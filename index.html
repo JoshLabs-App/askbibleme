@@ -10,218 +10,214 @@
     <div class="page-shell">
       <header class="site-topbar">
         <div class="site-topbar-title">
-          <h1 id="brandTitle">AskBible.me</h1>
-          <p id="brandSubtitle" class="brand-subtitle">
-            叩门的要为他开门，寻找的必得寻见。
-          </p>
-        </div>
-
-        <div class="site-topbar-actions">
-          <button class="top-action-btn" id="fontDecreaseBtn" type="button">
-            A-
-          </button>
-          <button class="top-action-btn" id="fontIncreaseBtn" type="button">
-            A+
-          </button>
-          <button class="top-action-btn" id="exportPrettyPdfBtn" type="button">
-            导出
-          </button>
-          <button class="top-action-btn" id="exportPrintPdfBtn" type="button">
-            打印
-          </button>
-          <button class="top-action-btn" id="openAdminBtn" type="button">
-            管理
-          </button>
+          <h1 id="brandTitle">
+            <span class="brand-ask">Ask</span><span class="brand-bible">Bible</span><span class="brand-me" id="openAdminBtn">.me</span>
+            <span id="brandSubtitle" class="brand-subtitle">你们祈求，就⋯ 寻找，就⋯ 叩门，就⋯ 马太福音 7:7-8</span>
+          </h1>
         </div>
       </header>
 
       <main class="book-layout">
         <div class="book-spread">
-        <section class="book-page left-page">
-  <div class="page-toolbar">
-    <div class="reading-toolbar">
-      <button
-        type="button"
-        id="bookChapterTrigger"
-        class="toolbar-trigger toolbar-trigger-wide"
-      >
-        <span id="bookChapterTriggerText">创世记 1章</span>
-        <span class="toolbar-caret">▼</span>
-      </button>
+          <section class="book-page left-page">
+            <div class="book-side-extend-tags" aria-label="侧边标签">
+              <a id="sideUserTag" class="book-side-extend-tag" href="/notebook.html" aria-label="打开笔记"></a>
+            </div>
+            <div class="page-toolbar">
+              <div class="reading-toolbar">
+                <button
+                  type="button"
+                  id="bookChapterTrigger"
+                  class="toolbar-trigger toolbar-trigger-wide"
+                >
+                  <span id="bookChapterTriggerText">创世记 1章</span>
+                  <span class="toolbar-caret">▼</span>
+                </button>
 
-      <button
-        type="button"
-        id="hideScriptureBtn"
-        class="toolbar-trigger toolbar-trigger-toggle"
-      >
-        隐藏
-      </button>
+                <button
+                  type="button"
+                  id="primaryVersionTrigger"
+                  class="toolbar-trigger"
+                >
+                  <span id="primaryVersionTriggerText">译本</span>
+                  <span class="toolbar-caret">▼</span>
+                </button>
 
-      <button
-        type="button"
-        id="contentTypeTrigger"
-        class="toolbar-trigger"
-      >
-        <span id="contentTypeTriggerText">默认版</span>
-        <span class="toolbar-caret">▼</span>
-      </button>
+                <button
+                  type="button"
+                  id="contentTypeTrigger"
+                  class="toolbar-trigger"
+                >
+                  <span id="contentTypeTriggerText">版本</span>
+                  <span class="toolbar-caret">▼</span>
+                </button>
 
-      <button
-        type="button"
-        id="primaryVersionTrigger"
-        class="toolbar-trigger"
-      >
-        <span id="primaryVersionTriggerText">和合本简体</span>
-        <span class="toolbar-caret">▼</span>
-      </button>
+                <div id="displayModeSwitch" class="display-mode-switch" aria-label="显示模式">
+                  <button type="button" id="scriptureToggleBtn" class="display-mode-btn">经文</button>
+                  <button type="button" id="allDisplayToggleBtn" class="display-mode-btn">全显</button>
+                  <button type="button" id="questionToggleBtn" class="display-mode-btn">问题</button>
+                </div>
 
-      <button
-        type="button"
-        id="compareVersionTrigger"
-        class="toolbar-trigger"
-      >
-        <span id="compareVersionTriggerText">对照</span>
-        <span class="toolbar-caret">▼</span>
-      </button>
-    </div>
+              </div>
 
-    <!-- 兼容现有 JS：先隐藏保留 -->
-    <div style="display: none">
-      <select id="uiLang" aria-label="界面语言"></select>
-      <select id="bookId" aria-label="卷书"></select>
-      <select id="chapter" aria-label="章数"></select>
-      <select id="contentVersion" aria-label="查经版本"></select>
-      <select id="contentLang" aria-label="内容语言"></select>
-      <select id="scriptureVersion" aria-label="主经文版本"></select>
-      <div id="secondaryScriptureVersions"></div>
-    </div>
+              <!-- 兼容现有 JS：隐藏保留 -->
+              <div style="display: none">
+                <select id="uiLang" aria-label="界面语言"></select>
+                <select id="bookId" aria-label="卷书"></select>
+                <select id="chapter" aria-label="章数"></select>
+                <select id="contentVersion" aria-label="查经版本"></select>
+                <select id="contentLang" aria-label="内容语言"></select>
+                <select id="scriptureVersion" aria-label="主经文版本"></select>
+                <div id="secondaryScriptureVersions"></div>
+              </div>
 
-    <!-- 书卷 + 章节面板 -->
-    <div id="bookChapterPanel" class="toolbar-panel" hidden>
-      <div class="toolbar-panel-inner toolbar-panel-book">
-        <div class="toolbar-panel-head">
-          <div class="toolbar-panel-title">书卷章节</div>
-          <button
-            type="button"
-            class="toolbar-panel-close"
-            data-close-panel="bookChapterPanel"
-          >
-            关闭
-          </button>
-        </div>
+              <!-- 书卷 + 章节面板 -->
+              <div id="bookChapterPanel" class="toolbar-panel" hidden>
+                <div class="toolbar-panel-inner toolbar-panel-book">
+                  <div class="toolbar-panel-head">
+                    <div class="toolbar-panel-title">书卷章节</div>
+                    <button
+                      type="button"
+                      class="toolbar-panel-close"
+                      data-close-panel="bookChapterPanel"
+                    >
+                      关闭
+                    </button>
+                  </div>
 
-        <div class="book-tab-row">
-          <button
-            type="button"
-            class="book-tab active"
-            data-testament-tab="旧约"
-          >
-            旧约
-          </button>
-          <button
-            type="button"
-            class="book-tab"
-            data-testament-tab="新约"
-          >
-            新约
-          </button>
-        </div>
+                  <div class="book-tab-row">
+                    <button
+                      type="button"
+                      class="book-tab active"
+                      data-testament-tab="旧约"
+                    >
+                      旧约
+                    </button>
+                    <button
+                      type="button"
+                      class="book-tab"
+                      data-testament-tab="新约"
+                    >
+                      新约
+                    </button>
+                  </div>
 
-        <div id="bookGrid" class="book-grid">
-          <!-- JS 渲染书卷网格 -->
-        </div>
+                  <div id="bookGrid" class="book-grid">
+                    <!-- JS 渲染书卷网格 -->
+                  </div>
 
-        <div class="chapter-grid-wrap">
-          <div class="chapter-grid-title">章节</div>
-          <div id="chapterGrid" class="chapter-grid">
-            <!-- JS 渲染章节网格 -->
-          </div>
-        </div>
-      </div>
-    </div>
+                  <div class="chapter-grid-wrap">
+                    <div class="chapter-grid-title">章节</div>
+                    <div id="chapterGrid" class="chapter-grid">
+                      <!-- JS 渲染章节网格 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-    <!-- 类型面板 -->
-    <div id="contentTypePanel" class="toolbar-panel" hidden>
-      <div class="toolbar-panel-inner toolbar-panel-simple">
-        <div class="toolbar-panel-head">
-          <div class="toolbar-panel-title">类型</div>
-          <button
-            type="button"
-            class="toolbar-panel-close"
-            data-close-panel="contentTypePanel"
-          >
-            关闭
-          </button>
-        </div>
-        <div id="contentTypeList" class="option-list">
-          <!-- JS 渲染 -->
-        </div>
-      </div>
-    </div>
+              <!-- 类型面板 -->
+              <div id="contentTypePanel" class="toolbar-panel" hidden>
+                <div class="toolbar-panel-inner toolbar-panel-simple">
+                  <div class="toolbar-panel-head">
+                    <div class="toolbar-panel-title">类型</div>
+                    <button
+                      type="button"
+                      class="toolbar-panel-close"
+                      data-close-panel="contentTypePanel"
+                    >
+                      关闭
+                    </button>
+                  </div>
+                  <div id="contentTypeList" class="option-list">
+                    <!-- JS 渲染 -->
+                  </div>
+                  <div class="chapter-grid-wrap">
+                    <div id="contentActionList" class="option-list">
+                      <button
+                        type="button"
+                        class="option-item"
+                        id="exportPrettyPdfBtn"
+                      >
+                        导出
+                      </button>
+                      <button
+                        type="button"
+                        class="option-item"
+                        id="exportPrintPdfBtn"
+                      >
+                        打印
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-    <!-- 主版本面板 -->
-    <div id="primaryVersionPanel" class="toolbar-panel" hidden>
-      <div class="toolbar-panel-inner toolbar-panel-simple">
-        <div class="toolbar-panel-head">
-          <div class="toolbar-panel-title">版本</div>
-          <button
-            type="button"
-            class="toolbar-panel-close"
-            data-close-panel="primaryVersionPanel"
-          >
-            关闭
-          </button>
-        </div>
-        <div id="primaryVersionList" class="option-list">
-          <!-- JS 渲染 -->
-        </div>
-      </div>
-    </div>
+              <!-- 主版本面板 -->
+              <div id="primaryVersionPanel" class="toolbar-panel" hidden>
+                <div class="toolbar-panel-inner toolbar-panel-simple">
+                  <div class="toolbar-panel-head">
+                    <div class="toolbar-panel-title">圣经版本</div>
+                    <button
+                      type="button"
+                      class="toolbar-panel-close"
+                      data-close-panel="primaryVersionPanel"
+                    >
+                      关闭
+                    </button>
+                  </div>
+                  <div class="chapter-grid-wrap">
+                    <div id="primaryVersionSectionTitle" class="chapter-grid-title">主版本（单选）</div>
+                    <div id="primaryVersionList" class="version-grid">
+                      <!-- JS 渲染 -->
+                    </div>
+                  </div>
+                  <div class="chapter-grid-wrap">
+                    <div id="compareVersionSectionTitle" class="chapter-grid-title">对照版本（可多选）</div>
+                    <div id="compareVersionList" class="version-grid version-grid-multi">
+                      <!-- JS 渲染 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-    <!-- 对照面板 -->
-    <div id="compareVersionPanel" class="toolbar-panel" hidden>
-      <div class="toolbar-panel-inner toolbar-panel-simple">
-        <div class="toolbar-panel-head">
-          <div class="toolbar-panel-title">对照版本</div>
-          <button
-            type="button"
-            class="toolbar-panel-close"
-            data-close-panel="compareVersionPanel"
-          >
-            关闭
-          </button>
-        </div>
-        <div id="compareVersionList" class="option-list option-list-multi">
-          <!-- JS 渲染 -->
-        </div>
-      </div>
-    </div>
-  </div>
+            </div>
 
-  <div class="title-nav-row">
-    <button
-      type="button"
-      class="title-nav-btn title-nav-btn-left"
-      id="prevChapterBtnTop"
-      aria-label="上一章"
-    >
-      &lt;
-    </button>
+            <div class="title-nav-row">
+              <div class="title-nav-side">
+                <button
+                  type="button"
+                  class="title-nav-btn title-nav-btn-left"
+                  id="prevChapterBtnTop"
+                  aria-label="上一章"
+                >
+                  &lt;
+                </button>
+                <button type="button" class="title-nav-mini-btn" id="fontDecreaseBtn">
+                  -
+                </button>
+              </div>
 
-    <button
-      type="button"
-      class="title-nav-btn title-nav-btn-right"
-      id="nextChapterBtnTop"
-      aria-label="下一章"
-    >
-      &gt;
-    </button>
-  </div>
+              <div class="title-nav-side title-nav-side-right">
+                <button type="button" class="title-nav-mini-btn" id="fontIncreaseBtn">
+                  +
+                </button>
+                <button
+                  type="button"
+                  class="title-nav-btn title-nav-btn-right"
+                  id="nextChapterBtnTop"
+                  aria-label="下一章"
+                >
+                  &gt;
+                </button>
+              </div>
+            </div>
 
-  <div class="page-title-block page-title-block-stacked">
-    <div id="pageChapterNumber" class="page-chapter-number">1</div>
-    <div id="pageBookTitle" class="page-book-title">创世记</div>
-  </div>
+            <div class="page-title-block page-title-block-stacked">
+              <div id="pageChapterNumber" class="page-chapter-number">1</div>
+              <div id="pageBookTitle" class="page-book-title">创世记</div>
+            </div>
+
+            <div class="repeated-words-wrap">
               <div id="repeatedWordsLine" class="repeated-words-line">—</div>
             </div>
 
@@ -232,6 +228,23 @@
             <div class="page-head-spacer"></div>
 
             <div id="rightBlocks" class="blocks-stack"></div>
+
+            <div class="chapter-feedback-wrap">
+              <div class="chapter-feedback-title">参与贡献</div>
+              <textarea
+                id="chapterQuestionInput"
+                class="chapter-feedback-input"
+                placeholder="你能提出更好的问题吗？"
+              ></textarea>
+              <div class="chapter-feedback-actions">
+                <button type="button" id="submitChapterQuestionBtn" class="chapter-feedback-btn">
+                  贡献问题
+                </button>
+                <div id="chapterQuestionStatus" class="chapter-feedback-status"></div>
+              </div>
+              <div id="chapterApprovedTitle" class="chapter-feedback-approved-title">用户贡献</div>
+              <div id="chapterApprovedQuestions" class="chapter-approved-list"></div>
+            </div>
 
             <div class="chapter-nav bottom-nav">
               <button type="button" class="nav-btn" id="prevChapterBtnBottom">
@@ -247,6 +260,10 @@
           </section>
         </div>
       </main>
+      <footer class="site-footer">
+        <span class="site-footer-version">v13.0.0</span>
+        <span class="site-footer-copy">© 2026 AskBible.me. All rights reserved.</span>
+      </footer>
     </div>
 
     <div id="adminPasswordModal" class="modal-mask" style="display: none">
@@ -275,6 +292,32 @@
           <button id="submitAdminPasswordBtn" class="primary-btn" type="button">
             进入管理
           </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="authModal" class="modal-mask" style="display: none">
+      <div class="modal-card modal-card-sm">
+        <div class="modal-head">
+          <h2 id="authModalTitle">用户登录</h2>
+          <button id="closeAuthBtn" class="top-action-btn modal-dark-btn" type="button">关闭</button>
+        </div>
+        <div id="authHintBar" class="auth-hint-bar">登录后会解锁更多宝藏</div>
+        <div class="modal-actions">
+          <button id="authModeLoginBtn" class="secondary-btn" type="button">登录</button>
+          <button id="authModeRegisterBtn" class="secondary-btn" type="button">注册</button>
+        </div>
+        <div id="authNameField">
+          <div class="section-title">用户昵称</div>
+          <input id="authNameInput" class="custom-textarea single-input" type="text" placeholder="请输入用户昵称" />
+        </div>
+        <div class="section-title">邮箱</div>
+        <input id="authEmailInput" class="custom-textarea single-input" type="email" placeholder="name@example.com" />
+        <div class="section-title">密码</div>
+        <input id="authPasswordInput" class="custom-textarea single-input" type="password" placeholder="至少 6 位" />
+        <div id="authErrorText" class="error-text"></div>
+        <div class="modal-actions">
+          <button id="authSubmitBtn" class="primary-btn" type="button">登录</button>
         </div>
       </div>
     </div>
@@ -380,38 +423,38 @@
 
               <div class="section-title">规则开关</div>
               <div class="check-grid">
-                <label
-                  ><input type="checkbox" id="adminLeaderHint" />
-                  输出带领提示</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAvoidRepeat" />
-                  避免重复句式</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAllowLightApplication" />
-                  允许轻度应用</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAllowGospelEmphasis" />
-                  强调福音线索</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAllowChildrenTone" />
-                  儿童语气</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAllowYouthTone" />
-                  青少年向</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAllowCoupleTone" />
-                  夫妇关系向</label
-                >
-                <label
-                  ><input type="checkbox" id="adminAllowWorkplaceTone" />
-                  职场应用向</label
-                >
+                <label>
+                  <input type="checkbox" id="adminLeaderHint" />
+                  输出带领提示
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAvoidRepeat" />
+                  避免重复句式
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAllowLightApplication" />
+                  允许轻度应用
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAllowGospelEmphasis" />
+                  强调福音线索
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAllowChildrenTone" />
+                  儿童语气
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAllowYouthTone" />
+                  青少年向
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAllowCoupleTone" />
+                  夫妇关系向
+                </label>
+                <label>
+                  <input type="checkbox" id="adminAllowWorkplaceTone" />
+                  职场应用向
+                </label>
               </div>
 
               <div class="section-title">按语言补充要求</div>

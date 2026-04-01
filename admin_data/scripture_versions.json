@@ -30,7 +30,7 @@
     },
     {
       "id": "bbe_en",
-      "label": "BBE English",
+      "label": "BBE English EASY",
       "lang": "en",
       "enabled": true,
       "uiEnabled": true,
@@ -40,7 +40,8 @@
       "sourceType": "usfx",
       "sourceFile": "data/eng-bbe.usfx.xml",
       "description": "English BBE",
-      "sortOrder": 10
+      "sortOrder": 10,
+      "updatedAt": "2026-04-01T05:45:07.804Z"
     },
     {
       "id": "web_en",

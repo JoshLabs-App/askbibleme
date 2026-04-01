@@ -24,7 +24,16 @@
         "enabled": true,
         "uiEnabled": true,
         "contentEnabled": true,
-        "scriptureEnabled": false,
+        "scriptureEnabled": true,
+        "contentMode": "native"
+      },
+      {
+        "id": "he",
+        "label": "Hebrew",
+        "enabled": true,
+        "uiEnabled": true,
+        "contentEnabled": true,
+        "scriptureEnabled": true,
         "contentMode": "native"
       }
     ]

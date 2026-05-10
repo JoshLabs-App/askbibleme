@@ -876,7 +876,7 @@ export default function StudioWorkspace({
     <div
       className={
         embedInAdmin
-          ? "flex min-h-[min(100dvh,56rem)] min-h-0 flex-1 flex-col overflow-hidden bg-canvas text-ink supports-[height:100dvh]:min-h-[100dvh]"
+          ? "flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-canvas text-ink"
           : "flex h-[100vh] max-h-[100vh] min-h-0 flex-col overflow-hidden bg-canvas text-ink supports-[height:100dvh]:h-[100dvh] supports-[height:100dvh]:max-h-[100dvh]"
       }
     >

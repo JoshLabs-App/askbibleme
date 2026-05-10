@@ -18,6 +18,7 @@ import type {
 } from "@/lib/music-companion/types";
 import { HomeMusicFloatingChrome } from "@/components/home/HomeMusicFloatingChrome";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { IconPause, IconPlay, IconSkipBack, IconSkipForward } from "@/components/ui/MediaPlaybackIcons";
 
 const SacredAtmosphereCanvas = dynamic(
   () =>
@@ -575,16 +576,20 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
             onClick={prevScene}
             disabled={orderedScenes.length <= 1}
           >
-            ⏮
+            <IconSkipBack className="h-5 w-5 shrink-0 lg:h-6 lg:w-6" />
           </button>
           <button
             type="button"
             disabled={!audioSrc}
             onClick={() => void togglePlay()}
-            className="music-reactive-play-btn relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-transparent text-2xl text-white/[0.82] outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-1 focus-visible:ring-white/35 disabled:cursor-not-allowed disabled:opacity-35 lg:h-[5.25rem] lg:w-[5.25rem] lg:text-[1.65rem]"
+            className="music-reactive-play-btn relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-transparent text-white/[0.82] outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-1 focus-visible:ring-white/35 disabled:cursor-not-allowed disabled:opacity-35 lg:h-[5.25rem] lg:w-[5.25rem]"
             aria-label={playing ? "暂停" : "播放"}
           >
-            {playing ? "⏸" : "▶"}
+            {playing ? (
+              <IconPause className="h-9 w-9 shrink-0 lg:h-10 lg:w-10" />
+            ) : (
+              <IconPlay className="h-9 w-9 shrink-0 translate-x-1 lg:h-10 lg:w-10" />
+            )}
           </button>
           <button
             type="button"
@@ -594,7 +599,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
             onClick={nextScene}
             disabled={orderedScenes.length <= 1}
           >
-            ⏭
+            <IconSkipForward className="h-5 w-5 shrink-0 lg:h-6 lg:w-6" />
           </button>
         </div>
 

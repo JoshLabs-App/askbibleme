@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["sharp"],
+
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根
   outputFileTracingRoot: path.join(__dirname),
 

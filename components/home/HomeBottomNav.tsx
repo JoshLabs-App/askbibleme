@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
 const items: { href: string; label: string; match: (p: string) => boolean }[] = [
   /** 文案「音乐」对应首页 `/` 主体验 */
@@ -14,7 +15,7 @@ const items: { href: string; label: string; match: (p: string) => boolean }[] = 
 
 function tabClass(active: boolean) {
   return [
-    "flex min-h-[2.5rem] min-w-0 flex-1 flex-col items-center justify-center px-1 py-1 text-[11px] font-medium tracking-wide transition",
+    "flex min-h-[2.5rem] min-w-0 flex-1 flex-col items-center justify-center px-1 py-1 text-sm font-medium tracking-wide transition",
     active ? "text-ink" : "text-ink/50 hover:bg-ink/[0.04] hover:text-ink/85",
   ].join(" ");
 }
@@ -55,9 +56,13 @@ export function HomeBottomNav() {
               !canPlay ? "暂无可播放曲目" : playing ? "暂停音乐" : "播放音乐"
             }
             onClick={() => togglePlay()}
-            className="music-reactive-play-btn flex h-11 w-11 -translate-y-0.5 items-center justify-center rounded-full bg-white text-[14px] text-ink shadow-sm ring-1 ring-ink/[0.06] transition-colors hover:bg-white hover:shadow disabled:pointer-events-none disabled:opacity-35"
+            className="music-reactive-play-btn flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-[0_1px_2px_rgba(31,26,18,0.05),0_3px_10px_rgba(31,26,18,0.06)] ring-1 ring-border/45 transition hover:bg-[#EDE4D4] hover:ring-border/60 hover:shadow-[0_2px_6px_rgba(31,26,18,0.07)] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand/50 disabled:pointer-events-none disabled:opacity-35"
           >
-            {playing ? "⏸" : "▶"}
+            {playing ? (
+              <IconPause className="h-[18px] w-[18px] shrink-0 opacity-95" />
+            ) : (
+              <IconPlay className="h-[18px] w-[18px] shrink-0 translate-x-[1px] opacity-95" />
+            )}
           </button>
         </div>
 

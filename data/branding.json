@@ -1,0 +1,19 @@
+{
+  "updatedAt": "2026-05-10T20:16:42.906Z",
+  "originalName": "在祢里面.png",
+  "logoKind": "raster",
+  "presetId": "parchment",
+  "colors": {
+    "canvas": "#F4EBD9",
+    "surface": "#E8DCC8",
+    "border": "#C9B899",
+    "muted": "#6E5E45",
+    "ink": "#1F1A12",
+    "sand": "#B8945A",
+    "adminBg": "#F5F1EA",
+    "adminPanel": "#EBE6DC",
+    "adminLine": "#D4CBB8",
+    "adminFg": "#1F1A12",
+    "adminMuted": "#6E5E45"
+  }
+}

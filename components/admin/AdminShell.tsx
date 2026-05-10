@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { AdminMobilePreviewPanel } from "@/components/admin/AdminMobilePreviewPanel";
 
 const ADMIN_SIDEBAR_WIDTH_KEY = "selah-admin-sidebar-width-v1";
 /** 默认 ≈ 15.75rem */
@@ -252,7 +253,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-adminBg text-adminFg md:flex-row md:overflow-hidden">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col bg-adminBg text-adminFg md:flex-row md:overflow-hidden">
       {/* 移动端：整宽底边分隔 */}
       <aside className="flex w-full shrink-0 flex-col border-b border-adminLine px-3 py-4 md:hidden">{asideInner}</aside>
 
@@ -279,8 +280,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </button>
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
-        {children}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+          {children}
+        </div>
+
+        <aside className="hidden min-h-0 w-[min(420px,36vw)] shrink-0 flex-col overflow-hidden border-l border-adminLine bg-adminPanel/25 lg:w-[440px] md:flex md:flex-col">
+          <AdminMobilePreviewPanel />
+        </aside>
+      </div>
+
+      <div className="shrink-0 border-t border-adminLine bg-adminPanel/15 md:hidden">
+        <AdminMobilePreviewPanel stacked />
       </div>
 
       <div className="border-t border-adminLine px-4 py-3 md:hidden">

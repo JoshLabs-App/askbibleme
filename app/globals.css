@@ -2,7 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base: parchment canvas, charcoal ink, muted gold — journey / scripture calm */
+/* 默认品牌变量（无 data/branding.json 或未写入 inline 时生效） */
+:root {
+  --brand-canvas: #f4ebd9;
+  --brand-canvas-rgb: 244 235 217;
+  --brand-surface: #e8dcc8;
+  --brand-surface-rgb: 232 220 200;
+  --brand-border: #c9b899;
+  --brand-border-rgb: 201 184 153;
+  --brand-muted: #6e5e45;
+  --brand-muted-rgb: 110 94 69;
+  --brand-ink: #1f1a12;
+  --brand-ink-rgb: 31 26 18;
+  --brand-sand: #b8945a;
+  --brand-sand-rgb: 184 148 90;
+  --brand-admin-bg: #f5f1ea;
+  --brand-admin-bg-rgb: 245 241 234;
+  --brand-admin-panel: #ebe6dc;
+  --brand-admin-panel-rgb: 235 230 220;
+  --brand-admin-line: #d4cbb8;
+  --brand-admin-line-rgb: 212 203 184;
+  --brand-admin-fg: #1f1a12;
+  --brand-admin-fg-rgb: 31 26 18;
+  --brand-admin-muted: #6e5e45;
+  --brand-admin-muted-rgb: 110 94 69;
+}
 html,
 body {
   height: 100%;

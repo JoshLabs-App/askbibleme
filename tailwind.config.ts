@@ -9,19 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Journey 参考：羊皮纸底、深炭褐字、哑光金点缀（沙漠暮色 / 经卷气质）
-        canvas: "#F4EBD9",
-        surface: "#E8DCC8",
-        border: "#C9B899",
-        muted: "#6E5E45",
-        ink: "#1F1A12",
-        sand: "#B8945A",
+        // 品牌语义色由 CSS 变量驱动（后台「全局设置」可改预设 / 自定义）
+        canvas: "rgb(var(--brand-canvas-rgb) / <alpha-value>)",
+        surface: "rgb(var(--brand-surface-rgb) / <alpha-value>)",
+        border: "rgb(var(--brand-border-rgb) / <alpha-value>)",
+        muted: "rgb(var(--brand-muted-rgb) / <alpha-value>)",
+        ink: "rgb(var(--brand-ink-rgb) / <alpha-value>)",
+        sand: "rgb(var(--brand-sand-rgb) / <alpha-value>)",
         /** 统一后台（浅色羊皮纸系，与前台气质一致、略偏中性灰） */
-        adminBg: "#F5F1EA",
-        adminPanel: "#EBE6DC",
-        adminLine: "#D4CBB8",
-        adminFg: "#1F1A12",
-        adminMuted: "#6E5E45",
+        adminBg: "rgb(var(--brand-admin-bg-rgb) / <alpha-value>)",
+        adminPanel: "rgb(var(--brand-admin-panel-rgb) / <alpha-value>)",
+        adminLine: "rgb(var(--brand-admin-line-rgb) / <alpha-value>)",
+        adminFg: "rgb(var(--brand-admin-fg-rgb) / <alpha-value>)",
+        adminMuted: "rgb(var(--brand-admin-muted-rgb) / <alpha-value>)",
       },
       fontFamily: {
         sans: [

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { STUDIO_DISK_BEARER_STORAGE_KEY } from "@/lib/studio-config";
 import {
   newBackgroundId,
   newTrackId,
@@ -13,17 +12,7 @@ import {
 } from "@/lib/music-companion/track-naming";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import { ADMIN_MAIN_CLASS } from "@/components/admin/admin-layout";
-
-function diskAuthHeaders(): HeadersInit {
-  const h: Record<string, string> = {};
-  try {
-    const t = localStorage.getItem(STUDIO_DISK_BEARER_STORAGE_KEY)?.trim();
-    if (t) h.Authorization = `Bearer ${t}`;
-  } catch {
-    /* ignore */
-  }
-  return h;
-}
+import { diskAuthHeaders } from "@/lib/disk-auth-headers";
 
 function primarySceneId(store: MusicCompanionStore): string | null {
   const ord = [...store.scenes].sort((a, b) => a.order - b.order);

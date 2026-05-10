@@ -9,7 +9,7 @@ const overview: {
     title: "系统",
     items: [
       { href: "/admin/studio", label: "studio", hint: "产品文档与本地讨论" },
-      { href: "/admin/system/settings", label: "全局设置", hint: "系统级选项（占位）" },
+      { href: "/admin/system/settings", label: "全局设置", hint: "LOGO 与站点图标（PWA / Apple）" },
     ],
   },
   {
@@ -38,7 +38,7 @@ export default function AdminHomePage() {
     <div className={ADMIN_MAIN_CLASS}>
       <h1 className="text-[15px] font-medium tracking-tight text-adminFg">概览</h1>
       <p className="mt-2 max-w-prose text-[12px] leading-relaxed text-adminMuted">
-        下列入口与侧栏一致；无卡片，便于桌面快速扫读。
+        下列入口与侧栏一致；无卡片，便于桌面快速扫读。宽屏下右侧为常驻「手机预览」；窄屏下在页面底部查看。
       </p>
 
       <div className="mt-10 max-w-3xl space-y-10">

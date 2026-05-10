@@ -1,0 +1,77 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  HOME_ATMOSPHERE_STORAGE_KEY,
+  isHomeAtmospherePresetId,
+  type HomeAtmospherePresetId,
+} from "@/music-visual/presets/home-atmosphere";
+
+export type HomeAtmosphereVisualContextValue = {
+  homeAtmospherePresetId: HomeAtmospherePresetId;
+  setHomeAtmospherePresetId: (id: HomeAtmospherePresetId) => void;
+};
+
+const HomeAtmosphereVisualContext = createContext<HomeAtmosphereVisualContextValue | null>(null);
+
+function readStoredHomeAtmosphere(): HomeAtmospherePresetId {
+  if (typeof window === "undefined") return "parchment";
+  try {
+    const raw = window.localStorage.getItem(HOME_ATMOSPHERE_STORAGE_KEY);
+    if (isHomeAtmospherePresetId(raw)) return raw;
+  } catch {
+    /* ignore */
+  }
+  return "parchment";
+}
+
+/**
+ * 首页「氛围」与壳层音乐视觉（CSS + WebGL）共享的单一来源；子页面未改氛围时保持上次值。
+ */
+export function HomeAtmosphereVisualProvider({ children }: { children: ReactNode }) {
+  const [homeAtmospherePresetId, setHomeAtmospherePresetIdState] =
+    useState<HomeAtmospherePresetId>("parchment");
+
+  useEffect(() => {
+    setHomeAtmospherePresetIdState(readStoredHomeAtmosphere());
+  }, []);
+
+  const setHomeAtmospherePresetId = useCallback((id: HomeAtmospherePresetId) => {
+    setHomeAtmospherePresetIdState(id);
+    try {
+      window.localStorage.setItem(HOME_ATMOSPHERE_STORAGE_KEY, id);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const value = useMemo<HomeAtmosphereVisualContextValue>(
+    () => ({ homeAtmospherePresetId, setHomeAtmospherePresetId }),
+    [homeAtmospherePresetId, setHomeAtmospherePresetId],
+  );
+
+  return (
+    <HomeAtmosphereVisualContext.Provider value={value}>{children}</HomeAtmosphereVisualContext.Provider>
+  );
+}
+
+export function useHomeAtmosphereVisual(): HomeAtmosphereVisualContextValue {
+  const ctx = useContext(HomeAtmosphereVisualContext);
+  if (!ctx) {
+    throw new Error("useHomeAtmosphereVisual must be used within HomeAtmosphereVisualProvider");
+  }
+  return ctx;
+}
+
+/** Canvas 等可在壳外降级使用，不抛错 */
+export function useHomeAtmosphereVisualOptional(): HomeAtmosphereVisualContextValue | null {
+  return useContext(HomeAtmosphereVisualContext);
+}

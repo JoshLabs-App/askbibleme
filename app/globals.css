@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base: parchment canvas, charcoal ink, muted gold — journey / scripture calm */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+}
+
+/**
+ * 壳层 `--music-*` 由 MusicShellVisualProvider 写入。
+ * 有预计算 JSON 时随真实能量变化；否则播放中仍有缓慢「呼吸」便于感知。
+ */
+.music-reactive-home-glow {
+  opacity: calc(
+    (0.14 + var(--music-rms, 0.08) * 1.05 + var(--music-low, 0) * 0.42) * var(--music-tune-glow-mul, 1) *
+      var(--music-master, 1)
+  );
+}
+
+.music-reactive-home-glow-dark {
+  opacity: calc(
+    (0.18 + var(--music-rms, 0.08) * 1.15 + var(--music-low, 0) * 0.48) * var(--music-tune-glow-mul, 1) *
+      var(--music-tune-glow-dark-extra, 1) * var(--music-master, 1)
+  );
+}
+
+.music-reactive-play-btn {
+  transform: scale(
+    min(
+      1.48,
+      calc(
+        1 + (var(--music-rms, 0.08) * 0.14 + var(--music-mid, 0) * 0.1) * var(--music-tune-play-mul, 1)
+      )
+    )
+  );
+  transition: transform 0.1s ease-out;
+}
+
+/** 首页背景专用层（与前景兄弟）：极轻 scale 呼吸；不低于 1，避免缩小时露出外层 canvas 描边 */
+.music-reactive-home-shell {
+  transform: scale(
+    min(
+      18.5,
+      max(
+        1,
+        calc(1 + (var(--music-rms, 0.08) - 0.08) * var(--music-tune-shell-amp, 0.09) * var(--music-master, 1))
+      )
+    )
+  );
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-reactive-home-shell,
+  .music-reactive-play-btn {
+    transform: none;
+    transition: none;
+  }
+}
+
+/**
+ * App shell 全屏轻弹层（配合 `AppShellModal` → `document.body`）：
+ * 根层勿加 padding，否则 absolute 遮罩无法铺满，会露出 body 的 canvas 色「外框」。
+ * 安全区与左右留白交给 `.app-shell-modal-slot`。
+ */
+.app-shell-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.app-shell-modal-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(0 0 0 / 0.22);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+}
+
+.app-shell-modal-slot {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}

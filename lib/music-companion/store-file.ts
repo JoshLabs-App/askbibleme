@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { LocalizedField } from "@/lib/i18n/localized-text";
 import type {
   AudioTrack,
   BackgroundVisual,
@@ -66,20 +67,61 @@ function normRef(v: unknown): string | null {
   return t === "" ? null : t;
 }
 
+function parseRequiredLocalized(raw: unknown, max: number, label: string): LocalizedField {
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) throw err(`${label} 不能为空`);
+    if (t.length > max) throw err(`${label} 过长`);
+    return t;
+  }
+  if (!raw || typeof raw !== "object") throw err(`${label} 格式错误`);
+  const o = raw as Record<string, unknown>;
+  const zh = typeof o["zh-CN"] === "string" ? o["zh-CN"].trim() : "";
+  const enRaw = o.en;
+  const en = typeof enRaw === "string" && enRaw.trim() ? enRaw.trim() : undefined;
+  if (!zh) throw err(`${label} 须包含非空 zh-CN`);
+  if (zh.length > max || (en && en.length > max)) throw err(`${label} 过长`);
+  return en ? { "zh-CN": zh, en } : zh;
+}
+
+function parseOptionalLocalized(raw: unknown, max: number, label: string): LocalizedField | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw === "string") {
+    const t = raw.trim();
+    if (!t) return undefined;
+    if (t.length > max) throw err(`${label} 过长`);
+    return t;
+  }
+  if (!raw || typeof raw !== "object") throw err(`${label} 格式错误`);
+  const o = raw as Record<string, unknown>;
+  const zh = typeof o["zh-CN"] === "string" ? o["zh-CN"].trim() : "";
+  const enRaw = o.en;
+  const en = typeof enRaw === "string" && enRaw.trim() ? enRaw.trim() : undefined;
+  if (!zh && !en) return undefined;
+  if (!zh) throw err(`${label} 须有 zh-CN`);
+  if (zh.length > max || (en && en.length > max)) throw err(`${label} 过长`);
+  return en ? { "zh-CN": zh, en } : zh;
+}
+
+function assertLocalizedLen(v: LocalizedField, max: number, label: string) {
+  if (typeof v === "string") {
+    if (!v.trim()) throw err(`${label} 不能为空`);
+    if (v.length > max) throw err(`${label} 过长`);
+    return;
+  }
+  const zh = v["zh-CN"]?.trim() ?? "";
+  if (!zh) throw err(`${label} zh-CN 不能为空`);
+  if (zh.length > max || (v.en && v.en.length > max)) throw err(`${label} 过长`);
+}
+
 function validateTrack(t: AudioTrack) {
   assertId(t.id, "曲目");
-  if (typeof t.title !== "string" || t.title.length > MAX_TITLE) {
-    throw err("曲目 title 无效或过长");
-  }
+  assertLocalizedLen(t.title, MAX_TITLE, "曲目 title");
   if (typeof t.src !== "string" || t.src.length > MAX_SRC) {
     throw err("曲目 src 无效或过长");
   }
-  if (t.artist != null && t.artist.length > MAX_TITLE) {
-    throw err("曲目 artist 过长");
-  }
-  if (t.remark != null && t.remark.length > MAX_REMARK) {
-    throw err("曲目 remark 过长");
-  }
+  if (t.artist !== undefined) assertLocalizedLen(t.artist, MAX_TITLE, "曲目 artist");
+  if (t.remark !== undefined) assertLocalizedLen(t.remark, MAX_REMARK, "曲目 remark");
 }
 
 function validateBackground(b: BackgroundVisual) {
@@ -97,9 +139,8 @@ function validateBackground(b: BackgroundVisual) {
       throw err("gradient 类型背景须提供 cssGradient");
     }
   }
-  if (b.credit != null && b.credit.length > MAX_TITLE) {
-    throw err("背景 credit 过长");
-  }
+  if (b.title !== undefined) assertLocalizedLen(b.title, MAX_TITLE, "背景 title");
+  if (b.credit !== undefined) assertLocalizedLen(b.credit, MAX_TITLE, "背景 credit");
 }
 
 function validateScene(s: Scene, tracks: Set<string>, backgrounds: Set<string>) {
@@ -113,6 +154,7 @@ function validateScene(s: Scene, tracks: Set<string>, backgrounds: Set<string>) 
   };
   check(s.audioTrackId, tracks, "曲目");
   check(s.backgroundVisualId, backgrounds, "背景");
+  if (s.title !== undefined) assertLocalizedLen(s.title, MAX_TITLE, "场景 title");
 }
 
 export function parseAndValidateMusicStore(raw: unknown): MusicCompanionStore {
@@ -150,24 +192,36 @@ export function parseAndValidateMusicStore(raw: unknown): MusicCompanionStore {
         : undefined;
     const track: AudioTrack = {
       id: typeof r.id === "string" ? r.id.trim() : "",
-      title: typeof r.title === "string" ? r.title : "",
-      artist: typeof r.artist === "string" && r.artist.trim() ? r.artist : undefined,
+      title: parseRequiredLocalized(r.title, MAX_TITLE, "曲目 title"),
+      artist: parseOptionalLocalized(r.artist, MAX_TITLE, "曲目 artist"),
       src: typeof r.src === "string" ? r.src : "",
       durationSec:
         typeof r.durationSec === "number" && Number.isFinite(r.durationSec)
           ? r.durationSec
           : undefined,
       tags,
-      remark:
-        typeof r.remark === "string" && r.remark.trim() ? r.remark.trim() : undefined,
+      remark: parseOptionalLocalized(r.remark, MAX_REMARK, "曲目 remark"),
     };
     validateTrack(track);
     tracks.push(track);
   }
   for (const x of bv) {
     if (!x || typeof x !== "object") throw err("背景项格式错误");
-    validateBackground(x as BackgroundVisual);
-    backgrounds.push(x as BackgroundVisual);
+    const r = x as Record<string, unknown>;
+    const id = typeof r.id === "string" ? r.id.trim() : "";
+    const typ = r.type === "image" ? "image" : r.type === "gradient" ? "gradient" : null;
+    if (!typ) throw err("背景 type 须为 image 或 gradient");
+    const bg: BackgroundVisual = {
+      id,
+      type: typ,
+      imageSrc: typeof r.imageSrc === "string" ? r.imageSrc : undefined,
+      title: parseOptionalLocalized(r.title, MAX_TITLE, "背景 title"),
+      cssGradient: typeof r.cssGradient === "string" ? r.cssGradient : undefined,
+      blur: Boolean(r.blur),
+      credit: parseOptionalLocalized(r.credit, MAX_TITLE, "背景 credit"),
+    };
+    validateBackground(bg);
+    backgrounds.push(bg);
   }
   const trackIds = new Set(tracks.map((t) => t.id));
   const bgIds = new Set(backgrounds.map((b) => b.id));
@@ -179,7 +233,7 @@ export function parseAndValidateMusicStore(raw: unknown): MusicCompanionStore {
     }
     const scene: Scene = {
       id: raw.id.trim(),
-      title: typeof raw.title === "string" ? raw.title : undefined,
+      title: parseOptionalLocalized(raw.title, MAX_TITLE, "场景 title"),
       order: typeof raw.order === "number" ? raw.order : 0,
       audioTrackId: normRef(raw.audioTrackId),
       backgroundVisualId: normRef(raw.backgroundVisualId),

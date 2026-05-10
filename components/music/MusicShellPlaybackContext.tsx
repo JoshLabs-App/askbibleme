@@ -96,9 +96,16 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   /** 恢复完成前不写 localStorage，避免用 0 秒覆盖上次进度 */
   const shellPlaybackPersistEnabledRef = useRef(false);
   const shellPlaybackLastPersistAtRef = useRef(0);
+  /** 曲目自然结束后切到下一首并自动播放（避免 `ended` 时 `paused` 导致仅绑 src 不 play） */
+  const playAfterNextBindRef = useRef(false);
 
   const defaultSrc = useMemo(() => ((store ? getShellDefaultAudioSrc(store) : null) ?? "").trim(), [store]);
   const effectiveSrc = (playbackOverride?.trim() || defaultSrc).trim();
+
+  const storeRef = useRef(store);
+  storeRef.current = store;
+  const effectiveSrcRef = useRef(effectiveSrc);
+  effectiveSrcRef.current = effectiveSrc;
 
   const setPlaybackSrc = useCallback(
     (src: string | null) => {
@@ -224,6 +231,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
     if (audioUrlEquals(a, effectiveSrc)) {
       lastBoundEffectiveSrcRef.current = effectiveSrc;
+      if (playAfterNextBindRef.current) {
+        playAfterNextBindRef.current = false;
+        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      }
       return;
     }
     if (shellPlaybackUrlsEqual(lastBoundEffectiveSrcRef.current, effectiveSrc)) {
@@ -231,9 +242,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
     lastBoundEffectiveSrcRef.current = effectiveSrc;
     const wasPlaying = !a.paused;
+    const playAfterAdvance = playAfterNextBindRef.current;
     a.src = effectiveSrc;
     a.load();
-    if (wasPlaying) {
+    if (wasPlaying || playAfterAdvance) {
+      playAfterNextBindRef.current = false;
       void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     }
     /** 未在播时不要 `setPlaying(false)`：会制造无意义重渲染，曾与首页对齐 `effectiveSrc` 的 effect 形成更新风暴。 */
@@ -351,6 +364,36 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       a.removeEventListener("pause", onPause);
     };
   }, []);
+
+  /** 自动下一首 / 单轨循环（与曲库 `audioTracks` 顺序一致，末首后回到第一首） */
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || loading) return;
+
+    const onEndedAdvance = () => {
+      const st = storeRef.current;
+      if (!st) return;
+      const tracks = st.audioTracks.filter((t) => Boolean(t.src?.trim()));
+      const n = tracks.length;
+      if (n === 0) return;
+      if (n === 1) {
+        a.currentTime = 0;
+        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        return;
+      }
+      const cur = effectiveSrcRef.current.trim();
+      let idx = tracks.findIndex((t) => shellPlaybackUrlsEqual((t.src ?? "").trim(), cur));
+      if (idx < 0) idx = 0;
+      const nextTrack = tracks[(idx + 1) % n];
+      const nextSrc = (nextTrack.src ?? "").trim();
+      if (!nextSrc) return;
+      playAfterNextBindRef.current = true;
+      setPlaybackSrc(nextSrc);
+    };
+
+    a.addEventListener("ended", onEndedAdvance);
+    return () => a.removeEventListener("ended", onEndedAdvance);
+  }, [loading, setPlaybackSrc]);
 
   const canPlay = Boolean(effectiveSrc) && !loading;
 

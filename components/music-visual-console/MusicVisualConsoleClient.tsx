@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { ADMIN_MAIN_CLASS } from "@/components/admin/admin-layout";
 import { readShellPlaybackPersisted } from "@/lib/music-companion/shell-playback-storage";
+import { primaryLocaleText } from "@/lib/i18n/localized-text";
 import { MusicVisualTuningForm } from "@/music-visual/components/MusicVisualTuningForm";
 import {
   isHomeAtmospherePresetId,
@@ -130,7 +131,7 @@ export function MusicVisualConsoleClient({
       visuals: musicStore.backgroundVisuals.length,
       trackRows: tracks.slice(0, 20).map((t) => ({
         id: t.id,
-        title: t.title,
+        title: primaryLocaleText(t.title),
         src: clip(t.src ?? "", 72),
         analysis: t.analysisSrc ? clip(t.analysisSrc, 56) : "—",
       })),

@@ -14,6 +14,7 @@ import {
 } from "@/music-visual";
 import { MUSIC_VISUAL_TUNING_LIMITS as TL } from "@/music-visual/tuning/schema";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellModal } from "@/components/ui/AppShellModal";
 
 const SacredAtmosphereCanvas = dynamic(
@@ -225,6 +226,7 @@ function MusicVisualTuneRow(props: {
 }
 
 export function HomeDashboard() {
+  const { t } = useLocale();
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
   const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
@@ -517,7 +519,7 @@ export function HomeDashboard() {
                                 : "min-h-8 shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide text-ink/38 transition hover:text-ink/62"
                           }
                         >
-                          {p.label}
+                          {t(`music.atmosphere.${p.id}`)}
                         </button>
                       );
                     })}
@@ -547,7 +549,7 @@ export function HomeDashboard() {
                       : "min-h-[2.25rem] rounded-full px-3 py-1 text-[11px] font-medium tracking-wide text-canvas/50 transition hover:text-canvas/82"
                   }
                 >
-                  氛围
+                  {t("music.home.bgAmbient")}
                 </button>
                 <button
                   type="button"
@@ -562,7 +564,7 @@ export function HomeDashboard() {
                         : "min-h-[2.25rem] rounded-full px-3 py-1 text-[11px] font-medium tracking-wide text-ink/40 transition hover:text-ink/68"
                   }
                 >
-                  图像
+                  {t("music.home.bgImages")}
                 </button>
               </div>
             </div>
@@ -587,20 +589,20 @@ export function HomeDashboard() {
               id="music-visual-tuning-title"
               className={`text-[12px] font-medium tracking-wide ${useCanvasChrome ? "text-canvas/88" : "text-ink/78"}`}
             >
-              播放视觉
+              {t("chrome.playbackVisual")}
             </h2>
             <button
               type="button"
               onClick={dismissMusicVisualPanel}
               className={`rounded-lg px-2 py-1 text-[11px] font-medium ${useCanvasChrome ? "text-canvas/55 hover:bg-white/10" : "text-ink/45 hover:bg-ink/[0.05]"}`}
             >
-              完成
+              {t("common.done")}
             </button>
           </div>
           <p
             className={`mb-2 text-[10px] leading-snug ${useCanvasChrome ? "text-canvas/48" : "text-ink/48"}`}
           >
-            首页「{HOME_ATMOSPHERE_PRESETS.find((x) => x.id === homeAtmospherePresetId)?.label ?? "—"}」→ 引擎「
+            首页「{t(`music.atmosphere.${homeAtmospherePresetId}`)}」→ 引擎「
             {engineAtmosphere.label}」（{engineAtmosphere.id}）。{" "}
             除播放键外，下方滑杆与氛围乘子叠加后写入 CSS；播放键为窄范围微调且不与总强度相乘。「跟曲线」「无数据呼吸」在引擎内随雾速/微粒密度轻微调制。
           </p>

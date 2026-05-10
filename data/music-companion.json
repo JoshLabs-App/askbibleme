@@ -3,13 +3,22 @@
   "audioTracks": [
     {
       "id": "track-demo",
-      "title": "你们要休息，要知道我是神",
+      "title": {
+        "zh-CN": "你们要休息，要知道我是神",
+        "en": "Be still, and know that I am God."
+      },
       "src": "/music/uploads/6678c12378874721ad779e7bdc93e990.m4a",
-      "remark": "诗篇 46:10"
+      "remark": {
+        "zh-CN": "诗篇 46:10",
+        "en": "Psalm 46:10"
+      }
     },
     {
       "id": "track-mozr2wqufrfv",
-      "title": "4月29日-副本(1)",
+      "title": {
+        "zh-CN": "4月29日-副本(1)",
+        "en": "April 29 – duplicate (1)"
+      },
       "src": "/music/uploads/de2d329fa5c14ea2912aa93ce1867181.m4a"
     }
   ],
@@ -42,7 +51,10 @@
   "scenes": [
     {
       "id": "scene-default",
-      "title": "默认场景",
+      "title": {
+        "zh-CN": "默认场景",
+        "en": "Default scene"
+      },
       "order": 0,
       "audioTrackId": "track-mozr2wqufrfv",
       "backgroundVisualId": "bg-moz3kpueo6x1"

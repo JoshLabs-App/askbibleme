@@ -7,12 +7,12 @@ export const HOME_ATMOSPHERE_STORAGE_KEY = "selah-home-atmosphere-preset";
 /** 首页「经卷 / 晨光 …」氛围 ID（与壳层 localStorage 对齐） */
 export type HomeAtmospherePresetId = "parchment" | "dawn" | "dusk" | "mist" | "ember";
 
-export const HOME_ATMOSPHERE_PRESETS: { id: HomeAtmospherePresetId; label: string }[] = [
-  { id: "parchment", label: "经卷" },
-  { id: "dawn", label: "晨光" },
-  { id: "dusk", label: "暮色" },
-  { id: "mist", label: "薄雾" },
-  { id: "ember", label: "余烬" },
+export const HOME_ATMOSPHERE_PRESETS: readonly { id: HomeAtmospherePresetId }[] = [
+  { id: "parchment" },
+  { id: "dawn" },
+  { id: "dusk" },
+  { id: "mist" },
+  { id: "ember" },
 ];
 
 /** 首页视觉氛围 → 音乐视觉引擎预设（雾速 / 顶光权重 / 微粒密度） */

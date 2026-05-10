@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
 import { brandingAssetsExist, getResolvedBrandColors } from "@/lib/site-branding";
 import { brandColorsToCssVars } from "@/lib/site-branding-colors";
 
@@ -60,7 +62,9 @@ export default async function RootLayout({
   return (
     <html lang="zh-CN" style={brandColorsToCssVars(colors) as CSSProperties}>
       <body className="min-h-screen font-sans text-[15px] leading-relaxed">
-        {children}
+        <AppSkinProvider>
+          <LocaleProvider>{children}</LocaleProvider>
+        </AppSkinProvider>
       </body>
     </html>
   );

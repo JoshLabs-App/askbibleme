@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS, HOME_VERSES } from "@/components/home/home-verse-constants";
+import { useEffect, useMemo, useState } from "react";
+import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
 
 type Props = {
   /** 深色底（音乐首页）或浅色底（旧首页氛围） */
@@ -19,6 +21,8 @@ export function HomeVerseRotator({
   prominence = "default",
   className = "",
 }: Props) {
+  const { locale } = useLocale();
+  const HOME_VERSES = useMemo(() => HOME_VERSES_BY_LOCALE[locale], [locale]);
   const isDark = variant === "dark";
   const isHero = prominence === "hero";
   const [homeVerseIndex, setHomeVerseIndex] = useState(0);
@@ -65,7 +69,12 @@ export function HomeVerseRotator({
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, locale, HOME_VERSES.length]);
+
+  useEffect(() => {
+    setHomeVerseIndex(0);
+    setHomeVerseVisible(true);
+  }, [locale]);
 
   const lineClass = (() => {
     if (isHero) {

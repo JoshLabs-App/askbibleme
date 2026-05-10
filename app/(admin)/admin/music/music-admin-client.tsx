@@ -11,6 +11,7 @@ import {
   titleFromUploadFileName,
 } from "@/lib/music-companion/track-naming";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
+import { primaryLocaleText } from "@/lib/i18n/localized-text";
 import { ADMIN_MAIN_CLASS } from "@/components/admin/admin-layout";
 import { diskAuthHeaders } from "@/lib/disk-auth-headers";
 
@@ -294,7 +295,7 @@ function AdminMediaHub({
       let nextSnap: MusicCompanionStore | null = null;
       setStore((s) => {
         if (!s) return s;
-        const title = nextDateNumberedMusicUploadTitle(s.audioTracks.map((t) => t.title ?? ""));
+        const title = nextDateNumberedMusicUploadTitle(s.audioTracks.map((t) => primaryLocaleText(t.title)));
         nextSnap = withNewAudioTrack(s, {
           id,
           title,
@@ -320,7 +321,7 @@ function AdminMediaHub({
         if (!s) return s;
         const imageTitles = s.backgroundVisuals
           .filter((b) => b.type === "image")
-          .map((b) => b.title ?? "");
+          .map((b) => primaryLocaleText(b.title));
         const imgTitle = nextDateNumberedImageUploadTitle(imageTitles);
         nextSnap = withNewImageBackground(s, { id, src: url, title: imgTitle });
         return nextSnap;
@@ -433,7 +434,7 @@ function AudioTrackLibrary({
             ...s,
             audioTracks: s.audioTracks.map((x) => ({
               ...x,
-              title: `${p}${x.title ?? ""}`.trim(),
+              title: `${p}${primaryLocaleText(x.title)}`.trim(),
             })),
           }
         : s,
@@ -449,7 +450,7 @@ function AudioTrackLibrary({
             ...s,
             audioTracks: s.audioTracks.map((x) => ({
               ...x,
-              title: `${x.title ?? ""}${suf}`.trim(),
+              title: `${primaryLocaleText(x.title)}${suf}`.trim(),
             })),
           }
         : s,
@@ -536,7 +537,7 @@ function AudioTrackLibrary({
                 <input
                   aria-label="标题"
                   className="min-w-0 flex-1 rounded border border-border bg-adminPanel px-2 py-1.5 text-[13px] text-adminFg"
-                  value={t.title}
+                  value={primaryLocaleText(t.title)}
                   placeholder="（无标题）"
                   onChange={(e) => {
                     const v = e.target.value;
@@ -578,7 +579,7 @@ function AudioTrackLibrary({
                       className="mt-0.5 w-full resize-y rounded border border-border bg-adminPanel px-2 py-1.5 text-[12px] text-adminFg"
                       rows={2}
                       placeholder="可选"
-                      value={t.remark ?? ""}
+                      value={primaryLocaleText(t.remark)}
                       onChange={(e) => {
                         const v = e.target.value;
                         setStore((s) =>
@@ -639,7 +640,7 @@ function AudioTrackLibrary({
                       艺人（可选）
                       <input
                         className="mt-0.5 w-full rounded border border-border bg-adminPanel px-2 py-1 text-[12px]"
-                        value={t.artist ?? ""}
+                        value={primaryLocaleText(t.artist)}
                         onChange={(e) => {
                           const v = e.target.value;
                           setStore((s) =>
@@ -692,7 +693,7 @@ function ImageBackgroundLibrary({
           rows.map(({ b, index }) => {
             const fileHint = (b.imageSrc ?? "").split("/").pop() ?? "";
             const label =
-              b.title?.trim() || titleFromUploadFileName(fileHint || "image");
+              primaryLocaleText(b.title) || titleFromUploadFileName(fileHint || "image");
             return (
               <li key={b.id} className="flex items-center gap-3 px-3 py-2">
                 {b.imageSrc ? (

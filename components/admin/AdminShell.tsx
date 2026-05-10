@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { LocaleTrigger } from "@/components/i18n/LocaleTrigger";
 import { AdminMobilePreviewPanel } from "@/components/admin/AdminMobilePreviewPanel";
+import { AppSkinTrigger } from "@/components/theme/AppSkinTrigger";
 
 const ADMIN_SIDEBAR_WIDTH_KEY = "selah-admin-sidebar-width-v1";
 /** 默认 ≈ 15.75rem */
@@ -21,40 +24,40 @@ function clampSidebarWidth(w: number): number {
   return Math.min(max, Math.max(SIDEBAR_MIN_PX, Math.round(w)));
 }
 
-type NavLeaf = { href: string; label: string };
+type NavLeaf = { href: string; labelKey: string };
 
 type NavSection =
-  | { kind: "group"; id: string; label: string; items: NavLeaf[] }
-  | { kind: "leaf"; id: string; href: string; label: string };
+  | { kind: "group"; id: string; labelKey: string; items: NavLeaf[] }
+  | { kind: "leaf"; id: string; href: string; labelKey: string };
 
 /** 与产品后台信息架构一致：一级分类 → 二级入口（无二级则为单层链接） */
 const SECTIONS: NavSection[] = [
   {
     kind: "group",
     id: "system",
-    label: "系统",
+    labelKey: "admin.groups.system",
     items: [
-      { href: "/admin/studio", label: "studio" },
-      { href: "/admin/system/settings", label: "全局设置" },
+      { href: "/admin/studio", labelKey: "admin.items.studio" },
+      { href: "/admin/system/settings", labelKey: "admin.items.settings" },
     ],
   },
   {
     kind: "group",
     id: "music",
-    label: "音乐",
+    labelKey: "admin.groups.music",
     items: [
-      { href: "/admin/music", label: "曲库与配图" },
-      { href: "/admin/visual", label: "播放视觉" },
+      { href: "/admin/music", labelKey: "admin.items.musicLibrary" },
+      { href: "/admin/visual", labelKey: "admin.items.playbackVisual" },
     ],
   },
-  { kind: "leaf", id: "journey", href: "/admin/journey", label: "旅程" },
+  { kind: "leaf", id: "journey", href: "/admin/journey", labelKey: "admin.items.journey" },
   {
     kind: "group",
     id: "bible",
-    label: "圣经",
-    items: [{ href: "/admin/read/segments", label: "圣经分段" }],
+    labelKey: "admin.groups.bible",
+    items: [{ href: "/admin/read/segments", labelKey: "admin.items.readSegments" }],
   },
-  { kind: "leaf", id: "explore", href: "/admin/explore", label: "探索" },
+  { kind: "leaf", id: "explore", href: "/admin/explore", labelKey: "admin.items.explore" },
 ];
 
 const INITIAL_GROUP_OPEN: Record<string, boolean> = {};
@@ -93,6 +96,7 @@ function navOverviewClass(active: boolean) {
  */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
+  const { t } = useLocale();
 
   const [open, setOpen] = useState<Record<string, boolean>>(() => ({ ...INITIAL_GROUP_OPEN }));
   const [sidebarPx, setSidebarPx] = useState(SIDEBAR_DEFAULT_PX);
@@ -176,21 +180,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <>
       <div className="px-1 pb-3 md:pb-6">
         <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-adminMuted">Selah.my</p>
-        <p className="mt-0.5 text-[13px] font-medium tracking-tight text-adminFg">后台管理</p>
+        <p className="mt-0.5 text-[13px] font-medium tracking-tight text-adminFg">{t("admin.title")}</p>
       </div>
 
       <Link href="/admin" className={`${navOverviewClass(pathname === "/admin")} mb-3 md:mb-4`}>
-        概览
+        {t("admin.overview")}
       </Link>
 
-      <nav className="flex flex-col gap-4 md:gap-5" aria-label="后台导航">
+      <nav className="flex flex-col gap-4 md:gap-5" aria-label={t("admin.navLabel")}>
         {SECTIONS.map((section) => {
           if (section.kind === "leaf") {
             const active = leafActive(pathname, section.href);
             return (
               <div key={section.id}>
                 <Link href={section.href} className={navOverviewClass(active)}>
-                  {section.label}
+                  {t(section.labelKey)}
                 </Link>
               </div>
             );
@@ -198,6 +202,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
           const expanded = open[section.id] !== false;
           const childActive = groupHasActive(pathname, section.items);
+          const groupTitle = t(section.labelKey);
 
           return (
             <div key={section.id} className="flex flex-col gap-1">
@@ -209,7 +214,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   childActive ? "text-adminFg" : ""
                 }`}
               >
-                <span>{section.label}</span>
+                <span>{groupTitle}</span>
                 <span
                   className={`select-none text-[10px] font-normal text-adminMuted transition-transform duration-200 ${
                     expanded ? "rotate-0" : "-rotate-90"
@@ -223,7 +228,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 <div
                   className="flex flex-col gap-0.5 border-l border-adminLine pl-2.5 md:pl-3"
                   role="group"
-                  aria-label={`${section.label}子项`}
+                  aria-label={t("admin.groupChildItems", { group: groupTitle })}
                 >
                   {section.items.map((item) => (
                     <Link
@@ -231,7 +236,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       className={navLeafClass(leafActive(pathname, item.href))}
                     >
-                      {item.label}
+                      {t(item.labelKey)}
                     </Link>
                   ))}
                 </div>
@@ -241,12 +246,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      <div className="mt-auto hidden pt-8 md:block">
+      <div className="mt-auto hidden flex-col gap-1 pt-8 md:flex">
+        <LocaleTrigger>
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+            >
+              {t("admin.language")}
+            </button>
+          )}
+        </LocaleTrigger>
+        <AppSkinTrigger>
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+            >
+              {t("admin.appearance")}
+            </button>
+          )}
+        </AppSkinTrigger>
         <Link
           href="/"
           className="block rounded-md px-2.5 py-1.5 text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
         >
-          ← 返回前台
+          {t("admin.backToApp")}
         </Link>
       </div>
     </>
@@ -267,7 +294,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </aside>
         <button
           type="button"
-          aria-label="拖动调整侧栏宽度"
+          aria-label={t("admin.resizeSidebar")}
           onPointerDown={onSidebarResizePointerDown}
           className="group relative z-10 w-[10px] shrink-0 cursor-col-resize touch-none select-none self-stretch border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-ink/15 focus-visible:ring-offset-2 focus-visible:ring-offset-adminBg"
         >
@@ -294,9 +321,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <AdminMobilePreviewPanel stacked />
       </div>
 
-      <div className="border-t border-adminLine px-4 py-3 md:hidden">
+      <div className="flex flex-col gap-2 border-t border-adminLine px-4 py-3 md:hidden">
+        <LocaleTrigger>
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              className="text-left text-[11px] text-adminMuted hover:text-adminFg/85"
+            >
+              {t("admin.language")}
+            </button>
+          )}
+        </LocaleTrigger>
+        <AppSkinTrigger>
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              className="text-left text-[11px] text-adminMuted hover:text-adminFg/85"
+            >
+              {t("admin.appearance")}
+            </button>
+          )}
+        </AppSkinTrigger>
         <Link href="/" className="text-[11px] text-adminMuted hover:text-adminFg/85">
-          ← 返回前台
+          {t("admin.backToApp")}
         </Link>
       </div>
     </div>

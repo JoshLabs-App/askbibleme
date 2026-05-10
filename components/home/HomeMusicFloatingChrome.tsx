@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { LocaleTrigger } from "@/components/i18n/LocaleTrigger";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { AppSkinTrigger } from "@/components/theme/AppSkinTrigger";
 
 function IconMenu(props: { className?: string }) {
   return (
@@ -25,10 +28,10 @@ function IconUserAvatar(props: { className?: string }) {
   );
 }
 
-const navLinks: { href: string; label: string }[] = [
-  { href: "/journey", label: "旅程" },
-  { href: "/read", label: "圣经" },
-  { href: "/explore", label: "探索" },
+const navLinks: { href: string; labelKey: string }[] = [
+  { href: "/journey", labelKey: "nav.journey" },
+  { href: "/read", labelKey: "nav.read" },
+  { href: "/explore", labelKey: "nav.explore" },
 ];
 
 const menuSurface =
@@ -45,6 +48,7 @@ const menuSectionTitle =
  */
 export function HomeMusicFloatingChrome() {
   const pathname = usePathname() ?? "";
+  const { t } = useLocale();
   const [navOpen, setNavOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
@@ -53,9 +57,9 @@ export function HomeMusicFloatingChrome() {
   useEffect(() => {
     if (!navOpen && !userOpen) return;
     const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (navRef.current?.contains(t)) return;
-      if (userRef.current?.contains(t)) return;
+      const target = e.target as Node;
+      if (navRef.current?.contains(target)) return;
+      if (userRef.current?.contains(target)) return;
       setNavOpen(false);
       setUserOpen(false);
     };
@@ -90,7 +94,7 @@ export function HomeMusicFloatingChrome() {
           <button
             type="button"
             onClick={openNav}
-            aria-label={navOpen ? "关闭导航菜单" : "打开导航菜单"}
+            aria-label={navOpen ? t("chrome.closeNavMenu") : t("chrome.openNavMenu")}
             aria-expanded={navOpen}
             aria-haspopup="menu"
             aria-controls="home-music-nav-menu"
@@ -111,7 +115,7 @@ export function HomeMusicFloatingChrome() {
                   className={menuItem}
                   onClick={() => setNavOpen(false)}
                 >
-                  返回首页
+                  {t("chrome.backHome")}
                 </Link>
               ) : null}
               {navLinks.map((item) => (
@@ -122,7 +126,7 @@ export function HomeMusicFloatingChrome() {
                   className={menuItem}
                   onClick={() => setNavOpen(false)}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               ))}
             </div>
@@ -133,7 +137,7 @@ export function HomeMusicFloatingChrome() {
           <button
             type="button"
             onClick={openUser}
-            aria-label={userOpen ? "关闭个人管理" : "打开个人管理"}
+            aria-label={userOpen ? t("chrome.closeUserMenu") : t("chrome.openUserMenu")}
             aria-expanded={userOpen}
             aria-haspopup="menu"
             aria-controls="home-music-user-menu"
@@ -145,17 +149,48 @@ export function HomeMusicFloatingChrome() {
             <div
               id="home-music-user-menu"
               role="menu"
-              aria-label="个人管理"
+              aria-label={t("chrome.userMenuAria")}
               className={`absolute right-0 top-[calc(100%+0.3rem)] z-[60] ${menuSurface}`}
             >
-              <p className={menuSectionTitle}>个人管理</p>
+              <p className={menuSectionTitle}>{t("chrome.personalSettings")}</p>
+              <LocaleTrigger>
+                {(openLocale) => (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={`${menuItem} w-full text-left`}
+                    onClick={() => {
+                      setUserOpen(false);
+                      openLocale();
+                    }}
+                  >
+                    {t("nav.language")}
+                  </button>
+                )}
+              </LocaleTrigger>
+              <AppSkinTrigger>
+                {(openSkin) => (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={`${menuItem} w-full text-left`}
+                    onClick={() => {
+                      setUserOpen(false);
+                      openSkin();
+                    }}
+                  >
+                    {t("nav.appearance")}
+                  </button>
+                )}
+              </AppSkinTrigger>
+              <p className={menuSectionTitle}>{t("chrome.adminToolsSection")}</p>
               <Link
                 href="/admin"
                 role="menuitem"
                 className={menuItem}
                 onClick={() => setUserOpen(false)}
               >
-                管理后台
+                {t("chrome.adminHome")}
               </Link>
               <Link
                 href="/admin/studio"
@@ -163,7 +198,7 @@ export function HomeMusicFloatingChrome() {
                 className={menuItem}
                 onClick={() => setUserOpen(false)}
               >
-                内部 · Studio
+                {t("chrome.studioInternal")}
               </Link>
               <Link
                 href="/admin/music"
@@ -171,7 +206,7 @@ export function HomeMusicFloatingChrome() {
                 className={menuItem}
                 onClick={() => setUserOpen(false)}
               >
-                首页管理
+                {t("chrome.musicAdmin")}
               </Link>
               <Link
                 href="/admin/visual"
@@ -179,7 +214,7 @@ export function HomeMusicFloatingChrome() {
                 className={menuItem}
                 onClick={() => setUserOpen(false)}
               >
-                播放视觉
+                {t("chrome.playbackVisual")}
               </Link>
             </div>
           ) : null}

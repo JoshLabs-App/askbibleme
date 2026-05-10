@@ -1,0 +1,138 @@
+{
+  "common": {
+    "close": "关闭",
+    "current": "当前",
+    "done": "完成",
+    "refresh": "刷新"
+  },
+  "nav": {
+    "mainLabel": "主导航",
+    "music": "音乐",
+    "journey": "旅程",
+    "read": "圣经",
+    "explore": "探索",
+    "appearance": "界面风格",
+    "language": "语言"
+  },
+  "skin": {
+    "title": "界面风格",
+    "hint": "仅本设备生效。「跟随站点」使用管理后台保存的配色；其余为固定模板。",
+    "listLabel": "风格模板",
+    "presets": {
+      "site": "跟随站点",
+      "parchment": "羊皮纸（默认）",
+      "mist": "雾灰",
+      "dusk": "暮色",
+      "forest": "苔绿"
+    }
+  },
+  "localePicker": {
+    "title": "语言",
+    "hint": "仅本设备生效，界面文案会即时切换。",
+    "listLabel": "语言列表"
+  },
+  "localeNames": {
+    "zh-CN": "简体中文",
+    "en": "English"
+  },
+  "chrome": {
+    "openNavMenu": "打开导航菜单",
+    "closeNavMenu": "关闭导航菜单",
+    "backHome": "返回首页",
+    "openUserMenu": "打开个人菜单",
+    "closeUserMenu": "关闭个人菜单",
+    "userMenuAria": "个人菜单",
+    "personalSettings": "个人设置",
+    "adminToolsSection": "管理",
+    "adminHome": "管理后台",
+    "studioInternal": "内部 · Studio",
+    "musicAdmin": "首页管理",
+    "playbackVisual": "播放视觉"
+  },
+  "playback": {
+    "noTrack": "暂无可播放曲目",
+    "pauseMusic": "暂停音乐",
+    "playMusic": "播放音乐"
+  },
+  "music": {
+    "atmosphere": {
+      "parchment": "经卷",
+      "dawn": "晨光",
+      "dusk": "暮色",
+      "mist": "薄雾",
+      "ember": "余烬"
+    },
+    "home": {
+      "prevTrack": "上一首",
+      "prevScene": "上一场景",
+      "nextTrack": "下一首",
+      "nextScene": "下一场景",
+      "shuffleTrack": "随机换一首",
+      "noAudioBefore": "尚未配置音频。请在",
+      "adminMusic": "管理后台",
+      "noAudioAfter": "上传曲目或填写音频地址后刷新本页。",
+      "progress": "进度",
+      "bgMode": "背景模式",
+      "bgImages": "图片",
+      "bgAmbient": "氛围",
+      "ambientPicker": "氛围动态",
+      "shuffleBg": "随机换背景图",
+      "panelOpen": "收起画面",
+      "panelClosed": "画面",
+      "blur": "模糊",
+      "opacity": "透明度",
+      "dim": "压暗",
+      "saturation": "饱和",
+      "resetFx": "恢复默认"
+    },
+    "visualTuning": {
+      "homeAtmosphereTitle": "首页氛围",
+      "homeAtmosphereHint": "与音乐首页播放区「氛围」同一套 ID；壳层 WebGL / CSS 驱动与此处选项对齐。"
+    }
+  },
+  "admin": {
+    "title": "后台管理",
+    "overview": "概览",
+    "backToApp": "← 返回前台",
+    "appearance": "界面风格",
+    "language": "语言",
+    "navLabel": "后台导航",
+    "resizeSidebar": "拖动调整侧栏宽度",
+    "groupChildItems": "{{group}}子项",
+    "groups": {
+      "system": "系统",
+      "music": "音乐",
+      "bible": "圣经"
+    },
+    "items": {
+      "studio": "studio",
+      "settings": "全局设置",
+      "musicLibrary": "曲库与配图",
+      "playbackVisual": "播放视觉",
+      "journey": "旅程",
+      "readSegments": "圣经分段",
+      "explore": "探索"
+    },
+    "preview": {
+      "title": "手机端预览",
+      "hint": "iPhone 12 Pro 逻辑视口 {{w}}×{{h}}（预览按比例缩放以适配区域）；同源实时渲染；音频需在框内手动播放。",
+      "page": "页面",
+      "routeMusicHome": "音乐首页",
+      "iframeTitle": "移动端预览"
+    }
+  },
+  "pages": {
+    "journey": {
+      "title": "旅程",
+      "description": "安静路径上的陪伴感，正在与整体产品一起成型。"
+    },
+    "read": {
+      "title": "圣经",
+      "description": "回到经文的路径正在与整体安静体验一起成型。"
+    },
+    "explore": {
+      "title": "探索",
+      "description": "慢一点的发现，不与「回到经文」抢主叙事。"
+    }
+  }
+}

@@ -3,10 +3,13 @@
  * 持久化见 `data/music-companion.json`。
  */
 
+import type { LocalizedField } from "@/lib/i18n/localized-text";
+
 export type AudioTrack = {
   id: string;
-  title: string;
-  artist?: string;
+  /** 展示标题；可为纯中文串或 `{ "zh-CN", en? }` */
+  title: LocalizedField;
+  artist?: LocalizedField;
   /** 音频 URL（可同源 /public 或 https） */
   src: string;
   /** 预计算能量曲线 JSON（上传时生成，如 `/music/analysis/<id>.json`） */
@@ -14,7 +17,7 @@ export type AudioTrack = {
   durationSec?: number;
   tags?: string[];
   /** 后期备注/标签，如【安静】【敬拜】【睡眠】 */
-  remark?: string;
+  remark?: LocalizedField;
 };
 
 export type BackgroundVisual = {
@@ -22,15 +25,15 @@ export type BackgroundVisual = {
   type: "image" | "gradient";
   imageSrc?: string;
   /** 图片素材在后台列表中的名称（上传时可自动生成） */
-  title?: string;
+  title?: LocalizedField;
   cssGradient?: string;
   blur?: boolean;
-  credit?: string;
+  credit?: LocalizedField;
 };
 
 export type Scene = {
   id: string;
-  title?: string;
+  title?: LocalizedField;
   audioTrackId: string | null;
   backgroundVisualId: string | null;
   order: number;

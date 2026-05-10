@@ -1,0 +1,138 @@
+{
+  "common": {
+    "close": "Close",
+    "current": "Current",
+    "done": "Done",
+    "refresh": "Refresh"
+  },
+  "nav": {
+    "mainLabel": "Main navigation",
+    "music": "Music",
+    "journey": "Journey",
+    "read": "Scripture",
+    "explore": "Explore",
+    "appearance": "Appearance",
+    "language": "Language"
+  },
+  "skin": {
+    "title": "Appearance",
+    "hint": "Saved on this device only. “Match site” uses colors from the admin settings; other options are fixed palettes.",
+    "listLabel": "Palettes",
+    "presets": {
+      "site": "Match site",
+      "parchment": "Parchment (default)",
+      "mist": "Mist gray",
+      "dusk": "Dusk",
+      "forest": "Moss green"
+    }
+  },
+  "localePicker": {
+    "title": "Language",
+    "hint": "Saved on this device only. Copy updates immediately.",
+    "listLabel": "Languages"
+  },
+  "localeNames": {
+    "zh-CN": "简体中文",
+    "en": "English"
+  },
+  "chrome": {
+    "openNavMenu": "Open navigation menu",
+    "closeNavMenu": "Close navigation menu",
+    "backHome": "Back to home",
+    "openUserMenu": "Open menu",
+    "closeUserMenu": "Close menu",
+    "userMenuAria": "Account menu",
+    "personalSettings": "Personal",
+    "adminToolsSection": "Site tools",
+    "adminHome": "Admin home",
+    "studioInternal": "Studio (internal)",
+    "musicAdmin": "Home music",
+    "playbackVisual": "Playback visuals"
+  },
+  "playback": {
+    "noTrack": "Nothing to play yet",
+    "pauseMusic": "Pause music",
+    "playMusic": "Play music"
+  },
+  "music": {
+    "atmosphere": {
+      "parchment": "Scroll",
+      "dawn": "Dawn",
+      "dusk": "Dusk",
+      "mist": "Mist",
+      "ember": "Ember"
+    },
+    "home": {
+      "prevTrack": "Previous track",
+      "prevScene": "Previous scene",
+      "nextTrack": "Next track",
+      "nextScene": "Next scene",
+      "shuffleTrack": "Shuffle track",
+      "noAudioBefore": "No audio configured yet. Open",
+      "adminMusic": "admin",
+      "noAudioAfter": "to upload tracks or add URLs, then refresh.",
+      "progress": "Progress",
+      "bgMode": "Background mode",
+      "bgImages": "Images",
+      "bgAmbient": "Atmosphere",
+      "ambientPicker": "Atmosphere presets",
+      "shuffleBg": "Shuffle background image",
+      "panelOpen": "Hide image controls",
+      "panelClosed": "Image",
+      "blur": "Blur",
+      "opacity": "Opacity",
+      "dim": "Dim",
+      "saturation": "Saturation",
+      "resetFx": "Reset"
+    },
+    "visualTuning": {
+      "homeAtmosphereTitle": "Home atmosphere",
+      "homeAtmosphereHint": "Same preset IDs as the music home “Atmosphere” strip; aligned with shell WebGL / CSS."
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "overview": "Overview",
+    "backToApp": "← Back to app",
+    "appearance": "Appearance",
+    "language": "Language",
+    "navLabel": "Admin navigation",
+    "resizeSidebar": "Drag to resize sidebar",
+    "groupChildItems": "{{group}} · items",
+    "groups": {
+      "system": "System",
+      "music": "Music",
+      "bible": "Scripture"
+    },
+    "items": {
+      "studio": "studio",
+      "settings": "Global settings",
+      "musicLibrary": "Library & artwork",
+      "playbackVisual": "Playback visuals",
+      "journey": "Journey",
+      "readSegments": "Reading segments",
+      "explore": "Explore"
+    },
+    "preview": {
+      "title": "Mobile preview",
+      "hint": "iPhone 12 Pro logical viewport {{w}}×{{h}} (preview scales to fit); live iframe; start audio inside the frame.",
+      "page": "Page",
+      "routeMusicHome": "Music home",
+      "iframeTitle": "Mobile preview"
+    }
+  },
+  "pages": {
+    "journey": {
+      "title": "Journey",
+      "description": "A calmer sense of company along the path—still taking shape with the rest of the product."
+    },
+    "read": {
+      "title": "Scripture",
+      "description": "The way back into the text is forming together with the quiet whole experience."
+    },
+    "explore": {
+      "title": "Explore",
+      "description": "Slower discovery that does not compete with “returning to the text.”"
+    }
+  }
+}

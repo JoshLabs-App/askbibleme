@@ -18,7 +18,9 @@ import type {
 } from "@/lib/music-companion/types";
 import { HomeMusicFloatingChrome } from "@/components/home/HomeMusicFloatingChrome";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
-import { IconPause, IconPlay, IconSkipBack, IconSkipForward } from "@/components/ui/MediaPlaybackIcons";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { IconSkipBack, IconSkipForward } from "@/components/ui/MediaPlaybackIcons";
+import { resolveLocalized } from "@/lib/i18n/localized-text";
 
 const SacredAtmosphereCanvas = dynamic(
   () =>
@@ -113,6 +115,7 @@ function replaceAtmosphereSearchParam(id: HomeAtmospherePresetId) {
 }
 
 export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) {
+  const { locale, t } = useLocale();
   const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
   const urlOverrideAppliedRef = useRef(false);
 
@@ -123,8 +126,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   }, [atmosphereUrlOverride, setHomeAtmospherePresetId]);
 
   const {
-    playing,
-    togglePlay,
     pausePlayback,
     currentSec,
     durationSec,
@@ -312,6 +313,15 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     return store.audioTracks.find((t) => t.src?.trim()) ?? sceneTrack;
   }, [tracksWithSrc, trackPoolIdx, scene, store.audioTracks]);
 
+  const trackArtist = useMemo(
+    () => resolveLocalized(track?.artist, locale).trim(),
+    [track?.artist, locale],
+  );
+  const trackRemark = useMemo(
+    () => resolveLocalized(track?.remark, locale).trim(),
+    [track?.remark, locale],
+  );
+
   const sceneDrivenBg = useMemo(
     () =>
       scene
@@ -410,6 +420,30 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     pausePlayback();
   }, [orderedScenes.length, pausePlayback]);
 
+  const showLateralNav = tracksWithSrc.length > 1 || orderedScenes.length > 1;
+
+  const goLeft = useCallback(() => {
+    if (tracksWithSrc.length > 1) {
+      setTrackPoolIdx((i) => {
+        const n = tracksWithSrc.length;
+        return (i - 1 + n) % n;
+      });
+      return;
+    }
+    prevScene();
+  }, [tracksWithSrc.length, prevScene]);
+
+  const goRight = useCallback(() => {
+    if (tracksWithSrc.length > 1) {
+      setTrackPoolIdx((i) => {
+        const n = tracksWithSrc.length;
+        return (i + 1) % n;
+      });
+      return;
+    }
+    nextScene();
+  }, [tracksWithSrc.length, nextScene]);
+
   const bgStyle: React.CSSProperties = {};
   const showImageBackdrop = bgMode === "images";
   let imageBackdropFilter: string | undefined;
@@ -496,47 +530,75 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+2.35rem))] lg:pt-[max(0.35rem,calc(env(safe-area-inset-top)+2.55rem))]">
       <div className="relative z-10 flex flex-col items-center justify-start px-6 pt-5 text-center sm:pt-6 lg:px-12 lg:pt-8 xl:px-20 2xl:px-24">
-        <div className="w-full max-w-3xl pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl">
+        <div
+          className={`flex w-full items-start justify-center gap-1 sm:gap-2 lg:gap-4 ${showLateralNav ? "max-w-[88rem]" : "max-w-3xl"}`}
+        >
+          {showLateralNav ? (
+            <button
+              type="button"
+              onClick={goLeft}
+              aria-label={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
+              title={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
+              className="mt-[clamp(1rem,12dvh,6rem)] flex min-h-[min(52vw,14rem)] w-[min(16vw,4.25rem)] shrink-0 items-center justify-center rounded-2xl text-white/35 transition hover:bg-white/[0.06] hover:text-white/60 active:scale-[0.98] lg:min-h-[min(36vw,16rem)] lg:w-[min(12vw,5rem)]"
+            >
+              <IconSkipBack className="h-7 w-7 shrink-0 lg:h-8 lg:w-8" aria-hidden />
+            </button>
+          ) : null}
+
+          <div className="min-w-0 flex-1 pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl">
           {tracksWithSrc.length > 1 ? (
             <button
               type="button"
               onClick={() => shuffleTrack()}
-              aria-label="随机换一首"
+              aria-label={t("music.home.shuffleTrack")}
               className="group w-full rounded-2xl px-3 py-4 text-center transition active:scale-[0.99] lg:rounded-3xl lg:px-8 lg:py-8 lg:transition-colors lg:hover:bg-white/[0.03]"
             >
               <HomeVerseRotator variant="dark" prominence="hero" className="w-full" />
-              {track?.artist?.trim() ? (
+              {trackArtist ? (
                 <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">
-                  {track.artist}
+                  {trackArtist}
                 </p>
               ) : null}
-              {track?.remark?.trim() ? (
+              {trackRemark ? (
                 <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/[0.55] drop-shadow-sm lg:mt-4 lg:text-sm lg:leading-relaxed">
-                  {track.remark.trim()}
+                  {trackRemark}
                 </p>
               ) : null}
             </button>
           ) : (
             <>
               <HomeVerseRotator variant="dark" prominence="hero" className="w-full" />
-              {track?.artist?.trim() ? (
-                <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">{track.artist}</p>
+              {trackArtist ? (
+                <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">{trackArtist}</p>
               ) : null}
-              {track?.remark?.trim() ? (
+              {trackRemark ? (
                 <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/[0.55] drop-shadow-sm lg:mt-4 lg:text-sm lg:leading-relaxed">
-                  {track.remark.trim()}
+                  {trackRemark}
                 </p>
               ) : null}
             </>
           )}
+          </div>
+
+          {showLateralNav ? (
+            <button
+              type="button"
+              onClick={goRight}
+              aria-label={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
+              title={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
+              className="mt-[clamp(1rem,12dvh,6rem)] flex min-h-[min(52vw,14rem)] w-[min(16vw,4.25rem)] shrink-0 items-center justify-center rounded-2xl text-white/35 transition hover:bg-white/[0.06] hover:text-white/60 active:scale-[0.98] lg:min-h-[min(36vw,16rem)] lg:w-[min(12vw,5rem)]"
+            >
+              <IconSkipForward className="h-7 w-7 shrink-0 lg:h-8 lg:w-8" aria-hidden />
+            </button>
+          ) : null}
         </div>
         {!audioSrc ? (
           <p className="mt-4 max-w-[16rem] text-xs leading-relaxed text-amber-100/90 lg:max-w-md lg:text-sm">
-            尚未配置音频。请在{" "}
+            {t("music.home.noAudioBefore")}{" "}
             <Link href="/admin/music" className="underline underline-offset-2">
-              管理后台
+              {t("music.home.adminMusic")}
             </Link>{" "}
-            上传曲目或填写音频地址后刷新本页。
+            {t("music.home.noAudioAfter")}
           </p>
         ) : null}
       </div>
@@ -548,7 +610,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
             <span className="min-w-[2.5rem] shrink-0">{formatTime(currentSec)}</span>
             <button
               type="button"
-              aria-label="进度"
+              aria-label={t("music.home.progress")}
               className="group relative h-[3px] flex-1 overflow-hidden rounded-full bg-white/[0.1]"
               onClick={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
@@ -567,47 +629,11 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between gap-2 lg:gap-10">
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/55 transition hover:text-white/90 lg:h-11 lg:w-11 lg:text-white/45 lg:hover:bg-white/[0.05] lg:hover:text-white/90"
-            aria-label="上一场景"
-            title={orderedScenes.length > 1 ? "切换场景" : undefined}
-            onClick={prevScene}
-            disabled={orderedScenes.length <= 1}
-          >
-            <IconSkipBack className="h-5 w-5 shrink-0 lg:h-6 lg:w-6" />
-          </button>
-          <button
-            type="button"
-            disabled={!audioSrc}
-            onClick={() => void togglePlay()}
-            className="music-reactive-play-btn relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-transparent text-white/[0.82] outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-1 focus-visible:ring-white/35 disabled:cursor-not-allowed disabled:opacity-35 lg:h-[5.25rem] lg:w-[5.25rem]"
-            aria-label={playing ? "暂停" : "播放"}
-          >
-            {playing ? (
-              <IconPause className="h-9 w-9 shrink-0 lg:h-10 lg:w-10" />
-            ) : (
-              <IconPlay className="h-9 w-9 shrink-0 translate-x-1 lg:h-10 lg:w-10" />
-            )}
-          </button>
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white/55 transition hover:text-white/90 lg:h-11 lg:w-11 lg:text-white/45 lg:hover:bg-white/[0.05] lg:hover:text-white/90"
-            aria-label="下一场景"
-            title={orderedScenes.length > 1 ? "切换场景" : undefined}
-            onClick={nextScene}
-            disabled={orderedScenes.length <= 1}
-          >
-            <IconSkipForward className="h-5 w-5 shrink-0 lg:h-6 lg:w-6" />
-          </button>
-        </div>
-
         <div className="flex flex-col items-center gap-2 pt-2 lg:gap-2.5 lg:pt-3">
           <div
             className="inline-flex rounded-full border border-white/15 bg-black/20 p-0.5 backdrop-blur-sm lg:border-white/10 lg:bg-black/25 lg:p-1 lg:shadow-inner lg:shadow-black/40"
             role="group"
-            aria-label="背景模式"
+            aria-label={t("music.home.bgMode")}
           >
             <button
               type="button"
@@ -623,7 +649,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                   : "text-white/55 hover:text-white/80"
               }`}
             >
-              图片
+              {t("music.home.bgImages")}
             </button>
             <button
               type="button"
@@ -634,14 +660,14 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                   : "text-white/55 hover:text-white/80"
               }`}
             >
-              氛围
+              {t("music.home.bgAmbient")}
             </button>
           </div>
           {bgMode === "ambient" ? (
             <div
               className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 px-2 pt-1.5 lg:gap-x-3.5 lg:pt-2"
               role="group"
-              aria-label="氛围动态"
+              aria-label={t("music.home.ambientPicker")}
             >
               {HOME_ATMOSPHERE_PRESETS.map((p) => (
                 <button
@@ -658,7 +684,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                       : "text-white/[0.32] hover:text-white/[0.48]"
                   }`}
                 >
-                  {p.label}
+                  {t(`music.atmosphere.${p.id}`)}
                 </button>
               ))}
             </div>
@@ -670,7 +696,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                   <button
                     type="button"
                     onClick={() => shuffleImage()}
-                    aria-label="随机换背景图"
+                    aria-label={t("music.home.shuffleBg")}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/[0.08] text-sm text-white/75 backdrop-blur-sm transition hover:bg-white/[0.12] active:scale-[0.98] lg:h-10 lg:w-10"
                   >
                     ↻
@@ -683,7 +709,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                   aria-controls="music-img-fx-panel"
                   className="px-2 py-1 text-[10px] font-normal tracking-[0.14em] text-white/35 transition hover:text-white/55 lg:text-[11px]"
                 >
-                  {imgFxOpen ? "收起画面" : "画面"}
+                  {imgFxOpen ? t("music.home.panelOpen") : t("music.home.panelClosed")}
                 </button>
               </div>
               {imgFxOpen ? (
@@ -693,7 +719,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                 >
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>模糊</span>
+                      <span>{t("music.home.blur")}</span>
                       <span className="tabular-nums">{imgBlurPx.toFixed(1)}</span>
                     </div>
                     <input
@@ -704,12 +730,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                       value={imgBlurPx}
                       onChange={(e) => setImgBlurPx(Number(e.target.value))}
                       className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label="模糊"
+                      aria-label={t("music.home.blur")}
                     />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>透明</span>
+                      <span>{t("music.home.opacity")}</span>
                       <span className="tabular-nums">{Math.round(imgOpacity * 100)}</span>
                     </div>
                     <input
@@ -720,12 +746,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                       value={Math.round(imgOpacity * 100)}
                       onChange={(e) => setImgOpacity(Number(e.target.value) / 100)}
                       className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label="透明度"
+                      aria-label={t("music.home.opacity")}
                     />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>压暗</span>
+                      <span>{t("music.home.dim")}</span>
                       <span className="tabular-nums">{Math.round(imgDim * 100)}</span>
                     </div>
                     <input
@@ -736,12 +762,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                       value={Math.round(imgDim * 100)}
                       onChange={(e) => setImgDim(Number(e.target.value) / 100)}
                       className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label="压暗"
+                      aria-label={t("music.home.dim")}
                     />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>饱和</span>
+                      <span>{t("music.home.saturation")}</span>
                       <span className="tabular-nums">{Math.round(imgSaturate * 100)}</span>
                     </div>
                     <input
@@ -752,7 +778,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                       value={Math.round(imgSaturate * 100)}
                       onChange={(e) => setImgSaturate(Number(e.target.value) / 100)}
                       className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label="饱和度"
+                      aria-label={t("music.home.saturation")}
                     />
                   </div>
                   <div className="flex justify-end pt-0.5">
@@ -766,7 +792,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                         setImgBlurPx(displayBg?.type === "image" && displayBg.blur ? 8 : 0);
                       }}
                     >
-                      恢复默认
+                      {t("music.home.resetFx")}
                     </button>
                   </div>
                 </div>

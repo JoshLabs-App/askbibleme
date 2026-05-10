@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   HOME_ATMOSPHERE_PRESETS,
   MUSIC_VISUAL_ATMOSPHERE_PRESETS,
@@ -65,6 +66,7 @@ export function MusicVisualTuningForm({
   showEnginePresetTable = false,
   embeddedInAdmin = false,
 }: MusicVisualTuningFormProps) {
+  const { t } = useLocale();
   const { tuning, setTuning, resetTuning } = useMusicVisualTuning();
   const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
 
@@ -91,9 +93,9 @@ export function MusicVisualTuningForm({
   return (
     <div className={className}>
       <section className={sec}>
-        <h2 className={h2}>首页氛围</h2>
+        <h2 className={h2}>{t("music.visualTuning.homeAtmosphereTitle")}</h2>
         <p className={`mb-2 text-[10px] leading-relaxed ${bodyMuted}`}>
-          与音乐首页播放区「氛围」同一套 ID；壳层 WebGL / CSS 驱动与此处选项对齐。
+          {t("music.visualTuning.homeAtmosphereHint")}
         </p>
         <div className="flex flex-wrap gap-2">
           {HOME_ATMOSPHERE_PRESETS.map((p) => (
@@ -111,7 +113,7 @@ export function MusicVisualTuningForm({
                     : "border-border/60 text-muted hover:border-ink/15 hover:text-ink"
               }`}
             >
-              {p.label}
+              {t(`music.atmosphere.${p.id}`)}
             </button>
           ))}
         </div>

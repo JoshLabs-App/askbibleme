@@ -132,3 +132,163 @@ body {
   padding-top: max(1rem, env(safe-area-inset-top));
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
+
+/* 放松页 Calm 式呼吸光球（静音影像 + 独立音乐） */
+@keyframes relax-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.68;
+  }
+  50% {
+    transform: scale(1.09);
+    opacity: 0.94;
+  }
+}
+
+.animate-relax-breathe {
+  animation: relax-breathe 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-relax-breathe {
+    animation: none;
+    opacity: 0.82;
+  }
+}
+
+/* 放松页 · 同心涟漪（画面效果之一） */
+@keyframes relax-ripple-ring {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.42;
+  }
+  100% {
+    transform: scale(1.42);
+    opacity: 0;
+  }
+}
+
+.animate-relax-ripple-ring {
+  animation: relax-ripple-ring 12s linear infinite;
+}
+
+.animate-relax-ripple-ring-delay-a {
+  animation-delay: -4s;
+}
+
+.animate-relax-ripple-ring-delay-b {
+  animation-delay: -8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-relax-ripple-ring,
+  .animate-relax-ripple-ring-delay-a,
+  .animate-relax-ripple-ring-delay-b {
+    animation: none;
+    opacity: 0.2;
+    transform: scale(1);
+  }
+}
+
+/* 放松页 · 余晖线（横向光带缓慢伸缩） */
+@keyframes relax-afterglow {
+  0%,
+  100% {
+    opacity: 0.36;
+    transform: scaleX(0.76);
+  }
+  50% {
+    opacity: 0.94;
+    transform: scaleX(1);
+  }
+}
+
+.animate-relax-afterglow {
+  transform-origin: center center;
+  animation: relax-afterglow 11s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-relax-afterglow {
+    animation: none;
+    opacity: 0.72;
+    transform: scaleX(1);
+  }
+}
+
+/* 放松页 · 浮光（微粒缓慢上浮） */
+@keyframes relax-float-mote {
+  0% {
+    transform: translate3d(0, 16px, 0);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.5;
+  }
+  86% {
+    opacity: 0.36;
+  }
+  100% {
+    transform: translate3d(0, -52px, 0);
+    opacity: 0;
+  }
+}
+
+.animate-relax-float-mote {
+  animation: relax-float-mote 16s ease-in-out infinite;
+}
+
+.animate-relax-float-mote-delay-a {
+  animation-delay: -3.2s;
+}
+
+.animate-relax-float-mote-delay-b {
+  animation-delay: -6.4s;
+}
+
+.animate-relax-float-mote-delay-c {
+  animation-delay: -9.6s;
+}
+
+.animate-relax-float-mote-delay-d {
+  animation-delay: -12.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-relax-float-mote,
+  .animate-relax-float-mote-delay-a,
+  .animate-relax-float-mote-delay-b,
+  .animate-relax-float-mote-delay-c,
+  .animate-relax-float-mote-delay-d {
+    animation: none;
+    opacity: 0.34;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 放松页 · 静轴（纵向光柱缓慢伸缩） */
+@keyframes relax-pillar {
+  0%,
+  100% {
+    opacity: 0.36;
+    transform: scaleY(0.74);
+  }
+  50% {
+    opacity: 0.93;
+    transform: scaleY(1);
+  }
+}
+
+.animate-relax-pillar {
+  transform-origin: center center;
+  animation: relax-pillar 11s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-relax-pillar {
+    animation: none;
+    opacity: 0.72;
+    transform: scaleY(1);
+  }
+}

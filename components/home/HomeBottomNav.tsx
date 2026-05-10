@@ -9,13 +9,14 @@ import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 const itemDefs: { href: string; labelKey: string; match: (p: string) => boolean }[] = [
   { href: "/", labelKey: "nav.music", match: (p) => p === "/" || p === "" },
   { href: "/journey", labelKey: "nav.journey", match: (p) => p.startsWith("/journey") },
+  { href: "/relax", labelKey: "nav.relax", match: (p) => p.startsWith("/relax") },
   { href: "/read", labelKey: "nav.read", match: (p) => p.startsWith("/read") },
   { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },
 ];
 
 function tabClass(active: boolean) {
   return [
-    "flex min-h-[2.5rem] min-w-0 flex-1 flex-col items-center justify-center px-1 py-1 text-sm font-medium tracking-wide transition",
+    "flex min-h-[2.5rem] min-w-0 flex-1 flex-col items-center justify-center px-0.5 py-1 text-[11px] font-medium tracking-wide transition sm:px-1 sm:text-sm",
     active ? "text-ink" : "text-ink/50 hover:bg-ink/[0.04] hover:text-ink/85",
   ].join(" ");
 }
@@ -25,8 +26,8 @@ export function HomeBottomNav() {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
-
   if (pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith("/relax")) return null;
 
   return (
     <nav
@@ -34,21 +35,17 @@ export function HomeBottomNav() {
       aria-label={t("nav.mainLabel")}
     >
       <div className="flex w-full min-w-0 max-w-full items-stretch gap-0.5 px-1 sm:px-2">
-        <div className="flex min-w-0 flex-1 items-stretch justify-end gap-0.5">
-          <Link
-            href={itemDefs[0].href}
-            aria-current={itemDefs[0].match(pathname) ? "page" : undefined}
-            className={tabClass(itemDefs[0].match(pathname))}
-          >
-            {t(itemDefs[0].labelKey)}
-          </Link>
-          <Link
-            href={itemDefs[1].href}
-            aria-current={itemDefs[1].match(pathname) ? "page" : undefined}
-            className={tabClass(itemDefs[1].match(pathname))}
-          >
-            {t(itemDefs[1].labelKey)}
-          </Link>
+        <div className="flex min-w-0 flex-1 items-stretch justify-end gap-px sm:gap-0.5">
+          {[0, 1, 2].map((i) => (
+            <Link
+              key={itemDefs[i].href}
+              href={itemDefs[i].href}
+              aria-current={itemDefs[i].match(pathname) ? "page" : undefined}
+              className={tabClass(itemDefs[i].match(pathname))}
+            >
+              {t(itemDefs[i].labelKey)}
+            </Link>
+          ))}
         </div>
 
         <div className="music-reactive-play-btn flex shrink-0 items-center justify-center self-center px-0.5">
@@ -69,21 +66,17 @@ export function HomeBottomNav() {
           </button>
         </div>
 
-        <div className="flex min-w-0 flex-1 items-stretch justify-start gap-0.5">
-          <Link
-            href={itemDefs[2].href}
-            aria-current={itemDefs[2].match(pathname) ? "page" : undefined}
-            className={tabClass(itemDefs[2].match(pathname))}
-          >
-            {t(itemDefs[2].labelKey)}
-          </Link>
-          <Link
-            href={itemDefs[3].href}
-            aria-current={itemDefs[3].match(pathname) ? "page" : undefined}
-            className={tabClass(itemDefs[3].match(pathname))}
-          >
-            {t(itemDefs[3].labelKey)}
-          </Link>
+        <div className="flex min-w-0 flex-1 items-stretch justify-start gap-px sm:gap-0.5">
+          {[3, 4].map((i) => (
+            <Link
+              key={itemDefs[i].href}
+              href={itemDefs[i].href}
+              aria-current={itemDefs[i].match(pathname) ? "page" : undefined}
+              className={tabClass(itemDefs[i].match(pathname))}
+            >
+              {t(itemDefs[i].labelKey)}
+            </Link>
+          ))}
         </div>
       </div>
     </nav>

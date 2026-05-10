@@ -346,7 +346,15 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    const onTime = () => setCurrentSec(a.currentTime);
+    let rafId = 0;
+    const onTime = () => {
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        const el = audioRef.current;
+        if (el) setCurrentSec(el.currentTime);
+      });
+    };
     const onMeta = () => setDurationSec(Number.isFinite(a.duration) ? a.duration : 0);
     const onEnded = () => setPlaying(false);
     const onPlay = () => setPlaying(true);
@@ -357,6 +365,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     a.addEventListener("play", onPlay);
     a.addEventListener("pause", onPause);
     return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
       a.removeEventListener("timeupdate", onTime);
       a.removeEventListener("loadedmetadata", onMeta);
       a.removeEventListener("ended", onEnded);

@@ -140,6 +140,11 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     computeDefaultTrackPoolIdx(initialStore, initialSi),
   );
   const fullMusicSrcGateDone = useRef(false);
+  /** 用户刚点上一首/下一首/随机：短时间内优先信任 trackPoolIdx，避免壳层 ended 已切歌而此处仍用旧 URL 把播放源推回去导致更新风暴 */
+  const userSkipAtRef = useRef(0);
+  const bumpUserSkip = () => {
+    userSkipAtRef.current = typeof performance !== "undefined" ? performance.now() : 0;
+  };
   const setPlaybackSrcRef = useRef(setPlaybackSrc);
   setPlaybackSrcRef.current = setPlaybackSrc;
   const [bgMode, setBgMode] = useState<"images" | "ambient">("ambient");
@@ -219,7 +224,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     [store.audioTracks],
   );
 
-  /** 仅当曲目 id/src 集合变化时变化；避免 `tracksWithSrc` 数组引用抖动触发「对齐 effectiveSrc」effect 反复跑 */
+  /** 曲目 id/src 集合的稳定键；成员变化时强制重新解析当前曲与壳层 URL 的对齐关系 */
   const trackPoolSyncKey = useMemo(
     () =>
       store.audioTracks
@@ -229,8 +234,23 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     [store.audioTracks],
   );
 
-  const tracksWithSrcRef = useRef(tracksWithSrc);
-  tracksWithSrcRef.current = tracksWithSrc;
+  const resolvedTrackIdx = useMemo(() => {
+    const tracks = tracksWithSrc;
+    if (!tracks.length) return 0;
+    const es = effectiveSrc.trim();
+    const k = Math.min(Math.max(0, trackPoolIdx), tracks.length - 1);
+    const atKSrc = (tracks[k]?.src ?? "").trim();
+    if (!es) return k;
+    if (urlsEqual(atKSrc, es)) return k;
+    const j = tracks.findIndex((t) => urlsEqual((t.src ?? "").trim(), es));
+    if (j < 0) return k;
+    const now = typeof performance !== "undefined" ? performance.now() : 0;
+    if (now - userSkipAtRef.current < 720) return k;
+    return j;
+  }, [effectiveSrc, trackPoolIdx, tracksWithSrc, trackPoolSyncKey]);
+
+  const resolvedTrackIdxRef = useRef(0);
+  resolvedTrackIdxRef.current = resolvedTrackIdx;
 
   const imageBgs = useMemo(
     () => store.backgroundVisuals.filter((b) => b.type === "image" && b.imageSrc?.trim()),
@@ -304,22 +324,20 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
 
   const track = useMemo(() => {
     if (tracksWithSrc.length > 0) {
-      return tracksWithSrc[Math.min(trackPoolIdx, tracksWithSrc.length - 1)];
+      return tracksWithSrc[
+        Math.min(resolvedTrackIdx, tracksWithSrc.length - 1)
+      ];
     }
     const sceneTrack = scene
       ? (byId(store.audioTracks, scene.audioTrackId) as AudioTrack | null)
       : null;
     if (sceneTrack?.src?.trim()) return sceneTrack;
     return store.audioTracks.find((t) => t.src?.trim()) ?? sceneTrack;
-  }, [tracksWithSrc, trackPoolIdx, scene, store.audioTracks]);
+  }, [tracksWithSrc, resolvedTrackIdx, scene, store.audioTracks]);
 
   const trackArtist = useMemo(
     () => resolveLocalized(track?.artist, locale).trim(),
     [track?.artist, locale],
-  );
-  const trackRemark = useMemo(
-    () => resolveLocalized(track?.remark, locale).trim(),
-    [track?.remark, locale],
   );
 
   const sceneDrivenBg = useMemo(
@@ -349,25 +367,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   const audioSrc = track?.src?.trim() ?? "";
 
   useEffect(() => {
-    const tracks = tracksWithSrcRef.current;
-    if (tracks.length === 0) return;
-    const url = effectiveSrc.trim();
-    if (!url) return;
-    setTrackPoolIdx((cur) => {
-      const safe = Math.min(Math.max(0, cur), tracks.length - 1);
-      const curSrc = tracks[safe]?.src?.trim() ?? "";
-      if (curSrc && urlsEqual(curSrc, url)) return cur;
-      const idx = tracks.findIndex((t) => {
-        const s = t.src?.trim() ?? "";
-        if (!s) return false;
-        return urlsEqual(s, url);
-      });
-      if (idx < 0) return cur;
-      return cur === idx ? cur : idx;
-    });
-  }, [effectiveSrc, trackPoolSyncKey]);
-
-  useEffect(() => {
     const want = audioSrc.trim();
     if (!want) {
       setPlaybackSrcRef.current(null);
@@ -385,16 +384,16 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   }, [audioSrc, effectiveSrc]);
 
   const shuffleTrack = useCallback(() => {
-    setTrackPoolIdx((cur) => {
-      const n = tracksWithSrc.length;
-      if (n <= 1) return cur;
-      let next = cur;
-      for (let g = 0; g < 40 && next === cur; g++) {
-        next = Math.floor(Math.random() * n);
-      }
-      return next;
-    });
-  }, [tracksWithSrc]);
+    bumpUserSkip();
+    const n = tracksWithSrc.length;
+    if (n <= 1) return;
+    const cur = resolvedTrackIdxRef.current;
+    let next = cur;
+    for (let g = 0; g < 40 && next === cur; g++) {
+      next = Math.floor(Math.random() * n);
+    }
+    setTrackPoolIdx(next);
+  }, [tracksWithSrc.length]);
 
   const shuffleImage = useCallback(() => {
     setImagePoolIdx((cur) => {
@@ -424,10 +423,10 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
 
   const goLeft = useCallback(() => {
     if (tracksWithSrc.length > 1) {
-      setTrackPoolIdx((i) => {
-        const n = tracksWithSrc.length;
-        return (i - 1 + n) % n;
-      });
+      bumpUserSkip();
+      const n = tracksWithSrc.length;
+      const cur = resolvedTrackIdxRef.current;
+      setTrackPoolIdx((cur - 1 + n) % n);
       return;
     }
     prevScene();
@@ -435,10 +434,10 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
 
   const goRight = useCallback(() => {
     if (tracksWithSrc.length > 1) {
-      setTrackPoolIdx((i) => {
-        const n = tracksWithSrc.length;
-        return (i + 1) % n;
-      });
+      bumpUserSkip();
+      const n = tracksWithSrc.length;
+      const cur = resolvedTrackIdxRef.current;
+      setTrackPoolIdx((cur + 1) % n);
       return;
     }
     nextScene();
@@ -529,39 +528,20 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
         <HomeMusicFloatingChrome />
 
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+2.35rem))] lg:pt-[max(0.35rem,calc(env(safe-area-inset-top)+2.55rem))]">
-      <div className="relative z-10 flex flex-col items-center justify-start px-6 pt-5 text-center sm:pt-6 lg:px-12 lg:pt-8 xl:px-20 2xl:px-24">
-        <div
-          className={`flex w-full items-start justify-center gap-1 sm:gap-2 lg:gap-4 ${showLateralNav ? "max-w-[88rem]" : "max-w-3xl"}`}
-        >
-          {showLateralNav ? (
-            <button
-              type="button"
-              onClick={goLeft}
-              aria-label={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
-              title={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
-              className="mt-[clamp(1rem,12dvh,6rem)] flex min-h-[min(52vw,14rem)] w-[min(16vw,4.25rem)] shrink-0 items-center justify-center rounded-2xl text-white/35 transition hover:bg-white/[0.06] hover:text-white/60 active:scale-[0.98] lg:min-h-[min(36vw,16rem)] lg:w-[min(12vw,5rem)]"
-            >
-              <IconSkipBack className="h-7 w-7 shrink-0 lg:h-8 lg:w-8" aria-hidden />
-            </button>
-          ) : null}
-
-          <div className="min-w-0 flex-1 pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl">
+      <div className="relative z-10 flex flex-col items-center justify-start px-4 pt-5 text-center sm:px-5 sm:pt-6 lg:px-6 lg:pt-7 xl:px-8">
+        <div className="flex w-full max-w-xl flex-col items-center lg:max-w-2xl">
+          <div className="min-w-0 w-full pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade">
           {tracksWithSrc.length > 1 ? (
             <button
               type="button"
               onClick={() => shuffleTrack()}
               aria-label={t("music.home.shuffleTrack")}
-              className="group w-full rounded-2xl px-3 py-4 text-center transition active:scale-[0.99] lg:rounded-3xl lg:px-8 lg:py-8 lg:transition-colors lg:hover:bg-white/[0.03]"
+              className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-white/[0.03]"
             >
               <HomeVerseRotator variant="dark" prominence="hero" className="w-full" />
               {trackArtist ? (
                 <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">
                   {trackArtist}
-                </p>
-              ) : null}
-              {trackRemark ? (
-                <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/[0.55] drop-shadow-sm lg:mt-4 lg:text-sm lg:leading-relaxed">
-                  {trackRemark}
                 </p>
               ) : null}
             </button>
@@ -571,26 +551,9 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
               {trackArtist ? (
                 <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">{trackArtist}</p>
               ) : null}
-              {trackRemark ? (
-                <p className="mt-3 max-w-2xl text-xs leading-relaxed text-white/[0.55] drop-shadow-sm lg:mt-4 lg:text-sm lg:leading-relaxed">
-                  {trackRemark}
-                </p>
-              ) : null}
             </>
           )}
           </div>
-
-          {showLateralNav ? (
-            <button
-              type="button"
-              onClick={goRight}
-              aria-label={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
-              title={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
-              className="mt-[clamp(1rem,12dvh,6rem)] flex min-h-[min(52vw,14rem)] w-[min(16vw,4.25rem)] shrink-0 items-center justify-center rounded-2xl text-white/35 transition hover:bg-white/[0.06] hover:text-white/60 active:scale-[0.98] lg:min-h-[min(36vw,16rem)] lg:w-[min(12vw,5rem)]"
-            >
-              <IconSkipForward className="h-7 w-7 shrink-0 lg:h-8 lg:w-8" aria-hidden />
-            </button>
-          ) : null}
         </div>
         {!audioSrc ? (
           <p className="mt-4 max-w-[16rem] text-xs leading-relaxed text-amber-100/90 lg:max-w-md lg:text-sm">
@@ -604,7 +567,29 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
       </div>
         </div>
 
-        <footer className="relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-6 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs text-white/55 lg:mx-auto lg:max-w-5xl lg:gap-4 lg:px-12 lg:pb-5 lg:pt-4 lg:text-[13px] lg:text-white/48 xl:max-w-6xl 2xl:max-w-7xl xl:px-16 2xl:px-20">
+        <footer className="relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs text-white/55 lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] lg:text-white/48 xl:max-w-3xl xl:px-8">
+        {showLateralNav ? (
+          <div className="flex items-center justify-center gap-10 lg:gap-12">
+            <button
+              type="button"
+              onClick={goLeft}
+              aria-label={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
+              title={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] text-white/55 backdrop-blur-sm transition hover:bg-white/[0.1] hover:text-white/85 active:scale-[0.97] lg:h-11 lg:w-11"
+            >
+              <IconSkipBack className="h-[18px] w-[18px] shrink-0 lg:h-5 lg:w-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={goRight}
+              aria-label={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
+              title={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] text-white/55 backdrop-blur-sm transition hover:bg-white/[0.1] hover:text-white/85 active:scale-[0.97] lg:h-11 lg:w-11"
+            >
+              <IconSkipForward className="h-[18px] w-[18px] shrink-0 lg:h-5 lg:w-5" aria-hidden />
+            </button>
+          </div>
+        ) : null}
         {audioSrc ? (
           <div className="flex items-center gap-3.5 text-[11px] tabular-nums text-white/[0.5] lg:text-[12px] lg:text-white/45">
             <span className="min-w-[2.5rem] shrink-0">{formatTime(currentSec)}</span>

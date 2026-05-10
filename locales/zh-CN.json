@@ -11,6 +11,7 @@
     "journey": "旅程",
     "read": "圣经",
     "explore": "探索",
+    "relax": "放松",
     "appearance": "界面风格",
     "language": "语言"
   },
@@ -134,5 +135,16 @@
       "title": "探索",
       "description": "慢一点的发现，不与「回到经文」抢主叙事。"
     }
+  },
+  "relax": {
+    "back": "音乐首页",
+    "sessionLabel": "放松",
+    "effectPickerLabel": "画面效果",
+    "effectOrb": "光球",
+    "effectRipple": "涟漪",
+    "effectAfterglow": "余晖",
+    "effectFloat": "浮光",
+    "effectPillar": "静轴",
+    "noMusicHint": "暂无曲目。可在音乐首页或后台配置音频后再来。"
   }
 }

@@ -8,8 +8,8 @@ import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
 type Props = {
   /** 深色底（音乐首页）或浅色底（旧首页氛围） */
   variant?: "dark" | "light";
-  /** default：中部轮播；hero：音乐播放首页主标题区大字 */
-  prominence?: "default" | "hero";
+  /** default：中部轮播；hero：音乐播放首页主标题区大字；relax：放松页较大读经区 */
+  prominence?: "default" | "hero" | "relax";
   className?: string;
 };
 
@@ -25,6 +25,7 @@ export function HomeVerseRotator({
   const HOME_VERSES = useMemo(() => HOME_VERSES_BY_LOCALE[locale], [locale]);
   const isDark = variant === "dark";
   const isHero = prominence === "hero";
+  const isRelax = prominence === "relax";
   const [homeVerseIndex, setHomeVerseIndex] = useState(0);
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -79,8 +80,13 @@ export function HomeVerseRotator({
   const lineClass = (() => {
     if (isHero) {
       return isDark
-        ? "m-0 font-serif text-[clamp(1.35rem,3.8vw+0.35rem,2.35rem)] font-medium leading-[1.2] tracking-[0.03em] text-white/[0.92] drop-shadow-sm transition-colors duration-200 group-hover:text-white/[0.96]"
-        : "m-0 font-serif text-[clamp(1.35rem,3.8vw+0.35rem,2.35rem)] font-medium leading-[1.2] tracking-[0.03em] text-ink/88 transition-colors duration-200 group-hover:text-ink/92";
+        ? "m-0 font-serif text-[clamp(1.12rem,2.85vw+0.22rem,1.82rem)] font-medium leading-[1.22] tracking-[0.028em] text-white/[0.92] drop-shadow-sm transition-colors duration-200 group-hover:text-white/[0.96]"
+        : "m-0 font-serif text-[clamp(1.12rem,2.85vw+0.22rem,1.82rem)] font-medium leading-[1.22] tracking-[0.028em] text-ink/88 transition-colors duration-200 group-hover:text-ink/92";
+    }
+    if (isRelax) {
+      return isDark
+        ? "m-0 font-serif text-[clamp(1.02rem,3.6vw+0.15rem,1.32rem)] font-normal leading-[1.68] tracking-[0.032em] text-white/[0.9] drop-shadow-[0_2px_12px_rgba(0,0,0,0.42)]"
+        : "m-0 font-serif text-[clamp(1.02rem,3.6vw+0.15rem,1.32rem)] font-normal leading-[1.68] tracking-[0.026em] text-ink/85";
     }
     return isDark
       ? "m-0 font-serif text-[clamp(0.95rem,3.2vw,1.18rem)] font-normal leading-[1.55] tracking-[0.02em] text-white/[0.88] drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
@@ -90,8 +96,13 @@ export function HomeVerseRotator({
   const refClass = (() => {
     if (isHero) {
       return isDark
-        ? "mt-4 text-[11px] font-medium tracking-[0.18em] text-white/48"
-        : "mt-4 text-[11px] font-medium tracking-[0.2em] text-muted";
+        ? "mt-3 text-[10px] font-medium tracking-[0.16em] text-white/46 sm:mt-3.5 sm:text-[11px] sm:tracking-[0.18em]"
+        : "mt-3 text-[10px] font-medium tracking-[0.18em] text-muted sm:mt-3.5 sm:text-[11px]";
+    }
+    if (isRelax) {
+      return isDark
+        ? "mt-5 text-[10px] font-medium tracking-[0.26em] text-white/46 sm:text-[11px] sm:tracking-[0.28em]"
+        : "mt-5 text-[10px] font-medium tracking-[0.22em] text-muted sm:text-[11px]";
     }
     return isDark
       ? "mt-2.5 text-[9px] font-medium tracking-[0.2em] text-white/42"
@@ -99,8 +110,10 @@ export function HomeVerseRotator({
   })();
 
   const shellWidth = isHero
-    ? "max-w-[min(92vw,42rem)] sm:max-w-3xl lg:max-w-[48rem] xl:max-w-5xl 2xl:max-w-6xl"
-    : "max-w-[19rem] sm:max-w-[21.5rem]";
+    ? "max-w-[min(96vw,34rem)] sm:max-w-[36rem] lg:max-w-[38rem]"
+    : isRelax
+      ? "max-w-[min(96vw,26rem)] sm:max-w-[28rem]"
+      : "max-w-[19rem] sm:max-w-[21.5rem]";
 
   return (
     <div
@@ -109,7 +122,7 @@ export function HomeVerseRotator({
       aria-atomic="true"
     >
       <blockquote
-        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${isHero ? "space-y-2" : "space-y-1"}`}
+        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${isHero ? "space-y-2" : isRelax ? "space-y-2 sm:space-y-2.5" : "space-y-1"}`}
         style={{
           opacity: homeVerseVisible ? 1 : 0,
           transitionDuration: prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,

@@ -11,6 +11,7 @@
     "journey": "Journey",
     "read": "Scripture",
     "explore": "Explore",
+    "relax": "Relax",
     "appearance": "Appearance",
     "language": "Language"
   },
@@ -134,5 +135,16 @@
       "title": "Explore",
       "description": "Slower discovery that does not compete with “returning to the text.”"
     }
+  },
+  "relax": {
+    "back": "Music home",
+    "sessionLabel": "Relax",
+    "effectPickerLabel": "Visual style",
+    "effectOrb": "Orb",
+    "effectRipple": "Ripples",
+    "effectAfterglow": "Afterglow",
+    "effectFloat": "Drift",
+    "effectPillar": "Axis",
+    "noMusicHint": "No tracks yet. Add audio from the music home or admin, then come back."
   }
 }

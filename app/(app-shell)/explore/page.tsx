@@ -2,11 +2,15 @@ import { AppShellPlaceholder } from "@/components/shell/AppShellPlaceholder";
 
 export const metadata = {
   title: "探索 | Selah.my",
-  description: "慢一点的发现，不与「回到经文」抢主叙事。",
+  description: "适合慢慢走的人：转角会有轻轻松一口气的地方，音乐和放松也随时欢迎你。",
 };
 
 export default function ExplorePlaceholderPage() {
   return (
-    <AppShellPlaceholder titleKey="pages.explore.title" descriptionKey="pages.explore.description" />
+    <AppShellPlaceholder
+      titleKey="pages.explore.title"
+      leadKey="pages.explore.lead"
+      bodyKey="pages.explore.body"
+    />
   );
 }

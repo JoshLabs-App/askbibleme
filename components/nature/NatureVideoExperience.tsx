@@ -14,6 +14,7 @@ import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { NatureScenePreviewPanel } from "@/components/nature/NatureScenePreviewPanel";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
+import { NATURE_HOME_ROOT_THEME } from "@/lib/nature/root-theme";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 
 const NATURE_TOP_ICON_BTN =
@@ -67,9 +68,6 @@ function IconBellMuted(props: { className?: string }) {
 type Props = {
   initial: NatureSettingsV2;
 };
-
-/** 与页底 `bg-slate-950` 一致，避免 Android PWA / 全屏顶缘 `theme-color`（浅色）露出成一条横线 */
-const NATURE_THEME_COLOR = "#020617";
 
 /** 与背景 `<video>` 同定位，静图叠层与之对齐以免切换时「跳一下」 */
 const NATURE_BG_COVER_MEDIA =
@@ -409,8 +407,16 @@ export function NatureVideoExperience({ initial }: Props) {
       media: el.getAttribute("media"),
     }));
     for (const m of metas) {
-      m.setAttribute("content", NATURE_THEME_COLOR);
+      m.setAttribute("content", NATURE_HOME_ROOT_THEME);
     }
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlBg = html.style.backgroundColor;
+    const prevBodyBg = body.style.backgroundColor;
+    const prevColorScheme = html.style.colorScheme;
+    html.style.backgroundColor = NATURE_HOME_ROOT_THEME;
+    body.style.backgroundColor = NATURE_HOME_ROOT_THEME;
+    html.style.colorScheme = "dark";
     return () => {
       for (const { el, content, media } of snapshot) {
         if (content != null) el.setAttribute("content", content);
@@ -418,6 +424,9 @@ export function NatureVideoExperience({ initial }: Props) {
         if (media != null) el.setAttribute("media", media);
         else el.removeAttribute("media");
       }
+      html.style.backgroundColor = prevHtmlBg;
+      body.style.backgroundColor = prevBodyBg;
+      html.style.colorScheme = prevColorScheme;
     };
   }, []);
 

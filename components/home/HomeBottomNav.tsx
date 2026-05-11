@@ -20,9 +20,17 @@ const itemDefs: {
   { href: "/explore", labelKey: "nav.explore", Icon: IconNavExplore, match: (p) => p.startsWith("/explore") },
 ];
 
-function tabClass(active: boolean) {
+function tabClass(active: boolean, onDarkShell: boolean) {
+  const base =
+    "flex min-h-[3rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-0.5 text-[11px] font-medium leading-tight tracking-wide transition sm:min-h-[3.25rem] sm:gap-1 sm:px-1 sm:text-sm";
+  if (onDarkShell) {
+    return [
+      base,
+      active ? "text-white" : "text-white/45 hover:bg-white/[0.07] hover:text-white/88",
+    ].join(" ");
+  }
   return [
-    "flex min-h-[3rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-0.5 text-[11px] font-medium leading-tight tracking-wide transition sm:min-h-[3.25rem] sm:gap-1 sm:px-1 sm:text-sm",
+    base,
     active ? "text-ink" : "text-ink/50 hover:bg-ink/[0.04] hover:text-ink/85",
   ].join(" ");
 }
@@ -32,12 +40,16 @@ export function HomeBottomNav() {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
+  const natureHomeShell =
+    pathname === "/" || pathname === "" || pathname === "/nature" || pathname.startsWith("/nature/");
   if (pathname.startsWith("/admin")) return null;
   if (pathname.startsWith("/relax")) return null;
 
   return (
     <nav
-      className="home-bottom-nav relative z-20 w-full min-w-0 max-w-full shrink-0 overflow-x-hidden border-t border-border/25 bg-transparent pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5"
+      className={`home-bottom-nav relative z-20 w-full min-w-0 max-w-full shrink-0 overflow-x-hidden bg-transparent pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 ${
+        natureHomeShell ? "border-t border-white/12" : "border-t border-border/25"
+      }`}
       aria-label={t("nav.mainLabel")}
     >
       <div className="flex w-full min-w-0 max-w-full items-stretch gap-0.5 px-1 sm:px-2">
@@ -51,7 +63,7 @@ export function HomeBottomNav() {
                 key={def.href}
                 href={def.href}
                 aria-current={active ? "page" : undefined}
-                className={tabClass(active)}
+                className={tabClass(active, natureHomeShell)}
               >
                 <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 sm:h-5 sm:w-5" />
                 <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
@@ -68,7 +80,11 @@ export function HomeBottomNav() {
               !canPlay ? t("playback.noTrack") : playing ? t("playback.pauseMusic") : t("playback.playMusic")
             }
             onClick={() => togglePlay()}
-            className="music-reactive-play-btn flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-[0_1px_2px_rgba(31,26,18,0.05),0_3px_10px_rgba(31,26,18,0.06)] ring-1 ring-border/45 transition hover:bg-[#EDE4D4] hover:ring-border/60 hover:shadow-[0_2px_6px_rgba(31,26,18,0.07)] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand/50 disabled:pointer-events-none disabled:opacity-35"
+            className={
+              natureHomeShell
+                ? "music-reactive-play-btn flex h-11 w-11 items-center justify-center rounded-full bg-white/12 text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] ring-1 ring-white/22 transition hover:bg-white/18 hover:ring-white/30 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:pointer-events-none disabled:opacity-35"
+                : "music-reactive-play-btn flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-[0_1px_2px_rgba(31,26,18,0.05),0_3px_10px_rgba(31,26,18,0.06)] ring-1 ring-border/45 transition hover:bg-[#EDE4D4] hover:ring-border/60 hover:shadow-[0_2px_6px_rgba(31,26,18,0.07)] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand/50 disabled:pointer-events-none disabled:opacity-35"
+            }
           >
             {playing ? (
               <IconPause className="h-[18px] w-[18px] shrink-0 opacity-95" />
@@ -88,7 +104,7 @@ export function HomeBottomNav() {
                 key={def.href}
                 href={def.href}
                 aria-current={active ? "page" : undefined}
-                className={tabClass(active)}
+                className={tabClass(active, natureHomeShell)}
               >
                 <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 sm:h-5 sm:w-5" />
                 <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>

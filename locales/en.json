@@ -230,15 +230,18 @@
   "pages": {
     "journey": {
       "title": "Journey",
-      "description": "A calmer sense of company along the path—still taking shape with the rest of the product."
+      "lead": "If this quiet suits you, keep walking.",
+      "body": "A lighter kind of company along the way—no rush, no checklist, a small steadier corner in the heart. What belongs here will meet you as you go; the still scenes and verses on home are already walking with you."
     },
     "read": {
       "title": "Scripture",
-      "description": "The way back into the text is forming together with the quiet whole experience."
+      "lead": "Let reading stay quiet.",
+      "body": "Space for returning to the text—less noise, more room to dwell. If you stay on this path, it will join what you have already met in the verses on home."
     },
     "explore": {
       "title": "Explore",
-      "description": "Slower discovery that does not compete with “returning to the text.”"
+      "lead": "Some light asks you to walk slowly.",
+      "body": "Gentle things worth stumbling upon—no lectures, no wall of links. If you like moving slowly, corners will offer themselves; Music and Relax are always glad to hold you."
     }
   },
   "nature": {

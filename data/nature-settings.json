@@ -4,12 +4,12 @@
     {
       "id": "21c414ac-1052-48c9-82b4-6ad897ecc9b3",
       "src": "/nature/uploads/0f79b12cfe8e476d889f53add9ea8515.mp4",
-      "title": "山顶云海",
+      "title": "云海",
       "mix": [
         {
           "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
           "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
-          "volume": 0.14
+          "volume": 0.23
         }
       ]
     },
@@ -17,6 +17,7 @@
       "id": "f1f36b56-696d-4d78-9fac-ef688d6f2b89",
       "src": "/nature/uploads/0463f278c78440679a6f534be4035f9b.mp4",
       "title": "湖泊",
+      "thumbSrc": "/nature/thumbs/8da756a7021441e991a7038bb68abacc.jpg",
       "mix": [
         {
           "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
@@ -29,6 +30,42 @@
           "volume": 0.47
         }
       ]
+    },
+    {
+      "id": "50925f41-f3ad-4796-bcb4-8cfa932a2ede",
+      "src": "/nature/uploads/7659d5d2783645088b564b266fdc95d6.mp4",
+      "title": "树叶",
+      "thumbSrc": "/nature/thumbs/959fa23ecc5845f688c611743bb7e7bd.jpg",
+      "mix": [
+        {
+          "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+          "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+          "volume": 0.65
+        },
+        {
+          "id": "mix-282a13f6-ad35-41f0-8122-92eddd417928",
+          "clipId": "282a13f6-ad35-41f0-8122-92eddd417928",
+          "volume": 0.04
+        }
+      ]
+    },
+    {
+      "id": "a6ceaef1-cb94-4041-a743-6638b2352bd7",
+      "src": "/nature/uploads/30bbc9f15ec94baabb47a2a2c462f328.mp4",
+      "title": "雨夜",
+      "thumbSrc": "/nature/thumbs/764dca6b60d34a06931b633111f98d91.jpg",
+      "mix": [
+        {
+          "id": "mix-22dafdf4-9e5d-44e7-9c24-905c0d9f040d",
+          "clipId": "22dafdf4-9e5d-44e7-9c24-905c0d9f040d",
+          "volume": 0.48
+        }
+      ]
+    },
+    {
+      "id": "acd85167-eeaa-4370-b293-e71f05a58c0f",
+      "src": "/nature/uploads/36277f9e6db342dc90fcb30479517374.mp4",
+      "title": "学习"
     }
   ],
   "ambientClips": [
@@ -41,6 +78,66 @@
       "id": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
       "src": "/nature/audio-uploads/6b879482ae144738901487d898e89d70.mp3",
       "title": "birds"
+    },
+    {
+      "id": "988c785a-e065-43ff-b28d-0f3260bcc04a",
+      "src": "/nature/audio-uploads/a32cbc76010540a0869e44d7aeceb1a2.mp3",
+      "title": "水鸟"
+    },
+    {
+      "id": "226bafe6-f46f-4fa2-af55-f691b215095d",
+      "src": "/nature/audio-uploads/e8c5306ea193409c8aacbf0ac5d1d065.mp3",
+      "title": "打雷1"
+    },
+    {
+      "id": "282a13f6-ad35-41f0-8122-92eddd417928",
+      "src": "/nature/audio-uploads/d09ebfbfb30c4674b7496e21907ec917.mp3",
+      "title": "流水"
+    },
+    {
+      "id": "14c64cc7-1987-4d60-b7e6-095b172614d8",
+      "src": "/nature/audio-uploads/aaa7b8b8817048579cb19d4942073764.mp3",
+      "title": "流水2"
+    },
+    {
+      "id": "0cbd0416-40be-4835-9d73-67f0984854fb",
+      "src": "/nature/audio-uploads/8155a55f7e2946b08e2549869ce06017.mp3",
+      "title": "下雨"
+    },
+    {
+      "id": "2b6c9f4c-fd26-44a0-9bb2-f5ba9c90d18f",
+      "src": "/nature/audio-uploads/acccce179a12414b894b104b938898cd.mp3",
+      "title": "夜晚"
+    },
+    {
+      "id": "22dafdf4-9e5d-44e7-9c24-905c0d9f040d",
+      "src": "/nature/audio-uploads/49d0b08e6f5d4cb2a74633ee031b3b39.mp3",
+      "title": "下雨2"
+    },
+    {
+      "id": "7ddc2290-2bab-4ce9-900a-f04aff01a7c4",
+      "src": "/nature/audio-uploads/ab43e15c0427480c8cda1defc61d7cdf.mp3",
+      "title": "鸟"
+    },
+    {
+      "id": "3c9bd8c9-a5c1-43ef-982d-94aa66ada075",
+      "src": "/nature/audio-uploads/68f7841100e6489aa0cda61cc98ae591.mp3",
+      "title": "鸟"
+    },
+    {
+      "id": "2641cc58-4aa4-4d98-b2cc-b52f8916e17f",
+      "src": "/nature/audio-uploads/fbc932cc25cf49dc9be5c237e1a76d1c.mp3",
+      "title": "海水"
+    },
+    {
+      "id": "ebf12e2b-1b74-47bd-9cb6-3f30c1a9ae09",
+      "src": "/nature/audio-uploads/397f7d6346874e6aa2904e8ecf8227c6.mp3",
+      "title": "下雨"
+    },
+    {
+      "id": "9a21fb27-c9db-44b8-961d-8a337f5dbc5c",
+      "src": "/nature/audio-uploads/3136a4bafc0c452584bd94fb6cedb1f7.mp3",
+      "title": "打雷"
     }
   ],
   "activeVideoId": "f1f36b56-696d-4d78-9fac-ef688d6f2b89",

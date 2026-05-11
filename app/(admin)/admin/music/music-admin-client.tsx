@@ -123,10 +123,12 @@ function xhrPostFormData(
   form: FormData,
   headers: Record<string, string>,
   onProgress: (p: UploadProgressPayload) => void,
+  timeoutMs = 130_000,
 ): Promise<{ status: number; bodyText: string }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
+    xhr.timeout = timeoutMs;
     for (const [k, v] of Object.entries(headers)) {
       if (v) xhr.setRequestHeader(k, v);
     }
@@ -149,6 +151,12 @@ function xhrPostFormData(
     };
     xhr.onload = () => resolve({ status: xhr.status, bodyText: xhr.responseText });
     xhr.onerror = () => reject(new Error("网络错误（XHR）"));
+    xhr.ontimeout = () =>
+      reject(
+        new Error(
+          `上传超时（>${Math.round(timeoutMs / 1000)}s）。大文件转码较慢时可设 MUSIC_UPLOAD_SKIP_TRANSCODE=1，或跳过能量分析 MUSIC_UPLOAD_SKIP_ANALYSIS=1。`,
+        ),
+      );
     xhr.onabort = () => reject(new Error("上传已中断"));
     xhr.send(form);
   });

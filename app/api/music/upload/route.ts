@@ -33,11 +33,18 @@ function extFromName(name: string): string {
   return n.slice(i);
 }
 
+function uploadAnalysisMaxSeconds(): number {
+  const raw = process.env.MUSIC_UPLOAD_ANALYSIS_MAX_SEC?.trim();
+  const n = raw ? Number.parseInt(raw, 10) : 120;
+  if (!Number.isFinite(n)) return 120;
+  return Math.min(900, Math.max(30, n));
+}
+
 /** 预计算能量曲线 JSON；失败不阻断上传。`MUSIC_UPLOAD_SKIP_ANALYSIS=1` 跳过。 */
 async function tryWriteTrackAnalysisJson(audioPath: string, idBase: string): Promise<string | null> {
   if (process.env.MUSIC_UPLOAD_SKIP_ANALYSIS === "1") return null;
   try {
-    const v1 = await analyzeAudioFileToV1(audioPath);
+    const v1 = await analyzeAudioFileToV1(audioPath, { maxSeconds: uploadAnalysisMaxSeconds() });
     const analysisDir = path.resolve(process.cwd(), "public", "music", "analysis");
     await fs.mkdir(analysisDir, { recursive: true });
     const name = `${idBase}.json`;
@@ -55,6 +62,7 @@ async function tryWriteTrackAnalysisJson(audioPath: string, idBase: string): Pro
  * 上传音频 → 默认用 ffmpeg 转码为 **AAC .m4a**（适合流式码率 + faststart）。
  * 跳过转码：`MUSIC_UPLOAD_SKIP_TRANSCODE=1`（仅保存原文件）。
  * 跳过能量分析：`MUSIC_UPLOAD_SKIP_ANALYSIS=1`（上传时不生成 `/public/music/analysis/*.json`）。
+ * 分析仅取音频前若干秒（默认 120，范围 30–900）：`MUSIC_UPLOAD_ANALYSIS_MAX_SEC`，避免长文件解码阻塞过久。
  * 码率：`MUSIC_UPLOAD_BITRATE_K`（默认 96，范围建议 32–192）。
  */
 export async function POST(req: Request) {

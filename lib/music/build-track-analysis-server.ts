@@ -82,7 +82,20 @@ export function buildTrackAnalysisFromMonoSamples(
   };
 }
 
-export async function decodeFileToMonoF32Pcm(filePath: string): Promise<{ samples: Float32Array; sampleRate: number }> {
+export type DecodeAudioPcmOptions = {
+  /** 最多解码时长（秒），上限为 MAX_ANALYSIS_SEC；上传后能量分析应使用较短片段以免阻塞。 */
+  maxSeconds?: number;
+};
+
+export async function decodeFileToMonoF32Pcm(
+  filePath: string,
+  opts?: DecodeAudioPcmOptions,
+): Promise<{ samples: Float32Array; sampleRate: number }> {
+  const cap = opts?.maxSeconds;
+  const tSec =
+    typeof cap === "number" && Number.isFinite(cap) && cap > 0
+      ? Math.min(MAX_ANALYSIS_SEC, Math.max(1, Math.floor(cap)))
+      : MAX_ANALYSIS_SEC;
   return new Promise((resolve, reject) => {
     const args = [
       "-hide_banner",
@@ -91,7 +104,7 @@ export async function decodeFileToMonoF32Pcm(filePath: string): Promise<{ sample
       "-i",
       filePath,
       "-t",
-      String(MAX_ANALYSIS_SEC),
+      String(tSec),
       "-vn",
       "-ac",
       "1",
@@ -130,7 +143,10 @@ export async function decodeFileToMonoF32Pcm(filePath: string): Promise<{ sample
   });
 }
 
-export async function analyzeAudioFileToV1(filePath: string): Promise<TrackAudioAnalysisV1> {
-  const { samples, sampleRate } = await decodeFileToMonoF32Pcm(filePath);
+export async function analyzeAudioFileToV1(
+  filePath: string,
+  opts?: DecodeAudioPcmOptions,
+): Promise<TrackAudioAnalysisV1> {
+  const { samples, sampleRate } = await decodeFileToMonoF32Pcm(filePath, opts);
   return buildTrackAnalysisFromMonoSamples(samples, sampleRate);
 }

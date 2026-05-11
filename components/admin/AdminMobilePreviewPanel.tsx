@@ -68,11 +68,7 @@ export function AdminMobilePreviewPanel({
     return () => ro.disconnect();
   }, []);
 
-  const src = useMemo(() => {
-    const path = PREVIEW_ROUTES[routeIdx]?.path ?? "/";
-    if (typeof window === "undefined") return path;
-    return `${window.location.origin}${path}`;
-  }, [routeIdx]);
+  const src = useMemo(() => PREVIEW_ROUTES[routeIdx]?.path ?? "/", [routeIdx]);
 
   const refresh = useCallback(() => setReloadKey((k) => k + 1), []);
 

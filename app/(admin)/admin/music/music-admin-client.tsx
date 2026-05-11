@@ -106,6 +106,54 @@ function disk403Hint(status: number, serverError: string): string {
   return " 提示：使用 `next start` 时需在 Studio 填写与 STUDIO_WRITE_SECRET 相同的磁盘密钥，或本地使用 `npm run dev`。";
 }
 
+type UploadProgressPayload = { pct: number; awaitingServer: boolean };
+
+function parseJsonFromBodyText(bodyText: string, httpStatus: number): Record<string, unknown> {
+  if (!bodyText.trim()) return {};
+  try {
+    return JSON.parse(bodyText) as Record<string, unknown>;
+  } catch {
+    throw new Error(`服务器返回非 JSON（HTTP ${httpStatus}）。若为生产环境，请确认接口未返回 HTML 错误页。`);
+  }
+}
+
+/** `fetch` 无法可靠报告 multipart 上传字节进度；用 XHR 的 `upload.onprogress`。 */
+function xhrPostFormData(
+  url: string,
+  form: FormData,
+  headers: Record<string, string>,
+  onProgress: (p: UploadProgressPayload) => void,
+): Promise<{ status: number; bodyText: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    for (const [k, v] of Object.entries(headers)) {
+      if (v) xhr.setRequestHeader(k, v);
+    }
+    let lastEmit = 0;
+    const emit = (pct: number, awaitingServer: boolean) => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (!awaitingServer && pct < 100 && now - lastEmit < 90) return;
+      lastEmit = now;
+      onProgress({ pct: Math.min(100, Math.max(0, pct)), awaitingServer });
+    };
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && e.total > 0) {
+        emit(Math.floor((100 * e.loaded) / e.total), false);
+      } else if (e.loaded > 0) {
+        emit(1, false);
+      }
+    };
+    xhr.upload.onload = () => {
+      emit(100, true);
+    };
+    xhr.onload = () => resolve({ status: xhr.status, bodyText: xhr.responseText });
+    xhr.onerror = () => reject(new Error("网络错误（XHR）"));
+    xhr.onabort = () => reject(new Error("上传已中断"));
+    xhr.send(form);
+  });
+}
+
 /** 单入口上传：按 MIME / 扩展名自动分到音频或图片。 */
 function mediaKind(file: File): "audio" | "image" | null {
   if (file.type.startsWith("audio/")) return "audio";
@@ -254,19 +302,24 @@ function AdminMediaHub({
   getStoreSnapshot: () => MusicCompanionStore | null;
   bumpPersistIgnore: (ms?: number) => void;
 }) {
-  const [uploadProgress, setUploadProgress] = useState<{ cur: number; total: number } | null>(null);
+  type UploadProgressState = {
+    batchCur: number;
+    batchTotal: number;
+    fileName: string;
+    fileUploadPct: number;
+    awaitingServer: boolean;
+  };
+
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
   const busy = uploadProgress !== null;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const runAudioUpload = useCallback(async (file: File) => {
+  const runAudioUpload = useCallback(async (file: File, report: (p: UploadProgressPayload) => void) => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/music/upload", {
-      method: "POST",
-      headers: { ...diskAuthHeaders() },
-      body: fd,
-    });
-    const data = (await parseJsonBody(res)) as {
+    const headers = diskAuthHeaders() as Record<string, string>;
+    const { status, bodyText } = await xhrPostFormData("/api/music/upload", fd, headers, report);
+    const data = parseJsonFromBodyText(bodyText, status) as {
       ok?: boolean;
       url?: string;
       error?: string;
@@ -275,9 +328,9 @@ function AdminMediaHub({
       warning?: string;
       analysisUrl?: string;
     };
-    if (!res.ok) {
-      const err = typeof data.error === "string" ? data.error : `上传失败（${res.status}）`;
-      throw new Error(err + disk403Hint(res.status, err));
+    if (status < 200 || status >= 300) {
+      const err = typeof data.error === "string" ? data.error : `上传失败（${status}）`;
+      throw new Error(err + disk403Hint(status, err));
     }
     const url = data.url;
     if (typeof url !== "string" || !url) {
@@ -285,6 +338,7 @@ function AdminMediaHub({
     }
     const analysisUrl =
       typeof data.analysisUrl === "string" && data.analysisUrl.trim() ? data.analysisUrl.trim() : undefined;
+    report({ pct: 100, awaitingServer: false });
     return {
       url,
       transcoded: data.transcoded,
@@ -294,29 +348,30 @@ function AdminMediaHub({
     };
   }, []);
 
-  const runImageUpload = useCallback(async (file: File) => {
+  const runImageUpload = useCallback(async (file: File, report: (p: UploadProgressPayload) => void) => {
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/music/upload-image", {
-      method: "POST",
-      headers: { ...diskAuthHeaders() },
-      body: fd,
-    });
-    const data = (await parseJsonBody(res)) as { ok?: boolean; url?: string; error?: string };
-    if (!res.ok) {
-      const err = typeof data.error === "string" ? data.error : `上传失败（${res.status}）`;
-      throw new Error(err + disk403Hint(res.status, err));
+    const headers = diskAuthHeaders() as Record<string, string>;
+    const { status, bodyText } = await xhrPostFormData("/api/music/upload-image", fd, headers, report);
+    const data = parseJsonFromBodyText(bodyText, status) as { ok?: boolean; url?: string; error?: string };
+    if (status < 200 || status >= 300) {
+      const err = typeof data.error === "string" ? data.error : `上传失败（${status}）`;
+      throw new Error(err + disk403Hint(status, err));
     }
     const url = data.url;
     if (typeof url !== "string" || !url) {
       throw new Error("上传响应异常：缺少 url");
     }
+    report({ pct: 100, awaitingServer: false });
     return { url };
   }, []);
 
   const ingestAudio = useCallback(
     async (file: File, base: MusicCompanionStore) => {
-      const data = await runAudioUpload(file);
+      const report = ({ pct, awaitingServer }: UploadProgressPayload) => {
+        setUploadProgress((s) => (s ? { ...s, fileUploadPct: pct, awaitingServer } : s));
+      };
+      const data = await runAudioUpload(file, report);
       const id = newTrackId();
       const title = nextDateNumberedMusicUploadTitle(base.audioTracks.map((t) => primaryLocaleText(t.title)));
       const nextSnap = withNewAudioTrack(base, {
@@ -337,7 +392,10 @@ function AdminMediaHub({
 
   const ingestImage = useCallback(
     async (file: File, base: MusicCompanionStore): Promise<MusicCompanionStore> => {
-      const { url } = await runImageUpload(file);
+      const report = ({ pct, awaitingServer }: UploadProgressPayload) => {
+        setUploadProgress((s) => (s ? { ...s, fileUploadPct: pct, awaitingServer } : s));
+      };
+      const { url } = await runImageUpload(file, report);
       const id = newBackgroundId();
       const imageTitles = base.backgroundVisuals
         .filter((b) => b.type === "image")
@@ -371,7 +429,6 @@ function AdminMediaHub({
       }
       bumpPersistIgnore(Math.max(8000, 2000 + planned.length * 4000));
       setMsg(null);
-      setUploadProgress({ cur: 0, total: planned.length });
       const skipTail = skipped.length ? ` 已跳过：${skipped.join("、")}` : "";
       let lastAudio:
         | {
@@ -383,13 +440,18 @@ function AdminMediaHub({
       let chain = getStoreSnapshot();
       if (!chain) {
         setMsg("无曲库数据");
-        setUploadProgress(null);
         return;
       }
       try {
         for (let i = 0; i < planned.length; i++) {
-          setUploadProgress({ cur: i + 1, total: planned.length });
           const { file, kind } = planned[i];
+          setUploadProgress({
+            batchCur: i + 1,
+            batchTotal: planned.length,
+            fileName: file.name,
+            fileUploadPct: 0,
+            awaitingServer: false,
+          });
           if (kind === "audio") {
             const { next, data } = await ingestAudio(file, chain);
             chain = next;
@@ -419,7 +481,7 @@ function AdminMediaHub({
 
   const labelMain =
     uploadProgress !== null
-      ? `上传中 ${uploadProgress.cur}/${uploadProgress.total}`
+      ? `上传 ${uploadProgress.batchCur}/${uploadProgress.batchTotal}`
       : "上传";
 
   return (
@@ -428,6 +490,36 @@ function AdminMediaHub({
       <p className="mt-2 max-w-prose text-[10px] leading-relaxed text-adminMuted">
         大文件或转码可能需数十秒；上传完成前请勿离开本页。若写入失败，请确认未禁用自动保存，且生产环境已配置磁盘写入密钥。
       </p>
+      {uploadProgress ? (
+        <div className="mt-3 rounded-md border border-adminLine bg-adminPanel/50 px-3 py-2.5">
+          <p className="text-[11px] text-adminFg">
+            <span className="font-medium">
+              {uploadProgress.batchCur}/{uploadProgress.batchTotal}
+            </span>{" "}
+            <span className="break-all text-adminMuted">{uploadProgress.fileName}</span>
+          </p>
+          <p className="mt-1 text-[10px] text-adminMuted">
+            {uploadProgress.awaitingServer ? "服务器处理中（转码 / 写盘 / 能量分析）…" : "正在上传到服务器…"}
+          </p>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-adminLine/55">
+            <div
+              className={`h-full rounded-full bg-adminFg/85 ${
+                uploadProgress.awaitingServer ? "w-full animate-pulse motion-reduce:animate-none" : ""
+              }`}
+              style={
+                uploadProgress.awaitingServer
+                  ? undefined
+                  : { width: `${Math.max(2, uploadProgress.fileUploadPct)}%` }
+              }
+            />
+          </div>
+          <p className="mt-1 text-[10px] tabular-nums text-adminMuted">
+            {uploadProgress.awaitingServer && uploadProgress.fileUploadPct >= 100
+              ? "—"
+              : `${uploadProgress.fileUploadPct}%`}
+          </p>
+        </div>
+      ) : null}
       <div className="mt-3 flex flex-col gap-2">
         <label className="relative flex min-h-[4rem] cursor-pointer flex-col items-start justify-center overflow-hidden rounded-md border border-dashed border-border bg-canvas/70 px-3 py-3 text-left transition hover:border-border hover:bg-surface/80">
           <span className="pointer-events-none relative z-0 text-[11px] font-medium text-adminFg">{labelMain}</span>

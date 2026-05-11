@@ -2,8 +2,10 @@ import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import "./globals.css";
+import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
+import { getAppBuildId } from "@/lib/app-build-id";
 import { brandingAssetsExist, getResolvedBrandColors } from "@/lib/site-branding";
 import { brandColorsToCssVars } from "@/lib/site-branding-colors";
 import {
@@ -73,11 +75,16 @@ export default async function RootLayout({
     : inferAppLocaleFromAcceptLanguage(headerList.get("accept-language"));
   const htmlLang = initialLocaleGuess === "en" ? "en" : "zh-CN";
 
+  const appBuildId = getAppBuildId();
+
   return (
     <html lang={htmlLang} style={brandColorsToCssVars(colors) as CSSProperties}>
-      <body className="min-h-screen font-sans text-[15px] leading-relaxed">
+      <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
         <AppSkinProvider>
-          <LocaleProvider initialLocaleGuess={initialLocaleGuess}>{children}</LocaleProvider>
+          <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
+            {children}
+            <AppUpdateNotifier />
+          </LocaleProvider>
         </AppSkinProvider>
       </body>
     </html>

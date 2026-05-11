@@ -51,7 +51,10 @@
     "adminToolsSection": "Site tools",
     "studioInternal": "Studio (internal)",
     "musicAdmin": "Home music",
-    "playbackVisual": "Playback visuals"
+    "playbackVisual": "Playback visuals",
+    "updateAvailable": "A new version is available. Tap refresh to load the latest—no need to reinstall from the home screen.",
+    "updateRefresh": "Refresh",
+    "updateLater": "Later"
   },
   "playback": {
     "noTrack": "Nothing to play yet",

@@ -51,7 +51,10 @@
     "adminToolsSection": "管理",
     "studioInternal": "内部 · Studio",
     "musicAdmin": "首页管理",
-    "playbackVisual": "播放视觉"
+    "playbackVisual": "播放视觉",
+    "updateAvailable": "有新版本。点一下刷新即可载入最新界面（无需重新安装到桌面）。",
+    "updateRefresh": "刷新",
+    "updateLater": "稍后"
   },
   "playback": {
     "noTrack": "暂无可播放曲目",

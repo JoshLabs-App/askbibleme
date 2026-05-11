@@ -7,7 +7,7 @@ import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackCont
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
 const itemDefs: { href: string; labelKey: string; match: (p: string) => boolean }[] = [
-  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" },
+  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" || p === "/nature" },
   { href: "/journey", labelKey: "nav.journey", match: (p) => p.startsWith("/journey") },
   { href: "/read", labelKey: "nav.read", match: (p) => p.startsWith("/read") },
   { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },

@@ -35,10 +35,9 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
 
   const select = useCallback(
     (id: string) => {
-      if (id === activeVideoId) return;
       onSelectVideo(id);
     },
-    [activeVideoId, onSelectVideo],
+    [onSelectVideo],
   );
 
   if (!videos.length) return null;

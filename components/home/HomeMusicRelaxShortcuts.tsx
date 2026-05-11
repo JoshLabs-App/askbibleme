@@ -38,11 +38,12 @@ function sleepLabelKey(m: MusicShellSleepTimerMinutes): string {
 }
 
 /**
- * 音乐 `/music`、放松 `/relax` 的简单入口（自然首页等）；中间为全局定时停止（怀表）。
+ * 自然 `/nature`、音乐 `/music`、放松 `/relax` 的简单入口；中间为全局定时停止（怀表）。
  */
 export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string }) {
   const { t } = useLocale();
   const pathname = usePathname() ?? "";
+  const onNature = pathname === "/" || pathname === "" || pathname === "/nature";
   const onMusic = pathname === "/music" || pathname.startsWith("/music/");
   const onRelax = pathname === "/relax" || pathname.startsWith("/relax/");
   const { sleepTimerMinutes, setSleepTimerMinutes } = useMusicShellPlayback();
@@ -88,6 +89,10 @@ export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string
       className={`relative flex flex-wrap items-center justify-center gap-x-2 gap-y-2 sm:gap-x-4 ${className}`}
       aria-label={t("music.home.shortcutsAria")}
     >
+      <Link href="/nature" aria-current={onNature ? "page" : undefined} className={linkClass(onNature)}>
+        {t("nav.nature")}
+      </Link>
+
       <Link href="/music" aria-current={onMusic ? "page" : undefined} className={linkClass(onMusic)}>
         {t("nav.music")}
       </Link>

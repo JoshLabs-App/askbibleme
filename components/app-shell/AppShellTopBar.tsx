@@ -31,6 +31,7 @@ function IconUserAvatar(props: { className?: string }) {
 }
 
 const navLinks: { href: string; labelKey: string }[] = [
+  { href: "/nature", labelKey: "nav.nature" },
   { href: "/music", labelKey: "nav.music" },
   { href: "/relax", labelKey: "nav.relax" },
   { href: "/journey", labelKey: "nav.journey" },

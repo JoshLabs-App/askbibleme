@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
@@ -20,7 +20,7 @@ type Props = {
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
-  const { dockChromeVisible, toggleDockChrome } = useHomeDockChrome();
+  const { dockChromeVisible, toggleDockChrome, setDockChromeVisible } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState(
@@ -38,6 +38,14 @@ export function NatureVideoExperience({ initial }: Props) {
       activeVideoId: activeVideoId.trim() || initial.activeVideoId.trim() || initial.videos[0]?.id || "",
     }),
     [initial, activeVideoId],
+  );
+
+  const selectVideoAndImmersive = useCallback(
+    (id: string) => {
+      setActiveVideoId(id);
+      setDockChromeVisible(false);
+    },
+    [setDockChromeVisible],
   );
 
   const { videoSrc, posterSrc, ambientLayers } = useMemo(
@@ -144,7 +152,7 @@ export function NatureVideoExperience({ initial }: Props) {
                 className="mt-6 shrink-0 sm:mt-7"
                 settings={initial}
                 activeVideoId={playbackSettings.activeVideoId}
-                onSelectVideo={setActiveVideoId}
+                onSelectVideo={selectVideoAndImmersive}
               />
               <HomeMusicRelaxShortcuts className="mx-auto mt-5 w-full max-w-md shrink-0 sm:mt-6" />
             </DockChromeCollapse>

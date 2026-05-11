@@ -113,7 +113,12 @@ export function LocaleProvider({ children, initialLocaleGuess }: LocaleProviderP
   }, [setLocale]);
 
   const t = useCallback(
-    (path: string, vars?: Record<string, string>) => translate(MESSAGES[locale], path, vars),
+    (path: string, vars?: Record<string, string>) => {
+      const primary = MESSAGES[locale];
+      const fallbacks =
+        locale === "zh-CN" ? [MESSAGES.en] : [MESSAGES["zh-CN"]];
+      return translate(primary, path, vars, fallbacks);
+    },
     [locale],
   );
 

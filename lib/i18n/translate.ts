@@ -18,13 +18,19 @@ export function interpolate(template: string, vars?: Record<string, string>): st
   return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => vars[key] ?? "");
 }
 
-/** `a.b.c` 点路径；缺键时回退为 `path` 便于发现漏翻 */
+/**
+ * `a.b.c` 点路径。先查 `messages`，再依次查 `fallbackChain`；皆无或非空字符串时回退为 `path` 便于发现漏翻。
+ * 当前仅维护 zh-CN / en：中文界面缺键用英文补，英文界面缺键用中文补；将来新增语言时在调用处把英文包放进 fallbacks 前列即可。
+ */
 export function translate(
   messages: Messages,
   path: string,
   vars?: Record<string, string>,
+  fallbackChain: Messages[] = [],
 ): string {
-  const v = getByPath(messages, path);
-  if (typeof v !== "string") return path;
-  return interpolate(v, vars);
+  for (const bundle of [messages, ...fallbackChain]) {
+    const v = getByPath(bundle, path);
+    if (typeof v === "string" && v.length > 0) return interpolate(v, vars);
+  }
+  return path;
 }

@@ -17,13 +17,16 @@ export function parseLocale(raw: string | null | undefined): AppLocale {
   return DEFAULT_LOCALE;
 }
 
-/** 将 BCP 47 语言标签映射到已支持的应用语言；其余回落 `zh-CN`。 */
+/**
+ * 将 BCP 47 语言标签映射到已支持的应用语言。
+ * 非中文、非英文（如 ja、fr）回落 **`en`**：产品仅完整维护中英文案，其余语言无包时用英文而非中文。
+ */
 export function mapLanguageTagToAppLocale(tag: string): AppLocale {
   const t = tag.trim().toLowerCase();
   if (!t) return DEFAULT_LOCALE;
   if (t === "en" || t.startsWith("en-")) return "en";
   if (t.startsWith("zh")) return "zh-CN";
-  return DEFAULT_LOCALE;
+  return "en";
 }
 
 /** 从 `Accept-Language` 取首选语言（SSR / 首请求）。 */

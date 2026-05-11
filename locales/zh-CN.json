@@ -49,7 +49,6 @@
     "unmuteAmbient": "打开背景环境声",
     "personalSettings": "个人设置",
     "adminToolsSection": "管理",
-    "adminHome": "管理",
     "studioInternal": "内部 · Studio",
     "musicAdmin": "首页管理",
     "playbackVisual": "播放视觉"
@@ -170,13 +169,6 @@
       "empty": "当前筛选下没有文件。",
       "openFile": "新窗口打开",
       "referenced": "配置中已引用"
-    },
-    "preview": {
-      "title": "手机端预览",
-      "hint": "iPhone 12 Pro 逻辑视口 {{w}}×{{h}}（预览按比例缩放以适配区域）；同源实时渲染；音频需在框内手动播放。",
-      "page": "页面",
-      "routeMusicHome": "音乐首页",
-      "iframeTitle": "移动端预览"
     },
     "naturePage": {
       "title": "自然",

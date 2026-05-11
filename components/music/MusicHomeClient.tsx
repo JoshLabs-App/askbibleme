@@ -15,8 +15,10 @@ import {
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { resolveLocalized } from "@/lib/i18n/localized-text";
+import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
+import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
 
 const SacredAtmosphereCanvas = dynamic(
   () =>
@@ -96,7 +98,8 @@ function replaceAtmosphereSearchParam(id: HomeAtmospherePresetId) {
 }
 
 export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) {
-  const { locale, t } = useLocale();
+  const { t } = useLocale();
+  const landscapeNarrow = useLandscapeNarrow();
   const { setOverrideId, clearOverride } = useMusicShellAtmosphereOverride();
   const [musicAtmosphereId, setMusicAtmosphereId] = useState<HomeAtmospherePresetId>(
     () => atmosphereUrlOverride ?? "lagoon",
@@ -259,11 +262,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     return store.audioTracks.find((t) => t.src?.trim()) ?? sceneTrack;
   }, [tracksWithSrc, resolvedTrackIdx, scene, store.audioTracks]);
 
-  const trackArtist = useMemo(
-    () => resolveLocalized(track?.artist, locale).trim(),
-    [track?.artist, locale],
-  );
-
   const audioSrc = track?.src?.trim() ?? "";
 
   useEffect(() => {
@@ -296,6 +294,26 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   }, [tracksWithSrc.length]);
 
   const lagoonLight = musicAtmosphereId === "lagoon";
+
+  useEffect(() => {
+    if (!landscapeNarrow) {
+      document.documentElement.removeAttribute("data-landscape-immersive");
+      return;
+    }
+    document.documentElement.setAttribute("data-landscape-immersive", "");
+    return () => document.documentElement.removeAttribute("data-landscape-immersive");
+  }, [landscapeNarrow]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!landscapeNarrow) {
+      if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
+    void requestFullscreenCompat(document.documentElement).catch(() => {});
+  }, [landscapeNarrow]);
 
   return (
     <div
@@ -340,12 +358,21 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
       />
 
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <AppShellTopBar tone={lagoonLight ? "onLight" : "onDark"} />
+        <AppShellTopBar tone={lagoonLight ? "onLight" : "onDark"} landscapeImmersive={landscapeNarrow} />
 
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+3.5rem))]">
-      <div className="relative z-10 flex flex-col items-center justify-start px-4 pt-5 text-center sm:px-5 sm:pt-6 lg:px-6 lg:pt-7 xl:px-8">
-        <div className="flex w-full max-w-xl flex-col items-center lg:max-w-2xl">
-          <div className="min-w-0 w-full pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade">
+        <div
+          className={`flex min-h-0 flex-1 flex-col overflow-hidden ${ln}:min-h-0 ${ln}:flex-row ${ln}:gap-2 ${ln}:px-2 ${ln}:pb-1`}
+        >
+          <div
+            className={`min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+3.5rem))] ${ln}:min-w-0 ${ln}:overflow-y-auto ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`}
+          >
+            <div
+              className={`relative z-10 flex flex-col items-center justify-start px-4 pt-5 text-center sm:px-5 sm:pt-6 lg:px-6 lg:pt-7 xl:px-8 ${ln}:h-full ${ln}:justify-center ${ln}:px-3 ${ln}:py-3`}
+            >
+              <div className="flex w-full max-w-xl flex-col items-center lg:max-w-2xl">
+                <div
+                  className={`min-w-0 w-full pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade ${ln}:pt-1 ${ln}:max-w-[min(100%,28rem)]`}
+                >
           {tracksWithSrc.length > 1 ? (
             <button
               type="button"
@@ -359,15 +386,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                 variant={lagoonLight ? "light" : "dark"}
                 className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
               />
-              {trackArtist ? (
-                <p
-                  className={`mt-5 text-sm font-normal drop-shadow-sm lg:mt-6 lg:text-base ${
-                    lagoonLight ? "text-ink/70" : "text-white/[0.78]"
-                  }`}
-                >
-                  {trackArtist}
-                </p>
-              ) : null}
             </button>
           ) : (
             <>
@@ -375,15 +393,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                 variant={lagoonLight ? "light" : "dark"}
                 className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
               />
-              {trackArtist ? (
-                <p
-                  className={`mt-5 text-sm font-normal drop-shadow-sm lg:mt-6 lg:text-base ${
-                    lagoonLight ? "text-ink/70" : "text-white/[0.78]"
-                  }`}
-                >
-                  {trackArtist}
-                </p>
-              ) : null}
             </>
           )}
           </div>
@@ -401,14 +410,14 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
             {t("music.home.noAudioAfter")}
           </p>
         ) : null}
-      </div>
-        </div>
+            </div>
+          </div>
 
         <footer
-          className={`relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] xl:max-w-3xl xl:px-8 ${
+          className={`relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] xl:max-w-3xl xl:px-8 ${ln}:mx-0 ${ln}:max-w-none ${ln}:w-[min(13rem,36vw)] ${ln}:max-w-[42%] ${ln}:shrink-0 ${ln}:self-stretch ${ln}:justify-center ${ln}:gap-2 ${ln}:border-l ${ln}:px-3 ${ln}:py-2 ${ln}:pt-2 ${ln}:pb-[max(0.5rem,env(safe-area-inset-bottom))] ${ln}:pr-[max(0.25rem,env(safe-area-inset-right))] ${
             lagoonLight
-              ? "text-ink/55 lg:text-ink/50"
-              : "text-white/55 lg:text-white/48"
+              ? `text-ink/55 lg:text-ink/50 ${ln}:border-ink/12`
+              : `text-white/55 lg:text-white/48 ${ln}:border-white/[0.12]`
           }`}
         >
         {audioSrc ? (
@@ -479,6 +488,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
           </div>
         </div>
       </footer>
+        </div>
       </div>
     </div>
   );

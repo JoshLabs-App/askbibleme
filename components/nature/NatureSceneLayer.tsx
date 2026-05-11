@@ -96,13 +96,10 @@ export function NatureSceneLayer({
                 />
               )}
               <div className="pointer-events-none absolute inset-0 bg-white/[0.04] backdrop-blur-[1px]" aria-hidden />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 p-2 pt-4">
-                <span className="block text-[11px] font-semibold leading-snug tracking-tight text-white drop-shadow-[0_1px_5px_rgba(0,0,0,0.45)] sm:text-xs">
-                  {title}
-                </span>
-              </span>
+              <div
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
+                aria-hidden
+              />
             </button>
           );
         })}

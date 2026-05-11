@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
+import { ImmersiveAmbientClock } from "@/components/home/ImmersiveAmbientClock";
 import { HomeMusicRelaxShortcuts } from "@/components/home/HomeMusicRelaxShortcuts";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { NatureAmbientMixAudio } from "@/components/nature/NatureAmbientMixAudio";
@@ -12,6 +14,7 @@ import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { NatureScenePreviewPanel } from "@/components/nature/NatureScenePreviewPanel";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
+import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 
 const NATURE_TOP_ICON_BTN =
   "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] text-white/[0.9] hover:bg-white/[0.1]";
@@ -132,6 +135,7 @@ export function NatureVideoExperience({ initial }: Props) {
   const [activeVideoId, setActiveVideoId] = useState(
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
   );
+  const landscapeNarrow = useLandscapeNarrow();
 
   useEffect(() => {
     const next = initial.activeVideoId.trim() || initial.videos[0]?.id || "";
@@ -275,6 +279,28 @@ export function NatureVideoExperience({ initial }: Props) {
     return p;
   }, [previewWarmupSrc, videoSrc]);
 
+  const landscapeImmersive = landscapeNarrow && !!videoSrc.trim() && !videoBroken;
+
+  useEffect(() => {
+    if (!landscapeImmersive) {
+      document.documentElement.removeAttribute("data-nature-landscape-immersive");
+      return;
+    }
+    document.documentElement.setAttribute("data-nature-landscape-immersive", "");
+    return () => document.documentElement.removeAttribute("data-nature-landscape-immersive");
+  }, [landscapeImmersive]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!landscapeNarrow || !videoSrc.trim() || videoBroken) {
+      if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
+    void requestFullscreenCompat(document.documentElement).catch(() => {});
+  }, [landscapeNarrow, videoSrc, videoBroken]);
+
   useEffect(() => {
     introRevealGuardRef.current = false;
     lastBufferRevealPollRef.current = 0;
@@ -415,14 +441,14 @@ export function NatureVideoExperience({ initial }: Props) {
       {/* 顶缘略向上盖：减轻 Android 全屏 / WebView 亚像素缝露出壳层浅色底或 theme 色带 */}
       {/* 天青轻雾，压暗底部，便于读白字 */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-slate-950/88"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-slate-950/88"
         aria-hidden
       />
 
       <NaturePreviewVideoWarmup videoSrc={offscreenWarmupSrc} playbackRate={rate} />
 
       {videoSrc && !videoBroken ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-[1] overflow-hidden bg-slate-950 transform-gpu">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[1] overflow-hidden bg-slate-950 transform-gpu">
           <video
             ref={videoRef}
             key={videoSrc}
@@ -493,12 +519,13 @@ export function NatureVideoExperience({ initial }: Props) {
       ) : null}
 
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-[5] bg-gradient-to-b from-slate-950/25 via-transparent to-slate-950/60"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[5] bg-gradient-to-b from-slate-950/25 via-transparent to-slate-950/60"
         aria-hidden
       />
 
       <AppShellTopBar
         tone="onDark"
+        landscapeImmersive={false}
         rightAccessory={
           hasAmbientAudio && videoSrc && !videoBroken ? (
             <button
@@ -518,7 +545,11 @@ export function NatureVideoExperience({ initial }: Props) {
         }
       />
 
-      <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] [@media(max-height:500px)]:pb-3 [@media(max-height:500px)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4">
+      <ImmersiveAmbientClock visible={landscapeImmersive} />
+
+      <main
+        className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] [@media(max-height:500px)]:pb-3 [@media(max-height:500px)_and_(orientation:portrait)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4"
+      >
         {!videoSrc || videoBroken ? (
           <>
             <div className="relative flex min-h-0 flex-1 flex-col">
@@ -543,12 +574,12 @@ export function NatureVideoExperience({ initial }: Props) {
         ) : (
           <>
             <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
-            <div className="pointer-events-none fixed left-0 right-0 top-[38.2dvh] z-[12] -translate-y-1/2 px-5 sm:px-6 [@media(max-height:500px)]:top-[20dvh]">
-              <div className="mx-auto w-full max-w-lg sm:max-w-xl">
+            <div className="pointer-events-none fixed inset-x-0 top-[38.2dvh] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[20dvh]">
+              <div className="w-full max-w-lg sm:max-w-xl">
                 <HomeVerseRotator
                   variant="dark"
                   prominence="nature"
-                  className="min-h-[6.5rem] w-full sm:min-h-[7.5rem] [@media(max-height:500px)]:min-h-[4rem] [@media(max-height:500px)]:sm:min-h-[4.25rem]"
+                  className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
                 />
               </div>
             </div>

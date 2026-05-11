@@ -26,14 +26,19 @@
   --brand-admin-fg-rgb: 19 42 58;
   --brand-admin-muted: #4a6274;
   --brand-admin-muted-rgb: 74 98 116;
+  /**
+   * 视口顶缘「出血」：Android Chrome / WebView 常在首层 fixed 与视口之间留 1～3 设备像素的缝，
+   * 露出默认浅色，深色页面上尤其明显。壳层用 `top: calc(-1 * var(--app-viewport-bleed-top))` 向上多盖。
+   */
+  --app-viewport-bleed-top: 8px;
 }
 html,
 body {
   height: 100%;
+  min-height: 100dvh;
 }
 
-/** 与 body 一致：Android WebView / PWA 顶缘偶发 1px 漏色时避免露默认白底。
- * 全屏壳层另用 `fixed; top: -1px; bottom: 0` 多盖 1px，减轻 Chrome 亚像素缝（见 `app/(app-shell)/layout.tsx`）。
+/** 与 body 同色：缝若仍落在根节点上，对比弱于纯白 UA 底。全屏壳层另用负 top + `transform-gpu`（见 app 各 layout）。
  */
 html {
   background-color: rgb(var(--brand-canvas-rgb));
@@ -300,4 +305,14 @@ body {
     opacity: 0.72;
     transform: scaleY(1);
   }
+}
+
+/* 自然首页：窄屏横屏沉浸时隐藏底栏（全屏 API 不可用时仍尽量铺满） */
+html[data-nature-landscape-immersive] .home-bottom-nav {
+  display: none;
+}
+
+/* 音乐 / 放松：窄屏横屏时隐藏底栏 */
+html[data-landscape-immersive] .home-bottom-nav {
+  display: none;
 }

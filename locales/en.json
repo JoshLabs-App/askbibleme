@@ -49,7 +49,6 @@
     "unmuteAmbient": "Unmute background ambience",
     "personalSettings": "Personal",
     "adminToolsSection": "Site tools",
-    "adminHome": "Manage",
     "studioInternal": "Studio (internal)",
     "musicAdmin": "Home music",
     "playbackVisual": "Playback visuals"
@@ -170,13 +169,6 @@
       "empty": "No files match the current filters.",
       "openFile": "Open in new tab",
       "referenced": "Referenced in data"
-    },
-    "preview": {
-      "title": "Mobile preview",
-      "hint": "iPhone 12 Pro logical viewport {{w}}×{{h}} (preview scales to fit); live iframe; start audio inside the frame.",
-      "page": "Page",
-      "routeMusicHome": "Music home",
-      "iframeTitle": "Mobile preview"
     },
     "naturePage": {
       "title": "Nature",

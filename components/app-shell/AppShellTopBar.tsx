@@ -45,13 +45,21 @@ type Props = {
   tone?: AppShellTopBarTone;
   /** 顶栏右上（如自然页环境声静音）；未传时用占位保持与左侧按钮对称 */
   rightAccessory?: ReactNode;
+  /**
+   * 手机横屏沉浸：顶栏淡出且不可点；左缘窄条仍可滑开菜单（见同文件 edge strip）。
+   */
+  landscapeImmersive?: boolean;
 };
 
 /**
  * 应用壳默认顶栏：左上导航菜单（含管理入口）、右上可选控件；`absolute` 叠在页面内容之上。
  * 任意路由页在 `relative` 容器内引用即可；左缘滑开与窄条与首页行为一致。
  */
-export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props) {
+export function AppShellTopBar({
+  tone = "onDark",
+  rightAccessory = null,
+  landscapeImmersive = false,
+}: Props) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
   const onLight = tone === "onLight";
@@ -211,7 +219,16 @@ export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props
           toggleNavMenu();
         }}
       />
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-[50] px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1">
+      <header
+        className={[
+          "pointer-events-none absolute inset-x-0 top-0 z-[50] px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 transition-opacity duration-300 motion-reduce:transition-none",
+          landscapeImmersive
+            ? "opacity-0 [&_.pointer-events-auto]:pointer-events-none"
+            : "opacity-100",
+        ].join(" ")}
+        aria-hidden={landscapeImmersive ? true : undefined}
+        inert={landscapeImmersive ? true : undefined}
+      >
         <div className="grid w-full min-h-[44px] grid-cols-[1fr_auto_1fr] items-center gap-2">
           <div className="pointer-events-auto relative justify-self-start" ref={navRef}>
             <button
@@ -247,9 +264,6 @@ export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props
                 >
                   {t("nav.language")}
                 </button>
-                <Link href="/admin" role="menuitem" className={menuItem} onClick={() => setNavOpen(false)}>
-                  {t("chrome.adminHome")}
-                </Link>
               </div>
             ) : null}
           </div>

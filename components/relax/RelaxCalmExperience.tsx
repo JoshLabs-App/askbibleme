@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import type { RelaxSettingsV1 } from "@/lib/relax/types";
+import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
+import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
 import {
   parseRelaxVisualEffectId,
   RELAX_EFFECT_TAB_I18N_KEY,
@@ -15,6 +18,9 @@ import {
 } from "@/lib/relax/visual-effects";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
+
+/** 画面效果名在经文下轻提示的显示时长（毫秒） */
+const RELAX_EFFECT_HINT_MS = 5000;
 
 function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return "0:00";
@@ -122,9 +128,12 @@ function RelaxVisualByEffect({ id }: { id: RelaxVisualEffectId }) {
  */
 export function RelaxCalmExperience({ initial }: Props) {
   const { t } = useLocale();
+  const landscapeNarrow = useLandscapeNarrow();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   const [visualEffect, setVisualEffect] = useState<RelaxVisualEffectId>(RELAX_VISUAL_EFFECT_DEFAULT);
+  const [relaxEffectHintVisible, setRelaxEffectHintVisible] = useState(true);
+  const relaxEffectHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { canPlay, playing, togglePlay, currentSec, durationSec, seekRatio } = useMusicShellPlayback();
 
   useEffect(() => {
@@ -134,6 +143,18 @@ export function RelaxCalmExperience({ initial }: Props) {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    setRelaxEffectHintVisible(true);
+    if (relaxEffectHintTimerRef.current) clearTimeout(relaxEffectHintTimerRef.current);
+    relaxEffectHintTimerRef.current = setTimeout(() => {
+      relaxEffectHintTimerRef.current = null;
+      setRelaxEffectHintVisible(false);
+    }, RELAX_EFFECT_HINT_MS);
+    return () => {
+      if (relaxEffectHintTimerRef.current) clearTimeout(relaxEffectHintTimerRef.current);
+    };
+  }, [visualEffect]);
 
   const persistVisualEffect = (id: RelaxVisualEffectId) => {
     setVisualEffect(id);
@@ -164,6 +185,26 @@ export function RelaxCalmExperience({ initial }: Props) {
 
   const isLagoon = visualEffect === "lagoon";
   const hasVideo = Boolean(videoSrc && !videoBroken);
+
+  useEffect(() => {
+    if (!landscapeNarrow) {
+      document.documentElement.removeAttribute("data-landscape-immersive");
+      return;
+    }
+    document.documentElement.setAttribute("data-landscape-immersive", "");
+    return () => document.documentElement.removeAttribute("data-landscape-immersive");
+  }, [landscapeNarrow]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (!landscapeNarrow) {
+      if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
+    void requestFullscreenCompat(document.documentElement).catch(() => {});
+  }, [landscapeNarrow]);
 
   return (
     <div
@@ -208,7 +249,14 @@ export function RelaxCalmExperience({ initial }: Props) {
         aria-hidden
       />
 
-      <header className="relative z-20 mx-auto flex w-full max-w-xl shrink-0 items-center justify-between gap-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-[max(1rem,env(safe-area-inset-top))]">
+      <div
+        className={`relative z-20 flex min-h-[100dvh] w-full flex-1 flex-col supports-[height:100dvh]:min-h-[100dvh] ${ln}:absolute ${ln}:inset-y-0 ${ln}:right-0 ${ln}:left-auto ${ln}:min-h-0 ${ln}:w-[min(44vw,20rem)] ${ln}:max-w-[48%] ${ln}:justify-between ${ln}:bg-gradient-to-l ${ln}:pl-5 ${ln}:backdrop-blur-md ${ln}:pt-[max(0.35rem,env(safe-area-inset-top))] ${ln}:pb-[max(0.35rem,env(safe-area-inset-bottom))] ${ln}:pr-[max(0.35rem,env(safe-area-inset-right))] ${
+          isLagoon
+            ? `${ln}:from-sky-100/95 ${ln}:via-cyan-50/85 ${ln}:to-transparent`
+            : `${ln}:from-[#0f172a]/97 ${ln}:via-[#1e1b4b]/82 ${ln}:to-transparent`
+        }`}
+      >
+      <header className={`relative z-20 mx-auto flex w-full max-w-xl shrink-0 items-center justify-between gap-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-[max(1rem,env(safe-area-inset-top))] ${ln}:mx-0 ${ln}:max-w-none ${ln}:px-0 ${ln}:pt-0 ${ln}:sm:px-0 ${ln}:sm:pt-0`}>
         <Link
           href="/music"
           aria-label={t("relax.back")}
@@ -242,19 +290,37 @@ export function RelaxCalmExperience({ initial }: Props) {
         </span>
       </header>
 
-      <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-5 sm:py-11">
-        <div className="flex flex-col items-center gap-y-11 sm:gap-y-14">
-          <div className="flex shrink-0 items-center justify-center">
+      <main
+        className={`relative z-10 mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-5 sm:py-11 ${ln}:mx-0 ${ln}:max-w-none ${ln}:px-0 ${ln}:py-4 ${ln}:sm:px-0 ${ln}:sm:py-5`}
+      >
+        <div
+          className={`flex flex-col items-center gap-y-11 sm:gap-y-14 ${ln}:gap-y-6 ${ln}:justify-center`}
+        >
+          <div
+            className={`flex shrink-0 items-center justify-center ${ln}:scale-[0.88] motion-reduce:scale-100`}
+          >
             <RelaxVisualByEffect id={visualEffect} />
           </div>
           <HomeVerseRotator
             variant={isLagoon ? "light" : "dark"}
-            className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
+            className={`min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] ${ln}:min-h-[5.25rem] ${ln}:max-w-[min(100%,18rem)]`}
           />
+          <p
+            className={[
+              "w-full max-w-[17rem] overflow-hidden text-center text-[9px] font-normal leading-snug tracking-[0.18em] transition-all duration-500 ease-out motion-reduce:duration-150 sm:max-w-[19rem] sm:text-[10px] sm:tracking-[0.2em]",
+              isLagoon ? "text-ink/25" : "text-white/20",
+              relaxEffectHintVisible ? "mt-2 max-h-10 opacity-100 sm:mt-2.5" : "mt-0 max-h-0 opacity-0",
+            ].join(" ")}
+            aria-hidden
+          >
+            {t(RELAX_EFFECT_TAB_I18N_KEY[visualEffect])}
+          </p>
         </div>
       </main>
 
-      <footer className="relative z-20 mx-auto mt-auto flex w-full max-w-md shrink-0 flex-col gap-2.5 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-4">
+      <footer
+        className={`relative z-20 mx-auto mt-auto flex w-full max-w-md shrink-0 flex-col gap-2.5 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-4 ${ln}:mx-0 ${ln}:max-w-none ${ln}:w-full ${ln}:gap-2 ${ln}:px-0 ${ln}:pb-[max(0.5rem,env(safe-area-inset-bottom))] ${ln}:pt-2 ${ln}:sm:px-0 ${ln}:sm:pb-[max(0.5rem,env(safe-area-inset-bottom))] ${ln}:sm:pt-2`}
+      >
         {canPlay ? (
           <div
             className={`flex items-center gap-3.5 text-[12px] tabular-nums sm:text-[13px] ${
@@ -334,7 +400,7 @@ export function RelaxCalmExperience({ initial }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-center pb-0.5 pt-0.5">
+        <div className={`flex justify-center pb-0.5 pt-0.5 ${ln}:pt-0`}>
           <button
             type="button"
             disabled={!canPlay}
@@ -344,8 +410,8 @@ export function RelaxCalmExperience({ initial }: Props) {
             onClick={() => togglePlay()}
             className={
               isLagoon
-                ? "music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full border border-sky-300/80 bg-sky-600 text-white shadow-[0_10px_40px_-12px_rgba(15,60,90,0.35)] transition hover:bg-sky-700 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16"
-                : "music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full bg-white/[0.14] text-white shadow-[0_10px_44px_-14px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.14] transition hover:bg-white/[0.18] active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16"
+                ? `music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full border border-sky-300/80 bg-sky-600 text-white shadow-[0_10px_40px_-12px_rgba(15,60,90,0.35)] transition hover:bg-sky-700 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16 ${ln}:h-14 ${ln}:w-14 ${ln}:sm:h-14 ${ln}:sm:w-14`
+                : `music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full bg-white/[0.14] text-white shadow-[0_10px_44px_-14px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.14] transition hover:bg-white/[0.18] active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16 ${ln}:h-14 ${ln}:w-14 ${ln}:sm:h-14 ${ln}:sm:w-14`
             }
           >
             {playing ? (
@@ -356,6 +422,7 @@ export function RelaxCalmExperience({ initial }: Props) {
           </button>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

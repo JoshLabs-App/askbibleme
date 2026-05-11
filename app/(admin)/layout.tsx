@@ -7,7 +7,7 @@ import {
 
 /**
  * 与前台 `(app-shell)` 一致：整屏 `fixed` 壳层；主栏内再滚动。
- * Android 顶缘 1px 缝与前台同法处理（`top:-1px` + `bottom:0`）。
+ * 顶缘出血与前台一致（`--app-viewport-bleed-top` + `transform-gpu`）。
  * 仍挂载播放与视觉 Provider，供 `/admin/visual` 等使用。
  */
 export default function AdminSegmentLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export default function AdminSegmentLayout({ children }: { children: React.React
       <MusicVisualTuningProvider>
         <HomeAtmosphereVisualProvider>
           <MusicShellVisualProvider>
-            <div className="fixed bottom-0 left-0 right-0 top-[-1px] z-0 flex min-h-0 w-full flex-col overflow-hidden bg-adminBg">
+            <div className="fixed bottom-0 left-0 right-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-0 flex min-h-0 w-full flex-col overflow-hidden bg-adminBg transform-gpu">
               {children}
             </div>
           </MusicShellVisualProvider>

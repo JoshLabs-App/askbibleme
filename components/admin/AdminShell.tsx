@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LocaleTrigger } from "@/components/i18n/LocaleTrigger";
-import { AdminMobilePreviewPanel } from "@/components/admin/AdminMobilePreviewPanel";
 import { AppSkinTrigger } from "@/components/theme/AppSkinTrigger";
 
 const ADMIN_SIDEBAR_WIDTH_KEY = "selah-admin-sidebar-width-v1";
@@ -96,17 +95,12 @@ function navOverviewClass(active: boolean) {
   ].join(" ");
 }
 
-function isNatureAdminPath(pathname: string): boolean {
-  return pathname === "/admin/music/nature" || pathname.startsWith("/admin/music/nature/");
-}
-
 /**
  * 统一后台壳层：一级分类 + 二级入口分层侧栏；克制动效与对比。
  */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
-  const showMobilePreview = !isNatureAdminPath(pathname);
 
   const [open, setOpen] = useState<Record<string, boolean>>(() => ({ ...INITIAL_GROUP_OPEN }));
   const [sidebarPx, setSidebarPx] = useState(SIDEBAR_DEFAULT_PX);
@@ -339,23 +333,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </button>
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col md:flex-row md:overflow-hidden">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
-          {children}
-        </div>
-
-        {showMobilePreview ? (
-          <aside className="hidden min-h-0 w-[min(420px,36vw)] shrink-0 flex-col overflow-hidden border-l border-adminLine bg-adminPanel/25 lg:w-[440px] md:flex md:flex-col">
-            <AdminMobilePreviewPanel />
-          </aside>
-        ) : null}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] md:overflow-hidden">
+        {children}
       </div>
-
-      {showMobilePreview ? (
-        <div className="shrink-0 border-t border-adminLine bg-adminPanel/15 md:hidden">
-          <AdminMobilePreviewPanel stacked />
-        </div>
-      ) : null}
 
       <div className="flex flex-col gap-2 border-t border-adminLine px-4 py-3 md:hidden">
         <LocaleTrigger>

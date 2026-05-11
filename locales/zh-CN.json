@@ -45,6 +45,8 @@
     "openUserMenu": "打开后台菜单",
     "closeUserMenu": "关闭后台菜单",
     "userMenuAria": "后台菜单",
+    "muteAmbient": "关闭背景环境声",
+    "unmuteAmbient": "打开背景环境声",
     "personalSettings": "个人设置",
     "adminToolsSection": "管理",
     "adminHome": "管理后台",

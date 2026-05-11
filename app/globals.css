@@ -32,7 +32,9 @@ body {
   height: 100%;
 }
 
-/** 与 body 一致：Android WebView / PWA 顶缘偶发 1px 漏色时避免露默认白底 */
+/** 与 body 一致：Android WebView / PWA 顶缘偶发 1px 漏色时避免露默认白底。
+ * 全屏壳层另用 `fixed; top: -1px; bottom: 0` 多盖 1px，减轻 Chrome 亚像素缝（见 `app/(app-shell)/layout.tsx`）。
+ */
 html {
   background-color: rgb(var(--brand-canvas-rgb));
 }

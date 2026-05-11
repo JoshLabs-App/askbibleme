@@ -45,6 +45,8 @@
     "openUserMenu": "Open admin menu",
     "closeUserMenu": "Close admin menu",
     "userMenuAria": "Admin menu",
+    "muteAmbient": "Mute background ambience",
+    "unmuteAmbient": "Unmute background ambience",
     "personalSettings": "Personal",
     "adminToolsSection": "Site tools",
     "adminHome": "Admin home",

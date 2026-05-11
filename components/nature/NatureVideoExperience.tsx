@@ -11,6 +11,54 @@ import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
 
+const NATURE_TOP_ICON_BTN =
+  "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] text-white/[0.9] hover:bg-white/[0.1]";
+
+function IconBell(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M12 3a5 5 0 0 0-5 5v2.09l-.78 1.56A1 1 0 0 0 7 13h10a1 1 0 0 0 .89-1.45L17 10.09V8a5 5 0 0 0-5-5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 20a2 2 0 0 0 4 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconBellMuted(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M4 4 20 20"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8.5 8.5V8a3.5 3.5 0 0 1 6.24-2.17M13 13v.09l.78 1.56A1 1 0 0 1 12.9 16H7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 20a2 2 0 0 0 4 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 type Props = {
   initial: NatureSettingsV2;
 };
@@ -22,6 +70,7 @@ export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
   const { dockChromeVisible, toggleDockChrome, setDockChromeVisible } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [ambientMuted, setAmbientMuted] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState(
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
@@ -52,6 +101,7 @@ export function NatureVideoExperience({ initial }: Props) {
     () => resolveNaturePlayback(playbackSettings),
     [playbackSettings],
   );
+  const hasAmbientAudio = ambientLayers.length > 0;
   const poster = posterSrc?.trim();
   const rate = initial.playbackRate;
 
@@ -99,6 +149,7 @@ export function NatureVideoExperience({ initial }: Props) {
             layers={ambientLayers}
             videoRef={videoRef}
             playbackRate={rate}
+            ambientMuted={ambientMuted}
           />
         </div>
       ) : null}
@@ -108,7 +159,26 @@ export function NatureVideoExperience({ initial }: Props) {
         aria-hidden
       />
 
-      <AppShellTopBar tone="onDark" />
+      <AppShellTopBar
+        tone="onDark"
+        rightAccessory={
+          hasAmbientAudio && videoSrc && !videoBroken ? (
+            <button
+              type="button"
+              onClick={() => setAmbientMuted((m) => !m)}
+              aria-pressed={ambientMuted}
+              aria-label={ambientMuted ? t("chrome.unmuteAmbient") : t("chrome.muteAmbient")}
+              className={NATURE_TOP_ICON_BTN}
+            >
+              {ambientMuted ? (
+                <IconBellMuted className="h-[1.25rem] w-[1.25rem] opacity-90" />
+              ) : (
+                <IconBell className="h-[1.25rem] w-[1.25rem] opacity-90" />
+              )}
+            </button>
+          ) : null
+        }
+      />
 
       <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))]">
         {!videoSrc || videoBroken ? (

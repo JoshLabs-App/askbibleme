@@ -235,7 +235,7 @@ const config: Config = {
               "0 12px 36px -4px rgba(0,0,0,0.42), 0 0 24px rgba(197,160,112,0.22)",
           },
         },
-        /** 自然首页宽屏视频：竖屏手机内缓慢横移一程（左→右→左）共 5 分钟 */
+        /** 自然首页宽屏视频：竖屏手机内缓慢横移一程（左→右→左）共 10 分钟 */
         "nature-widescreen-pan": {
           "0%, 100%": { objectPosition: "0% 50%" },
           "50%": { objectPosition: "100% 50%" },
@@ -303,7 +303,7 @@ const config: Config = {
         "music-sacred-halo-slow": "music-sacred-halo 52s ease-in-out infinite",
         "music-hero-fade": "music-hero-fade 1.5s ease-out forwards",
         "music-play-breathe": "music-play-breathe 3.2s ease-in-out infinite",
-        "nature-widescreen-pan": "nature-widescreen-pan 300s ease-in-out infinite",
+        "nature-widescreen-pan": "nature-widescreen-pan 600s ease-in-out infinite",
       },
     },
   },

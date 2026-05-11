@@ -8,12 +8,14 @@ type Layer = { layerId: string; src: string; volume: number };
 function SyncLoopAmbient({
   src,
   volume,
+  ambientMuted,
   playbackRate,
   videoRef,
   setAudioEl,
 }: {
   src: string;
   volume: number;
+  ambientMuted: boolean;
   playbackRate: number;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   setAudioEl: (el: HTMLAudioElement | null) => void;
@@ -29,7 +31,7 @@ function SyncLoopAmbient({
     const a = aRef.current;
     const v = videoRef.current;
     if (!a || !v) return;
-    a.volume = volume;
+    a.volume = ambientMuted ? 0 : volume;
     a.loop = true;
     try {
       a.playbackRate = playbackRate;
@@ -50,7 +52,7 @@ function SyncLoopAmbient({
       v.removeEventListener("pause", onPause);
       a.pause();
     };
-  }, [src, volume, playbackRate, videoRef]);
+  }, [ambientMuted, src, volume, playbackRate, videoRef]);
 
   return <audio ref={bindRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
 }
@@ -62,10 +64,13 @@ export function NatureAmbientMixAudio({
   layers,
   videoRef,
   playbackRate,
+  ambientMuted = false,
 }: {
   layers: Layer[];
   videoRef: React.RefObject<HTMLVideoElement | null>;
   playbackRate: number;
+  /** 用户顶栏静音：音量为 0，仍与视频同步播放/暂停以便恢复 */
+  ambientMuted?: boolean;
 }) {
   const { registerSleepPauseHandler } = useMusicShellPlayback();
   const ambientByLayerRef = useRef(new Map<string, HTMLAudioElement>());
@@ -95,6 +100,7 @@ export function NatureAmbientMixAudio({
           key={l.layerId}
           src={l.src}
           volume={l.volume}
+          ambientMuted={ambientMuted}
           playbackRate={playbackRate}
           videoRef={videoRef}
           setAudioEl={(el) => setLayerAudioEl(l.layerId, el)}

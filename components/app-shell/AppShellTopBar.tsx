@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 
@@ -18,14 +18,6 @@ function IconMenu(props: { className?: string }) {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-    </svg>
-  );
-}
-
-function IconUserAvatar(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={props.className} aria-hidden>
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
     </svg>
   );
 }
@@ -59,13 +51,15 @@ export type AppShellTopBarTone = "onDark" | "onLight";
 type Props = {
   /** 深色底用 `onDark`，浅色底用 `onLight`（菜单面与字色） */
   tone?: AppShellTopBarTone;
+  /** 顶栏右上（如自然页环境声静音）；未传时用占位保持与左侧按钮对称 */
+  rightAccessory?: ReactNode;
 };
 
 /**
- * 应用壳默认顶栏：左上导航菜单、右上用户菜单；`absolute` 叠在页面内容之上。
+ * 应用壳默认顶栏：左上导航菜单（含管理入口）、右上可选控件；`absolute` 叠在页面内容之上。
  * 任意路由页在 `relative` 容器内引用即可；左缘滑开与窄条与首页行为一致。
  */
-export function AppShellTopBar({ tone = "onDark" }: Props) {
+export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
   const onLight = tone === "onLight";
@@ -75,29 +69,25 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
     HIT +
     (onLight ? " text-ink/85 hover:bg-ink/[0.06]" : " text-white/[0.9] hover:bg-white/[0.1]");
   const [navOpen, setNavOpen] = useState(false);
-  const [userOpen, setUserOpen] = useState(false);
   /** 与 `/api/admin/branding` 一致：有资源时顶栏中央展示透明 LOGO */
   const [brandLogoSrc, setBrandLogoSrc] = useState<string | null>(null);
   const brandFetchAbortRef = useRef<AbortController | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
-  const userRef = useRef<HTMLDivElement>(null);
   const navEdgeStripRef = useRef<HTMLButtonElement>(null);
   const suppressNavEdgeClickRef = useRef(false);
   const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const openNavMenu = useCallback(() => {
     setNavOpen(true);
-    setUserOpen(false);
   }, []);
 
   const toggleNavMenu = useCallback(() => {
     setNavOpen((o) => !o);
-    setUserOpen(false);
   }, []);
 
   useEffect(() => {
     const onTouchStart = (e: TouchEvent) => {
-      if (userOpen || navOpen) {
+      if (navOpen) {
         edgeSwipeStartRef.current = null;
         return;
       }
@@ -117,7 +107,7 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
     const onTouchEnd = (e: TouchEvent) => {
       const start = edgeSwipeStartRef.current;
       edgeSwipeStartRef.current = null;
-      if (!start || userOpen) return;
+      if (!start) return;
       const endX = e.changedTouches[0]?.clientX ?? start.x;
       const endY = e.changedTouches[0]?.clientY ?? start.y;
       const dx = endX - start.x;
@@ -134,7 +124,7 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
       document.removeEventListener("touchstart", onTouchStart);
       document.removeEventListener("touchend", onTouchEnd);
     };
-  }, [navOpen, openNavMenu, userOpen]);
+  }, [navOpen, openNavMenu]);
 
   const loadBrandingLogo = useCallback(() => {
     brandFetchAbortRef.current?.abort();
@@ -185,19 +175,16 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
   }, [loadBrandingLogo]);
 
   useEffect(() => {
-    if (!navOpen && !userOpen) return;
+    if (!navOpen) return;
     const onDown = (e: MouseEvent) => {
       const target = e.target as Node;
       if (navEdgeStripRef.current?.contains(target)) return;
       if (navRef.current?.contains(target)) return;
-      if (userRef.current?.contains(target)) return;
       setNavOpen(false);
-      setUserOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setNavOpen(false);
-        setUserOpen(false);
       }
     };
     document.addEventListener("mousedown", onDown);
@@ -206,15 +193,10 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [navOpen, userOpen]);
+  }, [navOpen]);
 
   const openNav = () => {
     toggleNavMenu();
-  };
-
-  const openUser = () => {
-    setUserOpen((o) => !o);
-    setNavOpen(false);
   };
 
   /** 顶栏下缘大致位置，左缘窄条从此向下延伸，避开顶栏按钮 */
@@ -266,6 +248,9 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
                     {t(item.labelKey)}
                   </Link>
                 ))}
+                <Link href="/admin" role="menuitem" className={menuItem} onClick={() => setNavOpen(false)}>
+                  {t("chrome.adminHome")}
+                </Link>
               </div>
             ) : null}
           </div>
@@ -290,30 +275,8 @@ export function AppShellTopBar({ tone = "onDark" }: Props) {
             )}
           </div>
 
-          <div className="pointer-events-auto relative justify-self-end" ref={userRef}>
-            <button
-              type="button"
-              onClick={openUser}
-              aria-label={userOpen ? t("chrome.closeUserMenu") : t("chrome.openUserMenu")}
-              aria-expanded={userOpen}
-              aria-haspopup="menu"
-              aria-controls="app-shell-user-menu"
-              className={iconBtn}
-            >
-              <IconUserAvatar className="h-[1.125rem] w-[1.125rem] opacity-90" />
-            </button>
-            {userOpen ? (
-              <div
-                id="app-shell-user-menu"
-                role="menu"
-                aria-label={t("chrome.userMenuAria")}
-                className={`absolute right-0 top-[calc(100%+0.35rem)] z-[60] ${menuSurface}`}
-              >
-                <Link href="/admin" role="menuitem" className={menuItem} onClick={() => setUserOpen(false)}>
-                  {t("chrome.adminHome")}
-                </Link>
-              </div>
-            ) : null}
+          <div className="pointer-events-auto relative flex justify-end justify-self-end">
+            {rightAccessory ?? <span className="h-11 w-11 shrink-0" aria-hidden />}
           </div>
         </div>
       </header>

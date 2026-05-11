@@ -255,10 +255,13 @@
     "emptyHint": "Upload or pick a clip under Admin → Music → Nature, or edit data/nature-settings.json.",
     "toggleDockChrome": "Show or hide bottom bar and scene row",
     "videoBgAnnounced": "Background is a muted looping video.",
+    "previewEnterFullScreen": "Enter full screen with this clip",
+    "previewTapHint": "Tap again for full screen",
     "noMusicHint": "No tracks yet. Add audio from the music home or admin, then return.",
     "scenes": {
       "sectionAria": "Nature clips",
       "ariaSwitch": "Switch to {{name}}",
+      "ariaCollapsePreview": "Close preview for {{name}}",
       "unnamedProduct": "Untitled clip"
     }
   },

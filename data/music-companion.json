@@ -5,6 +5,21 @@
       "id": "track-mozr2wqufrfv",
       "title": "01",
       "src": "/music/uploads/de2d329fa5c14ea2912aa93ce1867181.m4a"
+    },
+    {
+      "id": "track-mp1b2v0cj798",
+      "title": "04",
+      "src": "/music/uploads/a57bf00189944bf8bc2f4ec56c29a0ee.m4a"
+    },
+    {
+      "id": "track-mp1b39y09uat",
+      "title": "05",
+      "src": "/music/uploads/3acafc36ba394738b95748d5767dd6d6.m4a"
+    },
+    {
+      "id": "track-mp1b4gw6xun1",
+      "title": "音乐 2026-05-11 · 01",
+      "src": "/music/uploads/568393997202440e86675a228af78283.m4a"
     }
   ],
   "backgroundVisuals": [
@@ -29,7 +44,7 @@
         "en": "Default scene"
       },
       "order": 0,
-      "audioTrackId": "track-mozr2wqufrfv",
+      "audioTrackId": "track-mp1b4gw6xun1",
       "backgroundVisualId": "bg-moz3kpueo6x1"
     }
   ],

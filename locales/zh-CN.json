@@ -255,10 +255,13 @@
     "emptyHint": "请在后台「音乐 → 自然」上传或选择影片；也可手工编辑 data/nature-settings.json。",
     "toggleDockChrome": "显示或隐藏底部栏与场景卡片",
     "videoBgAnnounced": "背景为静音循环影片。",
+    "previewEnterFullScreen": "进入全屏播放此影片",
+    "previewTapHint": "再点一下进入全屏",
     "noMusicHint": "暂无曲目。可在音乐首页或后台配置音频后再来。",
     "scenes": {
       "sectionAria": "自然影片",
       "ariaSwitch": "切换到{{name}}",
+      "ariaCollapsePreview": "收起{{name}}预览",
       "unnamedProduct": "未命名影片"
     }
   },

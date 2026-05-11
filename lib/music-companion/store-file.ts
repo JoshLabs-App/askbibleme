@@ -231,12 +231,17 @@ export function parseAndValidateMusicStore(raw: unknown): MusicCompanionStore {
     if (typeof raw.id !== "string" || !raw.id.trim()) {
       throw err("场景项缺少 id");
     }
+    let audioTrackId = normRef(raw.audioTrackId);
+    let backgroundVisualId = normRef(raw.backgroundVisualId);
+    /** 列表已删素材但场景仍引用 id 时，读盘自愈为 null，避免整份 JSON 无法加载 */
+    if (audioTrackId !== null && !trackIds.has(audioTrackId)) audioTrackId = null;
+    if (backgroundVisualId !== null && !bgIds.has(backgroundVisualId)) backgroundVisualId = null;
     const scene: Scene = {
       id: raw.id.trim(),
       title: parseOptionalLocalized(raw.title, MAX_TITLE, "场景 title"),
       order: typeof raw.order === "number" ? raw.order : 0,
-      audioTrackId: normRef(raw.audioTrackId),
-      backgroundVisualId: normRef(raw.backgroundVisualId),
+      audioTrackId,
+      backgroundVisualId,
     };
     validateScene(scene, trackIds, bgIds);
     sceneList.push(scene);

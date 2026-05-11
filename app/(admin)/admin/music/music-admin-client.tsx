@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   newBackgroundId,
   newTrackId,
@@ -320,7 +320,7 @@ function AdminMediaHub({
 
   const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
   const busy = uploadProgress !== null;
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputId = useId();
 
   const runAudioUpload = useCallback(async (file: File, report: (p: UploadProgressPayload) => void) => {
     const fd = new FormData();
@@ -421,9 +421,9 @@ function AdminMediaHub({
   );
 
   const onMediaFiles = useCallback(
-    async (list: FileList | null) => {
-      if (!list?.length) return;
-      const arr = Array.from(list);
+    async (files: File[]) => {
+      if (files.length === 0) return;
+      const arr = files;
       const planned: { file: File; kind: "audio" | "image" }[] = [];
       const skipped: string[] = [];
       for (const f of arr) {
@@ -529,33 +529,34 @@ function AdminMediaHub({
         </div>
       ) : null}
       <div className="mt-3 flex flex-col gap-2">
-        <label className="relative flex min-h-[4rem] cursor-pointer flex-col items-start justify-center overflow-hidden rounded-md border border-dashed border-border bg-canvas/70 px-3 py-3 text-left transition hover:border-border hover:bg-surface/80">
-          <span className="pointer-events-none relative z-0 text-[11px] font-medium text-adminFg">{labelMain}</span>
-          <span className="pointer-events-none relative z-0 mt-1 text-[10px] text-adminMuted">点击此区域或下方按钮选择文件</span>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="audio/*,image/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.webm,.flac,.jpg,.jpeg,.png,.webp,.gif"
-            className="absolute inset-0 z-10 h-full min-h-[4rem] w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-            style={{ fontSize: "16px" }}
-            disabled={busy}
-            aria-label="上传音频或图片"
-            onChange={(e) => {
-              const fs = e.target.files;
-              e.target.value = "";
-              if (fs?.length) void onMediaFiles(fs);
-            }}
-          />
-        </label>
-        <button
-          type="button"
+        <input
+          id={uploadInputId}
+          type="file"
+          multiple
+          accept="audio/*,image/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.webm,.flac,.jpg,.jpeg,.png,.webp,.gif"
+          className="sr-only"
           disabled={busy}
-          className="self-start rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
-          onClick={() => fileInputRef.current?.click()}
+          aria-label="上传音频或图片"
+          onChange={(e) => {
+            const input = e.target;
+            const picked = input.files?.length ? Array.from(input.files) : [];
+            input.value = "";
+            if (picked.length) void onMediaFiles(picked);
+          }}
+        />
+        <label
+          htmlFor={uploadInputId}
+          className={`relative flex min-h-[4rem] flex-col items-start justify-center overflow-hidden rounded-md border border-dashed border-border bg-canvas/70 px-3 py-3 text-left transition hover:border-border hover:bg-surface/80 ${busy ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+        >
+          <span className="relative z-0 text-[11px] font-medium text-adminFg">{labelMain}</span>
+          <span className="relative z-0 mt-1 text-[10px] text-adminMuted">点击此区域或下方按钮选择文件</span>
+        </label>
+        <label
+          htmlFor={uploadInputId}
+          className={`self-start rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[11px] text-adminFg transition hover:bg-surface ${busy ? "pointer-events-none cursor-not-allowed opacity-40" : "cursor-pointer"}`}
         >
           选择文件…
-        </button>
+        </label>
       </div>
     </section>
   );
@@ -703,16 +704,20 @@ function AudioTrackLibrary({
                 <button
                   type="button"
                   className="shrink-0 px-2 py-1 text-[11px] text-red-700/90 transition hover:bg-red-50"
-                  onClick={() =>
+                  onClick={() => {
+                    const trackId = t.id;
                     setStore((s) =>
                       s
                         ? {
                             ...s,
-                            audioTracks: s.audioTracks.filter((_, j) => j !== i),
+                            audioTracks: s.audioTracks.filter((x) => x.id !== trackId),
+                            scenes: s.scenes.map((sc) =>
+                              sc.audioTrackId === trackId ? { ...sc, audioTrackId: null } : sc,
+                            ),
                           }
                         : s,
-                    )
-                  }
+                    );
+                  }}
                 >
                   删除
                 </button>
@@ -826,9 +831,7 @@ function ImageBackgroundLibrary({
   store: MusicCompanionStore;
   setStore: React.Dispatch<React.SetStateAction<MusicCompanionStore | null>>;
 }) {
-  const rows = store.backgroundVisuals
-    .map((b, index) => ({ b, index }))
-    .filter(({ b }) => b.type === "image");
+  const rows = store.backgroundVisuals.filter((b) => b.type === "image");
 
   return (
     <section className="mt-10">
@@ -837,7 +840,7 @@ function ImageBackgroundLibrary({
         {rows.length === 0 ? (
           <li className="px-3 py-8 text-[12px] text-adminMuted">暂无图片</li>
         ) : (
-          rows.map(({ b, index }) => {
+          rows.map((b) => {
             const fileHint = (b.imageSrc ?? "").split("/").pop() ?? "";
             const label =
               primaryLocaleText(b.title) || titleFromUploadFileName(fileHint || "image");
@@ -865,16 +868,20 @@ function ImageBackgroundLibrary({
                 <button
                   type="button"
                   className="shrink-0 px-2 py-1 text-[11px] text-red-700/90 transition hover:bg-red-50"
-                  onClick={() =>
+                  onClick={() => {
+                    const bgId = b.id;
                     setStore((s) =>
                       s
                         ? {
                             ...s,
-                            backgroundVisuals: s.backgroundVisuals.filter((_, j) => j !== index),
+                            backgroundVisuals: s.backgroundVisuals.filter((x) => x.id !== bgId),
+                            scenes: s.scenes.map((sc) =>
+                              sc.backgroundVisualId === bgId ? { ...sc, backgroundVisualId: null } : sc,
+                            ),
                           }
                         : s,
-                    )
-                  }
+                    );
+                  }}
                 >
                   删除
                 </button>

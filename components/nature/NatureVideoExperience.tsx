@@ -8,6 +8,7 @@ import { HomeMusicRelaxShortcuts } from "@/components/home/HomeMusicRelaxShortcu
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { NatureAmbientMixAudio } from "@/components/nature/NatureAmbientMixAudio";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
+import { NatureScenePreviewPanel } from "@/components/nature/NatureScenePreviewPanel";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
 
@@ -64,14 +65,17 @@ type Props = {
 };
 
 /**
- * 自然：全屏静音循环影像 + 轮播经文 + 第二层场景卡；顶栏 `AppShellTopBar`。
+ * 自然：全屏静音循环影像 + 轮播经文（视口 ≈38.2dvh 黄金线）+ 第二层场景卡；顶栏 `AppShellTopBar`。
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
   const { dockChromeVisible, toggleDockChrome, setDockChromeVisible } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
+
   const [ambientMuted, setAmbientMuted] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
+  const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
+  const [previewSlideOpen, setPreviewSlideOpen] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState(
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
   );
@@ -93,9 +97,44 @@ export function NatureVideoExperience({ initial }: Props) {
     (id: string) => {
       setActiveVideoId(id);
       setDockChromeVisible(false);
+      setPreviewSlideOpen(false);
+      setPreviewVideoId(null);
     },
     [setDockChromeVisible],
   );
+
+  const confirmPreviewFullScreen = useCallback(() => {
+    if (!previewVideoId) return;
+    selectVideoAndImmersive(previewVideoId);
+  }, [previewVideoId, selectVideoAndImmersive]);
+
+  /** 点卡片打开/切换预览；再点同一张则向下滑出收起 */
+  const onSceneCardPress = useCallback((id: string) => {
+    setPreviewVideoId((prev) => {
+      if (prev === id) {
+        queueMicrotask(() => {
+          const reduce =
+            typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (reduce) {
+            setPreviewSlideOpen(false);
+            setPreviewVideoId(null);
+          } else {
+            setPreviewSlideOpen(false);
+          }
+        });
+        return prev;
+      }
+      return id;
+    });
+  }, []);
+
+  const handlePreviewSlideTransitionEnd = useCallback((e: React.TransitionEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.propertyName !== "transform") return;
+    if (!previewSlideOpen) {
+      setPreviewVideoId(null);
+    }
+  }, [previewSlideOpen]);
 
   const { videoSrc, posterSrc, ambientLayers } = useMemo(
     () => resolveNaturePlayback(playbackSettings),
@@ -119,6 +158,21 @@ export function NatureVideoExperience({ initial }: Props) {
   useEffect(() => {
     setVideoBroken(false);
   }, [videoSrc]);
+
+  useEffect(() => {
+    if (!previewVideoId) {
+      setPreviewSlideOpen(false);
+      return;
+    }
+    const reduce =
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setPreviewSlideOpen(true);
+      return;
+    }
+    const id = requestAnimationFrame(() => setPreviewSlideOpen(true));
+    return () => cancelAnimationFrame(id);
+  }, [previewVideoId]);
 
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-slate-950 text-white">
@@ -180,7 +234,7 @@ export function NatureVideoExperience({ initial }: Props) {
         }
       />
 
-      <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] [@media(max-height:500px)]:pb-3 [@media(max-height:500px)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4">
         {!videoSrc || videoBroken ? (
           <>
             <div className="relative flex min-h-0 flex-1 flex-col">
@@ -199,13 +253,22 @@ export function NatureVideoExperience({ initial }: Props) {
               </div>
             </div>
             <DockChromeCollapse>
-              <HomeMusicRelaxShortcuts className="mx-auto mt-6 shrink-0 sm:mt-8" />
+              <HomeMusicRelaxShortcuts className="mx-auto mt-6 shrink-0 sm:mt-8 [@media(max-height:500px)]:mt-3" />
             </DockChromeCollapse>
           </>
         ) : (
           <>
             <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
-            <div className="relative flex min-h-0 flex-1 flex-col justify-center">
+            <div className="pointer-events-none fixed left-0 right-0 top-[38.2dvh] z-[12] -translate-y-1/2 px-5 sm:px-6 [@media(max-height:500px)]:top-[20dvh]">
+              <div className="mx-auto w-full max-w-lg sm:max-w-xl">
+                <HomeVerseRotator
+                  variant="dark"
+                  prominence="nature"
+                  className="min-h-[6.5rem] w-full sm:min-h-[7.5rem] [@media(max-height:500px)]:min-h-[4rem] [@media(max-height:500px)]:sm:min-h-[4.25rem]"
+                />
+              </div>
+            </div>
+            <div className="relative flex min-h-0 flex-1 flex-col">
               <button
                 type="button"
                 className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
@@ -213,18 +276,44 @@ export function NatureVideoExperience({ initial }: Props) {
                 aria-label={t("nature.toggleDockChrome")}
                 onClick={() => toggleDockChrome()}
               />
-              <div className="relative z-10 min-h-[6.5rem] w-full sm:min-h-[7.5rem] pointer-events-none">
-                <HomeVerseRotator variant="dark" prominence="nature" className="min-h-[6.5rem] w-full sm:min-h-[7.5rem]" />
-              </div>
             </div>
             <DockChromeCollapse>
+              <HomeMusicRelaxShortcuts className="mx-auto mt-6 w-full max-w-md shrink-0 sm:mt-7 [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:sm:mt-2.5" />
+              <div
+                className={`w-full shrink-0 transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
+                  previewVideoId ? "grid grid-rows-[1fr]" : "grid grid-rows-[0fr]"
+                }`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  {previewVideoId ? (
+                    <div
+                      onTransitionEnd={handlePreviewSlideTransitionEnd}
+                      className={[
+                        "will-change-transform transition-transform duration-300 ease-out motion-reduce:translate-y-0 motion-reduce:transition-none",
+                        previewSlideOpen ? "translate-y-0" : "translate-y-full",
+                      ].join(" ")}
+                    >
+                      <NatureScenePreviewPanel
+                        settings={initial}
+                        previewVideoId={previewVideoId}
+                        playbackRate={rate}
+                        onEnterImmersive={confirmPreviewFullScreen}
+                        onPreviewVideoError={() => {
+                          setPreviewSlideOpen(false);
+                          setPreviewVideoId(null);
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               <NatureSceneLayer
-                className="mt-6 shrink-0 sm:mt-7"
+                className="mt-5 shrink-0 sm:mt-6 [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:sm:mt-2.5"
                 settings={initial}
                 activeVideoId={playbackSettings.activeVideoId}
-                onSelectVideo={selectVideoAndImmersive}
+                previewVideoId={previewVideoId}
+                onSceneCardPress={onSceneCardPress}
               />
-              <HomeMusicRelaxShortcuts className="mx-auto mt-5 w-full max-w-md shrink-0 sm:mt-6" />
             </DockChromeCollapse>
           </>
         )}

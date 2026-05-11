@@ -86,8 +86,8 @@ export function HomeVerseRotator({
     }
     if (isNature) {
       return isDark
-        ? "m-0 font-sans text-[clamp(1.08rem,4.2vw+0.18rem,1.45rem)] font-medium leading-[1.58] tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.85),0_2px_28px_rgba(0,0,0,0.55)]"
-        : "m-0 font-sans text-[clamp(1.05rem,3.8vw+0.15rem,1.35rem)] font-medium leading-[1.58] tracking-[0.02em] text-ink/90";
+        ? "m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-medium leading-[1.46] tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)]:leading-[1.4]"
+        : "m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-medium leading-[1.46] tracking-[0.02em] text-ink/90";
     }
     if (isRelax) {
       return isDark
@@ -107,8 +107,8 @@ export function HomeVerseRotator({
     }
     if (isNature) {
       return isDark
-        ? "mt-4 font-sans text-[13px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-4 sm:text-[14px] sm:tracking-[0.16em] [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_12px_rgba(0,0,0,0.55)]"
-        : "mt-4 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:text-[14px]";
+        ? "mt-3 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:text-[11px]"
+        : "mt-3 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:text-[14px]";
     }
     if (isRelax) {
       return isDark
@@ -133,7 +133,7 @@ export function HomeVerseRotator({
       aria-atomic="true"
     >
       <blockquote
-        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${isHero ? "space-y-2" : isRelax || isNature ? "space-y-2 sm:space-y-2.5" : "space-y-1"}`}
+        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${isHero ? "space-y-2" : isRelax ? "space-y-2 sm:space-y-2.5" : isNature ? "space-y-1.5 sm:space-y-2 [@media(max-height:500px)]:space-y-1" : "space-y-1"}`}
         style={{
           opacity: homeVerseVisible ? 1 : 0,
           transitionDuration: prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,

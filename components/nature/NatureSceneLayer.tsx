@@ -8,7 +8,10 @@ type Props = {
   className?: string;
   settings: NatureSettingsV2;
   activeVideoId: string;
-  onSelectVideo: (id: string) => void;
+  /** 16:9 预览中选中的影片（可与 active 不同） */
+  previewVideoId: string | null;
+  /** 点卡片：打开或替换预览，不直接全屏 */
+  onSceneCardPress: (id: string) => void;
 };
 
 function cardTitle(v: NatureVideoEntry, fallback: string) {
@@ -19,7 +22,13 @@ function cardTitle(v: NatureVideoEntry, fallback: string) {
 /**
  * 自然页第二层：影片「产品」卡；当前片置末。一行约 3.5 张露出以暗示可横滑；同轨左右滑动。
  */
-export function NatureSceneLayer({ className = "", settings, activeVideoId, onSelectVideo }: Props) {
+export function NatureSceneLayer({
+  className = "",
+  settings,
+  activeVideoId,
+  previewVideoId,
+  onSceneCardPress,
+}: Props) {
   const { t } = useLocale();
   const videos = settings.videos;
 
@@ -35,9 +44,9 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
 
   const select = useCallback(
     (id: string) => {
-      onSelectVideo(id);
+      onSceneCardPress(id);
     },
-    [onSelectVideo],
+    [onSceneCardPress],
   );
 
   if (!videos.length) return null;
@@ -50,6 +59,7 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
       >
         {orderedVideos.map((v) => {
           const selected = v.id === activeVideoId;
+          const previewing = previewVideoId !== null && v.id === previewVideoId;
           const thumb = v.thumbSrc?.trim();
           const title = cardTitle(v, t("nature.scenes.unnamedProduct"));
 
@@ -58,10 +68,14 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
               key={v.id}
               type="button"
               aria-current={selected ? "true" : undefined}
-              aria-label={t("nature.scenes.ariaSwitch", { name: title })}
+              aria-pressed={previewing ? true : undefined}
+              aria-label={
+                previewing ? t("nature.scenes.ariaCollapsePreview", { name: title }) : t("nature.scenes.ariaSwitch", { name: title })
+              }
               onClick={() => select(v.id)}
               className={
-                "group relative aspect-square w-[calc((100%-1.5rem)/3.5)] shrink-0 snap-start overflow-hidden rounded-[0.85rem] text-left shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)] ring-1 ring-inset ring-white/[0.14] transition hover:ring-white/30 sm:w-[calc((100%-2.25rem)/3.5)] sm:rounded-[0.95rem]"
+                "group relative aspect-square w-[calc((100%-1.5rem)/3.5)] shrink-0 snap-start overflow-hidden rounded-[0.85rem] text-left shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[calc((100%-2.25rem)/3.5)] sm:rounded-[0.95rem] " +
+                (previewing ? "ring-2 ring-sky-400/70 ring-inset " : "ring-white/[0.14] ")
               }
             >
               <div className="absolute inset-0 bg-gradient-to-br from-slate-800/80 via-slate-900/75 to-slate-950/90" aria-hidden />

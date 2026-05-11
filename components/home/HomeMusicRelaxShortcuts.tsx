@@ -31,6 +31,45 @@ function IconPocketWatch({ className }: { className?: string }) {
   );
 }
 
+/** 双音符轮廓，与怀表同线宽 */
+function IconMusicNotes({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M10 6.5v9.5M15 5v9.5" />
+      <path d="M10 6.5 15 5" />
+      <circle cx="8" cy="17.5" r="2.25" />
+      <circle cx="13" cy="16" r="2.25" />
+    </svg>
+  );
+}
+
+/** 波纹，示意放松 / 呼吸 */
+function IconRelaxWaves({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M4 10c2.2 0 2.2-3.2 4.5-3.2S11 10 13.5 10s2.3-3.2 4.5-3.2 2.2 3.2 4.5 3.2" />
+      <path d="M4 15c2.2 0 2.2-3.2 4.5-3.2S11 15 13.5 15s2.3-3.2 4.5-3.2 2.2 3.2 4.5 3.2" />
+    </svg>
+  );
+}
+
 function sleepLabelKey(m: MusicShellSleepTimerMinutes): string {
   if (m === 30) return "music.sleepTimer.m30";
   if (m === 60) return "music.sleepTimer.m60";
@@ -38,24 +77,23 @@ function sleepLabelKey(m: MusicShellSleepTimerMinutes): string {
 }
 
 /**
- * 自然 `/nature`、音乐 `/music`、放松 `/relax` 的简单入口；中间为全局定时停止（怀表）。
+ * 音乐 `/music`、放松 `/relax` 的简单入口；右侧为全局定时停止（怀表）。
  */
 export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string }) {
   const { t } = useLocale();
   const pathname = usePathname() ?? "";
-  const onNature = pathname === "/" || pathname === "" || pathname === "/nature";
   const onMusic = pathname === "/music" || pathname.startsWith("/music/");
   const onRelax = pathname === "/relax" || pathname.startsWith("/relax/");
   const { sleepTimerMinutes, setSleepTimerMinutes } = useMusicShellPlayback();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverWrapRef = useRef<HTMLDivElement>(null);
 
-  const linkClass = (active: boolean) =>
+  const iconShortcutClass = (active: boolean) =>
     [
-      "rounded-full px-3.5 py-2 text-[13px] font-medium tracking-wide transition sm:px-4 sm:text-sm",
+      "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition sm:h-10 sm:w-10",
       active
-        ? "border border-white/35 bg-white/[0.12] text-white"
-        : "border border-white/15 bg-transparent text-white/75 hover:border-white/25 hover:bg-white/[0.06] hover:text-white",
+        ? "border-sky-300/60 bg-white/[0.18] text-white shadow-[0_0_0_1px_rgba(125,211,252,0.25)]"
+        : "border-white/15 bg-transparent text-white/75 hover:border-white/25 hover:bg-white/[0.06] hover:text-white",
     ].join(" ");
 
   const watchClass = [
@@ -89,12 +127,22 @@ export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string
       className={`relative flex flex-wrap items-center justify-center gap-x-2 gap-y-2 sm:gap-x-4 ${className}`}
       aria-label={t("music.home.shortcutsAria")}
     >
-      <Link href="/nature" aria-current={onNature ? "page" : undefined} className={linkClass(onNature)}>
-        {t("nav.nature")}
+      <Link
+        href="/music"
+        aria-label={t("nav.music")}
+        aria-current={onMusic ? "page" : undefined}
+        className={iconShortcutClass(onMusic)}
+      >
+        <IconMusicNotes className="h-[1.15rem] w-[1.15rem] sm:h-5 sm:w-5" />
       </Link>
 
-      <Link href="/music" aria-current={onMusic ? "page" : undefined} className={linkClass(onMusic)}>
-        {t("nav.music")}
+      <Link
+        href="/relax"
+        aria-label={t("nav.relax")}
+        aria-current={onRelax ? "page" : undefined}
+        className={iconShortcutClass(onRelax)}
+      >
+        <IconRelaxWaves className="h-[1.15rem] w-[1.15rem] sm:h-5 sm:w-5" />
       </Link>
 
       <div ref={popoverWrapRef} className="relative flex shrink-0 flex-col items-center">
@@ -144,10 +192,6 @@ export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string
           </div>
         ) : null}
       </div>
-
-      <Link href="/relax" aria-current={onRelax ? "page" : undefined} className={linkClass(onRelax)}>
-        {t("nav.relax")}
-      </Link>
     </nav>
   );
 }

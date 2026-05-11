@@ -6,7 +6,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -24,6 +24,40 @@ type AppSkinContextValue = {
 };
 
 const AppSkinContext = createContext<AppSkinContextValue | null>(null);
+
+const skinListeners = new Set<() => void>();
+
+function emitSkinChange() {
+  skinListeners.forEach((l) => {
+    try {
+      l();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+function subscribeSkin(onStore: () => void) {
+  if (typeof window === "undefined") return () => {};
+  skinListeners.add(onStore);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === USER_SKIN_STORAGE_KEY || e.key === null) onStore();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    skinListeners.delete(onStore);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getSkinSnapshot(): UserSkinId {
+  if (typeof window === "undefined") return "site";
+  return parseUserSkin(localStorage.getItem(USER_SKIN_STORAGE_KEY));
+}
+
+function getSkinServerSnapshot(): UserSkinId {
+  return "site";
+}
 
 function clearBodyBrandVarOverrides() {
   for (const name of BRAND_CSS_VAR_NAMES) {
@@ -60,24 +94,20 @@ function applyUserSkinToBody(id: UserSkinId) {
 }
 
 export function AppSkinProvider({ children }: { children: ReactNode }) {
-  const [skin, setSkinState] = useState<UserSkinId>("site");
+  const skin = useSyncExternalStore(subscribeSkin, getSkinSnapshot, getSkinServerSnapshot);
 
   useLayoutEffect(() => {
-    const saved = parseUserSkin(
-      typeof window !== "undefined" ? localStorage.getItem(USER_SKIN_STORAGE_KEY) : null,
-    );
-    setSkinState(saved);
-    applyUserSkinToBody(saved);
-  }, []);
+    applyUserSkinToBody(skin);
+  }, [skin]);
 
   const setSkin = useCallback((id: UserSkinId) => {
-    setSkinState(id);
     try {
       localStorage.setItem(USER_SKIN_STORAGE_KEY, id);
     } catch {
       /* ignore */
     }
     applyUserSkinToBody(id);
+    emitSkinChange();
   }, []);
 
   const value = useMemo(() => ({ skin, setSkin }), [skin, setSkin]);

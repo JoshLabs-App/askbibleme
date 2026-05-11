@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import type { RelaxSettingsV1 } from "@/lib/relax/types";
@@ -127,7 +127,7 @@ export function RelaxCalmExperience({ initial }: Props) {
   const [visualEffect, setVisualEffect] = useState<RelaxVisualEffectId>(RELAX_VISUAL_EFFECT_DEFAULT);
   const { canPlay, playing, togglePlay, currentSec, durationSec, seekRatio } = useMusicShellPlayback();
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     try {
       setVisualEffect(parseRelaxVisualEffectId(localStorage.getItem(RELAX_VISUAL_EFFECT_STORAGE_KEY)));
     } catch {

@@ -5,6 +5,9 @@ import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackCont
 
 type Layer = { layerId: string; src: string; volume: number };
 
+/** 底部壳层主音乐在播时，环境声乘子（避免与自然混音抢听感） */
+const AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING = 0.22;
+
 function SyncLoopAmbient({
   src,
   volume,
@@ -13,6 +16,7 @@ function SyncLoopAmbient({
   videoRef,
   setAudioEl,
   ambientLead,
+  underShellMusicGain,
 }: {
   src: string;
   volume: number;
@@ -22,6 +26,8 @@ function SyncLoopAmbient({
   setAudioEl: (el: HTMLAudioElement | null) => void;
   /** 为 true：挂载后即尝试播放，且不随视频 pause 而暂停（首页「先声后画」阶段） */
   ambientLead: boolean;
+  /** 与 `volume` 相乘；壳层音乐在播时为 `AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING` */
+  underShellMusicGain: number;
 }) {
   const aRef = useRef<HTMLAudioElement | null>(null);
 
@@ -33,7 +39,13 @@ function SyncLoopAmbient({
   useEffect(() => {
     const a = aRef.current;
     if (!a) return;
-    a.volume = ambientMuted ? 0 : volume;
+    const g = Math.max(0, Math.min(1, underShellMusicGain));
+    a.volume = ambientMuted ? 0 : Math.min(1, volume * g);
+  }, [ambientMuted, volume, underShellMusicGain, src]);
+
+  useEffect(() => {
+    const a = aRef.current;
+    if (!a) return;
     a.loop = true;
     try {
       a.playbackRate = playbackRate;
@@ -66,7 +78,7 @@ function SyncLoopAmbient({
       v.removeEventListener("pause", onPause);
       a.pause();
     };
-  }, [ambientMuted, src, volume, playbackRate, videoRef, ambientLead]);
+  }, [src, playbackRate, videoRef, ambientLead]);
 
   return <audio ref={bindRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
 }
@@ -89,7 +101,8 @@ export function NatureAmbientMixAudio({
   /** 静图开场阶段：环境声先起，不随视频 pause 被掐断；揭晓后与视频同步 */
   ambientLead?: boolean;
 }) {
-  const { registerSleepPauseHandler } = useMusicShellPlayback();
+  const { registerSleepPauseHandler, playing } = useMusicShellPlayback();
+  const underShellMusicGain = playing ? AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING : 1;
   const ambientByLayerRef = useRef(new Map<string, HTMLAudioElement>());
 
   const setLayerAudioEl = useCallback((layerId: string, el: HTMLAudioElement | null) => {
@@ -122,6 +135,7 @@ export function NatureAmbientMixAudio({
           videoRef={videoRef}
           setAudioEl={(el) => setLayerAudioEl(l.layerId, el)}
           ambientLead={ambientLead}
+          underShellMusicGain={underShellMusicGain}
         />
       ))}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   newBackgroundId,
@@ -196,28 +196,17 @@ export function MusicAdminClient() {
       <header className="mb-10 border-b border-adminLine pb-6">
         <h1 className="text-[15px] font-medium tracking-tight text-adminFg">曲库与配图</h1>
         <p className="mt-1 max-w-prose text-[11px] leading-relaxed text-adminMuted">
-          上传、曲目与背景图；写入 companion。
+          上传、曲目与背景图；写入 companion。自然全屏影片请至{" "}
+          <Link href="/admin/music/nature" className="font-medium text-adminFg underline-offset-2 hover:underline">
+            音乐 → 自然
+          </Link>
+          。
         </p>
       </header>
 
       <AdminMediaHub setStore={setStore} setMsg={setMsg} flushToDisk={flushToDisk} />
       <AudioTrackLibrary store={store} setStore={setStore} />
       <ImageBackgroundLibrary store={store} setStore={setStore} />
-
-      <section className="mt-12 border-t border-adminLine pt-8">
-        <h2 className="text-[11px] font-medium uppercase tracking-[0.14em] text-adminMuted">播放视觉</h2>
-        <p className="mt-2 max-w-prose text-[11px] leading-relaxed text-adminMuted">
-          滑杆、首页氛围、引擎预设、实时 drive 与导入导出见侧栏{" "}
-          <strong className="font-medium text-adminFg">播放视觉</strong>
-          。
-        </p>
-        <Link
-          href="/admin/visual"
-          className="mt-4 inline-block border-b border-adminFg/40 pb-0.5 text-[12px] font-medium text-adminFg transition hover:border-adminFg"
-        >
-          打开播放视觉 →
-        </Link>
-      </section>
     </main>
   );
 }

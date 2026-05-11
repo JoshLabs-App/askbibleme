@@ -39,6 +39,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/studio", labelKey: "admin.items.studio" },
       { href: "/admin/system/settings", labelKey: "admin.items.settings" },
+      { href: "/admin/system/media-library", labelKey: "admin.items.mediaLibrary" },
     ],
   },
   {
@@ -47,6 +48,7 @@ const SECTIONS: NavSection[] = [
     labelKey: "admin.groups.music",
     items: [
       { href: "/admin/music", labelKey: "admin.items.musicLibrary" },
+      { href: "/admin/music/nature", labelKey: "admin.items.natureProduct" },
       { href: "/admin/visual", labelKey: "admin.items.playbackVisual" },
     ],
   },
@@ -66,7 +68,10 @@ for (const s of SECTIONS) {
 }
 
 function leafActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  if (pathname === href) return true;
+  /** `/admin/music` 与 `/admin/music/nature` 为并列子页，仅精确匹配高亮曲库 */
+  if (href === "/admin/music") return false;
+  return pathname.startsWith(`${href}/`);
 }
 
 function groupHasActive(pathname: string, items: NavLeaf[]): boolean {
@@ -91,12 +96,17 @@ function navOverviewClass(active: boolean) {
   ].join(" ");
 }
 
+function isNatureAdminPath(pathname: string): boolean {
+  return pathname === "/admin/music/nature" || pathname.startsWith("/admin/music/nature/");
+}
+
 /**
  * 统一后台壳层：一级分类 + 二级入口分层侧栏；克制动效与对比。
  */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
+  const showMobilePreview = !isNatureAdminPath(pathname);
 
   const [open, setOpen] = useState<Record<string, boolean>>(() => ({ ...INITIAL_GROUP_OPEN }));
   const [sidebarPx, setSidebarPx] = useState(SIDEBAR_DEFAULT_PX);
@@ -312,14 +322,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
 
-        <aside className="hidden min-h-0 w-[min(420px,36vw)] shrink-0 flex-col overflow-hidden border-l border-adminLine bg-adminPanel/25 lg:w-[440px] md:flex md:flex-col">
-          <AdminMobilePreviewPanel />
-        </aside>
+        {showMobilePreview ? (
+          <aside className="hidden min-h-0 w-[min(420px,36vw)] shrink-0 flex-col overflow-hidden border-l border-adminLine bg-adminPanel/25 lg:w-[440px] md:flex md:flex-col">
+            <AdminMobilePreviewPanel />
+          </aside>
+        ) : null}
       </div>
 
-      <div className="shrink-0 border-t border-adminLine bg-adminPanel/15 md:hidden">
-        <AdminMobilePreviewPanel stacked />
-      </div>
+      {showMobilePreview ? (
+        <div className="shrink-0 border-t border-adminLine bg-adminPanel/15 md:hidden">
+          <AdminMobilePreviewPanel stacked />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-2 border-t border-adminLine px-4 py-3 md:hidden">
         <LocaleTrigger>

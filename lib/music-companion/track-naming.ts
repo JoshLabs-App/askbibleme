@@ -28,6 +28,25 @@ export function nextDateNumberedImageUploadTitle(
   return nextDateNumberedLabel("背景", existingTitles, now);
 }
 
+/**
+ * 上传自然页背景视频的列表标题：`自然影像 YYYY-MM-DD · 01`。
+ */
+export function nextDateNumberedNatureVideoTitle(
+  existingTitles: readonly string[],
+  now: Date = new Date(),
+): string {
+  return nextDateNumberedLabel("自然影像", existingTitles, now);
+}
+
+/** 自然页环境声素材默认标题：`环境声 YYYY-MM-DD · 01`。 */
+export function nextDateNumberedNatureAmbientTitle(
+  existingTitles: readonly string[],
+  now: Date = new Date(),
+): string {
+  return nextDateNumberedLabel("环境声", existingTitles, now);
+}
+
+
 function nextDateNumberedLabel(
   prefix: string,
   existingTitles: readonly string[],

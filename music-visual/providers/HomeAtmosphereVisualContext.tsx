@@ -23,14 +23,14 @@ export type HomeAtmosphereVisualContextValue = {
 const HomeAtmosphereVisualContext = createContext<HomeAtmosphereVisualContextValue | null>(null);
 
 function readStoredHomeAtmosphere(): HomeAtmospherePresetId {
-  if (typeof window === "undefined") return "parchment";
+  if (typeof window === "undefined") return "lagoon";
   try {
     const raw = window.localStorage.getItem(HOME_ATMOSPHERE_STORAGE_KEY);
     if (isHomeAtmospherePresetId(raw)) return raw;
   } catch {
     /* ignore */
   }
-  return "parchment";
+  return "lagoon";
 }
 
 /**
@@ -38,7 +38,7 @@ function readStoredHomeAtmosphere(): HomeAtmospherePresetId {
  */
 export function HomeAtmosphereVisualProvider({ children }: { children: ReactNode }) {
   const [homeAtmospherePresetId, setHomeAtmospherePresetIdState] =
-    useState<HomeAtmospherePresetId>("parchment");
+    useState<HomeAtmospherePresetId>("lagoon");
 
   useEffect(() => {
     setHomeAtmospherePresetIdState(readStoredHomeAtmosphere());

@@ -1,16 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import {
-  assertSafeSvgText,
-  regenerateBrandingIcons,
-} from "@/lib/branding-generate-icons";
+import { assertSafeSvgText } from "@/lib/branding-generate-icons";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import { normalizeBrandColors } from "@/lib/site-branding-colors";
 import type { SiteBrandingState } from "@/lib/site-branding-colors";
 import {
   BRANDING_PUBLIC_DIR,
   BRANDING_STATE_PATH,
+  brandingAssetsExist,
   readBrandingState,
   writeBrandingState,
 } from "@/lib/site-branding";
@@ -27,8 +25,8 @@ function extFromName(name: string): string {
 }
 
 /**
- * 上传站点 LOGO（栅格或 SVG）→ 写入 `public/branding/` 并生成 PWA / Apple / favicon。
- * SVG 会保留 `logo.svg` 并以矢量为准栅格化；栅格上传会删除旧的 `logo.svg`。
+ * 仅上传**顶栏 LOGO**（透明 SVG / 栅格）→ 写入 `logo.svg` 或 `logo.png`。
+ * 不修改网站 / PWA 图标（见 `app-icon.png` 与 `/api/admin/branding/app-icons`）。
  */
 export async function POST(req: Request) {
   if (!isStudioDiskSaveAllowed(req)) {
@@ -90,14 +88,14 @@ export async function POST(req: Request) {
     }
 
     const colors = normalizeBrandColors(prev?.colors);
-    await regenerateBrandingIcons(colors.canvas);
-
     const next: SiteBrandingState = {
       updatedAt: new Date().toISOString(),
       originalName: origName,
       logoKind: ext === ".svg" ? "svg" : "raster",
       presetId: prev?.presetId ?? "parchment",
       colors,
+      ...(prev?.appIconsUpdatedAt ? { appIconsUpdatedAt: prev.appIconsUpdatedAt } : {}),
+      ...(prev?.appIconOriginalName ? { appIconOriginalName: prev.appIconOriginalName } : {}),
     };
     await fs.mkdir(path.dirname(BRANDING_STATE_PATH), { recursive: true });
     await writeBrandingState(next);
@@ -106,6 +104,8 @@ export async function POST(req: Request) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
+
+  const iconsReady = await brandingAssetsExist();
 
   return NextResponse.json({
     ok: true,
@@ -116,10 +116,14 @@ export async function POST(req: Request) {
     colors: saved.colors,
     urls: {
       logo: "/branding/logo.png",
-      icon192: "/branding/icon-192.png",
-      icon512: "/branding/icon-512.png",
-      appleTouch: "/branding/apple-touch-icon.png",
-      favicon32: "/branding/favicon-32.png",
+      ...(iconsReady
+        ? {
+            icon192: "/branding/icon-192.png",
+            icon512: "/branding/icon-512.png",
+            appleTouch: "/branding/apple-touch-icon.png",
+            favicon32: "/branding/favicon-32.png",
+          }
+        : {}),
       ...(ext === ".svg" ? { vector: "/branding/logo.svg" as const } : {}),
     },
   });

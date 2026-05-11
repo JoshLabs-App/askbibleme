@@ -14,78 +14,83 @@ export type BrandColors = {
   adminMuted: string;
 };
 
+/** 静湖系：天青画布 + 深蓝字 + 湖水点缀（全站默认，偏 Calm 式自然界面气质） */
 export const DEFAULT_BRAND_COLORS: BrandColors = {
-  canvas: "#F4EBD9",
-  surface: "#E8DCC8",
-  border: "#C9B899",
-  muted: "#6E5E45",
-  ink: "#1F1A12",
-  sand: "#B8945A",
-  adminBg: "#F5F1EA",
-  adminPanel: "#EBE6DC",
-  adminLine: "#D4CBB8",
-  adminFg: "#1F1A12",
-  adminMuted: "#6E5E45",
+  canvas: "#E4F1FA",
+  surface: "#CFE6F4",
+  border: "#9BC4DC",
+  muted: "#4A6274",
+  ink: "#132A3A",
+  sand: "#3D8AB8",
+  adminBg: "#EAF4FB",
+  adminPanel: "#DDEEF8",
+  adminLine: "#B3D0E6",
+  adminFg: "#132A3A",
+  adminMuted: "#4A6274",
 };
 
 export type BrandPresetId = "parchment" | "mist" | "dusk" | "forest" | "custom";
 
 export type SiteBrandingState = {
+  /** 顶栏 LOGO 文件上次更新时间（与图标母版无关） */
   updatedAt: string;
   originalName: string;
   logoKind: "svg" | "raster";
   presetId: BrandPresetId;
   colors: BrandColors;
+  /** 网站 / PWA 图标包（由 app-icon 母版生成） */
+  appIconsUpdatedAt?: string;
+  appIconOriginalName?: string;
 };
 
 export const BRAND_PRESETS: Record<Exclude<BrandPresetId, "custom">, BrandColors> = {
   parchment: { ...DEFAULT_BRAND_COLORS },
   mist: {
-    canvas: "#EAE8E4",
-    surface: "#DEDBD6",
-    border: "#B8B4AC",
-    muted: "#5C5850",
-    ink: "#1A1815",
-    sand: "#8B7D62",
-    adminBg: "#EFEDE9",
-    adminPanel: "#E3E0DA",
-    adminLine: "#CAC6BE",
-    adminFg: "#1A1815",
-    adminMuted: "#5C5850",
+    canvas: "#E6EBF0",
+    surface: "#D5DEE8",
+    border: "#A8B6C4",
+    muted: "#4E5A66",
+    ink: "#1A2229",
+    sand: "#5B7A94",
+    adminBg: "#ECEFF3",
+    adminPanel: "#DFE6EE",
+    adminLine: "#C5CED8",
+    adminFg: "#1A2229",
+    adminMuted: "#4E5A66",
   },
   dusk: {
-    canvas: "#EDE4D8",
-    surface: "#DCCFBE",
-    border: "#A89278",
-    muted: "#5E4F3D",
-    ink: "#16120E",
-    sand: "#9A7348",
-    adminBg: "#EFE8DE",
-    adminPanel: "#E0D5C8",
-    adminLine: "#C4B09A",
-    adminFg: "#16120E",
-    adminMuted: "#5E4F3D",
+    canvas: "#DDE8F2",
+    surface: "#C8DAEA",
+    border: "#88A8C2",
+    muted: "#3D4F5E",
+    ink: "#0F1F2C",
+    sand: "#2E6D8F",
+    adminBg: "#E4EDF5",
+    adminPanel: "#D3E2EF",
+    adminLine: "#9FB8CC",
+    adminFg: "#0F1F2C",
+    adminMuted: "#3D4F5E",
   },
   forest: {
-    canvas: "#E8EDE6",
-    surface: "#D5DFD6",
-    border: "#A3B0A3",
-    muted: "#4D574E",
-    ink: "#121814",
-    sand: "#6B7F68",
-    adminBg: "#ECEFEB",
-    adminPanel: "#DEE5DF",
-    adminLine: "#B8C2B8",
-    adminFg: "#121814",
-    adminMuted: "#4D574E",
+    canvas: "#E2F0ED",
+    surface: "#CCE8E2",
+    border: "#8FC4B8",
+    muted: "#3D5A52",
+    ink: "#102820",
+    sand: "#2A8C78",
+    adminBg: "#E8F4F1",
+    adminPanel: "#D8EDE8",
+    adminLine: "#A8D4C8",
+    adminFg: "#102820",
+    adminMuted: "#3D5A52",
   },
 };
 
 export const BRAND_PRESET_LABELS: Record<BrandPresetId, string> = {
-  parchment: "羊皮纸（默认）",
-  mist: "雾灰",
-  dusk: "暮色",
-  forest: "苔绿",
+  parchment: "静湖（默认）",
+  mist: "雾蓝",
+  dusk: "暮青",
+  forest: "苔青",
   custom: "自定义",
 };
 

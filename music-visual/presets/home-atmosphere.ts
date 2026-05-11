@@ -4,10 +4,11 @@ import { getMusicVisualAtmospherePreset, type MusicVisualAtmospherePreset } from
 /** 与 `HomeDashboard` / `HomeAtmosphereVisualProvider` 共用 */
 export const HOME_ATMOSPHERE_STORAGE_KEY = "selah-home-atmosphere-preset";
 
-/** 首页「经卷 / 晨光 …」氛围 ID（与壳层 localStorage 对齐） */
-export type HomeAtmospherePresetId = "parchment" | "dawn" | "dusk" | "mist" | "ember";
+/** 首页「静湖 / 经卷 / 晨光 …」氛围 ID（与壳层 localStorage 对齐） */
+export type HomeAtmospherePresetId = "lagoon" | "parchment" | "dawn" | "dusk" | "mist" | "ember";
 
 export const HOME_ATMOSPHERE_PRESETS: readonly { id: HomeAtmospherePresetId }[] = [
+  { id: "lagoon" },
   { id: "parchment" },
   { id: "dawn" },
   { id: "dusk" },
@@ -17,6 +18,7 @@ export const HOME_ATMOSPHERE_PRESETS: readonly { id: HomeAtmospherePresetId }[] 
 
 /** 首页视觉氛围 → 音乐视觉引擎预设（雾速 / 顶光权重 / 微粒密度） */
 export const HOME_ATMOSPHERE_TO_MUSIC_VISUAL: Record<HomeAtmospherePresetId, MusicVisualAtmospherePresetId> = {
+  lagoon: "stillness",
   parchment: "stillness",
   dawn: "hope",
   dusk: "night",
@@ -34,7 +36,7 @@ export function legacyAmbientQueryToHomeAtmosphere(
   raw: string | string[] | undefined,
 ): HomeAtmospherePresetId | null {
   const v = (Array.isArray(raw) ? raw[0] : raw)?.trim().toLowerCase();
-  if (v === "calm") return "parchment";
+  if (v === "calm") return "lagoon";
   if (v === "ember") return "ember";
   if (v === "aurora") return "dawn";
   return null;

@@ -14,7 +14,7 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
     <MusicShellPlaybackProvider>
       <MusicVisualTuningProvider>
         <HomeAtmosphereVisualProvider>
-          <div className="fixed inset-0 z-[1] flex max-h-dvh flex-col overflow-hidden bg-canvas supports-[height:100dvh]:max-h-[100dvh]">
+          <div className="fixed inset-0 z-[1] flex h-dvh min-h-0 max-h-dvh w-full flex-col overflow-hidden bg-canvas">
             <MusicShellVisualProvider>
               <div className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
                 {children}

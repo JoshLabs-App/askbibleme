@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { regenerateBrandingIcons } from "@/lib/branding-generate-icons";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import {
-  brandingAssetsExist,
+  canRegenerateBrandedAppIcons,
   readBrandingState,
   resolveColorsFromPreset,
   writeBrandingState,
@@ -53,17 +53,25 @@ export async function POST(req: Request) {
   const prev = await readBrandingState();
 
   const next: SiteBrandingState = {
-    updatedAt: new Date().toISOString(),
+    updatedAt: prev?.updatedAt ?? new Date().toISOString(),
     originalName: prev?.originalName ?? "（尚未上传 LOGO）",
     logoKind: prev?.logoKind ?? ("raster" as const),
     presetId: presetId as BrandPresetId,
     colors,
+    ...(prev?.appIconsUpdatedAt ? { appIconsUpdatedAt: prev.appIconsUpdatedAt } : {}),
+    ...(prev?.appIconOriginalName ? { appIconOriginalName: prev.appIconOriginalName } : {}),
   };
 
   try {
     await writeBrandingState(next);
-    if (await brandingAssetsExist()) {
+    if (await canRegenerateBrandedAppIcons()) {
       await regenerateBrandingIcons(colors.canvas);
+      const bumped: SiteBrandingState = {
+        ...next,
+        appIconsUpdatedAt: new Date().toISOString(),
+        appIconOriginalName: prev?.appIconOriginalName ?? next.appIconOriginalName,
+      };
+      await writeBrandingState(bumped);
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

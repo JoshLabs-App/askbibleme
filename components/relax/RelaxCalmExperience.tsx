@@ -27,6 +27,19 @@ type Props = {
   initial: RelaxSettingsV1;
 };
 
+function RelaxLagoonVisual() {
+  return (
+    <div
+      className="pointer-events-none relative flex h-[min(58vw,17rem)] w-[min(58vw,17rem)] items-center justify-center sm:h-[17.5rem] sm:w-[17.5rem]"
+      aria-hidden
+    >
+      <div className="animate-relax-breathe absolute inset-[8%] rounded-full bg-gradient-to-br from-sky-400/55 via-cyan-400/40 to-teal-500/30 shadow-[0_0_72px_rgba(56,189,248,0.38),0_0_100px_rgba(45,212,191,0.22)] motion-reduce:animate-none" />
+      <div className="pointer-events-none absolute inset-[22%] rounded-full bg-gradient-to-tl from-white/50 via-sky-100/25 to-transparent opacity-95" />
+      <div className="pointer-events-none absolute inset-[38%] rounded-full bg-white/45 blur-xl" />
+    </div>
+  );
+}
+
 function RelaxOrbVisual() {
   return (
     <div
@@ -89,6 +102,8 @@ function RelaxPillarVisual() {
 
 function RelaxVisualByEffect({ id }: { id: RelaxVisualEffectId }) {
   switch (id) {
+    case "lagoon":
+      return <RelaxLagoonVisual />;
     case "orb":
       return <RelaxOrbVisual />;
     case "ripple":
@@ -103,7 +118,7 @@ function RelaxVisualByEffect({ id }: { id: RelaxVisualEffectId }) {
 }
 
 /**
- * Calm 式放松会话：全屏静音影像（可选）+ 壳层音乐；底栏在外层对该路由隐藏。
+ * 放松会话：静湖为浅色天青底；其余为深色。底栏在外层对该路由隐藏。
  */
 export function RelaxCalmExperience({ initial }: Props) {
   const { t } = useLocale();
@@ -147,10 +162,21 @@ export function RelaxCalmExperience({ initial }: Props) {
     setVideoBroken(false);
   }, [videoSrc]);
 
+  const isLagoon = visualEffect === "lagoon";
+  const hasVideo = Boolean(videoSrc && !videoBroken);
+
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-1 flex-col bg-[#0b1020] text-white supports-[height:100dvh]:min-h-[100dvh]">
+    <div
+      className={`relative flex min-h-[100dvh] w-full flex-1 flex-col supports-[height:100dvh]:min-h-[100dvh] ${
+        isLagoon ? "bg-canvas text-ink" : "bg-[#0b1020] text-white"
+      }`}
+    >
       <div
-        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a]"
+        className={`pointer-events-none absolute inset-0 z-0 ${
+          isLagoon
+            ? "bg-gradient-to-b from-sky-100 via-sky-50 to-cyan-100/90"
+            : "bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a]"
+        }`}
         aria-hidden
       />
 
@@ -158,7 +184,7 @@ export function RelaxCalmExperience({ initial }: Props) {
         <video
           ref={videoRef}
           key={videoSrc}
-          className="absolute inset-0 z-[1] h-full w-full object-cover"
+          className="absolute inset-0 z-[1] h-full w-full border-0 object-cover outline-none"
           src={videoSrc}
           poster={poster || undefined}
           muted
@@ -172,18 +198,34 @@ export function RelaxCalmExperience({ initial }: Props) {
       ) : null}
 
       <div
-        className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-b from-black/35 via-transparent to-black/[0.58]"
+        className={`pointer-events-none absolute inset-0 z-[5] ${
+          isLagoon && hasVideo
+            ? "bg-gradient-to-b from-white/55 via-sky-50/25 to-sky-200/45"
+            : isLagoon
+              ? "bg-gradient-to-b from-sky-200/25 via-transparent to-cyan-100/35"
+              : "bg-gradient-to-b from-black/35 via-transparent to-black/[0.58]"
+        }`}
         aria-hidden
       />
 
       <header className="relative z-20 mx-auto flex w-full max-w-xl shrink-0 items-center justify-between gap-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-[max(1rem,env(safe-area-inset-top))]">
         <Link
           href="/"
-          className="rounded-full px-3.5 py-2.5 text-[14px] font-medium leading-snug text-white/72 transition hover:bg-white/[0.07] hover:text-white sm:text-[15px]"
+          className={
+            isLagoon
+              ? "rounded-full px-3.5 py-2.5 text-[14px] font-medium leading-snug text-ink/80 transition hover:bg-white/60 hover:text-ink sm:text-[15px]"
+              : "rounded-full px-3.5 py-2.5 text-[14px] font-medium leading-snug text-white/72 transition hover:bg-white/[0.07] hover:text-white sm:text-[15px]"
+          }
         >
           ← {t("relax.back")}
         </Link>
-        <span className="shrink-0 text-[10px] font-medium tracking-[0.28em] text-white/38 sm:text-[11px] sm:tracking-[0.32em]">
+        <span
+          className={
+            isLagoon
+              ? "shrink-0 text-[10px] font-medium tracking-[0.28em] text-ink/45 sm:text-[11px] sm:tracking-[0.32em]"
+              : "shrink-0 text-[10px] font-medium tracking-[0.28em] text-white/38 sm:text-[11px] sm:tracking-[0.32em]"
+          }
+        >
           {t("relax.sessionLabel")}
         </span>
       </header>
@@ -193,7 +235,13 @@ export function RelaxCalmExperience({ initial }: Props) {
         role="tablist"
         aria-label={t("relax.effectPickerLabel")}
       >
-        <div className="flex max-w-full overflow-x-auto rounded-full bg-white/[0.055] p-1 ring-1 ring-white/[0.09] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          className={
+            isLagoon
+              ? "flex max-w-full overflow-x-auto rounded-full border border-sky-200/80 bg-white/75 p-1 shadow-sm ring-1 ring-sky-100/60 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              : "flex max-w-full overflow-x-auto rounded-full bg-white/[0.055] p-1 ring-1 ring-white/[0.09] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          }
+        >
           {RELAX_VISUAL_EFFECT_IDS.map((id) => {
             const selected = visualEffect === id;
             return (
@@ -203,9 +251,17 @@ export function RelaxCalmExperience({ initial }: Props) {
                 role="tab"
                 aria-selected={selected}
                 onClick={() => persistVisualEffect(id)}
-                className={`shrink-0 rounded-full px-3 py-2 text-[12px] font-medium tracking-wide transition sm:px-3.5 sm:py-2 sm:text-[12.5px] ${
-                  selected ? "bg-white/[0.15] text-white shadow-sm" : "text-white/44 hover:bg-white/[0.06] hover:text-white/78"
-                }`}
+                className={
+                  isLagoon
+                    ? `shrink-0 rounded-full px-3 py-2 text-[12px] font-medium tracking-wide transition sm:px-3.5 sm:py-2 sm:text-[12.5px] ${
+                        selected
+                          ? "bg-sky-600 text-white shadow-sm"
+                          : "text-ink/50 hover:bg-sky-100/80 hover:text-ink/85"
+                      }`
+                    : `shrink-0 rounded-full px-3 py-2 text-[12px] font-medium tracking-wide transition sm:px-3.5 sm:py-2 sm:text-[12.5px] ${
+                        selected ? "bg-white/[0.15] text-white shadow-sm" : "text-white/44 hover:bg-white/[0.06] hover:text-white/78"
+                      }`
+                }
               >
                 {t(RELAX_EFFECT_TAB_I18N_KEY[id])}
               </button>
@@ -220,7 +276,7 @@ export function RelaxCalmExperience({ initial }: Props) {
             <RelaxVisualByEffect id={visualEffect} />
           </div>
           <HomeVerseRotator
-            variant="dark"
+            variant={isLagoon ? "light" : "dark"}
             prominence="relax"
             className="min-h-[7.75rem] w-full sm:min-h-[9rem]"
           />
@@ -229,19 +285,31 @@ export function RelaxCalmExperience({ initial }: Props) {
 
       <footer className="relative z-20 mx-auto mt-auto flex w-full max-w-md shrink-0 flex-col gap-4 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-5 sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-5">
         {canPlay ? (
-          <div className="flex items-center gap-3.5 text-[12px] tabular-nums text-white/48 sm:text-[13px]">
+          <div
+            className={`flex items-center gap-3.5 text-[12px] tabular-nums sm:text-[13px] ${
+              isLagoon ? "text-ink/50" : "text-white/48"
+            }`}
+          >
             <span className="min-w-[2.75rem] shrink-0">{formatTime(currentSec)}</span>
             <button
               type="button"
               aria-label={t("music.home.progress")}
-              className="group relative h-1 flex-1 overflow-hidden rounded-full bg-white/[0.13] sm:h-[5px]"
+              className={
+                isLagoon
+                  ? "group relative h-1 flex-1 overflow-hidden rounded-full bg-ink/10 sm:h-[5px]"
+                  : "group relative h-1 flex-1 overflow-hidden rounded-full bg-white/[0.13] sm:h-[5px]"
+              }
               onClick={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 seekRatio((e.clientX - r.left) / r.width);
               }}
             >
               <span
-                className="absolute inset-y-0 left-0 rounded-full bg-white/[0.82] transition-[width] duration-150 ease-out group-hover:bg-white/90"
+                className={
+                  isLagoon
+                    ? "absolute inset-y-0 left-0 rounded-full bg-sand/90 transition-[width] duration-150 ease-out group-hover:bg-sand"
+                    : "absolute inset-y-0 left-0 rounded-full bg-white/[0.82] transition-[width] duration-150 ease-out group-hover:bg-white/90"
+                }
                 style={{
                   width: `${durationSec ? Math.min(100, (currentSec / durationSec) * 100) : 0}%`,
                 }}
@@ -250,7 +318,9 @@ export function RelaxCalmExperience({ initial }: Props) {
             <span className="min-w-[2.75rem] shrink-0 text-right">{formatTime(durationSec)}</span>
           </div>
         ) : (
-          <p className="text-center text-[12px] leading-relaxed text-white/38 sm:text-[13px]">{t("relax.noMusicHint")}</p>
+          <p className={`text-center text-[12px] leading-relaxed sm:text-[13px] ${isLagoon ? "text-muted" : "text-white/38"}`}>
+            {t("relax.noMusicHint")}
+          </p>
         )}
 
         <div className="flex justify-center pb-0.5">
@@ -261,7 +331,11 @@ export function RelaxCalmExperience({ initial }: Props) {
               !canPlay ? t("playback.noTrack") : playing ? t("playback.pauseMusic") : t("playback.playMusic")
             }
             onClick={() => togglePlay()}
-            className="music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full bg-white/[0.14] text-white shadow-[0_10px_44px_-14px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.14] transition hover:bg-white/[0.18] active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16"
+            className={
+              isLagoon
+                ? "music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full border border-sky-300/80 bg-sky-600 text-white shadow-[0_10px_40px_-12px_rgba(15,60,90,0.35)] transition hover:bg-sky-700 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16"
+                : "music-reactive-play-btn flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full bg-white/[0.14] text-white shadow-[0_10px_44px_-14px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.14] transition hover:bg-white/[0.18] active:scale-[0.96] disabled:pointer-events-none disabled:opacity-35 sm:h-16 sm:w-16"
+            }
           >
             {playing ? (
               <IconPause className="h-6 w-6 shrink-0 opacity-95 sm:h-[26px] sm:w-[26px]" />

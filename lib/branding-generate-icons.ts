@@ -3,6 +3,7 @@ import path from "node:path";
 import sharp from "sharp";
 
 const BRANDING_PUBLIC_DIR = path.resolve(process.cwd(), "public", "branding");
+const APP_ICON_MASTER = "app-icon.png";
 
 function parseRgb(hex: string): { r: number; g: number; b: number } {
   const h = hex.replace(/^#/, "");
@@ -26,55 +27,51 @@ async function squarePng(from: Buffer, size: number, bgHex: string): Promise<Buf
     .toBuffer();
 }
 
-/** 粗检 SVG，阻挡常见脚本注入（仍需栅格化后才对外展示 PNG）。 */
+/** 粗检 SVG，阻挡常见脚本注入（顶栏 LOGO 用，不经此文件生成图标）。 */
 export function assertSafeSvgText(buf: Buffer): void {
   const head = buf.subarray(0, Math.min(buf.length, 120_000)).toString("utf8");
-  if (
-    /<script[\s>]|<iframe|javascript:|data:text\/html|on\w+\s*=/i.test(head)
-  ) {
+  if (/<script[\s>]|<iframe|javascript:|data:text\/html|on\w+\s*=/i.test(head)) {
     throw new Error("SVG 含有不安全内容，请移除脚本与事件属性后重试。");
   }
 }
 
-async function loadRasterInput(dir: string): Promise<{ buf: Buffer; kind: "svg" | "raster" }> {
-  const svgPath = path.join(dir, "logo.svg");
-  const pngPath = path.join(dir, "logo.png");
+/**
+ * 读取「网站 / PWA 图标」母版 `app-icon.png`；若不存在则尝试从旧版单一的 `logo.png` 复制一次作为过渡。
+ * 不读取顶栏 `logo.svg`（图标母版须为栅格）。
+ */
+async function readAppIconMasterBuffer(dir: string): Promise<Buffer> {
+  const master = path.join(dir, APP_ICON_MASTER);
   try {
-    await fs.access(svgPath);
-    const buf = await fs.readFile(svgPath);
-    assertSafeSvgText(buf);
-    return { buf, kind: "svg" };
+    return await fs.readFile(master);
   } catch {
-    /* no svg */
+    const legacyLogo = path.join(dir, "logo.png");
+    try {
+      const b = await fs.readFile(legacyLogo);
+      await fs.writeFile(master, b);
+      return await fs.readFile(master);
+    } catch {
+      throw new Error(
+        "缺少网站与 App 图标母版：请在后台上传「网站与 App 图标」，或保留可读的 logo.png 作为一次性过渡。",
+      );
+    }
   }
-  try {
-    await fs.access(pngPath);
-    const buf = await fs.readFile(pngPath);
-    return { buf, kind: "raster" };
-  } catch {
-    throw new Error("缺少 logo.svg 或 logo.png，请先上传 LOGO。");
-  }
-}
-
-function sharpFromLogo(buf: Buffer, kind: "svg" | "raster") {
-  return kind === "svg" ? sharp(buf, { density: 240 }) : sharp(buf);
 }
 
 /**
- * 从 `public/branding/logo.svg`（优先）或 `logo.png` 生成各尺寸 PNG，底色用品牌 canvas。
+ * 从 `public/branding/app-icon.png` 生成 favicon / PWA / Apple 用 PNG；**不会**修改顶栏 `logo.png` / `logo.svg`。
+ * 画布底色用品牌 `canvas`，用于圆角外留白。
  */
 export async function regenerateBrandingIcons(canvasHex: string): Promise<void> {
   const dir = BRANDING_PUBLIC_DIR;
-  const { buf, kind } = await loadRasterInput(dir);
+  const raw = await readAppIconMasterBuffer(dir);
 
-  const logoPath = path.join(dir, "logo.png");
-  const resolvedLogo = path.resolve(logoPath);
-  const relLogo = path.relative(dir, resolvedLogo);
-  if (relLogo.startsWith("..") || path.isAbsolute(relLogo)) {
+  const base = await sharp(raw).rotate().png().toBuffer();
+
+  const masterResolved = path.resolve(dir, APP_ICON_MASTER);
+  const relMaster = path.relative(dir, masterResolved);
+  if (relMaster.startsWith("..") || path.isAbsolute(relMaster)) {
     throw new Error("路径校验失败。");
   }
-
-  const base = await sharpFromLogo(buf, kind).rotate().png().toBuffer();
 
   await sharp(base)
     .resize({
@@ -84,13 +81,15 @@ export async function regenerateBrandingIcons(canvasHex: string): Promise<void> 
       withoutEnlargement: true,
     })
     .png({ compressionLevel: 9 })
-    .toFile(resolvedLogo);
+    .toFile(masterResolved);
+
+  const normalized = await fs.readFile(masterResolved);
 
   const [icon192, icon512, apple180, fav32] = await Promise.all([
-    squarePng(base, 192, canvasHex),
-    squarePng(base, 512, canvasHex),
-    squarePng(base, 180, canvasHex),
-    squarePng(base, 32, canvasHex),
+    squarePng(normalized, 192, canvasHex),
+    squarePng(normalized, 512, canvasHex),
+    squarePng(normalized, 180, canvasHex),
+    squarePng(normalized, 32, canvasHex),
   ]);
 
   await Promise.all([
@@ -99,4 +98,20 @@ export async function regenerateBrandingIcons(canvasHex: string): Promise<void> 
     fs.writeFile(path.join(dir, "apple-touch-icon.png"), apple180),
     fs.writeFile(path.join(dir, "favicon-32.png"), fav32),
   ]);
+}
+
+/**
+ * 将用户上传的栅格写入 `app-icon.png`（旋转为正向 PNG），再生成全站图标包。
+ */
+export async function writeAppIconMasterFromRaster(fileBuf: Buffer, canvasHex: string): Promise<void> {
+  const dir = BRANDING_PUBLIC_DIR;
+  await fs.mkdir(dir, { recursive: true });
+  const png = await sharp(fileBuf).rotate().png().toBuffer();
+  const out = path.resolve(dir, APP_ICON_MASTER);
+  const rel = path.relative(dir, out);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) {
+    throw new Error("路径校验失败。");
+  }
+  await fs.writeFile(out, png);
+  await regenerateBrandingIcons(canvasHex);
 }

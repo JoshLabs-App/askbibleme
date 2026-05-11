@@ -16,7 +16,7 @@ const config: Config = {
         muted: "rgb(var(--brand-muted-rgb) / <alpha-value>)",
         ink: "rgb(var(--brand-ink-rgb) / <alpha-value>)",
         sand: "rgb(var(--brand-sand-rgb) / <alpha-value>)",
-        /** 统一后台（浅色羊皮纸系，与前台气质一致、略偏中性灰） */
+        /** 统一后台（浅色静湖系，与前台天青画布一致） */
         adminBg: "rgb(var(--brand-admin-bg-rgb) / <alpha-value>)",
         adminPanel: "rgb(var(--brand-admin-panel-rgb) / <alpha-value>)",
         adminLine: "rgb(var(--brand-admin-line-rgb) / <alpha-value>)",

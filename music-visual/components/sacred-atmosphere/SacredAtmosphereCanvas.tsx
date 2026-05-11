@@ -83,7 +83,7 @@ export type SacredAtmosphereCanvasProps = {
 /** Selah Sacred Atmosphere：全屏雾与顶光，与预计算 JSON 同源 `driveRef`；仅作氛围层，不接管 UI。 */
 export function SacredAtmosphereCanvas({ homeAtmospherePresetId: homeIdProp }: SacredAtmosphereCanvasProps) {
   const ctx = useHomeAtmosphereVisualOptional();
-  const resolvedHomeId = homeIdProp ?? ctx?.homeAtmospherePresetId ?? "parchment";
+  const resolvedHomeId = homeIdProp ?? ctx?.homeAtmospherePresetId ?? "lagoon";
   const [dpr, setDpr] = useState(1);
   useEffect(() => {
     setDpr(Math.min(window.devicePixelRatio ?? 1, 2));

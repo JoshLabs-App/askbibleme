@@ -37,13 +37,20 @@ export async function readBrandingState(): Promise<SiteBrandingState | null> {
     const raw = await fs.readFile(BRANDING_STATE_PATH, "utf-8");
     const j = JSON.parse(raw) as Partial<SiteBrandingState>;
     if (typeof j.updatedAt !== "string" || typeof j.originalName !== "string") return null;
-    return {
+    const base: SiteBrandingState = {
       updatedAt: j.updatedAt,
       originalName: j.originalName,
       logoKind: coerceLogoKind(j.logoKind),
       presetId: coercePreset(j.presetId),
       colors: normalizeBrandColors(j.colors),
     };
+    if (typeof j.appIconsUpdatedAt === "string" && j.appIconsUpdatedAt.trim()) {
+      base.appIconsUpdatedAt = j.appIconsUpdatedAt.trim();
+    }
+    if (typeof j.appIconOriginalName === "string" && j.appIconOriginalName.trim()) {
+      base.appIconOriginalName = j.appIconOriginalName.trim();
+    }
+    return base;
   } catch {
     return null;
   }
@@ -69,6 +76,34 @@ export async function brandingAssetsExist(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/** 顶栏用：存在 `logo.svg` 或 `logo.png` */
+export async function brandingLogoExists(): Promise<boolean> {
+  try {
+    await fs.access(path.join(BRANDING_PUBLIC_DIR, "logo.svg"));
+    return true;
+  } catch {
+    try {
+      await fs.access(path.join(BRANDING_PUBLIC_DIR, "logo.png"));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/** 配色保存时：若可找到图标母版则重新栅格化（母版为 app-icon.png，或过渡期内仅有 logo.png） */
+export async function canRegenerateBrandedAppIcons(): Promise<boolean> {
+  for (const rel of ["app-icon.png", "logo.png"]) {
+    try {
+      await fs.access(path.join(BRANDING_PUBLIC_DIR, rel));
+      return true;
+    } catch {
+      /* try next */
+    }
+  }
+  return false;
 }
 
 export function resolveColorsFromPreset(

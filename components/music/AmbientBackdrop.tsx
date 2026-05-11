@@ -14,6 +14,7 @@ type PresetClasses = {
 
 /** 无循环 keyframe：动感交给 WebGL（Sacred）+ 壳层 `--music-*`；此处只保留静态色与层次。 */
 const CLASSES: Record<HomeAtmospherePresetId, PresetClasses> = {
+  lagoon: { driftA: "", driftB: "", veil: "", sheen: "", grain: "", bokeh1: "", bokeh2: "" },
   parchment: { driftA: "", driftB: "", veil: "", sheen: "", grain: "", bokeh1: "", bokeh2: "" },
   dawn: { driftA: "", driftB: "", veil: "", sheen: "", grain: "", bokeh1: "", bokeh2: "" },
   dusk: { driftA: "", driftB: "", veil: "", sheen: "", grain: "", bokeh1: "", bokeh2: "" },
@@ -33,6 +34,19 @@ type PresetLayers = {
 
 /** 与 `HomeAtmospherePresetId` / 后台「首页氛围」一致； former calm/ember/aurora 已并入 parchment/ember/dawn。 */
 const LAYERS: Record<HomeAtmospherePresetId, PresetLayers> = {
+  lagoon: {
+    rootBg: "#e4f1fa",
+    layerA:
+      "radial-gradient(ellipse 78% 64% at 32% 32%, rgba(125, 211, 252, 0.55) 0%, rgba(186, 230, 253, 0.35) 48%, transparent 72%)",
+    layerB:
+      "radial-gradient(ellipse 70% 58% at 72% 48%, rgba(165, 243, 252, 0.45) 0%, rgba(224, 242, 254, 0.4) 50%, transparent 74%)",
+    bokeh1: "bg-sky-300/35",
+    bokeh2: "bg-cyan-200/30",
+    sheen:
+      "radial-gradient(ellipse 58% 48% at 48% 28%, rgba(255, 255, 255, 0.55) 0%, rgba(224, 242, 254, 0.25) 42%, transparent 68%)",
+    veil:
+      "linear-gradient(165deg, rgba(255, 255, 255, 0.42) 0%, rgba(224, 242, 254, 0.22) 45%, rgba(186, 230, 253, 0.38) 100%)",
+  },
   parchment: {
     rootBg: "#1f1a17",
     layerA:

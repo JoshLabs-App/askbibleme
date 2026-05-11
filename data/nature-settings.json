@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "videos": [
+    {
+      "id": "21c414ac-1052-48c9-82b4-6ad897ecc9b3",
+      "src": "/nature/uploads/0f79b12cfe8e476d889f53add9ea8515.mp4",
+      "title": "山顶云海",
+      "mix": [
+        {
+          "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+          "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+          "volume": 0.14
+        }
+      ]
+    },
+    {
+      "id": "f1f36b56-696d-4d78-9fac-ef688d6f2b89",
+      "src": "/nature/uploads/0463f278c78440679a6f534be4035f9b.mp4",
+      "title": "湖泊",
+      "mix": [
+        {
+          "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+          "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+          "volume": 0.14
+        },
+        {
+          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "volume": 0.47
+        }
+      ]
+    }
+  ],
+  "ambientClips": [
+    {
+      "id": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+      "src": "/nature/audio-uploads/b061e89925ef4f8bb119b4e473bd65f0.mp3",
+      "title": "lake"
+    },
+    {
+      "id": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
+      "src": "/nature/audio-uploads/6b879482ae144738901487d898e89d70.mp3",
+      "title": "birds"
+    }
+  ],
+  "activeVideoId": "f1f36b56-696d-4d78-9fac-ef688d6f2b89",
+  "playbackRate": 1
+}

@@ -34,6 +34,36 @@ const DARK_ATMOSPHERE_PRESETS = new Set<HomeAtmospherePresetId>(["dusk", "mist",
 
 function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
   switch (preset) {
+    case "lagoon":
+      return (
+        <>
+          <div className="absolute inset-0 bg-canvas" aria-hidden />
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-sky-200/40 via-transparent to-cyan-100/28"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -inset-[34%] bg-gradient-to-br from-sky-300/45 via-sky-100/18 to-teal-100/30 motion-safe:animate-amb-home-aurora-drift-a will-change-transform"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_88%_56%_at_12%_88%,rgba(56,189,248,0.22),transparent_54%)] motion-safe:animate-amb-home-aurora-bokeh-1 will-change-[transform,opacity]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_88%_12%,rgba(45,212,191,0.18),transparent_56%)] motion-safe:animate-amb-home-float-2 will-change-[transform,opacity]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -inset-[26%] mix-blend-soft-light bg-gradient-to-tl from-cyan-100/30 via-transparent to-sky-200/22 motion-safe:animate-amb-home-aurora-sheen will-change-[transform,opacity]"
+            aria-hidden
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-sand/[0.08] via-transparent to-transparent"
+            aria-hidden
+          />
+        </>
+      );
     case "parchment":
       return (
         <>

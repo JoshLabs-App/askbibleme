@@ -16,10 +16,9 @@ import type {
   MusicCompanionStore,
   Scene,
 } from "@/lib/music-companion/types";
-import { HomeMusicFloatingChrome } from "@/components/home/HomeMusicFloatingChrome";
+import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { IconSkipBack, IconSkipForward } from "@/components/ui/MediaPlaybackIcons";
 import { resolveLocalized } from "@/lib/i18n/localized-text";
 
 const SacredAtmosphereCanvas = dynamic(
@@ -125,14 +124,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     setHomeAtmospherePresetId(atmosphereUrlOverride);
   }, [atmosphereUrlOverride, setHomeAtmospherePresetId]);
 
-  const {
-    pausePlayback,
-    currentSec,
-    durationSec,
-    seekRatio,
-    setPlaybackSrc,
-    effectiveSrc,
-  } = useMusicShellPlayback();
+  const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc } = useMusicShellPlayback();
   const [store, setStore] = useState<MusicCompanionStore>(initialStore);
   const initialSi = initialSceneIndex(initialStore);
   const [sceneIndex, setSceneIndex] = useState(() => initialSi);
@@ -407,44 +399,9 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     });
   }, [imageBgs]);
 
-  const nextScene = useCallback(() => {
-    if (orderedScenes.length <= 1) return;
-    setSceneIndex((i) => (i + 1) % orderedScenes.length);
-    pausePlayback();
-  }, [orderedScenes.length, pausePlayback]);
-
-  const prevScene = useCallback(() => {
-    if (orderedScenes.length <= 1) return;
-    setSceneIndex((i) => (i - 1 + orderedScenes.length) % orderedScenes.length);
-    pausePlayback();
-  }, [orderedScenes.length, pausePlayback]);
-
-  const showLateralNav = tracksWithSrc.length > 1 || orderedScenes.length > 1;
-
-  const goLeft = useCallback(() => {
-    if (tracksWithSrc.length > 1) {
-      bumpUserSkip();
-      const n = tracksWithSrc.length;
-      const cur = resolvedTrackIdxRef.current;
-      setTrackPoolIdx((cur - 1 + n) % n);
-      return;
-    }
-    prevScene();
-  }, [tracksWithSrc.length, prevScene]);
-
-  const goRight = useCallback(() => {
-    if (tracksWithSrc.length > 1) {
-      bumpUserSkip();
-      const n = tracksWithSrc.length;
-      const cur = resolvedTrackIdxRef.current;
-      setTrackPoolIdx((cur + 1) % n);
-      return;
-    }
-    nextScene();
-  }, [tracksWithSrc.length, nextScene]);
-
   const bgStyle: React.CSSProperties = {};
   const showImageBackdrop = bgMode === "images";
+  const lagoonLight = homeAtmospherePresetId === "lagoon" && !showImageBackdrop;
   let imageBackdropFilter: string | undefined;
   if (showImageBackdrop) {
     const f: string[] = [];
@@ -476,7 +433,13 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   }
 
   return (
-    <div className="relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-ink text-canvas shadow-2xl lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none lg:shadow-none lg:ring-0">
+    <div
+      className={
+        lagoonLight
+          ? "relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink shadow-xl shadow-sky-900/10 lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none lg:shadow-none lg:ring-0"
+          : "relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-ink text-canvas shadow-2xl lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none lg:shadow-none lg:ring-0"
+      }
+    >
 
       <div className="pointer-events-none absolute inset-0 z-0 isolate min-h-full min-w-full overflow-hidden music-reactive-home-shell">
         {showImageBackdrop ? (
@@ -507,7 +470,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
         )}
         <div
           className={`pointer-events-none absolute inset-0 z-[2] mix-blend-soft-light ${
-            showImageBackdrop ? "opacity-[0.34]" : "opacity-[0.44]"
+            showImageBackdrop ? "opacity-[0.34]" : lagoonLight ? "opacity-[0.22]" : "opacity-[0.44]"
           }`}
           aria-hidden
         >
@@ -515,19 +478,33 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
         </div>
       </div>
       <div className="pointer-events-none absolute inset-0 z-[3]" aria-hidden>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/12 via-black/[0.22] to-black/[0.5] lg:from-black/10 lg:via-black/20 lg:to-black/[0.46]" />
-        <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,200,160,0.16)_0%,rgba(230,160,105,0.055)_40%,transparent_70%)]" />
+        {lagoonLight ? (
+          <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-sky-50/40 to-sky-100/55 lg:from-white/45 lg:via-sky-100/35 lg:to-sky-100/50" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-b from-black/12 via-black/[0.22] to-black/[0.5] lg:from-black/10 lg:via-black/20 lg:to-black/[0.46]" />
+        )}
+        {lagoonLight ? (
+          <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(125,211,252,0.35)_0%,rgba(224,242,254,0.2)_40%,transparent_72%)]" />
+        ) : homeAtmospherePresetId === "lagoon" ? (
+          <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(147,197,253,0.14)_0%,rgba(56,189,248,0.05)_38%,transparent_72%)]" />
+        ) : (
+          <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,200,160,0.16)_0%,rgba(230,160,105,0.055)_40%,transparent_70%)]" />
+        )}
       </div>
       {/* 底部轻晕：读取 `--music-*`，与后台「光晕 / 深色光晕」同源；置于 z-[3] 渐变之上否则完全被盖住 */}
       <div
-        className="music-reactive-home-glow-dark pointer-events-none absolute inset-x-0 bottom-0 z-[6] h-[min(38vh,17rem)] bg-gradient-to-t from-black/45 via-black/14 to-transparent"
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-[6] h-[min(38vh,17rem)] bg-gradient-to-t ${
+          lagoonLight
+            ? "from-sky-300/30 via-cyan-100/12 to-transparent music-reactive-home-glow"
+            : "from-black/45 via-black/14 to-transparent music-reactive-home-glow-dark"
+        }`}
         aria-hidden
       />
 
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <HomeMusicFloatingChrome />
+        <AppShellTopBar tone={lagoonLight ? "onLight" : "onDark"} />
 
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+2.35rem))] lg:pt-[max(0.35rem,calc(env(safe-area-inset-top)+2.55rem))]">
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+3.5rem))]">
       <div className="relative z-10 flex flex-col items-center justify-start px-4 pt-5 text-center sm:px-5 sm:pt-6 lg:px-6 lg:pt-7 xl:px-8">
         <div className="flex w-full max-w-xl flex-col items-center lg:max-w-2xl">
           <div className="min-w-0 w-full pt-[clamp(1rem,12dvh,6rem)] opacity-0 motion-reduce:animate-none motion-reduce:opacity-100 animate-music-hero-fade">
@@ -536,27 +513,43 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
               type="button"
               onClick={() => shuffleTrack()}
               aria-label={t("music.home.shuffleTrack")}
-              className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-white/[0.03]"
+              className={`group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors ${
+                lagoonLight ? "lg:hover:bg-ink/[0.04]" : "lg:hover:bg-white/[0.03]"
+              }`}
             >
-              <HomeVerseRotator variant="dark" prominence="hero" className="w-full" />
+              <HomeVerseRotator variant={lagoonLight ? "light" : "dark"} prominence="hero" className="w-full" />
               {trackArtist ? (
-                <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">
+                <p
+                  className={`mt-5 text-sm font-normal drop-shadow-sm lg:mt-6 lg:text-base ${
+                    lagoonLight ? "text-ink/70" : "text-white/[0.78]"
+                  }`}
+                >
                   {trackArtist}
                 </p>
               ) : null}
             </button>
           ) : (
             <>
-              <HomeVerseRotator variant="dark" prominence="hero" className="w-full" />
+              <HomeVerseRotator variant={lagoonLight ? "light" : "dark"} prominence="hero" className="w-full" />
               {trackArtist ? (
-                <p className="mt-5 text-sm font-normal text-white/[0.78] drop-shadow-sm lg:mt-6 lg:text-base">{trackArtist}</p>
+                <p
+                  className={`mt-5 text-sm font-normal drop-shadow-sm lg:mt-6 lg:text-base ${
+                    lagoonLight ? "text-ink/70" : "text-white/[0.78]"
+                  }`}
+                >
+                  {trackArtist}
+                </p>
               ) : null}
             </>
           )}
           </div>
         </div>
         {!audioSrc ? (
-          <p className="mt-4 max-w-[16rem] text-xs leading-relaxed text-amber-100/90 lg:max-w-md lg:text-sm">
+          <p
+            className={`mt-4 max-w-[16rem] text-xs leading-relaxed lg:max-w-md lg:text-sm ${
+              lagoonLight ? "text-muted" : "text-amber-100/90"
+            }`}
+          >
             {t("music.home.noAudioBefore")}{" "}
             <Link href="/admin/music" className="underline underline-offset-2">
               {t("music.home.adminMusic")}
@@ -567,36 +560,28 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
       </div>
         </div>
 
-        <footer className="relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs text-white/55 lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] lg:text-white/48 xl:max-w-3xl xl:px-8">
-        {showLateralNav ? (
-          <div className="flex items-center justify-center gap-10 lg:gap-12">
-            <button
-              type="button"
-              onClick={goLeft}
-              aria-label={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
-              title={tracksWithSrc.length > 1 ? t("music.home.prevTrack") : t("music.home.prevScene")}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] text-white/55 backdrop-blur-sm transition hover:bg-white/[0.1] hover:text-white/85 active:scale-[0.97] lg:h-11 lg:w-11"
-            >
-              <IconSkipBack className="h-[18px] w-[18px] shrink-0 lg:h-5 lg:w-5" aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={goRight}
-              aria-label={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
-              title={tracksWithSrc.length > 1 ? t("music.home.nextTrack") : t("music.home.nextScene")}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.06] text-white/55 backdrop-blur-sm transition hover:bg-white/[0.1] hover:text-white/85 active:scale-[0.97] lg:h-11 lg:w-11"
-            >
-              <IconSkipForward className="h-[18px] w-[18px] shrink-0 lg:h-5 lg:w-5" aria-hidden />
-            </button>
-          </div>
-        ) : null}
+        <footer
+          className={`relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] xl:max-w-3xl xl:px-8 ${
+            lagoonLight
+              ? "text-ink/55 lg:text-ink/50"
+              : "text-white/55 lg:text-white/48"
+          }`}
+        >
         {audioSrc ? (
-          <div className="flex items-center gap-3.5 text-[11px] tabular-nums text-white/[0.5] lg:text-[12px] lg:text-white/45">
+          <div
+            className={`flex items-center gap-3.5 text-[11px] tabular-nums lg:text-[12px] ${
+              lagoonLight ? "text-ink/50 lg:text-ink/45" : "text-white/[0.5] lg:text-white/45"
+            }`}
+          >
             <span className="min-w-[2.5rem] shrink-0">{formatTime(currentSec)}</span>
             <button
               type="button"
               aria-label={t("music.home.progress")}
-              className="group relative h-[3px] flex-1 overflow-hidden rounded-full bg-white/[0.1]"
+              className={
+                lagoonLight
+                  ? "group relative h-[3px] flex-1 overflow-hidden rounded-full bg-ink/12 lg:h-[3px]"
+                  : "group relative h-[3px] flex-1 overflow-hidden rounded-full bg-white/[0.1]"
+              }
               onClick={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 const x = e.clientX - r.left;
@@ -604,7 +589,11 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
               }}
             >
               <span
-                className="absolute inset-y-0 left-0 rounded-full bg-white/[0.88] shadow-[0_0_14px_rgba(255,255,255,0.35),0_0_28px_rgba(255,245,230,0.12)] transition-[width] duration-150 ease-out group-hover:bg-white/[0.95] group-hover:shadow-[0_0_18px_rgba(255,255,255,0.42)]"
+                className={
+                  lagoonLight
+                    ? "absolute inset-y-0 left-0 rounded-full bg-sand/90 shadow-[0_0_12px_rgba(61,138,184,0.35)] transition-[width] duration-150 ease-out group-hover:bg-sand group-hover:shadow-[0_0_16px_rgba(61,138,184,0.45)]"
+                    : "absolute inset-y-0 left-0 rounded-full bg-white/[0.88] shadow-[0_0_14px_rgba(255,255,255,0.35),0_0_28px_rgba(255,245,230,0.12)] transition-[width] duration-150 ease-out group-hover:bg-white/[0.95] group-hover:shadow-[0_0_18px_rgba(255,255,255,0.42)]"
+                }
                 style={{
                   width: `${durationSec ? Math.min(100, (currentSec / durationSec) * 100) : 0}%`,
                 }}
@@ -616,7 +605,11 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
 
         <div className="flex flex-col items-center gap-2 pt-2 lg:gap-2.5 lg:pt-3">
           <div
-            className="inline-flex rounded-full border border-white/15 bg-black/20 p-0.5 backdrop-blur-sm lg:border-white/10 lg:bg-black/25 lg:p-1 lg:shadow-inner lg:shadow-black/40"
+            className={
+              lagoonLight
+                ? "inline-flex rounded-full border border-sky-200/80 bg-white/75 p-0.5 shadow-sm backdrop-blur-sm lg:p-1"
+                : "inline-flex rounded-full border border-white/15 bg-black/20 p-0.5 backdrop-blur-sm lg:border-white/10 lg:bg-black/25 lg:p-1 lg:shadow-inner lg:shadow-black/40"
+            }
             role="group"
             aria-label={t("music.home.bgMode")}
           >
@@ -630,8 +623,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
               }}
               className={`rounded-full px-3 py-1.5 transition lg:px-4 lg:py-2 ${
                 bgMode === "images"
-                  ? "bg-white/20 text-white lg:bg-white/[0.18] lg:shadow-sm lg:shadow-black/30"
-                  : "text-white/55 hover:text-white/80"
+                  ? lagoonLight
+                    ? "bg-sky-600 text-white shadow-sm lg:bg-sky-600 lg:shadow-sm"
+                    : "bg-white/20 text-white lg:bg-white/[0.18] lg:shadow-sm lg:shadow-black/30"
+                  : lagoonLight
+                    ? "text-ink/50 hover:text-ink/80"
+                    : "text-white/55 hover:text-white/80"
               }`}
             >
               {t("music.home.bgImages")}
@@ -641,8 +638,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
               onClick={() => setBgMode("ambient")}
               className={`rounded-full px-3 py-1.5 transition lg:px-4 lg:py-2 ${
                 bgMode === "ambient"
-                  ? "bg-white/20 text-white lg:bg-white/[0.18] lg:shadow-sm lg:shadow-black/30"
-                  : "text-white/55 hover:text-white/80"
+                  ? lagoonLight
+                    ? "bg-sky-600 text-white shadow-sm lg:bg-sky-600 lg:shadow-sm"
+                    : "bg-white/20 text-white lg:bg-white/[0.18] lg:shadow-sm lg:shadow-black/30"
+                  : lagoonLight
+                    ? "text-ink/50 hover:text-ink/80"
+                    : "text-white/55 hover:text-white/80"
               }`}
             >
               {t("music.home.bgAmbient")}
@@ -665,8 +666,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                   aria-current={homeAtmospherePresetId === p.id ? "true" : undefined}
                   className={`px-1 py-0.5 text-[10px] font-normal tracking-[0.14em] transition ${
                     homeAtmospherePresetId === p.id
-                      ? "text-white/[0.72]"
-                      : "text-white/[0.32] hover:text-white/[0.48]"
+                      ? lagoonLight
+                        ? "text-sky-700"
+                        : "text-white/[0.72]"
+                      : lagoonLight
+                        ? "text-ink/35 hover:text-ink/55"
+                        : "text-white/[0.32] hover:text-white/[0.48]"
                   }`}
                 >
                   {t(`music.atmosphere.${p.id}`)}

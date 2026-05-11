@@ -363,7 +363,7 @@ export function MusicVisualConsoleClient({
         <textarea
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
-          placeholder='{"v":1,"tuning":{"v":1,"master":1,...},"homeAtmospherePresetId":"parchment"}'
+          placeholder='{"v":1,"tuning":{"v":1,"master":1,...},"homeAtmospherePresetId":"lagoon"}'
           rows={8}
           className={
             embeddedInAdmin

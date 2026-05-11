@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 
 const PREVIEW_ROUTES: { path: string; labelKey: string }[] = [
   { path: "/", labelKey: "admin.preview.routeMusicHome" },
+  { path: "/nature", labelKey: "nav.nature" },
   { path: "/relax", labelKey: "nav.relax" },
   { path: "/journey", labelKey: "nav.journey" },
   { path: "/read", labelKey: "nav.read" },
@@ -73,6 +75,10 @@ export function AdminMobilePreviewPanel({
   }, [routeIdx]);
 
   const refresh = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  useEffect(() => {
+    return subscribeSiteBrandingUpdated(() => setReloadKey((k) => k + 1));
+  }, []);
 
   return (
     <section

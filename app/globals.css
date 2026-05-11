@@ -4,32 +4,37 @@
 
 /* 默认品牌变量（无 data/branding.json 或未写入 inline 时生效） */
 :root {
-  --brand-canvas: #f4ebd9;
-  --brand-canvas-rgb: 244 235 217;
-  --brand-surface: #e8dcc8;
-  --brand-surface-rgb: 232 220 200;
-  --brand-border: #c9b899;
-  --brand-border-rgb: 201 184 153;
-  --brand-muted: #6e5e45;
-  --brand-muted-rgb: 110 94 69;
-  --brand-ink: #1f1a12;
-  --brand-ink-rgb: 31 26 18;
-  --brand-sand: #b8945a;
-  --brand-sand-rgb: 184 148 90;
-  --brand-admin-bg: #f5f1ea;
-  --brand-admin-bg-rgb: 245 241 234;
-  --brand-admin-panel: #ebe6dc;
-  --brand-admin-panel-rgb: 235 230 220;
-  --brand-admin-line: #d4cbb8;
-  --brand-admin-line-rgb: 212 203 184;
-  --brand-admin-fg: #1f1a12;
-  --brand-admin-fg-rgb: 31 26 18;
-  --brand-admin-muted: #6e5e45;
-  --brand-admin-muted-rgb: 110 94 69;
+  --brand-canvas: #e4f1fa;
+  --brand-canvas-rgb: 228 241 250;
+  --brand-surface: #cfe6f4;
+  --brand-surface-rgb: 207 230 244;
+  --brand-border: #9bc4dc;
+  --brand-border-rgb: 155 196 220;
+  --brand-muted: #4a6274;
+  --brand-muted-rgb: 74 98 116;
+  --brand-ink: #132a3a;
+  --brand-ink-rgb: 19 42 58;
+  --brand-sand: #3d8ab8;
+  --brand-sand-rgb: 61 138 184;
+  --brand-admin-bg: #eaf4fb;
+  --brand-admin-bg-rgb: 234 244 251;
+  --brand-admin-panel: #ddeef8;
+  --brand-admin-panel-rgb: 221 238 248;
+  --brand-admin-line: #b3d0e6;
+  --brand-admin-line-rgb: 179 208 230;
+  --brand-admin-fg: #132a3a;
+  --brand-admin-fg-rgb: 19 42 58;
+  --brand-admin-muted: #4a6274;
+  --brand-admin-muted-rgb: 74 98 116;
 }
 html,
 body {
   height: 100%;
+}
+
+/** 与 body 一致：Android WebView / PWA 顶缘偶发 1px 漏色时避免露默认白底 */
+html {
+  background-color: rgb(var(--brand-canvas-rgb));
 }
 
 body {
@@ -68,6 +73,8 @@ body {
 
 /** 首页背景专用层（与前景兄弟）：极轻 scale 呼吸；不低于 1，避免缩小时露出外层 canvas 描边 */
 .music-reactive-home-shell {
+  /** 默认 origin 为居中时 scale>1 会把顶缘推出裁剪盒，Android 上常见 1px 浅色缝 */
+  transform-origin: center top;
   transform: scale(
     min(
       18.5,

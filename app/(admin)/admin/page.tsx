@@ -9,13 +9,15 @@ const overview: {
     title: "系统",
     items: [
       { href: "/admin/studio", label: "studio", hint: "产品文档与本地讨论" },
-      { href: "/admin/system/settings", label: "全局设置", hint: "LOGO 与站点图标（PWA / Apple）" },
+      { href: "/admin/system/settings", label: "全局设置", hint: "顶栏 LOGO 与网站 / App 图标（分开上传）" },
+      { href: "/admin/system/media-library", label: "上传资源库", hint: "扫描 public 下已上传的音视频与文档，预览并批量删除试验文件" },
     ],
   },
   {
     title: "音乐",
     items: [
       { href: "/admin/music", label: "曲库与配图", hint: "上传音频与背景图，写入 companion" },
+      { href: "/admin/music/nature", label: "自然", hint: "全屏自然影片、专辑式预览与前台对照" },
       { href: "/admin/visual", label: "播放视觉", hint: "滑杆、氛围、引擎与导入导出" },
     ],
   },

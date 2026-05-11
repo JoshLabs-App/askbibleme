@@ -1,0 +1,76 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+type Layer = { layerId: string; src: string; volume: number };
+
+function SyncLoopAmbient({
+  src,
+  volume,
+  playbackRate,
+  videoRef,
+}: {
+  src: string;
+  volume: number;
+  playbackRate: number;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+}) {
+  const aRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const a = aRef.current;
+    const v = videoRef.current;
+    if (!a || !v) return;
+    a.volume = volume;
+    a.loop = true;
+    try {
+      a.playbackRate = playbackRate;
+    } catch {
+      /* ignore */
+    }
+    const onPlay = () => {
+      void a.play().catch(() => {});
+    };
+    const onPause = () => {
+      a.pause();
+    };
+    v.addEventListener("play", onPlay);
+    v.addEventListener("pause", onPause);
+    if (!v.paused) void a.play().catch(() => {});
+    return () => {
+      v.removeEventListener("play", onPlay);
+      v.removeEventListener("pause", onPause);
+      a.pause();
+    };
+  }, [src, volume, playbackRate, videoRef]);
+
+  return <audio ref={aRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
+}
+
+/**
+ * 与背景静音视频同步播放的多轨循环环境声（配置来自后台混音）。
+ */
+export function NatureAmbientMixAudio({
+  layers,
+  videoRef,
+  playbackRate,
+}: {
+  layers: Layer[];
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  playbackRate: number;
+}) {
+  if (!layers.length) return null;
+  return (
+    <div className="pointer-events-none absolute h-0 w-0 overflow-hidden" aria-hidden>
+      {layers.map((l) => (
+        <SyncLoopAmbient
+          key={l.layerId}
+          src={l.src}
+          volume={l.volume}
+          playbackRate={playbackRate}
+          videoRef={videoRef}
+        />
+      ))}
+    </div>
+  );
+}

@@ -1,0 +1,450 @@
+/* ── Bible catalog（再简约）────────────────────────────────── */
+.bible-catalog-page--read {
+  --bc-border: rgb(var(--brand-border-rgb));
+  --bc-hover: color-mix(in srgb, rgb(var(--brand-ink-rgb)) 3.5%, transparent);
+  --bc-muted: rgb(var(--brand-muted-rgb));
+  --bc-measure: clamp(12px, 2.8vw, 18px);
+  --bc-read-weak: color-mix(in srgb, rgb(var(--brand-muted-rgb)) 78%, rgb(var(--brand-canvas-rgb)) 22%);
+  --bc-read-faint: color-mix(in srgb, rgb(var(--brand-muted-rgb)) 52%, rgb(var(--brand-canvas-rgb)) 48%);
+  --bc-read-book: rgb(var(--brand-ink-rgb));
+  --bc-read-era-w: 3.05rem;
+  --bc-read-stripe-w: 3px;
+  --bc-read-poststripe-pad: 0.32rem;
+  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  background: rgb(var(--brand-canvas-rgb));
+}
+
+.bible-catalog-page--read .bible-catalog-shell {
+  max-width: min(21.5rem, 100%);
+  margin: 0 auto;
+}
+
+.bible-catalog-page--read .bible-catalog-doc {
+  padding-top: max(4px, env(safe-area-inset-top, 0px));
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(var(--bc-measure), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--bc-measure), env(safe-area-inset-right, 0px));
+}
+
+.bible-catalog-read-h1 {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  color: var(--bc-read-faint);
+}
+
+.bible-catalog-read-outline {
+  display: block;
+}
+
+.bible-catalog-read-testament {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.bible-catalog-read-testament--new {
+  margin-top: 0.55rem;
+  padding-top: 0.35rem;
+}
+
+.bible-catalog-read-testament-label.bible-catalog-read-heading-row {
+  margin: 0 0 0.2rem;
+  padding: 0;
+}
+
+.bible-catalog-read-testament--old .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  color: color-mix(in srgb, #c2410c 58%, rgb(var(--brand-ink-rgb)) 42%);
+}
+
+.bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  color: color-mix(in srgb, #1d4ed8 58%, rgb(var(--brand-ink-rgb)) 42%);
+}
+
+.bible-catalog-read-block {
+  margin: 0;
+  padding: 0.4rem 0 0;
+  border: none;
+}
+
+.bible-catalog-read-testament:first-child .bible-catalog-read-block:first-of-type {
+  padding-top: 0;
+}
+
+.bible-catalog-read-title.bible-catalog-read-heading-row {
+  margin: 0 0 0.12rem;
+  padding: 0;
+}
+
+.bible-catalog-read-heading-row {
+  display: grid;
+  grid-template-columns: var(--bc-read-era-w) minmax(0, 1fr);
+  column-gap: 0.22rem;
+  align-items: baseline;
+}
+
+.bible-catalog-read-heading-left {
+  min-width: 0;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.bible-catalog-read-title .bible-catalog-read-heading-left {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--bc-read-weak);
+}
+
+.bible-catalog-read-heading-right {
+  display: block;
+  min-height: 1em;
+}
+
+.bible-catalog-read-testament-body {
+  position: relative;
+  z-index: 0;
+}
+
+.bible-catalog-read-testament-body > .bible-catalog-read-testament-label,
+.bible-catalog-read-testament-body > .bible-catalog-read-block {
+  position: relative;
+  z-index: 1;
+}
+
+.bible-catalog-read-testament--old .bible-catalog-read-testament-body::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--bc-read-era-w) + 0.22rem);
+  top: 0;
+  bottom: 0;
+  width: var(--bc-read-stripe-w);
+  background: color-mix(in srgb, #b45309 72%, var(--bc-border) 28%);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--bc-read-era-w) + 0.22rem);
+  top: 0;
+  bottom: 0;
+  width: var(--bc-read-stripe-w);
+  background: color-mix(in srgb, #2563eb 68%, var(--bc-border) 32%);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bible-catalog-read-books {
+  margin: 0;
+  padding: 0;
+}
+
+.bible-catalog-read-book {
+  display: grid;
+  grid-template-columns: var(--bc-read-era-w) minmax(0, 1fr);
+  column-gap: 0.22rem;
+  align-items: center;
+  padding: 0.14rem 0;
+  margin: 0;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  z-index: 1;
+}
+
+.bible-catalog-read-book-body {
+  display: grid;
+  grid-template-columns: 1.05rem minmax(0, 1fr);
+  gap: 0.25rem 0.35rem;
+  align-items: center;
+  padding-left: var(--bc-read-poststripe-pad);
+  min-width: 0;
+}
+
+.bible-catalog-read-book-era {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.52rem;
+  font-weight: 450;
+  line-height: 1.22;
+  color: var(--bc-read-faint);
+  text-align: right;
+  opacity: 0.92;
+  white-space: nowrap;
+}
+
+.bible-catalog-read-book:hover {
+  background: var(--bc-hover);
+}
+
+.bible-catalog-read-book:hover .bible-catalog-read-book-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--bc-read-book) 28%, transparent);
+}
+
+.bible-catalog-read-book:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--bc-read-book) 25%, transparent);
+  outline-offset: 1px;
+}
+
+.bible-catalog-read-book-num {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.6rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--bc-read-faint);
+  text-align: right;
+  opacity: 0.85;
+}
+
+.bible-catalog-read-book-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.28;
+  color: var(--bc-read-book);
+}
+
+.bible-catalog-read-book-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.35rem;
+  row-gap: 0.06rem;
+  min-width: 0;
+}
+
+.bible-catalog-read-book-divine {
+  font-size: 0.62rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--bc-read-faint);
+}
+
+.bible-catalog-read-end {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 0.62rem;
+}
+
+.bible-catalog-text-link {
+  font-weight: 450;
+  color: var(--bc-read-weak);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--bc-read-weak) 30%, transparent);
+}
+
+.bible-catalog-text-link:hover {
+  color: var(--bc-read-book);
+  text-decoration-color: color-mix(in srgb, var(--bc-read-book) 35%, transparent);
+}
+
+/* 选章页（/bible-catalog/[bookId]） */
+.bible-catalog-chapters-back {
+  margin: 0 0 0.1rem;
+  padding: 0;
+  font-size: 0.62rem;
+  font-weight: 450;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--bc-read-faint);
+}
+
+.bible-catalog-chapters-book {
+  margin: 0.15rem 0 0.06rem;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
+  color: var(--bc-read-book);
+}
+
+.bible-catalog-chapters-range {
+  margin: 0 0 0.42rem;
+  padding: 0;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  color: var(--bc-read-faint);
+}
+
+.bible-catalog-chapters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.05rem, 1fr));
+  gap: 0.2rem 0.26rem;
+  margin: 0;
+  padding: 0;
+}
+
+.bible-catalog-chapter-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.3rem 0.12rem;
+  min-height: 1.72rem;
+  font-size: 0.68rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--bc-read-book);
+  text-decoration: none;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--bc-border) 45%, transparent);
+  background: color-mix(in srgb, rgb(var(--brand-canvas-rgb)) 96%, var(--bc-border) 4%);
+}
+
+.bible-catalog-chapter-cell:hover {
+  background: var(--bc-hover);
+  border-color: color-mix(in srgb, var(--bc-border) 65%, transparent);
+}
+
+.bible-catalog-chapter-cell:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--bc-read-book) 28%, transparent);
+  outline-offset: 1px;
+}
+
+/* 锚点选章（紧贴点击行附近） */
+.bc-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10100;
+  pointer-events: none;
+}
+
+.bc-sheet-root--open {
+  pointer-events: auto;
+}
+
+.bc-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  background: color-mix(in srgb, rgb(var(--brand-ink-rgb)) 18%, transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.bc-sheet-root--open .bc-sheet-backdrop {
+  opacity: 1;
+}
+
+.bc-sheet-panel {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: rgb(var(--brand-canvas-rgb));
+  box-shadow:
+    0 12px 40px color-mix(in srgb, rgb(var(--brand-ink-rgb)) 14%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--bc-border) 55%, transparent);
+  transform: translateY(-10px) scale(0.96);
+  transform-origin: top center;
+  opacity: 0;
+  transition:
+    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.22s ease;
+}
+
+.bc-sheet-root--open .bc-sheet-panel {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.bc-sheet-panel-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  padding: 0.45rem 0.5rem 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bc-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.4rem;
+  padding: 0;
+}
+
+.bc-sheet-title {
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--bc-read-book);
+}
+
+.bc-sheet-sub {
+  margin: 0.12rem 0 0;
+  padding: 0;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--bc-read-faint);
+}
+
+.bc-sheet-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.2rem -0.25rem 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--bc-read-weak);
+  background: transparent;
+  cursor: pointer;
+}
+
+.bc-sheet-close:hover {
+  background: var(--bc-hover);
+  color: var(--bc-read-book);
+}
+
+.bc-sheet-chapters {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 0.2rem;
+}
+
+button.bible-catalog-read-book--tap {
+  appearance: none;
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}

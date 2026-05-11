@@ -56,7 +56,10 @@ const SECTIONS: NavSection[] = [
     kind: "group",
     id: "bible",
     labelKey: "admin.groups.bible",
-    items: [{ href: "/admin/read/segments", labelKey: "admin.items.readSegments" }],
+    items: [
+      { href: "/admin/read/versions", labelKey: "admin.items.bibleVersions" },
+      { href: "/admin/read/segments", labelKey: "admin.items.readSegments" },
+    ],
   },
   { kind: "leaf", id: "explore", href: "/admin/explore", labelKey: "admin.items.explore" },
 ];
@@ -333,8 +336,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </button>
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] md:overflow-hidden">
-        {children}
+      {/* 桌面端原先 md:overflow-hidden 会吃掉主区滚动；内层单独 overflow-y-auto，Studio 等全高页仍可用 flex-1 + min-h-0 撑满 */}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+          {children}
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-adminLine px-4 py-3 md:hidden">

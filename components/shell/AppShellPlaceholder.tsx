@@ -11,6 +11,9 @@ type Props = {
   bodyKey: string;
   ctaHref?: string;
   ctaLabelKey?: string;
+  /** 次要入口（如圣经目录） */
+  secondaryCtaHref?: string;
+  secondaryCtaLabelKey?: string;
 };
 
 /**
@@ -22,6 +25,8 @@ export function AppShellPlaceholder({
   bodyKey,
   ctaHref = "/",
   ctaLabelKey = "chrome.backHome",
+  secondaryCtaHref,
+  secondaryCtaLabelKey,
 }: Props) {
   const { t } = useLocale();
   return (
@@ -33,12 +38,22 @@ export function AppShellPlaceholder({
         <div className="mx-auto mt-5 h-px w-10 bg-border/55" aria-hidden />
         <p className="mt-5 text-[14px] font-normal leading-relaxed text-ink/78 sm:text-[15px]">{t(leadKey)}</p>
         <p className="mt-4 text-[13px] leading-[1.65] text-muted sm:text-[14px]">{t(bodyKey)}</p>
-        <Link
-          href={ctaHref}
-          className="mt-10 inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/60 bg-surface/80 px-5 text-[13px] font-medium text-ink/88 shadow-sm transition hover:border-border hover:bg-surface hover:text-ink"
-        >
-          {t(ctaLabelKey)}
-        </Link>
+        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            href={ctaHref}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/60 bg-surface/80 px-5 text-[13px] font-medium text-ink/88 shadow-sm transition hover:border-border hover:bg-surface hover:text-ink"
+          >
+            {t(ctaLabelKey)}
+          </Link>
+          {secondaryCtaHref && secondaryCtaLabelKey ? (
+            <Link
+              href={secondaryCtaHref}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/45 bg-transparent px-5 text-[13px] font-medium text-ink/75 transition hover:border-border hover:bg-surface/60 hover:text-ink"
+            >
+              {t(secondaryCtaLabelKey)}
+            </Link>
+          ) : null}
+        </div>
       </div>
     </main>
   );

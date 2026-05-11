@@ -15,7 +15,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "nature:backfill-preview-frames": "node scripts/backfill-nature-preview-frames.mjs"
+    "nature:backfill-preview-frames": "node scripts/backfill-nature-preview-frames.mjs",
+    "import:bible": "node scripts/import-askbible-usfx.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

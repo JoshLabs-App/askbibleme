@@ -844,7 +844,7 @@ export function StudioAIDiscussionPanel({
     <div
       role="complementary"
       aria-label="AI Editorial Discussion Panel"
-      className={`flex h-full min-h-0 flex-1 flex-col bg-canvas text-ink ${
+      className={`flex min-h-0 flex-1 flex-col bg-canvas text-ink ${
         layoutMode === "focusOnly" ? "" : "border-l border-border/80"
       }`}
     >

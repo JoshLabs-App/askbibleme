@@ -11,6 +11,8 @@ export default function ReadPlaceholderPage() {
       titleKey="pages.read.title"
       leadKey="pages.read.lead"
       bodyKey="pages.read.body"
+      secondaryCtaHref="/read/catalog"
+      secondaryCtaLabelKey="pages.read.catalogCta"
     />
   );
 }

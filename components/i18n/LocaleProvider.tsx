@@ -10,7 +10,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  DEFAULT_LOCALE,
   inferAppLocaleFromNavigator,
   LOCALE_STORAGE_KEY,
   persistLocaleToCookie,
@@ -55,13 +54,14 @@ function subscribeLocale(onStore: () => void) {
 
 function createGetLocaleSnapshot(initialLocaleGuess: AppLocale) {
   return function getLocaleSnapshot(): AppLocale {
-    if (typeof window === "undefined") return DEFAULT_LOCALE;
+    // 与 `getServerSnapshot` 对齐：避免在无 `window` 的路径里回落到 `DEFAULT_LOCALE` 而与 Cookie/Accept-Language 首猜不一致
+    if (typeof window === "undefined") return initialLocaleGuess;
     try {
       const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
       if (raw) return parseLocale(raw);
       return initialLocaleGuess;
     } catch {
-      return DEFAULT_LOCALE;
+      return initialLocaleGuess;
     }
   };
 }

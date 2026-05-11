@@ -16,6 +16,10 @@ import {
   presetColorsForUserSkin,
   type UserSkinId,
 } from "@/lib/app-user-skin";
+import {
+  NATURE_HOME_THEME_LOCK_DATASET_KEY,
+  NATURE_HOME_THEME_LOCK_VALUE,
+} from "@/lib/nature/root-theme";
 import { brandColorsToCssVars } from "@/lib/site-branding-colors";
 
 type AppSkinContextValue = {
@@ -71,12 +75,21 @@ function applyVarsToBody(vars: Record<string, string>) {
   }
 }
 
+function isNatureHomeThemeColorLocked() {
+  if (typeof document === "undefined") return false;
+  return (
+    document.documentElement.dataset[NATURE_HOME_THEME_LOCK_DATASET_KEY] === NATURE_HOME_THEME_LOCK_VALUE
+  );
+}
+
 function syncThemeColorMetaFromCanvas(canvas: string) {
+  if (isNatureHomeThemeColorLocked()) return;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta && canvas) meta.setAttribute("content", canvas.trim());
 }
 
 function syncThemeColorMetaFromDocumentElement() {
+  if (isNatureHomeThemeColorLocked()) return;
   const raw = getComputedStyle(document.documentElement).getPropertyValue("--brand-canvas").trim();
   if (raw) syncThemeColorMetaFromCanvas(raw);
 }

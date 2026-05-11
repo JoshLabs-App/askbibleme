@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "sectionId": "canon-torah",
+      "order": 1,
+      "title": "摩西五经",
+      "taglines": ["神借着律法、约与带领，", "建立祂的百姓。"],
+      "bookIds": ["GEN", "EXO", "LEV", "NUM", "DEU"]
+    },
+    {
+      "sectionId": "canon-history",
+      "order": 2,
+      "title": "历史书",
+      "taglines": ["神带领祂的百姓进入应许之地，", "经历国度、失败、被掳与归回。"],
+      "bookIds": ["JOS", "JDG", "RUT", "1SA", "2SA", "1KI", "2KI", "1CH", "2CH", "EZR", "NEH", "EST"]
+    },
+    {
+      "sectionId": "canon-wisdom",
+      "order": 3,
+      "title": "智慧书与诗歌书",
+      "taglines": ["在人生的高山与低谷中，", "学习敬畏神、认识生命。"],
+      "bookIds": ["JOB", "PSA", "PRO", "ECC", "SNG"]
+    },
+    {
+      "sectionId": "canon-major-prophets",
+      "order": 4,
+      "title": "大先知书",
+      "taglines": ["神借着先知发出审判、", "呼唤与将来的盼望。"],
+      "bookIds": ["ISA", "JER", "LAM", "EZK", "DAN"]
+    },
+    {
+      "sectionId": "canon-minor-prophets",
+      "order": 5,
+      "title": "小先知书",
+      "taglines": ["在人远离神的时候，", "神仍不断呼唤人回转。"],
+      "bookIds": ["HOS", "JOL", "AMO", "OBA", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "ZEC", "MAL"]
+    },
+    {
+      "sectionId": "canon-gospels",
+      "order": 6,
+      "title": "四福音",
+      "taglines": ["神亲自来到人中间，", "显明救恩与天国。"],
+      "bookIds": ["MAT", "MRK", "LUK", "JHN"]
+    },
+    {
+      "sectionId": "canon-church-history",
+      "order": 7,
+      "title": "教会历史",
+      "taglines": ["圣灵降临，", "福音开始向世界展开。"],
+      "bookIds": ["ACT"]
+    },
+    {
+      "sectionId": "canon-pauline",
+      "order": 8,
+      "title": "保罗书信",
+      "taglines": ["神借着使徒教导教会，", "活出恩典与真理。"],
+      "bookIds": ["ROM", "1CO", "2CO", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT", "PHM"]
+    },
+    {
+      "sectionId": "canon-general-epistles",
+      "order": 9,
+      "title": "普通书信",
+      "taglines": ["在信心、苦难与盼望中，", "持守所信的道。"],
+      "bookIds": ["HEB", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD"]
+    },
+    {
+      "sectionId": "canon-apocalyptic",
+      "order": 10,
+      "title": "启示文学",
+      "taglines": ["神最终更新万有，", "人与神永远同住。"],
+      "bookIds": ["REV"]
+    }
+  ]
+}

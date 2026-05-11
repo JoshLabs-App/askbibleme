@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
@@ -14,7 +14,11 @@ import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { NatureScenePreviewPanel } from "@/components/nature/NatureScenePreviewPanel";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
-import { NATURE_HOME_ROOT_THEME } from "@/lib/nature/root-theme";
+import {
+  NATURE_HOME_ROOT_THEME,
+  NATURE_HOME_THEME_LOCK_DATASET_KEY,
+  NATURE_HOME_THEME_LOCK_VALUE,
+} from "@/lib/nature/root-theme";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 
 const NATURE_TOP_ICON_BTN =
@@ -399,7 +403,7 @@ export function NatureVideoExperience({ initial }: Props) {
     setVideoBroken(false);
   }, [videoSrc]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const metas = [...document.querySelectorAll('meta[name="theme-color"]')] as HTMLMetaElement[];
     const snapshot = metas.map((el) => ({
       el,
@@ -411,6 +415,7 @@ export function NatureVideoExperience({ initial }: Props) {
     }
     const html = document.documentElement;
     const body = document.body;
+    html.dataset[NATURE_HOME_THEME_LOCK_DATASET_KEY] = NATURE_HOME_THEME_LOCK_VALUE;
     const prevHtmlBg = html.style.backgroundColor;
     const prevBodyBg = body.style.backgroundColor;
     const prevColorScheme = html.style.colorScheme;
@@ -418,6 +423,7 @@ export function NatureVideoExperience({ initial }: Props) {
     body.style.backgroundColor = NATURE_HOME_ROOT_THEME;
     html.style.colorScheme = "dark";
     return () => {
+      Reflect.deleteProperty(html.dataset, NATURE_HOME_THEME_LOCK_DATASET_KEY);
       for (const { el, content, media } of snapshot) {
         if (content != null) el.setAttribute("content", content);
         else el.removeAttribute("content");

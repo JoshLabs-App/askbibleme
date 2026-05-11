@@ -248,11 +248,6 @@ export function AppShellTopBar({
                 role="menu"
                 className={`absolute left-0 top-[calc(100%+0.35rem)] z-[60] ${menuSurface}`}
               >
-                {pathname !== "/" && pathname !== "" ? (
-                  <Link href="/" role="menuitem" className={menuItem} onClick={() => setNavOpen(false)}>
-                    {t("chrome.backHome")}
-                  </Link>
-                ) : null}
                 <button
                   type="button"
                   role="menuitem"
@@ -273,7 +268,7 @@ export function AppShellTopBar({
               <Link
                 href="/"
                 className="flex h-11 max-h-[44px] items-center py-1"
-                aria-label={t("chrome.backHome")}
+                aria-label={t("nav.home")}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- 动态 branding 查询串；无需 Image 优化 */}
                 <img

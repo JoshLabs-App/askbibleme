@@ -1,0 +1,65 @@
+{
+  "translations": [
+    {
+      "id": "bbe-en",
+      "labelZh": "BBE 简易英文",
+      "labelEn": "Bible in Basic English (BBE)",
+      "language": "en",
+      "sourceFile": "uploads/bbe-en.json",
+      "updatedAt": "2026-05-11T21:36:22.913Z",
+      "bytes": 4393226,
+      "verseCount": 31102
+    },
+    {
+      "id": "cuv-simp",
+      "labelZh": "和合本（简体）",
+      "labelEn": "Chinese Union Version (Simplified)",
+      "language": "zh-Hans",
+      "sourceFile": "uploads/cuv-simp.json",
+      "updatedAt": "2026-05-11T21:36:22.913Z",
+      "bytes": 3439044,
+      "verseCount": 31100
+    },
+    {
+      "id": "cuv-trad",
+      "labelZh": "和合本（繁體）",
+      "labelEn": "Chinese Union Version (Traditional)",
+      "language": "zh-Hant",
+      "sourceFile": "uploads/cuv-trad.json",
+      "updatedAt": "2026-05-11T21:36:22.913Z",
+      "bytes": 3439031,
+      "verseCount": 31100
+    },
+    {
+      "id": "heb-leningrad",
+      "labelZh": "希伯来语 · Leningrad Codex",
+      "labelEn": "Hebrew (Leningrad / WLC-style)",
+      "language": "he",
+      "sourceFile": "uploads/heb-leningrad.json",
+      "updatedAt": "2026-05-11T21:36:22.913Z",
+      "bytes": 5410022,
+      "verseCount": 23213
+    },
+    {
+      "id": "rv1909-es",
+      "labelZh": "西班牙语 Reina-Valera 1909",
+      "labelEn": "Reina-Valera 1909 (Spanish)",
+      "language": "es",
+      "sourceFile": "uploads/rv1909-es.json",
+      "updatedAt": "2026-05-11T21:36:22.913Z",
+      "bytes": 4255861,
+      "verseCount": 30959
+    },
+    {
+      "id": "web-en",
+      "labelZh": "WEB 英译本",
+      "labelEn": "World English Bible",
+      "language": "en",
+      "sourceFile": "uploads/web-en.json",
+      "updatedAt": "2026-05-11T21:36:22.913Z",
+      "bytes": 4243949,
+      "verseCount": 31098
+    }
+  ],
+  "defaultTranslationId": "cuv-simp"
+}

@@ -885,7 +885,7 @@ export default function StudioWorkspace({
         className={`flex min-h-0 min-w-0 flex-1 flex-row ${
           discussionFocusOnly
             ? "overflow-hidden"
-            : "overflow-x-auto overflow-y-hidden"
+            : "overflow-x-auto overflow-hidden"
         }`}
       >
         {discussionFocusOnly ? (
@@ -1269,7 +1269,7 @@ export default function StudioWorkspace({
 
         {/* 右：AI Discussion Panel */}
         <div
-          className="flex h-full min-h-0 shrink-0 flex-col"
+          className="flex min-h-0 shrink-0 flex-col self-stretch"
           style={{ width: rightColPx, minWidth: Math.min(rightColPx, 260) }}
         >
           <StudioAIDiscussionPanel

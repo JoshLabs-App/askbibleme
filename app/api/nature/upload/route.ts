@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { extractVideoFirstFrameJpeg } from "@/lib/nature/extract-video-preview-frame";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
 const MAX_BYTES = 220 * 1024 * 1024;
@@ -76,9 +77,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `写入失败：${msg}` }, { status: 500 });
   }
 
+  const previewPostersDir = path.resolve(cwd, "public", "nature", "preview-posters");
+  const previewFilename = `${base}.jpg`;
+  const previewPath = path.resolve(previewPostersDir, previewFilename);
+  const previewRel = path.relative(previewPostersDir, previewPath);
+  let previewFrameUrl: string | null = null;
+  let previewFrameWarning: string | undefined;
+  if (!previewRel.startsWith("..") && !path.isAbsolute(previewRel)) {
+    const ex = await extractVideoFirstFrameJpeg(finalPath, previewPath);
+    if (ex.ok) {
+      previewFrameUrl = `/nature/preview-posters/${previewFilename}`;
+    } else {
+      previewFrameWarning = ex.message;
+      try {
+        await fs.unlink(previewPath);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     url: `/nature/uploads/${filename}`,
     filename,
+    previewFrameUrl,
+    ...(previewFrameWarning ? { previewFrameWarning } : {}),
   });
 }

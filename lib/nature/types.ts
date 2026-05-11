@@ -16,8 +16,10 @@ export type NatureVideoEntry = {
   id: string;
   src: string;
   title?: string;
-  /** 正方形封面（相册与前台 poster）；由后台从视频截取写入 */
+  /** 正方形封面（相册与场景卡）；后台截取或上传 */
   thumbSrc?: string;
+  /** 首帧预览图（16:9 友好 JPEG，上传/回填时生成）；预览条只显示此图不预拉视频 */
+  previewFrameSrc?: string;
   /** 该片前台叠加的环境声（可多轨） */
   mix?: NatureVideoMixLayer[];
 };

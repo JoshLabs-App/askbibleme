@@ -27,7 +27,7 @@
 ### 内容数据（非 JSON 文案）
 
 - 音乐伴侣等 **JSON 配置**里的展示字段可为 **双语对象**（如 `{ "zh-CN": "…", "en": "…" }`），解析见 `lib/music-companion/store-file.ts`、`lib/i18n/localized-text.ts`（`resolveLocalized`）。后台保存时应 **保证 `zh-CN` 必填**；`en` 可选，缺省时前台可回退中文。
-- **首页经文**等独立列表：`lib/i18n/home-verses.ts` 按 `AppLocale` 分表。
+- **自然 · 影片**：每条可有 `previewFrameSrc`（`/nature/preview-posters/*.jpg`），上传视频时由服务端 **ffmpeg** 截第 1 帧生成；预览条优先用该图 **不预拉视频**。旧数据可本地执行 `npm run nature:backfill-preview-frames`（需安装 ffmpeg）。无 ffmpeg 的环境（如部分 Serverless）上传仍成功，但响应里会有 `previewFrameWarning`，预览条回退为 `thumbSrc` 或内联视频。
 
 ### 场景命名与「语言切换」（产品 + 实现）
 

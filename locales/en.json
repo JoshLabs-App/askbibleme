@@ -149,6 +149,7 @@
       "bucketNatureVideo": "Nature · video",
       "bucketNatureAudio": "Nature · ambient audio",
       "bucketNatureThumb": "Nature · square covers",
+      "bucketNaturePreview": "Nature · preview first-frame",
       "bucketMusicAudio": "Music · audio",
       "bucketMusicBg": "Music · background images",
       "bucketMusicAnalysis": "Music · analysis JSON",
@@ -258,6 +259,8 @@
     "previewEnterFullScreen": "Enter full screen with this clip",
     "previewTapHint": "Tap again for full screen",
     "noMusicHint": "No tracks yet. Add audio from the music home or admin, then return.",
+    "slowVisualHint": "Getting the picture ready.",
+    "playbackBufferingHint": "Brief pause; playback will continue.",
     "scenes": {
       "sectionAria": "Nature clips",
       "ariaSwitch": "Switch to {{name}}",

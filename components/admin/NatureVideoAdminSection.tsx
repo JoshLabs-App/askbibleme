@@ -143,7 +143,13 @@ export function NatureVideoAdminSection({
           headers: { ...diskAuthHeaders() },
           body: fd,
         });
-        const data = (await res.json()) as { ok?: boolean; url?: string; error?: string };
+        const data = (await res.json()) as {
+          ok?: boolean;
+          url?: string;
+          previewFrameUrl?: string | null;
+          previewFrameWarning?: string;
+          error?: string;
+        };
         if (!res.ok) throw new Error(data.error ?? `上传失败（${res.status}）`);
         const url = data.url;
         if (typeof url !== "string" || !url.trim()) throw new Error("上传响应异常");
@@ -152,6 +158,14 @@ export function NatureVideoAdminSection({
         const title = nextDateNumberedNatureVideoTitle(titles);
         const id = newId();
         const row: NatureVideoEntry = { id, src: url.trim(), title };
+        const pfu = typeof data.previewFrameUrl === "string" ? data.previewFrameUrl.trim() : "";
+        if (pfu) {
+          row.previewFrameSrc = pfu;
+        }
+        if (data.previewFrameWarning) {
+          setUploadHint(`已上传；预览首帧未生成：${data.previewFrameWarning}`);
+        }
+
         const videos = [...prev.videos, row];
         const preferActive = prev.activeVideoId.trim();
         let activeVideoId =
@@ -164,7 +178,11 @@ export function NatureVideoAdminSection({
 
         const next: NatureSettingsV2 = { ...prev, videos, activeVideoId };
         const ok = await applyAndSync(next);
-        if (ok) setUploadHint(`已上传并写入：${title}`);
+        if (ok) {
+          if (!data.previewFrameWarning) {
+            setUploadHint(`已上传并写入：${title}`);
+          }
+        }
       } catch (e) {
         const m = e instanceof Error ? e.message : "上传失败";
         setMsg(m);

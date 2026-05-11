@@ -12,6 +12,7 @@ function SyncLoopAmbient({
   playbackRate,
   videoRef,
   setAudioEl,
+  ambientLead,
 }: {
   src: string;
   volume: number;
@@ -19,6 +20,8 @@ function SyncLoopAmbient({
   playbackRate: number;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   setAudioEl: (el: HTMLAudioElement | null) => void;
+  /** 为 true：挂载后即尝试播放，且不随视频 pause 而暂停（首页「先声后画」阶段） */
+  ambientLead: boolean;
 }) {
   const aRef = useRef<HTMLAudioElement | null>(null);
 
@@ -29,8 +32,7 @@ function SyncLoopAmbient({
 
   useEffect(() => {
     const a = aRef.current;
-    const v = videoRef.current;
-    if (!a || !v) return;
+    if (!a) return;
     a.volume = ambientMuted ? 0 : volume;
     a.loop = true;
     try {
@@ -38,21 +40,33 @@ function SyncLoopAmbient({
     } catch {
       /* ignore */
     }
+
+    if (ambientLead) {
+      void a.play().catch(() => {});
+    }
+
+    const v = videoRef.current;
+    if (!v) {
+      return () => {
+        a.pause();
+      };
+    }
+
     const onPlay = () => {
       void a.play().catch(() => {});
     };
     const onPause = () => {
-      a.pause();
+      if (!ambientLead) a.pause();
     };
     v.addEventListener("play", onPlay);
     v.addEventListener("pause", onPause);
-    if (!v.paused) void a.play().catch(() => {});
+    if (!ambientLead && !v.paused) void a.play().catch(() => {});
     return () => {
       v.removeEventListener("play", onPlay);
       v.removeEventListener("pause", onPause);
       a.pause();
     };
-  }, [ambientMuted, src, volume, playbackRate, videoRef]);
+  }, [ambientMuted, src, volume, playbackRate, videoRef, ambientLead]);
 
   return <audio ref={bindRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
 }
@@ -65,12 +79,15 @@ export function NatureAmbientMixAudio({
   videoRef,
   playbackRate,
   ambientMuted = false,
+  ambientLead = false,
 }: {
   layers: Layer[];
   videoRef: React.RefObject<HTMLVideoElement | null>;
   playbackRate: number;
   /** 用户顶栏静音：音量为 0，仍与视频同步播放/暂停以便恢复 */
   ambientMuted?: boolean;
+  /** 静图开场阶段：环境声先起，不随视频 pause 被掐断；揭晓后与视频同步 */
+  ambientLead?: boolean;
 }) {
   const { registerSleepPauseHandler } = useMusicShellPlayback();
   const ambientByLayerRef = useRef(new Map<string, HTMLAudioElement>());
@@ -104,6 +121,7 @@ export function NatureAmbientMixAudio({
           playbackRate={playbackRate}
           videoRef={videoRef}
           setAudioEl={(el) => setLayerAudioEl(l.layerId, el)}
+          ambientLead={ambientLead}
         />
       ))}
     </div>

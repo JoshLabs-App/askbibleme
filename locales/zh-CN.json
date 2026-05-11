@@ -149,6 +149,7 @@
       "bucketNatureVideo": "自然 · 影片",
       "bucketNatureAudio": "自然 · 环境声",
       "bucketNatureThumb": "自然 · 正方形封面",
+      "bucketNaturePreview": "自然 · 预览首帧图",
       "bucketMusicAudio": "音乐 · 音频",
       "bucketMusicBg": "音乐 · 背景图",
       "bucketMusicAnalysis": "音乐 · 分析 JSON",
@@ -258,6 +259,8 @@
     "previewEnterFullScreen": "进入全屏播放此影片",
     "previewTapHint": "再点一下进入全屏",
     "noMusicHint": "暂无曲目。可在音乐首页或后台配置音频后再来。",
+    "slowVisualHint": "画面在准备，请稍候。",
+    "playbackBufferingHint": "画面稍作停顿，马上继续。",
     "scenes": {
       "sectionAria": "自然影片",
       "ariaSwitch": "切换到{{name}}",

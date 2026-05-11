@@ -14,6 +14,8 @@ function bucketLabel(t: (path: string, vars?: Record<string, string>) => string,
       return t("admin.mediaLibrary.bucketNatureAudio");
     case "nature_thumb":
       return t("admin.mediaLibrary.bucketNatureThumb");
+    case "nature_preview":
+      return t("admin.mediaLibrary.bucketNaturePreview");
     case "music_audio":
       return t("admin.mediaLibrary.bucketMusicAudio");
     case "music_bg":
@@ -203,6 +205,7 @@ export function MediaLibraryClient() {
             <option value="nature_video">{t("admin.mediaLibrary.bucketNatureVideo")}</option>
             <option value="nature_audio">{t("admin.mediaLibrary.bucketNatureAudio")}</option>
             <option value="nature_thumb">{t("admin.mediaLibrary.bucketNatureThumb")}</option>
+            <option value="nature_preview">{t("admin.mediaLibrary.bucketNaturePreview")}</option>
             <option value="music_audio">{t("admin.mediaLibrary.bucketMusicAudio")}</option>
             <option value="music_bg">{t("admin.mediaLibrary.bucketMusicBg")}</option>
             <option value="music_analysis">{t("admin.mediaLibrary.bucketMusicAnalysis")}</option>

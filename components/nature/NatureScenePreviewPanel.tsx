@@ -28,8 +28,8 @@ function usePrefersReducedMotion() {
 }
 
 /**
- * 场景卡上方 16:9 预览：以外框为界用 cover 铺满（按容器宽度对齐），非 16:9 源上下裁切、避免左右黑边；点按进入全屏沉浸。
- * 切换场景：双轨交叉淡化（交替槽位），避免单 video 改 src 或收尾换 src 造成的硬切/重载闪断。
+ * 场景卡上方 16:9 预览：有首帧/封面图时只显示静态图（不预拉视频）；否则回退为内联视频。
+ * 切换场景：双轨交叉淡化（交替槽位）。视频与静态图各用独立状态，避免互相覆盖。
  */
 export function NatureScenePreviewPanel({
   settings,
@@ -43,19 +43,28 @@ export function NatureScenePreviewPanel({
   const slotARef = useRef<HTMLVideoElement>(null);
   const slotBRef = useRef<HTMLVideoElement>(null);
 
-  const { videoSrc, posterSrc } = useMemo(
+  const { videoSrc, posterSrc, previewStillSrc } = useMemo(
     () => resolveNaturePlayback({ ...settings, activeVideoId: previewVideoId }),
     [settings, previewVideoId],
   );
   const poster = posterSrc?.trim();
+  const still = previewStillSrc?.trim();
+  const useStaticPreview = Boolean(still);
 
-  const [srcA, setSrcA] = useState(videoSrc);
-  const [srcB, setSrcB] = useState(videoSrc);
-  const [activeSlot, setActiveSlot] = useState<"a" | "b">("a");
-  const [blending, setBlending] = useState(false);
-  const blendArmedRef = useRef(false);
+  const [vSrcA, setVSrcA] = useState(videoSrc);
+  const [vSrcB, setVSrcB] = useState(videoSrc);
+  const [vActive, setVActive] = useState<"a" | "b">("a");
+  const [vBlending, setVBlending] = useState(false);
+  const vArmedRef = useRef(false);
 
-  const dualLayer = srcA !== srcB;
+  const [iSrcA, setISrcA] = useState(still ?? "");
+  const [iSrcB, setISrcB] = useState(still ?? "");
+  const [iActive, setIActive] = useState<"a" | "b">("a");
+  const [iBlending, setIBlending] = useState(false);
+  const iArmedRef = useRef(false);
+
+  const dualV = vSrcA !== vSrcB;
+  const dualI = iSrcA !== iSrcB;
 
   const applyPlayback = useCallback(() => {
     for (const el of [slotARef.current, slotBRef.current]) {
@@ -71,79 +80,149 @@ export function NatureScenePreviewPanel({
 
   useEffect(() => {
     applyPlayback();
-  }, [applyPlayback, srcA, srcB]);
+  }, [applyPlayback, vSrcA, vSrcB]);
 
   useEffect(() => {
-    if (!videoSrc) return;
+    if (useStaticPreview || !videoSrc) return;
 
     if (reduceMotion) {
-      setSrcA(videoSrc);
-      setSrcB(videoSrc);
-      setActiveSlot("a");
-      setBlending(false);
-      blendArmedRef.current = false;
+      setVSrcA(videoSrc);
+      setVSrcB(videoSrc);
+      setVActive("a");
+      setVBlending(false);
+      vArmedRef.current = false;
       return;
     }
 
-    const topSrc = activeSlot === "a" ? srcA : srcB;
+    const topSrc = vActive === "a" ? vSrcA : vSrcB;
     if (videoSrc === topSrc) {
       return;
     }
 
-    const inactive: "a" | "b" = activeSlot === "a" ? "b" : "a";
-    blendArmedRef.current = false;
-    setBlending(false);
+    const inactive: "a" | "b" = vActive === "a" ? "b" : "a";
+    vArmedRef.current = false;
+    setVBlending(false);
     if (inactive === "a") {
-      setSrcA(videoSrc);
+      setVSrcA(videoSrc);
     } else {
-      setSrcB(videoSrc);
+      setVSrcB(videoSrc);
     }
-  }, [videoSrc, reduceMotion, activeSlot, srcA, srcB]);
+  }, [videoSrc, useStaticPreview, reduceMotion, vActive, vSrcA, vSrcB]);
+
+  useEffect(() => {
+    if (!useStaticPreview || !still) return;
+
+    if (reduceMotion) {
+      setISrcA(still);
+      setISrcB(still);
+      setIActive("a");
+      setIBlending(false);
+      iArmedRef.current = false;
+      return;
+    }
+
+    const top = iActive === "a" ? iSrcA : iSrcB;
+    if (still === top) {
+      return;
+    }
+
+    const inactive: "a" | "b" = iActive === "a" ? "b" : "a";
+    iArmedRef.current = false;
+    setIBlending(false);
+    if (inactive === "a") {
+      setISrcA(still);
+    } else {
+      setISrcB(still);
+    }
+  }, [still, useStaticPreview, reduceMotion, iActive, iSrcA, iSrcB]);
 
   const onInactivePlaying = useCallback(
     (slot: "a" | "b") => {
       if (reduceMotion) return;
-      if (slot === activeSlot) return;
-      const slotSrc = slot === "a" ? srcA : srcB;
+      if (slot === vActive) return;
+      const slotSrc = slot === "a" ? vSrcA : vSrcB;
       if (slotSrc !== videoSrc) return;
-      if (blendArmedRef.current) return;
-      blendArmedRef.current = true;
-      requestAnimationFrame(() => setBlending(true));
+      if (vArmedRef.current) return;
+      vArmedRef.current = true;
+      requestAnimationFrame(() => setVBlending(true));
     },
-    [reduceMotion, activeSlot, srcA, srcB, videoSrc],
+    [reduceMotion, vActive, vSrcA, vSrcB, videoSrc],
   );
 
-  const onSlotTransitionEnd = useCallback(
+  const onInactiveImgLoad = useCallback(
+    (slot: "a" | "b") => {
+      if (reduceMotion) return;
+      if (!still) return;
+      if (slot === iActive) return;
+      const slotSrc = slot === "a" ? iSrcA : iSrcB;
+      if (slotSrc !== still) return;
+      if (iArmedRef.current) return;
+      iArmedRef.current = true;
+      requestAnimationFrame(() => setIBlending(true));
+    },
+    [reduceMotion, iActive, iSrcA, iSrcB, still],
+  );
+
+  const onVideoTransitionEnd = useCallback(
     (e: React.TransitionEvent<HTMLVideoElement>, slot: "a" | "b") => {
       if (e.target !== e.currentTarget) return;
       if (e.propertyName !== "opacity") return;
-      if (!blending) return;
-      if (slot === activeSlot) return;
-      setActiveSlot(slot);
-      setBlending(false);
-      blendArmedRef.current = false;
+      if (!vBlending) return;
+      if (slot === vActive) return;
+      setVActive(slot);
+      setVBlending(false);
+      vArmedRef.current = false;
     },
-    [blending, activeSlot],
+    [vBlending, vActive],
+  );
+
+  const onImgTransitionEnd = useCallback(
+    (e: React.TransitionEvent<HTMLImageElement>, slot: "a" | "b") => {
+      if (e.target !== e.currentTarget) return;
+      if (e.propertyName !== "opacity") return;
+      if (!iBlending) return;
+      if (slot === iActive) return;
+      setIActive(slot);
+      setIBlending(false);
+      iArmedRef.current = false;
+    },
+    [iBlending, iActive],
   );
 
   const xfadeCls = reduceMotion
     ? ""
     : `transition-opacity ease-out motion-reduce:transition-none`;
 
-  const opacityFor = (slot: "a" | "b") => {
+  const opacityV = (slot: "a" | "b") => {
     if (reduceMotion) return 1;
-    if (!dualLayer) return 1;
-    const isActive = activeSlot === slot;
-    if (!blending) {
+    if (!dualV) return 1;
+    const isActive = vActive === slot;
+    if (!vBlending) {
       return isActive ? 1 : 0;
     }
     return isActive ? 0 : 1;
   };
 
-  const zFor = (slot: "a" | "b") => {
-    if (!dualLayer) return 0;
-    if (!blending) return activeSlot === slot ? 1 : 0;
-    return activeSlot === slot ? 0 : 1;
+  const opacityI = (slot: "a" | "b") => {
+    if (reduceMotion) return 1;
+    if (!dualI) return 1;
+    const isActive = iActive === slot;
+    if (!iBlending) {
+      return isActive ? 1 : 0;
+    }
+    return isActive ? 0 : 1;
+  };
+
+  const zV = (slot: "a" | "b") => {
+    if (!dualV) return 0;
+    if (!vBlending) return vActive === slot ? 1 : 0;
+    return vActive === slot ? 0 : 1;
+  };
+
+  const zI = (slot: "a" | "b") => {
+    if (!dualI) return 0;
+    if (!iBlending) return iActive === slot ? 1 : 0;
+    return iActive === slot ? 0 : 1;
   };
 
   if (!videoSrc) return null;
@@ -157,58 +236,107 @@ export function NatureScenePreviewPanel({
         aria-label={t("nature.previewEnterFullScreen")}
       >
         <div className="pointer-events-none relative z-0 h-full w-full bg-slate-950">
-          <video
-            ref={slotARef}
-            key={srcA}
-            src={srcA}
-            poster={poster || undefined}
-            muted
-            playsInline
-            loop
-            autoPlay
-            preload="auto"
-            className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
-            style={
-              reduceMotion
-                ? { zIndex: zFor("a") }
-                : {
-                    opacity: dualLayer ? opacityFor("a") : 1,
-                    zIndex: dualLayer ? zFor("a") : 0,
-                    transitionDuration: dualLayer ? `${PREVIEW_CROSSFADE_MS}ms` : undefined,
+          {useStaticPreview && still ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- 动态配置 URL；首帧静态预览 */}
+              <img
+                src={iSrcA}
+                alt=""
+                loading="eager"
+                decoding="async"
+                className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
+                style={
+                  reduceMotion
+                    ? { zIndex: zI("a") }
+                    : {
+                        opacity: dualI ? opacityI("a") : 1,
+                        zIndex: dualI ? zI("a") : 0,
+                        transitionDuration: dualI ? `${PREVIEW_CROSSFADE_MS}ms` : undefined,
+                      }
+                }
+                aria-hidden
+                onLoad={() => onInactiveImgLoad("a")}
+                onTransitionEnd={(e) => onImgTransitionEnd(e, "a")}
+              />
+              {dualI ? (
+                // eslint-disable-next-line @next/next/no-img-element -- 动态配置 URL；交叉淡化第二槽
+                <img
+                  src={iSrcB}
+                  alt=""
+                  loading="eager"
+                  decoding="async"
+                  className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
+                  style={
+                    reduceMotion
+                      ? { zIndex: zI("b") }
+                      : {
+                          opacity: opacityI("b"),
+                          zIndex: zI("b"),
+                          transitionDuration: `${PREVIEW_CROSSFADE_MS}ms`,
+                        }
                   }
-            }
-            aria-hidden
-            onPlaying={() => onInactivePlaying("a")}
-            onTransitionEnd={(e) => onSlotTransitionEnd(e, "a")}
-            onError={() => onPreviewVideoError?.()}
-          />
-          {dualLayer ? (
-            <video
-              ref={slotBRef}
-              key={srcB}
-              src={srcB}
-              poster={poster || undefined}
-              muted
-              playsInline
-              loop
-              autoPlay
-              preload="auto"
-              className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
-              style={
-                reduceMotion
-                  ? { zIndex: zFor("b") }
-                  : {
-                      opacity: opacityFor("b"),
-                      zIndex: zFor("b"),
-                      transitionDuration: `${PREVIEW_CROSSFADE_MS}ms`,
-                    }
-              }
-              aria-hidden
-              onPlaying={() => onInactivePlaying("b")}
-              onTransitionEnd={(e) => onSlotTransitionEnd(e, "b")}
-              onError={() => onPreviewVideoError?.()}
-            />
-          ) : null}
+                  aria-hidden
+                  onLoad={() => onInactiveImgLoad("b")}
+                  onTransitionEnd={(e) => onImgTransitionEnd(e, "b")}
+                />
+              ) : null}
+            </>
+          ) : (
+            <>
+              <video
+                ref={slotARef}
+                key={vSrcA}
+                src={vSrcA}
+                poster={poster || undefined}
+                muted
+                playsInline
+                loop
+                autoPlay
+                preload="auto"
+                className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
+                style={
+                  reduceMotion
+                    ? { zIndex: zV("a") }
+                    : {
+                        opacity: dualV ? opacityV("a") : 1,
+                        zIndex: dualV ? zV("a") : 0,
+                        transitionDuration: dualV ? `${PREVIEW_CROSSFADE_MS}ms` : undefined,
+                      }
+                }
+                aria-hidden
+                onPlaying={() => onInactivePlaying("a")}
+                onTransitionEnd={(e) => onVideoTransitionEnd(e, "a")}
+                onError={() => onPreviewVideoError?.()}
+              />
+              {dualV ? (
+                <video
+                  ref={slotBRef}
+                  key={vSrcB}
+                  src={vSrcB}
+                  poster={poster || undefined}
+                  muted
+                  playsInline
+                  loop
+                  autoPlay
+                  preload="auto"
+                  className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
+                  style={
+                    reduceMotion
+                      ? { zIndex: zV("b") }
+                      : {
+                          opacity: opacityV("b"),
+                          zIndex: zV("b"),
+                          transitionDuration: `${PREVIEW_CROSSFADE_MS}ms`,
+                        }
+                  }
+                  aria-hidden
+                  onPlaying={() => onInactivePlaying("b")}
+                  onTransitionEnd={(e) => onVideoTransitionEnd(e, "b")}
+                  onError={() => onPreviewVideoError?.()}
+                />
+              ) : null}
+            </>
+          )}
         </div>
         <span className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/22 via-black/[0.04] to-transparent px-2 pb-2 pt-5 text-center text-[10px] font-medium tracking-wide text-white/[0.58] drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.28)] sm:text-[11px]">
           {t("nature.previewTapHint")}

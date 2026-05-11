@@ -7,6 +7,7 @@ import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDoc
 import { HomeMusicRelaxShortcuts } from "@/components/home/HomeMusicRelaxShortcuts";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { NatureAmbientMixAudio } from "@/components/nature/NatureAmbientMixAudio";
+import { NaturePreviewVideoWarmup } from "@/components/nature/NaturePreviewVideoWarmup";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { NatureScenePreviewPanel } from "@/components/nature/NatureScenePreviewPanel";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
@@ -67,6 +68,53 @@ type Props = {
 /** 与页底 `bg-slate-950` 一致，避免 Android PWA / 全屏顶缘 `theme-color`（浅色）露出成一条横线 */
 const NATURE_THEME_COLOR = "#020617";
 
+/** 与背景 `<video>` 同定位，静图叠层与之对齐以免切换时「跳一下」 */
+const NATURE_BG_COVER_MEDIA =
+  "absolute left-0 top-1/2 h-full min-h-full w-full min-w-full -translate-y-1/2 object-cover object-left sm:left-1/2 sm:-translate-x-1/2 sm:object-center";
+
+/** 有首图时若迟迟不可播，超时仍淡出静图，避免永久卡在静图 */
+const INTRO_REVEAL_FALLBACK_MS = 12_000;
+
+/**
+ * 揭晓前要求「当前时间点之后」已缓冲够长（秒），利用单 video 渐进下载，减少揭晓后立刻卡顿。
+ * 后面边下边播由浏览器接管，用户无感。
+ */
+const MIN_BUFFER_AHEAD_SEC = 2.4;
+
+function bufferedSecondsAhead(v: HTMLVideoElement): number {
+  const t = v.currentTime;
+  try {
+    const ranges = v.buffered;
+    for (let i = 0; i < ranges.length; i++) {
+      const start = ranges.start(i);
+      const end = ranges.end(i);
+      if (t >= start && t < end) {
+        return end - t;
+      }
+    }
+  } catch {
+    return 0;
+  }
+  return 0;
+}
+
+function hasEnoughBufferedAhead(v: HTMLVideoElement, minBufferAheadSec: number): boolean {
+  if (v.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return false;
+  const ahead = bufferedSecondsAhead(v);
+  const dur = v.duration;
+  if (!Number.isFinite(dur) || dur <= 0) {
+    return ahead >= Math.min(0.9, 0.25 + minBufferAheadSec * 0.2);
+  }
+  const remaining = Math.max(0, dur - v.currentTime);
+  const need = Math.min(minBufferAheadSec, Math.max(0.12, remaining - 0.05));
+  return ahead >= need;
+}
+
+/** 静图阶段稍候再出现，避免一打开就提示 */
+const SLOW_INTRO_HINT_DELAY_MS = 3800;
+/** 播放中 rebuffer 稍候再提示，避免闪一下 */
+const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
+
 /**
  * 自然：全屏静音循环影像 + 轮播经文（视口 ≈38.2dvh 黄金线）+ 第二层场景卡；顶栏 `AppShellTopBar`。
  */
@@ -74,6 +122,8 @@ export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
   const { dockChromeVisible, toggleDockChrome, setDockChromeVisible } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const introRevealGuardRef = useRef(false);
+  const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [ambientMuted, setAmbientMuted] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
@@ -145,7 +195,120 @@ export function NatureVideoExperience({ initial }: Props) {
   );
   const hasAmbientAudio = ambientLayers.length > 0;
   const poster = posterSrc?.trim();
+  const posterUrl = poster ?? "";
+  const hasStillIntro = posterUrl.length > 0;
   const rate = initial.playbackRate;
+
+  const [introRevealed, setIntroRevealed] = useState(!hasStillIntro);
+  const lastBufferRevealPollRef = useRef(0);
+  const [showSlowIntroHint, setShowSlowIntroHint] = useState(false);
+  const [showPlaybackWaitHint, setShowPlaybackWaitHint] = useState(false);
+
+  const bufferAheadThreshold = useMemo(() => {
+    if (typeof navigator === "undefined") return MIN_BUFFER_AHEAD_SEC;
+    const conn = (navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean };
+    }).connection;
+    if (conn?.saveData) return MIN_BUFFER_AHEAD_SEC + 0.8;
+    const et = conn?.effectiveType;
+    if (et === "slow-2g") return MIN_BUFFER_AHEAD_SEC + 1.2;
+    if (et === "2g") return MIN_BUFFER_AHEAD_SEC + 1.8;
+    return MIN_BUFFER_AHEAD_SEC;
+  }, []);
+
+  const clearPlaybackWaitHint = useCallback(() => {
+    if (playbackWaitTimerRef.current) {
+      clearTimeout(playbackWaitTimerRef.current);
+      playbackWaitTimerRef.current = null;
+    }
+    setShowPlaybackWaitHint(false);
+  }, []);
+
+  const schedulePlaybackWaitHint = useCallback(() => {
+    if (playbackWaitTimerRef.current) clearTimeout(playbackWaitTimerRef.current);
+    playbackWaitTimerRef.current = setTimeout(() => {
+      playbackWaitTimerRef.current = null;
+      setShowPlaybackWaitHint(true);
+    }, PLAYBACK_WAIT_HINT_DELAY_MS);
+  }, []);
+
+  const commitIntroReveal = useCallback(() => {
+    if (!posterUrl) return;
+    if (introRevealGuardRef.current) return;
+    introRevealGuardRef.current = true;
+    const reduce =
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setIntroRevealed(true);
+    } else {
+      requestAnimationFrame(() => setIntroRevealed(true));
+    }
+  }, [posterUrl]);
+
+  const maybeRevealIntroFromBuffer = useCallback(() => {
+    if (!posterUrl) return;
+    if (introRevealGuardRef.current) return;
+    const v = videoRef.current;
+    if (!v || !hasEnoughBufferedAhead(v, bufferAheadThreshold)) return;
+    commitIntroReveal();
+  }, [posterUrl, commitIntroReveal, bufferAheadThreshold]);
+
+  const onTimeUpdatePollIntroReveal = useCallback(() => {
+    const now = performance.now();
+    if (now - lastBufferRevealPollRef.current < 220) return;
+    lastBufferRevealPollRef.current = now;
+    maybeRevealIntroFromBuffer();
+  }, [maybeRevealIntroFromBuffer]);
+
+  const previewWarmupSrc = useMemo(() => {
+    const id = previewVideoId?.trim();
+    if (!id) return "";
+    return resolveNaturePlayback({ ...initial, activeVideoId: id }).videoSrc.trim();
+  }, [initial, previewVideoId]);
+
+  /** 仅当「预览中的片」与主画面 URL 不同时离屏暖机，避免与主 `<video>` 重复拉同一条 */
+  const offscreenWarmupSrc = useMemo(() => {
+    const p = previewWarmupSrc.trim();
+    if (!p) return "";
+    const m = videoSrc.trim();
+    if (p === m) return "";
+    return p;
+  }, [previewWarmupSrc, videoSrc]);
+
+  useEffect(() => {
+    introRevealGuardRef.current = false;
+    lastBufferRevealPollRef.current = 0;
+    setShowSlowIntroHint(false);
+    clearPlaybackWaitHint();
+    const p = posterSrc?.trim() ?? "";
+    setIntroRevealed(p.length === 0);
+  }, [videoSrc, posterSrc, clearPlaybackWaitHint]);
+
+  useEffect(() => {
+    if (!posterUrl || introRevealed) return;
+    const id = window.setTimeout(() => {
+      if (introRevealGuardRef.current) return;
+      introRevealGuardRef.current = true;
+      setIntroRevealed(true);
+    }, INTRO_REVEAL_FALLBACK_MS);
+    return () => clearTimeout(id);
+  }, [posterUrl, introRevealed, videoSrc]);
+
+  useEffect(() => {
+    if (!hasStillIntro || introRevealed || !posterUrl) {
+      setShowSlowIntroHint(false);
+      return;
+    }
+    const id = window.setTimeout(() => setShowSlowIntroHint(true), SLOW_INTRO_HINT_DELAY_MS);
+    return () => {
+      clearTimeout(id);
+      setShowSlowIntroHint(false);
+    };
+  }, [hasStillIntro, introRevealed, posterUrl, videoSrc]);
+
+  useEffect(() => {
+    return () => clearPlaybackWaitHint();
+  }, [clearPlaybackWaitHint]);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -157,6 +320,56 @@ export function NatureVideoExperience({ initial }: Props) {
       /* ignore */
     }
   }, [rate, videoSrc, videoBroken]);
+
+  /** 首访或未开预览时主画面已在播，仅 metadata 缓冲偏少；空闲后再升 preload=auto（省流模式跳过）。有静图开场时已用 preload=auto，跳过重复升级 */
+  useEffect(() => {
+    if (hasStillIntro) return;
+    const el = videoRef.current;
+    if (!el || !videoSrc || videoBroken) return;
+    if (typeof navigator !== "undefined") {
+      const c = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+      if (c?.saveData) return;
+    }
+
+    let cancelled = false;
+    let idleHandle: number | null = null;
+    let kickTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const kick = () => {
+      if (cancelled) return;
+      const v = videoRef.current;
+      if (!v || !videoSrc) return;
+      v.preload = "auto";
+      try {
+        v.load();
+      } catch {
+        /* ignore */
+      }
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      idleHandle = requestIdleCallback(
+        () => {
+          idleHandle = null;
+          kick();
+        },
+        { timeout: 900 },
+      );
+    } else {
+      kickTimeout = setTimeout(() => {
+        kickTimeout = null;
+        kick();
+      }, 32);
+    }
+
+    return () => {
+      cancelled = true;
+      if (idleHandle != null && typeof cancelIdleCallback !== "undefined") {
+        cancelIdleCallback(idleHandle);
+      }
+      if (kickTimeout != null) clearTimeout(kickTimeout);
+    };
+  }, [videoSrc, videoBroken, hasStillIntro]);
 
   useEffect(() => {
     setVideoBroken(false);
@@ -206,28 +419,75 @@ export function NatureVideoExperience({ initial }: Props) {
         aria-hidden
       />
 
+      <NaturePreviewVideoWarmup videoSrc={offscreenWarmupSrc} playbackRate={rate} />
+
       {videoSrc && !videoBroken ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-[1] overflow-hidden bg-slate-950 transform-gpu">
           <video
             ref={videoRef}
             key={videoSrc}
-            className="absolute left-0 top-1/2 h-full min-h-full w-full min-w-full -translate-y-1/2 border-0 object-cover object-left outline-none motion-reduce:animate-none max-sm:animate-nature-widescreen-pan sm:left-1/2 sm:-translate-x-1/2 sm:object-center"
+            className={[
+              NATURE_BG_COVER_MEDIA,
+              "z-[1] border-0 outline-none motion-reduce:animate-none",
+              introRevealed ? "max-sm:animate-nature-widescreen-pan" : "",
+              "transition-opacity duration-700 ease-out motion-reduce:transition-none",
+              introRevealed ? "opacity-100" : "opacity-0",
+            ].join(" ")}
             style={{ maxWidth: "none" }}
             src={videoSrc}
-            poster={poster || undefined}
+            poster={hasStillIntro ? undefined : poster || undefined}
             muted
             playsInline
             loop
             autoPlay
-            preload="metadata"
+            preload={hasStillIntro ? "auto" : "metadata"}
             aria-hidden
+            onCanPlay={maybeRevealIntroFromBuffer}
+            onLoadedData={maybeRevealIntroFromBuffer}
+            onProgress={maybeRevealIntroFromBuffer}
+            onPlaying={() => {
+              clearPlaybackWaitHint();
+              maybeRevealIntroFromBuffer();
+            }}
+            onTimeUpdate={onTimeUpdatePollIntroReveal}
+            onWaiting={() => {
+              if (introRevealed) schedulePlaybackWaitHint();
+            }}
+            onStalled={() => {
+              if (introRevealed) schedulePlaybackWaitHint();
+            }}
             onError={() => setVideoBroken(true)}
           />
+          {hasStillIntro ? (
+            // eslint-disable-next-line @next/next/no-img-element -- 与视频同构图的静图叠层，需原生解码与缓存
+            <img
+              src={posterUrl}
+              alt=""
+              decoding="async"
+              fetchPriority="high"
+              className={[
+                NATURE_BG_COVER_MEDIA,
+                "z-[2] pointer-events-none transition-opacity duration-700 ease-out motion-reduce:transition-none",
+                introRevealed ? "opacity-0" : "opacity-100",
+              ].join(" ")}
+              style={{ maxWidth: "none" }}
+              aria-hidden
+            />
+          ) : null}
+          {(showSlowIntroHint || showPlaybackWaitHint) && (
+            <p
+              className="pointer-events-none absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:text-[13px] sm:left-6 sm:right-6"
+              aria-live="polite"
+            >
+              {showSlowIntroHint && !introRevealed ? t("nature.slowVisualHint") : t("nature.playbackBufferingHint")}
+            </p>
+          )}
           <NatureAmbientMixAudio
             layers={ambientLayers}
             videoRef={videoRef}
             playbackRate={rate}
             ambientMuted={ambientMuted}
+            ambientLead={hasStillIntro && !introRevealed}
           />
         </div>
       ) : null}

@@ -94,12 +94,18 @@ function collectVideoEntries(
     const thumbRaw = typeof o.thumbSrc === "string" ? o.thumbSrc.trim() : "";
     const thumbSrc =
       thumbRaw.startsWith("/nature/thumbs/") && thumbRaw.length <= MAX_SRC_LEN ? thumbRaw : undefined;
+    const previewRaw = typeof o.previewFrameSrc === "string" ? o.previewFrameSrc.trim() : "";
+    const previewFrameSrc =
+      previewRaw.startsWith("/nature/preview-posters/") && previewRaw.length <= MAX_SRC_LEN
+        ? previewRaw
+        : undefined;
     const mix = collectMixLayers(o.mix, validClipIds, mode);
     out.push({
       id,
       src,
       ...(title ? { title } : {}),
       ...(thumbSrc ? { thumbSrc } : {}),
+      ...(previewFrameSrc ? { previewFrameSrc } : {}),
       ...(mix ? { mix } : {}),
     });
   }

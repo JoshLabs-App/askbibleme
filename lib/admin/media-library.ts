@@ -6,6 +6,11 @@ export const MEDIA_LIBRARY_BUCKETS = [
   { id: "nature_video", urlPrefix: "/nature/uploads/", publicRel: ["nature", "uploads"] as const },
   { id: "nature_audio", urlPrefix: "/nature/audio-uploads/", publicRel: ["nature", "audio-uploads"] as const },
   { id: "nature_thumb", urlPrefix: "/nature/thumbs/", publicRel: ["nature", "thumbs"] as const },
+  {
+    id: "nature_preview",
+    urlPrefix: "/nature/preview-posters/",
+    publicRel: ["nature", "preview-posters"] as const,
+  },
   { id: "music_audio", urlPrefix: "/music/uploads/", publicRel: ["music", "uploads"] as const },
   { id: "music_bg", urlPrefix: "/music/bg-uploads/", publicRel: ["music", "bg-uploads"] as const },
   { id: "music_analysis", urlPrefix: "/music/analysis/", publicRel: ["music", "analysis"] as const },

@@ -7,9 +7,9 @@
       "title": "云海",
       "mix": [
         {
-          "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
-          "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
-          "volume": 0.23
+          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "volume": 0.06
         }
       ]
     },
@@ -19,11 +19,6 @@
       "title": "湖泊",
       "thumbSrc": "/nature/thumbs/8da756a7021441e991a7038bb68abacc.jpg",
       "mix": [
-        {
-          "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
-          "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
-          "volume": 0.14
-        },
         {
           "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
           "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
@@ -40,12 +35,12 @@
         {
           "id": "mix-9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
           "clipId": "9b06eb02-97e4-4857-b4ff-9a1f0b0d1609",
-          "volume": 0.65
+          "volume": 0.01
         },
         {
           "id": "mix-282a13f6-ad35-41f0-8122-92eddd417928",
           "clipId": "282a13f6-ad35-41f0-8122-92eddd417928",
-          "volume": 0.04
+          "volume": 0.08
         }
       ]
     },
@@ -58,7 +53,7 @@
         {
           "id": "mix-22dafdf4-9e5d-44e7-9c24-905c0d9f040d",
           "clipId": "22dafdf4-9e5d-44e7-9c24-905c0d9f040d",
-          "volume": 0.48
+          "volume": 0.14
         }
       ]
     },

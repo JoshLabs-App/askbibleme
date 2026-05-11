@@ -18,7 +18,7 @@
     },
     {
       "id": "track-mp1b4gw6xun1",
-      "title": "音乐 2026-05-11 · 01",
+      "title": "03",
       "src": "/music/uploads/568393997202440e86675a228af78283.m4a"
     }
   ],
@@ -27,12 +27,6 @@
       "id": "bg-demo",
       "type": "gradient",
       "cssGradient": "linear-gradient(165deg, #5c4a3a 0%, #3d3229 35%, #2c2824 70%, #1a1714 100%)",
-      "blur": false
-    },
-    {
-      "id": "bg-moz3kpueo6x1",
-      "type": "image",
-      "imageSrc": "/music/bg-uploads/2854d1b5af8a4381b13cbf928b309815.png",
       "blur": false
     }
   ],
@@ -45,7 +39,7 @@
       },
       "order": 0,
       "audioTrackId": "track-mp1b4gw6xun1",
-      "backgroundVisualId": "bg-moz3kpueo6x1"
+      "backgroundVisualId": null
     }
   ],
   "defaultSceneId": "scene-default"

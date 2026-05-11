@@ -186,6 +186,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setSidebarDragging(true);
   }, []);
 
+  if (pathname === "/admin/login") {
+    return (
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto bg-adminBg text-adminFg">
+        {children}
+      </div>
+    );
+  }
+
   const asideInner = (
     <>
       <div className="px-1 pb-3 md:pb-6">
@@ -279,6 +287,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           )}
         </AppSkinTrigger>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await fetch("/api/admin/auth", { method: "DELETE" });
+            } catch {
+              /* ignore */
+            }
+            window.location.href = "/admin/login";
+          }}
+          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+        >
+          {t("admin.login.signOut")}
+        </button>
         <Link
           href="/"
           className="block rounded-md px-2.5 py-1.5 text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
@@ -358,6 +380,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           )}
         </AppSkinTrigger>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await fetch("/api/admin/auth", { method: "DELETE" });
+            } catch {
+              /* ignore */
+            }
+            window.location.href = "/admin/login";
+          }}
+          className="text-left text-[11px] text-adminMuted hover:text-adminFg/85"
+        >
+          {t("admin.login.signOut")}
+        </button>
         <Link href="/" className="text-[11px] text-adminMuted hover:text-adminFg/85">
           {t("admin.backToApp")}
         </Link>

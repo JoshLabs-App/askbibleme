@@ -7,6 +7,7 @@
   },
   "nav": {
     "mainLabel": "Main navigation",
+    "home": "Home",
     "music": "Music",
     "journey": "Journey",
     "read": "Scripture",
@@ -86,7 +87,14 @@
       "opacity": "Opacity",
       "dim": "Dim",
       "saturation": "Saturation",
-      "resetFx": "Reset"
+      "resetFx": "Reset",
+      "shortcutsAria": "Music and Relax"
+    },
+    "sleepTimer": {
+      "watchAria": "Timer",
+      "m30": "30",
+      "m60": "60",
+      "m120": "120"
     },
     "visualTuning": {
       "homeAtmosphereTitle": "Home atmosphere",
@@ -101,6 +109,16 @@
     "language": "Language",
     "navLabel": "Admin navigation",
     "resizeSidebar": "Drag to resize sidebar",
+    "login": {
+      "pageTitle": "Admin sign-in",
+      "hint": "Enter the studio password to open the admin area.",
+      "passwordLabel": "Password",
+      "submit": "Continue",
+      "submitting": "Signing in…",
+      "errorWrong": "Incorrect password.",
+      "errorNetwork": "Could not reach the server. Try again.",
+      "signOut": "Sign out"
+    },
     "groupChildItems": "{{group}} · items",
     "groups": {
       "system": "System",
@@ -159,11 +177,11 @@
     },
     "naturePage": {
       "title": "Nature",
-      "intro": "Two blocks: Ambient is a separate shared library—upload a few loops (water, birds, etc.) that every clip can use. Background video is where each clip builds its own mix from that library. /nature plays the current clip’s picture and sound.",
+      "intro": "Two blocks: Ambient is a separate shared library—upload a few loops (water, birds, etc.) that every clip can use. Background video is where each clip builds its own mix from that library. The home page (full-screen nature) plays the current clip’s picture and sound.",
       "galleryTitle": "Clip gallery",
-      "galleryHint": "Tap a card to set the clip that plays on /nature (saved immediately).",
+      "galleryHint": "Tap a card to set the clip for the home page (saved immediately).",
       "galleryThumbEdit": "Square cover",
-      "galleryThumbHint": "Capture a center crop from this clip for the gallery and /nature poster.",
+      "galleryThumbHint": "Capture a center crop from this clip for the gallery and the home-page poster.",
       "galleryAddTitle": "Add new clip",
       "galleryAddHint": "Tap to upload video",
       "linkMusicLibrary": "Library & artwork",
@@ -181,7 +199,7 @@
       "ambientRemove": "Delete source",
       "ambientTitlePlaceholder": "Source name",
       "videoBlockTitle": "Background video",
-      "videoBlockIntro": "Upload looping video to public/nature/uploads. Each clip lists every Ambient source at 0% by default—raise only the tracks you want in the mix. /nature plays the current clip’s video and mix.",
+      "videoBlockIntro": "Upload looping video to public/nature/uploads. Each clip lists every Ambient source at 0% by default—raise only the tracks you want in the mix. The home page plays the current clip’s video and mix.",
       "mixSectionTitle": "Mix for this clip (only this clip)",
       "mixPreviewTitle": "Preview output",
       "mixPreviewHint": "Video fills the preview (cropped, no side bars), muted loop. Every library source is listed below at 0% by default—raise only what you need. Drag while previewing to hear live; release to save.",
@@ -189,9 +207,15 @@
       "mixPreviewStop": "Stop",
       "mixStripTitle": "Ambient levels (default 0%)",
       "mixAllClipsEmpty": "No ambient sources yet. Upload in the Ambient block above first.",
-      "thumbModalTitle": "Square cover from video",
-      "thumbModalHint": "Scrub to a frame; export is a center square crop (same as the /nature poster).",
+      "thumbModalTitle": "Square cover",
+      "thumbModalHint": "From a video frame or an image file. Pick a moment or file, adjust the square crop, then save.",
       "thumbModalSeek": "Time",
+      "thumbModalTabVideo": "Video frame",
+      "thumbModalTabImage": "Image file",
+      "thumbModalPickImage": "Choose image…",
+      "thumbModalImageEmpty": "No image selected yet.",
+      "thumbModalImageHint": "JPG, PNG, or WebP. Use the crop slider when the photo is wider or taller than a square.",
+      "thumbModalImageError": "Could not read this image.",
       "thumbModalPanLabel": "Crop left / right",
       "thumbModalPanLabelVertical": "Crop up / down",
       "thumbModalPanHint": "Wide clips: move the square crop horizontally.",
@@ -227,6 +251,7 @@
     "sessionLabel": "Nature",
     "emptyTitle": "No background video yet",
     "emptyHint": "Upload or pick a clip under Admin → Music → Nature, or edit data/nature-settings.json.",
+    "toggleDockChrome": "Show or hide bottom bar and scene row",
     "videoBgAnnounced": "Background is a muted looping video.",
     "noMusicHint": "No tracks yet. Add audio from the music home or admin, then return.",
     "scenes": {

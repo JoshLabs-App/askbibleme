@@ -107,8 +107,8 @@ export function HomeVerseRotator({
     }
     if (isNature) {
       return isDark
-        ? "mt-4 font-sans text-[11px] font-medium tracking-[0.18em] text-white/[0.62] sm:mt-4 sm:text-[12px] sm:tracking-[0.2em] [text-shadow:0_1px_3px_rgba(0,0,0,0.75)]"
-        : "mt-4 font-sans text-[11px] font-medium tracking-[0.2em] text-muted sm:text-[12px]";
+        ? "mt-4 font-sans text-[13px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-4 sm:text-[14px] sm:tracking-[0.16em] [text-shadow:0_1px_2px_rgba(0,0,0,0.9),0_2px_12px_rgba(0,0,0,0.55)]"
+        : "mt-4 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:text-[14px]";
     }
     if (isRelax) {
       return isDark

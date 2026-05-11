@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 
 type Layer = { layerId: string; src: string; volume: number };
 
@@ -9,13 +10,20 @@ function SyncLoopAmbient({
   volume,
   playbackRate,
   videoRef,
+  setAudioEl,
 }: {
   src: string;
   volume: number;
   playbackRate: number;
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  setAudioEl: (el: HTMLAudioElement | null) => void;
 }) {
-  const aRef = useRef<HTMLAudioElement>(null);
+  const aRef = useRef<HTMLAudioElement | null>(null);
+
+  const bindRef = (el: HTMLAudioElement | null) => {
+    aRef.current = el;
+    setAudioEl(el);
+  };
 
   useEffect(() => {
     const a = aRef.current;
@@ -44,7 +52,7 @@ function SyncLoopAmbient({
     };
   }, [src, volume, playbackRate, videoRef]);
 
-  return <audio ref={aRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
+  return <audio ref={bindRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
 }
 
 /**
@@ -59,6 +67,26 @@ export function NatureAmbientMixAudio({
   videoRef: React.RefObject<HTMLVideoElement | null>;
   playbackRate: number;
 }) {
+  const { registerSleepPauseHandler } = useMusicShellPlayback();
+  const ambientByLayerRef = useRef(new Map<string, HTMLAudioElement>());
+
+  const setLayerAudioEl = useCallback((layerId: string, el: HTMLAudioElement | null) => {
+    if (el) ambientByLayerRef.current.set(layerId, el);
+    else ambientByLayerRef.current.delete(layerId);
+  }, []);
+
+  useEffect(() => {
+    return registerSleepPauseHandler(() => {
+      for (const [, a] of ambientByLayerRef.current) {
+        try {
+          a.pause();
+        } catch {
+          /* ignore */
+        }
+      }
+    });
+  }, [registerSleepPauseHandler]);
+
   if (!layers.length) return null;
   return (
     <div className="pointer-events-none absolute h-0 w-0 overflow-hidden" aria-hidden>
@@ -69,6 +97,7 @@ export function NatureAmbientMixAudio({
           volume={l.volume}
           playbackRate={playbackRate}
           videoRef={videoRef}
+          setAudioEl={(el) => setLayerAudioEl(l.layerId, el)}
         />
       ))}
     </div>

@@ -118,7 +118,7 @@ function RelaxVisualByEffect({ id }: { id: RelaxVisualEffectId }) {
 }
 
 /**
- * 放松会话：静湖为浅色天青底；其余为深色。底栏在外层对该路由隐藏。
+ * 放松会话：静湖为浅色天青底；其余为深色。底栏在外层对该路由隐藏。底部控件：进度 → 轻量透明效果条 → 播放。
  */
 export function RelaxCalmExperience({ initial }: Props) {
   const { t } = useLocale();
@@ -210,14 +210,26 @@ export function RelaxCalmExperience({ initial }: Props) {
 
       <header className="relative z-20 mx-auto flex w-full max-w-xl shrink-0 items-center justify-between gap-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-[max(1rem,env(safe-area-inset-top))]">
         <Link
-          href="/"
+          href="/music"
+          aria-label={t("relax.back")}
           className={
             isLagoon
-              ? "rounded-full px-3.5 py-2.5 text-[14px] font-medium leading-snug text-ink/80 transition hover:bg-white/60 hover:text-ink sm:text-[15px]"
-              : "rounded-full px-3.5 py-2.5 text-[14px] font-medium leading-snug text-white/72 transition hover:bg-white/[0.07] hover:text-white sm:text-[15px]"
+              ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink/80 transition hover:bg-white/60 hover:text-ink"
+              : "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/72 transition hover:bg-white/[0.07] hover:text-white"
           }
         >
-          ← {t("relax.back")}
+          <svg
+            viewBox="0 0 24 24"
+            className="h-[1.35rem] w-[1.35rem]"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M14 7l-5 5 5 5" />
+          </svg>
         </Link>
         <span
           className={
@@ -229,46 +241,6 @@ export function RelaxCalmExperience({ initial }: Props) {
           {t("relax.sessionLabel")}
         </span>
       </header>
-
-      <div
-        className="relative z-20 mx-auto flex w-full max-w-xl shrink-0 justify-center px-4 pt-4 sm:px-5 sm:pt-5"
-        role="tablist"
-        aria-label={t("relax.effectPickerLabel")}
-      >
-        <div
-          className={
-            isLagoon
-              ? "flex max-w-full overflow-x-auto rounded-full border border-sky-200/80 bg-white/75 p-1 shadow-sm ring-1 ring-sky-100/60 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              : "flex max-w-full overflow-x-auto rounded-full bg-white/[0.055] p-1 ring-1 ring-white/[0.09] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          }
-        >
-          {RELAX_VISUAL_EFFECT_IDS.map((id) => {
-            const selected = visualEffect === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => persistVisualEffect(id)}
-                className={
-                  isLagoon
-                    ? `shrink-0 rounded-full px-3 py-2 text-[12px] font-medium tracking-wide transition sm:px-3.5 sm:py-2 sm:text-[12.5px] ${
-                        selected
-                          ? "bg-sky-600 text-white shadow-sm"
-                          : "text-ink/50 hover:bg-sky-100/80 hover:text-ink/85"
-                      }`
-                    : `shrink-0 rounded-full px-3 py-2 text-[12px] font-medium tracking-wide transition sm:px-3.5 sm:py-2 sm:text-[12.5px] ${
-                        selected ? "bg-white/[0.15] text-white shadow-sm" : "text-white/44 hover:bg-white/[0.06] hover:text-white/78"
-                      }`
-                }
-              >
-                {t(RELAX_EFFECT_TAB_I18N_KEY[id])}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <main className="relative z-10 mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-5 sm:py-11">
         <div className="flex flex-col items-center gap-y-11 sm:gap-y-14">
@@ -283,7 +255,7 @@ export function RelaxCalmExperience({ initial }: Props) {
         </div>
       </main>
 
-      <footer className="relative z-20 mx-auto mt-auto flex w-full max-w-md shrink-0 flex-col gap-4 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-5 sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-5">
+      <footer className="relative z-20 mx-auto mt-auto flex w-full max-w-md shrink-0 flex-col gap-2.5 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pt-4">
         {canPlay ? (
           <div
             className={`flex items-center gap-3.5 text-[12px] tabular-nums sm:text-[13px] ${
@@ -323,7 +295,47 @@ export function RelaxCalmExperience({ initial }: Props) {
           </p>
         )}
 
-        <div className="flex justify-center pb-0.5">
+        <div
+          className="flex w-full justify-center"
+          role="tablist"
+          aria-label={t("relax.effectPickerLabel")}
+        >
+          <div
+            className={
+              isLagoon
+                ? "flex max-w-full overflow-x-auto rounded-full border border-sky-300/30 bg-white/[0.2] p-0.5 shadow-none backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                : "flex max-w-full overflow-x-auto rounded-full border border-white/[0.08] bg-black/20 p-0.5 shadow-none backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            }
+          >
+            {RELAX_VISUAL_EFFECT_IDS.map((id) => {
+              const selected = visualEffect === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => persistVisualEffect(id)}
+                  className={
+                    isLagoon
+                      ? `shrink-0 rounded-full px-2 py-1 text-[11px] font-medium tracking-wide transition sm:px-2.5 sm:py-1 sm:text-[11px] ${
+                          selected
+                            ? "bg-sky-600/35 text-sky-950"
+                            : "text-ink/42 hover:bg-white/25 hover:text-ink/75"
+                        }`
+                      : `shrink-0 rounded-full px-2 py-1 text-[11px] font-medium tracking-wide transition sm:px-2.5 sm:py-1 sm:text-[11px] ${
+                          selected ? "bg-white/[0.14] text-white" : "text-white/38 hover:bg-white/[0.06] hover:text-white/72"
+                        }`
+                  }
+                >
+                  {t(RELAX_EFFECT_TAB_I18N_KEY[id])}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex justify-center pb-0.5 pt-0.5">
           <button
             type="button"
             disabled={!canPlay}

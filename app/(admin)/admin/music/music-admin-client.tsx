@@ -80,14 +80,30 @@ async function postCompanionJson(
       },
       body: JSON.stringify(store),
     });
-    const data = (await res.json()) as { ok?: boolean; error?: string };
+    const data = (await parseJsonBody(res)) as { ok?: boolean; error?: string };
     if (!res.ok) {
       return { ok: false, error: data.error ?? `写入失败（${res.status}）` };
     }
     return { ok: true };
-  } catch {
-    return { ok: false, error: "写入请求失败" };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "写入请求失败" };
   }
+}
+
+async function parseJsonBody(res: Response): Promise<Record<string, unknown>> {
+  const text = await res.text();
+  if (!text.trim()) return {};
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new Error(`服务器返回非 JSON（HTTP ${res.status}）。若为生产环境，请确认接口未返回 HTML 错误页。`);
+  }
+}
+
+function disk403Hint(status: number, serverError: string): string {
+  if (status !== 403) return "";
+  if (!serverError.includes("未允许")) return "";
+  return " 提示：使用 `next start` 时需在 Studio 填写与 STUDIO_WRITE_SECRET 相同的磁盘密钥，或本地使用 `npm run dev`。";
 }
 
 /** 单入口上传：按 MIME / 扩展名自动分到音频或图片。 */
@@ -105,13 +121,21 @@ export function MusicAdminClient() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const persistIgnoreUntil = useRef(0);
+  const storeRef = useRef<MusicCompanionStore | null>(null);
+  storeRef.current = store;
+
+  const getStoreSnapshot = useCallback(() => storeRef.current, []);
+
+  const bumpPersistIgnore = useCallback((ms = 2800) => {
+    persistIgnoreUntil.current = Date.now() + ms;
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     setMsg(null);
     try {
       const res = await fetch("/api/music/companion");
-      const data = (await res.json()) as MusicCompanionStore | { error?: string };
+      const data = (await parseJsonBody(res)) as MusicCompanionStore | { error?: string };
       if (!res.ok) {
         setMsg((data as { error?: string }).error ?? "加载失败");
         setStore(null);
@@ -204,7 +228,13 @@ export function MusicAdminClient() {
         </p>
       </header>
 
-      <AdminMediaHub setStore={setStore} setMsg={setMsg} flushToDisk={flushToDisk} />
+      <AdminMediaHub
+        setStore={setStore}
+        setMsg={setMsg}
+        flushToDisk={flushToDisk}
+        getStoreSnapshot={getStoreSnapshot}
+        bumpPersistIgnore={bumpPersistIgnore}
+      />
       <AudioTrackLibrary store={store} setStore={setStore} />
       <ImageBackgroundLibrary store={store} setStore={setStore} />
     </main>
@@ -215,13 +245,18 @@ function AdminMediaHub({
   setStore,
   setMsg,
   flushToDisk,
+  getStoreSnapshot,
+  bumpPersistIgnore,
 }: {
   setStore: React.Dispatch<React.SetStateAction<MusicCompanionStore | null>>;
   setMsg: React.Dispatch<React.SetStateAction<string | null>>;
   flushToDisk: (snapshot: MusicCompanionStore) => Promise<boolean>;
+  getStoreSnapshot: () => MusicCompanionStore | null;
+  bumpPersistIgnore: (ms?: number) => void;
 }) {
   const [uploadProgress, setUploadProgress] = useState<{ cur: number; total: number } | null>(null);
   const busy = uploadProgress !== null;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const runAudioUpload = useCallback(async (file: File) => {
     const fd = new FormData();
@@ -231,7 +266,7 @@ function AdminMediaHub({
       headers: { ...diskAuthHeaders() },
       body: fd,
     });
-    const data = (await res.json()) as {
+    const data = (await parseJsonBody(res)) as {
       ok?: boolean;
       url?: string;
       error?: string;
@@ -241,11 +276,12 @@ function AdminMediaHub({
       analysisUrl?: string;
     };
     if (!res.ok) {
-      throw new Error(data.error ?? `上传失败（${res.status}）`);
+      const err = typeof data.error === "string" ? data.error : `上传失败（${res.status}）`;
+      throw new Error(err + disk403Hint(res.status, err));
     }
     const url = data.url;
     if (typeof url !== "string" || !url) {
-      throw new Error("上传响应异常");
+      throw new Error("上传响应异常：缺少 url");
     }
     const analysisUrl =
       typeof data.analysisUrl === "string" && data.analysisUrl.trim() ? data.analysisUrl.trim() : undefined;
@@ -253,7 +289,7 @@ function AdminMediaHub({
       url,
       transcoded: data.transcoded,
       bitrateK: data.bitrateK,
-      warning: data.warning,
+      warning: typeof data.warning === "string" ? data.warning : undefined,
       analysisUrl,
     };
   }, []);
@@ -266,60 +302,56 @@ function AdminMediaHub({
       headers: { ...diskAuthHeaders() },
       body: fd,
     });
-    const data = (await res.json()) as { ok?: boolean; url?: string; error?: string };
+    const data = (await parseJsonBody(res)) as { ok?: boolean; url?: string; error?: string };
     if (!res.ok) {
-      throw new Error(data.error ?? `上传失败（${res.status}）`);
+      const err = typeof data.error === "string" ? data.error : `上传失败（${res.status}）`;
+      throw new Error(err + disk403Hint(res.status, err));
     }
     const url = data.url;
     if (typeof url !== "string" || !url) {
-      throw new Error("上传响应异常");
+      throw new Error("上传响应异常：缺少 url");
     }
     return { url };
   }, []);
 
   const ingestAudio = useCallback(
-    async (file: File) => {
+    async (file: File, base: MusicCompanionStore) => {
       const data = await runAudioUpload(file);
       const id = newTrackId();
-      let nextSnap: MusicCompanionStore | null = null;
-      setStore((s) => {
-        if (!s) return s;
-        const title = nextDateNumberedMusicUploadTitle(s.audioTracks.map((t) => primaryLocaleText(t.title)));
-        nextSnap = withNewAudioTrack(s, {
-          id,
-          title,
-          src: data.url,
-          ...(data.analysisUrl ? { analysisSrc: data.analysisUrl } : {}),
-        });
-        return nextSnap;
+      const title = nextDateNumberedMusicUploadTitle(base.audioTracks.map((t) => primaryLocaleText(t.title)));
+      const nextSnap = withNewAudioTrack(base, {
+        id,
+        title,
+        src: data.url,
+        ...(data.analysisUrl ? { analysisSrc: data.analysisUrl } : {}),
       });
-      if (!nextSnap) throw new Error("无曲库数据");
+      setStore(nextSnap);
+      bumpPersistIgnore();
       const ok = await flushToDisk(nextSnap);
       if (!ok) throw new Error("曲库写入失败");
-      return data;
+      bumpPersistIgnore();
+      return { next: nextSnap, data };
     },
-    [flushToDisk, runAudioUpload, setStore],
+    [bumpPersistIgnore, flushToDisk, runAudioUpload, setStore],
   );
 
   const ingestImage = useCallback(
-    async (file: File) => {
+    async (file: File, base: MusicCompanionStore): Promise<MusicCompanionStore> => {
       const { url } = await runImageUpload(file);
       const id = newBackgroundId();
-      let nextSnap: MusicCompanionStore | null = null;
-      setStore((s) => {
-        if (!s) return s;
-        const imageTitles = s.backgroundVisuals
-          .filter((b) => b.type === "image")
-          .map((b) => primaryLocaleText(b.title));
-        const imgTitle = nextDateNumberedImageUploadTitle(imageTitles);
-        nextSnap = withNewImageBackground(s, { id, src: url, title: imgTitle });
-        return nextSnap;
-      });
-      if (!nextSnap) throw new Error("无曲库数据");
+      const imageTitles = base.backgroundVisuals
+        .filter((b) => b.type === "image")
+        .map((b) => primaryLocaleText(b.title));
+      const imgTitle = nextDateNumberedImageUploadTitle(imageTitles);
+      const nextSnap = withNewImageBackground(base, { id, src: url, title: imgTitle });
+      setStore(nextSnap);
+      bumpPersistIgnore();
       const ok = await flushToDisk(nextSnap);
       if (!ok) throw new Error("曲库写入失败");
+      bumpPersistIgnore();
+      return nextSnap;
     },
-    [flushToDisk, runImageUpload, setStore],
+    [bumpPersistIgnore, flushToDisk, runImageUpload, setStore],
   );
 
   const onMediaFiles = useCallback(
@@ -337,6 +369,7 @@ function AdminMediaHub({
         setMsg(skipped.length ? `不支持的类型：${skipped.join("、")}` : "未选择文件");
         return;
       }
+      bumpPersistIgnore(Math.max(8000, 2000 + planned.length * 4000));
       setMsg(null);
       setUploadProgress({ cur: 0, total: planned.length });
       const skipTail = skipped.length ? ` 已跳过：${skipped.join("、")}` : "";
@@ -347,14 +380,22 @@ function AdminMediaHub({
             bitrateK?: number | null;
           }
         | undefined;
+      let chain = getStoreSnapshot();
+      if (!chain) {
+        setMsg("无曲库数据");
+        setUploadProgress(null);
+        return;
+      }
       try {
         for (let i = 0; i < planned.length; i++) {
           setUploadProgress({ cur: i + 1, total: planned.length });
           const { file, kind } = planned[i];
           if (kind === "audio") {
-            lastAudio = await ingestAudio(file);
+            const { next, data } = await ingestAudio(file, chain);
+            chain = next;
+            lastAudio = data;
           } else {
-            await ingestImage(file);
+            chain = await ingestImage(file, chain);
           }
         }
         if (planned.length === 1 && planned[0].kind === "audio" && lastAudio) {
@@ -373,7 +414,7 @@ function AdminMediaHub({
         setUploadProgress(null);
       }
     },
-    [ingestAudio, ingestImage, setMsg],
+    [bumpPersistIgnore, getStoreSnapshot, ingestAudio, ingestImage, setMsg],
   );
 
   const labelMain =
@@ -384,21 +425,38 @@ function AdminMediaHub({
   return (
     <section className="mt-10">
       <h2 className="text-[11px] font-medium uppercase tracking-[0.14em] text-adminMuted">上传</h2>
-      <label className="mt-3 flex min-h-[4rem] cursor-pointer flex-col items-start justify-center border border-dashed border-border bg-canvas/70 px-3 py-3 text-left transition hover:border-border hover:bg-surface/80">
-        <span className="text-[11px] font-medium text-adminFg">{labelMain}</span>
-        <input
-          type="file"
-          multiple
-          accept="audio/*,image/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.webm,.flac,.jpg,.jpeg,.png,.webp,.gif"
-          className="sr-only"
+      <p className="mt-2 max-w-prose text-[10px] leading-relaxed text-adminMuted">
+        大文件或转码可能需数十秒；上传完成前请勿离开本页。若写入失败，请确认未禁用自动保存，且生产环境已配置磁盘写入密钥。
+      </p>
+      <div className="mt-3 flex flex-col gap-2">
+        <label className="relative flex min-h-[4rem] cursor-pointer flex-col items-start justify-center overflow-hidden rounded-md border border-dashed border-border bg-canvas/70 px-3 py-3 text-left transition hover:border-border hover:bg-surface/80">
+          <span className="pointer-events-none relative z-0 text-[11px] font-medium text-adminFg">{labelMain}</span>
+          <span className="pointer-events-none relative z-0 mt-1 text-[10px] text-adminMuted">点击此区域或下方按钮选择文件</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="audio/*,image/*,.mp3,.m4a,.aac,.ogg,.opus,.wav,.webm,.flac,.jpg,.jpeg,.png,.webp,.gif"
+            className="absolute inset-0 z-10 h-full min-h-[4rem] w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+            style={{ fontSize: "16px" }}
+            disabled={busy}
+            aria-label="上传音频或图片"
+            onChange={(e) => {
+              const fs = e.target.files;
+              e.target.value = "";
+              if (fs?.length) void onMediaFiles(fs);
+            }}
+          />
+        </label>
+        <button
+          type="button"
           disabled={busy}
-          onChange={(e) => {
-            const fs = e.target.files;
-            e.target.value = "";
-            if (fs?.length) void onMediaFiles(fs);
-          }}
-        />
-      </label>
+          className="self-start rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          选择文件…
+        </button>
+      </div>
     </section>
   );
 }

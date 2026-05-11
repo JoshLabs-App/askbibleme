@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AmbientBackdrop } from "@/components/music/AmbientBackdrop";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import {
@@ -10,12 +10,7 @@ import {
   type HomeAtmospherePresetId,
   useHomeAtmosphereVisual,
 } from "@/music-visual";
-import type {
-  AudioTrack,
-  BackgroundVisual,
-  MusicCompanionStore,
-  Scene,
-} from "@/lib/music-companion/types";
+import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -96,15 +91,6 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
   return store.audioTracks.filter((t) => t.src?.trim()).length;
 }
 
-function countImageBgs(store: MusicCompanionStore): number {
-  return store.backgroundVisuals.filter((b) => b.type === "image" && b.imageSrc?.trim()).length;
-}
-
-function randomPoolIndex(n: number): number {
-  if (n <= 1) return 0;
-  return Math.floor(Math.random() * n);
-}
-
 function replaceAtmosphereSearchParam(id: HomeAtmospherePresetId) {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
@@ -139,38 +125,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   };
   const setPlaybackSrcRef = useRef(setPlaybackSrc);
   setPlaybackSrcRef.current = setPlaybackSrc;
-  const [bgMode, setBgMode] = useState<"images" | "ambient">("ambient");
-  /** 图片模式前台调节（不落盘） */
-  const [imgBlurPx, setImgBlurPx] = useState(0);
-  const [imgOpacity, setImgOpacity] = useState(1);
-  const [imgDim, setImgDim] = useState(0);
-  const [imgSaturate, setImgSaturate] = useState(1);
-  const [imgFxOpen, setImgFxOpen] = useState(false);
-  const imgFxRootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (bgMode !== "images") setImgFxOpen(false);
-  }, [bgMode]);
-
-  useEffect(() => {
-    if (!imgFxOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setImgFxOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [imgFxOpen]);
-
-  useEffect(() => {
-    if (!imgFxOpen) return;
-    const onDown = (e: MouseEvent) => {
-      if (imgFxRootRef.current && !imgFxRootRef.current.contains(e.target as Node)) {
-        setImgFxOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [imgFxOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -244,11 +198,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   const resolvedTrackIdxRef = useRef(0);
   resolvedTrackIdxRef.current = resolvedTrackIdx;
 
-  const imageBgs = useMemo(
-    () => store.backgroundVisuals.filter((b) => b.type === "image" && b.imageSrc?.trim()),
-    [store.backgroundVisuals],
-  );
-
   const defaultTrackPoolIdx = useMemo(() => {
     if (tracksWithSrc.length === 0) return 0;
     const want = scene?.audioTrackId ?? null;
@@ -256,18 +205,8 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     return i >= 0 ? i : 0;
   }, [scene?.audioTrackId, scene?.id, tracksWithSrc]);
 
-  const defaultImagePoolIdx = useMemo(() => {
-    if (imageBgs.length === 0) return 0;
-    const want = scene?.backgroundVisualId ?? null;
-    const i = want ? imageBgs.findIndex((b) => b.id === want) : -1;
-    return i >= 0 ? i : 0;
-  }, [scene?.backgroundVisualId, scene?.id, imageBgs]);
-
   const initialTrackCount = countTracksWithSrc(initialStore);
-  const initialImageCount = countImageBgs(initialStore);
-  const [imagePoolIdx, setImagePoolIdx] = useState(() => randomPoolIndex(initialImageCount));
   const initialTrackCountRef = useRef(initialTrackCount);
-  const initialImageCountRef = useRef(initialImageCount);
   const prevSceneIdForPoolRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -280,15 +219,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
   }, [tracksWithSrc.length, store, sceneIndex]);
 
   useEffect(() => {
-    const n = imageBgs.length;
-    const wasN = initialImageCountRef.current;
-    if (wasN <= 1 && n > 1) {
-      initialImageCountRef.current = n;
-      setImagePoolIdx(randomPoolIndex(n));
-    }
-  }, [imageBgs.length]);
-
-  useEffect(() => {
     const sid = scene?.id ?? null;
     const prev = prevSceneIdForPoolRef.current;
     if (prev === undefined) {
@@ -298,21 +228,14 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     if (prev !== sid) {
       prevSceneIdForPoolRef.current = sid;
       setTrackPoolIdx(defaultTrackPoolIdx);
-      setImagePoolIdx(defaultImagePoolIdx);
     }
-  }, [scene?.id, defaultTrackPoolIdx, defaultImagePoolIdx]);
+  }, [scene?.id, defaultTrackPoolIdx]);
 
   useEffect(() => {
     setTrackPoolIdx((i) =>
       tracksWithSrc.length === 0 ? 0 : Math.min(i, tracksWithSrc.length - 1),
     );
   }, [tracksWithSrc.length]);
-
-  useEffect(() => {
-    setImagePoolIdx((i) =>
-      imageBgs.length === 0 ? 0 : Math.min(i, imageBgs.length - 1),
-    );
-  }, [imageBgs.length]);
 
   const track = useMemo(() => {
     if (tracksWithSrc.length > 0) {
@@ -331,30 +254,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     () => resolveLocalized(track?.artist, locale).trim(),
     [track?.artist, locale],
   );
-
-  const sceneDrivenBg = useMemo(
-    () =>
-      scene
-        ? (byId(store.backgroundVisuals, scene.backgroundVisualId) as BackgroundVisual | null)
-        : null,
-    [scene, store.backgroundVisuals],
-  );
-
-  /** 有多张上传图时在图池里切换；否则用场景上的渐变/单图 */
-  const displayBg = useMemo(() => {
-    if (imageBgs.length > 0) {
-      return imageBgs[Math.min(imagePoolIdx, imageBgs.length - 1)];
-    }
-    return sceneDrivenBg;
-  }, [imageBgs, imagePoolIdx, sceneDrivenBg]);
-
-  useEffect(() => {
-    if (displayBg?.type === "image") {
-      setImgBlurPx(displayBg.blur ? 8 : 0);
-    } else {
-      setImgBlurPx(0);
-    }
-  }, [displayBg?.id, displayBg?.type, displayBg?.blur]);
 
   const audioSrc = track?.src?.trim() ?? "";
 
@@ -387,50 +286,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     setTrackPoolIdx(next);
   }, [tracksWithSrc.length]);
 
-  const shuffleImage = useCallback(() => {
-    setImagePoolIdx((cur) => {
-      const n = imageBgs.length;
-      if (n <= 1) return cur;
-      let next = cur;
-      for (let g = 0; g < 40 && next === cur; g++) {
-        next = Math.floor(Math.random() * n);
-      }
-      return next;
-    });
-  }, [imageBgs]);
-
-  const bgStyle: React.CSSProperties = {};
-  const showImageBackdrop = bgMode === "images";
-  const lagoonLight = homeAtmospherePresetId === "lagoon" && !showImageBackdrop;
-  let imageBackdropFilter: string | undefined;
-  if (showImageBackdrop) {
-    const f: string[] = [];
-    const blurPx = Math.min(imgBlurPx, 12);
-    if (blurPx > 0.01) f.push(`blur(${blurPx}px)`);
-    if (Math.abs(imgSaturate - 1) > 0.01) f.push(`saturate(${imgSaturate})`);
-    imageBackdropFilter = f.length > 0 ? f.join(" ") : undefined;
-  }
-  if (showImageBackdrop) {
-    if (displayBg?.type === "gradient" && displayBg.cssGradient) {
-      Object.assign(bgStyle, {
-        backgroundColor: "#45382E",
-        background: displayBg.cssGradient,
-      });
-    } else if (displayBg?.type === "image" && displayBg.imageSrc) {
-      const safe = displayBg.imageSrc.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-      Object.assign(bgStyle, {
-        backgroundColor: "#2E261C",
-        backgroundImage: `url("${safe}")`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      });
-    } else {
-      Object.assign(bgStyle, {
-        background:
-          "linear-gradient(165deg, #6a5846 0%, #45382E 40%, #2E261C 100%)",
-      });
-    }
-  }
+  const lagoonLight = homeAtmospherePresetId === "lagoon";
 
   return (
     <div
@@ -442,35 +298,10 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     >
 
       <div className="pointer-events-none absolute inset-0 z-0 isolate min-h-full min-w-full overflow-hidden music-reactive-home-shell">
-        {showImageBackdrop ? (
-          <div className="absolute inset-0 z-0 min-h-full min-w-full overflow-hidden bg-[#45382E]">
-            <div
-              className="absolute inset-0 min-h-full min-w-full transition-[opacity,filter] duration-300 ease-out"
-              style={{
-                ...bgStyle,
-                opacity: imgOpacity,
-                filter: imageBackdropFilter,
-              }}
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-black/[0.35]"
-              aria-hidden
-            />
-            {imgDim > 0.005 ? (
-              <div
-                className="pointer-events-none absolute inset-0 bg-black"
-                style={{ opacity: imgDim }}
-                aria-hidden
-              />
-            ) : null}
-          </div>
-        ) : (
-          <AmbientBackdrop preset={homeAtmospherePresetId} />
-        )}
+        <AmbientBackdrop preset={homeAtmospherePresetId} />
         <div
           className={`pointer-events-none absolute inset-0 z-[2] mix-blend-soft-light ${
-            showImageBackdrop ? "opacity-[0.34]" : lagoonLight ? "opacity-[0.22]" : "opacity-[0.44]"
+            lagoonLight ? "opacity-[0.22]" : "opacity-[0.44]"
           }`}
           aria-hidden
         >
@@ -485,8 +316,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
         )}
         {lagoonLight ? (
           <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(125,211,252,0.35)_0%,rgba(224,242,254,0.2)_40%,transparent_72%)]" />
-        ) : homeAtmospherePresetId === "lagoon" ? (
-          <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(147,197,253,0.14)_0%,rgba(56,189,248,0.05)_38%,transparent_72%)]" />
         ) : (
           <div className="absolute left-1/2 top-[min(30dvh,38%)] h-[min(92vw,34rem)] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,200,160,0.16)_0%,rgba(230,160,105,0.055)_40%,transparent_70%)]" />
         )}
@@ -605,190 +434,33 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
 
         <div className="flex flex-col items-center gap-2 pt-2 lg:gap-2.5 lg:pt-3">
           <div
-            className={
-              lagoonLight
-                ? "inline-flex rounded-full border border-sky-200/80 bg-white/75 p-0.5 shadow-sm backdrop-blur-sm lg:p-1"
-                : "inline-flex rounded-full border border-white/15 bg-black/20 p-0.5 backdrop-blur-sm lg:border-white/10 lg:bg-black/25 lg:p-1 lg:shadow-inner lg:shadow-black/40"
-            }
+            className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 px-2 pt-0.5 lg:gap-x-3.5 lg:pt-1"
             role="group"
-            aria-label={t("music.home.bgMode")}
+            aria-label={t("music.home.ambientPicker")}
           >
-            <button
-              type="button"
-              onClick={() => {
-                setBgMode("images");
-                if (imageBgs.length > 1) {
-                  setImagePoolIdx(randomPoolIndex(imageBgs.length));
-                }
-              }}
-              className={`rounded-full px-3 py-1.5 transition lg:px-4 lg:py-2 ${
-                bgMode === "images"
-                  ? lagoonLight
-                    ? "bg-sky-600 text-white shadow-sm lg:bg-sky-600 lg:shadow-sm"
-                    : "bg-white/20 text-white lg:bg-white/[0.18] lg:shadow-sm lg:shadow-black/30"
-                  : lagoonLight
-                    ? "text-ink/50 hover:text-ink/80"
-                    : "text-white/55 hover:text-white/80"
-              }`}
-            >
-              {t("music.home.bgImages")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setBgMode("ambient")}
-              className={`rounded-full px-3 py-1.5 transition lg:px-4 lg:py-2 ${
-                bgMode === "ambient"
-                  ? lagoonLight
-                    ? "bg-sky-600 text-white shadow-sm lg:bg-sky-600 lg:shadow-sm"
-                    : "bg-white/20 text-white lg:bg-white/[0.18] lg:shadow-sm lg:shadow-black/30"
-                  : lagoonLight
-                    ? "text-ink/50 hover:text-ink/80"
-                    : "text-white/55 hover:text-white/80"
-              }`}
-            >
-              {t("music.home.bgAmbient")}
-            </button>
+            {HOME_ATMOSPHERE_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setHomeAtmospherePresetId(p.id);
+                  replaceAtmosphereSearchParam(p.id);
+                }}
+                aria-current={homeAtmospherePresetId === p.id ? "true" : undefined}
+                className={`px-1 py-0.5 text-[10px] font-normal tracking-[0.14em] transition ${
+                  homeAtmospherePresetId === p.id
+                    ? lagoonLight
+                      ? "text-sky-700"
+                      : "text-white/[0.72]"
+                    : lagoonLight
+                      ? "text-ink/35 hover:text-ink/55"
+                      : "text-white/[0.32] hover:text-white/[0.48]"
+                }`}
+              >
+                {t(`music.atmosphere.${p.id}`)}
+              </button>
+            ))}
           </div>
-          {bgMode === "ambient" ? (
-            <div
-              className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 px-2 pt-1.5 lg:gap-x-3.5 lg:pt-2"
-              role="group"
-              aria-label={t("music.home.ambientPicker")}
-            >
-              {HOME_ATMOSPHERE_PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    setHomeAtmospherePresetId(p.id);
-                    replaceAtmosphereSearchParam(p.id);
-                  }}
-                  aria-current={homeAtmospherePresetId === p.id ? "true" : undefined}
-                  className={`px-1 py-0.5 text-[10px] font-normal tracking-[0.14em] transition ${
-                    homeAtmospherePresetId === p.id
-                      ? lagoonLight
-                        ? "text-sky-700"
-                        : "text-white/[0.72]"
-                      : lagoonLight
-                        ? "text-ink/35 hover:text-ink/55"
-                        : "text-white/[0.32] hover:text-white/[0.48]"
-                  }`}
-                >
-                  {t(`music.atmosphere.${p.id}`)}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          {showImageBackdrop ? (
-            <div ref={imgFxRootRef} className="flex w-full max-w-[17rem] flex-col items-center gap-2 lg:max-w-xl xl:max-w-2xl">
-              <div className="flex items-center justify-center gap-3">
-                {imageBgs.length > 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => shuffleImage()}
-                    aria-label={t("music.home.shuffleBg")}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/[0.08] text-sm text-white/75 backdrop-blur-sm transition hover:bg-white/[0.12] active:scale-[0.98] lg:h-10 lg:w-10"
-                  >
-                    ↻
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setImgFxOpen((o) => !o)}
-                  aria-expanded={imgFxOpen}
-                  aria-controls="music-img-fx-panel"
-                  className="px-2 py-1 text-[10px] font-normal tracking-[0.14em] text-white/35 transition hover:text-white/55 lg:text-[11px]"
-                >
-                  {imgFxOpen ? t("music.home.panelOpen") : t("music.home.panelClosed")}
-                </button>
-              </div>
-              {imgFxOpen ? (
-                <div
-                  id="music-img-fx-panel"
-                  className="w-full space-y-2 border-t border-white/[0.06] pt-2.5"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>{t("music.home.blur")}</span>
-                      <span className="tabular-nums">{imgBlurPx.toFixed(1)}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={12}
-                      step={0.5}
-                      value={imgBlurPx}
-                      onChange={(e) => setImgBlurPx(Number(e.target.value))}
-                      className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label={t("music.home.blur")}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>{t("music.home.opacity")}</span>
-                      <span className="tabular-nums">{Math.round(imgOpacity * 100)}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={35}
-                      max={100}
-                      step={1}
-                      value={Math.round(imgOpacity * 100)}
-                      onChange={(e) => setImgOpacity(Number(e.target.value) / 100)}
-                      className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label={t("music.home.opacity")}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>{t("music.home.dim")}</span>
-                      <span className="tabular-nums">{Math.round(imgDim * 100)}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={55}
-                      step={1}
-                      value={Math.round(imgDim * 100)}
-                      onChange={(e) => setImgDim(Number(e.target.value) / 100)}
-                      className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label={t("music.home.dim")}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px] text-white/38">
-                      <span>{t("music.home.saturation")}</span>
-                      <span className="tabular-nums">{Math.round(imgSaturate * 100)}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={60}
-                      max={120}
-                      step={1}
-                      value={Math.round(imgSaturate * 100)}
-                      onChange={(e) => setImgSaturate(Number(e.target.value) / 100)}
-                      className="h-1 w-full cursor-pointer accent-white/40"
-                      aria-label={t("music.home.saturation")}
-                    />
-                  </div>
-                  <div className="flex justify-end pt-0.5">
-                    <button
-                      type="button"
-                      className="text-[10px] text-white/30 transition hover:text-white/45"
-                      onClick={() => {
-                        setImgOpacity(1);
-                        setImgDim(0);
-                        setImgSaturate(1);
-                        setImgBlurPx(displayBg?.type === "image" && displayBg.blur ? 8 : 0);
-                      }}
-                    >
-                      {t("music.home.resetFx")}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
         </div>
       </footer>
       </div>

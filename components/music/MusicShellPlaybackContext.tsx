@@ -42,6 +42,9 @@ function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
   }
 }
 
+/** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐并调用已注册的额外暂停（如自然混音） */
+export type MusicShellSleepTimerMinutes = 0 | 30 | 60 | 120;
+
 export type MusicShellPlaybackValue = {
   canPlay: boolean;
   playing: boolean;
@@ -65,6 +68,11 @@ export type MusicShellPlaybackValue = {
   musicStore: MusicCompanionStore | null;
   /** 壳层唯一 `<audio>`，供音乐驱动视觉等扩展 */
   getAudioElement: () => HTMLAudioElement | null;
+  sleepTimerMinutes: MusicShellSleepTimerMinutes;
+  sleepTimerDeadlineAt: number | null;
+  setSleepTimerMinutes: (minutes: MusicShellSleepTimerMinutes) => void;
+  /** 定时到时在 `pausePlayback` 之后调用；用于自然页混音等其它 `<audio>` */
+  registerSleepPauseHandler: (handler: () => void) => () => void;
 };
 
 const MusicShellPlaybackContext = createContext<MusicShellPlaybackValue | null>(null);
@@ -85,6 +93,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const [playing, setPlaying] = useState(false);
   const [currentSec, setCurrentSec] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
+  const [sleepTimerMinutes, setSleepTimerMinutesState] = useState<MusicShellSleepTimerMinutes>(0); // 默认关闭
+  const [sleepTimerDeadlineAt, setSleepTimerDeadlineAt] = useState<number | null>(null);
+  const sleepTimerDeadlineRef = useRef<number | null>(null);
   const shellPlaybackHydratedRef = useRef(false);
   /** 避免 `currentSrc` 尚未就绪时反复 `load()` 触发 setState 风暴 */
   const lastBoundEffectiveSrcRef = useRef("");
@@ -98,6 +109,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const shellPlaybackLastPersistAtRef = useRef(0);
   /** 曲目自然结束后切到下一首并自动播放（避免 `ended` 时 `paused` 导致仅绑 src 不 play） */
   const playAfterNextBindRef = useRef(false);
+  const sleepPauseHandlersRef = useRef(new Set<() => void>());
 
   const defaultSrc = useMemo(() => ((store ? getShellDefaultAudioSrc(store) : null) ?? "").trim(), [store]);
   const effectiveSrc = (playbackOverride?.trim() || defaultSrc).trim();
@@ -139,6 +151,44 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     if (a && !a.paused) a.pause();
     setPlaying(false);
   }, []);
+
+  const setSleepTimerMinutes = useCallback((minutes: MusicShellSleepTimerMinutes) => {
+    setSleepTimerMinutesState(minutes);
+    if (minutes === 0) {
+      sleepTimerDeadlineRef.current = null;
+      setSleepTimerDeadlineAt(null);
+      return;
+    }
+    const until = Date.now() + minutes * 60 * 1000;
+    sleepTimerDeadlineRef.current = until;
+    setSleepTimerDeadlineAt(until);
+  }, []);
+
+  const registerSleepPauseHandler = useCallback((handler: () => void) => {
+    sleepPauseHandlersRef.current.add(handler);
+    return () => {
+      sleepPauseHandlersRef.current.delete(handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const d = sleepTimerDeadlineRef.current;
+      if (d == null || Date.now() < d) return;
+      sleepTimerDeadlineRef.current = null;
+      setSleepTimerMinutesState(0);
+      setSleepTimerDeadlineAt(null);
+      pausePlayback();
+      sleepPauseHandlersRef.current.forEach((fn) => {
+        try {
+          fn();
+        } catch {
+          /* ignore */
+        }
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [pausePlayback]);
 
   useEffect(() => {
     let cancelled = false;
@@ -449,6 +499,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       seekRatio,
       musicStore: store,
       getAudioElement,
+      sleepTimerMinutes,
+      sleepTimerDeadlineAt,
+      setSleepTimerMinutes,
+      registerSleepPauseHandler,
     }),
     [
       canPlay,
@@ -466,6 +520,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       seekRatio,
       store,
       getAudioElement,
+      sleepTimerMinutes,
+      sleepTimerDeadlineAt,
+      setSleepTimerMinutes,
+      registerSleepPauseHandler,
     ],
   );
 

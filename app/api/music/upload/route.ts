@@ -10,6 +10,9 @@ import {
 } from "@/lib/music/transcode-upload";
 import { analyzeAudioFileToV1 } from "@/lib/music/build-track-analysis-server";
 
+/** 大文件 + ffmpeg 转码；部署平台需在套餐允许范围内（秒）。 */
+export const maxDuration = 120;
+
 const MAX_BYTES = 45 * 1024 * 1024; // 45 MB
 
 const ALLOWED_EXT = new Set([

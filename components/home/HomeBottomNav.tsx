@@ -7,10 +7,8 @@ import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackCont
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
 const itemDefs: { href: string; labelKey: string; match: (p: string) => boolean }[] = [
-  { href: "/", labelKey: "nav.music", match: (p) => p === "/" || p === "" },
+  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" },
   { href: "/journey", labelKey: "nav.journey", match: (p) => p.startsWith("/journey") },
-  { href: "/nature", labelKey: "nav.nature", match: (p) => p.startsWith("/nature") },
-  { href: "/relax", labelKey: "nav.relax", match: (p) => p.startsWith("/relax") },
   { href: "/read", labelKey: "nav.read", match: (p) => p.startsWith("/read") },
   { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },
 ];
@@ -37,7 +35,7 @@ export function HomeBottomNav() {
     >
       <div className="flex w-full min-w-0 max-w-full items-stretch gap-0.5 px-1 sm:px-2">
         <div className="flex min-w-0 flex-1 items-stretch justify-end gap-px sm:gap-0.5">
-          {[0, 1, 2].map((i) => (
+          {[0, 1].map((i) => (
             <Link
               key={itemDefs[i].href}
               href={itemDefs[i].href}
@@ -68,7 +66,7 @@ export function HomeBottomNav() {
         </div>
 
         <div className="flex min-w-0 flex-1 items-stretch justify-start gap-px sm:gap-0.5">
-          {[3, 4, 5].map((i) => (
+          {[2, 3].map((i) => (
             <Link
               key={itemDefs[i].href}
               href={itemDefs[i].href}

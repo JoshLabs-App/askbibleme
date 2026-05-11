@@ -5,8 +5,8 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 
 const PREVIEW_ROUTES: { path: string; labelKey: string }[] = [
-  { path: "/", labelKey: "admin.preview.routeMusicHome" },
-  { path: "/nature", labelKey: "nav.nature" },
+  { path: "/", labelKey: "nav.home" },
+  { path: "/music", labelKey: "admin.preview.routeMusicHome" },
   { path: "/relax", labelKey: "nav.relax" },
   { path: "/journey", labelKey: "nav.journey" },
   { path: "/read", labelKey: "nav.read" },

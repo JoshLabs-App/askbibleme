@@ -179,7 +179,7 @@ export function MusicVisualConsoleClient({
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h1 className="text-[15px] font-semibold tracking-tight">播放视觉调试台</h1>
             <div className="flex flex-wrap gap-3 text-[11px]">
-              <Link href="/" className="text-muted transition hover:text-ink">
+              <Link href="/music" className="text-muted transition hover:text-ink">
                 首页
               </Link>
               <Link href="/admin/music" className="text-muted transition hover:text-ink">

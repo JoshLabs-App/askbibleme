@@ -7,6 +7,7 @@
   },
   "nav": {
     "mainLabel": "主导航",
+    "home": "首页",
     "music": "音乐",
     "journey": "旅程",
     "read": "圣经",
@@ -86,7 +87,14 @@
       "opacity": "透明度",
       "dim": "压暗",
       "saturation": "饱和",
-      "resetFx": "恢复默认"
+      "resetFx": "恢复默认",
+      "shortcutsAria": "音乐与放松"
+    },
+    "sleepTimer": {
+      "watchAria": "定时",
+      "m30": "30",
+      "m60": "60",
+      "m120": "120"
     },
     "visualTuning": {
       "homeAtmosphereTitle": "首页氛围",
@@ -101,6 +109,16 @@
     "language": "语言",
     "navLabel": "后台导航",
     "resizeSidebar": "拖动调整侧栏宽度",
+    "login": {
+      "pageTitle": "后台登录",
+      "hint": "请输入工作室密码以进入管理后台。",
+      "passwordLabel": "密码",
+      "submit": "进入",
+      "submitting": "验证中…",
+      "errorWrong": "密码不正确。",
+      "errorNetwork": "无法连接服务器，请重试。",
+      "signOut": "退出登录"
+    },
     "groupChildItems": "{{group}}子项",
     "groups": {
       "system": "系统",
@@ -159,7 +177,7 @@
     },
     "naturePage": {
       "title": "自然",
-      "intro": "本页分为两块：「环境音」为独立素材库，你可上传几条水声、鸟声等，所有影片共用；「背景影片」里，每条影片从环境音中选材、调音量，组合成该片在 /nature 的声音。",
+      "intro": "本页分为两块：「环境音」为独立素材库，你可上传几条水声、鸟声等，所有影片共用；「背景影片」里，每条影片从环境音中选材、调音量，组合成该片在首页（自然全屏）的声音。",
       "galleryTitle": "影片专辑预览",
       "galleryHint": "点击卡片切换为前台当前播放的影片（立即写入配置）。",
       "galleryThumbEdit": "正方形封面",
@@ -181,7 +199,7 @@
       "ambientRemove": "删除素材",
       "ambientTitlePlaceholder": "素材名称",
       "videoBlockTitle": "背景影片",
-      "videoBlockIntro": "上传全屏循环视频至 public/nature/uploads。每条影片下列出库内全部环境音素材，默认 0%；需要入混的轨道拉高即可。前台 /nature 按当前选用的影片播放画面与混音。",
+      "videoBlockIntro": "上传全屏循环视频至 public/nature/uploads。每条影片下列出库内全部环境音素材，默认 0%；需要入混的轨道拉高即可。前台首页按当前选用的影片播放画面与混音。",
       "mixSectionTitle": "本片混音（仅作用于本条影片）",
       "mixPreviewTitle": "试听输出",
       "mixPreviewHint": "预览区画面铺满、裁切无黑边，静音循环；下列为库内全部环境音，默认 0%。拖条试听中可即时听到，松手写入服务器。",
@@ -189,9 +207,15 @@
       "mixPreviewStop": "停止",
       "mixStripTitle": "环境音量（默认 0%）",
       "mixAllClipsEmpty": "尚无环境音素材。请先在上方「环境音」版块上传后再调。",
-      "thumbModalTitle": "从视频截取正方形封面",
-      "thumbModalHint": "拖动时间轴选择画面；裁切取画面中心正方形（与前台 poster 一致）。",
+      "thumbModalTitle": "正方形封面",
+      "thumbModalHint": "可从当前影片截帧，或上传一张图片；选好时间与裁切位置后保存为正方形。",
       "thumbModalSeek": "时间点",
+      "thumbModalTabVideo": "从视频",
+      "thumbModalTabImage": "上传图片",
+      "thumbModalPickImage": "选择图片…",
+      "thumbModalImageEmpty": "尚未选择图片",
+      "thumbModalImageHint": "支持 jpg / png / webp。画面明显宽或高时，可用下方滑块移动正方形取景。",
+      "thumbModalImageError": "无法加载该图片。",
       "thumbModalPanLabel": "裁切左右位置",
       "thumbModalPanLabelVertical": "裁切上下位置",
       "thumbModalPanHint": "横屏或偏宽画面：在水平方向移动正方形取景（左 ↔ 右）。",
@@ -227,6 +251,7 @@
     "sessionLabel": "自然",
     "emptyTitle": "仍未配置背景影片",
     "emptyHint": "请在后台「音乐 → 自然」上传或选择影片；也可手工编辑 data/nature-settings.json。",
+    "toggleDockChrome": "显示或隐藏底部栏与场景卡片",
     "videoBgAnnounced": "背景为静音循环影片。",
     "noMusicHint": "暂无曲目。可在音乐首页或后台配置音频后再来。",
     "scenes": {

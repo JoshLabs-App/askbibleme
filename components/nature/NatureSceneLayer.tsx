@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { IconPlay } from "@/components/ui/MediaPlaybackIcons";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
 type Props = {
@@ -18,7 +17,7 @@ function cardTitle(v: NatureVideoEntry, fallback: string) {
 }
 
 /**
- * 自然页第二层：横向展示后台配置的影片「产品」；点击切换当前全屏背景与该片混音。
+ * 自然页第二层：影片「产品」卡；当前片置末。一行约 3.5 张露出以暗示可横滑；同轨左右滑动。
  */
 export function NatureSceneLayer({ className = "", settings, activeVideoId, onSelectVideo }: Props) {
   const { t } = useLocale();
@@ -47,13 +46,14 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
   return (
     <section className={`w-full ${className}`} aria-label={t("nature.scenes.sectionAria")}>
       <div
-        className="-mx-1 flex gap-3 overflow-x-auto overscroll-x-contain px-1 pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory flex-nowrap gap-2 overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-3 [&::-webkit-scrollbar]:hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         {orderedVideos.map((v) => {
           const selected = v.id === activeVideoId;
           const thumb = v.thumbSrc?.trim();
           const title = cardTitle(v, t("nature.scenes.unnamedProduct"));
+
           return (
             <button
               key={v.id}
@@ -62,7 +62,7 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
               aria-label={t("nature.scenes.ariaSwitch", { name: title })}
               onClick={() => select(v.id)}
               className={
-                "group relative aspect-square w-[min(42vw,10.5rem)] shrink-0 snap-start overflow-hidden rounded-[1.35rem] text-left shadow-[0_12px_40px_-16px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.14] transition hover:ring-white/30"
+                "group relative aspect-square w-[calc((100%-1.5rem)/3.5)] shrink-0 snap-start overflow-hidden rounded-[0.85rem] text-left shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)] ring-1 ring-inset ring-white/[0.14] transition hover:ring-white/30 sm:w-[calc((100%-2.25rem)/3.5)] sm:rounded-[0.95rem]"
               }
             >
               <div className="absolute inset-0 bg-gradient-to-br from-slate-800/80 via-slate-900/75 to-slate-950/90" aria-hidden />
@@ -85,15 +85,8 @@ export function NatureSceneLayer({ className = "", settings, activeVideoId, onSe
               <div className="pointer-events-none absolute inset-0 bg-white/[0.04] backdrop-blur-[1px]" aria-hidden />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
-              <span
-                className="pointer-events-none absolute right-2.5 top-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-800 shadow-[0_2px_14px_rgba(0,0,0,0.22)] ring-1 ring-black/[0.06] transition group-hover:bg-white group-hover:text-slate-900"
-                aria-hidden
-              >
-                <IconPlay className="h-[14px] w-[14px] translate-x-[1px]" />
-              </span>
-
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 p-3 pt-8">
-                <span className="block text-[15px] font-semibold leading-snug tracking-tight text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.45)] sm:text-[15px]">
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 p-2 pt-4">
+                <span className="block text-[11px] font-semibold leading-snug tracking-tight text-white drop-shadow-[0_1px_5px_rgba(0,0,0,0.45)] sm:text-xs">
                   {title}
                 </span>
               </span>

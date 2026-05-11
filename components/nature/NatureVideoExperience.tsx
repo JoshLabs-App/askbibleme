@@ -64,6 +64,9 @@ type Props = {
   initial: NatureSettingsV2;
 };
 
+/** 与页底 `bg-slate-950` 一致，避免 Android PWA / 全屏顶缘 `theme-color`（浅色）露出成一条横线 */
+const NATURE_THEME_COLOR = "#020617";
+
 /**
  * 自然：全屏静音循环影像 + 轮播经文（视口 ≈38.2dvh 黄金线）+ 第二层场景卡；顶栏 `AppShellTopBar`。
  */
@@ -160,6 +163,26 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [videoSrc]);
 
   useEffect(() => {
+    const metas = [...document.querySelectorAll('meta[name="theme-color"]')] as HTMLMetaElement[];
+    const snapshot = metas.map((el) => ({
+      el,
+      content: el.getAttribute("content"),
+      media: el.getAttribute("media"),
+    }));
+    for (const m of metas) {
+      m.setAttribute("content", NATURE_THEME_COLOR);
+    }
+    return () => {
+      for (const { el, content, media } of snapshot) {
+        if (content != null) el.setAttribute("content", content);
+        else el.removeAttribute("content");
+        if (media != null) el.setAttribute("media", media);
+        else el.removeAttribute("media");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!previewVideoId) {
       setPreviewSlideOpen(false);
       return;
@@ -175,15 +198,16 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [previewVideoId]);
 
   return (
-    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-slate-950 text-white">
+    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden bg-slate-950 text-white [color-scheme:dark]">
+      {/* 顶缘略向上盖：减轻 Android 全屏 / WebView 亚像素缝露出壳层浅色底或 theme 色带 */}
       {/* 天青轻雾，压暗底部，便于读白字 */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-slate-950/88"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-slate-950/88"
         aria-hidden
       />
 
       {videoSrc && !videoBroken ? (
-        <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-slate-900">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-[1] overflow-hidden bg-slate-950 transform-gpu">
           <video
             ref={videoRef}
             key={videoSrc}
@@ -209,7 +233,7 @@ export function NatureVideoExperience({ initial }: Props) {
       ) : null}
 
       <div
-        className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-b from-slate-950/25 via-transparent to-slate-950/60"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-[-6px] z-[5] bg-gradient-to-b from-slate-950/25 via-transparent to-slate-950/60"
         aria-hidden
       />
 

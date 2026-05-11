@@ -9,11 +9,14 @@ export * from "./presets/atmosphere";
 export * from "./presets/home-atmosphere";
 export * from "./effects";
 export { HomeAtmosphereVisualProvider } from "./providers/HomeAtmosphereVisualContext";
+export { MusicShellAtmosphereOverrideProvider } from "./providers/MusicShellAtmosphereOverrideContext";
 export { MusicShellVisualProvider } from "./providers/MusicShellVisualContext";
 export { MusicVisualTuningProvider } from "./providers/MusicVisualTuningContext";
 export {
   useHomeAtmosphereVisual,
   useHomeAtmosphereVisualOptional,
+  useMusicShellAtmosphereOverride,
+  useMusicShellAtmosphereOverrideOptional,
   useMusicShellVisual,
   useMusicVisualTuning,
   useResolvedHomeAtmospherePreset,

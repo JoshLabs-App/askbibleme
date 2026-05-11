@@ -3,6 +3,7 @@ import { DockChromeCollapse, HomeDockChromeProvider } from "@/components/home/Ho
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
 import {
   HomeAtmosphereVisualProvider,
+  MusicShellAtmosphereOverrideProvider,
   MusicShellVisualProvider,
   MusicVisualTuningProvider,
 } from "@/music-visual";
@@ -17,18 +18,20 @@ export default function AppShellLayout({ children }: { children: React.ReactNode
     <MusicShellPlaybackProvider>
       <MusicVisualTuningProvider>
         <HomeAtmosphereVisualProvider>
-          <div className="fixed bottom-0 left-0 right-0 top-[-1px] z-[1] flex min-h-0 w-full flex-col overflow-hidden bg-canvas">
-            <HomeDockChromeProvider>
-              <MusicShellVisualProvider>
-                <div className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
-                  {children}
-                </div>
-                <DockChromeCollapse>
-                  <HomeBottomNav />
-                </DockChromeCollapse>
-              </MusicShellVisualProvider>
-            </HomeDockChromeProvider>
-          </div>
+          <MusicShellAtmosphereOverrideProvider>
+            <div className="fixed bottom-0 left-0 right-0 top-[-1px] z-[1] flex min-h-0 w-full flex-col overflow-hidden bg-canvas">
+              <HomeDockChromeProvider>
+                <MusicShellVisualProvider>
+                  <div className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+                    {children}
+                  </div>
+                  <DockChromeCollapse>
+                    <HomeBottomNav />
+                  </DockChromeCollapse>
+                </MusicShellVisualProvider>
+              </HomeDockChromeProvider>
+            </div>
+          </MusicShellAtmosphereOverrideProvider>
         </HomeAtmosphereVisualProvider>
       </MusicVisualTuningProvider>
     </MusicShellPlaybackProvider>

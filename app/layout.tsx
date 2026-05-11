@@ -1,10 +1,17 @@
 import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
 import { brandingAssetsExist, getResolvedBrandColors } from "@/lib/site-branding";
 import { brandColorsToCssVars } from "@/lib/site-branding-colors";
+import {
+  inferAppLocaleFromAcceptLanguage,
+  LOCALE_COOKIE_NAME,
+  parseLocale,
+  type AppLocale,
+} from "@/lib/i18n/config";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brandingReady = await brandingAssetsExist();
@@ -58,12 +65,19 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const colors = await getResolvedBrandColors();
+  const cookieStore = await cookies();
+  const headerList = await headers();
+  const cookieRaw = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
+  const initialLocaleGuess: AppLocale = cookieRaw
+    ? parseLocale(cookieRaw)
+    : inferAppLocaleFromAcceptLanguage(headerList.get("accept-language"));
+  const htmlLang = initialLocaleGuess === "en" ? "en" : "zh-CN";
 
   return (
-    <html lang="zh-CN" style={brandColorsToCssVars(colors) as CSSProperties}>
+    <html lang={htmlLang} style={brandColorsToCssVars(colors) as CSSProperties}>
       <body className="min-h-screen font-sans text-[15px] leading-relaxed">
         <AppSkinProvider>
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider initialLocaleGuess={initialLocaleGuess}>{children}</LocaleProvider>
         </AppSkinProvider>
       </body>
     </html>

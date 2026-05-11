@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 
 /** 常规手机最小触控约 44×44（iOS HIG / Material）；顶栏按钮统一此尺寸 */
@@ -21,15 +22,6 @@ function IconMenu(props: { className?: string }) {
     </svg>
   );
 }
-
-const navLinks: { href: string; labelKey: string }[] = [
-  { href: "/nature", labelKey: "nav.nature" },
-  { href: "/music", labelKey: "nav.music" },
-  { href: "/relax", labelKey: "nav.relax" },
-  { href: "/journey", labelKey: "nav.journey" },
-  { href: "/read", labelKey: "nav.read" },
-  { href: "/explore", labelKey: "nav.explore" },
-];
 
 const menuSurfaceDark =
   "min-w-[10rem] rounded-xl border border-white/[0.12] bg-black/45 py-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl";
@@ -69,6 +61,7 @@ export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props
     HIT +
     (onLight ? " text-ink/85 hover:bg-ink/[0.06]" : " text-white/[0.9] hover:bg-white/[0.1]");
   const [navOpen, setNavOpen] = useState(false);
+  const [localePickerOpen, setLocalePickerOpen] = useState(false);
   /** 与 `/api/admin/branding` 一致：有资源时顶栏中央展示透明 LOGO */
   const [brandLogoSrc, setBrandLogoSrc] = useState<string | null>(null);
   const brandFetchAbortRef = useRef<AbortController | null>(null);
@@ -243,11 +236,17 @@ export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props
                     {t("chrome.backHome")}
                   </Link>
                 ) : null}
-                {navLinks.map((item) => (
-                  <Link key={item.href} href={item.href} role="menuitem" className={menuItem} onClick={() => setNavOpen(false)}>
-                    {t(item.labelKey)}
-                  </Link>
-                ))}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={`${menuItem} w-full cursor-pointer border-0 bg-transparent text-left`}
+                  onClick={() => {
+                    setNavOpen(false);
+                    setLocalePickerOpen(true);
+                  }}
+                >
+                  {t("nav.language")}
+                </button>
                 <Link href="/admin" role="menuitem" className={menuItem} onClick={() => setNavOpen(false)}>
                   {t("chrome.adminHome")}
                 </Link>
@@ -280,6 +279,7 @@ export function AppShellTopBar({ tone = "onDark", rightAccessory = null }: Props
           </div>
         </div>
       </header>
+      <LocalePickerModal open={localePickerOpen} onDismiss={() => setLocalePickerOpen(false)} />
     </>
   );
 }

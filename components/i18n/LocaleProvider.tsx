@@ -9,7 +9,14 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, parseLocale, type AppLocale } from "@/lib/i18n/config";
+import {
+  DEFAULT_LOCALE,
+  inferAppLocaleFromNavigator,
+  LOCALE_STORAGE_KEY,
+  persistLocaleToCookie,
+  parseLocale,
+  type AppLocale,
+} from "@/lib/i18n/config";
 import { MESSAGES } from "@/lib/i18n/messages";
 import { translate } from "@/lib/i18n/translate";
 
@@ -46,17 +53,36 @@ function subscribeLocale(onStore: () => void) {
   };
 }
 
-function getLocaleSnapshot(): AppLocale {
-  if (typeof window === "undefined") return DEFAULT_LOCALE;
-  return parseLocale(localStorage.getItem(LOCALE_STORAGE_KEY));
+function createGetLocaleSnapshot(initialLocaleGuess: AppLocale) {
+  return function getLocaleSnapshot(): AppLocale {
+    if (typeof window === "undefined") return DEFAULT_LOCALE;
+    try {
+      const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
+      if (raw) return parseLocale(raw);
+      return initialLocaleGuess;
+    } catch {
+      return DEFAULT_LOCALE;
+    }
+  };
 }
 
-function getLocaleServerSnapshot(): AppLocale {
-  return DEFAULT_LOCALE;
+function createGetServerSnapshot(initialLocaleGuess: AppLocale) {
+  return function getLocaleServerSnapshot(): AppLocale {
+    return initialLocaleGuess;
+  };
 }
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
-  const locale = useSyncExternalStore(subscribeLocale, getLocaleSnapshot, getLocaleServerSnapshot);
+type LocaleProviderProps = {
+  children: ReactNode;
+  /** 无本地存储时用于 SSR 与首次客户端快照对齐：来自 Cookie 或 `Accept-Language` */
+  initialLocaleGuess: AppLocale;
+};
+
+export function LocaleProvider({ children, initialLocaleGuess }: LocaleProviderProps) {
+  const getSnapshot = useMemo(() => createGetLocaleSnapshot(initialLocaleGuess), [initialLocaleGuess]);
+  const getServerSnapshot = useMemo(() => createGetServerSnapshot(initialLocaleGuess), [initialLocaleGuess]);
+
+  const locale = useSyncExternalStore(subscribeLocale, getSnapshot, getServerSnapshot);
 
   useLayoutEffect(() => {
     document.documentElement.lang = locale === "en" ? "en" : "zh-CN";
@@ -68,9 +94,23 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
+    persistLocaleToCookie(next);
     document.documentElement.lang = next === "en" ? "en" : "zh-CN";
     emitLocaleChange();
   }, []);
+
+  useLayoutEffect(() => {
+    try {
+      const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
+      if (!raw) {
+        setLocale(inferAppLocaleFromNavigator());
+        return;
+      }
+      persistLocaleToCookie(parseLocale(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [setLocale]);
 
   const t = useCallback(
     (path: string, vars?: Record<string, string>) => translate(MESSAGES[locale], path, vars),

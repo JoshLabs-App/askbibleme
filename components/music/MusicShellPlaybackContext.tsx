@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
-import { getShellDefaultAudioSrc } from "@/lib/music-companion/shell-default-audio-src";
+import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
   clearShellPlaybackPersisted,
   isTrackSrcInStore,
@@ -51,9 +51,9 @@ export type MusicShellPlaybackValue = {
   loading: boolean;
   togglePlay: () => void;
   pausePlayback: () => void;
-  /** 当前实际播放地址（全屏页 override 或默认场景曲） */
+  /** 当前实际播放地址（全屏页 override 或默认池内随机曲） */
   effectiveSrc: string;
-  /** 壳层默认播放 URL（默认场景绑定曲或首条有 src 曲目） */
+  /** 壳层默认播放 URL（多曲时在池内随机；单曲为唯一一条） */
   shellDefaultSrc: string;
   /** 非空时覆盖默认播放源（全屏选曲或持久化恢复） */
   shellOverrideSrc: string | null;
@@ -110,6 +110,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   /** 曲目自然结束后切到下一首并自动播放（避免 `ended` 时 `paused` 导致仅绑 src 不 play） */
   const playAfterNextBindRef = useRef(false);
   const sleepPauseHandlersRef = useRef(new Set<() => void>());
+  const playbackOverrideRef = useRef<string | null>(null);
+  playbackOverrideRef.current = playbackOverride;
 
   const defaultSrc = useMemo(() => ((store ? getShellDefaultAudioSrc(store) : null) ?? "").trim(), [store]);
   const effectiveSrc = (playbackOverride?.trim() || defaultSrc).trim();
@@ -246,7 +248,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       timeSec: persisted.timeSec,
       tryPlay: persisted.wasPlaying,
     };
-    const def = getShellDefaultAudioSrc(store)?.trim() ?? "";
+    const def = getShellSceneBoundAudioSrc(store)?.trim() ?? "";
     if (def && shellPlaybackUrlsEqual(persisted.src, def)) setPlaybackOverride(null);
     else setPlaybackOverride(persisted.src.trim());
   }, [store, loading]);
@@ -468,19 +470,57 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
   const togglePlay = useCallback(async () => {
     const a = audioRef.current;
-    if (!a || !effectiveSrc) return;
+    if (!a || loading) return;
+    const st = storeRef.current;
+    const eff = effectiveSrcRef.current.trim();
+
+    if (!eff) {
+      if (st) {
+        const boot = getShellDefaultAudioSrc(st)?.trim() ?? "";
+        if (boot) {
+          playAfterNextBindRef.current = true;
+          setPlaybackSrc(boot);
+        }
+      }
+      return;
+    }
+
     if (!a.paused) {
       a.pause();
       setPlaying(false);
-    } else {
-      try {
-        await a.play();
-        setPlaying(true);
-      } catch {
-        setPlaying(false);
+      return;
+    }
+
+    const tracks = st?.audioTracks.filter((t) => Boolean(t.src?.trim())) ?? [];
+    if (tracks.length > 1 && playbackOverrideRef.current == null) {
+      const dur = a.duration;
+      const t0 = a.currentTime;
+      const nearStart = !Number.isFinite(dur) || dur <= 0 || t0 < 0.35;
+      const nearEnd = Number.isFinite(dur) && dur > 0 && t0 >= dur - 0.75;
+      if (nearStart || nearEnd) {
+        const curUrl = (a.currentSrc || a.src || eff).trim();
+        let pick = tracks[Math.floor(Math.random() * tracks.length)]!;
+        for (let g = 0; g < 28 && tracks.length > 1; g++) {
+          const ps = (pick.src ?? "").trim();
+          if (!shellPlaybackUrlsEqual(ps, curUrl)) break;
+          pick = tracks[Math.floor(Math.random() * tracks.length)]!;
+        }
+        const ns = (pick.src ?? "").trim();
+        if (ns) {
+          playAfterNextBindRef.current = true;
+          setPlaybackSrc(ns);
+          return;
+        }
       }
     }
-  }, [effectiveSrc]);
+
+    try {
+      await a.play();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+    }
+  }, [loading, setPlaybackSrc]);
 
   const value = useMemo<MusicShellPlaybackValue>(
     () => ({

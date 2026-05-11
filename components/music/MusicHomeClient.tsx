@@ -2,13 +2,15 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AmbientBackdrop } from "@/components/music/AmbientBackdrop";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import {
   HOME_ATMOSPHERE_PRESETS,
+  readStoredMusicHomeAtmosphere,
+  writeStoredMusicHomeAtmosphere,
   type HomeAtmospherePresetId,
-  useHomeAtmosphereVisual,
+  useMusicShellAtmosphereOverride,
 } from "@/music-visual";
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
@@ -62,17 +64,11 @@ function initialSceneIndex(s: MusicCompanionStore): number {
   return 0;
 }
 
-/** 与壳层默认曲一致：场景绑定曲目在池中的下标（不用随机，避免与首页一键播放错位） */
-function computeDefaultTrackPoolIdx(store: MusicCompanionStore, sceneIdx: number): number {
+/** 与壳层默认池一致：多曲随机下标；单曲为 0 */
+function computeRandomTrackPoolIdx(store: MusicCompanionStore): number {
   const tracks = store.audioTracks.filter((t) => t.src?.trim());
-  if (tracks.length === 0) return 0;
-  const ord = [...store.scenes].sort((a, b) => a.order - b.order);
-  if (ord.length === 0) return 0;
-  const si = Math.min(Math.max(0, sceneIdx), ord.length - 1);
-  const scene = ord[si] ?? null;
-  const want = scene?.audioTrackId ?? null;
-  const i = want ? tracks.findIndex((t) => t.id === want) : -1;
-  return i >= 0 ? i : 0;
+  if (tracks.length <= 1) return 0;
+  return Math.floor(Math.random() * tracks.length);
 }
 
 function urlsEqual(a: string, b: string): boolean {
@@ -101,22 +97,35 @@ function replaceAtmosphereSearchParam(id: HomeAtmospherePresetId) {
 
 export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) {
   const { locale, t } = useLocale();
-  const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
-  const urlOverrideAppliedRef = useRef(false);
+  const { setOverrideId, clearOverride } = useMusicShellAtmosphereOverride();
+  const [musicAtmosphereId, setMusicAtmosphereId] = useState<HomeAtmospherePresetId>(
+    () => atmosphereUrlOverride ?? "lagoon",
+  );
 
-  useEffect(() => {
-    if (!atmosphereUrlOverride || urlOverrideAppliedRef.current) return;
-    urlOverrideAppliedRef.current = true;
-    setHomeAtmospherePresetId(atmosphereUrlOverride);
-  }, [atmosphereUrlOverride, setHomeAtmospherePresetId]);
+  useLayoutEffect(() => {
+    if (atmosphereUrlOverride) {
+      setMusicAtmosphereId(atmosphereUrlOverride);
+      writeStoredMusicHomeAtmosphere(atmosphereUrlOverride);
+    } else {
+      setMusicAtmosphereId(readStoredMusicHomeAtmosphere());
+    }
+  }, [atmosphereUrlOverride]);
+
+  useLayoutEffect(() => {
+    setOverrideId(musicAtmosphereId);
+  }, [musicAtmosphereId, setOverrideId]);
+
+  useLayoutEffect(() => {
+    return () => {
+      clearOverride();
+    };
+  }, [clearOverride]);
 
   const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc } = useMusicShellPlayback();
   const [store, setStore] = useState<MusicCompanionStore>(initialStore);
   const initialSi = initialSceneIndex(initialStore);
   const [sceneIndex, setSceneIndex] = useState(() => initialSi);
-  const [trackPoolIdx, setTrackPoolIdx] = useState(() =>
-    computeDefaultTrackPoolIdx(initialStore, initialSi),
-  );
+  const [trackPoolIdx, setTrackPoolIdx] = useState(() => computeRandomTrackPoolIdx(initialStore));
   const fullMusicSrcGateDone = useRef(false);
   /** 用户刚点上一首/下一首/随机：短时间内优先信任 trackPoolIdx，避免壳层 ended 已切歌而此处仍用旧 URL 把播放源推回去导致更新风暴 */
   const userSkipAtRef = useRef(0);
@@ -214,7 +223,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     const wasN = initialTrackCountRef.current;
     if (wasN <= 1 && n > 1) {
       initialTrackCountRef.current = n;
-      setTrackPoolIdx(computeDefaultTrackPoolIdx(store, sceneIndex));
+      setTrackPoolIdx(computeRandomTrackPoolIdx(store));
     }
   }, [tracksWithSrc.length, store, sceneIndex]);
 
@@ -286,7 +295,7 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     setTrackPoolIdx(next);
   }, [tracksWithSrc.length]);
 
-  const lagoonLight = homeAtmospherePresetId === "lagoon";
+  const lagoonLight = musicAtmosphereId === "lagoon";
 
   return (
     <div
@@ -298,14 +307,14 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
     >
 
       <div className="pointer-events-none absolute inset-0 z-0 isolate min-h-full min-w-full overflow-hidden music-reactive-home-shell">
-        <AmbientBackdrop preset={homeAtmospherePresetId} />
+        <AmbientBackdrop preset={musicAtmosphereId} />
         <div
           className={`pointer-events-none absolute inset-0 z-[2] mix-blend-soft-light ${
             lagoonLight ? "opacity-[0.22]" : "opacity-[0.44]"
           }`}
           aria-hidden
         >
-          <SacredAtmosphereCanvas />
+          <SacredAtmosphereCanvas homeAtmospherePresetId={musicAtmosphereId} />
         </div>
       </div>
       <div className="pointer-events-none absolute inset-0 z-[3]" aria-hidden>
@@ -346,7 +355,10 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                 lagoonLight ? "lg:hover:bg-ink/[0.04]" : "lg:hover:bg-white/[0.03]"
               }`}
             >
-              <HomeVerseRotator variant={lagoonLight ? "light" : "dark"} prominence="hero" className="w-full" />
+              <HomeVerseRotator
+                variant={lagoonLight ? "light" : "dark"}
+                className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
+              />
               {trackArtist ? (
                 <p
                   className={`mt-5 text-sm font-normal drop-shadow-sm lg:mt-6 lg:text-base ${
@@ -359,7 +371,10 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
             </button>
           ) : (
             <>
-              <HomeVerseRotator variant={lagoonLight ? "light" : "dark"} prominence="hero" className="w-full" />
+              <HomeVerseRotator
+                variant={lagoonLight ? "light" : "dark"}
+                className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
+              />
               {trackArtist ? (
                 <p
                   className={`mt-5 text-sm font-normal drop-shadow-sm lg:mt-6 lg:text-base ${
@@ -443,12 +458,13 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
                 key={p.id}
                 type="button"
                 onClick={() => {
-                  setHomeAtmospherePresetId(p.id);
+                  setMusicAtmosphereId(p.id);
+                  writeStoredMusicHomeAtmosphere(p.id);
                   replaceAtmosphereSearchParam(p.id);
                 }}
-                aria-current={homeAtmospherePresetId === p.id ? "true" : undefined}
+                aria-current={musicAtmosphereId === p.id ? "true" : undefined}
                 className={`px-1 py-0.5 text-[10px] font-normal tracking-[0.14em] transition ${
-                  homeAtmospherePresetId === p.id
+                  musicAtmosphereId === p.id
                     ? lagoonLight
                       ? "text-sky-700"
                       : "text-white/[0.72]"

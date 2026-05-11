@@ -249,8 +249,7 @@ export function RelaxCalmExperience({ initial }: Props) {
           </div>
           <HomeVerseRotator
             variant={isLagoon ? "light" : "dark"}
-            prominence="relax"
-            className="min-h-[7.75rem] w-full sm:min-h-[9rem]"
+            className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
           />
         </div>
       </main>

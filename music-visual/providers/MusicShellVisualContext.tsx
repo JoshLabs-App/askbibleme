@@ -20,6 +20,7 @@ import {
   writeMusicVisualDriveCss,
 } from "@/music-visual/engine/step";
 import { useHomeAtmosphereVisual } from "@/music-visual/providers/HomeAtmosphereVisualContext";
+import { useMusicShellAtmosphereOverrideOptional } from "@/music-visual/providers/MusicShellAtmosphereOverrideContext";
 import { useMusicVisualTuning } from "@/music-visual/providers/MusicVisualTuningContext";
 import { getMusicVisualAtmospherePresetForHome } from "@/music-visual/presets/home-atmosphere";
 import { IDLE_MUSIC_VISUAL_DRIVE, type MusicVisualDriveSnapshot } from "@/music-visual/types/drive";
@@ -64,13 +65,16 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
   const { effectiveSrc, musicStore, getAudioElement } = useMusicShellPlayback();
   const { tuning } = useMusicVisualTuning();
   const { homeAtmospherePresetId } = useHomeAtmosphereVisual();
+  const atmosphereOverride = useMusicShellAtmosphereOverrideOptional();
+  const resolvedHomeAtmospherePresetId =
+    atmosphereOverride?.overrideId ?? homeAtmospherePresetId;
   const tuningRef = useRef(tuning);
   tuningRef.current = tuning;
 
   const atmosphereScalars = useMemo(() => {
-    const preset = getMusicVisualAtmospherePresetForHome(homeAtmospherePresetId);
+    const preset = getMusicVisualAtmospherePresetForHome(resolvedHomeAtmospherePresetId);
     return sacredAtmosphereScalarsFromPreset(preset);
-  }, [homeAtmospherePresetId]);
+  }, [resolvedHomeAtmospherePresetId]);
   const atmosphereScalarsRef = useRef(atmosphereScalars);
   atmosphereScalarsRef.current = atmosphereScalars;
 

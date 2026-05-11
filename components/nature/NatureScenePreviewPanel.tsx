@@ -28,7 +28,7 @@ function usePrefersReducedMotion() {
 }
 
 /**
- * 场景卡上方 16:9 预览：完整画面（contain），再点进入全屏沉浸。
+ * 场景卡上方 16:9 预览：以外框为界用 cover 铺满（按容器宽度对齐），非 16:9 源上下裁切、避免左右黑边；点按进入全屏沉浸。
  * 切换场景：双轨交叉淡化（交替槽位），避免单 video 改 src 或收尾换 src 造成的硬切/重载闪断。
  */
 export function NatureScenePreviewPanel({
@@ -167,7 +167,7 @@ export function NatureScenePreviewPanel({
             loop
             autoPlay
             preload="auto"
-            className={`pointer-events-none absolute inset-0 h-full w-full object-contain object-center ${xfadeCls}`}
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
             style={
               reduceMotion
                 ? { zIndex: zFor("a") }
@@ -193,7 +193,7 @@ export function NatureScenePreviewPanel({
               loop
               autoPlay
               preload="auto"
-              className={`pointer-events-none absolute inset-0 h-full w-full object-contain object-center ${xfadeCls}`}
+              className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-center ${xfadeCls}`}
               style={
                 reduceMotion
                   ? { zIndex: zFor("b") }

@@ -295,7 +295,7 @@
     "sessionLabel": "自然",
     "emptyTitle": "仍未配置背景影片",
     "emptyHint": "请在后台「音乐 → 自然」上传或选择影片；也可手工编辑 data/nature-settings.json。",
-    "toggleDockChrome": "显示或隐藏场景卡片与快捷入口",
+    "expandDockChrome": "展开下方场景与快捷入口，便于切换影片",
     "videoBgAnnounced": "背景为静音循环影片。",
     "previewEnterFullScreen": "进入全屏播放此影片",
     "previewTapHint": "再点一下进入全屏",

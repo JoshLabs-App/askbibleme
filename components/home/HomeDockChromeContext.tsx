@@ -2,7 +2,6 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -14,7 +13,6 @@ import { usePathname } from "next/navigation";
 type Value = {
   dockChromeVisible: boolean;
   setDockChromeVisible: (v: boolean) => void;
-  toggleDockChrome: () => void;
 };
 
 const HomeDockChromeContext = createContext<Value | null>(null);
@@ -34,15 +32,10 @@ export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
     setDockChromeVisible(true);
   }, [pathname]);
 
-  const toggleDockChrome = useCallback(() => {
-    setDockChromeVisible((v) => !v);
-  }, []);
-
   const value = useMemo(
     () => ({
       dockChromeVisible,
       setDockChromeVisible,
-      toggleDockChrome,
     }),
     [dockChromeVisible],
   );

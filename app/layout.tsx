@@ -59,6 +59,7 @@ export async function generateViewport(): Promise<Viewport> {
     initialScale: 1,
     viewportFit: "cover",
     themeColor: colors.canvas,
+    colorScheme: "dark",
   };
 }
 

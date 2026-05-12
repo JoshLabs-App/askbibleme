@@ -137,13 +137,15 @@ const NATURE_DOCK_REVEAL_SCROLL_PX = 12;
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
-  const { dockChromeVisible, toggleDockChrome, setDockChromeVisible } = useHomeDockChrome();
+  const { dockChromeVisible, setDockChromeVisible } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
   const prepareAbortRef = useRef<AbortController | null>(null);
   const prepareGenRef = useRef(0);
   const prepareTargetIdRef = useRef<string | null>(null);
   const introRevealGuardRef = useRef(false);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
+  const videoStageHeightCommitRef = useRef(0);
 
   const [ambientMuted, setAmbientMuted] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
@@ -164,26 +166,44 @@ export function NatureVideoExperience({ initial }: Props) {
   useLayoutEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
     if (!root) return;
-    const sync = () => {
-      const h = root.clientHeight;
-      if (h > 0) setVideoStageHeightPx(h);
+
+    /** iOS：visualViewport `scroll` 会高频触发；与 RO 叠加时 `clientHeight` 常在 ±1px 抖动，整槽高度重算会像周期性闪屏。仅采纳明显变化（≥12px），并短防抖。 */
+    let debounceId: number | null = null;
+
+    const applyHeight = () => {
+      const h = Math.round(root.clientHeight);
+      if (h <= 0) return;
+      const prev = videoStageHeightCommitRef.current;
+      if (prev !== 0 && Math.abs(h - prev) < 12) return;
+      videoStageHeightCommitRef.current = h;
+      setVideoStageHeightPx(h);
     };
-    sync();
-    const ro = new ResizeObserver(sync);
+
+    const schedule = () => {
+      if (debounceId != null) window.clearTimeout(debounceId);
+      debounceId = window.setTimeout(() => {
+        debounceId = null;
+        applyHeight();
+      }, 140);
+    };
+
+    applyHeight();
+    requestAnimationFrame(() => applyHeight());
+
+    const ro = new ResizeObserver(() => schedule());
     ro.observe(root);
-    const onWin = () => sync();
+    const onWin = () => schedule();
     window.addEventListener("resize", onWin);
     const vv = window.visualViewport;
     if (vv) {
       vv.addEventListener("resize", onWin);
-      vv.addEventListener("scroll", onWin);
     }
     return () => {
+      if (debounceId != null) window.clearTimeout(debounceId);
       ro.disconnect();
       window.removeEventListener("resize", onWin);
       if (vv) {
         vv.removeEventListener("resize", onWin);
-        vv.removeEventListener("scroll", onWin);
       }
     };
   }, []);
@@ -629,8 +649,8 @@ export function NatureVideoExperience({ initial }: Props) {
             type="button"
             className="absolute inset-0 z-[7] cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             aria-expanded={dockChromeVisible}
-            aria-label={t("nature.toggleDockChrome")}
-            onClick={() => toggleDockChrome()}
+            aria-label={t("nature.expandDockChrome")}
+            onClick={() => setDockChromeVisible(true)}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
@@ -654,8 +674,8 @@ export function NatureVideoExperience({ initial }: Props) {
               type="button"
               className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               aria-expanded={dockChromeVisible}
-              aria-label={t("nature.toggleDockChrome")}
-              onClick={() => toggleDockChrome()}
+              aria-label={t("nature.expandDockChrome")}
+              onClick={() => setDockChromeVisible(true)}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
               <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">

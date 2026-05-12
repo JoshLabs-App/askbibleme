@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Props = {
   visible: boolean;
@@ -18,8 +18,7 @@ function formatAmbientTime24(d: Date) {
  * 横屏沉浸 / 全屏时：视口水平居中、顶栏下方；较大字号、`font-thin`（100）、略提对比度。
  */
 export function ImmersiveAmbientClock({ visible }: Props) {
-  const [iso, setIso] = useState("");
-  const [label, setLabel] = useState("");
+  const timeRef = useRef<HTMLTimeElement>(null);
   const [fadedIn, setFadedIn] = useState(false);
 
   useEffect(() => {
@@ -34,13 +33,14 @@ export function ImmersiveAmbientClock({ visible }: Props) {
     return () => window.clearTimeout(id);
   }, [visible]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!visible) return;
-
+    const el = timeRef.current;
+    if (!el) return;
     const apply = () => {
       const d = new Date();
-      setIso(d.toISOString());
-      setLabel(formatAmbientTime24(d));
+      el.dateTime = d.toISOString();
+      el.textContent = formatAmbientTime24(d);
     };
     apply();
 
@@ -61,13 +61,12 @@ export function ImmersiveAmbientClock({ visible }: Props) {
 
   return (
     <time
-      dateTime={iso || undefined}
+      ref={timeRef}
+      aria-hidden
       className={[
         "pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+3.5rem)] z-[52] -translate-x-1/2 select-none font-thin tabular-nums tracking-[0.06em] text-[18px] text-white/[0.26] transition-opacity duration-700 ease-out motion-reduce:transition-none sm:text-[21px] sm:tracking-[0.07em]",
         fadedIn ? "opacity-100" : "opacity-0",
       ].join(" ")}
-    >
-      {label}
-    </time>
+    />
   );
 }

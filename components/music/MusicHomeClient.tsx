@@ -16,6 +16,7 @@ import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
+import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
 
 type Props = {
@@ -279,6 +280,13 @@ export function MusicHomeClient({ initialStore }: Props) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    /** iOS：对 documentElement 自动全屏易触发系统回收 / 黑屏闪回（与自然页一致，仅用 CSS 沉浸）。 */
+    if (isIosLikeUserAgent()) {
+      if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
     if (!landscapeNarrow) {
       if (document.fullscreenElement === document.documentElement) {
         void exitFullscreenCompat();

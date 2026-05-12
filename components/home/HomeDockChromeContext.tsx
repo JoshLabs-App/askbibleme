@@ -19,12 +19,18 @@ type Value = {
 
 const HomeDockChromeContext = createContext<Value | null>(null);
 
+/** 自然首页 `/`、`/nature`：底区场景卡等默认收起，上滑主滚动后再展开 */
+export function isNatureHomeShellPath(pathname: string) {
+  const p = pathname || "";
+  return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
+}
+
 export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
-  const [dockChromeVisible, setDockChromeVisible] = useState(true);
   const pathname = usePathname() ?? "";
+  const [dockChromeVisible, setDockChromeVisible] = useState(() => !isNatureHomeShellPath(pathname));
 
   useEffect(() => {
-    setDockChromeVisible(true);
+    setDockChromeVisible(!isNatureHomeShellPath(pathname));
   }, [pathname]);
 
   const toggleDockChrome = useCallback(() => {

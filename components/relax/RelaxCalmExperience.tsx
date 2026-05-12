@@ -7,6 +7,7 @@ import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackCont
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import type { RelaxSettingsV1 } from "@/lib/relax/types";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
+import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
 import {
   RELAX_EFFECT_TAB_I18N_KEY,
@@ -93,6 +94,13 @@ export function RelaxCalmExperience({ initial }: Props) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    /** iOS：对 documentElement 自动全屏易触发系统回收 / 黑屏闪回（与自然页一致）。 */
+    if (isIosLikeUserAgent()) {
+      if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
     if (!landscapeNarrow) {
       if (document.fullscreenElement === document.documentElement) {
         void exitFullscreenCompat();

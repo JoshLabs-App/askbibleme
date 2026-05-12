@@ -1,4 +1,4 @@
-/** 各浏览器全屏 API 兼容；移动端常需用户手势，横屏自动调用可能静默失败。 */
+/** 各浏览器全屏 API 兼容。注意：iOS / iPadOS 上对 `documentElement` 自动全屏易触发 WebKit 异常与整页重载，调用方应先用 `isIosLikeUserAgent()` 跳过。 */
 export function requestFullscreenCompat(el: Element): Promise<void> {
   const t = el as Element & {
     requestFullscreen?: (options?: FullscreenOptions) => Promise<void>;

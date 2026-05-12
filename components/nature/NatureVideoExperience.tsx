@@ -121,6 +121,8 @@ function hasEnoughBufferedAhead(v: HTMLVideoElement, minBufferAheadSec: number):
 const SLOW_INTRO_HINT_DELAY_MS = 3800;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
+/** 主壳滚动超过此值后展开底区（场景卡等）；自然首页初始为收起 */
+const NATURE_DOCK_REVEAL_SCROLL_PX = 36;
 
 /**
  * 自然：全屏静音循环影像 + 轮播经文（视口 ≈38.2dvh 黄金线）+ 第二层场景卡；顶栏 `AppShellTopBar`。
@@ -145,6 +147,19 @@ export function NatureVideoExperience({ initial }: Props) {
     const next = initial.activeVideoId.trim() || initial.videos[0]?.id || "";
     setActiveVideoId(next);
   }, [initial]);
+
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
+    if (!root) return;
+    const onScroll = () => {
+      if (root.scrollTop >= NATURE_DOCK_REVEAL_SCROLL_PX) {
+        setDockChromeVisible(true);
+      }
+    };
+    root.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => root.removeEventListener("scroll", onScroll);
+  }, [setDockChromeVisible]);
 
   const playbackSettings = useMemo(
     () => ({
@@ -469,7 +484,9 @@ export function NatureVideoExperience({ initial }: Props) {
         aria-hidden
       />
 
-      <NaturePreviewVideoWarmup videoSrc={offscreenWarmupSrc} playbackRate={rate} />
+      {offscreenWarmupSrc && !isIosLikeUserAgent() ? (
+        <NaturePreviewVideoWarmup videoSrc={offscreenWarmupSrc} playbackRate={rate} />
+      ) : null}
 
       {videoSrc && !videoBroken ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[1] overflow-hidden bg-slate-950 transform-gpu">
@@ -547,20 +564,20 @@ export function NatureVideoExperience({ initial }: Props) {
         aria-hidden
       />
 
-      {/* 顶缘：与底栏同色的压层，向下渐隐（仍短于底部大压层） */}
+      {/* 顶缘：薄压层，约 5% 实色后虚出 */}
       <div
-        className="pointer-events-none fixed inset-x-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[6] h-[clamp(4.75rem,20dvh,10rem)] sm:h-[clamp(5rem,17dvh,9rem)]"
+        className="pointer-events-none fixed inset-x-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[6] h-[clamp(2.75rem,10dvh,5rem)] sm:h-[clamp(3rem,8dvh,4.5rem)]"
         style={{
-          background: `linear-gradient(to bottom, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 12%, rgba(20, 60, 96, 0.62) 52%, rgba(20, 60, 96, 0.22) 80%, rgba(20, 60, 96, 0.06) 94%, transparent 100%)`,
+          background: `linear-gradient(to bottom, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 5%, rgba(20, 60, 96, 0.28) 42%, rgba(20, 60, 96, 0.08) 72%, transparent 100%)`,
         }}
         aria-hidden
       />
 
-      {/* 底栏上方：fixed 压层，湖水渐隐并入底栏色（scroll 外底栏同色，视觉上水「接到」底栏） */}
+      {/* 底栏上缘：薄压层；`bottom` 对齐底栏顶（见 lib/shell/home-dock-nav-bg.ts 注释），避免与实色底栏重复 */}
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-[6] h-[clamp(11rem,48dvh,22rem)] sm:h-[clamp(12rem,42dvh,21rem)]"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(0.375rem+3rem+max(0.5rem,env(safe-area-inset-bottom)))] z-[6] h-[clamp(2.75rem,10dvh,5rem)] sm:bottom-[calc(0.375rem+3.25rem+max(0.5rem,env(safe-area-inset-bottom)))] sm:h-[clamp(3rem,8dvh,4.5rem)]"
         style={{
-          background: `linear-gradient(to top, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 20%, rgba(20, 60, 96, 0.9) 38%, rgba(20, 60, 96, 0.52) 60%, rgba(20, 60, 96, 0.2) 82%, transparent 100%)`,
+          background: `linear-gradient(to top, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 5%, rgba(20, 60, 96, 0.28) 42%, rgba(20, 60, 96, 0.08) 72%, transparent 100%)`,
         }}
         aria-hidden
       />
@@ -590,7 +607,7 @@ export function NatureVideoExperience({ initial }: Props) {
       <ImmersiveAmbientClock visible={landscapeImmersive} />
 
       <main
-        className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-none lg:px-8 [@media(max-height:500px)]:pb-3 [@media(max-height:500px)_and_(orientation:portrait)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4 xl:px-10"
+        className="relative z-10 mx-auto flex w-full max-w-lg min-h-[calc(100svh+min(38dvh,17rem))] flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-none lg:px-8 [@media(max-height:500px)]:min-h-0 [@media(max-height:500px)]:pb-3 [@media(max-height:500px)_and_(orientation:portrait)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4 xl:px-10"
       >
         {!videoSrc || videoBroken ? (
           <>

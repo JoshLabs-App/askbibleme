@@ -10,12 +10,14 @@
     "muted": "#9BB0C2",
     "ink": "#F1F5F9",
     "sand": "#7EB8E0",
+    "appLight": "#DCECF7",
+    "appDark": "#143C60",
     "adminBg": "#0E2438",
     "adminPanel": "#152F45",
     "adminLine": "#2A5572",
     "adminFg": "#EEF3F8",
     "adminMuted": "#94A9B8"
   },
-  "appIconsUpdatedAt": "2026-05-11T03:02:51.013Z",
-  "appIconOriginalName": "selah.png"
+  "appIconsUpdatedAt": "2026-05-12T15:40:33.273Z",
+  "appIconOriginalName": "兰色.png"
 }

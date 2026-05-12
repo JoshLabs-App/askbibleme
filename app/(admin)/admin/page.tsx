@@ -54,7 +54,7 @@ export default function AdminHomePage() {
                 <li key={m.href}>
                   <Link
                     href={m.href}
-                    className="flex flex-col gap-0.5 py-3 text-left transition hover:bg-ink/[0.03] sm:flex-row sm:items-baseline sm:gap-6 sm:py-2.5"
+                    className="flex flex-col gap-0.5 py-3 text-left transition hover:bg-adminFg/[0.04] sm:flex-row sm:items-baseline sm:gap-6 sm:py-2.5"
                   >
                     <span className="w-36 shrink-0 text-[13px] font-medium text-adminFg">{m.label}</span>
                     <span className="min-w-0 flex-1 text-[12px] leading-snug text-adminMuted">{m.hint}</span>

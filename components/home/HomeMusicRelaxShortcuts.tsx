@@ -75,7 +75,7 @@ function sleepLabelKey(m: MusicShellSleepTimerMinutes): string {
 }
 
 /**
- * 自然页底区：音乐、放松入口与全局定时（怀表）。`/music`、`/relax` 在主导航外，由此处补充。
+ * 自然页底区：音乐、放松入口与全局定时（怀表）。`/music` 在主导航外，由此处补充；放松亦保留快捷入口。
  */
 export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string }) {
   const pathname = usePathname() ?? "";

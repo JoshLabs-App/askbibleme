@@ -44,3 +44,44 @@ export async function verifyAskbibleAdminCredentials(
   if (!verifyPasswordLikeAskBible(password, hash)) return { ok: false };
   return { ok: true, userId: String(row.id ?? ""), email: String(row.email ?? "") };
 }
+
+/**
+ * 任意 AskBible `users` 行（与旧站相同库）：不要求 `is_admin`，密码算法与 {@link verifyAskbibleAdminCredentials} 一致。
+ */
+export async function verifyAskbibleUserCredentials(
+  dbPath: string,
+  email: string,
+  password: string,
+): Promise<{ ok: true; userId: string; email: string; name: string } | { ok: false }> {
+  const wasmPath = path.join(process.cwd(), "node_modules", "sql.js", "dist", "sql-wasm.wasm");
+  const SQL = await initSqlJs({ locateFile: () => wasmPath });
+  const buf = fs.readFileSync(dbPath);
+  const db = new SQL.Database(new Uint8Array(buf));
+
+  const stmt = db.prepare(
+    "SELECT id, name, email, password_hash FROM users WHERE lower(trim(email)) = lower(trim(?)) LIMIT 1",
+  );
+  stmt.bind([email]);
+  if (!stmt.step()) {
+    stmt.free();
+    db.close();
+    return { ok: false };
+  }
+  const row = stmt.getAsObject() as {
+    id?: unknown;
+    name?: unknown;
+    email?: unknown;
+    password_hash?: unknown;
+  };
+  stmt.free();
+  db.close();
+
+  const hash = String(row.password_hash ?? "");
+  if (!verifyPasswordLikeAskBible(password, hash)) return { ok: false };
+  return {
+    ok: true,
+    userId: String(row.id ?? ""),
+    email: String(row.email ?? ""),
+    name: String(row.name ?? "").trim() || String(row.email ?? ""),
+  };
+}

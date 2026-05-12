@@ -168,9 +168,9 @@ export function BibleVersionsAdminClient() {
         {t("admin.bibleVersions.intro")}
       </p>
 
-      <section className="mt-8 rounded-lg border border-adminBorder/80 bg-adminPanel/40 p-4 md:p-5">
+      <section className="mt-8 rounded-lg border border-adminLine/80 bg-adminPanel/40 p-4 md:p-5">
         <h2 className="text-[13px] font-medium text-adminFg">{t("admin.bibleVersions.formatTitle")}</h2>
-        <pre className="mt-2 overflow-x-auto rounded-md bg-ink/[0.04] p-3 text-[11px] leading-relaxed text-adminFg/90">
+        <pre className="mt-2 overflow-x-auto rounded-md bg-adminFg/[0.05] p-3 text-[11px] leading-relaxed text-adminFg/90">
           {`{
   "format": "${SELAH_BIBLE_FORMAT}",
   "books": {
@@ -185,14 +185,14 @@ export function BibleVersionsAdminClient() {
 
       <form
         onSubmit={onSubmit}
-        className="mt-8 max-w-xl space-y-3 rounded-lg border border-adminBorder/80 bg-adminPanel/40 p-4 md:p-5"
+        className="mt-8 max-w-xl space-y-3 rounded-lg border border-adminLine/80 bg-adminPanel/40 p-4 md:p-5"
       >
         <h2 className="text-[13px] font-medium text-adminFg">{t("admin.bibleVersions.uploadTitle")}</h2>
         <div className="grid gap-2 sm:grid-cols-2">
           <label className="block text-[12px] text-adminMuted">
             <span className="mb-1 block text-adminFg/90">{t("admin.bibleVersions.fieldId")}</span>
             <input
-              className="w-full rounded-md border border-adminBorder bg-adminElevated px-2.5 py-1.5 text-[13px] text-adminFg"
+              className="w-full rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[13px] text-adminFg"
               value={id}
               onChange={(e) => setId(e.target.value)}
               placeholder="cuv"
@@ -203,7 +203,7 @@ export function BibleVersionsAdminClient() {
           <label className="block text-[12px] text-adminMuted">
             <span className="mb-1 block text-adminFg/90">{t("admin.bibleVersions.fieldLanguage")}</span>
             <input
-              className="w-full rounded-md border border-adminBorder bg-adminElevated px-2.5 py-1.5 text-[13px] text-adminFg"
+              className="w-full rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[13px] text-adminFg"
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               placeholder="zh-Hans"
@@ -214,7 +214,7 @@ export function BibleVersionsAdminClient() {
         <label className="block text-[12px] text-adminMuted">
           <span className="mb-1 block text-adminFg/90">{t("admin.bibleVersions.fieldLabelZh")}</span>
           <input
-            className="w-full rounded-md border border-adminBorder bg-adminElevated px-2.5 py-1.5 text-[13px] text-adminFg"
+            className="w-full rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[13px] text-adminFg"
             value={labelZh}
             onChange={(e) => setLabelZh(e.target.value)}
             required
@@ -223,7 +223,7 @@ export function BibleVersionsAdminClient() {
         <label className="block text-[12px] text-adminMuted">
           <span className="mb-1 block text-adminFg/90">{t("admin.bibleVersions.fieldLabelEn")}</span>
           <input
-            className="w-full rounded-md border border-adminBorder bg-adminElevated px-2.5 py-1.5 text-[13px] text-adminFg"
+            className="w-full rounded-md border border-adminLine bg-adminPanel px-2.5 py-1.5 text-[13px] text-adminFg"
             value={labelEn}
             onChange={(e) => setLabelEn(e.target.value)}
             required
@@ -234,14 +234,14 @@ export function BibleVersionsAdminClient() {
           <input
             type="file"
             accept=".json,application/json"
-            className="w-full text-[13px] text-adminFg file:mr-3 file:rounded file:border-0 file:bg-ink/[0.08] file:px-2 file:py-1"
+            className="w-full text-[13px] text-adminFg file:mr-3 file:rounded file:border-0 file:bg-adminFg/[0.08] file:px-2 file:py-1"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </label>
         <button
           type="submit"
           disabled={uploadBusy}
-          className="rounded-md bg-adminFg px-3 py-1.5 text-[12px] font-medium text-adminElevated disabled:opacity-50"
+          className="rounded-md bg-adminFg px-3 py-1.5 text-[12px] font-medium text-adminPanel disabled:opacity-50"
         >
           {uploadBusy ? t("admin.bibleVersions.uploading") : t("admin.bibleVersions.uploadSubmit")}
         </button>
@@ -274,10 +274,10 @@ export function BibleVersionsAdminClient() {
         ) : rows.length === 0 ? (
           <p className="mt-3 text-[13px] text-adminMuted">{t("admin.bibleVersions.empty")}</p>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-lg border border-adminBorder/80">
+          <div className="mt-4 overflow-x-auto rounded-lg border border-adminLine/80">
             <table className="w-full min-w-[640px] border-collapse text-left text-[12px]">
               <thead>
-                <tr className="border-b border-adminBorder/80 bg-adminPanel/60 text-adminMuted">
+                <tr className="border-b border-adminLine/80 bg-adminPanel/60 text-adminMuted">
                   <th className="px-3 py-2 font-medium">{t("admin.bibleVersions.colId")}</th>
                   <th className="px-3 py-2 font-medium">{t("admin.bibleVersions.colLabels")}</th>
                   <th className="px-3 py-2 font-medium">{t("admin.bibleVersions.colVerses")}</th>
@@ -290,11 +290,11 @@ export function BibleVersionsAdminClient() {
                 {rows.map((r) => {
                   const isDefault = index?.defaultTranslationId === r.id;
                   return (
-                    <tr key={r.id} className="border-b border-adminBorder/40 text-adminFg">
+                    <tr key={r.id} className="border-b border-adminLine/40 text-adminFg">
                       <td className="px-3 py-2 font-mono text-[11px]">
                         {r.id}
                         {isDefault ? (
-                          <span className="ml-2 rounded bg-ink/[0.1] px-1.5 py-0.5 text-[10px] text-adminMuted">
+                          <span className="ml-2 rounded bg-adminFg/[0.1] px-1.5 py-0.5 text-[10px] text-adminMuted">
                             {t("admin.bibleVersions.badgeDefault")}
                           </span>
                         ) : null}
@@ -314,7 +314,7 @@ export function BibleVersionsAdminClient() {
                               type="button"
                               disabled={defaultBusy !== null}
                               onClick={() => void setDefault(r.id)}
-                              className="rounded border border-adminBorder px-2 py-1 text-[11px] hover:bg-ink/[0.06] disabled:opacity-50"
+                              className="rounded border border-adminLine px-2 py-1 text-[11px] hover:bg-adminFg/[0.06] disabled:opacity-50"
                             >
                               {defaultBusy === r.id ? "…" : t("admin.bibleVersions.setDefault")}
                             </button>

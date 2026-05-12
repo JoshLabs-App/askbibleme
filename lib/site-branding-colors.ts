@@ -7,6 +7,10 @@ export type BrandColors = {
   muted: string;
   ink: string;
   sand: string;
+  /** 浅色应用区（如壳内浅底、模板主区）；与 `appDark` 成对 */
+  appLight: string;
+  /** 深色应用区：**底栏**、与自然页顶/底压层同源深色 */
+  appDark: string;
   adminBg: string;
   adminPanel: string;
   adminLine: string;
@@ -14,7 +18,7 @@ export type BrandColors = {
   adminMuted: string;
 };
 
-/** 与底栏 `#143C60` 同系的深青底：全站画布 + 浅色字，减轻 Android 顶缘缝露出浅色 UA 底的观感 */
+/** 深青画布 + 浅色字；`appDark` 与底栏、自然页压层同色族 */
 export const DEFAULT_BRAND_COLORS: BrandColors = {
   canvas: "#143C60",
   surface: "#183A52",
@@ -22,6 +26,8 @@ export const DEFAULT_BRAND_COLORS: BrandColors = {
   muted: "#9BB0C2",
   ink: "#F1F5F9",
   sand: "#7EB8E0",
+  appLight: "#DCECF7",
+  appDark: "#143C60",
   adminBg: "#0E2438",
   adminPanel: "#152F45",
   adminLine: "#2A5572",
@@ -52,6 +58,8 @@ export const BRAND_PRESETS: Record<Exclude<BrandPresetId, "custom">, BrandColors
     muted: "#96AAB8",
     ink: "#EEF2F6",
     sand: "#72B0D8",
+    appLight: "#D4E2ED",
+    appDark: "#0F1F2E",
     adminBg: "#0C1F30",
     adminPanel: "#132A3E",
     adminLine: "#264E68",
@@ -65,6 +73,8 @@ export const BRAND_PRESETS: Record<Exclude<BrandPresetId, "custom">, BrandColors
     muted: "#9AAFC0",
     ink: "#F0F4F8",
     sand: "#84BFE8",
+    appLight: "#DDE6F2",
+    appDark: "#0A1F35",
     adminBg: "#0B1E32",
     adminPanel: "#12283C",
     adminLine: "#244A66",
@@ -78,6 +88,8 @@ export const BRAND_PRESETS: Record<Exclude<BrandPresetId, "custom">, BrandColors
     muted: "#9BB8B2",
     ink: "#EEF6F4",
     sand: "#5EC4A8",
+    appLight: "#DDF0EA",
+    appDark: "#0C2623",
     adminBg: "#0E2E2A",
     adminPanel: "#153833",
     adminLine: "#285A52",
@@ -95,7 +107,10 @@ export const BRAND_PRESET_LABELS: Record<BrandPresetId, string> = {
 };
 
 export const BRAND_COLOR_GROUPS: { label: string; keys: (keyof BrandColors)[] }[] = [
-  { label: "前台主站", keys: ["canvas", "surface", "border", "muted", "ink", "sand"] },
+  {
+    label: "前台主站",
+    keys: ["canvas", "surface", "border", "muted", "ink", "sand", "appLight", "appDark"],
+  },
   {
     label: "后台 Admin",
     keys: ["adminBg", "adminPanel", "adminLine", "adminFg", "adminMuted"],
@@ -109,6 +124,8 @@ export const BRAND_COLOR_LABELS: Record<keyof BrandColors, string> = {
   muted: "次要字 muted",
   ink: "正文 ink",
   sand: "点缀 sand",
+  appLight: "浅色应用 appLight",
+  appDark: "深色应用 / 底栏 appDark",
   adminBg: "后台底 adminBg",
   adminPanel: "后台板 adminPanel",
   adminLine: "后台线 adminLine",

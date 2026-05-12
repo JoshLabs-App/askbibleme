@@ -3,11 +3,16 @@ import { getAdminGateSecret } from "@/lib/admin-gate";
 /** 复用 AskBible 登录成功后签发；middleware（Edge）仅校验 HMAC，不读 SQLite */
 export const ADMIN_ASKBIBLE_SESSION_COOKIE = "selah_admin_askbible";
 
+/** 前台用户（任意 `users` 行），与后台 admin cookie 分离 */
+export const USER_ASKBIBLE_SESSION_COOKIE = "selah_user_askbible";
+
 export type AskbibleSessionPayload = {
   v: 1;
   sub: string;
   email: string;
   exp: number;
+  /** 可选：旧站 `users.name`，供 `/api/auth/askbible` GET 展示 */
+  name?: string;
 };
 
 function utf8ToBase64Url(s: string): string {
@@ -54,22 +59,28 @@ export async function signAskbibleSessionCookie(payload: AskbibleSessionPayload)
   return `${body}.${sig}`;
 }
 
-export async function verifyAskbibleSessionCookie(raw: string | undefined | null): Promise<boolean> {
-  if (!raw || typeof raw !== "string" || !raw.includes(".")) return false;
+export async function parseAskbibleSessionCookie(
+  raw: string | undefined | null,
+): Promise<AskbibleSessionPayload | null> {
+  if (!raw || typeof raw !== "string" || !raw.includes(".")) return null;
   const last = raw.lastIndexOf(".");
   const body = raw.slice(0, last);
   const sig = raw.slice(last + 1);
   const expected = await hmacSha256Hex(getAdminGateSecret(), body);
-  if (!timingSafeEqualHex(sig, expected)) return false;
+  if (!timingSafeEqualHex(sig, expected)) return null;
   try {
     const txt = base64UrlToUtf8(body);
     const j = JSON.parse(txt) as AskbibleSessionPayload;
     if (j.v !== 1 || typeof j.exp !== "number" || typeof j.sub !== "string" || typeof j.email !== "string") {
-      return false;
+      return null;
     }
-    if (Date.now() > j.exp) return false;
-    return true;
+    if (Date.now() > j.exp) return null;
+    return j;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export async function verifyAskbibleSessionCookie(raw: string | undefined | null): Promise<boolean> {
+  return (await parseAskbibleSessionCookie(raw)) != null;
 }

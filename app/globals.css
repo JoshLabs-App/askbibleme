@@ -16,6 +16,10 @@
   --brand-ink-rgb: 241 245 249;
   --brand-sand: #7eb8e0;
   --brand-sand-rgb: 126 184 224;
+  --brand-app-light: #dcecf7;
+  --brand-app-light-rgb: 220 236 247;
+  --brand-app-dark: #143c60;
+  --brand-app-dark-rgb: 20 60 96;
   --brand-admin-bg: #0e2438;
   --brand-admin-bg-rgb: 14 36 56;
   --brand-admin-panel: #152f45;
@@ -26,11 +30,6 @@
   --brand-admin-fg-rgb: 238 243 248;
   --brand-admin-muted: #94a9b8;
   --brand-admin-muted-rgb: 148 169 184;
-  /**
-   * 视口顶缘「出血」：Android Chrome / WebView 常在首层 fixed 与视口之间留 1～3 设备像素的缝，
-   * 露出 UA 底。深色画布 + 略加大出血，缝若仍存在也不易呈「白线」。
-   */
-  --app-viewport-bleed-top: 32px;
   /**
    * 与 `HomeBottomNav` 一致：底栏总高固定 **70px**（`box-border`，内含 `pt` / `pb` 与安全区），
    * 自然首页视频槽首选「`[data-app-shell-scroll]` 的 `clientHeight`」与壳层同源；未量到前回退 `100dvh - var(--home-bottom-nav-slot)`。
@@ -44,7 +43,7 @@ body {
   min-height: 100dvh;
 }
 
-/** 与 body 同色：缝若仍落在根节点上，对比弱于纯白 UA 底。全屏壳层另用负 top + `transform-gpu`（见 app 各 layout）。
+/** 与 body 同色：缝若仍落在根节点上，对比弱于纯白 UA 底。
  */
 html {
   background-color: rgb(var(--brand-canvas-rgb));
@@ -53,6 +52,41 @@ html {
 
 body {
   @apply bg-canvas text-ink antialiased;
+}
+
+/**
+ * 管理后台独立浅色壳（Notion 式极简）：与前台 `html` 品牌变量解耦，仅作用于 `[data-admin-shell="light"]` 子树。
+ * 同步覆盖 `--brand-canvas` 等，便于主区内仍用 `border-border` / `bg-surface` 等 Tailwind 语义类。
+ */
+[data-admin-shell="light"] {
+  color-scheme: light;
+  --brand-admin-bg: #f7f6f3;
+  --brand-admin-bg-rgb: 247 246 243;
+  --brand-admin-panel: #ffffff;
+  --brand-admin-panel-rgb: 255 255 255;
+  --brand-admin-line: #e8e7e4;
+  --brand-admin-line-rgb: 232 231 228;
+  --brand-admin-fg: #37352f;
+  --brand-admin-fg-rgb: 55 53 47;
+  --brand-admin-muted: #6f6f6b;
+  --brand-admin-muted-rgb: 111 111 107;
+
+  --brand-canvas: #f7f6f3;
+  --brand-canvas-rgb: 247 246 243;
+  --brand-surface: #ffffff;
+  --brand-surface-rgb: 255 255 255;
+  --brand-border: #e8e7e4;
+  --brand-border-rgb: 232 231 228;
+  --brand-muted: #6f6f6b;
+  --brand-muted-rgb: 111 111 107;
+  --brand-ink: #37352f;
+  --brand-ink-rgb: 55 53 47;
+  --brand-sand: #2383e2;
+  --brand-sand-rgb: 35 131 226;
+  --brand-app-light: #fbfbfa;
+  --brand-app-light-rgb: 251 251 250;
+  --brand-app-dark: #37352f;
+  --brand-app-dark-rgb: 55 53 47;
 }
 
 /**
@@ -154,21 +188,22 @@ body {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-/* 放松页 Calm 式呼吸光球（静音影像 + 独立音乐） */
+/* 放松页 Calm 式呼吸光球（静音影像 + 独立音乐）：明显「由小到大」再回落，避免几乎看不出在动 */
 @keyframes relax-breathe {
   0%,
   100% {
-    transform: scale(1);
-    opacity: 0.68;
+    transform: scale(0.78);
+    opacity: 0.58;
   }
   50% {
-    transform: scale(1.09);
-    opacity: 0.94;
+    transform: scale(1.14);
+    opacity: 0.98;
   }
 }
 
 .animate-relax-breathe {
-  animation: relax-breathe 10s ease-in-out infinite;
+  animation: relax-breathe 8.5s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  transform-origin: center center;
 }
 
 @media (prefers-reduced-motion: reduce) {

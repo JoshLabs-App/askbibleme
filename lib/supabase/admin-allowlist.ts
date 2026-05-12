@@ -1,6 +1,9 @@
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
+
 /**
  * 仅列在 `ADMIN_USER_EMAILS` 中的 Supabase 用户可进 `/admin`（逗号分隔，不区分大小写）。
- * 未配置或为空：启用 Supabase 时无人可进后台（避免误开放整站注册用户）。
+ * 另：固定超级管理员邮箱始终可进（无需写入环境变量）。
+ * 未配置或为空：启用 Supabase 时除超级管理员外无人可进后台（避免误开放整站注册用户）。
  */
 export function parseAdminUserEmails(): string[] {
   const raw = process.env.ADMIN_USER_EMAILS?.trim();
@@ -13,6 +16,7 @@ export function parseAdminUserEmails(): string[] {
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email?.trim()) return false;
+  if (isSelahSuperAdminEmail(email)) return true;
   const allow = parseAdminUserEmails();
   if (allow.length === 0) return false;
   return allow.includes(email.trim().toLowerCase());

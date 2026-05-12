@@ -250,7 +250,7 @@ export function MusicAdminClient() {
         <p className="text-[13px] text-adminMuted">{msg ?? "无数据"}</p>
         <button
           type="button"
-          className="mt-4 rounded border border-adminLine px-3 py-1.5 text-[12px] text-adminFg transition hover:bg-ink/[0.05]"
+          className="mt-4 rounded border border-adminLine px-3 py-1.5 text-[12px] text-adminFg transition hover:bg-adminFg/[0.05]"
           onClick={() => void load()}
         >
           重试

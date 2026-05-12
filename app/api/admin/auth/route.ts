@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { verifyAskbibleAdminCredentials } from "@/lib/admin-askbible-login";
+import { verifyAskbibleAdminCredentials, verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
 import {
   ADMIN_ASKBIBLE_SESSION_COOKIE,
   signAskbibleSessionCookie,
@@ -11,19 +11,9 @@ import {
   computeAdminGateToken,
   getAdminPassword,
 } from "@/lib/admin-gate";
+import { authCookieSecure } from "@/lib/auth-cookie-secure";
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-
-/** 反向代理后须看 `x-forwarded-proto`；勿仅用 NODE_ENV，否则线上偶发无法种下 Secure cookie。 */
-function adminCookieSecure(req: Request): boolean {
-  const fwd = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
-  if (fwd === "https") return true;
-  if (fwd === "http") return false;
-  try {
-    return new URL(req.url).protocol === "https:";
-  } catch {
-    return process.env.NODE_ENV === "production";
-  }
-}
 
 function timingSafeEqualUtf8(a: string, b: string): boolean {
   try {
@@ -46,7 +36,7 @@ export async function GET() {
 
 /**
  * 登录优先级：
- * 1) 若存在 AskBible `auth.sqlite` 且请求体含 `email`：邮箱+密码 + `is_admin=1`（与旧站相同库即可复用）。
+ * 1) 若存在 AskBible `auth.sqlite` 且请求体含 `email`：`is_admin=1` 或固定超级管理员邮箱（与旧站相同库即可复用）。
  * 2) 否则若已配 Supabase：本接口不接受工作室口令（请用 Supabase 登录页）。
  * 3) 否则：工作室单口令 → `selah_admin_gate`。
  */
@@ -63,14 +53,20 @@ export async function POST(req: Request) {
 
   const dbPath = getAskbibleAuthSqlitePath();
   if (dbPath && emailRaw) {
-    const auth = await verifyAskbibleAdminCredentials(dbPath, emailRaw, password);
+    let auth = await verifyAskbibleAdminCredentials(dbPath, emailRaw, password);
+    if (!auth.ok && isSelahSuperAdminEmail(emailRaw)) {
+      const u = await verifyAskbibleUserCredentials(dbPath, emailRaw, password);
+      if (u.ok) {
+        auth = { ok: true, userId: u.userId, email: u.email };
+      }
+    }
     if (!auth.ok) {
       return NextResponse.json({ error: "Wrong email or password" }, { status: 401 });
     }
     const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
     const token = await signAskbibleSessionCookie({ v: 1, sub: auth.userId, email: auth.email, exp });
     const res = NextResponse.json({ ok: true, mode: "askbible" });
-    const secure = adminCookieSecure(req);
+    const secure = authCookieSecure(req);
     res.cookies.set(ADMIN_ASKBIBLE_SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
@@ -94,7 +90,7 @@ export async function POST(req: Request) {
 
   const token = await computeAdminGateToken();
   const res = NextResponse.json({ ok: true, mode: "legacy" });
-  const secure = adminCookieSecure(req);
+  const secure = authCookieSecure(req);
   res.cookies.set(ADMIN_GATE_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -106,7 +102,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const secure = adminCookieSecure(req);
+  const secure = authCookieSecure(req);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(ADMIN_GATE_COOKIE, "", {
     httpOnly: true,

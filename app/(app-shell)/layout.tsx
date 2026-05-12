@@ -8,7 +8,7 @@ import { AppShellProviders } from "./app-shell-providers";
  * 视口锁定的壳：主区单独滚动；主导航 `HomeBottomNav` 始终在壳底（不受自然页「收起场景区」影响）。
  * 自然页内 `DockChromeCollapse` 叠在画面上；默认收起，点主视频区域切换显隐。
  *
- * Android 顶缘亚像素缝：见 `globals.css` 中 `--app-viewport-bleed-top`；负 top 略加大并 `transform-gpu` 促合成层。
+ * 壳层顶对齐视口；若 Android 顶缘仍有细缝，由 `html`/`body` 画布色兜底，勿再负 top 抬壳（避免壳内 `fixed` 错位）。
  * 自然首页壳层深色见 `AppShellFixedChrome`（随 pathname 更新，避免软导航残留浅色底）。
  */
 export default async function AppShellLayout({ children }: { children: React.ReactNode }) {

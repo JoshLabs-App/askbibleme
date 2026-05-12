@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
+import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
-import { HOME_DOCK_NAV_BG } from "@/lib/shell/home-dock-nav-bg";
 
 const itemDefs: {
   href: string;
@@ -21,12 +21,14 @@ const itemDefs: {
 
 function navLinkClass(active: boolean) {
   const base =
-    "flex min-h-0 min-w-0 flex-1 basis-0 items-center justify-center px-1 py-0 text-[11px] font-medium leading-tight tracking-wide transition sm:text-[12px]";
+    "flex min-h-0 min-w-0 flex-1 basis-0 flex-col items-center justify-center px-0.5 py-0 text-[13px] font-medium leading-tight tracking-wide transition sm:px-0.5 sm:text-[14px]";
   return [
     base,
     active ? "text-white" : "text-white/45 hover:text-white/75",
   ].join(" ");
 }
+
+const navItemTextClass = "max-w-full truncate text-center";
 
 /** 置于 shell 底部列（非 fixed），由父级 `fixed inset-0 + flex` 保证始终在视口内。 */
 export function HomeBottomNav() {
@@ -34,6 +36,17 @@ export function HomeBottomNav() {
   const { t } = useLocale();
   const { setDockChromeVisible } = useHomeDockChrome();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
+  const shellTemplateDock = useShellTemplateDockPreviewOptional();
+  const dockBackground = shellTemplateDock?.templateDockHex ?? "var(--brand-app-dark)";
+  const dockAccent = shellTemplateDock?.templateDockHex ?? "var(--brand-app-dark)";
+  const dockChromeStyle = {
+    backgroundColor: dockBackground,
+  } as const;
+  const underfillBg =
+    typeof dockBackground === "string" && dockBackground.trim().startsWith("#")
+      ? dockBackground.trim()
+      : "rgb(var(--brand-app-dark-rgb))";
+
   if (pathname.startsWith("/admin")) return null;
 
   /** 同一路径再点「首页」时 pathname 不变，须显式展开底区，否则场景卡仍处收起态 */
@@ -43,11 +56,17 @@ export function HomeBottomNav() {
 
   return (
     <nav
-      className="home-bottom-nav relative z-20 flex h-[70px] min-h-[70px] w-full min-w-0 max-w-full shrink-0 flex-col overflow-x-hidden overflow-y-hidden box-border pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1"
-      style={{ backgroundColor: HOME_DOCK_NAV_BG }}
+      className="home-bottom-nav relative z-20 flex h-[70px] min-h-[70px] max-h-[70px] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden box-border border-0 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1"
+      style={dockChromeStyle}
       aria-label={t("nav.mainLabel")}
     >
-      <div className="flex min-h-0 w-full min-w-0 max-w-full flex-1 items-stretch px-0.5 sm:px-1">
+      {/* 向下多画 2px 同色，盖住壳层子像素缝（pointer-events-none 不误触） */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -bottom-px left-0 right-0 z-[1] h-[2px]"
+        style={{ backgroundColor: underfillBg }}
+      />
+      <div className="relative z-[2] flex min-h-0 w-full min-w-0 max-w-full flex-1 items-stretch px-0.5 sm:px-1">
         {itemDefs.slice(0, 2).map((def) => {
           const active = def.match(pathname);
           return (
@@ -58,7 +77,7 @@ export function HomeBottomNav() {
               className={navLinkClass(active)}
               onClick={def.href === "/" ? onHomeNavClick : undefined}
             >
-              <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
+              <span className={navItemTextClass}>{t(def.labelKey)}</span>
             </Link>
           );
         })}
@@ -71,7 +90,7 @@ export function HomeBottomNav() {
               !canPlay ? t("playback.noTrack") : playing ? t("playback.pauseMusic") : t("playback.playMusic")
             }
             onClick={() => togglePlay()}
-            style={{ backgroundColor: "rgba(255,255,255,0.94)", color: HOME_DOCK_NAV_BG }}
+            style={{ backgroundColor: "rgba(255,255,255,0.94)", color: dockAccent }}
             className="music-reactive-play-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-white/40 transition hover:bg-white hover:ring-white/55 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:pointer-events-none disabled:opacity-35"
           >
             {playing ? (
@@ -91,7 +110,7 @@ export function HomeBottomNav() {
               aria-current={active ? "page" : undefined}
               className={navLinkClass(active)}
             >
-              <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
+              <span className={navItemTextClass}>{t(def.labelKey)}</span>
             </Link>
           );
         })}

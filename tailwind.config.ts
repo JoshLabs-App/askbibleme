@@ -16,7 +16,9 @@ const config: Config = {
         muted: "rgb(var(--brand-muted-rgb) / <alpha-value>)",
         ink: "rgb(var(--brand-ink-rgb) / <alpha-value>)",
         sand: "rgb(var(--brand-sand-rgb) / <alpha-value>)",
-        /** 统一后台（浅色静湖系，与前台天青画布一致） */
+        appLight: "rgb(var(--brand-app-light-rgb) / <alpha-value>)",
+        appDark: "rgb(var(--brand-app-dark-rgb) / <alpha-value>)",
+        /** 后台壳：实际色值由 `[data-admin-shell="light"]` 独立定义（浅灰纸 + Notion 系正文），与前台画布解耦 */
         adminBg: "rgb(var(--brand-admin-bg-rgb) / <alpha-value>)",
         adminPanel: "rgb(var(--brand-admin-panel-rgb) / <alpha-value>)",
         adminLine: "rgb(var(--brand-admin-line-rgb) / <alpha-value>)",

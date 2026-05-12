@@ -1,5 +1,7 @@
-/** 前台底栏（`HomeBottomNav`）与自然页湖水压层渐变同色 */
-export const HOME_DOCK_NAV_BG = "#143C60" as const;
+import { DEFAULT_BRAND_COLORS } from "@/lib/site-branding-colors";
+
+/** 默认底栏色（= `DEFAULT_BRAND_COLORS.appDark`）；运行时应优先用 CSS `var(--brand-app-dark)` */
+export const HOME_DOCK_NAV_BG = DEFAULT_BRAND_COLORS.appDark;
 
 /**
  * 自然页底部 fixed 压层请用 `bottom` 避让底栏，勿用 `bottom-0` 叠在实色 nav 上。

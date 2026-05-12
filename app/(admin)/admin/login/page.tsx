@@ -133,15 +133,23 @@ function AdminLoginForm() {
     );
   }
 
-  const emailPasswordForm = (opts: { hint: string; onSubmit: (e: React.FormEvent) => void }) => (
+  const emailPasswordForm = (opts: { hint?: string; onSubmit: (e: React.FormEvent) => void }) => (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-5 py-12">
-      <div className="w-full max-w-sm rounded-2xl border border-adminLine bg-adminPanel/40 px-6 py-8 shadow-[0_12px_40px_-24px_rgba(44,40,36,0.35)]">
+      <div className="w-full max-w-sm rounded-xl border border-adminLine bg-adminPanel px-6 py-8 shadow-[0_8px_32px_-20px_rgba(15,15,15,0.1)]">
         <h1 className="text-center font-medium tracking-tight text-adminFg">{t("admin.login.pageTitle")}</h1>
-        <p className="mt-2 text-center text-[12px] leading-relaxed text-adminMuted">{opts.hint}</p>
+        {opts.hint?.trim() ? (
+          <p className="mt-2 text-center text-[12px] leading-relaxed text-adminMuted">{opts.hint}</p>
+        ) : null}
         {bannerError ? (
           <p className="mt-3 text-center text-[12px] text-red-600/90 dark:text-red-400/90">{bannerError}</p>
         ) : null}
-        <form className="mt-6 flex flex-col gap-4" onSubmit={opts.onSubmit}>
+        <form
+          className={[
+            "flex flex-col gap-4",
+            opts.hint?.trim() ? "mt-6" : bannerError ? "mt-6" : "mt-8",
+          ].join(" ")}
+          onSubmit={opts.onSubmit}
+        >
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-medium text-adminMuted">{t("admin.login.emailLabel")}</span>
             <input
@@ -150,7 +158,7 @@ function AdminLoginForm() {
               autoComplete="username"
               value={email}
               onChange={(ev) => setEmail(ev.target.value)}
-              className="rounded-lg border border-adminLine bg-adminBg px-3 py-2 text-[14px] text-adminFg outline-none ring-0 transition placeholder:text-adminMuted/50 focus:border-adminFg/25 focus:ring-2 focus:ring-ink/10"
+              className="rounded-lg border border-adminLine bg-white px-3 py-2 text-[14px] text-adminFg outline-none ring-0 transition placeholder:text-adminMuted/50 focus:border-adminFg/30 focus:ring-2 focus:ring-adminFg/12"
               placeholder="you@example.com"
             />
           </label>
@@ -162,7 +170,7 @@ function AdminLoginForm() {
               autoComplete="current-password"
               value={accountPassword}
               onChange={(ev) => setAccountPassword(ev.target.value)}
-              className="rounded-lg border border-adminLine bg-adminBg px-3 py-2 text-[14px] text-adminFg outline-none ring-0 transition placeholder:text-adminMuted/50 focus:border-adminFg/25 focus:ring-2 focus:ring-ink/10"
+              className="rounded-lg border border-adminLine bg-white px-3 py-2 text-[14px] text-adminFg outline-none ring-0 transition placeholder:text-adminMuted/50 focus:border-adminFg/30 focus:ring-2 focus:ring-adminFg/12"
               placeholder="····"
             />
           </label>
@@ -180,19 +188,24 @@ function AdminLoginForm() {
   );
 
   if (config.askbible) {
-    return emailPasswordForm({ hint: t("admin.login.askbibleHint"), onSubmit: onAskbibleSubmit });
+    return emailPasswordForm({ onSubmit: onAskbibleSubmit });
   }
 
   if (config.supabase) {
-    return emailPasswordForm({ hint: t("admin.login.supabaseHint"), onSubmit: onSupabaseSubmit });
+    return emailPasswordForm({ onSubmit: onSupabaseSubmit });
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-5 py-12">
-      <div className="w-full max-w-sm rounded-2xl border border-adminLine bg-adminPanel/40 px-6 py-8 shadow-[0_12px_40px_-24px_rgba(44,40,36,0.35)]">
+      <div className="w-full max-w-sm rounded-xl border border-adminLine bg-adminPanel px-6 py-8 shadow-[0_8px_32px_-20px_rgba(15,15,15,0.1)]">
         <h1 className="text-center font-medium tracking-tight text-adminFg">{t("admin.login.pageTitle")}</h1>
-        <p className="mt-2 text-center text-[12px] leading-relaxed text-adminMuted">{t("admin.login.hint")}</p>
-        <form className="mt-6 flex flex-col gap-4" onSubmit={onLegacySubmit}>
+        {bannerError ? (
+          <p className="mt-3 text-center text-[12px] text-red-600/90 dark:text-red-400/90">{bannerError}</p>
+        ) : null}
+        <form
+          className={bannerError ? "mt-6 flex flex-col gap-4" : "mt-8 flex flex-col gap-4"}
+          onSubmit={onLegacySubmit}
+        >
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-medium text-adminMuted">{t("admin.login.passwordLabel")}</span>
             <input
@@ -201,7 +214,7 @@ function AdminLoginForm() {
               autoComplete="current-password"
               value={password}
               onChange={(ev) => setPassword(ev.target.value)}
-              className="rounded-lg border border-adminLine bg-adminBg px-3 py-2 text-[14px] text-adminFg outline-none ring-0 transition placeholder:text-adminMuted/50 focus:border-adminFg/25 focus:ring-2 focus:ring-ink/10"
+              className="rounded-lg border border-adminLine bg-white px-3 py-2 text-[14px] text-adminFg outline-none ring-0 transition placeholder:text-adminMuted/50 focus:border-adminFg/30 focus:ring-2 focus:ring-adminFg/12"
               placeholder="····"
             />
           </label>

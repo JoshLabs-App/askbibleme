@@ -17,6 +17,17 @@ import {
   type UserSkinId,
 } from "@/lib/app-user-skin";
 import {
+  readShellTemplateBrandFromStorage,
+  SHELL_TEMPLATE_BRAND_STORAGE_KEY,
+  writeShellTemplateBrandToStorage,
+} from "@/lib/shell/shell-template-brand-preference";
+import {
+  isShellTemplatePreviewThemeId,
+  shellTemplatePreviewCssVars,
+  shellTemplatePreviewThemeById,
+  type ShellTemplatePreviewThemeId,
+} from "@/lib/shell/template-preview-themes";
+import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
@@ -25,14 +36,17 @@ import { brandColorsToCssVars } from "@/lib/site-branding-colors";
 type AppSkinContextValue = {
   skin: UserSkinId;
   setSkin: (id: UserSkinId) => void;
+  /** 非空时：`body` 上壳主题配色覆盖「界面风格」预设与站点默认 */
+  shellTemplateBrand: ShellTemplatePreviewThemeId | null;
+  setShellTemplateBrand: (id: ShellTemplatePreviewThemeId | null) => void;
 };
 
 const AppSkinContext = createContext<AppSkinContextValue | null>(null);
 
-const skinListeners = new Set<() => void>();
+const appearanceListeners = new Set<() => void>();
 
-function emitSkinChange() {
-  skinListeners.forEach((l) => {
+function emitAppearanceChange() {
+  appearanceListeners.forEach((l) => {
     try {
       l();
     } catch {
@@ -41,26 +55,48 @@ function emitSkinChange() {
   });
 }
 
-function subscribeSkin(onStore: () => void) {
+function subscribeAppearance(onStore: () => void) {
   if (typeof window === "undefined") return () => {};
-  skinListeners.add(onStore);
+  appearanceListeners.add(onStore);
   const onStorage = (e: StorageEvent) => {
-    if (e.key === USER_SKIN_STORAGE_KEY || e.key === null) onStore();
+    if (
+      e.key === USER_SKIN_STORAGE_KEY ||
+      e.key === SHELL_TEMPLATE_BRAND_STORAGE_KEY ||
+      e.key === null
+    ) {
+      onStore();
+    }
   };
   window.addEventListener("storage", onStorage);
   return () => {
-    skinListeners.delete(onStore);
+    appearanceListeners.delete(onStore);
     window.removeEventListener("storage", onStorage);
   };
 }
 
-function getSkinSnapshot(): UserSkinId {
-  if (typeof window === "undefined") return "site";
-  return parseUserSkin(localStorage.getItem(USER_SKIN_STORAGE_KEY));
+const APPEARANCE_SERVER_SNAPSHOT = JSON.stringify({ skin: "site", template: null as string | null });
+
+function getAppearanceSnapshot(): string {
+  if (typeof window === "undefined") return APPEARANCE_SERVER_SNAPSHOT;
+  const skin = parseUserSkin(localStorage.getItem(USER_SKIN_STORAGE_KEY));
+  const template = readShellTemplateBrandFromStorage();
+  return JSON.stringify({ skin, template });
 }
 
-function getSkinServerSnapshot(): UserSkinId {
-  return "site";
+function parseAppearanceSnapshot(raw: string): {
+  skin: UserSkinId;
+  shellTemplateBrand: ShellTemplatePreviewThemeId | null;
+} {
+  try {
+    const o = JSON.parse(raw) as { skin?: unknown; template?: unknown };
+    const skin = parseUserSkin(typeof o.skin === "string" ? o.skin : null);
+    const t = o.template;
+    const shellTemplateBrand =
+      typeof t === "string" && isShellTemplatePreviewThemeId(t) ? t : null;
+    return { skin, shellTemplateBrand };
+  } catch {
+    return { skin: "site", shellTemplateBrand: null };
+  }
 }
 
 function clearBodyBrandVarOverrides() {
@@ -94,11 +130,6 @@ function syncThemeColorMetaFromDocumentElement() {
   if (raw) syncThemeColorMetaFromCanvas(raw);
 }
 
-/**
- * 让 `html` 上的画布变量与 `body` 解析结果一致。
- * `globals.css` 里 `html { background-color: rgb(var(--brand-canvas-rgb)) }` 只看 `html` 自身变量；
- * 若皮肤把 `--brand-*` 只写在 `body` 上，Android 顶缘常会露出一条与内容不同的细线。
- */
 function syncHtmlCanvasBackgroundWithBody() {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
@@ -109,26 +140,42 @@ function syncHtmlCanvasBackgroundWithBody() {
   if (rgb) root.style.setProperty("--brand-canvas-rgb", rgb);
 }
 
-function applyUserSkinToBody(id: UserSkinId) {
+function applyAppearanceToBody(skin: UserSkinId, shellTemplateBrand: ShellTemplatePreviewThemeId | null) {
   clearBodyBrandVarOverrides();
-  const preset = presetColorsForUserSkin(id);
+  if (shellTemplateBrand) {
+    const theme = shellTemplatePreviewThemeById(shellTemplateBrand);
+    applyVarsToBody(shellTemplatePreviewCssVars(theme));
+    syncThemeColorMetaFromCanvas(theme.colors.canvas);
+    syncHtmlCanvasBackgroundWithBody();
+    return;
+  }
+  const preset = presetColorsForUserSkin(skin);
   if (!preset) {
     syncThemeColorMetaFromDocumentElement();
     syncHtmlCanvasBackgroundWithBody();
     return;
   }
-  const vars = brandColorsToCssVars(preset);
-  applyVarsToBody(vars);
+  applyVarsToBody(brandColorsToCssVars(preset));
   syncThemeColorMetaFromCanvas(preset.canvas);
   syncHtmlCanvasBackgroundWithBody();
 }
 
 export function AppSkinProvider({ children }: { children: ReactNode }) {
-  const skin = useSyncExternalStore(subscribeSkin, getSkinSnapshot, getSkinServerSnapshot);
+  const appearanceSnapshot = useSyncExternalStore(
+    subscribeAppearance,
+    getAppearanceSnapshot,
+    () => APPEARANCE_SERVER_SNAPSHOT,
+  );
+
+  const { skin, shellTemplateBrand } = useMemo(
+    () => parseAppearanceSnapshot(appearanceSnapshot),
+    [appearanceSnapshot],
+  );
 
   useLayoutEffect(() => {
-    applyUserSkinToBody(skin);
-  }, [skin]);
+    const parsed = parseAppearanceSnapshot(appearanceSnapshot);
+    applyAppearanceToBody(parsed.skin, parsed.shellTemplateBrand);
+  }, [appearanceSnapshot]);
 
   const setSkin = useCallback((id: UserSkinId) => {
     try {
@@ -136,11 +183,18 @@ export function AppSkinProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-    applyUserSkinToBody(id);
-    emitSkinChange();
+    emitAppearanceChange();
   }, []);
 
-  const value = useMemo(() => ({ skin, setSkin }), [skin, setSkin]);
+  const setShellTemplateBrand = useCallback((id: ShellTemplatePreviewThemeId | null) => {
+    writeShellTemplateBrandToStorage(id);
+    emitAppearanceChange();
+  }, []);
+
+  const value = useMemo(
+    () => ({ skin, setSkin, shellTemplateBrand, setShellTemplateBrand }),
+    [skin, setSkin, shellTemplateBrand, setShellTemplateBrand],
+  );
 
   return <AppSkinContext.Provider value={value}>{children}</AppSkinContext.Provider>;
 }

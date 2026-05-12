@@ -1,4 +1,5 @@
 import { AppShellPlaceholder } from "@/components/shell/AppShellPlaceholder";
+import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 
 export const metadata = {
   title: "探索 | Selah.my",
@@ -7,10 +8,13 @@ export const metadata = {
 
 export default function ExplorePlaceholderPage() {
   return (
-    <AppShellPlaceholder
-      titleKey="pages.explore.title"
-      leadKey="pages.explore.lead"
-      bodyKey="pages.explore.body"
-    />
+    <ShellTemplateChromeLayout contentClassName="gap-0">
+      <AppShellPlaceholder
+        embedded
+        titleKey="pages.explore.title"
+        leadKey="pages.explore.lead"
+        bodyKey="pages.explore.body"
+      />
+    </ShellTemplateChromeLayout>
   );
 }

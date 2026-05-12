@@ -1,4 +1,5 @@
 import { AppShellPlaceholder } from "@/components/shell/AppShellPlaceholder";
+import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 
 export const metadata = {
   title: "圣经 | Selah.my",
@@ -7,12 +8,15 @@ export const metadata = {
 
 export default function ReadPlaceholderPage() {
   return (
-    <AppShellPlaceholder
-      titleKey="pages.read.title"
-      leadKey="pages.read.lead"
-      bodyKey="pages.read.body"
-      secondaryCtaHref="/read/catalog"
-      secondaryCtaLabelKey="pages.read.catalogCta"
-    />
+    <ShellTemplateChromeLayout contentClassName="gap-0">
+      <AppShellPlaceholder
+        embedded
+        titleKey="pages.read.title"
+        leadKey="pages.read.lead"
+        bodyKey="pages.read.body"
+        secondaryCtaHref="/read/catalog"
+        secondaryCtaLabelKey="pages.read.catalogCta"
+      />
+    </ShellTemplateChromeLayout>
   );
 }

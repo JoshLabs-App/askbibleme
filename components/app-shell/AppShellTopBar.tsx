@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useAppSkin } from "@/components/theme/AppSkinProvider";
+import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
+import { isNatureHomeShellPath, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 
 /** 常规手机最小触控约 44×44（iOS HIG / Material）；顶栏按钮统一此尺寸 */
 const HIT = "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]";
@@ -23,17 +29,34 @@ function IconMenu(props: { className?: string }) {
   );
 }
 
-const menuSurfaceDark =
-  "min-w-[10rem] rounded-xl border border-white/[0.12] bg-black/45 py-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl";
+function IconClose(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const menuSurfaceLight =
-  "min-w-[10rem] rounded-xl border border-sky-200/80 bg-white/[0.94] py-1 text-ink shadow-[0_12px_40px_-12px_rgba(15,60,90,0.12)] backdrop-blur-xl";
+const DRAWER_TRANSITION_MS = 300;
 
-const menuItemDark =
-  "block px-3 py-2.5 text-[15px] font-normal leading-snug text-white/[0.92] transition hover:bg-white/[0.06] sm:py-2 sm:text-[14px]";
+const drawerNavLinks: {
+  href: string;
+  labelKey: "nav.home" | "nav.music" | "nav.relax" | "nav.journey" | "nav.read" | "nav.explore" | "nav.shellTemplate";
+}[] = [
+  { href: "/", labelKey: "nav.home" },
+  { href: "/music", labelKey: "nav.music" },
+  { href: "/relax", labelKey: "nav.relax" },
+  { href: "/journey", labelKey: "nav.journey" },
+  { href: "/read", labelKey: "nav.read" },
+  { href: "/explore", labelKey: "nav.explore" },
+  { href: "/template", labelKey: "nav.shellTemplate" },
+];
 
-const menuItemLight =
-  "block px-3 py-2.5 text-[15px] font-normal leading-snug text-ink/90 transition hover:bg-sky-100/90 sm:py-2 sm:text-[14px]";
+function shellPathActive(href: string, pathname: string): boolean {
+  const p = pathname || "";
+  if (href === "/") return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
+  return p === href || p.startsWith(`${href}/`);
+}
 
 const EDGE_SWIPE_OPEN_PX = 56;
 const EDGE_SWIPE_START_MAX_X = 28;
@@ -41,7 +64,7 @@ const EDGE_SWIPE_START_MAX_X = 28;
 export type AppShellTopBarTone = "onDark" | "onLight";
 
 type Props = {
-  /** 深色底用 `onDark`，浅色底用 `onLight`（菜单面与字色） */
+  /** 深色底用 `onDark`，浅色底用 `onLight`（顶栏图标 hover 等） */
   tone?: AppShellTopBarTone;
   /** 顶栏右上（如自然页环境声静音）；未传时用占位保持与左侧按钮对称 */
   rightAccessory?: ReactNode;
@@ -51,9 +74,11 @@ type Props = {
   landscapeImmersive?: boolean;
 };
 
+/** 抽屉挂 `body`：须高于底栏 `z-20`，且低于 `AppShellModal`（`z-index: 100`）以便语言弹层在上 */
+const NAV_DRAWER_PORTAL_Z = 80;
+
 /**
- * 应用壳默认顶栏：左上导航菜单（含管理入口）、右上可选控件；`absolute` 叠在页面内容之上。
- * 任意路由页在 `relative` 容器内引用即可；左缘滑开与窄条与首页行为一致。
+ * 应用壳默认顶栏：左上打开 **Notion 式左侧全高抽屉**（主导航 + 语言）；抽屉经 Portal 叠在底栏之上。
  */
 export function AppShellTopBar({
   tone = "onDark",
@@ -62,21 +87,29 @@ export function AppShellTopBar({
 }: Props) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
+  const { bootstrapped, configured, user, logout } = useAskbibleUser();
+  const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
+  const { setDockChromeVisible } = useHomeDockChrome();
   const onLight = tone === "onLight";
-  const menuSurface = onLight ? menuSurfaceLight : menuSurfaceDark;
-  const menuItem = onLight ? menuItemLight : menuItemDark;
   const iconBtn =
     HIT +
     (onLight ? " text-ink/85 hover:bg-ink/[0.06]" : " text-white/[0.9] hover:bg-white/[0.1]");
   const [navOpen, setNavOpen] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [drawerEntered, setDrawerEntered] = useState(false);
   const [localePickerOpen, setLocalePickerOpen] = useState(false);
   /** 与 `/api/admin/branding` 一致：有资源时顶栏中央展示透明 LOGO */
   const [brandLogoSrc, setBrandLogoSrc] = useState<string | null>(null);
   const brandFetchAbortRef = useRef<AbortController | null>(null);
-  const navRef = useRef<HTMLDivElement>(null);
   const navEdgeStripRef = useRef<HTMLButtonElement>(null);
   const suppressNavEdgeClickRef = useRef(false);
   const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const drawerCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [bodyPortalReady, setBodyPortalReady] = useState(false);
+
+  useEffect(() => {
+    setBodyPortalReady(true);
+  }, []);
 
   const openNavMenu = useCallback(() => {
     setNavOpen(true);
@@ -85,6 +118,53 @@ export function AppShellTopBar({
   const toggleNavMenu = useCallback(() => {
     setNavOpen((o) => !o);
   }, []);
+
+  const closeNavMenu = useCallback(() => {
+    setNavOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (navOpen) {
+      if (drawerCloseTimerRef.current != null) {
+        clearTimeout(drawerCloseTimerRef.current);
+        drawerCloseTimerRef.current = null;
+      }
+      setDrawerVisible(true);
+      const id = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setDrawerEntered(true));
+      });
+      return () => cancelAnimationFrame(id);
+    }
+    setDrawerEntered(false);
+    drawerCloseTimerRef.current = setTimeout(() => {
+      setDrawerVisible(false);
+      drawerCloseTimerRef.current = null;
+    }, DRAWER_TRANSITION_MS);
+    return () => {
+      if (drawerCloseTimerRef.current != null) {
+        clearTimeout(drawerCloseTimerRef.current);
+        drawerCloseTimerRef.current = null;
+      }
+    };
+  }, [navOpen]);
+
+  useEffect(() => {
+    if (!drawerVisible) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [drawerVisible]);
+
+  useEffect(() => {
+    if (!drawerVisible) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeNavMenu();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [drawerVisible, closeNavMenu]);
 
   useEffect(() => {
     const onTouchStart = (e: TouchEvent) => {
@@ -175,33 +255,19 @@ export function AppShellTopBar({
     return subscribeSiteBrandingUpdated(() => loadBrandingLogo());
   }, [loadBrandingLogo]);
 
-  useEffect(() => {
-    if (!navOpen) return;
-    const onDown = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (navEdgeStripRef.current?.contains(target)) return;
-      if (navRef.current?.contains(target)) return;
-      setNavOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setNavOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [navOpen]);
-
   const openNav = () => {
     toggleNavMenu();
   };
 
   /** 顶栏下缘大致位置，左缘窄条从此向下延伸（与加大后的 pt + 44px 行对齐） */
   const edgeStripTopClass = "top-[calc(env(safe-area-inset-top,0px)+6.25rem)]";
+
+  const drawerMotion = "transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] motion-reduce:transition-none motion-reduce:duration-0";
+
+  const linkRowBase =
+    "flex w-full items-center rounded-md px-2.5 py-2.5 text-left text-[15px] font-normal leading-snug text-[#37352f] transition sm:py-2 sm:text-[14px]";
+  const linkRowIdle = "hover:bg-black/[0.06] active:bg-black/[0.08]";
+  const linkRowActive = "bg-black/[0.07] font-medium";
 
   return (
     <>
@@ -230,37 +296,18 @@ export function AppShellTopBar({
         inert={landscapeImmersive ? true : undefined}
       >
         <div className="grid w-full min-h-[44px] grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div className="pointer-events-auto relative justify-self-start" ref={navRef}>
+          <div className="pointer-events-auto relative justify-self-start">
             <button
               type="button"
               onClick={openNav}
               aria-label={navOpen ? t("chrome.closeNavMenu") : t("chrome.openNavMenu")}
               aria-expanded={navOpen}
-              aria-haspopup="menu"
-              aria-controls="app-shell-nav-menu"
+              aria-haspopup="dialog"
+              aria-controls="app-shell-nav-drawer"
               className={iconBtn}
             >
               <IconMenu className="h-3 w-[1.125rem] opacity-90" />
             </button>
-            {navOpen ? (
-              <div
-                id="app-shell-nav-menu"
-                role="menu"
-                className={`absolute left-0 top-[calc(100%+0.35rem)] z-[60] ${menuSurface}`}
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={`${menuItem} w-full cursor-pointer border-0 bg-transparent text-left`}
-                  onClick={() => {
-                    setNavOpen(false);
-                    setLocalePickerOpen(true);
-                  }}
-                >
-                  {t("nav.language")}
-                </button>
-              </div>
-            ) : null}
           </div>
 
           <div className="pointer-events-auto flex min-w-0 max-w-[min(52vw,14rem)] justify-center justify-self-center">
@@ -288,6 +335,156 @@ export function AppShellTopBar({
           </div>
         </div>
       </header>
+
+      {bodyPortalReady && drawerVisible
+        ? createPortal(
+            <div
+              className="fixed inset-0 flex"
+              style={{ zIndex: NAV_DRAWER_PORTAL_Z }}
+              role="presentation"
+              aria-hidden={!navOpen && !drawerEntered ? true : undefined}
+            >
+              <button
+                type="button"
+                aria-label={t("chrome.closeNavMenu")}
+                className={[
+                  "absolute inset-0 border-0 bg-black/40 backdrop-blur-[1px] transition-opacity",
+                  drawerMotion,
+                  drawerEntered ? "opacity-100" : "opacity-0",
+                ].join(" ")}
+                onClick={closeNavMenu}
+              />
+              <aside
+                id="app-shell-nav-drawer"
+                role="dialog"
+                aria-modal="true"
+                aria-label={t("nav.mainLabel")}
+                className={[
+                  "absolute bottom-0 left-0 top-0 flex w-[min(22rem,calc(100vw-12px))] min-h-0 flex-col border-r border-neutral-200/90 bg-[#f7f6f3] shadow-[4px_0_32px_-12px_rgba(0,0,0,0.18)]",
+                  drawerMotion,
+                  drawerEntered ? "translate-x-0 opacity-100" : "-translate-x-[102%] opacity-100",
+                  "pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-2",
+                ].join(" ")}
+              >
+                <div className="flex shrink-0 items-center justify-between gap-2 pb-2 pl-0.5 pr-0.5 pt-1">
+                  <h2 className="min-w-0 truncate text-[13px] font-semibold uppercase tracking-[0.06em] text-[#37352f]/55">
+                    {t("nav.mainLabel")}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={closeNavMenu}
+                    aria-label={t("chrome.closeNavMenu")}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-[#37352f]/80 transition hover:bg-black/[0.06] active:bg-black/[0.08]"
+                  >
+                    <IconClose className="h-5 w-5" />
+                  </button>
+                </div>
+                <nav className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] py-1 pr-0.5">
+                  <div className="flex flex-col gap-0.5">
+                    {drawerNavLinks.map(({ href, labelKey }) => {
+                      const active = shellPathActive(href, pathname);
+                      return (
+                        <Link
+                          key={href}
+                          href={href}
+                          className={[linkRowBase, active ? linkRowActive : linkRowIdle].join(" ")}
+                          aria-current={active ? "page" : undefined}
+                          onClick={() => {
+                            closeNavMenu();
+                            if (href === "/" && isNatureHomeShellPath(pathname)) {
+                              setDockChromeVisible(true);
+                            }
+                          }}
+                        >
+                          {t(labelKey)}
+                        </Link>
+                      );
+                    })}
+                    <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
+                      <span className="sr-only">{t("nav.themeColorsHeading")}</span>
+                      <p className="sr-only">{t("nav.themeColorsHint")}</p>
+                      <ShellTemplateThemeStrip
+                        variant="drawer"
+                        selectedId={shellTemplateBrand}
+                        onPick={(id) => {
+                          setShellTemplateBrand(id);
+                          closeNavMenu();
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={[
+                          linkRowBase,
+                          linkRowIdle,
+                          "mt-2 text-[13px] text-[#37352f]/80",
+                          shellTemplateBrand == null ? linkRowActive : "",
+                        ].join(" ")}
+                        aria-pressed={shellTemplateBrand == null}
+                        onClick={() => {
+                          setShellTemplateBrand(null);
+                          closeNavMenu();
+                        }}
+                      >
+                        {t("nav.themeColorsFollowSite")}
+                      </button>
+                    </div>
+                    {bootstrapped && configured ? (
+                      user ? (
+                        <div className="mt-1 border-t border-neutral-200/90 pt-3">
+                          <p className="px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-[#37352f]/45">
+                            {t("auth.drawerSignedIn")}
+                          </p>
+                          <p className="truncate px-2.5 pb-2 text-[13px] text-[#37352f]/80" title={user.email}>
+                            {user.name !== user.email ? user.name : user.email}
+                          </p>
+                          <button
+                            type="button"
+                            className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
+                            onClick={() => {
+                              closeNavMenu();
+                              void logout();
+                            }}
+                          >
+                            {t("auth.drawerLogout")}
+                          </button>
+                          {isSelahSuperAdminEmail(user.email) ? (
+                            <Link
+                              href="/admin"
+                              className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
+                              onClick={() => closeNavMenu()}
+                            >
+                              {t("auth.drawerAdmin")}
+                            </Link>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <Link
+                          href="/login"
+                          className={[linkRowBase, linkRowIdle, "mt-1 border-t border-neutral-200/90 pt-3"].join(" ")}
+                          onClick={() => closeNavMenu()}
+                        >
+                          {t("auth.drawerLogin")}
+                        </Link>
+                      )
+                    ) : null}
+                    <button
+                      type="button"
+                      className={[linkRowBase, linkRowIdle, "mt-1 border-t border-neutral-200/90 pt-3"].join(" ")}
+                      onClick={() => {
+                        closeNavMenu();
+                        setLocalePickerOpen(true);
+                      }}
+                    >
+                      {t("nav.language")}
+                    </button>
+                  </div>
+                </nav>
+              </aside>
+            </div>,
+            document.body,
+          )
+        : null}
+
       <LocalePickerModal open={localePickerOpen} onDismiss={() => setLocalePickerOpen(false)} />
     </>
   );

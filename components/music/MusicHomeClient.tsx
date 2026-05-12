@@ -5,15 +5,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
+import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
+import { resolveLocalized } from "@/lib/i18n/localized-text";
 import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
 
 type Props = {
   initialStore: MusicCompanionStore;
+  /**
+   * `templateChrome`：外层已由 `ShellTemplateChromeLayout` 提供顶栏与主区衬底；轮播经文与首页自然层同源（`HomeVerseRotator` + `prominence="nature"`）。
+   * 缺省为独立全屏音乐页（历史行为）。
+   */
+  layout?: "standalone" | "templateChrome";
 };
 
 function pickScene(store: MusicCompanionStore): Scene | null {
@@ -71,9 +79,16 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
   return store.audioTracks.filter((t) => t.src?.trim()).length;
 }
 
-export function MusicHomeClient({ initialStore }: Props) {
-  const { t } = useLocale();
+/** 与自然首页 `NatureVideoExperience` 中 `HomeVerseRotator` 同版心、同最小高度（浅色主区用 `variant="light"`） */
+const MUSIC_HOME_VERSE_CLASS =
+  "w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]";
+
+export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) {
+  const { t, locale } = useLocale();
+  const { bootstrapped, user } = useAskbibleUser();
+  const showAdminMusicLink = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const landscapeNarrow = useLandscapeNarrow();
+  const inTemplateChrome = layout === "templateChrome";
 
   const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc } = useMusicShellPlayback();
   const [store, setStore] = useState<MusicCompanionStore>(initialStore);
@@ -244,6 +259,11 @@ export function MusicHomeClient({ initialStore }: Props) {
     setTrackPoolIdx(next);
   }, [tracksWithSrc.length]);
 
+  const selectTrack = useCallback((idx: number) => {
+    bumpUserSkip();
+    setTrackPoolIdx(idx);
+  }, []);
+
   useEffect(() => {
     if (!landscapeNarrow) {
       document.documentElement.removeAttribute("data-landscape-immersive");
@@ -272,48 +292,104 @@ export function MusicHomeClient({ initialStore }: Props) {
   }, [landscapeNarrow]);
 
   return (
-    <div className="relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none">
+    <div
+      className={
+        inTemplateChrome
+          ? "relative mx-auto flex min-h-0 min-w-0 w-full max-w-md flex-1 flex-col overflow-hidden text-ink lg:mx-0 lg:max-w-none"
+          : "relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none"
+      }
+    >
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <AppShellTopBar tone="onLight" landscapeImmersive={landscapeNarrow} />
+        {!inTemplateChrome ? <AppShellTopBar tone="onLight" landscapeImmersive={landscapeNarrow} /> : null}
 
         <div
           className={`flex min-h-0 flex-1 flex-col overflow-hidden ${ln}:min-h-0 ${ln}:flex-row ${ln}:gap-2 ${ln}:px-2 ${ln}:pb-1`}
         >
           <div
-            className={`min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pt-[max(0.25rem,calc(env(safe-area-inset-top)+3.5rem))] ${ln}:min-w-0 ${ln}:overflow-y-auto ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`}
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+              inTemplateChrome
+                ? `pt-1 ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
+                : `pt-[max(0.25rem,calc(env(safe-area-inset-top)+3.5rem))] ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
+            }`}
           >
             <div
-              className={`relative z-10 flex flex-col items-center justify-start px-4 pt-5 text-center sm:px-5 sm:pt-6 lg:px-6 lg:pt-7 xl:px-8 ${ln}:h-full ${ln}:justify-center ${ln}:px-3 ${ln}:py-3`}
+              className={`relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-4 sm:px-5 lg:px-6 xl:px-8 ${ln}:px-3`}
             >
-              <div className="flex w-full max-w-xl flex-col items-center lg:max-w-2xl">
-                <div className={`min-w-0 w-full pt-[clamp(1rem,12dvh,6rem)] ${ln}:pt-1 ${ln}:max-w-[min(100%,28rem)]`}>
-                  {tracksWithSrc.length > 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => shuffleTrack()}
-                      aria-label={t("music.home.shuffleTrack")}
-                      className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-ink/[0.04]"
-                    >
+              <div
+                className={`flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch] ${ln}:py-2`}
+              >
+                <div className="flex w-full max-w-lg flex-col items-center justify-center sm:max-w-xl lg:max-w-2xl">
+                  <div className="min-w-0 w-full px-0 pt-2 sm:pt-3">
+                    {tracksWithSrc.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => shuffleTrack()}
+                        aria-label={t("music.home.shuffleTrack")}
+                        className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-ink/[0.04]"
+                      >
+                        <HomeVerseRotator
+                          variant="light"
+                          prominence="nature"
+                          className={MUSIC_HOME_VERSE_CLASS}
+                        />
+                      </button>
+                    ) : (
                       <HomeVerseRotator
                         variant="light"
-                        className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
+                        prominence="nature"
+                        className={MUSIC_HOME_VERSE_CLASS}
                       />
-                    </button>
-                  ) : (
-                    <HomeVerseRotator
-                      variant="light"
-                      className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"
-                    />
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {tracksWithSrc.length > 0 ? (
+                <section className="mx-auto w-full max-w-md shrink-0 px-2 pb-2 pt-3 sm:max-w-lg">
+                  <ul className="mx-auto max-h-[min(40dvh,20rem)] space-y-0.5 overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch]">
+                    {tracksWithSrc.map((tr, idx) => {
+                      const active = idx === resolvedTrackIdx;
+                      const titleText =
+                        resolveLocalized(tr.title, locale).trim() || t("music.home.trackUntitled");
+                      const artistText = resolveLocalized(tr.artist, locale).trim();
+                      const line = artistText ? `${titleText} · ${artistText}` : titleText;
+                      return (
+                        <li key={tr.id}>
+                          <button
+                            type="button"
+                            onClick={() => selectTrack(idx)}
+                            aria-current={active ? "true" : undefined}
+                            className={[
+                              "w-full max-w-full border-0 bg-transparent px-2 py-2.5 text-center transition-[color,font-size] motion-reduce:transition-none",
+                              active
+                                ? "text-[17px] font-medium leading-snug text-ink sm:text-[18px]"
+                                : "text-[13px] font-normal leading-snug text-ink/48 sm:text-[13.5px]",
+                            ].join(" ")}
+                          >
+                            <span className="inline-block max-w-full whitespace-normal break-words text-balance">
+                              {line}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ) : null}
+
               {!audioSrc ? (
-                <p className="mt-4 max-w-[16rem] text-xs leading-relaxed text-muted lg:max-w-md lg:text-sm">
-                  {t("music.home.noAudioBefore")}{" "}
-                  <Link href="/admin/music" className="underline underline-offset-2">
-                    {t("music.home.adminMusic")}
-                  </Link>{" "}
-                  {t("music.home.noAudioAfter")}
+                <p className="shrink-0 px-2 pb-3 pt-1 text-center text-xs leading-relaxed text-muted sm:text-sm">
+                  {showAdminMusicLink ? (
+                    <>
+                      {t("music.home.noAudioBefore")}{" "}
+                      <Link href="/admin/music" className="underline underline-offset-2">
+                        {t("music.home.adminMusic")}
+                      </Link>{" "}
+                      {t("music.home.noAudioAfter")}
+                    </>
+                  ) : (
+                    t("music.home.noAudioPlain")
+                  )}
                 </p>
               ) : null}
             </div>

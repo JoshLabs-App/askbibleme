@@ -14,7 +14,7 @@ type Props = {
  * 界面风格模板：与后台品牌预设同源，仅写本机 localStorage + body CSS 变量覆盖。
  */
 export function AppSkinPickerModal({ open, onDismiss }: Props) {
-  const { skin, setSkin } = useAppSkin();
+  const { skin, setSkin, shellTemplateBrand } = useAppSkin();
   const { t } = useLocale();
   const titleId = "app-skin-picker-title";
 
@@ -30,6 +30,11 @@ export function AppSkinPickerModal({ open, onDismiss }: Props) {
           {t("skin.title")}
         </h2>
         <p className="mt-1.5 text-[11px] leading-relaxed text-muted">{t("skin.hint")}</p>
+        {shellTemplateBrand ? (
+          <p className="mt-2 rounded-lg border border-sand/25 bg-canvas/80 px-2.5 py-2 text-[11px] leading-relaxed text-muted">
+            {t("skin.themeOverrideHint")}
+          </p>
+        ) : null}
         <ul className="mt-4 flex flex-col gap-1" role="listbox" aria-label={t("skin.listLabel")}>
           {USER_SKIN_ORDER.map((id) => {
             const selected = skin === id;

@@ -12,9 +12,11 @@ import {
   useMusicVisualTuning,
 } from "@/music-visual";
 import { MUSIC_VISUAL_TUNING_LIMITS as TL } from "@/music-visual/tuning/schema";
+import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellModal } from "@/components/ui/AppShellModal";
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 
 const HOME_BACKDROP_STORAGE_KEY = "selah-home-backdrop-mode";
 
@@ -248,6 +250,8 @@ function MusicVisualTuneRow(props: {
 
 export function HomeDashboard() {
   const { t } = useLocale();
+  const { bootstrapped, user } = useAskbibleUser();
+  const showAdminHomeLinks = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
   const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
@@ -451,14 +455,16 @@ export function HomeDashboard() {
                   role="menu"
                   className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md"
                 >
-                  <Link
-                    href="/admin/studio"
-                    role="menuitem"
-                    className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    内部 · Studio
-                  </Link>
+                  {showAdminHomeLinks ? (
+                    <Link
+                      href="/admin/studio"
+                      role="menuitem"
+                      className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      内部 · Studio
+                    </Link>
+                  ) : null}
                   <button
                     type="button"
                     role="menuitem"
@@ -470,14 +476,16 @@ export function HomeDashboard() {
                   >
                     播放视觉…
                   </button>
-                  <Link
-                    href="/admin/music"
-                    role="menuitem"
-                    className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    曲库与配图
-                  </Link>
+                  {showAdminHomeLinks ? (
+                    <Link
+                      href="/admin/music"
+                      role="menuitem"
+                      className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      曲库与配图
+                    </Link>
+                  ) : null}
                 </div>
               ) : null}
             </div>

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
 import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
@@ -15,6 +16,10 @@ import {
   parseLocale,
   type AppLocale,
 } from "@/lib/i18n/config";
+import {
+  SITE_METADATA_DEFAULT_TITLE,
+  SITE_METADATA_TITLE_TEMPLATE,
+} from "@/lib/site-metadata-defaults";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brandingReady = await brandingAssetsExist();
@@ -22,13 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     manifest: "/manifest.webmanifest",
     title: {
-      default: "Selah.my",
-      template: "%s | Selah.my",
+      default: SITE_METADATA_DEFAULT_TITLE,
+      template: SITE_METADATA_TITLE_TEMPLATE,
     },
     description: "安静回到经文的入口 — 正在成型。",
     appleWebApp: {
       capable: true,
-      title: "Selah.my",
+      title: SITE_METADATA_DEFAULT_TITLE,
       statusBarStyle: "black-translucent",
     },
     icons: brandingReady
@@ -84,10 +89,12 @@ export default async function RootLayout({
       <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
         <AppSkinProvider>
           <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
-            <MusicShellPlaybackProvider>
-              {children}
-              <AppUpdateNotifier />
-            </MusicShellPlaybackProvider>
+            <AskbibleUserProvider>
+              <MusicShellPlaybackProvider>
+                {children}
+                <AppUpdateNotifier />
+              </MusicShellPlaybackProvider>
+            </AskbibleUserProvider>
           </LocaleProvider>
         </AppSkinProvider>
       </body>

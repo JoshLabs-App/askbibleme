@@ -1,13 +1,19 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { ADMIN_ASKBIBLE_SESSION_COOKIE, verifyAskbibleSessionCookie } from "@/lib/admin-askbible-session";
+import {
+  ADMIN_ASKBIBLE_SESSION_COOKIE,
+  USER_ASKBIBLE_SESSION_COOKIE,
+  parseAskbibleSessionCookie,
+  verifyAskbibleSessionCookie,
+} from "@/lib/admin-askbible-session";
 import { ADMIN_GATE_COOKIE, verifyAdminGateCookie } from "@/lib/admin-gate";
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { isAdminEmail } from "@/lib/supabase/admin-allowlist";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { copyCookiesTo, updateSupabaseSession } from "@/lib/supabase/middleware";
 
 /**
- * `/admin`：AskBible 复用会话（HMAC cookie）→ Supabase + 白名单 → 工作室 HMAC cookie。
+ * `/admin`：AskBible 管理 cookie → 固定超级管理员前台会话 → Supabase + 白名单 → 工作室 HMAC cookie。
  */
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -28,8 +34,12 @@ export async function middleware(request: NextRequest) {
 
   const { response: supaResponse, userEmail } = await updateSupabaseSession(request);
 
+  const userCookieRaw = request.cookies.get(USER_ASKBIBLE_SESSION_COOKIE)?.value;
+  const userPayload = await parseAskbibleSessionCookie(userCookieRaw);
+  const superAdminViaUserCookie = Boolean(userPayload && isSelahSuperAdminEmail(userPayload.email));
+
   if (isSupabaseConfigured()) {
-    const adminOk = Boolean(userEmail && isAdminEmail(userEmail));
+    const adminOk = Boolean(userEmail && isAdminEmail(userEmail)) || superAdminViaUserCookie;
 
     if (pathname === "/admin/login") {
       if (adminOk) {
@@ -60,6 +70,15 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname === "/admin/login") {
+    if (superAdminViaUserCookie) {
+      const nextRaw = request.nextUrl.searchParams.get("next")?.trim() || "/admin";
+      const safe = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/admin";
+      return NextResponse.redirect(new URL(safe, request.nextUrl.origin));
+    }
+    return NextResponse.next();
+  }
+
+  if (superAdminViaUserCookie) {
     return NextResponse.next();
   }
 

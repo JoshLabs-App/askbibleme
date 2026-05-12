@@ -1,4 +1,5 @@
 import { AppShellPlaceholder } from "@/components/shell/AppShellPlaceholder";
+import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 
 export const metadata = {
   title: "旅程 | Selah.my",
@@ -7,10 +8,13 @@ export const metadata = {
 
 export default function JourneyPlaceholderPage() {
   return (
-    <AppShellPlaceholder
-      titleKey="pages.journey.title"
-      leadKey="pages.journey.lead"
-      bodyKey="pages.journey.body"
-    />
+    <ShellTemplateChromeLayout contentClassName="gap-0">
+      <AppShellPlaceholder
+        embedded
+        titleKey="pages.journey.title"
+        leadKey="pages.journey.lead"
+        bodyKey="pages.journey.body"
+      />
+    </ShellTemplateChromeLayout>
   );
 }

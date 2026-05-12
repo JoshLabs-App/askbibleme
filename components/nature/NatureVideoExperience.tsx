@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { ImmersiveAmbientClock } from "@/components/home/ImmersiveAmbientClock";
@@ -18,7 +19,11 @@ import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
-import { HOME_DOCK_NAV_BG } from "@/lib/shell/home-dock-nav-bg";
+import { useShellTemplateChromeTuneFromStorage } from "@/hooks/useShellTemplateChromeTuneFromStorage";
+import {
+  shellTemplateChromeScrimBackgrounds,
+  shellTemplatePreviewThemeById,
+} from "@/lib/shell/template-preview-themes";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
@@ -72,16 +77,13 @@ function IconBellMuted(props: { className?: string }) {
 
 type Props = {
   initial: NatureSettingsV2;
+  /** 与 `/template` 同源：顶/底压边渐变用 `shellTemplateChromeScrimBackgrounds` + 本机已存 `chromeTune` */
+  brandChrome: { appLight: string; appDark: string };
 };
 
-/** 背景视频槽：与底栏 `bg-canvas` / `HOME_DOCK_NAV_BG` 同色，避免与 slate-950 接缝 */
+/** 背景视频槽：与滚动区 `canvas` 对齐；底栏用 `appDark`，与主区背景色系一致衔接 */
 const NATURE_VIDEO_STAGE_FRAME =
-  "relative z-[1] w-full shrink-0 overflow-hidden bg-canvas transform-gpu min-h-[12rem] -mb-px";
-
-/** 视频槽底缘压层：自下而上，前 5% 为实色再上渐隐（与 `HOME_DOCK_NAV_BG` 同源） */
-const NATURE_VIDEO_BOTTOM_SCRIM_STYLE: CSSProperties = {
-  background: `linear-gradient(to top, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 5%, color-mix(in srgb, ${HOME_DOCK_NAV_BG} 34%, transparent) 47%, transparent 100%)`,
-};
+  "relative z-[1] w-full shrink-0 overflow-hidden bg-canvas transform-gpu min-h-[12rem]";
 
 /** 与背景 `<video>` 同定位，静图叠层与之对齐以免切换时「跳一下」 */
 const NATURE_BG_COVER_MEDIA =
@@ -132,8 +134,9 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
  * 自然：背景视频限高在「视口 − 底栏」槽内；经文叠在视频上；场景与快捷入口在视频下方独立流式区域（与视频解耦）。
  */
-export function NatureVideoExperience({ initial }: Props) {
+export function NatureVideoExperience({ initial, brandChrome }: Props) {
   const { t } = useLocale();
+  const { shellTemplateBrand } = useAppSkin();
   const { dockChromeVisible, setDockChromeVisible, toggleDockChrome } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
   const prepareAbortRef = useRef<AbortController | null>(null);
@@ -154,6 +157,43 @@ export function NatureVideoExperience({ initial }: Props) {
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
   );
   const landscapeNarrow = useLandscapeNarrow();
+  const chromeTune = useShellTemplateChromeTuneFromStorage();
+
+  const scrimBrandChrome = useMemo(() => {
+    if (shellTemplateBrand) {
+      const c = shellTemplatePreviewThemeById(shellTemplateBrand).colors;
+      return { appLight: c.appLight, appDark: c.appDark };
+    }
+    return brandChrome;
+  }, [shellTemplateBrand, brandChrome]);
+
+  const shellChrome = useMemo(
+    () =>
+      shellTemplateChromeScrimBackgrounds(
+        scrimBrandChrome.appLight,
+        scrimBrandChrome.appDark,
+        chromeTune,
+      ),
+    [scrimBrandChrome.appLight, scrimBrandChrome.appDark, chromeTune],
+  );
+
+  const natureTopScrimStyle = useMemo(
+    (): CSSProperties => ({
+      background: shellChrome.topBackground,
+      height: `${chromeTune.topHeightRem}rem`,
+      minHeight: chromeTune.topHeightMinPx,
+    }),
+    [shellChrome.topBackground, chromeTune.topHeightRem, chromeTune.topHeightMinPx],
+  );
+
+  const natureBottomScrimStyle = useMemo(
+    (): CSSProperties => ({
+      background: shellChrome.bottomBackground,
+      height: `${chromeTune.bottomHeightRem}rem`,
+      minHeight: chromeTune.bottomHeightMinPx,
+    }),
+    [shellChrome.bottomBackground, chromeTune.bottomHeightRem, chromeTune.bottomHeightMinPx],
+  );
 
   useEffect(() => {
     const next = initial.activeVideoId.trim() || initial.videos[0]?.id || "";
@@ -520,12 +560,10 @@ export function NatureVideoExperience({ initial }: Props) {
   }, []);
 
   return (
-    <div className="relative flex w-full flex-col self-start overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
+    <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
       <div
-        className="pointer-events-none fixed inset-x-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[6] h-[clamp(2.75rem,10dvh,5rem)] sm:h-[clamp(3rem,8dvh,4.5rem)]"
-        style={{
-          background: `linear-gradient(to bottom, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 5%, rgba(20, 60, 96, 0.28) 42%, rgba(20, 60, 96, 0.08) 72%, transparent 100%)`,
-        }}
+        className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
+        style={natureTopScrimStyle}
         aria-hidden
       />
 
@@ -612,8 +650,8 @@ export function NatureVideoExperience({ initial }: Props) {
             ) : null}
           </div>
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[min(36dvh,14rem)] sm:h-[min(32dvh,15rem)]"
-            style={NATURE_VIDEO_BOTTOM_SCRIM_STYLE}
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] w-full"
+            style={natureBottomScrimStyle}
             aria-hidden
           />
           {(showSlowIntroHint || showPlaybackWaitHint) && (

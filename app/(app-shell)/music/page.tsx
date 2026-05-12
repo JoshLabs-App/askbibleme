@@ -1,4 +1,5 @@
 import { MusicHomeClient } from "@/components/music/MusicHomeClient";
+import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +12,8 @@ export const metadata = {
 export default async function MusicPage() {
   const store = await readMusicCompanionStore(process.cwd());
   return (
-    <div className="flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden bg-canvas lg:h-full lg:max-h-none">
-      <MusicHomeClient initialStore={store} />
-    </div>
+    <ShellTemplateChromeLayout contentClassName="gap-0">
+      <MusicHomeClient initialStore={store} layout="templateChrome" />
+    </ShellTemplateChromeLayout>
   );
 }

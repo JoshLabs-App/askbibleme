@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { ADMIN_MAIN_CLASS } from "@/components/admin/admin-layout";
 import { readShellPlaybackPersisted } from "@/lib/music-companion/shell-playback-storage";
 import { primaryLocaleText } from "@/lib/i18n/localized-text";
+import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { MusicVisualTuningForm } from "@/music-visual/components/MusicVisualTuningForm";
 import {
   isHomeAtmospherePresetId,
@@ -37,6 +39,8 @@ export function MusicVisualConsoleClient({
   embeddedInAdmin?: boolean;
 }) {
   const pathname = usePathname() ?? "";
+  const { bootstrapped, user } = useAskbibleUser();
+  const showAdminHeaderLinks = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const {
     effectiveSrc,
     shellDefaultSrc,
@@ -229,12 +233,16 @@ export function MusicVisualConsoleClient({
               <Link href="/music" className="text-muted transition hover:text-ink">
                 首页
               </Link>
-              <Link href="/admin/music" className="text-muted transition hover:text-ink">
-                曲库与配图
-              </Link>
-              <Link href="/admin/studio" className="text-muted transition hover:text-ink">
-                Studio
-              </Link>
+              {showAdminHeaderLinks ? (
+                <>
+                  <Link href="/admin/music" className="text-muted transition hover:text-ink">
+                    曲库与配图
+                  </Link>
+                  <Link href="/admin/studio" className="text-muted transition hover:text-ink">
+                    Studio
+                  </Link>
+                </>
+              ) : null}
             </div>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted">

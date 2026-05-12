@@ -38,6 +38,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/studio", labelKey: "admin.items.studio" },
       { href: "/admin/system/settings", labelKey: "admin.items.settings" },
+      { href: "/admin/system/shell-chrome", labelKey: "admin.items.shellChrome" },
       { href: "/admin/system/media-library", labelKey: "admin.items.mediaLibrary" },
     ],
   },
@@ -84,8 +85,8 @@ function navLeafClass(active: boolean) {
   return [
     "block rounded-md py-1 pl-2.5 pr-2 text-[12px] font-normal tracking-[0.01em] transition-colors md:pl-3",
     active
-      ? "bg-ink/[0.07] text-adminFg"
-      : "text-adminMuted hover:bg-ink/[0.05] hover:text-adminFg/90",
+      ? "bg-adminFg/[0.08] text-adminFg"
+      : "text-adminMuted hover:bg-adminFg/[0.05] hover:text-adminFg/90",
   ].join(" ");
 }
 
@@ -93,8 +94,8 @@ function navOverviewClass(active: boolean) {
   return [
     "block rounded-md px-2.5 py-1.5 text-[12px] font-normal tracking-[0.01em] transition-colors",
     active
-      ? "bg-ink/[0.07] text-adminFg"
-      : "text-adminMuted hover:bg-ink/[0.05] hover:text-adminFg/90",
+      ? "bg-adminFg/[0.08] text-adminFg"
+      : "text-adminMuted hover:bg-adminFg/[0.05] hover:text-adminFg/90",
   ].join(" ");
 }
 
@@ -267,7 +268,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={open}
-              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-adminFg/[0.05] hover:text-adminFg/85"
             >
               {t("admin.language")}
             </button>
@@ -278,7 +279,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={open}
-              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-adminFg/[0.05] hover:text-adminFg/85"
             >
               {t("admin.appearance")}
             </button>
@@ -302,13 +303,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             }
             window.location.href = "/";
           }}
-          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+          className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-adminFg/[0.05] hover:text-adminFg/85"
         >
           {t("admin.login.signOut")}
         </button>
         <Link
           href="/"
-          className="block rounded-md px-2.5 py-1.5 text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
+          className="block rounded-md px-2.5 py-1.5 text-[11px] text-adminMuted transition-colors hover:bg-adminFg/[0.05] hover:text-adminFg/85"
         >
           {t("admin.backToApp")}
         </Link>
@@ -319,12 +320,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col bg-adminBg text-adminFg md:flex-row md:overflow-hidden">
       {/* 移动端：整宽底边分隔 */}
-      <aside className="flex w-full shrink-0 flex-col border-b border-adminLine px-3 py-4 md:hidden">{asideInner}</aside>
+      <aside className="flex w-full shrink-0 flex-col border-b border-adminLine bg-adminPanel px-3 py-4 md:hidden">
+        {asideInner}
+      </aside>
 
       {/* 桌面端：可拖宽度 + 向右阴影 */}
       <div className="relative hidden min-h-0 shrink-0 self-stretch md:flex md:flex-row">
         <aside
-          className="flex max-h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain border-0 px-3 py-6 shadow-[8px_0_32px_-18px_rgba(44,40,36,0.18)]"
+          className="flex max-h-full min-h-0 flex-col overflow-y-auto overscroll-y-contain border-r border-adminLine/90 bg-adminPanel px-3 py-6 shadow-[4px_0_28px_-16px_rgba(15,15,15,0.07)]"
           style={{ width: sidebarPx }}
         >
           {asideInner}
@@ -333,7 +336,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           type="button"
           aria-label={t("admin.resizeSidebar")}
           onPointerDown={onSidebarResizePointerDown}
-          className="group relative z-10 w-[10px] shrink-0 cursor-col-resize touch-none select-none self-stretch border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-ink/15 focus-visible:ring-offset-2 focus-visible:ring-offset-adminBg"
+          className="group relative z-10 w-[10px] shrink-0 cursor-col-resize touch-none select-none self-stretch border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-adminFg/15 focus-visible:ring-offset-2 focus-visible:ring-offset-adminPanel"
         >
           <span
             className={`pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-adminLine/45 transition-colors ${
@@ -345,8 +348,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* 桌面端原先 md:overflow-hidden 会吃掉主区滚动；内层单独 overflow-y-auto，Studio 等全高页仍可用 flex-1 + min-h-0 撑满 */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-hidden bg-adminBg">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain bg-adminBg [-webkit-overflow-scrolling:touch]">
           {children}
         </div>
       </div>

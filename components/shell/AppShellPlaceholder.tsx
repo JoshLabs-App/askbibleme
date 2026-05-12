@@ -14,6 +14,10 @@ type Props = {
   /** 次要入口（如圣经目录） */
   secondaryCtaHref?: string;
   secondaryCtaLabelKey?: string;
+  /**
+   * 为 true 时不渲染外层 `main`，仅输出版心内容，供 `ShellTemplateChromeLayout` 等统一壳包裹。
+   */
+  embedded?: boolean;
 };
 
 /**
@@ -27,34 +31,47 @@ export function AppShellPlaceholder({
   ctaLabelKey = "chrome.backHome",
   secondaryCtaHref,
   secondaryCtaLabelKey,
+  embedded = false,
 }: Props) {
   const { t } = useLocale();
+  const body = (
+    <div className="mx-auto max-w-md">
+      <h1 className="font-serif text-[clamp(1.35rem,4vw,1.85rem)] font-medium leading-snug tracking-[0.03em] text-ink/90">
+        {t(titleKey)}
+      </h1>
+      <div className="mx-auto mt-5 h-px w-10 bg-border/55" aria-hidden />
+      <p className="mt-5 text-[14px] font-normal leading-relaxed text-ink/78 sm:text-[15px]">{t(leadKey)}</p>
+      <p className="mt-4 text-[13px] leading-[1.65] text-muted sm:text-[14px]">{t(bodyKey)}</p>
+      <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <Link
+          href={ctaHref}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/60 bg-surface/80 px-5 text-[13px] font-medium text-ink/88 shadow-sm transition hover:border-border hover:bg-surface hover:text-ink"
+        >
+          {t(ctaLabelKey)}
+        </Link>
+        {secondaryCtaHref && secondaryCtaLabelKey ? (
+          <Link
+            href={secondaryCtaHref}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/45 bg-transparent px-5 text-[13px] font-medium text-ink/75 transition hover:border-border hover:bg-surface/60 hover:text-ink"
+          >
+            {t(secondaryCtaLabelKey)}
+          </Link>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex w-full min-w-0 flex-1 flex-col items-center justify-center overflow-x-hidden text-center">
+        {body}
+      </div>
+    );
+  }
+
   return (
     <main className="flex min-h-full min-w-0 w-full flex-1 flex-col items-center justify-center overflow-x-hidden px-6 pb-10 text-center text-ink">
-      <div className="mx-auto max-w-md">
-        <h1 className="font-serif text-[clamp(1.35rem,4vw,1.85rem)] font-medium leading-snug tracking-[0.03em] text-ink/90">
-          {t(titleKey)}
-        </h1>
-        <div className="mx-auto mt-5 h-px w-10 bg-border/55" aria-hidden />
-        <p className="mt-5 text-[14px] font-normal leading-relaxed text-ink/78 sm:text-[15px]">{t(leadKey)}</p>
-        <p className="mt-4 text-[13px] leading-[1.65] text-muted sm:text-[14px]">{t(bodyKey)}</p>
-        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href={ctaHref}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/60 bg-surface/80 px-5 text-[13px] font-medium text-ink/88 shadow-sm transition hover:border-border hover:bg-surface hover:text-ink"
-          >
-            {t(ctaLabelKey)}
-          </Link>
-          {secondaryCtaHref && secondaryCtaLabelKey ? (
-            <Link
-              href={secondaryCtaHref}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border/45 bg-transparent px-5 text-[13px] font-medium text-ink/75 transition hover:border-border hover:bg-surface/60 hover:text-ink"
-            >
-              {t(secondaryCtaLabelKey)}
-            </Link>
-          ) : null}
-        </div>
-      </div>
+      {body}
     </main>
   );
 }

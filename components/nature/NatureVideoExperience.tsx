@@ -495,8 +495,7 @@ export function NatureVideoExperience({ initial }: Props) {
             key={videoSrc}
             className={[
               NATURE_BG_COVER_MEDIA,
-              "z-[1] border-0 outline-none motion-reduce:animate-none",
-              introRevealed ? "max-sm:animate-nature-widescreen-pan" : "",
+              "z-[1] border-0 outline-none",
               "transition-opacity duration-700 ease-out motion-reduce:transition-none",
               introRevealed ? "opacity-100" : "opacity-0",
             ].join(" ")}

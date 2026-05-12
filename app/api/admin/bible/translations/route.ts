@@ -38,7 +38,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   if (!isStudioDiskSaveAllowed(req)) return disk403();
-  let form: FormData;
+  let form: Awaited<ReturnType<Request["formData"]>>;
   try {
     form = await req.formData();
   } catch {

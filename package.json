@@ -21,7 +21,7 @@
     "ship:data": "bash scripts/ship-data-config.sh",
     "mobile:start": "npm run start --prefix apps/selah-mobile",
     "mobile:ios": "npm run ios --prefix apps/selah-mobile",
-    "mobile:android": "npm run android --prefix apps/selah-mobile",
+    "mobile:android": "bash scripts/run-mobile-android.sh",
     "dev:open": "bash scripts/launchers/run-dev-open-tabs.sh dev",
     "dev:restart:open": "bash scripts/launchers/run-dev-open-tabs.sh restart"
   },

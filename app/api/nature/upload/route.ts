@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let form: FormData;
+  let form: Awaited<ReturnType<Request["formData"]>>;
   try {
     form = await req.formData();
   } catch {

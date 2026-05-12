@@ -1,5 +1,5 @@
 /**
- * 底栏主导航：与 `HomeBottomNav` 四项对应。
+ * 底栏主导航图标（可选）：与 `HomeBottomNav` 左右四项 + 中央播放键可对应使用。
  * 图标始终同一套描边，颜色随父级 `currentColor`（与标签一致），贴近 iOS Tab Bar 的模板着色。
  */
 export type NavTabIconProps = {

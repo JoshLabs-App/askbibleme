@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
-import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
 const itemDefs: {
@@ -13,19 +13,16 @@ const itemDefs: {
   labelKey: string;
   match: (p: string) => boolean;
 }[] = [
-  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" || p === "/nature" },
-  { href: "/journey", labelKey: "nav.journey", match: (p) => p.startsWith("/journey") },
-  { href: "/read", labelKey: "nav.read", match: (p) => p.startsWith("/read") },
+  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/") },
+  { href: "/music", labelKey: "nav.music", match: (p) => p.startsWith("/music") },
+  { href: "/relax", labelKey: "nav.relax", match: (p) => p.startsWith("/relax") },
   { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },
 ];
 
 function navLinkClass(active: boolean) {
   const base =
     "flex min-h-0 min-w-0 flex-1 basis-0 flex-col items-center justify-center px-0.5 py-0 text-[13px] font-medium leading-tight tracking-wide transition sm:px-0.5 sm:text-[14px]";
-  return [
-    base,
-    active ? "text-white" : "text-white/45 hover:text-white/75",
-  ].join(" ");
+  return [base, active ? "text-white" : "text-white/45 hover:text-white/75"].join(" ");
 }
 
 const navItemTextClass = "max-w-full truncate text-center";

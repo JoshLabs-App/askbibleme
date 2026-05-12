@@ -3,7 +3,7 @@ import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChrom
 
 export const metadata = {
   title: "探索 | Selah.my",
-  description: "适合慢慢走的人：转角会有轻轻松一口气的地方，音乐和放松也随时欢迎你。",
+  description: "更多小惊喜正在路上；首页、音乐与放松里，也有随行的小惊喜。",
 };
 
 export default function ExplorePlaceholderPage() {

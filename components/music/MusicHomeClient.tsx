@@ -362,8 +362,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                             className={[
                               "w-full max-w-full border-0 bg-transparent px-2 py-2.5 text-center transition-[color,font-size] motion-reduce:transition-none",
                               active
-                                ? "text-[17px] font-medium leading-snug text-ink sm:text-[18px]"
-                                : "text-[13px] font-normal leading-snug text-ink/48 sm:text-[13.5px]",
+                                ? "text-[14px] font-normal leading-snug text-ink/52 sm:text-[15px]"
+                                : "text-[12.5px] font-normal leading-snug text-ink/22 hover:text-ink/34 sm:text-[13px]",
                             ].join(" ")}
                           >
                             <span className="inline-block max-w-full whitespace-normal break-words text-balance">

@@ -1,13 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { LagoonBreatheOrb } from "@/components/calm/LagoonBreatheOrb";
 import { AmbientBackdrop } from "@/components/music/AmbientBackdrop";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import {
-  HOME_ATMOSPHERE_PRESETS,
-  readStoredMusicHomeAtmosphere,
   writeStoredMusicHomeAtmosphere,
   type HomeAtmospherePresetId,
   useMusicShellAtmosphereOverride,
@@ -20,18 +18,8 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
 
-const SacredAtmosphereCanvas = dynamic(
-  () =>
-    import("@/music-visual/components/sacred-atmosphere/SacredAtmosphereCanvas").then((m) => ({
-      default: m.SacredAtmosphereCanvas,
-    })),
-  { ssr: false },
-);
-
 type Props = {
   initialStore: MusicCompanionStore;
-  /** URL `?atmosphere=` 或旧 `?ambient=`；null 时不覆盖 Context（沿用 localStorage） */
-  atmosphereUrlOverride: HomeAtmospherePresetId | null;
 };
 
 function pickScene(store: MusicCompanionStore): Scene | null {
@@ -89,30 +77,15 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
   return store.audioTracks.filter((t) => t.src?.trim()).length;
 }
 
-function replaceAtmosphereSearchParam(id: HomeAtmospherePresetId) {
-  if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
-  url.searchParams.delete("ambient");
-  url.searchParams.set("atmosphere", id);
-  window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
-}
-
-export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) {
+export function MusicHomeClient({ initialStore }: Props) {
   const { t } = useLocale();
   const landscapeNarrow = useLandscapeNarrow();
   const { setOverrideId, clearOverride } = useMusicShellAtmosphereOverride();
-  const [musicAtmosphereId, setMusicAtmosphereId] = useState<HomeAtmospherePresetId>(
-    () => atmosphereUrlOverride ?? "lagoon",
-  );
+  const musicAtmosphereId: HomeAtmospherePresetId = "lagoon";
 
   useLayoutEffect(() => {
-    if (atmosphereUrlOverride) {
-      setMusicAtmosphereId(atmosphereUrlOverride);
-      writeStoredMusicHomeAtmosphere(atmosphereUrlOverride);
-    } else {
-      setMusicAtmosphereId(readStoredMusicHomeAtmosphere());
-    }
-  }, [atmosphereUrlOverride]);
+    writeStoredMusicHomeAtmosphere("lagoon");
+  }, []);
 
   useLayoutEffect(() => {
     setOverrideId(musicAtmosphereId);
@@ -327,12 +300,12 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
       <div className="pointer-events-none absolute inset-0 z-0 isolate min-h-full min-w-full overflow-hidden music-reactive-home-shell">
         <AmbientBackdrop preset={musicAtmosphereId} />
         <div
-          className={`pointer-events-none absolute inset-0 z-[2] mix-blend-soft-light ${
+          className={`pointer-events-none absolute inset-0 z-[2] flex items-center justify-center mix-blend-soft-light ${
             lagoonLight ? "opacity-[0.22]" : "opacity-[0.44]"
           }`}
           aria-hidden
         >
-          <SacredAtmosphereCanvas homeAtmospherePresetId={musicAtmosphereId} />
+          <LagoonBreatheOrb />
         </div>
       </div>
       <div className="pointer-events-none absolute inset-0 z-[3]" aria-hidden>
@@ -456,37 +429,6 @@ export function MusicHomeClient({ initialStore, atmosphereUrlOverride }: Props) 
           </div>
         ) : null}
 
-        <div className="flex flex-col items-center gap-2 pt-2 lg:gap-2.5 lg:pt-3">
-          <div
-            className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 px-2 pt-0.5 lg:gap-x-3.5 lg:pt-1"
-            role="group"
-            aria-label={t("music.home.ambientPicker")}
-          >
-            {HOME_ATMOSPHERE_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => {
-                  setMusicAtmosphereId(p.id);
-                  writeStoredMusicHomeAtmosphere(p.id);
-                  replaceAtmosphereSearchParam(p.id);
-                }}
-                aria-current={musicAtmosphereId === p.id ? "true" : undefined}
-                className={`px-1 py-0.5 text-[10px] font-normal tracking-[0.14em] transition ${
-                  musicAtmosphereId === p.id
-                    ? lagoonLight
-                      ? "text-sky-700"
-                      : "text-white/[0.72]"
-                    : lagoonLight
-                      ? "text-ink/35 hover:text-ink/55"
-                      : "text-white/[0.32] hover:text-white/[0.48]"
-                }`}
-              >
-                {t(`music.atmosphere.${p.id}`)}
-              </button>
-            ))}
-          </div>
-        </div>
       </footer>
         </div>
       </div>

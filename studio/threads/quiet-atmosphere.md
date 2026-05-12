@@ -1,4 +1,4 @@
-# Thread · Sacred Atmosphere（氛围 / 神圣感）
+# Thread · 安静氛围（分寸与边界）
 
 主题：分寸感、避免宗教展演感与过度「灵修产品」气质。
 

@@ -58,7 +58,7 @@ export type MusicVisualTuningFormProps = {
 };
 
 /**
- * 首页氛围 + 引擎映射说明 + 播放视觉调参（localStorage，与 WebGL / `--music-*` 同源）。
+ * 首页氛围 + 引擎映射说明 + 播放视觉调参（localStorage，与 `--music-*` 同源）。
  */
 export function MusicVisualTuningForm({
   className = "",
@@ -142,7 +142,7 @@ export function MusicVisualTuningForm({
 
       <section className={secLast}>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className={h2}>播放视觉调参（WebGL / CSS）</h2>
+          <h2 className={h2}>播放视觉调参（CSS）</h2>
           <button type="button" onClick={() => resetTuning()} className={btnBorder}>
             恢复默认
           </button>

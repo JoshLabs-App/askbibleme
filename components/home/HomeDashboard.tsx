@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import {
@@ -16,14 +15,6 @@ import { MUSIC_VISUAL_TUNING_LIMITS as TL } from "@/music-visual/tuning/schema";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellModal } from "@/components/ui/AppShellModal";
-
-const SacredAtmosphereCanvas = dynamic(
-  () =>
-    import("@/music-visual/components/sacred-atmosphere/SacredAtmosphereCanvas").then((m) => ({
-      default: m.SacredAtmosphereCanvas,
-    })),
-  { ssr: false },
-);
 
 const HOME_BACKDROP_STORAGE_KEY = "selah-home-backdrop-mode";
 
@@ -388,14 +379,6 @@ export function HomeDashboard() {
           />
         ) : null}
         {!isImage ? <AtmosphereLayers preset={atmospherePreset} /> : null}
-        {!isImage && homeDarkAtmosphere ? (
-          <div
-            className="pointer-events-none absolute inset-0 z-[4] opacity-[0.38] mix-blend-soft-light"
-            aria-hidden
-          >
-            <SacredAtmosphereCanvas />
-          </div>
-        ) : null}
         {isImage ? (
           <div
             className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/50 via-black/15 to-black/72"

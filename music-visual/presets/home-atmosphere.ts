@@ -24,20 +24,15 @@ export const HOME_ATMOSPHERE_STORAGE_KEY = "selah-home-atmosphere-preset";
 /** 音乐页独立默认（静湖）；未写入时与首页氛围存储解耦 */
 export const MUSIC_HOME_ATMOSPHERE_STORAGE_KEY = "selah-music-home-atmosphere-v1";
 
+/** 音乐页仅保留「静湖」；忽略历史 localStorage 与其它 ID。 */
 export function readStoredMusicHomeAtmosphere(): HomeAtmospherePresetId {
-  if (typeof window === "undefined") return "lagoon";
-  try {
-    const raw = window.localStorage.getItem(MUSIC_HOME_ATMOSPHERE_STORAGE_KEY);
-    if (isHomeAtmospherePresetId(raw)) return raw;
-  } catch {
-    /* ignore */
-  }
   return "lagoon";
 }
 
-export function writeStoredMusicHomeAtmosphere(id: HomeAtmospherePresetId): void {
+export function writeStoredMusicHomeAtmosphere(_id: HomeAtmospherePresetId): void {
+  if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(MUSIC_HOME_ATMOSPHERE_STORAGE_KEY, id);
+    window.localStorage.setItem(MUSIC_HOME_ATMOSPHERE_STORAGE_KEY, "lagoon");
   } catch {
     /* ignore */
   }
@@ -53,7 +48,7 @@ export const HOME_ATMOSPHERE_TO_MUSIC_VISUAL: Record<HomeAtmospherePresetId, Mus
   ember: "worship",
 };
 
-/** 旧 `?ambient=calm|ember|aurora` → 当前首页氛围 ID（与后台 / WebGL 同源） */
+/** 旧 `?ambient=calm|ember|aurora` → 当前首页氛围 ID（与后台同源） */
 export function legacyAmbientQueryToHomeAtmosphere(
   raw: string | string[] | undefined,
 ): HomeAtmospherePresetId | null {

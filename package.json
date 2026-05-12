@@ -16,24 +16,27 @@
     "start": "next start",
     "lint": "next lint",
     "nature:backfill-preview-frames": "node scripts/backfill-nature-preview-frames.mjs",
-    "import:bible": "node scripts/import-askbible-usfx.mjs"
+    "import:bible": "node scripts/import-askbible-usfx.mjs",
+    "ship": "bash scripts/ship.sh",
+    "ship:data": "bash scripts/ship-data-config.sh",
+    "mobile:start": "npm run start --prefix apps/selah-mobile",
+    "mobile:ios": "npm run ios --prefix apps/selah-mobile",
+    "mobile:android": "npm run android --prefix apps/selah-mobile",
+    "dev:open": "bash scripts/launchers/run-dev-open-tabs.sh dev",
+    "dev:restart:open": "bash scripts/launchers/run-dev-open-tabs.sh restart"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "sharp": "^0.34.5",
-    "three": "^0.170.0"
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/three": "^0.170.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.3.0",

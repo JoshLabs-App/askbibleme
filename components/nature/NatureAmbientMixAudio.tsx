@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type MutableRefObject, type RefObject } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 
 type Layer = { layerId: string; src: string; volume: number };
@@ -12,6 +12,7 @@ function SyncLoopAmbient({
   src,
   volume,
   ambientMuted,
+  ambientMutedRef,
   playbackRate,
   videoRef,
   setAudioEl,
@@ -21,8 +22,9 @@ function SyncLoopAmbient({
   src: string;
   volume: number;
   ambientMuted: boolean;
+  ambientMutedRef: MutableRefObject<boolean>;
   playbackRate: number;
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+  videoRef: RefObject<HTMLVideoElement | null>;
   setAudioEl: (el: HTMLAudioElement | null) => void;
   /** 为 true：挂载后即尝试播放，且不随视频 pause 而暂停（首页「先声后画」阶段） */
   ambientLead: boolean;
@@ -36,12 +38,23 @@ function SyncLoopAmbient({
     setAudioEl(el);
   };
 
+  /** iOS 等：`volume` 不可靠；顶栏静音用 `muted` + `pause()`，恢复时再 `play()`。 */
   useEffect(() => {
     const a = aRef.current;
     if (!a) return;
     const g = Math.max(0, Math.min(1, underShellMusicGain));
-    a.volume = ambientMuted ? 0 : Math.min(1, volume * g);
-  }, [ambientMuted, volume, underShellMusicGain, src]);
+    const targetVol = Math.min(1, volume * g);
+    a.muted = ambientMuted;
+    a.volume = targetVol;
+    if (ambientMuted) {
+      a.pause();
+      return;
+    }
+    const v = videoRef.current;
+    if (ambientLead || (v && !v.paused)) {
+      void a.play().catch(() => {});
+    }
+  }, [ambientMuted, volume, underShellMusicGain, src, ambientLead, videoRef]);
 
   useEffect(() => {
     const a = aRef.current;
@@ -54,7 +67,7 @@ function SyncLoopAmbient({
     }
 
     if (ambientLead) {
-      void a.play().catch(() => {});
+      if (!ambientMutedRef.current) void a.play().catch(() => {});
     }
 
     const v = videoRef.current;
@@ -65,6 +78,7 @@ function SyncLoopAmbient({
     }
 
     const onPlay = () => {
+      if (ambientMutedRef.current) return;
       void a.play().catch(() => {});
     };
     const onPause = () => {
@@ -72,13 +86,13 @@ function SyncLoopAmbient({
     };
     v.addEventListener("play", onPlay);
     v.addEventListener("pause", onPause);
-    if (!ambientLead && !v.paused) void a.play().catch(() => {});
+    if (!ambientLead && !v.paused && !ambientMutedRef.current) void a.play().catch(() => {});
     return () => {
       v.removeEventListener("play", onPlay);
       v.removeEventListener("pause", onPause);
       a.pause();
     };
-  }, [src, playbackRate, videoRef, ambientLead]);
+  }, [src, playbackRate, videoRef, ambientLead, ambientMutedRef]);
 
   return <audio ref={bindRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
 }
@@ -94,9 +108,9 @@ export function NatureAmbientMixAudio({
   ambientLead = false,
 }: {
   layers: Layer[];
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+  videoRef: RefObject<HTMLVideoElement | null>;
   playbackRate: number;
-  /** 用户顶栏静音：音量为 0，仍与视频同步播放/暂停以便恢复 */
+  /** 用户顶栏静音：iOS 下须 muted/pause，不能仅靠 volume */
   ambientMuted?: boolean;
   /** 静图开场阶段：环境声先起，不随视频 pause 被掐断；揭晓后与视频同步 */
   ambientLead?: boolean;
@@ -104,6 +118,8 @@ export function NatureAmbientMixAudio({
   const { registerSleepPauseHandler, playing } = useMusicShellPlayback();
   const underShellMusicGain = playing ? AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING : 1;
   const ambientByLayerRef = useRef(new Map<string, HTMLAudioElement>());
+  const ambientMutedRef = useRef(ambientMuted);
+  ambientMutedRef.current = ambientMuted;
 
   const setLayerAudioEl = useCallback((layerId: string, el: HTMLAudioElement | null) => {
     if (el) ambientByLayerRef.current.set(layerId, el);
@@ -131,6 +147,7 @@ export function NatureAmbientMixAudio({
           src={l.src}
           volume={l.volume}
           ambientMuted={ambientMuted}
+          ambientMutedRef={ambientMutedRef}
           playbackRate={playbackRate}
           videoRef={videoRef}
           setAudioEl={(el) => setLayerAudioEl(l.layerId, el)}

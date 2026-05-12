@@ -1,7 +1,7 @@
 const STORAGE_KEY = "selah-music-visual-tuning-v1";
 
 /**
- * 总强度 / 光晕 / 深色光晕 / 背景呼吸：相对上一档再放约 ×10 上限（另有 CSS/WebGL 写入封顶）。
+ * 总强度 / 光晕 / 深色光晕 / 背景呼吸：相对上一档再放约 ×10 上限（另有 CSS 写入封顶）。
  * 「播放键」单独收窄范围，且 CSS 不与总强度相乘。
  */
 export const MUSIC_VISUAL_TUNING_LIMITS = {
@@ -34,13 +34,13 @@ export type MusicVisualTuningV1 = {
 
 export const DEFAULT_MUSIC_VISUAL_TUNING: MusicVisualTuningV1 = {
   v: 1,
-  master: 1,
+  master: 0.8,
   glowMul: 1,
   glowDarkExtra: 1,
-  shellBreathAmp: 0.09,
+  shellBreathAmp: 0.06,
   playPulseMul: 1,
-  fallbackBreath: 1,
-  analysisBlend: 0.48,
+  fallbackBreath: 0.4,
+  analysisBlend: 0.36,
 };
 
 function clamp(n: number, lo: number, hi: number): number {

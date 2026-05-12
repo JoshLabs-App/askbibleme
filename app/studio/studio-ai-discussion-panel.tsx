@@ -61,7 +61,9 @@ const THREAD_LABELS: Record<string, string> = {
   "feature-creep": "Feature Creep",
   "low-cognitive-load": "Low Cognitive Load",
   "user-psychology": "User Psychology",
-  "sacred-atmosphere": "Sacred Atmosphere",
+  "quiet-atmosphere": "Quiet atmosphere",
+  /** 旧 slug（线程文件已迁至 `studio/threads/quiet-atmosphere.md`） */
+  "sacred-atmosphere": "Quiet atmosphere",
 };
 
 const STUDIO_AI_RESPONSE_MODE_KEY = "askbible-studio-ai-response-mode-v1";

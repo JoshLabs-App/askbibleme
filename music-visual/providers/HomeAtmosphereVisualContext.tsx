@@ -66,7 +66,7 @@ function getAtmosphereServerSnapshot(): HomeAtmospherePresetId {
 }
 
 /**
- * 首页「氛围」与壳层音乐视觉（CSS + WebGL）共享的单一来源；子页面未改氛围时保持上次值。
+ * 首页「氛围」与壳层音乐视觉（CSS）共享的单一来源；子页面未改氛围时保持上次值。
  */
 export function HomeAtmosphereVisualProvider({ children }: { children: ReactNode }) {
   const homeAtmospherePresetId = useSyncExternalStore(

@@ -1,6 +1,6 @@
 /**
  * 与 `MusicShellVisualProvider` 内 rAF 平滑后的能量同源，
- * 通过 ref 同步给 WebGL 等，避免每帧 setState。
+ * 通过 ref 同步给订阅方，避免每帧 setState。
  */
 export type MusicVisualDriveSnapshot = {
   rms: number;

@@ -100,8 +100,8 @@ export function detectDiscussionTopics(userInput: string): {
       patterns: [/用户/, /心理/, /现代人/, /手机/, /内疚/, /情绪/],
     },
     {
-      slug: "sacred-atmosphere",
-      topic: "Sacred Atmosphere",
+      slug: "quiet-atmosphere",
+      topic: "Quiet atmosphere",
       patterns: [/神圣/, /氛围/, /仪式感/, /冥想/, /灵修/, /禅修/],
     },
   ];

@@ -219,10 +219,6 @@ const config: Config = {
             opacity: "0.55",
           },
         },
-        "music-sacred-halo": {
-          "0%, 100%": { opacity: "0.14", transform: "scale(1) translate3d(0, 0, 0)" },
-          "50%": { opacity: "0.26", transform: "scale(1.06) translate3d(1%, -0.5%, 0)" },
-        },
         "music-hero-fade": {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
@@ -299,8 +295,6 @@ const config: Config = {
         "amb-home-ember-bokeh-1": "amb-home-ember-bokeh-1 7s ease-in-out infinite",
         "amb-home-ember-bokeh-2": "amb-home-ember-bokeh-2 8s ease-in-out -4s infinite",
         "amb-home-ember-sheen": "amb-home-ember-sheen 8s ease-in-out infinite",
-        "music-sacred-halo": "music-sacred-halo 14s ease-in-out infinite",
-        "music-sacred-halo-slow": "music-sacred-halo 52s ease-in-out infinite",
         "music-hero-fade": "music-hero-fade 1.5s ease-out forwards",
         "music-play-breathe": "music-play-breathe 3.2s ease-in-out infinite",
         "nature-widescreen-pan": "nature-widescreen-pan 1800s ease-in-out infinite",

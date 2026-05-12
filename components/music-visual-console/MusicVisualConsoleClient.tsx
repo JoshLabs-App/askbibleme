@@ -17,6 +17,7 @@ import {
 } from "@/music-visual";
 import type { MusicVisualTuningV1 } from "@/music-visual/tuning/schema";
 import { normalizeMusicVisualTuning } from "@/music-visual/tuning/schema";
+import { diskAuthHeaders } from "@/lib/disk-auth-headers";
 
 type ConsoleBundleV1 = {
   v: 1;
@@ -56,8 +57,17 @@ export function MusicVisualConsoleClient({
   const [driveUi, setDriveUi] = useState({ rms: 0, low: 0, mid: 0, high: 0 });
   const [importText, setImportText] = useState("");
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [diskWriteMsg, setDiskWriteMsg] = useState<string | null>(null);
+  const [diskWriteBusy, setDiskWriteBusy] = useState(false);
   const [refetchMsg, setRefetchMsg] = useState<string | null>(null);
   const [refetchBusy, setRefetchBusy] = useState(false);
+  /** 仅挂载后读 localStorage，避免 SSR「（无）」与客户端 JSON 水合错位 */
+  const [shellPersistedText, setShellPersistedText] = useState<string | null>(null);
+
+  useEffect(() => {
+    const p = readShellPlaybackPersisted();
+    setShellPersistedText(p ? JSON.stringify(p, null, 2) : "（无）");
+  }, []);
 
   useEffect(() => {
     let h = 0;
@@ -85,6 +95,43 @@ export function MusicVisualConsoleClient({
       setImportMsg("复制失败，请手动全选导出区");
     }
     setTimeout(() => setImportMsg(null), 2400);
+  }, [exportBundle]);
+
+  const saveVisualConsoleToDisk = useCallback(async () => {
+    setDiskWriteBusy(true);
+    setDiskWriteMsg(null);
+    try {
+      const res = await fetch("/api/music/visual-console", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...diskAuthHeaders(),
+        },
+        body: JSON.stringify(exportBundle()),
+      });
+      let data: { ok?: boolean; error?: string } = {};
+      try {
+        data = (await res.json()) as { ok?: boolean; error?: string };
+      } catch {
+        /* ignore */
+      }
+      if (!res.ok) {
+        const err = typeof data.error === "string" ? data.error : `写入失败（${res.status}）`;
+        setDiskWriteMsg(
+          err +
+            (res.status === 403 && err.includes("未允许")
+              ? " 提示：`next start` 需在 Studio 填与 STUDIO_WRITE_SECRET 相同的磁盘密钥，或本地用 `npm run dev`。"
+              : ""),
+        );
+        return;
+      }
+      setDiskWriteMsg("已写入 data/music-visual-console.json。本机执行 npm run ship:data 提交并推送。");
+    } catch (e) {
+      setDiskWriteMsg(e instanceof Error ? e.message : "请求失败");
+    } finally {
+      setDiskWriteBusy(false);
+      setTimeout(() => setDiskWriteMsg(null), 10_000);
+    }
   }, [exportBundle]);
 
   const applyImport = useCallback(() => {
@@ -284,10 +331,7 @@ export function MusicVisualConsoleClient({
                 : "mt-2 max-h-32 overflow-auto rounded-lg border border-border/40 bg-canvas/90 p-2 font-mono text-[10px] text-ink/70"
             }
           >
-            {(() => {
-              const p = readShellPlaybackPersisted();
-              return p ? JSON.stringify(p, null, 2) : "（无）";
-            })()}
+            {shellPersistedText === null ? "…" : shellPersistedText}
           </pre>
         </details>
       </section>
@@ -347,7 +391,7 @@ export function MusicVisualConsoleClient({
       <section className={sectionBox}>
         <h2 className={`mb-2 text-[12px] font-medium ${embeddedInAdmin ? "text-adminFg/90" : "text-ink/90"}`}>导入 / 导出</h2>
         <p className={`mb-2 text-[10px] leading-relaxed ${muted}`}>
-          导出为 JSON（含 tuning 与可选 homeAtmospherePresetId）。导入支持完整 bundle，或仅 tuning 对象。
+          导出为 JSON（含 tuning 与可选 homeAtmospherePresetId）。导入支持完整 bundle，或仅 tuning 对象。写入仓库后由 Git 部署到线上；无需通过 AI。
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => void copyExport()} className={canvasBtn}>
@@ -356,7 +400,18 @@ export function MusicVisualConsoleClient({
           <button type="button" onClick={applyImport} className={canvasBtn}>
             应用下方 JSON
           </button>
+          <button
+            type="button"
+            disabled={diskWriteBusy}
+            onClick={() => void saveVisualConsoleToDisk()}
+            className={`${canvasBtn} disabled:opacity-50`}
+          >
+            {diskWriteBusy ? "写入中…" : "写入 data/music-visual-console.json"}
+          </button>
         </div>
+        {diskWriteMsg ? (
+          <p className={`mt-2 text-[11px] ${embeddedInAdmin ? "text-adminFg/80" : "text-ink/75"}`}>{diskWriteMsg}</p>
+        ) : null}
         {importMsg ? (
           <p className={`mt-2 text-[11px] ${embeddedInAdmin ? "text-adminFg/75" : "text-ink/70"}`}>{importMsg}</p>
         ) : null}

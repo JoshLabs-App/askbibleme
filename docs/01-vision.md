@@ -17,7 +17,7 @@
 
 **UX Philosophy（交互哲学）**
 - Low Cognitive Load：单屏聚焦、无导航堆砌、一键静默
-- Sacred Atmosphere：柔和过渡、呼吸感排版、无干扰音
+- Quiet atmosphere：柔和过渡、呼吸感排版、无干扰音
 - 渐进式暴露：内容按需浮现，非预设信息瀑布
 
 **Emotional Design（情感设计）**

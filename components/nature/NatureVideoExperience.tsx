@@ -20,9 +20,10 @@ import {
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
+import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
 const NATURE_TOP_ICON_BTN =
-  "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] text-white/[0.9] hover:bg-white/[0.1]";
+  "touch-manipulation flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] text-white/[0.9] hover:bg-white/[0.1]";
 
 function IconBell(props: { className?: string }) {
   return (
@@ -294,6 +295,13 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    /** iOS / iPadOS：对 `documentElement` 自动全屏易导致系统退出、手势与误触（含底栏「首页」）；仅桌面系横屏窄窗使用。 */
+    if (isIosLikeUserAgent()) {
+      if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
     if (!landscapeNarrow || !videoSrc.trim() || videoBroken) {
       if (document.fullscreenElement === document.documentElement) {
         void exitFullscreenCompat();
@@ -563,7 +571,7 @@ export function NatureVideoExperience({ initial }: Props) {
       <ImmersiveAmbientClock visible={landscapeImmersive} />
 
       <main
-        className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] [@media(max-height:500px)]:pb-3 [@media(max-height:500px)_and_(orientation:portrait)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4"
+        className="relative z-10 mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,calc(env(safe-area-inset-top)+3.5rem))] sm:max-w-xl sm:px-6 sm:pb-[max(2rem,env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-none lg:px-8 [@media(max-height:500px)]:pb-3 [@media(max-height:500px)_and_(orientation:portrait)]:pt-[max(0.5rem,calc(env(safe-area-inset-top)+2.25rem))] [@media(max-height:500px)]:sm:pb-4 xl:px-10"
       >
         {!videoSrc || videoBroken ? (
           <>
@@ -608,7 +616,7 @@ export function NatureVideoExperience({ initial }: Props) {
               />
             </div>
             <DockChromeCollapse>
-              <HomeMusicRelaxShortcuts className="mx-auto mt-6 w-full max-w-md shrink-0 sm:mt-7 [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:sm:mt-2.5" />
+              <HomeMusicRelaxShortcuts className="mx-auto mt-6 w-full max-w-md shrink-0 lg:max-w-none sm:mt-7 [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:sm:mt-2.5" />
               <div
                 className={`w-full shrink-0 transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
                   previewVideoId ? "grid grid-rows-[1fr]" : "grid grid-rows-[0fr]"

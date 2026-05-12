@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import {
   createContext,
   useContext,
@@ -12,7 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import { sacredAtmosphereScalarsFromPreset } from "@/music-visual/effects/sacred-atmosphere-preset";
+import { atmosphereScalarsFromPreset } from "@/music-visual/effects/atmosphere-engine-scalars";
 import {
   applyMusicVisualTuningToElement,
   createMusicVisualSmoothState,
@@ -30,7 +31,7 @@ import { parseTrackAnalysisJson, type TrackAudioAnalysisV1 } from "@/lib/music/t
 export type MusicShellVisualValue = {
   /** 当前曲目是否带有可读的预计算分析 */
   hasAnalysis: boolean;
-  /** rAF 内更新；读 `.current` 不触发 React 渲染（供 WebGL / Selah Sacred Atmosphere） */
+  /** 每帧（首页·音乐或播放中）或低频 tick 内更新；读 `.current` 不触发 React 渲染 */
   driveRef: MutableRefObject<MusicVisualDriveSnapshot>;
 };
 
@@ -60,9 +61,12 @@ const IDLE_STYLE: CSSProperties = {
  * 壳层音乐驱动视觉：有预计算 JSON 时按 `currentTime` 查表；否则播放中用低频「呼吸」占位。
  * 强度由 `MusicVisualTuningProvider` + 首页「播放视觉」面板调节。
  * 首页氛围经 `HomeAtmosphereVisualProvider` 映射为引擎 atmosphere 乘子。
+ *
+ * 省电 / 克制：`document` 隐藏时停表；非首页·音乐且未播放时用较低频定时器推进（避免整壳 60fps 空转）。
  */
 export function MusicShellVisualProvider({ children }: { children: ReactNode }) {
-  const { effectiveSrc, musicStore, getAudioElement } = useMusicShellPlayback();
+  const pathname = usePathname() ?? "";
+  const { effectiveSrc, musicStore, getAudioElement, playing } = useMusicShellPlayback();
   const { tuning } = useMusicVisualTuning();
   const { homeAtmospherePresetId } = useHomeAtmosphereVisual();
   const atmosphereOverride = useMusicShellAtmosphereOverrideOptional();
@@ -73,10 +77,15 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
 
   const atmosphereScalars = useMemo(() => {
     const preset = getMusicVisualAtmospherePresetForHome(resolvedHomeAtmospherePresetId);
-    return sacredAtmosphereScalarsFromPreset(preset);
+    return atmosphereScalarsFromPreset(preset);
   }, [resolvedHomeAtmospherePresetId]);
   const atmosphereScalarsRef = useRef(atmosphereScalars);
   atmosphereScalarsRef.current = atmosphereScalars;
+
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+  const playingRef = useRef(playing);
+  playingRef.current = playing;
 
   const rootRef = useRef<HTMLDivElement>(null);
   /** `<audio>` ref 极少数首帧尚未挂载时用占位元素推进引擎，避免整段视觉引擎永远不启动 */
@@ -117,13 +126,43 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
     }
 
     let raf = 0;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
     const smooth = createMusicVisualSmoothState();
 
-    const tick = () => {
+    const isPrimaryVisualRoute = () => {
+      const p = pathnameRef.current;
+      return p === "/" || p === "" || p.startsWith("/music");
+    };
+
+    const isHighPriority = () => playingRef.current || isPrimaryVisualRoute();
+
+    const clearSched = () => {
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+      if (idleTimer != null) {
+        clearTimeout(idleTimer);
+        idleTimer = null;
+      }
+    };
+
+    const applyHiddenIdle = () => {
+      clearSched();
+      Object.assign(el.style, IDLE_STYLE as Record<string, string>);
+      driveRef.current = { ...IDLE_MUSIC_VISUAL_DRIVE };
+    };
+
+    const pump = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        applyHiddenIdle();
+        return;
+      }
+
       const T = tuningRef.current;
-      applyMusicVisualTuningToElement(el, T, atmosphereScalarsRef.current);
       const audio = getAudioElement() ?? ghostAudioRef.current;
       if (audio) {
+        applyMusicVisualTuningToElement(el, T, atmosphereScalarsRef.current);
         stepMusicVisualEngine(
           smooth,
           analysis,
@@ -133,14 +172,39 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
           driveRef.current,
           atmosphereScalarsRef.current,
         );
+        writeMusicVisualDriveCss(el, driveRef.current);
+      } else {
+        applyMusicVisualTuningToElement(el, T, atmosphereScalarsRef.current);
       }
-      writeMusicVisualDriveCss(el, driveRef.current);
-      raf = requestAnimationFrame(tick);
+
+      if (isHighPriority()) {
+        raf = requestAnimationFrame(pump);
+      } else {
+        idleTimer = setTimeout(() => {
+          idleTimer = null;
+          pump();
+        }, 125);
+      }
     };
 
-    raf = requestAnimationFrame(tick);
+    const kick = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      clearSched();
+      pump();
+    };
+
+    const onVisibility = () => {
+      if (typeof document === "undefined") return;
+      if (document.visibilityState === "hidden") applyHiddenIdle();
+      else kick();
+    };
+
+    kick();
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
-      cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVisibility);
+      clearSched();
       Object.assign(el.style, IDLE_STYLE as Record<string, string>);
       driveRef.current = { ...IDLE_MUSIC_VISUAL_DRIVE };
     };

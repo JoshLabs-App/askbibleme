@@ -283,7 +283,7 @@ export function AppShellTopBar({
             )}
           </div>
 
-          <div className="pointer-events-auto relative flex justify-end justify-self-end">
+          <div className="pointer-events-auto relative z-[55] isolate flex touch-manipulation justify-end justify-self-end">
             {rightAccessory ?? <span className="h-11 w-11 shrink-0" aria-hidden />}
           </div>
         </div>

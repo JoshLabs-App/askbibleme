@@ -569,6 +569,77 @@ function AudioTrackLibrary({
   store: MusicCompanionStore;
   setStore: React.Dispatch<React.SetStateAction<MusicCompanionStore | null>>;
 }) {
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [previewTrackId, setPreviewTrackId] = useState<string | null>(null);
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+
+  useEffect(() => {
+    const el = previewAudioRef.current;
+    if (!el) return;
+    const sync = () => setPreviewPlaying(!el.paused);
+    const onEnded = () => {
+      setPreviewTrackId(null);
+      setPreviewPlaying(false);
+    };
+    el.addEventListener("play", sync);
+    el.addEventListener("pause", sync);
+    el.addEventListener("ended", onEnded);
+    return () => {
+      el.removeEventListener("play", sync);
+      el.removeEventListener("pause", sync);
+      el.removeEventListener("ended", onEnded);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!previewTrackId) return;
+    const still = store.audioTracks.some((t) => t.id === previewTrackId);
+    if (still) return;
+    const el = previewAudioRef.current;
+    if (el) {
+      el.pause();
+      el.removeAttribute("src");
+      el.load();
+    }
+    setPreviewTrackId(null);
+    setPreviewPlaying(false);
+  }, [store.audioTracks, previewTrackId]);
+
+  const togglePreview = useCallback((t: (typeof store.audioTracks)[number]) => {
+    const src = t.src?.trim();
+    if (!src) return;
+    const el = previewAudioRef.current;
+    if (!el) return;
+    if (previewTrackId === t.id) {
+      if (el.paused) void el.play().catch(() => setPreviewPlaying(false));
+      else el.pause();
+      return;
+    }
+    el.pause();
+    el.src = src;
+    setPreviewTrackId(t.id);
+    void el.play().catch(() => {
+      setPreviewTrackId(null);
+      setPreviewPlaying(false);
+    });
+  }, [previewTrackId]);
+
+  const moveTrack = useCallback(
+    (index: number, delta: -1 | 1) => {
+      setStore((s) => {
+        if (!s) return s;
+        const next = [...s.audioTracks];
+        const j = index + delta;
+        if (j < 0 || j >= next.length) return s;
+        const tmp = next[index];
+        next[index] = next[j]!;
+        next[j] = tmp!;
+        return { ...s, audioTracks: next };
+      });
+    },
+    [setStore],
+  );
+
   const [bulkPrefix, setBulkPrefix] = useState("");
   const [bulkSuffix, setBulkSuffix] = useState("");
   const [bulkStem, setBulkStem] = useState("音乐");
@@ -620,8 +691,16 @@ function AudioTrackLibrary({
     );
   }, [bulkStem, setStore]);
 
+  const lastIdx = store.audioTracks.length - 1;
+
   return (
     <section className="mt-10">
+      <audio
+        ref={previewAudioRef}
+        preload="metadata"
+        className="pointer-events-none fixed left-0 top-0 h-px w-px opacity-0"
+        aria-hidden
+      />
       <h2 className="text-[11px] font-medium uppercase tracking-[0.14em] text-adminMuted">曲目</h2>
       {store.audioTracks.length > 0 ? (
         <div className="mt-2 flex flex-wrap items-end gap-x-2 gap-y-1.5 border-y border-adminLine bg-canvas/70 px-2 py-2 text-[11px]">
@@ -681,10 +760,10 @@ function AudioTrackLibrary({
         ) : (
           store.audioTracks.map((t, i) => (
             <li key={t.id} className="px-3 py-2.5">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <input
                   aria-label="标题"
-                  className="min-w-0 flex-1 rounded border border-border bg-adminPanel px-2 py-1.5 text-[13px] text-adminFg"
+                  className="min-w-0 flex-1 basis-[12rem] rounded border border-border bg-adminPanel px-2 py-1.5 text-[13px] text-adminFg"
                   value={primaryLocaleText(t.title)}
                   placeholder="（无标题）"
                   onChange={(e) => {
@@ -701,26 +780,60 @@ function AudioTrackLibrary({
                     );
                   }}
                 />
-                <button
-                  type="button"
-                  className="shrink-0 px-2 py-1 text-[11px] text-red-700/90 transition hover:bg-red-50"
-                  onClick={() => {
-                    const trackId = t.id;
-                    setStore((s) =>
-                      s
-                        ? {
-                            ...s,
-                            audioTracks: s.audioTracks.filter((x) => x.id !== trackId),
-                            scenes: s.scenes.map((sc) =>
-                              sc.audioTrackId === trackId ? { ...sc, audioTrackId: null } : sc,
-                            ),
-                          }
-                        : s,
-                    );
-                  }}
-                >
-                  删除
-                </button>
+                <div className="flex shrink-0 flex-wrap items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={!t.src?.trim()}
+                    title={!t.src?.trim() ? "缺少音频地址（src）" : undefined}
+                    className="rounded border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-pressed={previewTrackId === t.id && previewPlaying}
+                    onClick={() => togglePreview(t)}
+                  >
+                    {!t.src?.trim()
+                      ? "试听"
+                      : previewTrackId === t.id
+                        ? previewPlaying
+                          ? "暂停"
+                          : "继续"
+                        : "试听"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i <= 0}
+                    className="rounded border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => moveTrack(i, -1)}
+                  >
+                    上移
+                  </button>
+                  <button
+                    type="button"
+                    disabled={i >= lastIdx}
+                    className="rounded border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => moveTrack(i, 1)}
+                  >
+                    下移
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2 py-1 text-[11px] text-red-700/90 transition hover:bg-red-50"
+                    onClick={() => {
+                      const trackId = t.id;
+                      setStore((s) =>
+                        s
+                          ? {
+                              ...s,
+                              audioTracks: s.audioTracks.filter((x) => x.id !== trackId),
+                              scenes: s.scenes.map((sc) =>
+                                sc.audioTrackId === trackId ? { ...sc, audioTrackId: null } : sc,
+                              ),
+                            }
+                          : s,
+                      );
+                    }}
+                  >
+                    删除
+                  </button>
+                </div>
               </div>
               <details className="mt-1.5 text-[11px]">
                 <summary className="cursor-pointer select-none text-adminMuted hover:text-adminFg/70">编辑</summary>

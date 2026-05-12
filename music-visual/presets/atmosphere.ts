@@ -1,6 +1,6 @@
 /**
  * 氛围视觉预设（与首页「经卷/暮色」等 UI 预设可逐步对齐）。
- * 供引擎 / shader 乘子与日后 AI 切换 atmosphere 使用。
+ * 供引擎乘子与日后 AI 切换 atmosphere 使用。
  */
 export type MusicVisualAtmospherePresetId =
   | "stillness"
@@ -12,7 +12,7 @@ export type MusicVisualAtmospherePresetId =
 export type MusicVisualAtmospherePreset = {
   id: MusicVisualAtmospherePresetId;
   label: string;
-  /** 雾相速度乘子（乘在 shader 时间项上） */
+  /** 雾相速度乘子 */
   fogSpeedMul: number;
   /** 光晕权重乘子 */
   glowWeightMul: number;

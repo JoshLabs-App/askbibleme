@@ -12,7 +12,7 @@ type PresetClasses = {
   bokeh2: string;
 };
 
-/** 无循环 keyframe：动感交给 WebGL（Sacred）+ 壳层 `--music-*`；此处只保留静态色与层次。 */
+/** 无循环 keyframe：壳层 `--music-*` 等可叠加动感；此处只保留静态色与层次。 */
 const CLASSES: Record<HomeAtmospherePresetId, PresetClasses> = {
   lagoon: { driftA: "", driftB: "", veil: "", sheen: "", grain: "", bokeh1: "", bokeh2: "" },
   parchment: { driftA: "", driftB: "", veil: "", sheen: "", grain: "", bokeh1: "", bokeh2: "" },

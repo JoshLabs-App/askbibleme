@@ -2,10 +2,9 @@ import type { MusicVisualAtmospherePreset } from "../presets/atmosphere";
 import type { MusicVisualAtmosphereScalars } from "../types/atmosphere-scalars";
 
 /**
- * Sacred Atmosphere 片元里使用的标量（由氛围 preset 决定；与 uniforms 一一对应）。
- * 组合逻辑集中在此，避免 Canvas / shader 两侧各写一套 magic number。
+ * 首页氛围 preset → 音乐视觉引擎标量（调制 CSS `--music-*`）。
  */
-export function sacredAtmosphereScalarsFromPreset(
+export function atmosphereScalarsFromPreset(
   preset: MusicVisualAtmospherePreset,
 ): MusicVisualAtmosphereScalars {
   return {

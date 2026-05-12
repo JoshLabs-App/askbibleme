@@ -21,7 +21,7 @@ export function createMusicVisualSmoothState(): MusicVisualSmooth {
 
 /**
  * 写入与「播放视觉」相关的 CSS 变量（每帧或 tuning 变化时）。
- * `atmosphere` 来自首页氛围 → `music-visual/presets` 映射；与 WebGL 乘子一致，做轻量叠加（不改变面板原始数值语义，仅输出合成结果到 CSS）。
+ * `atmosphere` 来自首页氛围 → `music-visual/presets` 映射；与引擎标量一致，做轻量叠加（不改变面板原始数值语义，仅输出合成结果到 CSS）。
  */
 export function applyMusicVisualTuningToElement(
   el: HTMLElement,

@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "tuning": {
+    "v": 1,
+    "master": 0.8,
+    "glowMul": 1,
+    "glowDarkExtra": 1,
+    "shellBreathAmp": 0.06,
+    "playPulseMul": 1,
+    "fallbackBreath": 0.4,
+    "analysisBlend": 0.36
+  },
+  "homeAtmospherePresetId": "lagoon"
+}

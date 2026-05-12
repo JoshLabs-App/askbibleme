@@ -151,8 +151,9 @@ export async function buildManifestBody(): Promise<MetadataRoute.Manifest> {
     short_name: "Selah.my",
     description: "安静回到经文的入口 — 正在成型。",
     start_url: "/",
-    display: "fullscreen",
-    display_override: ["fullscreen", "standalone", "minimal-ui"],
+    /** `fullscreen` 会隐藏 Android 状态栏（含系统时间）；`standalone` 与 iOS 主屏「半透明顶栏」观感更接近 */
+    display: "standalone",
+    display_override: ["standalone", "minimal-ui", "fullscreen"],
     background_color: canvas,
     theme_color: canvas,
     lang: "zh-CN",

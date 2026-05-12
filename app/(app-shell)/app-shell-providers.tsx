@@ -2,6 +2,7 @@
 
 import { HomeBottomNav } from "@/components/home/HomeBottomNav";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
+import { NatureBackgroundVideoPrefetch } from "@/components/nature/NatureBackgroundVideoPrefetch";
 import { AppShellFixedChrome } from "@/components/app-shell/AppShellFixedChrome";
 import {
   ApplyRepoVisualDefaults,
@@ -26,6 +27,7 @@ export function AppShellProviders({
           <MusicShellAtmosphereOverrideProvider>
             <AppShellFixedChrome>
               <HomeDockChromeProvider>
+                <NatureBackgroundVideoPrefetch />
                 <MusicShellVisualProvider>
                   <div
                     data-app-shell-scroll

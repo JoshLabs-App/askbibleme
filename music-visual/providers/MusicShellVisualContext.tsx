@@ -62,7 +62,7 @@ const IDLE_STYLE: CSSProperties = {
  * 强度由 `MusicVisualTuningProvider` + 首页「播放视觉」面板调节。
  * 首页氛围经 `HomeAtmosphereVisualProvider` 映射为引擎 atmosphere 乘子。
  *
- * 省电 / 克制：`document` 隐藏时停表；非首页·音乐且未播放时用较低频定时器推进（避免整壳 60fps 空转）。
+ * 省电 / 克制：`document` 隐藏时停表；自然首页 `/` 等未在播时用较低频定时器（避免与全屏视频争主线程）；仅音乐页或播放中走 rAF。
  */
 export function MusicShellVisualProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
@@ -131,7 +131,8 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
 
     const isPrimaryVisualRoute = () => {
       const p = pathnameRef.current;
-      return p === "/" || p === "" || p.startsWith("/music");
+      /** 自然首页 `/`、`/nature` 已占满 GPU/解码；勿与壳层 60fps CSS 驱动叠在同一优先级 */
+      return p === "/music" || p.startsWith("/music/");
     };
 
     const isHighPriority = () => playingRef.current || isPrimaryVisualRoute();

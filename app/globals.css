@@ -30,7 +30,7 @@
    * 视口顶缘「出血」：Android Chrome / WebView 常在首层 fixed 与视口之间留 1～3 设备像素的缝，
    * 露出 UA 底。深色画布 + 略加大出血，缝若仍存在也不易呈「白线」。
    */
-  --app-viewport-bleed-top: 22px;
+  --app-viewport-bleed-top: 32px;
   /**
    * 与 `HomeBottomNav` 一致：底栏总高固定 **70px**（`box-border`，内含 `pt` / `pb` 与安全区），
    * 自然首页视频槽首选「`[data-app-shell-scroll]` 的 `clientHeight`」与壳层同源；未量到前回退 `100dvh - var(--home-bottom-nav-slot)`。

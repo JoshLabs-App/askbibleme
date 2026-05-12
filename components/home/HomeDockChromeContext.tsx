@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -13,11 +14,12 @@ import { usePathname } from "next/navigation";
 type Value = {
   dockChromeVisible: boolean;
   setDockChromeVisible: (v: boolean) => void;
+  toggleDockChrome: () => void;
 };
 
 const HomeDockChromeContext = createContext<Value | null>(null);
 
-/** 自然首页 `/`、`/nature` 等：用于判断壳路径（主题、埋点等）；底区场景卡见 `DockChromeCollapse` 默认展开 */
+/** 自然首页 `/`、`/nature` 等：底区场景卡与快捷入口由 `DockChromeCollapse` 控制；默认收起，点画面切换。 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
   return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
@@ -25,17 +27,21 @@ export function isNatureHomeShellPath(pathname: string) {
 
 export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
-  /** 默认展开：大屏主区可滚动时若默认收起，用户不滚动就看不到场景可选图 */
-  const [dockChromeVisible, setDockChromeVisible] = useState(true);
+  const [dockChromeVisible, setDockChromeVisible] = useState(false);
 
   useEffect(() => {
-    setDockChromeVisible(true);
+    setDockChromeVisible(false);
   }, [pathname]);
+
+  const toggleDockChrome = useCallback(() => {
+    setDockChromeVisible((v) => !v);
+  }, []);
 
   const value = useMemo(
     () => ({
       dockChromeVisible,
       setDockChromeVisible,
+      toggleDockChrome,
     }),
     [dockChromeVisible],
   );

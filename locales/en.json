@@ -295,7 +295,7 @@
     "sessionLabel": "Nature",
     "emptyTitle": "No background video yet",
     "emptyHint": "Upload or pick a clip under Admin → Music → Nature, or edit data/nature-settings.json.",
-    "expandDockChrome": "Expand scene shortcuts below to pick a film",
+    "toggleDockChrome": "Show or hide scene cards and shortcuts",
     "videoBgAnnounced": "Background is a muted looping video.",
     "previewEnterFullScreen": "Enter full screen with this clip",
     "previewTapHint": "Tap again for full screen",

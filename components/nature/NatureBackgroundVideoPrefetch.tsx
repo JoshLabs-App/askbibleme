@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
 const PREFETCH_STAGGER_MS = 550;
 
@@ -11,6 +12,8 @@ const PREFETCH_STAGGER_MS = 550;
 export function NatureBackgroundVideoPrefetch() {
   useEffect(() => {
     if (typeof window === "undefined") return;
+    /** iOS：多路 mp4 prefetch + 主视频易顶内存；壳内已有首条播放，其余按需再拉 */
+    if (isIosLikeUserAgent()) return;
 
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (conn?.saveData) return;

@@ -129,15 +129,12 @@ function hasEnoughBufferedAhead(v: HTMLVideoElement, minBufferAheadSec: number):
 const SLOW_INTRO_HINT_DELAY_MS = 3800;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
-/** 主壳滚动超过此值后展开底区（用户点视频收起后，略下滑可再展开） */
-const NATURE_DOCK_REVEAL_SCROLL_PX = 12;
-
 /**
  * 自然：背景视频限高在「视口 − 底栏」槽内；经文叠在视频上；场景与快捷入口在视频下方独立流式区域（与视频解耦）。
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
-  const { dockChromeVisible, setDockChromeVisible } = useHomeDockChrome();
+  const { dockChromeVisible, setDockChromeVisible, toggleDockChrome } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
   const prepareAbortRef = useRef<AbortController | null>(null);
   const prepareGenRef = useRef(0);
@@ -209,19 +206,6 @@ export function NatureVideoExperience({ initial }: Props) {
   }, []);
 
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
-    if (!root) return;
-    const onScroll = () => {
-      if (root.scrollTop >= NATURE_DOCK_REVEAL_SCROLL_PX) {
-        setDockChromeVisible(true);
-      }
-    };
-    root.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => root.removeEventListener("scroll", onScroll);
-  }, [setDockChromeVisible]);
-
-  useEffect(() => {
     return () => {
       prepareAbortRef.current?.abort();
       prepareGenRef.current += 1;
@@ -240,7 +224,7 @@ export function NatureVideoExperience({ initial }: Props) {
 
   const selectVideoAndImmersive = useCallback((id: string) => {
     setActiveVideoId(id);
-    setDockChromeVisible(true);
+    setDockChromeVisible(false);
   }, [setDockChromeVisible]);
 
   /** 点场景小图：整段影片下载完成后再切主背景；换选或离开页会中止 */
@@ -649,8 +633,8 @@ export function NatureVideoExperience({ initial }: Props) {
             type="button"
             className="absolute inset-0 z-[7] cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             aria-expanded={dockChromeVisible}
-            aria-label={t("nature.expandDockChrome")}
-            onClick={() => setDockChromeVisible(true)}
+            aria-label={t("nature.toggleDockChrome")}
+            onClick={() => toggleDockChrome()}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
@@ -660,6 +644,26 @@ export function NatureVideoExperience({ initial }: Props) {
                 prominence="nature"
                 className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
               />
+            </div>
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(48dvh,58svh)] min-h-0 flex-col justify-end px-4 pb-2 pt-1 sm:px-6 sm:pb-3 md:px-8 xl:px-10">
+            <div
+              className={[
+                "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
+                dockChromeVisible ? "pointer-events-auto" : "pointer-events-none",
+              ].join(" ")}
+            >
+              <DockChromeCollapse>
+                <HomeMusicRelaxShortcuts className="mx-auto w-full max-w-md shrink-0 lg:max-w-none" />
+                <NatureSceneLayer
+                  className="mt-2 shrink-0 sm:mt-2.5 [@media(max-height:500px)]:mt-1.5 [@media(max-height:500px)]:sm:mt-2"
+                  settings={initial}
+                  activeVideoId={playbackSettings.activeVideoId}
+                  prepareSceneId={scenePrepare?.id ?? null}
+                  prepareProgress={scenePrepare?.progress ?? null}
+                  onSceneCardPress={onSceneCardPress}
+                />
+              </DockChromeCollapse>
             </div>
           </div>
         </div>
@@ -674,8 +678,8 @@ export function NatureVideoExperience({ initial }: Props) {
               type="button"
               className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               aria-expanded={dockChromeVisible}
-              aria-label={t("nature.expandDockChrome")}
-              onClick={() => setDockChromeVisible(true)}
+              aria-label={t("nature.toggleDockChrome")}
+              onClick={() => toggleDockChrome()}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
               <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">
@@ -683,35 +687,21 @@ export function NatureVideoExperience({ initial }: Props) {
                 <p className="mt-3 text-[12px] leading-relaxed text-white/55 sm:text-[13px]">{t("nature.emptyHint")}</p>
               </div>
             </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(40dvh,50svh)] min-h-0 flex-col justify-end px-4 pb-2 sm:px-6 sm:pb-3 md:px-8 xl:px-10">
+              <div
+              className={[
+                "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
+                dockChromeVisible ? "pointer-events-auto" : "pointer-events-none",
+              ].join(" ")}
+            >
+                <DockChromeCollapse>
+                  <HomeMusicRelaxShortcuts className="mx-auto w-full max-w-md shrink-0 lg:max-w-none" />
+                </DockChromeCollapse>
+              </div>
+            </div>
           </div>
         </div>
       )}
-
-      <main
-        className={
-          hasMainVideo
-            ? "relative z-10 mx-auto flex w-full max-w-lg shrink-0 flex-col bg-canvas px-5 pb-3 pt-3 sm:max-w-xl sm:px-6 sm:pb-4 sm:pt-4 md:max-w-3xl lg:max-w-none lg:px-8 xl:px-10 [@media(max-height:500px)]:pb-2 [@media(max-height:500px)]:pt-2"
-            : "relative z-10 mx-auto flex w-full max-w-lg shrink-0 flex-col bg-canvas px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 sm:max-w-xl sm:px-6 sm:pb-[max(1.25rem,env(safe-area-inset-bottom))] md:max-w-3xl lg:max-w-none lg:px-8 [@media(max-height:500px)]:pb-2 [@media(max-height:500px)]:sm:pb-3 xl:px-10"
-        }
-      >
-        <DockChromeCollapse>
-          {hasMainVideo ? (
-            <>
-              <HomeMusicRelaxShortcuts className="mx-auto mt-1 w-full max-w-md shrink-0 lg:max-w-none sm:mt-2 [@media(max-height:500px)]:mt-0.5 [@media(max-height:500px)]:sm:mt-1" />
-              <NatureSceneLayer
-                className="mt-2 shrink-0 sm:mt-3 [@media(max-height:500px)]:mt-1.5 [@media(max-height:500px)]:sm:mt-2"
-                settings={initial}
-                activeVideoId={playbackSettings.activeVideoId}
-                prepareSceneId={scenePrepare?.id ?? null}
-                prepareProgress={scenePrepare?.progress ?? null}
-                onSceneCardPress={onSceneCardPress}
-              />
-            </>
-          ) : (
-            <HomeMusicRelaxShortcuts className="mx-auto mt-4 shrink-0 sm:mt-6 [@media(max-height:500px)]:mt-3" />
-          )}
-        </DockChromeCollapse>
-      </main>
     </div>
   );
 }

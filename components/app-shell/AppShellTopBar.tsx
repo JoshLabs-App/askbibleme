@@ -200,8 +200,8 @@ export function AppShellTopBar({
     toggleNavMenu();
   };
 
-  /** 顶栏下缘大致位置，左缘窄条从此向下延伸，避开顶栏按钮 */
-  const edgeStripTopClass = "top-[calc(env(safe-area-inset-top)+3.25rem)]";
+  /** 顶栏下缘大致位置，左缘窄条从此向下延伸（与加大后的 pt + 44px 行对齐） */
+  const edgeStripTopClass = "top-[calc(env(safe-area-inset-top,0px)+6.25rem)]";
 
   return (
     <>
@@ -221,7 +221,7 @@ export function AppShellTopBar({
       />
       <header
         className={[
-          "pointer-events-none absolute inset-x-0 top-0 z-[50] px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 transition-opacity duration-300 motion-reduce:transition-none",
+          "pointer-events-none absolute inset-x-0 top-0 z-[50] px-4 pt-[max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))] pb-1.5 transition-opacity duration-300 motion-reduce:transition-none sm:px-5 sm:pt-[max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))] sm:pb-2",
           landscapeImmersive
             ? "opacity-0 [&_.pointer-events-auto]:pointer-events-none"
             : "opacity-100",

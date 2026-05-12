@@ -5,12 +5,16 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
+import { usePathname } from "next/navigation";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
+import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
   clearShellPlaybackPersisted,
@@ -86,8 +90,14 @@ export function useMusicShellPlayback(): MusicShellPlaybackValue {
 }
 
 export function MusicShellPlaybackProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname() ?? "";
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [loading, setLoading] = useState(true);
+  /**
+   * 自然首页 `/`、`/nature`：勿在曲库就绪后立刻把默认曲目绑进隐藏 `<audio>`（会 `load` 缓冲、吃内存），
+   * 易与主屏 Web 上全屏视频争资源导致整页被系统回收。离开首页、恢复持久化播放、或用户点壳层播放后再绑。
+   */
+  const [shellAudioHomePrimed, setShellAudioHomePrimed] = useState(false);
   const [playbackOverride, setPlaybackOverride] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -193,7 +203,15 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   }, [pausePlayback]);
 
   useEffect(() => {
+    const p = pathname;
+    if (p !== "/" && p !== "/nature") {
+      setShellAudioHomePrimed(true);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     let cancelled = false;
+    let lastHiddenAt = 0;
     const load = async () => {
       try {
         const res = await fetch("/api/music/companion", { cache: "no-store" });
@@ -209,7 +227,16 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     };
     void load();
     const onVis = () => {
-      if (document.visibilityState === "visible") void load();
+      if (document.visibilityState === "hidden") {
+        lastHiddenAt = Date.now();
+        return;
+      }
+      if (document.visibilityState === "visible") {
+        if (isIosLikeUserAgent() && lastHiddenAt > 0 && Date.now() - lastHiddenAt < 30_000) {
+          return;
+        }
+        void load();
+      }
     };
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -242,6 +269,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       return;
     }
 
+    setShellAudioHomePrimed(true);
     shellPlaybackPersistEnabledRef.current = false;
     shellPlaybackRestoreRef.current = {
       targetSrc: persisted.src.trim(),
@@ -268,11 +296,15 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
   }, [effectiveSrc, loading]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const a = audioRef.current;
     if (!a) return;
     a.preload = "none";
-    if (!effectiveSrc) {
+    const isHomeNature = pathname === "/" || pathname === "/nature";
+    const bindSrc =
+      !effectiveSrc.trim() || !isHomeNature || shellAudioHomePrimed ? effectiveSrc.trim() : "";
+
+    if (!bindSrc) {
       lastBoundEffectiveSrcRef.current = "";
       a.removeAttribute("src");
       a.load();
@@ -281,28 +313,28 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       setDurationSec(0);
       return;
     }
-    if (audioUrlEquals(a, effectiveSrc)) {
-      lastBoundEffectiveSrcRef.current = effectiveSrc;
+    if (audioUrlEquals(a, bindSrc)) {
+      lastBoundEffectiveSrcRef.current = bindSrc;
       if (playAfterNextBindRef.current) {
         playAfterNextBindRef.current = false;
         void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
       }
       return;
     }
-    if (shellPlaybackUrlsEqual(lastBoundEffectiveSrcRef.current, effectiveSrc)) {
+    if (shellPlaybackUrlsEqual(lastBoundEffectiveSrcRef.current, bindSrc)) {
       return;
     }
-    lastBoundEffectiveSrcRef.current = effectiveSrc;
+    lastBoundEffectiveSrcRef.current = bindSrc;
     const wasPlaying = !a.paused;
     const playAfterAdvance = playAfterNextBindRef.current;
-    a.src = effectiveSrc;
+    a.src = bindSrc;
     a.load();
     if (wasPlaying || playAfterAdvance) {
       playAfterNextBindRef.current = false;
       void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     }
     /** 未在播时不要 `setPlaying(false)`：会制造无意义重渲染，曾与首页对齐 `effectiveSrc` 的 effect 形成更新风暴。 */
-  }, [effectiveSrc]);
+  }, [effectiveSrc, pathname, shellAudioHomePrimed]);
 
   /** 在对应 src 的 metadata 就绪后 seek，并可选自动续播 */
   useEffect(() => {
@@ -469,6 +501,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const getAudioElement = useCallback((): HTMLAudioElement | null => audioRef.current, []);
 
   const togglePlay = useCallback(async () => {
+    flushSync(() => {
+      setShellAudioHomePrimed(true);
+    });
     const a = audioRef.current;
     if (!a || loading) return;
     const st = storeRef.current;

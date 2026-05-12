@@ -128,6 +128,7 @@ export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string
     >
       <Link
         href="/music"
+        prefetch={false}
         aria-current={onMusic ? "page" : undefined}
         aria-label={t("nav.music")}
         className={shortcutLinkClass(onMusic)}
@@ -136,6 +137,7 @@ export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string
       </Link>
       <Link
         href="/relax"
+        prefetch={false}
         aria-current={onRelax ? "page" : undefined}
         aria-label={t("nav.relax")}
         className={shortcutLinkClass(onRelax)}

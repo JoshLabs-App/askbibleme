@@ -7,9 +7,8 @@ import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext"
 import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
-import { useShellTemplateChromeTuneFromStorage } from "@/hooks/useShellTemplateChromeTuneFromStorage";
+import { useShellChromeScrimVisuals } from "@/hooks/useShellChromeScrimVisuals";
 import {
-  shellTemplateChromeScrimBackgrounds,
   shellTemplatePreviewCssVars,
   shellTemplatePreviewThemeById,
   type ShellTemplateChromeTune,
@@ -34,10 +33,13 @@ export type ShellTemplateChromeLayoutProps = {
    * 为 true：不渲染 `AppShellTopBar`、不占顶栏留白，主区横向贴边；主区高度随 `(app-shell)` 主列铺满（底栏仍由壳层固定）。
    */
   immersive?: boolean;
+  /** 为 true 时嵌入后台预览框：底压边相对 `main` 定位、不占满视口，且不写 `[data-app-shell-scroll]` 衬底色。 */
+  embedPreview?: boolean;
 };
 
 /**
  * 与 `/template` 同源的主区壳：浅色衬底、顶/底 scrim、`--brand-*` 预览变量、滚动区衬底同步、底栏 dock 色。
+ * 顶/底压边样式由 `useShellChromeScrimVisuals` 统一计算（管理后台「壳层压边」保存一次，与自然首页、旅程等共用同一套 tune + 渐变）。
  * 业务页只放内容，勿再自写一套 `main`/渐变/顶栏留白。
  *
  * `AppShellTopBar` 依赖 `HomeDockChromeProvider`；`/music` 等在 `(app-shell)` 外时，在此内嵌一层 Provider
@@ -49,14 +51,20 @@ export function ShellTemplateChromeLayout({
   contentClassName = "gap-6",
   sampleRootRef,
   immersive = false,
+  embedPreview = false,
 }: ShellTemplateChromeLayoutProps) {
-  const persistedChromeTune = useShellTemplateChromeTuneFromStorage();
-  const chromeTune = chromeTuneProp !== undefined ? chromeTuneProp : persistedChromeTune;
   const landscapeNarrow = useLandscapeNarrow();
   const { shellTemplateBrand } = useAppSkin();
   const previewThemeId = shellTemplateBrand ?? "lagoonPaper";
   const theme = shellTemplatePreviewThemeById(previewThemeId);
   const dockPreview = useShellTemplateDockPreviewOptional();
+
+  const { chrome, topLayerStyle, bottomLayerStyleShellTemplateMain } = useShellChromeScrimVisuals(
+    theme.colors.appLight,
+    theme.colors.appDark,
+    chromeTuneProp,
+    embedPreview ? { shellMainBottomScrim: "contained" } : undefined,
+  );
 
   useEffect(() => {
     if (!dockPreview) return;
@@ -64,13 +72,8 @@ export function ShellTemplateChromeLayout({
     return () => dockPreview.setTemplateDockHex(null);
   }, [theme.colors.appDark, dockPreview]);
 
-  const chrome = useMemo(
-    () =>
-      shellTemplateChromeScrimBackgrounds(theme.colors.appLight, theme.colors.appDark, chromeTune),
-    [theme.colors.appLight, theme.colors.appDark, chromeTune],
-  );
-
   useLayoutEffect(() => {
+    if (embedPreview) return;
     const el = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
     if (!el) return;
     const prev = el.style.backgroundColor;
@@ -79,66 +82,53 @@ export function ShellTemplateChromeLayout({
       if (prev) el.style.backgroundColor = prev;
       else el.style.removeProperty("background-color");
     };
-  }, [chrome.fillBackgroundColor]);
+  }, [chrome.fillBackgroundColor, embedPreview]);
 
   const mainStyle: CSSProperties = useMemo(
     () => ({
       ...(immersive
         ? {}
-        : {
-            minHeight: "calc(100dvh - var(--home-bottom-nav-slot, 70px))",
-          }),
+        : embedPreview
+          ? { minHeight: 0, height: "100%", flex: 1 }
+          : {
+              minHeight: "calc(100dvh - var(--home-bottom-nav-slot, 70px))",
+            }),
       position: "relative",
       backgroundColor: chrome.fillBackgroundColor,
+      ...(embedPreview ? { overflow: "hidden", display: "flex", flexDirection: "column" } : {}),
     }),
-    [chrome.fillBackgroundColor, immersive],
-  );
-
-  const topScrimStyle = useMemo(
-    (): CSSProperties => ({
-      background: chrome.topBackground,
-      height: `${chromeTune.topHeightRem}rem`,
-      minHeight: chromeTune.topHeightMinPx,
-    }),
-    [chrome.topBackground, chromeTune.topHeightRem, chromeTune.topHeightMinPx],
-  );
-
-  const bottomScrimStyle = useMemo(
-    (): CSSProperties => ({
-      background: chrome.bottomBackground,
-      height: `${chromeTune.bottomHeightRem}rem`,
-      minHeight: chromeTune.bottomHeightMinPx,
-      /** 与底栏顶缘对齐，勿再 `-2px` 叠层，避免部分设备上叠出第二条细线 */
-      bottom: "var(--home-bottom-nav-slot, 70px)",
-    }),
-    [chrome.bottomBackground, chromeTune.bottomHeightRem, chromeTune.bottomHeightMinPx],
+    [chrome.fillBackgroundColor, immersive, embedPreview],
   );
 
   const previewVars = useMemo(() => shellTemplatePreviewCssVars(theme), [theme]);
 
   const mainPadClass = immersive
     ? "overflow-hidden pb-0 pl-0 pr-0 pt-[env(safe-area-inset-top,0px)]"
-    : `overflow-visible pb-10 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] ${MAIN_PT_CLEAR_TOP_BAR}`;
+    : embedPreview
+      ? `min-h-0 overflow-hidden pb-6 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] ${MAIN_PT_CLEAR_TOP_BAR}`
+      : `overflow-visible pb-10 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] ${MAIN_PT_CLEAR_TOP_BAR}`;
+
+  const mainMinClass = embedPreview ? "min-h-0 h-full flex-1" : immersive ? "min-h-0 flex-1" : "";
+
+  const bottomScrimClass = embedPreview
+    ? "pointer-events-none absolute inset-x-0 bottom-0 z-[15] w-full"
+    : "pointer-events-none fixed inset-x-0 z-[15] w-full";
 
   return (
     <HomeDockChromeProvider>
       <main
-        className={`relative isolate flex min-h-full w-full min-w-0 flex-col ${immersive ? "min-h-0 flex-1" : ""} ${mainPadClass}`}
+        className={`relative isolate flex w-full min-w-0 flex-col ${mainMinClass} ${!immersive && !embedPreview ? "min-h-full" : ""} ${mainPadClass}`}
         style={mainStyle}
       >
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
-          style={topScrimStyle}
+          style={topLayerStyle}
         />
-        <div
-          aria-hidden
-          className="pointer-events-none fixed inset-x-0 z-[15] w-full"
-          style={bottomScrimStyle}
-        />
+        <div aria-hidden className={bottomScrimClass} style={bottomLayerStyleShellTemplateMain} />
         <div
           ref={sampleRootRef}
-          className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col ${immersive ? "pb-0" : "pb-2"} ${contentClassName}`}
+          className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col ${immersive ? "pb-0" : "pb-2"} ${embedPreview ? "min-h-0 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]" : ""} ${contentClassName}`}
           style={previewVars as CSSProperties}
         >
           {children}

@@ -4,6 +4,8 @@ import {
   type ShellTemplateChromeTune,
 } from "@/lib/shell/template-preview-themes";
 
+/** 顶/底压边 tune；UI 消费请走 `useShellChromeScrimVisuals`（与 `shellTemplateChromeScrimBackgrounds` 成对），勿在各页重复拼渐变。 */
+
 export const SHELL_TEMPLATE_CHROME_TUNE_STORAGE_KEY = "selah.shell-template-chrome-tune-v1";
 
 const TUNE_CHANGE_EVENT = "selah-shell-template-chrome-tune";

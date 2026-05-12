@@ -225,9 +225,10 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
 
   return (
     <MusicShellVisualContext.Provider value={value}>
+      {/** 勿铺 `bg-appDark`：与滚动区/底栏之间子像素缝会在浅底上露出一条深色或反锯齿「线」 */}
       <div
         ref={rootRef}
-        className="music-shell-visual-root flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-visible bg-appDark"
+        className="music-shell-visual-root flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-visible bg-transparent"
         style={IDLE_STYLE}
       >
         {children}

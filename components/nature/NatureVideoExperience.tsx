@@ -19,11 +19,8 @@ import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
-import { useShellTemplateChromeTuneFromStorage } from "@/hooks/useShellTemplateChromeTuneFromStorage";
-import {
-  shellTemplateChromeScrimBackgrounds,
-  shellTemplatePreviewThemeById,
-} from "@/lib/shell/template-preview-themes";
+import { useShellChromeScrimVisuals } from "@/hooks/useShellChromeScrimVisuals";
+import { shellTemplatePreviewThemeById } from "@/lib/shell/template-preview-themes";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
@@ -77,7 +74,7 @@ function IconBellMuted(props: { className?: string }) {
 
 type Props = {
   initial: NatureSettingsV2;
-  /** 与 `/template` 同源：顶/底压边渐变用 `shellTemplateChromeScrimBackgrounds` + 本机已存 `chromeTune` */
+  /** 顶/底压边与浅色壳同源，由 `useShellChromeScrimVisuals`（后台「壳层压边」+ 本机存储）统一计算 */
   brandChrome: { appLight: string; appDark: string };
 };
 
@@ -157,7 +154,6 @@ export function NatureVideoExperience({ initial, brandChrome }: Props) {
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
   );
   const landscapeNarrow = useLandscapeNarrow();
-  const chromeTune = useShellTemplateChromeTuneFromStorage();
 
   const scrimBrandChrome = useMemo(() => {
     if (shellTemplateBrand) {
@@ -167,32 +163,9 @@ export function NatureVideoExperience({ initial, brandChrome }: Props) {
     return brandChrome;
   }, [shellTemplateBrand, brandChrome]);
 
-  const shellChrome = useMemo(
-    () =>
-      shellTemplateChromeScrimBackgrounds(
-        scrimBrandChrome.appLight,
-        scrimBrandChrome.appDark,
-        chromeTune,
-      ),
-    [scrimBrandChrome.appLight, scrimBrandChrome.appDark, chromeTune],
-  );
-
-  const natureTopScrimStyle = useMemo(
-    (): CSSProperties => ({
-      background: shellChrome.topBackground,
-      height: `${chromeTune.topHeightRem}rem`,
-      minHeight: chromeTune.topHeightMinPx,
-    }),
-    [shellChrome.topBackground, chromeTune.topHeightRem, chromeTune.topHeightMinPx],
-  );
-
-  const natureBottomScrimStyle = useMemo(
-    (): CSSProperties => ({
-      background: shellChrome.bottomBackground,
-      height: `${chromeTune.bottomHeightRem}rem`,
-      minHeight: chromeTune.bottomHeightMinPx,
-    }),
-    [shellChrome.bottomBackground, chromeTune.bottomHeightRem, chromeTune.bottomHeightMinPx],
+  const { topLayerStyle, bottomLayerStyleNatureVideoStage } = useShellChromeScrimVisuals(
+    scrimBrandChrome.appLight,
+    scrimBrandChrome.appDark,
   );
 
   useEffect(() => {
@@ -563,7 +536,7 @@ export function NatureVideoExperience({ initial, brandChrome }: Props) {
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
-        style={natureTopScrimStyle}
+        style={topLayerStyle}
         aria-hidden
       />
 
@@ -651,7 +624,7 @@ export function NatureVideoExperience({ initial, brandChrome }: Props) {
           </div>
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] w-full"
-            style={natureBottomScrimStyle}
+            style={bottomLayerStyleNatureVideoStage}
             aria-hidden
           />
           {(showSlowIntroHint || showPlaybackWaitHint) && (

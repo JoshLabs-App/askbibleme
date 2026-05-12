@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { BrandColors } from "@/lib/site-branding-colors";
 import { brandColorsToCssVars, DEFAULT_BRAND_COLORS } from "@/lib/site-branding-colors";
 
@@ -141,6 +142,46 @@ export function shellTemplateChromeScrimBackgrounds(
   const bottomBackground = `linear-gradient(to top, rgb(${r},${g},${b}) 0%, rgb(${r},${g},${b}) ${d.bottomSolidEndPct}%, rgba(${r},${g},${b},${a1b}) ${d.bottomStop1Pct}%, rgba(${r},${g},${b},${a2b}) ${d.bottomStop2Pct}%, transparent 100%)`;
 
   return { fillBackgroundColor: fillStr, topBackground, bottomBackground };
+}
+
+/** 顶压边层 `style`：全站与后台「壳层压边」同源，勿在页面手写渐变/高度。 */
+export function shellChromeTopLayerStyle(
+  chrome: ReturnType<typeof shellTemplateChromeScrimBackgrounds>,
+  tune: ShellTemplateChromeTune,
+): CSSProperties {
+  return {
+    background: chrome.topBackground,
+    height: `${tune.topHeightRem}rem`,
+    minHeight: tune.topHeightMinPx,
+  };
+}
+
+/**
+ * `(app-shell)` 主列浅色壳、`ShellTemplateChromeLayout`：`fixed` 底压边，与 `HomeBottomNav` 槽位对齐。
+ */
+export function shellChromeBottomLayerStyleForAppShellMain(
+  chrome: ReturnType<typeof shellTemplateChromeScrimBackgrounds>,
+  tune: ShellTemplateChromeTune,
+): CSSProperties {
+  return {
+    background: chrome.bottomBackground,
+    height: `${tune.bottomHeightRem}rem`,
+    minHeight: tune.bottomHeightMinPx,
+    bottom: "calc(var(--home-bottom-nav-slot, 70px) - 3px)",
+    transform: "translateZ(0)",
+  };
+}
+
+/** 自然首页视频舞台内：`absolute bottom-0`，无底栏偏移。 */
+export function shellChromeBottomLayerStyleForNatureVideoStage(
+  chrome: ReturnType<typeof shellTemplateChromeScrimBackgrounds>,
+  tune: ShellTemplateChromeTune,
+): CSSProperties {
+  return {
+    background: chrome.bottomBackground,
+    height: `${tune.bottomHeightRem}rem`,
+    minHeight: tune.bottomHeightMinPx,
+  };
 }
 
 /** 壳模板页预览主题色板；可选经左菜单写入本机并由 `AppSkinProvider` 全站覆盖 `--brand-*` */

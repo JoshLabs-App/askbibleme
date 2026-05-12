@@ -11,7 +11,7 @@ type Props = { children: ReactNode };
 export function AppShellFixedChrome({ children }: Props) {
   return (
     <div
-      className="fixed inset-0 z-[1] flex min-h-0 w-full flex-col overflow-hidden bg-canvas isolate"
+      className="fixed inset-0 z-[1] flex min-h-0 w-full flex-col overflow-x-hidden overflow-y-visible bg-canvas isolate"
       style={{
         /**
          * 须用 **动态** 视口高，勿用 `lvh`：`lvh` 为地址栏收起后的「最大」高，首屏带 chrome 时
@@ -21,7 +21,7 @@ export function AppShellFixedChrome({ children }: Props) {
       }}
     >
       {/* 与底栏 `appDark` 一致：子像素缝透出时仍是同色，避免细缝露外层 `canvas` 呈浅色线 */}
-      <div className="relative z-[1] flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-appDark">
+      <div className="relative z-[1] flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-visible bg-appDark">
         {children}
       </div>
     </div>

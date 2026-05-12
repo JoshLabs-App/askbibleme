@@ -33,7 +33,7 @@ export function AppShellProviders({
                   <MusicShellVisualProvider>
                     <div
                       data-app-shell-scroll
-                      className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]"
+                      className="relative z-0 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain border-0 border-b-0 shadow-none [-webkit-overflow-scrolling:touch]"
                     >
                       {children}
                     </div>

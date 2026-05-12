@@ -56,14 +56,17 @@ export function HomeBottomNav() {
 
   return (
     <nav
-      className="home-bottom-nav relative z-20 flex h-[70px] min-h-[70px] max-h-[70px] w-full min-w-0 max-w-full shrink-0 flex-col overflow-hidden box-border border-0 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1"
+      className="home-bottom-nav relative z-20 -mt-px flex h-[70px] min-h-[70px] max-h-[70px] w-full min-w-0 max-w-full shrink-0 flex-col overflow-x-hidden overflow-y-visible box-border border-0 border-t-0 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1 shadow-none outline-none ring-0"
       style={dockChromeStyle}
       aria-label={t("nav.mainLabel")}
     >
-      {/* 向下多画 2px 同色，盖住壳层子像素缝（pointer-events-none 不误触） */}
+      {/**
+       * 向下多画同色带：盖住与视口底 / `canvas` 之间的子像素缝。
+       * 勿用 `overflow-hidden` 包住本层，否则此条会被裁掉，反露出浅色线。
+       */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -bottom-px left-0 right-0 z-[1] h-[2px]"
+        className="pointer-events-none absolute -bottom-1 left-0 right-0 z-[1] h-[max(10px,calc(env(safe-area-inset-bottom,0px)+8px))]"
         style={{ backgroundColor: underfillBg }}
       />
       <div className="relative z-[2] flex min-h-0 w-full min-w-0 max-w-full flex-1 items-stretch px-0.5 sm:px-1">

@@ -11,6 +11,7 @@ export default function JourneyPlaceholderPage() {
     <ShellTemplateChromeLayout contentClassName="gap-0">
       <AppShellPlaceholder
         embedded
+        hideBackHomeCta
         titleKey="pages.journey.title"
         leadKey="pages.journey.lead"
         bodyKey="pages.journey.body"

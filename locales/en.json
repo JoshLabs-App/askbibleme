@@ -286,6 +286,8 @@
     "shellChrome": {
       "pageTitle": "Shell top / bottom scrims",
       "intro": "Adjust the gradient height and transparency at the top and bottom of the app shell (home, nature, journey). Values are stored in this browser only; Save applies them immediately on the public app in the same browser.",
+      "previewHeading": "Live preview",
+      "previewHint": "Same shell as the public template page: sliders update this pane immediately; Save writes to this device for the rest of the app.",
       "templateMovedBlockTitle": "Shell template notes (moved from public /template)",
       "templateMovedBlockIntro": "These two paragraphs used to sit in the middle of the public shell template page; they are kept here for reference while you tune scrims."
     },

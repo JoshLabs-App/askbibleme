@@ -11,6 +11,7 @@ export default function ExplorePlaceholderPage() {
     <ShellTemplateChromeLayout contentClassName="gap-0">
       <AppShellPlaceholder
         embedded
+        hideBackHomeCta
         titleKey="pages.explore.title"
         leadKey="pages.explore.lead"
         bodyKey="pages.explore.body"

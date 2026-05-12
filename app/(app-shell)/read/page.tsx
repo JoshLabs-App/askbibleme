@@ -11,6 +11,7 @@ export default function ReadPlaceholderPage() {
     <ShellTemplateChromeLayout contentClassName="gap-0">
       <AppShellPlaceholder
         embedded
+        hideBackHomeCta
         titleKey="pages.read.title"
         leadKey="pages.read.lead"
         bodyKey="pages.read.body"

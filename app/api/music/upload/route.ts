@@ -10,10 +10,8 @@ import {
 } from "@/lib/music/transcode-upload";
 import { analyzeAudioFileToV1 } from "@/lib/music/build-track-analysis-server";
 
-/** 大文件 + ffmpeg 转码；部署平台需在套餐允许范围内（秒）。 */
+/** 大文件 + ffmpeg 转码；部署平台（如 Vercel）仍可能对请求体有套餐上限，与本应用内校验无关。 */
 export const maxDuration = 120;
-
-const MAX_BYTES = 45 * 1024 * 1024; // 45 MB
 
 const ALLOWED_EXT = new Set([
   ".mp3",
@@ -86,13 +84,6 @@ export async function POST(req: Request) {
   const file = form.get("file");
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "缺少 file 字段。" }, { status: 400 });
-  }
-
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: `文件过大（上限 ${Math.round(MAX_BYTES / 1024 / 1024)} MB）。` },
-      { status: 400 },
-    );
   }
 
   const origName = file.name || "audio";

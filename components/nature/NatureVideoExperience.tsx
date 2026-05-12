@@ -19,6 +19,7 @@ import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
+import { HOME_DOCK_NAV_BG } from "@/lib/shell/home-dock-nav-bg";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
@@ -543,6 +544,24 @@ export function NatureVideoExperience({ initial }: Props) {
 
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[5] bg-gradient-to-b from-slate-950/25 via-transparent to-slate-950/60"
+        aria-hidden
+      />
+
+      {/* 顶缘：与底栏同色的压层，向下渐隐（仍短于底部大压层） */}
+      <div
+        className="pointer-events-none fixed inset-x-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[6] h-[clamp(4.75rem,20dvh,10rem)] sm:h-[clamp(5rem,17dvh,9rem)]"
+        style={{
+          background: `linear-gradient(to bottom, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 12%, rgba(20, 60, 96, 0.62) 52%, rgba(20, 60, 96, 0.22) 80%, rgba(20, 60, 96, 0.06) 94%, transparent 100%)`,
+        }}
+        aria-hidden
+      />
+
+      {/* 底栏上方：fixed 压层，湖水渐隐并入底栏色（scroll 外底栏同色，视觉上水「接到」底栏） */}
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[6] h-[clamp(11rem,48dvh,22rem)] sm:h-[clamp(12rem,42dvh,21rem)]"
+        style={{
+          background: `linear-gradient(to top, ${HOME_DOCK_NAV_BG} 0%, ${HOME_DOCK_NAV_BG} 20%, rgba(20, 60, 96, 0.9) 38%, rgba(20, 60, 96, 0.52) 60%, rgba(20, 60, 96, 0.2) 82%, transparent 100%)`,
+        }}
         aria-hidden
       />
 

@@ -1,5 +1,5 @@
 /**
- * 底栏主导航：与 `HomeBottomNav` 四项一一对应；线框、currentColor，与 `text-ink` 联动。
+ * 底栏主导航：与 `HomeBottomNav` 四项一一对应；线框、currentColor，与底栏文字色联动。
  */
 export function IconNavHome({ className }: { className?: string }) {
   return (

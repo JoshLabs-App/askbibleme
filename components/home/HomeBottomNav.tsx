@@ -7,6 +7,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 import { IconNavExplore, IconNavHome, IconNavJourney, IconNavRead } from "@/components/ui/NavTabIcons";
+import { HOME_DOCK_NAV_BG } from "@/lib/shell/home-dock-nav-bg";
 
 const itemDefs: {
   href: string;
@@ -25,7 +26,7 @@ function tabClass(active: boolean) {
     "flex min-h-[3rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-0.5 text-[11px] font-medium leading-tight tracking-wide transition sm:min-h-[3.25rem] sm:gap-1 sm:px-1 sm:text-sm";
   return [
     base,
-    active ? "text-ink" : "text-ink/50 hover:bg-ink/[0.04] hover:text-ink/85",
+    active ? "text-white" : "text-white/55 hover:bg-white/[0.08] hover:text-white/90",
   ].join(" ");
 }
 
@@ -34,18 +35,13 @@ export function HomeBottomNav() {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
-  const natureHomeShell =
-    pathname === "/" || pathname === "" || pathname === "/nature" || pathname.startsWith("/nature/");
   if (pathname.startsWith("/admin")) return null;
   if (pathname.startsWith("/relax")) return null;
 
   return (
     <nav
-      className={`home-bottom-nav relative z-20 w-full min-w-0 max-w-full shrink-0 overflow-x-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 ${
-        natureHomeShell
-          ? "border-t border-border/50 bg-canvas shadow-[0_-6px_22px_rgba(0,0,0,0.12)]"
-          : "border-t border-border/25 bg-transparent"
-      }`}
+      className="home-bottom-nav relative z-20 w-full min-w-0 max-w-full shrink-0 overflow-x-hidden pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5"
+      style={{ backgroundColor: HOME_DOCK_NAV_BG }}
       aria-label={t("nav.mainLabel")}
     >
       <div className="flex w-full min-w-0 max-w-full items-stretch gap-0.5 px-1 sm:px-2">
@@ -76,7 +72,7 @@ export function HomeBottomNav() {
               !canPlay ? t("playback.noTrack") : playing ? t("playback.pauseMusic") : t("playback.playMusic")
             }
             onClick={() => togglePlay()}
-            className="music-reactive-play-btn flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-[0_1px_2px_rgba(31,26,18,0.05),0_3px_10px_rgba(31,26,18,0.06)] ring-1 ring-border/45 transition hover:bg-[#EDE4D4] hover:ring-border/60 hover:shadow-[0_2px_6px_rgba(31,26,18,0.07)] active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand/50 disabled:pointer-events-none disabled:opacity-35"
+            className="music-reactive-play-btn flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-border/45 transition hover:bg-[#EDE4D4] hover:ring-border/60 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand/50 disabled:pointer-events-none disabled:opacity-35"
           >
             {playing ? (
               <IconPause className="h-[18px] w-[18px] shrink-0 opacity-95" />

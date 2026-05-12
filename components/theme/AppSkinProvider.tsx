@@ -94,16 +94,33 @@ function syncThemeColorMetaFromDocumentElement() {
   if (raw) syncThemeColorMetaFromCanvas(raw);
 }
 
+/**
+ * 让 `html` 上的画布变量与 `body` 解析结果一致。
+ * `globals.css` 里 `html { background-color: rgb(var(--brand-canvas-rgb)) }` 只看 `html` 自身变量；
+ * 若皮肤把 `--brand-*` 只写在 `body` 上，Android 顶缘常会露出一条与内容不同的细线。
+ */
+function syncHtmlCanvasBackgroundWithBody() {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const cs = getComputedStyle(document.body);
+  const canvas = cs.getPropertyValue("--brand-canvas").trim();
+  const rgb = cs.getPropertyValue("--brand-canvas-rgb").trim();
+  if (canvas) root.style.setProperty("--brand-canvas", canvas);
+  if (rgb) root.style.setProperty("--brand-canvas-rgb", rgb);
+}
+
 function applyUserSkinToBody(id: UserSkinId) {
   clearBodyBrandVarOverrides();
   const preset = presetColorsForUserSkin(id);
   if (!preset) {
     syncThemeColorMetaFromDocumentElement();
+    syncHtmlCanvasBackgroundWithBody();
     return;
   }
   const vars = brandColorsToCssVars(preset);
   applyVarsToBody(vars);
   syncThemeColorMetaFromCanvas(preset.canvas);
+  syncHtmlCanvasBackgroundWithBody();
 }
 
 export function AppSkinProvider({ children }: { children: ReactNode }) {

@@ -1,46 +1,32 @@
 "use client";
 
-import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
-import {
-  IconNavExplore,
-  IconNavHome,
-  IconNavJourney,
-  IconNavRead,
-  type NavTabIconProps,
-} from "@/components/ui/NavTabIcons";
 import { HOME_DOCK_NAV_BG } from "@/lib/shell/home-dock-nav-bg";
 
 const itemDefs: {
   href: string;
   labelKey: string;
-  Icon: ComponentType<NavTabIconProps>;
   match: (p: string) => boolean;
 }[] = [
-  { href: "/", labelKey: "nav.home", Icon: IconNavHome, match: (p) => p === "/" || p === "" || p === "/nature" },
-  { href: "/journey", labelKey: "nav.journey", Icon: IconNavJourney, match: (p) => p.startsWith("/journey") },
-  { href: "/read", labelKey: "nav.read", Icon: IconNavRead, match: (p) => p.startsWith("/read") },
-  { href: "/explore", labelKey: "nav.explore", Icon: IconNavExplore, match: (p) => p.startsWith("/explore") },
+  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" || p === "/nature" },
+  { href: "/journey", labelKey: "nav.journey", match: (p) => p.startsWith("/journey") },
+  { href: "/read", labelKey: "nav.read", match: (p) => p.startsWith("/read") },
+  { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },
 ];
 
 function navLinkClass(active: boolean) {
   const base =
-    "flex min-h-0 min-w-0 flex-1 basis-0 flex-col items-center justify-center px-0.5 py-0 text-[10px] font-medium leading-tight tracking-wide transition sm:px-0.5 sm:text-[11px]";
+    "flex min-h-0 min-w-0 flex-1 basis-0 items-center justify-center px-1 py-0 text-[11px] font-medium leading-tight tracking-wide transition sm:text-[12px]";
   return [
     base,
-    active
-      ? "text-white"
-      : "text-white/45 hover:text-white/75",
+    active ? "text-white" : "text-white/45 hover:text-white/75",
   ].join(" ");
 }
-
-const navItemInnerClass =
-  "flex max-w-full min-w-0 flex-col items-center justify-center gap-0.5 leading-tight sm:gap-0.5";
 
 /** 置于 shell 底部列（非 fixed），由父级 `fixed inset-0 + flex` 保证始终在视口内。 */
 export function HomeBottomNav() {
@@ -64,7 +50,6 @@ export function HomeBottomNav() {
       <div className="flex min-h-0 w-full min-w-0 max-w-full flex-1 items-stretch px-0.5 sm:px-1">
         {itemDefs.slice(0, 2).map((def) => {
           const active = def.match(pathname);
-          const Icon = def.Icon;
           return (
             <Link
               key={def.href}
@@ -73,15 +58,12 @@ export function HomeBottomNav() {
               className={navLinkClass(active)}
               onClick={def.href === "/" ? onHomeNavClick : undefined}
             >
-              <span className={navItemInnerClass}>
-                <Icon className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]" />
-                <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
-              </span>
+              <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
             </Link>
           );
         })}
 
-        <div className="music-reactive-play-btn flex min-w-0 flex-1 basis-0 items-center justify-center">
+        <div className="music-reactive-play-btn flex min-w-0 flex-1 basis-0 items-center justify-center px-0.5">
           <button
             type="button"
             disabled={!canPlay}
@@ -102,7 +84,6 @@ export function HomeBottomNav() {
 
         {itemDefs.slice(2, 4).map((def) => {
           const active = def.match(pathname);
-          const Icon = def.Icon;
           return (
             <Link
               key={def.href}
@@ -110,10 +91,7 @@ export function HomeBottomNav() {
               aria-current={active ? "page" : undefined}
               className={navLinkClass(active)}
             >
-              <span className={navItemInnerClass}>
-                <Icon className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]" />
-                <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
-              </span>
+              <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
             </Link>
           );
         })}

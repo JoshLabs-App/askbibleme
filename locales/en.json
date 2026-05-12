@@ -59,7 +59,10 @@
   "playback": {
     "noTrack": "Nothing to play yet",
     "pauseMusic": "Pause music",
-    "playMusic": "Play music"
+    "playMusic": "Play music",
+    "playLabel": "Play",
+    "pauseLabel": "Pause",
+    "noTrackLabel": "None"
   },
   "music": {
     "atmosphere": {

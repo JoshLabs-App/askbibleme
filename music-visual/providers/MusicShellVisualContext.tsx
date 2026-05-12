@@ -62,11 +62,11 @@ const IDLE_STYLE: CSSProperties = {
  * 强度由 `MusicVisualTuningProvider` + 首页「播放视觉」面板调节。
  * 首页氛围经 `HomeAtmosphereVisualProvider` 映射为引擎 atmosphere 乘子。
  *
- * 省电 / 克制：`document` 隐藏时停表；自然首页 `/` 等未在播时用较低频定时器（避免与全屏视频争主线程）；仅音乐页或播放中走 rAF。
+ * 省电 / 克制：`document` 隐藏时停表；非 `/music` 路由一律低频 tick（即使正在播放），避免与全屏视频或其它页争主线程。
  */
 export function MusicShellVisualProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
-  const { effectiveSrc, musicStore, getAudioElement, playing } = useMusicShellPlayback();
+  const { effectiveSrc, musicStore, getAudioElement } = useMusicShellPlayback();
   const { tuning } = useMusicVisualTuning();
   const { homeAtmospherePresetId } = useHomeAtmosphereVisual();
   const atmosphereOverride = useMusicShellAtmosphereOverrideOptional();
@@ -84,8 +84,6 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
 
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const playingRef = useRef(playing);
-  playingRef.current = playing;
 
   const rootRef = useRef<HTMLDivElement>(null);
   /** `<audio>` ref 极少数首帧尚未挂载时用占位元素推进引擎，避免整段视觉引擎永远不启动 */
@@ -95,7 +93,13 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
 
   const track = useMemo(() => findAudioTrackBySrc(musicStore, effectiveSrc), [musicStore, effectiveSrc]);
 
+  const onMusicRoute = pathname === "/music" || pathname.startsWith("/music/");
+
   useEffect(() => {
+    if (!onMusicRoute) {
+      setAnalysis(null);
+      return;
+    }
     let cancelled = false;
     const src = track?.analysisSrc?.trim();
     setAnalysis(null);
@@ -115,7 +119,7 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
     return () => {
       cancelled = true;
     };
-  }, [track?.analysisSrc]);
+  }, [track?.analysisSrc, onMusicRoute]);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -129,13 +133,16 @@ export function MusicShellVisualProvider({ children }: { children: ReactNode }) 
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
     const smooth = createMusicVisualSmoothState();
 
-    const isPrimaryVisualRoute = () => {
+    const isMusicRoute = () => {
       const p = pathnameRef.current;
-      /** 自然首页 `/`、`/nature` 已占满 GPU/解码；勿与壳层 60fps CSS 驱动叠在同一优先级 */
       return p === "/music" || p.startsWith("/music/");
     };
 
-    const isHighPriority = () => playingRef.current || isPrimaryVisualRoute();
+    /**
+     * 仅音乐全屏页用 rAF 与节拍对齐。在 `/journey`、`/read` 等页「只听歌」时若仍 60fps 写 `--music-*`，
+     * 主线程与合成压力会明显升高，iPhone 上易出现周期闪卡；这些页用下面 `setTimeout` 低频即可。
+     */
+    const isHighPriority = () => isMusicRoute();
 
     const clearSched = () => {
       if (raf) {

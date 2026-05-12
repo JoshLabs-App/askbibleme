@@ -59,7 +59,10 @@
   "playback": {
     "noTrack": "暂无可播放曲目",
     "pauseMusic": "暂停音乐",
-    "playMusic": "播放音乐"
+    "playMusic": "播放音乐",
+    "playLabel": "播放",
+    "pauseLabel": "暂停",
+    "noTrackLabel": "暂无"
   },
   "music": {
     "atmosphere": {

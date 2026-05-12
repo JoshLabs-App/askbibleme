@@ -1,22 +1,14 @@
 /**
- * 管理后台简易门禁：cookie 存 HMAC(secret, password)，与 `middleware` / `api/admin/auth` 共用。
- * 生产环境请设置 `ADMIN_PASSWORD` 与 `ADMIN_GATE_SECRET`（任意长随机串）。
- *
- * 临时测试：`SELAH_ADMIN_DEV_GATE=1` 时忽略 `ADMIN_PASSWORD`，登录口令固定为 `dddd`。
- * 上线前删除该变量（及仓库根 `vercel.json` 里对应项），并改用强密码 + 独立 `ADMIN_GATE_SECRET`。
+ * 管理后台 cookie 门禁（HMAC）与 `/api/admin/auth` 共用。
+ * 当前未接 `middleware`：后台路由可直接访问；恢复门禁时加回 `middleware.ts` 并校验 `verifyAdminGateCookie`。
+ * 生产若再启用登录，请设置 `ADMIN_PASSWORD` 与 `ADMIN_GATE_SECRET`（任意长随机串）。
  */
 
 export const ADMIN_GATE_COOKIE = "selah_admin_gate";
 
 const GATE_PAYLOAD_PREFIX = "admin|v1|";
 
-function isDevAdminGateEnabled(): boolean {
-  const v = process.env.SELAH_ADMIN_DEV_GATE?.trim().toLowerCase();
-  return v === "1" || v === "true" || v === "yes";
-}
-
 export function getAdminPassword(): string {
-  if (isDevAdminGateEnabled()) return "dddd";
   return process.env.ADMIN_PASSWORD?.trim() || "dddd";
 }
 

@@ -292,7 +292,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             } catch {
               /* ignore */
             }
-            window.location.href = "/admin/login";
+            window.location.href = "/";
           }}
           className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-ink/[0.05] hover:text-adminFg/85"
         >
@@ -374,7 +374,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             } catch {
               /* ignore */
             }
-            window.location.href = "/admin/login";
+            window.location.href = "/";
           }}
           className="text-left text-[11px] text-adminMuted hover:text-adminFg/85"
         >

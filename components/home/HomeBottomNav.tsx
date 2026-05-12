@@ -91,12 +91,12 @@ export function HomeBottomNav() {
             }
             onClick={() => togglePlay()}
             style={{ backgroundColor: "rgba(255,255,255,0.94)", color: dockAccent }}
-            className="music-reactive-play-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-white/40 transition hover:bg-white hover:ring-white/55 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:pointer-events-none disabled:opacity-35"
+            className="music-reactive-play-btn flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-1 ring-white/40 transition hover:bg-white hover:ring-white/55 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:pointer-events-none disabled:opacity-35 sm:h-[52px] sm:w-[52px]"
           >
             {playing ? (
-              <IconPause className="h-4 w-4 shrink-0" />
+              <IconPause className="h-5 w-5 shrink-0 sm:h-[22px] sm:w-[22px]" />
             ) : (
-              <IconPlay className="h-4 w-4 shrink-0 translate-x-[1px]" />
+              <IconPlay className="h-5 w-5 shrink-0 translate-x-[1px] sm:h-[22px] sm:w-[22px]" />
             )}
           </button>
         </div>

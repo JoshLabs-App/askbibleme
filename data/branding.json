@@ -4,17 +4,17 @@
   "logoKind": "svg",
   "presetId": "parchment",
   "colors": {
-    "canvas": "#E4F1FA",
-    "surface": "#CFE6F4",
-    "border": "#9BC4DC",
-    "muted": "#4A6274",
-    "ink": "#132A3A",
-    "sand": "#3D8AB8",
-    "adminBg": "#EAF4FB",
-    "adminPanel": "#DDEEF8",
-    "adminLine": "#B3D0E6",
-    "adminFg": "#132A3A",
-    "adminMuted": "#4A6274"
+    "canvas": "#143C60",
+    "surface": "#183A52",
+    "border": "#295878",
+    "muted": "#9BB0C2",
+    "ink": "#F1F5F9",
+    "sand": "#7EB8E0",
+    "adminBg": "#0E2438",
+    "adminPanel": "#152F45",
+    "adminLine": "#2A5572",
+    "adminFg": "#EEF3F8",
+    "adminMuted": "#94A9B8"
   },
   "appIconsUpdatedAt": "2026-05-11T03:02:51.013Z",
   "appIconOriginalName": "selah.png"

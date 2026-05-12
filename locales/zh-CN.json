@@ -305,6 +305,7 @@
     "scenes": {
       "sectionAria": "自然影片",
       "ariaSwitch": "切换到{{name}}",
+      "ariaPreparing": "正在下载完整「{{name}}」，就绪后自动切换",
       "ariaCollapsePreview": "收起{{name}}预览",
       "unnamedProduct": "未命名影片"
     }

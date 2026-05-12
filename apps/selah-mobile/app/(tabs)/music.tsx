@@ -43,14 +43,14 @@ const styles = StyleSheet.create({
   play: {
     minHeight: 48,
     borderRadius: 999,
-    backgroundColor: theme.ink,
+    backgroundColor: theme.sand,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
   },
   playPressed: { opacity: 0.9 },
-  playText: { color: theme.canvas, fontSize: 15, fontWeight: "600" },
-  hint: { marginTop: 4, color: "rgba(237, 228, 212, 0.75)", fontSize: 12 },
+  playText: { color: "#0f172a", fontSize: 15, fontWeight: "600" },
+  hint: { marginTop: 4, color: "rgba(241, 245, 249, 0.72)", fontSize: 12 },
   secondary: {
     minHeight: 44,
     borderRadius: 999,
@@ -62,5 +62,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
   },
   secondaryPressed: { opacity: 0.9 },
-  secondaryText: { fontSize: 14, fontWeight: "600", color: "rgba(43, 37, 32, 0.88)" },
+  secondaryText: { fontSize: 14, fontWeight: "600", color: theme.ink },
 });

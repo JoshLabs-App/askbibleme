@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     fontSize: 15,
     lineHeight: 24,
-    color: "rgba(43, 37, 32, 0.82)",
+    color: "rgba(241, 245, 249, 0.88)",
     textAlign: "center",
   },
   body: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   btnText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "rgba(43, 37, 32, 0.88)",
+    color: theme.ink,
   },
   footer: {
     marginTop: 28,

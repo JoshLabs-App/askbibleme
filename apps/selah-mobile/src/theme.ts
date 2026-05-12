@@ -1,9 +1,9 @@
-/** 与前台 `canvas` / `ink` 气质接近的浅色底（非像素级对齐 Tailwind） */
+/** 与前台品牌 `canvas` / 底栏 `#143C60` 对齐（与 `lib/site-branding-colors` 默认同系） */
 export const theme = {
-  canvas: "#EDE4D4",
-  surface: "#F7F3EC",
-  ink: "#2B2520",
-  muted: "#6B6560",
-  border: "rgba(43, 37, 32, 0.12)",
-  sand: "#C9A66A",
+  canvas: "#143C60",
+  surface: "#183A52",
+  ink: "#F1F5F9",
+  muted: "#9BB0C2",
+  border: "rgba(41, 88, 120, 0.55)",
+  sand: "#7EB8E0",
 } as const;

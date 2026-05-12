@@ -11,7 +11,7 @@ export const metadata = {
 export default async function MusicPage() {
   const store = await readMusicCompanionStore(process.cwd());
   return (
-    <div className="flex h-dvh max-h-dvh min-h-0 w-full flex-1 flex-col overflow-hidden bg-ink lg:h-full lg:max-h-none lg:bg-[radial-gradient(125%_90%_at_50%_-5%,#3d3228_0%,#1c1610_42%,#0c0a08_100%)]">
+    <div className="flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden bg-ink lg:h-full lg:max-h-none lg:bg-[radial-gradient(125%_90%_at_50%_-5%,#3d3228_0%,#1c1610_42%,#0c0a08_100%)]">
       <MusicHomeClient initialStore={store} />
     </div>
   );

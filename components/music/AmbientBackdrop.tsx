@@ -35,7 +35,7 @@ type PresetLayers = {
 /** 与 `HomeAtmospherePresetId` / 后台「首页氛围」一致； former calm/ember/aurora 已并入 parchment/ember/dawn。 */
 const LAYERS: Record<HomeAtmospherePresetId, PresetLayers> = {
   lagoon: {
-    rootBg: "#e4f1fa",
+    rootBg: "#143C60",
     layerA:
       "radial-gradient(ellipse 78% 64% at 32% 32%, rgba(125, 211, 252, 0.55) 0%, rgba(186, 230, 253, 0.35) 48%, transparent 72%)",
     layerB:

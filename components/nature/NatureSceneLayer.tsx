@@ -8,9 +8,10 @@ type Props = {
   className?: string;
   settings: NatureSettingsV2;
   activeVideoId: string;
-  /** 16:9 预览中选中的影片（可与 active 不同） */
-  previewVideoId: string | null;
-  /** 点卡片：打开或替换预览，不直接全屏 */
+  /** 正在整段下载、尚未切入主画面的场景 id；无则为 null */
+  prepareSceneId: string | null;
+  /** 0–1；无 Content-Length 时为 null（卡片内用不确定进度样式） */
+  prepareProgress: number | null;
   onSceneCardPress: (id: string) => void;
 };
 
@@ -20,14 +21,14 @@ function cardTitle(v: NatureVideoEntry, fallback: string) {
 }
 
 /**
- * 自然页第二层：影片「产品」卡；当前片置末。窄屏按版块宽度约 3.5 张露出暗示横滑；宽屏单卡上限 6.5rem。
- * 大屏横条内整体水平居中（外层滚动 + 内层 `w-max` + `lg:justify-center`）。
+ * 自然页第二层：横向场景小图（缩略 / 封面）；当前片置末。窄屏约多张露出暗示横滑；宽屏单块上限约 5rem。
  */
 export function NatureSceneLayer({
   className = "",
   settings,
   activeVideoId,
-  previewVideoId,
+  prepareSceneId,
+  prepareProgress,
   onSceneCardPress,
 }: Props) {
   const { t } = useLocale();
@@ -58,13 +59,14 @@ export function NatureSceneLayer({
       aria-label={t("nature.scenes.sectionAria")}
     >
       <div
-        className="w-full overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex lg:justify-center [&::-webkit-scrollbar]:hidden"
+        className="w-full overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <div className="flex w-max min-w-0 flex-nowrap snap-x snap-mandatory gap-2 sm:gap-3">
+        <div className="flex min-w-full justify-center">
+          <div className="flex w-max min-w-0 flex-nowrap snap-x snap-mandatory gap-2 sm:gap-2.5">
           {orderedVideos.map((v) => {
             const selected = v.id === activeVideoId;
-            const previewing = previewVideoId !== null && v.id === previewVideoId;
+            const preparing = prepareSceneId !== null && v.id === prepareSceneId;
             const thumb = v.thumbSrc?.trim();
             const title = cardTitle(v, t("nature.scenes.unnamedProduct"));
 
@@ -73,14 +75,14 @@ export function NatureSceneLayer({
                 key={v.id}
                 type="button"
                 aria-current={selected ? "true" : undefined}
-                aria-pressed={previewing ? true : undefined}
+                aria-busy={preparing ? true : undefined}
                 aria-label={
-                  previewing ? t("nature.scenes.ariaCollapsePreview", { name: title }) : t("nature.scenes.ariaSwitch", { name: title })
+                  preparing ? t("nature.scenes.ariaPreparing", { name: title }) : t("nature.scenes.ariaSwitch", { name: title })
                 }
                 onClick={() => select(v.id)}
                 className={
-                  "group relative aspect-square w-[min(6.5rem,calc((100cqi-1.5rem)/3.5))] shrink-0 snap-start overflow-hidden rounded-[0.85rem] text-left shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[min(6.5rem,calc((100cqi-2.25rem)/3.5))] sm:rounded-[0.95rem] " +
-                  (previewing ? "ring-2 ring-sky-400/70 ring-inset " : "ring-white/[0.14] ")
+                  "group relative aspect-square w-[min(5rem,calc((100cqi-1.5rem)/4.5))] shrink-0 snap-start overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[min(5rem,calc((100cqi-2.25rem)/4.5))] sm:rounded-[0.85rem] " +
+                  (selected ? "ring-2 ring-sky-400/70 ring-inset " : "ring-white/[0.14] ")
                 }
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-800/80 via-slate-900/75 to-slate-950/90" aria-hidden />
@@ -105,9 +107,34 @@ export function NatureSceneLayer({
                   className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
                   aria-hidden
                 />
+                {preparing ? (
+                  <div className="pointer-events-none absolute inset-0 z-[15] flex flex-col justify-end bg-black/40 px-2 pb-2 pt-8">
+                    <div
+                      className="h-1.5 w-full overflow-hidden rounded-full bg-white/20"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={
+                        prepareProgress != null ? Math.round(prepareProgress * 100) : undefined
+                      }
+                    >
+                      {prepareProgress != null ? (
+                        <div
+                          className="h-full rounded-full bg-sky-400/95 transition-[width] duration-150 ease-out"
+                          style={{ width: `${Math.max(2, Math.round(prepareProgress * 100))}%` }}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <div className="h-full w-[38%] min-w-[1.75rem] rounded-full bg-sky-400/90 motion-safe:animate-pulse" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
               </button>
             );
           })}
+          </div>
         </div>
       </div>
     </section>

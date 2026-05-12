@@ -19,7 +19,7 @@ type Value = {
 
 const HomeDockChromeContext = createContext<Value | null>(null);
 
-/** 自然首页 `/`、`/nature`：底区场景卡等默认收起，上滑主滚动后再展开 */
+/** 自然首页 `/`、`/nature` 等：用于判断壳路径（主题、埋点等）；底区场景卡见 `DockChromeCollapse` 默认展开 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
   return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
@@ -27,10 +27,11 @@ export function isNatureHomeShellPath(pathname: string) {
 
 export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
-  const [dockChromeVisible, setDockChromeVisible] = useState(() => !isNatureHomeShellPath(pathname));
+  /** 默认展开：大屏主区可滚动时若默认收起，用户不滚动就看不到场景可选图 */
+  const [dockChromeVisible, setDockChromeVisible] = useState(true);
 
   useEffect(() => {
-    setDockChromeVisible(!isNatureHomeShellPath(pathname));
+    setDockChromeVisible(true);
   }, [pathname]);
 
   const toggleDockChrome = useCallback(() => {

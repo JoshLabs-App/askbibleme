@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
 import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
 import { getAppBuildId } from "@/lib/app-build-id";
 import { brandingAssetsExist, getResolvedBrandColors } from "@/lib/site-branding";
@@ -82,8 +83,10 @@ export default async function RootLayout({
       <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
         <AppSkinProvider>
           <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
-            {children}
-            <AppUpdateNotifier />
+            <MusicShellPlaybackProvider>
+              {children}
+              <AppUpdateNotifier />
+            </MusicShellPlaybackProvider>
           </LocaleProvider>
         </AppSkinProvider>
       </body>

@@ -305,6 +305,7 @@
     "scenes": {
       "sectionAria": "Nature clips",
       "ariaSwitch": "Switch to {{name}}",
+      "ariaPreparing": "Downloading full clip «{{name}}»; switches when ready",
       "ariaCollapsePreview": "Close preview for {{name}}",
       "unnamedProduct": "Untitled clip"
     }

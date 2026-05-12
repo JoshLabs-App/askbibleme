@@ -14,19 +14,6 @@
       ]
     },
     {
-      "id": "f1f36b56-696d-4d78-9fac-ef688d6f2b89",
-      "src": "/nature/uploads/0463f278c78440679a6f534be4035f9b.mp4",
-      "title": "湖泊",
-      "thumbSrc": "/nature/thumbs/8da756a7021441e991a7038bb68abacc.jpg",
-      "mix": [
-        {
-          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
-          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
-          "volume": 0.06
-        }
-      ]
-    },
-    {
       "id": "50925f41-f3ad-4796-bcb4-8cfa932a2ede",
       "src": "/nature/uploads/7659d5d2783645088b564b266fdc95d6.mp4",
       "title": "树叶",
@@ -58,9 +45,23 @@
       ]
     },
     {
-      "id": "acd85167-eeaa-4370-b293-e71f05a58c0f",
-      "src": "/nature/uploads/36277f9e6db342dc90fcb30479517374.mp4",
-      "title": "学习"
+      "id": "5fdf12b5-d9f0-4160-a385-541c01b6a337",
+      "src": "/nature/uploads/1bdce7b09e634b229444b3e7fcae6fd3.mp4",
+      "title": "自然影像 2026-05-12 · 02",
+      "previewFrameSrc": "/nature/preview-posters/1bdce7b09e634b229444b3e7fcae6fd3.jpg",
+      "mix": [
+        {
+          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "volume": 0.18
+        }
+      ]
+    },
+    {
+      "id": "54f68913-3ff5-4d1f-bfe2-ce9b7c4b3a1a",
+      "src": "/nature/uploads/1b9d41003c44438ea71d2070dc767ad2.mp4",
+      "title": "自然影像 2026-05-12 · 03",
+      "previewFrameSrc": "/nature/preview-posters/1b9d41003c44438ea71d2070dc767ad2.jpg"
     }
   ],
   "ambientClips": [
@@ -135,6 +136,6 @@
       "title": "打雷"
     }
   ],
-  "activeVideoId": "f1f36b56-696d-4d78-9fac-ef688d6f2b89",
+  "activeVideoId": "5fdf12b5-d9f0-4160-a385-541c01b6a337",
   "playbackRate": 1
 }

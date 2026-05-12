@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   useMusicShellPlayback,
@@ -10,6 +10,43 @@ import {
 } from "@/components/music/MusicShellPlaybackContext";
 
 const SLEEP_OPTIONS: MusicShellSleepTimerMinutes[] = [30, 60, 120];
+
+function IconMusicNotes({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="7" cy="18" r="3" />
+      <circle cx="17" cy="16" r="3" />
+    </svg>
+  );
+}
+
+function IconRelaxRipple({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.65"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="8.25" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="2.25" />
+    </svg>
+  );
+}
 
 function IconPocketWatch({ className }: { className?: string }) {
   return (
@@ -31,45 +68,6 @@ function IconPocketWatch({ className }: { className?: string }) {
   );
 }
 
-/** 双音符轮廓，与怀表同线宽 */
-function IconMusicNotes({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.65"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M10 6.5v9.5M15 5v9.5" />
-      <path d="M10 6.5 15 5" />
-      <circle cx="8" cy="17.5" r="2.25" />
-      <circle cx="13" cy="16" r="2.25" />
-    </svg>
-  );
-}
-
-/** 波纹，示意放松 / 呼吸 */
-function IconRelaxWaves({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.65"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <path d="M4 10c2.2 0 2.2-3.2 4.5-3.2S11 10 13.5 10s2.3-3.2 4.5-3.2 2.2 3.2 4.5 3.2" />
-      <path d="M4 15c2.2 0 2.2-3.2 4.5-3.2S11 15 13.5 15s2.3-3.2 4.5-3.2 2.2 3.2 4.5 3.2" />
-    </svg>
-  );
-}
-
 function sleepLabelKey(m: MusicShellSleepTimerMinutes): string {
   if (m === 30) return "music.sleepTimer.m30";
   if (m === 60) return "music.sleepTimer.m60";
@@ -77,18 +75,19 @@ function sleepLabelKey(m: MusicShellSleepTimerMinutes): string {
 }
 
 /**
- * 音乐 `/music`、放松 `/relax` 的简单入口；右侧为全局定时停止（怀表）。
+ * 自然页底区：音乐、放松入口与全局定时（怀表）。`/music`、`/relax` 在主导航外，由此处补充。
  */
 export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string }) {
-  const { t } = useLocale();
   const pathname = usePathname() ?? "";
-  const onMusic = pathname === "/music" || pathname.startsWith("/music/");
-  const onRelax = pathname === "/relax" || pathname.startsWith("/relax/");
+  const { t } = useLocale();
   const { sleepTimerMinutes, setSleepTimerMinutes } = useMusicShellPlayback();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverWrapRef = useRef<HTMLDivElement>(null);
 
-  const iconShortcutClass = (active: boolean) =>
+  const onMusic = pathname === "/music" || pathname.startsWith("/music/");
+  const onRelax = pathname === "/relax" || pathname.startsWith("/relax/");
+
+  const shortcutLinkClass = (active: boolean) =>
     [
       "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition sm:h-10 sm:w-10",
       active
@@ -129,22 +128,20 @@ export function HomeMusicRelaxShortcuts({ className = "" }: { className?: string
     >
       <Link
         href="/music"
-        aria-label={t("nav.music")}
         aria-current={onMusic ? "page" : undefined}
-        className={iconShortcutClass(onMusic)}
+        aria-label={t("nav.music")}
+        className={shortcutLinkClass(onMusic)}
       >
         <IconMusicNotes className="h-[1.15rem] w-[1.15rem] sm:h-5 sm:w-5" />
       </Link>
-
       <Link
         href="/relax"
-        aria-label={t("nav.relax")}
         aria-current={onRelax ? "page" : undefined}
-        className={iconShortcutClass(onRelax)}
+        aria-label={t("nav.relax")}
+        className={shortcutLinkClass(onRelax)}
       >
-        <IconRelaxWaves className="h-[1.15rem] w-[1.15rem] sm:h-5 sm:w-5" />
+        <IconRelaxRipple className="h-[1.15rem] w-[1.15rem] sm:h-5 sm:w-5" />
       </Link>
-
       <div ref={popoverWrapRef} className="relative flex shrink-0 flex-col items-center">
         <button
           type="button"

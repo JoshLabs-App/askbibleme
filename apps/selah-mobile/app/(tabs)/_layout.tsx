@@ -1,6 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
-import { StyleSheet, useColorScheme, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { strings } from "../../src/strings";
 import { theme } from "../../src/theme";
@@ -10,13 +10,11 @@ function TabIcon({ name, color }: { name: keyof typeof MaterialIcons.glyphMap; c
 }
 
 export default function TabsLayout() {
-  const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
-  const isDark = scheme === "dark";
-  const tabBg = "#89C6F6";
-  const borderTop = "rgba(43, 37, 32, 0.12)";
+  const tabBg = theme.canvas;
+  const borderTop = theme.border;
   const active = theme.ink;
-  const inactive = "rgba(43, 37, 32, 0.5)";
+  const inactive = "rgba(241, 245, 249, 0.52)";
 
   return (
     <Tabs
@@ -58,8 +56,8 @@ export default function TabsLayout() {
               style={[
                 styles.musicFab,
                 {
-                  backgroundColor: focused ? (isDark ? "#3f3f46" : "#fff") : isDark ? "#27272a" : "#fff",
-                  borderColor: focused ? theme.sand : theme.border,
+                  backgroundColor: focused ? theme.sand : theme.surface,
+                  borderColor: focused ? theme.ink : theme.border,
                 },
               ]}
             >

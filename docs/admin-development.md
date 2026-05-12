@@ -59,8 +59,10 @@
 ## 后台（Admin）相关路径
 
 - 路由：`app/(admin)/admin/*`，布局 `AdminShell`（`components/admin/AdminShell.tsx`）。
-- **账号登录（推荐，生产）**：在 Vercel 配置 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`（或 publishable key）、`ADMIN_USER_EMAILS`（逗号分隔，可进 `/admin` 的邮箱）。Supabase 中创建用户并启用 Email 密码；Authentication → URL configuration 的 Redirect URLs 加入 `https://你的域名/auth/callback`。启用后 `/admin/login` 为邮箱+密码，`POST /api/admin/auth` 工作室口令关闭。
-- **从 AskBible 2 迁管理员邮箱**：本机有老仓库时运行 `npm run migrate:askbible-admin-emails`（或 `ASKBIBLE_REPO=/path/to/01\\ AskBible\\ 2 node scripts/migration/askbible-admin-export.mjs`），将 `is_admin=1` 的邮箱导出为 `ADMIN_USER_EMAILS` 一行；**密码不可自动迁移**（老站 bcrypt/SHA256 与 Supabase Auth 不兼容），需在 Supabase 为每个邮箱新建用户或走重置密码。
+- **复用 AskBible 2 管理员账号**：部署环境能读取 `admin_data/auth.sqlite` 时，设 `ASKBIBLE_AUTH_SQLITE_PATH` 或 `ASKBIBLE_REPO`（见 `.env.example`）。`/admin/login` 用旧站同一邮箱+密码（`is_admin=1`）；登录后签发 `selah_admin_askbible` cookie。本地未设变量时，会尝试默认桌面路径下的老仓库（仅开发机）。Vercel 等无盘环境必须把 sqlite 放到可访问路径并配置变量。
+- **复用 AskBible 2 管理员账号（同一 auth.sqlite）**：部署机能读到 `admin_data/auth.sqlite` 时配置 `ASKBIBLE_AUTH_SQLITE_PATH` 或 `ASKBIBLE_REPO`（见 `.env.example`）。`/admin/login` 用旧站邮箱+密码（`is_admin=1`）；签发 `selah_admin_askbible` cookie。本地未设变量时可回退到桌面默认老仓库路径（仅开发机）；Vercel 须把 sqlite 放到可读路径。
+- **账号登录（Supabase）**：在 Vercel 配置 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`（或 publishable key）、`ADMIN_USER_EMAILS`（逗号分隔，可进 `/admin` 的邮箱）。Supabase 中创建用户并启用 Email 密码；Authentication → URL configuration 的 Redirect URLs 加入 `https://你的域名/auth/callback`。未配置 AskBible 库时 `/admin/login` 走 Supabase 邮箱登录；此时 `POST /api/admin/auth` 不接受工作室口令。
+- **从 AskBible 2 仅导出管理员邮箱**（给 Supabase 白名单用）：本机有老仓库时运行 `npm run migrate:askbible-admin-emails`；若已直接复用 `auth.sqlite` 登录则可不必再迁密码。
 - 与前台共用：`LocaleProvider` 包在根 `app/layout.tsx`，故后台与前台共享 `t()` 与语言存储（同站点同设备）。
 
 ---

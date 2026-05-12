@@ -1,17 +1,28 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { ADMIN_ASKBIBLE_SESSION_COOKIE, verifyAskbibleSessionCookie } from "@/lib/admin-askbible-session";
 import { ADMIN_GATE_COOKIE, verifyAdminGateCookie } from "@/lib/admin-gate";
 import { isAdminEmail } from "@/lib/supabase/admin-allowlist";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { copyCookiesTo, updateSupabaseSession } from "@/lib/supabase/middleware";
 
 /**
- * `/admin`：优先 Supabase 账号 + `ADMIN_USER_EMAILS` 白名单；未配 Supabase 时用原 HMAC 门禁 cookie。
+ * `/admin`：AskBible 复用会话（HMAC cookie）→ Supabase + 白名单 → 工作室 HMAC cookie。
  */
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (!pathname.startsWith("/admin")) {
+    return NextResponse.next();
+  }
+
+  const askbibleCookie = request.cookies.get(ADMIN_ASKBIBLE_SESSION_COOKIE)?.value;
+  if (await verifyAskbibleSessionCookie(askbibleCookie)) {
+    if (pathname === "/admin/login") {
+      const nextRaw = request.nextUrl.searchParams.get("next")?.trim() || "/admin";
+      const safe = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/admin";
+      return NextResponse.redirect(new URL(safe, request.nextUrl.origin));
+    }
     return NextResponse.next();
   }
 

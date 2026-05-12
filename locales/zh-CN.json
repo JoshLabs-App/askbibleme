@@ -117,6 +117,7 @@
       "pageTitle": "后台登录",
       "hint": "请输入工作室密码以进入管理后台。",
       "supabaseHint": "使用已在 Supabase 开通的管理员邮箱与密码登录。仅「管理员邮箱」名单中的账号可进入后台（见部署环境变量说明）。",
+      "askbibleHint": "使用 AskBible 2 同一套管理员邮箱与密码（读取服务器上的 auth.sqlite，须 is_admin=1）。",
       "emailLabel": "邮箱",
       "passwordLabel": "密码",
       "submit": "进入",

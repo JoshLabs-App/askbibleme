@@ -314,12 +314,20 @@ body {
   }
 }
 
-/* 自然首页：窄屏横屏沉浸时隐藏底栏（全屏 API 不可用时仍尽量铺满） */
+/* 自然首页：仅手机式横屏沉浸时隐藏底栏（平板/桌面横屏保留，见 `useLandscapeNarrow`） */
 html[data-nature-landscape-immersive] .home-bottom-nav {
   display: none;
 }
 
-/* 音乐 / 放松：窄屏横屏时隐藏底栏 */
+/* 音乐 / 放松：同上，仅手机式横屏 */
 html[data-landscape-immersive] .home-bottom-nav {
   display: none;
+}
+
+/** 宽视口兜底：横屏沉浸标记误触时仍保留主导航（与 `useLandscapeNarrow` 上沿一致） */
+@media (min-width: 933px) {
+  html[data-nature-landscape-immersive] .home-bottom-nav,
+  html[data-landscape-immersive] .home-bottom-nav {
+    display: flex;
+  }
 }

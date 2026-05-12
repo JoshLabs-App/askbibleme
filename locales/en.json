@@ -117,6 +117,7 @@
       "pageTitle": "Admin sign-in",
       "hint": "Enter the studio password to open the admin area.",
       "supabaseHint": "Sign in with the admin email and password provisioned in Supabase. Only emails listed in the admin allowlist can access /admin (see deployment env notes).",
+      "askbibleHint": "Use the same admin email and password as AskBible 2 (reads auth.sqlite on the server; account must have is_admin=1).",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "submit": "Continue",

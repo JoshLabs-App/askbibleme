@@ -67,7 +67,8 @@ export function NatureSceneLayer({
           {orderedVideos.map((v) => {
             const selected = v.id === activeVideoId;
             const preparing = prepareSceneId !== null && v.id === prepareSceneId;
-            const thumb = v.thumbSrc?.trim();
+            /** 方卡：先用户方图，再首帧静图；避免无图时依赖小 `<video>` 解码（iOS 常空白） */
+            const cardStill = v.thumbSrc?.trim() || v.previewFrameSrc?.trim() || "";
             const title = cardTitle(v, t("nature.scenes.unnamedProduct"));
 
             return (
@@ -86,10 +87,12 @@ export function NatureSceneLayer({
                 }
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-800/80 via-slate-900/75 to-slate-950/90" aria-hidden />
-                {thumb ? (
+                {cardStill ? (
                   <img
-                    src={thumb}
+                    src={cardStill}
                     alt=""
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 h-full w-full object-cover opacity-95 transition group-hover:opacity-100"
                   />
                 ) : (
@@ -97,7 +100,7 @@ export function NatureSceneLayer({
                     src={v.src}
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="none"
                     className="absolute inset-0 h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
                     aria-hidden
                   />

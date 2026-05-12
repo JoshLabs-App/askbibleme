@@ -34,21 +34,13 @@ function navLinkClass(active: boolean) {
   return [
     base,
     active
-      ? "text-[#ecd9a8]"
-      : "text-white/55 hover:bg-white/[0.08] hover:text-white/90",
+      ? "text-white"
+      : "text-white/45 hover:text-white/75",
   ].join(" ");
 }
 
-function navItemInnerClass(active: boolean) {
-  return [
-    "flex max-w-full min-w-0 flex-col items-center justify-center gap-0.5 leading-tight sm:gap-0.5",
-    active
-      ? "rounded-2xl bg-white/[0.12] px-3 pb-1 pt-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 backdrop-blur-md"
-      : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
+const navItemInnerClass =
+  "flex max-w-full min-w-0 flex-col items-center justify-center gap-0.5 leading-tight sm:gap-0.5";
 
 /** 置于 shell 底部列（非 fixed），由父级 `fixed inset-0 + flex` 保证始终在视口内。 */
 export function HomeBottomNav() {
@@ -81,11 +73,8 @@ export function HomeBottomNav() {
               className={navLinkClass(active)}
               onClick={def.href === "/" ? onHomeNavClick : undefined}
             >
-              <span className={navItemInnerClass(active)}>
-                <Icon
-                  active={active}
-                  className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]"
-                />
+              <span className={navItemInnerClass}>
+                <Icon className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]" />
                 <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
               </span>
             </Link>
@@ -121,11 +110,8 @@ export function HomeBottomNav() {
               aria-current={active ? "page" : undefined}
               className={navLinkClass(active)}
             >
-              <span className={navItemInnerClass(active)}>
-                <Icon
-                  active={active}
-                  className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]"
-                />
+              <span className={navItemInnerClass}>
+                <Icon className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]" />
                 <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
               </span>
             </Link>

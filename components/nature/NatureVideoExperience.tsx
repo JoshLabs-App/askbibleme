@@ -433,6 +433,8 @@ export function NatureVideoExperience({ initial }: Props) {
   /** 首访或未开预览时主画面已在播，仅 metadata 缓冲偏少；空闲后再升 preload=auto（省流模式跳过）。有静图开场时已用 preload=auto，跳过重复升级 */
   useEffect(() => {
     if (hasStillIntro) return;
+    /** iOS 主屏 Web：升 preload + `load()` 易拉高解码缓冲，加重内存压力 → 更易被系统整页杀掉后白屏重载 */
+    if (isIosLikeUserAgent()) return;
     const el = videoRef.current;
     if (!el || !videoSrc || videoBroken) return;
     if (typeof navigator !== "undefined") {

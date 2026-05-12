@@ -5,6 +5,19 @@ import {
   computeAdminGateToken,
   getAdminPassword,
 } from "@/lib/admin-gate";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+
+/** 反向代理后须看 `x-forwarded-proto`；勿仅用 NODE_ENV，否则线上偶发无法种下 Secure cookie。 */
+function adminCookieSecure(req: Request): boolean {
+  const fwd = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  if (fwd === "https") return true;
+  if (fwd === "http") return false;
+  try {
+    return new URL(req.url).protocol === "https:";
+  } catch {
+    return process.env.NODE_ENV === "production";
+  }
+}
 
 function timingSafeEqualUtf8(a: string, b: string): boolean {
   try {
@@ -17,8 +30,14 @@ function timingSafeEqualUtf8(a: string, b: string): boolean {
   }
 }
 
-/** 登录设 cookie；登出清 cookie。 */
+/** 登录设 cookie；登出清 cookie。已启用 Supabase 时关闭此路径（请用账号登录）。 */
 export async function POST(req: Request) {
+  if (isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: "Supabase auth enabled; use email sign-in on /admin/login." },
+      { status: 410 },
+    );
+  }
   let body: unknown;
   try {
     body = await req.json();
@@ -32,7 +51,7 @@ export async function POST(req: Request) {
 
   const token = await computeAdminGateToken();
   const res = NextResponse.json({ ok: true });
-  const secure = process.env.NODE_ENV === "production";
+  const secure = adminCookieSecure(req);
   res.cookies.set(ADMIN_GATE_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -43,8 +62,14 @@ export async function POST(req: Request) {
   return res;
 }
 
-export async function DELETE() {
+export async function DELETE(req: Request) {
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(ADMIN_GATE_COOKIE, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+  res.cookies.set(ADMIN_GATE_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: adminCookieSecure(req),
+    path: "/",
+    maxAge: 0,
+  });
   return res;
 }

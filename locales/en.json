@@ -116,10 +116,15 @@
     "login": {
       "pageTitle": "Admin sign-in",
       "hint": "Enter the studio password to open the admin area.",
+      "supabaseHint": "Sign in with the admin email and password provisioned in Supabase. Only emails listed in the admin allowlist can access /admin (see deployment env notes).",
+      "emailLabel": "Email",
       "passwordLabel": "Password",
       "submit": "Continue",
       "submitting": "Signing in…",
       "errorWrong": "Incorrect password.",
+      "errorLegacyDisabled": "This site uses account sign-in. Use email and password instead of the studio password.",
+      "errorForbidden": "This account is not allowed to access admin. Ask an owner to add your email to the admin list.",
+      "errorAuthCallback": "Sign-in could not be completed or the link expired. Try again.",
       "errorNetwork": "Could not reach the server. Try again.",
       "signOut": "Sign out"
     },

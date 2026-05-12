@@ -27,14 +27,14 @@
       "previewFrameSrc": "/nature/preview-posters/8dc18a70a13c4a5b96720b13e95cada7.jpg",
       "mix": [
         {
-          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
-          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
-          "volume": 0.14
-        },
-        {
           "id": "mix-226bafe6-f46f-4fa2-af55-f691b215095d",
           "clipId": "226bafe6-f46f-4fa2-af55-f691b215095d",
-          "volume": 0.06
+          "volume": 0.02
+        },
+        {
+          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
+          "volume": 0.03
         }
       ]
     },
@@ -130,6 +130,6 @@
       "title": "打雷"
     }
   ],
-  "activeVideoId": "3a865e9b-1b6c-46c8-92ac-bac809cbad0a",
+  "activeVideoId": "5fdf12b5-d9f0-4160-a385-541c01b6a337",
   "playbackRate": 1
 }

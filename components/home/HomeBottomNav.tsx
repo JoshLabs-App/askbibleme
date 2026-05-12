@@ -7,13 +7,19 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
-import { IconNavExplore, IconNavHome, IconNavJourney, IconNavRead } from "@/components/ui/NavTabIcons";
+import {
+  IconNavExplore,
+  IconNavHome,
+  IconNavJourney,
+  IconNavRead,
+  type NavTabIconProps,
+} from "@/components/ui/NavTabIcons";
 import { HOME_DOCK_NAV_BG } from "@/lib/shell/home-dock-nav-bg";
 
 const itemDefs: {
   href: string;
   labelKey: string;
-  Icon: ComponentType<{ className?: string }>;
+  Icon: ComponentType<NavTabIconProps>;
   match: (p: string) => boolean;
 }[] = [
   { href: "/", labelKey: "nav.home", Icon: IconNavHome, match: (p) => p === "/" || p === "" || p === "/nature" },
@@ -22,13 +28,26 @@ const itemDefs: {
   { href: "/explore", labelKey: "nav.explore", Icon: IconNavExplore, match: (p) => p.startsWith("/explore") },
 ];
 
-function tabClass(active: boolean) {
+function navLinkClass(active: boolean) {
   const base =
-    "flex min-h-0 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0 px-0.5 py-0 text-[10px] font-medium leading-tight tracking-wide transition sm:gap-0.5 sm:px-0.5 sm:text-[11px]";
+    "flex min-h-0 min-w-0 flex-1 basis-0 flex-col items-center justify-center px-0.5 py-0 text-[10px] font-medium leading-tight tracking-wide transition sm:px-0.5 sm:text-[11px]";
   return [
     base,
-    active ? "text-white" : "text-white/55 hover:bg-white/[0.08] hover:text-white/90",
+    active
+      ? "text-[#ecd9a8]"
+      : "text-white/55 hover:bg-white/[0.08] hover:text-white/90",
   ].join(" ");
+}
+
+function navItemInnerClass(active: boolean) {
+  return [
+    "flex max-w-full min-w-0 flex-col items-center justify-center gap-0.5 leading-tight sm:gap-0.5",
+    active
+      ? "rounded-2xl bg-white/[0.12] px-3 pb-1 pt-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-white/10 backdrop-blur-md"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 /** 置于 shell 底部列（非 fixed），由父级 `fixed inset-0 + flex` 保证始终在视口内。 */
@@ -59,11 +78,16 @@ export function HomeBottomNav() {
               key={def.href}
               href={def.href}
               aria-current={active ? "page" : undefined}
-              className={tabClass(active)}
+              className={navLinkClass(active)}
               onClick={def.href === "/" ? onHomeNavClick : undefined}
             >
-              <Icon className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]" />
-              <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
+              <span className={navItemInnerClass(active)}>
+                <Icon
+                  active={active}
+                  className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]"
+                />
+                <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
+              </span>
             </Link>
           );
         })}
@@ -95,10 +119,15 @@ export function HomeBottomNav() {
               key={def.href}
               href={def.href}
               aria-current={active ? "page" : undefined}
-              className={tabClass(active)}
+              className={navLinkClass(active)}
             >
-              <Icon className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]" />
-              <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
+              <span className={navItemInnerClass(active)}>
+                <Icon
+                  active={active}
+                  className="h-4 w-4 shrink-0 sm:h-[1.05rem] sm:w-[1.05rem]"
+                />
+                <span className="max-w-full truncate text-center">{t(def.labelKey)}</span>
+              </span>
             </Link>
           );
         })}

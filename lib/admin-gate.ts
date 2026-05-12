@@ -1,7 +1,6 @@
 /**
- * 管理后台 cookie 门禁（HMAC）与 `/api/admin/auth` 共用。
- * 当前未接 `middleware`：后台路由可直接访问；恢复门禁时加回 `middleware.ts` 并校验 `verifyAdminGateCookie`。
- * 生产若再启用登录，请设置 `ADMIN_PASSWORD` 与 `ADMIN_GATE_SECRET`（任意长随机串）。
+ * 管理后台 cookie 门禁（HMAC）与 `/api/admin/auth`、`middleware.ts` 共用。
+ * 当已配置 `NEXT_PUBLIC_SUPABASE_URL` + anon key 时，/admin 走 Supabase 账号 + `ADMIN_USER_EMAILS`，不再使用本 cookie。
  */
 
 export const ADMIN_GATE_COOKIE = "selah_admin_gate";

@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, type MutableRefObject, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
 type Layer = { layerId: string; src: string; volume: number };
 
-/** 底部壳层主音乐在播时，环境声乘子（避免与自然混音抢听感） */
-const AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING = 0.22;
+/** 底部壳层主音乐在播时，环境声乘子（主页自然视频背景声降至约一成，让音乐主导） */
+const AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING = 0.1;
 
 function SyncLoopAmbient({
   src,
@@ -18,6 +19,7 @@ function SyncLoopAmbient({
   setAudioEl,
   ambientLead,
   underShellMusicGain,
+  mediaPreload,
 }: {
   src: string;
   volume: number;
@@ -30,6 +32,7 @@ function SyncLoopAmbient({
   ambientLead: boolean;
   /** 与 `volume` 相乘；壳层音乐在播时为 `AMBIENT_GAIN_WHEN_SHELL_MUSIC_PLAYING` */
   underShellMusicGain: number;
+  mediaPreload: "auto" | "metadata";
 }) {
   const aRef = useRef<HTMLAudioElement | null>(null);
 
@@ -94,7 +97,9 @@ function SyncLoopAmbient({
     };
   }, [src, playbackRate, videoRef, ambientLead, ambientMutedRef]);
 
-  return <audio ref={bindRef} src={src} className="hidden" playsInline preload="auto" aria-hidden />;
+  return (
+    <audio ref={bindRef} src={src} className="hidden" playsInline preload={mediaPreload} aria-hidden />
+  );
 }
 
 /**
@@ -120,6 +125,12 @@ export function NatureAmbientMixAudio({
   const ambientByLayerRef = useRef(new Map<string, HTMLAudioElement>());
   const ambientMutedRef = useRef(ambientMuted);
   ambientMutedRef.current = ambientMuted;
+
+  /** 与 SSR 首帧一致为 auto，挂载后再在 iOS 降为 metadata，减轻主屏 Web 内存压力、降低整页被系统回收概率 */
+  const [mediaPreload, setMediaPreload] = useState<"auto" | "metadata">("auto");
+  useEffect(() => {
+    if (isIosLikeUserAgent()) setMediaPreload("metadata");
+  }, []);
 
   const setLayerAudioEl = useCallback((layerId: string, el: HTMLAudioElement | null) => {
     if (el) ambientByLayerRef.current.set(layerId, el);
@@ -153,6 +164,7 @@ export function NatureAmbientMixAudio({
           setAudioEl={(el) => setLayerAudioEl(l.layerId, el)}
           ambientLead={ambientLead}
           underShellMusicGain={underShellMusicGain}
+          mediaPreload={mediaPreload}
         />
       ))}
     </div>

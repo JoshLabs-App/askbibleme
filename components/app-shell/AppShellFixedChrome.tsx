@@ -10,8 +10,12 @@ export function AppShellFixedChrome({ children }: Props) {
     <div
       className="fixed bottom-0 left-0 right-0 top-[calc(-1*var(--app-viewport-bleed-top))] z-[1] flex min-h-0 w-full flex-col overflow-hidden bg-canvas isolate before:pointer-events-none before:absolute before:inset-x-0 before:top-[calc(-1*var(--app-viewport-bleed-top)-10px)] before:z-0 before:h-[calc(var(--app-viewport-bleed-top)+12px)] before:bg-canvas transform-gpu"
       style={{
-        /** iOS 等：`bottom:0` 与视口单位不一致时壳高偶发短于最大可视高，底缘外露出浅色条 */
-        minHeight: "calc(100lvh + var(--app-viewport-bleed-top))",
+        /**
+         * 须用 **动态** 视口高，勿用 `lvh`：`lvh` 为地址栏收起后的「最大」高，首屏带 chrome 时
+         * 壳 `min-height` 会高于实际可视区，flex 底栏被顶到屏外（iOS / Android 常见只露底栏一小条）。
+         * `dvh` 随当前可视区变化；偶发底缘浅色缝仍靠 bleed 与 `bg-canvas` 兜底。
+         */
+        minHeight: "calc(100dvh + var(--app-viewport-bleed-top))",
       }}
     >
       <div className="relative z-[1] flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">

@@ -116,10 +116,15 @@
     "login": {
       "pageTitle": "后台登录",
       "hint": "请输入工作室密码以进入管理后台。",
+      "supabaseHint": "使用已在 Supabase 开通的管理员邮箱与密码登录。仅「管理员邮箱」名单中的账号可进入后台（见部署环境变量说明）。",
+      "emailLabel": "邮箱",
       "passwordLabel": "密码",
       "submit": "进入",
       "submitting": "验证中…",
       "errorWrong": "密码不正确。",
+      "errorLegacyDisabled": "当前站点已启用账号登录，请使用邮箱与密码，不再使用工作室口令。",
+      "errorForbidden": "该账号无权进入管理后台。请联系管理员将你的邮箱加入管理员名单。",
+      "errorAuthCallback": "登录验证未完成或链接已失效，请重试。",
       "errorNetwork": "无法连接服务器，请重试。",
       "signOut": "退出登录"
     },

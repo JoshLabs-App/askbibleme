@@ -35,6 +35,8 @@ export type ShellTemplateChromeLayoutProps = {
   immersive?: boolean;
   /** 为 true 时嵌入后台预览框：底压边相对 `main` 定位、不占满视口，且不写 `[data-app-shell-scroll]` 衬底色。 */
   embedPreview?: boolean;
+  /** 为 true 时不渲染主区顶/底 scrim 压边（祷告等全页自有衬底时使用，避免上下「阴影感」）。 */
+  suppressEdgeScrim?: boolean;
 };
 
 /**
@@ -52,6 +54,7 @@ export function ShellTemplateChromeLayout({
   sampleRootRef,
   immersive = false,
   embedPreview = false,
+  suppressEdgeScrim = false,
 }: ShellTemplateChromeLayoutProps) {
   const landscapeNarrow = useLandscapeNarrow();
   const { shellTemplateBrand } = useAppSkin();
@@ -120,12 +123,16 @@ export function ShellTemplateChromeLayout({
         className={`relative isolate flex w-full min-w-0 flex-col ${mainMinClass} ${!immersive && !embedPreview ? "min-h-full" : ""} ${mainPadClass}`}
         style={mainStyle}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
-          style={topLayerStyle}
-        />
-        <div aria-hidden className={bottomScrimClass} style={bottomLayerStyleShellTemplateMain} />
+        {suppressEdgeScrim ? null : (
+          <>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
+              style={topLayerStyle}
+            />
+            <div aria-hidden className={bottomScrimClass} style={bottomLayerStyleShellTemplateMain} />
+          </>
+        )}
         <div
           ref={sampleRootRef}
           className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col ${immersive ? "pb-0" : "pb-2"} ${embedPreview ? "min-h-0 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]" : ""} ${contentClassName}`}

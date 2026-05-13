@@ -9,6 +9,8 @@ import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { AppLocale } from "@/lib/i18n/config";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
@@ -22,6 +24,8 @@ type Props = {
    * 缺省为独立全屏音乐页（历史行为）。
    */
   layout?: "standalone" | "templateChrome";
+  /** 由服务端从已导入译本解析的轮播经文 */
+  homeVerseRotation?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 function pickScene(store: MusicCompanionStore): Scene | null {
@@ -83,7 +87,7 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
 const MUSIC_HOME_VERSE_CLASS =
   "w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]";
 
-export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) {
+export function MusicHomeClient({ initialStore, layout = "standalone", homeVerseRotation }: Props) {
   const { t, locale } = useLocale();
   const { bootstrapped, user } = useAskbibleUser();
   const showAdminMusicLink = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
@@ -328,6 +332,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                         className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-ink/[0.04]"
                       >
                         <HomeVerseRotator
+                          entriesByLocale={homeVerseRotation}
                           variant="light"
                           prominence="nature"
                           className={MUSIC_HOME_VERSE_CLASS}
@@ -335,6 +340,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                       </button>
                     ) : (
                       <HomeVerseRotator
+                        entriesByLocale={homeVerseRotation}
                         variant="light"
                         prominence="nature"
                         className={MUSIC_HOME_VERSE_CLASS}

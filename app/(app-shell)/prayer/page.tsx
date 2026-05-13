@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { CATEGORY_DESC, PrayerTopicsCategoryList, PrayerTopicsGuideIntro } from "@/components/prayer/PrayerTopicsIndex";
+import { CATEGORY_DESC, PrayerTopicsCategoryList } from "@/components/prayer/PrayerTopicsIndex";
+import { PrayerHomeFirstScreen } from "@/components/prayer/PrayerHomeFirstScreen";
 import { PrayerPageFrame } from "@/components/prayer/PrayerPageFrame";
-import { PrayerBreadcrumb } from "@/components/prayer/PrayerBreadcrumb";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { readTopicPrayerLibrarySync } from "@/lib/prayer/read-topic-prayer-library";
 import { resolveTopicPrayerLibraryJsonPath } from "@/lib/prayer/topic-prayer-library-path";
@@ -20,16 +20,10 @@ export default function PrayerIndexPage() {
   const categories = lib.categories;
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
+    <ShellTemplateChromeLayout contentClassName="gap-0" suppressEdgeScrim>
       <PrayerPageFrame>
-        <header className="max-w-prose border-b border-ink/10 pb-10">
-          <PrayerBreadcrumb items={[{ href: "/", label: "首页" }]} />
-          <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">祷告</p>
-          <h1 className="mt-2 font-serif text-[1.55rem] font-medium tracking-tight text-ink/90 sm:text-[1.65rem]">祷告与经文</h1>
-        </header>
-
-        <div className="mt-12 space-y-0">
-          <PrayerTopicsGuideIntro />
+        <div className="space-y-0">
+          <PrayerHomeFirstScreen />
 
           {!jsonPath || categories.length === 0 ? (
             <section className="mt-12 border-l-2 border-amber-500/55 pl-4 text-[14px] leading-relaxed text-ink/80 dark:border-amber-600/50">
@@ -48,12 +42,12 @@ export default function PrayerIndexPage() {
         </div>
 
         {categories.length > 0 ? (
-          <nav className="mt-16 border-t border-ink/10 pt-10" aria-labelledby="prayer-index-toc">
+          <nav className="mt-16 border-t border-amber-200/45 pt-10 dark:border-stone-700/50" aria-labelledby="prayer-index-toc">
             <h2 id="prayer-index-toc" className="font-serif text-[1.12rem] font-medium text-ink/88">
               按处境浏览
             </h2>
             <p className="mt-2 max-w-prose text-[13px] leading-relaxed text-muted">以下链到各方向下的主题与经文预览。</p>
-            <ol className="mt-8 list-none divide-y divide-ink/10 border-t border-ink/10 p-0">
+            <ol className="mt-8 list-none divide-y divide-amber-200/40 border-t border-amber-200/40 p-0 dark:divide-stone-700/50 dark:border-stone-700/50">
               {categories.map((c) => {
                 const blurb = CATEGORY_DESC[c.id];
                 return (

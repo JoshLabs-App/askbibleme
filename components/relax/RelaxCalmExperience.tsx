@@ -15,6 +15,8 @@ import {
 } from "@/lib/relax/visual-effects";
 import { LagoonBreatheOrb } from "@/components/calm/LagoonBreatheOrb";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import type { AppLocale } from "@/lib/i18n/config";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 
 /** 画面效果名在经文下轻提示的显示时长（毫秒） */
 const RELAX_EFFECT_HINT_MS = 5000;
@@ -23,13 +25,14 @@ type Props = {
   initial: RelaxSettingsV1;
   /** 外层已包 `ShellTemplateChromeLayout` 时：用 flex 填满主区，不再占满整屏视口。 */
   layout?: "standalone" | "templateChrome";
+  homeVerseRotation?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 /**
  * 放松会话：静湖浅色天青底 + 视频/渐变铺满；不在本页提供播放/进度控件（由音乐页或底栏等控制）。
  * `templateChrome`：无返回、无会话标题，主区全幅铺满（供 `/relax` 与壳模板同源）。
  */
-export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
+export function RelaxCalmExperience({ initial, layout = "standalone", homeVerseRotation }: Props) {
   const { t } = useLocale();
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
@@ -197,6 +200,7 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
               <LagoonBreatheOrb />
             </div>
             <HomeVerseRotator
+              entriesByLocale={homeVerseRotation}
               variant="light"
               className={`min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] ${ln}:min-h-[5.25rem] ${ln}:max-w-[min(100%,18rem)]`}
             />

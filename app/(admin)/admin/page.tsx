@@ -27,7 +27,11 @@ const overview: {
   },
   {
     title: "圣经",
-    items: [{ href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" }],
+    items: [
+      { href: "/admin/read/versions", label: "译本与上传", hint: "上传 selah-bible-v1 JSON、设默认译本" },
+      { href: "/admin/read/golden-verses", label: "金句", hint: "首页轮播与主题分类经节（只读总览）" },
+      { href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" },
+    ],
   },
   {
     title: "探索",

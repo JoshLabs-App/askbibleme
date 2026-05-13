@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
 import { verifyAskbibleAdminCredentials, verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
 import {
+  getLegacyAdminLoginUrl,
+  isLegacyRemoteAdminAuthConfigured,
+  postLegacyAskbibleLogin,
+} from "@/lib/askbible-legacy-remote-login";
+import {
   ADMIN_ASKBIBLE_SESSION_COOKIE,
   signAskbibleSessionCookie,
 } from "@/lib/admin-askbible-session";
@@ -29,14 +34,14 @@ function timingSafeEqualUtf8(a: string, b: string): boolean {
 /** 登录页用：是否可走 AskBible 库 / Supabase / 工作室口令 */
 export async function GET() {
   return NextResponse.json({
-    askbible: Boolean(getAskbibleAuthSqlitePath()),
+    askbible: Boolean(getAskbibleAuthSqlitePath() || isLegacyRemoteAdminAuthConfigured()),
     supabase: isSupabaseConfigured(),
   });
 }
 
 /**
  * 登录优先级：
- * 1) 若存在 AskBible `auth.sqlite` 且请求体含 `email`：`is_admin=1` 或固定超级管理员邮箱（与旧站相同库即可复用）。
+ * 1) 若请求体含 `email`：优先 POST 到旧站 `ASKBIBLE_LEGACY_*` 管理登录 URL（由旧站校验）；否则若存在 auth.sqlite：`is_admin=1` 或固定超级管理员邮箱。
  * 2) 否则若已配 Supabase：本接口不接受工作室口令（请用 Supabase 登录页）。
  * 3) 否则：工作室单口令 → `selah_admin_gate`。
  */
@@ -50,6 +55,34 @@ export async function POST(req: Request) {
   const o = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const emailRaw = typeof o.email === "string" ? o.email.trim() : "";
   const password = typeof o.password === "string" ? o.password : "";
+
+  const legacyAdminUrl = getLegacyAdminLoginUrl();
+  if (emailRaw && legacyAdminUrl) {
+    const remote = await postLegacyAskbibleLogin(legacyAdminUrl, emailRaw, password, "admin");
+    if (remote.ok) {
+      const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      const token = await signAskbibleSessionCookie({
+        v: 1,
+        sub: remote.userId,
+        email: remote.email,
+        exp,
+      });
+      const res = NextResponse.json({ ok: true, mode: "askbible-legacy" });
+      const secure = authCookieSecure(req);
+      res.cookies.set(ADMIN_ASKBIBLE_SESSION_COOKIE, token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure,
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+      return res;
+    }
+    return NextResponse.json(
+      { error: remote.error || "Wrong email or password" },
+      { status: remote.status >= 400 && remote.status < 600 ? remote.status : 502 },
+    );
+  }
 
   const dbPath = getAskbibleAuthSqlitePath();
   if (dbPath && emailRaw) {

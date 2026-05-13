@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { NatureVideoExperience } from "@/components/nature/NatureVideoExperience";
+import { buildHomeVerseRotationByLocale } from "@/lib/bible/home-verse-ref-rotation";
 import { natureHomeViewport } from "@/lib/nature/nature-home-viewport";
 import { readNatureSettings } from "@/lib/nature/read-nature-settings";
 import { getResolvedBrandColors } from "@/lib/site-branding";
@@ -15,7 +16,15 @@ export const viewport = natureHomeViewport;
 export const dynamic = "force-dynamic";
 
 export default async function NaturePage() {
-  const settings = await readNatureSettings(process.cwd());
+  const cwd = process.cwd();
+  const settings = await readNatureSettings(cwd);
   const { appLight, appDark } = await getResolvedBrandColors();
-  return <NatureVideoExperience initial={settings} brandChrome={{ appLight, appDark }} />;
+  const homeVerseRotation = buildHomeVerseRotationByLocale(cwd);
+  return (
+    <NatureVideoExperience
+      initial={settings}
+      brandChrome={{ appLight, appDark }}
+      homeVerseRotation={homeVerseRotation}
+    />
+  );
 }

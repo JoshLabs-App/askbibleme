@@ -8,3 +8,7 @@ export const MESSAGES: Record<AppLocale, Messages> = {
   "zh-CN": zhCN,
   en: en as Messages,
 };
+
+export function getMessages(locale: AppLocale): Messages {
+  return MESSAGES[locale];
+}

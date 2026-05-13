@@ -11,6 +11,8 @@ import { HomeMusicRelaxShortcuts } from "@/components/home/HomeMusicRelaxShortcu
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { NatureAmbientMixAudio } from "@/components/nature/NatureAmbientMixAudio";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
+import type { AppLocale } from "@/lib/i18n/config";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { fetchNatureVideoFully } from "@/lib/nature/fetch-nature-video-fully";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
@@ -76,6 +78,8 @@ type Props = {
   initial: NatureSettingsV2;
   /** 顶/底压边与浅色壳同源，由 `useShellChromeScrimVisuals`（后台「壳层压边」+ 本机存储）统一计算 */
   brandChrome: { appLight: string; appDark: string };
+  /** 由服务端从已导入译本解析的首页轮播经文（中英各一套） */
+  homeVerseRotation?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 /** 背景视频槽：与滚动区 `canvas` 对齐；底栏用 `appDark`，与主区背景色系一致衔接 */
@@ -131,7 +135,7 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
  * 自然：背景视频限高在「视口 − 底栏」槽内；经文叠在视频上；场景与快捷入口在视频下方独立流式区域（与视频解耦）。
  */
-export function NatureVideoExperience({ initial, brandChrome }: Props) {
+export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation }: Props) {
   const { t } = useLocale();
   const { shellTemplateBrand } = useAppSkin();
   const { dockChromeVisible, setDockChromeVisible, toggleDockChrome } = useHomeDockChrome();
@@ -653,6 +657,7 @@ export function NatureVideoExperience({ initial, brandChrome }: Props) {
           <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
             <div className="w-full max-w-lg sm:max-w-xl">
               <HomeVerseRotator
+                entriesByLocale={homeVerseRotation}
                 variant="dark"
                 prominence="nature"
                 className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"

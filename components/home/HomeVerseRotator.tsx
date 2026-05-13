@@ -3,9 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { AppLocale } from "@/lib/i18n/config";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
 
 type Props = {
+  /**
+   * 若由服务端从译本解析好，则优先使用（按界面语言切换）；
+   * 未传时回落到 `HOME_VERSES_BY_LOCALE` 硬编码。
+   */
+  entriesByLocale?: Record<AppLocale, HomeVerseEntry[]>;
   /** 深色底（音乐首页）或浅色底（旧首页氛围） */
   variant?: "dark" | "light";
   /** default：中部轮播；hero：音乐播放首页主标题区大字；relax：放松页较大读经区；nature：自然页全屏视频上，对比更强 */
@@ -17,12 +24,17 @@ type Props = {
  * 首页经文轮播：与原先 `HomeDashboard` 同节奏与淡出逻辑。
  */
 export function HomeVerseRotator({
+  entriesByLocale,
   variant = "dark",
   prominence = "default",
   className = "",
 }: Props) {
   const { locale } = useLocale();
-  const HOME_VERSES = useMemo(() => HOME_VERSES_BY_LOCALE[locale], [locale]);
+  const HOME_VERSES = useMemo(() => {
+    const fromServer = entriesByLocale?.[locale];
+    if (fromServer && fromServer.length > 0) return fromServer;
+    return HOME_VERSES_BY_LOCALE[locale];
+  }, [locale, entriesByLocale]);
   const isDark = variant === "dark";
   const isHero = prominence === "hero";
   const isRelax = prominence === "relax";

@@ -1,5 +1,6 @@
 import { MusicHomeClient } from "@/components/music/MusicHomeClient";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { buildHomeVerseRotationByLocale } from "@/lib/bible/home-verse-ref-rotation";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +11,12 @@ export const metadata = {
 };
 
 export default async function MusicPage() {
-  const store = await readMusicCompanionStore(process.cwd());
+  const cwd = process.cwd();
+  const store = await readMusicCompanionStore(cwd);
+  const homeVerseRotation = buildHomeVerseRotationByLocale(cwd);
   return (
     <ShellTemplateChromeLayout contentClassName="gap-0">
-      <MusicHomeClient initialStore={store} layout="templateChrome" />
+      <MusicHomeClient initialStore={store} layout="templateChrome" homeVerseRotation={homeVerseRotation} />
     </ShellTemplateChromeLayout>
   );
 }

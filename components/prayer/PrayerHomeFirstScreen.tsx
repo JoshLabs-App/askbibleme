@@ -161,7 +161,7 @@ export function PrayerHomeFirstScreen() {
           {STEPS.map((step, i) => (
             <li key={i} className="relative border-b border-amber-200/35 pb-8 pt-0 last:border-b-0 last:pb-0 dark:border-stone-700/50">
               <span
-                className="absolute left-[0.6rem] top-[1.35rem] z-[1] h-2 w-2 rounded-full border-2 border-[#faf6f0] bg-amber-600 sm:left-[0.7rem] sm:top-[1.45rem] dark:border-[#1a1512] dark:bg-amber-500"
+                className="absolute left-[0.6rem] top-[1.35rem] z-[1] h-2 w-2 rounded-full border-2 border-[#efe3d8] bg-amber-600 sm:left-[0.7rem] sm:top-[1.45rem] dark:border-[#151210] dark:bg-amber-500"
                 aria-hidden
               />
               <div className="flex gap-4 pl-10 sm:gap-5 sm:pl-11">

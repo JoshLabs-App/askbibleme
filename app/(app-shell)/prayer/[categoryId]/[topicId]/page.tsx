@@ -7,6 +7,7 @@ import { PrayerVersePassage } from "@/components/prayer/PrayerVersePassage";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { buildTopicOpeningLine, getTopicPrayerCategory, getTopicPrayerTopic } from "@/lib/prayer/read-topic-prayer-library";
 import { pickPrayerDisplayTranslationId } from "@/lib/prayer/prayer-translation-id";
+import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerTopicFromSelah } from "@/lib/prayer/resolve-topic-prayer-from-selah-bible";
 
 type Props = { params: Promise<{ categoryId: string; topicId: string }> };
@@ -37,7 +38,11 @@ export default async function PrayerTopicPage({ params }: Props) {
   ];
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0" suppressEdgeScrim>
+    <ShellTemplateChromeLayout
+      contentClassName="gap-0"
+      suppressEdgeScrim
+      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
+    >
       <PrayerPageFrame>
         <PrayerBreadcrumb items={crumbs} />
 

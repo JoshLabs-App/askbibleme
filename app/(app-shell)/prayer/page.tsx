@@ -4,6 +4,7 @@ import { PrayerHomeFirstScreen } from "@/components/prayer/PrayerHomeFirstScreen
 import { PrayerPageFrame } from "@/components/prayer/PrayerPageFrame";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { readTopicPrayerLibrarySync } from "@/lib/prayer/read-topic-prayer-library";
+import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerLibraryJsonPath } from "@/lib/prayer/topic-prayer-library-path";
 
 export const metadata = {
@@ -20,7 +21,11 @@ export default function PrayerIndexPage() {
   const categories = lib.categories;
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0" suppressEdgeScrim>
+    <ShellTemplateChromeLayout
+      contentClassName="gap-0"
+      suppressEdgeScrim
+      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
+    >
       <PrayerPageFrame>
         <div className="space-y-0">
           <PrayerHomeFirstScreen />

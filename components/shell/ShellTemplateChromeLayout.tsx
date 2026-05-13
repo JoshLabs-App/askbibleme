@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { useEffect, useLayoutEffect, useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from "react";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
 import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
@@ -13,6 +13,24 @@ import {
   shellTemplatePreviewThemeById,
   type ShellTemplateChromeTune,
 } from "@/lib/shell/template-preview-themes";
+import { PRAYER_SHELL_FILL_DARK, PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
+
+function subscribeHtmlClassDark(onStore: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const obs = new MutationObserver(onStore);
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", onStore);
+  return () => {
+    obs.disconnect();
+    mq.removeEventListener("change", onStore);
+  };
+}
+
+function getHtmlDarkSnapshot(): string {
+  if (typeof window === "undefined") return "0";
+  return document.documentElement.classList.contains("dark") ? "1" : "0";
+}
 
 /** 与 `AppShellTopBar` header：`pt` + 44px 行 + `pb` + 少量空隙 */
 const MAIN_PT_CLEAR_TOP_BAR =
@@ -37,6 +55,11 @@ export type ShellTemplateChromeLayoutProps = {
   embedPreview?: boolean;
   /** 为 true 时不渲染主区顶/底 scrim 压边（祷告等全页自有衬底时使用，避免上下「阴影感」）。 */
   suppressEdgeScrim?: boolean;
+  /**
+   * 与 `[data-app-shell-scroll]`、`main` 的 `backgroundColor` 一致。
+   * 祷告等全屏暖页请传入，避免滚动区仍用壳层默认冷灰而在圆角/渐变处露出「断层」。
+   */
+  appShellBackground?: string;
 };
 
 /**
@@ -55,7 +78,16 @@ export function ShellTemplateChromeLayout({
   immersive = false,
   embedPreview = false,
   suppressEdgeScrim = false,
+  appShellBackground,
 }: ShellTemplateChromeLayoutProps) {
+  const prayerWarmDarkSnap = useSyncExternalStore(subscribeHtmlClassDark, getHtmlDarkSnapshot, () => "0");
+
+  const resolvedAppShellBackground = useMemo(() => {
+    if (!appShellBackground) return null;
+    if (appShellBackground !== PRAYER_SHELL_FILL_LIGHT) return appShellBackground;
+    return prayerWarmDarkSnap === "1" ? PRAYER_SHELL_FILL_DARK : PRAYER_SHELL_FILL_LIGHT;
+  }, [appShellBackground, prayerWarmDarkSnap]);
+
   const landscapeNarrow = useLandscapeNarrow();
   const { shellTemplateBrand } = useAppSkin();
   const previewThemeId = shellTemplateBrand ?? "lagoonPaper";
@@ -80,15 +112,17 @@ export function ShellTemplateChromeLayout({
     const el = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
     if (!el) return;
     const prev = el.style.backgroundColor;
-    el.style.backgroundColor = chrome.fillBackgroundColor;
+    const scrollFill = resolvedAppShellBackground ?? chrome.fillBackgroundColor;
+    el.style.backgroundColor = scrollFill;
     return () => {
       if (prev) el.style.backgroundColor = prev;
       else el.style.removeProperty("background-color");
     };
-  }, [chrome.fillBackgroundColor, embedPreview]);
+  }, [chrome.fillBackgroundColor, embedPreview, appShellBackground, resolvedAppShellBackground]);
 
-  const mainStyle: CSSProperties = useMemo(
-    () => ({
+  const mainStyle: CSSProperties = useMemo(() => {
+    const fill = resolvedAppShellBackground ?? chrome.fillBackgroundColor;
+    return {
       ...(immersive
         ? {}
         : embedPreview
@@ -97,11 +131,10 @@ export function ShellTemplateChromeLayout({
               minHeight: "calc(100dvh - var(--home-bottom-nav-slot, 70px))",
             }),
       position: "relative",
-      backgroundColor: chrome.fillBackgroundColor,
+      backgroundColor: fill,
       ...(embedPreview ? { overflow: "hidden", display: "flex", flexDirection: "column" } : {}),
-    }),
-    [chrome.fillBackgroundColor, immersive, embedPreview],
-  );
+    };
+  }, [chrome.fillBackgroundColor, immersive, embedPreview, resolvedAppShellBackground]);
 
   const previewVars = useMemo(() => shellTemplatePreviewCssVars(theme), [theme]);
 

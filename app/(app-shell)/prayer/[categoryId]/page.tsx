@@ -11,6 +11,7 @@ import {
   getTopicPrayerCategory,
 } from "@/lib/prayer/read-topic-prayer-library";
 import { pickPrayerDisplayTranslationId } from "@/lib/prayer/prayer-translation-id";
+import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerTopicHeadVerses } from "@/lib/prayer/resolve-topic-prayer-from-selah-bible";
 
 type Props = { params: Promise<{ categoryId: string }> };
@@ -37,7 +38,11 @@ export default async function PrayerCategoryPage({ params }: Props) {
   const related = getRelatedTopicsForCategory(cwd, categoryId, 6);
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0" suppressEdgeScrim>
+    <ShellTemplateChromeLayout
+      contentClassName="gap-0"
+      suppressEdgeScrim
+      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
+    >
       <PrayerPageFrame>
         <PrayerBreadcrumb items={[{ href: "/", label: "首页" }, { href: "/prayer", label: "祷告" }]} />
 

@@ -458,7 +458,14 @@
       "ariaPreparing": "Downloading full clip «{{name}}»; switches when ready",
       "ariaCollapsePreview": "Close preview for {{name}}",
       "unnamedProduct": "Untitled clip"
-    }
+    },
+    "bgSoftFocusStartAria": "Turn on soft focus with your last dim and blur, and open controls",
+    "bgSoftFocusOpenPanelAria": "Open dim and blur controls",
+    "bgSoftFocusCloseAria": "Turn off dim overlay, blur, and close controls",
+    "bgSoftFocusPanelTitle": "Soft focus",
+    "bgSoftFocusOverlayLabel": "Dim strength",
+    "bgSoftFocusBlurLabel": "Blur strength",
+    "bgSoftFocusHidePanel": "Hide panel"
   },
   "relax": {
     "back": "Music home",

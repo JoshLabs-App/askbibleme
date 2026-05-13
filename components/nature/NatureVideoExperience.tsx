@@ -21,6 +21,11 @@ import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
+import {
+  NATURE_SOFT_FOCUS_DEFAULTS,
+  readNatureSoftFocusPrefs,
+  writeNatureSoftFocusPrefs,
+} from "@/lib/nature/nature-soft-focus-prefs";
 import { useShellChromeScrimVisuals } from "@/hooks/useShellChromeScrimVisuals";
 import { shellTemplatePreviewThemeById } from "@/lib/shell/template-preview-themes";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
@@ -70,6 +75,16 @@ function IconBellMuted(props: { className?: string }) {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function IconBgSoftFocus(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
+      <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
     </svg>
   );
 }
@@ -149,6 +164,14 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
   const videoStageHeightCommitRef = useRef(0);
 
   const [ambientMuted, setAmbientMuted] = useState(false);
+  const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
+  const [natureSoftFocusPanelOpen, setNatureSoftFocusPanelOpen] = useState(false);
+  const [natureSoftFocusOverlayOpacity, setNatureSoftFocusOverlayOpacity] = useState(
+    NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity,
+  );
+  const [natureSoftFocusBlurPx, setNatureSoftFocusBlurPx] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const softFocusPersistTimerRef = useRef<number | null>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
@@ -536,6 +559,75 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     };
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setPrefersReducedMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const p = readNatureSoftFocusPrefs();
+    setNatureSoftFocusOverlayOpacity(p.overlayOpacity);
+    setNatureSoftFocusBlurPx(p.blurPx);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (softFocusPersistTimerRef.current != null) {
+        window.clearTimeout(softFocusPersistTimerRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleNatureSoftFocusPersist = useCallback((overlayOpacity: number, blurPx: number) => {
+    if (softFocusPersistTimerRef.current != null) {
+      window.clearTimeout(softFocusPersistTimerRef.current);
+    }
+    softFocusPersistTimerRef.current = window.setTimeout(() => {
+      softFocusPersistTimerRef.current = null;
+      writeNatureSoftFocusPrefs({ overlayOpacity, blurPx });
+    }, 220);
+  }, []);
+
+  const onNatureSoftFocusIconClick = useCallback(() => {
+    if (natureBgSoftFocus && natureSoftFocusPanelOpen) {
+      writeNatureSoftFocusPrefs({
+        overlayOpacity: natureSoftFocusOverlayOpacity,
+        blurPx: natureSoftFocusBlurPx,
+      });
+      setNatureBgSoftFocus(false);
+      setNatureSoftFocusPanelOpen(false);
+      return;
+    }
+    if (natureBgSoftFocus && !natureSoftFocusPanelOpen) {
+      setNatureSoftFocusPanelOpen(true);
+      return;
+    }
+    const p = readNatureSoftFocusPrefs();
+    setNatureSoftFocusOverlayOpacity(p.overlayOpacity);
+    setNatureSoftFocusBlurPx(p.blurPx);
+    setNatureBgSoftFocus(true);
+    setNatureSoftFocusPanelOpen(true);
+  }, [
+    natureBgSoftFocus,
+    natureSoftFocusBlurPx,
+    natureSoftFocusOverlayOpacity,
+    natureSoftFocusPanelOpen,
+  ]);
+
+  const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
+    ? Math.min(natureSoftFocusBlurPx, 10)
+    : natureSoftFocusBlurPx;
+
+  const natureSoftFocusTriggerAria =
+    natureBgSoftFocus && natureSoftFocusPanelOpen
+      ? t("nature.bgSoftFocusCloseAria")
+      : natureBgSoftFocus && !natureSoftFocusPanelOpen
+        ? t("nature.bgSoftFocusOpenPanelAria")
+        : t("nature.bgSoftFocusStartAria");
+
   return (
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
       <div
@@ -548,21 +640,100 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
         tone="onDark"
         landscapeImmersive={false}
         rightAccessory={
-          hasAmbientAudio && hasMainVideo ? (
-            <button
-              type="button"
-              onClick={() => setAmbientMuted((m) => !m)}
-              aria-pressed={ambientMuted}
-              aria-label={ambientMuted ? t("chrome.unmuteAmbient") : t("chrome.muteAmbient")}
-              className={NATURE_TOP_ICON_BTN}
-            >
-              {ambientMuted ? (
-                <IconBellMuted className="h-[1.25rem] w-[1.25rem] opacity-90" />
-              ) : (
-                <IconBell className="h-[1.25rem] w-[1.25rem] opacity-90" />
-              )}
-            </button>
-          ) : null
+          <div className="flex flex-col items-end gap-2">
+            {hasAmbientAudio && hasMainVideo ? (
+              <button
+                type="button"
+                onClick={() => setAmbientMuted((m) => !m)}
+                aria-pressed={ambientMuted}
+                aria-label={ambientMuted ? t("chrome.unmuteAmbient") : t("chrome.muteAmbient")}
+                className={NATURE_TOP_ICON_BTN}
+              >
+                {ambientMuted ? (
+                  <IconBellMuted className="h-[1.25rem] w-[1.25rem] opacity-90" />
+                ) : (
+                  <IconBell className="h-[1.25rem] w-[1.25rem] opacity-90" />
+                )}
+              </button>
+            ) : null}
+            {hasMainVideo ? (
+              <div className="relative isolate">
+                {natureSoftFocusPanelOpen ? (
+                  <div
+                    id="nature-soft-focus-panel"
+                    role="region"
+                    aria-label={t("nature.bgSoftFocusPanelTitle")}
+                    className="pointer-events-auto absolute right-full top-1/2 z-[60] mr-2 w-[min(13.75rem,calc(100vw-5rem))] -translate-y-1/2 rounded-2xl border border-white/18 bg-black/55 px-3 py-2.5 text-left shadow-[0_8px_36px_-8px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+                  >
+                    <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">
+                      {t("nature.bgSoftFocusPanelTitle")}
+                    </p>
+                    <label className="block text-[12px] text-white/78" htmlFor="nature-soft-focus-overlay">
+                      {t("nature.bgSoftFocusOverlayLabel")}
+                    </label>
+                    <input
+                      id="nature-soft-focus-overlay"
+                      type="range"
+                      min={0.08}
+                      max={0.82}
+                      step={0.01}
+                      value={natureSoftFocusOverlayOpacity}
+                      className="mb-2.5 mt-1 w-full accent-white"
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (!Number.isFinite(v)) return;
+                        setNatureSoftFocusOverlayOpacity(v);
+                        scheduleNatureSoftFocusPersist(v, natureSoftFocusBlurPx);
+                      }}
+                    />
+                    <label className="block text-[12px] text-white/78" htmlFor="nature-soft-focus-blur">
+                      {t("nature.bgSoftFocusBlurLabel")}
+                    </label>
+                    <input
+                      id="nature-soft-focus-blur"
+                      type="range"
+                      min={2}
+                      max={48}
+                      step={1}
+                      value={natureSoftFocusBlurPx}
+                      className="mt-1 w-full accent-white"
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (!Number.isFinite(v)) return;
+                        const b = Math.round(v);
+                        setNatureSoftFocusBlurPx(b);
+                        scheduleNatureSoftFocusPersist(natureSoftFocusOverlayOpacity, b);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="mt-2.5 w-full border-0 bg-transparent p-0 text-left text-[12px] text-white/55 underline decoration-white/25 underline-offset-2 transition hover:text-white/80"
+                      onClick={() => setNatureSoftFocusPanelOpen(false)}
+                    >
+                      {t("nature.bgSoftFocusHidePanel")}
+                    </button>
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={onNatureSoftFocusIconClick}
+                  aria-expanded={natureSoftFocusPanelOpen}
+                  aria-controls={natureSoftFocusPanelOpen ? "nature-soft-focus-panel" : undefined}
+                  aria-pressed={natureBgSoftFocus}
+                  aria-label={natureSoftFocusTriggerAria}
+                  className={NATURE_TOP_ICON_BTN}
+                >
+                  <IconBgSoftFocus
+                    className={
+                      natureBgSoftFocus
+                        ? "h-[1.25rem] w-[1.25rem] text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.95))_drop-shadow(0_0_18px_rgba(200,225,255,0.55))]"
+                        : "h-[1.25rem] w-[1.25rem] opacity-90"
+                    }
+                  />
+                </button>
+              </div>
+            ) : null}
+          </div>
         }
       />
 
@@ -631,6 +802,19 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
             style={bottomLayerStyleNatureVideoStage}
             aria-hidden
           />
+          {natureBgSoftFocus ? (
+            <div
+              className="pointer-events-none absolute inset-0 z-[8]"
+              style={
+                {
+                  backgroundColor: `rgba(0,0,0,${natureSoftFocusOverlayOpacity})`,
+                  backdropFilter: `blur(${effectiveNatureSoftFocusBlurPx}px)`,
+                  WebkitBackdropFilter: `blur(${effectiveNatureSoftFocusBlurPx}px)`,
+                } satisfies CSSProperties
+              }
+              aria-hidden
+            />
+          ) : null}
           {(showSlowIntroHint || showPlaybackWaitHint) && (
             <p
               className="pointer-events-none absolute bottom-4 left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:bottom-5 sm:text-[13px] sm:left-6 sm:right-6"

@@ -458,7 +458,14 @@
       "ariaPreparing": "正在下载完整「{{name}}」，就绪后自动切换",
       "ariaCollapsePreview": "收起{{name}}预览",
       "unnamedProduct": "未命名影片"
-    }
+    },
+    "bgSoftFocusStartAria": "开启暗衣柔焦（沿用上次暗度与模糊）并打开调节",
+    "bgSoftFocusOpenPanelAria": "打开暗衣调节面板",
+    "bgSoftFocusCloseAria": "关闭暗衣柔焦并收起调节",
+    "bgSoftFocusPanelTitle": "暗衣柔焦",
+    "bgSoftFocusOverlayLabel": "黑色遮罩浓度",
+    "bgSoftFocusBlurLabel": "背景模糊强度",
+    "bgSoftFocusHidePanel": "收起面板"
   },
   "relax": {
     "back": "音乐首页",

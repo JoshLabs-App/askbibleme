@@ -6,6 +6,7 @@ import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL, HOME_PRAYER_POOL_PUBLIC_BASE } fro
 import {
   memoryNamespaceFromScope,
   normalizeGoldenVerseFontFamily,
+  normalizeGoldenVerseTextEffect,
   readHomePrayerVersePrefs,
   requestHomePrayerVerseFeedReload,
   writeHomePrayerVersePrefs,
@@ -190,7 +191,28 @@ export function HomePrayerVerseDockSettings({
                     <option value="serif">{t("pages.goldenVerses.fontSerif")}</option>
                   </select>
                 </label>
+                <label className="flex min-h-[44px] items-center justify-between gap-3 border-t border-black/[0.06] px-4 dark:border-white/[0.08]">
+                  <span className="shrink-0 text-[17px] leading-snug text-ink dark:text-white">{t("pages.goldenVerses.effectRowLabel")}</span>
+                  <select
+                    className={iosSelectClass}
+                    value={prefs.goldenVerseTextEffect}
+                    onChange={(e) => {
+                      const p = readHomePrayerVersePrefs();
+                      persist(
+                        { ...p, goldenVerseTextEffect: normalizeGoldenVerseTextEffect(e.target.value) },
+                        { reloadFeed: false },
+                      );
+                    }}
+                  >
+                    <option value="engraved">{t("pages.goldenVerses.effectEngraved")}</option>
+                    <option value="insetCarved">{t("pages.goldenVerses.effectInsetCarved")}</option>
+                    <option value="flat">{t("pages.goldenVerses.effectFlat")}</option>
+                    <option value="letterpress">{t("pages.goldenVerses.effectLetterpress")}</option>
+                    <option value="softBloom">{t("pages.goldenVerses.effectSoftBloom")}</option>
+                  </select>
+                </label>
               </div>
+              <p className="px-4 pt-1.5 text-[12px] leading-snug text-muted">{t("pages.goldenVerses.effectLegend")}</p>
             </div>
           </div>
         ) : null}
@@ -407,7 +429,28 @@ export function HomePrayerVerseDockSettings({
                 <option value="serif">{t("pages.goldenVerses.fontSerif")}</option>
               </select>
             </label>
+            <label className="flex min-h-[44px] items-center justify-between gap-3 border-t border-black/[0.06] px-4 dark:border-white/[0.08]">
+              <span className="shrink-0 text-[17px] leading-snug text-ink dark:text-white">{t("pages.goldenVerses.effectRowLabel")}</span>
+              <select
+                className={iosSelectClass}
+                value={prefs.goldenVerseTextEffect}
+                onChange={(e) => {
+                  const p = readHomePrayerVersePrefs();
+                  persist(
+                    { ...p, goldenVerseTextEffect: normalizeGoldenVerseTextEffect(e.target.value) },
+                    { reloadFeed: false },
+                  );
+                }}
+              >
+                <option value="engraved">{t("pages.goldenVerses.effectEngraved")}</option>
+                <option value="insetCarved">{t("pages.goldenVerses.effectInsetCarved")}</option>
+                <option value="flat">{t("pages.goldenVerses.effectFlat")}</option>
+                <option value="letterpress">{t("pages.goldenVerses.effectLetterpress")}</option>
+                <option value="softBloom">{t("pages.goldenVerses.effectSoftBloom")}</option>
+              </select>
+            </label>
           </div>
+          <p className="px-4 pt-1.5 text-[12px] leading-snug text-muted">{t("pages.goldenVerses.effectLegend")}</p>
         </div>
       ) : null}
 

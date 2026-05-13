@@ -1,5 +1,6 @@
 import type {
   GoldenVerseFontFamilyV1,
+  GoldenVerseTextEffectV1,
   HomePrayerVersePrefsV1,
   VerseDisplayModeV1,
   VerseScopeV1,
@@ -14,6 +15,7 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   verseTextEnTranslationId: "web-en",
   memoryByNamespace: {},
   goldenVerseFontFamily: "sans",
+  goldenVerseTextEffect: "engraved",
 };
 
 /** 任意 prefs 写入后派发（同标签页）；用于金句页字体等无需重拉祷告池的 UI 同步 */
@@ -21,6 +23,18 @@ export const HOME_PRAYER_PREFS_UPDATED_EVENT = "selah:home-prayer-verse-prefs-up
 
 export function normalizeGoldenVerseFontFamily(raw: unknown): GoldenVerseFontFamilyV1 {
   return raw === "serif" ? "serif" : "sans";
+}
+
+const GOLDEN_TEXT_EFFECT_IDS: GoldenVerseTextEffectV1[] = [
+  "engraved",
+  "insetCarved",
+  "flat",
+  "letterpress",
+  "softBloom",
+];
+
+export function normalizeGoldenVerseTextEffect(raw: unknown): GoldenVerseTextEffectV1 {
+  return GOLDEN_TEXT_EFFECT_IDS.includes(raw as GoldenVerseTextEffectV1) ? (raw as GoldenVerseTextEffectV1) : "engraved";
 }
 
 export function normalizeVerseZhTranslationId(raw: unknown): string {
@@ -58,6 +72,7 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
       verseTextEnTranslationId: normalizeVerseEnTranslationId(p.verseTextEnTranslationId),
       memoryByNamespace,
       goldenVerseFontFamily: normalizeGoldenVerseFontFamily(p.goldenVerseFontFamily),
+      goldenVerseTextEffect: normalizeGoldenVerseTextEffect(p.goldenVerseTextEffect),
     };
   } catch {
     return DEFAULT_HOME_PRAYER_PREFS;

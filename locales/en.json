@@ -448,7 +448,7 @@
     },
     "goldenVerses": {
       "title": "Verses",
-      "lead": "Read slowly—the same lines as on Nature, Music, and Relax. The gear at the top right sets section scope and this page’s typeface; translations and bilingual live in the side menu.",
+      "lead": "Read slowly—the same lines as on Nature, Music, and Relax. The gear sets section scope, typeface, and letter look; translations and bilingual live in the side menu.",
       "empty": "No verses to show yet.",
       "settingsSection": "Source and translations",
       "settingsLead": "These preferences are shared with the home verse rotation. After you change a Bible text, give it a moment to refresh everywhere.",
@@ -458,10 +458,20 @@
       "settingsLoading": "Loading the verse library… Settings will appear in a moment.",
       "swipeHint": "Swipe left or right on the verse to change",
       "settings": "Verse and translation settings",
+      "fullscreenEnter": "Full screen (hide nav and edge fades)",
+      "fullscreenExit": "Exit full screen",
+      "tapVerseToggleChromeless": "Tap to enter or leave full screen",
       "fontLegend": "Typeface for verses on this page. Saved on this device with your other verse preferences.",
       "fontRowLabel": "Font",
       "fontSans": "Sans-serif",
-      "fontSerif": "Serif"
+      "fontSerif": "Serif",
+      "effectRowLabel": "Letter look",
+      "effectLegend": "Layered shadows suggest carved or pressed type; shadows are off when “Reduce motion” is on.",
+      "effectEngraved": "Warm engraved (default)",
+      "effectInsetCarved": "Inset carved",
+      "effectFlat": "Flat, no shading",
+      "effectLetterpress": "Light letterpress",
+      "effectSoftBloom": "Soft bloom"
     }
   },
   "nature": {

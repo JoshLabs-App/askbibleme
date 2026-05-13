@@ -32,6 +32,15 @@ export type VerseDisplayModeV1 = "primary" | "bilingual";
 /** 金句专页（`verseStyle="goldenVerses"`）正文字体；与首页自然底栏译本偏好同存一份 JSON */
 export type GoldenVerseFontFamilyV1 = "sans" | "serif";
 
+/** 金句专页正文字面效果（多层 text-shadow 模拟刻/印；见 `golden-verse-text-effects.ts`） */
+export type GoldenVerseTextEffectV1 =
+  | "engraved"
+  /** 阴刻内凹感（字形上缘吃光、内缘暗影） */
+  | "insetCarved"
+  | "flat"
+  | "letterpress"
+  | "softBloom";
+
 export type PrayerMemoryRowV1 = {
   lastShownAt: number;
   intervalMs: number;
@@ -49,4 +58,5 @@ export type HomePrayerVersePrefsV1 = {
   /** 按范围隔离：`all` 或 `cat:<categoryId>` */
   memoryByNamespace: Record<string, Record<string, PrayerMemoryRowV1>>;
   goldenVerseFontFamily: GoldenVerseFontFamilyV1;
+  goldenVerseTextEffect: GoldenVerseTextEffectV1;
 };

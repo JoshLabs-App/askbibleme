@@ -62,7 +62,7 @@ function TopShellInsetTime({ visible, tone }: { visible: boolean; tone: AppShell
     <time
       ref={timeRef}
       className={[
-        "pointer-events-none fixed left-1/2 z-[52] -translate-x-1/2 select-none font-medium tabular-nums opacity-50",
+        "pointer-events-none fixed left-1/2 z-[52] -translate-x-1/2 select-none font-medium tabular-nums portrait:opacity-100 landscape:opacity-50",
         "text-[14px] tracking-[0.04em] sm:text-[15px] sm:tracking-[0.05em]",
         "portrait:-translate-y-1/2 portrait:top-[calc(max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))+1.375rem)] portrait:bottom-auto portrait:sm:top-[calc(max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))+1.375rem)]",
         "landscape:translate-y-0 landscape:top-auto landscape:bottom-[10%]",

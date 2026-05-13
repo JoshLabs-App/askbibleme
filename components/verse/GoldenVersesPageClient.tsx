@@ -4,8 +4,9 @@ import type { CSSProperties } from "react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { GoldenVersesChromelessProvider, useGoldenVersesChromeless } from "@/components/verse/GoldenVersesChromelessContext";
 import { GoldenVersesClient } from "@/components/verse/GoldenVersesClient";
-import { GoldenVersesSettingsTopBar } from "@/components/verse/GoldenVersesSettingsTopBar";
+import { GoldenVersesTopActions } from "@/components/verse/GoldenVersesTopActions";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { useShellChromeScrimVisuals } from "@/hooks/useShellChromeScrimVisuals";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -28,6 +29,7 @@ const NATURE_BG_COVER_MEDIA =
   "absolute left-0 top-1/2 z-[1] h-full min-h-full w-full min-w-full -translate-y-1/2 border-0 object-cover object-left outline-none sm:left-1/2 sm:-translate-x-1/2 sm:object-center";
 
 function GoldenVersesNatureLikeStage({ imageSrc, fallbackByLocale }: { imageSrc: string; fallbackByLocale: Props["fallbackByLocale"] }) {
+  const { chromeless } = useGoldenVersesChromeless();
   const { shellTemplateBrand } = useAppSkin();
   const scrimBrandChrome = useMemo(() => {
     if (shellTemplateBrand) {
@@ -46,6 +48,7 @@ function GoldenVersesNatureLikeStage({ imageSrc, fallbackByLocale }: { imageSrc:
   const stageHeightCommitRef = useRef(0);
 
   useLayoutEffect(() => {
+    if (chromeless) return;
     const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
     if (!root) return;
 
@@ -87,35 +90,44 @@ function GoldenVersesNatureLikeStage({ imageSrc, fallbackByLocale }: { imageSrc:
         vv.removeEventListener("resize", onWin);
       }
     };
-  }, []);
+  }, [chromeless]);
 
   const stageShellStyle: CSSProperties = useMemo(
     () => ({
-      height:
-        stageHeightPx > 0 ? `${stageHeightPx}px` : "calc(100dvh - var(--home-bottom-nav-slot))",
+      height: chromeless
+        ? "100dvh"
+        : stageHeightPx > 0
+          ? `${stageHeightPx}px`
+          : "calc(100dvh - var(--home-bottom-nav-slot))",
     }),
-    [stageHeightPx],
+    [chromeless, stageHeightPx],
   );
 
   return (
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-ink [color-scheme:light]">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
-        style={topLayerStyle}
-        aria-hidden
-      />
-
-      <AppShellTopBar
-        tone="onLight"
-        landscapeImmersive={false}
-        rightAccessory={<GoldenVersesSettingsTopBar variant="light" />}
-      />
-
-      <div className={NATURE_VIDEO_STAGE_FRAME} style={stageShellStyle}>
+      {!chromeless ? (
         <div
-          className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
+          style={topLayerStyle}
           aria-hidden
         />
+      ) : null}
+
+      {!chromeless ? (
+        <AppShellTopBar
+          tone="onLight"
+          landscapeImmersive={false}
+          rightAccessory={<GoldenVersesTopActions layout="inline" />}
+        />
+      ) : null}
+
+      <div className={NATURE_VIDEO_STAGE_FRAME} style={stageShellStyle}>
+        {!chromeless ? (
+          <div
+            className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-transparent"
+            aria-hidden
+          />
+        ) : null}
         <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-canvas">
           {/* eslint-disable-next-line @next/next/no-img-element -- 与首页视频层同源构图，须与 `NATURE_BG_COVER_MEDIA` 一致 */}
           <img
@@ -128,35 +140,55 @@ function GoldenVersesNatureLikeStage({ imageSrc, fallbackByLocale }: { imageSrc:
             aria-hidden
           />
         </div>
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] w-full"
-          style={bottomLayerStyleNatureVideoStage}
-          aria-hidden
-        />
+        {!chromeless ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] w-full"
+            style={bottomLayerStyleNatureVideoStage}
+            aria-hidden
+          />
+        ) : null}
         <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
           <div className="pointer-events-auto flex w-full justify-center">
             <GoldenVersesClient fallbackByLocale={fallbackByLocale} layout="shellFullBleed" />
           </div>
         </div>
       </div>
+
+      {chromeless ? <GoldenVersesTopActions layout="floating" /> : null}
     </div>
   );
 }
 
-export function GoldenVersesPageClient({ fallbackByLocale, goldenBackgroundImageUrl }: Props) {
-  if (goldenBackgroundImageUrl) {
-    return (
-      <GoldenVersesNatureLikeStage imageSrc={goldenBackgroundImageUrl} fallbackByLocale={fallbackByLocale} />
-    );
-  }
+function GoldenVersesPlainShell({ fallbackByLocale }: { fallbackByLocale: Props["fallbackByLocale"] }) {
+  const { chromeless } = useGoldenVersesChromeless();
 
   return (
-    <ShellTemplateChromeLayout
-      contentClassName="gap-0"
-      topBarRightAccessory={<GoldenVersesSettingsTopBar variant="light" />}
-      topBarTone="onLight"
-    >
-      <GoldenVersesClient fallbackByLocale={fallbackByLocale} />
-    </ShellTemplateChromeLayout>
+    <>
+      <ShellTemplateChromeLayout
+        contentClassName="gap-0"
+        immersive={chromeless}
+        suppressEdgeScrim={chromeless}
+        topBarRightAccessory={chromeless ? null : <GoldenVersesTopActions layout="inline" />}
+        topBarTone="onLight"
+      >
+        <GoldenVersesClient fallbackByLocale={fallbackByLocale} />
+      </ShellTemplateChromeLayout>
+      {chromeless ? <GoldenVersesTopActions layout="floating" /> : null}
+    </>
+  );
+}
+
+function GoldenVersesPageClientInner({ fallbackByLocale, goldenBackgroundImageUrl }: Props) {
+  if (goldenBackgroundImageUrl) {
+    return <GoldenVersesNatureLikeStage imageSrc={goldenBackgroundImageUrl} fallbackByLocale={fallbackByLocale} />;
+  }
+  return <GoldenVersesPlainShell fallbackByLocale={fallbackByLocale} />;
+}
+
+export function GoldenVersesPageClient(props: Props) {
+  return (
+    <GoldenVersesChromelessProvider>
+      <GoldenVersesPageClientInner {...props} />
+    </GoldenVersesChromelessProvider>
   );
 }

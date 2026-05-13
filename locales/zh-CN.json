@@ -448,7 +448,7 @@
     },
     "goldenVerses": {
       "title": "金句",
-      "lead": "慢读与自然、音乐、放松里同源的经文。右上齿轮可选版块范围与本页字体；译本与双语在侧栏菜单。",
+      "lead": "慢读与自然、音乐、放松里同源的经文。右上齿轮可选版块范围、字体与字面效果；译本与双语在侧栏菜单。",
       "empty": "暂无可显示的经句。",
       "settingsSection": "经文来源与译本",
       "settingsLead": "与首页经文轮播、祷告池共用本机偏好；改译本后稍候即可在各处看到新正文。",
@@ -458,10 +458,20 @@
       "settingsLoading": "经文库加载中，稍后即可选择范围与译本。",
       "swipeHint": "在经文上左右滑动也可切换",
       "settings": "经文与译本设置",
+      "fullscreenEnter": "全屏阅读（隐藏导航与上下渐变）",
+      "fullscreenExit": "退出全屏",
+      "tapVerseToggleChromeless": "点按切换全屏阅读",
       "fontLegend": "本页金句正文的字体，与其它经文偏好存在同一设备。",
       "fontRowLabel": "字体",
       "fontSans": "无衬线",
-      "fontSerif": "衬线"
+      "fontSerif": "衬线",
+      "effectRowLabel": "字面效果",
+      "effectLegend": "用多层阴影模拟刻印与内凹；开启系统「减少动态效果」时不叠加阴影。",
+      "effectEngraved": "阳刻温补（默认）",
+      "effectInsetCarved": "阴刻内凹",
+      "effectFlat": "平面无饰",
+      "effectLetterpress": "铅印轻压",
+      "effectSoftBloom": "柔光浮字"
     }
   },
   "nature": {

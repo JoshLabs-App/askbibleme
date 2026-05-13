@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent } from "react";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useHomePrayerVerseFeed } from "@/components/home/useHomePrayerVerseFeed";
+import { useGoldenVersesChromeless } from "@/components/verse/GoldenVersesChromelessContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
-import type { GoldenVerseFontFamilyV1 } from "@/lib/home-prayer-pools/types";
+import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_PREFS_UPDATED_EVENT, readHomePrayerVersePrefs } from "@/lib/home-prayer-pools/prefs";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 
@@ -33,25 +34,26 @@ function IconChevron(props: { dir: "left" | "right"; className?: string }) {
 const PREV_NEXT_BTN =
   "flex h-11 w-11 shrink-0 items-center justify-center border-0 bg-transparent text-ink/72 transition hover:text-ink/92 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/25";
 
-const PREV_NEXT_ROW_BASE =
-  "pointer-events-auto fixed inset-x-0 z-[25] flex justify-center gap-10 opacity-50";
-
-/** 主壳滚动区内（舞台含 transform）：相对舞台底缘留白即可 */
-const PREV_NEXT_ROW_IN_STAGE = `${PREV_NEXT_ROW_BASE} bottom-3`;
-
-/** 模板壳内无舞台 transform：相对视口，叠在底栏上缘之上 */
-const PREV_NEXT_ROW_VIEWPORT = `${PREV_NEXT_ROW_BASE} bottom-[calc(var(--home-bottom-nav-slot,70px)+0.75rem)]`;
+/** 视口高度约 70% 处水平居中；`-translate-y-1/2` 使整行垂直居中于该线 */
+const PREV_NEXT_ROW =
+  "pointer-events-auto fixed inset-x-0 z-[25] flex justify-center gap-10 opacity-50 top-[70dvh] -translate-y-1/2";
 
 export function GoldenVersesClient({ fallbackByLocale, layout = "default" }: Props) {
   const { t, locale } = useLocale();
+  const { landscapeNarrow, toggleManualChromeless } = useGoldenVersesChromeless();
   const feed = useHomePrayerVerseFeed({ fallbackByLocale });
   const [goldenVerseFontFamily, setGoldenVerseFontFamily] = useState<GoldenVerseFontFamilyV1>("sans");
+  const [goldenVerseTextEffect, setGoldenVerseTextEffect] = useState<GoldenVerseTextEffectV1>("engraved");
 
   useEffect(() => {
-    setGoldenVerseFontFamily(readHomePrayerVersePrefs().goldenVerseFontFamily);
-    const onPrefs = () => setGoldenVerseFontFamily(readHomePrayerVersePrefs().goldenVerseFontFamily);
-    window.addEventListener(HOME_PRAYER_PREFS_UPDATED_EVENT, onPrefs);
-    return () => window.removeEventListener(HOME_PRAYER_PREFS_UPDATED_EVENT, onPrefs);
+    const sync = () => {
+      const p = readHomePrayerVersePrefs();
+      setGoldenVerseFontFamily(p.goldenVerseFontFamily);
+      setGoldenVerseTextEffect(p.goldenVerseTextEffect);
+    };
+    sync();
+    window.addEventListener(HOME_PRAYER_PREFS_UPDATED_EVENT, sync);
+    return () => window.removeEventListener(HOME_PRAYER_PREFS_UPDATED_EVENT, sync);
   }, []);
   const primaryLocale: AppLocale = feed.bilingual ? "en" : locale;
   const primaryList = feed.entriesByLocale[primaryLocale] ?? [];
@@ -89,7 +91,7 @@ export function GoldenVersesClient({ fallbackByLocale, layout = "default" }: Pro
 
   const prevNextBar =
     n > 1 ? (
-      <div className={layout === "shellFullBleed" ? PREV_NEXT_ROW_IN_STAGE : PREV_NEXT_ROW_VIEWPORT}>
+      <div className={PREV_NEXT_ROW}>
         <button type="button" onClick={goPrev} aria-label={t("pages.goldenVerses.prev")} className={PREV_NEXT_BTN}>
           <IconChevron dir="left" className="h-[22px] w-[22px]" />
         </button>
@@ -114,6 +116,7 @@ export function GoldenVersesClient({ fallbackByLocale, layout = "default" }: Pro
           prominence="nature"
           verseStyle="goldenVerses"
           goldenVerseFontFamily={goldenVerseFontFamily}
+          goldenVerseTextEffect={goldenVerseTextEffect}
           className={GOLDEN_VERSE_ROTATOR_CLASS}
           paused
           verseIndex={idx}
@@ -122,10 +125,34 @@ export function GoldenVersesClient({ fallbackByLocale, layout = "default" }: Pro
     </>
   );
 
+  const portraitVerseTapProps =
+    landscapeNarrow === false
+      ? {
+          role: "button" as const,
+          tabIndex: 0,
+          "aria-label": t("pages.goldenVerses.tapVerseToggleChromeless"),
+          onClick: () => toggleManualChromeless(),
+          onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggleManualChromeless();
+            }
+          },
+        }
+      : {};
+
+  const verseTapShellClass =
+    landscapeNarrow === false
+      ? "rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ink/25 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+      : "";
+
   if (layout === "shellFullBleed") {
     return (
       <>
-        <div className="w-full max-w-lg text-center sm:max-w-xl landscape:max-w-[80vw]">
+        <div
+          className={`w-full max-w-lg text-center sm:max-w-xl landscape:max-w-[80vw] ${verseTapShellClass}`.trim()}
+          {...portraitVerseTapProps}
+        >
           {inner}
         </div>
         {prevNextBar}
@@ -136,7 +163,12 @@ export function GoldenVersesClient({ fallbackByLocale, layout = "default" }: Pro
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <div className="mx-auto flex min-h-0 w-full max-w-[36rem] flex-1 flex-col px-5 pb-24 pt-2 text-ink [-webkit-overflow-scrolling:touch] sm:max-w-[40rem] landscape:max-w-[80vw] md:px-8">
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">{inner}</div>
+        <div
+          className={`flex min-h-0 flex-1 flex-col items-center justify-center text-center ${verseTapShellClass}`.trim()}
+          {...portraitVerseTapProps}
+        >
+          {inner}
+        </div>
       </div>
       {prevNextBar}
     </div>

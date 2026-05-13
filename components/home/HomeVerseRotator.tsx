@@ -4,21 +4,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
-import type { GoldenVerseFontFamilyV1 } from "@/lib/home-prayer-pools/types";
+import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
+import { goldenVerseTextShadowClass } from "@/lib/home-prayer-pools/golden-verse-text-effects";
 import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
 
-/**
- * 金句页「刻入」感：字顶微亮 + 上沿内凹暗影 + 极轻外落影（非自然页那种强 glow）。
- * `motion-reduce` 下关闭，避免多余视觉噪声。
- */
-const GOLDEN_VERSE_ENGRAVED =
-  "[text-shadow:0_0.06em_0_rgba(255,238,215,0.52),0_-0.045em_0.08em_rgba(42,20,0,0.34),0_0.1em_0.2em_rgba(42,20,0,0.12)] motion-reduce:[text-shadow:none]";
-
-const GOLDEN_VERSE_ENGRAVED_SMALL =
-  "[text-shadow:0_0.05em_0_rgba(255,238,215,0.45),0_-0.035em_0.06em_rgba(42,20,0,0.3)] motion-reduce:[text-shadow:none]";
-
-/** 宽屏：按容器宽度把每行压成单行，取各行长句中的最小可用字号后统一应用 */
 const GOLDEN_WIDE_FIT_MQ = "(min-width: 1024px)";
 
 function clearGoldenWideFitStyles(root: HTMLElement) {
@@ -109,12 +99,14 @@ type Props = {
   /** `paused` 时有效：当前经句下标。 */
   verseIndex?: number;
   /**
-   * 金句专页：独立排版（`#5F2E00`）、凹刻字效；`motion-reduce` 下无阴影。
+   * 金句专页：独立排版（`#5F2E00`）、字面阴影由 `goldenVerseTextEffect` 控制；`motion-reduce` 下无阴影。
    * 仅在与 `prominence="nature"` 同用时生效。
    */
   verseStyle?: "default" | "goldenVerses";
   /** 金句排版用字体；与 `verseStyle="goldenVerses"` 同用时由父级从偏好注入 */
   goldenVerseFontFamily?: GoldenVerseFontFamilyV1;
+  /** 金句字面阴影预设；与 `verseStyle="goldenVerses"` 同用时由父级从偏好注入 */
+  goldenVerseTextEffect?: GoldenVerseTextEffectV1;
 };
 
 /**
@@ -133,6 +125,7 @@ export function HomeVerseRotator({
   verseIndex: verseIndexProp = 0,
   verseStyle = "default",
   goldenVerseFontFamily = "sans",
+  goldenVerseTextEffect = "engraved",
 }: Props) {
   const { locale } = useLocale();
   /** 双语时固定「英文大在上、中文小在下」；单语时随界面语言。 */
@@ -258,14 +251,15 @@ export function HomeVerseRotator({
       goldenFitRafRef.current = null;
       clearGoldenWideFitStyles(root);
     };
-  }, [isGoldenVerses, activeIndex, bilingual, verseKeysSig, HOME_VERSES, secondaryList, goldenVerseFontFamily]);
+  }, [isGoldenVerses, activeIndex, bilingual, verseKeysSig, HOME_VERSES, secondaryList, goldenVerseFontFamily, goldenVerseTextEffect]);
 
   const lineClass = (() => {
     /** 双语时英文主文：行距空隙减半 `1 + (L-1)/2` */
     const L = (loose: number, tight: string) => (bilingual ? tight : `leading-[${loose}]`);
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-[#5F2E00] ${GOLDEN_VERSE_ENGRAVED} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
+      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "primary");
+      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-[#5F2E00] ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
     }
     if (isHero) {
       return isDark
@@ -291,7 +285,8 @@ export function HomeVerseRotator({
     const S = (tight: string, normal: string) => (bilingual ? tight : normal);
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-[#5F2E00] ${GOLDEN_VERSE_ENGRAVED}`;
+      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "secondary");
+      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-[#5F2E00] ${fx}`;
     }
     if (isNature) {
       return isDark
@@ -311,10 +306,11 @@ export function HomeVerseRotator({
   const refClass = (() => {
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
+      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "ref");
       if (bilingual) {
-        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${GOLDEN_VERSE_ENGRAVED_SMALL}`;
+        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
       }
-      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${GOLDEN_VERSE_ENGRAVED_SMALL}`;
+      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
     }
     if (isHero) {
       return isDark
@@ -349,7 +345,8 @@ export function HomeVerseRotator({
   const secondaryRefClass = (() => {
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] text-[#5F2E00] sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px] ${GOLDEN_VERSE_ENGRAVED_SMALL}`;
+      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "ref");
+      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] text-[#5F2E00] sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px] ${fx}`;
     }
     if (isNature) {
       return isDark

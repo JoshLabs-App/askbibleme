@@ -359,6 +359,15 @@ html[data-landscape-immersive] .home-bottom-nav {
   display: none;
 }
 
+/* 金句页沉浸：隐藏底栏、顶栏由壳层不渲染；顶/底渐变由壳层 suppress；槽位归零便于主区用满 100dvh */
+html[data-golden-verses-chromeless] {
+  --home-bottom-nav-slot: 0px;
+}
+
+html[data-golden-verses-chromeless] .home-bottom-nav {
+  display: none;
+}
+
 /** 宽视口兜底：横屏沉浸标记误触时仍保留主导航（与 `useLandscapeNarrow` 上沿一致） */
 @media (min-width: 933px) {
   html[data-nature-landscape-immersive] .home-bottom-nav,

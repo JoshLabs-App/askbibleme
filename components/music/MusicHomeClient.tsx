@@ -410,8 +410,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
             className={`relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs text-ink/55 lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] lg:text-ink/50 xl:max-w-3xl xl:px-8 ${ln}:mx-0 ${ln}:max-w-none ${ln}:w-[min(13rem,36vw)] ${ln}:max-w-[42%] ${ln}:shrink-0 ${ln}:self-stretch ${ln}:justify-center ${ln}:gap-2 ${ln}:border-l ${ln}:border-ink/12 ${ln}:px-3 ${ln}:py-2 ${ln}:pt-2 ${ln}:pb-[max(0.5rem,env(safe-area-inset-bottom))] ${ln}:pr-[max(0.25rem,env(safe-area-inset-right))]`}
           >
             {audioSrc ? (
-              <div className="flex items-center gap-3.5 text-[11px] tabular-nums text-ink/50 lg:text-[12px] lg:text-ink/45">
-                <span className="min-w-[2.5rem] shrink-0">{formatTime(currentSec)}</span>
+              <div className="flex items-center gap-3.5 text-[11px] tabular-nums text-ink lg:text-[12px]">
+                <span className="min-w-[2.5rem] shrink-0 opacity-50">{formatTime(currentSec)}</span>
                 <button
                   type="button"
                   aria-label={t("music.home.progress")}
@@ -429,7 +429,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
                     }}
                   />
                 </button>
-                <span className="min-w-[2.5rem] shrink-0 text-right">{formatTime(durationSec)}</span>
+                <span className="min-w-[2.5rem] shrink-0 text-right opacity-50">{formatTime(durationSec)}</span>
               </div>
             ) : null}
           </footer>

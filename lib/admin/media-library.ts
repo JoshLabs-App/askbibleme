@@ -14,6 +14,11 @@ export const MEDIA_LIBRARY_BUCKETS = [
   { id: "music_audio", urlPrefix: "/music/uploads/", publicRel: ["music", "uploads"] as const },
   { id: "music_bg", urlPrefix: "/music/bg-uploads/", publicRel: ["music", "bg-uploads"] as const },
   { id: "music_analysis", urlPrefix: "/music/analysis/", publicRel: ["music", "analysis"] as const },
+  {
+    id: "golden_verse_bg",
+    urlPrefix: "/golden-verses/bg-uploads/",
+    publicRel: ["golden-verses", "bg-uploads"] as const,
+  },
 ] as const;
 
 export type MediaLibraryBucketId = (typeof MEDIA_LIBRARY_BUCKETS)[number]["id"];
@@ -44,7 +49,7 @@ function classifyKind(filename: string): MediaLibraryKind {
 function collectUrlStringsFromJson(v: unknown, out: Set<string>) {
   if (typeof v === "string") {
     const s = v.trim();
-    if (s.startsWith("/nature/") || s.startsWith("/music/")) {
+    if (s.startsWith("/nature/") || s.startsWith("/music/") || s.startsWith("/golden-verses/")) {
       out.add(s.split("?")[0] ?? s);
     }
     return;
@@ -75,6 +80,8 @@ export async function collectReferencedPublicUrls(cwd: string): Promise<Set<stri
   if (nature) collectUrlStringsFromJson(nature, out);
   const companion = await tryReadJson(cwd, path.join("data", "music-companion.json"));
   if (companion) collectUrlStringsFromJson(companion, out);
+  const golden = await tryReadJson(cwd, path.join("data", "golden-verses-settings.json"));
+  if (golden) collectUrlStringsFromJson(golden, out);
   return out;
 }
 

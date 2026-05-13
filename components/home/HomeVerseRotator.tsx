@@ -1,11 +1,88 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
+import type { GoldenVerseFontFamilyV1 } from "@/lib/home-prayer-pools/types";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
+
+/**
+ * 金句页「刻入」感：字顶微亮 + 上沿内凹暗影 + 极轻外落影（非自然页那种强 glow）。
+ * `motion-reduce` 下关闭，避免多余视觉噪声。
+ */
+const GOLDEN_VERSE_ENGRAVED =
+  "[text-shadow:0_0.06em_0_rgba(255,238,215,0.52),0_-0.045em_0.08em_rgba(42,20,0,0.34),0_0.1em_0.2em_rgba(42,20,0,0.12)] motion-reduce:[text-shadow:none]";
+
+const GOLDEN_VERSE_ENGRAVED_SMALL =
+  "[text-shadow:0_0.05em_0_rgba(255,238,215,0.45),0_-0.035em_0.06em_rgba(42,20,0,0.3)] motion-reduce:[text-shadow:none]";
+
+/** 宽屏：按容器宽度把每行压成单行，取各行长句中的最小可用字号后统一应用 */
+const GOLDEN_WIDE_FIT_MQ = "(min-width: 1024px)";
+
+function clearGoldenWideFitStyles(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>("[data-golden-fit]").forEach((el) => {
+    el.style.removeProperty("font-size");
+    el.style.removeProperty("white-space");
+  });
+}
+
+function applyGoldenWideFit(root: HTMLElement) {
+  if (typeof window === "undefined") return;
+  if (!window.matchMedia(GOLDEN_WIDE_FIT_MQ).matches) {
+    clearGoldenWideFitStyles(root);
+    return;
+  }
+  const blockquote = root.querySelector("blockquote");
+  if (!blockquote) return;
+  const lines = [
+    ...blockquote.querySelectorAll<HTMLElement>('p[data-golden-fit="line"], p[data-golden-fit="secondary"]'),
+  ];
+  if (lines.length === 0) return;
+  const maxW = blockquote.clientWidth;
+  if (maxW < 40) return;
+
+  const MIN_PX = 14;
+  const MAX_PX = 220;
+  let unit = MAX_PX;
+  let measured = false;
+
+  for (const el of lines) {
+    const t = el.textContent?.replace(/\s+/g, " ").trim() ?? "";
+    if (!t) continue;
+    measured = true;
+    el.style.removeProperty("font-size");
+    el.style.whiteSpace = "nowrap";
+    let lo = MIN_PX;
+    let hi = MAX_PX;
+    for (let k = 0; k < 30; k++) {
+      const mid = (lo + hi) / 2;
+      el.style.fontSize = `${mid}px`;
+      void el.offsetWidth;
+      if (el.scrollWidth <= maxW + 1) lo = mid;
+      else hi = mid;
+    }
+    unit = Math.min(unit, lo);
+  }
+
+  if (!measured) {
+    clearGoldenWideFitStyles(root);
+    return;
+  }
+
+  const u = Math.max(MIN_PX, Math.min(MAX_PX, unit));
+  for (const el of lines) {
+    el.style.fontSize = `${u}px`;
+    el.style.whiteSpace = "nowrap";
+  }
+
+  blockquote.querySelectorAll<HTMLElement>('footer[data-golden-fit="ref"]').forEach((footer) => {
+    const fr = Math.max(11, Math.min(40, Math.round(u * 0.38)));
+    footer.style.fontSize = `${fr}px`;
+    footer.style.whiteSpace = "normal";
+  });
+}
 
 type Props = {
   /**
@@ -15,7 +92,7 @@ type Props = {
   entriesByLocale?: Record<AppLocale, HomeVerseEntry[]>;
   /** 与 `entriesByLocale` 同索引展示另一语（须两语数组对齐） */
   bilingual?: boolean;
-  /** 与 `entriesByLocale` 对齐；用于复习进度写入 */
+  /** 与 `entriesByLocale` 对齐；用于经句轮播进度写入 */
   verseKeys?: string[];
   onVerseCommitted?: (verseKey: string) => void;
   onNearEnd?: (index: number, total: number) => void;
@@ -24,6 +101,20 @@ type Props = {
   /** default：中部轮播；hero：音乐播放首页主标题区大字；relax：放松页较大读经区；nature：自然页全屏视频上，对比更强 */
   prominence?: "default" | "hero" | "relax" | "nature";
   className?: string;
+  /**
+   * 为 true 时不自动轮播、不淡出；由 `verseIndex` 控制当前节（金句页手动翻句）。
+   * 此时 `onVerseCommitted` 应由父级在换句时调用，本组件内不再随下标自动写入。
+   */
+  paused?: boolean;
+  /** `paused` 时有效：当前经句下标。 */
+  verseIndex?: number;
+  /**
+   * 金句专页：独立排版（`#5F2E00`）、凹刻字效；`motion-reduce` 下无阴影。
+   * 仅在与 `prominence="nature"` 同用时生效。
+   */
+  verseStyle?: "default" | "goldenVerses";
+  /** 金句排版用字体；与 `verseStyle="goldenVerses"` 同用时由父级从偏好注入 */
+  goldenVerseFontFamily?: GoldenVerseFontFamilyV1;
 };
 
 /**
@@ -38,6 +129,10 @@ export function HomeVerseRotator({
   variant = "dark",
   prominence = "default",
   className = "",
+  paused = false,
+  verseIndex: verseIndexProp = 0,
+  verseStyle = "default",
+  goldenVerseFontFamily = "sans",
 }: Props) {
   const { locale } = useLocale();
   /** 双语时固定「英文大在上、中文小在下」；单语时随界面语言。 */
@@ -48,12 +143,12 @@ export function HomeVerseRotator({
     if (fromServer && fromServer.length > 0) return fromServer;
     return HOME_VERSES_BY_LOCALE[primaryLocale];
   }, [entriesByLocale, primaryLocale]);
-  const SECONDARY_VERSES = useMemo(() => {
-    if (!secondaryLocale || !entriesByLocale) return null;
-    const o = entriesByLocale[secondaryLocale];
-    return o && o.length === HOME_VERSES.length ? o : null;
-  }, [bilingual, entriesByLocale, secondaryLocale, HOME_VERSES.length]);
+  const secondaryList = useMemo(() => {
+    if (!bilingual || !secondaryLocale || !entriesByLocale) return null;
+    return entriesByLocale[secondaryLocale] ?? null;
+  }, [bilingual, entriesByLocale, secondaryLocale]);
   const isDark = variant === "dark";
+  const isGoldenVerses = verseStyle === "goldenVerses" && prominence === "nature";
   const isHero = prominence === "hero";
   const isRelax = prominence === "relax";
   const isNature = prominence === "nature";
@@ -61,7 +156,15 @@ export function HomeVerseRotator({
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const lastCommittedIndex = useRef(-1);
+  const goldenShellRef = useRef<HTMLDivElement | null>(null);
+  const goldenFitRafRef = useRef<number | null>(null);
   const verseKeysSig = verseKeys?.join("\u0001") ?? "";
+
+  const nVerses = HOME_VERSES.length;
+  const activeIndex = paused
+    ? Math.min(Math.max(0, verseIndexProp), Math.max(0, nVerses - 1))
+    : homeVerseIndex;
+  const showVerse = nVerses > 0;
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -72,6 +175,7 @@ export function HomeVerseRotator({
   }, []);
 
   useEffect(() => {
+    if (paused) return;
     const n = HOME_VERSES.length;
     if (n <= 1) return;
 
@@ -103,15 +207,17 @@ export function HomeVerseRotator({
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [prefersReducedMotion, locale, bilingual, HOME_VERSES.length, entriesByLocale]);
+  }, [paused, prefersReducedMotion, locale, bilingual, HOME_VERSES.length, entriesByLocale]);
 
   useEffect(() => {
+    if (paused) return;
     setHomeVerseIndex(0);
     setHomeVerseVisible(true);
     lastCommittedIndex.current = -1;
-  }, [locale, verseKeysSig, bilingual]);
+  }, [paused, locale, verseKeysSig, bilingual]);
 
   useEffect(() => {
+    if (paused) return;
     if (!verseKeys?.length || !onVerseCommitted) return;
     const prev = lastCommittedIndex.current;
     if (prev >= 0 && prev !== homeVerseIndex) {
@@ -119,15 +225,48 @@ export function HomeVerseRotator({
       if (k) onVerseCommitted(k);
     }
     lastCommittedIndex.current = homeVerseIndex;
-  }, [homeVerseIndex, verseKeys, onVerseCommitted]);
+  }, [paused, homeVerseIndex, verseKeys, onVerseCommitted]);
 
   useEffect(() => {
-    onNearEnd?.(homeVerseIndex, HOME_VERSES.length);
-  }, [homeVerseIndex, HOME_VERSES.length, onNearEnd]);
+    onNearEnd?.(activeIndex, HOME_VERSES.length);
+  }, [activeIndex, HOME_VERSES.length, onNearEnd]);
+
+  useLayoutEffect(() => {
+    if (!isGoldenVerses) return;
+    const root = goldenShellRef.current;
+    if (!root) return;
+
+    const schedule = () => {
+      if (goldenFitRafRef.current != null) cancelAnimationFrame(goldenFitRafRef.current);
+      goldenFitRafRef.current = requestAnimationFrame(() => {
+        goldenFitRafRef.current = null;
+        applyGoldenWideFit(root);
+      });
+    };
+
+    const mq = window.matchMedia(GOLDEN_WIDE_FIT_MQ);
+    const onMq = () => schedule();
+    mq.addEventListener("change", onMq);
+    const ro = new ResizeObserver(schedule);
+    ro.observe(root);
+    schedule();
+
+    return () => {
+      mq.removeEventListener("change", onMq);
+      ro.disconnect();
+      if (goldenFitRafRef.current != null) cancelAnimationFrame(goldenFitRafRef.current);
+      goldenFitRafRef.current = null;
+      clearGoldenWideFitStyles(root);
+    };
+  }, [isGoldenVerses, activeIndex, bilingual, verseKeysSig, HOME_VERSES, secondaryList, goldenVerseFontFamily]);
 
   const lineClass = (() => {
     /** 双语时英文主文：行距空隙减半 `1 + (L-1)/2` */
     const L = (loose: number, tight: string) => (bilingual ? tight : `leading-[${loose}]`);
+    if (isGoldenVerses) {
+      const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
+      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-[#5F2E00] ${GOLDEN_VERSE_ENGRAVED} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
+    }
     if (isHero) {
       return isDark
         ? `m-0 font-serif text-[clamp(1.12rem,2.85vw+0.22rem,1.82rem)] font-medium ${L(1.22, "leading-[1.11]")} tracking-[0.028em] text-white/[0.92] drop-shadow-sm transition-colors duration-200 group-hover:text-white/[0.96]`
@@ -150,6 +289,10 @@ export function HomeVerseRotator({
 
   const secondaryLineClass = (() => {
     const S = (tight: string, normal: string) => (bilingual ? tight : normal);
+    if (isGoldenVerses) {
+      const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
+      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-[#5F2E00] ${GOLDEN_VERSE_ENGRAVED}`;
+    }
     if (isNature) {
       return isDark
         ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
@@ -166,6 +309,13 @@ export function HomeVerseRotator({
   })();
 
   const refClass = (() => {
+    if (isGoldenVerses) {
+      const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
+      if (bilingual) {
+        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${GOLDEN_VERSE_ENGRAVED_SMALL}`;
+      }
+      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${GOLDEN_VERSE_ENGRAVED_SMALL}`;
+    }
     if (isHero) {
       return isDark
         ? "mt-3 text-[10px] font-medium tracking-[0.16em] text-white/46 sm:mt-3.5 sm:text-[11px] sm:tracking-[0.18em]"
@@ -197,6 +347,10 @@ export function HomeVerseRotator({
   })();
 
   const secondaryRefClass = (() => {
+    if (isGoldenVerses) {
+      const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
+      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] text-[#5F2E00] sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px] ${GOLDEN_VERSE_ENGRAVED_SMALL}`;
+    }
     if (isNature) {
       return isDark
         ? `${bilingual ? "mt-1" : "mt-1.5"} font-sans text-[10px] font-semibold tracking-[0.12em] text-white/[0.78] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] sm:text-[11px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[10px]`
@@ -214,6 +368,8 @@ export function HomeVerseRotator({
 
   const shellWidth = isHero
     ? "max-w-[min(96vw,34rem)] sm:max-w-[36rem] lg:max-w-[38rem]"
+    : isGoldenVerses
+      ? "max-w-[min(96vw,40rem)] sm:max-w-[42rem] md:max-w-[44rem] landscape:max-w-[80vw]"
     : isRelax || isNature
       ? "max-w-[min(96vw,26rem)] sm:max-w-[28rem] md:max-w-[34rem] lg:max-w-[40rem] landscape:max-w-[min(92vw,44rem)] md:landscape:max-w-[min(86vw,50rem)] lg:landscape:max-w-[min(82vw,56rem)]"
       : "max-w-[19rem] sm:max-w-[21.5rem]";
@@ -233,11 +389,16 @@ export function HomeVerseRotator({
 
   const secondaryBlockMargin = bilingual ? (isNature ? "mt-2 sm:mt-2.5" : "mt-2") : isNature ? "mt-4 sm:mt-5" : "mt-4";
 
-  const sec = SECONDARY_VERSES?.[homeVerseIndex];
+  const sec = secondaryList?.[activeIndex];
   const showSecondary = Boolean(bilingual && sec?.lines?.length);
+
+  if (!showVerse) {
+    return null;
+  }
 
   return (
     <div
+      ref={goldenShellRef}
       className={`mx-auto w-full ${shellWidth} text-center ${className}`.trim()}
       aria-live="polite"
       aria-atomic="true"
@@ -245,24 +406,38 @@ export function HomeVerseRotator({
       <blockquote
         className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${blockquoteStack}`}
         style={{
-          opacity: homeVerseVisible ? 1 : 0,
-          transitionDuration: prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,
+          opacity: paused || homeVerseVisible ? 1 : 0,
+          transitionDuration: paused || prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,
         }}
       >
-        {(HOME_VERSES[homeVerseIndex]?.lines ?? []).map((line, i) => (
-          <p key={`${homeVerseIndex}-p-${i}`} className={lineClass}>
+        {(HOME_VERSES[activeIndex]?.lines ?? []).map((line, i) => (
+          <p
+            key={`${activeIndex}-p-${i}`}
+            className={lineClass}
+            data-golden-fit={isGoldenVerses ? "line" : undefined}
+          >
             {line}
           </p>
         ))}
-        <footer className={refClass}>{HOME_VERSES[homeVerseIndex]?.ref ?? ""}</footer>
+        <footer className={refClass} data-golden-fit={isGoldenVerses ? "ref" : undefined}>
+          {HOME_VERSES[activeIndex]?.ref ?? ""}
+        </footer>
         {showSecondary ? (
           <div className={secondaryBlockMargin}>
             {(sec?.lines ?? []).map((line, i) => (
-              <p key={`${homeVerseIndex}-s-${i}`} className={secondaryLineClass}>
+              <p
+                key={`${activeIndex}-s-${i}`}
+                className={secondaryLineClass}
+                data-golden-fit={isGoldenVerses ? "secondary" : undefined}
+              >
                 {line}
               </p>
             ))}
-            {sec?.ref ? <footer className={secondaryRefClass}>{sec.ref}</footer> : null}
+            {sec?.ref ? (
+              <footer className={secondaryRefClass} data-golden-fit={isGoldenVerses ? "ref" : undefined}>
+                {sec.ref}
+              </footer>
+            ) : null}
           </div>
         ) : null}
       </blockquote>

@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from "react";
-import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
+import { AppShellTopBar, type AppShellTopBarTone } from "@/components/app-shell/AppShellTopBar";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
 import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
@@ -51,6 +51,10 @@ export type ShellTemplateChromeLayoutProps = {
    * 为 true：不渲染 `AppShellTopBar`、不占顶栏留白，主区横向贴边；主区高度随 `(app-shell)` 主列铺满（底栏仍由壳层固定）。
    */
   immersive?: boolean;
+  /** 传入时挂到 `AppShellTopBar` 右上槽位（与全局菜单同一行）。 */
+  topBarRightAccessory?: ReactNode;
+  /** 顶栏图标与字色：全幅暗底图（如金句背景）时用 `onDark`。 */
+  topBarTone?: AppShellTopBarTone;
   /** 为 true 时嵌入后台预览框：底压边相对 `main` 定位、不占满视口，且不写 `[data-app-shell-scroll]` 衬底色。 */
   embedPreview?: boolean;
   /** 为 true 时不渲染主区顶/底 scrim 压边（祷告等全页自有衬底时使用，避免上下「阴影感」）。 */
@@ -79,6 +83,8 @@ export function ShellTemplateChromeLayout({
   embedPreview = false,
   suppressEdgeScrim = false,
   appShellBackground,
+  topBarRightAccessory,
+  topBarTone = "onLight",
 }: ShellTemplateChromeLayoutProps) {
   const prayerWarmDarkSnap = useSyncExternalStore(subscribeHtmlClassDark, getHtmlDarkSnapshot, () => "0");
 
@@ -174,7 +180,11 @@ export function ShellTemplateChromeLayout({
           {children}
         </div>
         {immersive ? null : (
-          <AppShellTopBar tone="onLight" landscapeImmersive={landscapeNarrow} />
+          <AppShellTopBar
+            tone={topBarTone}
+            landscapeImmersive={landscapeNarrow}
+            rightAccessory={topBarRightAccessory}
+          />
         )}
       </main>
     </HomeDockChromeProvider>

@@ -124,7 +124,7 @@ export function pickVerseKeySequence(
 }
 
 /**
- * 首屏组批：若 manifest 带 `bootstrapVerseKeys`，先按该顺序（过滤无效）填满一部分，再按复习/随机逻辑补满。
+ * 首屏组批：若 manifest 带 `bootstrapVerseKeys`，先按该顺序（过滤无效）填满一部分，再按权重与随机逻辑补满。
  */
 export function buildInitialVerseKeySequence(
   manifest: HomePrayerManifestV1,

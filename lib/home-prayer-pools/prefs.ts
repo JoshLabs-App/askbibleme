@@ -1,4 +1,9 @@
-import type { HomePrayerVersePrefsV1, VerseDisplayModeV1, VerseScopeV1 } from "@/lib/home-prayer-pools/types";
+import type {
+  GoldenVerseFontFamilyV1,
+  HomePrayerVersePrefsV1,
+  VerseDisplayModeV1,
+  VerseScopeV1,
+} from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_PREFS_STORAGE_KEY } from "@/lib/home-prayer-pools/constants";
 
 export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
@@ -8,7 +13,15 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   verseTextZhTranslationId: "cuv-simp",
   verseTextEnTranslationId: "web-en",
   memoryByNamespace: {},
+  goldenVerseFontFamily: "sans",
 };
+
+/** 任意 prefs 写入后派发（同标签页）；用于金句页字体等无需重拉祷告池的 UI 同步 */
+export const HOME_PRAYER_PREFS_UPDATED_EVENT = "selah:home-prayer-verse-prefs-updated";
+
+export function normalizeGoldenVerseFontFamily(raw: unknown): GoldenVerseFontFamilyV1 {
+  return raw === "serif" ? "serif" : "sans";
+}
 
 export function normalizeVerseZhTranslationId(raw: unknown): string {
   const s = typeof raw === "string" && raw.trim() ? raw.trim() : "";
@@ -44,6 +57,7 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
       verseTextZhTranslationId: normalizeVerseZhTranslationId(p.verseTextZhTranslationId),
       verseTextEnTranslationId: normalizeVerseEnTranslationId(p.verseTextEnTranslationId),
       memoryByNamespace,
+      goldenVerseFontFamily: normalizeGoldenVerseFontFamily(p.goldenVerseFontFamily),
     };
   } catch {
     return DEFAULT_HOME_PRAYER_PREFS;
@@ -63,12 +77,13 @@ export function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(HOME_PRAYER_PREFS_STORAGE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event(HOME_PRAYER_PREFS_UPDATED_EVENT));
   } catch {
     /* ignore */
   }
 }
 
-/** 与 `useHomePrayerVerseFeed` 内监听配对；仅在用户改范围/双语/译本/重置复习等需重拉池时调用，勿在逐节记忆写入时调用。 */
+/** 与 `useHomePrayerVerseFeed` 内监听配对；仅在用户改范围/双语/译本/重置经句顺序等需重拉池时调用，勿在逐节记忆写入时调用。 */
 export const HOME_PRAYER_VERSE_FEED_RELOAD_EVENT = "selah:home-prayer-verse-feed-reload";
 
 export function requestHomePrayerVerseFeedReload(): void {

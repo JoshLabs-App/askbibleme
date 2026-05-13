@@ -29,6 +29,9 @@ export type VerseScopeV1 = { type: "all" } | { type: "category"; categoryId: str
 
 export type VerseDisplayModeV1 = "primary" | "bilingual";
 
+/** 金句专页（`verseStyle="goldenVerses"`）正文字体；与首页自然底栏译本偏好同存一份 JSON */
+export type GoldenVerseFontFamilyV1 = "sans" | "serif";
+
 export type PrayerMemoryRowV1 = {
   lastShownAt: number;
   intervalMs: number;
@@ -45,4 +48,5 @@ export type HomePrayerVersePrefsV1 = {
   verseTextEnTranslationId: string;
   /** 按范围隔离：`all` 或 `cat:<categoryId>` */
   memoryByNamespace: Record<string, Record<string, PrayerMemoryRowV1>>;
+  goldenVerseFontFamily: GoldenVerseFontFamilyV1;
 };

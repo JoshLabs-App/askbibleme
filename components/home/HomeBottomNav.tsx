@@ -20,7 +20,23 @@ const homeItem: NavItemDef = {
   match: (p) => p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/"),
 };
 
-const dockNavItems: NavItemDef[] = [{ href: "/prayer", labelKey: "nav.prayer", match: (p) => p.startsWith("/prayer") }];
+const musicItem: NavItemDef = {
+  href: "/music",
+  labelKey: "nav.music",
+  match: (p) => p === "/music" || p.startsWith("/music/"),
+};
+
+const goldenVersesItem: NavItemDef = {
+  href: "/verse",
+  labelKey: "nav.goldenVerses",
+  match: (p) => p === "/verse" || p.startsWith("/verse/"),
+};
+
+const prayerItem: NavItemDef = {
+  href: "/prayer",
+  labelKey: "nav.prayer",
+  match: (p) => p.startsWith("/prayer"),
+};
 
 function navLinkClass(active: boolean) {
   const base =
@@ -70,16 +86,25 @@ export function HomeBottomNav() {
         style={{ backgroundColor: underfillBg }}
       />
       <div className="relative z-[2] flex min-h-0 w-full min-w-0 max-w-full flex-1 items-stretch px-0.5 sm:px-1">
-        <Link
-          href={homeItem.href}
-          aria-current={homeItem.match(pathname) ? "page" : undefined}
-          className={navLinkClass(homeItem.match(pathname))}
-          onClick={onHomeNavClick}
-        >
-          <span className={navItemTextClass}>{t(homeItem.labelKey)}</span>
-        </Link>
+        <div className="flex min-h-0 min-w-0 flex-1 basis-0">
+          <Link
+            href={homeItem.href}
+            aria-current={homeItem.match(pathname) ? "page" : undefined}
+            className={navLinkClass(homeItem.match(pathname))}
+            onClick={onHomeNavClick}
+          >
+            <span className={navItemTextClass}>{t(homeItem.labelKey)}</span>
+          </Link>
+          <Link
+            href={musicItem.href}
+            aria-current={musicItem.match(pathname) ? "page" : undefined}
+            className={navLinkClass(musicItem.match(pathname))}
+          >
+            <span className={navItemTextClass}>{t(musicItem.labelKey)}</span>
+          </Link>
+        </div>
 
-        <div className="music-reactive-play-btn flex min-w-0 flex-1 basis-0 items-center justify-center px-0.5">
+        <div className="music-reactive-play-btn flex shrink-0 items-center justify-center px-1 sm:px-2">
           <button
             type="button"
             disabled={!canPlay}
@@ -98,19 +123,22 @@ export function HomeBottomNav() {
           </button>
         </div>
 
-        {dockNavItems.map((def) => {
-          const active = def.match(pathname);
-          return (
-            <Link
-              key={def.href}
-              href={def.href}
-              aria-current={active ? "page" : undefined}
-              className={navLinkClass(active)}
-            >
-              <span className={navItemTextClass}>{t(def.labelKey)}</span>
-            </Link>
-          );
-        })}
+        <div className="flex min-h-0 min-w-0 flex-1 basis-0">
+          <Link
+            href={goldenVersesItem.href}
+            aria-current={goldenVersesItem.match(pathname) ? "page" : undefined}
+            className={navLinkClass(goldenVersesItem.match(pathname))}
+          >
+            <span className={navItemTextClass}>{t(goldenVersesItem.labelKey)}</span>
+          </Link>
+          <Link
+            href={prayerItem.href}
+            aria-current={prayerItem.match(pathname) ? "page" : undefined}
+            className={navLinkClass(prayerItem.match(pathname))}
+          >
+            <span className={navItemTextClass}>{t(prayerItem.labelKey)}</span>
+          </Link>
+        </div>
       </div>
     </nav>
   );

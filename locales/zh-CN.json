@@ -13,6 +13,7 @@
     "read": "圣经",
     "prayer": "祈祷",
     "explore": "探索",
+    "goldenVerses": "金句",
     "nature": "自然",
     "relax": "放松",
     "appearance": "界面风格",
@@ -330,7 +331,7 @@
     },
     "mediaLibrary": {
       "title": "上传资源库",
-      "intro": "自动扫描 public 下各上传目录中的文件（自然影片/环境声/封面、音乐音频/背景图、能量分析 JSON 等），可预览并勾选删除，便于清理调试时产生的多余文件。若 URL 仍出现在 data/nature-settings.json 或 data/music-companion.json 中，默认禁止删除；勾选「强制删除」可跳过引用检查（请自行确认前台不再使用该地址）。",
+      "intro": "自动扫描 public 下各上传目录中的文件（自然影片/环境声/封面、音乐音频/背景图、金句页背景图、能量分析 JSON 等），可预览并勾选删除，便于清理调试时产生的多余文件。若 URL 仍出现在 data/nature-settings.json、data/music-companion.json 或 data/golden-verses-settings.json 中，默认禁止删除；勾选「强制删除」可跳过引用检查（请自行确认前台不再使用该地址）。",
       "loading": "加载中…",
       "refresh": "重新扫描",
       "filterBucket": "目录",
@@ -342,6 +343,7 @@
       "bucketNaturePreview": "自然 · 预览首帧图",
       "bucketMusicAudio": "音乐 · 音频",
       "bucketMusicBg": "音乐 · 背景图",
+      "bucketGoldenVerseBg": "金句 · 背景图",
       "bucketMusicAnalysis": "音乐 · 分析 JSON",
       "kindAll": "全部类型",
       "kindImage": "图像",
@@ -443,6 +445,23 @@
       "prayerCardTitle": "祷告与经文",
       "prayerCardLead": "按生活处境选方向，进入主题；经文正文来自你已导入的译本。",
       "prayerCardCta": "打开祷告页 →"
+    },
+    "goldenVerses": {
+      "title": "金句",
+      "lead": "慢读与自然、音乐、放松里同源的经文。右上齿轮可选版块范围与本页字体；译本与双语在侧栏菜单。",
+      "empty": "暂无可显示的经句。",
+      "settingsSection": "经文来源与译本",
+      "settingsLead": "与首页经文轮播、祷告池共用本机偏好；改译本后稍候即可在各处看到新正文。",
+      "prev": "上一句",
+      "next": "下一句",
+      "counter": "{{current}} / {{total}}",
+      "settingsLoading": "经文库加载中，稍后即可选择范围与译本。",
+      "swipeHint": "在经文上左右滑动也可切换",
+      "settings": "经文与译本设置",
+      "fontLegend": "本页金句正文的字体，与其它经文偏好存在同一设备。",
+      "fontRowLabel": "字体",
+      "fontSans": "无衬线",
+      "fontSerif": "衬线"
     }
   },
   "nature": {
@@ -466,14 +485,17 @@
     "bgSoftFocusHidePanel": "收起面板",
     "homeVerse": {
       "settingsToggle": "首页经文（祷告池）",
-      "scopeLegend": "经文范围",
-      "scopeAll": "全部方向 + 复习",
-      "scopeCategory": "单一分类 + 复习",
-      "bilingual": "双语对照（英文大在上、中文小在下）",
-      "translationLegend": "首页经文译本",
-      "zhTranslation": "中文正文",
-      "enTranslation": "英文正文（WEB 或 简易）",
-      "resetMemory": "重置复习进度"
+      "scopeLegend": "版块",
+      "scopeAll": "所有版块",
+      "scopeCategory": "单一版块",
+      "bilingual": "双语展示",
+      "bilingualAria": "开启后英文在上、中文在下。",
+      "translationLegend": "译本选择",
+      "contrastCaption": "对照版本",
+      "zhTranslation": "中文",
+      "enTranslation": "英文",
+      "categoryRowLabel": "版块",
+      "resetMemory": "重置进度"
     },
     "scenes": {
       "sectionAria": "自然影片",

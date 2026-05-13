@@ -13,6 +13,7 @@
     "read": "Scripture",
     "prayer": "Prayer",
     "explore": "Explore",
+    "goldenVerses": "Verses",
     "nature": "Nature",
     "relax": "Relax",
     "appearance": "Appearance",
@@ -330,7 +331,7 @@
     },
     "mediaLibrary": {
       "title": "Upload library",
-      "intro": "Scans known upload folders under public (nature video/audio/thumbs, music audio/backgrounds, analysis JSON). Preview files, select, and delete leftovers from experiments. If a URL still appears in data/nature-settings.json or data/music-companion.json, delete is blocked unless you check “Force delete” (only when you are sure nothing uses it).",
+      "intro": "Scans known upload folders under public (nature video/audio/thumbs, music audio/backgrounds, golden-verse backgrounds, analysis JSON). Preview files, select, and delete leftovers from experiments. If a URL still appears in data/nature-settings.json, data/music-companion.json, or data/golden-verses-settings.json, delete is blocked unless you check “Force delete” (only when you are sure nothing uses it).",
       "loading": "Loading…",
       "refresh": "Rescan",
       "filterBucket": "Folder",
@@ -342,6 +343,7 @@
       "bucketNaturePreview": "Nature · preview first-frame",
       "bucketMusicAudio": "Music · audio",
       "bucketMusicBg": "Music · background images",
+      "bucketGoldenVerseBg": "Golden verses · background images",
       "bucketMusicAnalysis": "Music · analysis JSON",
       "kindAll": "All types",
       "kindImage": "Image",
@@ -443,6 +445,23 @@
       "prayerCardTitle": "Prayer with Scripture",
       "prayerCardLead": "Pick a life situation, open a topic; verse text comes from your imported Bible.",
       "prayerCardCta": "Open prayer →"
+    },
+    "goldenVerses": {
+      "title": "Verses",
+      "lead": "Read slowly—the same lines as on Nature, Music, and Relax. The gear at the top right sets section scope and this page’s typeface; translations and bilingual live in the side menu.",
+      "empty": "No verses to show yet.",
+      "settingsSection": "Source and translations",
+      "settingsLead": "These preferences are shared with the home verse rotation. After you change a Bible text, give it a moment to refresh everywhere.",
+      "prev": "Previous",
+      "next": "Next",
+      "counter": "{{current}} / {{total}}",
+      "settingsLoading": "Loading the verse library… Settings will appear in a moment.",
+      "swipeHint": "Swipe left or right on the verse to change",
+      "settings": "Verse and translation settings",
+      "fontLegend": "Typeface for verses on this page. Saved on this device with your other verse preferences.",
+      "fontRowLabel": "Font",
+      "fontSans": "Sans-serif",
+      "fontSerif": "Serif"
     }
   },
   "nature": {
@@ -466,14 +485,17 @@
     "bgSoftFocusHidePanel": "Hide panel",
     "homeVerse": {
       "settingsToggle": "Verse rotation (prayer pool)",
-      "scopeLegend": "Source",
-      "scopeAll": "All topics + review",
-      "scopeCategory": "One category + review",
-      "bilingual": "Show bilingual (English large / Chinese small)",
-      "translationLegend": "Bible text for home verses",
-      "zhTranslation": "Chinese column",
-      "enTranslation": "English column (WEB or simple)",
-      "resetMemory": "Reset verse review progress"
+      "scopeLegend": "Sections",
+      "scopeAll": "All sections",
+      "scopeCategory": "Single section",
+      "bilingual": "Bilingual",
+      "bilingualAria": "When on, English is shown large on top and Chinese below.",
+      "translationLegend": "Translation",
+      "contrastCaption": "Versions",
+      "zhTranslation": "Chinese",
+      "enTranslation": "English",
+      "categoryRowLabel": "Section",
+      "resetMemory": "Reset progress"
     },
     "scenes": {
       "sectionAria": "Nature clips",

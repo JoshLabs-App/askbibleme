@@ -321,6 +321,7 @@ function AdminMediaHub({
   const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
   const busy = uploadProgress !== null;
   const uploadInputId = useId();
+  const [imageDestination, setImageDestination] = useState<"music" | "golden_verses">("music");
 
   const runAudioUpload = useCallback(async (file: File, report: (p: UploadProgressPayload) => void) => {
     const fd = new FormData();
@@ -361,6 +362,24 @@ function AdminMediaHub({
     fd.append("file", file);
     const headers = diskAuthHeaders() as Record<string, string>;
     const { status, bodyText } = await xhrPostFormData("/api/music/upload-image", fd, headers, report);
+    const data = parseJsonFromBodyText(bodyText, status) as { ok?: boolean; url?: string; error?: string };
+    if (status < 200 || status >= 300) {
+      const err = typeof data.error === "string" ? data.error : `上传失败（${status}）`;
+      throw new Error(err + disk403Hint(status, err));
+    }
+    const url = data.url;
+    if (typeof url !== "string" || !url) {
+      throw new Error("上传响应异常：缺少 url");
+    }
+    report({ pct: 100, awaitingServer: false });
+    return { url };
+  }, []);
+
+  const runGoldenVerseImageUpload = useCallback(async (file: File, report: (p: UploadProgressPayload) => void) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const headers = diskAuthHeaders() as Record<string, string>;
+    const { status, bodyText } = await xhrPostFormData("/api/golden-verses/upload-image", fd, headers, report);
     const data = parseJsonFromBodyText(bodyText, status) as { ok?: boolean; url?: string; error?: string };
     if (status < 200 || status >= 300) {
       const err = typeof data.error === "string" ? data.error : `上传失败（${status}）`;
@@ -420,6 +439,17 @@ function AdminMediaHub({
     [bumpPersistIgnore, flushToDisk, runImageUpload, setStore],
   );
 
+  const ingestGoldenVerseImage = useCallback(
+    async (file: File) => {
+      const report = ({ pct, awaitingServer }: UploadProgressPayload) => {
+        setUploadProgress((s) => (s ? { ...s, fileUploadPct: pct, awaitingServer } : s));
+      };
+      await runGoldenVerseImageUpload(file, report);
+      bumpPersistIgnore();
+    },
+    [bumpPersistIgnore, runGoldenVerseImageUpload],
+  );
+
   const onMediaFiles = useCallback(
     async (files: File[]) => {
       if (files.length === 0) return;
@@ -445,8 +475,11 @@ function AdminMediaHub({
             bitrateK?: number | null;
           }
         | undefined;
+      const needsMusicStore = planned.some(
+        (p) => p.kind === "audio" || (p.kind === "image" && imageDestination === "music"),
+      );
       let chain = getStoreSnapshot();
-      if (!chain) {
+      if (needsMusicStore && !chain) {
         setMsg("无曲库数据");
         return;
       }
@@ -461,11 +494,13 @@ function AdminMediaHub({
             awaitingServer: false,
           });
           if (kind === "audio") {
-            const { next, data } = await ingestAudio(file, chain);
+            const { next, data } = await ingestAudio(file, chain!);
             chain = next;
             lastAudio = data;
+          } else if (imageDestination === "golden_verses") {
+            await ingestGoldenVerseImage(file);
           } else {
-            chain = await ingestImage(file, chain);
+            chain = await ingestImage(file, chain!);
           }
         }
         if (planned.length === 1 && planned[0].kind === "audio" && lastAudio) {
@@ -476,7 +511,13 @@ function AdminMediaHub({
           else base = "已写入。";
           setMsg(base + skipTail);
         } else {
-          setMsg(`已完成 ${planned.length} 个文件。${skipTail}`.trim());
+          const goldenOnly =
+            planned.every((p) => p.kind === "image") && imageDestination === "golden_verses";
+          setMsg(
+            goldenOnly
+              ? `已上传金句页背景（${planned.length} 张，前台使用最后一张）。${skipTail}`.trim()
+              : `已完成 ${planned.length} 个文件。${skipTail}`.trim(),
+          );
         }
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "上传失败");
@@ -484,7 +525,15 @@ function AdminMediaHub({
         setUploadProgress(null);
       }
     },
-    [bumpPersistIgnore, getStoreSnapshot, ingestAudio, ingestImage, setMsg],
+    [
+      bumpPersistIgnore,
+      getStoreSnapshot,
+      imageDestination,
+      ingestAudio,
+      ingestGoldenVerseImage,
+      ingestImage,
+      setMsg,
+    ],
   );
 
   const labelMain =
@@ -497,6 +546,24 @@ function AdminMediaHub({
       <h2 className="text-[11px] font-medium uppercase tracking-[0.14em] text-adminMuted">上传</h2>
       <p className="mt-2 max-w-prose text-[10px] leading-relaxed text-adminMuted">
         大文件或转码可能需数十秒；上传完成前请勿离开本页。若写入失败，请确认未禁用自动保存，且生产环境已配置磁盘写入密钥。
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <label htmlFor={`${uploadInputId}-dest`} className="text-[10px] text-adminMuted">
+          图片保存到
+        </label>
+        <select
+          id={`${uploadInputId}-dest`}
+          value={imageDestination}
+          disabled={busy}
+          onChange={(e) => setImageDestination(e.target.value === "golden_verses" ? "golden_verses" : "music")}
+          className="max-w-[min(100%,20rem)] rounded-md border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminFg disabled:opacity-50"
+        >
+          <option value="music">音乐 · 背景图（写入曲库）</option>
+          <option value="golden_verses">金句 · 背景图（前台 /verse）</option>
+        </select>
+      </div>
+      <p className="mt-1 max-w-prose text-[10px] leading-relaxed text-adminMuted">
+        音频固定写入音乐曲库。金句背景多选时依次上传，配置中为最后一次成功的图片。
       </p>
       {uploadProgress ? (
         <div className="mt-3 rounded-md border border-adminLine bg-adminPanel/50 px-3 py-2.5">

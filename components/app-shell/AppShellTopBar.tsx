@@ -9,12 +9,12 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
-import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
 import { isNatureHomeShellPath, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
+import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
 
 /** 常规手机最小触控约 44×44（iOS HIG / Material）；顶栏按钮统一此尺寸 */
 const HIT = "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]";
@@ -98,11 +98,12 @@ const DRAWER_TRANSITION_MS = 300;
 
 const drawerNavLinks: {
   href: string;
-  labelKey: "nav.music" | "nav.relax" | "nav.explore" | "nav.shellTemplate";
+  labelKey: "nav.music" | "nav.relax" | "nav.explore" | "nav.goldenVerses" | "nav.shellTemplate";
 }[] = [
   { href: "/music", labelKey: "nav.music" },
   { href: "/relax", labelKey: "nav.relax" },
   { href: "/explore", labelKey: "nav.explore" },
+  { href: "/verse", labelKey: "nav.goldenVerses" },
   { href: "/template", labelKey: "nav.shellTemplate" },
 ];
 
@@ -465,6 +466,13 @@ export function AppShellTopBar({
                       );
                     })}
                     <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
+                      <HomePrayerVerseDockSettings
+                        placement="drawer"
+                        drawerOpen={navOpen && drawerEntered}
+                        sections={["translation"]}
+                      />
+                    </div>
+                    <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
                       <span className="sr-only">{t("nav.themeColorsHeading")}</span>
                       <p className="sr-only">{t("nav.themeColorsHint")}</p>
                       <ShellTemplateThemeStrip
@@ -491,9 +499,6 @@ export function AppShellTopBar({
                       >
                         {t("nav.themeColorsFollowSite")}
                       </button>
-                    </div>
-                    <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
-                      <HomePrayerVerseDockSettings placement="drawer" drawerOpen={navOpen && drawerEntered} />
                     </div>
                     {bootstrapped ? (
                       user ? (

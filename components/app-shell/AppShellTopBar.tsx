@@ -11,6 +11,7 @@ import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeSt
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
 import { isNatureHomeShellPath, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
+import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 
 /** 常规手机最小触控约 44×44（iOS HIG / Material）；顶栏按钮统一此尺寸 */
@@ -87,8 +88,10 @@ export function AppShellTopBar({
   landscapeImmersive = false,
 }: Props) {
   const pathname = usePathname() ?? "";
+  const registerUrl = getPublicRegisterUrl();
+  const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
   const { t } = useLocale();
-  const { bootstrapped, configured, user, logout } = useAskbibleUser();
+  const { bootstrapped, user, logout } = useAskbibleUser();
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
   const { setDockChromeVisible } = useHomeDockChrome();
   const onLight = tone === "onLight";
@@ -429,7 +432,7 @@ export function AppShellTopBar({
                         {t("nav.themeColorsFollowSite")}
                       </button>
                     </div>
-                    {bootstrapped && configured ? (
+                    {bootstrapped ? (
                       user ? (
                         <div className="mt-1 border-t border-neutral-200/90 pt-3">
                           <p className="px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-[#37352f]/45">
@@ -459,13 +462,37 @@ export function AppShellTopBar({
                           ) : null}
                         </div>
                       ) : (
-                        <Link
-                          href="/login"
-                          className={[linkRowBase, linkRowIdle, "mt-1 border-t border-neutral-200/90 pt-3"].join(" ")}
-                          onClick={() => closeNavMenu()}
-                        >
-                          {t("auth.drawerLogin")}
-                        </Link>
+                        <div className="mt-1 space-y-0.5 border-t border-neutral-200/90 pt-3">
+                          <p className="px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-[#37352f]/45">
+                            {t("auth.drawerAccount")}
+                          </p>
+                          <Link
+                            href="/login"
+                            className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
+                            onClick={() => closeNavMenu()}
+                          >
+                            {t("auth.drawerLogin")}
+                          </Link>
+                          {registerExternal && registerUrl ? (
+                            <a
+                              href={registerUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
+                              onClick={() => closeNavMenu()}
+                            >
+                              {t("auth.drawerRegister")}
+                            </a>
+                          ) : (
+                            <Link
+                              href="/register"
+                              className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
+                              onClick={() => closeNavMenu()}
+                            >
+                              {t("auth.drawerRegister")}
+                            </Link>
+                          )}
+                        </div>
                       )
                     ) : null}
                     <button

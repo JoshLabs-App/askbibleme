@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 
 function LoginPageFallback() {
   return (
@@ -21,6 +22,9 @@ function LoginPageInner() {
   const nextRaw = searchParams.get("next")?.trim() || "/";
   const safeNext =
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") && nextRaw !== "/login" ? nextRaw : "/";
+
+  const registerUrl = getPublicRegisterUrl() ?? "";
+  const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
 
   const { bootstrapped, configured, user, refresh } = useAskbibleUser();
   const [email, setEmail] = useState("");
@@ -123,6 +127,25 @@ function LoginPageInner() {
             {pending ? t("auth.submitting") : t("auth.submit")}
           </button>
         </form>
+        <div className="mt-6 flex flex-col items-center gap-2 text-center">
+          {registerExternal && registerUrl ? (
+            <a
+              href={registerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] text-ink/50 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/75"
+            >
+              {t("auth.loginFooterRegister")}
+            </a>
+          ) : (
+            <Link
+              href="/register"
+              className="text-[13px] text-ink/50 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/75"
+            >
+              {t("auth.loginFooterRegister")}
+            </Link>
+          )}
+        </div>
         <Link
           href="/"
           className="mt-8 block text-center text-[13px] text-ink/45 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/70"

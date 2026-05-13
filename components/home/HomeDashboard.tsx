@@ -17,6 +17,7 @@ import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellModal } from "@/components/ui/AppShellModal";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
+import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 
 const HOME_BACKDROP_STORAGE_KEY = "selah-home-backdrop-mode";
 
@@ -250,8 +251,10 @@ function MusicVisualTuneRow(props: {
 
 export function HomeDashboard() {
   const { t } = useLocale();
-  const { bootstrapped, user } = useAskbibleUser();
+  const { bootstrapped, user, logout } = useAskbibleUser();
   const showAdminHomeLinks = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
+  const registerUrl = getPublicRegisterUrl() ?? "";
+  const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
   const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
@@ -455,6 +458,62 @@ export function HomeDashboard() {
                   role="menu"
                   className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md"
                 >
+                  {bootstrapped && !user ? (
+                    <>
+                      <Link
+                        href="/login"
+                        role="menuitem"
+                        className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        {t("auth.drawerLogin")}
+                      </Link>
+                      {registerExternal && registerUrl ? (
+                        <a
+                          href={registerUrl}
+                          role="menuitem"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          {t("auth.drawerRegister")}
+                        </a>
+                      ) : (
+                        <Link
+                          href="/register"
+                          role="menuitem"
+                          className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          {t("auth.drawerRegister")}
+                        </Link>
+                      )}
+                      <div className="mx-3 my-1 h-px bg-white/10" aria-hidden />
+                    </>
+                  ) : null}
+                  {bootstrapped && user ? (
+                    <>
+                      <p className="px-3 pt-1.5 text-[10px] font-medium uppercase tracking-wide text-canvas/45">
+                        {t("auth.drawerSignedIn")}
+                      </p>
+                      <p className="truncate px-3 pb-1 text-[12px] text-canvas/90" title={user.email}>
+                        {user.email}
+                      </p>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="block w-full px-3 py-2.5 text-left text-[13px] text-canvas/95 transition hover:bg-white/10"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          void logout();
+                        }}
+                      >
+                        {t("auth.drawerLogout")}
+                      </button>
+                      <div className="mx-3 my-1 h-px bg-white/10" aria-hidden />
+                    </>
+                  ) : null}
                   {showAdminHomeLinks ? (
                     <Link
                       href="/admin/studio"

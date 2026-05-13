@@ -32,10 +32,18 @@
     "notConfigured": "Account sign-in is not available right now.",
     "errorWrong": "Wrong email or password",
     "errorNetwork": "Network error. Try again.",
+    "drawerAccount": "Account",
     "drawerLogin": "Sign in",
+    "drawerRegister": "Create account",
     "drawerLogout": "Sign out",
     "drawerSignedIn": "Signed in",
-    "drawerAdmin": "Manage"
+    "drawerAdmin": "Manage",
+    "loginFooterRegister": "New here? Create an account",
+    "registerPageTitle": "Create account",
+    "registerIntro": "Create your account on the AskBible site, then return here and sign in with the same email and password.",
+    "registerEnvHint": "Operators can set NEXT_PUBLIC_ASKBIBLE_REGISTER_URL in Vercel to your registration URL; this page will redirect there automatically.",
+    "registerGoLogin": "Already have an account? Sign in",
+    "registerRedirecting": "Redirecting…"
   },
   "shellTemplatePage": {
     "tokensHeading": "Default title, type & color",

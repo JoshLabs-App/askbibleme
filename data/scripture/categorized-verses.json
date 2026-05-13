@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "sourceNote": "Theme-style categories with OSIS verse refs only; body text always from Selah-imported Bibles at runtime.",
+  "sourceMeta": {
+    "sourceName": "In-repo devotional-style grouping (OSIS refs only; editorial labels)",
+    "licenseOrTermsNote": "This file stores verse references only; full text is loaded from Selah-imported Bibles at runtime. Theme breadth for the product is primarily maintained via data/prayer/topic_prayer_library.json.",
+    "snapshotVersion": "2026-05-12"
+  },
+  "categories": [
+    {
+      "id": "encouragement",
+      "labelZh": "鼓励",
+      "labelEn": "Encouragement",
+      "themeIds": ["pastoral", "comfort"],
+      "verseRefs": [
+        { "bookId": "PSA", "chapter": 23, "verseStart": 1, "verseEnd": 1 },
+        { "bookId": "ROM", "chapter": 8, "verseStart": 28, "verseEnd": 28 }
+      ]
+    },
+    {
+      "id": "hope",
+      "labelZh": "盼望",
+      "labelEn": "Hope",
+      "themeIds": ["eschatological", "prayer"],
+      "verseRefs": [
+        { "bookId": "JHN", "chapter": 3, "verseStart": 16, "verseEnd": 16 },
+        { "bookId": "PHP", "chapter": 4, "verseStart": 6, "verseEnd": 6 }
+      ]
+    },
+    {
+      "id": "comfort",
+      "labelZh": "安慰",
+      "labelEn": "Comfort",
+      "themeIds": ["pastoral"],
+      "verseRefs": [
+        { "bookId": "MAT", "chapter": 11, "verseStart": 28, "verseEnd": 28 },
+        { "bookId": "PSA", "chapter": 46, "verseStart": 10, "verseEnd": 10 }
+      ]
+    },
+    {
+      "id": "faith",
+      "labelZh": "信心",
+      "labelEn": "Faith",
+      "themeIds": ["discipleship"],
+      "verseRefs": [
+        { "bookId": "PRO", "chapter": 3, "verseStart": 5, "verseEnd": 5 },
+        { "bookId": "2CO", "chapter": 5, "verseStart": 7, "verseEnd": 7 }
+      ]
+    },
+    {
+      "id": "wisdom",
+      "labelZh": "智慧",
+      "labelEn": "Wisdom",
+      "themeIds": ["wisdom-literature"],
+      "verseRefs": [
+        { "bookId": "PRO", "chapter": 4, "verseStart": 23, "verseEnd": 23 },
+        { "bookId": "PSA", "chapter": 103, "verseStart": 1, "verseEnd": 1 }
+      ]
+    }
+  ]
+}

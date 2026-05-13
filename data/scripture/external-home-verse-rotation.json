@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "sourceMeta": {
+    "sourceName": "Selah home verse rotation (legacy hand-picked OSIS refs)",
+    "licenseOrTermsNote": "Verse references only; body text is always loaded from Selah-imported Bibles. Extend this list manually in-repo as needed.",
+    "snapshotVersion": "2026-05-12"
+  },
+  "verseRefs": [
+    { "bookId": "PSA", "chapter": 23, "verseStart": 1, "verseEnd": 1 },
+    { "bookId": "PRO", "chapter": 3, "verseStart": 5, "verseEnd": 5 },
+    { "bookId": "JHN", "chapter": 3, "verseStart": 16, "verseEnd": 16 },
+    { "bookId": "PHP", "chapter": 4, "verseStart": 6, "verseEnd": 6 },
+    { "bookId": "PRO", "chapter": 4, "verseStart": 23, "verseEnd": 23 },
+    { "bookId": "ROM", "chapter": 8, "verseStart": 28, "verseEnd": 28 },
+    { "bookId": "2CO", "chapter": 5, "verseStart": 7, "verseEnd": 7 },
+    { "bookId": "PSA", "chapter": 46, "verseStart": 10, "verseEnd": 10 },
+    { "bookId": "PSA", "chapter": 103, "verseStart": 1, "verseEnd": 1 },
+    { "bookId": "MAT", "chapter": 11, "verseStart": 28, "verseEnd": 28 }
+  ]
+}

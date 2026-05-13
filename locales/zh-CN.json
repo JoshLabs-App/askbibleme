@@ -11,6 +11,7 @@
     "music": "音乐",
     "journey": "旅程",
     "read": "圣经",
+    "prayer": "祈祷",
     "explore": "探索",
     "nature": "自然",
     "relax": "放松",
@@ -243,6 +244,7 @@
       "journey": "旅程",
       "readSegments": "圣经分段",
       "bibleVersions": "译本与上传",
+      "goldenVerses": "金句",
       "explore": "探索",
       "mediaLibrary": "上传资源库"
     },
@@ -282,6 +284,28 @@
       "uploadFailed": "上传失败（{{status}}）",
       "setDefaultFailed": "设置失败（{{status}}）",
       "deleteFailed": "删除失败（{{status}}）"
+    },
+    "goldenVerses": {
+      "title": "金句",
+      "intro": "此处汇总仓库内「首页轮播」与「主题分类」的经节引用（VerseRef）。正文始终来自已上传译本；编辑请改仓库内 data/scripture/ 下 JSON 后重新部署或本地刷新。当前为只读总览，不含在线编辑。",
+      "homeSection": "首页轮播清单",
+      "categoriesSection": "主题分类（经句）",
+      "fileRotation": "data/scripture/external-home-verse-rotation.json",
+      "fileCategories": "data/scripture/categorized-verses.json",
+      "missingRotation": "未找到首页轮播 JSON，请检查文件路径与 JSON 格式。",
+      "missingCategories": "未找到主题分类 JSON，请检查文件路径与 JSON 格式。",
+      "sourceMetaHeading": "来源与条款摘要",
+      "sourceNameLabel": "来源名称",
+      "sourceUrlLabel": "参考链接",
+      "snapshotLabel": "快照版本",
+      "themeIdsLabel": "主题标签",
+      "colIndex": "#",
+      "colRef": "引用（OSIS）",
+      "colPreview": "预览（随界面语言译本首行）",
+      "colRead": "读经",
+      "openRead": "打开",
+      "homeFootnote": "顺序即前台轮播顺序；与前台语言切换一致时，英文界面下预览可在浏览器切到英文后另开此页查看（或加 ?locale=en）。",
+      "categoriesFootnote": "分类与 themeIds 供产品与经文入口对齐；勿与正典书卷分区（scripture_canon_catalog）混用。"
     },
     "shellChrome": {
       "pageTitle": "壳层顶/底压边",
@@ -400,7 +424,12 @@
     "explore": {
       "title": "探索",
       "lead": "更多惊喜，正在悄悄靠近。",
-      "body": "这里会慢慢住进一些让你会心一笑的小发现——不必赶时间，也适合一次次回来拆开一点点。它们还在路上；你愿意等一等的话，很快就会在这里碰面。在那之前，首页的自然与经文、音乐里的声音、放松里的一小段安静，也都可以当作随行的小惊喜。"
+      "body": "这里会慢慢住进一些让你会心一笑的小发现——不必赶时间，也适合一次次回来拆开一点点。它们还在路上；你愿意等一等的话，很快就会在这里碰面。在那之前，首页的自然与经文、音乐里的声音、放松里的一小段安静，也都可以当作随行的小惊喜。",
+      "availableHeading": "现在可以打开",
+      "availableHint": "已接上的入口会出现在下面；其余仍在路上。",
+      "prayerCardTitle": "祷告与经文",
+      "prayerCardLead": "按生活处境选方向，进入主题；经文正文来自你已导入的译本。",
+      "prayerCardCta": "打开祷告页 →"
     }
   },
   "nature": {

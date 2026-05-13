@@ -15,7 +15,7 @@ const itemDefs: {
 }[] = [
   { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/") },
   { href: "/music", labelKey: "nav.music", match: (p) => p.startsWith("/music") },
-  { href: "/relax", labelKey: "nav.relax", match: (p) => p.startsWith("/relax") },
+  { href: "/prayer", labelKey: "nav.prayer", match: (p) => p.startsWith("/prayer") },
   { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },
 ];
 

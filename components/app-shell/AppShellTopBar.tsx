@@ -41,13 +41,14 @@ const DRAWER_TRANSITION_MS = 300;
 
 const drawerNavLinks: {
   href: string;
-  labelKey: "nav.home" | "nav.music" | "nav.relax" | "nav.journey" | "nav.read" | "nav.explore" | "nav.shellTemplate";
+  labelKey: "nav.home" | "nav.music" | "nav.relax" | "nav.journey" | "nav.read" | "nav.prayer" | "nav.explore" | "nav.shellTemplate";
 }[] = [
   { href: "/", labelKey: "nav.home" },
   { href: "/music", labelKey: "nav.music" },
   { href: "/relax", labelKey: "nav.relax" },
   { href: "/journey", labelKey: "nav.journey" },
   { href: "/read", labelKey: "nav.read" },
+  { href: "/prayer", labelKey: "nav.prayer" },
   { href: "/explore", labelKey: "nav.explore" },
   { href: "/template", labelKey: "nav.shellTemplate" },
 ];

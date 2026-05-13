@@ -11,6 +11,7 @@
     "music": "Music",
     "journey": "Journey",
     "read": "Scripture",
+    "prayer": "Prayer",
     "explore": "Explore",
     "nature": "Nature",
     "relax": "Relax",
@@ -243,6 +244,7 @@
       "journey": "Journey",
       "readSegments": "Reading segments",
       "bibleVersions": "Translations & upload",
+      "goldenVerses": "Golden verses",
       "explore": "Explore",
       "mediaLibrary": "Upload library"
     },
@@ -282,6 +284,28 @@
       "uploadFailed": "Upload failed ({{status}})",
       "setDefaultFailed": "Could not set default ({{status}})",
       "deleteFailed": "Delete failed ({{status}})"
+    },
+    "goldenVerses": {
+      "title": "Golden verses",
+      "intro": "Summary of verse references (VerseRef) for the home rotation and themed categories. Body text always comes from uploaded Bible JSON; edit files under data/scripture/ in the repo, then redeploy or refresh locally. Read-only overview—no in-browser editing yet.",
+      "homeSection": "Home rotation list",
+      "categoriesSection": "Themed categories",
+      "fileRotation": "data/scripture/external-home-verse-rotation.json",
+      "fileCategories": "data/scripture/categorized-verses.json",
+      "missingRotation": "Home rotation JSON is missing or invalid.",
+      "missingCategories": "Categorized verses JSON is missing or invalid.",
+      "sourceMetaHeading": "Source & terms note",
+      "sourceNameLabel": "Source name",
+      "sourceUrlLabel": "Reference URL",
+      "snapshotLabel": "Snapshot version",
+      "themeIdsLabel": "Theme ids",
+      "colIndex": "#",
+      "colRef": "Reference (OSIS)",
+      "colPreview": "Preview (first line, locale translation)",
+      "colRead": "Read",
+      "openRead": "Open",
+      "homeFootnote": "Order matches the public home rotation. For English preview text, switch the site locale to English or open this page with ?locale=en.",
+      "categoriesFootnote": "Categories and themeIds align product copy with verse entry points; keep separate from the canon section catalog (scripture_canon_catalog)."
     },
     "shellChrome": {
       "pageTitle": "Shell top / bottom scrims",
@@ -400,7 +424,12 @@
     "explore": {
       "title": "Explore",
       "lead": "More little surprises are quietly on their way.",
-      "body": "This corner will slowly fill with small delights—nothing to rush, worth returning to unwrap bit by bit. They are still traveling; if you can wait a little, you will meet them here soon. Until then, the verses and light on Home, a track in Music, or a short hush in Relax can be surprises that walk with you."
+      "body": "This corner will slowly fill with small delights—nothing to rush, worth returning to unwrap bit by bit. They are still traveling; if you can wait a little, you will meet them here soon. Until then, the verses and light on Home, a track in Music, or a short hush in Relax can be surprises that walk with you.",
+      "availableHeading": "Open now",
+      "availableHint": "Wired-up entries appear below; the rest is still on its way.",
+      "prayerCardTitle": "Prayer with Scripture",
+      "prayerCardLead": "Pick a life situation, open a topic; verse text comes from your imported Bible.",
+      "prayerCardCta": "Open prayer →"
     }
   },
   "nature": {

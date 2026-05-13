@@ -21,24 +21,26 @@ function isSelahBiblePayload(v: unknown): v is { format?: string; books: Record<
   return typeof o.books === "object" && o.books !== null && !Array.isArray(o.books);
 }
 
-/** 从默认译本 JSON 读取一章（服务端）。若无译本或缺章则返回 null。 */
-export function loadChapterFromDefaultTranslation(bookId: string, chapter: number): LoadedChapter | null {
+/** 从指定译本 JSON 读取一章（服务端）。若无译本或缺章则返回 null。 */
+export function loadChapterFromTranslation(
+  cwd: string,
+  bookId: string,
+  chapter: number,
+  translationId: string,
+): LoadedChapter | null {
   const id = String(bookId || "").trim().toUpperCase();
-  if (!BOOK_RE.test(id)) return null;
+  const tid = String(translationId || "").trim();
+  if (!BOOK_RE.test(id) || !tid) return null;
   const bookMeta = scriptureBooks.find((b) => b.bookId === id);
   if (!bookMeta) return null;
   const ch = Number(chapter);
   if (!Number.isInteger(ch) || ch < 1 || ch > bookMeta.chapters) return null;
 
-  const cwd = process.cwd();
   const index = readTranslationsIndexSync(cwd);
-  const translationId = index.defaultTranslationId ?? index.translations[0]?.id ?? null;
-  if (!translationId) return null;
-
-  const meta = index.translations.find((t) => t.id === translationId);
+  const meta = index.translations.find((t) => t.id === tid);
   if (!meta) return null;
 
-  const abs = resolveTranslationAbsolutePath(cwd, translationId);
+  const abs = resolveTranslationAbsolutePath(cwd, tid);
   let raw: unknown;
   try {
     raw = JSON.parse(fs.readFileSync(abs, "utf8")) as unknown;
@@ -60,7 +62,7 @@ export function loadChapterFromDefaultTranslation(bookId: string, chapter: numbe
   if (verses.length === 0) return null;
 
   return {
-    translationId,
+    translationId: tid,
     labelZh: meta.labelZh,
     labelEn: meta.labelEn,
     bookId: id,
@@ -68,4 +70,13 @@ export function loadChapterFromDefaultTranslation(bookId: string, chapter: numbe
     chapter: ch,
     verses,
   };
+}
+
+/** 从默认译本 JSON 读取一章（服务端）。若无译本或缺章则返回 null。 */
+export function loadChapterFromDefaultTranslation(bookId: string, chapter: number): LoadedChapter | null {
+  const cwd = process.cwd();
+  const index = readTranslationsIndexSync(cwd);
+  const translationId = index.defaultTranslationId ?? index.translations[0]?.id ?? null;
+  if (!translationId) return null;
+  return loadChapterFromTranslation(cwd, bookId, chapter, translationId);
 }

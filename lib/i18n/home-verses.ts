@@ -3,6 +3,10 @@ import type { AppLocale } from "@/lib/i18n/config";
 export type HomeVerseEntry = { lines: string[]; ref: string };
 
 const HOME_VERSES_ZH: HomeVerseEntry[] = [
+  {
+    lines: ["我要向山举目。", "我的帮助从何而来？", "我的帮助从造天地的耶和华而来。"],
+    ref: "诗篇 121:1–2",
+  },
   { lines: ["耶和华是我的牧者，", "我必不至缺乏。"], ref: "诗篇 23:1" },
   { lines: ["你要专心仰赖耶和华，", "不可倚靠自己的聪明。"], ref: "箴言 3:5" },
   {
@@ -25,6 +29,15 @@ const HOME_VERSES_ZH: HomeVerseEntry[] = [
 ];
 
 const HOME_VERSES_EN: HomeVerseEntry[] = [
+  {
+    lines: [
+      "I will lift up my eyes to the hills.",
+      "Where does my help come from?",
+      "My help comes from Yahweh,",
+      "who made heaven and earth.",
+    ],
+    ref: "Psalm 121:1–2",
+  },
   { lines: ["The Lord is my shepherd;", "I shall not want."], ref: "Psalm 23:1" },
   {
     lines: ["Trust in the Lord with all your heart,", "and do not lean on your own understanding."],

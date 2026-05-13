@@ -6,7 +6,7 @@ import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackCont
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
-import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { HomeVerseRotatorWithPrayerPool } from "@/components/home/HomeVerseRotatorWithPrayerPool";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -93,6 +93,11 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
   const showAdminMusicLink = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
+
+  const verseFallback = useMemo(
+    () => homeVerseRotation ?? ({ "zh-CN": [], en: [] } as Record<AppLocale, HomeVerseEntry[]>),
+    [homeVerseRotation],
+  );
 
   const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc } = useMusicShellPlayback();
   const [store, setStore] = useState<MusicCompanionStore>(initialStore);
@@ -322,7 +327,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
               <div
                 className={`flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch] ${ln}:py-2`}
               >
-                <div className="flex w-full max-w-lg flex-col items-center justify-center sm:max-w-xl lg:max-w-2xl">
+                <div className="flex w-full max-w-lg flex-col items-center justify-center sm:max-w-xl lg:max-w-2xl landscape:max-w-[min(92vw,48rem)] lg:landscape:max-w-[min(85vw,54rem)]">
                   <div className="min-w-0 w-full px-0 pt-2 sm:pt-3">
                     {tracksWithSrc.length > 1 ? (
                       <button
@@ -331,16 +336,16 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
                         aria-label={t("music.home.shuffleTrack")}
                         className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-ink/[0.04]"
                       >
-                        <HomeVerseRotator
-                          entriesByLocale={homeVerseRotation}
+                        <HomeVerseRotatorWithPrayerPool
+                          fallbackByLocale={verseFallback}
                           variant="light"
                           prominence="nature"
                           className={MUSIC_HOME_VERSE_CLASS}
                         />
                       </button>
                     ) : (
-                      <HomeVerseRotator
-                        entriesByLocale={homeVerseRotation}
+                      <HomeVerseRotatorWithPrayerPool
+                        fallbackByLocale={verseFallback}
                         variant="light"
                         prominence="nature"
                         className={MUSIC_HOME_VERSE_CLASS}

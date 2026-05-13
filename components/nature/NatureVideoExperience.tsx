@@ -6,11 +6,11 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
-import { ImmersiveAmbientClock } from "@/components/home/ImmersiveAmbientClock";
-import { HomeMusicRelaxShortcuts } from "@/components/home/HomeMusicRelaxShortcuts";
+import { HomeSleepTimerControl } from "@/components/home/HomeSleepTimerControl";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
-import { NatureAmbientMixAudio } from "@/components/nature/NatureAmbientMixAudio";
+import { useHomePrayerVerseFeed } from "@/components/home/useHomePrayerVerseFeed";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
+import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
@@ -31,8 +31,9 @@ import { shellTemplatePreviewThemeById } from "@/lib/shell/template-preview-them
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
-const NATURE_TOP_ICON_BTN =
-  "touch-manipulation flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] text-white/[0.9] hover:bg-white/[0.1]";
+/** 音乐静音：保留 44×44 触控，无圆形底框 */
+const NATURE_BELL_BTN =
+  "touch-manipulation inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/[0.9] transition hover:text-white active:scale-[0.97]";
 
 function IconBell(props: { className?: string }) {
   return (
@@ -49,6 +50,16 @@ function IconBell(props: { className?: string }) {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function IconBgSoftFocus(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
+      <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
     </svg>
   );
 }
@@ -75,16 +86,6 @@ function IconBellMuted(props: { className?: string }) {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-    </svg>
-  );
-}
-
-function IconBgSoftFocus(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
-      <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
     </svg>
   );
 }
@@ -163,7 +164,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
   /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
   const videoStageHeightCommitRef = useRef(0);
 
-  const [ambientMuted, setAmbientMuted] = useState(false);
+  const { shellAudioMuted, setShellAudioMuted } = useMusicShellPlayback();
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
   const [natureSoftFocusPanelOpen, setNatureSoftFocusPanelOpen] = useState(false);
   const [natureSoftFocusOverlayOpacity, setNatureSoftFocusOverlayOpacity] = useState(
@@ -189,6 +190,12 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     }
     return brandChrome;
   }, [shellTemplateBrand, brandChrome]);
+
+  const verseFallback = useMemo(
+    () => homeVerseRotation ?? ({ "zh-CN": [], en: [] } as Record<AppLocale, HomeVerseEntry[]>),
+    [homeVerseRotation],
+  );
+  const verseFeed = useHomePrayerVerseFeed({ fallbackByLocale: verseFallback });
 
   const { topLayerStyle, bottomLayerStyleNatureVideoStage } = useShellChromeScrimVisuals(
     scrimBrandChrome.appLight,
@@ -315,12 +322,12 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     [activeVideoId, initial, selectVideoAndImmersive],
   );
 
-  const { videoSrc, posterSrc, ambientLayers } = useMemo(
-    () => resolveNaturePlayback(playbackSettings),
-    [playbackSettings],
-  );
+  const { videoSrc, posterSrc } = useMemo(() => resolveNaturePlayback(playbackSettings), [playbackSettings]);
   const hasMainVideo = Boolean(videoSrc.trim()) && !videoBroken;
-  const hasAmbientAudio = ambientLayers.length > 0;
+
+  useEffect(() => {
+    if (!hasMainVideo) setNatureBgSoftFocus(false);
+  }, [hasMainVideo]);
   const poster = posterSrc?.trim();
   const posterUrl = poster ?? "";
   const hasStillIntro = posterUrl.length > 0;
@@ -628,6 +635,15 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
         ? t("nature.bgSoftFocusOpenPanelAria")
         : t("nature.bgSoftFocusStartAria");
 
+  /** 视频空白：柔焦面板打开时只收起面板，不切换底栏场景区 */
+  const onNatureVideoBlankClick = useCallback(() => {
+    if (natureSoftFocusPanelOpen) {
+      setNatureSoftFocusPanelOpen(false);
+      return;
+    }
+    toggleDockChrome();
+  }, [natureSoftFocusPanelOpen, toggleDockChrome]);
+
   return (
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
       <div
@@ -639,17 +655,18 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
       <AppShellTopBar
         tone="onDark"
         landscapeImmersive={false}
+        showTopInsetTime={landscapeImmersive}
         rightAccessory={
           <div className="flex flex-col items-end gap-2">
-            {hasAmbientAudio && hasMainVideo ? (
+            {hasMainVideo ? (
               <button
                 type="button"
-                onClick={() => setAmbientMuted((m) => !m)}
-                aria-pressed={ambientMuted}
-                aria-label={ambientMuted ? t("chrome.unmuteAmbient") : t("chrome.muteAmbient")}
-                className={NATURE_TOP_ICON_BTN}
+                onClick={() => setShellAudioMuted(!shellAudioMuted)}
+                aria-pressed={shellAudioMuted}
+                aria-label={shellAudioMuted ? t("chrome.unmuteShellMusic") : t("chrome.muteShellMusic")}
+                className={NATURE_BELL_BTN}
               >
-                {ambientMuted ? (
+                {shellAudioMuted ? (
                   <IconBellMuted className="h-[1.25rem] w-[1.25rem] opacity-90" />
                 ) : (
                   <IconBell className="h-[1.25rem] w-[1.25rem] opacity-90" />
@@ -721,7 +738,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
                   aria-controls={natureSoftFocusPanelOpen ? "nature-soft-focus-panel" : undefined}
                   aria-pressed={natureBgSoftFocus}
                   aria-label={natureSoftFocusTriggerAria}
-                  className={NATURE_TOP_ICON_BTN}
+                  className={NATURE_BELL_BTN}
                 >
                   <IconBgSoftFocus
                     className={
@@ -733,11 +750,10 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
                 </button>
               </div>
             ) : null}
+            <HomeSleepTimerControl />
           </div>
         }
       />
-
-      <ImmersiveAmbientClock visible={landscapeImmersive} />
 
       {hasMainVideo ? (
         <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
@@ -823,25 +839,22 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
               {showSlowIntroHint && !introRevealed ? t("nature.slowVisualHint") : t("nature.playbackBufferingHint")}
             </p>
           )}
-          <NatureAmbientMixAudio
-            layers={ambientLayers}
-            videoRef={videoRef}
-            playbackRate={rate}
-            ambientMuted={ambientMuted}
-            ambientLead={hasStillIntro && !introRevealed}
-          />
           <button
             type="button"
             className="absolute inset-0 z-[7] cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             aria-expanded={dockChromeVisible}
             aria-label={t("nature.toggleDockChrome")}
-            onClick={() => toggleDockChrome()}
+            onClick={onNatureVideoBlankClick}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
-            <div className="w-full max-w-lg sm:max-w-xl">
+            <div className="w-full max-w-lg sm:max-w-xl landscape:max-w-[min(92vw,50rem)] md:landscape:max-w-[min(86vw,56rem)]">
               <HomeVerseRotator
-                entriesByLocale={homeVerseRotation}
+                entriesByLocale={verseFeed.entriesByLocale}
+                bilingual={verseFeed.bilingual}
+                verseKeys={verseFeed.verseKeys}
+                onVerseCommitted={verseFeed.onVerseCommitted}
+                onNearEnd={verseFeed.onNearEnd}
                 variant="dark"
                 prominence="nature"
                 className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
@@ -856,9 +869,8 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
               ].join(" ")}
             >
               <DockChromeCollapse>
-                <HomeMusicRelaxShortcuts className="mx-auto w-full max-w-md shrink-0 lg:max-w-none" />
                 <NatureSceneLayer
-                  className="mt-2 shrink-0 sm:mt-2.5 [@media(max-height:500px)]:mt-1.5 [@media(max-height:500px)]:sm:mt-2"
+                  className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
                   settings={initial}
                   activeVideoId={playbackSettings.activeVideoId}
                   prepareSceneId={scenePrepare?.id ?? null}
@@ -881,7 +893,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
               className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               aria-expanded={dockChromeVisible}
               aria-label={t("nature.toggleDockChrome")}
-              onClick={() => toggleDockChrome()}
+              onClick={onNatureVideoBlankClick}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
               <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">
@@ -891,13 +903,20 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
             </div>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(40dvh,50svh)] min-h-0 flex-col justify-end px-4 pb-2 sm:px-6 sm:pb-3 md:px-8 xl:px-10">
               <div
-              className={[
-                "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
-                dockChromeVisible ? "pointer-events-auto" : "pointer-events-none",
-              ].join(" ")}
-            >
+                className={[
+                  "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
+                  dockChromeVisible ? "pointer-events-auto" : "pointer-events-none",
+                ].join(" ")}
+              >
                 <DockChromeCollapse>
-                  <HomeMusicRelaxShortcuts className="mx-auto w-full max-w-md shrink-0 lg:max-w-none" />
+                  <NatureSceneLayer
+                    className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
+                    settings={initial}
+                    activeVideoId={playbackSettings.activeVideoId}
+                    prepareSceneId={scenePrepare?.id ?? null}
+                    prepareProgress={scenePrepare?.progress ?? null}
+                    onSceneCardPress={onSceneCardPress}
+                  />
                 </DockChromeCollapse>
               </div>
             </div>

@@ -19,7 +19,7 @@ type Value = {
 
 const HomeDockChromeContext = createContext<Value | null>(null);
 
-/** 自然首页 `/`、`/nature` 等：底区场景卡与快捷入口由 `DockChromeCollapse` 控制；默认收起，点画面切换。 */
+/** 自然首页 `/`、`/nature` 等：底区场景卡由 `DockChromeCollapse` 控制；默认收起，点画面切换。 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
   return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");

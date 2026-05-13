@@ -8,16 +8,19 @@ import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackCont
 import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
-const itemDefs: {
+type NavItemDef = {
   href: string;
   labelKey: string;
   match: (p: string) => boolean;
-}[] = [
-  { href: "/", labelKey: "nav.home", match: (p) => p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/") },
-  { href: "/music", labelKey: "nav.music", match: (p) => p.startsWith("/music") },
-  { href: "/prayer", labelKey: "nav.prayer", match: (p) => p.startsWith("/prayer") },
-  { href: "/explore", labelKey: "nav.explore", match: (p) => p.startsWith("/explore") },
-];
+};
+
+const homeItem: NavItemDef = {
+  href: "/",
+  labelKey: "nav.home",
+  match: (p) => p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/"),
+};
+
+const dockNavItems: NavItemDef[] = [{ href: "/prayer", labelKey: "nav.prayer", match: (p) => p.startsWith("/prayer") }];
 
 function navLinkClass(active: boolean) {
   const base =
@@ -67,20 +70,14 @@ export function HomeBottomNav() {
         style={{ backgroundColor: underfillBg }}
       />
       <div className="relative z-[2] flex min-h-0 w-full min-w-0 max-w-full flex-1 items-stretch px-0.5 sm:px-1">
-        {itemDefs.slice(0, 2).map((def) => {
-          const active = def.match(pathname);
-          return (
-            <Link
-              key={def.href}
-              href={def.href}
-              aria-current={active ? "page" : undefined}
-              className={navLinkClass(active)}
-              onClick={def.href === "/" ? onHomeNavClick : undefined}
-            >
-              <span className={navItemTextClass}>{t(def.labelKey)}</span>
-            </Link>
-          );
-        })}
+        <Link
+          href={homeItem.href}
+          aria-current={homeItem.match(pathname) ? "page" : undefined}
+          className={navLinkClass(homeItem.match(pathname))}
+          onClick={onHomeNavClick}
+        >
+          <span className={navItemTextClass}>{t(homeItem.labelKey)}</span>
+        </Link>
 
         <div className="music-reactive-play-btn flex min-w-0 flex-1 basis-0 items-center justify-center px-0.5">
           <button
@@ -101,7 +98,7 @@ export function HomeBottomNav() {
           </button>
         </div>
 
-        {itemDefs.slice(2, 4).map((def) => {
+        {dockNavItems.map((def) => {
           const active = def.match(pathname);
           return (
             <Link

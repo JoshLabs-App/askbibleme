@@ -6,6 +6,8 @@ import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { SCRIPTURE_BOOK_NAME_EN } from "@/lib/bible/scripture-book-names-en";
 import type { VerseRef } from "@/lib/bible/verse-ref";
+import { stripZhVerseDisplayNotes } from "@/lib/bible/strip-zh-verse-display-notes";
+import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
 
 function verseRangeSuffix(verseStart: number, verseEnd: number): string {
   if (verseStart === verseEnd) return `${verseStart}`;
@@ -33,23 +35,60 @@ export type ResolveVerseRefOptions = {
   whenIncomplete?: ResolveVerseRefWhenIncomplete;
 };
 
+/** 统计「有字形」长度，用于判断是否为孤行（标点不计）。 */
+function countZhContentChars(s: string): number {
+  return s.replace(/[，。、；：！？「」『』""''\s\u3000]/g, "").length;
+}
+
+/**
+ * 将过短的尾行并回上一行，避免「你，」等单字/双字孤行。
+ * 从末行向前合并，再处理首行仍过短的情况。
+ */
+function mergeZhOrphanDisplayLines(lines: string[]): string[] {
+  if (lines.length <= 1) return lines;
+  const arr = [...lines];
+  for (let i = arr.length - 1; i >= 1; i--) {
+    const n = countZhContentChars(arr[i]!);
+    if (n <= 2) {
+      arr[i - 1] = arr[i - 1]! + arr[i]!;
+      arr.splice(i, 1);
+    }
+  }
+  if (arr.length >= 2 && countZhContentChars(arr[0]!) <= 2) {
+    arr[1] = arr[0]! + arr[1]!;
+    arr.shift();
+  }
+  return arr;
+}
+
+/** 中文：在逗号/分号处断行前先凑够一定长度，再合并孤行。 */
+function splitZhVerseTextToDisplayLines(t: string): string[] {
+  const trimmed = t.trim();
+  if (!trimmed) return [];
+  const chunks: string[] = [];
+  let buf = "";
+  /** 逗号前至少这么多「非逗分空白」字再断，减少碎行。 */
+  const minCharsBeforeCommaBreak = 8;
+  for (let i = 0; i < trimmed.length; i++) {
+    const c = trimmed[i]!;
+    buf += c;
+    if ("，；".includes(c) && buf.replace(/[，；\s]/g, "").length >= minCharsBeforeCommaBreak) {
+      chunks.push(buf.trim());
+      buf = "";
+    }
+  }
+  if (buf.trim()) chunks.push(buf.trim());
+  const base = chunks.length > 0 ? chunks : [trimmed];
+  const merged = mergeZhOrphanDisplayLines(base);
+  return merged.length > 0 ? merged : [trimmed];
+}
+
 /** 将一节或连续多节正文拆成多行，便于首页排版（与旧 hand-split 接近）。 */
 export function splitVerseTextToDisplayLines(text: string, locale: AppLocale): string[] {
   const t = text.trim();
   if (!t) return [];
   if (locale === "zh-CN") {
-    const chunks: string[] = [];
-    let buf = "";
-    for (let i = 0; i < t.length; i++) {
-      const c = t[i];
-      buf += c;
-      if ("，；".includes(c) && buf.replace(/[，；\s]/g, "").length >= 6) {
-        chunks.push(buf.trim());
-        buf = "";
-      }
-    }
-    if (buf.trim()) chunks.push(buf.trim());
-    return chunks.length > 0 ? chunks : [t];
+    return splitZhVerseTextToDisplayLines(t);
   }
   const parts = t.split(/,\s+/).filter((p) => p.trim());
   if (parts.length <= 1) return [t];
@@ -110,13 +149,21 @@ export function resolveVerseRefToHomeEntry(
     return { lines: [footRequested], ref: footRequested };
   }
 
+  const verseBodyForSplit = (raw: string): string => {
+    const t = raw.trim();
+    if (!t) return "";
+    const pass = locale === "zh-CN" ? stripZhVerseDisplayNotes(t) : t;
+    return normalizeVerseTextForHomeDisplay(pass);
+  };
+
   const lines: string[] = [];
   if (picked.length === 1) {
-    lines.push(...splitVerseTextToDisplayLines(picked[0].text, locale));
+    const body = verseBodyForSplit(picked[0].text);
+    if (body) lines.push(...splitVerseTextToDisplayLines(body, locale));
   } else {
     for (const row of picked) {
-      const one = row.text.trim();
-      if (one) lines.push(one);
+      const one = verseBodyForSplit(row.text);
+      if (one) lines.push(...splitVerseTextToDisplayLines(one, locale));
     }
   }
 
@@ -138,5 +185,9 @@ export function resolveVerseRefToHomeEntry(
 
   if (!foot) return null;
 
-  return { lines: lines.length ? lines : [picked[0].text.trim()], ref: foot };
+  const fallbackLine =
+    normalizeVerseTextForHomeDisplay(
+      locale === "zh-CN" ? stripZhVerseDisplayNotes(picked[0].text) : picked[0].text.trim(),
+    ) || picked[0].text.trim();
+  return { lines: lines.length ? lines : [fallbackLine || picked[0].text.trim()], ref: foot };
 }

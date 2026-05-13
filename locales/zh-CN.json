@@ -7,7 +7,7 @@
   },
   "nav": {
     "mainLabel": "主导航",
-    "home": "首页",
+    "home": "安息",
     "music": "音乐",
     "journey": "旅程",
     "read": "圣经",
@@ -20,7 +20,8 @@
     "shellTemplate": "壳模板",
     "themeColorsHeading": "主题配色",
     "themeColorsHint": "保存在本机；选中后全站壳层使用该套色，直到点「跟随站点」。",
-    "themeColorsFollowSite": "跟随站点"
+    "themeColorsFollowSite": "跟随站点",
+    "homeVerseSection": "首页经文（自然 · 音乐 · 放松）"
   },
   "auth": {
     "pageTitle": "登录",
@@ -152,6 +153,8 @@
     "userMenuAria": "后台菜单",
     "muteAmbient": "关闭背景环境声",
     "unmuteAmbient": "打开背景环境声",
+    "muteShellMusic": "音乐静音",
+    "unmuteShellMusic": "取消音乐静音",
     "personalSettings": "个人设置",
     "adminToolsSection": "管理",
     "studioInternal": "内部 · Studio",
@@ -201,11 +204,13 @@
       "opacity": "透明度",
       "dim": "压暗",
       "saturation": "饱和",
-      "resetFx": "恢复默认",
-      "shortcutsAria": "音乐与放松"
+      "resetFx": "恢复默认"
     },
     "sleepTimer": {
-      "watchAria": "定时",
+      "watchAria": "定时停止音乐",
+      "popoverLead": "到点后只暂停壳层音乐，不会熄屏或锁定手机。",
+      "stayAwakeLabel": "保持屏幕常亮",
+      "stayAwakeHint": "依赖浏览器；切到后台或离开本页会自动解除。",
       "m30": "30",
       "m60": "60",
       "m120": "120"
@@ -452,20 +457,31 @@
     "noMusicHint": "暂无曲目。可在音乐首页或后台配置音频后再来。",
     "slowVisualHint": "画面在准备，请稍候。",
     "playbackBufferingHint": "画面稍作停顿，马上继续。",
-    "scenes": {
-      "sectionAria": "自然影片",
-      "ariaSwitch": "切换到{{name}}",
-      "ariaPreparing": "正在下载完整「{{name}}」，就绪后自动切换",
-      "ariaCollapsePreview": "收起{{name}}预览",
-      "unnamedProduct": "未命名影片"
-    },
     "bgSoftFocusStartAria": "开启暗衣柔焦（沿用上次暗度与模糊）并打开调节",
     "bgSoftFocusOpenPanelAria": "打开暗衣调节面板",
     "bgSoftFocusCloseAria": "关闭暗衣柔焦并收起调节",
     "bgSoftFocusPanelTitle": "暗衣柔焦",
     "bgSoftFocusOverlayLabel": "黑色遮罩浓度",
     "bgSoftFocusBlurLabel": "背景模糊强度",
-    "bgSoftFocusHidePanel": "收起面板"
+    "bgSoftFocusHidePanel": "收起面板",
+    "homeVerse": {
+      "settingsToggle": "首页经文（祷告池）",
+      "scopeLegend": "经文范围",
+      "scopeAll": "全部方向 + 复习",
+      "scopeCategory": "单一分类 + 复习",
+      "bilingual": "双语对照（英文大在上、中文小在下）",
+      "translationLegend": "首页经文译本",
+      "zhTranslation": "中文正文",
+      "enTranslation": "英文正文（WEB 或 简易）",
+      "resetMemory": "重置复习进度"
+    },
+    "scenes": {
+      "sectionAria": "自然影片",
+      "ariaSwitch": "切换到{{name}}",
+      "ariaPreparing": "正在下载完整「{{name}}」，就绪后自动切换",
+      "ariaCollapsePreview": "收起{{name}}预览",
+      "unnamedProduct": "未命名影片"
+    }
   },
   "relax": {
     "back": "音乐首页",

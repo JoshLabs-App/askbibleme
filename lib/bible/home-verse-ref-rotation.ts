@@ -7,6 +7,7 @@ import { readExternalHomeVerseRotationSync } from "@/lib/scripture/read-external
 
 /** 与历史 `home-verses.ts` 顺序一致；`data/scripture/external-home-verse-rotation.json` 缺失时的回退。 */
 export const HOME_VERSE_ROTATION_REFS_FALLBACK: VerseRef[] = [
+  { bookId: "PSA", chapter: 121, verseStart: 1, verseEnd: 2 },
   { bookId: "PSA", chapter: 23, verseStart: 1, verseEnd: 1 },
   { bookId: "PRO", chapter: 3, verseStart: 5, verseEnd: 5 },
   { bookId: "JHN", chapter: 3, verseStart: 16, verseEnd: 16 },

@@ -5,7 +5,7 @@ export function resolveNaturePlayback(s: NatureSettingsV2): {
   posterSrc?: string;
   /** 预览条静态图：首帧 JPEG 优先，否则正方形 thumb；二者皆无时预览条回退为内联视频 */
   previewStillSrc?: string;
-  /** 与当前活动影片对应的环境声层（已解析为 URL + 音量） */
+  /** 环境声层（当前前台恒为空数组；类型保留以兼容调用方）。 */
   ambientLayers: { layerId: string; src: string; volume: number }[];
 } {
   const posterSrc = s.posterSrc?.trim();
@@ -22,20 +22,8 @@ export function resolveNaturePlayback(s: NatureSettingsV2): {
     (rowPreview && rowPreview.length > 0 ? rowPreview : undefined) ??
     (rowThumb && rowThumb.length > 0 ? rowThumb : undefined);
   const previewStillSrc = posterFromRow;
-  const clipById = new Map(s.ambientClips.map((c) => [c.id, c]));
-  const mix = row?.mix ?? [];
-  const ambientLayers = mix
-    .map((layer) => {
-      const clip = clipById.get(layer.clipId);
-      const src = clip?.src.trim() ?? "";
-      if (!src) return null;
-      return {
-        layerId: layer.id,
-        src,
-        volume: layer.volume,
-      };
-    })
-    .filter((x): x is { layerId: string; src: string; volume: number } => x !== null);
+  /** 产品：自然主视频不再叠环境声轨（后台混音数据仍保留在 JSON，前台不播放）。 */
+  const ambientLayers: { layerId: string; src: string; volume: number }[] = [];
   const posterSrcMerged = posterFromRow ?? posterSrc;
   return {
     videoSrc,

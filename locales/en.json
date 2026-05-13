@@ -7,7 +7,7 @@
   },
   "nav": {
     "mainLabel": "Main navigation",
-    "home": "Home",
+    "home": "Rest",
     "music": "Music",
     "journey": "Journey",
     "read": "Scripture",
@@ -20,7 +20,8 @@
     "shellTemplate": "Shell template",
     "themeColorsHeading": "Theme colors",
     "themeColorsHint": "Saved on this device. Applies this palette app-wide until you tap Follow site.",
-    "themeColorsFollowSite": "Follow site branding"
+    "themeColorsFollowSite": "Follow site branding",
+    "homeVerseSection": "Home verse (Nature, Music, Relax)"
   },
   "auth": {
     "pageTitle": "Sign in",
@@ -152,6 +153,8 @@
     "userMenuAria": "Admin menu",
     "muteAmbient": "Mute background ambience",
     "unmuteAmbient": "Unmute background ambience",
+    "muteShellMusic": "Mute music",
+    "unmuteShellMusic": "Unmute music",
     "personalSettings": "Personal",
     "adminToolsSection": "Site tools",
     "studioInternal": "Studio (internal)",
@@ -201,11 +204,13 @@
       "opacity": "Opacity",
       "dim": "Dim",
       "saturation": "Saturation",
-      "resetFx": "Reset",
-      "shortcutsAria": "Music and Relax"
+      "resetFx": "Reset"
     },
     "sleepTimer": {
-      "watchAria": "Timer",
+      "watchAria": "Music stop timer",
+      "popoverLead": "When time is up, only shell music pauses. The screen is not turned off and your phone does not lock.",
+      "stayAwakeLabel": "Keep screen on",
+      "stayAwakeHint": "Uses the Screen Wake Lock when the browser allows it; released if you background the tab or leave this page.",
       "m30": "30",
       "m60": "60",
       "m120": "120"
@@ -452,20 +457,31 @@
     "noMusicHint": "No tracks yet. Add audio from the music home or admin, then return.",
     "slowVisualHint": "Getting the picture ready.",
     "playbackBufferingHint": "Brief pause; playback will continue.",
-    "scenes": {
-      "sectionAria": "Nature clips",
-      "ariaSwitch": "Switch to {{name}}",
-      "ariaPreparing": "Downloading full clip «{{name}}»; switches when ready",
-      "ariaCollapsePreview": "Close preview for {{name}}",
-      "unnamedProduct": "Untitled clip"
-    },
     "bgSoftFocusStartAria": "Turn on soft focus with your last dim and blur, and open controls",
     "bgSoftFocusOpenPanelAria": "Open dim and blur controls",
     "bgSoftFocusCloseAria": "Turn off dim overlay, blur, and close controls",
     "bgSoftFocusPanelTitle": "Soft focus",
     "bgSoftFocusOverlayLabel": "Dim strength",
     "bgSoftFocusBlurLabel": "Blur strength",
-    "bgSoftFocusHidePanel": "Hide panel"
+    "bgSoftFocusHidePanel": "Hide panel",
+    "homeVerse": {
+      "settingsToggle": "Verse rotation (prayer pool)",
+      "scopeLegend": "Source",
+      "scopeAll": "All topics + review",
+      "scopeCategory": "One category + review",
+      "bilingual": "Show bilingual (English large / Chinese small)",
+      "translationLegend": "Bible text for home verses",
+      "zhTranslation": "Chinese column",
+      "enTranslation": "English column (WEB or simple)",
+      "resetMemory": "Reset verse review progress"
+    },
+    "scenes": {
+      "sectionAria": "Nature clips",
+      "ariaSwitch": "Switch to {{name}}",
+      "ariaPreparing": "Downloading full clip «{{name}}»; switches when ready",
+      "ariaCollapsePreview": "Close preview for {{name}}",
+      "unnamedProduct": "Untitled clip"
+    }
   },
   "relax": {
     "back": "Music home",

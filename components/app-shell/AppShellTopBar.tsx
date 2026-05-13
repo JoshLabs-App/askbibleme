@@ -2,20 +2,76 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
+import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
 import { isNatureHomeShellPath, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
+import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
 
 /** 常规手机最小触控约 44×44（iOS HIG / Material）；顶栏按钮统一此尺寸 */
 const HIT = "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]";
+
+function formatShellInsetTime(d: Date) {
+  return d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function TopShellInsetTime({ visible, tone }: { visible: boolean; tone: AppShellTopBarTone }) {
+  const timeRef = useRef<HTMLTimeElement>(null);
+
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const el = timeRef.current;
+    if (!el) return;
+    const apply = () => {
+      const d = new Date();
+      el.dateTime = d.toISOString();
+      el.textContent = formatShellInsetTime(d);
+    };
+    apply();
+
+    let intervalId: number | undefined;
+    const msToNextMinute = 60000 - (Date.now() % 60000) + 50;
+    const kick = window.setTimeout(() => {
+      apply();
+      intervalId = window.setInterval(apply, 60000);
+    }, msToNextMinute);
+
+    return () => {
+      window.clearTimeout(kick);
+      if (intervalId) window.clearInterval(intervalId);
+    };
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const onLight = tone === "onLight";
+
+  return (
+    <time
+      ref={timeRef}
+      className={[
+        "pointer-events-none fixed left-1/2 z-[52] -translate-x-1/2 select-none font-medium tabular-nums opacity-50",
+        "text-[14px] tracking-[0.04em] sm:text-[15px] sm:tracking-[0.05em]",
+        "portrait:-translate-y-1/2 portrait:top-[calc(max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))+1.375rem)] portrait:bottom-auto portrait:sm:top-[calc(max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))+1.375rem)]",
+        "landscape:translate-y-0 landscape:top-auto landscape:bottom-[10%]",
+        "landscape:text-[28px] landscape:tracking-[0.06em] landscape:sm:text-[30px] landscape:sm:tracking-[0.07em]",
+        onLight ? "text-ink" : "text-white",
+      ].join(" ")}
+    />
+  );
+}
 
 function IconMenu(props: { className?: string }) {
   return (
@@ -42,14 +98,10 @@ const DRAWER_TRANSITION_MS = 300;
 
 const drawerNavLinks: {
   href: string;
-  labelKey: "nav.home" | "nav.music" | "nav.relax" | "nav.journey" | "nav.read" | "nav.prayer" | "nav.explore" | "nav.shellTemplate";
+  labelKey: "nav.music" | "nav.relax" | "nav.explore" | "nav.shellTemplate";
 }[] = [
-  { href: "/", labelKey: "nav.home" },
   { href: "/music", labelKey: "nav.music" },
   { href: "/relax", labelKey: "nav.relax" },
-  { href: "/journey", labelKey: "nav.journey" },
-  { href: "/read", labelKey: "nav.read" },
-  { href: "/prayer", labelKey: "nav.prayer" },
   { href: "/explore", labelKey: "nav.explore" },
   { href: "/template", labelKey: "nav.shellTemplate" },
 ];
@@ -74,6 +126,10 @@ type Props = {
    * 手机横屏沉浸：顶栏淡出且不可点；左缘窄条仍可滑开菜单（见同文件 edge strip）。
    */
   landscapeImmersive?: boolean;
+  /**
+   * 与 `landscapeImmersive` 无关的「顶栏行内时间」：如自然页横屏有主视频时，顶栏仍可见但需在菜单行高度显示时间。
+   */
+  showTopInsetTime?: boolean;
 };
 
 /** 抽屉挂 `body`：须高于底栏 `z-20`，且低于 `AppShellModal`（`z-index: 100`）以便语言弹层在上 */
@@ -86,8 +142,11 @@ export function AppShellTopBar({
   tone = "onDark",
   rightAccessory = null,
   landscapeImmersive = false,
+  showTopInsetTime = false,
 }: Props) {
   const pathname = usePathname() ?? "";
+  const insetClockEnv = useShellInsetClockEnvironment();
+  const showTopShellTime = insetClockEnv || landscapeImmersive || showTopInsetTime;
   const registerUrl = getPublicRegisterUrl();
   const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
   const { t } = useLocale();
@@ -275,6 +334,7 @@ export function AppShellTopBar({
 
   return (
     <>
+      <TopShellInsetTime visible={showTopShellTime} tone={tone} />
       <button
         type="button"
         ref={navEdgeStripRef}
@@ -291,7 +351,7 @@ export function AppShellTopBar({
       />
       <header
         className={[
-          "pointer-events-none absolute inset-x-0 top-0 z-[50] px-4 pt-[max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))] pb-1.5 transition-opacity duration-300 motion-reduce:transition-none sm:px-5 sm:pt-[max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))] sm:pb-2",
+          "pointer-events-none absolute inset-x-0 top-0 z-[50] overflow-visible px-4 pt-[max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))] pb-1.5 transition-opacity duration-300 motion-reduce:transition-none sm:px-5 sm:pt-[max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))] sm:pb-2",
           landscapeImmersive
             ? "opacity-0 [&_.pointer-events-auto]:pointer-events-none"
             : "opacity-100",
@@ -299,7 +359,7 @@ export function AppShellTopBar({
         aria-hidden={landscapeImmersive ? true : undefined}
         inert={landscapeImmersive ? true : undefined}
       >
-        <div className="grid w-full min-h-[44px] grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="grid w-full min-h-[44px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-visible">
           <div className="pointer-events-auto relative justify-self-start">
             <button
               type="button"
@@ -334,7 +394,7 @@ export function AppShellTopBar({
             )}
           </div>
 
-          <div className="pointer-events-auto relative z-[55] isolate flex touch-manipulation justify-end justify-self-end">
+          <div className="pointer-events-auto relative z-[55] isolate flex touch-manipulation justify-end justify-self-end overflow-visible">
             {rightAccessory ?? <span className="h-11 w-11 shrink-0" aria-hidden />}
           </div>
         </div>
@@ -431,6 +491,9 @@ export function AppShellTopBar({
                       >
                         {t("nav.themeColorsFollowSite")}
                       </button>
+                    </div>
+                    <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
+                      <HomePrayerVerseDockSettings placement="drawer" drawerOpen={navOpen && drawerEntered} />
                     </div>
                     {bootstrapped ? (
                       user ? (

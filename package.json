@@ -17,6 +17,7 @@
     "lint": "next lint",
     "nature:backfill-preview-frames": "node scripts/backfill-nature-preview-frames.mjs",
     "import:bible": "node scripts/import-askbible-usfx.mjs",
+    "gen:home-prayer-pools": "tsx scripts/generate-home-prayer-pools.ts",
     "migrate:askbible-admin-emails": "node scripts/migration/askbible-admin-export.mjs",
     "ship": "bash scripts/ship.sh",
     "ship:data": "bash scripts/ship-data-config.sh",
@@ -48,6 +49,7 @@
     "eslint-config-next": "^15.3.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.0"
   }
 }

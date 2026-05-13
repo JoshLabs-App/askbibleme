@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
@@ -14,7 +14,7 @@ import {
   RELAX_VISUAL_EFFECT_STORAGE_KEY,
 } from "@/lib/relax/visual-effects";
 import { LagoonBreatheOrb } from "@/components/calm/LagoonBreatheOrb";
-import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { HomeVerseRotatorWithPrayerPool } from "@/components/home/HomeVerseRotatorWithPrayerPool";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 
@@ -36,6 +36,10 @@ export function RelaxCalmExperience({ initial, layout = "standalone", homeVerseR
   const { t } = useLocale();
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
+  const verseFallback = useMemo(
+    () => homeVerseRotation ?? ({ "zh-CN": [], en: [] } as Record<AppLocale, HomeVerseEntry[]>),
+    [homeVerseRotation],
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   const [relaxEffectHintVisible, setRelaxEffectHintVisible] = useState(true);
@@ -199,10 +203,10 @@ export function RelaxCalmExperience({ initial, layout = "standalone", homeVerseR
             >
               <LagoonBreatheOrb />
             </div>
-            <HomeVerseRotator
-              entriesByLocale={homeVerseRotation}
+            <HomeVerseRotatorWithPrayerPool
+              fallbackByLocale={verseFallback}
               variant="light"
-              className={`min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] ${ln}:min-h-[5.25rem] ${ln}:max-w-[min(100%,18rem)]`}
+              className={`min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] landscape:max-w-[min(92vw,40rem)] md:landscape:max-w-[min(86vw,46rem)] ${ln}:min-h-[5.25rem] ${ln}:max-w-[min(100%,18rem)]`}
             />
             <p
               className={[

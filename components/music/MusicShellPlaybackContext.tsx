@@ -46,7 +46,7 @@ function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
   }
 }
 
-/** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐并调用已注册的额外暂停（如自然混音） */
+/** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐（不关屏、不锁机），并调用已注册的额外暂停（历史：自然混音等） */
 export type MusicShellSleepTimerMinutes = 0 | 30 | 60 | 120;
 
 export type MusicShellPlaybackValue = {
@@ -77,6 +77,9 @@ export type MusicShellPlaybackValue = {
   setSleepTimerMinutes: (minutes: MusicShellSleepTimerMinutes) => void;
   /** 定时到时在 `pausePlayback` 之后调用；用于自然页混音等其它 `<audio>` */
   registerSleepPauseHandler: (handler: () => void) => () => void;
+  /** 壳层 `<audio>` 静音（首页顶栏铃铛）；不改变播放/暂停状态 */
+  shellAudioMuted: boolean;
+  setShellAudioMuted: (muted: boolean) => void;
 };
 
 const MusicShellPlaybackContext = createContext<MusicShellPlaybackValue | null>(null);
@@ -105,6 +108,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const [durationSec, setDurationSec] = useState(0);
   const [sleepTimerMinutes, setSleepTimerMinutesState] = useState<MusicShellSleepTimerMinutes>(0); // 默认关闭
   const [sleepTimerDeadlineAt, setSleepTimerDeadlineAt] = useState<number | null>(null);
+  const [shellAudioMuted, setShellAudioMutedState] = useState(false);
   const sleepTimerDeadlineRef = useRef<number | null>(null);
   const shellPlaybackHydratedRef = useRef(false);
   /** 避免 `currentSrc` 尚未就绪时反复 `load()` 触发 setState 风暴 */
@@ -182,6 +186,18 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       sleepPauseHandlersRef.current.delete(handler);
     };
   }, []);
+
+  const setShellAudioMuted = useCallback((muted: boolean) => {
+    setShellAudioMutedState(muted);
+    const a = audioRef.current;
+    if (a) a.muted = muted;
+  }, []);
+
+  useLayoutEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.muted = shellAudioMuted;
+  }, [shellAudioMuted]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -308,6 +324,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       lastBoundEffectiveSrcRef.current = "";
       a.removeAttribute("src");
       a.load();
+      a.muted = shellAudioMuted;
       setPlaying(false);
       setCurrentSec(0);
       setDurationSec(0);
@@ -315,6 +332,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
     if (audioUrlEquals(a, bindSrc)) {
       lastBoundEffectiveSrcRef.current = bindSrc;
+      a.muted = shellAudioMuted;
       if (playAfterNextBindRef.current) {
         playAfterNextBindRef.current = false;
         void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
@@ -328,13 +346,14 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const wasPlaying = !a.paused;
     const playAfterAdvance = playAfterNextBindRef.current;
     a.src = bindSrc;
+    a.muted = shellAudioMuted;
     a.load();
     if (wasPlaying || playAfterAdvance) {
       playAfterNextBindRef.current = false;
       void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     }
     /** 未在播时不要 `setPlaying(false)`：会制造无意义重渲染，曾与首页对齐 `effectiveSrc` 的 effect 形成更新风暴。 */
-  }, [effectiveSrc, pathname, shellAudioHomePrimed]);
+  }, [effectiveSrc, pathname, shellAudioHomePrimed, shellAudioMuted]);
 
   /** 在对应 src 的 metadata 就绪后 seek，并可选自动续播 */
   useEffect(() => {
@@ -578,6 +597,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       sleepTimerDeadlineAt,
       setSleepTimerMinutes,
       registerSleepPauseHandler,
+      shellAudioMuted,
+      setShellAudioMuted,
     }),
     [
       canPlay,
@@ -599,6 +620,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       sleepTimerDeadlineAt,
       setSleepTimerMinutes,
       registerSleepPauseHandler,
+      shellAudioMuted,
+      setShellAudioMuted,
     ],
   );
 

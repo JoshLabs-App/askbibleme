@@ -5,9 +5,10 @@ import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChrom
 import { readTopicPrayerLibrarySync } from "@/lib/prayer/read-topic-prayer-library";
 import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerLibraryJsonPath } from "@/lib/prayer/topic-prayer-library-path";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata = {
-  title: "祷告 · Selah.my",
+  title: sitePageTitle("祷告"),
   description: "以经文为起点的安静祷告入口：方向、主题与可读译本正文。",
 };
 

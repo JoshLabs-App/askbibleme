@@ -2,10 +2,11 @@ import { BibleCatalogReadOutline } from "@/components/bible/BibleCatalogReadOutl
 import { ReadCatalogFooterLink, ReadCatalogTopBack } from "@/components/bible/ReadCatalogNavLinks";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { readScriptureCanonCatalog } from "@/lib/bible/read-scripture-canon-catalog";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
 import "./bible-catalog.css";
 
 export const metadata = {
-  title: "六十六卷",
+  title: sitePageTitle("六十六卷"),
   description: "圣经正典目录与历史时期线索。",
 };
 

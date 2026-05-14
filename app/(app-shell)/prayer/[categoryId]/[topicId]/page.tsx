@@ -9,6 +9,7 @@ import { buildTopicOpeningLine, getTopicPrayerCategory, getTopicPrayerTopic } fr
 import { pickPrayerDisplayTranslationId } from "@/lib/prayer/prayer-translation-id";
 import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerTopicFromSelah } from "@/lib/prayer/resolve-topic-prayer-from-selah-bible";
+import { sitePageTitle, sitePageTitleWithSuffix } from "@/lib/site-metadata-defaults";
 
 type Props = { params: Promise<{ categoryId: string; topicId: string }> };
 
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props) {
   const { categoryId, topicId } = await params;
   const cwd = process.cwd();
   const topic = getTopicPrayerTopic(cwd, categoryId, topicId);
-  return { title: topic ? `${topic.title} · 祷告 · Selah.my` : "祷告" };
+  return { title: topic ? sitePageTitleWithSuffix([topic.title, "祷告"]) : sitePageTitle("祷告") };
 }
 
 export default async function PrayerTopicPage({ params }: Props) {

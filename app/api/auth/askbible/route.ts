@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const dbPath = getAskbibleAuthSqlitePath();
     if (!dbPath) {
       return NextResponse.json(
-        { error: "AskBible auth not configured (no legacy URL and no auth.sqlite)" },
+        { error: "Sign-in is not configured on this server (no remote auth URL and no auth database)" },
         { status: 503 },
       );
     }

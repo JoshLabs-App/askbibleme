@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { NatureVideoExperience } from "@/components/nature/NatureVideoExperience";
 import { natureHomeViewport } from "@/lib/nature/nature-home-viewport";
 import { readNatureSettings } from "@/lib/nature/read-nature-settings";
+import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
 export const metadata: Metadata = {
-  title: "Selah.my",
+  title: SITE_METADATA_DEFAULT_TITLE,
   description: "全屏自然影像与轮播经文。",
 };
 

@@ -42,7 +42,7 @@
     "drawerAdmin": "管理后台",
     "loginFooterRegister": "没有账号？去注册",
     "registerPageTitle": "注册",
-    "registerIntro": "新账号请在 AskBible 站点完成注册；完成后回到本站使用同一邮箱与密码登录。",
+    "registerIntro": "请在团队提供的注册页完成账号创建，然后回到 Selah.my 使用同一邮箱与密码登录。",
     "registerEnvHint": "运营环境可在 Vercel 环境变量中设置 NEXT_PUBLIC_ASKBIBLE_REGISTER_URL 为旧站注册页地址，保存后访问本页将自动跳转。",
     "registerGoLogin": "已有账号？去登录",
     "registerRedirecting": "正在跳转…"

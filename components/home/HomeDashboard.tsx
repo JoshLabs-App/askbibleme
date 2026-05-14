@@ -18,6 +18,7 @@ import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
+import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
 const HOME_BACKDROP_STORAGE_KEY = "selah-home-backdrop-mode";
 
@@ -401,7 +402,7 @@ export function HomeDashboard() {
                   : "pointer-events-none font-serif text-[12px] font-normal tracking-[0.14em] text-ink/85"
               }
             >
-              Selah.my
+              {SITE_METADATA_DEFAULT_TITLE}
             </p>
             <div className="pointer-events-auto relative" ref={userMenuRef}>
               <button

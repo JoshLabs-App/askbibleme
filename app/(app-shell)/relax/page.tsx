@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { RelaxCalmExperience } from "@/components/relax/RelaxCalmExperience";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { readRelaxSettings } from "@/lib/relax/read-relax-settings";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata: Metadata = {
-  title: "放松",
+  title: sitePageTitle("放松"),
   description: "静音画面与独立音乐层，慢下来的一小段时间。",
 };
 

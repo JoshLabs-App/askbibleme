@@ -24,16 +24,20 @@ import {
 export async function generateMetadata(): Promise<Metadata> {
   const brandingReady = await brandingAssetsExist();
 
+  const appTitle = SITE_METADATA_DEFAULT_TITLE;
+
   return {
     manifest: "/manifest.webmanifest",
+    /** 安卓 Chrome「添加到主屏幕」等 */
+    applicationName: appTitle,
     title: {
-      default: SITE_METADATA_DEFAULT_TITLE,
+      default: appTitle,
       template: SITE_METADATA_TITLE_TEMPLATE,
     },
     description: "安静回到经文的入口 — 正在成型。",
     appleWebApp: {
       capable: true,
-      title: SITE_METADATA_DEFAULT_TITLE,
+      title: appTitle,
       statusBarStyle: "black-translucent",
     },
     icons: brandingReady
@@ -53,6 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
         },
     other: {
       "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-title": appTitle,
     },
   };
 }

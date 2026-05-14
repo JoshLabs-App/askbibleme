@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { MetadataRoute } from "next";
+import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 import type { BrandColors, BrandPresetId, SiteBrandingState } from "@/lib/site-branding-colors";
 import {
   BRAND_PRESETS,
@@ -147,8 +148,8 @@ export async function buildManifestBody(): Promise<MetadataRoute.Manifest> {
   return {
     id: "/",
     scope: "/",
-    name: "Selah.my",
-    short_name: "Selah.my",
+    name: SITE_METADATA_DEFAULT_TITLE,
+    short_name: SITE_METADATA_DEFAULT_TITLE,
     description: "安静回到经文的入口 — 正在成型。",
     start_url: "/",
     /** `fullscreen` 会隐藏 Android 状态栏（含系统时间）；`standalone` 与 iOS 主屏「半透明顶栏」观感更接近 */

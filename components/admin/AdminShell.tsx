@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LocaleTrigger } from "@/components/i18n/LocaleTrigger";
 import { AppSkinTrigger } from "@/components/theme/AppSkinTrigger";
+import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
 const ADMIN_SIDEBAR_WIDTH_KEY = "selah-admin-sidebar-width-v1";
 /** 默认 ≈ 15.75rem */
@@ -195,7 +196,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const asideInner = (
     <>
       <div className="px-1 pb-3 md:pb-6">
-        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-adminMuted">Selah.my</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-adminMuted">{SITE_METADATA_DEFAULT_TITLE}</p>
         <p className="mt-0.5 text-[13px] font-medium tracking-tight text-adminFg">{t("admin.title")}</p>
       </div>
 

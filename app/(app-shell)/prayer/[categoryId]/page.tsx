@@ -13,6 +13,7 @@ import {
 import { pickPrayerDisplayTranslationId } from "@/lib/prayer/prayer-translation-id";
 import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerTopicHeadVerses } from "@/lib/prayer/resolve-topic-prayer-from-selah-bible";
+import { sitePageTitle, sitePageTitleWithSuffix } from "@/lib/site-metadata-defaults";
 
 type Props = { params: Promise<{ categoryId: string }> };
 
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props) {
   const { categoryId } = await params;
   const cwd = process.cwd();
   const cat = getTopicPrayerCategory(cwd, categoryId);
-  return { title: cat ? `${cat.title} · 祷告 · Selah.my` : "祷告" };
+  return { title: cat ? sitePageTitleWithSuffix([cat.title, "祷告"]) : sitePageTitle("祷告") };
 }
 
 export default async function PrayerCategoryPage({ params }: Props) {

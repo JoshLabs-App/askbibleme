@@ -65,6 +65,7 @@ import {
   inferLocalModelSuitability,
   type LocalModelScanEntry,
 } from "@/lib/ai/model-notes";
+import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
 function entriesFromLocalModelsApi(data: {
   models?: string[];
@@ -914,7 +915,7 @@ export default function StudioWorkspace({
               {embedInAdmin ? "← 管理概览" : "← 返回"}
             </Link>
             <div className="mt-1.5 text-[12px] font-medium leading-tight tracking-tight text-ink">
-              Selah.my Studio
+              {`${SITE_METADATA_DEFAULT_TITLE} Studio`}
             </div>
             <p className="mt-0.5 text-[9px] leading-snug text-muted/90">
               产品大脑 · 内部

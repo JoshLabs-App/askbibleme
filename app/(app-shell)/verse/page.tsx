@@ -1,8 +1,9 @@
 import { GoldenVersesPageClient } from "@/components/verse/GoldenVersesPageClient";
 import { readGoldenVersesSettings } from "@/lib/golden-verses/settings-file";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata = {
-  title: "金句 · Selah.my",
+  title: sitePageTitle("金句"),
   description: "金句",
 };
 

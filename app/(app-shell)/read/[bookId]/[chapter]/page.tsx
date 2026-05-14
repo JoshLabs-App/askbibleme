@@ -2,14 +2,15 @@ import { notFound } from "next/navigation";
 import { ReadChapterNav } from "@/components/bible/ReadChapterNav";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { loadChapterFromDefaultTranslation } from "@/lib/bible/load-chapter-from-default-translation";
+import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 type Props = { params: Promise<{ bookId: string; chapter: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { bookId, chapter } = await params;
   const data = loadChapterFromDefaultTranslation(bookId, Number(chapter));
-  if (!data) return { title: "经文" };
-  return { title: `${data.bookName} ${data.chapter}` };
+  if (!data) return { title: sitePageTitle("经文") };
+  return { title: sitePageTitle(`${data.bookName} ${data.chapter}`) };
 }
 
 export default async function ReadChapterPage({ params }: Props) {

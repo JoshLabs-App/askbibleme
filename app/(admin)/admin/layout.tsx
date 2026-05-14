@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { SITE_METADATA_DEFAULT_TITLE, sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata: Metadata = {
   title: {
-    default: "后台管理",
-    template: "%s · 后台管理",
+    default: sitePageTitle("后台"),
+    template: `%s · 后台 | ${SITE_METADATA_DEFAULT_TITLE}`,
   },
   robots: { index: false, follow: false },
 };

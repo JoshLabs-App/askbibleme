@@ -480,6 +480,7 @@
     "sessionLabel": "Nature",
     "emptyTitle": "No background video yet",
     "emptyHint": "Upload or pick a clip under Admin → Music → Nature, or edit data/nature-settings.json.",
+    "videoDecodeErrorShort": "This clip failed to play (missing file on the server or unsupported format). Preview still shows when available; check paths under /public or re-upload in admin.",
     "toggleDockChrome": "Show or hide scene cards and shortcuts",
     "videoBgAnnounced": "Background is a muted looping video.",
     "previewEnterFullScreen": "Enter full screen with this clip",

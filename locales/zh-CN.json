@@ -480,6 +480,7 @@
     "sessionLabel": "自然",
     "emptyTitle": "仍未配置背景影片",
     "emptyHint": "请在后台「音乐 → 自然」上传或选择影片；也可手工编辑 data/nature-settings.json。",
+    "videoDecodeErrorShort": "此地址的影片无法播放（例如文件未随站点部署或格式不受支持）。已尽量保留预览图；请检查 /public 下路径或后台重新上传。",
     "toggleDockChrome": "显示或隐藏场景与快捷入口",
     "videoBgAnnounced": "背景为静音循环影片。",
     "previewEnterFullScreen": "进入全屏播放此影片",

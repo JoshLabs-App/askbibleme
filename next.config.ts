@@ -7,6 +7,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   serverExternalPackages: ["sharp", "sql.js"],
 
+  /**
+   * Vercel 等 Serverless：`readNatureSettings` 用动态路径读 `data/nature-settings.json`，
+   * 自动 tracing 可能漏带，运行时回退空配置 → 首页误报「仍未配置背景影片」。
+   */
+  outputFileTracingIncludes: {
+    "/*": ["./data/nature-settings.json"],
+  },
+
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根
   outputFileTracingRoot: path.join(__dirname),
 

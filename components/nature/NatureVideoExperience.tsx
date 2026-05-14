@@ -312,24 +312,32 @@ export function NatureVideoExperience({ initial }: Props) {
     () => resolveNaturePlayback(playbackSettings),
     [playbackSettings],
   );
-  const hasMainVideo = Boolean(videoSrc.trim()) && !videoBroken;
-  const mediaPolicy = useNatureMediaPolicy();
-
-  useEffect(() => {
-    if (!hasMainVideo) setNatureBgSoftFocus(false);
-  }, [hasMainVideo]);
   const stillImageUrl = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
   const posterUrl = stillImageUrl;
   const hasStillIntro = posterUrl.length > 0;
+  /** 配置里是否有主片地址（与解码是否成功无关） */
+  const hasConfiguredVideoSrc = Boolean(videoSrc.trim());
+  /** 可挂载 `<video>` 且不处于解码错误态 */
+  const hasPlayableVideo = hasConfiguredVideoSrc && !videoBroken;
+  /**
+   * 是否展示自然主舞台（含静图兜底）。勿用 `!videoBroken` 判断：解码失败时仍应有预览图，
+   * 否则误落入「仍未配置背景影片」空态。
+   */
+  const hasNatureVisual = hasConfiguredVideoSrc || hasStillIntro;
+  const mediaPolicy = useNatureMediaPolicy();
+
+  useEffect(() => {
+    if (!hasNatureVisual) setNatureBgSoftFocus(false);
+  }, [hasNatureVisual]);
   /** 低电量：仅静图，不挂载解码 `<video>` */
   const posterOnlyLowPower = mediaPolicy.lowBatteryStatic && hasStillIntro;
-  const showNatureVideoDecoder = hasMainVideo && !posterOnlyLowPower && dwellVideoAllowed;
+  const showNatureVideoDecoder = hasPlayableVideo && !posterOnlyLowPower && dwellVideoAllowed;
 
   useEffect(() => {
     setDwellVideoAllowed(false);
     setDwellPolicyResolved(false);
 
-    if (!hasMainVideo) {
+    if (!hasConfiguredVideoSrc) {
       return;
     }
 
@@ -353,7 +361,7 @@ export function NatureVideoExperience({ initial }: Props) {
     return () => window.clearTimeout(id);
   }, [
     activeVideoId,
-    hasMainVideo,
+    hasConfiguredVideoSrc,
     posterOnlyLowPower,
     mediaPolicy.lowBatteryStatic,
     mediaPolicy.saveData,
@@ -361,7 +369,7 @@ export function NatureVideoExperience({ initial }: Props) {
   ]);
 
   const conservationHintKey = useMemo(() => {
-    if (!hasMainVideo || showNatureVideoDecoder) return null;
+    if (!hasConfiguredVideoSrc || videoBroken || showNatureVideoDecoder) return null;
     if (mediaPolicy.lowBatteryStatic) return "lowBattery" as const;
     if (!dwellPolicyResolved) return null;
     if (mediaPolicy.saveData) return "saveData" as const;
@@ -369,7 +377,8 @@ export function NatureVideoExperience({ initial }: Props) {
     if (mem !== undefined && mem < 3) return "lowMemory" as const;
     return null;
   }, [
-    hasMainVideo,
+    hasConfiguredVideoSrc,
+    videoBroken,
     showNatureVideoDecoder,
     mediaPolicy.lowBatteryStatic,
     mediaPolicy.saveData,
@@ -772,7 +781,7 @@ export function NatureVideoExperience({ initial }: Props) {
         showTopInsetTime={landscapeImmersive}
         rightAccessory={
           <div className="flex flex-col items-end gap-2">
-            {hasMainVideo ? (
+            {hasNatureVisual ? (
               <button
                 type="button"
                 onClick={() => setShellAudioMuted(!shellAudioMuted)}
@@ -787,7 +796,7 @@ export function NatureVideoExperience({ initial }: Props) {
                 )}
               </button>
             ) : null}
-            {hasMainVideo ? (
+            {hasNatureVisual ? (
               <div className="relative isolate">
                 {natureSoftFocusPanelOpen ? (
                   <div
@@ -869,7 +878,7 @@ export function NatureVideoExperience({ initial }: Props) {
         }
       />
 
-      {hasMainVideo ? (
+      {hasNatureVisual ? (
         <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
           <div
             className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-transparent"
@@ -922,7 +931,7 @@ export function NatureVideoExperience({ initial }: Props) {
                 className={[
                   NATURE_BG_COVER_MEDIA,
                   "z-[2] pointer-events-none transition-opacity duration-700 ease-out motion-reduce:transition-none",
-                  posterOnlyLowPower || !introRevealed ? "opacity-100" : "opacity-0",
+                  posterOnlyLowPower || !introRevealed || !showNatureVideoDecoder ? "opacity-100" : "opacity-0",
                 ].join(" ")}
                 style={{ maxWidth: "none" }}
                 aria-hidden
@@ -942,7 +951,15 @@ export function NatureVideoExperience({ initial }: Props) {
               aria-hidden
             />
           ) : null}
-          {(showSlowIntroHint || showPlaybackWaitHint) && !posterOnlyLowPower ? (
+          {videoBroken && hasConfiguredVideoSrc ? (
+            <p
+              className="pointer-events-none absolute bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-amber-100/80 sm:left-6 sm:right-6 sm:text-[13px]"
+              role="status"
+              aria-live="polite"
+            >
+              {t("nature.videoDecodeErrorShort")}
+            </p>
+          ) : (showSlowIntroHint || showPlaybackWaitHint) && !posterOnlyLowPower ? (
             <p
               className="pointer-events-none absolute bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:left-6 sm:right-6 sm:text-[13px]"
               aria-live="polite"

@@ -47,6 +47,13 @@
 
 说明：Studio 当前可有 **localStorage** 过渡；与 Supabase 同步、账号与正式数据写入以本表为准逐步实现。**未接 Supabase 前**不在此仓库假装已完成云端后端。
 
+### 内容与发布（本机优先）
+
+- **真源**：产品文字与原则类内容以 **本机编辑 + Git（含 `docs/`）** 为准；Studio 的生成与整理也在可信环境完成。
+- **线上**：站点以 **构建 / 静态分发** 为主，**默认不在生产环境提供「在线管理或在线生成整站内容」**（减小攻击面；当前单人单机时尤其合适）。实现上：在 **Vercel Production**（`VERCEL_ENV=production`）对 `/admin`、`/studio`、`/api/ai` 及 `/api/admin`、`/api/studio` 中间件 **默认 404**；本机 `npm run dev` 不受影响。临时开放线上后台（不推荐）设 `SELAH_ALLOW_ADMIN_IN_PRODUCTION=1`；任意非 development 强制关掉设 `SELAH_DISABLE_PUBLIC_ADMIN=1`（见 `.env.example`）。
+- **习惯**：定期将仓库 **push 到远程**，降低单设备丢失风险。
+- **凭据**：部署与 CI 用密钥 **权限最小**；不把「随意改站或写生产库」的能力长期铺在多环境或可被公网滥用的入口上。若日后必须开放线上写入口，再在 `docs/` 里单独记录威胁模型与权限设计，**不默认扩功能**。
+
 ## 本地开发（减少 Next 报 chunk 丢失）
 
 - 日常：**`npm run dev`**（Turbopack，**不再**每次启动删 `.next`——避免你开第二个终端又跑 `dev` 时，把第一个正在跑的实例的 `.next` 删掉，出现 `ENOENT` / 缺 `[turbopack]_runtime.js`）。

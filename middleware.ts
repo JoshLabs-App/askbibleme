@@ -11,12 +11,29 @@ import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { isAdminEmail } from "@/lib/supabase/admin-allowlist";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { copyCookiesTo, updateSupabaseSession } from "@/lib/supabase/middleware";
+import { isSelahOnlineEditorSurfaceAllowed } from "@/lib/selah-online-editor-surface";
+
+function isPrivilegedEditorPath(pathname: string): boolean {
+  return (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin") ||
+    pathname === "/studio" ||
+    pathname.startsWith("/studio/") ||
+    pathname.startsWith("/api/studio") ||
+    pathname.startsWith("/api/ai")
+  );
+}
 
 /**
  * `/admin`：AskBible 管理 cookie → 固定超级管理员前台会话 → Supabase + 白名单 → 工作室 HMAC cookie。
+ * 公网生产默认关闭 `/admin`、`/studio`、`/api/ai` 及对应 API（见 `lib/selah-online-editor-surface.ts`）。
  */
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  if (isPrivilegedEditorPath(pathname) && !isSelahOnlineEditorSurfaceAllowed()) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   if (!pathname.startsWith("/admin")) {
     return NextResponse.next();
@@ -96,5 +113,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/studio/:path*",
+    "/api/studio/:path*",
+    "/api/ai/:path*",
+  ],
 };

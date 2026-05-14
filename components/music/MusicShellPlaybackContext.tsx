@@ -15,7 +15,7 @@ import { flushSync } from "react-dom";
 import { usePathname } from "next/navigation";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
-import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc } from "@/lib/music-companion/shell-default-audio-src";
+import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
   clearShellPlaybackPersisted,
   isTrackSrcInStore,
@@ -46,6 +46,10 @@ function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
   }
 }
 
+function isMusicShellPath(p: string): boolean {
+  return p === "/music" || p.startsWith("/music/");
+}
+
 /** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐（不关屏、不锁机），并调用已注册的额外暂停（历史：自然混音等） */
 export type MusicShellSleepTimerMinutes = 0 | 30 | 60 | 120;
 
@@ -68,7 +72,7 @@ export type MusicShellPlaybackValue = {
   currentSec: number;
   durationSec: number;
   seekRatio: (ratio: number) => void;
-  /** 壳层曲库（用于解析 `analysisSrc` 等） */
+  /** 壳层曲库（曲目元数据等） */
   musicStore: MusicCompanionStore | null;
   /** 壳层唯一 `<audio>`，供音乐驱动视觉等扩展 */
   getAudioElement: () => HTMLAudioElement | null;
@@ -118,6 +122,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     timeSec: number;
     tryPlay: boolean;
   } | null>(null);
+  /** 音乐路由：同一 pathname 内避免 store 引用更新时重复随机 */
+  const musicShellSessionKeyRef = useRef<string>("");
+  /** 减轻「回前台就拉曲库」：全平台最短间隔（毫秒） */
+  const companionFetchMinIntervalMs = 45_000;
+  const companionLastFetchAtRef = useRef(0);
   /** 恢复完成前不写 localStorage，避免用 0 秒覆盖上次进度 */
   const shellPlaybackPersistEnabledRef = useRef(false);
   const shellPlaybackLastPersistAtRef = useRef(0);
@@ -151,10 +160,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
   const refetchCompanionStore = useCallback(async () => {
     try {
-      const res = await fetch("/api/music/companion", { cache: "no-store" });
+      const res = await fetch("/api/music/companion", { cache: "default" });
       if (!res.ok) return { ok: false as const, status: res.status };
       const next = (await res.json()) as MusicCompanionStore | { error?: string };
       if ("error" in next && next.error) return { ok: false as const, message: String(next.error) };
+      companionLastFetchAtRef.current = Date.now();
       setStore(next as MusicCompanionStore);
       return { ok: true as const };
     } catch (e) {
@@ -228,35 +238,60 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   useEffect(() => {
     let cancelled = false;
     let lastHiddenAt = 0;
-    const load = async () => {
+    let idleId: number | undefined;
+    let fallbackTimer: number | undefined;
+
+    const load = async (reason: "initial" | "visible") => {
+      if (reason === "visible") {
+        const t = companionLastFetchAtRef.current;
+        if (t > 0 && Date.now() - t < companionFetchMinIntervalMs) return;
+        if (isIosLikeUserAgent() && lastHiddenAt > 0 && Date.now() - lastHiddenAt < 30_000) {
+          return;
+        }
+      }
       try {
-        const res = await fetch("/api/music/companion", { cache: "no-store" });
+        const res = await fetch("/api/music/companion", { cache: "default" });
         if (!res.ok || cancelled) return;
         const next = (await res.json()) as MusicCompanionStore | { error?: string };
         if ("error" in next && next.error) return;
-        if (!cancelled) setStore(next as MusicCompanionStore);
+        if (!cancelled) {
+          companionLastFetchAtRef.current = Date.now();
+          setStore(next as MusicCompanionStore);
+        }
       } catch {
         /* ignore */
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
-    void load();
+
+    const kickInitial = () => {
+      if (cancelled) return;
+      void load("initial");
+    };
+
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(kickInitial, { timeout: 500 });
+    } else {
+      fallbackTimer = window.setTimeout(kickInitial, 0);
+    }
+
     const onVis = () => {
       if (document.visibilityState === "hidden") {
         lastHiddenAt = Date.now();
         return;
       }
       if (document.visibilityState === "visible") {
-        if (isIosLikeUserAgent() && lastHiddenAt > 0 && Date.now() - lastHiddenAt < 30_000) {
-          return;
-        }
-        void load();
+        void load("visible");
       }
     };
     document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelled = true;
+      if (idleId != null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (fallbackTimer != null) window.clearTimeout(fallbackTimer);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
@@ -269,9 +304,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
   }, [defaultSrc, playbackOverride]);
 
-  /** 首次拿到曲库后：从 localStorage 恢复上次曲目与进度（仅本标签页一次） */
+  /** 首次拿到曲库后：从 localStorage 恢复上次曲目（非 `/music`）；音乐页每次进入随机起播、清持久化、尝试自动播放 */
   useEffect(() => {
     if (loading || !store || shellPlaybackHydratedRef.current) return;
+    if (isMusicShellPath(pathname)) return;
     shellPlaybackHydratedRef.current = true;
 
     const persisted = readShellPlaybackPersisted();
@@ -295,7 +331,37 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const def = getShellSceneBoundAudioSrc(store)?.trim() ?? "";
     if (def && shellPlaybackUrlsEqual(persisted.src, def)) setPlaybackOverride(null);
     else setPlaybackOverride(persisted.src.trim());
-  }, [store, loading]);
+  }, [store, loading, pathname]);
+
+  useEffect(() => {
+    if (loading || !store) return;
+    if (!isMusicShellPath(pathname)) {
+      musicShellSessionKeyRef.current = "";
+      return;
+    }
+    if (musicShellSessionKeyRef.current === pathname) return;
+    musicShellSessionKeyRef.current = pathname;
+
+    if (!shellPlaybackHydratedRef.current) {
+      shellPlaybackHydratedRef.current = true;
+    }
+
+    clearShellPlaybackPersisted();
+    shellPlaybackRestoreRef.current = null;
+    shellPlaybackPersistEnabledRef.current = true;
+    setShellAudioHomePrimed(true);
+
+    const url = pickRandomShellAudioTrackSrc(store, null);
+    if (!url) return;
+
+    const def = getShellSceneBoundAudioSrc(store)?.trim() ?? "";
+    if (def && shellPlaybackUrlsEqual(url, def)) {
+      setPlaybackOverride(null);
+    } else {
+      playAfterNextBindRef.current = true;
+      setPlaybackOverride(url);
+    }
+  }, [pathname, store, loading]);
 
   /** 曲库加载失败等：无 store 时仍允许写入进度，避免持久化被永久关闭 */
   useEffect(() => {
@@ -494,10 +560,14 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         return;
       }
       const cur = effectiveSrcRef.current.trim();
-      let idx = tracks.findIndex((t) => shellPlaybackUrlsEqual((t.src ?? "").trim(), cur));
-      if (idx < 0) idx = 0;
-      const nextTrack = tracks[(idx + 1) % n];
-      const nextSrc = (nextTrack.src ?? "").trim();
+      const randomNext = pickRandomShellAudioTrackSrc(st, cur);
+      const nextSrc =
+        randomNext?.trim() ||
+        (() => {
+          let idx = tracks.findIndex((t) => shellPlaybackUrlsEqual((t.src ?? "").trim(), cur));
+          if (idx < 0) idx = 0;
+          return (tracks[(idx + 1) % n]?.src ?? "").trim();
+        })();
       if (!nextSrc) return;
       playAfterNextBindRef.current = true;
       setPlaybackSrc(nextSrc);

@@ -1,21 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { HomeSleepTimerControl } from "@/components/home/HomeSleepTimerControl";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
-import { useHomePrayerVerseFeed } from "@/components/home/useHomePrayerVerseFeed";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import type { AppLocale } from "@/lib/i18n/config";
-import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
-import type { NatureSettingsV2 } from "@/lib/nature/types";
-import { fetchNatureVideoFully } from "@/lib/nature/fetch-nature-video-fully";
+import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
+import { useNatureMediaPolicy } from "@/hooks/useNatureMediaPolicy";
 import {
   NATURE_HOME_ROOT_THEME,
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
@@ -26,10 +22,24 @@ import {
   readNatureSoftFocusPrefs,
   writeNatureSoftFocusPrefs,
 } from "@/lib/nature/nature-soft-focus-prefs";
-import { useShellChromeScrimVisuals } from "@/hooks/useShellChromeScrimVisuals";
-import { shellTemplatePreviewThemeById } from "@/lib/shell/template-preview-themes";
+import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
+import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+
+/** 当前场景停留后再挂视频解码（毫秒） */
+const NATURE_SCENE_DWELL_MS = 3000;
+/** 水平滑动切换场景的最小位移（px） */
+const NATURE_SCENE_SWIPE_MIN_DX = 48;
+
+function adjacentNatureSceneId(videos: NatureVideoEntry[], currentId: string, direction: 1 | -1): string | null {
+  const ids = videos.map((v) => v.id.trim()).filter(Boolean);
+  if (ids.length < 2) return null;
+  let i = ids.indexOf(currentId.trim());
+  if (i < 0) i = 0;
+  const n = (i + direction + ids.length) % ids.length;
+  return ids[n] ?? null;
+}
 
 /** 音乐静音：保留 44×44 触控，无圆形底框 */
 const NATURE_BELL_BTN =
@@ -92,10 +102,6 @@ function IconBellMuted(props: { className?: string }) {
 
 type Props = {
   initial: NatureSettingsV2;
-  /** 顶/底压边与浅色壳同源，由 `useShellChromeScrimVisuals`（后台「壳层压边」+ 本机存储）统一计算 */
-  brandChrome: { appLight: string; appDark: string };
-  /** 由服务端从已导入译本解析的首页轮播经文（中英各一套） */
-  homeVerseRotation?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 /** 背景视频槽：与滚动区 `canvas` 对齐；底栏用 `appDark`，与主区背景色系一致衔接 */
@@ -149,17 +155,15 @@ const SLOW_INTRO_HINT_DELAY_MS = 3800;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
- * 自然：背景视频限高在「视口 − 底栏」槽内；经文叠在视频上；场景与快捷入口在视频下方独立流式区域（与视频解耦）。
+ * 自然：背景视频铺满主列；左/右滑切换场景（先静图）；停留约 3s 且内存/省流等许可后再挂 `<video>` 解码与渐显。
  */
-export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation }: Props) {
+export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
-  const { shellTemplateBrand } = useAppSkin();
   const { dockChromeVisible, setDockChromeVisible, toggleDockChrome } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const prepareAbortRef = useRef<AbortController | null>(null);
-  const prepareGenRef = useRef(0);
-  const prepareTargetIdRef = useRef<string | null>(null);
   const introRevealGuardRef = useRef(false);
+  const swipeBlankTouchRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressBlankTapRef = useRef(false);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
   const videoStageHeightCommitRef = useRef(0);
@@ -176,31 +180,11 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
   const [videoBroken, setVideoBroken] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
-  /** 场景小图：整段影片拉取中；progress null 表示无 Content-Length */
-  const [scenePrepare, setScenePrepare] = useState<{ id: string; progress: number | null } | null>(null);
+  const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
   const [activeVideoId, setActiveVideoId] = useState(
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
   );
   const landscapeNarrow = useLandscapeNarrow();
-
-  const scrimBrandChrome = useMemo(() => {
-    if (shellTemplateBrand) {
-      const c = shellTemplatePreviewThemeById(shellTemplateBrand).colors;
-      return { appLight: c.appLight, appDark: c.appDark };
-    }
-    return brandChrome;
-  }, [shellTemplateBrand, brandChrome]);
-
-  const verseFallback = useMemo(
-    () => homeVerseRotation ?? ({ "zh-CN": [], en: [] } as Record<AppLocale, HomeVerseEntry[]>),
-    [homeVerseRotation],
-  );
-  const verseFeed = useHomePrayerVerseFeed({ fallbackByLocale: verseFallback });
-
-  const { topLayerStyle, bottomLayerStyleNatureVideoStage } = useShellChromeScrimVisuals(
-    scrimBrandChrome.appLight,
-    scrimBrandChrome.appDark,
-  );
 
   useEffect(() => {
     const next = initial.activeVideoId.trim() || initial.videos[0]?.id || "";
@@ -215,7 +199,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     let debounceId: number | null = null;
 
     const applyHeight = () => {
-      const h = Math.round(root.clientHeight);
+      const h = readAppShellScrollContentBoxClientHeight(root);
       if (h <= 0) return;
       const prev = videoStageHeightCommitRef.current;
       if (prev !== 0 && Math.abs(h - prev) < 12) return;
@@ -252,15 +236,6 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     };
   }, []);
 
-  useEffect(() => {
-    return () => {
-      prepareAbortRef.current?.abort();
-      prepareGenRef.current += 1;
-      prepareTargetIdRef.current = null;
-      setScenePrepare(null);
-    };
-  }, []);
-
   const playbackSettings = useMemo(
     () => ({
       ...initial,
@@ -274,63 +249,54 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     setDockChromeVisible(false);
   }, [setDockChromeVisible]);
 
-  /** 点场景小图：整段影片下载完成后再切主背景；换选或离开页会中止 */
+  /** 点场景小图：按需切源，由浏览器渐进缓冲；静图叠层直至缓冲够再揭晓 */
   const onSceneCardPress = useCallback(
     (id: string) => {
       const next = id.trim();
       if (!next || next === activeVideoId.trim()) return;
-      if (prepareTargetIdRef.current === next) return;
-
-      prepareAbortRef.current?.abort();
-      const ac = new AbortController();
-      prepareAbortRef.current = ac;
-      prepareGenRef.current += 1;
-      const gen = prepareGenRef.current;
-      prepareTargetIdRef.current = next;
-      setScenePrepare({ id: next, progress: 0 });
-
-      void (async () => {
-        try {
-          const { videoSrc } = resolveNaturePlayback({
-            ...initial,
-            activeVideoId: next,
-          });
-          const url = videoSrc.trim();
-          if (!url) throw new Error("empty video src");
-          await fetchNatureVideoFully(url, ac.signal, (received, totalBytes) => {
-            if (prepareGenRef.current !== gen) return;
-            if (totalBytes != null && totalBytes > 0) {
-              setScenePrepare({ id: next, progress: Math.min(1, received / totalBytes) });
-            } else {
-              setScenePrepare({ id: next, progress: null });
-            }
-          });
-        } catch {
-          if (prepareGenRef.current === gen && !ac.signal.aborted) {
-            prepareTargetIdRef.current = null;
-            setScenePrepare(null);
-          }
-          return;
-        }
-
-        if (ac.signal.aborted || prepareGenRef.current !== gen) return;
-        prepareTargetIdRef.current = null;
-        setScenePrepare(null);
-        selectVideoAndImmersive(next);
-      })();
+      selectVideoAndImmersive(next);
     },
-    [activeVideoId, initial, selectVideoAndImmersive],
+    [activeVideoId, selectVideoAndImmersive],
   );
 
-  const { videoSrc, posterSrc } = useMemo(() => resolveNaturePlayback(playbackSettings), [playbackSettings]);
+  const { videoSrc, posterSrc, previewStillSrc } = useMemo(
+    () => resolveNaturePlayback(playbackSettings),
+    [playbackSettings],
+  );
   const hasMainVideo = Boolean(videoSrc.trim()) && !videoBroken;
+  const mediaPolicy = useNatureMediaPolicy();
 
   useEffect(() => {
     if (!hasMainVideo) setNatureBgSoftFocus(false);
   }, [hasMainVideo]);
-  const poster = posterSrc?.trim();
-  const posterUrl = poster ?? "";
+  const stillImageUrl = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
+  const posterUrl = stillImageUrl;
   const hasStillIntro = posterUrl.length > 0;
+  /** 低电量：仅静图，不挂载解码 `<video>` */
+  const posterOnlyLowPower = mediaPolicy.lowBatteryStatic && hasStillIntro;
+  const showNatureVideoDecoder = hasMainVideo && !posterOnlyLowPower && dwellVideoAllowed;
+
+  useEffect(() => {
+    setDwellVideoAllowed(false);
+    if (!hasMainVideo || posterOnlyLowPower) return;
+    const id = window.setTimeout(() => {
+      const mem = mediaPolicy.deviceMemoryGb;
+      const memoryOk = mem === undefined || mem >= 3;
+      if (mediaPolicy.lowBatteryStatic || mediaPolicy.saveData || !memoryOk) {
+        setDwellVideoAllowed(false);
+        return;
+      }
+      setDwellVideoAllowed(true);
+    }, NATURE_SCENE_DWELL_MS);
+    return () => window.clearTimeout(id);
+  }, [
+    activeVideoId,
+    hasMainVideo,
+    posterOnlyLowPower,
+    mediaPolicy.lowBatteryStatic,
+    mediaPolicy.saveData,
+    mediaPolicy.deviceMemoryGb,
+  ]);
   const rate = initial.playbackRate;
 
   const [introRevealed, setIntroRevealed] = useState(!hasStillIntro);
@@ -368,6 +334,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
 
   const commitIntroReveal = useCallback(() => {
     if (!posterUrl) return;
+    if (posterOnlyLowPower) return;
     if (introRevealGuardRef.current) return;
     introRevealGuardRef.current = true;
     const reduce =
@@ -377,15 +344,15 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     } else {
       requestAnimationFrame(() => setIntroRevealed(true));
     }
-  }, [posterUrl]);
+  }, [posterUrl, posterOnlyLowPower]);
 
   const maybeRevealIntroFromBuffer = useCallback(() => {
-    if (!posterUrl) return;
+    if (!posterUrl || posterOnlyLowPower) return;
     if (introRevealGuardRef.current) return;
     const v = videoRef.current;
     if (!v || !hasEnoughBufferedAhead(v, bufferAheadThreshold)) return;
     commitIntroReveal();
-  }, [posterUrl, commitIntroReveal, bufferAheadThreshold]);
+  }, [posterUrl, posterOnlyLowPower, commitIntroReveal, bufferAheadThreshold]);
 
   const onTimeUpdatePollIntroReveal = useCallback(() => {
     const now = performance.now();
@@ -394,12 +361,12 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     maybeRevealIntroFromBuffer();
   }, [maybeRevealIntroFromBuffer]);
 
-  const landscapeImmersive = landscapeNarrow && hasMainVideo;
+  const landscapeImmersive = landscapeNarrow && showNatureVideoDecoder;
 
   const videoStageShellStyle: CSSProperties = useMemo(
     () => ({
       height:
-        videoStageHeightPx > 0 ? `${videoStageHeightPx}px` : "calc(100dvh - var(--home-bottom-nav-slot))",
+        videoStageHeightPx > 0 ? `${videoStageHeightPx}px` : "100dvh",
     }),
     [videoStageHeightPx],
   );
@@ -436,22 +403,22 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     lastBufferRevealPollRef.current = 0;
     setShowSlowIntroHint(false);
     clearPlaybackWaitHint();
-    const p = posterSrc?.trim() ?? "";
+    const p = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
     setIntroRevealed(p.length === 0);
-  }, [videoSrc, posterSrc, clearPlaybackWaitHint]);
+  }, [videoSrc, posterSrc, previewStillSrc, clearPlaybackWaitHint]);
 
   useEffect(() => {
-    if (!posterUrl || introRevealed) return;
+    if (!posterUrl || introRevealed || posterOnlyLowPower || !dwellVideoAllowed) return;
     const id = window.setTimeout(() => {
       if (introRevealGuardRef.current) return;
       introRevealGuardRef.current = true;
       setIntroRevealed(true);
     }, INTRO_REVEAL_FALLBACK_MS);
     return () => clearTimeout(id);
-  }, [posterUrl, introRevealed, videoSrc]);
+  }, [posterUrl, introRevealed, videoSrc, posterOnlyLowPower, dwellVideoAllowed]);
 
   useEffect(() => {
-    if (!hasStillIntro || introRevealed || !posterUrl) {
+    if (!hasStillIntro || introRevealed || !posterUrl || posterOnlyLowPower || !dwellVideoAllowed) {
       setShowSlowIntroHint(false);
       return;
     }
@@ -460,7 +427,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
       clearTimeout(id);
       setShowSlowIntroHint(false);
     };
-  }, [hasStillIntro, introRevealed, posterUrl, videoSrc]);
+  }, [hasStillIntro, introRevealed, posterUrl, videoSrc, posterOnlyLowPower, dwellVideoAllowed]);
 
   useEffect(() => {
     return () => clearPlaybackWaitHint();
@@ -468,27 +435,28 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el || !videoSrc || videoBroken) return;
+    if (!el || !videoSrc || videoBroken || posterOnlyLowPower) return;
     el.muted = true;
     try {
       el.playbackRate = rate;
     } catch {
       /* ignore */
     }
-  }, [rate, videoSrc, videoBroken]);
+  }, [rate, videoSrc, videoBroken, posterOnlyLowPower]);
 
-  /** 首访或未开预览时主画面已在播，仅 metadata 缓冲偏少；空闲后再升 preload=auto（省流模式跳过）。有静图开场时已用 preload=auto，跳过重复升级 */
+  /** 首访无静图时仅 metadata；不在后台、非低电静图、非低内存机、非 iOS 时 idle 后再升 preload=auto（省流跳过） */
   useEffect(() => {
+    if (!dwellVideoAllowed) return;
     if (hasStillIntro) return;
-    /** iOS 主屏 Web：升 preload + `load()` 易拉高解码缓冲，加重内存压力 → 更易被系统整页杀掉后白屏重载 */
     if (isIosLikeUserAgent()) return;
+    if (!mediaPolicy.documentVisible) return;
+    if (mediaPolicy.lowBatteryStatic) return;
+    if (mediaPolicy.saveData) return;
+    if (typeof mediaPolicy.deviceMemoryGb === "number" && mediaPolicy.deviceMemoryGb > 0 && mediaPolicy.deviceMemoryGb <= 4) {
+      return;
+    }
     const el = videoRef.current;
     if (!el || !videoSrc || videoBroken) return;
-    if (typeof navigator !== "undefined") {
-      const c = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-      if (c?.saveData) return;
-    }
-
     let cancelled = false;
     let idleHandle: number | null = null;
     let kickTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -527,7 +495,37 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
       }
       if (kickTimeout != null) clearTimeout(kickTimeout);
     };
-  }, [videoSrc, videoBroken, hasStillIntro]);
+  }, [
+    videoSrc,
+    videoBroken,
+    hasStillIntro,
+    mediaPolicy.documentVisible,
+    mediaPolicy.lowBatteryStatic,
+    mediaPolicy.saveData,
+    mediaPolicy.deviceMemoryGb,
+    dwellVideoAllowed,
+  ]);
+
+  /** 后台标签：暂停解码，减少不可见时的缓冲 */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !videoSrc.trim() || videoBroken || posterOnlyLowPower) return;
+    if (!dwellVideoAllowed) return;
+    if (!mediaPolicy.documentVisible) {
+      v.pause();
+      return;
+    }
+    if (hasStillIntro && !introRevealed) return;
+    void v.play().catch(() => {});
+  }, [
+    mediaPolicy.documentVisible,
+    videoSrc,
+    videoBroken,
+    posterOnlyLowPower,
+    hasStillIntro,
+    introRevealed,
+    dwellVideoAllowed,
+  ]);
 
   useEffect(() => {
     setVideoBroken(false);
@@ -644,14 +642,48 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
     toggleDockChrome();
   }, [natureSoftFocusPanelOpen, toggleDockChrome]);
 
+  const onBlankPointerDown = useCallback((e: PointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType === "mouse") {
+      swipeBlankTouchRef.current = null;
+      return;
+    }
+    swipeBlankTouchRef.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const onBlankPointerUp = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (e.pointerType === "mouse") return;
+      const start = swipeBlankTouchRef.current;
+      swipeBlankTouchRef.current = null;
+      if (!start || initial.videos.length < 2) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (Math.abs(dx) < NATURE_SCENE_SWIPE_MIN_DX || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+      const direction = (dx < 0 ? 1 : -1) as 1 | -1;
+      const next = adjacentNatureSceneId(initial.videos, activeVideoId, direction);
+      if (next && next !== activeVideoId.trim()) {
+        suppressBlankTapRef.current = true;
+        selectVideoAndImmersive(next);
+      }
+    },
+    [initial.videos, activeVideoId, selectVideoAndImmersive],
+  );
+
+  const onBlankClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      if (suppressBlankTapRef.current) {
+        suppressBlankTapRef.current = false;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      onNatureVideoBlankClick();
+    },
+    [onNatureVideoBlankClick],
+  );
+
   return (
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-[6] w-full"
-        style={topLayerStyle}
-        aria-hidden
-      />
-
       <AppShellTopBar
         tone="onDark"
         landscapeImmersive={false}
@@ -762,40 +794,42 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
             aria-hidden
           />
           <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-canvas">
-            <video
-              ref={videoRef}
-              key={videoSrc}
-              className={[
-                NATURE_BG_COVER_MEDIA,
-                "z-[1] border-0 outline-none",
-                "transition-opacity duration-700 ease-out motion-reduce:transition-none",
-                introRevealed ? "opacity-100" : "opacity-0",
-              ].join(" ")}
-              style={{ maxWidth: "none" }}
-              src={videoSrc}
-              poster={hasStillIntro ? undefined : poster || undefined}
-              muted
-              playsInline
-              loop
-              autoPlay
-              preload={hasStillIntro ? "auto" : "metadata"}
-              aria-hidden
-              onCanPlay={maybeRevealIntroFromBuffer}
-              onLoadedData={maybeRevealIntroFromBuffer}
-              onProgress={maybeRevealIntroFromBuffer}
-              onPlaying={() => {
-                clearPlaybackWaitHint();
-                maybeRevealIntroFromBuffer();
-              }}
-              onTimeUpdate={onTimeUpdatePollIntroReveal}
-              onWaiting={() => {
-                if (introRevealed) schedulePlaybackWaitHint();
-              }}
-              onStalled={() => {
-                if (introRevealed) schedulePlaybackWaitHint();
-              }}
-              onError={() => setVideoBroken(true)}
-            />
+            {showNatureVideoDecoder ? (
+              <video
+                ref={videoRef}
+                key={videoSrc}
+                className={[
+                  NATURE_BG_COVER_MEDIA,
+                  "z-[1] border-0 outline-none",
+                  "transition-opacity duration-700 ease-out motion-reduce:transition-none",
+                  introRevealed ? "opacity-100" : "opacity-0",
+                ].join(" ")}
+                style={{ maxWidth: "none" }}
+                src={videoSrc}
+                poster={hasStillIntro ? undefined : posterSrc?.trim() || undefined}
+                muted
+                playsInline
+                loop
+                autoPlay
+                preload="metadata"
+                aria-hidden
+                onCanPlay={maybeRevealIntroFromBuffer}
+                onLoadedData={maybeRevealIntroFromBuffer}
+                onProgress={maybeRevealIntroFromBuffer}
+                onPlaying={() => {
+                  clearPlaybackWaitHint();
+                  maybeRevealIntroFromBuffer();
+                }}
+                onTimeUpdate={onTimeUpdatePollIntroReveal}
+                onWaiting={() => {
+                  if (introRevealed) schedulePlaybackWaitHint();
+                }}
+                onStalled={() => {
+                  if (introRevealed) schedulePlaybackWaitHint();
+                }}
+                onError={() => setVideoBroken(true)}
+              />
+            ) : null}
             {hasStillIntro ? (
               // eslint-disable-next-line @next/next/no-img-element -- 与视频同构图的静图叠层，需原生解码与缓存
               <img
@@ -806,18 +840,13 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
                 className={[
                   NATURE_BG_COVER_MEDIA,
                   "z-[2] pointer-events-none transition-opacity duration-700 ease-out motion-reduce:transition-none",
-                  introRevealed ? "opacity-0" : "opacity-100",
+                  posterOnlyLowPower || !introRevealed ? "opacity-100" : "opacity-0",
                 ].join(" ")}
                 style={{ maxWidth: "none" }}
                 aria-hidden
               />
             ) : null}
           </div>
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] w-full"
-            style={bottomLayerStyleNatureVideoStage}
-            aria-hidden
-          />
           {natureBgSoftFocus ? (
             <div
               className="pointer-events-none absolute inset-0 z-[8]"
@@ -831,37 +860,34 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
               aria-hidden
             />
           ) : null}
-          {(showSlowIntroHint || showPlaybackWaitHint) && (
+          {(showSlowIntroHint || showPlaybackWaitHint) && !posterOnlyLowPower ? (
             <p
-              className="pointer-events-none absolute bottom-4 left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:bottom-5 sm:text-[13px] sm:left-6 sm:right-6"
+              className="pointer-events-none absolute bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:left-6 sm:right-6 sm:text-[13px]"
               aria-live="polite"
             >
               {showSlowIntroHint && !introRevealed ? t("nature.slowVisualHint") : t("nature.playbackBufferingHint")}
             </p>
-          )}
+          ) : null}
           <button
             type="button"
-            className="absolute inset-0 z-[7] cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+            className="absolute inset-0 z-[7] cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
             aria-expanded={dockChromeVisible}
             aria-label={t("nature.toggleDockChrome")}
-            onClick={onNatureVideoBlankClick}
+            onPointerDown={onBlankPointerDown}
+            onPointerUp={onBlankPointerUp}
+            onClick={onBlankClick}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
             <div className="w-full max-w-lg sm:max-w-xl landscape:max-w-[min(92vw,50rem)] md:landscape:max-w-[min(86vw,56rem)]">
               <HomeVerseRotator
-                entriesByLocale={verseFeed.entriesByLocale}
-                bilingual={verseFeed.bilingual}
-                verseKeys={verseFeed.verseKeys}
-                onVerseCommitted={verseFeed.onVerseCommitted}
-                onNearEnd={verseFeed.onNearEnd}
                 variant="dark"
                 prominence="nature"
                 className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
               />
             </div>
           </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(48dvh,58svh)] min-h-0 flex-col justify-end px-4 pb-2 pt-1 sm:px-6 sm:pb-3 md:px-8 xl:px-10">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(48dvh,58svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
             <div
               className={[
                 "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
@@ -873,13 +899,14 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
                   className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
                   settings={initial}
                   activeVideoId={playbackSettings.activeVideoId}
-                  prepareSceneId={scenePrepare?.id ?? null}
-                  prepareProgress={scenePrepare?.progress ?? null}
+                  prepareSceneId={null}
+                  prepareProgress={null}
                   onSceneCardPress={onSceneCardPress}
                 />
               </DockChromeCollapse>
             </div>
           </div>
+          <HomeShellFloatingRouteNav placement="videoStage" />
         </div>
       ) : (
         <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
@@ -890,10 +917,12 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
           <div className="relative flex min-h-0 flex-1 flex-col">
             <button
               type="button"
-              className="absolute inset-0 z-0 cursor-default border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+              className="absolute inset-0 z-0 cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               aria-expanded={dockChromeVisible}
               aria-label={t("nature.toggleDockChrome")}
-              onClick={onNatureVideoBlankClick}
+              onPointerDown={onBlankPointerDown}
+              onPointerUp={onBlankPointerUp}
+              onClick={onBlankClick}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
               <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">
@@ -901,7 +930,7 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
                 <p className="mt-3 text-[12px] leading-relaxed text-white/55 sm:text-[13px]">{t("nature.emptyHint")}</p>
               </div>
             </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(40dvh,50svh)] min-h-0 flex-col justify-end px-4 pb-2 sm:px-6 sm:pb-3 md:px-8 xl:px-10">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(40dvh,50svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
               <div
                 className={[
                   "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
@@ -913,14 +942,15 @@ export function NatureVideoExperience({ initial, brandChrome, homeVerseRotation 
                     className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
                     settings={initial}
                     activeVideoId={playbackSettings.activeVideoId}
-                    prepareSceneId={scenePrepare?.id ?? null}
-                    prepareProgress={scenePrepare?.progress ?? null}
+                    prepareSceneId={null}
+                    prepareProgress={null}
                     onSceneCardPress={onSceneCardPress}
                   />
                 </DockChromeCollapse>
               </div>
             </div>
           </div>
+          <HomeShellFloatingRouteNav placement="videoStage" />
         </div>
       )}
     </div>

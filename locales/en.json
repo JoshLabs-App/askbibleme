@@ -517,6 +517,7 @@
   },
   "relax": {
     "back": "Music home",
+    "guideHint": "Nothing to do—just stay here a moment.",
     "sessionLabel": "Relax",
     "effectPickerLabel": "Visual style",
     "effectLagoon": "Lagoon",

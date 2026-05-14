@@ -2,20 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import {
   HOME_ATMOSPHERE_PRESETS,
-  getMusicVisualAtmospherePresetForHome,
   type HomeAtmospherePresetId,
-  useHomeAtmosphereVisual,
-  useMusicVisualTuning,
-} from "@/music-visual";
-import { MUSIC_VISUAL_TUNING_LIMITS as TL } from "@/music-visual/tuning/schema";
+  readStoredHomeAtmospherePreset,
+  writeStoredHomeAtmospherePreset,
+} from "@/lib/home/home-atmosphere";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { AppShellModal } from "@/components/ui/AppShellModal";
+import type { AppLocale } from "@/lib/i18n/config";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 
@@ -37,19 +37,19 @@ function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[34%] bg-gradient-to-br from-sky-300/45 via-sky-100/18 to-teal-100/30 motion-safe:animate-amb-home-aurora-drift-a will-change-transform"
+            className="pointer-events-none absolute -inset-[34%] bg-gradient-to-br from-sky-300/45 via-sky-100/18 to-teal-100/30"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_88%_56%_at_12%_88%,rgba(56,189,248,0.22),transparent_54%)] motion-safe:animate-amb-home-aurora-bokeh-1 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_88%_56%_at_12%_88%,rgba(56,189,248,0.22),transparent_54%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_88%_12%,rgba(45,212,191,0.18),transparent_56%)] motion-safe:animate-amb-home-float-2 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_88%_12%,rgba(45,212,191,0.18),transparent_56%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[26%] mix-blend-soft-light bg-gradient-to-tl from-cyan-100/30 via-transparent to-sky-200/22 motion-safe:animate-amb-home-aurora-sheen will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[26%] mix-blend-soft-light bg-gradient-to-tl from-cyan-100/30 via-transparent to-sky-200/22"
             aria-hidden
           />
           <div
@@ -67,15 +67,15 @@ function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[32%] bg-[radial-gradient(ellipse_68%_52%_at_28%_22%,rgba(148,163,184,0.2),transparent_56%)] blur-2xl motion-safe:animate-amb-home-parchment-drift will-change-transform"
+            className="pointer-events-none absolute -inset-[32%] bg-[radial-gradient(ellipse_68%_52%_at_28%_22%,rgba(148,163,184,0.2),transparent_56%)] blur-2xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_52%_at_50%_-8%,rgba(184,148,90,0.14),transparent_54%)] motion-safe:animate-amb-home-float-1 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_52%_at_50%_-8%,rgba(184,148,90,0.14),transparent_54%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[22%] bg-gradient-to-r from-transparent via-white/14 to-transparent motion-safe:animate-amb-home-sweep will-change-transform"
+            className="pointer-events-none absolute -inset-[22%] bg-gradient-to-r from-transparent via-white/14 to-transparent"
             aria-hidden
           />
           <div
@@ -89,19 +89,19 @@ function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
         <>
           <div className="absolute inset-0 bg-[#d8e4f2]" aria-hidden />
           <div
-            className="pointer-events-none absolute -inset-[36%] bg-gradient-to-br from-sky-200/50 via-cyan-100/22 to-indigo-100/38 motion-safe:animate-amb-home-aurora-drift-a will-change-transform"
+            className="pointer-events-none absolute -inset-[36%] bg-gradient-to-br from-sky-200/50 via-cyan-100/22 to-indigo-100/38"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_92%_58%_at_10%_90%,rgba(96,165,250,0.26),transparent_52%)] motion-safe:animate-amb-home-aurora-bokeh-1 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_92%_58%_at_10%_90%,rgba(96,165,250,0.26),transparent_52%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_78%_50%_at_90%_10%,rgba(147,197,253,0.22),transparent_54%)] motion-safe:animate-amb-home-float-2 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_78%_50%_at_90%_10%,rgba(147,197,253,0.22),transparent_54%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[28%] mix-blend-soft-light bg-gradient-to-tl from-rose-100/35 via-transparent to-sky-100/28 motion-safe:animate-amb-home-aurora-sheen will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[28%] mix-blend-soft-light bg-gradient-to-tl from-rose-100/35 via-transparent to-sky-100/28"
             aria-hidden
           />
         </>
@@ -115,19 +115,19 @@ function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[42%] rounded-full bg-[radial-gradient(ellipse_56%_46%_at_68%_32%,rgba(99,102,241,0.38),transparent_60%)] blur-3xl motion-safe:animate-amb-home-float-1 will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[42%] rounded-full bg-[radial-gradient(ellipse_56%_46%_at_68%_32%,rgba(99,102,241,0.38),transparent_60%)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[38%] rounded-full bg-[radial-gradient(ellipse_52%_44%_at_24%_68%,rgba(168,85,247,0.26),transparent_58%)] blur-3xl motion-safe:animate-amb-home-float-2 will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[38%] rounded-full bg-[radial-gradient(ellipse_52%_44%_at_24%_68%,rgba(168,85,247,0.26),transparent_58%)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_96%_62%_at_50%_102%,rgba(30,27,64,0.72),transparent_50%)] motion-safe:animate-amb-home-glow-pulse will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_96%_62%_at_50%_102%,rgba(30,27,64,0.72),transparent_50%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[32%] bg-violet-400/[0.12] motion-safe:animate-amb-home-ember-drift-a will-change-transform"
+            className="pointer-events-none absolute -inset-[32%] bg-violet-400/[0.12]"
             aria-hidden
           />
         </>
@@ -141,19 +141,19 @@ function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[40%] rounded-full bg-[radial-gradient(ellipse_58%_48%_at_16%_40%,rgba(45,212,191,0.22),transparent_60%)] blur-3xl motion-safe:animate-amb-home-aurora-drift-b will-change-transform"
+            className="pointer-events-none absolute -inset-[40%] rounded-full bg-[radial-gradient(ellipse_58%_48%_at_16%_40%,rgba(45,212,191,0.22),transparent_60%)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[44%] rounded-full bg-[radial-gradient(ellipse_54%_46%_at_84%_60%,rgba(148,163,184,0.24),transparent_56%)] blur-3xl motion-safe:animate-amb-home-float-1 will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[44%] rounded-full bg-[radial-gradient(ellipse_54%_46%_at_84%_60%,rgba(148,163,184,0.24),transparent_56%)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_58%_at_50%_-6%,rgba(94,234,212,0.14),transparent_48%)] motion-safe:animate-amb-home-calm-bokeh-2 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_58%_at_50%_-6%,rgba(94,234,212,0.14),transparent_48%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[22%] bg-gradient-to-r from-transparent via-teal-200/14 to-transparent motion-safe:animate-amb-home-sweep will-change-transform"
+            className="pointer-events-none absolute -inset-[22%] bg-gradient-to-r from-transparent via-teal-200/14 to-transparent"
             aria-hidden
           />
         </>
@@ -167,19 +167,19 @@ function AtmosphereLayers({ preset }: { preset: HomeAtmospherePresetId }) {
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[48%] rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_108%,rgba(234,88,12,0.5),transparent_58%)] blur-3xl motion-safe:animate-amb-home-ember-bokeh-1 will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[48%] rounded-full bg-[radial-gradient(ellipse_50%_40%_at_50%_108%,rgba(234,88,12,0.5),transparent_58%)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[42%] rounded-full bg-[radial-gradient(ellipse_44%_38%_at_76%_26%,rgba(251,146,60,0.24),transparent_56%)] blur-3xl motion-safe:animate-amb-home-ember-drift-b will-change-transform"
+            className="pointer-events-none absolute -inset-[42%] rounded-full bg-[radial-gradient(ellipse_44%_38%_at_76%_26%,rgba(251,146,60,0.24),transparent_56%)] blur-3xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_72%_42%_at_18%_16%,rgba(220,38,38,0.16),transparent_52%)] motion-safe:animate-amb-home-ember-bokeh-2 will-change-[transform,opacity]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_72%_42%_at_18%_16%,rgba(220,38,38,0.16),transparent_52%)]"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -inset-[18%] bg-gradient-to-br from-orange-500/18 via-transparent to-transparent motion-safe:animate-amb-home-ember-sheen will-change-[transform,opacity]"
+            className="pointer-events-none absolute -inset-[18%] bg-gradient-to-br from-orange-500/18 via-transparent to-transparent"
             aria-hidden
           />
         </>
@@ -207,45 +207,13 @@ function IconMenu(props: { className?: string }) {
   );
 }
 
+const HOME_DASHBOARD_VERSE_FALLBACK: Record<AppLocale, HomeVerseEntry[]> = { "zh-CN": [], en: [] };
+
 function IconUserAvatar(props: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={props.className} aria-hidden>
       <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
     </svg>
-  );
-}
-
-function MusicVisualTuneRow(props: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  onChange: (n: number) => void;
-  decimals?: number;
-  dark: boolean;
-}) {
-  const d = props.decimals ?? 2;
-  return (
-    <label
-      className={`flex items-center gap-2 py-1.5 text-[11px] ${props.dark ? "text-canvas/78" : "text-ink/58"}`}
-    >
-      <span className="w-[5.5rem] shrink-0 leading-snug">{props.label}</span>
-      <input
-        type="range"
-        min={props.min}
-        max={props.max}
-        step={props.step}
-        value={props.value}
-        onChange={(e) => props.onChange(Number(e.target.value))}
-        className={`min-w-0 flex-1 ${props.dark ? "accent-white/45" : "accent-ink/30"}`}
-      />
-      <span
-        className={`w-10 shrink-0 text-right tabular-nums text-[10px] ${props.dark ? "text-canvas/48" : "text-ink/42"}`}
-      >
-        {props.value.toFixed(d)}
-      </span>
-    </label>
   );
 }
 
@@ -257,19 +225,16 @@ export function HomeDashboard() {
   const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
-  const { homeAtmospherePresetId, setHomeAtmospherePresetId } = useHomeAtmosphereVisual();
+  const [homeAtmospherePresetId, setHomeAtmospherePresetId] = useState<HomeAtmospherePresetId>("lagoon");
   const atmospherePreset = homeAtmospherePresetId;
   const [atmospherePickerOpen, setAtmospherePickerOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [musicVisualPanelOpen, setMusicVisualPanelOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const atmosphereControlsRef = useRef<HTMLDivElement>(null);
-  const { tuning, setTuning, resetTuning } = useMusicVisualTuning();
-  const engineAtmosphere = useMemo(
-    () => getMusicVisualAtmospherePresetForHome(homeAtmospherePresetId),
-    [homeAtmospherePresetId],
-  );
-  const dismissMusicVisualPanel = useCallback(() => setMusicVisualPanelOpen(false), []);
+
+  useLayoutEffect(() => {
+    setHomeAtmospherePresetId(readStoredHomeAtmospherePreset());
+  }, []);
 
   useEffect(() => {
     try {
@@ -293,6 +258,7 @@ export function HomeDashboard() {
   const setAtmospherePresetPersist = (id: HomeAtmospherePresetId) => {
     setHomeAtmospherePresetId(id);
     setAtmospherePickerOpen(false);
+    writeStoredHomeAtmospherePreset(id);
   };
 
   const onAtmosphereModeTabClick = () => {
@@ -361,11 +327,12 @@ export function HomeDashboard() {
   const useCanvasChrome = isImage || homeDarkAtmosphere;
 
   return (
-    <main className="relative flex min-h-full w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-transparent">
-      {/* 音乐呼吸仅作用在背景层；顶栏、经文、控件不随 scale 变形 */}
+    <HomePrayerVerseFeedProvider fallbackByLocale={HOME_DASHBOARD_VERSE_FALLBACK}>
+      <main className="relative flex min-h-full w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-transparent">
+      {/* 背景与前景分层：顶栏、经文、控件叠在静态背景之上 */}
       <div className="relative isolate flex min-h-0 w-full flex-1 shrink-0 flex-col overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-0 z-0 overflow-hidden music-reactive-home-shell"
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
           aria-hidden
         >
         {isImage && thumbUrl ? (
@@ -407,8 +374,8 @@ export function HomeDashboard() {
         <div
           className={
             isImage || homeDarkAtmosphere
-              ? "music-reactive-home-glow-dark pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[min(32vh,14rem)] bg-gradient-to-t from-black/35 via-black/10 to-transparent"
-              : "music-reactive-home-glow pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[min(24vh,9rem)] bg-gradient-to-t from-ink/[0.05] via-transparent to-transparent"
+              ? "pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[min(32vh,14rem)] bg-gradient-to-t from-black/35 via-black/10 to-transparent"
+              : "pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[min(24vh,9rem)] bg-gradient-to-t from-ink/[0.05] via-transparent to-transparent"
           }
           aria-hidden
         />
@@ -524,17 +491,6 @@ export function HomeDashboard() {
                       内部 · Studio
                     </Link>
                   ) : null}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="block w-full px-3 py-2.5 text-left text-[13px] text-canvas/95 transition hover:bg-white/10"
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      setMusicVisualPanelOpen(true);
-                    }}
-                  >
-                    播放视觉…
-                  </button>
                   {showAdminHomeLinks ? (
                     <Link
                       href="/admin/music"
@@ -651,121 +607,7 @@ export function HomeDashboard() {
           </div>
         </div>
       </div>
-
-      <AppShellModal
-        open={musicVisualPanelOpen}
-        onDismiss={dismissMusicVisualPanel}
-        labelledBy="music-visual-tuning-title"
-      >
-        <div
-          className={`relative z-[1] mx-auto w-full max-w-[min(100%,20rem)] rounded-2xl border px-4 py-3 shadow-2xl ${
-            useCanvasChrome
-              ? "border-white/14 bg-black/78 text-canvas"
-              : "border-border/45 bg-canvas/[0.98] text-ink"
-          }`}
-        >
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <h2
-              id="music-visual-tuning-title"
-              className={`text-[12px] font-medium tracking-wide ${useCanvasChrome ? "text-canvas/88" : "text-ink/78"}`}
-            >
-              {t("chrome.playbackVisual")}
-            </h2>
-            <button
-              type="button"
-              onClick={dismissMusicVisualPanel}
-              className={`rounded-lg px-2 py-1 text-[11px] font-medium ${useCanvasChrome ? "text-canvas/55 hover:bg-white/10" : "text-ink/45 hover:bg-ink/[0.05]"}`}
-            >
-              {t("common.done")}
-            </button>
-          </div>
-          <p
-            className={`mb-2 text-[10px] leading-snug ${useCanvasChrome ? "text-canvas/48" : "text-ink/48"}`}
-          >
-            首页「{t(`music.atmosphere.${homeAtmospherePresetId}`)}」→ 引擎「
-            {engineAtmosphere.label}」（{engineAtmosphere.id}）。{" "}
-            除播放键外，下方滑杆与氛围乘子叠加后写入 CSS；播放键为窄范围微调且不与总强度相乘。「跟曲线」「无数据呼吸」在引擎内随雾速/微粒密度轻微调制。
-          </p>
-          <div className="max-h-[min(58vh,22rem)] space-y-0.5 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] pr-0.5">
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="总强度"
-              min={TL.master.min}
-              max={TL.master.max}
-              step={1}
-              value={tuning.master}
-              onChange={(n) => setTuning({ master: n })}
-            />
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="光晕"
-              min={TL.glowMul.min}
-              max={TL.glowMul.max}
-              step={2.5}
-              value={tuning.glowMul}
-              onChange={(n) => setTuning({ glowMul: n })}
-            />
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="深色光晕"
-              min={TL.glowDarkExtra.min}
-              max={TL.glowDarkExtra.max}
-              step={2}
-              value={tuning.glowDarkExtra}
-              onChange={(n) => setTuning({ glowDarkExtra: n })}
-            />
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="背景呼吸"
-              min={TL.shellBreathAmp.min}
-              max={TL.shellBreathAmp.max}
-              step={0.5}
-              value={tuning.shellBreathAmp}
-              onChange={(n) => setTuning({ shellBreathAmp: n })}
-            />
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="播放键"
-              min={TL.playPulseMul.min}
-              max={TL.playPulseMul.max}
-              step={0.03}
-              value={tuning.playPulseMul}
-              onChange={(n) => setTuning({ playPulseMul: n })}
-            />
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="无数据呼吸"
-              min={TL.fallbackBreath.min}
-              max={TL.fallbackBreath.max}
-              step={0.25}
-              value={tuning.fallbackBreath}
-              onChange={(n) => setTuning({ fallbackBreath: n })}
-            />
-            <MusicVisualTuneRow
-              dark={useCanvasChrome}
-              label="跟曲线"
-              min={TL.analysisBlend.min}
-              max={TL.analysisBlend.max}
-              step={0.1}
-              value={tuning.analysisBlend}
-              onChange={(n) => setTuning({ analysisBlend: n })}
-            />
-          </div>
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              onClick={() => resetTuning()}
-              className={`rounded-lg border px-3 py-1.5 text-[11px] font-medium ${
-                useCanvasChrome
-                  ? "border-white/18 text-canvas/70 hover:bg-white/8"
-                  : "border-border/50 text-ink/55 hover:bg-ink/[0.04]"
-              }`}
-            >
-              恢复默认
-            </button>
-          </div>
-        </div>
-      </AppShellModal>
     </main>
+    </HomePrayerVerseFeedProvider>
   );
 }

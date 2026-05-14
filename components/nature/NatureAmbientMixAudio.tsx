@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import { NATURE_VIDEO_AMBIENT_AUDIO_ENABLED } from "@/lib/nature/nature-video-ambient-audio";
 
 type Layer = { layerId: string; src: string; volume: number };
 
@@ -104,6 +105,7 @@ function SyncLoopAmbient({
 
 /**
  * 与背景静音视频同步播放的多轨循环环境声（配置来自后台混音）。
+ * 产品默认关闭，见 `NATURE_VIDEO_AMBIENT_AUDIO_ENABLED`；未来用户开关打开后再挂载。
  */
 export function NatureAmbientMixAudio({
   layers,
@@ -149,7 +151,7 @@ export function NatureAmbientMixAudio({
     });
   }, [registerSleepPauseHandler]);
 
-  if (!layers.length) return null;
+  if (!NATURE_VIDEO_AMBIENT_AUDIO_ENABLED || !layers.length) return null;
   return (
     <div className="pointer-events-none absolute h-0 w-0 overflow-hidden" aria-hidden>
       {layers.map((l) => (

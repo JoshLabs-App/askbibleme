@@ -21,12 +21,39 @@ import {
   DEFAULT_HOME_PRAYER_PREFS,
   HOME_PRAYER_VERSE_FEED_RELOAD_EVENT,
   memoryNamespaceFromScope,
+  persistVerseDisplayToCookie,
   readHomePrayerVersePrefs,
   scopeIdFromPrefs,
   verseTranslationIdsFromPrefs,
   writeHomePrayerVersePrefs,
 } from "@/lib/home-prayer-pools/prefs";
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
+
+/** 各语言列表应对齐；取最短长度用于整体环形平移，双语索引仍一致。 */
+function alignedFallbackSpanLength(by: Record<AppLocale, HomeVerseEntry[]>): number {
+  const lens = (Object.keys(by) as AppLocale[])
+    .map((L) => (by[L] ?? []).length)
+    .filter((n) => n > 0);
+  if (lens.length === 0) return 0;
+  return Math.min(...lens);
+}
+
+function rotateFallbackByLocale(
+  by: Record<AppLocale, HomeVerseEntry[]>,
+  offset: number,
+): Record<AppLocale, HomeVerseEntry[]> {
+  const n = alignedFallbackSpanLength(by);
+  if (n <= 1) return by;
+  const o = ((offset % n) + n) % n;
+  if (o === 0) return by;
+  const out: Record<AppLocale, HomeVerseEntry[]> = { ...by };
+  for (const L of Object.keys(by) as AppLocale[]) {
+    const arr = by[L] ?? [];
+    if (arr.length < n) continue;
+    out[L] = [...arr.slice(o), ...arr.slice(0, o)];
+  }
+  return out;
+}
 
 type Args = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
@@ -52,6 +79,9 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
   const keysQueueRef = useRef<string[]>([]);
   const extendingRef = useRef(false);
   const extendCooldownUntilRef = useRef(0);
+  /** 无祷告池 key 时使用硬编码/RSC 列表：随机起点，避免每次打开都是 rotation 第一条（诗篇 121）。 */
+  const fallbackSpinRef = useRef<number | null>(null);
+  const fallbackSpinPrefsTokenRef = useRef<number | null>(null);
 
   useEffect(() => {
     const onReload = () => setPrefsToken((x) => x + 1);
@@ -61,6 +91,11 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
 
   useEffect(() => {
     setPrefsHydrated(true);
+  }, []);
+
+  /** 将本机「双语展示」偏好同步到 Cookie，便于后续 RSC 只解析需要的语言（单语不解析另一语言） */
+  useEffect(() => {
+    persistVerseDisplayToCookie(readHomePrayerVersePrefs().verseDisplay);
   }, []);
 
   useEffect(() => {
@@ -183,14 +218,32 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
     const prefs = prefsHydrated ? readHomePrayerVersePrefs() : DEFAULT_HOME_PRAYER_PREFS;
     const bilingual = prefs.verseDisplay === "bilingual";
     if (poolEntries && verseKeys.length > 0) {
+      fallbackSpinRef.current = null;
       return {
         entries: poolEntries,
         keys: verseKeys as string[],
         bilingual,
       };
     }
+    if (!prefsHydrated) {
+      return {
+        entries: fallbackByLocale,
+        keys: undefined as string[] | undefined,
+        bilingual,
+      };
+    }
+    const n = alignedFallbackSpanLength(fallbackByLocale);
+    if (fallbackSpinPrefsTokenRef.current !== prefsToken) {
+      fallbackSpinPrefsTokenRef.current = prefsToken;
+      fallbackSpinRef.current = null;
+    }
+    if (fallbackSpinRef.current === null && n > 1) {
+      fallbackSpinRef.current = Math.floor(Math.random() * n);
+    }
+    const spin = fallbackSpinRef.current ?? 0;
+    const entries = n <= 1 ? fallbackByLocale : rotateFallbackByLocale(fallbackByLocale, spin);
     return {
-      entries: fallbackByLocale,
+      entries,
       keys: undefined as string[] | undefined,
       bilingual,
     };

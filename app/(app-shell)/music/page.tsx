@@ -1,9 +1,9 @@
 import { MusicHomeClient } from "@/components/music/MusicHomeClient";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
-import { buildHomeVerseRotationByLocale } from "@/lib/bible/home-verse-ref-rotation";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 
-export const dynamic = "force-dynamic";
+/** 曲库 JSON 变更不必秒级反映：略长缓存减轻每次打开音乐页的 RSC 读盘 */
+export const revalidate = 45;
 
 export const metadata = {
   title: "音乐 · Selah.my",
@@ -13,10 +13,9 @@ export const metadata = {
 export default async function MusicPage() {
   const cwd = process.cwd();
   const store = await readMusicCompanionStore(cwd);
-  const homeVerseRotation = buildHomeVerseRotationByLocale(cwd);
   return (
     <ShellTemplateChromeLayout contentClassName="gap-0">
-      <MusicHomeClient initialStore={store} layout="templateChrome" homeVerseRotation={homeVerseRotation} />
+      <MusicHomeClient initialStore={store} layout="templateChrome" />
     </ShellTemplateChromeLayout>
   );
 }

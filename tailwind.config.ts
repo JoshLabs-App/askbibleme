@@ -144,95 +144,6 @@ const config: Config = {
           "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1.05)", opacity: "0.2" },
           "50%": { transform: "translate3d(-30%, 24%, 0) scale(0.82)", opacity: "0.68" },
         },
-        /** 首页氛围：以横向 / 缩放 / 透明度为主，避免大位移 Y 造成「上下整块在动」 */
-        "amb-home-float-1": {
-          "0%, 100%": { transform: "translate3d(-5%, 0, 0) scale(1.03) rotate(-1deg)", opacity: "0.9" },
-          "50%": { transform: "translate3d(6%, 0, 0) scale(1.1) rotate(2deg)", opacity: "1" },
-        },
-        "amb-home-float-2": {
-          "0%, 100%": { transform: "translate3d(4%, 0, 0) scale(1.04) rotate(1deg)", opacity: "0.88" },
-          "50%": { transform: "translate3d(-7%, 0, 0) scale(0.97) rotate(-2deg)", opacity: "1" },
-        },
-        "amb-home-glow-pulse": {
-          "0%, 100%": { opacity: "0.18", transform: "scale(1)" },
-          "50%": { opacity: "0.5", transform: "scale(1.07)" },
-        },
-        "amb-home-sweep": {
-          "0%": { transform: "translate3d(-52%, 0, 0) skewX(-7deg)", opacity: "0.05" },
-          "50%": { transform: "translate3d(52%, 0, 0) skewX(6deg)", opacity: "0.32" },
-          "100%": { transform: "translate3d(-52%, 0, 0) skewX(-7deg)", opacity: "0.05" },
-        },
-        "amb-home-parchment-drift": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)" },
-          "50%": { transform: "translate3d(-7%, 0, 0) rotate(5deg) scale(1.05)" },
-        },
-        "amb-home-aurora-drift-a": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)" },
-          "35%": { transform: "translate3d(-14%, 1%, 0) rotate(8deg) scale(1.06)" },
-          "70%": { transform: "translate3d(12%, -1%, 0) rotate(-8deg) scale(0.98)" },
-        },
-        "amb-home-aurora-drift-b": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1.04)" },
-          "45%": { transform: "translate3d(12%, 2%, 0) rotate(-10deg) scale(1.08)" },
-          "80%": { transform: "translate3d(-10%, -1%, 0) rotate(10deg) scale(0.98)" },
-        },
-        "amb-home-aurora-bokeh-1": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1)", opacity: "0.22" },
-          "50%": { transform: "translate3d(14%, -5%, 0) scale(1.18)", opacity: "0.72" },
-        },
-        "amb-home-aurora-sheen": {
-          "0%, 100%": {
-            transform: "translate3d(-10%, 0, 0) scale(1.02) rotate(-5deg)",
-            opacity: "0.12",
-          },
-          "50%": {
-            transform: "translate3d(12%, 0, 0) scale(1.1) rotate(6deg)",
-            opacity: "0.48",
-          },
-        },
-        "amb-home-calm-bokeh-2": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0)", opacity: "0.28" },
-          "50%": { transform: "translate3d(-6%, 3%, 0)", opacity: "0.48" },
-        },
-        "amb-home-ember-drift-a": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)" },
-          "50%": { transform: "translate3d(10%, -2%, 0) rotate(10deg) scale(1.06)" },
-        },
-        "amb-home-ember-drift-b": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1.06)" },
-          "40%": { transform: "translate3d(12%, -3%, 0) rotate(-10deg) scale(0.96)" },
-          "75%": { transform: "translate3d(-10%, 2%, 0) rotate(8deg) scale(1.04)" },
-        },
-        "amb-home-ember-bokeh-1": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1)", opacity: "0.25" },
-          "50%": { transform: "translate3d(16%, -6%, 0) scale(1.22)", opacity: "0.85" },
-        },
-        "amb-home-ember-bokeh-2": {
-          "0%, 100%": { transform: "translate3d(0, 0, 0) scale(1.05)", opacity: "0.18" },
-          "50%": { transform: "translate3d(-14%, 5%, 0) scale(0.9)", opacity: "0.78" },
-        },
-        "amb-home-ember-sheen": {
-          "0%, 100%": {
-            transform: "translate3d(-12%, 0, 0) scale(1) rotate(-6deg)",
-            opacity: "0.08",
-          },
-          "50%": {
-            transform: "translate3d(14%, 0, 0) scale(1.12) rotate(8deg)",
-            opacity: "0.55",
-          },
-        },
-        "music-hero-fade": {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
-        },
-        "music-play-breathe": {
-          "0%, 100%": { transform: "scale(1)", boxShadow: "0 10px 32px -6px rgba(0,0,0,0.38)" },
-          "50%": {
-            transform: "scale(1.018)",
-            boxShadow:
-              "0 12px 36px -4px rgba(0,0,0,0.42), 0 0 24px rgba(197,160,112,0.22)",
-          },
-        },
       },
       animation: {
         "amb-calm-drift-a": "amb-calm-drift-a 22s ease-in-out infinite",
@@ -277,23 +188,6 @@ const config: Config = {
         "amb-aurora-bokeh-1-slow": "amb-aurora-bokeh-1 36s ease-in-out infinite",
         "amb-aurora-bokeh-2": "amb-aurora-bokeh-2 11s ease-in-out -4s infinite",
         "amb-aurora-bokeh-2-slow": "amb-aurora-bokeh-2 44s ease-in-out -16s infinite",
-        "amb-home-float-1": "amb-home-float-1 16s ease-in-out infinite",
-        "amb-home-float-2": "amb-home-float-2 20s ease-in-out -5s infinite",
-        "amb-home-glow-pulse": "amb-home-glow-pulse 9s ease-in-out infinite",
-        "amb-home-sweep": "amb-home-sweep 14s ease-in-out infinite",
-        "amb-home-parchment-drift": "amb-home-parchment-drift 22s ease-in-out infinite",
-        "amb-home-aurora-drift-a": "amb-home-aurora-drift-a 14s ease-in-out infinite",
-        "amb-home-aurora-drift-b": "amb-home-aurora-drift-b 18s ease-in-out -5s infinite",
-        "amb-home-aurora-bokeh-1": "amb-home-aurora-bokeh-1 9s ease-in-out infinite",
-        "amb-home-aurora-sheen": "amb-home-aurora-sheen 11s ease-in-out infinite",
-        "amb-home-calm-bokeh-2": "amb-home-calm-bokeh-2 21s ease-in-out -10s infinite",
-        "amb-home-ember-drift-a": "amb-home-ember-drift-a 9s ease-in-out infinite",
-        "amb-home-ember-drift-b": "amb-home-ember-drift-b 11s ease-in-out -3s infinite",
-        "amb-home-ember-bokeh-1": "amb-home-ember-bokeh-1 7s ease-in-out infinite",
-        "amb-home-ember-bokeh-2": "amb-home-ember-bokeh-2 8s ease-in-out -4s infinite",
-        "amb-home-ember-sheen": "amb-home-ember-sheen 8s ease-in-out infinite",
-        "music-hero-fade": "music-hero-fade 1.5s ease-out forwards",
-        "music-play-breathe": "music-play-breathe 3.2s ease-in-out infinite",
       },
     },
   },

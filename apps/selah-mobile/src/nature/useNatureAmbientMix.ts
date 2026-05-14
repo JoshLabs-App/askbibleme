@@ -8,6 +8,7 @@ export const EMPTY_NATURE_AMBIENT_LAYERS: NatureAmbientLayer[] = [];
 
 /**
  * 与网站 `NatureAmbientMixAudio` 类似：按场景混音多轨循环环境声（MP3 来自网络 URL）。
+ * 当前 `resolveNaturePlayback` 不向视频页输出环境层；保留 hook 供日后用户开关打开时使用。
  * `layersKey` 须随场景 / 混音配置变化，以便卸载旧轨并加载新轨。
  */
 export function useNatureAmbientMix(

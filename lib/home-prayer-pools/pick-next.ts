@@ -13,6 +13,13 @@ function cloneMemory(m: Record<string, PrayerMemoryRowV1>): Record<string, Praye
   return o;
 }
 
+/** 同一组 key 随机起点环形展开，避免每次打开都从 bootstrap 第一条开始。 */
+function rotateKeysRandomStart(keys: string[], rng: () => number): string[] {
+  if (keys.length <= 1) return [...keys];
+  const i = Math.floor(rng() * keys.length);
+  return [...keys.slice(i), ...keys.slice(0, i)];
+}
+
 function dueAt(row: PrayerMemoryRowV1 | undefined, now: number): number {
   if (!row) return 0;
   return row.lastShownAt + row.intervalMs;
@@ -124,7 +131,7 @@ export function pickVerseKeySequence(
 }
 
 /**
- * 首屏组批：若 manifest 带 `bootstrapVerseKeys`，先按该顺序（过滤无效）填满一部分，再按权重与随机逻辑补满。
+ * 首屏组批：若 manifest 带 `bootstrapVerseKeys`，先按该组（随机起点环形顺序，过滤无效）填满一部分，再按权重与随机逻辑补满。
  */
 export function buildInitialVerseKeySequence(
   manifest: HomePrayerManifestV1,
@@ -134,7 +141,10 @@ export function buildInitialVerseKeySequence(
   rng: () => number,
 ): string[] {
   const valid = new Set(manifest.entries.map((e) => e.verseKey));
-  const bootstrap = (manifest.bootstrapVerseKeys ?? []).filter((k) => valid.has(k));
+  const bootstrap = rotateKeysRandomStart(
+    (manifest.bootstrapVerseKeys ?? []).filter((k) => valid.has(k)),
+    rng,
+  );
   if (bootstrap.length === 0) {
     return pickVerseKeySequence(manifest, memorySnapshot, count, now, rng);
   }

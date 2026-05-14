@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 仅提交 data 下「可版本化」的产品配置（不含圣经大 JSON），并 push。
-# 调完曲库 / 自然 / relax / 品牌 / 播放视觉 后在本机执行即可，无需通过 AI。
+# 调完曲库 / 自然 / relax / 品牌 后在本机执行即可，无需通过 AI。
 #   npm run ship:data
 #   npm run ship:data -- "chore: 调自然默认场景"
 set -euo pipefail
@@ -13,7 +13,6 @@ PATHS=(
   "data/nature-settings.json"
   "data/relax-settings.json"
   "data/branding.json"
-  "data/music-visual-console.json"
 )
 
 for p in "${PATHS[@]}"; do

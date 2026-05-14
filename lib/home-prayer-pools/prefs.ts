@@ -5,7 +5,26 @@ import type {
   VerseDisplayModeV1,
   VerseScopeV1,
 } from "@/lib/home-prayer-pools/types";
-import { HOME_PRAYER_PREFS_STORAGE_KEY } from "@/lib/home-prayer-pools/constants";
+import { HOME_PRAYER_PREFS_STORAGE_KEY, VERSE_DISPLAY_COOKIE_NAME } from "@/lib/home-prayer-pools/constants";
+
+export { VERSE_DISPLAY_COOKIE_NAME };
+
+const VERSE_DISPLAY_COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 400;
+
+/** RSC 读 Cookie：与 `writeHomePrayerVersePrefs` 写入值一致 */
+export function verseDisplayModeFromCookieValue(raw: string | null | undefined): VerseDisplayModeV1 {
+  if (raw === "bilingual") return "bilingual";
+  return "primary";
+}
+
+export function persistVerseDisplayToCookie(display: VerseDisplayModeV1): void {
+  if (typeof document === "undefined") return;
+  try {
+    document.cookie = `${VERSE_DISPLAY_COOKIE_NAME}=${display};path=/;max-age=${VERSE_DISPLAY_COOKIE_MAX_AGE_SEC};SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
 
 export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   version: 1,
@@ -92,6 +111,7 @@ export function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(HOME_PRAYER_PREFS_STORAGE_KEY, JSON.stringify(next));
+    persistVerseDisplayToCookie(next.verseDisplay);
     window.dispatchEvent(new Event(HOME_PRAYER_PREFS_UPDATED_EVENT));
   } catch {
     /* ignore */

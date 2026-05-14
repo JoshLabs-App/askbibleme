@@ -1,13 +1,20 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
+import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
+import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
-import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { goldenVerseTextShadowClass } from "@/lib/home-prayer-pools/golden-verse-text-effects";
 import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
+
+/** `flow`：多段 `lines` 连成一段自然换行，避免多 `<p>` + 自动折行造成「孤字行」。 */
+function joinVerseLinesForFlow(lines: string[], locale: AppLocale): string {
+  const parts = lines.map((s) => s.trim()).filter(Boolean);
+  if (parts.length === 0) return "";
+  return locale === "zh-CN" ? parts.join("") : parts.join(" ");
+}
 
 const GOLDEN_WIDE_FIT_MQ = "(min-width: 1024px)";
 
@@ -75,29 +82,11 @@ function applyGoldenWideFit(root: HTMLElement) {
 }
 
 type Props = {
-  /**
-   * 若由服务端从译本解析好，则优先使用（按界面语言切换）；
-   * 未传时回落到 `HOME_VERSES_BY_LOCALE` 硬编码。
-   */
-  entriesByLocale?: Record<AppLocale, HomeVerseEntry[]>;
-  /** 与 `entriesByLocale` 同索引展示另一语（须两语数组对齐） */
-  bilingual?: boolean;
-  /** 与 `entriesByLocale` 对齐；用于经句轮播进度写入 */
-  verseKeys?: string[];
-  onVerseCommitted?: (verseKey: string) => void;
-  onNearEnd?: (index: number, total: number) => void;
   /** 深色底（音乐首页）或浅色底（旧首页氛围） */
   variant?: "dark" | "light";
   /** default：中部轮播；hero：音乐播放首页主标题区大字；relax：放松页较大读经区；nature：自然页全屏视频上，对比更强 */
   prominence?: "default" | "hero" | "relax" | "nature";
   className?: string;
-  /**
-   * 为 true 时不自动轮播、不淡出；由 `verseIndex` 控制当前节（金句页手动翻句）。
-   * 此时 `onVerseCommitted` 应由父级在换句时调用，本组件内不再随下标自动写入。
-   */
-  paused?: boolean;
-  /** `paused` 时有效：当前经句下标。 */
-  verseIndex?: number;
   /**
    * 金句专页：独立排版（`#5F2E00`）、字面阴影由 `goldenVerseTextEffect` 控制；`motion-reduce` 下无阴影。
    * 仅在与 `prominence="nature"` 同用时生效。
@@ -110,24 +99,18 @@ type Props = {
 };
 
 /**
- * 首页经文轮播：与原先 `HomeDashboard` 同节奏与淡出逻辑。
+ * 首页经文轮播：节奏与淡出由 `HomePrayerVerseFeedProvider` 统一驱动；本组件只负责版式与字级。
  */
 export function HomeVerseRotator({
-  entriesByLocale,
-  bilingual = false,
-  verseKeys,
-  onVerseCommitted,
-  onNearEnd,
   variant = "dark",
   prominence = "default",
   className = "",
-  paused = false,
-  verseIndex: verseIndexProp = 0,
   verseStyle = "default",
   goldenVerseFontFamily = "sans",
   goldenVerseTextEffect = "engraved",
 }: Props) {
   const { locale } = useLocale();
+  const { entriesByLocale, bilingual, activeIndex, homeVerseVisible } = useHomePrayerVerseFeedContext();
   /** 双语时固定「英文大在上、中文小在下」；单语时随界面语言。 */
   const primaryLocale: AppLocale = bilingual ? "en" : locale;
   const secondaryLocale: AppLocale | null = bilingual ? "zh-CN" : null;
@@ -145,19 +128,26 @@ export function HomeVerseRotator({
   const isHero = prominence === "hero";
   const isRelax = prominence === "relax";
   const isNature = prominence === "nature";
-  const [homeVerseIndex, setHomeVerseIndex] = useState(0);
-  const [homeVerseVisible, setHomeVerseVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const lastCommittedIndex = useRef(-1);
   const goldenShellRef = useRef<HTMLDivElement | null>(null);
   const goldenFitRafRef = useRef<number | null>(null);
-  const verseKeysSig = verseKeys?.join("\u0001") ?? "";
 
   const nVerses = HOME_VERSES.length;
-  const activeIndex = paused
-    ? Math.min(Math.max(0, verseIndexProp), Math.max(0, nVerses - 1))
-    : homeVerseIndex;
   const showVerse = nVerses > 0;
+  const safeIndex = Math.min(activeIndex, Math.max(0, nVerses - 1));
+
+  const sec = secondaryList?.[safeIndex];
+  const showSecondary = Boolean(bilingual && sec?.lines?.length);
+  const activeVerse = HOME_VERSES[safeIndex];
+  const primaryFlowText = useMemo(
+    () => joinVerseLinesForFlow(activeVerse?.lines ?? [], primaryLocale),
+    [activeVerse, primaryLocale],
+  );
+  const secondaryFlowText = useMemo(
+    () => joinVerseLinesForFlow(sec?.lines ?? [], secondaryLocale ?? "zh-CN"),
+    [sec, secondaryLocale],
+  );
+  const flowPrettyClass = "text-pretty";
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -166,63 +156,6 @@ export function HomeVerseRotator({
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
-
-  useEffect(() => {
-    if (paused) return;
-    const n = HOME_VERSES.length;
-    if (n <= 1) return;
-
-    if (prefersReducedMotion) {
-      const id = window.setInterval(() => {
-        setHomeVerseIndex((i) => (i + 1) % n);
-      }, HOME_VERSE_STABLE_MS);
-      return () => window.clearInterval(id);
-    }
-
-    let cancelled = false;
-    let tid: number | undefined;
-
-    const step = () => {
-      tid = window.setTimeout(() => {
-        if (cancelled) return;
-        setHomeVerseVisible(false);
-        tid = window.setTimeout(() => {
-          if (cancelled) return;
-          setHomeVerseIndex((i) => (i + 1) % n);
-          requestAnimationFrame(() => setHomeVerseVisible(true));
-          tid = window.setTimeout(step, HOME_VERSE_FADE_MS + HOME_VERSE_STABLE_MS);
-        }, HOME_VERSE_FADE_MS);
-      }, HOME_VERSE_STABLE_MS);
-    };
-
-    step();
-    return () => {
-      cancelled = true;
-      if (tid !== undefined) window.clearTimeout(tid);
-    };
-  }, [paused, prefersReducedMotion, locale, bilingual, HOME_VERSES.length, entriesByLocale]);
-
-  useEffect(() => {
-    if (paused) return;
-    setHomeVerseIndex(0);
-    setHomeVerseVisible(true);
-    lastCommittedIndex.current = -1;
-  }, [paused, locale, verseKeysSig, bilingual]);
-
-  useEffect(() => {
-    if (paused) return;
-    if (!verseKeys?.length || !onVerseCommitted) return;
-    const prev = lastCommittedIndex.current;
-    if (prev >= 0 && prev !== homeVerseIndex) {
-      const k = verseKeys[prev];
-      if (k) onVerseCommitted(k);
-    }
-    lastCommittedIndex.current = homeVerseIndex;
-  }, [paused, homeVerseIndex, verseKeys, onVerseCommitted]);
-
-  useEffect(() => {
-    onNearEnd?.(activeIndex, HOME_VERSES.length);
-  }, [activeIndex, HOME_VERSES.length, onNearEnd]);
 
   useLayoutEffect(() => {
     if (!isGoldenVerses) return;
@@ -251,7 +184,7 @@ export function HomeVerseRotator({
       goldenFitRafRef.current = null;
       clearGoldenWideFitStyles(root);
     };
-  }, [isGoldenVerses, activeIndex, bilingual, verseKeysSig, HOME_VERSES, secondaryList, goldenVerseFontFamily, goldenVerseTextEffect]);
+  }, [isGoldenVerses, safeIndex, bilingual, HOME_VERSES, secondaryList, goldenVerseFontFamily, goldenVerseTextEffect, primaryFlowText, secondaryFlowText]);
 
   const lineClass = (() => {
     /** 双语时英文主文：行距空隙减半 `1 + (L-1)/2` */
@@ -386,9 +319,6 @@ export function HomeVerseRotator({
 
   const secondaryBlockMargin = bilingual ? (isNature ? "mt-2 sm:mt-2.5" : "mt-2") : isNature ? "mt-4 sm:mt-5" : "mt-4";
 
-  const sec = secondaryList?.[activeIndex];
-  const showSecondary = Boolean(bilingual && sec?.lines?.length);
-
   if (!showVerse) {
     return null;
   }
@@ -403,33 +333,33 @@ export function HomeVerseRotator({
       <blockquote
         className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${blockquoteStack}`}
         style={{
-          opacity: paused || homeVerseVisible ? 1 : 0,
-          transitionDuration: paused || prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,
+          opacity: homeVerseVisible ? 1 : 0,
+          transitionDuration: prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,
         }}
       >
-        {(HOME_VERSES[activeIndex]?.lines ?? []).map((line, i) => (
+        {primaryFlowText ? (
           <p
-            key={`${activeIndex}-p-${i}`}
-            className={lineClass}
+            key={`${safeIndex}-p-flow`}
+            className={`${lineClass} ${flowPrettyClass}`.trim()}
             data-golden-fit={isGoldenVerses ? "line" : undefined}
           >
-            {line}
+            {primaryFlowText}
           </p>
-        ))}
+        ) : null}
         <footer className={refClass} data-golden-fit={isGoldenVerses ? "ref" : undefined}>
-          {HOME_VERSES[activeIndex]?.ref ?? ""}
+          {HOME_VERSES[safeIndex]?.ref ?? ""}
         </footer>
         {showSecondary ? (
           <div className={secondaryBlockMargin}>
-            {(sec?.lines ?? []).map((line, i) => (
+            {secondaryFlowText ? (
               <p
-                key={`${activeIndex}-s-${i}`}
-                className={secondaryLineClass}
+                key={`${safeIndex}-s-flow`}
+                className={`${secondaryLineClass} ${flowPrettyClass}`.trim()}
                 data-golden-fit={isGoldenVerses ? "secondary" : undefined}
               >
-                {line}
+                {secondaryFlowText}
               </p>
-            ))}
+            ) : null}
             {sec?.ref ? (
               <footer className={secondaryRefClass} data-golden-fit={isGoldenVerses ? "ref" : undefined}>
                 {sec.ref}

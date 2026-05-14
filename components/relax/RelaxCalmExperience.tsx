@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
@@ -15,35 +15,32 @@ import {
 } from "@/lib/relax/visual-effects";
 import { LagoonBreatheOrb } from "@/components/calm/LagoonBreatheOrb";
 import { HomeVerseRotatorWithPrayerPool } from "@/components/home/HomeVerseRotatorWithPrayerPool";
-import type { AppLocale } from "@/lib/i18n/config";
-import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 
 /** 画面效果名在经文下轻提示的显示时长（毫秒） */
 const RELAX_EFFECT_HINT_MS = 5000;
+/** 进入放松页顶部引导小字：略短于效果名，避免抢主区 */
+const RELAX_GUIDE_HINT_MS = 3200;
 
 type Props = {
   initial: RelaxSettingsV1;
   /** 外层已包 `ShellTemplateChromeLayout` 时：用 flex 填满主区，不再占满整屏视口。 */
   layout?: "standalone" | "templateChrome";
-  homeVerseRotation?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 /**
  * 放松会话：静湖浅色天青底 + 视频/渐变铺满；不在本页提供播放/进度控件（由音乐页或底栏等控制）。
  * `templateChrome`：无返回、无会话标题，主区全幅铺满（供 `/relax` 与壳模板同源）。
  */
-export function RelaxCalmExperience({ initial, layout = "standalone", homeVerseRotation }: Props) {
+export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
   const { t } = useLocale();
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
-  const verseFallback = useMemo(
-    () => homeVerseRotation ?? ({ "zh-CN": [], en: [] } as Record<AppLocale, HomeVerseEntry[]>),
-    [homeVerseRotation],
-  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   const [relaxEffectHintVisible, setRelaxEffectHintVisible] = useState(true);
   const relaxEffectHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [relaxGuideVisible, setRelaxGuideVisible] = useState(true);
+  const relaxGuideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { canPlay } = useMusicShellPlayback();
 
   useEffect(() => {
@@ -63,6 +60,18 @@ export function RelaxCalmExperience({ initial, layout = "standalone", homeVerseR
     }, RELAX_EFFECT_HINT_MS);
     return () => {
       if (relaxEffectHintTimerRef.current) clearTimeout(relaxEffectHintTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    setRelaxGuideVisible(true);
+    if (relaxGuideTimerRef.current) clearTimeout(relaxGuideTimerRef.current);
+    relaxGuideTimerRef.current = setTimeout(() => {
+      relaxGuideTimerRef.current = null;
+      setRelaxGuideVisible(false);
+    }, RELAX_GUIDE_HINT_MS);
+    return () => {
+      if (relaxGuideTimerRef.current) clearTimeout(relaxGuideTimerRef.current);
     };
   }, []);
 
@@ -199,12 +208,21 @@ export function RelaxCalmExperience({ initial, layout = "standalone", homeVerseR
             className={`flex flex-col items-center gap-y-11 sm:gap-y-14 ${ln}:gap-y-6 ${ln}:justify-center`}
           >
             <div
-              className={`flex shrink-0 items-center justify-center ${ln}:scale-[0.88] motion-reduce:scale-100`}
+              className={`relative flex shrink-0 flex-col items-center justify-center ${ln}:scale-[0.88] motion-reduce:scale-100`}
             >
+              <p
+                role="status"
+                aria-live="polite"
+                className={[
+                  "pointer-events-none absolute bottom-full left-1/2 z-[1] mb-2 w-[min(100%,19rem)] -translate-x-1/2 px-2 text-center text-[10px] font-normal leading-snug text-ink/42 transition-opacity duration-700 ease-out motion-reduce:transition-none sm:mb-2.5 sm:max-w-[21rem] sm:text-[11px] sm:leading-relaxed sm:text-ink/38",
+                  relaxGuideVisible ? "opacity-100" : "opacity-0",
+                ].join(" ")}
+              >
+                {t("relax.guideHint")}
+              </p>
               <LagoonBreatheOrb />
             </div>
             <HomeVerseRotatorWithPrayerPool
-              fallbackByLocale={verseFallback}
               variant="light"
               className={`min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] landscape:max-w-[min(92vw,40rem)] md:landscape:max-w-[min(86vw,46rem)] ${ln}:min-h-[5.25rem] ${ln}:max-w-[min(100%,18rem)]`}
             />

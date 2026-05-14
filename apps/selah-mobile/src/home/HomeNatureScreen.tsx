@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchNatureSettings } from "../api/fetchNatureSettings";
 import { getSelahBaseUrl, toAbsoluteUrl } from "../config/selahBaseUrl";
 import { resolveNaturePlayback } from "../nature/resolveNaturePlayback";
-import { EMPTY_NATURE_AMBIENT_LAYERS, useNatureAmbientMix } from "../nature/useNatureAmbientMix";
 import { strings } from "../strings";
 import type { NatureSettingsV2, NatureVideoEntry } from "../types/nature";
 
@@ -77,14 +76,6 @@ export function HomeNatureScreen() {
   const videoUri = playback?.videoSrc ? toAbsoluteUrl(baseUrl, playback.videoSrc) : "";
   const posterUri = playback?.posterSrc ? toAbsoluteUrl(baseUrl, playback.posterSrc) : "";
   const clampedRate = Math.min(2, Math.max(0.5, settings?.playbackRate ?? 1));
-
-  const ambientLayers = playback?.ambientLayers ?? EMPTY_NATURE_AMBIENT_LAYERS;
-  const ambientKey = useMemo(() => {
-    if (!playback?.ambientLayers?.length) return "";
-    return playback.ambientLayers.map((l) => `${l.layerId}|${l.src}|${l.volume}`).join(";;");
-  }, [playback]);
-
-  useNatureAmbientMix(baseUrl, ambientLayers, ambientKey, clampedRate, Boolean(settings && playback && videoUri));
 
   const videoRef = useRef<ElementRef<typeof Video>>(null);
 

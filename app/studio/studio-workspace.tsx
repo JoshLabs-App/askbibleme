@@ -913,12 +913,6 @@ export default function StudioWorkspace({
             >
               {embedInAdmin ? "← 管理概览" : "← 返回"}
             </Link>
-            <Link
-              href="/admin/visual"
-              className="mt-2 block text-[10px] text-muted transition hover:text-ink"
-            >
-              播放视觉 →
-            </Link>
             <div className="mt-1.5 text-[12px] font-medium leading-tight tracking-tight text-ink">
               Selah.my Studio
             </div>

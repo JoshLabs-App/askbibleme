@@ -49,7 +49,6 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/music", labelKey: "admin.items.musicLibrary" },
       { href: "/admin/music/nature", labelKey: "admin.items.natureProduct" },
-      { href: "/admin/visual", labelKey: "admin.items.playbackVisual" },
     ],
   },
   { kind: "leaf", id: "journey", href: "/admin/journey", labelKey: "admin.items.journey" },

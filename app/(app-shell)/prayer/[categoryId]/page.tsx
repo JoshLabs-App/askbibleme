@@ -38,11 +38,7 @@ export default async function PrayerCategoryPage({ params }: Props) {
   const related = getRelatedTopicsForCategory(cwd, categoryId, 6);
 
   return (
-    <ShellTemplateChromeLayout
-      contentClassName="gap-0"
-      suppressEdgeScrim
-      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
-    >
+    <ShellTemplateChromeLayout contentClassName="gap-0" appShellBackground={PRAYER_SHELL_FILL_LIGHT}>
       <PrayerPageFrame>
         <PrayerBreadcrumb items={[{ href: "/", label: "首页" }, { href: "/prayer", label: "祷告" }]} />
 

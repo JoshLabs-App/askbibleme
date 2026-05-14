@@ -1,29 +1,56 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
 const PREFETCH_STAGGER_MS = 550;
 
 /**
- * 进入前台壳后，在浏览器空闲时错峰预取配置里前几条自然背景成片（`link rel=prefetch`），
- * 不阻塞首屏；尊重 Save-Data；仅同源 `/nature/uploads/*.mp4`。
+ * 仅在标签页前台可见、且非 iOS、非 Save-Data、非低内存机时，于 idle 错峰 `link rel=prefetch` 若干成片。
+ * 隐藏或后台：取消排队并移除已注入的 link，避免不可见 Tab 继续拉满大媒体。
  */
 export function NatureBackgroundVideoPrefetch() {
+  const sessionRef = useRef(0);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
-    /** iOS：多路 mp4 prefetch + 主视频易顶内存；壳内已有首条播放，其余按需再拉 */
     if (isIosLikeUserAgent()) return;
 
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
     if (conn?.saveData) return;
 
-    let cancelled = false;
+    const dm = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+    if (typeof dm === "number" && dm > 0 && dm <= 4) return;
+
+    let disposed = false;
     const timers: number[] = [];
     const injected: HTMLLinkElement[] = [];
 
-    const prefetchUrl = (href: string) => {
-      if (cancelled) return;
+    const clearTimers = () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.length = 0;
+    };
+
+    const removeInjected = () => {
+      for (const link of injected) {
+        try {
+          link.remove();
+        } catch {
+          /* ignore */
+        }
+      }
+      injected.length = 0;
+    };
+
+    const bumpSession = () => {
+      sessionRef.current += 1;
+      clearTimers();
+      removeInjected();
+    };
+
+    const prefetchUrl = (href: string, sid: number) => {
+      if (disposed || sid !== sessionRef.current) return;
+      if (document.visibilityState !== "visible") return;
       let abs: string;
       try {
         abs = new URL(href, window.location.origin).href;
@@ -39,40 +66,79 @@ export function NatureBackgroundVideoPrefetch() {
       injected.push(link);
     };
 
-    const start = () => {
-      if (cancelled) return;
+    const runPrefetch = (sid: number) => {
+      if (disposed || sid !== sessionRef.current) return;
+      if (document.visibilityState !== "visible") return;
       void (async () => {
         let urls: string[] = [];
         try {
           const r = await fetch("/api/nature/prefetch-srcs");
-          if (!r.ok) return;
+          if (!r.ok || disposed || sid !== sessionRef.current) return;
           const j = (await r.json()) as { urls?: unknown };
           if (!Array.isArray(j.urls)) return;
           urls = j.urls.filter((u): u is string => typeof u === "string");
         } catch {
           return;
         }
-        if (cancelled || !urls.length) return;
+        if (disposed || sid !== sessionRef.current || !urls.length) return;
+        if (document.visibilityState !== "visible") return;
         urls.forEach((href, i) => {
-          const id = window.setTimeout(() => prefetchUrl(href), i * PREFETCH_STAGGER_MS);
+          const id = window.setTimeout(() => prefetchUrl(href, sid), i * PREFETCH_STAGGER_MS);
           timers.push(id);
         });
       })();
     };
 
-    const idleId =
-      typeof window.requestIdleCallback === "function"
-        ? window.requestIdleCallback(start, { timeout: 8000 })
-        : null;
-    const fallbackId = idleId == null ? window.setTimeout(start, 2200) : null;
+    let idleHandle: number | null = null;
+    let fallbackTimer: number | null = null;
+
+    const cancelIdleKick = () => {
+      if (idleHandle != null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
+      idleHandle = null;
+      if (fallbackTimer != null) {
+        window.clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+    };
+
+    const schedulePrefetch = () => {
+      cancelIdleKick();
+      bumpSession();
+      const sid = sessionRef.current;
+      if (document.visibilityState !== "visible") return;
+
+      const kick = () => {
+        idleHandle = null;
+        fallbackTimer = null;
+        runPrefetch(sid);
+      };
+
+      if (typeof window.requestIdleCallback === "function") {
+        idleHandle = window.requestIdleCallback(kick, { timeout: 8000 });
+      } else {
+        fallbackTimer = window.setTimeout(kick, 2200);
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") {
+        bumpSession();
+        cancelIdleKick();
+        return;
+      }
+      schedulePrefetch();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    schedulePrefetch();
 
     return () => {
-      cancelled = true;
-      if (idleId != null && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-      if (fallbackId != null) window.clearTimeout(fallbackId);
-      timers.forEach((id) => window.clearTimeout(id));
+      disposed = true;
+      bumpSession();
+      cancelIdleKick();
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

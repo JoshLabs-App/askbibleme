@@ -18,7 +18,6 @@ const overview: {
     items: [
       { href: "/admin/music", label: "曲库与配图", hint: "上传音频与背景图，写入 companion" },
       { href: "/admin/music/nature", label: "自然", hint: "全屏自然影片、专辑式预览与前台对照" },
-      { href: "/admin/visual", label: "播放视觉", hint: "滑杆、氛围、引擎与导入导出" },
     ],
   },
   {

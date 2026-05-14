@@ -20,20 +20,11 @@ export function resolveNaturePlayback(s: NatureSettingsV2): {
     (rowPreview && rowPreview.length > 0 ? rowPreview : undefined) ??
     (rowThumb && rowThumb.length > 0 ? rowThumb : undefined);
   const previewStillSrc = posterFromRow;
-  const clipById = new Map((s.ambientClips ?? []).map((c) => [c.id, c]));
-  const mix = row?.mix ?? [];
-  const ambientLayers = mix
-    .map((layer) => {
-      const clip = clipById.get(layer.clipId);
-      const src = clip?.src.trim() ?? "";
-      if (!src) return null;
-      return {
-        layerId: layer.id,
-        src,
-        volume: layer.volume,
-      };
-    })
-    .filter((x): x is { layerId: string; src: string; volume: number } => x !== null);
+  /**
+   * 与 Web `lib/nature/nature-video-ambient-audio.ts` 产品默认一致：自然主视频不叠环境声，
+   * 直至提供用户开关后再与 Web 共用 `NATURE_VIDEO_AMBIENT_AUDIO_ENABLED` / 混音构建逻辑。
+   */
+  const ambientLayers: { layerId: string; src: string; volume: number }[] = [];
   const posterSrcMerged = posterFromRow ?? posterSrc;
   return {
     videoSrc,

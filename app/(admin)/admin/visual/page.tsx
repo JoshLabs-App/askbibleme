@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import { MusicVisualConsoleClient } from "@/components/music-visual-console/MusicVisualConsoleClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "播放视觉",
-  description: "首页氛围与播放视觉调参、实时 drive、导入导出（统一后台内）",
-};
-
+/** 播放视觉功能已移除；旧链接重定向到后台首页 */
 export default function AdminVisualPage() {
-  return <MusicVisualConsoleClient embeddedInAdmin />;
+  redirect("/admin");
 }

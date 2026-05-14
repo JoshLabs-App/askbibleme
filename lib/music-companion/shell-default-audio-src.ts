@@ -1,3 +1,4 @@
+import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
 import type { MusicCompanionStore, Scene } from "./types";
 
 function pickScene(store: MusicCompanionStore): Scene | null {
@@ -34,4 +35,27 @@ export function getShellDefaultAudioSrc(store: MusicCompanionStore): string | nu
   if (tracksWithSrc.length === 1) return tracksWithSrc[0].src?.trim() ?? null;
   const i = Math.floor(Math.random() * tracksWithSrc.length);
   return tracksWithSrc[i]?.src?.trim() ?? null;
+}
+
+/**
+ * 从曲库随机选一条可播 URL；多曲时尽量避开 `exceptUrl`（用于「下一首随机」）。
+ */
+export function pickRandomShellAudioTrackSrc(
+  store: MusicCompanionStore,
+  exceptUrl: string | null | undefined,
+): string | null {
+  const tracks = store.audioTracks.filter((t) => Boolean(t.src?.trim()));
+  if (tracks.length === 0) return null;
+  const ex = (exceptUrl ?? "").trim();
+  if (tracks.length === 1) {
+    const u = tracks[0]!.src!.trim();
+    return u || null;
+  }
+  let pick = tracks[Math.floor(Math.random() * tracks.length)]!;
+  for (let g = 0; g < 40; g++) {
+    const u = (pick.src ?? "").trim();
+    if (!ex || !shellPlaybackUrlsEqual(u, ex)) break;
+    pick = tracks[Math.floor(Math.random() * tracks.length)]!;
+  }
+  return (pick.src ?? "").trim() || null;
 }

@@ -19,7 +19,10 @@ type Value = {
 
 const HomeDockChromeContext = createContext<Value | null>(null);
 
-/** 自然首页 `/`、`/nature` 等：底区场景卡由 `DockChromeCollapse` 控制；默认收起，点画面切换。 */
+/** 自然首页进入时展开场景卡，此后自动收起（毫秒） */
+const NATURE_DOCK_SCENE_AUTO_HIDE_MS = 5000;
+
+/** 自然首页 `/`、`/nature` 等：底区场景卡由 `DockChromeCollapse` 控制；进入时先展开约 5s 后自动收起，点主画面可再展开/收起。 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
   return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
@@ -30,6 +33,11 @@ export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
   const [dockChromeVisible, setDockChromeVisible] = useState(false);
 
   useEffect(() => {
+    if (isNatureHomeShellPath(pathname)) {
+      setDockChromeVisible(true);
+      const id = window.setTimeout(() => setDockChromeVisible(false), NATURE_DOCK_SCENE_AUTO_HIDE_MS);
+      return () => window.clearTimeout(id);
+    }
     setDockChromeVisible(false);
   }, [pathname]);
 

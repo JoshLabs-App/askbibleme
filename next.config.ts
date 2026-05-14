@@ -10,9 +10,9 @@ const nextConfig: NextConfig = {
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根
   outputFileTracingRoot: path.join(__dirname),
 
-  /** 旧书签 `/music-visual-console` → 后台播放视觉 */
+  /** 旧书签 `/music-visual-console` → 管理概览 */
   async redirects() {
-    return [{ source: "/music-visual-console", destination: "/admin/visual", permanent: true }];
+    return [{ source: "/music-visual-console", destination: "/admin", permanent: true }];
   },
 
   /**

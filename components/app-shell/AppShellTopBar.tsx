@@ -10,13 +10,12 @@ import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
 import { isNatureHomeShellPath, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
-import { subscribeSiteBrandingUpdated } from "@/lib/branding-broadcast";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
 import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
 
-/** 常规手机最小触控约 44×44（iOS HIG / Material）；顶栏按钮统一此尺寸 */
+/** 常规手机最小触控约 44×44（iOS HIG / Material）；壳层角标按钮统一此尺寸 */
 const HIT = "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]";
 
 function formatShellInsetTime(d: Date) {
@@ -64,7 +63,7 @@ function TopShellInsetTime({ visible, tone }: { visible: boolean; tone: AppShell
       className={[
         "pointer-events-none fixed left-1/2 z-[52] -translate-x-1/2 select-none font-medium tabular-nums portrait:opacity-100 landscape:opacity-50",
         "text-[14px] tracking-[0.04em] sm:text-[15px] sm:tracking-[0.05em]",
-        "portrait:-translate-y-1/2 portrait:top-[calc(max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))+1.375rem)] portrait:bottom-auto portrait:sm:top-[calc(max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))+1.375rem)]",
+        "portrait:top-[calc(env(safe-area-inset-top,0px)+0.2rem)] portrait:bottom-auto portrait:translate-y-0",
         "landscape:translate-y-0 landscape:top-auto landscape:bottom-[10%]",
         "landscape:text-[28px] landscape:tracking-[0.06em] landscape:sm:text-[30px] landscape:sm:tracking-[0.07em]",
         onLight ? "text-ink" : "text-white",
@@ -98,12 +97,9 @@ const DRAWER_TRANSITION_MS = 300;
 
 const drawerNavLinks: {
   href: string;
-  labelKey: "nav.music" | "nav.relax" | "nav.explore" | "nav.goldenVerses" | "nav.shellTemplate";
+  labelKey: "nav.music" | "nav.shellTemplate";
 }[] = [
   { href: "/music", labelKey: "nav.music" },
-  { href: "/relax", labelKey: "nav.relax" },
-  { href: "/explore", labelKey: "nav.explore" },
-  { href: "/verse", labelKey: "nav.goldenVerses" },
   { href: "/template", labelKey: "nav.shellTemplate" },
 ];
 
@@ -119,16 +115,16 @@ const EDGE_SWIPE_START_MAX_X = 28;
 export type AppShellTopBarTone = "onDark" | "onLight";
 
 type Props = {
-  /** 深色底用 `onDark`，浅色底用 `onLight`（顶栏图标 hover 等） */
+  /** 深色底用 `onDark`，浅色底用 `onLight`（角标图标 hover 等） */
   tone?: AppShellTopBarTone;
-  /** 顶栏右上（如自然页环境声静音）；未传时用占位保持与左侧按钮对称 */
+  /** 右上槽（如自然页静音）；不传则仅显示菜单 */
   rightAccessory?: ReactNode;
   /**
-   * 手机横屏沉浸：顶栏淡出且不可点；左缘窄条仍可滑开菜单（见同文件 edge strip）。
+   * 手机横屏沉浸：角标淡出且不可点；左缘窄条仍可滑开菜单（见同文件 edge strip）。
    */
   landscapeImmersive?: boolean;
   /**
-   * 与 `landscapeImmersive` 无关的「顶栏行内时间」：如自然页横屏有主视频时，顶栏仍可见但需在菜单行高度显示时间。
+   * 与 `landscapeImmersive` 无关：在状态栏附近显示壳层时间（如自然页横屏有主视频时）。
    */
   showTopInsetTime?: boolean;
 };
@@ -137,7 +133,7 @@ type Props = {
 const NAV_DRAWER_PORTAL_Z = 80;
 
 /**
- * 应用壳默认顶栏：左上打开 **Notion 式左侧全高抽屉**（主导航 + 语言）；抽屉经 Portal 叠在底栏之上。
+ * 应用壳角标式浮动控制：左上打开 **Notion 式左侧全高抽屉**（主导航 + 语言）；抽屉经 Portal 叠在底栏之上。无整行顶栏。
  */
 export function AppShellTopBar({
   tone = "onDark",
@@ -162,9 +158,6 @@ export function AppShellTopBar({
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerEntered, setDrawerEntered] = useState(false);
   const [localePickerOpen, setLocalePickerOpen] = useState(false);
-  /** 与 `/api/admin/branding` 一致：有资源时顶栏中央展示透明 LOGO */
-  const [brandLogoSrc, setBrandLogoSrc] = useState<string | null>(null);
-  const brandFetchAbortRef = useRef<AbortController | null>(null);
   const navEdgeStripRef = useRef<HTMLButtonElement>(null);
   const suppressNavEdgeClickRef = useRef(false);
   const edgeSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -271,60 +264,12 @@ export function AppShellTopBar({
     };
   }, [navOpen, openNavMenu]);
 
-  const loadBrandingLogo = useCallback(() => {
-    brandFetchAbortRef.current?.abort();
-    const ac = new AbortController();
-    brandFetchAbortRef.current = ac;
-    void (async () => {
-      try {
-        const res = await fetch("/api/admin/branding", { signal: ac.signal, cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as {
-          logoReady?: boolean;
-          iconsReady?: boolean;
-          state?: { logoKind?: string; updatedAt?: string } | null;
-          urls?: { logo?: string; vector?: string } | null;
-        };
-        if (ac.signal.aborted) return;
-        if (!data.logoReady || !data.state?.updatedAt) {
-          setBrandLogoSrc(null);
-          return;
-        }
-        const v = encodeURIComponent(data.state.updatedAt);
-        const src =
-          data.state.logoKind === "svg" && data.urls?.vector
-            ? `${data.urls.vector}?v=${v}`
-            : data.urls?.logo
-              ? `${data.urls.logo}?v=${v}`
-              : null;
-        if (!src) {
-          setBrandLogoSrc(null);
-          return;
-        }
-        setBrandLogoSrc(src);
-      } catch {
-        if (!ac.signal.aborted) setBrandLogoSrc(null);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    loadBrandingLogo();
-    return () => {
-      brandFetchAbortRef.current?.abort();
-    };
-  }, [loadBrandingLogo]);
-
-  useEffect(() => {
-    return subscribeSiteBrandingUpdated(() => loadBrandingLogo());
-  }, [loadBrandingLogo]);
-
   const openNav = () => {
     toggleNavMenu();
   };
 
-  /** 顶栏下缘大致位置，左缘窄条从此向下延伸（与加大后的 pt + 44px 行对齐） */
-  const edgeStripTopClass = "top-[calc(env(safe-area-inset-top,0px)+6.25rem)]";
+  /** 角标区下缘大致位置，左缘窄条从此向下延伸（safe-area + ~44px 菜单行 + 少量空隙） */
+  const edgeStripTopClass = "top-[calc(env(safe-area-inset-top,0px)+3.75rem)]";
 
   const drawerMotion = "transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] motion-reduce:transition-none motion-reduce:duration-0";
 
@@ -341,7 +286,7 @@ export function AppShellTopBar({
         ref={navEdgeStripRef}
         tabIndex={-1}
         aria-hidden
-        className={`fixed bottom-[calc(4.85rem+env(safe-area-inset-bottom))] left-0 z-[48] w-6 min-w-[1.25rem] cursor-pointer border-0 bg-transparent py-0 pl-[env(safe-area-inset-left)] pr-0 outline-none ${edgeStripTopClass}`}
+        className={`fixed bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] left-0 z-[48] w-6 min-w-[1.25rem] cursor-pointer border-0 bg-transparent py-0 pl-[env(safe-area-inset-left)] pr-0 outline-none ${edgeStripTopClass}`}
         onClick={() => {
           if (suppressNavEdgeClickRef.current) {
             suppressNavEdgeClickRef.current = false;
@@ -350,56 +295,31 @@ export function AppShellTopBar({
           toggleNavMenu();
         }}
       />
-      <header
+      <div
         className={[
-          "pointer-events-none absolute inset-x-0 top-0 z-[50] overflow-visible px-4 pt-[max(2.125rem,calc(env(safe-area-inset-top,0px)+1.5rem))] pb-1.5 transition-opacity duration-300 motion-reduce:transition-none sm:px-5 sm:pt-[max(2.375rem,calc(env(safe-area-inset-top,0px)+1.75rem))] sm:pb-2",
+          "pointer-events-none fixed inset-x-0 top-0 z-[50] flex items-start justify-between gap-2 pt-[max(0.35rem,env(safe-area-inset-top,0px))] pl-[max(0.35rem,env(safe-area-inset-left,0px))] pr-[max(0.35rem,env(safe-area-inset-right,0px))] transition-opacity duration-300 motion-reduce:transition-none",
           landscapeImmersive
-            ? "opacity-0 [&_.pointer-events-auto]:pointer-events-none"
+            ? "opacity-0 [&_.chrome-float-hit]:pointer-events-none"
             : "opacity-100",
         ].join(" ")}
         aria-hidden={landscapeImmersive ? true : undefined}
         inert={landscapeImmersive ? true : undefined}
       >
-        <div className="grid w-full min-h-[44px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-visible">
-          <div className="pointer-events-auto relative justify-self-start">
-            <button
-              type="button"
-              onClick={openNav}
-              aria-label={navOpen ? t("chrome.closeNavMenu") : t("chrome.openNavMenu")}
-              aria-expanded={navOpen}
-              aria-haspopup="dialog"
-              aria-controls="app-shell-nav-drawer"
-              className={iconBtn}
-            >
-              <IconMenu className="h-3 w-[1.125rem] opacity-90" />
-            </button>
-          </div>
-
-          <div className="pointer-events-auto flex min-w-0 max-w-[min(52vw,14rem)] justify-center justify-self-center">
-            {brandLogoSrc ? (
-              <Link
-                href="/"
-                className="flex h-11 max-h-[44px] items-center py-1"
-                aria-label={t("nav.home")}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- 动态 branding 查询串；无需 Image 优化 */}
-                <img
-                  src={brandLogoSrc}
-                  alt=""
-                  className="max-h-9 w-auto max-w-full object-contain opacity-[0.92] drop-shadow-sm transition hover:opacity-100"
-                  decoding="async"
-                />
-              </Link>
-            ) : (
-              <span className="h-11 w-px shrink-0" aria-hidden />
-            )}
-          </div>
-
-          <div className="pointer-events-auto relative z-[55] isolate flex touch-manipulation justify-end justify-self-end overflow-visible">
-            {rightAccessory ?? <span className="h-11 w-11 shrink-0" aria-hidden />}
-          </div>
+        <div className="chrome-float-hit pointer-events-auto">
+          <button
+            type="button"
+            onClick={openNav}
+            aria-label={navOpen ? t("chrome.closeNavMenu") : t("chrome.openNavMenu")}
+            aria-expanded={navOpen}
+            aria-haspopup="dialog"
+            aria-controls="app-shell-nav-drawer"
+            className={iconBtn}
+          >
+            <IconMenu className="h-3 w-[1.125rem] opacity-90" />
+          </button>
         </div>
-      </header>
+        <div className="chrome-float-hit pointer-events-auto flex flex-col items-end gap-2">{rightAccessory}</div>
+      </div>
 
       {bodyPortalReady && drawerVisible
         ? createPortal(

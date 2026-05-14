@@ -38,11 +38,7 @@ export default async function PrayerTopicPage({ params }: Props) {
   ];
 
   return (
-    <ShellTemplateChromeLayout
-      contentClassName="gap-0"
-      suppressEdgeScrim
-      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
-    >
+    <ShellTemplateChromeLayout contentClassName="gap-0" appShellBackground={PRAYER_SHELL_FILL_LIGHT}>
       <PrayerPageFrame>
         <PrayerBreadcrumb items={crumbs} />
 

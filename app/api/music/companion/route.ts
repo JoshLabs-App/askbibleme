@@ -12,7 +12,8 @@ export async function GET() {
     const store = await readMusicCompanionStore(process.cwd());
     return NextResponse.json(store, {
       headers: {
-        "Cache-Control": "no-store, must-revalidate",
+        /** 曲库 JSON 很小；短私缓存减轻重复请求 */
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=120",
       },
     });
   } catch (e) {

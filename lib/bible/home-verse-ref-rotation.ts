@@ -1,6 +1,7 @@
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
+import type { VerseDisplayModeV1 } from "@/lib/home-prayer-pools/types";
 import { resolveVerseRefToHomeEntry } from "@/lib/bible/resolve-verse-range-for-display";
 import type { VerseRef } from "@/lib/bible/verse-ref";
 import { readExternalHomeVerseRotationSync } from "@/lib/scripture/read-external-home-verse-rotation";
@@ -29,7 +30,7 @@ export function getHomeVerseRotationRefs(cwd: string): VerseRef[] {
 /** @deprecated 使用 `getHomeVerseRotationRefs(process.cwd())`；保留导出名以免外部引用断裂。 */
 export const HOME_VERSE_ROTATION_REFS = HOME_VERSE_ROTATION_REFS_FALLBACK;
 
-const LOCALES: AppLocale[] = ["zh-CN", "en"];
+const SHELL_LOCALES: AppLocale[] = ["zh-CN", "en"];
 
 function buildForLocale(cwd: string, locale: AppLocale): HomeVerseEntry[] {
   const refs = getHomeVerseRotationRefs(cwd);
@@ -42,14 +43,44 @@ function buildForLocale(cwd: string, locale: AppLocale): HomeVerseEntry[] {
 }
 
 /**
- * 为首页轮播解析各语言经文；若译本缺失导致条目过少，回落到内置硬编码。
+ * 壳层 RSC 应解析哪些语言的轮播经文。
+ * - `primary`：只解析界面语言（与 `selah_locale` Cookie 一致），另一语言在 Record 中空数组，不占读盘解析。
+ * - `bilingual`：中英文都解析，保证同一索引对齐（与 `selah_verse_display` Cookie 一致）。
  */
-export function buildHomeVerseRotationByLocale(cwd: string): Record<AppLocale, HomeVerseEntry[]> {
+export function appLocalesForHomeVerseRotationShell(
+  verseDisplay: VerseDisplayModeV1,
+  uiLocale: AppLocale,
+): AppLocale[] {
+  if (verseDisplay === "bilingual") return [...SHELL_LOCALES];
+  return [uiLocale];
+}
+
+/**
+ * 只解析 `locales` 中的语言；其余键为 `[]`（客户端单语时走内置 `HOME_VERSES_BY_LOCALE` 兜底，不经 RSC 解析）。
+ */
+export function buildHomeVerseRotationForLocales(
+  cwd: string,
+  locales: ReadonlyArray<AppLocale>,
+): Record<AppLocale, HomeVerseEntry[]> {
+  const want = new Set<AppLocale>(locales);
   const refs = getHomeVerseRotationRefs(cwd);
   const result = {} as Record<AppLocale, HomeVerseEntry[]>;
-  for (const locale of LOCALES) {
+  for (const locale of SHELL_LOCALES) {
+    if (!want.has(locale)) {
+      result[locale] = [];
+      continue;
+    }
     const built = buildForLocale(cwd, locale);
-    result[locale] = built.length >= Math.min(4, refs.length) ? built : [...HOME_VERSES_BY_LOCALE[locale]];
+    result[locale] =
+      built.length >= Math.min(4, refs.length) ? built : [...HOME_VERSES_BY_LOCALE[locale]];
   }
   return result;
+}
+
+/**
+ * 为首页轮播解析各语言经文；若译本缺失导致条目过少，回落到内置硬编码。
+ * 全量构建（管理脚本、需双语的测试等）；前台页面优先用 `buildHomeVerseRotationFromShellCookies`。
+ */
+export function buildHomeVerseRotationByLocale(cwd: string): Record<AppLocale, HomeVerseEntry[]> {
+  return buildHomeVerseRotationForLocales(cwd, SHELL_LOCALES);
 }

@@ -31,10 +31,9 @@
   --brand-admin-muted: #94a9b8;
   --brand-admin-muted-rgb: 148 169 184;
   /**
-   * 与 `HomeBottomNav` 一致：底栏总高固定 **70px**（`box-border`，内含 `pt` / `pb` 与安全区），
-   * 自然首页视频槽首选「`[data-app-shell-scroll]` 的 `clientHeight`」与壳层同源；未量到前回退 `100dvh - var(--home-bottom-nav-slot)`。
+   * 不设底栏槽占位；自然页路由叠在视频上，其它页为 fixed 浮层。回退 `calc(100dvh - slot)` 中 slot 多为 0。
    */
-  --home-bottom-nav-slot: 70px;
+  --home-bottom-nav-slot: 0px;
 }
 
 html,
@@ -87,61 +86,6 @@ body {
   --brand-app-light-rgb: 251 251 250;
   --brand-app-dark: #37352f;
   --brand-app-dark-rgb: 55 53 47;
-}
-
-/**
- * 壳层 `--music-*` 由 MusicShellVisualProvider 写入。
- * 有预计算 JSON 时随真实能量变化；否则播放中仍有缓慢「呼吸」便于感知。
- */
-.music-reactive-home-glow {
-  opacity: calc(
-    (0.14 + var(--music-rms, 0.08) * 1.05 + var(--music-low, 0) * 0.42) * var(--music-tune-glow-mul, 1) *
-      var(--music-master, 1)
-  );
-}
-
-.music-reactive-home-glow-dark {
-  opacity: calc(
-    (0.18 + var(--music-rms, 0.08) * 1.15 + var(--music-low, 0) * 0.48) * var(--music-tune-glow-mul, 1) *
-      var(--music-tune-glow-dark-extra, 1) * var(--music-master, 1)
-  );
-}
-
-.music-reactive-play-btn {
-  transform: scale(
-    min(
-      1.48,
-      calc(
-        1 + (var(--music-rms, 0.08) * 0.14 + var(--music-mid, 0) * 0.1) * var(--music-tune-play-mul, 1)
-      )
-    )
-  );
-  transition: transform 0.1s ease-out;
-}
-
-/** 首页背景专用层（与前景兄弟）：极轻 scale 呼吸；不低于 1，避免缩小时露出外层 canvas 描边 */
-.music-reactive-home-shell {
-  /** 默认 origin 为居中时 scale>1 会把顶缘推出裁剪盒，Android 上常见 1px 浅色缝 */
-  transform-origin: center top;
-  transform: scale(
-    min(
-      18.5,
-      max(
-        1,
-        calc(1 + (var(--music-rms, 0.08) - 0.08) * var(--music-tune-shell-amp, 0.09) * var(--music-master, 1))
-      )
-    )
-  );
-  transition: transform 0.2s ease-out;
-  will-change: transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .music-reactive-home-shell,
-  .music-reactive-play-btn {
-    transform: none;
-    transition: none;
-  }
 }
 
 /**
@@ -359,7 +303,7 @@ html[data-landscape-immersive] .home-bottom-nav {
   display: none;
 }
 
-/* 金句页沉浸：隐藏底栏、顶栏由壳层不渲染；顶/底渐变由壳层 suppress；槽位归零便于主区用满 100dvh */
+/* 金句页沉浸：隐藏底栏；槽位归零便于主区用满 100dvh */
 html[data-golden-verses-chromeless] {
   --home-bottom-nav-slot: 0px;
 }

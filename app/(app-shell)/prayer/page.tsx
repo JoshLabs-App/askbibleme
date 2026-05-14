@@ -21,11 +21,7 @@ export default function PrayerIndexPage() {
   const categories = lib.categories;
 
   return (
-    <ShellTemplateChromeLayout
-      contentClassName="gap-0"
-      suppressEdgeScrim
-      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
-    >
+    <ShellTemplateChromeLayout contentClassName="gap-0" appShellBackground={PRAYER_SHELL_FILL_LIGHT}>
       <PrayerPageFrame>
         <div className="space-y-0">
           <PrayerHomeFirstScreen />

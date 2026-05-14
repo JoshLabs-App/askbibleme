@@ -517,6 +517,7 @@
   },
   "relax": {
     "back": "音乐首页",
+    "guideHint": "什么都不用做，停一会儿就好。",
     "sessionLabel": "放松",
     "effectPickerLabel": "画面效果",
     "effectLagoon": "静湖",

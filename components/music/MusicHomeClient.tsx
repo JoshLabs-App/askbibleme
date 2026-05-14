@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
@@ -9,8 +10,6 @@ import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseRotatorWithPrayerPool } from "@/components/home/HomeVerseRotatorWithPrayerPool";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import type { AppLocale } from "@/lib/i18n/config";
-import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
@@ -24,8 +23,6 @@ type Props = {
    * 缺省为独立全屏音乐页（历史行为）。
    */
   layout?: "standalone" | "templateChrome";
-  /** 由服务端从已导入译本解析的轮播经文 */
-  homeVerseRotation?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 function pickScene(store: MusicCompanionStore): Scene | null {
@@ -79,6 +76,27 @@ function urlsEqual(a: string, b: string): boolean {
   }
 }
 
+function MusicHomeTrackFromQuery({
+  tracksWithSrc,
+  bumpUserSkip,
+  setTrackPoolIdx,
+}: {
+  tracksWithSrc: AudioTrack[];
+  bumpUserSkip: () => void;
+  setTrackPoolIdx: (n: number) => void;
+}) {
+  const sp = useSearchParams();
+  useEffect(() => {
+    const tid = sp.get("track")?.trim();
+    if (!tid) return;
+    const idx = tracksWithSrc.findIndex((t) => t.id === tid);
+    if (idx < 0) return;
+    bumpUserSkip();
+    setTrackPoolIdx(idx);
+  }, [sp, tracksWithSrc, bumpUserSkip, setTrackPoolIdx]);
+  return null;
+}
+
 function countTracksWithSrc(store: MusicCompanionStore): number {
   return store.audioTracks.filter((t) => t.src?.trim()).length;
 }
@@ -87,55 +105,35 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
 const MUSIC_HOME_VERSE_CLASS =
   "w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]";
 
-export function MusicHomeClient({ initialStore, layout = "standalone", homeVerseRotation }: Props) {
+export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) {
   const { t, locale } = useLocale();
   const { bootstrapped, user } = useAskbibleUser();
   const showAdminMusicLink = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
 
-  const verseFallback = useMemo(
-    () => homeVerseRotation ?? ({ "zh-CN": [], en: [] } as Record<AppLocale, HomeVerseEntry[]>),
-    [homeVerseRotation],
-  );
-
-  const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc } = useMusicShellPlayback();
-  const [store, setStore] = useState<MusicCompanionStore>(initialStore);
+  const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc, musicStore } = useMusicShellPlayback();
+  /** 与壳层曲库同源：避免进页再打一遍 `/api/music/companion`；壳层拉取后自动更新 */
+  const store = musicStore ?? initialStore;
   const initialSi = initialSceneIndex(initialStore);
   const [sceneIndex, setSceneIndex] = useState(() => initialSi);
   const [trackPoolIdx, setTrackPoolIdx] = useState(() => computeRandomTrackPoolIdx(initialStore));
   const fullMusicSrcGateDone = useRef(false);
   /** 用户刚点上一首/下一首/随机：短时间内优先信任 trackPoolIdx，避免壳层 ended 已切歌而此处仍用旧 URL 把播放源推回去导致更新风暴 */
   const userSkipAtRef = useRef(0);
-  const bumpUserSkip = () => {
+  const bumpUserSkip = useCallback(() => {
     userSkipAtRef.current = typeof performance !== "undefined" ? performance.now() : 0;
-  };
+  }, []);
   const setPlaybackSrcRef = useRef(setPlaybackSrc);
   setPlaybackSrcRef.current = setPlaybackSrc;
 
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const res = await fetch("/api/music/companion", { cache: "no-store" });
-        if (!res.ok || cancelled) return;
-        const next = (await res.json()) as MusicCompanionStore | { error?: string };
-        if ("error" in next && next.error) return;
-        if (!cancelled) setStore(next as MusicCompanionStore);
-      } catch {
-        /* ignore */
-      }
-    };
-    void load();
-    const onVis = () => {
-      if (document.visibilityState === "visible") void load();
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      cancelled = true;
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, []);
+    const es = effectiveSrc.trim();
+    if (!es) return;
+    const list = store.audioTracks.filter((t) => Boolean(t.src?.trim()));
+    const j = list.findIndex((t) => urlsEqual((t.src ?? "").trim(), es));
+    if (j >= 0) setTrackPoolIdx(j);
+  }, [effectiveSrc, store.audioTracks]);
 
   const orderedScenes = useMemo(
     () => [...store.scenes].sort((a, b) => a.order - b.order),
@@ -308,6 +306,13 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
           : "relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none"
       }
     >
+      <Suspense fallback={null}>
+        <MusicHomeTrackFromQuery
+          tracksWithSrc={tracksWithSrc}
+          bumpUserSkip={bumpUserSkip}
+          setTrackPoolIdx={setTrackPoolIdx}
+        />
+      </Suspense>
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {!inTemplateChrome ? <AppShellTopBar tone="onLight" landscapeImmersive={landscapeNarrow} /> : null}
 
@@ -318,7 +323,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
             className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
               inTemplateChrome
                 ? `pt-1 ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
-                : `pt-[max(0.25rem,calc(env(safe-area-inset-top)+3.5rem))] ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
+                : `pt-[max(0.25rem,env(safe-area-inset-top,0px))] ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
             }`}
           >
             <div
@@ -337,7 +342,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
                         className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-ink/[0.04]"
                       >
                         <HomeVerseRotatorWithPrayerPool
-                          fallbackByLocale={verseFallback}
                           variant="light"
                           prominence="nature"
                           className={MUSIC_HOME_VERSE_CLASS}
@@ -345,7 +349,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone", homeVerse
                       </button>
                     ) : (
                       <HomeVerseRotatorWithPrayerPool
-                        fallbackByLocale={verseFallback}
                         variant="light"
                         prominence="nature"
                         className={MUSIC_HOME_VERSE_CLASS}

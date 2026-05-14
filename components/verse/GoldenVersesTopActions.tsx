@@ -39,14 +39,14 @@ const BTN_DARK =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/90 transition hover:bg-white/12 active:scale-[0.97]";
 
 type Props = {
-  /** `inline`：顶栏右上槽内；`floating`：沉浸态固定角标 */
+  /** `inline`：壳层右上槽内；`floating`：沉浸态固定角标 */
   layout: "inline" | "floating";
   /** 与 `GoldenVersesSettingsTopBar` 一致 */
   settingsVariant?: "light" | "dark";
 };
 
 /**
- * 全屏（沉浸壳）+ 设置齿轮。沉浸时顶栏被收起，仅 `floating` 这一条可见。
+ * 全屏（沉浸壳）+ 设置齿轮。沉浸时壳层角标收起，仅 `floating` 这一条可见。
  */
 export function GoldenVersesTopActions({ layout, settingsVariant }: Props) {
   const { t } = useLocale();

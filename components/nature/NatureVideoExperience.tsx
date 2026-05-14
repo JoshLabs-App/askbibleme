@@ -181,15 +181,51 @@ export function NatureVideoExperience({ initial }: Props) {
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
+  const [dwellPolicyResolved, setDwellPolicyResolved] = useState(false);
+  const [natureSettings, setNatureSettings] = useState<NatureSettingsV2>(initial);
   const [activeVideoId, setActiveVideoId] = useState(
     () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
   );
   const landscapeNarrow = useLandscapeNarrow();
 
   useEffect(() => {
+    setNatureSettings(initial);
     const next = initial.activeVideoId.trim() || initial.videos[0]?.id || "";
     setActiveVideoId(next);
   }, [initial]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/nature/settings", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as NatureSettingsV2 | null;
+        if (
+          cancelled ||
+          !data ||
+          data.version !== 2 ||
+          !Array.isArray(data.videos) ||
+          !Array.isArray(data.ambientClips)
+        ) {
+          return;
+        }
+        setNatureSettings(data);
+        setActiveVideoId((prev) => {
+          const ids = new Set(data.videos.map((v) => v.id.trim()).filter(Boolean));
+          const p = prev.trim();
+          if (p && ids.has(p)) return prev;
+          const fb = data.activeVideoId.trim() || data.videos[0]?.id || "";
+          return fb || prev;
+        });
+      } catch {
+        /* 离线等：保留构建期 initial */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
@@ -238,10 +274,10 @@ export function NatureVideoExperience({ initial }: Props) {
 
   const playbackSettings = useMemo(
     () => ({
-      ...initial,
-      activeVideoId: activeVideoId.trim() || initial.activeVideoId.trim() || initial.videos[0]?.id || "",
+      ...natureSettings,
+      activeVideoId: activeVideoId.trim() || natureSettings.activeVideoId.trim() || natureSettings.videos[0]?.id || "",
     }),
-    [initial, activeVideoId],
+    [natureSettings, activeVideoId],
   );
 
   const selectVideoAndImmersive = useCallback((id: string) => {
@@ -278,16 +314,29 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useEffect(() => {
     setDwellVideoAllowed(false);
-    if (!hasMainVideo || posterOnlyLowPower) return;
+    setDwellPolicyResolved(false);
+
+    if (!hasMainVideo) {
+      return;
+    }
+
+    if (posterOnlyLowPower) {
+      setDwellVideoAllowed(false);
+      setDwellPolicyResolved(true);
+      return;
+    }
+
     const id = window.setTimeout(() => {
+      setDwellPolicyResolved(true);
       const mem = mediaPolicy.deviceMemoryGb;
       const memoryOk = mem === undefined || mem >= 3;
       if (mediaPolicy.lowBatteryStatic || mediaPolicy.saveData || !memoryOk) {
         setDwellVideoAllowed(false);
-        return;
+      } else {
+        setDwellVideoAllowed(true);
       }
-      setDwellVideoAllowed(true);
     }, NATURE_SCENE_DWELL_MS);
+
     return () => window.clearTimeout(id);
   }, [
     activeVideoId,
@@ -297,7 +346,25 @@ export function NatureVideoExperience({ initial }: Props) {
     mediaPolicy.saveData,
     mediaPolicy.deviceMemoryGb,
   ]);
-  const rate = initial.playbackRate;
+
+  const conservationHintKey = useMemo(() => {
+    if (!hasMainVideo || showNatureVideoDecoder) return null;
+    if (mediaPolicy.lowBatteryStatic) return "lowBattery" as const;
+    if (!dwellPolicyResolved) return null;
+    if (mediaPolicy.saveData) return "saveData" as const;
+    const mem = mediaPolicy.deviceMemoryGb;
+    if (mem !== undefined && mem < 3) return "lowMemory" as const;
+    return null;
+  }, [
+    hasMainVideo,
+    showNatureVideoDecoder,
+    mediaPolicy.lowBatteryStatic,
+    mediaPolicy.saveData,
+    mediaPolicy.deviceMemoryGb,
+    dwellPolicyResolved,
+  ]);
+
+  const rate = natureSettings.playbackRate;
 
   const [introRevealed, setIntroRevealed] = useState(!hasStillIntro);
   const lastBufferRevealPollRef = useRef(0);
@@ -655,18 +722,18 @@ export function NatureVideoExperience({ initial }: Props) {
       if (e.pointerType === "mouse") return;
       const start = swipeBlankTouchRef.current;
       swipeBlankTouchRef.current = null;
-      if (!start || initial.videos.length < 2) return;
+      if (!start || natureSettings.videos.length < 2) return;
       const dx = e.clientX - start.x;
       const dy = e.clientY - start.y;
       if (Math.abs(dx) < NATURE_SCENE_SWIPE_MIN_DX || Math.abs(dx) < Math.abs(dy) * 1.15) return;
       const direction = (dx < 0 ? 1 : -1) as 1 | -1;
-      const next = adjacentNatureSceneId(initial.videos, activeVideoId, direction);
+      const next = adjacentNatureSceneId(natureSettings.videos, activeVideoId, direction);
       if (next && next !== activeVideoId.trim()) {
         suppressBlankTapRef.current = true;
         selectVideoAndImmersive(next);
       }
     },
-    [initial.videos, activeVideoId, selectVideoAndImmersive],
+    [natureSettings.videos, activeVideoId, selectVideoAndImmersive],
   );
 
   const onBlankClick = useCallback(
@@ -867,6 +934,17 @@ export function NatureVideoExperience({ initial }: Props) {
             >
               {showSlowIntroHint && !introRevealed ? t("nature.slowVisualHint") : t("nature.playbackBufferingHint")}
             </p>
+          ) : conservationHintKey ? (
+            <p
+              className="pointer-events-none absolute bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:left-6 sm:right-6 sm:text-[13px]"
+              aria-live="polite"
+            >
+              {conservationHintKey === "lowBattery"
+                ? t("nature.lowBatteryStillHint")
+                : conservationHintKey === "saveData"
+                  ? t("nature.saveDataStillHint")
+                  : t("nature.lowMemoryStillHint")}
+            </p>
           ) : null}
           <button
             type="button"
@@ -897,7 +975,7 @@ export function NatureVideoExperience({ initial }: Props) {
               <DockChromeCollapse>
                 <NatureSceneLayer
                   className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
-                  settings={initial}
+                  settings={natureSettings}
                   activeVideoId={playbackSettings.activeVideoId}
                   prepareSceneId={null}
                   prepareProgress={null}
@@ -940,7 +1018,7 @@ export function NatureVideoExperience({ initial }: Props) {
                 <DockChromeCollapse>
                   <NatureSceneLayer
                     className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
-                    settings={initial}
+                    settings={natureSettings}
                     activeVideoId={playbackSettings.activeVideoId}
                     prepareSceneId={null}
                     prepareProgress={null}

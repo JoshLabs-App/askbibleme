@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getAppBuildId } from "@/lib/app-build-id";
 
 /**
- * 返回当前服务端构建标识；客户端与 `body[data-app-build]` 对比，判断是否有新部署。
+ * 返回当前构建标识（与 `public/app-build.json`、`body[data-app-build]` 同源逻辑）。
+ * 客户端优先请求 `/app-build.json`；此处保留作兼容回源。
  */
 export async function GET() {
   return NextResponse.json(

@@ -162,6 +162,7 @@
     "musicAdmin": "首页管理",
     "playbackVisual": "播放视觉",
     "updateAvailable": "有新版本。点一下刷新即可载入最新界面（无需重新安装到桌面）。",
+    "updateForced": "发现新版本，页面将在片刻后自动刷新以载入最新界面。",
     "updateRefresh": "刷新",
     "updateLater": "稍后"
   },
@@ -486,6 +487,9 @@
     "noMusicHint": "暂无曲目。可在音乐首页或后台配置音频后再来。",
     "slowVisualHint": "画面在准备，请稍候。",
     "playbackBufferingHint": "画面稍作停顿，马上继续。",
+    "lowBatteryStillHint": "电量较低，为省电已暂缓动态画面，当前仅显示静图。",
+    "saveDataStillHint": "已开启省流，暂时仅显示静图以节省流量。",
+    "lowMemoryStillHint": "设备内存较紧张，暂时仅显示静图以保持流畅。",
     "bgSoftFocusStartAria": "开启暗衣柔焦（沿用上次暗度与模糊）并打开调节",
     "bgSoftFocusOpenPanelAria": "打开暗衣调节面板",
     "bgSoftFocusCloseAria": "关闭暗衣柔焦并收起调节",
@@ -517,7 +521,7 @@
   },
   "relax": {
     "back": "音乐首页",
-    "guideHint": "什么都不用做，停一会儿就好。",
+    "guideHint": "跟着中央的节奏慢慢呼吸，身体会逐渐放松。",
     "sessionLabel": "放松",
     "effectPickerLabel": "画面效果",
     "effectLagoon": "静湖",

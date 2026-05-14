@@ -1144,7 +1144,7 @@ export function StudioAIDiscussionPanel({
               if (msg.kind === "user") {
                 return (
                   <div key={msg.id} className="flex justify-end">
-                    <div className="max-w-[min(100%,18rem)] rounded-2xl border border-border/60 bg-white/90 px-3 py-2 text-[12px] leading-relaxed text-ink shadow-sm">
+                    <div className="max-w-[min(100%,18rem)] rounded-2xl border border-border/60 bg-white/90 px-3 py-2 text-[12px] leading-relaxed text-ink shadow-sm select-text">
                       <pre className="whitespace-pre-wrap font-sans">{msg.content}</pre>
                     </div>
                   </div>
@@ -1152,7 +1152,7 @@ export function StudioAIDiscussionPanel({
               }
               if (msg.kind === "assistant_note") {
                 return (
-                  <div key={msg.id} className="rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-[12px] leading-relaxed text-ink/90 shadow-sm">
+                  <div key={msg.id} className="select-text rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-[12px] leading-relaxed text-ink/90 shadow-sm">
                     <p className="text-[9px] font-medium uppercase tracking-wide text-muted">
                       更短表述
                     </p>
@@ -1165,7 +1165,7 @@ export function StudioAIDiscussionPanel({
               return (
                 <article
                   key={msg.id}
-                  className="space-y-3 rounded-xl border border-border/70 bg-white/90 px-3 py-3 shadow-[0_1px_0_rgba(44,40,36,0.03)]"
+                  className="select-text space-y-3 rounded-xl border border-border/70 bg-white/90 px-3 py-3 shadow-[0_1px_0_rgba(44,40,36,0.03)]"
                 >
                   <p className="text-[9px] font-medium text-muted">
                     {modeAndRoleBadgeLine(r, roleConfigs)}

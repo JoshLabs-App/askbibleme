@@ -11,8 +11,12 @@ type Props = {
  * Studio 右侧助理气泡：把 Markdown 渲染为安静、易扫读的排版（标题 / 列表 / 代码）。
  */
 export function StudioChatMarkdown({ content, className }: Props) {
+  const rootClass =
+    className && className.trim().length > 0
+      ? `studio-chat-markdown ${className}`
+      : "studio-chat-markdown";
   return (
-    <div className={className}>
+    <div className={rootClass}>
       <ReactMarkdown
         components={{
           h1: ({ children }) => (

@@ -162,6 +162,7 @@
     "musicAdmin": "Home music",
     "playbackVisual": "Playback visuals",
     "updateAvailable": "A new version is available. Tap refresh to load the latest—no need to reinstall from the home screen.",
+    "updateForced": "A new version is available. This page will refresh automatically in a moment.",
     "updateRefresh": "Refresh",
     "updateLater": "Later"
   },
@@ -486,6 +487,9 @@
     "noMusicHint": "No tracks yet. Add audio from the music home or admin, then return.",
     "slowVisualHint": "Getting the picture ready.",
     "playbackBufferingHint": "Brief pause; playback will continue.",
+    "lowBatteryStillHint": "Battery is low. To save power, motion is paused—only the still image is shown for now.",
+    "saveDataStillHint": "Data saver is on; only the still image is shown to use less data.",
+    "lowMemoryStillHint": "This device has limited memory; only the still image is shown to keep things smooth.",
     "bgSoftFocusStartAria": "Turn on soft focus with your last dim and blur, and open controls",
     "bgSoftFocusOpenPanelAria": "Open dim and blur controls",
     "bgSoftFocusCloseAria": "Turn off dim overlay, blur, and close controls",
@@ -517,7 +521,7 @@
   },
   "relax": {
     "back": "Music home",
-    "guideHint": "Nothing to do—just stay here a moment.",
+    "guideHint": "Breathe with the rhythm at the center—your body can ease into that.",
     "sessionLabel": "Relax",
     "effectPickerLabel": "Visual style",
     "effectLagoon": "Lagoon",

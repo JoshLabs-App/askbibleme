@@ -51,6 +51,26 @@ html {
 
 body {
   @apply bg-canvas text-ink antialiased;
+  /* 触控端减少误划选正文；需复制的区域用 `.select-text` / `.allow-select` 或原生表单控件 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable="plaintext-only"],
+.select-text,
+.allow-select,
+/* 后台内嵌代码块、配置片段 */
+[data-admin-shell] pre,
+/* Studio：文档预览、讨论区与助理气泡 Markdown */
+.studio-doc-readable,
+.discussion-markdown,
+.studio-chat-markdown {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /**

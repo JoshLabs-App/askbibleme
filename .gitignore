@@ -15,6 +15,9 @@
 /.next/
 /out/
 
+# 构建时由 scripts/write-app-build-meta.mjs 生成（与 data-app-build 对齐）
+/public/app-build.json
+
 # production
 /build
 

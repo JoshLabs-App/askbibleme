@@ -11,8 +11,7 @@ export const metadata: Metadata = {
 
 export const viewport = natureHomeViewport;
 
-export const dynamic = "force-dynamic";
-
+/** 构建期嵌入 `data/nature-settings.json`；打开后由 `NatureVideoExperience` 再拉 `/api/nature/settings` 对齐最新配置。 */
 export default async function NaturePage() {
   const cwd = process.cwd();
   const settings = await readNatureSettings(cwd);

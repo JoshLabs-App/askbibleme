@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { CATEGORY_DESC, PrayerTopicsCategoryList } from "@/components/prayer/PrayerTopicsIndex";
+import { PrayerTopicsCategoryList } from "@/components/prayer/PrayerTopicsIndex";
 import { PrayerHomeFirstScreen } from "@/components/prayer/PrayerHomeFirstScreen";
 import { PrayerPageFrame } from "@/components/prayer/PrayerPageFrame";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
@@ -41,31 +40,6 @@ export default function PrayerIndexPage() {
             </div>
           )}
         </div>
-
-        {categories.length > 0 ? (
-          <nav className="mt-16 border-t border-amber-200/45 pt-10 dark:border-stone-700/50" aria-labelledby="prayer-index-toc">
-            <h2 id="prayer-index-toc" className="font-serif text-[1.12rem] font-medium text-ink/88">
-              按处境浏览
-            </h2>
-            <p className="mt-2 max-w-prose text-[13px] leading-relaxed text-muted">以下链到各方向下的主题与经文预览。</p>
-            <ol className="mt-8 list-none divide-y divide-amber-200/40 border-t border-amber-200/40 p-0 dark:divide-stone-700/50 dark:border-stone-700/50">
-              {categories.map((c) => {
-                const blurb = CATEGORY_DESC[c.id];
-                return (
-                  <li key={c.id}>
-                    <Link href={`/prayer/${c.id}`} className="group block py-5 first:pt-4">
-                      <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                        <span className="font-serif text-[1.08rem] font-medium text-ink/90 group-hover:text-ink">{c.title}</span>
-                        <span className="shrink-0 text-[12px] tabular-nums text-muted">{c.topics.length} 个主题</span>
-                      </span>
-                      {blurb ? <p className="mt-2 max-w-prose text-[13px] leading-relaxed text-ink/68">{blurb}</p> : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
-        ) : null}
       </PrayerPageFrame>
     </ShellTemplateChromeLayout>
   );

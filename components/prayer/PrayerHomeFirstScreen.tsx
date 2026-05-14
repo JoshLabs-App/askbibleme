@@ -156,12 +156,16 @@ export function PrayerHomeFirstScreen() {
       </div>
 
       <div className="relative mt-10 sm:mt-12">
-        <div className="pointer-events-none absolute left-[1.125rem] top-3 bottom-3 w-0 border-l border-dashed border-amber-300/55 sm:left-[1.25rem] dark:border-amber-800/35" aria-hidden />
+        {/* 实线 + 与图标列对齐：避免 iOS Safari 竖向 border-dashed 错位/闪烁 */}
+        <div
+          className="pointer-events-none absolute left-[3.875rem] top-3 bottom-3 w-px -translate-x-1/2 bg-amber-300/55 sm:left-[4.125rem] dark:bg-amber-800/40"
+          aria-hidden
+        />
         <ol className="relative m-0 list-none space-y-0 p-0">
           {STEPS.map((step, i) => (
             <li key={i} className="relative border-b border-amber-200/35 pb-8 pt-0 last:border-b-0 last:pb-0 dark:border-stone-700/50">
               <span
-                className="absolute left-[0.6rem] top-[1.35rem] z-[1] h-2 w-2 rounded-full border-2 border-[#efe3d8] bg-amber-600 sm:left-[0.7rem] sm:top-[1.45rem] dark:border-[#151210] dark:bg-amber-500"
+                className="absolute left-[3.875rem] top-[1.5rem] z-[1] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#efe3d8] bg-amber-600 sm:left-[4.125rem] dark:border-[#151210] dark:bg-amber-500"
                 aria-hidden
               />
               <div className="flex gap-4 pl-10 sm:gap-5 sm:pl-11">

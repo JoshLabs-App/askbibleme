@@ -8,6 +8,43 @@ import type { AppLocale } from "@/lib/i18n/config";
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
 import { goldenVerseTextShadowClass } from "@/lib/home-prayer-pools/golden-verse-text-effects";
 import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
+import type { NatureHomeVerseTextEffectV1 } from "@/lib/home/nature-home-verse-appearance-prefs";
+
+function natureHomePrimaryOnVideo(effect: NatureHomeVerseTextEffectV1, isDark: boolean): string {
+  if (effect === "flat" || effect === "classic") {
+    return isDark
+      ? "[text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)]"
+      : "";
+  }
+  const g = goldenVerseTextShadowClass(effect as GoldenVerseTextEffectV1, "primary");
+  return isDark
+    ? `drop-shadow-[0_1px_1px_rgba(0,0,0,0.55)] drop-shadow-[0_2px_14px_rgba(0,0,0,0.32)] ${g}`
+    : `drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)] ${g}`;
+}
+
+function natureHomeSecondaryOnVideo(effect: NatureHomeVerseTextEffectV1, isDark: boolean): string {
+  if (effect === "flat" || effect === "classic") {
+    return isDark
+      ? "[text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]"
+      : "";
+  }
+  const g = goldenVerseTextShadowClass(effect as GoldenVerseTextEffectV1, "secondary");
+  return isDark
+    ? `drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] drop-shadow-[0_1px_10px_rgba(0,0,0,0.28)] ${g}`
+    : `drop-shadow-[0_1px_1px_rgba(0,0,0,0.08)] ${g}`;
+}
+
+function natureHomeRefOnVideo(effect: NatureHomeVerseTextEffectV1, isDark: boolean): string {
+  if (effect === "flat" || effect === "classic") {
+    return isDark
+      ? "[text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)]"
+      : "[text-shadow:0_1px_1px_rgba(255,255,255,0.45),0_1px_8px_rgba(0,0,0,0.08)]";
+  }
+  const g = goldenVerseTextShadowClass(effect as GoldenVerseTextEffectV1, "ref");
+  return isDark
+    ? `drop-shadow-[0_1px_1px_rgba(0,0,0,0.48)] drop-shadow-[0_1px_8px_rgba(0,0,0,0.25)] ${g}`
+    : `drop-shadow-[0_1px_1px_rgba(0,0,0,0.06)] ${g}`;
+}
 
 /** `flow`：多段 `lines` 连成一段自然换行，避免多 `<p>` + 自动折行造成「孤字行」。 */
 function joinVerseLinesForFlow(lines: string[], locale: AppLocale): string {
@@ -96,6 +133,12 @@ type Props = {
   goldenVerseFontFamily?: GoldenVerseFontFamilyV1;
   /** 金句字面阴影预设；与 `verseStyle="goldenVerses"` 同用时由父级从偏好注入 */
   goldenVerseTextEffect?: GoldenVerseTextEffectV1;
+  /**
+   * 自然首页中间轮播：`prominence="nature"` 且非金句排版时，由父级从 `nature-home-verse-appearance-prefs` 注入。
+   * 未传时保持原先默认（无衬线 + 轻轮廓），与金句专页偏好无关。
+   */
+  natureHomeFontFamily?: GoldenVerseFontFamilyV1;
+  natureHomeTextEffect?: NatureHomeVerseTextEffectV1;
 };
 
 /**
@@ -107,7 +150,9 @@ export function HomeVerseRotator({
   className = "",
   verseStyle = "default",
   goldenVerseFontFamily = "sans",
-  goldenVerseTextEffect = "engraved",
+  goldenVerseTextEffect = "insetCarved",
+  natureHomeFontFamily,
+  natureHomeTextEffect,
 }: Props) {
   const { locale } = useLocale();
   const { entriesByLocale, bilingual, activeIndex, homeVerseVisible } = useHomePrayerVerseFeedContext();
@@ -128,6 +173,19 @@ export function HomeVerseRotator({
   const isHero = prominence === "hero";
   const isRelax = prominence === "relax";
   const isNature = prominence === "nature";
+  const natureHomeTypography =
+    natureHomeFontFamily !== undefined || natureHomeTextEffect !== undefined;
+  const nhFont = natureHomeFontFamily ?? "sans";
+  const nhSerif = nhFont === "serif";
+  const nhFace = nhSerif ? "font-serif" : "font-sans";
+  const nhEffect: NatureHomeVerseTextEffectV1 = natureHomeTextEffect ?? "classic";
+  /** 无衬线 +（首页原版｜平面）：与加偏好前首页经文视觉完全一致 */
+  const nhLegacyDefault =
+    natureHomeTypography && nhFont === "sans" && (nhEffect === "classic" || nhEffect === "flat");
+  /** 自定义自然首页经文：无衬线 / 衬线均加粗（「首页原版 / 平面」无衬线时仍走 nhLegacyDefault 旧视觉） */
+  const nhPrimaryWt = "font-bold";
+  const nhSecondaryWt = "font-bold";
+  const nhRefWt = "font-bold";
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const goldenShellRef = useRef<HTMLDivElement | null>(null);
   const goldenFitRafRef = useRef<number | null>(null);
@@ -192,7 +250,8 @@ export function HomeVerseRotator({
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "primary");
-      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-[#5F2E00] ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
+      const ink = isDark ? "text-[#f7ecda]" : "text-[#5F2E00]";
+      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] ${ink} ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
     }
     if (isHero) {
       return isDark
@@ -200,6 +259,17 @@ export function HomeVerseRotator({
         : `m-0 font-serif text-[clamp(1.12rem,2.85vw+0.22rem,1.82rem)] font-medium ${L(1.22, "leading-[1.11]")} tracking-[0.028em] text-ink/88 transition-colors duration-200 group-hover:text-ink/92`;
     }
     if (isNature) {
+      if (nhLegacyDefault) {
+        return isDark
+          ? `m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
+          : `m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90`;
+      }
+      if (natureHomeTypography) {
+        const fx = natureHomePrimaryOnVideo(nhEffect, isDark);
+        return isDark
+          ? `m-0 ${nhFace} text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] ${nhPrimaryWt} ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
+          : `m-0 ${nhFace} text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] ${nhPrimaryWt} ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90 ${fx}`;
+      }
       return isDark
         ? `m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
         : `m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90`;
@@ -219,9 +289,21 @@ export function HomeVerseRotator({
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "secondary");
-      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-[#5F2E00] ${fx}`;
+      const ink = isDark ? "text-[#f2e6d2]" : "text-[#5F2E00]";
+      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] ${ink} ${fx}`;
     }
     if (isNature) {
+      if (nhLegacyDefault) {
+        return isDark
+          ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
+          : `m-0 font-sans text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80`;
+      }
+      if (natureHomeTypography) {
+        const fx = natureHomeSecondaryOnVideo(nhEffect, isDark);
+        return isDark
+          ? `m-0 ${nhFace} text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] ${nhSecondaryWt} ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] ${fx}`
+          : `m-0 ${nhFace} text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] ${nhSecondaryWt} ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80 ${fx}`;
+      }
       return isDark
         ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
         : `m-0 font-sans text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80`;
@@ -240,10 +322,11 @@ export function HomeVerseRotator({
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "ref");
+      const ink = isDark ? "text-[#e8dcc6]" : "text-[#5F2E00]";
       if (bilingual) {
-        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
+        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] ${ink} sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
       }
-      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] text-[#5F2E00] sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
+      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] ${ink} sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
     }
     if (isHero) {
       return isDark
@@ -251,6 +334,27 @@ export function HomeVerseRotator({
         : "mt-3 text-[10px] font-medium tracking-[0.18em] text-muted sm:mt-3.5 sm:text-[11px]";
     }
     if (isNature) {
+      if (nhLegacyDefault) {
+        if (bilingual) {
+          return isDark
+            ? "mt-2 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
+            : "mt-2 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:mt-2.5 sm:text-[14px]";
+        }
+        return isDark
+          ? "mt-3 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
+          : "mt-3 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:text-[14px]";
+      }
+      if (natureHomeTypography) {
+        const fx = natureHomeRefOnVideo(nhEffect, isDark);
+        if (bilingual) {
+          return isDark
+            ? `mt-2 ${nhFace} text-[12px] ${nhRefWt} tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]`
+            : `mt-2 ${nhFace} text-[13px] ${nhRefWt} tracking-[0.16em] text-ink/80 sm:mt-2.5 sm:text-[14px] ${fx}`;
+        }
+        return isDark
+          ? `mt-3 ${nhFace} text-[12px] ${nhRefWt} tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]`
+          : `mt-3 ${nhFace} text-[13px] ${nhRefWt} tracking-[0.16em] text-ink/80 sm:text-[14px] ${fx}`;
+      }
       if (bilingual) {
         return isDark
           ? "mt-2 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
@@ -279,9 +383,21 @@ export function HomeVerseRotator({
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "ref");
-      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] text-[#5F2E00] sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px] ${fx}`;
+      const ink = isDark ? "text-[#e8dcc6]" : "text-[#5F2E00]";
+      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] ${ink} sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px] ${fx}`;
     }
     if (isNature) {
+      if (nhLegacyDefault) {
+        return isDark
+          ? `${bilingual ? "mt-1" : "mt-1.5"} font-sans text-[10px] font-semibold tracking-[0.12em] text-white/[0.78] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] sm:text-[11px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[10px]`
+          : `${bilingual ? "mt-1" : "mt-1.5"} font-sans text-[11px] font-semibold tracking-[0.14em] text-ink/80 [text-shadow:0_1px_1px_rgba(255,255,255,0.45),0_1px_8px_rgba(0,0,0,0.08)] sm:text-[12px]`;
+      }
+      if (natureHomeTypography) {
+        const fx = natureHomeRefOnVideo(nhEffect, isDark);
+        return isDark
+          ? `${bilingual ? "mt-1" : "mt-1.5"} ${nhFace} text-[10px] ${nhRefWt} tracking-[0.12em] text-white/[0.78] sm:text-[11px] ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:text-[10px]`
+          : `${bilingual ? "mt-1" : "mt-1.5"} ${nhFace} text-[11px] ${nhRefWt} tracking-[0.14em] text-ink/80 sm:text-[12px] ${fx}`;
+      }
       return isDark
         ? `${bilingual ? "mt-1" : "mt-1.5"} font-sans text-[10px] font-semibold tracking-[0.12em] text-white/[0.78] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] sm:text-[11px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[10px]`
         : `${bilingual ? "mt-1" : "mt-1.5"} font-sans text-[11px] font-semibold tracking-[0.14em] text-ink/80 [text-shadow:0_1px_1px_rgba(255,255,255,0.45),0_1px_8px_rgba(0,0,0,0.08)] sm:text-[12px]`;

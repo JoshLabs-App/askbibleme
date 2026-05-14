@@ -200,15 +200,15 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
           role="main"
           className={
             inTemplateChrome
-              ? "relative z-10 flex min-h-0 w-full flex-1 flex-col justify-center px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-5"
-              : `relative z-10 mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-5 sm:py-11 ${ln}:mx-0 ${ln}:max-w-none ${ln}:px-0 ${ln}:py-4 ${ln}:sm:px-0 ${ln}:sm:py-5`
+              ? "relative z-10 flex min-h-0 w-full flex-1 flex-col justify-center px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 sm:px-5 landscape:min-h-0 landscape:justify-start landscape:pt-[max(0.35rem,env(safe-area-inset-top))]"
+              : `relative z-10 mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col justify-center px-4 py-10 sm:px-5 sm:py-11 ${ln}:mx-0 ${ln}:max-w-none ${ln}:px-0 ${ln}:py-4 ${ln}:sm:px-0 ${ln}:sm:py-5 landscape:min-h-0 landscape:justify-start landscape:py-4 landscape:sm:py-5`
           }
         >
           <div
-            className={`flex flex-col items-center gap-y-11 sm:gap-y-14 ${ln}:gap-y-6 ${ln}:justify-center`}
+            className={`flex min-h-0 w-full flex-col items-center gap-y-11 sm:gap-y-14 ${ln}:gap-y-6 ${ln}:justify-center landscape:flex-1 landscape:gap-y-3 landscape:pb-[max(3.25rem,calc(env(safe-area-inset-bottom,0px)+2.5rem))] landscape:sm:gap-y-3`}
           >
             <div
-              className={`relative flex shrink-0 flex-col items-center justify-center ${ln}:scale-[0.88] motion-reduce:scale-100`}
+              className={`relative flex shrink-0 flex-col items-center justify-center ${ln}:scale-[0.88] motion-reduce:scale-100 landscape:min-h-0 landscape:w-full landscape:grow landscape:shrink landscape:basis-0 landscape:justify-center`}
             >
               <p
                 role="status"
@@ -224,20 +224,20 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
             </div>
             <HomeVerseRotatorWithPrayerPool
               variant="light"
-              className={`min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] landscape:max-w-[min(92vw,40rem)] md:landscape:max-w-[min(86vw,46rem)] ${ln}:min-h-[5.25rem] ${ln}:max-w-[min(100%,18rem)]`}
+              className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem] landscape:hidden"
             />
             <p
               className={[
-                "w-full max-w-[17rem] overflow-hidden text-center text-[9px] font-normal leading-snug tracking-[0.18em] transition-all duration-500 ease-out motion-reduce:duration-150 sm:max-w-[19rem] sm:text-[10px] sm:tracking-[0.2em]",
+                "w-full max-w-[17rem] shrink-0 overflow-hidden text-center text-[9px] font-normal leading-snug tracking-[0.18em] transition-all duration-500 ease-out motion-reduce:duration-150 sm:max-w-[19rem] sm:text-[10px] sm:tracking-[0.2em]",
                 "text-ink/25",
-                relaxEffectHintVisible ? "mt-2 max-h-10 opacity-100 sm:mt-2.5" : "mt-0 max-h-0 opacity-0",
+                relaxEffectHintVisible ? "mt-2 max-h-10 opacity-100 sm:mt-2.5 landscape:mt-0" : "mt-0 max-h-0 opacity-0",
               ].join(" ")}
               aria-hidden
             >
               {t(RELAX_EFFECT_TAB_I18N_KEY.lagoon)}
             </p>
             {!canPlay ? (
-              <p className="mt-6 max-w-[19rem] text-center text-[12px] leading-relaxed text-muted sm:text-[13px]">
+              <p className="mt-6 max-w-[19rem] shrink-0 text-center text-[12px] leading-relaxed text-muted sm:text-[13px] landscape:mt-3">
                 {t("relax.noMusicHint")}
               </p>
             ) : null}

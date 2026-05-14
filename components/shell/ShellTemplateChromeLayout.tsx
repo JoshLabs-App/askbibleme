@@ -13,7 +13,11 @@ import {
   shellTemplatePreviewThemeById,
   type ShellTemplateChromeTune,
 } from "@/lib/shell/template-preview-themes";
-import { PRAYER_SHELL_FILL_DARK, PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
+import {
+  PRAYER_SHELL_FILL_DARK,
+  PRAYER_SHELL_FILL_LIGHT,
+  PRAYER_WARM_DARK_BRAND_RGB,
+} from "@/lib/prayer/prayer-shell-fill";
 
 function subscribeHtmlClassDark(onStore: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -132,6 +136,14 @@ export function ShellTemplateChromeLayout({
 
   const previewVars = useMemo(() => shellTemplatePreviewCssVars(theme), [theme]);
 
+  const contentStyle = useMemo(() => {
+    const base: CSSProperties = { ...(previewVars as CSSProperties) };
+    if (resolvedAppShellBackground === PRAYER_SHELL_FILL_DARK) {
+      Object.assign(base, PRAYER_WARM_DARK_BRAND_RGB as CSSProperties);
+    }
+    return base;
+  }, [previewVars, resolvedAppShellBackground]);
+
   const mainPadClass = immersive
     ? "overflow-hidden pb-0 pl-0 pr-0 pt-[env(safe-area-inset-top,0px)]"
     : embedPreview
@@ -149,7 +161,7 @@ export function ShellTemplateChromeLayout({
         <div
           ref={sampleRootRef}
           className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col ${immersive ? "pb-0" : "pb-2"} ${embedPreview ? "min-h-0 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]" : ""} ${contentClassName}`}
-          style={previewVars as CSSProperties}
+          style={contentStyle}
         >
           {children}
         </div>

@@ -13,12 +13,20 @@ import {
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFeedContext";
+import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
+import {
+  NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
+  NATURE_HOME_TEXT_SCALE_STEPS,
+  natureHomeTextScaleAtStep,
+  readNatureHomeTextScaleStepIndex,
+  writeNatureHomeTextScaleStepIndex,
+} from "@/lib/home/nature-home-text-scale-prefs";
 
 const HOME_BACKDROP_STORAGE_KEY = "selah-home-backdrop-mode";
 
@@ -218,6 +226,25 @@ function IconUserAvatar(props: { className?: string }) {
   );
 }
 
+function IconVerseTypography(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function HomeDashboard() {
   const { t } = useLocale();
   const { bootstrapped, user, logout } = useAskbibleUser();
@@ -230,8 +257,15 @@ export function HomeDashboard() {
   const atmospherePreset = homeAtmospherePresetId;
   const [atmospherePickerOpen, setAtmospherePickerOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [verseTypographyOpen, setVerseTypographyOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const verseTypographyRef = useRef<HTMLDivElement>(null);
   const atmosphereControlsRef = useRef<HTMLDivElement>(null);
+  const [verseTextScaleStepIndex, setVerseTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
+
+  useLayoutEffect(() => {
+    setVerseTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
+  }, []);
 
   useLayoutEffect(() => {
     setHomeAtmospherePresetId(readStoredHomeAtmospherePreset());
@@ -290,6 +324,24 @@ export function HomeDashboard() {
   }, [userMenuOpen]);
 
   useEffect(() => {
+    if (!verseTypographyOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (verseTypographyRef.current && !verseTypographyRef.current.contains(e.target as Node)) {
+        setVerseTypographyOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setVerseTypographyOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [verseTypographyOpen]);
+
+  useEffect(() => {
     if (!atmospherePickerOpen || backdropMode !== "atmosphere") return;
     const onDown = (e: MouseEvent) => {
       if (atmosphereControlsRef.current?.contains(e.target as Node)) return;
@@ -326,6 +378,17 @@ export function HomeDashboard() {
   const isImage = backdropMode === "image";
   const homeDarkAtmosphere = !isImage && DARK_ATMOSPHERE_PRESETS.has(atmospherePreset);
   const useCanvasChrome = isImage || homeDarkAtmosphere;
+
+  const verseTextZoom = natureHomeTextScaleAtStep(verseTextScaleStepIndex);
+  const verseTextScaleMin = verseTextScaleStepIndex <= 0;
+  const verseTextScaleMax = verseTextScaleStepIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1;
+  const bumpVerseTextScaleStep = useCallback((delta: 1 | -1) => {
+    setVerseTextScaleStepIndex((prev) => {
+      const next = Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, Math.max(0, prev + delta));
+      writeNatureHomeTextScaleStepIndex(next);
+      return next;
+    });
+  }, []);
 
   return (
     <HomePrayerVerseFeedProvider fallbackByLocale={HOME_DASHBOARD_VERSE_FALLBACK}>
@@ -382,50 +445,95 @@ export function HomeDashboard() {
         />
         </div>
 
-        <header className="pointer-events-none absolute inset-x-0 top-0 z-50 flex px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 sm:px-5">
-          <div className="flex w-full items-center justify-between">
-            <Link
-              href="/explore"
-              className={
-                useCanvasChrome
-                  ? "pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full text-canvas/90 transition hover:bg-canvas/14 active:scale-[0.97]"
-                  : "pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full text-ink/85 transition hover:bg-ink/[0.06] active:scale-[0.97]"
-              }
-              aria-label="探索"
-            >
-              <IconMenu className="h-[11px] w-[0.88rem] opacity-90" />
-            </Link>
+        <header className="pointer-events-none absolute inset-x-0 top-0 z-50 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 sm:px-5">
+          <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+            <div className="justify-self-start">
+              <Link
+                href="/explore"
+                className={
+                  useCanvasChrome
+                    ? "pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full text-canvas/90 transition hover:bg-canvas/14 active:scale-[0.97]"
+                    : "pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full text-ink/85 transition hover:bg-ink/[0.06] active:scale-[0.97]"
+                }
+                aria-label="探索"
+              >
+                <IconMenu className="h-[11px] w-[0.88rem] opacity-90" />
+              </Link>
+            </div>
             <p
               className={
                 useCanvasChrome
-                  ? "pointer-events-none font-serif text-[12px] font-normal tracking-[0.14em] text-canvas/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
-                  : "pointer-events-none font-serif text-[12px] font-normal tracking-[0.14em] text-ink/85"
+                  ? "pointer-events-none justify-self-center text-center font-serif text-[12px] font-normal tracking-[0.14em] text-canvas/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
+                  : "pointer-events-none justify-self-center text-center font-serif text-[12px] font-normal tracking-[0.14em] text-ink/85"
               }
             >
               {SITE_METADATA_DEFAULT_TITLE}
             </p>
-            <div className="pointer-events-auto relative" ref={userMenuRef}>
-              <button
-                type="button"
-                onClick={() => setUserMenuOpen((o) => !o)}
-                aria-label={userMenuOpen ? "关闭菜单" : "用户菜单"}
-                aria-expanded={userMenuOpen}
-                aria-haspopup="menu"
-                aria-controls="home-user-menu"
-                className={
-                  useCanvasChrome
-                    ? "flex h-9 w-9 items-center justify-center rounded-full text-canvas/90 transition hover:bg-canvas/14 active:scale-[0.97]"
-                    : "flex h-9 w-9 items-center justify-center rounded-full text-ink/85 transition hover:bg-ink/[0.06] active:scale-[0.97]"
-                }
-              >
-                <IconUserAvatar className="h-[14px] w-[14px] opacity-88" />
-              </button>
-              {userMenuOpen ? (
-                <div
-                  id="home-user-menu"
-                  role="menu"
-                  className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md"
+            <div className="pointer-events-auto flex items-center justify-end gap-1 justify-self-end">
+              <div className="relative" ref={verseTypographyRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setVerseTypographyOpen((o) => !o);
+                  }}
+                  aria-label={t("nature.homeVerse.typographyMenu")}
+                  aria-expanded={verseTypographyOpen}
+                  aria-haspopup="dialog"
+                  aria-controls={verseTypographyOpen ? "home-verse-typography-popover" : undefined}
+                  className={
+                    useCanvasChrome
+                      ? "flex h-9 w-9 items-center justify-center rounded-full text-canvas/90 transition hover:bg-canvas/14 active:scale-[0.97]"
+                      : "flex h-9 w-9 items-center justify-center rounded-full text-ink/85 transition hover:bg-ink/[0.06] active:scale-[0.97]"
+                  }
                 >
+                  <IconVerseTypography className="h-[15px] w-[15px] opacity-88" />
+                </button>
+                {verseTypographyOpen ? (
+                  <div
+                    id="home-verse-typography-popover"
+                    role="dialog"
+                    aria-label={t("pages.goldenVerses.settings")}
+                    className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/20 bg-ink/88 py-1 text-canvas shadow-xl backdrop-blur-md [-webkit-overflow-scrolling:touch]"
+                  >
+                    <HomePrayerVerseDockSettings
+                      placement="popover"
+                      sections={["goldenFont"]}
+                      natureVerseTextScale={{
+                        atMin: verseTextScaleMin,
+                        atMax: verseTextScaleMax,
+                        onSmaller: () => bumpVerseTextScaleStep(-1),
+                        onLarger: () => bumpVerseTextScaleStep(1),
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerseTypographyOpen(false);
+                    setUserMenuOpen((o) => !o);
+                  }}
+                  aria-label={userMenuOpen ? "关闭菜单" : "用户菜单"}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
+                  aria-controls="home-user-menu"
+                  className={
+                    useCanvasChrome
+                      ? "flex h-9 w-9 items-center justify-center rounded-full text-canvas/90 transition hover:bg-canvas/14 active:scale-[0.97]"
+                      : "flex h-9 w-9 items-center justify-center rounded-full text-ink/85 transition hover:bg-ink/[0.06] active:scale-[0.97]"
+                  }
+                >
+                  <IconUserAvatar className="h-[14px] w-[14px] opacity-88" />
+                </button>
+                {userMenuOpen ? (
+                  <div
+                    id="home-user-menu"
+                    role="menu"
+                    className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md"
+                  >
                   {bootstrapped && !user ? (
                     <>
                       <Link
@@ -504,6 +612,7 @@ export function HomeDashboard() {
                   ) : null}
                 </div>
               ) : null}
+              </div>
             </div>
           </div>
         </header>
@@ -518,7 +627,10 @@ export function HomeDashboard() {
           >
             {/* 经文块对齐主区垂直黄金分割点（1/φ² ≈ 38.2%），以块中心落在该线上 */}
             <div className="relative min-h-0 flex-1">
-              <div className="absolute left-1/2 top-[38.2%] z-[1] flex w-full -translate-x-1/2 -translate-y-1/2 justify-center px-5 sm:px-6">
+              <div
+                className="absolute left-1/2 top-[38.2%] z-[1] flex w-full -translate-x-1/2 -translate-y-1/2 justify-center px-5 sm:px-6"
+                style={{ zoom: verseTextZoom }}
+              >
                 <HomeVerseRotator
                   variant={useCanvasChrome ? "dark" : "light"}
                   className="min-h-[7rem] max-w-[19rem] sm:max-w-[21.5rem]"

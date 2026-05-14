@@ -24,7 +24,7 @@ function IconGear(props: { className?: string }) {
 }
 
 /**
- * 金句页顶栏右上：与 `HomeDashboard` 用户菜单同构（圆钮 + 下方浮层 + 点外关闭 / Esc）。
+ * 金句页顶栏右上：与首页 `HomeDashboard` 用户菜单同构（圆钮 + 深色磨砂浮层 + 点外关闭 / Esc）。
  * @param variant `dark`：叠在全幅背景图上时用浅色图标（与 `AppShellTopBar` onDark 一致）。
  */
 export function GoldenVersesSettingsTopBar({ variant = "light" }: { variant?: "light" | "dark" }) {
@@ -75,11 +75,9 @@ export function GoldenVersesSettingsTopBar({ variant = "light" }: { variant?: "l
           id="golden-verse-settings-popover"
           role="dialog"
           aria-label={t("pages.goldenVerses.settings")}
-          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md [-webkit-overflow-scrolling:touch]"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/20 bg-ink/88 py-1 text-canvas shadow-xl backdrop-blur-md [-webkit-overflow-scrolling:touch]"
         >
-          <div className="mx-1 mb-1 mt-1 rounded-lg bg-canvas px-1 py-2 text-ink shadow-sm">
-            <HomePrayerVerseDockSettings placement="page" sections={["scope", "goldenFont"]} />
-          </div>
+          <HomePrayerVerseDockSettings placement="popover" sections={["scope", "goldenFont"]} />
         </div>
       ) : null}
     </div>

@@ -1,6 +1,14 @@
 /**
- * 播放 / 暂停：实心矢量（小尺寸更清晰）；跳过：描边矢量。
- * 避免使用 ▶ ⏸ 等字符，以免 iOS/Android 渲染成彩色 emoji。
+ * 媒体控件图标（跳过为描边；播放 / 暂停为 **Apple / SF Symbols 气质**：圆角楔形 + 胶囊竖条）。
+ *
+ * **播放**（近 `play.fill`）
+ * - 圆角楔形、实心、`fill="currentColor"`；父级用 `text-*` / `color` 控制颜色。
+ * - 可略 `translate-x-[0.5px]` 做光学居中。
+ *
+ * **暂停**（近 `pause.fill`）
+ * - 两根圆角矩形（`rx` 为半宽 → 端部半圆），与系统控制条暂停一致。
+ *
+ * 避免用 ▶ ⏸ Unicode，以免在 iOS/Android 上变成彩色 emoji。
  */
 const stroke = {
   stroke: "currentColor",
@@ -9,7 +17,7 @@ const stroke = {
   strokeLinejoin: "round" as const,
 };
 
-/** 实心三角：小尺寸比描边更清晰，避免「草图感」。 */
+/** 圆角楔形播放（SF Symbols `play.fill` 一类形，24×24 视口）。 */
 export function IconPlay({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -22,14 +30,12 @@ export function IconPlay({ className }: { className?: string }) {
   );
 }
 
+/** 双胶囊暂停（SF Symbols `pause.fill` 一类形）。 */
 export function IconPause({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path
-        fillRule="evenodd"
-        d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z"
-        clipRule="evenodd"
-      />
+      <rect x="6.75" y="5.25" width="3.75" height="13.5" rx="1.875" ry="1.875" />
+      <rect x="13.5" y="5.25" width="3.75" height="13.5" rx="1.875" ry="1.875" />
     </svg>
   );
 }

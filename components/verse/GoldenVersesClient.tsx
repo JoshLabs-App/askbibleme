@@ -22,7 +22,7 @@ export function GoldenVersesClient({ layout = "default" }: Props) {
   const { t } = useLocale();
   const { landscapeNarrow, toggleManualChromeless } = useGoldenVersesChromeless();
   const [goldenVerseFontFamily, setGoldenVerseFontFamily] = useState<GoldenVerseFontFamilyV1>("sans");
-  const [goldenVerseTextEffect, setGoldenVerseTextEffect] = useState<GoldenVerseTextEffectV1>("engraved");
+  const [goldenVerseTextEffect, setGoldenVerseTextEffect] = useState<GoldenVerseTextEffectV1>("insetCarved");
 
   useEffect(() => {
     const sync = () => {

@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
 type NavItemDef = {
@@ -131,8 +130,6 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
   const { t } = useLocale();
   const { peekDockChrome } = useHomeDockChrome();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
-  const shellTemplateDock = useShellTemplateDockPreviewOptional();
-  const dockAccent = shellTemplateDock?.templateDockHex ?? "var(--brand-app-dark)";
 
   const onHomeNavClick = () => {
     peekDockChrome();
@@ -156,7 +153,7 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
         className={iconLinkClass(active)}
         onClick={item === homeItem ? onHomeNavClick : undefined}
       >
-        <Icon className="h-[1.2rem] w-[1.2rem] sm:h-[1.35rem] sm:w-[1.35rem]" />
+        <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
       </Link>
     );
   };
@@ -176,14 +173,15 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
             !canPlay ? t("playback.noTrack") : playing ? t("playback.pauseMusic") : t("playback.playMusic")
           }
           onClick={() => togglePlay()}
-          style={{ backgroundColor: "rgba(255,255,255,0.94)", color: dockAccent }}
-          className="mx-0.5 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full shadow-[0_4px_22px_-6px_rgba(0,0,0,0.55)] ring-1 ring-white/45 transition hover:bg-white hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:pointer-events-none disabled:opacity-35"
+          className="mx-0.5 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-white/90 bg-transparent shadow-[0_3px_18px_-5px_rgba(0,0,0,0.5)] transition hover:border-white hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/75 disabled:pointer-events-none disabled:opacity-35"
         >
-          {playing ? (
-            <IconPause className="h-[22px] w-[22px] shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]" />
-          ) : (
-            <IconPlay className="h-[22px] w-[22px] shrink-0 translate-x-[1px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]" />
-          )}
+          <span className="flex items-center justify-center text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
+            {playing ? (
+              <IconPause className="h-[22px] w-[22px] shrink-0" />
+            ) : (
+              <IconPlay className="h-[22px] w-[22px] shrink-0 translate-x-[0.5px]" />
+            )}
+          </span>
         </button>
 
         <div className="flex items-center gap-1 sm:gap-1.5">{navRight.map(renderIconLink)}</div>

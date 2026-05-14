@@ -22,8 +22,20 @@ import {
   readNatureSoftFocusPrefs,
   writeNatureSoftFocusPrefs,
 } from "@/lib/nature/nature-soft-focus-prefs";
+import {
+  NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
+  NATURE_HOME_TEXT_SCALE_STEPS,
+  natureHomeTextScaleAtStep,
+  readNatureHomeTextScaleStepIndex,
+  writeNatureHomeTextScaleStepIndex,
+} from "@/lib/home/nature-home-text-scale-prefs";
+import {
+  NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT,
+  readNatureHomeVerseAppearance,
+} from "@/lib/home/nature-home-verse-appearance-prefs";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
+import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
@@ -70,6 +82,34 @@ function IconBgSoftFocus(props: { className?: string }) {
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
       <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
+    </svg>
+  );
+}
+
+/** 右上 Aa：自然首页经文外观（独立存储，与金句专页无关） */
+function IconVerseTypography(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={props.className} aria-hidden>
+      <text
+        x="3.25"
+        y="16.75"
+        fill="currentColor"
+        fontSize="14"
+        fontWeight="700"
+        fontFamily='ui-serif, Georgia, "Times New Roman", serif'
+      >
+        A
+      </text>
+      <text
+        x="12.75"
+        y="16.75"
+        fill="currentColor"
+        fontSize="11"
+        fontWeight="600"
+        fontFamily='system-ui, ui-sans-serif, sans-serif'
+      >
+        a
+      </text>
     </svg>
   );
 }
@@ -171,11 +211,14 @@ export function NatureVideoExperience({ initial }: Props) {
   const { shellAudioMuted, setShellAudioMuted } = useMusicShellPlayback();
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
   const [natureSoftFocusPanelOpen, setNatureSoftFocusPanelOpen] = useState(false);
+  const [verseAppearancePanelOpen, setVerseAppearancePanelOpen] = useState(false);
   const [natureSoftFocusOverlayOpacity, setNatureSoftFocusOverlayOpacity] = useState(
     NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity,
   );
   const [natureSoftFocusBlurPx, setNatureSoftFocusBlurPx] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
+  const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
   const softFocusPersistTimerRef = useRef<number | null>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
@@ -669,6 +712,16 @@ export function NatureVideoExperience({ initial }: Props) {
     setNatureSoftFocusBlurPx(p.blurPx);
   }, []);
 
+  useLayoutEffect(() => {
+    setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
+  }, []);
+
+  useEffect(() => {
+    const syncAppearance = () => setNatureVerseAppearance(readNatureHomeVerseAppearance());
+    window.addEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
+    return () => window.removeEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
+  }, []);
+
   useEffect(() => {
     return () => {
       if (softFocusPersistTimerRef.current != null) {
@@ -695,9 +748,11 @@ export function NatureVideoExperience({ initial }: Props) {
       });
       setNatureBgSoftFocus(false);
       setNatureSoftFocusPanelOpen(false);
+      setVerseAppearancePanelOpen(false);
       return;
     }
     if (natureBgSoftFocus && !natureSoftFocusPanelOpen) {
+      setVerseAppearancePanelOpen(false);
       setNatureSoftFocusPanelOpen(true);
       return;
     }
@@ -705,6 +760,7 @@ export function NatureVideoExperience({ initial }: Props) {
     setNatureSoftFocusOverlayOpacity(p.overlayOpacity);
     setNatureSoftFocusBlurPx(p.blurPx);
     setNatureBgSoftFocus(true);
+    setVerseAppearancePanelOpen(false);
     setNatureSoftFocusPanelOpen(true);
   }, [
     natureBgSoftFocus,
@@ -712,6 +768,14 @@ export function NatureVideoExperience({ initial }: Props) {
     natureSoftFocusOverlayOpacity,
     natureSoftFocusPanelOpen,
   ]);
+
+  const onVerseAppearanceIconClick = useCallback(() => {
+    setVerseAppearancePanelOpen((wasOpen) => {
+      const next = !wasOpen;
+      if (next) setNatureSoftFocusPanelOpen(false);
+      return next;
+    });
+  }, []);
 
   const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
     ? Math.min(natureSoftFocusBlurPx, 10)
@@ -730,8 +794,12 @@ export function NatureVideoExperience({ initial }: Props) {
       setNatureSoftFocusPanelOpen(false);
       return;
     }
+    if (verseAppearancePanelOpen) {
+      setVerseAppearancePanelOpen(false);
+      return;
+    }
     toggleDockChrome();
-  }, [natureSoftFocusPanelOpen, toggleDockChrome]);
+  }, [natureSoftFocusPanelOpen, verseAppearancePanelOpen, toggleDockChrome]);
 
   const onBlankPointerDown = useCallback((e: PointerEvent<HTMLButtonElement>) => {
     if (e.pointerType === "mouse") {
@@ -773,6 +841,18 @@ export function NatureVideoExperience({ initial }: Props) {
     [onNatureVideoBlankClick],
   );
 
+  const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
+  const textScaleMin = textScaleStepIndex <= 0;
+  const textScaleMax = textScaleStepIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1;
+
+  const bumpTextScaleStep = useCallback((delta: 1 | -1) => {
+    setTextScaleStepIndex((prev) => {
+      const next = Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, Math.max(0, prev + delta));
+      writeNatureHomeTextScaleStepIndex(next);
+      return next;
+    });
+  }, []);
+
   return (
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden bg-canvas text-white [color-scheme:dark]">
       <AppShellTopBar
@@ -803,7 +883,7 @@ export function NatureVideoExperience({ initial }: Props) {
                     id="nature-soft-focus-panel"
                     role="region"
                     aria-label={t("nature.bgSoftFocusPanelTitle")}
-                    className="pointer-events-auto absolute right-full top-1/2 z-[60] mr-2 w-[min(13.75rem,calc(100vw-5rem))] -translate-y-1/2 rounded-2xl border border-white/18 bg-black/55 px-3 py-2.5 text-left shadow-[0_8px_36px_-8px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+                    className="pointer-events-auto absolute right-full top-0 z-[60] mr-2 max-h-[min(72dvh,calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-5rem))] w-[min(13.75rem,calc(100vw-5rem))] overflow-y-auto overscroll-y-contain rounded-2xl border border-white/18 bg-black/55 px-3 py-2.5 text-left shadow-[0_8px_36px_-8px_rgba(0,0,0,0.5)] backdrop-blur-xl [-webkit-overflow-scrolling:touch]"
                   >
                     <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">
                       {t("nature.bgSoftFocusPanelTitle")}
@@ -873,6 +953,41 @@ export function NatureVideoExperience({ initial }: Props) {
                 </button>
               </div>
             ) : null}
+            <div className="relative isolate">
+              {verseAppearancePanelOpen ? (
+                <div
+                  id="nature-verse-appearance-panel"
+                  role="region"
+                  aria-label={t("nature.homeVerse.typographyMenu")}
+                  className="pointer-events-auto absolute right-full top-0 z-[60] mr-2 max-h-[min(72dvh,calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-5rem))] w-[min(13.75rem,calc(100vw-5rem))] overflow-y-auto overscroll-y-contain rounded-2xl border border-white/18 bg-black/55 px-3 py-2.5 text-left shadow-[0_8px_36px_-8px_rgba(0,0,0,0.5)] backdrop-blur-xl [-webkit-overflow-scrolling:touch]"
+                >
+                  <NatureHomeVerseAppearancePanel
+                    natureVerseTextScale={{
+                      atMin: textScaleMin,
+                      atMax: textScaleMax,
+                      onSmaller: () => bumpTextScaleStep(-1),
+                      onLarger: () => bumpTextScaleStep(1),
+                    }}
+                  />
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={onVerseAppearanceIconClick}
+                aria-expanded={verseAppearancePanelOpen}
+                aria-controls={verseAppearancePanelOpen ? "nature-verse-appearance-panel" : undefined}
+                aria-label={t("nature.toggleVerseAppearanceAria")}
+                className={NATURE_BELL_BTN}
+              >
+                <IconVerseTypography
+                  className={
+                    verseAppearancePanelOpen
+                      ? "h-[1.35rem] w-[1.35rem] text-white [filter:drop-shadow(0_0_4px_rgba(255,255,255,0.75))]"
+                      : "h-[1.35rem] w-[1.35rem] opacity-90"
+                  }
+                />
+              </button>
+            </div>
             <HomeSleepTimerControl />
           </div>
         }
@@ -989,10 +1104,15 @@ export function NatureVideoExperience({ initial }: Props) {
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
-            <div className="w-full max-w-lg sm:max-w-xl landscape:max-w-[min(92vw,50rem)] md:landscape:max-w-[min(86vw,56rem)]">
+            <div
+              className="w-full max-w-lg sm:max-w-xl landscape:max-w-[min(92vw,50rem)] md:landscape:max-w-[min(86vw,56rem)]"
+              style={{ zoom: verseTextZoom }}
+            >
               <HomeVerseRotator
                 variant="dark"
                 prominence="nature"
+                natureHomeFontFamily={natureVerseAppearance.fontFamily}
+                natureHomeTextEffect={natureVerseAppearance.textEffect}
                 className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
               />
             </div>

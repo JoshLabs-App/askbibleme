@@ -45,6 +45,6 @@ export function goldenVerseTextShadowClass(effect: GoldenVerseTextEffectV1, tier
       }
       return `[text-shadow:0_0_0.55em_rgba(139,90,43,0.16),0_0.08em_0.2em_rgba(62,28,0,0.12)] ${MR}`;
     default:
-      return goldenVerseTextShadowClass("engraved", tier);
+      return goldenVerseTextShadowClass("insetCarved", tier);
   }
 }

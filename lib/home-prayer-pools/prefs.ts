@@ -34,7 +34,7 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   verseTextEnTranslationId: "web-en",
   memoryByNamespace: {},
   goldenVerseFontFamily: "sans",
-  goldenVerseTextEffect: "engraved",
+  goldenVerseTextEffect: "insetCarved",
 };
 
 /** 任意 prefs 写入后派发（同标签页）；用于金句页字体等无需重拉祷告池的 UI 同步 */
@@ -53,7 +53,7 @@ const GOLDEN_TEXT_EFFECT_IDS: GoldenVerseTextEffectV1[] = [
 ];
 
 export function normalizeGoldenVerseTextEffect(raw: unknown): GoldenVerseTextEffectV1 {
-  return GOLDEN_TEXT_EFFECT_IDS.includes(raw as GoldenVerseTextEffectV1) ? (raw as GoldenVerseTextEffectV1) : "engraved";
+  return GOLDEN_TEXT_EFFECT_IDS.includes(raw as GoldenVerseTextEffectV1) ? (raw as GoldenVerseTextEffectV1) : "insetCarved";
 }
 
 export function normalizeVerseZhTranslationId(raw: unknown): string {

@@ -26,8 +26,24 @@ function formatShellInsetTime(d: Date) {
   });
 }
 
-function TopShellInsetTime({ visible, tone }: { visible: boolean; tone: AppShellTopBarTone }) {
+function isRelaxShellPath(pathname: string) {
+  const p = pathname || "";
+  return p === "/relax" || p.startsWith("/relax/");
+}
+
+function TopShellInsetTime({
+  visible,
+  tone,
+  pathname,
+}: {
+  visible: boolean;
+  tone: AppShellTopBarTone;
+  pathname: string;
+}) {
   const timeRef = useRef<HTMLTimeElement>(null);
+  const relaxRoute = isRelaxShellPath(pathname);
+  /** 自然首页：横屏时底区有 `videoStage` 底栏与经文，壳层时钟改顶对齐 safe-area，避免被叠住 */
+  const natureHomeShell = isNatureHomeShellPath(pathname);
 
   useLayoutEffect(() => {
     if (!visible) return;
@@ -57,15 +73,24 @@ function TopShellInsetTime({ visible, tone }: { visible: boolean; tone: AppShell
 
   const onLight = tone === "onLight";
 
+  /** 自然首页横屏：底栏与经文叠在下半屏，`bottom` 易被挡住；顶栏位与竖屏一致、不占主视觉中部 */
+  const landscapeNatureTime =
+    "landscape:bottom-auto landscape:top-[calc(env(safe-area-inset-top,0px)+0.35rem)] landscape:text-[clamp(0.9375rem,3.4vmin,1.125rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1rem,3.2vmin,1.1875rem)]";
+
   return (
     <time
       ref={timeRef}
       className={[
-        "pointer-events-none fixed left-1/2 z-[52] -translate-x-1/2 select-none font-medium tabular-nums portrait:opacity-100 landscape:opacity-50",
+        "pointer-events-none fixed left-1/2 z-[52] -translate-x-1/2 select-none font-medium tabular-nums portrait:opacity-100",
+        relaxRoute ? "landscape:opacity-95" : natureHomeShell ? "landscape:opacity-100" : "landscape:opacity-50",
         "text-[14px] tracking-[0.04em] sm:text-[15px] sm:tracking-[0.05em]",
         "portrait:top-[calc(env(safe-area-inset-top,0px)+0.2rem)] portrait:bottom-auto portrait:translate-y-0",
-        "landscape:translate-y-0 landscape:top-auto landscape:bottom-[10%]",
-        "landscape:text-[28px] landscape:tracking-[0.06em] landscape:sm:text-[30px] landscape:sm:tracking-[0.07em]",
+        "landscape:translate-y-0",
+        relaxRoute
+          ? "landscape:top-auto landscape:bottom-[max(0.35rem,calc(env(safe-area-inset-bottom,0px)+0.35rem))] landscape:text-[clamp(1.125rem,3.8vmin,1.375rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1.1875rem,3.6vmin,1.4375rem)]"
+          : natureHomeShell
+            ? landscapeNatureTime
+            : "landscape:top-auto landscape:bottom-[10%] landscape:text-[28px] landscape:tracking-[0.06em] landscape:sm:text-[30px] landscape:sm:tracking-[0.07em]",
         onLight ? "text-ink" : "text-white",
       ].join(" ")}
     />
@@ -280,7 +305,7 @@ export function AppShellTopBar({
 
   return (
     <>
-      <TopShellInsetTime visible={showTopShellTime} tone={tone} />
+      <TopShellInsetTime visible={showTopShellTime} tone={tone} pathname={pathname} />
       <button
         type="button"
         ref={navEdgeStripRef}

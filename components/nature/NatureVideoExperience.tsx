@@ -159,7 +159,7 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
-  const { dockChromeVisible, setDockChromeVisible, toggleDockChrome } = useHomeDockChrome();
+  const { dockChromeVisible, setDockChromeVisible, toggleDockChrome, peekDockChrome } = useHomeDockChrome();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
   const swipeBlankTouchRef = useRef<{ x: number; y: number } | null>(null);
@@ -235,8 +235,12 @@ export function NatureVideoExperience({ initial }: Props) {
     let debounceId: number | null = null;
 
     const applyHeight = () => {
-      const h = readAppShellScrollContentBoxClientHeight(root);
-      if (h <= 0) return;
+      const readH = readAppShellScrollContentBoxClientHeight(root);
+      if (readH <= 0) return;
+      /** Android：safe-area 常为 0，scroll 盒 `clientHeight` 也可能小于可见视口，取较大值避免顶缘露壳层色条 */
+      const vvH = typeof window !== "undefined" ? window.visualViewport?.height ?? 0 : 0;
+      const innerH = typeof window !== "undefined" ? window.innerHeight : 0;
+      const h = Math.max(readH, vvH || 0, innerH || 0);
       const prev = videoStageHeightCommitRef.current;
       if (prev !== 0 && Math.abs(h - prev) < 12) return;
       videoStageHeightCommitRef.current = h;
@@ -261,6 +265,7 @@ export function NatureVideoExperience({ initial }: Props) {
     const vv = window.visualViewport;
     if (vv) {
       vv.addEventListener("resize", onWin);
+      vv.addEventListener("scroll", onWin);
     }
     return () => {
       if (debounceId != null) window.clearTimeout(debounceId);
@@ -268,6 +273,7 @@ export function NatureVideoExperience({ initial }: Props) {
       window.removeEventListener("resize", onWin);
       if (vv) {
         vv.removeEventListener("resize", onWin);
+        vv.removeEventListener("scroll", onWin);
       }
     };
   }, []);
@@ -280,10 +286,17 @@ export function NatureVideoExperience({ initial }: Props) {
     [natureSettings, activeVideoId],
   );
 
-  const selectVideoAndImmersive = useCallback((id: string) => {
-    setActiveVideoId(id);
-    setDockChromeVisible(false);
-  }, [setDockChromeVisible]);
+  const selectVideoAndImmersive = useCallback(
+    (id: string, opts?: { peekSceneDock?: boolean }) => {
+      setActiveVideoId(id);
+      if (opts?.peekSceneDock) {
+        peekDockChrome();
+      } else {
+        setDockChromeVisible(false);
+      }
+    },
+    [peekDockChrome, setDockChromeVisible],
+  );
 
   /** 点场景小图：按需切源，由浏览器渐进缓冲；静图叠层直至缓冲够再揭晓 */
   const onSceneCardPress = useCallback(
@@ -433,7 +446,9 @@ export function NatureVideoExperience({ initial }: Props) {
   const videoStageShellStyle: CSSProperties = useMemo(
     () => ({
       height:
-        videoStageHeightPx > 0 ? `${videoStageHeightPx}px` : "100dvh",
+        videoStageHeightPx > 0
+          ? `${videoStageHeightPx}px`
+          : "max(100dvh, 100svh, 100vh)",
     }),
     [videoStageHeightPx],
   );
@@ -730,7 +745,7 @@ export function NatureVideoExperience({ initial }: Props) {
       const next = adjacentNatureSceneId(natureSettings.videos, activeVideoId, direction);
       if (next && next !== activeVideoId.trim()) {
         suppressBlankTapRef.current = true;
-        selectVideoAndImmersive(next);
+        selectVideoAndImmersive(next, { peekSceneDock: true });
       }
     },
     [natureSettings.videos, activeVideoId, selectVideoAndImmersive],
@@ -750,7 +765,7 @@ export function NatureVideoExperience({ initial }: Props) {
   );
 
   return (
-    <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden bg-canvas text-white [color-scheme:dark]">
+    <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden bg-canvas text-white [color-scheme:dark]">
       <AppShellTopBar
         tone="onDark"
         landscapeImmersive={false}

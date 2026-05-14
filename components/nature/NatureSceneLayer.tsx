@@ -86,14 +86,14 @@ export function NatureSceneLayer({
                   (selected ? "ring-2 ring-sky-400/70 ring-inset " : "ring-white/[0.14] ")
                 }
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800/80 via-slate-900/75 to-slate-950/90" aria-hidden />
+                <div className="absolute inset-0 bg-slate-950" aria-hidden />
                 {cardStill ? (
                   <img
                     src={cardStill}
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover opacity-95 transition group-hover:opacity-100"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : (
                   <video
@@ -101,13 +101,12 @@ export function NatureSceneLayer({
                     muted
                     playsInline
                     preload="none"
-                    className="absolute inset-0 h-full w-full object-cover opacity-90 transition group-hover:opacity-100"
+                    className="absolute inset-0 h-full w-full object-cover"
                     aria-hidden
                   />
                 )}
-                <div className="pointer-events-none absolute inset-0 bg-white/[0.04] backdrop-blur-[1px]" aria-hidden />
                 <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"
                   aria-hidden
                 />
                 {preparing ? (

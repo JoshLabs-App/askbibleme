@@ -111,9 +111,11 @@ const navRight: NavItemDef[] = [goldenVersesItem, prayerItem];
 function iconLinkClass(active: boolean) {
   return [
     "flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]",
+    // 浅色底上仍可辨认：双层深色 drop-shadow（对 SVG 描边生效）
+    "drop-shadow-[0_1px_2px_rgba(0,0,0,0.62)] drop-shadow-[0_0_12px_rgba(0,0,0,0.32)]",
     active
-      ? "text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.65)]"
-      : "text-white/55 hover:text-white/95",
+      ? "text-white [text-shadow:0_1px_14px_rgba(0,0,0,0.72),0_0_1px_rgba(0,0,0,0.85)]"
+      : "text-white/60 hover:text-white/95 [text-shadow:0_1px_10px_rgba(0,0,0,0.55),0_0_1px_rgba(0,0,0,0.8)]",
   ].join(" ");
 }
 
@@ -127,13 +129,13 @@ type Props = { placement: Placement };
 export function HomeShellFloatingRouteNav({ placement }: Props) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
-  const { setDockChromeVisible } = useHomeDockChrome();
+  const { peekDockChrome } = useHomeDockChrome();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
   const shellTemplateDock = useShellTemplateDockPreviewOptional();
   const dockAccent = shellTemplateDock?.templateDockHex ?? "var(--brand-app-dark)";
 
   const onHomeNavClick = () => {
-    setDockChromeVisible(true);
+    peekDockChrome();
   };
 
   const outer =
@@ -178,9 +180,9 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
           className="mx-0.5 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full shadow-[0_4px_22px_-6px_rgba(0,0,0,0.55)] ring-1 ring-white/45 transition hover:bg-white hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:pointer-events-none disabled:opacity-35"
         >
           {playing ? (
-            <IconPause className="h-[22px] w-[22px] shrink-0" />
+            <IconPause className="h-[22px] w-[22px] shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]" />
           ) : (
-            <IconPlay className="h-[22px] w-[22px] shrink-0 translate-x-[1px]" />
+            <IconPlay className="h-[22px] w-[22px] shrink-0 translate-x-[1px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.28)]" />
           )}
         </button>
 

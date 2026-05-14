@@ -12,13 +12,14 @@ export function AppShellFixedChrome({ children }: Props) {
   const safeFill = { backgroundColor: "rgb(var(--brand-app-dark-rgb))" } as const;
   return (
     <div
-      className="fixed inset-0 z-[1] flex min-h-0 w-full flex-col overflow-x-hidden overflow-y-visible bg-canvas isolate"
+      className="fixed inset-0 z-[1] flex w-full flex-col overflow-x-hidden overflow-y-visible bg-canvas isolate"
       style={{
         /**
-         * 须用 **动态** 视口高，勿用 `lvh`：`lvh` 为地址栏收起后的「最大」高，首屏带 chrome 时
+         * 须用 **动态** 视口高，勿单用 `lvh`：`lvh` 为地址栏收起后的「最大」高，首屏带 chrome 时
          * 壳 `min-height` 会高于实际可视区，flex 底栏被顶到屏外（iOS / Android 常见只露底栏一小条）。
+         * `max(100dvh, 100svh)`：Android 上 `100dvh` 偶发小于可见区时，用 `svh` 抬高下限，减少顶缘露底。
          */
-        minHeight: "100dvh",
+        minHeight: "max(100dvh, 100svh)",
       }}
     >
       {/* 留海 / 圆角屏四边：与内层主壳同色铺满，避免半透状态栏或横条外露浅缝 */}

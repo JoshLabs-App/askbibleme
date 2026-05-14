@@ -149,7 +149,7 @@ export function AppShellTopBar({
   const { t } = useLocale();
   const { bootstrapped, user, logout } = useAskbibleUser();
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
-  const { setDockChromeVisible } = useHomeDockChrome();
+  const { peekDockChrome } = useHomeDockChrome();
   const onLight = tone === "onLight";
   const iconBtn =
     HIT +
@@ -377,7 +377,7 @@ export function AppShellTopBar({
                           onClick={() => {
                             closeNavMenu();
                             if (href === "/" && isNatureHomeShellPath(pathname)) {
-                              setDockChromeVisible(true);
+                              peekDockChrome();
                             }
                           }}
                         >

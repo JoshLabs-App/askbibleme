@@ -77,8 +77,8 @@ function applyGoldenWideFit(root: HTMLElement) {
   const maxW = blockquote.clientWidth;
   if (maxW < 40) return;
 
-  const MIN_PX = 14;
-  const MAX_PX = 220;
+  const MIN_PX = 10;
+  const MAX_PX = 280;
   let unit = MAX_PX;
   let measured = false;
 
@@ -112,7 +112,7 @@ function applyGoldenWideFit(root: HTMLElement) {
   }
 
   blockquote.querySelectorAll<HTMLElement>('footer[data-golden-fit="ref"]').forEach((footer) => {
-    const fr = Math.max(11, Math.min(40, Math.round(u * 0.38)));
+    const fr = Math.max(10, Math.min(52, Math.round(u * 0.42)));
     footer.style.fontSize = `${fr}px`;
     footer.style.whiteSpace = "normal";
   });
@@ -139,6 +139,10 @@ type Props = {
    */
   natureHomeFontFamily?: GoldenVerseFontFamilyV1;
   natureHomeTextEffect?: NatureHomeVerseTextEffectV1;
+  /**
+   * 自然首页视频槽：由父级在「整体 scale 仍装不下」时置为 true，主/副文启用 `line-clamp`、卷标单行省略。
+   */
+  natureTightLineClamp?: boolean;
 };
 
 /**
@@ -153,6 +157,7 @@ export function HomeVerseRotator({
   goldenVerseTextEffect = "insetCarved",
   natureHomeFontFamily,
   natureHomeTextEffect,
+  natureTightLineClamp = false,
 }: Props) {
   const { locale } = useLocale();
   const { entriesByLocale, bilingual, activeIndex, homeVerseVisible } = useHomePrayerVerseFeedContext();
@@ -206,6 +211,17 @@ export function HomeVerseRotator({
     [sec, secondaryLocale],
   );
   const flowPrettyClass = "text-pretty";
+
+  const natureClampPrimary =
+    isNature && !isGoldenVerses && natureTightLineClamp
+      ? bilingual
+        ? "line-clamp-6 max-w-full sm:line-clamp-7"
+        : "line-clamp-8 max-w-full"
+      : "";
+  const natureClampSecondary =
+    isNature && !isGoldenVerses && natureTightLineClamp && bilingual ? "line-clamp-5 max-w-full" : "";
+  const natureClampFoot =
+    isNature && !isGoldenVerses && natureTightLineClamp ? "max-w-full truncate" : "";
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -416,9 +432,11 @@ export function HomeVerseRotator({
     ? "max-w-[min(96vw,34rem)] sm:max-w-[36rem] lg:max-w-[38rem]"
     : isGoldenVerses
       ? "max-w-[min(96vw,40rem)] sm:max-w-[42rem] md:max-w-[44rem] landscape:max-w-[80vw]"
-    : isRelax || isNature
-      ? "max-w-[min(96vw,26rem)] sm:max-w-[28rem] md:max-w-[34rem] lg:max-w-[40rem] landscape:max-w-[min(92vw,44rem)] md:landscape:max-w-[min(86vw,50rem)] lg:landscape:max-w-[min(82vw,56rem)]"
-      : "max-w-[19rem] sm:max-w-[21.5rem]";
+    : isNature
+      ? "w-full min-w-0 max-w-[min(100%,80vw)]"
+      : isRelax
+        ? "max-w-[min(96vw,26rem)] sm:max-w-[28rem] md:max-w-[34rem] lg:max-w-[40rem] landscape:max-w-[min(92vw,44rem)] md:landscape:max-w-[min(86vw,50rem)] lg:landscape:max-w-[min(82vw,56rem)]"
+        : "max-w-[19rem] sm:max-w-[21.5rem]";
 
   const blockquoteStack = (() => {
     if (bilingual) {
@@ -435,6 +453,9 @@ export function HomeVerseRotator({
 
   const secondaryBlockMargin = bilingual ? (isNature ? "mt-2 sm:mt-2.5" : "mt-2") : isNature ? "mt-4 sm:mt-5" : "mt-4";
 
+  const natureVerseContain =
+    isNature ? "break-words [word-break:break-word] [overflow-wrap:anywhere] overflow-x-clip" : "";
+
   if (!showVerse) {
     return null;
   }
@@ -442,12 +463,12 @@ export function HomeVerseRotator({
   return (
     <div
       ref={goldenShellRef}
-      className={`mx-auto w-full ${shellWidth} text-center ${className}`.trim()}
+      className={`mx-auto w-full ${shellWidth} text-center ${natureVerseContain} ${className}`.trim()}
       aria-live="polite"
       aria-atomic="true"
     >
       <blockquote
-        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${blockquoteStack}`}
+        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${blockquoteStack} ${isNature ? "min-w-0 max-w-full" : ""}`.trim()}
         style={{
           opacity: homeVerseVisible ? 1 : 0,
           transitionDuration: prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,
@@ -456,13 +477,16 @@ export function HomeVerseRotator({
         {primaryFlowText ? (
           <p
             key={`${safeIndex}-p-flow`}
-            className={`${lineClass} ${flowPrettyClass}`.trim()}
+            className={`${lineClass} ${natureTightLineClamp ? "" : flowPrettyClass} ${natureClampPrimary}`.trim()}
             data-golden-fit={isGoldenVerses ? "line" : undefined}
           >
             {primaryFlowText}
           </p>
         ) : null}
-        <footer className={refClass} data-golden-fit={isGoldenVerses ? "ref" : undefined}>
+        <footer
+          className={`${refClass} ${natureClampFoot}`.trim()}
+          data-golden-fit={isGoldenVerses ? "ref" : undefined}
+        >
           {HOME_VERSES[safeIndex]?.ref ?? ""}
         </footer>
         {showSecondary ? (
@@ -470,14 +494,17 @@ export function HomeVerseRotator({
             {secondaryFlowText ? (
               <p
                 key={`${safeIndex}-s-flow`}
-                className={`${secondaryLineClass} ${flowPrettyClass}`.trim()}
+                className={`${secondaryLineClass} ${natureTightLineClamp ? "" : flowPrettyClass} ${natureClampSecondary}`.trim()}
                 data-golden-fit={isGoldenVerses ? "secondary" : undefined}
               >
                 {secondaryFlowText}
               </p>
             ) : null}
             {sec?.ref ? (
-              <footer className={secondaryRefClass} data-golden-fit={isGoldenVerses ? "ref" : undefined}>
+              <footer
+                className={`${secondaryRefClass} ${natureClampFoot}`.trim()}
+                data-golden-fit={isGoldenVerses ? "ref" : undefined}
+              >
                 {sec.ref}
               </footer>
             ) : null}

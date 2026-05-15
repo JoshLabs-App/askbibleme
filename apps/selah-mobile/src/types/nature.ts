@@ -15,6 +15,8 @@ export type NatureVideoMixLayer = {
 export type NatureVideoEntry = {
   id: string;
   src: string;
+  src1080?: string;
+  src4k?: string;
   title?: unknown;
   thumbSrc?: string;
   previewFrameSrc?: string;

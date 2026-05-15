@@ -146,24 +146,29 @@ export function NatureVideoAdminSection({
         const data = (await res.json()) as {
           ok?: boolean;
           url?: string;
+          src?: string;
+          src1080?: string;
+          src4k?: string;
+          renditions?: boolean;
           previewFrameUrl?: string | null;
           previewFrameWarning?: string;
           error?: string;
         };
         if (!res.ok) throw new Error(data.error ?? `上传失败（${res.status}）`);
-        const url = data.url;
-        if (typeof url !== "string" || !url.trim()) throw new Error("上传响应异常");
+        const primary = (typeof data.src === "string" ? data.src : typeof data.url === "string" ? data.url : "").trim();
+        if (!primary) throw new Error("上传响应异常");
 
         const titles = prev.videos.map((v) => v.title ?? "").filter(Boolean);
         const title = nextDateNumberedNatureVideoTitle(titles);
         const id = newId();
-        const row: NatureVideoEntry = { id, src: url.trim(), title };
+        const row: NatureVideoEntry = { id, src: primary, title };
+        const s1080 = typeof data.src1080 === "string" ? data.src1080.trim() : "";
+        if (s1080) row.src1080 = s1080;
+        const s4k = typeof data.src4k === "string" ? data.src4k.trim() : "";
+        if (s4k) row.src4k = s4k;
         const pfu = typeof data.previewFrameUrl === "string" ? data.previewFrameUrl.trim() : "";
         if (pfu) {
           row.previewFrameSrc = pfu;
-        }
-        if (data.previewFrameWarning) {
-          setUploadHint(`已上传；预览首帧未生成：${data.previewFrameWarning}`);
         }
 
         const videos = [...prev.videos, row];
@@ -179,7 +184,11 @@ export function NatureVideoAdminSection({
         const next: NatureSettingsV2 = { ...prev, videos, activeVideoId };
         const ok = await applyAndSync(next);
         if (ok) {
-          if (!data.previewFrameWarning) {
+          if (data.previewFrameWarning) {
+            setUploadHint(`已上传；预览首帧未生成：${data.previewFrameWarning}`);
+          } else if (data.renditions) {
+            setUploadHint(`已写入并转码（720 默认 · 1080 可选）；母片已保留：${title}`);
+          } else {
             setUploadHint(`已上传并写入：${title}`);
           }
         }
@@ -651,9 +660,7 @@ export function NatureVideoAdminSection({
         >
           {busy ? "上传中…" : "选择视频文件"}
         </button>
-        <p className="mt-2 text-[10px] leading-relaxed text-adminMuted">
-          mp4 / webm / mov / m4v，单文件约 220MB；开发环境可直接写入，生产需配置磁盘写入密钥（与音乐上传相同）。
-        </p>
+        <p className="mt-2 text-[10px] leading-relaxed text-adminMuted">{t("admin.naturePage.videoUploadFootMulti")}</p>
         {uploadHint ? (
           <p
             className={`mt-2 text-[11px] leading-snug ${
@@ -720,6 +727,16 @@ export function NatureVideoAdminSection({
                   </button>
                 </div>
                 <p className="mt-1.5 break-all font-mono text-[10px] text-adminMuted">{v.src}</p>
+                {v.src1080?.trim() ? (
+                  <p className="mt-0.5 break-all font-mono text-[10px] text-adminMuted/85">
+                    1080：{v.src1080.trim()}
+                  </p>
+                ) : null}
+                {v.src4k?.trim() ? (
+                  <p className="mt-0.5 break-all font-mono text-[10px] text-adminMuted/85">
+                    母片：{v.src4k.trim()}
+                  </p>
+                ) : null}
 
                 <div className="mt-4">
                   <p className="text-[11px] font-medium text-adminFg">{t("admin.naturePage.mixSectionTitle")}</p>

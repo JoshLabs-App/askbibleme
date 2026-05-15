@@ -14,7 +14,12 @@ export type NatureVideoMixLayer = {
 
 export type NatureVideoEntry = {
   id: string;
+  /** 线上默认播放（新上传经转码后为 720p H.264）；历史数据可为单文件任意分辨率 */
   src: string;
+  /** 可选 1080p H.264；前台「高清」开关打开且存在时使用 */
+  src1080?: string;
+  /** 原始母片（如 4K / .mov），仅存档；默认不参与播放与预取 */
+  src4k?: string;
   title?: string;
   /** 正方形封面（相册与场景卡）；后台截取或上传 */
   thumbSrc?: string;

@@ -1,11 +1,23 @@
-import type { NatureSettingsV2 } from "../types/nature";
+import type { NatureSettingsV2, NatureVideoEntry } from "../types/nature";
 
-export function resolveNaturePlayback(s: NatureSettingsV2): {
+function videoSrcForEntry(entry: NatureVideoEntry | undefined, prefer1080: boolean): string {
+  if (!entry) return "";
+  const base = entry.src.trim();
+  const hi = typeof entry.src1080 === "string" ? entry.src1080.trim() : "";
+  if (prefer1080 && hi) return hi;
+  return base;
+}
+
+export function resolveNaturePlayback(
+  s: NatureSettingsV2,
+  opts?: { prefer1080?: boolean },
+): {
   videoSrc: string;
   posterSrc?: string;
   previewStillSrc?: string;
   ambientLayers: { layerId: string; src: string; volume: number }[];
 } {
+  const prefer1080 = Boolean(opts?.prefer1080);
   const posterSrc = s.posterSrc?.trim();
   if (!s.videos.length) {
     return { videoSrc: "", ambientLayers: [], ...(posterSrc ? { posterSrc } : {}) };
@@ -13,7 +25,7 @@ export function resolveNaturePlayback(s: NatureSettingsV2): {
   const want = (s.activeVideoId ?? "").trim();
   const hit = want ? s.videos.find((v) => v.id === want) : undefined;
   const row = hit ?? s.videos[0];
-  const videoSrc = row?.src.trim() ?? "";
+  const videoSrc = videoSrcForEntry(row, prefer1080);
   const rowThumb = row?.thumbSrc?.trim();
   const rowPreview = row?.previewFrameSrc?.trim();
   const posterFromRow =

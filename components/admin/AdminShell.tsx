@@ -60,6 +60,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/read/versions", labelKey: "admin.items.bibleVersions" },
       { href: "/admin/read/golden-verses", labelKey: "admin.items.goldenVerses" },
+      { href: "/admin/read/openbible-topics", labelKey: "admin.items.openbibleTopics" },
       { href: "/admin/read/segments", labelKey: "admin.items.readSegments" },
     ],
   },

@@ -13,6 +13,7 @@ import {
   USER_ASKBIBLE_SESSION_COOKIE,
 } from "@/lib/admin-askbible-session";
 import { authCookieSecure } from "@/lib/auth-cookie-secure";
+import { isAdminEmail } from "@/lib/supabase/admin-allowlist";
 
 const USER_SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 30;
 
@@ -35,7 +36,8 @@ export async function GET() {
         name: (payload.name && String(payload.name).trim()) || payload.email,
       }
     : null;
-  return NextResponse.json({ configured, user });
+  const isAdmin = isAdminEmail(user?.email);
+  return NextResponse.json({ configured, user, isAdmin });
 }
 
 export async function POST(req: Request) {

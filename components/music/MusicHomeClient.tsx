@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DeviceMusicLibrarySection } from "@/components/music/DeviceMusicLibrarySection";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
@@ -112,7 +113,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
 
-  const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc, musicStore } = useMusicShellPlayback();
+  const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc, musicStore, deviceLibraryPlayback, clearDeviceLibraryPlayback } =
+    useMusicShellPlayback();
   /** 与壳层曲库同源：避免进页再打一遍 `/api/music/companion`；壳层拉取后自动更新 */
   const store = musicStore ?? initialStore;
   const initialSi = initialSceneIndex(initialStore);
@@ -238,6 +240,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   const audioSrc = track?.src?.trim() ?? "";
 
   useEffect(() => {
+    if (deviceLibraryPlayback) return;
     const want = audioSrc.trim();
     if (!want) {
       setPlaybackSrcRef.current(null);
@@ -252,9 +255,10 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     }
 
     setPlaybackSrcRef.current(want);
-  }, [audioSrc, effectiveSrc]);
+  }, [audioSrc, effectiveSrc, deviceLibraryPlayback]);
 
   const shuffleTrack = useCallback(() => {
+    clearDeviceLibraryPlayback();
     bumpUserSkip();
     const n = tracksWithSrc.length;
     if (n <= 1) return;
@@ -264,12 +268,16 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
       next = Math.floor(Math.random() * n);
     }
     setTrackPoolIdx(next);
-  }, [tracksWithSrc.length]);
+  }, [tracksWithSrc.length, clearDeviceLibraryPlayback, bumpUserSkip]);
 
-  const selectTrack = useCallback((idx: number) => {
-    bumpUserSkip();
-    setTrackPoolIdx(idx);
-  }, []);
+  const selectTrack = useCallback(
+    (idx: number) => {
+      clearDeviceLibraryPlayback();
+      bumpUserSkip();
+      setTrackPoolIdx(idx);
+    },
+    [clearDeviceLibraryPlayback, bumpUserSkip],
+  );
 
   useEffect(() => {
     if (!landscapeNarrow) {
@@ -390,6 +398,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                   </ul>
                 </section>
               ) : null}
+
+              <DeviceMusicLibrarySection tone="onLight" />
 
               {!audioSrc ? (
                 <p className="shrink-0 px-2 pb-3 pt-1 text-center text-xs leading-relaxed text-muted sm:text-sm">

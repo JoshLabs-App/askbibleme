@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
-import { DockChromeCollapse, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { HomeSleepTimerControl } from "@/components/home/HomeSleepTimerControl";
+import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
-import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
+import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
 import { useNatureMediaPolicy } from "@/hooks/useNatureMediaPolicy";
 import {
@@ -23,6 +22,10 @@ import {
   writeNatureSoftFocusPrefs,
 } from "@/lib/nature/nature-soft-focus-prefs";
 import {
+  readNatureBackground1080Pref,
+  writeNatureBackground1080Pref,
+} from "@/lib/nature/nature-video-quality-prefs";
+import {
   NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
   NATURE_HOME_TEXT_SCALE_STEPS,
   natureHomeTextScaleAtStep,
@@ -34,6 +37,7 @@ import {
   readNatureHomeVerseAppearance,
 } from "@/lib/home/nature-home-verse-appearance-prefs";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
+import { resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
 import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
@@ -41,17 +45,9 @@ import { isIosLikeUserAgent } from "@/lib/dom/ios";
 
 /** 当前场景停留后再挂视频解码（毫秒） */
 const NATURE_SCENE_DWELL_MS = 3000;
-/** 水平滑动切换场景的最小位移（px） */
-const NATURE_SCENE_SWIPE_MIN_DX = 48;
 
-function adjacentNatureSceneId(videos: NatureVideoEntry[], currentId: string, direction: 1 | -1): string | null {
-  const ids = videos.map((v) => v.id.trim()).filter(Boolean);
-  if (ids.length < 2) return null;
-  let i = ids.indexOf(currentId.trim());
-  if (i < 0) i = 0;
-  const n = (i + direction + ids.length) % ids.length;
-  return ids[n] ?? null;
-}
+/** 无滚动：先整体 `scale`；仍超出带区时再收紧行数（`line-clamp`）并二次压缩 */
+const NATURE_VERSE_FIT_COMPRESS_MIN = 0.06;
 
 /** 音乐静音：保留 44×44 触控，无圆形底框 */
 const NATURE_BELL_BTN =
@@ -82,6 +78,34 @@ function IconBgSoftFocus(props: { className?: string }) {
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
       <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
+    </svg>
+  );
+}
+
+function IconNatureEnterFullscreen(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5"
+        stroke="currentColor"
+        strokeWidth="1.65"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconNatureExitFullscreen(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+        stroke="currentColor"
+        strokeWidth="1.65"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -195,15 +219,13 @@ const SLOW_INTRO_HINT_DELAY_MS = 3800;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
- * 自然：背景视频铺满主列；左/右滑切换场景（先静图）；停留约 3s 且内存/省流等许可后再挂 `<video>` 解码与渐显。
+ * 自然：背景视频铺满主列；场景在「场景」页选择；停留约 3s 且内存/省流等许可后再挂 `<video>` 解码与渐显。
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
-  const { dockChromeVisible, setDockChromeVisible, toggleDockChrome, peekDockChrome } = useHomeDockChrome();
+  const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
-  const swipeBlankTouchRef = useRef<{ x: number; y: number } | null>(null);
-  const suppressBlankTapRef = useRef(false);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
   const videoStageHeightCommitRef = useRef(0);
@@ -221,20 +243,31 @@ export function NatureVideoExperience({ initial }: Props) {
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
   const softFocusPersistTimerRef = useRef<number | null>(null);
   const [videoBroken, setVideoBroken] = useState(false);
+  const [preferNature1080, setPreferNature1080] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
   const [dwellPolicyResolved, setDwellPolicyResolved] = useState(false);
   const [natureSettings, setNatureSettings] = useState<NatureSettingsV2>(initial);
-  const [activeVideoId, setActiveVideoId] = useState(
-    () => initial.activeVideoId.trim() || initial.videos[0]?.id || "",
-  );
+  const [activeVideoId, setActiveVideoId] = useState(() => resolveNatureHomeActiveVideoId(initial));
   const landscapeNarrow = useLandscapeNarrow();
+  /** 用户用右上按钮进入整页全屏时保留，避免与「竖屏 / 换源」自动退出逻辑冲突 */
+  const natureHomeUserDocFullscreenRef = useRef(false);
+  const [docElementFullscreen, setDocElementFullscreen] = useState(false);
+  /** 避免 SSR（无 navigator）与客户端 iOS UA 不一致导致顶栏子树 hydration 错位 */
+  const [iosUaResolved, setIosUaResolved] = useState(false);
+  useEffect(() => {
+    setIosUaResolved(true);
+  }, []);
+  const showNatureDocFullscreenBtn = !iosUaResolved || !isIosLikeUserAgent();
+  const natureVerseFitBoxRef = useRef<HTMLDivElement>(null);
+  const natureVerseFitMeasureRef = useRef<HTMLDivElement>(null);
+  const [natureVerseFitCompress, setNatureVerseFitCompress] = useState(1);
+  const [verseTightLineClamp, setVerseTightLineClamp] = useState(false);
 
   useEffect(() => {
     setNatureSettings(initial);
-    const next = initial.activeVideoId.trim() || initial.videos[0]?.id || "";
-    setActiveVideoId(next);
+    setActiveVideoId(resolveNatureHomeActiveVideoId(initial));
   }, [initial]);
 
   useEffect(() => {
@@ -258,8 +291,7 @@ export function NatureVideoExperience({ initial }: Props) {
           const ids = new Set(data.videos.map((v) => v.id.trim()).filter(Boolean));
           const p = prev.trim();
           if (p && ids.has(p)) return prev;
-          const fb = data.activeVideoId.trim() || data.videos[0]?.id || "";
-          return fb || prev;
+          return resolveNatureHomeActiveVideoId(data);
         });
       } catch {
         /* 离线等：保留构建期 initial */
@@ -329,31 +361,18 @@ export function NatureVideoExperience({ initial }: Props) {
     [natureSettings, activeVideoId],
   );
 
-  const selectVideoAndImmersive = useCallback(
-    (id: string, opts?: { peekSceneDock?: boolean }) => {
-      setActiveVideoId(id);
-      if (opts?.peekSceneDock) {
-        peekDockChrome();
-      } else {
-        setDockChromeVisible(false);
-      }
-    },
-    [peekDockChrome, setDockChromeVisible],
-  );
+  const activeNatureRow = useMemo(() => {
+    const s = playbackSettings;
+    if (!s.videos.length) return undefined;
+    const want = s.activeVideoId.trim();
+    return (want ? s.videos.find((v) => v.id === want) : undefined) ?? s.videos[0];
+  }, [playbackSettings]);
 
-  /** 点场景小图：按需切源，由浏览器渐进缓冲；静图叠层直至缓冲够再揭晓 */
-  const onSceneCardPress = useCallback(
-    (id: string) => {
-      const next = id.trim();
-      if (!next || next === activeVideoId.trim()) return;
-      selectVideoAndImmersive(next);
-    },
-    [activeVideoId, selectVideoAndImmersive],
-  );
+  const currentClipHas1080 = Boolean(activeNatureRow?.src1080?.trim());
 
   const { videoSrc, posterSrc, previewStillSrc } = useMemo(
-    () => resolveNaturePlayback(playbackSettings),
-    [playbackSettings],
+    () => resolveNaturePlayback(playbackSettings, { prefer1080: preferNature1080 }),
+    [playbackSettings, preferNature1080],
   );
   const stillImageUrl = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
   const posterUrl = stillImageUrl;
@@ -516,15 +535,39 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    const sync = () => {
+      setDocElementFullscreen(document.fullscreenElement === document.documentElement);
+      if (document.fullscreenElement !== document.documentElement) {
+        natureHomeUserDocFullscreenRef.current = false;
+      }
+    };
+    document.addEventListener("fullscreenchange", sync);
+    sync();
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
     /** iOS / iPadOS：对 `documentElement` 自动全屏易导致系统退出、手势与误触（含底栏「首页」）；仅桌面系横屏窄窗使用。 */
     if (isIosLikeUserAgent()) {
+      natureHomeUserDocFullscreenRef.current = false;
       if (document.fullscreenElement === document.documentElement) {
         void exitFullscreenCompat();
       }
       return;
     }
-    if (!landscapeNarrow || !videoSrc.trim() || videoBroken) {
+    if (!videoSrc.trim() || videoBroken) {
+      natureHomeUserDocFullscreenRef.current = false;
       if (document.fullscreenElement === document.documentElement) {
+        void exitFullscreenCompat();
+      }
+      return;
+    }
+    if (!landscapeNarrow) {
+      if (
+        document.fullscreenElement === document.documentElement &&
+        !natureHomeUserDocFullscreenRef.current
+      ) {
         void exitFullscreenCompat();
       }
       return;
@@ -714,6 +757,7 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useLayoutEffect(() => {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
+    setPreferNature1080(readNatureBackground1080Pref());
   }, []);
 
   useEffect(() => {
@@ -777,6 +821,15 @@ export function NatureVideoExperience({ initial }: Props) {
     });
   }, []);
 
+  const onToggleNature1080 = useCallback(() => {
+    setPreferNature1080((p) => {
+      const next = !p;
+      writeNatureBackground1080Pref(next);
+      return next;
+    });
+    setVideoBroken(false);
+  }, []);
+
   const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
     ? Math.min(natureSoftFocusBlurPx, 10)
     : natureSoftFocusBlurPx;
@@ -788,7 +841,7 @@ export function NatureVideoExperience({ initial }: Props) {
         ? t("nature.bgSoftFocusOpenPanelAria")
         : t("nature.bgSoftFocusStartAria");
 
-  /** 视频空白：柔焦面板打开时只收起面板，不切换底栏场景区 */
+  /** 视频空白：收起柔焦或经文外观浮层（无浮层时无操作） */
   const onNatureVideoBlankClick = useCallback(() => {
     if (natureSoftFocusPanelOpen) {
       setNatureSoftFocusPanelOpen(false);
@@ -796,50 +849,8 @@ export function NatureVideoExperience({ initial }: Props) {
     }
     if (verseAppearancePanelOpen) {
       setVerseAppearancePanelOpen(false);
-      return;
     }
-    toggleDockChrome();
-  }, [natureSoftFocusPanelOpen, verseAppearancePanelOpen, toggleDockChrome]);
-
-  const onBlankPointerDown = useCallback((e: PointerEvent<HTMLButtonElement>) => {
-    if (e.pointerType === "mouse") {
-      swipeBlankTouchRef.current = null;
-      return;
-    }
-    swipeBlankTouchRef.current = { x: e.clientX, y: e.clientY };
-  }, []);
-
-  const onBlankPointerUp = useCallback(
-    (e: PointerEvent<HTMLButtonElement>) => {
-      if (e.pointerType === "mouse") return;
-      const start = swipeBlankTouchRef.current;
-      swipeBlankTouchRef.current = null;
-      if (!start || natureSettings.videos.length < 2) return;
-      const dx = e.clientX - start.x;
-      const dy = e.clientY - start.y;
-      if (Math.abs(dx) < NATURE_SCENE_SWIPE_MIN_DX || Math.abs(dx) < Math.abs(dy) * 1.15) return;
-      const direction = (dx < 0 ? 1 : -1) as 1 | -1;
-      const next = adjacentNatureSceneId(natureSettings.videos, activeVideoId, direction);
-      if (next && next !== activeVideoId.trim()) {
-        suppressBlankTapRef.current = true;
-        selectVideoAndImmersive(next, { peekSceneDock: true });
-      }
-    },
-    [natureSettings.videos, activeVideoId, selectVideoAndImmersive],
-  );
-
-  const onBlankClick = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      if (suppressBlankTapRef.current) {
-        suppressBlankTapRef.current = false;
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      onNatureVideoBlankClick();
-    },
-    [onNatureVideoBlankClick],
-  );
+  }, [natureSoftFocusPanelOpen, verseAppearancePanelOpen]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
   const textScaleMin = textScaleStepIndex <= 0;
@@ -853,12 +864,69 @@ export function NatureVideoExperience({ initial }: Props) {
     });
   }, []);
 
+  const onNatureHomeFullscreenClick = useCallback(() => {
+    if (typeof document === "undefined" || isIosLikeUserAgent()) return;
+    if (document.fullscreenElement === document.documentElement) {
+      natureHomeUserDocFullscreenRef.current = false;
+      void exitFullscreenCompat();
+      return;
+    }
+    natureHomeUserDocFullscreenRef.current = true;
+    void requestFullscreenCompat(document.documentElement).catch(() => {
+      natureHomeUserDocFullscreenRef.current = false;
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!hasNatureVisual) return;
+    const box = natureVerseFitBoxRef.current;
+    const inner = natureVerseFitMeasureRef.current;
+    if (!box || !inner) return;
+
+    const applyFit = () => {
+      const bw = box.clientWidth;
+      const bh = box.clientHeight;
+
+      setVerseTightLineClamp(false);
+      setNatureVerseFitCompress(1);
+      void inner.offsetWidth;
+      let r = inner.getBoundingClientRect();
+      if (!(bw >= 8 && bh >= 8 && r.width >= 0.5 && r.height >= 0.5)) return;
+
+      let raw = Math.min(bw / r.width, bh / r.height);
+      const needsClamp = raw < 0.998;
+      if (needsClamp) {
+        setVerseTightLineClamp(true);
+        void inner.offsetWidth;
+        r = inner.getBoundingClientRect();
+        raw = Math.min(bw / r.width, bh / r.height);
+      }
+
+      const next = Math.min(1, Math.max(NATURE_VERSE_FIT_COMPRESS_MIN, Number.isFinite(raw) ? raw : 1));
+      setNatureVerseFitCompress((prev) => (Math.abs(prev - next) < 0.004 ? prev : next));
+    };
+
+    applyFit();
+    const ro = new ResizeObserver(() => applyFit());
+    ro.observe(box);
+    return () => ro.disconnect();
+  }, [
+    hasNatureVisual,
+    bilingual,
+    homeVerseVisible,
+    verseTextZoom,
+    activeIndex,
+    natureVerseAppearance.fontFamily,
+    natureVerseAppearance.textEffect,
+  ]);
+
   return (
     <div className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden bg-canvas text-white [color-scheme:dark]">
       <AppShellTopBar
         tone="onDark"
         landscapeImmersive={false}
-        showTopInsetTime={landscapeImmersive}
+        showTopInsetTime={false}
+        hideTopShellInsetTime
         rightAccessory={
           <div className="flex flex-col items-end gap-2">
             {hasNatureVisual ? (
@@ -953,6 +1021,25 @@ export function NatureVideoExperience({ initial }: Props) {
                 </button>
               </div>
             ) : null}
+            {hasNatureVisual && currentClipHas1080 ? (
+              <button
+                type="button"
+                onClick={onToggleNature1080}
+                aria-pressed={preferNature1080}
+                aria-label={t("nature.bg1080ToggleAria")}
+                className={NATURE_BELL_BTN}
+              >
+                <span
+                  className={
+                    preferNature1080
+                      ? "text-[10px] font-semibold tabular-nums leading-none tracking-tight text-white [filter:drop-shadow(0_0_4px_rgba(255,255,255,0.65))]"
+                      : "text-[10px] font-medium tabular-nums leading-none tracking-tight text-white/60"
+                  }
+                >
+                  1080
+                </span>
+              </button>
+            ) : null}
             <div className="relative isolate">
               {verseAppearancePanelOpen ? (
                 <div
@@ -988,6 +1075,23 @@ export function NatureVideoExperience({ initial }: Props) {
                 />
               </button>
             </div>
+            {showNatureDocFullscreenBtn ? (
+              <button
+                type="button"
+                onClick={onNatureHomeFullscreenClick}
+                aria-pressed={docElementFullscreen}
+                aria-label={
+                  docElementFullscreen ? t("nature.fullscreenExitAria") : t("nature.fullscreenEnterAria")
+                }
+                className={NATURE_BELL_BTN}
+              >
+                {docElementFullscreen ? (
+                  <IconNatureExitFullscreen className="h-[1.25rem] w-[1.25rem] opacity-90" />
+                ) : (
+                  <IconNatureEnterFullscreen className="h-[1.25rem] w-[1.25rem] opacity-90" />
+                )}
+              </button>
+            ) : null}
             <HomeSleepTimerControl />
           </div>
         }
@@ -1096,44 +1200,40 @@ export function NatureVideoExperience({ initial }: Props) {
           <button
             type="button"
             className="absolute inset-0 z-[7] cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-            aria-expanded={dockChromeVisible}
-            aria-label={t("nature.toggleDockChrome")}
-            onPointerDown={onBlankPointerDown}
-            onPointerUp={onBlankPointerUp}
-            onClick={onBlankClick}
+            aria-label={t("nature.homeBackdropTapAria")}
+            onClick={onNatureVideoBlankClick}
           />
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
-          <div className="pointer-events-none absolute inset-x-0 top-[38.2%] z-[12] flex -translate-y-1/2 justify-center px-5 sm:px-6 [@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]">
+          <div
+            ref={natureVerseFitBoxRef}
+            className="pointer-events-none absolute inset-x-0 bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] z-[12] flex min-h-0 flex-col items-center justify-start overflow-hidden px-5 sm:px-6 top-[max(4.25rem,38.2%)] [@media(max-height:500px)_and_(orientation:portrait)]:top-[max(4rem,32%)] landscape:bottom-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] landscape:top-[max(3.5rem,min(38.2%,30svh))]"
+          >
             <div
-              className="w-full max-w-lg sm:max-w-xl landscape:max-w-[min(92vw,50rem)] md:landscape:max-w-[min(86vw,56rem)]"
-              style={{ zoom: verseTextZoom }}
+              className="mx-auto flex min-w-0 max-w-full justify-center"
+              style={{
+                transform: `scale(${natureVerseFitCompress})`,
+                transformOrigin: "center top",
+              }}
             >
-              <HomeVerseRotator
-                variant="dark"
-                prominence="nature"
-                natureHomeFontFamily={natureVerseAppearance.fontFamily}
-                natureHomeTextEffect={natureVerseAppearance.textEffect}
-                className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
-              />
-            </div>
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(48dvh,58svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
-            <div
-              className={[
-                "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
-                dockChromeVisible ? "pointer-events-auto" : "pointer-events-none",
-              ].join(" ")}
-            >
-              <DockChromeCollapse>
-                <NatureSceneLayer
-                  className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
-                  settings={natureSettings}
-                  activeVideoId={playbackSettings.activeVideoId}
-                  prepareSceneId={null}
-                  prepareProgress={null}
-                  onSceneCardPress={onSceneCardPress}
+              <div
+                ref={natureVerseFitMeasureRef}
+                className="mx-auto min-w-0 overflow-x-clip"
+                style={
+                  {
+                    zoom: verseTextZoom,
+                    maxWidth: `min(80vw, ${80 / verseTextZoom}vw)`,
+                  } satisfies CSSProperties
+                }
+              >
+                <HomeVerseRotator
+                  variant="dark"
+                  prominence="nature"
+                  natureHomeFontFamily={natureVerseAppearance.fontFamily}
+                  natureHomeTextEffect={natureVerseAppearance.textEffect}
+                  natureTightLineClamp={verseTightLineClamp}
+                  className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
                 />
-              </DockChromeCollapse>
+              </div>
             </div>
           </div>
           <HomeShellFloatingRouteNav placement="videoStage" />
@@ -1148,35 +1248,13 @@ export function NatureVideoExperience({ initial }: Props) {
             <button
               type="button"
               className="absolute inset-0 z-0 cursor-default touch-pan-y border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-              aria-expanded={dockChromeVisible}
-              aria-label={t("nature.toggleDockChrome")}
-              onPointerDown={onBlankPointerDown}
-              onPointerUp={onBlankPointerUp}
-              onClick={onBlankClick}
+              aria-label={t("nature.homeBackdropTapAria")}
+              onClick={onNatureVideoBlankClick}
             />
             <div className="relative z-10 flex min-h-0 flex-1 flex-col pointer-events-none">
               <div className="mx-auto mt-6 max-w-sm rounded-3xl bg-white/[0.14] px-5 py-6 text-center ring-1 ring-white/[0.22] backdrop-blur-2xl sm:mt-8">
                 <p className="text-[15px] font-medium leading-snug text-white/90 sm:text-[16px]">{t("nature.emptyTitle")}</p>
                 <p className="mt-3 text-[12px] leading-relaxed text-white/55 sm:text-[13px]">{t("nature.emptyHint")}</p>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(40dvh,50svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
-              <div
-                className={[
-                  "mx-auto w-full min-h-0 max-w-lg px-3 pb-1 pt-2 sm:max-w-xl sm:px-4 sm:pb-2 sm:pt-2.5 md:max-w-3xl lg:max-w-none lg:px-5",
-                  dockChromeVisible ? "pointer-events-auto" : "pointer-events-none",
-                ].join(" ")}
-              >
-                <DockChromeCollapse>
-                  <NatureSceneLayer
-                    className="mt-0 shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
-                    settings={natureSettings}
-                    activeVideoId={playbackSettings.activeVideoId}
-                    prepareSceneId={null}
-                    prepareProgress={null}
-                    onSceneCardPress={onSceneCardPress}
-                  />
-                </DockChromeCollapse>
               </div>
             </div>
           </div>

@@ -28,8 +28,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env
-.env*.local
+# 本地 OpenBible 主题 TSV / SQLite（可由 npm run import:openbible-topics 生成）
+/data/bible/openbible-topics.sqlite
+/data/bible/openbible-topic-scores.tsv
+
 
 # typescript
 next-env.d.ts

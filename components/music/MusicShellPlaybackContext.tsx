@@ -23,6 +23,12 @@ import {
   shellPlaybackUrlsEqual,
   writeShellPlaybackPersisted,
 } from "@/lib/music-companion/shell-playback-storage";
+import { getDeviceTrackBlob } from "@/lib/music/device-library-db";
+import {
+  clearDevicePlaybackPersisted,
+  readDevicePlaybackPersisted,
+  writeDevicePlaybackPersisted,
+} from "@/lib/music/device-playback-storage";
 
 function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
   const c = candidate.trim();
@@ -53,12 +59,26 @@ function isMusicShellPath(p: string): boolean {
 /** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐（不关屏、不锁机），并调用已注册的额外暂停（历史：自然混音等） */
 export type MusicShellSleepTimerMinutes = 0 | 30 | 60 | 120;
 
+export type DeviceLibraryPlaybackInfo = {
+  trackId: string;
+  /** 导入曲库可跨页恢复；仅本次打开的本地文件不写入恢复存储 */
+  persistResume: boolean;
+};
+
 export type MusicShellPlaybackValue = {
   canPlay: boolean;
   playing: boolean;
   loading: boolean;
   togglePlay: () => void;
   pausePlayback: () => void;
+  /** 非空时表示正在播放本机导入/打开的音频（不入站方服务器） */
+  deviceLibraryPlayback: DeviceLibraryPlaybackInfo | null;
+  /** 用本地 Blob 接管壳层 `<audio>`；会撤销上一段本机播放的 object URL */
+  attachDeviceLibraryFromBlob: (trackId: string, blob: Blob, opts: { persistResume: boolean }) => void;
+  /** 停止本机播放并释放 object URL；不影响曲库默认源 */
+  clearDeviceLibraryPlayback: () => void;
+  /** 桌面 Chromium：可选文件夹批量导入 */
+  canPickLocalAudioFolder: boolean;
   /** 当前实际播放地址（全屏页 override 或默认池内随机曲） */
   effectiveSrc: string;
   /** 壳层默认播放 URL（多曲时在池内随机；单曲为唯一一条） */
@@ -106,6 +126,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
    */
   const [shellAudioHomePrimed, setShellAudioHomePrimed] = useState(false);
   const [playbackOverride, setPlaybackOverride] = useState<string | null>(null);
+  type DevicePlaybackCell = { trackId: string; objectUrl: string; persistResume: boolean };
+  const [devicePlayback, setDevicePlaybackState] = useState<DevicePlaybackCell | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [currentSec, setCurrentSec] = useState(0);
@@ -115,6 +137,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const [shellAudioMuted, setShellAudioMutedState] = useState(false);
   const sleepTimerDeadlineRef = useRef<number | null>(null);
   const shellPlaybackHydratedRef = useRef(false);
+  /** 非音乐路由异步恢复（本机曲优先）时防止并发重复跑 */
+  const nonMusicHydrateLockRef = useRef(false);
   /** 避免 `currentSrc` 尚未就绪时反复 `load()` 触发 setState 风暴 */
   const lastBoundEffectiveSrcRef = useRef("");
   const shellPlaybackRestoreRef = useRef<{
@@ -135,17 +159,45 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const sleepPauseHandlersRef = useRef(new Set<() => void>());
   const playbackOverrideRef = useRef<string | null>(null);
   playbackOverrideRef.current = playbackOverride;
+  const devicePlaybackRef = useRef<DevicePlaybackCell | null>(null);
+  devicePlaybackRef.current = devicePlayback;
 
   const defaultSrc = useMemo(() => ((store ? getShellDefaultAudioSrc(store) : null) ?? "").trim(), [store]);
-  const effectiveSrc = (playbackOverride?.trim() || defaultSrc).trim();
+  const catalogEffectiveSrc = (playbackOverride?.trim() || defaultSrc).trim();
+  const effectiveSrc = (devicePlayback?.objectUrl.trim() || catalogEffectiveSrc).trim();
 
   const storeRef = useRef(store);
   storeRef.current = store;
   const effectiveSrcRef = useRef(effectiveSrc);
   effectiveSrcRef.current = effectiveSrc;
 
+  const clearDeviceLibraryPlayback = useCallback(() => {
+    clearDevicePlaybackPersisted();
+    setDevicePlaybackState((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return null;
+    });
+  }, []);
+
+  const attachDeviceLibraryFromBlob = useCallback((trackId: string, blob: Blob, opts: { persistResume: boolean }) => {
+    clearShellPlaybackPersisted();
+    const objectUrl = URL.createObjectURL(blob);
+    setDevicePlaybackState((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return { trackId, objectUrl, persistResume: opts.persistResume };
+    });
+    setPlaybackOverride(null);
+    playAfterNextBindRef.current = true;
+    setShellAudioHomePrimed(true);
+  }, []);
+
   const setPlaybackSrc = useCallback(
     (src: string | null) => {
+      setDevicePlaybackState((prev) => {
+        if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+        return null;
+      });
+      clearDevicePlaybackPersisted();
       if (!src?.trim()) {
         setPlaybackOverride(null);
         return;
@@ -157,6 +209,16 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     },
     [defaultSrc],
   );
+
+  const canPickLocalAudioFolder = useMemo(
+    () => typeof window !== "undefined" && "showDirectoryPicker" in window,
+    [],
+  );
+
+  const deviceLibraryPlayback = useMemo((): DeviceLibraryPlaybackInfo | null => {
+    if (!devicePlayback) return null;
+    return { trackId: devicePlayback.trackId, persistResume: devicePlayback.persistResume };
+  }, [devicePlayback]);
 
   const refetchCompanionStore = useCallback(async () => {
     try {
@@ -304,33 +366,76 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
   }, [defaultSrc, playbackOverride]);
 
-  /** 首次拿到曲库后：从 localStorage 恢复上次曲目（非 `/music`）；音乐页每次进入随机起播、清持久化、尝试自动播放 */
+  /** 首次拿到曲库后：从 localStorage 恢复（非 `/music`）；本机导入曲优先于曲库 URL；音乐页每次进入随机起播并清远程持久化 */
   useEffect(() => {
     if (loading || !store || shellPlaybackHydratedRef.current) return;
     if (isMusicShellPath(pathname)) return;
-    shellPlaybackHydratedRef.current = true;
+    if (nonMusicHydrateLockRef.current) return;
+    nonMusicHydrateLockRef.current = true;
 
-    const persisted = readShellPlaybackPersisted();
-    if (!persisted) {
-      shellPlaybackPersistEnabledRef.current = true;
-      return;
-    }
-    if (!isTrackSrcInStore(store, persisted.src)) {
-      clearShellPlaybackPersisted();
-      shellPlaybackPersistEnabledRef.current = true;
-      return;
-    }
+    let cancelled = false;
 
-    setShellAudioHomePrimed(true);
-    shellPlaybackPersistEnabledRef.current = false;
-    shellPlaybackRestoreRef.current = {
-      targetSrc: persisted.src.trim(),
-      timeSec: persisted.timeSec,
-      tryPlay: persisted.wasPlaying,
+    void (async () => {
+      try {
+        const dp = readDevicePlaybackPersisted();
+        if (dp && dp.trackId && !dp.trackId.startsWith("session:")) {
+          const blob = await getDeviceTrackBlob(dp.trackId);
+          if (cancelled) return;
+          if (blob) {
+            const objectUrl = URL.createObjectURL(blob);
+            setDevicePlaybackState((prev) => {
+              if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+              return { trackId: dp.trackId, objectUrl, persistResume: true };
+            });
+            setShellAudioHomePrimed(true);
+            shellPlaybackRestoreRef.current = {
+              targetSrc: objectUrl,
+              timeSec: dp.timeSec,
+              tryPlay: dp.wasPlaying,
+            };
+            shellPlaybackPersistEnabledRef.current = false;
+            shellPlaybackHydratedRef.current = true;
+            return;
+          }
+          clearDevicePlaybackPersisted();
+        }
+      } catch {
+        if (!cancelled) clearDevicePlaybackPersisted();
+      }
+
+      if (cancelled) return;
+
+      const persisted = readShellPlaybackPersisted();
+      if (!persisted) {
+        shellPlaybackPersistEnabledRef.current = true;
+        shellPlaybackHydratedRef.current = true;
+        return;
+      }
+      if (!isTrackSrcInStore(store, persisted.src)) {
+        clearShellPlaybackPersisted();
+        shellPlaybackPersistEnabledRef.current = true;
+        shellPlaybackHydratedRef.current = true;
+        return;
+      }
+
+      setShellAudioHomePrimed(true);
+      shellPlaybackPersistEnabledRef.current = false;
+      shellPlaybackRestoreRef.current = {
+        targetSrc: persisted.src.trim(),
+        timeSec: persisted.timeSec,
+        tryPlay: persisted.wasPlaying,
+      };
+      const def = getShellSceneBoundAudioSrc(store)?.trim() ?? "";
+      if (def && shellPlaybackUrlsEqual(persisted.src, def)) setPlaybackOverride(null);
+      else setPlaybackOverride(persisted.src.trim());
+      shellPlaybackHydratedRef.current = true;
+    })().finally(() => {
+      nonMusicHydrateLockRef.current = false;
+    });
+
+    return () => {
+      cancelled = true;
     };
-    const def = getShellSceneBoundAudioSrc(store)?.trim() ?? "";
-    if (def && shellPlaybackUrlsEqual(persisted.src, def)) setPlaybackOverride(null);
-    else setPlaybackOverride(persisted.src.trim());
   }, [store, loading, pathname]);
 
   useEffect(() => {
@@ -347,6 +452,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
 
     clearShellPlaybackPersisted();
+    clearDevicePlaybackPersisted();
+    setDevicePlaybackState((prev) => {
+      if (prev?.objectUrl) URL.revokeObjectURL(prev.objectUrl);
+      return null;
+    });
     shellPlaybackRestoreRef.current = null;
     shellPlaybackPersistEnabledRef.current = true;
     setShellAudioHomePrimed(true);
@@ -471,8 +581,19 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     if (!shellPlaybackPersistEnabledRef.current || loading) return;
     const a = audioRef.current;
     if (!a) return;
+    const dev = devicePlaybackRef.current;
+    if (dev?.persistResume) {
+      writeDevicePlaybackPersisted({
+        v: 1,
+        trackId: dev.trackId,
+        timeSec: a.currentTime,
+        wasPlaying: !a.paused,
+      });
+      shellPlaybackLastPersistAtRef.current = Date.now();
+      return;
+    }
     const src = effectiveSrc.trim();
-    if (!src) return;
+    if (!src || src.startsWith("blob:")) return;
     writeShellPlaybackPersisted({
       v: 1,
       src,
@@ -549,6 +670,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     if (!a || loading) return;
 
     const onEndedAdvance = () => {
+      if (devicePlaybackRef.current) {
+        a.currentTime = 0;
+        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        return;
+      }
       const st = storeRef.current;
       if (!st) return;
       const tracks = st.audioTracks.filter((t) => Boolean(t.src?.trim()));
@@ -616,7 +742,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
 
     const tracks = st?.audioTracks.filter((t) => Boolean(t.src?.trim())) ?? [];
-    if (tracks.length > 1 && playbackOverrideRef.current == null) {
+    if (tracks.length > 1 && playbackOverrideRef.current == null && !devicePlaybackRef.current) {
       const dur = a.duration;
       const t0 = a.currentTime;
       const nearStart = !Number.isFinite(dur) || dur <= 0 || t0 < 0.35;
@@ -653,6 +779,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       loading,
       togglePlay,
       pausePlayback,
+      deviceLibraryPlayback,
+      attachDeviceLibraryFromBlob,
+      clearDeviceLibraryPlayback,
+      canPickLocalAudioFolder,
       effectiveSrc,
       shellDefaultSrc: defaultSrc,
       shellOverrideSrc: playbackOverride,
@@ -676,6 +806,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       loading,
       togglePlay,
       pausePlayback,
+      deviceLibraryPlayback,
+      attachDeviceLibraryFromBlob,
+      clearDeviceLibraryPlayback,
+      canPickLocalAudioFolder,
       effectiveSrc,
       defaultSrc,
       playbackOverride,

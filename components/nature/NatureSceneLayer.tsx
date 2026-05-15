@@ -57,6 +57,7 @@ export function NatureSceneLayer({
     <section
       className={`@container relative w-full ${className}`}
       aria-label={t("nature.scenes.sectionAria")}
+      data-shell-swipe-nav-exclude
     >
       <div
         className="w-full overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"

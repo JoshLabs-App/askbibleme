@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import { readNatureBackground1080Pref } from "@/lib/nature/nature-video-quality-prefs";
 
 const PREFETCH_STAGGER_MS = 550;
 
@@ -72,7 +73,10 @@ export function NatureBackgroundVideoPrefetch() {
       void (async () => {
         let urls: string[] = [];
         try {
-          const r = await fetch("/api/nature/prefetch-srcs");
+          const prefer1080 = readNatureBackground1080Pref();
+          const r = await fetch(
+            `/api/nature/prefetch-srcs${prefer1080 ? "?prefer1080=1" : ""}`,
+          );
           if (!r.ok || disposed || sid !== sessionRef.current) return;
           const j = (await r.json()) as { urls?: unknown };
           if (!Array.isArray(j.urls)) return;

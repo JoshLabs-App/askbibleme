@@ -52,6 +52,10 @@ function collectAmbientClipEntries(raw: unknown): NatureAmbientClipEntry[] {
   return out;
 }
 
+function isNatureVideoUploadsRef(u: string): boolean {
+  return u.startsWith("/nature/uploads/") && u.length <= MAX_SRC_LEN;
+}
+
 function collectMixLayers(
   raw: unknown,
   validClipIds: Set<string>,
@@ -100,6 +104,24 @@ function collectVideoEntries(
         ? previewRaw
         : undefined;
     const mix = collectMixLayers(o.mix, validClipIds, mode);
+    const src1080Raw = typeof o.src1080 === "string" ? o.src1080.trim() : "";
+    let src1080: string | undefined;
+    if (src1080Raw) {
+      if (!isNatureVideoUploadsRef(src1080Raw)) {
+        if (mode === "strict") throw err(`视频 ${id}：src1080 须为 /nature/uploads/ 下的路径`);
+      } else {
+        src1080 = src1080Raw;
+      }
+    }
+    const src4kRaw = typeof o.src4k === "string" ? o.src4k.trim() : "";
+    let src4k: string | undefined;
+    if (src4kRaw) {
+      if (!isNatureVideoUploadsRef(src4kRaw)) {
+        if (mode === "strict") throw err(`视频 ${id}：src4k 须为 /nature/uploads/ 下的路径`);
+      } else {
+        src4k = src4kRaw;
+      }
+    }
     out.push({
       id,
       src,
@@ -107,6 +129,8 @@ function collectVideoEntries(
       ...(thumbSrc ? { thumbSrc } : {}),
       ...(previewFrameSrc ? { previewFrameSrc } : {}),
       ...(mix ? { mix } : {}),
+      ...(src1080 ? { src1080 } : {}),
+      ...(src4k ? { src4k } : {}),
     });
   }
   return out;

@@ -9,7 +9,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
-import { isNatureHomeShellPath, useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
+import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
@@ -77,6 +77,13 @@ function TopShellInsetTime({
   const landscapeNatureTime =
     "landscape:bottom-auto landscape:top-[calc(env(safe-area-inset-top,0px)+0.35rem)] landscape:text-[clamp(0.9375rem,3.4vmin,1.125rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1rem,3.2vmin,1.1875rem)]";
 
+  /**
+   * 横屏且时间落在底部时：抬高到 **底栏浮条之上**（与 `NatureVideoExperience` 底区 hint 的留白同量级），
+   * 避免与 `HomeShellFloatingRouteNav`（播放钮约 52px + safe-area）叠住。
+   */
+  const landscapeTimeAboveBottomNav =
+    "landscape:bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] landscape:top-auto";
+
   return (
     <time
       ref={timeRef}
@@ -87,10 +94,10 @@ function TopShellInsetTime({
         "portrait:top-[calc(env(safe-area-inset-top,0px)+0.2rem)] portrait:bottom-auto portrait:translate-y-0",
         "landscape:translate-y-0",
         relaxRoute
-          ? "landscape:top-auto landscape:bottom-[max(0.35rem,calc(env(safe-area-inset-bottom,0px)+0.35rem))] landscape:text-[clamp(1.125rem,3.8vmin,1.375rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1.1875rem,3.6vmin,1.4375rem)]"
+          ? `${landscapeTimeAboveBottomNav} landscape:text-[clamp(1.125rem,3.8vmin,1.375rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1.1875rem,3.6vmin,1.4375rem)]`
           : natureHomeShell
             ? landscapeNatureTime
-            : "landscape:top-auto landscape:bottom-[10%] landscape:text-[28px] landscape:tracking-[0.06em] landscape:sm:text-[30px] landscape:sm:tracking-[0.07em]",
+            : `${landscapeTimeAboveBottomNav} landscape:text-[28px] landscape:tracking-[0.06em] landscape:sm:text-[30px] landscape:sm:tracking-[0.07em]`,
         onLight ? "text-ink" : "text-white",
       ].join(" ")}
     />
@@ -152,6 +159,11 @@ type Props = {
    * 与 `landscapeImmersive` 无关：在状态栏附近显示壳层时间（如自然页横屏有主视频时）。
    */
   showTopInsetTime?: boolean;
+  /**
+   * 为 true 时不渲染壳层时间（覆盖 PWA 全屏等 `useShellInsetClockEnvironment`、以及 `showTopInsetTime` / `landscapeImmersive`）。
+   * 用于 `/scenes` 等不希望出现大号叠层时钟的页面。
+   */
+  hideTopShellInsetTime?: boolean;
 };
 
 /** 抽屉挂 `body`：须高于底栏 `z-20`，且低于 `AppShellModal`（`z-index: 100`）以便语言弹层在上 */
@@ -165,16 +177,17 @@ export function AppShellTopBar({
   rightAccessory = null,
   landscapeImmersive = false,
   showTopInsetTime = false,
+  hideTopShellInsetTime = false,
 }: Props) {
   const pathname = usePathname() ?? "";
   const insetClockEnv = useShellInsetClockEnvironment();
-  const showTopShellTime = insetClockEnv || landscapeImmersive || showTopInsetTime;
+  const showTopShellTime =
+    !hideTopShellInsetTime && (insetClockEnv || landscapeImmersive || showTopInsetTime);
   const registerUrl = getPublicRegisterUrl();
   const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
   const { t } = useLocale();
-  const { bootstrapped, user, logout } = useAskbibleUser();
+  const { bootstrapped, user, isAdmin, logout } = useAskbibleUser();
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
-  const { peekDockChrome } = useHomeDockChrome();
   const onLight = tone === "onLight";
   const iconBtn =
     HIT +
@@ -401,9 +414,6 @@ export function AppShellTopBar({
                           aria-current={active ? "page" : undefined}
                           onClick={() => {
                             closeNavMenu();
-                            if (href === "/" && isNatureHomeShellPath(pathname)) {
-                              peekDockChrome();
-                            }
                           }}
                         >
                           {t(labelKey)}
@@ -417,34 +427,36 @@ export function AppShellTopBar({
                         sections={["translation"]}
                       />
                     </div>
-                    <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
-                      <span className="sr-only">{t("nav.themeColorsHeading")}</span>
-                      <p className="sr-only">{t("nav.themeColorsHint")}</p>
-                      <ShellTemplateThemeStrip
-                        variant="drawer"
-                        selectedId={shellTemplateBrand}
-                        onPick={(id) => {
-                          setShellTemplateBrand(id);
-                          closeNavMenu();
-                        }}
-                      />
-                      <button
-                        type="button"
-                        className={[
-                          linkRowBase,
-                          linkRowIdle,
-                          "mt-2 text-[13px] text-[#37352f]/80",
-                          shellTemplateBrand == null ? linkRowActive : "",
-                        ].join(" ")}
-                        aria-pressed={shellTemplateBrand == null}
-                        onClick={() => {
-                          setShellTemplateBrand(null);
-                          closeNavMenu();
-                        }}
-                      >
-                        {t("nav.themeColorsFollowSite")}
-                      </button>
-                    </div>
+                    {bootstrapped && isAdmin ? (
+                      <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
+                        <span className="sr-only">{t("nav.themeColorsHeading")}</span>
+                        <p className="sr-only">{t("nav.themeColorsHint")}</p>
+                        <ShellTemplateThemeStrip
+                          variant="drawer"
+                          selectedId={shellTemplateBrand}
+                          onPick={(id) => {
+                            setShellTemplateBrand(id);
+                            closeNavMenu();
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className={[
+                            linkRowBase,
+                            linkRowIdle,
+                            "mt-2 text-[13px] text-[#37352f]/80",
+                            shellTemplateBrand == null ? linkRowActive : "",
+                          ].join(" ")}
+                          aria-pressed={shellTemplateBrand == null}
+                          onClick={() => {
+                            setShellTemplateBrand(null);
+                            closeNavMenu();
+                          }}
+                        >
+                          {t("nav.themeColorsFollowSite")}
+                        </button>
+                      </div>
+                    ) : null}
                     {bootstrapped ? (
                       user ? (
                         <div className="mt-1 border-t border-neutral-200/90 pt-3">

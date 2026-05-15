@@ -57,7 +57,7 @@ function usePrefersReducedMotion(): boolean {
 const NATURE_DOCK_MANUAL_FADE_IN_MS = 320;
 const NATURE_DOCK_MANUAL_FADE_OUT_MS = 220;
 
-/** 自然首页 `/`、`/nature` 等：底区场景卡节奏由本文件定时；点主画面可即时展开/收起（打断自动序列）。 */
+/** 自然首页 `/`、`/nature` 等：底区场景卡首轮进入时定时展示；点主画面可即时展开/收起（打断自动序列）。 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
   return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
@@ -70,6 +70,8 @@ export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
   const [contentOpacity, setContentOpacity] = useState(0);
   const [opacityTransitionMs, setOpacityTransitionMs] = useState(NATURE_DOCK_SCENE_FADE_IN_MS);
   const sequenceTimerIdsRef = useRef<number[]>([]);
+  /** 同一次 SPA 会话内仅首轮进入自然首页时自动展开场景条，离开后再回首页不重复 */
+  const homeDockAutoIntroPlayedRef = useRef(false);
 
   const clearSequenceTimers = useCallback(() => {
     for (const id of sequenceTimerIdsRef.current) {
@@ -84,43 +86,47 @@ export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
 
   const dockChromeVisible = layoutOpen && contentOpacity >= 1;
 
-  const startAutoRevealSequence = useCallback(() => {
-    clearSequenceTimers();
-    const delay = reduceMotion ? 0 : NATURE_DOCK_SCENE_DELAY_MS;
-    const fadeIn = reduceMotion ? 140 : NATURE_DOCK_SCENE_FADE_IN_MS;
-    const hold = reduceMotion ? 900 : NATURE_DOCK_SCENE_HOLD_MS;
-    const fadeOut = reduceMotion ? 160 : NATURE_DOCK_SCENE_FADE_OUT_MS;
+  const startAutoRevealSequence = useCallback(
+    (opts?: { onRevealStart?: () => void }) => {
+      clearSequenceTimers();
+      const delay = reduceMotion ? 0 : NATURE_DOCK_SCENE_DELAY_MS;
+      const fadeIn = reduceMotion ? 140 : NATURE_DOCK_SCENE_FADE_IN_MS;
+      const hold = reduceMotion ? 900 : NATURE_DOCK_SCENE_HOLD_MS;
+      const fadeOut = reduceMotion ? 160 : NATURE_DOCK_SCENE_FADE_OUT_MS;
 
-    setOpacityTransitionMs(fadeIn);
-    setLayoutOpen(false);
-    setContentOpacity(0);
-
-    const fadeOutAt = delay + fadeIn + hold;
-    const collapseAt = fadeOutAt + fadeOut;
-
-    const tShow = window.setTimeout(() => {
-      setLayoutOpen(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setOpacityTransitionMs(fadeIn);
-          setContentOpacity(1);
-        });
-      });
-    }, delay);
-    pushTimer(tShow);
-
-    const tFadeOut = window.setTimeout(() => {
-      setOpacityTransitionMs(fadeOut);
-      setContentOpacity(0);
-    }, fadeOutAt);
-    pushTimer(tFadeOut);
-
-    const tCollapse = window.setTimeout(() => {
+      setOpacityTransitionMs(fadeIn);
       setLayoutOpen(false);
       setContentOpacity(0);
-    }, collapseAt);
-    pushTimer(tCollapse);
-  }, [clearSequenceTimers, pushTimer, reduceMotion]);
+
+      const fadeOutAt = delay + fadeIn + hold;
+      const collapseAt = fadeOutAt + fadeOut;
+
+      const tShow = window.setTimeout(() => {
+        opts?.onRevealStart?.();
+        setLayoutOpen(true);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setOpacityTransitionMs(fadeIn);
+            setContentOpacity(1);
+          });
+        });
+      }, delay);
+      pushTimer(tShow);
+
+      const tFadeOut = window.setTimeout(() => {
+        setOpacityTransitionMs(fadeOut);
+        setContentOpacity(0);
+      }, fadeOutAt);
+      pushTimer(tFadeOut);
+
+      const tCollapse = window.setTimeout(() => {
+        setLayoutOpen(false);
+        setContentOpacity(0);
+      }, collapseAt);
+      pushTimer(tCollapse);
+    },
+    [clearSequenceTimers, pushTimer, reduceMotion],
+  );
 
   const peekDockChrome = useCallback(() => {
     if (!isNatureHomeShellPath(pathname)) return;
@@ -129,11 +135,17 @@ export function HomeDockChromeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     clearSequenceTimers();
-    if (isNatureHomeShellPath(pathname)) {
-      startAutoRevealSequence();
-    } else {
+    if (!isNatureHomeShellPath(pathname)) {
       setLayoutOpen(false);
       setContentOpacity(0);
+      return () => clearSequenceTimers();
+    }
+    if (!homeDockAutoIntroPlayedRef.current) {
+      startAutoRevealSequence({
+        onRevealStart: () => {
+          homeDockAutoIntroPlayedRef.current = true;
+        },
+      });
     }
     return () => clearSequenceTimers();
   }, [pathname, clearSequenceTimers, startAutoRevealSequence, reduceMotion]);

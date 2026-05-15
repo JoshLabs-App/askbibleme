@@ -17,6 +17,8 @@ type Ctx = {
   bootstrapped: boolean;
   configured: boolean;
   user: AskbibleAppUser | null;
+  /** 与 `/admin` 门禁一致：超级管理员或 `ADMIN_USER_EMAILS` 白名单 */
+  isAdmin: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
@@ -28,6 +30,7 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [configured, setConfigured] = useState(false);
   const [user, setUser] = useState<AskbibleAppUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -36,12 +39,15 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
       const j = (await res.json()) as {
         configured?: boolean;
         user?: AskbibleAppUser | null;
+        isAdmin?: boolean;
       };
       setConfigured(Boolean(j.configured));
       setUser(j.user ?? null);
+      setIsAdmin(Boolean(j.isAdmin));
     } catch {
       setConfigured(false);
       setUser(null);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
       setBootstrapped(true);
@@ -61,8 +67,8 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const value = useMemo(
-    () => ({ bootstrapped, configured, user, loading, refresh, logout }),
-    [bootstrapped, configured, user, loading, refresh, logout],
+    () => ({ bootstrapped, configured, user, isAdmin, loading, refresh, logout }),
+    [bootstrapped, configured, user, isAdmin, loading, refresh, logout],
   );
 
   return <AskbibleUserContext.Provider value={value}>{children}</AskbibleUserContext.Provider>;

@@ -4,7 +4,6 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { useHomeDockChrome } from "@/components/home/HomeDockChromeContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 
@@ -28,22 +27,13 @@ function IconHome(props: { className?: string }) {
   );
 }
 
-function IconRelax(props: { className?: string }) {
+function IconScenes(props: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <path
-        d="M4 14c2.5 2 6.5 2 9-1s3.5-6 1-8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M11 19c2.5-1.5 4-4.5 3-8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        opacity="0.85"
-      />
+      <rect x="3" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="14" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -83,11 +73,11 @@ const homeItem: NavItemDef = {
   Icon: IconHome,
 };
 
-const relaxItem: NavItemDef = {
-  href: "/relax",
-  labelKey: "nav.relax",
-  match: (p) => p === "/relax" || p.startsWith("/relax/"),
-  Icon: IconRelax,
+const scenesItem: NavItemDef = {
+  href: "/scenes",
+  labelKey: "nav.scenes",
+  match: (p) => p === "/scenes" || p.startsWith("/scenes/"),
+  Icon: IconScenes,
 };
 
 const goldenVersesItem: NavItemDef = {
@@ -104,7 +94,7 @@ const prayerItem: NavItemDef = {
   Icon: IconPrayer,
 };
 
-const navLeft: NavItemDef[] = [homeItem, relaxItem];
+const navLeft: NavItemDef[] = [homeItem, scenesItem];
 const navRight: NavItemDef[] = [goldenVersesItem, prayerItem];
 
 function iconLinkClass(active: boolean) {
@@ -128,12 +118,7 @@ type Props = { placement: Placement };
 export function HomeShellFloatingRouteNav({ placement }: Props) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
-  const { peekDockChrome } = useHomeDockChrome();
   const { canPlay, playing, togglePlay } = useMusicShellPlayback();
-
-  const onHomeNavClick = () => {
-    peekDockChrome();
-  };
 
   const outer =
     placement === "fixedShell"
@@ -151,7 +136,6 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
         aria-current={active ? "page" : undefined}
         aria-label={t(item.labelKey)}
         className={iconLinkClass(active)}
-        onClick={item === homeItem ? onHomeNavClick : undefined}
       >
         <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
       </Link>
@@ -161,7 +145,7 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
   return (
     <div className={outer}>
       <nav
-        className="pointer-events-auto flex min-w-0 max-w-[min(100%,24rem)] items-center justify-center gap-2 sm:max-w-md sm:gap-3"
+        className="pointer-events-auto flex min-w-0 max-w-[min(100%,28rem)] items-center justify-center gap-2 sm:max-w-lg sm:gap-3"
         aria-label={t("nav.mainLabel")}
       >
         <div className="flex items-center gap-1 sm:gap-1.5">{navLeft.map(renderIconLink)}</div>

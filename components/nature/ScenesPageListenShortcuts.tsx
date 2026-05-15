@@ -6,7 +6,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /** 与 `NatureSceneLayer` 方卡同尺寸与圆角，便于视觉一致 */
 const TILE_BASE =
-  "group relative flex aspect-square w-[min(5rem,calc((100cqi-1.5rem)/4.5))] shrink-0 snap-start items-stretch justify-stretch overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[min(5rem,calc((100cqi-2.25rem)/4.5))] sm:rounded-[0.85rem]";
+  "group relative flex aspect-square w-[4.25rem] shrink-0 items-stretch justify-stretch overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[4.75rem] sm:rounded-[0.85rem]";
 const TILE_IDLE = "ring-white/[0.14]";
 const TILE_ACTIVE = "ring-2 ring-sky-400/70 ring-inset";
 

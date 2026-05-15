@@ -21,7 +21,7 @@ function cardTitle(v: NatureVideoEntry, fallback: string) {
 }
 
 /**
- * 自然页第二层：横向场景小图（缩略 / 封面）；当前片置末。窄屏约多张露出暗示横滑；宽屏单块上限约 5rem。
+ * 场景页：方卡缩略 / 封面；当前片置末。全部铺开、横向居中，多行时自动换行（不横滑）。
  */
 export function NatureSceneLayer({
   className = "",
@@ -59,12 +59,7 @@ export function NatureSceneLayer({
       aria-label={t("nature.scenes.sectionAria")}
       data-shell-swipe-nav-exclude
     >
-      <div
-        className="w-full overflow-x-auto overscroll-x-contain pb-1 pt-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        <div className="flex min-w-full justify-center">
-          <div className="flex w-max min-w-0 flex-nowrap snap-x snap-mandatory gap-2 sm:gap-2.5">
+      <div className="flex w-full flex-wrap justify-center gap-2 pb-1 pt-0.5 sm:gap-2.5">
           {orderedVideos.map((v) => {
             const selected = v.id === activeVideoId;
             const preparing = prepareSceneId !== null && v.id === prepareSceneId;
@@ -83,7 +78,7 @@ export function NatureSceneLayer({
                 }
                 onClick={() => select(v.id)}
                 className={
-                  "group relative aspect-square w-[min(5rem,calc((100cqi-1.5rem)/4.5))] shrink-0 snap-start overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[min(5rem,calc((100cqi-2.25rem)/4.5))] sm:rounded-[0.85rem] " +
+                  "group relative aspect-square w-[4.25rem] shrink-0 overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[4.75rem] sm:rounded-[0.85rem] " +
                   (selected ? "ring-2 ring-sky-400/70 ring-inset " : "ring-white/[0.14] ")
                 }
               >
@@ -137,8 +132,6 @@ export function NatureSceneLayer({
               </button>
             );
           })}
-          </div>
-        </div>
       </div>
     </section>
   );

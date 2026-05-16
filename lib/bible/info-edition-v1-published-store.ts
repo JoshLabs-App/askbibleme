@@ -106,7 +106,18 @@ export function publishInfoEditionFromGenerations(
   const now = new Date().toISOString();
   const entry = generationToPublishedChapter(bookId, chapter, picked, now);
   const file = readInfoEditionV1PublishedSync(cwd);
-  file.chapters[infoEditionChapterKey(bookId, chapter)] = entry;
+  const key = infoEditionChapterKey(bookId, chapter);
+  file.chapters[key] = entry;
+  if (file.pending?.[key]) {
+    const pending = { ...file.pending };
+    delete pending[key];
+    file.pending = pending;
+  }
+  if (file.failed?.[key]) {
+    const failed = { ...file.failed };
+    delete failed[key];
+    file.failed = failed;
+  }
   writeInfoEditionV1PublishedSync(cwd, file);
   return entry;
 }

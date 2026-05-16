@@ -5,7 +5,6 @@ import { ReadChapterNav } from "@/components/bible/ReadChapterNav";
 import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadChapterFromDefaultTranslation } from "@/lib/bible/load-chapter-from-default-translation";
-import { loadPublishedInfoEditionChapter } from "@/lib/bible/info-edition-v1-published-store";
 import { ReadChapterInfoEditionBlock } from "@/components/bible/ReadChapterInfoEditionBlock";
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
@@ -27,7 +26,6 @@ export default async function ReadChapterPage({ params }: Props) {
   if (!data) notFound();
 
   const { prev, next } = resolveReadChapterNeighbors(data.bookId, data.chapter);
-  const infoEdition = loadPublishedInfoEditionChapter(process.cwd(), data.bookId, data.chapter);
 
   return (
     <ScriptureChrome>
@@ -50,7 +48,7 @@ export default async function ReadChapterPage({ params }: Props) {
             verses={data.verses}
           />
         </div>
-        {infoEdition ? <ReadChapterInfoEditionBlock published={infoEdition} /> : null}
+        <ReadChapterInfoEditionBlock bookId={data.bookId} chapter={data.chapter} />
         <ReadChapterTodayPlanBlock bookId={data.bookId} chapter={data.chapter} />
         <ReadChapterEndNav bookName={data.bookName} chapter={data.chapter} prev={prev} next={next} />
       </article>

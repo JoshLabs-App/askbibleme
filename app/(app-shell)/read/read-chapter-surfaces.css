@@ -158,9 +158,91 @@
   padding-bottom: 0.25rem;
 }
 
+/* 信息版入口：默认不加载正文 */
+.read-chapter-info-edition-invite {
+  margin-top: clamp(2rem, 6vw, 2.75rem);
+  text-align: center;
+}
+
+.read-chapter-info-edition-invite-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.read-chapter-info-edition-trigger {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.28) 100%, transparent);
+  background: color-mix(in srgb, rgba(255, 252, 245, 0.55) 100%, transparent);
+  padding: 0.45rem 1.1rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, rgb(92 58 28) 90%, transparent);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.read-chapter-info-edition-trigger:hover:not(:disabled) {
+  background: color-mix(in srgb, rgba(255, 252, 245, 0.82) 100%, transparent);
+  border-color: color-mix(in srgb, rgba(120, 75, 30, 0.38) 100%, transparent);
+}
+
+.read-chapter-info-edition-trigger:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.dark .read-chapter-info-edition-trigger {
+  border-color: color-mix(in srgb, rgba(245, 230, 210, 0.18) 100%, transparent);
+  background: color-mix(in srgb, rgba(28, 26, 24, 0.45) 100%, transparent);
+  color: color-mix(in srgb, rgb(245 235 220) 85%, transparent);
+}
+
+.read-chapter-info-edition-invite-hint {
+  margin: 0;
+  max-width: 16rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, rgb(120 75 30) 48%, transparent);
+}
+
+.dark .read-chapter-info-edition-invite-hint {
+  color: color-mix(in srgb, rgb(245 230 210) 38%, transparent);
+}
+
+.read-chapter-info-edition-loading-text {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, rgb(120 75 30) 55%, transparent);
+}
+
+.read-chapter-info-edition-panel--error {
+  text-align: center;
+}
+
+.read-chapter-info-edition-error-text {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, rgb(140 50 40) 85%, transparent);
+}
+
+.read-chapter-info-edition-retry {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.25) 100%, transparent);
+  background: transparent;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, rgb(92 58 28) 88%, transparent);
+}
+
 /* V1 信息版（基础版）：与经文明确分为第二块内容 */
 .read-chapter-info-edition {
-  margin-top: clamp(2.5rem, 8vw, 3.5rem);
+  margin-top: clamp(1.25rem, 4vw, 1.75rem);
   text-align: start;
 }
 

@@ -43,6 +43,8 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
   const [published, setPublished] = useState<InfoEditionV1PublishedChapter | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollStartedRef = useRef<number | null>(null);
+  const POLL_MAX_MS = 4 * 60 * 1000;
 
   const stopPoll = useCallback(() => {
     if (pollRef.current) {
@@ -74,7 +76,15 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
 
   const pollUntilReady = useCallback(() => {
     stopPoll();
+    pollStartedRef.current = Date.now();
     pollRef.current = setInterval(() => {
+      if (pollStartedRef.current && Date.now() - pollStartedRef.current > POLL_MAX_MS) {
+        stopPoll();
+        setErr(t("pages.read.infoEditionTimeout"));
+        setPhase("error");
+        setOpen(true);
+        return;
+      }
       void (async () => {
         const res = await fetch(
           `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`,

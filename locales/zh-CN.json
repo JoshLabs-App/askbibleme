@@ -684,6 +684,7 @@
       "infoEditionInviteHint": "导读非经文，需时再加载",
       "infoEditionGenerating": "正在准备本章导读…",
       "infoEditionLoadFailed": "暂时无法加载本章导读",
+      "infoEditionTimeout": "生成时间较长，请稍后重试",
       "infoEditionRetry": "重试",
       "infoEditionShow": "展开导读",
       "infoEditionHide": "收起导读",

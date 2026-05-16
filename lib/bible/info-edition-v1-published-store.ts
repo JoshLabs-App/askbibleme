@@ -49,6 +49,46 @@ function normalizeChapter(raw: unknown): InfoEditionV1PublishedChapter | null {
   };
 }
 
+function normalizePending(
+  raw: unknown,
+): InfoEditionV1PublishedFile["pending"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const out: NonNullable<InfoEditionV1PublishedFile["pending"]> = {};
+  for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
+    if (!val || typeof val !== "object") continue;
+    const o = val as Record<string, unknown>;
+    const bookId = typeof o.bookId === "string" ? o.bookId.trim().toUpperCase() : "";
+    const chapter = Number(o.chapter);
+    const startedAt = typeof o.startedAt === "string" ? o.startedAt.trim() : "";
+    if (!bookId || !Number.isInteger(chapter) || chapter < 1 || !startedAt) continue;
+    out[key] = { bookId, chapter, startedAt };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function normalizeFailed(
+  raw: unknown,
+): InfoEditionV1PublishedFile["failed"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const out: NonNullable<InfoEditionV1PublishedFile["failed"]> = {};
+  for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
+    if (!val || typeof val !== "object") continue;
+    const o = val as Record<string, unknown>;
+    const bookId = typeof o.bookId === "string" ? o.bookId.trim().toUpperCase() : "";
+    const chapter = Number(o.chapter);
+    const error = typeof o.error === "string" ? o.error.trim() : "";
+    const failedAt = typeof o.failedAt === "string" ? o.failedAt.trim() : "";
+    if (!bookId || !Number.isInteger(chapter) || chapter < 1 || !error) continue;
+    out[key] = {
+      bookId,
+      chapter,
+      error,
+      failedAt: failedAt || new Date().toISOString(),
+    };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function normalizeFile(raw: unknown): InfoEditionV1PublishedFile {
   if (!raw || typeof raw !== "object") return defaultFile();
   const o = raw as Record<string, unknown>;
@@ -65,6 +105,8 @@ function normalizeFile(raw: unknown): InfoEditionV1PublishedFile {
     defaultProfileId:
       typeof o.defaultProfileId === "string" ? o.defaultProfileId : INFO_EDITION_V1_PUBLISH_PROFILE_ID,
     chapters,
+    pending: normalizePending(o.pending),
+    failed: normalizeFailed(o.failed),
   };
 }
 

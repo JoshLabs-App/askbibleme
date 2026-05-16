@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { generateInfoEditionChapterForReader } from "@/lib/bible/info-edition-v1-generate-reader";
+import { after, NextResponse } from "next/server";
 import {
-  clearInfoEditionPending,
   getInfoEditionReaderCache,
-  setInfoEditionReaderFailed,
   tryBeginInfoEditionPending,
 } from "@/lib/bible/info-edition-v1-reader-cache";
+import { runInfoEditionV1ReaderGenerationJob } from "@/lib/bible/info-edition-v1-reader-job";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
+
+export const maxDuration = 300;
 
 function parseBookChapter(searchParams: URLSearchParams): { bookId: string; chapter: number } | { error: string } {
   const bookId = searchParams.get("bookId")?.trim().toUpperCase() ?? "";
@@ -21,16 +21,15 @@ function parseBookChapter(searchParams: URLSearchParams): { bookId: string; chap
   return { bookId, chapter };
 }
 
+const noStore = { headers: { "Cache-Control": "no-store" } };
+
 export async function GET(req: Request) {
   const parsed = parseBookChapter(new URL(req.url).searchParams);
   if ("error" in parsed) {
     return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
   }
   const cache = getInfoEditionReaderCache(process.cwd(), parsed.bookId, parsed.chapter);
-  return NextResponse.json(
-    { ok: true, ...cache },
-    { headers: { "Cache-Control": "no-store" } },
-  );
+  return NextResponse.json({ ok: true, ...cache }, noStore);
 }
 
 export async function POST(req: Request) {
@@ -67,41 +66,18 @@ export async function POST(req: Request) {
   const cwd = process.cwd();
   const cached = getInfoEditionReaderCache(cwd, bookId, chapter);
   if (cached.status === "ready" && cached.published) {
-    return NextResponse.json(
-      { ok: true, status: "ready", published: cached.published },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    return NextResponse.json({ ok: true, status: "ready", published: cached.published }, noStore);
   }
   if (cached.status === "pending") {
-    return NextResponse.json(
-      { ok: true, status: "pending" },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    return NextResponse.json({ ok: true, status: "pending" }, noStore);
   }
 
   const began = tryBeginInfoEditionPending(cwd, bookId, chapter);
   if (!began) {
-    return NextResponse.json(
-      { ok: true, status: "pending" },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    return NextResponse.json({ ok: true, status: "pending" }, noStore);
   }
 
-  try {
-    const result = await generateInfoEditionChapterForReader(cwd, bookId, chapter);
-    clearInfoEditionPending(cwd, bookId, chapter);
-    if (!result.ok) {
-      setInfoEditionReaderFailed(cwd, bookId, chapter, result.error);
-      return NextResponse.json({ ok: false, error: result.error }, { status: 502 });
-    }
-    return NextResponse.json(
-      { ok: true, status: "ready", published: result.published },
-      { headers: { "Cache-Control": "no-store" } },
-    );
-  } catch (e) {
-    clearInfoEditionPending(cwd, bookId, chapter);
-    const msg = e instanceof Error ? e.message : String(e);
-    setInfoEditionReaderFailed(cwd, bookId, chapter, msg);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
-  }
+  after(() => runInfoEditionV1ReaderGenerationJob(cwd, bookId, chapter));
+
+  return NextResponse.json({ ok: true, status: "pending" }, noStore);
 }

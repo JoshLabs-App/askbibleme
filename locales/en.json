@@ -684,6 +684,7 @@
       "infoEditionInviteHint": "Guide is separate from Scripture; loads on demand",
       "infoEditionGenerating": "Preparing chapter guide…",
       "infoEditionLoadFailed": "Could not load the chapter guide",
+      "infoEditionTimeout": "Generation is taking longer than expected. Please try again.",
       "infoEditionRetry": "Retry",
       "infoEditionShow": "Show guide",
       "infoEditionHide": "Hide guide",

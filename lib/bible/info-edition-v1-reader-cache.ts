@@ -13,7 +13,7 @@ import type {
   InfoEditionV1PublishedChapter,
 } from "@/lib/bible/info-edition-v1-published-types";
 
-const PENDING_STALE_MS = 8 * 60 * 1000;
+const PENDING_STALE_MS = 4 * 60 * 1000;
 
 export type InfoEditionV1ReaderCacheResponse = {
   status: InfoEditionV1ChapterCacheStatus;

@@ -14,7 +14,7 @@ type ChatCompletionResponse = {
 export async function createChatCompletion(
   settings: ResolvedAISettings,
   messages: ChatMessage[],
-  opts?: { maxTokens?: number },
+  opts?: { maxTokens?: number; timeoutMs?: number },
 ): Promise<{ text: string } | { error: string; status?: number }> {
   const url = `${settings.baseUrl}/chat/completions`;
   const headers: Record<string, string> = {
@@ -24,16 +24,35 @@ export async function createChatCompletion(
     headers.Authorization = `Bearer ${settings.apiKey}`;
   }
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      model: settings.model,
-      messages,
-      temperature: 0.35,
-      max_tokens: opts?.maxTokens ?? 1800,
-    }),
-  });
+  const timeoutMs = opts?.timeoutMs ?? 0;
+  const controller = timeoutMs > 0 ? new AbortController() : null;
+  const timeoutId =
+    controller && timeoutMs > 0
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : undefined;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers,
+      signal: controller?.signal,
+      body: JSON.stringify({
+        model: settings.model,
+        messages,
+        temperature: 0.35,
+        max_tokens: opts?.maxTokens ?? 1800,
+      }),
+    });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      return { error: "请求超时，请稍后再试。" };
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    return { error: msg || "无法连接 AI 服务。" };
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 
   const json = (await res.json()) as ChatCompletionResponse;
 

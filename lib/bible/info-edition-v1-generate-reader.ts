@@ -18,9 +18,13 @@ export type GenerateReaderChapterResult =
   | { ok: true; published: InfoEditionV1PublishedChapter }
   | { ok: false; error: string };
 
+const READER_RULES_MAX_CHARS = 2_800;
+
 function readerDescriptionRules(cwd: string): string {
   const ws = readInfoEditionV1WorkspaceSync(cwd);
-  return ws.current.descriptionRules?.trim() ?? "";
+  const rules = ws.current.descriptionRules?.trim() ?? "";
+  if (rules.length <= READER_RULES_MAX_CHARS) return rules;
+  return `${rules.slice(0, READER_RULES_MAX_CHARS)}\n\n[…描述规则已截断，以加快生成]`;
 }
 
 /** 读经页按需：基础版 × DeepSeek，生成一章并写入发布缓存 */
@@ -63,7 +67,10 @@ export async function generateInfoEditionChapterForReader(
   const messages = buildInfoEditionV1Messages(loaded, readerDescriptionRules(cwd), {
     systemPrompt: role.systemPrompt,
   });
-  const result = await createChatCompletion(settings, messages);
+  const result = await createChatCompletion(settings, messages, {
+    maxTokens: 1_400,
+    timeoutMs: 180_000,
+  });
   if ("error" in result) return { ok: false, error: result.error };
 
   const generation: InfoEditionV1Generation = {

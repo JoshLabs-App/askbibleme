@@ -24,6 +24,9 @@ function syncParchmentShellDataset(active: boolean) {
     if (topPx > 0) {
       html.style.setProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR, `${topPx}px`);
       html.style.setProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR, `${topPx}px`);
+    } else {
+      html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
+      html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR);
     }
   } else {
     Reflect.deleteProperty(html.dataset, SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY);
@@ -87,7 +90,7 @@ export function AppShellFixedChrome({ children }: Props) {
         className={`${safeAreaClass} app-shell-safe-area-fill--top left-0 right-0 top-0`}
         style={
           parchmentShell
-            ? { ...PARCHMENT_SHELL_SURFACE_STYLE, height: "env(safe-area-inset-top, 0px)" }
+            ? PARCHMENT_SHELL_SURFACE_STYLE
             : { ...safeFill, height: "env(safe-area-inset-top, 0px)" }
         }
       />

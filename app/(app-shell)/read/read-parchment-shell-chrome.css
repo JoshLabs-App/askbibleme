@@ -1,11 +1,40 @@
 /**
- * 读经 / 祷告：单层羊皮底图（仅 `.app-shell-parchment-backdrop` 绘制，避免顶栏/安全区重复拉伸出「分层」）
+ * 读经 / 祷告：单层羊皮底图（`html`/`body` + `background-attachment: fixed` 全屏铺底，避免顶栏/安全区再拉伸出一层）
  */
 
 html[data-app-shell-safe-fill="parchment"],
 html[data-app-shell-safe-fill="parchment"] body {
   background-color: var(--read-parchment-bg-canvas, #ecd9b9) !important;
-  background-image: none !important;
+  background-image: var(--read-parchment-bg-image) !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% 100% !important;
+  background-position: center center !important;
+  background-attachment: fixed !important;
+}
+
+@media (min-width: 480px) and (orientation: landscape),
+  (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  html[data-app-shell-safe-fill="parchment"],
+  html[data-app-shell-safe-fill="parchment"] body {
+    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image)) !important;
+  }
+}
+
+.dark html[data-app-shell-safe-fill="parchment"],
+.dark html[data-app-shell-safe-fill="parchment"] body {
+  background-color: #1a1512 !important;
+  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+    var(--read-parchment-bg-image) !important;
+  background-blend-mode: multiply, normal;
+}
+
+@media (min-width: 480px) and (orientation: landscape),
+  (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  .dark html[data-app-shell-safe-fill="parchment"],
+  .dark html[data-app-shell-safe-fill="parchment"] body {
+    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image)) !important;
+  }
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {
@@ -14,48 +43,18 @@ html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
-  background-image: var(--read-parchment-bg-image);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-position: center center;
+  display: none;
 }
 
-@media (min-width: 480px) and (orientation: landscape),
-  (min-width: 480px) and (min-aspect-ratio: 4/3) {
-  html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
-    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
-  }
-}
-
-.dark html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
-  background-color: #1a1512;
-  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-    var(--read-parchment-bg-image);
-  background-blend-mode: multiply, normal;
-}
-
-@media (min-width: 480px) and (orientation: landscape),
-  (min-width: 480px) and (min-aspect-ratio: 4/3) {
-  .dark html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
-    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
-  }
-}
-
-/* 安全区条带只占位，不再单独铺底图（否则会再拉伸出一层） */
+/* 顶缘安全区条带不占高、不铺底（内容列用 padding + env 避让；PWA 用 --app-shell-safe-top-effective） */
 html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
   background: transparent !important;
   background-image: none !important;
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill--top {
-  height: var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px));
-  min-height: var(--app-shell-safe-top-fallback, 0px);
+  height: 0 !important;
+  min-height: 0 !important;
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-inner {

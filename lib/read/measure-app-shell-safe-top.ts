@@ -50,17 +50,14 @@ export function measureAppShellSafeTopPx(): number {
     const offsetTop = Math.round(vv.offsetTop);
     if (offsetTop > 0) return offsetTop;
 
-    const layoutGap = Math.round(window.innerHeight - vv.height - vv.offsetTop);
-    if (layoutGap > 0 && layoutGap <= 96) return layoutGap;
+    if (!isAndroid()) {
+      const layoutGap = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+      if (layoutGap > 0 && layoutGap <= 96) return layoutGap;
+    }
   }
 
-  if (isAndroid()) {
-    if (isDisplayStandalone()) {
-      return isSamsungDevice() ? SAMSUNG_STANDALONE_MIN_TOP_PX : ANDROID_STANDALONE_MIN_TOP_PX;
-    }
-
-    const screenGap = Math.round(window.screen.height - window.innerHeight);
-    if (screenGap > 20 && screenGap <= 120) return Math.min(screenGap, 56);
+  if (isAndroid() && isDisplayStandalone()) {
+    return isSamsungDevice() ? SAMSUNG_STANDALONE_MIN_TOP_PX : ANDROID_STANDALONE_MIN_TOP_PX;
   }
 
   return 0;

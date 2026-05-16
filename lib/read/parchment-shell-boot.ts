@@ -15,7 +15,7 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   html.style.backgroundImage = "none";
   html.style.colorScheme = dark ? "dark" : "light";
 
-  var topPx = 32;
+  var topPx = 0;
   try {
     var probe = document.createElement("div");
     probe.style.cssText =
@@ -23,18 +23,20 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
     html.appendChild(probe);
     var envTop = probe.getBoundingClientRect().height;
     probe.remove();
-    if (envTop > 0) topPx = Math.round(envTop);
-    else if (/Samsung|SM-S9/i.test(navigator.userAgent)) topPx = 32;
-    else if (
+    if (envTop > 0) {
+      topPx = Math.round(envTop);
+    } else if (
       window.matchMedia("(display-mode: standalone)").matches ||
       window.matchMedia("(display-mode: fullscreen)").matches
     ) {
-      topPx = 28;
+      topPx = /Samsung|SM-S9/i.test(navigator.userAgent) ? 32 : 28;
     }
   } catch (e) {}
 
-  html.style.setProperty("--app-shell-safe-top-effective", topPx + "px");
-  html.style.setProperty("--app-shell-safe-top-fallback", topPx + "px");
+  if (topPx > 0) {
+    html.style.setProperty("--app-shell-safe-top-effective", topPx + "px");
+    html.style.setProperty("--app-shell-safe-top-fallback", topPx + "px");
+  }
 
   var metas = document.querySelectorAll('meta[name="theme-color"]');
   for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", color);

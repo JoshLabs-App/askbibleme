@@ -22,10 +22,7 @@ function syncSafeTopEffective() {
     return;
   }
   root.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
-  root.style.setProperty(
-    SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
-    "env(safe-area-inset-top, 0px)",
-  );
+  root.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR);
 }
 
 function syncParchmentThemeColor() {

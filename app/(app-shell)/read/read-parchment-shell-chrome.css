@@ -5,11 +5,19 @@
 html[data-app-shell-safe-fill="parchment"],
 html[data-app-shell-safe-fill="parchment"] body {
   background-color: var(--read-parchment-bg-canvas, #e5d2bf) !important;
+  background-image: var(--read-parchment-bg-image);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
 }
 
 .dark html[data-app-shell-safe-fill="parchment"],
 .dark html[data-app-shell-safe-fill="parchment"] body {
   background-color: #1a1512 !important;
+  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+    var(--read-parchment-bg-image);
+  background-blend-mode: multiply, normal;
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {

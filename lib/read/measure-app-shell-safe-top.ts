@@ -1,5 +1,7 @@
-/** Android 独立屏 / 刘海机：`env(safe-area-inset-top)` 为 0 时的合理下限（dp 约 24–28） */
+/** Android 独立屏：`env(safe-area-inset-top)` 为 0 时的合理下限 */
 const ANDROID_STANDALONE_MIN_TOP_PX = 28;
+/** Samsung One UI 状态栏（S23 系列等）略高 */
+const SAMSUNG_STANDALONE_MIN_TOP_PX = 32;
 
 function readSafeAreaInsetTopPx(): number {
   if (typeof document === "undefined") return 0;
@@ -15,6 +17,11 @@ function readSafeAreaInsetTopPx(): number {
 function isAndroid(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Android/i.test(navigator.userAgent);
+}
+
+function isSamsungDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Samsung|SM-S9|SM-S2/i.test(navigator.userAgent);
 }
 
 function isDisplayStandalone(): boolean {
@@ -48,7 +55,9 @@ export function measureAppShellSafeTopPx(): number {
   }
 
   if (isAndroid()) {
-    if (isDisplayStandalone()) return ANDROID_STANDALONE_MIN_TOP_PX;
+    if (isDisplayStandalone()) {
+      return isSamsungDevice() ? SAMSUNG_STANDALONE_MIN_TOP_PX : ANDROID_STANDALONE_MIN_TOP_PX;
+    }
 
     const screenGap = Math.round(window.screen.height - window.innerHeight);
     if (screenGap > 20 && screenGap <= 120) return Math.min(screenGap, 56);

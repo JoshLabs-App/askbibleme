@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { cookies, headers } from "next/headers";
+import { PARCHMENT_SHELL_BOOT_SCRIPT } from "@/lib/read/parchment-shell-boot";
 import "./globals.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
@@ -92,6 +94,9 @@ export default async function RootLayout({
   return (
     <html lang={htmlLang} style={brandColorsToCssVars(colors) as CSSProperties}>
       <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
+        <Script id="selah-parchment-shell-boot" strategy="beforeInteractive">
+          {PARCHMENT_SHELL_BOOT_SCRIPT}
+        </Script>
         <AppSkinProvider>
           <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
             <AskbibleUserProvider>

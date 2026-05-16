@@ -184,7 +184,7 @@ export function ShellTemplateChromeLayout({
         </div>
         <AppShellTopBar
           tone={topBarTone}
-          landscapeImmersive={landscapeNarrow}
+          landscapeImmersive={landscapeNarrow && !parchmentRoute}
           rightAccessory={topBarRightAccessory}
         />
       </main>

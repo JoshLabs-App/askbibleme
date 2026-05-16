@@ -31,7 +31,7 @@
   }
 }
 
-/* 实际滚动区：上下各 100px alpha 遮罩，经文进出时渐隐 */
+/* 实际滚动区：仅底缘渐隐；顶栏由 padding 避让固定菜单/设置角标（勿做顶部 alpha 遮罩，否则章首导航被吃掉） */
 .read-bible-parchment-scroll,
 .read-chapter-scroll {
   --read-parchment-edge-fade: 100px;
@@ -45,15 +45,13 @@
   padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
   -webkit-mask-image: linear-gradient(
     to bottom,
-    hsla(0, 0%, 100%, 0) 0,
-    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade),
+    hsla(0, 0%, 100%, 1) 0,
     hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade)),
     hsla(0, 0%, 100%, 0) 100%
   );
   mask-image: linear-gradient(
     to bottom,
-    hsla(0, 0%, 100%, 0) 0,
-    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade),
+    hsla(0, 0%, 100%, 1) 0,
     hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade)),
     hsla(0, 0%, 100%, 0) 100%
   );
@@ -86,7 +84,9 @@
 .read-chapter-parchment {
   --read-parchment-pad-x: max(1.4rem, calc(env(safe-area-inset-left, 0px) + 0.35rem));
   --read-parchment-pad-x-end: max(1.4rem, calc(env(safe-area-inset-right, 0px) + 0.35rem));
-  --read-parchment-pad-top: calc(50px + env(safe-area-inset-top, 0px));
+  --read-parchment-pad-top: calc(
+    3.75rem + var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px))
+  );
   --read-parchment-pad-bottom: calc(50px + env(safe-area-inset-bottom, 0px));
   max-width: min(28rem, 100%);
   margin-inline: auto;

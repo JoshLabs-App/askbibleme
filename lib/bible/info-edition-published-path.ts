@@ -28,7 +28,7 @@ function infoEditionExternalDataRoot(): string | null {
 /**
  * 可写目录（用于判断磁盘模式是否可用）。
  * - 本机 dev：`<cwd>/data/bible`
- * - 生产磁盘：挂载根目录（如 `/mnt/data`），文件直接写在根下，避免 `mkdir bible` 权限问题
+ * - 生产磁盘：挂载根目录（如 `/var/data`），文件直接写在根下，避免 `mkdir bible` 权限问题
  */
 export function infoEditionWritableBibleDir(_cwd: string): string | null {
   if (!isInfoEditionDiskSaveEnabled()) return null;

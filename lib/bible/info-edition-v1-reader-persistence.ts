@@ -58,7 +58,7 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
   if (isInfoEditionDiskSaveMisconfiguredInProduction()) {
     return (
       "已开启 INFO_EDITION_DISK_SAVE，但未配置 DATA_ROOT / INFO_EDITION_DATA_DIR。" +
-      " Render 请在后台挂载 Persistent Disk 并设 DATA_ROOT=/mnt/data；或改用 Supabase + AI_API_KEY。"
+      " Render 请在后台挂载 Persistent Disk 并设 DATA_ROOT 为挂载路径（如 /var/data）；或改用 Supabase + AI_API_KEY。"
     );
   }
 
@@ -86,7 +86,7 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
         );
       }
       return (
-        "Render 磁盘方案：① Disks 挂载 /mnt/data；② Environment 设 INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；" +
+        "Render 磁盘方案：① Disks 的 Mount path 与 DATA_ROOT 一致（如 /var/data）；② INFO_EDITION_DISK_SAVE=1；" +
         "③ AI_API_KEY、AI_BASE_URL、AI_MODEL；④ Manual Deploy。"
       );
     }
@@ -101,7 +101,7 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
     );
   }
   if (mode === "disk" && !isInfoEditionProductionDiskConfigured()) {
-    return "生产环境缺少 DATA_ROOT 或 INFO_EDITION_DATA_DIR（Render 请挂载 Persistent Disk 到该路径，如 /mnt/data）。";
+    return "生产环境缺少 DATA_ROOT 或 INFO_EDITION_DATA_DIR（Render 请挂载 Persistent Disk 到同一路径，如 /var/data）。";
   }
   return null;
 }

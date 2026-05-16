@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { NatureSceneCategorySelect } from "@/components/admin/NatureSceneCategorySelect";
+import { NatureVideoAdminListThumb } from "@/components/admin/NatureVideoAdminListThumb";
 import { NatureVideoSquareThumbModal } from "@/components/admin/NatureVideoSquareThumbModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { nextDateNumberedNatureVideoTitle } from "@/lib/music-companion/track-naming";
@@ -540,6 +541,14 @@ export function NatureVideoAdminSection({
             const active = settings.activeVideoId === v.id;
             return (
               <li key={v.id} className="px-3 py-3">
+                <div className="flex gap-3">
+                  <NatureVideoAdminListThumb
+                    video={v}
+                    active={active}
+                    disabled={busy}
+                    onPress={() => void setActive(v.id)}
+                  />
+                  <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="radio"
@@ -603,7 +612,8 @@ export function NatureVideoAdminSection({
                     母片：{v.src4k.trim()}
                   </p>
                 ) : null}
-
+                  </div>
+                </div>
               </li>
             );
           })

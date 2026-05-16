@@ -52,6 +52,14 @@ async function parseJson(res: Response): Promise<Record<string, unknown>> {
   }
 }
 
+function apiFailureMessage(j: Record<string, unknown>, res: Response): string | undefined {
+  if (typeof j.error === "string" && j.error.trim()) return j.error.trim();
+  if (j.ok === false && typeof j.message === "string") return j.message.trim();
+  if (!res.ok) return `HTTP ${res.status}`;
+  if (j.ok === false) return "请求未成功";
+  return undefined;
+}
+
 /** 读经页：已有导读则默认展开；无则点击后再生成或加载 */
 export function ReadChapterInfoEditionBlock({
   bookId,
@@ -121,11 +129,9 @@ export function ReadChapterInfoEditionBlock({
           { cache: "no-store" },
         );
         const j = await parseJson(res);
-        if (!res.ok) {
+        if (!res.ok || j.ok === false) {
           stopPoll();
-          setErr(
-            formatInfoEditionError(typeof j.error === "string" ? j.error : undefined, t),
-          );
+          setErr(formatInfoEditionError(apiFailureMessage(j, res), t));
           setPhase("error");
           setOpen(true);
           return;
@@ -143,8 +149,8 @@ export function ReadChapterInfoEditionBlock({
     const qs = `bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`;
     const getRes = await fetch(`/api/read/info-edition-v1?${qs}`, { cache: "no-store" });
     const getJ = await parseJson(getRes);
-    if (!getRes.ok) {
-      setErr(formatInfoEditionError(typeof getJ.error === "string" ? getJ.error : undefined, t));
+    if (!getRes.ok || getJ.ok === false) {
+      setErr(formatInfoEditionError(apiFailureMessage(getJ, getRes), t));
       setPhase("error");
       setOpen(true);
       return;
@@ -161,9 +167,10 @@ export function ReadChapterInfoEditionBlock({
       body: JSON.stringify({ bookId, chapter }),
     });
     const postJ = await parseJson(postRes);
-    if (!postRes.ok) {
+    if (!postRes.ok || postJ.ok === false) {
       stopPoll();
-      setErr(formatInfoEditionError(typeof postJ.error === "string" ? postJ.error : undefined, t));
+      if (postJ.status === "failed" && applyCachePayload(postJ)) return;
+      setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
       setPhase("error");
       setOpen(true);
       return;

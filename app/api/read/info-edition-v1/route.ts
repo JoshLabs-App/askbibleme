@@ -47,7 +47,10 @@ export async function POST(req: Request) {
     if (!isInfoEditionReaderGenerateAllowed()) {
       const error =
         infoEditionReaderGenerateBlockedReason() ?? "本章导读生成暂不可用。";
-      return NextResponse.json({ ok: false, error }, { status: 503, ...noStore });
+      return NextResponse.json(
+        { ok: false, status: "failed", error },
+        { status: 503, ...noStore },
+      );
     }
 
     let body: unknown;

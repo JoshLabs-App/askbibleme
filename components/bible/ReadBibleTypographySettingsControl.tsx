@@ -84,10 +84,10 @@ export function ReadBibleTypographySettingsControl() {
             value={prefs.font}
             onChange={(e) => setFont(e.target.value as typeof prefs.font)}
           >
+            <option value="system">{t("pages.read.typography.fontSystem")}</option>
             <option value="songti">{t("pages.read.typography.fontSongti")}</option>
             <option value="kaiti">{t("pages.read.typography.fontKaiti")}</option>
             <option value="heiti">{t("pages.read.typography.fontHeiti")}</option>
-            <option value="system">{t("pages.read.typography.fontSystem")}</option>
           </select>
           <label className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200" htmlFor="read-bible-size-select">
             {t("pages.read.typography.sizeLabel")}

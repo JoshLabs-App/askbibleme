@@ -73,7 +73,7 @@ const READ_BIBLE_SIZE_TOKENS: Record<ReadBibleSizeId, SizeTokens> = {
 };
 
 export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
-  font: "songti",
+  font: "system",
   size: "m",
 };
 
@@ -100,7 +100,7 @@ export function parseReadBibleTypographyPrefs(raw: string | null): ReadBibleTypo
   if (!raw || typeof raw !== "string") return { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
   try {
     const j = JSON.parse(raw) as Partial<ReadBibleTypographyPrefsV1>;
-    const font = j.font === "kaiti" || j.font === "heiti" || j.font === "system" || j.font === "songti" ? j.font : "songti";
+    const font = j.font === "kaiti" || j.font === "heiti" || j.font === "system" || j.font === "songti" ? j.font : "system";
     const size = j.size === "s" || j.size === "l" || j.size === "xl" || j.size === "m" ? j.size : "m";
     return { font, size };
   } catch {

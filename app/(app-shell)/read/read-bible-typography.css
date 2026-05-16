@@ -1,30 +1,18 @@
-/* /read、/prayer：默认宋体系；字族与字号由 `ReadBibleTypographyProvider` 写 `documentElement` CSS 变量 */
+/* /read、/prayer：默认系统字体；字族与字号由 `ReadBibleTypographyProvider` 写 `documentElement` CSS 变量 */
 .read-bible-typography {
   font-family: var(
     --read-bible-font-family,
-    "Songti SC",
-    "STSong",
-    "Songti TC",
-    "STSongti-TC",
-    "Noto Serif SC",
-    "Noto Serif TC",
-    "SimSun",
-    "NSimSun",
-    "PMingLiU",
-    "MingLiU",
-    "Hiragino Mincho ProN",
-    "Yu Mincho",
-    "MS Mincho",
-    "Iowan Old Style",
-    "Palatino Linotype",
-    Palatino,
-    "Book Antiqua",
-    Georgia,
-    Cambria,
-    "Times New Roman",
-    Times,
-    ui-serif,
-    serif
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif
   );
   -webkit-font-smoothing: antialiased;
 }

@@ -28,8 +28,8 @@ const overview: {
     title: "圣经",
     items: [
       { href: "/admin/read/versions", label: "译本与上传", hint: "上传 selah-bible-v1 JSON、设默认译本" },
+      { href: "/admin/read/golden-verse-themes", label: "金句主题", hint: "BIBLE 主题标签墙（本地 SQLite，需先 import）" },
       { href: "/admin/read/golden-verses", label: "金句", hint: "首页轮播与主题分类经节（只读总览）" },
-      { href: "/admin/read/openbible-topics", label: "主题经文索引", hint: "OpenBible 原始行，本地 SQLite 筛选与经文预览" },
       { href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" },
     ],
   },

@@ -35,7 +35,7 @@ function outDir(scopeId: string): string {
   return path.join(cwd, "public", "data", "home-prayer-pools", scopeId);
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const index = readTranslationsIndexSync(cwd);
   const zhTids = translationIdsPresent(index, HOME_POOL_ZH_TRANSLATION_IDS);
   const enTids = translationIdsPresent(index, HOME_POOL_EN_TRANSLATION_IDS);
@@ -62,11 +62,11 @@ function main(): void {
     for (const row of rows) {
       const byTranslationId: Record<string, HomeVerseEntry> = {};
       for (const tid of zhTids) {
-        const entry = resolveVerseRefToHomeEntry(cwd, { ...row.ref, translationId: tid }, "zh-CN");
+        const entry = await resolveVerseRefToHomeEntry(cwd, { ...row.ref, translationId: tid }, "zh-CN");
         if (homeVerseEntryFitsPrayerHomeDisplay(entry)) byTranslationId[tid] = entry!;
       }
       for (const tid of enTids) {
-        const entry = resolveVerseRefToHomeEntry(cwd, { ...row.ref, translationId: tid }, "en");
+        const entry = await resolveVerseRefToHomeEntry(cwd, { ...row.ref, translationId: tid }, "en");
         if (homeVerseEntryFitsPrayerHomeDisplay(entry)) byTranslationId[tid] = entry!;
       }
       const zhDefault = byTranslationId[defaultZhTid];
@@ -155,4 +155,7 @@ function main(): void {
   console.log("[home-prayer-pools] _meta.json written");
 }
 
-main();
+void main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

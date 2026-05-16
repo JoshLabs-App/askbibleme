@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { writeScriptureSqliteFromBooks } from "@/lib/bible/build-scripture-sqlite";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import { SELAH_BIBLE_FORMAT } from "@/lib/bible/translations-types";
 import {
@@ -97,6 +98,7 @@ export async function POST(req: Request) {
       format: SELAH_BIBLE_FORMAT,
       books,
     });
+    await writeScriptureSqliteFromBooks(cwd, id, books);
     const index = await readTranslationsIndex(cwd);
     const wasEmpty = index.translations.length === 0;
     const now = new Date().toISOString();

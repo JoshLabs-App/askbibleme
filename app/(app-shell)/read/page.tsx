@@ -1,24 +1,35 @@
-import { AppShellPlaceholder } from "@/components/shell/AppShellPlaceholder";
+import { ReadBibleHomeClient } from "@/components/bible/ReadBibleHomeClient";
+import { ReadBibleTypographySettingsControl } from "@/components/bible/ReadBibleTypographySettingsControl";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { readScriptureCanonCatalog } from "@/lib/bible/read-scripture-canon-catalog";
+import { readReadingPlanRegistrySync } from "@/lib/bible/reading-plans/reading-plans-store";
+import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
+import "./catalog/bible-catalog.css";
 
 export const metadata = {
   title: sitePageTitle("圣经"),
-  description: "回到文字里的路，会与首页已经遇见的经文悄悄相连——你愿意的话，就一路走下去。",
+  description: "正典六十六卷目录、今日读经与安静的阅读入口。",
 };
 
-export default function ReadPlaceholderPage() {
+export default async function ReadPlaceholderPage() {
+  const cwd = process.cwd();
+  const canon = readScriptureCanonCatalog();
+  const readingPlanRegistry = readReadingPlanRegistrySync(cwd)?.plans ?? [];
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
-      <AppShellPlaceholder
-        embedded
-        hideBackHomeCta
-        titleKey="pages.read.title"
-        leadKey="pages.read.lead"
-        bodyKey="pages.read.body"
-        secondaryCtaHref="/read/catalog"
-        secondaryCtaLabelKey="pages.read.catalogCta"
-      />
+    <ShellTemplateChromeLayout
+      contentClassName="gap-0"
+      appShellBackground={PRAYER_SHELL_FILL_LIGHT}
+      immersive
+      topBarRightAccessory={<ReadBibleTypographySettingsControl />}
+    >
+      <div className="read-bible-parchment-shell flex-1 text-amber-950 dark:text-stone-50">
+        <div className="read-bible-parchment-scroll read-bible-parchment-scroll--read-home">
+          <div className="read-bible-parchment-column read-bible-parchment-column--catalog read-bible-typography">
+            <ReadBibleHomeClient catalogSections={canon.sections} readingPlanRegistry={readingPlanRegistry} />
+          </div>
+        </div>
+      </div>
     </ShellTemplateChromeLayout>
   );
 }

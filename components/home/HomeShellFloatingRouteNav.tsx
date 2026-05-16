@@ -3,6 +3,7 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ScriptureAudioDockStrip } from "@/components/bible/ScriptureAudioDockStrip";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
@@ -38,16 +39,15 @@ function IconScenes(props: { className?: string }) {
   );
 }
 
-function IconVerse(props: { className?: string }) {
+function IconRead(props: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
       <path
-        d="M7 4h10a1 1 0 0 1 1 1v14l-3-2-3 2-3-2-3 2V5a1 1 0 0 1 1-1Z"
+        d="M12 5.25v13.5M12 5.25c-2.1-1.1-4.6-.9-6.75.65V18.6c2.15-1.35 4.65-1.55 6.75-.35M12 5.25c2.1-1.1 4.6-.9 6.75.65V18.6c-2.15-1.35-4.65-1.55-6.75-.35"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <path d="M9 9h6M9 12h4" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
     </svg>
   );
 }
@@ -80,11 +80,11 @@ const scenesItem: NavItemDef = {
   Icon: IconScenes,
 };
 
-const goldenVersesItem: NavItemDef = {
-  href: "/verse",
-  labelKey: "nav.goldenVerses",
-  match: (p) => p === "/verse" || p.startsWith("/verse/"),
-  Icon: IconVerse,
+const readItem: NavItemDef = {
+  href: "/read",
+  labelKey: "nav.read",
+  match: (p) => p === "/read" || p.startsWith("/read/"),
+  Icon: IconRead,
 };
 
 const prayerItem: NavItemDef = {
@@ -95,11 +95,11 @@ const prayerItem: NavItemDef = {
 };
 
 const navLeft: NavItemDef[] = [homeItem, scenesItem];
-const navRight: NavItemDef[] = [goldenVersesItem, prayerItem];
+const navRight: NavItemDef[] = [readItem, prayerItem];
 
 function iconLinkClass(active: boolean) {
   return [
-    "flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]",
+    "flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97] sm:min-h-[44px] sm:min-w-[44px]",
     // 浅色底上仍可辨认：双层深色 drop-shadow（对 SVG 描边生效）
     "drop-shadow-[0_1px_2px_rgba(0,0,0,0.62)] drop-shadow-[0_0_12px_rgba(0,0,0,0.32)]",
     active
@@ -122,8 +122,8 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
 
   const outer =
     placement === "fixedShell"
-      ? "home-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-0"
-      : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex justify-center px-3 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-0";
+      ? "home-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1 px-3 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-0"
+      : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1 px-3 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-0";
 
   const renderIconLink = (item: NavItemDef) => {
     const active = item.match(pathname);
@@ -137,18 +137,22 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
         aria-label={t(item.labelKey)}
         className={iconLinkClass(active)}
       >
-        <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
+        <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
       </Link>
     );
   };
 
   return (
     <div className={outer}>
+      <ScriptureAudioDockStrip placement={placement} />
       <nav
-        className="pointer-events-auto flex min-w-0 max-w-[min(100%,28rem)] items-center justify-center gap-2 sm:max-w-lg sm:gap-3"
+        className={[
+          "pointer-events-auto flex min-w-0 max-w-[min(100%,28rem)] items-center justify-center gap-1 rounded-full border-0 bg-black/45 px-1.5 py-1 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.65)] backdrop-blur-md sm:max-w-lg sm:gap-1.5 sm:px-2.5 sm:py-1.5",
+          "supports-[backdrop-filter]:bg-black/38",
+        ].join(" ")}
         aria-label={t("nav.mainLabel")}
       >
-        <div className="flex items-center gap-1 sm:gap-1.5">{navLeft.map(renderIconLink)}</div>
+        <div className="flex items-center gap-0.5 sm:gap-1">{navLeft.map(renderIconLink)}</div>
 
         <button
           type="button"
@@ -157,18 +161,18 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
             !canPlay ? t("playback.noTrack") : playing ? t("playback.pauseMusic") : t("playback.playMusic")
           }
           onClick={() => togglePlay()}
-          className="mx-0.5 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-white/90 bg-transparent shadow-[0_3px_18px_-5px_rgba(0,0,0,0.5)] transition hover:border-white hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/75 disabled:pointer-events-none disabled:opacity-35"
+          className="mx-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-0 bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/75 disabled:pointer-events-none disabled:opacity-35 sm:h-12 sm:w-12"
         >
           <span className="flex items-center justify-center text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">
             {playing ? (
-              <IconPause className="h-[22px] w-[22px] shrink-0" />
+              <IconPause className="h-[18px] w-[18px] shrink-0 sm:h-5 sm:w-5" />
             ) : (
-              <IconPlay className="h-[22px] w-[22px] shrink-0 translate-x-[0.5px]" />
+              <IconPlay className="h-[18px] w-[18px] shrink-0 translate-x-[0.5px] sm:h-5 sm:w-5" />
             )}
           </span>
         </button>
 
-        <div className="flex items-center gap-1 sm:gap-1.5">{navRight.map(renderIconLink)}</div>
+        <div className="flex items-center gap-0.5 sm:gap-1">{navRight.map(renderIconLink)}</div>
       </nav>
     </div>
   );

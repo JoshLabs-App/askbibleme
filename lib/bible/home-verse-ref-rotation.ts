@@ -4,6 +4,7 @@ import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
 import type { VerseDisplayModeV1 } from "@/lib/home-prayer-pools/types";
 import { resolveVerseRefToHomeEntry } from "@/lib/bible/resolve-verse-range-for-display";
 import type { VerseRef } from "@/lib/bible/verse-ref";
+import { readHomeGoldenVerseRotationStaticSync } from "@/lib/scripture/home-golden-verse-rotation-static-file";
 import { readExternalHomeVerseRotationSync } from "@/lib/scripture/read-external-home-verse-rotation";
 
 /** 与历史 `home-verses.ts` 顺序一致；`data/scripture/external-home-verse-rotation.json` 缺失时的回退。 */
@@ -32,14 +33,42 @@ export const HOME_VERSE_ROTATION_REFS = HOME_VERSE_ROTATION_REFS_FALLBACK;
 
 const SHELL_LOCALES: AppLocale[] = ["zh-CN", "en"];
 
-function buildForLocale(cwd: string, locale: AppLocale): HomeVerseEntry[] {
-  const refs = getHomeVerseRotationRefs(cwd);
+async function buildForLocaleFromRefs(cwd: string, locale: AppLocale, refs: VerseRef[]): Promise<HomeVerseEntry[]> {
   const out: HomeVerseEntry[] = [];
   for (const ref of refs) {
-    const row = resolveVerseRefToHomeEntry(cwd, ref, locale);
+    const row = await resolveVerseRefToHomeEntry(cwd, ref, locale);
     if (row) out.push(row);
   }
   return out;
+}
+
+async function buildHomeVerseRotationForLocalesResolved(
+  cwd: string,
+  locales: ReadonlyArray<AppLocale>,
+): Promise<Record<AppLocale, HomeVerseEntry[]>> {
+  const want = new Set<AppLocale>(locales);
+  const refs = getHomeVerseRotationRefs(cwd);
+  const result = {} as Record<AppLocale, HomeVerseEntry[]>;
+  for (const locale of SHELL_LOCALES) {
+    if (!want.has(locale)) {
+      result[locale] = [];
+      continue;
+    }
+    const built = await buildForLocaleFromRefs(cwd, locale, refs);
+    result[locale] =
+      built.length >= Math.min(4, refs.length) ? built : [...HOME_VERSES_BY_LOCALE[locale]];
+  }
+  return result;
+}
+
+/** 供生成静态快照脚本 / 管理保存后重算：全量中英轮播正文（已含「条目过少则回退内置金句」逻辑）。 */
+export async function buildResolvedHomeVerseRotationSnapshot(cwd: string): Promise<{
+  verseRefsCount: number;
+  entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
+}> {
+  const refs = getHomeVerseRotationRefs(cwd);
+  const entriesByLocale = await buildHomeVerseRotationForLocalesResolved(cwd, SHELL_LOCALES);
+  return { verseRefsCount: refs.length, entriesByLocale };
 }
 
 /**
@@ -58,29 +87,33 @@ export function appLocalesForHomeVerseRotationShell(
 /**
  * 只解析 `locales` 中的语言；其余键为 `[]`（客户端单语时走内置 `HOME_VERSES_BY_LOCALE` 兜底，不经 RSC 解析）。
  */
-export function buildHomeVerseRotationForLocales(
+export async function buildHomeVerseRotationForLocales(
   cwd: string,
   locales: ReadonlyArray<AppLocale>,
-): Record<AppLocale, HomeVerseEntry[]> {
+): Promise<Record<AppLocale, HomeVerseEntry[]>> {
   const want = new Set<AppLocale>(locales);
   const refs = getHomeVerseRotationRefs(cwd);
-  const result = {} as Record<AppLocale, HomeVerseEntry[]>;
-  for (const locale of SHELL_LOCALES) {
-    if (!want.has(locale)) {
-      result[locale] = [];
-      continue;
+  const snap = readHomeGoldenVerseRotationStaticSync(cwd);
+  if (snap && snap.verseRefsCount === refs.length) {
+    const result = {} as Record<AppLocale, HomeVerseEntry[]>;
+    for (const locale of SHELL_LOCALES) {
+      if (!want.has(locale)) {
+        result[locale] = [];
+        continue;
+      }
+      const built = snap.entriesByLocale[locale] ?? [];
+      result[locale] =
+        built.length >= Math.min(4, refs.length) ? built : [...HOME_VERSES_BY_LOCALE[locale]];
     }
-    const built = buildForLocale(cwd, locale);
-    result[locale] =
-      built.length >= Math.min(4, refs.length) ? built : [...HOME_VERSES_BY_LOCALE[locale]];
+    return result;
   }
-  return result;
+  return buildHomeVerseRotationForLocalesResolved(cwd, locales);
 }
 
 /**
  * 为首页轮播解析各语言经文；若译本缺失导致条目过少，回落到内置硬编码。
  * 全量构建（管理脚本、需双语的测试等）；前台页面优先用 `buildHomeVerseRotationFromShellCookies`。
  */
-export function buildHomeVerseRotationByLocale(cwd: string): Record<AppLocale, HomeVerseEntry[]> {
+export async function buildHomeVerseRotationByLocale(cwd: string): Promise<Record<AppLocale, HomeVerseEntry[]>> {
   return buildHomeVerseRotationForLocales(cwd, SHELL_LOCALES);
 }

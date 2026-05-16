@@ -14,7 +14,11 @@ export async function GET() {
       language: t.language,
     }));
     return NextResponse.json(
-      { version: 1 as const, translations },
+      {
+        version: 1 as const,
+        translations,
+        defaultTranslationId: index.defaultTranslationId,
+      },
       { headers: { "Cache-Control": "public, max-age=300, stale-while-revalidate=86400" } },
     );
   } catch (e) {

@@ -1,3 +1,5 @@
+@import "../read-chapter-surfaces.css";
+
 /* ── Bible catalog（再简约）────────────────────────────────── */
 .bible-catalog-page--read {
   --bc-border: rgb(var(--brand-border-rgb));
@@ -11,28 +13,103 @@
   --bc-read-stripe-w: 3px;
   --bc-read-poststripe-pad: 0.32rem;
   padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-  background: rgb(var(--brand-canvas-rgb));
+  background: transparent;
 }
 
-.bible-catalog-page--read .bible-catalog-shell {
-  max-width: min(21.5rem, 100%);
-  margin: 0 auto;
+.read-bible-parchment-shell .bible-catalog-page--read {
+  padding-bottom: 0;
 }
 
-.bible-catalog-page--read .bible-catalog-doc {
-  padding-top: max(4px, env(safe-area-inset-top, 0px));
-  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
-  padding-left: max(var(--bc-measure), env(safe-area-inset-left, 0px));
-  padding-right: max(var(--bc-measure), env(safe-area-inset-right, 0px));
+.bible-catalog-page--read.bible-catalog-on-parchment {
+  padding: 0;
+  /* 羊皮卷上勿用根级 brand-muted（偏冷色）；改暖褐以保证对比 */
+  --bc-read-book: #1c1410;
+  --bc-read-weak: #5c4030;
+  --bc-read-faint: #6e5240;
+  --bc-hover: color-mix(in srgb, #2a1810 7%, transparent);
+  --bc-read-era-w: 3.75rem;
+  --bc-read-poststripe-pad: 0.42rem;
 }
 
-.bible-catalog-read-h1 {
-  margin: 0 0 0.35rem;
-  font-size: 0.68rem;
+.dark .read-bible-parchment-shell .bible-catalog-page--read.bible-catalog-on-parchment {
+  --bc-read-book: #f4ebe1;
+  --bc-read-weak: #d8c8b4;
+  --bc-read-faint: #b9a896;
+  --bc-hover: color-mix(in srgb, #f4ebe1 8%, transparent);
+}
+
+/* 目录版心：左右留白略增，宽屏略放宽，历史时期列更宽 */
+.read-bible-parchment-shell .read-bible-parchment-column--catalog {
+  --read-parchment-pad-x: max(1.55rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));
+  --read-parchment-pad-x-end: max(1.55rem, calc(env(safe-area-inset-right, 0px) + 0.55rem));
+  max-width: min(31rem, 100%);
+}
+
+.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-heading-row,
+.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-book {
+  column-gap: 0.34rem;
+}
+
+.read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  color: color-mix(in srgb, #6b2d38 62%, #1c1410 38%);
+}
+
+.dark .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  color: color-mix(in srgb, #e8b4bc 55%, #f4ebe1 45%);
+}
+
+.read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
+  background: color-mix(in srgb, #7a3340 70%, var(--bc-border) 30%);
+}
+
+.bible-catalog-read-header {
+  text-align: center;
+}
+
+.bible-catalog-read-header .bible-catalog-read-end {
+  margin-top: 0;
+}
+
+.bible-catalog-read-header .bible-catalog-read-h1 {
+  margin: 0.2rem 0 0.75rem;
+  font-size: clamp(1.35rem, 4vw, 1.65rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.28;
+  color: var(--bc-read-book);
+  text-wrap: balance;
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  font-size: 0.78rem;
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-title .bible-catalog-read-heading-left {
+  font-size: 0.64rem;
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-book-name {
+  font-size: 0.95rem;
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-book-divine {
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-book-era {
+  font-size: 0.58rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  color: var(--bc-read-faint);
+  opacity: 1;
+}
+
+.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-book-num {
+  font-size: 0.64rem;
+  opacity: 1;
+}
+
+.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-book-body {
+  gap: 0.26rem 0.4rem;
 }
 
 .bible-catalog-read-outline {
@@ -349,6 +426,29 @@
   opacity: 1;
 }
 
+/* 选章浮层（portal 到 body）：内面与羊皮卷读经页统一的暖褐，不用冷色 brand 画布 */
+.bc-sheet-root.bible-catalog-page--read {
+  --bc-read-book: #1c1410;
+  --bc-read-weak: #5c4030;
+  --bc-read-faint: #6e5240;
+  --bc-hover: color-mix(in srgb, #2a1810 7%, transparent);
+}
+
+.dark .bc-sheet-root.bible-catalog-page--read {
+  --bc-read-book: #f4ebe1;
+  --bc-read-weak: #d8c8b4;
+  --bc-read-faint: #b9a896;
+  --bc-hover: color-mix(in srgb, #f4ebe1 8%, transparent);
+}
+
+.bc-sheet-root.bible-catalog-page--read .bc-sheet-backdrop {
+  background: color-mix(in srgb, rgb(40 22 12) 44%, transparent);
+}
+
+.dark .bc-sheet-root.bible-catalog-page--read .bc-sheet-backdrop {
+  background: color-mix(in srgb, rgb(0 0 0) 55%, transparent);
+}
+
 .bc-sheet-panel {
   position: fixed;
   display: flex;
@@ -365,6 +465,42 @@
   transition:
     transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.22s ease;
+}
+
+.bc-sheet-root.bible-catalog-page--read .bc-sheet-panel {
+  background: color-mix(in srgb, var(--read-parchment-bg-canvas, #e5d2bf) 93%, #fff 7%);
+  border: 1px solid color-mix(in srgb, rgb(120 53 15) 24%, transparent);
+  box-shadow:
+    0 14px 44px color-mix(in srgb, rgb(35 18 10) 22%, transparent),
+    0 0 0 1px color-mix(in srgb, rgb(120 53 15) 14%, transparent);
+}
+
+.dark .bc-sheet-root.bible-catalog-page--read .bc-sheet-panel {
+  background: color-mix(in srgb, #1c1917 82%, var(--read-parchment-bg-canvas, #3d3428) 18%);
+  border: 1px solid color-mix(in srgb, #f4ebe1 14%, transparent);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.52),
+    0 0 0 1px color-mix(in srgb, #f4ebe1 11%, transparent);
+}
+
+.bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell {
+  background: color-mix(in srgb, #fff 26%, var(--read-parchment-bg-canvas, #e5d2bf) 74%);
+  border-color: color-mix(in srgb, rgb(120 53 15) 30%, transparent);
+}
+
+.bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell:hover {
+  background: color-mix(in srgb, #fff 42%, var(--read-parchment-bg-canvas, #e5d2bf) 58%);
+  border-color: color-mix(in srgb, rgb(120 53 15) 42%, transparent);
+}
+
+.dark .bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell {
+  background: color-mix(in srgb, #292524 58%, #44403c 42%);
+  border-color: color-mix(in srgb, #f4ebe1 16%, transparent);
+}
+
+.dark .bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell:hover {
+  background: color-mix(in srgb, #3f3a36 62%, #57534e 38%);
+  border-color: color-mix(in srgb, #f4ebe1 24%, transparent);
 }
 
 .bc-sheet-root--open .bc-sheet-panel {

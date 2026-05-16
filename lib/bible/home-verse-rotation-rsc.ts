@@ -15,5 +15,5 @@ export async function buildHomeVerseRotationFromShellCookies(cwd: string) {
   const ui = parseLocale(jar.get(LOCALE_COOKIE_NAME)?.value);
   const verseDisplay = verseDisplayModeFromCookieValue(jar.get(VERSE_DISPLAY_COOKIE_NAME)?.value);
   const locales = appLocalesForHomeVerseRotationShell(verseDisplay, ui);
-  return buildHomeVerseRotationForLocales(cwd, locales);
+  return await buildHomeVerseRotationForLocales(cwd, locales);
 }

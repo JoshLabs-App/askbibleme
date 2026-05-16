@@ -16,6 +16,7 @@ import { ScenesPageListenShortcuts } from "@/components/nature/ScenesPageListenS
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import {
+  defaultNatureHomeActiveVideoId,
   resolveNatureHomeActiveVideoId,
   writeNatureHomeActiveSceneId,
 } from "@/lib/home/nature-home-active-scene-prefs";
@@ -38,7 +39,8 @@ export function NatureScenesPickerPage({ initial }: Props) {
   const { t } = useLocale();
   const router = useRouter();
   const [settings, setSettings] = useState(initial);
-  const [activeVideoId, setActiveVideoId] = useState(() => resolveNatureHomeActiveVideoId(initial));
+  const [activeVideoId, setActiveVideoId] = useState(() => defaultNatureHomeActiveVideoId(initial));
+  const activeSceneHydratedRef = useRef(false);
   const videoStageHeightCommitRef = useRef(0);
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
 
@@ -46,6 +48,12 @@ export function NatureScenesPickerPage({ initial }: Props) {
     setSettings(initial);
     setActiveVideoId(resolveNatureHomeActiveVideoId(initial));
   }, [initial]);
+
+  useLayoutEffect(() => {
+    if (activeSceneHydratedRef.current) return;
+    activeSceneHydratedRef.current = true;
+    setActiveVideoId(resolveNatureHomeActiveVideoId(settings));
+  }, [settings]);
 
   useLayoutEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");

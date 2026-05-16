@@ -79,10 +79,10 @@ function TopShellInsetTime({
 
   /**
    * 横屏且时间落在底部时：抬高到 **底栏浮条之上**（与 `NatureVideoExperience` 底区 hint 的留白同量级），
-   * 避免与 `HomeShellFloatingRouteNav`（播放钮约 52px + safe-area）叠住。
+   * 避免与 `HomeShellFloatingRouteNav`（播放钮约 44–48px + safe-area）叠住。
    */
   const landscapeTimeAboveBottomNav =
-    "landscape:bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] landscape:top-auto";
+    "landscape:bottom-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] landscape:top-auto";
 
   return (
     <time
@@ -127,20 +127,6 @@ function IconClose(props: { className?: string }) {
 
 const DRAWER_TRANSITION_MS = 300;
 
-const drawerNavLinks: {
-  href: string;
-  labelKey: "nav.music" | "nav.shellTemplate";
-}[] = [
-  { href: "/music", labelKey: "nav.music" },
-  { href: "/template", labelKey: "nav.shellTemplate" },
-];
-
-function shellPathActive(href: string, pathname: string): boolean {
-  const p = pathname || "";
-  if (href === "/") return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
-  return p === href || p.startsWith(`${href}/`);
-}
-
 const EDGE_SWIPE_OPEN_PX = 56;
 const EDGE_SWIPE_START_MAX_X = 28;
 
@@ -170,7 +156,7 @@ type Props = {
 const NAV_DRAWER_PORTAL_Z = 80;
 
 /**
- * 应用壳角标式浮动控制：左上打开 **Notion 式左侧全高抽屉**（主导航 + 语言）；抽屉经 Portal 叠在底栏之上。无整行顶栏。
+ * 应用壳角标式浮动控制：左上打开 **Notion 式左侧全高抽屉**（用户菜单：译本、主题、账号、语言等）；抽屉经 Portal 叠在底栏之上。无整行顶栏。
  */
 export function AppShellTopBar({
   tone = "onDark",
@@ -381,7 +367,7 @@ export function AppShellTopBar({
                 id="app-shell-nav-drawer"
                 role="dialog"
                 aria-modal="true"
-                aria-label={t("nav.mainLabel")}
+                aria-label={t("nav.drawerUserMenuTitle")}
                 className={[
                   "absolute bottom-0 left-0 top-0 flex w-[min(22rem,calc(100vw-12px))] min-h-0 flex-col border-r border-neutral-200/90 bg-[#f7f6f3] shadow-[4px_0_32px_-12px_rgba(0,0,0,0.18)]",
                   drawerMotion,
@@ -391,7 +377,7 @@ export function AppShellTopBar({
               >
                 <div className="flex shrink-0 items-center justify-between gap-2 pb-2 pl-0.5 pr-0.5 pt-1">
                   <h2 className="min-w-0 truncate text-[13px] font-semibold uppercase tracking-[0.06em] text-[#37352f]/55">
-                    {t("nav.mainLabel")}
+                    {t("nav.drawerUserMenuTitle")}
                   </h2>
                   <button
                     type="button"
@@ -404,23 +390,7 @@ export function AppShellTopBar({
                 </div>
                 <nav className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] py-1 pr-0.5">
                   <div className="flex flex-col gap-0.5">
-                    {drawerNavLinks.map(({ href, labelKey }) => {
-                      const active = shellPathActive(href, pathname);
-                      return (
-                        <Link
-                          key={href}
-                          href={href}
-                          className={[linkRowBase, active ? linkRowActive : linkRowIdle].join(" ")}
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => {
-                            closeNavMenu();
-                          }}
-                        >
-                          {t(labelKey)}
-                        </Link>
-                      );
-                    })}
-                    <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
+                    <div className="pt-1">
                       <HomePrayerVerseDockSettings
                         placement="drawer"
                         drawerOpen={navOpen && drawerEntered}

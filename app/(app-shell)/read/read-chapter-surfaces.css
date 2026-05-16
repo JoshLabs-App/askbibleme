@@ -1,0 +1,223 @@
+@import "./read-bible-typography.css";
+@import "./read-parchment-background.css";
+
+/* 圣经 /read 路由共用：羊皮卷全幅底 + 内层滚动（文字上下 100px 渐隐） */
+.read-bible-parchment-shell,
+.read-chapter-shell {
+  box-sizing: border-box;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background-color: var(--read-parchment-bg-canvas, #e5d2bf);
+  background-image: var(--read-parchment-bg-image);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+}
+
+/* 实际滚动区：上下各 100px alpha 遮罩，经文进出时渐隐 */
+.read-bible-parchment-scroll,
+.read-chapter-scroll {
+  --read-parchment-edge-fade: 100px;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    hsla(0, 0%, 100%, 0) 0,
+    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade),
+    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade)),
+    hsla(0, 0%, 100%, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    hsla(0, 0%, 100%, 0) 0,
+    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade),
+    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade)),
+    hsla(0, 0%, 100%, 0) 100%
+  );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* `/read` 首页：标题 → 经文 → 目录顺序排版；整列在此区内纵向滚动（经文无独立衬框） */
+.read-bible-parchment-scroll.read-bible-parchment-scroll--read-home {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  /* 整页滚动时不用上下 alpha 遮罩，避免标题/目录边缘被吃掉 */
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.read-bible-parchment-scroll--read-home > .read-bible-parchment-column {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 版心列：字族见 `.read-bible-typography`（与本列同元素叠加） */
+.read-bible-parchment-column,
+.read-chapter-parchment {
+  --read-parchment-pad-x: max(1.4rem, calc(env(safe-area-inset-left, 0px) + 0.35rem));
+  --read-parchment-pad-x-end: max(1.4rem, calc(env(safe-area-inset-right, 0px) + 0.35rem));
+  --read-parchment-pad-top: calc(50px + env(safe-area-inset-top, 0px));
+  --read-parchment-pad-bottom: calc(50px + env(safe-area-inset-bottom, 0px));
+  max-width: min(28rem, 100%);
+  margin-inline: auto;
+  padding: var(--read-parchment-pad-top) var(--read-parchment-pad-x) var(--read-parchment-pad-bottom);
+}
+
+.read-chapter-header {
+  text-align: center;
+}
+
+.read-chapter-title {
+  line-height: 1.3;
+  margin-inline: auto;
+  max-width: 100%;
+  font-size: var(--read-bible-chapter-title-font-size, 1.6rem);
+}
+
+/* /read 首页：标题区上下留白 */
+.read-bible-home-hero {
+  padding-top: 0.35rem;
+  padding-bottom: 0.15rem;
+}
+
+/* 经文直接铺在羊皮底上，不与目录叠层 */
+.read-bible-read-home-verse {
+  position: relative;
+}
+
+/* 目录随首页整列滚动，不再单独限高滚动 */
+.read-bible-read-home-catalog-scroll {
+  padding-bottom: 0.25rem;
+}
+
+/* /read 首页主标题：字号由 CSS 变量控制（与 `read-bible-typography-prefs` 对齐） */
+.read-bible-home-title-he {
+  font-size: var(--read-bible-home-title-he, clamp(2.75rem, 11vmin, 4.35rem));
+}
+
+.read-bible-home-title-zh {
+  font-size: var(--read-bible-home-title-zh, clamp(1.875rem, 6.5vmin, 3.125rem));
+}
+
+.read-bible-home-title-en {
+  font-size: var(--read-bible-home-title-en, clamp(0.8125rem, 2.35vmin, 1.0625rem));
+}
+
+/* /read 首页下方目录：无衬线；字族随「黑体 / 系统」阅读设置与正文一致，其余为苹方栈 */
+.read-bible-read-home-catalog {
+  font-family: var(
+    --read-bible-catalog-font-family,
+    "PingFang SC",
+    "PingFang TC",
+    "Hiragino Sans GB",
+    "Heiti SC",
+    "STHeiti",
+    "Hiragino Kaku Gothic ProN",
+    "Microsoft YaHei",
+    "Noto Sans SC",
+    "Noto Sans TC",
+    ui-sans-serif,
+    system-ui,
+    sans-serif
+  );
+}
+
+.read-chapter-article {
+  margin-top: 1.85rem;
+  color: inherit;
+  text-align: start;
+}
+
+.read-chapter-verse {
+  margin: 0 0 1.45rem;
+  font-size: var(--read-bible-verse-font-size, 1.1875rem);
+  font-weight: 500;
+  line-height: 2;
+  letter-spacing: 0.015em;
+  /* 朗读跟读 scrollIntoView：避开 fixed 顶栏与卷首渐隐 */
+  scroll-margin-top: 5.5rem;
+  scroll-margin-bottom: 2.5rem;
+}
+
+.read-chapter-verse:last-child {
+  margin-bottom: 0;
+}
+
+/* 和合本整章朗读：按进度估算的当前节 */
+.read-chapter-verse.read-chapter-verse--audio-active {
+  margin-inline: -0.35rem;
+  padding: 0.15rem 0.35rem 0.35rem;
+  border-radius: 0.4rem;
+  background-color: color-mix(in srgb, rgba(139, 90, 43, 0.12) 100%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(120, 75, 30, 0.14) 100%, transparent);
+}
+
+.dark .read-chapter-verse.read-chapter-verse--audio-active {
+  background-color: color-mix(in srgb, rgba(245, 230, 210, 0.07) 100%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(245, 230, 210, 0.1) 100%, transparent);
+}
+
+.read-chapter-verse-num {
+  display: inline-block;
+  min-width: 1.25em;
+  margin-right: 0.45rem;
+  vertical-align: top;
+  font-size: 0.69em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.88;
+  color: color-mix(in srgb, currentColor 68%, transparent);
+}
+
+/* 试点：推断的「神谕引语」略强调，避免与正文对比过强 */
+.read-chapter-divine-speech {
+  font-weight: 700;
+  color: color-mix(in srgb, rgb(120 55 28) 92%, currentColor);
+}
+
+.dark .read-chapter-divine-speech {
+  color: color-mix(in srgb, rgb(255 220 185) 88%, currentColor);
+}
+
+.dark .read-chapter-verse-num {
+  color: color-mix(in srgb, currentColor 74%, transparent);
+}
+
+.dark .read-bible-parchment-shell,
+.dark .read-chapter-shell {
+  background-color: #1a1512;
+  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+    var(--read-parchment-bg-image);
+  background-blend-mode: multiply, normal;
+}
+
+/* 圣经首页：轮播经文与羊皮卷主色对齐（覆盖 Rotator 内 text-ink） */
+.read-bible-read-home-verse blockquote p,
+.read-bible-read-home-verse blockquote footer {
+  color: color-mix(in srgb, rgb(28 20 16) 94%, transparent);
+}
+
+.dark .read-bible-read-home-verse blockquote p,
+.dark .read-bible-read-home-verse blockquote footer {
+  color: color-mix(in srgb, rgb(250 250 249) 90%, transparent);
+}

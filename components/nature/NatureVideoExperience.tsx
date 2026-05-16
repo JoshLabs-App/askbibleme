@@ -37,7 +37,7 @@ import {
   readNatureHomeVerseAppearance,
 } from "@/lib/home/nature-home-verse-appearance-prefs";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
-import { resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
+import { defaultNatureHomeActiveVideoId, resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
 import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
@@ -234,14 +234,15 @@ export function NatureVideoExperience({ initial }: Props) {
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
   const [natureSoftFocusPanelOpen, setNatureSoftFocusPanelOpen] = useState(false);
   const [verseAppearancePanelOpen, setVerseAppearancePanelOpen] = useState(false);
-  const [natureSoftFocusOverlayOpacity, setNatureSoftFocusOverlayOpacity] = useState(
+  const [softFocusCommittedOpacity, setSoftFocusCommittedOpacity] = useState(
     NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity,
   );
-  const [natureSoftFocusBlurPx, setNatureSoftFocusBlurPx] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
+  const [softFocusCommittedBlur, setSoftFocusCommittedBlur] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
+  const [softFocusDraftOpacity, setSoftFocusDraftOpacity] = useState(NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity);
+  const [softFocusDraftBlur, setSoftFocusDraftBlur] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
-  const softFocusPersistTimerRef = useRef<number | null>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   const [preferNature1080, setPreferNature1080] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
@@ -249,7 +250,8 @@ export function NatureVideoExperience({ initial }: Props) {
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
   const [dwellPolicyResolved, setDwellPolicyResolved] = useState(false);
   const [natureSettings, setNatureSettings] = useState<NatureSettingsV2>(initial);
-  const [activeVideoId, setActiveVideoId] = useState(() => resolveNatureHomeActiveVideoId(initial));
+  const [activeVideoId, setActiveVideoId] = useState(() => defaultNatureHomeActiveVideoId(initial));
+  const activeSceneHydratedRef = useRef(false);
   const landscapeNarrow = useLandscapeNarrow();
   /** 用户用右上按钮进入整页全屏时保留，避免与「竖屏 / 换源」自动退出逻辑冲突 */
   const natureHomeUserDocFullscreenRef = useRef(false);
@@ -269,6 +271,12 @@ export function NatureVideoExperience({ initial }: Props) {
     setNatureSettings(initial);
     setActiveVideoId(resolveNatureHomeActiveVideoId(initial));
   }, [initial]);
+
+  useLayoutEffect(() => {
+    if (activeSceneHydratedRef.current) return;
+    activeSceneHydratedRef.current = true;
+    setActiveVideoId(resolveNatureHomeActiveVideoId(natureSettings));
+  }, [natureSettings]);
 
   useEffect(() => {
     let cancelled = false;
@@ -389,7 +397,10 @@ export function NatureVideoExperience({ initial }: Props) {
   const mediaPolicy = useNatureMediaPolicy();
 
   useEffect(() => {
-    if (!hasNatureVisual) setNatureBgSoftFocus(false);
+    if (!hasNatureVisual) {
+      setNatureBgSoftFocus(false);
+      setNatureSoftFocusPanelOpen(false);
+    }
   }, [hasNatureVisual]);
   /** 低电量：仅静图，不挂载解码 `<video>` */
   const posterOnlyLowPower = mediaPolicy.lowBatteryStatic && hasStillIntro;
@@ -751,8 +762,10 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useEffect(() => {
     const p = readNatureSoftFocusPrefs();
-    setNatureSoftFocusOverlayOpacity(p.overlayOpacity);
-    setNatureSoftFocusBlurPx(p.blurPx);
+    setSoftFocusCommittedOpacity(p.overlayOpacity);
+    setSoftFocusCommittedBlur(p.blurPx);
+    setSoftFocusDraftOpacity(p.overlayOpacity);
+    setSoftFocusDraftBlur(p.blurPx);
   }, []);
 
   useLayoutEffect(() => {
@@ -766,52 +779,35 @@ export function NatureVideoExperience({ initial }: Props) {
     return () => window.removeEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (softFocusPersistTimerRef.current != null) {
-        window.clearTimeout(softFocusPersistTimerRef.current);
-      }
-    };
+
+  /** 关闭 / 取消：收起面板并关闭柔焦叠层（不写入当前滑条值） */
+  const dismissNatureSoftFocusPanel = useCallback(() => {
+    setNatureSoftFocusPanelOpen(false);
+    setNatureBgSoftFocus(false);
   }, []);
 
-  const scheduleNatureSoftFocusPersist = useCallback((overlayOpacity: number, blurPx: number) => {
-    if (softFocusPersistTimerRef.current != null) {
-      window.clearTimeout(softFocusPersistTimerRef.current);
-    }
-    softFocusPersistTimerRef.current = window.setTimeout(() => {
-      softFocusPersistTimerRef.current = null;
-      writeNatureSoftFocusPrefs({ overlayOpacity, blurPx });
-    }, 220);
-  }, []);
-
-  const onNatureSoftFocusIconClick = useCallback(() => {
-    if (natureBgSoftFocus && natureSoftFocusPanelOpen) {
-      writeNatureSoftFocusPrefs({
-        overlayOpacity: natureSoftFocusOverlayOpacity,
-        blurPx: natureSoftFocusBlurPx,
-      });
-      setNatureBgSoftFocus(false);
-      setNatureSoftFocusPanelOpen(false);
-      setVerseAppearancePanelOpen(false);
-      return;
-    }
-    if (natureBgSoftFocus && !natureSoftFocusPanelOpen) {
-      setVerseAppearancePanelOpen(false);
-      setNatureSoftFocusPanelOpen(true);
-      return;
-    }
-    const p = readNatureSoftFocusPrefs();
-    setNatureSoftFocusOverlayOpacity(p.overlayOpacity);
-    setNatureSoftFocusBlurPx(p.blurPx);
+  const confirmNatureSoftFocusPanel = useCallback(() => {
+    writeNatureSoftFocusPrefs({ overlayOpacity: softFocusDraftOpacity, blurPx: softFocusDraftBlur });
+    setSoftFocusCommittedOpacity(softFocusDraftOpacity);
+    setSoftFocusCommittedBlur(softFocusDraftBlur);
     setNatureBgSoftFocus(true);
+    setNatureSoftFocusPanelOpen(false);
+  }, [softFocusDraftOpacity, softFocusDraftBlur]);
+
+  const openNatureSoftFocusPanel = useCallback(() => {
+    setSoftFocusDraftOpacity(softFocusCommittedOpacity);
+    setSoftFocusDraftBlur(softFocusCommittedBlur);
     setVerseAppearancePanelOpen(false);
     setNatureSoftFocusPanelOpen(true);
-  }, [
-    natureBgSoftFocus,
-    natureSoftFocusBlurPx,
-    natureSoftFocusOverlayOpacity,
-    natureSoftFocusPanelOpen,
-  ]);
+  }, [softFocusCommittedOpacity, softFocusCommittedBlur]);
+
+  const onNatureSoftFocusIconClick = useCallback(() => {
+    if (natureSoftFocusPanelOpen) {
+      dismissNatureSoftFocusPanel();
+      return;
+    }
+    openNatureSoftFocusPanel();
+  }, [natureSoftFocusPanelOpen, dismissNatureSoftFocusPanel, openNatureSoftFocusPanel]);
 
   const onVerseAppearanceIconClick = useCallback(() => {
     setVerseAppearancePanelOpen((wasOpen) => {
@@ -830,27 +826,30 @@ export function NatureVideoExperience({ initial }: Props) {
     setVideoBroken(false);
   }, []);
 
-  const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
-    ? Math.min(natureSoftFocusBlurPx, 10)
-    : natureSoftFocusBlurPx;
+  const softFocusLayerVisible = natureBgSoftFocus || natureSoftFocusPanelOpen;
+  const softFocusDisplayOpacity = natureSoftFocusPanelOpen ? softFocusDraftOpacity : softFocusCommittedOpacity;
+  const softFocusDisplayBlur = natureSoftFocusPanelOpen ? softFocusDraftBlur : softFocusCommittedBlur;
 
-  const natureSoftFocusTriggerAria =
-    natureBgSoftFocus && natureSoftFocusPanelOpen
-      ? t("nature.bgSoftFocusCloseAria")
-      : natureBgSoftFocus && !natureSoftFocusPanelOpen
-        ? t("nature.bgSoftFocusOpenPanelAria")
-        : t("nature.bgSoftFocusStartAria");
+  const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
+    ? Math.min(softFocusDisplayBlur, 10)
+    : softFocusDisplayBlur;
+
+  const natureSoftFocusTriggerAria = natureSoftFocusPanelOpen
+    ? t("nature.bgSoftFocusCloseAria")
+    : natureBgSoftFocus
+      ? t("nature.bgSoftFocusOpenPanelAria")
+      : t("nature.bgSoftFocusStartAria");
 
   /** 视频空白：收起柔焦或经文外观浮层（无浮层时无操作） */
   const onNatureVideoBlankClick = useCallback(() => {
     if (natureSoftFocusPanelOpen) {
-      setNatureSoftFocusPanelOpen(false);
+      dismissNatureSoftFocusPanel();
       return;
     }
     if (verseAppearancePanelOpen) {
       setVerseAppearancePanelOpen(false);
     }
-  }, [natureSoftFocusPanelOpen, verseAppearancePanelOpen]);
+  }, [natureSoftFocusPanelOpen, verseAppearancePanelOpen, dismissNatureSoftFocusPanel]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
   const textScaleMin = textScaleStepIndex <= 0;
@@ -965,13 +964,12 @@ export function NatureVideoExperience({ initial }: Props) {
                       min={0.08}
                       max={0.82}
                       step={0.01}
-                      value={natureSoftFocusOverlayOpacity}
+                      value={softFocusDraftOpacity}
                       className="mb-2.5 mt-1 w-full accent-white"
                       onChange={(e) => {
                         const v = Number(e.target.value);
                         if (!Number.isFinite(v)) return;
-                        setNatureSoftFocusOverlayOpacity(v);
-                        scheduleNatureSoftFocusPersist(v, natureSoftFocusBlurPx);
+                        setSoftFocusDraftOpacity(v);
                       }}
                     />
                     <label className="block text-[12px] text-white/78" htmlFor="nature-soft-focus-blur">
@@ -983,23 +981,31 @@ export function NatureVideoExperience({ initial }: Props) {
                       min={2}
                       max={48}
                       step={1}
-                      value={natureSoftFocusBlurPx}
+                      value={softFocusDraftBlur}
                       className="mt-1 w-full accent-white"
                       onChange={(e) => {
                         const v = Number(e.target.value);
                         if (!Number.isFinite(v)) return;
                         const b = Math.round(v);
-                        setNatureSoftFocusBlurPx(b);
-                        scheduleNatureSoftFocusPersist(natureSoftFocusOverlayOpacity, b);
+                        setSoftFocusDraftBlur(b);
                       }}
                     />
-                    <button
-                      type="button"
-                      className="mt-2.5 w-full border-0 bg-transparent p-0 text-left text-[12px] text-white/55 underline decoration-white/25 underline-offset-2 transition hover:text-white/80"
-                      onClick={() => setNatureSoftFocusPanelOpen(false)}
-                    >
-                      {t("nature.bgSoftFocusHidePanel")}
-                    </button>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        className="min-h-[40px] flex-1 rounded-lg border border-white/25 bg-white/12 px-2 py-2 text-center text-[12px] font-medium text-white/95 transition hover:bg-white/18"
+                        onClick={confirmNatureSoftFocusPanel}
+                      >
+                        {t("nature.bgSoftFocusConfirm")}
+                      </button>
+                      <button
+                        type="button"
+                        className="min-h-[40px] flex-1 rounded-lg border border-white/18 bg-transparent px-2 py-2 text-center text-[12px] font-medium text-white/75 transition hover:bg-white/[0.07] hover:text-white/90"
+                        onClick={dismissNatureSoftFocusPanel}
+                      >
+                        {t("nature.bgSoftFocusCloseNoEffect")}
+                      </button>
+                    </div>
                   </div>
                 ) : null}
                 <button
@@ -1013,7 +1019,7 @@ export function NatureVideoExperience({ initial }: Props) {
                 >
                   <IconBgSoftFocus
                     className={
-                      natureBgSoftFocus
+                      natureBgSoftFocus || natureSoftFocusPanelOpen
                         ? "h-[1.25rem] w-[1.25rem] text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.95))_drop-shadow(0_0_18px_rgba(200,225,255,0.55))]"
                         : "h-[1.25rem] w-[1.25rem] opacity-90"
                     }
@@ -1157,12 +1163,12 @@ export function NatureVideoExperience({ initial }: Props) {
               />
             ) : null}
           </div>
-          {natureBgSoftFocus ? (
+          {softFocusLayerVisible ? (
             <div
               className="pointer-events-none absolute inset-0 z-[8]"
               style={
                 {
-                  backgroundColor: `rgba(0,0,0,${natureSoftFocusOverlayOpacity})`,
+                  backgroundColor: `rgba(0,0,0,${softFocusDisplayOpacity})`,
                   backdropFilter: `blur(${effectiveNatureSoftFocusBlurPx}px)`,
                   WebkitBackdropFilter: `blur(${effectiveNatureSoftFocusBlurPx}px)`,
                 } satisfies CSSProperties

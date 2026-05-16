@@ -2,12 +2,13 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
-import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
+import { useOptionalHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
+import { useStandaloneVerseCarousel } from "@/components/home/useStandaloneVerseCarousel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
 import { goldenVerseTextShadowClass } from "@/lib/home-prayer-pools/golden-verse-text-effects";
-import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
+import { HOME_VERSES_BY_LOCALE, type HomeVerseEntry } from "@/lib/i18n/home-verses";
 import type { NatureHomeVerseTextEffectV1 } from "@/lib/home/nature-home-verse-appearance-prefs";
 
 function natureHomePrimaryOnVideo(effect: NatureHomeVerseTextEffectV1, isDark: boolean): string {
@@ -143,10 +144,16 @@ type Props = {
    * 自然首页视频槽：由父级在「整体 scale 仍装不下」时置为 true，主/副文启用 `line-clamp`、卷标单行省略。
    */
   natureTightLineClamp?: boolean;
+  /**
+   * 若传入：仅用此处列表在本组件内轮播，**不**与全站 `HomePrayerVerseFeedProvider` 的经文池与进度同步；
+   * 双语时仍读取 Provider 的 `bilingual` 以决定主/副文语言。用于 `/read` 等固定主题的经文位。
+   */
+  standaloneVersesByLocale?: Record<AppLocale, HomeVerseEntry[]>;
 };
 
 /**
- * 首页经文轮播：节奏与淡出由 `HomePrayerVerseFeedProvider` 统一驱动；本组件只负责版式与字级。
+ * 首页经文轮播：节奏与淡出通常由 `HomePrayerVerseFeedProvider` 驱动；若传入 `standaloneVersesByLocale`，
+ * 则在本组件内独立轮播该列表，不与全站经文池进度同步。
  */
 export function HomeVerseRotator({
   variant = "dark",
@@ -158,21 +165,52 @@ export function HomeVerseRotator({
   natureHomeFontFamily,
   natureHomeTextEffect,
   natureTightLineClamp = false,
+  standaloneVersesByLocale,
 }: Props) {
   const { locale } = useLocale();
-  const { entriesByLocale, bilingual, activeIndex, homeVerseVisible } = useHomePrayerVerseFeedContext();
+  const ctx = useOptionalHomePrayerVerseFeedContext();
+  const useStandaloneFeed = Boolean(standaloneVersesByLocale);
+
+  if (!useStandaloneFeed && !ctx) {
+    throw new Error(
+      "HomeVerseRotator must be used within HomePrayerVerseFeedProvider unless standaloneVersesByLocale is set.",
+    );
+  }
+
+  /** 独立池时仍沿用全站双语开关（若有 Provider）；无 Provider 时视为单语。 */
+  const bilingual = useStandaloneFeed ? (ctx?.bilingual ?? false) : ctx!.bilingual;
   /** 双语时固定「英文大在上、中文小在下」；单语时随界面语言。 */
   const primaryLocale: AppLocale = bilingual ? "en" : locale;
   const secondaryLocale: AppLocale | null = bilingual ? "zh-CN" : null;
+
   const HOME_VERSES = useMemo(() => {
-    const fromServer = entriesByLocale?.[primaryLocale];
+    if (standaloneVersesByLocale) {
+      const list = standaloneVersesByLocale[primaryLocale];
+      if (list && list.length > 0) return list;
+      return HOME_VERSES_BY_LOCALE[primaryLocale];
+    }
+    const fromServer = ctx!.entriesByLocale?.[primaryLocale];
     if (fromServer && fromServer.length > 0) return fromServer;
     return HOME_VERSES_BY_LOCALE[primaryLocale];
-  }, [entriesByLocale, primaryLocale]);
+  }, [standaloneVersesByLocale, primaryLocale, ctx?.entriesByLocale]);
+
   const secondaryList = useMemo(() => {
-    if (!bilingual || !secondaryLocale || !entriesByLocale) return null;
-    return entriesByLocale[secondaryLocale] ?? null;
-  }, [bilingual, entriesByLocale, secondaryLocale]);
+    if (!bilingual || !secondaryLocale) return null;
+    if (standaloneVersesByLocale) {
+      return standaloneVersesByLocale[secondaryLocale] ?? null;
+    }
+    return ctx!.entriesByLocale?.[secondaryLocale] ?? null;
+  }, [bilingual, secondaryLocale, standaloneVersesByLocale, ctx?.entriesByLocale]);
+
+  const nVerses = HOME_VERSES.length;
+  const standaloneCarousel = useStandaloneVerseCarousel({
+    enabled: useStandaloneFeed,
+    nVerses,
+    resetKey: `${locale}-${bilingual}`,
+  });
+
+  const activeIndex = useStandaloneFeed ? standaloneCarousel.activeIndex : ctx!.activeIndex;
+  const homeVerseVisible = useStandaloneFeed ? standaloneCarousel.homeVerseVisible : ctx!.homeVerseVisible;
   const isDark = variant === "dark";
   const isGoldenVerses = verseStyle === "goldenVerses" && prominence === "nature";
   const isHero = prominence === "hero";
@@ -195,7 +233,6 @@ export function HomeVerseRotator({
   const goldenShellRef = useRef<HTMLDivElement | null>(null);
   const goldenFitRafRef = useRef<number | null>(null);
 
-  const nVerses = HOME_VERSES.length;
   const showVerse = nVerses > 0;
   const safeIndex = Math.min(activeIndex, Math.max(0, nVerses - 1));
 

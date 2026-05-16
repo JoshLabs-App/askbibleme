@@ -23,6 +23,11 @@ export function writeNatureHomeActiveSceneId(id: string): void {
   }
 }
 
+/** 与 SSR / hydration 首帧一致：仅用配置默认 id，不读 localStorage。 */
+export function defaultNatureHomeActiveVideoId(settings: NatureSettingsV2): string {
+  return settings.activeVideoId.trim() || settings.videos[0]?.id || "";
+}
+
 /** 优先本机上次选择，否则用配置默认；仅返回仍存在于 `videos` 的 id。 */
 export function resolveNatureHomeActiveVideoId(settings: NatureSettingsV2): string {
   const validIds = new Set(settings.videos.map((x) => x.id.trim()).filter(Boolean));

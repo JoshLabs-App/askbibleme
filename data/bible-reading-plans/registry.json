@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "upstreamNote": "Bundles are generated from https://github.com/khornberg/readingplans (README: transformed from devkardia/bibleplan). Names mentioning ESV are historical labels in that repo — confirm Crossway / publisher marks and redistribution rights before public product use. Chinese three-track / other tables are not in this upstream set; add separately.",
+  "plans": [
+    {
+      "planId": "backtothebiblechronological",
+      "name": "Back to the Bible Chronological",
+      "abbreviation": "bttbc",
+      "description": "Copyright Back to the Bible <br /><a target='_new' href='http://www.backtothebible.org'>www.backtothebible.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/backtothebiblechronological.json",
+      "bundlePath": "data/bible-reading-plans/built/backtothebiblechronological.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 6
+    },
+    {
+      "planId": "esvchroniclesandprophets",
+      "name": "Chronicles and Prophets",
+      "abbreviation": "ecp",
+      "description": "Chronicles and Prophets<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvchroniclesandprophets.json",
+      "bundlePath": "data/bible-reading-plans/built/esvchroniclesandprophets.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 1
+    },
+    {
+      "planId": "esveverydayinword",
+      "name": "Every Day In the Word",
+      "abbreviation": "eedw",
+      "description": "Every Day in the Word<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esveverydayinword.json",
+      "bundlePath": "data/bible-reading-plans/built/esveverydayinword.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 5
+    },
+    {
+      "planId": "esvgospelsandepistles",
+      "name": "Gospel and Epistles",
+      "abbreviation": "ege",
+      "description": "Gospel and Epistles<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvgospelsandepistles.json",
+      "bundlePath": "data/bible-reading-plans/built/esvgospelsandepistles.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 1
+    },
+    {
+      "planId": "esvliterarystudybible",
+      "name": "ESV Literary Study Bible Plan",
+      "abbreviation": "elsb",
+      "description": "ESV Literary Study Bible<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvliterarystudybible.json",
+      "bundlePath": "data/bible-reading-plans/built/esvliterarystudybible.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 4
+    },
+    {
+      "planId": "esvpentateuchandhistoryofisrael",
+      "name": "Pentateuch and History of Israel",
+      "abbreviation": "ephi",
+      "description": "Pentateuch and History of Israel<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvpentateuchandhistoryofisrael.json",
+      "bundlePath": "data/bible-reading-plans/built/esvpentateuchandhistoryofisrael.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 1
+    },
+    {
+      "planId": "esvpsalmsandwisdomliterature",
+      "name": "Psalms and Wisdom Literature",
+      "abbreviation": "epwl",
+      "description": "Psalm and Wisdom Literature<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvpsalmsandwisdomliterature.json",
+      "bundlePath": "data/bible-reading-plans/built/esvpsalmsandwisdomliterature.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 1
+    },
+    {
+      "planId": "esvthroughthebible",
+      "name": "Through The Bible",
+      "abbreviation": "etb",
+      "description": "Through the Bible<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvthroughthebible.json",
+      "bundlePath": "data/bible-reading-plans/built/esvthroughthebible.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 2
+    },
+    {
+      "planId": "heartlightotandnt",
+      "name": "Old and New Testament",
+      "abbreviation": "hlnt",
+      "description": "Old Testament and New Testament<br /><a target='_new' href='http://www.heartlight.org/devotionals/reading_plans/'>www.heartlight.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/heartlightotandnt.json",
+      "bundlePath": "data/bible-reading-plans/built/heartlightotandnt.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 4
+    },
+    {
+      "planId": "mcheyne",
+      "name": "M'Cheyne",
+      "abbreviation": "m",
+      "description": "M'Cheyne Reading Plan",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/mcheyne.json",
+      "bundlePath": "data/bible-reading-plans/built/mcheyne.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 4
+    },
+    {
+      "planId": "oneyearchronological",
+      "name": "One Year Chronological",
+      "abbreviation": "oyc",
+      "description": "One Year Chronological<br /><a target='_new' href='http://www.oneyearbibleonline.com'>www.oneyearbibleonline.com</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/oneyearchronological.json",
+      "bundlePath": "data/bible-reading-plans/built/oneyearchronological.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 15
+    }
+  ]
+}

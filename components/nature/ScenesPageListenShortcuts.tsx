@@ -90,7 +90,7 @@ export function ScenesPageListenShortcuts() {
 
   return (
     <section
-      className="@container relative w-full shrink-0"
+      className="@container relative mb-5 w-full shrink-0 sm:mb-6"
       aria-label={t("scenesPage.sectionListen")}
       data-shell-swipe-nav-exclude
     >

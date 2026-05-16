@@ -28,7 +28,8 @@ export function useHomePrayerVerseFeedContext(): HomePrayerVerseFeedContextValue
   return v;
 }
 
-function useOptionalHomePrayerVerseFeedContext(): HomePrayerVerseFeedContextValue | null {
+/** 供 `HomeVerseRotator` 等：在可选「独立经文池」模式下可不依赖全站池上下文。 */
+export function useOptionalHomePrayerVerseFeedContext(): HomePrayerVerseFeedContextValue | null {
   return useContext(HomePrayerVerseFeedContext);
 }
 

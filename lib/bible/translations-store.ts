@@ -1,6 +1,7 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { invalidateScriptureSqliteCache, scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
 import type { BibleTranslationMeta, BibleTranslationsIndex } from "@/lib/bible/translations-types";
 
 const DATA_DIR = "data/bible";
@@ -107,4 +108,11 @@ export async function deleteTranslationFile(cwd: string, id: string): Promise<vo
     const err = e as NodeJS.ErrnoException;
     if (err.code !== "ENOENT") throw e;
   }
+  try {
+    await fs.unlink(scriptureSqlitePath(cwd, id));
+  } catch (e) {
+    const err = e as NodeJS.ErrnoException;
+    if (err.code !== "ENOENT") throw e;
+  }
+  invalidateScriptureSqliteCache(id);
 }

@@ -18,6 +18,10 @@ export function ReadCatalogFooterLink() {
   const { t } = useLocale();
   return (
     <p className="bible-catalog-read-end">
+      <Link href="/read/plans" className="bible-catalog-text-link">
+        {t("pages.read.plansNav")}
+      </Link>
+      <span className="mx-2 text-amber-800/35 dark:text-stone-600">·</span>
       <Link href="/read" className="bible-catalog-text-link">
         {t("pages.read.catalogFooter")}
       </Link>

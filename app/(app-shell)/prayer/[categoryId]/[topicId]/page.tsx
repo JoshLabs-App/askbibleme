@@ -29,7 +29,7 @@ export default async function PrayerTopicPage({ params }: Props) {
   const raw = getTopicPrayerTopic(cwd, categoryId, topicId);
   if (!raw) notFound();
   const category = getTopicPrayerCategory(cwd, categoryId);
-  const topic = resolveTopicPrayerTopicFromSelah(cwd, raw, tid);
+  const topic = await resolveTopicPrayerTopicFromSelah(cwd, raw, tid);
   const lead = topic.summary?.trim() || buildTopicOpeningLine(topic);
 
   const crumbs = [

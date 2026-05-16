@@ -1,0 +1,26 @@
+/**
+ * 读经羊皮卷底图（全 /read 路由共用）
+ *
+ * - **1** — `parchment-scroll-bg.png`（原版）
+ * - **2** — `parchment-scroll-bg-2.png`（深色卷轴）
+ * - **3** — `parchment-scroll-bg-3.png`（顶卷轴 + 纵向羊皮）
+ *
+ * 默认使用 **1**。在 `<html data-read-parchment-bg="1"|"2"|"3">` 上切换
+ *（日后可由设置 / localStorage 在客户端写入）。
+ */
+:root {
+  --read-parchment-bg-canvas: #e5d2bf;
+  --read-parchment-bg-image: url("/read/parchment-scroll-bg.png");
+}
+
+html[data-read-parchment-bg="1"] {
+  --read-parchment-bg-image: url("/read/parchment-scroll-bg.png");
+}
+
+html[data-read-parchment-bg="2"] {
+  --read-parchment-bg-image: url("/read/parchment-scroll-bg-2.png");
+}
+
+html[data-read-parchment-bg="3"] {
+  --read-parchment-bg-image: url("/read/parchment-scroll-bg-3.png");
+}

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 
 /** 与 `HomeShellFloatingRouteNav` 左→右（不含中央播放；不含放松入口）一致 */
-const ROUTE_SWIPE_ORDER = ["/", "/scenes", "/verse", "/prayer"] as const;
+const ROUTE_SWIPE_ORDER = ["/", "/scenes", "/read", "/prayer"] as const;
 
 const SWIPE_MIN_DX = 56;
 
@@ -14,7 +14,7 @@ function routeSwipeIndex(pathname: string): number | null {
   if (p.startsWith("/admin")) return null;
   if (isNatureHomeShellPath(p)) return 0;
   if (p === "/scenes" || p.startsWith("/scenes/")) return 1;
-  if (p === "/verse" || p.startsWith("/verse/")) return 2;
+  if (p === "/read" || p.startsWith("/read/")) return 2;
   if (p.startsWith("/prayer")) return 3;
   return null;
 }

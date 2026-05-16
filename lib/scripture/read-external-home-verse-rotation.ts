@@ -44,3 +44,11 @@ export function readExternalHomeVerseRotationSync(cwd: string): ExternalHomeVers
   }
   return { version: o.version, sourceMeta, verseRefs };
 }
+
+/** 写入首页轮播 `VerseRef[]`（不含 sourceMeta，避免落库来源信息）。 */
+export function writeExternalHomeVerseRotationSync(cwd: string, verseRefs: VerseRef[]): void {
+  const abs = path.join(cwd, REL);
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  const payload: ExternalHomeVerseRotationFile = { version: 2, verseRefs };
+  fs.writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}

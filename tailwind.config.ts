@@ -36,6 +36,28 @@ const config: Config = {
           "Arial",
           "sans-serif",
         ],
+        /** 含简繁宋体：否则 `font-serif` 只有 Georgia，中文会落回苹方/黑体 */
+        serif: [
+          "Songti SC",
+          "STSong",
+          "Songti TC",
+          "STSongti-TC",
+          "Noto Serif SC",
+          "Noto Serif TC",
+          "SimSun",
+          "NSimSun",
+          "PMingLiU",
+          "MingLiU",
+          "Hiragino Mincho ProN",
+          "Yu Mincho",
+          "MS Mincho",
+          "ui-serif",
+          "Georgia",
+          "Cambria",
+          '"Times New Roman"',
+          "Times",
+          "serif",
+        ],
       },
       keyframes: {
         "amb-calm-drift-a": {

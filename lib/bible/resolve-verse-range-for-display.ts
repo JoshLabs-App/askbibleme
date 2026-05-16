@@ -100,12 +100,12 @@ export function splitVerseTextToDisplayLines(text: string, locale: AppLocale): s
  * 缺章 / 缺译本文件：`ref-only` 时仅返回脚注一行；默认 `skip` 返回 null。
  * 范围内部分缺节：`partial-span`（默认）用已有节正文，脚注改为实际首尾节号。
  */
-export function resolveVerseRefToHomeEntry(
+export async function resolveVerseRefToHomeEntry(
   cwd: string,
   ref: VerseRef,
   locale: AppLocale,
   options?: ResolveVerseRefOptions,
-): HomeVerseEntry | null {
+): Promise<HomeVerseEntry | null> {
   const whenIncomplete: ResolveVerseRefWhenIncomplete = options?.whenIncomplete ?? "partial-span";
 
   const index = readTranslationsIndexSync(cwd);
@@ -122,7 +122,7 @@ export function resolveVerseRefToHomeEntry(
     locale,
   );
 
-  const loaded = loadChapterFromTranslation(cwd, ref.bookId, ref.chapter, tid);
+  const loaded = await loadChapterFromTranslation(cwd, ref.bookId, ref.chapter, tid);
   if (!loaded) {
     if (whenIncomplete === "ref-only" && footRequested) {
       return { lines: [footRequested], ref: footRequested };

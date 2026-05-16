@@ -183,7 +183,7 @@ export function BibleCatalogReadOutline({ sections }: Props) {
           }}
           onTransitionEnd={onPanelTransitionEnd}
         >
-          <div className="bc-sheet-panel-inner">
+          <div className="bc-sheet-panel-inner read-bible-typography">
             <header className="bc-sheet-header">
               <div>
                 <h2 id="bc-sheet-title" className="bc-sheet-title">

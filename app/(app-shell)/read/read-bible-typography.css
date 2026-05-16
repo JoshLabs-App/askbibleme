@@ -1,0 +1,30 @@
+/* /read 首页、目录、读经章：默认宋体系 + 拉丁衬线；字族与字号可由 `ReadBibleTypographyProvider` 写 `documentElement` CSS 变量覆盖 */
+.read-bible-typography {
+  font-family: var(
+    --read-bible-font-family,
+    "Songti SC",
+    "STSong",
+    "Songti TC",
+    "STSongti-TC",
+    "Noto Serif SC",
+    "Noto Serif TC",
+    "SimSun",
+    "NSimSun",
+    "PMingLiU",
+    "MingLiU",
+    "Hiragino Mincho ProN",
+    "Yu Mincho",
+    "MS Mincho",
+    "Iowan Old Style",
+    "Palatino Linotype",
+    Palatino,
+    "Book Antiqua",
+    Georgia,
+    Cambria,
+    "Times New Roman",
+    Times,
+    ui-serif,
+    serif
+  );
+  -webkit-font-smoothing: antialiased;
+}

@@ -34,7 +34,7 @@ export default async function PrayerCategoryPage({ params }: Props) {
   if (!raw) notFound();
   const resolved = {
     ...raw,
-    topics: raw.topics.map((t) => resolveTopicPrayerTopicHeadVerses(cwd, t, tid, 3)),
+    topics: await Promise.all(raw.topics.map((t) => resolveTopicPrayerTopicHeadVerses(cwd, t, tid, 3))),
   };
   const related = getRelatedTopicsForCategory(cwd, categoryId, 6);
 

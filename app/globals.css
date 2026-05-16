@@ -339,3 +339,40 @@ html[data-golden-verses-chromeless] .home-bottom-nav {
     display: flex;
   }
 }
+
+/* 底栏「整章经朗读」进度条：跨路由可用，故放在 globals */
+.read-scripture-dock-seek::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.read-scripture-dock-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: rgba(254, 243, 199, 0.96);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28);
+}
+.read-scripture-dock-seek::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.read-scripture-dock-seek::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 9999px;
+  background: rgba(254, 243, 199, 0.96);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28);
+}
+.read-scripture-dock-seek:disabled::-webkit-slider-thumb {
+  background: rgba(255, 255, 255, 0.35);
+}
+.read-scripture-dock-seek:disabled::-moz-range-thumb {
+  background: rgba(255, 255, 255, 0.35);
+}

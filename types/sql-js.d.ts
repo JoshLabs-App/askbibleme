@@ -1,5 +1,5 @@
 declare module "sql.js" {
-  type Statement = {
+  export type Statement = {
     bind: (values: unknown[] | Record<string, unknown>) => void;
     step: () => boolean;
     getAsObject: () => Record<string, unknown>;
@@ -7,14 +7,15 @@ declare module "sql.js" {
     free: () => void;
   };
 
-  type Database = {
+  export type Database = {
     close: () => void;
     run: (sql: string, params?: unknown[] | Record<string, unknown>) => void;
     prepare: (sql: string) => Statement;
     export: () => Uint8Array;
+    exec: (sql: string) => { columns: string[]; values: unknown[][] }[];
   };
 
-  type SqlJsStatic = {
+  export type SqlJsStatic = {
     Database: new (data?: ArrayLike<number> | Buffer) => Database;
   };
 

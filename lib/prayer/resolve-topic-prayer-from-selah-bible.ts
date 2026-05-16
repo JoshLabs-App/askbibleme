@@ -62,11 +62,11 @@ function referenceLabelZh(bookId: string, chapter: number, verseStart: number, v
 /**
  * 用 Selah 已导入译本填充 `reference` 与 `text`（单书卷、可跨章连续取字；跨书卷则仅规范化书卷码）。
  */
-export function resolveTopicPrayerVerseFromSelah(
+export async function resolveTopicPrayerVerseFromSelah(
   cwd: string,
   verse: TopicPrayerVerse,
   translationId: string,
-): TopicPrayerVerse {
+): Promise<TopicPrayerVerse> {
   const bookId = normalizeBookId(verse.book);
   const ch0 = verse.chapterStart;
   const ch1 = verse.chapterEnd;
@@ -76,7 +76,7 @@ export function resolveTopicPrayerVerseFromSelah(
   if (ch0 !== ch1) {
     const parts: string[] = [];
     for (let ch = ch0; ch <= ch1; ch += 1) {
-      const loaded = loadChapterFromTranslation(cwd, bookId, ch, translationId);
+      const loaded = await loadChapterFromTranslation(cwd, bookId, ch, translationId);
       if (!loaded) continue;
       const v0 = ch === ch0 ? vs : 1;
       const v1 = ch === ch1 ? ve : loaded.verses[loaded.verses.length - 1]?.verse ?? ve;
@@ -92,7 +92,7 @@ export function resolveTopicPrayerVerseFromSelah(
     };
   }
 
-  const loaded = loadChapterFromTranslation(cwd, bookId, ch0, translationId);
+  const loaded = await loadChapterFromTranslation(cwd, bookId, ch0, translationId);
   if (!loaded) {
     return { ...verse, book: bookId, reference: verse.reference.trim() || referenceLabelZh(bookId, ch0, vs, ve) };
   }
@@ -105,35 +105,39 @@ export function resolveTopicPrayerVerseFromSelah(
   };
 }
 
-export function resolveTopicPrayerTopicFromSelah(
+export async function resolveTopicPrayerTopicFromSelah(
   cwd: string,
   topic: TopicPrayerTopic,
   translationId: string,
-): TopicPrayerTopic {
+): Promise<TopicPrayerTopic> {
+  const verses = await Promise.all(topic.verses.map((v) => resolveTopicPrayerVerseFromSelah(cwd, v, translationId)));
   return {
     ...topic,
-    verses: topic.verses.map((v) => resolveTopicPrayerVerseFromSelah(cwd, v, translationId)),
+    verses,
   };
 }
 
 /** 只解析前 `maxVerses` 条（用于分类页预览，减轻磁盘读）。 */
-export function resolveTopicPrayerTopicHeadVerses(
+export async function resolveTopicPrayerTopicHeadVerses(
   cwd: string,
   topic: TopicPrayerTopic,
   translationId: string,
   maxVerses: number,
-): TopicPrayerTopic {
-  const head = topic.verses.slice(0, maxVerses).map((v) => resolveTopicPrayerVerseFromSelah(cwd, v, translationId));
+): Promise<TopicPrayerTopic> {
+  const head = await Promise.all(
+    topic.verses.slice(0, maxVerses).map((v) => resolveTopicPrayerVerseFromSelah(cwd, v, translationId)),
+  );
   return { ...topic, verses: head };
 }
 
-export function resolveTopicPrayerCategoryFromSelah(
+export async function resolveTopicPrayerCategoryFromSelah(
   cwd: string,
   category: TopicPrayerCategory,
   translationId: string,
-): TopicPrayerCategory {
+): Promise<TopicPrayerCategory> {
+  const topics = await Promise.all(category.topics.map((t) => resolveTopicPrayerTopicFromSelah(cwd, t, translationId)));
   return {
     ...category,
-    topics: category.topics.map((t) => resolveTopicPrayerTopicFromSelah(cwd, t, translationId)),
+    topics,
   };
 }

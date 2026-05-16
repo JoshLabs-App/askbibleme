@@ -1,0 +1,6627 @@
+{
+  "schemaVersion": 1,
+  "planId": "esvthroughthebible",
+  "abbreviation": "etb",
+  "name": "Through The Bible",
+  "description": "Through the Bible<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+  "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvthroughthebible.json",
+  "days": [
+    {
+      "dayIndex": 0,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Genesis 1-2"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Matthew 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 1,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 3,
+          "endChapter": 5,
+          "label": "Genesis 3-5"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Matthew 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 6,
+          "endChapter": 8,
+          "label": "Genesis 6-8"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Matthew 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 9,
+          "endChapter": 11,
+          "label": "Genesis 9-11"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Matthew 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 4,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 12,
+          "endChapter": 14,
+          "label": "Genesis 12-14"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 1,
+          "endVerse": 26,
+          "label": "Matthew 5:1-26"
+        }
+      ]
+    },
+    {
+      "dayIndex": 5,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 15,
+          "endChapter": 17,
+          "label": "Genesis 15-17"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 27,
+          "endVerse": 48,
+          "label": "Matthew 5:27-48"
+        }
+      ]
+    },
+    {
+      "dayIndex": 6,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 18,
+          "endChapter": 19,
+          "label": "Genesis 18-19"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Matthew 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 7,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 20,
+          "endChapter": 22,
+          "label": "Genesis 20-22"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 7,
+          "endChapter": 7,
+          "label": "Matthew 7"
+        }
+      ]
+    },
+    {
+      "dayIndex": 8,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 23,
+          "endChapter": 24,
+          "label": "Genesis 23-24"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 8,
+          "endChapter": 8,
+          "label": "Matthew 8"
+        }
+      ]
+    },
+    {
+      "dayIndex": 9,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 25,
+          "endChapter": 26,
+          "label": "Genesis 25-26"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 1,
+          "endVerse": 17,
+          "label": "Matthew 9:1-17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 10,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 27,
+          "endChapter": 28,
+          "label": "Genesis 27-28"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 18,
+          "endVerse": 38,
+          "label": "Matthew 9:18-38"
+        }
+      ]
+    },
+    {
+      "dayIndex": 11,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 29,
+          "endChapter": 30,
+          "label": "Genesis 29-30"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "Matthew 10:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 12,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 31,
+          "endChapter": 32,
+          "label": "Genesis 31-32"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 24,
+          "endVerse": 42,
+          "label": "Matthew 10:24-42"
+        }
+      ]
+    },
+    {
+      "dayIndex": 13,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 33,
+          "endChapter": 35,
+          "label": "Genesis 33-35"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 11,
+          "endChapter": 11,
+          "label": "Matthew 11"
+        }
+      ]
+    },
+    {
+      "dayIndex": 14,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 36,
+          "endChapter": 37,
+          "label": "Genesis 36-37"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Matthew 12:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 15,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 38,
+          "endChapter": 40,
+          "label": "Genesis 38-40"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 22,
+          "endVerse": 50,
+          "label": "Matthew 12:22-50"
+        }
+      ]
+    },
+    {
+      "dayIndex": 16,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 41,
+          "endChapter": 41,
+          "label": "Genesis 41"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 1,
+          "endVerse": 32,
+          "label": "Matthew 13:1-32"
+        }
+      ]
+    },
+    {
+      "dayIndex": 17,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 42,
+          "endChapter": 43,
+          "label": "Genesis 42-43"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 33,
+          "endVerse": 58,
+          "label": "Matthew 13:33-58"
+        }
+      ]
+    },
+    {
+      "dayIndex": 18,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 44,
+          "endChapter": 45,
+          "label": "Genesis 44-45"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Matthew 14:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 19,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 46,
+          "endChapter": 48,
+          "label": "Genesis 46-48"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 22,
+          "endVerse": 36,
+          "label": "Matthew 14:22-36"
+        }
+      ]
+    },
+    {
+      "dayIndex": 20,
+      "readings": [
+        {
+          "bookId": "GEN",
+          "startChapter": 49,
+          "endChapter": 50,
+          "label": "Genesis 49-50"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Matthew 15:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 21,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Exodus 1-3"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 21,
+          "endVerse": 39,
+          "label": "Matthew 15:21-39"
+        }
+      ]
+    },
+    {
+      "dayIndex": 22,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Exodus 4-6"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 16,
+          "endChapter": 16,
+          "label": "Matthew 16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 23,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 7,
+          "endChapter": 8,
+          "label": "Exodus 7-8"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 17,
+          "endChapter": 17,
+          "label": "Matthew 17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 24,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 9,
+          "endChapter": 10,
+          "label": "Exodus 9-10"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 18,
+          "endChapter": 18,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Matthew 18:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 25,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 11,
+          "endChapter": 12,
+          "label": "Exodus 11-12"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 18,
+          "endChapter": 18,
+          "startVerse": 21,
+          "endVerse": 35,
+          "label": "Matthew 18:21-35"
+        }
+      ]
+    },
+    {
+      "dayIndex": 26,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 13,
+          "endChapter": 15,
+          "label": "Exodus 13-15"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "Matthew 19:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 27,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 16,
+          "endChapter": 18,
+          "label": "Exodus 16-18"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 16,
+          "endVerse": 30,
+          "label": "Matthew 19:16-30"
+        }
+      ]
+    },
+    {
+      "dayIndex": 28,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 19,
+          "endChapter": 21,
+          "label": "Exodus 19-21"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 20,
+          "endChapter": 20,
+          "startVerse": 1,
+          "endVerse": 16,
+          "label": "Matthew 20:1-16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 29,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 22,
+          "endChapter": 24,
+          "label": "Exodus 22-24"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 20,
+          "endChapter": 20,
+          "startVerse": 17,
+          "endVerse": 34,
+          "label": "Matthew 20:17-34"
+        }
+      ]
+    },
+    {
+      "dayIndex": 30,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 25,
+          "endChapter": 26,
+          "label": "Exodus 25-26"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 21,
+          "endChapter": 21,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Matthew 21:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 31,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 27,
+          "endChapter": 28,
+          "label": "Exodus 27-28"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 21,
+          "endChapter": 21,
+          "startVerse": 23,
+          "endVerse": 46,
+          "label": "Matthew 21:23-46"
+        }
+      ]
+    },
+    {
+      "dayIndex": 32,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 29,
+          "endChapter": 30,
+          "label": "Exodus 29-30"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 22,
+          "endChapter": 22,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Matthew 22:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 33,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 31,
+          "endChapter": 33,
+          "label": "Exodus 31-33"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 22,
+          "endChapter": 22,
+          "startVerse": 23,
+          "endVerse": 46,
+          "label": "Matthew 22:23-46"
+        }
+      ]
+    },
+    {
+      "dayIndex": 34,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 34,
+          "endChapter": 36,
+          "label": "Exodus 34-36"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Matthew 23:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 35,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 37,
+          "endChapter": 38,
+          "label": "Exodus 37-38"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 23,
+          "endVerse": 39,
+          "label": "Matthew 23:23-39"
+        }
+      ]
+    },
+    {
+      "dayIndex": 36,
+      "readings": [
+        {
+          "bookId": "EXO",
+          "startChapter": 39,
+          "endChapter": 40,
+          "label": "Exodus 39-40"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 24,
+          "endChapter": 24,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Matthew 24:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 37,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Leviticus 1-3"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 24,
+          "endChapter": 24,
+          "startVerse": 23,
+          "endVerse": 51,
+          "label": "Matthew 24:23-51"
+        }
+      ]
+    },
+    {
+      "dayIndex": 38,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Leviticus 4-6"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 25,
+          "endChapter": 25,
+          "startVerse": 1,
+          "endVerse": 30,
+          "label": "Matthew 25:1-30"
+        }
+      ]
+    },
+    {
+      "dayIndex": 39,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Leviticus 7-9"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 25,
+          "endChapter": 25,
+          "startVerse": 31,
+          "endVerse": 46,
+          "label": "Matthew 25:31-46"
+        }
+      ]
+    },
+    {
+      "dayIndex": 40,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Leviticus 10-12"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 26,
+          "endChapter": 26,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "Matthew 26:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 41,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 13,
+          "endChapter": 13,
+          "label": "Leviticus 13"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 26,
+          "endChapter": 26,
+          "startVerse": 20,
+          "endVerse": 54,
+          "label": "Matthew 26:20-54"
+        }
+      ]
+    },
+    {
+      "dayIndex": 42,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 14,
+          "endChapter": 14,
+          "label": "Leviticus 14"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 26,
+          "endChapter": 26,
+          "startVerse": 55,
+          "endVerse": 75,
+          "label": "Matthew 26:55-75"
+        }
+      ]
+    },
+    {
+      "dayIndex": 43,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 15,
+          "endChapter": 17,
+          "label": "Leviticus 15-17"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 27,
+          "endChapter": 27,
+          "startVerse": 1,
+          "endVerse": 31,
+          "label": "Matthew 27:1-31"
+        }
+      ]
+    },
+    {
+      "dayIndex": 44,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 18,
+          "endChapter": 19,
+          "label": "Leviticus 18-19"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 27,
+          "endChapter": 27,
+          "startVerse": 32,
+          "endVerse": 66,
+          "label": "Matthew 27:32-66"
+        }
+      ]
+    },
+    {
+      "dayIndex": 45,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 20,
+          "endChapter": 21,
+          "label": "Leviticus 20-21"
+        },
+        {
+          "bookId": "MAT",
+          "startChapter": 28,
+          "endChapter": 28,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Matthew 28:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 46,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 22,
+          "endChapter": 23,
+          "label": "Leviticus 22-23"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Mark 1:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 47,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 24,
+          "endChapter": 25,
+          "label": "Leviticus 24-25"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 23,
+          "endVerse": 45,
+          "label": "Mark 1:23-45"
+        }
+      ]
+    },
+    {
+      "dayIndex": 48,
+      "readings": [
+        {
+          "bookId": "LEV",
+          "startChapter": 26,
+          "endChapter": 27,
+          "label": "Leviticus 26-27"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Mark 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 49,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Numbers 1-2"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 3,
+          "endChapter": 3,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Mark 3:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 50,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 3,
+          "endChapter": 4,
+          "label": "Numbers 3-4"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 3,
+          "endChapter": 3,
+          "startVerse": 22,
+          "endVerse": 35,
+          "label": "Mark 3:22-35"
+        }
+      ]
+    },
+    {
+      "dayIndex": 51,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 5,
+          "endChapter": 6,
+          "label": "Numbers 5-6"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Mark 4:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 52,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 7,
+          "endChapter": 7,
+          "label": "Numbers 7"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 21,
+          "endVerse": 41,
+          "label": "Mark 4:21-41"
+        }
+      ]
+    },
+    {
+      "dayIndex": 53,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 8,
+          "endChapter": 10,
+          "label": "Numbers 8-10"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Mark 5:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 54,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 11,
+          "endChapter": 13,
+          "label": "Numbers 11-13"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 21,
+          "endVerse": 43,
+          "label": "Mark 5:21-43"
+        }
+      ]
+    },
+    {
+      "dayIndex": 55,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 14,
+          "endChapter": 15,
+          "label": "Numbers 14-15"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 1,
+          "endVerse": 32,
+          "label": "Mark 6:1-32"
+        }
+      ]
+    },
+    {
+      "dayIndex": 56,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 16,
+          "endChapter": 17,
+          "label": "Numbers 16-17"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 33,
+          "endVerse": 56,
+          "label": "Mark 6:33-56"
+        }
+      ]
+    },
+    {
+      "dayIndex": 57,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 18,
+          "endChapter": 20,
+          "label": "Numbers 18-20"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 1,
+          "endVerse": 13,
+          "label": "Mark 7:1-13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 58,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 21,
+          "endChapter": 23,
+          "label": "Numbers 21-23"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 7,
+          "startVerse": 14,
+          "endChapter": 8,
+          "endVerse": 10,
+          "label": "Mark 7:14-8:10"
+        }
+      ]
+    },
+    {
+      "dayIndex": 59,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 24,
+          "endChapter": 27,
+          "label": "Numbers 24-27"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 11,
+          "endVerse": 38,
+          "label": "Mark 8:11-38"
+        }
+      ]
+    },
+    {
+      "dayIndex": 60,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 28,
+          "endChapter": 29,
+          "label": "Numbers 28-29"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 1,
+          "endVerse": 29,
+          "label": "Mark 9:1-29"
+        }
+      ]
+    },
+    {
+      "dayIndex": 61,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 30,
+          "endChapter": 31,
+          "label": "Numbers 30-31"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 30,
+          "endVerse": 50,
+          "label": "Mark 9:30-50"
+        }
+      ]
+    },
+    {
+      "dayIndex": 62,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 32,
+          "endChapter": 33,
+          "label": "Numbers 32-33"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 31,
+          "label": "Mark 10:1-31"
+        }
+      ]
+    },
+    {
+      "dayIndex": 63,
+      "readings": [
+        {
+          "bookId": "NUM",
+          "startChapter": 34,
+          "endChapter": 36,
+          "label": "Numbers 34-36"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 32,
+          "endVerse": 52,
+          "label": "Mark 10:32-52"
+        }
+      ]
+    },
+    {
+      "dayIndex": 64,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Deuteronomy 1-2"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "Mark 11:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 65,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 3,
+          "endChapter": 4,
+          "label": "Deuteronomy 3-4"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 20,
+          "endVerse": 33,
+          "label": "Mark 11:20-33"
+        }
+      ]
+    },
+    {
+      "dayIndex": 66,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 5,
+          "endChapter": 7,
+          "label": "Deuteronomy 5-7"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 1,
+          "endVerse": 27,
+          "label": "Mark 12:1-27"
+        }
+      ]
+    },
+    {
+      "dayIndex": 67,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 8,
+          "endChapter": 10,
+          "label": "Deuteronomy 8-10"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 28,
+          "endVerse": 44,
+          "label": "Mark 12:28-44"
+        }
+      ]
+    },
+    {
+      "dayIndex": 68,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 11,
+          "endChapter": 13,
+          "label": "Deuteronomy 11-13"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 1,
+          "endVerse": 13,
+          "label": "Mark 13:1-13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 69,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 14,
+          "endChapter": 16,
+          "label": "Deuteronomy 14-16"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 14,
+          "endVerse": 37,
+          "label": "Mark 13:14-37"
+        }
+      ]
+    },
+    {
+      "dayIndex": 70,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 17,
+          "endChapter": 19,
+          "label": "Deuteronomy 17-19"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 1,
+          "endVerse": 25,
+          "label": "Mark 14:1-25"
+        }
+      ]
+    },
+    {
+      "dayIndex": 71,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 20,
+          "endChapter": 22,
+          "label": "Deuteronomy 20-22"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 26,
+          "endVerse": 50,
+          "label": "Mark 14:26-50"
+        }
+      ]
+    },
+    {
+      "dayIndex": 72,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 23,
+          "endChapter": 25,
+          "label": "Deuteronomy 23-25"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 51,
+          "endVerse": 72,
+          "label": "Mark 14:51-72"
+        }
+      ]
+    },
+    {
+      "dayIndex": 73,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 26,
+          "endChapter": 27,
+          "label": "Deuteronomy 26-27"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 1,
+          "endVerse": 26,
+          "label": "Mark 15:1-26"
+        }
+      ]
+    },
+    {
+      "dayIndex": 74,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 28,
+          "endChapter": 28,
+          "label": "Deuteronomy 28"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 27,
+          "endVerse": 47,
+          "label": "Mark 15:27-47"
+        }
+      ]
+    },
+    {
+      "dayIndex": 75,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 29,
+          "endChapter": 30,
+          "label": "Deuteronomy 29-30"
+        },
+        {
+          "bookId": "MRK",
+          "startChapter": 16,
+          "endChapter": 16,
+          "label": "Mark 16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 76,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 31,
+          "endChapter": 32,
+          "label": "Deuteronomy 31-32"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "Luke 1:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 77,
+      "readings": [
+        {
+          "bookId": "DEU",
+          "startChapter": 33,
+          "endChapter": 34,
+          "label": "Deuteronomy 33-34"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 24,
+          "endVerse": 56,
+          "label": "Luke 1:24-56"
+        }
+      ]
+    },
+    {
+      "dayIndex": 78,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Joshua 1-3"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 57,
+          "endVerse": 80,
+          "label": "Luke 1:57-80"
+        }
+      ]
+    },
+    {
+      "dayIndex": 79,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Joshua 4-6"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 2,
+          "endChapter": 2,
+          "startVerse": 1,
+          "endVerse": 24,
+          "label": "Luke 2:1-24"
+        }
+      ]
+    },
+    {
+      "dayIndex": 80,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 7,
+          "endChapter": 8,
+          "label": "Joshua 7-8"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 2,
+          "endChapter": 2,
+          "startVerse": 25,
+          "endVerse": 52,
+          "label": "Luke 2:25-52"
+        }
+      ]
+    },
+    {
+      "dayIndex": 81,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 9,
+          "endChapter": 10,
+          "label": "Joshua 9-10"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Luke 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 82,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 11,
+          "endChapter": 13,
+          "label": "Joshua 11-13"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 1,
+          "endVerse": 32,
+          "label": "Luke 4:1-32"
+        }
+      ]
+    },
+    {
+      "dayIndex": 83,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 14,
+          "endChapter": 15,
+          "label": "Joshua 14-15"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 33,
+          "endVerse": 44,
+          "label": "Luke 4:33-44"
+        }
+      ]
+    },
+    {
+      "dayIndex": 84,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 16,
+          "endChapter": 18,
+          "label": "Joshua 16-18"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 1,
+          "endVerse": 16,
+          "label": "Luke 5:1-16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 85,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 19,
+          "endChapter": 20,
+          "label": "Joshua 19-20"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 17,
+          "endVerse": 39,
+          "label": "Luke 5:17-39"
+        }
+      ]
+    },
+    {
+      "dayIndex": 86,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 21,
+          "endChapter": 22,
+          "label": "Joshua 21-22"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 1,
+          "endVerse": 26,
+          "label": "Luke 6:1-26"
+        }
+      ]
+    },
+    {
+      "dayIndex": 87,
+      "readings": [
+        {
+          "bookId": "JOS",
+          "startChapter": 23,
+          "endChapter": 24,
+          "label": "Joshua 23-24"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 27,
+          "endVerse": 49,
+          "label": "Luke 6:27-49"
+        }
+      ]
+    },
+    {
+      "dayIndex": 88,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Judges 1-2"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 1,
+          "endVerse": 30,
+          "label": "Luke 7:1-30"
+        }
+      ]
+    },
+    {
+      "dayIndex": 89,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 3,
+          "endChapter": 5,
+          "label": "Judges 3-5"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 31,
+          "endVerse": 50,
+          "label": "Luke 7:31-50"
+        }
+      ]
+    },
+    {
+      "dayIndex": 90,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 6,
+          "endChapter": 7,
+          "label": "Judges 6-7"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Luke 8:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 91,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 8,
+          "endChapter": 9,
+          "label": "Judges 8-9"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 22,
+          "endVerse": 56,
+          "label": "Luke 8:22-56"
+        }
+      ]
+    },
+    {
+      "dayIndex": 92,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 10,
+          "endChapter": 11,
+          "label": "Judges 10-11"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 1,
+          "endVerse": 36,
+          "label": "Luke 9:1-36"
+        }
+      ]
+    },
+    {
+      "dayIndex": 93,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 12,
+          "endChapter": 14,
+          "label": "Judges 12-14"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 37,
+          "endVerse": 62,
+          "label": "Luke 9:37-62"
+        }
+      ]
+    },
+    {
+      "dayIndex": 94,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 15,
+          "endChapter": 17,
+          "label": "Judges 15-17"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 24,
+          "label": "Luke 10:1-24"
+        }
+      ]
+    },
+    {
+      "dayIndex": 95,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 18,
+          "endChapter": 19,
+          "label": "Judges 18-19"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 25,
+          "endVerse": 42,
+          "label": "Luke 10:25-42"
+        }
+      ]
+    },
+    {
+      "dayIndex": 96,
+      "readings": [
+        {
+          "bookId": "JDG",
+          "startChapter": 20,
+          "endChapter": 21,
+          "label": "Judges 20-21"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 28,
+          "label": "Luke 11:1-28"
+        }
+      ]
+    },
+    {
+      "dayIndex": 97,
+      "readings": [
+        {
+          "bookId": "RUT",
+          "startChapter": 1,
+          "endChapter": 4,
+          "label": "Ruth 1-4"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 29,
+          "endVerse": 54,
+          "label": "Luke 11:29-54"
+        }
+      ]
+    },
+    {
+      "dayIndex": 98,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "1Samuel 1-3"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 1,
+          "endVerse": 34,
+          "label": "Luke 12:1-34"
+        }
+      ]
+    },
+    {
+      "dayIndex": 99,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "1Samuel 4-6"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 35,
+          "endVerse": 59,
+          "label": "Luke 12:35-59"
+        }
+      ]
+    },
+    {
+      "dayIndex": 100,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "1Samuel 7-9"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Luke 13:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 101,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "1Samuel 10-12"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 22,
+          "endVerse": 35,
+          "label": "Luke 13:22-35"
+        }
+      ]
+    },
+    {
+      "dayIndex": 102,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 13,
+          "endChapter": 14,
+          "label": "1Samuel 13-14"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 12,
+          "endVerse": 24,
+          "label": "Luke 14:12-24"
+        }
+      ]
+    },
+    {
+      "dayIndex": 103,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 15,
+          "endChapter": 16,
+          "label": "1Samuel 15-16"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 25,
+          "endVerse": 35,
+          "label": "Luke 14:25-35"
+        }
+      ]
+    },
+    {
+      "dayIndex": 104,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 17,
+          "endChapter": 18,
+          "label": "1Samuel 17-18"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 1,
+          "endVerse": 10,
+          "label": "Luke 15:1-10"
+        }
+      ]
+    },
+    {
+      "dayIndex": 105,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 19,
+          "endChapter": 21,
+          "label": "1Samuel 19-21"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 11,
+          "endVerse": 32,
+          "label": "Luke 15:11-32"
+        }
+      ]
+    },
+    {
+      "dayIndex": 106,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 22,
+          "endChapter": 24,
+          "label": "1Samuel 22-24"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 16,
+          "endChapter": 16,
+          "startVerse": 1,
+          "endVerse": 18,
+          "label": "Luke 16:1-18"
+        }
+      ]
+    },
+    {
+      "dayIndex": 107,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 25,
+          "endChapter": 26,
+          "label": "1Samuel 25-26"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 16,
+          "endChapter": 16,
+          "startVerse": 19,
+          "endVerse": 31,
+          "label": "Luke 16:19-31"
+        }
+      ]
+    },
+    {
+      "dayIndex": 108,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 27,
+          "endChapter": 29,
+          "label": "1Samuel 27-29"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 17,
+          "endChapter": 17,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "Luke 17:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 109,
+      "readings": [
+        {
+          "bookId": "1SA",
+          "startChapter": 30,
+          "endChapter": 31,
+          "label": "1Samuel 30-31"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 17,
+          "endChapter": 17,
+          "startVerse": 20,
+          "endVerse": 37,
+          "label": "Luke 17:20-37"
+        }
+      ]
+    },
+    {
+      "dayIndex": 110,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "2Samuel 1-3"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 18,
+          "endChapter": 18,
+          "startVerse": 1,
+          "endVerse": 17,
+          "label": "Luke 18:1-17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 111,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "2Samuel 4-6"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 18,
+          "endChapter": 18,
+          "startVerse": 18,
+          "endVerse": 43,
+          "label": "Luke 18:18-43"
+        }
+      ]
+    },
+    {
+      "dayIndex": 112,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "2Samuel 7-9"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 1,
+          "endVerse": 28,
+          "label": "Luke 19:1-28"
+        }
+      ]
+    },
+    {
+      "dayIndex": 113,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "2Samuel 10-12"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 29,
+          "endVerse": 48,
+          "label": "Luke 19:29-48"
+        }
+      ]
+    },
+    {
+      "dayIndex": 114,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 13,
+          "endChapter": 14,
+          "label": "2Samuel 13-14"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 20,
+          "endChapter": 20,
+          "startVerse": 1,
+          "endVerse": 26,
+          "label": "Luke 20:1-26"
+        }
+      ]
+    },
+    {
+      "dayIndex": 115,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 15,
+          "endChapter": 16,
+          "label": "2Samuel 15-16"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 20,
+          "endChapter": 20,
+          "startVerse": 27,
+          "endVerse": 47,
+          "label": "Luke 20:27-47"
+        }
+      ]
+    },
+    {
+      "dayIndex": 116,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 17,
+          "endChapter": 18,
+          "label": "2Samuel 17-18"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 21,
+          "endChapter": 21,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "Luke 21:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 117,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 19,
+          "endChapter": 20,
+          "label": "2Samuel 19-20"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 21,
+          "endChapter": 21,
+          "startVerse": 20,
+          "endVerse": 38,
+          "label": "Luke 21:20-38"
+        }
+      ]
+    },
+    {
+      "dayIndex": 118,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 21,
+          "endChapter": 22,
+          "label": "2Samuel 21-22"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 22,
+          "endChapter": 22,
+          "startVerse": 1,
+          "endVerse": 30,
+          "label": "Luke 22:1-30"
+        }
+      ]
+    },
+    {
+      "dayIndex": 119,
+      "readings": [
+        {
+          "bookId": "2SA",
+          "startChapter": 23,
+          "endChapter": 24,
+          "label": "2Samuel 23-24"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 22,
+          "endChapter": 22,
+          "startVerse": 31,
+          "endVerse": 53,
+          "label": "Luke 22:31-53"
+        }
+      ]
+    },
+    {
+      "dayIndex": 120,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "1Kings 1-2"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 22,
+          "endChapter": 22,
+          "startVerse": 54,
+          "endVerse": 71,
+          "label": "Luke 22:54-71"
+        }
+      ]
+    },
+    {
+      "dayIndex": 121,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 3,
+          "endChapter": 5,
+          "label": "1Kings 3-5"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 1,
+          "endVerse": 26,
+          "label": "Luke 23:1-26"
+        }
+      ]
+    },
+    {
+      "dayIndex": 122,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 6,
+          "endChapter": 7,
+          "label": "1Kings 6-7"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 27,
+          "endVerse": 38,
+          "label": "Luke 23:27-38"
+        }
+      ]
+    },
+    {
+      "dayIndex": 123,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 8,
+          "endChapter": 9,
+          "label": "1Kings 8-9"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 39,
+          "endVerse": 56,
+          "label": "Luke 23:39-56"
+        }
+      ]
+    },
+    {
+      "dayIndex": 124,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 10,
+          "endChapter": 11,
+          "label": "1Kings 10-11"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 24,
+          "endChapter": 24,
+          "startVerse": 1,
+          "endVerse": 35,
+          "label": "Luke 24:1-35"
+        }
+      ]
+    },
+    {
+      "dayIndex": 125,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 12,
+          "endChapter": 13,
+          "label": "1Kings 12-13"
+        },
+        {
+          "bookId": "LUK",
+          "startChapter": 24,
+          "endChapter": 24,
+          "startVerse": 36,
+          "endVerse": 53,
+          "label": "Luke 24:36-53"
+        }
+      ]
+    },
+    {
+      "dayIndex": 126,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 14,
+          "endChapter": 15,
+          "label": "1Kings 14-15"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 1,
+          "endVerse": 28,
+          "label": "John 1:1-28"
+        }
+      ]
+    },
+    {
+      "dayIndex": 127,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 16,
+          "endChapter": 18,
+          "label": "1Kings 16-18"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 1,
+          "endChapter": 1,
+          "startVerse": 29,
+          "endVerse": 51,
+          "label": "John 1:29-51"
+        }
+      ]
+    },
+    {
+      "dayIndex": 128,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 19,
+          "endChapter": 20,
+          "label": "1Kings 19-20"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "John 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 129,
+      "readings": [
+        {
+          "bookId": "1KI",
+          "startChapter": 21,
+          "endChapter": 22,
+          "label": "1Kings 21-22"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 3,
+          "endChapter": 3,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "John 3:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 130,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "2Kings 1-3"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 3,
+          "endChapter": 3,
+          "startVerse": 22,
+          "endVerse": 36,
+          "label": "John 3:22-36"
+        }
+      ]
+    },
+    {
+      "dayIndex": 131,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 4,
+          "endChapter": 5,
+          "label": "2Kings 4-5"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 1,
+          "endVerse": 30,
+          "label": "John 4:1-30"
+        }
+      ]
+    },
+    {
+      "dayIndex": 132,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 6,
+          "endChapter": 8,
+          "label": "2Kings 6-8"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 31,
+          "endVerse": 54,
+          "label": "John 4:31-54"
+        }
+      ]
+    },
+    {
+      "dayIndex": 133,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 9,
+          "endChapter": 11,
+          "label": "2Kings 9-11"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 1,
+          "endVerse": 24,
+          "label": "John 5:1-24"
+        }
+      ]
+    },
+    {
+      "dayIndex": 134,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 12,
+          "endChapter": 14,
+          "label": "2Kings 12-14"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 25,
+          "endVerse": 47,
+          "label": "John 5:25-47"
+        }
+      ]
+    },
+    {
+      "dayIndex": 135,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 15,
+          "endChapter": 17,
+          "label": "2Kings 15-17"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "John 6:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 136,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 18,
+          "endChapter": 19,
+          "label": "2Kings 18-19"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 22,
+          "endVerse": 44,
+          "label": "John 6:22-44"
+        }
+      ]
+    },
+    {
+      "dayIndex": 137,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 20,
+          "endChapter": 22,
+          "label": "2Kings 20-22"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 6,
+          "endChapter": 6,
+          "startVerse": 45,
+          "endVerse": 71,
+          "label": "John 6:45-71"
+        }
+      ]
+    },
+    {
+      "dayIndex": 138,
+      "readings": [
+        {
+          "bookId": "2KI",
+          "startChapter": 23,
+          "endChapter": 25,
+          "label": "2Kings 23-25"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 1,
+          "endVerse": 31,
+          "label": "John 7:1-31"
+        }
+      ]
+    },
+    {
+      "dayIndex": 139,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "1Chronicles 1-2"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 32,
+          "endVerse": 53,
+          "label": "John 7:32-53"
+        }
+      ]
+    },
+    {
+      "dayIndex": 140,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 3,
+          "endChapter": 5,
+          "label": "1Chronicles 3-5"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "John 8:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 141,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 6,
+          "endChapter": 7,
+          "label": "1Chronicles 6-7"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 21,
+          "endVerse": 36,
+          "label": "John 8:21-36"
+        }
+      ]
+    },
+    {
+      "dayIndex": 142,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 8,
+          "endChapter": 10,
+          "label": "1Chronicles 8-10"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 37,
+          "endVerse": 59,
+          "label": "John 8:37-59"
+        }
+      ]
+    },
+    {
+      "dayIndex": 143,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 11,
+          "endChapter": 13,
+          "label": "1Chronicles 11-13"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "John 9:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 144,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 14,
+          "endChapter": 16,
+          "label": "1Chronicles 14-16"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 24,
+          "endVerse": 41,
+          "label": "John 9:24-41"
+        }
+      ]
+    },
+    {
+      "dayIndex": 145,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 17,
+          "endChapter": 19,
+          "label": "1Chronicles 17-19"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "John 10:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 146,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 20,
+          "endChapter": 22,
+          "label": "1Chronicles 20-22"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 22,
+          "endVerse": 42,
+          "label": "John 10:22-42"
+        }
+      ]
+    },
+    {
+      "dayIndex": 147,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 23,
+          "endChapter": 25,
+          "label": "1Chronicles 23-25"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 17,
+          "label": "John 11:1-17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 148,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 26,
+          "endChapter": 27,
+          "label": "1Chronicles 26-27"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 18,
+          "endVerse": 46,
+          "label": "John 11:18-46"
+        }
+      ]
+    },
+    {
+      "dayIndex": 149,
+      "readings": [
+        {
+          "bookId": "1CH",
+          "startChapter": 28,
+          "endChapter": 29,
+          "label": "1Chronicles 28-29"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 47,
+          "endVerse": 57,
+          "label": "John 11:47-57"
+        }
+      ]
+    },
+    {
+      "dayIndex": 150,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "2Chronicles 1-3"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "John 12:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 151,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "2Chronicles 4-6"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 12,
+          "endChapter": 12,
+          "startVerse": 20,
+          "endVerse": 50,
+          "label": "John 12:20-50"
+        }
+      ]
+    },
+    {
+      "dayIndex": 152,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "2Chronicles 7-9"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 1,
+          "endVerse": 17,
+          "label": "John 13:1-17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 153,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "2Chronicles 10-12"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 18,
+          "endVerse": 38,
+          "label": "John 13:18-38"
+        }
+      ]
+    },
+    {
+      "dayIndex": 154,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 13,
+          "endChapter": 16,
+          "label": "2Chronicles 13-16"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 14,
+          "endChapter": 14,
+          "label": "John 14"
+        }
+      ]
+    },
+    {
+      "dayIndex": 155,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 17,
+          "endChapter": 19,
+          "label": "2Chronicles 17-19"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 15,
+          "endChapter": 15,
+          "label": "John 15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 156,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 20,
+          "endChapter": 22,
+          "label": "2Chronicles 20-22"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 16,
+          "endChapter": 16,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "John 16:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 157,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 23,
+          "endChapter": 25,
+          "label": "2Chronicles 23-25"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 16,
+          "endChapter": 16,
+          "startVerse": 16,
+          "endVerse": 33,
+          "label": "John 16:16-33"
+        }
+      ]
+    },
+    {
+      "dayIndex": 158,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 26,
+          "endChapter": 28,
+          "label": "2Chronicles 26-28"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 17,
+          "endChapter": 17,
+          "label": "John 17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 159,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 29,
+          "endChapter": 31,
+          "label": "2Chronicles 29-31"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 18,
+          "endChapter": 18,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "John 18:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 160,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 32,
+          "endChapter": 33,
+          "label": "2Chronicles 32-33"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 18,
+          "endChapter": 18,
+          "startVerse": 24,
+          "endVerse": 40,
+          "label": "John 18:24-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 161,
+      "readings": [
+        {
+          "bookId": "2CH",
+          "startChapter": 34,
+          "endChapter": 36,
+          "label": "2Chronicles 34-36"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "John 19:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 162,
+      "readings": [
+        {
+          "bookId": "EZR",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Ezra 1-2"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 23,
+          "endVerse": 42,
+          "label": "John 19:23-42"
+        }
+      ]
+    },
+    {
+      "dayIndex": 163,
+      "readings": [
+        {
+          "bookId": "EZR",
+          "startChapter": 3,
+          "endChapter": 5,
+          "label": "Ezra 3-5"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 20,
+          "endChapter": 20,
+          "label": "John 20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 164,
+      "readings": [
+        {
+          "bookId": "EZR",
+          "startChapter": 6,
+          "endChapter": 8,
+          "label": "Ezra 6-8"
+        },
+        {
+          "bookId": "JHN",
+          "startChapter": 21,
+          "endChapter": 21,
+          "label": "John 21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 165,
+      "readings": [
+        {
+          "bookId": "EZR",
+          "startChapter": 9,
+          "endChapter": 10,
+          "label": "Ezra 9-10"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Acts 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 166,
+      "readings": [
+        {
+          "bookId": "NEH",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Nehemiah 1-3"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 2,
+          "endChapter": 2,
+          "startVerse": 1,
+          "endVerse": 13,
+          "label": "Acts 2:1-13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 167,
+      "readings": [
+        {
+          "bookId": "NEH",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Nehemiah 4-6"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 2,
+          "endChapter": 2,
+          "startVerse": 14,
+          "endVerse": 47,
+          "label": "Acts 2:14-47"
+        }
+      ]
+    },
+    {
+      "dayIndex": 168,
+      "readings": [
+        {
+          "bookId": "NEH",
+          "startChapter": 7,
+          "endChapter": 8,
+          "label": "Nehemiah 7-8"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Acts 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 169,
+      "readings": [
+        {
+          "bookId": "NEH",
+          "startChapter": 9,
+          "endChapter": 11,
+          "label": "Nehemiah 9-11"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Acts 4:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 170,
+      "readings": [
+        {
+          "bookId": "NEH",
+          "startChapter": 12,
+          "endChapter": 13,
+          "label": "Nehemiah 12-13"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 4,
+          "endChapter": 4,
+          "startVerse": 23,
+          "endVerse": 37,
+          "label": "Acts 4:23-37"
+        }
+      ]
+    },
+    {
+      "dayIndex": 171,
+      "readings": [
+        {
+          "bookId": "EST",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Esther 1-3"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 1,
+          "endVerse": 16,
+          "label": "Acts 5:1-16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 172,
+      "readings": [
+        {
+          "bookId": "EST",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Esther 4-6"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 5,
+          "endChapter": 5,
+          "startVerse": 17,
+          "endVerse": 42,
+          "label": "Acts 5:17-42"
+        }
+      ]
+    },
+    {
+      "dayIndex": 173,
+      "readings": [
+        {
+          "bookId": "EST",
+          "startChapter": 7,
+          "endChapter": 10,
+          "label": "Esther 7-10"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Acts 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 174,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Job 1-3"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "Acts 7:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 175,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Job 4-6"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 20,
+          "endVerse": 43,
+          "label": "Acts 7:20-43"
+        }
+      ]
+    },
+    {
+      "dayIndex": 176,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Job 7-9"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 44,
+          "endVerse": 60,
+          "label": "Acts 7:44-60"
+        }
+      ]
+    },
+    {
+      "dayIndex": 177,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Job 10-12"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 1,
+          "endVerse": 25,
+          "label": "Acts 8:1-25"
+        }
+      ]
+    },
+    {
+      "dayIndex": 178,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 13,
+          "endChapter": 15,
+          "label": "Job 13-15"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 26,
+          "endVerse": 40,
+          "label": "Acts 8:26-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 179,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 16,
+          "endChapter": 18,
+          "label": "Job 16-18"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 1,
+          "endVerse": 22,
+          "label": "Acts 9:1-22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 180,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 19,
+          "endChapter": 20,
+          "label": "Job 19-20"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 9,
+          "endChapter": 9,
+          "startVerse": 23,
+          "endVerse": 43,
+          "label": "Acts 9:23-43"
+        }
+      ]
+    },
+    {
+      "dayIndex": 181,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 21,
+          "endChapter": 22,
+          "label": "Job 21-22"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "Acts 10:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 182,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 23,
+          "endChapter": 25,
+          "label": "Job 23-25"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 24,
+          "endVerse": 48,
+          "label": "Acts 10:24-48"
+        }
+      ]
+    },
+    {
+      "dayIndex": 183,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 26,
+          "endChapter": 28,
+          "label": "Job 26-28"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 11,
+          "endChapter": 11,
+          "label": "Acts 11"
+        }
+      ]
+    },
+    {
+      "dayIndex": 184,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 29,
+          "endChapter": 30,
+          "label": "Job 29-30"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 12,
+          "endChapter": 12,
+          "label": "Acts 12"
+        }
+      ]
+    },
+    {
+      "dayIndex": 185,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 31,
+          "endChapter": 32,
+          "label": "Job 31-32"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "Acts 13:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 186,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 33,
+          "endChapter": 34,
+          "label": "Job 33-34"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 13,
+          "endChapter": 13,
+          "startVerse": 24,
+          "endVerse": 52,
+          "label": "Acts 13:24-52"
+        }
+      ]
+    },
+    {
+      "dayIndex": 187,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 35,
+          "endChapter": 37,
+          "label": "Job 35-37"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 14,
+          "endChapter": 14,
+          "label": "Acts 14"
+        }
+      ]
+    },
+    {
+      "dayIndex": 188,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 38,
+          "endChapter": 39,
+          "label": "Job 38-39"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Acts 15:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 189,
+      "readings": [
+        {
+          "bookId": "JOB",
+          "startChapter": 40,
+          "endChapter": 42,
+          "label": "Job 40-42"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 22,
+          "endVerse": 41,
+          "label": "Acts 15:22-41"
+        }
+      ]
+    },
+    {
+      "dayIndex": 190,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Psalm 1-3"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 16,
+          "endChapter": 16,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "Acts 16:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 191,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Psalm 4-6"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 16,
+          "endChapter": 16,
+          "startVerse": 16,
+          "endVerse": 40,
+          "label": "Acts 16:16-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 192,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Psalm 7-9"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 17,
+          "endChapter": 17,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "Acts 17:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 193,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Psalm 10-12"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 17,
+          "endChapter": 17,
+          "startVerse": 16,
+          "endVerse": 34,
+          "label": "Acts 17:16-34"
+        }
+      ]
+    },
+    {
+      "dayIndex": 194,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 13,
+          "endChapter": 16,
+          "label": "Psalm 13-16"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 18,
+          "endChapter": 18,
+          "label": "Acts 18"
+        }
+      ]
+    },
+    {
+      "dayIndex": 195,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 17,
+          "endChapter": 18,
+          "label": "Psalm 17-18"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Acts 19:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 196,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 19,
+          "endChapter": 21,
+          "label": "Psalm 19-21"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 19,
+          "endChapter": 19,
+          "startVerse": 21,
+          "endVerse": 41,
+          "label": "Acts 19:21-41"
+        }
+      ]
+    },
+    {
+      "dayIndex": 197,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 22,
+          "endChapter": 24,
+          "label": "Psalm 22-24"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 20,
+          "endChapter": 20,
+          "startVerse": 1,
+          "endVerse": 16,
+          "label": "Acts 20:1-16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 198,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 25,
+          "endChapter": 27,
+          "label": "Psalm 25-27"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 20,
+          "endChapter": 20,
+          "startVerse": 17,
+          "endVerse": 38,
+          "label": "Acts 20:17-38"
+        }
+      ]
+    },
+    {
+      "dayIndex": 199,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 28,
+          "endChapter": 30,
+          "label": "Psalm 28-30"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 21,
+          "endChapter": 21,
+          "startVerse": 1,
+          "endVerse": 14,
+          "label": "Acts 21:1-14"
+        }
+      ]
+    },
+    {
+      "dayIndex": 200,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 31,
+          "endChapter": 33,
+          "label": "Psalm 31-33"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 21,
+          "endChapter": 21,
+          "startVerse": 15,
+          "endVerse": 40,
+          "label": "Acts 21:15-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 201,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 34,
+          "endChapter": 35,
+          "label": "Psalm 34-35"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 22,
+          "endChapter": 22,
+          "label": "Acts 22"
+        }
+      ]
+    },
+    {
+      "dayIndex": 202,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 36,
+          "endChapter": 37,
+          "label": "Psalm 36-37"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 1,
+          "endVerse": 11,
+          "label": "Acts 23:1-11"
+        }
+      ]
+    },
+    {
+      "dayIndex": 203,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 38,
+          "endChapter": 40,
+          "label": "Psalm 38-40"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 23,
+          "endChapter": 23,
+          "startVerse": 12,
+          "endVerse": 35,
+          "label": "Acts 23:12-35"
+        }
+      ]
+    },
+    {
+      "dayIndex": 204,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 41,
+          "endChapter": 43,
+          "label": "Psalm 41-43"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 24,
+          "endChapter": 24,
+          "label": "Acts 24"
+        }
+      ]
+    },
+    {
+      "dayIndex": 205,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 44,
+          "endChapter": 46,
+          "label": "Psalm 44-46"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 25,
+          "endChapter": 25,
+          "label": "Acts 25"
+        }
+      ]
+    },
+    {
+      "dayIndex": 206,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 47,
+          "endChapter": 49,
+          "label": "Psalm 47-49"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 26,
+          "endChapter": 26,
+          "label": "Acts 26"
+        }
+      ]
+    },
+    {
+      "dayIndex": 207,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 50,
+          "endChapter": 52,
+          "label": "Psalm 50-52"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 27,
+          "endChapter": 27,
+          "startVerse": 1,
+          "endVerse": 25,
+          "label": "Acts 27:1-25"
+        }
+      ]
+    },
+    {
+      "dayIndex": 208,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 53,
+          "endChapter": 55,
+          "label": "Psalm 53-55"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 27,
+          "endChapter": 27,
+          "startVerse": 26,
+          "endVerse": 44,
+          "label": "Acts 27:26-44"
+        }
+      ]
+    },
+    {
+      "dayIndex": 209,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 56,
+          "endChapter": 58,
+          "label": "Psalm 56-58"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 28,
+          "endChapter": 28,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "Acts 28:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 210,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 59,
+          "endChapter": 61,
+          "label": "Psalm 59-61"
+        },
+        {
+          "bookId": "ACT",
+          "startChapter": 28,
+          "endChapter": 28,
+          "startVerse": 16,
+          "endVerse": 31,
+          "label": "Acts 28:16-31"
+        }
+      ]
+    },
+    {
+      "dayIndex": 211,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 62,
+          "endChapter": 64,
+          "label": "Psalm 62-64"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Romans 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 212,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 65,
+          "endChapter": 67,
+          "label": "Psalm 65-67"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Romans 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 213,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 68,
+          "endChapter": 69,
+          "label": "Psalm 68-69"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Romans 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 214,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 70,
+          "endChapter": 72,
+          "label": "Psalm 70-72"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Romans 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 215,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 73,
+          "endChapter": 74,
+          "label": "Psalm 73-74"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "Romans 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 216,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 75,
+          "endChapter": 77,
+          "label": "Psalm 75-77"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Romans 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 217,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 78,
+          "endChapter": 78,
+          "label": "Psalm 78"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 7,
+          "endChapter": 7,
+          "label": "Romans 7"
+        }
+      ]
+    },
+    {
+      "dayIndex": 218,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 79,
+          "endChapter": 81,
+          "label": "Psalm 79-81"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 1,
+          "endVerse": 18,
+          "label": "Romans 8:1-18"
+        }
+      ]
+    },
+    {
+      "dayIndex": 219,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 82,
+          "endChapter": 84,
+          "label": "Psalm 82-84"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 8,
+          "endChapter": 8,
+          "startVerse": 19,
+          "endVerse": 39,
+          "label": "Romans 8:19-39"
+        }
+      ]
+    },
+    {
+      "dayIndex": 220,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 85,
+          "endChapter": 87,
+          "label": "Psalm 85-87"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 9,
+          "endChapter": 9,
+          "label": "Romans 9"
+        }
+      ]
+    },
+    {
+      "dayIndex": 221,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 88,
+          "endChapter": 89,
+          "label": "Psalm 88-89"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 10,
+          "endChapter": 10,
+          "label": "Romans 10"
+        }
+      ]
+    },
+    {
+      "dayIndex": 222,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 90,
+          "endChapter": 92,
+          "label": "Psalm 90-92"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 21,
+          "label": "Romans 11:1-21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 223,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 93,
+          "endChapter": 95,
+          "label": "Psalm 93-95"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 22,
+          "endVerse": 36,
+          "label": "Romans 11:22-36"
+        }
+      ]
+    },
+    {
+      "dayIndex": 224,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 96,
+          "endChapter": 98,
+          "label": "Psalm 96-98"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 12,
+          "endChapter": 12,
+          "label": "Romans 12"
+        }
+      ]
+    },
+    {
+      "dayIndex": 225,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 99,
+          "endChapter": 102,
+          "label": "Psalm 99-102"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 13,
+          "endChapter": 13,
+          "label": "Romans 13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 226,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 103,
+          "endChapter": 104,
+          "label": "Psalm 103-104"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 14,
+          "endChapter": 14,
+          "label": "Romans 14"
+        }
+      ]
+    },
+    {
+      "dayIndex": 227,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 105,
+          "endChapter": 106,
+          "label": "Psalm 105-106"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "Romans 15:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 228,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 107,
+          "endChapter": 108,
+          "label": "Psalm 107-108"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 21,
+          "endVerse": 33,
+          "label": "Romans 15:21-33"
+        }
+      ]
+    },
+    {
+      "dayIndex": 229,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 109,
+          "endChapter": 111,
+          "label": "Psalm 109-111"
+        },
+        {
+          "bookId": "ROM",
+          "startChapter": 16,
+          "endChapter": 16,
+          "label": "Romans 16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 230,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 112,
+          "endChapter": 115,
+          "label": "Psalm 112-115"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "1Corinthians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 231,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 116,
+          "endChapter": 118,
+          "label": "Psalm 116-118"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "1Corinthians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 232,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 119,
+          "endChapter": 119,
+          "startVerse": 1,
+          "endVerse": 48,
+          "label": "Psalm 119:1-48"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "1Corinthians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 233,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 119,
+          "endChapter": 119,
+          "startVerse": 49,
+          "endVerse": 104,
+          "label": "Psalm 119:49-104"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "1Corinthians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 234,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 119,
+          "endChapter": 119,
+          "startVerse": 105,
+          "endVerse": 176,
+          "label": "Psalm 119:105-176"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "1Corinthians 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 235,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 120,
+          "endChapter": 123,
+          "label": "Psalm 120-123"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "1Corinthians 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 236,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 124,
+          "endChapter": 127,
+          "label": "Psalm 124-127"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 1,
+          "endVerse": 24,
+          "label": "1Corinthians 7:1-24"
+        }
+      ]
+    },
+    {
+      "dayIndex": 237,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 128,
+          "endChapter": 131,
+          "label": "Psalm 128-131"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 7,
+          "endChapter": 7,
+          "startVerse": 25,
+          "endVerse": 40,
+          "label": "1Corinthians 7:25-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 238,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 132,
+          "endChapter": 135,
+          "label": "Psalm 132-135"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 8,
+          "endChapter": 8,
+          "label": "1Corinthians 8"
+        }
+      ]
+    },
+    {
+      "dayIndex": 239,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 136,
+          "endChapter": 138,
+          "label": "Psalm 136-138"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 9,
+          "endChapter": 9,
+          "label": "1Corinthians 9"
+        }
+      ]
+    },
+    {
+      "dayIndex": 240,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 139,
+          "endChapter": 141,
+          "label": "Psalm 139-141"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 13,
+          "label": "1Corinthians 10:1-13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 241,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 142,
+          "endChapter": 144,
+          "label": "Psalm 142-144"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 14,
+          "endVerse": 33,
+          "label": "1Corinthians 10:14-33"
+        }
+      ]
+    },
+    {
+      "dayIndex": 242,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 145,
+          "endChapter": 147,
+          "label": "Psalm 145-147"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "1Corinthians 11:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 243,
+      "readings": [
+        {
+          "bookId": "PSA",
+          "startChapter": 148,
+          "endChapter": 150,
+          "label": "Psalm 148-150"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 16,
+          "endVerse": 34,
+          "label": "1Corinthians 11:16-34"
+        }
+      ]
+    },
+    {
+      "dayIndex": 244,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Proverbs 1-2"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 12,
+          "endChapter": 12,
+          "label": "1Corinthians 12"
+        }
+      ]
+    },
+    {
+      "dayIndex": 245,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 3,
+          "endChapter": 4,
+          "label": "Proverbs 3-4"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 13,
+          "endChapter": 13,
+          "label": "1Corinthians 13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 246,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 5,
+          "endChapter": 6,
+          "label": "Proverbs 5-6"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 1,
+          "endVerse": 20,
+          "label": "1Corinthians 14:1-20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 247,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 7,
+          "endChapter": 8,
+          "label": "Proverbs 7-8"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 14,
+          "endChapter": 14,
+          "startVerse": 21,
+          "endVerse": 40,
+          "label": "1Corinthians 14:21-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 248,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 9,
+          "endChapter": 10,
+          "label": "Proverbs 9-10"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 1,
+          "endVerse": 32,
+          "label": "1Corinthians 15:1-32"
+        }
+      ]
+    },
+    {
+      "dayIndex": 249,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 11,
+          "endChapter": 12,
+          "label": "Proverbs 11-12"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 15,
+          "endChapter": 15,
+          "startVerse": 33,
+          "endVerse": 58,
+          "label": "1Corinthians 15:33-58"
+        }
+      ]
+    },
+    {
+      "dayIndex": 250,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 13,
+          "endChapter": 14,
+          "label": "Proverbs 13-14"
+        },
+        {
+          "bookId": "1CO",
+          "startChapter": 16,
+          "endChapter": 16,
+          "label": "1Corinthians 16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 251,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 15,
+          "endChapter": 16,
+          "label": "Proverbs 15-16"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "2Corinthians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 252,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 17,
+          "endChapter": 18,
+          "label": "Proverbs 17-18"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "2Corinthians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 253,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 19,
+          "endChapter": 20,
+          "label": "Proverbs 19-20"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "2Corinthians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 254,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 21,
+          "endChapter": 22,
+          "label": "Proverbs 21-22"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "2Corinthians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 255,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 23,
+          "endChapter": 24,
+          "label": "Proverbs 23-24"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "2Corinthians 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 256,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 25,
+          "endChapter": 27,
+          "label": "Proverbs 25-27"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "2Corinthians 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 257,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 28,
+          "endChapter": 29,
+          "label": "Proverbs 28-29"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 7,
+          "endChapter": 7,
+          "label": "2Corinthians 7"
+        }
+      ]
+    },
+    {
+      "dayIndex": 258,
+      "readings": [
+        {
+          "bookId": "PRO",
+          "startChapter": 30,
+          "endChapter": 31,
+          "label": "Proverbs 30-31"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 8,
+          "endChapter": 8,
+          "label": "2Corinthians 8"
+        }
+      ]
+    },
+    {
+      "dayIndex": 259,
+      "readings": [
+        {
+          "bookId": "ECC",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Ecclesiastes 1-3"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 9,
+          "endChapter": 9,
+          "label": "2Corinthians 9"
+        }
+      ]
+    },
+    {
+      "dayIndex": 260,
+      "readings": [
+        {
+          "bookId": "ECC",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Ecclesiastes 4-6"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 10,
+          "endChapter": 10,
+          "label": "2Corinthians 10"
+        }
+      ]
+    },
+    {
+      "dayIndex": 261,
+      "readings": [
+        {
+          "bookId": "ECC",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Ecclesiastes 7-9"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 15,
+          "label": "2Corinthians 11:1-15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 262,
+      "readings": [
+        {
+          "bookId": "ECC",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Ecclesiastes 10-12"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 16,
+          "endVerse": 33,
+          "label": "2Corinthians 11:16-33"
+        }
+      ]
+    },
+    {
+      "dayIndex": 263,
+      "readings": [
+        {
+          "bookId": "SNG",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "SongOfSongs 1-3"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 12,
+          "endChapter": 12,
+          "label": "2Corinthians 12"
+        }
+      ]
+    },
+    {
+      "dayIndex": 264,
+      "readings": [
+        {
+          "bookId": "SNG",
+          "startChapter": 4,
+          "endChapter": 5,
+          "label": "SongOfSongs 4-5"
+        },
+        {
+          "bookId": "2CO",
+          "startChapter": 13,
+          "endChapter": 13,
+          "label": "2Corinthians 13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 265,
+      "readings": [
+        {
+          "bookId": "SNG",
+          "startChapter": 6,
+          "endChapter": 8,
+          "label": "SongOfSongs 6-8"
+        },
+        {
+          "bookId": "GAL",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Galatians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 266,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Isaiah 1-3"
+        },
+        {
+          "bookId": "GAL",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Galatians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 267,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Isaiah 4-6"
+        },
+        {
+          "bookId": "GAL",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Galatians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 268,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Isaiah 7-9"
+        },
+        {
+          "bookId": "GAL",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Galatians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 269,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Isaiah 10-12"
+        },
+        {
+          "bookId": "GAL",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "Galatians 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 270,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 13,
+          "endChapter": 15,
+          "label": "Isaiah 13-15"
+        },
+        {
+          "bookId": "GAL",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Galatians 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 271,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 16,
+          "endChapter": 18,
+          "label": "Isaiah 16-18"
+        },
+        {
+          "bookId": "EPH",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Ephesians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 272,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 19,
+          "endChapter": 21,
+          "label": "Isaiah 19-21"
+        },
+        {
+          "bookId": "EPH",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Ephesians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 273,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 22,
+          "endChapter": 23,
+          "label": "Isaiah 22-23"
+        },
+        {
+          "bookId": "EPH",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Ephesians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 274,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 24,
+          "endChapter": 26,
+          "label": "Isaiah 24-26"
+        },
+        {
+          "bookId": "EPH",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Ephesians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 275,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 27,
+          "endChapter": 28,
+          "label": "Isaiah 27-28"
+        },
+        {
+          "bookId": "EPH",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "Ephesians 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 276,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 29,
+          "endChapter": 30,
+          "label": "Isaiah 29-30"
+        },
+        {
+          "bookId": "EPH",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Ephesians 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 277,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 31,
+          "endChapter": 33,
+          "label": "Isaiah 31-33"
+        },
+        {
+          "bookId": "PHP",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Philippians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 278,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 34,
+          "endChapter": 36,
+          "label": "Isaiah 34-36"
+        },
+        {
+          "bookId": "PHP",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Philippians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 279,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 37,
+          "endChapter": 38,
+          "label": "Isaiah 37-38"
+        },
+        {
+          "bookId": "PHP",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Philippians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 280,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 39,
+          "endChapter": 40,
+          "label": "Isaiah 39-40"
+        },
+        {
+          "bookId": "PHP",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Philippians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 281,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 41,
+          "endChapter": 42,
+          "label": "Isaiah 41-42"
+        },
+        {
+          "bookId": "COL",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Colossians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 282,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 43,
+          "endChapter": 44,
+          "label": "Isaiah 43-44"
+        },
+        {
+          "bookId": "COL",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Colossians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 283,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 45,
+          "endChapter": 47,
+          "label": "Isaiah 45-47"
+        },
+        {
+          "bookId": "COL",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Colossians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 284,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 48,
+          "endChapter": 49,
+          "label": "Isaiah 48-49"
+        },
+        {
+          "bookId": "COL",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Colossians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 285,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 50,
+          "endChapter": 52,
+          "label": "Isaiah 50-52"
+        },
+        {
+          "bookId": "1TH",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "1Thessalonians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 286,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 53,
+          "endChapter": 55,
+          "label": "Isaiah 53-55"
+        },
+        {
+          "bookId": "1TH",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "1Thessalonians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 287,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 56,
+          "endChapter": 58,
+          "label": "Isaiah 56-58"
+        },
+        {
+          "bookId": "1TH",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "1Thessalonians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 288,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 59,
+          "endChapter": 61,
+          "label": "Isaiah 59-61"
+        },
+        {
+          "bookId": "1TH",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "1Thessalonians 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 289,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 62,
+          "endChapter": 64,
+          "label": "Isaiah 62-64"
+        },
+        {
+          "bookId": "1TH",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "1Thessalonians 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 290,
+      "readings": [
+        {
+          "bookId": "ISA",
+          "startChapter": 65,
+          "endChapter": 66,
+          "label": "Isaiah 65-66"
+        },
+        {
+          "bookId": "2TH",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "2Thessalonians 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 291,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Jeremiah 1-2"
+        },
+        {
+          "bookId": "2TH",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "2Thessalonians 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 292,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 3,
+          "endChapter": 4,
+          "label": "Jeremiah 3-4"
+        },
+        {
+          "bookId": "2TH",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "2Thessalonians 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 293,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 5,
+          "endChapter": 6,
+          "label": "Jeremiah 5-6"
+        },
+        {
+          "bookId": "1TI",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "1Timothy 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 294,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 7,
+          "endChapter": 8,
+          "label": "Jeremiah 7-8"
+        },
+        {
+          "bookId": "1TI",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "1Timothy 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 295,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 9,
+          "endChapter": 10,
+          "label": "Jeremiah 9-10"
+        },
+        {
+          "bookId": "1TI",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "1Timothy 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 296,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 11,
+          "endChapter": 13,
+          "label": "Jeremiah 11-13"
+        },
+        {
+          "bookId": "1TI",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "1Timothy 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 297,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 14,
+          "endChapter": 16,
+          "label": "Jeremiah 14-16"
+        },
+        {
+          "bookId": "1TI",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "1Timothy 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 298,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 17,
+          "endChapter": 19,
+          "label": "Jeremiah 17-19"
+        },
+        {
+          "bookId": "1TI",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "1Timothy 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 299,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 20,
+          "endChapter": 22,
+          "label": "Jeremiah 20-22"
+        },
+        {
+          "bookId": "2TI",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "2Timothy 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 300,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 23,
+          "endChapter": 24,
+          "label": "Jeremiah 23-24"
+        },
+        {
+          "bookId": "2TI",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "2Timothy 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 301,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 25,
+          "endChapter": 26,
+          "label": "Jeremiah 25-26"
+        },
+        {
+          "bookId": "2TI",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "2Timothy 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 302,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 27,
+          "endChapter": 28,
+          "label": "Jeremiah 27-28"
+        },
+        {
+          "bookId": "2TI",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "2Timothy 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 303,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 29,
+          "endChapter": 30,
+          "label": "Jeremiah 29-30"
+        },
+        {
+          "bookId": "TIT",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Titus 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 304,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 31,
+          "endChapter": 32,
+          "label": "Jeremiah 31-32"
+        },
+        {
+          "bookId": "TIT",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Titus 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 305,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 33,
+          "endChapter": 35,
+          "label": "Jeremiah 33-35"
+        },
+        {
+          "bookId": "TIT",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Titus 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 306,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 36,
+          "endChapter": 37,
+          "label": "Jeremiah 36-37"
+        },
+        {
+          "bookId": "PHM",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Philemon 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 307,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 38,
+          "endChapter": 39,
+          "label": "Jeremiah 38-39"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Hebrews 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 308,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 40,
+          "endChapter": 42,
+          "label": "Jeremiah 40-42"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Hebrews 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 309,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 43,
+          "endChapter": 45,
+          "label": "Jeremiah 43-45"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Hebrews 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 310,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 46,
+          "endChapter": 48,
+          "label": "Jeremiah 46-48"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Hebrews 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 311,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 49,
+          "endChapter": 50,
+          "label": "Jeremiah 49-50"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "Hebrews 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 312,
+      "readings": [
+        {
+          "bookId": "JER",
+          "startChapter": 51,
+          "endChapter": 52,
+          "label": "Jeremiah 51-52"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Hebrews 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 313,
+      "readings": [
+        {
+          "bookId": "LAM",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Lamentations 1-2"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 7,
+          "endChapter": 7,
+          "label": "Hebrews 7"
+        }
+      ]
+    },
+    {
+      "dayIndex": 314,
+      "readings": [
+        {
+          "bookId": "LAM",
+          "startChapter": 3,
+          "endChapter": 5,
+          "label": "Lamentations 3-5"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 8,
+          "endChapter": 8,
+          "label": "Hebrews 8"
+        }
+      ]
+    },
+    {
+      "dayIndex": 315,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Ezekiel 1-3"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 9,
+          "endChapter": 9,
+          "label": "Hebrews 9"
+        }
+      ]
+    },
+    {
+      "dayIndex": 316,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Ezekiel 4-6"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 1,
+          "endVerse": 23,
+          "label": "Hebrews 10:1-23"
+        }
+      ]
+    },
+    {
+      "dayIndex": 317,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Ezekiel 7-9"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 10,
+          "endChapter": 10,
+          "startVerse": 24,
+          "endVerse": 39,
+          "label": "Hebrews 10:24-39"
+        }
+      ]
+    },
+    {
+      "dayIndex": 318,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Ezekiel 10-12"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 1,
+          "endVerse": 19,
+          "label": "Hebrews 11:1-19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 319,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 13,
+          "endChapter": 15,
+          "label": "Ezekiel 13-15"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 11,
+          "endChapter": 11,
+          "startVerse": 20,
+          "endVerse": 40,
+          "label": "Hebrews 11:20-40"
+        }
+      ]
+    },
+    {
+      "dayIndex": 320,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 16,
+          "endChapter": 16,
+          "label": "Ezekiel 16"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 12,
+          "endChapter": 12,
+          "label": "Hebrews 12"
+        }
+      ]
+    },
+    {
+      "dayIndex": 321,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 17,
+          "endChapter": 19,
+          "label": "Ezekiel 17-19"
+        },
+        {
+          "bookId": "HEB",
+          "startChapter": 13,
+          "endChapter": 13,
+          "label": "Hebrews 13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 322,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 20,
+          "endChapter": 21,
+          "label": "Ezekiel 20-21"
+        },
+        {
+          "bookId": "JAS",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "James 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 323,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 22,
+          "endChapter": 23,
+          "label": "Ezekiel 22-23"
+        },
+        {
+          "bookId": "JAS",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "James 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 324,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 24,
+          "endChapter": 26,
+          "label": "Ezekiel 24-26"
+        },
+        {
+          "bookId": "JAS",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "James 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 325,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 27,
+          "endChapter": 28,
+          "label": "Ezekiel 27-28"
+        },
+        {
+          "bookId": "JAS",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "James 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 326,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 29,
+          "endChapter": 31,
+          "label": "Ezekiel 29-31"
+        },
+        {
+          "bookId": "JAS",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "James 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 327,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 32,
+          "endChapter": 33,
+          "label": "Ezekiel 32-33"
+        },
+        {
+          "bookId": "1PE",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "1Peter 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 328,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 34,
+          "endChapter": 35,
+          "label": "Ezekiel 34-35"
+        },
+        {
+          "bookId": "1PE",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "1Peter 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 329,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 36,
+          "endChapter": 37,
+          "label": "Ezekiel 36-37"
+        },
+        {
+          "bookId": "1PE",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "1Peter 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 330,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 38,
+          "endChapter": 39,
+          "label": "Ezekiel 38-39"
+        },
+        {
+          "bookId": "1PE",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "1Peter 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 331,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 40,
+          "endChapter": 40,
+          "label": "Ezekiel 40"
+        },
+        {
+          "bookId": "1PE",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "1Peter 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 332,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 41,
+          "endChapter": 42,
+          "label": "Ezekiel 41-42"
+        },
+        {
+          "bookId": "2PE",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "2Peter 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 333,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 43,
+          "endChapter": 44,
+          "label": "Ezekiel 43-44"
+        },
+        {
+          "bookId": "2PE",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "2Peter 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 334,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 45,
+          "endChapter": 46,
+          "label": "Ezekiel 45-46"
+        },
+        {
+          "bookId": "2PE",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "2Peter 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 335,
+      "readings": [
+        {
+          "bookId": "EZK",
+          "startChapter": 47,
+          "endChapter": 48,
+          "label": "Ezekiel 47-48"
+        },
+        {
+          "bookId": "1JN",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "1John 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 336,
+      "readings": [
+        {
+          "bookId": "DAN",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Daniel 1-2"
+        },
+        {
+          "bookId": "1JN",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "1John 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 337,
+      "readings": [
+        {
+          "bookId": "DAN",
+          "startChapter": 3,
+          "endChapter": 4,
+          "label": "Daniel 3-4"
+        },
+        {
+          "bookId": "1JN",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "1John 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 338,
+      "readings": [
+        {
+          "bookId": "DAN",
+          "startChapter": 5,
+          "endChapter": 6,
+          "label": "Daniel 5-6"
+        },
+        {
+          "bookId": "1JN",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "1John 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 339,
+      "readings": [
+        {
+          "bookId": "DAN",
+          "startChapter": 7,
+          "endChapter": 8,
+          "label": "Daniel 7-8"
+        },
+        {
+          "bookId": "1JN",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "1John 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 340,
+      "readings": [
+        {
+          "bookId": "DAN",
+          "startChapter": 9,
+          "endChapter": 10,
+          "label": "Daniel 9-10"
+        },
+        {
+          "bookId": "2JN",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "2John 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 341,
+      "readings": [
+        {
+          "bookId": "DAN",
+          "startChapter": 11,
+          "endChapter": 12,
+          "label": "Daniel 11-12"
+        },
+        {
+          "bookId": "3JN",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "3John 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 342,
+      "readings": [
+        {
+          "bookId": "HOS",
+          "startChapter": 1,
+          "endChapter": 4,
+          "label": "Hosea 1-4"
+        },
+        {
+          "bookId": "JUD",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Jude 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 343,
+      "readings": [
+        {
+          "bookId": "HOS",
+          "startChapter": 5,
+          "endChapter": 8,
+          "label": "Hosea 5-8"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Revelation 1"
+        }
+      ]
+    },
+    {
+      "dayIndex": 344,
+      "readings": [
+        {
+          "bookId": "HOS",
+          "startChapter": 9,
+          "endChapter": 11,
+          "label": "Hosea 9-11"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 2,
+          "endChapter": 2,
+          "label": "Revelation 2"
+        }
+      ]
+    },
+    {
+      "dayIndex": 345,
+      "readings": [
+        {
+          "bookId": "HOS",
+          "startChapter": 12,
+          "endChapter": 14,
+          "label": "Hosea 12-14"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 3,
+          "endChapter": 3,
+          "label": "Revelation 3"
+        }
+      ]
+    },
+    {
+      "dayIndex": 346,
+      "readings": [
+        {
+          "bookId": "JOL",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Joel 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 4,
+          "endChapter": 4,
+          "label": "Revelation 4"
+        }
+      ]
+    },
+    {
+      "dayIndex": 347,
+      "readings": [
+        {
+          "bookId": "AMO",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Amos 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 5,
+          "endChapter": 5,
+          "label": "Revelation 5"
+        }
+      ]
+    },
+    {
+      "dayIndex": 348,
+      "readings": [
+        {
+          "bookId": "AMO",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Amos 4-6"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 6,
+          "endChapter": 6,
+          "label": "Revelation 6"
+        }
+      ]
+    },
+    {
+      "dayIndex": 349,
+      "readings": [
+        {
+          "bookId": "AMO",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Amos 7-9"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 7,
+          "endChapter": 7,
+          "label": "Revelation 7"
+        }
+      ]
+    },
+    {
+      "dayIndex": 350,
+      "readings": [
+        {
+          "bookId": "OBA",
+          "startChapter": 1,
+          "endChapter": 1,
+          "label": "Obadiah 1"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 8,
+          "endChapter": 8,
+          "label": "Revelation 8"
+        }
+      ]
+    },
+    {
+      "dayIndex": 351,
+      "readings": [
+        {
+          "bookId": "JON",
+          "startChapter": 1,
+          "endChapter": 4,
+          "label": "Jonah 1-4"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 9,
+          "endChapter": 9,
+          "label": "Revelation 9"
+        }
+      ]
+    },
+    {
+      "dayIndex": 352,
+      "readings": [
+        {
+          "bookId": "MIC",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Micah 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 10,
+          "endChapter": 10,
+          "label": "Revelation 10"
+        }
+      ]
+    },
+    {
+      "dayIndex": 353,
+      "readings": [
+        {
+          "bookId": "MIC",
+          "startChapter": 4,
+          "endChapter": 5,
+          "label": "Micah 4-5"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 11,
+          "endChapter": 11,
+          "label": "Revelation 11"
+        }
+      ]
+    },
+    {
+      "dayIndex": 354,
+      "readings": [
+        {
+          "bookId": "MIC",
+          "startChapter": 6,
+          "endChapter": 7,
+          "label": "Micah 6-7"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 12,
+          "endChapter": 12,
+          "label": "Revelation 12"
+        }
+      ]
+    },
+    {
+      "dayIndex": 355,
+      "readings": [
+        {
+          "bookId": "NAM",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Nahum 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 13,
+          "endChapter": 13,
+          "label": "Revelation 13"
+        }
+      ]
+    },
+    {
+      "dayIndex": 356,
+      "readings": [
+        {
+          "bookId": "HAB",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Habakkuk 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 14,
+          "endChapter": 14,
+          "label": "Revelation 14"
+        }
+      ]
+    },
+    {
+      "dayIndex": 357,
+      "readings": [
+        {
+          "bookId": "ZEP",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Zephaniah 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 15,
+          "endChapter": 15,
+          "label": "Revelation 15"
+        }
+      ]
+    },
+    {
+      "dayIndex": 358,
+      "readings": [
+        {
+          "bookId": "HAG",
+          "startChapter": 1,
+          "endChapter": 2,
+          "label": "Haggai 1-2"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 16,
+          "endChapter": 16,
+          "label": "Revelation 16"
+        }
+      ]
+    },
+    {
+      "dayIndex": 359,
+      "readings": [
+        {
+          "bookId": "ZEC",
+          "startChapter": 1,
+          "endChapter": 3,
+          "label": "Zechariah 1-3"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 17,
+          "endChapter": 17,
+          "label": "Revelation 17"
+        }
+      ]
+    },
+    {
+      "dayIndex": 360,
+      "readings": [
+        {
+          "bookId": "ZEC",
+          "startChapter": 4,
+          "endChapter": 6,
+          "label": "Zechariah 4-6"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 18,
+          "endChapter": 18,
+          "label": "Revelation 18"
+        }
+      ]
+    },
+    {
+      "dayIndex": 361,
+      "readings": [
+        {
+          "bookId": "ZEC",
+          "startChapter": 7,
+          "endChapter": 9,
+          "label": "Zechariah 7-9"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 19,
+          "endChapter": 19,
+          "label": "Revelation 19"
+        }
+      ]
+    },
+    {
+      "dayIndex": 362,
+      "readings": [
+        {
+          "bookId": "ZEC",
+          "startChapter": 10,
+          "endChapter": 12,
+          "label": "Zechariah 10-12"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 20,
+          "endChapter": 20,
+          "label": "Revelation 20"
+        }
+      ]
+    },
+    {
+      "dayIndex": 363,
+      "readings": [
+        {
+          "bookId": "ZEC",
+          "startChapter": 13,
+          "endChapter": 14,
+          "label": "Zechariah 13-14"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 21,
+          "endChapter": 21,
+          "label": "Revelation 21"
+        }
+      ]
+    },
+    {
+      "dayIndex": 364,
+      "readings": [
+        {
+          "bookId": "MAL",
+          "startChapter": 1,
+          "endChapter": 4,
+          "label": "Malachi 1-4"
+        },
+        {
+          "bookId": "REV",
+          "startChapter": 22,
+          "endChapter": 22,
+          "label": "Revelation 22"
+        }
+      ]
+    }
+  ]
+}

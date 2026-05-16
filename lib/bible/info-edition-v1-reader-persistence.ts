@@ -21,6 +21,7 @@ import {
   tryBeginInfoEditionPendingSupabase,
 } from "@/lib/bible/info-edition-v1-published-supabase";
 import {
+  infoEditionWritableBibleDir,
   isInfoEditionDiskSaveEnabled,
   isInfoEditionDiskSaveMisconfiguredInProduction,
   isInfoEditionProductionDiskConfigured,
@@ -52,7 +53,7 @@ export function isInfoEditionReaderGenerateAllowed(): boolean {
   return true;
 }
 
-export function infoEditionReaderGenerateBlockedReason(): string | null {
+export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): string | null {
   if (isInfoEditionDiskSaveMisconfiguredInProduction()) {
     return (
       "已开启 INFO_EDITION_DISK_SAVE，但未配置 DATA_ROOT / INFO_EDITION_DATA_DIR。" +
@@ -60,13 +61,32 @@ export function infoEditionReaderGenerateBlockedReason(): string | null {
     );
   }
 
-  const mode = getInfoEditionReaderPersistence();
+  if (
+    isInfoEditionDiskSaveEnabled() &&
+    infoEditionWritableBibleDir(cwd) &&
+    !isInfoEditionWritableDiskAvailable(cwd)
+  ) {
+    const root = infoEditionWritableBibleDir(cwd);
+    return (
+      `持久盘路径 ${root} 不存在或不可写。Render 请在 Disks 挂载 Persistent Disk 到该路径后 Redeploy。`
+    );
+  }
+
+  const mode = getInfoEditionReaderPersistence(cwd);
   if (mode === "none") {
     if (isRenderDeployment()) {
+      const dataRoot =
+        process.env.DATA_ROOT?.trim() || process.env.INFO_EDITION_DATA_DIR?.trim() || "";
+      if (isInfoEditionDiskSaveEnabled() && dataRoot) {
+        return (
+          `已设 INFO_EDITION_DISK_SAVE=1 与 DATA_ROOT=${dataRoot}，但该路径尚不可写。` +
+          " 请在 Render → 你的 Web Service → Disks：添加盘、Mount Path 必须与 DATA_ROOT 完全一致，保存后 Manual Deploy。" +
+          " 并确认已设 AI_API_KEY、AI_BASE_URL、AI_MODEL。"
+        );
+      }
       return (
-        "Render 上本章导读二选一：① Persistent Disk 挂载到 /mnt/data，并设 INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；" +
-        "② Supabase：NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY，并执行 migration/20260516000000_info_edition_v1_reader_cache.sql。" +
-        " 两种方案均需 AI_API_KEY、AI_BASE_URL、AI_MODEL。"
+        "Render 磁盘方案：① Disks 挂载 /mnt/data；② Environment 设 INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；" +
+        "③ AI_API_KEY、AI_BASE_URL、AI_MODEL；④ Manual Deploy。"
       );
     }
     if (isVercelDeployment()) {

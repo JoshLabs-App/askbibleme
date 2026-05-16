@@ -36,8 +36,8 @@ function formatInfoEditionError(
   t: (key: string, vars?: Record<string, string>) => string,
 ): string {
   if (!raw?.trim()) return t("pages.read.infoEditionLoadFailed");
-  if (/EACCES|permission denied|不可写|mkdir/i.test(raw)) {
-    return t("pages.read.infoEditionDiskError");
+  if (/EACCES|permission denied|EPERM|EROFS|不可写|mkdir|Render 提示/i.test(raw)) {
+    return raw;
   }
   return raw;
 }

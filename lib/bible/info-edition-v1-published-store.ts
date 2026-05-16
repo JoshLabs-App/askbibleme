@@ -14,6 +14,7 @@ import type {
 } from "@/lib/bible/info-edition-v1-published-types";
 import { INFO_EDITION_V1_PUBLISHED_VERSION } from "@/lib/bible/info-edition-v1-published-types";
 import {
+  formatInfoEditionDiskWriteError,
   infoEditionBundledPublishedPath,
   infoEditionLegacyWritablePublishedPath,
   infoEditionWritablePublishedPath,
@@ -160,10 +161,23 @@ export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1
     );
   }
   const dir = path.dirname(file);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  const payload = `${JSON.stringify(normalizeFile(next), null, 2)}\n`;
+  const tmp = `${file}.${process.pid}.tmp`;
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true, mode: 0o775 });
+    }
+    fs.writeFileSync(tmp, payload, { encoding: "utf8", mode: 0o664 });
+    fs.renameSync(tmp, file);
+  } catch (e) {
+    try {
+      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+    } catch {
+      /* ignore */
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(formatInfoEditionDiskWriteError(msg));
   }
-  fs.writeFileSync(file, `${JSON.stringify(normalizeFile(next), null, 2)}\n`, "utf8");
 }
 
 export function loadPublishedInfoEditionChapter(

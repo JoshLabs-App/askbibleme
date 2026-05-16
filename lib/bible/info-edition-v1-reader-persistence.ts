@@ -21,6 +21,7 @@ import {
   tryBeginInfoEditionPendingSupabase,
 } from "@/lib/bible/info-edition-v1-published-supabase";
 import {
+  formatInfoEditionDiskWriteError,
   infoEditionWritableBibleDir,
   isInfoEditionDiskSaveEnabled,
   isInfoEditionDiskSaveMisconfiguredInProduction,
@@ -67,8 +68,8 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
     !isInfoEditionWritableDiskAvailable(cwd)
   ) {
     const root = infoEditionWritableBibleDir(cwd);
-    return (
-      `持久盘路径 ${root} 不存在或不可写。Render 请在 Disks 挂载 Persistent Disk 到该路径后 Redeploy。`
+    return formatInfoEditionDiskWriteError(
+      `持久盘路径 ${root} 不存在或不可写。`,
     );
   }
 

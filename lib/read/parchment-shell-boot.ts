@@ -9,15 +9,18 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
 
   var html = document.documentElement;
   var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  var color = dark ? "#1a1512" : "#e5d2bf";
-  var bgUrl = "/read/parchment-scroll-bg.png";
+  var color = dark ? "#1a1512" : "#ecd9b9";
+  var w = window.innerWidth || 0;
+  var h = window.innerHeight || 1;
+  var wide = w >= 480 && (w > h || w / h >= 4 / 3);
+  var bgUrl = wide ? "/read/parchment-scroll-bg-wide.jpg" : "/read/parchment-scroll-bg.jpg";
 
   html.dataset.appShellSafeFill = "parchment";
   html.style.backgroundColor = color;
   html.style.backgroundImage = "url(" + bgUrl + ")";
   html.style.backgroundRepeat = "no-repeat";
-  html.style.backgroundSize = "cover";
-  html.style.backgroundPosition = "center top";
+  html.style.backgroundSize = "100% 100%";
+  html.style.backgroundPosition = "center center";
   html.style.colorScheme = dark ? "dark" : "light";
 
   var topPx = 32;

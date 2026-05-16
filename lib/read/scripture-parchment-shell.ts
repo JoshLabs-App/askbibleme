@@ -14,7 +14,7 @@ export const SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE = "parchment";
 export const SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR = "--app-shell-safe-top-fallback";
 export const SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR = "--app-shell-safe-top-effective";
 
-export const SCRIPTURE_PARCHMENT_THEME_COLOR = "#e5d2bf";
+export const SCRIPTURE_PARCHMENT_THEME_COLOR = "#ecd9b9";
 export const SCRIPTURE_PARCHMENT_THEME_COLOR_DARK = "#1a1512";
 
 export function isScriptureParchmentPath(pathname: string): boolean {

@@ -15,18 +15,20 @@
   flex-direction: column;
   overflow: hidden;
 
-  background-color: var(--read-parchment-bg-canvas, #e5d2bf);
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
   background-image: var(--read-parchment-bg-image);
   background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center top;
+  background-size: 100% 100%;
+  background-position: center center;
 }
 
-/* 宽屏（横卷）：视口偏横时用横版羊皮底图 */
-@media (min-width: 480px) and (min-aspect-ratio: 4/3) {
+/* 横屏 / 宽比例：横版裁切图，拉伸铺满视口 */
+@media (min-width: 480px) and (orientation: landscape),
+  (min-width: 480px) and (min-aspect-ratio: 4/3) {
   .read-bible-parchment-shell,
   .read-chapter-shell {
     background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+    background-size: 100% 100%;
     background-position: center center;
   }
 }

@@ -17,6 +17,7 @@
     "start": "next start",
     "lint": "next lint",
     "nature:backfill-preview-frames": "node scripts/backfill-nature-preview-frames.mjs",
+    "nature:retranscode": "tsx scripts/retranscode-nature-videos.ts",
     "import:bible": "node scripts/import-askbible-usfx.mjs",
     "import:reader-verse-themes": "tsx scripts/import-reader-verse-themes.ts",
     "import:reading-plans": "tsx scripts/import-khornberg-reading-plans.ts",

@@ -14,7 +14,7 @@ type Props = { settings: NatureSettingsV2 };
  * `/scenes` 全屏背景：静音循环影片 + 首帧/封面；压暗渐变保证方卡可读。
  */
 export function NatureScenesPageBackdrop({ settings }: Props) {
-  const playback = useMemo(() => resolveScenesPagePlayback(settings), [settings]);
+  const playback = useMemo(() => resolveScenesPagePlayback(settings, { prefer1080: true }), [settings]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoBroken, setVideoBroken] = useState(false);
   const [videoReady, setVideoReady] = useState(false);

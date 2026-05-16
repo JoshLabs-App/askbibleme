@@ -25,56 +25,83 @@ function runFfmpeg(args: string[]): Promise<{ ok: true } | { ok: false; message:
   });
 }
 
+/** 首页背景短片：统一 30fps、固定 GOP，利于硬解与循环 */
+const NATURE_VIDEO_FPS = 30;
+/** 1s 关键帧间隔（@30fps），短循环 seek / 重缓冲更稳 */
+const NATURE_VIDEO_GOP = 30;
+
+function scaleFpsFilter(maxHeight: number): string {
+  return `scale=-2:${maxHeight}:flags=lanczos,fps=${NATURE_VIDEO_FPS}`;
+}
+
+/** H.264 成片共用编码参数（720 / 1080 仅分辨率不同） */
+const NATURE_VIDEO_ENCODE_TAIL = [
+  "-an",
+  "-sn",
+  "-c:v",
+  "libx264",
+  "-preset",
+  "medium",
+  "-tune",
+  "fastdecode",
+  "-crf",
+  "22",
+  "-g",
+  String(NATURE_VIDEO_GOP),
+  "-keyint_min",
+  String(NATURE_VIDEO_GOP),
+  "-sc_threshold",
+  "0",
+  "-profile:v",
+  "high",
+  "-level",
+  "4.0",
+  "-pix_fmt",
+  "yuv420p",
+  "-color_range",
+  "tv",
+  "-colorspace",
+  "bt709",
+  "-color_primaries",
+  "bt709",
+  "-color_trc",
+  "bt709",
+  "-movflags",
+  "+faststart",
+] as const;
+
+async function transcodeOneRendition(
+  inputPath: string,
+  maxHeight: number,
+  outputPath: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  return runFfmpeg([
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-y",
+    "-i",
+    inputPath,
+    "-vf",
+    scaleFpsFilter(maxHeight),
+    ...NATURE_VIDEO_ENCODE_TAIL,
+    outputPath,
+  ]);
+}
+
 /**
- * 自母片生成 720p、1080p H.264（yuv420p、+faststart），无音轨。
- * 适合由本机后台上传 4K 母片后写入 `public/nature/uploads/`。
+ * 自母片生成 720p、1080p H.264（yuv420p limited、bt709、+faststart），无音轨。
+ * 固定帧率与 GOP，配合前台「整段缓冲后再播」；新上传生效，旧文件需重传或另行批量重转。
  */
 export async function transcodeNatureVideoRenditions(params: {
   inputPath: string;
   out720Path: string;
   out1080Path: string;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
-  const commonTail = [
-    "-an",
-    "-sn",
-    "-c:v",
-    "libx264",
-    "-preset",
-    "medium",
-    "-crf",
-    "22",
-    "-pix_fmt",
-    "yuv420p",
-    "-movflags",
-    "+faststart",
-  ] as const;
-
-  const r1080 = await runFfmpeg([
-    "-hide_banner",
-    "-loglevel",
-    "error",
-    "-y",
-    "-i",
-    params.inputPath,
-    "-vf",
-    "scale=-2:1080",
-    ...commonTail,
-    params.out1080Path,
-  ]);
+  const r1080 = await transcodeOneRendition(params.inputPath, 1080, params.out1080Path);
   if (!r1080.ok) return r1080;
 
-  const r720 = await runFfmpeg([
-    "-hide_banner",
-    "-loglevel",
-    "error",
-    "-y",
-    "-i",
-    params.inputPath,
-    "-vf",
-    "scale=-2:720",
-    ...commonTail,
-    params.out720Path,
-  ]);
+  const r720 = await transcodeOneRendition(params.inputPath, 720, params.out720Path);
   if (!r720.ok) return r720;
 
   return { ok: true };

@@ -4,7 +4,6 @@ import { useCallback, useMemo } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   NATURE_SCENE_CATEGORIES,
-  natureSceneCategoryLabelKey,
   parseNatureSceneCategory,
   type NatureSceneCategory,
 } from "@/lib/nature/scene-categories";
@@ -119,7 +118,7 @@ function SceneCard({
 }
 
 /**
- * 场景页：自然 / 白天 / 晚上分行展示，保持配置顺序，当前片仅高亮不挪位。
+ * 场景页：按 自然 → 白天 → 晚上 顺序连成一片网格，当前片仅高亮不挪位。
  */
 export function NatureSceneLayer({
   className = "",
@@ -132,16 +131,16 @@ export function NatureSceneLayer({
   const { t } = useLocale();
   const videos = settings.videos;
 
-  const videosByCategory = useMemo(() => {
-    const map: Record<NatureSceneCategory, NatureVideoEntry[]> = {
+  const orderedVideos = useMemo(() => {
+    const buckets: Record<NatureSceneCategory, NatureVideoEntry[]> = {
       nature: [],
       day: [],
       night: [],
     };
     for (const v of videos) {
-      map[categoryForVideo(v)].push(v);
+      buckets[categoryForVideo(v)].push(v);
     }
-    return map;
+    return NATURE_SCENE_CATEGORIES.flatMap((cat) => buckets[cat]);
   }, [videos]);
 
   const select = useCallback(
@@ -162,42 +161,23 @@ export function NatureSceneLayer({
 
   return (
     <section
-      className={`@container relative flex w-full flex-col gap-4 sm:gap-5 ${className}`}
+      className={`@container relative flex w-full flex-wrap justify-center gap-2 pb-0.5 pt-0.5 sm:gap-2.5 ${className}`}
       aria-label={t("nature.scenes.sectionAria")}
       data-shell-swipe-nav-exclude
     >
-      {NATURE_SCENE_CATEGORIES.map((cat) => {
-        const rowVideos = videosByCategory[cat];
-        const label = t(natureSceneCategoryLabelKey(cat));
-        return (
-          <div key={cat} className="w-full" role="group" aria-label={label}>
-            <p className="mb-1.5 text-center text-[11px] font-medium tracking-wide text-white/78 sm:mb-2 sm:text-[12px]">
-              {label}
-            </p>
-            {rowVideos.length === 0 ? (
-              <p className="pb-0.5 text-center text-[10px] leading-relaxed text-white/45 sm:text-[11px]">
-                {t("nature.scenes.categoryEmpty", { name: label })}
-              </p>
-            ) : (
-              <div className="flex w-full flex-wrap justify-center gap-2 pb-0.5 pt-0.5 sm:gap-2.5">
-                {rowVideos.map((v) => (
-                  <SceneCard
-                    key={v.id}
-                    v={v}
-                    selected={v.id === activeVideoId}
-                    preparing={prepareSceneId !== null && v.id === prepareSceneId}
-                    prepareProgress={prepareProgress}
-                    unnamedLabel={unnamed}
-                    onSelect={select}
-                    ariaPreparing={ariaPreparing}
-                    ariaSwitch={ariaSwitch}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {orderedVideos.map((v) => (
+        <SceneCard
+          key={v.id}
+          v={v}
+          selected={v.id === activeVideoId}
+          preparing={prepareSceneId !== null && v.id === prepareSceneId}
+          prepareProgress={prepareProgress}
+          unnamedLabel={unnamed}
+          onSelect={select}
+          ariaPreparing={ariaPreparing}
+          ariaSwitch={ariaSwitch}
+        />
+      ))}
     </section>
   );
 }

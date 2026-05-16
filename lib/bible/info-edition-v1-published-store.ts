@@ -143,8 +143,12 @@ export function readInfoEditionV1PublishedSync(cwd: string): InfoEditionV1Publis
 }
 
 export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1PublishedFile): void {
-  const file =
-    infoEditionWritablePublishedPath(cwd) ?? infoEditionBundledPublishedPath(cwd);
+  const file = infoEditionWritablePublishedPath(cwd);
+  if (!file) {
+    throw new Error(
+      "导读缓存不可写：生产环境请设置 INFO_EDITION_DISK_SAVE=1，并设置 DATA_ROOT 或 INFO_EDITION_DATA_DIR 为持久磁盘路径（如 /mnt/data）。",
+    );
+  }
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(normalizeFile(next), null, 2)}\n`, "utf8");
 }

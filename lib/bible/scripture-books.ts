@@ -6,6 +6,14 @@ export type ScriptureBook = {
   overviewOnly?: boolean;
 };
 
+export const OLD_TESTAMENT_MAX_BOOK_NUMBER = 39;
+
+export type ScriptureTestament = "old" | "new";
+
+export function testamentForBookNumber(bookNumber: number): ScriptureTestament {
+  return bookNumber <= OLD_TESTAMENT_MAX_BOOK_NUMBER ? "old" : "new";
+}
+
 export const scriptureBooks: ScriptureBook[] = [
   { bookNumber: 1, bookId: "GEN", bookName: "创世记", chapters: 50 },
   { bookNumber: 2, bookId: "EXO", bookName: "出埃及记", chapters: 40 },

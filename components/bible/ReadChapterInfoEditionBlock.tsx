@@ -21,9 +21,15 @@ const ReadChapterInfoEditionMarkdown = dynamic(
 type Props = {
   bookId: string;
   chapter: number;
+  /** 服务端已发布的导读（有则默认展开，无需再点一次） */
+  initialPublished?: InfoEditionV1PublishedChapter | null;
 };
 
 type PanelPhase = "idle" | "loading" | "ready" | "error";
+
+function hasPublishedMarkdown(ch?: InfoEditionV1PublishedChapter | null): boolean {
+  return Boolean(ch?.markdown?.trim());
+}
 
 async function parseJson(res: Response): Promise<Record<string, unknown>> {
   const text = await res.text();
@@ -35,12 +41,19 @@ async function parseJson(res: Response): Promise<Record<string, unknown>> {
   }
 }
 
-/** 读经页：默认不加载；点击「查看相关信息」后生成或展示缓存 */
-export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
+/** 读经页：已有导读则默认展开；无则点击后再生成或加载 */
+export function ReadChapterInfoEditionBlock({
+  bookId,
+  chapter,
+  initialPublished = null,
+}: Props) {
   const { t } = useLocale();
-  const [phase, setPhase] = useState<PanelPhase>("idle");
-  const [open, setOpen] = useState(false);
-  const [published, setPublished] = useState<InfoEditionV1PublishedChapter | null>(null);
+  const initialReady = hasPublishedMarkdown(initialPublished);
+  const [phase, setPhase] = useState<PanelPhase>(initialReady ? "ready" : "idle");
+  const [open, setOpen] = useState(initialReady);
+  const [published, setPublished] = useState<InfoEditionV1PublishedChapter | null>(
+    initialReady ? initialPublished : null,
+  );
   const [err, setErr] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollStartedRef = useRef<number | null>(null);
@@ -55,24 +68,27 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
 
   useEffect(() => () => stopPoll(), [stopPoll]);
 
-  const applyCachePayload = useCallback((j: Record<string, unknown>): boolean => {
-    const status = typeof j.status === "string" ? j.status : "";
-    if (status === "ready" && j.published && typeof j.published === "object") {
-      setPublished(j.published as InfoEditionV1PublishedChapter);
-      setPhase("ready");
-      setOpen(true);
-      setErr(null);
-      return true;
-    }
-    if (status === "failed") {
-      const e = typeof j.error === "string" ? j.error : t("pages.read.infoEditionLoadFailed");
-      setErr(e);
-      setPhase("error");
-      setOpen(true);
-      return true;
-    }
-    return status !== "pending";
-  }, [t]);
+  const applyCachePayload = useCallback(
+    (j: Record<string, unknown>, options?: { openOnFailed?: boolean }): boolean => {
+      const status = typeof j.status === "string" ? j.status : "";
+      if (status === "ready" && j.published && typeof j.published === "object") {
+        setPublished(j.published as InfoEditionV1PublishedChapter);
+        setPhase("ready");
+        setOpen(true);
+        setErr(null);
+        return true;
+      }
+      if (status === "failed") {
+        const e = typeof j.error === "string" ? j.error : t("pages.read.infoEditionLoadFailed");
+        setErr(e);
+        setPhase("error");
+        if (options?.openOnFailed ?? true) setOpen(true);
+        return true;
+      }
+      return status !== "pending";
+    },
+    [t],
+  );
 
   const pollUntilReady = useCallback(() => {
     stopPoll();
@@ -113,6 +129,7 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
     if (!getRes.ok) {
       setErr(typeof getJ.error === "string" ? getJ.error : t("pages.read.infoEditionLoadFailed"));
       setPhase("error");
+      setOpen(true);
       return;
     }
     if (applyCachePayload(getJ)) return;
@@ -130,6 +147,7 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
     if (!postRes.ok) {
       setErr(typeof postJ.error === "string" ? postJ.error : t("pages.read.infoEditionLoadFailed"));
       setPhase("error");
+      setOpen(true);
       return;
     }
     if (applyCachePayload(postJ)) return;
@@ -140,6 +158,32 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
     setErr(t("pages.read.infoEditionLoadFailed"));
     setPhase("error");
   }, [applyCachePayload, bookId, chapter, pollUntilReady, t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch(
+        `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`,
+        { cache: "no-store" },
+      );
+      const j = await parseJson(res);
+      if (cancelled || !res.ok) return;
+      if (j.status === "ready") {
+        applyCachePayload(j);
+        return;
+      }
+      if (initialReady) return;
+      if (j.status === "pending") {
+        setPhase("loading");
+        setOpen(true);
+        pollUntilReady();
+      }
+    })();
+    return () => {
+      cancelled = true;
+      stopPoll();
+    };
+  }, [applyCachePayload, bookId, chapter, initialReady, pollUntilReady, stopPoll]);
 
   const onPrimaryClick = () => {
     if (phase === "ready" && published) {
@@ -152,29 +196,28 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
 
   const showPanel = open && (phase === "loading" || phase === "ready" || phase === "error");
   const roleLabel = published?.roleLabel ?? t("pages.read.infoEditionDefaultRole");
+  const showInvite = phase === "idle";
 
   return (
     <section className="read-chapter-info-edition-invite" aria-label={t("pages.read.infoEditionAriaLabel")}>
-      <div className="read-chapter-info-edition-invite-row">
-        <button
-          type="button"
-          onClick={onPrimaryClick}
-          disabled={phase === "loading"}
-          className="read-chapter-info-edition-trigger"
-          aria-expanded={showPanel}
-        >
-          {phase === "loading"
-            ? t("pages.read.infoEditionGenerating")
-            : phase === "ready"
-              ? open
-                ? t("pages.read.infoEditionHide")
-                : t("pages.read.infoEditionShow")
+      {showInvite || phase === "loading" ? (
+        <div className="read-chapter-info-edition-invite-row">
+          <button
+            type="button"
+            onClick={onPrimaryClick}
+            disabled={phase === "loading"}
+            className="read-chapter-info-edition-trigger"
+            aria-expanded={showPanel}
+          >
+            {phase === "loading"
+              ? t("pages.read.infoEditionGenerating")
               : t("pages.read.viewRelatedInfo")}
-        </button>
-        {phase === "idle" ? (
-          <p className="read-chapter-info-edition-invite-hint">{t("pages.read.infoEditionInviteHint")}</p>
-        ) : null}
-      </div>
+          </button>
+          {showInvite ? (
+            <p className="read-chapter-info-edition-invite-hint">{t("pages.read.infoEditionInviteHint")}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       {showPanel ? (
         <section className="read-chapter-info-edition">
@@ -186,6 +229,16 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
             </span>
             <span className="read-chapter-info-edition-divider-line" />
           </div>
+
+          {phase === "ready" && published ? (
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="read-chapter-info-edition-trigger read-chapter-info-edition-trigger--collapse"
+            >
+              {t("pages.read.infoEditionHide")}
+            </button>
+          ) : null}
 
           <p className="read-chapter-info-edition-disclaimer">{t("pages.read.infoEditionDisclaimer")}</p>
 
@@ -211,6 +264,16 @@ export function ReadChapterInfoEditionBlock({ bookId, chapter }: Props) {
             </div>
           ) : null}
         </section>
+      ) : null}
+
+      {phase === "ready" && published && !open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="read-chapter-info-edition-trigger read-chapter-info-edition-trigger--reopen"
+        >
+          {t("pages.read.infoEditionShow")}
+        </button>
       ) : null}
     </section>
   );

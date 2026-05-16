@@ -6,6 +6,7 @@ import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesCli
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadChapterFromDefaultTranslation } from "@/lib/bible/load-chapter-from-default-translation";
 import { ReadChapterInfoEditionBlock } from "@/components/bible/ReadChapterInfoEditionBlock";
+import { getInfoEditionReaderCacheAsync } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
@@ -26,6 +27,12 @@ export default async function ReadChapterPage({ params }: Props) {
   if (!data) notFound();
 
   const { prev, next } = resolveReadChapterNeighbors(data.bookId, data.chapter);
+
+  const infoCache = await getInfoEditionReaderCacheAsync(process.cwd(), data.bookId, data.chapter);
+  const initialInfoPublished =
+    infoCache.status === "ready" && infoCache.published?.markdown.trim()
+      ? infoCache.published
+      : null;
 
   return (
     <ScriptureChrome>
@@ -48,9 +55,20 @@ export default async function ReadChapterPage({ params }: Props) {
             verses={data.verses}
           />
         </div>
-        <ReadChapterInfoEditionBlock bookId={data.bookId} chapter={data.chapter} />
+        <ReadChapterInfoEditionBlock
+          key={`${data.bookId}-${data.chapter}`}
+          bookId={data.bookId}
+          chapter={data.chapter}
+          initialPublished={initialInfoPublished}
+        />
         <ReadChapterTodayPlanBlock bookId={data.bookId} chapter={data.chapter} />
-        <ReadChapterEndNav bookName={data.bookName} chapter={data.chapter} prev={prev} next={next} />
+        <ReadChapterEndNav
+          bookId={data.bookId}
+          bookName={data.bookName}
+          chapter={data.chapter}
+          prev={prev}
+          next={next}
+        />
       </article>
     </ScriptureChrome>
   );

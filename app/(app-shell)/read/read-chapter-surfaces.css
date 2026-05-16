@@ -194,6 +194,16 @@
   cursor: wait;
 }
 
+.read-chapter-info-edition-trigger--collapse,
+.read-chapter-info-edition-trigger--reopen {
+  display: block;
+  margin: 0.35rem auto 0;
+}
+
+.read-chapter-info-edition-trigger--collapse {
+  margin-top: 0.5rem;
+}
+
 .dark .read-chapter-info-edition-trigger {
   border-color: color-mix(in srgb, rgba(245, 230, 210, 0.18) 100%, transparent);
   background: color-mix(in srgb, rgba(28, 26, 24, 0.45) 100%, transparent);
@@ -526,4 +536,257 @@
 
 .prayer-on-parchment .prayer-verse-passage--full:first-child {
   margin-top: 0;
+}
+
+/* 章末：书卷 / 章 跳转底部面板 */
+.read-chapter-jump-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10150;
+  pointer-events: none;
+}
+
+.read-chapter-jump-root--open {
+  pointer-events: auto;
+}
+
+.read-chapter-jump-backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: color-mix(in srgb, #1a1208 28%, transparent);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  cursor: pointer;
+}
+
+.read-chapter-jump-root--open .read-chapter-jump-backdrop {
+  opacity: 1;
+}
+
+.read-chapter-jump-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  max-height: min(78dvh, 560px);
+  padding: 0.65rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 1rem 1rem 0 0;
+  border: 1px solid color-mix(in srgb, #8b6914 18%, transparent);
+  border-bottom: 0;
+  background: color-mix(in srgb, #f4e8d4 97%, #c9a66b 3%);
+  box-shadow: 0 -12px 40px color-mix(in srgb, #1a1208 14%, transparent);
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.read-chapter-jump-root--open .read-chapter-jump-panel {
+  transform: translateY(0);
+}
+
+.read-chapter-jump-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding-bottom: 0.45rem;
+}
+
+.read-chapter-jump-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, #3d2a10 92%, transparent);
+}
+
+.read-chapter-jump-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, #8b6914 10%, transparent);
+  font-size: 1.25rem;
+  line-height: 1;
+  color: color-mix(in srgb, #3d2a10 75%, transparent);
+  cursor: pointer;
+}
+
+.read-chapter-jump-books {
+  flex: 0 1 auto;
+  max-height: min(34dvh, 240px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.22rem 0.35rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, #8b6914 14%, transparent);
+}
+
+.read-chapter-jump-testament-group {
+  display: contents;
+}
+
+.read-chapter-jump-testament-label {
+  grid-column: 1 / -1;
+  margin: 0.15rem 0 0.1rem;
+  padding: 0.28rem 0 0.08rem;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.read-chapter-jump-testament-group:first-child .read-chapter-jump-testament-label {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.read-chapter-jump-testament-label--old {
+  color: color-mix(in srgb, #c2410c 70%, #3d2a10 30%);
+}
+
+.read-chapter-jump-testament-label--new {
+  color: color-mix(in srgb, #1d4ed8 68%, #3d2a10 32%);
+}
+
+.read-chapter-jump-book {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.38rem 0.42rem;
+  border: 1px solid color-mix(in srgb, #8b6914 16%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, #faf3e8 94%, #c9a66b 6%);
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.read-chapter-jump-book--old {
+  border-color: color-mix(in srgb, #b45309 22%, #8b6914 78%);
+  background: color-mix(in srgb, #faf3e8 90%, #f59e0b 10%);
+}
+
+.read-chapter-jump-book--new {
+  border-color: color-mix(in srgb, #2563eb 20%, #8b6914 80%);
+  background: color-mix(in srgb, #faf3e8 90%, #93c5fd 10%);
+}
+
+.read-chapter-jump-book--old.read-chapter-jump-book--selected {
+  border-color: color-mix(in srgb, #b45309 48%, transparent);
+  background: color-mix(in srgb, #f0dcc0 82%, #f59e0b 18%);
+}
+
+.read-chapter-jump-book--new.read-chapter-jump-book--selected {
+  border-color: color-mix(in srgb, #2563eb 44%, transparent);
+  background: color-mix(in srgb, #e4e9f4 82%, #93c5fd 18%);
+}
+
+.read-chapter-jump-book-num {
+  flex-shrink: 0;
+  width: 1.35rem;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: color-mix(in srgb, #6b4f1a 70%, transparent);
+}
+
+.read-chapter-jump-book-name {
+  font-size: 0.72rem;
+  font-weight: 550;
+  line-height: 1.25;
+  color: color-mix(in srgb, #3d2a10 90%, transparent);
+}
+
+.read-chapter-jump-chapters-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 0.5rem;
+}
+
+.read-chapter-jump-chapters-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: color-mix(in srgb, #6b4f1a 78%, transparent);
+}
+
+.read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, #c2410c 62%, #6b4f1a 38%);
+}
+
+.read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, #1d4ed8 58%, #6b4f1a 42%);
+}
+
+.read-chapter-jump-chapters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.05rem, 1fr));
+  gap: 0.2rem 0.26rem;
+  margin: 0;
+  padding: 0 0 0.25rem;
+}
+
+.read-chapter-jump-chapter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.72rem;
+  padding: 0.3rem 0.12rem;
+  font-size: 0.68rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: color-mix(in srgb, #3d2a10 88%, transparent);
+  text-decoration: none;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, #8b6914 22%, transparent);
+  background: color-mix(in srgb, #faf3e8 96%, #c9a66b 4%);
+}
+
+.read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, #8b6914 48%, transparent);
+  background: color-mix(in srgb, #e0c9a8 82%, #c9a66b 18%);
+  font-weight: 650;
+}
+
+.read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, #b45309 20%, #8b6914 80%);
+}
+
+.read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, #b45309 46%, transparent);
+  background: color-mix(in srgb, #ecd9bc 80%, #f59e0b 20%);
+}
+
+.read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, #2563eb 18%, #8b6914 82%);
+}
+
+.read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, #2563eb 42%, transparent);
+  background: color-mix(in srgb, #dce4f2 80%, #93c5fd 20%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .read-chapter-jump-backdrop,
+  .read-chapter-jump-panel {
+    transition: none;
+  }
 }

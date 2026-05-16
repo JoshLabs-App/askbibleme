@@ -18,18 +18,30 @@ export function infoEditionBundledPublishedPath(cwd: string): string {
   return path.join(cwd, "data", "bible", PUBLISHED_FILENAME);
 }
 
+function infoEditionExternalDataRoot(): string | null {
+  const external =
+    process.env.INFO_EDITION_DATA_DIR?.trim() || process.env.DATA_ROOT?.trim();
+  return external || null;
+}
+
 /**
  * 可写发布文件目录。
  * - 本机 dev：`<cwd>/data/bible`
- * - Render 等：`INFO_EDITION_DATA_DIR`（如 `/mnt/data`）→ `/mnt/data/bible`
+ * - 生产（Render 等）：必须设 `DATA_ROOT` 或 `INFO_EDITION_DATA_DIR`（如 `/mnt/data`）→ `/mnt/data/bible`
  */
-export function infoEditionWritableBibleDir(cwd: string): string | null {
+export function infoEditionWritableBibleDir(_cwd: string): string | null {
   if (!isInfoEditionDiskSaveEnabled()) return null;
-  const external =
-    process.env.INFO_EDITION_DATA_DIR?.trim() ||
-    process.env.DATA_ROOT?.trim();
+  const external = infoEditionExternalDataRoot();
   if (external) return path.join(external, "bible");
-  return path.join(cwd, "data", "bible");
+  if (process.env.NODE_ENV === "production") return null;
+  return path.join(_cwd, "data", "bible");
+}
+
+/** 生产环境磁盘写入是否已正确配置（避免写入只读构建目录导致 POST 500） */
+export function isInfoEditionProductionDiskConfigured(): boolean {
+  if (!isInfoEditionDiskSaveEnabled()) return true;
+  if (process.env.NODE_ENV !== "production") return true;
+  return Boolean(infoEditionExternalDataRoot());
 }
 
 export function infoEditionWritablePublishedPath(cwd: string): string | null {

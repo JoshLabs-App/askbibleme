@@ -694,6 +694,7 @@
       "infoEditionInviteHint": "Guide is separate from Scripture; loads on demand",
       "infoEditionGenerating": "Preparing chapter guide…",
       "infoEditionLoadFailed": "Could not load the chapter guide",
+      "infoEditionDiskError": "The server cannot write the guide cache (disk permission). Set DATA_ROOT to the disk mount (e.g. /mnt/data) on Render and redeploy.",
       "infoEditionTimeout": "Generation is taking longer than expected. Please try again.",
       "infoEditionRetry": "Retry",
       "infoEditionShow": "Show guide",

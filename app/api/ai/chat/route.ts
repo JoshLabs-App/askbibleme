@@ -63,7 +63,8 @@ export async function POST(req: Request) {
     ),
   };
 
-  const resolved = resolveAISettings(b.settings);
+  const profileId = typeof b.profileId === "string" ? b.profileId.trim() : undefined;
+  const resolved = resolveAISettings(b.settings, { profileId: profileId || undefined });
   if ("error" in resolved) {
     return NextResponse.json({ error: resolved.error }, { status: 400 });
   }

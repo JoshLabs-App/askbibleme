@@ -39,6 +39,8 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/admin/studio", labelKey: "admin.items.studio" },
       { href: "/admin/system/settings", labelKey: "admin.items.settings" },
+      { href: "/admin/system/ai-api", labelKey: "admin.items.aiApi" },
+      { href: "/admin/system/generation-roles", labelKey: "admin.items.generationRoles" },
       { href: "/admin/system/shell-chrome", labelKey: "admin.items.shellChrome" },
       { href: "/admin/system/media-library", labelKey: "admin.items.mediaLibrary" },
     ],
@@ -62,6 +64,7 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/read/golden-verse-themes", labelKey: "admin.items.goldenVerseThemes" },
       { href: "/admin/read/golden-verses", labelKey: "admin.items.goldenVerses" },
       { href: "/admin/read/segments", labelKey: "admin.items.readSegments" },
+      { href: "/admin/read/info-edition-v1", labelKey: "admin.items.infoEditionV1" },
     ],
   },
   { kind: "leaf", id: "explore", href: "/admin/explore", labelKey: "admin.items.explore" },

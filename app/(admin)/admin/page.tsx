@@ -10,6 +10,16 @@ const overview: {
     items: [
       { href: "/admin/studio", label: "studio", hint: "产品文档与本地讨论" },
       { href: "/admin/system/settings", label: "全局设置", hint: "顶栏 LOGO 与网站 / App 图标（分开上传）" },
+      {
+        href: "/admin/system/ai-api",
+        label: "API 密钥",
+        hint: "按网关 URL 或 Studio 连接自动注入 Bearer",
+      },
+      {
+        href: "/admin/system/generation-roles",
+        label: "生成角色",
+        hint: "管理 V1 信息版等生成任务的 system 角色与默认项",
+      },
       { href: "/admin/system/media-library", label: "上传资源库", hint: "扫描 public 下已上传的音视频与文档，预览并批量删除试验文件" },
     ],
   },
@@ -31,6 +41,11 @@ const overview: {
       { href: "/admin/read/golden-verse-themes", label: "金句主题", hint: "BIBLE 主题标签墙（本地 SQLite，需先 import）" },
       { href: "/admin/read/golden-verses", label: "金句", hint: "首页轮播与主题分类经节（只读总览）" },
       { href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" },
+      {
+        href: "/admin/read/info-edition-v1",
+        label: "V1 信息版",
+        hint: "按书卷章 + 描述规则，多连接 AI 对比生成",
+      },
     ],
   },
   {

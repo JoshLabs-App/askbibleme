@@ -1,15 +1,19 @@
+import { applyAdminApiKey } from "@/lib/ai/apply-admin-api-key";
 import type { AISettings, ResolvedAISettings } from "./types";
 
 /**
- * 合并：请求体里的 settings + 环境变量（CI/部署用）。
+ * 合并：请求体里的 settings + 后台密钥表 + 环境变量（CI/部署用）。
  * - baseUrl / model 必填（可由请求体或环境变量提供）。
- * - apiKey 可选：本地 Ollama 等常不需要；若需要，来自请求体或 AI_API_KEY 等。
+ * - apiKey：请求体 > 后台 profileId / URL 槽位 > 环境变量。
  */
 export function resolveAISettings(
   partial?: Partial<AISettings>,
+  opts?: { profileId?: string },
 ): ResolvedAISettings | { error: string } {
+  const merged = applyAdminApiKey(partial ?? {}, { profileId: opts?.profileId });
+
   const baseUrlRaw =
-    partial?.baseUrl?.trim() || process.env.AI_BASE_URL?.trim() || "";
+    merged.baseUrl?.trim() || process.env.AI_BASE_URL?.trim() || "";
   if (!baseUrlRaw) {
     return {
       error:
@@ -19,7 +23,7 @@ export function resolveAISettings(
   const baseUrl = baseUrlRaw.replace(/\/$/, "");
 
   const model =
-    partial?.model?.trim() || process.env.AI_MODEL?.trim() || "";
+    merged.model?.trim() || process.env.AI_MODEL?.trim() || "";
   if (!model) {
     return {
       error:
@@ -27,9 +31,9 @@ export function resolveAISettings(
     };
   }
 
-  const provider = partial?.provider ?? "openai-compatible";
+  const provider = merged.provider ?? "openai-compatible";
 
-  const fromBody = partial?.apiKey?.trim();
+  const fromBody = merged.apiKey?.trim();
   const fromEnv =
     process.env.AI_API_KEY?.trim() ||
     process.env.AI_BEARER_TOKEN?.trim() ||

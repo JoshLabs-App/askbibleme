@@ -34,6 +34,9 @@ yarn-error.log*
 # 由 npm run import:reader-verse-themes 从 BIBLE JSON 生成的本地主题库（体积大，不入库）
 /data/scripture/reader-verse-themes.sqlite
 
+# 后台 API 密钥（含明文 Key，仅保留 data/admin/ai-api-config.json.example 入仓）
+/data/admin/ai-api-config.json
+
 # typescript
 next-env.d.ts
 *.tsbuildinfo

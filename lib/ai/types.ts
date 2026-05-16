@@ -45,6 +45,8 @@ export type AIChatRequestBody = {
   context: AIChatContext;
   /** 当前选中的连接；其它调用方也可只依赖环境变量 */
   settings?: Partial<AISettings>;
+  /** 与 Studio 连接 id 对齐时，优先用后台 profileKeys 中的密钥 */
+  profileId?: string;
 };
 
 /** 右侧 Studio 对话的一条（不含前端专用 id） */

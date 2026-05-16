@@ -14,6 +14,7 @@ type ChatCompletionResponse = {
 export async function createChatCompletion(
   settings: ResolvedAISettings,
   messages: ChatMessage[],
+  opts?: { maxTokens?: number },
 ): Promise<{ text: string } | { error: string; status?: number }> {
   const url = `${settings.baseUrl}/chat/completions`;
   const headers: Record<string, string> = {
@@ -30,7 +31,7 @@ export async function createChatCompletion(
       model: settings.model,
       messages,
       temperature: 0.35,
-      max_tokens: 1800,
+      max_tokens: opts?.maxTokens ?? 1800,
     }),
   });
 

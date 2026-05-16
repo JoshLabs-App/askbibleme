@@ -68,7 +68,9 @@ select,
 /* Studio：文档预览、讨论区与助理气泡 Markdown */
 .studio-doc-readable,
 .discussion-markdown,
-.studio-chat-markdown {
+.studio-chat-markdown,
+.info-edition-compare-md,
+.info-edition-compare-copy {
   user-select: text;
   -webkit-user-select: text;
 }

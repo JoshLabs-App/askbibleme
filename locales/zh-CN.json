@@ -475,7 +475,12 @@
       "deleteFailed": "删除失败。",
       "compareTitle": "AI 生成对比",
       "compareHint": "各栏为同一章经文与规则下的并行输出；可调整规则后重新生成。",
-      "compareLayoutHint": "多栏横排对比；栏多时可左右滑动。正文按 Markdown 标题与列表呈现层次。"
+      "compareLayoutHint": "多栏横排对比；栏多时可左右滑动。正文按 Markdown 标题与列表呈现层次。",
+      "compareSelectAll": "全选",
+      "compareCopyAll": "复制全部",
+      "compareCopyOne": "复制",
+      "compareCopied": "已复制到剪贴板",
+      "compareCopyFailed": "复制失败，请手动全选后复制"
     },
     "goldenVerses": {
       "title": "金句",

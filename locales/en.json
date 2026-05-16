@@ -475,7 +475,12 @@
       "deleteFailed": "Delete failed.",
       "compareTitle": "AI comparison",
       "compareHint": "Each column is a parallel run with the same chapter and rules; tweak rules and regenerate as needed.",
-      "compareLayoutHint": "Side-by-side columns; scroll horizontally when there are many. Body uses Markdown headings and lists for structure."
+      "compareLayoutHint": "Side-by-side columns; scroll horizontally when there are many. Body uses Markdown headings and lists for structure.",
+      "compareSelectAll": "Select all",
+      "compareCopyAll": "Copy all",
+      "compareCopyOne": "Copy",
+      "compareCopied": "Copied to clipboard",
+      "compareCopyFailed": "Copy failed—select manually and copy"
     },
     "goldenVerses": {
       "title": "Golden verses",

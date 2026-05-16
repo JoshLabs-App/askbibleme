@@ -5,6 +5,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
 import type { AIConnectionProfile } from "@/lib/ai/types";
 import { normalizeInfoEditionCompareMarkdown } from "@/lib/bible/info-edition-v1-format";
+import { sortGenerationsWithPublishedFirst } from "@/lib/bible/info-edition-v1-publish";
 import { profileCompareDisplay } from "@/lib/ai/profile-display";
 import { InfoEditionCompareMarkdown } from "@/components/admin/InfoEditionCompareMarkdown";
 
@@ -35,7 +36,8 @@ type Props = {
   hint?: string;
 };
 
-export function InfoEditionCompareGrid({ generations, profiles, hint }: Props) {
+export function InfoEditionCompareGrid({ generations: rawGenerations, profiles, hint }: Props) {
+  const generations = sortGenerationsWithPublishedFirst(rawGenerations);
   const { t } = useLocale();
   const ie = useCallback((key: string) => t(`admin.infoEditionV1.${key}`), [t]);
   const copyRootRef = useRef<HTMLDivElement>(null);

@@ -9,6 +9,7 @@ import type {
   InfoEditionV1Generation,
   InfoEditionV1HistoryEntry,
 } from "@/lib/bible/info-edition-v1-types";
+import { publishInfoEditionFromGenerations } from "@/lib/bible/info-edition-v1-published-store";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
 function disk403() {
@@ -134,7 +135,13 @@ export async function POST(req: Request) {
         descriptionCharCount: draft.descriptionRules.length,
       };
       writeInfoEditionV1WorkspaceSync(cwd, workspace);
-      return NextResponse.json({ ok: true, workspace, compareId: historyId });
+      const published = publishInfoEditionFromGenerations(
+        cwd,
+        draft.bookId,
+        draft.chapter,
+        generations,
+      );
+      return NextResponse.json({ ok: true, workspace, compareId: historyId, published });
     }
 
     const entry: InfoEditionV1HistoryEntry = {
@@ -148,7 +155,35 @@ export async function POST(req: Request) {
     };
     workspace.history = [entry, ...workspace.history].slice(0, 48);
     writeInfoEditionV1WorkspaceSync(cwd, workspace);
-    return NextResponse.json({ ok: true, workspace, compareId: entry.id });
+    const published = publishInfoEditionFromGenerations(
+      cwd,
+      draft.bookId,
+      draft.chapter,
+      generations,
+    );
+    return NextResponse.json({ ok: true, workspace, compareId: entry.id, published });
+  }
+
+  if (action === "publish_reader") {
+    const draft = parseDraft(o);
+    if ("error" in draft) return NextResponse.json({ ok: false, error: draft.error }, { status: 400 });
+    const generations = parseGenerations(o.generations);
+    if (!generations?.length) {
+      return NextResponse.json({ ok: false, error: "缺少对比结果。" }, { status: 400 });
+    }
+    const published = publishInfoEditionFromGenerations(
+      cwd,
+      draft.bookId,
+      draft.chapter,
+      generations,
+    );
+    if (!published) {
+      return NextResponse.json(
+        { ok: false, error: "未找到可发布的「基础版」有效结果（优先 DeepSeek）。" },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ ok: true, published });
   }
 
   if (action === "archive") {

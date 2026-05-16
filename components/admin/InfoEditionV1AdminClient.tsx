@@ -17,6 +17,7 @@ import type {
 } from "@/lib/bible/info-edition-v1-types";
 import type { ScriptureBook } from "@/lib/bible/scripture-books";
 import { INFO_EDITION_V1_MAX_COMPARE_RUNS } from "@/lib/bible/info-edition-v1-types";
+import { sortGenerationsWithPublishedFirst } from "@/lib/bible/info-edition-v1-publish";
 import { InfoEditionCompareGrid } from "@/components/admin/InfoEditionCompareGrid";
 import { dedupeConnectionProfiles, profileCompareDisplay } from "@/lib/ai/profile-display";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
@@ -470,13 +471,14 @@ export function InfoEditionV1AdminClient() {
           throw new Error(e + (res.status === 403 ? ` ${rt("diskHint")}` : ""));
         }
         const gens = Array.isArray(j.generations) ? (j.generations as InfoEditionV1Generation[]) : [];
-        setGenerations(gens);
+        const sorted = sortGenerationsWithPublishedFirst(gens);
+        setGenerations(sorted);
 
         const saveAction = opts?.historyId ? "update_compare" : "save_compare";
         const saveBody: Record<string, unknown> = {
           action: saveAction,
           ...draftPayload(),
-          generations: gens,
+          generations: sorted,
         };
         if (opts?.historyId) saveBody.historyId = opts.historyId;
         const res2 = await fetch("/api/admin/bible/info-edition-v1", {
@@ -490,9 +492,13 @@ export function InfoEditionV1AdminClient() {
           const compareId = typeof j2.compareId === "string" ? j2.compareId : opts?.historyId ?? null;
           if (compareId) setActiveHistoryId(compareId);
           setHistoryOpen(true);
-          setMsg(ie("generateDoneSaved", { count: String(gens.length) }));
+          setMsg(
+            j2.published
+              ? ie("generateDonePublished", { count: String(sorted.length) })
+              : ie("generateDoneSaved", { count: String(sorted.length) }),
+          );
         } else {
-          setMsg(ie("generateDone", { count: String(gens.length) }));
+          setMsg(ie("generateDone", { count: String(sorted.length) }));
         }
       } catch (e) {
         setErr(e instanceof Error ? e.message : String(e));
@@ -503,6 +509,31 @@ export function InfoEditionV1AdminClient() {
     },
     [applyWorkspace, bookId, chapter, descriptionRules, draftPayload, ie, rt, selectedProfilesForGenerate, selectedRolesForGenerate],
   );
+
+  const publishToReader = useCallback(async () => {
+    if (!generations?.length) return;
+    setErr(null);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/bible/info-edition-v1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...diskAuthHeaders() },
+        body: JSON.stringify({
+          action: "publish_reader",
+          ...draftPayload(),
+          generations,
+        }),
+      });
+      const j = await parseJson(res);
+      if (!res.ok) {
+        const e = typeof j.error === "string" ? j.error : ie("publishReaderFailed");
+        throw new Error(e);
+      }
+      if (j.published) setMsg(ie("publishReaderDone"));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    }
+  }, [draftPayload, generations, ie]);
 
   const archiveToHistory = useCallback(async () => {
     setArchiving(true);
@@ -550,7 +581,7 @@ export function InfoEditionV1AdminClient() {
       setSelectedProfileIds(new Set(entry.selectedProfileIds));
       setActiveHistoryId(entry.id);
       if (entry.generations?.length) {
-        setGenerations(entry.generations);
+        setGenerations(sortGenerationsWithPublishedFirst(entry.generations));
         setMsg(ie("compareLoaded"));
       } else {
         setGenerations(null);
@@ -804,6 +835,15 @@ export function InfoEditionV1AdminClient() {
           className="shrink-0 rounded border border-adminFg/35 bg-adminFg/[0.14] px-3.5 py-1 text-[12px] font-semibold text-adminFg shadow-sm transition hover:bg-adminFg/[0.2] disabled:cursor-not-allowed disabled:opacity-45"
         >
           {generating ? ie("generating") : ie("generateCompare")}
+        </button>
+        <button
+          type="button"
+          onClick={() => void publishToReader()}
+          disabled={!generations?.length}
+          className={actionClass}
+          title={ie("publishReader")}
+        >
+          {ie("publishReader")}
         </button>
         <span className="text-[10px] tabular-nums text-adminMuted">
           {ie("charCount", { count: String(descriptionCharCount) })}

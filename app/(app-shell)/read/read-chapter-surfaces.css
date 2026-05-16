@@ -153,6 +153,121 @@
   margin-bottom: 0;
 }
 
+/* 经文正文区（与下方信息版分区） */
+.read-chapter-scripture {
+  padding-bottom: 0.25rem;
+}
+
+/* V1 信息版（基础版）：与经文明确分为第二块内容 */
+.read-chapter-info-edition {
+  margin-top: clamp(2.5rem, 8vw, 3.5rem);
+  text-align: start;
+}
+
+.read-chapter-info-edition-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.read-chapter-info-edition-divider-line {
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, rgba(120, 75, 30, 0.22) 100%, transparent);
+}
+
+.dark .read-chapter-info-edition-divider-line {
+  background: color-mix(in srgb, rgba(245, 230, 210, 0.16) 100%, transparent);
+}
+
+.read-chapter-info-edition-divider-label {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.read-chapter-info-edition-kicker {
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, rgb(120 75 30) 55%, transparent);
+}
+
+.dark .read-chapter-info-edition-kicker {
+  color: color-mix(in srgb, rgb(245 230 210) 45%, transparent);
+}
+
+.read-chapter-info-edition-role {
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, rgb(92 58 28) 88%, transparent);
+}
+
+.dark .read-chapter-info-edition-role {
+  color: color-mix(in srgb, rgb(245 235 220) 82%, transparent);
+}
+
+.read-chapter-info-edition-disclaimer {
+  margin: 0 0 0.85rem;
+  text-align: center;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, rgb(120 75 30) 52%, transparent);
+}
+
+.dark .read-chapter-info-edition-disclaimer {
+  color: color-mix(in srgb, rgb(245 230 210) 42%, transparent);
+}
+
+.read-chapter-info-edition-panel {
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.18) 100%, transparent);
+  background: color-mix(in srgb, rgba(255, 252, 245, 0.72) 100%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.65) 100%, transparent) inset,
+    0 8px 28px -18px color-mix(in srgb, rgba(80, 50, 20, 0.35) 100%, transparent);
+  padding: 1.15rem 1.2rem 1.35rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+.dark .read-chapter-info-edition-panel {
+  border-color: color-mix(in srgb, rgba(245, 230, 210, 0.14) 100%, transparent);
+  background: color-mix(in srgb, rgba(28, 26, 24, 0.55) 100%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.06) 100%, transparent) inset,
+    0 10px 32px -20px rgba(0, 0, 0, 0.45);
+}
+
+.read-chapter-info-edition-panel-skeleton {
+  min-height: 5rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, rgba(120, 75, 30, 0.06) 100%, transparent);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.dark .read-chapter-info-edition-panel-skeleton {
+  background: color-mix(in srgb, rgba(245, 230, 210, 0.06) 100%, transparent);
+}
+
+.read-chapter-info-edition-md {
+  font-size: 0.875rem;
+  line-height: 1.72;
+}
+
+.read-chapter-info-edition-md :first-child {
+  margin-top: 0;
+}
+
 /* 和合本整章朗读：按进度估算的当前节 */
 .read-chapter-verse.read-chapter-verse--audio-active {
   margin-inline: -0.35rem;

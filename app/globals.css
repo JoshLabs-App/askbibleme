@@ -70,7 +70,9 @@ select,
 .discussion-markdown,
 .studio-chat-markdown,
 .info-edition-compare-md,
-.info-edition-compare-copy {
+.info-edition-compare-copy,
+.read-chapter-info-edition,
+.read-chapter-info-edition-md {
   user-select: text;
   -webkit-user-select: text;
 }

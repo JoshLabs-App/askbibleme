@@ -20,7 +20,11 @@ import {
   setInfoEditionReaderFailedSupabase,
   tryBeginInfoEditionPendingSupabase,
 } from "@/lib/bible/info-edition-v1-published-supabase";
-import { isInfoEditionDiskSaveEnabled } from "@/lib/bible/info-edition-published-path";
+import {
+  infoEditionWritableBibleDir,
+  isInfoEditionDiskSaveEnabled,
+  isInfoEditionProductionDiskConfigured,
+} from "@/lib/bible/info-edition-published-path";
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
 
@@ -28,8 +32,8 @@ export type InfoEditionReaderPersistence = "disk" | "supabase" | "none";
 
 export { isInfoEditionDiskSaveEnabled };
 
-export function getInfoEditionReaderPersistence(): InfoEditionReaderPersistence {
-  if (isInfoEditionDiskSaveEnabled()) {
+export function getInfoEditionReaderPersistence(cwd = process.cwd()): InfoEditionReaderPersistence {
+  if (isInfoEditionDiskSaveEnabled() && infoEditionWritableBibleDir(cwd)) {
     return "disk";
   }
   if (isSupabaseServiceConfigured()) {
@@ -39,7 +43,19 @@ export function getInfoEditionReaderPersistence(): InfoEditionReaderPersistence 
 }
 
 export function isInfoEditionReaderGenerateAllowed(): boolean {
-  return getInfoEditionReaderPersistence() !== "none";
+  if (getInfoEditionReaderPersistence() === "none") return false;
+  if (!isInfoEditionProductionDiskConfigured()) return false;
+  return true;
+}
+
+export function infoEditionReaderGenerateBlockedReason(): string | null {
+  if (getInfoEditionReaderPersistence() === "none") {
+    return "本章导读生成未启用：Render 请挂载 Disk（如 /mnt/data），并设 INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data、AI_API_KEY。";
+  }
+  if (!isInfoEditionProductionDiskConfigured()) {
+    return "生产环境缺少 DATA_ROOT 或 INFO_EDITION_DATA_DIR，无法写入导读缓存（请指向 Render 持久磁盘，如 /mnt/data）。";
+  }
+  return null;
 }
 
 export async function getInfoEditionReaderCacheAsync(

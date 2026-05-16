@@ -7,7 +7,7 @@ import {
   formatBibleBookHistoryEraAriaZh,
   formatBibleBookHistoryEraCompact,
 } from "@/lib/bible/bible-book-history-era";
-import { scriptureBooks } from "@/lib/bible/scripture-books";
+import { OLD_TESTAMENT_MAX_BOOK_NUMBER, scriptureBooks } from "@/lib/bible/scripture-books";
 import type { ScriptureCanonCatalogBook, ScriptureCanonCatalogSection } from "@/lib/bible/read-scripture-canon-catalog";
 
 type Props = {
@@ -58,8 +58,6 @@ function computePanelLayout(s: SheetModel): PanelLayout {
   maxH = Math.max(160, Math.min(maxH, vh - top - pad));
   return { top, left, width: panelW, maxHeight: maxH };
 }
-
-const OLD_TESTAMENT_MAX_BOOK_NUMBER = 39;
 
 function testamentForSection(section: ScriptureCanonCatalogSection): "old" | "new" {
   const n = section.books[0]?.bookNumber;

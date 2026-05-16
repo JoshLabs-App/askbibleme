@@ -21,10 +21,10 @@ import {
   tryBeginInfoEditionPendingSupabase,
 } from "@/lib/bible/info-edition-v1-published-supabase";
 import {
-  infoEditionWritableBibleDir,
   isInfoEditionDiskSaveEnabled,
   isInfoEditionDiskSaveMisconfiguredInProduction,
   isInfoEditionProductionDiskConfigured,
+  isInfoEditionWritableDiskAvailable,
   isVercelDeployment,
 } from "@/lib/bible/info-edition-published-path";
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
@@ -35,11 +35,7 @@ export type InfoEditionReaderPersistence = "disk" | "supabase" | "none";
 export { isInfoEditionDiskSaveEnabled };
 
 export function getInfoEditionReaderPersistence(cwd = process.cwd()): InfoEditionReaderPersistence {
-  /** Vercel 无持久盘：禁止走 DATA_ROOT 磁盘，仅 Supabase */
-  if (isVercelDeployment()) {
-    return isSupabaseServiceConfigured() ? "supabase" : "none";
-  }
-  if (isInfoEditionDiskSaveEnabled() && infoEditionWritableBibleDir(cwd)) {
+  if (isInfoEditionWritableDiskAvailable(cwd)) {
     return "disk";
   }
   if (isSupabaseServiceConfigured()) {

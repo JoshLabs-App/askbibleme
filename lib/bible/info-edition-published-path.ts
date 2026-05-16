@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 
 const PUBLISHED_FILENAME = "info-edition-v1-published.json";
@@ -35,6 +36,25 @@ export function infoEditionWritableBibleDir(_cwd: string): string | null {
   if (external) return external;
   if (process.env.NODE_ENV === "production") return null;
   return path.join(_cwd, "data", "bible");
+}
+
+/** 磁盘目录真实可写（避免生产误配 DATA_ROOT 却无挂载，如 Vercel / 未挂盘的 Render） */
+export function isInfoEditionWritableDiskAvailable(cwd: string): boolean {
+  const dir = infoEditionWritableBibleDir(cwd);
+  if (!dir) return false;
+  try {
+    if (fs.existsSync(dir)) {
+      fs.accessSync(dir, fs.constants.W_OK);
+      return true;
+    }
+    if (process.env.NODE_ENV !== "production") {
+      fs.mkdirSync(dir, { recursive: true });
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /** 生产环境磁盘写入是否已正确配置（避免写入只读构建目录导致 POST 500） */

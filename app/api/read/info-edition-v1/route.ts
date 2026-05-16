@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import {
   getInfoEditionReaderCacheAsync,
+  getInfoEditionReaderPersistence,
   infoEditionReaderGenerateBlockedReason,
   isInfoEditionReaderGenerateAllowed,
   tryBeginInfoEditionPendingAsync,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { runInfoEditionV1ReaderGenerationJob } from "@/lib/bible/info-edition-v1-reader-job";
 import { scheduleInfoEditionV1ReaderJob } from "@/lib/bible/info-edition-v1-schedule-job";
-import { isVercelDeployment } from "@/lib/bible/info-edition-published-path";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 
 export const maxDuration = 300;
@@ -98,8 +98,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, status: "pending" }, noStore);
     }
 
-    /** Vercel：同请求内跑完生成（after 在部分实例上不可靠，避免一直 pending） */
-    if (isVercelDeployment()) {
+    /** Supabase / 无盘主机：同请求内跑完生成，避免 after() 未执行而一直 pending */
+    if (getInfoEditionReaderPersistence(cwd) === "supabase") {
       await runInfoEditionV1ReaderGenerationJob(cwd, bookId, chapter);
       const afterCache = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter);
       return NextResponse.json({ ok: true, ...afterCache }, noStore);

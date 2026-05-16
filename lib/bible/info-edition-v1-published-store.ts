@@ -15,6 +15,7 @@ import type {
 import { INFO_EDITION_V1_PUBLISHED_VERSION } from "@/lib/bible/info-edition-v1-published-types";
 import {
   infoEditionBundledPublishedPath,
+  infoEditionLegacyWritablePublishedPath,
   infoEditionWritablePublishedPath,
 } from "@/lib/bible/info-edition-published-path";
 
@@ -131,13 +132,22 @@ function normalizeFile(raw: unknown): InfoEditionV1PublishedFile {
   };
 }
 
+function readDiskOverlay(cwd: string): InfoEditionV1PublishedFile | null {
+  const primary = infoEditionWritablePublishedPath(cwd);
+  if (primary) {
+    const fromPrimary = readJsonFile(primary);
+    if (fromPrimary) return fromPrimary;
+  }
+  const legacy = infoEditionLegacyWritablePublishedPath(cwd);
+  if (legacy && legacy !== primary) {
+    return readJsonFile(legacy);
+  }
+  return null;
+}
+
 export function readInfoEditionV1PublishedSync(cwd: string): InfoEditionV1PublishedFile {
   const bundled = readJsonFile(infoEditionBundledPublishedPath(cwd)) ?? defaultFile();
-  const writable = infoEditionWritablePublishedPath(cwd);
-  if (!writable || writable === infoEditionBundledPublishedPath(cwd)) {
-    return bundled;
-  }
-  const overlay = readJsonFile(writable);
+  const overlay = readDiskOverlay(cwd);
   if (!overlay) return bundled;
   return mergePublishedFiles(bundled, overlay);
 }
@@ -149,7 +159,10 @@ export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1
       "导读缓存不可写：生产环境请设置 INFO_EDITION_DISK_SAVE=1，并设置 DATA_ROOT 或 INFO_EDITION_DATA_DIR 为持久磁盘路径（如 /mnt/data）。",
     );
   }
-  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const dir = path.dirname(file);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
   fs.writeFileSync(file, `${JSON.stringify(normalizeFile(next), null, 2)}\n`, "utf8");
 }
 

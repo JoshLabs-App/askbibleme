@@ -25,14 +25,14 @@ function infoEditionExternalDataRoot(): string | null {
 }
 
 /**
- * 可写发布文件目录。
+ * 可写目录（用于判断磁盘模式是否可用）。
  * - 本机 dev：`<cwd>/data/bible`
- * - 生产（Render 等）：必须设 `DATA_ROOT` 或 `INFO_EDITION_DATA_DIR`（如 `/mnt/data`）→ `/mnt/data/bible`
+ * - 生产磁盘：挂载根目录（如 `/mnt/data`），文件直接写在根下，避免 `mkdir bible` 权限问题
  */
 export function infoEditionWritableBibleDir(_cwd: string): string | null {
   if (!isInfoEditionDiskSaveEnabled()) return null;
   const external = infoEditionExternalDataRoot();
-  if (external) return path.join(external, "bible");
+  if (external) return external;
   if (process.env.NODE_ENV === "production") return null;
   return path.join(_cwd, "data", "bible");
 }
@@ -44,7 +44,22 @@ export function isInfoEditionProductionDiskConfigured(): boolean {
   return Boolean(infoEditionExternalDataRoot());
 }
 
+/** 旧版 Render 路径（曾写入 `<mount>/bible/…`，只读合并用） */
+export function infoEditionLegacyWritablePublishedPath(cwd: string): string | null {
+  const external = infoEditionExternalDataRoot();
+  if (!external || !isInfoEditionDiskSaveEnabled()) return null;
+  return path.join(external, "bible", PUBLISHED_FILENAME);
+}
+
+/**
+ * 可写发布文件路径。
+ * - 本机 dev：`<cwd>/data/bible/info-edition-v1-published.json`
+ * - 生产磁盘：`<DATA_ROOT>/info-edition-v1-published.json`（挂载根目录，勿再建 bible 子目录）
+ */
 export function infoEditionWritablePublishedPath(cwd: string): string | null {
-  const dir = infoEditionWritableBibleDir(cwd);
-  return dir ? path.join(dir, PUBLISHED_FILENAME) : null;
+  if (!isInfoEditionDiskSaveEnabled()) return null;
+  const external = infoEditionExternalDataRoot();
+  if (external) return path.join(external, PUBLISHED_FILENAME);
+  if (process.env.NODE_ENV === "production") return null;
+  return path.join(cwd, "data", "bible", PUBLISHED_FILENAME);
 }

@@ -694,6 +694,7 @@
       "infoEditionInviteHint": "导读非经文，需时再加载",
       "infoEditionGenerating": "正在准备本章导读…",
       "infoEditionLoadFailed": "暂时无法加载本章导读",
+      "infoEditionDiskError": "服务器无法写入导读缓存（磁盘权限）。请在 Render 将 DATA_ROOT 设为磁盘挂载根目录（如 /mnt/data），并重新部署。",
       "infoEditionTimeout": "生成时间较长，请稍后重试",
       "infoEditionRetry": "重试",
       "infoEditionShow": "展开导读",

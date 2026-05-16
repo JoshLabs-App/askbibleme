@@ -31,6 +31,17 @@ function hasPublishedMarkdown(ch?: InfoEditionV1PublishedChapter | null): boolea
   return Boolean(ch?.markdown?.trim());
 }
 
+function formatInfoEditionError(
+  raw: string | undefined,
+  t: (key: string, vars?: Record<string, string>) => string,
+): string {
+  if (!raw?.trim()) return t("pages.read.infoEditionLoadFailed");
+  if (/EACCES|permission denied|不可写|mkdir/i.test(raw)) {
+    return t("pages.read.infoEditionDiskError");
+  }
+  return raw;
+}
+
 async function parseJson(res: Response): Promise<Record<string, unknown>> {
   const text = await res.text();
   if (!text.trim()) return {};
@@ -79,7 +90,10 @@ export function ReadChapterInfoEditionBlock({
         return true;
       }
       if (status === "failed") {
-        const e = typeof j.error === "string" ? j.error : t("pages.read.infoEditionLoadFailed");
+        const e = formatInfoEditionError(
+          typeof j.error === "string" ? j.error : undefined,
+          t,
+        );
         setErr(e);
         setPhase("error");
         if (options?.openOnFailed ?? true) setOpen(true);
@@ -109,8 +123,11 @@ export function ReadChapterInfoEditionBlock({
         const j = await parseJson(res);
         if (!res.ok) {
           stopPoll();
-          setErr(typeof j.error === "string" ? j.error : t("pages.read.infoEditionLoadFailed"));
+          setErr(
+            formatInfoEditionError(typeof j.error === "string" ? j.error : undefined, t),
+          );
           setPhase("error");
+          setOpen(true);
           return;
         }
         if (applyCachePayload(j)) stopPoll();
@@ -127,7 +144,7 @@ export function ReadChapterInfoEditionBlock({
     const getRes = await fetch(`/api/read/info-edition-v1?${qs}`, { cache: "no-store" });
     const getJ = await parseJson(getRes);
     if (!getRes.ok) {
-      setErr(typeof getJ.error === "string" ? getJ.error : t("pages.read.infoEditionLoadFailed"));
+      setErr(formatInfoEditionError(typeof getJ.error === "string" ? getJ.error : undefined, t));
       setPhase("error");
       setOpen(true);
       return;
@@ -145,7 +162,8 @@ export function ReadChapterInfoEditionBlock({
     });
     const postJ = await parseJson(postRes);
     if (!postRes.ok) {
-      setErr(typeof postJ.error === "string" ? postJ.error : t("pages.read.infoEditionLoadFailed"));
+      stopPoll();
+      setErr(formatInfoEditionError(typeof postJ.error === "string" ? postJ.error : undefined, t));
       setPhase("error");
       setOpen(true);
       return;

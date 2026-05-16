@@ -1,8 +1,8 @@
 import { generateInfoEditionChapterForReader } from "@/lib/bible/info-edition-v1-generate-reader";
 import {
-  clearInfoEditionPending,
-  setInfoEditionReaderFailed,
-} from "@/lib/bible/info-edition-v1-reader-cache";
+  clearInfoEditionPendingAsync,
+  setInfoEditionReaderFailedAsync,
+} from "@/lib/bible/info-edition-v1-reader-persistence";
 
 /** 读经页后台任务：生成一章并写入发布缓存（由 POST + after 触发） */
 export async function runInfoEditionV1ReaderGenerationJob(
@@ -12,13 +12,13 @@ export async function runInfoEditionV1ReaderGenerationJob(
 ): Promise<void> {
   try {
     const result = await generateInfoEditionChapterForReader(cwd, bookId, chapter);
-    clearInfoEditionPending(cwd, bookId, chapter);
+    await clearInfoEditionPendingAsync(cwd, bookId, chapter);
     if (!result.ok) {
-      setInfoEditionReaderFailed(cwd, bookId, chapter, result.error);
+      await setInfoEditionReaderFailedAsync(cwd, bookId, chapter, result.error);
     }
   } catch (e) {
-    clearInfoEditionPending(cwd, bookId, chapter);
+    await clearInfoEditionPendingAsync(cwd, bookId, chapter);
     const msg = e instanceof Error ? e.message : String(e);
-    setInfoEditionReaderFailed(cwd, bookId, chapter, msg);
+    await setInfoEditionReaderFailedAsync(cwd, bookId, chapter, msg);
   }
 }

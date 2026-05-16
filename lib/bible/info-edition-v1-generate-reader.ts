@@ -1,3 +1,4 @@
+import { gatewaySlotEndpoint } from "@/lib/admin/gateway-slot-endpoints";
 import { readAiApiConfigSync, listAllConnectionsPublic } from "@/lib/admin/ai-api-config-store";
 import { readGenerationRolesSync, resolveGenerationRole } from "@/lib/admin/generation-roles-store";
 import { GENERATION_ROLE_BUILTIN_INFO_V1 } from "@/lib/admin/generation-roles-types";
@@ -5,7 +6,7 @@ import { buildInfoEditionV1Messages } from "@/lib/bible/info-edition-v1-prompt";
 import {
   INFO_EDITION_V1_PUBLISH_PROFILE_ID,
 } from "@/lib/bible/info-edition-v1-publish";
-import { publishInfoEditionFromGenerations } from "@/lib/bible/info-edition-v1-published-store";
+import { publishInfoEditionFromGenerationsAsync } from "@/lib/bible/info-edition-v1-reader-persistence";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 import { readInfoEditionV1WorkspaceSync } from "@/lib/bible/info-edition-v1-store";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
@@ -50,19 +51,32 @@ export async function generateInfoEditionChapterForReader(
 
   const connections = listAllConnectionsPublic(readAiApiConfigSync(cwd));
   const conn = connections.find((c) => c.id === INFO_EDITION_V1_PUBLISH_PROFILE_ID);
-  if (!conn?.baseUrl.trim() || !conn.model.trim()) {
-    return { ok: false, error: "DeepSeek 连接未配置。请在后台「API 密钥」中启用。" };
+  const deepseekSlot = gatewaySlotEndpoint("deepseek");
+  const baseUrl = conn?.baseUrl.trim() || deepseekSlot?.baseUrl || "";
+  const model = conn?.model.trim() || deepseekSlot?.model || "";
+  const profileName = conn?.name || deepseekSlot?.shortLabel || "DeepSeek";
+  if (!baseUrl || !model) {
+    return {
+      ok: false,
+      error: "DeepSeek 未配置：请在后台「API 密钥」启用，或设置环境变量 AI_BASE_URL / AI_MODEL / AI_API_KEY。",
+    };
   }
 
   const settings = resolveAISettings(
     {
       provider: "openai-compatible",
-      baseUrl: conn.baseUrl,
-      model: conn.model,
+      baseUrl,
+      model,
     },
-    { profileId: conn.id },
+    { profileId: INFO_EDITION_V1_PUBLISH_PROFILE_ID },
   );
   if ("error" in settings) return { ok: false, error: settings.error };
+  if (!settings.apiKey?.trim()) {
+    return {
+      ok: false,
+      error: "未配置 DeepSeek API Key：请在后台「API 密钥」填写，或设置环境变量 AI_API_KEY。",
+    };
+  }
 
   const messages = buildInfoEditionV1Messages(loaded, readerDescriptionRules(cwd), {
     systemPrompt: role.systemPrompt,
@@ -74,15 +88,15 @@ export async function generateInfoEditionChapterForReader(
   if ("error" in result) return { ok: false, error: result.error };
 
   const generation: InfoEditionV1Generation = {
-    profileId: conn.id,
-    profileName: conn.name,
+    profileId: INFO_EDITION_V1_PUBLISH_PROFILE_ID,
+    profileName,
     generationRoleId: role.id,
     generationRoleLabel: role.label,
     text: result.text,
     charCount: result.text.length,
   };
 
-  const published = publishInfoEditionFromGenerations(cwd, bookId, chapter, [generation]);
+  const published = await publishInfoEditionFromGenerationsAsync(cwd, bookId, chapter, [generation]);
   if (!published) return { ok: false, error: "生成结果无效，无法发布。" };
 
   return { ok: true, published };

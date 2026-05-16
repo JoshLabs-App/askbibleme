@@ -1,11 +1,12 @@
 import { after, NextResponse } from "next/server";
-import {
-  getInfoEditionReaderCache,
-  tryBeginInfoEditionPending,
-} from "@/lib/bible/info-edition-v1-reader-cache";
 import { runInfoEditionV1ReaderGenerationJob } from "@/lib/bible/info-edition-v1-reader-job";
+import {
+  getInfoEditionReaderCacheAsync,
+  getInfoEditionReaderPersistence,
+  isInfoEditionReaderGenerateAllowed,
+  tryBeginInfoEditionPendingAsync,
+} from "@/lib/bible/info-edition-v1-reader-persistence";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
-import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
 export const maxDuration = 300;
 
@@ -28,19 +29,18 @@ export async function GET(req: Request) {
   if ("error" in parsed) {
     return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
   }
-  const cache = getInfoEditionReaderCache(process.cwd(), parsed.bookId, parsed.chapter);
+  const cache = await getInfoEditionReaderCacheAsync(process.cwd(), parsed.bookId, parsed.chapter);
   return NextResponse.json({ ok: true, ...cache }, noStore);
 }
 
 export async function POST(req: Request) {
-  if (!isStudioDiskSaveAllowed(req)) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "本章导读生成仅在开发环境可用；线上需接入数据库后再开放。",
-      },
-      { status: 503 },
-    );
+  if (!isInfoEditionReaderGenerateAllowed()) {
+    const mode = getInfoEditionReaderPersistence();
+    const error =
+      mode === "none"
+        ? "本章导读生成未启用：生产环境请配置 NEXT_PUBLIC_SUPABASE_URL 与 SUPABASE_SERVICE_ROLE_KEY，并在 Supabase 执行 migrations；同时配置 AI_API_KEY（DeepSeek）。"
+        : "本章导读生成暂不可用。";
+    return NextResponse.json({ ok: false, error }, { status: 503 });
   }
 
   let body: unknown;
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
   }
 
   const cwd = process.cwd();
-  const cached = getInfoEditionReaderCache(cwd, bookId, chapter);
+  const cached = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter);
   if (cached.status === "ready" && cached.published) {
     return NextResponse.json({ ok: true, status: "ready", published: cached.published }, noStore);
   }
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, status: "pending" }, noStore);
   }
 
-  const began = tryBeginInfoEditionPending(cwd, bookId, chapter);
+  const began = await tryBeginInfoEditionPendingAsync(cwd, bookId, chapter);
   if (!began) {
     return NextResponse.json({ ok: true, status: "pending" }, noStore);
   }

@@ -1,11 +1,55 @@
 import { GENERATION_ROLE_BUILTIN_INFO_V1 } from "@/lib/admin/generation-roles-types";
+import type { GenerationRole } from "@/lib/admin/generation-roles-types";
+import type { AIConnectionProfile } from "@/lib/ai/types";
 import { normalizeInfoEditionCompareMarkdown } from "@/lib/bible/info-edition-v1-format";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 
-/** 前台读经页默认：基础版 × DeepSeek */
+/** 前台读经页 / 后台生产流程默认：基础版 × DeepSeek */
 export const INFO_EDITION_V1_PUBLISH_ROLE_ID = GENERATION_ROLE_BUILTIN_INFO_V1;
 export const INFO_EDITION_V1_PUBLISH_PROFILE_ID = "slot:deepseek";
+
+function productionProfileScore(p: Pick<AIConnectionProfile, "id" | "model" | "name">): number {
+  if (p.id === INFO_EDITION_V1_PUBLISH_PROFILE_ID) return 100;
+  const model = p.model.trim().toLowerCase();
+  if (model === "deepseek-chat" || model.endsWith("/deepseek-chat")) return 90;
+  if (/deepseek/i.test(model) || /deepseek/i.test(p.name)) return 80;
+  return 0;
+}
+
+function productionRoleScore(r: Pick<GenerationRole, "id" | "label">): number {
+  if (r.id === INFO_EDITION_V1_PUBLISH_ROLE_ID) return 100;
+  if (r.label.trim() === "基础版") return 90;
+  return 0;
+}
+
+/** V1 后台：DeepSeek 等生产默认连接排在最前 */
+export function sortProfilesForInfoEditionProduction<T extends AIConnectionProfile>(profiles: T[]): T[] {
+  return [...profiles].sort((a, b) => productionProfileScore(b) - productionProfileScore(a));
+}
+
+/** V1 后台：基础版排在最前 */
+export function sortRolesForInfoEditionProduction<T extends GenerationRole>(roles: T[]): T[] {
+  return [...roles].sort((a, b) => productionRoleScore(b) - productionRoleScore(a));
+}
+
+/** 无已选连接时：默认 deepseek-chat（网关 slot:deepseek） */
+export function pickDefaultInfoEditionProfileIds(
+  profiles: Pick<AIConnectionProfile, "id" | "model" | "name">[],
+): string[] {
+  const sorted = sortProfilesForInfoEditionProduction([...profiles] as AIConnectionProfile[]);
+  const top = sorted[0];
+  if (!top || productionProfileScore(top) === 0) return [];
+  return [top.id];
+}
+
+/** 无已选角色时：默认基础版 */
+export function pickDefaultInfoEditionRoleIds(roles: Pick<GenerationRole, "id" | "label">[]): string[] {
+  const sorted = sortRolesForInfoEditionProduction([...roles] as GenerationRole[]);
+  const top = sorted[0];
+  if (!top || productionRoleScore(top) === 0) return [];
+  return [top.id];
+}
 
 export function infoEditionChapterKey(bookId: string, chapter: number): string {
   return `${bookId.trim().toUpperCase()}:${chapter}`;

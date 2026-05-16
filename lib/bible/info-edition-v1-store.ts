@@ -1,6 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  INFO_EDITION_V1_PUBLISH_PROFILE_ID,
+  INFO_EDITION_V1_PUBLISH_ROLE_ID,
+} from "@/lib/bible/info-edition-v1-publish";
+import {
   INFO_EDITION_V1_HISTORY_MAX,
   INFO_EDITION_V1_STORE_VERSION,
   type InfoEditionV1Draft,
@@ -20,8 +24,8 @@ export function defaultInfoEditionV1Draft(): InfoEditionV1Draft {
     bookId: "GEN",
     chapter: 1,
     descriptionRules: "",
-    selectedProfileIds: [],
-    selectedGenerationRoleIds: [],
+    selectedProfileIds: [INFO_EDITION_V1_PUBLISH_PROFILE_ID],
+    selectedGenerationRoleIds: [INFO_EDITION_V1_PUBLISH_ROLE_ID],
   };
 }
 

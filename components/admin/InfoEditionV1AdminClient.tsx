@@ -17,7 +17,13 @@ import type {
 } from "@/lib/bible/info-edition-v1-types";
 import type { ScriptureBook } from "@/lib/bible/scripture-books";
 import { INFO_EDITION_V1_MAX_COMPARE_RUNS } from "@/lib/bible/info-edition-v1-types";
-import { sortGenerationsWithPublishedFirst } from "@/lib/bible/info-edition-v1-publish";
+import {
+  pickDefaultInfoEditionProfileIds,
+  pickDefaultInfoEditionRoleIds,
+  sortGenerationsWithPublishedFirst,
+  sortProfilesForInfoEditionProduction,
+  sortRolesForInfoEditionProduction,
+} from "@/lib/bible/info-edition-v1-publish";
 import { InfoEditionCompareGrid } from "@/components/admin/InfoEditionCompareGrid";
 import { dedupeConnectionProfiles, profileCompareDisplay } from "@/lib/ai/profile-display";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
@@ -124,9 +130,14 @@ export function InfoEditionV1AdminClient() {
   const descriptionCharCount = descriptionRules.length;
 
   const profiles = profilesBundle.profiles;
-  const readyProfiles = useMemo(
-    () => profiles.filter((p) => p.baseUrl.trim() && p.model.trim()),
-    [profiles],
+  const readyProfiles = useMemo(() => {
+    const ready = profiles.filter((p) => p.baseUrl.trim() && p.model.trim());
+    return sortProfilesForInfoEditionProduction(ready);
+  }, [profiles]);
+
+  const rolesForUi = useMemo(
+    () => sortRolesForInfoEditionProduction(generationRoles),
+    [generationRoles],
   );
 
   const draftPayload = useCallback(
@@ -189,12 +200,17 @@ export function InfoEditionV1AdminClient() {
         });
         return;
       }
-      const def = config?.defaultRoleId;
+      const defaults = pickDefaultInfoEditionRoleIds(list);
       pauseAutoSaveRef.current = true;
-      if (def && allowed.has(def)) {
-        setSelectedGenerationRoleIds(new Set([def]));
-      } else if (list[0]) {
-        setSelectedGenerationRoleIds(new Set([list[0].id]));
+      if (defaults.length) {
+        setSelectedGenerationRoleIds(new Set(defaults));
+      } else {
+        const def = config?.defaultRoleId;
+        if (def && allowed.has(def)) {
+          setSelectedGenerationRoleIds(new Set([def]));
+        } else if (list[0]) {
+          setSelectedGenerationRoleIds(new Set([list[0].id]));
+        }
       }
       queueMicrotask(() => {
         pauseAutoSaveRef.current = false;
@@ -313,10 +329,15 @@ export function InfoEditionV1AdminClient() {
         useProfilesRaw.filter((p) => p.baseUrl.trim() && p.model.trim()),
       );
 
-      setProfilesBundle({ version: 1, activeProfileId: null, profiles: useProfiles });
+      const sortedProfiles = sortProfilesForInfoEditionProduction(useProfiles);
+      setProfilesBundle({ version: 1, activeProfileId: null, profiles: sortedProfiles });
       setConnectionsSyncedAt(typeof j.syncedAt === "string" ? j.syncedAt : null);
-      const allowed = new Set(useProfiles.map((p) => p.id));
-      setSelectedProfileIds((prev) => new Set([...prev].filter((id) => allowed.has(id))));
+      const allowed = new Set(sortedProfiles.map((p) => p.id));
+      setSelectedProfileIds((prev) => {
+        const filtered = new Set([...prev].filter((id) => allowed.has(id)));
+        if (filtered.size > 0) return filtered;
+        return new Set(pickDefaultInfoEditionProfileIds(sortedProfiles));
+      });
     } catch {
       setProfilesBundle(loadProfilesFromStorage());
     }
@@ -385,9 +406,9 @@ export function InfoEditionV1AdminClient() {
   }, [readyProfiles]);
 
   const clearProfiles = useCallback(() => {
-    setSelectedProfileIds(new Set());
+    setSelectedProfileIds(new Set(pickDefaultInfoEditionProfileIds(readyProfiles)));
     setMsg(null);
-  }, []);
+  }, [readyProfiles]);
 
   const saveCurrent = useCallback(async () => {
     setSaving(true);
@@ -420,9 +441,9 @@ export function InfoEditionV1AdminClient() {
   }, [generationRoles]);
 
   const clearRoles = useCallback(() => {
-    setSelectedGenerationRoleIds(new Set());
+    setSelectedGenerationRoleIds(new Set(pickDefaultInfoEditionRoleIds(generationRoles)));
     setMsg(null);
-  }, []);
+  }, [generationRoles]);
 
   const runGenerate = useCallback(
     async (opts?: { historyId?: string; persistToHistory?: boolean }) => {
@@ -770,7 +791,7 @@ export function InfoEditionV1AdminClient() {
           </span>
         ) : (
           <>
-            {generationRoles.map((r) => {
+            {rolesForUi.map((r) => {
               const on = selectedGenerationRoleIds.has(r.id);
               return (
                 <button

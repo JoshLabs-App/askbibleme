@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
 import {
   getInfoEditionReaderCacheAsync,
+  getInfoEditionReaderPersistence,
   infoEditionReaderGenerateBlockedReason,
   isInfoEditionReaderGenerateAllowed,
   tryBeginInfoEditionPendingAsync,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { runInfoEditionV1ReaderGenerationJob } from "@/lib/bible/info-edition-v1-reader-job";
+import {
+  isInfoEditionWritableDiskAvailable,
+  isRenderDeployment,
+} from "@/lib/bible/info-edition-published-path";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
+
+function logRenderDiskDiagnostics(cwd: string): void {
+  if (!isRenderDeployment()) return;
+  console.info("[info-edition-v1] Render disk check", {
+    persistence: getInfoEditionReaderPersistence(cwd),
+    INFO_EDITION_DISK_SAVE: process.env.INFO_EDITION_DISK_SAVE ?? "",
+    DATA_ROOT: process.env.DATA_ROOT ?? "",
+    writable: isInfoEditionWritableDiskAvailable(cwd),
+  });
+}
 
 export const maxDuration = 300;
 export const runtime = "nodejs";
@@ -42,6 +57,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const cwd = process.cwd();
+    logRenderDiskDiagnostics(cwd);
+
     if (!isInfoEditionReaderGenerateAllowed()) {
       const error =
         infoEditionReaderGenerateBlockedReason() ?? "本章导读生成暂不可用。";
@@ -71,7 +89,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "无效章号。" }, { status: 400 });
     }
 
-    const cwd = process.cwd();
     const cached = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter);
     if (cached.status === "ready" && cached.published) {
       return NextResponse.json({ ok: true, status: "ready", published: cached.published }, noStore);

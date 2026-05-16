@@ -40,6 +40,10 @@ export type ReadingPlanRegistryEntry = {
   bundlePath: string;
   dayCount: number;
   maxReadingsPerDay: number;
+  /** If true, omitted from plan picker lists (bundle file may still exist). */
+  listHidden?: boolean;
+  /** Lower sorts earlier in the plan picker (default 100). */
+  listPriority?: number;
 };
 
 export type ReadingPlanRegistry = {

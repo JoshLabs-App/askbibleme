@@ -17,47 +17,22 @@ export function PrayerVersePassage({ reference, book, chapterStart, text, prayer
   const showIdx = isFull && typeof index === "number";
 
   return (
-    <div className={isFull ? "mt-10 first:mt-0" : ""}>
+    <div className={["prayer-verse-passage", isFull ? "prayer-verse-passage--full" : ""].filter(Boolean).join(" ")}>
       {showIdx ? (
-        <p className="mb-2 font-mono text-[11px] font-medium tabular-nums tracking-wide text-muted">
-          {String(index + 1).padStart(2, "0")}
-        </p>
+        <p className="prayer-eyebrow mb-2 tabular-nums">{String(index + 1).padStart(2, "0")}</p>
       ) : null}
-      <blockquote
-        className={
-          isFull
-            ? "m-0 border-0 border-l-2 border-ink/18 pl-5 sm:pl-6"
-            : "m-0 border-0 border-l-2 border-ink/12 pl-4 sm:pl-5"
-        }
-      >
-        <p
-          className={
-            isFull
-              ? "font-serif text-[16px] leading-[1.85] text-ink/92 sm:text-[17px]"
-              : "text-[14px] leading-[1.82] text-ink/88 sm:text-[15px]"
-          }
-        >
-          {body}
-        </p>
-        <footer className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-sans">
-          <cite className="not-italic text-[12px] font-medium tabular-nums text-muted">{reference}</cite>
-          <Link
-            href={`/read/${book}/${chapterStart}`}
-            className="text-[12px] text-ink/70 underline decoration-ink/25 underline-offset-[0.2em] transition hover:text-ink hover:decoration-ink/45"
-          >
+      <blockquote className="prayer-accent-l">
+        <p className="prayer-body m-0">{body}</p>
+        <footer className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <cite className="prayer-muted not-italic text-[0.69em] font-semibold tabular-nums">{reference}</cite>
+          <Link href={`/read/${book}/${chapterStart}`} className="prayer-link text-[0.69em] font-medium">
             去读整章
           </Link>
         </footer>
       </blockquote>
       {prayerPrompt ? (
-        <p
-          className={
-            isFull
-              ? "mt-4 max-w-prose border-l border-ink/10 pl-4 text-[13px] leading-relaxed text-ink/78"
-              : "mt-3 max-w-prose border-l border-ink/10 pl-3 text-[12px] leading-relaxed text-ink/72"
-          }
-        >
-          <span className="font-medium text-ink/85">{isFull ? "可这样祷告：" : "提醒："}</span>
+        <p className="prayer-accent-l prayer-lead mt-4 max-w-prose text-[0.82em]">
+          <span className="font-semibold text-inherit">{isFull ? "可这样祷告：" : "提醒："}</span>
           {prayerPrompt}
         </p>
       ) : null}

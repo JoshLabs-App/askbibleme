@@ -21,7 +21,16 @@ export function readReadingPlanRegistrySync(cwd: string): ReadingPlanRegistry | 
     const raw = fs.readFileSync(p, "utf-8");
     const j = JSON.parse(raw) as ReadingPlanRegistry;
     if (j?.schemaVersion !== 1 || !Array.isArray(j.plans)) return null;
-    return j;
+    const plans = j.plans
+      .filter((p) => !p.listHidden)
+      .slice()
+      .sort((a, b) => {
+        const pa = typeof a.listPriority === "number" ? a.listPriority : 100;
+        const pb = typeof b.listPriority === "number" ? b.listPriority : 100;
+        if (pa !== pb) return pa - pb;
+        return a.planId.localeCompare(b.planId);
+      });
+    return { ...j, plans };
   } catch {
     return null;
   }

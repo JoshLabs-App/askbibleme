@@ -57,3 +57,38 @@ export function IconSkipForward({ className }: { className?: string }) {
     </svg>
   );
 }
+
+const repeatStroke = {
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+/** 经朗读：重复本章（循环箭头 + 单划） */
+export function IconScriptureRepeatChapter({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M6.5 9.25A5.75 5.75 0 0 1 17.2 7.5M17.5 14.75A5.75 5.75 0 0 1 6.8 16.5"
+        {...repeatStroke}
+      />
+      <path d="M6.5 9.25V6.5H3.75M17.5 14.75v2.75h2.75" {...repeatStroke} />
+      <path d="M10.5 12h6.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 经朗读：重复本卷（循环箭头 + 多行） */
+export function IconScriptureRepeatBook({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M6.5 9.25A5.75 5.75 0 0 1 17.2 7.5M17.5 14.75A5.75 5.75 0 0 1 6.8 16.5"
+        {...repeatStroke}
+      />
+      <path d="M6.5 9.25V6.5H3.75M17.5 14.75v2.75h2.75" {...repeatStroke} />
+      <path d="M10 10.75h7M10 12.25h7M10 13.75h5.5" {...repeatStroke} />
+    </svg>
+  );
+}

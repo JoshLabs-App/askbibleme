@@ -7,8 +7,8 @@ import { formatReadingPlanRange, readingPlanChapterHref } from "@/lib/bible/read
 import type { ReadingPlanDay } from "@/lib/bible/reading-plans/types";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import {
-  getReadingPlanPrefsServerSnapshot,
-  getReadingPlanPrefsSnapshot,
+  getEffectiveReadingPlanPrefsServerSnapshot,
+  getEffectiveReadingPlanPrefsSnapshot,
   resolveReadingPlanDayIndex,
   subscribeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
@@ -33,8 +33,8 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
   const { t } = useLocale();
   const prefs = useSyncExternalStore(
     subscribeReadingPlanPrefs,
-    getReadingPlanPrefsSnapshot,
-    getReadingPlanPrefsServerSnapshot,
+    getEffectiveReadingPlanPrefsSnapshot,
+    getEffectiveReadingPlanPrefsServerSnapshot,
   );
 
   const registryById = useMemo(() => new Map(registryPlans.map((p) => [p.planId, p])), [registryPlans]);
@@ -42,11 +42,11 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
   const [payload, setPayload] = useState<DayPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const dayCount = prefs ? registryById.get(prefs.planId)?.dayCount : undefined;
-  const dayIndex = prefs && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  const dayCount = registryById.get(prefs.planId)?.dayCount ?? prefs.dayCount;
+  const dayIndex = dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
 
   const loadToday = useCallback(async () => {
-    if (!prefs || dayIndex == null) {
+    if (dayIndex == null) {
       setPayload(null);
       return;
     }
@@ -72,33 +72,6 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
   useEffect(() => {
     void loadToday();
   }, [loadToday]);
-
-  if (!prefs) {
-    return (
-      <section
-        className="read-bible-today-plan mx-auto mt-6 w-full max-w-md shrink-0 border-t border-amber-900/10 px-1 pt-4 text-center dark:border-stone-500/20 sm:mt-7 sm:pt-5"
-        aria-labelledby="read-bible-today-plan-heading"
-      >
-        <h2
-          id="read-bible-today-plan-heading"
-          className="text-[11px] font-semibold tracking-[0.18em] text-amber-900/72 dark:text-stone-400"
-        >
-          {t("pages.read.todayPlanTitle")}
-        </h2>
-        <p className="mx-auto mt-3 max-w-[18rem] text-pretty text-[12px] leading-relaxed text-amber-900/70 dark:text-stone-400">
-          {t("pages.read.todayPlanNone")}
-        </p>
-        <p className="mt-3 text-[11px]">
-          <Link
-            href="/read/plans"
-            className="font-medium text-amber-900/78 underline decoration-amber-800/25 underline-offset-[0.2em] hover:text-amber-950 dark:text-stone-400 dark:hover:text-stone-200"
-          >
-            {t("pages.read.plansCta")}
-          </Link>
-        </p>
-      </section>
-    );
-  }
 
   const titleKey = planTitleKey(prefs.planId);
   const localizedTitle = t(titleKey);

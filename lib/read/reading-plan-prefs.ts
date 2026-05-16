@@ -13,11 +13,17 @@ export type ReadingPlanPrefs = {
 
 export const READING_PLAN_PREFS_STORAGE_KEY = "selah-reading-plan-prefs-v1";
 
+/** Implicit plan when the user has not chosen one in local storage. */
+export const DEFAULT_READING_PLAN_ID = "esvthroughthebible";
+export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "calendar-jan1";
+export const DEFAULT_READING_PLAN_DAY_COUNT = 365;
+
 /**
  * `useSyncExternalStore` requires a stable snapshot reference when storage is unchanged.
  */
 let snapshotRaw: string | undefined;
 let snapshotPrefs: ReadingPlanPrefs | null = null;
+let snapshotEffectivePrefs: ReadingPlanPrefs | null = null;
 
 const listeners = new Set<() => void>();
 
@@ -97,15 +103,68 @@ function refreshPrefsSnapshotFromStorage(): ReadingPlanPrefs | null {
     if (key === snapshotRaw) return snapshotPrefs;
     snapshotRaw = key;
     snapshotPrefs = key ? parseReadingPlanPrefs(key) : null;
+    snapshotEffectivePrefs = null;
     return snapshotPrefs;
   } catch {
     snapshotRaw = "";
     snapshotPrefs = null;
+    snapshotEffectivePrefs = null;
     return null;
   }
 }
 
-/** Cached snapshot for `useSyncExternalStore` (client). */
+export function buildDefaultReadingPlanPrefs(dayCount = DEFAULT_READING_PLAN_DAY_COUNT): ReadingPlanPrefs {
+  return {
+    version: 1,
+    planId: DEFAULT_READING_PLAN_ID,
+    anchor: DEFAULT_READING_PLAN_ANCHOR,
+    dayCount,
+  };
+}
+
+/** Stable reference for `useSyncExternalStore` SSR / hydration. */
+const SERVER_EFFECTIVE_READING_PLAN_PREFS = buildDefaultReadingPlanPrefs();
+
+/** Stored prefs, or the product default when nothing is saved. */
+export function resolveEffectiveReadingPlanPrefs(
+  stored: ReadingPlanPrefs | null,
+  opts?: { dayCount?: number },
+): ReadingPlanPrefs {
+  if (stored) return stored;
+  return buildDefaultReadingPlanPrefs(opts?.dayCount);
+}
+
+export function isImplicitDefaultReadingPlan(stored: ReadingPlanPrefs | null): boolean {
+  return stored === null;
+}
+
+function refreshEffectivePrefsSnapshot(): ReadingPlanPrefs {
+  const stored = refreshPrefsSnapshotFromStorage();
+  const next = resolveEffectiveReadingPlanPrefs(stored);
+  if (
+    snapshotEffectivePrefs &&
+    snapshotEffectivePrefs.planId === next.planId &&
+    snapshotEffectivePrefs.anchor === next.anchor &&
+    snapshotEffectivePrefs.startedOn === next.startedOn &&
+    snapshotEffectivePrefs.dayCount === next.dayCount
+  ) {
+    return snapshotEffectivePrefs;
+  }
+  snapshotEffectivePrefs = next;
+  return next;
+}
+
+/** Cached snapshot for `useSyncExternalStore` (client) — includes implicit default. */
+export function getEffectiveReadingPlanPrefsSnapshot(): ReadingPlanPrefs {
+  return refreshEffectivePrefsSnapshot();
+}
+
+/** SSR / hydration — product default until client reads storage. */
+export function getEffectiveReadingPlanPrefsServerSnapshot(): ReadingPlanPrefs {
+  return SERVER_EFFECTIVE_READING_PLAN_PREFS;
+}
+
+/** Cached snapshot for `useSyncExternalStore` (client) — stored only. */
 export function getReadingPlanPrefsSnapshot(): ReadingPlanPrefs | null {
   return refreshPrefsSnapshotFromStorage();
 }
@@ -119,6 +178,10 @@ export function readReadingPlanPrefs(): ReadingPlanPrefs | null {
   return refreshPrefsSnapshotFromStorage();
 }
 
+export function readEffectiveReadingPlanPrefs(): ReadingPlanPrefs {
+  return refreshEffectivePrefsSnapshot();
+}
+
 export function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): void {
   if (typeof window === "undefined") return;
   try {
@@ -126,11 +189,13 @@ export function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): void {
       localStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY);
       snapshotRaw = "";
       snapshotPrefs = null;
+      snapshotEffectivePrefs = null;
     } else {
       const json = JSON.stringify(prefs);
       localStorage.setItem(READING_PLAN_PREFS_STORAGE_KEY, json);
       snapshotRaw = json;
       snapshotPrefs = prefs;
+      snapshotEffectivePrefs = null;
     }
     emit();
   } catch {

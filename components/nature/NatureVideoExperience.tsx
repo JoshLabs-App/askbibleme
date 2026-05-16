@@ -42,6 +42,11 @@ import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRo
 import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import {
+  NATURE_HOME_PORTRAIT_PAN_DELAY_SEC,
+  NATURE_HOME_PORTRAIT_PAN_DURATION_SEC,
+} from "@/lib/nature/nature-home-portrait-pan";
+import "@/components/nature/nature-home-portrait-pan.css";
 
 /** 当前场景停留后再挂视频解码（毫秒） */
 const NATURE_SCENE_DWELL_MS = 3000;
@@ -172,9 +177,9 @@ type Props = {
 const NATURE_VIDEO_STAGE_FRAME =
   "relative z-[1] w-full shrink-0 overflow-hidden bg-canvas transform-gpu min-h-[12rem]";
 
-/** 与背景 `<video>` 同定位，静图叠层与之对齐以免切换时「跳一下」 */
+/** 与背景 `<video>` 同定位；竖屏平移见 `nature-home-portrait-pan.css` */
 const NATURE_BG_COVER_MEDIA =
-  "absolute left-0 top-1/2 h-full min-h-full w-full min-w-full -translate-y-1/2 object-cover object-left sm:left-1/2 sm:-translate-x-1/2 sm:object-center";
+  "nature-bg-cover-media absolute top-1/2 h-full min-h-full w-full min-w-full object-cover";
 
 /** 有首图时若迟迟不可播，超时仍淡出静图，避免永久卡在静图 */
 const INTRO_REVEAL_FALLBACK_MS = 12_000;
@@ -1109,7 +1114,15 @@ export function NatureVideoExperience({ initial }: Props) {
             className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-transparent"
             aria-hidden
           />
-          <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-canvas">
+          <div
+            className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-canvas"
+            style={
+              {
+                "--nature-home-portrait-pan-delay": `${NATURE_HOME_PORTRAIT_PAN_DELAY_SEC}s`,
+                "--nature-home-portrait-pan-duration": `${NATURE_HOME_PORTRAIT_PAN_DURATION_SEC}s`,
+              } as CSSProperties
+            }
+          >
             {showNatureVideoDecoder ? (
               <video
                 ref={videoRef}

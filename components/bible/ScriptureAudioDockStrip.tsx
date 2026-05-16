@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { IconScriptureRepeatBook, IconScriptureRepeatChapter } from "@/components/ui/MediaPlaybackIcons";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 
 function formatClock(sec: number): string {
@@ -23,9 +24,9 @@ type Placement = "fixedShell" | "videoStage";
 type Props = { placement: Placement };
 
 const chipBase =
-  "shrink-0 rounded-full border border-white/14 px-2 py-0.5 font-medium transition active:scale-[0.98] sm:px-2.5";
-const chipOff = "bg-white/[0.06] text-white/72 hover:bg-white/[0.1] hover:text-white/88";
-const chipOn = "border-amber-200/35 bg-amber-100/14 text-amber-50";
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/18 transition active:scale-[0.98] sm:h-9 sm:w-9";
+const chipOff = "bg-white/[0.06] text-white hover:bg-white/[0.12]";
+const chipOn = "border-white/35 bg-white/14 text-white";
 
 const seekClass =
   "read-scripture-dock-seek h-5 w-full min-w-[2.75rem] max-w-full flex-1 cursor-pointer appearance-none bg-transparent accent-amber-200/95 disabled:cursor-not-allowed disabled:opacity-35";
@@ -76,14 +77,19 @@ export function ScriptureAudioDockStrip({ placement }: Props) {
 
   const chip = (mode: "chapter" | "book") => {
     const on = scriptureAudioRepeatMode === mode;
+    const label =
+      mode === "chapter" ? t("playback.scriptureRepeatChapterShort") : t("playback.scriptureRepeatBookShort");
+    const Icon = mode === "chapter" ? IconScriptureRepeatChapter : IconScriptureRepeatBook;
     return (
       <button
         type="button"
         onClick={() => setScriptureAudioRepeatMode(on ? "off" : mode)}
         className={[chipBase, on ? chipOn : chipOff].join(" ")}
         aria-pressed={on}
+        aria-label={label}
+        title={label}
       >
-        {mode === "chapter" ? t("playback.scriptureRepeatChapterShort") : t("playback.scriptureRepeatBookShort")}
+        <Icon className="h-[17px] w-[17px] sm:h-[18px] sm:w-[18px]" />
       </button>
     );
   };
@@ -97,10 +103,10 @@ export function ScriptureAudioDockStrip({ placement }: Props) {
       ].join(" ")}
       aria-label={t("playback.scriptureDockLabel")}
     >
-      <span className="min-w-0 shrink-0 tabular-nums tracking-tight text-white/92">
-        <span className="text-white">{cur}</span>
-        <span className="mx-0.5 text-white/38">/</span>
-        <span className="text-white/72">{dur}</span>
+      <span className="min-w-0 shrink-0 tabular-nums tracking-tight text-white">
+        <span>{cur}</span>
+        <span className="mx-0.5 text-white/45">/</span>
+        <span className="text-white/88">{dur}</span>
       </span>
       <input
         type="range"

@@ -4,12 +4,12 @@ import type { ReactNode } from "react";
 export function PrayerThemeTags({ tags }: { tags: string[] }): ReactNode {
   if (!tags.length) return null;
   return (
-    <p className="text-[13px] leading-relaxed text-muted">
-      <span className="text-ink/45">主题</span>
-      <span className="mx-1.5 text-ink/25">·</span>
+    <p className="prayer-muted text-[0.82em] leading-relaxed">
+      <span className="opacity-70">主题</span>
+      <span className="mx-1.5 opacity-35">·</span>
       {tags.map((tag, i) => (
         <span key={tag}>
-          {i > 0 ? <span className="text-ink/25"> · </span> : null}
+          {i > 0 ? <span className="opacity-35"> · </span> : null}
           {tag}
         </span>
       ))}

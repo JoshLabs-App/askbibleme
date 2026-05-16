@@ -27,10 +27,7 @@ import {
   shellTemplatePreviewThemeById,
   type ShellTemplatePreviewThemeId,
 } from "@/lib/shell/template-preview-themes";
-import {
-  NATURE_HOME_THEME_LOCK_DATASET_KEY,
-  NATURE_HOME_THEME_LOCK_VALUE,
-} from "@/lib/nature/root-theme";
+import { isThemeColorManagedOnDocument } from "@/lib/read/scripture-parchment-shell";
 import { brandColorsToCssVars } from "@/lib/site-branding-colors";
 
 type AppSkinContextValue = {
@@ -111,21 +108,18 @@ function applyVarsToBody(vars: Record<string, string>) {
   }
 }
 
-function isNatureHomeThemeColorLocked() {
-  if (typeof document === "undefined") return false;
-  return (
-    document.documentElement.dataset[NATURE_HOME_THEME_LOCK_DATASET_KEY] === NATURE_HOME_THEME_LOCK_VALUE
-  );
+function isThemeColorLockedExternally() {
+  return isThemeColorManagedOnDocument();
 }
 
 function syncThemeColorMetaFromCanvas(canvas: string) {
-  if (isNatureHomeThemeColorLocked()) return;
+  if (isThemeColorLockedExternally()) return;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta && canvas) meta.setAttribute("content", canvas.trim());
 }
 
 function syncThemeColorMetaFromDocumentElement() {
-  if (isNatureHomeThemeColorLocked()) return;
+  if (isThemeColorLockedExternally()) return;
   const raw = getComputedStyle(document.documentElement).getPropertyValue("--brand-canvas").trim();
   if (raw) syncThemeColorMetaFromCanvas(raw);
 }

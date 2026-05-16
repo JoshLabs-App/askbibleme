@@ -7,8 +7,8 @@ import { stripReadingPlanHtml } from "@/lib/bible/reading-plans/strip-html-descr
 import type { ReadingPlanBundle, ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import { ReadPlanActivateControl } from "@/components/bible/ReadPlanActivateControl";
 import {
-  getReadingPlanPrefsServerSnapshot,
-  getReadingPlanPrefsSnapshot,
+  getEffectiveReadingPlanPrefsServerSnapshot,
+  getEffectiveReadingPlanPrefsSnapshot,
   resolveReadingPlanDayIndex,
   subscribeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
@@ -107,10 +107,10 @@ type DetailProps = {
 
 export function ReadPlanDetailClient({ bundle }: DetailProps) {
   const { t, locale } = useLocale();
-  const stored = useSyncExternalStore(
+  const prefs = useSyncExternalStore(
     subscribeReadingPlanPrefs,
-    getReadingPlanPrefsSnapshot,
-    getReadingPlanPrefsServerSnapshot,
+    getEffectiveReadingPlanPrefsSnapshot,
+    getEffectiveReadingPlanPrefsServerSnapshot,
   );
   const title = trPlanField(t, bundle.planId, "title") || bundle.name;
   const subtitle = trPlanField(t, bundle.planId, "subtitle");
@@ -118,7 +118,7 @@ export function ReadPlanDetailClient({ bundle }: DetailProps) {
   const subLang = locale === "en" ? "zh-CN" : "en";
   const strippedDesc = bundle.description ? stripReadingPlanHtml(bundle.description) : "";
   const todayIndex =
-    stored?.planId === bundle.planId ? resolveReadingPlanDayIndex(stored, bundle.days.length) : null;
+    prefs.planId === bundle.planId ? resolveReadingPlanDayIndex(prefs, bundle.days.length) : null;
 
   return (
     <div className="read-plans-root mx-auto w-full max-w-lg px-3 pb-12 pt-6 sm:px-4 sm:pt-8">

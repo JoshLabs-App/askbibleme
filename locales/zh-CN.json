@@ -557,7 +557,7 @@
           "blurb": "每日四章并行，约一年内通读旧约一遍，新约与诗篇各约两遍。节奏较密，适合能稳定安排读经时间的人。副题与经题保留英文，便于查对常见版本。"
         },
         "backtothebiblechronological": {
-          "title": "回到圣经：编年一年通读",
+          "title": "按历史时间线读通圣经",
           "subtitle": "Back to the Bible Chronological",
           "blurb": "按历史线索重排经文顺序的一年通读，常穿插约伯记等段落。适合想从「故事时间线」进入整本圣经的人。表内版权信息以英文标注为准。"
         },
@@ -592,9 +592,9 @@
           "blurb": "以诗篇、箴言、传道书等智慧传统为主的轨道，可与叙事类计划互补。"
         },
         "esvthroughthebible": {
-          "title": "通读圣经（每日两段）",
+          "title": "按书卷顺序通读圣经",
           "subtitle": "Through The Bible",
-          "blurb": "每日通常两段经文，一年内走完整本圣经的常见节奏之一，旧约新约并进。"
+          "blurb": "每日旧约、新约各一段（多为两截经文），一年通读；列表里与「旧约新约并进」类计划只保留这一种较轻的节奏。"
         },
         "heartlightotandnt": {
           "title": "Heartlight：旧约与新约并进",

@@ -558,7 +558,7 @@
         },
         "backtothebiblechronological": {
           "title": "Back to the Bible Chronological",
-          "subtitle": "回到圣经：编年一年通读",
+          "subtitle": "按历史时间线读通圣经",
           "blurb": "A one-year chronological sweep, often weaving Job and other blocks by storyline. Good if you like reading along historical time. Copyright notes in the source appear in English."
         },
         "esvchroniclesandprophets": {
@@ -593,8 +593,8 @@
         },
         "esvthroughthebible": {
           "title": "Through The Bible",
-          "subtitle": "通读圣经（每日两段）",
-          "blurb": "Typically two readings per day to finish the whole Bible in a year—OT and NT in parallel."
+          "subtitle": "按书卷顺序通读圣经",
+          "blurb": "One OT and one NT reading most days (often two passages), finishing the Bible in a year. We list one daily OT+NT plan to avoid near-duplicates."
         },
         "heartlightotandnt": {
           "title": "Heartlight OT and NT",

@@ -1,9 +1,8 @@
 import { PrayerTopicsCategoryList } from "@/components/prayer/PrayerTopicsIndex";
 import { PrayerHomeFirstScreen } from "@/components/prayer/PrayerHomeFirstScreen";
 import { PrayerPageFrame } from "@/components/prayer/PrayerPageFrame";
-import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { readTopicPrayerLibrarySync } from "@/lib/prayer/read-topic-prayer-library";
-import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 import { resolveTopicPrayerLibraryJsonPath } from "@/lib/prayer/topic-prayer-library-path";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
@@ -21,18 +20,18 @@ export default function PrayerIndexPage() {
   const categories = lib.categories;
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0" appShellBackground={PRAYER_SHELL_FILL_LIGHT}>
+    <ScriptureChrome scrollHome>
       <PrayerPageFrame>
         <div className="space-y-0">
           <PrayerHomeFirstScreen />
 
           {!jsonPath || categories.length === 0 ? (
-            <section className="mt-12 border-l-2 border-amber-500/55 pl-4 text-[14px] leading-relaxed text-ink/80 dark:border-amber-600/50">
-              <p className="font-medium text-ink/90">尚未载入主题库</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink/75">
-                请将 <code className="font-mono text-[12px] text-ink/85">topic_prayer_library.json</code> 放在{" "}
-                <code className="font-mono text-[12px] text-ink/85">data/prayer/</code>，或设置{" "}
-                <code className="font-mono text-[12px] text-ink/85">ASKBIBLE_REPO</code> 指向旧站仓库后再试。
+            <section className="prayer-accent-l mt-12">
+              <p className="prayer-heading-sm">尚未载入主题库</p>
+              <p className="prayer-lead mt-2 text-[0.88em]">
+                请将 <code className="font-mono text-[0.95em]">topic_prayer_library.json</code> 放在{" "}
+                <code className="font-mono text-[0.95em]">data/prayer/</code>，或设置{" "}
+                <code className="font-mono text-[0.95em]">ASKBIBLE_REPO</code> 指向旧站仓库后再试。
               </p>
             </section>
           ) : (
@@ -42,6 +41,6 @@ export default function PrayerIndexPage() {
           )}
         </div>
       </PrayerPageFrame>
-    </ShellTemplateChromeLayout>
+    </ScriptureChrome>
   );
 }

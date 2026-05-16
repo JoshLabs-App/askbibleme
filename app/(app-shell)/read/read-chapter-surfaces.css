@@ -1,5 +1,6 @@
 @import "./read-bible-typography.css";
 @import "./read-parchment-background.css";
+@import "./read-parchment-shell-chrome.css";
 
 /* 圣经 /read 路由共用：羊皮卷全幅底 + 内层滚动（文字上下 100px 渐隐） */
 .read-bible-parchment-shell,
@@ -19,6 +20,15 @@
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center top;
+}
+
+/* 宽屏（横卷）：视口偏横时用横版羊皮底图 */
+@media (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  .read-bible-parchment-shell,
+  .read-chapter-shell {
+    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+    background-position: center center;
+  }
 }
 
 /* 实际滚动区：上下各 100px alpha 遮罩，经文进出时渐隐 */
@@ -110,7 +120,6 @@
   padding-bottom: 0.25rem;
 }
 
-/* /read 首页主标题：字号由 CSS 变量控制（与 `read-bible-typography-prefs` 对齐） */
 .read-bible-home-title-he {
   font-size: var(--read-bible-home-title-he, clamp(2.75rem, 11vmin, 4.35rem));
 }
@@ -121,25 +130,6 @@
 
 .read-bible-home-title-en {
   font-size: var(--read-bible-home-title-en, clamp(0.8125rem, 2.35vmin, 1.0625rem));
-}
-
-/* /read 首页下方目录：无衬线；字族随「黑体 / 系统」阅读设置与正文一致，其余为苹方栈 */
-.read-bible-read-home-catalog {
-  font-family: var(
-    --read-bible-catalog-font-family,
-    "PingFang SC",
-    "PingFang TC",
-    "Hiragino Sans GB",
-    "Heiti SC",
-    "STHeiti",
-    "Hiragino Kaku Gothic ProN",
-    "Microsoft YaHei",
-    "Noto Sans SC",
-    "Noto Sans TC",
-    ui-sans-serif,
-    system-ui,
-    sans-serif
-  );
 }
 
 .read-chapter-article {
@@ -211,6 +201,14 @@
   background-blend-mode: multiply, normal;
 }
 
+@media (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  .dark .read-bible-parchment-shell,
+  .dark .read-chapter-shell {
+    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+  }
+}
+
 /* 圣经首页：轮播经文与羊皮卷主色对齐（覆盖 Rotator 内 text-ink） */
 .read-bible-read-home-verse blockquote p,
 .read-bible-read-home-verse blockquote footer {
@@ -220,4 +218,115 @@
 .dark .read-bible-read-home-verse blockquote p,
 .dark .read-bible-read-home-verse blockquote footer {
   color: color-mix(in srgb, rgb(250 250 249) 90%, transparent);
+}
+
+/* ── 祷告 /prayer：与读经共用羊皮卷与版式变量 ── */
+.prayer-on-parchment {
+  --prayer-line: color-mix(in srgb, currentColor 15%, transparent);
+  --prayer-line-emphasis: color-mix(in srgb, currentColor 24%, transparent);
+  color: color-mix(in srgb, rgb(28 20 16) 94%, transparent);
+}
+
+.dark .prayer-on-parchment {
+  color: color-mix(in srgb, rgb(250 250 249) 92%, transparent);
+}
+
+/* 横线：兄弟分隔、顶/底边 */
+.prayer-on-parchment .prayer-divide-y > * + * {
+  border-top: 1px solid var(--prayer-line);
+}
+
+.prayer-on-parchment .prayer-rule-t {
+  border-top: 1px solid var(--prayer-line);
+}
+
+.prayer-on-parchment .prayer-rule-b {
+  border-bottom: 1px solid var(--prayer-line);
+}
+
+/* 竖线：引用、提示 */
+.prayer-on-parchment .prayer-accent-l {
+  border-left: 2px solid var(--prayer-line-emphasis);
+  padding-left: 1rem;
+}
+
+@media (min-width: 640px) {
+  .prayer-on-parchment .prayer-accent-l {
+    padding-left: 1.25rem;
+  }
+}
+
+.prayer-on-parchment .prayer-icon-ring {
+  box-shadow: inset 0 0 0 1px var(--prayer-line);
+}
+
+.prayer-on-parchment .prayer-eyebrow {
+  font-size: 0.69em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+.prayer-on-parchment .prayer-heading {
+  font-size: var(--read-bible-chapter-title-font-size, 1.6rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+
+.prayer-on-parchment .prayer-heading-sm {
+  font-size: calc(var(--read-bible-verse-font-size, 1.1875rem) * 0.92);
+  font-weight: 600;
+  line-height: 1.4;
+  color: inherit;
+}
+
+.prayer-on-parchment .prayer-lead,
+.prayer-on-parchment .prayer-body {
+  font-size: var(--read-bible-verse-font-size, 1.1875rem);
+  font-weight: 500;
+  line-height: 2;
+  letter-spacing: 0.015em;
+  color: color-mix(in srgb, currentColor 92%, transparent);
+}
+
+.prayer-on-parchment .prayer-muted {
+  color: color-mix(in srgb, currentColor 62%, transparent);
+}
+
+.prayer-on-parchment .prayer-link {
+  color: color-mix(in srgb, currentColor 82%, transparent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--prayer-line-emphasis);
+  text-underline-offset: 0.22em;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.prayer-on-parchment .prayer-link:hover {
+  color: inherit;
+  text-decoration-color: color-mix(in srgb, currentColor 42%, transparent);
+}
+
+.prayer-on-parchment .prayer-link--quiet {
+  text-decoration-color: transparent;
+}
+
+.prayer-on-parchment .prayer-link--quiet:hover {
+  text-decoration-color: var(--prayer-line-emphasis);
+}
+
+.prayer-on-parchment .prayer-verse-passage blockquote {
+  margin: 0;
+  border: 0;
+}
+
+.prayer-on-parchment .prayer-verse-passage--full {
+  margin-top: 2.25rem;
+}
+
+.prayer-on-parchment .prayer-verse-passage--full:first-child {
+  margin-top: 0;
 }

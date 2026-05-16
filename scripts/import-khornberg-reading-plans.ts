@@ -36,6 +36,15 @@ const SLUGS = [
   "oneyearchronological",
 ] as const;
 
+/** Same product niche as another listed plan; keep bundle, hide from picker. */
+const LIST_HIDDEN_PLAN_IDS = new Set(["heartlightotandnt"]);
+
+const LIST_PRIORITY_BY_PLAN_ID: Record<string, number> = {
+  esvthroughthebible: 0,
+  backtothebiblechronological: 1,
+  esvgospelsandepistles: 2,
+};
+
 async function fetchJson(slug: string): Promise<Khorn> {
   const u = `${RAW_BASE}/${slug}.json`;
   const res = await fetch(u);
@@ -104,11 +113,20 @@ async function main() {
       bundlePath: rel,
       dayCount: bundle.days.length,
       maxReadingsPerDay,
+      ...(LIST_HIDDEN_PLAN_IDS.has(bundle.planId) ? { listHidden: true } : {}),
+      ...(LIST_PRIORITY_BY_PLAN_ID[bundle.planId] != null
+        ? { listPriority: LIST_PRIORITY_BY_PLAN_ID[bundle.planId] }
+        : {}),
     });
     console.log(`wrote ${rel} (${bundle.days.length} days, up to ${maxReadingsPerDay} readings/day)`);
   }
 
-  entries.sort((a, b) => a.planId.localeCompare(b.planId));
+  entries.sort((a, b) => {
+    const pa = a.listPriority ?? 100;
+    const pb = b.listPriority ?? 100;
+    if (pa !== pb) return pa - pb;
+    return a.planId.localeCompare(b.planId);
+  });
 
   const registry: ReadingPlanRegistry = {
     schemaVersion: 1,

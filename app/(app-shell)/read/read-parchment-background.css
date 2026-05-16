@@ -4,13 +4,15 @@
  * - **1** — `parchment-scroll-bg.png`（原版）
  * - **2** — `parchment-scroll-bg-2.png`（深色卷轴）
  * - **3** — `parchment-scroll-bg-3.png`（顶卷轴 + 纵向羊皮）
+ * - **wide** — `parchment-scroll-bg-wide.jpg`（横卷；宽屏时见 `read-chapter-surfaces.css`）
  *
  * 默认使用 **1**。在 `<html data-read-parchment-bg="1"|"2"|"3">` 上切换
- *（日后可由设置 / localStorage 在客户端写入）。
+ * （日后可由设置 / localStorage 在客户端写入）。
  */
 :root {
   --read-parchment-bg-canvas: #e5d2bf;
   --read-parchment-bg-image: url("/read/parchment-scroll-bg.png");
+  --read-parchment-bg-image-wide: url("/read/parchment-scroll-bg-wide.jpg");
 }
 
 html[data-read-parchment-bg="1"] {

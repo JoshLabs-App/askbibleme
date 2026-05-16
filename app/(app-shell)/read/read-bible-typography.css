@@ -1,4 +1,4 @@
-/* /read 首页、目录、读经章：默认宋体系 + 拉丁衬线；字族与字号可由 `ReadBibleTypographyProvider` 写 `documentElement` CSS 变量覆盖 */
+/* /read、/prayer：默认宋体系；字族与字号由 `ReadBibleTypographyProvider` 写 `documentElement` CSS 变量 */
 .read-bible-typography {
   font-family: var(
     --read-bible-font-family,
@@ -27,4 +27,10 @@
     serif
   );
   -webkit-font-smoothing: antialiased;
+}
+
+.read-bible-parchment-shell :is(.font-serif, .font-sans),
+.read-chapter-shell :is(.font-serif, .font-sans),
+.read-bible-typography :is(.font-serif, .font-sans) {
+  font-family: inherit;
 }

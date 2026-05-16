@@ -12,8 +12,8 @@ import {
   indexInReadingPlanQueue,
 } from "@/lib/read/reading-plan-chapter-queue";
 import {
-  getReadingPlanPrefsServerSnapshot,
-  getReadingPlanPrefsSnapshot,
+  getEffectiveReadingPlanPrefsServerSnapshot,
+  getEffectiveReadingPlanPrefsSnapshot,
   resolveReadingPlanDayIndex,
   subscribeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
@@ -31,8 +31,8 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
   const { t } = useLocale();
   const prefs = useSyncExternalStore(
     subscribeReadingPlanPrefs,
-    getReadingPlanPrefsSnapshot,
-    getReadingPlanPrefsServerSnapshot,
+    getEffectiveReadingPlanPrefsSnapshot,
+    getEffectiveReadingPlanPrefsServerSnapshot,
   );
 
   const [readings, setReadings] = useState<ReadingPlanRange[] | null>(null);
@@ -40,12 +40,6 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
   const [dayIndex, setDayIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!prefs) {
-      setReadings(null);
-      setPlanTitle(null);
-      setDayIndex(null);
-      return;
-    }
     let cancelled = false;
     const dayCount = prefs.dayCount ?? 365;
     const idx = resolveReadingPlanDayIndex(prefs, dayCount);
@@ -66,7 +60,7 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
   const queue = useMemo(() => (readings?.length ? buildReadingPlanChapterQueue(readings) : []), [readings]);
   const currentInQueue = indexInReadingPlanQueue(queue, bookId, chapter);
 
-  if (!prefs || !readings?.length || currentInQueue < 0) return null;
+  if (!readings?.length || currentInQueue < 0) return null;
 
   const currentKey = chapterRefKey({ bookId, chapter });
 

@@ -15,6 +15,11 @@
       "id": "track-mp1b4gw6xun1",
       "title": "03",
       "src": "/music/uploads/568393997202440e86675a228af78283.m4a"
+    },
+    {
+      "id": "track-mp8cnzsixq2x",
+      "title": "06",
+      "src": "/music/uploads/9c6fc29d3d3148e9a44b27df71ae0375.m4a"
     }
   ],
   "backgroundVisuals": [
@@ -33,7 +38,7 @@
         "en": "Default scene"
       },
       "order": 0,
-      "audioTrackId": "track-mp1b4gw6xun1",
+      "audioTrackId": "track-mp8cnzsixq2x",
       "backgroundVisualId": null
     }
   ],

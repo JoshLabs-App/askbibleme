@@ -3,6 +3,17 @@
   "upstreamNote": "Bundles are generated from https://github.com/khornberg/readingplans (README: transformed from devkardia/bibleplan). Names mentioning ESV are historical labels in that repo — confirm Crossway / publisher marks and redistribution rights before public product use. Chinese three-track / other tables are not in this upstream set; add separately.",
   "plans": [
     {
+      "planId": "esvthroughthebible",
+      "name": "Through The Bible",
+      "abbreviation": "etb",
+      "description": "Through the Bible<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
+      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvthroughthebible.json",
+      "bundlePath": "data/bible-reading-plans/built/esvthroughthebible.json",
+      "dayCount": 365,
+      "maxReadingsPerDay": 2,
+      "listPriority": 0
+    },
+    {
       "planId": "backtothebiblechronological",
       "name": "Back to the Bible Chronological",
       "abbreviation": "bttbc",
@@ -10,7 +21,8 @@
       "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/backtothebiblechronological.json",
       "bundlePath": "data/bible-reading-plans/built/backtothebiblechronological.json",
       "dayCount": 365,
-      "maxReadingsPerDay": 6
+      "maxReadingsPerDay": 6,
+      "listPriority": 1
     },
     {
       "planId": "esvchroniclesandprophets",
@@ -40,7 +52,8 @@
       "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvgospelsandepistles.json",
       "bundlePath": "data/bible-reading-plans/built/esvgospelsandepistles.json",
       "dayCount": 365,
-      "maxReadingsPerDay": 1
+      "maxReadingsPerDay": 1,
+      "listPriority": 2
     },
     {
       "planId": "esvliterarystudybible",
@@ -73,16 +86,6 @@
       "maxReadingsPerDay": 1
     },
     {
-      "planId": "esvthroughthebible",
-      "name": "Through The Bible",
-      "abbreviation": "etb",
-      "description": "Through the Bible<br /><a target='_new' href='http://www.esv.org/biblereadingplans'>www.esv.org</a>",
-      "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/esvthroughthebible.json",
-      "bundlePath": "data/bible-reading-plans/built/esvthroughthebible.json",
-      "dayCount": 365,
-      "maxReadingsPerDay": 2
-    },
-    {
       "planId": "heartlightotandnt",
       "name": "Old and New Testament",
       "abbreviation": "hlnt",
@@ -90,7 +93,8 @@
       "sourceUrl": "https://raw.githubusercontent.com/khornberg/readingplans/master/heartlightotandnt.json",
       "bundlePath": "data/bible-reading-plans/built/heartlightotandnt.json",
       "dayCount": 365,
-      "maxReadingsPerDay": 4
+      "maxReadingsPerDay": 4,
+      "listHidden": true
     },
     {
       "planId": "mcheyne",

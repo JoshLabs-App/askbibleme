@@ -5,7 +5,7 @@ import {
 } from "@/lib/read/reading-plan-audio-session";
 import { fetchReadingPlanDayClient } from "@/lib/read/fetch-reading-plan-day-client";
 import {
-  readReadingPlanPrefs,
+  readEffectiveReadingPlanPrefs,
   resolveReadingPlanDayIndex,
   type ReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
@@ -17,12 +17,8 @@ import {
 export async function prepareReadingPlanAudioSessionForChapter(
   bookId: string,
   chapter: number,
-  prefs: ReadingPlanPrefs | null = readReadingPlanPrefs(),
+  prefs: ReadingPlanPrefs = readEffectiveReadingPlanPrefs(),
 ): Promise<ReadingPlanAudioSession | null> {
-  if (!prefs) {
-    writeReadingPlanAudioSession(null);
-    return null;
-  }
 
   const dayCount = prefs.dayCount ?? 365;
   const dayIndex = resolveReadingPlanDayIndex(prefs, dayCount);

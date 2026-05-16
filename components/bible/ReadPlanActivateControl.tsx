@@ -6,8 +6,12 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { ReadingPlanAnchor } from "@/lib/read/reading-plan-prefs";
 import {
+  DEFAULT_READING_PLAN_ANCHOR,
+  DEFAULT_READING_PLAN_ID,
   getReadingPlanPrefsServerSnapshot,
   getReadingPlanPrefsSnapshot,
+  isImplicitDefaultReadingPlan,
+  resolveEffectiveReadingPlanPrefs,
   resolveReadingPlanDayIndex,
   setActiveReadingPlan,
   subscribeReadingPlanPrefs,
@@ -28,17 +32,29 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     getReadingPlanPrefsServerSnapshot,
   );
 
-  const isActive = stored?.planId === planId;
-  const [anchor, setAnchor] = useState<ReadingPlanAnchor>(stored?.planId === planId ? stored.anchor : "from-today");
+  const effective = useMemo(
+    () => resolveEffectiveReadingPlanPrefs(stored, { dayCount }),
+    [stored, dayCount],
+  );
+  const isActive = effective.planId === planId;
+  const isImplicitDefault =
+    planId === DEFAULT_READING_PLAN_ID && isImplicitDefaultReadingPlan(stored);
+  const [anchor, setAnchor] = useState<ReadingPlanAnchor>(
+    stored?.planId === planId
+      ? stored.anchor
+      : planId === DEFAULT_READING_PLAN_ID
+        ? DEFAULT_READING_PLAN_ANCHOR
+        : "from-today",
+  );
 
   useEffect(() => {
-    if (stored?.planId === planId) setAnchor(stored.anchor);
-  }, [stored, planId]);
+    if (isActive) setAnchor(effective.anchor);
+  }, [isActive, effective.anchor]);
 
   const todayDayIndex = useMemo(() => {
-    if (!isActive || !stored) return null;
-    return resolveReadingPlanDayIndex(stored, dayCount) + 1;
-  }, [isActive, stored, dayCount]);
+    if (!isActive) return null;
+    return resolveReadingPlanDayIndex(effective, dayCount) + 1;
+  }, [isActive, effective, dayCount]);
 
   const activate = () => {
     setActiveReadingPlan(planId, anchor, { dayCount });
@@ -98,7 +114,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
         >
           {isActive ? t("pages.read.planActivateUpdate") : t("pages.read.planActivateUse")}
         </button>
-        {isActive ? (
+        {isActive && !isImplicitDefault ? (
           <button
             type="button"
             onClick={clear}

@@ -18,6 +18,10 @@ import {
   PRAYER_SHELL_FILL_LIGHT,
   PRAYER_WARM_DARK_BRAND_RGB,
 } from "@/lib/prayer/prayer-shell-fill";
+import {
+  SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY,
+  SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
+} from "@/lib/read/scripture-parchment-shell";
 
 function subscribeHtmlClassDark(onStore: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -110,8 +114,15 @@ export function ShellTemplateChromeLayout({
     const el = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
     if (!el) return;
     const prev = el.style.backgroundColor;
-    const scrollFill = resolvedAppShellBackground ?? chrome.fillBackgroundColor;
-    el.style.backgroundColor = scrollFill;
+    const parchmentShell =
+      document.documentElement.dataset[SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY] ===
+      SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE;
+    if (parchmentShell) {
+      el.style.removeProperty("background-color");
+    } else {
+      const scrollFill = resolvedAppShellBackground ?? chrome.fillBackgroundColor;
+      el.style.backgroundColor = scrollFill;
+    }
     return () => {
       if (prev) el.style.backgroundColor = prev;
       else el.style.removeProperty("background-color");

@@ -20,16 +20,10 @@ import {
   resolveNatureHomeActiveVideoId,
   writeNatureHomeActiveSceneId,
 } from "@/lib/home/nature-home-active-scene-prefs";
+import { SCENES_PAGE_SURFACE_STYLE } from "@/lib/nature/scenes-page-surface";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
 
 type Props = { initial: NatureSettingsV2 };
-
-/** 场景页整屏底：在 `--brand-app-dark` 上做轻高光顶 + 略压暗底，与顶栏同色带衔接 */
-const SCENES_PAGE_SURFACE_STYLE: CSSProperties = {
-  backgroundColor: "rgb(var(--brand-app-dark-rgb))",
-  backgroundImage:
-    "linear-gradient(168deg, color-mix(in srgb, rgb(var(--brand-app-dark-rgb)) 88%, #ffffff 9%) 0%, rgb(var(--brand-app-dark-rgb)) 38%, color-mix(in srgb, rgb(var(--brand-app-dark-rgb)) 54%, #000000 46%) 100%)",
-};
 
 /** 与自然首页同构的舞台框；底色由 `SCENES_PAGE_SURFACE_STYLE` 注入 */
 const NATURE_VIDEO_STAGE_FRAME =

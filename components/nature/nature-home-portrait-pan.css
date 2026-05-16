@@ -1,0 +1,37 @@
+/**
+ * 首页 / 自然页背景：竖屏 object-cover 自左向右平移；横屏居中静止。
+ * 延迟与平移时长由父级 CSS 变量注入（默认 3min 后开始、30min 走完一遍）。
+ */
+.nature-bg-cover-media {
+  left: 50%;
+  transform: translate(-50%, -50%);
+  object-position: center center;
+}
+
+@media (orientation: portrait) {
+  .nature-bg-cover-media {
+    left: 0;
+    transform: translateY(-50%);
+    object-position: 0% center;
+    animation: nature-home-portrait-pan var(--nature-home-portrait-pan-duration, 1800s) linear infinite;
+    animation-delay: var(--nature-home-portrait-pan-delay, 180s);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @media (orientation: portrait) {
+    .nature-bg-cover-media {
+      animation: none;
+      object-position: 0% center;
+    }
+  }
+}
+
+@keyframes nature-home-portrait-pan {
+  from {
+    object-position: 0% center;
+  }
+  to {
+    object-position: 100% center;
+  }
+}

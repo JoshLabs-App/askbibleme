@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   NATURE_SCENE_CATEGORIES,
@@ -30,8 +30,96 @@ function categoryForVideo(v: NatureVideoEntry): NatureSceneCategory {
   return parseNatureSceneCategory(v.category);
 }
 
+const SCENE_CARD_CLASS =
+  "group relative aspect-square w-[4.25rem] shrink-0 overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[4.75rem] sm:rounded-[0.85rem]";
+
+type SceneCardProps = {
+  v: NatureVideoEntry;
+  selected: boolean;
+  preparing: boolean;
+  prepareProgress: number | null;
+  unnamedLabel: string;
+  onSelect: (id: string) => void;
+  ariaPreparing: (name: string) => string;
+  ariaSwitch: (name: string) => string;
+};
+
+function SceneCard({
+  v,
+  selected,
+  preparing,
+  prepareProgress,
+  unnamedLabel,
+  onSelect,
+  ariaPreparing,
+  ariaSwitch,
+}: SceneCardProps) {
+  const cardStill = v.thumbSrc?.trim() || v.previewFrameSrc?.trim() || "";
+  const title = cardTitle(v, unnamedLabel);
+
+  return (
+    <button
+      type="button"
+      aria-current={selected ? "true" : undefined}
+      aria-busy={preparing ? true : undefined}
+      aria-label={preparing ? ariaPreparing(title) : ariaSwitch(title)}
+      onClick={() => onSelect(v.id)}
+      className={
+        SCENE_CARD_CLASS +
+        (selected ? " ring-2 ring-sky-400/70 ring-inset " : " ring-white/[0.14] ")
+      }
+    >
+      <div className="absolute inset-0 bg-slate-950" aria-hidden />
+      {cardStill ? (
+        <img
+          src={cardStill}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <video
+          src={v.src}
+          muted
+          playsInline
+          preload="none"
+          className="absolute inset-0 h-full w-full object-cover"
+          aria-hidden
+        />
+      )}
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"
+        aria-hidden
+      />
+      {preparing ? (
+        <div className="pointer-events-none absolute inset-0 z-[15] flex flex-col justify-end bg-black/40 px-2 pb-2 pt-8">
+          <div
+            className="h-1.5 w-full overflow-hidden rounded-full bg-white/20"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={prepareProgress != null ? Math.round(prepareProgress * 100) : undefined}
+          >
+            {prepareProgress != null ? (
+              <div
+                className="h-full rounded-full bg-sky-400/95 transition-[width] duration-150 ease-out"
+                style={{ width: `${Math.max(2, Math.round(prepareProgress * 100))}%` }}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <div className="h-full w-[38%] min-w-[1.75rem] rounded-full bg-sky-400/90 motion-safe:animate-pulse" />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </button>
+  );
+}
+
 /**
- * 场景页：按分类筛选方卡；保持配置顺序，当前片仅高亮不挪位。
+ * 场景页：自然 / 白天 / 晚上分行展示，保持配置顺序，当前片仅高亮不挪位。
  */
 export function NatureSceneLayer({
   className = "",
@@ -44,19 +132,17 @@ export function NatureSceneLayer({
   const { t } = useLocale();
   const videos = settings.videos;
 
-  const [category, setCategory] = useState<NatureSceneCategory>("nature");
-
-  useEffect(() => {
-    const active = activeVideoId.trim();
-    if (!active) return;
-    const hit = videos.find((v) => v.id === active);
-    if (hit) setCategory(categoryForVideo(hit));
-  }, [activeVideoId, videos]);
-
-  const filteredVideos = useMemo(
-    () => videos.filter((v) => categoryForVideo(v) === category),
-    [videos, category],
-  );
+  const videosByCategory = useMemo(() => {
+    const map: Record<NatureSceneCategory, NatureVideoEntry[]> = {
+      nature: [],
+      day: [],
+      night: [],
+    };
+    for (const v of videos) {
+      map[categoryForVideo(v)].push(v);
+    }
+    return map;
+  }, [videos]);
 
   const select = useCallback(
     (id: string) => {
@@ -65,122 +151,53 @@ export function NatureSceneLayer({
     [onSceneCardPress],
   );
 
+  const unnamed = t("nature.scenes.unnamedProduct");
+  const ariaPreparing = useCallback(
+    (name: string) => t("nature.scenes.ariaPreparing", { name }),
+    [t],
+  );
+  const ariaSwitch = useCallback((name: string) => t("nature.scenes.ariaSwitch", { name }), [t]);
+
   if (!videos.length) return null;
 
   return (
     <section
-      className={`@container relative w-full ${className}`}
+      className={`@container relative flex w-full flex-col gap-4 sm:gap-5 ${className}`}
       aria-label={t("nature.scenes.sectionAria")}
       data-shell-swipe-nav-exclude
     >
-      <div
-        className="mb-2 flex w-full flex-wrap justify-center gap-1.5 sm:mb-2.5 sm:gap-2"
-        role="tablist"
-        aria-label={t("nature.scenes.categoryTabsAria")}
-      >
-        {NATURE_SCENE_CATEGORIES.map((id) => {
-          const selected = category === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => setCategory(id)}
-              className={
-                "rounded-full px-3 py-1 text-[11px] font-medium tracking-wide transition sm:px-3.5 sm:py-1.5 sm:text-[12px] " +
-                (selected
-                  ? "bg-white/22 text-white shadow-sm ring-1 ring-white/35"
-                  : "bg-black/25 text-white/72 ring-1 ring-white/12 hover:bg-black/35 hover:text-white/90")
-              }
-            >
-              {t(natureSceneCategoryLabelKey(id))}
-            </button>
-          );
-        })}
-      </div>
-
-      {filteredVideos.length === 0 ? (
-        <p className="px-2 py-4 text-center text-[11px] leading-relaxed text-white/55 sm:text-[12px]">
-          {t("nature.scenes.categoryEmpty", { name: t(natureSceneCategoryLabelKey(category)) })}
-        </p>
-      ) : (
-        <div className="flex w-full flex-wrap justify-center gap-2 pb-1 pt-0.5 sm:gap-2.5">
-          {filteredVideos.map((v) => {
-            const selected = v.id === activeVideoId;
-            const preparing = prepareSceneId !== null && v.id === prepareSceneId;
-            const cardStill = v.thumbSrc?.trim() || v.previewFrameSrc?.trim() || "";
-            const title = cardTitle(v, t("nature.scenes.unnamedProduct"));
-
-            return (
-              <button
-                key={v.id}
-                type="button"
-                aria-current={selected ? "true" : undefined}
-                aria-busy={preparing ? true : undefined}
-                aria-label={
-                  preparing
-                    ? t("nature.scenes.ariaPreparing", { name: title })
-                    : t("nature.scenes.ariaSwitch", { name: title })
-                }
-                onClick={() => select(v.id)}
-                className={
-                  "group relative aspect-square w-[4.25rem] shrink-0 overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[4.75rem] sm:rounded-[0.85rem] " +
-                  (selected ? "ring-2 ring-sky-400/70 ring-inset " : "ring-white/[0.14] ")
-                }
-              >
-                <div className="absolute inset-0 bg-slate-950" aria-hidden />
-                {cardStill ? (
-                  <img
-                    src={cardStill}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover"
+      {NATURE_SCENE_CATEGORIES.map((cat) => {
+        const rowVideos = videosByCategory[cat];
+        const label = t(natureSceneCategoryLabelKey(cat));
+        return (
+          <div key={cat} className="w-full" role="group" aria-label={label}>
+            <p className="mb-1.5 text-center text-[11px] font-medium tracking-wide text-white/78 sm:mb-2 sm:text-[12px]">
+              {label}
+            </p>
+            {rowVideos.length === 0 ? (
+              <p className="pb-0.5 text-center text-[10px] leading-relaxed text-white/45 sm:text-[11px]">
+                {t("nature.scenes.categoryEmpty", { name: label })}
+              </p>
+            ) : (
+              <div className="flex w-full flex-wrap justify-center gap-2 pb-0.5 pt-0.5 sm:gap-2.5">
+                {rowVideos.map((v) => (
+                  <SceneCard
+                    key={v.id}
+                    v={v}
+                    selected={v.id === activeVideoId}
+                    preparing={prepareSceneId !== null && v.id === prepareSceneId}
+                    prepareProgress={prepareProgress}
+                    unnamedLabel={unnamed}
+                    onSelect={select}
+                    ariaPreparing={ariaPreparing}
+                    ariaSwitch={ariaSwitch}
                   />
-                ) : (
-                  <video
-                    src={v.src}
-                    muted
-                    playsInline
-                    preload="none"
-                    className="absolute inset-0 h-full w-full object-cover"
-                    aria-hidden
-                  />
-                )}
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"
-                  aria-hidden
-                />
-                {preparing ? (
-                  <div className="pointer-events-none absolute inset-0 z-[15] flex flex-col justify-end bg-black/40 px-2 pb-2 pt-8">
-                    <div
-                      className="h-1.5 w-full overflow-hidden rounded-full bg-white/20"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={
-                        prepareProgress != null ? Math.round(prepareProgress * 100) : undefined
-                      }
-                    >
-                      {prepareProgress != null ? (
-                        <div
-                          className="h-full rounded-full bg-sky-400/95 transition-[width] duration-150 ease-out"
-                          style={{ width: `${Math.max(2, Math.round(prepareProgress * 100))}%` }}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <div className="h-full w-[38%] min-w-[1.75rem] rounded-full bg-sky-400/90 motion-safe:animate-pulse" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      )}
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </section>
   );
 }

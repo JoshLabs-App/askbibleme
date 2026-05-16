@@ -1,13 +1,16 @@
+import { isSamsungGalaxyUa } from "@/lib/read/parchment-samsung-device";
+
 /** Android 独立屏：`env(safe-area-inset-top)` 为 0 时的合理下限 */
 const ANDROID_STANDALONE_MIN_TOP_PX = 28;
-/** Samsung One UI 状态栏（S23 系列等）略高 */
+/** Samsung One UI 状态栏（S23 / S23 Ultra 等）略高 */
 const SAMSUNG_STANDALONE_MIN_TOP_PX = 32;
 
 function readSafeAreaInsetTopPx(): number {
   if (typeof document === "undefined") return 0;
   const probe = document.createElement("div");
   probe.style.cssText =
-    "position:fixed;top:0;left:0;height:0;width:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px);";
+    "position:fixed;top:0;left:0;height:0;width:0;visibility:hidden;pointer-events:none;" +
+    "padding-top:constant(safe-area-inset-top,0px);padding-top:env(safe-area-inset-top,0px);";
   document.documentElement.appendChild(probe);
   const inset = probe.getBoundingClientRect().height;
   probe.remove();
@@ -17,11 +20,6 @@ function readSafeAreaInsetTopPx(): number {
 function isAndroid(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Android/i.test(navigator.userAgent);
-}
-
-function isSamsungDevice(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /Samsung|SM-S9|SM-S2/i.test(navigator.userAgent);
 }
 
 function isDisplayStandalone(): boolean {
@@ -57,7 +55,7 @@ export function measureAppShellSafeTopPx(): number {
   }
 
   if (isAndroid() && isDisplayStandalone()) {
-    return isSamsungDevice() ? SAMSUNG_STANDALONE_MIN_TOP_PX : ANDROID_STANDALONE_MIN_TOP_PX;
+    return isSamsungGalaxyUa() ? SAMSUNG_STANDALONE_MIN_TOP_PX : ANDROID_STANDALONE_MIN_TOP_PX;
   }
 
   return 0;

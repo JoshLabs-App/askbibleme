@@ -18,8 +18,24 @@ export const SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR = "--app-shell-safe-top-
 export const SCRIPTURE_PARCHMENT_THEME_COLOR = "#ecd9b9";
 export const SCRIPTURE_PARCHMENT_THEME_COLOR_DARK = "#1a1512";
 
-/** 顶栏透明，让 `html` 羊皮底延伸到状态栏下（Chrome 109+ / iOS 半透明顶栏） */
+/** 顶栏透明，让羊皮底延伸到状态栏下（Chrome 109+ / iOS 半透明顶栏） */
 export const SCRIPTURE_PARCHMENT_STATUS_BAR_THEME = "transparent";
+
+/** Samsung / 部分 WebView 对 `transparent` 无效时用 8 位 hex 透明 */
+export const SCRIPTURE_PARCHMENT_STATUS_BAR_THEME_ALPHA_LIGHT = "#ecd9b900";
+export const SCRIPTURE_PARCHMENT_STATUS_BAR_THEME_ALPHA_DARK = "#1a151200";
+
+export const SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY = "readParchmentSamsung";
+export const SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE = "1";
+
+export function scriptureParchmentStatusBarTheme(dark: boolean, samsung: boolean): string {
+  if (samsung) {
+    return dark
+      ? SCRIPTURE_PARCHMENT_STATUS_BAR_THEME_ALPHA_DARK
+      : SCRIPTURE_PARCHMENT_STATUS_BAR_THEME_ALPHA_LIGHT;
+  }
+  return SCRIPTURE_PARCHMENT_STATUS_BAR_THEME;
+}
 
 export function isScriptureParchmentPath(pathname: string): boolean {
   const p = pathname || "";

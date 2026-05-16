@@ -2,17 +2,27 @@
  * 读经 / 祷告：单层羊皮底（`html::before` fixed 全屏 + 透明 theme-color，顶栏下仍是同一张底图）
  */
 
+html[data-app-shell-safe-fill="parchment"] {
+  isolation: isolate;
+}
+
 html[data-app-shell-safe-fill="parchment"]::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   background-color: var(--read-parchment-bg-canvas, #ecd9b9);
   background-image: var(--read-parchment-bg-image);
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-position: center center;
+}
+
+html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]::before {
+  top: calc(-1 * max(env(safe-area-inset-top, 0px), var(--app-shell-safe-top-effective, 0px)));
+  height: calc(100dvh + max(env(safe-area-inset-top, 0px), var(--app-shell-safe-top-effective, 0px)));
+  min-height: 100lvh;
 }
 
 @media (min-width: 480px) and (orientation: landscape),
@@ -37,15 +47,11 @@ html[data-app-shell-safe-fill="parchment"]::before {
   }
 }
 
-html[data-app-shell-safe-fill="parchment"],
 html[data-app-shell-safe-fill="parchment"] body {
-  background-color: var(--read-parchment-bg-canvas, #ecd9b9) !important;
+  position: relative;
+  z-index: 1;
+  background-color: transparent !important;
   background-image: none !important;
-}
-
-.dark html[data-app-shell-safe-fill="parchment"],
-.dark html[data-app-shell-safe-fill="parchment"] body {
-  background-color: #1a1512 !important;
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {
@@ -55,6 +61,34 @@ html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
   display: none;
+}
+
+/* Samsung（S23 Ultra 等）：部分 WebView 对 html::before 合成异常，加一层 fixed 底图 */
+html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center center;
+}
+
+@media (min-width: 480px) and (orientation: landscape),
+  (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
+    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+  }
+}
+
+.dark html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
+  background-color: #1a1512;
+  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+    var(--read-parchment-bg-image);
+  background-blend-mode: multiply, normal;
 }
 
 /* 顶缘安全区条带不占高、不铺底（内容列用 padding + env 避让；PWA 用 --app-shell-safe-top-effective） */

@@ -10,7 +10,13 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   var html = document.documentElement;
   var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   var canvas = dark ? "#1a1512" : "#ecd9b9";
+  var ua = navigator.userAgent || "";
+  var samsung =
+    /SamsungBrowser/i.test(ua) || /Samsung/i.test(ua) || /\\bSM-[A-Z]\\d/i.test(ua);
+  var statusBar = samsung ? (dark ? "#1a151200" : "#ecd9b900") : "transparent";
+
   html.dataset.appShellSafeFill = "parchment";
+  if (samsung) html.dataset.readParchmentSamsung = "1";
   html.style.backgroundColor = canvas;
   html.style.colorScheme = dark ? "dark" : "light";
 
@@ -18,7 +24,8 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   try {
     var probe = document.createElement("div");
     probe.style.cssText =
-      "position:fixed;top:0;left:0;height:0;width:0;visibility:hidden;padding-top:env(safe-area-inset-top,0px);";
+      "position:fixed;top:0;left:0;height:0;width:0;visibility:hidden;" +
+      "padding-top:constant(safe-area-inset-top,0px);padding-top:env(safe-area-inset-top,0px);";
     html.appendChild(probe);
     var envTop = probe.getBoundingClientRect().height;
     probe.remove();
@@ -28,7 +35,7 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
       window.matchMedia("(display-mode: standalone)").matches ||
       window.matchMedia("(display-mode: fullscreen)").matches
     ) {
-      topPx = /Samsung|SM-S9/i.test(navigator.userAgent) ? 32 : 28;
+      topPx = samsung ? 32 : 28;
     }
   } catch (e) {}
 
@@ -38,6 +45,6 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   }
 
   var metas = document.querySelectorAll('meta[name="theme-color"]');
-  for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", "transparent");
+  for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", statusBar);
 })();
 `.trim();

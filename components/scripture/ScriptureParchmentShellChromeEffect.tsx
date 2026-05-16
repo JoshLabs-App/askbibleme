@@ -3,15 +3,18 @@
 import { useLayoutEffect } from "react";
 import { NATURE_HOME_THEME_LOCK_DATASET_KEY } from "@/lib/nature/root-theme";
 import { measureAppShellSafeTopPx } from "@/lib/read/measure-app-shell-safe-top";
+import { isSamsungGalaxyUa } from "@/lib/read/parchment-samsung-device";
 import {
+  SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY,
+  SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE,
   SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
   SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
-  SCRIPTURE_PARCHMENT_STATUS_BAR_THEME,
   SCRIPTURE_PARCHMENT_THEME_COLOR,
   SCRIPTURE_PARCHMENT_THEME_COLOR_DARK,
   SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE,
+  scriptureParchmentStatusBarTheme,
 } from "@/lib/read/scripture-parchment-shell";
 
 function syncSafeTopEffective() {
@@ -27,12 +30,22 @@ function syncSafeTopEffective() {
 }
 
 function syncParchmentThemeColor() {
-  const dark = document.documentElement.classList.contains("dark");
+  const root = document.documentElement;
+  const dark = root.classList.contains("dark");
+  const samsung = isSamsungGalaxyUa();
   const canvas = dark ? SCRIPTURE_PARCHMENT_THEME_COLOR_DARK : SCRIPTURE_PARCHMENT_THEME_COLOR;
-  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
-    meta.setAttribute("content", SCRIPTURE_PARCHMENT_STATUS_BAR_THEME);
+  const statusBar = scriptureParchmentStatusBarTheme(dark, samsung);
+
+  if (samsung) {
+    root.dataset[SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY] = SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE;
+  } else {
+    Reflect.deleteProperty(root.dataset, SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY);
   }
-  document.documentElement.style.backgroundColor = canvas;
+
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
+    meta.setAttribute("content", statusBar);
+  }
+  root.style.backgroundColor = canvas;
   document.body.style.backgroundColor = canvas;
 }
 
@@ -62,6 +75,7 @@ export function ScriptureParchmentShellChromeEffect() {
       window.removeEventListener("resize", onViewport);
       darkObs.disconnect();
       Reflect.deleteProperty(html.dataset, SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY);
+      Reflect.deleteProperty(html.dataset, SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY);
       Reflect.deleteProperty(html.dataset, NATURE_HOME_THEME_LOCK_DATASET_KEY);
       html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
       html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR);

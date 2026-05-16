@@ -107,7 +107,8 @@ export function ReadChapterInfoEditionBlock({
         if (options?.openOnFailed ?? true) setOpen(true);
         return true;
       }
-      return status !== "pending";
+      /** 仅 ready / failed 结束轮询；`missing` 须继续等或超时，否则会一直停在 loading */
+      return false;
     },
     [t],
   );
@@ -180,8 +181,9 @@ export function ReadChapterInfoEditionBlock({
       pollUntilReady();
       return;
     }
-    setErr(t("pages.read.infoEditionLoadFailed"));
+    setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
     setPhase("error");
+    setOpen(true);
   }, [applyCachePayload, bookId, chapter, pollUntilReady, t]);
 
   useEffect(() => {

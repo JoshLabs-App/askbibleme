@@ -1,7 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import {
+  NATURE_SCENE_CATEGORIES,
+  natureSceneCategoryLabelKey,
+  parseNatureSceneCategory,
+  type NatureSceneCategory,
+} from "@/lib/nature/scene-categories";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
 type Props = {
@@ -20,8 +26,12 @@ function cardTitle(v: NatureVideoEntry, fallback: string) {
   return t || fallback;
 }
 
+function categoryForVideo(v: NatureVideoEntry): NatureSceneCategory {
+  return parseNatureSceneCategory(v.category);
+}
+
 /**
- * 场景页：方卡缩略 / 封面；保持配置顺序，当前片仅高亮不挪位。全部铺开、横向居中，多行时自动换行（不横滑）。
+ * 场景页：按分类筛选方卡；保持配置顺序，当前片仅高亮不挪位。
  */
 export function NatureSceneLayer({
   className = "",
@@ -33,6 +43,20 @@ export function NatureSceneLayer({
 }: Props) {
   const { t } = useLocale();
   const videos = settings.videos;
+
+  const [category, setCategory] = useState<NatureSceneCategory>("nature");
+
+  useEffect(() => {
+    const active = activeVideoId.trim();
+    if (!active) return;
+    const hit = videos.find((v) => v.id === active);
+    if (hit) setCategory(categoryForVideo(hit));
+  }, [activeVideoId, videos]);
+
+  const filteredVideos = useMemo(
+    () => videos.filter((v) => categoryForVideo(v) === category),
+    [videos, category],
+  );
 
   const select = useCallback(
     (id: string) => {
@@ -49,11 +73,42 @@ export function NatureSceneLayer({
       aria-label={t("nature.scenes.sectionAria")}
       data-shell-swipe-nav-exclude
     >
-      <div className="flex w-full flex-wrap justify-center gap-2 pb-1 pt-0.5 sm:gap-2.5">
-          {videos.map((v) => {
+      <div
+        className="mb-2 flex w-full flex-wrap justify-center gap-1.5 sm:mb-2.5 sm:gap-2"
+        role="tablist"
+        aria-label={t("nature.scenes.categoryTabsAria")}
+      >
+        {NATURE_SCENE_CATEGORIES.map((id) => {
+          const selected = category === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => setCategory(id)}
+              className={
+                "rounded-full px-3 py-1 text-[11px] font-medium tracking-wide transition sm:px-3.5 sm:py-1.5 sm:text-[12px] " +
+                (selected
+                  ? "bg-white/22 text-white shadow-sm ring-1 ring-white/35"
+                  : "bg-black/25 text-white/72 ring-1 ring-white/12 hover:bg-black/35 hover:text-white/90")
+              }
+            >
+              {t(natureSceneCategoryLabelKey(id))}
+            </button>
+          );
+        })}
+      </div>
+
+      {filteredVideos.length === 0 ? (
+        <p className="px-2 py-4 text-center text-[11px] leading-relaxed text-white/55 sm:text-[12px]">
+          {t("nature.scenes.categoryEmpty", { name: t(natureSceneCategoryLabelKey(category)) })}
+        </p>
+      ) : (
+        <div className="flex w-full flex-wrap justify-center gap-2 pb-1 pt-0.5 sm:gap-2.5">
+          {filteredVideos.map((v) => {
             const selected = v.id === activeVideoId;
             const preparing = prepareSceneId !== null && v.id === prepareSceneId;
-            /** 方卡：先用户方图，再首帧静图；避免无图时依赖小 `<video>` 解码（iOS 常空白） */
             const cardStill = v.thumbSrc?.trim() || v.previewFrameSrc?.trim() || "";
             const title = cardTitle(v, t("nature.scenes.unnamedProduct"));
 
@@ -64,7 +119,9 @@ export function NatureSceneLayer({
                 aria-current={selected ? "true" : undefined}
                 aria-busy={preparing ? true : undefined}
                 aria-label={
-                  preparing ? t("nature.scenes.ariaPreparing", { name: title }) : t("nature.scenes.ariaSwitch", { name: title })
+                  preparing
+                    ? t("nature.scenes.ariaPreparing", { name: title })
+                    : t("nature.scenes.ariaSwitch", { name: title })
                 }
                 onClick={() => select(v.id)}
                 className={
@@ -122,7 +179,8 @@ export function NatureSceneLayer({
               </button>
             );
           })}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

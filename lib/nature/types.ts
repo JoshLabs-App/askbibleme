@@ -1,3 +1,5 @@
+import type { NatureSceneCategory } from "./scene-categories";
+
 /** 可复用的环境声素材（水声、鸟声等），写入 `nature-settings.json` */
 export type NatureAmbientClipEntry = {
   id: string;
@@ -21,6 +23,8 @@ export type NatureVideoEntry = {
   /** 原始母片（如 4K / .mov），仅存档；默认不参与播放与预取 */
   src4k?: string;
   title?: string;
+  /** 场景分类：自然 / 白天 / 晚上；缺省为 `nature` */
+  category?: NatureSceneCategory;
   /** 正方形封面（相册与场景卡）；后台截取或上传 */
   thumbSrc?: string;
   /** 首帧预览图（16:9 友好 JPEG，上传/回填时生成）；预览条只显示此图不预拉视频 */

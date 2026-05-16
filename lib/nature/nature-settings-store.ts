@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { parseNatureSceneCategory } from "./scene-categories";
 import type {
   NatureAmbientClipEntry,
   NatureSettingsV2,
@@ -104,6 +105,7 @@ function collectVideoEntries(
         ? previewRaw
         : undefined;
     const mix = collectMixLayers(o.mix, validClipIds, mode);
+    const category = parseNatureSceneCategory(o.category);
     const src1080Raw = typeof o.src1080 === "string" ? o.src1080.trim() : "";
     let src1080: string | undefined;
     if (src1080Raw) {
@@ -125,6 +127,7 @@ function collectVideoEntries(
     out.push({
       id,
       src,
+      category,
       ...(title ? { title } : {}),
       ...(thumbSrc ? { thumbSrc } : {}),
       ...(previewFrameSrc ? { previewFrameSrc } : {}),

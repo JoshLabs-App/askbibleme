@@ -444,6 +444,8 @@
       "videoBlockTitle": "背景影片",
       "videoBlockIntro": "上传全屏循环视频至 public/nature/uploads。前台首页与场景页按「当前播放」选用条目的画面（静音循环）。",
       "videoUploadFootMulti": "支持 mp4 / webm / mov / m4v，单文件约 450MB。本机已安装 ffmpeg 时：会保留母片并自动生成 720p、1080p H.264（母片留在磁盘备以后用）；前台默认播 1080p，网络卡顿时自动退回 720p。设置 NATURE_UPLOAD_SKIP_TRANSCODE=1 则仅保存原文件（与旧行为一致）。磁盘写入权限与音乐上传相同。",
+      "videoCategoryLabel": "分类",
+      "uploadCategoryLabel": "新上传归入",
       "mixSectionTitle": "本片混音（仅作用于本条影片）",
       "mixPreviewTitle": "试听输出",
       "mixPreviewHint": "预览区画面铺满、裁切无黑边，静音循环；下列为库内全部环境音，默认 0%。拖条试听中可即时听到，松手写入服务器。",
@@ -697,8 +699,15 @@
       "categoryRowLabel": "版块",
       "resetMemory": "重置进度"
     },
+    "sceneCategory": {
+      "nature": "自然",
+      "day": "白天",
+      "night": "晚上"
+    },
     "scenes": {
       "sectionAria": "自然影片",
+      "categoryTabsAria": "场景分类",
+      "categoryEmpty": "「{{name}}」下暂无场景",
       "ariaSwitch": "切换到{{name}}",
       "ariaPreparing": "正在下载完整「{{name}}」，就绪后自动切换",
       "ariaCollapsePreview": "收起{{name}}预览",

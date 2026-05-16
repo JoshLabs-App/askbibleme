@@ -1,10 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { NatureSceneCategorySelect } from "@/components/admin/NatureSceneCategorySelect";
 import { NatureVideoSquareThumbModal } from "@/components/admin/NatureVideoSquareThumbModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { nextDateNumberedNatureVideoTitle } from "@/lib/music-companion/track-naming";
 import { diskAuthHeaders } from "@/lib/disk-auth-headers";
+import {
+  DEFAULT_NATURE_SCENE_CATEGORY,
+  parseNatureSceneCategory,
+  type NatureSceneCategory,
+} from "@/lib/nature/scene-categories";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
 async function postNatureSettings(
@@ -52,6 +58,7 @@ export function NatureVideoAdminSection({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [thumbModalVideoId, setThumbModalVideoId] = useState<string | null>(null);
   const [thumbSaveBusy, setThumbSaveBusy] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState<NatureSceneCategory>(DEFAULT_NATURE_SCENE_CATEGORY);
   useLayoutEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
@@ -153,7 +160,7 @@ export function NatureVideoAdminSection({
         const titles = prev.videos.map((v) => v.title ?? "").filter(Boolean);
         const title = nextDateNumberedNatureVideoTitle(titles);
         const id = newId();
-        const row: NatureVideoEntry = { id, src: primary, title };
+        const row: NatureVideoEntry = { id, src: primary, title, category: uploadCategory };
         const s1080 = typeof data.src1080 === "string" ? data.src1080.trim() : "";
         if (s1080) row.src1080 = s1080;
         const s4k = typeof data.src4k === "string" ? data.src4k.trim() : "";
@@ -192,7 +199,7 @@ export function NatureVideoAdminSection({
         setUploadBusy(false);
       }
     },
-    [applyAndSync, setMsg, settings],
+    [applyAndSync, setMsg, settings, uploadCategory],
   );
 
   const setActive = useCallback(
@@ -226,6 +233,19 @@ export function NatureVideoAdminSection({
       if (!prev) return;
       const videos = prev.videos.map((v) =>
         v.id === id ? { ...v, title: title.trim() || undefined } : v,
+      );
+      const next: NatureSettingsV2 = { ...prev, videos };
+      await applyAndSync(next);
+    },
+    [applyAndSync, settings],
+  );
+
+  const updateCategory = useCallback(
+    async (id: string, category: NatureSceneCategory) => {
+      const prev = settingsRef.current ?? settings;
+      if (!prev) return;
+      const videos = prev.videos.map((v) =>
+        v.id === id ? { ...v, category: parseNatureSceneCategory(category) } : v,
       );
       const next: NatureSettingsV2 = { ...prev, videos };
       await applyAndSync(next);
@@ -427,6 +447,15 @@ export function NatureVideoAdminSection({
       ) : null}
 
       <div className="mt-4 rounded-md border border-dashed border-border bg-canvas/70 px-3 py-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-adminMuted">{t("admin.naturePage.uploadCategoryLabel")}</span>
+          <NatureSceneCategorySelect
+            value={uploadCategory}
+            onChange={setUploadCategory}
+            disabled={busy}
+            aria-label={t("admin.naturePage.uploadCategoryLabel")}
+          />
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -479,6 +508,12 @@ export function NatureVideoAdminSection({
                     aria-label="在自然页播放"
                   />
                   <span className="text-[10px] text-adminMuted">{active ? "当前播放" : "选用"}</span>
+                  <NatureSceneCategorySelect
+                    value={parseNatureSceneCategory(v.category)}
+                    disabled={busy}
+                    aria-label={t("admin.naturePage.videoCategoryLabel")}
+                    onChange={(category) => void updateCategory(v.id, category)}
+                  />
                   <input
                     key={`${v.id}-${v.title ?? ""}`}
                     defaultValue={v.title ?? ""}

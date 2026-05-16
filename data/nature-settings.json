@@ -2,19 +2,6 @@
   "version": 2,
   "videos": [
     {
-      "id": "5fdf12b5-d9f0-4160-a385-541c01b6a337",
-      "src": "/nature/uploads/1bdce7b09e634b229444b3e7fcae6fd3.mp4",
-      "title": "自然影像 2026-05-12 · 02",
-      "previewFrameSrc": "/nature/preview-posters/1bdce7b09e634b229444b3e7fcae6fd3.jpg",
-      "mix": [
-        {
-          "id": "mix-9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
-          "clipId": "9fc01510-8e71-4b9a-8c1a-cee198f50f9e",
-          "volume": 0.18
-        }
-      ]
-    },
-    {
       "id": "54f68913-3ff5-4d1f-bfe2-ce9b7c4b3a1a",
       "src": "/nature/uploads/1b9d41003c44438ea71d2070dc767ad2.mp4",
       "title": "自然影像 2026-05-12 · 03",
@@ -64,6 +51,14 @@
       "previewFrameSrc": "/nature/preview-posters/d82f4a27a47d43b796abe0c837702963.jpg",
       "src1080": "/nature/uploads/d82f4a27a47d43b796abe0c837702963-1080.mp4",
       "src4k": "/nature/uploads/d82f4a27a47d43b796abe0c837702963.master.mp4"
+    },
+    {
+      "id": "9cc949f2-3c1d-49c0-8357-2dc1d32bd954",
+      "src": "/nature/uploads/9a090c2be6a34caa9536861005726781-720.mp4",
+      "title": "自然影像 2026-05-16 · 02",
+      "previewFrameSrc": "/nature/preview-posters/9a090c2be6a34caa9536861005726781.jpg",
+      "src1080": "/nature/uploads/9a090c2be6a34caa9536861005726781-1080.mp4",
+      "src4k": "/nature/uploads/9a090c2be6a34caa9536861005726781.master.mp4"
     }
   ],
   "ambientClips": [
@@ -138,6 +133,6 @@
       "title": "打雷"
     }
   ],
-  "activeVideoId": "5fdf12b5-d9f0-4160-a385-541c01b6a337",
+  "activeVideoId": "9cc949f2-3c1d-49c0-8357-2dc1d32bd954",
   "playbackRate": 1
 }

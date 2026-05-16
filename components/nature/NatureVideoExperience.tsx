@@ -21,6 +21,7 @@ import {
   readNatureSoftFocusPrefs,
   writeNatureSoftFocusPrefs,
 } from "@/lib/nature/nature-soft-focus-prefs";
+import { shouldStartNatureVideoAt720 } from "@/lib/nature/nature-video-start-quality";
 import {
   readNatureBackground1080Pref,
   writeNatureBackground1080Pref,
@@ -181,13 +182,10 @@ const NATURE_VIDEO_STAGE_FRAME =
 const NATURE_BG_COVER_MEDIA =
   "nature-bg-cover-media absolute top-1/2 h-full min-h-full w-full min-w-full object-cover";
 
-/** 有首图时若迟迟不可播，超时仍淡出静图，避免永久卡在静图 */
-const INTRO_REVEAL_FALLBACK_MS = 12_000;
+/** 有首图时：至少停留静图此时长，且视频完全载入后，才淡出静图露出 `<video>` */
+const INTRO_REVEAL_MIN_DELAY_MS = 5000;
 
-/**
- * 揭晓前要求「当前时间点之后」已缓冲够长（秒），利用单 video 渐进下载，减少揭晓后立刻卡顿。
- * 后面边下边播由浏览器接管，用户无感。
- */
+/** 播放中 rebuffer 判定用：当前时间点之后需缓冲够长（秒） */
 const MIN_BUFFER_AHEAD_SEC = 2.4;
 
 function bufferedSecondsAhead(v: HTMLVideoElement): number {
@@ -219,8 +217,22 @@ function hasEnoughBufferedAhead(v: HTMLVideoElement, minBufferAheadSec: number):
   return ahead >= need;
 }
 
-/** 静图阶段稍候再出现，避免一打开就提示 */
-const SLOW_INTRO_HINT_DELAY_MS = 3800;
+/** 揭晓静图前：整段循环影片已缓冲就绪（非「够播几秒」） */
+function isNatureVideoFullyLoaded(v: HTMLVideoElement): boolean {
+  if (v.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return false;
+  const dur = v.duration;
+  if (!Number.isFinite(dur) || dur <= 0) return false;
+  try {
+    const ranges = v.buffered;
+    if (ranges.length === 0) return false;
+    return ranges.end(ranges.length - 1) >= dur - 0.2;
+  } catch {
+    return false;
+  }
+}
+
+/** 静图阶段：超过揭晓最短等待后再提示加载慢 */
+const SLOW_INTRO_HINT_DELAY_MS = INTRO_REVEAL_MIN_DELAY_MS + 2500;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
@@ -231,6 +243,7 @@ export function NatureVideoExperience({ initial }: Props) {
   const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
+  const introStillLoadStartedAtRef = useRef(0);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
   const videoStageHeightCommitRef = useRef(0);
@@ -249,7 +262,9 @@ export function NatureVideoExperience({ initial }: Props) {
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
   const [videoBroken, setVideoBroken] = useState(false);
-  const [preferNature1080, setPreferNature1080] = useState(false);
+  const [preferNature1080, setPreferNature1080] = useState(true);
+  /** 本会话内因卡顿从 1080 退回 720（换场景后重试 1080，除非弱网首帧策略） */
+  const [adaptiveNature720, setAdaptiveNature720] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
@@ -382,10 +397,11 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [playbackSettings]);
 
   const currentClipHas1080 = Boolean(activeNatureRow?.src1080?.trim());
+  const effectivePreferNature1080 = preferNature1080 && !adaptiveNature720;
 
   const { videoSrc, posterSrc, previewStillSrc } = useMemo(
-    () => resolveNaturePlayback(playbackSettings, { prefer1080: preferNature1080 }),
-    [playbackSettings, preferNature1080],
+    () => resolveNaturePlayback(playbackSettings, { prefer1080: effectivePreferNature1080 }),
+    [playbackSettings, effectivePreferNature1080],
   );
   const stillImageUrl = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
   const posterUrl = stillImageUrl;
@@ -516,10 +532,11 @@ export function NatureVideoExperience({ initial }: Props) {
   const maybeRevealIntroFromBuffer = useCallback(() => {
     if (!posterUrl || posterOnlyLowPower) return;
     if (introRevealGuardRef.current) return;
+    if (performance.now() - introStillLoadStartedAtRef.current < INTRO_REVEAL_MIN_DELAY_MS) return;
     const v = videoRef.current;
-    if (!v || !hasEnoughBufferedAhead(v, bufferAheadThreshold)) return;
+    if (!v || !isNatureVideoFullyLoaded(v)) return;
     commitIntroReveal();
-  }, [posterUrl, posterOnlyLowPower, commitIntroReveal, bufferAheadThreshold]);
+  }, [posterUrl, posterOnlyLowPower, commitIntroReveal]);
 
   const onTimeUpdatePollIntroReveal = useCallback(() => {
     const now = performance.now();
@@ -593,6 +610,7 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useEffect(() => {
     introRevealGuardRef.current = false;
+    introStillLoadStartedAtRef.current = performance.now();
     lastBufferRevealPollRef.current = 0;
     setShowSlowIntroHint(false);
     clearPlaybackWaitHint();
@@ -601,14 +619,20 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [videoSrc, posterSrc, previewStillSrc, clearPlaybackWaitHint]);
 
   useEffect(() => {
-    if (!posterUrl || introRevealed || posterOnlyLowPower || !dwellVideoAllowed) return;
+    if (!hasStillIntro || !posterUrl || posterOnlyLowPower || !dwellVideoAllowed) return;
+    introStillLoadStartedAtRef.current = performance.now();
     const id = window.setTimeout(() => {
-      if (introRevealGuardRef.current) return;
-      introRevealGuardRef.current = true;
-      setIntroRevealed(true);
-    }, INTRO_REVEAL_FALLBACK_MS);
+      maybeRevealIntroFromBuffer();
+    }, INTRO_REVEAL_MIN_DELAY_MS);
     return () => clearTimeout(id);
-  }, [posterUrl, introRevealed, videoSrc, posterOnlyLowPower, dwellVideoAllowed]);
+  }, [
+    videoSrc,
+    hasStillIntro,
+    posterUrl,
+    posterOnlyLowPower,
+    dwellVideoAllowed,
+    maybeRevealIntroFromBuffer,
+  ]);
 
   useEffect(() => {
     if (!hasStillIntro || introRevealed || !posterUrl || posterOnlyLowPower || !dwellVideoAllowed) {
@@ -724,6 +748,23 @@ export function NatureVideoExperience({ initial }: Props) {
     setVideoBroken(false);
   }, [videoSrc]);
 
+  useEffect(() => {
+    setAdaptiveNature720(shouldStartNatureVideoAt720(mediaPolicy));
+  }, [activeVideoId, mediaPolicy.saveData]);
+
+  const considerAdaptiveDowngradeTo720 = useCallback(() => {
+    if (!currentClipHas1080 || !preferNature1080 || adaptiveNature720) return;
+    const v = videoRef.current;
+    if (!v) return;
+    if (hasEnoughBufferedAhead(v, bufferAheadThreshold)) return;
+    setAdaptiveNature720(true);
+  }, [
+    currentClipHas1080,
+    preferNature1080,
+    adaptiveNature720,
+    bufferAheadThreshold,
+  ]);
+
   useLayoutEffect(() => {
     const metas = [...document.querySelectorAll('meta[name="theme-color"]')] as HTMLMetaElement[];
     const snapshot = metas.map((el) => ({
@@ -823,13 +864,19 @@ export function NatureVideoExperience({ initial }: Props) {
   }, []);
 
   const onToggleNature1080 = useCallback(() => {
+    if (!effectivePreferNature1080 && preferNature1080) {
+      setAdaptiveNature720(false);
+      setVideoBroken(false);
+      return;
+    }
     setPreferNature1080((p) => {
       const next = !p;
       writeNatureBackground1080Pref(next);
+      if (next) setAdaptiveNature720(false);
       return next;
     });
     setVideoBroken(false);
-  }, []);
+  }, [effectivePreferNature1080, preferNature1080]);
 
   const softFocusLayerVisible = natureBgSoftFocus || natureSoftFocusPanelOpen;
   const softFocusDisplayOpacity = natureSoftFocusPanelOpen ? softFocusDraftOpacity : softFocusCommittedOpacity;
@@ -1036,13 +1083,13 @@ export function NatureVideoExperience({ initial }: Props) {
               <button
                 type="button"
                 onClick={onToggleNature1080}
-                aria-pressed={preferNature1080}
+                aria-pressed={effectivePreferNature1080}
                 aria-label={t("nature.bg1080ToggleAria")}
                 className={NATURE_BELL_BTN}
               >
                 <span
                   className={
-                    preferNature1080
+                    effectivePreferNature1080
                       ? "text-[10px] font-semibold tabular-nums leading-none tracking-tight text-white [filter:drop-shadow(0_0_4px_rgba(255,255,255,0.65))]"
                       : "text-[10px] font-medium tabular-nums leading-none tracking-tight text-white/60"
                   }
@@ -1143,6 +1190,7 @@ export function NatureVideoExperience({ initial }: Props) {
                 preload="metadata"
                 aria-hidden
                 onCanPlay={maybeRevealIntroFromBuffer}
+                onCanPlayThrough={maybeRevealIntroFromBuffer}
                 onLoadedData={maybeRevealIntroFromBuffer}
                 onProgress={maybeRevealIntroFromBuffer}
                 onPlaying={() => {
@@ -1151,12 +1199,20 @@ export function NatureVideoExperience({ initial }: Props) {
                 }}
                 onTimeUpdate={onTimeUpdatePollIntroReveal}
                 onWaiting={() => {
+                  considerAdaptiveDowngradeTo720();
                   if (introRevealed) schedulePlaybackWaitHint();
                 }}
                 onStalled={() => {
+                  considerAdaptiveDowngradeTo720();
                   if (introRevealed) schedulePlaybackWaitHint();
                 }}
-                onError={() => setVideoBroken(true)}
+                onError={() => {
+                  if (currentClipHas1080 && preferNature1080 && !adaptiveNature720) {
+                    setAdaptiveNature720(true);
+                    return;
+                  }
+                  setVideoBroken(true);
+                }}
               />
             ) : null}
             {hasStillIntro ? (

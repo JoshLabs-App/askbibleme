@@ -1,13 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { NatureClipMixWorkbench } from "@/components/admin/NatureClipMixWorkbench";
 import { NatureVideoSquareThumbModal } from "@/components/admin/NatureVideoSquareThumbModal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import {
-  nextDateNumberedNatureAmbientTitle,
-  nextDateNumberedNatureVideoTitle,
-} from "@/lib/music-companion/track-naming";
+import { nextDateNumberedNatureVideoTitle } from "@/lib/music-companion/track-naming";
 import { diskAuthHeaders } from "@/lib/disk-auth-headers";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
@@ -54,10 +50,6 @@ export function NatureVideoAdminSection({
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadHint, setUploadHint] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [audioUploadBusy, setAudioUploadBusy] = useState(false);
-  const [audioUploadHint, setAudioUploadHint] = useState<string | null>(null);
-  const [audioHintOk, setAudioHintOk] = useState(false);
-  const audioFileInputRef = useRef<HTMLInputElement>(null);
   const [thumbModalVideoId, setThumbModalVideoId] = useState<string | null>(null);
   const [thumbSaveBusy, setThumbSaveBusy] = useState(false);
   useLayoutEffect(() => {
@@ -203,64 +195,6 @@ export function NatureVideoAdminSection({
     [applyAndSync, setMsg, settings],
   );
 
-  const onAmbientFileChosen = useCallback(
-    async (file: File | null | undefined) => {
-      if (!file) return;
-      const prev = settingsRef.current ?? settings;
-      if (!prev) {
-        const m = "自然页配置尚未就绪，请刷新本页后重试。";
-        setMsg(m);
-        setAudioUploadHint(m);
-        return;
-      }
-      const lower = file.name.toLowerCase();
-      const okExt = /\.(mp3|wav|ogg|m4a|aac|opus|webm|flac)$/.test(lower);
-      const okMime = file.type.startsWith("audio/");
-      if (!okExt && !okMime) {
-        const m = t("admin.naturePage.ambientBadType");
-        setMsg(m);
-        setAudioUploadHint(m);
-        return;
-      }
-      setAudioUploadBusy(true);
-      setAudioUploadHint(null);
-      setAudioHintOk(false);
-      setMsg(null);
-      try {
-        const fd = new FormData();
-        fd.append("file", file);
-        const res = await fetch("/api/nature/upload-audio", {
-          method: "POST",
-          headers: { ...diskAuthHeaders() },
-          body: fd,
-        });
-        const data = (await res.json()) as { ok?: boolean; url?: string; error?: string };
-        if (!res.ok) throw new Error(data.error ?? `上传失败（${res.status}）`);
-        const url = data.url;
-        if (typeof url !== "string" || !url.trim()) throw new Error("上传响应异常");
-
-        const titles = prev.ambientClips.map((c) => c.title ?? "").filter(Boolean);
-        const title = nextDateNumberedNatureAmbientTitle(titles);
-        const id = newId();
-        const ambientClips = [...prev.ambientClips, { id, src: url.trim(), title }];
-        const next: NatureSettingsV2 = { ...prev, ambientClips };
-        const ok = await applyAndSync(next);
-        if (ok) {
-          setAudioHintOk(true);
-          setAudioUploadHint(t("admin.naturePage.ambientUploadDone", { title }));
-        }
-      } catch (e) {
-        const m = e instanceof Error ? e.message : "上传失败";
-        setMsg(m);
-        setAudioUploadHint(m);
-        setAudioHintOk(false);
-      } finally {
-        setAudioUploadBusy(false);
-      }
-    },
-    [applyAndSync, setMsg, settings, t],
-  );
-
   const setActive = useCallback(
     async (id: string) => {
       const prev = settingsRef.current ?? settings;
@@ -293,61 +227,6 @@ export function NatureVideoAdminSection({
       const videos = prev.videos.map((v) =>
         v.id === id ? { ...v, title: title.trim() || undefined } : v,
       );
-      const next: NatureSettingsV2 = { ...prev, videos };
-      await applyAndSync(next);
-    },
-    [applyAndSync, settings],
-  );
-
-  const updateAmbientTitle = useCallback(
-    async (clipId: string, title: string) => {
-      const prev = settingsRef.current ?? settings;
-      if (!prev) return;
-      const ambientClips = prev.ambientClips.map((c) =>
-        c.id === clipId ? { ...c, title: title.trim() || undefined } : c,
-      );
-      const next: NatureSettingsV2 = { ...prev, ambientClips };
-      await applyAndSync(next);
-    },
-    [applyAndSync, settings],
-  );
-
-  const removeAmbientClip = useCallback(
-    async (clipId: string) => {
-      const prev = settingsRef.current ?? settings;
-      if (!prev) return;
-      const ambientClips = prev.ambientClips.filter((c) => c.id !== clipId);
-      const videos = prev.videos.map((v) => {
-        const mix = v.mix?.filter((l) => l.clipId !== clipId);
-        const next = { ...v };
-        if (mix?.length) next.mix = mix;
-        else delete next.mix;
-        return next;
-      });
-      const next: NatureSettingsV2 = { ...prev, ambientClips, videos };
-      await applyAndSync(next);
-    },
-    [applyAndSync, settings],
-  );
-
-  const setMixClipVolume = useCallback(
-    async (videoId: string, clipId: string, volume: number) => {
-      const prev = settingsRef.current ?? settings;
-      if (!prev) return;
-      const v = Math.min(1, Math.max(0, volume));
-      const videos = prev.videos.map((row) => {
-        if (row.id !== videoId) return row;
-        const others = (row.mix ?? []).filter((l) => l.clipId !== clipId);
-        if (v < 0.0005) {
-          const nextRow = { ...row };
-          if (others.length) nextRow.mix = others;
-          else delete nextRow.mix;
-          return nextRow;
-        }
-        const existing = (row.mix ?? []).find((l) => l.clipId === clipId);
-        const id = existing?.id ?? `mix-${clipId}`;
-        return { ...row, mix: [...others, { id, clipId, volume: v }] };
-      });
       const next: NatureSettingsV2 = { ...prev, videos };
       await applyAndSync(next);
     },
@@ -423,101 +302,11 @@ export function NatureVideoAdminSection({
     );
   }
 
-  const busy = uploadBusy || audioUploadBusy || thumbSaveBusy;
+  const busy = uploadBusy || thumbSaveBusy;
 
   return (
     <>
     <div className="mt-10 flex flex-col gap-10">
-      <section
-        className="rounded-2xl border border-adminLine/80 bg-adminPanel/15 px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset] md:px-6 md:py-6"
-        aria-labelledby="nature-ambient-block-title"
-      >
-        <div className="flex flex-wrap items-center gap-2 gap-y-1">
-          <h2
-            id="nature-ambient-block-title"
-            className="text-[13px] font-semibold tracking-tight text-adminFg"
-          >
-            {t("admin.naturePage.ambientBlockTitle")}
-          </h2>
-          <span className="rounded-full border border-adminLine/70 bg-adminBg/70 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.12em] text-adminMuted">
-            {t("admin.naturePage.ambientBlockBadge")}
-          </span>
-        </div>
-        <p className="mt-2 max-w-prose text-[11px] leading-relaxed text-adminMuted">
-          {t("admin.naturePage.ambientBlockIntro")}
-        </p>
-
-        <div className="mt-4 rounded-md border border-dashed border-border bg-canvas/70 px-3 py-3">
-          <input
-            ref={audioFileInputRef}
-            type="file"
-            accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.opus,.webm,.flac"
-            className="sr-only"
-            aria-hidden
-            tabIndex={-1}
-            onChange={(e) => {
-              const input = e.target;
-              const chosen = input.files?.item(0) ?? null;
-              input.value = "";
-              void onAmbientFileChosen(chosen);
-            }}
-          />
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => audioFileInputRef.current?.click()}
-            className="rounded border border-adminLine bg-adminPanel px-3 py-2 text-[12px] font-medium text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {audioUploadBusy ? t("admin.naturePage.ambientUploading") : t("admin.naturePage.ambientUpload")}
-          </button>
-          <p className="mt-2 text-[10px] leading-relaxed text-adminMuted">
-            {t("admin.naturePage.ambientUploadFoot")}
-          </p>
-          {audioUploadHint ? (
-            <p
-              className={`mt-2 text-[11px] leading-snug ${
-                audioHintOk ? "text-emerald-900/90" : "text-amber-900/90"
-              }`}
-            >
-              {audioUploadHint}
-            </p>
-          ) : null}
-        </div>
-
-        {settings.ambientClips.length === 0 ? (
-          <p className="mt-3 text-[11px] text-adminMuted">{t("admin.naturePage.ambientListEmpty")}</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-adminLine border-y border-adminLine">
-            {settings.ambientClips.map((c) => (
-              <li key={c.id} className="px-3 py-2.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    key={`${c.id}-${c.title ?? ""}`}
-                    defaultValue={c.title ?? ""}
-                    className="min-w-0 flex-1 rounded border border-border bg-adminPanel px-2 py-1 text-[12px] text-adminFg"
-                    placeholder={t("admin.naturePage.ambientTitlePlaceholder")}
-                    aria-label={t("admin.naturePage.ambientTitlePlaceholder")}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      if ((c.title ?? "").trim() === val.trim()) return;
-                      void updateAmbientTitle(c.id, val);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="shrink-0 px-2 py-1 text-[11px] text-red-700/90 transition hover:bg-red-50"
-                    onClick={() => void removeAmbientClip(c.id)}
-                  >
-                    {t("admin.naturePage.ambientRemove")}
-                  </button>
-                </div>
-                <p className="mt-1 break-all font-mono text-[10px] text-adminMuted">{c.src}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
       <section
         className="rounded-2xl border border-adminLine/80 bg-adminPanel/10 px-5 py-5 shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] md:px-6 md:py-6"
         aria-labelledby="nature-video-block-title"
@@ -738,16 +527,6 @@ export function NatureVideoAdminSection({
                   </p>
                 ) : null}
 
-                <div className="mt-4">
-                  <p className="text-[11px] font-medium text-adminFg">{t("admin.naturePage.mixSectionTitle")}</p>
-                  <NatureClipMixWorkbench
-                    key={v.id}
-                    videoSrc={v.src}
-                    mix={v.mix}
-                    ambientClips={settings.ambientClips}
-                    onClipVolumeCommit={(clipId, vol) => void setMixClipVolume(v.id, clipId, vol)}
-                  />
-                </div>
               </li>
             );
           })

@@ -67,10 +67,13 @@ export function HomeNatureScreen() {
 
   const playback = useMemo(() => {
     if (!settings) return null;
-    return resolveNaturePlayback({
-      ...settings,
-      activeVideoId: localActiveId || settings.activeVideoId,
-    });
+    return resolveNaturePlayback(
+      {
+        ...settings,
+        activeVideoId: localActiveId || settings.activeVideoId,
+      },
+      { prefer1080: true },
+    );
   }, [settings, localActiveId]);
 
   const videoUri = playback?.videoSrc ? toAbsoluteUrl(baseUrl, playback.videoSrc) : "";

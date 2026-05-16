@@ -23,6 +23,7 @@ import {
 import {
   infoEditionWritableBibleDir,
   isInfoEditionDiskSaveEnabled,
+  isInfoEditionDiskSaveMisconfiguredInProduction,
   isInfoEditionProductionDiskConfigured,
 } from "@/lib/bible/info-edition-published-path";
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
@@ -43,16 +44,29 @@ export function getInfoEditionReaderPersistence(cwd = process.cwd()): InfoEditio
 }
 
 export function isInfoEditionReaderGenerateAllowed(): boolean {
-  if (getInfoEditionReaderPersistence() === "none") return false;
-  if (!isInfoEditionProductionDiskConfigured()) return false;
+  const mode = getInfoEditionReaderPersistence();
+  if (mode === "none") return false;
+  if (mode === "disk" && !isInfoEditionProductionDiskConfigured()) return false;
   return true;
 }
 
 export function infoEditionReaderGenerateBlockedReason(): string | null {
-  if (getInfoEditionReaderPersistence() === "none") {
-    return "本章导读生成未启用：Render 请挂载 Disk（如 /mnt/data），并设 INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data、AI_API_KEY。";
+  if (isInfoEditionDiskSaveMisconfiguredInProduction()) {
+    return (
+      "已开启 INFO_EDITION_DISK_SAVE，但生产环境未配置 DATA_ROOT / INFO_EDITION_DATA_DIR。" +
+      " Vercel 无持久盘：请关闭 INFO_EDITION_DISK_SAVE，改用 Supabase（NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY）并执行 info_edition migration；同时配置 AI_API_KEY。"
+    );
   }
-  if (!isInfoEditionProductionDiskConfigured()) {
+
+  const mode = getInfoEditionReaderPersistence();
+  if (mode === "none") {
+    return (
+      "本章导读生成未启用：请配置 Supabase（Vercel 推荐）或 Render 持久磁盘。" +
+      " Supabase：NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY + migration；" +
+      " 磁盘：INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；并设置 AI_API_KEY / AI_BASE_URL / AI_MODEL。"
+    );
+  }
+  if (mode === "disk" && !isInfoEditionProductionDiskConfigured()) {
     return "生产环境缺少 DATA_ROOT 或 INFO_EDITION_DATA_DIR，无法写入导读缓存（请指向 Render 持久磁盘，如 /mnt/data）。";
   }
   return null;

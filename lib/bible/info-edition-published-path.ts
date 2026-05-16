@@ -44,6 +44,15 @@ export function isInfoEditionProductionDiskConfigured(): boolean {
   return Boolean(infoEditionExternalDataRoot());
 }
 
+/** 已开 INFO_EDITION_DISK_SAVE 但生产环境未挂 DATA_ROOT（Vercel 等无盘时常误配） */
+export function isInfoEditionDiskSaveMisconfiguredInProduction(): boolean {
+  return (
+    isInfoEditionDiskSaveEnabled() &&
+    process.env.NODE_ENV === "production" &&
+    !infoEditionExternalDataRoot()
+  );
+}
+
 /** 旧版 Render 路径（曾写入 `<mount>/bible/…`，只读合并用） */
 export function infoEditionLegacyWritablePublishedPath(cwd: string): string | null {
   const external = infoEditionExternalDataRoot();

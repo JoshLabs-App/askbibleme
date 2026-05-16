@@ -1,5 +1,7 @@
 import { AppShellProviders } from "./app-shell-providers";
 import { buildHomeVerseRotationFromShellCookies } from "@/lib/bible/home-verse-rotation-rsc";
+import "./read/read-parchment-background.css";
+import "./read/read-parchment-shell-chrome.css";
 
 /**
  * 视口锁定的壳：主区单独滚动；非自然页时主导航为底部 fixed 图标条 + 播放键。

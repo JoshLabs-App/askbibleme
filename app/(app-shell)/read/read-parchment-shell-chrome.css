@@ -1,7 +1,26 @@
 /**
- * 读经 / 祷告：刘海与安全区铺羊皮底图（见 `ScriptureParchmentShellChromeEffect`）
+ * 读经 / 祷告：刘海与安全区铺羊皮底图（见 `ScriptureParchmentShellChromeEffect` + `AppShellFixedChrome`）
  */
 
+html[data-app-shell-safe-fill="parchment"],
+html[data-app-shell-safe-fill="parchment"] body {
+  background-color: var(--read-parchment-bg-canvas, #e5d2bf) !important;
+}
+
+.dark html[data-app-shell-safe-fill="parchment"],
+.dark html[data-app-shell-safe-fill="parchment"] body {
+  background-color: #1a1512 !important;
+}
+
+html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {
+  background-color: var(--read-parchment-bg-canvas, #e5d2bf) !important;
+}
+
+.dark html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {
+  background-color: #1a1512 !important;
+}
+
+html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop,
 html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
   background-color: var(--read-parchment-bg-canvas, #e5d2bf);
   background-image: var(--read-parchment-bg-image);
@@ -11,6 +30,7 @@ html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
 }
 
 @media (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop,
   html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
     background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
     background-position: center center;
@@ -19,8 +39,10 @@ html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill--top {
   height: var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px));
+  min-height: var(--app-shell-safe-top-fallback, 0px);
 }
 
+.dark html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop,
 .dark html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
   background-color: #1a1512;
   background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
@@ -29,6 +51,7 @@ html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill--top {
 }
 
 @media (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  .dark html[data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop,
   .dark html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill {
     background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
       var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
@@ -36,19 +59,11 @@ html[data-app-shell-safe-fill="parchment"] .app-shell-safe-area-fill--top {
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-inner {
-  background-color: var(--read-parchment-bg-canvas, #e5d2bf);
-}
-
-.dark html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-inner {
-  background-color: #1a1512;
+  background-color: transparent !important;
 }
 
 html[data-app-shell-safe-fill="parchment"] [data-app-shell-scroll] {
-  background-color: var(--read-parchment-bg-canvas, #e5d2bf);
-}
-
-.dark html[data-app-shell-safe-fill="parchment"] [data-app-shell-scroll] {
-  background-color: #1a1512;
+  background-color: transparent !important;
 }
 
 html[data-app-shell-safe-fill="parchment"] [data-app-shell-scroll] > main {
@@ -56,7 +71,16 @@ html[data-app-shell-safe-fill="parchment"] [data-app-shell-scroll] > main {
   background-color: transparent !important;
 }
 
+html[data-app-shell-safe-fill="parchment"] [data-app-shell-scroll] > main > div:first-child {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
 html[data-app-shell-safe-fill="parchment"] .read-bible-parchment-shell {
-  margin-top: calc(-1 * var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px)));
-  padding-top: var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px));
+  position: absolute;
+  inset: 0;
+  margin-top: 0;
+  padding-top: 0;
+  min-height: 100%;
 }

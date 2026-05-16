@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { AppShellTopBar, type AppShellTopBarTone } from "@/components/app-shell/AppShellTopBar";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
 import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
@@ -19,6 +20,7 @@ import {
   PRAYER_WARM_DARK_BRAND_RGB,
 } from "@/lib/prayer/prayer-shell-fill";
 import {
+  isScriptureParchmentPath,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
 } from "@/lib/read/scripture-parchment-shell";
@@ -87,6 +89,8 @@ export function ShellTemplateChromeLayout({
   topBarRightAccessory,
   topBarTone = "onLight",
 }: ShellTemplateChromeLayoutProps) {
+  const pathname = usePathname() ?? "";
+  const parchmentRoute = isScriptureParchmentPath(pathname);
   const prayerWarmDarkSnap = useSyncExternalStore(subscribeHtmlClassDark, getHtmlDarkSnapshot, () => "0");
 
   const resolvedAppShellBackground = useMemo(() => {
@@ -130,7 +134,7 @@ export function ShellTemplateChromeLayout({
   }, [chrome.fillBackgroundColor, embedPreview, appShellBackground, resolvedAppShellBackground]);
 
   const mainStyle: CSSProperties = useMemo(() => {
-    const fill = resolvedAppShellBackground ?? chrome.fillBackgroundColor;
+    const fill = parchmentRoute ? "transparent" : (resolvedAppShellBackground ?? chrome.fillBackgroundColor);
     return {
       ...(immersive
         ? {}
@@ -143,7 +147,7 @@ export function ShellTemplateChromeLayout({
       backgroundColor: fill,
       ...(embedPreview ? { overflow: "hidden", display: "flex", flexDirection: "column" } : {}),
     };
-  }, [chrome.fillBackgroundColor, immersive, embedPreview, resolvedAppShellBackground]);
+  }, [chrome.fillBackgroundColor, immersive, embedPreview, resolvedAppShellBackground, parchmentRoute]);
 
   const previewVars = useMemo(() => shellTemplatePreviewCssVars(theme), [theme]);
 
@@ -156,7 +160,9 @@ export function ShellTemplateChromeLayout({
   }, [previewVars, resolvedAppShellBackground]);
 
   const mainPadClass = immersive
-    ? "overflow-hidden pb-0 pl-0 pr-0 pt-[env(safe-area-inset-top,0px)]"
+    ? parchmentRoute
+      ? "overflow-hidden pb-0 pl-0 pr-0 pt-0"
+      : "overflow-hidden pb-0 pl-0 pr-0 pt-[env(safe-area-inset-top,0px)]"
     : embedPreview
       ? "min-h-0 overflow-hidden pb-6 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-[env(safe-area-inset-top,0px)]"
       : "overflow-visible pb-10 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-[env(safe-area-inset-top,0px)]";

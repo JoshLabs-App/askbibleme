@@ -1,9 +1,8 @@
 "use client";
 
 import { useLayoutEffect } from "react";
-import {
-  NATURE_HOME_THEME_LOCK_DATASET_KEY,
-} from "@/lib/nature/root-theme";
+import { NATURE_HOME_THEME_LOCK_DATASET_KEY } from "@/lib/nature/root-theme";
+import { measureAppShellSafeTopPx } from "@/lib/read/measure-app-shell-safe-top";
 import {
   SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
   SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR,
@@ -14,34 +13,18 @@ import {
   SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE,
 } from "@/lib/read/scripture-parchment-shell";
 
-function readSafeAreaInsetTopPx(): number {
-  if (typeof document === "undefined") return 0;
-  const probe = document.createElement("div");
-  probe.style.cssText =
-    "position:fixed;top:0;left:0;height:0;width:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px);";
-  document.documentElement.appendChild(probe);
-  const inset = probe.getBoundingClientRect().height;
-  probe.remove();
-  return inset;
-}
-
-function syncAndroidSafeTopFallback() {
+function syncSafeTopEffective() {
   const root = document.documentElement;
-  const envTop = readSafeAreaInsetTopPx();
-  if (envTop > 0) {
-    root.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
-    root.style.setProperty(
-      SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
-      "env(safe-area-inset-top, 0px)",
-    );
+  const topPx = measureAppShellSafeTopPx();
+  if (topPx > 0) {
+    root.style.setProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR, `${topPx}px`);
+    root.style.setProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR, `${topPx}px`);
     return;
   }
-  const vv = window.visualViewport;
-  const fallback = Math.max(0, Math.round(vv?.offsetTop ?? 0));
-  root.style.setProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR, `${fallback}px`);
+  root.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
   root.style.setProperty(
     SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
-    `max(env(safe-area-inset-top, 0px), var(${SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR}, 0px))`,
+    "env(safe-area-inset-top, 0px)",
   );
 }
 
@@ -52,6 +35,7 @@ function syncParchmentThemeColor() {
     meta.setAttribute("content", color);
   }
   document.documentElement.style.backgroundColor = color;
+  document.body.style.backgroundColor = color;
 }
 
 /**
@@ -63,10 +47,10 @@ export function ScriptureParchmentShellChromeEffect() {
     html.dataset[SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY] = SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE;
     html.dataset[NATURE_HOME_THEME_LOCK_DATASET_KEY] = SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE;
 
-    syncAndroidSafeTopFallback();
+    syncSafeTopEffective();
     syncParchmentThemeColor();
 
-    const onViewport = () => syncAndroidSafeTopFallback();
+    const onViewport = () => syncSafeTopEffective();
     window.visualViewport?.addEventListener("resize", onViewport);
     window.visualViewport?.addEventListener("scroll", onViewport);
     window.addEventListener("resize", onViewport);
@@ -84,6 +68,7 @@ export function ScriptureParchmentShellChromeEffect() {
       html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
       html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR);
       html.style.removeProperty("background-color");
+      document.body.style.removeProperty("background-color");
     };
   }, []);
 

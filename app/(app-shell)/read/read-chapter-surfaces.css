@@ -15,22 +15,7 @@
   flex-direction: column;
   overflow: hidden;
 
-  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
-  background-image: var(--read-parchment-bg-image);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-position: center center;
-}
-
-/* 横屏 / 宽比例：横版裁切图，拉伸铺满视口 */
-@media (min-width: 480px) and (orientation: landscape),
-  (min-width: 480px) and (min-aspect-ratio: 4/3) {
-  .read-bible-parchment-shell,
-  .read-chapter-shell {
-    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
-    background-size: 100% 100%;
-    background-position: center center;
-  }
+  background: transparent;
 }
 
 /* 实际滚动区：仅底缘渐隐；顶栏由 padding 避让固定菜单/设置角标（勿做顶部 alpha 遮罩，否则章首导航被吃掉） */
@@ -400,22 +385,6 @@
 
 .dark .read-chapter-verse-num {
   color: color-mix(in srgb, currentColor 74%, transparent);
-}
-
-.dark .read-bible-parchment-shell,
-.dark .read-chapter-shell {
-  background-color: #1a1512;
-  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-    var(--read-parchment-bg-image);
-  background-blend-mode: multiply, normal;
-}
-
-@media (min-width: 480px) and (min-aspect-ratio: 4/3) {
-  .dark .read-bible-parchment-shell,
-  .dark .read-chapter-shell {
-    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
-  }
 }
 
 /* 圣经首页：轮播经文与羊皮卷主色对齐（覆盖 Rotator 内 text-ink） */

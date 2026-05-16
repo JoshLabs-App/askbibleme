@@ -42,9 +42,7 @@ export function AppShellFixedChrome({ children }: Props) {
   const parchmentShell = isScriptureParchmentPath(pathname);
   const safeFill = scenesSurface
     ? SCENES_PAGE_SURFACE_STYLE
-    : parchmentShell
-      ? PARCHMENT_SHELL_SURFACE_STYLE
-      : ({ backgroundColor: "rgb(var(--brand-app-dark-rgb))" } as const);
+    : ({ backgroundColor: "rgb(var(--brand-app-dark-rgb))" } as const);
   const safeAreaClass = parchmentShell
     ? "app-shell-safe-area-fill pointer-events-none absolute z-[2]"
     : "app-shell-safe-area-fill pointer-events-none absolute z-0 bg-[rgb(var(--brand-app-dark-rgb))]";
@@ -78,7 +76,6 @@ export function AppShellFixedChrome({ children }: Props) {
          * `max(100dvh, 100svh)`：Android 上 `100dvh` 偶发小于可见区时，用 `svh` 抬高下限，减少顶缘露底。
          */
         minHeight: "max(100dvh, 100svh)",
-        ...(parchmentShell ? PARCHMENT_SHELL_SURFACE_STYLE : {}),
       }}
     >
       {parchmentShell ? (
@@ -88,7 +85,11 @@ export function AppShellFixedChrome({ children }: Props) {
       <div
         aria-hidden
         className={`${safeAreaClass} app-shell-safe-area-fill--top left-0 right-0 top-0`}
-        style={parchmentShell ? PARCHMENT_SHELL_SURFACE_STYLE : { ...safeFill, height: "env(safe-area-inset-top, 0px)" }}
+        style={
+          parchmentShell
+            ? { ...PARCHMENT_SHELL_SURFACE_STYLE, height: "env(safe-area-inset-top, 0px)" }
+            : { ...safeFill, height: "env(safe-area-inset-top, 0px)" }
+        }
       />
       <div
         aria-hidden

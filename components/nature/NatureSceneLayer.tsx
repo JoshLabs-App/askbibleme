@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
@@ -21,7 +21,7 @@ function cardTitle(v: NatureVideoEntry, fallback: string) {
 }
 
 /**
- * 场景页：方卡缩略 / 封面；当前片置末。全部铺开、横向居中，多行时自动换行（不横滑）。
+ * 场景页：方卡缩略 / 封面；保持配置顺序，当前片仅高亮不挪位。全部铺开、横向居中，多行时自动换行（不横滑）。
  */
 export function NatureSceneLayer({
   className = "",
@@ -33,16 +33,6 @@ export function NatureSceneLayer({
 }: Props) {
   const { t } = useLocale();
   const videos = settings.videos;
-
-  /** 正在播放的一条排在最后，其余保持配置中的顺序 */
-  const orderedVideos = useMemo(() => {
-    const active = activeVideoId.trim();
-    if (!active) return videos;
-    const hit = videos.find((v) => v.id === active);
-    if (!hit) return videos;
-    const rest = videos.filter((v) => v.id !== active);
-    return [...rest, hit];
-  }, [videos, activeVideoId]);
 
   const select = useCallback(
     (id: string) => {
@@ -60,7 +50,7 @@ export function NatureSceneLayer({
       data-shell-swipe-nav-exclude
     >
       <div className="flex w-full flex-wrap justify-center gap-2 pb-1 pt-0.5 sm:gap-2.5">
-          {orderedVideos.map((v) => {
+          {videos.map((v) => {
             const selected = v.id === activeVideoId;
             const preparing = prepareSceneId !== null && v.id === prepareSceneId;
             /** 方卡：先用户方图，再首帧静图；避免无图时依赖小 `<video>` 解码（iOS 常空白） */

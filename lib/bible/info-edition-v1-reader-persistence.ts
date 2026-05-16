@@ -25,6 +25,7 @@ import {
   isInfoEditionDiskSaveEnabled,
   isInfoEditionDiskSaveMisconfiguredInProduction,
   isInfoEditionProductionDiskConfigured,
+  isVercelDeployment,
 } from "@/lib/bible/info-edition-published-path";
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
@@ -34,6 +35,10 @@ export type InfoEditionReaderPersistence = "disk" | "supabase" | "none";
 export { isInfoEditionDiskSaveEnabled };
 
 export function getInfoEditionReaderPersistence(cwd = process.cwd()): InfoEditionReaderPersistence {
+  /** Vercel 无持久盘：禁止走 DATA_ROOT 磁盘，仅 Supabase */
+  if (isVercelDeployment()) {
+    return isSupabaseServiceConfigured() ? "supabase" : "none";
+  }
   if (isInfoEditionDiskSaveEnabled() && infoEditionWritableBibleDir(cwd)) {
     return "disk";
   }
@@ -60,8 +65,15 @@ export function infoEditionReaderGenerateBlockedReason(): string | null {
 
   const mode = getInfoEditionReaderPersistence();
   if (mode === "none") {
+    if (isVercelDeployment()) {
+      return (
+        "Vercel 上本章导读需 Supabase：请配置 NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY，" +
+        "执行 supabase/migrations/20260516000000_info_edition_v1_reader_cache.sql，" +
+        "并设置 AI_API_KEY（及 AI_BASE_URL / AI_MODEL）。可关闭 INFO_EDITION_DISK_SAVE。"
+      );
+    }
     return (
-      "本章导读生成未启用：请配置 Supabase（Vercel 推荐）或 Render 持久磁盘。" +
+      "本章导读生成未启用：请配置 Supabase 或 Render 持久磁盘。" +
       " Supabase：NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY + migration；" +
       " 磁盘：INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；并设置 AI_API_KEY / AI_BASE_URL / AI_MODEL。"
     );

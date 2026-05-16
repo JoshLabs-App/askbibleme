@@ -20,16 +20,16 @@ import {
   setInfoEditionReaderFailedSupabase,
   tryBeginInfoEditionPendingSupabase,
 } from "@/lib/bible/info-edition-v1-published-supabase";
+import { isInfoEditionDiskSaveEnabled } from "@/lib/bible/info-edition-published-path";
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
 
 export type InfoEditionReaderPersistence = "disk" | "supabase" | "none";
 
+export { isInfoEditionDiskSaveEnabled };
+
 export function getInfoEditionReaderPersistence(): InfoEditionReaderPersistence {
-  if (process.env.STUDIO_DISABLE_DISK_SAVE === "1") {
-    return isSupabaseServiceConfigured() ? "supabase" : "none";
-  }
-  if (process.env.NODE_ENV === "development") {
+  if (isInfoEditionDiskSaveEnabled()) {
     return "disk";
   }
   if (isSupabaseServiceConfigured()) {

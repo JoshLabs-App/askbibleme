@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const mode = getInfoEditionReaderPersistence();
     const error =
       mode === "none"
-        ? "本章导读生成未启用：生产环境请配置 NEXT_PUBLIC_SUPABASE_URL 与 SUPABASE_SERVICE_ROLE_KEY，并在 Supabase 执行 migrations；同时配置 AI_API_KEY（DeepSeek）。"
+        ? "本章导读生成未启用：Render 请挂载 Disk（如 /mnt/data），并设 INFO_EDITION_DISK_SAVE=1、INFO_EDITION_DATA_DIR=/mnt/data、AI_API_KEY。"
         : "本章导读生成暂不可用。";
     return NextResponse.json({ ok: false, error }, { status: 503 });
   }

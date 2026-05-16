@@ -13,11 +13,32 @@ import type {
   InfoEditionV1PublishedFile,
 } from "@/lib/bible/info-edition-v1-published-types";
 import { INFO_EDITION_V1_PUBLISHED_VERSION } from "@/lib/bible/info-edition-v1-published-types";
+import {
+  infoEditionBundledPublishedPath,
+  infoEditionWritablePublishedPath,
+} from "@/lib/bible/info-edition-published-path";
 
-const REL = path.join("data", "bible", "info-edition-v1-published.json");
+function readJsonFile(file: string): InfoEditionV1PublishedFile | null {
+  if (!fs.existsSync(file)) return null;
+  try {
+    return normalizeFile(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
+  } catch {
+    return null;
+  }
+}
 
-function absPath(cwd: string): string {
-  return path.join(cwd, REL);
+function mergePublishedFiles(
+  base: InfoEditionV1PublishedFile,
+  overlay: InfoEditionV1PublishedFile,
+): InfoEditionV1PublishedFile {
+  return {
+    ...base,
+    defaultRoleId: overlay.defaultRoleId || base.defaultRoleId,
+    defaultProfileId: overlay.defaultProfileId || base.defaultProfileId,
+    chapters: { ...base.chapters, ...overlay.chapters },
+    pending: { ...base.pending, ...overlay.pending },
+    failed: { ...base.failed, ...overlay.failed },
+  };
 }
 
 function defaultFile(): InfoEditionV1PublishedFile {
@@ -111,17 +132,19 @@ function normalizeFile(raw: unknown): InfoEditionV1PublishedFile {
 }
 
 export function readInfoEditionV1PublishedSync(cwd: string): InfoEditionV1PublishedFile {
-  const file = absPath(cwd);
-  if (!fs.existsSync(file)) return defaultFile();
-  try {
-    return normalizeFile(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
-  } catch {
-    return defaultFile();
+  const bundled = readJsonFile(infoEditionBundledPublishedPath(cwd)) ?? defaultFile();
+  const writable = infoEditionWritablePublishedPath(cwd);
+  if (!writable || writable === infoEditionBundledPublishedPath(cwd)) {
+    return bundled;
   }
+  const overlay = readJsonFile(writable);
+  if (!overlay) return bundled;
+  return mergePublishedFiles(bundled, overlay);
 }
 
 export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1PublishedFile): void {
-  const file = absPath(cwd);
+  const file =
+    infoEditionWritablePublishedPath(cwd) ?? infoEditionBundledPublishedPath(cwd);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, `${JSON.stringify(normalizeFile(next), null, 2)}\n`, "utf8");
 }

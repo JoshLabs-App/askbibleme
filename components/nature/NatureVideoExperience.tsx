@@ -23,10 +23,6 @@ import {
 } from "@/lib/nature/nature-soft-focus-prefs";
 import { shouldStartNatureVideoAt720 } from "@/lib/nature/nature-video-start-quality";
 import {
-  readNatureBackground1080Pref,
-  writeNatureBackground1080Pref,
-} from "@/lib/nature/nature-video-quality-prefs";
-import {
   NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
   NATURE_HOME_TEXT_SCALE_STEPS,
   natureHomeTextScaleAtStep,
@@ -262,7 +258,6 @@ export function NatureVideoExperience({ initial }: Props) {
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
   const [videoBroken, setVideoBroken] = useState(false);
-  const [preferNature1080, setPreferNature1080] = useState(true);
   /** 本会话内因卡顿从 1080 退回 720（换场景后重试 1080，除非弱网首帧策略） */
   const [adaptiveNature720, setAdaptiveNature720] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
@@ -397,7 +392,7 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [playbackSettings]);
 
   const currentClipHas1080 = Boolean(activeNatureRow?.src1080?.trim());
-  const effectivePreferNature1080 = preferNature1080 && !adaptiveNature720;
+  const effectivePreferNature1080 = !adaptiveNature720;
 
   const { videoSrc, posterSrc, previewStillSrc } = useMemo(
     () => resolveNaturePlayback(playbackSettings, { prefer1080: effectivePreferNature1080 }),
@@ -753,14 +748,13 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [activeVideoId, mediaPolicy.saveData]);
 
   const considerAdaptiveDowngradeTo720 = useCallback(() => {
-    if (!currentClipHas1080 || !preferNature1080 || adaptiveNature720) return;
+    if (!currentClipHas1080 || adaptiveNature720) return;
     const v = videoRef.current;
     if (!v) return;
     if (hasEnoughBufferedAhead(v, bufferAheadThreshold)) return;
     setAdaptiveNature720(true);
   }, [
     currentClipHas1080,
-    preferNature1080,
     adaptiveNature720,
     bufferAheadThreshold,
   ]);
@@ -816,7 +810,6 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useLayoutEffect(() => {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
-    setPreferNature1080(readNatureBackground1080Pref());
   }, []);
 
   useEffect(() => {
@@ -862,21 +855,6 @@ export function NatureVideoExperience({ initial }: Props) {
       return next;
     });
   }, []);
-
-  const onToggleNature1080 = useCallback(() => {
-    if (!effectivePreferNature1080 && preferNature1080) {
-      setAdaptiveNature720(false);
-      setVideoBroken(false);
-      return;
-    }
-    setPreferNature1080((p) => {
-      const next = !p;
-      writeNatureBackground1080Pref(next);
-      if (next) setAdaptiveNature720(false);
-      return next;
-    });
-    setVideoBroken(false);
-  }, [effectivePreferNature1080, preferNature1080]);
 
   const softFocusLayerVisible = natureBgSoftFocus || natureSoftFocusPanelOpen;
   const softFocusDisplayOpacity = natureSoftFocusPanelOpen ? softFocusDraftOpacity : softFocusCommittedOpacity;
@@ -1079,25 +1057,6 @@ export function NatureVideoExperience({ initial }: Props) {
                 </button>
               </div>
             ) : null}
-            {hasNatureVisual && currentClipHas1080 ? (
-              <button
-                type="button"
-                onClick={onToggleNature1080}
-                aria-pressed={effectivePreferNature1080}
-                aria-label={t("nature.bg1080ToggleAria")}
-                className={NATURE_BELL_BTN}
-              >
-                <span
-                  className={
-                    effectivePreferNature1080
-                      ? "text-[10px] font-semibold tabular-nums leading-none tracking-tight text-white [filter:drop-shadow(0_0_4px_rgba(255,255,255,0.65))]"
-                      : "text-[10px] font-medium tabular-nums leading-none tracking-tight text-white/60"
-                  }
-                >
-                  1080
-                </span>
-              </button>
-            ) : null}
             <div className="relative isolate">
               {verseAppearancePanelOpen ? (
                 <div
@@ -1207,7 +1166,7 @@ export function NatureVideoExperience({ initial }: Props) {
                   if (introRevealed) schedulePlaybackWaitHint();
                 }}
                 onError={() => {
-                  if (currentClipHas1080 && preferNature1080 && !adaptiveNature720) {
+                  if (currentClipHas1080 && !adaptiveNature720) {
                     setAdaptiveNature720(true);
                     return;
                   }

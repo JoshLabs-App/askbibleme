@@ -25,6 +25,7 @@ import {
   isInfoEditionDiskSaveMisconfiguredInProduction,
   isInfoEditionProductionDiskConfigured,
   isInfoEditionWritableDiskAvailable,
+  isRenderDeployment,
   isVercelDeployment,
 } from "@/lib/bible/info-edition-published-path";
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
@@ -54,28 +55,32 @@ export function isInfoEditionReaderGenerateAllowed(): boolean {
 export function infoEditionReaderGenerateBlockedReason(): string | null {
   if (isInfoEditionDiskSaveMisconfiguredInProduction()) {
     return (
-      "已开启 INFO_EDITION_DISK_SAVE，但生产环境未配置 DATA_ROOT / INFO_EDITION_DATA_DIR。" +
-      " Vercel 无持久盘：请关闭 INFO_EDITION_DISK_SAVE，改用 Supabase（NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY）并执行 info_edition migration；同时配置 AI_API_KEY。"
+      "已开启 INFO_EDITION_DISK_SAVE，但未配置 DATA_ROOT / INFO_EDITION_DATA_DIR。" +
+      " Render 请在后台挂载 Persistent Disk 并设 DATA_ROOT=/mnt/data；或改用 Supabase + AI_API_KEY。"
     );
   }
 
   const mode = getInfoEditionReaderPersistence();
   if (mode === "none") {
+    if (isRenderDeployment()) {
+      return (
+        "Render 上本章导读二选一：① Persistent Disk 挂载到 /mnt/data，并设 INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；" +
+        "② Supabase：NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY，并执行 migration/20260516000000_info_edition_v1_reader_cache.sql。" +
+        " 两种方案均需 AI_API_KEY、AI_BASE_URL、AI_MODEL。"
+      );
+    }
     if (isVercelDeployment()) {
       return (
-        "Vercel 上本章导读需 Supabase：请配置 NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY，" +
-        "执行 supabase/migrations/20260516000000_info_edition_v1_reader_cache.sql，" +
-        "并设置 AI_API_KEY（及 AI_BASE_URL / AI_MODEL）。可关闭 INFO_EDITION_DISK_SAVE。"
+        "本章导读需 Supabase：NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY、migration，及 AI_API_KEY。" +
+        " 请关闭 INFO_EDITION_DISK_SAVE。"
       );
     }
     return (
-      "本章导读生成未启用：请配置 Supabase 或 Render 持久磁盘。" +
-      " Supabase：NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY + migration；" +
-      " 磁盘：INFO_EDITION_DISK_SAVE=1、DATA_ROOT=/mnt/data；并设置 AI_API_KEY / AI_BASE_URL / AI_MODEL。"
+      "本章导读生成未启用：请配置 Supabase 或持久磁盘（INFO_EDITION_DISK_SAVE=1、DATA_ROOT），并设置 AI_API_KEY / AI_BASE_URL / AI_MODEL。"
     );
   }
   if (mode === "disk" && !isInfoEditionProductionDiskConfigured()) {
-    return "生产环境缺少 DATA_ROOT 或 INFO_EDITION_DATA_DIR，无法写入导读缓存（请指向 Render 持久磁盘，如 /mnt/data）。";
+    return "生产环境缺少 DATA_ROOT 或 INFO_EDITION_DATA_DIR（Render 请挂载 Persistent Disk 到该路径，如 /mnt/data）。";
   }
   return null;
 }

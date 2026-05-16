@@ -69,6 +69,11 @@ export function isVercelDeployment(): boolean {
   return process.env.VERCEL === "1" || Boolean(process.env.VERCEL);
 }
 
+/** askbible.me 等自托管（Render Web Service） */
+export function isRenderDeployment(): boolean {
+  return process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
+}
+
 /** 已开 INFO_EDITION_DISK_SAVE 但生产环境未挂 DATA_ROOT（Vercel 等无盘时常误配） */
 export function isInfoEditionDiskSaveMisconfiguredInProduction(): boolean {
   return (

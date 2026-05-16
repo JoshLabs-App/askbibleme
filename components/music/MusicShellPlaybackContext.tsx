@@ -908,6 +908,30 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const st = storeRef.current;
     const eff = effectiveSrcRef.current.trim();
 
+    /** 已离开 `/read/{书}/{章}`：底栏播放键管壳层音乐，勿续播仍挂在 override 上的整章经朗读。 */
+    const scriptureOnNonChapterRoute = Boolean(eff && isCuvChapterAudioEffectiveSrc(eff));
+    if (scriptureOnNonChapterRoute) {
+      if (!a.paused) {
+        a.pause();
+        setPlaying(false);
+        return;
+      }
+      setScriptureAudioRepeatModeState("off");
+      scriptureAudioRepeatRef.current = "off";
+      if (st) {
+        const avoid = eff;
+        const pick =
+          pickRandomShellAudioTrackSrc(st, avoid)?.trim() || getShellDefaultAudioSrc(st)?.trim() || "";
+        if (pick) {
+          playAfterNextBindRef.current = true;
+          const def = getShellDefaultAudioSrc(st)?.trim() ?? "";
+          if (def && shellPlaybackUrlsEqual(pick, def)) setPlaybackSrc(null);
+          else setPlaybackSrc(pick);
+        }
+      }
+      return;
+    }
+
     if (!eff) {
       if (st) {
         const boot = getShellDefaultAudioSrc(st)?.trim() ?? "";

@@ -3,6 +3,7 @@ import path from "node:path";
 import type { VerseRef } from "@/lib/bible/verse-ref";
 import { parseVerseRefFromUnknown } from "@/lib/bible/verse-ref-json";
 import type { ScriptureSourceMeta } from "@/lib/scripture/scripture-source-meta";
+import { capSiteVersePoolRefs } from "@/lib/scripture/site-verse-pool";
 
 const REL = path.join("data", "scripture", "external-home-verse-rotation.json");
 
@@ -29,7 +30,8 @@ export function readExternalHomeVerseRotationSync(cwd: string): ExternalHomeVers
     const r = parseVerseRefFromUnknown(item);
     if (r) verseRefs.push(r);
   }
-  if (verseRefs.length === 0) return null;
+  const capped = capSiteVersePoolRefs(verseRefs);
+  if (capped.length === 0) return null;
   const sm = o.sourceMeta;
   let sourceMeta: ScriptureSourceMeta | undefined;
   if (sm && typeof sm === "object") {
@@ -42,13 +44,13 @@ export function readExternalHomeVerseRotationSync(cwd: string): ExternalHomeVers
       snapshotVersion: typeof m.snapshotVersion === "string" ? m.snapshotVersion : undefined,
     };
   }
-  return { version: o.version, sourceMeta, verseRefs };
+  return { version: o.version, sourceMeta, verseRefs: capped };
 }
 
-/** 写入首页轮播 `VerseRef[]`（不含 sourceMeta，避免落库来源信息）。 */
+/** 写入全站经文池 `VerseRef[]`（最多 400；不含 sourceMeta）。 */
 export function writeExternalHomeVerseRotationSync(cwd: string, verseRefs: VerseRef[]): void {
   const abs = path.join(cwd, REL);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
-  const payload: ExternalHomeVerseRotationFile = { version: 2, verseRefs };
+  const payload: ExternalHomeVerseRotationFile = { version: 2, verseRefs: capSiteVersePoolRefs(verseRefs) };
   fs.writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 }

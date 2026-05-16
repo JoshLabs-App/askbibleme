@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildVerseRefsFromThemeSubcategoryKeys } from "@/lib/scripture/build-home-verse-refs-from-theme-selection";
 import { readHomeGoldenThemeSelectionSync, writeHomeGoldenThemeSelectionSync } from "@/lib/scripture/home-golden-theme-selection";
 import { writeExternalHomeVerseRotationSync } from "@/lib/scripture/read-external-home-verse-rotation";
+import { writeHomePrayerPoolFromGoldenRotation } from "@/lib/home-prayer-pools/build-golden-rotation-pool";
 import { regenerateHomeGoldenVerseRotationStatic } from "@/lib/scripture/regenerate-home-golden-verse-rotation-static";
 import { getReaderVerseThemesDatabase } from "@/lib/scripture/reader-verse-themes-db";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
@@ -72,12 +73,14 @@ export async function POST(req: Request) {
     writeHomeGoldenThemeSelectionSync(cwd, uniq);
     writeExternalHomeVerseRotationSync(cwd, verseRefs);
     await regenerateHomeGoldenVerseRotationStatic(cwd);
+    const pool = await writeHomePrayerPoolFromGoldenRotation(cwd);
     return NextResponse.json(
       {
         ok: true,
         selectedCount: uniq.length,
         writtenVerseRefs: verseRefs.length,
         wroteStaticSnapshot: true,
+        prayerPoolVerseCount: pool.verseCount,
       },
       { headers: { "Cache-Control": "no-store" } },
     );

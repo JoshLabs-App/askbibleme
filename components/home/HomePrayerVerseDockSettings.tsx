@@ -116,7 +116,7 @@ export function HomePrayerVerseDockSettings({
   const isPage = placement === "page";
   const isPopover = placement === "popover";
   const isPageLike = isPage || isPopover;
-  const sections = sectionsProp ?? (["scope", "translation"] as HomeVerseSettingsSection[]);
+  const sections = sectionsProp ?? (["translation"] as HomeVerseSettingsSection[]);
   const showScope = sections.includes("scope");
   const showTranslation = sections.includes("translation");
   const showGoldenFont = sections.includes("goldenFont");

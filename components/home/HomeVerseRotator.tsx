@@ -8,7 +8,8 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
 import { goldenVerseTextShadowClass } from "@/lib/home-prayer-pools/golden-verse-text-effects";
-import { HOME_VERSES_BY_LOCALE, type HomeVerseEntry } from "@/lib/i18n/home-verses";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
+import { READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE } from "@/lib/i18n/read-scripture-about-verses";
 import type { NatureHomeVerseTextEffectV1 } from "@/lib/home/nature-home-verse-appearance-prefs";
 
 function natureHomePrimaryOnVideo(effect: NatureHomeVerseTextEffectV1, isDark: boolean): string {
@@ -187,11 +188,11 @@ export function HomeVerseRotator({
     if (standaloneVersesByLocale) {
       const list = standaloneVersesByLocale[primaryLocale];
       if (list && list.length > 0) return list;
-      return HOME_VERSES_BY_LOCALE[primaryLocale];
+      return READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[primaryLocale];
     }
     const fromServer = ctx!.entriesByLocale?.[primaryLocale];
     if (fromServer && fromServer.length > 0) return fromServer;
-    return HOME_VERSES_BY_LOCALE[primaryLocale];
+    return READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[primaryLocale];
   }, [standaloneVersesByLocale, primaryLocale, ctx?.entriesByLocale]);
 
   const secondaryList = useMemo(() => {

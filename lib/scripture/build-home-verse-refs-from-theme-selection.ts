@@ -1,5 +1,5 @@
 import type { VerseRef } from "@/lib/bible/verse-ref";
-import { HOME_GOLDEN_THEME_ROTATION_MAX_REFS } from "@/lib/scripture/home-golden-theme-constants";
+import { SITE_VERSE_POOL_MAX } from "@/lib/scripture/site-verse-pool";
 import { getReaderVerseThemesDatabase } from "@/lib/scripture/reader-verse-themes-db";
 
 function refKey(r: VerseRef): string {
@@ -14,7 +14,7 @@ export async function buildVerseRefsFromThemeSubcategoryKeys(
   keys: string[],
   options?: { maxRefs?: number; shuffle?: boolean },
 ): Promise<VerseRef[]> {
-  const max = options?.maxRefs ?? HOME_GOLDEN_THEME_ROTATION_MAX_REFS;
+  const max = options?.maxRefs ?? SITE_VERSE_POOL_MAX;
   const shuffle = options?.shuffle !== false;
   const db = await getReaderVerseThemesDatabase(cwd);
   if (!db || keys.length === 0) return [];

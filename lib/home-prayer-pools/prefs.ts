@@ -98,12 +98,7 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
   }
 }
 
-function normalizeScope(raw: unknown): VerseScopeV1 {
-  if (!raw || typeof raw !== "object") return { type: "all" };
-  const o = raw as { type?: string; categoryId?: string };
-  if (o.type === "category" && typeof o.categoryId === "string" && o.categoryId.trim()) {
-    return { type: "category", categoryId: o.categoryId.trim() };
-  }
+function normalizeScope(_raw: unknown): VerseScopeV1 {
   return { type: "all" };
 }
 
@@ -126,8 +121,8 @@ export function requestHomePrayerVerseFeedReload(): void {
   window.dispatchEvent(new Event(HOME_PRAYER_VERSE_FEED_RELOAD_EVENT));
 }
 
-export function scopeIdFromPrefs(scope: VerseScopeV1): string {
-  return scope.type === "all" ? "all" : scope.categoryId;
+export function scopeIdFromPrefs(_scope: VerseScopeV1): string {
+  return "all";
 }
 
 export function verseTranslationIdsFromPrefs(prefs: HomePrayerVersePrefsV1): { zh: string; en: string } {

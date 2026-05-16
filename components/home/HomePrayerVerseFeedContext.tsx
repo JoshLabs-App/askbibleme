@@ -6,7 +6,7 @@ import { useHomePrayerVerseFeed } from "@/components/home/useHomePrayerVerseFeed
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
-import { HOME_VERSES_BY_LOCALE } from "@/lib/i18n/home-verses";
+import { READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE } from "@/lib/i18n/read-scripture-about-verses";
 
 export type HomePrayerVerseFeedContextValue = {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
@@ -63,11 +63,11 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   const verseKeysSig = verseKeys?.join("\u0001") ?? "";
 
   const primaryLocale: AppLocale = bilingual ? "en" : locale;
-  /** 与 `HomeVerseRotator` 同源：有池/RSC 列表用列表，否则用内置 `HOME_VERSES_BY_LOCALE`。 */
+  /** 与 `HomeVerseRotator` 同源：有池/RSC 列表用列表，否则用紧急回退文案。 */
   const nVerses = useMemo(() => {
     const fromServer = entriesByLocale?.[primaryLocale];
     if (fromServer && fromServer.length > 0) return fromServer.length;
-    return HOME_VERSES_BY_LOCALE[primaryLocale].length;
+    return READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[primaryLocale].length;
   }, [entriesByLocale, primaryLocale]);
 
   const nearEndIndex = Math.min(activeIndex, Math.max(0, nVerses - 1));

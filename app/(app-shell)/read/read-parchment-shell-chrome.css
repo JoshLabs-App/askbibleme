@@ -1,40 +1,51 @@
 /**
- * 读经 / 祷告：单层羊皮底图（`html`/`body` + `background-attachment: fixed` 全屏铺底，避免顶栏/安全区再拉伸出一层）
+ * 读经 / 祷告：单层羊皮底（`html::before` fixed 全屏 + 透明 theme-color，顶栏下仍是同一张底图）
  */
 
-html[data-app-shell-safe-fill="parchment"],
-html[data-app-shell-safe-fill="parchment"] body {
-  background-color: var(--read-parchment-bg-canvas, #ecd9b9) !important;
-  background-image: var(--read-parchment-bg-image) !important;
-  background-repeat: no-repeat !important;
-  background-size: 100% 100% !important;
-  background-position: center center !important;
-  background-attachment: fixed !important;
+html[data-app-shell-safe-fill="parchment"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center center;
 }
 
 @media (min-width: 480px) and (orientation: landscape),
   (min-width: 480px) and (min-aspect-ratio: 4/3) {
-  html[data-app-shell-safe-fill="parchment"],
-  html[data-app-shell-safe-fill="parchment"] body {
-    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image)) !important;
+  html[data-app-shell-safe-fill="parchment"]::before {
+    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
   }
 }
 
-.dark html[data-app-shell-safe-fill="parchment"],
-.dark html[data-app-shell-safe-fill="parchment"] body {
-  background-color: #1a1512 !important;
+.dark html[data-app-shell-safe-fill="parchment"]::before {
+  background-color: #1a1512;
   background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-    var(--read-parchment-bg-image) !important;
+    var(--read-parchment-bg-image);
   background-blend-mode: multiply, normal;
 }
 
 @media (min-width: 480px) and (orientation: landscape),
   (min-width: 480px) and (min-aspect-ratio: 4/3) {
-  .dark html[data-app-shell-safe-fill="parchment"],
-  .dark html[data-app-shell-safe-fill="parchment"] body {
+  .dark html[data-app-shell-safe-fill="parchment"]::before {
     background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image)) !important;
+      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
   }
+}
+
+html[data-app-shell-safe-fill="parchment"],
+html[data-app-shell-safe-fill="parchment"] body {
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9) !important;
+  background-image: none !important;
+}
+
+.dark html[data-app-shell-safe-fill="parchment"],
+.dark html[data-app-shell-safe-fill="parchment"] body {
+  background-color: #1a1512 !important;
 }
 
 html[data-app-shell-safe-fill="parchment"] .app-shell-fixed-chrome-outer {

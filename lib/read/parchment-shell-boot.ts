@@ -9,10 +9,9 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
 
   var html = document.documentElement;
   var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  var color = dark ? "#1a1512" : "#ecd9b9";
+  var canvas = dark ? "#1a1512" : "#ecd9b9";
   html.dataset.appShellSafeFill = "parchment";
-  html.style.backgroundColor = color;
-  html.style.backgroundImage = "none";
+  html.style.backgroundColor = canvas;
   html.style.colorScheme = dark ? "dark" : "light";
 
   var topPx = 0;
@@ -39,6 +38,6 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   }
 
   var metas = document.querySelectorAll('meta[name="theme-color"]');
-  for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", color);
+  for (var i = 0; i < metas.length; i++) metas[i].setAttribute("content", "transparent");
 })();
 `.trim();

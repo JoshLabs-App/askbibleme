@@ -8,6 +8,7 @@ import {
   SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
+  SCRIPTURE_PARCHMENT_STATUS_BAR_THEME,
   SCRIPTURE_PARCHMENT_THEME_COLOR,
   SCRIPTURE_PARCHMENT_THEME_COLOR_DARK,
   SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE,
@@ -27,16 +28,16 @@ function syncSafeTopEffective() {
 
 function syncParchmentThemeColor() {
   const dark = document.documentElement.classList.contains("dark");
-  const color = dark ? SCRIPTURE_PARCHMENT_THEME_COLOR_DARK : SCRIPTURE_PARCHMENT_THEME_COLOR;
+  const canvas = dark ? SCRIPTURE_PARCHMENT_THEME_COLOR_DARK : SCRIPTURE_PARCHMENT_THEME_COLOR;
   for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
-    meta.setAttribute("content", color);
+    meta.setAttribute("content", SCRIPTURE_PARCHMENT_STATUS_BAR_THEME);
   }
-  document.documentElement.style.backgroundColor = color;
-  document.body.style.backgroundColor = color;
+  document.documentElement.style.backgroundColor = canvas;
+  document.body.style.backgroundColor = canvas;
 }
 
 /**
- * 读经 / 祷告羊皮卷：刘海与安全区铺底图；Android 顶栏 `theme-color` 与卷轴暖色对齐。
+ * 读经 / 祷告羊皮卷：透明顶栏 + 全屏羊皮底（状态栏下延续同一张底图）。
  */
 export function ScriptureParchmentShellChromeEffect() {
   useLayoutEffect(() => {

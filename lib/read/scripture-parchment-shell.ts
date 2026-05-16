@@ -14,8 +14,12 @@ export const SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE = "parchment";
 export const SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR = "--app-shell-safe-top-fallback";
 export const SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR = "--app-shell-safe-top-effective";
 
+/** 铺底 / 不支持透明顶栏时的兜底 */
 export const SCRIPTURE_PARCHMENT_THEME_COLOR = "#ecd9b9";
 export const SCRIPTURE_PARCHMENT_THEME_COLOR_DARK = "#1a1512";
+
+/** 顶栏透明，让 `html` 羊皮底延伸到状态栏下（Chrome 109+ / iOS 半透明顶栏） */
+export const SCRIPTURE_PARCHMENT_STATUS_BAR_THEME = "transparent";
 
 export function isScriptureParchmentPath(pathname: string): boolean {
   const p = pathname || "";

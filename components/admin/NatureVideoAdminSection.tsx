@@ -221,7 +221,11 @@ export function NatureVideoAdminSection({
       if (activeVideoId === id || !videos.some((v) => v.id === activeVideoId)) {
         activeVideoId = videos[0]?.id ?? "";
       }
-      const next: NatureSettingsV2 = { ...prev, videos, activeVideoId };
+      let scenesPageVideoId = prev.scenesPageVideoId;
+      if (scenesPageVideoId === id || (scenesPageVideoId && !videos.some((v) => v.id === scenesPageVideoId))) {
+        scenesPageVideoId = undefined;
+      }
+      const next: NatureSettingsV2 = { ...prev, videos, activeVideoId, scenesPageVideoId };
       await applyAndSync(next);
     },
     [applyAndSync, settings],
@@ -248,6 +252,21 @@ export function NatureVideoAdminSection({
         v.id === id ? { ...v, category: parseNatureSceneCategory(category) } : v,
       );
       const next: NatureSettingsV2 = { ...prev, videos };
+      await applyAndSync(next);
+    },
+    [applyAndSync, settings],
+  );
+
+  const setScenesPageVideoId = useCallback(
+    async (videoId: string) => {
+      const prev = settingsRef.current ?? settings;
+      if (!prev) return;
+      const trimmed = videoId.trim();
+      const next: NatureSettingsV2 = {
+        ...prev,
+        scenesPageVideoId:
+          trimmed && prev.videos.some((v) => v.id === trimmed) ? trimmed : undefined,
+      };
       await applyAndSync(next);
     },
     [applyAndSync, settings],
@@ -340,6 +359,29 @@ export function NatureVideoAdminSection({
         <p className="mt-2 max-w-prose text-[11px] leading-relaxed text-adminMuted">
           {t("admin.naturePage.videoBlockIntro")}
         </p>
+
+        <div className="mt-4 flex max-w-md flex-col gap-1.5">
+          <label htmlFor="nature-scenes-page-backdrop" className="text-[11px] font-medium text-adminFg">
+            {t("admin.naturePage.scenesPageBackdropLabel")}
+          </label>
+          <select
+            id="nature-scenes-page-backdrop"
+            disabled={busy || settings.videos.length === 0}
+            value={settings.scenesPageVideoId?.trim() ?? ""}
+            className="rounded border border-border bg-adminPanel px-2 py-1.5 text-[12px] text-adminFg"
+            onChange={(e) => void setScenesPageVideoId(e.target.value)}
+          >
+            <option value="">{t("admin.naturePage.scenesPageBackdropFollowHome")}</option>
+            {settings.videos.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.title?.trim() || t("admin.naturePage.unnamedClip")}
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] leading-relaxed text-adminMuted">
+            {t("admin.naturePage.scenesPageBackdropHint")}
+          </p>
+        </div>
 
         {showGallery ? (
         <div className="mt-6">

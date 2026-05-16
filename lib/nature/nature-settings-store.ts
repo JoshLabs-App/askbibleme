@@ -33,8 +33,15 @@ export function defaultNatureSettingsV2(): NatureSettingsV2 {
     videos: [],
     ambientClips: [],
     activeVideoId: "",
+    scenesPageVideoId: "",
     playbackRate: 1,
   };
+}
+
+function normalizeScenesPageVideoId(raw: unknown, videos: { id: string }[]): string {
+  const explicit = typeof raw === "string" ? raw.trim() : "";
+  if (explicit && videos.some((v) => v.id === explicit)) return explicit;
+  return "";
 }
 
 function collectAmbientClipEntries(raw: unknown): NatureAmbientClipEntry[] {
@@ -179,6 +186,7 @@ function normalizeV2(o: Record<string, unknown>): NatureSettingsV2 {
   if (!activeVideoId && videos.length > 0) {
     activeVideoId = videos[0]?.id ?? "";
   }
+  const scenesPageVideoId = normalizeScenesPageVideoId(o.scenesPageVideoId, videos);
   const playbackRate =
     typeof o.playbackRate === "number" && Number.isFinite(o.playbackRate)
       ? clampRate(o.playbackRate)
@@ -192,6 +200,7 @@ function normalizeV2(o: Record<string, unknown>): NatureSettingsV2 {
     videos,
     ambientClips,
     activeVideoId,
+    ...(scenesPageVideoId ? { scenesPageVideoId } : {}),
     playbackRate,
     ...(posterSrc ? { posterSrc } : {}),
   };
@@ -235,6 +244,7 @@ export function assertValidNatureSettingsForWrite(raw: unknown): NatureSettingsV
     activeVideoId = videos[0]?.id ?? "";
   }
   if (!activeVideoId && videos.length > 0) activeVideoId = videos[0]?.id ?? "";
+  const scenesPageVideoId = normalizeScenesPageVideoId(o.scenesPageVideoId, videos);
   const playbackRate =
     typeof o.playbackRate === "number" && Number.isFinite(o.playbackRate)
       ? clampRate(o.playbackRate)
@@ -248,6 +258,7 @@ export function assertValidNatureSettingsForWrite(raw: unknown): NatureSettingsV
     videos,
     ambientClips,
     activeVideoId,
+    ...(scenesPageVideoId ? { scenesPageVideoId } : {}),
     playbackRate,
     ...(posterSrc ? { posterSrc } : {}),
   };

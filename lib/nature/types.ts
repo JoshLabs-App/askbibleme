@@ -41,6 +41,8 @@ export type NatureSettingsV2 = {
   ambientClips: NatureAmbientClipEntry[];
   /** 自然页当前播放；若为空或找不到对应项则用列表第一项 */
   activeVideoId: string;
+  /** 场景选择页 `/scenes` 背景影片；缺省或无效时同 {@link activeVideoId} */
+  scenesPageVideoId?: string;
   playbackRate: number;
   posterSrc?: string;
 };

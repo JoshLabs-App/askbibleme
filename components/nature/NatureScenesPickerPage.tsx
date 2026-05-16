@@ -12,6 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
+import { NatureScenesPageBackdrop } from "@/components/nature/NatureScenesPageBackdrop";
 import { ScenesPageListenShortcuts } from "@/components/nature/ScenesPageListenShortcuts";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
@@ -145,7 +146,7 @@ export function NatureScenesPickerPage({ initial }: Props) {
 
   const videoStageShellStyle: CSSProperties = useMemo(
     () => ({
-      ...SCENES_PAGE_SURFACE_STYLE,
+      position: "relative",
       height:
         videoStageHeightPx > 0
           ? `${videoStageHeightPx}px`
@@ -167,6 +168,7 @@ export function NatureScenesPickerPage({ initial }: Props) {
       />
 
       <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
+        <NatureScenesPageBackdrop settings={settings} />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(58dvh,68svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
           <div className="pointer-events-auto mx-auto flex w-full min-h-0 max-w-lg flex-col items-stretch gap-5 overflow-y-auto overscroll-y-contain px-1 pb-1 sm:max-w-xl sm:px-2 md:max-w-3xl lg:max-w-none">

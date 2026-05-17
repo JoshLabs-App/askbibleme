@@ -1,6 +1,16 @@
 export const READ_BIBLE_TYPOGRAPHY_STORAGE_KEY = "selah_read_bible_typography_v1";
 
-export type ReadBibleSizeId = "s" | "m" | "l" | "xl" | "xxl";
+export type ReadBibleSizeId =
+  | "s"
+  | "m"
+  | "l"
+  | "xl"
+  | "xxl"
+  | "xxxl"
+  | "xxxxl"
+  | "xxxxxl"
+  | "xxxxxxl"
+  | "xxxxxxxl";
 
 export type ReadBibleTypographyPrefsV1 = {
   size: ReadBibleSizeId;
@@ -60,6 +70,46 @@ const READ_BIBLE_SIZE_TOKENS: Record<ReadBibleSizeId, SizeTokens> = {
     homeTitleEn: "clamp(1.02rem,2.95vmin,1.28rem)",
     contrastVerseRem: "1.34rem",
   },
+  xxxl: {
+    verseRem: "1.88rem",
+    chapterTitleRem: "2.32rem",
+    homeTitleHe: "clamp(4.05rem,15.5vmin,6.45rem)",
+    homeTitleZh: "clamp(2.72rem,9.6vmin,4.6rem)",
+    homeTitleEn: "clamp(1.1rem,3.2vmin,1.38rem)",
+    contrastVerseRem: "1.48rem",
+  },
+  xxxxl: {
+    verseRem: "2.1rem",
+    chapterTitleRem: "2.54rem",
+    homeTitleHe: "clamp(4.5rem,17vmin,7.15rem)",
+    homeTitleZh: "clamp(3.02rem,10.5vmin,5.1rem)",
+    homeTitleEn: "clamp(1.18rem,3.45vmin,1.48rem)",
+    contrastVerseRem: "1.62rem",
+  },
+  xxxxxl: {
+    verseRem: "2.34rem",
+    chapterTitleRem: "2.78rem",
+    homeTitleHe: "clamp(4.95rem,18.5vmin,7.85rem)",
+    homeTitleZh: "clamp(3.35rem,11.5vmin,5.65rem)",
+    homeTitleEn: "clamp(1.26rem,3.7vmin,1.58rem)",
+    contrastVerseRem: "1.78rem",
+  },
+  xxxxxxl: {
+    verseRem: "2.6rem",
+    chapterTitleRem: "3.04rem",
+    homeTitleHe: "clamp(5.45rem,20vmin,8.6rem)",
+    homeTitleZh: "clamp(3.72rem,12.5vmin,6.25rem)",
+    homeTitleEn: "clamp(1.34rem,3.95vmin,1.68rem)",
+    contrastVerseRem: "1.94rem",
+  },
+  xxxxxxxl: {
+    verseRem: "2.88rem",
+    chapterTitleRem: "3.32rem",
+    homeTitleHe: "clamp(5.95rem,21.5vmin,9.35rem)",
+    homeTitleZh: "clamp(4.1rem,13.5vmin,6.85rem)",
+    homeTitleEn: "clamp(1.42rem,4.2vmin,1.78rem)",
+    contrastVerseRem: "2.12rem",
+  },
 };
 
 export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
@@ -80,7 +130,18 @@ export function readBibleTypographyCssVars(prefs: ReadBibleTypographyPrefsV1): R
   };
 }
 
-export const READ_BIBLE_SIZE_ORDER: ReadBibleSizeId[] = ["s", "m", "l", "xl", "xxl"];
+export const READ_BIBLE_SIZE_ORDER: ReadBibleSizeId[] = [
+  "s",
+  "m",
+  "l",
+  "xl",
+  "xxl",
+  "xxxl",
+  "xxxxl",
+  "xxxxxl",
+  "xxxxxxl",
+  "xxxxxxxl",
+];
 
 export function readBibleSizeAtMin(size: ReadBibleSizeId): boolean {
   return size === READ_BIBLE_SIZE_ORDER[0];

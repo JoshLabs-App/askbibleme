@@ -20,15 +20,9 @@ const sideLinkClass =
 const centerPickClass =
   "cursor-pointer border-0 bg-transparent p-0 text-[0.98rem] font-semibold leading-snug text-amber-950/92 no-underline transition hover:text-amber-950 dark:text-stone-100/95 dark:hover:text-stone-50";
 
-export function ReadChapterEndNav({ bookId, bookName, chapter, prev, next }: Props) {
+export function ReadChapterEndNav({ bookId, chapter, prev, next }: Props) {
   const { t } = useLocale();
   const [jumpOpen, setJumpOpen] = useState(false);
-  const [jumpFocus, setJumpFocus] = useState<"book" | "chapter">("chapter");
-
-  const openJump = (focus: "book" | "chapter") => {
-    setJumpFocus(focus);
-    setJumpOpen(true);
-  };
 
   if (!prev && !next) return null;
 
@@ -49,21 +43,10 @@ export function ReadChapterEndNav({ bookId, bookName, chapter, prev, next }: Pro
           <button
             type="button"
             className={centerPickClass}
-            onClick={() => openJump("book")}
-            aria-label={t("pages.read.chapterEndNavPickBook", { bookName })}
+            onClick={() => setJumpOpen(true)}
+            aria-label={t("pages.read.chapterEndNavCatalogPickAria")}
           >
-            {bookName}
-          </button>
-          <span className="font-semibold text-amber-950/92 dark:text-stone-100/95" aria-hidden>
-            {" "}
-          </span>
-          <button
-            type="button"
-            className={centerPickClass}
-            onClick={() => openJump("chapter")}
-            aria-label={t("pages.read.chapterEndNavPickChapter", { chapter: String(chapter) })}
-          >
-            {t("pages.read.chapterEndNavChapterLabel", { chapter: String(chapter) })}
+            {t("pages.read.chapterEndNavCatalogPick")}
           </button>
         </div>
         <div className="min-w-0 justify-self-end text-end">
@@ -80,7 +63,7 @@ export function ReadChapterEndNav({ bookId, bookName, chapter, prev, next }: Pro
         onClose={() => setJumpOpen(false)}
         bookId={bookId}
         chapter={chapter}
-        focusSection={jumpFocus}
+        focusSection="book"
       />
     </>
   );

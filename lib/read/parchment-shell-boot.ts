@@ -15,10 +15,10 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
     /SamsungBrowser/i.test(ua) || /Samsung/i.test(ua) || /\\bSM-[A-Z]\\d/i.test(ua);
   var statusBar = samsung ? (dark ? "#1a151200" : "#ecd9b900") : "transparent";
 
-  html.dataset.appShellSafeFill = "parchment";
-  if (samsung) html.dataset.readParchmentSamsung = "1";
-  html.style.backgroundColor = canvas;
-  html.style.colorScheme = dark ? "dark" : "light";
+  if (!html.dataset.appShellSafeFill) html.dataset.appShellSafeFill = "parchment";
+  if (samsung && !html.dataset.readParchmentSamsung) html.dataset.readParchmentSamsung = "1";
+  if (!html.style.backgroundColor) html.style.backgroundColor = canvas;
+  if (!html.style.colorScheme) html.style.colorScheme = dark ? "dark" : "light";
 
   var topPx = 0;
   try {

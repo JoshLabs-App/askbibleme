@@ -3,8 +3,16 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { cookies, headers } from "next/headers";
 import { PARCHMENT_SHELL_BOOT_SCRIPT } from "@/lib/read/parchment-shell-boot";
+import { isSamsungGalaxyUserAgent } from "@/lib/read/parchment-samsung-device";
+import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
+import {
+  isScriptureParchmentPath,
+  SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE,
+  SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
+} from "@/lib/read/scripture-parchment-shell";
 import "./globals.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { PwaInstallPrompt } from "@/components/app-shell/PwaInstallPrompt";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
@@ -88,11 +96,23 @@ export default async function RootLayout({
     ? parseLocale(cookieRaw)
     : inferAppLocaleFromAcceptLanguage(headerList.get("accept-language"));
   const htmlLang = initialLocaleGuess === "en" ? "en" : "zh-CN";
+  const pathname = headerList.get(SELAH_REQUEST_PATHNAME_HEADER) ?? "";
+  const parchmentShell = isScriptureParchmentPath(pathname);
+  const samsungParchment =
+    parchmentShell && isSamsungGalaxyUserAgent(headerList.get("user-agent") ?? "");
 
   const appBuildId = getAppBuildId();
 
   return (
-    <html lang={htmlLang} style={brandColorsToCssVars(colors) as CSSProperties}>
+    <html
+      lang={htmlLang}
+      style={brandColorsToCssVars(colors) as CSSProperties}
+      suppressHydrationWarning
+      data-app-shell-safe-fill={parchmentShell ? SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE : undefined}
+      data-read-parchment-samsung={
+        samsungParchment ? SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE : undefined
+      }
+    >
       <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
         <Script id="selah-parchment-shell-boot" strategy="beforeInteractive">
           {PARCHMENT_SHELL_BOOT_SCRIPT}
@@ -102,6 +122,7 @@ export default async function RootLayout({
             <AskbibleUserProvider>
               <MusicShellPlaybackProvider>
                 {children}
+                <PwaInstallPrompt />
                 <AppUpdateNotifier />
               </MusicShellPlaybackProvider>
             </AskbibleUserProvider>

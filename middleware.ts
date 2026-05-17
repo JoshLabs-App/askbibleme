@@ -12,6 +12,13 @@ import { isAdminEmail } from "@/lib/supabase/admin-allowlist";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { copyCookiesTo, updateSupabaseSession } from "@/lib/supabase/middleware";
 import { isSelahOnlineEditorSurfaceAllowed } from "@/lib/selah-online-editor-surface";
+import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
+
+function nextWithRequestPathname(request: NextRequest, init?: ResponseInit) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(SELAH_REQUEST_PATHNAME_HEADER, request.nextUrl.pathname);
+  return NextResponse.next({ ...init, request: { headers: requestHeaders } });
+}
 
 function isPrivilegedEditorPath(pathname: string): boolean {
   return (
@@ -36,7 +43,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!pathname.startsWith("/admin")) {
-    return NextResponse.next();
+    return nextWithRequestPathname(request);
   }
 
   const askbibleCookie = request.cookies.get(ADMIN_ASKBIBLE_SESSION_COOKIE)?.value;
@@ -46,7 +53,7 @@ export async function middleware(request: NextRequest) {
       const safe = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/admin";
       return NextResponse.redirect(new URL(safe, request.nextUrl.origin));
     }
-    return NextResponse.next();
+    return nextWithRequestPathname(request);
   }
 
   const { response: supaResponse, userEmail } = await updateSupabaseSession(request);
@@ -92,16 +99,16 @@ export async function middleware(request: NextRequest) {
       const safe = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/admin";
       return NextResponse.redirect(new URL(safe, request.nextUrl.origin));
     }
-    return NextResponse.next();
+    return nextWithRequestPathname(request);
   }
 
   if (superAdminViaUserCookie) {
-    return NextResponse.next();
+    return nextWithRequestPathname(request);
   }
 
   const raw = request.cookies.get(ADMIN_GATE_COOKIE)?.value;
   if (await verifyAdminGateCookie(raw)) {
-    return NextResponse.next();
+    return nextWithRequestPathname(request);
   }
 
   const url = request.nextUrl.clone();
@@ -114,6 +121,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|mp3|mp4|webm|json)).*)",
     "/admin/:path*",
     "/api/admin/:path*",
     "/studio/:path*",

@@ -863,6 +863,8 @@
     "saveDataStillHint": "Data saver is on; only the still image is shown to use less data.",
     "lowMemoryStillHint": "This device has limited memory; only the still image is shown to keep things smooth.",
     "bg1080ToggleAria": "Background quality: 720p by default; turn on for 1080p HD",
+    "bg1080ToggleAriaOff": "Background quality: 720p now; tap to switch to 1080p HD",
+    "bg1080ToggleAriaOn": "Background quality: 1080p HD now; tap to switch to 720p",
     "bgSoftFocusStartAria": "Open soft focus controls (Apply to use; Close cancels with no effect)",
     "bgSoftFocusOpenPanelAria": "Open soft focus controls",
     "bgSoftFocusCloseAria": "Close controls and turn off dim and blur (no effect)",

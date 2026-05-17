@@ -1,6 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
@@ -35,7 +45,9 @@ import {
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
 import { defaultNatureHomeActiveVideoId, resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
 import {
+  getNatureBackground1080PrefSnapshot,
   readNatureBackground1080Pref,
+  subscribeNatureBackground1080Pref,
   writeNatureBackground1080Pref,
 } from "@/lib/nature/nature-video-quality-prefs";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
@@ -69,6 +81,15 @@ const NATURE_VERSE_FIT_COMPRESS_MIN = 0.06;
 const NATURE_BELL_BTN =
   "touch-manipulation inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/[0.9] transition hover:text-white active:scale-[0.97]";
 
+function nature1080ToggleBtnClass(active: boolean): string {
+  return [
+    "touch-manipulation inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-0 p-0 transition active:scale-[0.97]",
+    active
+      ? "bg-sky-400/30 text-sky-50 ring-1 ring-sky-300/65 shadow-[0_0_14px_rgba(56,189,248,0.5)]"
+      : "bg-transparent text-white/70 hover:bg-white/[0.08] hover:text-white/95",
+  ].join(" ");
+}
+
 function IconBell(props: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
@@ -100,7 +121,7 @@ function IconBgSoftFocus(props: { className?: string }) {
 
 function IconBg1080(props: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={props.className} aria-hidden>
+    <svg viewBox="0 0 24 24" className={`pointer-events-none ${props.className ?? ""}`.trim()} aria-hidden>
       <text
         x="12"
         y="15.5"
@@ -265,7 +286,11 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
-  const [background1080, setBackground1080] = useState(false);
+  const background1080 = useSyncExternalStore(
+    subscribeNatureBackground1080Pref,
+    getNatureBackground1080PrefSnapshot,
+    () => false,
+  );
   const [videoBroken, setVideoBroken] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
@@ -899,10 +924,6 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
   }, []);
 
-  useLayoutEffect(() => {
-    setBackground1080(readNatureBackground1080Pref());
-  }, []);
-
   useEffect(() => {
     const syncAppearance = () => setNatureVerseAppearance(readNatureHomeVerseAppearance());
     window.addEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
@@ -947,14 +968,12 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     });
   }, []);
 
-  const onBackground1080Toggle = useCallback(() => {
+  const onBackground1080Toggle = useCallback((e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
     setNatureSoftFocusPanelOpen(false);
     setVerseAppearancePanelOpen(false);
-    setBackground1080((prev) => {
-      const next = !prev;
-      writeNatureBackground1080Pref(next);
-      return next;
-    });
+    writeNatureBackground1080Pref(!readNatureBackground1080Pref());
+    setVideoBroken(false);
   }, []);
 
   const softFocusLayerVisible = natureBgSoftFocus || natureSoftFocusPanelOpen;
@@ -1079,15 +1098,16 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
                 type="button"
                 onClick={onBackground1080Toggle}
                 aria-pressed={background1080}
-                aria-label={t("nature.bg1080ToggleAria")}
-                className={NATURE_BELL_BTN}
+                aria-label={
+                  background1080 ? t("nature.bg1080ToggleAriaOn") : t("nature.bg1080ToggleAriaOff")
+                }
+                className={nature1080ToggleBtnClass(background1080)}
               >
                 <IconBg1080
-                  className={
-                    background1080
-                      ? "h-[1.35rem] w-[1.35rem] text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.95))_drop-shadow(0_0_18px_rgba(200,225,255,0.55))]"
-                      : "h-[1.35rem] w-[1.35rem] opacity-90"
-                  }
+                  className={[
+                    "h-[1.35rem] w-[1.35rem]",
+                    background1080 ? "font-semibold" : "opacity-90",
+                  ].join(" ")}
                 />
               </button>
             ) : null}
@@ -1352,13 +1372,19 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
           <p className="sr-only">{t("nature.videoBgAnnounced")}</p>
           <div
             ref={natureVerseFitBoxRef}
-            className="pointer-events-none absolute inset-x-0 bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] z-[12] flex min-h-0 flex-col items-center justify-start overflow-hidden px-5 sm:px-6 top-[max(4.25rem,38.2%)] [@media(max-height:500px)_and_(orientation:portrait)]:top-[max(4rem,32%)] landscape:bottom-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] landscape:top-[max(3.5rem,min(38.2%,30svh))]"
+            className={[
+              "pointer-events-none absolute inset-x-0 top-[38.2%] z-[12]",
+              "flex max-h-[min(52dvh,calc(100%-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-11rem))]",
+              "-translate-y-1/2 flex-col items-center justify-center overflow-hidden px-5 sm:px-6",
+              "[@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]",
+              "landscape:max-h-[min(44dvh,calc(100%-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-9.5rem))]",
+            ].join(" ")}
           >
             <div
               className="mx-auto flex min-w-0 max-w-full justify-center"
               style={{
                 transform: `scale(${natureVerseFitCompress})`,
-                transformOrigin: "center top",
+                transformOrigin: "center center",
               }}
             >
               <div

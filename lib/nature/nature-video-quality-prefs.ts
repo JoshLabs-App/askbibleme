@@ -33,3 +33,15 @@ export function writeNatureBackground1080Pref(on: boolean): void {
     /* quota / private mode */
   }
 }
+
+/** 供 `useSyncExternalStore`：与 localStorage 同步，避免顶栏开关与播放 tier 脱节。 */
+export function subscribeNatureBackground1080Pref(onStore: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => onStore();
+  window.addEventListener(NATURE_BACKGROUND_1080_PREF_UPDATED_EVENT, handler);
+  return () => window.removeEventListener(NATURE_BACKGROUND_1080_PREF_UPDATED_EVENT, handler);
+}
+
+export function getNatureBackground1080PrefSnapshot(): boolean {
+  return readNatureBackground1080Pref();
+}

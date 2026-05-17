@@ -863,6 +863,8 @@
     "saveDataStillHint": "已开启省流，暂时仅显示静图以节省流量。",
     "lowMemoryStillHint": "设备内存较紧张，暂时仅显示静图以保持流畅。",
     "bg1080ToggleAria": "背景清晰度：默认 720p；开启后使用 1080p 高清",
+    "bg1080ToggleAriaOff": "背景清晰度：当前 720p，点按切换为 1080p 高清",
+    "bg1080ToggleAriaOn": "背景清晰度：当前 1080p 高清，点按切换为 720p",
     "bgSoftFocusStartAria": "打开暗衣柔焦调节（确定后应用；关闭则不使用柔焦）",
     "bgSoftFocusOpenPanelAria": "打开暗衣柔焦调节面板",
     "bgSoftFocusCloseAria": "关闭面板并取消柔焦（不使用遮罩与模糊）",

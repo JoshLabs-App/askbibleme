@@ -147,6 +147,8 @@ export type MusicShellPlaybackValue = {
   setSleepTimerMinutes: (minutes: MusicShellSleepTimerMinutes) => void;
   /** 定时到时在 `pausePlayback` 之后调用；用于自然页混音等其它 `<audio>` */
   registerSleepPauseHandler: (handler: () => void) => () => void;
+  /** 壳层 `play()` 之前调用（电视互斥：先让出视频解码器） */
+  registerBeforeShellPlayHandler: (handler: () => void | Promise<void>) => () => void;
   /** 壳层 `<audio>` 静音（首页顶栏铃铛）；不改变播放/暂停状态 */
   shellAudioMuted: boolean;
   setShellAudioMuted: (muted: boolean) => void;
@@ -215,6 +217,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const scriptureAudioRepeatRef = useRef<ScriptureAudioRepeatMode>("off");
   scriptureAudioRepeatRef.current = scriptureAudioRepeatMode;
   const sleepPauseHandlersRef = useRef(new Set<() => void>());
+  const beforeShellPlayHandlersRef = useRef(new Set<() => void | Promise<void>>());
   const playbackOverrideRef = useRef<string | null>(null);
   playbackOverrideRef.current = playbackOverride;
   const devicePlaybackRef = useRef<DevicePlaybackCell | null>(null);
@@ -316,6 +319,36 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       sleepPauseHandlersRef.current.delete(handler);
     };
   }, []);
+
+  const registerBeforeShellPlayHandler = useCallback((handler: () => void | Promise<void>) => {
+    beforeShellPlayHandlersRef.current.add(handler);
+    return () => {
+      beforeShellPlayHandlersRef.current.delete(handler);
+    };
+  }, []);
+
+  const runBeforeShellPlayHandlers = useCallback(async () => {
+    for (const fn of beforeShellPlayHandlersRef.current) {
+      try {
+        await fn();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
+
+  const attemptShellPlay = useCallback(
+    async (a: HTMLAudioElement) => {
+      await runBeforeShellPlayHandlers();
+      try {
+        await a.play();
+        setPlaying(true);
+      } catch {
+        setPlaying(false);
+      }
+    },
+    [runBeforeShellPlayHandlers],
+  );
 
   const setShellAudioMuted = useCallback((muted: boolean) => {
     setShellAudioMutedState(muted);
@@ -579,7 +612,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       a.muted = shellAudioMuted;
       if (playAfterNextBindRef.current) {
         playAfterNextBindRef.current = false;
-        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        void attemptShellPlay(a);
       }
       return;
     }
@@ -594,10 +627,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     a.load();
     if (wasPlaying || playAfterAdvance) {
       playAfterNextBindRef.current = false;
-      void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      void attemptShellPlay(a);
     }
     /** 未在播时不要 `setPlaying(false)`：会制造无意义重渲染，曾与首页对齐 `effectiveSrc` 的 effect 形成更新风暴。 */
-  }, [effectiveSrc, pathname, shellAudioHomePrimed, shellAudioMuted]);
+  }, [effectiveSrc, pathname, shellAudioHomePrimed, shellAudioMuted, attemptShellPlay]);
 
   /** 在对应 src 的 metadata 就绪后 seek，并可选自动续播 */
   useEffect(() => {
@@ -623,7 +656,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       shellPlaybackRestoreRef.current = null;
       shellPlaybackPersistEnabledRef.current = true;
       if (tryPlay) {
-        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        void attemptShellPlay(a);
       }
     };
 
@@ -643,7 +676,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       cancelled = true;
       a.removeEventListener("loadedmetadata", onMeta);
     };
-  }, [effectiveSrc, loading]);
+  }, [effectiveSrc, loading, attemptShellPlay]);
 
   const persistShellPlayback = useCallback(() => {
     if (!shellPlaybackPersistEnabledRef.current || loading) return;
@@ -740,7 +773,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const onEndedAdvance = () => {
       if (devicePlaybackRef.current) {
         a.currentTime = 0;
-        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        void attemptShellPlay(a);
         return;
       }
       const cur = effectiveSrcRef.current.trim();
@@ -793,7 +826,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       const parsed = mode !== "off" ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
       if (parsed && mode === "chapter") {
         a.currentTime = 0;
-        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        void attemptShellPlay(a);
         return;
       }
       if (parsed && mode === "book") {
@@ -837,7 +870,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       if (n === 0) return;
       if (n === 1) {
         a.currentTime = 0;
-        void a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+        void attemptShellPlay(a);
         return;
       }
       const randomNext = pickRandomShellAudioTrackSrc(st, cur);
@@ -855,7 +888,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
     a.addEventListener("ended", onEndedAdvance);
     return () => a.removeEventListener("ended", onEndedAdvance);
-  }, [loading, setPlaybackSrc, router]);
+  }, [loading, setPlaybackSrc, router, attemptShellPlay]);
 
   const canPlay = Boolean(effectiveSrc) && !loading;
 
@@ -909,12 +942,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
               setPlaying(false);
               return;
             }
-            try {
-              await a.play();
-              setPlaying(true);
-            } catch {
-              setPlaying(false);
-            }
+            await attemptShellPlay(a);
             return;
           }
         }
@@ -988,13 +1016,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       }
     }
 
-    try {
-      await a.play();
-      setPlaying(true);
-    } catch {
-      setPlaying(false);
-    }
-  }, [loading, pathname, setPlaybackSrc]);
+    await attemptShellPlay(a);
+  }, [loading, pathname, setPlaybackSrc, attemptShellPlay]);
 
   const value = useMemo<MusicShellPlaybackValue>(
     () => ({
@@ -1021,6 +1044,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       sleepTimerDeadlineAt,
       setSleepTimerMinutes,
       registerSleepPauseHandler,
+      registerBeforeShellPlayHandler,
       shellAudioMuted,
       setShellAudioMuted,
       scriptureAudioRepeatMode,
@@ -1050,6 +1074,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       sleepTimerDeadlineAt,
       setSleepTimerMinutes,
       registerSleepPauseHandler,
+      registerBeforeShellPlayHandler,
       shellAudioMuted,
       setShellAudioMuted,
       scriptureAudioRepeatMode,

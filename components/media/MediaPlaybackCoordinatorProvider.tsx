@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
@@ -40,15 +41,23 @@ export function useMediaPlaybackCoordinator(): MediaPlaybackCoordinatorValue {
  */
 export function MediaPlaybackCoordinatorProvider({ children }: { children: ReactNode }) {
   const policy = useMediaPlaybackPolicy();
-  const { playing, pausePlayback } = useMusicShellPlayback();
+  const { playing, pausePlayback, registerBeforeShellPlayHandler } = useMusicShellPlayback();
   const videosRef = useRef(new Map<string, VideoGetter>());
   const pauseShellRef = useRef(pausePlayback);
+  /** 电视：`play()` 之前先让出视频，避免音频起不来 */
+  const [shellAudioReserved, setShellAudioReserved] = useState(false);
 
   useEffect(() => {
     pauseShellRef.current = pausePlayback;
   }, [pausePlayback]);
 
-  const shellAudioBlocksVideo = policy === "strictExclusive" && playing;
+  useEffect(() => {
+    if (playing) return;
+    setShellAudioReserved(false);
+  }, [playing]);
+
+  const shellAudioBlocksVideo =
+    policy === "strictExclusive" && (playing || shellAudioReserved);
 
   const registerBackgroundVideo = useCallback((id: string, getEl: VideoGetter) => {
     videosRef.current.set(id, getEl);
@@ -73,6 +82,17 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
     if (!shellAudioBlocksVideo) return;
     pauseRegisteredVideos();
   }, [shellAudioBlocksVideo, pauseRegisteredVideos]);
+
+  useEffect(() => {
+    return registerBeforeShellPlayHandler(async () => {
+      if (policy !== "strictExclusive") return;
+      setShellAudioReserved(true);
+      pauseRegisteredVideos();
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+    });
+  }, [policy, registerBeforeShellPlayHandler, pauseRegisteredVideos]);
 
   const onBackgroundVideoPlaying = useCallback(() => {
     if (policy !== "strictExclusive") return;

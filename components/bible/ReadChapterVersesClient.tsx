@@ -5,7 +5,7 @@ import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoice
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
 import {
-  fetchCuvChapterVerseTimings,
+  fetchChapterVerseTimings,
   type CuvChapterVerseTiming,
   verseIndexForVerseNumber,
   verseNumberAtChapterAudioTime,
@@ -84,7 +84,7 @@ export function ReadChapterVersesClient({
     };
   }, [supported, bookName, bookId, chapter, playVoice]);
 
-  const useVerseTimingsFile = supported && !teochewNtVoiceActive(playVoice);
+  const useVerseTimingsFile = supported;
 
   useEffect(() => {
     if (!useVerseTimingsFile) {
@@ -96,7 +96,7 @@ export function ReadChapterVersesClient({
     setVerseTimingsReady("pending");
     setVerseTimings(null);
     void (async () => {
-      const timings = await fetchCuvChapterVerseTimings(bookId, chapter);
+      const timings = await fetchChapterVerseTimings(playVoice, bookId, chapter);
       if (cancelled) return;
       if (timings?.length) {
         setVerseTimings(timings);
@@ -109,7 +109,7 @@ export function ReadChapterVersesClient({
     return () => {
       cancelled = true;
     };
-  }, [useVerseTimingsFile, bookId, chapter]);
+  }, [useVerseTimingsFile, playVoice, bookId, chapter]);
 
   const contrastByVerse = useMemo(() => {
     if (!contrastVerses?.length) return null;
@@ -142,7 +142,7 @@ export function ReadChapterVersesClient({
     Boolean(effectiveSrc.trim()) &&
     shellPlaybackUrlsEqual(resolvedChapterSrc!, effectiveSrc.trim());
 
-  const verseFollowEnabled = supported && !teochewNtVoiceActive(playVoice);
+  const verseFollowEnabled = supported;
 
   const activeIndex = (() => {
     if (!verseFollowEnabled || !audioMatchesThisChapter) return null;

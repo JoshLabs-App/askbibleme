@@ -33,6 +33,7 @@
     "audio:teochew-manifest": "node scripts/build-teochew-nt-manifest.mjs",
     "audio:teochew-pull": "node scripts/pull-teochew-nt-audio.mjs",
     "audio:verse-timings-sync": "node scripts/sync-cuv-verse-timings.mjs",
+    "audio:teochew-timings": "node scripts/generate-teochew-nt-verse-timings.mjs",
     "info-edition:sync-disk": "node scripts/sync-info-edition-published-to-data-root.mjs",
     "info-edition:batch": "tsx scripts/batch-info-edition-volumes.ts",
     "info-edition:push-remote": "node scripts/push-info-edition-published-remote.mjs",

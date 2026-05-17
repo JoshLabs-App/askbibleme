@@ -1,6 +1,11 @@
 /**
- * 和合本整章朗读逐节时间轴（来自 AskBible `public/verse-timings/{BOOK}-{章}.json`，Whisper/stable-ts 对齐）。
+ * 整章朗读逐节时间轴（Whisper/stable-ts 对齐）。
+ * - 普通话：`/verse-timings/{BOOK}-{章}.json`（自 AskBible 同步）
+ * - 潮州语新约：`/verse-timings/teochew-nt/{BOOK}-{章}.json`
  */
+
+import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
+import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
 
 export type CuvChapterVerseTiming = {
   verse: number;
@@ -8,10 +13,22 @@ export type CuvChapterVerseTiming = {
   end: number;
 };
 
-export function buildCuvChapterVerseTimingsUrl(bookId: string, chapter: number): string {
+export function buildChapterVerseTimingsUrl(
+  voiceId: CuvChapterAudioVoiceId,
+  bookId: string,
+  chapter: number,
+): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  if (teochewNtVoiceActive(voiceId)) {
+    return `/verse-timings/teochew-nt/${id}-${chapter}.json`;
+  }
   return `/verse-timings/${id}-${chapter}.json`;
+}
+
+/** @deprecated use buildChapterVerseTimingsUrl("mandarin", …) */
+export function buildCuvChapterVerseTimingsUrl(bookId: string, chapter: number): string {
+  return buildChapterVerseTimingsUrl("mandarin", bookId, chapter);
 }
 
 export function parseCuvChapterVerseTimingsPayload(data: unknown): CuvChapterVerseTiming[] | null {
@@ -56,11 +73,12 @@ export function verseIndexForVerseNumber(
   return idx >= 0 ? idx : null;
 }
 
-export async function fetchCuvChapterVerseTimings(
+export async function fetchChapterVerseTimings(
+  voiceId: CuvChapterAudioVoiceId,
   bookId: string,
   chapter: number,
 ): Promise<CuvChapterVerseTiming[] | null> {
-  const url = buildCuvChapterVerseTimingsUrl(bookId, chapter);
+  const url = buildChapterVerseTimingsUrl(voiceId, bookId, chapter);
   if (!url) return null;
   try {
     const res = await fetch(url, { cache: "force-cache" });
@@ -70,4 +88,11 @@ export async function fetchCuvChapterVerseTimings(
   } catch {
     return null;
   }
+}
+
+export async function fetchCuvChapterVerseTimings(
+  bookId: string,
+  chapter: number,
+): Promise<CuvChapterVerseTiming[] | null> {
+  return fetchChapterVerseTimings("mandarin", bookId, chapter);
 }

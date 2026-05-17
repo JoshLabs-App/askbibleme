@@ -13,6 +13,8 @@ PATHS=(
   "data/nature-settings.json"
   "data/relax-settings.json"
   "data/branding.json"
+  "data/admin/generation-roles.json"
+  "data/bible/info-edition-v1-published.json"
 )
 
 for p in "${PATHS[@]}"; do

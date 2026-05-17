@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { NatureVerseTextScaleDockProps } from "@/components/home/HomePrayerVerseDockSettings";
-import { normalizeGoldenVerseFontFamily } from "@/lib/home-prayer-pools/prefs";
+import { normalizeGoldenVerseFontFamily } from "@/lib/home-prayer-pools/golden-verse-normalize";
 import type { GoldenVerseFontFamilyV1 } from "@/lib/home-prayer-pools/types";
 import {
   NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT,

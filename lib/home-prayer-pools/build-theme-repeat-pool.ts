@@ -9,10 +9,8 @@ import {
   getReaderVerseThemesDatabase,
   readerVerseThemesSqlitePath,
 } from "@/lib/scripture/reader-verse-themes-db";
-import {
-  listThemeRepeatPoolSourceRows,
-  themeRepeatPoolScopeId,
-} from "@/lib/scripture/reader-verse-repeat-rank";
+import { listThemeRepeatPoolSourceRows } from "@/lib/scripture/reader-verse-repeat-rank";
+import { themeRepeatPoolScopeId } from "@/lib/scripture/theme-repeat-pool-scope-id";
 import { HOME_PRAYER_POOL_CHUNK_SIZE } from "@/lib/home-prayer-pools/constants";
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
 import { verseKeyFromVerseRef } from "@/lib/home-prayer-pools/verse-key-from-ref";

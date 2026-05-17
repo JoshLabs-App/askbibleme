@@ -1,12 +1,16 @@
 import type {
-  GoldenVerseFontFamilyV1,
-  GoldenVerseTextEffectV1,
   HomePrayerVersePrefsV1,
   VerseDisplayModeV1,
   VerseScopeV1,
 } from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_PREFS_STORAGE_KEY, VERSE_DISPLAY_COOKIE_NAME } from "@/lib/home-prayer-pools/constants";
-import { themeRepeatPoolScopeId } from "@/lib/scripture/reader-verse-repeat-rank";
+import {
+  normalizeGoldenVerseFontFamily,
+  normalizeGoldenVerseTextEffect,
+} from "@/lib/home-prayer-pools/golden-verse-normalize";
+import { themeRepeatPoolScopeId } from "@/lib/scripture/theme-repeat-pool-scope-id";
+
+export { normalizeGoldenVerseFontFamily, normalizeGoldenVerseTextEffect };
 
 export { VERSE_DISPLAY_COOKIE_NAME };
 
@@ -40,22 +44,6 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
 
 /** 任意 prefs 写入后派发（同标签页）；用于金句页字体等无需重拉祷告池的 UI 同步 */
 export const HOME_PRAYER_PREFS_UPDATED_EVENT = "selah:home-prayer-verse-prefs-updated";
-
-export function normalizeGoldenVerseFontFamily(raw: unknown): GoldenVerseFontFamilyV1 {
-  return raw === "serif" ? "serif" : "sans";
-}
-
-const GOLDEN_TEXT_EFFECT_IDS: GoldenVerseTextEffectV1[] = [
-  "engraved",
-  "insetCarved",
-  "flat",
-  "letterpress",
-  "softBloom",
-];
-
-export function normalizeGoldenVerseTextEffect(raw: unknown): GoldenVerseTextEffectV1 {
-  return GOLDEN_TEXT_EFFECT_IDS.includes(raw as GoldenVerseTextEffectV1) ? (raw as GoldenVerseTextEffectV1) : "insetCarved";
-}
 
 export function normalizeVerseZhTranslationId(raw: unknown): string {
   const s = typeof raw === "string" && raw.trim() ? raw.trim() : "";

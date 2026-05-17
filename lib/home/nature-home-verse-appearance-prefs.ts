@@ -1,5 +1,8 @@
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
-import { normalizeGoldenVerseFontFamily, normalizeGoldenVerseTextEffect } from "@/lib/home-prayer-pools/prefs";
+import {
+  normalizeGoldenVerseFontFamily,
+  normalizeGoldenVerseTextEffect,
+} from "@/lib/home-prayer-pools/golden-verse-normalize";
 
 const STORAGE_KEY = "selah-nature-home-verse-appearance-v1";
 

@@ -181,11 +181,7 @@ export function listThemeRepeatPoolSourceRows(
   return cap > 0 ? filtered.slice(0, cap) : filtered;
 }
 
-/** 首次访问构建全量排行索引并缓存在进程内（mtime 变化时重建）。 */
-export function themeRepeatPoolScopeId(minCount: number): string {
-  const n = Math.max(1, Math.floor(minCount));
-  return `theme-repeat-ge${n}`;
-}
+export { themeRepeatPoolScopeId } from "@/lib/scripture/theme-repeat-pool-scope-id";
 
 export function getOrBuildRankIndex(db: Database, mtimeMs: number): RankIndexCache {
   if (indexCache && indexCache.mtimeMs === mtimeMs && indexCache.version === RANK_INDEX_CACHE_VERSION) {

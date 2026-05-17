@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 
 const ReadChapterInfoEditionMarkdown = dynamic(
@@ -19,9 +20,11 @@ const ReadChapterInfoEditionMarkdown = dynamic(
 );
 
 type Props = {
+  variant: InfoEditionReaderVariant;
   bookId: string;
   chapter: number;
-  /** 服务端已发布的导读（有则默认展开，无需再点一次） */
+  /** 父级已选中该版本时展示并触发加载 */
+  isActive: boolean;
   initialPublished?: InfoEditionV1PublishedChapter | null;
 };
 
@@ -60,23 +63,46 @@ function apiFailureMessage(j: Record<string, unknown>, res: Response): string | 
   return undefined;
 }
 
-/** 读经页：已有导读则默认展开；无则点击后再生成或加载 */
+function editionQuery(variant: InfoEditionReaderVariant): string {
+  return `edition=${encodeURIComponent(variant)}`;
+}
+
+/** 读经页：导读版 / 引导版面板（由父级选择后按需加载） */
 export function ReadChapterInfoEditionBlock({
+  variant,
   bookId,
   chapter,
+  isActive,
   initialPublished = null,
 }: Props) {
   const { t } = useLocale();
   const initialReady = hasPublishedMarkdown(initialPublished);
   const [phase, setPhase] = useState<PanelPhase>(initialReady ? "ready" : "idle");
-  const [open, setOpen] = useState(initialReady);
   const [published, setPublished] = useState<InfoEditionV1PublishedChapter | null>(
     initialReady ? initialPublished : null,
   );
   const [err, setErr] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollStartedRef = useRef<number | null>(null);
+  const loadStartedRef = useRef(false);
   const POLL_MAX_MS = 4 * 60 * 1000;
+
+  const sectionKicker =
+    variant === "guide"
+      ? t("pages.read.guideEditionSectionKicker")
+      : t("pages.read.infoEditionSectionKicker");
+  const disclaimer =
+    variant === "guide"
+      ? t("pages.read.guideEditionDisclaimer")
+      : t("pages.read.infoEditionDisclaimer");
+  const ariaLabel =
+    variant === "guide"
+      ? t("pages.read.guideEditionAriaLabel")
+      : t("pages.read.infoEditionAriaLabel");
+  const defaultRole =
+    variant === "guide"
+      ? t("pages.read.guideEditionDefaultRole")
+      : t("pages.read.infoEditionDefaultRole");
 
   const stopPoll = useCallback(() => {
     if (pollRef.current) {
@@ -93,7 +119,6 @@ export function ReadChapterInfoEditionBlock({
       if (status === "ready" && j.published && typeof j.published === "object") {
         setPublished(j.published as InfoEditionV1PublishedChapter);
         setPhase("ready");
-        setOpen(true);
         setErr(null);
         return true;
       }
@@ -104,10 +129,11 @@ export function ReadChapterInfoEditionBlock({
         );
         setErr(e);
         setPhase("error");
-        if (options?.openOnFailed ?? true) setOpen(true);
+        if (options?.openOnFailed ?? true) {
+          /* panel visible while active */
+        }
         return true;
       }
-      /** 仅 ready / failed 结束轮询；`missing` 须继续等或超时，否则会一直停在 loading */
       return false;
     },
     [t],
@@ -121,12 +147,11 @@ export function ReadChapterInfoEditionBlock({
         stopPoll();
         setErr(t("pages.read.infoEditionTimeout"));
         setPhase("error");
-        setOpen(true);
         return;
       }
       void (async () => {
         const res = await fetch(
-          `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`,
+          `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant)}`,
           { cache: "no-store" },
         );
         const j = await parseJson(res);
@@ -134,26 +159,23 @@ export function ReadChapterInfoEditionBlock({
           stopPoll();
           setErr(formatInfoEditionError(apiFailureMessage(j, res), t));
           setPhase("error");
-          setOpen(true);
           return;
         }
         if (applyCachePayload(j)) stopPoll();
       })();
     }, 2000);
-  }, [applyCachePayload, bookId, chapter, stopPoll, t]);
+  }, [applyCachePayload, bookId, chapter, stopPoll, t, variant]);
 
   const loadOrGenerate = useCallback(async () => {
     setErr(null);
     setPhase("loading");
-    setOpen(true);
 
-    const qs = `bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`;
+    const qs = `bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant)}`;
     const getRes = await fetch(`/api/read/info-edition-v1?${qs}`, { cache: "no-store" });
     const getJ = await parseJson(getRes);
     if (!getRes.ok || getJ.ok === false) {
       setErr(formatInfoEditionError(apiFailureMessage(getJ, getRes), t));
       setPhase("error");
-      setOpen(true);
       return;
     }
     if (applyCachePayload(getJ)) return;
@@ -165,7 +187,7 @@ export function ReadChapterInfoEditionBlock({
     const postRes = await fetch(`/api/read/info-edition-v1`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookId, chapter }),
+      body: JSON.stringify({ bookId, chapter, edition: variant }),
     });
     const postJ = await parseJson(postRes);
     if (!postRes.ok || postJ.ok === false) {
@@ -173,7 +195,6 @@ export function ReadChapterInfoEditionBlock({
       if (postJ.status === "failed" && applyCachePayload(postJ)) return;
       setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
       setPhase("error");
-      setOpen(true);
       return;
     }
     if (applyCachePayload(postJ)) return;
@@ -183,91 +204,48 @@ export function ReadChapterInfoEditionBlock({
     }
     setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
     setPhase("error");
-    setOpen(true);
-  }, [applyCachePayload, bookId, chapter, pollUntilReady, t]);
+  }, [applyCachePayload, bookId, chapter, pollUntilReady, stopPoll, t, variant]);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const res = await fetch(
-        `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}`,
-        { cache: "no-store" },
-      );
-      const j = await parseJson(res);
-      if (cancelled || !res.ok) return;
-      if (j.status === "ready") {
-        applyCachePayload(j);
-        return;
-      }
-      if (initialReady) return;
-      if (j.status === "pending") {
-        setPhase("loading");
-        setOpen(true);
-        pollUntilReady();
-      }
-    })();
-    return () => {
-      cancelled = true;
+    if (!isActive) {
       stopPoll();
-    };
-  }, [applyCachePayload, bookId, chapter, initialReady, pollUntilReady, stopPoll]);
-
-  const onPrimaryClick = () => {
-    if (phase === "ready" && published) {
-      setOpen((v) => !v);
       return;
     }
-    if (phase === "loading") return;
+    if (phase === "ready") return;
+    if (initialReady && initialPublished) {
+      setPublished(initialPublished);
+      setPhase("ready");
+      return;
+    }
+    if (phase === "loading") {
+      pollUntilReady();
+      return;
+    }
+    if (phase === "error") return;
+    if (loadStartedRef.current) return;
+    loadStartedRef.current = true;
     void loadOrGenerate();
-  };
+  }, [initialPublished, initialReady, isActive, loadOrGenerate, phase, pollUntilReady, stopPoll]);
 
-  const showPanel = open && (phase === "loading" || phase === "ready" || phase === "error");
-  const roleLabel = published?.roleLabel ?? t("pages.read.infoEditionDefaultRole");
-  const showInvite = phase === "idle";
+  if (!isActive) return null;
+
+  const showPanel = phase === "loading" || phase === "ready" || phase === "error";
+  const roleLabel = published?.roleLabel ?? defaultRole;
 
   return (
-    <section className="read-chapter-info-edition-invite" aria-label={t("pages.read.infoEditionAriaLabel")}>
-      {showInvite || phase === "loading" ? (
-        <div className="read-chapter-info-edition-invite-row">
-          <button
-            type="button"
-            onClick={onPrimaryClick}
-            disabled={phase === "loading"}
-            className="read-chapter-info-edition-trigger"
-            aria-expanded={showPanel}
-          >
-            {phase === "loading"
-              ? t("pages.read.infoEditionGenerating")
-              : t("pages.read.viewRelatedInfo")}
-          </button>
-          {showInvite ? (
-            <p className="read-chapter-info-edition-invite-hint">{t("pages.read.infoEditionInviteHint")}</p>
-          ) : null}
-        </div>
-      ) : null}
-
+    <section className="read-chapter-info-edition-invite" aria-label={ariaLabel}>
       {showPanel ? (
         <section className="read-chapter-info-edition">
           <div className="read-chapter-info-edition-divider" role="separator" aria-hidden>
             <span className="read-chapter-info-edition-divider-line" />
             <span className="read-chapter-info-edition-divider-label">
-              <span className="read-chapter-info-edition-kicker">{t("pages.read.infoEditionSectionKicker")}</span>
+              <span className="read-chapter-info-edition-kicker">{sectionKicker}</span>
               <span className="read-chapter-info-edition-role">{roleLabel}</span>
             </span>
             <span className="read-chapter-info-edition-divider-line" />
           </div>
 
-          {phase === "ready" && published ? (
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="read-chapter-info-edition-trigger read-chapter-info-edition-trigger--collapse"
-            >
-              {t("pages.read.infoEditionHide")}
-            </button>
-          ) : null}
-
-          <p className="read-chapter-info-edition-disclaimer">{t("pages.read.infoEditionDisclaimer")}</p>
+          <p className="read-chapter-info-edition-disclaimer">{disclaimer}</p>
 
           {phase === "error" && err ? (
             <div className="read-chapter-info-edition-panel read-chapter-info-edition-panel--error">
@@ -291,16 +269,6 @@ export function ReadChapterInfoEditionBlock({
             </div>
           ) : null}
         </section>
-      ) : null}
-
-      {phase === "ready" && published && !open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="read-chapter-info-edition-trigger read-chapter-info-edition-trigger--reopen"
-        >
-          {t("pages.read.infoEditionShow")}
-        </button>
       ) : null}
     </section>
   );

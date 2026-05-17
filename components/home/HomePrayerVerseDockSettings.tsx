@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL, HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
 import {
-  memoryNamespaceFromScope,
   normalizeGoldenVerseFontFamily,
   normalizeGoldenVerseTextEffect,
   readHomePrayerVersePrefs,
@@ -196,15 +195,6 @@ export function HomePrayerVerseDockSettings({
     setPrefs(next);
     if (opts?.reloadFeed !== false) requestHomePrayerVerseFeedReload();
   }, []);
-
-  const resetMemory = useCallback(() => {
-    const p = readHomePrayerVersePrefs();
-    const ns = memoryNamespaceFromScope(p.verseScope);
-    persist({
-      ...p,
-      memoryByNamespace: { ...p.memoryByNamespace, [ns]: {} },
-    });
-  }, [persist]);
 
   useEffect(() => {
     if (zhCatalog.length === 0 || enCatalog.length === 0) return;
@@ -493,18 +483,6 @@ export function HomePrayerVerseDockSettings({
             />
             <span>{t("nature.homeVerse.bilingual")}</span>
           </label>
-
-          <button
-            type="button"
-            className={
-              isDock
-                ? "w-full rounded-lg border border-white/18 bg-white/[0.05] py-2 text-[12px] text-white/75 transition hover:bg-white/[0.1]"
-                : "w-full rounded-md border border-neutral-200/90 bg-black/[0.03] py-2 text-[13px] text-[#37352f]/80 transition hover:bg-black/[0.06]"
-            }
-            onClick={resetMemory}
-          >
-            {t("nature.homeVerse.resetMemory")}
-          </button>
         </>
       ) : null}
 
@@ -951,19 +929,6 @@ export function HomePrayerVerseDockSettings({
             </div>
           </div>
 
-          <div className="px-2 pt-1">
-            <button
-              type="button"
-              className={
-                isPopover
-                  ? "w-full rounded-xl py-3 text-center text-[17px] font-normal text-[#FF9A8F] transition active:opacity-70"
-                  : "w-full rounded-xl py-3 text-center text-[17px] font-normal text-[#FF3B30] transition active:opacity-70 dark:text-[#FF453A]"
-              }
-              onClick={resetMemory}
-            >
-              {t("nature.homeVerse.resetMemory")}
-            </button>
-          </div>
         </>
       ) : null}
     </div>

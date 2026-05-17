@@ -4,6 +4,44 @@
 
 html[data-app-shell-safe-fill="parchment"] {
   isolation: isolate;
+  /* 读经版心：手机保持窄栏；平板 / iPad 横屏逐步放宽（与首页经文 rotator 量感对齐） */
+  --read-parchment-column-max: 28rem;
+  --read-parchment-catalog-column-max: 31rem;
+}
+
+@media (min-width: 768px) {
+  html[data-app-shell-safe-fill="parchment"] {
+    --read-parchment-column-max: 36rem;
+    --read-parchment-catalog-column-max: 40rem;
+  }
+}
+
+@media (min-width: 768px) and (orientation: landscape) {
+  html[data-app-shell-safe-fill="parchment"] {
+    --read-parchment-column-max: min(44rem, 88vw);
+    --read-parchment-catalog-column-max: min(48rem, 90vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-app-shell-safe-fill="parchment"] {
+    --read-parchment-column-max: 40rem;
+    --read-parchment-catalog-column-max: 44rem;
+  }
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  html[data-app-shell-safe-fill="parchment"] {
+    --read-parchment-column-max: min(50rem, 82vw);
+    --read-parchment-catalog-column-max: min(54rem, 84vw);
+  }
+}
+
+@media (min-width: 1280px) and (orientation: landscape) {
+  html[data-app-shell-safe-fill="parchment"] {
+    --read-parchment-column-max: min(56rem, 78vw);
+    --read-parchment-catalog-column-max: min(58rem, 80vw);
+  }
 }
 
 html[data-app-shell-safe-fill="parchment"]::before {
@@ -25,10 +63,36 @@ html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]::bef
   min-height: 100lvh;
 }
 
+/* 宽屏横卷（1920×1080）：直接 url / image-set，勿用含 image-set 的 var()（否则易回退竖图拉伸） */
 @media (min-width: 480px) and (orientation: landscape),
   (min-width: 480px) and (min-aspect-ratio: 4/3) {
   html[data-app-shell-safe-fill="parchment"]::before {
-    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+    background-image: url("/read/parchment-scroll-bg-wide.jpg");
+  }
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  @media (min-width: 480px) and (orientation: landscape),
+    (min-width: 480px) and (min-aspect-ratio: 4/3) {
+    html[data-app-shell-safe-fill="parchment"]::before {
+      background-image: image-set(
+        url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+        url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+      );
+    }
+  }
+}
+
+html[data-read-parchment-wide="1"][data-app-shell-safe-fill="parchment"]::before {
+  background-image: url("/read/parchment-scroll-bg-wide.jpg");
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  html[data-read-parchment-wide="1"][data-app-shell-safe-fill="parchment"]::before {
+    background-image: image-set(
+      url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+      url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+    );
   }
 }
 
@@ -43,7 +107,41 @@ html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]::bef
   (min-width: 480px) and (min-aspect-ratio: 4/3) {
   .dark html[data-app-shell-safe-fill="parchment"]::before {
     background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
-      var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+      url("/read/parchment-scroll-bg-wide.jpg");
+    background-blend-mode: multiply, normal;
+  }
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  @media (min-width: 480px) and (orientation: landscape),
+    (min-width: 480px) and (min-aspect-ratio: 4/3) {
+    .dark html[data-app-shell-safe-fill="parchment"]::before {
+      background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+        image-set(
+          url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+          url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+        );
+      background-blend-mode: multiply, normal;
+    }
+  }
+}
+
+html[data-read-parchment-wide="1"].dark[data-app-shell-safe-fill="parchment"]::before,
+.dark html[data-read-parchment-wide="1"][data-app-shell-safe-fill="parchment"]::before {
+  background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+    url("/read/parchment-scroll-bg-wide.jpg");
+  background-blend-mode: multiply, normal;
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  html[data-read-parchment-wide="1"].dark[data-app-shell-safe-fill="parchment"]::before,
+  .dark html[data-read-parchment-wide="1"][data-app-shell-safe-fill="parchment"]::before {
+    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+      image-set(
+        url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+        url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+      );
+    background-blend-mode: multiply, normal;
   }
 }
 
@@ -80,7 +178,34 @@ html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app
 @media (min-width: 480px) and (orientation: landscape),
   (min-width: 480px) and (min-aspect-ratio: 4/3) {
   html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
-    background-image: var(--read-parchment-bg-image-wide, var(--read-parchment-bg-image));
+    background-image: url("/read/parchment-scroll-bg-wide.jpg");
+  }
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  @media (min-width: 480px) and (orientation: landscape),
+    (min-width: 480px) and (min-aspect-ratio: 4/3) {
+    html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app-shell-parchment-backdrop {
+      background-image: image-set(
+        url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+        url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+      );
+    }
+  }
+}
+
+html[data-read-parchment-wide="1"][data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]
+  .app-shell-parchment-backdrop {
+  background-image: url("/read/parchment-scroll-bg-wide.jpg");
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  html[data-read-parchment-wide="1"][data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]
+    .app-shell-parchment-backdrop {
+    background-image: image-set(
+      url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+      url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+    );
   }
 }
 
@@ -89,6 +214,33 @@ html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"] .app
   background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
     var(--read-parchment-bg-image);
   background-blend-mode: multiply, normal;
+}
+
+@media (min-width: 480px) and (orientation: landscape),
+  (min-width: 480px) and (min-aspect-ratio: 4/3) {
+  .dark
+    html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]
+    .app-shell-parchment-backdrop {
+    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+      url("/read/parchment-scroll-bg-wide.jpg");
+    background-blend-mode: multiply, normal;
+  }
+}
+
+@supports (background-image: image-set(url("/read/parchment-scroll-bg-wide.webp") type("image/webp"))) {
+  @media (min-width: 480px) and (orientation: landscape),
+    (min-width: 480px) and (min-aspect-ratio: 4/3) {
+    .dark
+      html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]
+      .app-shell-parchment-backdrop {
+      background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.42), rgba(14, 11, 9, 0.78)),
+        image-set(
+          url("/read/parchment-scroll-bg-wide.webp") type("image/webp"),
+          url("/read/parchment-scroll-bg-wide.jpg") type("image/jpeg")
+        );
+      background-blend-mode: multiply, normal;
+    }
+  }
 }
 
 /* 顶缘安全区条带不占高、不铺底（内容列用 padding + env 避让；PWA 用 --app-shell-safe-top-effective） */

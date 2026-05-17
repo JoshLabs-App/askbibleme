@@ -17,6 +17,31 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
 
   if (!html.dataset.appShellSafeFill) html.dataset.appShellSafeFill = "parchment";
   if (samsung && !html.dataset.readParchmentSamsung) html.dataset.readParchmentSamsung = "1";
+
+  function syncReadParchmentWide() {
+    try {
+      var wide =
+        window.matchMedia("(min-width: 480px) and (min-aspect-ratio: 4/3)").matches ||
+        window.matchMedia("(min-width: 480px) and (orientation: landscape)").matches;
+      if (wide) html.dataset.readParchmentWide = "1";
+      else delete html.dataset.readParchmentWide;
+    } catch (e) {}
+  }
+  syncReadParchmentWide();
+  if (window.matchMedia) {
+    var wideMqA = window.matchMedia("(min-width: 480px) and (min-aspect-ratio: 4/3)");
+    var wideMqB = window.matchMedia("(min-width: 480px) and (orientation: landscape)");
+    var onWideChange = function () {
+      syncReadParchmentWide();
+    };
+    if (wideMqA.addEventListener) {
+      wideMqA.addEventListener("change", onWideChange);
+      wideMqB.addEventListener("change", onWideChange);
+    } else if (wideMqA.addListener) {
+      wideMqA.addListener(onWideChange);
+      wideMqB.addListener(onWideChange);
+    }
+  }
   if (!html.style.backgroundColor) html.style.backgroundColor = canvas;
   if (!html.style.colorScheme) html.style.colorScheme = dark ? "dark" : "light";
 

@@ -28,6 +28,14 @@ export const SCRIPTURE_PARCHMENT_STATUS_BAR_THEME_ALPHA_DARK = "#1a151200";
 export const SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY = "readParchmentSamsung";
 export const SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE = "1";
 
+/** 宽屏横卷：`parchment-shell-boot` 按视口写入，CSS 与 media query 双保险 */
+export const SCRIPTURE_PARCHMENT_WIDE_DATASET_KEY = "readParchmentWide";
+export const SCRIPTURE_PARCHMENT_WIDE_DATASET_VALUE = "1";
+
+/** 与 `read-parchment-shell-chrome.css` 宽屏规则一致 */
+export const SCRIPTURE_PARCHMENT_WIDE_MEDIA =
+  "(min-width: 480px) and (min-aspect-ratio: 4/3), (min-width: 480px) and (orientation: landscape)";
+
 export function scriptureParchmentStatusBarTheme(dark: boolean, samsung: boolean): string {
   if (samsung) {
     return dark

@@ -23,9 +23,17 @@ type Props = {
   bookName: string;
   chapter: number;
   verses: Verse[];
+  contrastVerses?: Verse[] | null;
 };
 
-export function ReadChapterVersesClient({ translationId, bookId, bookName, chapter, verses }: Props) {
+export function ReadChapterVersesClient({
+  translationId,
+  bookId,
+  bookName,
+  chapter,
+  verses,
+  contrastVerses = null,
+}: Props) {
   const { effectiveSrc, currentSec, durationSec, playing } = useMusicShellPlayback();
   const [resolvedChapterSrc, setResolvedChapterSrc] = useState<string | null>(null);
   const verseElRefs = useRef<(HTMLParagraphElement | null)[]>([]);
@@ -56,6 +64,15 @@ export function ReadChapterVersesClient({ translationId, bookId, bookName, chapt
       cancelled = true;
     };
   }, [supported, bookName, bookId, chapter]);
+
+  const contrastByVerse = useMemo(() => {
+    if (!contrastVerses?.length) return null;
+    const m = new Map<number, string>();
+    for (const v of contrastVerses) {
+      if (v.text.trim()) m.set(v.verse, v.text);
+    }
+    return m;
+  }, [contrastVerses]);
 
   const weights = useMemo(() => verseWeightsForReadChapterAudio(verses), [verses]);
 
@@ -110,6 +127,7 @@ export function ReadChapterVersesClient({ translationId, bookId, bookName, chapt
     <>
       {verses.map((v, i) => {
         const active = activeIndex !== null && i === activeIndex;
+        const contrastText = contrastByVerse?.get(v.verse) ?? null;
         return (
           <p
             key={`${bookId}:${chapter}:${v.verse}`}
@@ -126,19 +144,24 @@ export function ReadChapterVersesClient({ translationId, bookId, bookName, chapt
               .join(" ")}
           >
             <span className="read-chapter-verse-num">{v.verse}</span>
-            {verseDivineParts ? (
-              verseDivineParts[i]!.map((seg, si) =>
-                seg.divine ? (
-                  <span key={si} className="read-chapter-divine-speech">
-                    {seg.text}
-                  </span>
-                ) : (
-                  <Fragment key={si}>{seg.text}</Fragment>
-                ),
-              )
-            ) : (
-              v.text
-            )}
+            <span className="read-chapter-verse-primary">
+              {verseDivineParts ? (
+                verseDivineParts[i]!.map((seg, si) =>
+                  seg.divine ? (
+                    <span key={si} className="read-chapter-divine-speech">
+                      {seg.text}
+                    </span>
+                  ) : (
+                    <Fragment key={si}>{seg.text}</Fragment>
+                  ),
+                )
+              ) : (
+                v.text
+              )}
+            </span>
+            {contrastText ? (
+              <span className="read-chapter-verse-contrast">{contrastText}</span>
+            ) : null}
           </p>
         );
       })}

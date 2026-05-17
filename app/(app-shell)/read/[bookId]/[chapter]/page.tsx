@@ -4,9 +4,12 @@ import { ReadChapterTodayPlanBlock } from "@/components/bible/ReadChapterTodayPl
 import { ReadChapterNav } from "@/components/bible/ReadChapterNav";
 import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
-import { loadChapterFromDefaultTranslation } from "@/lib/bible/load-chapter-from-default-translation";
-import { ReadChapterInfoEditionBlock } from "@/components/bible/ReadChapterInfoEditionBlock";
-import { getInfoEditionReaderCacheAsync } from "@/lib/bible/info-edition-v1-reader-persistence";
+import { loadReadChapterForReadPage } from "@/lib/read/load-read-chapter-for-read-page";
+import { ReadChapterPostReadingEditions } from "@/components/bible/ReadChapterPostReadingEditions";
+import {
+  getInfoEditionReaderCacheAsync,
+  resolveInfoEditionReaderTarget,
+} from "@/lib/bible/info-edition-v1-reader-persistence";
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
@@ -14,8 +17,9 @@ type Props = { params: Promise<{ bookId: string; chapter: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { bookId, chapter } = await params;
-  const data = await loadChapterFromDefaultTranslation(bookId, Number(chapter));
-  if (!data) return { title: sitePageTitle("经文") };
+  const loaded = await loadReadChapterForReadPage(bookId, Number(chapter));
+  if (!loaded) return { title: sitePageTitle("经文") };
+  const data = loaded.primary;
   return { title: sitePageTitle(`${data.bookName} ${data.chapter}`) };
 }
 
@@ -23,15 +27,32 @@ export default async function ReadChapterPage({ params }: Props) {
   const { bookId, chapter } = await params;
   const ch = Number(chapter);
   if (!Number.isFinite(ch)) notFound();
-  const data = await loadChapterFromDefaultTranslation(bookId, ch);
-  if (!data) notFound();
+  const loaded = await loadReadChapterForReadPage(bookId, ch);
+  if (!loaded) notFound();
+
+  const data = loaded.primary;
+  const contrast = loaded.contrast;
 
   const { prev, next } = resolveReadChapterNeighbors(data.bookId, data.chapter);
 
-  const infoCache = await getInfoEditionReaderCacheAsync(process.cwd(), data.bookId, data.chapter);
+  const cwd = process.cwd();
+  const infoTarget = resolveInfoEditionReaderTarget(cwd, { edition: "info" });
+  const guideTarget = resolveInfoEditionReaderTarget(cwd, { edition: "guide" });
+  const infoCache =
+    "error" in infoTarget
+      ? null
+      : await getInfoEditionReaderCacheAsync(cwd, data.bookId, data.chapter, infoTarget);
+  const guideCache =
+    "error" in guideTarget
+      ? null
+      : await getInfoEditionReaderCacheAsync(cwd, data.bookId, data.chapter, guideTarget);
   const initialInfoPublished =
-    infoCache.status === "ready" && infoCache.published?.markdown.trim()
+    infoCache?.status === "ready" && infoCache.published?.markdown.trim()
       ? infoCache.published
+      : null;
+  const initialGuidePublished =
+    guideCache?.status === "ready" && guideCache.published?.markdown.trim()
+      ? guideCache.published
       : null;
 
   return (
@@ -53,13 +74,14 @@ export default async function ReadChapterPage({ params }: Props) {
             bookName={data.bookName}
             chapter={data.chapter}
             verses={data.verses}
+            contrastVerses={contrast?.verses ?? null}
           />
         </div>
-        <ReadChapterInfoEditionBlock
-          key={`${data.bookId}-${data.chapter}`}
+        <ReadChapterPostReadingEditions
           bookId={data.bookId}
           chapter={data.chapter}
-          initialPublished={initialInfoPublished}
+          initialInfoPublished={initialInfoPublished}
+          initialGuidePublished={initialGuidePublished}
         />
         <ReadChapterTodayPlanBlock bookId={data.bookId} chapter={data.chapter} />
         <ReadChapterEndNav

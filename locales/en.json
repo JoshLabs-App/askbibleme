@@ -707,6 +707,15 @@
       "infoEditionShow": "Show guide",
       "infoEditionHide": "Hide guide",
       "infoEditionDefaultRole": "Basic edition",
+      "postReadingEditionsAriaLabel": "After-reading helps",
+      "postReadingEditionsLead": "When you finish the chapter, open if you wish",
+      "postReadingEditionsChoicesAria": "Choose guide or study lead",
+      "postReadingEditionInfo": "Chapter guide",
+      "postReadingEditionGuide": "Study lead",
+      "guideEditionSectionKicker": "Study lead",
+      "guideEditionDisclaimer": "Bible study prompts below—not Scripture text.",
+      "guideEditionAriaLabel": "Chapter study lead",
+      "guideEditionDefaultRole": "Guide V2",
       "planActivateHeading": "Use this plan",
       "planAnchorFromToday": "Start from today",
       "planAnchorFromTodayHint": "Today becomes day 1; each calendar day advances one step.",
@@ -727,18 +736,15 @@
       "todayPlanLoading": "Loading…",
       "todayPlanEmpty": "No readings for today.",
       "typography": {
-        "ariaOpen": "Reading typography",
-        "dialogTitle": "Reading typography",
-        "fontLabel": "Font",
-        "sizeLabel": "Size",
-        "fontSongti": "Serif Song (default)",
-        "fontKaiti": "Kai (Chinese)",
-        "fontHeiti": "Hei / sans",
-        "fontSystem": "System UI",
-        "sizeS": "Smaller",
-        "sizeM": "Default",
-        "sizeL": "Larger",
-        "sizeXl": "Largest"
+        "ariaOpen": "Reading settings",
+        "dialogTitle": "Reading settings",
+        "primaryTranslation": "Bible version",
+        "contrastTranslation": "Parallel version",
+        "contrastNone": "None",
+        "contrastHint": "Parallel text appears below each verse.",
+        "sizeLabel": "Text size",
+        "sizeSmallerAria": "Decrease text size",
+        "sizeLargerAria": "Increase text size"
       },
       "plansCatalog": {
         "mcheyne": {
@@ -884,8 +890,7 @@
       "contrastCaption": "Versions",
       "zhTranslation": "Chinese",
       "enTranslation": "English",
-      "categoryRowLabel": "Section",
-      "resetMemory": "Reset progress"
+      "categoryRowLabel": "Section"
     },
     "sceneCategory": {
       "nature": "Nature",

@@ -77,9 +77,17 @@
     3.75rem + var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px))
   );
   --read-parchment-pad-bottom: calc(50px + env(safe-area-inset-bottom, 0px));
-  max-width: min(28rem, 100%);
+  max-width: min(var(--read-parchment-column-max, 28rem), 100%);
   margin-inline: auto;
   padding: var(--read-parchment-pad-top) var(--read-parchment-pad-x) var(--read-parchment-pad-bottom);
+}
+
+@media (min-width: 768px) {
+  .read-bible-parchment-column,
+  .read-chapter-parchment {
+    --read-parchment-pad-x: max(1.75rem, calc(env(safe-area-inset-left, 0px) + 0.5rem));
+    --read-parchment-pad-x-end: max(1.75rem, calc(env(safe-area-inset-right, 0px) + 0.5rem));
+  }
 }
 
 .read-chapter-header {
@@ -142,9 +150,81 @@
   margin-bottom: 0;
 }
 
+.read-chapter-verse-contrast {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--read-bible-contrast-verse-font-size, 1.02rem);
+  font-weight: 450;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, rgb(120 75 30) 62%, transparent);
+}
+
+.dark .read-chapter-verse-contrast {
+  color: color-mix(in srgb, rgb(214 211 209) 78%, transparent);
+}
+
 /* 经文正文区（与下方信息版分区） */
 .read-chapter-scripture {
   padding-bottom: 0.25rem;
+}
+
+/* 读后经文辅助：导读版 / 引导版 */
+.read-chapter-post-reading-editions {
+  margin-top: clamp(2rem, 6vw, 2.75rem);
+  text-align: center;
+}
+
+.read-chapter-post-reading-editions-lead {
+  margin: 0 0 0.85rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, rgb(120 75 30) 52%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-lead {
+  color: color-mix(in srgb, rgb(245 230 210) 42%, transparent);
+}
+
+.read-chapter-post-reading-editions-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.read-chapter-post-reading-editions-choice {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.28) 100%, transparent);
+  background: color-mix(in srgb, rgba(255, 252, 245, 0.55) 100%, transparent);
+  padding: 0.45rem 1.1rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, rgb(92 58 28) 90%, transparent);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.read-chapter-post-reading-editions-choice:hover {
+  background: color-mix(in srgb, rgba(255, 252, 245, 0.82) 100%, transparent);
+  border-color: color-mix(in srgb, rgba(120, 75, 30, 0.38) 100%, transparent);
+}
+
+.read-chapter-post-reading-editions-choice--active {
+  border-color: color-mix(in srgb, rgba(120, 75, 30, 0.5) 100%, transparent);
+  background: color-mix(in srgb, rgba(255, 248, 235, 0.92) 100%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-choice {
+  border-color: color-mix(in srgb, rgba(245, 230, 210, 0.18) 100%, transparent);
+  background: color-mix(in srgb, rgba(28, 26, 24, 0.45) 100%, transparent);
+  color: color-mix(in srgb, rgb(245 235 220) 85%, transparent);
+}
+
+.read-chapter-post-reading-editions-panels .read-chapter-info-edition-invite {
+  margin-top: 1.25rem;
 }
 
 /* 信息版入口：默认不加载正文 */
@@ -210,7 +290,7 @@
 
 .read-chapter-info-edition-invite-hint {
   margin: 0;
-  max-width: 16rem;
+  max-width: min(16rem, 100%);
   font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
   font-size: 0.6875rem;
   line-height: 1.45;
@@ -376,14 +456,12 @@
 }
 
 .read-chapter-verse-num {
-  display: inline-block;
-  min-width: 1.25em;
-  margin-right: 0.45rem;
-  vertical-align: top;
+  display: inline;
+  margin-right: 0.35em;
   font-size: 0.69em;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  line-height: 1.88;
+  white-space: nowrap;
   color: color-mix(in srgb, currentColor 68%, transparent);
 }
 
@@ -571,8 +649,51 @@
   overflow: hidden;
 }
 
+@media (min-width: 768px) {
+  .read-chapter-jump-panel {
+    left: 50%;
+    right: auto;
+    width: min(var(--read-parchment-column-max, 36rem), calc(100% - 1.5rem));
+    border-radius: 1rem;
+    border-bottom: 1px solid color-mix(in srgb, #8b6914 18%, transparent);
+    bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    max-height: min(72dvh, 620px);
+    box-shadow: 0 -8px 36px color-mix(in srgb, #1a1208 16%, transparent),
+      0 16px 48px color-mix(in srgb, #1a1208 10%, transparent);
+    transform: translate(-50%, 100%);
+  }
+
+  .read-chapter-jump-root--open .read-chapter-jump-panel {
+    transform: translate(-50%, 0);
+  }
+
+  .read-chapter-jump-books {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-height: min(38dvh, 280px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .read-chapter-jump-books {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-height: min(40dvh, 300px);
+  }
+}
+
 .read-chapter-jump-root--open .read-chapter-jump-panel {
   transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+  .read-chapter-jump-root--open .read-chapter-jump-panel {
+    transform: translate(-50%, 0);
+  }
+
+  .read-chapter-info-edition-trigger--generating,
+  .read-chapter-info-edition-invite-hint,
+  .read-chapter-info-edition-loading-text {
+    max-width: min(24rem, 100%);
+  }
 }
 
 .read-chapter-jump-header {

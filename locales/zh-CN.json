@@ -707,6 +707,15 @@
       "infoEditionShow": "展开导读",
       "infoEditionHide": "收起导读",
       "infoEditionDefaultRole": "基础版",
+      "postReadingEditionsAriaLabel": "读后经文辅助",
+      "postReadingEditionsLead": "读完本章，可按需打开",
+      "postReadingEditionsChoicesAria": "选择导读或引导",
+      "postReadingEditionInfo": "导读版",
+      "postReadingEditionGuide": "引导版",
+      "guideEditionSectionKicker": "引导版",
+      "guideEditionDisclaimer": "以下为本章查经引导，并非圣经译文。",
+      "guideEditionAriaLabel": "本章查经引导",
+      "guideEditionDefaultRole": "引导版V2",
       "planActivateHeading": "使用此计划",
       "planAnchorFromToday": "从今天开始",
       "planAnchorFromTodayHint": "选定的这一天为第 1 天；之后按自然日推进。",
@@ -727,18 +736,15 @@
       "todayPlanLoading": "正在载入…",
       "todayPlanEmpty": "今日暂无经文段。",
       "typography": {
-        "ariaOpen": "阅读版式",
-        "dialogTitle": "阅读版式",
-        "fontLabel": "字体",
+        "ariaOpen": "阅读设置",
+        "dialogTitle": "阅读设置",
+        "primaryTranslation": "圣经版本",
+        "contrastTranslation": "对照版本",
+        "contrastNone": "无",
+        "contrastHint": "对照文显示于每节主文下方。",
         "sizeLabel": "字号",
-        "fontSongti": "宋体（默认）",
-        "fontKaiti": "楷体",
-        "fontHeiti": "黑体 / 无衬线",
-        "fontSystem": "系统界面体",
-        "sizeS": "较小",
-        "sizeM": "标准",
-        "sizeL": "较大",
-        "sizeXl": "特大"
+        "sizeSmallerAria": "缩小字号",
+        "sizeLargerAria": "放大字号"
       },
       "plansCatalog": {
         "mcheyne": {
@@ -884,8 +890,7 @@
       "contrastCaption": "对照版本",
       "zhTranslation": "中文",
       "enTranslation": "英文",
-      "categoryRowLabel": "版块",
-      "resetMemory": "重置进度"
+      "categoryRowLabel": "版块"
     },
     "sceneCategory": {
       "nature": "自然",

@@ -160,6 +160,24 @@ export function HomeSleepTimerControl({ className = "", embedded = false, compac
 
   useScreenWakeLock(stayAwake);
 
+  useEffect(() => {
+    if (!popoverOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      const w = popoverWrapRef.current;
+      if (!w || w.contains(e.target as Node)) return;
+      setPopoverOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopoverOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("mousedown", onDoc, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [popoverOpen]);
+
   if (embedded) {
     return (
       <div className={className}>
@@ -183,24 +201,6 @@ export function HomeSleepTimerControl({ className = "", embedded = false, compac
       ? "text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.85))_drop-shadow(0_0_14px_rgba(255,255,255,0.35))]"
       : "",
   ].join(" ");
-
-  useEffect(() => {
-    if (!popoverOpen) return;
-    const onDoc = (e: MouseEvent) => {
-      const w = popoverWrapRef.current;
-      if (!w || w.contains(e.target as Node)) return;
-      setPopoverOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPopoverOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc, true);
-    document.addEventListener("keydown", onKey, true);
-    return () => {
-      document.removeEventListener("mousedown", onDoc, true);
-      document.removeEventListener("keydown", onKey, true);
-    };
-  }, [popoverOpen]);
 
   return (
     <div ref={popoverWrapRef} className={["relative flex shrink-0 flex-col items-end overflow-visible", className].join(" ")}>

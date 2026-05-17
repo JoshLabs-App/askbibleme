@@ -39,6 +39,11 @@ const overview: {
     items: [
       { href: "/admin/read/versions", label: "译本与上传", hint: "上传 selah-bible-v1 JSON、设默认译本" },
       { href: "/admin/read/golden-verse-themes", label: "金句主题", hint: "BIBLE 主题标签墙（本地 SQLite，需先 import）" },
+      {
+        href: "/admin/read/verse-repeat-rank",
+        label: "经节重复排行",
+        hint: "主题库 12,585 去重节按收录次数排序（需先 import）",
+      },
       { href: "/admin/read/golden-verses", label: "金句", hint: "首页轮播与主题分类经节（只读总览）" },
       { href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" },
       {

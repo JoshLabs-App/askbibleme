@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { AdminReaderVerseThemesClient } from "@/components/admin/AdminReaderVerseThemesClient";
 import { ADMIN_MAIN_CLASS } from "@/components/admin/admin-layout";
@@ -23,6 +24,11 @@ export default async function AdminGoldenVerseThemesPage({
     <div className={ADMIN_MAIN_CLASS}>
       <h1 className="text-lg font-medium tracking-tight text-adminFg">{gt.title}</h1>
       <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-adminMuted">{gt.intro}</p>
+      <p className="mt-2 text-[13px] text-adminMuted">
+        <Link href="/admin/read/verse-repeat-rank" className="font-medium text-adminFg underline underline-offset-2">
+          {m.admin.verseRepeatRank.title}
+        </Link>
+      </p>
       <AdminReaderVerseThemesClient />
     </div>
   );

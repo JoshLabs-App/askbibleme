@@ -19,6 +19,7 @@ import {
   READER_VERSE_THEMES_SCHEMA_SQL,
   readerVerseThemesSqlitePath,
 } from "../lib/scripture/reader-verse-themes-db";
+import { invalidateVerseRepeatRankMetaCache } from "../lib/scripture/reader-verse-repeat-rank";
 
 type VerseIn = {
   position?: number;
@@ -157,6 +158,7 @@ async function run(absSrc: string) {
   db.close();
   fs.writeFileSync(outAbs, Buffer.from(bin));
   invalidateReaderVerseThemesDbCache();
+  invalidateVerseRepeatRankMetaCache();
   console.error(`已写入: ${outAbs}`);
 }
 

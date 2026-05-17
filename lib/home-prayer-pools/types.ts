@@ -25,7 +25,10 @@ export type HomePrayerChunkV1 = {
   verses: HomePrayerChunkVerseV1[];
 };
 
-export type VerseScopeV1 = { type: "all" } | { type: "category"; categoryId: string };
+export type VerseScopeV1 =
+  | { type: "all" }
+  | { type: "category"; categoryId: string }
+  | { type: "themeRepeat"; minCount: number };
 
 export type VerseDisplayModeV1 = "primary" | "bilingual";
 

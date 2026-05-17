@@ -1,8 +1,10 @@
+import fs from "node:fs";
 import type { Database } from "sql.js";
 import { NextResponse } from "next/server";
 import { chineseBookNameToBookId } from "@/lib/bible/chinese-book-name-to-id";
 import { canonicalLabel } from "@/lib/scripture/reader-verse-themes-bucket";
-import { getReaderVerseThemesDatabase } from "@/lib/scripture/reader-verse-themes-db";
+import { enrichVerseRepeatRankItems, queryVerseRepeatRankPage } from "@/lib/scripture/reader-verse-repeat-rank";
+import { getReaderVerseThemesDatabase, readerVerseThemesSqlitePath } from "@/lib/scripture/reader-verse-themes-db";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
 function disk403() {
@@ -142,6 +144,22 @@ export async function GET(req: Request) {
 
       return NextResponse.json(
         { ok: true, total, limit, offset, items },
+        { headers: { "Cache-Control": "no-store" } },
+      );
+    }
+
+    if (mode === "verse-repeat-rank") {
+      const limit = Math.min(500, Math.max(1, Number(url.searchParams.get("limit") ?? 100)));
+      const offset = Math.max(0, Number(url.searchParams.get("offset") ?? 0));
+      const q = (url.searchParams.get("q") ?? "").trim();
+      const minCount = url.searchParams.get("minCount");
+      const maxCount = url.searchParams.get("maxCount");
+      const dbPath = readerVerseThemesSqlitePath(cwd);
+      const mtimeMs = fs.existsSync(dbPath) ? fs.statSync(dbPath).mtimeMs : 0;
+      const page = queryVerseRepeatRankPage(db, { limit, offset, q, minCount, maxCount, mtimeMs });
+      await enrichVerseRepeatRankItems(page.items);
+      return NextResponse.json(
+        { ok: true, ...page },
         { headers: { "Cache-Control": "no-store" } },
       );
     }

@@ -6,6 +6,7 @@ import type {
   VerseScopeV1,
 } from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_PREFS_STORAGE_KEY, VERSE_DISPLAY_COOKIE_NAME } from "@/lib/home-prayer-pools/constants";
+import { themeRepeatPoolScopeId } from "@/lib/scripture/reader-verse-repeat-rank";
 
 export { VERSE_DISPLAY_COOKIE_NAME };
 
@@ -67,7 +68,9 @@ export function normalizeVerseEnTranslationId(raw: unknown): string {
 }
 
 export function memoryNamespaceFromScope(scope: VerseScopeV1): string {
-  return scope.type === "all" ? "all" : `cat:${scope.categoryId}`;
+  if (scope.type === "all") return "all";
+  if (scope.type === "themeRepeat") return themeRepeatPoolScopeId(scope.minCount);
+  return `cat:${scope.categoryId}`;
 }
 
 export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
@@ -98,7 +101,17 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
   }
 }
 
-function normalizeScope(_raw: unknown): VerseScopeV1 {
+function normalizeScope(raw: unknown): VerseScopeV1 {
+  if (raw && typeof raw === "object") {
+    const o = raw as { type?: string; categoryId?: string; minCount?: number };
+    if (o.type === "themeRepeat") {
+      const min = Number(o.minCount);
+      if (Number.isFinite(min) && min >= 1) return { type: "themeRepeat", minCount: Math.floor(min) };
+    }
+    if (o.type === "category" && typeof o.categoryId === "string" && o.categoryId.trim()) {
+      return { type: "category", categoryId: o.categoryId.trim() };
+    }
+  }
   return { type: "all" };
 }
 
@@ -121,7 +134,9 @@ export function requestHomePrayerVerseFeedReload(): void {
   window.dispatchEvent(new Event(HOME_PRAYER_VERSE_FEED_RELOAD_EVENT));
 }
 
-export function scopeIdFromPrefs(_scope: VerseScopeV1): string {
+export function scopeIdFromPrefs(scope: VerseScopeV1): string {
+  if (scope.type === "themeRepeat") return themeRepeatPoolScopeId(scope.minCount);
+  if (scope.type === "category") return `cat-${scope.categoryId}`;
   return "all";
 }
 

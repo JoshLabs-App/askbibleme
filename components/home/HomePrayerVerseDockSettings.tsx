@@ -362,6 +362,16 @@ export function HomePrayerVerseDockSettings({
               type="radio"
               name={isDock ? "hv-scope-dock" : "hv-scope-drawer"}
               className="mt-0.5"
+              checked={prefs.verseScope.type === "themeRepeat"}
+              onChange={() => persist({ ...prefs, verseScope: { type: "themeRepeat", minCount: 5 } })}
+            />
+            <span>{t("nature.homeVerse.scopeThemeRepeatGe5")}</span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-2">
+            <input
+              type="radio"
+              name={isDock ? "hv-scope-dock" : "hv-scope-drawer"}
+              className="mt-0.5"
               checked={prefs.verseScope.type === "category"}
               onChange={() =>
                 persist({
@@ -705,12 +715,12 @@ export function HomePrayerVerseDockSettings({
                 : "overflow-hidden rounded-[10px] bg-ink/[0.045] p-1 dark:bg-white/[0.06]"
             }
           >
-            <div className={isPopover ? "flex h-9 rounded-lg bg-black/35 p-0.5" : "flex h-9 rounded-lg bg-black/[0.06] p-0.5 dark:bg-black/30"}>
+            <div className={isPopover ? "flex flex-col gap-1 rounded-lg bg-black/35 p-1" : "flex flex-col gap-1 rounded-lg bg-black/[0.06] p-1 dark:bg-black/30"}>
               <button
                 type="button"
                 aria-pressed={prefs.verseScope.type === "all"}
                 className={[
-                  "min-h-0 flex-1 rounded-md text-[13px] font-medium leading-none transition motion-reduce:transition-none",
+                  "min-h-9 w-full rounded-md px-2 text-left text-[13px] font-medium leading-snug transition motion-reduce:transition-none",
                   prefs.verseScope.type === "all"
                     ? isPopover
                       ? "bg-white/18 text-white shadow-none"
@@ -725,9 +735,26 @@ export function HomePrayerVerseDockSettings({
               </button>
               <button
                 type="button"
+                aria-pressed={prefs.verseScope.type === "themeRepeat"}
+                className={[
+                  "min-h-9 w-full rounded-md px-2 text-left text-[13px] font-medium leading-snug transition motion-reduce:transition-none",
+                  prefs.verseScope.type === "themeRepeat"
+                    ? isPopover
+                      ? "bg-white/18 text-white shadow-none"
+                      : "bg-canvas text-ink shadow-sm dark:bg-zinc-700 dark:text-white"
+                    : isPopover
+                      ? "text-white/55"
+                      : "text-ink/55 dark:text-white/55",
+                ].join(" ")}
+                onClick={() => persist({ ...prefs, verseScope: { type: "themeRepeat", minCount: 5 } })}
+              >
+                {t("nature.homeVerse.scopeThemeRepeatGe5")}
+              </button>
+              <button
+                type="button"
                 aria-pressed={prefs.verseScope.type === "category"}
                 className={[
-                  "min-h-0 flex-1 rounded-md text-[13px] font-medium leading-none transition motion-reduce:transition-none",
+                  "min-h-9 w-full rounded-md px-2 text-left text-[13px] font-medium leading-snug transition motion-reduce:transition-none",
                   prefs.verseScope.type === "category"
                     ? isPopover
                       ? "bg-white/18 text-white shadow-none"

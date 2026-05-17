@@ -1,0 +1,188 @@
+import { mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import type { AppLocale } from "@/lib/i18n/config";
+import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
+import type { VerseRef } from "@/lib/bible/verse-ref";
+import { resolveVerseRefToHomeEntry } from "@/lib/bible/resolve-verse-range-for-display";
+import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
+import {
+  getReaderVerseThemesDatabase,
+  readerVerseThemesSqlitePath,
+} from "@/lib/scripture/reader-verse-themes-db";
+import {
+  listThemeRepeatPoolSourceRows,
+  themeRepeatPoolScopeId,
+} from "@/lib/scripture/reader-verse-repeat-rank";
+import { HOME_PRAYER_POOL_CHUNK_SIZE } from "@/lib/home-prayer-pools/constants";
+import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
+import { verseKeyFromVerseRef } from "@/lib/home-prayer-pools/verse-key-from-ref";
+
+const HOME_POOL_ZH_TRANSLATION_IDS = ["cuv-simp", "cuv-trad"] as const;
+const HOME_POOL_EN_TRANSLATION_IDS = ["web-en", "bbe-en"] as const;
+
+function translationIdsPresent(
+  index: ReturnType<typeof readTranslationsIndexSync>,
+  ids: readonly string[],
+): string[] {
+  return ids.filter((id) => index.translations.some((t) => t.id === id));
+}
+
+function poolOutDir(cwd: string, scopeId: string): string {
+  return path.join(cwd, "public", "data", "home-prayer-pools", scopeId);
+}
+
+export type WriteThemeRepeatPrayerPoolOptions = {
+  minCount: number;
+  maxCount?: number;
+  cap?: number;
+};
+
+export type WriteThemeRepeatPrayerPoolResult = {
+  scopeId: string;
+  minCount: number;
+  verseCount: number;
+  chunkCount: number;
+  skippedResolve: number;
+};
+
+/**
+ * 依主题库收录次数生成静态祷告池：`public/data/home-prayer-pools/theme-repeat-ge{N}/`。
+ * 正文仅来自圣经库（cuv-simp / web-en 等），不读主题库 verse_text。
+ */
+export async function writeThemeRepeatPrayerPool(
+  cwd: string,
+  options: WriteThemeRepeatPrayerPoolOptions,
+): Promise<WriteThemeRepeatPrayerPoolResult> {
+  const minCount = Math.max(1, Math.floor(options.minCount));
+  const scopeId = themeRepeatPoolScopeId(minCount);
+  const dbPath = readerVerseThemesSqlitePath(cwd);
+  const fs = await import("node:fs");
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(
+      `未找到 ${readerVerseThemesSqlitePath(cwd)}。请先运行 npm run import:reader-verse-themes`,
+    );
+  }
+  const db = await getReaderVerseThemesDatabase(cwd);
+  if (!db) throw new Error("无法打开 reader-verse-themes.sqlite");
+
+  const mtimeMs = fs.statSync(dbPath).mtimeMs;
+  const sourceRows = listThemeRepeatPoolSourceRows(db, {
+    minCount,
+    maxCount: options.maxCount,
+    cap: options.cap,
+    mtimeMs,
+  });
+
+  const metaPath = path.join(cwd, "data", "scripture", `${scopeId}-meta.json`);
+  mkdirSync(path.dirname(metaPath), { recursive: true });
+  writeFileSync(
+    metaPath,
+    `${JSON.stringify(
+      {
+        version: 1 as const,
+        scopeId,
+        minCount,
+        maxCount: options.maxCount ?? null,
+        cap: options.cap ?? null,
+        verseCount: sourceRows.length,
+        rows: sourceRows,
+      },
+      null,
+      0,
+    )}\n`,
+    "utf8",
+  );
+
+  const index = readTranslationsIndexSync(cwd);
+  const zhTids = translationIdsPresent(index, HOME_POOL_ZH_TRANSLATION_IDS);
+  const enTids = translationIdsPresent(index, HOME_POOL_EN_TRANSLATION_IDS);
+  const defaultZhTid = zhTids.includes("cuv-simp") ? "cuv-simp" : zhTids[0];
+  const defaultEnTid = enTids.includes("web-en") ? "web-en" : enTids[0];
+  if (!defaultZhTid || !defaultEnTid) {
+    throw new Error("需要 cuv-simp/cuv-trad 与 web-en/bbe-en 译本方可生成池。");
+  }
+
+  const resolved: {
+    verseKey: string;
+    weight: number;
+    locales: Record<AppLocale, HomeVerseEntry>;
+    byTranslationId: Record<string, HomeVerseEntry>;
+  }[] = [];
+  let skippedResolve = 0;
+
+  for (const row of sourceRows) {
+    const ref: VerseRef = {
+      bookId: row.bookId,
+      chapter: row.chapter,
+      verseStart: row.verse,
+      verseEnd: row.verse,
+    };
+    const verseKey = verseKeyFromVerseRef(ref);
+    const byTranslationId: Record<string, HomeVerseEntry> = {};
+    for (const tid of zhTids) {
+      const entry = await resolveVerseRefToHomeEntry(cwd, { ...ref, translationId: tid }, "zh-CN");
+      if (entry?.lines?.length) byTranslationId[tid] = entry;
+    }
+    for (const tid of enTids) {
+      const entry = await resolveVerseRefToHomeEntry(cwd, { ...ref, translationId: tid }, "en");
+      if (entry?.lines?.length) byTranslationId[tid] = entry;
+    }
+    const zhDefault = byTranslationId[defaultZhTid];
+    const enDefault = byTranslationId[defaultEnTid];
+    if (!zhDefault?.lines?.length || !enDefault?.lines?.length) {
+      skippedResolve += 1;
+      continue;
+    }
+    resolved.push({
+      verseKey,
+      weight: Math.max(1, row.repeatCount),
+      locales: { "zh-CN": zhDefault, en: enDefault },
+      byTranslationId,
+    });
+  }
+
+  const chunkSize = HOME_PRAYER_POOL_CHUNK_SIZE;
+  const entries: HomePrayerManifestV1["entries"] = [];
+  for (let i = 0; i < resolved.length; i++) {
+    entries.push({
+      verseKey: resolved[i]!.verseKey,
+      weight: resolved[i]!.weight,
+      chunkIndex: Math.floor(i / chunkSize),
+    });
+  }
+
+  const manifest: HomePrayerManifestV1 = {
+    version: 1,
+    scopeId,
+    chunkSize,
+    entries,
+    bootstrapVerseKeys: resolved.slice(0, 40).map((r) => r.verseKey),
+  };
+
+  const out = poolOutDir(cwd, scopeId);
+  mkdirSync(out, { recursive: true });
+  writeFileSync(path.join(out, "manifest.json"), `${JSON.stringify(manifest)}\n`, "utf8");
+
+  let chunkCount = 0;
+  if (resolved.length > 0) {
+    chunkCount = Math.ceil(resolved.length / chunkSize);
+    for (let ci = 0; ci < chunkCount; ci++) {
+      const slice = resolved.slice(ci * chunkSize, ci * chunkSize + chunkSize);
+      const chunk: HomePrayerChunkV1 = {
+        version: 1,
+        scopeId,
+        chunkIndex: ci,
+        verses: slice,
+      };
+      writeFileSync(path.join(out, `chunk-${ci}.json`), `${JSON.stringify(chunk)}\n`, "utf8");
+    }
+    for (const name of readdirSync(out)) {
+      const m = /^chunk-(\d+)\.json$/.exec(name);
+      if (m && Number(m[1]) >= chunkCount) {
+        unlinkSync(path.join(out, name));
+      }
+    }
+  }
+
+  return { scopeId, minCount, verseCount: resolved.length, chunkCount, skippedResolve };
+}

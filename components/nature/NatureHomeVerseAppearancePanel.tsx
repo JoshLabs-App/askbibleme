@@ -15,6 +15,8 @@ import {
 
 type Props = {
   natureVerseTextScale?: NatureVerseTextScaleDockProps;
+  /** 嵌入首页设置单卡：更矮行高、无外层圆角盒 */
+  compact?: boolean;
 };
 
 function IconTextScaleSmaller(props: { className?: string }) {
@@ -56,7 +58,7 @@ const selectClass =
 /**
  * 自然首页 Aa 浮层：极简列表，与右上「暗衣柔焦」浮层同气质；无说明段落。
  */
-export function NatureHomeVerseAppearancePanel({ natureVerseTextScale }: Props) {
+export function NatureHomeVerseAppearancePanel({ natureVerseTextScale, compact = false }: Props) {
   const { t } = useLocale();
   const [fontFamily, setFontFamily] = useState<GoldenVerseFontFamilyV1>(() =>
     readNatureHomeVerseAppearance().fontFamily,
@@ -86,13 +88,22 @@ export function NatureHomeVerseAppearancePanel({ natureVerseTextScale }: Props) 
     return () => window.removeEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, sync);
   }, []);
 
+  const labelClass = compact ? "shrink-0 text-[10px] leading-snug text-white/55" : rowLabel;
+  const selectCls = compact
+    ? "min-h-[28px] min-w-0 max-w-[58%] flex-1 cursor-pointer appearance-none truncate border-0 bg-transparent py-0.5 pr-4 text-right text-[11px] text-white/92 outline-none"
+    : selectClass;
+  const rowClass = compact
+    ? "flex min-h-[30px] items-center justify-between gap-1.5"
+    : "flex min-h-[40px] items-center justify-between gap-2 px-2.5 py-1";
+  const shellClass = compact ? "divide-y divide-white/10" : "divide-y divide-white/10 overflow-hidden rounded-xl bg-white/[0.05]";
+
   return (
     <div className="w-full">
-      <div className="divide-y divide-white/10 overflow-hidden rounded-xl bg-white/[0.05]">
-        <label className="flex min-h-[40px] items-center justify-between gap-2 px-2.5 py-1">
-          <span className={rowLabel}>{t("pages.goldenVerses.fontRowLabel")}</span>
+      <div className={shellClass}>
+        <label className={rowClass}>
+          <span className={labelClass}>{t("pages.goldenVerses.fontRowLabel")}</span>
           <select
-            className={selectClass}
+            className={selectCls}
             value={fontFamily}
             onChange={(e) => {
               const nextFont = normalizeGoldenVerseFontFamily(e.target.value);
@@ -107,10 +118,10 @@ export function NatureHomeVerseAppearancePanel({ natureVerseTextScale }: Props) 
             <option value="serif">{t("pages.goldenVerses.fontSerif")}</option>
           </select>
         </label>
-        <label className="flex min-h-[40px] items-center justify-between gap-2 px-2.5 py-1">
-          <span className={rowLabel}>{t("pages.goldenVerses.effectRowLabel")}</span>
+        <label className={rowClass}>
+          <span className={labelClass}>{t("pages.goldenVerses.effectRowLabel")}</span>
           <select
-            className={selectClass}
+            className={selectCls}
             value={textEffect}
             onChange={(e) => {
               const v = e.target.value as NatureHomeVerseTextEffectV1;
@@ -130,24 +141,32 @@ export function NatureHomeVerseAppearancePanel({ natureVerseTextScale }: Props) 
           </select>
         </label>
         {natureVerseTextScale ? (
-          <div className="flex items-center justify-center gap-1.5 px-2 py-1.5">
+          <div className={compact ? "flex items-center justify-center gap-1 py-0.5" : "flex items-center justify-center gap-1.5 px-2 py-1.5"}>
             <button
               type="button"
               disabled={natureVerseTextScale.atMin}
               aria-label={t("nature.textScaleSmallerAria")}
-              className="inline-flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.06] text-white/90 transition hover:bg-white/10 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              className={
+                compact
+                  ? "inline-flex min-h-[28px] min-w-[28px] shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.05] text-white/90 transition hover:bg-white/10 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                  : "inline-flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.06] text-white/90 transition hover:bg-white/10 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              }
               onClick={natureVerseTextScale.onSmaller}
             >
-              <IconTextScaleSmaller className="h-[1.15rem] w-[1.15rem] opacity-90" />
+              <IconTextScaleSmaller className={compact ? "h-4 w-4 opacity-90" : "h-[1.15rem] w-[1.15rem] opacity-90"} />
             </button>
             <button
               type="button"
               disabled={natureVerseTextScale.atMax}
               aria-label={t("nature.textScaleLargerAria")}
-              className="inline-flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.06] text-white/90 transition hover:bg-white/10 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              className={
+                compact
+                  ? "inline-flex min-h-[28px] min-w-[28px] shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.05] text-white/90 transition hover:bg-white/10 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                  : "inline-flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.06] text-white/90 transition hover:bg-white/10 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              }
               onClick={natureVerseTextScale.onLarger}
             >
-              <IconTextScaleLarger className="h-[1.15rem] w-[1.15rem] opacity-90" />
+              <IconTextScaleLarger className={compact ? "h-4 w-4 opacity-90" : "h-[1.15rem] w-[1.15rem] opacity-90"} />
             </button>
           </div>
         ) : null}

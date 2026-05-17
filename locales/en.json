@@ -857,7 +857,7 @@
     "emptyHint": "Upload or pick a clip under Admin → Music → Nature, or edit data/nature-settings.json.",
     "videoDecodeErrorShort": "This clip failed to play (missing file on the server or unsupported format). Preview still shows when available; check paths under /public or re-upload in admin.",
     "toggleDockChrome": "Show or hide scene cards and shortcuts",
-    "homeBackdropTapAria": "Close soft focus or verse appearance panels when they are open",
+    "homeBackdropTapAria": "Close the settings panel when it is open",
     "toggleVerseAppearanceAria": "Show or hide verse appearance: type, letter look, and on-screen size",
     "fullscreenEnterAria": "Enter full screen for this page",
     "fullscreenExitAria": "Exit full screen",
@@ -881,6 +881,18 @@
     "bgSoftFocusBlurLabel": "Blur strength",
     "bgSoftFocusConfirm": "Apply",
     "bgSoftFocusCloseNoEffect": "Close",
+    "homeSettings": {
+      "openAria": "Open home settings",
+      "closeAria": "Close home settings",
+      "panelTitle": "Settings",
+      "qualitySection": "Background quality",
+      "quality1080Label": "1080p HD",
+      "displaySection": "Display",
+      "softFocusShort": "Dim",
+      "softBlurShort": "Blur",
+      "softFocusOff": "Off",
+      "fullscreenShort": "Full screen"
+    },
     "textScaleSmallerAria": "Shrink rotating verse text one step",
     "textScaleLargerAria": "Enlarge rotating verse text one step",
     "homeVerse": {

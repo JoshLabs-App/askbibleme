@@ -42,12 +42,116 @@ const TOP_BAR_TIMER_BTN =
 
 type Props = {
   className?: string;
+  /** 嵌入自然首页设置面板：无顶栏按钮，直接展示选项 */
+  embedded?: boolean;
+  /** 与首页设置单卡同屏：去掉说明、缩小按钮 */
+  compact?: boolean;
 };
+
+function HomeSleepTimerPanelContent({
+  sleepTimerMinutes,
+  setSleepTimerMinutes,
+  stayAwake,
+  setStayAwake,
+  onPickTimer,
+  compact = false,
+}: {
+  sleepTimerMinutes: number;
+  setSleepTimerMinutes: (m: MusicShellSleepTimerMinutes | 0) => void;
+  stayAwake: boolean;
+  setStayAwake: (v: boolean | ((prev: boolean) => boolean)) => void;
+  onPickTimer?: () => void;
+  compact?: boolean;
+}) {
+  const { t } = useLocale();
+  const pillClass = compact
+    ? "min-w-[2.25rem] rounded-full px-2 py-0.5 text-[10px]"
+    : "min-w-[2.5rem] rounded-full px-2.5 py-1 text-[12px]";
+
+  return (
+    <>
+      {compact ? null : (
+        <p className="mb-2 px-0.5 text-[11px] leading-snug text-white/72">{t("music.sleepTimer.popoverLead")}</p>
+      )}
+      <div className="flex justify-center gap-1" role="group" aria-label={t("music.sleepTimer.watchAria")}>
+        {SLEEP_OPTIONS.map((m) => {
+          const selected = sleepTimerMinutes === m;
+          return (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => {
+                if (sleepTimerMinutes === m) setSleepTimerMinutes(0);
+                else setSleepTimerMinutes(m);
+                onPickTimer?.();
+              }}
+              className={
+                selected
+                  ? `${pillClass} bg-sky-500/90 font-medium text-white`
+                  : `${pillClass} border border-white/12 bg-white/[0.06] text-white/85 transition hover:bg-white/[0.1]`
+              }
+            >
+              {t(sleepLabelKey(m))}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className={compact ? "mt-1.5 flex min-h-[28px] items-center justify-between gap-2" : "mt-2.5 border-t border-white/15 pt-2.5"}>
+        {compact ? (
+          <>
+            <span className="text-[10px] text-white/55">{t("music.sleepTimer.stayAwakeLabel")}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={stayAwake}
+              aria-label={t("music.sleepTimer.stayAwakeLabel")}
+              onClick={(e) => {
+                e.stopPropagation();
+                setStayAwake((v) => !v);
+              }}
+              className={[
+                "relative flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200",
+                stayAwake ? "justify-end border border-sky-400/60 bg-sky-500/75" : "justify-start border border-white/22 bg-white/[0.08]",
+              ].join(" ")}
+            >
+              <span className="pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm" aria-hidden />
+            </button>
+          </>
+        ) : (
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1 pr-1">
+              <p className="text-[12px] font-medium leading-snug text-white/90">{t("music.sleepTimer.stayAwakeLabel")}</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-white/55">{t("music.sleepTimer.stayAwakeHint")}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={stayAwake}
+              aria-label={t("music.sleepTimer.stayAwakeLabel")}
+              onClick={(e) => {
+                e.stopPropagation();
+                setStayAwake((v) => !v);
+              }}
+              className={[
+                "relative mt-0.5 flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200",
+                stayAwake ? "justify-end border border-sky-400/60 bg-sky-500/75" : "justify-start border border-white/22 bg-white/[0.08]",
+              ].join(" ")}
+            >
+              <span className="pointer-events-none block h-6 w-6 rounded-full bg-white shadow-sm" aria-hidden />
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 /**
  * 壳层睡眠定时器（到时只暂停壳层音乐）+ 可选屏幕常亮（Wake Lock）。自然首页顶栏。
  */
-export function HomeSleepTimerControl({ className = "" }: Props) {
+export function HomeSleepTimerControl({ className = "", embedded = false, compact = false }: Props) {
   const { t } = useLocale();
   const { sleepTimerMinutes, setSleepTimerMinutes } = useMusicShellPlayback();
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -55,6 +159,20 @@ export function HomeSleepTimerControl({ className = "" }: Props) {
   const popoverWrapRef = useRef<HTMLDivElement>(null);
 
   useScreenWakeLock(stayAwake);
+
+  if (embedded) {
+    return (
+      <div className={className}>
+        <HomeSleepTimerPanelContent
+          sleepTimerMinutes={sleepTimerMinutes}
+          setSleepTimerMinutes={setSleepTimerMinutes}
+          stayAwake={stayAwake}
+          setStayAwake={setStayAwake}
+          compact={compact}
+        />
+      </div>
+    );
+  }
 
   const watchClass = [
     TOP_BAR_TIMER_BTN,
@@ -109,56 +227,14 @@ export function HomeSleepTimerControl({ className = "" }: Props) {
             "landscape:right-full landscape:top-1/2 landscape:mt-0 landscape:mr-2 landscape:-translate-y-1/2",
           ].join(" ")}
         >
-          <p className="mb-2 px-0.5 text-center text-[11px] leading-snug text-white/72">{t("music.sleepTimer.popoverLead")}</p>
-          <div className="flex justify-center gap-1" role="group">
-            {SLEEP_OPTIONS.map((m) => {
-              const selected = sleepTimerMinutes === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => {
-                    if (sleepTimerMinutes === m) setSleepTimerMinutes(0);
-                    else setSleepTimerMinutes(m);
-                    setPopoverOpen(false);
-                  }}
-                  className={
-                    selected
-                      ? "min-w-[2.5rem] rounded-full bg-sky-500/90 px-2.5 py-1 text-[12px] font-medium text-white"
-                      : "min-w-[2.5rem] rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[12px] text-white/85 transition hover:bg-white/[0.1]"
-                  }
-                >
-                  {t(sleepLabelKey(m))}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-2.5 border-t border-white/15 pt-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1 pr-1">
-                <p className="text-[12px] font-medium leading-snug text-white/90">{t("music.sleepTimer.stayAwakeLabel")}</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-white/55">{t("music.sleepTimer.stayAwakeHint")}</p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={stayAwake}
-                aria-label={t("music.sleepTimer.stayAwakeLabel")}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setStayAwake((v) => !v);
-                }}
-                className={[
-                  "relative mt-0.5 flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200",
-                  stayAwake ? "justify-end border border-sky-400/60 bg-sky-500/75" : "justify-start border border-white/22 bg-white/[0.08]",
-                ].join(" ")}
-              >
-                <span className="pointer-events-none block h-6 w-6 rounded-full bg-white shadow-sm" aria-hidden />
-              </button>
-            </div>
-          </div>
+          <HomeSleepTimerPanelContent
+            sleepTimerMinutes={sleepTimerMinutes}
+            setSleepTimerMinutes={setSleepTimerMinutes}
+            stayAwake={stayAwake}
+            setStayAwake={setStayAwake}
+            onPickTimer={() => setPopoverOpen(false)}
+            compact={compact}
+          />
         </div>
       ) : null}
     </div>

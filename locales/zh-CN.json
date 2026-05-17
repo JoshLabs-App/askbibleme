@@ -857,7 +857,7 @@
     "emptyHint": "请在后台「音乐 → 自然」上传或选择影片；也可手工编辑 data/nature-settings.json。",
     "videoDecodeErrorShort": "此地址的影片无法播放（例如文件未随站点部署或格式不受支持）。已尽量保留预览图；请检查 /public 下路径或后台重新上传。",
     "toggleDockChrome": "显示或隐藏场景与快捷入口",
-    "homeBackdropTapAria": "若有打开，则关闭柔焦或经文外观面板",
+    "homeBackdropTapAria": "若有打开，则关闭设置面板",
     "toggleVerseAppearanceAria": "打开或收起经文外观：字体、字面与本页大小",
     "fullscreenEnterAria": "全屏显示本页",
     "fullscreenExitAria": "退出全屏",
@@ -881,6 +881,18 @@
     "bgSoftFocusBlurLabel": "背景模糊强度",
     "bgSoftFocusConfirm": "确定",
     "bgSoftFocusCloseNoEffect": "关闭",
+    "homeSettings": {
+      "openAria": "打开首页设置",
+      "closeAria": "关闭首页设置",
+      "panelTitle": "设置",
+      "qualitySection": "背景清晰度",
+      "quality1080Label": "1080p 高清",
+      "displaySection": "显示",
+      "softFocusShort": "暗",
+      "softBlurShort": "糊",
+      "softFocusOff": "关柔焦",
+      "fullscreenShort": "全屏"
+    },
     "textScaleSmallerAria": "仅缩小轮播经文一档",
     "textScaleLargerAria": "仅放大轮播经文一档",
     "homeVerse": {

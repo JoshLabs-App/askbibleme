@@ -9,15 +9,13 @@ import {
   useState,
   useSyncExternalStore,
   type CSSProperties,
-  type MouseEvent,
 } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
-import { HomeSleepTimerControl } from "@/components/home/HomeSleepTimerControl";
+import { NatureHomeSettingsControl } from "@/components/nature/NatureHomeSettingsControl";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
-import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import { resolveNaturePlayback } from "@/lib/nature/resolve-nature-playback";
 import { useNatureMediaPolicy } from "@/hooks/useNatureMediaPolicy";
@@ -51,7 +49,6 @@ import {
   writeNatureBackground1080Pref,
 } from "@/lib/nature/nature-video-quality-prefs";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
-import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import {
@@ -77,148 +74,6 @@ const NATURE_SCENE_DWELL_MS = 3000;
 /** 无滚动：先整体 `scale`；仍超出带区时再收紧行数（`line-clamp`）并二次压缩 */
 const NATURE_VERSE_FIT_COMPRESS_MIN = 0.06;
 
-/** 音乐静音：保留 44×44 触控，无圆形底框 */
-const NATURE_BELL_BTN =
-  "touch-manipulation inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/[0.9] transition hover:text-white active:scale-[0.97]";
-
-function nature1080ToggleBtnClass(active: boolean): string {
-  return [
-    "touch-manipulation inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-0 p-0 transition active:scale-[0.97]",
-    active
-      ? "bg-sky-400/30 text-sky-50 ring-1 ring-sky-300/65 shadow-[0_0_14px_rgba(56,189,248,0.5)]"
-      : "bg-transparent text-white/70 hover:bg-white/[0.08] hover:text-white/95",
-  ].join(" ");
-}
-
-function IconBell(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <path
-        d="M12 3a5 5 0 0 0-5 5v2.09l-.78 1.56A1 1 0 0 0 7 13h10a1 1 0 0 0 .89-1.45L17 10.09V8a5 5 0 0 0-5-5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 20a2 2 0 0 0 4 0"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function IconBgSoftFocus(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
-      <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
-    </svg>
-  );
-}
-
-function IconBg1080(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={`pointer-events-none ${props.className ?? ""}`.trim()} aria-hidden>
-      <text
-        x="12"
-        y="15.5"
-        textAnchor="middle"
-        fontSize="7.5"
-        fontWeight="650"
-        fill="currentColor"
-        fontFamily="ui-sans-serif, system-ui, sans-serif"
-        letterSpacing="-0.02em"
-      >
-        1080
-      </text>
-    </svg>
-  );
-}
-
-function IconNatureEnterFullscreen(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <path
-        d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5"
-        stroke="currentColor"
-        strokeWidth="1.65"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconNatureExitFullscreen(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <path
-        d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
-        stroke="currentColor"
-        strokeWidth="1.65"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** 右上 Aa：自然首页经文外观（独立存储，与金句专页无关） */
-function IconVerseTypography(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={props.className} aria-hidden>
-      <text
-        x="3.25"
-        y="16.75"
-        fill="currentColor"
-        fontSize="14"
-        fontWeight="700"
-        fontFamily='ui-serif, Georgia, "Times New Roman", serif'
-      >
-        A
-      </text>
-      <text
-        x="12.75"
-        y="16.75"
-        fill="currentColor"
-        fontSize="11"
-        fontWeight="600"
-        fontFamily='system-ui, ui-sans-serif, sans-serif'
-      >
-        a
-      </text>
-    </svg>
-  );
-}
-
-function IconBellMuted(props: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <path
-        d="M4 4 20 20"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8.5 8.5V8a3.5 3.5 0 0 1 6.24-2.17M13 13v.09l.78 1.56A1 1 0 0 1 12.9 16H7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 20a2 2 0 0 0 4 0"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 type Props = {
   initial: NatureSettingsV2;
@@ -273,10 +128,8 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
   const videoStageHeightCommitRef = useRef(0);
 
-  const { shellAudioMuted, setShellAudioMuted } = useMusicShellPlayback();
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
-  const [natureSoftFocusPanelOpen, setNatureSoftFocusPanelOpen] = useState(false);
-  const [verseAppearancePanelOpen, setVerseAppearancePanelOpen] = useState(false);
+  const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
   const [softFocusCommittedOpacity, setSoftFocusCommittedOpacity] = useState(
     NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity,
   );
@@ -460,7 +313,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   useEffect(() => {
     if (!hasNatureVisual) {
       setNatureBgSoftFocus(false);
-      setNatureSoftFocusPanelOpen(false);
+      setHomeSettingsOpen(false);
     }
   }, [hasNatureVisual]);
   /** 低电量：仅静图，不挂载解码 `<video>` */
@@ -931,75 +784,54 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   }, []);
 
 
-  /** 关闭 / 取消：收起面板并关闭柔焦叠层（不写入当前滑条值） */
-  const dismissNatureSoftFocusPanel = useCallback(() => {
-    setNatureSoftFocusPanelOpen(false);
-    setNatureBgSoftFocus(false);
-  }, []);
-
-  const confirmNatureSoftFocusPanel = useCallback(() => {
-    writeNatureSoftFocusPrefs({ overlayOpacity: softFocusDraftOpacity, blurPx: softFocusDraftBlur });
-    setSoftFocusCommittedOpacity(softFocusDraftOpacity);
-    setSoftFocusCommittedBlur(softFocusDraftBlur);
+  const applySoftFocusAt = useCallback((next: { opacity?: number; blur?: number }) => {
+    const opacity = next.opacity ?? softFocusDraftOpacity;
+    const blur = next.blur ?? softFocusDraftBlur;
+    writeNatureSoftFocusPrefs({ overlayOpacity: opacity, blurPx: blur });
+    setSoftFocusCommittedOpacity(opacity);
+    setSoftFocusCommittedBlur(blur);
+    setSoftFocusDraftOpacity(opacity);
+    setSoftFocusDraftBlur(blur);
     setNatureBgSoftFocus(true);
-    setNatureSoftFocusPanelOpen(false);
   }, [softFocusDraftOpacity, softFocusDraftBlur]);
 
-  const openNatureSoftFocusPanel = useCallback(() => {
+  const clearSoftFocus = useCallback(() => {
     setSoftFocusDraftOpacity(softFocusCommittedOpacity);
     setSoftFocusDraftBlur(softFocusCommittedBlur);
-    setVerseAppearancePanelOpen(false);
-    setNatureSoftFocusPanelOpen(true);
+    setNatureBgSoftFocus(false);
   }, [softFocusCommittedOpacity, softFocusCommittedBlur]);
 
-  const onNatureSoftFocusIconClick = useCallback(() => {
-    if (natureSoftFocusPanelOpen) {
-      dismissNatureSoftFocusPanel();
-      return;
-    }
-    openNatureSoftFocusPanel();
-  }, [natureSoftFocusPanelOpen, dismissNatureSoftFocusPanel, openNatureSoftFocusPanel]);
-
-  const onVerseAppearanceIconClick = useCallback(() => {
-    setVerseAppearancePanelOpen((wasOpen) => {
-      const next = !wasOpen;
-      if (next) setNatureSoftFocusPanelOpen(false);
-      return next;
-    });
-  }, []);
-
-  const onBackground1080Toggle = useCallback((e: MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    setNatureSoftFocusPanelOpen(false);
-    setVerseAppearancePanelOpen(false);
+  const onBackground1080Toggle = useCallback(() => {
     writeNatureBackground1080Pref(!readNatureBackground1080Pref());
     setVideoBroken(false);
   }, []);
 
-  const softFocusLayerVisible = natureBgSoftFocus || natureSoftFocusPanelOpen;
-  const softFocusDisplayOpacity = natureSoftFocusPanelOpen ? softFocusDraftOpacity : softFocusCommittedOpacity;
-  const softFocusDisplayBlur = natureSoftFocusPanelOpen ? softFocusDraftBlur : softFocusCommittedBlur;
+  const onHomeSettingsOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        setSoftFocusDraftOpacity(softFocusCommittedOpacity);
+        setSoftFocusDraftBlur(softFocusCommittedBlur);
+      } else {
+        setSoftFocusDraftOpacity(softFocusCommittedOpacity);
+        setSoftFocusDraftBlur(softFocusCommittedBlur);
+      }
+      setHomeSettingsOpen(open);
+    },
+    [softFocusCommittedOpacity, softFocusCommittedBlur],
+  );
+
+  const softFocusLayerVisible = natureBgSoftFocus || homeSettingsOpen;
+  const softFocusDisplayOpacity = homeSettingsOpen ? softFocusDraftOpacity : softFocusCommittedOpacity;
+  const softFocusDisplayBlur = homeSettingsOpen ? softFocusDraftBlur : softFocusCommittedBlur;
 
   const effectiveNatureSoftFocusBlurPx = prefersReducedMotion
     ? Math.min(softFocusDisplayBlur, 10)
     : softFocusDisplayBlur;
 
-  const natureSoftFocusTriggerAria = natureSoftFocusPanelOpen
-    ? t("nature.bgSoftFocusCloseAria")
-    : natureBgSoftFocus
-      ? t("nature.bgSoftFocusOpenPanelAria")
-      : t("nature.bgSoftFocusStartAria");
-
-  /** 视频空白：收起柔焦或经文外观浮层（无浮层时无操作） */
+  /** 视频空白：收起设置面板（无面板时无操作） */
   const onNatureVideoBlankClick = useCallback(() => {
-    if (natureSoftFocusPanelOpen) {
-      dismissNatureSoftFocusPanel();
-      return;
-    }
-    if (verseAppearancePanelOpen) {
-      setVerseAppearancePanelOpen(false);
-    }
-  }, [natureSoftFocusPanelOpen, verseAppearancePanelOpen, dismissNatureSoftFocusPanel]);
+    if (homeSettingsOpen) onHomeSettingsOpenChange(false);
+  }, [homeSettingsOpen, onHomeSettingsOpenChange]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
   const textScaleMin = textScaleStepIndex <= 0;
@@ -1077,178 +909,29 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
         showTopInsetTime={false}
         hideTopShellInsetTime
         rightAccessory={
-          <div className="flex flex-col items-end gap-2">
-            {hasNatureVisual ? (
-              <button
-                type="button"
-                onClick={() => setShellAudioMuted(!shellAudioMuted)}
-                aria-pressed={shellAudioMuted}
-                aria-label={shellAudioMuted ? t("chrome.unmuteShellMusic") : t("chrome.muteShellMusic")}
-                className={NATURE_BELL_BTN}
-              >
-                {shellAudioMuted ? (
-                  <IconBellMuted className="h-[1.25rem] w-[1.25rem] opacity-90" />
-                ) : (
-                  <IconBell className="h-[1.25rem] w-[1.25rem] opacity-90" />
-                )}
-              </button>
-            ) : null}
-            {hasNatureVisual && activeSceneHas1080 ? (
-              <button
-                type="button"
-                onClick={onBackground1080Toggle}
-                aria-pressed={background1080}
-                aria-label={
-                  background1080 ? t("nature.bg1080ToggleAriaOn") : t("nature.bg1080ToggleAriaOff")
-                }
-                className={nature1080ToggleBtnClass(background1080)}
-              >
-                <IconBg1080
-                  className={[
-                    "h-[1.35rem] w-[1.35rem]",
-                    background1080 ? "font-semibold" : "opacity-90",
-                  ].join(" ")}
-                />
-              </button>
-            ) : null}
-            {hasNatureVisual ? (
-              <div className="relative isolate">
-                {natureSoftFocusPanelOpen ? (
-                  <div
-                    id="nature-soft-focus-panel"
-                    role="region"
-                    aria-label={t("nature.bgSoftFocusPanelTitle")}
-                    className="pointer-events-auto absolute right-full top-0 z-[60] mr-2 max-h-[min(72dvh,calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-5rem))] w-[min(13.75rem,calc(100vw-5rem))] overflow-y-auto overscroll-y-contain rounded-2xl border border-white/18 bg-black/55 px-3 py-2.5 text-left shadow-[0_8px_36px_-8px_rgba(0,0,0,0.5)] backdrop-blur-xl [-webkit-overflow-scrolling:touch]"
-                  >
-                    <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">
-                      {t("nature.bgSoftFocusPanelTitle")}
-                    </p>
-                    <label className="block text-[12px] text-white/78" htmlFor="nature-soft-focus-overlay">
-                      {t("nature.bgSoftFocusOverlayLabel")}
-                    </label>
-                    <input
-                      id="nature-soft-focus-overlay"
-                      type="range"
-                      min={0.08}
-                      max={0.82}
-                      step={0.01}
-                      value={softFocusDraftOpacity}
-                      className="mb-2.5 mt-1 w-full accent-white"
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        if (!Number.isFinite(v)) return;
-                        setSoftFocusDraftOpacity(v);
-                      }}
-                    />
-                    <label className="block text-[12px] text-white/78" htmlFor="nature-soft-focus-blur">
-                      {t("nature.bgSoftFocusBlurLabel")}
-                    </label>
-                    <input
-                      id="nature-soft-focus-blur"
-                      type="range"
-                      min={2}
-                      max={48}
-                      step={1}
-                      value={softFocusDraftBlur}
-                      className="mt-1 w-full accent-white"
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        if (!Number.isFinite(v)) return;
-                        const b = Math.round(v);
-                        setSoftFocusDraftBlur(b);
-                      }}
-                    />
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        type="button"
-                        className="min-h-[40px] flex-1 rounded-lg border border-white/25 bg-white/12 px-2 py-2 text-center text-[12px] font-medium text-white/95 transition hover:bg-white/18"
-                        onClick={confirmNatureSoftFocusPanel}
-                      >
-                        {t("nature.bgSoftFocusConfirm")}
-                      </button>
-                      <button
-                        type="button"
-                        className="min-h-[40px] flex-1 rounded-lg border border-white/18 bg-transparent px-2 py-2 text-center text-[12px] font-medium text-white/75 transition hover:bg-white/[0.07] hover:text-white/90"
-                        onClick={dismissNatureSoftFocusPanel}
-                      >
-                        {t("nature.bgSoftFocusCloseNoEffect")}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={onNatureSoftFocusIconClick}
-                  aria-expanded={natureSoftFocusPanelOpen}
-                  aria-controls={natureSoftFocusPanelOpen ? "nature-soft-focus-panel" : undefined}
-                  aria-pressed={natureBgSoftFocus}
-                  aria-label={natureSoftFocusTriggerAria}
-                  className={NATURE_BELL_BTN}
-                >
-                  <IconBgSoftFocus
-                    className={
-                      natureBgSoftFocus || natureSoftFocusPanelOpen
-                        ? "h-[1.25rem] w-[1.25rem] text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.95))_drop-shadow(0_0_18px_rgba(200,225,255,0.55))]"
-                        : "h-[1.25rem] w-[1.25rem] opacity-90"
-                    }
-                  />
-                </button>
-              </div>
-            ) : null}
-            <div className="relative isolate">
-              {verseAppearancePanelOpen ? (
-                <div
-                  id="nature-verse-appearance-panel"
-                  role="region"
-                  aria-label={t("nature.homeVerse.typographyMenu")}
-                  className="pointer-events-auto absolute right-full top-0 z-[60] mr-2 max-h-[min(72dvh,calc(100svh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-5rem))] w-[min(13.75rem,calc(100vw-5rem))] overflow-y-auto overscroll-y-contain rounded-2xl border border-white/18 bg-black/55 px-3 py-2.5 text-left shadow-[0_8px_36px_-8px_rgba(0,0,0,0.5)] backdrop-blur-xl [-webkit-overflow-scrolling:touch]"
-                >
-                  <NatureHomeVerseAppearancePanel
-                    natureVerseTextScale={{
-                      atMin: textScaleMin,
-                      atMax: textScaleMax,
-                      onSmaller: () => bumpTextScaleStep(-1),
-                      onLarger: () => bumpTextScaleStep(1),
-                    }}
-                  />
-                </div>
-              ) : null}
-              <button
-                type="button"
-                onClick={onVerseAppearanceIconClick}
-                aria-expanded={verseAppearancePanelOpen}
-                aria-controls={verseAppearancePanelOpen ? "nature-verse-appearance-panel" : undefined}
-                aria-label={t("nature.toggleVerseAppearanceAria")}
-                className={NATURE_BELL_BTN}
-              >
-                <IconVerseTypography
-                  className={
-                    verseAppearancePanelOpen
-                      ? "h-[1.35rem] w-[1.35rem] text-white [filter:drop-shadow(0_0_4px_rgba(255,255,255,0.75))]"
-                      : "h-[1.35rem] w-[1.35rem] opacity-90"
-                  }
-                />
-              </button>
-            </div>
-            {showNatureDocFullscreenBtn ? (
-              <button
-                type="button"
-                onClick={onNatureHomeFullscreenClick}
-                aria-pressed={docElementFullscreen}
-                aria-label={
-                  docElementFullscreen ? t("nature.fullscreenExitAria") : t("nature.fullscreenEnterAria")
-                }
-                className={NATURE_BELL_BTN}
-              >
-                {docElementFullscreen ? (
-                  <IconNatureExitFullscreen className="h-[1.25rem] w-[1.25rem] opacity-90" />
-                ) : (
-                  <IconNatureEnterFullscreen className="h-[1.25rem] w-[1.25rem] opacity-90" />
-                )}
-              </button>
-            ) : null}
-            <HomeSleepTimerControl />
-          </div>
+          <NatureHomeSettingsControl
+            open={homeSettingsOpen}
+            onOpenChange={onHomeSettingsOpenChange}
+            hasNatureVisual={hasNatureVisual}
+            activeSceneHas1080={activeSceneHas1080}
+            background1080={background1080}
+            onBackground1080Toggle={onBackground1080Toggle}
+            showFullscreenBtn={showNatureDocFullscreenBtn}
+            docElementFullscreen={docElementFullscreen}
+            onFullscreenClick={onNatureHomeFullscreenClick}
+            softFocusDraftOpacity={softFocusDraftOpacity}
+            softFocusDraftBlur={softFocusDraftBlur}
+            onSoftFocusOpacityChange={(opacity) => applySoftFocusAt({ opacity })}
+            onSoftFocusBlurChange={(blur) => applySoftFocusAt({ blur })}
+            onSoftFocusClear={clearSoftFocus}
+            natureBgSoftFocus={natureBgSoftFocus}
+            natureVerseTextScale={{
+              atMin: textScaleMin,
+              atMax: textScaleMax,
+              onSmaller: () => bumpTextScaleStep(-1),
+              onLarger: () => bumpTextScaleStep(1),
+            }}
+          />
         }
       />
 

@@ -8,7 +8,8 @@
       "slot:deepseek"
     ],
     "selectedGenerationRoleIds": [
-      "role_356f0ffb"
+      "role_356f0ffb",
+      "info_edition_v1"
     ]
   },
   "history": [

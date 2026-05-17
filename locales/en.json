@@ -930,7 +930,17 @@
       "effectInsetCarved": "Inset carved",
       "effectFlat": "Flat, no shading",
       "effectLetterpress": "Light letterpress",
-      "effectSoftBloom": "Soft bloom"
+      "effectSoftBloom": "Soft bloom",
+      "textSizeRowLabel": "Text size",
+      "textSizeHint": "Use A− / A＋ for this page only. Wide range (about 35%–1000%), saved separately from Nature home.",
+      "pageTemplate": "Page template",
+      "pageTemplates": {
+        "custom": "Uploaded",
+        "wide": "Wide scroll",
+        "scroll": "Tall scroll",
+        "scroll2": "Dark scroll",
+        "scroll3": "Top scroll"
+      }
     }
   },
   "nature": {

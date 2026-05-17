@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import { useOptionalHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useStandaloneVerseCarousel } from "@/components/home/useStandaloneVerseCarousel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
-import { goldenVerseTextShadowClass } from "@/lib/home-prayer-pools/golden-verse-text-effects";
+import {
+  goldenVerseTextShadowClass,
+  goldenVerseTextShadowValue,
+  type GoldenVerseTextShadowTier,
+} from "@/lib/home-prayer-pools/golden-verse-text-effects";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE } from "@/lib/i18n/read-scripture-about-verses";
 import type { NatureHomeVerseTextEffectV1 } from "@/lib/home/nature-home-verse-appearance-prefs";
@@ -56,6 +60,16 @@ function joinVerseLinesForFlow(lines: string[], locale: AppLocale): string {
 }
 
 const GOLDEN_WIDE_FIT_MQ = "(min-width: 1024px)";
+
+function goldenVerseTextShadowStyle(
+  effect: GoldenVerseTextEffectV1,
+  tier: GoldenVerseTextShadowTier,
+  prefersReducedMotion: boolean,
+): CSSProperties | undefined {
+  if (prefersReducedMotion) return undefined;
+  const textShadow = goldenVerseTextShadowValue(effect, tier);
+  return textShadow ? { textShadow } : undefined;
+}
 
 function clearGoldenWideFitStyles(root: HTMLElement) {
   root.querySelectorAll<HTMLElement>("[data-golden-fit]").forEach((el) => {
@@ -303,9 +317,8 @@ export function HomeVerseRotator({
     const L = (loose: number, tight: string) => (bilingual ? tight : `leading-[${loose}]`);
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "primary");
       const ink = isDark ? "text-[#f7ecda]" : "text-[#5F2E00]";
-      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] ${ink} ${fx} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
+      return `m-0 ${face} text-[clamp(2.04rem,7.2vw+0.28rem,2.56rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] ${ink} [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(1.92rem,6.5vw+0.2rem,2.28rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`;
     }
     if (isHero) {
       return isDark
@@ -342,9 +355,8 @@ export function HomeVerseRotator({
     const S = (tight: string, normal: string) => (bilingual ? tight : normal);
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "secondary");
       const ink = isDark ? "text-[#f2e6d2]" : "text-[#5F2E00]";
-      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] ${ink} ${fx}`;
+      return `m-0 ${face} text-[clamp(1.76rem,6vw+0.2rem,2.08rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] ${ink}`;
     }
     if (isNature) {
       if (nhLegacyDefault) {
@@ -375,12 +387,11 @@ export function HomeVerseRotator({
   const refClass = (() => {
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "ref");
       const ink = isDark ? "text-[#e8dcc6]" : "text-[#5F2E00]";
       if (bilingual) {
-        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] ${ink} sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
+        return `mt-2 ${face} text-[26px] font-bold tracking-[0.15em] ${ink} sm:mt-2.5 sm:text-[28px] sm:tracking-[0.16em] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px]`;
       }
-      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] ${ink} sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px] ${fx}`;
+      return `mt-3 ${face} text-[26px] font-bold tracking-[0.15em] ${ink} sm:mt-3.5 sm:text-[28px] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[24px]`;
     }
     if (isHero) {
       return isDark
@@ -436,9 +447,8 @@ export function HomeVerseRotator({
   const secondaryRefClass = (() => {
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
-      const fx = goldenVerseTextShadowClass(goldenVerseTextEffect, "ref");
       const ink = isDark ? "text-[#e8dcc6]" : "text-[#5F2E00]";
-      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] ${ink} sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px] ${fx}`;
+      return `${bilingual ? "mt-1" : "mt-1.5"} ${face} text-[22px] font-bold tracking-[0.13em] ${ink} sm:text-[24px] [@media(max-height:500px)_and_(orientation:portrait)]:text-[20px]`;
     }
     if (isNature) {
       if (nhLegacyDefault) {
@@ -516,6 +526,11 @@ export function HomeVerseRotator({
           <p
             key={`${safeIndex}-p-flow`}
             className={`${lineClass} ${natureTightLineClamp ? "" : flowPrettyClass} ${natureClampPrimary}`.trim()}
+            style={
+              isGoldenVerses
+                ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "primary", prefersReducedMotion)
+                : undefined
+            }
             data-golden-fit={isGoldenVerses ? "line" : undefined}
           >
             {primaryFlowText}
@@ -523,6 +538,11 @@ export function HomeVerseRotator({
         ) : null}
         <footer
           className={`${refClass} ${natureClampFoot}`.trim()}
+          style={
+            isGoldenVerses
+              ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "ref", prefersReducedMotion)
+              : undefined
+          }
           data-golden-fit={isGoldenVerses ? "ref" : undefined}
         >
           {HOME_VERSES[safeIndex]?.ref ?? ""}
@@ -533,6 +553,11 @@ export function HomeVerseRotator({
               <p
                 key={`${safeIndex}-s-flow`}
                 className={`${secondaryLineClass} ${natureTightLineClamp ? "" : flowPrettyClass} ${natureClampSecondary}`.trim()}
+                style={
+                  isGoldenVerses
+                    ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "secondary", prefersReducedMotion)
+                    : undefined
+                }
                 data-golden-fit={isGoldenVerses ? "secondary" : undefined}
               >
                 {secondaryFlowText}
@@ -541,6 +566,11 @@ export function HomeVerseRotator({
             {sec?.ref ? (
               <footer
                 className={`${secondaryRefClass} ${natureClampFoot}`.trim()}
+                style={
+                  isGoldenVerses
+                    ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "ref", prefersReducedMotion)
+                    : undefined
+                }
                 data-golden-fit={isGoldenVerses ? "ref" : undefined}
               >
                 {sec.ref}

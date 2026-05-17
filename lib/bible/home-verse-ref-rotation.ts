@@ -4,19 +4,10 @@ import { READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE } from "@/lib/i18n/read-scripture
 import type { VerseDisplayModeV1 } from "@/lib/home-prayer-pools/types";
 import { resolveVerseRefToHomeEntry } from "@/lib/bible/resolve-verse-range-for-display";
 import type { VerseRef } from "@/lib/bible/verse-ref";
-import { readHomeGoldenVerseRotationStaticSync } from "@/lib/scripture/home-golden-verse-rotation-static-file";
+import { readThemeRepeatPoolFallbackSync } from "@/lib/home-prayer-pools/read-theme-repeat-pool-fallback-sync";
 import { readExternalHomeVerseRotationSync } from "@/lib/scripture/read-external-home-verse-rotation";
 import { capSiteVersePoolRefs } from "@/lib/scripture/site-verse-pool";
-
-/**
- * 全站唯一经文池（引用列表，最多 400）：`data/scripture/external-home-verse-rotation.json`。
- * 正文缓存：`home-golden-verse-rotation-static.json`、`public/data/home-prayer-pools/all/`。
- */
-export function getHomeVerseRotationRefs(cwd: string): VerseRef[] {
-  const fromFile = readExternalHomeVerseRotationSync(cwd);
-  if (!fromFile?.verseRefs?.length) return [];
-  return capSiteVersePoolRefs(fromFile.verseRefs);
-}
+import { DEFAULT_THEME_REPEAT_MIN_COUNT } from "@/lib/scripture/theme-repeat-pool-scope-id";
 
 const SHELL_LOCALES: AppLocale[] = ["zh-CN", "en"];
 
@@ -27,43 +18,6 @@ function poolOrEmergencyFallback(
 ): HomeVerseEntry[] {
   const min = refsLength > 0 ? Math.min(4, refsLength) : 4;
   return built.length >= min ? built : [...READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[locale]];
-}
-
-async function buildForLocaleFromRefs(cwd: string, locale: AppLocale, refs: VerseRef[]): Promise<HomeVerseEntry[]> {
-  const out: HomeVerseEntry[] = [];
-  for (const ref of refs) {
-    const row = await resolveVerseRefToHomeEntry(cwd, ref, locale);
-    if (row) out.push(row);
-  }
-  return out;
-}
-
-async function buildHomeVerseRotationForLocalesResolved(
-  cwd: string,
-  locales: ReadonlyArray<AppLocale>,
-): Promise<Record<AppLocale, HomeVerseEntry[]>> {
-  const want = new Set<AppLocale>(locales);
-  const refs = getHomeVerseRotationRefs(cwd);
-  const result = {} as Record<AppLocale, HomeVerseEntry[]>;
-  for (const locale of SHELL_LOCALES) {
-    if (!want.has(locale)) {
-      result[locale] = [];
-      continue;
-    }
-    const built = await buildForLocaleFromRefs(cwd, locale, refs);
-    result[locale] = poolOrEmergencyFallback(built, locale, refs.length);
-  }
-  return result;
-}
-
-/** 供生成静态快照脚本 / 管理保存后重算：全量中英轮播正文。 */
-export async function buildResolvedHomeVerseRotationSnapshot(cwd: string): Promise<{
-  verseRefsCount: number;
-  entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
-}> {
-  const refs = getHomeVerseRotationRefs(cwd);
-  const entriesByLocale = await buildHomeVerseRotationForLocalesResolved(cwd, SHELL_LOCALES);
-  return { verseRefsCount: refs.length, entriesByLocale };
 }
 
 /**
@@ -79,30 +33,57 @@ export function appLocalesForHomeVerseRotationShell(
   return [uiLocale];
 }
 
-/** 只解析 `locales` 中的语言；池未就绪时由客户端走紧急回退文案。 */
+/** 只解析 `locales` 中的语言；正文来自 `theme-repeat-ge{N}` 静态池 bootstrap。 */
 export async function buildHomeVerseRotationForLocales(
   cwd: string,
   locales: ReadonlyArray<AppLocale>,
+  minCount: number = DEFAULT_THEME_REPEAT_MIN_COUNT,
 ): Promise<Record<AppLocale, HomeVerseEntry[]>> {
   const want = new Set<AppLocale>(locales);
-  const refs = getHomeVerseRotationRefs(cwd);
-  const snap = readHomeGoldenVerseRotationStaticSync(cwd);
-  if (snap && snap.verseRefsCount === refs.length) {
-    const result = {} as Record<AppLocale, HomeVerseEntry[]>;
-    for (const locale of SHELL_LOCALES) {
-      if (!want.has(locale)) {
-        result[locale] = [];
-        continue;
-      }
-      const built = snap.entriesByLocale[locale] ?? [];
-      result[locale] = poolOrEmergencyFallback(built, locale, refs.length);
+  const fromPool = readThemeRepeatPoolFallbackSync(cwd, locales, minCount);
+  const result = {} as Record<AppLocale, HomeVerseEntry[]>;
+  for (const locale of SHELL_LOCALES) {
+    if (!want.has(locale)) {
+      result[locale] = [];
+      continue;
     }
-    return result;
+    const built = fromPool[locale] ?? [];
+    result[locale] = poolOrEmergencyFallback(built, locale, built.length);
   }
-  return buildHomeVerseRotationForLocalesResolved(cwd, locales);
+  return result;
 }
 
-/** 全量构建（管理脚本、需双语的测试等）；前台页面优先用 `buildHomeVerseRotationFromShellCookies`。 */
+/** 全量构建（测试等）；前台页面优先用 `buildHomeVerseRotationFromShellCookies`。 */
 export async function buildHomeVerseRotationByLocale(cwd: string): Promise<Record<AppLocale, HomeVerseEntry[]>> {
   return buildHomeVerseRotationForLocales(cwd, SHELL_LOCALES);
+}
+
+/** @deprecated 仅 Admin 策展金句 / 旧脚本；前台轮播已改用主题库 `theme-repeat-ge{N}`。 */
+export function getHomeVerseRotationRefs(cwd: string): VerseRef[] {
+  const fromFile = readExternalHomeVerseRotationSync(cwd);
+  if (!fromFile?.verseRefs?.length) return [];
+  return capSiteVersePoolRefs(fromFile.verseRefs);
+}
+
+async function buildForLocaleFromRefs(cwd: string, locale: AppLocale, refs: VerseRef[]): Promise<HomeVerseEntry[]> {
+  const out: HomeVerseEntry[] = [];
+  for (const ref of refs) {
+    const row = await resolveVerseRefToHomeEntry(cwd, ref, locale);
+    if (row) out.push(row);
+  }
+  return out;
+}
+
+/** @deprecated 供 `generate-home-golden-verse-rotation-static` 等管理脚本。 */
+export async function buildResolvedHomeVerseRotationSnapshot(cwd: string): Promise<{
+  verseRefsCount: number;
+  entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
+}> {
+  const refs = getHomeVerseRotationRefs(cwd);
+  const entriesByLocale = {} as Record<AppLocale, HomeVerseEntry[]>;
+  for (const locale of SHELL_LOCALES) {
+    const built = await buildForLocaleFromRefs(cwd, locale, refs);
+    entriesByLocale[locale] = poolOrEmergencyFallback(built, locale, refs.length);
+  }
+  return { verseRefsCount: refs.length, entriesByLocale };
 }

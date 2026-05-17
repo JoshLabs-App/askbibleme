@@ -8,7 +8,15 @@ import {
   normalizeGoldenVerseFontFamily,
   normalizeGoldenVerseTextEffect,
 } from "@/lib/home-prayer-pools/golden-verse-normalize";
-import { themeRepeatPoolScopeId } from "@/lib/scripture/theme-repeat-pool-scope-id";
+import {
+  DEFAULT_THEME_REPEAT_MIN_COUNT,
+  themeRepeatPoolScopeId,
+} from "@/lib/scripture/theme-repeat-pool-scope-id";
+
+export const DEFAULT_VERSE_SCOPE: VerseScopeV1 = {
+  type: "themeRepeat",
+  minCount: DEFAULT_THEME_REPEAT_MIN_COUNT,
+};
 
 export { normalizeGoldenVerseFontFamily, normalizeGoldenVerseTextEffect };
 
@@ -33,7 +41,7 @@ export function persistVerseDisplayToCookie(display: VerseDisplayModeV1): void {
 
 export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   version: 1,
-  verseScope: { type: "all" },
+  verseScope: DEFAULT_VERSE_SCOPE,
   verseDisplay: "primary",
   verseTextZhTranslationId: "cuv-simp",
   verseTextEnTranslationId: "web-en",
@@ -56,9 +64,7 @@ export function normalizeVerseEnTranslationId(raw: unknown): string {
 }
 
 export function memoryNamespaceFromScope(scope: VerseScopeV1): string {
-  if (scope.type === "all") return "all";
-  if (scope.type === "themeRepeat") return themeRepeatPoolScopeId(scope.minCount);
-  return `cat:${scope.categoryId}`;
+  return themeRepeatPoolScopeId(scope.minCount);
 }
 
 export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
@@ -91,16 +97,13 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
 
 function normalizeScope(raw: unknown): VerseScopeV1 {
   if (raw && typeof raw === "object") {
-    const o = raw as { type?: string; categoryId?: string; minCount?: number };
+    const o = raw as { type?: string; minCount?: number };
     if (o.type === "themeRepeat") {
       const min = Number(o.minCount);
       if (Number.isFinite(min) && min >= 1) return { type: "themeRepeat", minCount: Math.floor(min) };
     }
-    if (o.type === "category" && typeof o.categoryId === "string" && o.categoryId.trim()) {
-      return { type: "category", categoryId: o.categoryId.trim() };
-    }
   }
-  return { type: "all" };
+  return DEFAULT_VERSE_SCOPE;
 }
 
 export function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): void {
@@ -123,9 +126,7 @@ export function requestHomePrayerVerseFeedReload(): void {
 }
 
 export function scopeIdFromPrefs(scope: VerseScopeV1): string {
-  if (scope.type === "themeRepeat") return themeRepeatPoolScopeId(scope.minCount);
-  if (scope.type === "category") return `cat-${scope.categoryId}`;
-  return "all";
+  return themeRepeatPoolScopeId(scope.minCount);
 }
 
 export function verseTranslationIdsFromPrefs(prefs: HomePrayerVersePrefsV1): { zh: string; en: string } {

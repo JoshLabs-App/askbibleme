@@ -1,6 +1,8 @@
 "use client";
 
 import { useGoldenVersesChromeless } from "@/components/verse/GoldenVersesChromelessContext";
+import { GoldenVerseTextScaleControls } from "@/components/verse/GoldenVerseTextScaleControls";
+import { GoldenVersesPageTemplatePicker } from "@/components/verse/GoldenVersesPageTemplatePicker";
 import { GoldenVersesSettingsTopBar } from "@/components/verse/GoldenVersesSettingsTopBar";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { exitFullscreenCompat } from "@/lib/dom/fullscreen";
@@ -43,12 +45,18 @@ type Props = {
   layout: "inline" | "floating";
   /** 与 `GoldenVersesSettingsTopBar` 一致 */
   settingsVariant?: "light" | "dark";
+  /** 后台上传的自定义底图；供页模板选择器 */
+  customBackgroundUrl?: string | null;
 };
 
 /**
  * 全屏（沉浸壳）+ 设置齿轮。沉浸时壳层角标收起，仅 `floating` 这一条可见。
  */
-export function GoldenVersesTopActions({ layout, settingsVariant }: Props) {
+export function GoldenVersesTopActions({
+  layout,
+  settingsVariant,
+  customBackgroundUrl = null,
+}: Props) {
   const { t } = useLocale();
   const { chromeless, manualChromeless, landscapeNarrow, setManualChromeless } = useGoldenVersesChromeless();
 
@@ -92,6 +100,11 @@ export function GoldenVersesTopActions({ layout, settingsVariant }: Props) {
           <IconEnterFullscreen className="h-[15px] w-[15px] opacity-88" />
         )}
       </button>
+      <GoldenVerseTextScaleControls variant={settingsVariant ?? (floating ? "dark" : "light")} />
+      <GoldenVersesPageTemplatePicker
+        customUploadUrl={customBackgroundUrl}
+        variant={settingsVariant ?? (floating ? "dark" : "light")}
+      />
       <GoldenVersesSettingsTopBar variant={settingsVariant ?? (floating ? "dark" : "light")} />
     </div>
   );

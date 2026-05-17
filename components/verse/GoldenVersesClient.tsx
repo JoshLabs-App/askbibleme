@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { useGoldenVersesChromeless } from "@/components/verse/GoldenVersesChromelessContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useGoldenVerseTextScale } from "@/hooks/useGoldenVerseTextScale";
 import type { GoldenVerseFontFamilyV1, GoldenVerseTextEffectV1 } from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_PREFS_UPDATED_EVENT, readHomePrayerVersePrefs } from "@/lib/home-prayer-pools/prefs";
 
@@ -20,6 +21,7 @@ const GOLDEN_VERSE_ROTATOR_CLASS =
 
 export function GoldenVersesClient({ layout = "default" }: Props) {
   const { t } = useLocale();
+  const { zoom: verseTextZoom } = useGoldenVerseTextScale();
   const { landscapeNarrow, toggleManualChromeless } = useGoldenVersesChromeless();
   const [goldenVerseFontFamily, setGoldenVerseFontFamily] = useState<GoldenVerseFontFamilyV1>("sans");
   const [goldenVerseTextEffect, setGoldenVerseTextEffect] = useState<GoldenVerseTextEffectV1>("insetCarved");
@@ -35,15 +37,22 @@ export function GoldenVersesClient({ layout = "default" }: Props) {
     return () => window.removeEventListener(HOME_PRAYER_PREFS_UPDATED_EVENT, sync);
   }, []);
 
+  const verseZoomStyle = {
+    zoom: verseTextZoom,
+    maxWidth: `min(96vw, ${96 / verseTextZoom}vw)`,
+  } satisfies CSSProperties;
+
   const inner = (
-    <HomeVerseRotator
-      variant="light"
-      prominence="nature"
-      verseStyle="goldenVerses"
-      goldenVerseFontFamily={goldenVerseFontFamily}
-      goldenVerseTextEffect={goldenVerseTextEffect}
-      className={GOLDEN_VERSE_ROTATOR_CLASS}
-    />
+    <div className="mx-auto min-w-0 overflow-x-clip" style={verseZoomStyle}>
+      <HomeVerseRotator
+        variant="light"
+        prominence="nature"
+        verseStyle="goldenVerses"
+        goldenVerseFontFamily={goldenVerseFontFamily}
+        goldenVerseTextEffect={goldenVerseTextEffect}
+        className={GOLDEN_VERSE_ROTATOR_CLASS}
+      />
+    </div>
   );
 
   const portraitVerseTapProps =

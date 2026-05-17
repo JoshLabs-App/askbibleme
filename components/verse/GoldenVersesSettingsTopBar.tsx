@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
+import { GoldenVerseTextScaleControls } from "@/components/verse/GoldenVerseTextScaleControls";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 function IconGear(props: { className?: string }) {
@@ -78,6 +79,11 @@ export function GoldenVersesSettingsTopBar({ variant = "light" }: { variant?: "l
           className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/20 bg-ink/88 py-1 text-canvas shadow-xl backdrop-blur-md [-webkit-overflow-scrolling:touch]"
         >
           <HomePrayerVerseDockSettings placement="popover" sections={["goldenFont"]} />
+          <p className="mt-3 px-4 text-[13px] font-medium leading-snug text-canvas/70">
+            {t("pages.goldenVerses.textSizeRowLabel")}
+          </p>
+          <GoldenVerseTextScaleControls variant="dark" layout="panel" />
+          <p className="px-4 pt-1.5 text-[12px] leading-snug text-canvas/50">{t("pages.goldenVerses.textSizeHint")}</p>
         </div>
       ) : null}
     </div>

@@ -5,6 +5,11 @@ import { NATURE_HOME_THEME_LOCK_DATASET_KEY } from "@/lib/nature/root-theme";
 import { measureAppShellSafeTopPx } from "@/lib/read/measure-app-shell-safe-top";
 import { isSamsungGalaxyUa } from "@/lib/read/parchment-samsung-device";
 import {
+  clearReadParchmentWideDataset,
+  subscribeReadParchmentWideViewport,
+  syncReadParchmentWideDataset,
+} from "@/lib/read/sync-read-parchment-wide";
+import {
   SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY,
   SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE,
   SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
@@ -60,8 +65,12 @@ export function ScriptureParchmentShellChromeEffect() {
 
     syncSafeTopEffective();
     syncParchmentThemeColor();
+    syncReadParchmentWideDataset(html);
 
     const onViewport = () => syncSafeTopEffective();
+    const offWideViewport = subscribeReadParchmentWideViewport(() => {
+      syncReadParchmentWideDataset(html);
+    });
     window.visualViewport?.addEventListener("resize", onViewport);
     window.visualViewport?.addEventListener("scroll", onViewport);
     window.addEventListener("resize", onViewport);
@@ -70,12 +79,14 @@ export function ScriptureParchmentShellChromeEffect() {
     darkObs.observe(html, { attributes: true, attributeFilter: ["class"] });
 
     return () => {
+      offWideViewport();
       window.visualViewport?.removeEventListener("resize", onViewport);
       window.visualViewport?.removeEventListener("scroll", onViewport);
       window.removeEventListener("resize", onViewport);
       darkObs.disconnect();
       Reflect.deleteProperty(html.dataset, SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY);
       Reflect.deleteProperty(html.dataset, SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_KEY);
+      clearReadParchmentWideDataset(html);
       Reflect.deleteProperty(html.dataset, NATURE_HOME_THEME_LOCK_DATASET_KEY);
       html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
       html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR);

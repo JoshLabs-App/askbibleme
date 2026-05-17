@@ -1,0 +1,51 @@
+import {
+  READ_PARCHMENT_BG_IMAGE_CSS_VAR,
+  readParchmentBgImageCssValue,
+} from "@/lib/read/read-parchment-background";
+import {
+  SCRIPTURE_PARCHMENT_WIDE_DATASET_KEY,
+  SCRIPTURE_PARCHMENT_WIDE_DATASET_VALUE,
+  SCRIPTURE_PARCHMENT_WIDE_MEDIA,
+} from "@/lib/read/scripture-parchment-shell";
+
+/** 与 `read-parchment-shell-chrome.css` 宽屏规则一致：宽 ≥ 高且足够宽 */
+export const READ_PARCHMENT_WIDE_MIN_WIDTH_PX = 480;
+
+export const READ_PARCHMENT_WIDE_MEDIA = SCRIPTURE_PARCHMENT_WIDE_MEDIA;
+
+export function isReadParchmentWideViewport(
+  width = typeof window !== "undefined" ? window.innerWidth : 0,
+  height = typeof window !== "undefined" ? window.innerHeight : 0,
+): boolean {
+  return width >= READ_PARCHMENT_WIDE_MIN_WIDTH_PX && width >= height && height > 0;
+}
+
+export function clearReadParchmentWideDataset(root: HTMLElement = document.documentElement): void {
+  Reflect.deleteProperty(root.dataset, SCRIPTURE_PARCHMENT_WIDE_DATASET_KEY);
+  root.style.removeProperty(READ_PARCHMENT_BG_IMAGE_CSS_VAR);
+}
+
+export function syncReadParchmentWideDataset(root: HTMLElement = document.documentElement): void {
+  if (isReadParchmentWideViewport()) {
+    root.dataset[SCRIPTURE_PARCHMENT_WIDE_DATASET_KEY] = SCRIPTURE_PARCHMENT_WIDE_DATASET_VALUE;
+    root.style.setProperty(READ_PARCHMENT_BG_IMAGE_CSS_VAR, readParchmentBgImageCssValue(true));
+  } else {
+    clearReadParchmentWideDataset(root);
+  }
+}
+
+export function subscribeReadParchmentWideViewport(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia(READ_PARCHMENT_WIDE_MEDIA);
+  const onMq = () => onChange();
+  if (mq.addEventListener) mq.addEventListener("change", onMq);
+  else mq.addListener(onMq);
+  window.addEventListener("resize", onMq);
+  window.visualViewport?.addEventListener("resize", onMq);
+  return () => {
+    if (mq.removeEventListener) mq.removeEventListener("change", onMq);
+    else mq.removeListener(onMq);
+    window.removeEventListener("resize", onMq);
+    window.visualViewport?.removeEventListener("resize", onMq);
+  };
+}

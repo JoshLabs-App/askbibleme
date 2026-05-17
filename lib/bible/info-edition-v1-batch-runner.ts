@@ -20,6 +20,7 @@ export type InfoEditionBatchUiConfig = {
   remoteScpTarget: string;
   pushEachBook: boolean;
   bookStart: string;
+  bookEnd: string;
   delayMs: number;
   editions: InfoEditionReaderVariant[];
 };
@@ -28,6 +29,7 @@ const DEFAULT_UI_CONFIG: InfoEditionBatchUiConfig = {
   remoteScpTarget: "",
   pushEachBook: false,
   bookStart: "",
+  bookEnd: "",
   delayMs: 800,
   editions: ["info", "guide"],
 };
@@ -49,6 +51,7 @@ export function readBatchUiConfig(cwd: string): InfoEditionBatchUiConfig {
         typeof raw.remoteScpTarget === "string" ? raw.remoteScpTarget.trim() : "",
       pushEachBook: raw.pushEachBook === true,
       bookStart: typeof raw.bookStart === "string" ? raw.bookStart.trim().toUpperCase() : "",
+      bookEnd: typeof raw.bookEnd === "string" ? raw.bookEnd.trim().toUpperCase() : "",
       delayMs:
         typeof raw.delayMs === "number" && raw.delayMs >= 0
           ? Math.min(raw.delayMs, 60_000)
@@ -106,6 +109,7 @@ export type StartBatchOptions = {
   force?: boolean;
   pushEachBook?: boolean;
   bookStart?: string;
+  bookEnd?: string;
   delayMs?: number;
   editions?: InfoEditionReaderVariant[];
   remoteScpTarget?: string;
@@ -125,6 +129,7 @@ export function startBatchProcess(
     ...ui,
     pushEachBook: opts.pushEachBook ?? ui.pushEachBook,
     bookStart: opts.bookStart ?? ui.bookStart,
+    bookEnd: opts.bookEnd ?? ui.bookEnd,
     delayMs: opts.delayMs ?? ui.delayMs,
     editions: opts.editions ?? ui.editions,
     remoteScpTarget: opts.remoteScpTarget ?? ui.remoteScpTarget,
@@ -148,21 +153,27 @@ export function startBatchProcess(
 
   const env: NodeJS.ProcessEnv = {
     ...process.env,
+    NODE_ENV: "development",
     INFO_EDITION_BATCH_EDITIONS: config.editions.join(","),
     INFO_EDITION_BATCH_DELAY_MS: String(config.delayMs),
   };
   if (opts.force) env.INFO_EDITION_BATCH_FORCE = "1";
   if (config.bookStart) env.INFO_EDITION_BATCH_BOOK_START = config.bookStart;
+  if (config.bookEnd) env.INFO_EDITION_BATCH_BOOK_END = config.bookEnd;
   if (config.pushEachBook) env.INFO_EDITION_BATCH_PUSH_EACH_BOOK = "1";
   if (config.remoteScpTarget) {
     env.INFO_EDITION_REMOTE_SCP_TARGET = config.remoteScpTarget;
   }
 
+  const shim = path.join(cwd, "scripts", "register-server-only.cjs");
   const child = spawn(tsx, [script], {
     cwd,
     detached: true,
     stdio: ["ignore", logFd, logFd],
-    env,
+    env: {
+      ...env,
+      NODE_OPTIONS: [process.env.NODE_OPTIONS, `--require ${shim}`].filter(Boolean).join(" "),
+    },
   });
   fs.closeSync(logFd);
   child.unref();

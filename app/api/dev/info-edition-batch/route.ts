@@ -133,6 +133,7 @@ export async function POST(req: Request) {
       pushEachBook:
         typeof body.pushEachBook === "boolean" ? body.pushEachBook : prev.pushEachBook,
       bookStart: typeof body.bookStart === "string" ? body.bookStart.trim().toUpperCase() : prev.bookStart,
+      bookEnd: typeof body.bookEnd === "string" ? body.bookEnd.trim().toUpperCase() : prev.bookEnd,
       delayMs:
         typeof body.delayMs === "number" && body.delayMs >= 0
           ? Math.min(body.delayMs, 60_000)

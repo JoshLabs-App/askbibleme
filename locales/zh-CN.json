@@ -930,7 +930,17 @@
       "effectInsetCarved": "阴刻内凹",
       "effectFlat": "平面无饰",
       "effectLetterpress": "铅印轻压",
-      "effectSoftBloom": "柔光浮字"
+      "effectSoftBloom": "柔光浮字",
+      "textSizeRowLabel": "字号",
+      "textSizeHint": "A− / A＋ 调节本页经文字号；范围较宽（约 35%–1000%），与自然首页分开记忆。",
+      "pageTemplate": "页模板",
+      "pageTemplates": {
+        "custom": "后台上传",
+        "wide": "横卷羊皮",
+        "scroll": "竖卷羊皮",
+        "scroll2": "深色卷轴",
+        "scroll3": "顶卷轴"
+      }
     }
   },
   "nature": {

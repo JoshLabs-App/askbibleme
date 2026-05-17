@@ -8,6 +8,7 @@
  * 用法：
  *   npm run info-edition:batch
  *   INFO_EDITION_BATCH_FORCE=1 npm run info-edition:batch
+ *   INFO_EDITION_BATCH_BOOK_START=GEN INFO_EDITION_BATCH_BOOK_END=GEN npm run info-edition:batch
  *   INFO_EDITION_BATCH_BOOK_START=MAT npm run info-edition:batch
  *   INFO_EDITION_BATCH_PUSH_EACH_BOOK=1 INFO_EDITION_REMOTE_SCP_TARGET='user@host:/var/data/info-edition-v1-published.json' npm run info-edition:batch
  *
@@ -92,17 +93,28 @@ function pushPublishedToRemote(): { ok: boolean; error?: string } {
   return { ok: true };
 }
 
-function bookStartIndex(): number {
-  const raw = process.env.INFO_EDITION_BATCH_BOOK_START?.trim().toUpperCase();
-  if (!raw) return 0;
-  const byId = scriptureBooks.findIndex((b) => b.bookId === raw);
+function resolveBookIndex(raw: string, label: "START" | "END"): number | null {
+  const id = raw.trim().toUpperCase();
+  const byId = scriptureBooks.findIndex((b) => b.bookId === id);
   if (byId >= 0) return byId;
-  const byNum = Number(raw);
+  const byNum = Number(id);
   if (Number.isInteger(byNum) && byNum >= 1 && byNum <= scriptureBooks.length) {
     return byNum - 1;
   }
-  console.warn(`Unknown INFO_EDITION_BATCH_BOOK_START=${raw}, starting from GEN`);
-  return 0;
+  console.warn(`Unknown INFO_EDITION_BATCH_BOOK_${label}=${raw}`);
+  return null;
+}
+
+function bookStartIndex(): number {
+  const raw = process.env.INFO_EDITION_BATCH_BOOK_START?.trim();
+  if (!raw) return 0;
+  return resolveBookIndex(raw, "START") ?? 0;
+}
+
+function bookEndIndex(): number {
+  const raw = process.env.INFO_EDITION_BATCH_BOOK_END?.trim();
+  if (!raw) return scriptureBooks.length - 1;
+  return resolveBookIndex(raw, "END") ?? scriptureBooks.length - 1;
 }
 
 function chapterAlreadyOk(
@@ -150,9 +162,11 @@ async function run(): Promise<void> {
   writeInfoEditionBatchState(cwd, state);
 
   const startBookIndex = Math.max(state.cursor.bookIndex, bookStartIndex());
+  const endBookIndex = Math.max(startBookIndex, bookEndIndex());
 
   const infoTarget = targetByEdition.get("info");
   const guideTarget = targetByEdition.get("guide");
+  const endBook = scriptureBooks[endBookIndex];
   console.log(
     [
       `Batch: ${editions.join(" + ")}`,
@@ -162,7 +176,7 @@ async function run(): Promise<void> {
       editions.includes("info")
         ? `导读描述规则 ${descriptionRulesForInfo.length} 字`
         : null,
-      `books ${startBookIndex + 1}/${scriptureBooks.length}…${scriptureBooks.length}`,
+      `books ${scriptureBooks[startBookIndex]?.bookId ?? "?"}…${endBook?.bookId ?? "?"}`,
       skipExisting ? "skip existing" : "regenerate all",
       pushEachBook ? "push each book" : "local only",
     ]
@@ -171,7 +185,7 @@ async function run(): Promise<void> {
   );
 
   try {
-    for (let bi = startBookIndex; bi < scriptureBooks.length; bi++) {
+    for (let bi = startBookIndex; bi <= endBookIndex && bi < scriptureBooks.length; bi++) {
       const book = scriptureBooks[bi];
       const bookState = ensureBookState(state, book.bookId, book.bookName, book.chapters);
 

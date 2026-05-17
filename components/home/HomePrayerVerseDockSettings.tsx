@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL, HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
+import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL } from "@/lib/home-prayer-pools/constants";
 import {
   normalizeGoldenVerseFontFamily,
   normalizeGoldenVerseTextEffect,
@@ -12,11 +12,9 @@ import {
 } from "@/lib/home-prayer-pools/prefs";
 import type { HomePrayerVersePrefsV1 } from "@/lib/home-prayer-pools/types";
 
-type Meta = { version: 1; categories: { id: string; title: string }[] };
-
 type Catalog = { version: 1; translations: { id: string; labelZh: string; labelEn: string; language: string }[] };
 
-type HomeVerseSettingsSection = "scope" | "translation" | "goldenFont";
+type HomeVerseSettingsSection = "translation" | "goldenFont";
 
 /** 自然首页：本页经文 `zoom` 档位（与 `nature-home-text-scale-prefs` 同源） */
 export type NatureVerseTextScaleDockProps = {
@@ -31,7 +29,7 @@ type Props = {
   placement?: "dock" | "drawer" | "page" | "popover";
   /** `placement="drawer"` 时由父级传入，抽屉打开动画结束后再为 true，用于与 localStorage 同步 */
   drawerOpen?: boolean;
-  /** 默认 `['scope','translation']`；金句页可传 `['scope','goldenFont']`，侧栏只传 `['translation']`。 */
+  /** 默认 `['translation']`；金句页可传 `['goldenFont']`。 */
   sections?: HomeVerseSettingsSection[];
   /** 自然首页 dock 或首页齿轮 popover：字体/字面区块下方展示本页经文缩放 +/-（`nature-home-text-scale-prefs`） */
   natureVerseTextScale?: NatureVerseTextScaleDockProps;
@@ -116,30 +114,14 @@ export function HomePrayerVerseDockSettings({
   const isPopover = placement === "popover";
   const isPageLike = isPage || isPopover;
   const sections = sectionsProp ?? (["translation"] as HomeVerseSettingsSection[]);
-  const showScope = sections.includes("scope");
   const showTranslation = sections.includes("translation");
   const showGoldenFont = sections.includes("goldenFont");
-  const goldenFontIntroText =
-    showScope || showTranslation ? t("pages.goldenVerses.fontLegend") : t("nature.homeVerse.goldenFontPrefsHint");
+  const goldenFontIntroText = showTranslation
+    ? t("pages.goldenVerses.fontLegend")
+    : t("nature.homeVerse.goldenFontPrefsHint");
   const [open, setOpen] = useState(false);
-  const [meta, setMeta] = useState<Meta | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [prefs, setPrefs] = useState<HomePrayerVersePrefsV1>(() => readHomePrayerVersePrefs());
-
-  useEffect(() => {
-    let cancelled = false;
-    void fetch(`${HOME_PRAYER_POOL_PUBLIC_BASE}/_meta.json`, { cache: "force-cache" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!cancelled && data?.version === 1 && Array.isArray(data.categories)) {
-          setMeta(data as Meta);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -209,124 +191,6 @@ export function HomePrayerVerseDockSettings({
     });
   }, [zhCatalog, enCatalog, persist]);
 
-  if (isPageLike && showScope && !meta?.categories.length) {
-    const loadingCardClass = isPopover
-      ? "rounded-xl border border-white/12 bg-white/[0.06] px-4 py-5 text-[14px] leading-relaxed text-canvas/65 sm:px-5"
-      : showGoldenFont
-        ? "mt-4 rounded-xl border border-ink/10 bg-canvas/70 px-4 py-5 text-[14px] leading-relaxed text-muted shadow-sm sm:px-5"
-        : "mt-1 rounded-xl border border-ink/10 bg-canvas/70 px-4 py-5 text-[14px] leading-relaxed text-muted shadow-sm sm:px-5";
-
-    const loadingBody = (
-      <>
-        {showGoldenFont ? (
-          <div className={isPopover ? "mt-0 space-y-4" : "mt-0 space-y-5"}>
-            <div>
-              <p
-                className={
-                  isPopover
-                    ? "px-4 pb-1.5 text-[13px] font-normal leading-snug text-canvas/55"
-                    : "px-4 pb-1.5 text-[13px] font-normal leading-snug text-muted"
-                }
-              >
-                {goldenFontIntroText}
-              </p>
-              <div
-                className={
-                  isPopover
-                    ? "overflow-hidden rounded-[10px] bg-white/[0.07]"
-                    : "overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
-                }
-              >
-                <label className="flex min-h-[44px] items-center justify-between gap-3 px-4">
-                  <span
-                    className={
-                      isPopover
-                        ? "shrink-0 text-[17px] leading-snug text-canvas/95"
-                        : "shrink-0 text-[17px] leading-snug text-ink dark:text-white"
-                    }
-                  >
-                    {t("pages.goldenVerses.fontRowLabel")}
-                  </span>
-                  <select
-                    className={pageSelectClass}
-                    value={prefs.goldenVerseFontFamily}
-                    onChange={(e) => {
-                      const p = readHomePrayerVersePrefs();
-                      persist(
-                        { ...p, goldenVerseFontFamily: normalizeGoldenVerseFontFamily(e.target.value) },
-                        { reloadFeed: false },
-                      );
-                    }}
-                  >
-                    <option value="sans">{t("pages.goldenVerses.fontSans")}</option>
-                    <option value="serif">{t("pages.goldenVerses.fontSerif")}</option>
-                  </select>
-                </label>
-                <label
-                  className={
-                    isPopover
-                      ? "flex min-h-[44px] items-center justify-between gap-3 border-t border-white/10 px-4"
-                      : "flex min-h-[44px] items-center justify-between gap-3 border-t border-black/[0.06] px-4 dark:border-white/[0.08]"
-                  }
-                >
-                  <span
-                    className={
-                      isPopover
-                        ? "shrink-0 text-[17px] leading-snug text-canvas/95"
-                        : "shrink-0 text-[17px] leading-snug text-ink dark:text-white"
-                    }
-                  >
-                    {t("pages.goldenVerses.effectRowLabel")}
-                  </span>
-                  <select
-                    className={pageSelectClass}
-                    value={prefs.goldenVerseTextEffect}
-                    onChange={(e) => {
-                      const p = readHomePrayerVersePrefs();
-                      persist(
-                        { ...p, goldenVerseTextEffect: normalizeGoldenVerseTextEffect(e.target.value) },
-                        { reloadFeed: false },
-                      );
-                    }}
-                  >
-                    <option value="engraved">{t("pages.goldenVerses.effectEngraved")}</option>
-                    <option value="insetCarved">{t("pages.goldenVerses.effectInsetCarved")}</option>
-                    <option value="flat">{t("pages.goldenVerses.effectFlat")}</option>
-                    <option value="letterpress">{t("pages.goldenVerses.effectLetterpress")}</option>
-                    <option value="softBloom">{t("pages.goldenVerses.effectSoftBloom")}</option>
-                  </select>
-                </label>
-              </div>
-              <p
-                className={
-                  isPopover
-                    ? "px-4 pt-1.5 text-[12px] leading-snug text-canvas/50"
-                    : "px-4 pt-1.5 text-[12px] leading-snug text-muted"
-                }
-              >
-                {t("pages.goldenVerses.effectLegend")}
-              </p>
-            </div>
-          </div>
-        ) : null}
-        <div className={isPopover ? `mt-2 ${loadingCardClass}` : loadingCardClass} role="status">
-          {t("pages.goldenVerses.settingsLoading")}
-        </div>
-      </>
-    );
-
-    return isPage ? (
-      <section className="w-full" aria-label={t("pages.goldenVerses.title")}>
-        {loadingBody}
-      </section>
-    ) : (
-      <div className="w-full">{loadingBody}</div>
-    );
-  }
-
-  if (showScope && !meta?.categories.length) {
-    return null;
-  }
 
   const formInnerDockDrawer = (
     <div
@@ -336,79 +200,6 @@ export function HomePrayerVerseDockSettings({
           : "space-y-3 rounded-lg border border-neutral-200/80 bg-white/60 px-2.5 py-2.5 text-[13px] text-[#37352f]/90 backdrop-blur-sm sm:text-[14px]"
       }
     >
-      {showScope ? (
-        <fieldset className="space-y-2 border-0 p-0">
-          <legend
-            className={
-              isDock
-                ? "text-[11px] font-semibold uppercase tracking-[0.12em] text-white/55"
-                : "text-[11px] font-semibold uppercase tracking-[0.12em] text-[#37352f]/50"
-            }
-          >
-            {t("nature.homeVerse.scopeLegend")}
-          </legend>
-          <label className="flex cursor-pointer items-start gap-2">
-            <input
-              type="radio"
-              name={isDock ? "hv-scope-dock" : "hv-scope-drawer"}
-              className="mt-0.5"
-              checked={prefs.verseScope.type === "all"}
-              onChange={() => persist({ ...prefs, verseScope: { type: "all" } })}
-            />
-            <span>{t("nature.homeVerse.scopeAll")}</span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-2">
-            <input
-              type="radio"
-              name={isDock ? "hv-scope-dock" : "hv-scope-drawer"}
-              className="mt-0.5"
-              checked={prefs.verseScope.type === "themeRepeat"}
-              onChange={() => persist({ ...prefs, verseScope: { type: "themeRepeat", minCount: 5 } })}
-            />
-            <span>{t("nature.homeVerse.scopeThemeRepeatGe5")}</span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-2">
-            <input
-              type="radio"
-              name={isDock ? "hv-scope-dock" : "hv-scope-drawer"}
-              className="mt-0.5"
-              checked={prefs.verseScope.type === "category"}
-              onChange={() =>
-                persist({
-                  ...prefs,
-                  verseScope: {
-                    type: "category",
-                    categoryId: meta!.categories[0]?.id ?? "self",
-                  },
-                })
-              }
-            />
-            <span>{t("nature.homeVerse.scopeCategory")}</span>
-          </label>
-          {prefs.verseScope.type === "category" ? (
-            <select
-              className={
-                isDock
-                  ? "ml-6 mt-1 w-[min(100%,18rem)] rounded-lg border border-white/20 bg-black/30 px-2 py-1.5 text-[12px] text-white/90"
-                  : "ml-6 mt-1 w-[min(100%,18rem)] rounded-md border border-neutral-200/90 bg-white px-2 py-1.5 text-[13px] text-[#37352f]"
-              }
-              value={prefs.verseScope.categoryId}
-              onChange={(e) =>
-                persist({
-                  ...prefs,
-                  verseScope: { type: "category", categoryId: e.target.value },
-                })
-              }
-            >
-              {meta!.categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          ) : null}
-        </fieldset>
-      ) : null}
 
       {showTranslation && zhCatalog.length > 0 && enCatalog.length > 0 ? (
         <fieldset className="space-y-2 border-0 p-0">
@@ -697,131 +488,6 @@ export function HomePrayerVerseDockSettings({
         </div>
       ) : null}
 
-      {showScope && meta ? (
-        <div>
-          <p
-            className={
-              isPopover
-                ? "px-4 pb-1.5 text-[13px] font-normal leading-snug text-canvas/55"
-                : "px-4 pb-1.5 text-[13px] font-normal leading-snug text-muted"
-            }
-          >
-            {t("nature.homeVerse.scopeLegend")}
-          </p>
-          <div
-            className={
-              isPopover
-                ? "overflow-hidden rounded-[10px] bg-white/[0.07] p-1"
-                : "overflow-hidden rounded-[10px] bg-ink/[0.045] p-1 dark:bg-white/[0.06]"
-            }
-          >
-            <div className={isPopover ? "flex flex-col gap-1 rounded-lg bg-black/35 p-1" : "flex flex-col gap-1 rounded-lg bg-black/[0.06] p-1 dark:bg-black/30"}>
-              <button
-                type="button"
-                aria-pressed={prefs.verseScope.type === "all"}
-                className={[
-                  "min-h-9 w-full rounded-md px-2 text-left text-[13px] font-medium leading-snug transition motion-reduce:transition-none",
-                  prefs.verseScope.type === "all"
-                    ? isPopover
-                      ? "bg-white/18 text-white shadow-none"
-                      : "bg-canvas text-ink shadow-sm dark:bg-zinc-700 dark:text-white"
-                    : isPopover
-                      ? "text-white/55"
-                      : "text-ink/55 dark:text-white/55",
-                ].join(" ")}
-                onClick={() => persist({ ...prefs, verseScope: { type: "all" } })}
-              >
-                {t("nature.homeVerse.scopeAll")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={prefs.verseScope.type === "themeRepeat"}
-                className={[
-                  "min-h-9 w-full rounded-md px-2 text-left text-[13px] font-medium leading-snug transition motion-reduce:transition-none",
-                  prefs.verseScope.type === "themeRepeat"
-                    ? isPopover
-                      ? "bg-white/18 text-white shadow-none"
-                      : "bg-canvas text-ink shadow-sm dark:bg-zinc-700 dark:text-white"
-                    : isPopover
-                      ? "text-white/55"
-                      : "text-ink/55 dark:text-white/55",
-                ].join(" ")}
-                onClick={() => persist({ ...prefs, verseScope: { type: "themeRepeat", minCount: 5 } })}
-              >
-                {t("nature.homeVerse.scopeThemeRepeatGe5")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={prefs.verseScope.type === "category"}
-                className={[
-                  "min-h-9 w-full rounded-md px-2 text-left text-[13px] font-medium leading-snug transition motion-reduce:transition-none",
-                  prefs.verseScope.type === "category"
-                    ? isPopover
-                      ? "bg-white/18 text-white shadow-none"
-                      : "bg-canvas text-ink shadow-sm dark:bg-zinc-700 dark:text-white"
-                    : isPopover
-                      ? "text-white/55"
-                      : "text-ink/55 dark:text-white/55",
-                ].join(" ")}
-                onClick={() =>
-                  persist({
-                    ...prefs,
-                    verseScope: {
-                      type: "category",
-                      categoryId: meta.categories[0]?.id ?? "self",
-                    },
-                  })
-                }
-              >
-                {t("nature.homeVerse.scopeCategory")}
-              </button>
-            </div>
-          </div>
-          {prefs.verseScope.type === "category" ? (
-            <div
-              className={
-                isPopover
-                  ? "mt-2 overflow-hidden rounded-[10px] bg-white/[0.07]"
-                  : "mt-2 overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
-              }
-            >
-              <label
-                className={
-                  isPopover
-                    ? "flex min-h-[44px] items-center justify-between gap-3 border-b border-white/10 px-4"
-                    : "flex min-h-[44px] items-center justify-between gap-3 border-b border-black/[0.06] px-4 dark:border-white/[0.08]"
-                }
-              >
-                <span
-                  className={
-                    isPopover
-                      ? "shrink-0 text-[17px] leading-snug text-canvas/95"
-                      : "shrink-0 text-[17px] leading-snug text-ink dark:text-white"
-                  }
-                >
-                  {t("nature.homeVerse.categoryRowLabel")}
-                </span>
-                <select
-                  className={pageSelectClass}
-                  value={prefs.verseScope.categoryId}
-                  onChange={(e) =>
-                    persist({
-                      ...prefs,
-                      verseScope: { type: "category", categoryId: e.target.value },
-                    })
-                  }
-                >
-                  {meta.categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
 
       {showTranslation && zhCatalog.length > 0 && enCatalog.length > 0 ? (
         <div>

@@ -1,3 +1,9 @@
+import {
+  READ_PARCHMENT_BG_IMAGE_CSS_VAR,
+  readParchmentBgImageCssValue,
+} from "@/lib/read/read-parchment-background";
+import { SCRIPTURE_PARCHMENT_WIDE_MEDIA } from "@/lib/read/scripture-parchment-shell";
+
 /**
  * 在 React 水合前执行：读经/祷告 PWA 首帧即改 `theme-color` 与根节点羊皮底，避免 Samsung 等仍露 manifest 深青顶栏。
  * 由 `app/layout.tsx` 以 `beforeInteractive` 注入。
@@ -20,26 +26,32 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
 
   function syncReadParchmentWide() {
     try {
-      var wide =
-        window.matchMedia("(min-width: 480px) and (min-aspect-ratio: 4/3)").matches ||
-        window.matchMedia("(min-width: 480px) and (orientation: landscape)").matches;
-      if (wide) html.dataset.readParchmentWide = "1";
-      else delete html.dataset.readParchmentWide;
+      var w = window.innerWidth || 0;
+      var h = window.innerHeight || 0;
+      var wide = w >= 480 && h > 0 && w >= h;
+      if (wide) {
+        html.dataset.readParchmentWide = "1";
+        html.style.setProperty(${JSON.stringify(READ_PARCHMENT_BG_IMAGE_CSS_VAR)}, ${JSON.stringify(readParchmentBgImageCssValue(true))});
+      } else {
+        delete html.dataset.readParchmentWide;
+        html.style.removeProperty(${JSON.stringify(READ_PARCHMENT_BG_IMAGE_CSS_VAR)});
+      }
     } catch (e) {}
   }
   syncReadParchmentWide();
   if (window.matchMedia) {
-    var wideMqA = window.matchMedia("(min-width: 480px) and (min-aspect-ratio: 4/3)");
-    var wideMqB = window.matchMedia("(min-width: 480px) and (orientation: landscape)");
+    var wideMq = window.matchMedia(${JSON.stringify(SCRIPTURE_PARCHMENT_WIDE_MEDIA)});
     var onWideChange = function () {
       syncReadParchmentWide();
     };
-    if (wideMqA.addEventListener) {
-      wideMqA.addEventListener("change", onWideChange);
-      wideMqB.addEventListener("change", onWideChange);
-    } else if (wideMqA.addListener) {
-      wideMqA.addListener(onWideChange);
-      wideMqB.addListener(onWideChange);
+    if (wideMq.addEventListener) {
+      wideMq.addEventListener("change", onWideChange);
+    } else if (wideMq.addListener) {
+      wideMq.addListener(onWideChange);
+    }
+    window.addEventListener("resize", onWideChange);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", onWideChange);
     }
   }
   if (!html.style.backgroundColor) html.style.backgroundColor = canvas;

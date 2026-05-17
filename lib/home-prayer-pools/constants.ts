@@ -1,4 +1,4 @@
-/** 与 `public/data/home-prayer-pools/` 下目录名一致（`all` 或分类 `id`） */
+/** 与 `public/data/home-prayer-pools/` 下目录名一致（如 `theme-repeat-ge5`） */
 export const HOME_PRAYER_POOL_PUBLIC_BASE = "/data/home-prayer-pools";
 
 export const HOME_PRAYER_POOL_CHUNK_SIZE = 20;

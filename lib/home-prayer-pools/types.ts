@@ -6,7 +6,7 @@ export type HomePrayerManifestV1 = {
   scopeId: string;
   chunkSize: number;
   entries: { verseKey: string; weight: number; chunkIndex: number }[];
-  /** 仅 `all`：优先展示的 key 顺序（短、鼓励向在前），首屏组批会尽量先从这里取 */
+  /** 优先展示的 key 顺序，首屏组批会尽量先从这里取 */
   bootstrapVerseKeys?: string[];
 };
 
@@ -25,10 +25,7 @@ export type HomePrayerChunkV1 = {
   verses: HomePrayerChunkVerseV1[];
 };
 
-export type VerseScopeV1 =
-  | { type: "all" }
-  | { type: "category"; categoryId: string }
-  | { type: "themeRepeat"; minCount: number };
+export type VerseScopeV1 = { type: "themeRepeat"; minCount: number };
 
 export type VerseDisplayModeV1 = "primary" | "bilingual";
 
@@ -58,7 +55,7 @@ export type HomePrayerVersePrefsV1 = {
   verseTextZhTranslationId: string;
   /** 首页经文英文栏：如 `web-en`（WEB）、`bbe-en`（简易英文） */
   verseTextEnTranslationId: string;
-  /** 按范围隔离：`all` 或 `cat:<categoryId>` */
+  /** 按范围隔离：如 `theme-repeat-ge5` */
   memoryByNamespace: Record<string, Record<string, PrayerMemoryRowV1>>;
   goldenVerseFontFamily: GoldenVerseFontFamilyV1;
   goldenVerseTextEffect: GoldenVerseTextEffectV1;

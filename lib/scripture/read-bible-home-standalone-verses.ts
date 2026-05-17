@@ -13,7 +13,7 @@ function rotationUsable(by: Record<AppLocale, HomeVerseEntry[]>): boolean {
 }
 
 /**
- * `/read` 圣经首页等独立轮播：与全站金句池同源（`external-home-verse-rotation.json`）。
+ * `/read` 圣经首页等独立轮播：与全站同源（`theme-repeat-ge5` 静态池 bootstrap）。
  * 解析过少时回退 `READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE`。
  */
 export async function buildReadBibleHomeStandaloneVersesByLocale(

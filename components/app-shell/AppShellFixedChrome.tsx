@@ -7,6 +7,11 @@ import { isScenesShellPath, SCENES_PAGE_SURFACE_STYLE } from "@/lib/nature/scene
 import { measureAppShellSafeTopPx } from "@/lib/read/measure-app-shell-safe-top";
 import { PARCHMENT_SHELL_SURFACE_STYLE } from "@/lib/read/parchment-shell-surface-style";
 import {
+  clearReadParchmentWideDataset,
+  subscribeReadParchmentWideViewport,
+  syncReadParchmentWideDataset,
+} from "@/lib/read/sync-read-parchment-wide";
+import {
   isScriptureParchmentPath,
   SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR,
   SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR,
@@ -20,6 +25,7 @@ function syncParchmentShellDataset(active: boolean) {
   const html = document.documentElement;
   if (active) {
     html.dataset[SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY] = SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE;
+    syncReadParchmentWideDataset(html);
     const topPx = measureAppShellSafeTopPx();
     if (topPx > 0) {
       html.style.setProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR, `${topPx}px`);
@@ -30,6 +36,7 @@ function syncParchmentShellDataset(active: boolean) {
     }
   } else {
     Reflect.deleteProperty(html.dataset, SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY);
+    clearReadParchmentWideDataset(html);
     html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_FALLBACK_VAR);
     html.style.removeProperty(SCRIPTURE_PARCHMENT_SAFE_TOP_EFFECTIVE_VAR);
   }
@@ -54,10 +61,12 @@ export function AppShellFixedChrome({ children }: Props) {
     syncParchmentShellDataset(parchmentShell);
     if (!parchmentShell) return;
     const onViewport = () => syncParchmentShellDataset(true);
+    const offWide = subscribeReadParchmentWideViewport(onViewport);
     window.visualViewport?.addEventListener("resize", onViewport);
     window.visualViewport?.addEventListener("scroll", onViewport);
     window.addEventListener("resize", onViewport);
     return () => {
+      offWide();
       window.visualViewport?.removeEventListener("resize", onViewport);
       window.visualViewport?.removeEventListener("scroll", onViewport);
       window.removeEventListener("resize", onViewport);

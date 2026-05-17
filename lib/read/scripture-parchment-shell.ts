@@ -32,9 +32,9 @@ export const SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE = "1";
 export const SCRIPTURE_PARCHMENT_WIDE_DATASET_KEY = "readParchmentWide";
 export const SCRIPTURE_PARCHMENT_WIDE_DATASET_VALUE = "1";
 
-/** 与 `read-parchment-shell-chrome.css` 宽屏规则一致 */
+/** 与 `read-parchment-shell-chrome.css` 宽屏规则一致（视口宽 ≥ 高） */
 export const SCRIPTURE_PARCHMENT_WIDE_MEDIA =
-  "(min-width: 480px) and (min-aspect-ratio: 4/3), (min-width: 480px) and (orientation: landscape)";
+  "(min-width: 480px) and (min-aspect-ratio: 1 / 1)";
 
 export function scriptureParchmentStatusBarTheme(dark: boolean, samsung: boolean): string {
   if (samsung) {

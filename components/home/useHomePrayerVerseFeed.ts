@@ -75,7 +75,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
   const manifestRef = useRef<HomePrayerManifestV1 | null>(null);
   const bodiesRef = useRef<VerseBodyMap>(new Map());
   const chunkCacheRef = useRef(new Map<number, HomePrayerChunkV1>());
-  const scopeIdRef = useRef("all");
+  const scopeIdRef = useRef("theme-repeat-ge5");
   const keysQueueRef = useRef<string[]>([]);
   const extendingRef = useRef(false);
   const extendCooldownUntilRef = useRef(0);

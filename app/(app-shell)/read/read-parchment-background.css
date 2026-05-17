@@ -4,7 +4,7 @@
  * - **1** — `parchment-scroll-bg`（默认；webp + jpg，约 30 KiB / 473×1024）
  * - **2** — `parchment-scroll-bg-2.png`（深色卷轴）
  * - **3** — `parchment-scroll-bg-3.png`（顶卷轴 + 纵向羊皮）
- * - **wide** — `parchment-scroll-bg-wide`（横屏 16:9；`100% 100%` 铺满；webp + jpg）
+ * - **wide** — `parchment-scroll-bg-wide`（横屏 4:3，1024×768；`100% 100%` 铺满；webp + jpg）
  *
  * 默认 **1**。在 `<html data-read-parchment-bg="1"|"2"|"3">` 上切换。
  */
@@ -46,4 +46,18 @@ html[data-read-parchment-bg="2"] {
 
 html[data-read-parchment-bg="3"] {
   --read-parchment-bg-image: url("/read/parchment-scroll-bg-3.png");
+}
+
+/**
+ * 宽屏横卷：`html::before` 只读 `--read-parchment-bg-image`。
+ * 此处必须用裸 url()，勿把 image-set 赋给该变量（部分浏览器会回退竖图）。
+ */
+html[data-app-shell-safe-fill="parchment"][data-read-parchment-wide="1"] {
+  --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
+}
+
+@media (min-width: 480px) and (min-aspect-ratio: 1 / 1) {
+  html[data-app-shell-safe-fill="parchment"] {
+    --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
+  }
 }

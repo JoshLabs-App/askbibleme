@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
+import { useShellBackgroundVideoCoordination } from "@/hooks/useShellBackgroundVideoCoordination";
 import type { RelaxSettingsV1 } from "@/lib/relax/types";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
@@ -94,6 +95,11 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
   }, [videoSrc]);
 
   const hasVideo = Boolean(videoSrc && !videoBroken);
+  const { blockVideoDecoder, onVideoPlaying } = useShellBackgroundVideoCoordination(videoRef, {
+    enabled: hasVideo,
+    surfaceId: "relax-calm",
+  });
+  const showVideoDecoder = hasVideo && !blockVideoDecoder;
 
   useEffect(() => {
     if (!landscapeNarrow) {
@@ -135,7 +141,7 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
         aria-hidden
       />
 
-      {videoSrc && !videoBroken ? (
+      {showVideoDecoder ? (
         <video
           ref={videoRef}
           key={videoSrc}
@@ -148,13 +154,14 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
           autoPlay
           preload="metadata"
           aria-hidden
+          onPlaying={() => onVideoPlaying()}
           onError={() => setVideoBroken(true)}
         />
       ) : null}
 
       <div
         className={`pointer-events-none absolute inset-0 z-[5] ${
-          hasVideo
+          showVideoDecoder
             ? "bg-gradient-to-b from-white/55 via-sky-50/25 to-sky-200/45"
             : "bg-gradient-to-b from-sky-200/25 via-transparent to-cyan-100/35"
         }`}

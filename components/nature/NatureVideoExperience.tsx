@@ -64,6 +64,7 @@ import {
 import { isPrefetchableNatureVideoSrc } from "@/lib/nature/is-prefetchable-nature-video-src";
 import { canNatureHomeFullVideoFetch } from "@/lib/nature/can-nature-home-full-video-fetch";
 import { useNatureHomeFullVideoFetch } from "@/hooks/useNatureHomeFullVideoFetch";
+import { useShellBackgroundVideoCoordination } from "@/hooks/useShellBackgroundVideoCoordination";
 
 /**
  * 停留后再挂 `<video>` 解码（非「切换」时刻）。
@@ -309,6 +310,10 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
    */
   const hasNatureVisual = hasConfiguredVideoSrc || hasStillIntro;
   const mediaPolicy = useNatureMediaPolicy();
+  const { blockVideoDecoder, onVideoPlaying } = useShellBackgroundVideoCoordination(videoRef, {
+    enabled: hasConfiguredVideoSrc && !videoBroken,
+    surfaceId: "nature-home",
+  });
 
   useEffect(() => {
     if (!hasNatureVisual) {
@@ -338,6 +343,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   const showNatureVideoDecoder =
     hasPlayableVideo &&
     !posterOnlyLowPower &&
+    !blockVideoDecoder &&
     (useFullVideoIntro ? fullFetchReady && Boolean(fullFetchObjectUrl) : dwellVideoAllowed);
 
   const playbackVideoSrc =
@@ -974,6 +980,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
                 onLoadedData={maybeRevealIntroFromBuffer}
                 onProgress={maybeRevealIntroFromBuffer}
                 onPlaying={() => {
+                  onVideoPlaying();
                   clearPlaybackWaitHint();
                   maybeRevealIntroFromBuffer();
                 }}

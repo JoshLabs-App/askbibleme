@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { formatReadingPlanRange, readingPlanChapterHref } from "@/lib/bible/reading-plans/format-reading-range";
 import { stripReadingPlanHtml } from "@/lib/bible/reading-plans/strip-html-description";
+import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanBundle, ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import { ReadPlanActivateControl } from "@/components/bible/ReadPlanActivateControl";
 import {
@@ -84,7 +85,9 @@ export function ReadPlansPageClient({ plans }: ListProps) {
                         </p>
                       ) : null}
                       <p className="mt-2 text-[11px] tabular-nums tracking-wide text-amber-800/55 dark:text-stone-500">
-                        {t("pages.read.plansMeta", { days: String(p.dayCount), max: String(p.maxReadingsPerDay) })}
+                        {isTripleLoopPlanId(p.planId)
+                          ? t("pages.read.tripleLoopPlansMeta")
+                          : t("pages.read.plansMeta", { days: String(p.dayCount), max: String(p.maxReadingsPerDay) })}
                       </p>
                     </div>
                     <span className="shrink-0 pt-0.5 text-[11px] font-medium text-amber-800/60 dark:text-stone-400">

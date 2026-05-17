@@ -25,6 +25,11 @@ import {
   sortRolesForInfoEditionProduction,
 } from "@/lib/bible/info-edition-v1-publish";
 import { InfoEditionCompareGrid } from "@/components/admin/InfoEditionCompareGrid";
+import {
+  InfoEditionReaderProbePanel,
+  type InfoEditionReaderProbeHandle,
+  type ReaderGenerateResponse,
+} from "@/components/admin/InfoEditionReaderProbePanel";
 import { dedupeConnectionProfiles, profileCompareDisplay } from "@/lib/ai/profile-display";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { diskAuthHeaders } from "@/lib/disk-auth-headers";
@@ -125,6 +130,7 @@ export function InfoEditionV1AdminClient() {
 
   const pauseAutoSaveRef = useRef(true);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const readerProbeRef = useRef<InfoEditionReaderProbeHandle>(null);
 
   const bookMeta = useMemo(() => scriptureBooks.find((b) => b.bookId === bookId), [bookId]);
   const descriptionCharCount = descriptionRules.length;
@@ -531,6 +537,27 @@ export function InfoEditionV1AdminClient() {
     [applyWorkspace, bookId, chapter, descriptionRules, draftPayload, ie, rt, selectedProfilesForGenerate, selectedRolesForGenerate],
   );
 
+  const onReaderProbeResult = useCallback(
+    (res: ReaderGenerateResponse) => {
+      if (!res.ok || !res.generation?.text?.trim() || !res.probe) return;
+      const g: InfoEditionV1Generation = {
+        profileId: "slot:deepseek",
+        profileName: res.probe.profileName ?? "DeepSeek",
+        generationRoleId: res.probe.roleId,
+        generationRoleLabel: res.probe.roleLabel,
+        text: res.generation.text,
+        charCount: res.generation.charCount,
+      };
+      setGenerations([g]);
+      setMsg(
+        res.published
+          ? ie("readerGenerateDonePublished", { label: res.probe.variantLabel })
+          : ie("readerGenerateDone", { label: res.probe.variantLabel }),
+      );
+    },
+    [ie],
+  );
+
   const publishToReader = useCallback(async () => {
     if (!generations?.length) return;
     setErr(null);
@@ -869,6 +896,22 @@ export function InfoEditionV1AdminClient() {
         <span className="text-[10px] tabular-nums text-adminMuted">
           {ie("charCount", { count: String(descriptionCharCount) })}
         </span>
+        <button
+          type="button"
+          disabled={generating || loading}
+          onClick={() => readerProbeRef.current?.previewInfo()}
+          className="shrink-0 rounded border border-adminFg/30 bg-adminFg/[0.12] px-2.5 py-1 text-[11px] font-semibold text-adminFg transition hover:bg-adminFg/20 disabled:opacity-45"
+        >
+          {ie("readerGenerateInfo")}
+        </button>
+        <button
+          type="button"
+          disabled={generating || loading}
+          onClick={() => readerProbeRef.current?.previewGuide()}
+          className="shrink-0 rounded border border-adminFg/30 bg-adminFg/[0.12] px-2.5 py-1 text-[11px] font-semibold text-adminFg transition hover:bg-adminFg/20 disabled:opacity-45"
+        >
+          {ie("readerGenerateGuide")}
+        </button>
         {!canGenerate && !generating && selectedProfileIds.size > 0 && !selectedGenerationRoleIds.size ? (
           <span className="text-[10px] text-amber-800/90 dark:text-amber-200/80">{ie("needRole")}</span>
         ) : null}
@@ -884,6 +927,17 @@ export function InfoEditionV1AdminClient() {
           </span>
         ) : null}
       </div>
+
+      <InfoEditionReaderProbePanel
+        ref={readerProbeRef}
+        bookId={bookId}
+        chapter={chapter}
+        descriptionRules={descriptionRules}
+        disabled={generating || loading}
+        ie={ie}
+        diskHeaders={diskAuthHeaders()}
+        onResult={onReaderProbeResult}
+      />
 
       <textarea
         id="info-edition-rules"

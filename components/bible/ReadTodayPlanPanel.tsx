@@ -4,26 +4,27 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { formatReadingPlanRange, readingPlanChapterHref } from "@/lib/bible/reading-plans/format-reading-range";
-import type { ReadingPlanDay } from "@/lib/bible/reading-plans/types";
+import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
+import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   getEffectiveReadingPlanPrefsServerSnapshot,
   getEffectiveReadingPlanPrefsSnapshot,
   resolveReadingPlanDayIndex,
   subscribeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
+import {
+  getTripleLoopProgressServerSnapshot,
+  getTripleLoopProgressSnapshot,
+  subscribeTripleLoopProgress,
+} from "@/lib/read/triple-loop-progress";
+import { loadTodayReadingPlanPayload, type TodayReadingPlanPayload } from "@/lib/read/today-reading-plan-payload";
 
 function planTitleKey(planId: string): string {
   return `pages.read.plansCatalog.${planId}.title`;
 }
 
-type DayPayload = {
-  planId: string;
-  name: string;
-  dayCount: number;
-  dayIndex: number;
-  day: ReadingPlanDay | null;
-};
+type DayPayload = TodayReadingPlanPayload;
 
 type Props = {
   registryPlans: ReadingPlanRegistryEntry[];
@@ -42,36 +43,38 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
   const [payload, setPayload] = useState<DayPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = registryById.get(prefs.planId)?.dayCount ?? prefs.dayCount;
-  const dayIndex = dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
 
   const loadToday = useCallback(async () => {
-    if (dayIndex == null) {
+    if (!isTripleLoop && dayIndex == null) {
       setPayload(null);
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/read/reading-plan/${encodeURIComponent(prefs.planId)}?dayIndex=${dayIndex}`,
-        { cache: "no-store" },
-      );
-      if (!res.ok) {
-        setPayload(null);
-        return;
-      }
-      const j = (await res.json()) as DayPayload;
+      const j = await loadTodayReadingPlanPayload(prefs, { dayCount: dayCount ?? undefined });
       setPayload(j);
     } catch {
       setPayload(null);
     } finally {
       setLoading(false);
     }
-  }, [prefs, dayIndex]);
+  }, [prefs, dayIndex, dayCount, isTripleLoop]);
+
+  const tripleProgress = useSyncExternalStore(
+    subscribeTripleLoopProgress,
+    getTripleLoopProgressSnapshot,
+    getTripleLoopProgressServerSnapshot,
+  );
+  const tripleProgressKey = isTripleLoop
+    ? `${tripleProgress.ot.bookId}:${tripleProgress.ot.chapter}|${tripleProgress.nt.bookId}:${tripleProgress.nt.chapter}|${tripleProgress.wisdom.bookId}:${tripleProgress.wisdom.chapter}`
+    : "";
 
   useEffect(() => {
     void loadToday();
-  }, [loadToday]);
+  }, [loadToday, tripleProgressKey]);
 
   const titleKey = planTitleKey(prefs.planId);
   const localizedTitle = t(titleKey);
@@ -94,7 +97,13 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
       <p className="mx-auto mt-3 max-w-[20rem] text-pretty text-[0.9rem] font-medium leading-snug text-amber-950 dark:text-stone-100">
         {planTitle}
       </p>
-      {dayIndex != null ? (
+      {isTripleLoop ? (
+        <p className="mt-2 text-[11px] tabular-nums tracking-wide text-amber-800/58 dark:text-stone-500">
+          {t("pages.read.todayPlanDayMeta", { n: String(getReadingPlanDaySinceEpoch()) })}
+          <span className="mx-1.5 text-amber-800/35 dark:text-stone-600">·</span>
+          {t("pages.read.todayPlanAnchorEaster")}
+        </p>
+      ) : dayIndex != null ? (
         <p className="mt-2 text-[11px] tabular-nums tracking-wide text-amber-800/58 dark:text-stone-500">
           {t("pages.read.todayPlanDayMeta", { n: String(dayIndex + 1) })}
           <span className="mx-1.5 text-amber-800/35 dark:text-stone-600">·</span>

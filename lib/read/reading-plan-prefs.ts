@@ -1,5 +1,5 @@
 /** Device-local active reading plan (not synced to cloud). */
-export type ReadingPlanAnchor = "from-today" | "calendar-jan1";
+export type ReadingPlanAnchor = "from-today" | "calendar-jan1" | "calendar-easter";
 
 export type ReadingPlanPrefs = {
   version: 1;
@@ -13,10 +13,16 @@ export type ReadingPlanPrefs = {
 
 export const READING_PLAN_PREFS_STORAGE_KEY = "selah-reading-plan-prefs-v1";
 
+import { TRIPLE_LOOP_PLAN_DAY_COUNT, TRIPLE_LOOP_PLAN_ID } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
+
+export { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
+export { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
+
 /** Implicit plan when the user has not chosen one in local storage. */
-export const DEFAULT_READING_PLAN_ID = "esvthroughthebible";
-export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "calendar-jan1";
-export const DEFAULT_READING_PLAN_DAY_COUNT = 365;
+export const DEFAULT_READING_PLAN_ID = TRIPLE_LOOP_PLAN_ID;
+export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "calendar-easter";
+export const DEFAULT_READING_PLAN_DAY_COUNT = TRIPLE_LOOP_PLAN_DAY_COUNT;
 
 /**
  * `useSyncExternalStore` requires a stable snapshot reference when storage is unchanged.
@@ -84,12 +90,19 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
   try {
     const j = JSON.parse(raw) as ReadingPlanPrefs;
     if (j?.version !== 1 || typeof j.planId !== "string" || !j.planId.trim()) return null;
-    if (j.anchor !== "from-today" && j.anchor !== "calendar-jan1") return null;
+    if (j.anchor !== "from-today" && j.anchor !== "calendar-jan1" && j.anchor !== "calendar-easter") return null;
     const startedOn = typeof j.startedOn === "string" && j.startedOn.trim() ? j.startedOn.trim() : undefined;
     if (j.anchor === "from-today" && !startedOn) return null;
     const dayCount =
       typeof j.dayCount === "number" && Number.isInteger(j.dayCount) && j.dayCount > 0 ? j.dayCount : undefined;
-    return { version: 1, planId: j.planId.trim(), anchor: j.anchor, startedOn, dayCount };
+    const planId = j.planId.trim();
+    return {
+      version: 1,
+      planId,
+      anchor: j.anchor,
+      startedOn: j.anchor === "calendar-easter" ? READING_PLAN_EASTER_EPOCH_DATE : startedOn,
+      dayCount,
+    };
   } catch {
     return null;
   }
@@ -118,6 +131,7 @@ export function buildDefaultReadingPlanPrefs(dayCount = DEFAULT_READING_PLAN_DAY
     version: 1,
     planId: DEFAULT_READING_PLAN_ID,
     anchor: DEFAULT_READING_PLAN_ANCHOR,
+    startedOn: READING_PLAN_EASTER_EPOCH_DATE,
     dayCount,
   };
 }
@@ -213,7 +227,12 @@ export function setActiveReadingPlan(
     version: 1,
     planId,
     anchor,
-    startedOn: anchor === "from-today" ? toLocalDateString(now) : undefined,
+    startedOn:
+      anchor === "from-today"
+        ? toLocalDateString(now)
+        : anchor === "calendar-easter"
+          ? READING_PLAN_EASTER_EPOCH_DATE
+          : undefined,
     dayCount: opts?.dayCount,
   };
   writeReadingPlanPrefs(prefs);
@@ -231,6 +250,8 @@ export function resolveReadingPlanDayIndex(
   let offset = 0;
   if (prefs.anchor === "calendar-jan1") {
     offset = localDaysBetween(jan1OfYear(now.getFullYear()), today);
+  } else if (prefs.anchor === "calendar-easter") {
+    offset = localDaysBetween(READING_PLAN_EASTER_EPOCH_DATE, today);
   } else {
     const start = prefs.startedOn ?? today;
     offset = localDaysBetween(start, today);

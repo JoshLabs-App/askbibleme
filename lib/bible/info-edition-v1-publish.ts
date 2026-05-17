@@ -32,6 +32,14 @@ export function readerVariantToRoleId(
   return INFO_EDITION_V1_PUBLISH_ROLE_ID;
 }
 
+/** 由 generation-roles 条目推断读经页版本（与后台 reader-generate 一致） */
+export function readerVariantFromRole(role: Pick<GenerationRole, "id" | "label">): InfoEditionReaderVariant {
+  if (role.id === INFO_EDITION_GUIDE_V2_ROLE_ID) return "guide";
+  const label = role.label.trim();
+  if (label === INFO_EDITION_GUIDE_V2_ROLE_LABEL || label === "引导版") return "guide";
+  return "info";
+}
+
 export function parseInfoEditionReaderVariant(raw: string | null | undefined): InfoEditionReaderVariant | null {
   const v = raw?.trim().toLowerCase() ?? "";
   if (v === "info" || v === "导读" || v === "导读版") return "info";

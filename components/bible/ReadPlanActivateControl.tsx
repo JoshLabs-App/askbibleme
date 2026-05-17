@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanAnchor } from "@/lib/read/reading-plan-prefs";
 import {
   DEFAULT_READING_PLAN_ANCHOR,
@@ -36,6 +37,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     () => resolveEffectiveReadingPlanPrefs(stored, { dayCount }),
     [stored, dayCount],
   );
+  const isTripleLoop = isTripleLoopPlanId(planId);
   const isActive = effective.planId === planId;
   const isImplicitDefault =
     planId === DEFAULT_READING_PLAN_ID && isImplicitDefaultReadingPlan(stored);
@@ -52,12 +54,12 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   }, [isActive, effective.anchor]);
 
   const todayDayIndex = useMemo(() => {
-    if (!isActive) return null;
+    if (!isActive || isTripleLoop) return null;
     return resolveReadingPlanDayIndex(effective, dayCount) + 1;
-  }, [isActive, effective, dayCount]);
+  }, [isActive, effective, dayCount, isTripleLoop]);
 
   const activate = () => {
-    setActiveReadingPlan(planId, anchor, { dayCount });
+    setActiveReadingPlan(planId, isTripleLoop ? "calendar-easter" : anchor, { dayCount });
     router.push("/read");
     router.refresh();
   };
@@ -72,39 +74,45 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
       <p className="text-[11px] font-semibold tracking-[0.12em] text-amber-900/72 dark:text-stone-400">
         {t("pages.read.planActivateHeading")}
       </p>
-      <fieldset className="mt-3 space-y-2 border-0 p-0">
-        <legend className="sr-only">{t("pages.read.planActivateHeading")}</legend>
-        <label className="flex cursor-pointer items-start gap-2.5 text-left text-[13px] text-amber-950 dark:text-stone-200">
-          <input
-            type="radio"
-            name="plan-anchor"
-            className="mt-0.5"
-            checked={anchor === "from-today"}
-            onChange={() => setAnchor("from-today")}
-          />
-          <span>
-            <span className="font-medium">{t("pages.read.planAnchorFromToday")}</span>
-            <span className="mt-0.5 block text-[11px] text-amber-800/62 dark:text-stone-500">
-              {t("pages.read.planAnchorFromTodayHint")}
+      {isTripleLoop ? (
+        <p className="mt-3 text-pretty text-[12px] leading-relaxed text-amber-900/78 dark:text-stone-400">
+          {t("pages.read.tripleLoopActivateHint")}
+        </p>
+      ) : (
+        <fieldset className="mt-3 space-y-2 border-0 p-0">
+          <legend className="sr-only">{t("pages.read.planActivateHeading")}</legend>
+          <label className="flex cursor-pointer items-start gap-2.5 text-left text-[13px] text-amber-950 dark:text-stone-200">
+            <input
+              type="radio"
+              name="plan-anchor"
+              className="mt-0.5"
+              checked={anchor === "from-today"}
+              onChange={() => setAnchor("from-today")}
+            />
+            <span>
+              <span className="font-medium">{t("pages.read.planAnchorFromToday")}</span>
+              <span className="mt-0.5 block text-[11px] text-amber-800/62 dark:text-stone-500">
+                {t("pages.read.planAnchorFromTodayHint")}
+              </span>
             </span>
-          </span>
-        </label>
-        <label className="flex cursor-pointer items-start gap-2.5 text-left text-[13px] text-amber-950 dark:text-stone-200">
-          <input
-            type="radio"
-            name="plan-anchor"
-            className="mt-0.5"
-            checked={anchor === "calendar-jan1"}
-            onChange={() => setAnchor("calendar-jan1")}
-          />
-          <span>
-            <span className="font-medium">{t("pages.read.planAnchorJan1")}</span>
-            <span className="mt-0.5 block text-[11px] text-amber-800/62 dark:text-stone-500">
-              {t("pages.read.planAnchorJan1Hint")}
+          </label>
+          <label className="flex cursor-pointer items-start gap-2.5 text-left text-[13px] text-amber-950 dark:text-stone-200">
+            <input
+              type="radio"
+              name="plan-anchor"
+              className="mt-0.5"
+              checked={anchor === "calendar-jan1"}
+              onChange={() => setAnchor("calendar-jan1")}
+            />
+            <span>
+              <span className="font-medium">{t("pages.read.planAnchorJan1")}</span>
+              <span className="mt-0.5 block text-[11px] text-amber-800/62 dark:text-stone-500">
+                {t("pages.read.planAnchorJan1Hint")}
+              </span>
             </span>
-          </span>
-        </label>
-      </fieldset>
+          </label>
+        </fieldset>
+      )}
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button

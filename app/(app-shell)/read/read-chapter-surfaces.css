@@ -2,7 +2,7 @@
 @import "./read-parchment-background.css";
 @import "./read-parchment-shell-chrome.css";
 
-/* 圣经 /read 与祷告 /prayer 共用：羊皮卷全幅底 + 内层滚动（默认上下 150px 渐隐） */
+/* 圣经 /read 与祷告 /prayer 共用：羊皮卷全幅底 + 内层滚动（顶/底缘 mask 渐隐，底缘更重） */
 .read-bible-parchment-shell,
 .read-chapter-shell {
   box-sizing: border-box;
@@ -18,10 +18,11 @@
   background: transparent;
 }
 
-/* 实际滚动区：上下缘各 150px 渐隐；顶栏由 padding 避让固定菜单/设置角标 */
+/* 实际滚动区：顶缘渐隐 + 底缘更重渐隐（经文在底部由有到无）；顶栏由 padding 避让固定菜单/设置角标 */
 .read-bible-parchment-scroll,
 .read-chapter-scroll {
-  --read-parchment-edge-fade: 150px;
+  --read-parchment-edge-fade-top: 150px;
+  --read-parchment-edge-fade-bottom: 220px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -33,15 +34,17 @@
   -webkit-mask-image: linear-gradient(
     to bottom,
     hsla(0, 0%, 100%, 0) 0,
-    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade),
-    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade)),
+    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
+    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
+    hsla(0, 0%, 100%, 0.28) calc(100% - 5.5rem),
     hsla(0, 0%, 100%, 0) 100%
   );
   mask-image: linear-gradient(
     to bottom,
     hsla(0, 0%, 100%, 0) 0,
-    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade),
-    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade)),
+    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
+    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
+    hsla(0, 0%, 100%, 0.28) calc(100% - 5.5rem),
     hsla(0, 0%, 100%, 0) 100%
   );
   -webkit-mask-size: 100% 100%;
@@ -133,11 +136,12 @@
 }
 
 .read-chapter-verse {
-  margin: 0 0 1.45rem;
+  margin: 0 0 0.9rem;
   font-size: var(--read-bible-verse-font-size, 1.1875rem);
   font-weight: 500;
-  line-height: 2;
-  letter-spacing: 0.015em;
+  /* 经节内换行行距（非节与节间距） */
+  line-height: 1.5;
+  letter-spacing: 0.012em;
   /* 朗读跟读 scrollIntoView：避开 fixed 顶栏与卷首渐隐 */
   scroll-margin-top: 5.5rem;
   scroll-margin-bottom: 2.5rem;
@@ -149,10 +153,10 @@
 
 .read-chapter-verse-contrast {
   display: block;
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
   font-size: var(--read-bible-contrast-verse-font-size, 1.02rem);
   font-weight: 450;
-  line-height: 1.45;
+  line-height: 1.32;
   letter-spacing: 0.01em;
   color: color-mix(in srgb, rgb(120 75 30) 62%, transparent);
 }

@@ -4,19 +4,26 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { formatReadingPlanRange, readingPlanChapterHref } from "@/lib/bible/reading-plans/format-reading-range";
+import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanRange } from "@/lib/bible/reading-plans/types";
-import { fetchReadingPlanDayClient } from "@/lib/read/fetch-reading-plan-day-client";
 import {
   buildReadingPlanChapterQueue,
   chapterRefKey,
   indexInReadingPlanQueue,
 } from "@/lib/read/reading-plan-chapter-queue";
+import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   getEffectiveReadingPlanPrefsServerSnapshot,
   getEffectiveReadingPlanPrefsSnapshot,
   resolveReadingPlanDayIndex,
   subscribeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
+import {
+  getTripleLoopProgressServerSnapshot,
+  getTripleLoopProgressSnapshot,
+  subscribeTripleLoopProgress,
+} from "@/lib/read/triple-loop-progress";
+import { loadTodayReadingPlanPayload } from "@/lib/read/today-reading-plan-payload";
 
 type Props = {
   bookId: string;
@@ -39,14 +46,25 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
   const [planTitle, setPlanTitle] = useState<string | null>(null);
   const [dayIndex, setDayIndex] = useState<number | null>(null);
 
+  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+
+  const tripleProgress = useSyncExternalStore(
+    subscribeTripleLoopProgress,
+    getTripleLoopProgressSnapshot,
+    getTripleLoopProgressServerSnapshot,
+  );
+  const tripleProgressKey = isTripleLoop
+    ? `${tripleProgress.ot.bookId}:${tripleProgress.ot.chapter}|${tripleProgress.nt.bookId}:${tripleProgress.nt.chapter}|${tripleProgress.wisdom.bookId}:${tripleProgress.wisdom.chapter}`
+    : "";
+
   useEffect(() => {
     let cancelled = false;
     const dayCount = prefs.dayCount ?? 365;
-    const idx = resolveReadingPlanDayIndex(prefs, dayCount);
+    const idx = isTripleLoop ? 0 : resolveReadingPlanDayIndex(prefs, dayCount);
     void (async () => {
-      const payload = await fetchReadingPlanDayClient(prefs.planId, idx);
+      const payload = await loadTodayReadingPlanPayload(prefs, { dayCount });
       if (cancelled) return;
-      setDayIndex(idx);
+      setDayIndex(isTripleLoop ? null : idx);
       const titleKey = planTitleKey(prefs.planId);
       const localized = t(titleKey);
       setPlanTitle(localized === titleKey ? payload?.name ?? prefs.planId : localized);
@@ -55,7 +73,7 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [prefs, t]);
+  }, [prefs, t, isTripleLoop, tripleProgressKey]);
 
   const queue = useMemo(() => (readings?.length ? buildReadingPlanChapterQueue(readings) : []), [readings]);
   const currentInQueue = indexInReadingPlanQueue(queue, bookId, chapter);
@@ -80,7 +98,13 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
           {planTitle}
         </p>
       ) : null}
-      {dayIndex != null ? (
+      {isTripleLoop ? (
+        <p className="mt-1 text-[11px] tabular-nums text-amber-800/58 dark:text-stone-500">
+          {t("pages.read.todayPlanDayMeta", { n: String(getReadingPlanDaySinceEpoch()) })}
+          <span className="mx-1.5 text-amber-800/35 dark:text-stone-600">·</span>
+          {t("pages.read.todayPlanAnchorEaster")}
+        </p>
+      ) : dayIndex != null ? (
         <p className="mt-1 text-[11px] tabular-nums text-amber-800/58 dark:text-stone-500">
           {t("pages.read.todayPlanDayMeta", { n: String(dayIndex + 1) })}
         </p>

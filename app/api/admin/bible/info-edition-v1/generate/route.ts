@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readGenerationRolesSync, resolveGenerationRole } from "@/lib/admin/generation-roles-store";
 import { buildInfoEditionV1Messages } from "@/lib/bible/info-edition-v1-prompt";
+import { readerVariantFromRole } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1GenerateProfile, InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
 import { INFO_EDITION_V1_MAX_COMPARE_RUNS } from "@/lib/bible/info-edition-v1-types";
 import { loadChapterFromDefaultTranslation } from "@/lib/bible/load-chapter-from-default-translation";
@@ -131,9 +132,15 @@ export async function POST(req: Request) {
 
   const generations: InfoEditionV1Generation[] = await Promise.all(
     jobs.map(async ({ role, profile: p }) => {
-      const messages = buildInfoEditionV1Messages(loaded, descriptionRules, {
-        systemPrompt: role.systemPrompt,
-      });
+      const variant = readerVariantFromRole(role);
+      const messages = buildInfoEditionV1Messages(
+        loaded,
+        variant === "guide" ? "" : descriptionRules,
+        {
+          systemPrompt: role.systemPrompt,
+          variant,
+        },
+      );
       const resolved = resolveAISettings(p.settings, { profileId: p.id });
       if ("error" in resolved) {
         return {

@@ -310,10 +310,13 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
    */
   const hasNatureVisual = hasConfiguredVideoSrc || hasStillIntro;
   const mediaPolicy = useNatureMediaPolicy();
-  const { blockVideoDecoder, onVideoPlaying } = useShellBackgroundVideoCoordination(videoRef, {
-    enabled: hasConfiguredVideoSrc && !videoBroken,
-    surfaceId: "nature-home",
-  });
+  const { blockVideoDecoder, onVideoPlaying, shellAudioBlocksVideo } = useShellBackgroundVideoCoordination(
+    videoRef,
+    {
+      enabled: hasConfiguredVideoSrc && !videoBroken,
+      surfaceId: "nature-home",
+    },
+  );
 
   useEffect(() => {
     if (!hasNatureVisual) {
@@ -1006,7 +1009,12 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
                 className={[
                   NATURE_BG_COVER_MEDIA,
                   "z-[2] pointer-events-none transition-opacity duration-700 ease-out motion-reduce:transition-none",
-                  posterOnlyLowPower || !introRevealed || !showNatureVideoDecoder ? "opacity-100" : "opacity-0",
+                  posterOnlyLowPower ||
+                  shellAudioBlocksVideo ||
+                  !introRevealed ||
+                  !showNatureVideoDecoder
+                    ? "opacity-100"
+                    : "opacity-0",
                 ].join(" ")}
                 style={{ maxWidth: "none" }}
                 aria-hidden

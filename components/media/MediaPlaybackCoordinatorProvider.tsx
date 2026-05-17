@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
@@ -17,10 +18,9 @@ type VideoGetter = () => HTMLVideoElement | null;
 
 export type MediaPlaybackCoordinatorValue = {
   policy: MediaPlaybackPolicyTier;
-  /** 恒为 false（不再卸载背景视频；电视走短暂暂停后共存） */
+  /** 电视 + 壳层音乐在播/将播：背景改静图，卸载视频解码器 */
   shellAudioBlocksVideo: boolean;
   registerBackgroundVideo: (id: string, getEl: VideoGetter) => () => void;
-  /** 背景视频开始播放；`tvCoexist` 下不掐断壳层音乐 */
   onBackgroundVideoPlaying: () => void;
 };
 
@@ -41,13 +41,22 @@ function waitTwoAnimationFrames(): Promise<void> {
 }
 
 /**
- * 电视：`play()` 前短暂暂停背景视频，成功后恢复静音播放，尽量同时保留画面与音乐。
- * 手机：`normal`，无协调。
+ * 电视：起播音乐前暂停视频；音乐在播时保持静图（不恢复解码，避免黑屏占满）。
+ * 音乐暂停后恢复静音视频。手机：`normal`，无协调。
  */
 export function MediaPlaybackCoordinatorProvider({ children }: { children: ReactNode }) {
   const policy = useMediaPlaybackPolicy();
-  const { registerBeforeShellPlayHandler, registerAfterShellPlayHandler } = useMusicShellPlayback();
+  const { playing, registerBeforeShellPlayHandler } = useMusicShellPlayback();
   const videosRef = useRef(new Map<string, VideoGetter>());
+  const [shellAudioReserved, setShellAudioReserved] = useState(false);
+
+  useEffect(() => {
+    if (playing) return;
+    setShellAudioReserved(false);
+  }, [playing]);
+
+  const shellAudioBlocksVideo =
+    policy === "tvCoexist" && (playing || shellAudioReserved);
 
   const registerBackgroundVideo = useCallback((id: string, getEl: VideoGetter) => {
     videosRef.current.set(id, getEl);
@@ -84,31 +93,33 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
   useEffect(() => {
     return registerBeforeShellPlayHandler(async () => {
       if (policy !== "tvCoexist") return;
+      setShellAudioReserved(true);
       pauseRegisteredVideos();
       await waitTwoAnimationFrames();
     });
   }, [policy, registerBeforeShellPlayHandler, pauseRegisteredVideos]);
 
   useEffect(() => {
-    return registerAfterShellPlayHandler(async () => {
-      if (policy !== "tvCoexist") return;
-      await waitTwoAnimationFrames();
-      resumeRegisteredVideosMuted();
-    });
-  }, [policy, registerAfterShellPlayHandler, resumeRegisteredVideosMuted]);
+    if (policy !== "tvCoexist") return;
+    if (shellAudioBlocksVideo) {
+      pauseRegisteredVideos();
+      return;
+    }
+    void waitTwoAnimationFrames().then(() => resumeRegisteredVideosMuted());
+  }, [policy, shellAudioBlocksVideo, pauseRegisteredVideos, resumeRegisteredVideosMuted]);
 
   const onBackgroundVideoPlaying = useCallback(() => {
-    /* tvCoexist：视频恢复播放时不暂停壳层音乐 */
+    /* 音乐在播时不因视频 onPlaying 掐断音乐 */
   }, []);
 
   const value = useMemo<MediaPlaybackCoordinatorValue>(
     () => ({
       policy,
-      shellAudioBlocksVideo: false,
+      shellAudioBlocksVideo,
       registerBackgroundVideo,
       onBackgroundVideoPlaying,
     }),
-    [policy, registerBackgroundVideo, onBackgroundVideoPlaying],
+    [policy, shellAudioBlocksVideo, registerBackgroundVideo, onBackgroundVideoPlaying],
   );
 
   return (

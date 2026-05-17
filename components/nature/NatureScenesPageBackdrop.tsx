@@ -22,10 +22,13 @@ export function NatureScenesPageBackdrop({ settings }: Props) {
 
   const { videoSrc, posterSrc } = playback;
   const showVideo = Boolean(videoSrc.trim()) && !videoBroken;
-  const { blockVideoDecoder, onVideoPlaying } = useShellBackgroundVideoCoordination(videoRef, {
-    enabled: showVideo,
-    surfaceId: "scenes-backdrop",
-  });
+  const { blockVideoDecoder, onVideoPlaying, shellAudioBlocksVideo } = useShellBackgroundVideoCoordination(
+    videoRef,
+    {
+      enabled: showVideo,
+      surfaceId: "scenes-backdrop",
+    },
+  );
   const showVideoDecoder = showVideo && !blockVideoDecoder;
 
   useEffect(() => {
@@ -71,7 +74,7 @@ export function NatureScenesPageBackdrop({ settings }: Props) {
           className={[
             BG_MEDIA,
             "z-[2] transition-opacity duration-700 ease-out motion-reduce:transition-none",
-            showVideoDecoder && videoReady ? "opacity-0" : "opacity-100",
+            showVideoDecoder && videoReady && !shellAudioBlocksVideo ? "opacity-0" : "opacity-100",
           ].join(" ")}
         />
       ) : null}

@@ -34,6 +34,10 @@ import {
 } from "@/lib/home/nature-home-verse-appearance-prefs";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
 import { defaultNatureHomeActiveVideoId, resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
+import {
+  readNatureBackground1080Pref,
+  writeNatureBackground1080Pref,
+} from "@/lib/nature/nature-video-quality-prefs";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
 import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
@@ -79,6 +83,25 @@ function IconBgSoftFocus(props: { className?: string }) {
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="12" cy="12" r="6.5" stroke="currentColor" strokeWidth="1.35" strokeDasharray="2.2 3.4" opacity="0.85" />
       <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.8 4" opacity="0.55" />
+    </svg>
+  );
+}
+
+function IconBg1080(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={props.className} aria-hidden>
+      <text
+        x="12"
+        y="15.5"
+        textAnchor="middle"
+        fontSize="7.5"
+        fontWeight="650"
+        fill="currentColor"
+        fontFamily="ui-sans-serif, system-ui, sans-serif"
+        letterSpacing="-0.02em"
+      >
+        1080
+      </text>
     </svg>
   );
 }
@@ -199,7 +222,7 @@ const SLOW_INTRO_HINT_DELAY_MS = INTRO_REVEAL_MIN_DELAY_MS + 2500;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
- * 自然：背景视频铺满主列；场景在「场景」页选择；停留约 3s 后挂 1080 解码，整段缓冲完再渐显（弱网仅多等静图）。
+ * 自然：背景视频铺满主列；场景在「场景」页选择；停留约 3s 后挂视频解码（默认 720，可开 1080），整段缓冲完再渐显（弱网仅多等静图）。
  */
 export function NatureVideoExperience({ initial }: Props) {
   const { t } = useLocale();
@@ -224,6 +247,7 @@ export function NatureVideoExperience({ initial }: Props) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
+  const [background1080, setBackground1080] = useState(false);
   const [videoBroken, setVideoBroken] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
@@ -356,9 +380,14 @@ export function NatureVideoExperience({ initial }: Props) {
     return (want ? s.videos.find((v) => v.id === want) : undefined) ?? s.videos[0];
   }, [playbackSettings]);
 
+  const activeSceneHas1080 = Boolean(activeNatureRow?.src1080?.trim());
+
   const { videoSrc, posterSrc, previewStillSrc } = useMemo(
-    () => resolveNaturePlayback(playbackSettings, { prefer1080: true }),
-    [playbackSettings],
+    () =>
+      resolveNaturePlayback(playbackSettings, {
+        prefer1080: background1080 && activeSceneHas1080,
+      }),
+    [playbackSettings, background1080, activeSceneHas1080],
   );
   const stillImageUrl = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
   const posterUrl = stillImageUrl;
@@ -366,8 +395,9 @@ export function NatureVideoExperience({ initial }: Props) {
   /** 仅场景 id + 静图变化时重置揭晓 */
   const sceneIntroKey = useMemo(() => {
     const id = activeNatureRow?.id?.trim() ?? "";
-    return `${id}\0${posterUrl}`;
-  }, [activeNatureRow?.id, posterUrl]);
+    const tier = background1080 && activeSceneHas1080 ? "1080" : "720";
+    return `${id}\0${posterUrl}\0${tier}`;
+  }, [activeNatureRow?.id, posterUrl, background1080, activeSceneHas1080]);
   /** 配置里是否有主片地址（与解码是否成功无关） */
   const hasConfiguredVideoSrc = Boolean(videoSrc.trim());
   /** 可挂载 `<video>` 且不处于解码错误态 */
@@ -732,6 +762,10 @@ export function NatureVideoExperience({ initial }: Props) {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
   }, []);
 
+  useLayoutEffect(() => {
+    setBackground1080(readNatureBackground1080Pref());
+  }, []);
+
   useEffect(() => {
     const syncAppearance = () => setNatureVerseAppearance(readNatureHomeVerseAppearance());
     window.addEventListener(NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT, syncAppearance);
@@ -772,6 +806,16 @@ export function NatureVideoExperience({ initial }: Props) {
     setVerseAppearancePanelOpen((wasOpen) => {
       const next = !wasOpen;
       if (next) setNatureSoftFocusPanelOpen(false);
+      return next;
+    });
+  }, []);
+
+  const onBackground1080Toggle = useCallback(() => {
+    setNatureSoftFocusPanelOpen(false);
+    setVerseAppearancePanelOpen(false);
+    setBackground1080((prev) => {
+      const next = !prev;
+      writeNatureBackground1080Pref(next);
       return next;
     });
   }, []);
@@ -891,6 +935,23 @@ export function NatureVideoExperience({ initial }: Props) {
                 ) : (
                   <IconBell className="h-[1.25rem] w-[1.25rem] opacity-90" />
                 )}
+              </button>
+            ) : null}
+            {hasNatureVisual && activeSceneHas1080 ? (
+              <button
+                type="button"
+                onClick={onBackground1080Toggle}
+                aria-pressed={background1080}
+                aria-label={t("nature.bg1080ToggleAria")}
+                className={NATURE_BELL_BTN}
+              >
+                <IconBg1080
+                  className={
+                    background1080
+                      ? "h-[1.35rem] w-[1.35rem] text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.95))_drop-shadow(0_0_18px_rgba(200,225,255,0.55))]"
+                      : "h-[1.35rem] w-[1.35rem] opacity-90"
+                  }
+                />
               </button>
             ) : null}
             {hasNatureVisual ? (
@@ -1052,7 +1113,7 @@ export function NatureVideoExperience({ initial }: Props) {
             {showNatureVideoDecoder ? (
               <video
                 ref={videoRef}
-                key={activeNatureRow?.id ?? videoSrc}
+                key={`${activeNatureRow?.id ?? videoSrc}\0${background1080 && activeSceneHas1080 ? "1080" : "720"}`}
                 className={[
                   NATURE_BG_COVER_MEDIA,
                   "z-[1] border-0 outline-none",

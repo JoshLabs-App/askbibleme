@@ -1,5 +1,8 @@
-/** 互斥策略：`normal` 不改变现有手机/桌面行为；`strictExclusive` 用于电视等单管线设备。 */
-export type MediaPlaybackPolicyTier = "normal" | "strictExclusive";
+/**
+ * - `normal`：手机/桌面，背景静音视频与壳层音乐可同时存在。
+ * - `tvCoexist`：电视等：起播音乐前短暂让出视频，成功后尝试恢复静音视频（不卸载解码器）。
+ */
+export type MediaPlaybackPolicyTier = "normal" | "tvCoexist";
 
 const TV_UA_RE =
   /Smart-?TV|SMART-TV|SmartTV|Tizen|Web0S|webOS|NetCast|BRAVIA|Viera|HbbTV|Roku|CrKey|GoogleTV|AppleTV|AFTT|AFTB|AFTM|AFTS|Silk\/|Kindle|PlayStation|Xbox|VIDAA|Opera TV/i;
@@ -9,7 +12,7 @@ function isIosTabletOrPhoneUa(ua: string): boolean {
 }
 
 /**
- * 手机 / 平板（含 iPad）：永不进入 strict，避免方案 A 影响现有「动图 + 音乐」体验。
+ * 手机 / 平板（含 iPad）：永不进入 TV 协调，避免影响「动图 + 音乐」。
  */
 export function isLikelyMobilePhoneUserAgent(ua: string = typeof navigator !== "undefined" ? navigator.userAgent : ""): boolean {
   if (!ua) return false;
@@ -17,14 +20,13 @@ export function isLikelyMobilePhoneUserAgent(ua: string = typeof navigator !== "
   if (/Android/i.test(ua)) {
     if (/TV|AFT/i.test(ua)) return false;
     if (/Mobile/i.test(ua)) return true;
-    // 部分 Android 手机 UA 无 Mobile，但也不是 TV
     return !TV_UA_RE.test(ua);
   }
   if (/Mobile|iPhone|iPod|Windows Phone/i.test(ua)) return true;
   return false;
 }
 
-/** 电视 / 机顶盒 / 游戏主机浏览器等：通常无法稳定双路媒体。 */
+/** 电视 / 机顶盒 / 游戏主机浏览器等。 */
 export function isTvLikeUserAgent(ua: string = typeof navigator !== "undefined" ? navigator.userAgent : ""): boolean {
   if (!ua) return false;
   if (isLikelyMobilePhoneUserAgent(ua)) return false;
@@ -32,12 +34,12 @@ export function isTvLikeUserAgent(ua: string = typeof navigator !== "undefined" 
 }
 
 /**
- * 解析媒体互斥档位。手机恒为 `normal`；电视为 `strictExclusive`；桌面默认 `normal`。
+ * 解析媒体策略。手机恒为 `normal`；电视为 `tvCoexist`；桌面默认 `normal`。
  */
 export function resolveMediaPlaybackPolicyTier(
   ua: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
 ): MediaPlaybackPolicyTier {
   if (!ua || isLikelyMobilePhoneUserAgent(ua)) return "normal";
-  if (isTvLikeUserAgent(ua)) return "strictExclusive";
+  if (isTvLikeUserAgent(ua)) return "tvCoexist";
   return "normal";
 }

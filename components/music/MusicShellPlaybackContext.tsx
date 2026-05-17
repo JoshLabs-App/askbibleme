@@ -147,8 +147,10 @@ export type MusicShellPlaybackValue = {
   setSleepTimerMinutes: (minutes: MusicShellSleepTimerMinutes) => void;
   /** 定时到时在 `pausePlayback` 之后调用；用于自然页混音等其它 `<audio>` */
   registerSleepPauseHandler: (handler: () => void) => () => void;
-  /** 壳层 `play()` 之前调用（电视互斥：先让出视频解码器） */
+  /** 壳层 `play()` 之前调用（电视：先短暂暂停背景视频） */
   registerBeforeShellPlayHandler: (handler: () => void | Promise<void>) => () => void;
+  /** 壳层 `play()` 尝试之后调用（电视：恢复静音背景视频） */
+  registerAfterShellPlayHandler: (handler: () => void | Promise<void>) => () => void;
   /** 壳层 `<audio>` 静音（首页顶栏铃铛）；不改变播放/暂停状态 */
   shellAudioMuted: boolean;
   setShellAudioMuted: (muted: boolean) => void;
@@ -218,6 +220,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   scriptureAudioRepeatRef.current = scriptureAudioRepeatMode;
   const sleepPauseHandlersRef = useRef(new Set<() => void>());
   const beforeShellPlayHandlersRef = useRef(new Set<() => void | Promise<void>>());
+  const afterShellPlayHandlersRef = useRef(new Set<() => void | Promise<void>>());
   const playbackOverrideRef = useRef<string | null>(null);
   playbackOverrideRef.current = playbackOverride;
   const devicePlaybackRef = useRef<DevicePlaybackCell | null>(null);
@@ -327,8 +330,25 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     };
   }, []);
 
+  const registerAfterShellPlayHandler = useCallback((handler: () => void | Promise<void>) => {
+    afterShellPlayHandlersRef.current.add(handler);
+    return () => {
+      afterShellPlayHandlersRef.current.delete(handler);
+    };
+  }, []);
+
   const runBeforeShellPlayHandlers = useCallback(async () => {
     for (const fn of beforeShellPlayHandlersRef.current) {
+      try {
+        await fn();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
+
+  const runAfterShellPlayHandlers = useCallback(async () => {
+    for (const fn of afterShellPlayHandlersRef.current) {
       try {
         await fn();
       } catch {
@@ -345,9 +365,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         setPlaying(true);
       } catch {
         setPlaying(false);
+      } finally {
+        await runAfterShellPlayHandlers();
       }
     },
-    [runBeforeShellPlayHandlers],
+    [runBeforeShellPlayHandlers, runAfterShellPlayHandlers],
   );
 
   const setShellAudioMuted = useCallback((muted: boolean) => {
@@ -1045,6 +1067,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       setSleepTimerMinutes,
       registerSleepPauseHandler,
       registerBeforeShellPlayHandler,
+      registerAfterShellPlayHandler,
       shellAudioMuted,
       setShellAudioMuted,
       scriptureAudioRepeatMode,
@@ -1075,6 +1098,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       setSleepTimerMinutes,
       registerSleepPauseHandler,
       registerBeforeShellPlayHandler,
+      registerAfterShellPlayHandler,
       shellAudioMuted,
       setShellAudioMuted,
       scriptureAudioRepeatMode,

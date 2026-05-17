@@ -7,7 +7,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   type ReactNode,
 } from "react";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
@@ -18,10 +17,10 @@ type VideoGetter = () => HTMLVideoElement | null;
 
 export type MediaPlaybackCoordinatorValue = {
   policy: MediaPlaybackPolicyTier;
-  /** strict + 壳层音乐在播：背景视频应停解码（仅电视等） */
+  /** 恒为 false（不再卸载背景视频；电视走短暂暂停后共存） */
   shellAudioBlocksVideo: boolean;
   registerBackgroundVideo: (id: string, getEl: VideoGetter) => () => void;
-  /** 背景视频开始播放（strict：暂停壳层音乐） */
+  /** 背景视频开始播放；`tvCoexist` 下不掐断壳层音乐 */
   onBackgroundVideoPlaying: () => void;
 };
 
@@ -35,29 +34,20 @@ export function useMediaPlaybackCoordinator(): MediaPlaybackCoordinatorValue {
   return ctx;
 }
 
+function waitTwoAnimationFrames(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
 /**
- * 方案 A：壳层 `<audio>` 与背景 `<video>` 互斥（仅 `strictExclusive`）。
- * 方案 B：策略由 UA 判定；手机恒为 `normal`，行为与改前一致。
+ * 电视：`play()` 前短暂暂停背景视频，成功后恢复静音播放，尽量同时保留画面与音乐。
+ * 手机：`normal`，无协调。
  */
 export function MediaPlaybackCoordinatorProvider({ children }: { children: ReactNode }) {
   const policy = useMediaPlaybackPolicy();
-  const { playing, pausePlayback, registerBeforeShellPlayHandler } = useMusicShellPlayback();
+  const { registerBeforeShellPlayHandler, registerAfterShellPlayHandler } = useMusicShellPlayback();
   const videosRef = useRef(new Map<string, VideoGetter>());
-  const pauseShellRef = useRef(pausePlayback);
-  /** 电视：`play()` 之前先让出视频，避免音频起不来 */
-  const [shellAudioReserved, setShellAudioReserved] = useState(false);
-
-  useEffect(() => {
-    pauseShellRef.current = pausePlayback;
-  }, [pausePlayback]);
-
-  useEffect(() => {
-    if (playing) return;
-    setShellAudioReserved(false);
-  }, [playing]);
-
-  const shellAudioBlocksVideo =
-    policy === "strictExclusive" && (playing || shellAudioReserved);
 
   const registerBackgroundVideo = useCallback((id: string, getEl: VideoGetter) => {
     videosRef.current.set(id, getEl);
@@ -78,36 +68,47 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
     }
   }, []);
 
-  useEffect(() => {
-    if (!shellAudioBlocksVideo) return;
-    pauseRegisteredVideos();
-  }, [shellAudioBlocksVideo, pauseRegisteredVideos]);
+  const resumeRegisteredVideosMuted = useCallback(() => {
+    for (const getEl of videosRef.current.values()) {
+      const v = getEl();
+      if (!v) continue;
+      try {
+        v.muted = true;
+        if (v.paused) void v.play().catch(() => {});
+      } catch {
+        /* ignore */
+      }
+    }
+  }, []);
 
   useEffect(() => {
     return registerBeforeShellPlayHandler(async () => {
-      if (policy !== "strictExclusive") return;
-      setShellAudioReserved(true);
+      if (policy !== "tvCoexist") return;
       pauseRegisteredVideos();
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      });
+      await waitTwoAnimationFrames();
     });
   }, [policy, registerBeforeShellPlayHandler, pauseRegisteredVideos]);
 
+  useEffect(() => {
+    return registerAfterShellPlayHandler(async () => {
+      if (policy !== "tvCoexist") return;
+      await waitTwoAnimationFrames();
+      resumeRegisteredVideosMuted();
+    });
+  }, [policy, registerAfterShellPlayHandler, resumeRegisteredVideosMuted]);
+
   const onBackgroundVideoPlaying = useCallback(() => {
-    if (policy !== "strictExclusive") return;
-    if (!playing) return;
-    pauseShellRef.current();
-  }, [policy, playing]);
+    /* tvCoexist：视频恢复播放时不暂停壳层音乐 */
+  }, []);
 
   const value = useMemo<MediaPlaybackCoordinatorValue>(
     () => ({
       policy,
-      shellAudioBlocksVideo,
+      shellAudioBlocksVideo: false,
       registerBackgroundVideo,
       onBackgroundVideoPlaying,
     }),
-    [policy, shellAudioBlocksVideo, registerBackgroundVideo, onBackgroundVideoPlaying],
+    [policy, registerBackgroundVideo, onBackgroundVideoPlaying],
   );
 
   return (

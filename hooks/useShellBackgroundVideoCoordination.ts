@@ -11,26 +11,23 @@ type Options = {
 };
 
 /**
- * 背景静音视频与壳层音乐的协调（仅电视 `strictExclusive` 生效）。
- * `blockVideoDecoder` 在手机上恒为 false。
+ * 注册背景视频供电视协调器短暂暂停/恢复；不再卸载 `<video>`。
+ * `blockVideoDecoder` 恒为 false。
  */
 export function useShellBackgroundVideoCoordination(
   videoRef: RefObject<HTMLVideoElement | null>,
   { enabled, surfaceId }: Options,
 ) {
-  const { policy, shellAudioBlocksVideo, registerBackgroundVideo, onBackgroundVideoPlaying } =
-    useMediaPlaybackCoordinator();
+  const { policy, registerBackgroundVideo, onBackgroundVideoPlaying } = useMediaPlaybackCoordinator();
 
   useEffect(() => {
     if (!enabled) return;
     return registerBackgroundVideo(surfaceId, () => videoRef.current);
   }, [enabled, surfaceId, registerBackgroundVideo, videoRef]);
 
-  const blockVideoDecoder = policy === "strictExclusive" && shellAudioBlocksVideo;
-
   const handleVideoPlaying = useCallback(() => {
     onBackgroundVideoPlaying();
   }, [onBackgroundVideoPlaying]);
 
-  return { blockVideoDecoder, onVideoPlaying: handleVideoPlaying, policy };
+  return { blockVideoDecoder: false, onVideoPlaying: handleVideoPlaying, policy };
 }

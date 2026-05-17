@@ -8,15 +8,18 @@ import { GoldenVersesChromelessProvider, useGoldenVersesChromeless } from "@/com
 import { GoldenVersesClient } from "@/components/verse/GoldenVersesClient";
 import { GoldenVersesTopActions } from "@/components/verse/GoldenVersesTopActions";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
+import { useGoldenVersePageBackgrounds } from "@/hooks/useGoldenVersePageBackgrounds";
 import { useGoldenVersePageTemplateId } from "@/hooks/useGoldenVersePageTemplateId";
+import type { GoldenVerseBackgroundItem } from "@/lib/golden-verses/background-uploads";
 import { resolveGoldenVersePageTemplateImageUrl } from "@/lib/verse/golden-verse-page-templates";
 
 type Props = {
-  goldenBackgroundImageUrl: string | null;
+  uploadedBackgrounds: readonly GoldenVerseBackgroundItem[];
 };
 
 type TopActionsExtras = {
-  customBackgroundUrl: string | null;
+  uploadedBackgrounds: readonly GoldenVerseBackgroundItem[];
+  refreshPageBackgrounds: () => Promise<GoldenVerseBackgroundItem[]>;
 };
 
 /**
@@ -104,7 +107,11 @@ function GoldenVersesNatureLikeStage({
           tone="onLight"
           landscapeImmersive={false}
           rightAccessory={
-            <GoldenVersesTopActions layout="inline" customBackgroundUrl={topActionsExtras.customBackgroundUrl} />
+            <GoldenVersesTopActions
+              layout="inline"
+              uploadedBackgrounds={topActionsExtras.uploadedBackgrounds}
+              refreshPageBackgrounds={topActionsExtras.refreshPageBackgrounds}
+            />
           }
         />
       ) : null}
@@ -135,7 +142,11 @@ function GoldenVersesNatureLikeStage({
       </div>
 
       {chromeless ? (
-        <GoldenVersesTopActions layout="floating" customBackgroundUrl={topActionsExtras.customBackgroundUrl} />
+        <GoldenVersesTopActions
+          layout="floating"
+          uploadedBackgrounds={topActionsExtras.uploadedBackgrounds}
+          refreshPageBackgrounds={topActionsExtras.refreshPageBackgrounds}
+        />
       ) : null}
     </div>
   );
@@ -151,7 +162,11 @@ function GoldenVersesPlainShell({ topActionsExtras }: { topActionsExtras: TopAct
         immersive={chromeless}
         topBarRightAccessory={
           chromeless ? null : (
-            <GoldenVersesTopActions layout="inline" customBackgroundUrl={topActionsExtras.customBackgroundUrl} />
+            <GoldenVersesTopActions
+              layout="inline"
+              uploadedBackgrounds={topActionsExtras.uploadedBackgrounds}
+              refreshPageBackgrounds={topActionsExtras.refreshPageBackgrounds}
+            />
           )
         }
         topBarTone="onLight"
@@ -159,19 +174,24 @@ function GoldenVersesPlainShell({ topActionsExtras }: { topActionsExtras: TopAct
         <GoldenVersesClient />
       </ShellTemplateChromeLayout>
       {chromeless ? (
-        <GoldenVersesTopActions layout="floating" customBackgroundUrl={topActionsExtras.customBackgroundUrl} />
+        <GoldenVersesTopActions
+          layout="floating"
+          uploadedBackgrounds={topActionsExtras.uploadedBackgrounds}
+          refreshPageBackgrounds={topActionsExtras.refreshPageBackgrounds}
+        />
       ) : null}
     </>
   );
 }
 
-function GoldenVersesPageClientInner({ goldenBackgroundImageUrl }: Props) {
-  const templateId = useGoldenVersePageTemplateId(goldenBackgroundImageUrl);
-  const imageSrc = resolveGoldenVersePageTemplateImageUrl(templateId, goldenBackgroundImageUrl);
+function GoldenVersesPageClientInner({ uploadedBackgrounds: initialBackgrounds }: Props) {
+  const { backgrounds, refresh } = useGoldenVersePageBackgrounds(initialBackgrounds);
+  const templateId = useGoldenVersePageTemplateId(backgrounds);
+  const imageSrc = resolveGoldenVersePageTemplateImageUrl(templateId, backgrounds);
 
   const topActionsExtras: TopActionsExtras = useMemo(
-    () => ({ customBackgroundUrl: goldenBackgroundImageUrl }),
-    [goldenBackgroundImageUrl],
+    () => ({ uploadedBackgrounds: backgrounds, refreshPageBackgrounds: refresh }),
+    [backgrounds, refresh],
   );
 
   if (imageSrc) {

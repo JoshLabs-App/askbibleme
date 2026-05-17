@@ -3,6 +3,7 @@
 import { useGoldenVersesChromeless } from "@/components/verse/GoldenVersesChromelessContext";
 import { GoldenVerseTextScaleControls } from "@/components/verse/GoldenVerseTextScaleControls";
 import { GoldenVersesPageTemplatePicker } from "@/components/verse/GoldenVersesPageTemplatePicker";
+import type { GoldenVerseBackgroundItem } from "@/lib/golden-verses/background-uploads";
 import { GoldenVersesSettingsTopBar } from "@/components/verse/GoldenVersesSettingsTopBar";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { exitFullscreenCompat } from "@/lib/dom/fullscreen";
@@ -45,8 +46,9 @@ type Props = {
   layout: "inline" | "floating";
   /** 与 `GoldenVersesSettingsTopBar` 一致 */
   settingsVariant?: "light" | "dark";
-  /** 后台上传的自定义底图；供页模板选择器 */
-  customBackgroundUrl?: string | null;
+  /** 后台实际上传的金句页背景目录 */
+  uploadedBackgrounds?: readonly GoldenVerseBackgroundItem[];
+  refreshPageBackgrounds?: () => Promise<GoldenVerseBackgroundItem[]>;
 };
 
 /**
@@ -55,7 +57,8 @@ type Props = {
 export function GoldenVersesTopActions({
   layout,
   settingsVariant,
-  customBackgroundUrl = null,
+  uploadedBackgrounds = [],
+  refreshPageBackgrounds,
 }: Props) {
   const { t } = useLocale();
   const { chromeless, manualChromeless, landscapeNarrow, setManualChromeless } = useGoldenVersesChromeless();
@@ -101,10 +104,13 @@ export function GoldenVersesTopActions({
         )}
       </button>
       <GoldenVerseTextScaleControls variant={settingsVariant ?? (floating ? "dark" : "light")} />
-      <GoldenVersesPageTemplatePicker
-        customUploadUrl={customBackgroundUrl}
-        variant={settingsVariant ?? (floating ? "dark" : "light")}
-      />
+      {uploadedBackgrounds.length > 0 ? (
+        <GoldenVersesPageTemplatePicker
+          uploadedBackgrounds={uploadedBackgrounds}
+          refreshPageBackgrounds={refreshPageBackgrounds}
+          variant={settingsVariant ?? (floating ? "dark" : "light")}
+        />
+      ) : null}
       <GoldenVersesSettingsTopBar variant={settingsVariant ?? (floating ? "dark" : "light")} />
     </div>
   );

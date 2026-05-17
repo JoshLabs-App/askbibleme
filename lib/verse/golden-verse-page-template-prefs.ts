@@ -1,3 +1,4 @@
+import type { GoldenVerseBackgroundItem } from "@/lib/golden-verses/background-uploads";
 import {
   defaultGoldenVersePageTemplateId,
   normalizeGoldenVersePageTemplateId,
@@ -14,11 +15,11 @@ export type GoldenVersePageTemplatePrefsV1 = {
 };
 
 export function readGoldenVersePageTemplatePrefs(
-  customUploadUrl: string | null,
+  backgrounds: readonly GoldenVerseBackgroundItem[],
 ): GoldenVersePageTemplatePrefsV1 {
   const fallback: GoldenVersePageTemplatePrefsV1 = {
     version: 1,
-    templateId: defaultGoldenVersePageTemplateId(customUploadUrl),
+    templateId: defaultGoldenVersePageTemplateId(backgrounds),
   };
   if (typeof window === "undefined") return fallback;
   try {
@@ -26,22 +27,22 @@ export function readGoldenVersePageTemplatePrefs(
     if (!raw?.trim()) return fallback;
     const p = JSON.parse(raw) as Partial<GoldenVersePageTemplatePrefsV1>;
     if (p?.version !== 1) return fallback;
-    const templateId = normalizeGoldenVersePageTemplateId(p.templateId);
-    if (templateId === "custom" && !customUploadUrl?.trim()) {
-      return { version: 1, templateId: "wide" };
-    }
+    const templateId = normalizeGoldenVersePageTemplateId(p.templateId, backgrounds);
     return { version: 1, templateId };
   } catch {
     return fallback;
   }
 }
 
-export function writeGoldenVersePageTemplatePrefs(templateId: GoldenVersePageTemplateId): void {
+export function writeGoldenVersePageTemplatePrefs(
+  templateId: GoldenVersePageTemplateId,
+  backgrounds: readonly GoldenVerseBackgroundItem[],
+): void {
   if (typeof window === "undefined") return;
   try {
     const normalized: GoldenVersePageTemplatePrefsV1 = {
       version: 1,
-      templateId: normalizeGoldenVersePageTemplateId(templateId),
+      templateId: normalizeGoldenVersePageTemplateId(templateId, backgrounds),
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
     window.dispatchEvent(new Event(GOLDEN_VERSE_PAGE_TEMPLATE_UPDATED_EVENT));
@@ -50,7 +51,6 @@ export function writeGoldenVersePageTemplatePrefs(templateId: GoldenVersePageTem
   }
 }
 
-/** `useSyncExternalStore`：SSR 用默认模板，客户端 hydration 后再读 localStorage */
 export function subscribeGoldenVersePageTemplate(onStoreChange: () => void): () => void {
   const onStorage = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) onStoreChange();
@@ -64,13 +64,13 @@ export function subscribeGoldenVersePageTemplate(onStoreChange: () => void): () 
 }
 
 export function getGoldenVersePageTemplateClientSnapshot(
-  customUploadUrl: string | null,
+  backgrounds: readonly GoldenVerseBackgroundItem[],
 ): GoldenVersePageTemplateId {
-  return readGoldenVersePageTemplatePrefs(customUploadUrl).templateId;
+  return readGoldenVersePageTemplatePrefs(backgrounds).templateId;
 }
 
 export function getGoldenVersePageTemplateServerSnapshot(
-  customUploadUrl: string | null,
+  backgrounds: readonly GoldenVerseBackgroundItem[],
 ): GoldenVersePageTemplateId {
-  return defaultGoldenVersePageTemplateId(customUploadUrl);
+  return defaultGoldenVersePageTemplateId(backgrounds);
 }

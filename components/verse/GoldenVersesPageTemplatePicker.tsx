@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useGoldenVersePageTemplateId } from "@/hooks/useGoldenVersePageTemplateId";
+import type { GoldenVerseBackgroundItem } from "@/lib/golden-verses/background-uploads";
 import { writeGoldenVersePageTemplatePrefs } from "@/lib/verse/golden-verse-page-template-prefs";
 import {
+  goldenVersePageTemplateAriaLabel,
   listGoldenVersePageTemplateOptions,
   resolveGoldenVersePageTemplateImageUrl,
   type GoldenVersePageTemplateId,
@@ -21,25 +23,35 @@ function IconLayoutTemplate(props: { className?: string }) {
 }
 
 type Props = {
-  customUploadUrl: string | null;
+  uploadedBackgrounds: readonly GoldenVerseBackgroundItem[];
+  refreshPageBackgrounds?: () => Promise<GoldenVerseBackgroundItem[]>;
   variant?: "light" | "dark";
 };
 
 /**
  * 金句页右上：页模板（底图）选择，横向缩略图条。
  */
-export function GoldenVersesPageTemplatePicker({ customUploadUrl, variant = "light" }: Props) {
+export function GoldenVersesPageTemplatePicker({
+  uploadedBackgrounds,
+  refreshPageBackgrounds,
+  variant = "light",
+}: Props) {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
-  const templateId = useGoldenVersePageTemplateId(customUploadUrl);
+  const templateId = useGoldenVersePageTemplateId(uploadedBackgrounds);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  const options = listGoldenVersePageTemplateOptions(customUploadUrl);
+  const options = listGoldenVersePageTemplateOptions(uploadedBackgrounds);
 
   const applyTemplate = (id: GoldenVersePageTemplateId) => {
-    writeGoldenVersePageTemplatePrefs(id);
+    writeGoldenVersePageTemplatePrefs(id, uploadedBackgrounds);
     setOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) return;
+    void refreshPageBackgrounds?.();
+  }, [open, refreshPageBackgrounds]);
 
   useEffect(() => {
     if (!open) return;
@@ -93,17 +105,18 @@ export function GoldenVersesPageTemplatePicker({ customUploadUrl, variant = "lig
             aria-label={t("pages.goldenVerses.pageTemplate")}
           >
             {options.map((opt) => {
-              const thumbSrc = resolveGoldenVersePageTemplateImageUrl(opt.id, customUploadUrl);
+              const thumbSrc = resolveGoldenVersePageTemplateImageUrl(opt.id, uploadedBackgrounds);
               if (!thumbSrc) return null;
               const selected = templateId === opt.id;
+              const aria = goldenVersePageTemplateAriaLabel(opt, t);
               return (
                 <button
                   key={opt.id}
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  aria-label={t(`pages.goldenVerses.pageTemplates.${opt.id}`)}
-                  title={t(`pages.goldenVerses.pageTemplates.${opt.id}`)}
+                  aria-label={aria}
+                  title={aria}
                   onClick={() => applyTemplate(opt.id)}
                   className={[
                     "relative h-[4.25rem] w-[3.35rem] shrink-0 overflow-hidden rounded-lg border-2 transition active:scale-[0.97]",

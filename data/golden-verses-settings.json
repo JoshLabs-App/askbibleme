@@ -1,4 +1,39 @@
 {
-  "v": 1,
-  "backgroundImageUrl": "/golden-verses/bg-uploads/e09a7e8fc4284ba5947a5b8686f67d81.png"
+  "v": 2,
+  "backgrounds": [
+    {
+      "id": "e09a7e8fc4284ba5947a5b8686f67d81",
+      "url": "/golden-verses/bg-uploads/e09a7e8fc4284ba5947a5b8686f67d81.png",
+      "filename": "e09a7e8fc4284ba5947a5b8686f67d81.png"
+    },
+    {
+      "id": "72ff670db2a14908a5bc36110c7991ad",
+      "url": "/golden-verses/bg-uploads/72ff670db2a14908a5bc36110c7991ad.png",
+      "filename": "72ff670db2a14908a5bc36110c7991ad.png"
+    },
+    {
+      "id": "2b8b08709a5244a9890aaa4f1d3d09d6",
+      "url": "/golden-verses/bg-uploads/2b8b08709a5244a9890aaa4f1d3d09d6.png",
+      "filename": "2b8b08709a5244a9890aaa4f1d3d09d6.png",
+      "addedAt": "2026-05-17T23:06:13.566Z"
+    },
+    {
+      "id": "fc7831e3d13d4c20911a7bcd93e55d21",
+      "url": "/golden-verses/bg-uploads/fc7831e3d13d4c20911a7bcd93e55d21.png",
+      "filename": "fc7831e3d13d4c20911a7bcd93e55d21.png",
+      "addedAt": "2026-05-17T23:06:32.228Z"
+    },
+    {
+      "id": "c135f3ec4da843dea1cb2ad56bd87e33",
+      "url": "/golden-verses/bg-uploads/c135f3ec4da843dea1cb2ad56bd87e33.png",
+      "filename": "c135f3ec4da843dea1cb2ad56bd87e33.png",
+      "addedAt": "2026-05-17T23:06:39.178Z"
+    },
+    {
+      "id": "a7b21ace81304564bc4b8a4689586412",
+      "url": "/golden-verses/bg-uploads/a7b21ace81304564bc4b8a4689586412.png",
+      "filename": "a7b21ace81304564bc4b8a4689586412.png",
+      "addedAt": "2026-05-17T23:06:49.012Z"
+    }
+  ]
 }

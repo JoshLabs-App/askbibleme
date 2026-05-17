@@ -45,6 +45,11 @@ const overview: {
         hint: "主题库 12,585 去重节按收录次数排序（需先 import）",
       },
       { href: "/admin/read/golden-verses", label: "金句", hint: "首页轮播与主题分类经节（只读总览）" },
+      {
+        href: "/admin/read/verse-backgrounds",
+        label: "金句页背景",
+        hint: "上传 / 删除 /verse 页可选底图",
+      },
       { href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" },
       {
         href: "/admin/read/info-edition-v1",

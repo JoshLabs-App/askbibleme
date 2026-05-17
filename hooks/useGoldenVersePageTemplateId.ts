@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import type { GoldenVerseBackgroundItem } from "@/lib/golden-verses/background-uploads";
 import {
   getGoldenVersePageTemplateClientSnapshot,
   getGoldenVersePageTemplateServerSnapshot,
@@ -10,11 +11,11 @@ import type { GoldenVersePageTemplateId } from "@/lib/verse/golden-verse-page-te
 
 /** 金句页底图模板 id：SSR / 首帧与默认一致，hydration 后同步本机偏好 */
 export function useGoldenVersePageTemplateId(
-  customUploadUrl: string | null,
+  backgrounds: readonly GoldenVerseBackgroundItem[],
 ): GoldenVersePageTemplateId {
   return useSyncExternalStore(
     subscribeGoldenVersePageTemplate,
-    () => getGoldenVersePageTemplateClientSnapshot(customUploadUrl),
-    () => getGoldenVersePageTemplateServerSnapshot(customUploadUrl),
+    () => getGoldenVersePageTemplateClientSnapshot(backgrounds),
+    () => getGoldenVersePageTemplateServerSnapshot(backgrounds),
   );
 }

@@ -301,6 +301,7 @@
       "goldenVerseThemes": "Verse themes",
       "verseRepeatRank": "Verse repeat rank",
       "goldenVerses": "Golden verses",
+      "versePageBackgrounds": "Verse page backgrounds",
       "explore": "Explore",
       "mediaLibrary": "Upload library"
     },
@@ -529,6 +530,18 @@
       "saveDone": "Wrote {{count}} verse ref(s) (cap {{cap}}).",
       "saveFailed": "Save failed (HTTP {{status}})",
       "selectionLoadFailed": "Could not load saved selection (HTTP {{status}})"
+    },
+    "versePageBackgrounds": {
+      "upload": "Upload background",
+      "uploading": "Uploading…",
+      "uploadDone": "Uploaded and added to the catalog.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "deleteConfirm": "Delete this background? The file and catalog entry will be removed.",
+      "deleteDone": "Deleted.",
+      "loading": "Loading…",
+      "empty": "No uploaded backgrounds yet. JPG / PNG / WebP / GIF, max 25 MB each.",
+      "openVersePage": "Open /verse preview"
     },
     "goldenVerseThemes": {
       "title": "Golden verse themes",
@@ -935,7 +948,7 @@
       "textSizeHint": "Use A− / A＋ for this page only. Wide range (about 35%–1000%), saved separately from Nature home.",
       "pageTemplate": "Page template",
       "pageTemplates": {
-        "custom": "Uploaded",
+        "upload": "Upload {{id}}",
         "wide": "Wide scroll",
         "scroll": "Tall scroll",
         "scroll2": "Dark scroll",

@@ -1,23 +1,11 @@
-import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
-import { writeGoldenVersesSettings } from "@/lib/golden-verses/settings-file";
+import { saveGoldenVerseBackgroundFile } from "@/lib/golden-verses/background-uploads";
+import { addGoldenVerseBackground } from "@/lib/golden-verses/settings-file";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
-const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
-
-const ALLOWED_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
-
-function extFromName(name: string): string {
-  const n = name.toLowerCase();
-  const i = n.lastIndexOf(".");
-  if (i < 0) return "";
-  return n.slice(i);
-}
-
 /**
- * 金句页背景图 → `public/golden-verses/bg-uploads/`，并写入 `data/golden-verses-settings.json`。
+ * 金句页背景图 → `public/golden-verses/bg-uploads/`，追加到 `data/golden-verses-settings.json` 目录。
+ * 推荐在后台「金句页背景」集中管理；本路由保留供脚本或旧入口调用。
  */
 export async function POST(req: Request) {
   if (!isStudioDiskSaveAllowed(req)) {
@@ -42,57 +30,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "缺少 file 字段。" }, { status: 400 });
   }
 
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: `文件过大（上限 ${Math.round(MAX_BYTES / 1024 / 1024)} MB）。` },
-      { status: 400 },
-    );
-  }
-
-  const origName = file.name || "image";
-  const ext = extFromName(origName);
-  if (!ALLOWED_EXT.has(ext)) {
-    return NextResponse.json(
-      {
-        error: `不支持的扩展名 ${ext || "（无）"}。允许：${[...ALLOWED_EXT].join(" ")}`,
-      },
-      { status: 400 },
-    );
-  }
-
-  const base = randomUUID().replace(/-/g, "");
   const cwd = process.cwd();
-  const uploadsDir = path.resolve(cwd, "public", "golden-verses", "bg-uploads");
-  const outName = `${base}${ext}`;
-  const outPath = path.resolve(uploadsDir, outName);
-  const rel = path.relative(uploadsDir, outPath);
-  if (rel.startsWith("..") || path.isAbsolute(rel)) {
-    return NextResponse.json({ error: "路径校验失败。" }, { status: 500 });
-  }
-
-  const publicUrl = `/golden-verses/bg-uploads/${outName}`;
-  const buf = Buffer.from(await file.arrayBuffer());
   try {
-    await fs.mkdir(uploadsDir, { recursive: true });
-    await fs.writeFile(outPath, buf);
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: `写入失败：${msg}` }, { status: 500 });
-  }
-
-  try {
-    await writeGoldenVersesSettings(cwd, {
-      v: 1,
-      backgroundImageUrl: publicUrl,
+    const saved = await saveGoldenVerseBackgroundFile(cwd, file);
+    const item = { ...saved, addedAt: new Date().toISOString() };
+    await addGoldenVerseBackground(cwd, item);
+    return NextResponse.json({
+      ok: true,
+      url: saved.url,
+      filename: saved.filename,
+      id: saved.id,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: `图片已保存，但写入配置失败：${msg}` }, { status: 500 });
+    const status = msg.includes("过大") || msg.includes("扩展名") ? 400 : 500;
+    return NextResponse.json({ error: msg }, { status });
   }
-
-  return NextResponse.json({
-    ok: true,
-    url: publicUrl,
-    filename: outName,
-  });
 }

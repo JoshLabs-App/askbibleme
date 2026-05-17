@@ -6,9 +6,9 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 
 /** 与 `NatureSceneLayer` 方卡同尺寸与圆角，便于视觉一致 */
 const TILE_BASE =
-  "group relative flex aspect-square w-[4.25rem] shrink-0 items-stretch justify-stretch overflow-hidden rounded-[0.75rem] text-left shadow-[0_6px_18px_-10px_rgba(0,0,0,0.45)] ring-1 ring-inset transition hover:ring-white/30 sm:w-[4.75rem] sm:rounded-[0.85rem]";
-const TILE_IDLE = "ring-white/[0.14]";
-const TILE_ACTIVE = "ring-2 ring-sky-400/70 ring-inset";
+  "group relative flex aspect-square w-[4.25rem] shrink-0 items-stretch justify-stretch overflow-hidden rounded-[0.75rem] text-left shadow-[0_4px_16px_-8px_rgba(15,23,42,0.14)] ring-1 ring-inset transition hover:ring-ink/15 sm:w-[4.75rem] sm:rounded-[0.85rem]";
+const TILE_IDLE = "ring-ink/[0.08]";
+const TILE_ACTIVE = "ring-2 ring-sky-500/55 ring-inset";
 
 function IconMusicMark(props: { className?: string }) {
   return (
@@ -70,21 +70,24 @@ export function ScenesPageListenShortcuts() {
       label: t("nav.music"),
       match: (p: string) => p === "/music" || p.startsWith("/music/"),
       Icon: IconMusicMark,
-      panelClass: "bg-gradient-to-br from-violet-950/95 via-slate-900 to-slate-950",
+      panelClass: "bg-gradient-to-br from-violet-200 via-purple-100 to-indigo-50",
+      iconClass: "text-violet-900/88",
     },
     {
       href: "/relax",
       label: t("nav.relax"),
       match: (p: string) => p === "/relax" || p.startsWith("/relax/"),
       Icon: IconRelaxMark,
-      panelClass: "bg-gradient-to-br from-teal-950/95 via-slate-900 to-slate-950",
+      panelClass: "bg-gradient-to-br from-teal-200 via-emerald-100 to-cyan-50",
+      iconClass: "text-teal-900/88",
     },
     {
       href: "/verse",
       label: t("nav.goldenVerses"),
       match: (p: string) => p === "/verse" || p.startsWith("/verse/"),
       Icon: IconVerseMark,
-      panelClass: "bg-gradient-to-br from-amber-950/90 via-stone-900 to-stone-950",
+      panelClass: "bg-gradient-to-br from-amber-200 via-orange-100 to-amber-50",
+      iconClass: "text-amber-950/88",
     },
   ] as const;
 
@@ -95,7 +98,7 @@ export function ScenesPageListenShortcuts() {
       data-shell-swipe-nav-exclude
     >
       <div className="flex w-full justify-center gap-2 sm:gap-2.5">
-        {items.map(({ href, label, match, Icon, panelClass }) => {
+        {items.map(({ href, label, match, Icon, panelClass, iconClass }) => {
           const active = match(pathname);
           return (
             <Link
@@ -108,7 +111,7 @@ export function ScenesPageListenShortcuts() {
             >
               <span className={`absolute inset-0 ${panelClass}`} aria-hidden />
               <span className="relative z-[1] flex h-full w-full items-center justify-center p-2">
-                <Icon className="h-9 w-9 text-white/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)] sm:h-10 sm:w-10" />
+                <Icon className={`h-9 w-9 sm:h-10 sm:w-10 ${iconClass}`} />
               </span>
             </Link>
           );

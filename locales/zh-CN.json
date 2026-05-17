@@ -301,6 +301,7 @@
       "goldenVerseThemes": "金句主题",
       "verseRepeatRank": "经节重复排行",
       "goldenVerses": "金句",
+      "versePageBackgrounds": "金句页背景",
       "explore": "探索",
       "mediaLibrary": "上传资源库"
     },
@@ -529,6 +530,18 @@
       "saveDone": "已写入 {{count}} 条引用（上限 {{cap}}）。",
       "saveFailed": "保存失败（HTTP {{status}}）",
       "selectionLoadFailed": "加载已选主题失败（HTTP {{status}}）"
+    },
+    "versePageBackgrounds": {
+      "upload": "上传背景图",
+      "uploading": "上传中…",
+      "uploadDone": "已上传并加入目录。",
+      "delete": "删除",
+      "deleting": "删除中…",
+      "deleteConfirm": "确定删除这张背景图？文件与配置条目将一并移除。",
+      "deleteDone": "已删除。",
+      "loading": "加载中…",
+      "empty": "尚无上传背景。可上传 JPG / PNG / WebP / GIF（单张上限 25 MB）。",
+      "openVersePage": "打开 /verse 预览"
     },
     "goldenVerseThemes": {
       "title": "金句主题",
@@ -935,7 +948,7 @@
       "textSizeHint": "A− / A＋ 调节本页经文字号；范围较宽（约 35%–1000%），与自然首页分开记忆。",
       "pageTemplate": "页模板",
       "pageTemplates": {
-        "custom": "后台上传",
+        "upload": "上传 {{id}}",
         "wide": "横卷羊皮",
         "scroll": "竖卷羊皮",
         "scroll2": "深色卷轴",

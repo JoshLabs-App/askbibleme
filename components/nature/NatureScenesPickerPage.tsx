@@ -3,9 +3,18 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
+import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
+import { HomeVerseTypographyTopAccessory } from "@/components/home/HomeVerseTypographyTopAccessory";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { ScenesPageListenShortcuts } from "@/components/nature/ScenesPageListenShortcuts";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import {
+  NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
+  NATURE_HOME_TEXT_SCALE_STEPS,
+  natureHomeTextScaleAtStep,
+  readNatureHomeTextScaleStepIndex,
+  writeNatureHomeTextScaleStepIndex,
+} from "@/lib/home/nature-home-text-scale-prefs";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import {
   defaultNatureHomeActiveVideoId,
@@ -29,6 +38,34 @@ export function NatureScenesPickerPage({ initial }: Props) {
   const activeSceneHydratedRef = useRef(false);
   const videoStageHeightCommitRef = useRef(0);
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
+  const [verseTextScaleStepIndex, setVerseTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
+
+  useLayoutEffect(() => {
+    setVerseTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
+  }, []);
+
+  const verseTextZoom = natureHomeTextScaleAtStep(verseTextScaleStepIndex);
+  const natureVerseTextScale = useMemo(
+    () => ({
+      atMin: verseTextScaleStepIndex <= 0,
+      atMax: verseTextScaleStepIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1,
+      onSmaller: () => {
+        setVerseTextScaleStepIndex((prev) => {
+          const next = Math.max(0, prev - 1);
+          writeNatureHomeTextScaleStepIndex(next);
+          return next;
+        });
+      },
+      onLarger: () => {
+        setVerseTextScaleStepIndex((prev) => {
+          const next = Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, prev + 1);
+          writeNatureHomeTextScaleStepIndex(next);
+          return next;
+        });
+      },
+    }),
+    [verseTextScaleStepIndex],
+  );
 
   useLayoutEffect(() => {
     if (activeSceneHydratedRef.current) return;
@@ -119,11 +156,19 @@ export function NatureScenesPickerPage({ initial }: Props) {
         landscapeImmersive={false}
         showTopInsetTime={false}
         hideTopShellInsetTime
+        rightAccessory={<HomeVerseTypographyTopAccessory tone="onDark" natureVerseTextScale={natureVerseTextScale} />}
       />
 
       <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(58dvh,68svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
-          <div className="pointer-events-auto mx-auto flex w-full min-h-0 max-w-lg flex-col items-stretch gap-5 overflow-y-auto overscroll-y-contain px-1 pb-1 sm:max-w-xl sm:px-2 md:max-w-3xl lg:max-w-none">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(72dvh,82svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
+          <div className="pointer-events-auto mx-auto flex w-full min-h-0 max-w-lg flex-col items-stretch gap-4 overflow-y-auto overscroll-y-contain px-1 pb-1 sm:max-w-xl sm:px-2 md:max-w-3xl lg:max-w-none">
+            <div className="shrink-0 text-center" style={{ zoom: verseTextZoom }}>
+              <HomeVerseRotator
+                variant="dark"
+                prominence="nature"
+                className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[5rem]"
+              />
+            </div>
             <div
               className="@container relative w-full shrink-0"
               role="region"

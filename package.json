@@ -28,6 +28,8 @@
     "audio:restore": "bash scripts/checkout-cuv-chapter-audio.sh",
     "audio:sync-disk": "node scripts/sync-cuv-audio-to-data-root.mjs",
     "audio:deploy-disk": "npm run audio:restore && node scripts/sync-cuv-audio-to-data-root.mjs",
+    "audio:pull-batch": "node scripts/pull-cuv-audio-batch-to-disk.mjs",
+    "audio:pull-all-batches": "node scripts/pull-cuv-audio-all-batches.mjs",
     "info-edition:sync-disk": "node scripts/sync-info-edition-published-to-data-root.mjs",
     "ship": "bash scripts/ship.sh",
     "ship:data": "bash scripts/ship-data-config.sh",

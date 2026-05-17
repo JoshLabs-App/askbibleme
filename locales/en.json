@@ -296,7 +296,7 @@
       "playbackVisual": "Playback visuals",
       "journey": "Journey",
       "readSegments": "Reading segments",
-      "infoEditionV1": "Info edition V1",
+      "infoEditionV1": "Content generation",
       "bibleVersions": "Translations & upload",
       "goldenVerseThemes": "Verse themes",
       "goldenVerses": "Golden verses",
@@ -411,7 +411,7 @@
       "deleteFailed": "Delete failed ({{status}})"
     },
     "infoEditionV1": {
-      "title": "Info edition V1",
+      "title": "Content generation",
       "intro": "Draft quiet chapter “info edition” copy from the default translation, with custom description rules and parallel runs across multiple AI connections. Drafts and history live in local JSON.",
       "fileLine": "data/bible/info-edition-v1-workspace.json",
       "scopeTitle": "Passage",

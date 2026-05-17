@@ -296,7 +296,7 @@
       "playbackVisual": "播放视觉",
       "journey": "旅程",
       "readSegments": "圣经分段",
-      "infoEditionV1": "V1 信息版",
+      "infoEditionV1": "内容生成系统",
       "bibleVersions": "译本与上传",
       "goldenVerseThemes": "金句主题",
       "goldenVerses": "金句",
@@ -411,7 +411,7 @@
       "deleteFailed": "删除失败（{{status}}）"
     },
     "infoEditionV1": {
-      "title": "V1 信息版",
+      "title": "内容生成系统",
       "intro": "为指定书卷章撰写安静、克制的「信息版」文案：从默认译本读取经文，按描述规则调用多个 AI 连接并行对比。书卷、章、角色、AI 与规则会自动记住上次选择；生成对比自动存入对比记录。",
       "fileLine": "data/bible/info-edition-v1-workspace.json",
       "scopeTitle": "经文范围",

@@ -43,7 +43,7 @@ const overview: {
       { href: "/admin/read/segments", label: "圣经分段", hint: "分段与结构（占位）" },
       {
         href: "/admin/read/info-edition-v1",
-        label: "V1 信息版",
+        label: "内容生成系统",
         hint: "按书卷章 + 描述规则，多连接 AI 对比生成",
       },
     ],

@@ -158,7 +158,7 @@ export function AdminGenerationRolesClient() {
       <p className="text-[11px] text-adminMuted">
         {tr("usedBy")}{" "}
         <Link href="/admin/read/info-edition-v1" className="underline underline-offset-2">
-          V1 信息版
+          {t("admin.items.infoEditionV1")}
         </Link>
       </p>
 

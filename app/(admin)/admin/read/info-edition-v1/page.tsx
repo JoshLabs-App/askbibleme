@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { LOCALE_COOKIE_NAME, parseLocale, type AppLocale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 
-export const metadata = { title: "V1 信息版" };
+export const metadata = { title: "内容生成系统" };
 
 export default async function AdminInfoEditionV1Page({
   searchParams,

@@ -9,7 +9,10 @@
   --bc-read-weak: color-mix(in srgb, rgb(var(--brand-muted-rgb)) 78%, rgb(var(--brand-canvas-rgb)) 22%);
   --bc-read-faint: color-mix(in srgb, rgb(var(--brand-muted-rgb)) 52%, rgb(var(--brand-canvas-rgb)) 48%);
   --bc-read-book: rgb(var(--brand-ink-rgb));
-  --bc-read-era-w: 3.05rem;
+  /* 左列（历史时期）≈ 容器宽 38.2%，竖线贴黄金分割；窄屏不低于 min */
+  --bc-read-golden-minor: 38.2%;
+  --bc-read-golden-min: 3.05rem;
+  --bc-read-col-gap: 0.22rem;
   --bc-read-stripe-w: 3px;
   --bc-read-poststripe-pad: 0.32rem;
   padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
@@ -27,7 +30,7 @@
   --bc-read-weak: #5c4030;
   --bc-read-faint: #6e5240;
   --bc-hover: color-mix(in srgb, #2a1810 7%, transparent);
-  --bc-read-era-w: 3.75rem;
+  --bc-read-golden-min: 3.35rem;
   --bc-read-poststripe-pad: 0.42rem;
 }
 
@@ -52,20 +55,19 @@
   }
 
   .bible-catalog-page--read.bible-catalog-on-parchment {
-    --bc-read-era-w: 4.25rem;
+    --bc-read-golden-min: 3.5rem;
     --bc-read-poststripe-pad: 0.48rem;
   }
 }
 
 @media (min-width: 1024px) {
   .bible-catalog-page--read.bible-catalog-on-parchment {
-    --bc-read-era-w: 4.75rem;
+    --bc-read-golden-min: 3.65rem;
   }
 }
 
-.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-heading-row,
-.read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-book {
-  column-gap: 0.34rem;
+.read-bible-parchment-shell .bible-catalog-on-parchment {
+  --bc-read-col-gap: 0.34rem;
 }
 
 .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
@@ -175,8 +177,8 @@
 
 .bible-catalog-read-heading-row {
   display: grid;
-  grid-template-columns: var(--bc-read-era-w) minmax(0, 1fr);
-  column-gap: 0.22rem;
+  grid-template-columns: minmax(var(--bc-read-golden-min), var(--bc-read-golden-minor)) minmax(0, 1fr);
+  column-gap: var(--bc-read-col-gap);
   align-items: baseline;
 }
 
@@ -218,7 +220,7 @@
 .bible-catalog-read-testament--old .bible-catalog-read-testament-body::before {
   content: "";
   position: absolute;
-  left: calc(var(--bc-read-era-w) + 0.22rem);
+  left: calc(var(--bc-read-golden-minor) + var(--bc-read-col-gap));
   top: 0;
   bottom: 0;
   width: var(--bc-read-stripe-w);
@@ -231,7 +233,7 @@
 .bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
   content: "";
   position: absolute;
-  left: calc(var(--bc-read-era-w) + 0.22rem);
+  left: calc(var(--bc-read-golden-minor) + var(--bc-read-col-gap));
   top: 0;
   bottom: 0;
   width: var(--bc-read-stripe-w);
@@ -248,8 +250,8 @@
 
 .bible-catalog-read-book {
   display: grid;
-  grid-template-columns: var(--bc-read-era-w) minmax(0, 1fr);
-  column-gap: 0.22rem;
+  grid-template-columns: minmax(var(--bc-read-golden-min), var(--bc-read-golden-minor)) minmax(0, 1fr);
+  column-gap: var(--bc-read-col-gap);
   align-items: center;
   padding: 0.14rem 0;
   margin: 0;

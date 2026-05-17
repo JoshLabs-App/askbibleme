@@ -2,7 +2,7 @@
 @import "./read-parchment-background.css";
 @import "./read-parchment-shell-chrome.css";
 
-/* 圣经 /read 路由共用：羊皮卷全幅底 + 内层滚动（文字上下 150px 渐隐） */
+/* 圣经 /read 与祷告 /prayer 共用：羊皮卷全幅底 + 内层滚动（默认上下 150px 渐隐） */
 .read-bible-parchment-shell,
 .read-chapter-shell {
   box-sizing: border-box;
@@ -18,7 +18,7 @@
   background: transparent;
 }
 
-/* 实际滚动区：上下缘各 150px 渐隐；顶栏仍由 padding 避让固定菜单/设置角标 */
+/* 实际滚动区：上下缘各 150px 渐隐；顶栏由 padding 避让固定菜单/设置角标 */
 .read-bible-parchment-scroll,
 .read-chapter-scroll {
   --read-parchment-edge-fade: 150px;
@@ -50,14 +50,11 @@
   mask-repeat: no-repeat;
 }
 
-/* `/read` 首页：标题 → 经文 → 目录顺序排版；整列在此区内纵向滚动（经文无独立衬框） */
+/* `/read`、`/prayer` 首页：标题 → 内容 → 目录顺序排版；整列在此区内纵向滚动 */
 .read-bible-parchment-scroll.read-bible-parchment-scroll--read-home {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  /* 整页滚动时不用上下 alpha 遮罩，避免标题/目录边缘被吃掉 */
-  -webkit-mask-image: none;
-  mask-image: none;
 }
 
 .read-bible-parchment-scroll--read-home > .read-bible-parchment-column {

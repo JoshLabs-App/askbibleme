@@ -147,10 +147,7 @@ export function HomeShellFloatingRouteNav({ placement }: Props) {
     <div className={outer}>
       <ScriptureAudioDockStrip placement={placement} />
       <nav
-        className={[
-          "pointer-events-auto flex min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))] items-center justify-center gap-1 rounded-full border-0 bg-black/45 px-1.5 py-1 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.65)] backdrop-blur-md sm:gap-1.5 sm:px-2.5 sm:py-1.5",
-          "supports-[backdrop-filter]:bg-black/38",
-        ].join(" ")}
+        className="pointer-events-auto flex min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))] items-center justify-center gap-1 rounded-full border-0 bg-transparent px-1.5 py-1 sm:gap-1.5 sm:px-2.5 sm:py-1.5"
         aria-label={t("nav.mainLabel")}
       >
         <div className="flex items-center gap-0.5 sm:gap-1">{navLeft.map(renderIconLink)}</div>

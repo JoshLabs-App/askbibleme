@@ -6,7 +6,7 @@ import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 
 type Props = {
   children: ReactNode;
-  /** `/read` 首页：整列滚动、无上下渐隐遮罩 */
+  /** `/read`、`/prayer` 首页：整列 flex 排版（渐隐与章页相同，见 `read-chapter-surfaces.css`） */
   scrollHome?: boolean;
 };
 

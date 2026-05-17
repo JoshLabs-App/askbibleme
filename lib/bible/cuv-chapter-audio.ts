@@ -1,8 +1,18 @@
 /**
- * 和合本（CUV）整章朗读音源：与 AskBible 2 `reader/page.tsx` 同源。
- * 优先本机 `public/audio/{BOOK}-{chapter}.mp3`（HEAD 成功），否则回退远程 CDN。
+ * 和合本（CUV）整章朗读音源。
+ * - 自托管（推荐生产）：仅 ` /audio/{BOOK}-{chapter}.mp3 `（public 或 DATA_ROOT/audio）
+ * - 开发回退：未开自托管时，本地不存在则回退 theaudiopower.org
  */
+
 export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://theaudiopower.org/CUV/Recordings";
+
+/** 生产自托管：仅使用本站 `/audio/{BOOK}-{章}.mp3`，不回退外部 CDN */
+export function isCuvChapterAudioSelfHosted(): boolean {
+  return (
+    process.env.NEXT_PUBLIC_CUV_CHAPTER_AUDIO_SELF_HOSTED === "1" ||
+    process.env.CUV_CHAPTER_AUDIO_SELF_HOSTED === "1"
+  );
+}
 
 export function translationSupportsCuvChapterAudio(translationId: string): boolean {
   return String(translationId || "")
@@ -45,16 +55,27 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   bookId: string;
   chapter: number;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
-  const remote = buildExternalCuvChapterAudioUrl(args.bookName, args.chapter);
-  if (!remote) return { ok: false };
   const local = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
-  if (local) {
+  if (!local) return { ok: false };
+
+  const tryLocal = async (): Promise<{ ok: true; src: string } | null> => {
     try {
       const check = await fetch(local, { method: "HEAD", cache: "force-cache" });
       if (check.ok) return { ok: true, src: local };
     } catch {
-      /* use remote */
+      /* missing */
     }
+    return null;
+  };
+
+  const localHit = await tryLocal();
+  if (localHit) return localHit;
+
+  if (isCuvChapterAudioSelfHosted()) {
+    return { ok: false };
   }
+
+  const remote = buildExternalCuvChapterAudioUrl(args.bookName, args.chapter);
+  if (!remote) return { ok: false };
   return { ok: true, src: remote };
 }

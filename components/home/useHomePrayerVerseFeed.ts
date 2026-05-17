@@ -100,6 +100,9 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
 
   useEffect(() => {
     let cancelled = false;
+    let idleHandle: number | undefined;
+    let fallbackTimer: number | undefined;
+
     const run = async () => {
       const prefs = readHomePrayerVersePrefs();
       if (cancelled) return;
@@ -137,9 +140,23 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
       const ci = lastKey ? verseKeyToChunkIndex(manifest, lastKey) : null;
       if (ci != null) prefetchChunkIdle(scopeId, ci + 1, chunkCacheRef.current);
     };
-    void run();
+
+    const kick = () => {
+      if (!cancelled) void run();
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(kick, { timeout: 5000 });
+    } else {
+      fallbackTimer = window.setTimeout(kick, 1200);
+    }
+
     return () => {
       cancelled = true;
+      if (idleHandle != null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
+      if (fallbackTimer != null) window.clearTimeout(fallbackTimer);
     };
   }, [prefsToken]);
 

@@ -4,6 +4,7 @@ import {
   getInfoEditionReaderPersistence,
   infoEditionReaderGenerateBlockedReason,
   isInfoEditionReaderGenerateAllowed,
+  resolveInfoEditionReaderTarget,
   tryBeginInfoEditionPendingAsync,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { runInfoEditionV1ReaderGenerationJob } from "@/lib/bible/info-edition-v1-reader-job";
@@ -38,16 +39,35 @@ function parseBookChapter(searchParams: URLSearchParams): { bookId: string; chap
   return { bookId, chapter };
 }
 
+function parseEditionTarget(
+  cwd: string,
+  searchParams: URLSearchParams,
+  body?: Record<string, unknown>,
+) {
+  const edition =
+    (typeof body?.edition === "string" ? body.edition : null) ??
+    searchParams.get("edition");
+  const roleId =
+    (typeof body?.roleId === "string" ? body.roleId : null) ?? searchParams.get("roleId");
+  return resolveInfoEditionReaderTarget(cwd, { edition, roleId });
+}
+
 const noStore = { headers: { "Cache-Control": "no-store" } };
 
 export async function GET(req: Request) {
   try {
-    const parsed = parseBookChapter(new URL(req.url).searchParams);
+    const cwd = process.cwd();
+    const url = new URL(req.url);
+    const parsed = parseBookChapter(url.searchParams);
     if ("error" in parsed) {
       return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
     }
-    const cache = await getInfoEditionReaderCacheAsync(process.cwd(), parsed.bookId, parsed.chapter);
-    return NextResponse.json({ ok: true, ...cache }, noStore);
+    const target = parseEditionTarget(cwd, url.searchParams);
+    if ("error" in target) {
+      return NextResponse.json({ ok: false, error: target.error }, { status: 400 });
+    }
+    const cache = await getInfoEditionReaderCacheAsync(cwd, parsed.bookId, parsed.chapter, target);
+    return NextResponse.json({ ok: true, edition: target.variant, ...cache }, noStore);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[info-edition-v1] GET failed", msg);
@@ -89,37 +109,48 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "无效章号。" }, { status: 400 });
     }
 
-    const cached = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter);
+    const target = parseEditionTarget(cwd, new URL(req.url).searchParams, o);
+    if ("error" in target) {
+      return NextResponse.json({ ok: false, error: target.error }, { status: 400 });
+    }
+
+    const cached = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter, target);
     if (cached.status === "ready" && cached.published) {
-      return NextResponse.json({ ok: true, status: "ready", published: cached.published }, noStore);
+      return NextResponse.json(
+        { ok: true, edition: target.variant, status: "ready", published: cached.published },
+        noStore,
+      );
     }
     if (cached.status === "pending") {
-      return NextResponse.json({ ok: true, status: "pending" }, noStore);
+      return NextResponse.json({ ok: true, edition: target.variant, status: "pending" }, noStore);
     }
     if (cached.status === "failed" && cached.error) {
-      return NextResponse.json({ ok: true, status: "failed", error: cached.error }, noStore);
+      return NextResponse.json(
+        { ok: true, edition: target.variant, status: "failed", error: cached.error },
+        noStore,
+      );
     }
 
     let began = false;
     try {
-      began = await tryBeginInfoEditionPendingAsync(cwd, bookId, chapter);
+      began = await tryBeginInfoEditionPendingAsync(cwd, bookId, chapter, target);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error("[info-edition-v1] tryBegin pending failed", msg);
       return NextResponse.json(
-        { ok: true, status: "failed", error: msg },
+        { ok: true, edition: target.variant, status: "failed", error: msg },
         { status: 200, ...noStore },
       );
     }
 
     if (!began) {
-      return NextResponse.json({ ok: true, status: "pending" }, noStore);
+      return NextResponse.json({ ok: true, edition: target.variant, status: "pending" }, noStore);
     }
 
     /** 同请求内跑完生成（Render 上 after 后台任务不可靠，避免一直 pending） */
-    await runInfoEditionV1ReaderGenerationJob(cwd, bookId, chapter);
-    const afterCache = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter);
-    return NextResponse.json({ ok: true, ...afterCache }, noStore);
+    await runInfoEditionV1ReaderGenerationJob(cwd, bookId, chapter, target);
+    const afterCache = await getInfoEditionReaderCacheAsync(cwd, bookId, chapter, target);
+    return NextResponse.json({ ok: true, edition: target.variant, ...afterCache }, noStore);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[info-edition-v1] POST failed", msg);

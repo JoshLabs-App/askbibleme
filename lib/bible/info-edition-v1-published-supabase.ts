@@ -2,8 +2,9 @@ import "server-only";
 import {
   generationToPublishedChapter,
   infoEditionChapterKey,
-  pickPublishedGeneration,
+  infoEditionReaderChapterKey,
 } from "@/lib/bible/info-edition-v1-publish";
+import { loadPublishedInfoEditionChapter } from "@/lib/bible/info-edition-v1-published-store";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
@@ -45,25 +46,51 @@ function rowToPublished(row: CacheRow): InfoEditionV1PublishedChapter | null {
   };
 }
 
+async function fetchCacheRow(
+  bookId: string,
+  chapter: number,
+  roleId: string,
+): Promise<CacheRow | null> {
+  const client = createSupabaseServiceClient();
+  if (!client) return null;
+
+  const readerKey = infoEditionReaderChapterKey(bookId, chapter, roleId);
+  const { data: readerRow } = await client
+    .from(TABLE)
+    .select("*")
+    .eq("chapter_key", readerKey)
+    .maybeSingle();
+  if (readerRow) return readerRow as CacheRow;
+
+  const legacyKey = infoEditionChapterKey(bookId, chapter);
+  const { data: legacyRow } = await client
+    .from(TABLE)
+    .select("*")
+    .eq("chapter_key", legacyKey)
+    .maybeSingle();
+  return legacyRow ? (legacyRow as CacheRow) : null;
+}
+
 export async function getInfoEditionReaderCacheSupabase(
   bookId: string,
   chapter: number,
+  roleId: string,
 ): Promise<InfoEditionV1ReaderCacheResponse> {
   const client = createSupabaseServiceClient();
   if (!client) return { status: "missing" };
 
-  const key = infoEditionChapterKey(bookId, chapter);
-  const { data, error } = await client
-    .from(TABLE)
-    .select("*")
-    .eq("chapter_key", key)
-    .maybeSingle();
-
-  if (error || !data) return { status: "missing" };
-  const row = data as CacheRow;
+  const row = await fetchCacheRow(bookId, chapter, roleId);
+  if (!row) return { status: "missing" };
 
   if (row.status === "ready") {
     const published = rowToPublished(row);
+    if (published && published.roleId === roleId) {
+      return { status: "ready", published };
+    }
+    const bundled = loadPublishedInfoEditionChapter(process.cwd(), bookId, chapter, { roleId });
+    if (bundled?.markdown.trim()) {
+      return { status: "ready", published: bundled };
+    }
     if (published) return { status: "ready", published };
     return { status: "missing" };
   }
@@ -85,15 +112,16 @@ export async function getInfoEditionReaderCacheSupabase(
 export async function tryBeginInfoEditionPendingSupabase(
   bookId: string,
   chapter: number,
+  roleId: string,
 ): Promise<boolean> {
   const client = createSupabaseServiceClient();
   if (!client) return false;
 
-  const key = infoEditionChapterKey(bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, roleId);
   const normalizedBookId = bookId.trim().toUpperCase();
   const now = new Date().toISOString();
 
-  const existing = await getInfoEditionReaderCacheSupabase(bookId, chapter);
+  const existing = await getInfoEditionReaderCacheSupabase(bookId, chapter, roleId);
   if (existing.status === "pending" || existing.status === "ready") return false;
 
   const { error } = await client.from(TABLE).upsert(
@@ -102,6 +130,7 @@ export async function tryBeginInfoEditionPendingSupabase(
       book_id: normalizedBookId,
       chapter,
       status: "pending",
+      role_id: roleId,
       started_at: now,
       failed_at: null,
       error: null,
@@ -116,11 +145,12 @@ export async function tryBeginInfoEditionPendingSupabase(
 export async function clearInfoEditionPendingSupabase(
   bookId: string,
   chapter: number,
+  roleId: string,
 ): Promise<void> {
   const client = createSupabaseServiceClient();
   if (!client) return;
 
-  const key = infoEditionChapterKey(bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, roleId);
   const { data } = await client.from(TABLE).select("status").eq("chapter_key", key).maybeSingle();
   if (!data || (data as { status: string }).status !== "pending") return;
 
@@ -131,11 +161,12 @@ export async function setInfoEditionReaderFailedSupabase(
   bookId: string,
   chapter: number,
   error: string,
+  roleId: string,
 ): Promise<void> {
   const client = createSupabaseServiceClient();
   if (!client) return;
 
-  const key = infoEditionChapterKey(bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, roleId);
   const now = new Date().toISOString();
   await client.from(TABLE).upsert(
     {
@@ -143,6 +174,7 @@ export async function setInfoEditionReaderFailedSupabase(
       book_id: bookId.trim().toUpperCase(),
       chapter,
       status: "failed",
+      role_id: roleId,
       error: error.trim() || "生成失败",
       failed_at: now,
       started_at: null,
@@ -156,16 +188,19 @@ export async function publishInfoEditionChapterSupabase(
   bookId: string,
   chapter: number,
   generations: InfoEditionV1Generation[],
+  roleId: string,
 ): Promise<InfoEditionV1PublishedChapter | null> {
   const client = createSupabaseServiceClient();
   if (!client) return null;
 
-  const picked = pickPublishedGeneration(generations);
+  const picked =
+    generations.find((g) => !g.error && g.text.trim() && g.generationRoleId === roleId) ??
+    generations.find((g) => !g.error && g.text.trim());
   if (!picked) return null;
 
   const now = new Date().toISOString();
   const entry = generationToPublishedChapter(bookId, chapter, picked, now);
-  const key = infoEditionChapterKey(bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, entry.roleId);
 
   const { error } = await client.from(TABLE).upsert(
     {

@@ -5,7 +5,7 @@ import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata: Metadata = {
   title: sitePageTitle("场景"),
-  description: "选择自然首页背景场景；选择保存在本机。",
+  description: "选择自然首页背景场景；静态列表，选择保存在本机。",
 };
 
 export default async function ScenesPage() {

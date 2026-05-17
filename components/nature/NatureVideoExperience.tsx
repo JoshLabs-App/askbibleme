@@ -47,8 +47,19 @@ import {
   NATURE_HOME_PORTRAIT_PAN_DURATION_SEC,
 } from "@/lib/nature/nature-home-portrait-pan";
 import "@/components/nature/nature-home-portrait-pan.css";
+import {
+  fetchNatureSettingsIfStale,
+  markNatureSettingsRevisionSynced,
+  natureSettingsStaleOnVisible,
+} from "@/lib/nature/sync-nature-settings-client";
+import { isPrefetchableNatureVideoSrc } from "@/lib/nature/is-prefetchable-nature-video-src";
+import { canNatureHomeFullVideoFetch } from "@/lib/nature/can-nature-home-full-video-fetch";
+import { useNatureHomeFullVideoFetch } from "@/hooks/useNatureHomeFullVideoFetch";
 
-/** 当前场景停留后再挂视频解码（毫秒） */
+/**
+ * 停留后再挂 `<video>` 解码（非「切换」时刻）。
+ * 有首图时：揭晓 = 本延迟 + {@link INTRO_REVEAL_MIN_DELAY_MS} + 整段缓冲完成；弱网多停静图。
+ */
 const NATURE_SCENE_DWELL_MS = 3000;
 
 /** 无滚动：先整体 `scale`；仍超出带区时再收紧行数（`line-clamp`）并二次压缩 */
@@ -190,6 +201,8 @@ function IconBellMuted(props: { className?: string }) {
 
 type Props = {
   initial: NatureSettingsV2;
+  /** 与 RSC 嵌入的 settings 指纹一致时可跳过首屏重复拉取 */
+  settingsRevision: string;
 };
 
 /** 背景视频槽：与滚动区 `canvas` 对齐；底栏用 `appDark`，与主区背景色系一致衔接 */
@@ -203,7 +216,7 @@ const NATURE_BG_COVER_MEDIA =
 /** 有首图时：至少停留静图此时长，且视频完全载入后，才淡出静图露出 `<video>` */
 const INTRO_REVEAL_MIN_DELAY_MS = 5000;
 
-/** 揭晓静图前：整段循环影片已缓冲就绪（非「够播几秒」） */
+/** 流式揭晓：整段循环影片已缓冲就绪 */
 function isNatureVideoFullyLoaded(v: HTMLVideoElement): boolean {
   if (v.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return false;
   const dur = v.duration;
@@ -217,14 +230,19 @@ function isNatureVideoFullyLoaded(v: HTMLVideoElement): boolean {
   }
 }
 
+/** Blob 本地片：已完整在内存，够播即可揭晓 */
+function isNatureVideoReadyFromBlob(v: HTMLVideoElement): boolean {
+  return v.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
+}
+
 /** 静图阶段：超过揭晓最短等待后再提示加载慢 */
 const SLOW_INTRO_HINT_DELAY_MS = INTRO_REVEAL_MIN_DELAY_MS + 2500;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
- * 自然：背景视频铺满主列；场景在「场景」页选择；停留约 3s 后挂视频解码（默认 720，可开 1080），整段缓冲完再渐显（弱网仅多等静图）。
+ * 自然：有首图时进页显静图、后台 fetch 整段 MP4，下完再挂 `<video>` 并淡出静图；否则约 3s 起流式缓冲揭晓。
  */
-export function NatureVideoExperience({ initial }: Props) {
+export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   const { t } = useLocale();
   const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -283,36 +301,41 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [natureSettings]);
 
   useEffect(() => {
+    markNatureSettingsRevisionSynced(settingsRevision);
     let cancelled = false;
+
+    const apply = (data: NatureSettingsV2) => {
+      setNatureSettings(data);
+      setActiveVideoId((prev) => {
+        const ids = new Set(data.videos.map((v) => v.id.trim()).filter(Boolean));
+        const p = prev.trim();
+        if (p && ids.has(p)) return prev;
+        return resolveNatureHomeActiveVideoId(data);
+      });
+    };
+
     void (async () => {
-      try {
-        const res = await fetch("/api/nature/settings", { cache: "no-store" });
-        if (!res.ok || cancelled) return;
-        const data = (await res.json()) as NatureSettingsV2 | null;
-        if (
-          cancelled ||
-          !data ||
-          data.version !== 2 ||
-          !Array.isArray(data.videos) ||
-          !Array.isArray(data.ambientClips)
-        ) {
-          return;
-        }
-        setNatureSettings(data);
-        setActiveVideoId((prev) => {
-          const ids = new Set(data.videos.map((v) => v.id.trim()).filter(Boolean));
-          const p = prev.trim();
-          if (p && ids.has(p)) return prev;
-          return resolveNatureHomeActiveVideoId(data);
-        });
-      } catch {
-        /* 离线等：保留构建期 initial */
-      }
+      const data = await fetchNatureSettingsIfStale(settingsRevision);
+      if (cancelled || !data) return;
+      apply(data);
     })();
+
+    const onVis = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!natureSettingsStaleOnVisible()) return;
+      void (async () => {
+        const data = await fetchNatureSettingsIfStale(settingsRevision, { force: true });
+        if (cancelled || !data) return;
+        apply(data);
+      })();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [settingsRevision]);
 
   useLayoutEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
@@ -417,7 +440,30 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [hasNatureVisual]);
   /** 低电量：仅静图，不挂载解码 `<video>` */
   const posterOnlyLowPower = mediaPolicy.lowBatteryStatic && hasStillIntro;
-  const showNatureVideoDecoder = hasPlayableVideo && !posterOnlyLowPower && dwellVideoAllowed;
+
+  const wantsFullVideoFetch =
+    hasStillIntro && hasConfiguredVideoSrc && !posterOnlyLowPower && !videoBroken;
+  const fullFetchEligible = wantsFullVideoFetch && canNatureHomeFullVideoFetch(videoSrc, mediaPolicy);
+  const {
+    objectUrl: fullFetchObjectUrl,
+    ready: fullFetchReady,
+    failed: fullFetchFailed,
+  } = useNatureHomeFullVideoFetch({
+    enabled: fullFetchEligible,
+    videoSrc,
+    sceneKey: sceneIntroKey,
+  });
+  /** 有首图且整段 fetch 成功：静图 → 下完再挂 video；否则走 dwell + 流式缓冲 */
+  const useFullVideoIntro = fullFetchEligible && !fullFetchFailed;
+  const introUsesStreaming = hasStillIntro && !useFullVideoIntro;
+
+  const showNatureVideoDecoder =
+    hasPlayableVideo &&
+    !posterOnlyLowPower &&
+    (useFullVideoIntro ? fullFetchReady && Boolean(fullFetchObjectUrl) : dwellVideoAllowed);
+
+  const playbackVideoSrc =
+    useFullVideoIntro && fullFetchObjectUrl ? fullFetchObjectUrl : videoSrc;
 
   useEffect(() => {
     setDwellVideoAllowed(false);
@@ -433,13 +479,25 @@ export function NatureVideoExperience({ initial }: Props) {
       return;
     }
 
+    if (useFullVideoIntro) {
+      setDwellVideoAllowed(false);
+      setDwellPolicyResolved(true);
+      return;
+    }
+
     const id = window.setTimeout(() => {
       setDwellPolicyResolved(true);
       setDwellVideoAllowed(!mediaPolicy.lowBatteryStatic);
     }, NATURE_SCENE_DWELL_MS);
 
     return () => window.clearTimeout(id);
-  }, [activeVideoId, hasConfiguredVideoSrc, posterOnlyLowPower, mediaPolicy.lowBatteryStatic]);
+  }, [
+    activeVideoId,
+    hasConfiguredVideoSrc,
+    posterOnlyLowPower,
+    mediaPolicy.lowBatteryStatic,
+    useFullVideoIntro,
+  ]);
 
   const conservationHintKey = useMemo(() => {
     if (!hasConfiguredVideoSrc || videoBroken || showNatureVideoDecoder) return null;
@@ -496,9 +554,11 @@ export function NatureVideoExperience({ initial }: Props) {
     if (introRevealGuardRef.current) return;
     if (performance.now() - introStillLoadStartedAtRef.current < INTRO_REVEAL_MIN_DELAY_MS) return;
     const v = videoRef.current;
-    if (!v || !isNatureVideoFullyLoaded(v)) return;
+    if (!v) return;
+    const ready = useFullVideoIntro ? isNatureVideoReadyFromBlob(v) : isNatureVideoFullyLoaded(v);
+    if (!ready) return;
     commitIntroReveal();
-  }, [posterUrl, posterOnlyLowPower, commitIntroReveal]);
+  }, [posterUrl, posterOnlyLowPower, commitIntroReveal, useFullVideoIntro]);
 
   const onTimeUpdatePollIntroReveal = useCallback(() => {
     const now = performance.now();
@@ -580,7 +640,7 @@ export function NatureVideoExperience({ initial }: Props) {
   }, [sceneIntroKey, hasStillIntro, clearPlaybackWaitHint]);
 
   useEffect(() => {
-    if (!hasStillIntro || !posterUrl || posterOnlyLowPower || !dwellVideoAllowed) return;
+    if (!introUsesStreaming || !posterUrl || posterOnlyLowPower || !dwellVideoAllowed) return;
     introStillLoadStartedAtRef.current = performance.now();
     const id = window.setTimeout(() => {
       maybeRevealIntroFromBuffer();
@@ -588,7 +648,7 @@ export function NatureVideoExperience({ initial }: Props) {
     return () => clearTimeout(id);
   }, [
     sceneIntroKey,
-    hasStillIntro,
+    introUsesStreaming,
     posterUrl,
     posterOnlyLowPower,
     dwellVideoAllowed,
@@ -596,7 +656,30 @@ export function NatureVideoExperience({ initial }: Props) {
   ]);
 
   useEffect(() => {
-    if (!hasStillIntro || introRevealed || !posterUrl || posterOnlyLowPower || !dwellVideoAllowed) {
+    if (!useFullVideoIntro || !fullFetchReady || introRevealed || !posterUrl || posterOnlyLowPower) return;
+    const elapsed = performance.now() - introStillLoadStartedAtRef.current;
+    const wait = Math.max(0, INTRO_REVEAL_MIN_DELAY_MS - elapsed);
+    const id = window.setTimeout(() => {
+      maybeRevealIntroFromBuffer();
+    }, wait);
+    return () => clearTimeout(id);
+  }, [
+    useFullVideoIntro,
+    fullFetchReady,
+    introRevealed,
+    posterUrl,
+    posterOnlyLowPower,
+    sceneIntroKey,
+    maybeRevealIntroFromBuffer,
+  ]);
+
+  useEffect(() => {
+    if (!hasStillIntro || introRevealed || !posterUrl || posterOnlyLowPower) {
+      setShowSlowIntroHint(false);
+      return;
+    }
+    const stillWaiting = useFullVideoIntro ? !fullFetchReady : !dwellVideoAllowed;
+    if (!stillWaiting) {
       setShowSlowIntroHint(false);
       return;
     }
@@ -605,7 +688,15 @@ export function NatureVideoExperience({ initial }: Props) {
       clearTimeout(id);
       setShowSlowIntroHint(false);
     };
-  }, [hasStillIntro, introRevealed, posterUrl, videoSrc, posterOnlyLowPower, dwellVideoAllowed]);
+  }, [
+    hasStillIntro,
+    introRevealed,
+    posterUrl,
+    posterOnlyLowPower,
+    useFullVideoIntro,
+    fullFetchReady,
+    dwellVideoAllowed,
+  ]);
 
   useEffect(() => {
     return () => clearPlaybackWaitHint();
@@ -613,24 +704,72 @@ export function NatureVideoExperience({ initial }: Props) {
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el || !videoSrc || videoBroken || posterOnlyLowPower) return;
+    if (!el || !playbackVideoSrc || videoBroken || posterOnlyLowPower) return;
     el.muted = true;
     try {
       el.playbackRate = rate;
     } catch {
       /* ignore */
     }
-  }, [rate, videoSrc, videoBroken, posterOnlyLowPower]);
+  }, [rate, playbackVideoSrc, videoBroken, posterOnlyLowPower]);
 
-  /** 首访无静图时仅 metadata；不在后台、非低电静图、非低内存机、非 iOS 时 idle 后再升 preload=auto（省流跳过） */
+  /** 首屏起预拉当前成片（整段 fetch 路径不用，避免重复拉流） */
   useEffect(() => {
-    if (!dwellVideoAllowed) return;
-    if (hasStillIntro) return;
+    if (useFullVideoIntro) return;
+    if (!hasConfiguredVideoSrc || !videoSrc.trim() || posterOnlyLowPower) return;
+    if (!isPrefetchableNatureVideoSrc(videoSrc)) return;
+    if (isIosLikeUserAgent()) return;
+    if (mediaPolicy.saveData) return;
+    if (mediaPolicy.lowBatteryStatic) return;
+    if (
+      typeof mediaPolicy.deviceMemoryGb === "number" &&
+      mediaPolicy.deviceMemoryGb > 0 &&
+      mediaPolicy.deviceMemoryGb <= 4
+    ) {
+      return;
+    }
+    let abs: string;
+    try {
+      abs = new URL(videoSrc, window.location.origin).href;
+    } catch {
+      return;
+    }
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "video";
+    link.href = abs;
+    document.head.appendChild(link);
+    return () => {
+      try {
+        link.remove();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [
+    sceneIntroKey,
+    videoSrc,
+    hasConfiguredVideoSrc,
+    posterOnlyLowPower,
+    mediaPolicy.saveData,
+    mediaPolicy.lowBatteryStatic,
+    mediaPolicy.deviceMemoryGb,
+    useFullVideoIntro,
+  ]);
+
+  /** 流式路径：解码器挂载后 preload=auto */
+  useEffect(() => {
+    if (useFullVideoIntro) return;
+    if (!showNatureVideoDecoder) return;
     if (isIosLikeUserAgent()) return;
     if (!mediaPolicy.documentVisible) return;
     if (mediaPolicy.lowBatteryStatic) return;
     if (mediaPolicy.saveData) return;
-    if (typeof mediaPolicy.deviceMemoryGb === "number" && mediaPolicy.deviceMemoryGb > 0 && mediaPolicy.deviceMemoryGb <= 4) {
+    if (
+      typeof mediaPolicy.deviceMemoryGb === "number" &&
+      mediaPolicy.deviceMemoryGb > 0 &&
+      mediaPolicy.deviceMemoryGb <= 4
+    ) {
       return;
     }
     const el = videoRef.current;
@@ -681,28 +820,26 @@ export function NatureVideoExperience({ initial }: Props) {
     mediaPolicy.lowBatteryStatic,
     mediaPolicy.saveData,
     mediaPolicy.deviceMemoryGb,
-    dwellVideoAllowed,
+    showNatureVideoDecoder,
+    useFullVideoIntro,
   ]);
 
-  /** 后台标签：暂停解码，减少不可见时的缓冲 */
+  /** 后台标签：暂停解码；前台且解码器已挂则静音播放 */
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || !videoSrc.trim() || videoBroken || posterOnlyLowPower) return;
-    if (!dwellVideoAllowed) return;
+    if (!v || !playbackVideoSrc.trim() || videoBroken || posterOnlyLowPower) return;
+    if (!showNatureVideoDecoder) return;
     if (!mediaPolicy.documentVisible) {
       v.pause();
       return;
     }
-    if (hasStillIntro && !introRevealed) return;
     void v.play().catch(() => {});
   }, [
     mediaPolicy.documentVisible,
-    videoSrc,
+    playbackVideoSrc,
     videoBroken,
     posterOnlyLowPower,
-    hasStillIntro,
-    introRevealed,
-    dwellVideoAllowed,
+    showNatureVideoDecoder,
   ]);
 
   useEffect(() => {
@@ -1121,7 +1258,7 @@ export function NatureVideoExperience({ initial }: Props) {
                   introRevealed ? "opacity-100" : "opacity-0",
                 ].join(" ")}
                 style={{ maxWidth: "none" }}
-                src={videoSrc}
+                src={playbackVideoSrc}
                 poster={hasStillIntro ? undefined : posterSrc?.trim() || undefined}
                 muted
                 playsInline

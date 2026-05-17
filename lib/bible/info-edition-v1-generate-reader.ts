@@ -1,12 +1,14 @@
 import { gatewaySlotEndpoint } from "@/lib/admin/gateway-slot-endpoints";
 import { readAiApiConfigSync, listAllConnectionsPublic } from "@/lib/admin/ai-api-config-store";
 import { readGenerationRolesSync, resolveGenerationRole } from "@/lib/admin/generation-roles-store";
-import { GENERATION_ROLE_BUILTIN_INFO_V1 } from "@/lib/admin/generation-roles-types";
 import { buildInfoEditionV1Messages } from "@/lib/bible/info-edition-v1-prompt";
 import {
   INFO_EDITION_V1_PUBLISH_PROFILE_ID,
 } from "@/lib/bible/info-edition-v1-publish";
-import { publishInfoEditionFromGenerationsAsync } from "@/lib/bible/info-edition-v1-reader-persistence";
+import {
+  publishInfoEditionFromGenerationsAsync,
+  type ResolvedInfoEditionReaderTarget,
+} from "@/lib/bible/info-edition-v1-reader-persistence";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 import { readInfoEditionV1WorkspaceSync } from "@/lib/bible/info-edition-v1-store";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
@@ -28,11 +30,12 @@ function readerDescriptionRules(cwd: string): string {
   return `${rules.slice(0, READER_RULES_MAX_CHARS)}\n\n[…描述规则已截断，以加快生成]`;
 }
 
-/** 读经页按需：基础版 × DeepSeek，生成一章并写入发布缓存 */
+/** 读经页按需：指定角色 × DeepSeek，生成一章并写入发布缓存 */
 export async function generateInfoEditionChapterForReader(
   cwd: string,
   bookId: string,
   chapter: number,
+  target: ResolvedInfoEditionReaderTarget,
 ): Promise<GenerateReaderChapterResult> {
   const bookMeta = scriptureBooks.find((b) => b.bookId === bookId);
   if (!bookMeta) return { ok: false, error: "无效书卷。" };
@@ -46,8 +49,13 @@ export async function generateInfoEditionChapterForReader(
   }
 
   const rolesFile = readGenerationRolesSync(cwd);
-  const role = resolveGenerationRole(rolesFile, GENERATION_ROLE_BUILTIN_INFO_V1);
-  if (!role) return { ok: false, error: "基础版生成角色不可用。" };
+  const role = resolveGenerationRole(rolesFile, target.roleId);
+  if (!role) {
+    return {
+      ok: false,
+      error: target.variant === "guide" ? "引导版生成角色不可用。" : "导读版生成角色不可用。",
+    };
+  }
 
   const connections = listAllConnectionsPublic(readAiApiConfigSync(cwd));
   const conn = connections.find((c) => c.id === INFO_EDITION_V1_PUBLISH_PROFILE_ID);
@@ -78,7 +86,9 @@ export async function generateInfoEditionChapterForReader(
     };
   }
 
-  const messages = buildInfoEditionV1Messages(loaded, readerDescriptionRules(cwd), {
+  const descriptionRules =
+    target.variant === "guide" ? "" : readerDescriptionRules(cwd);
+  const messages = buildInfoEditionV1Messages(loaded, descriptionRules, {
     systemPrompt: role.systemPrompt,
   });
   const result = await createChatCompletion(settings, messages, {
@@ -96,7 +106,7 @@ export async function generateInfoEditionChapterForReader(
     charCount: result.text.length,
   };
 
-  const published = await publishInfoEditionFromGenerationsAsync(cwd, bookId, chapter, [generation]);
+  const published = await publishInfoEditionFromGenerationsAsync(cwd, bookId, chapter, [generation], target);
   if (!published) return { ok: false, error: "生成结果无效，无法发布。" };
 
   return { ok: true, published };

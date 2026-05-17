@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
-import { NatureScenesPageBackdrop } from "@/components/nature/NatureScenesPageBackdrop";
 import { ScenesPageListenShortcuts } from "@/components/nature/ScenesPageListenShortcuts";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
@@ -26,23 +17,18 @@ import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-
 
 type Props = { initial: NatureSettingsV2 };
 
-/** 与自然首页同构的舞台框；底色由 `SCENES_PAGE_SURFACE_STYLE` 注入 */
 const NATURE_VIDEO_STAGE_FRAME =
   "relative z-[1] w-full shrink-0 overflow-hidden transform-gpu min-h-[12rem]";
 
+/** 场景选择：静态渐变底 + 构建期 settings，无背景视频、无运行时拉配置。 */
 export function NatureScenesPickerPage({ initial }: Props) {
   const { t } = useLocale();
   const router = useRouter();
-  const [settings, setSettings] = useState(initial);
+  const settings = initial;
   const [activeVideoId, setActiveVideoId] = useState(() => defaultNatureHomeActiveVideoId(initial));
   const activeSceneHydratedRef = useRef(false);
   const videoStageHeightCommitRef = useRef(0);
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
-
-  useEffect(() => {
-    setSettings(initial);
-    setActiveVideoId(resolveNatureHomeActiveVideoId(initial));
-  }, [initial]);
 
   useLayoutEffect(() => {
     if (activeSceneHydratedRef.current) return;
@@ -99,38 +85,6 @@ export function NatureScenesPickerPage({ initial }: Props) {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetch("/api/nature/settings", { cache: "no-store" });
-        if (!res.ok || cancelled) return;
-        const data = (await res.json()) as NatureSettingsV2 | null;
-        if (
-          cancelled ||
-          !data ||
-          data.version !== 2 ||
-          !Array.isArray(data.videos) ||
-          !Array.isArray(data.ambientClips)
-        ) {
-          return;
-        }
-        setSettings(data);
-        setActiveVideoId((prev) => {
-          const ids = new Set(data.videos.map((v) => v.id.trim()).filter(Boolean));
-          const p = prev.trim();
-          if (p && ids.has(p)) return prev;
-          return resolveNatureHomeActiveVideoId(data);
-        });
-      } catch {
-        /* 离线等 */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const onSceneCardPress = useCallback(
     (id: string) => {
       const next = id.trim();
@@ -168,8 +122,6 @@ export function NatureScenesPickerPage({ initial }: Props) {
       />
 
       <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
-        <NatureScenesPageBackdrop settings={settings} />
-
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(58dvh,68svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
           <div className="pointer-events-auto mx-auto flex w-full min-h-0 max-w-lg flex-col items-stretch gap-5 overflow-y-auto overscroll-y-contain px-1 pb-1 sm:max-w-xl sm:px-2 md:max-w-3xl lg:max-w-none">
             <div

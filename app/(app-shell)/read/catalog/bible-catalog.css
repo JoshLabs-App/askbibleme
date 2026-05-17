@@ -42,7 +42,25 @@
 .read-bible-parchment-shell .read-bible-parchment-column--catalog {
   --read-parchment-pad-x: max(1.55rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));
   --read-parchment-pad-x-end: max(1.55rem, calc(env(safe-area-inset-right, 0px) + 0.55rem));
-  max-width: min(31rem, 100%);
+  max-width: min(var(--read-parchment-catalog-column-max, 31rem), 100%);
+}
+
+@media (min-width: 768px) {
+  .read-bible-parchment-shell .read-bible-parchment-column--catalog {
+    --read-parchment-pad-x: max(1.75rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));
+    --read-parchment-pad-x-end: max(1.75rem, calc(env(safe-area-inset-right, 0px) + 0.55rem));
+  }
+
+  .bible-catalog-page--read.bible-catalog-on-parchment {
+    --bc-read-era-w: 4.25rem;
+    --bc-read-poststripe-pad: 0.48rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bible-catalog-page--read.bible-catalog-on-parchment {
+    --bc-read-era-w: 4.75rem;
+  }
 }
 
 .read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-read-heading-row,

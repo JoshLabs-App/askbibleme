@@ -1,5 +1,5 @@
 import {
-  infoEditionChapterKey,
+  infoEditionReaderChapterKey,
   INFO_EDITION_V1_PUBLISH_PROFILE_ID,
   INFO_EDITION_V1_PUBLISH_ROLE_ID,
 } from "@/lib/bible/info-edition-v1-publish";
@@ -21,13 +21,18 @@ export type InfoEditionV1ReaderCacheResponse = {
   error?: string;
 };
 
+export type InfoEditionReaderCacheOpts = {
+  roleId: string;
+};
+
 export function getInfoEditionReaderCache(
   cwd: string,
   bookId: string,
   chapter: number,
+  opts: InfoEditionReaderCacheOpts,
 ): InfoEditionV1ReaderCacheResponse {
-  const key = infoEditionChapterKey(bookId, chapter);
-  const ready = loadPublishedInfoEditionChapter(cwd, bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, opts.roleId);
+  const ready = loadPublishedInfoEditionChapter(cwd, bookId, chapter, { roleId: opts.roleId });
   if (ready?.markdown.trim()) {
     return { status: "ready", published: ready };
   }
@@ -50,8 +55,13 @@ export function getInfoEditionReaderCache(
 }
 
 /** 占位 pending；若已在 pending 且未过期则返回 false */
-export function tryBeginInfoEditionPending(cwd: string, bookId: string, chapter: number): boolean {
-  const key = infoEditionChapterKey(bookId, chapter);
+export function tryBeginInfoEditionPending(
+  cwd: string,
+  bookId: string,
+  chapter: number,
+  opts: InfoEditionReaderCacheOpts,
+): boolean {
+  const key = infoEditionReaderChapterKey(bookId, chapter, opts.roleId);
   const file = readInfoEditionV1PublishedSync(cwd);
   const existing = file.pending?.[key];
   if (existing?.startedAt) {
@@ -74,8 +84,13 @@ export function tryBeginInfoEditionPending(cwd: string, bookId: string, chapter:
   return true;
 }
 
-export function clearInfoEditionPending(cwd: string, bookId: string, chapter: number): void {
-  const key = infoEditionChapterKey(bookId, chapter);
+export function clearInfoEditionPending(
+  cwd: string,
+  bookId: string,
+  chapter: number,
+  opts: InfoEditionReaderCacheOpts,
+): void {
+  const key = infoEditionReaderChapterKey(bookId, chapter, opts.roleId);
   const file = readInfoEditionV1PublishedSync(cwd);
   if (!file.pending?.[key]) return;
   const pending = { ...file.pending };
@@ -88,8 +103,9 @@ export function setInfoEditionReaderFailed(
   bookId: string,
   chapter: number,
   error: string,
+  opts: InfoEditionReaderCacheOpts,
 ): void {
-  const key = infoEditionChapterKey(bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, opts.roleId);
   const file = readInfoEditionV1PublishedSync(cwd);
   const failed = { ...(file.failed ?? {}) };
   failed[key] = {
@@ -103,8 +119,13 @@ export function setInfoEditionReaderFailed(
   writeInfoEditionV1PublishedSync(cwd, { ...file, pending, failed });
 }
 
-export function clearInfoEditionReaderFailed(cwd: string, bookId: string, chapter: number): void {
-  const key = infoEditionChapterKey(bookId, chapter);
+export function clearInfoEditionReaderFailed(
+  cwd: string,
+  bookId: string,
+  chapter: number,
+  opts: InfoEditionReaderCacheOpts,
+): void {
+  const key = infoEditionReaderChapterKey(bookId, chapter, opts.roleId);
   const file = readInfoEditionV1PublishedSync(cwd);
   if (!file.failed?.[key]) return;
   const failed = { ...file.failed };

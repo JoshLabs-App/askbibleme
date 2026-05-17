@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { TopicPrayerCategory } from "@/lib/prayer/topic-prayer-types";
+import type { TopicPrayerCategoryIndex } from "@/lib/prayer/topic-prayer-library-index";
 
 export const CATEGORY_DESC: Record<string, string> = {
   self: "在你的内心光景中，带着真实的需要来到神面前。",
@@ -93,7 +93,7 @@ const CATEGORY_PROSE: Record<
   ),
 };
 
-export function PrayerTopicsCategoryList({ categories }: { categories: TopicPrayerCategory[] }) {
+export function PrayerTopicsCategoryList({ categories }: { categories: TopicPrayerCategoryIndex[] }) {
   const T = (topicId: string, catId: string, title: string) => <TopicLink key={topicId} catId={catId} topicId={topicId} title={title} />;
 
   return (

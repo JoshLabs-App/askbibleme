@@ -9,6 +9,57 @@ import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-
 export const INFO_EDITION_V1_PUBLISH_ROLE_ID = GENERATION_ROLE_BUILTIN_INFO_V1;
 export const INFO_EDITION_V1_PUBLISH_PROFILE_ID = "slot:deepseek";
 
+/** 读经页「引导版」：与后台 generation-roles 中「引导版V2」对应 */
+export const INFO_EDITION_GUIDE_V2_ROLE_ID = "role_356f0ffb" as const;
+export const INFO_EDITION_GUIDE_V2_ROLE_LABEL = "引导版V2" as const;
+
+export type InfoEditionReaderVariant = "info" | "guide";
+
+export function resolveReaderGuideRoleId(
+  roles: Pick<GenerationRole, "id" | "label">[],
+): string {
+  const byLabel = roles.find((r) => r.label.trim() === INFO_EDITION_GUIDE_V2_ROLE_LABEL);
+  if (byLabel) return byLabel.id;
+  const byId = roles.find((r) => r.id === INFO_EDITION_GUIDE_V2_ROLE_ID);
+  return byId?.id ?? INFO_EDITION_GUIDE_V2_ROLE_ID;
+}
+
+export function readerVariantToRoleId(
+  variant: InfoEditionReaderVariant,
+  roles: Pick<GenerationRole, "id" | "label">[],
+): string {
+  if (variant === "guide") return resolveReaderGuideRoleId(roles);
+  return INFO_EDITION_V1_PUBLISH_ROLE_ID;
+}
+
+export function parseInfoEditionReaderVariant(raw: string | null | undefined): InfoEditionReaderVariant | null {
+  const v = raw?.trim().toLowerCase() ?? "";
+  if (v === "info" || v === "导读" || v === "导读版") return "info";
+  if (v === "guide" || v === "引导" || v === "引导版") return "guide";
+  return null;
+}
+
+function isReaderInfoEditionRole(roleId: string, roleLabel: string): boolean {
+  if (roleId === INFO_EDITION_V1_PUBLISH_ROLE_ID) return true;
+  return /^基础版/.test(roleLabel.trim());
+}
+
+function isReaderGuideEditionRole(roleId: string, roleLabel: string): boolean {
+  if (roleId === INFO_EDITION_GUIDE_V2_ROLE_ID) return true;
+  const label = roleLabel.trim();
+  return label === INFO_EDITION_GUIDE_V2_ROLE_LABEL || label === "引导版";
+}
+
+export function publishedChapterMatchesReaderRole(
+  ch: Pick<InfoEditionV1PublishedChapter, "roleId" | "roleLabel">,
+  targetRoleId: string,
+  variant: InfoEditionReaderVariant,
+): boolean {
+  if (ch.roleId === targetRoleId) return true;
+  if (variant === "info") return isReaderInfoEditionRole(ch.roleId, ch.roleLabel);
+  return isReaderGuideEditionRole(ch.roleId, ch.roleLabel);
+}
+
 function productionProfileScore(p: Pick<AIConnectionProfile, "id" | "model" | "name">): number {
   if (p.id === INFO_EDITION_V1_PUBLISH_PROFILE_ID) return 100;
   const model = p.model.trim().toLowerCase();
@@ -53,6 +104,15 @@ export function pickDefaultInfoEditionRoleIds(roles: Pick<GenerationRole, "id" |
 
 export function infoEditionChapterKey(bookId: string, chapter: number): string {
   return `${bookId.trim().toUpperCase()}:${chapter}`;
+}
+
+/** 读经页按角色分桶的缓存键（新写入一律使用此键） */
+export function infoEditionReaderChapterKey(
+  bookId: string,
+  chapter: number,
+  roleId: string,
+): string {
+  return `${infoEditionChapterKey(bookId, chapter)}:${roleId}`;
 }
 
 function generationOk(g: InfoEditionV1Generation): boolean {

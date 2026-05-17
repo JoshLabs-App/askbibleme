@@ -3,10 +3,15 @@ import path from "node:path";
 import {
   generationToPublishedChapter,
   infoEditionChapterKey,
+  infoEditionReaderChapterKey,
   INFO_EDITION_V1_PUBLISH_PROFILE_ID,
   INFO_EDITION_V1_PUBLISH_ROLE_ID,
   pickPublishedGeneration,
+  publishedChapterMatchesReaderRole,
+  readerVariantToRoleId,
+  type InfoEditionReaderVariant,
 } from "@/lib/bible/info-edition-v1-publish";
+import { readGenerationRolesSync } from "@/lib/admin/generation-roles-store";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
 import type {
   InfoEditionV1PublishedChapter,
@@ -180,14 +185,48 @@ export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1
   }
 }
 
+function resolveReaderTargetRoleId(
+  cwd: string,
+  roleId?: string,
+  variant?: InfoEditionReaderVariant | null,
+): string | null {
+  if (roleId?.trim()) return roleId.trim();
+  if (!variant) return null;
+  const roles = readGenerationRolesSync(cwd).roles;
+  return readerVariantToRoleId(variant, roles);
+}
+
 export function loadPublishedInfoEditionChapter(
   cwd: string,
   bookId: string,
   chapter: number,
+  opts?: { roleId?: string; variant?: InfoEditionReaderVariant | null },
 ): InfoEditionV1PublishedChapter | null {
   const file = readInfoEditionV1PublishedSync(cwd);
-  const key = infoEditionChapterKey(bookId, chapter);
-  return file.chapters[key] ?? null;
+  const variant = opts?.variant ?? null;
+  const targetRoleId = resolveReaderTargetRoleId(cwd, opts?.roleId, variant);
+  if (!targetRoleId) {
+    const legacyKey = infoEditionChapterKey(bookId, chapter);
+    return file.chapters[legacyKey] ?? null;
+  }
+
+  const readerKey = infoEditionReaderChapterKey(bookId, chapter, targetRoleId);
+  const fromReaderKey = file.chapters[readerKey];
+  if (fromReaderKey?.markdown.trim()) return fromReaderKey;
+
+  const legacyKey = infoEditionChapterKey(bookId, chapter);
+  const legacy = file.chapters[legacyKey];
+  if (
+    legacy?.markdown.trim() &&
+    publishedChapterMatchesReaderRole(
+      legacy,
+      targetRoleId,
+      variant ?? (targetRoleId === INFO_EDITION_V1_PUBLISH_ROLE_ID ? "info" : "guide"),
+    )
+  ) {
+    return legacy;
+  }
+  return null;
 }
 
 /** 将对比结果中的「基础版 + DeepSeek」写入发布文件，供前台读经页读取 */
@@ -196,13 +235,17 @@ export function publishInfoEditionFromGenerations(
   bookId: string,
   chapter: number,
   generations: InfoEditionV1Generation[],
+  opts?: { roleId?: string },
 ): InfoEditionV1PublishedChapter | null {
-  const picked = pickPublishedGeneration(generations);
+  const picked = opts?.roleId
+    ? generations.find((g) => !g.error && g.text.trim() && g.generationRoleId === opts.roleId) ??
+      generations.find((g) => !g.error && g.text.trim())
+    : pickPublishedGeneration(generations);
   if (!picked) return null;
   const now = new Date().toISOString();
   const entry = generationToPublishedChapter(bookId, chapter, picked, now);
   const file = readInfoEditionV1PublishedSync(cwd);
-  const key = infoEditionChapterKey(bookId, chapter);
+  const key = infoEditionReaderChapterKey(bookId, chapter, entry.roleId);
   file.chapters[key] = entry;
   if (file.pending?.[key]) {
     const pending = { ...file.pending };

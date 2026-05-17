@@ -1,20 +1,26 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 import { readNatureBackground1080Pref } from "@/lib/nature/nature-video-quality-prefs";
 
 const PREFETCH_STAGGER_MS = 550;
+const PREFETCH_MAX_URLS = 2;
+/** 首屏后再预取，避免与首页静图/主视频争带宽 */
+const PREFETCH_DELAY_MS = 14_000;
 
 /**
- * 仅在标签页前台可见、且非 iOS、非 Save-Data、非低内存机时，于 idle 错峰 `link rel=prefetch` 若干成片。
- * 隐藏或后台：取消排队并移除已注入的 link，避免不可见 Tab 继续拉满大媒体。
+ * 仅自然首页：前台 idle 且停留一段时间后，错峰 prefetch 最多 2 条成片。
  */
 export function NatureBackgroundVideoPrefetch() {
+  const pathname = usePathname() ?? "";
   const sessionRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!isNatureHomeShellPath(pathname)) return;
     if (isIosLikeUserAgent()) return;
 
     const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
@@ -80,7 +86,9 @@ export function NatureBackgroundVideoPrefetch() {
           if (!r.ok || disposed || sid !== sessionRef.current) return;
           const j = (await r.json()) as { urls?: unknown };
           if (!Array.isArray(j.urls)) return;
-          urls = j.urls.filter((u): u is string => typeof u === "string");
+          urls = j.urls
+            .filter((u): u is string => typeof u === "string")
+            .slice(0, PREFETCH_MAX_URLS);
         } catch {
           return;
         }
@@ -95,6 +103,7 @@ export function NatureBackgroundVideoPrefetch() {
 
     let idleHandle: number | null = null;
     let fallbackTimer: number | null = null;
+    let delayTimer: number | null = null;
 
     const cancelIdleKick = () => {
       if (idleHandle != null && typeof window.cancelIdleCallback === "function") {
@@ -104,6 +113,10 @@ export function NatureBackgroundVideoPrefetch() {
       if (fallbackTimer != null) {
         window.clearTimeout(fallbackTimer);
         fallbackTimer = null;
+      }
+      if (delayTimer != null) {
+        window.clearTimeout(delayTimer);
+        delayTimer = null;
       }
     };
 
@@ -119,11 +132,15 @@ export function NatureBackgroundVideoPrefetch() {
         runPrefetch(sid);
       };
 
-      if (typeof window.requestIdleCallback === "function") {
-        idleHandle = window.requestIdleCallback(kick, { timeout: 8000 });
-      } else {
-        fallbackTimer = window.setTimeout(kick, 2200);
-      }
+      delayTimer = window.setTimeout(() => {
+        delayTimer = null;
+        if (disposed || sid !== sessionRef.current) return;
+        if (typeof window.requestIdleCallback === "function") {
+          idleHandle = window.requestIdleCallback(kick, { timeout: 12_000 });
+        } else {
+          fallbackTimer = window.setTimeout(kick, 800);
+        }
+      }, PREFETCH_DELAY_MS);
     };
 
     const onVisibility = () => {
@@ -144,7 +161,7 @@ export function NatureBackgroundVideoPrefetch() {
       cancelIdleKick();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

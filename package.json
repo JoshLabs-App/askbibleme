@@ -24,6 +24,8 @@
     "generate:home-golden-verse-static": "tsx scripts/generate-home-golden-verse-rotation-static.ts",
     "build:bible-sqlite": "tsx scripts/build-bible-sqlite-from-json.ts",
     "migrate:askbible-admin-emails": "node scripts/migration/askbible-admin-export.mjs",
+    "audio:checkout": "bash scripts/checkout-cuv-chapter-audio.sh",
+    "audio:sync-disk": "node scripts/sync-cuv-audio-to-data-root.mjs",
     "ship": "bash scripts/ship.sh",
     "ship:data": "bash scripts/ship-data-config.sh",
     "mobile:start": "npm run start --prefix apps/selah-mobile",

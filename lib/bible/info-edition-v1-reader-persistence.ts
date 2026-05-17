@@ -7,6 +7,12 @@ import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types"
 import type {
   InfoEditionV1PublishedChapter,
 } from "@/lib/bible/info-edition-v1-published-types";
+import { readGenerationRolesSync } from "@/lib/admin/generation-roles-store";
+import {
+  parseInfoEditionReaderVariant,
+  readerVariantToRoleId,
+  type InfoEditionReaderVariant,
+} from "@/lib/bible/info-edition-v1-publish";
 import {
   clearInfoEditionPending as clearPendingDisk,
   getInfoEditionReaderCache as getCacheDisk,
@@ -34,6 +40,28 @@ import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
 
 export type InfoEditionReaderPersistence = "disk" | "supabase" | "none";
+
+export type ResolvedInfoEditionReaderTarget = {
+  variant: InfoEditionReaderVariant;
+  roleId: string;
+};
+
+export function resolveInfoEditionReaderTarget(
+  cwd: string,
+  opts: { edition?: string | null; roleId?: string | null },
+): ResolvedInfoEditionReaderTarget | { error: string } {
+  const roles = readGenerationRolesSync(cwd).roles;
+  const editionRaw = opts.edition?.trim() ?? "";
+  const roleIdRaw = opts.roleId?.trim() ?? "";
+  if (editionRaw && !parseInfoEditionReaderVariant(editionRaw)) {
+    return { error: "无效的 edition（请使用 info 或 guide）。" };
+  }
+  const variant = parseInfoEditionReaderVariant(editionRaw) ?? "info";
+  if (roleIdRaw) {
+    return { variant, roleId: roleIdRaw };
+  }
+  return { variant, roleId: readerVariantToRoleId(variant, roles) };
+}
 
 export { isInfoEditionDiskSaveEnabled };
 
@@ -110,18 +138,22 @@ export async function getInfoEditionReaderCacheAsync(
   cwd: string,
   bookId: string,
   chapter: number,
+  target: ResolvedInfoEditionReaderTarget,
 ): Promise<InfoEditionV1ReaderCacheResponse> {
-  const bundled = loadPublishedInfoEditionChapter(cwd, bookId, chapter);
+  const bundled = loadPublishedInfoEditionChapter(cwd, bookId, chapter, {
+    roleId: target.roleId,
+    variant: target.variant,
+  });
   if (bundled?.markdown.trim()) {
     return { status: "ready", published: bundled };
   }
 
   const mode = getInfoEditionReaderPersistence();
   if (mode === "supabase") {
-    return getInfoEditionReaderCacheSupabase(bookId, chapter);
+    return getInfoEditionReaderCacheSupabase(bookId, chapter, target.roleId);
   }
   if (mode === "disk") {
-    return getCacheDisk(cwd, bookId, chapter);
+    return getCacheDisk(cwd, bookId, chapter, { roleId: target.roleId });
   }
   return { status: "missing" };
 }
@@ -130,13 +162,14 @@ export async function tryBeginInfoEditionPendingAsync(
   cwd: string,
   bookId: string,
   chapter: number,
+  target: ResolvedInfoEditionReaderTarget,
 ): Promise<boolean> {
   const mode = getInfoEditionReaderPersistence();
   if (mode === "supabase") {
-    return tryBeginInfoEditionPendingSupabase(bookId, chapter);
+    return tryBeginInfoEditionPendingSupabase(bookId, chapter, target.roleId);
   }
   if (mode === "disk") {
-    return tryBeginDisk(cwd, bookId, chapter);
+    return tryBeginDisk(cwd, bookId, chapter, { roleId: target.roleId });
   }
   return false;
 }
@@ -145,14 +178,15 @@ export async function clearInfoEditionPendingAsync(
   cwd: string,
   bookId: string,
   chapter: number,
+  target: ResolvedInfoEditionReaderTarget,
 ): Promise<void> {
   const mode = getInfoEditionReaderPersistence();
   if (mode === "supabase") {
-    await clearInfoEditionPendingSupabase(bookId, chapter);
+    await clearInfoEditionPendingSupabase(bookId, chapter, target.roleId);
     return;
   }
   if (mode === "disk") {
-    clearPendingDisk(cwd, bookId, chapter);
+    clearPendingDisk(cwd, bookId, chapter, { roleId: target.roleId });
   }
 }
 
@@ -161,14 +195,15 @@ export async function setInfoEditionReaderFailedAsync(
   bookId: string,
   chapter: number,
   error: string,
+  target: ResolvedInfoEditionReaderTarget,
 ): Promise<void> {
   const mode = getInfoEditionReaderPersistence();
   if (mode === "supabase") {
-    await setInfoEditionReaderFailedSupabase(bookId, chapter, error);
+    await setInfoEditionReaderFailedSupabase(bookId, chapter, error, target.roleId);
     return;
   }
   if (mode === "disk") {
-    setFailedDisk(cwd, bookId, chapter, error);
+    setFailedDisk(cwd, bookId, chapter, error, { roleId: target.roleId });
   }
 }
 
@@ -177,13 +212,16 @@ export async function publishInfoEditionFromGenerationsAsync(
   bookId: string,
   chapter: number,
   generations: InfoEditionV1Generation[],
+  target: ResolvedInfoEditionReaderTarget,
 ): Promise<InfoEditionV1PublishedChapter | null> {
   const mode = getInfoEditionReaderPersistence();
   if (mode === "supabase") {
-    return publishInfoEditionChapterSupabase(bookId, chapter, generations);
+    return publishInfoEditionChapterSupabase(bookId, chapter, generations, target.roleId);
   }
   if (mode === "disk") {
-    return publishInfoEditionFromGenerations(cwd, bookId, chapter, generations);
+    return publishInfoEditionFromGenerations(cwd, bookId, chapter, generations, {
+      roleId: target.roleId,
+    });
   }
   return null;
 }

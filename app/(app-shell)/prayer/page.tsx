@@ -2,7 +2,7 @@ import { PrayerTopicsCategoryList } from "@/components/prayer/PrayerTopicsIndex"
 import { PrayerHomeFirstScreen } from "@/components/prayer/PrayerHomeFirstScreen";
 import { PrayerPageFrame } from "@/components/prayer/PrayerPageFrame";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
-import { readTopicPrayerLibrarySync } from "@/lib/prayer/read-topic-prayer-library";
+import { readTopicPrayerLibraryIndexSync } from "@/lib/prayer/topic-prayer-library-index";
 import { resolveTopicPrayerLibraryJsonPath } from "@/lib/prayer/topic-prayer-library-path";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
@@ -16,8 +16,7 @@ export const revalidate = 600;
 export default function PrayerIndexPage() {
   const cwd = process.cwd();
   const jsonPath = resolveTopicPrayerLibraryJsonPath(cwd);
-  const lib = readTopicPrayerLibrarySync(cwd);
-  const categories = lib.categories;
+  const categories = readTopicPrayerLibraryIndexSync(cwd);
 
   return (
     <ScriptureChrome scrollHome>

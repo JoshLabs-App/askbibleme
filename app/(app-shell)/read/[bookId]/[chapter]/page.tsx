@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ReadChapterEndNav } from "@/components/bible/ReadChapterEndNav";
 import { ReadChapterTodayPlanBlock } from "@/components/bible/ReadChapterTodayPlanBlock";
 import { ReadChapterNav } from "@/components/bible/ReadChapterNav";
+import { ReadChapterCuvAudioBar } from "@/components/bible/ReadChapterCuvAudioBar";
 import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadReadChapterForReadPage } from "@/lib/read/load-read-chapter-for-read-page";
@@ -65,6 +66,12 @@ export default async function ReadChapterPage({ params }: Props) {
             第 {data.chapter} 章
           </span>
         </h1>
+        <ReadChapterCuvAudioBar
+          translationId={data.translationId}
+          bookId={data.bookId}
+          bookName={data.bookName}
+          chapter={data.chapter}
+        />
       </header>
       <article className="read-chapter-article">
         <div className="read-chapter-scripture">

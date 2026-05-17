@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import {
   resolveCuvChapterAudioPlayableSrc,
   translationSupportsCuvChapterAudio,
 } from "@/lib/bible/cuv-chapter-audio";
+import { getTeochewNtManifestEntry } from "@/lib/bible/teochew-nt-audio";
 import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
 
 type Props = {
@@ -17,10 +19,11 @@ type Props = {
 };
 
 /**
- * 和合本章节朗读：音源规则来自 AskBible 2 reader；走壳层唯一 `<audio>`（与底栏播放同一套）。
+ * 和合本章节朗读：人声在右上阅读设置；此处仅播放控制。
  */
 export function ReadChapterCuvAudioBar({ translationId, bookId, bookName, chapter }: Props) {
   const { t } = useLocale();
+  const { effectiveVoiceId } = useCuvChapterAudioVoice();
   const {
     effectiveSrc,
     playing,
@@ -36,6 +39,7 @@ export function ReadChapterCuvAudioBar({ translationId, bookId, bookName, chapte
   const pushedRef = useRef(false);
 
   const supported = translationSupportsCuvChapterAudio(translationId);
+  const playVoice = effectiveVoiceId(bookId);
 
   useEffect(() => {
     if (!supported) return;
@@ -43,7 +47,12 @@ export function ReadChapterCuvAudioBar({ translationId, bookId, bookName, chapte
     setResolveState("busy");
     setResolvedSrc(null);
     void (async () => {
-      const r = await resolveCuvChapterAudioPlayableSrc({ bookName, bookId, chapter });
+      const r = await resolveCuvChapterAudioPlayableSrc({
+        bookName,
+        bookId,
+        chapter,
+        voiceId: playVoice,
+      });
       if (cancelled) return;
       if (!r.ok) {
         setResolveState("err");
@@ -55,7 +64,7 @@ export function ReadChapterCuvAudioBar({ translationId, bookId, bookName, chapte
     return () => {
       cancelled = true;
     };
-  }, [supported, bookName, bookId, chapter]);
+  }, [supported, bookName, bookId, chapter, playVoice]);
 
   useEffect(() => {
     return () => {
@@ -104,12 +113,16 @@ export function ReadChapterCuvAudioBar({ translationId, bookId, bookName, chapte
   const disabled = resolveState === "busy" || resolveState === "idle" || !resolvedSrc || loading;
   const label =
     resolveState === "err"
-      ? t("pages.read.chapterAudioUnavailable")
+      ? playVoice === "teochew-nt" && getTeochewNtManifestEntry(bookId, chapter)
+        ? t("pages.read.chapterAudioTeochewNotOnDisk")
+        : t("pages.read.chapterAudioUnavailable")
       : resolveState === "busy"
         ? t("pages.read.chapterAudioPreparing")
         : isThisChapterBound && playing
           ? t("pages.read.chapterAudioPause")
-          : t("pages.read.chapterAudioPlay");
+          : playVoice === "teochew-nt"
+            ? t("pages.read.chapterAudioPlayTeochew")
+            : t("pages.read.chapterAudioPlay");
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -121,7 +134,9 @@ export function ReadChapterCuvAudioBar({ translationId, bookId, bookName, chapte
       >
         {label}
       </button>
-      <p className="text-[11px] leading-snug text-amber-900/48 dark:text-stone-500">{t("pages.read.chapterAudioHint")}</p>
+      <p className="text-[11px] leading-snug text-amber-900/48 dark:text-stone-500">
+        {playVoice === "teochew-nt" ? t("pages.read.chapterAudioTeochewHint") : t("pages.read.chapterAudioHint")}
+      </p>
     </div>
   );
 }

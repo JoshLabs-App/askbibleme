@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const FILENAME_RE = /^[A-Z0-9]{2,8}-\d+\.mp3$/i;
+const MANDARIN_FILENAME_RE = /^[A-Z0-9]{2,8}-\d+\.mp3$/i;
+const TEOCHEW_REL_RE = /^teochew-nt\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 
 /** Render 磁盘等：`{DATA_ROOT}/audio` 或 `CUV_AUDIO_DATA_DIR` */
 export function cuvChapterAudioDataDir(): string | null {
@@ -11,21 +12,32 @@ export function cuvChapterAudioDataDir(): string | null {
   return path.join(root, "audio");
 }
 
+/** 相对路径：`GEN-1.mp3` 或 `teochew-nt/MAT-1.mp3` */
+export function isSafeChapterAudioRelativePath(relativePath: string): boolean {
+  const norm = String(relativePath || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "");
+  if (!norm || norm.includes("..")) return false;
+  return MANDARIN_FILENAME_RE.test(norm) || TEOCHEW_REL_RE.test(norm);
+}
+
+/** @deprecated use isSafeChapterAudioRelativePath */
 export function isSafeCuvChapterAudioFilename(filename: string): boolean {
-  const base = path.basename(String(filename || "").trim());
-  return Boolean(base) && FILENAME_RE.test(base);
+  return isSafeChapterAudioRelativePath(filename);
 }
 
 /** 解析磁盘上的 MP3 路径：`public/audio` 优先，其次 `{DATA_ROOT}/audio` */
-export function resolveCuvChapterAudioFilePath(filename: string): string | null {
-  const safe = path.basename(String(filename || "").trim());
-  if (!isSafeCuvChapterAudioFilename(safe)) return null;
+export function resolveCuvChapterAudioFilePath(relativePath: string): string | null {
+  const norm = String(relativePath || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "");
+  if (!isSafeChapterAudioRelativePath(norm)) return null;
 
-  const candidates: string[] = [
-    path.join(process.cwd(), "public", "audio", safe),
-  ];
+  const candidates: string[] = [path.join(process.cwd(), "public", "audio", norm)];
   const dataDir = cuvChapterAudioDataDir();
-  if (dataDir) candidates.push(path.join(dataDir, safe));
+  if (dataDir) candidates.push(path.join(dataDir, norm));
 
   for (const p of candidates) {
     try {

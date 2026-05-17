@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { ReadChapterAudioVoiceSettingsFields } from "@/components/bible/ReadChapterAudioVoiceSettingsFields";
 import {
   useReadBibleTranslationSettings,
   useReadBibleTypography,
@@ -157,6 +158,7 @@ export function ReadBibleTypographySettingsControl() {
                   {t("pages.read.typography.contrastHint")}
                 </p>
               ) : null}
+              <ReadChapterAudioVoiceSettingsFields />
             </>
           ) : null}
 

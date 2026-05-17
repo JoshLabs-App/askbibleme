@@ -15,6 +15,7 @@ import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
 import { PwaInstallPrompt } from "@/components/app-shell/PwaInstallPrompt";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { CuvChapterAudioVoiceProvider } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
 import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
 import { getAppBuildId } from "@/lib/app-build-id";
@@ -120,11 +121,13 @@ export default async function RootLayout({
         <AppSkinProvider>
           <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
             <AskbibleUserProvider>
-              <MusicShellPlaybackProvider>
-                {children}
-                <PwaInstallPrompt />
-                <AppUpdateNotifier />
-              </MusicShellPlaybackProvider>
+              <CuvChapterAudioVoiceProvider>
+                <MusicShellPlaybackProvider>
+                  {children}
+                  <PwaInstallPrompt />
+                  <AppUpdateNotifier />
+                </MusicShellPlaybackProvider>
+              </CuvChapterAudioVoiceProvider>
             </AskbibleUserProvider>
           </LocaleProvider>
         </AppSkinProvider>

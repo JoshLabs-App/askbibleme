@@ -29,7 +29,9 @@ import {
   readDevicePlaybackPersisted,
   writeDevicePlaybackPersisted,
 } from "@/lib/music/device-playback-storage";
+import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { resolveCuvChapterAudioPlayableSrc, translationSupportsCuvChapterAudio } from "@/lib/bible/cuv-chapter-audio";
+import { voiceSupportsBook } from "@/lib/bible/cuv-chapter-audio-voices";
 import { tryParseCuvChapterAudioEffectiveSrc, isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { indexInReadingPlanQueue } from "@/lib/read/reading-plan-chapter-queue";
@@ -166,6 +168,11 @@ export function useMusicShellPlayback(): MusicShellPlaybackValue {
 export function MusicShellPlaybackProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
+  const { voiceId: chapterAudioVoiceId, effectiveVoiceId } = useCuvChapterAudioVoice();
+  const chapterAudioVoiceRef = useRef(chapterAudioVoiceId);
+  useEffect(() => {
+    chapterAudioVoiceRef.current = chapterAudioVoiceId;
+  }, [chapterAudioVoiceId]);
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [loading, setLoading] = useState(true);
   /**
@@ -756,10 +763,16 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
                 setPlaying(false);
                 return;
               }
+              const activeVoice = planParsed.voiceId;
+              if (activeVoice === "teochew-nt" && !voiceSupportsBook("teochew-nt", next.bookId)) {
+                setPlaying(false);
+                return;
+              }
               const resolved = await resolveCuvChapterAudioPlayableSrc({
                 bookName: meta.bookName,
                 bookId: next.bookId,
                 chapter: next.chapter,
+                voiceId: activeVoice,
               });
               if (!resolved.ok) {
                 setPlaying(false);
@@ -801,6 +814,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
             bookName: meta.bookName,
             bookId: parsed.bookId,
             chapter: nextCh,
+            voiceId: parsed.voiceId,
           });
           if (!resolved.ok) {
             setPlaying(false);
@@ -873,10 +887,12 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
             setScriptureAudioRepeatModeState("off");
             scriptureAudioRepeatRef.current = "off";
           }
+          const playVoice = effectiveVoiceId(readCh.bookId);
           const resolved = await resolveCuvChapterAudioPlayableSrc({
             bookName: bookMeta.bookName,
             bookId: readCh.bookId,
             chapter: readCh.chapter,
+            voiceId: playVoice,
           });
           if (resolved.ok) {
             const want = resolved.src.trim();

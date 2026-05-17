@@ -1,8 +1,13 @@
 /**
  * 和合本（CUV）整章朗读音源。
  * - 自托管（推荐生产）：仅 ` /audio/{BOOK}-{chapter}.mp3 `（public 或 DATA_ROOT/audio）
+ * - 潮州语新约：`/audio/teochew-nt/{BOOK}-{chapter}.mp3`（见 teochew-nt-audio-manifest.json）
  * - 开发回退：未开自托管时，本地不存在则回退 theaudiopower.org
  */
+
+import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
+import { effectiveVoiceForBook, voiceSupportsBook } from "@/lib/bible/cuv-chapter-audio-voices";
+import { resolveTeochewNtChapterAudioPlayableSrc, teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
 
 export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://theaudiopower.org/CUV/Recordings";
 
@@ -54,7 +59,17 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   bookName: string;
   bookId: string;
   chapter: number;
+  voiceId?: CuvChapterAudioVoiceId;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
+  const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
+  if (teochewNtVoiceActive(voice)) {
+    return resolveTeochewNtChapterAudioPlayableSrc({
+      bookId: args.bookId,
+      chapter: args.chapter,
+    });
+  }
+  if (!voiceSupportsBook(voice, args.bookId)) return { ok: false };
+
   const local = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
   if (!local) return { ok: false };
 

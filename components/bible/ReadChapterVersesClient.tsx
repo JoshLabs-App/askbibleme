@@ -1,7 +1,15 @@
 "use client";
 
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
+import {
+  fetchCuvChapterVerseTimings,
+  type CuvChapterVerseTiming,
+  verseIndexForVerseNumber,
+  verseNumberAtChapterAudioTime,
+} from "@/lib/bible/cuv-chapter-verse-timings";
 import { getCuvChapterAudioContentBounds } from "@/lib/bible/cuv-chapter-audio-content-bounds";
 import {
   inferDivineSpeechSpans,
@@ -34,8 +42,12 @@ export function ReadChapterVersesClient({
   verses,
   contrastVerses = null,
 }: Props) {
+  const { effectiveVoiceId } = useCuvChapterAudioVoice();
   const { effectiveSrc, currentSec, durationSec, playing } = useMusicShellPlayback();
+  const playVoice = effectiveVoiceId(bookId);
   const [resolvedChapterSrc, setResolvedChapterSrc] = useState<string | null>(null);
+  const [verseTimings, setVerseTimings] = useState<CuvChapterVerseTiming[] | null>(null);
+  const [verseTimingsReady, setVerseTimingsReady] = useState<"idle" | "pending" | "yes" | "no">("idle");
   const verseElRefs = useRef<(HTMLParagraphElement | null)[]>([]);
   const lastFollowIndexRef = useRef<number | null>(null);
   const anchorKeyRef = useRef("");
@@ -45,6 +57,8 @@ export function ReadChapterVersesClient({
     anchorKeyRef.current = anchorKey;
     verseElRefs.current = [];
     lastFollowIndexRef.current = null;
+    setVerseTimings(null);
+    setVerseTimingsReady("idle");
   }
 
   const supported = translationSupportsCuvChapterAudio(translationId);
@@ -56,14 +70,46 @@ export function ReadChapterVersesClient({
     }
     let cancelled = false;
     void (async () => {
-      const r = await resolveCuvChapterAudioPlayableSrc({ bookName, bookId, chapter });
+      const r = await resolveCuvChapterAudioPlayableSrc({
+        bookName,
+        bookId,
+        chapter,
+        voiceId: playVoice,
+      });
       if (cancelled) return;
       setResolvedChapterSrc(r.ok ? r.src : null);
     })();
     return () => {
       cancelled = true;
     };
-  }, [supported, bookName, bookId, chapter]);
+  }, [supported, bookName, bookId, chapter, playVoice]);
+
+  const useVerseTimingsFile = supported && !teochewNtVoiceActive(playVoice);
+
+  useEffect(() => {
+    if (!useVerseTimingsFile) {
+      setVerseTimings(null);
+      setVerseTimingsReady("idle");
+      return;
+    }
+    let cancelled = false;
+    setVerseTimingsReady("pending");
+    setVerseTimings(null);
+    void (async () => {
+      const timings = await fetchCuvChapterVerseTimings(bookId, chapter);
+      if (cancelled) return;
+      if (timings?.length) {
+        setVerseTimings(timings);
+        setVerseTimingsReady("yes");
+      } else {
+        setVerseTimings(null);
+        setVerseTimingsReady("no");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [useVerseTimingsFile, bookId, chapter]);
 
   const contrastByVerse = useMemo(() => {
     if (!contrastVerses?.length) return null;
@@ -86,20 +132,28 @@ export function ReadChapterVersesClient({
   }, [pilotDivineSpeech, verses, translationId, bookId, chapter]);
 
   const contentBounds = useMemo(() => {
-    if (!supported) return undefined;
+    if (!supported || teochewNtVoiceActive(playVoice) || verseTimingsReady === "yes") return undefined;
     const { leadInSec, trailOutSec } = getCuvChapterAudioContentBounds(bookId, chapter);
     return { contentStartSec: leadInSec, contentEndTrimSec: trailOutSec };
-  }, [supported, bookId, chapter]);
+  }, [supported, bookId, chapter, playVoice, verseTimingsReady]);
 
   const audioMatchesThisChapter =
     Boolean(resolvedChapterSrc) &&
     Boolean(effectiveSrc.trim()) &&
     shellPlaybackUrlsEqual(resolvedChapterSrc!, effectiveSrc.trim());
 
-  const activeIndex =
-    supported && audioMatchesThisChapter
-      ? verseIndexForReadChapterAudioTime(currentSec, durationSec, weights, contentBounds)
-      : null;
+  const verseFollowEnabled = supported && !teochewNtVoiceActive(playVoice);
+
+  const activeIndex = (() => {
+    if (!verseFollowEnabled || !audioMatchesThisChapter) return null;
+    if (verseTimingsReady === "yes" && verseTimings?.length) {
+      const verseNum = verseNumberAtChapterAudioTime(currentSec, verseTimings);
+      if (verseNum === null) return null;
+      return verseIndexForVerseNumber(verses, verseNum);
+    }
+    if (verseTimingsReady === "pending") return null;
+    return verseIndexForReadChapterAudioTime(currentSec, durationSec, weights, contentBounds);
+  })();
 
   useLayoutEffect(() => {
     if (!playing) {

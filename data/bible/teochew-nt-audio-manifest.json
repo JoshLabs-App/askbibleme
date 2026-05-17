@@ -1,0 +1,2091 @@
+{
+  "version": 1,
+  "source": "tstscc-teochew",
+  "sourceSite": "http://info.tstscc.org:9090/teochew/",
+  "mode": 0,
+  "modeLabel": "朗读版",
+  "attribution": "潮州语新约朗读音频：众生命堂「潮汕語音聖經」朗读版（2018–2020）。",
+  "count": 260,
+  "entries": [
+    {
+      "bookId": "MAT",
+      "chapter": 1,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___01_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___01_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-1.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 2,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___02_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___02_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-2.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 3,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___03_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___03_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-3.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 4,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___04_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___04_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-4.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 5,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___05_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___05_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-5.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 6,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___06_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___06_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-6.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 7,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___07_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___07_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-7.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 8,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___08_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___08_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-8.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 9,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___09_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___09_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-9.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 10,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___10_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___10_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-10.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 11,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___11_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___11_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-11.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 12,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___12_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___12_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-12.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 13,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___13_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___13_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-13.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 14,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___14_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___14_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-14.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 15,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___15_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___15_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-15.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 16,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___16_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___16_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-16.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 17,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___17_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___17_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-17.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 18,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___18_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___18_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-18.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 19,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___19_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___19_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-19.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 20,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___20_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___20_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-20.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 21,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___21_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___21_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-21.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 22,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___22_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___22_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-22.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 23,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___23_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___23_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-23.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 24,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___24_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___24_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-24.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 25,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___25_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___25_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-25.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 26,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___26_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___26_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-26.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 27,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___27_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___27_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-27.mp3"
+    },
+    {
+      "bookId": "MAT",
+      "chapter": 28,
+      "tstsccSlug": "mat",
+      "remotePath": "read/B01___28_Matthew_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B01___28_Matthew_______N1CFRUNV.mp3",
+      "localFilename": "MAT-28.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 1,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___01_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___01_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-1.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 2,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___02_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___02_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-2.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 3,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___03_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___03_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-3.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 4,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___04_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___04_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-4.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 5,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___05_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___05_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-5.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 6,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___06_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___06_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-6.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 7,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___07_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___07_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-7.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 8,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___08_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___08_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-8.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 9,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___09_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___09_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-9.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 10,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___10_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___10_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-10.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 11,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___11_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___11_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-11.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 12,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___12_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___12_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-12.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 13,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___13_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___13_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-13.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 14,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___14_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___14_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-14.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 15,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___15_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___15_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-15.mp3"
+    },
+    {
+      "bookId": "MRK",
+      "chapter": 16,
+      "tstsccSlug": "mak",
+      "remotePath": "read/B02___16_Mark__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B02___16_Mark__________N1CFRUNV.mp3",
+      "localFilename": "MRK-16.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 1,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___01_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___01_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-1.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 2,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___02_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___02_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-2.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 3,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___03_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___03_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-3.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 4,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___04_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___04_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-4.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 5,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___05_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___05_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-5.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 6,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___06_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___06_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-6.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 7,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___07_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___07_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-7.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 8,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___08_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___08_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-8.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 9,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___09_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___09_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-9.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 10,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___10_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___10_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-10.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 11,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___11_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___11_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-11.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 12,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___12_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___12_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-12.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 13,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___13_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___13_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-13.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 14,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___14_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___14_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-14.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 15,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___15_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___15_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-15.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 16,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___16_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___16_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-16.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 17,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___17_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___17_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-17.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 18,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___18_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___18_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-18.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 19,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___19_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___19_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-19.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 20,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___20_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___20_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-20.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 21,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___21_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___21_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-21.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 22,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___22_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___22_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-22.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 23,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___23_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___23_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-23.mp3"
+    },
+    {
+      "bookId": "LUK",
+      "chapter": 24,
+      "tstsccSlug": "luk",
+      "remotePath": "read/B03___24_Luke__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B03___24_Luke__________N1CFRUNV.mp3",
+      "localFilename": "LUK-24.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 1,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___01_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___01_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-1.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 2,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___02_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___02_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-2.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 3,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___03_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___03_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-3.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 4,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___04_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___04_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-4.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 5,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___05_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___05_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-5.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 6,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___06_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___06_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-6.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 7,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___07_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___07_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-7.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 8,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___08_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___08_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-8.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 9,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___09_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___09_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-9.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 10,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___10_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___10_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-10.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 11,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___11_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___11_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-11.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 12,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___12_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___12_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-12.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 13,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___13_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___13_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-13.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 14,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___14_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___14_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-14.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 15,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___15_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___15_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-15.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 16,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___16_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___16_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-16.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 17,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___17_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___17_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-17.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 18,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___18_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___18_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-18.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 19,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___19_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___19_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-19.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 20,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___20_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___20_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-20.mp3"
+    },
+    {
+      "bookId": "JHN",
+      "chapter": 21,
+      "tstsccSlug": "jhn",
+      "remotePath": "read/B04___21_John__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B04___21_John__________N1CFRUNV.mp3",
+      "localFilename": "JHN-21.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 1,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___01_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___01_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-1.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 2,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___02_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___02_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-2.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 3,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___03_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___03_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-3.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 4,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___04_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___04_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-4.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 5,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___05_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___05_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-5.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 6,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___06_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___06_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-6.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 7,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___07_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___07_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-7.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 8,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___08_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___08_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-8.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 9,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___09_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___09_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-9.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 10,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___10_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___10_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-10.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 11,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___11_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___11_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-11.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 12,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___12_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___12_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-12.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 13,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___13_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___13_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-13.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 14,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___14_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___14_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-14.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 15,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___15_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___15_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-15.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 16,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___16_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___16_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-16.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 17,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___17_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___17_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-17.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 18,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___18_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___18_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-18.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 19,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___19_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___19_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-19.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 20,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___20_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___20_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-20.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 21,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___21_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___21_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-21.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 22,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___22_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___22_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-22.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 23,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___23_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___23_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-23.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 24,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___24_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___24_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-24.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 25,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___25_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___25_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-25.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 26,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___26_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___26_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-26.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 27,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___27_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___27_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-27.mp3"
+    },
+    {
+      "bookId": "ACT",
+      "chapter": 28,
+      "tstsccSlug": "act",
+      "remotePath": "read/B05___28_Acts__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B05___28_Acts__________N1CFRUNV.mp3",
+      "localFilename": "ACT-28.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 1,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___01_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___01_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-1.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 2,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___02_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___02_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-2.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 3,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___03_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___03_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-3.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 4,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___04_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___04_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-4.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 5,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___05_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___05_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-5.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 6,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___06_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___06_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-6.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 7,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___07_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___07_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-7.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 8,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___08_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___08_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-8.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 9,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___09_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___09_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-9.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 10,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___10_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___10_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-10.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 11,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___11_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___11_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-11.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 12,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___12_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___12_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-12.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 13,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___13_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___13_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-13.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 14,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___14_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___14_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-14.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 15,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___15_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___15_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-15.mp3"
+    },
+    {
+      "bookId": "ROM",
+      "chapter": 16,
+      "tstsccSlug": "rom",
+      "remotePath": "read/B06___16_Romans________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B06___16_Romans________N1CFRUNV.mp3",
+      "localFilename": "ROM-16.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 1,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___01_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___01_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-1.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 2,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___02_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___02_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-2.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 3,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___03_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___03_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-3.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 4,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___04_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___04_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-4.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 5,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___05_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___05_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-5.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 6,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___06_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___06_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-6.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 7,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___07_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___07_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-7.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 8,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___08_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___08_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-8.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 9,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___09_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___09_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-9.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 10,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___10_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___10_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-10.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 11,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___11_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___11_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-11.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 12,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___12_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___12_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-12.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 13,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___13_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___13_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-13.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 14,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___14_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___14_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-14.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 15,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___15_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___15_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-15.mp3"
+    },
+    {
+      "bookId": "1CO",
+      "chapter": 16,
+      "tstsccSlug": "1co",
+      "remotePath": "read/B07___16_1Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B07___16_1Corinthians__N1CFRUNV.mp3",
+      "localFilename": "1CO-16.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 1,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___01_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___01_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-1.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 2,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___02_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___02_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-2.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 3,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___03_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___03_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-3.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 4,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___04_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___04_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-4.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 5,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___05_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___05_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-5.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 6,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___06_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___06_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-6.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 7,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___07_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___07_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-7.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 8,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___08_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___08_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-8.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 9,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___09_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___09_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-9.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 10,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___10_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___10_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-10.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 11,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___11_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___11_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-11.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 12,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___12_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___12_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-12.mp3"
+    },
+    {
+      "bookId": "2CO",
+      "chapter": 13,
+      "tstsccSlug": "2co",
+      "remotePath": "read/B08___13_2Corinthians__N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B08___13_2Corinthians__N1CFRUNV.mp3",
+      "localFilename": "2CO-13.mp3"
+    },
+    {
+      "bookId": "GAL",
+      "chapter": 1,
+      "tstsccSlug": "gal",
+      "remotePath": "read/B09___01_Galatians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B09___01_Galatians_____N1CFRUNV.mp3",
+      "localFilename": "GAL-1.mp3"
+    },
+    {
+      "bookId": "GAL",
+      "chapter": 2,
+      "tstsccSlug": "gal",
+      "remotePath": "read/B09___02_Galatians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B09___02_Galatians_____N1CFRUNV.mp3",
+      "localFilename": "GAL-2.mp3"
+    },
+    {
+      "bookId": "GAL",
+      "chapter": 3,
+      "tstsccSlug": "gal",
+      "remotePath": "read/B09___03_Galatians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B09___03_Galatians_____N1CFRUNV.mp3",
+      "localFilename": "GAL-3.mp3"
+    },
+    {
+      "bookId": "GAL",
+      "chapter": 4,
+      "tstsccSlug": "gal",
+      "remotePath": "read/B09___04_Galatians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B09___04_Galatians_____N1CFRUNV.mp3",
+      "localFilename": "GAL-4.mp3"
+    },
+    {
+      "bookId": "GAL",
+      "chapter": 5,
+      "tstsccSlug": "gal",
+      "remotePath": "read/B09___05_Galatians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B09___05_Galatians_____N1CFRUNV.mp3",
+      "localFilename": "GAL-5.mp3"
+    },
+    {
+      "bookId": "GAL",
+      "chapter": 6,
+      "tstsccSlug": "gal",
+      "remotePath": "read/B09___06_Galatians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B09___06_Galatians_____N1CFRUNV.mp3",
+      "localFilename": "GAL-6.mp3"
+    },
+    {
+      "bookId": "EPH",
+      "chapter": 1,
+      "tstsccSlug": "eph",
+      "remotePath": "read/B10___01_Ephesians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B10___01_Ephesians_____N1CFRUNV.mp3",
+      "localFilename": "EPH-1.mp3"
+    },
+    {
+      "bookId": "EPH",
+      "chapter": 2,
+      "tstsccSlug": "eph",
+      "remotePath": "read/B10___02_Ephesians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B10___02_Ephesians_____N1CFRUNV.mp3",
+      "localFilename": "EPH-2.mp3"
+    },
+    {
+      "bookId": "EPH",
+      "chapter": 3,
+      "tstsccSlug": "eph",
+      "remotePath": "read/B10___03_Ephesians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B10___03_Ephesians_____N1CFRUNV.mp3",
+      "localFilename": "EPH-3.mp3"
+    },
+    {
+      "bookId": "EPH",
+      "chapter": 4,
+      "tstsccSlug": "eph",
+      "remotePath": "read/B10___04_Ephesians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B10___04_Ephesians_____N1CFRUNV.mp3",
+      "localFilename": "EPH-4.mp3"
+    },
+    {
+      "bookId": "EPH",
+      "chapter": 5,
+      "tstsccSlug": "eph",
+      "remotePath": "read/B10___05_Ephesians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B10___05_Ephesians_____N1CFRUNV.mp3",
+      "localFilename": "EPH-5.mp3"
+    },
+    {
+      "bookId": "EPH",
+      "chapter": 6,
+      "tstsccSlug": "eph",
+      "remotePath": "read/B10___06_Ephesians_____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B10___06_Ephesians_____N1CFRUNV.mp3",
+      "localFilename": "EPH-6.mp3"
+    },
+    {
+      "bookId": "PHP",
+      "chapter": 1,
+      "tstsccSlug": "phl",
+      "remotePath": "read/B11___01_Philippians___N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B11___01_Philippians___N1CFRUNV.mp3",
+      "localFilename": "PHP-1.mp3"
+    },
+    {
+      "bookId": "PHP",
+      "chapter": 2,
+      "tstsccSlug": "phl",
+      "remotePath": "read/B11___02_Philippians___N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B11___02_Philippians___N1CFRUNV.mp3",
+      "localFilename": "PHP-2.mp3"
+    },
+    {
+      "bookId": "PHP",
+      "chapter": 3,
+      "tstsccSlug": "phl",
+      "remotePath": "read/B11___03_Philippians___N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B11___03_Philippians___N1CFRUNV.mp3",
+      "localFilename": "PHP-3.mp3"
+    },
+    {
+      "bookId": "PHP",
+      "chapter": 4,
+      "tstsccSlug": "phl",
+      "remotePath": "read/B11___04_Philippians___N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B11___04_Philippians___N1CFRUNV.mp3",
+      "localFilename": "PHP-4.mp3"
+    },
+    {
+      "bookId": "COL",
+      "chapter": 1,
+      "tstsccSlug": "col",
+      "remotePath": "read/B12___01_Colossians____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B12___01_Colossians____N1CFRUNV.mp3",
+      "localFilename": "COL-1.mp3"
+    },
+    {
+      "bookId": "COL",
+      "chapter": 2,
+      "tstsccSlug": "col",
+      "remotePath": "read/B12___02_Colossians____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B12___02_Colossians____N1CFRUNV.mp3",
+      "localFilename": "COL-2.mp3"
+    },
+    {
+      "bookId": "COL",
+      "chapter": 3,
+      "tstsccSlug": "col",
+      "remotePath": "read/B12___03_Colossians____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B12___03_Colossians____N1CFRUNV.mp3",
+      "localFilename": "COL-3.mp3"
+    },
+    {
+      "bookId": "COL",
+      "chapter": 4,
+      "tstsccSlug": "col",
+      "remotePath": "read/B12___04_Colossians____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B12___04_Colossians____N1CFRUNV.mp3",
+      "localFilename": "COL-4.mp3"
+    },
+    {
+      "bookId": "1TH",
+      "chapter": 1,
+      "tstsccSlug": "1ts",
+      "remotePath": "read/B13___01_1Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B13___01_1Thess________N1CFRUNV.mp3",
+      "localFilename": "1TH-1.mp3"
+    },
+    {
+      "bookId": "1TH",
+      "chapter": 2,
+      "tstsccSlug": "1ts",
+      "remotePath": "read/B13___02_1Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B13___02_1Thess________N1CFRUNV.mp3",
+      "localFilename": "1TH-2.mp3"
+    },
+    {
+      "bookId": "1TH",
+      "chapter": 3,
+      "tstsccSlug": "1ts",
+      "remotePath": "read/B13___03_1Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B13___03_1Thess________N1CFRUNV.mp3",
+      "localFilename": "1TH-3.mp3"
+    },
+    {
+      "bookId": "1TH",
+      "chapter": 4,
+      "tstsccSlug": "1ts",
+      "remotePath": "read/B13___04_1Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B13___04_1Thess________N1CFRUNV.mp3",
+      "localFilename": "1TH-4.mp3"
+    },
+    {
+      "bookId": "1TH",
+      "chapter": 5,
+      "tstsccSlug": "1ts",
+      "remotePath": "read/B13___05_1Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B13___05_1Thess________N1CFRUNV.mp3",
+      "localFilename": "1TH-5.mp3"
+    },
+    {
+      "bookId": "2TH",
+      "chapter": 1,
+      "tstsccSlug": "2ts",
+      "remotePath": "read/B14___01_2Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B14___01_2Thess________N1CFRUNV.mp3",
+      "localFilename": "2TH-1.mp3"
+    },
+    {
+      "bookId": "2TH",
+      "chapter": 2,
+      "tstsccSlug": "2ts",
+      "remotePath": "read/B14___02_2Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B14___02_2Thess________N1CFRUNV.mp3",
+      "localFilename": "2TH-2.mp3"
+    },
+    {
+      "bookId": "2TH",
+      "chapter": 3,
+      "tstsccSlug": "2ts",
+      "remotePath": "read/B14___03_2Thess________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B14___03_2Thess________N1CFRUNV.mp3",
+      "localFilename": "2TH-3.mp3"
+    },
+    {
+      "bookId": "1TI",
+      "chapter": 1,
+      "tstsccSlug": "1ti",
+      "remotePath": "read/B15___01_1Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B15___01_1Timothy______N1CFRUNV.mp3",
+      "localFilename": "1TI-1.mp3"
+    },
+    {
+      "bookId": "1TI",
+      "chapter": 2,
+      "tstsccSlug": "1ti",
+      "remotePath": "read/B15___02_1Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B15___02_1Timothy______N1CFRUNV.mp3",
+      "localFilename": "1TI-2.mp3"
+    },
+    {
+      "bookId": "1TI",
+      "chapter": 3,
+      "tstsccSlug": "1ti",
+      "remotePath": "read/B15___03_1Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B15___03_1Timothy______N1CFRUNV.mp3",
+      "localFilename": "1TI-3.mp3"
+    },
+    {
+      "bookId": "1TI",
+      "chapter": 4,
+      "tstsccSlug": "1ti",
+      "remotePath": "read/B15___04_1Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B15___04_1Timothy______N1CFRUNV.mp3",
+      "localFilename": "1TI-4.mp3"
+    },
+    {
+      "bookId": "1TI",
+      "chapter": 5,
+      "tstsccSlug": "1ti",
+      "remotePath": "read/B15___05_1Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B15___05_1Timothy______N1CFRUNV.mp3",
+      "localFilename": "1TI-5.mp3"
+    },
+    {
+      "bookId": "1TI",
+      "chapter": 6,
+      "tstsccSlug": "1ti",
+      "remotePath": "read/B15___06_1Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B15___06_1Timothy______N1CFRUNV.mp3",
+      "localFilename": "1TI-6.mp3"
+    },
+    {
+      "bookId": "2TI",
+      "chapter": 1,
+      "tstsccSlug": "2ti",
+      "remotePath": "read/B16___01_2Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B16___01_2Timothy______N1CFRUNV.mp3",
+      "localFilename": "2TI-1.mp3"
+    },
+    {
+      "bookId": "2TI",
+      "chapter": 2,
+      "tstsccSlug": "2ti",
+      "remotePath": "read/B16___02_2Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B16___02_2Timothy______N1CFRUNV.mp3",
+      "localFilename": "2TI-2.mp3"
+    },
+    {
+      "bookId": "2TI",
+      "chapter": 3,
+      "tstsccSlug": "2ti",
+      "remotePath": "read/B16___03_2Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B16___03_2Timothy______N1CFRUNV.mp3",
+      "localFilename": "2TI-3.mp3"
+    },
+    {
+      "bookId": "2TI",
+      "chapter": 4,
+      "tstsccSlug": "2ti",
+      "remotePath": "read/B16___04_2Timothy______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B16___04_2Timothy______N1CFRUNV.mp3",
+      "localFilename": "2TI-4.mp3"
+    },
+    {
+      "bookId": "TIT",
+      "chapter": 1,
+      "tstsccSlug": "tit",
+      "remotePath": "read/B17___01_Titus_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B17___01_Titus_________N1CFRUNV.mp3",
+      "localFilename": "TIT-1.mp3"
+    },
+    {
+      "bookId": "TIT",
+      "chapter": 2,
+      "tstsccSlug": "tit",
+      "remotePath": "read/B17___02_Titus_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B17___02_Titus_________N1CFRUNV.mp3",
+      "localFilename": "TIT-2.mp3"
+    },
+    {
+      "bookId": "TIT",
+      "chapter": 3,
+      "tstsccSlug": "tit",
+      "remotePath": "read/B17___03_Titus_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B17___03_Titus_________N1CFRUNV.mp3",
+      "localFilename": "TIT-3.mp3"
+    },
+    {
+      "bookId": "PHM",
+      "chapter": 1,
+      "tstsccSlug": "phm",
+      "remotePath": "read/B18___01_Philemon______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B18___01_Philemon______N1CFRUNV.mp3",
+      "localFilename": "PHM-1.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 1,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___01_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___01_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-1.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 2,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___02_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___02_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-2.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 3,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___03_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___03_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-3.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 4,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___04_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___04_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-4.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 5,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___05_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___05_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-5.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 6,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___06_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___06_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-6.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 7,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___07_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___07_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-7.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 8,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___08_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___08_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-8.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 9,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___09_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___09_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-9.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 10,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___10_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___10_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-10.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 11,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___11_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___11_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-11.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 12,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___12_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___12_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-12.mp3"
+    },
+    {
+      "bookId": "HEB",
+      "chapter": 13,
+      "tstsccSlug": "heb",
+      "remotePath": "read/B19___13_Hebrews_______N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B19___13_Hebrews_______N1CFRUNV.mp3",
+      "localFilename": "HEB-13.mp3"
+    },
+    {
+      "bookId": "JAS",
+      "chapter": 1,
+      "tstsccSlug": "jas",
+      "remotePath": "read/B20___01_James_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B20___01_James_________N1CFRUNV.mp3",
+      "localFilename": "JAS-1.mp3"
+    },
+    {
+      "bookId": "JAS",
+      "chapter": 2,
+      "tstsccSlug": "jas",
+      "remotePath": "read/B20___02_James_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B20___02_James_________N1CFRUNV.mp3",
+      "localFilename": "JAS-2.mp3"
+    },
+    {
+      "bookId": "JAS",
+      "chapter": 3,
+      "tstsccSlug": "jas",
+      "remotePath": "read/B20___03_James_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B20___03_James_________N1CFRUNV.mp3",
+      "localFilename": "JAS-3.mp3"
+    },
+    {
+      "bookId": "JAS",
+      "chapter": 4,
+      "tstsccSlug": "jas",
+      "remotePath": "read/B20___04_James_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B20___04_James_________N1CFRUNV.mp3",
+      "localFilename": "JAS-4.mp3"
+    },
+    {
+      "bookId": "JAS",
+      "chapter": 5,
+      "tstsccSlug": "jas",
+      "remotePath": "read/B20___05_James_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B20___05_James_________N1CFRUNV.mp3",
+      "localFilename": "JAS-5.mp3"
+    },
+    {
+      "bookId": "1PE",
+      "chapter": 1,
+      "tstsccSlug": "1pe",
+      "remotePath": "read/B21___01_1Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B21___01_1Peter________N1CFRUNV.mp3",
+      "localFilename": "1PE-1.mp3"
+    },
+    {
+      "bookId": "1PE",
+      "chapter": 2,
+      "tstsccSlug": "1pe",
+      "remotePath": "read/B21___02_1Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B21___02_1Peter________N1CFRUNV.mp3",
+      "localFilename": "1PE-2.mp3"
+    },
+    {
+      "bookId": "1PE",
+      "chapter": 3,
+      "tstsccSlug": "1pe",
+      "remotePath": "read/B21___03_1Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B21___03_1Peter________N1CFRUNV.mp3",
+      "localFilename": "1PE-3.mp3"
+    },
+    {
+      "bookId": "1PE",
+      "chapter": 4,
+      "tstsccSlug": "1pe",
+      "remotePath": "read/B21___04_1Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B21___04_1Peter________N1CFRUNV.mp3",
+      "localFilename": "1PE-4.mp3"
+    },
+    {
+      "bookId": "1PE",
+      "chapter": 5,
+      "tstsccSlug": "1pe",
+      "remotePath": "read/B21___05_1Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B21___05_1Peter________N1CFRUNV.mp3",
+      "localFilename": "1PE-5.mp3"
+    },
+    {
+      "bookId": "2PE",
+      "chapter": 1,
+      "tstsccSlug": "2pe",
+      "remotePath": "read/B22___01_2Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B22___01_2Peter________N1CFRUNV.mp3",
+      "localFilename": "2PE-1.mp3"
+    },
+    {
+      "bookId": "2PE",
+      "chapter": 2,
+      "tstsccSlug": "2pe",
+      "remotePath": "read/B22___02_2Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B22___02_2Peter________N1CFRUNV.mp3",
+      "localFilename": "2PE-2.mp3"
+    },
+    {
+      "bookId": "2PE",
+      "chapter": 3,
+      "tstsccSlug": "2pe",
+      "remotePath": "read/B22___03_2Peter________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B22___03_2Peter________N1CFRUNV.mp3",
+      "localFilename": "2PE-3.mp3"
+    },
+    {
+      "bookId": "1JN",
+      "chapter": 1,
+      "tstsccSlug": "1jn",
+      "remotePath": "read/B23___01_1John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B23___01_1John_________N1CFRUNV.mp3",
+      "localFilename": "1JN-1.mp3"
+    },
+    {
+      "bookId": "1JN",
+      "chapter": 2,
+      "tstsccSlug": "1jn",
+      "remotePath": "read/B23___02_1John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B23___02_1John_________N1CFRUNV.mp3",
+      "localFilename": "1JN-2.mp3"
+    },
+    {
+      "bookId": "1JN",
+      "chapter": 3,
+      "tstsccSlug": "1jn",
+      "remotePath": "read/B23___03_1John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B23___03_1John_________N1CFRUNV.mp3",
+      "localFilename": "1JN-3.mp3"
+    },
+    {
+      "bookId": "1JN",
+      "chapter": 4,
+      "tstsccSlug": "1jn",
+      "remotePath": "read/B23___04_1John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B23___04_1John_________N1CFRUNV.mp3",
+      "localFilename": "1JN-4.mp3"
+    },
+    {
+      "bookId": "1JN",
+      "chapter": 5,
+      "tstsccSlug": "1jn",
+      "remotePath": "read/B23___05_1John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B23___05_1John_________N1CFRUNV.mp3",
+      "localFilename": "1JN-5.mp3"
+    },
+    {
+      "bookId": "2JN",
+      "chapter": 1,
+      "tstsccSlug": "2jn",
+      "remotePath": "read/B24___01_2John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B24___01_2John_________N1CFRUNV.mp3",
+      "localFilename": "2JN-1.mp3"
+    },
+    {
+      "bookId": "3JN",
+      "chapter": 1,
+      "tstsccSlug": "3jn",
+      "remotePath": "read/B25___01_3John_________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B25___01_3John_________N1CFRUNV.mp3",
+      "localFilename": "3JN-1.mp3"
+    },
+    {
+      "bookId": "JUD",
+      "chapter": 1,
+      "tstsccSlug": "jud",
+      "remotePath": "read/B26___01_Jude__________N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B26___01_Jude__________N1CFRUNV.mp3",
+      "localFilename": "JUD-1.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 1,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___01_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___01_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-1.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 2,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___02_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___02_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-2.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 3,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___03_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___03_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-3.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 4,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___04_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___04_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-4.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 5,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___05_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___05_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-5.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 6,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___06_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___06_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-6.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 7,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___07_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___07_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-7.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 8,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___08_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___08_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-8.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 9,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___09_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___09_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-9.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 10,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___10_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___10_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-10.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 11,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___11_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___11_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-11.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 12,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___12_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___12_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-12.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 13,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___13_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___13_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-13.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 14,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___14_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___14_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-14.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 15,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___15_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___15_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-15.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 16,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___16_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___16_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-16.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 17,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___17_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___17_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-17.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 18,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___18_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___18_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-18.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 19,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___19_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___19_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-19.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 20,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___20_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___20_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-20.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 21,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___21_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___21_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-21.mp3"
+    },
+    {
+      "bookId": "REV",
+      "chapter": 22,
+      "tstsccSlug": "rev",
+      "remotePath": "read/B27___22_Revelation____N1CFRUNV.mp3",
+      "remoteUrl": "http://info.tstscc.org:9090/teochew/read/B27___22_Revelation____N1CFRUNV.mp3",
+      "localFilename": "REV-22.mp3"
+    }
+  ]
+}

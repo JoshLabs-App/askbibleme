@@ -37,6 +37,13 @@ yarn-error.log*
 # 后台 API 密钥（含明文 Key，仅保留 data/admin/ai-api-config.json.example 入仓）
 /data/admin/ai-api-config.json
 
+# 潮州语新约 MP3（npm run audio:teochew-pull 生成；manifest 入库）
+/public/audio/teochew-nt/*.mp3
+
+# 本机全本导读/引导版批量进度（见 npm run info-edition:batch）
+/data/bible/info-edition-v1-batch-state.json
+/data/bible/info-edition-v1-batch.lock
+
 # typescript
 next-env.d.ts
 *.tsbuildinfo

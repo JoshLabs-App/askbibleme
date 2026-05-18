@@ -254,7 +254,7 @@ export function BibleCatalogReadOutline({ sections }: Props) {
                               eraAria ? `历史时期${eraAria}` : "",
                               section.title,
                               book.bookName,
-                              `神是${book.divine}`,
+                              book.divine,
                               book.summary,
                               "在点击处打开选章",
                             ]
@@ -273,7 +273,7 @@ export function BibleCatalogReadOutline({ sections }: Props) {
                             </span>
                             <span className="bible-catalog-read-book-main">
                               <strong className="bible-catalog-read-book-name">{book.bookName}</strong>
-                              <span className="bible-catalog-read-book-divine">神是{book.divine}</span>
+                              <span className="bible-catalog-read-book-divine">{book.divine}</span>
                             </span>
                           </span>
                         </button>

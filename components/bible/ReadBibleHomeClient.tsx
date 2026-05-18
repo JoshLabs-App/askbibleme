@@ -37,7 +37,7 @@ export function ReadBibleHomeClient({ catalogSections, readingPlanRegistry }: Pr
       <ReadTodayPlanPanel registryPlans={readingPlanRegistry} />
 
       <section
-        className="read-bible-read-home-catalog mt-6 w-full min-w-0 shrink-0 border-t border-amber-900/10 pt-4 text-left dark:border-stone-500/20 sm:mt-7 sm:pt-5"
+        className="read-bible-read-home-catalog mt-6 w-full min-w-0 shrink-0 border-t border-amber-900/10 pt-4 dark:border-stone-500/20 sm:mt-7 sm:pt-5"
         aria-labelledby="read-bible-home-catalog-heading"
       >
         <h2

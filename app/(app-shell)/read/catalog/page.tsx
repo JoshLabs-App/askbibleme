@@ -14,8 +14,8 @@ export default function ReadCatalogPage() {
   const canon = readScriptureCanonCatalog();
 
   return (
-    <ScriptureChrome>
-      <div className="read-bible-parchment-column--catalog bible-catalog-page--read bible-catalog-on-parchment min-h-0 w-full">
+    <ScriptureChrome parchmentColumnClassName="read-bible-parchment-column--catalog">
+      <div className="bible-catalog-page--read bible-catalog-on-parchment min-h-0 w-full">
         <header className="bible-catalog-read-header">
           <ReadCatalogTopBack />
           <h1 className="bible-catalog-read-h1">六十六卷</h1>

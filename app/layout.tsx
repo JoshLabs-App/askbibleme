@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { cookies, headers } from "next/headers";
 import { PARCHMENT_SHELL_BOOT_SCRIPT } from "@/lib/read/parchment-shell-boot";
+import { SYNC_HTML_DARK_CLASS_BOOT_SCRIPT } from "@/lib/read/sync-html-dark-class";
 import { isSamsungGalaxyUserAgent } from "@/lib/read/parchment-samsung-device";
 import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
 import {
@@ -116,6 +117,9 @@ export default async function RootLayout({
       }
     >
       <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
+        <Script id="selah-sync-html-dark-class" strategy="beforeInteractive">
+          {SYNC_HTML_DARK_CLASS_BOOT_SCRIPT}
+        </Script>
         <Script id="selah-parchment-shell-boot" strategy="beforeInteractive">
           {PARCHMENT_SHELL_BOOT_SCRIPT}
         </Script>

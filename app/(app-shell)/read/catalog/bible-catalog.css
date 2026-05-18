@@ -42,14 +42,28 @@
 }
 
 /* 目录版心：左右留白略增，宽屏略放宽，历史时期列更宽 */
-.read-bible-parchment-shell .read-bible-parchment-column--catalog {
+.read-bible-parchment-shell .read-bible-parchment-column.read-bible-parchment-column--catalog {
   --read-parchment-pad-x: max(1.55rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));
   --read-parchment-pad-x-end: max(1.55rem, calc(env(safe-area-inset-right, 0px) + 0.55rem));
   max-width: min(var(--read-parchment-catalog-column-max, 31rem), 100%);
+  margin-inline: auto;
+}
+
+/* 双栏目录表：在版心内整体水平居中（固定测量，避免宽栏拉散） */
+.bible-catalog-on-parchment {
+  --bc-catalog-content-max: min(23.5rem, 100%);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-header,
+.bible-catalog-on-parchment .bible-catalog-read-outline,
+.bible-catalog-on-parchment > .bible-catalog-read-end {
+  width: 100%;
+  max-width: var(--bc-catalog-content-max);
+  margin-inline: auto;
 }
 
 @media (min-width: 768px) {
-  .read-bible-parchment-shell .read-bible-parchment-column--catalog {
+  .read-bible-parchment-shell .read-bible-parchment-column.read-bible-parchment-column--catalog {
     --read-parchment-pad-x: max(1.75rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));
     --read-parchment-pad-x-end: max(1.75rem, calc(env(safe-area-inset-right, 0px) + 0.55rem));
   }

@@ -46,16 +46,14 @@ export async function resolveTeochewNtChapterAudioPlayableSrc(args: {
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   if (!voiceSupportsBook("teochew-nt", args.bookId)) return { ok: false };
 
+  const entry = getTeochewNtManifestEntry(args.bookId, args.chapter);
+  if (!entry) return { ok: false };
+
   const local = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
   if (!local) return { ok: false };
 
-  try {
-    const check = await fetch(local, { method: "HEAD", cache: "force-cache" });
-    if (check.ok) return { ok: true, src: local };
-  } catch {
-    /* missing on disk */
-  }
-  return { ok: false };
+  // 清单已列章 → 使用本站 /audio（磁盘或 GitHub 代理）。勿用 HEAD + force-cache，避免缓存旧 404 导致无法播放。
+  return { ok: true, src: local };
 }
 
 export function teochewNtVoiceActive(voiceId: CuvChapterAudioVoiceId): boolean {

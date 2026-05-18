@@ -5,6 +5,7 @@ import {
   isSafeChapterAudioRelativePath,
   resolveCuvChapterAudioFilePath,
 } from "@/lib/bible/cuv-chapter-audio-storage";
+import { getTeochewNtManifestEntry } from "@/lib/bible/teochew-nt-audio";
 
 const CACHE = "public, max-age=31536000, immutable";
 const TEOCHEW_REL_RE = /^teochew-nt\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
@@ -15,27 +16,49 @@ function teochewGithubRawUrl(relativePath: string): string {
   return `https://raw.githubusercontent.com/${repo}/${branch}/public/audio/${relativePath}`;
 }
 
-/** 磁盘无文件时，从 teochew-nt-audio 分支代理（生产免先 rsync 692MB） */
-async function serveTeochewFromGithubRaw(
+function parseTeochewRelativePath(relativePath: string): { bookId: string; chapter: number } | null {
+  const m = /^teochew-nt\/([A-Z0-9]{2,8})-(\d+)\.mp3$/i.exec(relativePath);
+  if (!m) return null;
+  return { bookId: m[1]!.toUpperCase(), chapter: Number(m[2]) };
+}
+
+async function fetchTeochewUpstream(
+  url: string,
   req: NextRequest,
-  relativePath: string,
-): Promise<Response> {
-  const url = teochewGithubRawUrl(relativePath);
+): Promise<Response | null> {
   const headers: Record<string, string> = {};
   const range = req.headers.get("range");
   if (range) headers.Range = range;
   const token = process.env.GITHUB_TOKEN?.trim();
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token && url.includes("github.com")) headers.Authorization = `Bearer ${token}`;
 
-  let upstream: Response;
   try {
-    upstream = await fetch(url, { headers, signal: AbortSignal.timeout(120_000) });
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(120_000) });
+    return res.ok ? res : null;
   } catch {
-    return new Response("Not found", { status: 404 });
+    return null;
+  }
+}
+
+/** 磁盘无文件时，从 GitHub 分支或 manifest 源站代理 */
+async function serveTeochewFromRemote(
+  req: NextRequest,
+  relativePath: string,
+): Promise<Response> {
+  const parsed = parseTeochewRelativePath(relativePath);
+  const entry = parsed ? getTeochewNtManifestEntry(parsed.bookId, parsed.chapter) : null;
+
+  const urls = [teochewGithubRawUrl(relativePath)];
+  if (entry?.remoteUrl) urls.push(entry.remoteUrl);
+
+  let upstream: Response | null = null;
+  for (const url of urls) {
+    upstream = await fetchTeochewUpstream(url, req);
+    if (upstream) break;
   }
 
-  if (!upstream.ok) {
-    return new Response("Not found", { status: upstream.status === 404 ? 404 : 502 });
+  if (!upstream) {
+    return new Response("Not found", { status: 404 });
   }
 
   const out = new Headers({
@@ -95,7 +118,7 @@ export async function serveChapterAudioFile(
   const filePath = resolveCuvChapterAudioFilePath(relativePath);
   if (!filePath) {
     if (TEOCHEW_REL_RE.test(relativePath)) {
-      return serveTeochewFromGithubRaw(req, relativePath);
+      return serveTeochewFromRemote(req, relativePath);
     }
     return new Response("Not found", { status: 404 });
   }

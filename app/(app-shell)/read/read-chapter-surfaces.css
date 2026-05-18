@@ -499,7 +499,22 @@
 }
 
 .dark .prayer-on-parchment {
-  color: color-mix(in srgb, rgb(250 250 249) 92%, transparent);
+  color: color-mix(in srgb, rgb(244 235 225) 94%, transparent);
+  --prayer-line: color-mix(in srgb, rgb(244 235 225) 14%, transparent);
+  --prayer-line-emphasis: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+}
+
+.dark .prayer-on-parchment .prayer-eyebrow {
+  color: color-mix(in srgb, currentColor 54%, transparent);
+}
+
+.dark .prayer-on-parchment .prayer-muted {
+  color: color-mix(in srgb, currentColor 66%, transparent);
+}
+
+.dark .prayer-on-parchment .prayer-lead,
+.dark .prayer-on-parchment .prayer-body {
+  color: color-mix(in srgb, currentColor 90%, transparent);
 }
 
 /* 横线：兄弟分隔、顶/底边 */
@@ -889,6 +904,114 @@
 .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter--current {
   border-color: color-mix(in srgb, #2563eb 42%, transparent);
   background: color-mix(in srgb, #dce4f2 80%, #93c5fd 20%);
+}
+
+/* 章末书卷/章跳转：与目录选章浮层同系暖褐，暗黑下对齐羊皮卷 */
+.dark .read-chapter-jump-backdrop {
+  background: color-mix(in srgb, rgb(0 0 0) 52%, transparent);
+}
+
+.dark .read-chapter-jump-panel {
+  border-color: color-mix(in srgb, #f4ebe1 14%, transparent);
+  background: color-mix(in srgb, #1c1917 82%, var(--read-parchment-bg-canvas, #2a221c) 18%);
+  box-shadow:
+    0 -14px 44px rgba(0, 0, 0, 0.48),
+    0 0 0 1px color-mix(in srgb, #f4ebe1 11%, transparent);
+}
+
+.dark .read-chapter-jump-title {
+  color: color-mix(in srgb, #f4ebe1 92%, transparent);
+}
+
+.dark .read-chapter-jump-close {
+  background: color-mix(in srgb, #f4ebe1 10%, transparent);
+  color: color-mix(in srgb, #f4ebe1 72%, transparent);
+}
+
+.dark .read-chapter-jump-books {
+  border-bottom-color: color-mix(in srgb, #f4ebe1 12%, transparent);
+}
+
+.dark .read-chapter-jump-testament-label--old {
+  color: color-mix(in srgb, #f0b88a 68%, #f4ebe1 32%);
+}
+
+.dark .read-chapter-jump-testament-label--new {
+  color: color-mix(in srgb, #93c5fd 62%, #f4ebe1 38%);
+}
+
+.dark .read-chapter-jump-book {
+  border-color: color-mix(in srgb, #f4ebe1 14%, transparent);
+  background: color-mix(in srgb, #292524 70%, #44403c 30%);
+}
+
+.dark .read-chapter-jump-book--old {
+  border-color: color-mix(in srgb, #d97706 28%, #f4ebe1 72%);
+  background: color-mix(in srgb, #292524 64%, #78350f 36%);
+}
+
+.dark .read-chapter-jump-book--new {
+  border-color: color-mix(in srgb, #60a5fa 24%, #f4ebe1 76%);
+  background: color-mix(in srgb, #292524 64%, #1e3a5f 36%);
+}
+
+.dark .read-chapter-jump-book--old.read-chapter-jump-book--selected {
+  border-color: color-mix(in srgb, #f59e0b 44%, transparent);
+  background: color-mix(in srgb, #44403c 58%, #92400e 42%);
+}
+
+.dark .read-chapter-jump-book--new.read-chapter-jump-book--selected {
+  border-color: color-mix(in srgb, #60a5fa 42%, transparent);
+  background: color-mix(in srgb, #44403c 58%, #1e40af 42%);
+}
+
+.dark .read-chapter-jump-book-num {
+  color: color-mix(in srgb, #d8c8b4 72%, transparent);
+}
+
+.dark .read-chapter-jump-book-name {
+  color: color-mix(in srgb, #f4ebe1 90%, transparent);
+}
+
+.dark .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, #d8c8b4 78%, transparent);
+}
+
+.dark .read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, #f0b88a 62%, #d8c8b4 38%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapters-label {
+  color: color-mix(in srgb, #93c5fd 58%, #d8c8b4 42%);
+}
+
+.dark .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, #f4ebe1 16%, transparent);
+  background: color-mix(in srgb, #292524 58%, #44403c 42%);
+  color: color-mix(in srgb, #f4ebe1 88%, transparent);
+}
+
+.dark .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, #f4ebe1 38%, transparent);
+  background: color-mix(in srgb, #44403c 62%, #57534e 38%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, #d97706 22%, #f4ebe1 78%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--old .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, #f59e0b 44%, transparent);
+  background: color-mix(in srgb, #44403c 56%, #92400e 44%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter {
+  border-color: color-mix(in srgb, #60a5fa 20%, #f4ebe1 80%);
+}
+
+.dark .read-chapter-jump-chapters-wrap--new .read-chapter-jump-chapter--current {
+  border-color: color-mix(in srgb, #60a5fa 40%, transparent);
+  background: color-mix(in srgb, #44403c 56%, #1e40af 44%);
 }
 
 @media (prefers-reduced-motion: reduce) {

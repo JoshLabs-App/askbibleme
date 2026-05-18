@@ -76,7 +76,7 @@ export function ReadBibleTypographySettingsControl() {
     if (onChapterRoute) router.refresh();
   };
 
-  const iconBtn = `${HIT} text-ink/85 hover:bg-ink/[0.06]`;
+  const iconBtn = `${HIT} text-amber-950/85 hover:bg-amber-950/[0.06] dark:text-stone-200/90 dark:hover:bg-stone-50/[0.08]`;
 
   return (
     <div className="relative" ref={rootRef}>

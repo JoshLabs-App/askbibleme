@@ -14,6 +14,10 @@
   --read-parchment-bg-image-wide: url("/read/parchment-scroll-bg-wide.jpg");
 }
 
+html.dark {
+  --read-parchment-bg-canvas: #1a1512;
+}
+
 @supports (background-image: image-set(url("/read/parchment-scroll-bg.webp") type("image/webp"))) {
   :root {
     --read-parchment-bg-image: image-set(

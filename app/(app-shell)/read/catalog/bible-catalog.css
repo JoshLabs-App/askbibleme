@@ -41,6 +41,28 @@
   --bc-hover: color-mix(in srgb, #f4ebe1 8%, transparent);
 }
 
+.dark .read-bible-parchment-shell .bible-catalog-read-testament--old .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+  color: color-mix(in srgb, #f0b88a 58%, #f4ebe1 42%);
+}
+
+.dark .read-bible-parchment-shell .bible-catalog-read-testament--old .bible-catalog-read-testament-body::before {
+  background: color-mix(in srgb, #d97706 62%, #f4ebe1 12%);
+}
+
+.dark .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
+  background: color-mix(in srgb, #7a3340 58%, #f4ebe1 14%);
+}
+
+.dark .read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-chapter-cell {
+  background: color-mix(in srgb, #292524 58%, #44403c 42%);
+  border-color: color-mix(in srgb, #f4ebe1 16%, transparent);
+}
+
+.dark .read-bible-parchment-shell .bible-catalog-on-parchment .bible-catalog-chapter-cell:hover {
+  background: color-mix(in srgb, #3f3a36 62%, #57534e 38%);
+  border-color: color-mix(in srgb, #f4ebe1 24%, transparent);
+}
+
 /* 目录版心：左右留白略增，宽屏略放宽，历史时期列更宽 */
 .read-bible-parchment-shell .read-bible-parchment-column.read-bible-parchment-column--catalog {
   --read-parchment-pad-x: max(1.55rem, calc(env(safe-area-inset-left, 0px) + 0.55rem));

@@ -9,12 +9,9 @@
   --bc-read-weak: color-mix(in srgb, rgb(var(--brand-muted-rgb)) 78%, rgb(var(--brand-canvas-rgb)) 22%);
   --bc-read-faint: color-mix(in srgb, rgb(var(--brand-muted-rgb)) 52%, rgb(var(--brand-canvas-rgb)) 48%);
   --bc-read-book: rgb(var(--brand-ink-rgb));
-  /* 左列（历史时期）≈ 容器宽 38.2%，竖线贴黄金分割；窄屏不低于 min */
-  --bc-read-golden-minor: 38.2%;
-  --bc-read-golden-min: 3.05rem;
-  --bc-read-col-gap: 0.22rem;
-  --bc-read-stripe-w: 3px;
-  --bc-read-poststripe-pad: 0.32rem;
+  /* 左列：历史时期（固定宽，与卷名区一起整体居中） */
+  --bc-read-era-col: 3.05rem;
+  --bc-read-col-gap: 0.35rem;
   padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   background: transparent;
 }
@@ -30,8 +27,7 @@
   --bc-read-weak: #5c4030;
   --bc-read-faint: #6e5240;
   --bc-hover: color-mix(in srgb, #2a1810 7%, transparent);
-  --bc-read-golden-min: 3.35rem;
-  --bc-read-poststripe-pad: 0.42rem;
+  --bc-read-era-col: 3.2rem;
 }
 
 .dark .read-bible-parchment-shell .bible-catalog-page--read.bible-catalog-on-parchment {
@@ -49,16 +45,10 @@
   margin-inline: auto;
 }
 
-/* 双栏目录表：在版心内整体水平居中（固定测量，避免宽栏拉散） */
-.bible-catalog-on-parchment {
-  --bc-catalog-content-max: min(23.5rem, 100%);
-}
-
 .bible-catalog-on-parchment .bible-catalog-read-header,
 .bible-catalog-on-parchment .bible-catalog-read-outline,
 .bible-catalog-on-parchment > .bible-catalog-read-end {
   width: 100%;
-  max-width: var(--bc-catalog-content-max);
   margin-inline: auto;
 }
 
@@ -69,14 +59,13 @@
   }
 
   .bible-catalog-page--read.bible-catalog-on-parchment {
-    --bc-read-golden-min: 3.5rem;
-    --bc-read-poststripe-pad: 0.48rem;
+    --bc-read-era-col: 3.35rem;
   }
 }
 
 @media (min-width: 1024px) {
   .bible-catalog-page--read.bible-catalog-on-parchment {
-    --bc-read-golden-min: 3.65rem;
+    --bc-read-era-col: 3.5rem;
   }
 }
 
@@ -90,10 +79,6 @@
 
 .dark .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
   color: color-mix(in srgb, #e8b4bc 55%, #f4ebe1 45%);
-}
-
-.read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
-  background: color-mix(in srgb, #7a3340 70%, var(--bc-border) 30%);
 }
 
 .bible-catalog-read-header {
@@ -190,15 +175,13 @@
 }
 
 .bible-catalog-read-heading-row {
-  display: grid;
-  grid-template-columns: minmax(var(--bc-read-golden-min), var(--bc-read-golden-minor)) minmax(0, 1fr);
-  column-gap: var(--bc-read-col-gap);
-  align-items: baseline;
+  display: block;
 }
 
 .bible-catalog-read-heading-left {
+  display: block;
   min-width: 0;
-  text-align: right;
+  text-align: center;
   line-height: 1.25;
 }
 
@@ -216,45 +199,12 @@
 }
 
 .bible-catalog-read-heading-right {
-  display: block;
-  min-height: 1em;
+  display: none;
 }
 
 .bible-catalog-read-testament-body {
-  position: relative;
-  z-index: 0;
-}
-
-.bible-catalog-read-testament-body > .bible-catalog-read-testament-label,
-.bible-catalog-read-testament-body > .bible-catalog-read-block {
-  position: relative;
-  z-index: 1;
-}
-
-.bible-catalog-read-testament--old .bible-catalog-read-testament-body::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--bc-read-golden-minor) + var(--bc-read-col-gap));
-  top: 0;
-  bottom: 0;
-  width: var(--bc-read-stripe-w);
-  background: color-mix(in srgb, #b45309 72%, var(--bc-border) 28%);
-  border-radius: 1px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--bc-read-golden-minor) + var(--bc-read-col-gap));
-  top: 0;
-  bottom: 0;
-  width: var(--bc-read-stripe-w);
-  background: color-mix(in srgb, #2563eb 68%, var(--bc-border) 32%);
-  border-radius: 1px;
-  pointer-events: none;
-  z-index: 2;
+  max-width: min(22.5rem, 100%);
+  margin-inline: auto;
 }
 
 .bible-catalog-read-books {
@@ -264,7 +214,7 @@
 
 .bible-catalog-read-book {
   display: grid;
-  grid-template-columns: minmax(var(--bc-read-golden-min), var(--bc-read-golden-minor)) minmax(0, 1fr);
+  grid-template-columns: var(--bc-read-era-col) minmax(0, 1fr);
   column-gap: var(--bc-read-col-gap);
   align-items: center;
   padding: 0.14rem 0;
@@ -280,7 +230,7 @@
   grid-template-columns: 1.05rem minmax(0, 1fr);
   gap: 0.25rem 0.35rem;
   align-items: center;
-  padding-left: var(--bc-read-poststripe-pad);
+  padding-left: 0;
   min-width: 0;
 }
 

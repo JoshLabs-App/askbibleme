@@ -3,18 +3,9 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
-import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
-import { HomeVerseTypographyTopAccessory } from "@/components/home/HomeVerseTypographyTopAccessory";
 import { NatureSceneLayer } from "@/components/nature/NatureSceneLayer";
 import { ScenesPageListenShortcuts } from "@/components/nature/ScenesPageListenShortcuts";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import {
-  NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
-  NATURE_HOME_TEXT_SCALE_STEPS,
-  natureHomeTextScaleAtStep,
-  readNatureHomeTextScaleStepIndex,
-  writeNatureHomeTextScaleStepIndex,
-} from "@/lib/home/nature-home-text-scale-prefs";
 import type { NatureSettingsV2 } from "@/lib/nature/types";
 import {
   defaultNatureHomeActiveVideoId,
@@ -38,34 +29,6 @@ export function NatureScenesPickerPage({ initial }: Props) {
   const activeSceneHydratedRef = useRef(false);
   const videoStageHeightCommitRef = useRef(0);
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
-  const [verseTextScaleStepIndex, setVerseTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
-
-  useLayoutEffect(() => {
-    setVerseTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
-  }, []);
-
-  const verseTextZoom = natureHomeTextScaleAtStep(verseTextScaleStepIndex);
-  const natureVerseTextScale = useMemo(
-    () => ({
-      atMin: verseTextScaleStepIndex <= 0,
-      atMax: verseTextScaleStepIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1,
-      onSmaller: () => {
-        setVerseTextScaleStepIndex((prev) => {
-          const next = Math.max(0, prev - 1);
-          writeNatureHomeTextScaleStepIndex(next);
-          return next;
-        });
-      },
-      onLarger: () => {
-        setVerseTextScaleStepIndex((prev) => {
-          const next = Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, prev + 1);
-          writeNatureHomeTextScaleStepIndex(next);
-          return next;
-        });
-      },
-    }),
-    [verseTextScaleStepIndex],
-  );
 
   useLayoutEffect(() => {
     if (activeSceneHydratedRef.current) return;
@@ -156,28 +119,9 @@ export function NatureScenesPickerPage({ initial }: Props) {
         landscapeImmersive={false}
         showTopInsetTime={false}
         hideTopShellInsetTime
-        rightAccessory={<HomeVerseTypographyTopAccessory tone="onDark" natureVerseTextScale={natureVerseTextScale} />}
       />
 
       <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
-        {/* 与自然首页 `NatureVideoExperience` 一致：经文块中心落在主区垂直黄金分割点 */}
-        <div
-          className={[
-            "pointer-events-none absolute inset-x-0 top-[38.2%] z-[12]",
-            "flex max-h-[min(52dvh,calc(100%-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-11rem))]",
-            "-translate-y-1/2 flex-col items-center justify-center overflow-hidden px-5 sm:px-6",
-            "[@media(max-height:500px)_and_(orientation:portrait)]:top-[32%]",
-            "landscape:max-h-[min(44dvh,calc(100%-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-9.5rem))]",
-          ].join(" ")}
-        >
-          <div className="mx-auto flex min-w-0 max-w-full justify-center text-center" style={{ zoom: verseTextZoom }}>
-            <HomeVerseRotator
-              variant="dark"
-              prominence="nature"
-              className="w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]"
-            />
-          </div>
-        </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[14] flex max-h-[min(58dvh,72svh)] min-h-0 flex-col justify-end px-4 pb-[max(4.75rem,calc(env(safe-area-inset-bottom,0px)+4.25rem))] pt-1 sm:px-6 sm:pb-[max(5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] md:px-8 xl:px-10">
           <div className="pointer-events-auto mx-auto flex w-full min-h-0 max-w-lg flex-col items-stretch gap-4 overflow-y-auto overscroll-y-contain px-1 pb-1 sm:max-w-xl sm:px-2 md:max-w-3xl lg:max-w-none">
             <div

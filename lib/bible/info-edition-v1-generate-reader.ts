@@ -10,7 +10,7 @@ export type GenerateReaderChapterResult =
   | { ok: false; error: string };
 
 export type GenerateInfoEditionReaderOpts = {
-  /** 与后台「导读版投送」相同：仅 info 使用；guide 始终忽略 */
+  /** 与后台「讲解版投送」相同：仅 info 使用；guide 始终忽略 */
   descriptionRulesOverride?: string | null;
 };
 

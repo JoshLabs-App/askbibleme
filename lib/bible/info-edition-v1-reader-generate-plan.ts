@@ -100,14 +100,14 @@ export async function planInfoEditionReaderGeneration(
   if (!role) {
     return {
       ok: false,
-      error: target.variant === "guide" ? "引导版生成角色不可用。" : "导读版生成角色不可用。",
+      error: target.variant === "guide" ? "发现版生成角色不可用。" : "讲解版生成角色不可用。",
     };
   }
   const roleVariant = readerVariantFromRole(role);
   if (roleVariant !== target.variant) {
     return {
       ok: false,
-      error: `角色「${role.label}」与版本 ${target.variant === "guide" ? "引导版" : "导读版"} 不一致。`,
+      error: `角色「${role.label}」与版本 ${target.variant === "guide" ? "发现版" : "讲解版"} 不一致。`,
     };
   }
 
@@ -172,7 +172,7 @@ export function planToPublicPayload(plan: InfoEditionReaderGeneratePlan) {
   return {
     variant: plan.variant,
     variantLabel: plan.role.label,
-    editionKind: plan.variant === "guide" ? "引导版" : "导读版",
+    editionKind: plan.variant === "guide" ? "发现版" : "讲解版",
     roleId: plan.role.id,
     roleLabel: plan.role.label,
     roleHint: plan.role.hint,

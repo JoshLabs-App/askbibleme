@@ -101,7 +101,7 @@ export function validateInfoEditionOutput(
       push(checks, "warn", "intro", "开头未见「查经引导」类引导语。");
     }
     if (/描述规则（作者填写）|导读正文/i.test(markdown)) {
-      push(checks, "warn", "wrong-task", "正文含导读版用语，可能拼稿或模型跑偏。");
+      push(checks, "warn", "wrong-task", "正文含讲解版用语，可能拼稿或模型跑偏。");
     }
   }
 

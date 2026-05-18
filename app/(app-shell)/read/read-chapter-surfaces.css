@@ -170,58 +170,225 @@
   padding-bottom: 0.25rem;
 }
 
-/* 读后经文辅助：导读版 / 引导版 */
+/* 读后经文辅助：左自己发现 / 右查阅资料（始终左右双栏） */
 .read-chapter-post-reading-editions {
+  --post-reading-discover: #2f5c44;
+  --post-reading-discover-fill: #eef6f1;
+  --post-reading-discover-border: color-mix(in srgb, var(--post-reading-discover) 26%, transparent);
+  --post-reading-consult: #355a78;
+  --post-reading-consult-fill: #eef3f8;
+  --post-reading-consult-border: color-mix(in srgb, var(--post-reading-consult) 26%, transparent);
+  --post-reading-board-width: min(44rem, calc(100vw - var(--read-parchment-pad-x, 1.4rem) - var(--read-parchment-pad-x-end, 1.4rem)));
+  position: relative;
+  left: 50%;
+  width: var(--post-reading-board-width);
+  max-width: var(--post-reading-board-width);
   margin-top: clamp(2rem, 6vw, 2.75rem);
+  margin-inline: 0;
+  transform: translateX(-50%);
   text-align: center;
 }
 
-.read-chapter-post-reading-editions-lead {
-  margin: 0 0 0.85rem;
-  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: color-mix(in srgb, rgb(120 75 30) 52%, transparent);
+.read-chapter-post-reading-editions-heading {
+  margin: 0 0 1.25rem;
 }
 
-.dark .read-chapter-post-reading-editions-lead {
-  color: color-mix(in srgb, rgb(245 230 210) 42%, transparent);
+.read-chapter-post-reading-editions-heading-text {
+  margin: 0 0 0.55rem;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
+  font-size: clamp(1.2rem, 4.5vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  color: color-mix(in srgb, rgb(28 22 16) 94%, transparent);
 }
 
-.read-chapter-post-reading-editions-choices {
+.read-chapter-post-reading-editions-heading-rule {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  gap: 0.55rem;
+  gap: 0.65rem;
+  max-width: 14rem;
+  margin-inline: auto;
 }
 
-.read-chapter-post-reading-editions-choice {
+.read-chapter-post-reading-editions-heading-rule-line {
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, rgb(72 52 34) 28%, transparent);
+}
+
+.read-chapter-post-reading-editions-heading-leaf {
+  flex-shrink: 0;
+  color: var(--post-reading-discover);
+}
+
+.dark .read-chapter-post-reading-editions-heading-text {
+  color: color-mix(in srgb, rgb(245 235 220) 92%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-heading-rule-line {
+  background: color-mix(in srgb, rgba(245, 230, 210, 0.25) 100%, transparent);
+}
+
+.read-chapter-post-reading-editions-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: 0.65rem;
+  width: 100%;
+}
+
+.read-chapter-post-reading-editions-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, rgb(72 52 34) 14%, transparent);
+  border-radius: 0.65rem;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.read-chapter-post-reading-editions-panel--discover {
+  border-color: var(--post-reading-discover-border);
+}
+
+.read-chapter-post-reading-editions-panel--consult {
+  border-color: var(--post-reading-consult-border);
+}
+
+.read-chapter-post-reading-editions-panel:hover {
+  transform: translateY(-1px);
+}
+
+.read-chapter-post-reading-editions-panel--active.read-chapter-post-reading-editions-panel--discover {
+  border-color: color-mix(in srgb, var(--post-reading-discover) 42%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--post-reading-discover) 12%, transparent),
+    0 8px 22px color-mix(in srgb, var(--post-reading-discover) 14%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--active.read-chapter-post-reading-editions-panel--consult {
+  border-color: color-mix(in srgb, var(--post-reading-consult) 42%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--post-reading-consult) 12%, transparent),
+    0 8px 22px color-mix(in srgb, var(--post-reading-consult) 14%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  flex-shrink: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.read-chapter-post-reading-editions-panel-art-img {
+  object-fit: contain;
+  object-position: center center;
+  opacity: 0.9;
+}
+
+.read-chapter-post-reading-editions-panel-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem 0.85rem;
+}
+
+.read-chapter-post-reading-editions-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.28) 100%, transparent);
-  background: color-mix(in srgb, rgba(255, 252, 245, 0.55) 100%, transparent);
-  padding: 0.45rem 1.1rem;
-  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: color-mix(in srgb, rgb(92 58 28) 90%, transparent);
-  transition: background 0.15s ease, border-color 0.15s ease;
+  padding: 0.22rem 0.6rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgb(255 252 248);
 }
 
-.read-chapter-post-reading-editions-choice:hover {
-  background: color-mix(in srgb, rgba(255, 252, 245, 0.82) 100%, transparent);
-  border-color: color-mix(in srgb, rgba(120, 75, 30, 0.38) 100%, transparent);
+.read-chapter-post-reading-editions-panel--discover .read-chapter-post-reading-editions-panel-badge {
+  background: var(--post-reading-discover);
 }
 
-.read-chapter-post-reading-editions-choice--active {
-  border-color: color-mix(in srgb, rgba(120, 75, 30, 0.5) 100%, transparent);
-  background: color-mix(in srgb, rgba(255, 248, 235, 0.92) 100%, transparent);
+.read-chapter-post-reading-editions-panel--consult .read-chapter-post-reading-editions-panel-badge {
+  background: var(--post-reading-consult);
 }
 
-.dark .read-chapter-post-reading-editions-choice {
-  border-color: color-mix(in srgb, rgba(245, 230, 210, 0.18) 100%, transparent);
-  background: color-mix(in srgb, rgba(28, 26, 24, 0.45) 100%, transparent);
-  color: color-mix(in srgb, rgb(245 235 220) 85%, transparent);
+.read-chapter-post-reading-editions-panel-title {
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
+  font-size: clamp(1.15rem, 4.2vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+.read-chapter-post-reading-editions-panel--discover .read-chapter-post-reading-editions-panel-title {
+  color: var(--post-reading-discover);
+}
+
+.read-chapter-post-reading-editions-panel--consult .read-chapter-post-reading-editions-panel-title {
+  color: var(--post-reading-consult);
+}
+
+.read-chapter-post-reading-editions-panel-title-rule {
+  display: block;
+  width: 2.75rem;
+  height: 1px;
+  margin: 0.1rem 0 0.15rem;
+  background: color-mix(in srgb, rgb(72 52 34) 22%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--discover .read-chapter-post-reading-editions-panel-title-rule {
+  background: color-mix(in srgb, var(--post-reading-discover) 35%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel--consult .read-chapter-post-reading-editions-panel-title-rule {
+  background: color-mix(in srgb, var(--post-reading-consult) 35%, transparent);
+}
+
+.read-chapter-post-reading-editions-panel-blurb {
+  margin: 0;
+  max-width: 10.5rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
+  font-size: clamp(0.6875rem, 3vw, 0.75rem);
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, rgb(48 38 28) 78%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel {
+  background: transparent;
+  border-color: color-mix(in srgb, rgba(245, 230, 210, 0.14) 100%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel--discover {
+  border-color: color-mix(in srgb, var(--post-reading-discover) 32%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel--consult {
+  border-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
+}
+
+.dark .read-chapter-post-reading-editions-panel-blurb {
+  color: color-mix(in srgb, rgb(245 235 220) 70%, transparent);
 }
 
 .read-chapter-post-reading-editions-panels .read-chapter-info-edition-invite {
@@ -373,6 +540,14 @@
   color: color-mix(in srgb, rgb(120 75 30) 55%, transparent);
 }
 
+.read-chapter-info-edition--discover .read-chapter-info-edition-kicker {
+  color: color-mix(in srgb, var(--post-reading-discover) 72%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-kicker {
+  color: color-mix(in srgb, var(--post-reading-consult) 72%, transparent);
+}
+
 .dark .read-chapter-info-edition-kicker {
   color: color-mix(in srgb, rgb(245 230 210) 45%, transparent);
 }
@@ -414,6 +589,22 @@
   font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
+.read-chapter-info-edition--discover .read-chapter-info-edition-panel {
+  border-color: var(--post-reading-discover-border);
+  background: var(--post-reading-discover-fill);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.7) 100%, transparent) inset,
+    0 8px 28px -18px color-mix(in srgb, var(--post-reading-discover) 18%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-panel {
+  border-color: var(--post-reading-consult-border);
+  background: var(--post-reading-consult-fill);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.7) 100%, transparent) inset,
+    0 8px 28px -18px color-mix(in srgb, var(--post-reading-consult) 18%, transparent);
+}
+
 .dark .read-chapter-info-edition-panel {
   border-color: color-mix(in srgb, rgba(245, 230, 210, 0.14) 100%, transparent);
   background: color-mix(in srgb, rgba(28, 26, 24, 0.55) 100%, transparent);
@@ -422,11 +613,29 @@
     0 10px 32px -20px rgba(0, 0, 0, 0.45);
 }
 
+.dark .read-chapter-info-edition--discover .read-chapter-info-edition-panel {
+  border-color: color-mix(in srgb, var(--post-reading-discover) 32%, transparent);
+  background: color-mix(in srgb, var(--post-reading-discover) 14%, rgb(22 20 18));
+}
+
+.dark .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
+  border-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
+  background: color-mix(in srgb, var(--post-reading-consult) 14%, rgb(22 20 18));
+}
+
 .read-chapter-info-edition-panel-skeleton {
   min-height: 5rem;
   border-radius: 0.5rem;
   background: color-mix(in srgb, rgba(120, 75, 30, 0.06) 100%, transparent);
   animation: pulse 1.8s ease-in-out infinite;
+}
+
+.read-chapter-info-edition--discover .read-chapter-info-edition-panel-skeleton {
+  background: color-mix(in srgb, var(--post-reading-discover) 10%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-panel-skeleton {
+  background: color-mix(in srgb, var(--post-reading-consult) 10%, transparent);
 }
 
 .dark .read-chapter-info-edition-panel-skeleton {

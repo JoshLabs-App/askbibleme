@@ -67,7 +67,7 @@ function editionQuery(variant: InfoEditionReaderVariant): string {
   return `edition=${encodeURIComponent(variant)}`;
 }
 
-/** 读经页：导读版 / 引导版面板（由父级选择后按需加载） */
+/** 读经页：讲解版 / 发现版面板（由父级选择后按需加载） */
 export function ReadChapterInfoEditionBlock({
   variant,
   bookId,
@@ -235,7 +235,13 @@ export function ReadChapterInfoEditionBlock({
   return (
     <section className="read-chapter-info-edition-invite" aria-label={ariaLabel}>
       {showPanel ? (
-        <section className="read-chapter-info-edition">
+        <section
+          className={
+            variant === "guide"
+              ? "read-chapter-info-edition read-chapter-info-edition--discover"
+              : "read-chapter-info-edition read-chapter-info-edition--consult"
+          }
+        >
           <div className="read-chapter-info-edition-divider" role="separator" aria-hidden>
             <span className="read-chapter-info-edition-divider-line" />
             <span className="read-chapter-info-edition-divider-label">

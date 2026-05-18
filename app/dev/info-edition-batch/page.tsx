@@ -81,10 +81,10 @@ export default function InfoEditionBatchMonitorPage() {
         </Link>
       </p>
       <h1 style={{ fontSize: "1.35rem", fontWeight: 600, margin: "0.5rem 0 1rem" }}>
-        导读 / 引导版 · 全本批量
+        讲解 / 发现版 · 全本批量
       </h1>
       <p style={{ fontSize: "0.85rem", color: "#555", margin: "0 0 1rem" }}>
-        与后台「导读版投送 / 引导版投送 → 确认生成」同一套拼稿与 DeepSeek 调用；导读使用工作区已保存的描述规则，引导仅经文。
+        与后台「讲解版投送 / 发现版投送 → 确认生成」同一套拼稿与 DeepSeek 调用；讲解使用工作区已保存的描述规则，发现仅经文。
       </p>
 
       {err ? <p style={{ color: "#b00020" }}>{err}</p> : null}
@@ -115,7 +115,7 @@ export default function InfoEditionBatchMonitorPage() {
             {st.cursor.bookName ? (
               <p style={{ margin: "0.5rem 0 0", fontSize: "0.85rem" }}>
                 光标：{st.cursor.bookName} 第 {st.cursor.chapter} 章 ·{" "}
-                {st.cursor.edition === "guide" ? "引导版" : "导读版"}
+                {st.cursor.edition === "guide" ? "发现版" : "讲解版"}
               </p>
             ) : null}
             {st.lastRun?.error ? (

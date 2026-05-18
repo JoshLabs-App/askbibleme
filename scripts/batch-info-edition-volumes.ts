@@ -1,6 +1,6 @@
 /**
- * 本机全本 / 分卷批量生成导读版 + 引导版，逐章写入 data/bible/info-edition-v1-published.json。
- * 生成逻辑与后台「导读版投送 / 引导版投送 → 确认生成」相同：
+ * 本机全本 / 分卷批量生成讲解版 + 发现版，逐章写入 data/bible/info-edition-v1-published.json。
+ * 生成逻辑与后台「讲解版投送 / 发现版投送 → 确认生成」相同：
  *   planInfoEditionReaderGeneration → executeInfoEditionReaderPlan（DeepSeek + 角色 system）
  * 导读 user 含工作区描述规则；引导 user 仅经文。
  * 每卷完成后可选 scp 推到 Render 磁盘。支持断点续跑。
@@ -200,7 +200,7 @@ async function run(): Promise<void> {
           state.cursor = { bookIndex: bi, chapter: ci, editionIndex: ei };
           writeInfoEditionBatchState(cwd, state);
 
-          const label = `${book.bookName} ${ci}章 · ${edition === "guide" ? "引导版" : "导读版"}`;
+          const label = `${book.bookName} ${ci}章 · ${edition === "guide" ? "发现版" : "讲解版"}`;
 
           if (skipExisting && chapterAlreadyOk(book.bookId, ci, edition, target.roleId)) {
             setChapterStatus(bookState, ci, edition, "skipped");

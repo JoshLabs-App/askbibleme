@@ -210,7 +210,7 @@ export const InfoEditionReaderProbePanel = forwardRef<InfoEditionReaderProbeHand
               system {probe.systemCharCount} 字 · user {probe.userCharCount} 字
               {probe.variant === "info"
                 ? ` · 描述规则 ${probe.descriptionRulesCharCount} 字`
-                : " · 引导版不使用下方描述规则框"}
+                : " · 发现版不使用下方描述规则框"}
             </span>
           </div>
 

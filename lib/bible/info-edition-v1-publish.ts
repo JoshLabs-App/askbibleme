@@ -9,16 +9,24 @@ import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-
 export const INFO_EDITION_V1_PUBLISH_ROLE_ID = GENERATION_ROLE_BUILTIN_INFO_V1;
 export const INFO_EDITION_V1_PUBLISH_PROFILE_ID = "slot:deepseek";
 
-/** 读经页「引导版」：与后台 generation-roles 中「引导版V2」对应 */
+/** 读经页「发现版」：与后台 generation-roles 中「发现版V2」对应 */
 export const INFO_EDITION_GUIDE_V2_ROLE_ID = "role_356f0ffb" as const;
-export const INFO_EDITION_GUIDE_V2_ROLE_LABEL = "引导版V2" as const;
+export const INFO_EDITION_GUIDE_V2_ROLE_LABEL = "发现版V2" as const;
+
+const GUIDE_V2_ROLE_LABEL_ALIASES = [
+  INFO_EDITION_GUIDE_V2_ROLE_LABEL,
+  "引导版V2",
+  "引导版",
+] as const;
 
 export type InfoEditionReaderVariant = "info" | "guide";
 
 export function resolveReaderGuideRoleId(
   roles: Pick<GenerationRole, "id" | "label">[],
 ): string {
-  const byLabel = roles.find((r) => r.label.trim() === INFO_EDITION_GUIDE_V2_ROLE_LABEL);
+  const byLabel = roles.find((r) =>
+    (GUIDE_V2_ROLE_LABEL_ALIASES as readonly string[]).includes(r.label.trim()),
+  );
   if (byLabel) return byLabel.id;
   const byId = roles.find((r) => r.id === INFO_EDITION_GUIDE_V2_ROLE_ID);
   return byId?.id ?? INFO_EDITION_GUIDE_V2_ROLE_ID;
@@ -36,14 +44,14 @@ export function readerVariantToRoleId(
 export function readerVariantFromRole(role: Pick<GenerationRole, "id" | "label">): InfoEditionReaderVariant {
   if (role.id === INFO_EDITION_GUIDE_V2_ROLE_ID) return "guide";
   const label = role.label.trim();
-  if (label === INFO_EDITION_GUIDE_V2_ROLE_LABEL || label === "引导版") return "guide";
+  if ((GUIDE_V2_ROLE_LABEL_ALIASES as readonly string[]).includes(label)) return "guide";
   return "info";
 }
 
 export function parseInfoEditionReaderVariant(raw: string | null | undefined): InfoEditionReaderVariant | null {
   const v = raw?.trim().toLowerCase() ?? "";
-  if (v === "info" || v === "导读" || v === "导读版") return "info";
-  if (v === "guide" || v === "引导" || v === "引导版") return "guide";
+  if (v === "info" || v === "导读" || v === "导读版" || v === "讲解" || v === "讲解版") return "info";
+  if (v === "guide" || v === "引导" || v === "引导版" || v === "发现" || v === "发现版") return "guide";
   return null;
 }
 
@@ -55,7 +63,7 @@ function isReaderInfoEditionRole(roleId: string, roleLabel: string): boolean {
 function isReaderGuideEditionRole(roleId: string, roleLabel: string): boolean {
   if (roleId === INFO_EDITION_GUIDE_V2_ROLE_ID) return true;
   const label = roleLabel.trim();
-  return label === INFO_EDITION_GUIDE_V2_ROLE_LABEL || label === "引导版";
+  return (GUIDE_V2_ROLE_LABEL_ALIASES as readonly string[]).includes(label);
 }
 
 export function publishedChapterMatchesReaderRole(

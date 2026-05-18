@@ -839,8 +839,9 @@
         "contrastTranslation": "对照版本",
         "contrastNone": "无",
         "contrastHint": "对照文显示于每节主文下方。",
-        "chapterAudioVoiceLabel": "朗读人声",
+        "chapterAudioVoiceLabel": "朗读语言",
         "chapterAudioVoiceHint": "潮州语仅新约有音频；旧约章自动使用普通话。",
+        "chapterAudioVoiceHintNonCuv": "朗读音频为和合本录音；屏幕译本可另选。章页底栏播放时生效。",
         "sizeLabel": "字号",
         "sizeSmallerAria": "缩小字号",
         "sizeLargerAria": "放大字号"

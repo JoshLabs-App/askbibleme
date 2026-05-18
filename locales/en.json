@@ -839,8 +839,9 @@
         "contrastTranslation": "Parallel version",
         "contrastNone": "None",
         "contrastHint": "Parallel text appears below each verse.",
-        "chapterAudioVoiceLabel": "Chapter narration",
+        "chapterAudioVoiceLabel": "Narration language",
         "chapterAudioVoiceHint": "Teochew audio is available for the New Testament only; Old Testament chapters use Mandarin.",
+        "chapterAudioVoiceHintNonCuv": "Narration uses CUV audio; on-screen text can be another translation. Applies when you play from a chapter page.",
         "sizeLabel": "Text size",
         "sizeSmallerAria": "Decrease text size",
         "sizeLargerAria": "Increase text size"

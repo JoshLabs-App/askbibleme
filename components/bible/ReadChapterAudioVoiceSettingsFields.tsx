@@ -21,9 +21,7 @@ export function ReadChapterAudioVoiceSettingsFields() {
   const { translation } = useReadBibleTranslationSettings();
   const { playing, effectiveSrc, pausePlayback } = useMusicShellPlayback();
 
-  if (!translationSupportsCuvChapterAudio(translation.primaryTranslationId)) {
-    return null;
-  }
+  const primarySupportsAudio = translationSupportsCuvChapterAudio(translation.primaryTranslationId);
 
   const onChange = (next: string) => {
     const id = next as CuvChapterAudioVoiceId;
@@ -55,7 +53,9 @@ export function ReadChapterAudioVoiceSettingsFields() {
         ))}
       </select>
       <p className="mt-2 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">
-        {t("pages.read.typography.chapterAudioVoiceHint")}
+        {primarySupportsAudio
+          ? t("pages.read.typography.chapterAudioVoiceHint")
+          : t("pages.read.typography.chapterAudioVoiceHintNonCuv")}
       </p>
     </>
   );

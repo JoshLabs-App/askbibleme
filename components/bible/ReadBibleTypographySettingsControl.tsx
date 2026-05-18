@@ -158,9 +158,10 @@ export function ReadBibleTypographySettingsControl() {
                   {t("pages.read.typography.contrastHint")}
                 </p>
               ) : null}
-              <ReadChapterAudioVoiceSettingsFields />
             </>
           ) : null}
+
+          {showTranslation ? <ReadChapterAudioVoiceSettingsFields /> : null}
 
           <div className="mt-3 flex items-center justify-between gap-3">
             <span className="text-[13px] font-medium text-amber-950/90 dark:text-stone-200">

@@ -12,6 +12,7 @@ import {
   resolveInfoEditionReaderTarget,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
+import { ReadChapterTelemetry } from "@/components/telemetry/ReadChapterTelemetry";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 type Props = { params: Promise<{ bookId: string; chapter: string }> };
@@ -57,42 +58,54 @@ export default async function ReadChapterPage({ params }: Props) {
       : null;
 
   return (
-    <ScriptureChrome>
-      <header className="read-chapter-header">
-        <ReadChapterNav />
-        <h1 className="read-chapter-title mt-3 text-balance font-semibold tracking-tight text-amber-950 dark:text-stone-50">
-          {data.bookName}{" "}
-          <span className="tabular-nums text-[0.88em] font-semibold text-amber-900/88 dark:text-stone-200">
-            第 {data.chapter} 章
-          </span>
-        </h1>
-      </header>
+    <ScriptureChrome parchmentColumnClassName="read-bible-parchment-column--read-chapter">
+      <ReadChapterTelemetry bookId={data.bookId} chapter={data.chapter} />
       <article className="read-chapter-article">
-        <div className="read-chapter-scripture">
-          <ReadChapterVersesClient
-            translationId={data.translationId}
+        <div className="read-chapter-spread">
+          <div className="read-chapter-open-book">
+            <div className="read-chapter-spread-scripture read-chapter-open-book-page read-chapter-open-book-page--left">
+              <header className="read-chapter-header">
+                <ReadChapterNav />
+                <h1 className="read-chapter-title font-semibold tracking-tight text-amber-950 dark:text-stone-50">
+                  {data.bookName}{" "}
+                  <span className="tabular-nums text-[0.88em] font-semibold text-amber-900/88 dark:text-stone-200">
+                    第 {data.chapter} 章
+                  </span>
+                </h1>
+              </header>
+              <div className="read-chapter-scripture">
+                <ReadChapterVersesClient
+                  translationId={data.translationId}
+                  bookId={data.bookId}
+                  bookName={data.bookName}
+                  chapter={data.chapter}
+                  verses={data.verses}
+                  contrastVerses={contrast?.verses ?? null}
+                />
+              </div>
+            </div>
+            <div className="read-chapter-open-book-spine" aria-hidden="true" />
+            <aside className="read-chapter-spread-editions read-chapter-open-book-page read-chapter-open-book-page--right">
+              <ReadChapterPostReadingEditions
+                bookId={data.bookId}
+                chapter={data.chapter}
+                initialInfoPublished={initialInfoPublished}
+                initialGuidePublished={initialGuidePublished}
+              />
+            </aside>
+          </div>
+        </div>
+        <div className="read-chapter-spread-after">
+          <ReadChapterTodayPlanBlock bookId={data.bookId} chapter={data.chapter} />
+          <ReadChapterTripleLoopAdvance bookId={data.bookId} chapter={data.chapter} />
+          <ReadChapterEndNav
             bookId={data.bookId}
             bookName={data.bookName}
             chapter={data.chapter}
-            verses={data.verses}
-            contrastVerses={contrast?.verses ?? null}
+            prev={prev}
+            next={next}
           />
         </div>
-        <ReadChapterPostReadingEditions
-          bookId={data.bookId}
-          chapter={data.chapter}
-          initialInfoPublished={initialInfoPublished}
-          initialGuidePublished={initialGuidePublished}
-        />
-        <ReadChapterTodayPlanBlock bookId={data.bookId} chapter={data.chapter} />
-        <ReadChapterTripleLoopAdvance bookId={data.bookId} chapter={data.chapter} />
-        <ReadChapterEndNav
-          bookId={data.bookId}
-          bookName={data.bookName}
-          chapter={data.chapter}
-          prev={prev}
-          next={next}
-        />
       </article>
     </ScriptureChrome>
   );

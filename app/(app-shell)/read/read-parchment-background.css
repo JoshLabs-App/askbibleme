@@ -65,10 +65,3 @@ html[data-app-shell-safe-fill="parchment"][data-read-parchment-wide="1"] {
     --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
   }
 }
-
-/* 读经章双栏：与 `useReadChapterSpreadLayout` 同断点，竖屏 iPad 宽≥1024 也用横卷 */
-@media (min-width: 1024px) {
-  html[data-app-shell-safe-fill="parchment"]:has(.read-bible-parchment-column--read-chapter) {
-    --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
-  }
-}

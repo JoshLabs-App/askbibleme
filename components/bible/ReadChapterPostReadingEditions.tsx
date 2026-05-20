@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import Image from "next/image";
+import { useState, type ReactNode } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ReadChapterInfoEditionBlock } from "@/components/bible/ReadChapterInfoEditionBlock";
-import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 
@@ -63,36 +63,17 @@ function BookIcon() {
   );
 }
 
-function PostReadingEditionPill({
-  panel,
-  active,
-  onSelect,
-}: {
-  panel: PanelCopy;
-  active: boolean;
-  onSelect: () => void;
-}) {
-  const variant = panel.side === "guide" ? "guide" : "info";
-
+function LeafIcon({ className }: { className?: string }) {
   return (
-    <button
-      type="button"
-      role="tab"
-      id={`read-edition-tab-${variant}`}
-      aria-selected={active}
-      aria-controls={`read-edition-panel-${variant}`}
-      className={[
-        "read-chapter-edition-pill",
-        panel.side === "guide" ? "read-chapter-edition-pill--discover" : "read-chapter-edition-pill--consult",
-        active ? "read-chapter-edition-pill--active" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      onClick={onSelect}
-    >
-      {panel.tagIcon}
-      {panel.tag}
-    </button>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <path
+        d="M12 3c-4 4-6 8-6 12 0 3 2.5 5 6 6 4-1 6-3 6-6 0-4-2-8-6-12Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M12 9v10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -105,7 +86,7 @@ function PostReadingPanel({
   active: boolean;
   onToggle: () => void;
 }) {
-  const ariaLabel = panel.title;
+  const ariaLabel = `${panel.tag} · ${panel.title}`;
 
   return (
     <button
@@ -116,13 +97,22 @@ function PostReadingPanel({
       onClick={onToggle}
     >
       <div className="read-chapter-post-reading-editions-panel-art" aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={panel.art} alt="" className="read-chapter-post-reading-editions-panel-art-img" />
+        <Image
+          src={panel.art}
+          alt=""
+          fill
+          unoptimized
+          sizes="(max-width: 560px) 50vw, 22rem"
+          className="read-chapter-post-reading-editions-panel-art-img"
+        />
       </div>
       <div className="read-chapter-post-reading-editions-panel-body">
-        <span className="read-chapter-post-reading-editions-panel-title read-chapter-post-reading-editions-panel-title--choice">
-          {panel.title}
+        <span className="read-chapter-post-reading-editions-panel-badge">
+          {panel.tagIcon}
+          {panel.tag}
         </span>
+        <span className="read-chapter-post-reading-editions-panel-title">{panel.title}</span>
+        <span className="read-chapter-post-reading-editions-panel-title-rule" aria-hidden />
         <p className="read-chapter-post-reading-editions-panel-blurb">{panel.blurb}</p>
       </div>
     </button>
@@ -136,21 +126,11 @@ export function ReadChapterPostReadingEditions({
   initialGuidePublished = null,
 }: Props) {
   const { t } = useLocale();
-  const isSpread = useReadChapterSpreadLayout();
   const [active, setActive] = useState<InfoEditionReaderVariant | null>(null);
 
-  const selectVariant = (variant: InfoEditionReaderVariant) => {
-    setActive(variant);
+  const toggle = (variant: InfoEditionReaderVariant) => {
+    setActive((current) => (current === variant ? null : variant));
   };
-
-  useEffect(() => {
-    if (isSpread && active === null) {
-      setActive("guide");
-    }
-  }, [isSpread, active]);
-
-  const showGuide = active === "guide";
-  const showInfo = active === "info";
 
   const panels: PanelCopy[] = [
     {
@@ -173,100 +153,53 @@ export function ReadChapterPostReadingEditions({
 
   return (
     <section
-      className={[
-        "read-chapter-post-reading-editions",
-        isSpread ? "read-chapter-post-reading-editions--spread" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className="read-chapter-post-reading-editions"
       aria-label={t("pages.read.postReadingEditionsAriaLabel")}
     >
-      <header
-        className={[
-          "read-chapter-post-reading-editions-heading",
-          isSpread ? "read-chapter-post-reading-editions-heading--spread" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
+      <header className="read-chapter-post-reading-editions-heading">
         <h2 className="read-chapter-post-reading-editions-heading-text">
           {t("pages.read.postReadingEditionsHeading")}
         </h2>
         <div className="read-chapter-post-reading-editions-heading-rule" aria-hidden>
           <span className="read-chapter-post-reading-editions-heading-rule-line" />
+          <LeafIcon className="read-chapter-post-reading-editions-heading-leaf" />
+          <span className="read-chapter-post-reading-editions-heading-rule-line" />
         </div>
       </header>
 
-      {isSpread ? (
-        <div
-          className="read-chapter-edition-switcher"
-          role="tablist"
-          aria-label={t("pages.read.postReadingEditionsChoicesAria")}
-        >
-          <PostReadingEditionPill
-            panel={panels[0]}
-            active={active === "guide"}
-            onSelect={() => selectVariant("guide")}
-          />
-          <PostReadingEditionPill
-            panel={panels[1]}
-            active={active === "info"}
-            onSelect={() => selectVariant("info")}
-          />
-        </div>
-      ) : null}
+      <div
+        className="read-chapter-post-reading-editions-board"
+        role="group"
+        aria-label={t("pages.read.postReadingEditionsChoicesAria")}
+      >
+        <PostReadingPanel
+          panel={panels[0]}
+          active={active === "guide"}
+          onToggle={() => toggle("guide")}
+        />
 
-      {!isSpread ? (
-        <div className="read-chapter-post-reading-editions-board-wrap">
-          <div
-            className="read-chapter-post-reading-editions-board"
-            role="group"
-            aria-label={t("pages.read.postReadingEditionsChoicesAria")}
-          >
-            <PostReadingPanel
-              panel={panels[0]}
-              active={active === "guide"}
-              onToggle={() => selectVariant("guide")}
-            />
-            <PostReadingPanel
-              panel={panels[1]}
-              active={active === "info"}
-              onToggle={() => selectVariant("info")}
-            />
-          </div>
-          <span className="read-chapter-post-reading-editions-or" aria-hidden>
-            {t("pages.read.postReadingEditionsOr")}
-          </span>
-        </div>
-      ) : null}
+        <PostReadingPanel
+          panel={panels[1]}
+          active={active === "info"}
+          onToggle={() => toggle("info")}
+        />
+      </div>
 
       <div className="read-chapter-post-reading-editions-panels">
-        {showGuide ? (
-          <div id="read-edition-panel-guide" role="tabpanel" aria-labelledby="read-edition-tab-guide">
-            <ReadChapterInfoEditionBlock
-              key={`guide-${bookId}-${chapter}`}
-              variant="guide"
-              bookId={bookId}
-              chapter={chapter}
-              isActive
-              initialPublished={initialGuidePublished}
-              showHeroBadge={!isSpread}
-            />
-          </div>
-        ) : null}
-        {showInfo ? (
-          <div id="read-edition-panel-info" role="tabpanel" aria-labelledby="read-edition-tab-info">
-            <ReadChapterInfoEditionBlock
-              key={`info-${bookId}-${chapter}`}
-              variant="info"
-              bookId={bookId}
-              chapter={chapter}
-              isActive
-              initialPublished={initialInfoPublished}
-              showHeroBadge={!isSpread}
-            />
-          </div>
-        ) : null}
+        <ReadChapterInfoEditionBlock
+          variant="guide"
+          bookId={bookId}
+          chapter={chapter}
+          isActive={active === "guide"}
+          initialPublished={initialGuidePublished}
+        />
+        <ReadChapterInfoEditionBlock
+          variant="info"
+          bookId={bookId}
+          chapter={chapter}
+          isActive={active === "info"}
+          initialPublished={initialInfoPublished}
+        />
       </div>
     </section>
   );

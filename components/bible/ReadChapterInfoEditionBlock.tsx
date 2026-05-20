@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { PostReadingEditionHero } from "@/components/bible/PostReadingEditionHero";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 
@@ -27,8 +26,6 @@ type Props = {
   /** 父级已选中该版本时展示并触发加载 */
   isActive: boolean;
   initialPublished?: InfoEditionV1PublishedChapter | null;
-  /** 为 false 时不在正文顶重复显示版本徽章（大屏由父级双按钮切换） */
-  showHeroBadge?: boolean;
 };
 
 type PanelPhase = "idle" | "loading" | "ready" | "error";
@@ -77,7 +74,6 @@ export function ReadChapterInfoEditionBlock({
   chapter,
   isActive,
   initialPublished = null,
-  showHeroBadge = true,
 }: Props) {
   const { t } = useLocale();
   const initialReady = hasPublishedMarkdown(initialPublished);
@@ -91,6 +87,10 @@ export function ReadChapterInfoEditionBlock({
   const loadStartedRef = useRef(false);
   const POLL_MAX_MS = 4 * 60 * 1000;
 
+  const sectionKicker =
+    variant === "guide"
+      ? t("pages.read.guideEditionSectionKicker")
+      : t("pages.read.infoEditionSectionKicker");
   const disclaimer =
     variant === "guide"
       ? t("pages.read.guideEditionDisclaimer")
@@ -99,6 +99,11 @@ export function ReadChapterInfoEditionBlock({
     variant === "guide"
       ? t("pages.read.guideEditionAriaLabel")
       : t("pages.read.infoEditionAriaLabel");
+  const defaultRole =
+    variant === "guide"
+      ? t("pages.read.guideEditionDefaultRole")
+      : t("pages.read.infoEditionDefaultRole");
+
   const stopPoll = useCallback(() => {
     if (pollRef.current) {
       clearInterval(pollRef.current);
@@ -225,6 +230,7 @@ export function ReadChapterInfoEditionBlock({
   if (!isActive) return null;
 
   const showPanel = phase === "loading" || phase === "ready" || phase === "error";
+  const roleLabel = published?.roleLabel ?? defaultRole;
 
   return (
     <section className="read-chapter-info-edition-invite" aria-label={ariaLabel}>
@@ -236,10 +242,16 @@ export function ReadChapterInfoEditionBlock({
               : "read-chapter-info-edition read-chapter-info-edition--consult"
           }
         >
-          <header className="read-chapter-info-edition-header">
-            {showHeroBadge ? <PostReadingEditionHero variant={variant} /> : null}
-            <p className="read-chapter-info-edition-disclaimer">{disclaimer}</p>
-          </header>
+          <div className="read-chapter-info-edition-divider" role="separator" aria-hidden>
+            <span className="read-chapter-info-edition-divider-line" />
+            <span className="read-chapter-info-edition-divider-label">
+              <span className="read-chapter-info-edition-kicker">{sectionKicker}</span>
+              <span className="read-chapter-info-edition-role">{roleLabel}</span>
+            </span>
+            <span className="read-chapter-info-edition-divider-line" />
+          </div>
+
+          <p className="read-chapter-info-edition-disclaimer">{disclaimer}</p>
 
           {phase === "error" && err ? (
             <div className="read-chapter-info-edition-panel read-chapter-info-edition-panel--error">

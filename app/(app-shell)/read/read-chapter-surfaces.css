@@ -90,198 +90,15 @@
   }
 }
 
-/* 读经章：底栏主导航上方的快捷操作行 */
-.read-chapter-action-chrome {
-  display: flex;
-  width: 100%;
-  max-width: min(100%, var(--read-parchment-column-max, 28rem));
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.1rem;
-  margin-bottom: 0.2rem;
-  padding-left: max(1.375rem, env(safe-area-inset-left, 0px));
-  padding-right: max(1.375rem, env(safe-area-inset-right, 0px));
-  box-sizing: border-box;
-}
-
-.read-bible-parchment-scroll:has(.read-chapter-header) {
-  padding-bottom: calc(7.75rem + env(safe-area-inset-bottom, 0px));
-}
-
-.read-scripture-search {
-  width: 100%;
-  max-width: min(var(--read-parchment-column-max, 28rem), 100%);
-  margin-inline: auto;
-  padding-bottom: 1rem;
-}
-
-.read-scripture-search-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.3;
-  text-align: center;
-  color: color-mix(in srgb, rgb(28 20 16) 94%, transparent);
-}
-
-.read-scripture-search-lead {
-  margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.55;
-  text-align: center;
-  color: color-mix(in srgb, rgb(92 64 48) 88%, transparent);
-}
-
-.read-scripture-search-scope {
-  display: flex;
-  justify-content: center;
-  gap: 0.125rem;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto 0.875rem;
-  padding: 0.2rem;
-  border: 1px solid color-mix(in srgb, rgb(120 53 15) 28%, transparent);
-  border-radius: 0.65rem;
-  background: color-mix(in srgb, rgb(255 252 245) 88%, transparent);
-}
-
-.read-scripture-search-scope-btn {
-  border: 0;
-  border-radius: 0.5rem;
-  background: transparent;
-  padding: 0.42rem 0.85rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.2;
-  color: color-mix(in srgb, rgb(92 64 48) 88%, transparent);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.read-scripture-search-scope-btn.is-active {
-  background: color-mix(in srgb, rgb(28 20 16) 92%, transparent);
-  color: color-mix(in srgb, rgb(255 252 245) 96%, transparent);
-}
-
-.read-scripture-search-field {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.read-scripture-search-input {
-  box-sizing: border-box;
-  width: 100%;
-  border: 1px solid color-mix(in srgb, rgb(120 53 15) 28%, transparent);
-  border-radius: 0.65rem;
-  background: color-mix(in srgb, rgb(255 252 245) 88%, transparent);
-  padding: 0.7rem 0.85rem;
-  font-size: 1rem;
-  color: color-mix(in srgb, rgb(28 20 16) 94%, transparent);
-}
-
-.read-scripture-search-input:focus {
-  outline: 2px solid color-mix(in srgb, rgb(120 53 15) 35%, transparent);
-  outline-offset: 2px;
-}
-
-.read-scripture-search-hint,
-.read-scripture-search-status,
-.read-scripture-search-empty,
-.read-scripture-search-error {
-  margin: 0.5rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  text-align: center;
-  color: color-mix(in srgb, rgb(92 64 48) 82%, transparent);
-}
-
-.read-scripture-search-error {
-  color: color-mix(in srgb, rgb(120 40 20) 88%, transparent);
-}
-
-.read-scripture-search-results {
-  margin: 1rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.read-scripture-search-hit {
-  display: block;
-  padding: 0.85rem 0;
-  border-top: 1px solid color-mix(in srgb, rgb(120 53 15) 18%, transparent);
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-}
-
-.read-scripture-search-hit:hover {
-  opacity: 0.88;
-}
-
-.read-scripture-search-hit-ref {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: color-mix(in srgb, rgb(72 52 34) 88%, transparent);
-}
-
-.read-scripture-search-hit-text {
-  display: block;
-  font-size: 0.9375rem;
-  line-height: 1.65;
-  color: color-mix(in srgb, rgb(28 20 16) 88%, transparent);
-}
-
-.dark .read-scripture-search-title {
-  color: color-mix(in srgb, rgb(250 250 249) 92%, transparent);
-}
-
-.dark .read-scripture-search-lead,
-.dark .read-scripture-search-hint,
-.dark .read-scripture-search-status,
-.dark .read-scripture-search-empty {
-  color: color-mix(in srgb, rgb(214 198 180) 82%, transparent);
-}
-
-.dark .read-scripture-search-input {
-  border-color: color-mix(in srgb, rgb(245 230 210) 18%, transparent);
-  background: color-mix(in srgb, rgb(42 36 30) 55%, transparent);
-  color: color-mix(in srgb, rgb(244 235 225) 94%, transparent);
-}
-
-.dark .read-scripture-search-scope {
-  border-color: color-mix(in srgb, rgb(245 230 210) 18%, transparent);
-  background: color-mix(in srgb, rgb(42 36 30) 55%, transparent);
-}
-
-.dark .read-scripture-search-scope-btn {
-  color: color-mix(in srgb, rgb(214 198 180) 82%, transparent);
-}
-
-.dark .read-scripture-search-scope-btn.is-active {
-  background: color-mix(in srgb, rgb(244 235 225) 18%, transparent);
-  color: color-mix(in srgb, rgb(250 250 249) 96%, transparent);
-}
-
-.dark .read-scripture-search-hit-ref {
-  color: color-mix(in srgb, rgb(214 198 180) 88%, transparent);
-}
-
-.dark .read-scripture-search-hit-text {
-  color: color-mix(in srgb, rgb(244 235 225) 88%, transparent);
-}
-
 .read-chapter-header {
   text-align: center;
 }
 
 .read-chapter-title {
-  margin: 50px auto;
+  line-height: 1.3;
+  margin-inline: auto;
   max-width: 100%;
   font-size: var(--read-bible-chapter-title-font-size, 1.6rem);
-  line-height: 1.3;
-  text-align: center;
-  text-wrap: balance;
 }
 
 /* /read 首页：标题区上下留白 */
@@ -318,200 +135,6 @@
   text-align: start;
 }
 
-/* 读经章：大屏双栏（左经文 / 右讲解+发现），仅 `.read-bible-parchment-column--read-chapter` 页 */
-.read-chapter-spread {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.read-chapter-open-book {
-  display: contents;
-}
-
-.read-chapter-open-book-spine {
-  display: none;
-}
-
-.read-chapter-spread-scripture {
-  min-width: 0;
-}
-
-.read-chapter-spread-editions {
-  min-width: 0;
-}
-
-.read-chapter-spread-after {
-  min-width: 0;
-}
-
-@media (min-width: 1024px) {
-  .read-bible-parchment-column--read-chapter {
-    --read-parchment-column-max: min(96rem, 96vw);
-    max-width: min(96rem, 96vw);
-  }
-
-  /* 摊开的书：左页经文、中缝书脊、右页讲解 */
-  .read-chapter-open-book {
-    --read-open-book-radius: clamp(0.65rem, 1.25vw, 1rem);
-    --read-open-book-page-pad-left: clamp(3rem, 5.5vw, 4.25rem);
-    /* 书页纸色：略暖但不偏黄，与背后羊皮底区分开 */
-    --read-open-book-page-bg: color-mix(in srgb, var(--read-parchment-bg-canvas, #ecd9b9) 14%, rgb(253 251 247));
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    position: relative;
-    align-items: stretch;
-    margin-top: 0.35rem;
-    border-radius: var(--read-open-book-radius);
-    background: var(--read-open-book-page-bg);
-    box-shadow:
-      0 1px 0 color-mix(in srgb, rgb(255 255 255) 48%, transparent) inset,
-      0 18px 48px -12px color-mix(in srgb, rgb(28 20 16) 22%, transparent),
-      0 4px 14px color-mix(in srgb, rgb(28 20 16) 10%, transparent);
-    overflow: visible;
-    isolation: isolate;
-  }
-
-  .dark .read-chapter-open-book {
-    --read-open-book-page-bg: color-mix(in srgb, var(--read-parchment-bg-canvas, #1a1512) 48%, rgb(30 27 24));
-    background: var(--read-open-book-page-bg);
-    box-shadow:
-      0 1px 0 color-mix(in srgb, rgb(255 255 255) 6%, transparent) inset,
-      0 20px 52px -14px color-mix(in srgb, rgb(0 0 0) 55%, transparent),
-      0 4px 16px color-mix(in srgb, rgb(0 0 0) 28%, transparent);
-  }
-
-  /* 中缝不铺色带，只靠左右页极淡内阴影暗示装订沟 */
-  .read-chapter-open-book-spine {
-    display: block;
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    z-index: 2;
-    width: 1px;
-    transform: translateX(-50%);
-    pointer-events: none;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .read-chapter-open-book-page--left {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-    padding: clamp(1.1rem, 2.2vw, 1.55rem) clamp(2.7rem, 5.6vw, 4rem) clamp(1.15rem, 2.2vw, 1.6rem)
-      var(--read-open-book-page-pad-left);
-    border-radius: var(--read-open-book-radius) 0 0 var(--read-open-book-radius);
-    box-shadow: inset -16px 0 28px -20px color-mix(in srgb, rgb(28 20 16) 9%, transparent);
-  }
-
-  .read-chapter-open-book-page--left::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(2.5rem, 12%);
-    pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, rgb(28 20 16) 4%, transparent)
-    );
-  }
-
-  .dark .read-chapter-open-book-page--left {
-    box-shadow: inset -16px 0 28px -20px color-mix(in srgb, rgb(0 0 0) 14%, transparent);
-  }
-
-  .dark .read-chapter-open-book-page--left::after {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, rgb(0 0 0) 6%, transparent)
-    );
-  }
-
-  .read-chapter-open-book-page--right {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-    padding: clamp(2.2rem, 4.4vw, 3.1rem) clamp(1rem, 2vw, 1.45rem) clamp(1.15rem, 2.2vw, 1.6rem)
-      var(--read-open-book-page-pad-left);
-    border-radius: 0 var(--read-open-book-radius) var(--read-open-book-radius) 0;
-    box-shadow: inset 16px 0 28px -20px color-mix(in srgb, rgb(28 20 16) 9%, transparent);
-  }
-
-  .read-chapter-open-book-page--right::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: min(2.5rem, 12%);
-    pointer-events: none;
-    background: linear-gradient(
-      270deg,
-      transparent,
-      color-mix(in srgb, rgb(28 20 16) 4%, transparent)
-    );
-  }
-
-  .dark .read-chapter-open-book-page--right {
-    box-shadow: inset 16px 0 28px -20px color-mix(in srgb, rgb(0 0 0) 14%, transparent);
-  }
-
-  .dark .read-chapter-open-book-page--right::after {
-    background: linear-gradient(
-      270deg,
-      transparent,
-      color-mix(in srgb, rgb(0 0 0) 6%, transparent)
-    );
-  }
-
-  /* 左右页随内容撑开，由外层羊皮滚动区统一滚动（不在栏内再套滚动） */
-  .read-chapter-spread-scripture,
-  .read-chapter-spread-editions {
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .read-chapter-spread-editions {
-    position: relative;
-    align-self: stretch;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel--error,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition--discover .read-chapter-info-edition-panel,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
-    max-height: none;
-    overflow: visible;
-    border: none;
-    box-shadow: none;
-    background: transparent;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel-skeleton {
-    background: color-mix(in srgb, rgb(120 75 30) 5%, transparent);
-  }
-
-  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel,
-  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel--error,
-  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition--discover .read-chapter-info-edition-panel,
-  .dark .read-chapter-post-reading-editions--spread .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
-    border: none;
-    box-shadow: none;
-    background: transparent;
-  }
-
-  .read-chapter-spread-after {
-    margin-top: clamp(1.5rem, 3vw, 2rem);
-  }
-}
-
 .read-chapter-verse {
   margin: 0 0 0.9rem;
   font-size: var(--read-bible-verse-font-size, 1.1875rem);
@@ -542,20 +165,19 @@
   color: color-mix(in srgb, rgb(214 211 209) 78%, transparent);
 }
 
-/* 经文正文区（与章标题、下方信息版分区） */
+/* 经文正文区（与下方信息版分区） */
 .read-chapter-scripture {
   padding-bottom: 0.25rem;
 }
 
-/* 读后经文辅助：左自己探索 / 右查阅资料（始终左右双栏） */
+/* 读后经文辅助：左自己发现 / 右查阅资料（始终左右双栏） */
 .read-chapter-post-reading-editions {
   --post-reading-discover: #2f5c44;
+  --post-reading-discover-fill: #eef6f1;
   --post-reading-discover-border: color-mix(in srgb, var(--post-reading-discover) 26%, transparent);
   --post-reading-consult: #355a78;
+  --post-reading-consult-fill: #eef3f8;
   --post-reading-consult-border: color-mix(in srgb, var(--post-reading-consult) 26%, transparent);
-  /* 卡片底：羊皮卷图按卡片宽高拉伸铺满（不用白底） */
-  --post-reading-panel-bg: var(--read-parchment-bg-image);
-  --post-reading-panel-bg-canvas: var(--read-parchment-bg-canvas, #ecd9b9);
   --post-reading-board-width: min(44rem, calc(100vw - var(--read-parchment-pad-x, 1.4rem) - var(--read-parchment-pad-x-end, 1.4rem)));
   position: relative;
   left: 50%;
@@ -565,146 +187,6 @@
   margin-inline: 0;
   transform: translateX(-50%);
   text-align: center;
-}
-
-/* 须在上一规则之后：大屏双栏右页，宽度跟右栏而非 100vw / 44rem */
-@media (min-width: 1024px) {
-  .read-chapter-post-reading-editions.read-chapter-post-reading-editions--spread {
-    --post-reading-board-width: 100%;
-    position: static;
-    left: auto;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    margin-top: 0;
-    margin-inline: 0;
-    transform: none;
-    text-align: start;
-    box-sizing: border-box;
-  }
-
-  .read-chapter-post-reading-editions-heading--spread {
-    margin-bottom: 0.85rem;
-    text-align: center;
-  }
-
-  .read-chapter-post-reading-editions-heading--spread .read-chapter-post-reading-editions-heading-rule {
-    display: none;
-  }
-
-  .read-chapter-edition-switcher {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0 0 0.85rem;
-    flex-wrap: wrap;
-  }
-
-  .read-chapter-edition-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.28rem;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 0.28rem 0.72rem;
-    font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
-    font-size: 0.625rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    line-height: 1.2;
-    color: rgb(255 252 248);
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease,
-      opacity 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-
-  .read-chapter-edition-pill--discover:not(.read-chapter-edition-pill--active) {
-    border-color: color-mix(in srgb, var(--post-reading-discover) 32%, transparent);
-    background: color-mix(in srgb, var(--post-reading-discover) 12%, transparent);
-    color: var(--post-reading-discover);
-  }
-
-  .read-chapter-edition-pill--consult:not(.read-chapter-edition-pill--active) {
-    border-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
-    background: color-mix(in srgb, var(--post-reading-consult) 12%, transparent);
-    color: var(--post-reading-consult);
-  }
-
-  .read-chapter-edition-pill--discover.read-chapter-edition-pill--active {
-    background: var(--post-reading-discover);
-    box-shadow: 0 1px 6px color-mix(in srgb, var(--post-reading-discover) 22%, transparent);
-  }
-
-  .read-chapter-edition-pill--consult.read-chapter-edition-pill--active {
-    background: var(--post-reading-consult);
-    box-shadow: 0 1px 6px color-mix(in srgb, var(--post-reading-consult) 22%, transparent);
-  }
-
-  .read-chapter-edition-pill:focus-visible {
-    outline: 2px solid color-mix(in srgb, currentColor 35%, transparent);
-    outline-offset: 3px;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-header {
-    margin-bottom: 0.65rem;
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-post-reading-editions-panels {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-post-reading-editions-panels .read-chapter-info-edition-invite,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-panel,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-md {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-post-reading-editions-panels .read-chapter-info-edition-invite {
-    margin-top: 0;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition {
-    margin-top: 0;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-disclaimer,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-hero-title,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-loading-text {
-    max-width: 100%;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-md,
-  .read-chapter-post-reading-editions--spread .read-chapter-info-edition-md :is(p, li, blockquote) {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  /* 右栏不另铺竖图拉伸；透出整页横卷底 */
-  .read-chapter-post-reading-editions--spread {
-    --post-reading-panel-bg: none;
-  }
-
-  .read-chapter-post-reading-editions--spread .read-chapter-post-reading-editions-panel {
-    background-image: none;
-    background-color: transparent;
-  }
-
-  .dark .read-chapter-post-reading-editions--spread .read-chapter-post-reading-editions-panel {
-    background-color: transparent;
-  }
 }
 
 .read-chapter-post-reading-editions-heading {
@@ -749,50 +231,12 @@
   background: color-mix(in srgb, rgba(245, 230, 210, 0.25) 100%, transparent);
 }
 
-.read-chapter-post-reading-editions-board-wrap {
-  position: relative;
-  width: 100%;
-}
-
 .read-chapter-post-reading-editions-board {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
   column-gap: 0.65rem;
   width: 100%;
-}
-
-.read-chapter-post-reading-editions-or {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, rgb(72 52 34) 22%, transparent);
-  background: color-mix(in srgb, rgb(245 235 224) 96%, transparent);
-  box-shadow: 0 1px 4px color-mix(in srgb, rgb(28 20 16) 8%, transparent);
-  transform: translate(-50%, -50%);
-  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
-  font-size: clamp(0.6875rem, 2.8vw, 0.75rem);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-transform: lowercase;
-  color: color-mix(in srgb, rgb(48 38 28) 72%, transparent);
-  user-select: none;
-  pointer-events: none;
-}
-
-.dark .read-chapter-post-reading-editions-or {
-  border-color: color-mix(in srgb, rgba(245, 230, 210, 0.22) 100%, transparent);
-  background: color-mix(in srgb, rgb(42 36 30) 92%, transparent);
-  color: color-mix(in srgb, rgb(244 235 225) 72%, transparent);
-  box-shadow: 0 1px 6px color-mix(in srgb, rgb(0 0 0) 28%, transparent);
 }
 
 .read-chapter-post-reading-editions-panel {
@@ -803,11 +247,7 @@
   padding: 0;
   border: 1px solid color-mix(in srgb, rgb(72 52 34) 14%, transparent);
   border-radius: 0.65rem;
-  background-color: var(--post-reading-panel-bg-canvas);
-  background-image: var(--post-reading-panel-bg);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100% 100%;
+  background: transparent;
   box-shadow: none;
   overflow: hidden;
   text-align: center;
@@ -857,12 +297,7 @@
 }
 
 .read-chapter-post-reading-editions-panel-art-img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
+  object-fit: contain;
   object-position: center center;
   opacity: 0.9;
 }
@@ -940,6 +375,7 @@
 }
 
 .dark .read-chapter-post-reading-editions-panel {
+  background: transparent;
   border-color: color-mix(in srgb, rgba(245, 230, 210, 0.14) 100%, transparent);
 }
 
@@ -1069,138 +505,6 @@
   text-align: start;
 }
 
-.read-chapter-info-edition-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.15rem;
-  padding-bottom: 1.1rem;
-  border-bottom: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.14) 100%, transparent);
-  text-align: center;
-}
-
-.read-chapter-info-edition--discover .read-chapter-info-edition-header {
-  border-bottom-color: color-mix(in srgb, var(--post-reading-discover) 18%, transparent);
-}
-
-.read-chapter-info-edition--consult .read-chapter-info-edition-header {
-  border-bottom-color: color-mix(in srgb, var(--post-reading-consult) 18%, transparent);
-}
-
-.dark .read-chapter-info-edition-header {
-  border-bottom-color: color-mix(in srgb, rgba(245, 230, 210, 0.12) 100%, transparent);
-}
-
-.read-chapter-info-edition-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 0;
-  text-align: center;
-}
-
-.read-chapter-info-edition-hero-art {
-  position: relative;
-  width: min(72%, 12.5rem);
-  aspect-ratio: 1 / 1;
-}
-
-.read-chapter-info-edition-hero-art-img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  opacity: 0.92;
-}
-
-.read-chapter-info-edition-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  border-radius: 999px;
-  padding: 0.22rem 0.6rem;
-  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif;
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: rgb(255 252 248);
-}
-
-.read-chapter-info-edition-hero--discover .read-chapter-info-edition-hero-badge {
-  background: var(--post-reading-discover);
-}
-
-.read-chapter-info-edition-hero--consult .read-chapter-info-edition-hero-badge {
-  background: var(--post-reading-consult);
-}
-
-.read-chapter-info-edition-hero-badge--switch {
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    filter 0.15s ease;
-}
-
-.read-chapter-info-edition-hero-badge--switch:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 2px 10px color-mix(in srgb, rgb(28 20 16) 14%, transparent);
-}
-
-.read-chapter-info-edition-hero-badge--switch:active {
-  transform: scale(0.97);
-}
-
-.read-chapter-info-edition-hero-badge--switch:focus-visible {
-  outline: 2px solid color-mix(in srgb, currentColor 35%, transparent);
-  outline-offset: 3px;
-}
-
-.read-chapter-info-edition-hero-title {
-  margin: 0;
-  max-width: 18rem;
-  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
-  font-size: clamp(1.25rem, 4.8vw, 1.45rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1.3;
-  text-align: center;
-  text-wrap: balance;
-}
-
-.read-chapter-info-edition-hero--discover .read-chapter-info-edition-hero-title {
-  color: var(--post-reading-discover);
-}
-
-.read-chapter-info-edition-hero--consult .read-chapter-info-edition-hero-title {
-  color: var(--post-reading-consult);
-}
-
-.read-chapter-info-edition-hero-title-rule {
-  display: block;
-  width: 2.75rem;
-  height: 1px;
-  margin: 0.05rem 0 0.1rem;
-}
-
-.read-chapter-info-edition-hero--discover .read-chapter-info-edition-hero-title-rule {
-  background: color-mix(in srgb, var(--post-reading-discover) 35%, transparent);
-}
-
-.read-chapter-info-edition-hero--consult .read-chapter-info-edition-hero-title-rule {
-  background: color-mix(in srgb, var(--post-reading-consult) 35%, transparent);
-}
-
-.read-chapter-post-reading-editions-panel-title--choice {
-  color: color-mix(in srgb, rgb(48 38 28) 88%, transparent);
-}
-
-.dark .read-chapter-post-reading-editions-panel-title--choice {
-  color: color-mix(in srgb, rgb(245 230 210) 88%, transparent);
-}
-
 .read-chapter-info-edition-divider {
   display: flex;
   align-items: center;
@@ -1261,12 +565,11 @@
 }
 
 .read-chapter-info-edition-disclaimer {
-  margin: 0.75rem 0 0;
-  max-width: 22rem;
+  margin: 0 0 0.85rem;
   text-align: center;
   font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
   font-size: 0.6875rem;
-  line-height: 1.55;
+  line-height: 1.5;
   letter-spacing: 0.02em;
   color: color-mix(in srgb, rgb(120 75 30) 52%, transparent);
 }
@@ -1276,27 +579,29 @@
 }
 
 .read-chapter-info-edition-panel {
-  border-radius: 0.875rem;
+  border-radius: 0.75rem;
   border: 1px solid color-mix(in srgb, rgba(120, 75, 30, 0.18) 100%, transparent);
   background: color-mix(in srgb, rgba(255, 252, 245, 0.72) 100%, transparent);
   box-shadow:
     0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.65) 100%, transparent) inset,
     0 8px 28px -18px color-mix(in srgb, rgba(80, 50, 20, 0.35) 100%, transparent);
-  padding: 1.35rem 1.25rem 1.5rem;
+  padding: 1.15rem 1.2rem 1.35rem;
   font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
 .read-chapter-info-edition--discover .read-chapter-info-edition-panel {
   border-color: var(--post-reading-discover-border);
+  background: var(--post-reading-discover-fill);
   box-shadow:
-    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.65) 100%, transparent) inset,
+    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.7) 100%, transparent) inset,
     0 8px 28px -18px color-mix(in srgb, var(--post-reading-discover) 18%, transparent);
 }
 
 .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
   border-color: var(--post-reading-consult-border);
+  background: var(--post-reading-consult-fill);
   box-shadow:
-    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.65) 100%, transparent) inset,
+    0 1px 0 color-mix(in srgb, rgba(255, 255, 255, 0.7) 100%, transparent) inset,
     0 8px 28px -18px color-mix(in srgb, var(--post-reading-consult) 18%, transparent);
 }
 
@@ -1310,10 +615,12 @@
 
 .dark .read-chapter-info-edition--discover .read-chapter-info-edition-panel {
   border-color: color-mix(in srgb, var(--post-reading-discover) 32%, transparent);
+  background: color-mix(in srgb, var(--post-reading-discover) 14%, rgb(22 20 18));
 }
 
 .dark .read-chapter-info-edition--consult .read-chapter-info-edition-panel {
   border-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
+  background: color-mix(in srgb, var(--post-reading-consult) 14%, rgb(22 20 18));
 }
 
 .read-chapter-info-edition-panel-skeleton {
@@ -1323,112 +630,25 @@
   animation: pulse 1.8s ease-in-out infinite;
 }
 
+.read-chapter-info-edition--discover .read-chapter-info-edition-panel-skeleton {
+  background: color-mix(in srgb, var(--post-reading-discover) 10%, transparent);
+}
+
+.read-chapter-info-edition--consult .read-chapter-info-edition-panel-skeleton {
+  background: color-mix(in srgb, var(--post-reading-consult) 10%, transparent);
+}
+
 .dark .read-chapter-info-edition-panel-skeleton {
   background: color-mix(in srgb, rgba(245, 230, 210, 0.06) 100%, transparent);
 }
 
 .read-chapter-info-edition-md {
-  font-size: 0.9375rem;
-  line-height: 1.75;
+  font-size: 0.875rem;
+  line-height: 1.72;
 }
 
 .read-chapter-info-edition-md :first-child {
   margin-top: 0;
-}
-
-.read-chapter-info-edition-md .read-info-edition-h1 {
-  margin: 0 0 1.15rem;
-  padding-bottom: 0.9rem;
-  border-bottom: 1px solid color-mix(in srgb, rgb(72 52 34) 16%, transparent);
-  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
-  font-size: clamp(1.05rem, 4.2vw, 1.125rem);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1.45;
-  text-align: center;
-  text-wrap: balance;
-}
-
-.read-chapter-info-edition-md .read-info-edition-h2 {
-  margin: 1.85rem 0 0.65rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid color-mix(in srgb, rgb(72 52 34) 12%, transparent);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  line-height: 1.4;
-  text-align: left;
-}
-
-.read-chapter-info-edition-md .read-info-edition-h3 {
-  margin: 1.35rem 0 0.45rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.4;
-  text-align: left;
-}
-
-.read-chapter-info-edition-md .read-info-edition-p {
-  margin: 0 0 0.9rem;
-  font-size: 0.9375rem;
-  line-height: 1.75;
-  color: color-mix(in srgb, rgb(28 20 16) 82%, transparent);
-}
-
-.read-chapter-info-edition-md .read-info-edition-p:last-child {
-  margin-bottom: 0;
-}
-
-.dark .read-chapter-info-edition-md .read-info-edition-p {
-  color: color-mix(in srgb, rgb(245 230 210) 82%, transparent);
-}
-
-.read-chapter-info-edition--discover .read-chapter-info-edition-md :is(.read-info-edition-h1, .read-info-edition-h2, .read-info-edition-h3) {
-  color: var(--post-reading-discover);
-}
-
-.read-chapter-info-edition--discover .read-chapter-info-edition-md .read-info-edition-h1 {
-  border-bottom-color: color-mix(in srgb, var(--post-reading-discover) 32%, transparent);
-}
-
-.read-chapter-info-edition--discover .read-chapter-info-edition-md .read-info-edition-h2 {
-  border-bottom-color: color-mix(in srgb, var(--post-reading-discover) 22%, transparent);
-}
-
-.read-chapter-info-edition--discover .read-chapter-info-edition-md strong {
-  color: var(--post-reading-discover);
-}
-
-.read-chapter-info-edition--consult .read-chapter-info-edition-md :is(.read-info-edition-h1, .read-info-edition-h2, .read-info-edition-h3) {
-  color: var(--post-reading-consult);
-}
-
-.read-chapter-info-edition--consult .read-chapter-info-edition-md .read-info-edition-h1 {
-  border-bottom-color: color-mix(in srgb, var(--post-reading-consult) 32%, transparent);
-}
-
-.read-chapter-info-edition--consult .read-chapter-info-edition-md .read-info-edition-h2 {
-  border-bottom-color: color-mix(in srgb, var(--post-reading-consult) 22%, transparent);
-}
-
-.read-chapter-info-edition--consult .read-chapter-info-edition-md strong {
-  color: var(--post-reading-consult);
-}
-
-.read-chapter-info-edition-md ul,
-.read-chapter-info-edition-md ol {
-  margin: 0.35rem 0 1rem;
-  padding-left: 1.25rem;
-}
-
-.read-chapter-info-edition-md li {
-  margin-bottom: 0.35rem;
-}
-
-.read-chapter-info-edition-md hr {
-  margin: 1.5rem 0;
-  border: 0;
-  border-top: 1px solid color-mix(in srgb, rgb(72 52 34) 12%, transparent);
 }
 
 /* 和合本整章朗读：按进度估算的当前节 */
@@ -1443,64 +663,6 @@
 .dark .read-chapter-verse.read-chapter-verse--audio-active {
   background-color: color-mix(in srgb, rgba(245, 230, 210, 0.07) 100%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(245, 230, 210, 0.1) 100%, transparent);
-}
-
-/* 经文搜索跳入：高亮并 scrollIntoView(center) */
-.read-chapter-verse.read-chapter-verse--search-focus {
-  margin-inline: -0.35rem;
-  padding: 0.25rem 0.35rem 0.4rem;
-  border-radius: 0.4rem;
-  background-color: color-mix(in srgb, rgba(139, 90, 43, 0.2) 100%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(92, 58, 18, 0.28) 100%, transparent);
-}
-
-.dark .read-chapter-verse.read-chapter-verse--search-focus {
-  background-color: color-mix(in srgb, rgba(245, 230, 210, 0.12) 100%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(245, 230, 210, 0.18) 100%, transparent);
-}
-
-.read-chapter-verse.read-chapter-verse--bookmark {
-  margin-inline: -0.35rem;
-  padding: 0.2rem 0.35rem 0.35rem;
-  border-radius: 0.4rem;
-  background-color: color-mix(in srgb, rgba(69, 45, 28, 0.1) 100%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(92, 58, 18, 0.2) 100%, transparent);
-  cursor: pointer;
-}
-
-.dark .read-chapter-verse.read-chapter-verse--bookmark {
-  background-color: color-mix(in srgb, rgba(245, 230, 210, 0.09) 100%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(245, 230, 210, 0.14) 100%, transparent);
-}
-
-.read-verse-bookmark-feedback {
-  position: fixed;
-  left: 50%;
-  bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
-  z-index: 60;
-  max-width: min(20rem, calc(100vw - 2rem));
-  transform: translateX(-50%);
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.35;
-  text-align: center;
-  color: #f7f4ef;
-  background: color-mix(in srgb, rgb(28 20 16) 88%, transparent);
-  pointer-events: none;
-  animation: read-verse-bookmark-feedback-in 0.16s ease-out;
-}
-
-@keyframes read-verse-bookmark-feedback-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
 
 .read-chapter-verse-num {

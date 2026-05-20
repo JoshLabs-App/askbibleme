@@ -1,23 +1,23 @@
 {
-  "updatedAt": "2026-05-20T01:18:04.395Z",
-  "originalName": "2 icon-maskable.svg",
+  "updatedAt": "2026-05-20T03:02:11.588Z",
+  "originalName": "logo w.svg",
   "logoKind": "svg",
   "presetId": "parchment",
   "colors": {
-    "canvas": "#143C60",
-    "surface": "#183A52",
-    "border": "#295878",
-    "muted": "#9BB0C2",
-    "ink": "#F1F5F9",
-    "sand": "#7EB8E0",
-    "appLight": "#DCECF7",
-    "appDark": "#143C60",
-    "adminBg": "#0E2438",
-    "adminPanel": "#152F45",
-    "adminLine": "#2A5572",
-    "adminFg": "#EEF3F8",
-    "adminMuted": "#94A9B8"
+    "canvas": "#ECD9B9",
+    "surface": "#F5EBE0",
+    "border": "#C9A672",
+    "muted": "#5C4030",
+    "ink": "#1C1410",
+    "sand": "#9C7447",
+    "appLight": "#F7F3E9",
+    "appDark": "#5B4636",
+    "adminBg": "#3D2E24",
+    "adminPanel": "#4A382C",
+    "adminLine": "#6E5240",
+    "adminFg": "#F4EBE1",
+    "adminMuted": "#B9A896"
   },
-  "appIconsUpdatedAt": "2026-05-20T01:34:31.670Z",
-  "appIconOriginalName": "askbible.png"
+  "appIconsUpdatedAt": "2026-05-20T03:02:38.261Z",
+  "appIconOriginalName": "logo1.png"
 }

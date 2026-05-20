@@ -1,0 +1,10 @@
+# AskBible.me 生产（Render Web Service）— 与 Dashboard 二选一即可；提交本文件后可在 Render 启用 Blueprint。
+services:
+  - type: web
+    name: askbible
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production

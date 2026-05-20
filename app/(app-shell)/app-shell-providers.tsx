@@ -7,6 +7,7 @@ import { ShellTemplateDockPreviewProvider } from "@/components/shell/ShellTempla
 import { NatureBackgroundVideoPrefetch } from "@/components/nature/NatureBackgroundVideoPrefetch";
 import { AppShellFixedChrome } from "@/components/app-shell/AppShellFixedChrome";
 import { AppShellScrollArea } from "@/components/app-shell/AppShellScrollArea";
+import { TelemetryProvider } from "@/components/telemetry/TelemetryProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 
@@ -17,6 +18,7 @@ type Props = {
 
 export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
   return (
+    <TelemetryProvider>
     <AppShellFixedChrome>
       <ShellTemplateDockPreviewProvider>
         <HomeDockChromeProvider>
@@ -28,5 +30,6 @@ export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
         </HomeDockChromeProvider>
       </ShellTemplateDockPreviewProvider>
     </AppShellFixedChrome>
+    </TelemetryProvider>
   );
 }

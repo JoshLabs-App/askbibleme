@@ -10,11 +10,26 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MOBILE_BUNDLED_ONLY": "1",
+        "EXPO_PUBLIC_ASKBIBLE_BASE_URL": "https://askbible.me"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_MOBILE_BUNDLED_ONLY": "1",
+        "EXPO_PUBLIC_ASKBIBLE_BASE_URL": "https://askbible.me"
+      },
       "android": {
         "buildType": "apk"
       }
-    },
-    "production": {}
+    }
   },
   "submit": {
     "production": {}

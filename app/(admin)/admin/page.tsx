@@ -21,6 +21,11 @@ const overview: {
         hint: "管理 V1 信息版等生成任务的 system 角色与默认项",
       },
       { href: "/admin/system/media-library", label: "上传资源库", hint: "扫描 public 下已上传的音视频与文档，预览并批量删除试验文件" },
+      {
+        href: "/admin/system/usage",
+        label: "使用概览",
+        hint: "匿名设备 DAU、页面/点击/自然场景统计（与信息版同盘，无需 Supabase）",
+      },
     ],
   },
   {

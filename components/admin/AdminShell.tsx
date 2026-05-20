@@ -43,6 +43,7 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/system/generation-roles", labelKey: "admin.items.generationRoles" },
       { href: "/admin/system/shell-chrome", labelKey: "admin.items.shellChrome" },
       { href: "/admin/system/media-library", labelKey: "admin.items.mediaLibrary" },
+      { href: "/admin/system/usage", labelKey: "admin.items.usage" },
     ],
   },
   {
@@ -67,6 +68,7 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/read/verse-backgrounds", labelKey: "admin.items.versePageBackgrounds" },
       { href: "/admin/read/segments", labelKey: "admin.items.readSegments" },
       { href: "/admin/read/info-edition-v1", labelKey: "admin.items.infoEditionV1" },
+      { href: "/admin/read/info-edition-batch", labelKey: "admin.items.infoEditionBatch" },
     ],
   },
   { kind: "leaf", id: "explore", href: "/admin/explore", labelKey: "admin.items.explore" },

@@ -4,8 +4,6 @@ import { ReadChapterTodayPlanBlock } from "@/components/bible/ReadChapterTodayPl
 import { ReadChapterTripleLoopAdvance } from "@/components/bible/ReadChapterTripleLoopAdvance";
 import { ReadChapterNav } from "@/components/bible/ReadChapterNav";
 import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesClient";
-import { ReadChapterOfflineCacheEffects } from "@/components/pwa/ReadChapterOfflineCacheEffects";
-import { ReadChapterOfflineNotice } from "@/components/pwa/ReadChapterOfflineNotice";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadReadChapterForReadPage } from "@/lib/read/load-read-chapter-for-read-page";
 import { ReadChapterPostReadingEditions } from "@/components/bible/ReadChapterPostReadingEditions";
@@ -13,15 +11,11 @@ import {
   getInfoEditionReaderCacheAsync,
   resolveInfoEditionReaderTarget,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
-import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-param";
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
 import { ReadChapterTelemetry } from "@/components/telemetry/ReadChapterTelemetry";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
-type Props = {
-  params: Promise<{ bookId: string; chapter: string }>;
-  searchParams: Promise<{ verse?: string }>;
-};
+type Props = { params: Promise<{ bookId: string; chapter: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { bookId, chapter } = await params;
@@ -31,10 +25,8 @@ export async function generateMetadata({ params }: Props) {
   return { title: sitePageTitle(`${data.bookName} ${data.chapter}`) };
 }
 
-export default async function ReadChapterPage({ params, searchParams }: Props) {
+export default async function ReadChapterPage({ params }: Props) {
   const { bookId, chapter } = await params;
-  const { verse: verseRaw } = await searchParams;
-  const initialFocusVerse = parseScriptureVerseParam(verseRaw);
   const ch = Number(chapter);
   if (!Number.isFinite(ch)) notFound();
   const loaded = await loadReadChapterForReadPage(bookId, ch);
@@ -82,19 +74,6 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
                 </h1>
               </header>
               <div className="read-chapter-scripture">
-                <ReadChapterOfflineNotice
-                  translationId={data.translationId}
-                  bookId={data.bookId}
-                  chapter={data.chapter}
-                />
-                <ReadChapterOfflineCacheEffects
-                  translationId={data.translationId}
-                  bookId={data.bookId}
-                  bookName={data.bookName}
-                  chapter={data.chapter}
-                  verses={data.verses}
-                  contrastVerses={contrast?.verses ?? null}
-                />
                 <ReadChapterVersesClient
                   translationId={data.translationId}
                   bookId={data.bookId}
@@ -102,7 +81,6 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
                   chapter={data.chapter}
                   verses={data.verses}
                   contrastVerses={contrast?.verses ?? null}
-                  initialFocusVerse={initialFocusVerse}
                 />
               </div>
             </div>

@@ -5,6 +5,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /** Render 等小内存构建机：降低 webpack 峰值内存（略增编译时间） */
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   serverExternalPackages: ["sharp", "sql.js"],
 
   /**

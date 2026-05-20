@@ -3,23 +3,31 @@
   "audioTracks": [
     {
       "id": "track-mp1b2v0cj798",
-      "title": "04",
-      "src": "/music/uploads/a57bf00189944bf8bc2f4ec56c29a0ee.m4a"
+      "title": "Still Waters",
+      "artist": "Instrumental Worship",
+      "src": "/music/uploads/a57bf00189944bf8bc2f4ec56c29a0ee.m4a",
+      "analysisSrc": "/music/analysis/a57bf00189944bf8bc2f4ec56c29a0ee.json"
     },
     {
       "id": "track-mp1b39y09uat",
-      "title": "05",
-      "src": "/music/uploads/3acafc36ba394738b95748d5767dd6d6.m4a"
+      "title": "Draw Near to You",
+      "artist": "Instrumental Worship",
+      "src": "/music/uploads/3acafc36ba394738b95748d5767dd6d6.m4a",
+      "analysisSrc": "/music/analysis/3acafc36ba394738b95748d5767dd6d6.json"
     },
     {
       "id": "track-mp1b4gw6xun1",
-      "title": "03",
-      "src": "/music/uploads/568393997202440e86675a228af78283.m4a"
+      "title": "Quiet Praise",
+      "artist": "Instrumental Worship",
+      "src": "/music/uploads/568393997202440e86675a228af78283.m4a",
+      "analysisSrc": "/music/analysis/568393997202440e86675a228af78283.json"
     },
     {
       "id": "track-mp8cnzsixq2x",
-      "title": "06",
-      "src": "/music/uploads/9c6fc29d3d3148e9a44b27df71ae0375.m4a"
+      "title": "Grace Abounds",
+      "artist": "Instrumental Worship",
+      "src": "/music/uploads/9c6fc29d3d3148e9a44b27df71ae0375.m4a",
+      "analysisSrc": "/music/analysis/9c6fc29d3d3148e9a44b27df71ae0375.json"
     }
   ],
   "backgroundVisuals": [

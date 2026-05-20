@@ -2,11 +2,16 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  infoEditionExternalDataRoot,
   infoEditionWritableBibleDir,
   isInfoEditionDiskSaveEnabled,
   isInfoEditionWritableDiskAvailable,
 } from "@/lib/bible/info-edition-published-path";
+
+function telemetryExternalDataRoot(): string | null {
+  const external =
+    process.env.INFO_EDITION_DATA_DIR?.trim() || process.env.DATA_ROOT?.trim();
+  return external || null;
+}
 import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
 
 const TELEMETRY_STORE_FILENAME = "telemetry-v1-store.json";
@@ -40,7 +45,7 @@ export function telemetryStorageMode(cwd = process.cwd()): "disk" | "supabase" |
 export function telemetryStorageLabel(cwd = process.cwd()): string {
   const mode = telemetryStorageMode(cwd);
   if (mode === "disk") {
-    const root = infoEditionExternalDataRoot() ?? path.join(cwd, "data", "bible");
+    const root = telemetryExternalDataRoot() ?? path.join(cwd, "data", "bible");
     return `磁盘（${root}/${TELEMETRY_STORE_FILENAME}）`;
   }
   if (mode === "supabase") return "Supabase";
@@ -52,7 +57,7 @@ export function ensureTelemetryStoreDir(cwd = process.cwd()): string | null {
   if (!file) return null;
   const dir = path.dirname(file);
   if (!fs.existsSync(dir)) {
-    if (process.env.NODE_ENV === "production" && !infoEditionExternalDataRoot()) {
+    if (process.env.NODE_ENV === "production" && !telemetryExternalDataRoot()) {
       return null;
     }
     fs.mkdirSync(dir, { recursive: true });

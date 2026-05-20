@@ -1,7 +1,15 @@
-# AskBible.me 生产（Render Web Service）— 与 Dashboard 二选一即可；提交本文件后可在 Render 启用 Blueprint。
+# AskBible.me 生产（Render Web Service）
+# 已有 Web Service 不会自动套用本文件 — 请在 Dashboard 将 Build Command 设为：
+#   bash scripts/render-build.sh
 services:
   - type: web
     name: askbible
     runtime: node
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: bash scripts/render-build.sh
     startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"

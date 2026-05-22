@@ -12,8 +12,6 @@ function telemetryExternalDataRoot(): string | null {
     process.env.INFO_EDITION_DATA_DIR?.trim() || process.env.DATA_ROOT?.trim();
   return external || null;
 }
-import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
-
 const TELEMETRY_STORE_FILENAME = "telemetry-v1-store.json";
 
 /** 与信息版同一套磁盘策略：dev → data/bible；Render → DATA_ROOT */
@@ -36,9 +34,8 @@ export function telemetryStoreFilePath(cwd = process.cwd()): string | null {
   return path.join(dir, TELEMETRY_STORE_FILENAME);
 }
 
-export function telemetryStorageMode(cwd = process.cwd()): "disk" | "supabase" | "none" {
+export function telemetryStorageMode(cwd = process.cwd()): "disk" | "none" {
   if (isTelemetryWritableDiskAvailable(cwd)) return "disk";
-  if (isSupabaseServiceConfigured()) return "supabase";
   return "none";
 }
 
@@ -48,7 +45,6 @@ export function telemetryStorageLabel(cwd = process.cwd()): string {
     const root = telemetryExternalDataRoot() ?? path.join(cwd, "data", "bible");
     return `磁盘（${root}/${TELEMETRY_STORE_FILENAME}）`;
   }
-  if (mode === "supabase") return "Supabase";
   return "未配置";
 }
 

@@ -13,6 +13,11 @@ export function getAskbibleAuthSqlitePath(): string | null {
     if (fs.existsSync(abs)) return abs;
     return null;
   }
+  const dataRoot = process.env.DATA_ROOT?.trim();
+  if (dataRoot) {
+    const p = path.join(path.resolve(dataRoot), "admin_data", "auth.sqlite");
+    if (fs.existsSync(p)) return p;
+  }
   const repo = process.env.ASKBIBLE_REPO?.trim();
   if (repo) {
     const p = path.join(path.resolve(repo), "admin_data", "auth.sqlite");

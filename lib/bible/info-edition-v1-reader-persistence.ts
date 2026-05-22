@@ -20,13 +20,6 @@ import {
   tryBeginInfoEditionPending as tryBeginDisk,
 } from "@/lib/bible/info-edition-v1-reader-cache";
 import {
-  clearInfoEditionPendingSupabase,
-  getInfoEditionReaderCacheSupabase,
-  publishInfoEditionChapterSupabase,
-  setInfoEditionReaderFailedSupabase,
-  tryBeginInfoEditionPendingSupabase,
-} from "@/lib/bible/info-edition-v1-published-supabase";
-import {
   formatInfoEditionDiskWriteError,
   infoEditionWritableBibleDir,
   isInfoEditionDiskSaveEnabled,
@@ -36,10 +29,9 @@ import {
   isRenderDeployment,
   isVercelDeployment,
 } from "@/lib/bible/info-edition-published-path";
-import { isSupabaseServiceConfigured } from "@/lib/supabase/service";
 import type { InfoEditionV1ReaderCacheResponse } from "@/lib/bible/info-edition-v1-reader-cache";
 
-export type InfoEditionReaderPersistence = "disk" | "supabase" | "none";
+export type InfoEditionReaderPersistence = "disk" | "none";
 
 export type ResolvedInfoEditionReaderTarget = {
   variant: InfoEditionReaderVariant;
@@ -69,9 +61,6 @@ export function getInfoEditionReaderPersistence(cwd = process.cwd()): InfoEditio
   if (isInfoEditionWritableDiskAvailable(cwd)) {
     return "disk";
   }
-  if (isSupabaseServiceConfigured()) {
-    return "supabase";
-  }
   return "none";
 }
 
@@ -86,7 +75,7 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
   if (isInfoEditionDiskSaveMisconfiguredInProduction()) {
     return (
       "已开启 INFO_EDITION_DISK_SAVE，但未配置 DATA_ROOT / INFO_EDITION_DATA_DIR。" +
-      " Render 请在后台挂载 Persistent Disk 并设 DATA_ROOT 为挂载路径（如 /var/data）；或改用 Supabase + AI_API_KEY。"
+      " Render 请在后台挂载 Persistent Disk 并设 DATA_ROOT 为挂载路径（如 /var/data）。"
     );
   }
 
@@ -120,12 +109,11 @@ export function infoEditionReaderGenerateBlockedReason(cwd = process.cwd()): str
     }
     if (isVercelDeployment()) {
       return (
-        "本章导读需 Supabase：NEXT_PUBLIC_SUPABASE_URL、SUPABASE_SERVICE_ROLE_KEY、migration，及 AI_API_KEY。" +
-        " 请关闭 INFO_EDITION_DISK_SAVE。"
+        "本章导读需持久存储：请启用 INFO_EDITION_DISK_SAVE，并确保 DATA_ROOT 可写，同时配置 AI_API_KEY。"
       );
     }
     return (
-      "本章导读生成未启用：请配置 Supabase 或持久磁盘（INFO_EDITION_DISK_SAVE=1、DATA_ROOT），并设置 AI_API_KEY / AI_BASE_URL / AI_MODEL。"
+      "本章导读生成未启用：请配置持久磁盘（INFO_EDITION_DISK_SAVE=1、DATA_ROOT），并设置 AI_API_KEY / AI_BASE_URL / AI_MODEL。"
     );
   }
   if (mode === "disk" && !isInfoEditionProductionDiskConfigured()) {
@@ -149,9 +137,6 @@ export async function getInfoEditionReaderCacheAsync(
   }
 
   const mode = getInfoEditionReaderPersistence();
-  if (mode === "supabase") {
-    return getInfoEditionReaderCacheSupabase(bookId, chapter, target.roleId);
-  }
   if (mode === "disk") {
     return getCacheDisk(cwd, bookId, chapter, { roleId: target.roleId });
   }
@@ -165,9 +150,6 @@ export async function tryBeginInfoEditionPendingAsync(
   target: ResolvedInfoEditionReaderTarget,
 ): Promise<boolean> {
   const mode = getInfoEditionReaderPersistence();
-  if (mode === "supabase") {
-    return tryBeginInfoEditionPendingSupabase(bookId, chapter, target.roleId);
-  }
   if (mode === "disk") {
     return tryBeginDisk(cwd, bookId, chapter, { roleId: target.roleId });
   }
@@ -181,10 +163,6 @@ export async function clearInfoEditionPendingAsync(
   target: ResolvedInfoEditionReaderTarget,
 ): Promise<void> {
   const mode = getInfoEditionReaderPersistence();
-  if (mode === "supabase") {
-    await clearInfoEditionPendingSupabase(bookId, chapter, target.roleId);
-    return;
-  }
   if (mode === "disk") {
     clearPendingDisk(cwd, bookId, chapter, { roleId: target.roleId });
   }
@@ -198,10 +176,6 @@ export async function setInfoEditionReaderFailedAsync(
   target: ResolvedInfoEditionReaderTarget,
 ): Promise<void> {
   const mode = getInfoEditionReaderPersistence();
-  if (mode === "supabase") {
-    await setInfoEditionReaderFailedSupabase(bookId, chapter, error, target.roleId);
-    return;
-  }
   if (mode === "disk") {
     setFailedDisk(cwd, bookId, chapter, error, { roleId: target.roleId });
   }
@@ -215,9 +189,6 @@ export async function publishInfoEditionFromGenerationsAsync(
   target: ResolvedInfoEditionReaderTarget,
 ): Promise<InfoEditionV1PublishedChapter | null> {
   const mode = getInfoEditionReaderPersistence();
-  if (mode === "supabase") {
-    return publishInfoEditionChapterSupabase(bookId, chapter, generations, target.roleId);
-  }
   if (mode === "disk") {
     return publishInfoEditionFromGenerations(cwd, bookId, chapter, generations, {
       roleId: target.roleId,

@@ -1,88 +1,79 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
 import { verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
-import {
-  getLegacyUserLoginUrl,
-  isLegacyRemoteUserAuthConfigured,
-  postLegacyAskbibleLogin,
-} from "@/lib/askbible-legacy-remote-login";
-import {
-  parseAskbibleSessionCookie,
-  signAskbibleSessionCookie,
-  USER_ASKBIBLE_SESSION_COOKIE,
-} from "@/lib/admin-askbible-session";
 import { authCookieSecure } from "@/lib/auth-cookie-secure";
-import { isAdminEmail } from "@/lib/supabase/admin-allowlist";
+import {
+  ASKBIBLE_USER_SESSION_COOKIE,
+  parseAskbibleUserSessionCookie,
+  signAskbibleUserSessionCookie,
+} from "@/lib/askbible-user-session";
+import { getAskbibleUserById, registerAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
 
-const USER_SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 30;
+export const runtime = "nodejs";
 
-export type AskbibleAuthMeUser = { id: string; email: string; name: string };
+function missingSqliteResponse() {
+  return NextResponse.json(
+    { error: "AskBible sqlite auth not configured (ASKBIBLE_AUTH_SQLITE_PATH or DATA_ROOT/admin_data/auth.sqlite)" },
+    { status: 503 },
+  );
+}
 
-/**
- * GET：是否已配置旧站远程或 sqlite + 当前前台用户会话（HttpOnly cookie）。
- * POST：邮箱+密码 — 优先 POST 到 `ASKBIBLE_LEGACY_*` 旧站接口；否则读本地 auth.sqlite。
- * DELETE：登出并清除 `selah_user_askbible`。
- */
+function readString(o: Record<string, unknown>, key: string): string {
+  const v = o[key];
+  return typeof v === "string" ? v.trim() : "";
+}
+
 export async function GET() {
   const dbPath = getAskbibleAuthSqlitePath();
-  const configured = Boolean(dbPath) || isLegacyRemoteUserAuthConfigured();
-  const raw = (await cookies()).get(USER_ASKBIBLE_SESSION_COOKIE)?.value;
-  const payload = await parseAskbibleSessionCookie(raw);
-  const user: AskbibleAuthMeUser | null = payload
-    ? {
-        id: payload.sub,
-        email: payload.email,
-        name: (payload.name && String(payload.name).trim()) || payload.email,
-      }
-    : null;
-  const isAdmin = isAdminEmail(user?.email);
-  return NextResponse.json({ configured, user, isAdmin });
+  if (!dbPath) return NextResponse.json({ configured: false, user: null });
+
+  const store = await cookies();
+  const sessionCookie = store.get(ASKBIBLE_USER_SESSION_COOKIE)?.value;
+
+  const session = await parseAskbibleUserSessionCookie(sessionCookie);
+  if (!session) return NextResponse.json({ configured: true, user: null });
+
+  const user = await getAskbibleUserById(dbPath, session.sub);
+  if (!user) return NextResponse.json({ configured: true, user: null });
+  return NextResponse.json({ configured: true, user });
 }
 
 export async function POST(req: Request) {
+  const dbPath = getAskbibleAuthSqlitePath();
+  if (!dbPath) return missingSqliteResponse();
+
   let body: unknown;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+
   const o = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
-  const email = typeof o.email === "string" ? o.email.trim() : "";
+  const action = readString(o, "action") || "login";
+  const email = readString(o, "email");
   const password = typeof o.password === "string" ? o.password : "";
+  const name = readString(o, "name");
+
   if (!email || !password) {
-    return NextResponse.json({ error: "Missing email or password" }, { status: 400 });
+    return NextResponse.json({ error: "缺少邮箱或密码" }, { status: 400 });
   }
 
-  const legacyUrl = getLegacyUserLoginUrl();
-  let auth: { userId: string; email: string; name: string };
-
-  if (legacyUrl) {
-    const remote = await postLegacyAskbibleLogin(legacyUrl, email, password, "user");
-    if (!remote.ok) {
-      return NextResponse.json(
-        { error: remote.error || "Wrong email or password" },
-        { status: remote.status >= 400 && remote.status < 600 ? remote.status : 502 },
-      );
+  if (action === "register") {
+    const reg = await registerAskbibleSqliteUser({ dbPath, email, password, name });
+    if (!reg.ok) {
+      return NextResponse.json({ error: reg.error }, { status: reg.status });
     }
-    auth = { userId: remote.userId, email: remote.email, name: remote.name };
-  } else {
-    const dbPath = getAskbibleAuthSqlitePath();
-    if (!dbPath) {
-      return NextResponse.json(
-        { error: "Sign-in is not configured on this server (no remote auth URL and no auth database)" },
-        { status: 503 },
-      );
-    }
-    const local = await verifyAskbibleUserCredentials(dbPath, email, password);
-    if (!local.ok) {
-      return NextResponse.json({ error: "Wrong email or password" }, { status: 401 });
-    }
-    auth = { userId: local.userId, email: local.email, name: local.name };
   }
 
-  const exp = Date.now() + USER_SESSION_MAX_AGE_SEC * 1000;
-  const token = await signAskbibleSessionCookie({
+  const auth = await verifyAskbibleUserCredentials(dbPath, email, password);
+  if (!auth.ok) {
+    return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
+  }
+
+  const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const token = await signAskbibleUserSessionCookie({
     v: 1,
     sub: auth.userId,
     email: auth.email,
@@ -91,15 +82,15 @@ export async function POST(req: Request) {
   });
   const res = NextResponse.json({
     ok: true,
-    user: { id: auth.userId, email: auth.email, name: auth.name } satisfies AskbibleAuthMeUser,
+    user: { id: auth.userId, email: auth.email, name: auth.name },
   });
   const secure = authCookieSecure(req);
-  res.cookies.set(USER_ASKBIBLE_SESSION_COOKIE, token, {
+  res.cookies.set(ASKBIBLE_USER_SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure,
     path: "/",
-    maxAge: USER_SESSION_MAX_AGE_SEC,
+    maxAge: 60 * 60 * 24 * 7,
   });
   return res;
 }
@@ -107,7 +98,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const secure = authCookieSecure(req);
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(USER_ASKBIBLE_SESSION_COOKIE, "", {
+  res.cookies.set(ASKBIBLE_USER_SESSION_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure,

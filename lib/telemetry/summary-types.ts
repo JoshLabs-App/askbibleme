@@ -1,7 +1,7 @@
 export type TelemetrySummary = {
   configured: boolean;
   /** 数据来源（便于管理页提示） */
-  storage?: "disk" | "supabase";
+  storage?: "disk";
   /** 例如：磁盘（/var/data/telemetry-v1-store.json） */
   storageHint?: string;
   days: number;

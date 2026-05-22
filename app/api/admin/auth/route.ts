@@ -18,7 +18,6 @@ import {
 } from "@/lib/admin-gate";
 import { authCookieSecure } from "@/lib/auth-cookie-secure";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 function timingSafeEqualUtf8(a: string, b: string): boolean {
   try {
@@ -31,19 +30,17 @@ function timingSafeEqualUtf8(a: string, b: string): boolean {
   }
 }
 
-/** 登录页用：是否可走 AskBible 库 / Supabase / 工作室口令 */
+/** 登录页用：是否可走 AskBible 库 / 工作室口令 */
 export async function GET() {
   return NextResponse.json({
     askbible: Boolean(getAskbibleAuthSqlitePath() || isLegacyRemoteAdminAuthConfigured()),
-    supabase: isSupabaseConfigured(),
   });
 }
 
 /**
  * 登录优先级：
  * 1) 若请求体含 `email`：优先 POST 到旧站 `ASKBIBLE_LEGACY_*` 管理登录 URL（由旧站校验）；否则若存在 auth.sqlite：`is_admin=1` 或固定超级管理员邮箱。
- * 2) 否则若已配 Supabase：本接口不接受工作室口令（请用 Supabase 登录页）。
- * 3) 否则：工作室单口令 → `selah_admin_gate`。
+ * 2) 否则：工作室单口令 → `selah_admin_gate`。
  */
 export async function POST(req: Request) {
   let body: unknown;
@@ -108,13 +105,6 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 7,
     });
     return res;
-  }
-
-  if (isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: "Supabase auth enabled; use email sign-in on /admin/login." },
-      { status: 410 },
-    );
   }
 
   if (!timingSafeEqualUtf8(password, getAdminPassword())) {

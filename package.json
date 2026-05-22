@@ -25,6 +25,7 @@
     "build:theme-repeat-pool": "tsx scripts/build-theme-repeat-pool.ts",
     "import:reading-plans": "tsx scripts/import-khornberg-reading-plans.ts",
     "build:bible-sqlite": "tsx scripts/build-bible-sqlite-from-json.ts",
+    "build:scripture-xrefs": "tsx scripts/build-scripture-xrefs-sqlite.ts",
     "migrate:askbible-admin-emails": "node scripts/migration/askbible-admin-export.mjs",
     "audio:checkout": "bash scripts/checkout-cuv-chapter-audio.sh",
     "audio:restore": "bash scripts/checkout-cuv-chapter-audio.sh",
@@ -88,8 +89,6 @@
     "dev:restart:open": "bash scripts/launchers/run-dev-open-tabs.sh restart"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.105.4",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^3.0.3",
     "next": "^15.3.0",

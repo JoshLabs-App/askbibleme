@@ -13,11 +13,10 @@ import {
 export type AskbibleAppUser = { id: string; email: string; name: string };
 
 type Ctx = {
-  /** 是否已完成首次 GET /api/auth/askbible（避免未拉取前误判「未配置」） */
+  /** 是否已完成首次用户态拉取 */
   bootstrapped: boolean;
   configured: boolean;
   user: AskbibleAppUser | null;
-  /** 与 `/admin` 门禁一致：超级管理员或 `ADMIN_USER_EMAILS` 白名单 */
   isAdmin: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
@@ -35,15 +34,17 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/askbible", { cache: "no-store" });
-      const j = (await res.json()) as {
-        configured?: boolean;
-        user?: AskbibleAppUser | null;
-        isAdmin?: boolean;
-      };
-      setConfigured(Boolean(j.configured));
-      setUser(j.user ?? null);
-      setIsAdmin(Boolean(j.isAdmin));
+      const res = await fetch("/api/auth/askbible", { method: "GET", cache: "no-store" });
+      if (!res.ok) {
+        setConfigured(false);
+        setUser(null);
+        setIsAdmin(false);
+        return;
+      }
+      const data = (await res.json()) as { configured?: boolean; user?: AskbibleAppUser | null };
+      setConfigured(Boolean(data.configured));
+      setUser(data.user || null);
+      setIsAdmin(false);
     } catch {
       setConfigured(false);
       setUser(null);

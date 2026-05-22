@@ -298,14 +298,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           type="button"
           onClick={async () => {
             try {
-              if (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
-                const { createSupabaseBrowserClient } = await import("@/lib/supabase/browser");
-                await createSupabaseBrowserClient().auth.signOut();
-              }
-            } catch {
-              /* ignore */
-            }
-            try {
               await fetch("/api/admin/auth", { method: "DELETE" });
             } catch {
               /* ignore */
@@ -389,14 +381,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={async () => {
-            try {
-              if (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
-                const { createSupabaseBrowserClient } = await import("@/lib/supabase/browser");
-                await createSupabaseBrowserClient().auth.signOut();
-              }
-            } catch {
-              /* ignore */
-            }
             try {
               await fetch("/api/admin/auth", { method: "DELETE" });
             } catch {

@@ -3,9 +3,8 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-type AuthConfig = { askbible: boolean; supabase: boolean };
+type AuthConfig = { askbible: boolean };
 
 function AdminLoginForm() {
   const { t } = useLocale();
@@ -27,9 +26,9 @@ function AdminLoginForm() {
       try {
         const res = await fetch("/api/admin/auth", { cache: "no-store" });
         const j = (await res.json()) as AuthConfig;
-        if (!cancelled) setConfig({ askbible: Boolean(j.askbible), supabase: Boolean(j.supabase) });
+        if (!cancelled) setConfig({ askbible: Boolean(j.askbible) });
       } catch {
-        if (!cancelled) setConfig({ askbible: false, supabase: false });
+        if (!cancelled) setConfig({ askbible: false });
       }
     })();
     return () => {
@@ -85,32 +84,6 @@ function AdminLoginForm() {
         window.location.assign(safeNext);
       } catch {
         setError(t("admin.login.errorNetwork"));
-      } finally {
-        setPending(false);
-      }
-    },
-    [accountPassword, email, safeNext, t],
-  );
-
-  const onSupabaseSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError(null);
-      setPending(true);
-      try {
-        const supabase = createSupabaseBrowserClient();
-        const { error: signErr } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: accountPassword,
-        });
-        if (signErr) {
-          setError(signErr.message || t("admin.login.errorWrong"));
-          return;
-        }
-        window.location.assign(safeNext);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : t("admin.login.errorNetwork");
-        setError(msg);
       } finally {
         setPending(false);
       }
@@ -189,10 +162,6 @@ function AdminLoginForm() {
 
   if (config.askbible) {
     return emailPasswordForm({ onSubmit: onAskbibleSubmit });
-  }
-
-  if (config.supabase) {
-    return emailPasswordForm({ onSubmit: onSupabaseSubmit });
   }
 
   return (

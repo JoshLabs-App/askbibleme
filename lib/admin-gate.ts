@@ -1,7 +1,7 @@
 /**
  * 管理后台 cookie 门禁（HMAC）与 `/api/admin/auth`、`middleware.ts` 共用。
- * 若服务器上能读到 AskBible `auth.sqlite`，优先走邮箱+密码复用（见 `lib/admin-askbible-*`），本 cookie 仅用于未配 AskBible 库且未配 Supabase 时。
- * 当已配置 Supabase 且未使用 AskBible 库时，/admin 走 Supabase 账号 + `ADMIN_USER_EMAILS`。
+ * 若服务器上能读到 AskBible `auth.sqlite`，优先走邮箱+密码复用（见 `lib/admin-askbible-*`）；
+ * 本 cookie 仅用于未配 AskBible 库时的工作室口令后备方案。
  */
 
 export const ADMIN_GATE_COOKIE = "selah_admin_gate";

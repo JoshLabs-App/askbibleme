@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { readChapterHrefFromVerseKey } from "@/lib/bible/parse-verse-key";
 import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import { useOptionalHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useStandaloneVerseCarousel } from "@/components/home/useStandaloneVerseCarousel";
@@ -205,8 +207,7 @@ export function HomeVerseRotator({
       return READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[primaryLocale];
     }
     const fromServer = ctx!.entriesByLocale?.[primaryLocale];
-    if (fromServer && fromServer.length > 0) return fromServer;
-    return READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[primaryLocale];
+    return fromServer ?? [];
   }, [standaloneVersesByLocale, primaryLocale, ctx?.entriesByLocale]);
 
   const secondaryList = useMemo(() => {
@@ -254,6 +255,8 @@ export function HomeVerseRotator({
   const sec = secondaryList?.[safeIndex];
   const showSecondary = Boolean(bilingual && sec?.lines?.length);
   const activeVerse = HOME_VERSES[safeIndex];
+  const activeVerseKey = useStandaloneFeed ? undefined : ctx?.verseKeys?.[safeIndex];
+  const readChapterHref = activeVerseKey ? readChapterHrefFromVerseKey(activeVerseKey) : null;
   const primaryFlowText = useMemo(
     () => joinVerseLinesForFlow(activeVerse?.lines ?? [], primaryLocale),
     [activeVerse, primaryLocale],
@@ -328,8 +331,8 @@ export function HomeVerseRotator({
     if (isNature) {
       if (nhLegacyDefault) {
         return isDark
-          ? `m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
-          : `m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90`;
+          ? `m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
+          : `m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90`;
       }
       if (natureHomeTypography) {
         const fx = natureHomePrimaryOnVideo(nhEffect, isDark);
@@ -338,8 +341,8 @@ export function HomeVerseRotator({
           : `m-0 ${nhFace} text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] ${nhPrimaryWt} ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90 ${fx}`;
       }
       return isDark
-        ? `m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
-        : `m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-medium ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90`;
+        ? `m-0 font-sans text-[clamp(1.04rem,3.85vw+0.16rem,1.34rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.018em] text-white/[0.96] [text-shadow:0_1px_2px_rgba(0,0,0,0.38),0_2px_14px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:text-[clamp(0.95rem,3.2vw+0.12rem,1.12rem)] [@media(max-height:500px)_and_(orientation:portrait)]:${L(1.4, "leading-[1.2]")}`
+        : `m-0 font-sans text-[clamp(1.02rem,3.6vw+0.14rem,1.28rem)] font-bold ${L(1.46, "leading-[1.23]")} tracking-[0.02em] text-ink/90`;
     }
     if (isRelax) {
       return isDark
@@ -361,8 +364,8 @@ export function HomeVerseRotator({
     if (isNature) {
       if (nhLegacyDefault) {
         return isDark
-          ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
-          : `m-0 font-sans text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80`;
+          ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
+          : `m-0 font-sans text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80`;
       }
       if (natureHomeTypography) {
         const fx = natureHomeSecondaryOnVideo(nhEffect, isDark);
@@ -371,8 +374,8 @@ export function HomeVerseRotator({
           : `m-0 ${nhFace} text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] ${nhSecondaryWt} ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80 ${fx}`;
       }
       return isDark
-        ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
-        : `m-0 font-sans text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] font-semibold ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80`;
+        ? `m-0 font-sans text-[clamp(0.88rem,3.1vw+0.1rem,1.05rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} tracking-[0.015em] text-white/[0.88] [text-shadow:0_1px_2px_rgba(0,0,0,0.42),0_1px_10px_rgba(0,0,0,0.22)]`
+        : `m-0 font-sans text-[clamp(0.88rem,3vw+0.1rem,1.04rem)] font-bold ${S("leading-[1.26]", "leading-[1.42]")} text-ink/80`;
     }
     if (isRelax) {
       return isDark
@@ -402,12 +405,12 @@ export function HomeVerseRotator({
       if (nhLegacyDefault) {
         if (bilingual) {
           return isDark
-            ? "mt-2 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
-            : "mt-2 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:mt-2.5 sm:text-[14px]";
+            ? "mt-2 font-sans text-[12px] font-bold tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
+            : "mt-2 font-sans text-[13px] font-bold tracking-[0.16em] text-ink/80 sm:mt-2.5 sm:text-[14px]";
         }
         return isDark
-          ? "mt-3 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
-          : "mt-3 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:text-[14px]";
+          ? "mt-3 font-sans text-[12px] font-bold tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
+          : "mt-3 font-sans text-[13px] font-bold tracking-[0.16em] text-ink/80 sm:text-[14px]";
       }
       if (natureHomeTypography) {
         const fx = natureHomeRefOnVideo(nhEffect, isDark);
@@ -422,12 +425,12 @@ export function HomeVerseRotator({
       }
       if (bilingual) {
         return isDark
-          ? "mt-2 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
-          : "mt-2 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:mt-2.5 sm:text-[14px]";
+          ? "mt-2 font-sans text-[12px] font-bold tracking-[0.14em] text-white/[0.78] sm:mt-2.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-1.5 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
+          : "mt-2 font-sans text-[13px] font-bold tracking-[0.16em] text-ink/80 sm:mt-2.5 sm:text-[14px]";
       }
       return isDark
-        ? "mt-3 font-sans text-[12px] font-semibold tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
-        : "mt-3 font-sans text-[13px] font-semibold tracking-[0.16em] text-ink/80 sm:text-[14px]";
+        ? "mt-3 font-sans text-[12px] font-bold tracking-[0.14em] text-white/[0.78] sm:mt-3.5 sm:text-[13px] sm:tracking-[0.16em] [text-shadow:0_1px_1px_rgba(0,0,0,0.36),0_1px_10px_rgba(0,0,0,0.22)] [@media(max-height:500px)_and_(orientation:portrait)]:mt-2 [@media(max-height:500px)_and_(orientation:portrait)]:text-[11px]"
+        : "mt-3 font-sans text-[13px] font-bold tracking-[0.16em] text-ink/80 sm:text-[14px]";
     }
     if (isRelax) {
       if (bilingual) {
@@ -508,20 +511,23 @@ export function HomeVerseRotator({
     return null;
   }
 
-  return (
-    <div
-      ref={goldenShellRef}
-      className={`mx-auto w-full ${shellWidth} text-center ${natureVerseContain} ${className}`.trim()}
-      aria-live="polite"
-      aria-atomic="true"
+  const cinematicNatureFadeMs = Math.max(HOME_VERSE_FADE_MS, 4000);
+
+  const blockquoteEl = (
+    <blockquote
+      className={`m-0 text-center transition-[opacity,transform,filter] ${blockquoteStack} ${isNature ? "min-w-0 max-w-full" : ""} ${readChapterHref ? "cursor-pointer" : ""}`.trim()}
+      style={{
+        opacity: homeVerseVisible ? 1 : 0,
+        transform: prefersReducedMotion
+          ? "none"
+          : homeVerseVisible
+            ? "translate3d(0, 0, 0) scale(1)"
+            : "translate3d(0, 10px, 0) scale(0.992)",
+        filter: prefersReducedMotion ? "none" : homeVerseVisible ? "blur(0px)" : "blur(6px)",
+        transitionDuration: `${prefersReducedMotion ? Math.min(800, HOME_VERSE_FADE_MS) : isNature ? cinematicNatureFadeMs : HOME_VERSE_FADE_MS}ms`,
+        transitionTimingFunction: isNature ? "cubic-bezier(0.22, 1, 0.36, 1)" : "ease-in-out",
+      }}
     >
-      <blockquote
-        className={`m-0 text-center transition-opacity ease-in-out motion-reduce:transition-none ${blockquoteStack} ${isNature ? "min-w-0 max-w-full" : ""}`.trim()}
-        style={{
-          opacity: homeVerseVisible ? 1 : 0,
-          transitionDuration: prefersReducedMotion ? "0ms" : `${HOME_VERSE_FADE_MS}ms`,
-        }}
-      >
         {primaryFlowText ? (
           <p
             key={`${safeIndex}-p-flow`}
@@ -578,7 +584,27 @@ export function HomeVerseRotator({
             ) : null}
           </div>
         ) : null}
-      </blockquote>
+    </blockquote>
+  );
+
+  return (
+    <div
+      ref={goldenShellRef}
+      className={`mx-auto w-full ${shellWidth} text-center ${natureVerseContain} ${className}`.trim()}
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {readChapterHref ? (
+        <Link
+          href={readChapterHref}
+          className="block rounded-lg outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-white/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent motion-reduce:transition-none"
+          aria-label={activeVerse?.ref ?? undefined}
+        >
+          {blockquoteEl}
+        </Link>
+      ) : (
+        blockquoteEl
+      )}
     </div>
   );
 }

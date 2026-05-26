@@ -1,13 +1,19 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ReadChapterAudioVoiceSettingsFields } from "@/components/bible/ReadChapterAudioVoiceSettingsFields";
 import {
   useReadBibleTranslationSettings,
   useReadBibleTypography,
 } from "@/components/bible/ReadBibleTypographyProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
+import { translationSupportsChapterAudio } from "@/lib/bible/read-chapter-audio";
+import {
+  READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY,
+  translationCatalogWithChapterAudio,
+} from "@/lib/read/read-chapter-audio-translation";
 const HIT =
   "flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition active:scale-[0.97]";
 
@@ -41,20 +47,27 @@ export function ReadBibleTypographySettingsControl() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const { sizeAtMin, sizeAtMax, bumpSize } = useReadBibleTypography();
+  const { sizeAtMin, sizeAtMax, sizeAtDefault, bumpSize, resetSizeToDefault } =
+    useReadBibleTypography();
   const {
     translation,
     translationCatalog,
     translationCatalogReady,
     setPrimaryTranslationId,
     setContrastTranslationId,
+    setAudioTranslationId,
+    chapterAudioTranslationId,
   } = useReadBibleTranslationSettings();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const spreadLayout = useReadChapterSpreadLayout();
 
   const showTranslation = pathname?.startsWith("/read") ?? false;
   const onChapterRoute = /^\/read\/[^/]+\/\d+\/?$/.test(pathname ?? "");
+  const hideOnSpreadChapter = onChapterRoute && spreadLayout;
+
+  if (hideOnSpreadChapter) return null;
 
   useEffect(() => {
     if (!open) return;
@@ -76,6 +89,19 @@ export function ReadBibleTypographySettingsControl() {
     if (onChapterRoute) router.refresh();
   };
 
+  const audioTranslationOptions = useMemo(() => {
+    const index = { translations: translationCatalog, defaultTranslationId: null };
+    const audioCatalog = translationCatalogWithChapterAudio(index);
+    if (audioCatalog.length === 0) return [];
+    return [
+      { id: READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY, label: t("pages.read.typography.audioTranslationFollowPrimary") },
+      ...audioCatalog.map((tr) => ({
+        id: tr.id,
+        label: locale === "zh-CN" ? tr.labelZh : tr.labelEn,
+      })),
+    ];
+  }, [translationCatalog, locale, t]);
+
   const iconBtn = `${HIT} text-amber-950/85 hover:bg-amber-950/[0.06] dark:text-stone-200/90 dark:hover:bg-stone-50/[0.08]`;
 
   return (
@@ -96,7 +122,7 @@ export function ReadBibleTypographySettingsControl() {
           id={titleId}
           role="dialog"
           aria-label={t("pages.read.typography.dialogTitle")}
-          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(20rem,calc(100vw-1.25rem))] rounded-xl border border-amber-900/14 bg-[#fffaf4]/96 px-3.5 py-3 text-left text-amber-950 shadow-lg backdrop-blur-sm dark:border-stone-500/25 dark:bg-stone-900/95 dark:text-stone-50"
+          className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(20rem,calc(100vw-1.25rem))] rounded-xl border border-amber-900/14 bg-[#fffaf4]/96 px-3.5 pt-3.5 pb-4 text-left text-amber-950 shadow-lg backdrop-blur-sm dark:border-stone-500/25 dark:bg-stone-900/95 dark:text-stone-50"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-900/65 dark:text-stone-400">
             {t("pages.read.typography.dialogTitle")}
@@ -158,6 +184,43 @@ export function ReadBibleTypographySettingsControl() {
                   {t("pages.read.typography.contrastHint")}
                 </p>
               ) : null}
+
+              {audioTranslationOptions.length > 1 ? (
+                <>
+                  <label
+                    className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200"
+                    htmlFor="read-bible-audio-translation"
+                  >
+                    {t("pages.read.typography.audioTranslation")}
+                  </label>
+                  <select
+                    id="read-bible-audio-translation"
+                    className={selectClass}
+                    disabled={!translationCatalogReady}
+                    value={translation.audioTranslationId ?? READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setAudioTranslationId(
+                        !v || v === READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY ? null : v,
+                      );
+                      refreshChapterIfNeeded();
+                    }}
+                  >
+                    {audioTranslationOptions.map((opt) => (
+                      <option key={opt.id || "follow"} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : null}
+              {translation.audioTranslationId &&
+              translation.audioTranslationId !== translation.primaryTranslationId &&
+              translationSupportsChapterAudio(translation.audioTranslationId) ? (
+                <p className="mt-2 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">
+                  {t("pages.read.typography.audioTranslationCrossHint")}
+                </p>
+              ) : null}
             </>
           ) : null}
 
@@ -168,6 +231,15 @@ export function ReadBibleTypographySettingsControl() {
               {t("pages.read.typography.sizeLabel")}
             </span>
             <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={sizeAtDefault}
+                aria-label={t("pages.read.typography.sizeResetDefaultAria")}
+                className={`${sizeBtnClass} min-w-[3.25rem] px-2 text-[13px]`}
+                onClick={resetSizeToDefault}
+              >
+                {t("pages.read.typography.sizeResetDefault")}
+              </button>
               <button
                 type="button"
                 disabled={sizeAtMin}

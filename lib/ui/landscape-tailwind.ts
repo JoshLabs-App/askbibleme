@@ -3,4 +3,4 @@
  * 用法：\`${landscapeNarrowMedia}:flex-row\`
  */
 export const landscapeNarrowMedia =
-  "[@media(orientation:landscape)_and_(max-width:932px)_and_(max-height:500px)]";
+  "[@media(orientation:landscape)_and_(max-width:956px)_and_(max-height:500px)]";

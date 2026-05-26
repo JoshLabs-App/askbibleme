@@ -9,7 +9,6 @@ export function webPathnameToScreen(pathname: string): TelemetryEventProperties 
   if (p === "/relax") return { screen: "relax" };
   if (p === "/music") return { screen: "music" };
   if (p === "/explore" || p.startsWith("/explore/")) {
-    if (p.includes("/prayer")) return { screen: "explore.prayer" };
     return { screen: "explore" };
   }
   if (p === "/read/search") return { screen: "read.search" };
@@ -26,8 +25,6 @@ export function webPathnameToScreen(pathname: string): TelemetryEventProperties 
   }
 
   if (p.startsWith("/read")) return { screen: "read.catalog" };
-  if (p.startsWith("/prayer")) return { screen: "explore.prayer" };
-
   return null;
 }
 
@@ -39,7 +36,6 @@ export function mobileSegmentsToScreen(segments: string[]): TelemetryEventProper
   const head = parts[0];
   if (head === "music") return { screen: "music" };
   if (head === "explore") {
-    if (parts.includes("prayer")) return { screen: "explore.prayer" };
     return { screen: "explore" };
   }
   if (head === "scenes" || head === "scenes.tsx") return { screen: "scenes" };

@@ -182,7 +182,7 @@ if (!bookArg && !doAll) {
   process.exit(0);
 }
 
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "selah-teochew-whisper-"));
+const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "askbible-teochew-whisper-"));
 let ok = 0;
 let fail = 0;
 

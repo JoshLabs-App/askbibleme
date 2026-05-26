@@ -9,9 +9,9 @@ MODE="${1:-dev}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ "$MODE" = "restart" ]; then
-  echo "  Selah.my · 干净重启开发服务器"
+  echo "  AskBible.me · 干净重启开发服务器"
 else
-  echo "  Selah.my · 开发服务器"
+  echo "  AskBible.me · 开发服务器"
 fi
 echo "  目录: $ROOT"
 echo "  就绪后将打开浏览器：前台 http://localhost:3450/ ，后台 http://localhost:3450/admin"

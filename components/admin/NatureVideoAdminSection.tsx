@@ -12,6 +12,11 @@ import {
   parseNatureSceneCategory,
   type NatureSceneCategory,
 } from "@/lib/nature/scene-categories";
+import {
+  NATURE_AMBIENT_SCENE_SLOTS,
+  natureAmbientSceneSlotLabel,
+  type NatureAmbientSceneSlotId,
+} from "@/lib/nature/ambient-scene-slots";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
 async function postNatureSettings(
@@ -39,6 +44,44 @@ function newId(): string {
   return `id-${Date.now()}`;
 }
 
+function reorderVideos(videos: NatureVideoEntry[], id: string, direction: "up" | "down"): NatureVideoEntry[] {
+  const index = videos.findIndex((v) => v.id === id);
+  if (index < 0) return videos;
+  const swapIndex = direction === "up" ? index - 1 : index + 1;
+  if (swapIndex < 0 || swapIndex >= videos.length) return videos;
+  const next = [...videos];
+  const current = next[index];
+  const target = next[swapIndex];
+  if (!current || !target) return videos;
+  next[index] = target;
+  next[swapIndex] = current;
+  return next;
+}
+
+function upsertAmbientClipForSlot(
+  clips: NatureSettingsV2["ambientClips"],
+  slotId: NatureAmbientSceneSlotId,
+  nextSrc: string,
+): NatureSettingsV2["ambientClips"] {
+  const normalized = nextSrc.trim();
+  const nextTitle = natureAmbientSceneSlotLabel(slotId);
+  if (!normalized) return clips;
+  const hit = clips.find((clip) => clip.id === slotId);
+  if (hit) {
+    return clips.map((clip) =>
+      clip.id === slotId ? { ...clip, src: normalized, title: nextTitle } : clip,
+    );
+  }
+  return [...clips, { id: slotId, src: normalized, title: nextTitle }];
+}
+
+function removeAmbientClipForSlot(
+  clips: NatureSettingsV2["ambientClips"],
+  slotId: NatureAmbientSceneSlotId,
+): NatureSettingsV2["ambientClips"] {
+  return clips.filter((clip) => clip.id !== slotId);
+}
+
 export function NatureVideoAdminSection({
   setMsg,
   showGallery = false,
@@ -60,6 +103,9 @@ export function NatureVideoAdminSection({
   const [thumbModalVideoId, setThumbModalVideoId] = useState<string | null>(null);
   const [thumbSaveBusy, setThumbSaveBusy] = useState(false);
   const [uploadCategory, setUploadCategory] = useState<NatureSceneCategory>(DEFAULT_NATURE_SCENE_CATEGORY);
+  const [ambientUploadBusy, setAmbientUploadBusy] = useState<NatureAmbientSceneSlotId | null>(null);
+  const [ambientUploadHint, setAmbientUploadHint] = useState<string | null>(null);
+  const ambientInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   useLayoutEffect(() => {
     settingsRef.current = settings;
   }, [settings]);
@@ -151,7 +197,9 @@ export function NatureVideoAdminSection({
           src4k?: string;
           renditions?: boolean;
           previewFrameUrl?: string | null;
+          thumbUrl?: string | null;
           previewFrameWarning?: string;
+          thumbWarning?: string;
           error?: string;
         };
         if (!res.ok) throw new Error(data.error ?? `上传失败（${res.status}）`);
@@ -170,6 +218,10 @@ export function NatureVideoAdminSection({
         if (pfu) {
           row.previewFrameSrc = pfu;
         }
+        const tu = typeof data.thumbUrl === "string" ? data.thumbUrl.trim() : "";
+        if (tu) {
+          row.thumbSrc = tu;
+        }
 
         const videos = [...prev.videos, row];
         const preferActive = prev.activeVideoId.trim();
@@ -184,12 +236,15 @@ export function NatureVideoAdminSection({
         const next: NatureSettingsV2 = { ...prev, videos, activeVideoId };
         const ok = await applyAndSync(next);
         if (ok) {
-          if (data.previewFrameWarning) {
-            setUploadHint(`已上传；预览首帧未生成：${data.previewFrameWarning}`);
+          if (data.previewFrameWarning || data.thumbWarning) {
+            const warns = [data.previewFrameWarning, data.thumbWarning].filter(
+              (x): x is string => typeof x === "string" && x.trim().length > 0,
+            );
+            setUploadHint(`已上传；部分小图未生成：${warns.join("；")}`);
           } else if (data.renditions) {
-            setUploadHint(`已写入并转码（720 默认 · 1080 可选）；母片已保留：${title}`);
+            setUploadHint(`已写入并转码（720 默认 · 1080 可选）；静止图与 1:1 小图已自动生成：${title}`);
           } else {
-            setUploadHint(`已上传并写入：${title}`);
+            setUploadHint(`已上传并写入；静止图与 1:1 小图已自动生成：${title}`);
           }
         }
       } catch (e) {
@@ -201,6 +256,67 @@ export function NatureVideoAdminSection({
       }
     },
     [applyAndSync, setMsg, settings, uploadCategory],
+  );
+
+  const onAmbientFileChosen = useCallback(
+    async (slotId: NatureAmbientSceneSlotId, file: File | null | undefined) => {
+      if (!file) return;
+      const prev = settingsRef.current ?? settings;
+      if (!prev) {
+        setMsg("自然页配置尚未就绪，请刷新本页后重试。");
+        return;
+      }
+      const lower = file.name.toLowerCase();
+      const okExt = /\.(mp3|wav|ogg|m4a|aac|opus|webm|flac)$/.test(lower);
+      const okMime = file.type.startsWith("audio/");
+      if (!okExt && !okMime) {
+        setMsg("请选择常见音频文件（mp3 / wav / m4a / ogg / flac）。");
+        return;
+      }
+      setAmbientUploadBusy(slotId);
+      setAmbientUploadHint(null);
+      setMsg(null);
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/nature/upload-audio", {
+          method: "POST",
+          headers: { ...diskAuthHeaders() },
+          body: fd,
+        });
+        const data = (await res.json()) as {
+          ok?: boolean;
+          url?: string;
+          error?: string;
+        };
+        if (!res.ok) throw new Error(data.error ?? `上传失败（${res.status}）`);
+        const url = typeof data.url === "string" ? data.url.trim() : "";
+        if (!url) throw new Error("上传响应异常");
+        const ambientClips = upsertAmbientClipForSlot(prev.ambientClips ?? [], slotId, url);
+        const next: NatureSettingsV2 = { ...prev, ambientClips };
+        const ok = await applyAndSync(next);
+        if (ok) {
+          setAmbientUploadHint(`已更新 ${natureAmbientSceneSlotLabel(slotId)} 声音。`);
+        }
+      } catch (e) {
+        const m = e instanceof Error ? e.message : "上传失败";
+        setMsg(m);
+      } finally {
+        setAmbientUploadBusy((cur) => (cur === slotId ? null : cur));
+      }
+    },
+    [applyAndSync, setMsg, settings],
+  );
+
+  const clearAmbientSlot = useCallback(
+    async (slotId: NatureAmbientSceneSlotId) => {
+      const prev = settingsRef.current ?? settings;
+      if (!prev) return;
+      const ambientClips = removeAmbientClipForSlot(prev.ambientClips ?? [], slotId);
+      const next: NatureSettingsV2 = { ...prev, ambientClips };
+      await applyAndSync(next);
+    },
+    [applyAndSync, settings],
   );
 
   const setActive = useCallback(
@@ -227,6 +343,18 @@ export function NatureVideoAdminSection({
         scenesPageVideoId = undefined;
       }
       const next: NatureSettingsV2 = { ...prev, videos, activeVideoId, scenesPageVideoId };
+      await applyAndSync(next);
+    },
+    [applyAndSync, settings],
+  );
+
+  const moveVideo = useCallback(
+    async (id: string, direction: "up" | "down") => {
+      const prev = settingsRef.current ?? settings;
+      if (!prev) return;
+      const videos = reorderVideos(prev.videos, id, direction);
+      if (videos === prev.videos) return;
+      const next: NatureSettingsV2 = { ...prev, videos };
       await applyAndSync(next);
     },
     [applyAndSync, settings],
@@ -299,7 +427,7 @@ export function NatureVideoAdminSection({
         setThumbSaveBusy(false);
       }
     },
-    [applyAndSync, settings],
+    [applyAndSync, setMsg, settings],
   );
 
   const clearVideoThumb = useCallback(
@@ -342,7 +470,7 @@ export function NatureVideoAdminSection({
     );
   }
 
-  const busy = uploadBusy || thumbSaveBusy;
+  const busy = uploadBusy || thumbSaveBusy || ambientUploadBusy != null;
 
   return (
     <>
@@ -382,6 +510,74 @@ export function NatureVideoAdminSection({
           <p className="text-[10px] leading-relaxed text-adminMuted">
             {t("admin.naturePage.scenesPageBackdropHint")}
           </p>
+        </div>
+
+        <div className="mt-6 rounded-md border border-adminLine/70 bg-adminPanel/30 px-3 py-3">
+          <h3 className="text-[12px] font-medium text-adminFg">场景音效（App 图标直连）</h3>
+          <p className="mt-1 text-[10px] leading-relaxed text-adminMuted">
+            8 个固定入口：水、雨、海浪、雷、鸟、风、白噪音、咖啡厅。上传后，App 首页点击对应图标会播放该声音。
+          </p>
+          <div className="mt-3 grid grid-cols-1 gap-2.5 md:grid-cols-2">
+            {NATURE_AMBIENT_SCENE_SLOTS.map((slot) => {
+              const clip = settings.ambientClips.find((x) => x.id === slot.id);
+              const uploading = ambientUploadBusy === slot.id;
+              return (
+                <div
+                  key={slot.id}
+                  className="rounded border border-adminLine/70 bg-adminPanel/60 px-2.5 py-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-medium text-adminFg">{slot.label}</p>
+                    <span className="text-[10px] text-adminMuted">
+                      {clip?.src?.trim() ? "已上传" : "未上传"}
+                    </span>
+                  </div>
+                  <p className="mt-1 break-all font-mono text-[10px] text-adminMuted/85">
+                    {clip?.src?.trim() || "（暂无文件）"}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      ref={(el) => {
+                        ambientInputRefs.current[slot.id] = el;
+                      }}
+                      type="file"
+                      accept="audio/mp3,audio/mpeg,audio/wav,audio/x-wav,audio/ogg,audio/m4a,audio/aac,audio/webm,audio/flac,.mp3,.wav,.ogg,.m4a,.aac,.opus,.webm,.flac"
+                      className="sr-only"
+                      aria-hidden
+                      tabIndex={-1}
+                      onChange={(e) => {
+                        const input = e.target;
+                        const chosen = input.files?.item(0) ?? null;
+                        input.value = "";
+                        void onAmbientFileChosen(slot.id, chosen);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => ambientInputRefs.current[slot.id]?.click()}
+                      className="rounded border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {uploading ? "上传中…" : clip?.src?.trim() ? "替换文件" : "上传文件"}
+                    </button>
+                    {clip?.src?.trim() ? (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void clearAmbientSlot(slot.id)}
+                        className="rounded border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminMuted transition hover:bg-surface hover:text-adminFg disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        清空
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {ambientUploadHint ? (
+            <p className="mt-2 text-[11px] leading-snug text-emerald-900/90">{ambientUploadHint}</p>
+          ) : null}
         </div>
 
         {showGallery ? (
@@ -537,8 +733,10 @@ export function NatureVideoAdminSection({
         {settings.videos.length === 0 ? (
           <li className="px-3 py-8 text-[12px] text-adminMuted">暂无视频，上传后在此列出并可选择在自然页播放。</li>
         ) : (
-          settings.videos.map((v) => {
+          settings.videos.map((v, index) => {
             const active = settings.activeVideoId === v.id;
+            const canMoveUp = index > 0;
+            const canMoveDown = index >= 0 && index < settings.videos.length - 1;
             return (
               <li key={v.id} className="px-3 py-3">
                 <div className="flex gap-3">
@@ -583,6 +781,22 @@ export function NatureVideoAdminSection({
                     onClick={() => setThumbModalVideoId(v.id)}
                   >
                     {t("admin.naturePage.galleryThumbEdit")}
+                  </button>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded border border-adminLine/80 bg-adminPanel px-2 py-1 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={busy || !canMoveUp}
+                    onClick={() => void moveVideo(v.id, "up")}
+                  >
+                    上移
+                  </button>
+                  <button
+                    type="button"
+                    className="shrink-0 rounded border border-adminLine/80 bg-adminPanel px-2 py-1 text-[11px] text-adminFg transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-45"
+                    disabled={busy || !canMoveDown}
+                    onClick={() => void moveVideo(v.id, "down")}
+                  >
+                    下移
                   </button>
                   {v.thumbSrc?.trim() ? (
                     <button

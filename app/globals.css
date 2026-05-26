@@ -2,34 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 默认品牌变量（无 data/branding.json 或未写入 inline 时生效） */
+/* 默认品牌变量（无 data/branding.json 或未写入 inline 时生效；与读经羊皮 `--read-parchment-bg-canvas` 对齐） */
 :root {
-  --brand-canvas: #143c60;
-  --brand-canvas-rgb: 20 60 96;
-  --brand-surface: #183a52;
-  --brand-surface-rgb: 24 58 82;
-  --brand-border: #295878;
-  --brand-border-rgb: 41 88 120;
-  --brand-muted: #9bb0c2;
-  --brand-muted-rgb: 155 176 194;
-  --brand-ink: #f1f5f9;
-  --brand-ink-rgb: 241 245 249;
-  --brand-sand: #7eb8e0;
-  --brand-sand-rgb: 126 184 224;
-  --brand-app-light: #dcecf7;
-  --brand-app-light-rgb: 220 236 247;
-  --brand-app-dark: #143c60;
-  --brand-app-dark-rgb: 20 60 96;
-  --brand-admin-bg: #0e2438;
-  --brand-admin-bg-rgb: 14 36 56;
-  --brand-admin-panel: #152f45;
-  --brand-admin-panel-rgb: 21 47 69;
-  --brand-admin-line: #2a5572;
-  --brand-admin-line-rgb: 42 85 114;
-  --brand-admin-fg: #eef3f8;
-  --brand-admin-fg-rgb: 238 243 248;
-  --brand-admin-muted: #94a9b8;
-  --brand-admin-muted-rgb: 148 169 184;
+  --brand-canvas: #ecd9b9;
+  --brand-canvas-rgb: 236 217 185;
+  --brand-surface: #f5ebe0;
+  --brand-surface-rgb: 245 235 224;
+  --brand-border: #c9a672;
+  --brand-border-rgb: 201 166 114;
+  --brand-muted: #5c4030;
+  --brand-muted-rgb: 92 64 48;
+  --brand-ink: #1c1410;
+  --brand-ink-rgb: 28 20 16;
+  --brand-sand: #9c7447;
+  --brand-sand-rgb: 156 116 71;
+  --brand-app-light: #f7f3e9;
+  --brand-app-light-rgb: 247 243 233;
+  --brand-app-dark: #5b4636;
+  --brand-app-dark-rgb: 91 70 54;
+  --brand-logo-background: #ecd9b9;
+  --brand-logo-background-rgb: 236 217 185;
+  --brand-admin-bg: #3d2e24;
+  --brand-admin-bg-rgb: 61 46 36;
+  --brand-admin-panel: #4a382c;
+  --brand-admin-panel-rgb: 74 56 44;
+  --brand-admin-line: #6e5240;
+  --brand-admin-line-rgb: 110 82 64;
+  --brand-admin-fg: #f4ebe1;
+  --brand-admin-fg-rgb: 244 235 225;
+  --brand-admin-muted: #b9a896;
+  --brand-admin-muted-rgb: 185 168 150;
   /**
    * 不设底栏槽占位；自然页路由叠在视频上，其它页为 fixed 浮层。回退 `calc(100dvh - slot)` 中 slot 多为 0。
    */
@@ -46,7 +48,7 @@ body {
  */
 html {
   background-color: rgb(var(--brand-canvas-rgb));
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 body {
@@ -337,7 +339,7 @@ html[data-golden-verses-chromeless] .home-bottom-nav {
 }
 
 /** 宽视口兜底：横屏沉浸标记误触时仍保留主导航（与 `useLandscapeNarrow` 上沿一致） */
-@media (min-width: 933px) {
+@media (min-width: 957px) {
   html[data-nature-landscape-immersive] .home-bottom-nav,
   html[data-landscape-immersive] .home-bottom-nav {
     display: flex;

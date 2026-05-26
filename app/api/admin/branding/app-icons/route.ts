@@ -20,7 +20,7 @@ function extFromName(name: string): string {
 }
 
 /**
- * 上传**网站 / PWA 图标**母版（栅格）→ 写入 `app-icon.png` 并生成 favicon / Apple / PWA 尺寸。
+ * 上传**网站 / PWA / 原生 App** 图标母版（栅格）→ 写入 `app-icon.png` 并生成 favicon / PWA / Expo 资源。
  * 与顶栏 LOGO（`logo.svg` / `logo.png`）完全独立。
  */
 export async function POST(req: Request) {
@@ -79,6 +79,8 @@ export async function POST(req: Request) {
     logoKind: prev?.logoKind ?? "raster",
     presetId: prev?.presetId ?? "parchment",
     colors,
+    ...(prev?.logoBackground ? { logoBackground: prev.logoBackground } : {}),
+    ...(prev?.logoTextAccent ? { logoTextAccent: prev.logoTextAccent } : {}),
     appIconsUpdatedAt: new Date().toISOString(),
     appIconOriginalName: origName,
   };
@@ -88,6 +90,7 @@ export async function POST(req: Request) {
     ok: true,
     appIconsUpdatedAt: next.appIconsUpdatedAt,
     appIconOriginalName: next.appIconOriginalName,
+    mobileNativeSynced: true,
     urls: {
       icon192: "/branding/icon-192.png",
       icon512: "/branding/icon-512.png",

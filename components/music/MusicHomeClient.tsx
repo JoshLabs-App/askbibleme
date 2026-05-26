@@ -26,6 +26,64 @@ type Props = {
   layout?: "standalone" | "templateChrome";
 };
 
+const KNOWN_MUSIC_ALBUMS = ["安静", "下午茶", "专注工作", "睡眠"] as const;
+const DEFAULT_ALBUM = "安静";
+const ALBUM_SWATCH_CLASS: Record<string, string> = {
+  安静: "bg-[linear-gradient(135deg,#89c2ff_0%,#4f7db8_100%)]",
+  下午茶: "bg-[linear-gradient(135deg,#ffd8a8_0%,#c88c52_100%)]",
+  专注工作: "bg-[linear-gradient(135deg,#b6bcc8_0%,#707786_100%)]",
+  睡眠: "bg-[linear-gradient(135deg,#c7b6ff_0%,#6d5aa9_100%)]",
+};
+const FALLBACK_SWATCH_CLASSES = [
+  "bg-[linear-gradient(135deg,#8aa8d8_0%,#5b6d8a_100%)]",
+  "bg-[linear-gradient(135deg,#b495cf_0%,#7f5c9f_100%)]",
+  "bg-[linear-gradient(135deg,#8eb7b0_0%,#567f78_100%)]",
+  "bg-[linear-gradient(135deg,#d0a48d_0%,#9f6e56_100%)]",
+] as const;
+
+function firstTag(tags: string[]): string | null {
+  for (const raw of tags) {
+    const t = raw.trim();
+    if (t) return t;
+  }
+  return null;
+}
+
+function albumFromRemark(remark: string): string | null {
+  const trimmed = remark.trim();
+  if (!trimmed) return null;
+  const m = trimmed.match(/专辑[:：]\s*([^\n;；。]+)/);
+  if (m?.[1]) {
+    const fromPrefix = m[1].trim();
+    if (fromPrefix) return fromPrefix;
+  }
+  return null;
+}
+
+function fallbackSwatchClass(albumName: string): string {
+  let h = 0;
+  for (let i = 0; i < albumName.length; i += 1) h = (h * 31 + albumName.charCodeAt(i)) | 0;
+  return FALLBACK_SWATCH_CLASSES[Math.abs(h) % FALLBACK_SWATCH_CLASSES.length]!;
+}
+
+function inferTrackAlbum(track: AudioTrack): string {
+  const tags = Array.isArray(track.tags) ? track.tags : [];
+  for (const album of KNOWN_MUSIC_ALBUMS) {
+    if (tags.includes(album)) return album;
+  }
+  if (tags.includes("工作")) return "专注工作";
+  const customFromTag = firstTag(tags);
+  if (customFromTag) return customFromTag;
+  const remarkRaw = typeof track.remark === "string" ? track.remark : track.remark?.["zh-CN"] ?? "";
+  if (remarkRaw.includes("专注工作") || remarkRaw.includes("工作")) return "专注工作";
+  for (const album of KNOWN_MUSIC_ALBUMS) {
+    if (remarkRaw.includes(album)) return album;
+  }
+  const customFromRemark = albumFromRemark(remarkRaw);
+  if (customFromRemark) return customFromRemark;
+  return DEFAULT_ALBUM;
+}
+
 function pickScene(store: MusicCompanionStore): Scene | null {
   const { scenes, defaultSceneId } = store;
   if (scenes.length === 0) return null;
@@ -34,11 +92,6 @@ function pickScene(store: MusicCompanionStore): Scene | null {
     if (s) return s;
   }
   return [...scenes].sort((a, b) => a.order - b.order)[0] ?? null;
-}
-
-function byId<T extends { id: string }>(list: T[], id: string | null): T | null {
-  if (!id) return null;
-  return list.find((x) => x.id === id) ?? null;
 }
 
 function formatTime(sec: number): string {
@@ -113,12 +166,21 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   const landscapeNarrow = useLandscapeNarrow();
   const inTemplateChrome = layout === "templateChrome";
 
-  const { currentSec, durationSec, seekRatio, setPlaybackSrc, effectiveSrc, musicStore, deviceLibraryPlayback, clearDeviceLibraryPlayback } =
-    useMusicShellPlayback();
+  const {
+    currentSec,
+    durationSec,
+    seekRatio,
+    setPlaybackSrc,
+    effectiveSrc,
+    musicStore,
+    deviceLibraryPlayback,
+    clearDeviceLibraryPlayback,
+  } = useMusicShellPlayback();
   /** 与壳层曲库同源：避免进页再打一遍 `/api/music/companion`；壳层拉取后自动更新 */
   const store = musicStore ?? initialStore;
   const initialSi = initialSceneIndex(initialStore);
   const [sceneIndex, setSceneIndex] = useState(() => initialSi);
+  const [album, setAlbum] = useState<string>(DEFAULT_ALBUM);
   const [trackPoolIdx, setTrackPoolIdx] = useState(() => computeRandomTrackPoolIdx(initialStore));
   const fullMusicSrcGateDone = useRef(false);
   /** 用户刚点上一首/下一首/随机：短时间内优先信任 trackPoolIdx，避免壳层 ended 已切歌而此处仍用旧 URL 把播放源推回去导致更新风暴 */
@@ -152,20 +214,47 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
 
   const scene = orderedScenes[sceneIndex] ?? pickScene(store);
 
-  const tracksWithSrc = useMemo(
+  const allTracksWithSrc = useMemo(
     () => store.audioTracks.filter((t) => t.src?.trim()),
     [store.audioTracks],
   );
-
-  /** 曲目 id/src 集合的稳定键；成员变化时强制重新解析当前曲与壳层 URL 的对齐关系 */
-  const trackPoolSyncKey = useMemo(
-    () =>
-      store.audioTracks
-        .filter((t) => Boolean(t.src?.trim()))
-        .map((t) => `${t.id}\u001f${(t.src ?? "").trim()}`)
-        .join("\u001e"),
-    [store.audioTracks],
+  const tracksWithSrc = useMemo(
+    () => allTracksWithSrc.filter((t) => inferTrackAlbum(t) === album),
+    [allTracksWithSrc, album],
   );
+  const albumNames = useMemo(() => {
+    const seen = new Set<string>();
+    const ordered: string[] = [];
+    for (const name of KNOWN_MUSIC_ALBUMS) {
+      seen.add(name);
+      ordered.push(name);
+    }
+    for (const t of allTracksWithSrc) {
+      const name = inferTrackAlbum(t).trim() || DEFAULT_ALBUM;
+      if (seen.has(name)) continue;
+      seen.add(name);
+      ordered.push(name);
+    }
+    return ordered;
+  }, [allTracksWithSrc]);
+  const albumCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const t of allTracksWithSrc) {
+      const name = inferTrackAlbum(t).trim() || DEFAULT_ALBUM;
+      counts[name] = (counts[name] ?? 0) + 1;
+    }
+    return counts;
+  }, [allTracksWithSrc]);
+
+  useEffect(() => {
+    if ((albumCounts[album] ?? 0) > 0) return;
+    const next = albumNames.find((name) => (albumCounts[name] ?? 0) > 0) ?? DEFAULT_ALBUM;
+    if (next !== album) setAlbum(next);
+  }, [album, albumCounts, albumNames]);
+
+  useEffect(() => {
+    setTrackPoolIdx(0);
+  }, [album]);
 
   const resolvedTrackIdx = useMemo(() => {
     const tracks = tracksWithSrc;
@@ -180,7 +269,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     const now = typeof performance !== "undefined" ? performance.now() : 0;
     if (now - userSkipAtRef.current < 720) return k;
     return j;
-  }, [effectiveSrc, trackPoolIdx, tracksWithSrc, trackPoolSyncKey]);
+  }, [effectiveSrc, trackPoolIdx, tracksWithSrc]);
 
   const resolvedTrackIdxRef = useRef(0);
   resolvedTrackIdxRef.current = resolvedTrackIdx;
@@ -190,7 +279,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     const want = scene?.audioTrackId ?? null;
     const i = want ? tracksWithSrc.findIndex((t) => t.id === want) : -1;
     return i >= 0 ? i : 0;
-  }, [scene?.audioTrackId, scene?.id, tracksWithSrc]);
+  }, [scene?.audioTrackId, tracksWithSrc]);
 
   const initialTrackCount = countTracksWithSrc(initialStore);
   const initialTrackCountRef = useRef(initialTrackCount);
@@ -225,17 +314,9 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   }, [tracksWithSrc.length]);
 
   const track = useMemo(() => {
-    if (tracksWithSrc.length > 0) {
-      return tracksWithSrc[
-        Math.min(resolvedTrackIdx, tracksWithSrc.length - 1)
-      ];
-    }
-    const sceneTrack = scene
-      ? (byId(store.audioTracks, scene.audioTrackId) as AudioTrack | null)
-      : null;
-    if (sceneTrack?.src?.trim()) return sceneTrack;
-    return store.audioTracks.find((t) => t.src?.trim()) ?? sceneTrack;
-  }, [tracksWithSrc, resolvedTrackIdx, scene, store.audioTracks]);
+    if (tracksWithSrc.length === 0) return null;
+    return tracksWithSrc[Math.min(resolvedTrackIdx, tracksWithSrc.length - 1)];
+  }, [tracksWithSrc, resolvedTrackIdx]);
 
   const audioSrc = track?.src?.trim() ?? "";
 
@@ -366,36 +447,69 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                 </div>
               </div>
 
-              {tracksWithSrc.length > 0 ? (
+              {allTracksWithSrc.length > 0 ? (
                 <section className="mx-auto w-full max-w-md shrink-0 px-2 pb-2 pt-3 sm:max-w-lg">
-                  <ul className="mx-auto max-h-[min(40dvh,20rem)] space-y-0.5 overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch]">
-                    {tracksWithSrc.map((tr, idx) => {
-                      const active = idx === resolvedTrackIdx;
-                      const titleText =
-                        resolveLocalized(tr.title, locale).trim() || t("music.home.trackUntitled");
-                      const artistText = resolveLocalized(tr.artist, locale).trim();
-                      const line = artistText ? `${titleText} · ${artistText}` : titleText;
+                  <div className="mb-3 flex items-center justify-center gap-2 rounded-2xl border border-ink/10 bg-ink/[0.04] p-2">
+                    {albumNames.map((albumName) => {
+                      const active = albumName === album;
                       return (
-                        <li key={tr.id}>
-                          <button
-                            type="button"
-                            onClick={() => selectTrack(idx)}
-                            aria-current={active ? "true" : undefined}
-                            className={[
-                              "w-full max-w-full border-0 bg-transparent px-2 py-2.5 text-center transition-[color,font-size] motion-reduce:transition-none",
-                              active
-                                ? "text-[17px] font-medium leading-snug text-ink/20 sm:text-[18px]"
-                                : "text-[16px] font-normal leading-snug text-ink/20 hover:text-ink/25 sm:text-[17px]",
-                            ].join(" ")}
-                          >
-                            <span className="inline-block max-w-full whitespace-normal break-words text-balance">
-                              {line}
-                            </span>
-                          </button>
-                        </li>
+                        <button
+                          key={albumName}
+                          type="button"
+                          onClick={() => setAlbum(albumName)}
+                          aria-pressed={active}
+                          aria-label={albumName}
+                          title={albumName}
+                          className={`h-12 w-[5.4rem] rounded-xl border-2 transition sm:h-14 sm:w-[6.2rem] ${
+                            active
+                              ? "border-white/75 shadow-[0_0_0_1px_rgba(0,0,0,0.18)]"
+                              : "border-transparent opacity-80 hover:border-white/45 hover:opacity-100"
+                          }`}
+                        >
+                          <span
+                            className={`block h-full w-full rounded-[0.6rem] ${
+                              ALBUM_SWATCH_CLASS[albumName] ?? fallbackSwatchClass(albumName)
+                            }`}
+                          />
+                          <span className="sr-only">
+                            {albumName}（{albumCounts[albumName] ?? 0}）
+                          </span>
+                        </button>
                       );
                     })}
-                  </ul>
+                  </div>
+                  {tracksWithSrc.length > 0 ? (
+                    <ul className="mx-auto max-h-[min(40dvh,20rem)] space-y-0.5 overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch]">
+                      {tracksWithSrc.map((tr, idx) => {
+                        const active = idx === resolvedTrackIdx;
+                        const titleText =
+                          resolveLocalized(tr.title, locale).trim() || t("music.home.trackUntitled");
+                        const artistText = resolveLocalized(tr.artist, locale).trim();
+                        const line = artistText ? `${titleText} · ${artistText}` : titleText;
+                        return (
+                          <li key={tr.id}>
+                            <button
+                              type="button"
+                              onClick={() => selectTrack(idx)}
+                              aria-current={active ? "true" : undefined}
+                              className={[
+                                "w-full max-w-full border-0 bg-transparent px-2 py-2.5 text-center transition-[color,font-size] motion-reduce:transition-none",
+                                active
+                                  ? "text-[17px] font-medium leading-snug text-ink/20 sm:text-[18px]"
+                                  : "text-[16px] font-normal leading-snug text-ink/20 hover:text-ink/25 sm:text-[17px]",
+                              ].join(" ")}
+                            >
+                              <span className="inline-block max-w-full whitespace-normal break-words text-balance">
+                                {line}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="py-4 text-center text-[12px] text-ink/35">该专辑暂无曲目</p>
+                  )}
                 </section>
               ) : null}
 

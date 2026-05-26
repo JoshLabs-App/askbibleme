@@ -19,7 +19,7 @@ export function infoEditionBundledPublishedPath(cwd: string): string {
   return path.join(cwd, "data", "bible", PUBLISHED_FILENAME);
 }
 
-function infoEditionExternalDataRoot(): string | null {
+export function infoEditionExternalDataRoot(): string | null {
   const external =
     process.env.INFO_EDITION_DATA_DIR?.trim() || process.env.DATA_ROOT?.trim();
   return external || null;

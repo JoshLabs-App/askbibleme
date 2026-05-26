@@ -21,8 +21,12 @@ import { MediaPlaybackCoordinatorProvider } from "@/components/media/MediaPlayba
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
 import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
 import { getAppBuildId } from "@/lib/app-build-id";
-import { brandingAssetsExist, getResolvedBrandColors } from "@/lib/site-branding";
-import { brandColorsToCssVars } from "@/lib/site-branding-colors";
+import { brandingAssetsExist, getResolvedBrandColors, getResolvedLogoBackground } from "@/lib/site-branding";
+import {
+  brandCanvasColorScheme,
+  brandColorsToCssVars,
+  logoBackgroundToCssVars,
+} from "@/lib/site-branding-colors";
 import {
   inferAppLocaleFromAcceptLanguage,
   LOCALE_COOKIE_NAME,
@@ -82,7 +86,7 @@ export async function generateViewport(): Promise<Viewport> {
     initialScale: 1,
     viewportFit: "cover",
     themeColor: colors.canvas,
-    colorScheme: "dark",
+    colorScheme: brandCanvasColorScheme(colors.canvas),
   };
 }
 
@@ -92,6 +96,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const colors = await getResolvedBrandColors();
+  const logoBackground = await getResolvedLogoBackground();
   const cookieStore = await cookies();
   const headerList = await headers();
   const cookieRaw = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
@@ -109,7 +114,12 @@ export default async function RootLayout({
   return (
     <html
       lang={htmlLang}
-      style={brandColorsToCssVars(colors) as CSSProperties}
+      style={
+        {
+          ...brandColorsToCssVars(colors),
+          ...logoBackgroundToCssVars(logoBackground),
+        } as CSSProperties
+      }
       suppressHydrationWarning
       data-app-shell-safe-fill={parchmentShell ? SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE : undefined}
       data-read-parchment-samsung={

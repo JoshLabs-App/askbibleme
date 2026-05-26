@@ -2,7 +2,7 @@
 
 第一阶段只做：
 
-- Selah.my Studio
+- AskBible.me Studio
 - Journey Reader
 - Bible Reader
 - 一个 Journey（出埃及）

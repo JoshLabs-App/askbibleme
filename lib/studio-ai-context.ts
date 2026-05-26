@@ -1,5 +1,5 @@
 /**
- * Selah.my Studio — 分层 AI 上下文（Layered Context Memory）
+ * AskBible.me Studio — 分层 AI 上下文（Layered Context Memory）
  * 纯函数：可运行于服务端路由或单元测试；不负责读盘。
  */
 

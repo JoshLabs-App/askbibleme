@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import {
+  purgeOfflineCachesForBuildUpdate,
+  refreshServiceWorkerRegistration,
+  skipWaitingServiceWorker,
+} from "@/lib/pwa/sw-client";
 
 const POLL_MS = 5 * 60 * 1000;
 const FIRST_CHECK_MS = 45_000;
@@ -54,6 +59,9 @@ export function AppUpdateNotifier() {
     const remote = await fetchRemoteBuildId();
     if (shouldSkipBuildId(remote)) return;
     if (remote === loaded) return;
+    void purgeOfflineCachesForBuildUpdate();
+    void skipWaitingServiceWorker();
+    void refreshServiceWorkerRegistration();
     reloadScheduledRef.current = true;
     setVisible(true);
     if (reloadTimerRef.current != null) window.clearTimeout(reloadTimerRef.current);

@@ -4,7 +4,8 @@ import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoice
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import { translationSupportsCuvChapterAudio } from "@/lib/bible/cuv-chapter-audio";
+import { translationSupportsChapterAudio } from "@/lib/bible/read-chapter-audio";
+import { translationUsesWebChapterAudio } from "@/lib/bible/web-chapter-audio";
 import {
   CUV_CHAPTER_AUDIO_VOICES,
   type CuvChapterAudioVoiceId,
@@ -18,10 +19,11 @@ const selectClass =
 export function ReadChapterAudioVoiceSettingsFields() {
   const { t } = useLocale();
   const { voiceId, setVoiceId } = useCuvChapterAudioVoice();
-  const { translation } = useReadBibleTranslationSettings();
+  const { translation, chapterAudioTranslationId } = useReadBibleTranslationSettings();
   const { playing, effectiveSrc, pausePlayback } = useMusicShellPlayback();
 
-  const primarySupportsAudio = translationSupportsCuvChapterAudio(translation.primaryTranslationId);
+  const primarySupportsAudio = translationSupportsChapterAudio(chapterAudioTranslationId);
+  const webAudioOnly = translationUsesWebChapterAudio(chapterAudioTranslationId);
 
   const onChange = (next: string) => {
     const id = next as CuvChapterAudioVoiceId;
@@ -34,28 +36,34 @@ export function ReadChapterAudioVoiceSettingsFields() {
 
   return (
     <>
-      <label
-        className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200"
-        htmlFor="read-bible-chapter-audio-voice"
-      >
-        {t("pages.read.typography.chapterAudioVoiceLabel")}
-      </label>
-      <select
-        id="read-bible-chapter-audio-voice"
-        className={selectClass}
-        value={voiceId}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {CUV_CHAPTER_AUDIO_VOICES.map((v) => (
-          <option key={v.id} value={v.id}>
-            {t(v.labelKey)}
-          </option>
-        ))}
-      </select>
+      {!webAudioOnly ? (
+        <>
+          <label
+            className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200"
+            htmlFor="read-bible-chapter-audio-voice"
+          >
+            {t("pages.read.typography.chapterAudioVoiceLabel")}
+          </label>
+          <select
+            id="read-bible-chapter-audio-voice"
+            className={selectClass}
+            value={voiceId}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {CUV_CHAPTER_AUDIO_VOICES.map((v) => (
+              <option key={v.id} value={v.id}>
+                {t(v.labelKey)}
+              </option>
+            ))}
+          </select>
+        </>
+      ) : null}
       <p className="mt-2 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">
-        {primarySupportsAudio
-          ? t("pages.read.typography.chapterAudioVoiceHint")
-          : t("pages.read.typography.chapterAudioVoiceHintNonCuv")}
+        {webAudioOnly
+          ? t("pages.read.typography.chapterAudioVoiceHintWebEn")
+          : primarySupportsAudio
+            ? t("pages.read.typography.chapterAudioVoiceHint")
+            : t("pages.read.typography.chapterAudioVoiceHintNonCuv")}
       </p>
     </>
   );

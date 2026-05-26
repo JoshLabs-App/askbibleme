@@ -1,5 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { loadThemeRepeatCountMap } from "@/lib/bible/golden-verse-theme-repeat";
+import { translationSupportsSpeechHighlight } from "@/lib/bible/infer-divine-speech-spans";
+import { buildChapterVerseAnnotations } from "@/lib/bible/verse-annotations";
 import { getSqlJsStatic } from "@/lib/bible/sql-js-wasm";
 import {
   invalidateScriptureSqliteCache,
@@ -12,6 +15,10 @@ export async function writeScriptureSqliteFromBooks(
   cwd: string,
   translationId: string,
   books: Record<string, Record<string, Record<string, string>>>,
+  options?: {
+    themeRepeatCounts?: ReadonlyMap<string, number>;
+    speechSpansByVerseKey?: ReadonlyMap<string, string>;
+  },
 ): Promise<{ bytes: number; verseCount: number }> {
   const id = String(translationId || "").trim();
   if (!id) throw new Error("缺少 translationId。");
@@ -21,9 +28,16 @@ export async function writeScriptureSqliteFromBooks(
   db.run(SCRIPTURE_SQLITE_SCHEMA_SQL);
   const insMeta = db.prepare("INSERT INTO meta (key, value) VALUES (?, ?)");
   insMeta.run(["format", SELAH_SCRIPTURE_SQLITE_FORMAT]);
+  insMeta.run(["annotations", "speech-spans-v1+theme-repeat-count-v1"]);
   insMeta.free();
 
-  const ins = db.prepare("INSERT INTO verse (book_id, chapter, verse, text) VALUES (?, ?, ?, ?)");
+  const themeRepeatCounts = options?.themeRepeatCounts ?? (await loadThemeRepeatCountMap(cwd));
+  const speechSpansByVerseKey = options?.speechSpansByVerseKey;
+  const speechHighlight = translationSupportsSpeechHighlight(id);
+
+  const ins = db.prepare(
+    "INSERT INTO verse (book_id, chapter, verse, text, speech_spans, flags, theme_repeat_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  );
   db.run("BEGIN TRANSACTION");
   let verseCount = 0;
   try {
@@ -38,11 +52,38 @@ export async function writeScriptureSqliteFromBooks(
         const vsObj = chObj[chStr];
         if (!vsObj || typeof vsObj !== "object") continue;
         const vKeys = Object.keys(vsObj).sort((a, b) => Number(a) - Number(b));
-        for (const vStr of vKeys) {
-          const verse = Number(vStr);
-          const text = vsObj[vStr];
-          if (!Number.isInteger(verse) || verse < 1 || typeof text !== "string" || !text.trim()) continue;
-          ins.run([bookId, ch, verse, text]);
+        const verses = vKeys
+          .map((vStr) => {
+            const verse = Number(vStr);
+            const text = vsObj[vStr];
+            if (!Number.isInteger(verse) || verse < 1 || typeof text !== "string" || !text.trim()) {
+              return null;
+            }
+            return { verse, text };
+          })
+          .filter((v): v is { verse: number; text: string } => v != null);
+
+        const annotations = buildChapterVerseAnnotations({
+          translationId: id,
+          bookId,
+          chapter: ch,
+          verses,
+          themeRepeatCounts,
+          speechHighlight,
+          speechSpansByVerseKey,
+        });
+
+        for (const v of verses) {
+          const ann = annotations.get(v.verse) ?? { speechSpans: "", flags: 0, themeRepeatCount: 0 };
+          ins.run([
+            bookId,
+            ch,
+            v.verse,
+            v.text,
+            ann.speechSpans,
+            ann.flags,
+            ann.themeRepeatCount,
+          ]);
           verseCount++;
         }
       }

@@ -11,6 +11,11 @@ import {
   writeHomePrayerVersePrefs,
 } from "@/lib/home-prayer-pools/prefs";
 import type { HomePrayerVersePrefsV1 } from "@/lib/home-prayer-pools/types";
+import {
+  readReadBibleTranslationPrefsFromStorage,
+  writeReadBibleTranslationPrefsToStorage,
+} from "@/lib/read/read-bible-translation-prefs";
+import type { BibleTranslationsIndex } from "@/lib/bible/translations-types";
 
 type Catalog = { version: 1; translations: { id: string; labelZh: string; labelEn: string; language: string }[] };
 
@@ -20,8 +25,11 @@ type HomeVerseSettingsSection = "translation" | "goldenFont";
 export type NatureVerseTextScaleDockProps = {
   atMin: boolean;
   atMax: boolean;
+  /** 已为默认档位时可禁用「恢复默认」 */
+  atDefault?: boolean;
   onSmaller: () => void;
   onLarger: () => void;
+  onResetToDefault?: () => void;
 };
 
 type Props = {
@@ -108,7 +116,7 @@ export function HomePrayerVerseDockSettings({
   sections: sectionsProp,
   natureVerseTextScale,
 }: Props) {
-  const { t, locale } = useLocale();
+  const { t, locale, setLocale } = useLocale();
   const isDock = placement === "dock";
   const isPage = placement === "page";
   const isPopover = placement === "popover";
@@ -155,7 +163,7 @@ export function HomePrayerVerseDockSettings({
   const iosSelectClass =
     "min-h-[44px] min-w-0 max-w-[60%] flex-1 cursor-pointer appearance-none truncate border-0 bg-transparent py-2.5 pr-6 text-right text-[17px] font-normal leading-snug text-[#007AFF] outline-none ring-0 focus:ring-0 dark:text-[#0A84FF]";
 
-  /** 叠在 `bg-ink/88` 浮层内时的选择器字色（对齐 iOS 暗色列表） */
+  /** 叠在深色实底浮层内时的选择器字色（对齐 iOS 暗色列表） */
   const iosSelectClassPopover =
     "min-h-[44px] min-w-0 max-w-[60%] flex-1 cursor-pointer appearance-none truncate border-0 bg-transparent py-2.5 pr-6 text-right text-[17px] font-normal leading-snug text-sky-300 outline-none ring-0 focus:ring-0";
 
@@ -177,6 +185,36 @@ export function HomePrayerVerseDockSettings({
     setPrefs(next);
     if (opts?.reloadFeed !== false) requestHomePrayerVerseFeedReload();
   }, []);
+
+  const syncReadPrimaryTranslation = useCallback(
+    (translationId: string, targetLocale: "zh-CN" | "en") => {
+      if (!catalog) return;
+      const index: BibleTranslationsIndex = {
+        translations: catalog.translations.map((t) => ({
+          ...t,
+          sourceFile: "",
+          updatedAt: "",
+          bytes: 0,
+          verseCount: 0,
+        })),
+        defaultTranslationId: null,
+      };
+      const base = readReadBibleTranslationPrefsFromStorage(index, targetLocale);
+      writeReadBibleTranslationPrefsToStorage(
+        {
+          ...base,
+          primaryTranslationId: translationId,
+          contrastTranslationId:
+            base.contrastTranslationId === translationId ? null : base.contrastTranslationId,
+        },
+        index,
+      );
+      if (locale !== targetLocale) {
+        setLocale(targetLocale);
+      }
+    },
+    [catalog, locale, setLocale],
+  );
 
   useEffect(() => {
     if (zhCatalog.length === 0 || enCatalog.length === 0) return;
@@ -226,10 +264,14 @@ export function HomePrayerVerseDockSettings({
                   : zhCatalog[0]!.id
               }
               onChange={(e) =>
-                persist({
-                  ...prefs,
-                  verseTextZhTranslationId: e.target.value,
-                })
+                {
+                  const nextId = e.target.value;
+                  persist({
+                    ...prefs,
+                    verseTextZhTranslationId: nextId,
+                  });
+                  syncReadPrimaryTranslation(nextId, "zh-CN");
+                }
               }
             >
               {zhCatalog.map((tr) => (
@@ -253,10 +295,14 @@ export function HomePrayerVerseDockSettings({
                   : enCatalog[0]!.id
               }
               onChange={(e) =>
-                persist({
-                  ...prefs,
-                  verseTextEnTranslationId: e.target.value,
-                })
+                {
+                  const nextId = e.target.value;
+                  persist({
+                    ...prefs,
+                    verseTextEnTranslationId: nextId,
+                  });
+                  syncReadPrimaryTranslation(nextId, "en");
+                }
               }
             >
               {enCatalog.map((tr) => (
@@ -385,7 +431,7 @@ export function HomePrayerVerseDockSettings({
           <div
             className={
               isPopover
-                ? "overflow-hidden rounded-[10px] bg-white/[0.07]"
+                ? "overflow-hidden rounded-[10px] bg-zinc-800"
                 : "overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
             }
           >
@@ -417,7 +463,7 @@ export function HomePrayerVerseDockSettings({
             <label
               className={
                 isPopover
-                  ? "flex min-h-[44px] items-center justify-between gap-3 border-t border-white/10 px-4"
+                  ? "flex min-h-[44px] items-center justify-between gap-3 border-t border-zinc-700 px-4"
                   : "flex min-h-[44px] items-center justify-between gap-3 border-t border-black/[0.06] px-4 dark:border-white/[0.08]"
               }
             >
@@ -463,12 +509,12 @@ export function HomePrayerVerseDockSettings({
               <p className="mt-3 px-4 text-[13px] font-medium leading-snug text-canvas/70">
                 {t("nature.homeVerse.sizeOnHome")}
               </p>
-              <div className="mx-4 mt-1.5 flex items-center justify-center gap-2 overflow-hidden rounded-[10px] bg-white/[0.07] px-2 py-2">
+              <div className="mx-4 mt-1.5 flex items-center justify-center gap-2 overflow-hidden rounded-[10px] bg-zinc-800 px-2 py-2">
                 <button
                   type="button"
                   disabled={natureVerseTextScale.atMin}
                   aria-label={t("nature.textScaleSmallerAria")}
-                  className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/[0.08] text-canvas/95 transition hover:bg-white/[0.14] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                  className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-700 text-canvas transition hover:bg-zinc-600 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
                   onClick={natureVerseTextScale.onSmaller}
                 >
                   <IconTextScaleSmallerDock className="h-[1.3rem] w-[1.3rem] opacity-90" />
@@ -477,7 +523,7 @@ export function HomePrayerVerseDockSettings({
                   type="button"
                   disabled={natureVerseTextScale.atMax}
                   aria-label={t("nature.textScaleLargerAria")}
-                  className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/[0.08] text-canvas/95 transition hover:bg-white/[0.14] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+                  className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-700 text-canvas transition hover:bg-zinc-600 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
                   onClick={natureVerseTextScale.onLarger}
                 >
                   <IconTextScaleLargerDock className="h-[1.3rem] w-[1.3rem] opacity-90" />
@@ -503,14 +549,14 @@ export function HomePrayerVerseDockSettings({
           <div
             className={
               isPopover
-                ? "overflow-hidden rounded-[10px] bg-white/[0.07]"
+                ? "overflow-hidden rounded-[10px] bg-zinc-800"
                 : "overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
             }
           >
             <p
               className={
                 isPopover
-                  ? "border-b border-white/10 px-4 pb-2 pt-2.5 text-[13px] leading-snug text-canvas/55"
+                  ? "border-b border-zinc-700 px-4 pb-2 pt-2.5 text-[13px] leading-snug text-canvas/55"
                   : "border-b border-black/[0.06] px-4 pb-2 pt-2.5 text-[13px] leading-snug text-muted dark:border-white/[0.08]"
               }
             >
@@ -519,7 +565,7 @@ export function HomePrayerVerseDockSettings({
             <label
               className={
                 isPopover
-                  ? "flex min-h-[44px] items-center justify-between gap-3 border-b border-white/10 px-4"
+                  ? "flex min-h-[44px] items-center justify-between gap-3 border-b border-zinc-700 px-4"
                   : "flex min-h-[44px] items-center justify-between gap-3 border-b border-black/[0.06] px-4 dark:border-white/[0.08]"
               }
             >
@@ -540,10 +586,14 @@ export function HomePrayerVerseDockSettings({
                     : zhCatalog[0]!.id
                 }
                 onChange={(e) =>
-                  persist({
-                    ...prefs,
-                    verseTextZhTranslationId: e.target.value,
-                  })
+                  {
+                    const nextId = e.target.value;
+                    persist({
+                      ...prefs,
+                      verseTextZhTranslationId: nextId,
+                    });
+                    syncReadPrimaryTranslation(nextId, "zh-CN");
+                  }
                 }
               >
                 {zhCatalog.map((tr) => (
@@ -571,10 +621,14 @@ export function HomePrayerVerseDockSettings({
                     : enCatalog[0]!.id
                 }
                 onChange={(e) =>
-                  persist({
-                    ...prefs,
-                    verseTextEnTranslationId: e.target.value,
-                  })
+                  {
+                    const nextId = e.target.value;
+                    persist({
+                      ...prefs,
+                      verseTextEnTranslationId: nextId,
+                    });
+                    syncReadPrimaryTranslation(nextId, "en");
+                  }
                 }
               >
                 {enCatalog.map((tr) => (
@@ -594,7 +648,7 @@ export function HomePrayerVerseDockSettings({
             <div
               className={
                 isPopover
-                  ? "overflow-hidden rounded-[10px] bg-white/[0.07]"
+                  ? "overflow-hidden rounded-[10px] bg-zinc-800"
                   : "overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
               }
             >

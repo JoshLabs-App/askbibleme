@@ -1,4 +1,5 @@
-const STORAGE_KEY = "selah-golden-verse-text-scale-v1";
+const STORAGE_KEY = "askbible-golden-verse-text-scale-v1";
+const STORAGE_KEY_LEGACY = "selah-golden-verse-text-scale-v1";
 const STORAGE_SCHEMA_V1 = 1 as const;
 
 /** 金句专页经文 `zoom`：比自然首页更宽（约 0.35×–10×） */
@@ -33,7 +34,7 @@ function clampStepIndex(n: number): number {
 export function readGoldenVerseTextScaleStepIndex(): number {
   if (typeof window === "undefined") return GOLDEN_VERSE_TEXT_SCALE_DEFAULT_STEP_INDEX;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY_LEGACY);
     if (!raw?.trim()) return GOLDEN_VERSE_TEXT_SCALE_DEFAULT_STEP_INDEX;
     const p = JSON.parse(raw) as { v?: unknown; stepIndex?: unknown };
     if (p?.v !== STORAGE_SCHEMA_V1 || typeof p.stepIndex !== "number") {
@@ -52,6 +53,7 @@ export function writeGoldenVerseTextScaleStepIndex(stepIndex: number): void {
       STORAGE_KEY,
       JSON.stringify({ v: STORAGE_SCHEMA_V1, stepIndex: clampStepIndex(stepIndex) }),
     );
+    localStorage.removeItem(STORAGE_KEY_LEGACY);
     window.dispatchEvent(new Event(GOLDEN_VERSE_TEXT_SCALE_UPDATED_EVENT));
   } catch {
     /* ignore */
@@ -64,7 +66,7 @@ export function goldenVerseTextScaleAtStep(stepIndex: number): GoldenVerseTextSc
 
 export function subscribeGoldenVerseTextScale(onStoreChange: () => void): () => void {
   const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) onStoreChange();
+    if (e.key === STORAGE_KEY || e.key === STORAGE_KEY_LEGACY) onStoreChange();
   };
   window.addEventListener(GOLDEN_VERSE_TEXT_SCALE_UPDATED_EVENT, onStoreChange);
   window.addEventListener("storage", onStorage);

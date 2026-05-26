@@ -1,0 +1,298 @@
+# Speech Spans v1 Review Queue
+
+Snapshot: data/bible/annotations/speech-spans-v2.json
+Snapshot version: v2
+Snapshot generated at: 2026-05-24T05:24:22.885Z
+
+Status legend: `todo` | `reviewed` | `needs-fix`
+Chapter status key format in review-state: `<translationId>:<BOOK>:<chapter>`
+
+## Priority A - Gospel Chapters
+
+- [needs-fix] cuv-simp MAT 26 | score=144 | annotated=45 divine=9 human=37 mixed=1 short=0 | samples=MAT 26:25
+- [needs-fix] cuv-trad MAT 26 | score=144 | annotated=45 divine=9 human=37 mixed=1 short=0 | samples=MAT 26:25
+- [reviewed] web-en MAT 26 | score=132 | annotated=42 divine=7 human=35 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp LUK 22 | score=130 | annotated=41 divine=19 human=25 mixed=3 short=2 | samples=LUK 22:35, LUK 22:38, LUK 22:67
+- [needs-fix] cuv-trad LUK 22 | score=130 | annotated=41 divine=19 human=25 mixed=3 short=2 | samples=LUK 22:35, LUK 22:38, LUK 22:67
+- [needs-fix] cuv-simp JHN 8 | score=125 | annotated=46 divine=34 human=17 mixed=5 short=0 | samples=JHN 8:11, JHN 8:19, JHN 8:25
+- [needs-fix] cuv-trad JHN 8 | score=125 | annotated=46 divine=34 human=17 mixed=5 short=0 | samples=JHN 8:11, JHN 8:19, JHN 8:25
+- [reviewed] cuv-simp MRK 14 | score=123 | annotated=43 divine=14 human=29 mixed=0 short=1 | samples=MRK 14:45
+- [reviewed] cuv-trad MRK 14 | score=123 | annotated=43 divine=14 human=29 mixed=0 short=1 | samples=MRK 14:45
+- [reviewed] web-en MRK 14 | score=111 | annotated=35 divine=7 human=28 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp MRK 10 | score=108 | annotated=36 divine=17 human=21 mixed=2 short=0 | samples=MRK 10:39, MRK 10:51
+- [needs-fix] cuv-trad MRK 10 | score=108 | annotated=36 divine=17 human=21 mixed=2 short=0 | samples=MRK 10:39, MRK 10:51
+- [reviewed] web-en LUK 22 | score=108 | annotated=32 divine=4 human=28 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp LUK 9 | score=107 | annotated=29 divine=8 human=23 mixed=2 short=1 | samples=LUK 9:13, LUK 9:20, LUK 9:30
+- [needs-fix] cuv-trad LUK 9 | score=107 | annotated=29 divine=8 human=23 mixed=2 short=1 | samples=LUK 9:13, LUK 9:20, LUK 9:30
+- [needs-fix] cuv-simp MAT 27 | score=105 | annotated=26 divine=2 human=25 mixed=1 short=2 | samples=MAT 27:8, MAT 27:11, MAT 27:33
+- [needs-fix] cuv-trad MAT 27 | score=105 | annotated=26 divine=2 human=25 mixed=1 short=2 | samples=MAT 27:8, MAT 27:11, MAT 27:33
+- [needs-fix] cuv-simp MAT 21 | score=104 | annotated=27 divine=10 human=20 mixed=3 short=1 | samples=MAT 21:16, MAT 21:25, MAT 21:29
+- [needs-fix] cuv-trad MAT 21 | score=104 | annotated=27 divine=10 human=20 mixed=3 short=1 | samples=MAT 21:16, MAT 21:25, MAT 21:29
+- [reviewed] cuv-simp JHN 9 | score=102 | annotated=32 divine=8 human=24 mixed=0 short=1 | samples=JHN 9:9
+- [reviewed] cuv-trad JHN 9 | score=102 | annotated=32 divine=8 human=24 mixed=0 short=1 | samples=JHN 9:9
+- [needs-fix] web-en JHN 8 | score=101 | annotated=25 divine=11 human=18 mixed=4 short=0 | samples=JHN 8:11, JHN 8:19, JHN 8:25
+- [needs-fix] cuv-simp JHN 1 | score=100 | annotated=25 divine=2 human=24 mixed=1 short=1 | samples=JHN 1:21, JHN 1:48
+- [needs-fix] cuv-trad JHN 1 | score=100 | annotated=25 divine=2 human=24 mixed=1 short=1 | samples=JHN 1:21, JHN 1:48
+- [needs-fix] cuv-simp JHN 4 | score=97 | annotated=32 divine=13 human=20 mixed=1 short=0 | samples=JHN 4:17
+- [needs-fix] cuv-simp JHN 11 | score=97 | annotated=28 divine=7 human=22 mixed=1 short=0 | samples=JHN 11:39
+- [needs-fix] cuv-trad JHN 4 | score=97 | annotated=32 divine=13 human=20 mixed=1 short=0 | samples=JHN 4:17
+- [needs-fix] cuv-trad JHN 11 | score=97 | annotated=28 divine=7 human=22 mixed=1 short=0 | samples=JHN 11:39
+- [needs-fix] web-en JHN 11 | score=97 | annotated=28 divine=7 human=22 mixed=1 short=0 | samples=JHN 11:39
+- [needs-fix] web-en MAT 27 | score=97 | annotated=24 divine=1 human=24 mixed=1 short=0 | samples=MAT 27:11
+- [needs-fix] web-en MRK 10 | score=97 | annotated=28 divine=7 human=22 mixed=1 short=0 | samples=MRK 10:39
+- [reviewed] web-en JHN 9 | score=96 | annotated=28 divine=4 human=24 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp JHN 7 | score=94 | annotated=34 divine=14 human=20 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp JHN 18 | score=94 | annotated=26 divine=10 human=18 mixed=2 short=1 | samples=JHN 18:5, JHN 18:6, JHN 18:37
+- [reviewed] cuv-trad JHN 7 | score=94 | annotated=34 divine=14 human=20 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad JHN 18 | score=94 | annotated=26 divine=10 human=18 mixed=2 short=1 | samples=JHN 18:5, JHN 18:6, JHN 18:37
+- [reviewed] cuv-simp JHN 6 | score=93 | annotated=41 divine=25 human=16 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad JHN 6 | score=93 | annotated=41 divine=25 human=16 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp LUK 23 | score=92 | annotated=23 divine=3 human=21 mixed=1 short=1 | samples=LUK 23:3, LUK 23:33
+- [needs-fix] cuv-trad LUK 23 | score=92 | annotated=23 divine=3 human=21 mixed=1 short=1 | samples=LUK 23:3, LUK 23:33
+- [needs-fix] web-en JHN 1 | score=92 | annotated=23 divine=3 human=21 mixed=1 short=1 | samples=JHN 1:21, JHN 1:48
+- [reviewed] cuv-simp JHN 19 | score=91 | annotated=23 divine=1 human=22 mixed=0 short=2 | samples=JHN 19:17, JHN 19:30
+- [reviewed] cuv-simp LUK 7 | score=91 | annotated=23 divine=7 human=18 mixed=2 short=1 | samples=LUK 7:8, LUK 7:16, LUK 7:43
+- [reviewed] cuv-trad JHN 19 | score=91 | annotated=23 divine=1 human=22 mixed=0 short=2 | samples=JHN 19:17, JHN 19:30
+- [reviewed] cuv-trad LUK 7 | score=91 | annotated=23 divine=7 human=18 mixed=2 short=1 | samples=LUK 7:8, LUK 7:16, LUK 7:43
+- [reviewed] cuv-simp LUK 19 | score=90 | annotated=26 divine=4 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp MRK 9 | score=90 | annotated=28 divine=8 human=20 mixed=0 short=1 | samples=MRK 9:4
+- [reviewed] cuv-trad LUK 19 | score=90 | annotated=26 divine=4 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad MRK 9 | score=90 | annotated=28 divine=8 human=20 mixed=0 short=1 | samples=MRK 9:4
+- [needs-fix] cuv-simp MAT 9 | score=89 | annotated=24 divine=5 human=20 mixed=1 short=0 | samples=MAT 9:28
+- [needs-fix] cuv-trad MAT 9 | score=89 | annotated=24 divine=5 human=20 mixed=1 short=0 | samples=MAT 9:28
+- [reviewed] web-en JHN 18 | score=89 | annotated=23 divine=7 human=18 mixed=2 short=0 | samples=JHN 18:5, JHN 18:37
+- [reviewed] web-en LUK 9 | score=88 | annotated=26 divine=5 human=21 mixed=0 short=0 | samples=-
+- [reviewed] web-en JHN 19 | score=87 | annotated=23 divine=1 human=22 mixed=0 short=0 | samples=-
+- [needs-fix] web-en MAT 13 | score=86 | annotated=21 divine=2 human=20 mixed=1 short=0 | samples=MAT 13:51
+- [reviewed] cuv-simp LUK 8 | score=85 | annotated=21 divine=6 human=17 mixed=2 short=0 | samples=LUK 8:25, LUK 8:45
+- [reviewed] cuv-trad LUK 8 | score=85 | annotated=21 divine=6 human=17 mixed=2 short=0 | samples=LUK 8:25, LUK 8:45
+- [reviewed] web-en JHN 4 | score=85 | annotated=26 divine=10 human=17 mixed=1 short=0 | samples=JHN 4:17
+- [reviewed] cuv-simp LUK 18 | score=84 | annotated=24 divine=4 human=20 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad LUK 18 | score=84 | annotated=24 divine=4 human=20 mixed=0 short=0 | samples=-
+- [reviewed] web-en JHN 6 | score=84 | annotated=26 divine=7 human=19 mixed=0 short=0 | samples=-
+- [reviewed] web-en MAT 21 | score=84 | annotated=20 divine=5 human=17 mixed=2 short=0 | samples=MAT 21:16, MAT 21:31
+- [reviewed] cuv-simp MAT 13 | score=83 | annotated=30 divine=17 human=14 mixed=1 short=0 | samples=MAT 13:51
+- [reviewed] cuv-trad MAT 13 | score=83 | annotated=30 divine=17 human=14 mixed=1 short=0 | samples=MAT 13:51
+- [reviewed] web-en LUK 7 | score=83 | annotated=20 divine=2 human=19 mixed=1 short=0 | samples=LUK 7:40
+- [reviewed] web-en LUK 8 | score=83 | annotated=20 divine=2 human=19 mixed=1 short=0 | samples=LUK 8:45
+- [reviewed] web-en MAT 9 | score=83 | annotated=20 divine=2 human=19 mixed=1 short=0 | samples=MAT 9:28
+- [reviewed] cuv-simp LUK 10 | score=82 | annotated=27 divine=13 human=15 mixed=1 short=0 | samples=LUK 10:37
+- [reviewed] cuv-simp MAT 15 | score=82 | annotated=24 divine=12 human=14 mixed=2 short=0 | samples=MAT 15:4, MAT 15:34
+- [reviewed] cuv-trad LUK 10 | score=82 | annotated=27 divine=13 human=15 mixed=1 short=0 | samples=LUK 10:37
+- [reviewed] cuv-trad MAT 15 | score=82 | annotated=24 divine=12 human=14 mixed=2 short=0 | samples=MAT 15:4, MAT 15:34
+- [reviewed] web-en MRK 9 | score=82 | annotated=22 divine=2 human=20 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp JHN 21 | score=81 | annotated=15 divine=8 human=11 mixed=4 short=2 | samples=JHN 21:5, JHN 21:7, JHN 21:12
+- [needs-fix] cuv-trad JHN 21 | score=81 | annotated=15 divine=8 human=11 mixed=4 short=2 | samples=JHN 21:5, JHN 21:7, JHN 21:12
+- [reviewed] cuv-simp MAT 25 | score=80 | annotated=20 divine=0 human=20 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad MAT 25 | score=80 | annotated=20 divine=0 human=20 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp MRK 6 | score=79 | annotated=17 divine=3 human=16 mixed=2 short=0 | samples=MRK 6:37, MRK 6:38
+- [reviewed] cuv-simp MRK 8 | score=79 | annotated=19 divine=1 human=18 mixed=0 short=2 | samples=MRK 8:5, MRK 8:20
+- [reviewed] cuv-trad MRK 6 | score=79 | annotated=17 divine=3 human=16 mixed=2 short=0 | samples=MRK 6:37, MRK 6:38
+- [reviewed] cuv-trad MRK 8 | score=79 | annotated=19 divine=1 human=18 mixed=0 short=2 | samples=MRK 8:5, MRK 8:20
+
+## Priority B - Other High-Risk Chapters
+
+- [needs-fix] cuv-simp 1KI 22 | score=125 | annotated=30 divine=10 human=27 mixed=7 short=3 | samples=1KI 22:11, 1KI 22:14, 1KI 22:16
+- [needs-fix] cuv-trad 1KI 22 | score=125 | annotated=30 divine=10 human=27 mixed=7 short=3 | samples=1KI 22:11, 1KI 22:14, 1KI 22:16
+- [needs-fix] cuv-simp 2CH 18 | score=118 | annotated=26 divine=10 human=24 mixed=8 short=2 | samples=2CH 18:7, 2CH 18:10, 2CH 18:13
+- [needs-fix] cuv-trad 2CH 18 | score=118 | annotated=26 divine=10 human=24 mixed=8 short=2 | samples=2CH 18:7, 2CH 18:10, 2CH 18:13
+- [needs-fix] cuv-simp 2KI 9 | score=99 | annotated=28 divine=11 human=22 mixed=5 short=1 | samples=2KI 9:3, 2KI 9:6, 2KI 9:12
+- [needs-fix] cuv-trad 2KI 9 | score=99 | annotated=28 divine=11 human=22 mixed=5 short=1 | samples=2KI 9:3, 2KI 9:6, 2KI 9:12
+- [needs-fix] cuv-simp GEN 24 | score=98 | annotated=31 divine=3 human=29 mixed=1 short=2 | samples=GEN 24:33, GEN 24:50, GEN 24:58
+- [needs-fix] cuv-trad GEN 24 | score=98 | annotated=31 divine=3 human=29 mixed=1 short=2 | samples=GEN 24:33, GEN 24:50, GEN 24:58
+- [needs-fix] cuv-simp 1KI 20 | score=93 | annotated=26 divine=5 human=24 mixed=3 short=2 | samples=1KI 20:13, 1KI 20:14, 1KI 20:42
+- [needs-fix] cuv-trad 1KI 20 | score=93 | annotated=26 divine=5 human=24 mixed=3 short=2 | samples=1KI 20:13, 1KI 20:14, 1KI 20:42
+- [needs-fix] web-en 2CH 18 | score=92 | annotated=28 divine=3 human=27 mixed=2 short=0 | samples=2CH 18:16, 2CH 18:20
+- [needs-fix] cuv-simp 2KI 4 | score=91 | annotated=29 divine=7 human=24 mixed=2 short=2 | samples=2KI 4:26, 2KI 4:43, 2KI 4:44
+- [needs-fix] cuv-trad 2KI 4 | score=91 | annotated=29 divine=7 human=24 mixed=2 short=2 | samples=2KI 4:26, 2KI 4:43, 2KI 4:44
+- [needs-fix] web-en 1KI 22 | score=88 | annotated=29 divine=3 human=27 mixed=1 short=0 | samples=1KI 22:17
+- [needs-fix] cuv-simp 1KI 1 | score=86 | annotated=27 divine=2 human=26 mixed=1 short=1 | samples=1KI 1:17
+- [needs-fix] cuv-trad 1KI 1 | score=86 | annotated=27 divine=2 human=26 mixed=1 short=1 | samples=1KI 1:17
+- [reviewed] web-en 2KI 4 | score=82 | annotated=28 divine=1 human=27 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp DEU 28 | score=81 | annotated=67 divine=67 human=2 mixed=2 short=0 | samples=DEU 28:1, DEU 28:15
+- [reviewed] cuv-trad DEU 28 | score=81 | annotated=67 divine=67 human=2 mixed=2 short=0 | samples=DEU 28:1, DEU 28:15
+- [reviewed] web-en 1KI 20 | score=80 | annotated=26 divine=0 human=26 mixed=0 short=1 | samples=1KI 20:34
+- [needs-fix] cuv-simp 1KI 2 | score=79 | annotated=27 divine=9 human=20 mixed=2 short=1 | samples=1KI 2:27, 1KI 2:30, 1KI 2:42
+- [reviewed] cuv-simp GEN 27 | score=79 | annotated=25 divine=0 human=25 mixed=0 short=2 | samples=GEN 27:1, GEN 27:24
+- [needs-fix] cuv-trad 1KI 2 | score=79 | annotated=27 divine=9 human=20 mixed=2 short=1 | samples=1KI 2:27, 1KI 2:30, 1KI 2:42
+- [reviewed] cuv-trad GEN 27 | score=79 | annotated=25 divine=0 human=25 mixed=0 short=2 | samples=GEN 27:1, GEN 27:24
+- [reviewed] web-en 1KI 18 | score=78 | annotated=26 divine=0 human=26 mixed=0 short=0 | samples=-
+- [reviewed] web-en GEN 27 | score=78 | annotated=26 divine=0 human=26 mixed=0 short=0 | samples=-
+- [reviewed] web-en LEV 19 | score=78 | annotated=26 divine=0 human=26 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp 1SA 20 | score=77 | annotated=24 divine=1 human=24 mixed=1 short=0 | samples=1SA 20:42
+- [needs-fix] cuv-simp EZK 16 | score=77 | annotated=42 divine=37 human=8 mixed=3 short=2 | samples=EZK 16:8, EZK 16:23, EZK 16:43
+- [needs-fix] cuv-simp JER 23 | score=77 | annotated=27 divine=26 human=7 mixed=6 short=3 | samples=JER 23:11, JER 23:12, JER 23:17
+- [needs-fix] cuv-trad 1SA 20 | score=77 | annotated=24 divine=1 human=24 mixed=1 short=0 | samples=1SA 20:42
+- [needs-fix] cuv-trad EZK 16 | score=77 | annotated=42 divine=37 human=8 mixed=3 short=2 | samples=EZK 16:8, EZK 16:23, EZK 16:43
+- [needs-fix] cuv-trad JER 23 | score=77 | annotated=27 divine=26 human=7 mixed=6 short=3 | samples=JER 23:11, JER 23:12, JER 23:17
+- [reviewed] web-en 2KI 6 | score=77 | annotated=25 divine=0 human=25 mixed=0 short=1 | samples=2KI 6:2
+- [reviewed] web-en GEN 24 | score=75 | annotated=25 divine=0 human=25 mixed=0 short=0 | samples=-
+- [reviewed] web-en EZK 48 | score=72 | annotated=24 divine=0 human=24 mixed=0 short=0 | samples=-
+- [needs-fix] cuv-simp DEU 5 | score=70 | annotated=28 divine=22 human=10 mixed=4 short=1 | samples=DEU 5:4, DEU 5:12, DEU 5:22
+- [needs-fix] cuv-trad DEU 5 | score=70 | annotated=28 divine=22 human=10 mixed=4 short=1 | samples=DEU 5:4, DEU 5:12, DEU 5:22
+- [reviewed] cuv-simp 2SA 18 | score=69 | annotated=23 divine=0 human=23 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad 2SA 18 | score=69 | annotated=23 divine=0 human=23 mixed=0 short=0 | samples=-
+- [reviewed] web-en 1SA 14 | score=69 | annotated=23 divine=0 human=23 mixed=0 short=0 | samples=-
+- [reviewed] web-en 2KI 9 | score=69 | annotated=23 divine=0 human=23 mixed=0 short=0 | samples=-
+- [reviewed] web-en 2SA 18 | score=69 | annotated=23 divine=0 human=23 mixed=0 short=0 | samples=-
+- [reviewed] web-en JER 51 | score=69 | annotated=23 divine=0 human=23 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp 1KI 18 | score=68 | annotated=24 divine=2 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp 1SA 14 | score=68 | annotated=24 divine=2 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp 2KI 6 | score=68 | annotated=26 divine=5 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp ACT 7 | score=68 | annotated=29 divine=13 human=17 mixed=1 short=0 | samples=ACT 7:44
+- [reviewed] cuv-trad 1KI 18 | score=68 | annotated=24 divine=2 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad 1SA 14 | score=68 | annotated=24 divine=2 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad 2KI 6 | score=68 | annotated=26 divine=5 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad ACT 7 | score=68 | annotated=29 divine=13 human=17 mixed=1 short=0 | samples=ACT 7:44
+- [reviewed] web-en 1KI 1 | score=66 | annotated=22 divine=0 human=22 mixed=0 short=0 | samples=-
+- [reviewed] web-en 1KI 2 | score=66 | annotated=22 divine=0 human=22 mixed=0 short=0 | samples=-
+- [reviewed] web-en 2SA 19 | score=66 | annotated=22 divine=0 human=22 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp NUM 22 | score=65 | annotated=25 divine=14 human=13 mixed=2 short=2 | samples=NUM 22:8, NUM 22:30, NUM 22:38
+- [reviewed] cuv-trad NUM 22 | score=65 | annotated=25 divine=14 human=13 mixed=2 short=2 | samples=NUM 22:8, NUM 22:30, NUM 22:38
+- [needs-fix] web-en EZK 23 | score=65 | annotated=14 divine=6 human=13 mixed=5 short=0 | samples=EZK 23:22, EZK 23:28, EZK 23:32
+- [reviewed] cuv-simp 1SA 9 | score=64 | annotated=18 divine=3 human=17 mixed=2 short=1 | samples=1SA 9:6, 1SA 9:9
+- [needs-fix] cuv-simp DEU 1 | score=64 | annotated=23 divine=13 human=13 mixed=3 short=0 | samples=DEU 1:6, DEU 1:19, DEU 1:41
+- [reviewed] cuv-trad 1SA 9 | score=64 | annotated=18 divine=3 human=17 mixed=2 short=1 | samples=1SA 9:6, 1SA 9:9
+- [needs-fix] cuv-trad DEU 1 | score=64 | annotated=23 divine=13 human=13 mixed=3 short=0 | samples=DEU 1:6, DEU 1:19, DEU 1:41
+- [reviewed] web-en LEV 18 | score=64 | annotated=22 divine=1 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp 2SA 19 | score=63 | annotated=21 divine=0 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp EXO 32 | score=63 | annotated=26 divine=12 human=15 mixed=1 short=1 | samples=EXO 32:27
+- [reviewed] cuv-simp JDG 9 | score=63 | annotated=21 divine=0 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad 2SA 19 | score=63 | annotated=21 divine=0 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-trad EXO 32 | score=63 | annotated=26 divine=12 human=15 mixed=1 short=1 | samples=EXO 32:27
+- [reviewed] cuv-trad JDG 9 | score=63 | annotated=21 divine=0 human=21 mixed=0 short=0 | samples=-
+- [reviewed] web-en 1SA 20 | score=63 | annotated=21 divine=0 human=21 mixed=0 short=0 | samples=-
+- [reviewed] cuv-simp GEN 30 | score=62 | annotated=20 divine=0 human=20 mixed=0 short=1 | samples=GEN 30:11
+- [reviewed] cuv-trad GEN 30 | score=62 | annotated=20 divine=0 human=20 mixed=0 short=1 | samples=GEN 30:11
+- [needs-fix] web-en EZK 36 | score=62 | annotated=18 divine=10 human=12 mixed=4 short=0 | samples=EZK 36:13, EZK 36:22, EZK 36:33
+- [reviewed] cuv-simp EZK 20 | score=61 | annotated=45 divine=44 human=3 mixed=2 short=0 | samples=EZK 20:3, EZK 20:49
+- [reviewed] cuv-trad EZK 20 | score=61 | annotated=45 divine=44 human=3 mixed=2 short=0 | samples=EZK 20:3, EZK 20:49
+- [needs-fix] web-en EZK 20 | score=61 | annotated=15 divine=6 human=13 mixed=4 short=0 | samples=EZK 20:3, EZK 20:27, EZK 20:30
+- [reviewed] cuv-simp JER 38 | score=60 | annotated=18 divine=4 human=16 mixed=2 short=0 | samples=JER 38:2, JER 38:17
+- [reviewed] cuv-trad JER 38 | score=60 | annotated=18 divine=4 human=16 mixed=2 short=0 | samples=JER 38:2, JER 38:17
+- [reviewed] web-en GEN 30 | score=60 | annotated=20 divine=0 human=20 mixed=0 short=0 | samples=-
+- [reviewed] web-en JDG 16 | score=60 | annotated=20 divine=0 human=20 mixed=0 short=0 | samples=-
+
+## Spot-check Verses (Mixed/Short)
+
+- 1KI 1:17 | divineSpans=1 humanSpans=2 minSpanLen=1 | 她说：「我主啊，你曾向婢女指着耶和华你的神起誓说：『你儿子所罗门必接续我作王，坐在我的位上。』
+- 1KI 13:18 | divineSpans=1 humanSpans=2 minSpanLen=1 | 老先知对他说：「我也是先知，和你一样。有天使奉耶和华的命对我说：『你去把他带回你的家，叫他吃饭喝水。』」这都是老先知诓哄他。
+- 1KI 20:13 | divineSpans=1 humanSpans=2 minSpanLen=1 | 有一个先知来见以色列王亚哈，说：「耶和华如此说：『这一大群人你看见了么？今日我必将他们交在你手里，你就知道我是耶和华。』」
+- 1KI 20:42 | divineSpans=1 humanSpans=2 minSpanLen=1 | 他对王说：「耶和华如此说：『因你将我定要灭绝的人放去，你的命就必代替他的命，你的民也必代替他的民。』」
+- 1KI 22:11 | divineSpans=1 humanSpans=2 minSpanLen=1 | 基拿拿的儿子西底家造了两个铁角，说：「耶和华如此说：『你要用这角抵触亚兰人，直到将他们灭尽。』」
+- 1KI 22:17 | divineSpans=1 humanSpans=2 minSpanLen=1 | 米该雅说：「我看见以色列众民散在山上，如同没有牧人的羊群一般。耶和华说：『这民没有主人，他们可以平平安安的各归各家去。』」
+- 1SA 10:18 | divineSpans=1 humanSpans=2 minSpanLen=1 | 对他们说：「耶和华以色列的神如此说：『我领你们以色列人出埃及，救你们脱离埃及人的手，又救你们脱离欺压你们各国之人的手。』
+- 1SA 29:9 | divineSpans=1 humanSpans=2 minSpanLen=1 | 亚吉说：「我知道你在我眼前是好人，如同神的使者一般；只是非利士人的首领说：『这人不可同我们出战。』
+- 2CH 12:5 | divineSpans=1 humanSpans=2 minSpanLen=1 | 那时，犹大的首领因为示撒就聚集在耶路撒冷。有先知示玛雅去见罗波安和众首领，对他们说：「耶和华如此说：『你们离弃了我，所以我使你们落在示撒手里。』」
+- 2CH 18:10 | divineSpans=1 humanSpans=2 minSpanLen=1 | 基拿拿的儿子西底家造了两个铁角，说：「耶和华如此说：『你要用这角抵触亚兰人，直到将他们灭尽。』」
+- 2CH 18:16 | divineSpans=1 humanSpans=2 minSpanLen=1 | 米该雅说：「我看见以色列众民散在山上，如同没有牧人的羊群一般。耶和华说：『这民没有主人，他们可以平平安安的各归各家去。』」
+- 2KI 1:16 | divineSpans=1 humanSpans=2 minSpanLen=1 | 对王说：「耶和华如此说：『你差人去问以革伦神巴力西卜，岂因以色列中没有神可以求问吗？所以你必不下所上的床，必定要死！』」
+- 2KI 2:21 | divineSpans=1 humanSpans=2 minSpanLen=1 | 他出到水源，将盐倒在水中，说：「耶和华如此说：『我治好了这水，从此必不再使人死，也不再使地土不生产。』」
+- 2KI 19:20 | divineSpans=1 humanSpans=2 minSpanLen=1 | 亚摩斯的儿子以赛亚就打发人去见希西家，说：「耶和华以色列的神如此说：『你既然求我攻击亚述王西拿基立，我已听见了。』
+- 2KI 20:1 | divineSpans=1 humanSpans=2 minSpanLen=1 | 那时，希西家病得要死。亚摩斯的儿子先知以赛亚去见他，对他说：「耶和华如此说：『你当留遗命与你的家，因为你必死，不能活了。』」
+- 2SA 24:12 | divineSpans=1 humanSpans=2 minSpanLen=1 | 「你去告诉大卫，说耶和华如此说：『我有三样灾，随你选择一样，我好降与你。』」
+- DEU 17:14 | divineSpans=1 humanSpans=2 minSpanLen=1 | 「到了耶和华你神所赐你的地，得了那地居住的时候，若说：『我要立王治理我，像四围的国一样。』
+- DEU 31:2 | divineSpans=1 humanSpans=2 minSpanLen=1 | 说：「我现在一百二十岁了，不能照常出入；耶和华也曾对我说：『你必不得过这约但河。』
+- EXO 5:1 | divineSpans=1 humanSpans=2 minSpanLen=1 | 后来摩西、亚伦去对法老说：「耶和华以色列的神这样说：『容我的百姓去，在旷野向我守节。』」
+- EXO 16:23 | divineSpans=1 humanSpans=2 minSpanLen=1 | 摩西对他们说：「耶和华这样说：『明天是圣安息日，是向耶和华守的圣安息日。你们要烤的就烤了，要煮的就煮了，所剩下的都留到早晨。』」
+- EXO 32:27 | divineSpans=1 humanSpans=2 minSpanLen=1 | 他对他们说：「耶和华以色列的神这样说：『你们各人把刀跨在腰间，在营中往来，从这门到那门，各人杀他的弟兄与同伴并邻舍。』」
+- GEN 32:9 | divineSpans=1 humanSpans=2 minSpanLen=1 | 雅各说：「耶和华我祖亚伯拉罕的神，我父亲以撒的神啊，你曾对我说：『回你本地本族去，我要厚待你。』
+- JER 14:13 | divineSpans=1 humanSpans=2 minSpanLen=1 | 我就说：「唉！主耶和华啊，那些先知常对他们说：『你们必不看见刀剑，也不遭遇饥荒；耶和华要在这地方赐你们长久的平安。』」
+- JER 42:18 | divineSpans=1 humanSpans=2 minSpanLen=1 | 「万军之耶和华以色列的神如此说：『我怎样将我的怒气和忿怒倾在耶路撒冷的居民身上，你们进入埃及的时候，我也必照样将我的忿怒倾在你们身上，以致你们令人辱骂、惊骇、咒诅、羞辱，你们不得再见这地方。』
+- JER 43:2 | divineSpans=1 humanSpans=2 minSpanLen=1 | 何沙雅的儿子亚撒利雅和加利亚的儿子约哈难，并一切狂傲的人，就对耶利米说：「你说谎言！耶和华我们的神并没有差遣你来说：『你们不可进入埃及，在那里寄居。』
+- LEV 10:3 | divineSpans=1 humanSpans=2 minSpanLen=1 | 于是摩西对亚伦说：「这就是耶和华所说：『我在亲近我的人中要显为圣；在众民面前，我要得荣耀。』」亚伦就默默不言。
+- 1KI 1:17 | divineSpans=1 humanSpans=2 minSpanLen=1 | 她說：「我主啊，你曾向婢女指着耶和華你的神起誓說：『你兒子所羅門必接續我作王，坐在我的位上。』
+- 1KI 13:18 | divineSpans=1 humanSpans=2 minSpanLen=1 | 老先知對他說：「我也是先知，和你一樣。有天使奉耶和華的命對我說：『你去把他帶回你的家，叫他吃飯喝水。』」這都是老先知誆哄他。
+- 1KI 20:13 | divineSpans=1 humanSpans=2 minSpanLen=1 | 有一個先知來見以色列王亞哈，說：「耶和華如此說：『這一大群人你看見了麼？今日我必將他們交在你手裏，你就知道我是耶和華。』」
+- 1KI 20:42 | divineSpans=1 humanSpans=2 minSpanLen=1 | 他對王說：「耶和華如此說：『因你將我定要滅絕的人放去，你的命就必代替他的命，你的民也必代替他的民。』」
+- 1KI 22:11 | divineSpans=1 humanSpans=2 minSpanLen=1 | 基拿拿的兒子西底家造了兩個鐵角，說：「耶和華如此說：『你要用這角牴觸亞蘭人，直到將他們滅盡。』」
+- 1KI 22:17 | divineSpans=1 humanSpans=2 minSpanLen=1 | 米該雅說：「我看見以色列眾民散在山上，如同沒有牧人的羊群一般。耶和華說：『這民沒有主人，他們可以平平安安的各歸各家去。』」
+- 1SA 10:18 | divineSpans=1 humanSpans=2 minSpanLen=1 | 對他們說：「耶和華以色列的神如此說：『我領你們以色列人出埃及，救你們脫離埃及人的手，又救你們脫離欺壓你們各國之人的手。』
+- 1SA 29:9 | divineSpans=1 humanSpans=2 minSpanLen=1 | 亞吉說：「我知道你在我眼前是好人，如同神的使者一般；只是非利士人的首領說：『這人不可同我們出戰。』
+- 2CH 12:5 | divineSpans=1 humanSpans=2 minSpanLen=1 | 那時，猶大的首領因為示撒就聚集在耶路撒冷。有先知示瑪雅去見羅波安和眾首領，對他們說：「耶和華如此說：『你們離棄了我，所以我使你們落在示撒手裏。』」
+- 2CH 18:10 | divineSpans=1 humanSpans=2 minSpanLen=1 | 基拿拿的兒子西底家造了兩個鐵角，說：「耶和華如此說：『你要用這角牴觸亞蘭人，直到將他們滅盡。』」
+- 2CH 18:16 | divineSpans=1 humanSpans=2 minSpanLen=1 | 米該雅說：「我看見以色列眾民散在山上，如同沒有牧人的羊群一般。耶和華說：『這民沒有主人，他們可以平平安安的各歸各家去。』」
+- 2KI 1:16 | divineSpans=1 humanSpans=2 minSpanLen=1 | 對王說：「耶和華如此說：『你差人去問以革倫神巴力西卜，豈因以色列中沒有神可以求問嗎？所以你必不下所上的床，必定要死！』」
+- 2KI 2:21 | divineSpans=1 humanSpans=2 minSpanLen=1 | 他出到水源，將鹽倒在水中，說：「耶和華如此說：『我治好了這水，從此必不再使人死，也不再使地土不生產。』」
+- 2KI 19:20 | divineSpans=1 humanSpans=2 minSpanLen=1 | 亞摩斯的兒子以賽亞就打發人去見希西家，說：「耶和華以色列的神如此說：『你既然求我攻擊亞述王西拿基立，我已聽見了。』
+- 2KI 20:1 | divineSpans=1 humanSpans=2 minSpanLen=1 | 那時，希西家病得要死。亞摩斯的兒子先知以賽亞去見他，對他說：「耶和華如此說：『你當留遺命與你的家，因為你必死，不能活了。』」
+- 2SA 24:12 | divineSpans=1 humanSpans=2 minSpanLen=1 | 「你去告訴大衛，說耶和華如此說：『我有三樣災，隨你選擇一樣，我好降與你。』」
+- DEU 17:14 | divineSpans=1 humanSpans=2 minSpanLen=1 | 「到了耶和華你神所賜你的地，得了那地居住的時候，若說：『我要立王治理我，像四圍的國一樣。』
+- DEU 31:2 | divineSpans=1 humanSpans=2 minSpanLen=1 | 說：「我現在一百二十歲了，不能照常出入；耶和華也曾對我說：『你必不得過這約但河。』
+- EXO 5:1 | divineSpans=1 humanSpans=2 minSpanLen=1 | 後來摩西、亞倫去對法老說：「耶和華以色列的神這樣說：『容我的百姓去，在曠野向我守節。』」
+- EXO 16:23 | divineSpans=1 humanSpans=2 minSpanLen=1 | 摩西對他們說：「耶和華這樣說：『明天是聖安息日，是向耶和華守的聖安息日。你們要烤的就烤了，要煮的就煮了，所剩下的都留到早晨。』」
+- EXO 32:27 | divineSpans=1 humanSpans=2 minSpanLen=1 | 他對他們說：「耶和華以色列的神這樣說：『你們各人把刀跨在腰間，在營中往來，從這門到那門，各人殺他的弟兄與同伴並鄰舍。』」
+- GEN 32:9 | divineSpans=1 humanSpans=2 minSpanLen=1 | 雅各說：「耶和華我祖亞伯拉罕的神，我父親以撒的神啊，你曾對我說：『回你本地本族去，我要厚待你。』
+- JER 14:13 | divineSpans=1 humanSpans=2 minSpanLen=1 | 我就說：「唉！主耶和華啊，那些先知常對他們說：『你們必不看見刀劍，也不遭遇饑荒；耶和華要在這地方賜你們長久的平安。』」
+- JER 42:18 | divineSpans=1 humanSpans=2 minSpanLen=1 | 「萬軍之耶和華以色列的神如此說：『我怎樣將我的怒氣和忿怒傾在耶路撒冷的居民身上，你們進入埃及的時候，我也必照樣將我的忿怒傾在你們身上，以致你們令人辱罵、驚駭、咒詛、羞辱，你們不得再見這地方。』
+- JER 43:2 | divineSpans=1 humanSpans=2 minSpanLen=1 | 何沙雅的兒子亞撒利雅和加利亞的兒子約哈難，並一切狂傲的人，就對耶利米說：「你說謊言！耶和華我們的神並沒有差遣你來說：『你們不可進入埃及，在那裏寄居。』
+- LEV 10:3 | divineSpans=1 humanSpans=2 minSpanLen=1 | 於是摩西對亞倫說：「這就是耶和華所說：『我在親近我的人中要顯為聖；在眾民面前，我要得榮耀。』」亞倫就默默不言。
+- 1KI 20:34 | divineSpans=0 humanSpans=3 minSpanLen=1 | Ben Hadad said to him, “The cities which my father took from your father I will restore. You shall make streets for yourself in Damascus, as my father made in Samaria.” “I”, said Ahab, “will let you go with this covenant.” So he made a covenant with him, and let him go.
+- GEN 1:5 | divineSpans=0 humanSpans=2 minSpanLen=1 | 神称光为「昼」，称暗为「夜」。有晚上，有早晨，这是头一日。
+- GEN 1:10 | divineSpans=0 humanSpans=2 minSpanLen=1 | 神称旱地为「地」，称水的聚处为「海」。神看着是好的。
+- JER 29:15 | divineSpans=1 humanSpans=1 minSpanLen=1 | 「你们说：『耶和华在巴比伦为我们兴起先知』；
+- GEN 1:5 | divineSpans=0 humanSpans=2 minSpanLen=1 | 神稱光為「晝」，稱暗為「夜」。有晚上，有早晨，這是頭一日。
+- GEN 1:10 | divineSpans=0 humanSpans=2 minSpanLen=1 | 神稱旱地為「地」，稱水的聚處為「海」。神看着是好的。
+- JER 29:15 | divineSpans=1 humanSpans=1 minSpanLen=1 | 「你們說：『耶和華在巴比倫為我們興起先知』；
+- 1KI 13:26 | divineSpans=1 humanSpans=0 minSpanLen=1 | Then the prophet who had made him come back, hearing it, said, It is the man of God, who went against the word of the Lord; that is why the Lord has given him to the lion to be wounded to death, as the Lord said.
+- 2KI 9:26 | divineSpans=1 humanSpans=0 minSpanLen=1 | I saw the blood of Naboth and of his sons yesterday; and I will give you full payment in this field, says the Lord? So now, take him and put him in this field, as the Lord said.
+- JER 23:35 | divineSpans=1 humanSpans=0 minSpanLen=1 | But this is what you are to say, every man to his neighbour and every man to his brother, What answer has the Lord given? and, What has the Lord said?
+- JER 23:37 | divineSpans=1 humanSpans=0 minSpanLen=1 | This is what you are to say to the prophet, What answer has the Lord given to you? and, What has the Lord said?
+- JOS 14:12 | divineSpans=1 humanSpans=0 minSpanLen=1 | So now, give me this hill-country named by the Lord at that time; for you had an account of it then, how the Anakim were there, and great walled towns: it may be that the Lord will be with me, and I will be able to take their land, as the Lord said.
+- NUM 23:17 | divineSpans=1 humanSpans=0 minSpanLen=1 | So he came to him where he was waiting by his burned offering with the chiefs of Moab by his side. And Balak said to him, What has the Lord said?
+- EZK 2:4 | divineSpans=1 humanSpans=0 minSpanLen=1 | 这众子面无羞耻，心里刚硬。我差你往他们那里去，你要对他们说：主耶和华如此说。
+- GEN 1:8 | divineSpans=0 humanSpans=1 minSpanLen=1 | 神称空气为「天」。有晚上，有早晨，是第二日。
+- GEN 5:2 | divineSpans=0 humanSpans=1 minSpanLen=1 | 并且造男造女。在他们被造的日子，神赐福给他们，称他们为「人」。）
+- JOB 36:2 | divineSpans=1 humanSpans=0 minSpanLen=1 | 你再容我片时，我就指示你，因我还有话为神说。
+- LUK 2:38 | divineSpans=1 humanSpans=0 minSpanLen=1 | 正当那时，她进前来称谢神，将孩子的事对一切盼望耶路撒冷得救赎的人讲说。
+- TIT 2:13 | divineSpans=0 humanSpans=1 minSpanLen=1 | 等候所盼望的福，并等候至大的神和〔或无「和」字〕我们救主耶稣基督的荣耀显现。
+- EZK 2:4 | divineSpans=1 humanSpans=0 minSpanLen=1 | 這眾子面無羞恥，心裏剛硬。我差你往他們那裏去，你要對他們說：主耶和華如此說。
+- GEN 1:8 | divineSpans=0 humanSpans=1 minSpanLen=1 | 神稱空氣為「天」。有晚上，有早晨，是第二日。
+- GEN 5:2 | divineSpans=0 humanSpans=1 minSpanLen=1 | 並且造男造女。在他們被造的日子，神賜福給他們，稱他們為「人」。）
+- JOB 36:2 | divineSpans=1 humanSpans=0 minSpanLen=1 | 你再容我片時，我就指示你，因我還有話為神說。
+- LUK 2:38 | divineSpans=1 humanSpans=0 minSpanLen=1 | 正當那時，她進前來稱謝神，將孩子的事對一切盼望耶路撒冷得救贖的人講說。
+- TIT 2:13 | divineSpans=0 humanSpans=1 minSpanLen=1 | 等候所盼望的福，並等候至大的神和〔或無「和」字〕我們救主耶穌基督的榮耀顯現。
+- JAS 5:12 | divineSpans=0 humanSpans=4 minSpanLen=2 | But above all things, my brothers, don’t swear— not by heaven, or by the earth, or by any other oath; but let your “yes” be “yes”, and your “no”, “no”; so that you don’t fall into hypocrisy.
+- 1SA 9:9 | divineSpans=1 humanSpans=2 minSpanLen=2 | （从前以色列中，若有人去问神，就说：「我们问先见去吧！」现在称为「先知」的，从前称为「先见」。）
+- 2KI 10:15 | divineSpans=0 humanSpans=3 minSpanLen=2 | 耶户从那里前行，恰遇利甲的儿子约拿达来迎接他，耶户问他安，对他说：「你诚心待我像我诚心待你吗？」约拿达回答说：「是。」耶户说：「若是这样，你向我伸手」，他就伸手；耶户拉他上车。
+- AMO 6:10 | divineSpans=0 humanSpans=3 minSpanLen=2 | 死人的伯叔，就是烧他尸首的，要将这尸首搬到房外，问房屋内间的人说：「你那里还有人没有？」他必说：「没有」；又说：「不要作声，因为我们不可提耶和华的名。」
+- ISA 62:12 | divineSpans=0 humanSpans=3 minSpanLen=2 | 人必称他们为「圣民」，为「耶和华的赎民」；你也必称为「被眷顾、不撇弃的城」。
+- JDG 12:5 | divineSpans=0 humanSpans=3 minSpanLen=2 | 基列人把守约但河的渡口，不容以法莲人过去。以法莲逃走的人若说：「容我过去。」基列人就问他说：「你是以法莲人不是？」他若说：「不是」，
+- JER 37:17 | divineSpans=0 humanSpans=3 minSpanLen=2 | 西底家王打发人提出他来，在自己的宫内私下问他说：「从耶和华有甚么话临到没有？」耶利米说：「有！」又说：「你必交在巴比伦王手中。」
+- JHN 9:9 | divineSpans=0 humanSpans=3 minSpanLen=2 | 有人说：「是他」；又有人说；「不是，却是像他。」他自己说：「是我。」
+- LUK 7:8 | divineSpans=0 humanSpans=3 minSpanLen=2 | 因为我在人的权下，也有兵在我以下，对这个说：『去！』他就去；对那个说：『来！』他就来；对我的仆人说：『你作这事！』他就去作。」
+- MAT 8:9 | divineSpans=0 humanSpans=3 minSpanLen=2 | 因为我在人的权下，也有兵在我以下；对这个说：『去！』他就去；对那个说：『来！』他就来；对我的仆人说：『你作这事！』他就去作。」
+- 1SA 9:9 | divineSpans=1 humanSpans=2 minSpanLen=2 | （從前以色列中，若有人去問神，就說：「我們問先見去吧！」現在稱為「先知」的，從前稱為「先見」。）
+- 2KI 10:15 | divineSpans=0 humanSpans=3 minSpanLen=2 | 耶戶從那裏前行，恰遇利甲的兒子約拿達來迎接他，耶戶問他安，對他說：「你誠心待我像我誠心待你嗎？」約拿達回答說：「是。」耶戶說：「若是這樣，你向我伸手」，他就伸手；耶戶拉他上車。
+- AMO 6:10 | divineSpans=0 humanSpans=3 minSpanLen=2 | 死人的伯叔，就是燒他屍首的，要將這屍首搬到房外，問房屋內間的人說：「你那裏還有人沒有？」他必說：「沒有」；又說：「不要作聲，因為我們不可提耶和華的名。」
+- ISA 62:12 | divineSpans=0 humanSpans=3 minSpanLen=2 | 人必稱他們為「聖民」，為「耶和華的贖民」；你也必稱為「被眷顧、不撇棄的城」。
+- JDG 12:5 | divineSpans=0 humanSpans=3 minSpanLen=2 | 基列人把守約但河的渡口，不容以法蓮人過去。以法蓮逃走的人若說：「容我過去。」基列人就問他說：「你是以法蓮人不是？」他若說：「不是」，
+- JER 37:17 | divineSpans=0 humanSpans=3 minSpanLen=2 | 西底家王打發人提出他來，在自己的宮內私下問他說：「從耶和華有甚麼話臨到沒有？」耶利米說：「有！」又說：「你必交在巴比倫王手中。」
+- JHN 9:9 | divineSpans=0 humanSpans=3 minSpanLen=2 | 有人說：「是他」；又有人說；「不是，卻是像他。」他自己說：「是我。」
+- LUK 7:8 | divineSpans=0 humanSpans=3 minSpanLen=2 | 因為我在人的權下，也有兵在我以下，對這個說：『去！』他就去；對那個說：『來！』他就來；對我的僕人說：『你作這事！』他就去作。」
+- MAT 8:9 | divineSpans=0 humanSpans=3 minSpanLen=2 | 因為我在人的權下，也有兵在我以下；對這個說：『去！』他就去；對那個說：『來！』他就來；對我的僕人說：『你作這事！』他就去作。」
+- JDG 12:5 | divineSpans=0 humanSpans=3 minSpanLen=2 | The Gileadites took the fords of the Jordan against the Ephraimites. When the fugitives of Ephraim said, “Let me go over,” the men of Gilead said to him, “Are you an Ephraimite?” If he said, “No”;
+- 1KI 13:14 | divineSpans=1 humanSpans=1 minSpanLen=2 | 去追赶神人，遇见他坐在橡树底下，就问他说：「你是从犹大来的神人不是？」他说：「是。」
+- 2SA 2:20 | divineSpans=0 humanSpans=2 minSpanLen=2 | 押尼珥回头说：「你是亚撒黑么？」回答说：「是。」
+- ACT 22:27 | divineSpans=0 humanSpans=2 minSpanLen=2 | 千夫长就来问保罗说：「你告诉我，你是罗马人吗？」保罗说：「是。」
+- EXO 8:19 | divineSpans=1 humanSpans=1 minSpanLen=2 | 行法术的就对法老说：「这是神的手段。」法老心里刚硬，不肯听摩西、亚伦，正如耶和华所说的。
+- EXO 23:13 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「凡我对你们说的话，你们要谨守。别神的名，你不可提，也不可从你口中传说。」
+- EXO 35:10 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「你们中间凡心里有智慧的都要来作耶和华一切所吩咐的：
+- EZK 16:8 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「我从你旁边经过，看见你的时候正动爱情，便用衣襟搭在你身上，遮盖你的赤体；又向你起誓，与你结盟，你就归于我。这是主耶和华说的。
+- EZK 32:31 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「法老看见他们，便为他被杀的军队受安慰。这是主耶和华说的。
+- EZK 44:15 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「以色列人走迷离开我的时候，祭司利未人撒督的子孙仍看守我的圣所。他们必亲近我，事奉我，并且侍立在我面前，将脂油与血献给我。这是主耶和华说的。
+- GEN 2:23 | divineSpans=0 humanSpans=2 minSpanLen=2 | 那人说：这是我骨中的骨，肉中的肉，可以称她为「女人」，因为她是从「男人」身上取出来的。
+- ISA 60:18 | divineSpans=0 humanSpans=2 minSpanLen=2 | 你地上不再听见强暴的事，境内不再听见荒凉毁灭的事。你必称你的墙为「拯救」，称你的门为「赞美」。
+- ISA 66:17 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「那些分别为圣、洁净自己的，进入园内跟在其中一个人的后头，吃猪肉和仓鼠并可憎之物，他们必一同灭绝；这是耶和华说的。
+- JER 3:1 | divineSpans=1 humanSpans=1 minSpanLen=2 | 有话说：『人若休妻，妻离他而去，作了别人的妻，前夫岂能再收回她来？』若收回她来，那地岂不是大大玷污了吗？但你和许多亲爱的行邪淫，还可以归向我。这是耶和华说的。
+- MAL 1:9 | divineSpans=1 humanSpans=1 minSpanLen=2 | 「现在我劝你们恳求神，他好施恩与我们。这妄献的事，既由你们经手，他岂能看你们的情面吗？这是万军之耶和华说的。
+- MAL 2:16 | divineSpans=2 humanSpans=0 minSpanLen=2 | 耶和华以色列的神说：「休妻的事和以强暴待妻的人都是我所恨恶的！所以当谨守你们的心，不可行诡诈。」这是万军之耶和华说的。
+- MAT 17:25 | divineSpans=0 humanSpans=2 minSpanLen=2 | 彼得说：「纳。」他进了屋子，耶稣先向他说：「西门，你的意思如何？世上的君王向谁征收关税、丁税？是向自己的儿子呢？是向外人呢？」
+- REV 22:17 | divineSpans=0 humanSpans=2 minSpanLen=2 | 圣灵和新妇都说：「来！」听见的人也该说：「来！」口渴的人也当来；愿意的，都可以白白取生命的水喝。
+- ZEC 1:4 | divineSpans=2 humanSpans=0 minSpanLen=2 | 不要效法你们列祖。从前的先知呼叫他们说，万军之耶和华如此说：『你们要回头离开你们的恶道恶行。』他们却不听，也不顺从我。这是耶和华说的。
+- ZEC 11:7 | divineSpans=0 humanSpans=2 minSpanLen=2 | 于是，我牧养这将宰的群羊，就是群中最困苦的羊。我拿着两根杖，一根我称为「荣美」，一根我称为「联索」。这样，我牧养了群羊。
+- 1KI 13:14 | divineSpans=1 humanSpans=1 minSpanLen=2 | 去追趕神人，遇見他坐在橡樹底下，就問他說：「你是從猶大來的神人不是？」他說：「是。」
+- 2SA 2:20 | divineSpans=0 humanSpans=2 minSpanLen=2 | 押尼珥回頭說：「你是亞撒黑麼？」回答說：「是。」
+- ACT 22:27 | divineSpans=0 humanSpans=2 minSpanLen=2 | 千夫長就來問保羅說：「你告訴我，你是羅馬人嗎？」保羅說：「是。」
+- EXO 8:19 | divineSpans=1 humanSpans=1 minSpanLen=2 | 行法術的就對法老說：「這是神的手段。」法老心裏剛硬，不肯聽摩西、亞倫，正如耶和華所說的。
+

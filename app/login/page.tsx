@@ -127,14 +127,6 @@ function LoginPageInner() {
             {pending ? t("auth.submitting") : t("auth.submit")}
           </button>
         </form>
-        <div className="mt-6 flex flex-col items-center gap-2 text-center">
-          <Link
-            href="/register"
-            className="text-[13px] text-ink/50 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/75"
-          >
-            {t("auth.loginFooterRegister")}
-          </Link>
-        </div>
         <Link
           href="/"
           className="mt-8 block text-center text-[13px] text-ink/45 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/70"

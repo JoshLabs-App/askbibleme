@@ -25,12 +25,24 @@ function parseTranslationsIndexJson(raw: string): BibleTranslationsIndex {
   if (!j || typeof j !== "object" || !Array.isArray(j.translations)) {
     return { translations: [], defaultTranslationId: null };
   }
+  const shouldHideTranslation = (t: BibleTranslationMeta): boolean => {
+    const id = String(t.id || "").trim().toLowerCase();
+    const lang = String(t.language || "").trim().toLowerCase();
+    // 产品策略：西班牙语先不对外放出（保留数据文件，UI 统一隐藏）。
+    if (lang === "es" || lang.startsWith("es-")) return true;
+    if (id.endsWith("-es") || id.includes("-es-")) return true;
+    return false;
+  };
+  const translations = j.translations
+    .filter((t): t is BibleTranslationMeta => Boolean(t?.id))
+    .filter((t) => !shouldHideTranslation(t));
+  const defaultId =
+    typeof j.defaultTranslationId === "string" && j.defaultTranslationId.trim()
+      ? j.defaultTranslationId.trim()
+      : null;
   return {
-    translations: j.translations.filter((t): t is BibleTranslationMeta => Boolean(t?.id)),
-    defaultTranslationId:
-      typeof j.defaultTranslationId === "string" && j.defaultTranslationId.trim()
-        ? j.defaultTranslationId.trim()
-        : null,
+    translations,
+    defaultTranslationId: defaultId && translations.some((t) => t.id === defaultId) ? defaultId : null,
   };
 }
 

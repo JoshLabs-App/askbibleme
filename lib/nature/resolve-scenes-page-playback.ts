@@ -16,13 +16,10 @@ export function resolveScenesPageVideoEntry(s: NatureSettingsV2): NatureVideoEnt
   return s.videos.find((v) => v.id === id);
 }
 
-export function resolveScenesPagePlayback(
-  s: NatureSettingsV2,
-  opts?: { prefer1080?: boolean },
-): { videoSrc: string; posterSrc?: string } {
+export function resolveScenesPagePlayback(s: NatureSettingsV2): { videoSrc: string; posterSrc?: string } {
   const row = resolveScenesPageVideoEntry(s);
   if (!row) return { videoSrc: "" };
-  const videoSrc = resolveNatureVideoSrcForEntry(row, Boolean(opts?.prefer1080));
+  const videoSrc = resolveNatureVideoSrcForEntry(row);
   const rowPreview = row.previewFrameSrc?.trim();
   const rowThumb = row.thumbSrc?.trim();
   const posterSrc =

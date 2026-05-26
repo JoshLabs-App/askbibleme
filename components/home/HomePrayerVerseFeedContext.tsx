@@ -6,7 +6,6 @@ import { useHomePrayerVerseFeed } from "@/components/home/useHomePrayerVerseFeed
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
-import { READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE } from "@/lib/i18n/read-scripture-about-verses";
 
 export type HomePrayerVerseFeedContextValue = {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
@@ -63,11 +62,9 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   const verseKeysSig = verseKeys?.join("\u0001") ?? "";
 
   const primaryLocale: AppLocale = bilingual ? "en" : locale;
-  /** 与 `HomeVerseRotator` 同源：有池/RSC 列表用列表，否则用紧急回退文案。 */
   const nVerses = useMemo(() => {
     const fromServer = entriesByLocale?.[primaryLocale];
-    if (fromServer && fromServer.length > 0) return fromServer.length;
-    return READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[primaryLocale].length;
+    return fromServer?.length ?? 0;
   }, [entriesByLocale, primaryLocale]);
 
   const nearEndIndex = Math.min(activeIndex, Math.max(0, nVerses - 1));
@@ -83,15 +80,9 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   useEffect(() => {
     if (nVerses <= 1) return;
 
-    if (prefersReducedMotion) {
-      const id = window.setInterval(() => {
-        setActiveIndex((i) => (i + 1) % nVerses);
-      }, HOME_VERSE_STABLE_MS);
-      return () => window.clearInterval(id);
-    }
-
     let cancelled = false;
     let tid: number | undefined;
+    const fadeMs = prefersReducedMotion ? Math.min(800, HOME_VERSE_FADE_MS) : HOME_VERSE_FADE_MS;
 
     const step = () => {
       tid = window.setTimeout(() => {
@@ -101,8 +92,8 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
           if (cancelled) return;
           setActiveIndex((i) => (i + 1) % nVerses);
           requestAnimationFrame(() => setHomeVerseVisible(true));
-          tid = window.setTimeout(step, HOME_VERSE_FADE_MS + HOME_VERSE_STABLE_MS);
-        }, HOME_VERSE_FADE_MS);
+          tid = window.setTimeout(step, fadeMs + HOME_VERSE_STABLE_MS);
+        }, fadeMs);
       }, HOME_VERSE_STABLE_MS);
     };
 

@@ -1,8 +1,14 @@
 /**
  * 从 `data/bible/uploads/{translationId}.json` 生成 `data/bible/sqlite/{translationId}.sqlite`。
+ * 写入 `speech_spans`、`theme_repeat_count`（主题库陈列次数；≥3 次才标金句色带）。
  * 供 `npm run build`（prebuild）与本机 `npm run build:bible-sqlite` 使用。
  */
 import fs from "node:fs";
+import {
+  loadThemeRepeatCountMap,
+  MIN_GOLDEN_THEME_REPEAT_COUNT,
+} from "../lib/bible/golden-verse-theme-repeat";
+import { loadSpeechSpansSnapshot } from "../lib/bible/speech-spans-snapshot";
 import { writeScriptureSqliteFromBooks } from "../lib/bible/build-scripture-sqlite";
 import { readTranslationsIndex, resolveTranslationAbsolutePath } from "../lib/bible/translations-store";
 import { parseAndValidateBiblePayload } from "../lib/bible/validate-bible-json";
@@ -15,6 +21,23 @@ async function main(): Promise<void> {
     return;
   }
 
+  const themeRepeatCounts = await loadThemeRepeatCountMap(cwd);
+  const speechSpansSnapshot = loadSpeechSpansSnapshot(cwd);
+  let goldenMarked = 0;
+  for (const c of themeRepeatCounts.values()) {
+    if (c >= MIN_GOLDEN_THEME_REPEAT_COUNT) goldenMarked++;
+  }
+  console.error(
+    `[build-bible-sqlite] theme verses: ${themeRepeatCounts.size}, golden marker (≥${MIN_GOLDEN_THEME_REPEAT_COUNT}): ${goldenMarked}`,
+  );
+  if (speechSpansSnapshot?.translations.size) {
+    console.error(
+      `[build-bible-sqlite] speech snapshot loaded (${speechSpansSnapshot.version}): ${speechSpansSnapshot.translations.size} translations from ${speechSpansSnapshot.relPath}`,
+    );
+  } else {
+    console.error("[build-bible-sqlite] speech snapshot not found, fallback to heuristic inference");
+  }
+
   for (const t of index.translations) {
     const abs = resolveTranslationAbsolutePath(cwd, t.id);
     if (!fs.existsSync(abs)) {
@@ -23,7 +46,10 @@ async function main(): Promise<void> {
     }
     const raw = JSON.parse(fs.readFileSync(abs, "utf8")) as unknown;
     const { books, verseCount } = parseAndValidateBiblePayload(raw);
-    const { bytes, verseCount: inserted } = await writeScriptureSqliteFromBooks(cwd, t.id, books);
+    const { bytes, verseCount: inserted } = await writeScriptureSqliteFromBooks(cwd, t.id, books, {
+      themeRepeatCounts,
+      speechSpansByVerseKey: speechSpansSnapshot?.translations.get(t.id) ?? undefined,
+    });
     if (inserted !== verseCount) {
       console.error(`[build-bible-sqlite] ${t.id}: 节数不一致 (json=${verseCount}, sqlite=${inserted})`);
       process.exit(1);

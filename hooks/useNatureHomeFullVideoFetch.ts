@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fetchNatureVideoFully } from "@/lib/nature/fetch-nature-video-fully";
+import {
+  ensureNatureVideoBlobObjectUrl,
+  peekNatureVideoBlobObjectUrl,
+} from "@/lib/nature/nature-video-blob-cache";
 
 type Args = {
   enabled: boolean;
@@ -13,16 +16,37 @@ type Args = {
  * 进页显静图时：后台 fetch 整段成片，就绪后返回 Blob object URL 供 `<video src>` 使用。
  */
 export function useNatureHomeFullVideoFetch({ enabled, videoSrc, sceneKey }: Args) {
-  const [objectUrl, setObjectUrl] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(() =>
+    enabled && videoSrc.trim() ? peekNatureVideoBlobObjectUrl(videoSrc.trim()) : null,
+  );
+  const [ready, setReady] = useState(() =>
+    Boolean(enabled && videoSrc.trim() && peekNatureVideoBlobObjectUrl(videoSrc.trim())),
+  );
   const [failed, setFailed] = useState(false);
-  const urlRef = useRef<string | null>(null);
+  /** 0–1；无 Content-Length 时为 null */
+  const [progress, setProgress] = useState<number | null>(null);
+  const [loading, setLoading] = useState(() =>
+    Boolean(enabled && videoSrc.trim() && !peekNatureVideoBlobObjectUrl(videoSrc.trim())),
+  );
 
   useEffect(() => {
-    if (!enabled || !videoSrc.trim()) {
+    const src = videoSrc.trim();
+    if (!enabled || !src) {
       setObjectUrl(null);
       setReady(false);
       setFailed(false);
+      setProgress(null);
+      setLoading(false);
+      return;
+    }
+
+    const cached = peekNatureVideoBlobObjectUrl(src);
+    if (cached) {
+      setObjectUrl(cached);
+      setReady(true);
+      setFailed(false);
+      setProgress(1);
+      setLoading(false);
       return;
     }
 
@@ -31,34 +55,42 @@ export function useNatureHomeFullVideoFetch({ enabled, videoSrc, sceneKey }: Arg
     setObjectUrl(null);
     setReady(false);
     setFailed(false);
+    setProgress(0);
+    setLoading(true);
 
     void (async () => {
       try {
-        const buf = await fetchNatureVideoFully(videoSrc, ac.signal, () => {});
+        const url = await ensureNatureVideoBlobObjectUrl(src, ac.signal, (received, totalBytes) => {
+          if (cancelled) return;
+          if (totalBytes != null && totalBytes > 0) {
+            setProgress(Math.min(1, received / totalBytes));
+          } else {
+            setProgress(null);
+          }
+        });
         if (cancelled) return;
-        const blob = new Blob([buf], { type: "video/mp4" });
-        const url = URL.createObjectURL(blob);
-        if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-        urlRef.current = url;
         setObjectUrl(url);
+        setProgress(1);
         setReady(true);
+        setLoading(false);
       } catch {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) {
+          setFailed(true);
+          setLoading(false);
+        }
       }
     })();
 
     return () => {
       cancelled = true;
       ac.abort();
-      if (urlRef.current) {
-        URL.revokeObjectURL(urlRef.current);
-        urlRef.current = null;
-      }
       setObjectUrl(null);
       setReady(false);
       setFailed(false);
+      setProgress(null);
+      setLoading(false);
     };
   }, [enabled, videoSrc, sceneKey]);
 
-  return { objectUrl, ready, failed };
+  return { objectUrl, ready, failed, progress, loading };
 }

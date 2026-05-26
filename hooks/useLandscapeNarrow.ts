@@ -10,7 +10,7 @@ export function useLandscapeNarrow(): boolean {
   const [matches, setMatches] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia(
-      "(orientation: landscape) and (max-width: 932px) and (max-height: 500px)",
+      "(orientation: landscape) and (max-width: 956px) and (max-height: 500px)",
     );
     const sync = () => setMatches(mq.matches);
     sync();

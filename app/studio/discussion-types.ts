@@ -46,7 +46,7 @@ export const DEFAULT_DISCUSSION_ROLE_CONFIGS: DiscussionRoleConfig[] = [
     label: "Gatekeeper",
     rules: [
       "职责：专门挑刺。",
-      "检查是否违背 Selah.my 核心原则。",
+      "检查是否违背 AskBible.me 核心原则。",
       "检查是否变成工具、平台、百科、游戏化、Dashboard。",
       "提醒功能膨胀、认知负荷、核心偏移。",
     ].join("\n"),

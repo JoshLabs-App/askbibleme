@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildVerseRefsFromThemeSubcategoryKeys } from "@/lib/scripture/build-home-verse-refs-from-theme-selection";
 import { readHomeGoldenThemeSelectionSync, writeHomeGoldenThemeSelectionSync } from "@/lib/scripture/home-golden-theme-selection";
-import { writeExternalHomeVerseRotationSync } from "@/lib/scripture/read-external-home-verse-rotation";
-import { writeHomePrayerPoolFromGoldenRotation } from "@/lib/home-prayer-pools/build-golden-rotation-pool";
-import { regenerateHomeGoldenVerseRotationStatic } from "@/lib/scripture/regenerate-home-golden-verse-rotation-static";
-import { getReaderVerseThemesDatabase } from "@/lib/scripture/reader-verse-themes-db";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
 const KEY_RE = /^\d+-\d+$/;
@@ -59,29 +54,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const db = await getReaderVerseThemesDatabase(cwd);
-  if (!db && uniq.length > 0) {
-    return NextResponse.json(
-      { ok: false, error: "未找到主题库 SQLite。请先在「金句主题」页按说明执行 import。" },
-      { status: 400 },
-    );
-  }
-
   try {
-    const verseRefs =
-      uniq.length > 0 ? await buildVerseRefsFromThemeSubcategoryKeys(cwd, uniq) : [];
     writeHomeGoldenThemeSelectionSync(cwd, uniq);
-    writeExternalHomeVerseRotationSync(cwd, verseRefs);
-    await regenerateHomeGoldenVerseRotationStatic(cwd);
-    const pool = await writeHomePrayerPoolFromGoldenRotation(cwd);
     return NextResponse.json(
-      {
-        ok: true,
-        selectedCount: uniq.length,
-        writtenVerseRefs: verseRefs.length,
-        wroteStaticSnapshot: true,
-        prayerPoolVerseCount: pool.verseCount,
-      },
+      { ok: true, selectedCount: uniq.length },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {

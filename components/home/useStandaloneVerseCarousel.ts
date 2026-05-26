@@ -42,15 +42,9 @@ export function useStandaloneVerseCarousel({ enabled, nVerses, resetKey }: Args)
     if (!enabled) return;
     if (nVerses <= 1) return;
 
-    if (prefersReducedMotion) {
-      const id = window.setInterval(() => {
-        setActiveIndex((i) => (i + 1) % nVerses);
-      }, HOME_VERSE_STABLE_MS);
-      return () => window.clearInterval(id);
-    }
-
     let cancelled = false;
     let tid: number | undefined;
+    const fadeMs = prefersReducedMotion ? Math.min(800, HOME_VERSE_FADE_MS) : HOME_VERSE_FADE_MS;
 
     const step = () => {
       tid = window.setTimeout(() => {
@@ -60,8 +54,8 @@ export function useStandaloneVerseCarousel({ enabled, nVerses, resetKey }: Args)
           if (cancelled) return;
           setActiveIndex((i) => (i + 1) % nVerses);
           requestAnimationFrame(() => setHomeVerseVisible(true));
-          tid = window.setTimeout(step, HOME_VERSE_FADE_MS + HOME_VERSE_STABLE_MS);
-        }, HOME_VERSE_FADE_MS);
+          tid = window.setTimeout(step, fadeMs + HOME_VERSE_STABLE_MS);
+        }, fadeMs);
       }, HOME_VERSE_STABLE_MS);
     };
 

@@ -10,6 +10,7 @@ import type {
 import { readGenerationRolesSync } from "@/lib/admin/generation-roles-store";
 import {
   parseInfoEditionReaderVariant,
+  readerVariantFromRole,
   readerVariantToRoleId,
   type InfoEditionReaderVariant,
 } from "@/lib/bible/info-edition-v1-publish";
@@ -48,8 +49,20 @@ export function resolveInfoEditionReaderTarget(
   if (editionRaw && !parseInfoEditionReaderVariant(editionRaw)) {
     return { error: "无效的 edition（请使用 info 或 guide）。" };
   }
-  const variant = parseInfoEditionReaderVariant(editionRaw) ?? "info";
+  const parsedVariant = parseInfoEditionReaderVariant(editionRaw);
+  const variant = parsedVariant ?? "info";
   if (roleIdRaw) {
+    const role = roles.find((it) => it.id === roleIdRaw);
+    if (!role) {
+      return { variant, roleId: readerVariantToRoleId(variant, roles) };
+    }
+    if (!parsedVariant) {
+      return { variant: readerVariantFromRole(role), roleId: roleIdRaw };
+    }
+    const roleVariant = readerVariantFromRole(role);
+    if (roleVariant !== variant) {
+      return { variant, roleId: readerVariantToRoleId(variant, roles) };
+    }
     return { variant, roleId: roleIdRaw };
   }
   return { variant, roleId: readerVariantToRoleId(variant, roles) };

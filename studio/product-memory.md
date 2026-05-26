@@ -4,7 +4,7 @@
 
 ## Core Definition · 核心定义
 
-（Selah.my 是什么 / 不是什么——单段可验收表述。）
+（AskBible.me 是什么 / 不是什么——单段可验收表述。）
 
 ## Confirmed Principles · 已确认原则
 

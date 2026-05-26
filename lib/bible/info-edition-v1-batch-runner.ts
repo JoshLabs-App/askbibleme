@@ -2,19 +2,17 @@ import "server-only";
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { isInfoEditionBatchOnProductionDisk } from "@/lib/bible/info-edition-batch-access";
+import {
+  infoEditionBatchLogPath,
+  infoEditionBatchUiConfigPath,
+} from "@/lib/bible/info-edition-batch-paths";
 import {
   infoEditionBatchLockPath,
   readInfoEditionBatchState,
   writeInfoEditionBatchState,
 } from "@/lib/bible/info-edition-v1-batch-state";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
-
-export const INFO_EDITION_BATCH_LOG_REL = path.join("data", "bible", "info-edition-v1-batch.log");
-export const INFO_EDITION_BATCH_UI_CONFIG_REL = path.join(
-  "data",
-  "bible",
-  "info-edition-v1-batch-ui.json",
-);
 
 export type InfoEditionBatchUiConfig = {
   remoteScpTarget: string;
@@ -23,6 +21,10 @@ export type InfoEditionBatchUiConfig = {
   bookEnd: string;
   delayMs: number;
   editions: InfoEditionReaderVariant[];
+  translationId: string;
+  outputLanguage: "zh-CN" | "en";
+  infoRoleId: string;
+  guideRoleId: string;
 };
 
 const DEFAULT_UI_CONFIG: InfoEditionBatchUiConfig = {
@@ -32,14 +34,14 @@ const DEFAULT_UI_CONFIG: InfoEditionBatchUiConfig = {
   bookEnd: "",
   delayMs: 800,
   editions: ["info", "guide"],
+  translationId: "",
+  outputLanguage: "zh-CN",
+  infoRoleId: "",
+  guideRoleId: "",
 };
 
-function abs(cwd: string, rel: string): string {
-  return path.join(cwd, rel);
-}
-
 export function readBatchUiConfig(cwd: string): InfoEditionBatchUiConfig {
-  const p = abs(cwd, INFO_EDITION_BATCH_UI_CONFIG_REL);
+  const p = infoEditionBatchUiConfigPath(cwd);
   if (!fs.existsSync(p)) return { ...DEFAULT_UI_CONFIG };
   try {
     const raw = JSON.parse(fs.readFileSync(p, "utf8")) as Partial<InfoEditionBatchUiConfig>;
@@ -57,6 +59,10 @@ export function readBatchUiConfig(cwd: string): InfoEditionBatchUiConfig {
           ? Math.min(raw.delayMs, 60_000)
           : DEFAULT_UI_CONFIG.delayMs,
       editions: editions.length ? editions : DEFAULT_UI_CONFIG.editions,
+      translationId: typeof raw.translationId === "string" ? raw.translationId.trim() : "",
+      outputLanguage: raw.outputLanguage === "en" ? "en" : "zh-CN",
+      infoRoleId: typeof raw.infoRoleId === "string" ? raw.infoRoleId.trim() : "",
+      guideRoleId: typeof raw.guideRoleId === "string" ? raw.guideRoleId.trim() : "",
     };
   } catch {
     return { ...DEFAULT_UI_CONFIG };
@@ -64,7 +70,7 @@ export function readBatchUiConfig(cwd: string): InfoEditionBatchUiConfig {
 }
 
 export function writeBatchUiConfig(cwd: string, config: InfoEditionBatchUiConfig): void {
-  const p = abs(cwd, INFO_EDITION_BATCH_UI_CONFIG_REL);
+  const p = infoEditionBatchUiConfigPath(cwd);
   const dir = path.dirname(p);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(p, `${JSON.stringify(config, null, 2)}\n`, "utf8");
@@ -87,7 +93,7 @@ export function isBatchProcessAlive(pid: number): boolean {
 }
 
 export function readBatchLogTail(cwd: string, lines = 48): string[] {
-  const p = abs(cwd, INFO_EDITION_BATCH_LOG_REL);
+  const p = infoEditionBatchLogPath(cwd);
   if (!fs.existsSync(p)) return [];
   const text = fs.readFileSync(p, "utf8");
   return text.split("\n").filter(Boolean).slice(-lines);
@@ -107,12 +113,20 @@ export function reconcileBatchRunningFlag(cwd: string): boolean {
 
 export type StartBatchOptions = {
   force?: boolean;
+  /** 仅重生成 published 中结构校验未通过的章×版本 */
+  fixInvalid?: boolean;
+  /** 从断点光标续跑至全本最后一卷（忽略配置里的卷范围） */
+  fullBible?: boolean;
   pushEachBook?: boolean;
   bookStart?: string;
   bookEnd?: string;
   delayMs?: number;
   editions?: InfoEditionReaderVariant[];
   remoteScpTarget?: string;
+  translationId?: string;
+  outputLanguage?: "zh-CN" | "en";
+  infoRoleId?: string;
+  guideRoleId?: string;
 };
 
 export function startBatchProcess(
@@ -128,11 +142,15 @@ export function startBatchProcess(
   const config: InfoEditionBatchUiConfig = {
     ...ui,
     pushEachBook: opts.pushEachBook ?? ui.pushEachBook,
-    bookStart: opts.bookStart ?? ui.bookStart,
-    bookEnd: opts.bookEnd ?? ui.bookEnd,
+    bookStart: opts.fullBible ? "" : (opts.bookStart ?? ui.bookStart),
+    bookEnd: opts.fullBible ? "" : (opts.bookEnd ?? ui.bookEnd),
     delayMs: opts.delayMs ?? ui.delayMs,
     editions: opts.editions ?? ui.editions,
     remoteScpTarget: opts.remoteScpTarget ?? ui.remoteScpTarget,
+    translationId: opts.translationId ?? ui.translationId,
+    outputLanguage: opts.outputLanguage ?? ui.outputLanguage,
+    infoRoleId: opts.infoRoleId ?? ui.infoRoleId,
+    guideRoleId: opts.guideRoleId ?? ui.guideRoleId,
   };
   writeBatchUiConfig(cwd, config);
 
@@ -142,7 +160,7 @@ export function startBatchProcess(
     return { ok: false, error: "找不到 tsx 或批量脚本，请先 npm install。" };
   }
 
-  const logPath = abs(cwd, INFO_EDITION_BATCH_LOG_REL);
+  const logPath = infoEditionBatchLogPath(cwd);
   const logDir = path.dirname(logPath);
   if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
   const logFd = fs.openSync(logPath, "a");
@@ -151,19 +169,25 @@ export function startBatchProcess(
     `\n--- batch start ${new Date().toISOString()} ---\n`,
   );
 
+  const directDisk = isInfoEditionBatchOnProductionDisk(cwd);
   const env: NodeJS.ProcessEnv = {
     ...process.env,
-    NODE_ENV: "development",
+    ...(directDisk ? {} : { NODE_ENV: "development" }),
     INFO_EDITION_BATCH_EDITIONS: config.editions.join(","),
     INFO_EDITION_BATCH_DELAY_MS: String(config.delayMs),
+    INFO_EDITION_BATCH_OUTPUT_LANGUAGE: config.outputLanguage,
   };
   if (opts.force) env.INFO_EDITION_BATCH_FORCE = "1";
+  if (opts.fixInvalid) env.INFO_EDITION_BATCH_FIX_INVALID = "1";
   if (config.bookStart) env.INFO_EDITION_BATCH_BOOK_START = config.bookStart;
   if (config.bookEnd) env.INFO_EDITION_BATCH_BOOK_END = config.bookEnd;
-  if (config.pushEachBook) env.INFO_EDITION_BATCH_PUSH_EACH_BOOK = "1";
-  if (config.remoteScpTarget) {
+  if (config.pushEachBook && !directDisk) env.INFO_EDITION_BATCH_PUSH_EACH_BOOK = "1";
+  if (config.remoteScpTarget && !directDisk) {
     env.INFO_EDITION_REMOTE_SCP_TARGET = config.remoteScpTarget;
   }
+  if (config.translationId) env.INFO_EDITION_BATCH_TRANSLATION_ID = config.translationId;
+  if (config.infoRoleId) env.INFO_EDITION_BATCH_INFO_ROLE_ID = config.infoRoleId;
+  if (config.guideRoleId) env.INFO_EDITION_BATCH_GUIDE_ROLE_ID = config.guideRoleId;
 
   const shim = path.join(cwd, "scripts", "register-server-only.cjs");
   const child = spawn(tsx, [script], {

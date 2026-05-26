@@ -4,8 +4,11 @@ import type { MetadataRoute } from "next";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 import type { BrandColors, BrandPresetId, SiteBrandingState } from "@/lib/site-branding-colors";
 import {
+  BRAND_PRESET_ORDER,
   BRAND_PRESETS,
+  coerceBrandPresetId,
   DEFAULT_BRAND_COLORS,
+  isValidHex6,
   normalizeBrandColors,
 } from "@/lib/site-branding-colors";
 
@@ -14,19 +17,13 @@ export type { SiteBrandingState } from "@/lib/site-branding-colors";
 const cwd = process.cwd();
 export const BRANDING_PUBLIC_DIR = path.resolve(cwd, "public", "branding");
 export const BRANDING_STATE_PATH = path.resolve(cwd, "data", "branding.json");
+export const DEFAULT_LOGO_TEXT_ACCENT = "#E5A525";
 
-const VALID_PRESET: Set<BrandPresetId> = new Set([
-  "parchment",
-  "mist",
-  "dusk",
-  "forest",
-  "custom",
-]);
+const VALID_PRESET: Set<BrandPresetId> = new Set([...BRAND_PRESET_ORDER, "custom"]);
 
 function coercePreset(id: unknown): BrandPresetId {
-  return typeof id === "string" && VALID_PRESET.has(id as BrandPresetId)
-    ? (id as BrandPresetId)
-    : "parchment";
+  const coerced = coerceBrandPresetId(id);
+  return coerced === "custom" || VALID_PRESET.has(coerced) ? coerced : "parchment";
 }
 
 function coerceLogoKind(v: unknown): "svg" | "raster" {
@@ -51,6 +48,12 @@ export async function readBrandingState(): Promise<SiteBrandingState | null> {
     if (typeof j.appIconOriginalName === "string" && j.appIconOriginalName.trim()) {
       base.appIconOriginalName = j.appIconOriginalName.trim();
     }
+    if (typeof j.logoBackground === "string" && isValidHex6(j.logoBackground)) {
+      base.logoBackground = j.logoBackground.trim().toUpperCase();
+    }
+    if (typeof j.logoTextAccent === "string" && isValidHex6(j.logoTextAccent)) {
+      base.logoTextAccent = j.logoTextAccent.trim().toUpperCase();
+    }
     return base;
   } catch {
     return null;
@@ -69,10 +72,39 @@ export async function getResolvedBrandColors(): Promise<BrandColors> {
   return normalizeBrandColors(st.colors);
 }
 
+/** 顶栏 LOGO 方块底色；未单独保存时与品牌 `canvas` 一致。 */
+export async function getResolvedLogoBackground(): Promise<string> {
+  const st = await readBrandingState();
+  const colors = await getResolvedBrandColors();
+  if (st?.logoBackground && isValidHex6(st.logoBackground)) {
+    return st.logoBackground.trim().toUpperCase();
+  }
+  return colors.canvas;
+}
+
+/** 前台阅读辅助色（默认值用于提升羊皮背景上的可读性）。 */
+export async function getResolvedLogoTextAccent(): Promise<string> {
+  const st = await readBrandingState();
+  if (st?.logoTextAccent && isValidHex6(st.logoTextAccent)) {
+    return st.logoTextAccent.trim().toUpperCase();
+  }
+  return DEFAULT_LOGO_TEXT_ACCENT;
+}
+
 export async function brandingAssetsExist(): Promise<boolean> {
   try {
     await fs.access(path.join(BRANDING_PUBLIC_DIR, "icon-192.png"));
     await fs.access(path.join(BRANDING_PUBLIC_DIR, "icon-512.png"));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** 启动屏预览：`public/branding/splash-icon.png` */
+export async function brandingSplashExists(): Promise<boolean> {
+  try {
+    await fs.access(path.join(BRANDING_PUBLIC_DIR, "splash-icon.png"));
     return true;
   } catch {
     return false;

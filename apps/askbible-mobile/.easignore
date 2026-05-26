@@ -1,0 +1,32 @@
+node_modules/
+**/node_modules/
+**/node_modules/**
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+android/.cxx/
+**/.gradle/
+**/.cxx/
+**/build/
+
+# iOS build artifacts
+ios/build/
+ios/Pods/
+ios/DerivedData/
+ios/.symlinks/
+
+# Metro / logs / local env
+.metro-health-check*
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.env*.local
+.DS_Store

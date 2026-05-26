@@ -2,85 +2,94 @@
   "version": 2,
   "videos": [
     {
-      "id": "8132b70e-f9dc-44a3-9cb0-35f43a46ef33",
-      "src": "/nature/uploads/d82f4a27a47d43b796abe0c837702963-720.mp4",
-      "category": "nature",
-      "title": "自然影像 2026-05-16 · 01",
-      "previewFrameSrc": "/nature/preview-posters/d82f4a27a47d43b796abe0c837702963.jpg",
-      "src1080": "/nature/uploads/d82f4a27a47d43b796abe0c837702963-1080.mp4",
-      "src4k": "/nature/uploads/d82f4a27a47d43b796abe0c837702963.master.mp4"
-    },
-    {
       "id": "9cc949f2-3c1d-49c0-8357-2dc1d32bd954",
       "src": "/nature/uploads/9a090c2be6a34caa9536861005726781-720.mp4",
       "category": "nature",
       "title": "自然影像 2026-05-16 · 02",
+      "thumbSrc": "/nature/thumbs/9a090c2be6a34caa9536861005726781.jpg",
       "previewFrameSrc": "/nature/preview-posters/9a090c2be6a34caa9536861005726781.jpg",
       "src1080": "/nature/uploads/9a090c2be6a34caa9536861005726781-1080.mp4",
       "src4k": "/nature/uploads/9a090c2be6a34caa9536861005726781.master.mp4"
-    },
-    {
-      "id": "d86754f9-2c16-4896-a00f-31a29858b547",
-      "src": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d-720.mp4",
-      "category": "nature",
-      "title": "自然影像 2026-05-16 · 03",
-      "previewFrameSrc": "/nature/preview-posters/0b288d8250b2460788fd0f0e2efa828d.jpg",
-      "src1080": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d-1080.mp4",
-      "src4k": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d.master.mp4"
-    },
-    {
-      "id": "d721567f-395f-41d0-b022-7f78a4ef456e",
-      "src": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9-720.mp4",
-      "category": "nature",
-      "title": "自然影像 2026-05-16 · 04",
-      "previewFrameSrc": "/nature/preview-posters/3adc833b30b4495fb8c46a48cc11afe9.jpg",
-      "src1080": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9-1080.mp4",
-      "src4k": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9.master.mp4"
-    },
-    {
-      "id": "260b958e-f95a-4900-80b5-3ae9e7b2d720",
-      "src": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58-720.mp4",
-      "category": "day",
-      "title": "自然影像 2026-05-16 · 05",
-      "previewFrameSrc": "/nature/preview-posters/a59d8302282b42a28d858a8d92c5ba58.jpg",
-      "src1080": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58-1080.mp4",
-      "src4k": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58.master.mp4"
     },
     {
       "id": "3c8150de-7baa-4334-9c89-4042781ced66",
       "src": "/nature/uploads/aaf87b9fcc864378a8b0cd099cb9a5c5-720.mp4",
       "category": "night",
       "title": "自然影像 2026-05-16 · 06",
+      "thumbSrc": "/nature/thumbs/aaf87b9fcc864378a8b0cd099cb9a5c5.jpg",
       "previewFrameSrc": "/nature/preview-posters/aaf87b9fcc864378a8b0cd099cb9a5c5.jpg",
       "src1080": "/nature/uploads/aaf87b9fcc864378a8b0cd099cb9a5c5-1080.mp4",
       "src4k": "/nature/uploads/aaf87b9fcc864378a8b0cd099cb9a5c5.master.mp4"
-    },
-    {
-      "id": "3ebc424b-5a1b-48dd-accb-0906186dfda0",
-      "src": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d-720.mp4",
-      "category": "nature",
-      "title": "自然影像 2026-05-16 · 07",
-      "previewFrameSrc": "/nature/preview-posters/3f24c668f5eb4be889950a7874a2464d.jpg",
-      "src1080": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d-1080.mp4",
-      "src4k": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d.master.mp4"
     },
     {
       "id": "7536456b-50fe-42c0-ad70-e78c9710e762",
       "src": "/nature/uploads/005ff1000c2046e2af6055b0d0d78792-720.mp4",
       "category": "nature",
       "title": "自然影像 2026-05-16 · 08",
+      "thumbSrc": "/nature/thumbs/005ff1000c2046e2af6055b0d0d78792.jpg",
       "previewFrameSrc": "/nature/preview-posters/005ff1000c2046e2af6055b0d0d78792.jpg",
       "src1080": "/nature/uploads/005ff1000c2046e2af6055b0d0d78792-1080.mp4",
       "src4k": "/nature/uploads/005ff1000c2046e2af6055b0d0d78792.master.mp4"
     },
     {
-      "id": "1f30d164-bbf4-4542-acb3-d182af2a5173",
-      "src": "/nature/uploads/728556a209a24dfda7ec013eee14c9e7-720.mp4",
-      "category": "night",
-      "title": "自然影像 2026-05-16 · 09",
-      "previewFrameSrc": "/nature/preview-posters/728556a209a24dfda7ec013eee14c9e7.jpg",
-      "src1080": "/nature/uploads/728556a209a24dfda7ec013eee14c9e7-1080.mp4",
-      "src4k": "/nature/uploads/728556a209a24dfda7ec013eee14c9e7.master.mp4"
+      "id": "d721567f-395f-41d0-b022-7f78a4ef456e",
+      "src": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9-720.mp4",
+      "category": "nature",
+      "title": "自然影像 2026-05-16 · 04",
+      "thumbSrc": "/nature/thumbs/3adc833b30b4495fb8c46a48cc11afe9.jpg",
+      "previewFrameSrc": "/nature/preview-posters/3adc833b30b4495fb8c46a48cc11afe9.jpg",
+      "src1080": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9-1080.mp4",
+      "src4k": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9.master.mp4"
+    },
+    {
+      "id": "d86754f9-2c16-4896-a00f-31a29858b547",
+      "src": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d-720.mp4",
+      "category": "nature",
+      "title": "自然影像 2026-05-16 · 03",
+      "thumbSrc": "/nature/thumbs/0b288d8250b2460788fd0f0e2efa828d.jpg",
+      "previewFrameSrc": "/nature/preview-posters/0b288d8250b2460788fd0f0e2efa828d.jpg",
+      "src1080": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d-1080.mp4",
+      "src4k": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d.master.mp4"
+    },
+    {
+      "id": "3ebc424b-5a1b-48dd-accb-0906186dfda0",
+      "src": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d-720.mp4",
+      "category": "nature",
+      "title": "自然影像 2026-05-16 · 07",
+      "thumbSrc": "/nature/thumbs/3f24c668f5eb4be889950a7874a2464d.jpg",
+      "previewFrameSrc": "/nature/preview-posters/3f24c668f5eb4be889950a7874a2464d.jpg",
+      "src1080": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d-1080.mp4",
+      "src4k": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d.master.mp4"
+    },
+    {
+      "id": "c6eed3e9-7b57-4fd8-9843-4af6fb321b0c",
+      "src": "/nature/uploads/3736d8d552da45de84099a78ad8cc3eb-720.mp4",
+      "category": "nature",
+      "title": "自然影像 2026-05-25 · 01",
+      "thumbSrc": "/nature/thumbs/3736d8d552da45de84099a78ad8cc3eb.jpg",
+      "previewFrameSrc": "/nature/preview-posters/3736d8d552da45de84099a78ad8cc3eb.jpg",
+      "src1080": "/nature/uploads/3736d8d552da45de84099a78ad8cc3eb-1080.mp4",
+      "src4k": "/nature/uploads/3736d8d552da45de84099a78ad8cc3eb.master.mp4"
+    },
+    {
+      "id": "260b958e-f95a-4900-80b5-3ae9e7b2d720",
+      "src": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58-720.mp4",
+      "category": "day",
+      "title": "自然影像 2026-05-16 · 05",
+      "thumbSrc": "/nature/thumbs/a59d8302282b42a28d858a8d92c5ba58.jpg",
+      "previewFrameSrc": "/nature/preview-posters/a59d8302282b42a28d858a8d92c5ba58.jpg",
+      "src1080": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58-1080.mp4",
+      "src4k": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58.master.mp4"
+    },
+    {
+      "id": "8132b70e-f9dc-44a3-9cb0-35f43a46ef33",
+      "src": "/nature/uploads/d82f4a27a47d43b796abe0c837702963-720.mp4",
+      "category": "nature",
+      "title": "自然影像 2026-05-16 · 01",
+      "thumbSrc": "/nature/thumbs/d82f4a27a47d43b796abe0c837702963.jpg",
+      "previewFrameSrc": "/nature/preview-posters/d82f4a27a47d43b796abe0c837702963.jpg",
+      "src1080": "/nature/uploads/d82f4a27a47d43b796abe0c837702963-1080.mp4",
+      "src4k": "/nature/uploads/d82f4a27a47d43b796abe0c837702963.master.mp4"
     }
   ],
   "ambientClips": [
@@ -153,6 +162,51 @@
       "id": "9a21fb27-c9db-44b8-961d-8a337f5dbc5c",
       "src": "/nature/audio-uploads/3136a4bafc0c452584bd94fb6cedb1f7.mp3",
       "title": "打雷"
+    },
+    {
+      "id": "scene-water",
+      "src": "/nature/audio-uploads/scene-water-lake-120.mp3",
+      "title": "水"
+    },
+    {
+      "id": "scene-rain",
+      "src": "/nature/audio-uploads/5eb30fd4dc0048e29f938ee8e0d3e03d.mp3",
+      "title": "雨"
+    },
+    {
+      "id": "scene-waves",
+      "src": "/nature/audio-uploads/scene-waves-ocean.mp3",
+      "title": "海浪"
+    },
+    {
+      "id": "scene-thunder",
+      "src": "/nature/audio-uploads/scene-thunderstorm-28.mp3",
+      "title": "雷"
+    },
+    {
+      "id": "scene-birds",
+      "src": "/nature/audio-uploads/scene-birds-forest-319791.mp3",
+      "title": "鸟"
+    },
+    {
+      "id": "scene-wind",
+      "src": "/nature/audio-uploads/scene-windstorm-60.mp3",
+      "title": "风"
+    },
+    {
+      "id": "scene-white-noise",
+      "src": "/nature/audio-uploads/scene-white-noise-41.mp3",
+      "title": "白噪音"
+    },
+    {
+      "id": "scene-cafe",
+      "src": "/nature/audio-uploads/scene-cafe-120.mp3",
+      "title": "咖啡厅"
+    },
+    {
+      "id": "scene-big-noise",
+      "src": "/nature/audio-uploads/scene-big-noise-300.mp3",
+      "title": "大噪音（备用）"
     }
   ],
   "activeVideoId": "9cc949f2-3c1d-49c0-8357-2dc1d32bd954",

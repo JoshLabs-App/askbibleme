@@ -1,8 +1,21 @@
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import type { HomePrayerChunkV1, HomePrayerManifestV1, HomePrayerChunkVerseV1 } from "@/lib/home-prayer-pools/types";
-import { HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
 import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
+import { HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
+import {
+  HOME_PRAYER_POOL_CHUNKS,
+  HOME_PRAYER_POOL_MANIFEST_GE5,
+  HOME_PRAYER_POOL_SCOPE_ID,
+} from "@/lib/home-prayer-pools/chunk-registry.generated";
+
+function isManifestValid(data: HomePrayerManifestV1): boolean {
+  return data?.version === 1 && Array.isArray(data.entries);
+}
+
+function isChunkValid(data: HomePrayerChunkV1): boolean {
+  return data?.version === 1 && Array.isArray(data.verses);
+}
 
 export function manifestUrl(scopeId: string): string {
   return `${HOME_PRAYER_POOL_PUBLIC_BASE}/${encodeURIComponent(scopeId)}/manifest.json`;
@@ -13,24 +26,29 @@ export function chunkUrl(scopeId: string, chunkIndex: number): string {
 }
 
 export async function fetchHomePrayerManifest(scopeId: string): Promise<HomePrayerManifestV1 | null> {
+  if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
+    return isManifestValid(HOME_PRAYER_POOL_MANIFEST_GE5) ? HOME_PRAYER_POOL_MANIFEST_GE5 : null;
+  }
   try {
     const res = await fetch(manifestUrl(scopeId), { cache: "force-cache" });
     if (!res.ok) return null;
     const data = (await res.json()) as HomePrayerManifestV1;
-    if (data?.version !== 1 || !Array.isArray(data.entries)) return null;
-    return data;
+    return isManifestValid(data) ? data : null;
   } catch {
     return null;
   }
 }
 
 export async function fetchHomePrayerChunk(scopeId: string, chunkIndex: number): Promise<HomePrayerChunkV1 | null> {
+  if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
+    const data = HOME_PRAYER_POOL_CHUNKS[chunkIndex];
+    return data && isChunkValid(data) ? data : null;
+  }
   try {
     const res = await fetch(chunkUrl(scopeId, chunkIndex), { cache: "force-cache" });
     if (!res.ok) return null;
     const data = (await res.json()) as HomePrayerChunkV1;
-    if (data?.version !== 1 || !Array.isArray(data.verses)) return null;
-    return data;
+    return isChunkValid(data) ? data : null;
   } catch {
     return null;
   }
@@ -115,8 +133,13 @@ export function buildEntriesByLocaleFromKeys(
 }
 
 export function prefetchChunkIdle(scopeId: string, chunkIndex: number, chunkCache: Map<number, HomePrayerChunkV1>): void {
-  if (typeof window === "undefined") return;
   if (chunkCache.has(chunkIndex)) return;
+  if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
+    const ch = HOME_PRAYER_POOL_CHUNKS[chunkIndex];
+    if (ch && isChunkValid(ch)) chunkCache.set(chunkIndex, ch);
+    return;
+  }
+  if (typeof window === "undefined") return;
   const run = () => {
     void fetchHomePrayerChunk(scopeId, chunkIndex).then((ch) => {
       if (ch) chunkCache.set(chunkIndex, ch);

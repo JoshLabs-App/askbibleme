@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { PostReadingEditionHero } from "@/components/bible/PostReadingEditionHero";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 
@@ -24,17 +23,26 @@ type Props = {
   variant: InfoEditionReaderVariant;
   bookId: string;
   chapter: number;
+  roleId?: string | null;
   /** 父级已选中该版本时展示并触发加载 */
   isActive: boolean;
   initialPublished?: InfoEditionV1PublishedChapter | null;
-  /** 为 false 时不在正文顶重复显示版本徽章（大屏由父级双按钮切换） */
-  showHeroBadge?: boolean;
+  onBack?: () => void;
 };
 
 type PanelPhase = "idle" | "loading" | "ready" | "error";
 
 function hasPublishedMarkdown(ch?: InfoEditionV1PublishedChapter | null): boolean {
   return Boolean(ch?.markdown?.trim());
+}
+
+function matchesRequestedRole(
+  published: InfoEditionV1PublishedChapter | null | undefined,
+  roleId: string | null,
+): boolean {
+  const wanted = roleId?.trim();
+  if (!wanted) return true;
+  return published?.roleId?.trim() === wanted;
 }
 
 function formatInfoEditionError(
@@ -66,8 +74,12 @@ function apiFailureMessage(j: Record<string, unknown>, res: Response): string | 
   return undefined;
 }
 
-function editionQuery(variant: InfoEditionReaderVariant): string {
-  return `edition=${encodeURIComponent(variant)}`;
+function editionQuery(variant: InfoEditionReaderVariant, roleId?: string | null): string {
+  const q = [`edition=${encodeURIComponent(variant)}`];
+  if (roleId?.trim()) {
+    q.push(`roleId=${encodeURIComponent(roleId.trim())}`);
+  }
+  return q.join("&");
 }
 
 /** 读经页：讲解版 / 发现版面板（由父级选择后按需加载） */
@@ -75,12 +87,13 @@ export function ReadChapterInfoEditionBlock({
   variant,
   bookId,
   chapter,
+  roleId = null,
   isActive,
   initialPublished = null,
-  showHeroBadge = true,
+  onBack,
 }: Props) {
   const { t } = useLocale();
-  const initialReady = hasPublishedMarkdown(initialPublished);
+  const initialReady = hasPublishedMarkdown(initialPublished) && matchesRequestedRole(initialPublished, roleId);
   const [phase, setPhase] = useState<PanelPhase>(initialReady ? "ready" : "idle");
   const [published, setPublished] = useState<InfoEditionV1PublishedChapter | null>(
     initialReady ? initialPublished : null,
@@ -89,6 +102,7 @@ export function ReadChapterInfoEditionBlock({
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollStartedRef = useRef<number | null>(null);
   const loadStartedRef = useRef(false);
+  const roleSnapshotRef = useRef<string>(roleId?.trim() ?? "");
   const POLL_MAX_MS = 4 * 60 * 1000;
 
   const disclaimer =
@@ -107,6 +121,23 @@ export function ReadChapterInfoEditionBlock({
   }, []);
 
   useEffect(() => () => stopPoll(), [stopPoll]);
+
+  useEffect(() => {
+    const nextRole = roleId?.trim() ?? "";
+    if (roleSnapshotRef.current === nextRole) return;
+    roleSnapshotRef.current = nextRole;
+    loadStartedRef.current = false;
+    stopPoll();
+    if (hasPublishedMarkdown(initialPublished) && matchesRequestedRole(initialPublished, roleId)) {
+      setPublished(initialPublished);
+      setPhase("ready");
+      setErr(null);
+      return;
+    }
+    setPublished(null);
+    setErr(null);
+    setPhase("idle");
+  }, [initialPublished, roleId, stopPoll]);
 
   const applyCachePayload = useCallback(
     (j: Record<string, unknown>, options?: { openOnFailed?: boolean }): boolean => {
@@ -146,7 +177,7 @@ export function ReadChapterInfoEditionBlock({
       }
       void (async () => {
         const res = await fetch(
-          `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant)}`,
+          `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant, roleId)}`,
           { cache: "no-store" },
         );
         const j = await parseJson(res);
@@ -159,13 +190,13 @@ export function ReadChapterInfoEditionBlock({
         if (applyCachePayload(j)) stopPoll();
       })();
     }, 2000);
-  }, [applyCachePayload, bookId, chapter, stopPoll, t, variant]);
+  }, [applyCachePayload, bookId, chapter, roleId, stopPoll, t, variant]);
 
   const loadOrGenerate = useCallback(async () => {
     setErr(null);
     setPhase("loading");
 
-    const qs = `bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant)}`;
+    const qs = `bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant, roleId)}`;
     const getRes = await fetch(`/api/read/info-edition-v1?${qs}`, { cache: "no-store" });
     const getJ = await parseJson(getRes);
     if (!getRes.ok || getJ.ok === false) {
@@ -182,7 +213,7 @@ export function ReadChapterInfoEditionBlock({
     const postRes = await fetch(`/api/read/info-edition-v1`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookId, chapter, edition: variant }),
+      body: JSON.stringify({ bookId, chapter, edition: variant, roleId }),
     });
     const postJ = await parseJson(postRes);
     if (!postRes.ok || postJ.ok === false) {
@@ -199,7 +230,7 @@ export function ReadChapterInfoEditionBlock({
     }
     setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
     setPhase("error");
-  }, [applyCachePayload, bookId, chapter, pollUntilReady, stopPoll, t, variant]);
+  }, [applyCachePayload, bookId, chapter, pollUntilReady, roleId, stopPoll, t, variant]);
 
   useEffect(() => {
     if (!isActive) {
@@ -237,7 +268,6 @@ export function ReadChapterInfoEditionBlock({
           }
         >
           <header className="read-chapter-info-edition-header">
-            {showHeroBadge ? <PostReadingEditionHero variant={variant} /> : null}
             <p className="read-chapter-info-edition-disclaimer">{disclaimer}</p>
           </header>
 
@@ -260,6 +290,16 @@ export function ReadChapterInfoEditionBlock({
           {phase === "ready" && published ? (
             <div className="read-chapter-info-edition-panel">
               <ReadChapterInfoEditionMarkdown content={published.markdown} />
+              {onBack ? (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="read-chapter-info-edition-back"
+                  aria-label={t("pages.read.postReadingBack")}
+                >
+                  {t("pages.read.postReadingBack")}
+                </button>
+              ) : null}
             </div>
           ) : null}
         </section>

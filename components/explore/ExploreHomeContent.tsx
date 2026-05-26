@@ -24,13 +24,72 @@ export function ExploreHomeContent() {
         <ul className="mx-auto mt-8 max-w-md space-y-3">
           <li>
             <Link
-              href="/prayer"
+              href="/explore/word-of-god"
               className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
             >
-              <span className="font-serif text-[1.08rem] font-medium text-ink/90">{t("pages.explore.prayerCardTitle")}</span>
-              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.prayerCardLead")}</span>
+              <span className="inline-flex items-center gap-2 font-serif text-[1.08rem] font-medium text-ink/90">
+                <span
+                  aria-hidden
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink/12 bg-canvas/80 text-[1.05rem]"
+                >
+                  📖
+                </span>
+                <span>{t("pages.explore.wordOfGodCardTitle")}</span>
+              </span>
+              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.wordOfGodCardLead")}</span>
               <span className="mt-3 text-[13px] font-medium text-ink/80 underline decoration-ink/25 underline-offset-[0.2em]">
-                {t("pages.explore.prayerCardCta")}
+                {t("pages.explore.wordOfGodCardCta")}
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/explore/biblical-feasts"
+              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
+            >
+              <span className="inline-flex items-center gap-2 font-serif text-[1.08rem] font-medium text-ink/90">
+                <span
+                  aria-hidden
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink/12 bg-canvas/80 text-[1.05rem]"
+                >
+                  🗓️
+                </span>
+                <span>{t("pages.explore.biblicalFeastsCardTitle")}</span>
+              </span>
+              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.biblicalFeastsCardLead")}</span>
+              <span className="mt-3 flex items-center gap-2 text-[11px] text-ink/62">
+                <span className="font-medium">{t("pages.explore.biblicalFeasts.feasts.passover.month")}</span>
+                <span className="relative h-px flex-1 bg-border/70">
+                  <span className="absolute left-[10%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
+                  <span className="absolute left-[38%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
+                  <span className="absolute left-[66%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
+                  <span className="absolute left-[92%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
+                </span>
+                <span className="font-medium">{t("pages.explore.biblicalFeasts.feasts.tabernacles.month")}</span>
+              </span>
+              <span className="mt-3 text-[13px] font-medium text-ink/80 underline decoration-ink/25 underline-offset-[0.2em]">
+                {t("pages.explore.biblicalFeastsCardCta")}
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/explore/year-day-count"
+              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
+            >
+              <span className="font-serif text-[1.08rem] font-medium text-ink/90">
+                {t("pages.explore.yearDayCountTitle")}
+              </span>
+              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.yearDayCountLead")}</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/explore/years-days-eternity"
+              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
+            >
+              <span className="font-serif text-[1.08rem] font-medium text-ink/90">
+                {t("pages.explore.yearsDaysEternityTitle")}
               </span>
             </Link>
           </li>

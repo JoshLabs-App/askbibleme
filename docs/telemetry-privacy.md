@@ -1,6 +1,13 @@
 # 产品使用统计（Telemetry）隐私说明
 
-面向创始人与部署；用户端不展示追踪提示（无第三方广告追踪）。
+面向创始人与部署；仅做匿名基础统计，不做第三方广告追踪。
+
+## 默认策略（当前）
+
+- **默认关闭**：移动端首次安装后，统计开关默认不启用。
+- **同意后启用**：首次启动会出现同意弹窗，只有用户点「允许」才开始采集匿名事件。
+- **可随时关闭**：用户可在 App 左侧菜单的隐私区随时关闭匿名统计。
+- **无广告追踪**：不接入广告标识，不做跨 App/跨站追踪（`NSPrivacyTracking=false`）。
 
 ## 收集什么
 
@@ -15,13 +22,11 @@
 
 ## 存储与保留
 
-**默认与信息版相同（推荐，无需 Supabase）：**
+**默认与信息版相同（推荐）：**
 
 - 本机：`data/bible/telemetry-v1-store.json`
 - Render 持久盘：`<DATA_ROOT>/telemetry-v1-store.json`（需已配置 `INFO_EDITION_DISK_SAVE` + `DATA_ROOT`）
 - 文件内为按日聚合（DAU、页面/点击/场景排行），保留约 90 天
-
-**可选：** 若已配置 `SUPABASE_SERVICE_ROLE_KEY` 且未挂磁盘，则写入 Supabase 表（见 `supabase/migrations/20260519000000_telemetry_events.sql`）。
 
 ## 离线行为
 
@@ -37,7 +42,7 @@
 
 机内资源与统计分开：**可保持** `EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1`（经文/场景走 APK 包内），同时有网时上报到 `https://askbible.me/api/telemetry/ingest`。
 
-[`apps/selah-mobile/eas.json`](../apps/selah-mobile/eas.json) 的 `preview` / `production` 已默认：
+[`apps/askbible-mobile/eas.json`](../apps/askbible-mobile/eas.json) 的 `preview` / `production` 已默认：
 
 - `EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1`
 - `EXPO_PUBLIC_ASKBIBLE_BASE_URL=https://askbible.me`
@@ -47,4 +52,4 @@
 
 ## 管理查看
 
-- `/admin/system/usage`（需现有管理后台权限 + Supabase service role）。
+- `/admin/system/usage`（需现有管理后台权限）。

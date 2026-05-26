@@ -3,15 +3,12 @@ import { getAdminGateSecret } from "@/lib/admin-gate";
 /** 复用 AskBible 登录成功后签发；middleware（Edge）仅校验 HMAC，不读 SQLite */
 export const ADMIN_ASKBIBLE_SESSION_COOKIE = "selah_admin_askbible";
 
-/** 前台用户（任意 `users` 行），与后台 admin cookie 分离 */
-export const USER_ASKBIBLE_SESSION_COOKIE = "selah_user_askbible";
-
 export type AskbibleSessionPayload = {
   v: 1;
   sub: string;
   email: string;
   exp: number;
-  /** 可选：旧站 `users.name`，供 `/api/auth/askbible` GET 展示 */
+  /** 可选：旧站 `users.name` */
   name?: string;
 };
 

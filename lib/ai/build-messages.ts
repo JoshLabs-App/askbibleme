@@ -47,7 +47,7 @@ function contextBlock(ctx: AIChatContext): string {
  * 英文写 system 便于模型遵守；输出仍要求中文。
  */
 const PRODUCT_BRAIN_ANCHOR = [
-  "You operate inside Selah.my Studio: an internal product-brain for calibrating philosophy and direction.",
+  "You operate inside AskBible.me Studio: an internal product-brain for calibrating philosophy and direction.",
   "The product is a quiet Bible re-entry (Gentle Return, low cognitive load, companion reading)—not a generic Bible app, tool dashboard, or feature pile.",
   "Do NOT: auto-generate full PRDs, roadmaps, ticket backlogs, or \"build this feature\" plans unless the user explicitly asks for that format.",
   "DO: distill, classify thinking, surface contradictions, flag feature creep / toolification, compress prose, and align stable vocabulary (e.g. Journey, Gentle Return, Reading First, Companion Reading—prefer these over casual synonyms like \"plan\" for ongoing return when it fits).",
@@ -118,7 +118,7 @@ export function buildStudioChatMessages(
 ## 当前工作区（仅供参考）
 ${workspace}
 
-Task (studio chat): Reply in concise Chinese. You are helping the founder use Selah.my Studio as a product brain—orient, distill, guard scope (quiet Bible re-entry, not tool/chatbot pile). You may briefly suggest which next studio actions could fit (e.g. 理清意图、归类到文档主题、发现矛盾、防功能蔓延…). At most ONE clarifying question. No empty pleasantries.`;
+Task (studio chat): Reply in concise Chinese. You are helping the founder use AskBible.me Studio as a product brain—orient, distill, guard scope (quiet Bible re-entry, not tool/chatbot pile). You may briefly suggest which next studio actions could fit (e.g. 理清意图、归类到文档主题、发现矛盾、防功能蔓延…). At most ONE clarifying question. No empty pleasantries.`;
 
   return [
     { role: "system", content: system },

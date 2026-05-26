@@ -5,7 +5,7 @@ import { getSqlJsStatic } from "@/lib/bible/sql-js-wasm";
 
 export const SCRIPTURE_SQLITE_DIR_REL = path.join("data", "bible", "sqlite");
 
-export const SELAH_SCRIPTURE_SQLITE_FORMAT = "selah-scripture-sqlite-v1";
+export const SELAH_SCRIPTURE_SQLITE_FORMAT = "selah-scripture-sqlite-v3";
 
 export const SCRIPTURE_SQLITE_SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS meta (
@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS verse (
   chapter INTEGER NOT NULL,
   verse INTEGER NOT NULL,
   text TEXT NOT NULL,
+  speech_spans TEXT NOT NULL DEFAULT '',
+  flags INTEGER NOT NULL DEFAULT 0,
+  theme_repeat_count INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (book_id, chapter, verse)
 );
 CREATE INDEX IF NOT EXISTS idx_verse_ch ON verse(book_id, chapter);

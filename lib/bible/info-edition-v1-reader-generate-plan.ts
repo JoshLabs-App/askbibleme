@@ -17,11 +17,15 @@ import {
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
 import { readInfoEditionV1WorkspaceSync } from "@/lib/bible/info-edition-v1-store";
 import type { InfoEditionV1Generation } from "@/lib/bible/info-edition-v1-types";
-import { loadChapterFromDefaultTranslation } from "@/lib/bible/load-chapter-from-default-translation";
+import {
+  loadChapterFromDefaultTranslation,
+  loadChapterFromTranslation,
+} from "@/lib/bible/load-chapter-from-default-translation";
 import type { LoadedChapter } from "@/lib/bible/load-chapter-from-default-translation";
 import { createChatCompletion } from "@/lib/ai/openai-compatible";
 import { resolveAISettings } from "@/lib/ai/resolve-settings";
 import type { ResolvedAISettings } from "@/lib/ai/types";
+import { infoEditionReaderMaxTokens } from "@/lib/bible/info-edition-reader-max-tokens";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 
 export const READER_DESCRIPTION_RULES_MAX_CHARS = 2_800;
@@ -38,6 +42,7 @@ export type InfoEditionReaderGeneratePlan = {
   profileName: string;
   maxTokens: number;
   timeoutMs: number;
+  outputLanguage: "zh-CN" | "en";
 };
 
 export type PlanReaderGenerationResult =
@@ -82,7 +87,11 @@ export async function planInfoEditionReaderGeneration(
   bookId: string,
   chapter: number,
   target: ResolvedInfoEditionReaderTarget,
-  opts?: { descriptionRulesOverride?: string | null },
+  opts?: {
+    descriptionRulesOverride?: string | null;
+    translationIdOverride?: string | null;
+    outputLanguage?: "zh-CN" | "en";
+  },
 ): Promise<PlanReaderGenerationResult> {
   const bookMeta = scriptureBooks.find((b) => b.bookId === bookId);
   if (!bookMeta) return { ok: false, error: "无效书卷。" };
@@ -90,9 +99,15 @@ export async function planInfoEditionReaderGeneration(
     return { ok: false, error: "无效章号。" };
   }
 
-  const loaded = await loadChapterFromDefaultTranslation(bookId, chapter);
+  const outputLanguage = opts?.outputLanguage ?? "zh-CN";
+  const translationId = opts?.translationIdOverride?.trim();
+  const loaded = translationId
+    ? await loadChapterFromTranslation(cwd, bookId, chapter, translationId)
+    : await loadChapterFromDefaultTranslation(bookId, chapter);
   if (!loaded) {
-    return { ok: false, error: "无法读取本章经文。请先在后台登记默认译本。" };
+    return translationId
+      ? { ok: false, error: `无法读取本章经文：未找到译本 ${translationId} 或章节缺失。` }
+      : { ok: false, error: "无法读取本章经文。请先在后台登记默认译本。" };
   }
 
   const rolesFile = readGenerationRolesSync(cwd);
@@ -145,9 +160,14 @@ export async function planInfoEditionReaderGeneration(
     target.variant,
     opts?.descriptionRulesOverride,
   );
+  const systemPrompt =
+    outputLanguage === "en"
+      ? `${role.systemPrompt}\n\n[Language Override]\nOutput language must be English only.`
+      : role.systemPrompt;
   const messages = buildInfoEditionV1Messages(loaded, descriptionRulesUsed, {
-    systemPrompt: role.systemPrompt,
+    systemPrompt,
     variant: target.variant,
+    outputLanguage,
   });
 
   return {
@@ -162,8 +182,9 @@ export async function planInfoEditionReaderGeneration(
       settings,
       profileId: INFO_EDITION_V1_PUBLISH_PROFILE_ID,
       profileName,
-      maxTokens: 1_400,
-      timeoutMs: 180_000,
+      maxTokens: infoEditionReaderMaxTokens(target.variant),
+      timeoutMs: 240_000,
+      outputLanguage,
     },
   };
 }
@@ -179,11 +200,15 @@ export function planToPublicPayload(plan: InfoEditionReaderGeneratePlan) {
     bookId: plan.loaded.bookId,
     bookName: plan.loaded.bookName,
     chapter: plan.loaded.chapter,
-    translation: plan.loaded.labelZh || plan.loaded.translationId,
+    translation:
+      plan.outputLanguage === "en"
+        ? plan.loaded.labelEn || plan.loaded.translationId
+        : plan.loaded.labelZh || plan.loaded.translationId,
     descriptionRulesUsed: plan.descriptionRulesUsed,
     descriptionRulesCharCount: plan.descriptionRulesUsed.length,
     profileId: plan.profileId,
     profileName: plan.profileName,
+    outputLanguage: plan.outputLanguage,
     model: plan.settings.model,
     baseUrl: plan.settings.baseUrl,
     maxTokens: plan.maxTokens,

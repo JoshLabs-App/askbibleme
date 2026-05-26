@@ -5,8 +5,16 @@ import { NextResponse } from "next/server";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
 const MAX_BYTES = 80 * 1024 * 1024;
-
-const ALLOWED_EXT = new Set([".mp3", ".wav", ".ogg", ".m4a", ".aac", ".opus", ".webm", ".flac"]);
+const ALLOWED_EXT = new Set([
+  ".mp3",
+  ".wav",
+  ".ogg",
+  ".m4a",
+  ".aac",
+  ".opus",
+  ".webm",
+  ".flac",
+]);
 
 function extFromName(name: string): string {
   const n = name.toLowerCase();
@@ -15,7 +23,7 @@ function extFromName(name: string): string {
   return n.slice(i);
 }
 
-/** 自然页环境声素材 → `public/nature/audio-uploads/` */
+/** 上传自然场景环境声原文件（不转码），用于 App 场景音效选择。 */
 export async function POST(req: Request) {
   if (!isStudioDiskSaveAllowed(req)) {
     return NextResponse.json(
@@ -27,11 +35,23 @@ export async function POST(req: Request) {
     );
   }
 
+  const rawCt = req.headers.get("content-type")?.trim().toLowerCase() ?? "";
+  if (!rawCt.startsWith("multipart/form-data")) {
+    return NextResponse.json(
+      { error: "请求体须为 multipart/form-data（请选择文件后直接上传，不要手动改 Content-Type）。" },
+      { status: 400 },
+    );
+  }
+
   let form: Awaited<ReturnType<Request["formData"]>>;
   try {
     form = await req.formData();
-  } catch {
-    return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { error: `multipart 解析失败：${msg}。若为大文件，请确认已重启服务并生效更大的 proxyClientMaxBodySize。` },
+      { status: 400 },
+    );
   }
 
   const file = form.get("file");
@@ -46,23 +66,20 @@ export async function POST(req: Request) {
     );
   }
 
-  const origName = file.name || "audio";
-  const ext = extFromName(origName);
+  const ext = extFromName(file.name || "audio");
   if (!ALLOWED_EXT.has(ext)) {
     return NextResponse.json(
-      {
-        error: `不支持的扩展名 ${ext || "（无）"}。允许：${[...ALLOWED_EXT].join(" ")}`,
-      },
+      { error: `不支持的扩展名 ${ext || "（无）"}。允许：${[...ALLOWED_EXT].join(" ")}` },
       { status: 400 },
     );
   }
 
   const base = randomUUID().replace(/-/g, "");
+  const filename = `${base}${ext}`;
   const cwd = process.cwd();
   const uploadsDir = path.resolve(cwd, "public", "nature", "audio-uploads");
-  const filename = `${base}${ext}`;
-  const finalPath = path.resolve(uploadsDir, filename);
-  const rel = path.relative(uploadsDir, finalPath);
+  const outPath = path.resolve(uploadsDir, filename);
+  const rel = path.relative(uploadsDir, outPath);
   if (rel.startsWith("..") || path.isAbsolute(rel)) {
     return NextResponse.json({ error: "路径校验失败。" }, { status: 500 });
   }
@@ -70,7 +87,7 @@ export async function POST(req: Request) {
   try {
     await fs.mkdir(uploadsDir, { recursive: true });
     const buf = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(finalPath, buf);
+    await fs.writeFile(outPath, buf);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: `写入失败：${msg}` }, { status: 500 });

@@ -3,7 +3,7 @@ import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 
 /**
  * `/read` 圣经入口专用：经文内容只谈「圣经 / 神的话」本身（默示、真理、永存、脚前的灯等），
- * 仅作金句池解析失败时的回退；正常展示与 `external-home-verse-rotation` 同源。
+ * 仅作 `theme-repeat-ge{N}` 池解析失败时的回退。
  */
 const READ_SCRIPTURE_ABOUT_ZH: HomeVerseEntry[] = [
   {

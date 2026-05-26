@@ -1,0 +1,98 @@
+# Root-level EAS archive excludes (monorepo)
+
+# VCS / cache
+.git/
+.cursor/
+node_modules/
+**/node_modules/
+**/node_modules/**
+.next/
+coverage/
+build/
+out/
+
+# Large generated artifacts in repo root
+dist/
+
+# Monorepo: exclude non-mobile app packages
+apps/askbible-tv-webos/
+
+# Web/runtime content not needed for Expo mobile build upload
+public/
+data/
+docs/
+studio/
+supabase/
+app/
+components/
+hooks/
+lib/
+locales/
+scripts/
+types/
+middleware.ts
+next.config.mjs
+next-env.d.ts
+postcss.config.mjs
+tailwind.config.ts
+tsconfig.json
+tsconfig.tsbuildinfo
+package.json
+package-lock.json
+!apps/askbible-mobile/package.json
+!apps/askbible-mobile/package-lock.json
+render.yaml
+ship.command
+AGENTS.md
+
+# Keep all mobile app sources in EAS archive
+!apps/askbible-mobile/**
+!data/
+!data/**
+!lib/
+!lib/**
+!hooks/
+!hooks/**
+!components/
+!components/**
+!types/
+!types/**
+!tsconfig.json
+
+# Source media libraries (not required in EAS archive)
+public/music/uploads/
+public/nature/uploads/
+public/nature/audio-uploads/
+public/golden-verses/bg-uploads/
+public/audio/
+data/bible/uploads/
+data/bible/sqlite/
+
+# TV experiments (exclude from mobile EAS builds)
+apps/askbible-tv-webos/
+app/(tv)/
+components/tv/
+lib/media/tv-client.ts
+lib/media/tv-shell-boot.ts
+scripts/sync-tv-content.mjs
+
+# Mobile app build artifacts / local deps
+apps/askbible-mobile/node_modules/
+apps/askbible-mobile/.expo/
+apps/askbible-mobile/dist/
+apps/askbible-mobile/web-build/
+apps/askbible-mobile/android/.gradle/
+apps/askbible-mobile/android/build/
+apps/askbible-mobile/android/app/build/
+apps/askbible-mobile/android/app/.cxx/
+apps/askbible-mobile/ios/build/
+apps/askbible-mobile/ios/Pods/
+apps/askbible-mobile/**/build/
+apps/askbible-mobile/**/.gradle/
+apps/askbible-mobile/**/.cxx/
+
+# Logs / local env
+*.log
+apps/askbible-mobile/.env
+apps/askbible-mobile/.env.*
+apps/askbible-mobile/.env*.local

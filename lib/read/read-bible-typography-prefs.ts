@@ -18,7 +18,7 @@ export type ReadBibleTypographyPrefsV1 = {
 
 /** 羊皮卷 / 读经 / 祷告正文：系统界面黑体栈（不再提供字体切换） */
 export const READ_BIBLE_FONT_STACK_SYSTEM =
-  'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","PingFang SC","Microsoft YaHei",sans-serif';
+  'ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Noto Sans CJK SC","Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC","WenQuanYi Micro Hei",sans-serif';
 
 type SizeTokens = {
   verseRem: string;
@@ -113,7 +113,7 @@ const READ_BIBLE_SIZE_TOKENS: Record<ReadBibleSizeId, SizeTokens> = {
 };
 
 export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
-  size: "m",
+  size: "l",
 };
 
 export function readBibleTypographyCssVars(prefs: ReadBibleTypographyPrefsV1): Record<string, string> {
@@ -163,7 +163,7 @@ export function parseReadBibleTypographyPrefs(raw: string | null): ReadBibleTypo
     const j = JSON.parse(raw) as Partial<ReadBibleTypographyPrefsV1> & { font?: string };
     const size = READ_BIBLE_SIZE_ORDER.includes(j.size as ReadBibleSizeId)
       ? (j.size as ReadBibleSizeId)
-      : "m";
+      : DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size;
     return { size };
   } catch {
     return { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
@@ -182,7 +182,9 @@ export function readReadBibleTypographyPrefsFromStorage(): ReadBibleTypographyPr
 export function writeReadBibleTypographyPrefsToStorage(prefs: ReadBibleTypographyPrefsV1): void {
   if (typeof window === "undefined") return;
   try {
-    const size = READ_BIBLE_SIZE_ORDER.includes(prefs.size) ? prefs.size : "m";
+    const size = READ_BIBLE_SIZE_ORDER.includes(prefs.size)
+    ? prefs.size
+    : DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size;
     window.localStorage.setItem(READ_BIBLE_TYPOGRAPHY_STORAGE_KEY, JSON.stringify({ size }));
   } catch {
     /* ignore */

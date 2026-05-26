@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
@@ -10,7 +11,7 @@ import {
 } from "@/lib/music/transcode-upload";
 import { analyzeAudioFileToV1 } from "@/lib/music/build-track-analysis-server";
 
-/** 大文件 + ffmpeg 转码；部署平台（如 Vercel）仍可能对请求体有套餐上限，与本应用内校验无关。 */
+/** 大文件上传；如开启转码会调用 ffmpeg。部署平台（如 Vercel）仍可能对请求体有套餐上限，与本应用内校验无关。 */
 export const maxDuration = 120;
 
 const ALLOWED_EXT = new Set([
@@ -29,6 +30,18 @@ function extFromName(name: string): string {
   const i = n.lastIndexOf(".");
   if (i < 0) return "";
   return n.slice(i);
+}
+
+function extFromMime(contentType: string): string {
+  const ct = contentType.trim().toLowerCase();
+  if (ct.includes("mpeg")) return ".mp3";
+  if (ct.includes("mp4") || ct.includes("m4a") || ct.includes("aac")) return ".m4a";
+  if (ct.includes("ogg")) return ".ogg";
+  if (ct.includes("opus")) return ".opus";
+  if (ct.includes("wav")) return ".wav";
+  if (ct.includes("webm")) return ".webm";
+  if (ct.includes("flac")) return ".flac";
+  return "";
 }
 
 function uploadAnalysisMaxSeconds(): number {
@@ -56,9 +69,38 @@ async function tryWriteTrackAnalysisJson(audioPath: string, idBase: string): Pro
   }
 }
 
+async function probeDurationSec(audioPath: string): Promise<number | null> {
+  return new Promise((resolve) => {
+    const ffprobe = spawn(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        audioPath,
+      ],
+      { stdio: ["ignore", "pipe", "ignore"] },
+    );
+    let out = "";
+    ffprobe.stdout?.on("data", (d: Buffer) => {
+      out += d.toString();
+    });
+    ffprobe.on("error", () => resolve(null));
+    ffprobe.on("close", (code) => {
+      if (code !== 0) return resolve(null);
+      const n = Number.parseFloat(out.trim());
+      if (!Number.isFinite(n) || n <= 0) return resolve(null);
+      resolve(Math.round(n));
+    });
+  });
+}
+
 /**
- * 上传音频 → 默认用 ffmpeg 转码为 **AAC .m4a**（适合流式码率 + faststart）。
- * 跳过转码：`MUSIC_UPLOAD_SKIP_TRANSCODE=1`（仅保存原文件）。
+ * 上传音频 → 默认保存原文件（不转码）。
+ * 如需转码为 AAC .m4a：设置 `MUSIC_UPLOAD_SKIP_TRANSCODE=0`（适合流式码率 + faststart）。
  * 跳过能量分析：`MUSIC_UPLOAD_SKIP_ANALYSIS=1`（上传时不生成 `/public/music/analysis/*.json`）。
  * 分析仅取音频前若干秒（默认 120，范围 30–900）：`MUSIC_UPLOAD_ANALYSIS_MAX_SEC`，避免长文件解码阻塞过久。
  * 码率：`MUSIC_UPLOAD_BITRATE_K`（默认 96，范围建议 32–192）。
@@ -74,19 +116,67 @@ export async function POST(req: Request) {
     );
   }
 
-  let form: Awaited<ReturnType<Request["formData"]>>;
-  try {
-    form = await req.formData();
-  } catch {
-    return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
+  let origName = "audio";
+  let buf: Buffer | null = null;
+  const contentLength = Number.parseInt(req.headers.get("content-length") ?? "", 10);
+  const rawCt = req.headers.get("content-type")?.trim().toLowerCase() ?? "";
+  const ct = rawCt.split(";")[0] ?? "";
+  const isMultipart = ct === "multipart/form-data";
+  const isRawAudio = ct.startsWith("audio/") || ct === "application/octet-stream";
+
+  // 兼容两类客户端：标准 multipart（浏览器）与直接音频流（部分 WebView / 设备端）。
+  if (isMultipart) {
+    try {
+      const form = await req.formData();
+      const file = form.get("file");
+      if (file && file instanceof File) {
+        origName = file.name || "audio";
+        buf = Buffer.from(await file.arrayBuffer());
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "unknown";
+      return NextResponse.json({ error: `multipart 解析失败：${msg}` }, { status: 400 });
+    }
   }
 
-  const file = form.get("file");
-  if (!file || !(file instanceof File)) {
+  if (!buf) {
+    if (isMultipart) {
+      return NextResponse.json({ error: "缺少 file 字段。" }, { status: 400 });
+    }
+    if (!isRawAudio) {
+      return NextResponse.json(
+        { error: "请求体须为 multipart/form-data（或直接 audio/* 二进制流）。" },
+        { status: 400 },
+      );
+    }
+
+    const raw = await req.arrayBuffer();
+    if (!raw.byteLength) {
+      return NextResponse.json({ error: "请求体为空。" }, { status: 400 });
+    }
+    if (Number.isFinite(contentLength) && contentLength > 0 && raw.byteLength < contentLength) {
+      return NextResponse.json(
+        {
+          error: `上传请求体被截断（收到 ${raw.byteLength} bytes，小于 Content-Length ${contentLength}）。请提高 Next.js proxyClientMaxBodySize（例如 150mb）并让上传接口绕过 middleware 后重试。`,
+        },
+        { status: 413 },
+      );
+    }
+    buf = Buffer.from(raw);
+
+    const hintedName =
+      req.headers.get("x-upload-filename")?.trim() ||
+      req.headers.get("x-file-name")?.trim() ||
+      req.headers.get("x-filename")?.trim() ||
+      "audio";
+    const hintedExt = extFromName(hintedName) || extFromMime(ct);
+    origName = hintedExt ? `${hintedName}${extFromName(hintedName) ? "" : hintedExt}` : hintedName;
+  }
+
+  if (!buf) {
     return NextResponse.json({ error: "缺少 file 字段。" }, { status: 400 });
   }
 
-  const origName = file.name || "audio";
   const ext = extFromName(origName);
   if (!ALLOWED_EXT.has(ext)) {
     return NextResponse.json(
@@ -105,7 +195,6 @@ export async function POST(req: Request) {
   if (relTmp.startsWith("..") || path.isAbsolute(relTmp)) {
     return NextResponse.json({ error: "路径校验失败。" }, { status: 500 });
   }
-  const buf = Buffer.from(await file.arrayBuffer());
 
   try {
     await fs.mkdir(uploadsDir, { recursive: true });
@@ -129,14 +218,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: msg }, { status: 500 });
     }
     const analysisUrl = await tryWriteTrackAnalysisJson(finalPath, base);
+    const durationSec = await probeDurationSec(finalPath);
     return NextResponse.json({
       ok: true,
       url: `/music/uploads/${filename}`,
       filename,
       transcoded: false,
       warning:
-        "已按 MUSIC_UPLOAD_SKIP_TRANSCODE=1 保存原文件，未做码率压缩。去掉该环境变量并安装 ffmpeg 可启用自动转码。",
+        "已按当前配置保存原文件，未做码率压缩。若需流式 AAC，可设置 MUSIC_UPLOAD_SKIP_TRANSCODE=0 并安装 ffmpeg。",
       bitrateK: null,
+      ...(durationSec ? { durationSec } : {}),
       ...(analysisUrl ? { analysisUrl } : {}),
     });
   }
@@ -154,6 +245,7 @@ export async function POST(req: Request) {
       await fs.writeFile(fallbackPath, buf);
       await fs.unlink(outPath).catch(() => {});
       const analysisUrl = await tryWriteTrackAnalysisJson(fallbackPath, base);
+      const durationSec = await probeDurationSec(fallbackPath);
       return NextResponse.json({
         ok: true,
         url: `/music/uploads/${fallbackName}`,
@@ -161,6 +253,7 @@ export async function POST(req: Request) {
         transcoded: false,
         warning: `${tr.message} 已改存原格式文件，可稍后安装 ffmpeg 再重新上传以生成流式 m4a。`,
         bitrateK: null,
+        ...(durationSec ? { durationSec } : {}),
         ...(analysisUrl ? { analysisUrl } : {}),
       });
     } catch (e) {
@@ -174,12 +267,14 @@ export async function POST(req: Request) {
   }
 
   const analysisUrl = await tryWriteTrackAnalysisJson(outPath, base);
+  const durationSec = await probeDurationSec(outPath);
   return NextResponse.json({
     ok: true,
     url: `/music/uploads/${outName}`,
     filename: outName,
     transcoded: true,
     bitrateK,
+    ...(durationSec ? { durationSec } : {}),
     ...(analysisUrl ? { analysisUrl } : {}),
   });
 }

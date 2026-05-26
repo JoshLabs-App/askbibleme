@@ -16,6 +16,11 @@ const overview: {
         hint: "按网关 URL 或 Studio 连接自动注入 Bearer",
       },
       {
+        href: "/admin/system/content-flags",
+        label: "内容开关",
+        hint: "移动端会员注册与远程内容 manifest 的可视化开关",
+      },
+      {
         href: "/admin/system/generation-roles",
         label: "生成角色",
         hint: "管理 V1 信息版等生成任务的 system 角色与默认项",
@@ -24,7 +29,7 @@ const overview: {
       {
         href: "/admin/system/usage",
         label: "使用概览",
-        hint: "匿名设备 DAU、页面/点击/自然场景统计（与信息版同盘，无需 Supabase）",
+        hint: "匿名设备 DAU、页面/点击/自然场景统计（与信息版同盘）",
       },
     ],
   },

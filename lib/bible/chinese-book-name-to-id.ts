@@ -4,7 +4,7 @@ import { scriptureBooks } from "@/lib/bible/scripture-books";
 const BOOKS_BY_NAME_LEN = [...scriptureBooks].sort((a, b) => b.bookName.length - a.bookName.length);
 
 /**
- * 将和合本风格中文书卷名（如「马太福音」）解析为 Selah `bookId`（如 MAT）。
+ * 将和合本风格中文书卷名（如「马太福音」）解析为 AskBible `bookId`（如 MAT）。
  */
 export function chineseBookNameToBookId(name: string): string | null {
   const n = String(name ?? "").trim();

@@ -12,7 +12,7 @@ export type TodayReadingPlanPayload = ReadingPlanDayPayload;
 export function buildTripleLoopDayPayload(progress = readTripleLoopProgress()): TodayReadingPlanPayload {
   return {
     planId: "triple-loop",
-    name: "三段式读经",
+    name: "新旧约循环读经计划",
     dayCount: TRIPLE_LOOP_PLAN_DAY_COUNT,
     dayIndex: 0,
     day: buildTripleLoopReadingPlanDay(progress),

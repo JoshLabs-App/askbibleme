@@ -4,8 +4,6 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
-import { readNatureBackground1080Pref } from "@/lib/nature/nature-video-quality-prefs";
-
 const PREFETCH_STAGGER_MS = 550;
 const PREFETCH_MAX_URLS = 2;
 /** 首屏后再预取，避免与首页静图/主视频争带宽 */
@@ -79,10 +77,7 @@ export function NatureBackgroundVideoPrefetch() {
       void (async () => {
         let urls: string[] = [];
         try {
-          const prefer1080 = readNatureBackground1080Pref();
-          const r = await fetch(
-            `/api/nature/prefetch-srcs${prefer1080 ? "?prefer1080=1" : ""}`,
-          );
+          const r = await fetch("/api/nature/prefetch-srcs");
           if (!r.ok || disposed || sid !== sessionRef.current) return;
           const j = (await r.json()) as { urls?: unknown };
           if (!Array.isArray(j.urls)) return;

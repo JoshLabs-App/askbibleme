@@ -6,11 +6,10 @@ import { pickNatureVideoPrefetchUrls } from "@/lib/nature/pick-nature-video-pref
 export const dynamic = "force-dynamic";
 
 /** 供前台 idle 预取：只返回前几条成片 URL，避免拉整份 `nature-settings.json`。 */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
-    const prefer1080 = req.nextUrl.searchParams.get("prefer1080") === "1";
     const s = await readNatureSettings(process.cwd());
-    const urls = pickNatureVideoPrefetchUrls(s, 5, prefer1080);
+    const urls = pickNatureVideoPrefetchUrls(s, 5);
     return NextResponse.json(
       { urls },
       { headers: { "Cache-Control": "private, no-store, must-revalidate" } },

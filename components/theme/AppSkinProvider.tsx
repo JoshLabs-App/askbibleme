@@ -12,6 +12,7 @@ import {
 import {
   BRAND_CSS_VAR_NAMES,
   USER_SKIN_STORAGE_KEY,
+  USER_SKIN_STORAGE_KEY_LEGACY,
   parseUserSkin,
   presetColorsForUserSkin,
   type UserSkinId,
@@ -58,6 +59,7 @@ function subscribeAppearance(onStore: () => void) {
   const onStorage = (e: StorageEvent) => {
     if (
       e.key === USER_SKIN_STORAGE_KEY ||
+      e.key === USER_SKIN_STORAGE_KEY_LEGACY ||
       e.key === SHELL_TEMPLATE_BRAND_STORAGE_KEY ||
       e.key === null
     ) {
@@ -75,7 +77,9 @@ const APPEARANCE_SERVER_SNAPSHOT = JSON.stringify({ skin: "site", template: null
 
 function getAppearanceSnapshot(): string {
   if (typeof window === "undefined") return APPEARANCE_SERVER_SNAPSHOT;
-  const skin = parseUserSkin(localStorage.getItem(USER_SKIN_STORAGE_KEY));
+  const skin = parseUserSkin(
+    localStorage.getItem(USER_SKIN_STORAGE_KEY) ?? localStorage.getItem(USER_SKIN_STORAGE_KEY_LEGACY),
+  );
   const template = readShellTemplateBrandFromStorage();
   return JSON.stringify({ skin, template });
 }
@@ -174,6 +178,7 @@ export function AppSkinProvider({ children }: { children: ReactNode }) {
   const setSkin = useCallback((id: UserSkinId) => {
     try {
       localStorage.setItem(USER_SKIN_STORAGE_KEY, id);
+      localStorage.removeItem(USER_SKIN_STORAGE_KEY_LEGACY);
     } catch {
       /* ignore */
     }

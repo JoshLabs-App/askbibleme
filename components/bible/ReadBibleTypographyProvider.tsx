@@ -16,11 +16,19 @@ import {
   type ReadBibleSizeId,
   type ReadBibleTypographyPrefsV1,
 } from "@/lib/read/read-bible-typography-prefs";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { resolveChapterAudioTranslationId } from "@/lib/read/read-chapter-audio-translation";
 import {
   readReadBibleTranslationPrefsFromStorage,
+  resolveDefaultPrimaryTranslationId,
   writeReadBibleTranslationPrefsToStorage,
   type ReadBibleTranslationPrefsV1,
 } from "@/lib/read/read-bible-translation-prefs";
+import {
+  readHomePrayerVersePrefs,
+  requestHomePrayerVerseFeedReload,
+  writeHomePrayerVersePrefs,
+} from "@/lib/home-prayer-pools/prefs";
 
 type CatalogResponse = {
   version: 1;
@@ -33,15 +41,19 @@ type ReadBibleReadSettingsContextValue = {
   setSize: (size: ReadBibleSizeId) => void;
   sizeAtMin: boolean;
   sizeAtMax: boolean;
+  sizeAtDefault: boolean;
   bumpSize: (delta: -1 | 1) => void;
+  resetSizeToDefault: () => void;
   translation: ReadBibleTranslationPrefsV1;
   translationCatalog: CatalogResponse["translations"];
   translationCatalogReady: boolean;
   setPrimaryTranslationId: (id: string) => ReadBibleTranslationPrefsV1;
   setContrastTranslationId: (id: string | null) => ReadBibleTranslationPrefsV1;
+  setAudioTranslationId: (id: string | null) => ReadBibleTranslationPrefsV1;
+  chapterAudioTranslationId: string;
 };
 
-const ReadBibleReadSettingsContext = createContext<ReadBibleReadSettingsContextValue | null>(null);
+export const ReadBibleReadSettingsContext = createContext<ReadBibleReadSettingsContextValue | null>(null);
 
 function applyTypographyToDocument(prefs: ReadBibleTypographyPrefsV1) {
   const root = document.documentElement;
@@ -66,6 +78,7 @@ function catalogToIndex(catalog: CatalogResponse): BibleTranslationsIndex {
 }
 
 export function ReadBibleTypographyProvider({ children }: { children: ReactNode }) {
+  const { locale, setLocale } = useLocale();
   const [typography, setTypography] = useState<ReadBibleTypographyPrefsV1>(DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS);
   const [translation, setTranslation] = useState<ReadBibleTranslationPrefsV1 | null>(null);
   const [translationCatalog, setTranslationCatalog] = useState<CatalogResponse["translations"]>([]);
@@ -91,21 +104,31 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
           translations: list,
           defaultTranslationId: data.defaultTranslationId ?? null,
         });
-        const fromStorage = readReadBibleTranslationPrefsFromStorage(index);
+        const fromStorage = readReadBibleTranslationPrefsFromStorage(index, locale);
         writeReadBibleTranslationPrefsToStorage(fromStorage, index);
         setTranslation(fromStorage);
         setTranslationCatalogReady(true);
       } catch {
         if (!cancelled) {
           setTranslationCatalogReady(true);
-          setTranslation((prev) => prev ?? { version: 1, primaryTranslationId: "cuv-simp", contrastTranslationId: null });
+          setTranslation((prev) =>
+            prev ?? {
+              version: 1,
+              primaryTranslationId: resolveDefaultPrimaryTranslationId(
+                { translations: [], defaultTranslationId: null },
+                locale,
+              ),
+              contrastTranslationId: null,
+              audioTranslationId: null,
+            },
+          );
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale]);
 
   useLayoutEffect(() => {
     applyTypographyToDocument(typography);
@@ -144,8 +167,18 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     [],
   );
 
+  const resetSizeToDefault = useCallback(() => {
+    setTypography((p) => {
+      const next = { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
+      if (next.size === p.size) return p;
+      writeReadBibleTypographyPrefsToStorage(next);
+      return next;
+    });
+  }, []);
+
   const sizeAtMin = readBibleSizeAtMin(typography.size);
   const sizeAtMax = readBibleSizeAtMax(typography.size);
+  const sizeAtDefault = typography.size === DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size;
 
   const translationIndex = useMemo(
     (): BibleTranslationsIndex => ({
@@ -157,7 +190,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
 
   const setPrimaryTranslationId = useCallback(
     (id: string) => {
-      const base = translation ?? readReadBibleTranslationPrefsFromStorage(translationIndex);
+      const base = translation ?? readReadBibleTranslationPrefsFromStorage(translationIndex, locale);
       const next = writeReadBibleTranslationPrefsToStorage(
         {
           ...base,
@@ -168,14 +201,35 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
         translationIndex,
       );
       setTranslation(next);
+      const selected = translationIndex.translations.find((t) => t.id === next.primaryTranslationId);
+      const selectedLocale = /^en\b/i.test(selected?.language ?? "") ? "en" : "zh-CN";
+      const homePrefs = readHomePrayerVersePrefs();
+      if (selectedLocale === "en") {
+        if (homePrefs.verseTextEnTranslationId !== next.primaryTranslationId) {
+          writeHomePrayerVersePrefs({
+            ...homePrefs,
+            verseTextEnTranslationId: next.primaryTranslationId,
+          });
+          requestHomePrayerVerseFeedReload();
+        }
+      } else if (homePrefs.verseTextZhTranslationId !== next.primaryTranslationId) {
+        writeHomePrayerVersePrefs({
+          ...homePrefs,
+          verseTextZhTranslationId: next.primaryTranslationId,
+        });
+        requestHomePrayerVerseFeedReload();
+      }
+      if (locale !== selectedLocale) {
+        setLocale(selectedLocale);
+      }
       return next;
     },
-    [translation, translationIndex],
+    [translation, translationIndex, locale, setLocale],
   );
 
   const setContrastTranslationId = useCallback(
     (id: string | null) => {
-      const base = translation ?? readReadBibleTranslationPrefsFromStorage(translationIndex);
+      const base = translation ?? readReadBibleTranslationPrefsFromStorage(translationIndex, locale);
       const next = writeReadBibleTranslationPrefsToStorage(
         { ...base, contrastTranslationId: id && id.trim() ? id.trim() : null },
         translationIndex,
@@ -183,14 +237,37 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       setTranslation(next);
       return next;
     },
-    [translation, translationIndex],
+    [translation, translationIndex, locale],
+  );
+
+  const setAudioTranslationId = useCallback(
+    (id: string | null) => {
+      const base = translation ?? readReadBibleTranslationPrefsFromStorage(translationIndex, locale);
+      const next = writeReadBibleTranslationPrefsToStorage(
+        { ...base, audioTranslationId: id && id.trim() ? id.trim() : null },
+        translationIndex,
+      );
+      setTranslation(next);
+      return next;
+    },
+    [translation, translationIndex, locale],
   );
 
   const resolvedTranslation =
     translation ??
     (translationCatalogReady
-      ? readReadBibleTranslationPrefsFromStorage(translationIndex)
-      : { version: 1 as const, primaryTranslationId: "cuv-simp", contrastTranslationId: null });
+      ? readReadBibleTranslationPrefsFromStorage(translationIndex, locale)
+      : {
+          version: 1 as const,
+          primaryTranslationId: resolveDefaultPrimaryTranslationId(translationIndex, locale),
+          contrastTranslationId: null,
+          audioTranslationId: null,
+        });
+
+  const chapterAudioTranslationId = useMemo(
+    () => resolveChapterAudioTranslationId(resolvedTranslation),
+    [resolvedTranslation],
+  );
 
   const value = useMemo(
     (): ReadBibleReadSettingsContextValue => ({
@@ -198,24 +275,32 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       setSize,
       sizeAtMin,
       sizeAtMax,
+      sizeAtDefault,
       bumpSize,
+      resetSizeToDefault,
       translation: resolvedTranslation,
       translationCatalog,
       translationCatalogReady,
       setPrimaryTranslationId,
       setContrastTranslationId,
+      setAudioTranslationId,
+      chapterAudioTranslationId,
     }),
     [
       typography,
       setSize,
       sizeAtMin,
       sizeAtMax,
+      sizeAtDefault,
       bumpSize,
+      resetSizeToDefault,
       resolvedTranslation,
       translationCatalog,
       translationCatalogReady,
       setPrimaryTranslationId,
       setContrastTranslationId,
+      setAudioTranslationId,
+      chapterAudioTranslationId,
     ],
   );
 
@@ -226,7 +311,13 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
 
 export function useReadBibleTypography(): Pick<
   ReadBibleReadSettingsContextValue,
-  "typography" | "setSize" | "sizeAtMin" | "sizeAtMax" | "bumpSize"
+  | "typography"
+  | "setSize"
+  | "sizeAtMin"
+  | "sizeAtMax"
+  | "sizeAtDefault"
+  | "bumpSize"
+  | "resetSizeToDefault"
 > {
   const v = useContext(ReadBibleReadSettingsContext);
   if (!v) throw new Error("useReadBibleTypography must be used under ReadBibleTypographyProvider");
@@ -235,7 +326,9 @@ export function useReadBibleTypography(): Pick<
     setSize: v.setSize,
     sizeAtMin: v.sizeAtMin,
     sizeAtMax: v.sizeAtMax,
+    sizeAtDefault: v.sizeAtDefault,
     bumpSize: v.bumpSize,
+    resetSizeToDefault: v.resetSizeToDefault,
   };
 }
 
@@ -246,6 +339,8 @@ export function useReadBibleTranslationSettings(): Pick<
   | "translationCatalogReady"
   | "setPrimaryTranslationId"
   | "setContrastTranslationId"
+  | "setAudioTranslationId"
+  | "chapterAudioTranslationId"
 > {
   const v = useContext(ReadBibleReadSettingsContext);
   if (!v) throw new Error("useReadBibleTranslationSettings must be used under ReadBibleTypographyProvider");
@@ -255,5 +350,7 @@ export function useReadBibleTranslationSettings(): Pick<
     translationCatalogReady: v.translationCatalogReady,
     setPrimaryTranslationId: v.setPrimaryTranslationId,
     setContrastTranslationId: v.setContrastTranslationId,
+    setAudioTranslationId: v.setAudioTranslationId,
+    chapterAudioTranslationId: v.chapterAudioTranslationId,
   };
 }

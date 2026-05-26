@@ -5,13 +5,13 @@ import {
 import { SCRIPTURE_PARCHMENT_WIDE_MEDIA } from "@/lib/read/scripture-parchment-shell";
 
 /**
- * 在 React 水合前执行：读经/祷告 PWA 首帧即改 `theme-color` 与根节点羊皮底，避免 Samsung 等仍露 manifest 深青顶栏。
+ * 在 React 水合前执行：读经 PWA 首帧即改 `theme-color` 与根节点羊皮底，避免 Samsung 等仍露非羊皮 manifest 顶栏。
  * 由 `app/layout.tsx` 以 `beforeInteractive` 注入。
  */
 export const PARCHMENT_SHELL_BOOT_SCRIPT = `
 (function () {
   var p = window.location.pathname;
-  if (p !== "/read" && p.indexOf("/read/") !== 0 && p !== "/prayer" && p.indexOf("/prayer/") !== 0) return;
+  if (p !== "/read" && p.indexOf("/read/") !== 0) return;
 
   var html = document.documentElement;
   var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -24,11 +24,16 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
   if (!html.dataset.appShellSafeFill) html.dataset.appShellSafeFill = "parchment";
   if (samsung && !html.dataset.readParchmentSamsung) html.dataset.readParchmentSamsung = "1";
 
+  function isReadChapterPath(path) {
+    return /^\\/read\\/[^/]+\\/\\d+\\/?$/.test(path || "");
+  }
+
   function syncReadParchmentWide() {
     try {
       var w = window.innerWidth || 0;
       var h = window.innerHeight || 0;
-      var wide = w >= 480 && h > 0 && w >= h;
+      var wide =
+        (isReadChapterPath(p) && w >= 1024) || (w >= 480 && h > 0 && w >= h);
       if (wide) {
         html.dataset.readParchmentWide = "1";
         html.style.setProperty(${JSON.stringify(READ_PARCHMENT_BG_IMAGE_CSS_VAR)}, ${JSON.stringify(readParchmentBgImageCssValue(true))});

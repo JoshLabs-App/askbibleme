@@ -60,7 +60,14 @@ const NATURE_DOCK_MANUAL_FADE_OUT_MS = 220;
 /** 自然首页 `/`、`/nature` 等：底区场景卡首轮进入时定时展示；点主画面可即时展开/收起（打断自动序列）。 */
 export function isNatureHomeShellPath(pathname: string) {
   const p = pathname || "";
-  return p === "/" || p === "" || p === "/nature" || p.startsWith("/nature/");
+  return (
+    p === "/" ||
+    p === "" ||
+    p === "/nature" ||
+    p.startsWith("/nature/") ||
+    p === "/tv" ||
+    p === "/tv/"
+  );
 }
 
 export function HomeDockChromeProvider({ children }: { children: ReactNode }) {

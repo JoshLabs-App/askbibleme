@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
-const OUT_SIZE = 768;
+const OUT_SIZE = 3840;
 
 /** pan ∈ [-1,1]：-1 最左，0 居中，1 最右（仅当画面宽大于裁切边长时有效） */
 function squareCropSourceRect(iw: number, ih: number, pan: number): { sx: number; sy: number; side: number } {

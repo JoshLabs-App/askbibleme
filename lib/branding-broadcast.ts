@@ -5,7 +5,7 @@ export const SITE_BRANDING_BROADCAST = "selah-site-branding-v1";
 export type SiteBrandingBroadcastMessage = {
   type: "branding-updated";
   /** 便于以后细分；当前仅用于调试日志 */
-  reason?: "logo" | "app-icons" | "colors";
+  reason?: "logo" | "logo-background" | "splash" | "app-icons" | "colors";
 };
 
 export function notifySiteBrandingUpdated(reason?: SiteBrandingBroadcastMessage["reason"]): void {

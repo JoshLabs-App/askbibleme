@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "sourceNote": "Theme-style categories with OSIS verse refs only; body text always from Selah-imported Bibles at runtime.",
+  "sourceNote": "Theme-style categories with OSIS verse refs only; body text always from AskBible-imported Bibles at runtime.",
   "sourceMeta": {
     "sourceName": "In-repo devotional-style grouping (OSIS refs only; editorial labels)",
-    "licenseOrTermsNote": "This file stores verse references only; full text is loaded from Selah-imported Bibles at runtime. Theme breadth for the product is primarily maintained via data/prayer/topic_prayer_library.json.",
+    "licenseOrTermsNote": "This file stores verse references only; full text is loaded from AskBible-imported Bibles at runtime.",
     "snapshotVersion": "2026-05-12"
   },
   "categories": [

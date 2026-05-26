@@ -1,0 +1,25 @@
+{
+  "add": [
+    {
+      "from": { "bookId": "LUK", "chapter": 4, "verse": 18 },
+      "to": { "bookId": "ISA", "chapter": 61, "verseStart": 1, "verseEnd": 2 },
+      "note": "引文：主的灵在我身上"
+    },
+    {
+      "from": { "bookId": "LUK", "chapter": 4, "verse": 19 },
+      "to": { "bookId": "ISA", "chapter": 61, "verseStart": 1, "verseEnd": 2 },
+      "note": "引文"
+    },
+    {
+      "from": { "bookId": "ACT", "chapter": 2, "verse": 16 },
+      "to": { "bookId": "JOL", "chapter": 2, "verseStart": 28, "verseEnd": 32 },
+      "note": "彼得引用约珥"
+    },
+    {
+      "from": { "bookId": "HEB", "chapter": 8, "verse": 8 },
+      "to": { "bookId": "JER", "chapter": 31, "verseStart": 31, "verseEnd": 34 },
+      "note": "新约引用耶利米"
+    }
+  ],
+  "remove": []
+}

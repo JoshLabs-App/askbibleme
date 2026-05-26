@@ -7,15 +7,21 @@ import {
   resolveColorsFromPreset,
   writeBrandingState,
 } from "@/lib/site-branding";
-import type { BrandColors, BrandPresetId, SiteBrandingState } from "@/lib/site-branding-colors";
+import {
+  BRAND_PRESET_ORDER,
+  coerceBrandPresetId,
+  LEGACY_BRAND_PRESET_IDS,
+  type BrandColors,
+  type BrandPresetId,
+  type SiteBrandingState,
+} from "@/lib/site-branding-colors";
 
-const VALID_PRESET = new Set<BrandPresetId>([
-  "parchment",
-  "mist",
-  "dusk",
-  "forest",
-  "custom",
-]);
+function isValidPresetInput(raw: string): boolean {
+  if (raw === "custom") return true;
+  if ((BRAND_PRESET_ORDER as readonly string[]).includes(raw)) return true;
+  if (raw in LEGACY_BRAND_PRESET_IDS) return true;
+  return false;
+}
 
 /**
  * 保存品牌配色预设或自定义色值；若已生成过图标则用当前 canvas 底色重新栅格化一遍。
@@ -38,10 +44,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "请求体需为 JSON。" }, { status: 400 });
   }
 
-  const presetId = (body as { presetId?: unknown }).presetId;
-  if (typeof presetId !== "string" || !VALID_PRESET.has(presetId as BrandPresetId)) {
+  const rawPresetId = (body as { presetId?: unknown }).presetId;
+  if (typeof rawPresetId !== "string" || !isValidPresetInput(rawPresetId)) {
     return NextResponse.json({ error: "无效 presetId。" }, { status: 400 });
   }
+  const presetId = coerceBrandPresetId(rawPresetId);
 
   const customRaw = (body as { colors?: unknown }).colors;
   const custom =
@@ -49,15 +56,17 @@ export async function POST(req: Request) {
       ? (customRaw as Partial<BrandColors>)
       : undefined;
 
-  const colors = resolveColorsFromPreset(presetId as BrandPresetId, custom);
+  const colors = resolveColorsFromPreset(presetId, custom);
   const prev = await readBrandingState();
 
   const next: SiteBrandingState = {
     updatedAt: prev?.updatedAt ?? new Date().toISOString(),
     originalName: prev?.originalName ?? "（尚未上传 LOGO）",
     logoKind: prev?.logoKind ?? ("raster" as const),
-    presetId: presetId as BrandPresetId,
+    presetId,
     colors,
+    ...(prev?.logoBackground ? { logoBackground: prev.logoBackground } : {}),
+    ...(prev?.logoTextAccent ? { logoTextAccent: prev.logoTextAccent } : {}),
     ...(prev?.appIconsUpdatedAt ? { appIconsUpdatedAt: prev.appIconsUpdatedAt } : {}),
     ...(prev?.appIconOriginalName ? { appIconOriginalName: prev.appIconOriginalName } : {}),
   };

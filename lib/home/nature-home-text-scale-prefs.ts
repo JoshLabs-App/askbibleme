@@ -1,4 +1,5 @@
-const STORAGE_KEY = "selah-nature-home-text-scale-v1";
+const STORAGE_KEY = "askbible-nature-home-text-scale-v1";
+const STORAGE_KEY_LEGACY = "selah-nature-home-text-scale-v1";
 const STORAGE_SCHEMA_V2 = 2 as const;
 const STORAGE_SCHEMA_V3 = 3 as const;
 
@@ -58,7 +59,7 @@ function clampStepIndex(n: number): number {
 export function readNatureHomeTextScaleStepIndex(): number {
   if (typeof window === "undefined") return NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY_LEGACY);
     if (!raw) return NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX;
     const parsed = JSON.parse(raw) as { stepIndex?: unknown; v?: unknown } | unknown;
     const stepIndex =
@@ -103,6 +104,7 @@ export function writeNatureHomeTextScaleStepIndex(stepIndex: number): void {
       STORAGE_KEY,
       JSON.stringify({ v: STORAGE_SCHEMA_V3, stepIndex: clampStepIndex(stepIndex) }),
     );
+    localStorage.removeItem(STORAGE_KEY_LEGACY);
   } catch {
     // ignore quota / private mode
   }

@@ -24,6 +24,7 @@ import {
   SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY,
   SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
 } from "@/lib/read/scripture-parchment-shell";
+import { isShellPrimaryAppRoute } from "@/lib/shell/shell-primary-route";
 
 function subscribeHtmlClassDark(onStore: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -90,6 +91,7 @@ export function ShellTemplateChromeLayout({
   topBarTone = "onLight",
 }: ShellTemplateChromeLayoutProps) {
   const pathname = usePathname() ?? "";
+  const showTopMenu = isShellPrimaryAppRoute(pathname);
   const parchmentRoute = isScriptureParchmentPath(pathname);
   const prayerWarmDarkSnap = useSyncExternalStore(subscribeHtmlClassDark, getHtmlDarkSnapshot, () => "0");
 
@@ -182,11 +184,13 @@ export function ShellTemplateChromeLayout({
         >
           {children}
         </div>
-        <AppShellTopBar
-          tone={topBarTone}
-          landscapeImmersive={landscapeNarrow && !parchmentRoute}
-          rightAccessory={topBarRightAccessory}
-        />
+        {showTopMenu ? (
+          <AppShellTopBar
+            tone={topBarTone}
+            landscapeImmersive={landscapeNarrow && !parchmentRoute}
+            rightAccessory={topBarRightAccessory}
+          />
+        ) : null}
       </main>
     </HomeDockChromeProvider>
   );

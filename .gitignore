@@ -20,6 +20,12 @@
 
 # production
 /build
+/dist/mobile/
+
+# Expo 离线 APK 媒体（npm run mobile:sync-offline-media 生成，体积大）
+/apps/askbible-mobile/assets/nature/
+/apps/askbible-mobile/assets/music/tracks/
+/apps/askbible-mobile/assets/music/analysis/
 
 # misc
 .DS_Store
@@ -39,11 +45,22 @@ yarn-error.log*
 
 # 潮州语新约 MP3（npm run audio:teochew-pull 生成；manifest 入库）
 /public/audio/teochew-nt/*.mp3
+/public/audio/web-en/*.mp3
 
 # 本机全本导读/引导版批量进度（见 npm run info-edition:batch）
 /data/bible/info-edition-v1-batch-state.json
 /data/bible/info-edition-v1-batch.lock
+/data/bible/telemetry-v1-store.json
+/data/feedback/feedback-submissions.jsonl
 
 # typescript
 next-env.d.ts
 *.tsbuildinfo
+
+# TV / webOS（本机实验，不部署、不入库）
+apps/askbible-tv-webos/
+app/(tv)/
+components/tv/
+lib/media/tv-client.ts
+lib/media/tv-shell-boot.ts
+scripts/sync-tv-content.mjs

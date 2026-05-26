@@ -12,8 +12,7 @@
  *   node scripts/migration/askbible-admin-export.mjs
  *   node scripts/migration/askbible-admin-export.mjs --all-users   # 列出所有用户（含非管理员）
  *
- * 接上 Selah：把输出的 `ADMIN_USER_EMAILS=...` 贴到 Vercel；在 Supabase 为每个邮箱创建用户并设密码
- *（或发「重置密码」）。老站 bcrypt/SHA256 哈希不能原样迁入 Supabase。
+ * 接上 Selah：把输出的 `ADMIN_USER_EMAILS=...` 贴到部署环境，用于对照可进后台的管理员名单。
  */
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -82,7 +81,7 @@ function main() {
   if (adminEmails.length === 0 && fs.existsSync(jsonPath)) {
     const j = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
     const users = Array.isArray(j.users) ? j.users : [];
-    console.log("── users.json（无 is_admin，下列邮箱需你自行决定谁可进 Selah 后台）──\n");
+    console.log("── users.json（无 is_admin，下列邮箱需你自行决定谁可进 AskBible 后台）──\n");
     for (const u of users) {
       console.log(`${u.email || ""}\tname=${u.name || ""}\tid=${u.id || ""}`);
     }
@@ -100,10 +99,9 @@ function main() {
   console.log("── 复制到 Vercel 环境变量 ADMIN_USER_EMAILS（逗号分隔，无空格亦可）──\n");
   console.log(`ADMIN_USER_EMAILS=${unique.join(",")}\n`);
   console.log(
-    "── 接上 Selah 的步骤 ──\n" +
-      "1. Supabase → Authentication → Users：为上述每个邮箱「Add user」并设密码，或让用户用「Forgot password」。\n" +
-      "2. 不能把 AskBible 的 password_hash 直接导入 Supabase（算法不兼容）。\n" +
-      "3. 部署 Selah 时带上 NEXT_PUBLIC_SUPABASE_* 与 ADMIN_USER_EMAILS。\n",
+    "── 接上 AskBible 的步骤 ──\n" +
+      "1. 复用老站 auth.sqlite 登录时，请确认这些邮箱中哪些应保留管理员权限。\n" +
+      "2. 部署 Selah 时可配置 ADMIN_USER_EMAILS（用于后台权限白名单对照）。\n",
   );
 }
 

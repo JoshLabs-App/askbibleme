@@ -96,6 +96,7 @@ export function ScriptureAudioDockStrip({ placement }: Props) {
 
   return (
     <div
+      data-shell-swipe-nav-exclude
       className={[
         "pointer-events-auto flex w-full min-w-0 max-w-[min(100%,var(--read-parchment-column-max,28rem))] items-center gap-2 rounded-full border-0",
         "bg-black/40 px-3 py-1.5 text-[11px] leading-tight text-white/88 shadow-[0_6px_28px_-8px_rgba(0,0,0,0.55)] backdrop-blur-md",

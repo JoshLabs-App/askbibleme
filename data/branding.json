@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-20T03:02:11.588Z",
+  "updatedAt": "2026-05-21T16:43:12.848Z",
   "originalName": "logo w.svg",
   "logoKind": "svg",
   "presetId": "parchment",
@@ -18,6 +18,8 @@
     "adminFg": "#F4EBE1",
     "adminMuted": "#B9A896"
   },
-  "appIconsUpdatedAt": "2026-05-20T03:02:38.261Z",
-  "appIconOriginalName": "logo1.png"
+  "logoBackground": "#FFB101",
+  "logoTextAccent": "#E5A525",
+  "appIconsUpdatedAt": "2026-05-21T16:43:13.045Z",
+  "appIconOriginalName": "from-logo:logo w.svg"
 }

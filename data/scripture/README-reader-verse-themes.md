@@ -24,5 +24,5 @@ NODE_OPTIONS=--max-old-space-size=8192 npm run import:reader-verse-themes -- /pa
 ## 说明
 
 - 分桶与「复合标签」下二级分组逻辑与 `tag-wall.html` 内脚本一致（见 `lib/scripture/reader-verse-themes-bucket.ts`）。
-- **库内不保存**第三方站点名称、参考链接、源 JSON 路径、导入时间等元数据；亦不写入 `category` / `subcategory` / `verse` 中的外链字段。仅保留：大主题与子标签名、`title` 文案、节数、分桶、经文引用与正文、以及解析得到的 Selah `book_id`。
+- **库内不保存**第三方站点名称、参考链接、源 JSON 路径、导入时间等元数据；亦不写入 `category` / `subcategory` / `verse` 中的外链字段。仅保留：大主题与子标签名、`title` 文案、节数、分桶、经文引用与正文、以及解析得到的 AskBible `book_id`。
 - 「打开读经」在书名可映射到 `lib/bible/scripture-books.ts` 中的中文名时生成。

@@ -226,15 +226,19 @@ export function BibleCatalogReadOutline({ sections }: Props) {
             <div className="bible-catalog-read-testament-body">
               <p
                 id={`bc-testament-${group.testament}`}
-                className="bible-catalog-read-testament-label bible-catalog-read-heading-row"
+                className="bible-catalog-read-testament-label"
               >
-                <span className="bible-catalog-read-heading-left">
+                <span className="bible-catalog-read-testament-label-text">
                   {group.testament === "old" ? "旧约" : "新约"}
                 </span>
-                <span className="bible-catalog-read-heading-right" aria-hidden="true" />
               </p>
               {group.sections.map((section) => (
-                <section key={section.sectionId} id={section.sectionId} className="bible-catalog-read-block">
+                <section
+                  key={section.sectionId}
+                  id={section.sectionId}
+                  className="bible-catalog-read-block"
+                  data-section-id={section.sectionId}
+                >
                   <h2 className="bible-catalog-read-title bible-catalog-read-heading-row">
                     <span className="bible-catalog-read-heading-left">{section.title}</span>
                     <span className="bible-catalog-read-heading-right" aria-hidden="true" />
@@ -248,6 +252,7 @@ export function BibleCatalogReadOutline({ sections }: Props) {
                           key={book.bookId}
                           type="button"
                           className="bible-catalog-read-book bible-catalog-read-book--tap"
+                          data-section-id={section.sectionId}
                           aria-label={
                             [
                               group.testament === "old" ? "旧约" : "新约",

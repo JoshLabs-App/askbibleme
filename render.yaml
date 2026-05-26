@@ -1,7 +1,16 @@
-# AskBible.me 生产（Render Web Service）— 与 Dashboard 二选一即可；提交本文件后可在 Render 启用 Blueprint。
+# AskBible.me — Render Web Service（已有服务不会自动应用；请在 Dashboard 对齐下列值）
 services:
   - type: web
     name: askbible
     runtime: node
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22.22.0"
+      # 构建阶段内存不足时提高堆上限（Render 文档建议；勿设过小如 460）
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=4096

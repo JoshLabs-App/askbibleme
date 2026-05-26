@@ -18,7 +18,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
-import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 import {
   NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
@@ -28,7 +27,8 @@ import {
   writeNatureHomeTextScaleStepIndex,
 } from "@/lib/home/nature-home-text-scale-prefs";
 
-const HOME_BACKDROP_STORAGE_KEY = "selah-home-backdrop-mode";
+const HOME_BACKDROP_STORAGE_KEY = "askbible-home-backdrop-mode";
+const HOME_BACKDROP_STORAGE_KEY_LEGACY = "selah-home-backdrop-mode";
 
 type HomeBackdropMode = "atmosphere" | "image";
 
@@ -249,8 +249,6 @@ export function HomeDashboard() {
   const { t } = useLocale();
   const { bootstrapped, user, logout } = useAskbibleUser();
   const showAdminHomeLinks = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
-  const registerUrl = getPublicRegisterUrl() ?? "";
-  const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
   const [homeAtmospherePresetId, setHomeAtmospherePresetId] = useState<HomeAtmospherePresetId>("lagoon");
@@ -273,7 +271,9 @@ export function HomeDashboard() {
 
   useEffect(() => {
     try {
-      const v = localStorage.getItem(HOME_BACKDROP_STORAGE_KEY);
+      const v =
+        localStorage.getItem(HOME_BACKDROP_STORAGE_KEY) ??
+        localStorage.getItem(HOME_BACKDROP_STORAGE_KEY_LEGACY);
       if (v === "image" || v === "atmosphere") setBackdropMode(v);
     } catch {
       /* ignore */
@@ -285,6 +285,7 @@ export function HomeDashboard() {
     if (mode === "image") setAtmospherePickerOpen(false);
     try {
       localStorage.setItem(HOME_BACKDROP_STORAGE_KEY, mode);
+      localStorage.removeItem(HOME_BACKDROP_STORAGE_KEY_LEGACY);
     } catch {
       /* ignore */
     }
@@ -483,8 +484,8 @@ export function HomeDashboard() {
                   aria-controls={verseTypographyOpen ? "home-verse-typography-popover" : undefined}
                   className={
                     useCanvasChrome
-                      ? "flex h-9 w-9 items-center justify-center rounded-full text-canvas/90 transition hover:bg-canvas/14 active:scale-[0.97]"
-                      : "flex h-9 w-9 items-center justify-center rounded-full text-ink/85 transition hover:bg-ink/[0.06] active:scale-[0.97]"
+                      ? "flex h-9 w-9 items-center justify-center rounded-full bg-ink text-canvas transition active:scale-[0.97]"
+                      : "flex h-9 w-9 items-center justify-center rounded-full bg-canvas text-ink shadow-[0_2px_8px_rgba(15,23,42,0.14)] transition active:scale-[0.97]"
                   }
                 >
                   <IconVerseTypography className="h-[15px] w-[15px] opacity-88" />
@@ -494,7 +495,7 @@ export function HomeDashboard() {
                     id="home-verse-typography-popover"
                     role="dialog"
                     aria-label={t("pages.goldenVerses.settings")}
-                    className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-white/20 bg-ink/88 py-1 text-canvas shadow-xl backdrop-blur-md [-webkit-overflow-scrolling:touch]"
+                    className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] w-[min(22rem,calc(100vw-1.25rem))] max-h-[min(32rem,72vh)] overflow-y-auto overscroll-y-contain rounded-xl border border-zinc-700 bg-zinc-900 py-1 text-canvas shadow-xl [-webkit-overflow-scrolling:touch]"
                   >
                     <HomePrayerVerseDockSettings
                       placement="popover"
@@ -534,40 +535,6 @@ export function HomeDashboard() {
                     role="menu"
                     className="absolute right-0 top-[calc(100%+0.35rem)] z-[60] min-w-[10.5rem] rounded-xl border border-white/20 bg-ink/88 py-1 shadow-xl backdrop-blur-md"
                   >
-                  {bootstrapped && !user ? (
-                    <>
-                      <Link
-                        href="/login"
-                        role="menuitem"
-                        className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        {t("auth.drawerLogin")}
-                      </Link>
-                      {registerExternal && registerUrl ? (
-                        <a
-                          href={registerUrl}
-                          role="menuitem"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          {t("auth.drawerRegister")}
-                        </a>
-                      ) : (
-                        <Link
-                          href="/register"
-                          role="menuitem"
-                          className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          {t("auth.drawerRegister")}
-                        </Link>
-                      )}
-                      <div className="mx-3 my-1 h-px bg-white/10" aria-hidden />
-                    </>
-                  ) : null}
                   {bootstrapped && user ? (
                     <>
                       <p className="px-3 pt-1.5 text-[10px] font-medium uppercase tracking-wide text-canvas/45">

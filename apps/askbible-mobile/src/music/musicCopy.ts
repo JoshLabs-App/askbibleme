@@ -1,0 +1,23 @@
+/** 音乐页文案：固定英文（不读 zh-CN 语言包） */
+export const musicCopy = {
+  untitled: "Untitled",
+  artistFallback: "Instrumental Worship",
+  noAudio: "No tracks available yet.",
+  visualThemeLabel: "Color",
+  visualThemeAuto: "Auto",
+  visualThemeLogo: "Logo",
+  visualThemeAqua: "Aqua",
+  visualThemeDark: "Dark",
+  shuffle: "Shuffle",
+  prev: "Previous track",
+  next: "Next track",
+  play: "Play",
+  pause: "Pause",
+  progress: "Playback progress",
+  repeatOneOn: "Repeat one on",
+  repeatOneOff: "Repeat one off",
+  sleepTimerOff: "Timer off",
+  sleepTimer30: "30m",
+  sleepTimer60: "60m",
+  sleepTimer120: "120m",
+} as const;

@@ -9,8 +9,6 @@ import {
   groupReaderThemeRows,
   type ReaderThemeFlatRow,
 } from "@/lib/scripture/reader-verse-themes-bucket";
-import { SITE_VERSE_POOL_MAX } from "@/lib/scripture/site-verse-pool";
-
 type IndexOk = { ok: true; rows: ReaderThemeFlatRow[] };
 
 async function parseJson(res: Response): Promise<Record<string, unknown>> {
@@ -142,8 +140,8 @@ export function AdminGoldenVersesThemePickerClient() {
         const e = typeof j.error === "string" ? j.error : gv("saveFailed", { status: String(res.status) });
         throw new Error(e + (res.status === 403 ? ` ${rt("diskHint")}` : ""));
       }
-      const n = Number(j.writtenVerseRefs ?? 0);
-      setSaveMsg(gv("saveDone", { count: String(n), cap: String(SITE_VERSE_POOL_MAX) }));
+      const n = Number(j.selectedCount ?? 0);
+      setSaveMsg(gv("saveDone", { count: String(n) }));
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {

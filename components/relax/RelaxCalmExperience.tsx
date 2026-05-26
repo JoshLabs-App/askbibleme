@@ -42,7 +42,7 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
   const relaxEffectHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [relaxGuideVisible, setRelaxGuideVisible] = useState(true);
   const relaxGuideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { canPlay } = useMusicShellPlayback();
+  const { canPlayMusic } = useMusicShellPlayback();
 
   useEffect(() => {
     try {
@@ -243,7 +243,7 @@ export function RelaxCalmExperience({ initial, layout = "standalone" }: Props) {
             >
               {t(RELAX_EFFECT_TAB_I18N_KEY.lagoon)}
             </p>
-            {!canPlay ? (
+            {!canPlayMusic ? (
               <p className="mt-6 max-w-[19rem] shrink-0 text-center text-[12px] leading-relaxed text-muted sm:text-[13px] landscape:mt-3">
                 {t("relax.noMusicHint")}
               </p>

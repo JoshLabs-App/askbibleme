@@ -12,11 +12,16 @@ export const INFO_EDITION_V1_PUBLISH_PROFILE_ID = "slot:deepseek";
 /** 读经页「发现版」：与后台 generation-roles 中「发现版V2」对应 */
 export const INFO_EDITION_GUIDE_V2_ROLE_ID = "role_356f0ffb" as const;
 export const INFO_EDITION_GUIDE_V2_ROLE_LABEL = "发现版V2" as const;
+export const INFO_EDITION_GUIDE_V2_EN_ROLE_ID = "role_guide_v2_en" as const;
+export const INFO_EDITION_GUIDE_V2_EN_ROLE_LABEL = "Study Guide V2 EN" as const;
 
 const GUIDE_V2_ROLE_LABEL_ALIASES = [
   INFO_EDITION_GUIDE_V2_ROLE_LABEL,
+  INFO_EDITION_GUIDE_V2_EN_ROLE_LABEL,
   "引导版V2",
   "引导版",
+  "Guide V2",
+  "Guide V2 EN",
 ] as const;
 
 export type InfoEditionReaderVariant = "info" | "guide";
@@ -43,6 +48,7 @@ export function readerVariantToRoleId(
 /** 由 generation-roles 条目推断读经页版本（与后台 reader-generate 一致） */
 export function readerVariantFromRole(role: Pick<GenerationRole, "id" | "label">): InfoEditionReaderVariant {
   if (role.id === INFO_EDITION_GUIDE_V2_ROLE_ID) return "guide";
+  if (role.id === INFO_EDITION_GUIDE_V2_EN_ROLE_ID) return "guide";
   const label = role.label.trim();
   if ((GUIDE_V2_ROLE_LABEL_ALIASES as readonly string[]).includes(label)) return "guide";
   return "info";

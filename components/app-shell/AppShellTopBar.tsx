@@ -10,7 +10,6 @@ import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { LocalePickerModal } from "@/components/i18n/LocalePickerModal";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
-import { getPublicRegisterUrl } from "@/lib/site-auth-links";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
 import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
@@ -73,9 +72,9 @@ function TopShellInsetTime({
 
   const onLight = tone === "onLight";
 
-  /** 自然首页横屏：底栏与经文叠在下半屏，`bottom` 易被挡住；顶栏位与竖屏一致、不占主视觉中部 */
+  /** 自然首页横屏沉浸：底栏隐藏，时间居中靠下（与放松页横屏同量级留白） */
   const landscapeNatureTime =
-    "landscape:bottom-auto landscape:top-[calc(env(safe-area-inset-top,0px)+0.35rem)] landscape:text-[clamp(0.9375rem,3.4vmin,1.125rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1rem,3.2vmin,1.1875rem)]";
+    "landscape:bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)+0.5rem))] landscape:top-auto landscape:text-[clamp(0.9375rem,3.4vmin,1.125rem)] landscape:tracking-[0.05em] landscape:sm:text-[clamp(1rem,3.2vmin,1.1875rem)]";
 
   /**
    * 横屏且时间落在底部时：抬高到 **底栏浮条之上**（与 `NatureVideoExperience` 底区 hint 的留白同量级），
@@ -169,9 +168,10 @@ export function AppShellTopBar({
   const insetClockEnv = useShellInsetClockEnvironment();
   const showTopShellTime =
     !hideTopShellInsetTime && (insetClockEnv || landscapeImmersive || showTopInsetTime);
-  const registerUrl = getPublicRegisterUrl();
-  const registerExternal = Boolean(registerUrl && /^https?:\/\//i.test(registerUrl));
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const feedbackLabel = locale === "zh-CN" ? "反馈" : "Feedback";
+  const shellSecondaryHeading = locale === "zh-CN" ? "壳层入口" : "Shell routes";
+  const exploreSecondaryHeading = locale === "zh-CN" ? "探索入口" : "Explore routes";
   const { bootstrapped, user, isAdmin, logout } = useAskbibleUser();
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
   const onLight = tone === "onLight";
@@ -301,6 +301,7 @@ export function AppShellTopBar({
     "flex w-full items-center rounded-md px-2.5 py-2.5 text-left text-[15px] font-normal leading-snug text-[#37352f] transition sm:py-2 sm:text-[14px]";
   const linkRowIdle = "hover:bg-black/[0.06] active:bg-black/[0.08]";
   const linkRowActive = "bg-black/[0.07] font-medium";
+  const sectionHeadingClass = "px-2.5 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-[#37352f]/45";
 
   return (
     <>
@@ -397,6 +398,42 @@ export function AppShellTopBar({
                         sections={["translation"]}
                       />
                     </div>
+                    <div className="mt-1 border-t border-neutral-200/90 pt-2">
+                      <p className={sectionHeadingClass}>{shellSecondaryHeading}</p>
+                      <Link
+                        href="/scenes"
+                        className={[
+                          linkRowBase,
+                          pathname === "/scenes" || pathname.startsWith("/scenes/") ? linkRowActive : linkRowIdle,
+                        ].join(" ")}
+                        onClick={() => closeNavMenu()}
+                      >
+                        {t("nav.scenes")}
+                      </Link>
+                      <Link
+                        href="/relax"
+                        className={[
+                          linkRowBase,
+                          pathname === "/relax" || pathname.startsWith("/relax/") ? linkRowActive : linkRowIdle,
+                        ].join(" ")}
+                        onClick={() => closeNavMenu()}
+                      >
+                        {t("nav.relax")}
+                      </Link>
+                    </div>
+                    <div className="mt-1 border-t border-neutral-200/90 pt-2">
+                      <p className={sectionHeadingClass}>{exploreSecondaryHeading}</p>
+                      <Link
+                        href="/explore"
+                        className={[
+                          linkRowBase,
+                          pathname === "/explore" || pathname.startsWith("/explore/") ? linkRowActive : linkRowIdle,
+                        ].join(" ")}
+                        onClick={() => closeNavMenu()}
+                      >
+                        {t("nav.explore")}
+                      </Link>
+                    </div>
                     {bootstrapped && isAdmin ? (
                       <div className="mt-1.5 border-t border-neutral-200/90 pt-2">
                         <span className="sr-only">{t("nav.themeColorsHeading")}</span>
@@ -456,39 +493,7 @@ export function AppShellTopBar({
                             </Link>
                           ) : null}
                         </div>
-                      ) : (
-                        <div className="mt-1 space-y-0.5 border-t border-neutral-200/90 pt-3">
-                          <p className="px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-[#37352f]/45">
-                            {t("auth.drawerAccount")}
-                          </p>
-                          <Link
-                            href="/login"
-                            className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
-                            onClick={() => closeNavMenu()}
-                          >
-                            {t("auth.drawerLogin")}
-                          </Link>
-                          {registerExternal && registerUrl ? (
-                            <a
-                              href={registerUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
-                              onClick={() => closeNavMenu()}
-                            >
-                              {t("auth.drawerRegister")}
-                            </a>
-                          ) : (
-                            <Link
-                              href="/register"
-                              className={[linkRowBase, linkRowIdle, "text-[#37352f]/85"].join(" ")}
-                              onClick={() => closeNavMenu()}
-                            >
-                              {t("auth.drawerRegister")}
-                            </Link>
-                          )}
-                        </div>
-                      )
+                      ) : null
                     ) : null}
                     <button
                       type="button"
@@ -500,6 +505,13 @@ export function AppShellTopBar({
                     >
                       {t("nav.language")}
                     </button>
+                    <Link
+                      href="/feedback"
+                      className={[linkRowBase, linkRowIdle].join(" ")}
+                      onClick={() => closeNavMenu()}
+                    >
+                      {feedbackLabel}
+                    </Link>
                   </div>
                 </nav>
               </aside>

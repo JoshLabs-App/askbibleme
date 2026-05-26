@@ -1,8 +1,12 @@
 import fs from "node:fs";
+import { loadedChapterVerseFromRow, type LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
+import type { ChapterSegment } from "@/lib/bible/load-chapter-segments";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getScriptureDatabase, scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
 import { readTranslationsIndexSync, resolveTranslationAbsolutePath } from "@/lib/bible/translations-store";
 import { SELAH_BIBLE_FORMAT, type BibleTranslationMeta } from "@/lib/bible/translations-types";
+
+export type { LoadedChapterVerse };
 
 export type LoadedChapter = {
   translationId: string;
@@ -11,7 +15,8 @@ export type LoadedChapter = {
   bookId: string;
   bookName: string;
   chapter: number;
-  verses: { verse: number; text: string }[];
+  verses: LoadedChapterVerse[];
+  segments?: ChapterSegment[] | null;
 };
 
 const BOOK_RE = /^[A-Z0-9]{2,8}$/;
@@ -28,7 +33,7 @@ function loadedChapterFromParts(
   bookId: string,
   bookName: string,
   ch: number,
-  verses: { verse: number; text: string }[],
+  verses: LoadedChapterVerse[],
 ): LoadedChapter | null {
   if (verses.length === 0) return null;
   return {
@@ -55,16 +60,21 @@ async function loadChapterFromSqlite(
   if (!db) return null;
 
   const stmt = db.prepare(
-    "SELECT verse, text FROM verse WHERE book_id = ? AND chapter = ? ORDER BY verse ASC",
+    "SELECT verse, text, speech_spans, flags, theme_repeat_count FROM verse WHERE book_id = ? AND chapter = ? ORDER BY verse ASC",
   );
-  const verses: { verse: number; text: string }[] = [];
+  const verses: LoadedChapterVerse[] = [];
   try {
     stmt.bind([bookId, ch]);
     while (stmt.step()) {
       const row = stmt.getAsObject() as Record<string, unknown>;
-      const verse = Number(row.verse);
-      const text = String(row.text ?? "");
-      if (Number.isInteger(verse) && verse >= 1 && text.trim()) verses.push({ verse, text });
+      const loaded = loadedChapterVerseFromRow({
+        verse: Number(row.verse),
+        text: String(row.text ?? ""),
+        speech_spans: String(row.speech_spans ?? ""),
+        flags: Number(row.flags ?? 0),
+        theme_repeat_count: Number(row.theme_repeat_count ?? 0),
+      });
+      if (loaded) verses.push(loaded);
     }
   } finally {
     stmt.free();
@@ -96,8 +106,18 @@ function loadChapterFromJsonSync(
   if (!chMap || typeof chMap !== "object") return null;
 
   const verses = Object.keys(chMap)
-    .map((k) => ({ verse: Number(k), text: chMap[k] }))
-    .filter((x) => Number.isInteger(x.verse) && x.verse >= 1 && typeof x.text === "string" && x.text.trim())
+    .map((k) => {
+      const text = chMap[k];
+      if (typeof text !== "string" || !text.trim()) return null;
+      return loadedChapterVerseFromRow({
+        verse: Number(k),
+        text,
+        speech_spans: "",
+        flags: 0,
+        theme_repeat_count: 0,
+      });
+    })
+    .filter((x): x is LoadedChapterVerse => x != null)
     .sort((a, b) => a.verse - b.verse);
 
   return loadedChapterFromParts(tid, meta, bookId, bookName, ch, verses);

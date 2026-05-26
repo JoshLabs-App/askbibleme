@@ -12,6 +12,8 @@ export type GenerateReaderChapterResult =
 export type GenerateInfoEditionReaderOpts = {
   /** 与后台「讲解版投送」相同：仅 info 使用；guide 始终忽略 */
   descriptionRulesOverride?: string | null;
+  translationIdOverride?: string | null;
+  outputLanguage?: "zh-CN" | "en";
 };
 
 /** 读经页 / 全本批量：与后台 reader-generate「确认生成」同源（plan → execute → publish） */
@@ -24,6 +26,8 @@ export async function generateInfoEditionChapterForReader(
 ): Promise<GenerateReaderChapterResult> {
   const planned = await planInfoEditionReaderGeneration(cwd, bookId, chapter, target, {
     descriptionRulesOverride: opts?.descriptionRulesOverride,
+    translationIdOverride: opts?.translationIdOverride,
+    outputLanguage: opts?.outputLanguage,
   });
   if (!planned.ok) return { ok: false, error: planned.error };
 

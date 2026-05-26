@@ -68,7 +68,11 @@ export async function transcodeToStreamingM4a(
 }
 
 export function shouldSkipTranscode(): boolean {
-  return process.env.MUSIC_UPLOAD_SKIP_TRANSCODE === "1";
+  const raw = process.env.MUSIC_UPLOAD_SKIP_TRANSCODE?.trim().toLowerCase();
+  if (!raw) return true;
+  if (raw === "0" || raw === "false" || raw === "no" || raw === "off") return false;
+  if (raw === "1" || raw === "true" || raw === "yes" || raw === "on") return true;
+  return true;
 }
 
 export function streamingBitrateK(): number {

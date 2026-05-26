@@ -47,7 +47,11 @@ export function scriptureParchmentStatusBarTheme(dark: boolean, samsung: boolean
 
 export function isScriptureParchmentPath(pathname: string): boolean {
   const p = pathname || "";
-  return p === "/read" || p.startsWith("/read/") || p === "/prayer" || p.startsWith("/prayer/");
+  return (
+    p === "/read" ||
+    p.startsWith("/read/") ||
+    p === "/dev/info-edition-batch"
+  );
 }
 
 export function isThemeColorManagedOnDocument(): boolean {

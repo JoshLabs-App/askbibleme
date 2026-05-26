@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ReadChapterInfoEditionBlock } from "@/components/bible/ReadChapterInfoEditionBlock";
 import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
+
+const INFO_EDITION_V1_EN_ROLE_ID = "info_edition_v1_en";
+const INFO_EDITION_GUIDE_V2_EN_ROLE_ID = "role_guide_v2_en";
 
 const DISCOVER_ART = "/read/post-reading/discover-self.png";
 const CONSULT_ART = "/read/post-reading/consult-materials.png";
@@ -15,6 +19,10 @@ type Props = {
   chapter: number;
   initialInfoPublished?: InfoEditionV1PublishedChapter | null;
   initialGuidePublished?: InfoEditionV1PublishedChapter | null;
+  infoRoleId?: string | null;
+  guideRoleId?: string | null;
+  prevChapterHref?: string | null;
+  nextChapterHref?: string | null;
 };
 
 type PanelCopy = {
@@ -134,23 +142,46 @@ export function ReadChapterPostReadingEditions({
   chapter,
   initialInfoPublished = null,
   initialGuidePublished = null,
+  infoRoleId = null,
+  guideRoleId = null,
+  prevChapterHref = null,
+  nextChapterHref = null,
 }: Props) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const isSpread = useReadChapterSpreadLayout();
   const [active, setActive] = useState<InfoEditionReaderVariant | null>(null);
+  const hasAutoSelectedSpreadDefault = useRef(false);
 
   const selectVariant = (variant: InfoEditionReaderVariant) => {
     setActive(variant);
   };
+  const goBackToChoices = () => {
+    setActive(null);
+  };
+  const backToTop = () => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
-    if (isSpread && active === null) {
+    if (isSpread && active === null && !hasAutoSelectedSpreadDefault.current) {
       setActive("guide");
+      hasAutoSelectedSpreadDefault.current = true;
+    }
+
+    if (!isSpread) {
+      hasAutoSelectedSpreadDefault.current = false;
     }
   }, [isSpread, active]);
 
   const showGuide = active === "guide";
   const showInfo = active === "info";
+  const normalizedInfoRoleId = infoRoleId?.trim() || null;
+  const normalizedGuideRoleId = guideRoleId?.trim() || null;
+  const effectiveInfoRoleId =
+    normalizedInfoRoleId ?? (locale === "en" ? INFO_EDITION_V1_EN_ROLE_ID : null);
+  const effectiveGuideRoleId =
+    normalizedGuideRoleId ?? (locale === "en" ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : null);
 
   const panels: PanelCopy[] = [
     {
@@ -217,26 +248,21 @@ export function ReadChapterPostReadingEditions({
       ) : null}
 
       {!isSpread ? (
-        <div className="read-chapter-post-reading-editions-board-wrap">
-          <div
-            className="read-chapter-post-reading-editions-board"
-            role="group"
-            aria-label={t("pages.read.postReadingEditionsChoicesAria")}
-          >
-            <PostReadingPanel
-              panel={panels[0]}
-              active={active === "guide"}
-              onToggle={() => selectVariant("guide")}
-            />
-            <PostReadingPanel
-              panel={panels[1]}
-              active={active === "info"}
-              onToggle={() => selectVariant("info")}
-            />
-          </div>
-          <span className="read-chapter-post-reading-editions-or" aria-hidden>
-            {t("pages.read.postReadingEditionsOr")}
-          </span>
+        <div
+          className="read-chapter-post-reading-editions-board-wrap read-chapter-post-reading-editions-book"
+          role="group"
+          aria-label={t("pages.read.postReadingEditionsChoicesAria")}
+        >
+          <PostReadingPanel
+            panel={panels[0]}
+            active={active === "guide"}
+            onToggle={() => selectVariant("guide")}
+          />
+          <PostReadingPanel
+            panel={panels[1]}
+            active={active === "info"}
+            onToggle={() => selectVariant("info")}
+          />
         </div>
       ) : null}
 
@@ -244,30 +270,60 @@ export function ReadChapterPostReadingEditions({
         {showGuide ? (
           <div id="read-edition-panel-guide" role="tabpanel" aria-labelledby="read-edition-tab-guide">
             <ReadChapterInfoEditionBlock
-              key={`guide-${bookId}-${chapter}`}
+              key={`guide-${bookId}-${chapter}-${effectiveGuideRoleId ?? "default"}`}
               variant="guide"
               bookId={bookId}
               chapter={chapter}
+              roleId={effectiveGuideRoleId}
               isActive
               initialPublished={initialGuidePublished}
-              showHeroBadge={!isSpread}
+              onBack={goBackToChoices}
             />
           </div>
         ) : null}
         {showInfo ? (
           <div id="read-edition-panel-info" role="tabpanel" aria-labelledby="read-edition-tab-info">
             <ReadChapterInfoEditionBlock
-              key={`info-${bookId}-${chapter}`}
+              key={`info-${bookId}-${chapter}-${effectiveInfoRoleId ?? "default"}`}
               variant="info"
               bookId={bookId}
               chapter={chapter}
+              roleId={effectiveInfoRoleId}
               isActive
               initialPublished={initialInfoPublished}
-              showHeroBadge={!isSpread}
+              onBack={goBackToChoices}
             />
           </div>
         ) : null}
       </div>
+      {active ? (
+        <div className="read-chapter-post-reading-bottom-actions" aria-label={t("pages.read.chapterEndNavAria")}>
+          <div className="read-chapter-post-reading-bottom-actions-side">
+            {prevChapterHref ? (
+              <Link href={prevChapterHref} className="read-chapter-post-reading-bottom-nav">
+                <span aria-hidden>‹</span>
+                <span>{t("pages.read.chapterEndNavPrev")}</span>
+              </Link>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={backToTop}
+            className="read-chapter-post-reading-back-top"
+            aria-label={t("pages.read.postReadingBackToTop")}
+          >
+            {t("pages.read.postReadingBackToTop")}
+          </button>
+          <div className="read-chapter-post-reading-bottom-actions-side read-chapter-post-reading-bottom-actions-side--right">
+            {nextChapterHref ? (
+              <Link href={nextChapterHref} className="read-chapter-post-reading-bottom-nav">
+                <span>{t("pages.read.chapterEndNavNext")}</span>
+                <span aria-hidden>›</span>
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

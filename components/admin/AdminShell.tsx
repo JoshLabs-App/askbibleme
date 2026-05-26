@@ -40,6 +40,7 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/studio", labelKey: "admin.items.studio" },
       { href: "/admin/system/settings", labelKey: "admin.items.settings" },
       { href: "/admin/system/ai-api", labelKey: "admin.items.aiApi" },
+      { href: "/admin/system/content-flags", labelKey: "admin.items.contentFlags" },
       { href: "/admin/system/generation-roles", labelKey: "admin.items.generationRoles" },
       { href: "/admin/system/shell-chrome", labelKey: "admin.items.shellChrome" },
       { href: "/admin/system/media-library", labelKey: "admin.items.mediaLibrary" },

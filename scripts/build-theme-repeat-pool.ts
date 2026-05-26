@@ -22,15 +22,22 @@ function readNumArg(name: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+function hasFlag(name: string): boolean {
+  const exact = `--${name}`;
+  return process.argv.slice(2).includes(exact);
+}
+
 const cwd = process.cwd();
 const minCount = readNumArg("min") ?? 5;
 const maxCount = readNumArg("max");
 const cap = readNumArg("cap");
+const strict = hasFlag("strict");
 
-void writeThemeRepeatPrayerPool(cwd, { minCount, maxCount, cap })
+void writeThemeRepeatPrayerPool(cwd, { minCount, maxCount, cap, includeExploreSeeds: !strict })
   .then((r) => {
     console.log(
       `[theme-repeat-pool] ${r.scopeId}: ${r.verseCount} verses, ${r.chunkCount} chunks` +
+        (r.forcedExploreAdds ? `, +${r.forcedExploreAdds} from explore` : "") +
         (r.skippedResolve ? ` (skipped ${r.skippedResolve} unresolved)` : ""),
     );
   })

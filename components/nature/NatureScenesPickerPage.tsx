@@ -14,18 +14,27 @@ import {
 } from "@/lib/home/nature-home-active-scene-prefs";
 import { SCENES_PAGE_SURFACE_STYLE } from "@/lib/nature/scenes-page-surface";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
+import { ensureNatureVideoBlobObjectUrl, peekNatureVideoBlobObjectUrl } from "@/lib/nature/nature-video-blob-cache";
+import { resolveNatureVideoSrcForEntry } from "@/lib/nature/resolve-nature-playback";
 
-type Props = { initial: NatureSettingsV2 };
+type Props = {
+  initial: NatureSettingsV2;
+  /** 选场景后返回的自然首页路径（电视壳为 `/tv`） */
+  afterSelectHomePath?: string;
+};
 
 const NATURE_VIDEO_STAGE_FRAME =
   "relative z-[1] w-full shrink-0 overflow-hidden transform-gpu min-h-[12rem]";
 
 /** 场景选择：静态渐变底 + 构建期 settings，无背景视频、无运行时拉配置。 */
-export function NatureScenesPickerPage({ initial }: Props) {
+export function NatureScenesPickerPage({ initial, afterSelectHomePath = "/" }: Props) {
   const { t } = useLocale();
   const router = useRouter();
   const settings = initial;
   const [activeVideoId, setActiveVideoId] = useState(() => defaultNatureHomeActiveVideoId(initial));
+  const [prepareSceneId, setPrepareSceneId] = useState<string | null>(null);
+  const [prepareProgress, setPrepareProgress] = useState<number | null>(null);
+  const prepareAbortRef = useRef<AbortController | null>(null);
   const activeSceneHydratedRef = useRef(false);
   const videoStageHeightCommitRef = useRef(0);
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
@@ -85,17 +94,62 @@ export function NatureScenesPickerPage({ initial }: Props) {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    return () => {
+      prepareAbortRef.current?.abort();
+      prepareAbortRef.current = null;
+    };
+  }, []);
+
   const onSceneCardPress = useCallback(
     (id: string) => {
       const next = id.trim();
-      if (!next) return;
-      if (next !== activeVideoId.trim()) {
-        writeNatureHomeActiveSceneId(next);
-        setActiveVideoId(next);
+      if (!next || prepareSceneId) return;
+
+      const row = settings.videos.find((v) => v.id.trim() === next);
+      const videoSrc = row ? resolveNatureVideoSrcForEntry(row).trim() : "";
+      if (!videoSrc) return;
+
+      writeNatureHomeActiveSceneId(next);
+      setActiveVideoId(next);
+
+      if (peekNatureVideoBlobObjectUrl(videoSrc)) {
+        router.push(afterSelectHomePath);
+        return;
       }
-      router.push("/");
+
+      prepareAbortRef.current?.abort();
+      const ac = new AbortController();
+      prepareAbortRef.current = ac;
+      setPrepareSceneId(next);
+      setPrepareProgress(0);
+
+      void (async () => {
+        try {
+          await ensureNatureVideoBlobObjectUrl(videoSrc, ac.signal, (received, totalBytes) => {
+            if (totalBytes != null && totalBytes > 0) {
+              setPrepareProgress(Math.min(1, received / totalBytes));
+            } else {
+              setPrepareProgress(null);
+            }
+          });
+          if (ac.signal.aborted) return;
+          setPrepareSceneId(null);
+          setPrepareProgress(null);
+          router.push(afterSelectHomePath);
+        } catch {
+          if (!ac.signal.aborted) {
+            setPrepareSceneId(null);
+            setPrepareProgress(null);
+          }
+        } finally {
+          if (prepareAbortRef.current === ac) {
+            prepareAbortRef.current = null;
+          }
+        }
+      })();
     },
-    [activeVideoId, router],
+    [afterSelectHomePath, prepareSceneId, router, settings.videos],
   );
 
   const videoStageShellStyle: CSSProperties = useMemo(
@@ -134,8 +188,8 @@ export function NatureScenesPickerPage({ initial }: Props) {
                   className="mt-0 w-full shrink-0 sm:mt-0.5 [@media(max-height:500px)]:mt-0 [@media(max-height:500px)]:sm:mt-0.5"
                   settings={settings}
                   activeVideoId={activeVideoId}
-                  prepareSceneId={null}
-                  prepareProgress={null}
+                  prepareSceneId={prepareSceneId}
+                  prepareProgress={prepareProgress}
                   onSceneCardPress={onSceneCardPress}
                 />
               ) : (

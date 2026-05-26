@@ -15,6 +15,23 @@ import { primaryLocaleText } from "@/lib/i18n/localized-text";
 import { ADMIN_MAIN_CLASS } from "@/components/admin/admin-layout";
 import { diskAuthHeaders } from "@/lib/disk-auth-headers";
 
+const MUSIC_ALBUMS = ["安静", "下午茶", "专注工作", "睡眠"] as const;
+type MusicAlbum = (typeof MUSIC_ALBUMS)[number];
+
+function inferTrackAlbum(track: (MusicCompanionStore["audioTracks"])[number]): MusicAlbum {
+  const tags = Array.isArray(track.tags) ? track.tags : [];
+  for (const album of MUSIC_ALBUMS) {
+    if (tags.includes(album)) return album;
+  }
+  if (tags.includes("工作")) return "专注工作";
+  const remark = primaryLocaleText(track.remark).trim();
+  if (remark.includes("专注工作") || remark.includes("工作")) return "专注工作";
+  for (const album of MUSIC_ALBUMS) {
+    if (remark.includes(album)) return album;
+  }
+  return "安静";
+}
+
 function primarySceneId(store: MusicCompanionStore): string | null {
   const ord = [...store.scenes].sort((a, b) => a.order - b.order);
   if (ord.length === 0) return null;
@@ -27,7 +44,15 @@ function primarySceneId(store: MusicCompanionStore): string | null {
 
 function withNewAudioTrack(
   s: MusicCompanionStore,
-  payload: { id: string; title: string; src: string; analysisSrc?: string },
+  payload: {
+    id: string;
+    title: string;
+    src: string;
+    analysisSrc?: string;
+    durationSec?: number;
+    tags?: string[];
+    remark?: string;
+  },
 ): MusicCompanionStore {
   const pid = primarySceneId(s);
   const scenes = pid
@@ -38,12 +63,27 @@ function withNewAudioTrack(
     title: payload.title,
     src: payload.src,
     ...(payload.analysisSrc?.trim() ? { analysisSrc: payload.analysisSrc.trim() } : {}),
+    ...(typeof payload.durationSec === "number" && Number.isFinite(payload.durationSec) && payload.durationSec > 0
+      ? { durationSec: Math.round(payload.durationSec) }
+      : {}),
+    ...(payload.tags?.length ? { tags: payload.tags } : {}),
+    ...(payload.remark?.trim() ? { remark: payload.remark.trim() } : {}),
   };
   return {
     ...s,
     audioTracks: [...s.audioTracks, track],
     scenes,
   };
+}
+
+function formatDuration(sec: number | null | undefined): string {
+  if (typeof sec !== "number" || !Number.isFinite(sec) || sec <= 0) return "--:--";
+  const whole = Math.max(0, Math.floor(sec));
+  const h = Math.floor(whole / 3600);
+  const m = Math.floor((whole % 3600) / 60);
+  const s = whole % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function withNewImageBackground(
@@ -154,11 +194,55 @@ function xhrPostFormData(
     xhr.ontimeout = () =>
       reject(
         new Error(
-          `上传超时（>${Math.round(timeoutMs / 1000)}s）。大文件转码较慢时可设 MUSIC_UPLOAD_SKIP_TRANSCODE=1，或跳过能量分析 MUSIC_UPLOAD_SKIP_ANALYSIS=1。`,
+          `上传超时（>${Math.round(timeoutMs / 1000)}s）。若已启用转码（MUSIC_UPLOAD_SKIP_TRANSCODE=0），可改回 1；或跳过能量分析 MUSIC_UPLOAD_SKIP_ANALYSIS=1。`,
         ),
       );
     xhr.onabort = () => reject(new Error("上传已中断"));
     xhr.send(form);
+  });
+}
+
+function xhrPostBinary(
+  url: string,
+  body: Blob,
+  headers: Record<string, string>,
+  onProgress: (p: UploadProgressPayload) => void,
+  timeoutMs = 130_000,
+): Promise<{ status: number; bodyText: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.timeout = timeoutMs;
+    for (const [k, v] of Object.entries(headers)) {
+      if (v) xhr.setRequestHeader(k, v);
+    }
+    let lastEmit = 0;
+    const emit = (pct: number, awaitingServer: boolean) => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (!awaitingServer && pct < 100 && now - lastEmit < 90) return;
+      lastEmit = now;
+      onProgress({ pct: Math.min(100, Math.max(0, pct)), awaitingServer });
+    };
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && e.total > 0) {
+        emit(Math.floor((100 * e.loaded) / e.total), false);
+      } else if (e.loaded > 0) {
+        emit(1, false);
+      }
+    };
+    xhr.upload.onload = () => {
+      emit(100, true);
+    };
+    xhr.onload = () => resolve({ status: xhr.status, bodyText: xhr.responseText });
+    xhr.onerror = () => reject(new Error("网络错误（XHR）"));
+    xhr.ontimeout = () =>
+      reject(
+        new Error(
+          `上传超时（>${Math.round(timeoutMs / 1000)}s）。若已启用转码（MUSIC_UPLOAD_SKIP_TRANSCODE=0），可改回 1；或跳过能量分析 MUSIC_UPLOAD_SKIP_ANALYSIS=1。`,
+        ),
+      );
+    xhr.onabort = () => reject(new Error("上传已中断"));
+    xhr.send(body);
   });
 }
 
@@ -321,22 +405,61 @@ function AdminMediaHub({
   const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
   const busy = uploadProgress !== null;
   const uploadInputId = useId();
+  const [audioAlbum, setAudioAlbum] = useState<MusicAlbum>("安静");
   const [imageDestination, setImageDestination] = useState<"music" | "golden_verses">("music");
 
   const runAudioUpload = useCallback(async (file: File, report: (p: UploadProgressPayload) => void) => {
     const fd = new FormData();
     fd.append("file", file);
-    const headers = diskAuthHeaders() as Record<string, string>;
-    const { status, bodyText } = await xhrPostFormData("/api/music/upload", fd, headers, report);
-    const data = parseJsonFromBodyText(bodyText, status) as {
-      ok?: boolean;
-      url?: string;
-      error?: string;
-      transcoded?: boolean;
-      bitrateK?: number | null;
-      warning?: string;
-      analysisUrl?: string;
+    const baseHeaders = diskAuthHeaders() as Record<string, string>;
+    const tryMultipart = async () => {
+      const { status, bodyText } = await xhrPostFormData("/api/music/upload", fd, baseHeaders, report);
+      return {
+        status,
+        data: parseJsonFromBodyText(bodyText, status) as {
+          ok?: boolean;
+          url?: string;
+          error?: string;
+          transcoded?: boolean;
+          bitrateK?: number | null;
+          warning?: string;
+          analysisUrl?: string;
+          durationSec?: number;
+        },
+      };
     };
+    const tryRawBinary = async () => {
+      const rawHeaders: Record<string, string> = {
+        ...baseHeaders,
+        "Content-Type": file.type?.trim() || "application/octet-stream",
+      };
+      const { status, bodyText } = await xhrPostBinary("/api/music/upload", file, rawHeaders, report);
+      return {
+        status,
+        data: parseJsonFromBodyText(bodyText, status) as {
+          ok?: boolean;
+          url?: string;
+          error?: string;
+          transcoded?: boolean;
+          bitrateK?: number | null;
+          warning?: string;
+          analysisUrl?: string;
+          durationSec?: number;
+        },
+      };
+    };
+
+    let { status, data } = await tryRawBinary();
+    const errText = typeof data.error === "string" ? data.error : "";
+    const needsMultipartFallback =
+      status === 400 &&
+      (errText.includes("缺少 file 字段") ||
+        errText.includes("请求体须为 multipart/form-data") ||
+        errText.includes("不支持的扩展名"));
+    if (needsMultipartFallback) {
+      ({ status, data } = await tryMultipart());
+    }
+
     if (status < 200 || status >= 300) {
       const err = typeof data.error === "string" ? data.error : `上传失败（${status}）`;
       throw new Error(err + disk403Hint(status, err));
@@ -347,6 +470,10 @@ function AdminMediaHub({
     }
     const analysisUrl =
       typeof data.analysisUrl === "string" && data.analysisUrl.trim() ? data.analysisUrl.trim() : undefined;
+    const durationSec =
+      typeof data.durationSec === "number" && Number.isFinite(data.durationSec) && data.durationSec > 0
+        ? data.durationSec
+        : undefined;
     report({ pct: 100, awaitingServer: false });
     return {
       url,
@@ -354,6 +481,7 @@ function AdminMediaHub({
       bitrateK: data.bitrateK,
       warning: typeof data.warning === "string" ? data.warning : undefined,
       analysisUrl,
+      durationSec,
     };
   }, []);
 
@@ -406,6 +534,9 @@ function AdminMediaHub({
         title,
         src: data.url,
         ...(data.analysisUrl ? { analysisSrc: data.analysisUrl } : {}),
+        ...(data.durationSec ? { durationSec: data.durationSec } : {}),
+        tags: [audioAlbum],
+        remark: `专辑：${audioAlbum}`,
       });
       setStore(nextSnap);
       bumpPersistIgnore();
@@ -414,7 +545,7 @@ function AdminMediaHub({
       bumpPersistIgnore();
       return { next: nextSnap, data };
     },
-    [bumpPersistIgnore, flushToDisk, runAudioUpload, setStore],
+    [audioAlbum, bumpPersistIgnore, flushToDisk, runAudioUpload, setStore],
   );
 
   const ingestImage = useCallback(
@@ -548,6 +679,25 @@ function AdminMediaHub({
         大文件或转码可能需数十秒；上传完成前请勿离开本页。若写入失败，请确认未禁用自动保存，且生产环境已配置磁盘写入密钥。
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
+        <label htmlFor={`${uploadInputId}-audio-album`} className="text-[10px] text-adminMuted">
+          音频专辑
+        </label>
+        <select
+          id={`${uploadInputId}-audio-album`}
+          value={audioAlbum}
+          disabled={busy}
+          onChange={(e) => {
+            const next = e.target.value;
+            setAudioAlbum(next === "下午茶" || next === "睡眠" || next === "安静" ? next : "安静");
+          }}
+          className="max-w-[min(100%,12rem)] rounded-md border border-adminLine bg-adminPanel px-2 py-1 text-[11px] text-adminFg disabled:opacity-50"
+        >
+          {MUSIC_ALBUMS.map((album) => (
+            <option key={album} value={album}>
+              {album}
+            </option>
+          ))}
+        </select>
         <label htmlFor={`${uploadInputId}-dest`} className="text-[10px] text-adminMuted">
           图片保存到
         </label>
@@ -563,7 +713,7 @@ function AdminMediaHub({
         </select>
       </div>
       <p className="mt-1 max-w-prose text-[10px] leading-relaxed text-adminMuted">
-        音频固定写入音乐曲库。金句背景多选时依次上传，配置中为最后一次成功的图片。
+        音频会写入所选专辑（安静 / 下午茶 / 睡眠）；金句背景多选时依次上传，配置中为最后一次成功的图片。
       </p>
       {uploadProgress ? (
         <div className="mt-3 rounded-md border border-adminLine bg-adminPanel/50 px-3 py-2.5">
@@ -639,6 +789,7 @@ function AudioTrackLibrary({
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewTrackId, setPreviewTrackId] = useState<string | null>(null);
   const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [detectedDurationById, setDetectedDurationById] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const el = previewAudioRef.current;
@@ -672,7 +823,43 @@ function AudioTrackLibrary({
     setPreviewPlaying(false);
   }, [store.audioTracks, previewTrackId]);
 
-  const togglePreview = useCallback((t: (typeof store.audioTracks)[number]) => {
+  useEffect(() => {
+    const pending = store.audioTracks.filter(
+      (t) =>
+        (!t.durationSec || t.durationSec <= 0) &&
+        typeof t.src === "string" &&
+        t.src.trim() &&
+        !detectedDurationById[t.id],
+    );
+    if (pending.length === 0) return;
+    let cancelled = false;
+    pending.forEach((track) => {
+      const audio = document.createElement("audio");
+      audio.preload = "metadata";
+      audio.src = track.src.trim();
+      const finalize = () => {
+        audio.removeAttribute("src");
+        audio.load();
+      };
+      audio.onloadedmetadata = () => {
+        if (cancelled) {
+          finalize();
+          return;
+        }
+        const d = audio.duration;
+        if (Number.isFinite(d) && d > 0) {
+          setDetectedDurationById((prev) => ({ ...prev, [track.id]: Math.floor(d) }));
+        }
+        finalize();
+      };
+      audio.onerror = finalize;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [detectedDurationById, store.audioTracks]);
+
+  const togglePreview = useCallback((t: MusicCompanionStore["audioTracks"][number]) => {
     const src = t.src?.trim();
     if (!src) return;
     const el = previewAudioRef.current;
@@ -847,6 +1034,34 @@ function AudioTrackLibrary({
                     );
                   }}
                 />
+                <span className="shrink-0 rounded border border-adminLine bg-adminPanel px-2 py-1 font-mono text-[11px] text-adminMuted">
+                  {formatDuration(t.durationSec ?? detectedDurationById[t.id])}
+                </span>
+                <select
+                  aria-label="专辑"
+                  className="shrink-0 rounded border border-border bg-adminPanel px-1.5 py-1 text-[11px] text-adminFg"
+                  value={inferTrackAlbum(t)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    const album = next === "下午茶" || next === "睡眠" || next === "安静" ? next : "安静";
+                    setStore((s) =>
+                      s
+                        ? {
+                            ...s,
+                            audioTracks: s.audioTracks.map((x, j) =>
+                              j === i ? { ...x, tags: [album], remark: `专辑：${album}` } : x,
+                            ),
+                          }
+                        : s,
+                    );
+                  }}
+                >
+                  {MUSIC_ALBUMS.map((album) => (
+                    <option key={album} value={album}>
+                      {album}
+                    </option>
+                  ))}
+                </select>
                 <div className="flex shrink-0 flex-wrap items-center gap-1">
                   <button
                     type="button"
@@ -928,6 +1143,14 @@ function AudioTrackLibrary({
                     />
                   </label>
                   <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="block text-[10px] text-adminMuted">
+                      时长
+                      <input
+                        className="mt-0.5 w-full rounded border border-border bg-adminPanel px-2 py-1 font-mono text-[11px]"
+                        value={formatDuration(t.durationSec ?? detectedDurationById[t.id])}
+                        readOnly
+                      />
+                    </label>
                     <label className="block text-[10px] text-adminMuted">
                       id
                       <input

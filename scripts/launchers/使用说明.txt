@@ -1,9 +1,11 @@
-Selah.my Studio — 双击启动（仅 macOS）
+AskBible.me Studio — 双击启动（仅 macOS）
 
-位置：本文件夹里的三个 .command 文件
+位置：本文件夹里的 .command 文件
+
+── 网站 / Studio ──
 
 1-开发服务器.command
-  → 日常写代码用。会打开终端并运行 npm run dev
+  → 日常写代码。会打开终端并运行 npm run dev
   → 浏览器打开：http://localhost:3450/studio
 
 2-卡住时重启.command
@@ -11,6 +13,51 @@ Selah.my Studio — 双击启动（仅 macOS）
 
 3-检查能否编译.command
   → 改完代码点一次，自动做类型检查 + 构建。有错会在窗口里显示
+
+── 手机 App 开发（模拟器 / Metro）──
+
+4-手机开发-iOS.command
+  → 网站 API (3450) + Metro + iOS 模拟器
+  → 终端：npm run mobile:dev
+
+5-手机开发-仅Metro.command
+  → 网站 API + Metro（不自动开模拟器；终端里按 i / a）
+
+── 真机（推荐双击）──
+
+6-手机开发-Android真机.command   ⚠ 开发版，不能离线单独用
+  → USB 连 Android 手机 + 开 USB 调试
+  → 自动：网站 API + Metro + 编译安装 Debug 到手机
+  → 拔掉 Mac / 关 Metro 会「无法连接」——这是预期行为
+  → 终端：npm run mobile:dev:android:device
+
+7-手机开发-iPhone真机.command
+  → USB 连 iPhone + 信任电脑 + Xcode 已配置签名
+  → 自动：网站 API + Metro + 编译安装到手机
+  → 终端：npm run mobile:dev:iphone
+
+8-安装Release到Android手机.command   ✓ 侧载正式包，可离线
+  → 把经文/场景/音乐等打进 APK，不连 Mac、不跑 Metro
+  → USB 连手机后双击；或终端：npm run mobile:install:apk:device
+  → 只打 APK 不安装：npm run mobile:build:apk:local → dist/mobile/*.apk
+
+9-iPhone云端安装说明.command
+  → 不插 Mac 数据线时，如何用 EAS 装到 iPhone（需 Apple 开发者账号）
+
+── 终端命令速查 ──
+
+  npm run mobile:dev              # 模拟器：API + Metro + iOS 模拟器
+  npm run mobile:dev:android        # 模拟器：API + Metro + Android 模拟器
+  npm run mobile:dev:android:device # 真机 Android（USB）
+  npm run mobile:dev:iphone         # 真机 iPhone（USB）
+  npm run mobile:install:apk:device # Android 正式包侧载（USB）
+  npm run mobile:build:apk:local    # 只打 APK 到 dist/mobile/
+  npm run mobile:build:ios:internal # EAS 云端打 iOS 内测包
+
+真机连本机 API 时：
+  复制 apps/askbible-mobile/.env.device.example → .env.local
+  把里面的 IP 改成 Mac 局域网 IP（终端: ipconfig getifaddr en0）
+  iPhone / Android 与 Mac 同一 Wi‑Fi
 
 首次双击若提示「无法打开」或安全警告：
   在文件上 右键 → 打开 → 仍要打开

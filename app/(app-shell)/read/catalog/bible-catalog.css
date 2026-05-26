@@ -41,12 +41,12 @@
   --bc-hover: color-mix(in srgb, #f4ebe1 8%, transparent);
 }
 
-.dark .read-bible-parchment-shell .bible-catalog-read-testament--old .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
-  color: color-mix(in srgb, #f0b88a 58%, #f4ebe1 42%);
+.dark .read-bible-parchment-shell .bible-catalog-read-testament--old .bible-catalog-read-testament-label-text {
+  color: color-mix(in srgb, #fbbf24 58%, #f4ebe1 42%);
 }
 
 .dark .read-bible-parchment-shell .bible-catalog-read-testament--old .bible-catalog-read-testament-body::before {
-  background: color-mix(in srgb, #d97706 62%, #f4ebe1 12%);
+  background: color-mix(in srgb, #d97707 62%, #f4ebe1 12%);
 }
 
 .dark .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-body::before {
@@ -100,11 +100,11 @@
   --bc-read-col-gap: 0.34rem;
 }
 
-.read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+.read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label-text {
   color: color-mix(in srgb, #6b2d38 62%, #1c1410 38%);
 }
 
-.dark .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+.dark .read-bible-parchment-shell .bible-catalog-read-testament--new .bible-catalog-read-testament-label-text {
   color: color-mix(in srgb, #e8b4bc 55%, #f4ebe1 45%);
 }
 
@@ -130,16 +130,16 @@
   text-wrap: balance;
 }
 
-.bible-catalog-on-parchment .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
-  font-size: 0.78rem;
+.bible-catalog-on-parchment .bible-catalog-read-testament-label-text {
+  font-size: 0.92rem;
 }
 
 .bible-catalog-on-parchment .bible-catalog-read-title .bible-catalog-read-heading-left {
-  font-size: 0.64rem;
+  font-size: 0.72rem;
 }
 
 .bible-catalog-on-parchment .bible-catalog-read-book-name {
-  font-size: 1.03rem;
+  font-size: 1.14rem;
 }
 
 .bible-catalog-on-parchment .bible-catalog-read-book-divine {
@@ -177,23 +177,76 @@
   padding-top: 0.35rem;
 }
 
-.bible-catalog-read-testament-label.bible-catalog-read-heading-row {
-  margin: 0 0 0.2rem;
+.bible-catalog-read-testament-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 0 0.62rem;
   padding: 0;
 }
 
-.bible-catalog-read-testament--old .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
-  color: color-mix(in srgb, #c2410c 58%, rgb(var(--brand-ink-rgb)) 42%);
+.bible-catalog-read-testament-label-text {
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1.32;
 }
 
-.bible-catalog-read-testament--new .bible-catalog-read-testament-label .bible-catalog-read-heading-left {
+.bible-catalog-read-testament--old .bible-catalog-read-testament-label-text {
+  color: color-mix(in srgb, #d97707 58%, rgb(var(--brand-ink-rgb)) 42%);
+}
+
+.bible-catalog-read-testament--new .bible-catalog-read-testament-label-text {
   color: color-mix(in srgb, #1d4ed8 58%, rgb(var(--brand-ink-rgb)) 42%);
 }
 
+
 .bible-catalog-read-block {
-  margin: 0;
-  padding: 0.4rem 0 0;
+  margin: 0 0 0.55rem;
+  padding: 0.5rem 0.4rem 0.35rem;
   border: none;
+  border-radius: 8px;
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-torah"] {
+  background: rgba(217, 119, 7, 0.09);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-history"] {
+  background: rgba(180, 83, 9, 0.08);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-wisdom"] {
+  background: rgba(101, 163, 13, 0.07);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-major-prophets"] {
+  background: rgba(153, 27, 27, 0.07);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-minor-prophets"] {
+  background: rgba(71, 85, 105, 0.08);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-gospels"] {
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-church-history"] {
+  background: rgba(13, 148, 136, 0.07);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-pauline"] {
+  background: rgba(124, 58, 237, 0.07);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-general-epistles"] {
+  background: rgba(5, 150, 105, 0.07);
+}
+
+.bible-catalog-on-parchment .bible-catalog-read-block[data-section-id="canon-apocalyptic"] {
+  background: rgba(127, 29, 29, 0.08);
 }
 
 .bible-catalog-read-testament:first-child .bible-catalog-read-block:first-of-type {
@@ -218,17 +271,58 @@
   line-height: 1.25;
 }
 
-.bible-catalog-read-testament-label .bible-catalog-read-heading-left {
-  font-size: 0.74rem;
+.bible-catalog-read-title .bible-catalog-read-heading-left {
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
+  text-align: left;
+  border-left: 4px solid var(--bc-section-accent, var(--bc-read-weak));
+  padding-left: 0.45rem;
+  margin-left: 0.12rem;
 }
 
-.bible-catalog-read-title .bible-catalog-read-heading-left {
-  font-size: 0.6rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--bc-read-weak);
+.bible-catalog-read-block[data-section-id="canon-torah"] {
+  --bc-section-accent: #c9920f;
+}
+
+.bible-catalog-read-block[data-section-id="canon-history"] {
+  --bc-section-accent: #b45309;
+}
+
+.bible-catalog-read-block[data-section-id="canon-wisdom"] {
+  --bc-section-accent: #6b7c3f;
+}
+
+.bible-catalog-read-block[data-section-id="canon-major-prophets"] {
+  --bc-section-accent: #9f1239;
+}
+
+.bible-catalog-read-block[data-section-id="canon-minor-prophets"] {
+  --bc-section-accent: #4a6a8a;
+}
+
+.bible-catalog-read-block[data-section-id="canon-gospels"] {
+  --bc-section-accent: #1d4ed8;
+}
+
+.bible-catalog-read-block[data-section-id="canon-church-history"] {
+  --bc-section-accent: #0f766e;
+}
+
+.bible-catalog-read-block[data-section-id="canon-pauline"] {
+  --bc-section-accent: #6d28d9;
+}
+
+.bible-catalog-read-block[data-section-id="canon-general-epistles"] {
+  --bc-section-accent: #047857;
+}
+
+.bible-catalog-read-block[data-section-id="canon-apocalyptic"] {
+  --bc-section-accent: #991b1b;
+}
+
+.bible-catalog-read-block[data-section-id] .bible-catalog-read-title .bible-catalog-read-heading-left {
+  color: var(--bc-section-accent);
 }
 
 .bible-catalog-read-heading-right {
@@ -256,7 +350,7 @@
   top: 0;
   bottom: 0;
   width: var(--bc-read-stripe-w);
-  background: color-mix(in srgb, #b45309 72%, var(--bc-border) 28%);
+  background: color-mix(in srgb, #d97707 72%, var(--bc-border) 28%);
   border-radius: 1px;
   pointer-events: none;
   z-index: 2;
@@ -285,7 +379,7 @@
   grid-template-columns: minmax(var(--bc-read-golden-min), var(--bc-read-golden-minor)) minmax(0, 1fr);
   column-gap: var(--bc-read-col-gap);
   align-items: center;
-  padding: 0.14rem 0;
+  padding: 0.16rem 0;
   margin: 0;
   text-decoration: none;
   color: inherit;
@@ -299,6 +393,15 @@
   gap: 0.25rem 0.35rem;
   align-items: center;
   padding-left: var(--bc-read-poststripe-pad);
+  min-width: 0;
+}
+
+.bible-catalog-read-book-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.35rem;
+  row-gap: 0.06rem;
   min-width: 0;
 }
 
@@ -330,29 +433,24 @@
 
 .bible-catalog-read-book-num {
   font-variant-numeric: tabular-nums;
-  font-size: 0.6rem;
-  font-weight: 500;
+  font-size: 0.62rem;
+  font-weight: 600;
   line-height: 1.3;
-  color: var(--bc-read-faint);
+  color: var(--bc-section-accent, var(--bc-read-faint));
   text-align: right;
-  opacity: 0.85;
+  opacity: 1;
+}
+
+.bible-catalog-read-block[data-section-id] .bible-catalog-read-book-num {
+  color: var(--bc-section-accent);
 }
 
 .bible-catalog-read-book-name {
-  font-size: 0.94rem;
+  font-size: 1.06rem;
   font-weight: 600;
   letter-spacing: -0.015em;
-  line-height: 1.28;
+  line-height: 1.3;
   color: var(--bc-read-book);
-}
-
-.bible-catalog-read-book-main {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 0.35rem;
-  row-gap: 0.06rem;
-  min-width: 0;
 }
 
 .bible-catalog-read-book-divine {
@@ -360,6 +458,7 @@
   font-weight: 400;
   line-height: 1.35;
   color: var(--bc-read-faint);
+  opacity: 0.92;
 }
 
 .bible-catalog-read-end {

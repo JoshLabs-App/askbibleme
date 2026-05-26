@@ -1,12 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import {
-  NATURE_SCENE_CATEGORIES,
-  parseNatureSceneCategory,
-  type NatureSceneCategory,
-} from "@/lib/nature/scene-categories";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
 
 type Props = {
@@ -23,10 +18,6 @@ type Props = {
 function cardTitle(v: NatureVideoEntry, fallback: string) {
   const t = v.title?.trim();
   return t || fallback;
-}
-
-function categoryForVideo(v: NatureVideoEntry): NatureSceneCategory {
-  return parseNatureSceneCategory(v.category);
 }
 
 const SCENE_CARD_CLASS =
@@ -117,9 +108,7 @@ function SceneCard({
   );
 }
 
-/**
- * 场景页：按 自然 → 白天 → 晚上 顺序连成一片网格，当前片仅高亮不挪位。
- */
+/** 场景页：按后台配置中的 videos 顺序连成一片网格，当前片仅高亮不挪位。 */
 export function NatureSceneLayer({
   className = "",
   settings,
@@ -130,18 +119,7 @@ export function NatureSceneLayer({
 }: Props) {
   const { t } = useLocale();
   const videos = settings.videos;
-
-  const orderedVideos = useMemo(() => {
-    const buckets: Record<NatureSceneCategory, NatureVideoEntry[]> = {
-      nature: [],
-      day: [],
-      night: [],
-    };
-    for (const v of videos) {
-      buckets[categoryForVideo(v)].push(v);
-    }
-    return NATURE_SCENE_CATEGORIES.flatMap((cat) => buckets[cat]);
-  }, [videos]);
+  const orderedVideos = videos;
 
   const select = useCallback(
     (id: string) => {

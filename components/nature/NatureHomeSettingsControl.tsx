@@ -11,20 +11,15 @@ const TOP_BAR_BTN =
 
 /** 单屏、无滚动；内容靠紧凑行距塞入一卡 */
 const PANEL_SHELL =
-  "pointer-events-auto absolute right-full top-0 z-[60] mr-2 w-[11.25rem] shrink-0 overflow-hidden rounded-xl border border-white/18 bg-black/58 px-2 py-2 text-left shadow-[0_8px_32px_-10px_rgba(0,0,0,0.55)] backdrop-blur-xl";
+  "pointer-events-auto absolute right-full top-0 z-[60] mr-2 w-[11.25rem] shrink-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 px-2 py-2 text-left shadow-[0_8px_32px_-10px_rgba(0,0,0,0.55)]";
 
-const DIVIDER = "my-1.5 border-t border-white/10";
+const DIVIDER = "my-1.5 border-t border-zinc-700";
 
 const ROW = "flex min-h-[32px] items-center justify-between gap-2";
 
 const MICRO = "w-7 shrink-0 text-[10px] text-white/50";
 
 const RANGE = "h-1 min-w-0 flex-1 accent-white";
-
-const SEGMENT_WRAP = "flex rounded-md bg-white/[0.06] p-0.5";
-
-const SEGMENT_BTN =
-  "min-h-[28px] flex-1 rounded-[5px] px-2 text-[11px] font-medium transition active:scale-[0.98]";
 
 function IconSettings(props: { className?: string }) {
   return (
@@ -48,9 +43,6 @@ export type NatureHomeSettingsControlProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   hasNatureVisual: boolean;
-  activeSceneHas1080: boolean;
-  background1080: boolean;
-  onBackground1080Toggle: () => void;
   showFullscreenBtn: boolean;
   docElementFullscreen: boolean;
   onFullscreenClick: () => void;
@@ -70,9 +62,6 @@ export function NatureHomeSettingsControl({
   open,
   onOpenChange,
   hasNatureVisual,
-  activeSceneHas1080,
-  background1080,
-  onBackground1080Toggle,
   showFullscreenBtn,
   docElementFullscreen,
   onFullscreenClick,
@@ -112,42 +101,11 @@ export function NatureHomeSettingsControl({
           id="nature-home-settings-panel"
           role="region"
           aria-label={t("nature.homeSettings.panelTitle")}
+          data-shell-swipe-nav-exclude
           className={PANEL_SHELL}
         >
-          {hasNatureVisual && activeSceneHas1080 ? (
-            <div className={SEGMENT_WRAP} role="group" aria-label={t("nature.homeSettings.qualitySection")}>
-              <button
-                type="button"
-                aria-pressed={!background1080}
-                onClick={() => {
-                  if (background1080) onBackground1080Toggle();
-                }}
-                className={[
-                  SEGMENT_BTN,
-                  !background1080 ? "bg-white/18 text-white" : "text-white/60 hover:text-white/85",
-                ].join(" ")}
-              >
-                720
-              </button>
-              <button
-                type="button"
-                aria-pressed={background1080}
-                onClick={() => {
-                  if (!background1080) onBackground1080Toggle();
-                }}
-                className={[
-                  SEGMENT_BTN,
-                  background1080 ? "bg-sky-500/80 text-white" : "text-white/60 hover:text-white/85",
-                ].join(" ")}
-              >
-                1080
-              </button>
-            </div>
-          ) : null}
-
           {hasNatureVisual ? (
             <>
-              {activeSceneHas1080 ? <div className={DIVIDER} aria-hidden /> : null}
               <div className="space-y-1">
                 <div className={`${ROW} gap-1.5`}>
                   <span className={MICRO}>{t("nature.homeSettings.softFocusShort")}</span>
@@ -220,7 +178,7 @@ export function NatureHomeSettingsControl({
                 aria-pressed={docElementFullscreen}
                 aria-label={docElementFullscreen ? t("nature.fullscreenExitAria") : t("nature.fullscreenEnterAria")}
                 onClick={onFullscreenClick}
-                className={`${ROW} w-full rounded-md px-1 text-[11px] text-white/82 transition hover:bg-white/[0.06] hover:text-white`}
+                className={`${ROW} w-full rounded-md px-1 text-[11px] text-white/82 transition hover:bg-zinc-800 hover:text-white`}
               >
                 <span>{t("nature.homeSettings.fullscreenShort")}</span>
                 <span className="text-white/45">{docElementFullscreen ? "▢" : "⤢"}</span>

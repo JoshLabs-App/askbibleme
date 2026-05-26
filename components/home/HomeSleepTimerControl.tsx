@@ -88,8 +88,10 @@ function HomeSleepTimerPanelContent({
               }}
               className={
                 selected
-                  ? `${pillClass} bg-sky-500/90 font-medium text-white`
-                  : `${pillClass} border border-white/12 bg-white/[0.06] text-white/85 transition hover:bg-white/[0.1]`
+                  ? `${pillClass} bg-sky-500 font-medium text-white`
+                  : compact
+                    ? `${pillClass} border border-zinc-600 bg-zinc-700 text-white/85 transition hover:bg-zinc-600`
+                    : `${pillClass} border border-white/12 bg-white/[0.06] text-white/85 transition hover:bg-white/[0.1]`
               }
             >
               {t(sleepLabelKey(m))}
@@ -113,7 +115,9 @@ function HomeSleepTimerPanelContent({
               }}
               className={[
                 "relative flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200",
-                stayAwake ? "justify-end border border-sky-400/60 bg-sky-500/75" : "justify-start border border-white/22 bg-white/[0.08]",
+                stayAwake
+                  ? "justify-end border border-sky-400 bg-sky-500"
+                  : "justify-start border border-zinc-600 bg-zinc-700",
               ].join(" ")}
             >
               <span className="pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm" aria-hidden />

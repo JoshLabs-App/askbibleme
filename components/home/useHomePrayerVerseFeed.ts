@@ -20,7 +20,6 @@ import {
 import {
   DEFAULT_HOME_PRAYER_PREFS,
   HOME_PRAYER_VERSE_FEED_RELOAD_EVENT,
-  memoryNamespaceFromScope,
   persistVerseDisplayToCookie,
   readHomePrayerVersePrefs,
   scopeIdFromPrefs,
@@ -28,6 +27,8 @@ import {
   writeHomePrayerVersePrefs,
 } from "@/lib/home-prayer-pools/prefs";
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
+import { HOME_PRAYER_POOL_SCOPE_ID } from "@/lib/home-prayer-pools/chunk-registry.generated";
+import { readVerifiedHomePrayerPoolConfig } from "@/lib/home-prayer-pools/remote-config";
 
 /** 各语言列表应对齐；取最短长度用于整体环形平移，双语索引仍一致。 */
 function alignedFallbackSpanLength(by: Record<AppLocale, HomeVerseEntry[]>): number {
@@ -59,6 +60,21 @@ type Args = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
 };
 
+function memoryNamespaceFromScopeId(scopeId: string): string {
+  return scopeId.trim() || HOME_PRAYER_POOL_SCOPE_ID;
+}
+
+function pickScopeIdForFeed(
+  localScopeId: string,
+  remote: Awaited<ReturnType<typeof readVerifiedHomePrayerPoolConfig>>,
+): string {
+  if (!remote) return localScopeId;
+  const allowlist = new Set(remote.allowlistedScopeIds);
+  if (allowlist.has(localScopeId)) return localScopeId;
+  if (allowlist.has(remote.selectedScopeId)) return remote.selectedScopeId;
+  return HOME_PRAYER_POOL_SCOPE_ID;
+}
+
 export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
   bilingual: boolean;
@@ -75,7 +91,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
   const manifestRef = useRef<HomePrayerManifestV1 | null>(null);
   const bodiesRef = useRef<VerseBodyMap>(new Map());
   const chunkCacheRef = useRef(new Map<number, HomePrayerChunkV1>());
-  const scopeIdRef = useRef("theme-repeat-ge5");
+  const scopeIdRef = useRef<string>(HOME_PRAYER_POOL_SCOPE_ID);
   const keysQueueRef = useRef<string[]>([]);
   const extendingRef = useRef(false);
   const extendCooldownUntilRef = useRef(0);
@@ -106,7 +122,10 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
     const run = async () => {
       const prefs = readHomePrayerVersePrefs();
       if (cancelled) return;
-      const scopeId = scopeIdFromPrefs(prefs.verseScope);
+      const localScopeId = scopeIdFromPrefs(prefs.verseScope);
+      const remoteConfig = await readVerifiedHomePrayerPoolConfig();
+      if (cancelled) return;
+      const scopeId = pickScopeIdForFeed(localScopeId, remoteConfig);
       scopeIdRef.current = scopeId;
       const manifest = await fetchHomePrayerManifest(scopeId);
       if (cancelled) return;
@@ -118,7 +137,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
         return;
       }
       manifestRef.current = manifest;
-      const ns = memoryNamespaceFromScope(prefs.verseScope);
+      const ns = memoryNamespaceFromScopeId(scopeId);
       const memory = { ...(prefs.memoryByNamespace[ns] ?? {}) };
       const keys = buildInitialVerseKeySequence(manifest, memory, HOME_PRAYER_FEED_BATCH_SIZE, Date.now(), Math.random);
       bodiesRef.current = new Map();
@@ -162,7 +181,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
 
   const onVerseCommitted = useCallback((key: string) => {
     const prefs = readHomePrayerVersePrefs();
-    const ns = memoryNamespaceFromScope(prefs.verseScope);
+    const ns = memoryNamespaceFromScopeId(scopeIdRef.current);
     const mem = { ...(prefs.memoryByNamespace[ns] ?? {}) };
     advanceMemoryAfterShown(mem, key, Date.now());
     writeHomePrayerVersePrefs({
@@ -179,7 +198,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
     extendingRef.current = true;
     try {
       const prefs = readHomePrayerVersePrefs();
-      const ns = memoryNamespaceFromScope(prefs.verseScope);
+      const ns = memoryNamespaceFromScopeId(scopeId);
       const memory = { ...(prefs.memoryByNamespace[ns] ?? {}) };
       const cur = keysQueueRef.current;
       const exclude = new Set(cur);

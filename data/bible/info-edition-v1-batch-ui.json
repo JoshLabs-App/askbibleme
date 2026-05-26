@@ -1,0 +1,15 @@
+{
+  "remoteScpTarget": "",
+  "pushEachBook": false,
+  "bookStart": "JDG",
+  "bookEnd": "REV",
+  "delayMs": 800,
+  "editions": [
+    "info",
+    "guide"
+  ],
+  "translationId": "web-en",
+  "outputLanguage": "en",
+  "infoRoleId": "info_edition_v1_en",
+  "guideRoleId": "role_guide_v2_en"
+}

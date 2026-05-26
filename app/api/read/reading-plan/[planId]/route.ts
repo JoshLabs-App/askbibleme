@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: Params) {
     const state = tripleLoopStateForPlanDay(planDay);
     return NextResponse.json({
       planId,
-      name: "三段式读经",
+      name: "新旧约循环读经计划",
       dayCount: TRIPLE_LOOP_PLAN_DAY_COUNT,
       dayIndex: 0,
       planDay,

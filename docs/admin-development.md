@@ -27,7 +27,7 @@
 ### 内容数据（非 JSON 文案）
 
 - 音乐伴侣等 **JSON 配置**里的展示字段可为 **双语对象**（如 `{ "zh-CN": "…", "en": "…" }`），解析见 `lib/music-companion/store-file.ts`、`lib/i18n/localized-text.ts`（`resolveLocalized`）。后台保存时应 **保证 `zh-CN` 必填**；`en` 可选，缺省时前台可回退中文。
-- **自然 · 影片**：每条可有 `previewFrameSrc`（`/nature/preview-posters/*.jpg`），上传视频时由服务端 **ffmpeg** 截第 1 帧生成；预览条优先用该图 **不预拉视频**。旧数据可本地执行 `npm run nature:backfill-preview-frames`（需安装 ffmpeg）。无 ffmpeg 的环境（如部分 Serverless）上传仍成功，但响应里会有 `previewFrameWarning`，预览条回退为 `thumbSrc` 或内联视频。
+- **自然 · 影片**：每条可有 `previewFrameSrc`（`/nature/preview-posters/*.jpg`），上传视频时由服务端 **ffmpeg** 从 **4K 母片**（`*.master.*`）截第 1 帧生成（最长边 ≤3840、JPEG `-q:v 2`）；首页静图优先用该图。旧数据从 720 帧升级：本机 `npm run nature:regenerate-preview-4k`（`--force`，需 ffmpeg）。仅补缺无预览帧的条目：`npm run nature:backfill-preview-frames`。无 ffmpeg 的环境（如部分 Serverless）上传仍成功，但响应里会有 `previewFrameWarning`，预览条回退为 `thumbSrc` 或内联视频。
 
 ### 场景命名与「语言切换」（产品 + 实现）
 
@@ -61,8 +61,8 @@
 - 路由：`app/(admin)/admin/*`，布局 `AdminShell`（`components/admin/AdminShell.tsx`）。
 - **复用 AskBible 2 管理员账号**：部署环境能读取 `admin_data/auth.sqlite` 时，设 `ASKBIBLE_AUTH_SQLITE_PATH` 或 `ASKBIBLE_REPO`（见 `.env.example`）。`/admin/login` 用旧站同一邮箱+密码（`is_admin=1`）；登录后签发 `selah_admin_askbible` cookie。本地未设变量时，会尝试默认桌面路径下的老仓库（仅开发机）。Vercel 等无盘环境必须把 sqlite 放到可访问路径并配置变量。
 - **复用 AskBible 2 管理员账号（同一 auth.sqlite）**：部署机能读到 `admin_data/auth.sqlite` 时配置 `ASKBIBLE_AUTH_SQLITE_PATH` 或 `ASKBIBLE_REPO`（见 `.env.example`）。`/admin/login` 用旧站邮箱+密码（`is_admin=1`）；签发 `selah_admin_askbible` cookie。本地未设变量时可回退到桌面默认老仓库路径（仅开发机）；Vercel 须把 sqlite 放到可读路径。
-- **账号登录（Supabase）**：在 Vercel 配置 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`（或 publishable key）、`ADMIN_USER_EMAILS`（逗号分隔，可进 `/admin` 的邮箱）。Supabase 中创建用户并启用 Email 密码；Authentication → URL configuration 的 Redirect URLs 加入 `https://你的域名/auth/callback`。未配置 AskBible 库时 `/admin/login` 走 Supabase 邮箱登录；此时 `POST /api/admin/auth` 不接受工作室口令。
-- **从 AskBible 2 仅导出管理员邮箱**（给 Supabase 白名单用）：本机有老仓库时运行 `npm run migrate:askbible-admin-emails`；若已直接复用 `auth.sqlite` 登录则可不必再迁密码。
+- **账号登录（sqlite）**：优先复用 AskBible `auth.sqlite`（见上两条）；未配置 sqlite 时可用工作室口令（`ADMIN_PASSWORD`）进入 `/admin`。
+- **从 AskBible 2 导出管理员邮箱**（仅用于审计/对照）：本机有老仓库时运行 `npm run migrate:askbible-admin-emails`。
 - 与前台共用：`LocaleProvider` 包在根 `app/layout.tsx`，故后台与前台共享 `t()` 与语言存储（同站点同设备）。
 
 ---
@@ -70,4 +70,4 @@
 ## 刻意不做的（防蔓延）
 
 - 不在此文档未讨论的前提下引入 **整站重型的 i18n 路由框架**，除非有明确的 SEO / 分地区部署需求。
-- 不把 **用户账号级语言偏好** 与当前 **设备级 localStorage** 混为一谈；上 Supabase 后若要做「登录后备份语言到资料表」，单独立项，再改 `LocaleProvider` 初始化顺序。
+- 不把 **用户账号级语言偏好** 与当前 **设备级 localStorage** 混为一谈；若要做「登录后备份语言到资料表」，单独立项，再改 `LocaleProvider` 初始化顺序。

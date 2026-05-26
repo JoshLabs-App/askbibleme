@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { assertSafeSvgText } from "@/lib/branding-generate-icons";
+import { assertSafeSvgText, syncAppIconsFromBarLogo } from "@/lib/branding-generate-icons";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import { normalizeBrandColors } from "@/lib/site-branding-colors";
 import type { SiteBrandingState } from "@/lib/site-branding-colors";
@@ -94,12 +94,31 @@ export async function POST(req: Request) {
       logoKind: ext === ".svg" ? "svg" : "raster",
       presetId: prev?.presetId ?? "parchment",
       colors,
+      ...(prev?.logoBackground ? { logoBackground: prev.logoBackground } : {}),
+      ...(prev?.logoTextAccent ? { logoTextAccent: prev.logoTextAccent } : {}),
       ...(prev?.appIconsUpdatedAt ? { appIconsUpdatedAt: prev.appIconsUpdatedAt } : {}),
       ...(prev?.appIconOriginalName ? { appIconOriginalName: prev.appIconOriginalName } : {}),
     };
     await fs.mkdir(path.dirname(BRANDING_STATE_PATH), { recursive: true });
     await writeBrandingState(next);
-    saved = next;
+
+    try {
+      await syncAppIconsFromBarLogo(colors.canvas);
+      saved = {
+        ...next,
+        appIconsUpdatedAt: new Date().toISOString(),
+        appIconOriginalName: `from-logo:${origName}`,
+      };
+      await writeBrandingState(saved);
+    } catch (iconErr) {
+      const hint = iconErr instanceof Error ? iconErr.message : String(iconErr);
+      return NextResponse.json(
+        {
+          error: `顶栏 LOGO 已保存，但同步 App / iOS 图标失败：${hint}`,
+        },
+        { status: 500 },
+      );
+    }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 400 });
@@ -111,6 +130,8 @@ export async function POST(req: Request) {
     ok: true,
     logoKind: ext === ".svg" ? "svg" : "raster",
     updatedAt: saved.updatedAt,
+    appIconsUpdatedAt: saved.appIconsUpdatedAt,
+    appIconOriginalName: saved.appIconOriginalName,
     originalName: saved.originalName,
     presetId: saved.presetId,
     colors: saved.colors,

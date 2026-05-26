@@ -14,7 +14,10 @@ export function useMediaPlaybackPolicy(): MediaPlaybackPolicyTier {
   const [tier, setTier] = useState<MediaPlaybackPolicyTier>("normal");
 
   useEffect(() => {
-    setTier(resolveMediaPlaybackPolicyTier());
+    const sync = () => setTier(resolveMediaPlaybackPolicyTier());
+    sync();
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
   }, []);
 
   return tier;

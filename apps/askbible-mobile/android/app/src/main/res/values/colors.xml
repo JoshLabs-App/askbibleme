@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+  <color name="splashscreen_background">#ffb101</color>
+  <color name="iconBackground">#ffb101</color>
+  <color name="colorPrimary">#ffb101</color>
+  <color name="colorPrimaryDark">#db9801</color>
+</resources>

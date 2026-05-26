@@ -2,32 +2,154 @@
   "version": 1,
   "audioTracks": [
     {
-      "id": "track-mp1b2v0cj798",
-      "title": "Still Waters",
-      "artist": "Instrumental Worship",
-      "src": "/music/uploads/a57bf00189944bf8bc2f4ec56c29a0ee.m4a",
-      "analysisSrc": "/music/analysis/a57bf00189944bf8bc2f4ec56c29a0ee.json"
+      "id": "track-mpg4a7xcip5q",
+      "title": "Silent Prayer",
+      "src": "/music/uploads/b411d78a52ab4dcab9d8c6987ac01762.mp3",
+      "durationSec": 2014,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
     },
     {
-      "id": "track-mp1b39y09uat",
-      "title": "Draw Near to You",
-      "artist": "Instrumental Worship",
-      "src": "/music/uploads/3acafc36ba394738b95748d5767dd6d6.m4a",
-      "analysisSrc": "/music/analysis/3acafc36ba394738b95748d5767dd6d6.json"
+      "id": "track-mpg4a8h3jhwl",
+      "title": "Still in His Presence",
+      "src": "/music/uploads/47be3bc200a24bf487428f7088746519.mp3",
+      "durationSec": 2095,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
     },
     {
-      "id": "track-mp1b4gw6xun1",
-      "title": "Quiet Praise",
-      "artist": "Instrumental Worship",
-      "src": "/music/uploads/568393997202440e86675a228af78283.m4a",
-      "analysisSrc": "/music/analysis/568393997202440e86675a228af78283.json"
+      "id": "track-mpg4a8zi2sjk",
+      "title": "Quiet Heartbeat",
+      "src": "/music/uploads/8e8422632fb34a7c9dcc7172cecf4781.mp3",
+      "durationSec": 1879,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
     },
     {
-      "id": "track-mp8cnzsixq2x",
-      "title": "Grace Abounds",
-      "artist": "Instrumental Worship",
-      "src": "/music/uploads/9c6fc29d3d3148e9a44b27df71ae0375.m4a",
-      "analysisSrc": "/music/analysis/9c6fc29d3d3148e9a44b27df71ae0375.json"
+      "id": "track-mpg4a9ix6n6h",
+      "title": "Grace in the Silence",
+      "src": "/music/uploads/1af3e7c242304a2086c0c4cdd37e2db1.mp3",
+      "durationSec": 2067,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mpg4aa1q1473",
+      "title": "Resting Before the Lord",
+      "src": "/music/uploads/8eccffd4ad92441fb01619e473a153a5.mp3",
+      "durationSec": 1890,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mpg4aajof3c7",
+      "title": "Peace at His Feet",
+      "src": "/music/uploads/b05e34419ed8484fad4cad5dff0c3d78.mp3",
+      "durationSec": 2017,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mpkljem5ewpo",
+      "title": "Dancing in the Afternoon Light",
+      "src": "/music/uploads/e1e831706a454fc1ad5e444c5433786f.mp3",
+      "durationSec": 1869,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
+    },
+    {
+      "id": "track-mpkmwq6ej8y8",
+      "title": "Rainy Window",
+      "src": "/music/uploads/1dc20f0b313345cca2c4c1cf3ebccee8.mp3",
+      "durationSec": 120,
+      "tags": [
+        "睡眠"
+      ],
+      "remark": "专辑：睡眠"
+    },
+    {
+      "id": "track-mpkn1s6ax3sk",
+      "title": "Relaxing Brown Noise",
+      "src": "/music/uploads/709e0e58b2974fcb9b1ee502cd6a79b0.mp3",
+      "durationSec": 598,
+      "tags": [
+        "睡眠"
+      ],
+      "remark": "专辑：睡眠"
+    },
+    {
+      "id": "track-mpkm1n2z3z7z",
+      "title": "Alpha Waves 8 Hz🎧",
+      "src": "/music/uploads/d0f96a4573204d4cb91f3c10dc5f53c9.mp3",
+      "durationSec": 1800,
+      "tags": [
+        "睡眠"
+      ],
+      "remark": "专辑：睡眠"
+    },
+    {
+      "id": "track-mpkm1m4fly5r",
+      "title": "4Hz Theta Brainwaves🎧",
+      "src": "/music/uploads/67b3b991f3634446aaf8185e147f9642.mp3",
+      "durationSec": 1802,
+      "tags": [
+        "睡眠"
+      ],
+      "remark": "专辑：睡眠"
+    },
+    {
+      "id": "track-mpkm1mjz4zd1",
+      "title": "40-42-delta🎧",
+      "src": "/music/uploads/92e36c98d3774bc0aac97548dbf7366a.mp3",
+      "durationSec": 30,
+      "tags": [
+        "睡眠"
+      ],
+      "remark": "专辑：睡眠"
+    },
+    {
+      "id": "track-mpknl837n9oq",
+      "title": "Grace-Filled Afternoon",
+      "src": "/music/uploads/faedc528e0f646978fab98008baa1614.mp3",
+      "durationSec": 1930,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
+    },
+    {
+      "id": "track-mpknyhqpr8qw",
+      "title": "Deep Calls to Deep",
+      "src": "/music/uploads/87ccf04d22994febbe28bced9278a22d.mp3",
+      "durationSec": 29,
+      "tags": [
+        "专注工作"
+      ],
+      "remark": "专辑：专注工作"
+    },
+    {
+      "id": "track-mpkpc8f7zrte",
+      "title": "Resting on a French Bench",
+      "src": "/music/uploads/ad7ff29461ab49a89111b44081d94a14.mp3",
+      "durationSec": 2231,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
     }
   ],
   "backgroundVisuals": [
@@ -46,7 +168,7 @@
         "en": "Default scene"
       },
       "order": 0,
-      "audioTrackId": "track-mp8cnzsixq2x",
+      "audioTrackId": "track-mpkpc8f7zrte",
       "backgroundVisualId": null
     }
   ],

@@ -10,9 +10,11 @@ export const HOME_ATMOSPHERE_PRESETS: readonly { id: HomeAtmospherePresetId }[] 
   { id: "ember" },
 ];
 
-export const HOME_ATMOSPHERE_STORAGE_KEY = "selah-home-atmosphere-preset";
+export const HOME_ATMOSPHERE_STORAGE_KEY = "askbible-home-atmosphere-preset";
+const HOME_ATMOSPHERE_STORAGE_KEY_LEGACY = "selah-home-atmosphere-preset";
 
-export const MUSIC_HOME_ATMOSPHERE_STORAGE_KEY = "selah-music-home-atmosphere-v1";
+export const MUSIC_HOME_ATMOSPHERE_STORAGE_KEY = "askbible-music-home-atmosphere-v1";
+const MUSIC_HOME_ATMOSPHERE_STORAGE_KEY_LEGACY = "selah-music-home-atmosphere-v1";
 
 export function isHomeAtmospherePresetId(v: string | null | undefined): v is HomeAtmospherePresetId {
   if (!v) return false;
@@ -28,6 +30,7 @@ export function writeStoredMusicHomeAtmosphere(_id: HomeAtmospherePresetId): voi
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(MUSIC_HOME_ATMOSPHERE_STORAGE_KEY, "lagoon");
+    window.localStorage.removeItem(MUSIC_HOME_ATMOSPHERE_STORAGE_KEY_LEGACY);
   } catch {
     /* ignore */
   }
@@ -59,6 +62,11 @@ export function readStoredHomeAtmospherePreset(): HomeAtmospherePresetId {
   try {
     const raw = window.localStorage.getItem(HOME_ATMOSPHERE_STORAGE_KEY);
     if (raw && isHomeAtmospherePresetId(raw)) return raw;
+    const legacy = window.localStorage.getItem(HOME_ATMOSPHERE_STORAGE_KEY_LEGACY);
+    if (legacy && isHomeAtmospherePresetId(legacy)) {
+      window.localStorage.setItem(HOME_ATMOSPHERE_STORAGE_KEY, legacy);
+      return legacy;
+    }
   } catch {
     /* ignore */
   }
@@ -69,6 +77,7 @@ export function writeStoredHomeAtmospherePreset(id: HomeAtmospherePresetId): voi
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(HOME_ATMOSPHERE_STORAGE_KEY, id);
+    window.localStorage.removeItem(HOME_ATMOSPHERE_STORAGE_KEY_LEGACY);
   } catch {
     /* ignore */
   }

@@ -21,11 +21,14 @@ export const TELEMETRY_TAB_VALUES = ["home", "music", "read", "explore"] as cons
 
 /** 首期关心的 tap target（可逐步扩展） */
 export const TELEMETRY_TAP_TARGETS = [
+  "intro.start",
+  "intro.skip",
   "read.settings",
   "read.search",
   "read.favorites",
   "read.plans",
   "read.catalog",
+  "read.downloadAudioPack",
   "read.chapter.audio",
   "read.chapter.bookmark",
   "read.chapter.copy",
@@ -35,7 +38,7 @@ export const TELEMETRY_TAP_TARGETS = [
   "home.relax",
   "shell.menu",
   "music.play",
-  "explore.prayer",
+  "explore.open",
 ] as const;
 
 export type TelemetryTapTarget = (typeof TELEMETRY_TAP_TARGETS)[number];

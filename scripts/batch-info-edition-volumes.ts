@@ -11,13 +11,17 @@
  *   INFO_EDITION_BATCH_BOOK_START=GEN INFO_EDITION_BATCH_BOOK_END=GEN npm run info-edition:batch
  *   INFO_EDITION_BATCH_BOOK_START=MAT npm run info-edition:batch
  *   INFO_EDITION_BATCH_PUSH_EACH_BOOK=1 INFO_EDITION_REMOTE_SCP_TARGET='user@host:/var/data/info-edition-v1-published.json' npm run info-edition:batch
+ *   npm run info-edition:batch:fix-invalid   # 仅重生成校验未通过的章
  *
  * 进度：npm run dev 后打开 http://localhost:3450/dev/info-edition-batch
  */
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { generateInfoEditionChapterForReader } from "@/lib/bible/info-edition-v1-generate-reader";
+import {
+  generateInfoEditionChapterWithValidation,
+  summarizeValidationIssues,
+} from "@/lib/bible/info-edition-batch-chapter-run";
 import {
   countBatchProgress,
   ensureBookState,
@@ -28,6 +32,8 @@ import {
   type InfoEditionBatchState,
 } from "@/lib/bible/info-edition-v1-batch-state";
 import { validateInfoEditionOutput } from "@/lib/bible/info-edition-v1-output-validate";
+import { writeInvalidPublishedScanCache } from "@/lib/bible/info-edition-invalid-scan-cache";
+import { scanInvalidPublishedChapters } from "@/lib/bible/info-edition-scan-invalid-published";
 import { readerDescriptionRulesFromWorkspace } from "@/lib/bible/info-edition-v1-reader-generate-plan";
 import { loadPublishedInfoEditionChapter } from "@/lib/bible/info-edition-v1-published-store";
 import type { InfoEditionReaderVariant as Variant } from "@/lib/bible/info-edition-v1-publish";
@@ -36,6 +42,7 @@ import {
   type ResolvedInfoEditionReaderTarget,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { readGenerationRolesSync } from "@/lib/admin/generation-roles-store";
+import { isInfoEditionBatchOnProductionDisk } from "@/lib/bible/info-edition-batch-access";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 
 const cwd = process.cwd();
@@ -47,6 +54,24 @@ function parseEditions(): Variant[] {
     .map((s) => s.trim().toLowerCase())
     .filter((s): s is Variant => s === "info" || s === "guide");
   return list.length ? list : ["info", "guide"];
+}
+
+function batchOutputLanguage(): "zh-CN" | "en" {
+  const raw = process.env.INFO_EDITION_BATCH_OUTPUT_LANGUAGE?.trim().toLowerCase();
+  return raw === "en" ? "en" : "zh-CN";
+}
+
+function batchTranslationId(): string | null {
+  const raw = process.env.INFO_EDITION_BATCH_TRANSLATION_ID?.trim();
+  return raw ? raw : null;
+}
+
+function batchRoleIdOverride(edition: Variant): string | null {
+  const raw =
+    edition === "guide"
+      ? process.env.INFO_EDITION_BATCH_GUIDE_ROLE_ID?.trim()
+      : process.env.INFO_EDITION_BATCH_INFO_ROLE_ID?.trim();
+  return raw ? raw : null;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -130,20 +155,63 @@ function chapterAlreadyOk(
   return Boolean(ch?.markdown?.trim());
 }
 
+function chapterPassesValidation(
+  bookId: string,
+  chapter: number,
+  edition: Variant,
+  roleId: string,
+  outputLanguage: "zh-CN" | "en",
+): boolean {
+  const ch = loadPublishedInfoEditionChapter(cwd, bookId, chapter, {
+    roleId,
+    variant: edition,
+  });
+  if (!ch?.markdown?.trim()) return false;
+  return validateInfoEditionOutput(ch.markdown, edition, { outputLanguage }).ok;
+}
+
 async function run(): Promise<void> {
   const editions = parseEditions();
-  const force = process.env.INFO_EDITION_BATCH_FORCE === "1";
-  const skipExisting = force ? false : process.env.INFO_EDITION_BATCH_SKIP_EXISTING !== "0";
-  const pushEachBook = process.env.INFO_EDITION_BATCH_PUSH_EACH_BOOK === "1";
+  const fixInvalid = process.env.INFO_EDITION_BATCH_FIX_INVALID === "1";
+  const force = fixInvalid || process.env.INFO_EDITION_BATCH_FORCE === "1";
+  const skipExisting = fixInvalid
+    ? true
+    : force
+      ? false
+      : process.env.INFO_EDITION_BATCH_SKIP_EXISTING !== "0";
+  const directDisk = isInfoEditionBatchOnProductionDisk(cwd);
+  const pushEachBook =
+    !directDisk && process.env.INFO_EDITION_BATCH_PUSH_EACH_BOOK === "1";
   const delayMs = Math.max(0, Number(process.env.INFO_EDITION_BATCH_DELAY_MS || 800));
   const stopOnError = process.env.INFO_EDITION_BATCH_STOP_ON_ERROR === "1";
-  const strictOutput = process.env.INFO_EDITION_BATCH_STRICT_OUTPUT === "1";
+  const strictOutput =
+    process.env.INFO_EDITION_BATCH_STRICT_OUTPUT === "1" || fixInvalid;
+  const outputLanguage = batchOutputLanguage();
+  const translationId = batchTranslationId();
 
   readGenerationRolesSync(cwd);
-  const descriptionRulesForInfo = readerDescriptionRulesFromWorkspace(cwd);
+
+  if (fixInvalid) {
+    const invalid = scanInvalidPublishedChapters(cwd).filter((t) =>
+      editions.includes(t.edition),
+    );
+    writeInvalidPublishedScanCache(cwd, invalid);
+    console.log(
+      `[fix-invalid] 扫描到 ${invalid.length} 个待修复任务（${editions.join(" + ")}）`,
+    );
+    if (invalid.length === 0) {
+      console.log("[fix-invalid] 无待修复章节，退出。");
+      return;
+    }
+  }
+  const descriptionRulesForInfo =
+    outputLanguage === "en" ? "" : readerDescriptionRulesFromWorkspace(cwd);
   const targetByEdition = new Map<Variant, ResolvedInfoEditionReaderTarget>();
   for (const ed of editions) {
-    const t = resolveInfoEditionReaderTarget(cwd, { edition: ed });
+    const t = resolveInfoEditionReaderTarget(cwd, {
+      edition: ed,
+      roleId: batchRoleIdOverride(ed),
+    });
     if ("error" in t) {
       console.error(t.error);
       process.exit(1);
@@ -161,7 +229,9 @@ async function run(): Promise<void> {
   state.editions = editions;
   writeInfoEditionBatchState(cwd, state);
 
-  const startBookIndex = Math.max(state.cursor.bookIndex, bookStartIndex());
+  const startBookIndex = fixInvalid
+    ? bookStartIndex()
+    : Math.max(state.cursor.bookIndex, bookStartIndex());
   const endBookIndex = Math.max(startBookIndex, bookEndIndex());
 
   const infoTarget = targetByEdition.get("info");
@@ -171,14 +241,20 @@ async function run(): Promise<void> {
     [
       `Batch: ${editions.join(" + ")}`,
       `pipeline: reader-generate (plan→execute)`,
+      `lang=${outputLanguage}`,
+      translationId ? `translation=${translationId}` : "translation=default",
       infoTarget ? `导读 role=${infoTarget.roleId}` : null,
       guideTarget ? `引导 role=${guideTarget.roleId}` : null,
       editions.includes("info")
         ? `导读描述规则 ${descriptionRulesForInfo.length} 字`
         : null,
       `books ${scriptureBooks[startBookIndex]?.bookId ?? "?"}…${endBook?.bookId ?? "?"}`,
-      skipExisting ? "skip existing" : "regenerate all",
-      pushEachBook ? "push each book" : "local only",
+      fixInvalid
+        ? "fix invalid only"
+        : skipExisting
+          ? "skip existing"
+          : "regenerate all",
+      directDisk ? "direct disk" : pushEachBook ? "push each book" : "local only",
     ]
       .filter(Boolean)
       .join(" | "),
@@ -189,8 +265,10 @@ async function run(): Promise<void> {
       const book = scriptureBooks[bi];
       const bookState = ensureBookState(state, book.bookId, book.bookName, book.chapters);
 
-      let startChapter = bi === state.cursor.bookIndex ? state.cursor.chapter : 1;
-      let startEditionIndex = bi === state.cursor.bookIndex ? state.cursor.editionIndex : 0;
+      let startChapter =
+        !fixInvalid && bi === state.cursor.bookIndex ? state.cursor.chapter : 1;
+      let startEditionIndex =
+        !fixInvalid && bi === state.cursor.bookIndex ? state.cursor.editionIndex : 0;
 
       for (let ci = startChapter; ci <= book.chapters; ci++) {
         for (let ei = ci === startChapter ? startEditionIndex : 0; ei < editions.length; ei++) {
@@ -202,7 +280,15 @@ async function run(): Promise<void> {
 
           const label = `${book.bookName} ${ci}章 · ${edition === "guide" ? "发现版" : "讲解版"}`;
 
-          if (skipExisting && chapterAlreadyOk(book.bookId, ci, edition, target.roleId)) {
+          const skipBecauseValid =
+            fixInvalid &&
+            chapterPassesValidation(book.bookId, ci, edition, target.roleId, outputLanguage);
+          const skipBecauseExists =
+            !fixInvalid &&
+            skipExisting &&
+            chapterAlreadyOk(book.bookId, ci, edition, target.roleId);
+
+          if (skipBecauseValid || skipBecauseExists) {
             setChapterStatus(bookState, ci, edition, "skipped");
             state.stats.skipped += 1;
             state.lastRun = {
@@ -218,38 +304,22 @@ async function run(): Promise<void> {
 
           console.log(`[gen] ${label} …`);
           const t0 = Date.now();
-          const result = await generateInfoEditionChapterForReader(
+          const result = await generateInfoEditionChapterWithValidation(
             cwd,
             book.bookId,
             ci,
             target,
-            edition === "info"
-              ? { descriptionRulesOverride: descriptionRulesForInfo }
-              : undefined,
+            {
+              descriptionRulesOverride:
+                edition === "info" ? descriptionRulesForInfo : undefined,
+              translationIdOverride: translationId,
+              outputLanguage,
+            },
           );
 
-          if (result.ok) {
-            const md = result.published.markdown;
-            const check = validateInfoEditionOutput(md, edition);
-            if (!check.ok) {
-              const summary = check.checks.map((c) => c.message).join("; ");
-              console.error(`[check-fail] ${label}: ${summary}`);
-              if (strictOutput) {
-                setChapterStatus(bookState, ci, edition, "failed");
-                state.stats.failed += 1;
-                state.lastRun = {
-                  bookId: book.bookId,
-                  chapter: ci,
-                  edition,
-                  at: new Date().toISOString(),
-                  error: summary,
-                };
-                writeInfoEditionBatchState(cwd, state);
-                if (stopOnError) throw new Error(summary);
-                if (delayMs > 0) await sleep(delayMs);
-                continue;
-              }
-            } else if (check.warnCount > 0) {
+          if (result.ok && result.published && result.check) {
+            const check = result.check;
+            if (check.warnCount > 0) {
               console.warn(
                 `[check-warn] ${label}: ${check.checks
                   .filter((c) => c.level === "warn")
@@ -265,10 +335,19 @@ async function run(): Promise<void> {
               edition,
               at: new Date().toISOString(),
             };
+            const retryNote =
+              result.attempts > 1 ? `, ${result.attempts}次尝试` : "";
             console.log(
-              `[ok] ${label} (${Math.round((Date.now() - t0) / 1000)}s, ${check.charCount}字${check.warnCount ? `, ${check.warnCount}提醒` : ""})`,
+              `[ok] ${label} (${Math.round((Date.now() - t0) / 1000)}s, ${check.charCount}字${check.warnCount ? `, ${check.warnCount}提醒` : ""}${retryNote})`,
             );
           } else {
+            const summary =
+              result.check && !result.check.ok
+                ? summarizeValidationIssues(result.check, edition)
+                : result.checkSummary ?? result.error ?? "生成或校验失败";
+            console.error(
+              `[check-fail] ${label}: ${summary}${result.attempts > 1 ? ` (${result.attempts}次尝试)` : ""}`,
+            );
             setChapterStatus(bookState, ci, edition, "failed");
             state.stats.failed += 1;
             state.lastRun = {
@@ -276,12 +355,11 @@ async function run(): Promise<void> {
               chapter: ci,
               edition,
               at: new Date().toISOString(),
-              error: result.error,
+              error: summary,
             };
-            console.error(`[fail] ${label}: ${result.error}`);
             writeInfoEditionBatchState(cwd, state);
-            if (stopOnError) {
-              throw new Error(result.error);
+            if (stopOnError || strictOutput) {
+              if (stopOnError) throw new Error(summary);
             }
           }
 
@@ -291,16 +369,22 @@ async function run(): Promise<void> {
       }
 
       const bookComplete = isBookGenerationComplete(bookState, book.chapters, editions);
-      if (bookComplete && pushEachBook) {
-        console.log(`[sync] ${book.bookName} → remote …`);
-        const push = pushPublishedToRemote();
-        if (push.ok) {
+      if (bookComplete && (pushEachBook || directDisk)) {
+        if (directDisk) {
           bookState.syncedAt = new Date().toISOString();
           delete bookState.lastSyncError;
-          console.log(`[sync] ${book.bookName} OK`);
+          console.log(`[disk] ${book.bookName} complete (published on DATA_ROOT)`);
         } else {
-          bookState.lastSyncError = push.error;
-          console.error(`[sync] ${book.bookName} failed: ${push.error}`);
+          console.log(`[sync] ${book.bookName} → remote …`);
+          const push = pushPublishedToRemote();
+          if (push.ok) {
+            bookState.syncedAt = new Date().toISOString();
+            delete bookState.lastSyncError;
+            console.log(`[sync] ${book.bookName} OK`);
+          } else {
+            bookState.lastSyncError = push.error;
+            console.error(`[sync] ${book.bookName} failed: ${push.error}`);
+          }
         }
         writeInfoEditionBatchState(cwd, state);
       }

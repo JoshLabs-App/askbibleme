@@ -17,6 +17,7 @@ import type {
   InfoEditionV1PublishedChapter,
   InfoEditionV1PublishedFile,
 } from "@/lib/bible/info-edition-v1-published-types";
+import { normalizeInfoEditionCompareMarkdown } from "@/lib/bible/info-edition-v1-format";
 import { INFO_EDITION_V1_PUBLISHED_VERSION } from "@/lib/bible/info-edition-v1-published-types";
 import {
   formatInfoEditionDiskWriteError,
@@ -62,7 +63,8 @@ function normalizeChapter(raw: unknown): InfoEditionV1PublishedChapter | null {
   const o = raw as Record<string, unknown>;
   const bookId = typeof o.bookId === "string" ? o.bookId.trim().toUpperCase() : "";
   const chapter = Number(o.chapter);
-  const markdown = typeof o.markdown === "string" ? o.markdown.trim() : "";
+  const markdownRaw = typeof o.markdown === "string" ? o.markdown : "";
+  const markdown = normalizeInfoEditionCompareMarkdown(markdownRaw);
   if (!bookId || !Number.isInteger(chapter) || chapter < 1 || !markdown) return null;
   return {
     bookId,
@@ -213,6 +215,18 @@ export function loadPublishedInfoEditionChapter(
   const readerKey = infoEditionReaderChapterKey(bookId, chapter, targetRoleId);
   const fromReaderKey = file.chapters[readerKey];
   if (fromReaderKey?.markdown.trim()) return fromReaderKey;
+
+  const explicitRoleId = opts?.roleId?.trim();
+  if (explicitRoleId) {
+    // When caller explicitly asks for a role bucket (e.g. English V1/V2),
+    // do not silently fall back to another role's legacy chapter.
+    const legacyKey = infoEditionChapterKey(bookId, chapter);
+    const legacyExact = file.chapters[legacyKey];
+    if (legacyExact?.markdown.trim() && legacyExact.roleId === explicitRoleId) {
+      return legacyExact;
+    }
+    return null;
+  }
 
   const legacyKey = infoEditionChapterKey(bookId, chapter);
   const legacy = file.chapters[legacyKey];

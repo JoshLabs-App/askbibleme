@@ -1,14 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
+import {
+  infoEditionBatchLockPath,
+  infoEditionBatchStatePath,
+} from "@/lib/bible/info-edition-batch-paths";
 
 export const INFO_EDITION_BATCH_STATE_VERSION = 1 as const;
-export const INFO_EDITION_BATCH_STATE_REL = path.join(
-  "data",
-  "bible",
-  "info-edition-v1-batch-state.json",
-);
-export const INFO_EDITION_BATCH_LOCK_REL = path.join("data", "bible", "info-edition-v1-batch.lock");
 
 export type InfoEditionBatchChapterStatus = "ok" | "failed" | "skipped";
 
@@ -51,13 +49,7 @@ export type InfoEditionBatchState = {
   };
 };
 
-export function infoEditionBatchStatePath(cwd: string): string {
-  return path.join(cwd, INFO_EDITION_BATCH_STATE_REL);
-}
-
-export function infoEditionBatchLockPath(cwd: string): string {
-  return path.join(cwd, INFO_EDITION_BATCH_LOCK_REL);
-}
+export { infoEditionBatchLockPath, infoEditionBatchStatePath };
 
 function defaultState(editions: InfoEditionReaderVariant[]): InfoEditionBatchState {
   const now = new Date().toISOString();

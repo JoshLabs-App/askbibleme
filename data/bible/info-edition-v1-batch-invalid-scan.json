@@ -1,0 +1,16 @@
+{
+  "at": "2026-05-20T00:03:17.703Z",
+  "count": 1,
+  "sample": [
+    {
+      "bookId": "JHN",
+      "bookName": "约翰福音",
+      "chapter": 6,
+      "edition": "guide",
+      "issues": [
+        "缺少模块「经文祷告」。",
+        "缺少模块「一句话总结」。"
+      ]
+    }
+  ]
+}

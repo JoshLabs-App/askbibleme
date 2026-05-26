@@ -28,12 +28,30 @@ const INFO_REQUIRED_HEADINGS = [
   "今日默想",
   "经文回应",
 ] as const;
+const INFO_REQUIRED_HEADINGS_EN = [
+  "Chapter Overview",
+  "Historical Background",
+  "Theological Insight",
+  "Key Themes",
+  "Today",
+  "Scripture Response",
+] as const;
 
-const GUIDE_REQUIRED_HEADINGS = ["观察", "解释", "应用", "经文祷告", "一句话总结"] as const;
+const GUIDE_REQUIRED_HEADINGS = ["观察", "解释", "应用", "一句话总结"] as const;
+const GUIDE_REQUIRED_HEADINGS_EN = ["Observation", "Interpretation", "Application", "One-sentence"] as const;
 
 function hasHeading(md: string, fragment: string): boolean {
   const re = new RegExp(`^#{1,3}\\s*[^\\n]*${fragment}`, "im");
   return re.test(md);
+}
+
+function firstMeaningfulLine(md: string): string {
+  for (const line of md.split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t) continue;
+    return t;
+  }
+  return "";
 }
 
 function push(
@@ -49,7 +67,9 @@ function push(
 export function validateInfoEditionOutput(
   raw: string,
   variant: InfoEditionReaderVariant,
+  opts?: { outputLanguage?: "zh-CN" | "en" },
 ): InfoEditionOutputValidation {
+  const outputLanguage = opts?.outputLanguage ?? "zh-CN";
   const checks: InfoEditionOutputCheck[] = [];
   const markdown = normalizeInfoEditionCompareMarkdown(raw);
   const charCount = markdown.length;
@@ -66,6 +86,9 @@ export function validateInfoEditionOutput(
   if (!/^#\s+/m.test(markdown)) {
     push(checks, "error", "no-h1", "缺少 Markdown 一级标题（#）。");
   }
+  if (!/^#\s+\S/.test(firstMeaningfulLine(markdown))) {
+    push(checks, "error", "first-line-not-h1", "第一行必须是主标题（# 标题）。");
+  }
 
   if (variant === "info") {
     if (charCount < INFO_MIN_CHARS) {
@@ -78,7 +101,9 @@ export function validateInfoEditionOutput(
         `导读偏短（${charCount} 字；角色规范约 1200–1800 字）。`,
       );
     }
-    for (const h of INFO_REQUIRED_HEADINGS) {
+    const requiredHeadings =
+      outputLanguage === "en" ? INFO_REQUIRED_HEADINGS_EN : INFO_REQUIRED_HEADINGS;
+    for (const h of requiredHeadings) {
       if (!hasHeading(markdown, h)) {
         push(checks, "error", `missing-${h}`, `缺少模块标题「${h}」。`);
       }
@@ -92,16 +117,28 @@ export function validateInfoEditionOutput(
     } else if (charCount < GUIDE_SOFT_MIN_CHARS) {
       push(checks, "warn", "short", `引导偏短（${charCount} 字）。`);
     }
-    for (const h of GUIDE_REQUIRED_HEADINGS) {
+    const requiredHeadings =
+      outputLanguage === "en" ? GUIDE_REQUIRED_HEADINGS_EN : GUIDE_REQUIRED_HEADINGS;
+    for (const h of requiredHeadings) {
       if (!hasHeading(markdown, h)) {
         push(checks, "error", `missing-${h}`, `缺少模块「${h}」。`);
       }
     }
-    if (!/查经引导|回到经文/i.test(markdown.slice(0, 500))) {
+    if (
+      outputLanguage === "en"
+        ? !/study guide|back to scripture|return to scripture/i.test(markdown.slice(0, 500))
+        : !/查经引导|回到经文/i.test(markdown.slice(0, 500))
+    ) {
       push(checks, "warn", "intro", "开头未见「查经引导」类引导语。");
     }
     if (/描述规则（作者填写）|导读正文/i.test(markdown)) {
       push(checks, "warn", "wrong-task", "正文含讲解版用语，可能拼稿或模型跑偏。");
+    }
+    if (/##\s*[四4][、.．]?\s*经文祷告|###\s*祷告引导|^#\s*经文祷告/m.test(markdown)) {
+      push(checks, "error", "guide-prayer-block", "发现版不应含「经文祷告」或「祷告引导」模块。");
+    }
+    if (/(?:^|\n)#{1,3}\s*祷告引导/m.test(markdown)) {
+      push(checks, "error", "prayer-guide", "正文含 AI 祷告引导，请删除或重生成。");
     }
   }
 

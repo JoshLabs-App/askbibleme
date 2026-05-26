@@ -1,10 +1,15 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import {
   loadChapterFromTranslation,
   type LoadedChapter,
 } from "@/lib/bible/load-chapter-from-default-translation";
 import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
+import {
+  loadChapterSegmentsFromLocalDataset,
+  loadChapterSegmentsFromOpenUsfm,
+} from "@/lib/bible/load-chapter-segments";
 import { resolveReadBibleTranslationPrefsFromCookies } from "@/lib/read/read-bible-translation-prefs";
+import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
 export type ReadChapterWithContrast = {
   primary: LoadedChapter;
@@ -19,7 +24,9 @@ export async function loadReadChapterForReadPage(
   const cwd = process.cwd();
   const index = readTranslationsIndexSync(cwd);
   const cookieStore = await cookies();
-  const prefs = resolveReadBibleTranslationPrefsFromCookies(cookieStore, index);
+  const headerList = await headers();
+  const locale = resolveRequestLocale(cookieStore, headerList.get("accept-language"));
+  const prefs = resolveReadBibleTranslationPrefsFromCookies(cookieStore, index, locale);
 
   const primary = await loadChapterFromTranslation(
     cwd,
@@ -38,6 +45,11 @@ export async function loadReadChapterForReadPage(
       prefs.contrastTranslationId,
     );
   }
+
+  const primaryMaxVerse = primary.verses.reduce((max, row) => Math.max(max, row.verse), 0) || null;
+  primary.segments =
+    loadChapterSegmentsFromLocalDataset(cwd, primary.bookId, primary.chapter) ??
+    (await loadChapterSegmentsFromOpenUsfm(primary.bookId, primary.chapter, primaryMaxVerse));
 
   return { primary, contrast };
 }

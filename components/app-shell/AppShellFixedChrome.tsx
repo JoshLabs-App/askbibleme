@@ -43,7 +43,7 @@ function syncParchmentShellDataset(active: boolean) {
 }
 
 /**
- * 前台 fixed 壳：与品牌 `canvas`（深青）一致。
+ * 前台 fixed 壳：与品牌 `canvas`（默认读经羊皮）一致；读经/祷告路由由羊皮卷 dataset 覆盖。
  * 使用 `inset-0` 顶对齐视口，勿负 top / `transform-gpu` 抬壳，否则壳内 `position:fixed`（如侧栏菜单）会相对错位、顶内容被裁切。
  */
 export function AppShellFixedChrome({ children }: Props) {

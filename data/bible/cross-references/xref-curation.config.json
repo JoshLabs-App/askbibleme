@@ -1,0 +1,15 @@
+{
+  "maxOutgoingPerVerse": 3,
+  "maxIncomingPerVerse": 4,
+  "minEdgePriorityToKeep": 100,
+  "minVersePriorityToPublish": 150,
+  "requireCrossTestamentEdge": true,
+  "skipEmptyAnchors": true,
+  "priority": {
+    "crossTestament": 100,
+    "highFrequencyTarget": 50,
+    "multiAnchorConsensus": 20,
+    "sameBook": 10
+  },
+  "highFrequencyTargetMinIncoming": 40
+}

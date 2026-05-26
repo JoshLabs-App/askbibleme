@@ -1,0 +1,64 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "channel": "preview",
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MOBILE_OFFLINE_FIRST": "0",
+        "EXPO_PUBLIC_MOBILE_BUNDLED_ONLY": "0",
+        "EXPO_PUBLIC_ASKBIBLE_BASE_URL": "https://askbible.me",
+        "EXPO_PUBLIC_MEMBER_REGISTER_ENABLED": "0",
+        "MOBILE_BUNDLE_OFFLINE_MEDIA": "1"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_MOBILE_OFFLINE_FIRST": "0",
+        "EXPO_PUBLIC_MOBILE_BUNDLED_ONLY": "0",
+        "EXPO_PUBLIC_ASKBIBLE_BASE_URL": "https://askbible.me",
+        "EXPO_PUBLIC_MEMBER_REGISTER_ENABLED": "0",
+        "MOBILE_BUNDLE_OFFLINE_MEDIA": "1"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "preview": {
+      "ios": {
+        "ascAppId": "6771996188",
+        "ascApiKeyId": "9HDA27WY8C",
+        "ascApiKeyIssuerId": "a56f0624-e4a4-438d-be5d-92403dd9969b",
+        "ascApiKeyPath": "$ASC_API_KEY_PATH"
+      }
+    },
+    "production": {
+      "ios": {
+        "ascAppId": "6771996188",
+        "ascApiKeyId": "9HDA27WY8C",
+        "ascApiKeyIssuerId": "a56f0624-e4a4-438d-be5d-92403dd9969b",
+        "ascApiKeyPath": "$ASC_API_KEY_PATH"
+      },
+      "android": {
+        "track": "internal",
+        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
+      }
+    }
+  }
+}

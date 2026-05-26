@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
 } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
@@ -42,12 +41,6 @@ import {
 } from "@/lib/home/nature-home-verse-appearance-prefs";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
 import { defaultNatureHomeActiveVideoId, resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
-import {
-  getNatureBackground1080PrefSnapshot,
-  readNatureBackground1080Pref,
-  subscribeNatureBackground1080Pref,
-  writeNatureBackground1080Pref,
-} from "@/lib/nature/nature-video-quality-prefs";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
@@ -64,7 +57,9 @@ import {
 import { isPrefetchableNatureVideoSrc } from "@/lib/nature/is-prefetchable-nature-video-src";
 import { canNatureHomeFullVideoFetch } from "@/lib/nature/can-nature-home-full-video-fetch";
 import { useNatureHomeFullVideoFetch } from "@/hooks/useNatureHomeFullVideoFetch";
+import { NatureVideoLoadProgress } from "@/components/nature/NatureVideoLoadProgress";
 import { useShellBackgroundVideoCoordination } from "@/hooks/useShellBackgroundVideoCoordination";
+import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 
 /**
  * 停留后再挂 `<video>` 解码（非「切换」时刻）。
@@ -80,6 +75,8 @@ type Props = {
   initial: NatureSettingsV2;
   /** 与 RSC 嵌入的 settings 指纹一致时可跳过首屏重复拉取 */
   settingsRevision: string;
+  /** 电视壳：导航链到 `/tv/*` */
+  shellRoot?: string;
 };
 
 /** 背景视频槽：与滚动区 `canvas` 对齐；底栏用 `appDark`，与主区背景色系一致衔接 */
@@ -107,11 +104,6 @@ function isNatureVideoFullyLoaded(v: HTMLVideoElement): boolean {
   }
 }
 
-/** Blob 本地片：已完整在内存，够播即可揭晓 */
-function isNatureVideoReadyFromBlob(v: HTMLVideoElement): boolean {
-  return v.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA;
-}
-
 /** 静图阶段：超过揭晓最短等待后再提示加载慢 */
 const SLOW_INTRO_HINT_DELAY_MS = INTRO_REVEAL_MIN_DELAY_MS + 2500;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
@@ -119,11 +111,14 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
 /**
  * 自然：有首图时进页显静图、后台 fetch 整段 MP4，下完再挂 `<video>` 并淡出静图；否则约 3s 起流式缓冲揭晓。
  */
-export function NatureVideoExperience({ initial, settingsRevision }: Props) {
+export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "" }: Props) {
   const { t } = useLocale();
+  const { canPlayMusic, togglePlayMusic } = useMusicShellPlayback();
   const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
+  /** 本会话内 `<video poster>` 是否仍用 HTML poster（首场景揭晓后不再重复挂） */
+  const introSessionRevealedRef = useRef(false);
   const introStillLoadStartedAtRef = useRef(0);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
@@ -140,11 +135,6 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
-  const background1080 = useSyncExternalStore(
-    subscribeNatureBackground1080Pref,
-    getNatureBackground1080PrefSnapshot,
-    () => false,
-  );
   const [videoBroken, setVideoBroken] = useState(false);
   /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
   const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
@@ -282,24 +272,15 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     return (want ? s.videos.find((v) => v.id === want) : undefined) ?? s.videos[0];
   }, [playbackSettings]);
 
-  const activeSceneHas1080 = Boolean(activeNatureRow?.src1080?.trim());
-
   const { videoSrc, posterSrc, previewStillSrc } = useMemo(
-    () =>
-      resolveNaturePlayback(playbackSettings, {
-        prefer1080: background1080 && activeSceneHas1080,
-      }),
-    [playbackSettings, background1080, activeSceneHas1080],
+    () => resolveNaturePlayback(playbackSettings),
+    [playbackSettings],
   );
   const stillImageUrl = (posterSrc?.trim() || previewStillSrc?.trim() || "").trim();
   const posterUrl = stillImageUrl;
   const hasStillIntro = posterUrl.length > 0;
-  /** 仅场景 id + 静图变化时重置揭晓 */
-  const sceneIntroKey = useMemo(() => {
-    const id = activeNatureRow?.id?.trim() ?? "";
-    const tier = background1080 && activeSceneHas1080 ? "1080" : "720";
-    return `${id}\0${posterUrl}\0${tier}`;
-  }, [activeNatureRow?.id, posterUrl, background1080, activeSceneHas1080]);
+  /** 仅场景 id 变化时重置流式策略；切换场景不再因海报 URL 重播静图 */
+  const sceneIntroKey = activeNatureRow?.id?.trim() ?? "";
   /** 配置里是否有主片地址（与解码是否成功无关） */
   const hasConfiguredVideoSrc = Boolean(videoSrc.trim());
   /** 可挂载 `<video>` 且不处于解码错误态 */
@@ -334,6 +315,8 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     objectUrl: fullFetchObjectUrl,
     ready: fullFetchReady,
     failed: fullFetchFailed,
+    progress: fullFetchProgress,
+    loading: fullFetchLoading,
   } = useNatureHomeFullVideoFetch({
     enabled: fullFetchEligible,
     videoSrc,
@@ -342,6 +325,8 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   /** 有首图且整段 fetch 成功：静图 → 下完再挂 video；否则走 dwell + 流式缓冲 */
   const useFullVideoIntro = fullFetchEligible && !fullFetchFailed;
   const introUsesStreaming = hasStillIntro && !useFullVideoIntro;
+  const showFullFetchProgress =
+    useFullVideoIntro && fullFetchLoading && !fullFetchReady && hasStillIntro && !posterOnlyLowPower;
 
   const showNatureVideoDecoder =
     hasPlayableVideo &&
@@ -429,6 +414,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     introRevealGuardRef.current = true;
     const reduce =
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    introSessionRevealedRef.current = true;
     if (reduce) {
       setIntroRevealed(true);
     } else {
@@ -439,13 +425,23 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
   const maybeRevealIntroFromBuffer = useCallback(() => {
     if (!posterUrl || posterOnlyLowPower) return;
     if (introRevealGuardRef.current) return;
+    if (useFullVideoIntro) {
+      if (!fullFetchReady) return;
+      commitIntroReveal();
+      return;
+    }
     if (performance.now() - introStillLoadStartedAtRef.current < INTRO_REVEAL_MIN_DELAY_MS) return;
     const v = videoRef.current;
     if (!v) return;
-    const ready = useFullVideoIntro ? isNatureVideoReadyFromBlob(v) : isNatureVideoFullyLoaded(v);
-    if (!ready) return;
+    if (!isNatureVideoFullyLoaded(v)) return;
     commitIntroReveal();
-  }, [posterUrl, posterOnlyLowPower, commitIntroReveal, useFullVideoIntro]);
+  }, [
+    posterUrl,
+    posterOnlyLowPower,
+    commitIntroReveal,
+    useFullVideoIntro,
+    fullFetchReady,
+  ]);
 
   const onTimeUpdatePollIntroReveal = useCallback(() => {
     const now = performance.now();
@@ -544,12 +540,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
 
   useEffect(() => {
     if (!useFullVideoIntro || !fullFetchReady || introRevealed || !posterUrl || posterOnlyLowPower) return;
-    const elapsed = performance.now() - introStillLoadStartedAtRef.current;
-    const wait = Math.max(0, INTRO_REVEAL_MIN_DELAY_MS - elapsed);
-    const id = window.setTimeout(() => {
-      maybeRevealIntroFromBuffer();
-    }, wait);
-    return () => clearTimeout(id);
+    maybeRevealIntroFromBuffer();
   }, [
     useFullVideoIntro,
     fullFetchReady,
@@ -565,7 +556,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
       setShowSlowIntroHint(false);
       return;
     }
-    const stillWaiting = useFullVideoIntro ? !fullFetchReady : !dwellVideoAllowed;
+    const stillWaiting = useFullVideoIntro ? fullFetchLoading && !fullFetchReady : !dwellVideoAllowed;
     if (!stillWaiting) {
       setShowSlowIntroHint(false);
       return;
@@ -582,6 +573,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     posterOnlyLowPower,
     useFullVideoIntro,
     fullFetchReady,
+    fullFetchLoading,
     dwellVideoAllowed,
   ]);
 
@@ -810,11 +802,6 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     setNatureBgSoftFocus(false);
   }, [softFocusCommittedOpacity, softFocusCommittedBlur]);
 
-  const onBackground1080Toggle = useCallback(() => {
-    writeNatureBackground1080Pref(!readNatureBackground1080Pref());
-    setVideoBroken(false);
-  }, []);
-
   const onHomeSettingsOpenChange = useCallback(
     (open: boolean) => {
       if (open) {
@@ -837,14 +824,19 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
     ? Math.min(softFocusDisplayBlur, 10)
     : softFocusDisplayBlur;
 
-  /** 视频空白：收起设置面板（无面板时无操作） */
+  /** 视频空白：收起设置面板；否则切换背景音乐播放 */
   const onNatureVideoBlankClick = useCallback(() => {
-    if (homeSettingsOpen) onHomeSettingsOpenChange(false);
-  }, [homeSettingsOpen, onHomeSettingsOpenChange]);
+    if (homeSettingsOpen) {
+      onHomeSettingsOpenChange(false);
+      return;
+    }
+    if (canPlayMusic) void togglePlayMusic();
+  }, [homeSettingsOpen, onHomeSettingsOpenChange, canPlayMusic, togglePlayMusic]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
   const textScaleMin = textScaleStepIndex <= 0;
   const textScaleMax = textScaleStepIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1;
+  const textScaleAtDefault = textScaleStepIndex === NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX;
 
   const bumpTextScaleStep = useCallback((delta: 1 | -1) => {
     setTextScaleStepIndex((prev) => {
@@ -852,6 +844,11 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
       writeNatureHomeTextScaleStepIndex(next);
       return next;
     });
+  }, []);
+
+  const resetTextScaleToDefault = useCallback(() => {
+    setTextScaleStepIndex(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
+    writeNatureHomeTextScaleStepIndex(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   }, []);
 
   const onNatureHomeFullscreenClick = useCallback(() => {
@@ -916,15 +913,12 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
         tone="onDark"
         landscapeImmersive={false}
         showTopInsetTime={false}
-        hideTopShellInsetTime
+        hideTopShellInsetTime={!landscapeImmersive}
         rightAccessory={
           <NatureHomeSettingsControl
             open={homeSettingsOpen}
             onOpenChange={onHomeSettingsOpenChange}
             hasNatureVisual={hasNatureVisual}
-            activeSceneHas1080={activeSceneHas1080}
-            background1080={background1080}
-            onBackground1080Toggle={onBackground1080Toggle}
             showFullscreenBtn={showNatureDocFullscreenBtn}
             docElementFullscreen={docElementFullscreen}
             onFullscreenClick={onNatureHomeFullscreenClick}
@@ -937,8 +931,10 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
             natureVerseTextScale={{
               atMin: textScaleMin,
               atMax: textScaleMax,
+              atDefault: textScaleAtDefault,
               onSmaller: () => bumpTextScaleStep(-1),
               onLarger: () => bumpTextScaleStep(1),
+              onResetToDefault: resetTextScaleToDefault,
             }}
           />
         }
@@ -962,7 +958,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
             {showNatureVideoDecoder ? (
               <video
                 ref={videoRef}
-                key={`${activeNatureRow?.id ?? videoSrc}\0${background1080 && activeSceneHas1080 ? "1080" : "720"}`}
+                key={`${activeNatureRow?.id ?? videoSrc}`}
                 className={[
                   NATURE_BG_COVER_MEDIA,
                   "z-[1] border-0 outline-none",
@@ -971,7 +967,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
                 ].join(" ")}
                 style={{ maxWidth: "none" }}
                 src={playbackVideoSrc}
-                poster={hasStillIntro ? undefined : posterSrc?.trim() || undefined}
+                poster={hasStillIntro && !introSessionRevealedRef.current ? undefined : posterSrc?.trim() || undefined}
                 muted
                 playsInline
                 loop
@@ -1042,6 +1038,11 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
             >
               {t("nature.videoDecodeErrorShort")}
             </p>
+          ) : showFullFetchProgress ? (
+            <NatureVideoLoadProgress
+              progress={fullFetchProgress}
+              label={t("nature.downloadProgressHint")}
+            />
           ) : (showSlowIntroHint || showPlaybackWaitHint) && !posterOnlyLowPower ? (
             <p
               className="pointer-events-none absolute bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.75rem))] left-3 right-3 z-[3] text-center text-[12px] leading-snug text-white/50 sm:left-6 sm:right-6 sm:text-[13px]"
@@ -1106,7 +1107,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
               </div>
             </div>
           </div>
-          <HomeShellFloatingRouteNav placement="videoStage" />
+          <HomeShellFloatingRouteNav placement="videoStage" shellRoot={shellRoot} />
         </div>
       ) : (
         <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
@@ -1128,7 +1129,7 @@ export function NatureVideoExperience({ initial, settingsRevision }: Props) {
               </div>
             </div>
           </div>
-          <HomeShellFloatingRouteNav placement="videoStage" />
+          <HomeShellFloatingRouteNav placement="videoStage" shellRoot={shellRoot} />
         </div>
       )}
     </div>

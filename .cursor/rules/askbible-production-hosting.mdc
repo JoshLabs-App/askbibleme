@@ -1,0 +1,16 @@
+---
+description: AskBible.me 线上生产环境（Render + 持久磁盘）
+alwaysApply: true
+---
+
+# 生产环境（默认假设）
+
+**AskBible.me 线上生产**部署在 **Render Web Service + Persistent Disk**，不是 Vercel。
+
+涉及导读/引导版、信息版缓存、`info-edition-v1-published.json`、`DATA_ROOT`、`INFO_EDITION_DISK_SAVE`、后台磁盘写入权限时，默认按 Render + 磁盘方案排查与给建议：
+
+- 持久数据写在 `DATA_ROOT`（或 `INFO_EDITION_DATA_DIR`）挂载路径下，例如 `<DATA_ROOT>/info-edition-v1-published.json`
+- 本机 `npm run dev` 仍写仓库 `data/bible/`；与线上磁盘数据分离
+- 引导版/导读版线上缓存清理：删磁盘上对应 `chapter_key`（如 `GEN:34:role_356f0ffb`），或 Render 挂载盘中的 published 文件条目
+
+本地开发、Studio、后台 API 密钥仍以本机 Git + `data/admin/` 为准。

@@ -66,3 +66,216 @@ export function sampleTrackAnalysisAt(a: TrackAudioAnalysisV1, tSec: number): Tr
     high: lerp(a.high),
   };
 }
+
+/** `/music/uploads/<id>.m4a` → `/music/analysis/<id>.json` */
+export function analysisSrcFromAudioPath(src: string): string | null {
+  const m = src.match(/\/music\/uploads\/([^/?#]+)\.[a-z0-9]+$/i);
+  if (!m?.[1]) return null;
+  return `/music/analysis/${m[1]}.json`;
+}
+
+/** 将 rms 序列压缩为波形展示用的少量采样点（取桶内峰值） */
+export function downsampleRmsForWaveform(rms: number[], pointCount: number): number[] {
+  const n = Math.max(2, Math.floor(pointCount));
+  if (rms.length === 0) return Array(n).fill(0.06);
+  if (rms.length <= n) return [...rms];
+  const out: number[] = [];
+  const bucket = rms.length / n;
+  for (let i = 0; i < n; i++) {
+    const start = Math.floor(i * bucket);
+    const end = Math.max(start + 1, Math.floor((i + 1) * bucket));
+    let peak = 0;
+    for (let j = start; j < end && j < rms.length; j++) peak = Math.max(peak, rms[j] ?? 0);
+    out.push(peak);
+  }
+  return out;
+}
+
+/** 归一化到 0..1，并保留安静段的可见起伏 */
+export function normalizeWaveformSamples(samples: number[]): number[] {
+  if (samples.length === 0) return [];
+  let max = 0;
+  for (const v of samples) max = Math.max(max, v);
+  const denom = Math.max(max, 0.001);
+  return samples.map((v) => 0.07 + (v / denom) * 0.93);
+}
+
+/** 音乐页频谱/曲线视觉调参（更慢、起伏更大） */
+export const MUSIC_SPECTRUM_VISUAL = {
+  lerpPlaying: 0.1,
+  lerpIdle: 0.05,
+  levelGain: 1.32,
+  levelMin: 0.04,
+  levelBase: 0.05,
+  levelScale: 1.08,
+  curveAmpRatio: 0.97,
+  idleTimeScale: 0.42,
+  idleWobbleGain: 1.4,
+} as const;
+
+/** 向右滚动的独立曲线（与频谱条无关） */
+export const MUSIC_SCROLL_CURVE = {
+  historyLen: 96,
+  msPerStepPlaying: 54,
+  msPerStepIdle: 92,
+  ampRatio: 0.44,
+  pointGain: 1.15,
+} as const;
+
+function shapeSpectrumLevel(raw: number): number {
+  const lifted = MUSIC_SPECTRUM_VISUAL.levelBase + raw * MUSIC_SPECTRUM_VISUAL.levelScale;
+  return Math.min(1, Math.max(MUSIC_SPECTRUM_VISUAL.levelMin, lifted * MUSIC_SPECTRUM_VISUAL.levelGain));
+}
+
+/** 单平面频谱条高度（0..1），播放时按 low/mid/high 分布；暂停时用缓慢呼吸 */
+export function sampleSpectrumBarLevels(
+  analysis: TrackAudioAnalysisV1 | null,
+  tSec: number,
+  barCount: number,
+  playing: boolean,
+): number[] {
+  const n = Math.max(4, Math.floor(barCount));
+  if (!analysis || !playing) return idleSpectrumBarLevels(n, tSec);
+  const center = sampleTrackAnalysisAt(analysis, tSec);
+  return Array.from({ length: n }, (_, i) => {
+    const phase = i / Math.max(1, n - 1);
+    const lowW = Math.max(0, 1.1 - phase * 2.4);
+    const midW = Math.max(0, 1 - Math.abs(phase - 0.42) * 2.6);
+    const highW = Math.max(0, (phase - 0.32) * 1.55);
+    const wSum = lowW + midW + highW + 1e-6;
+    const band = (center.low * lowW + center.mid * midW + center.high * highW) / wSum;
+    const spread = ((i * 0.37) % 1) - 0.5;
+    const tOff = spread * analysis.dt * 2.5;
+    const near = sampleTrackAnalysisAt(
+      analysis,
+      Math.max(0, Math.min(analysis.durationSec, tSec + tOff)),
+    );
+    const level = band * 0.58 + near.rms * 0.28 + center.rms * 0.14;
+    return shapeSpectrumLevel(level);
+  });
+}
+
+/** 暂停 / 无分析：低频呼吸占位 */
+export function idleSpectrumBarLevels(barCount: number, tSec: number): number[] {
+  const n = Math.max(4, Math.floor(barCount));
+  const ts = tSec * MUSIC_SPECTRUM_VISUAL.idleTimeScale;
+  const wGain = MUSIC_SPECTRUM_VISUAL.idleWobbleGain;
+  return Array.from({ length: n }, (_, i) => {
+    const phase = i / Math.max(1, n - 1);
+    const wobble =
+      (Math.sin(ts * 2.4 + phase * 9.5) * 0.045 +
+        Math.sin(ts * 1.35 + phase * 4.2 + 0.6) * 0.035) *
+      wGain;
+    return shapeSpectrumLevel(0.1 + wobble);
+  });
+}
+
+/** 无分析数据时的占位起伏 */
+export function idleWaveformSamples(pointCount: number): number[] {
+  const n = Math.max(2, Math.floor(pointCount));
+  return Array.from({ length: n }, (_, i) => {
+    const t = i / (n - 1);
+    return (
+      0.08 +
+      Math.sin(t * Math.PI * 3.2) * 0.05 +
+      Math.sin(t * Math.PI * 8.5 + 0.4) * 0.03
+    );
+  });
+}
+
+export function resolvePlaybackDisplaySec(
+  currentSec: number,
+  durationSec: number,
+  playing: boolean,
+  sync: { sec: number; at: number },
+  now: number,
+): number {
+  if (playing && durationSec > 0) {
+    const elapsed = (now - sync.at) / 1000;
+    return Math.min(durationSec, sync.sec + elapsed);
+  }
+  return now / 1000;
+}
+
+export function createScrollingHistory(maxLen: number, fill = 0.5): number[] {
+  return Array.from({ length: maxLen }, () => fill);
+}
+
+/** 滚动曲线单点（0..1，0.5 为中线） */
+export function sampleScrollingCurvePoint(
+  analysis: TrackAudioAnalysisV1 | null,
+  tSec: number,
+  playing: boolean,
+): number {
+  if (analysis && playing) {
+    const s = sampleTrackAnalysisAt(analysis, tSec);
+    const raw = s.rms * 0.62 + s.mid * 0.24 + s.low * 0.14;
+    const shaped = shapeSpectrumLevel(raw);
+    const centered = 0.5 + (shaped - 0.5) * MUSIC_SCROLL_CURVE.pointGain;
+    return Math.min(1, Math.max(0, centered));
+  }
+  const ts = tSec * MUSIC_SPECTRUM_VISUAL.idleTimeScale;
+  const wobble = Math.sin(ts * 1.6) * 0.12 + Math.sin(ts * 0.85 + 1.1) * 0.08;
+  return Math.min(1, Math.max(0, 0.5 + wobble));
+}
+
+/** 新点从左侧进入，波形向右移动 */
+export function pushScrollingHistory(history: number[], point: number, maxLen: number): number[] {
+  const next = [Math.min(1, Math.max(0, point)), ...history];
+  return next.slice(0, maxLen);
+}
+
+/** 中线起伏、向右滚动的平滑曲线（viewBox） */
+export function buildScrollingWaveSvgPath(history: number[], width: number, height: number): string {
+  const n = history.length;
+  if (n < 2) return "";
+  const mid = height * 0.5;
+  const amp = height * MUSIC_SCROLL_CURVE.ampRatio;
+  const step = width / (n - 1);
+  const yAt = (i: number) => mid - ((history[i] ?? 0.5) - 0.5) * amp * 2;
+
+  let d = `M 0 ${yAt(0).toFixed(2)}`;
+  for (let i = 1; i < n; i++) {
+    const x1 = i * step;
+    const cx = ((i - 0.5) * step).toFixed(2);
+    d += ` Q ${cx} ${yAt(i).toFixed(2)} ${x1.toFixed(2)} ${yAt(i).toFixed(2)}`;
+  }
+  return d;
+}
+
+/** @deprecated 频谱顶缘曲线；现用 buildScrollingWaveSvgPath */
+export function buildSpectrumCurveSvgPath(levels: number[], width: number, height: number): string {
+  const n = levels.length;
+  if (n < 2) return "";
+  const base = height - 2;
+  const amp = (height - 6) * MUSIC_SPECTRUM_VISUAL.curveAmpRatio;
+  const step = width / (n - 1);
+  const yAt = (i: number) => base - (levels[i] ?? 0) * amp;
+
+  let d = `M 0 ${yAt(0).toFixed(2)}`;
+  for (let i = 1; i < n; i++) {
+    const x1 = i * step;
+    const cx = ((i - 0.5) * step).toFixed(2);
+    d += ` Q ${cx} ${yAt(i).toFixed(2)} ${x1.toFixed(2)} ${yAt(i).toFixed(2)}`;
+  }
+  return d;
+}
+
+/** 平滑单线波形 path（viewBox 坐标系） */
+export function buildSmoothWaveSvgPath(samples: number[], width: number, height: number): string {
+  const n = samples.length;
+  if (n < 2) return "";
+  const mid = height * 0.5;
+  const amp = height * 0.4;
+  const step = width / (n - 1);
+  const yAt = (i: number) => mid - (samples[i] ?? 0) * amp;
+
+  let d = `M 0 ${yAt(0).toFixed(2)}`;
+  for (let i = 1; i < n; i++) {
+    const x0 = (i - 1) * step;
+    const x1 = i * step;
+    const cx = ((x0 + x1) * 0.5).toFixed(2);
+    d += ` Q ${cx} ${yAt(i).toFixed(2)} ${x1.toFixed(2)} ${yAt(i).toFixed(2)}`;
+  }
+  return d;
+}

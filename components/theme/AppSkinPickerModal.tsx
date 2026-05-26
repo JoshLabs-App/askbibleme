@@ -2,7 +2,7 @@
 
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellModal } from "@/components/ui/AppShellModal";
-import { USER_SKIN_ORDER } from "@/lib/app-user-skin";
+import { brandPresetLabel, USER_SKIN_ORDER } from "@/lib/app-user-skin";
 import { useAppSkin } from "./AppSkinProvider";
 
 type Props = {
@@ -35,9 +35,14 @@ export function AppSkinPickerModal({ open, onDismiss }: Props) {
             {t("skin.themeOverrideHint")}
           </p>
         ) : null}
-        <ul className="mt-4 flex flex-col gap-1" role="listbox" aria-label={t("skin.listLabel")}>
+        <ul
+          className="mt-4 flex max-h-[min(60vh,24rem)] flex-col gap-1 overflow-y-auto overscroll-contain"
+          role="listbox"
+          aria-label={t("skin.listLabel")}
+        >
           {USER_SKIN_ORDER.map((id) => {
             const selected = skin === id;
+            const label = id === "site" ? t("skin.presets.site") : brandPresetLabel(id);
             return (
               <li key={id} role="option" aria-selected={selected}>
                 <button
@@ -53,7 +58,7 @@ export function AppSkinPickerModal({ open, onDismiss }: Props) {
                       : "border-border/40 bg-canvas/60 hover:border-border/70 hover:bg-canvas",
                   ].join(" ")}
                 >
-                  <span className="text-ink">{t(`skin.presets.${id}`)}</span>
+                  <span className="text-ink">{label}</span>
                   {selected ? (
                     <span className="text-[11px] font-medium text-sand" aria-hidden>
                       {t("common.current")}

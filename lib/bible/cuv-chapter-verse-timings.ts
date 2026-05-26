@@ -2,10 +2,12 @@
  * 整章朗读逐节时间轴（Whisper/stable-ts 对齐）。
  * - 普通话：`/verse-timings/{BOOK}-{章}.json`（自 AskBible 同步）
  * - 潮州语新约：`/verse-timings/teochew-nt/{BOOK}-{章}.json`
+ * - WEB / BBE：`/verse-timings/web-en/{BOOK}-{章}.json`
  */
 
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
 import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
+import { translationUsesWebChapterAudio } from "@/lib/bible/web-chapter-audio";
 
 export type CuvChapterVerseTiming = {
   verse: number;
@@ -14,21 +16,25 @@ export type CuvChapterVerseTiming = {
 };
 
 export function buildChapterVerseTimingsUrl(
+  translationId: string,
   voiceId: CuvChapterAudioVoiceId,
   bookId: string,
   chapter: number,
 ): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  if (translationUsesWebChapterAudio(translationId)) {
+    return `/verse-timings/web-en/${id}-${chapter}.json`;
+  }
   if (teochewNtVoiceActive(voiceId)) {
     return `/verse-timings/teochew-nt/${id}-${chapter}.json`;
   }
   return `/verse-timings/${id}-${chapter}.json`;
 }
 
-/** @deprecated use buildChapterVerseTimingsUrl("mandarin", …) */
+/** @deprecated use buildChapterVerseTimingsUrl(translationId, voiceId, …) */
 export function buildCuvChapterVerseTimingsUrl(bookId: string, chapter: number): string {
-  return buildChapterVerseTimingsUrl("mandarin", bookId, chapter);
+  return buildChapterVerseTimingsUrl("cuv-simp", "mandarin", bookId, chapter);
 }
 
 export function parseCuvChapterVerseTimingsPayload(data: unknown): CuvChapterVerseTiming[] | null {
@@ -74,11 +80,12 @@ export function verseIndexForVerseNumber(
 }
 
 export async function fetchChapterVerseTimings(
+  translationId: string,
   voiceId: CuvChapterAudioVoiceId,
   bookId: string,
   chapter: number,
 ): Promise<CuvChapterVerseTiming[] | null> {
-  const url = buildChapterVerseTimingsUrl(voiceId, bookId, chapter);
+  const url = buildChapterVerseTimingsUrl(translationId, voiceId, bookId, chapter);
   if (!url) return null;
   try {
     const res = await fetch(url, { cache: "force-cache" });
@@ -94,5 +101,5 @@ export async function fetchCuvChapterVerseTimings(
   bookId: string,
   chapter: number,
 ): Promise<CuvChapterVerseTiming[] | null> {
-  return fetchChapterVerseTimings("mandarin", bookId, chapter);
+  return fetchChapterVerseTimings("cuv-simp", "mandarin", bookId, chapter);
 }

@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
+import { mergeMusicCompanionTrackDisplay } from "@/lib/music-companion/merge-track-display";
 import {
   parseAndValidateMusicStore,
   readMusicCompanionStore,
   writeMusicCompanionStore,
 } from "@/lib/music-companion/store-file";
+import shippedCatalog from "@/data/music-companion.json";
+import type { MusicCompanionStore } from "@/lib/music-companion/types";
 
 /** 公开读取音乐陪伴配置（前台首页与后台编辑用） */
 export async function GET() {
   try {
-    const store = await readMusicCompanionStore(process.cwd());
+    const store = mergeMusicCompanionTrackDisplay(
+      await readMusicCompanionStore(process.cwd()),
+      shippedCatalog as MusicCompanionStore,
+    );
     return NextResponse.json(store, {
       headers: {
         /** 曲库 JSON 很小；短私缓存减轻重复请求 */

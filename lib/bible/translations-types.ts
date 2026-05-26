@@ -18,3 +18,4 @@ export type BibleTranslationsIndex = {
 };
 
 export const SELAH_BIBLE_FORMAT = "selah-bible-v1";
+export const DEFAULT_SCRIPTURE_TRANSLATION_ID = "cuv-simp";

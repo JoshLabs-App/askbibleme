@@ -11,15 +11,6 @@ import { DEFAULT_THEME_REPEAT_MIN_COUNT } from "@/lib/scripture/theme-repeat-poo
 
 const SHELL_LOCALES: AppLocale[] = ["zh-CN", "en"];
 
-function poolOrEmergencyFallback(
-  built: HomeVerseEntry[],
-  locale: AppLocale,
-  refsLength: number,
-): HomeVerseEntry[] {
-  const min = refsLength > 0 ? Math.min(4, refsLength) : 4;
-  return built.length >= min ? built : [...READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[locale]];
-}
-
 /**
  * 壳层 RSC 应解析哪些语言的轮播经文。
  * - `primary`：只解析界面语言（与 `selah_locale` Cookie 一致），另一语言在 Record 中空数组，不占读盘解析。
@@ -48,7 +39,7 @@ export async function buildHomeVerseRotationForLocales(
       continue;
     }
     const built = fromPool[locale] ?? [];
-    result[locale] = poolOrEmergencyFallback(built, locale, built.length);
+    result[locale] = built;
   }
   return result;
 }
@@ -83,7 +74,7 @@ export async function buildResolvedHomeVerseRotationSnapshot(cwd: string): Promi
   const entriesByLocale = {} as Record<AppLocale, HomeVerseEntry[]>;
   for (const locale of SHELL_LOCALES) {
     const built = await buildForLocaleFromRefs(cwd, locale, refs);
-    entriesByLocale[locale] = poolOrEmergencyFallback(built, locale, refs.length);
+    entriesByLocale[locale] = built.length >= 4 ? built : [...READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE[locale]];
   }
   return { verseRefsCount: refs.length, entriesByLocale };
 }

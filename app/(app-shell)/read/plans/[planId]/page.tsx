@@ -17,7 +17,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props) {
   const { planId } = await params;
   const decoded = decodeURIComponent(planId);
-  if (isTripleLoopPlanId(decoded)) return { title: sitePageTitle("三段式读经") };
+  if (isTripleLoopPlanId(decoded)) return { title: sitePageTitle("新旧约循环读经计划") };
   const bundle = readReadingPlanBundleSync(process.cwd(), decoded);
   if (!bundle) return { title: sitePageTitle("读经计划") };
   return { title: sitePageTitle(bundle.name) };

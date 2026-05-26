@@ -14,9 +14,29 @@ import { themeRepeatPoolScopeId } from "@/lib/scripture/theme-repeat-pool-scope-
 import { HOME_PRAYER_POOL_CHUNK_SIZE } from "@/lib/home-prayer-pools/constants";
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
 import { verseKeyFromVerseRef } from "@/lib/home-prayer-pools/verse-key-from-ref";
+import {
+  readThemeRepeatAllowlistVerseKeys,
+  writeThemeRepeatAllowlist,
+  type ThemeRepeatAllowlistRow,
+} from "@/lib/home-prayer-pools/theme-repeat-allowlist";
+import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "../../apps/askbible-mobile/src/explore/explore-home-verse-pool-verse-keys";
 
 const HOME_POOL_ZH_TRANSLATION_IDS = ["cuv-simp", "cuv-trad"] as const;
 const HOME_POOL_EN_TRANSLATION_IDS = ["web-en", "bbe-en"] as const;
+const CJK_CHAR_RE = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
+const INCOMPLETE_CJK_END_RE = /[，；：、]\s*$/;
+
+function stripTailQuotes(text: string): string {
+  return text.replace(/[」』”"\)\]）】〕〉》]+$/g, "").trimEnd();
+}
+
+function isLikelyIncompleteCjkSingleLine(entry: HomeVerseEntry): boolean {
+  if (!entry.lines?.length) return true;
+  if (entry.lines.length > 1) return false;
+  const line = stripTailQuotes(entry.lines[0] ?? "").trim();
+  if (!line || !CJK_CHAR_RE.test(line)) return false;
+  return INCOMPLETE_CJK_END_RE.test(line);
+}
 
 function translationIdsPresent(
   index: ReturnType<typeof readTranslationsIndexSync>,
@@ -33,6 +53,8 @@ export type WriteThemeRepeatPrayerPoolOptions = {
   minCount: number;
   maxCount?: number;
   cap?: number;
+  /** 兼容旧行为：补入 explore 兜底经文。严格排行包可关闭。 */
+  includeExploreSeeds?: boolean;
 };
 
 export type WriteThemeRepeatPrayerPoolResult = {
@@ -41,7 +63,22 @@ export type WriteThemeRepeatPrayerPoolResult = {
   verseCount: number;
   chunkCount: number;
   skippedResolve: number;
+  forcedExploreAdds: number;
 };
+
+function parseVerseKey(verseKey: string): VerseRef | null {
+  const m = /^([A-Z0-9]{3})\.(\d+)\.(\d+)$/.exec(verseKey.trim().toUpperCase());
+  if (!m) return null;
+  const chapter = Number(m[2]);
+  const verse = Number(m[3]);
+  if (!Number.isInteger(chapter) || chapter < 1 || !Number.isInteger(verse) || verse < 1) return null;
+  return {
+    bookId: m[1]!,
+    chapter,
+    verseStart: verse,
+    verseEnd: verse,
+  };
+}
 
 /**
  * 依主题库收录次数生成静态祷告池：`public/data/home-prayer-pools/theme-repeat-ge{N}/`。
@@ -70,6 +107,73 @@ export async function writeThemeRepeatPrayerPool(
     cap: options.cap,
     mtimeMs,
   });
+  const sourceRowByVerseKey = new Map<string, (typeof sourceRows)[number]>();
+  for (const row of sourceRows) {
+    const key = verseKeyFromVerseRef({
+      bookId: row.bookId,
+      chapter: row.chapter,
+      verseStart: row.verse,
+      verseEnd: row.verse,
+    });
+    sourceRowByVerseKey.set(key, row);
+  }
+  const allowlistVerseKeys = readThemeRepeatAllowlistVerseKeys(cwd, scopeId);
+  const sourceRowsFiltered =
+    allowlistVerseKeys == null
+      ? sourceRows
+      : sourceRows.filter((row) =>
+          allowlistVerseKeys.has(
+            verseKeyFromVerseRef({
+              bookId: row.bookId,
+              chapter: row.chapter,
+              verseStart: row.verse,
+              verseEnd: row.verse,
+            }),
+          ),
+        );
+  const selectedVerseKeys = new Set(
+    sourceRowsFiltered.map((row) =>
+      verseKeyFromVerseRef({
+        bookId: row.bookId,
+        chapter: row.chapter,
+        verseStart: row.verse,
+        verseEnd: row.verse,
+      }),
+    ),
+  );
+  const includeExploreSeeds = options.includeExploreSeeds ?? true;
+  const sourceRowsWithExplore = [...sourceRowsFiltered];
+  let forcedExploreAdds = 0;
+  if (includeExploreSeeds) {
+    for (const exploreVerseKey of EXPLORE_HOME_VERSE_POOL_VERSE_KEYS) {
+      if (selectedVerseKeys.has(exploreVerseKey)) continue;
+      const fromRank = sourceRowByVerseKey.get(exploreVerseKey);
+      if (fromRank) {
+        sourceRowsWithExplore.push(fromRank);
+        selectedVerseKeys.add(exploreVerseKey);
+        forcedExploreAdds += 1;
+        continue;
+      }
+      const parsed = parseVerseKey(exploreVerseKey);
+      if (!parsed) continue;
+      sourceRowsWithExplore.push({
+        verseKey: exploreVerseKey,
+        repeatCount: Math.max(1, minCount),
+        bookId: parsed.bookId,
+        chapter: parsed.chapter,
+        verse: parsed.verseStart,
+      });
+      selectedVerseKeys.add(exploreVerseKey);
+      forcedExploreAdds += 1;
+    }
+  }
+  sourceRowsWithExplore.sort(
+    (a, b) =>
+      b.repeatCount - a.repeatCount ||
+      a.bookId.localeCompare(b.bookId, "en") ||
+      a.chapter - b.chapter ||
+      a.verse - b.verse,
+  );
 
   const metaPath = path.join(cwd, "data", "scripture", `${scopeId}-meta.json`);
   mkdirSync(path.dirname(metaPath), { recursive: true });
@@ -82,8 +186,8 @@ export async function writeThemeRepeatPrayerPool(
         minCount,
         maxCount: options.maxCount ?? null,
         cap: options.cap ?? null,
-        verseCount: sourceRows.length,
-        rows: sourceRows,
+        verseCount: sourceRowsWithExplore.length,
+        rows: sourceRowsWithExplore,
       },
       null,
       0,
@@ -106,9 +210,10 @@ export async function writeThemeRepeatPrayerPool(
     locales: Record<AppLocale, HomeVerseEntry>;
     byTranslationId: Record<string, HomeVerseEntry>;
   }[] = [];
+  const allowlistRows: ThemeRepeatAllowlistRow[] = [];
   let skippedResolve = 0;
 
-  for (const row of sourceRows) {
+  for (const row of sourceRowsWithExplore) {
     const ref: VerseRef = {
       bookId: row.bookId,
       chapter: row.chapter,
@@ -131,6 +236,16 @@ export async function writeThemeRepeatPrayerPool(
       skippedResolve += 1;
       continue;
     }
+    if (isLikelyIncompleteCjkSingleLine(zhDefault)) {
+      skippedResolve += 1;
+      continue;
+    }
+    allowlistRows.push({
+      verseKey,
+      repeatCount: Math.max(1, row.repeatCount),
+      reference: zhDefault.ref,
+      text: zhDefault.lines.join(" "),
+    });
     resolved.push({
       verseKey,
       weight: Math.max(1, row.repeatCount),
@@ -182,5 +297,19 @@ export async function writeThemeRepeatPrayerPool(
     }
   }
 
-  return { scopeId, minCount, verseCount: resolved.length, chunkCount, skippedResolve };
+  if (allowlistVerseKeys == null) {
+    const filePath = writeThemeRepeatAllowlist(cwd, scopeId, allowlistRows);
+    console.log(
+      `[theme-repeat-pool] created allowlist at ${filePath} (${allowlistRows.length} rows)`,
+    );
+  }
+
+  return {
+    scopeId,
+    minCount,
+    verseCount: resolved.length,
+    chunkCount,
+    skippedResolve,
+    forcedExploreAdds,
+  };
 }

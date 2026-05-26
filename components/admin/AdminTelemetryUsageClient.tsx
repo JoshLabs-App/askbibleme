@@ -92,7 +92,7 @@ export function AdminTelemetryUsageClient() {
             线上 Render 保持已用的{" "}
             <code className="text-adminFg">INFO_EDITION_DISK_SAVE=1</code> 与{" "}
             <code className="text-adminFg">DATA_ROOT</code> 即可，文件为{" "}
-            <code className="text-adminFg">telemetry-v1-store.json</code>，无需 Supabase。
+            <code className="text-adminFg">telemetry-v1-store.json</code>。
           </p>
           <p className="text-[11px]">
             详见 <code className="text-adminFg">docs/telemetry-privacy.md</code>。

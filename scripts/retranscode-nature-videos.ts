@@ -69,7 +69,7 @@ async function main() {
       await fs.rename(tmp1080, out1080);
 
       const previewPath = path.join(postersDir, `${base}.jpg`);
-      const frame = await extractVideoFirstFrameJpeg(out720, previewPath);
+      const frame = await extractVideoFirstFrameJpeg(masterPath, previewPath);
       if (!frame.ok) {
         console.log(`成片 OK，预览帧跳过：${frame.message}`);
       } else {

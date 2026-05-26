@@ -1,0 +1,56 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+ios/build/
+ios/Pods/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# 由 `npm run mobile:sync-content` 从仓库真源复制，不提交生成物
+assets/scripture/*.sqlite
+assets/content/*
+!assets/content/.gitkeep
+assets/audio/web-en/
+assets/audio/teochew-nt/
+assets/audio/*.mp3
+!assets/audio/today-plan-complete.mp3
+
+# 原生目录已由 `expo prebuild` / `expo run:android` 生成并纳入版本管理，便于 CI 与协作。
+# 若改用「持续 prebuild」工作流，可再改回忽略 ios/、android/。

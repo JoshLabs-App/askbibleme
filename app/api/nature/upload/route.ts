@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { extractVideoFirstFrameJpeg } from "@/lib/nature/extract-video-preview-frame";
+import {
+  extractVideoFirstFrameJpeg,
+  extractVideoSquareThumbJpeg,
+} from "@/lib/nature/extract-video-preview-frame";
 import { transcodeNatureVideoRenditions } from "@/lib/nature/transcode-nature-video-renditions";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
@@ -34,11 +37,23 @@ export async function POST(req: Request) {
     );
   }
 
+  const rawCt = req.headers.get("content-type")?.trim().toLowerCase() ?? "";
+  if (!rawCt.startsWith("multipart/form-data")) {
+    return NextResponse.json(
+      { error: "请求体须为 multipart/form-data（请选择文件后直接上传，不要手动改 Content-Type）。" },
+      { status: 400 },
+    );
+  }
+
   let form: Awaited<ReturnType<Request["formData"]>>;
   try {
     form = await req.formData();
-  } catch {
-    return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      { error: `multipart 解析失败：${msg}。若为大文件，请确认已重启服务并生效更大的 proxyClientMaxBodySize。` },
+      { status: 400 },
+    );
   }
 
   const file = form.get("file");
@@ -119,8 +134,14 @@ export async function POST(req: Request) {
   const previewRel = path.relative(previewPostersDir, previewPath);
   let previewFrameUrl: string | null = null;
   let previewFrameWarning: string | undefined;
+  const thumbsDir = path.resolve(cwd, "public", "nature", "thumbs");
+  const thumbFilename = `${base}.jpg`;
+  const thumbPath = path.resolve(thumbsDir, thumbFilename);
+  const thumbRel = path.relative(thumbsDir, thumbPath);
+  let thumbUrl: string | null = null;
+  let thumbWarning: string | undefined;
 
-  const frameSource = skip ? (singleFinalPath as string) : path720;
+  const frameSource = skip ? (singleFinalPath as string) : masterPath;
   if (!previewRel.startsWith("..") && !path.isAbsolute(previewRel)) {
     const ex = await extractVideoFirstFrameJpeg(frameSource, previewPath);
     if (ex.ok) {
@@ -129,6 +150,19 @@ export async function POST(req: Request) {
       previewFrameWarning = ex.message;
       try {
         await fs.unlink(previewPath);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  if (!thumbRel.startsWith("..") && !path.isAbsolute(thumbRel)) {
+    const ex = await extractVideoSquareThumbJpeg(frameSource, thumbPath);
+    if (ex.ok) {
+      thumbUrl = `/nature/thumbs/${thumbFilename}`;
+    } else {
+      thumbWarning = ex.message;
+      try {
+        await fs.unlink(thumbPath);
       } catch {
         /* ignore */
       }
@@ -144,7 +178,9 @@ export async function POST(req: Request) {
       src: url,
       filename: fn,
       previewFrameUrl,
+      thumbUrl,
       ...(previewFrameWarning ? { previewFrameWarning } : {}),
+      ...(thumbWarning ? { thumbWarning } : {}),
       renditions: false,
     });
   }
@@ -161,7 +197,9 @@ export async function POST(req: Request) {
     filename: `${base}-720.mp4`,
     masterFilename,
     previewFrameUrl,
+    thumbUrl,
     renditions: true,
     ...(previewFrameWarning ? { previewFrameWarning } : {}),
+    ...(thumbWarning ? { thumbWarning } : {}),
   });
 }

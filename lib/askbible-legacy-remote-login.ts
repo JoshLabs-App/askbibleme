@@ -1,5 +1,5 @@
 /**
- * 通过旧站 HTTP 接口登录：由旧站校验账号密码，Selah 只信任成功响应并签发本站 cookie（不读 auth.sqlite）。
+ * 通过旧站 HTTP 接口登录：由旧站校验账号密码，AskBible 只信任成功响应并签发本站 cookie（不读 auth.sqlite）。
  *
  * 环境变量见 `.env.example`。请求体固定为 JSON：
  * `{ "email": string, "password": string, "purpose": "user" | "admin" }`

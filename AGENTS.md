@@ -1,8 +1,13 @@
-# AGENTS.md — Selah.my
+# AGENTS.md — AskBible.me
+
+## 对外名称（用户可见）
+
+- 产品 / 站点 / App 显示名：**AskBible.me**（域名 `askbible.me`）。真源：`lib/askbible-product-name.ts`。
+- 仓库目录、`selah-*` 存储键、原生包名 `me.askbible`（域名 `askbible.me`）等为内部工程名，**不要**出现在用户界面。
 
 ## 产品边界（必读）
 
-- Selah.my **不是** Bible Tool。
+- AskBible.me **不是** Bible Tool。
 - **不是** AI Bible Chatbot。
 - **不是** 游戏化圣经。
 - **不是** 资料库 / 百科。
@@ -11,14 +16,14 @@
 
 ## 当前开发重点
 
-- 优先：**Selah.my Studio**（**产品大脑**：文档 + 本地 AI + 写回 `docs/`；见上文「Studio 定位」）。
+- 优先：**AskBible.me Studio**（**产品大脑**：文档 + 本地 AI + 写回 `docs/`；见上文「Studio 定位」）。
 - **不要**先做：用户端圣经 App、Journey 内容系统、CMS。
 
 ## Studio 定位（核心定义）
 
-**Selah.my Studio 不是「后台」**，也不是 CMS、Notion 替代品、AI Chat 或单纯内容编辑器。
+**AskBible.me Studio 不是「后台」**，也不是 CMS、Notion 替代品、AI Chat 或单纯内容编辑器。
 
-它是 **Selah.my 的「产品大脑」**（产品哲学操作系统）：目标不是管理页面或用户，而是 **持续校准产品方向**——防止慢慢变成「又一个 Bible App」、防止 **产品失忆**。身份上更接近 **Curator（策展人）** 与 **编辑部**：守护核心体验与产品语言，而不是企业运营后台。
+它是 **AskBible.me 的「产品大脑」**（产品哲学操作系统）：目标不是管理页面或用户，而是 **持续校准产品方向**——防止慢慢变成「又一个 Bible App」、防止 **产品失忆**。身份上更接近 **Curator（策展人）** 与 **编辑部**：守护核心体验与产品语言，而不是企业运营后台。
 
 - **最大风险**：不是开发做不出来，而是 **失去核心**（功能堆叠、工具化、认知负荷上升）。因此 **`docs/09-dangerous-directions.md` 与原则类文档极其重要**。
 - **贴入摘录 / 草稿后，AI 应做的事**（与右侧动作对应）：**理清意图**（先概括你在忙什么，并建议 2～4 个可执行的下一步方向，对应其它动作）、**提炼**、**归类**、**检矛盾**、**防功能蔓延**、**压缩删减**、**原则与用语**（边界见同段下文）。
@@ -35,17 +40,21 @@
 
 - 所有开发保持**低认知负荷**。
 - **不允许**擅自扩展功能；超出范围的想法写入 `docs/10-parking-lot.md`，**不要**在代码里实现。
+- 平台实现与优化顺序固定为：**苹果（iOS）第一优先，安卓第二，网页第三**。
+- 安卓与网页在交互、视觉与体验节奏上，默认**对齐苹果版本**；若受平台能力限制，先记录差异与原因，再给降级方案。
+- 涉及后台/管理端开发流程时，按同一顺序推进：先在苹果标准上完成与验证，再同步安卓，最后同步网页。
+- 移动端媒体（音乐/视频）默认**本地播放优先**：播放只走安装包内或设备已下载资源；远端仅用于检查/下载更新包，不作为常规直连播放源。
 
 ## 技术栈与部署（约定）
 
 | 层级 | 选型 |
 |------|------|
 | **Frontend（前台 + Studio）** | Next.js **App Router** + **TypeScript** + **Tailwind CSS** |
-| **Backend（后端）** | **Supabase**：PostgreSQL + Auth + Storage + Edge Functions |
-| **Deploy（部署）** | **Vercel**（Next）+ **Supabase**（数据与边缘逻辑） |
+| **Backend（后端）** | **本地数据优先**：`auth.sqlite` + `data/` 配置文件 + Render Persistent Disk |
+| **Deploy（部署）** | **Render Web Service + Persistent Disk** |
 | **Mobile App（以后）** | 先 **PWA**；后期再评估 **Expo / React Native** |
 
-说明：Studio 当前可有 **localStorage** 过渡；与 Supabase 同步、账号与正式数据写入以本表为准逐步实现。**未接 Supabase 前**不在此仓库假装已完成云端后端。
+说明：Studio 当前可有 **localStorage** 过渡；账号与正式数据写入以仓库与挂载磁盘为准逐步实现。
 
 ### 内容与发布（本机优先）
 

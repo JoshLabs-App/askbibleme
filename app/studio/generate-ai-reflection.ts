@@ -87,7 +87,7 @@ function wantsEnglishPartnerVoice(input: string): boolean {
 }
 
 const ZH_DEEP_PRODUCT_ANCHOR = `
-再往深处对齐 Selah.my 的主线：不是在证明自己「懂圣经」或「料多」，而是让一个人更愿意、更安静、更习惯地回到经文本身。任何一个新入口，都要被放到这条轴上量——它是缩短还是拉长了从「打开」到「眼睛落在经文上」的路径？会不会把用户的心流从「读」悄悄换成「逛」「收藏」「看懂整个叙事」？
+再往深处对齐 AskBible.me 的主线：不是在证明自己「懂圣经」或「料多」，而是让一个人更愿意、更安静、更习惯地回到经文本身。任何一个新入口，都要被放到这条轴上量——它是缩短还是拉长了从「打开」到「眼睛落在经文上」的路径？会不会把用户的心流从「读」悄悄换成「逛」「收藏」「看懂整个叙事」？
 
 还有一层容易被低估的代价：心理预算。界面每多一个「看起来像目的地」的东西，用户就要多花一次决策成本；这笔账在首页最亏，因为你付不起他们第二次犹豫。宁可把野心拆进停车场或二级实验，也别在主叙事里用「万一有人要」站稳脚跟。
 
@@ -245,7 +245,7 @@ function pickMinimalDirectAnswer(input: string): string {
       );
     }
     return appendZhDeep(
-      "实现上先定边界：同步还是异步、失败怎么降级、数据存在哪。别一上来扩抽象层；能用一个路由 + 一种存储就别拆三套。工程上的「优雅」若让用户路径变长或故障面变大，就不算优雅——Selah.my 这类产品尤其怕隐性复杂度，因为它最终都会变成界面上的犹豫。",
+      "实现上先定边界：同步还是异步、失败怎么降级、数据存在哪。别一上来扩抽象层；能用一个路由 + 一种存储就别拆三套。工程上的「优雅」若让用户路径变长或故障面变大，就不算优雅——AskBible.me 这类产品尤其怕隐性复杂度，因为它最终都会变成界面上的犹豫。",
       "product",
     );
   }
@@ -257,7 +257,7 @@ function pickMinimalDirectAnswer(input: string): string {
       );
     }
     return appendZhDeep(
-      "好文案先删：删掉一半形容词，再删一半从句。读出声如果像内部汇报，就再砍；像对朋友一句提醒，多半就对了。在 Selah.my 语境里，还要多问一句：这句话是在帮用户把注意力放回经文，还是在帮团队把产品说得更体面——两者经常长得像，但目的相反。",
+      "好文案先删：删掉一半形容词，再删一半从句。读出声如果像内部汇报，就再砍；像对朋友一句提醒，多半就对了。在 AskBible.me 语境里，还要多问一句：这句话是在帮用户把注意力放回经文，还是在帮团队把产品说得更体面——两者经常长得像，但目的相反。",
       "product",
     );
   }
@@ -288,7 +288,7 @@ function pickMinimalDirectAnswer(input: string): string {
   if (wantsEnglishPartnerVoice(t)) {
     return (
       `On "${hint}": default stance is still off the main path. ` +
-      "Selah.my wins on quiet re-entry into Scripture—anything that feels like a new browsing layer stays small until one metric proves it deepens reading, not sightseeing.\n\n" +
+      "AskBible.me wins on quiet re-entry into Scripture—anything that feels like a new browsing layer stays small until one metric proves it deepens reading, not sightseeing.\n\n" +
       "If this is a real proposal, write one falsifiable user-behavior sentence (what they do in the first 30 seconds). If you cannot, it is not yet a product decision—only a mood."
     );
   }
@@ -314,7 +314,7 @@ function pickGatekeeperMinimal(input: string): string {
   const t = input.trim();
   if (wantsMapOnLanding(t)) {
     return appendZhDeep(
-      "危险。首页主放地图会把 Selah.my 推向工具化与探索平台：多看多找、少一句「今天继续读经」。认知负荷一上来，入口就被稀释。地图可以存在，但不该替用户回答「我今天从哪里开始」——那句话只能来自接续与经文本身，而不是来自「我在哪、附近有什么」。",
+      "危险。首页主放地图会把 AskBible.me 推向工具化与探索平台：多看多找、少一句「今天继续读经」。认知负荷一上来，入口就被稀释。地图可以存在，但不该替用户回答「我今天从哪里开始」——那句话只能来自接续与经文本身，而不是来自「我在哪、附近有什么」。",
       "gate",
     );
   }
@@ -412,7 +412,7 @@ function buildReflectivePartnerReply(
     const reason = [
       "这里说的「原因」不是替用户猜需求，而是把你 proposal 里隐性携带的产品身份写出来：它更像工具、百科、游戏化系统，还是更像安静的读经入口。身份问题不会自己消失，只会被 UI 的细节一次次确认。",
       `对「${excerpt}」这一类讨论，我特别在意它有没有偷偷把成功指标换成「停留时长」「使用频次」「地图点击」这一类容易被团队庆祝、却不等于在读经的指标。`,
-      "危险方向的意义，在于提前承认：有些东西在其他产品里可能是标配，但在 Selah.my 里可能是质地改变。把关不是扫兴，而是避免你们在第三年才意识到「这艘船早就不是去同一个港口」。",
+      "危险方向的意义，在于提前承认：有些东西在其他产品里可能是标配，但在 AskBible.me 里可能是质地改变。把关不是扫兴，而是避免你们在第三年才意识到「这艘船早就不是去同一个港口」。",
     ].join("\n\n");
 
     const advice = [

@@ -18,7 +18,7 @@ export function isTripleLoopPlanId(planId: string): boolean {
 export function getTripleLoopRegistryEntry(): ReadingPlanRegistryEntry {
   return {
     planId: TRIPLE_LOOP_PLAN_ID,
-    name: "三段式读经",
+    name: "新旧约循环读经计划",
     abbreviation: "3-track",
     description: "旧约、新约、智慧书三条独立循环；不按日历补读。",
     sourceUrl: "selah:triple-loop",

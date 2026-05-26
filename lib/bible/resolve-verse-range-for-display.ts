@@ -3,29 +3,12 @@ import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { loadChapterFromTranslation } from "@/lib/bible/load-chapter-from-default-translation";
 import { pickTranslationIdForLocale } from "@/lib/bible/pick-translation-for-locale";
 import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
-import { scriptureBooks } from "@/lib/bible/scripture-books";
-import { SCRIPTURE_BOOK_NAME_EN } from "@/lib/bible/scripture-book-names-en";
 import type { VerseRef } from "@/lib/bible/verse-ref";
+import { formatVerseRefFootnote } from "@/lib/bible/format-verse-ref-footnote";
+
+export { formatVerseRefFootnote } from "@/lib/bible/format-verse-ref-footnote";
 import { stripZhVerseDisplayNotes } from "@/lib/bible/strip-zh-verse-display-notes";
 import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
-
-function verseRangeSuffix(verseStart: number, verseEnd: number): string {
-  if (verseStart === verseEnd) return `${verseStart}`;
-  return `${verseStart}–${verseEnd}`;
-}
-
-export function formatVerseRefFootnote(ref: VerseRef, locale: AppLocale): string | null {
-  const bookId = String(ref.bookId || "").trim().toUpperCase();
-  const bookZh = scriptureBooks.find((b) => b.bookId === bookId);
-  if (!bookZh) return null;
-  const ch = ref.chapter;
-  const suffix = verseRangeSuffix(ref.verseStart, ref.verseEnd);
-  if (locale === "zh-CN") {
-    return `${bookZh.bookName} ${ch}:${suffix}`;
-  }
-  const enName = SCRIPTURE_BOOK_NAME_EN[bookId] ?? bookId;
-  return `${enName} ${ch}:${suffix}`;
-}
 
 /** 缺章 / 缺节 / 节内部分缺失时的策略（计划：统一在 resolver）。 */
 export type ResolveVerseRefWhenIncomplete = "skip" | "ref-only" | "partial-span";
@@ -38,6 +21,12 @@ export type ResolveVerseRefOptions = {
 /** 统计「有字形」长度，用于判断是否为孤行（标点不计）。 */
 function countZhContentChars(s: string): number {
   return s.replace(/[，。、；：！？「」『』""''\s\u3000]/g, "").length;
+}
+
+const SAME_AS_PREVIOUS_VERSE_RE = /^[\s]*[并並][于於]上[节節][。.]?[\s]*$/;
+
+function isSameAsPreviousVerseMarker(text: string): boolean {
+  return SAME_AS_PREVIOUS_VERSE_RE.test(text);
 }
 
 /**
@@ -149,6 +138,20 @@ export async function resolveVerseRefToHomeEntry(
     return { lines: [footRequested], ref: footRequested };
   }
 
+  const loadedVerseTextByVerse = new Map(loaded.verses.map((x) => [x.verse, x.text]));
+  const resolveDisplaySourceText = (verse: number, rawText: string): string => {
+    if (!isSameAsPreviousVerseMarker(rawText)) return rawText;
+    // 「并于上节」是占位文案，向前回溯到最近可展示正文。
+    for (let prev = verse - 1; prev >= 1; prev -= 1) {
+      const hit = loadedVerseTextByVerse.get(prev);
+      if (!hit) continue;
+      const t = hit.trim();
+      if (!t || isSameAsPreviousVerseMarker(t)) continue;
+      return hit;
+    }
+    return rawText;
+  };
+
   const verseBodyForSplit = (raw: string): string => {
     const t = raw.trim();
     if (!t) return "";
@@ -158,11 +161,11 @@ export async function resolveVerseRefToHomeEntry(
 
   const lines: string[] = [];
   if (picked.length === 1) {
-    const body = verseBodyForSplit(picked[0].text);
+    const body = verseBodyForSplit(resolveDisplaySourceText(picked[0].verse, picked[0].text));
     if (body) lines.push(...splitVerseTextToDisplayLines(body, locale));
   } else {
     for (const row of picked) {
-      const one = verseBodyForSplit(row.text);
+      const one = verseBodyForSplit(resolveDisplaySourceText(row.verse, row.text));
       if (one) lines.push(...splitVerseTextToDisplayLines(one, locale));
     }
   }
@@ -187,7 +190,9 @@ export async function resolveVerseRefToHomeEntry(
 
   const fallbackLine =
     normalizeVerseTextForHomeDisplay(
-      locale === "zh-CN" ? stripZhVerseDisplayNotes(picked[0].text) : picked[0].text.trim(),
-    ) || picked[0].text.trim();
+      locale === "zh-CN"
+        ? stripZhVerseDisplayNotes(resolveDisplaySourceText(picked[0].verse, picked[0].text))
+        : resolveDisplaySourceText(picked[0].verse, picked[0].text).trim(),
+    ) || resolveDisplaySourceText(picked[0].verse, picked[0].text).trim();
   return { lines: lines.length ? lines : [fallbackLine || picked[0].text.trim()], ref: foot };
 }

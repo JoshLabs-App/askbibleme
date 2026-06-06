@@ -42,12 +42,21 @@ async function main(): Promise<void> {
   for (const t of index.translations) {
     const abs = resolveTranslationAbsolutePath(cwd, t.id);
     const sqliteAbs = scriptureSqlitePath(cwd, t.id);
-    if (!fs.existsSync(abs)) {
-      if (fs.existsSync(sqliteAbs)) {
-        const bytes = fs.statSync(sqliteAbs).size;
-        console.error(`[build-bible-sqlite] ${t.id}: using committed sqlite (${bytes} bytes, no uploads JSON)`);
-        continue;
-      }
+    const forceRebuild = process.env.FORCE_BIBLE_SQLITE_REBUILD === "1";
+    const hasJson = fs.existsSync(abs);
+    const hasSqlite = fs.existsSync(sqliteAbs);
+    const jsonNewerThanSqlite =
+      hasJson &&
+      hasSqlite &&
+      fs.statSync(abs).mtimeMs > fs.statSync(sqliteAbs).mtimeMs;
+
+    if (hasSqlite && (!hasJson || (!forceRebuild && !jsonNewerThanSqlite))) {
+      const bytes = fs.statSync(sqliteAbs).size;
+      const reason = !hasJson ? "no uploads JSON" : "committed sqlite up to date";
+      console.error(`[build-bible-sqlite] ${t.id}: using committed sqlite (${bytes} bytes, ${reason})`);
+      continue;
+    }
+    if (!hasJson) {
       console.error(`[build-bible-sqlite] 缺少 JSON: ${abs}`);
       process.exit(1);
     }

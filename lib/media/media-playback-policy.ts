@@ -1,4 +1,16 @@
-import { isAskbibleOfficialTvClient } from "./tv-client";
+/** localStorage 键：官方电视 App 写入后，Web 端用 `normal` 媒体策略（背景视频 + 壳层音乐并存）。 */
+const ASKBIBLE_TV_CLIENT_STORAGE_KEY = "askbible_tv_client";
+const ASKBIBLE_TV_CLIENT_IDS = new Set(["lg-webos"]);
+
+function isAskbibleOfficialTvClient(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem(ASKBIBLE_TV_CLIENT_STORAGE_KEY);
+    return Boolean(raw && ASKBIBLE_TV_CLIENT_IDS.has(raw));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * - `normal`：手机/桌面/官方 TV App，背景静音视频与壳层音乐可同时存在。

@@ -146,10 +146,32 @@ export async function readReadBibleTranslationPrefs(
 ): Promise<ReadBibleTranslationPrefsV1> {
   try {
     const raw = await AsyncStorage.getItem(READ_BIBLE_TRANSLATION_STORAGE_KEY);
-    return parseReadBibleTranslationPrefs(raw, index, locale);
+    const mode = await readReadBibleTranslationPrefMode();
+    const parsed = parseReadBibleTranslationPrefs(raw, index, locale);
+    return resolveReadBibleTranslationPrefsForLocale(parsed, mode, index, locale);
   } catch {
-    return parseReadBibleTranslationPrefs(null, index, locale);
+    const mode = await readReadBibleTranslationPrefMode().catch((): ReadBibleTranslationPrefMode => "auto");
+    const parsed = parseReadBibleTranslationPrefs(null, index, locale);
+    return resolveReadBibleTranslationPrefsForLocale(parsed, mode, index, locale);
   }
+}
+
+/** auto 模式：主译本随 App 界面语言（zh-CN → 和合本；en → 英文译本等） */
+export function resolveReadBibleTranslationPrefsForLocale(
+  prefs: ReadBibleTranslationPrefsV1,
+  mode: ReadBibleTranslationPrefMode,
+  index: BibleTranslationsIndex,
+  locale?: AppLocale,
+): ReadBibleTranslationPrefsV1 {
+  if (mode !== "auto" || !locale) return prefs;
+  const localePrimary = resolveDefaultPrimaryTranslationId(index, locale);
+  if (prefs.primaryTranslationId === localePrimary) return prefs;
+  return {
+    ...prefs,
+    primaryTranslationId: localePrimary,
+    contrastTranslationIds: prefs.contrastTranslationIds.filter((id) => id !== localePrimary),
+    audioTranslationId: null,
+  };
 }
 
 export async function hasReadBibleTranslationPrefsStored(): Promise<boolean> {

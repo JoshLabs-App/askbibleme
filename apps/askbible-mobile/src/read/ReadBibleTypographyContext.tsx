@@ -9,9 +9,11 @@ import {
   type ReactNode,
 } from "react";
 import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { inferAppLocaleFromDevice } from "../i18n/config";
 import {
   getLocale,
   hydrateLocaleFromStorage,
+  subscribeLocale,
 } from "../i18n/locale-store";
 import { readCuvChapterAudioVoice, subscribeCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
@@ -40,6 +42,7 @@ import {
   type ReadBibleTranslationPrefsV1,
 } from "./read-bible-translation-prefs";
 import {
+  defaultHomePrimaryTranslationIdForLocale,
   readHomePrayerVersePrefs,
   writeHomePrayerVersePrefs,
 } from "../home/homePrayerVersePrefs";
@@ -85,7 +88,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     version: 1,
     primaryTranslationId: resolveDefaultPrimaryTranslationId(
       { translations: [], defaultTranslationId: null },
-      getLocale(),
+      inferAppLocaleFromDevice(),
     ),
     contrastTranslationIds: [],
     audioTranslationId: null,
@@ -104,21 +107,34 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   );
 
   const syncHomeVersePrefsFromPrimary = useCallback(
-    async (primaryId: string) => {
+    async (primaryId: string, opts?: { mode?: "auto" | "manual" }) => {
       const tr = translationIndex.translations.find((item) => item.id === primaryId);
       const isEnglish = /^en\b/i.test(tr?.language ?? "");
       const home = await readHomePrayerVersePrefs();
-      if (isEnglish) {
-        if (home.verseTextEnTranslationId === primaryId) return;
+      const mode = opts?.mode ?? home.primaryTranslationMode;
+      if (mode === "auto") {
+        const locale = getLocale();
         await writeHomePrayerVersePrefs({
           ...home,
+          primaryTranslationMode: "auto",
+          verseTextZhTranslationId: defaultHomePrimaryTranslationIdForLocale(locale),
+          verseTextEnTranslationId: "",
+        });
+        return;
+      }
+      if (isEnglish) {
+        if (home.verseTextEnTranslationId === primaryId && home.primaryTranslationMode === "manual") return;
+        await writeHomePrayerVersePrefs({
+          ...home,
+          primaryTranslationMode: "manual",
           verseTextEnTranslationId: primaryId,
         });
         return;
       }
-      if (home.verseTextZhTranslationId === primaryId) return;
+      if (home.verseTextZhTranslationId === primaryId && home.primaryTranslationMode === "manual") return;
       await writeHomePrayerVersePrefs({
         ...home,
+        primaryTranslationMode: "manual",
         verseTextZhTranslationId: primaryId,
       });
     },
@@ -133,6 +149,17 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     if (!translationCatalogReady) return;
     void readReadBibleTranslationPrefs(translationIndex, getLocale()).then(setTranslation);
   }, [translationCatalogReady, translationIndex]);
+
+  const syncAutoTranslationForLocale = useCallback(async () => {
+    if (!translationCatalogReady) return;
+    const locale = getLocale();
+    const mode = await readReadBibleTranslationPrefMode();
+    if (mode !== "auto") return;
+    const prefs = await readReadBibleTranslationPrefs(translationIndex, locale);
+    const normalized = await writeReadBibleTranslationPrefs(prefs, translationIndex);
+    await syncHomeVersePrefsFromPrimary(normalized.primaryTranslationId, { mode: "auto" });
+    setTranslation(normalized);
+  }, [translationCatalogReady, translationIndex, syncHomeVersePrefsFromPrimary]);
 
   useEffect(() => {
     void readReadBibleTypographyPrefs().then(setTypography);
@@ -162,15 +189,14 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
           },
           index,
         );
-        // 首次安装后即冻结当前默认，避免后续随系统语言变化而切换。
-        await writeReadBibleTranslationPrefMode("manual");
+        await writeReadBibleTranslationPrefMode("auto");
+        await syncHomeVersePrefsFromPrimary(normalized.primaryTranslationId, { mode: "auto" });
       } else {
-        const mode = await readReadBibleTranslationPrefMode();
         const prefs = await readReadBibleTranslationPrefs(index, locale);
         normalized = await writeReadBibleTranslationPrefs(prefs, index);
-        // 兼容旧数据：若历史上保留 auto，首次进入时转为 manual（只保留首启自动一次）。
+        const mode = await readReadBibleTranslationPrefMode();
         if (mode === "auto") {
-          await writeReadBibleTranslationPrefMode("manual");
+          await syncHomeVersePrefsFromPrimary(normalized.primaryTranslationId, { mode: "auto" });
         }
       }
       if (!cancelled) {
@@ -186,6 +212,13 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   useEffect(() => {
     return subscribeReadBibleTranslation(refreshTranslation);
   }, [refreshTranslation]);
+
+  useEffect(() => {
+    if (!translationCatalogReady) return;
+    return subscribeLocale(() => {
+      void syncAutoTranslationForLocale();
+    });
+  }, [translationCatalogReady, syncAutoTranslationForLocale]);
 
   const px = useMemo(() => readBibleTypographyPx(typography.size), [typography.size]);
   const sizeAtMin = readBibleSizeAtMin(typography.size);
@@ -246,6 +279,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
 
   const setPrimaryTranslationId = useCallback(
     async (id: string) => {
+      await writeReadBibleTranslationPrefMode("manual");
       const next = await writeReadBibleTranslationPrefs(
         {
           ...translation,
@@ -256,7 +290,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
         },
         translationIndex,
       );
-      await syncHomeVersePrefsFromPrimary(next.primaryTranslationId);
+      await syncHomeVersePrefsFromPrimary(next.primaryTranslationId, { mode: "manual" });
       setTranslation(next);
     },
     [translation, translationIndex, syncHomeVersePrefsFromPrimary],

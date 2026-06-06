@@ -43,8 +43,9 @@ export function pickTranslationIdForLocale(
     );
   }
   return (
+    firstMatch(index, (id) => id === "web-en") ??
     firstMatch(index, (id) => id === "kjv") ??
-    firstMatch(index, (id, lang) => lang === "en" || id === "otb-en-gb" || id === "web-en") ??
+    firstMatch(index, (id, lang) => lang === "en" || id === "otb-en-gb") ??
     firstMatch(index, (id, lang) => id === "bbe-en") ??
     firstMatch(index, (_id, lang) => lang.startsWith("en")) ??
     index.defaultTranslationId

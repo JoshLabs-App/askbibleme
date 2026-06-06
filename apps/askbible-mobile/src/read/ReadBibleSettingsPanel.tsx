@@ -35,6 +35,12 @@ import {
   subscribeAudioPackageDownload,
 } from "./read-audio-package-download";
 import { trackTap } from "../telemetry/tap";
+import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
+import {
+  ensureScriptureTranslationReady,
+  readScriptureTranslationDownloadState,
+  subscribeScriptureTranslationDownload,
+} from "../bible/scripture-translation-download";
 
 type Props = {
   visible: boolean;
@@ -201,6 +207,9 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   const { playing, togglePlayScripture, playbackMode } = useMusicPlayback();
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [downloadState, setDownloadState] = useState(() => readAudioPackageDownloadState());
+  const [translationDownloadState, setTranslationDownloadState] = useState(() =>
+    readScriptureTranslationDownloadState(),
+  );
   const [contrastDraftIds, setContrastDraftIds] = useState<string[]>(contrastTranslationIds);
   const localeZhText = useCallback(
     (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text),
@@ -222,12 +231,46 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     });
   }, []);
 
+  useEffect(() => {
+    return subscribeScriptureTranslationDownload(() => {
+      setTranslationDownloadState(readScriptureTranslationDownloadState());
+    });
+  }, []);
+
+  const ensureTranslationDownloaded = useCallback(
+    async (translationId: string) => {
+      const meta = translationMetaFromCatalog(
+        { translations: translationCatalog, defaultTranslationId: null },
+        translationId,
+      );
+      await ensureScriptureTranslationReady(translationId, meta?.downloadUrl);
+    },
+    [translationCatalog],
+  );
+
   const primaryOptions = useMemo((): ReadSettingsSelectOption[] => {
+    const downloadingId =
+      translationDownloadState.status === "running" ? translationDownloadState.translationId : null;
     return sortPickerTranslations(translationCatalog).map((tr) => {
       const label = translationOptionLabel(tr, locale);
-      return { id: tr.id, label, shortLabel: shortLabel(tr.id, locale, label) };
+      const needsDownload = tr.bundled === false;
+      const suffix =
+        downloadingId === tr.id
+          ? locale === "en"
+            ? ` (${translationDownloadState.percent}%)`
+            : ` (${translationDownloadState.percent}%)`
+          : needsDownload
+            ? locale === "en"
+              ? " ↓"
+              : " ↓"
+            : "";
+      return {
+        id: tr.id,
+        label: `${label}${suffix}`,
+        shortLabel: shortLabel(tr.id, locale, label),
+      };
     });
-  }, [translationCatalog, locale]);
+  }, [translationCatalog, locale, translationDownloadState]);
 
   const contrastOptions = useMemo((): ReadSettingsSelectOption[] => {
     const all = sortPickerTranslations(
@@ -332,9 +375,17 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
         setOpenMenu(null);
         return;
       }
-      void setPrimaryTranslationId(id).then(() => setOpenMenu(null));
+      void (async () => {
+        try {
+          await ensureTranslationDownloaded(id);
+          await setPrimaryTranslationId(id);
+          setOpenMenu(null);
+        } catch {
+          /* download state surfaced via translationDownloadState */
+        }
+      })();
     },
-    [primaryTranslationId, setPrimaryTranslationId],
+    [primaryTranslationId, setPrimaryTranslationId, ensureTranslationDownloaded],
   );
 
   const onContrastToggleSelect = useCallback(
@@ -343,12 +394,28 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
       if (!tid) return;
       setContrastDraftIds((prev) => {
         const exists = prev.includes(tid);
-        const next = exists ? prev.filter((item) => item !== tid) : [...prev, tid];
-        void setContrastTranslationIds(next);
-        return next;
+        if (exists) {
+          const next = prev.filter((item) => item !== tid);
+          void setContrastTranslationIds(next);
+          return next;
+        }
+        void (async () => {
+          try {
+            await ensureTranslationDownloaded(tid);
+            setContrastDraftIds((current) => {
+              if (current.includes(tid)) return current;
+              const next = [...current, tid];
+              void setContrastTranslationIds(next);
+              return next;
+            });
+          } catch {
+            /* ignore */
+          }
+        })();
+        return prev;
       });
     },
-    [setContrastTranslationIds],
+    [setContrastTranslationIds, ensureTranslationDownloaded],
   );
 
   const onChapterAudioPlaybackSelect = useCallback(

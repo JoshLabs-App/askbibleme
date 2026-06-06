@@ -1,4 +1,4 @@
-import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
+import { isScriptureTranslationInstalled } from "./scripture-database";
 import { getScriptureBookDisplayName } from "./scripture-book-display-name";
 import { scriptureBooks } from "./scripture-books";
 import { getScriptureDatabase, retryScriptureDatabaseOnPrepareError } from "./scripture-database";
@@ -85,7 +85,7 @@ export async function loadChapterFromBundledTranslation(
   },
 ): Promise<LoadedChapter | null> {
   const tid = String(translationId || "").trim();
-  if (!isBundledScriptureTranslation(tid)) {
+  if (!(await isScriptureTranslationInstalled(tid))) {
     return null;
   }
 

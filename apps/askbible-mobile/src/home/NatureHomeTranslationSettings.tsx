@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { bundledBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
 import type { BibleTranslationMeta } from "../bible/translations-types";
 import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
@@ -86,8 +86,18 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
   const [prefs, setPrefs] = useState<HomePrayerVersePrefsV1>(DEFAULT_HOME_PRAYER_PREFS);
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
 
-  const catalog = useMemo(() => bundledBibleTranslationsCatalog().translations, []);
+  const [catalog, setCatalog] = useState<BibleTranslationMeta[]>([]);
   const contrastOffLabel = t("pages.read.typography.contrastNone");
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchBibleTranslationsCatalog().then((index) => {
+      if (!cancelled) setCatalog(index.translations);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

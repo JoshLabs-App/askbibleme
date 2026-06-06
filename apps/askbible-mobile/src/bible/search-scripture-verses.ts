@@ -1,5 +1,4 @@
-import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
-import { retryScriptureDatabaseOnPrepareError } from "./scripture-database";
+import { isScriptureTranslationInstalled, retryScriptureDatabaseOnPrepareError } from "./scripture-database";
 import {
   escapeSqliteLikePattern,
   hitsFromRows,
@@ -34,8 +33,8 @@ export async function searchScriptureVersesMobile(
 ): Promise<ScriptureSearchHit[]> {
   const tid = String(translationId || "").trim();
   if (!tid) return [];
-  if (!isBundledScriptureTranslation(tid)) {
-    throw new Error(`译本未内置：${tid}`);
+  if (!(await isScriptureTranslationInstalled(tid))) {
+    throw new Error(`译本未下载：${tid}`);
   }
 
   const q = normalizeScriptureSearchQuery(query);

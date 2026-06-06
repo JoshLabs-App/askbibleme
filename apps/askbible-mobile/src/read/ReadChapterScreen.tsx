@@ -21,6 +21,8 @@ import {
   copyTextToClipboard,
 } from "../bible/copy-scripture-verse-clipboard";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
+import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { ensureScriptureTranslationReady } from "../bible/scripture-translation-download";
 import { loadBundledChapterSegments } from "../bible/bundled-chapter-segments";
 import { loadChapterXrefs } from "../bible/load-chapter-xrefs";
 import type { ScriptureVerseXrefs } from "../bible/scripture-xref-types";
@@ -337,6 +339,21 @@ export function ReadChapterScreen() {
         labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
         labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
       };
+
+      const catalogIndex = {
+        translations: translationCatalog,
+        defaultTranslationId: null as string | null,
+      };
+      await ensureScriptureTranslationReady(
+        primaryTranslationId,
+        translationMetaFromCatalog(catalogIndex, primaryTranslationId)?.downloadUrl,
+      );
+      for (const meta of contrastMetas) {
+        await ensureScriptureTranslationReady(
+          meta.id,
+          translationMetaFromCatalog(catalogIndex, meta.id)?.downloadUrl,
+        );
+      }
 
       const loaded = await loadChapterFromBundledTranslation(
         bookId,

@@ -33,6 +33,10 @@ function dbFileName(translationId: string): string {
   return `${normalized}.sqlite`;
 }
 
+export function getScriptureDatabaseDestPath(translationId: string): string {
+  return `${FileSystem.documentDirectory}SQLite/${dbFileName(translationId)}`;
+}
+
 function schemaVersionPath(dest: string): string {
   return `${dest}.schema-version`;
 }
@@ -54,6 +58,21 @@ async function writeInstalledSchemaVersion(dest: string, version: number): Promi
   await FileSystem.writeAsStringAsync(schemaVersionPath(dest), String(version));
 }
 
+export async function markScriptureDatabaseInstalled(dest: string): Promise<void> {
+  await writeInstalledSchemaVersion(dest, SCRIPTURE_SQLITE_SCHEMA_VERSION);
+}
+
+export async function isScriptureTranslationInstalled(translationId: string): Promise<boolean> {
+  const id = String(translationId || "").trim();
+  if (!id) return false;
+  if (isBundledScriptureTranslation(id)) return true;
+  const dest = getScriptureDatabaseDestPath(id);
+  const info = await FileSystem.getInfoAsync(dest);
+  if (!info.exists || typeof info.size !== "number" || info.size <= 0) return false;
+  const installedVer = await readInstalledSchemaVersion(dest);
+  return installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION;
+}
+
 function clearOpenPromise(translationId: string): void {
   openPromises.delete(translationId);
 }
@@ -69,7 +88,8 @@ async function closeOpenedDatabase(translationId: string): Promise<void> {
   }
 }
 
-async function removeInstalledDatabase(dest: string, translationId: string): Promise<void> {
+export async function removeScriptureDatabaseFiles(translationId: string): Promise<void> {
+  const dest = getScriptureDatabaseDestPath(translationId);
   await closeOpenedDatabase(translationId);
   clearOpenPromise(translationId);
   try {
@@ -79,6 +99,10 @@ async function removeInstalledDatabase(dest: string, translationId: string): Pro
   }
   await FileSystem.deleteAsync(dest, { idempotent: true });
   await FileSystem.deleteAsync(schemaVersionPath(dest), { idempotent: true });
+}
+
+async function removeInstalledDatabase(dest: string, translationId: string): Promise<void> {
+  await removeScriptureDatabaseFiles(translationId);
 }
 
 async function bundledAssetByteSize(assetModule: number): Promise<number> {
@@ -106,13 +130,24 @@ async function copyBundledDatabaseToDisk(
   await writeInstalledSchemaVersion(dest, SCRIPTURE_SQLITE_SCHEMA_VERSION);
 }
 
+async function ensureDownloadedDatabaseOnDisk(translationId: string): Promise<void> {
+  const dest = getScriptureDatabaseDestPath(translationId);
+  const info = await FileSystem.getInfoAsync(dest);
+  const installedVer = info.exists ? await readInstalledSchemaVersion(dest) : null;
+  const destSize = info.exists && typeof info.size === "number" ? info.size : 0;
+  if (info.exists && installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION && destSize > 0) {
+    return;
+  }
+  throw new Error(`译本未下载：${translationId}`);
+}
+
 async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void> {
   const assetModule = getBundledScriptureAssetModule(translationId);
   if (assetModule == null) {
     throw new Error(`译本未内置：${translationId}`);
   }
 
-  const dest = `${FileSystem.documentDirectory}SQLite/${dbFileName(translationId)}`;
+  const dest = getScriptureDatabaseDestPath(translationId);
   const legacyName = `${translationId}.sqlite`;
   const legacyDest = `${FileSystem.documentDirectory}SQLite/${legacyName}`;
   if (legacyName !== dbFileName(translationId)) {
@@ -149,19 +184,24 @@ async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void>
   await copyBundledDatabaseToDisk(translationId, dest, assetModule);
 }
 
-/** 打开指定译本 SQLite；首次或 schema 升级时从 assets 复制到应用文档目录。 */
+/** 打开指定译本 SQLite；内置译本从 assets 复制，其余须已下载到文档目录。 */
 export async function getScriptureDatabase(
   translationId: string = DEFAULT_SCRIPTURE_TRANSLATION_ID,
 ): Promise<SQLite.SQLiteDatabase> {
   const id = String(translationId || "").trim();
-  if (!isBundledScriptureTranslation(id)) {
-    throw new Error(`译本未内置：${id}`);
+  const bundled = isBundledScriptureTranslation(id);
+  if (!bundled && !(await isScriptureTranslationInstalled(id))) {
+    throw new Error(`译本未下载：${id}`);
   }
 
   let openPromise = openPromises.get(id);
   if (!openPromise) {
     openPromise = (async () => {
-      await ensureBundledDatabaseOnDisk(id);
+      if (bundled) {
+        await ensureBundledDatabaseOnDisk(id);
+      } else {
+        await ensureDownloadedDatabaseOnDisk(id);
+      }
       const db = await SQLite.openDatabaseAsync(dbFileName(id));
       openDatabases.set(id, db);
       return db;
@@ -202,10 +242,14 @@ export async function retryScriptureDatabaseOnPrepareError<T>(
         return await run(reopened);
       } catch (err2) {
         if (!isNativeDatabaseRejectedError(err2)) throw err2;
-        const dest = `${FileSystem.documentDirectory}SQLite/${dbFileName(id)}`;
-        // 二次失败再执行完整重建（删库并从 assets 重拷贝）。
+        const dest = getScriptureDatabaseDestPath(id);
+        // 二次失败再执行完整重建（内置译本删库并从 assets 重拷贝）。
         await removeInstalledDatabase(dest, id);
-        await ensureBundledDatabaseOnDisk(id);
+        if (isBundledScriptureTranslation(id)) {
+          await ensureBundledDatabaseOnDisk(id);
+        } else {
+          throw err2;
+        }
         const rebuilt = await getScriptureDatabase(id);
         return run(rebuilt);
       }

@@ -20,7 +20,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchNatureSettings, getBundledNatureSettings } from "../api/fetchNatureSettings";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { parchmentSans } from "../fonts/parchmentType";
-import { getNatureMediaBaseUrl } from "../bible/chapter-audio-url";
+import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
+import { ensureNatureResourcePackSync } from "../media/natureResourcePackSync";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { resolveLocalizedField, t, toZhTwText } from "../i18n/site-copy";
 import type { AppLocale } from "../i18n/config";
@@ -153,7 +154,7 @@ export function HomeNatureScreen() {
   const naturePackRev = useNatureResourcePackSync();
   const insets = useSafeAreaInsets();
   const sceneStripSwipeExclude = useShellSwipeExcludeHandlers();
-  const baseUrl = getNatureMediaBaseUrl();
+  const baseUrl = getNatureRemoteAssetBaseUrl();
   const { width: winW, height: winH } = useWindowDimensions();
   const isLandscape = winW > winH;
   const landscapeNarrow = useLandscapeNarrow();
@@ -179,6 +180,10 @@ export function HomeNatureScreen() {
       void configureShellAudioMode();
     }, []),
   );
+
+  useEffect(() => {
+    void ensureNatureResourcePackSync();
+  }, []);
 
   const [loading, setLoading] = useState(() => !bootWithBundled || bundledOnBoot.videos.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -1012,9 +1017,8 @@ export function HomeNatureScreen() {
   const renderSceneThumb = (item: NatureVideoEntry) => {
     const selected = !loopAllScenesEnabled && item.id === sceneId;
     const thumbModule = resolveNaturePosterPlaybackModule(item.id);
-    const thumbRemote = item.thumbSrc?.trim()
-      ? toAbsoluteUrl(baseUrl, item.thumbSrc.trim())
-      : "";
+    const posterRel = (item.previewFrameSrc || item.thumbSrc)?.trim() ?? "";
+    const thumbRemote = posterRel ? toAbsoluteUrl(baseUrl, posterRel) : "";
     const thumbUri = resolveNaturePosterPlaybackUri(item.id, thumbRemote) || thumbRemote;
     const onPick = () =>
       showLandscapeVideo && landscapeScenePickerOpen

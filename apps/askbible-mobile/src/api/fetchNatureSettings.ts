@@ -1,8 +1,12 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { NatureSettingsV2 } from "../types/nature";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { fetchWithTimeout } from "./fetchWithTimeout";
 import { readSyncedNatureSettings } from "../media/natureResourcePackSync";
 
 const bundledRaw = require("../../assets/content/nature-settings.json") as NatureSettingsV2;
+const NATURE_SETTINGS_CACHE_KEY = "askbible-nature-settings-cache-v1";
+const NATURE_SETTINGS_CACHE_TTL_MS = 60_000;
 
 function normalizeNatureSettings(raw: NatureSettingsV2): NatureSettingsV2 {
   return {
@@ -16,6 +20,30 @@ function normalizeNatureSettings(raw: NatureSettingsV2): NatureSettingsV2 {
 }
 
 const bundledSettings = normalizeNatureSettings(bundledRaw);
+
+function isNatureSettingsShape(raw: unknown): raw is NatureSettingsV2 {
+  if (!raw || typeof raw !== "object") return false;
+  const o = raw as Record<string, unknown>;
+  return Array.isArray(o.videos);
+}
+
+function isLocalLikeHostFromBase(base: string): boolean {
+  try {
+    const u = new URL(base);
+    const h = u.hostname.trim().toLowerCase();
+    if (!h) return true;
+    if (h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return true;
+    if (h.startsWith("10.") || h.startsWith("192.168.")) return true;
+    const m = h.match(/^172\.(\d+)\./);
+    if (m) {
+      const octet = Number(m[1]);
+      if (Number.isFinite(octet) && octet >= 16 && octet <= 31) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 function mediaFingerprint(row: {
   src?: string;
@@ -54,7 +82,8 @@ function pickBundledMatch(
   return bucket.find((row) => !usedBundledIds.has(row.id)) ?? null;
 }
 
-function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettingsV2 {
+/** Web 场景列表为真源；APK 内置仅用于已有媒体的本地路径回退。 */
+export function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettingsV2 {
   const bundledById = new Map(bundledSettings.videos.map((row) => [row.id, row]));
   const bundledByFingerprint = new Map<string, NatureSettingsV2["videos"][number][]>();
   for (const row of bundledSettings.videos) {
@@ -67,7 +96,7 @@ function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettin
 
   const usedBundledIds = new Set<string>();
 
-  const mergedOrdered = remote.videos
+  const videos = remote.videos
     .map((row) => {
       const bundled = pickBundledMatch(
         row,
@@ -75,14 +104,14 @@ function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettin
         bundledByFingerprint,
         usedBundledIds,
       );
-      if (!bundled) return null;
+      if (!bundled) {
+        return row;
+      }
       usedBundledIds.add(bundled.id);
       return {
         ...bundled,
         ...row,
-        // 保留 bundled id，确保本地资源解析与已存偏好稳定
         id: bundled.id,
-        // bundled 包中保持本地可用的媒体路径；后台顺序/标题/分类等仍可覆盖
         src: bundled.src,
         src1080: bundled.src1080,
         src4k: bundled.src4k,
@@ -90,10 +119,8 @@ function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettin
     })
     .filter((row): row is NonNullable<typeof row> => row != null);
 
-  // 只展示后台仍存在的场景；不要把已被后台删除的 bundled 尾项再补回前台。
-  const videos = mergedOrdered;
-
-  const remoteActiveRow = remote.videos.find((row) => row.id === remote.activeVideoId);
+  const remoteActive = remote.activeVideoId?.trim() ?? "";
+  const remoteActiveRow = remote.videos.find((row) => row.id === remoteActive);
   const activeMappedBundledId =
     remoteActiveRow
       ? pickBundledMatch(
@@ -105,6 +132,7 @@ function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettin
       : "";
 
   const activeVideoId =
+    (remoteActive && videos.some((v) => v.id === remoteActive) ? remoteActive : "") ||
     (activeMappedBundledId && videos.some((v) => v.id === activeMappedBundledId)
       ? activeMappedBundledId
       : "") ||
@@ -114,7 +142,10 @@ function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): NatureSettin
     (videos[0]?.id ?? "");
 
   return {
-    ...bundledSettings,
+    ...remote,
+    version: remote.version ?? bundledSettings.version,
+    ambientClips:
+      remote.ambientClips.length > 0 ? remote.ambientClips : bundledSettings.ambientClips,
     videos,
     activeVideoId,
     playbackRate: remote.playbackRate ?? bundledSettings.playbackRate,
@@ -126,20 +157,80 @@ export function getBundledNatureSettings(): NatureSettingsV2 {
   return bundledSettings;
 }
 
+type CachedNatureSettings = {
+  fetchedAt: number;
+  settings: NatureSettingsV2;
+};
+
+async function readCachedNatureSettings(): Promise<NatureSettingsV2 | null> {
+  try {
+    const raw = await AsyncStorage.getItem(NATURE_SETTINGS_CACHE_KEY);
+    if (!raw?.trim()) return null;
+    const parsed = JSON.parse(raw) as Partial<CachedNatureSettings>;
+    if (!parsed.settings || !isNatureSettingsShape(parsed.settings)) return null;
+    const age = Date.now() - (typeof parsed.fetchedAt === "number" ? parsed.fetchedAt : 0);
+    if (age > NATURE_SETTINGS_CACHE_TTL_MS) return null;
+    return normalizeNatureSettings(parsed.settings);
+  } catch {
+    return null;
+  }
+}
+
+async function writeCachedNatureSettings(settings: NatureSettingsV2): Promise<void> {
+  try {
+    const payload: CachedNatureSettings = { fetchedAt: Date.now(), settings };
+    await AsyncStorage.setItem(NATURE_SETTINGS_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 从 askbible.me（或联调本机）拉取 Web 真源场景配置。 */
+export async function fetchNatureSettingsFromRemote(): Promise<NatureSettingsV2 | null> {
+  const primaryBase = getAskBibleBaseUrl().replace(/\/$/, "");
+  const candidates = [primaryBase];
+  if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {
+    candidates.push("https://askbible.me");
+  }
+
+  for (const base of candidates) {
+    try {
+      const res = await fetchWithTimeout(`${base}/api/nature/settings`, {
+        headers: { Accept: "application/json" },
+        timeoutMs: 5000,
+      });
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!res.ok || !contentType.includes("application/json")) continue;
+      const data = normalizeNatureSettings((await res.json()) as NatureSettingsV2);
+      if (data.videos.length > 0) return data;
+    } catch {
+      /* 离线或本机未启动时继续尝试下一候选 */
+    }
+  }
+  return null;
+}
+
 export async function fetchNatureSettings(): Promise<NatureSettingsV2> {
-  if (isMobileBundledOnly()) return bundledSettings;
+  const remote = await fetchNatureSettingsFromRemote();
+  if (remote) {
+    const merged = mergeBundledScenesByRemoteOrder(remote);
+    await writeCachedNatureSettings(remote);
+    return merged;
+  }
 
   try {
     const localPack = await readSyncedNatureSettings();
-    if (!localPack) return bundledSettings;
-    const localSettings = normalizeNatureSettings(localPack);
-    if (!localSettings.videos.length) return bundledSettings;
-    // 本地已下载包若比内置更旧（例如历史缓存），优先使用内置，避免“新场景被旧包覆盖”。
-    if (localSettings.videos.length < bundledSettings.videos.length) {
-      return bundledSettings;
+    if (localPack?.videos?.length) {
+      return mergeBundledScenesByRemoteOrder(normalizeNatureSettings(localPack));
     }
-    return mergeBundledScenesByRemoteOrder(localSettings);
   } catch {
-    return bundledSettings;
+    /* ignore */
   }
+
+  const cached = await readCachedNatureSettings();
+  if (cached?.videos.length) {
+    return mergeBundledScenesByRemoteOrder(cached);
+  }
+
+  return bundledSettings;
 }

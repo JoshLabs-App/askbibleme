@@ -34,12 +34,14 @@ export function getChapterAudioBaseUrl(): string {
 }
 
 /**
- * 自然场景视频/海报：纯本地包仅用 require 资源，不拼 askbible.me。
+ * 自然场景静态资源（缩略图、资源包下载）的站点根 URL。
+ * 成片播放仍只走 APK / 已下载包（见 `resolveNatureCoverPlayback`），此处仅用于拼路径与拉取更新包。
  */
+export function getNatureRemoteAssetBaseUrl(): string {
+  return getAskBibleBaseUrl().replace(/\/$/, "");
+}
+
+/** @deprecated 使用 `getNatureRemoteAssetBaseUrl` */
 export function getNatureMediaBaseUrl(): string {
-  if (isMobileBundledOnly()) return "";
-  const base = getAskBibleBaseUrl().replace(/\/$/, "");
-  if (isTrustedSelfHostedChapterAudioBase(base)) return base;
-  if (__DEV__) return base;
-  return "";
+  return getNatureRemoteAssetBaseUrl();
 }

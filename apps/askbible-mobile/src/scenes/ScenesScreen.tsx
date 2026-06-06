@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchNatureSettings } from "../api/fetchNatureSettings";
-import { getNatureMediaBaseUrl } from "../bible/chapter-audio-url";
+import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { resolveLocalizedField, t } from "../i18n/site-copy";
 import {
@@ -29,6 +29,7 @@ import {
   resolveNaturePosterPlaybackModule,
   resolveNaturePosterPlaybackUri,
 } from "../media/bundledNatureMedia";
+import { ensureNatureResourcePackSync } from "../media/natureResourcePackSync";
 import { useNatureResourcePackSync } from "../media/useNatureResourcePackSync";
 import {
   bumpNatureSceneUsage,
@@ -48,7 +49,7 @@ function sceneTitleText(raw: NatureVideoEntry["title"]): string {
 
 export function ScenesScreen() {
   const naturePackRev = useNatureResourcePackSync();
-  const baseUrl = getNatureMediaBaseUrl();
+  const baseUrl = getNatureRemoteAssetBaseUrl();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
@@ -75,6 +76,10 @@ export function ScenesScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    void ensureNatureResourcePackSync();
+  }, []);
 
   useEffect(() => {
     if (naturePackRev <= 0) return;
@@ -129,7 +134,8 @@ export function ScenesScreen() {
               {videos.map((v) => {
                 const selected = v.id === activeId;
                 const thumbModule = resolveNaturePosterPlaybackModule(v.id);
-                const thumbRemote = v.thumbSrc?.trim() ? toAbsoluteUrl(baseUrl, v.thumbSrc.trim()) : "";
+                const posterRel = (v.previewFrameSrc || v.thumbSrc)?.trim() ?? "";
+                const thumbRemote = posterRel ? toAbsoluteUrl(baseUrl, posterRel) : "";
                 const thumbUri = resolveNaturePosterPlaybackUri(v.id, thumbRemote) || thumbRemote;
                 const label = sceneTitleText(v.title);
                 return (

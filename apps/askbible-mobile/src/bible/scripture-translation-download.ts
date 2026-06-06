@@ -6,6 +6,7 @@ import {
   isScriptureTranslationInstalled,
   markScriptureDatabaseInstalled,
   removeScriptureDatabaseFiles,
+  writeRemoteScriptureBytesMarker,
 } from "./scripture-database";
 
 export type ScriptureTranslationDownloadStatus = "idle" | "running" | "done" | "error";
@@ -60,15 +61,17 @@ function buildDownloadUrl(translationId: string, downloadUrl?: string | null): s
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-/** 下载非内置译本 SQLite 到设备文档目录。 */
+/** 下载译本 SQLite 到设备文档目录；`force` 用于 OTA 覆盖已有文件。 */
 export async function downloadScriptureTranslation(
   translationId: string,
   downloadUrl?: string | null,
+  options?: { force?: boolean },
 ): Promise<void> {
   const id = String(translationId || "").trim();
   if (!id) throw new Error("译本 id 无效");
-  if (isBundledScriptureTranslation(id)) return;
-  if (await isScriptureTranslationInstalled(id)) return;
+  const force = Boolean(options?.force);
+  if (!force && isBundledScriptureTranslation(id)) return;
+  if (!force && (await isScriptureTranslationInstalled(id))) return;
 
   if (state.status === "running" && state.translationId === id) {
     return;
@@ -113,6 +116,10 @@ export async function downloadScriptureTranslation(
     await removeScriptureDatabaseFiles(id);
     await FileSystem.moveAsync({ from: tmp, to: dest });
     await markScriptureDatabaseInstalled(dest);
+    const installedInfo = await FileSystem.getInfoAsync(dest);
+    if (installedInfo.exists && typeof installedInfo.size === "number" && installedInfo.size > 0) {
+      await writeRemoteScriptureBytesMarker(dest, installedInfo.size);
+    }
     setState({ translationId: id, status: "done", percent: 100, error: null });
   } catch (e) {
     activeDownload = null;

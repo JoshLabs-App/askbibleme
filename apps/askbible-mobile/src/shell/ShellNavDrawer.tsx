@@ -45,9 +45,13 @@ import {
   type NatureHomeTtsLevel,
 } from "../home/natureHomePrefs";
 import {
-  checkNatureResourcePackUpdate,
-  ensureNatureResourcePackSync,
-} from "../media/natureResourcePackSync";
+  checkMobileResourceUpdates,
+  readMobileResourceUpdateState,
+  subscribeMobileResourceUpdate,
+  type MobileResourceUpdateItem,
+} from "../updates/mobileResourceUpdate";
+import { ResourceUpdateSheet } from "../updates/ResourceUpdateSheet";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import {
   fetchMobileContentManifest,
   type MobileContentManifestAnnouncement,
@@ -219,8 +223,10 @@ export function ShellNavDrawer() {
   const [ttsVoices, setTtsVoices] = useState<DeviceVoice[]>([]);
   const [poolPickerOpen, setPoolPickerOpen] = useState(false);
   const [resourceUpdateChecking, setResourceUpdateChecking] = useState(false);
-  const [resourceUpdateApplying, setResourceUpdateApplying] = useState(false);
   const [resourceUpdateAvailable, setResourceUpdateAvailable] = useState(false);
+  const [resourceUpdateItems, setResourceUpdateItems] = useState<MobileResourceUpdateItem[]>([]);
+  const [resourceUpdateSheetOpen, setResourceUpdateSheetOpen] = useState(false);
+  const [resourceUpdateProgress, setResourceUpdateProgress] = useState(() => readMobileResourceUpdateState());
   const [resourceAnnouncement, setResourceAnnouncement] = useState<MobileContentManifestAnnouncement | null>(null);
   const [resourceAnnouncementActive, setResourceAnnouncementActive] = useState(false);
   const [localeSwitching, setLocaleSwitching] = useState(false);
@@ -297,16 +303,27 @@ export function ShellNavDrawer() {
     });
   }, [open, panelW, slideX, backdropOpacity, visible]);
 
+  useEffect(() => {
+    return subscribeMobileResourceUpdate(() => {
+      setResourceUpdateProgress(readMobileResourceUpdateState());
+    });
+  }, []);
+
   const checkResourceUpdates = async () => {
-    if (resourceUpdateChecking || resourceUpdateApplying) return false;
+    if (resourceUpdateChecking || resourceUpdateProgress.phase === "downloading") return false;
+    if (isMobileBundledOnly()) {
+      setResourceUpdateAvailable(false);
+      setResourceUpdateItems([]);
+      return false;
+    }
     setResourceUpdateChecking(true);
     try {
-      const [nature, music] = await Promise.all([
-        checkNatureResourcePackUpdate().then((x) => x.available),
-        checkMusicCatalogUpdate(),
-      ]);
-      const available = nature || music;
+      const items = await checkMobileResourceUpdates({
+        isMusicUpdateAvailable: checkMusicCatalogUpdate,
+      });
+      const available = items.length > 0;
       setResourceUpdateAvailable(available);
+      setResourceUpdateItems(items);
       return available;
     } finally {
       setResourceUpdateChecking(false);
@@ -372,11 +389,12 @@ export function ShellNavDrawer() {
   const currentPool =
     HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
     HOME_VERSE_POOL_SCOPE_OPTIONS[0];
+  const resourceUpdateApplying = resourceUpdateProgress.phase === "downloading";
   const resourceNeedsAttention = resourceUpdateAvailable || resourceAnnouncementActive;
   const resourceUpdateDetail = resourceUpdateApplying
     ? zh
-      ? "更新中…"
-      : "Updating..."
+      ? `下载中 ${resourceUpdateProgress.overallPercent}%`
+      : `Downloading ${resourceUpdateProgress.overallPercent}%`
     : resourceUpdateChecking
       ? zh
         ? "检查中…"
@@ -386,16 +404,16 @@ export function ShellNavDrawer() {
           ? "发现新资源与通知"
           : "New resources and notice"
         : resourceUpdateAvailable
-        ? zh
-          ? "发现新资源"
-          : "New resources available"
-        : resourceAnnouncementActive
           ? zh
-            ? "有新通知"
-            : "New notice"
-        : zh
-          ? "已是最新"
-          : "Up to date";
+            ? `${resourceUpdateItems.length} 项可更新`
+            : `${resourceUpdateItems.length} updates`
+          : resourceAnnouncementActive
+            ? zh
+              ? "有新通知"
+              : "New notice"
+            : zh
+              ? "已是最新"
+              : "Up to date";
 
   const showAnnouncementPrompt = () => {
     const announcement = resourceAnnouncement;
@@ -688,7 +706,9 @@ export function ShellNavDrawer() {
                   selected={resourceNeedsAttention}
                   onPress={async () => {
                     if (resourceUpdateChecking || resourceUpdateApplying) return;
-                    const hasUpdate = await checkResourceUpdates();
+                    const hasUpdate = resourceUpdateAvailable
+                      ? resourceUpdateItems.length > 0
+                      : await checkResourceUpdates();
                     if (!hasUpdate) {
                       if (resourceAnnouncement && resourceAnnouncementActive) {
                         showAnnouncementPrompt();
@@ -700,40 +720,25 @@ export function ShellNavDrawer() {
                       );
                       return;
                     }
-                    Alert.alert(
-                      zh ? "发现新资源" : "New resources found",
-                      zh
-                        ? `检测到场景/音乐有新版本，是否现在下载更新？${resourceAnnouncementActive ? "\n\n另有一条更新通知，可稍后在此查看。" : ""}`
-                        : `New scene/music versions are available. Download now?${resourceAnnouncementActive ? "\n\nThere is also an update notice you can review later." : ""}`,
-                      [
-                        { text: zh ? "稍后" : "Later", style: "cancel" },
-                        {
-                          text: zh ? "更新" : "Update",
-                          onPress: () => {
-                            void (async () => {
-                              setResourceUpdateApplying(true);
-                              try {
-                                const [nature, music] = await Promise.all([
-                                  checkNatureResourcePackUpdate().then((x) => x.available),
-                                  checkMusicCatalogUpdate(),
-                                ]);
-                                if (nature) await ensureNatureResourcePackSync();
-                                if (music) await downloadMusicCatalogUpdate();
-                                const latest = await checkResourceUpdates();
-                                Alert.alert(
-                                  latest ? (zh ? "部分未更新" : "Partially updated") : (zh ? "更新完成" : "Update complete"),
-                                  latest
-                                    ? (zh ? "仍有资源待更新，请稍后重试。" : "Some resources are still pending. Please try again later.")
-                                    : (zh ? "本地资源已更新到最新。" : "Local resources are now up to date."),
-                                );
-                              } finally {
-                                setResourceUpdateApplying(false);
-                              }
-                            })();
-                          },
-                        },
-                      ],
-                    );
+                    setResourceUpdateSheetOpen(true);
+                  }}
+                />
+                <ResourceUpdateSheet
+                  visible={resourceUpdateSheetOpen}
+                  zh={zh}
+                  locale={locale}
+                  items={resourceUpdateItems}
+                  downloadMusicUpdate={downloadMusicCatalogUpdate}
+                  onClose={() => {
+                    if (resourceUpdateProgress.phase === "downloading") return;
+                    setResourceUpdateSheetOpen(false);
+                    void checkResourceUpdates();
+                  }}
+                  onComplete={(failedCount) => {
+                    void checkResourceUpdates().then(() => {
+                      if (failedCount > 0) return;
+                      setResourceUpdateSheetOpen(false);
+                    });
                   }}
                 />
                 <View style={styles.compactGap} />

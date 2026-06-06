@@ -29,7 +29,7 @@ export async function GET() {
         language: t.language,
         bundled,
         bytes,
-        downloadUrl: bundled ? null : `/api/mobile/bible/translations/${encodeURIComponent(t.id)}/sqlite`,
+        downloadUrl: `/api/mobile/bible/translations/${encodeURIComponent(t.id)}/sqlite`,
       };
     });
 

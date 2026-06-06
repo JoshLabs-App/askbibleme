@@ -30,7 +30,7 @@ const CURRENT_DIR = `${ROOT}/current`;
 
 let hydrated = false;
 let syncing = false;
-let syncPromise: Promise<void> | null = null;
+let syncPromise: Promise<boolean> | null = null;
 let state: NaturePackState = { version: "", settings: null, byPath: {} };
 const listeners = new Set<() => void>();
 
@@ -109,18 +109,30 @@ function isValidManifest(raw: unknown): raw is NaturePackManifest {
   return true;
 }
 
-export type NaturePackUpdateCheck = {
-  available: boolean;
-  latestVersion: string;
+export type ResourcePackSyncProgress = {
+  completedUnits: number;
+  totalUnits: number;
+  currentLabel: string;
+  unitPercent: number;
 };
 
-async function downloadAsset(baseUrl: string, asset: NaturePackAsset): Promise<string | null> {
+export type ResourcePackSyncOptions = {
+  force?: boolean;
+  onProgress?: (progress: ResourcePackSyncProgress) => void;
+};
+
+async function downloadAsset(
+  baseUrl: string,
+  asset: NaturePackAsset,
+  onUnitProgress?: (percent: number) => void,
+): Promise<string | null> {
   const pathNorm = normalizeNatureAssetPath(asset.path);
   if (!pathNorm.startsWith("/nature/") || pathNorm.includes("..")) return null;
 
   const target = localUriForPath(pathNorm);
   const existing = await FileSystem.getInfoAsync(target, { md5: true });
   if (existing.exists && existing.size === asset.size && existing.md5 === asset.md5) {
+    onUnitProgress?.(100);
     return target;
   }
 
@@ -132,6 +144,21 @@ async function downloadAsset(baseUrl: string, asset: NaturePackAsset): Promise<s
     await FileSystem.deleteAsync(target, { idempotent: true });
   } catch {
     // ignore
+  }
+
+  if (onUnitProgress) {
+    const resumable = FileSystem.createDownloadResumable(remote, target, {}, (progress) => {
+      const total = progress.totalBytesExpectedToWrite;
+      const pct =
+        total > 0 ? Math.min(100, Math.floor((progress.totalBytesWritten / total) * 100)) : 0;
+      onUnitProgress(pct);
+    });
+    const result = await resumable.downloadAsync();
+    if (!result?.uri || result.status !== 200) return null;
+    const verified = await FileSystem.getInfoAsync(target, { md5: true });
+    if (!verified.exists || verified.size !== asset.size || verified.md5 !== asset.md5) return null;
+    onUnitProgress(100);
+    return target;
   }
 
   const result = await FileSystem.downloadAsync(remote, target, { md5: true });
@@ -159,25 +186,42 @@ function shouldUpdateFromManifest(manifest: NaturePackManifest): boolean {
   return Object.keys(state.byPath).length === 0;
 }
 
-async function runSyncOnce(): Promise<void> {
+async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boolean> {
   await hydrateState();
-  if (syncing) return;
+  if (syncing) return false;
   syncing = true;
   try {
     const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
     const manifest = await fetchNaturePackManifest();
-    if (!manifest) return;
-    if (!shouldUpdateFromManifest(manifest)) {
-      return;
+    if (!manifest) return false;
+    if (!options.force && !shouldUpdateFromManifest(manifest)) {
+      return false;
     }
 
+    const total = manifest.assets.length;
     const nextByPath: Record<string, string> = {};
-    for (const asset of manifest.assets) {
-      const uri = await downloadAsset(baseUrl, asset);
+    for (let i = 0; i < manifest.assets.length; i += 1) {
+      const asset = manifest.assets[i]!;
+      options.onProgress?.({
+        completedUnits: i,
+        totalUnits: total,
+        currentLabel: asset.path,
+        unitPercent: 0,
+      });
+      const uri = await downloadAsset(baseUrl, asset, (unitPercent) => {
+        options.onProgress?.({
+          completedUnits: i,
+          totalUnits: total,
+          currentLabel: asset.path,
+          unitPercent,
+        });
+      });
       if (!uri) continue;
       const key = normalizeNatureAssetPath(asset.path);
       if (key) nextByPath[key] = uri;
     }
+
+    if (Object.keys(nextByPath).length === 0) return false;
 
     state = {
       version: manifest.packVersion,
@@ -189,20 +233,32 @@ async function runSyncOnce(): Promise<void> {
     };
     await persistState();
     emit();
+    options.onProgress?.({
+      completedUnits: total,
+      totalUnits: total,
+      currentLabel: "",
+      unitPercent: 100,
+    });
+    return true;
   } catch {
-    // network failures should not break nature rendering
+    return false;
   } finally {
     syncing = false;
   }
 }
 
-export async function ensureNatureResourcePackSync(): Promise<void> {
+export type NaturePackUpdateCheck = {
+  available: boolean;
+  latestVersion: string;
+};
+
+export async function ensureNatureResourcePackSync(options?: ResourcePackSyncOptions): Promise<boolean> {
   if (!syncPromise) {
-    syncPromise = runSyncOnce().finally(() => {
+    syncPromise = runSyncOnce(options ?? {}).finally(() => {
       syncPromise = null;
     });
   }
-  await syncPromise;
+  return syncPromise;
 }
 
 export async function checkNatureResourcePackUpdate(): Promise<NaturePackUpdateCheck> {

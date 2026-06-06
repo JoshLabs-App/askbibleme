@@ -109,13 +109,18 @@ function isValidManifest(raw: unknown): raw is MusicPackManifest {
   return true;
 }
 
-async function downloadAsset(baseUrl: string, asset: MusicPackAsset): Promise<string | null> {
+async function downloadAsset(
+  baseUrl: string,
+  asset: MusicPackAsset,
+  onUnitProgress?: (percent: number) => void,
+): Promise<string | null> {
   const pathNorm = normalizeMusicAssetPath(asset.path);
   if (!pathNorm.startsWith("/music/") || pathNorm.includes("..")) return null;
 
   const target = localUriForPath(pathNorm);
   const existing = await FileSystem.getInfoAsync(target, { md5: true });
   if (existing.exists && existing.size === asset.size && existing.md5 === asset.md5) {
+    onUnitProgress?.(100);
     return target;
   }
 
@@ -127,6 +132,21 @@ async function downloadAsset(baseUrl: string, asset: MusicPackAsset): Promise<st
     await FileSystem.deleteAsync(target, { idempotent: true });
   } catch {
     /* ignore */
+  }
+
+  if (onUnitProgress) {
+    const resumable = FileSystem.createDownloadResumable(remote, target, {}, (progress) => {
+      const total = progress.totalBytesExpectedToWrite;
+      const pct =
+        total > 0 ? Math.min(100, Math.floor((progress.totalBytesWritten / total) * 100)) : 0;
+      onUnitProgress(pct);
+    });
+    const result = await resumable.downloadAsync();
+    if (!result?.uri || result.status !== 200) return null;
+    const verified = await FileSystem.getInfoAsync(target, { md5: true });
+    if (!verified.exists || verified.size !== asset.size || verified.md5 !== asset.md5) return null;
+    onUnitProgress(100);
+    return target;
   }
 
   const result = await FileSystem.downloadAsync(remote, target, { md5: true });
@@ -154,7 +174,7 @@ function shouldUpdateFromManifest(manifest: MusicPackManifest): boolean {
   return Object.keys(state.byPath).length === 0;
 }
 
-async function runSyncOnce(force = false): Promise<boolean> {
+async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boolean> {
   await hydrateState();
   if (syncing) return false;
   syncing = true;
@@ -162,13 +182,28 @@ async function runSyncOnce(force = false): Promise<boolean> {
     const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
     const manifest = await fetchMusicPackManifest();
     if (!manifest) return false;
-    if (!force && !shouldUpdateFromManifest(manifest)) {
+    if (!options.force && !shouldUpdateFromManifest(manifest)) {
       return false;
     }
 
+    const total = manifest.assets.length;
     const nextByPath: Record<string, string> = {};
-    for (const asset of manifest.assets) {
-      const uri = await downloadAsset(baseUrl, asset);
+    for (let i = 0; i < manifest.assets.length; i += 1) {
+      const asset = manifest.assets[i]!;
+      options.onProgress?.({
+        completedUnits: i,
+        totalUnits: total,
+        currentLabel: asset.path,
+        unitPercent: 0,
+      });
+      const uri = await downloadAsset(baseUrl, asset, (unitPercent) => {
+        options.onProgress?.({
+          completedUnits: i,
+          totalUnits: total,
+          currentLabel: asset.path,
+          unitPercent,
+        });
+      });
       if (!uri) continue;
       const key = normalizeMusicAssetPath(asset.path);
       if (key) nextByPath[key] = uri;
@@ -186,6 +221,12 @@ async function runSyncOnce(force = false): Promise<boolean> {
     };
     await persistState();
     emit();
+    options.onProgress?.({
+      completedUnits: total,
+      totalUnits: total,
+      currentLabel: "",
+      unitPercent: 100,
+    });
     return true;
   } catch {
     return false;
@@ -199,9 +240,22 @@ export type MusicPackUpdateCheck = {
   latestVersion: string;
 };
 
-export async function ensureMusicResourcePackSync(force = false): Promise<boolean> {
+export type ResourcePackSyncProgress = {
+  completedUnits: number;
+  totalUnits: number;
+  currentLabel: string;
+  unitPercent: number;
+};
+
+export type ResourcePackSyncOptions = {
+  force?: boolean;
+  onProgress?: (progress: ResourcePackSyncProgress) => void;
+};
+
+export async function ensureMusicResourcePackSync(options?: ResourcePackSyncOptions): Promise<boolean> {
+  const force = Boolean(options?.force);
   if (!syncPromise) {
-    syncPromise = runSyncOnce(force).finally(() => {
+    syncPromise = runSyncOnce({ force, onProgress: options?.onProgress }).finally(() => {
       syncPromise = null;
     });
   }

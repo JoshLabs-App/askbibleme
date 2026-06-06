@@ -504,7 +504,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (!remote || !isMusicCompanionStoreDifferent(remote, current)) {
       remote = await fetchMusicCompanionStoreFromRemote();
     }
-    const synced = await ensureMusicResourcePackSync(true);
+    const synced = await ensureMusicResourcePackSync({ force: true });
     const syncedStore = (await readSyncedMusicCompanionStore()) ?? remote;
     const nextStore =
       syncedStore && hasAtLeastBundledTracks(syncedStore, bundled)

@@ -72,12 +72,13 @@ function normalizeCatalog(raw: unknown): BibleTranslationsIndex | null {
   };
 }
 
-async function readCachedCatalog(): Promise<BibleTranslationsIndex | null> {
+async function readCachedCatalog(maxAgeMs?: number): Promise<BibleTranslationsIndex | null> {
   try {
     const raw = (await AsyncStorage.getItem(CATALOG_CACHE_KEY))?.trim();
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedCatalog;
-    if (!parsed?.index || Date.now() - parsed.fetchedAt > CATALOG_CACHE_TTL_MS) return null;
+    if (!parsed?.index) return null;
+    if (maxAgeMs != null && Date.now() - parsed.fetchedAt > maxAgeMs) return null;
     return normalizeCatalog(parsed.index);
   } catch {
     return null;
@@ -124,12 +125,21 @@ export function bundledBibleTranslationsCatalog(): BibleTranslationsIndex {
 
 /** 优先拉 askbible.me 全量目录；离线时回退内置 3 译本。 */
 export async function fetchBibleTranslationsCatalog(): Promise<BibleTranslationsIndex> {
-  const cached = await readCachedCatalog();
+  const cached = await readCachedCatalog(CATALOG_CACHE_TTL_MS);
   if (cached) return cached;
 
   const remote = await fetchRemoteCatalog();
   if (remote) return remote;
 
+  return OFFLINE_BUNDLED_INDEX;
+}
+
+/** 资源更新检查：跳过短缓存，尽量拉最新目录。 */
+export async function fetchBibleTranslationsCatalogFresh(): Promise<BibleTranslationsIndex> {
+  const remote = await fetchRemoteCatalog();
+  if (remote) return remote;
+  const cached = await readCachedCatalog();
+  if (cached) return cached;
   return OFFLINE_BUNDLED_INDEX;
 }
 

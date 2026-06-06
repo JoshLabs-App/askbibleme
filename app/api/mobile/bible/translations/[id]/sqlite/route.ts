@@ -1,6 +1,5 @@
 import fsp from "node:fs/promises";
 import { NextResponse } from "next/server";
-import { isMobileBundledScriptureTranslationId } from "@/lib/bible/mobile-bundled-scripture-ids";
 import { scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
 import { readTranslationsIndex } from "@/lib/bible/translations-store";
 
@@ -21,10 +20,6 @@ export async function GET(_req: Request, context: RouteContext) {
     const index = await readTranslationsIndex(cwd);
     if (!index.translations.some((t) => t.id === id)) {
       return NextResponse.json({ error: "translation_not_found" }, { status: 404 });
-    }
-
-    if (isMobileBundledScriptureTranslationId(id)) {
-      return NextResponse.json({ error: "translation_bundled_in_app" }, { status: 400 });
     }
 
     const absPath = scriptureSqlitePath(cwd, id);

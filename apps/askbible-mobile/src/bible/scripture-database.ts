@@ -58,6 +58,32 @@ async function writeInstalledSchemaVersion(dest: string, version: number): Promi
   await FileSystem.writeAsStringAsync(schemaVersionPath(dest), String(version));
 }
 
+function remoteBytesMarkerPath(dest: string): string {
+  return `${dest}.remote-bytes`;
+}
+
+async function readRemoteBytesMarker(dest: string): Promise<number | null> {
+  const path = remoteBytesMarkerPath(dest);
+  const info = await FileSystem.getInfoAsync(path);
+  if (!info.exists) return null;
+  try {
+    const raw = await FileSystem.readAsStringAsync(path);
+    const n = Number(String(raw).trim());
+    return Number.isInteger(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeRemoteScriptureBytesMarker(dest: string, bytes: number): Promise<void> {
+  if (!Number.isInteger(bytes) || bytes <= 0) return;
+  await FileSystem.writeAsStringAsync(remoteBytesMarkerPath(dest), String(bytes));
+}
+
+async function clearRemoteBytesMarker(dest: string): Promise<void> {
+  await FileSystem.deleteAsync(remoteBytesMarkerPath(dest), { idempotent: true });
+}
+
 export async function markScriptureDatabaseInstalled(dest: string): Promise<void> {
   await writeInstalledSchemaVersion(dest, SCRIPTURE_SQLITE_SCHEMA_VERSION);
 }
@@ -99,6 +125,7 @@ export async function removeScriptureDatabaseFiles(translationId: string): Promi
   }
   await FileSystem.deleteAsync(dest, { idempotent: true });
   await FileSystem.deleteAsync(schemaVersionPath(dest), { idempotent: true });
+  await clearRemoteBytesMarker(dest);
 }
 
 async function removeInstalledDatabase(dest: string, translationId: string): Promise<void> {
@@ -111,6 +138,24 @@ async function bundledAssetByteSize(assetModule: number): Promise<number> {
   if (!asset.localUri) return 0;
   const info = await FileSystem.getInfoAsync(asset.localUri);
   return info.exists && typeof info.size === "number" ? info.size : 0;
+}
+
+/** 本地已安装译本 SQLite 体积；内置译本无文档副本时回退到安装包 asset 大小。 */
+export async function getLocalScriptureTranslationByteSize(translationId: string): Promise<number> {
+  const id = String(translationId || "").trim();
+  if (!id) return 0;
+  const dest = getScriptureDatabaseDestPath(id);
+  const info = await FileSystem.getInfoAsync(dest);
+  if (info.exists && typeof info.size === "number" && info.size > 0) {
+    return info.size;
+  }
+  if (isBundledScriptureTranslation(id)) {
+    const assetModule = getBundledScriptureAssetModule(id);
+    if (assetModule != null) {
+      return bundledAssetByteSize(assetModule);
+    }
+  }
+  return 0;
 }
 
 async function copyBundledDatabaseToDisk(
@@ -159,17 +204,20 @@ async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void>
     await FileSystem.deleteAsync(legacyDest, { idempotent: true });
     await FileSystem.deleteAsync(schemaVersionPath(legacyDest), { idempotent: true });
   }
-  const [info, bundledSize] = await Promise.all([
+  const [info, bundledSize, remoteBytes] = await Promise.all([
     FileSystem.getInfoAsync(dest),
     bundledAssetByteSize(assetModule),
+    readRemoteBytesMarker(dest),
   ]);
   const installedVer = info.exists ? await readInstalledSchemaVersion(dest) : null;
   const destSize = info.exists && typeof info.size === "number" ? info.size : 0;
   const upToDate =
     info.exists &&
     installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION &&
-    bundledSize > 0 &&
-    destSize === bundledSize;
+    destSize > 0 &&
+    (remoteBytes != null
+      ? destSize === remoteBytes
+      : bundledSize > 0 && destSize === bundledSize);
 
   if (upToDate) {
     return;

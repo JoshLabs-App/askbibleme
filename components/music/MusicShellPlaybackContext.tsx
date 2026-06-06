@@ -646,7 +646,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       setDurationSec(0);
       return;
     }
-    if (audioUrlEquals(a, bindSrc)) {
+    if (audioUrlEquals(a, bindSrc) && !a.error) {
       lastBoundEffectiveSrcRef.current = bindSrc;
       a.muted = shellAudioMuted;
       if (playAfterNextBindRef.current) {
@@ -655,7 +655,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       }
       return;
     }
-    if (shellPlaybackUrlsEqual(lastBoundEffectiveSrcRef.current, bindSrc)) {
+    if (shellPlaybackUrlsEqual(lastBoundEffectiveSrcRef.current, bindSrc) && !a.error) {
       return;
     }
     lastBoundEffectiveSrcRef.current = bindSrc;

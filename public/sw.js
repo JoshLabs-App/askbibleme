@@ -85,6 +85,7 @@ async function activateWorker() {
   activeBuildId = await fetchBuildId();
   const names = cacheNames();
   await precacheShell(names.precache);
+  await purgePartialMediaCache(names.media);
   await deleteForeignCaches(Object.values(names));
   await self.clients.claim();
 }
@@ -176,19 +177,56 @@ function isNextStatic(pathname) {
   return pathname.startsWith("/_next/static/");
 }
 
+function requestHasRangeHeader(request) {
+  return request.headers.has("Range");
+}
+
+/** 206 分片响应不能按 URL 写入 Cache API，否则 `<audio>` 会拿到截断 MP3 并报 Format error。 */
+async function purgePartialMediaCache(cacheName) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  await Promise.all(
+    keys.map(async (req) => {
+      const res = await cache.match(req);
+      if (res?.status === 206) await cache.delete(req);
+    }),
+  );
+}
+
 async function cacheFirst(request, cacheName, trimMax) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
   try {
     const res = await fetch(request);
-    if (res.ok) {
+    if (res.ok && res.status === 200) {
       await cache.put(request, res.clone());
       if (trimMax) await trimCache(cacheName, trimMax);
     }
     return res;
   } catch {
     if (cached) return cached;
+    throw new Error("offline");
+  }
+}
+
+/** 音频/视频：Range 请求直出网络；仅缓存完整 200 响应。 */
+async function cacheFirstMedia(request, cacheName, trimMax) {
+  if (requestHasRangeHeader(request)) {
+    return fetch(request);
+  }
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  if (cached && cached.status !== 206) return cached;
+  try {
+    const res = await fetch(request);
+    if (res.ok && res.status === 200) {
+      await cache.put(request, res.clone());
+      if (trimMax) await trimCache(cacheName, trimMax);
+    }
+    return res;
+  } catch {
+    if (cached && cached.status !== 206) return cached;
     throw new Error("offline");
   }
 }
@@ -250,7 +288,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isMediaPath(pathname)) {
-    event.respondWith(cacheFirst(request, names.media, MAX_MEDIA_CACHE_ENTRIES));
+    event.respondWith(cacheFirstMedia(request, names.media, MAX_MEDIA_CACHE_ENTRIES));
     return;
   }
 

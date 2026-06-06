@@ -62,8 +62,6 @@
     "registerSubmit": "Create account",
     "registerSubmitting": "Creating…",
     "registerName": "Display name (optional)",
-    "registerAcceptTerms": "I agree to the terms of service and privacy policy",
-    "registerTermsRequired": "Please accept the terms of service first.",
     "registerClosed": "Registration is not open yet.",
     "registerSuccess": "Account created. Sign in with the same email and password.",
     "forgotPageTitle": "Reset password",

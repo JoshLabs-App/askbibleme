@@ -62,8 +62,6 @@
     "registerSubmit": "注册",
     "registerSubmitting": "注册中…",
     "registerName": "昵称（可选）",
-    "registerAcceptTerms": "我同意服务条款与隐私政策",
-    "registerTermsRequired": "请先同意服务条款。",
     "registerClosed": "会员注册尚未开放。",
     "registerSuccess": "账号已创建，请使用同一邮箱与密码登录。",
     "forgotPageTitle": "重置密码",

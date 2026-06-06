@@ -16,7 +16,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -28,10 +27,6 @@ export default function RegisterPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       setError(null);
-      if (!acceptTerms) {
-        setError(t("auth.registerTermsRequired"));
-        return;
-      }
       setPending(true);
       try {
         const res = await fetch("/api/auth/askbible", {
@@ -57,7 +52,7 @@ export default function RegisterPage() {
         setPending(false);
       }
     },
-    [acceptTerms, email, name, password, refresh, router, t],
+    [email, name, password, refresh, router, t],
   );
 
   if (!bootstrapped) {
@@ -135,15 +130,6 @@ export default function RegisterPage() {
               className="rounded-lg border border-ink/12 bg-white/[0.04] px-3 py-2.5 text-[15px] text-ink outline-none transition placeholder:text-ink/30 focus:border-ink/25"
               required
             />
-          </label>
-          <label className="flex items-start gap-2.5 pt-1">
-            <input
-              type="checkbox"
-              checked={acceptTerms}
-              onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-ink/20"
-            />
-            <span className="text-[13px] leading-relaxed text-ink/60">{t("auth.registerAcceptTerms")}</span>
           </label>
           {error ? (
             <p className="text-center text-[13px] text-red-300/95" role="alert">

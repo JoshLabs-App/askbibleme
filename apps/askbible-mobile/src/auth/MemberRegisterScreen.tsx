@@ -28,7 +28,6 @@ export function MemberRegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,10 +41,6 @@ export function MemberRegisterScreen() {
       setError(t("auth.errorNetwork"));
       return;
     }
-    if (!acceptTerms) {
-      setError(t("auth.registerTermsRequired"));
-      return;
-    }
     setPending(true);
     setError(null);
     try {
@@ -55,7 +50,6 @@ export function MemberRegisterScreen() {
         name: name.trim(),
         locale,
         source: "askbible-mobile",
-        acceptTerms: true,
       });
       if (!result.ok) {
         setError(result.error);
@@ -114,15 +108,6 @@ export function MemberRegisterScreen() {
                 textContentType="newPassword"
                 style={styles.input}
               />
-              <Pressable
-                onPress={() => setAcceptTerms((v) => !v)}
-                style={styles.termsRow}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: acceptTerms }}
-              >
-                <View style={[styles.checkbox, acceptTerms && styles.checkboxOn]} />
-                <Text style={styles.termsText}>{t("auth.registerAcceptTerms")}</Text>
-              </Pressable>
               {error ? <Text style={styles.error}>{error}</Text> : null}
               <Pressable
                 onPress={() => void onSubmit()}
@@ -180,24 +165,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: theme.ink,
     backgroundColor: "rgba(255,255,255,0.45)",
-    ...parchmentSans(400),
-  },
-  termsRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 12 },
-  checkbox: {
-    width: 18,
-    height: 18,
-    marginTop: 2,
-    borderRadius: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(55,53,47,0.35)",
-    backgroundColor: "rgba(255,255,255,0.5)",
-  },
-  checkboxOn: { backgroundColor: "rgba(55,53,47,0.82)" },
-  termsText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
-    color: "rgba(55,53,47,0.62)",
     ...parchmentSans(400),
   },
   error: {

@@ -57,6 +57,24 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+/** 首次注册时确保 users 表存在（Render 磁盘上可能是旧版 admin-only auth.sqlite）。 */
+function ensureUsersTable(db: SqlJsDb): void {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT,
+      is_admin INTEGER NOT NULL DEFAULT 0,
+      admin_role TEXT NOT NULL DEFAULT '',
+      online_seconds_total INTEGER NOT NULL DEFAULT 0,
+      color_theme_id TEXT NOT NULL DEFAULT ''
+    )
+  `);
+}
+
 export async function getAskbibleUserById(dbPath: string, userId: string): Promise<AskbibleSqlUser | null> {
   const { db, close } = await openDb(dbPath);
   try {
@@ -100,6 +118,7 @@ export async function registerAskbibleSqliteUser(input: {
 
   const { db, close, save } = await openDb(dbPath);
   try {
+    ensureUsersTable(db);
     const existsStmt = db.prepare("SELECT id FROM users WHERE lower(trim(email)) = lower(trim(?)) LIMIT 1");
     existsStmt.bind([normalizedEmail]);
     const exists = existsStmt.step();

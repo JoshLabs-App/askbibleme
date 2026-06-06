@@ -17,7 +17,6 @@ type RegisterRequestV1 = {
   name?: unknown;
   locale?: unknown;
   source?: unknown;
-  acceptTerms?: unknown;
 };
 
 function trimString(v: unknown): string {
@@ -126,21 +125,8 @@ export async function POST(req: Request) {
   const email = trimString(body.email).toLowerCase();
   const password = typeof body.password === "string" ? body.password : "";
   const name = trimString(body.name);
-  const acceptTerms = body.acceptTerms === true;
   const locale = trimString(body.locale).slice(0, 24);
   const source = trimString(body.source).slice(0, 60);
-
-  if (!acceptTerms) {
-    return NextResponse.json(
-      {
-        ok: false,
-        schemaVersion: SCHEMA_VERSION,
-        error: "请先同意服务条款。",
-        code: "terms_not_accepted",
-      },
-      { status: 400 },
-    );
-  }
 
   if (!validEmail(email)) {
     return NextResponse.json(

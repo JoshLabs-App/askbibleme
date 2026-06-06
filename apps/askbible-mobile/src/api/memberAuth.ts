@@ -9,7 +9,6 @@ export type MobileRegisterRequest = {
   name?: string;
   locale?: string;
   source?: string;
-  acceptTerms: boolean;
 };
 
 export type MobileRegisterResult =
@@ -39,7 +38,6 @@ export async function registerMobileMember(input: MobileRegisterRequest): Promis
       name: input.name ?? "",
       locale: input.locale ?? "",
       source: input.source ?? "askbible-mobile",
-      acceptTerms: Boolean(input.acceptTerms),
     }),
   });
 

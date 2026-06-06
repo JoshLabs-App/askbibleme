@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { mergeMusicCompanionTrackDisplay } from "@/lib/music-companion/merge-track-display";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
-import shippedCatalog from "@/data/music-companion.json";
+import { shippedMusicCompanionStore } from "@/lib/music-companion/shipped-store";
 
 type ManifestAsset = {
   path: string;
@@ -69,7 +69,7 @@ export async function GET() {
     const cwd = process.cwd();
     const store = mergeMusicCompanionTrackDisplay(
       await readMusicCompanionStore(cwd),
-      shippedCatalog as MusicCompanionStore,
+      shippedMusicCompanionStore,
     );
     const assets = await collectAssets(cwd, store);
     const hash = createHash("md5");

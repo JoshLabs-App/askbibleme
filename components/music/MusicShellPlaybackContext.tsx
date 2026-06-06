@@ -17,6 +17,10 @@ import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
+  musicCompanionStoreHasPlayableTracks,
+  shippedMusicCompanionStore,
+} from "@/lib/music-companion/shipped-store";
+import {
   clearShellPlaybackPersisted,
   readScriptureAudioRepeatModePersisted,
   readShellPlaybackPersisted,
@@ -195,8 +199,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   useEffect(() => {
     chapterAudioVoiceRef.current = chapterAudioVoiceId;
   }, [chapterAudioVoiceId]);
-  const [store, setStore] = useState<MusicCompanionStore | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [store, setStore] = useState<MusicCompanionStore | null>(() => shippedMusicCompanionStore);
+  /** 首屏已有随包曲库；网络刷新不阻塞播放。 */
+  const [loading, setLoading] = useState(false);
   /**
    * 自然首页 `/`、`/nature`：勿在曲库就绪后立刻把默认曲目绑进隐藏 `<audio>`（会 `load` 缓冲、吃内存），
    * 易与主屏 Web 上全屏视频争资源导致整页被系统回收。离开首页、恢复持久化播放、或用户点壳层播放后再绑。
@@ -451,8 +456,6 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   useEffect(() => {
     let cancelled = false;
     let lastHiddenAt = 0;
-    let idleId: number | undefined;
-    let fallbackTimer: number | undefined;
 
     const load = async (reason: "initial" | "visible") => {
       if (reason === "visible") {
@@ -472,22 +475,11 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
           setStore(next as MusicCompanionStore);
         }
       } catch {
-        /* ignore */
-      } finally {
-        if (!cancelled) setLoading(false);
+        /* 保留 bootstrap 曲库 */
       }
     };
 
-    const kickInitial = () => {
-      if (cancelled) return;
-      void load("initial");
-    };
-
-    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
-      idleId = window.requestIdleCallback(kickInitial, { timeout: 500 });
-    } else {
-      fallbackTimer = window.setTimeout(kickInitial, 0);
-    }
+    void load("initial");
 
     const onVis = () => {
       if (document.visibilityState === "hidden") {
@@ -501,10 +493,6 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelled = true;
-      if (idleId != null && typeof window.cancelIdleCallback === "function") {
-        window.cancelIdleCallback(idleId);
-      }
-      if (fallbackTimer != null) window.clearTimeout(fallbackTimer);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
@@ -957,13 +945,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
   const canPlay = Boolean(effectiveSrc) && !loading;
 
-  const canPlayMusic = useMemo(() => {
-    if (loading || !store) return false;
-    return (
-      Boolean(getShellDefaultAudioSrc(store)?.trim()) ||
-      store.audioTracks.some((t) => Boolean(t.src?.trim()))
-    );
-  }, [loading, store]);
+  const canPlayMusic = useMemo(() => musicCompanionStoreHasPlayableTracks(store), [store]);
 
   const seekRatio = useCallback((ratio: number) => {
     const a = audioRef.current;

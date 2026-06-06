@@ -6,7 +6,7 @@ import {
   readMusicCompanionStore,
   writeMusicCompanionStore,
 } from "@/lib/music-companion/store-file";
-import shippedCatalog from "@/data/music-companion.json";
+import { shippedMusicCompanionStore } from "@/lib/music-companion/shipped-store";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 
 /** 公开读取音乐陪伴配置（前台首页与后台编辑用） */
@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const store = mergeMusicCompanionTrackDisplay(
       await readMusicCompanionStore(process.cwd()),
-      shippedCatalog as MusicCompanionStore,
+      shippedMusicCompanionStore,
     );
     return NextResponse.json(store, {
       headers: {

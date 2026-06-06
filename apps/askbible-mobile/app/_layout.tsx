@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { LogBox, NativeModules, Platform, StyleSheet } from "react-native";
 import { AppLogoSplash } from "../src/shell/AppLogoSplash";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { MemberAuthProvider } from "../src/auth/MemberAuthProvider";
 import { LocaleProvider } from "../src/i18n/LocaleProvider";
 import { MusicPlaybackProvider } from "../src/music/MusicPlaybackContext";
 import { clearStaleNavigationState } from "../src/shell/clearStaleNavigationState";
@@ -92,6 +93,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <LocaleProvider>
+      <MemberAuthProvider>
       <TelemetryProvider>
       <ShellNavMenuProvider>
         <MusicPlaybackProvider>
@@ -111,6 +113,7 @@ export default function RootLayout() {
                 <Stack.Screen name="relax" options={{ headerShown: false }} />
                 <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
                 <Stack.Screen name="register" options={{ headerShown: false, animation: "slide_from_right" }} />
+                <Stack.Screen name="login" options={{ headerShown: false, animation: "slide_from_right" }} />
               </Stack>
               <ShellMenuButton />
               <ShellInsetClock />
@@ -123,6 +126,7 @@ export default function RootLayout() {
         </MusicPlaybackProvider>
       </ShellNavMenuProvider>
       </TelemetryProvider>
+      </MemberAuthProvider>
       </LocaleProvider>
     </SafeAreaProvider>
   );

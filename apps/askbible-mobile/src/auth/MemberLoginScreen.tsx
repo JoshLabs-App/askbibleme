@@ -22,12 +22,12 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { theme } from "../theme";
 
-export function MemberRegisterScreen() {
+export function MemberLoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { locale, t } = useLocale();
-  const { completeRegistration } = useMemberAuth();
-  const registerOpen = useSyncExternalStore(
+  const { t } = useLocale();
+  const { signIn } = useMemberAuth();
+  const authOpen = useSyncExternalStore(
     subscribeMemberRegisterEnabled,
     getMemberRegisterEnabled,
     getMemberRegisterEnabled,
@@ -35,13 +35,12 @@ export function MemberRegisterScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit() {
     if (pending) return;
-    if (!registerOpen) {
+    if (!authOpen) {
       setError(t("auth.registerClosed"));
       return;
     }
@@ -52,14 +51,9 @@ export function MemberRegisterScreen() {
     setPending(true);
     setError(null);
     try {
-      const result = await completeRegistration({
-        email: email.trim(),
-        password,
-        name: name.trim(),
-        locale,
-      });
+      const result = await signIn({ email: email.trim(), password });
       if (!result.ok) {
-        setError(result.error === "network" ? t("auth.errorNetwork") : result.error || t("auth.errorNetwork"));
+        setError(result.error === "network" ? t("auth.errorNetwork") : result.error || t("auth.errorWrong"));
         return;
       }
       router.back();
@@ -82,10 +76,10 @@ export function MemberRegisterScreen() {
             <Text style={styles.backText}>{t("auth.backHome")}</Text>
           </Pressable>
 
-          <Text style={styles.title}>{t("auth.registerPageTitle")}</Text>
-          <Text style={styles.intro}>{registerOpen ? t("auth.registerIntro") : t("auth.registerClosed")}</Text>
+          <Text style={styles.title}>{t("auth.pageTitle")}</Text>
+          <Text style={styles.intro}>{authOpen ? t("auth.registerIntro") : t("auth.registerClosed")}</Text>
 
-          {registerOpen ? (
+          {authOpen ? (
             <View style={styles.form}>
               <Text style={styles.label}>{t("auth.email")}</Text>
               <TextInput
@@ -97,20 +91,12 @@ export function MemberRegisterScreen() {
                 textContentType="emailAddress"
                 style={styles.input}
               />
-              <Text style={styles.label}>{t("auth.registerName")}</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                textContentType="name"
-                style={styles.input}
-              />
               <Text style={styles.label}>{t("auth.password")}</Text>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                textContentType="newPassword"
+                textContentType="password"
                 style={styles.input}
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -122,11 +108,11 @@ export function MemberRegisterScreen() {
                 {pending ? (
                   <ActivityIndicator color={theme.ink} />
                 ) : (
-                  <Text style={styles.submitText}>{t("auth.registerSubmit")}</Text>
+                  <Text style={styles.submitText}>{t("auth.submit")}</Text>
                 )}
               </Pressable>
-              <Pressable onPress={() => router.replace("/login")} style={styles.linkBtn}>
-                <Text style={styles.linkText}>{t("auth.registerGoLogin")}</Text>
+              <Pressable onPress={() => router.replace("/register")} style={styles.linkBtn}>
+                <Text style={styles.linkText}>{t("auth.loginFooterRegister")}</Text>
               </Pressable>
             </View>
           ) : null}

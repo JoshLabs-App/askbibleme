@@ -63,7 +63,11 @@ import {
   shouldShowUpdateAnnouncement,
   snoozeUpdateAnnouncement,
 } from "../updates/updateAnnouncementPrefs";
-import { isMemberRegisterEnabled } from "../config/mobileBundledOnly";
+import { useMemberAuth } from "../auth/MemberAuthProvider";
+import {
+  getMemberRegisterEnabled,
+  subscribeMemberRegisterEnabled,
+} from "../auth/member-register-enabled";
 import { useShellNavMenu } from "./ShellNavMenuContext";
 import { useShellSwipeSuspend } from "./useShellSwipeSuspend";
 
@@ -188,6 +192,12 @@ export function ShellNavDrawer() {
   const { locale, setLocale, t } = useLocale();
   const { open, closeMenu } = useShellNavMenu();
   useShellSwipeSuspend(open);
+  const memberAuthEnabled = useSyncExternalStore(
+    subscribeMemberRegisterEnabled,
+    getMemberRegisterEnabled,
+    getMemberRegisterEnabled,
+  );
+  const { user, signOut } = useMemberAuth();
 
   const panelW = drawerWidth();
   const slideX = useRef(new Animated.Value(-panelW)).current;
@@ -736,16 +746,45 @@ export function ShellNavDrawer() {
                   }}
                 />
                 <View style={styles.compactGap} />
-                {isMemberRegisterEnabled() ? (
+                {memberAuthEnabled ? (
                   <>
-                    <MenuRow
-                      label={t("auth.drawerRegister")}
-                      onPress={() => {
-                        closeMenu();
-                        router.push("/register");
-                      }}
-                    />
-                    <View style={styles.compactGap} />
+                    {user ? (
+                      <>
+                        <MenuRow
+                          label={t("auth.drawerSignedIn")}
+                          detail={user.name || user.email}
+                          onPress={() => closeMenu()}
+                        />
+                        <View style={styles.compactGap} />
+                        <MenuRow
+                          label={t("auth.drawerLogout")}
+                          onPress={() => {
+                            closeMenu();
+                            void signOut();
+                          }}
+                        />
+                        <View style={styles.compactGap} />
+                      </>
+                    ) : (
+                      <>
+                        <MenuRow
+                          label={t("auth.drawerLogin")}
+                          onPress={() => {
+                            closeMenu();
+                            router.push("/login");
+                          }}
+                        />
+                        <View style={styles.compactGap} />
+                        <MenuRow
+                          label={t("auth.drawerRegister")}
+                          onPress={() => {
+                            closeMenu();
+                            router.push("/register");
+                          }}
+                        />
+                        <View style={styles.compactGap} />
+                      </>
+                    )}
                   </>
                 ) : null}
                 <MenuRow

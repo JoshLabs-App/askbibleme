@@ -21,8 +21,4 @@ export function isMobileBundledOnly(): boolean {
   return !__DEV__;
 }
 
-/** 会员注册入口开关（默认关闭，待线上空间准备好后再打开）。 */
-export function isMemberRegisterEnabled(): boolean {
-  const flag = process.env.EXPO_PUBLIC_MEMBER_REGISTER_ENABLED?.trim();
-  return flag === "1" || flag?.toLowerCase() === "true";
-}
+export { isMemberRegisterEnabled } from "../auth/member-register-enabled";

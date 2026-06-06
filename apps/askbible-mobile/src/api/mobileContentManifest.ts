@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { applyMemberRegisterEnabledFromServer } from "../auth/member-register-enabled";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
@@ -37,6 +38,9 @@ export type MobileContentManifest = {
   flags: {
     remoteContentManifestEnabled: boolean;
     exploreCategoriesRemoteEnabled: boolean;
+  };
+  serverCapabilities?: {
+    memberRegisterEnabled?: boolean;
   };
   items: MobileContentManifestItem[];
   announcement?: MobileContentManifestAnnouncement | null;
@@ -145,6 +149,12 @@ function normalizeManifest(raw: unknown): MobileContentManifest | null {
       remoteContentManifestEnabled: Boolean(data.flags?.remoteContentManifestEnabled),
       exploreCategoriesRemoteEnabled: Boolean(data.flags?.exploreCategoriesRemoteEnabled),
     },
+    serverCapabilities: {
+      memberRegisterEnabled: Boolean(
+        (data as { serverCapabilities?: { memberRegisterEnabled?: boolean } }).serverCapabilities
+          ?.memberRegisterEnabled,
+      ),
+    },
     items,
     announcement: normalizeAnnouncement(data.announcement),
     generatedAt: typeof data.generatedAt === "string" ? data.generatedAt : new Date().toISOString(),
@@ -184,6 +194,7 @@ export async function fetchMobileContentManifest(): Promise<MobileContentManifes
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const manifest = normalizeManifest(await res.json());
     if (!manifest) throw new Error("invalid manifest");
+    applyMemberRegisterEnabledFromServer(Boolean(manifest.serverCapabilities?.memberRegisterEnabled));
     await writeCachedManifest(manifest);
     return manifest;
   } catch {

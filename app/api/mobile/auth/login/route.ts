@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
+import { verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
 import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { registerAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
-import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
 import { issueMobileUserSessionToken } from "@/lib/mobile-auth-session";
+import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
 
 export const runtime = "nodejs";
 
 const SCHEMA_VERSION = 1;
 const WINDOW_MS = 60_000;
-const MAX_HITS_PER_IP = 12;
+const MAX_HITS_PER_IP = 20;
 const ipBuckets = new Map<string, { count: number; startAt: number }>();
 
-type RegisterRequestV1 = {
+type LoginRequestV1 = {
   schemaVersion?: number;
   email?: unknown;
   password?: unknown;
-  name?: unknown;
-  locale?: unknown;
-  source?: unknown;
 };
 
 function trimString(v: unknown): string {
@@ -45,17 +42,12 @@ function passRateLimit(ip: string): boolean {
   return true;
 }
 
-function validEmail(email: string): boolean {
-  if (!email || email.length > 320) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 function missingSqliteResponse() {
   return NextResponse.json(
     {
       ok: false,
       schemaVersion: SCHEMA_VERSION,
-      error: "注册服务尚未配置，请稍后再试。",
+      error: "登录服务尚未配置，请稍后再试。",
       code: "auth_not_configured",
     },
     { status: 503 },
@@ -69,8 +61,8 @@ export async function POST(req: Request) {
       {
         ok: false,
         schemaVersion: SCHEMA_VERSION,
-        error: "会员注册尚未开放。",
-        code: "register_disabled",
+        error: "会员登录尚未开放。",
+        code: "auth_disabled",
       },
       { status: 503 },
     );
@@ -92,9 +84,9 @@ export async function POST(req: Request) {
   const dbPath = getAskbibleAuthSqlitePath();
   if (!dbPath) return missingSqliteResponse();
 
-  let body: RegisterRequestV1;
+  let body: LoginRequestV1;
   try {
-    body = (await req.json()) as RegisterRequestV1;
+    body = (await req.json()) as LoginRequestV1;
   } catch {
     return NextResponse.json(
       {
@@ -125,57 +117,39 @@ export async function POST(req: Request) {
 
   const email = trimString(body.email).toLowerCase();
   const password = typeof body.password === "string" ? body.password : "";
-  const name = trimString(body.name);
-  const locale = trimString(body.locale).slice(0, 24);
-  const source = trimString(body.source).slice(0, 60);
-
-  if (!validEmail(email)) {
+  if (!email || !password) {
     return NextResponse.json(
       {
         ok: false,
         schemaVersion: SCHEMA_VERSION,
-        error: "邮箱格式不正确。",
-        code: "invalid_email",
+        error: "缺少邮箱或密码。",
+        code: "invalid_credentials",
       },
       { status: 400 },
     );
   }
 
-  if (password.length < 8) {
+  const auth = await verifyAskbibleUserCredentials(dbPath, email, password);
+  if (!auth.ok) {
     return NextResponse.json(
       {
         ok: false,
         schemaVersion: SCHEMA_VERSION,
-        error: "密码至少需要 8 位。",
-        code: "password_too_short",
+        error: "邮箱或密码错误。",
+        code: "invalid_credentials",
       },
-      { status: 400 },
+      { status: 401 },
     );
   }
 
-  const created = await registerAskbibleSqliteUser({ dbPath, email, password, name });
-  if (!created.ok) {
-    const code = created.status === 409 ? "email_already_exists" : "register_failed";
-    return NextResponse.json(
-      {
-        ok: false,
-        schemaVersion: SCHEMA_VERSION,
-        error: created.error,
-        code,
-      },
-      { status: created.status },
-    );
-  }
-
-  const session = await issueMobileUserSessionToken(created.user);
+  const user = { id: auth.userId, email: auth.email, name: auth.name };
+  const session = await issueMobileUserSessionToken(user);
 
   return NextResponse.json({
     ok: true,
     schemaVersion: SCHEMA_VERSION,
-    user: created.user,
+    user,
     sessionToken: session.sessionToken,
     expiresAt: session.expiresAt,
-    nextAction: "login",
-    context: { locale, source },
   });
 }

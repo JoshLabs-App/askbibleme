@@ -30,6 +30,7 @@
     },
     "android": {
       "package": "me.askbible",
+      "versionCode": 6,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

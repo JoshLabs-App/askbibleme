@@ -29,5 +29,5 @@ fi
 
 cd apps/askbible-mobile
 
-echo "→ 提交最新 Android production 构建到 Google Play（正式版 production 轨道）…"
-npx eas submit --profile production --platform android --latest --non-interactive "$@"
+echo "→ 提交最新 Android production 构建到 Google Play 封闭测试（alpha）…"
+npx eas submit --profile closed_testing --platform android --latest --non-interactive "$@"

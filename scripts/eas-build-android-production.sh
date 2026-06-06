@@ -21,6 +21,31 @@ MOBILE_BUNDLE_MUSIC_LIMIT=1 \
 MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a7xcip5q \
 npm run mobile:sync-offline-media
 
+echo "→ 离线媒体体积审计…"
+du -sh apps/askbible-mobile/assets/nature/videos apps/askbible-mobile/assets/music/tracks apps/askbible-mobile/assets/audio 2>/dev/null || true
+node - <<'NODE'
+const fs = require("node:fs");
+const path = require("node:path");
+const root = path.join(process.cwd(), "apps/askbible-mobile/assets");
+function dirBytes(p) {
+  if (!fs.existsSync(p)) return 0;
+  let n = 0;
+  for (const f of fs.readdirSync(p)) {
+    const fp = path.join(p, f);
+    const st = fs.statSync(fp);
+    n += st.isDirectory() ? dirBytes(fp) : st.size;
+  }
+  return n;
+}
+const musicTracks = dirBytes(path.join(root, "music/tracks"));
+const mb = (n) => (n / (1024 * 1024)).toFixed(1);
+console.log(`bundled music tracks: ${mb(musicTracks)} MB (${fs.existsSync(path.join(root,"music/tracks")) ? fs.readdirSync(path.join(root,"music/tracks")).length : 0} file(s))`);
+if (musicTracks > 80 * 1024 * 1024) {
+  console.error("ERROR: bundled music exceeds 80MB — check MOBILE_BUNDLE_MUSIC_LIMIT before building.");
+  process.exit(1);
+}
+NODE
+
 cd apps/askbible-mobile
 
 echo "→ 提交 EAS Android production 构建（AAB）…"

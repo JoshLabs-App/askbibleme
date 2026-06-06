@@ -16,7 +16,9 @@
         "EXPO_PUBLIC_MOBILE_BUNDLED_ONLY": "0",
         "EXPO_PUBLIC_ASKBIBLE_BASE_URL": "https://askbible.me",
         "EXPO_PUBLIC_MEMBER_REGISTER_ENABLED": "1",
-        "MOBILE_BUNDLE_OFFLINE_MEDIA": "1"
+        "MOBILE_BUNDLE_OFFLINE_MEDIA": "1",
+        "MOBILE_BUNDLE_MUSIC_LIMIT": "1",
+        "MOBILE_STARTER_MUSIC_TRACK_ID": "track-mpg4a7xcip5q"
       },
       "android": {
         "buildType": "apk"
@@ -32,7 +34,9 @@
         "EXPO_PUBLIC_MOBILE_BUNDLED_ONLY": "0",
         "EXPO_PUBLIC_ASKBIBLE_BASE_URL": "https://askbible.me",
         "EXPO_PUBLIC_MEMBER_REGISTER_ENABLED": "1",
-        "MOBILE_BUNDLE_OFFLINE_MEDIA": "1"
+        "MOBILE_BUNDLE_OFFLINE_MEDIA": "1",
+        "MOBILE_BUNDLE_MUSIC_LIMIT": "1",
+        "MOBILE_STARTER_MUSIC_TRACK_ID": "track-mpg4a7xcip5q"
       },
       "android": {
         "buildType": "app-bundle"
@@ -56,13 +60,31 @@
         "ascApiKeyPath": "$ASC_API_KEY_PATH"
       },
       "android": {
+        "track": "production",
+        "releaseStatus": "draft",
+        "changesNotSentForReview": true,
+        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
+      }
+    },
+    "production_internal": {
+      "android": {
         "track": "internal",
+        "releaseStatus": "completed",
+        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
+      }
+    },
+    "closed_testing": {
+      "android": {
+        "track": "alpha",
+        "releaseStatus": "draft",
+        "changesNotSentForReview": true,
         "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
       }
     },
     "production_full": {
       "android": {
         "track": "production",
+        "releaseStatus": "draft",
         "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
       }
     }

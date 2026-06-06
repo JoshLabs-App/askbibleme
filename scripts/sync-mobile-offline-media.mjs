@@ -22,11 +22,10 @@ const musicAnalysisDir = path.join(repoRoot, "apps", "askbible-mobile", "assets"
 const bundleEnabled = process.env.MOBILE_BUNDLE_OFFLINE_MEDIA === "1";
 const starterTrackId = String(process.env.MOBILE_STARTER_MUSIC_TRACK_ID || "track-mpg4a7xcip5q").trim();
 const bundleMusicLimitRaw = process.env.MOBILE_BUNDLE_MUSIC_LIMIT?.trim();
+/** 生产包默认只打 1 首 starter；勿在未设 limit 时打包全库（~420MB）。 */
 const bundleMusicLimit = bundleMusicLimitRaw
   ? Math.max(1, Number(bundleMusicLimitRaw) || 1)
-  : bundleEnabled
-    ? Number.POSITIVE_INFINITY
-    : 1;
+  : 1;
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -46,12 +45,12 @@ function copyIfExists(srcRel, destAbs) {
 }
 
 /**
- * 自然场景优先打包 1080p：若 settings 指向 720，则尝试同前缀的 -1080 文件。
- * 仅在文件存在时替换，避免破坏现有兼容性。
+ * 安装包内场景默认 720p（控制体积）。仅当 MOBILE_BUNDLE_NATURE_PREFER_1080=1 时才尝试 1080。
  */
 function resolveNatureVideoSrcForBundle(srcRel) {
   const trimmed = String(srcRel || "").trim();
   if (!trimmed) return trimmed;
+  if (process.env.MOBILE_BUNDLE_NATURE_PREFER_1080 !== "1") return trimmed;
   if (!trimmed.endsWith("-720.mp4")) return trimmed;
   const preferred1080 = trimmed.replace(/-720\.mp4$/i, "-1080.mp4");
   const preferredAbs = path.join(publicRoot, preferred1080.replace(/^\//, ""));

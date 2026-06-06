@@ -47,6 +47,15 @@ function allowedIds(index: BibleTranslationsIndex): Set<string> {
   return new Set(index.translations.map((t) => t.id));
 }
 
+function firstAvailableTranslationId(index: BibleTranslationsIndex, ids: string[]): string | null {
+  const allowed = allowedIds(index);
+  for (const id of ids) {
+    const tid = id.trim();
+    if (tid && allowed.has(tid)) return tid;
+  }
+  return null;
+}
+
 export function resolveDefaultPrimaryTranslationId(
   index: BibleTranslationsIndex,
   locale?: AppLocale,
@@ -55,7 +64,12 @@ export function resolveDefaultPrimaryTranslationId(
     const picked = pickTranslationIdForLocale(index, locale);
     if (picked && allowedIds(index).has(picked)) return picked;
   }
-  return index.defaultTranslationId ?? index.translations[0]?.id ?? "cuv-simp";
+  return (
+    firstAvailableTranslationId(index, ["cuv-simp", "cuv-trad"]) ??
+    index.defaultTranslationId ??
+    index.translations[0]?.id ??
+    "cuv-simp"
+  );
 }
 
 export function normalizeReadBiblePrimaryTranslationId(

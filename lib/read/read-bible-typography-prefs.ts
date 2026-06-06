@@ -119,7 +119,7 @@ const READ_BIBLE_SIZE_TOKENS: Record<ReadBibleSizeId, SizeTokens> = {
 export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
   size: "l",
   verseParagraphFlow: true,
-  chapterSegmentMode: "default",
+  chapterSegmentMode: "t1",
 };
 
 export function readBibleTypographyCssVars(prefs: ReadBibleTypographyPrefsV1): Record<string, string> {
@@ -178,13 +178,12 @@ export function parseReadBibleTypographyPrefs(raw: string | null): ReadBibleTypo
       size,
       verseParagraphFlow:
         typeof j.verseParagraphFlow === "boolean" ? j.verseParagraphFlow : fallback.verseParagraphFlow,
-      chapterSegmentMode:
-        (j.chapterSegmentMode as string | undefined) === "t1"
-          ? "t1"
-          : (j.chapterSegmentMode as string | undefined) === "t2" ||
-              (j.chapterSegmentMode as string | undefined) === "story"
-            ? "t1"
-            : "default",
+      chapterSegmentMode: (() => {
+        const rawMode = j.chapterSegmentMode as string | undefined;
+        if (rawMode === "t1" || rawMode === "t2" || rawMode === "story") return "t1";
+        if (rawMode === "default") return "default";
+        return fallback.chapterSegmentMode;
+      })(),
     };
   } catch {
     return fallback;

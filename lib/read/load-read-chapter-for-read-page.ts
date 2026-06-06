@@ -10,6 +10,7 @@ import {
   loadChapterSegmentsFromOpenUsfm,
 } from "@/lib/bible/load-chapter-segments";
 import { resolveReadBibleTranslationPrefsFromCookies } from "@/lib/read/read-bible-translation-prefs";
+import { DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS } from "@/lib/read/read-bible-typography-prefs";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
 export type ReadChapterContrastLoaded = {
@@ -52,7 +53,12 @@ export async function loadReadChapterForReadPage(
 
   const primaryMaxVerse = primary.verses.reduce((max, row) => Math.max(max, row.verse), 0) || null;
   primary.segments =
-    loadBundledChapterSegments(cwd, primary.bookId, primary.chapter, "default") ??
+    loadBundledChapterSegments(
+      cwd,
+      primary.bookId,
+      primary.chapter,
+      DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.chapterSegmentMode,
+    ) ??
     loadChapterSegmentsFromLocalDataset(cwd, primary.bookId, primary.chapter) ??
     (await loadChapterSegmentsFromOpenUsfm(primary.bookId, primary.chapter, primaryMaxVerse));
 

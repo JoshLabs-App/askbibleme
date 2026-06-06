@@ -183,7 +183,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
 export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
   size: "m",
   verseParagraphFlow: true,
-  chapterSegmentMode: "default",
+  chapterSegmentMode: "t1",
 };
 
 /** 平台默认：iOS / Android 统一中号（`m`） */
@@ -243,12 +243,12 @@ export function parseReadBibleTypographyPrefs(raw: string | null): ReadBibleTypo
         typeof j.verseParagraphFlow === "boolean"
           ? j.verseParagraphFlow
           : platformDefault.verseParagraphFlow,
-      chapterSegmentMode:
-        j.chapterSegmentMode === "t1"
-          ? "t1"
-          : j.chapterSegmentMode === "t2" || j.chapterSegmentMode === "story"
-            ? "t1"
-            : "default",
+      chapterSegmentMode: (() => {
+        const rawMode = j.chapterSegmentMode;
+        if (rawMode === "t1" || rawMode === "t2" || rawMode === "story") return "t1";
+        if (rawMode === "default") return "default";
+        return platformDefault.chapterSegmentMode;
+      })(),
     };
   } catch {
     return { ...platformDefault };

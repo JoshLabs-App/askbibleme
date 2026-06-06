@@ -380,7 +380,20 @@ export function BibleCatalogReadOutline({
                   ) : jumpCatalog ? (
                     <h2 className="bc-jump-section-title bible-catalog-read-title">{section.title}</h2>
                   ) : (
-                  <div className={showBookSummary ? "bc-home-books" : "bible-catalog-read-books"}>
+                    <h2 className="bible-catalog-read-title bible-catalog-read-heading-row">
+                      <span className="bible-catalog-read-heading-left">{section.title}</span>
+                      <span className="bible-catalog-read-heading-right" aria-hidden="true" />
+                    </h2>
+                  )}
+                  <div
+                    className={
+                      showBookSummary
+                        ? "bc-home-books"
+                        : jumpCatalog
+                          ? "bc-jump-books"
+                          : "bible-catalog-read-books"
+                    }
+                  >
                     {section.books.map((book) => {
                       const eraCompact = formatBibleBookHistoryEraCompact(book.bookId);
                       const eraAria = formatBibleBookHistoryEraAriaZh(book.bookId);

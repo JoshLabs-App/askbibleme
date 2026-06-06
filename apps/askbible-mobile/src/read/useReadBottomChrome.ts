@@ -5,7 +5,7 @@ import {
   subscribeReadChapterBottomChromeApi,
   type ReadChapterBottomChromeApi,
 } from "./read-chapter-chrome-inset";
-import { isReadChapterRoute, readRouteUsesBottomActionChrome } from "./read-route-chrome";
+import { readRouteUsesBottomActionChrome } from "./read-route-chrome";
 
 /** 章页 API 优先；圣经首页与其余读经子页用默认快捷操作（目录→/read/read，下一章禁用） */
 export function useReadBottomChrome(): ReadChapterBottomChromeApi | null {
@@ -23,7 +23,7 @@ export function useReadBottomChrome(): ReadChapterBottomChromeApi | null {
 
   return useMemo(() => {
     if (chapterChrome) return chapterChrome;
-    if (!readRouteUsesBottomActionChrome(pathname) || isReadChapterRoute(pathname)) return null;
+    if (!readRouteUsesBottomActionChrome(pathname)) return null;
     return {
       openCatalog,
       goNext: () => {},

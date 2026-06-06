@@ -1,86 +1,217 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ReadTodayPlanReadingRow } from "@/components/bible/ReadTodayPlanReadingRow";
+import { ReadTodayReadingStats } from "@/components/bible/ReadTodayReadingStats";
+import { ReadYearDayTimeline } from "@/components/bible/ReadYearDayTimeline";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { formatReadingPlanRange, readingPlanChapterHref } from "@/lib/bible/reading-plans/format-reading-range";
-import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { useReadingHabitStats } from "@/hooks/useReadingHabitStats";
+import { useTodayReadingChapterFractions } from "@/hooks/useTodayReadingChapterFractions";
+import { useTodayReadingDone } from "@/hooks/useTodayReadingDone";
+import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "@/hooks/useTodayReadingPlan";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
-import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
+import { READ_PARCHMENT_FAINT, READ_PARCHMENT_MUTED } from "@/lib/read/read-parchment-accents";
+import { computeTodayReadingItemProgress } from "@/lib/read/compute-today-reading-progress";
 import {
-  getEffectiveReadingPlanPrefsServerSnapshot,
-  getEffectiveReadingPlanPrefsSnapshot,
-  resolveReadingPlanDayIndex,
-  subscribeReadingPlanPrefs,
-} from "@/lib/read/reading-plan-prefs";
-import {
-  getTripleLoopProgressServerSnapshot,
-  getTripleLoopProgressSnapshot,
-  subscribeTripleLoopProgress,
-} from "@/lib/read/triple-loop-progress";
-import { loadTodayReadingPlanPayload, type TodayReadingPlanPayload } from "@/lib/read/today-reading-plan-payload";
+  readCompletedChapterKeySet,
+  subscribeReadChapterCompletion,
+} from "@/lib/read/read-chapter-completion";
+import { todayReadingItemKey } from "@/lib/read/today-reading-done";
 
-function planTitleKey(planId: string): string {
-  return `pages.read.plansCatalog.${planId}.title`;
-}
-
-type DayPayload = TodayReadingPlanPayload;
-
-type Props = {
-  registryPlans: ReadingPlanRegistryEntry[];
+type ReadingsProps = {
+  plan: TodayReadingPlanState;
 };
 
-export function ReadTodayPlanPanel({ registryPlans }: Props) {
+export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
   const { t } = useLocale();
-  const prefs = useSyncExternalStore(
-    subscribeReadingPlanPrefs,
-    getEffectiveReadingPlanPrefsSnapshot,
-    getEffectiveReadingPlanPrefsServerSnapshot,
-  );
-
-  const registryById = useMemo(() => new Map(registryPlans.map((p) => [p.planId, p])), [registryPlans]);
-
-  const [payload, setPayload] = useState<DayPayload | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
-  const dayCount = registryById.get(prefs.planId)?.dayCount ?? prefs.dayCount;
-  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
-
-  const loadToday = useCallback(async () => {
-    if (!isTripleLoop && dayIndex == null) {
-      setPayload(null);
-      return;
-    }
-    setLoading(true);
-    try {
-      const j = await loadTodayReadingPlanPayload(prefs, { dayCount: dayCount ?? undefined });
-      setPayload(j);
-    } catch {
-      setPayload(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [prefs, dayIndex, dayCount, isTripleLoop]);
-
-  const tripleProgress = useSyncExternalStore(
-    subscribeTripleLoopProgress,
-    getTripleLoopProgressSnapshot,
-    getTripleLoopProgressServerSnapshot,
-  );
-  const tripleProgressKey = isTripleLoop
-    ? `${tripleProgress.ot.bookId}:${tripleProgress.ot.chapter}|${tripleProgress.nt.bookId}:${tripleProgress.nt.chapter}|${tripleProgress.wisdom.bookId}:${tripleProgress.wisdom.chapter}`
-    : "";
+  const { payload, loading, isTripleLoop } = plan;
+  const { isDone, allDone, toggleDone, doneKeys } = useTodayReadingDone(plan);
+  const { fractions, tripleCurrent, tripleProgressKey } = useTodayReadingChapterFractions(plan);
+  const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
+  const readings = payload?.day?.readings ?? [];
+  const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    void loadToday();
-  }, [loadToday, tripleProgressKey]);
+    const reload = () => setCompletedChapterKeys(readCompletedChapterKeySet());
+    reload();
+    return subscribeReadChapterCompletion(reload);
+  }, []);
+
+  const chapterCompletionProgress = useMemo(() => {
+    const progressByItem = new Map<string, number>();
+    if (isTripleLoop) return progressByItem;
+    for (const r of readings) {
+      const start = Math.max(1, Math.trunc(r.startChapter));
+      const end = Math.max(start, Math.trunc(r.endChapter));
+      const total = end - start + 1;
+      let completed = 0;
+      for (let ch = start; ch <= end; ch += 1) {
+        if (completedChapterKeys.has(`${r.bookId}:${ch}`)) completed += 1;
+      }
+      progressByItem.set(todayReadingItemKey(r), total > 0 ? completed / total : 0);
+    }
+    return progressByItem;
+  }, [completedChapterKeys, isTripleLoop, readings]);
+
+  const isReadingDone = useMemo(() => {
+    const doneByItem = new Map<string, boolean>();
+    for (const r of readings) {
+      const itemKey = todayReadingItemKey(r);
+      doneByItem.set(
+        itemKey,
+        isTripleLoop ? isDone(r) : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
+      );
+    }
+    return doneByItem;
+  }, [chapterCompletionProgress, isDone, isTripleLoop, readings]);
+
+  const todayAllDone = useMemo(
+    () =>
+      !loading &&
+      readings.length > 0 &&
+      (isTripleLoop
+        ? allDone(readings)
+        : readings.every((r) => (chapterCompletionProgress.get(todayReadingItemKey(r)) ?? 0) >= 1)),
+    [loading, readings, isTripleLoop, allDone, chapterCompletionProgress],
+  );
+
+  useEffect(() => {
+    void syncTodayComplete(todayAllDone);
+  }, [todayAllDone, syncTodayComplete]);
+
+  const progressKey = `${[...doneKeys].join(",")}|${tripleProgressKey}|${JSON.stringify(fractions)}`;
+
+  return (
+    <div className="read-bible-today-readings mx-auto w-full max-w-[340px]">
+      <ReadYearDayTimeline />
+      <ReadTodayReadingStats yearDay={yearDay} snapshot={snapshot} />
+
+      {loading ? (
+        <p className="mt-2 text-[12px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanLoading")}</p>
+      ) : readings.length ? (
+        <div className="mt-0.5 w-full pl-[30px]">
+          {readings.map((r) => {
+            const itemKey = todayReadingItemKey(r);
+            const done = isReadingDone.get(itemKey) ?? false;
+            const chapterProgress = chapterCompletionProgress.get(itemKey) ?? 0;
+            const progress = computeTodayReadingItemProgress({
+              reading: r,
+              isDone: done,
+              chapterFraction: isTripleLoop ? (fractions[itemKey] ?? 0) : chapterProgress,
+              isTripleLoop,
+              currentTriple: tripleCurrent,
+            });
+            return (
+              <ReadTodayPlanReadingRow
+                key={`${itemKey}-${progressKey}`}
+                reading={r}
+                done={done}
+                progress={progress}
+                showCheckbox={isTripleLoop}
+                dimDoneText={isTripleLoop}
+                checkboxDisabled={!isTripleLoop}
+                onToggleDone={() => toggleDone(r)}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <p className="mt-2 text-[13px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanEmpty")}</p>
+      )}
+    </div>
+  );
+}
+
+type FooterProps = {
+  plan: TodayReadingPlanState;
+  variant?: "home" | "panel";
+};
+
+export function ReadTodayPlanFooter({ plan, variant = "panel" }: FooterProps) {
+  const { t, locale } = useLocale();
+  const { prefs, payload, loading, isTripleLoop, dayIndex, epochDay } = plan;
 
   const titleKey = planTitleKey(prefs.planId);
   const localizedTitle = t(titleKey);
   const planTitle = localizedTitle === titleKey ? payload?.name ?? prefs.planId : localizedTitle;
   const anchorHint =
     prefs.anchor === "calendar-jan1" ? t("pages.read.todayPlanAnchorJan1") : t("pages.read.todayPlanAnchorToday");
+
+  if (loading) return null;
+
+  const home = variant === "home";
+
+  return (
+    <footer
+      className={
+        home
+          ? "read-bible-today-plan-footer read-bible-today-plan-footer--home mx-auto mt-7 max-w-[340px] px-1 pb-2 pt-5 text-center"
+          : "read-bible-today-plan-footer mx-auto mt-7 max-w-md border-t border-amber-900/10 px-1 pt-5 text-center dark:border-stone-500/20"
+      }
+    >
+      <p
+        className={[
+          "mx-auto max-w-[20rem] text-[15px] font-medium leading-5",
+          home ? "" : "text-amber-900/72 dark:text-stone-400",
+        ].join(" ")}
+        style={home ? { color: READ_PARCHMENT_MUTED } : undefined}
+      >
+        {planTitle}
+      </p>
+      {isTripleLoop ? (
+        <p
+          className={[
+            "mt-1.5 text-[12px] tabular-nums tracking-[0.04em]",
+            home ? "" : "text-amber-800/58 dark:text-stone-500",
+          ].join(" ")}
+          style={home ? { color: READ_PARCHMENT_FAINT } : undefined}
+        >
+          {t("pages.read.todayPlanDayMeta", { n: String(epochDay) })}
+          <span className="mx-1.5 opacity-60">·</span>
+          {t("pages.read.todayPlanAnchorEaster")}
+        </p>
+      ) : dayIndex != null ? (
+        <p
+          className={[
+            "mt-1.5 text-[12px] tabular-nums tracking-[0.04em]",
+            home ? "" : "text-amber-800/58 dark:text-stone-500",
+          ].join(" ")}
+          style={home ? { color: READ_PARCHMENT_FAINT } : undefined}
+        >
+          {t("pages.read.todayPlanDayMeta", { n: String(dayIndex + 1) })}
+          <span className="mx-1.5 opacity-60">·</span>
+          {anchorHint}
+        </p>
+      ) : null}
+      <p className="mt-2 text-[12px]">
+        <Link
+          href="/read/plans"
+          className={
+            home
+              ? "font-medium no-underline hover:opacity-80"
+              : "font-medium text-amber-900/78 underline decoration-amber-800/25 underline-offset-[0.2em] hover:text-amber-950 dark:text-stone-400"
+          }
+          style={home ? { color: READ_PARCHMENT_MUTED } : undefined}
+        >
+          {locale === "en"
+            ? "Tap to view more plans"
+            : locale === "zh-TW"
+              ? "點按查看更多計畫"
+              : "点击查看更多计划"}
+        </Link>
+      </p>
+    </footer>
+  );
+}
+
+type Props = {
+  registryPlans: ReadingPlanRegistryEntry[];
+};
+
+export function ReadTodayPlanPanel({ registryPlans }: Props) {
+  const plan = useTodayReadingPlan(registryPlans);
+  const { t } = useLocale();
 
   return (
     <section
@@ -93,58 +224,8 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
       >
         {t("pages.read.todayPlanTitle")}
       </h2>
-
-      <p className="mx-auto mt-3 max-w-[20rem] text-pretty text-[0.9rem] font-medium leading-snug text-amber-950 dark:text-stone-100">
-        {planTitle}
-      </p>
-      {isTripleLoop ? (
-        <p className="mt-2 text-[11px] tabular-nums tracking-wide text-amber-800/58 dark:text-stone-500">
-          {t("pages.read.todayPlanDayMeta", { n: String(getReadingPlanDaySinceEpoch()) })}
-          <span className="mx-1.5 text-amber-800/35 dark:text-stone-600">·</span>
-          {t("pages.read.todayPlanAnchorEaster")}
-        </p>
-      ) : dayIndex != null ? (
-        <p className="mt-2 text-[11px] tabular-nums tracking-wide text-amber-800/58 dark:text-stone-500">
-          {t("pages.read.todayPlanDayMeta", { n: String(dayIndex + 1) })}
-          <span className="mx-1.5 text-amber-800/35 dark:text-stone-600">·</span>
-          {anchorHint}
-        </p>
-      ) : null}
-
-      <p className="mt-3 text-[11px]">
-        <Link
-          href={`/read/plans/${encodeURIComponent(prefs.planId)}`}
-          className="font-medium text-amber-900/78 underline decoration-amber-800/25 underline-offset-[0.2em] hover:text-amber-950 dark:text-stone-400 dark:hover:text-stone-200"
-        >
-          {t("pages.read.todayPlanChange")}
-        </Link>
-        <span className="mx-2 text-amber-800/35 dark:text-stone-600">·</span>
-        <Link
-          href="/read/plans"
-          className="font-medium text-amber-900/78 underline decoration-amber-800/25 underline-offset-[0.2em] hover:text-amber-950 dark:text-stone-400 dark:hover:text-stone-200"
-        >
-          {t("pages.read.todayPlanAllPlans")}
-        </Link>
-      </p>
-
-      {loading ? (
-        <p className="mt-4 text-[12px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanLoading")}</p>
-      ) : payload?.day?.readings.length ? (
-        <ul className="mx-auto mt-4 flex max-w-[20rem] flex-col items-center gap-2.5">
-          {payload.day.readings.map((r, idx) => (
-            <li key={idx} className="w-full text-[13px] leading-snug">
-              <Link
-                href={readingPlanChapterHref(r.bookId, r.startChapter)}
-                className="font-medium text-amber-950 underline decoration-amber-800/25 underline-offset-[0.15em] hover:decoration-amber-800/50 dark:text-stone-100 dark:decoration-stone-500/35"
-              >
-                {formatReadingPlanRange(r)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-4 text-[12px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanEmpty")}</p>
-      )}
+      <ReadTodayPlanReadings plan={plan} />
+      <ReadTodayPlanFooter plan={plan} />
     </section>
   );
 }

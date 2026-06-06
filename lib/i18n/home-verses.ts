@@ -81,5 +81,6 @@ const HOME_VERSES_EN: HomeVerseEntry[] = [
 
 export const HOME_VERSES_BY_LOCALE: Record<AppLocale, HomeVerseEntry[]> = {
   "zh-CN": HOME_VERSES_ZH,
+  "zh-TW": HOME_VERSES_ZH,
   en: HOME_VERSES_EN,
 };

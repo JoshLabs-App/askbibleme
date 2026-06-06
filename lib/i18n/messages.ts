@@ -6,6 +6,7 @@ export type Messages = typeof zhCN;
 
 export const MESSAGES: Record<AppLocale, Messages> = {
   "zh-CN": zhCN,
+  "zh-TW": zhCN,
   en: en as Messages,
 };
 

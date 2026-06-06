@@ -4,5 +4,5 @@ import type { AppLocale } from "../i18n/config";
 export function joinVerseLinesForFlow(lines: string[], locale: AppLocale): string {
   const parts = lines.map((s) => s.trim()).filter(Boolean);
   if (parts.length === 0) return "";
-  return locale === "zh-CN" ? parts.join("") : parts.join(" ");
+  return locale === "en" ? parts.join(" ") : parts.join("");
 }

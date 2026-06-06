@@ -4,6 +4,7 @@ import {
   type LoadedChapter,
 } from "@/lib/bible/load-chapter-from-default-translation";
 import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
+import { loadBundledChapterSegments } from "@/lib/bible/bundled-chapter-segments";
 import {
   loadChapterSegmentsFromLocalDataset,
   loadChapterSegmentsFromOpenUsfm,
@@ -11,12 +12,19 @@ import {
 import { resolveReadBibleTranslationPrefsFromCookies } from "@/lib/read/read-bible-translation-prefs";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
-export type ReadChapterWithContrast = {
-  primary: LoadedChapter;
-  contrast: LoadedChapter | null;
+export type ReadChapterContrastLoaded = {
+  translationId: string;
+  chapter: LoadedChapter;
 };
 
-/** 读经章页：按 Cookie / 默认读本加载主译本，可选对照译本。 */
+export type ReadChapterWithContrast = {
+  primary: LoadedChapter;
+  /** @deprecated 首项对照；请用 `contrasts` */
+  contrast: LoadedChapter | null;
+  contrasts: ReadChapterContrastLoaded[];
+};
+
+/** 读经章页：按 Cookie / 默认读本加载主译本，可选多个对照译本。 */
 export async function loadReadChapterForReadPage(
   bookId: string,
   chapter: number,
@@ -36,20 +44,21 @@ export async function loadReadChapterForReadPage(
   );
   if (!primary) return null;
 
-  let contrast: LoadedChapter | null = null;
-  if (prefs.contrastTranslationId) {
-    contrast = await loadChapterFromTranslation(
-      cwd,
-      bookId,
-      chapter,
-      prefs.contrastTranslationId,
-    );
+  const contrasts: ReadChapterContrastLoaded[] = [];
+  for (const contrastId of prefs.contrastTranslationIds) {
+    const loaded = await loadChapterFromTranslation(cwd, bookId, chapter, contrastId);
+    if (loaded) contrasts.push({ translationId: contrastId, chapter: loaded });
   }
 
   const primaryMaxVerse = primary.verses.reduce((max, row) => Math.max(max, row.verse), 0) || null;
   primary.segments =
+    loadBundledChapterSegments(cwd, primary.bookId, primary.chapter, "default") ??
     loadChapterSegmentsFromLocalDataset(cwd, primary.bookId, primary.chapter) ??
     (await loadChapterSegmentsFromOpenUsfm(primary.bookId, primary.chapter, primaryMaxVerse));
 
-  return { primary, contrast };
+  return {
+    primary,
+    contrast: contrasts[0]?.chapter ?? null,
+    contrasts,
+  };
 }

@@ -51,6 +51,8 @@ import {
   writeReadingPlanAudioSession,
 } from "@/lib/read/reading-plan-audio-session";
 import { prepareReadingPlanAudioSessionForChapter } from "@/lib/read/prepare-reading-plan-audio-session";
+import { readPlanFlowActive } from "@/lib/read/plan-flow-session";
+import { resolveTodayPlanLoopNextTarget } from "@/lib/read/resolve-today-plan-loop-next-target";
 
 function audioUrlEquals(el: HTMLAudioElement, candidate: string): boolean {
   const c = candidate.trim();
@@ -114,7 +116,7 @@ async function fetchDefaultTranslationIdCached(): Promise<string | null> {
 export type ScriptureAudioRepeatMode = "off" | "chapter" | "book";
 
 /** 全局定时停止：0 为关闭；墙钟到时暂停壳层音乐（不关屏、不锁机），并调用已注册的额外暂停（历史：自然混音等） */
-export type MusicShellSleepTimerMinutes = 0 | 30 | 60 | 120;
+export type MusicShellSleepTimerMinutes = 0 | 15 | 30 | 60 | 120;
 
 export type DeviceLibraryPlaybackInfo = {
   trackId: string;
@@ -822,6 +824,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const advanceScriptureChapter = async (
       parsed: ParsedCuvChapterAudioSrc,
       target: { bookId: string; chapter: number } | null,
+      opts?: { planFlow?: boolean },
     ) => {
       if (!target) {
         setPlaying(false);
@@ -858,7 +861,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         setPlaying(false);
         return;
       }
-      router.push(`/read/${target.bookId}/${target.chapter}`);
+      const planQuery = opts?.planFlow || readPlanFlowActive() ? "?planFlow=1" : "";
+      router.push(`/read/${target.bookId}/${target.chapter}${planQuery}`);
       playAfterNextBindRef.current = true;
       setPlaybackSrc(resolved.src.trim());
     };
@@ -870,6 +874,18 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         return;
       }
       const cur = effectiveSrcRef.current.trim();
+      const parsedEarly = cur ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
+      if (parsedEarly && readPlanFlowActive()) {
+        void (async () => {
+          const next = await resolveTodayPlanLoopNextTarget(parsedEarly.bookId, parsedEarly.chapter);
+          if (next) {
+            await advanceScriptureChapter(parsedEarly, next, { planFlow: true });
+            return;
+          }
+          setPlaying(false);
+        })();
+        return;
+      }
       const planSession = readReadingPlanAudioSession();
       const planParsed = planSession && cur ? tryParseCuvChapterAudioEffectiveSrc(cur) : null;
       if (planSession && planParsed) {
@@ -890,7 +906,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         }
       }
       const mode = scriptureAudioRepeatRef.current;
-      const parsed = tryParseCuvChapterAudioEffectiveSrc(cur);
+      const parsed = parsedEarly ?? tryParseCuvChapterAudioEffectiveSrc(cur);
       if (parsed) {
         if (mode === "chapter") {
           a.currentTime = 0;
@@ -976,7 +992,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     if (!bookMeta) return;
 
     const planSession = await prepareReadingPlanAudioSessionForChapter(readCh.bookId, readCh.chapter);
-    if (planSession) {
+    if (planSession || readPlanFlowActive()) {
       setScriptureAudioRepeatMode("off", { persist: false });
     }
     const playVoice = effectiveVoiceId(readCh.bookId);

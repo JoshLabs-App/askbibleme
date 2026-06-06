@@ -2,7 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Speech from "expo-speech";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Alert,
   Animated,
@@ -23,12 +23,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { resolveLocalizedField } from "../i18n/site-copy";
-import {
-  getTelemetryConsent,
-  hydrateTelemetryConsent,
-  setTelemetryConsent,
-  subscribeTelemetryConsent,
-} from "../telemetry/consent";
 import {
   HOME_VERSE_POOL_SCOPE_OPTIONS,
   type HomeVersePoolScopeId,
@@ -58,6 +52,9 @@ import {
   fetchMobileContentManifest,
   type MobileContentManifestAnnouncement,
 } from "../api/mobileContentManifest";
+import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { resolveDefaultPrimaryTranslationId, writeReadBibleTranslationPrefs, writeReadBibleTranslationPrefMode } from "../read/read-bible-translation-prefs";
+import { readHomePrayerVersePrefs, writeHomePrayerVersePrefs } from "../home/homePrayerVersePrefs";
 import { requestOpenOnboardingDevotionIntro } from "../onboarding/onboarding-devotion-gate";
 import { resetOnboardingDevotionIntro } from "../onboarding/onboarding-devotion-prefs";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
@@ -66,6 +63,7 @@ import {
   shouldShowUpdateAnnouncement,
   snoozeUpdateAnnouncement,
 } from "../updates/updateAnnouncementPrefs";
+import { isMemberRegisterEnabled } from "../config/mobileBundledOnly";
 import { useShellNavMenu } from "./ShellNavMenuContext";
 import { useShellSwipeSuspend } from "./useShellSwipeSuspend";
 
@@ -107,8 +105,9 @@ function MenuRow({ label, onPress, detail, selected }: MenuRowProps) {
 
 type LocaleInlineRowProps = {
   locale: AppLocale;
-  setLocale: (next: AppLocale) => void;
+  onLocaleChange: (next: AppLocale) => void;
   zh: boolean;
+  switching: boolean;
 };
 
 type DeviceVoice = { identifier: string; name?: string; language?: string };
@@ -140,28 +139,42 @@ function inferVoiceGender(voice: DeviceVoice): "female" | "male" | "unknown" {
   return "unknown";
 }
 
-function LocaleInlineRow({ locale, setLocale, zh }: LocaleInlineRowProps) {
+function LocaleInlineRow({ locale, onLocaleChange, zh, switching }: LocaleInlineRowProps) {
   return (
     <View style={[styles.row, styles.rowInline]}>
       <Text style={styles.rowText}>{zh ? "语言" : "Language"}</Text>
       <View style={styles.localeInlineGroup}>
         <Pressable
-          onPress={() => setLocale("zh-CN")}
-          style={[styles.localeInlineChip, locale === "zh-CN" && styles.localeInlineChipActive]}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "zh-CN" }}
-          accessibilityLabel="中文"
-        >
-          <Text style={[styles.localeInlineText, locale === "zh-CN" && styles.localeInlineTextActive]}>中文</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setLocale("en")}
+          onPress={() => onLocaleChange("en")}
           style={[styles.localeInlineChip, locale === "en" && styles.localeInlineChipActive]}
+          disabled={switching}
           accessibilityRole="button"
           accessibilityState={{ selected: locale === "en" }}
-          accessibilityLabel="English"
+          accessibilityLabel={zh ? "英文（美国旗）" : "English (US flag)"}
         >
-          <Text style={[styles.localeInlineText, locale === "en" && styles.localeInlineTextActive]}>EN</Text>
+          <Text style={[styles.localeInlineIcon, locale === "en" && styles.localeInlineIconActive]}>
+            🇺🇸
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => onLocaleChange("zh-TW")}
+          style={[styles.localeInlineChip, locale === "zh-TW" && styles.localeInlineChipActive]}
+          disabled={switching}
+          accessibilityRole="button"
+          accessibilityState={{ selected: locale === "zh-TW" }}
+          accessibilityLabel="繁体"
+        >
+          <Text style={[styles.localeInlineIcon, locale === "zh-TW" && styles.localeInlineIconActive]}>🇹🇼</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => onLocaleChange("zh-CN")}
+          style={[styles.localeInlineChip, locale === "zh-CN" && styles.localeInlineChipActive]}
+          disabled={switching}
+          accessibilityRole="button"
+          accessibilityState={{ selected: locale === "zh-CN" }}
+          accessibilityLabel="中简"
+        >
+          <Text style={[styles.localeInlineIcon, locale === "zh-CN" && styles.localeInlineIconActive]}>🇨🇳</Text>
         </Pressable>
       </View>
     </View>
@@ -180,11 +193,6 @@ export function ShellNavDrawer() {
   const slideX = useRef(new Animated.Value(-panelW)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const [visible, setVisible] = useState(false);
-  const telemetryConsent = useSyncExternalStore(
-    subscribeTelemetryConsent,
-    getTelemetryConsent,
-    () => "unknown",
-  );
   const homeTtsExperimentEnabled = useSyncExternalStore(
     subscribeHomeTtsExperiment,
     getHomeTtsExperimentEnabled,
@@ -205,13 +213,13 @@ export function ShellNavDrawer() {
   const [resourceUpdateAvailable, setResourceUpdateAvailable] = useState(false);
   const [resourceAnnouncement, setResourceAnnouncement] = useState<MobileContentManifestAnnouncement | null>(null);
   const [resourceAnnouncementActive, setResourceAnnouncementActive] = useState(false);
+  const [localeSwitching, setLocaleSwitching] = useState(false);
   const {
     checkMusicCatalogUpdate,
     downloadMusicCatalogUpdate,
   } = useMusicPlayback();
 
   useEffect(() => {
-    void hydrateTelemetryConsent();
     void hydrateHomeTtsExperiment();
     void hydrateHomeVersePoolScope();
   }, []);
@@ -329,54 +337,6 @@ export function ShellNavDrawer() {
   }, [open]);
 
   const zh = locale !== "en";
-  const telemetryDetail =
-    telemetryConsent === "granted"
-      ? zh
-        ? "已开启，感谢你帮助我们持续优化"
-        : "Enabled, thanks for helping us improve"
-      : telemetryConsent === "denied"
-        ? zh
-          ? "已关闭（可随时重新开启）"
-          : "Disabled (you can enable anytime)"
-        : zh
-          ? "建议开启：帮助我们持续优化体验"
-          : "Recommended: help improve your experience";
-
-  const toggleTelemetryConsent = () => {
-    if (telemetryConsent === "granted") {
-      Alert.alert(
-        zh ? "关闭匿名优化统计" : "Disable anonymous insights",
-        zh ? "关闭后将停止上报匿名使用指标，你仍可随时在这里重新开启。" : "Anonymous usage insights will stop. You can enable again anytime.",
-        [
-          { text: zh ? "取消" : "Cancel", style: "cancel" },
-          {
-            text: zh ? "关闭" : "Disable",
-            style: "destructive",
-            onPress: () => {
-              void setTelemetryConsent("denied");
-            },
-          },
-        ],
-      );
-      return;
-    }
-
-    Alert.alert(
-      zh ? "帮助我们持续优化体验" : "Help us improve your experience",
-      zh
-        ? "仅收集匿名基础指标（打开次数、使用时长、页面访问），不会用于广告追踪。"
-        : "We only collect anonymous basics (opens, session duration, screen views), never ad tracking.",
-      [
-        { text: zh ? "取消" : "Cancel", style: "cancel" },
-        {
-          text: zh ? "同意并开启" : "Agree and enable",
-          onPress: () => {
-            void setTelemetryConsent("granted");
-          },
-        },
-      ],
-    );
-  };
 
   const persistTtsPrefs = (next: { rateLevel: NatureHomeTtsLevel; pitchLevel: NatureHomeTtsLevel; voiceId: string }) => {
     setTtsRateLevel(next.rateLevel);
@@ -468,6 +428,41 @@ export function ShellNavDrawer() {
     Alert.alert(title, body || (zh ? "你可以稍后再处理此提醒。" : "You can handle this reminder later."), buttons);
   };
 
+  const handleLocaleChange = useCallback(
+    (nextLocale: AppLocale) => {
+      if (nextLocale === locale || localeSwitching) return;
+      setLocale(nextLocale);
+      setLocaleSwitching(true);
+      void (async () => {
+        try {
+          const index = await fetchBibleTranslationsCatalog();
+          const localePrimary = resolveDefaultPrimaryTranslationId(index, nextLocale);
+          await writeReadBibleTranslationPrefs(
+            {
+              version: 1,
+              primaryTranslationId: localePrimary,
+              contrastTranslationIds: [],
+              audioTranslationId: null,
+            },
+            index,
+          );
+          await writeReadBibleTranslationPrefMode("auto");
+
+          const homePrefs = await readHomePrayerVersePrefs();
+          await writeHomePrayerVersePrefs({
+            ...homePrefs,
+            primaryTranslationMode: "auto",
+            verseTextZhTranslationId: localePrimary,
+            verseTextEnTranslationId: "",
+          });
+        } finally {
+          setLocaleSwitching(false);
+        }
+      })();
+    },
+    [locale, localeSwitching, setLocale],
+  );
+
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={closeMenu}>
       <View style={styles.root}>
@@ -515,7 +510,7 @@ export function ShellNavDrawer() {
               </View>
 
               <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                <LocaleInlineRow locale={locale} setLocale={setLocale} zh={zh} />
+                <LocaleInlineRow locale={locale} onLocaleChange={handleLocaleChange} zh={zh} switching={localeSwitching} />
                 <View style={styles.compactGap} />
                 <Text style={styles.sectionLabelCompact}>{zh ? "主页经文池" : "Home verse pool"}</Text>
                 <Pressable
@@ -741,12 +736,18 @@ export function ShellNavDrawer() {
                   }}
                 />
                 <View style={styles.compactGap} />
-                <MenuRow
-                  label={zh ? "帮助我们优化（匿名）" : "Help us improve (anonymous)"}
-                  detail={telemetryDetail}
-                  onPress={toggleTelemetryConsent}
-                />
-                <View style={styles.compactGap} />
+                {isMemberRegisterEnabled() ? (
+                  <>
+                    <MenuRow
+                      label={t("auth.drawerRegister")}
+                      onPress={() => {
+                        closeMenu();
+                        router.push("/register");
+                      }}
+                    />
+                    <View style={styles.compactGap} />
+                  </>
+                ) : null}
                 <MenuRow
                   label={t("feedback.menuAction")}
                   detail={SUPPORT_EMAIL}
@@ -1025,12 +1026,12 @@ const styles = StyleSheet.create({
   localeInlineGroup: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
   },
   localeInlineChip: {
     minWidth: 42,
     paddingHorizontal: 8,
-    minHeight: 24,
+    minHeight: 32,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
@@ -1042,12 +1043,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 177, 1, 0.18)",
     borderColor: "rgba(255, 177, 1, 0.75)",
   },
-  localeInlineText: {
-    fontSize: 12,
+  localeInlineIcon: {
+    fontSize: 18,
+    lineHeight: 20,
     color: "rgba(55, 53, 47, 0.72)",
     ...parchmentSans(600),
   },
-  localeInlineTextActive: {
+  localeInlineIconActive: {
     color: "rgba(120, 75, 30, 0.95)",
   },
   rowSelected: {

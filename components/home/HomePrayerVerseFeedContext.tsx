@@ -1,7 +1,20 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
+import {
+  getNatureHomeVerseTimingOverride,
+  subscribeNatureHomeVerseTimingOverride,
+} from "@/lib/home/nature-home-verse-timing-override";
 import { useHomePrayerVerseFeed } from "@/components/home/useHomePrayerVerseFeed";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -53,11 +66,17 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   const { locale } = useLocale();
   const { entriesByLocale, bilingual, verseKeys, onVerseCommitted, onNearEnd } = useHomePrayerVerseFeed({
     fallbackByLocale,
+    locale,
   });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const natureHomeVerseTimingOverride = useSyncExternalStore(
+    subscribeNatureHomeVerseTimingOverride,
+    getNatureHomeVerseTimingOverride,
+    () => null,
+  );
   const lastCommittedIndex = useRef(-1);
   const verseKeysSig = verseKeys?.join("\u0001") ?? "";
 
@@ -82,7 +101,8 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
 
     let cancelled = false;
     let tid: number | undefined;
-    const fadeMs = prefersReducedMotion ? Math.min(800, HOME_VERSE_FADE_MS) : HOME_VERSE_FADE_MS;
+    const baseFadeMs = natureHomeVerseTimingOverride?.fadeMs ?? HOME_VERSE_FADE_MS;
+    const fadeMs = prefersReducedMotion ? Math.min(800, baseFadeMs) : baseFadeMs;
 
     const step = () => {
       tid = window.setTimeout(() => {
@@ -102,7 +122,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig]);
+  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride?.fadeMs]);
 
   useEffect(() => {
     setActiveIndex((i) => Math.min(i, Math.max(0, nVerses - 1)));

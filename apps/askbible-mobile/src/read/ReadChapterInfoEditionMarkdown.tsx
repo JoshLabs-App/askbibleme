@@ -4,6 +4,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { normalizeInfoEditionCompareMarkdown } from "../bible/info-edition-format";
 import type { InfoEditionReaderVariant } from "../bible/info-edition-types";
 import { parchmentSans } from "../fonts/parchmentType";
+import { useLocale } from "../i18n/LocaleProvider";
+import { toZhTwText } from "../i18n/site-copy";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { postReadingTheme as pr } from "./postReadingTheme";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
@@ -144,15 +146,20 @@ function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number
 }
 
 export function ReadChapterInfoEditionMarkdown({ content, variant }: Props) {
+  const { locale } = useLocale();
   const trimmed = normalizeInfoEditionCompareMarkdown(content);
-  const { heading, body } = useMemo(() => splitPrimaryHeading(trimmed), [trimmed]);
+  const localized = useMemo(
+    () => (locale === "zh-TW" ? toZhTwText(trimmed) : trimmed),
+    [locale, trimmed],
+  );
+  const { heading, body } = useMemo(() => splitPrimaryHeading(localized), [localized]);
   const { px } = useReadBibleTypography();
   const textScale = useMemo(
     () => Math.max(0.8, Math.min(2.8, px.verseFontSize / 16)),
     [px.verseFontSize],
   );
   const markdownStyles = useMemo(() => markdownStylesFor(variant, textScale), [variant, textScale]);
-  if (!trimmed) return null;
+  if (!localized) return null;
 
   return (
     <View>
@@ -161,7 +168,7 @@ export function ReadChapterInfoEditionMarkdown({ content, variant }: Props) {
           <Text style={markdownStyles.titleText}>{heading}</Text>
         </View>
       ) : null}
-      <Markdown style={markdownStyles}>{body || trimmed}</Markdown>
+      <Markdown style={markdownStyles}>{body || localized}</Markdown>
     </View>
   );
 }

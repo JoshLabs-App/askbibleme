@@ -11,6 +11,7 @@ import {
   writeStoredHomeAtmospherePreset,
 } from "@/lib/home/home-atmosphere";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
+import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
 import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDockSettings";
@@ -216,7 +217,11 @@ function IconMenu(props: { className?: string }) {
   );
 }
 
-const HOME_DASHBOARD_VERSE_FALLBACK: Record<AppLocale, HomeVerseEntry[]> = { "zh-CN": [], en: [] };
+const HOME_DASHBOARD_VERSE_FALLBACK: Record<AppLocale, HomeVerseEntry[]> = {
+  "zh-CN": [],
+  "zh-TW": [],
+  en: [],
+};
 
 function IconUserAvatar(props: { className?: string }) {
   return (
@@ -248,6 +253,7 @@ function IconVerseTypography(props: { className?: string }) {
 export function HomeDashboard() {
   const { t } = useLocale();
   const { bootstrapped, user, logout } = useAskbibleUser();
+  const registerOpen = isMemberRegisterEnabledClient();
   const showAdminHomeLinks = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
@@ -554,6 +560,28 @@ export function HomeDashboard() {
                       >
                         {t("auth.drawerLogout")}
                       </button>
+                      <div className="mx-3 my-1 h-px bg-white/10" aria-hidden />
+                    </>
+                  ) : bootstrapped ? (
+                    <>
+                      <Link
+                        href="/login"
+                        role="menuitem"
+                        className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        {t("auth.drawerLogin")}
+                      </Link>
+                      {registerOpen ? (
+                        <Link
+                          href="/register"
+                          role="menuitem"
+                          className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          {t("auth.drawerRegister")}
+                        </Link>
+                      ) : null}
                       <div className="mx-3 my-1 h-px bg-white/10" aria-hidden />
                     </>
                   ) : null}

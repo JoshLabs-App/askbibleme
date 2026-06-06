@@ -113,23 +113,29 @@ export function buildEntriesByLocaleFromKeys(
   bodies: VerseBodyMap,
   zhTranslationId: string,
   enTranslationId: string,
+  zhTwTranslationId = "cuv-trad",
 ): Record<AppLocale, HomeVerseEntry[]> | null {
   const zhTid = zhTranslationId.trim() || "cuv-simp";
   const enTid = enTranslationId.trim() || "web-en";
+  const zhTwTid = zhTwTranslationId.trim() || "cuv-trad";
   const zh: HomeVerseEntry[] = [];
+  const zhTw: HomeVerseEntry[] = [];
   const en: HomeVerseEntry[] = [];
   for (const key of verseKeys) {
     const row = bodies.get(key);
     if (!row) return null;
     let a = entryForTranslationId(row, zhTid) ?? row.locales["zh-CN"];
+    let tw = entryForTranslationId(row, zhTwTid) ?? a;
     let b = entryForTranslationId(row, enTid) ?? row.locales.en;
     if (!a?.lines?.length && !b?.lines?.length) return null;
     const zhEntry = a?.lines?.length ? a : b!;
+    const zhTwEntry = tw?.lines?.length ? tw : zhEntry;
     const enEntry = b?.lines?.length ? b : a!;
     zh.push(normalizeHomeVerseEntry(zhEntry));
+    zhTw.push(normalizeHomeVerseEntry(zhTwEntry));
     en.push(normalizeHomeVerseEntry(enEntry));
   }
-  return { "zh-CN": zh, en };
+  return { "zh-CN": zh, "zh-TW": zhTw, en };
 }
 
 export function prefetchChunkIdle(scopeId: string, chunkIndex: number, chunkCache: Map<number, HomePrayerChunkV1>): void {

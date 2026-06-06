@@ -29,6 +29,15 @@ import {
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_POOL_SCOPE_ID } from "@/lib/home-prayer-pools/chunk-registry.generated";
 import { readVerifiedHomePrayerPoolConfig } from "@/lib/home-prayer-pools/remote-config";
+import {
+  HOME_VERSE_POOL_SCOPE_KEYS,
+  type HomeVersePoolScopeId,
+} from "@/lib/explore/explore-home-verse-pool-scopes";
+import { filterManifestToExploreScope } from "@/lib/home-prayer-pools/filter-manifest-to-scope";
+import {
+  HOME_VERSE_POOL_SCOPE_UPDATED_EVENT,
+  hydrateHomeVersePoolScope,
+} from "@/lib/home/home-verse-pool-scope-prefs";
 
 /** 各语言列表应对齐；取最短长度用于整体环形平移，双语索引仍一致。 */
 function alignedFallbackSpanLength(by: Record<AppLocale, HomeVerseEntry[]>): number {
@@ -58,10 +67,12 @@ function rotateFallbackByLocale(
 
 type Args = {
   fallbackByLocale: Record<AppLocale, HomeVerseEntry[]>;
+  locale: AppLocale;
 };
 
-function memoryNamespaceFromScopeId(scopeId: string): string {
-  return scopeId.trim() || HOME_PRAYER_POOL_SCOPE_ID;
+function memoryNamespaceFromScopeId(scopeId: string, exploreScopeId: HomeVersePoolScopeId): string {
+  const base = scopeId.trim() || HOME_PRAYER_POOL_SCOPE_ID;
+  return `${base}@${exploreScopeId}`;
 }
 
 function pickScopeIdForFeed(
@@ -75,7 +86,7 @@ function pickScopeIdForFeed(
   return HOME_PRAYER_POOL_SCOPE_ID;
 }
 
-export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
+export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
   bilingual: boolean;
   verseKeys: string[] | undefined;
@@ -92,6 +103,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
   const bodiesRef = useRef<VerseBodyMap>(new Map());
   const chunkCacheRef = useRef(new Map<number, HomePrayerChunkV1>());
   const scopeIdRef = useRef<string>(HOME_PRAYER_POOL_SCOPE_ID);
+  const exploreScopeIdRef = useRef<HomeVersePoolScopeId>("all");
   const keysQueueRef = useRef<string[]>([]);
   const extendingRef = useRef(false);
   const extendCooldownUntilRef = useRef(0);
@@ -102,7 +114,11 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
   useEffect(() => {
     const onReload = () => setPrefsToken((x) => x + 1);
     window.addEventListener(HOME_PRAYER_VERSE_FEED_RELOAD_EVENT, onReload);
-    return () => window.removeEventListener(HOME_PRAYER_VERSE_FEED_RELOAD_EVENT, onReload);
+    window.addEventListener(HOME_VERSE_POOL_SCOPE_UPDATED_EVENT, onReload);
+    return () => {
+      window.removeEventListener(HOME_PRAYER_VERSE_FEED_RELOAD_EVENT, onReload);
+      window.removeEventListener(HOME_VERSE_POOL_SCOPE_UPDATED_EVENT, onReload);
+    };
   }, []);
 
   useEffect(() => {
@@ -126,9 +142,15 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
       const remoteConfig = await readVerifiedHomePrayerPoolConfig();
       if (cancelled) return;
       const scopeId = pickScopeIdForFeed(localScopeId, remoteConfig);
+      const exploreScopeId = hydrateHomeVersePoolScope();
       scopeIdRef.current = scopeId;
-      const manifest = await fetchHomePrayerManifest(scopeId);
+      exploreScopeIdRef.current = exploreScopeId;
+      let manifest = await fetchHomePrayerManifest(scopeId);
       if (cancelled) return;
+      if (manifest && manifest.entries.length > 0) {
+        const scopeKeys = HOME_VERSE_POOL_SCOPE_KEYS[exploreScopeId];
+        manifest = filterManifestToExploreScope(manifest, scopeKeys, exploreScopeId);
+      }
       if (!manifest || manifest.entries.length === 0) {
         manifestRef.current = null;
         setPoolEntries(null);
@@ -137,14 +159,14 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
         return;
       }
       manifestRef.current = manifest;
-      const ns = memoryNamespaceFromScopeId(scopeId);
+      const ns = memoryNamespaceFromScopeId(scopeId, exploreScopeId);
       const memory = { ...(prefs.memoryByNamespace[ns] ?? {}) };
       const keys = buildInitialVerseKeySequence(manifest, memory, HOME_PRAYER_FEED_BATCH_SIZE, Date.now(), Math.random);
       bodiesRef.current = new Map();
       chunkCacheRef.current = new Map();
       await ensureVerseBodiesLoaded(scopeId, manifest, keys, bodiesRef.current, chunkCacheRef.current);
       if (cancelled) return;
-      const { zh, en } = verseTranslationIdsFromPrefs(prefs);
+      const { zh, en } = verseTranslationIdsFromPrefs(prefs, locale);
       const built = buildEntriesByLocaleFromKeys(keys, bodiesRef.current, zh, en);
       if (!built) {
         setPoolEntries(null);
@@ -177,11 +199,11 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
       }
       if (fallbackTimer != null) window.clearTimeout(fallbackTimer);
     };
-  }, [prefsToken]);
+  }, [prefsToken, locale]);
 
   const onVerseCommitted = useCallback((key: string) => {
     const prefs = readHomePrayerVersePrefs();
-    const ns = memoryNamespaceFromScopeId(scopeIdRef.current);
+    const ns = memoryNamespaceFromScopeId(scopeIdRef.current, exploreScopeIdRef.current);
     const mem = { ...(prefs.memoryByNamespace[ns] ?? {}) };
     advanceMemoryAfterShown(mem, key, Date.now());
     writeHomePrayerVersePrefs({
@@ -198,7 +220,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
     extendingRef.current = true;
     try {
       const prefs = readHomePrayerVersePrefs();
-      const ns = memoryNamespaceFromScopeId(scopeId);
+      const ns = memoryNamespaceFromScopeId(scopeId, exploreScopeIdRef.current);
       const memory = { ...(prefs.memoryByNamespace[ns] ?? {}) };
       const cur = keysQueueRef.current;
       const exclude = new Set(cur);
@@ -223,7 +245,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
       if (more.length === 0) return;
       const merged = [...cur, ...more];
       await ensureVerseBodiesLoaded(scopeId, manifest, merged, bodiesRef.current, chunkCacheRef.current);
-      const { zh, en } = verseTranslationIdsFromPrefs(prefs);
+      const { zh, en } = verseTranslationIdsFromPrefs(prefs, locale);
       const built = buildEntriesByLocaleFromKeys(merged, bodiesRef.current, zh, en);
       if (!built) return;
       keysQueueRef.current = merged;
@@ -235,7 +257,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale }: Args): {
     } finally {
       extendingRef.current = false;
     }
-  }, []);
+  }, [locale]);
 
   const onNearEnd = useCallback(
     (index: number, total: number) => {

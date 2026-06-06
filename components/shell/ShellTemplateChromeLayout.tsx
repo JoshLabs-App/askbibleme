@@ -25,6 +25,11 @@ import {
   SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
 } from "@/lib/read/scripture-parchment-shell";
 import { isShellPrimaryAppRoute } from "@/lib/shell/shell-primary-route";
+import {
+  getMusicAutoHideChrome,
+  isMusicShellPath,
+  subscribeMusicAutoHideChrome,
+} from "@/lib/music/music-auto-hide-chrome";
 
 function subscribeHtmlClassDark(onStore: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -102,6 +107,14 @@ export function ShellTemplateChromeLayout({
   }, [appShellBackground, prayerWarmDarkSnap]);
 
   const landscapeNarrow = useLandscapeNarrow();
+  const musicAutoHideChrome = useSyncExternalStore(
+    subscribeMusicAutoHideChrome,
+    getMusicAutoHideChrome,
+    () => false,
+  );
+  const onMusicPath = isMusicShellPath(pathname);
+  const musicLandscapeImmersive =
+    onMusicPath && (landscapeNarrow || musicAutoHideChrome);
   const { shellTemplateBrand } = useAppSkin();
   const previewThemeId = shellTemplateBrand ?? "lagoonPaper";
   const theme = shellTemplatePreviewThemeById(previewThemeId);
@@ -187,8 +200,9 @@ export function ShellTemplateChromeLayout({
         {showTopMenu ? (
           <AppShellTopBar
             tone={topBarTone}
-            landscapeImmersive={landscapeNarrow && !parchmentRoute}
+            landscapeImmersive={musicLandscapeImmersive || (landscapeNarrow && !parchmentRoute)}
             rightAccessory={topBarRightAccessory}
+            hideTopShellInsetTime={parchmentRoute}
           />
         ) : null}
       </main>

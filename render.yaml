@@ -6,6 +6,10 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
+    disk:
+      name: askbible-data
+      mountPath: /var/data
+      sizeGB: 10
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,3 +18,16 @@ services:
       # 构建阶段内存不足时提高堆上限（Render 文档建议；勿设过小如 460）
       - key: NODE_OPTIONS
         value: --max-old-space-size=4096
+      # 持久盘根目录（须与 disk.mountPath 一致）
+      - key: DATA_ROOT
+        value: /var/data
+      - key: INFO_EDITION_DISK_SAVE
+        value: "1"
+      # 会员注册（构建期 NEXT_PUBLIC_* 须在此设置，否则 Web 注册入口不会显示）
+      - key: MEMBER_REGISTER_ENABLED
+        value: "1"
+      - key: NEXT_PUBLIC_MEMBER_REGISTER_ENABLED
+        value: "1"
+      # 用户库：优先读 DATA_ROOT/admin_data/auth.sqlite（首次上线用 npm run auth:push-remote 上传）
+      # - key: ASKBIBLE_AUTH_SQLITE_PATH
+      #   value: /var/data/admin_data/auth.sqlite

@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppLocale } from "../i18n/config";
 import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-scopes";
-import { readHomePrayerVersePrefs, verseTranslationIdsFromPrefs } from "./homePrayerVersePrefs";
+import {
+  readHomePrayerVersePrefs,
+  subscribeHomePrayerVersePrefs,
+  flowLocaleForHomeVerseTranslationId,
+  verseTranslationIdsFromPrefs,
+} from "./homePrayerVersePrefs";
 import { loadHomeVerseManifest, resolveHomeVersePair } from "./verse-pool/loader";
 import { readHomeVerseMemory, writeHomeVerseMemory } from "./verse-pool/memory-prefs";
 import { advanceMemoryAfterShown, pickNextVerseKey } from "./verse-pool/pick-next";
@@ -25,10 +30,13 @@ async function pickShow(
   locale: AppLocale,
   primaryTranslationId: string,
   contrastTranslationId: string,
+  avoidVerseKey?: string | null,
 ): Promise<{ primary: HomeVerseEntry; contrast: HomeVerseEntry | null; verseKey: string } | null> {
   const now = Date.now();
   const maxAttempts = Math.min(12, manifest.entries.length);
   const excluded = new Set<string>();
+  const avoidKey = (avoidVerseKey ?? "").trim();
+  if (avoidKey) excluded.add(avoidKey);
 
   for (let i = 0; i < maxAttempts; i += 1) {
     const candidateManifest =
@@ -42,7 +50,6 @@ async function pickShow(
     const key = pickNextVerseKey(candidateManifest, memory, now, Math.random);
     if (!key) break;
     excluded.add(key);
-    advanceMemoryAfterShown(memory, key, now);
     const pair = await resolveHomeVersePair(
       manifest,
       key,
@@ -51,9 +58,26 @@ async function pickShow(
       contrastTranslationId,
     );
     if (pair) {
+      advanceMemoryAfterShown(memory, key, now);
       await writeHomeVerseMemory(memory);
       return { ...pair, verseKey: key };
     }
+  }
+
+  // 兜底：随机尝试未命中时，顺序扫一遍，确保已选择的译本/对照真正生效。
+  for (const row of manifest.entries) {
+    if (excluded.has(row.verseKey)) continue;
+    const pair = await resolveHomeVersePair(
+      manifest,
+      row.verseKey,
+      locale,
+      primaryTranslationId,
+      contrastTranslationId,
+    );
+    if (!pair) continue;
+    advanceMemoryAfterShown(memory, row.verseKey, now);
+    await writeHomeVerseMemory(memory);
+    return { ...pair, verseKey: row.verseKey };
   }
 
   await writeHomeVerseMemory(memory);
@@ -81,6 +105,13 @@ export function useHomeThemeRepeatVerse(
     primary: "cuv-simp",
     contrast: "",
   });
+  const [homePrefsVersion, setHomePrefsVersion] = useState(0);
+
+  useEffect(() => {
+    return subscribeHomePrayerVersePrefs(() => {
+      setHomePrefsVersion((v) => v + 1);
+    });
+  }, []);
 
   const refreshTranslations = useCallback(async () => {
     const prefs = await readHomePrayerVersePrefs();
@@ -98,6 +129,7 @@ export function useHomeThemeRepeatVerse(
       locale,
       translationRef.current.primary,
       translationRef.current.contrast,
+      verseKey,
     );
     if (next) {
       setEntry(next.primary);
@@ -109,18 +141,39 @@ export function useHomeThemeRepeatVerse(
   const reloadCurrentVerse = useCallback(async () => {
     const manifest = manifestRef.current;
     const key = verseKey;
-    if (!manifest || !key) return;
-    const pair = await resolveHomeVersePair(
+    if (!manifest) return;
+    if (key) {
+      const pair = await resolveHomeVersePair(
+        manifest,
+        key,
+        locale,
+        translationRef.current.primary,
+        translationRef.current.contrast,
+      );
+      if (pair) {
+        setEntry(pair.primary);
+        setContrastEntry(pair.contrast);
+        return;
+      }
+    }
+    const next = await pickShow(
       manifest,
-      key,
+      memoryRef.current,
       locale,
       translationRef.current.primary,
       translationRef.current.contrast,
+      key,
     );
-    if (pair) {
-      setEntry(pair.primary);
-      setContrastEntry(pair.contrast);
+    if (next) {
+      setEntry(next.primary);
+      setContrastEntry(next.contrast);
+      setVerseKey(next.verseKey);
+      return;
     }
+    const flow = flowLocaleForHomeVerseTranslationId(translationRef.current.primary);
+    setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
+    setContrastEntry(null);
+    setVerseKey(null);
   }, [locale, verseKey]);
 
   useEffect(() => {
@@ -132,7 +185,8 @@ export function useHomeThemeRepeatVerse(
       manifestRef.current = manifest;
       memoryRef.current = await readHomeVerseMemory();
       if (!manifest?.entries.length) {
-        setEntry(locale === "en" ? FALLBACK_EN : FALLBACK_ZH);
+        const flow = flowLocaleForHomeVerseTranslationId(translationRef.current.primary);
+        setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
         setContrastEntry(null);
         setVerseKey(null);
         setReady(true);
@@ -151,7 +205,8 @@ export function useHomeThemeRepeatVerse(
           setContrastEntry(first.contrast);
           setVerseKey(first.verseKey);
         } else {
-          setEntry(locale === "en" ? FALLBACK_EN : FALLBACK_ZH);
+          const flow = flowLocaleForHomeVerseTranslationId(translationRef.current.primary);
+          setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
           setContrastEntry(null);
           setVerseKey(null);
         }
@@ -169,7 +224,7 @@ export function useHomeThemeRepeatVerse(
       await refreshTranslations();
       await reloadCurrentVerse();
     })();
-  }, [prefsVersion, ready, refreshTranslations, reloadCurrentVerse]);
+  }, [prefsVersion, homePrefsVersion, ready, refreshTranslations, reloadCurrentVerse]);
 
   useEffect(() => {
     if (!ready || !manifestRef.current?.entries.length || pauseRotation) return;

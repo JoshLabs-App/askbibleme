@@ -1,8 +1,10 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { InfoEditionReaderVariant } from "../bible/info-edition-types";
-import { t } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
+import { createT } from "../i18n/site-copy";
+import { getLocale } from "../i18n/locale-store";
 import { ReadChapterInfoEditionBlock } from "./ReadChapterInfoEditionBlock";
 import { postReadingTheme as pr } from "./postReadingTheme";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -15,6 +17,7 @@ const consultArt = require("../../assets/images/post-reading/consult-materials.p
 type Props = {
   bookId: string;
   chapter: number;
+  displayLocale?: AppLocale;
   infoRoleId?: string | null;
   guideRoleId?: string | null;
   onBackToTop?: () => void;
@@ -37,18 +40,20 @@ function PostReadingBookPage({
   isActive,
   onPress,
   textScale,
+  tx,
 }: {
   panel: PanelDef;
   pageSide: PageSide;
   isActive: boolean;
   onPress: () => void;
   textScale: number;
+  tx: (key: string) => string;
 }) {
   const isDiscover = panel.variant === "guide";
   const isLeft = pageSide === "left";
   const actionLabel = isActive
-    ? t("pages.read.postReadingEditionSelected")
-    : t("pages.read.postReadingEditionTapAction");
+    ? tx("pages.read.postReadingEditionSelected")
+    : tx("pages.read.postReadingEditionTapAction");
 
   return (
     <Pressable
@@ -61,7 +66,7 @@ function PostReadingBookPage({
       accessibilityRole="button"
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={panel.title}
-      accessibilityHint={t("pages.read.postReadingEditionTapAction")}
+      accessibilityHint={tx("pages.read.postReadingEditionTapAction")}
     >
       <View
         style={[
@@ -132,12 +137,14 @@ function PostReadingBookPage({
 export function ReadChapterPostReadingEditions({
   bookId,
   chapter,
+  displayLocale = getLocale(),
   infoRoleId = null,
   guideRoleId = null,
   onBackToTop,
   onGoPrevChapter,
   onGoNextChapter,
 }: Props) {
+  const t = useMemo(() => createT(displayLocale), [displayLocale]);
   const { px } = useReadBibleTypography();
   const textScale = Math.max(0.8, Math.min(2.8, px.verseFontSize / 16));
   const [active, setActive] = useState<InfoEditionReaderVariant | null>(null);
@@ -218,6 +225,7 @@ export function ReadChapterPostReadingEditions({
             isActive={active === "guide"}
             onPress={() => selectVariant("guide")}
             textScale={textScale}
+            tx={t}
           />
           <PostReadingBookPage
             panel={panels[1]}
@@ -225,6 +233,7 @@ export function ReadChapterPostReadingEditions({
             isActive={active === "info"}
             onPress={() => selectVariant("info")}
             textScale={textScale}
+            tx={t}
           />
         </View>
       </View>
@@ -235,6 +244,7 @@ export function ReadChapterPostReadingEditions({
           variant="guide"
           bookId={bookId}
           chapter={chapter}
+          displayLocale={displayLocale}
           roleId={guideRoleId}
           isActive
           onBack={() => setActive(null)}
@@ -246,6 +256,7 @@ export function ReadChapterPostReadingEditions({
           variant="info"
           bookId={bookId}
           chapter={chapter}
+          displayLocale={displayLocale}
           roleId={infoRoleId}
           isActive
           onBack={() => setActive(null)}

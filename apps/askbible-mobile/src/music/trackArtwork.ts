@@ -90,11 +90,11 @@ export function enrichPlaybackTracks(
   store: MusicCompanionStore,
   baseUrl: string,
 ): PlaybackTrack[] {
-  return store.audioTracks
-    .map((t, index) => {
+  const tracks: PlaybackTrack[] = [];
+  for (const [index, t] of store.audioTracks.entries()) {
       const remoteSrc = toAbsoluteUrl(baseUrl, t.src);
       const playback = resolveMusicTrackPlayback(t.id, remoteSrc);
-      if (!playback.src.trim() && playback.bundledModule == null) return null;
+      if (!playback.src.trim() && playback.bundledModule == null) continue;
       const visual = visualForTrack(store, t.id);
       let artworkUri: string | null = null;
       let gradientColors = gradientColorsForTrackId(t.id);
@@ -114,17 +114,20 @@ export function enrichPlaybackTracks(
         ? resolveMusicAnalysisPlaybackUri(t.id, remoteAnalysis)
         : null;
 
-      return {
+      const next: PlaybackTrack = {
         id: t.id,
         title: resolveMusicLocalizedField(t.title) || "",
         artist: resolveMusicLocalizedField(t.artist) || "",
         album: inferTrackAlbum(t),
         src: playback.src,
-        bundledModule: playback.bundledModule,
         analysisSrc,
         artworkUri,
         gradientColors,
       };
-    })
-    .filter((t): t is PlaybackTrack => t !== null);
+      if (playback.bundledModule != null) {
+        next.bundledModule = playback.bundledModule;
+      }
+      tracks.push(next);
+  }
+  return tracks;
 }

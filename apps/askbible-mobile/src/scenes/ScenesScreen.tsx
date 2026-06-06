@@ -18,16 +18,9 @@ import {
   readNatureActiveSceneId,
   writeNatureActiveSceneId,
 } from "../nature/natureActiveScenePrefs";
-import {
-  ShellSwipeExclude,
-  useShellSwipeExcludeHandlers,
-} from "../shell/ShellSwipeExclude";
+import { ShellSwipeExclude } from "../shell/ShellSwipeExclude";
 import type { NatureSettingsV2 } from "../types/nature";
-import {
-  HOME_SCENE_THUMB_GAP,
-  homeSceneStripContentWidth,
-  HomeSceneThumb,
-} from "../home/HomeSceneThumb";
+import { HOME_SCENE_THUMB_GAP, HomeSceneThumb } from "../home/HomeSceneThumb";
 import { trackTelemetry } from "../telemetry/client";
 import { parchmentSans } from "../fonts/parchmentType";
 import { theme } from "../theme";
@@ -43,13 +36,21 @@ import {
   sortNatureScenesByUsage,
   type NatureSceneUsageMap,
 } from "../nature/natureSceneUsage";
+import type { NatureVideoEntry } from "../types/nature";
+
+function sceneTitleText(raw: NatureVideoEntry["title"]): string {
+  if (typeof raw === "string") return raw.trim();
+  if (raw && typeof raw === "object") {
+    return resolveLocalizedField(raw as { "zh-CN"?: string; en?: string });
+  }
+  return "";
+}
 
 export function ScenesScreen() {
   const naturePackRev = useNatureResourcePackSync();
   const baseUrl = getNatureMediaBaseUrl();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const sceneStripSwipeExclude = useShellSwipeExcludeHandlers();
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<NatureSettingsV2 | null>(null);
   const [activeId, setActiveId] = useState("");
@@ -124,28 +125,13 @@ export function ScenesScreen() {
           <Text style={styles.empty}>{t("scenesPage.emptyInline")}</Text>
         ) : (
           <ShellSwipeExclude style={styles.stripWrap}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              alwaysBounceHorizontal
-              directionalLockEnabled
-              nestedScrollEnabled
-              onTouchStart={sceneStripSwipeExclude.onTouchStart}
-              onScrollBeginDrag={sceneStripSwipeExclude.onScrollBeginDrag}
-              contentContainerStyle={[
-                styles.strip,
-                videos.length > 0
-                  ? { minWidth: homeSceneStripContentWidth(videos.length) + 16 }
-                  : null,
-              ]}
-            >
+            <View style={styles.strip}>
               {videos.map((v) => {
                 const selected = v.id === activeId;
                 const thumbModule = resolveNaturePosterPlaybackModule(v.id);
                 const thumbRemote = v.thumbSrc?.trim() ? toAbsoluteUrl(baseUrl, v.thumbSrc.trim()) : "";
                 const thumbUri = resolveNaturePosterPlaybackUri(v.id, thumbRemote) || thumbRemote;
-                const label =
-                  typeof v.title === "string" ? v.title.trim() : resolveLocalizedField(v.title);
+                const label = sceneTitleText(v.title);
                 return (
                   <HomeSceneThumb
                     key={v.id}
@@ -157,7 +143,7 @@ export function ScenesScreen() {
                   />
                 );
               })}
-            </ScrollView>
+            </View>
           </ShellSwipeExclude>
         )}
 
@@ -177,10 +163,11 @@ const styles = StyleSheet.create({
   stripWrap: { marginTop: 24, alignSelf: "stretch" },
   strip: {
     flexDirection: "row",
-    direction: "ltr",
+    flexWrap: "wrap",
+    justifyContent: "center",
     gap: HOME_SCENE_THUMB_GAP,
     paddingVertical: 4,
-    paddingRight: 16,
+    paddingHorizontal: 2,
   },
   pressed: { opacity: 0.88 },
 });

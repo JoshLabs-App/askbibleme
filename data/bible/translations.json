@@ -1,6 +1,16 @@
 {
   "translations": [
     {
+      "id": "asv",
+      "labelZh": "ASV 英文标准本",
+      "labelEn": "American Standard Version (ASV)",
+      "language": "en",
+      "sourceFile": "uploads/asv.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4465819,
+      "verseCount": 31086
+    },
+    {
       "id": "bbe-en",
       "labelZh": "BBE 简易英文",
       "labelEn": "Bible in Basic English (BBE)",
@@ -9,6 +19,26 @@
       "updatedAt": "2026-05-11T21:36:22.913Z",
       "bytes": 4393226,
       "verseCount": 31102
+    },
+    {
+      "id": "blm-es",
+      "labelZh": "西班牙语 自由世界圣经",
+      "labelEn": "Spanish Free Bible for the World",
+      "language": "es",
+      "sourceFile": "uploads/blm-es.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4277479,
+      "verseCount": 31098
+    },
+    {
+      "id": "cbs-zh",
+      "labelZh": "中文当代译本（简体）",
+      "labelEn": "Mandarin Chinese Open Contemporary Bible (Simplified)",
+      "language": "zh-Hans",
+      "sourceFile": "uploads/cbs-zh.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 3385441,
+      "verseCount": 30827
     },
     {
       "id": "cuv-simp",
@@ -31,6 +61,26 @@
       "verseCount": 31100
     },
     {
+      "id": "dby-en",
+      "labelZh": "Darby 英译本",
+      "labelEn": "Darby Translation",
+      "language": "en",
+      "sourceFile": "uploads/dby-en.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4430324,
+      "verseCount": 31099
+    },
+    {
+      "id": "gnv-en",
+      "labelZh": "Geneva 1599 英译本",
+      "labelEn": "Geneva Bible 1599",
+      "language": "en",
+      "sourceFile": "uploads/gnv-en.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4401164,
+      "verseCount": 31090
+    },
+    {
       "id": "heb-leningrad",
       "labelZh": "希伯来语 · Leningrad Codex",
       "labelEn": "Hebrew (Leningrad / WLC-style)",
@@ -39,6 +89,46 @@
       "updatedAt": "2026-05-11T21:36:22.913Z",
       "bytes": 5410022,
       "verseCount": 23213
+    },
+    {
+      "id": "kjv",
+      "labelZh": "KJV 英文钦定本",
+      "labelEn": "King James Version (KJV)",
+      "language": "en",
+      "sourceFile": "uploads/kjv.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4474163,
+      "verseCount": 31102
+    },
+    {
+      "id": "otb-en-gb",
+      "labelZh": "Open Bible 英文版",
+      "labelEn": "Open Translation Bible (English, en-GB)",
+      "language": "en",
+      "sourceFile": "uploads/otb-en-gb.json",
+      "updatedAt": "2026-05-27T17:17:21.699Z",
+      "bytes": 4196686,
+      "verseCount": 31101
+    },
+    {
+      "id": "otb-zh-hans",
+      "labelZh": "Open Bible 简体中文",
+      "labelEn": "Open Translation Bible (Chinese Simplified, zh-CN)",
+      "language": "zh-Hans",
+      "sourceFile": "uploads/otb-zh-hans.json",
+      "updatedAt": "2026-05-27T17:17:21.699Z",
+      "bytes": 3236907,
+      "verseCount": 29079
+    },
+    {
+      "id": "otb-zh-hant",
+      "labelZh": "Open Bible 繁體中文（由简体自动转换）",
+      "labelEn": "Open Translation Bible (Chinese Traditional, auto-converted from zh-CN)",
+      "language": "zh-Hant",
+      "sourceFile": "uploads/otb-zh-hant.json",
+      "updatedAt": "2026-05-27T17:17:21.699Z",
+      "bytes": 3236907,
+      "verseCount": 29079
     },
     {
       "id": "rv1909-es",
@@ -51,6 +141,36 @@
       "verseCount": 30959
     },
     {
+      "id": "rvg-es",
+      "labelZh": "西班牙语 RVG",
+      "labelEn": "Reina Valera Gomez (Spanish)",
+      "language": "es",
+      "sourceFile": "uploads/rvg-es.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4254675,
+      "verseCount": 31102
+    },
+    {
+      "id": "swcb-zh",
+      "labelZh": "世界中文圣经",
+      "labelEn": "World Chinese Bible",
+      "language": "zh-Hans",
+      "sourceFile": "uploads/swcb-zh.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 3693667,
+      "verseCount": 31091
+    },
+    {
+      "id": "vbl-es",
+      "labelZh": "西班牙语 自由圣经译本",
+      "labelEn": "Spanish Free Bible Version",
+      "language": "es",
+      "sourceFile": "uploads/vbl-es.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4455178,
+      "verseCount": 31086
+    },
+    {
       "id": "web-en",
       "labelZh": "WEB 英译本",
       "labelEn": "World English Bible",
@@ -59,6 +179,16 @@
       "updatedAt": "2026-05-11T21:36:22.913Z",
       "bytes": 4243949,
       "verseCount": 31098
+    },
+    {
+      "id": "ylt-en",
+      "labelZh": "YLT 杨氏直译本",
+      "labelEn": "Young's Literal Translation (YLT)",
+      "language": "en",
+      "sourceFile": "uploads/ylt-en.json",
+      "updatedAt": "2026-05-27T17:42:03.549Z",
+      "bytes": 4389880,
+      "verseCount": 31102
     }
   ],
   "defaultTranslationId": "cuv-simp"

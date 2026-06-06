@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 
 export type NatureHomeSettingsSelectOption = {
@@ -36,7 +36,7 @@ export function NatureHomeSettingsSelect({
   menuPlacement = "below",
 }: Props) {
   const active = options.find((o) => o.id === value) ?? options[0];
-  const display = active?.label ?? "";
+  const display = active?.shortLabel ?? active?.label ?? "";
 
   return (
     <View style={[styles.block, open && styles.blockOpen, style]}>
@@ -68,29 +68,40 @@ export function NatureHomeSettingsSelect({
       </Pressable>
       {open && !disabled ? (
         <View style={[styles.menu, menuPlacement === "above" && styles.menuAbove]}>
-          {options.map((opt) => {
-            const selected = opt.id === value;
-            return (
-              <Pressable
-                key={opt.id}
-                onPress={() => onSelect(opt.id)}
-                style={({ pressed }) => [
-                  styles.option,
-                  selected && styles.optionActive,
-                  pressed && styles.optionPressed,
-                ]}
-              >
-                <Text style={[styles.optionText, selected && styles.optionTextActive]} numberOfLines={2}>
-                  {opt.label}
-                </Text>
-                {selected ? (
-                  <MaterialIcons name="check" size={16} color="#fff" />
-                ) : (
-                  <View style={styles.checkSpacer} />
-                )}
-              </Pressable>
-            );
-          })}
+          <ScrollView
+            style={styles.menuList}
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+          >
+            {options.map((opt) => {
+              const selected = opt.id === value;
+              return (
+                <Pressable
+                  key={opt.id}
+                  onPress={() => onSelect(opt.id)}
+                  style={({ pressed }) => [
+                    styles.option,
+                    selected && styles.optionActive,
+                    pressed && styles.optionPressed,
+                  ]}
+                >
+                  <Text
+                    style={[styles.optionText, selected && styles.optionTextActive]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {opt.label}
+                  </Text>
+                  {selected ? (
+                    <MaterialIcons name="check" size={16} color="#fff" />
+                  ) : (
+                    <View style={styles.checkSpacer} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
       ) : null}
     </View>
@@ -142,6 +153,10 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.4)",
   },
   menu: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "100%",
     marginTop: 4,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
@@ -151,12 +166,12 @@ const styles = StyleSheet.create({
     maxHeight: 168,
     zIndex: 8,
   },
+  menuList: {
+    maxHeight: 168,
+  },
   menuAbove: {
-    marginTop: 0,
+    top: undefined,
     marginBottom: 4,
-    position: "absolute",
-    left: 0,
-    right: 0,
     bottom: "100%",
   },
   option: {

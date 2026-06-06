@@ -6,6 +6,7 @@ import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { DEFAULT_SCRIPTURE_TRANSLATION_ID } from "../bible/types";
 import { parchmentSans } from "../fonts/parchmentType";
+import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
@@ -337,7 +338,7 @@ function parseRef(raw: string): ParsedRef | null {
   return { bookId, chapter, verseList, verseLabel };
 }
 
-function translationIdForLocale(locale: "zh-CN" | "en"): string {
+function translationIdForLocale(locale: AppLocale): string {
   return locale === "en" ? "web-en" : DEFAULT_SCRIPTURE_TRANSLATION_ID;
 }
 

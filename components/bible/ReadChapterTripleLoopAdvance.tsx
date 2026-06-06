@@ -19,9 +19,10 @@ import {
   getTripleLoopProgressServerSnapshot,
   getTripleLoopProgressSnapshot,
   hasUserTripleLoopProgress,
-  resetTripleLoopProgressToEpochDefault,
   subscribeTripleLoopProgress,
 } from "@/lib/read/triple-loop-progress";
+import { resetTripleLoopPlanToEasterDefault } from "@/lib/read/triple-loop-plan-sync";
+import { markTodayReadingChapterVisit } from "@/lib/read/today-reading-done";
 
 type Props = {
   bookId: string;
@@ -54,6 +55,7 @@ export function ReadChapterTripleLoopAdvance({ bookId, chapter }: Props) {
   const advance = () => {
     setSaving(true);
     try {
+      void markTodayReadingChapterVisit(bookId, chapter);
       advanceTripleLoopProgressTrack(track);
       router.refresh();
     } finally {
@@ -64,7 +66,7 @@ export function ReadChapterTripleLoopAdvance({ bookId, chapter }: Props) {
   const resetToDefault = () => {
     setSaving(true);
     try {
-      resetTripleLoopProgressToEpochDefault();
+      resetTripleLoopPlanToEasterDefault();
       router.refresh();
     } finally {
       setSaving(false);

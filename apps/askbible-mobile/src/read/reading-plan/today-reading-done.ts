@@ -109,6 +109,12 @@ export async function readTodayReadingDoneKeys(scopeKey: string): Promise<Set<st
   return new Set(record.doneKeys);
 }
 
+export async function clearTodayReadingDoneForScope(scopeKey: string): Promise<void> {
+  const record = await readRecord();
+  if (!record || record.scopeKey !== scopeKey) return;
+  await writeRecord({ version: 1, scopeKey, doneKeys: [] });
+}
+
 export async function setTodayReadingItemDone(
   scopeKey: string,
   itemKey: string,

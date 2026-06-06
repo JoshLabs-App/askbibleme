@@ -110,6 +110,7 @@ export default function RootLayout() {
                 <Stack.Screen name="scenes" options={{ headerShown: false, animation: "slide_from_right" }} />
                 <Stack.Screen name="relax" options={{ headerShown: false }} />
                 <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
+                <Stack.Screen name="register" options={{ headerShown: false, animation: "slide_from_right" }} />
               </Stack>
               <ShellMenuButton />
               <ShellInsetClock />

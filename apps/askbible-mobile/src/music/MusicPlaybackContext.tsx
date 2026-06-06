@@ -1,4 +1,5 @@
 import { Audio, type AVPlaybackStatus } from "expo-av";
+import { Asset } from "expo-asset";
 import { AppState, type AppStateStatus } from "react-native";
 import {
   configureShellAudioMode,
@@ -33,6 +34,7 @@ import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import {
   fetchMusicCompanionStoreFromRemote,
   getBundledMusicCompanionStore,
@@ -50,7 +52,13 @@ import {
   getActiveReadChapterPlayback,
   setActiveReadChapterPlayback,
 } from "../read/read-chapter-playback-store";
-import { readMusicPlaybackResume, writeMusicPlaybackResume } from "./music-playback-prefs";
+import {
+  normalizeScripturePlaybackRate,
+  readMusicPlaybackResume,
+  readScripturePlaybackRate,
+  writeMusicPlaybackResume,
+  writeScripturePlaybackRate,
+} from "./music-playback-prefs";
 
 export type ReadChapterPlaybackRegistration = {
   bookId: string;
@@ -106,6 +114,8 @@ type MusicPlaybackContextValue = {
   scripturePreparing: boolean;
   scriptureAudioRepeatMode: ScriptureAudioRepeatMode;
   setScriptureAudioRepeatMode: (mode: ScriptureAudioRepeatMode) => void;
+  scripturePlaybackRate: number;
+  setScripturePlaybackRate: (rate: number) => Promise<void>;
   seekRatio: (ratio: number) => Promise<void>;
   registerReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
   playTrackAt: (index: number) => Promise<void>;
@@ -222,7 +232,7 @@ async function fadeSoundVolume(
 function hasAtLeastBundledTracks(
   candidate: MusicCompanionStore | null | undefined,
   bundled: MusicCompanionStore,
-): boolean {
+): candidate is MusicCompanionStore {
   if (!candidate) return false;
   const candidateCount = Array.isArray(candidate.audioTracks) ? candidate.audioTracks.length : 0;
   const bundledCount = Array.isArray(bundled.audioTracks) ? bundled.audioTracks.length : 0;
@@ -240,6 +250,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const [scriptureDurationSec, setScriptureDurationSec] = useState(0);
   const [scriptureAudioRepeatMode, setScriptureAudioRepeatModeState] =
     useState<ScriptureAudioRepeatMode>("off");
+  const [scripturePlaybackRate, setScripturePlaybackRateState] = useState(1);
   const [scripturePreparing, setScripturePreparing] = useState(false);
   const [musicCurrentSec, setMusicCurrentSec] = useState(0);
   const [musicDurationSec, setMusicDurationSec] = useState(0);
@@ -261,6 +272,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const autoPlayScriptureRef = useRef(false);
   const readChapterRef = useRef<ReadChapterPlaybackRegistration | null>(null);
   const scriptureAudioRepeatRef = useRef<ScriptureAudioRepeatMode>("off");
+  const scripturePlaybackRateRef = useRef(1);
   const playTrackAtRef = useRef<(index: number) => Promise<void>>(async () => {});
   const musicSessionRef = useRef<{ trackId: string; startedAt: number } | null>(null);
   const calmLoopTransitioningRef = useRef(false);
@@ -294,6 +306,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   trackIndexRef.current = trackIndex;
   playbackModeRef.current = playbackMode;
   scriptureAudioRepeatRef.current = scriptureAudioRepeatMode;
+  scripturePlaybackRateRef.current = scripturePlaybackRate;
   musicRepeatModeRef.current = musicRepeatMode;
 
   const persistMusicResume = useCallback(
@@ -315,6 +328,24 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const setScriptureAudioRepeatMode = useCallback((mode: ScriptureAudioRepeatMode) => {
     scriptureAudioRepeatRef.current = mode;
     setScriptureAudioRepeatModeState(mode);
+  }, []);
+
+  const setScripturePlaybackRate = useCallback(async (rate: number) => {
+    const normalized = normalizeScripturePlaybackRate(rate);
+    scripturePlaybackRateRef.current = normalized;
+    setScripturePlaybackRateState(normalized);
+    try {
+      await writeScripturePlaybackRate(normalized);
+    } catch {
+      /* ignore local storage write failures */
+    }
+    const sound = soundRef.current;
+    if (!sound || playbackModeRef.current !== "scripture") return;
+    try {
+      await sound.setRateAsync(normalized, true);
+    } catch (err) {
+      logShellSoundError("setScripturePlaybackRate", err);
+    }
   }, []);
 
   const setMusicRepeatMode = useCallback((mode: MusicRepeatMode) => {
@@ -339,6 +370,14 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       return;
     }
     sleepTimerDeadlineRef.current = Date.now() + minutes * 60 * 1000;
+  }, []);
+
+  useEffect(() => {
+    void readScripturePlaybackRate().then((rate) => {
+      const normalized = normalizeScripturePlaybackRate(rate);
+      scripturePlaybackRateRef.current = normalized;
+      setScripturePlaybackRateState(normalized);
+    });
   }, []);
 
   useEffect(() => {
@@ -393,6 +432,11 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         // 启动先用内置曲库，保证秒开；再按条件覆盖本机缓存与线上新数据。
         const bundledStore = getBundledMusicCompanionStore();
         setStore(bundledStore);
+        if (isMobileBundledOnly()) {
+          // 侧载独立包：只读安装包内曲库，不用缓存/线上覆盖，避免命中未打包轨道导致不可播。
+          await audioModeWarmup;
+          return;
+        }
         const activated = await hasMusicPlaybackActivated();
         if (activated) {
           const cached = await readCachedMusicCompanionStore();
@@ -422,6 +466,11 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkMusicCatalogUpdate = useCallback(async (): Promise<boolean> => {
+    if (isMobileBundledOnly()) {
+      latestRemoteMusicStoreRef.current = null;
+      setMusicCatalogUpdateAvailable(false);
+      return false;
+    }
     const bundled = getBundledMusicCompanionStore();
     const current = storeRef.current ?? bundled;
     const remote = await fetchMusicCompanionStoreFromRemote();
@@ -437,6 +486,11 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const downloadMusicCatalogUpdate = useCallback(async (): Promise<boolean> => {
+    if (isMobileBundledOnly()) {
+      latestRemoteMusicStoreRef.current = null;
+      setMusicCatalogUpdateAvailable(false);
+      return false;
+    }
     const bundled = getBundledMusicCompanionStore();
     const current = storeRef.current ?? bundled;
     let remote = latestRemoteMusicStoreRef.current;
@@ -519,8 +573,47 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       if (tracks.length === 0) return;
       const i = ((index % tracks.length) + tracks.length) % tracks.length;
       const track = tracks[i]!;
-      const avSource = musicTrackAvSource(track);
-      if (avSource == null) return;
+      let avSource = musicTrackAvSource(track);
+      if (avSource == null) {
+        const missingId = track.id.trim();
+        if (missingId) failedTrackIdsRef.current.add(missingId);
+        // 当前曲目在本地包中不可播（例如轻量包未包含该文件）时，自动跳到下一首可播曲目。
+        const fallbackCandidates: number[] = [];
+        for (let k = 0; k < tracks.length; k += 1) {
+          if (k === i) continue;
+          const candidate = tracks[k];
+          if (!candidate) continue;
+          const tid = candidate.id.trim();
+          if (!tid || failedTrackIdsRef.current.has(tid)) continue;
+          const candidateSource = musicTrackAvSource(candidate);
+          if (candidateSource == null) {
+            failedTrackIdsRef.current.add(tid);
+            continue;
+          }
+          fallbackCandidates.push(k);
+        }
+        const fallbackIndex = fallbackCandidates[0];
+        if (fallbackIndex != null) {
+          void playTrackAtRef.current(fallbackIndex);
+          return;
+        }
+        if (failedTrackIdsRef.current.size >= tracks.length) {
+          failedTrackIdsRef.current.clear();
+        }
+        setPlaying(false);
+        return;
+      }
+      if (track.bundledModule != null) {
+        try {
+          const [asset] = await Asset.loadAsync(track.bundledModule);
+          const localUri = (asset?.localUri || asset?.uri || "").trim();
+          if (localUri) {
+            avSource = { uri: localUri };
+          }
+        } catch {
+          // bundled 资源预热失败时，回退到原始 avSource 继续尝试播放。
+        }
+      }
       calmLoopTransitioningRef.current = false;
       const prevTrack = tracks[trackIndexRef.current] ?? null;
       const useCalmFade =
@@ -800,7 +893,14 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
           }
           const created = await Audio.Sound.createAsync(
             scriptureSource,
-            { shouldPlay: true, progressUpdateIntervalMillis: 350, volume: 1, isMuted: false },
+            {
+              shouldPlay: true,
+              progressUpdateIntervalMillis: 350,
+              volume: 1,
+              isMuted: false,
+              rate: scripturePlaybackRateRef.current,
+              shouldCorrectPitch: true,
+            },
             (status: AVPlaybackStatus) => {
               if (soundId !== activeSoundIdRef.current) return;
               if (!status.isLoaded) {
@@ -1280,6 +1380,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       scripturePreparing,
       scriptureAudioRepeatMode,
       setScriptureAudioRepeatMode,
+      scripturePlaybackRate,
+      setScripturePlaybackRate,
       seekRatio,
       registerReadChapter,
       playTrackAt,
@@ -1313,6 +1415,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       scripturePreparing,
       scriptureAudioRepeatMode,
       setScriptureAudioRepeatMode,
+      scripturePlaybackRate,
+      setScripturePlaybackRate,
       seekRatio,
       registerReadChapter,
       playTrackAt,

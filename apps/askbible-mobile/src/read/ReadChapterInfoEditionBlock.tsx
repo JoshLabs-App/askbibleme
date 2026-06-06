@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -9,7 +9,9 @@ import type {
   InfoEditionReaderVariant,
   InfoEditionV1PublishedChapter,
 } from "../bible/info-edition-types";
-import { t } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
+import { createT } from "../i18n/site-copy";
+import { getLocale } from "../i18n/locale-store";
 import { ReadChapterInfoEditionMarkdown } from "./ReadChapterInfoEditionMarkdown";
 import { postReadingTheme as pr } from "./postReadingTheme";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -20,6 +22,7 @@ type Props = {
   variant: InfoEditionReaderVariant;
   bookId: string;
   chapter: number;
+  displayLocale?: AppLocale;
   roleId?: string | null;
   isActive: boolean;
   onBack?: () => void;
@@ -27,7 +30,7 @@ type Props = {
 
 type PanelPhase = "idle" | "loading" | "ready" | "error";
 
-function formatInfoEditionError(raw: string | undefined): string {
+function formatInfoEditionError(raw: string | undefined, t: (key: string) => string): string {
   if (!raw?.trim()) return t("pages.read.infoEditionLoadFailed");
   if (/EACCES|permission denied|EPERM|EROFS|不可写|mkdir|Render 提示/i.test(raw)) {
     return raw;
@@ -39,10 +42,12 @@ export function ReadChapterInfoEditionBlock({
   variant,
   bookId,
   chapter,
+  displayLocale = getLocale(),
   roleId = null,
   isActive,
   onBack,
 }: Props) {
+  const t = useMemo(() => createT(displayLocale), [displayLocale]);
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const { px } = useReadBibleTypography();
   const textScale = Math.max(0.8, Math.min(2.8, px.verseFontSize / 16));
@@ -69,7 +74,7 @@ export function ReadChapterInfoEditionBlock({
         return;
       }
       if (result.status === "failed") {
-        setErr(formatInfoEditionError(result.error));
+        setErr(formatInfoEditionError(result.error, t));
         setPhase("error");
         return;
       }

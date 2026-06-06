@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
+import type { AppLocale } from "../i18n/config";
+import { toZhTwText } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
@@ -32,6 +34,7 @@ import { readOnboardingNickname } from "../onboarding/onboarding-devotion-prefs"
 type Props = {
   bookId: string;
   chapter: number;
+  displayLocale?: AppLocale;
 };
 
 type ChapterRef = {
@@ -61,9 +64,11 @@ function formatDisplayNickname(raw: string): string {
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
-export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
+export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale }: Props) {
   const router = useRouter();
   const { locale } = useLocale();
+  const effectiveLocale = displayLocale ?? locale;
+  const isEnglishDisplay = effectiveLocale === "en";
   const { prefs } = useEffectiveReadingPlanPrefs();
   const { progress } = useTripleLoopProgress();
   const [readings, setReadings] = useState<ReadingPlanRange[]>([]);
@@ -81,6 +86,10 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
   const sparkleLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+  const localeZhText = useCallback(
+    (text: string) => (effectiveLocale === "zh-TW" ? toZhTwText(text) : text),
+    [effectiveLocale],
+  );
 
   const tripleProgressKey = isTripleLoop
     ? `${progress.ot.bookId}:${progress.ot.chapter}|${progress.nt.bookId}:${progress.nt.chapter}|${progress.wisdom.bookId}:${progress.wisdom.chapter}`
@@ -308,9 +317,9 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
     <>
       <View style={styles.card}>
         <View style={styles.titleWrap}>
-          <Text style={styles.titleName}>{displayName || (locale === "en" ? "Friend" : "你")}</Text>
+          <Text style={styles.titleName}>{displayName || (isEnglishDisplay ? "Friend" : localeZhText("你"))}</Text>
           <Text style={styles.titleMain}>
-            {locale === "en" ? "🎉 Great job! This chapter is complete." : "🎉 真棒！本章已完成"}
+            {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 真棒！本章已完成")}
           </Text>
         </View>
 
@@ -318,7 +327,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
           {readings.map((r) => {
             const key = todayReadingItemKey(r);
             const done = doneKeys.has(key);
-            const label = formatReadingPlanRange(r);
+            const label = formatReadingPlanRange(r, effectiveLocale);
             return (
               <View key={key} style={styles.readingRow}>
                 <Pressable
@@ -344,7 +353,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
                   hitSlop={8}
                   style={({ pressed }) => [styles.readingOpenBtn, pressed && styles.pressed]}
                   accessibilityRole="button"
-                  accessibilityLabel={locale === "en" ? `Open ${label}` : `打开 ${label}`}
+                  accessibilityLabel={isEnglishDisplay ? `Open ${label}` : `${localeZhText("打开")} ${label}`}
                 >
                   <View style={styles.readingOpenInner}>
                     <Text style={[styles.readingText, done && styles.readingTextDone]}>{label}</Text>
@@ -370,7 +379,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
               style={({ pressed }) => [styles.actionBtn, styles.actionPrimary, pressed && styles.pressed]}
             >
               <Text style={[styles.actionText, styles.actionPrimaryText]}>
-                {locale === "en" ? "Continue Plan..." : "继续计划……"}
+                {isEnglishDisplay ? "Continue Plan..." : localeZhText("继续计划……")}
               </Text>
             </Pressable>
           ) : (
@@ -379,7 +388,9 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
               hitSlop={8}
               style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
             >
-              <Text style={styles.actionText}>{locale === "en" ? "Back to Read Home" : "回到读经首页"}</Text>
+              <Text style={styles.actionText}>
+                {isEnglishDisplay ? "Back to Read Home" : localeZhText("回到读经首页")}
+              </Text>
             </Pressable>
           )}
           </View>
@@ -391,13 +402,17 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
           onPress={
             neighbors.prev
               ? () =>
-                  router.push({
-                    pathname: "/read/[bookId]/[chapter]",
-                    params: {
-                      bookId: neighbors.prev.bookId,
-                      chapter: String(neighbors.prev.chapter),
-                    },
-                  })
+                  {
+                    const prev = neighbors.prev;
+                    if (!prev) return;
+                    router.push({
+                      pathname: "/read/[bookId]/[chapter]",
+                      params: {
+                        bookId: prev.bookId,
+                        chapter: String(prev.chapter),
+                      },
+                    });
+                  }
               : undefined
           }
           hitSlop={10}
@@ -408,7 +423,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
             pressed && neighbors.prev && styles.pressed,
           ]}
           accessibilityRole="button"
-          accessibilityLabel={locale === "en" ? "Previous chapter" : "上一章"}
+          accessibilityLabel={isEnglishDisplay ? "Previous chapter" : localeZhText("上一章")}
         >
           <Text style={styles.chapterSideNavText}>{"<"}</Text>
         </Pressable>
@@ -418,20 +433,24 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
           hitSlop={8}
           style={({ pressed }) => [styles.backHomeLinkWrap, pressed && styles.pressed]}
         >
-          <Text style={styles.backHomeLinkText}>{locale === "en" ? "Back Home" : "返回主页"}</Text>
+          <Text style={styles.backHomeLinkText}>{isEnglishDisplay ? "Back Home" : localeZhText("返回主页")}</Text>
         </Pressable>
 
         <Pressable
           onPress={
             neighbors.next
               ? () =>
-                  router.push({
-                    pathname: "/read/[bookId]/[chapter]",
-                    params: {
-                      bookId: neighbors.next.bookId,
-                      chapter: String(neighbors.next.chapter),
-                    },
-                  })
+                  {
+                    const next = neighbors.next;
+                    if (!next) return;
+                    router.push({
+                      pathname: "/read/[bookId]/[chapter]",
+                      params: {
+                        bookId: next.bookId,
+                        chapter: String(next.chapter),
+                      },
+                    });
+                  }
               : undefined
           }
           hitSlop={10}
@@ -442,7 +461,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
             pressed && neighbors.next && styles.pressed,
           ]}
           accessibilityRole="button"
-          accessibilityLabel={locale === "en" ? "Next chapter" : "下一章"}
+          accessibilityLabel={isEnglishDisplay ? "Next chapter" : localeZhText("下一章")}
         >
           <Text style={styles.chapterSideNavText}>{">"}</Text>
         </Pressable>
@@ -480,18 +499,20 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
               <Text style={styles.sparkle}>✨</Text>
             </Animated.View>
             <Text style={styles.celebrateEmoji}>🎉</Text>
-            <Text style={styles.celebrateTitle}>{locale === "en" ? "Great Job!" : "恭喜你，今天完成了！"}</Text>
+            <Text style={styles.celebrateTitle}>
+              {isEnglishDisplay ? "Great Job!" : localeZhText("恭喜你，今天完成了！")}
+            </Text>
             <Text style={styles.celebrateBody}>
-              {locale === "en"
+              {isEnglishDisplay
                 ? "You completed all today's readings. Keep this quiet rhythm tomorrow."
-                : "你已完成今天所有读经计划。愿你把这份安静带进下一天。"}
+                : localeZhText("你已完成今天所有读经计划。愿你把这份安静带进下一天。")}
             </Text>
             <View style={styles.celebrateActions}>
               <Pressable
                 onPress={closeCelebrate}
                 style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
               >
-                <Text style={styles.actionText}>{locale === "en" ? "Keep Reading" : "继续阅读"}</Text>
+                <Text style={styles.actionText}>{isEnglishDisplay ? "Keep Reading" : localeZhText("继续阅读")}</Text>
               </Pressable>
               <Animated.View
                 style={[
@@ -520,7 +541,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter }: Props) {
                   style={({ pressed }) => [styles.actionBtn, styles.actionPrimary, pressed && styles.pressed]}
                 >
                   <Text style={[styles.actionText, styles.actionPrimaryText]}>
-                    {locale === "en" ? "Back to Home" : "回到读经首页"}
+                    {isEnglishDisplay ? "Back to Home" : localeZhText("回到读经首页")}
                   </Text>
                 </Pressable>
               </Animated.View>

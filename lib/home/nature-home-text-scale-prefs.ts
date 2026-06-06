@@ -16,6 +16,9 @@ export type NatureHomeTextScaleStep = (typeof NATURE_HOME_TEXT_SCALE_STEPS)[numb
 /** 对应比例 `1`（默认不缩放） */
 export const NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX = 12;
 
+/** 与 App `SUPER_LARGE_TEXT_SCALE_INDEX` 一致 */
+export const NATURE_HOME_SUPER_LARGE_TEXT_SCALE_INDEX = 24;
+
 /** 上一版 `v:2` 的 15 档；读入旧索引时先还原比例再映射到当前表，避免扩档后档位漂移 */
 const PREV_V2_TEXT_SCALE_STEPS = [0.62, 0.68, 0.74, 0.82, 0.91, 1, 1.1, 1.22, 1.36, 1.54, 1.75, 2, 2.28, 2.55, 2.85] as const;
 

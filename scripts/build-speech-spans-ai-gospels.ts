@@ -451,7 +451,7 @@ function parseLineModelOutput(
       }
     }
 
-    if (!Number.isInteger(verse) || !verseSet.has(verse)) continue;
+    if (verse == null || !Number.isInteger(verse) || !verseSet.has(verse)) continue;
     if (!kind || !segText) continue;
     const bucket = byVerse.get(verse) ?? [];
     bucket.push({ kind, text: segText });

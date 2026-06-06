@@ -8,7 +8,8 @@ import {
 } from "./cuv-chapter-audio-voices";
 import { scriptureBooks } from "./scripture-books";
 
-export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://theaudiopower.org/CUV/Recordings";
+export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://media.fhl.net/unvdavid";
+export const CUV_CHAPTER_AUDIO_LOCAL_SUBDIR = "cuv-v20";
 
 export function translationSupportsCuvChapterAudio(translationId: string): boolean {
   return String(translationId || "")
@@ -17,16 +18,19 @@ export function translationSupportsCuvChapterAudio(translationId: string): boole
     .startsWith("cuv");
 }
 
-export function buildExternalCuvChapterAudioUrl(bookName: string, chapter: number): string {
-  const name = String(bookName || "").trim();
-  if (!name || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `${CUV_CHAPTER_AUDIO_REMOTE_BASE}/${encodeURIComponent(`${name} ${chapter}`)}.mp3`;
+export function buildExternalCuvChapterAudioUrl(bookId: string, chapter: number): string {
+  const id = String(bookId || "").trim().toUpperCase();
+  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  const meta = scriptureBooks.find((b) => b.bookId === id);
+  if (!meta) return "";
+  const bid = meta.bookNumber;
+  return `${CUV_CHAPTER_AUDIO_REMOTE_BASE}/${bid}/${bid}_${String(chapter).padStart(3, "0")}.mp3`;
 }
 
 export function buildLocalCuvChapterAudioUrl(bookId: string, chapter: number): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `/audio/${id}-${chapter}.mp3`;
+  return `/audio/${CUV_CHAPTER_AUDIO_LOCAL_SUBDIR}/${id}-${chapter}.mp3`;
 }
 
 export function buildLocalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
@@ -35,22 +39,22 @@ export function buildLocalTeochewNtChapterAudioUrl(bookId: string, chapter: numb
   return `/audio/teochew-nt/${id}-${chapter}.mp3`;
 }
 
-/** theaudiopower CUV 文件名使用中文卷名，与界面 locale 无关 */
-function cuvRemoteBookName(bookId: string, bookName: string): string {
-  const meta = scriptureBooks.find((b) => b.bookId === String(bookId || "").trim().toUpperCase());
-  return meta?.bookName ?? bookName;
-}
-
 async function probeChapterAudioUrl(absolute: string): Promise<boolean> {
+  const isAudioContentType = (contentType: string | null): boolean =>
+    String(contentType || "")
+      .toLowerCase()
+      .includes("audio/");
+
   try {
     const head = await fetch(absolute, { method: "HEAD" });
-    if (head.ok) return true;
+    if (head.ok && isAudioContentType(head.headers.get("content-type"))) return true;
   } catch {
     /* ignore */
   }
   try {
     const ranged = await fetch(absolute, { headers: { Range: "bytes=0-1" } });
-    if (ranged.ok || ranged.status === 206) return true;
+    if (ranged.status === 206) return true;
+    if (ranged.ok && isAudioContentType(ranged.headers.get("content-type"))) return true;
   } catch {
     /* ignore */
   }
@@ -100,16 +104,19 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   if (!local) return { ok: false };
 
   const trusted = absoluteSelfHostedChapterAudioUrl(args.baseUrl, local);
-  if (trusted) return { ok: true, src: trusted };
+  if (trusted && !local.includes("/cuv-v20/")) return { ok: true, src: trusted };
 
   const localHit = await headOk(args.baseUrl, local);
   if (localHit) return { ok: true, src: localHit };
 
   const askBibleFallback = toAbsoluteUrl("https://askbible.me", local);
-  if (askBibleFallback) return { ok: true, src: askBibleFallback };
+  if (askBibleFallback) {
+    const askBibleHit = await headOk("https://askbible.me", local);
+    if (askBibleHit) return { ok: true, src: askBibleHit };
+  }
 
   const remote = buildExternalCuvChapterAudioUrl(
-    cuvRemoteBookName(args.bookId, args.bookName),
+    args.bookId,
     args.chapter,
   );
   if (!remote) return { ok: false };

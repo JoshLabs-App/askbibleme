@@ -13,11 +13,14 @@ type Props = {
   /** 极简模式不展示；仅保留无障碍 */
   label?: string;
   accessibilityLabel: string;
-  value: string;
+  value?: string;
+  values?: string[];
   options: ReadSettingsSelectOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (id: string) => void;
+  onSelect?: (id: string) => void;
+  onToggleSelect?: (id: string) => void;
+  emptyDisplay?: string;
   disabled?: boolean;
   style?: View["props"]["style"];
 };
@@ -26,15 +29,29 @@ export function ReadSettingsSelect({
   label,
   accessibilityLabel,
   value,
+  values,
   options,
   open,
   onOpenChange,
   onSelect,
+  onToggleSelect,
+  emptyDisplay,
   disabled,
   style,
 }: Props) {
+  const multi = Array.isArray(values);
+  const selectedIds = multi ? values : [];
   const active = options.find((o) => o.id === value) ?? options[0];
-  const display = active?.shortLabel ?? active?.label ?? "";
+  const pickedDisplay = multi
+    ? selectedIds
+        .map((id) => {
+          const item = options.find((opt) => opt.id === id);
+          return item?.shortLabel ?? item?.label ?? "";
+        })
+        .filter(Boolean)
+        .join(", ")
+    : active?.shortLabel ?? active?.label ?? "";
+  const display = pickedDisplay || emptyDisplay || "";
 
   return (
     <View style={[styles.block, open && styles.blockOpen, style]}>
@@ -72,17 +89,30 @@ export function ReadSettingsSelect({
           nestedScrollEnabled
         >
           {options.map((opt) => {
-            const selected = opt.id === value;
+            const selected = multi ? selectedIds.includes(opt.id) : opt.id === value;
             return (
               <Pressable
                 key={opt.id || "__none"}
-                onPress={() => onSelect(opt.id)}
+                onPress={() => {
+                  if (multi) {
+                    onToggleSelect?.(opt.id);
+                  } else {
+                    onSelect?.(opt.id);
+                  }
+                }}
                 style={({ pressed }) => [
                   styles.option,
                   selected && styles.optionActive,
                   pressed && styles.optionPressed,
                 ]}
               >
+                {multi ? (
+                  <MaterialIcons
+                    name={selected ? "check-box" : "check-box-outline-blank"}
+                    size={16}
+                    color={selected ? c.ink : c.faint}
+                  />
+                ) : null}
                 <Text
                   style={[styles.optionText, selected && styles.optionTextActive]}
                   numberOfLines={2}
@@ -104,7 +134,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   blockOpen: {
-    zIndex: 6,
+    zIndex: 30,
   },
   label: {
     marginBottom: 4,
@@ -143,18 +173,26 @@ const styles = StyleSheet.create({
     color: c.muted,
   },
   menu: {
-    marginTop: 3,
+    position: "absolute",
+    top: 37,
+    left: 0,
+    right: 0,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
     backgroundColor: c.surfaceSolid,
     overflow: "hidden",
-    maxHeight: 220,
+    maxHeight: 360,
+    zIndex: 20,
+    elevation: 6,
   },
   menuContent: {
     paddingVertical: 2,
   },
   option: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     paddingHorizontal: 10,
     paddingVertical: 9,
   },

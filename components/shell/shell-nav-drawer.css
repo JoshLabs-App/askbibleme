@@ -1,0 +1,223 @@
+/** 左上用户菜单 — 对齐 App `ShellNavDrawer` 羊皮卷底 */
+.shell-nav-drawer-panel {
+  background-color: rgba(236, 217, 185, 0.66);
+  border-right: 1px solid rgba(120, 53, 15, 0.22);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.16);
+  background-image: url("/read/parchment-scroll-bg.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+@supports (
+  background-image: image-set(
+    url("/read/parchment-scroll-bg.webp") type("image/webp"),
+    url("/read/parchment-scroll-bg.jpg") type("image/jpeg")
+  )
+) {
+  .shell-nav-drawer-panel {
+    background-image: image-set(
+      url("/read/parchment-scroll-bg.webp") type("image/webp"),
+      url("/read/parchment-scroll-bg.jpg") type("image/jpeg")
+    );
+  }
+}
+
+.shell-nav-drawer-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(236, 217, 185, 0.62);
+  pointer-events: none;
+}
+
+.shell-nav-drawer-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.shell-nav-drawer-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(55, 53, 47, 0.55);
+}
+
+.shell-nav-drawer-section-label {
+  margin-bottom: 4px;
+  padding: 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  color: rgba(55, 53, 47, 0.46);
+}
+
+.shell-nav-drawer-row {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.shell-nav-drawer-row:hover {
+  background: rgba(255, 244, 224, 0.72);
+}
+
+.shell-nav-drawer-row:active {
+  background: rgba(255, 244, 224, 0.85);
+}
+
+.shell-nav-drawer-row-text {
+  font-size: 16px;
+  line-height: 1.375;
+  color: #37352f;
+}
+
+.shell-nav-drawer-row-detail {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.42;
+  color: rgba(55, 53, 47, 0.55);
+}
+
+.shell-nav-drawer-row-stack {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.shell-nav-drawer-inline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.shell-nav-drawer-locale-chip {
+  display: inline-flex;
+  min-width: 42px;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 53, 15, 0.24);
+  background: rgba(255, 248, 235, 0.45);
+  padding: 0 8px;
+  font-size: 18px;
+  line-height: 1.1;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.shell-nav-drawer-locale-chip:hover {
+  background: rgba(255, 177, 1, 0.12);
+}
+
+.shell-nav-drawer-locale-chip[aria-pressed="true"] {
+  border-color: rgba(255, 177, 1, 0.75);
+  background: rgba(255, 177, 1, 0.18);
+}
+
+.shell-nav-drawer-select-trigger {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 53, 15, 0.2);
+  background: rgba(255, 248, 235, 0.5);
+  padding: 7px 10px;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.shell-nav-drawer-select-trigger:hover {
+  background: rgba(255, 177, 1, 0.14);
+}
+
+.shell-nav-drawer-select-label {
+  font-size: 13px;
+  color: rgba(55, 53, 47, 0.72);
+}
+
+.shell-nav-drawer-select-value {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(55, 53, 47, 0.9);
+}
+
+.shell-nav-drawer-select-options {
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 53, 15, 0.2);
+  background: rgba(255, 248, 235, 0.58);
+}
+
+.shell-nav-drawer-select-option {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(120, 53, 15, 0.12);
+  padding: 0 10px;
+  font-size: 13px;
+  color: rgba(55, 53, 47, 0.82);
+  transition: background-color 0.15s ease;
+}
+
+.shell-nav-drawer-select-option:last-child {
+  border-bottom: 0;
+}
+
+.shell-nav-drawer-select-option:hover {
+  background: rgba(255, 177, 1, 0.1);
+}
+
+.shell-nav-drawer-select-option-active {
+  background: rgba(255, 177, 1, 0.16);
+  font-weight: 600;
+  color: rgba(120, 75, 30, 0.96);
+}
+
+.shell-nav-drawer-compact-row {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 53, 15, 0.2);
+  background: rgba(255, 248, 235, 0.5);
+  padding: 7px 10px;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.shell-nav-drawer-compact-row:hover {
+  background: rgba(255, 177, 1, 0.14);
+}
+
+.shell-nav-drawer-compact-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(55, 53, 47, 0.86);
+}
+
+.shell-nav-drawer-compact-detail {
+  font-size: 12px;
+  color: rgba(120, 95, 60, 0.85);
+}

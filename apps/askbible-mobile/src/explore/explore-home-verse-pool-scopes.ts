@@ -1,4 +1,4 @@
-import { scriptureBooks } from "../../../../lib/bible/scripture-books";
+import { scriptureBooks } from "../bible/scripture-books";
 import {
   NARROW_GATE_BOOK_ABBR_TO_ID,
   NARROW_GATE_CATEGORIES,
@@ -12,10 +12,6 @@ import {
   PRAISE_WORSHIP_CATEGORIES,
 } from "./ExplorePraiseWorshipScreen";
 import {
-  REST_RESTORE_BOOK_ABBR_TO_ID,
-  REST_RESTORE_CATEGORIES,
-} from "./ExploreRestRestoreScreen";
-import {
   WORD_OF_GOD_BOOK_ABBR_TO_ID,
   WORD_OF_GOD_CATEGORIES,
 } from "./ExploreWordOfGodScreen";
@@ -24,7 +20,6 @@ import { YEARS_DAYS_ETERNITY_ZH } from "./years-days-eternity-content";
 import type { YearsDaysEternityBlock } from "./years-days-eternity-types";
 
 export type HomeVersePoolScopeId =
-  | "encouragement"
   | "comprehensive"
   | "praise_worship"
   | "word_of_god"
@@ -41,7 +36,6 @@ export type HomeVersePoolScopeOption = {
 
 export const HOME_VERSE_POOL_SCOPE_OPTIONS: HomeVersePoolScopeOption[] = [
   { id: "all", labelZh: "全部", labelEn: "All" },
-  { id: "encouragement", labelZh: "安息更新", labelEn: "Rest & Restore" },
   { id: "comprehensive", labelZh: "综合", labelEn: "Comprehensive" },
   { id: "praise_worship", labelZh: "赞美敬拜", labelEn: "Praise & Worship" },
   { id: "word_of_god", labelZh: "话语之光", labelEn: "Word of God" },
@@ -197,7 +191,6 @@ function unionSets(...sets: Set<string>[]): Set<string> {
   return out;
 }
 
-const encouragementKeys = collectByCategories(REST_RESTORE_CATEGORIES, REST_RESTORE_BOOK_ABBR_TO_ID);
 const praiseWorshipKeys = collectByCategories(PRAISE_WORSHIP_CATEGORIES, PRAISE_WORSHIP_BOOK_ABBR_TO_ID);
 const wordOfGodKeys = collectByCategories(WORD_OF_GOD_CATEGORIES, WORD_OF_GOD_BOOK_ABBR_TO_ID);
 const yearsDaysEternityKeys = collectYearsDaysEternityVerseKeys();
@@ -206,7 +199,6 @@ const prayerScriptureWeights = collectPrayerScriptureVerseWeights();
 const prayerScriptureKeys = new Set(prayerScriptureWeights.keys());
 const comprehensiveKeys = new Set(EXPLORE_HOME_VERSE_POOL_VERSE_KEYS);
 const allKeys = unionSets(
-  encouragementKeys,
   comprehensiveKeys,
   praiseWorshipKeys,
   wordOfGodKeys,
@@ -216,7 +208,6 @@ const allKeys = unionSets(
 );
 
 const allScopePriorityOrder: HomeVersePoolScopeId[] = [
-  "encouragement",
   "comprehensive",
   "praise_worship",
   "word_of_god",
@@ -227,9 +218,7 @@ const allScopePriorityOrder: HomeVersePoolScopeId[] = [
 
 const allPriorityLookup = new Map<string, number>();
 allScopePriorityOrder.forEach((scopeId, idx) => {
-  const keys = scopeId === "encouragement"
-    ? encouragementKeys
-    : scopeId === "comprehensive"
+  const keys = scopeId === "comprehensive"
       ? comprehensiveKeys
       : scopeId === "praise_worship"
         ? praiseWorshipKeys
@@ -261,7 +250,6 @@ export function homeVersePoolPrayerPriority(verseKey: string): number {
 }
 
 export const HOME_VERSE_POOL_SCOPE_KEYS: Record<HomeVersePoolScopeId, Set<string>> = {
-  encouragement: encouragementKeys,
   comprehensive: comprehensiveKeys,
   praise_worship: praiseWorshipKeys,
   word_of_god: wordOfGodKeys,

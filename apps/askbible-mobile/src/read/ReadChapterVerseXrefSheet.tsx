@@ -17,7 +17,8 @@ import { formatScriptureXrefLabel } from "../bible/format-scripture-xref-label";
 import type { ScriptureVerseXrefs, ScriptureXrefTarget } from "../bible/scripture-xref-types";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
-import { tFormat } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
+import { createT } from "../i18n/site-copy";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 
@@ -25,6 +26,7 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   bookName: string;
+  displayLocale?: AppLocale;
   chapter: number;
   verse: number;
   bundle: ScriptureVerseXrefs | null;
@@ -44,7 +46,7 @@ function XrefListSection({
   refs: ScriptureXrefTarget[];
   snippets: Record<string, string>;
   loading: boolean;
-  locale: ReturnType<typeof useLocale>["locale"];
+  locale: AppLocale;
   onOpen: (ref: ScriptureXrefTarget) => void;
 }) {
   if (!refs.length) return null;
@@ -79,12 +81,15 @@ export function ReadChapterVerseXrefSheet({
   visible,
   onClose,
   bookName,
+  displayLocale,
   chapter,
   verse,
   bundle,
 }: Props) {
   const router = useRouter();
   const { locale } = useLocale();
+  const sheetLocale = displayLocale ?? locale;
+  const tx = useMemo(() => createT(sheetLocale), [sheetLocale]);
   const insets = useSafeAreaInsets();
   const { primaryTranslationId } = useReadBibleTypography();
 
@@ -139,14 +144,14 @@ export function ReadChapterVerseXrefSheet({
         >
           <View style={styles.header}>
             <Text style={styles.title}>
-              {tFormat("pages.read.verseXrefSheetTitle", {
+              {tx("pages.read.verseXrefSheetTitle", {
                 bookName,
                 chapter: String(chapter),
                 verse: String(verse),
               })}
             </Text>
             <Pressable onPress={onClose} hitSlop={12}>
-              <Text style={styles.close}>{tFormat("pages.read.chapterJumpClose")}</Text>
+              <Text style={styles.close}>{tx("pages.read.chapterJumpClose")}</Text>
             </Pressable>
           </View>
 
@@ -157,23 +162,23 @@ export function ReadChapterVerseXrefSheet({
             showsVerticalScrollIndicator
           >
             <XrefListSection
-              title={tFormat("pages.read.verseXrefIncoming")}
+              title={tx("pages.read.verseXrefIncoming")}
               refs={incoming}
               snippets={snippets}
               loading={loadingSnippets}
-              locale={locale}
+              locale={sheetLocale}
               onOpen={openRef}
             />
             <XrefListSection
-              title={tFormat("pages.read.verseXrefOutgoing")}
+              title={tx("pages.read.verseXrefOutgoing")}
               refs={outgoing}
               snippets={snippets}
               loading={loadingSnippets}
-              locale={locale}
+              locale={sheetLocale}
               onOpen={openRef}
             />
             {!incoming.length && !outgoing.length ? (
-              <Text style={styles.empty}>{tFormat("pages.read.verseXrefEmpty")}</Text>
+              <Text style={styles.empty}>{tx("pages.read.verseXrefEmpty")}</Text>
             ) : null}
           </ScrollView>
         </Pressable>

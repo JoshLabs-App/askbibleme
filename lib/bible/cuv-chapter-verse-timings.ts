@@ -21,15 +21,27 @@ export function buildChapterVerseTimingsUrl(
   bookId: string,
   chapter: number,
 ): string {
+  return buildChapterVerseTimingsCandidates(translationId, voiceId, bookId, chapter)[0] ?? "";
+}
+
+export function buildChapterVerseTimingsCandidates(
+  translationId: string,
+  voiceId: CuvChapterAudioVoiceId,
+  bookId: string,
+  chapter: number,
+): string[] {
   const id = String(bookId || "").trim().toUpperCase();
-  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  if (!id || !Number.isInteger(chapter) || chapter < 1) return [];
   if (translationUsesWebChapterAudio(translationId)) {
-    return `/verse-timings/web-en/${id}-${chapter}.json`;
+    return [`/verse-timings/web-en/${id}-${chapter}.json`];
   }
   if (teochewNtVoiceActive(voiceId)) {
-    return `/verse-timings/teochew-nt/${id}-${chapter}.json`;
+    return [`/verse-timings/teochew-nt/${id}-${chapter}.json`];
   }
-  return `/verse-timings/${id}-${chapter}.json`;
+  return [
+    `/verse-timings/cuv-v20/${id}-${chapter}.json`,
+    `/verse-timings/${id}-${chapter}.json`,
+  ];
 }
 
 /** @deprecated use buildChapterVerseTimingsUrl(translationId, voiceId, …) */
@@ -85,16 +97,20 @@ export async function fetchChapterVerseTimings(
   bookId: string,
   chapter: number,
 ): Promise<CuvChapterVerseTiming[] | null> {
-  const url = buildChapterVerseTimingsUrl(translationId, voiceId, bookId, chapter);
-  if (!url) return null;
-  try {
-    const res = await fetch(url, { cache: "force-cache" });
-    if (!res.ok) return null;
-    const data: unknown = await res.json();
-    return parseCuvChapterVerseTimingsPayload(data);
-  } catch {
-    return null;
+  const urls = buildChapterVerseTimingsCandidates(translationId, voiceId, bookId, chapter);
+  if (!urls.length) return null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: "force-cache" });
+      if (!res.ok) continue;
+      const data: unknown = await res.json();
+      const parsed = parseCuvChapterVerseTimingsPayload(data);
+      if (parsed?.length) return parsed;
+    } catch {
+      /* try next */
+    }
   }
+  return null;
 }
 
 export async function fetchCuvChapterVerseTimings(

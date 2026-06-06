@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 
 function LoginPageFallback() {
   return (
@@ -23,6 +24,7 @@ function LoginPageInner() {
     nextRaw.startsWith("/") && !nextRaw.startsWith("//") && nextRaw !== "/login" ? nextRaw : "/";
 
   const { bootstrapped, configured, user, refresh } = useAskbibleUser();
+  const registerOpen = isMemberRegisterEnabledClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +129,16 @@ function LoginPageInner() {
             {pending ? t("auth.submitting") : t("auth.submit")}
           </button>
         </form>
+        {registerOpen ? (
+          <div className="mt-6 text-center">
+            <Link
+              href="/register"
+              className="text-[13px] text-ink/50 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/75"
+            >
+              {t("auth.loginFooterRegister")}
+            </Link>
+          </div>
+        ) : null}
         <Link
           href="/"
           className="mt-8 block text-center text-[13px] text-ink/45 underline decoration-ink/20 underline-offset-4 transition hover:text-ink/70"

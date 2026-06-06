@@ -30,7 +30,7 @@ fi
 echo "→ 同步图标与离线内容…"
 npm run mobile:sync-icons
 npm run mobile:sync-content
-MOBILE_BUNDLE_OFFLINE_MEDIA=0 npm run mobile:sync-offline-media
+MOBILE_BUNDLE_OFFLINE_MEDIA=1 npm run mobile:sync-offline-media
 
 cd apps/askbible-mobile
 
@@ -39,5 +39,5 @@ EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=0 \
 EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=0 \
 EXPO_PUBLIC_MEMBER_REGISTER_ENABLED=0 \
 EXPO_PUBLIC_ASKBIBLE_BASE_URL="https://askbible.me" \
-MOBILE_BUNDLE_OFFLINE_MEDIA=0 \
+MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
 npx eas build --profile production --platform ios --non-interactive "$@"

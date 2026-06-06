@@ -2,7 +2,8 @@ import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 import * as SQLite from "expo-sqlite";
 
-const XREF_DB_NAME = "scripture-xrefs.sqlite";
+const XREF_DB_NAME = "scripture_xrefs.sqlite";
+const XREF_DB_LEGACY_NAME = "scripture-xrefs.sqlite";
 const XREF_SCHEMA_VERSION = 1;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -10,6 +11,16 @@ const XREF_ASSET = require("../../assets/scripture/scripture-xrefs.sqlite");
 
 let openPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 let openedDatabase: SQLite.SQLiteDatabase | null = null;
+let operationTail: Promise<void> = Promise.resolve();
+
+function enqueueXrefDbOperation<T>(work: () => Promise<T>): Promise<T> {
+  const run = operationTail.catch(() => undefined).then(work);
+  operationTail = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
 
 function schemaVersionPath(dest: string): string {
   return `${dest}.schema-version`;
@@ -19,6 +30,17 @@ async function ensureXrefDatabaseOnDisk(): Promise<void> {
   const sqliteDir = `${FileSystem.documentDirectory}SQLite`;
   await FileSystem.makeDirectoryAsync(sqliteDir, { intermediates: true });
   const dest = `${sqliteDir}/${XREF_DB_NAME}`;
+  const legacyDest = `${sqliteDir}/${XREF_DB_LEGACY_NAME}`;
+
+  if (XREF_DB_LEGACY_NAME !== XREF_DB_NAME) {
+    try {
+      await SQLite.deleteDatabaseAsync(XREF_DB_LEGACY_NAME);
+    } catch {
+      /* ignore */
+    }
+    await FileSystem.deleteAsync(legacyDest, { idempotent: true });
+    await FileSystem.deleteAsync(schemaVersionPath(legacyDest), { idempotent: true });
+  }
 
   const asset = Asset.fromModule(XREF_ASSET);
   await asset.downloadAsync();
@@ -100,7 +122,9 @@ function isNativeDatabaseRejectedError(err: unknown): boolean {
   const message = String(err instanceof Error ? err.message : err).toLowerCase();
   return (
     message.includes("nativedatabase.prepareasync") ||
+    message.includes("nativedatabase.preparesync") ||
     message.includes("prepareasync") ||
+    message.includes("preparesync") ||
     (message.includes("call to function") && message.includes("nativedatabase."))
   );
 }
@@ -108,17 +132,29 @@ function isNativeDatabaseRejectedError(err: unknown): boolean {
 export async function retryScriptureXrefDatabaseOnPrepareError<T>(
   run: (db: SQLite.SQLiteDatabase) => Promise<T>,
 ): Promise<T | null> {
-  const firstDb = await getScriptureXrefDatabase();
-  if (!firstDb) return null;
-  try {
-    return await run(firstDb);
-  } catch (err) {
-    if (!isNativeDatabaseRejectedError(err)) throw err;
-    await closeOpenedXrefDatabase();
-    openPromise = null;
-    await ensureXrefDatabaseOnDisk();
-    const reopened = await getScriptureXrefDatabase();
-    if (!reopened) return null;
-    return run(reopened);
-  }
+  return enqueueXrefDbOperation(async () => {
+    const firstDb = await getScriptureXrefDatabase();
+    if (!firstDb) return null;
+    try {
+      return await run(firstDb);
+    } catch (err) {
+      if (!isNativeDatabaseRejectedError(err)) throw err;
+      // 先仅重建连接，避免并发读时反复删库引发连锁失效。
+      await closeOpenedXrefDatabase();
+      openPromise = null;
+      const reopened = await getScriptureXrefDatabase();
+      if (!reopened) return null;
+      try {
+        return await run(reopened);
+      } catch (err2) {
+        if (!isNativeDatabaseRejectedError(err2)) throw err2;
+        await closeOpenedXrefDatabase();
+        openPromise = null;
+        await ensureXrefDatabaseOnDisk();
+        const rebuilt = await getScriptureXrefDatabase();
+        if (!rebuilt) return null;
+        return run(rebuilt);
+      }
+    }
+  });
 }

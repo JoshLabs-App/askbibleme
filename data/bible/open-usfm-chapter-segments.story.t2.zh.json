@@ -1,0 +1,8334 @@
+{
+  "books": {
+    "GEN": {
+      "1": [
+        {
+          "id": "GEN-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 2,
+          "verseEnd": 2,
+          "title": "六日創造",
+          "titleZh": "六日創造"
+        },
+        {
+          "id": "GEN-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 2,
+          "verseEnd": 2
+        }
+      ],
+      "2": [
+        {
+          "id": "GEN-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "創造完畢",
+          "titleZh": "創造完畢"
+        },
+        {
+          "id": "GEN-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-2-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 4,
+          "verseEnd": 4,
+          "title": "人類的起源",
+          "titleZh": "人類的起源"
+        },
+        {
+          "id": "GEN-2-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 4,
+          "verseEnd": 4
+        },
+        {
+          "id": "GEN-2-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 4,
+          "verseEnd": 4,
+          "title": "塵土造人",
+          "titleZh": "塵土造人"
+        },
+        {
+          "id": "GEN-2-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "上主叮嚀",
+          "titleZh": "上主叮嚀"
+        },
+        {
+          "id": "GEN-2-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "GEN-2-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "孤獨不好",
+          "titleZh": "孤獨不好"
+        },
+        {
+          "id": "GEN-2-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ],
+      "3": [
+        {
+          "id": "GEN-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "善惡抉擇",
+          "titleZh": "善惡抉擇"
+        },
+        {
+          "id": "GEN-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-3-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "違命受詛",
+          "titleZh": "違命受詛"
+        },
+        {
+          "id": "GEN-3-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "GEN-3-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "逐出伊甸",
+          "titleZh": "逐出伊甸"
+        },
+        {
+          "id": "GEN-3-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 20,
+          "verseEnd": 20
+        }
+      ],
+      "4": [
+        {
+          "id": "GEN-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟獻祭",
+          "titleZh": "兄弟獻祭"
+        },
+        {
+          "id": "GEN-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-4-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "流血之罪",
+          "titleZh": "流血之罪"
+        },
+        {
+          "id": "GEN-4-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "GEN-4-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "不同後代",
+          "titleZh": "不同後代"
+        },
+        {
+          "id": "GEN-4-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 16,
+          "verseEnd": 16
+        }
+      ],
+      "5": [
+        {
+          "id": "GEN-5-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "從亞當到挪亞",
+          "titleZh": "從亞當到挪亞"
+        },
+        {
+          "id": "GEN-5-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-5-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 32,
+          "verseEnd": 32,
+          "title": "挪亞蒙恩",
+          "titleZh": "挪亞蒙恩"
+        },
+        {
+          "id": "GEN-5-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 32,
+          "verseEnd": 32
+        }
+      ],
+      "6": [
+        {
+          "id": "GEN-6-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "義人挪亞",
+          "titleZh": "義人挪亞"
+        },
+        {
+          "id": "GEN-6-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 9,
+          "verseEnd": 9
+        }
+      ],
+      "7": [
+        {
+          "id": "GEN-7-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "洪水審判",
+          "titleZh": "洪水審判"
+        },
+        {
+          "id": "GEN-7-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "8": [
+        {
+          "id": "GEN-8-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "彩虹永約",
+          "titleZh": "彩虹永約"
+        },
+        {
+          "id": "GEN-8-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 15,
+          "verseEnd": 15
+        }
+      ],
+      "9": [
+        {
+          "id": "GEN-9-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "列國的分散",
+          "titleZh": "列國的分散"
+        },
+        {
+          "id": "GEN-9-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ],
+      "10": [
+        {
+          "id": "GEN-10-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "挪亞的後代",
+          "titleZh": "挪亞的後代"
+        },
+        {
+          "id": "GEN-10-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-10-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 2,
+          "verseEnd": 2,
+          "title": "雅弗的後代",
+          "titleZh": "雅弗的後代"
+        },
+        {
+          "id": "GEN-10-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 2,
+          "verseEnd": 2
+        },
+        {
+          "id": "GEN-10-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "含的後代",
+          "titleZh": "含的後代"
+        },
+        {
+          "id": "GEN-10-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 6,
+          "verseEnd": 6
+        },
+        {
+          "id": "GEN-10-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "閃的後代",
+          "titleZh": "閃的後代"
+        },
+        {
+          "id": "GEN-10-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 21,
+          "verseEnd": 21
+        }
+      ],
+      "11": [
+        {
+          "id": "GEN-11-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "分散全地",
+          "titleZh": "分散全地"
+        },
+        {
+          "id": "GEN-11-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-11-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "從閃到亞伯蘭",
+          "titleZh": "從閃到亞伯蘭"
+        },
+        {
+          "id": "GEN-11-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 10,
+          "verseEnd": 10
+        },
+        {
+          "id": "GEN-11-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 27,
+          "verseEnd": 27,
+          "title": "他拉死在哈蘭",
+          "titleZh": "他拉死在哈蘭"
+        },
+        {
+          "id": "GEN-11-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 27,
+          "verseEnd": 27
+        }
+      ],
+      "12": [
+        {
+          "id": "GEN-12-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞伯蘭離開父家",
+          "titleZh": "亞伯蘭離開父家"
+        },
+        {
+          "id": "GEN-12-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-12-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "撒萊在法老宮中",
+          "titleZh": "撒萊在法老宮中"
+        },
+        {
+          "id": "GEN-12-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 9,
+          "verseEnd": 9
+        }
+      ],
+      "13": [
+        {
+          "id": "GEN-13-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞伯蘭與羅得分開",
+          "titleZh": "亞伯蘭與羅得分開"
+        },
+        {
+          "id": "GEN-13-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "14": [
+        {
+          "id": "GEN-14-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞伯蘭拯救羅得",
+          "titleZh": "亞伯蘭拯救羅得"
+        },
+        {
+          "id": "GEN-14-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "15": [
+        {
+          "id": "GEN-15-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主應許亞伯蘭得地",
+          "titleZh": "上主應許亞伯蘭得地"
+        },
+        {
+          "id": "GEN-15-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "16": [
+        {
+          "id": "GEN-16-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主看顧",
+          "titleZh": "上主看顧"
+        },
+        {
+          "id": "GEN-16-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "17": [
+        {
+          "id": "GEN-17-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主與亞伯拉罕立約",
+          "titleZh": "上主與亞伯拉罕立約"
+        },
+        {
+          "id": "GEN-17-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "18": [
+        {
+          "id": "GEN-18-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "撒拉笑",
+          "titleZh": "撒拉笑"
+        },
+        {
+          "id": "GEN-18-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-18-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "所多瑪與羅得",
+          "titleZh": "所多瑪與羅得"
+        },
+        {
+          "id": "GEN-18-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 16,
+          "verseEnd": 16
+        }
+      ],
+      "19": [
+        {
+          "id": "GEN-19-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "所多瑪與羅得",
+          "titleZh": "所多瑪與羅得"
+        },
+        {
+          "id": "GEN-19-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "20": [
+        {
+          "id": "GEN-20-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "撒拉在亞比米勒家中",
+          "titleZh": "撒拉在亞比米勒家中"
+        },
+        {
+          "id": "GEN-20-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "21": [
+        {
+          "id": "GEN-21-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "撒拉歡笑",
+          "titleZh": "撒拉歡笑"
+        },
+        {
+          "id": "GEN-21-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-21-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "以實瑪利被逐",
+          "titleZh": "以實瑪利被逐"
+        },
+        {
+          "id": "GEN-21-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "GEN-21-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "亞比米勒與亞伯拉罕立約",
+          "titleZh": "亞比米勒與亞伯拉罕立約"
+        },
+        {
+          "id": "GEN-21-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 22,
+          "verseEnd": 22
+        }
+      ],
+      "22": [
+        {
+          "id": "GEN-22-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主預備",
+          "titleZh": "上主預備"
+        },
+        {
+          "id": "GEN-22-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "23": [
+        {
+          "id": "GEN-23-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞伯拉罕買地",
+          "titleZh": "亞伯拉罕買地"
+        },
+        {
+          "id": "GEN-23-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "24": [
+        {
+          "id": "GEN-24-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "利百加離開父家",
+          "titleZh": "利百加離開父家"
+        },
+        {
+          "id": "GEN-24-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "25": [
+        {
+          "id": "GEN-25-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "以實瑪利的世系",
+          "titleZh": "以實瑪利的世系"
+        },
+        {
+          "id": "GEN-25-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 12,
+          "verseEnd": 12
+        },
+        {
+          "id": "GEN-25-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 19,
+          "verseEnd": 19,
+          "title": "祝福與相爭",
+          "titleZh": "祝福與相爭"
+        },
+        {
+          "id": "GEN-25-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 19,
+          "verseEnd": 19
+        }
+      ],
+      "26": [
+        {
+          "id": "GEN-26-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以撒與非利士相爭",
+          "titleZh": "以撒與非利士相爭"
+        },
+        {
+          "id": "GEN-26-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-26-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 34,
+          "verseEnd": 34,
+          "title": "雅各奪去以掃的祝福",
+          "titleZh": "雅各奪去以掃的祝福"
+        },
+        {
+          "id": "GEN-26-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 34,
+          "verseEnd": 34
+        }
+      ],
+      "27": [
+        {
+          "id": "GEN-27-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "雅各奪去以掃的祝福",
+          "titleZh": "雅各奪去以掃的祝福"
+        },
+        {
+          "id": "GEN-27-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "28": [
+        {
+          "id": "GEN-28-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "上主向雅各顯現",
+          "titleZh": "上主向雅各顯現"
+        },
+        {
+          "id": "GEN-28-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 10,
+          "verseEnd": 10
+        }
+      ],
+      "29": [
+        {
+          "id": "GEN-29-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "拉班欺騙雅各",
+          "titleZh": "拉班欺騙雅各"
+        },
+        {
+          "id": "GEN-29-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 15,
+          "verseEnd": 15
+        },
+        {
+          "id": "GEN-29-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 31,
+          "verseEnd": 31,
+          "title": "相爭",
+          "titleZh": "相爭"
+        },
+        {
+          "id": "GEN-29-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 31,
+          "verseEnd": 31
+        }
+      ],
+      "30": [
+        {
+          "id": "GEN-30-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 25,
+          "verseEnd": 25,
+          "title": "雅各欺騙拉班",
+          "titleZh": "雅各欺騙拉班"
+        },
+        {
+          "id": "GEN-30-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 25,
+          "verseEnd": 25
+        }
+      ],
+      "31": [
+        {
+          "id": "GEN-31-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "雅各離開拉班",
+          "titleZh": "雅各離開拉班"
+        },
+        {
+          "id": "GEN-31-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "32": [
+        {
+          "id": "GEN-32-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主向雅各顯現",
+          "titleZh": "上主向雅各顯現"
+        },
+        {
+          "id": "GEN-32-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "33": [
+        {
+          "id": "GEN-33-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "雅各歸還以掃祝福",
+          "titleZh": "雅各歸還以掃祝福"
+        },
+        {
+          "id": "GEN-33-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "34": [
+        {
+          "id": "GEN-34-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "眾子與迦南人相爭",
+          "titleZh": "眾子與迦南人相爭"
+        },
+        {
+          "id": "GEN-34-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "35": [
+        {
+          "id": "GEN-35-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 35,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兒子與死亡",
+          "titleZh": "兒子與死亡"
+        },
+        {
+          "id": "GEN-35-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 35,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "36": [
+        {
+          "id": "GEN-36-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以掃的兒子",
+          "titleZh": "以掃的兒子"
+        },
+        {
+          "id": "GEN-36-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "GEN-36-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "以東的歷史",
+          "titleZh": "以東的歷史"
+        },
+        {
+          "id": "GEN-36-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 9,
+          "verseEnd": 9
+        },
+        {
+          "id": "GEN-36-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "以掃的族長",
+          "titleZh": "以掃的族長"
+        },
+        {
+          "id": "GEN-36-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 15,
+          "verseEnd": 15
+        },
+        {
+          "id": "GEN-36-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "西珥的子孫",
+          "titleZh": "西珥的子孫"
+        },
+        {
+          "id": "GEN-36-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 20,
+          "verseEnd": 20
+        },
+        {
+          "id": "GEN-36-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 29,
+          "verseEnd": 29,
+          "title": "西珥的族長",
+          "titleZh": "西珥的族長"
+        },
+        {
+          "id": "GEN-36-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 29,
+          "verseEnd": 29
+        },
+        {
+          "id": "GEN-36-h6",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 31,
+          "verseEnd": 31,
+          "title": "以東的諸王",
+          "titleZh": "以東的諸王"
+        },
+        {
+          "id": "GEN-36-p6",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 31,
+          "verseEnd": 31
+        },
+        {
+          "id": "GEN-36-h7",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 40,
+          "verseEnd": 40,
+          "title": "以東的族長",
+          "titleZh": "以東的族長"
+        },
+        {
+          "id": "GEN-36-p7",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 40,
+          "verseEnd": 40
+        }
+      ],
+      "37": [
+        {
+          "id": "GEN-37-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 37,
+          "verseStart": 2,
+          "verseEnd": 2,
+          "title": "拯救與差遣",
+          "titleZh": "拯救與差遣"
+        },
+        {
+          "id": "GEN-37-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 37,
+          "verseStart": 2,
+          "verseEnd": 2
+        }
+      ],
+      "38": [
+        {
+          "id": "GEN-38-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 38,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "猶大家族",
+          "titleZh": "猶大家族"
+        },
+        {
+          "id": "GEN-38-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 38,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "39": [
+        {
+          "id": "GEN-39-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "約瑟在監獄",
+          "titleZh": "約瑟在監獄"
+        },
+        {
+          "id": "GEN-39-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 21,
+          "verseEnd": 21
+        }
+      ],
+      "40": [
+        {
+          "id": "GEN-40-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 40,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約瑟在監獄",
+          "titleZh": "約瑟在監獄"
+        },
+        {
+          "id": "GEN-40-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 40,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "41": [
+        {
+          "id": "GEN-41-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 41,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約瑟在王宮",
+          "titleZh": "約瑟在王宮"
+        },
+        {
+          "id": "GEN-41-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 41,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "42": [
+        {
+          "id": "GEN-42-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 42,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟首次到埃及",
+          "titleZh": "兄弟首次到埃及"
+        },
+        {
+          "id": "GEN-42-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 42,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "43": [
+        {
+          "id": "GEN-43-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 43,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟第二次到埃及",
+          "titleZh": "兄弟第二次到埃及"
+        },
+        {
+          "id": "GEN-43-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 43,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "44": [
+        {
+          "id": "GEN-44-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 44,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟第二次到埃及",
+          "titleZh": "兄弟第二次到埃及"
+        },
+        {
+          "id": "GEN-44-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 44,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "45": [
+        {
+          "id": "GEN-45-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 45,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟第二次到埃及",
+          "titleZh": "兄弟第二次到埃及"
+        },
+        {
+          "id": "GEN-45-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 45,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "46": [
+        {
+          "id": "GEN-46-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 46,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟第三次到埃及",
+          "titleZh": "兄弟第三次到埃及"
+        },
+        {
+          "id": "GEN-46-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 46,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "47": [
+        {
+          "id": "GEN-47-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 47,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兄弟第三次到埃及",
+          "titleZh": "兄弟第三次到埃及"
+        },
+        {
+          "id": "GEN-47-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 47,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "48": [
+        {
+          "id": "GEN-48-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 48,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "十二支派",
+          "titleZh": "十二支派"
+        },
+        {
+          "id": "GEN-48-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 48,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "49": [
+        {
+          "id": "GEN-49-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 49,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "十二支派",
+          "titleZh": "十二支派"
+        },
+        {
+          "id": "GEN-49-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 49,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "50": [
+        {
+          "id": "GEN-50-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 50,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約瑟與兄弟",
+          "titleZh": "約瑟與兄弟"
+        },
+        {
+          "id": "GEN-50-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 50,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ]
+    },
+    "EXO": {
+      "1": [
+        {
+          "id": "EXO-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "脫離埃及奴役，蒙拯救得自由",
+          "titleZh": "脫離埃及奴役，蒙拯救得自由"
+        },
+        {
+          "id": "EXO-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "他們的名字",
+          "titleZh": "他們的名字"
+        },
+        {
+          "id": "EXO-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-1-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "埃及的勞役",
+          "titleZh": "埃及的勞役"
+        },
+        {
+          "id": "EXO-1-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 8,
+          "verseEnd": 8
+        }
+      ],
+      "2": [
+        {
+          "id": "EXO-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西出生",
+          "titleZh": "摩西出生"
+        },
+        {
+          "id": "EXO-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-2-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "摩西逃亡",
+          "titleZh": "摩西逃亡"
+        },
+        {
+          "id": "EXO-2-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 11,
+          "verseEnd": 11
+        }
+      ],
+      "3": [
+        {
+          "id": "EXO-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "焚燒的荊棘叢",
+          "titleZh": "焚燒的荊棘叢"
+        },
+        {
+          "id": "EXO-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-3-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "title": "差遣摩西",
+          "titleZh": "差遣摩西"
+        },
+        {
+          "id": "EXO-3-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 7,
+          "verseEnd": 7
+        }
+      ],
+      "4": [
+        {
+          "id": "EXO-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兩個神蹟",
+          "titleZh": "兩個神蹟"
+        },
+        {
+          "id": "EXO-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-4-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "摩西回埃及",
+          "titleZh": "摩西回埃及"
+        },
+        {
+          "id": "EXO-4-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ],
+      "5": [
+        {
+          "id": "EXO-5-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "要求讓以色列人守節",
+          "titleZh": "要求讓以色列人守節"
+        },
+        {
+          "id": "EXO-5-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-5-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "無草造磚",
+          "titleZh": "無草造磚"
+        },
+        {
+          "id": "EXO-5-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 6,
+          "verseEnd": 6
+        }
+      ],
+      "6": [
+        {
+          "id": "EXO-6-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "重申應許",
+          "titleZh": "重申應許"
+        },
+        {
+          "id": "EXO-6-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-6-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "摩西和亞倫的世系",
+          "titleZh": "摩西和亞倫的世系"
+        },
+        {
+          "id": "EXO-6-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 14,
+          "verseEnd": 14
+        }
+      ],
+      "7": [
+        {
+          "id": "EXO-7-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西亞倫受命",
+          "titleZh": "摩西亞倫受命"
+        },
+        {
+          "id": "EXO-7-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-7-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "杖變蟒蛇",
+          "titleZh": "杖變蟒蛇"
+        },
+        {
+          "id": "EXO-7-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "EXO-7-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "水變血之災",
+          "titleZh": "水變血之災"
+        },
+        {
+          "id": "EXO-7-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 14,
+          "verseEnd": 14
+        }
+      ],
+      "8": [
+        {
+          "id": "EXO-8-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "青蛙之災",
+          "titleZh": "青蛙之災"
+        },
+        {
+          "id": "EXO-8-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-8-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "跳蚤之災",
+          "titleZh": "跳蚤之災"
+        },
+        {
+          "id": "EXO-8-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 16,
+          "verseEnd": 16
+        },
+        {
+          "id": "EXO-8-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "蒼蠅之災",
+          "titleZh": "蒼蠅之災"
+        },
+        {
+          "id": "EXO-8-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 20,
+          "verseEnd": 20
+        }
+      ],
+      "9": [
+        {
+          "id": "EXO-9-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "畜疫之災",
+          "titleZh": "畜疫之災"
+        },
+        {
+          "id": "EXO-9-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-9-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "泡瘡之災",
+          "titleZh": "泡瘡之災"
+        },
+        {
+          "id": "EXO-9-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "EXO-9-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "冰雹之災",
+          "titleZh": "冰雹之災"
+        },
+        {
+          "id": "EXO-9-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "10": [
+        {
+          "id": "EXO-10-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "蝗蟲之災",
+          "titleZh": "蝗蟲之災"
+        },
+        {
+          "id": "EXO-10-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 12,
+          "verseEnd": 12
+        },
+        {
+          "id": "EXO-10-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "黑暗之災",
+          "titleZh": "黑暗之災"
+        },
+        {
+          "id": "EXO-10-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 21,
+          "verseEnd": 21
+        }
+      ],
+      "11": [
+        {
+          "id": "EXO-11-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "預告殺長子",
+          "titleZh": "預告殺長子"
+        },
+        {
+          "id": "EXO-11-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "12": [
+        {
+          "id": "EXO-12-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "逾越節之祭",
+          "titleZh": "逾越節之祭"
+        },
+        {
+          "id": "EXO-12-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-12-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 29,
+          "verseEnd": 29,
+          "title": "殺長子之災",
+          "titleZh": "殺長子之災"
+        },
+        {
+          "id": "EXO-12-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 29,
+          "verseEnd": 29
+        },
+        {
+          "id": "EXO-12-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 40,
+          "verseEnd": 40,
+          "title": "出埃及",
+          "titleZh": "出埃及"
+        },
+        {
+          "id": "EXO-12-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 40,
+          "verseEnd": 40
+        }
+      ],
+      "13": [
+        {
+          "id": "EXO-13-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "長子分別為聖",
+          "titleZh": "長子分別為聖"
+        },
+        {
+          "id": "EXO-13-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "14": [
+        {
+          "id": "EXO-14-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "法老追兵",
+          "titleZh": "法老追兵"
+        },
+        {
+          "id": "EXO-14-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-14-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "過紅海",
+          "titleZh": "過紅海"
+        },
+        {
+          "id": "EXO-14-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 15,
+          "verseEnd": 15
+        }
+      ],
+      "15": [
+        {
+          "id": "EXO-15-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西之歌",
+          "titleZh": "摩西之歌"
+        },
+        {
+          "id": "EXO-15-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-15-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "米利暗的頌讚",
+          "titleZh": "米利暗的頌讚"
+        },
+        {
+          "id": "EXO-15-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 20,
+          "verseEnd": 20
+        },
+        {
+          "id": "EXO-15-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "瑪拉苦水變甜",
+          "titleZh": "瑪拉苦水變甜"
+        },
+        {
+          "id": "EXO-15-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 22,
+          "verseEnd": 22
+        },
+        {
+          "id": "EXO-15-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 27,
+          "verseEnd": 27,
+          "title": "以琳水泉",
+          "titleZh": "以琳水泉"
+        },
+        {
+          "id": "EXO-15-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 27,
+          "verseEnd": 27
+        }
+      ],
+      "16": [
+        {
+          "id": "EXO-16-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "汛的曠野",
+          "titleZh": "汛的曠野"
+        },
+        {
+          "id": "EXO-16-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-16-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "鵪鶉與嗎哪",
+          "titleZh": "鵪鶉與嗎哪"
+        },
+        {
+          "id": "EXO-16-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "17": [
+        {
+          "id": "EXO-17-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "磐石出水",
+          "titleZh": "磐石出水"
+        },
+        {
+          "id": "EXO-17-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-17-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "殺敗亞瑪力人",
+          "titleZh": "殺敗亞瑪力人"
+        },
+        {
+          "id": "EXO-17-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 8,
+          "verseEnd": 8
+        }
+      ],
+      "18": [
+        {
+          "id": "EXO-18-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西妻兒團聚",
+          "titleZh": "摩西妻兒團聚"
+        },
+        {
+          "id": "EXO-18-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-18-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "葉特羅獻策",
+          "titleZh": "葉特羅獻策"
+        },
+        {
+          "id": "EXO-18-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "19": [
+        {
+          "id": "EXO-19-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "西奈與神立約，委身事奉真神",
+          "titleZh": "西奈與神立約，委身事奉真神"
+        },
+        {
+          "id": "EXO-19-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-19-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "到達西奈山",
+          "titleZh": "到達西奈山"
+        },
+        {
+          "id": "EXO-19-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-19-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "神降臨西奈山",
+          "titleZh": "神降臨西奈山"
+        },
+        {
+          "id": "EXO-19-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 16,
+          "verseEnd": 16
+        }
+      ],
+      "20": [
+        {
+          "id": "EXO-20-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "傳十誡",
+          "titleZh": "傳十誡"
+        },
+        {
+          "id": "EXO-20-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-20-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "百姓驚懼",
+          "titleZh": "百姓驚懼"
+        },
+        {
+          "id": "EXO-20-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ],
+      "21": [
+        {
+          "id": "EXO-21-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "關於奴僕的條例",
+          "titleZh": "關於奴僕的條例"
+        },
+        {
+          "id": "EXO-21-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-21-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "關於殺人傷人的條例",
+          "titleZh": "關於殺人傷人的條例"
+        },
+        {
+          "id": "EXO-21-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "22": [
+        {
+          "id": "EXO-22-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "關於偷盜的條例",
+          "titleZh": "關於偷盜的條例"
+        },
+        {
+          "id": "EXO-22-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-22-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "敬畏神與憐憫人",
+          "titleZh": "敬畏神與憐憫人"
+        },
+        {
+          "id": "EXO-22-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 20,
+          "verseEnd": 20
+        }
+      ],
+      "23": [
+        {
+          "id": "EXO-23-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "要正直仁慈",
+          "titleZh": "要正直仁慈"
+        },
+        {
+          "id": "EXO-23-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-23-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "守安息年與安息日",
+          "titleZh": "守安息年與安息日"
+        },
+        {
+          "id": "EXO-23-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 10,
+          "verseEnd": 10
+        },
+        {
+          "id": "EXO-23-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "三大節期",
+          "titleZh": "三大節期"
+        },
+        {
+          "id": "EXO-23-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 14,
+          "verseEnd": 14
+        },
+        {
+          "id": "EXO-23-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "神的使者",
+          "titleZh": "神的使者"
+        },
+        {
+          "id": "EXO-23-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 20,
+          "verseEnd": 20
+        }
+      ],
+      "24": [
+        {
+          "id": "EXO-24-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "立約",
+          "titleZh": "立約"
+        },
+        {
+          "id": "EXO-24-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-24-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "摩西上山",
+          "titleZh": "摩西上山"
+        },
+        {
+          "id": "EXO-24-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "25": [
+        {
+          "id": "EXO-25-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "建造會幕聖所，建立敬拜中心",
+          "titleZh": "建造會幕聖所，建立敬拜中心"
+        },
+        {
+          "id": "EXO-25-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-25-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造會幕的指示",
+          "titleZh": "造會幕的指示"
+        },
+        {
+          "id": "EXO-25-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-25-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "造見證櫃的指示",
+          "titleZh": "造見證櫃的指示"
+        },
+        {
+          "id": "EXO-25-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 10,
+          "verseEnd": 10
+        },
+        {
+          "id": "EXO-25-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 23,
+          "verseEnd": 23,
+          "title": "造供桌的指示",
+          "titleZh": "造供桌的指示"
+        },
+        {
+          "id": "EXO-25-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 23,
+          "verseEnd": 23
+        },
+        {
+          "id": "EXO-25-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 31,
+          "verseEnd": 31,
+          "title": "造燈台的指示",
+          "titleZh": "造燈台的指示"
+        },
+        {
+          "id": "EXO-25-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 31,
+          "verseEnd": 31
+        }
+      ],
+      "26": [
+        {
+          "id": "EXO-26-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造帳幕的指示",
+          "titleZh": "造帳幕的指示"
+        },
+        {
+          "id": "EXO-26-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-26-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "造圍板的指示",
+          "titleZh": "造圍板的指示"
+        },
+        {
+          "id": "EXO-26-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 15,
+          "verseEnd": 15
+        },
+        {
+          "id": "EXO-26-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 31,
+          "verseEnd": 31,
+          "title": "造帳幔的指示",
+          "titleZh": "造帳幔的指示"
+        },
+        {
+          "id": "EXO-26-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 31,
+          "verseEnd": 31
+        }
+      ],
+      "27": [
+        {
+          "id": "EXO-27-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造祭壇的指示",
+          "titleZh": "造祭壇的指示"
+        },
+        {
+          "id": "EXO-27-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-27-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "造院子的指示",
+          "titleZh": "造院子的指示"
+        },
+        {
+          "id": "EXO-27-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 9,
+          "verseEnd": 9
+        },
+        {
+          "id": "EXO-27-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "點燈的指示",
+          "titleZh": "點燈的指示"
+        },
+        {
+          "id": "EXO-27-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 20,
+          "verseEnd": 20
+        }
+      ],
+      "28": [
+        {
+          "id": "EXO-28-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造聖袍的指示",
+          "titleZh": "造聖袍的指示"
+        },
+        {
+          "id": "EXO-28-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-28-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "造以弗得的指示",
+          "titleZh": "造以弗得的指示"
+        },
+        {
+          "id": "EXO-28-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 6,
+          "verseEnd": 6
+        },
+        {
+          "id": "EXO-28-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "造胸牌的指示",
+          "titleZh": "造胸牌的指示"
+        },
+        {
+          "id": "EXO-28-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 15,
+          "verseEnd": 15
+        },
+        {
+          "id": "EXO-28-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 31,
+          "verseEnd": 31,
+          "title": "造外袍的指示",
+          "titleZh": "造外袍的指示"
+        },
+        {
+          "id": "EXO-28-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 31,
+          "verseEnd": 31
+        },
+        {
+          "id": "EXO-28-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 40,
+          "verseEnd": 40,
+          "title": "造內袍的指示",
+          "titleZh": "造內袍的指示"
+        },
+        {
+          "id": "EXO-28-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 40,
+          "verseEnd": 40
+        }
+      ],
+      "29": [
+        {
+          "id": "EXO-29-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "按立祭司之禮",
+          "titleZh": "按立祭司之禮"
+        },
+        {
+          "id": "EXO-29-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "30": [
+        {
+          "id": "EXO-30-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造香壇的指示",
+          "titleZh": "造香壇的指示"
+        },
+        {
+          "id": "EXO-30-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-30-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "代贖的銀子",
+          "titleZh": "代贖的銀子"
+        },
+        {
+          "id": "EXO-30-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 11,
+          "verseEnd": 11
+        },
+        {
+          "id": "EXO-30-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 17,
+          "verseEnd": 17,
+          "title": "造銅盆的指示",
+          "titleZh": "造銅盆的指示"
+        },
+        {
+          "id": "EXO-30-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 17,
+          "verseEnd": 17
+        },
+        {
+          "id": "EXO-30-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "做聖膏油的指示",
+          "titleZh": "做聖膏油的指示"
+        },
+        {
+          "id": "EXO-30-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 22,
+          "verseEnd": 22
+        },
+        {
+          "id": "EXO-30-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 34,
+          "verseEnd": 34,
+          "title": "做至聖之香的指示",
+          "titleZh": "做至聖之香的指示"
+        },
+        {
+          "id": "EXO-30-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 34,
+          "verseEnd": 34
+        }
+      ],
+      "31": [
+        {
+          "id": "EXO-31-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "人才的準備",
+          "titleZh": "人才的準備"
+        },
+        {
+          "id": "EXO-31-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-31-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "要守安息日",
+          "titleZh": "要守安息日"
+        },
+        {
+          "id": "EXO-31-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "32": [
+        {
+          "id": "EXO-32-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "金牛犢",
+          "titleZh": "金牛犢"
+        },
+        {
+          "id": "EXO-32-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-32-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "title": "上主向以色列人發怒",
+          "titleZh": "上主向以色列人發怒"
+        },
+        {
+          "id": "EXO-32-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 7,
+          "verseEnd": 7
+        },
+        {
+          "id": "EXO-32-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "摩西向以色列人發怒",
+          "titleZh": "摩西向以色列人發怒"
+        },
+        {
+          "id": "EXO-32-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 15,
+          "verseEnd": 15
+        },
+        {
+          "id": "EXO-32-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 30,
+          "verseEnd": 30,
+          "title": "摩西求恕",
+          "titleZh": "摩西求恕"
+        },
+        {
+          "id": "EXO-32-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 30,
+          "verseEnd": 30
+        }
+      ],
+      "33": [
+        {
+          "id": "EXO-33-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "神拒絕同行",
+          "titleZh": "神拒絕同行"
+        },
+        {
+          "id": "EXO-33-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-33-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 33,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "求主同行",
+          "titleZh": "求主同行"
+        },
+        {
+          "id": "EXO-33-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 33,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "34": [
+        {
+          "id": "EXO-34-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "重造石版",
+          "titleZh": "重造石版"
+        },
+        {
+          "id": "EXO-34-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-34-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "重新立約",
+          "titleZh": "重新立約"
+        },
+        {
+          "id": "EXO-34-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 10,
+          "verseEnd": 10
+        },
+        {
+          "id": "EXO-34-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 29,
+          "verseEnd": 29,
+          "title": "摩西臉上的榮光",
+          "titleZh": "摩西臉上的榮光"
+        },
+        {
+          "id": "EXO-34-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 29,
+          "verseEnd": 29
+        }
+      ],
+      "35": [
+        {
+          "id": "EXO-35-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 35,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "吩咐守安息日",
+          "titleZh": "吩咐守安息日"
+        },
+        {
+          "id": "EXO-35-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 35,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-35-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 35,
+          "verseStart": 4,
+          "verseEnd": 4,
+          "title": "吩咐奉獻",
+          "titleZh": "吩咐奉獻"
+        },
+        {
+          "id": "EXO-35-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 35,
+          "verseStart": 4,
+          "verseEnd": 4
+        },
+        {
+          "id": "EXO-35-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 35,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "同心奉獻",
+          "titleZh": "同心奉獻"
+        },
+        {
+          "id": "EXO-35-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 35,
+          "verseStart": 20,
+          "verseEnd": 20
+        }
+      ],
+      "36": [
+        {
+          "id": "EXO-36-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "奉獻有餘",
+          "titleZh": "奉獻有餘"
+        },
+        {
+          "id": "EXO-36-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-36-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "造帳幕",
+          "titleZh": "造帳幕"
+        },
+        {
+          "id": "EXO-36-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "EXO-36-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "造圍板",
+          "titleZh": "造圍板"
+        },
+        {
+          "id": "EXO-36-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 20,
+          "verseEnd": 20
+        },
+        {
+          "id": "EXO-36-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 35,
+          "verseEnd": 35,
+          "title": "造帳幔",
+          "titleZh": "造帳幔"
+        },
+        {
+          "id": "EXO-36-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 35,
+          "verseEnd": 35
+        }
+      ],
+      "37": [
+        {
+          "id": "EXO-37-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 37,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造見證櫃",
+          "titleZh": "造見證櫃"
+        },
+        {
+          "id": "EXO-37-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 37,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-37-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 37,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "造供桌",
+          "titleZh": "造供桌"
+        },
+        {
+          "id": "EXO-37-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 37,
+          "verseStart": 10,
+          "verseEnd": 10
+        },
+        {
+          "id": "EXO-37-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 37,
+          "verseStart": 17,
+          "verseEnd": 17,
+          "title": "造燈台",
+          "titleZh": "造燈台"
+        },
+        {
+          "id": "EXO-37-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 37,
+          "verseStart": 17,
+          "verseEnd": 17
+        },
+        {
+          "id": "EXO-37-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 37,
+          "verseStart": 25,
+          "verseEnd": 25,
+          "title": "造香壇",
+          "titleZh": "造香壇"
+        },
+        {
+          "id": "EXO-37-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 37,
+          "verseStart": 25,
+          "verseEnd": 25
+        },
+        {
+          "id": "EXO-37-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 37,
+          "verseStart": 29,
+          "verseEnd": 29,
+          "title": "做聖膏油",
+          "titleZh": "做聖膏油"
+        },
+        {
+          "id": "EXO-37-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 37,
+          "verseStart": 29,
+          "verseEnd": 29
+        }
+      ],
+      "38": [
+        {
+          "id": "EXO-38-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 38,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "造祭壇",
+          "titleZh": "造祭壇"
+        },
+        {
+          "id": "EXO-38-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 38,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-38-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 38,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "造洗濯盆",
+          "titleZh": "造洗濯盆"
+        },
+        {
+          "id": "EXO-38-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 38,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "EXO-38-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 38,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "造院子",
+          "titleZh": "造院子"
+        },
+        {
+          "id": "EXO-38-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 38,
+          "verseStart": 9,
+          "verseEnd": 9
+        }
+      ],
+      "39": [
+        {
+          "id": "EXO-39-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "做聖衣",
+          "titleZh": "做聖衣"
+        },
+        {
+          "id": "EXO-39-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-39-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 2,
+          "verseEnd": 2,
+          "title": "做以弗得",
+          "titleZh": "做以弗得"
+        },
+        {
+          "id": "EXO-39-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 2,
+          "verseEnd": 2
+        },
+        {
+          "id": "EXO-39-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "做胸牌",
+          "titleZh": "做胸牌"
+        },
+        {
+          "id": "EXO-39-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "EXO-39-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "做外袍",
+          "titleZh": "做外袍"
+        },
+        {
+          "id": "EXO-39-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 22,
+          "verseEnd": 22
+        },
+        {
+          "id": "EXO-39-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 27,
+          "verseEnd": 27,
+          "title": "做內袍",
+          "titleZh": "做內袍"
+        },
+        {
+          "id": "EXO-39-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 27,
+          "verseEnd": 27
+        },
+        {
+          "id": "EXO-39-h6",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 39,
+          "verseStart": 32,
+          "verseEnd": 32,
+          "title": "會幕完工",
+          "titleZh": "會幕完工"
+        },
+        {
+          "id": "EXO-39-p6",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 39,
+          "verseStart": 32,
+          "verseEnd": 32
+        }
+      ],
+      "40": [
+        {
+          "id": "EXO-40-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 40,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "立起會幕",
+          "titleZh": "立起會幕"
+        },
+        {
+          "id": "EXO-40-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 40,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "EXO-40-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 40,
+          "verseStart": 34,
+          "verseEnd": 34,
+          "title": "神榮耀同行",
+          "titleZh": "神榮耀同行"
+        },
+        {
+          "id": "EXO-40-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 40,
+          "verseStart": 34,
+          "verseEnd": 34
+        }
+      ]
+    },
+    "LEV": {
+      "1": [
+        {
+          "id": "LEV-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "敬拜：獻祭的條例",
+          "titleZh": "敬拜：獻祭的條例"
+        },
+        {
+          "id": "LEV-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "燔祭",
+          "titleZh": "燔祭"
+        },
+        {
+          "id": "LEV-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "2": [
+        {
+          "id": "LEV-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "素祭",
+          "titleZh": "素祭"
+        },
+        {
+          "id": "LEV-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "3": [
+        {
+          "id": "LEV-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "平安祭",
+          "titleZh": "平安祭"
+        },
+        {
+          "id": "LEV-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "4": [
+        {
+          "id": "LEV-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "贖罪祭",
+          "titleZh": "贖罪祭"
+        },
+        {
+          "id": "LEV-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-4-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 27,
+          "verseEnd": 27,
+          "title": "百姓的贖罪祭",
+          "titleZh": "百姓的贖罪祭"
+        },
+        {
+          "id": "LEV-4-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 27,
+          "verseEnd": 27
+        }
+      ],
+      "5": [
+        {
+          "id": "LEV-5-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "贖愆祭",
+          "titleZh": "贖愆祭"
+        },
+        {
+          "id": "LEV-5-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 14,
+          "verseEnd": 14
+        }
+      ],
+      "6": [
+        {
+          "id": "LEV-6-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "祭司供獻燔祭",
+          "titleZh": "祭司供獻燔祭"
+        },
+        {
+          "id": "LEV-6-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "LEV-6-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "祭司供獻素祭",
+          "titleZh": "祭司供獻素祭"
+        },
+        {
+          "id": "LEV-6-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 14,
+          "verseEnd": 14
+        },
+        {
+          "id": "LEV-6-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 19,
+          "verseEnd": 19,
+          "title": "祭司的素祭",
+          "titleZh": "祭司的素祭"
+        },
+        {
+          "id": "LEV-6-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 19,
+          "verseEnd": 19
+        },
+        {
+          "id": "LEV-6-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 24,
+          "verseEnd": 24,
+          "title": "祭司供獻贖罪祭",
+          "titleZh": "祭司供獻贖罪祭"
+        },
+        {
+          "id": "LEV-6-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 24,
+          "verseEnd": 24
+        }
+      ],
+      "7": [
+        {
+          "id": "LEV-7-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "祭司供獻贖愆祭",
+          "titleZh": "祭司供獻贖愆祭"
+        },
+        {
+          "id": "LEV-7-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-7-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "祭司供獻平安祭",
+          "titleZh": "祭司供獻平安祭"
+        },
+        {
+          "id": "LEV-7-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 11,
+          "verseEnd": 11
+        }
+      ],
+      "8": [
+        {
+          "id": "LEV-8-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "祭司就職",
+          "titleZh": "祭司就職"
+        },
+        {
+          "id": "LEV-8-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-8-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞倫和兒子受聖職",
+          "titleZh": "亞倫和兒子受聖職"
+        },
+        {
+          "id": "LEV-8-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "9": [
+        {
+          "id": "LEV-9-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞倫和兒子開始供職",
+          "titleZh": "亞倫和兒子開始供職"
+        },
+        {
+          "id": "LEV-9-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "10": [
+        {
+          "id": "LEV-10-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "拿答和亞比戶",
+          "titleZh": "拿答和亞比戶"
+        },
+        {
+          "id": "LEV-10-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "11": [
+        {
+          "id": "LEV-11-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "潔淨的條例：禮儀上的不潔",
+          "titleZh": "潔淨的條例：禮儀上的不潔"
+        },
+        {
+          "id": "LEV-11-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-11-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "潔淨和不潔淨的食物",
+          "titleZh": "潔淨和不潔淨的食物"
+        },
+        {
+          "id": "LEV-11-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "12": [
+        {
+          "id": "LEV-12-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "產婦的潔淨",
+          "titleZh": "產婦的潔淨"
+        },
+        {
+          "id": "LEV-12-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "13": [
+        {
+          "id": "LEV-13-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "關於不潔淨的皮膚病",
+          "titleZh": "關於不潔淨的皮膚病"
+        },
+        {
+          "id": "LEV-13-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "14": [
+        {
+          "id": "LEV-14-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "皮膚病得潔淨的條例",
+          "titleZh": "皮膚病得潔淨的條例"
+        },
+        {
+          "id": "LEV-14-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-14-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 33,
+          "verseEnd": 33,
+          "title": "潔淨感染的房屋",
+          "titleZh": "潔淨感染的房屋"
+        },
+        {
+          "id": "LEV-14-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 33,
+          "verseEnd": 33
+        }
+      ],
+      "15": [
+        {
+          "id": "LEV-15-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "關於身體的漏症",
+          "titleZh": "關於身體的漏症"
+        },
+        {
+          "id": "LEV-15-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "16": [
+        {
+          "id": "LEV-16-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "贖罪日",
+          "titleZh": "贖罪日"
+        },
+        {
+          "id": "LEV-16-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "17": [
+        {
+          "id": "LEV-17-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "聖潔法典（一）：道德上的不潔",
+          "titleZh": "聖潔法典（一）：道德上的不潔"
+        },
+        {
+          "id": "LEV-17-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-17-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "宰殺祭牲的條例",
+          "titleZh": "宰殺祭牲的條例"
+        },
+        {
+          "id": "LEV-17-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "18": [
+        {
+          "id": "LEV-18-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "禁絕亂倫和淫亂",
+          "titleZh": "禁絕亂倫和淫亂"
+        },
+        {
+          "id": "LEV-18-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "19": [
+        {
+          "id": "LEV-19-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "成聖的生活",
+          "titleZh": "成聖的生活"
+        },
+        {
+          "id": "LEV-19-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "20": [
+        {
+          "id": "LEV-20-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "犯罪的刑罰",
+          "titleZh": "犯罪的刑罰"
+        },
+        {
+          "id": "LEV-20-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "21": [
+        {
+          "id": "LEV-21-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "聖潔法典（二）：祭司的規範",
+          "titleZh": "聖潔法典（二）：祭司的規範"
+        },
+        {
+          "id": "LEV-21-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-21-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "祭司的條例",
+          "titleZh": "祭司的條例"
+        },
+        {
+          "id": "LEV-21-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "22": [
+        {
+          "id": "LEV-22-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "吃聖物的條例",
+          "titleZh": "吃聖物的條例"
+        },
+        {
+          "id": "LEV-22-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-22-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 17,
+          "verseEnd": 17,
+          "title": "不蒙悅納的祭物",
+          "titleZh": "不蒙悅納的祭物"
+        },
+        {
+          "id": "LEV-22-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 17,
+          "verseEnd": 17
+        }
+      ],
+      "23": [
+        {
+          "id": "LEV-23-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "聖潔法典（三）：節期的條例",
+          "titleZh": "聖潔法典（三）：節期的條例"
+        },
+        {
+          "id": "LEV-23-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-23-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主的節期",
+          "titleZh": "上主的節期"
+        },
+        {
+          "id": "LEV-23-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-23-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 3,
+          "verseEnd": 3,
+          "title": "安息日",
+          "titleZh": "安息日"
+        },
+        {
+          "id": "LEV-23-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 3,
+          "verseEnd": 3
+        },
+        {
+          "id": "LEV-23-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 5,
+          "verseEnd": 5,
+          "title": "春天的節期",
+          "titleZh": "春天的節期"
+        },
+        {
+          "id": "LEV-23-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 5,
+          "verseEnd": 5
+        },
+        {
+          "id": "LEV-23-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 23,
+          "verseEnd": 23,
+          "title": "秋天的節期",
+          "titleZh": "秋天的節期"
+        },
+        {
+          "id": "LEV-23-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 23,
+          "verseEnd": 23
+        }
+      ],
+      "24": [
+        {
+          "id": "LEV-24-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "點燈與供餅",
+          "titleZh": "點燈與供餅"
+        },
+        {
+          "id": "LEV-24-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-24-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "褻瀆罪的條例",
+          "titleZh": "褻瀆罪的條例"
+        },
+        {
+          "id": "LEV-24-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 10,
+          "verseEnd": 10
+        }
+      ],
+      "25": [
+        {
+          "id": "LEV-25-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "安息年",
+          "titleZh": "安息年"
+        },
+        {
+          "id": "LEV-25-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-25-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "禧年",
+          "titleZh": "禧年"
+        },
+        {
+          "id": "LEV-25-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 8,
+          "verseEnd": 8
+        }
+      ],
+      "26": [
+        {
+          "id": "LEV-26-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "遵命得福",
+          "titleZh": "遵命得福"
+        },
+        {
+          "id": "LEV-26-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "LEV-26-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "不遵命得禍",
+          "titleZh": "不遵命得禍"
+        },
+        {
+          "id": "LEV-26-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 14,
+          "verseEnd": 14
+        }
+      ],
+      "27": [
+        {
+          "id": "LEV-27-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "許願和估價",
+          "titleZh": "許願和估價"
+        },
+        {
+          "id": "LEV-27-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ]
+    },
+    "NUM": {
+      "1": [
+        {
+          "id": "NUM-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以色列民準備進入迦南",
+          "titleZh": "以色列民準備進入迦南"
+        },
+        {
+          "id": "NUM-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "第一次數點人口",
+          "titleZh": "第一次數點人口"
+        },
+        {
+          "id": "NUM-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "2": [
+        {
+          "id": "NUM-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "安營、前進按部就班",
+          "titleZh": "安營、前進按部就班"
+        },
+        {
+          "id": "NUM-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "3": [
+        {
+          "id": "NUM-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "利未的世系和職責",
+          "titleZh": "利未的世系和職責"
+        },
+        {
+          "id": "NUM-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "4": [
+        {
+          "id": "NUM-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "哥轄子孫的工作",
+          "titleZh": "哥轄子孫的工作"
+        },
+        {
+          "id": "NUM-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-4-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "革順子孫的工作",
+          "titleZh": "革順子孫的工作"
+        },
+        {
+          "id": "NUM-4-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 21,
+          "verseEnd": 21
+        },
+        {
+          "id": "NUM-4-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 29,
+          "verseEnd": 29,
+          "title": "米拉利子孫的工作",
+          "titleZh": "米拉利子孫的工作"
+        },
+        {
+          "id": "NUM-4-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 29,
+          "verseEnd": 29
+        },
+        {
+          "id": "NUM-4-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 34,
+          "verseEnd": 34,
+          "title": "數點利未人口",
+          "titleZh": "數點利未人口"
+        },
+        {
+          "id": "NUM-4-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 34,
+          "verseEnd": 34
+        }
+      ],
+      "5": [
+        {
+          "id": "NUM-5-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "不潔淨之人的處理",
+          "titleZh": "不潔淨之人的處理"
+        },
+        {
+          "id": "NUM-5-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-5-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 5,
+          "verseEnd": 5,
+          "title": "罪的處理",
+          "titleZh": "罪的處理"
+        },
+        {
+          "id": "NUM-5-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 5,
+          "verseEnd": 5
+        },
+        {
+          "id": "NUM-5-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "疑妻子不貞的處理",
+          "titleZh": "疑妻子不貞的處理"
+        },
+        {
+          "id": "NUM-5-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 11,
+          "verseEnd": 11
+        }
+      ],
+      "6": [
+        {
+          "id": "NUM-6-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "拿細耳人的條例",
+          "titleZh": "拿細耳人的條例"
+        },
+        {
+          "id": "NUM-6-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-6-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "大祭司的祝福",
+          "titleZh": "大祭司的祝福"
+        },
+        {
+          "id": "NUM-6-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 22,
+          "verseEnd": 22
+        }
+      ],
+      "7": [
+        {
+          "id": "NUM-7-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "支派首領的奉獻",
+          "titleZh": "支派首領的奉獻"
+        },
+        {
+          "id": "NUM-7-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "8": [
+        {
+          "id": "NUM-8-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "點燈的規例",
+          "titleZh": "點燈的規例"
+        },
+        {
+          "id": "NUM-8-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-8-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 5,
+          "verseEnd": 5,
+          "title": "利未人奉獻的規例",
+          "titleZh": "利未人奉獻的規例"
+        },
+        {
+          "id": "NUM-8-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 5,
+          "verseEnd": 5
+        }
+      ],
+      "9": [
+        {
+          "id": "NUM-9-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "西奈曠野守逾越節",
+          "titleZh": "西奈曠野守逾越節"
+        },
+        {
+          "id": "NUM-9-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-9-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "帳幕立起",
+          "titleZh": "帳幕立起"
+        },
+        {
+          "id": "NUM-9-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 15,
+          "verseEnd": 15
+        }
+      ],
+      "10": [
+        {
+          "id": "NUM-10-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兩支銀號",
+          "titleZh": "兩支銀號"
+        },
+        {
+          "id": "NUM-10-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-10-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "從西奈到加低斯",
+          "titleZh": "從西奈到加低斯"
+        },
+        {
+          "id": "NUM-10-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 11,
+          "verseEnd": 11
+        },
+        {
+          "id": "NUM-10-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "離開西奈曠野",
+          "titleZh": "離開西奈曠野"
+        },
+        {
+          "id": "NUM-10-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 11,
+          "verseEnd": 11
+        }
+      ],
+      "11": [
+        {
+          "id": "NUM-11-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主烈火燒營",
+          "titleZh": "上主烈火燒營"
+        },
+        {
+          "id": "NUM-11-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-11-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 4,
+          "verseEnd": 4,
+          "title": "百姓哀哭要吃肉",
+          "titleZh": "百姓哀哭要吃肉"
+        },
+        {
+          "id": "NUM-11-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 4,
+          "verseEnd": 4
+        },
+        {
+          "id": "NUM-11-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "上主分賜靈予七十長老",
+          "titleZh": "上主分賜靈予七十長老"
+        },
+        {
+          "id": "NUM-11-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 16,
+          "verseEnd": 16
+        },
+        {
+          "id": "NUM-11-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 31,
+          "verseEnd": 31,
+          "title": "上主吹風帶來鵪鶉",
+          "titleZh": "上主吹風帶來鵪鶉"
+        },
+        {
+          "id": "NUM-11-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 31,
+          "verseEnd": 31
+        }
+      ],
+      "12": [
+        {
+          "id": "NUM-12-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "米利暗和亞倫惡評摩西",
+          "titleZh": "米利暗和亞倫惡評摩西"
+        },
+        {
+          "id": "NUM-12-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "13": [
+        {
+          "id": "NUM-13-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "四十年在加低斯",
+          "titleZh": "四十年在加低斯"
+        },
+        {
+          "id": "NUM-13-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-13-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "探子探查迦南",
+          "titleZh": "探子探查迦南"
+        },
+        {
+          "id": "NUM-13-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-13-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 25,
+          "verseEnd": 25,
+          "title": "探子的探查報告",
+          "titleZh": "探子的探查報告"
+        },
+        {
+          "id": "NUM-13-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 25,
+          "verseEnd": 25
+        }
+      ],
+      "14": [
+        {
+          "id": "NUM-14-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "百姓哀哭要回埃及",
+          "titleZh": "百姓哀哭要回埃及"
+        },
+        {
+          "id": "NUM-14-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-14-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "摩西向上主求情",
+          "titleZh": "摩西向上主求情"
+        },
+        {
+          "id": "NUM-14-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 13,
+          "verseEnd": 13
+        },
+        {
+          "id": "NUM-14-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "以色列人受罰不得進迦南",
+          "titleZh": "以色列人受罰不得進迦南"
+        },
+        {
+          "id": "NUM-14-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 20,
+          "verseEnd": 20
+        },
+        {
+          "id": "NUM-14-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 39,
+          "verseEnd": 39,
+          "title": "百姓擅自上山攻敵受挫",
+          "titleZh": "百姓擅自上山攻敵受挫"
+        },
+        {
+          "id": "NUM-14-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 39,
+          "verseEnd": 39
+        }
+      ],
+      "15": [
+        {
+          "id": "NUM-15-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "獻馨香火祭的規例",
+          "titleZh": "獻馨香火祭的規例"
+        },
+        {
+          "id": "NUM-15-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-15-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "獻贖罪祭的規例",
+          "titleZh": "獻贖罪祭的規例"
+        },
+        {
+          "id": "NUM-15-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 22,
+          "verseEnd": 22
+        },
+        {
+          "id": "NUM-15-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 32,
+          "verseEnd": 32,
+          "title": "犯安息日處死",
+          "titleZh": "犯安息日處死"
+        },
+        {
+          "id": "NUM-15-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 32,
+          "verseEnd": 32
+        },
+        {
+          "id": "NUM-15-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 37,
+          "verseEnd": 37,
+          "title": "衣邊縫繸常記誡命",
+          "titleZh": "衣邊縫繸常記誡命"
+        },
+        {
+          "id": "NUM-15-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 37,
+          "verseEnd": 37
+        }
+      ],
+      "16": [
+        {
+          "id": "NUM-16-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "可拉黨叛逆",
+          "titleZh": "可拉黨叛逆"
+        },
+        {
+          "id": "NUM-16-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-16-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 20,
+          "verseEnd": 20,
+          "title": "土地裂開吞滅叛徒",
+          "titleZh": "土地裂開吞滅叛徒"
+        },
+        {
+          "id": "NUM-16-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 20,
+          "verseEnd": 20
+        },
+        {
+          "id": "NUM-16-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 41,
+          "verseEnd": 41,
+          "title": "上主降瘟疫滅百姓",
+          "titleZh": "上主降瘟疫滅百姓"
+        },
+        {
+          "id": "NUM-16-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 41,
+          "verseEnd": 41
+        }
+      ],
+      "17": [
+        {
+          "id": "NUM-17-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞倫的杖發芽開花",
+          "titleZh": "亞倫的杖發芽開花"
+        },
+        {
+          "id": "NUM-17-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "18": [
+        {
+          "id": "NUM-18-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞倫和利未人的職責",
+          "titleZh": "亞倫和利未人的職責"
+        },
+        {
+          "id": "NUM-18-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-18-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "祭司所得的分",
+          "titleZh": "祭司所得的分"
+        },
+        {
+          "id": "NUM-18-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "NUM-18-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "利未人所得的分",
+          "titleZh": "利未人所得的分"
+        },
+        {
+          "id": "NUM-18-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 21,
+          "verseEnd": 21
+        }
+      ],
+      "19": [
+        {
+          "id": "NUM-19-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "紅母牛灰潔淨禮",
+          "titleZh": "紅母牛灰潔淨禮"
+        },
+        {
+          "id": "NUM-19-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "20": [
+        {
+          "id": "NUM-20-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "從加低斯到摩押平原",
+          "titleZh": "從加低斯到摩押平原"
+        },
+        {
+          "id": "NUM-20-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-20-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "米利暗死",
+          "titleZh": "米利暗死"
+        },
+        {
+          "id": "NUM-20-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-20-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 2,
+          "verseEnd": 2,
+          "title": "百姓爭鬧要水喝",
+          "titleZh": "百姓爭鬧要水喝"
+        },
+        {
+          "id": "NUM-20-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 2,
+          "verseEnd": 2
+        },
+        {
+          "id": "NUM-20-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "摩西擊打磐石出水",
+          "titleZh": "摩西擊打磐石出水"
+        },
+        {
+          "id": "NUM-20-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 9,
+          "verseEnd": 9
+        },
+        {
+          "id": "NUM-20-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "以東王不准以色列人過境",
+          "titleZh": "以東王不准以色列人過境"
+        },
+        {
+          "id": "NUM-20-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 14,
+          "verseEnd": 14
+        },
+        {
+          "id": "NUM-20-h6",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 22,
+          "verseEnd": 22,
+          "title": "亞倫死",
+          "titleZh": "亞倫死"
+        },
+        {
+          "id": "NUM-20-p6",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 22,
+          "verseEnd": 22
+        }
+      ],
+      "21": [
+        {
+          "id": "NUM-21-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "戰勝迦南人",
+          "titleZh": "戰勝迦南人"
+        },
+        {
+          "id": "NUM-21-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-21-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 4,
+          "verseEnd": 4,
+          "title": "百姓爭鬧與銅蛇",
+          "titleZh": "百姓爭鬧與銅蛇"
+        },
+        {
+          "id": "NUM-21-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 4,
+          "verseEnd": 4
+        },
+        {
+          "id": "NUM-21-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "戰勝亞摩利王",
+          "titleZh": "戰勝亞摩利王"
+        },
+        {
+          "id": "NUM-21-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 21,
+          "verseEnd": 21
+        },
+        {
+          "id": "NUM-21-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 33,
+          "verseEnd": 33,
+          "title": "戰勝巴珊王",
+          "titleZh": "戰勝巴珊王"
+        },
+        {
+          "id": "NUM-21-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 33,
+          "verseEnd": 33
+        }
+      ],
+      "22": [
+        {
+          "id": "NUM-22-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以色列民在摩押平原",
+          "titleZh": "以色列民在摩押平原"
+        },
+        {
+          "id": "NUM-22-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-22-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩押王召巴蘭詛咒以色列人",
+          "titleZh": "摩押王召巴蘭詛咒以色列人"
+        },
+        {
+          "id": "NUM-22-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-22-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 21,
+          "verseEnd": 21,
+          "title": "神的使者攔阻巴蘭",
+          "titleZh": "神的使者攔阻巴蘭"
+        },
+        {
+          "id": "NUM-22-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 21,
+          "verseEnd": 21
+        },
+        {
+          "id": "NUM-22-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 36,
+          "verseEnd": 36,
+          "title": "摩押王迎接巴蘭",
+          "titleZh": "摩押王迎接巴蘭"
+        },
+        {
+          "id": "NUM-22-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 36,
+          "verseEnd": 36
+        }
+      ],
+      "23": [
+        {
+          "id": "NUM-23-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "巴蘭第一次預言",
+          "titleZh": "巴蘭第一次預言"
+        },
+        {
+          "id": "NUM-23-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-23-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "巴蘭第二次預言",
+          "titleZh": "巴蘭第二次預言"
+        },
+        {
+          "id": "NUM-23-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 14,
+          "verseEnd": 14
+        }
+      ],
+      "24": [
+        {
+          "id": "NUM-24-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "巴蘭第三次預言",
+          "titleZh": "巴蘭第三次預言"
+        },
+        {
+          "id": "NUM-24-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-24-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "巴蘭第四次預言",
+          "titleZh": "巴蘭第四次預言"
+        },
+        {
+          "id": "NUM-24-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 10,
+          "verseEnd": 10
+        }
+      ],
+      "25": [
+        {
+          "id": "NUM-25-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以色列人在毗珥拜巴力",
+          "titleZh": "以色列人在毗珥拜巴力"
+        },
+        {
+          "id": "NUM-25-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "26": [
+        {
+          "id": "NUM-26-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "第二次數點人口",
+          "titleZh": "第二次數點人口"
+        },
+        {
+          "id": "NUM-26-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "27": [
+        {
+          "id": "NUM-27-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "西羅非哈女兒的產業權",
+          "titleZh": "西羅非哈女兒的產業權"
+        },
+        {
+          "id": "NUM-27-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-27-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "揀選約書亞承接摩西",
+          "titleZh": "揀選約書亞承接摩西"
+        },
+        {
+          "id": "NUM-27-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "28": [
+        {
+          "id": "NUM-28-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "每日的獻祭",
+          "titleZh": "每日的獻祭"
+        },
+        {
+          "id": "NUM-28-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-28-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "安息日的獻祭",
+          "titleZh": "安息日的獻祭"
+        },
+        {
+          "id": "NUM-28-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 9,
+          "verseEnd": 9
+        },
+        {
+          "id": "NUM-28-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "title": "初一的獻祭",
+          "titleZh": "初一的獻祭"
+        },
+        {
+          "id": "NUM-28-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 11,
+          "verseEnd": 11
+        },
+        {
+          "id": "NUM-28-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "逾越節的獻祭",
+          "titleZh": "逾越節的獻祭"
+        },
+        {
+          "id": "NUM-28-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 16,
+          "verseEnd": 16
+        },
+        {
+          "id": "NUM-28-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 26,
+          "verseEnd": 26,
+          "title": "七七節的獻祭",
+          "titleZh": "七七節的獻祭"
+        },
+        {
+          "id": "NUM-28-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 26,
+          "verseEnd": 26
+        }
+      ],
+      "29": [
+        {
+          "id": "NUM-29-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "吹角日的獻祭",
+          "titleZh": "吹角日的獻祭"
+        },
+        {
+          "id": "NUM-29-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-29-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "title": "贖罪日的獻祭",
+          "titleZh": "贖罪日的獻祭"
+        },
+        {
+          "id": "NUM-29-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 7,
+          "verseEnd": 7
+        },
+        {
+          "id": "NUM-29-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "住棚節的獻祭",
+          "titleZh": "住棚節的獻祭"
+        },
+        {
+          "id": "NUM-29-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "30": [
+        {
+          "id": "NUM-30-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 3,
+          "verseEnd": 3,
+          "title": "女子許願的規例",
+          "titleZh": "女子許願的規例"
+        },
+        {
+          "id": "NUM-30-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 3,
+          "verseEnd": 3
+        }
+      ],
+      "31": [
+        {
+          "id": "NUM-31-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "戰勝米甸人",
+          "titleZh": "戰勝米甸人"
+        },
+        {
+          "id": "NUM-31-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-31-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "擄掠品的處理",
+          "titleZh": "擄掠品的處理"
+        },
+        {
+          "id": "NUM-31-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "32": [
+        {
+          "id": "NUM-32-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "兩個半支派分約旦河東之地",
+          "titleZh": "兩個半支派分約旦河東之地"
+        },
+        {
+          "id": "NUM-32-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "33": [
+        {
+          "id": "NUM-33-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "從埃及到摩押的行程",
+          "titleZh": "從埃及到摩押的行程"
+        },
+        {
+          "id": "NUM-33-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-33-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 33,
+          "verseStart": 50,
+          "verseEnd": 50,
+          "title": "過約旦河之前的吩咐",
+          "titleZh": "過約旦河之前的吩咐"
+        },
+        {
+          "id": "NUM-33-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 33,
+          "verseStart": 50,
+          "verseEnd": 50
+        }
+      ],
+      "34": [
+        {
+          "id": "NUM-34-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "迦南地的境界",
+          "titleZh": "迦南地的境界"
+        },
+        {
+          "id": "NUM-34-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "NUM-34-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "負責分地的人",
+          "titleZh": "負責分地的人"
+        },
+        {
+          "id": "NUM-34-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "35": [
+        {
+          "id": "NUM-35-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 35,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "庇護城與殺人者的處理",
+          "titleZh": "庇護城與殺人者的處理"
+        },
+        {
+          "id": "NUM-35-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 35,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "36": [
+        {
+          "id": "NUM-36-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 36,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "繼承產業的女子婚姻處理",
+          "titleZh": "繼承產業的女子婚姻處理"
+        },
+        {
+          "id": "NUM-36-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 36,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ]
+    },
+    "DEU": {
+      "1": [
+        {
+          "id": "DEU-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "引言",
+          "titleZh": "引言"
+        },
+        {
+          "id": "DEU-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 2,
+          "verseEnd": 2,
+          "title": "說話的時間地點",
+          "titleZh": "說話的時間地點"
+        },
+        {
+          "id": "DEU-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 2,
+          "verseEnd": 2
+        },
+        {
+          "id": "DEU-1-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "摩西第一篇講論：歷史回顧",
+          "titleZh": "摩西第一篇講論：歷史回顧"
+        },
+        {
+          "id": "DEU-1-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6
+        },
+        {
+          "id": "DEU-1-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "正視首領的限制",
+          "titleZh": "正視首領的限制"
+        },
+        {
+          "id": "DEU-1-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6
+        },
+        {
+          "id": "DEU-1-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 19,
+          "verseEnd": 19,
+          "title": "承認羣體的失敗",
+          "titleZh": "承認羣體的失敗"
+        },
+        {
+          "id": "DEU-1-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 19,
+          "verseEnd": 19
+        }
+      ],
+      "2": [
+        {
+          "id": "DEU-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "順服上主的帶領",
+          "titleZh": "順服上主的帶領"
+        },
+        {
+          "id": "DEU-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "3": [
+        {
+          "id": "DEU-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "順服上主的帶領",
+          "titleZh": "順服上主的帶領"
+        },
+        {
+          "id": "DEU-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "4": [
+        {
+          "id": "DEU-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "聆聽上主吩咐的命令",
+          "titleZh": "聆聽上主吩咐的命令"
+        },
+        {
+          "id": "DEU-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-4-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 44,
+          "verseEnd": 44,
+          "title": "摩西第二篇講論（上）：約章概覽",
+          "titleZh": "摩西第二篇講論（上）：約章概覽"
+        },
+        {
+          "id": "DEU-4-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 44,
+          "verseEnd": 44
+        },
+        {
+          "id": "DEU-4-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 44,
+          "verseEnd": 44,
+          "title": "摩西律法引言",
+          "titleZh": "摩西律法引言"
+        },
+        {
+          "id": "DEU-4-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 44,
+          "verseEnd": 44
+        }
+      ],
+      "5": [
+        {
+          "id": "DEU-5-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "神在何烈山與民立約",
+          "titleZh": "神在何烈山與民立約"
+        },
+        {
+          "id": "DEU-5-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-5-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 23,
+          "verseEnd": 23,
+          "title": "百姓的回應",
+          "titleZh": "百姓的回應"
+        },
+        {
+          "id": "DEU-5-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 23,
+          "verseEnd": 23
+        }
+      ],
+      "6": [
+        {
+          "id": "DEU-6-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "百姓的回應",
+          "titleZh": "百姓的回應"
+        },
+        {
+          "id": "DEU-6-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "7": [
+        {
+          "id": "DEU-7-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "百姓的回應",
+          "titleZh": "百姓的回應"
+        },
+        {
+          "id": "DEU-7-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "8": [
+        {
+          "id": "DEU-8-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "吃得飽、毋忘上主",
+          "titleZh": "吃得飽、毋忘上主"
+        },
+        {
+          "id": "DEU-8-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "9": [
+        {
+          "id": "DEU-9-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "進入迦南非因己義",
+          "titleZh": "進入迦南非因己義"
+        },
+        {
+          "id": "DEU-9-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "10": [
+        {
+          "id": "DEU-10-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 12,
+          "verseEnd": 12,
+          "title": "敬畏事奉、謹守遵行",
+          "titleZh": "敬畏事奉、謹守遵行"
+        },
+        {
+          "id": "DEU-10-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 12,
+          "verseEnd": 12
+        }
+      ],
+      "11": [
+        {
+          "id": "DEU-11-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "敬畏事奉、謹守遵行",
+          "titleZh": "敬畏事奉、謹守遵行"
+        },
+        {
+          "id": "DEU-11-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "12": [
+        {
+          "id": "DEU-12-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西第二篇講論（下）：約章細則",
+          "titleZh": "摩西第二篇講論（下）：約章細則"
+        },
+        {
+          "id": "DEU-12-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-12-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "遵行律例和典章",
+          "titleZh": "遵行律例和典章"
+        },
+        {
+          "id": "DEU-12-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "13": [
+        {
+          "id": "DEU-13-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "事奉別神的引誘",
+          "titleZh": "事奉別神的引誘"
+        },
+        {
+          "id": "DEU-13-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "14": [
+        {
+          "id": "DEU-14-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "分別為聖的生活",
+          "titleZh": "分別為聖的生活"
+        },
+        {
+          "id": "DEU-14-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-14-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 28,
+          "verseEnd": 28,
+          "title": "對待窮人和奴婢",
+          "titleZh": "對待窮人和奴婢"
+        },
+        {
+          "id": "DEU-14-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 28,
+          "verseEnd": 28
+        }
+      ],
+      "15": [
+        {
+          "id": "DEU-15-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 19,
+          "verseEnd": 19,
+          "title": "向上主守節",
+          "titleZh": "向上主守節"
+        },
+        {
+          "id": "DEU-15-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 19,
+          "verseEnd": 19
+        }
+      ],
+      "16": [
+        {
+          "id": "DEU-16-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "首領的設立",
+          "titleZh": "首領的設立"
+        },
+        {
+          "id": "DEU-16-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ],
+      "17": [
+        {
+          "id": "DEU-17-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "首領的設立",
+          "titleZh": "首領的設立"
+        },
+        {
+          "id": "DEU-17-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "18": [
+        {
+          "id": "DEU-18-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "首領的設立",
+          "titleZh": "首領的設立"
+        },
+        {
+          "id": "DEU-18-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "19": [
+        {
+          "id": "DEU-19-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "執法的嚴寬",
+          "titleZh": "執法的嚴寬"
+        },
+        {
+          "id": "DEU-19-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "20": [
+        {
+          "id": "DEU-20-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "有關戰爭的教導",
+          "titleZh": "有關戰爭的教導"
+        },
+        {
+          "id": "DEU-20-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "21": [
+        {
+          "id": "DEU-21-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "公正的判斷",
+          "titleZh": "公正的判斷"
+        },
+        {
+          "id": "DEU-21-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "22": [
+        {
+          "id": "DEU-22-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "勸告與提醒",
+          "titleZh": "勸告與提醒"
+        },
+        {
+          "id": "DEU-22-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-22-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "禁止淫行",
+          "titleZh": "禁止淫行"
+        },
+        {
+          "id": "DEU-22-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "23": [
+        {
+          "id": "DEU-23-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主的聖會",
+          "titleZh": "上主的聖會"
+        },
+        {
+          "id": "DEU-23-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-23-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "羣體的共處",
+          "titleZh": "羣體的共處"
+        },
+        {
+          "id": "DEU-23-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 9,
+          "verseEnd": 9
+        }
+      ],
+      "24": [
+        {
+          "id": "DEU-24-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "人道與尊嚴",
+          "titleZh": "人道與尊嚴"
+        },
+        {
+          "id": "DEU-24-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-24-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "埃及的經驗",
+          "titleZh": "埃及的經驗"
+        },
+        {
+          "id": "DEU-24-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 14,
+          "verseEnd": 14
+        }
+      ],
+      "25": [
+        {
+          "id": "DEU-25-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "個別的案例",
+          "titleZh": "個別的案例"
+        },
+        {
+          "id": "DEU-25-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 25,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "26": [
+        {
+          "id": "DEU-26-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "奉獻初熟的土產",
+          "titleZh": "奉獻初熟的土產"
+        },
+        {
+          "id": "DEU-26-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 26,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "27": [
+        {
+          "id": "DEU-27-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西第三篇講論（上）：祝福與詛咒",
+          "titleZh": "摩西第三篇講論（上）：祝福與詛咒"
+        },
+        {
+          "id": "DEU-27-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-27-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "過約旦河以後",
+          "titleZh": "過約旦河以後"
+        },
+        {
+          "id": "DEU-27-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 27,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "28": [
+        {
+          "id": "DEU-28-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "遵命蒙福",
+          "titleZh": "遵命蒙福"
+        },
+        {
+          "id": "DEU-28-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-28-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 28,
+          "verseStart": 15,
+          "verseEnd": 15,
+          "title": "違命招詛",
+          "titleZh": "違命招詛"
+        },
+        {
+          "id": "DEU-28-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 28,
+          "verseStart": 15,
+          "verseEnd": 15
+        }
+      ],
+      "29": [
+        {
+          "id": "DEU-29-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西第三篇講論（下）：最後勸勉",
+          "titleZh": "摩西第三篇講論（下）：最後勸勉"
+        },
+        {
+          "id": "DEU-29-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-29-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主立約的話語",
+          "titleZh": "上主立約的話語"
+        },
+        {
+          "id": "DEU-29-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 29,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "30": [
+        {
+          "id": "DEU-30-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 30,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主立約的話語",
+          "titleZh": "上主立約的話語"
+        },
+        {
+          "id": "DEU-30-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 30,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "31": [
+        {
+          "id": "DEU-31-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西的離別及預言",
+          "titleZh": "摩西的離別及預言"
+        },
+        {
+          "id": "DEU-31-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-31-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "臨終的安排",
+          "titleZh": "臨終的安排"
+        },
+        {
+          "id": "DEU-31-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-31-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 31,
+          "verseStart": 30,
+          "verseEnd": 30,
+          "title": "詩歌的見證",
+          "titleZh": "詩歌的見證"
+        },
+        {
+          "id": "DEU-31-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 31,
+          "verseStart": 30,
+          "verseEnd": 30
+        }
+      ],
+      "32": [
+        {
+          "id": "DEU-32-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 45,
+          "verseEnd": 45,
+          "title": "摩西的遺言",
+          "titleZh": "摩西的遺言"
+        },
+        {
+          "id": "DEU-32-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 45,
+          "verseEnd": 45
+        },
+        {
+          "id": "DEU-32-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 32,
+          "verseStart": 48,
+          "verseEnd": 48,
+          "title": "上主的吩咐",
+          "titleZh": "上主的吩咐"
+        },
+        {
+          "id": "DEU-32-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 32,
+          "verseStart": 48,
+          "verseEnd": 48
+        }
+      ],
+      "33": [
+        {
+          "id": "DEU-33-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西臨終的祝福",
+          "titleZh": "摩西臨終的祝福"
+        },
+        {
+          "id": "DEU-33-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 33,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "34": [
+        {
+          "id": "DEU-34-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "摩西的離去",
+          "titleZh": "摩西的離去"
+        },
+        {
+          "id": "DEU-34-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "DEU-34-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 34,
+          "verseStart": 9,
+          "verseEnd": 9,
+          "title": "摩西的典範",
+          "titleZh": "摩西的典範"
+        },
+        {
+          "id": "DEU-34-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 34,
+          "verseStart": 9,
+          "verseEnd": 9
+        }
+      ]
+    },
+    "JOS": {
+      "1": [
+        {
+          "id": "JOS-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "為進入上主所賜之地作準備",
+          "titleZh": "為進入上主所賜之地作準備"
+        },
+        {
+          "id": "JOS-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主吩咐約書亞帶領百姓",
+          "titleZh": "上主吩咐約書亞帶領百姓"
+        },
+        {
+          "id": "JOS-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "2": [
+        {
+          "id": "JOS-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞差派探子偵查耶利哥",
+          "titleZh": "約書亞差派探子偵查耶利哥"
+        },
+        {
+          "id": "JOS-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "3": [
+        {
+          "id": "JOS-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以色列人渡過約旦河",
+          "titleZh": "以色列人渡過約旦河"
+        },
+        {
+          "id": "JOS-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "4": [
+        {
+          "id": "JOS-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主吩咐以色列人立石為記，使約書亞顯為尊大",
+          "titleZh": "上主吩咐以色列人立石為記，使約書亞顯為尊大"
+        },
+        {
+          "id": "JOS-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "5": [
+        {
+          "id": "JOS-5-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "以色列人分別為聖，在耶利哥平原守逾越節",
+          "titleZh": "以色列人分別為聖，在耶利哥平原守逾越節"
+        },
+        {
+          "id": "JOS-5-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-5-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 5,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "上主軍隊的元帥來見約書亞",
+          "titleZh": "上主軍隊的元帥來見約書亞"
+        },
+        {
+          "id": "JOS-5-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 5,
+          "verseStart": 13,
+          "verseEnd": 13
+        }
+      ],
+      "6": [
+        {
+          "id": "JOS-6-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "進入上主所賜之地",
+          "titleZh": "進入上主所賜之地"
+        },
+        {
+          "id": "JOS-6-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-6-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "耶利哥和中部的戰役",
+          "titleZh": "耶利哥和中部的戰役"
+        },
+        {
+          "id": "JOS-6-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-6-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "攻取耶利哥",
+          "titleZh": "攻取耶利哥"
+        },
+        {
+          "id": "JOS-6-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 6,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "7": [
+        {
+          "id": "JOS-7-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "亞干與當滅之物",
+          "titleZh": "亞干與當滅之物"
+        },
+        {
+          "id": "JOS-7-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 7,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "8": [
+        {
+          "id": "JOS-8-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "重整軍隊，再攻艾城",
+          "titleZh": "重整軍隊，再攻艾城"
+        },
+        {
+          "id": "JOS-8-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-8-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "艾城徹底滅絕歸神",
+          "titleZh": "艾城徹底滅絕歸神"
+        },
+        {
+          "id": "JOS-8-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 14,
+          "verseEnd": 14
+        },
+        {
+          "id": "JOS-8-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 8,
+          "verseStart": 30,
+          "verseEnd": 30,
+          "title": "約書亞獻祭，向全會眾宣讀律法書",
+          "titleZh": "約書亞獻祭，向全會眾宣讀律法書"
+        },
+        {
+          "id": "JOS-8-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 8,
+          "verseStart": 30,
+          "verseEnd": 30
+        }
+      ],
+      "9": [
+        {
+          "id": "JOS-9-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "南部戰役",
+          "titleZh": "南部戰役"
+        },
+        {
+          "id": "JOS-9-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-9-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "基遍人與以色列人立下和約",
+          "titleZh": "基遍人與以色列人立下和約"
+        },
+        {
+          "id": "JOS-9-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 9,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "10": [
+        {
+          "id": "JOS-10-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞重重擊殺五王聯軍",
+          "titleZh": "約書亞重重擊殺五王聯軍"
+        },
+        {
+          "id": "JOS-10-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-10-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 10,
+          "verseStart": 28,
+          "verseEnd": 28,
+          "title": "約書亞擊殺南部全地",
+          "titleZh": "約書亞擊殺南部全地"
+        },
+        {
+          "id": "JOS-10-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 10,
+          "verseStart": 28,
+          "verseEnd": 28
+        }
+      ],
+      "11": [
+        {
+          "id": "JOS-11-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "北部戰役",
+          "titleZh": "北部戰役"
+        },
+        {
+          "id": "JOS-11-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-11-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 11,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "總結佔領所賜之地",
+          "titleZh": "總結佔領所賜之地"
+        },
+        {
+          "id": "JOS-11-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 11,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ],
+      "12": [
+        {
+          "id": "JOS-12-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "回顧以色列人戰勝的王及疆界",
+          "titleZh": "回顧以色列人戰勝的王及疆界"
+        },
+        {
+          "id": "JOS-12-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 12,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "13": [
+        {
+          "id": "JOS-13-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "分配產業",
+          "titleZh": "分配產業"
+        },
+        {
+          "id": "JOS-13-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-13-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主的吩咐，與回顧約旦河東的產業分配",
+          "titleZh": "上主的吩咐，與回顧約旦河東的產業分配"
+        },
+        {
+          "id": "JOS-13-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 13,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "14": [
+        {
+          "id": "JOS-14-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞按上主吩咐分配產業",
+          "titleZh": "約書亞按上主吩咐分配產業"
+        },
+        {
+          "id": "JOS-14-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-14-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "迦勒全心全意跟隨上主，與他得到產業",
+          "titleZh": "迦勒全心全意跟隨上主，與他得到產業"
+        },
+        {
+          "id": "JOS-14-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 14,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "15": [
+        {
+          "id": "JOS-15-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "猶大子孫支派分得南面的產業",
+          "titleZh": "猶大子孫支派分得南面的產業"
+        },
+        {
+          "id": "JOS-15-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 15,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "16": [
+        {
+          "id": "JOS-16-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約瑟子孫分得北面的產業",
+          "titleZh": "約瑟子孫分得北面的產業"
+        },
+        {
+          "id": "JOS-16-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 16,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "17": [
+        {
+          "id": "JOS-17-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約瑟子孫分得北面的產業",
+          "titleZh": "約瑟子孫分得北面的產業"
+        },
+        {
+          "id": "JOS-17-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 17,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "18": [
+        {
+          "id": "JOS-18-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞完成分配其他七個支派的產業",
+          "titleZh": "約書亞完成分配其他七個支派的產業"
+        },
+        {
+          "id": "JOS-18-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 18,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "19": [
+        {
+          "id": "JOS-19-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 19,
+          "verseStart": 49,
+          "verseEnd": 49,
+          "title": "約書亞獲分配產業",
+          "titleZh": "約書亞獲分配產業"
+        },
+        {
+          "id": "JOS-19-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 19,
+          "verseStart": 49,
+          "verseEnd": 49
+        }
+      ],
+      "20": [
+        {
+          "id": "JOS-20-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "按上主吩咐設立庇護城",
+          "titleZh": "按上主吩咐設立庇護城"
+        },
+        {
+          "id": "JOS-20-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 20,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "21": [
+        {
+          "id": "JOS-21-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "分配給利未子孫的城邑",
+          "titleZh": "分配給利未子孫的城邑"
+        },
+        {
+          "id": "JOS-21-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 21,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "22": [
+        {
+          "id": "JOS-22-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "最後的道別",
+          "titleZh": "最後的道別"
+        },
+        {
+          "id": "JOS-22-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-22-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞對約旦河東兩個半支派的吩咐，與築壇事件",
+          "titleZh": "約書亞對約旦河東兩個半支派的吩咐，與築壇事件"
+        },
+        {
+          "id": "JOS-22-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 22,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "23": [
+        {
+          "id": "JOS-23-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞訣別之言",
+          "titleZh": "約書亞訣別之言"
+        },
+        {
+          "id": "JOS-23-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 23,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "24": [
+        {
+          "id": "JOS-24-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約書亞和以色列人重新立約事奉上主",
+          "titleZh": "約書亞和以色列人重新立約事奉上主"
+        },
+        {
+          "id": "JOS-24-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JOS-24-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 24,
+          "verseStart": 29,
+          "verseEnd": 29,
+          "title": "約書亞之死，一個時代的終結",
+          "titleZh": "約書亞之死，一個時代的終結"
+        },
+        {
+          "id": "JOS-24-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 24,
+          "verseStart": 29,
+          "verseEnd": 29
+        }
+      ]
+    },
+    "RUT": {
+      "1": [
+        {
+          "id": "RUT-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "拿俄米失去家人被遺下",
+          "titleZh": "拿俄米失去家人被遺下"
+        },
+        {
+          "id": "RUT-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "拿俄米從摩押回到猶大",
+          "titleZh": "拿俄米從摩押回到猶大"
+        },
+        {
+          "id": "RUT-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6
+        },
+        {
+          "id": "RUT-1-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6,
+          "title": "與兒媳走上了路",
+          "titleZh": "與兒媳走上了路"
+        },
+        {
+          "id": "RUT-1-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 6,
+          "verseEnd": 6
+        },
+        {
+          "id": "RUT-1-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "命令兒媳回娘家",
+          "titleZh": "命令兒媳回娘家"
+        },
+        {
+          "id": "RUT-1-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "RUT-1-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 14,
+          "verseEnd": 14,
+          "title": "路得緊緊跟隨拿俄米",
+          "titleZh": "路得緊緊跟隨拿俄米"
+        },
+        {
+          "id": "RUT-1-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 14,
+          "verseEnd": 14
+        },
+        {
+          "id": "RUT-1-h6",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 19,
+          "verseEnd": 19,
+          "title": "路得與拿俄米一起回到伯利恆",
+          "titleZh": "路得與拿俄米一起回到伯利恆"
+        },
+        {
+          "id": "RUT-1-p6",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 19,
+          "verseEnd": 19
+        }
+      ],
+      "2": [
+        {
+          "id": "RUT-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "路得與波阿斯在田間相遇",
+          "titleZh": "路得與波阿斯在田間相遇"
+        },
+        {
+          "id": "RUT-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-2-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "路得到波阿斯田裏拾取麥穗",
+          "titleZh": "路得到波阿斯田裏拾取麥穗"
+        },
+        {
+          "id": "RUT-2-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-2-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 8,
+          "verseEnd": 8,
+          "title": "波阿斯恩待路得",
+          "titleZh": "波阿斯恩待路得"
+        },
+        {
+          "id": "RUT-2-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 8,
+          "verseEnd": 8
+        },
+        {
+          "id": "RUT-2-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 17,
+          "verseEnd": 17,
+          "title": "路得告訴拿俄米在波阿斯田裏做工",
+          "titleZh": "路得告訴拿俄米在波阿斯田裏做工"
+        },
+        {
+          "id": "RUT-2-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 17,
+          "verseEnd": 17
+        }
+      ],
+      "3": [
+        {
+          "id": "RUT-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "路得與波阿斯在打麥場相遇",
+          "titleZh": "路得與波阿斯在打麥場相遇"
+        },
+        {
+          "id": "RUT-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-3-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "拿俄米指示路得下到打麥場",
+          "titleZh": "拿俄米指示路得下到打麥場"
+        },
+        {
+          "id": "RUT-3-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-3-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "title": "波阿斯向路得保證辦理贖回之事",
+          "titleZh": "波阿斯向路得保證辦理贖回之事"
+        },
+        {
+          "id": "RUT-3-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 7,
+          "verseEnd": 7
+        },
+        {
+          "id": "RUT-3-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 16,
+          "verseEnd": 16,
+          "title": "路得告訴拿俄米波阿斯所做的一切",
+          "titleZh": "路得告訴拿俄米波阿斯所做的一切"
+        },
+        {
+          "id": "RUT-3-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 16,
+          "verseEnd": 16
+        }
+      ],
+      "4": [
+        {
+          "id": "RUT-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "波阿斯辦理贖回路得之事",
+          "titleZh": "波阿斯辦理贖回路得之事"
+        },
+        {
+          "id": "RUT-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-4-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "與更親近的贖業至親商討",
+          "titleZh": "與更親近的贖業至親商討"
+        },
+        {
+          "id": "RUT-4-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "RUT-4-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "title": "買下拿俄米產業，宣佈娶路得為妻",
+          "titleZh": "買下拿俄米產業，宣佈娶路得為妻"
+        },
+        {
+          "id": "RUT-4-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 7,
+          "verseEnd": 7
+        },
+        {
+          "id": "RUT-4-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 13,
+          "verseEnd": 13,
+          "title": "拿俄米的生命恢復過來",
+          "titleZh": "拿俄米的生命恢復過來"
+        },
+        {
+          "id": "RUT-4-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 13,
+          "verseEnd": 13
+        },
+        {
+          "id": "RUT-4-h5",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 18,
+          "verseEnd": 18,
+          "title": "法勒斯的世系",
+          "titleZh": "法勒斯的世系"
+        },
+        {
+          "id": "RUT-4-p5",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 18,
+          "verseEnd": 18
+        }
+      ]
+    },
+    "JON": {
+      "1": [
+        {
+          "id": "JON-1-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主差派約拿向尼尼微宣告",
+          "titleZh": "上主差派約拿向尼尼微宣告"
+        },
+        {
+          "id": "JON-1-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JON-1-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約拿抗命，逃往他施",
+          "titleZh": "約拿抗命，逃往他施"
+        },
+        {
+          "id": "JON-1-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JON-1-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 4,
+          "verseEnd": 4,
+          "title": "上主掀起大風暴，約拿與外族人遭難",
+          "titleZh": "上主掀起大風暴，約拿與外族人遭難"
+        },
+        {
+          "id": "JON-1-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 4,
+          "verseEnd": 4
+        },
+        {
+          "id": "JON-1-h4",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 1,
+          "verseStart": 17,
+          "verseEnd": 17,
+          "title": "約拿在魚腹裏向上主禱告",
+          "titleZh": "約拿在魚腹裏向上主禱告"
+        },
+        {
+          "id": "JON-1-p4",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 1,
+          "verseStart": 17,
+          "verseEnd": 17
+        }
+      ],
+      "2": [
+        {
+          "id": "JON-2-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約拿在魚腹裏向上主禱告",
+          "titleZh": "約拿在魚腹裏向上主禱告"
+        },
+        {
+          "id": "JON-2-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 2,
+          "verseStart": 1,
+          "verseEnd": 1
+        }
+      ],
+      "3": [
+        {
+          "id": "JON-3-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "上主再次差派約拿向尼尼微宣告",
+          "titleZh": "上主再次差派約拿向尼尼微宣告"
+        },
+        {
+          "id": "JON-3-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JON-3-h2",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1,
+          "title": "約拿遵命，進城宣告",
+          "titleZh": "約拿遵命，進城宣告"
+        },
+        {
+          "id": "JON-3-p2",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 1,
+          "verseEnd": 1
+        },
+        {
+          "id": "JON-3-h3",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 3,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "title": "神看見尼尼微人回轉，改變心意",
+          "titleZh": "神看見尼尼微人回轉，改變心意"
+        },
+        {
+          "id": "JON-3-p3",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 3,
+          "verseStart": 10,
+          "verseEnd": 10
+        }
+      ],
+      "4": [
+        {
+          "id": "JON-4-h1",
+          "type": "heading",
+          "marker": "s1",
+          "chapter": 4,
+          "verseStart": 5,
+          "verseEnd": 5,
+          "title": "約拿在城外與上主對話",
+          "titleZh": "約拿在城外與上主對話"
+        },
+        {
+          "id": "JON-4-p1",
+          "type": "paragraph",
+          "marker": "p",
+          "chapter": 4,
+          "verseStart": 5,
+          "verseEnd": 5
+        }
+      ]
+    }
+  }
+}

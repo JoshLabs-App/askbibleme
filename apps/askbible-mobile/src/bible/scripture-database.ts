@@ -13,9 +13,24 @@ export const SCRIPTURE_SQLITE_SCHEMA_VERSION = 6;
 
 const openPromises = new Map<string, Promise<SQLite.SQLiteDatabase>>();
 const openDatabases = new Map<string, SQLite.SQLiteDatabase>();
+const operationTails = new Map<string, Promise<void>>();
+
+function enqueueScriptureDbOperation<T>(translationId: string, work: () => Promise<T>): Promise<T> {
+  const tail = operationTails.get(translationId) ?? Promise.resolve();
+  const run = tail.catch(() => undefined).then(work);
+  operationTails.set(
+    translationId,
+    run.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return run;
+}
 
 function dbFileName(translationId: string): string {
-  return `${translationId}.sqlite`;
+  const normalized = translationId.replace(/[^a-zA-Z0-9_]/g, "_");
+  return `${normalized}.sqlite`;
 }
 
 function schemaVersionPath(dest: string): string {
@@ -98,6 +113,17 @@ async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void>
   }
 
   const dest = `${FileSystem.documentDirectory}SQLite/${dbFileName(translationId)}`;
+  const legacyName = `${translationId}.sqlite`;
+  const legacyDest = `${FileSystem.documentDirectory}SQLite/${legacyName}`;
+  if (legacyName !== dbFileName(translationId)) {
+    try {
+      await SQLite.deleteDatabaseAsync(legacyName);
+    } catch {
+      /* ignore */
+    }
+    await FileSystem.deleteAsync(legacyDest, { idempotent: true });
+    await FileSystem.deleteAsync(schemaVersionPath(legacyDest), { idempotent: true });
+  }
   const [info, bundledSize] = await Promise.all([
     FileSystem.getInfoAsync(dest),
     bundledAssetByteSize(assetModule),
@@ -149,7 +175,9 @@ function isNativeDatabaseRejectedError(err: unknown): boolean {
   const message = String(err instanceof Error ? err.message : err).toLowerCase();
   return (
     message.includes("nativedatabase.prepareasync") ||
+    message.includes("nativedatabase.preparesync") ||
     message.includes("prepareasync") ||
+    message.includes("preparesync") ||
     (message.includes("call to function") && message.includes("nativedatabase."))
   );
 }
@@ -160,15 +188,27 @@ export async function retryScriptureDatabaseOnPrepareError<T>(
   run: (db: SQLite.SQLiteDatabase) => Promise<T>,
 ): Promise<T> {
   const id = String(translationId || "").trim();
-  const firstDb = await getScriptureDatabase(id);
-  try {
-    return await run(firstDb);
-  } catch (err) {
-    if (!isNativeDatabaseRejectedError(err)) throw err;
-    const dest = `${FileSystem.documentDirectory}SQLite/${dbFileName(id)}`;
-    await removeInstalledDatabase(dest, id);
-    await ensureBundledDatabaseOnDisk(id);
-    const reopened = await getScriptureDatabase(id);
-    return run(reopened);
-  }
+  return enqueueScriptureDbOperation(id, async () => {
+    const firstDb = await getScriptureDatabase(id);
+    try {
+      return await run(firstDb);
+    } catch (err) {
+      if (!isNativeDatabaseRejectedError(err)) throw err;
+      // 先只重建连接，避免并发查询场景下“删库+重拷贝”导致更多句柄失效。
+      await closeOpenedDatabase(id);
+      clearOpenPromise(id);
+      const reopened = await getScriptureDatabase(id);
+      try {
+        return await run(reopened);
+      } catch (err2) {
+        if (!isNativeDatabaseRejectedError(err2)) throw err2;
+        const dest = `${FileSystem.documentDirectory}SQLite/${dbFileName(id)}`;
+        // 二次失败再执行完整重建（删库并从 assets 重拷贝）。
+        await removeInstalledDatabase(dest, id);
+        await ensureBundledDatabaseOnDisk(id);
+        const rebuilt = await getScriptureDatabase(id);
+        return run(rebuilt);
+      }
+    }
+  });
 }

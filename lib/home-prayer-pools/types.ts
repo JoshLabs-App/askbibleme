@@ -29,6 +29,9 @@ export type VerseScopeV1 = { type: "themeRepeat"; minCount: number };
 
 export type VerseDisplayModeV1 = "primary" | "bilingual";
 
+/** auto: 跟随软件语言；manual: 用户手选主译本（与 App 一致） */
+export type HomePrimaryTranslationMode = "auto" | "manual";
+
 /** 金句专页（`verseStyle="goldenVerses"`）正文字体；与首页自然底栏译本偏好同存一份 JSON */
 export type GoldenVerseFontFamilyV1 = "sans" | "serif";
 
@@ -51,6 +54,8 @@ export type HomePrayerVersePrefsV1 = {
   version: 1;
   verseScope: VerseScopeV1;
   verseDisplay: VerseDisplayModeV1;
+  /** auto: 跟随软件语言；manual: 使用用户手选主译本 */
+  primaryTranslationMode: HomePrimaryTranslationMode;
   /** 首页经文中文栏使用的译本 id（须与 `translations.json` / 祷告池 chunk 内键一致） */
   verseTextZhTranslationId: string;
   /** 首页经文英文栏：如 `web-en`（WEB）、`bbe-en`（简易英文） */

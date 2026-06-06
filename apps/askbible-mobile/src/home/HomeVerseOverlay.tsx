@@ -5,6 +5,7 @@ import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parseVerseKey } from "../bible/parse-verse-key";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
+import type { AppLocale } from "../i18n/config";
 import { SHELL_TAB_BAR_CLEARANCE } from "../shell/shellLayout";
 import {
   HOME_SCENE_THUMB_SIZE,
@@ -17,7 +18,7 @@ import {
   type NatureHomeVerseAppearance,
 } from "./natureHomePrefs";
 import { useLocale } from "../i18n/LocaleProvider";
-import { t } from "../i18n/site-copy";
+import { t, toZhTwText } from "../i18n/site-copy";
 import { flowLocaleForHomeVerseTranslationId } from "./homePrayerVersePrefs";
 import { joinVerseLinesForFlow } from "./joinVerseLinesForFlow";
 import { useHomeThemeRepeatVerse } from "./useHomeThemeRepeatVerse";
@@ -296,20 +297,24 @@ export function HomeVerseOverlay({
 
   if (!ready || !effectiveEntry || !appearance) return null;
 
-  const body = joinVerseLinesForFlow(
-    effectiveEntry.lines,
-    flowLocaleForHomeVerseTranslationId(effectivePrimaryTranslationId),
-  );
-  const contrastBody = effectiveContrastEntry
+  const primaryFlowLocale = flowLocaleForHomeVerseTranslationId(effectivePrimaryTranslationId);
+  const rawBody = joinVerseLinesForFlow(effectiveEntry.lines, primaryFlowLocale);
+  const shouldUseTwForPrimary = locale === "zh-TW" && primaryFlowLocale !== "en";
+  const body = shouldUseTwForPrimary ? toZhTwText(rawBody) : rawBody;
+  const displayRef = shouldUseTwForPrimary ? toZhTwText(effectiveEntry.ref) : effectiveEntry.ref;
+  const contrastFlowLocale = flowLocaleForHomeVerseTranslationId(effectiveContrastTranslationId);
+  const contrastBodyRaw = effectiveContrastEntry
     ? joinVerseLinesForFlow(
         effectiveContrastEntry.lines,
-        flowLocaleForHomeVerseTranslationId(effectiveContrastTranslationId),
+        contrastFlowLocale,
       )
     : "";
+  const shouldUseTwForContrast = locale === "zh-TW" && contrastFlowLocale !== "en";
+  const contrastBody = shouldUseTwForContrast ? toZhTwText(contrastBodyRaw) : contrastBodyRaw;
   const scale = textScaleAtIndex(scaleIndex);
   const typo = verseTypography(appearance, scale, variant);
   const shouldUseCjkWrap =
-    hasCjkChars(body) || hasCjkChars(contrastBody) || hasCjkChars(effectiveEntry.ref);
+    hasCjkChars(body) || hasCjkChars(contrastBody) || hasCjkChars(displayRef);
   const cjkTextStyle = shouldUseCjkWrap ? styles.cjkText : null;
   const contrastTypo: typeof typo.body = effectiveContrastEntry
     ? {
@@ -360,7 +365,7 @@ export function HomeVerseOverlay({
           {contrastBody ? (
             <Text style={[contrastTypo, styles.barStripText, cjkTextStyle]}>{contrastBody}</Text>
           ) : null}
-          <Text style={[typo.ref, styles.barStripText, cjkTextStyle]}>{effectiveEntry.ref}</Text>
+          <Text style={[typo.ref, styles.barStripText, cjkTextStyle]}>{displayRef}</Text>
         </View>
       ) : (
         <>
@@ -368,7 +373,7 @@ export function HomeVerseOverlay({
           {contrastBody ? (
             <Text style={[contrastTypo, styles.goldenSlotText, cjkTextStyle]}>{contrastBody}</Text>
           ) : null}
-          <Text style={[typo.ref, styles.goldenSlotText, cjkTextStyle]}>{effectiveEntry.ref}</Text>
+          <Text style={[typo.ref, styles.goldenSlotText, cjkTextStyle]}>{displayRef}</Text>
         </>
       )}
     </Animated.View>
@@ -385,13 +390,13 @@ export function HomeVerseOverlay({
           <View style={[styles.barStripCard, styles.barStripInlineCard]}>
             <Text style={[typo.body, styles.barStripText, cjkTextStyle]}>{body}</Text>
             {contrastBody ? <Text style={[contrastTypo, styles.barStripText, cjkTextStyle]}>{contrastBody}</Text> : null}
-            <Text style={[typo.ref, styles.barStripText, cjkTextStyle]}>{effectiveEntry.ref}</Text>
+            <Text style={[typo.ref, styles.barStripText, cjkTextStyle]}>{displayRef}</Text>
           </View>
         ) : (
           <>
             <Text style={[typo.body, cjkTextStyle]}>{body}</Text>
             {contrastBody ? <Text style={[contrastTypo, cjkTextStyle]}>{contrastBody}</Text> : null}
-            <Text style={[typo.ref, cjkTextStyle]}>{effectiveEntry.ref}</Text>
+            <Text style={[typo.ref, cjkTextStyle]}>{displayRef}</Text>
           </>
         )}
       </Animated.View>
@@ -408,7 +413,7 @@ export function HomeVerseOverlay({
           onPress={openReadChapter}
           style={({ pressed }) => [styles.tapTarget, pressed && styles.tapTargetPressed]}
           accessibilityRole="button"
-          accessibilityLabel={effectiveEntry.ref}
+          accessibilityLabel={displayRef}
           accessibilityHint={t("pages.home.openVerseInBible")}
         >
           {content}
@@ -453,8 +458,6 @@ const styles = StyleSheet.create({
   },
   cjkText: {
     letterSpacing: 0,
-    lineBreakStrategyIOS: "standard",
-    textBreakStrategy: "highQuality",
   },
   wrapInline: {
     alignItems: "center",

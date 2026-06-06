@@ -8,6 +8,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  Share,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,8 +32,10 @@ import {
   DEFAULT_SCRIPTURE_LABEL_ZH,
 } from "../bible/types";
 import { scriptureBooks, testamentForBookNumber } from "../bible/scripture-books";
+import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { useLocale } from "../i18n/LocaleProvider";
-import { t, tFormat } from "../i18n/site-copy";
+import { createT, toZhTwText } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
 import { BibleCatalogOutline } from "./BibleCatalogOutline";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import {
@@ -74,6 +77,11 @@ import {
   isReadChapterCompleted,
   markReadChapterCompleted,
 } from "./read-chapter-completion";
+import {
+  VERSE_TEXT_HIGHLIGHT_PALETTE,
+  readChapterVerseTextHighlights,
+  writeVerseTextHighlightIndices,
+} from "./read-verse-text-highlights";
 
 function parseChapterParam(raw: string | string[] | undefined): number | null {
   const s = Array.isArray(raw) ? raw[0] : raw;
@@ -97,8 +105,10 @@ const READ_TOP_ACTION_IDLE_OPACITY = Platform.OS === "android" ? 0.72 : 0.5;
 const READ_TOP_ACTION_PRESSED_OPACITY = Platform.OS === "android" ? 0.88 : 0.68;
 const INFO_EDITION_V1_EN_ROLE_ID = "info_edition_v1_en";
 const INFO_EDITION_GUIDE_V2_EN_ROLE_ID = "role_guide_v2_en";
+const LOGO_HIGHLIGHT_COLOR = "#FFB103";
+const READ_VERSE_HIGHLIGHT_PALETTE = VERSE_TEXT_HIGHLIGHT_PALETTE;
 
-function buildFallbackCatalogSections(): ScriptureCanonCatalogSection[] {
+function buildFallbackCatalogSections(tx: (key: string) => string): ScriptureCanonCatalogSection[] {
   const oldBooks = scriptureBooks
     .filter((book) => testamentForBookNumber(book.bookNumber) === "old")
     .map((book) => ({
@@ -121,14 +131,14 @@ function buildFallbackCatalogSections(): ScriptureCanonCatalogSection[] {
     {
       sectionId: "fallback-old-testament",
       order: 1,
-      title: t("pages.read.catalogTestamentOld"),
+      title: tx("pages.read.catalogTestamentOld"),
       taglines: [],
       books: oldBooks,
     },
     {
       sectionId: "fallback-new-testament",
       order: 2,
-      title: t("pages.read.catalogTestamentNew"),
+      title: tx("pages.read.catalogTestamentNew"),
       taglines: [],
       books: newBooks,
     },
@@ -137,6 +147,24 @@ function buildFallbackCatalogSections(): ScriptureCanonCatalogSection[] {
 
 type ReadChapterPlanRef = { bookId: string; chapter: number };
 type VerseLayout = { y: number; height: number };
+type VerseActionMenuState = { verse: number; text: string } | null;
+type VerseHighlightMap = Map<number, string>;
+type ChapterHighlightMap = Map<number, VerseHighlightMap>;
+type ContrastVerseLine = { translationId: string; text: string };
+
+function cloneHighlightMap(input: ChapterHighlightMap): ChapterHighlightMap {
+  const out = new Map<number, VerseHighlightMap>();
+  for (const [verse, set] of input.entries()) {
+    out.set(verse, new Map(set));
+  }
+  return out;
+}
+
+function countHighlightedChars(input: ChapterHighlightMap): number {
+  let total = 0;
+  for (const set of input.values()) total += set.size;
+  return total;
+}
 
 function buildPlanChapterQueue(readings: Array<{ bookId: string; startChapter: number; endChapter: number }>) {
   const out: ReadChapterPlanRef[] = [];
@@ -177,7 +205,7 @@ export function ReadChapterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [chapterData, setChapterData] = useState<LoadedChapter | null>(null);
   const [chapterSegments, setChapterSegments] = useState<ChapterSegment[] | null>(null);
-  const [contrastByVerse, setContrastByVerse] = useState<Map<number, string> | null>(null);
+  const [contrastByVerse, setContrastByVerse] = useState<Map<number, ContrastVerseLine[]> | null>(null);
   const [chapterXrefs, setChapterXrefs] = useState<ScriptureVerseXrefs[] | null>(null);
   const [xrefSheetVerse, setXrefSheetVerse] = useState<number | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
@@ -188,6 +216,16 @@ export function ReadChapterScreen() {
   const [bookmarkFeedback, setBookmarkFeedback] = useState<string | null>(null);
   const [verseSelectionMode, setVerseSelectionMode] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
+  const [highlightedVerseIndexes, setHighlightedVerseIndexes] = useState<ChapterHighlightMap>(
+    new Map(),
+  );
+  const [verseActionMenu, setVerseActionMenu] = useState<VerseActionMenuState>(null);
+  const [highlightModeActive, setHighlightModeActive] = useState(false);
+  const [highlightDraftMap, setHighlightDraftMap] = useState<ChapterHighlightMap | null>(null);
+  const [activeHighlightColor, setActiveHighlightColor] = useState<string>(
+    READ_VERSE_HIGHLIGHT_PALETTE[0],
+  );
+  const highlightDraftMapRef = useRef<ChapterHighlightMap | null>(null);
   const [chapterCompleted, setChapterCompleted] = useState(false);
   const [planFlowNextTarget, setPlanFlowNextTarget] = useState<ReadChapterPlanRef | null>(null);
   const [audioViewportHeight, setAudioViewportHeight] = useState(0);
@@ -201,8 +239,10 @@ export function ReadChapterScreen() {
   const {
     px,
     primaryTranslationId,
-    contrastTranslationId,
+    contrastTranslationIds,
     translationCatalog,
+    verseParagraphFlow,
+    chapterSegmentMode,
   } =
     useReadBibleTypography();
   const { searchFocusVerse, onScrollViewportLayout, onVerseLayout } = useReadChapterSearchFocus(
@@ -214,22 +254,70 @@ export function ReadChapterScreen() {
     () => translationCatalog.find((tr) => tr.id === primaryTranslationId),
     [translationCatalog, primaryTranslationId],
   );
+  const readDisplayLocale = useMemo<AppLocale>(() => {
+    const lang = String(primaryTranslationMeta?.language ?? "").toLowerCase();
+    if (lang.startsWith("en")) return "en";
+    if (lang.startsWith("zh")) return locale === "zh-TW" ? "zh-TW" : "zh-CN";
+    const verseSample = chapterData?.verses
+      ?.slice(0, 3)
+      .map((row) => row.text)
+      .join(" ");
+    if (verseSample) {
+      if (/[\u3400-\u9FFF]/.test(verseSample)) {
+        return locale === "zh-TW" ? "zh-TW" : "zh-CN";
+      }
+      if (/[A-Za-z]/.test(verseSample)) {
+        return "en";
+      }
+    }
+    return locale;
+  }, [primaryTranslationMeta?.language, chapterData?.verses, locale]);
+  const tr = useMemo(() => createT(readDisplayLocale), [readDisplayLocale]);
   const prefersEnglishInfoEdition = /^en\b/i.test(primaryTranslationMeta?.language ?? "");
-  const isZhLocale = /^zh\b/i.test(locale);
+  const xrefBookName = useMemo(
+    () => (chapterData ? getScriptureBookDisplayName(chapterData.bookId, readDisplayLocale) : ""),
+    [chapterData, readDisplayLocale],
+  );
+  const postReadingDisplayLocale = readDisplayLocale;
+  const isEnglishPostReading = postReadingDisplayLocale === "en";
+  const localeDisplayText = useCallback(
+    (text: string) => (postReadingDisplayLocale === "zh-TW" ? toZhTwText(text) : text),
+    [postReadingDisplayLocale],
+  );
+  const isZhLocale = /^zh\b/i.test(readDisplayLocale);
+  const localeZhText = useCallback(
+    (text: string) => (readDisplayLocale === "zh-TW" ? toZhTwText(text) : text),
+    [readDisplayLocale],
+  );
+  const displayBookName = useMemo(
+    () => (chapterData ? getScriptureBookDisplayName(chapterData.bookId, readDisplayLocale) : ""),
+    [chapterData, readDisplayLocale],
+  );
+  const chapterTitleBookName = useMemo(
+    () => (chapterData ? getScriptureBookDisplayName(chapterData.bookId, readDisplayLocale) : ""),
+    [chapterData, readDisplayLocale],
+  );
+  const chapterTitleText = useMemo(() => {
+    if (!chapterData) return "";
+    if (readDisplayLocale === "en") {
+      return `${chapterTitleBookName} ${chapterData.chapter}`;
+    }
+    return `${chapterTitleBookName} 第${chapterData.chapter}章`;
+  }, [chapterData, chapterTitleBookName, readDisplayLocale]);
 
   const catalogSections = useMemo(() => {
     try {
       const sections = getScriptureCanonCatalogSections();
-      if (!sections.length) return buildFallbackCatalogSections();
+      if (!sections.length) return buildFallbackCatalogSections(tr);
       return sections;
     } catch {
-      return buildFallbackCatalogSections();
+      return buildFallbackCatalogSections(tr);
     }
-  }, []);
+  }, [tr]);
 
   const load = useCallback(async () => {
     if (!bookId || chapter == null) {
-      setError(t("pages.read.invalidChapter"));
+      setError(tr("pages.read.invalidChapter"));
       setChapterData(null);
       setLoading(false);
       return;
@@ -242,16 +330,13 @@ export function ReadChapterScreen() {
     setChapterXrefs(null);
     try {
       const primaryMeta = translationCatalog.find((tr) => tr.id === primaryTranslationId);
-      const contrastMeta = contrastTranslationId
-        ? translationCatalog.find((tr) => tr.id === contrastTranslationId)
-        : null;
+      const contrastMetas = contrastTranslationIds
+        .map((id) => translationCatalog.find((tr) => tr.id === id))
+        .filter((item): item is NonNullable<typeof item> => Boolean(item));
       const primaryLabels = {
         labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
         labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
       };
-      const contrastLabels = contrastMeta
-        ? { labelZh: contrastMeta.labelZh, labelEn: contrastMeta.labelEn }
-        : null;
 
       const loaded = await loadChapterFromBundledTranslation(
         bookId,
@@ -260,35 +345,42 @@ export function ReadChapterScreen() {
         primaryLabels,
       );
 
-      const [contrastResult, xrefsResult] = await Promise.allSettled([
-        contrastTranslationId && contrastLabels
-          ? loadChapterFromBundledTranslation(
+      const [contrastResults, xrefsResult] = await Promise.allSettled([
+        Promise.allSettled(
+          contrastMetas.map((meta) =>
+            loadChapterFromBundledTranslation(
               bookId,
               chapter,
-              contrastTranslationId,
-              contrastLabels,
-            )
-          : Promise.resolve(null),
+              meta.id,
+              { labelZh: meta.labelZh, labelEn: meta.labelEn },
+            ),
+          ),
+        ),
         loadChapterXrefs(bookId, chapter),
       ]);
 
       if (!loaded) {
         setChapterData(null);
-        setError(t("pages.read.chapterLoadError"));
+        setError(tr("pages.read.chapterLoadError"));
         return;
       }
       setChapterData(loaded);
-      setChapterSegments(loadBundledChapterSegments(loaded.bookId, loaded.chapter));
+      setChapterSegments(loadBundledChapterSegments(loaded.bookId, loaded.chapter, chapterSegmentMode));
       setChapterXrefs(xrefsResult.status === "fulfilled" ? xrefsResult.value : null);
       void recordTodayReadingChapterFraction(loaded.bookId, loaded.chapter, 0.1);
 
-      const contrastLoaded = contrastResult.status === "fulfilled" ? contrastResult.value : null;
-      if (contrastLoaded?.verses.length) {
-        const map = new Map<number, string>();
-        for (const v of contrastLoaded.verses) {
-          map.set(v.verse, v.text);
+      const contrastSettledRows = contrastResults.status === "fulfilled" ? contrastResults.value : [];
+      if (contrastSettledRows.length > 0) {
+        const map = new Map<number, ContrastVerseLine[]>();
+        for (const row of contrastSettledRows) {
+          if (row.status !== "fulfilled" || !row.value?.verses?.length) continue;
+          for (const v of row.value.verses) {
+            const bucket = map.get(v.verse) ?? [];
+            bucket.push({ translationId: row.value.translationId, text: v.text });
+            map.set(v.verse, bucket);
+          }
         }
-        setContrastByVerse(map);
+        setContrastByVerse(map.size ? map : null);
       }
       await writeLastReadPosition({
         bookId: loaded.bookId,
@@ -301,7 +393,7 @@ export function ReadChapterScreen() {
     } finally {
       setLoading(false);
     }
-  }, [bookId, chapter, primaryTranslationId, contrastTranslationId, translationCatalog]);
+  }, [bookId, chapter, primaryTranslationId, contrastTranslationIds, translationCatalog, chapterSegmentMode, tr]);
 
   useLayoutEffect(() => {
     setChapterData(null);
@@ -317,6 +409,10 @@ export function ReadChapterScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    highlightDraftMapRef.current = highlightDraftMap;
+  }, [highlightDraftMap]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -354,6 +450,14 @@ export function ReadChapterScreen() {
   const xrefSheetBundle =
     xrefSheetVerse != null ? (xrefsByVerse?.get(xrefSheetVerse) ?? null) : null;
 
+  const verseIndexByVerse = useMemo(() => {
+    const map = new Map<number, number>();
+    chapterData?.verses.forEach((row, idx) => {
+      map.set(row.verse, idx);
+    });
+    return map;
+  }, [chapterData?.verses]);
+
   const speechPartsByVerse = useMemo(() => {
     if (!chapterData?.verses.length) return null;
     return resolveChapterVerseSpeechParts(chapterData.verses, {
@@ -371,10 +475,12 @@ export function ReadChapterScreen() {
   const segmentMeta = useMemo(() => {
     const headingByVerse = new Map<number, string[]>();
     const paragraphStarts = new Set<number>();
+    const headingDisplayLocale = readDisplayLocale;
     for (const row of chapterSegments ?? []) {
       if (!Number.isInteger(row.verseStart) || row.verseStart == null) continue;
       if (row.type === "heading") {
-        const text = (locale === "en" ? row.title : row.titleZh || row.title)?.trim();
+        const raw = headingDisplayLocale === "en" ? row.title : row.titleZh || row.title;
+        const text = (headingDisplayLocale === "zh-TW" ? localeZhText(raw ?? "") : raw)?.trim();
         if (text) {
           const bucket = headingByVerse.get(row.verseStart) ?? [];
           bucket.push(text);
@@ -386,7 +492,31 @@ export function ReadChapterScreen() {
       }
     }
     return { headingByVerse, paragraphStarts };
-  }, [chapterSegments, locale]);
+  }, [chapterSegments, readDisplayLocale, localeZhText]);
+  const useParagraphFlowLayout = verseParagraphFlow && contrastTranslationIds.length === 0;
+  const activeHighlightMap = highlightModeActive
+    ? (highlightDraftMap ?? highlightedVerseIndexes)
+    : highlightedVerseIndexes;
+
+  const paragraphGroups = useMemo(() => {
+    const verses = chapterData?.verses ?? [];
+    const groups: Array<{ verses: typeof verses }> = [];
+    let current: typeof verses = [];
+    for (let i = 0; i < verses.length; i += 1) {
+      const verse = verses[i]!;
+      const isStart =
+        i === 0 ||
+        segmentMeta.paragraphStarts.has(verse.verse) ||
+        (segmentMeta.headingByVerse.get(verse.verse)?.length ?? 0) > 0;
+      if (isStart && current.length > 0) {
+        groups.push({ verses: current });
+        current = [];
+      }
+      current.push(verse);
+    }
+    if (current.length > 0) groups.push({ verses: current });
+    return groups;
+  }, [chapterData?.verses, segmentMeta.headingByVerse, segmentMeta.paragraphStarts]);
 
   const goNeighbor = useCallback(
     (target: { bookId: string; chapter: number } | null, direction: ReadChapterNavDirection) => {
@@ -480,8 +610,8 @@ export function ReadChapterScreen() {
     const verseIdx =
       activeVerseIndex != null && activeVerseIndex >= 0 && activeVerseIndex < total
         ? activeVerseIndex
-        : 0;
-    const fraction = Math.min(1, (verseIdx + 1) / total);
+        : -1;
+    const fraction = verseIdx >= 0 ? Math.min(1, (verseIdx + 1) / total) : 0;
     void recordTodayReadingChapterFraction(chapterData.bookId, chapterData.chapter, fraction);
   }, [chapterData, activeVerseIndex]);
 
@@ -517,14 +647,21 @@ export function ReadChapterScreen() {
   );
 
   useShellSwipeAction(
-    Boolean(chapterData) && !jumpOpen && !verseSelectionMode,
+    Boolean(chapterData) &&
+      !jumpOpen &&
+      !verseSelectionMode &&
+      verseActionMenu == null &&
+      !highlightModeActive,
     onChapterSwipe,
   );
-  useShellSwipeSuspend(jumpOpen || verseSelectionMode);
+  useShellSwipeSuspend(
+    jumpOpen || verseSelectionMode || verseActionMenu != null || highlightModeActive,
+  );
 
   const onVersePress = useCallback(
     (verse: number, text: string) => {
       if (!chapterData) return;
+      if (highlightModeActive) return;
       if (verseSelectionMode) {
         setSelectedVerses((prev) =>
           prev.includes(verse)
@@ -545,66 +682,44 @@ export function ReadChapterScreen() {
         void (async () => {
           const ref = {
             bookId: chapterData.bookId,
-            bookName: chapterData.bookName,
+            bookName: displayBookName,
             chapter: chapterData.chapter,
             verse,
             translationId: chapterData.translationId,
-            text,
+            text: localeZhText(text),
           };
           const added = await toggleVerseBookmark(ref);
-          if (added) {
-            try {
-              await copyScriptureVerseToClipboard(ref);
-            } catch {
-              /* 剪贴板失败不阻断收藏 */
-            }
-          }
           void Haptics.notificationAsync(
             added
               ? Haptics.NotificationFeedbackType.Success
               : Haptics.NotificationFeedbackType.Warning,
           );
           setBookmarkFeedback(
-            added ? t("pages.read.verseBookmarkSaved") : t("pages.read.verseBookmarkRemoved"),
+            added ? tr("pages.read.verseBookmarkSaved") : tr("pages.read.verseBookmarkRemoved"),
           );
         })();
         return;
       }
       lastVerseTapRef.current = { verse, at: now };
     },
-    [chapterData, verseSelectionMode, toggleVerseBookmark, swipe],
+    [chapterData, highlightModeActive, verseSelectionMode, toggleVerseBookmark, swipe, localeZhText, tr],
   );
 
   const onVerseLongPress = useCallback(
     (verse: number, text: string) => {
       if (!chapterData) return;
+      if (highlightModeActive) return;
+      if (verseSelectionMode) return;
       longPressCopiedVerseRef.current = verse;
       swipe?.markExclude();
-      void (async () => {
-        const copied = await copyScriptureVerseToClipboard({
-          bookId: chapterData.bookId,
-          bookName: chapterData.bookName,
-          chapter: chapterData.chapter,
-          verse,
-          translationId: chapterData.translationId,
-          text,
-        });
-        void Haptics.notificationAsync(
-          copied
-            ? Haptics.NotificationFeedbackType.Success
-            : Haptics.NotificationFeedbackType.Warning,
-        );
-        setBookmarkFeedback(
-          copied ? t("pages.read.verseCopied") : t("pages.read.verseCopyFailed"),
-        );
-      })();
+      setVerseActionMenu({ verse, text });
     },
-    [chapterData, swipe],
+    [chapterData, highlightModeActive, swipe, verseSelectionMode],
   );
 
   const copySelectedVerses = useCallback(async () => {
     if (!chapterData || selectedVerses.length === 0) {
-      setBookmarkFeedback(t("pages.read.verseSelectionEmpty"));
+      setBookmarkFeedback(tr("pages.read.verseSelectionEmpty"));
       return;
     }
     swipe?.markExclude();
@@ -612,7 +727,7 @@ export function ReadChapterScreen() {
       .map((verse) => {
         const row = chapterData.verses.find((v) => v.verse === verse);
         return row
-          ? `${chapterData.bookName} ${chapterData.chapter}:${verse} ${row.text}`
+          ? `${displayBookName} ${chapterData.chapter}:${verse} ${localeZhText(row.text)}`
           : null;
       })
       .filter((x): x is string => Boolean(x))
@@ -623,15 +738,186 @@ export function ReadChapterScreen() {
     );
     setBookmarkFeedback(
       ok
-        ? tFormat("pages.read.verseSelectionCopied", { count: selectedVerses.length })
-        : t("pages.read.verseCopyFailed"),
+        ? tr("pages.read.verseSelectionCopied", { count: selectedVerses.length })
+        : tr("pages.read.verseCopyFailed"),
     );
-  }, [chapterData, selectedVerses, swipe]);
+    setVerseSelectionMode(false);
+    setSelectedVerses([]);
+  }, [chapterData, selectedVerses, swipe, localeZhText]);
+
+  const runCopyCurrentVerse = useCallback(async () => {
+    if (!chapterData || !verseActionMenu) return;
+    const copied = await copyScriptureVerseToClipboard({
+      bookName: displayBookName,
+      chapter: chapterData.chapter,
+      verse: verseActionMenu.verse,
+      text: localeZhText(verseActionMenu.text),
+    });
+    void Haptics.notificationAsync(
+      copied
+        ? Haptics.NotificationFeedbackType.Success
+        : Haptics.NotificationFeedbackType.Warning,
+    );
+    setBookmarkFeedback(copied ? tr("pages.read.verseCopied") : tr("pages.read.verseCopyFailed"));
+    setVerseActionMenu(null);
+  }, [chapterData, verseActionMenu, localeZhText, tr]);
+
+  const runStartMultiCopy = useCallback(() => {
+    if (!verseActionMenu) return;
+    setVerseSelectionMode(true);
+    setSelectedVerses([verseActionMenu.verse]);
+    setVerseActionMenu(null);
+  }, [verseActionMenu]);
+
+  const runOpenHighlightEditor = useCallback(() => {
+    if (!verseActionMenu) return;
+    const draft = cloneHighlightMap(highlightedVerseIndexes);
+    setHighlightDraftMap(draft);
+    highlightDraftMapRef.current = draft;
+    setHighlightModeActive(true);
+    setVerseActionMenu(null);
+  }, [highlightedVerseIndexes, verseActionMenu]);
+
+  const toggleVerseHighlightUnit = useCallback(
+    (verse: number, current: VerseHighlightMap | null, start: number, end: number, color: string) => {
+      if (!highlightModeActive) return;
+      const next = new Map(current ?? []);
+      let allSelected = true;
+      for (let i = start; i < end; i += 1) {
+        if (!next.has(i)) {
+          allSelected = false;
+          break;
+        }
+      }
+      for (let i = start; i < end; i += 1) {
+        if (allSelected) next.delete(i);
+        else next.set(i, color);
+      }
+      const base = cloneHighlightMap(highlightDraftMapRef.current ?? highlightedVerseIndexes);
+      if (next.size) base.set(verse, next);
+      else base.delete(verse);
+      highlightDraftMapRef.current = base;
+      setHighlightDraftMap(base);
+    },
+    [highlightModeActive, highlightedVerseIndexes],
+  );
+
+  const replaceVerseHighlightSelection = useCallback(
+    (verse: number, selected: VerseHighlightMap) => {
+      if (!highlightModeActive) return;
+      const base = cloneHighlightMap(highlightDraftMapRef.current ?? highlightedVerseIndexes);
+      if (selected.size) base.set(verse, new Map(selected));
+      else base.delete(verse);
+      highlightDraftMapRef.current = base;
+      setHighlightDraftMap(base);
+    },
+    [highlightModeActive, highlightedVerseIndexes],
+  );
+
+  const paintVerseHighlightUnit = useCallback(
+    (verse: number, start: number, end: number, mode: "add" | "remove", color: string) => {
+      if (!highlightModeActive) return;
+      const base = cloneHighlightMap(highlightDraftMapRef.current ?? highlightedVerseIndexes);
+      const verseSet = new Map(base.get(verse) ?? []);
+      for (let i = start; i < end; i += 1) {
+        if (mode === "add") verseSet.set(i, color);
+        else verseSet.delete(i);
+      }
+      if (verseSet.size) base.set(verse, verseSet);
+      else base.delete(verse);
+      highlightDraftMapRef.current = base;
+      setHighlightDraftMap(base);
+    },
+    [highlightModeActive, highlightedVerseIndexes],
+  );
+
+  const finishHighlightMode = useCallback(async () => {
+    const latestDraft = highlightDraftMapRef.current ?? highlightDraftMap ?? highlightedVerseIndexes;
+    const nextMap = cloneHighlightMap(latestDraft);
+    const savedChars = countHighlightedChars(nextMap);
+    setHighlightedVerseIndexes(nextMap);
+    setHighlightModeActive(false);
+    setHighlightDraftMap(null);
+    highlightDraftMapRef.current = null;
+    if (!chapterData) return;
+    const allVerses = new Set<number>([
+      ...highlightedVerseIndexes.keys(),
+      ...nextMap.keys(),
+    ]);
+    for (const verse of Array.from(allVerses).sort((a, b) => a - b)) {
+      await writeVerseTextHighlightIndices(
+        {
+          translationId: chapterData.translationId,
+          bookId: chapterData.bookId,
+          chapter: chapterData.chapter,
+          verse,
+        },
+        nextMap.get(verse)?.entries() ?? [],
+      );
+    }
+    try {
+      const persisted = await readChapterVerseTextHighlights({
+        translationId: chapterData.translationId,
+        bookId: chapterData.bookId,
+        chapter: chapterData.chapter,
+      });
+      const persistedCount = countHighlightedChars(persisted);
+      if (persistedCount > 0 || savedChars === 0) setHighlightedVerseIndexes(persisted);
+      else setHighlightedVerseIndexes(nextMap);
+    } catch {
+      setHighlightedVerseIndexes(nextMap);
+    }
+    setBookmarkFeedback(
+      savedChars > 0
+        ? localeZhText("已保存高亮")
+        : localeZhText("已清空高亮"),
+    );
+  }, [chapterData, highlightedVerseIndexes, highlightDraftMap, localeZhText]);
+
+  const cancelHighlightModeByChapterChange = useCallback(() => {
+    setHighlightModeActive(false);
+    setHighlightDraftMap(null);
+    highlightDraftMapRef.current = null;
+  }, []);
+
+  const runShareVerse = useCallback(() => {
+    if (!chapterData || !verseActionMenu) return;
+    const message = `${displayBookName} ${chapterData.chapter}:${verseActionMenu.verse}\n${localeZhText(verseActionMenu.text)}`;
+    void Share.share({ message })
+      .then(() => {
+        setVerseActionMenu(null);
+      })
+      .catch(() => {
+        setBookmarkFeedback(tr("pages.read.verseShareFailed"));
+        setVerseActionMenu(null);
+      });
+  }, [chapterData, verseActionMenu, localeZhText, displayBookName, tr]);
 
   useEffect(() => {
     setVerseSelectionMode(false);
     setSelectedVerses([]);
-  }, [chapterData?.bookId, chapterData?.chapter]);
+    setVerseActionMenu(null);
+    cancelHighlightModeByChapterChange();
+  }, [cancelHighlightModeByChapterChange, chapterData?.bookId, chapterData?.chapter]);
+
+  useEffect(() => {
+    if (!chapterData) {
+      setHighlightedVerseIndexes(new Map());
+      return;
+    }
+    let cancelled = false;
+    void readChapterVerseTextHighlights({
+      translationId: chapterData.translationId,
+      bookId: chapterData.bookId,
+      chapter: chapterData.chapter,
+    }).then((map) => {
+      if (cancelled) return;
+      setHighlightedVerseIndexes(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterData?.translationId, chapterData?.bookId, chapterData?.chapter]);
 
   const jumpToChapter = useCallback(
     (nextBookId: string, nextChapter: number) => {
@@ -694,19 +980,20 @@ export function ReadChapterScreen() {
       {loading ? (
         <View style={[styles.centered, { paddingTop: insets.top }]}>
           <ActivityIndicator color={c.muted} />
-          <Text style={styles.statusText}>{t("pages.read.loadingChapter")}</Text>
+          <Text style={styles.statusText}>{tr("pages.read.loadingChapter")}</Text>
         </View>
       ) : error ? (
         <View style={[styles.centered, { paddingTop: insets.top }]}>
           <Text style={styles.errorText}>{error}</Text>
           <Pressable onPress={() => void load()} style={({ pressed }) => [styles.retryBtn, pressed && styles.pressed]}>
-            <Text style={styles.retryBtnText}>{t("pages.read.retry")}</Text>
+            <Text style={styles.retryBtnText}>{tr("pages.read.retry")}</Text>
           </Pressable>
         </View>
       ) : chapterData ? (
         <ParchmentBottomFadeScrollView
           ref={scrollRef}
           style={styles.scroll}
+          scrollEnabled={!highlightModeActive}
           onLayout={(e) => {
             const h = e.nativeEvent.layout.height;
             onScrollViewportLayout(h);
@@ -729,164 +1016,369 @@ export function ReadChapterScreen() {
             }}
           >
             <Text style={[styles.chapterTitle, { fontSize: px.chapterTitleSize }]}>
-              {isZhLocale
-                ? `${chapterData.bookName}${chapterData.chapter}章`
-                : `${chapterData.bookName} ${chapterData.chapter}`}
+              {chapterTitleText}
             </Text>
           </View>
 
-          {chapterData.verses.map((v, i) => {
-            const headings = segmentMeta.headingByVerse.get(v.verse) ?? [];
-            const showParagraphBreak = i > 0 && segmentMeta.paragraphStarts.has(v.verse);
-            const showParagraphRule = showParagraphBreak && headings.length > 0;
-            const nextVerse = chapterData.verses[i + 1];
-            const nextHasParagraphBreak =
-              nextVerse != null && segmentMeta.paragraphStarts.has(nextVerse.verse);
-            const searchFocus = searchFocusVerse === v.verse;
-            const bookmarked = isBookmarked({
-              translationId: chapterData.translationId,
-              bookId: chapterData.bookId,
-              chapter: chapterData.chapter,
-              verse: v.verse,
-            });
-            const audioActive = !searchFocus && !bookmarked && activeVerseIndex === i;
-            const verseHighlight = verseTextHighlightStyleForVerse({
-              isGolden: v.isGolden,
-              bookmarked,
-            });
-            const verseNumHighlight = bookmarked ? undefined : verseHighlight;
-            const highlightKind = bookmarked ? "bookmark" : v.isGolden ? "golden" : undefined;
-            const xrefBundle = xrefsByVerse?.get(v.verse);
-            const hasXref = Boolean(xrefBundle);
-            return (
-              <Fragment key={v.verse}>
-                {showParagraphBreak ? (
-                  showParagraphRule ? (
-                    <View style={styles.segmentParagraphBreakWithRule}>
-                      <View style={styles.segmentParagraphRule} />
-                    </View>
-                  ) : (
-                    <View style={styles.segmentParagraphBreak} />
-                  )
-                ) : null}
-                {headings.map((heading, idx) => (
-                  <Text
-                    key={`${v.verse}:h:${idx}`}
-                    style={[
-                      styles.segmentHeading,
-                      {
-                        fontSize: px.verseFontSize + 1,
-                        lineHeight: px.verseLineHeight + 2,
-                      },
-                    ]}
-                  >
-                    {heading}
-                  </Text>
-                ))}
-                <Pressable
-                  onPress={() => onVersePress(v.verse, v.text)}
-                  onLongPress={() => onVerseLongPress(v.verse, v.text)}
-                  delayLongPress={280}
-                  onLayout={(e) => {
-                    const { y, height } = e.nativeEvent.layout;
-                    onVerseLayout(v.verse, y, height);
-                    verseLayoutsRef.current.set(v.verse, { y, height });
-                  }}
-                  accessibilityRole="button"
-                  accessibilityHint={
-                    verseSelectionMode
-                      ? t("pages.read.verseSelectionTapA11yHint")
-                      : t("pages.read.verseBookmarkA11yHint")
-                  }
-                >
-                  <View
-                    style={[
-                      styles.verseBlock,
-                      nextHasParagraphBreak && styles.verseBlockBeforeSegmentBreak,
-                      selectedVerses.includes(v.verse) && styles.verseBlockSelected,
-                      searchFocus && styles.verseLineSearchFocus,
-                      audioActive && styles.verseLineActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.versePrimaryLine,
-                        {
-                          fontSize: px.verseFontSize,
-                          lineHeight: px.verseLineHeight,
-                        },
-                      ]}
-                    >
+          {useParagraphFlowLayout
+            ? paragraphGroups.map((group, groupIndex) => {
+                const firstVerse = group.verses[0];
+                if (!firstVerse) return null;
+                const headings = segmentMeta.headingByVerse.get(firstVerse.verse) ?? [];
+                const showParagraphBreak = groupIndex > 0;
+                const showParagraphRule = showParagraphBreak && headings.length > 0;
+                return (
+                  <Fragment key={`pg:${firstVerse.verse}`}>
+                    {showParagraphBreak ? (
+                      showParagraphRule ? (
+                        <View style={styles.segmentParagraphBreakWithRule}>
+                          <View style={styles.segmentParagraphRule} />
+                        </View>
+                      ) : (
+                        <View style={styles.segmentParagraphBreak} />
+                      )
+                    ) : null}
+                    {headings.map((heading, idx) => (
+                      <Text
+                        key={`${firstVerse.verse}:h:${idx}`}
+                        style={[
+                          styles.segmentHeading,
+                          {
+                            fontSize: px.verseFontSize + 1,
+                            lineHeight: px.verseLineHeight + 2,
+                          },
+                        ]}
+                      >
+                        {heading}
+                      </Text>
+                    ))}
+                    <View style={styles.verseParagraphBlock}>
                       <Text
                         style={[
-                          styles.verseNum,
-                          Platform.OS === "android" && styles.verseNumAndroid,
+                          styles.versePrimaryLine,
                           {
-                            fontSize: px.verseNumFontSize,
+                            fontSize: px.verseFontSize,
                             lineHeight: px.verseLineHeight,
                           },
-                          Platform.OS === "android" && {
-                            paddingTop: Math.max(
-                              0,
-                              Math.round((px.verseLineHeight - px.verseNumFontSize) * 0.1),
-                            ),
-                          },
-                          searchFocus && styles.verseNumSearchFocus,
-                          audioActive && styles.verseNumActive,
-                          selectedVerses.includes(v.verse) && styles.verseNumSelected,
-                          verseNumHighlight,
-                          hasXref && styles.verseNumXref,
                         ]}
-                        onPress={
-                          hasXref
-                            ? () => {
-                                setXrefSheetVerse(v.verse);
+                      >
+                        {group.verses.map((v) => {
+                          const verseIndex = verseIndexByVerse.get(v.verse) ?? -1;
+                          const searchFocus = searchFocusVerse === v.verse;
+                          const selected = selectedVerses.includes(v.verse);
+                          const highlightedIndexes = activeHighlightMap.get(v.verse) ?? null;
+                          const bookmarked = isBookmarked({
+                            translationId: chapterData.translationId,
+                            bookId: chapterData.bookId,
+                            chapter: chapterData.chapter,
+                            verse: v.verse,
+                          });
+                          const audioActive =
+                            !searchFocus && !bookmarked && verseIndex >= 0 && activeVerseIndex === verseIndex;
+                          const suppressVerseMarker = selected || searchFocus || audioActive;
+                          const verseHighlight = suppressVerseMarker
+                            ? undefined
+                            : verseTextHighlightStyleForVerse({
+                                isGolden: v.isGolden,
+                                bookmarked,
+                              });
+                          const verseNumHighlight = undefined;
+                          const highlightKind = suppressVerseMarker
+                            ? undefined
+                            : bookmarked
+                              ? "bookmark"
+                              : v.isGolden
+                                ? "golden"
+                                : undefined;
+                          const xrefBundle = xrefsByVerse?.get(v.verse);
+                          const hasXref = Boolean(xrefBundle);
+                          return (
+                            <Text
+                              key={`pv:${v.verse}`}
+                              onPress={
+                                highlightModeActive
+                                  ? undefined
+                                  : () => onVersePress(v.verse, v.text)
                               }
-                            : undefined
-                        }
-                        suppressHighlighting={!hasXref}
-                        accessibilityRole={hasXref ? "button" : undefined}
-                        accessibilityLabel={
-                          hasXref
-                            ? `${v.verse}, ${t("pages.read.verseXrefMarkerA11y")}`
-                            : undefined
-                        }
-                      >
-                        {v.verse}
+                              onLongPress={
+                                highlightModeActive
+                                  ? undefined
+                                  : () => onVerseLongPress(v.verse, v.text)
+                              }
+                              suppressHighlighting
+                              onLayout={(e) => {
+                                const { y, height } = e.nativeEvent.layout;
+                                onVerseLayout(v.verse, y, height);
+                                verseLayoutsRef.current.set(v.verse, { y, height });
+                              }}
+                              style={[
+                                styles.verseInlineChunk,
+                                selected && styles.verseInlineChunkSelected,
+                                searchFocus && styles.verseInlineChunkSearchFocus,
+                                audioActive && styles.verseInlineChunkAudioActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.verseNum,
+                                  Platform.OS === "android" && styles.verseNumAndroid,
+                                  {
+                                    fontSize: px.verseNumFontSize,
+                                    lineHeight: px.verseLineHeight,
+                                  },
+                                  Platform.OS === "android" && {
+                                    paddingTop: Math.max(
+                                      0,
+                                      Math.round((px.verseLineHeight - px.verseNumFontSize) * 0.1),
+                                    ),
+                                  },
+                                  searchFocus && styles.verseNumSearchFocus,
+                                  audioActive && styles.verseNumActive,
+                                  selected && styles.verseNumSelected,
+                                  verseNumHighlight,
+                                  hasXref && styles.verseNumXref,
+                                ]}
+                                onPress={
+                                  hasXref
+                                    ? () => {
+                                        setXrefSheetVerse(v.verse);
+                                      }
+                                    : undefined
+                                }
+                                suppressHighlighting={!hasXref}
+                                accessibilityRole={hasXref ? "button" : undefined}
+                                accessibilityLabel={
+                                  hasXref
+                                    ? `${v.verse}, ${tr("pages.read.verseXrefMarkerA11y")}`
+                                    : undefined
+                                }
+                              >
+                                {v.verse}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: px.verseFontSize,
+                                  lineHeight: px.verseLineHeight,
+                                }}
+                              >
+                                {READ_VERSE_NUM_BODY_GAP}
+                              </Text>
+                              <ReadChapterVerseText
+                                key={`pvtext:${v.verse}:${highlightModeActive ? "edit" : "view"}`}
+                                inline
+                                highlight={highlightKind}
+                                textHighlightColor={activeHighlightColor}
+                                text={localeZhText(v.text)}
+                                parts={speechPartsByVerse?.get(v.verse) ?? null}
+                                highlightedCharIndexes={highlightedIndexes}
+                                highlightEditMode={highlightModeActive}
+                                onToggleHighlightUnit={(start, end, color) =>
+                                  toggleVerseHighlightUnit(v.verse, highlightedIndexes, start, end, color)
+                                }
+                                onReplaceHighlightSelection={(next) =>
+                                  replaceVerseHighlightSelection(v.verse, next)
+                                }
+                                onPaintHighlightUnit={(start, end, mode, color) =>
+                                  paintVerseHighlightUnit(v.verse, start, end, mode, color)
+                                }
+                              />
+                              <Text>{" "}</Text>
+                            </Text>
+                          );
+                        })}
                       </Text>
+                    </View>
+                  </Fragment>
+                );
+              })
+            : chapterData.verses.map((v, i) => {
+                const headings = segmentMeta.headingByVerse.get(v.verse) ?? [];
+                const showParagraphBreak = i > 0 && segmentMeta.paragraphStarts.has(v.verse);
+                const showParagraphRule = showParagraphBreak && headings.length > 0;
+                const nextVerse = chapterData.verses[i + 1];
+                const nextHasParagraphBreak =
+                  nextVerse != null && segmentMeta.paragraphStarts.has(nextVerse.verse);
+                const searchFocus = searchFocusVerse === v.verse;
+                const highlightedIndexes = activeHighlightMap.get(v.verse) ?? null;
+                const bookmarked = isBookmarked({
+                  translationId: chapterData.translationId,
+                  bookId: chapterData.bookId,
+                  chapter: chapterData.chapter,
+                  verse: v.verse,
+                });
+                const audioActive = !searchFocus && !bookmarked && activeVerseIndex === i;
+                const suppressVerseMarker = selectedVerses.includes(v.verse) || searchFocus || audioActive;
+                const verseHighlight = suppressVerseMarker
+                  ? undefined
+                  : verseTextHighlightStyleForVerse({
+                      isGolden: v.isGolden,
+                      bookmarked,
+                    });
+                const verseNumHighlight = undefined;
+                const highlightKind = suppressVerseMarker
+                  ? undefined
+                  : bookmarked
+                    ? "bookmark"
+                    : v.isGolden
+                      ? "golden"
+                      : undefined;
+                const xrefBundle = xrefsByVerse?.get(v.verse);
+                const hasXref = Boolean(xrefBundle);
+                return (
+                  <Fragment key={v.verse}>
+                    {showParagraphBreak ? (
+                      showParagraphRule ? (
+                        <View style={styles.segmentParagraphBreakWithRule}>
+                          <View style={styles.segmentParagraphRule} />
+                        </View>
+                      ) : (
+                        <View style={styles.segmentParagraphBreak} />
+                      )
+                    ) : null}
+                    {headings.map((heading, idx) => (
                       <Text
-                        style={{
-                          fontSize: px.verseFontSize,
-                          lineHeight: px.verseLineHeight,
-                        }}
-                      >
-                        {READ_VERSE_NUM_BODY_GAP}
-                      </Text>
-                      <ReadChapterVerseText
-                        inline
-                        highlight={highlightKind}
-                        text={v.text}
-                        parts={speechPartsByVerse?.get(v.verse) ?? null}
-                      />
-                    </Text>
-                    {contrastByVerse?.get(v.verse) ? (
-                      <Text
+                        key={`${v.verse}:h:${idx}`}
                         style={[
-                          styles.verseContrast,
+                          styles.segmentHeading,
                           {
-                            fontSize: px.verseFontSize * 0.92,
-                            lineHeight: px.verseLineHeight * 0.78,
+                            fontSize: px.verseFontSize + 1,
+                            lineHeight: px.verseLineHeight + 2,
                           },
                         ]}
                       >
-                        {contrastByVerse.get(v.verse)}
+                        {heading}
                       </Text>
-                    ) : null}
-                  </View>
-                </Pressable>
-              </Fragment>
-            );
-          })}
+                    ))}
+                    <Pressable
+                      pointerEvents={highlightModeActive ? "box-none" : "auto"}
+                      onPress={
+                        highlightModeActive
+                          ? undefined
+                          : () => onVersePress(v.verse, v.text)
+                      }
+                      onLongPress={
+                        highlightModeActive
+                          ? undefined
+                          : () => onVerseLongPress(v.verse, v.text)
+                      }
+                      delayLongPress={280}
+                      onLayout={(e) => {
+                        const { y, height } = e.nativeEvent.layout;
+                        onVerseLayout(v.verse, y, height);
+                        verseLayoutsRef.current.set(v.verse, { y, height });
+                      }}
+                      accessibilityRole="button"
+                      accessibilityHint={
+                        verseSelectionMode
+                          ? tr("pages.read.verseSelectionTapA11yHint")
+                          : tr("pages.read.verseBookmarkA11yHint")
+                      }
+                    >
+                      <View
+                        style={[
+                          styles.verseBlock,
+                          nextHasParagraphBreak && styles.verseBlockBeforeSegmentBreak,
+                          selectedVerses.includes(v.verse) && styles.verseBlockSelected,
+                          searchFocus && styles.verseLineSearchFocus,
+                          audioActive && styles.verseLineActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.versePrimaryLine,
+                            {
+                              fontSize: px.verseFontSize,
+                              lineHeight: px.verseLineHeight,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.verseNum,
+                              Platform.OS === "android" && styles.verseNumAndroid,
+                              {
+                                fontSize: px.verseNumFontSize,
+                                lineHeight: px.verseLineHeight,
+                              },
+                              Platform.OS === "android" && {
+                                paddingTop: Math.max(
+                                  0,
+                                  Math.round((px.verseLineHeight - px.verseNumFontSize) * 0.1),
+                                ),
+                              },
+                              searchFocus && styles.verseNumSearchFocus,
+                              audioActive && styles.verseNumActive,
+                              selectedVerses.includes(v.verse) && styles.verseNumSelected,
+                              verseNumHighlight,
+                              hasXref && styles.verseNumXref,
+                            ]}
+                            onPress={
+                              hasXref
+                                ? () => {
+                                    setXrefSheetVerse(v.verse);
+                                  }
+                                : undefined
+                            }
+                            suppressHighlighting={!hasXref}
+                            accessibilityRole={hasXref ? "button" : undefined}
+                            accessibilityLabel={
+                              hasXref
+                                ? `${v.verse}, ${tr("pages.read.verseXrefMarkerA11y")}`
+                                : undefined
+                            }
+                          >
+                            {v.verse}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: px.verseFontSize,
+                              lineHeight: px.verseLineHeight,
+                            }}
+                          >
+                            {READ_VERSE_NUM_BODY_GAP}
+                          </Text>
+                          <ReadChapterVerseText
+                            key={`vtext:${v.verse}:${highlightModeActive ? "edit" : "view"}`}
+                            inline
+                            highlight={highlightKind}
+                            textHighlightColor={activeHighlightColor}
+                            text={localeZhText(v.text)}
+                            parts={speechPartsByVerse?.get(v.verse) ?? null}
+                            highlightedCharIndexes={highlightedIndexes}
+                            highlightEditMode={highlightModeActive}
+                            onToggleHighlightUnit={(start, end, color) =>
+                              toggleVerseHighlightUnit(v.verse, highlightedIndexes, start, end, color)
+                            }
+                            onReplaceHighlightSelection={(next) =>
+                              replaceVerseHighlightSelection(v.verse, next)
+                            }
+                            onPaintHighlightUnit={(start, end, mode, color) =>
+                              paintVerseHighlightUnit(v.verse, start, end, mode, color)
+                            }
+                          />
+                        </Text>
+                        {contrastByVerse?.get(v.verse)?.map((row) => (
+                          <Text
+                            key={`${v.verse}:${row.translationId}`}
+                            style={[
+                              styles.verseContrast,
+                              {
+                                fontSize: px.verseFontSize * 0.82,
+                                lineHeight: Math.max(
+                                  px.verseLineHeight * 0.78,
+                                  px.verseFontSize * 0.82 * 1.2,
+                                ),
+                              },
+                            ]}
+                          >
+                            {row.text}
+                          </Text>
+                        ))}
+                      </View>
+                    </Pressable>
+                  </Fragment>
+                );
+              })}
 
           <View style={styles.scriptureEndingSection}>
             <View style={styles.endNav}>
@@ -901,7 +1393,7 @@ export function ReadChapterScreen() {
                 ) : null}
               </View>
               <Pressable onPress={() => router.push("/read/read")} style={styles.endCenter}>
-                <Text style={styles.endCenterText}>{chapterData.bookName}</Text>
+                <Text style={styles.endCenterText}>{displayBookName}</Text>
               </Pressable>
               <View style={[styles.endSide, styles.endSideRight]}>
                 {neighbors.next ? (
@@ -940,7 +1432,7 @@ export function ReadChapterScreen() {
                 <View style={styles.chapterDoneRow}>
                   <MaterialIcons name="check-circle" size={22} color="#6E835E" />
                   <Text style={styles.chapterDoneText}>
-                    {locale === "en" ? "Completed" : "已完成读经"}
+                    {isEnglishPostReading ? "Completed" : localeDisplayText("已完成读经")}
                   </Text>
                 </View>
               </View>
@@ -950,6 +1442,7 @@ export function ReadChapterScreen() {
           <ReadChapterPostReadingEditions
             bookId={chapterData.bookId}
             chapter={chapterData.chapter}
+            displayLocale={postReadingDisplayLocale}
             infoRoleId={prefersEnglishInfoEdition ? INFO_EDITION_V1_EN_ROLE_ID : null}
             guideRoleId={prefersEnglishInfoEdition ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : null}
             onBackToTop={scrollToTop}
@@ -962,7 +1455,11 @@ export function ReadChapterScreen() {
           />
 
           {chapterCompleted ? (
-            <ReadChapterCompletionPlanPanel bookId={chapterData.bookId} chapter={chapterData.chapter} />
+            <ReadChapterCompletionPlanPanel
+              bookId={chapterData.bookId}
+              chapter={chapterData.chapter}
+              displayLocale={postReadingDisplayLocale}
+            />
           ) : null}
 
         </ParchmentBottomFadeScrollView>
@@ -974,7 +1471,8 @@ export function ReadChapterScreen() {
         <ReadChapterVerseXrefSheet
           visible={xrefSheetVerse != null}
           onClose={() => setXrefSheetVerse(null)}
-          bookName={chapterData.bookName}
+          bookName={xrefBookName || localeZhText(chapterData.bookName)}
+          displayLocale={readDisplayLocale}
           chapter={chapterData.chapter}
           verse={xrefSheetVerse ?? 0}
           bundle={xrefSheetBundle}
@@ -1002,7 +1500,7 @@ export function ReadChapterScreen() {
             disabled={verseSelectionMode}
             style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
             accessibilityRole="button"
-            accessibilityLabel={t("pages.read.chapterChromeBack")}
+            accessibilityLabel={tr("pages.read.chapterChromeBack")}
           >
             <MaterialIcons name="arrow-back-ios-new" size={19} color="#FFFFFF" style={styles.topActionIcon} />
           </Pressable>
@@ -1024,7 +1522,7 @@ export function ReadChapterScreen() {
             disabled={verseSelectionMode}
             style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
             accessibilityRole="button"
-            accessibilityLabel={t("pages.read.chapterChromeSearch")}
+            accessibilityLabel={tr("pages.read.chapterChromeSearch")}
           >
             <MaterialIcons name="search" size={21} color="#FFFFFF" style={styles.topActionIcon} />
           </Pressable>
@@ -1033,29 +1531,9 @@ export function ReadChapterScreen() {
             disabled={verseSelectionMode}
             style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
             accessibilityRole="button"
-            accessibilityLabel={t("pages.read.chapterChromeFavorites")}
+            accessibilityLabel={tr("pages.read.chapterChromeFavorites")}
           >
             <MaterialIcons name="bookmark-border" size={21} color="#FFFFFF" style={styles.topActionIcon} />
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              swipe?.markExclude();
-              setVerseSelectionMode((prev) => {
-                if (prev) setSelectedVerses([]);
-                return !prev;
-              });
-            }}
-            style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t("pages.read.verseSelectionToggle")}
-            accessibilityState={{ selected: verseSelectionMode }}
-          >
-            <MaterialIcons
-              name={verseSelectionMode ? "check-box" : "check-box-outline-blank"}
-              size={21}
-              color="#FFFFFF"
-              style={styles.topActionIcon}
-            />
           </Pressable>
         </View>
       ) : null}
@@ -1072,31 +1550,128 @@ export function ReadChapterScreen() {
           ]}
         >
           <Text style={styles.selectionCountText}>
-            {tFormat("pages.read.verseSelectionPicked", { count: selectedVerses.length })}
+            {tr("pages.read.verseSelectionPicked", { count: selectedVerses.length })}
           </Text>
           <View style={styles.selectionActions}>
             <Pressable
               onPress={() => setSelectedVerses([])}
               style={({ pressed }) => [styles.selectionBtn, pressed && styles.pressed]}
             >
-              <Text style={styles.selectionBtnText}>{t("pages.read.verseSelectionClear")}</Text>
+              <Text style={styles.selectionBtnText}>{tr("pages.read.verseSelectionClear")}</Text>
             </Pressable>
             <Pressable
               onPress={() => void copySelectedVerses()}
               style={({ pressed }) => [styles.selectionBtnPrimary, pressed && styles.pressed]}
             >
               <Text style={styles.selectionBtnPrimaryText}>
-                {t("pages.read.verseSelectionCopy")}
+                {tr("pages.read.verseSelectionCopy")}
               </Text>
             </Pressable>
+          </View>
+        </View>
+      ) : null}
+
+      {chapterData && verseActionMenu ? (
+        <Modal
+          visible
+          transparent
+          animationType="fade"
+          onRequestClose={() => setVerseActionMenu(null)}
+        >
+          <Pressable style={styles.verseActionBackdrop} onPress={() => setVerseActionMenu(null)}>
+            <Pressable style={styles.verseActionSheet} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.verseActionTitle}>
+                {readDisplayLocale === "en"
+                  ? `Verse ${verseActionMenu.verse}`
+                  : localeZhText(`第 ${verseActionMenu.verse} 节`)}
+              </Text>
+
+              <Pressable onPress={() => void runCopyCurrentVerse()} style={styles.verseActionBtn}>
+                <View style={styles.verseActionBtnRow}>
+                  <MaterialIcons name="content-copy" size={18} color={c.ink} />
+                  <Text style={styles.verseActionBtnText}>{localeZhText("本节复制")}</Text>
+                </View>
+              </Pressable>
+
+              <Pressable onPress={runStartMultiCopy} style={styles.verseActionBtn}>
+                <View style={styles.verseActionBtnRow}>
+                  <MaterialIcons name="done-all" size={18} color={c.ink} />
+                  <Text style={styles.verseActionBtnText}>{localeZhText("多选复制")}</Text>
+                </View>
+              </Pressable>
+
+              <Pressable onPress={runOpenHighlightEditor} style={styles.verseActionBtn}>
+                <View style={styles.verseActionBtnRow}>
+                  <MaterialIcons
+                    name={highlightModeActive ? "check-circle-outline" : "edit"}
+                    size={18}
+                    color={c.ink}
+                  />
+                  <Text style={styles.verseActionBtnText}>
+                    {highlightModeActive ? localeZhText("划重点模式中") : localeZhText("划重点（按字上底色）")}
+                  </Text>
+                </View>
+              </Pressable>
+
+              <Pressable onPress={runShareVerse} style={styles.verseActionBtn}>
+                <View style={styles.verseActionBtnRow}>
+                  <MaterialIcons name="share" size={18} color={c.ink} />
+                  <Text style={styles.verseActionBtnText}>{localeZhText("分享")}</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setVerseActionMenu(null)}
+                style={[styles.verseActionBtn, styles.verseActionBtnCancel]}
+              >
+                <View style={styles.verseActionBtnRow}>
+                  <MaterialIcons name="close" size={18} color={c.muted} />
+                  <Text style={[styles.verseActionBtnText, styles.verseActionBtnTextMuted]}>
+                    {localeZhText("关闭")}
+                  </Text>
+                </View>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
+
+      {chapterData && highlightModeActive ? (
+        <View
+          style={[
+            styles.highlightModeBar,
+            {
+              bottom: 88 + insets.bottom,
+            },
+          ]}
+        >
+          <Text style={styles.highlightModeTitle}>{localeZhText("划重点")}</Text>
+          <View style={styles.highlightColorPicker}>
+            {READ_VERSE_HIGHLIGHT_PALETTE.map((color) => {
+              const active = color === activeHighlightColor;
+              return (
+                <Pressable
+                  key={color}
+                  onPress={() => setActiveHighlightColor(color)}
+                  style={[
+                    styles.highlightColorChip,
+                    { backgroundColor: color },
+                    active && styles.highlightColorChipActive,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    active ? localeZhText("当前高亮颜色") : localeZhText("切换高亮颜色")
+                  }
+                />
+              );
+            })}
+          </View>
+          <View style={styles.highlightModeActions}>
             <Pressable
-              onPress={() => {
-                setVerseSelectionMode(false);
-                setSelectedVerses([]);
-              }}
-              style={({ pressed }) => [styles.selectionBtn, pressed && styles.pressed]}
+              onPress={() => void finishHighlightMode()}
+              style={({ pressed }) => [styles.selectionBtnPrimary, pressed && styles.pressed]}
             >
-              <Text style={styles.selectionBtnText}>{t("common.done")}</Text>
+              <Text style={styles.selectionBtnPrimaryText}>{localeZhText("完成")}</Text>
             </Pressable>
           </View>
         </View>
@@ -1114,7 +1689,7 @@ export function ReadChapterScreen() {
                   onPress={goReadHomeFromCatalog}
                   style={({ pressed }) => [styles.jumpBackBtn, pressed && styles.pressed]}
                   accessibilityRole="button"
-                  accessibilityLabel={t("pages.read.backToBibleHome")}
+                  accessibilityLabel={tr("pages.read.backToBibleHome")}
                 >
                   <MaterialIcons name="arrow-back-ios-new" size={16} color={c.ink} />
                 </Pressable>
@@ -1124,7 +1699,7 @@ export function ReadChapterScreen() {
                   ellipsizeMode="tail"
                   allowFontScaling={false}
                 >
-                  {t("pages.read.chapterJumpTitle")}
+                  {tr("pages.read.chapterJumpTitle")}
                 </Text>
                 <View style={styles.jumpHeaderSpacer} />
               </View>
@@ -1149,7 +1724,7 @@ export function ReadChapterScreen() {
                 </ParchmentBottomFadeScrollView>
               </View>
               <Pressable onPress={() => setJumpOpen(false)} style={styles.jumpClose}>
-                <Text style={styles.jumpCloseText}>{t("pages.read.chapterJumpClose")}</Text>
+                <Text style={styles.jumpCloseText}>{tr("pages.read.chapterJumpClose")}</Text>
               </Pressable>
             </ReadParchmentBackgroundImage>
           </Pressable>
@@ -1226,11 +1801,26 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     textAlign: "left",
   },
+  verseParagraphBlock: {
+    marginBottom: 14,
+  },
   verseBlockBeforeSegmentBreak: {
     marginBottom: 0,
   },
+  verseInlineChunk: {
+    borderRadius: 6,
+  },
+  verseInlineChunkSelected: {
+    backgroundColor: "#FFB103",
+  },
+  verseInlineChunkSearchFocus: {
+    backgroundColor: "#FFB103",
+  },
+  verseInlineChunkAudioActive: {
+    backgroundColor: "#FFB103",
+  },
   versePrimaryLine: {
-    ...parchmentSans(readTypography.verseFontWeight),
+    ...parchmentSans(500),
     color: readTypography.verseColor,
   },
   verseNumAndroid: {
@@ -1242,45 +1832,45 @@ const styles = StyleSheet.create({
   verseNum: {
     fontSize: readTypography.verseNumFontSize,
     ...parchmentSans(700),
-    color: readTypography.verseNumColor,
+    color: c.inkSoft,
   },
   verseNumXref: {
-    color: "#D97707",
+    color: c.verseNum,
   },
   verseNumSelected: {
-    color: "#B45309",
+    color: c.inkSoft,
   },
   verseBlockSelected: {
-    backgroundColor: "rgba(217, 119, 7, 0.14)",
+    backgroundColor: "#FFB103",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(180, 83, 9, 0.34)",
+    borderColor: "#FFB103",
     marginHorizontal: -8,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   verseLineActive: {
-    backgroundColor: c.verseAudioActiveBg,
+    backgroundColor: "#FFB103",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.verseAudioActiveBorder,
+    borderColor: "#FFB103",
     marginHorizontal: -8,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   verseLineSearchFocus: {
-    backgroundColor: c.verseSearchFocusBg,
+    backgroundColor: "#FFB103",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.verseSearchFocusBorder,
+    borderColor: "#FFB103",
     marginHorizontal: -8,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  verseNumActive: { color: c.verseAudioActiveNum },
-  verseNumSearchFocus: { color: c.verseSearchFocusNum },
+  verseNumActive: { color: c.inkSoft },
+  verseNumSearchFocus: { color: c.inkSoft },
   verseContrast: {
-    marginTop: 3,
+    marginTop: 7,
     color: c.muted,
     ...parchmentSans(400),
   },
@@ -1490,8 +2080,8 @@ const styles = StyleSheet.create({
   selectionBtnPrimary: {
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(180, 83, 9, 0.5)",
-    backgroundColor: "rgba(217, 119, 7, 0.15)",
+    borderColor: "#FFB103",
+    backgroundColor: "#FFB103",
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
@@ -1504,6 +2094,106 @@ const styles = StyleSheet.create({
     fontSize: 12,
     ...parchmentSans(600),
     color: "#8C4A0F",
+  },
+  verseActionBackdrop: {
+    flex: 1,
+    backgroundColor: c.modalBackdrop,
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingBottom: 18,
+  },
+  verseActionSheet: {
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surfaceSolid,
+    padding: 10,
+    gap: 8,
+  },
+  verseActionTitle: {
+    fontSize: 12,
+    color: c.muted,
+    textAlign: "center",
+    ...parchmentSans(600),
+  },
+  verseActionBtn: {
+    minHeight: 40,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  verseActionBtnCancel: {
+    marginTop: 2,
+  },
+  verseActionBtnText: {
+    fontSize: 14,
+    color: c.ink,
+    ...parchmentSans(600),
+  },
+  verseActionBtnTextMuted: {
+    color: c.muted,
+  },
+  verseActionBtnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  highlightModeBar: {
+    position: "absolute",
+    zIndex: 68,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: "rgba(255, 252, 245, 0.9)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 10,
+    shadowColor: "#1c1410",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  highlightModeTitle: {
+    fontSize: 12,
+    color: c.ink,
+    textAlign: "left",
+    ...parchmentSans(600),
+  },
+  highlightModeHint: {
+    fontSize: 11,
+    color: c.muted,
+    textAlign: "center",
+    ...parchmentSans(400),
+  },
+  highlightColorPicker: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    gap: 8,
+  },
+  highlightColorChip: {
+    width: 24,
+    height: 24,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(80, 50, 20, 0.35)",
+  },
+  highlightColorChipActive: {
+    borderWidth: 2,
+    borderColor: "#6A3D13",
+    transform: [{ scale: 1.08 }],
+  },
+  highlightModeActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
   pressed: { opacity: 0.88 },
 });

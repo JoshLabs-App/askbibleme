@@ -1,24 +1,93 @@
 #!/usr/bin/env node
 /**
- * 从 GitHub 分批下载 MP3 到 DATA_ROOT/audio（适合 Render Shell，无需 git remote）。
+ * 从 FHL（和合本 闫大卫朗读，version=20）分批下载 MP3 到 DATA_ROOT/audio。
  *
  *   DATA_ROOT=/var/data CUV_AUDIO_BATCH_INDEX=0 npm run audio:pull-batch
  *   DATA_ROOT=/var/data CUV_AUDIO_BATCH_INDEX=1 npm run audio:pull-batch
  *   … 直到日志显示 batch 为空
  *
- * 私有仓库：在 Render 环境变量设置 GITHUB_TOKEN（repo 读权限）。
+ * 如需把已有文件全部更新到 version=20，可加：
+ *   CUV_AUDIO_FORCE_OVERWRITE=1
  */
 import fs from "node:fs";
-import https from "node:https";
 import path from "node:path";
 
 const cwd = process.cwd();
-const repo = process.env.SELAH_GITHUB_REPO?.trim() || "askbibleme/askbibleme";
-const branch = process.env.CUV_AUDIO_GIT_REF?.trim() || "cuv-chapter-audio";
 const batchSize = Math.max(1, Number(process.env.CUV_AUDIO_BATCH_SIZE || 80));
 const batchIndex = Math.max(0, Number(process.env.CUV_AUDIO_BATCH_INDEX || 0));
 const root = process.env.DATA_ROOT?.trim() || process.env.CUV_AUDIO_DATA_DIR?.trim();
-const token = process.env.GITHUB_TOKEN?.trim();
+const forceOverwrite = process.env.CUV_AUDIO_FORCE_OVERWRITE === "1";
+const localSubdir = process.env.CUV_AUDIO_LOCAL_SUBDIR?.trim() || "cuv-v20";
+const FHL_UNVDAVID_BASE = "https://media.fhl.net/unvdavid";
+const BOOK_ORDER = [
+  "GEN",
+  "EXO",
+  "LEV",
+  "NUM",
+  "DEU",
+  "JOS",
+  "JDG",
+  "RUT",
+  "1SA",
+  "2SA",
+  "1KI",
+  "2KI",
+  "1CH",
+  "2CH",
+  "EZR",
+  "NEH",
+  "EST",
+  "JOB",
+  "PSA",
+  "PRO",
+  "ECC",
+  "SNG",
+  "ISA",
+  "JER",
+  "LAM",
+  "EZK",
+  "DAN",
+  "HOS",
+  "JOL",
+  "AMO",
+  "OBA",
+  "JON",
+  "MIC",
+  "NAM",
+  "HAB",
+  "ZEP",
+  "HAG",
+  "ZEC",
+  "MAL",
+  "MAT",
+  "MRK",
+  "LUK",
+  "JHN",
+  "ACT",
+  "ROM",
+  "1CO",
+  "2CO",
+  "GAL",
+  "EPH",
+  "PHP",
+  "COL",
+  "1TH",
+  "2TH",
+  "1TI",
+  "2TI",
+  "TIT",
+  "PHM",
+  "HEB",
+  "JAS",
+  "1PE",
+  "2PE",
+  "1JN",
+  "2JN",
+  "3JN",
+  "JUD",
+  "REV",
+];
+const BOOK_ID_TO_BID = new Map(BOOK_ORDER.map((bookId, index) => [bookId, index + 1]));
 
 if (!root) {
   console.error("Set DATA_ROOT (e.g. DATA_ROOT=/var/data)");
@@ -41,38 +110,23 @@ if (batch.length === 0) {
   process.exit(0);
 }
 
-const destDir = path.join(root, "audio");
+const destDir = path.join(root, "audio", localSubdir);
 fs.mkdirSync(destDir, { recursive: true });
 
-function rawUrl(filename) {
-  return `https://raw.githubusercontent.com/${repo}/${branch}/public/audio/${encodeURIComponent(filename)}`;
+function fhlAudioUrl(bookId, chapter) {
+  const bid = BOOK_ID_TO_BID.get(bookId);
+  if (!bid || !Number.isInteger(chapter) || chapter < 1) return null;
+  const chap3 = String(chapter).padStart(3, "0");
+  return `${FHL_UNVDAVID_BASE}/${bid}/${bid}_${chap3}.mp3`;
 }
 
-function downloadFile(url) {
-  return new Promise((resolve, reject) => {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    https
-      .get(url, { headers }, (res) => {
-        if (res.statusCode === 301 || res.statusCode === 302) {
-          const loc = res.headers.location;
-          if (!loc) {
-            reject(new Error(`Redirect without location for ${url}`));
-            return;
-          }
-          downloadFile(loc).then(resolve, reject);
-          return;
-        }
-        if (res.statusCode !== 200) {
-          res.resume();
-          reject(new Error(`HTTP ${res.statusCode} for ${url}`));
-          return;
-        }
-        const chunks = [];
-        res.on("data", (c) => chunks.push(c));
-        res.on("end", () => resolve(Buffer.concat(chunks)));
-      })
-      .on("error", reject);
+async function downloadFile(url) {
+  const res = await fetch(url, {
+    headers: { "User-Agent": "AskBibleCuvPull/1.0" },
+    signal: AbortSignal.timeout(120_000),
   });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
 }
 
 let downloaded = 0;
@@ -82,14 +136,20 @@ let failed = 0;
 for (const name of batch) {
   const dest = path.join(destDir, name);
   try {
-    if (fs.existsSync(dest)) {
+    if (!forceOverwrite && fs.existsSync(dest)) {
       const st = fs.statSync(dest);
       if (st.isFile() && st.size > 1024) {
         skipped += 1;
         continue;
       }
     }
-    const buf = await downloadFile(rawUrl(name));
+    const m = /^([A-Z0-9]+)-(\d+)\.mp3$/.exec(name);
+    if (!m) throw new Error(`invalid manifest filename: ${name}`);
+    const bookId = m[1];
+    const chapter = Number(m[2]);
+    const remote = fhlAudioUrl(bookId, chapter);
+    if (!remote) throw new Error(`cannot map ${bookId} to FHL bid`);
+    const buf = await downloadFile(remote);
     if (buf.length < 1024) {
       throw new Error(`file too small (${buf.length} bytes)`);
     }

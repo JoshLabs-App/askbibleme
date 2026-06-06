@@ -127,6 +127,8 @@ export function useReadChapterAudio(
 
     return () => {
       cancelled = true;
+      // 章节、语音或聚焦状态变化时，先注销旧章节，避免音频继续播上一章却用新章节正文高亮。
+      registerReadChapterRef.current(null);
     };
   }, [
     chapterAudioKey,

@@ -17,10 +17,8 @@ const EXPLORE_ICON_GRID_GAP = 10;
 const SCRIPTURE_ANTHOLOGY_IDS = [
   "years-days-eternity",
   "word-of-god",
-  "encouraging-words",
   "narrow-gate",
   "praise-worship",
-  "rest-restore",
 ] as const;
 
 export function ExploreScreen() {
@@ -90,7 +88,9 @@ export function ExploreScreen() {
             {topEntries.map(renderEntryTile)}
           </View>
           <View style={s.sectionDivider} />
-          <Text style={s.sectionCaption}>{locale === "en" ? "Scripture Anthology" : "经文汇编"}</Text>
+          <Text style={s.sectionCaption}>
+            {locale === "en" ? "Scripture Anthology" : locale === "zh-TW" ? "經文彙編" : "经文汇编"}
+          </Text>
           <View style={s.iconGrid}>
             {scriptureAnthologyEntries.map(renderEntryTile)}
           </View>

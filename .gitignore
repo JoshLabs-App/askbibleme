@@ -29,6 +29,9 @@
 
 # misc
 .DS_Store
+.env.local
+.env*.local
+*.aab
 *.pem
 npm-debug.log*
 yarn-debug.log*
@@ -46,6 +49,17 @@ yarn-error.log*
 # 潮州语新约 MP3（npm run audio:teochew-pull 生成；manifest 入库）
 /public/audio/teochew-nt/*.mp3
 /public/audio/web-en/*.mp3
+
+# 本地导入/下载的大体积资源（不入库，避免 Review 卡死）
+/data/bible/uploads/
+/data/bible/blm-es-chapter-audio-manifest.json
+/data/bible/cantonese-v3-audio-manifest.json
+/data/bible/cantonese-v3-nt-audio-manifest.json
+/data/bible/hakka-audio-manifest.json
+/data/bible/open-usfm-chapter-segments.story.zh.json
+/public/audio/
+/public/verse-timings/
+/scripts/whisper-env/
 
 # 本机全本导读/引导版批量进度（见 npm run info-edition:batch）
 /data/bible/info-edition-v1-batch-state.json

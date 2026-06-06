@@ -126,10 +126,10 @@ function parseChapterSegmentsFromUsfm(
     currentBlock = null;
   };
 
-  const openBlock = (type: ChapterSegmentType, marker: string) => {
+  const openBlock = (type: ChapterSegmentType, marker: string): ChapterSegment => {
     closeCurrentBlock();
     blockId += 1;
-    currentBlock = {
+    const next: ChapterSegment = {
       id: `${bookId}-${chapter}-b${blockId}`,
       type,
       marker,
@@ -137,6 +137,8 @@ function parseChapterSegmentsFromUsfm(
       verseStart: null,
       verseEnd: null,
     };
+    currentBlock = next;
+    return next;
   };
 
   const assignHeadingToVerse = (verse: number) => {
@@ -209,11 +211,9 @@ function parseChapterSegmentsFromUsfm(
       if (!Number.isInteger(verse) || verse < 1) continue;
       currentVerse = verse;
       assignHeadingToVerse(verse);
-      if (!currentBlock) openBlock("paragraph", "p");
-      if (currentBlock) {
-        currentBlock.verseStart = currentBlock.verseStart ?? verse;
-        currentBlock.verseEnd = verse;
-      }
+      const verseBlock = currentBlock ?? openBlock("paragraph", "p");
+      verseBlock.verseStart = verseBlock.verseStart ?? verse;
+      verseBlock.verseEnd = verse;
     }
   }
 

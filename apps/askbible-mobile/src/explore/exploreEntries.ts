@@ -44,20 +44,6 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     labelKey: "pages.explore.yearsDaysEternityIconLabel",
   },
   {
-    id: "word-of-god",
-    href: "/explore/word-of-god",
-    iconSet: "material-community",
-    icon: "book-open-page-variant",
-    labelKey: "pages.explore.wordOfGodIconLabel",
-  },
-  {
-    id: "encouraging-words",
-    href: "/explore/encouraging-words",
-    iconSet: "material-community",
-    icon: "heart",
-    labelKey: "pages.explore.encouragingWordsIconLabel",
-  },
-  {
     id: "narrow-gate",
     href: "/explore/narrow-gate",
     iconSet: "material-community",
@@ -70,13 +56,6 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     iconSet: "material-community",
     icon: "crown",
     labelKey: "pages.explore.praiseWorshipIconLabel",
-  },
-  {
-    id: "rest-restore",
-    href: "/explore/rest-restore",
-    iconSet: "material-community",
-    icon: "spa",
-    labelKey: "pages.explore.restRestoreIconLabel",
   },
   {
     id: "prayer",

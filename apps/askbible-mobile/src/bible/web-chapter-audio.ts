@@ -6,6 +6,8 @@ import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 export const WEB_CHAPTER_AUDIO_REMOTE_NT = "https://theaudiopower.org/WEB/Recordings";
 export const WEB_CHAPTER_AUDIO_REMOTE_OT = "https://theaudiopower.org/WEB2/Recordings";
 export const WEB_CHAPTER_AUDIO_SUBDIR = "web-en";
+export const BLM_ES_CHAPTER_AUDIO_REMOTE_BASE = "https://ebible.org/spablm/mp3";
+export const BLM_ES_CHAPTER_AUDIO_SUBDIR = "blm-es";
 
 const WEB_AUDIO_BOOK_NAME_OVERRIDES: Record<string, string> = {
   PSA: "Psalms",
@@ -155,7 +157,16 @@ export function translationUsesWebChapterAudio(translationId: string): boolean {
   const id = String(translationId || "")
     .trim()
     .toLowerCase();
-  return id === "web-en" || id === "bbe-en";
+  return id === "web-en" || id === "bbe-en" || id === "blm-es";
+}
+
+export function chapterAudioScopeForTranslation(translationId: string): string {
+  const id = String(translationId || "")
+    .trim()
+    .toLowerCase();
+  if (id === "web-en" || id === "bbe-en") return WEB_CHAPTER_AUDIO_SUBDIR;
+  if (id === "blm-es") return BLM_ES_CHAPTER_AUDIO_SUBDIR;
+  return WEB_CHAPTER_AUDIO_SUBDIR;
 }
 
 function webAudioBookNameEn(bookId: string): string {
@@ -170,13 +181,53 @@ function webRemoteBase(bookId: string): string {
     : WEB_CHAPTER_AUDIO_REMOTE_NT;
 }
 
-export function buildLocalWebChapterAudioUrl(bookId: string, chapter: number): string {
+export function buildLocalWebChapterAudioUrl(
+  bookId: string,
+  chapter: number,
+  translationId: string = "web-en",
+): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `/audio/${WEB_CHAPTER_AUDIO_SUBDIR}/${id}-${chapter}.mp3`;
+  const scope = chapterAudioScopeForTranslation(translationId);
+  return `/audio/${scope}/${id}-${chapter}.mp3`;
 }
 
-export function buildExternalWebChapterAudioUrl(bookId: string, chapter: number): string {
+const BLM_ES_CANONICAL_ALIAS: Record<string, string> = {
+  ECC: "ECL",
+  NAM: "NAH",
+  ZEC: "ZAC",
+  PHM: "FLM",
+};
+
+function blmEsAudioBookOrdinal(bookId: string): number | null {
+  const n = BOOK_NUMBER[bookId.toUpperCase()];
+  if (!n) return null;
+  // spablm 音频目录包含次经，NT 从 70 开始编号。
+  return n <= OLD_TESTAMENT_MAX ? n : n + 30;
+}
+
+function buildExternalBlmEsChapterAudioUrl(bookId: string, chapter: number): string {
+  const id = String(bookId || "").trim().toUpperCase();
+  const ordinal = blmEsAudioBookOrdinal(id);
+  if (!ordinal || !Number.isInteger(chapter) || chapter < 1) return "";
+  if (id === "PSA") return "";
+  const remoteBook = BLM_ES_CANONICAL_ALIAS[id] ?? id;
+  const ord = String(ordinal).padStart(2, "0");
+  const ch = String(chapter).padStart(2, "0");
+  return `${BLM_ES_CHAPTER_AUDIO_REMOTE_BASE}/spablm_${ord}_${remoteBook}_${ch}.mp3`;
+}
+
+export function buildExternalWebChapterAudioUrl(
+  bookId: string,
+  chapter: number,
+  translationId: string = "web-en",
+): string {
+  const tid = String(translationId || "")
+    .trim()
+    .toLowerCase();
+  if (tid === "blm-es") {
+    return buildExternalBlmEsChapterAudioUrl(bookId, chapter);
+  }
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
   const name = webAudioBookNameEn(id);
@@ -184,15 +235,21 @@ export function buildExternalWebChapterAudioUrl(bookId: string, chapter: number)
 }
 
 async function probeChapterAudioUrl(absolute: string): Promise<boolean> {
+  const isAudioContentType = (contentType: string | null): boolean =>
+    String(contentType || "")
+      .toLowerCase()
+      .includes("audio/");
+
   try {
     const head = await fetch(absolute, { method: "HEAD" });
-    if (head.ok) return true;
+    if (head.ok && isAudioContentType(head.headers.get("content-type"))) return true;
   } catch {
     /* ignore */
   }
   try {
     const ranged = await fetch(absolute, { headers: { Range: "bytes=0-1" } });
-    if (ranged.ok || ranged.status === 206) return true;
+    if (ranged.status === 206) return true;
+    if (ranged.ok && isAudioContentType(ranged.headers.get("content-type"))) return true;
   } catch {
     /* ignore */
   }
@@ -208,20 +265,21 @@ async function headOk(baseUrl: string, path: string): Promise<string | null> {
 
 export async function resolveWebChapterAudioPlayableSrc(args: {
   baseUrl: string;
+  translationId: string;
   bookId: string;
   chapter: number;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   const bundled = isMobileBundledOnly()
     ? resolveBundledChapterAudioUri({
-        translationId: "web-en",
+        translationId: args.translationId,
         bookId: args.bookId,
         chapter: args.chapter,
       })
     : null;
   if (bundled) return { ok: true, src: bundled };
-  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter);
+  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
 
-  const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter);
+  const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
   if (!local) return { ok: false };
 
   const localHit = await headOk(args.baseUrl, local);

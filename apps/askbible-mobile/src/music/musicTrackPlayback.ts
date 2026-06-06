@@ -36,6 +36,6 @@ function normalizeIosHttpUri(uri: string): string {
 export function musicTrackAvSource(track: MusicTrackPlayback | null): AVPlaybackSource | null {
   if (!track) return null;
   if (track.bundledModule != null) return track.bundledModule;
-  const uri = normalizeIosHttpUri(track.src.trim());
-  return uri ? { uri } : null;
+  const normalizedUri = normalizeIosHttpUri(track.src.trim());
+  return normalizedUri ? { uri: normalizedUri } : null;
 }

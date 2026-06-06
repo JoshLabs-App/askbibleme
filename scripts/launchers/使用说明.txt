@@ -55,7 +55,7 @@ AskBible.me Studio — 双击启动（仅 macOS）
   npm run mobile:build:ios:internal # EAS 云端打 iOS 内测包
 
 真机连本机 API 时：
-  复制 apps/askbible-mobile/.env.device.example → .env.local
+  复制 apps/askbible-mobile/env.device.example → .env.local
   把里面的 IP 改成 Mac 局域网 IP（终端: ipconfig getifaddr en0）
   iPhone / Android 与 Mac 同一 Wi‑Fi
 

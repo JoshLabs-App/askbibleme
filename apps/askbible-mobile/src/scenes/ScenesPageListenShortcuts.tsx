@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { t } from "../i18n/site-copy";
+import { t, tFormat } from "../i18n/site-copy";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { parchmentSans } from "../fonts/parchmentType";
 import { theme } from "../theme";
@@ -60,7 +60,7 @@ export function ScenesPageListenShortcuts() {
               pressed && styles.pressed,
             ]}
             accessibilityRole="button"
-            accessibilityLabel={t("scenesPage.openShortcutAria", { name: item.label })}
+            accessibilityLabel={tFormat("scenesPage.openShortcutAria", { name: item.label })}
           >
             <MaterialIcons name={item.icon} size={30} color={item.iconColor} />
             <Text style={styles.tileLabel} numberOfLines={1}>

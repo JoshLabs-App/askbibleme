@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { ReadChapterLastPositionSync } from "@/components/bible/ReadChapterLastPositionSync";
+import { ReadChapterTopActions } from "@/components/bible/ReadChapterTopActions";
 import { ReadChapterEndNav } from "@/components/bible/ReadChapterEndNav";
+import { ReadChapterPlanFlowSync } from "@/components/bible/ReadChapterPlanFlowSync";
+import { ReadChapterCompletionSection } from "@/components/bible/ReadChapterCompletionSection";
 import { ReadChapterTodayPlanBlock } from "@/components/bible/ReadChapterTodayPlanBlock";
-import { ReadChapterTripleLoopAdvance } from "@/components/bible/ReadChapterTripleLoopAdvance";
-import { ReadChapterNav } from "@/components/bible/ReadChapterNav";
-import { ReadChapterCatalogQuickPicker } from "@/components/bible/ReadChapterCatalogQuickPicker";
 import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadChapterXrefs } from "@/lib/bible/load-chapter-xrefs";
@@ -41,7 +43,7 @@ export default async function ReadChapterPage({ params }: Props) {
   if (!loaded) notFound();
 
   const data = loaded.primary;
-  const contrast = loaded.contrast;
+  const contrasts = loaded.contrasts;
 
   const { prev, next } = resolveReadChapterNeighbors(data.bookId, data.chapter);
 
@@ -79,20 +81,21 @@ export default async function ReadChapterPage({ params }: Props) {
 
   return (
     <ScriptureChrome parchmentColumnClassName="read-bible-parchment-column--read-chapter">
+      <ReadChapterTopActions />
+      <Suspense fallback={null}>
+        <ReadChapterPlanFlowSync />
+      </Suspense>
+      <ReadChapterLastPositionSync bookId={data.bookId} chapter={data.chapter} bookName={data.bookName} />
       <ReadChapterTelemetry bookId={data.bookId} chapter={data.chapter} />
       <article className="read-chapter-article">
         <div className="read-chapter-spread">
           <div className="read-chapter-open-book">
             <div className="read-chapter-spread-scripture read-chapter-open-book-page read-chapter-open-book-page--left">
               <header className="read-chapter-header">
-                <div className="read-chapter-header-top">
-                  <ReadChapterNav />
-                  <ReadChapterCatalogQuickPicker chapter={data.chapter} />
-                </div>
-                <h1 className="read-chapter-title font-semibold tracking-tight text-amber-950 dark:text-stone-50">
+                <h1 className="read-chapter-title">
                   {data.bookName}{" "}
-                  <span className="tabular-nums text-[0.88em] font-semibold text-amber-900/88 dark:text-stone-200">
-                    第 {data.chapter} 章
+                  <span className="read-chapter-title-chapter tabular-nums">
+                    第{data.chapter}章
                   </span>
                 </h1>
               </header>
@@ -104,9 +107,22 @@ export default async function ReadChapterPage({ params }: Props) {
                   chapter={data.chapter}
                   verses={data.verses}
                   segments={data.segments ?? null}
-                  contrastVerses={contrast?.verses ?? null}
+                  contrasts={contrasts.map((c) => ({
+                    translationId: c.translationId,
+                    verses: c.chapter.verses,
+                  }))}
                   chapterXrefs={chapterXrefs}
                 />
+              </div>
+              <div className="read-chapter-ending">
+                <ReadChapterEndNav
+                  bookId={data.bookId}
+                  bookName={data.bookName}
+                  chapter={data.chapter}
+                  prev={prev}
+                  next={next}
+                />
+                <ReadChapterCompletionSection bookId={data.bookId} chapter={data.chapter} />
               </div>
             </div>
             <div className="read-chapter-open-book-spine" aria-hidden="true" />
@@ -124,16 +140,8 @@ export default async function ReadChapterPage({ params }: Props) {
             </aside>
           </div>
         </div>
-        <div className="read-chapter-spread-after">
+        <div className="read-chapter-spread-after read-chapter-spread-after--web-extras">
           <ReadChapterTodayPlanBlock bookId={data.bookId} chapter={data.chapter} />
-          <ReadChapterTripleLoopAdvance bookId={data.bookId} chapter={data.chapter} />
-          <ReadChapterEndNav
-            bookId={data.bookId}
-            bookName={data.bookName}
-            chapter={data.chapter}
-            prev={prev}
-            next={next}
-          />
         </div>
       </article>
     </ScriptureChrome>

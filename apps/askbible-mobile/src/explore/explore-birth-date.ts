@@ -96,6 +96,6 @@ export function birthDateAgeYears(d: ExploreBirthDate, now: Date = new Date()): 
 }
 
 export function formatExploreBirthDateLabel(d: ExploreBirthDate, locale: string): string {
-  if (locale === "zh-CN") return `${d.year}年${d.month}月${d.day}日`;
+  if (!/^en\b/i.test(locale)) return `${d.year}年${d.month}月${d.day}日`;
   return `${d.month}/${d.day}/${d.year}`;
 }

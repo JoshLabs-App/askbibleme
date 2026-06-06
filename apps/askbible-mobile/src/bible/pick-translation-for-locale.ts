@@ -18,15 +18,27 @@ export function pickTranslationIdForLocale(
   index: BibleTranslationsIndex,
   locale: AppLocale,
 ): string | null {
+  if (locale === "zh-TW") {
+    return (
+      firstMatch(index, (id) => id === "cuv-trad") ??
+      firstMatch(index, (id, lang) => lang === "zh-hant" || id === "otb-zh-hant") ??
+      firstMatch(index, (id) => id === "otb-zh-hans") ??
+      firstMatch(index, (id, lang) => id === "cuv-simp" || lang === "zh-hans") ??
+      index.defaultTranslationId
+    );
+  }
   if (locale === "zh-CN") {
     return (
-      firstMatch(index, (id, lang) => id === "cuv-simp" || lang === "zh-hans") ??
+      firstMatch(index, (id) => id === "cuv-simp") ??
+      firstMatch(index, (id, lang) => lang === "zh-hans" || id === "otb-zh-hans") ??
+      firstMatch(index, (id) => id === "otb-zh-hant") ??
       firstMatch(index, (id, lang) => id === "cuv-trad" || lang === "zh-hant") ??
       index.defaultTranslationId
     );
   }
   return (
-    firstMatch(index, (id, lang) => id === "web-en" || lang === "en") ??
+    firstMatch(index, (id) => id === "kjv") ??
+    firstMatch(index, (id, lang) => lang === "en" || id === "otb-en-gb" || id === "web-en") ??
     firstMatch(index, (id, lang) => id === "bbe-en") ??
     firstMatch(index, (_id, lang) => lang.startsWith("en")) ??
     index.defaultTranslationId

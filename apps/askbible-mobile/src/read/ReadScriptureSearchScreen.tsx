@@ -172,6 +172,10 @@ export function ReadScriptureSearchScreen() {
       keyboardVerticalOffset={insets.top}
     >
       <ReadParchmentPageScroll keyboardShouldPersistTaps="handled">
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
+          <Text style={styles.backText}>{t("pages.read.catalogBack")}</Text>
+        </Pressable>
+
         <Text style={styles.title}>{t("pages.read.scriptureSearchTitle")}</Text>
         <Text style={styles.lead}>{t("pages.read.scriptureSearchLead")}</Text>
 
@@ -259,6 +263,12 @@ export function ReadScriptureSearchScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "transparent" },
+  back: { alignSelf: "flex-start", marginBottom: 8 },
+  backText: {
+    fontSize: 14,
+    ...parchmentSans(500),
+    color: c.muted,
+  },
   title: {
     fontSize: 22,
     ...parchmentSans(600),

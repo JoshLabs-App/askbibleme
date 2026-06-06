@@ -1,4 +1,5 @@
 import type { AppLocale } from "../i18n/config";
+import { toZhTwText } from "../i18n/site-copy";
 import type { CompanionNeedId } from "./onboarding-devotion-prefs";
 
 export type CompanionNeedOption = {
@@ -124,9 +125,25 @@ const solutionCardsEn: SolutionCard[] = [
 ];
 
 export function getCompanionNeedOptions(locale: AppLocale): CompanionNeedOption[] {
-  return locale === "en" ? companionNeedOptionsEn : companionNeedOptionsZh;
+  if (locale === "en") return companionNeedOptionsEn;
+  if (locale === "zh-TW") {
+    return companionNeedOptionsZh.map((item) => ({
+      ...item,
+      title: toZhTwText(item.title),
+      description: toZhTwText(item.description),
+    }));
+  }
+  return companionNeedOptionsZh;
 }
 
 export function getSolutionCards(locale: AppLocale): SolutionCard[] {
-  return locale === "en" ? solutionCardsEn : solutionCardsZh;
+  if (locale === "en") return solutionCardsEn;
+  if (locale === "zh-TW") {
+    return solutionCardsZh.map((item) => ({
+      ...item,
+      title: toZhTwText(item.title),
+      description: toZhTwText(item.description),
+    }));
+  }
+  return solutionCardsZh;
 }

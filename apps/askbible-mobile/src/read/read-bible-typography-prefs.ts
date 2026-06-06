@@ -16,6 +16,8 @@ export type ReadBibleSizeId =
 
 export type ReadBibleTypographyPrefsV1 = {
   size: ReadBibleSizeId;
+  verseParagraphFlow: boolean;
+  chapterSegmentMode: "default" | "t1";
 };
 
 /** 与网站 `read-bible-typography-prefs` rem×16 对齐 */
@@ -178,7 +180,11 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
 };
 
 /** 移动端默认比网站小一档，降低首读时视觉压力 */
-export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = { size: "m" };
+export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
+  size: "m",
+  verseParagraphFlow: true,
+  chapterSegmentMode: "default",
+};
 
 /** 平台默认：iOS / Android 统一中号（`m`） */
 export function defaultReadBibleTypographyPrefs(): ReadBibleTypographyPrefsV1 {
@@ -197,6 +203,9 @@ export const READ_BIBLE_SIZE_ORDER: ReadBibleSizeId[] = [
   "xxxxxxl",
   "xxxxxxxl",
 ];
+
+/** 一键大字预设：用于读经页设置里的「TT」快速按钮 */
+export const READ_BIBLE_SIZE_PRESET_LARGE: ReadBibleSizeId = "xl";
 
 export function readBibleTypographyPx(size: ReadBibleSizeId): ReadBibleTypographyPx {
   return PX[size] ?? PX.m;
@@ -220,11 +229,27 @@ export function parseReadBibleTypographyPrefs(raw: string | null): ReadBibleTypo
   const platformDefault = defaultReadBibleTypographyPrefs();
   if (!raw) return { ...platformDefault };
   try {
-    const j = JSON.parse(raw) as Partial<ReadBibleTypographyPrefsV1>;
+    const j = JSON.parse(raw) as {
+      size?: unknown;
+      verseParagraphFlow?: unknown;
+      chapterSegmentMode?: string;
+    };
     const size = READ_BIBLE_SIZE_ORDER.includes(j.size as ReadBibleSizeId)
       ? (j.size as ReadBibleSizeId)
       : platformDefault.size;
-    return { size };
+    return {
+      size,
+      verseParagraphFlow:
+        typeof j.verseParagraphFlow === "boolean"
+          ? j.verseParagraphFlow
+          : platformDefault.verseParagraphFlow,
+      chapterSegmentMode:
+        j.chapterSegmentMode === "t1"
+          ? "t1"
+          : j.chapterSegmentMode === "t2" || j.chapterSegmentMode === "story"
+            ? "t1"
+            : "default",
+    };
   } catch {
     return { ...platformDefault };
   }
@@ -243,5 +268,12 @@ export async function writeReadBibleTypographyPrefs(prefs: ReadBibleTypographyPr
   const size = READ_BIBLE_SIZE_ORDER.includes(prefs.size)
     ? prefs.size
     : defaultReadBibleTypographyPrefs().size;
-  await AsyncStorage.setItem(READ_BIBLE_TYPOGRAPHY_STORAGE_KEY, JSON.stringify({ size }));
+  await AsyncStorage.setItem(
+    READ_BIBLE_TYPOGRAPHY_STORAGE_KEY,
+    JSON.stringify({
+      size,
+      verseParagraphFlow: prefs.verseParagraphFlow === true,
+      chapterSegmentMode: prefs.chapterSegmentMode === "t1" ? "t1" : "default",
+    }),
+  );
 }

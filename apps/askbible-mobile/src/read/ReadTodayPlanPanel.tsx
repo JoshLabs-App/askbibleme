@@ -179,7 +179,11 @@ export function ReadTodayPlanFooter({ plan }: FooterProps) {
       <View style={styles.links}>
         <Pressable onPress={() => router.push("/read/plans")} hitSlop={8}>
           <Text style={styles.link} maxFontSizeMultiplier={1.1}>
-            {locale === "en" ? "Tap to view more plans" : "点击查看更多计划"}
+            {locale === "en"
+              ? "Tap to view more plans"
+              : locale === "zh-TW"
+                ? "點按查看更多計畫"
+                : "点击查看更多计划"}
           </Text>
         </Pressable>
       </View>

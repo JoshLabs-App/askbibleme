@@ -1,6 +1,10 @@
 import type { AppLocale } from "../../i18n/config";
 import { getAskBibleBaseUrl } from "../../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../../config/mobileBundledOnly";
+import { flowLocaleForHomeVerseTranslationId } from "../homePrayerVersePrefs";
+import { loadChapterFromBundledTranslation } from "../../bible/load-chapter";
+import { parseVerseKey } from "../../bible/parse-verse-key";
+import { getScriptureBookDisplayName } from "../../bible/scripture-book-display-name";
 import {
   HOME_VERSE_POOL_SCOPE_KEYS,
   homeVersePoolAllPriority,
@@ -8,13 +12,8 @@ import {
   type HomeVersePoolScopeId,
 } from "../../explore/explore-home-verse-pool-scopes";
 import { hydrateHomeVersePoolScope } from "../homeVersePoolScopePrefs";
-import { HOME_VERSE_POOL_CHUNKS, HOME_VERSE_POOL_SCOPE_ID } from "./chunk-registry.generated";
-import type {
-  HomePrayerChunkV1,
-  HomePrayerManifestV1,
-  HomeVerseEntry,
-  HomePrayerChunkVerseV1,
-} from "./types";
+import { HOME_VERSE_POOL_SCOPE_ID } from "./chunk-registry.generated";
+import type { HomePrayerManifestV1, HomeVerseEntry } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const bundledManifest = (() => {
@@ -25,8 +24,7 @@ const bundledManifest = (() => {
   }
 })();
 
-const chunkCache = new Map<number, HomePrayerChunkV1>();
-const bodyCache = new Map<string, HomePrayerChunkVerseV1>();
+const chapterCache = new Map<string, Promise<Awaited<ReturnType<typeof loadChapterFromBundledTranslation>>>>();
 
 export function getBundledHomeVerseManifest(): HomePrayerManifestV1 | null {
   if (!bundledManifest || bundledManifest.version !== 1) return null;
@@ -65,7 +63,8 @@ function filterManifestToScope(
             .map((row) => row.entry)
       : filteredEntriesRaw;
   if (filteredEntries.length === 0) return manifest;
-  const nextBootstrapRaw = manifest.bootstrapVerseKeys.filter((k) => scopeVerseKeys.has(k));
+  const bootstrapVerseKeys = manifest.bootstrapVerseKeys ?? [];
+  const nextBootstrapRaw = bootstrapVerseKeys.filter((k) => scopeVerseKeys.has(k));
   const nextBootstrap =
     scopeId === "all"
       ? [...nextBootstrapRaw].sort((a, b) => homeVersePoolAllPriority(a) - homeVersePoolAllPriority(b))
@@ -90,62 +89,40 @@ export async function loadHomeVerseManifest(): Promise<HomePrayerManifestV1 | nu
   return merged ? filterManifestToScope(merged, selectedScopeVerseKeys, selectedScopeId) : merged;
 }
 
-function verseKeyToChunkIndex(manifest: HomePrayerManifestV1, verseKey: string): number | null {
-  const row = manifest.entries.find((e) => e.verseKey === verseKey);
-  return row ? row.chunkIndex : null;
-}
-
-async function loadChunk(chunkIndex: number): Promise<HomePrayerChunkV1 | null> {
-  if (chunkCache.has(chunkIndex)) return chunkCache.get(chunkIndex)!;
-
-  const bundled = HOME_VERSE_POOL_CHUNKS[chunkIndex];
-  if (bundled?.version === 1) {
-    chunkCache.set(chunkIndex, bundled);
-    return bundled;
-  }
-
-  if (isMobileBundledOnly()) return null;
-
-  try {
-    const base = getAskBibleBaseUrl();
-    const res = await fetch(
-      `${base}/data/home-prayer-pools/${HOME_VERSE_POOL_SCOPE_ID}/chunk-${chunkIndex}.json`,
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as HomePrayerChunkV1;
-    if (data?.version !== 1) return null;
-    chunkCache.set(chunkIndex, data);
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-async function ensureVerseBody(verseKey: string, manifest: HomePrayerManifestV1): Promise<HomePrayerChunkVerseV1 | null> {
-  const cached = bodyCache.get(verseKey);
+async function loadChapterCached(bookId: string, chapter: number, translationId: string) {
+  const key = `${translationId}:${bookId}:${chapter}`;
+  const cached = chapterCache.get(key);
   if (cached) return cached;
-
-  const ci = verseKeyToChunkIndex(manifest, verseKey);
-  if (ci == null) return null;
-  const chunk = await loadChunk(ci);
-  if (!chunk) return null;
-  for (const v of chunk.verses) {
-    bodyCache.set(v.verseKey, v);
-  }
-  return bodyCache.get(verseKey) ?? null;
+  const task = loadChapterFromBundledTranslation(bookId, chapter, translationId);
+  chapterCache.set(key, task);
+  return task;
 }
 
-function entryForTranslationId(row: HomePrayerChunkVerseV1, translationId: string): HomeVerseEntry | null {
+function defaultPrimaryTranslationId(locale: AppLocale): string {
+  if (locale === "en") return "kjv";
+  if (locale === "zh-TW") return "cuv-trad";
+  return "cuv-simp";
+}
+
+async function resolveVerseEntryByTranslation(
+  verseKey: string,
+  translationId: string,
+): Promise<HomeVerseEntry | null> {
+  const parsed = parseVerseKey(verseKey);
+  if (!parsed) return null;
   const tid = translationId.trim();
   if (!tid) return null;
-  const byTid = row.byTranslationId?.[tid];
-  if (byTid?.lines?.length) return byTid;
-  return null;
-}
-
-function entryForLocale(row: HomePrayerChunkVerseV1, locale: AppLocale): HomeVerseEntry | null {
-  const tid = locale === "zh-CN" ? "cuv-simp" : "web-en";
-  return entryForTranslationId(row, tid) ?? (row.locales[locale]?.lines?.length ? row.locales[locale] : null);
+  const chapter = await loadChapterCached(parsed.bookId, parsed.chapter, tid);
+  if (!chapter) return null;
+  const verseText = chapter.verses.find((v) => v.verse === parsed.verse)?.text?.trim();
+  if (!verseText) return null;
+  const flow = flowLocaleForHomeVerseTranslationId(tid);
+  const refLocale: AppLocale = flow === "en" ? "en" : flow === "zh-TW" ? "zh-TW" : "zh-CN";
+  const bookName = getScriptureBookDisplayName(parsed.bookId, refLocale);
+  return {
+    lines: [verseText],
+    ref: `${bookName} ${parsed.chapter}:${parsed.verse}`,
+  };
 }
 
 export type ResolvedHomeVersePair = {
@@ -169,29 +146,25 @@ function isLikelyIncompleteCjkSingleLine(entry: HomeVerseEntry): boolean {
 }
 
 export async function resolveHomeVersePair(
-  manifest: HomePrayerManifestV1,
+  _manifest: HomePrayerManifestV1,
   verseKey: string,
   locale: AppLocale,
   primaryTranslationId: string,
   contrastTranslationId: string,
 ): Promise<ResolvedHomeVersePair | null> {
-  const row = await ensureVerseBody(verseKey, manifest);
-  if (!row) return null;
-
-  const primaryTid =
-    primaryTranslationId.trim() || (locale === "zh-CN" ? "cuv-simp" : "web-en");
+  const explicitPrimaryTid = primaryTranslationId.trim();
+  const primaryTid = explicitPrimaryTid || defaultPrimaryTranslationId(locale);
   const contrastTid = contrastTranslationId.trim();
 
-  const primary =
-    entryForTranslationId(row, primaryTid) ?? entryForLocale(row, locale);
+  const primary = await resolveVerseEntryByTranslation(verseKey, primaryTid);
   if (!primary?.lines?.length) return null;
   if (isLikelyIncompleteCjkSingleLine(primary)) return null;
 
-  const contrastRaw =
-    contrastTid && contrastTid !== primaryTid
-      ? entryForTranslationId(row, contrastTid)
-      : null;
-  const contrast = contrastRaw?.lines?.length ? contrastRaw : null;
+  if (!contrastTid || contrastTid === primaryTid) {
+    return { primary, contrast: null };
+  }
+  const contrast = await resolveVerseEntryByTranslation(verseKey, contrastTid);
+  if (!contrast?.lines?.length) return null;
   return { primary, contrast };
 }
 

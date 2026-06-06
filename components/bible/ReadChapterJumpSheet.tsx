@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useReadChapterHref } from "@/hooks/useReadChapterHref";
 import {
   scriptureBooks,
   testamentForBookNumber,
@@ -31,10 +32,6 @@ type Props = {
   focusSection?: FocusSection;
 };
 
-function readerChapterHref(bookId: string, chapter: number): string {
-  return `/read/${encodeURIComponent(bookId)}/${chapter}`;
-}
-
 export function ReadChapterJumpSheet({
   open,
   onClose,
@@ -43,6 +40,7 @@ export function ReadChapterJumpSheet({
   focusSection = "chapter",
 }: Props) {
   const { t } = useLocale();
+  const chapterHref = useReadChapterHref();
   const [visible, setVisible] = useState(false);
   const [entered, setEntered] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
@@ -195,7 +193,7 @@ export function ReadChapterJumpSheet({
               return (
                 <Link
                   key={ch}
-                  href={readerChapterHref(draftBookId, ch)}
+                  href={chapterHref(draftBookId, ch)}
                   className={`read-chapter-jump-chapter${isCurrent ? " read-chapter-jump-chapter--current" : ""}`}
                   aria-label={t("pages.read.chapterJumpChapterN", { chapter: String(ch) })}
                   aria-current={isCurrent ? "page" : undefined}

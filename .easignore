@@ -1,7 +1,11 @@
 # Root-level EAS archive excludes (monorepo)
 
 # VCS / cache
+.git
 .git/
+.git/**
+**/.git/
+**/.git/**
 .cursor/
 node_modules/
 **/node_modules/
@@ -78,19 +82,28 @@ scripts/sync-tv-content.mjs
 
 # Mobile app build artifacts / local deps
 apps/askbible-mobile/node_modules/
+apps/askbible-mobile/node_modules/**
 apps/askbible-mobile/.expo/
+apps/askbible-mobile/.expo/**
 apps/askbible-mobile/dist/
+apps/askbible-mobile/dist/**
 apps/askbible-mobile/web-build/
+apps/askbible-mobile/web-build/**
 apps/askbible-mobile/android/.gradle/
+apps/askbible-mobile/android/.gradle/**
 apps/askbible-mobile/android/build/
+apps/askbible-mobile/android/build/**
 apps/askbible-mobile/android/app/build/
+apps/askbible-mobile/android/app/build/**
 apps/askbible-mobile/android/app/.cxx/
+apps/askbible-mobile/android/app/.cxx/**
 apps/askbible-mobile/ios/build/
+apps/askbible-mobile/ios/build/**
 apps/askbible-mobile/ios/Pods/
+apps/askbible-mobile/ios/Pods/**
 apps/askbible-mobile/**/build/
 apps/askbible-mobile/**/.gradle/
 apps/askbible-mobile/**/.cxx/
-
 # Logs / local env
 *.log
 apps/askbible-mobile/.env

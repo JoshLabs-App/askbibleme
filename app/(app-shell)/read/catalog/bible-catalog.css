@@ -735,3 +735,288 @@ button.bible-catalog-read-book--tap {
   text-align: inherit;
   cursor: pointer;
 }
+
+/* /read 首页目录：旧约/新约分页 + 卷摘要（对齐 iOS homeMode） */
+.bc-home-testament-frame {
+  padding: 0.25rem 0.375rem 0.375rem;
+  border: 1px solid color-mix(in srgb, rgb(210 149 26) 36%, transparent);
+  background: color-mix(in srgb, rgb(210 149 26) 5%, transparent);
+}
+
+.bc-home-testament-pager {
+  display: flex;
+  width: 100%;
+}
+
+.bc-home-testament-tab {
+  flex: 1;
+  min-height: 2.625rem;
+  padding: 0.4375rem 0.5rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.bc-home-testament-tab--old {
+  color: #38486c;
+}
+
+.bc-home-testament-tab--new {
+  color: #d97707;
+}
+
+.bc-home-testament-tab--active {
+  background: rgba(210, 149, 26, 0.12);
+}
+
+.bc-home-testament-tab--old.bc-home-testament-tab--active {
+  border-bottom-color: #38486c;
+}
+
+.bc-home-testament-tab--new.bc-home-testament-tab--active {
+  border-bottom-color: #d97707;
+}
+
+.bc-home-testament-intro {
+  margin: 0.5rem 0 0.125rem;
+  padding: 0 0.25rem 0 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  text-align: left;
+  color: var(--bc-read-weak);
+}
+
+/* /read 首页目录：iOS BibleCatalogOutline homeMode 行布局 */
+.bible-catalog-read-outline--home .bible-catalog-read-testament-body {
+  max-width: 100%;
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-testament-body::before {
+  display: none;
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-testament--new {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.bc-home-section-block {
+  margin: 0 0 0.125rem;
+  padding: 0.125rem 0.125rem 0.25rem;
+  border-radius: 0;
+}
+
+.bc-home-section-block--plain {
+  background: transparent !important;
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-gospels"] {
+  --bc-section-accent: #d97707;
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-gospels"]:not(.bc-home-section-block--plain) {
+  background: rgba(217, 119, 7, 0.12);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-torah"] {
+  --bc-section-accent: #38486c;
+  background: transparent;
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-history"] {
+  --bc-section-accent: #b45309;
+  background: rgba(180, 83, 9, 0.08);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-wisdom"] {
+  --bc-section-accent: #6b7c3f;
+  background: rgba(101, 163, 13, 0.07);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-major-prophets"] {
+  --bc-section-accent: #9f1239;
+  background: rgba(153, 27, 27, 0.07);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-minor-prophets"] {
+  --bc-section-accent: #4a6a8a;
+  background: rgba(71, 85, 105, 0.08);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-church-history"] {
+  --bc-section-accent: #0f766e;
+  background: rgba(13, 148, 136, 0.07);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-pauline"] {
+  --bc-section-accent: #6d28d9;
+  background: rgba(124, 58, 237, 0.07);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-general-epistles"] {
+  --bc-section-accent: #047857;
+  background: rgba(5, 150, 105, 0.07);
+}
+
+.bible-catalog-read-outline--home .bible-catalog-read-block[data-section-id="canon-apocalyptic"] {
+  --bc-section-accent: #991b1b;
+  background: rgba(127, 29, 29, 0.08);
+}
+
+.bc-home-section-title {
+  margin: 0 0 0.125rem 0.125rem;
+  padding: 0 0 0 0.5rem;
+  border-left: 4px solid var(--bc-section-accent, var(--bc-read-weak));
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  color: var(--bc-section-accent, var(--bc-read-weak));
+}
+
+.bc-home-books {
+  margin: 0;
+  padding: 0;
+}
+
+.bc-home-book-row {
+  appearance: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  margin: 0 0 0.0625rem;
+  padding: 0.0625rem 0.125rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bc-home-book-row:hover {
+  background: rgba(118, 95, 62, 0.07);
+}
+
+.bc-home-book-row--active,
+.bc-home-book-row:active {
+  background: rgba(118, 95, 62, 0.08);
+}
+
+.bc-home-book-badge {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.125;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--bc-section-accent, var(--bc-read-faint));
+}
+
+.bc-home-book-main {
+  flex: 1;
+  min-width: 0;
+  padding-right: 0.25rem;
+}
+
+.bc-home-book-name {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--bc-read-book);
+}
+
+.bc-home-book-summary {
+  display: -webkit-box;
+  margin-top: 0;
+  padding-left: 0.0625rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--bc-read-weak);
+  opacity: 0.88;
+}
+
+.bc-home-book-progress-track {
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin-top: 0.25rem;
+  padding-right: 0.25rem;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(118, 95, 62, 0.24);
+  box-sizing: border-box;
+}
+
+.bc-home-book-progress-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: 2px;
+  background: #65775c;
+}
+
+.bc-home-book-row:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--bc-read-book) 25%, transparent);
+  outline-offset: 1px;
+}
+
+.bc-home-book-progress-fill[style*="width: 0"],
+.bc-home-book-progress-fill[style*="width:0"] {
+  width: 0 !important;
+}
+
+.bc-home-book-meta {
+  flex-shrink: 0;
+  width: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bc-home-book-progress-text {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.125;
+  font-variant-numeric: tabular-nums;
+  color: var(--bc-read-weak);
+  opacity: 0.92;
+}
+
+.bc-home-book-chevron {
+  flex-shrink: 0;
+  width: 1.25rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 400;
+  color: var(--bc-read-faint);
+  opacity: 0.58;
+  text-align: center;
+}
+
+.dark .bc-home-book-progress-track {
+  background: rgba(244, 235, 225, 0.14);
+}
+
+.dark .bc-home-book-row:hover,
+.dark .bc-home-book-row--active {
+  background: rgba(244, 235, 225, 0.08);
+}

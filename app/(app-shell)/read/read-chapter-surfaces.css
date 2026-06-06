@@ -66,6 +66,13 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  --read-parchment-column-max: 28rem;
+  --read-parchment-pad-top: calc(
+    3rem + var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px))
+  );
+  --read-parchment-pad-x: max(1.25rem, calc(env(safe-area-inset-left, 0px) + 0.25rem));
+  --read-parchment-pad-x-end: max(1.25rem, calc(env(safe-area-inset-right, 0px) + 0.25rem));
+  max-width: min(var(--read-parchment-column-max), 100%);
 }
 
 /* 版心列：字族见 `.read-bible-typography`（与本列同元素叠加） */
@@ -90,22 +97,149 @@
   }
 }
 
-/* 读经章：底栏主导航上方的快捷操作行 */
+/* 读经章：底栏主导航（iOS 已移除底栏上方快捷操作行） */
 .read-chapter-action-chrome {
-  display: flex;
-  width: 100%;
-  max-width: min(100%, var(--read-parchment-column-max, 28rem));
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.1rem;
-  margin-bottom: 0.2rem;
-  padding-left: max(1.375rem, env(safe-area-inset-left, 0px));
-  padding-right: max(1.375rem, env(safe-area-inset-right, 0px));
-  box-sizing: border-box;
+  display: none;
 }
 
 .read-bible-parchment-scroll:has(.read-chapter-header) {
-  padding-bottom: calc(7.75rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.read-bible-parchment-column--read-chapter {
+  position: relative;
+  --read-parchment-pad-top: calc(
+    4.5rem + var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px))
+  );
+}
+
+.read-chapter-top-action {
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.12));
+}
+
+.read-chapter-header {
+  position: relative;
+  width: 100%;
+  padding: 0.25rem 0 1.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, rgb(120 75 30) 22%, transparent);
+  text-align: center;
+}
+
+.read-chapter-title {
+  margin: 0 auto;
+  max-width: 100%;
+  font-size: var(--read-bible-chapter-title-font-size, clamp(1.375rem, 4.8vw, 1.6rem));
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+  color: #1c1410;
+}
+
+.read-chapter-title-chapter {
+  font-weight: 600;
+}
+
+.read-chapter-ending {
+  width: 100%;
+}
+
+.read-chapter-end-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 5rem;
+  margin-bottom: 3.125rem;
+  padding-top: 0;
+}
+
+.read-chapter-end-nav-side {
+  flex: 1;
+  min-width: 0;
+}
+
+.read-chapter-end-nav-side--next {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.read-chapter-end-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: color-mix(in srgb, rgb(92 64 48) 78%, transparent);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.read-chapter-end-nav-link:hover {
+  color: #1c1410;
+}
+
+.read-chapter-end-nav-link--next {
+  justify-content: flex-end;
+}
+
+.read-chapter-end-nav-center {
+  flex-shrink: 0;
+  max-width: 7.5rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  color: #1c1410;
+  cursor: pointer;
+}
+
+.read-chapter-ending-divider {
+  width: 100%;
+  height: 1.75rem;
+  margin-bottom: 0.875rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(78, 52, 30, 0.22) 0%,
+    rgba(78, 52, 30, 0.14) 28%,
+    rgba(78, 52, 30, 0.07) 58%,
+    rgba(78, 52, 30, 0.03) 82%,
+    rgba(78, 52, 30, 0) 100%
+  );
+}
+
+.read-chapter-spread-after--web-extras {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .read-chapter-spread-after--web-extras {
+    display: block;
+  }
+
+  .read-chapter-end-nav {
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+  }
+}
+
+.dark .read-chapter-title,
+.dark .read-chapter-end-nav-center {
+  color: rgb(250 250 249);
+}
+
+.dark .read-chapter-end-nav-link {
+  color: color-mix(in srgb, rgb(214 198 180) 82%, transparent);
+}
+
+.dark .read-chapter-header {
+  border-bottom-color: color-mix(in srgb, rgb(244 235 225) 18%, transparent);
 }
 
 .read-scripture-search {
@@ -315,16 +449,8 @@
   color: color-mix(in srgb, rgb(244 235 225) 88%, transparent);
 }
 
-.read-chapter-header {
-  position: relative;
-  text-align: center;
-}
-
 .read-chapter-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  display: none;
 }
 
 .read-chapter-catalog-trigger {
@@ -508,45 +634,101 @@
   background: color-mix(in srgb, #292524 62%, #1e3a5f 38%);
 }
 
-.read-chapter-title {
-  margin: 50px auto;
-  max-width: 100%;
-  font-size: var(--read-bible-chapter-title-font-size, 1.6rem);
-  line-height: 1.3;
-  text-align: center;
-  text-wrap: balance;
-}
-
-/* /read 首页：标题区上下留白 */
-.read-bible-home-hero {
-  padding-top: 0.35rem;
-  padding-bottom: 0.15rem;
-}
-
-/* 经文直接铺在羊皮底上，不与目录叠层 */
-.read-bible-read-home-verse {
+/* /read 首页：对齐 iOS ReadCatalogScreen */
+.read-bible-home-root {
   position: relative;
+  color: #1c1410;
 }
 
-/* 目录随首页整列滚动，不再单独限高滚动 */
+.read-bible-home-top-action {
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.12));
+}
+
+.read-bible-home-hero {
+  padding-top: 0.125rem;
+  padding-bottom: 0;
+}
+
+.read-bible-home-title-zh {
+  font-size: clamp(1.875rem, 6.2vw, 2.4375rem);
+  line-height: 1.1;
+  font-weight: 600;
+  color: #1c1410;
+}
+
+.read-bible-home-top-stack {
+  width: 100%;
+}
+
+.read-bible-today-readings {
+  margin-top: 0.375rem;
+  padding-top: 0.125rem;
+}
+
+.read-bible-today-stats {
+  margin-top: 0.625rem;
+  margin-bottom: 0.5rem;
+}
+
+.read-bible-today-stat-value {
+  font-size: clamp(2rem, 9.5vw, 2.375rem);
+  line-height: 1.15;
+}
+
+.read-bible-year-timeline-track {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(120, 53, 15, 0.28) 16%,
+    rgba(120, 53, 15, 0.28) 84%,
+    transparent 100%
+  );
+}
+
+.read-bible-today-reading-bar {
+  background: rgba(120, 53, 15, 0.12);
+}
+
+.read-bible-read-home-catalog {
+  border-top: none;
+  padding-top: 0.25rem;
+  margin-top: 0.5rem;
+}
+
 .read-bible-read-home-catalog-scroll {
   padding-bottom: 0.25rem;
 }
 
-.read-bible-home-title-he {
-  font-size: var(--read-bible-home-title-he, clamp(2.75rem, 11vmin, 4.35rem));
+.read-bible-today-plan-footer--home {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
 }
 
-.read-bible-home-title-zh {
-  font-size: var(--read-bible-home-title-zh, clamp(1.875rem, 6.5vmin, 3.125rem));
+.read-bible-read-home-verse {
+  position: relative;
 }
 
-.read-bible-home-title-en {
-  font-size: var(--read-bible-home-title-en, clamp(0.8125rem, 2.35vmin, 1.0625rem));
+.dark .read-bible-home-title-zh,
+.dark .read-bible-home-root {
+  color: #f4ebe1;
+}
+
+.dark .read-bible-year-timeline-track {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(244, 235, 225, 0.22) 16%,
+    rgba(244, 235, 225, 0.22) 84%,
+    transparent 100%
+  );
+}
+
+.dark .read-bible-today-reading-bar {
+  background: rgba(244, 235, 225, 0.14);
 }
 
 .read-chapter-article {
-  margin-top: 1.85rem;
+  margin-top: 0;
   color: inherit;
   text-align: start;
 }
@@ -578,20 +760,77 @@
   min-width: 0;
 }
 
+@media (max-width: 767px) {
+  .read-bible-parchment-column--read-chapter {
+    --read-parchment-column-max: none;
+    max-width: none;
+  }
+
+  .read-chapter-header {
+    padding: 0.25rem 0 1.15rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .read-chapter-title {
+    font-size: clamp(1.3rem, 6vw, 1.5rem);
+  }
+
+  .read-chapter-post-reading-editions {
+    --post-reading-board-width: 100%;
+    position: static;
+    left: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 1.5rem;
+    margin-inline: 0;
+    transform: none;
+    text-align: start;
+  }
+
+  .read-chapter-post-reading-editions-board-wrap,
+  .read-chapter-post-reading-editions-book,
+  .read-chapter-post-reading-editions-board {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .read-chapter-post-reading-editions-spread-parts {
+    gap: 0.85rem;
+  }
+
+  .read-chapter-end-nav {
+    margin-top: 3.25rem;
+    margin-bottom: 2rem;
+  }
+}
+
 @media (min-width: 1024px) {
+  .read-bible-parchment-scroll:has(.read-chapter-header) {
+    --read-parchment-edge-fade-top: 0px;
+    --read-parchment-edge-fade-bottom: 0px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
   .read-bible-parchment-column--read-chapter {
     --read-parchment-column-max: min(96rem, 96vw);
     max-width: min(96rem, 96vw);
+  }
+
+  .read-chapter-header {
+    padding: 70px 0 50px;
+    margin-bottom: 0.75rem;
   }
 
   /* 摊开的书：左页经文、中缝书脊、右页讲解 */
   .read-chapter-open-book {
     --read-open-book-radius: clamp(0.65rem, 1.25vw, 1rem);
     --read-open-book-page-pad-left: clamp(3rem, 5.5vw, 4.25rem);
+    --read-open-book-spine-x: 33.3333%;
     /* 书页纸色：略暖但不偏黄，与背后羊皮底区分开 */
     --read-open-book-page-bg: color-mix(in srgb, var(--read-parchment-bg-canvas, #ecd9b9) 14%, rgb(253 251 247));
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
     position: relative;
     align-items: stretch;
     margin-top: 0.35rem;
@@ -602,7 +841,6 @@
       0 18px 48px -12px color-mix(in srgb, rgb(28 20 16) 22%, transparent),
       0 4px 14px color-mix(in srgb, rgb(28 20 16) 10%, transparent);
     overflow: visible;
-    isolation: isolate;
   }
 
   .dark .read-chapter-open-book {
@@ -618,15 +856,38 @@
   .read-chapter-open-book-spine {
     display: block;
     position: absolute;
-    left: 50%;
+    left: var(--read-open-book-spine-x);
     top: 0;
     bottom: 0;
     z-index: 2;
-    width: 1px;
+    width: min(0.95rem, 4%);
     transform: translateX(-50%);
     pointer-events: none;
-    background: transparent;
-    box-shadow: none;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(28, 20, 16, 0.02) 18%,
+      rgba(28, 20, 16, 0.16) 50%,
+      rgba(28, 20, 16, 0.02) 82%,
+      transparent 100%
+    );
+    box-shadow:
+      -10px 0 16px -14px rgba(28, 20, 16, 0.2),
+      10px 0 16px -14px rgba(28, 20, 16, 0.16);
+  }
+
+  .dark .read-chapter-open-book-spine {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.04) 18%,
+      rgba(0, 0, 0, 0.24) 50%,
+      rgba(0, 0, 0, 0.04) 82%,
+      transparent 100%
+    );
+    box-shadow:
+      -10px 0 16px -14px rgba(0, 0, 0, 0.24),
+      10px 0 16px -14px rgba(0, 0, 0, 0.2);
   }
 
   .read-chapter-open-book-page--left {
@@ -636,7 +897,15 @@
     padding: clamp(1.1rem, 2.2vw, 1.55rem) clamp(2.7rem, 5.6vw, 4rem) clamp(1.15rem, 2.2vw, 1.6rem)
       var(--read-open-book-page-pad-left);
     border-radius: var(--read-open-book-radius) 0 0 var(--read-open-book-radius);
-    box-shadow: inset -16px 0 28px -20px color-mix(in srgb, rgb(28 20 16) 9%, transparent);
+    background-color: #f4efe6;
+    background-image: image-set(
+      url("/read/parchment-scroll-bg.webp") type("image/webp"),
+      url("/read/parchment-scroll-bg.jpg") type("image/jpeg")
+    );
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% 100%;
+    box-shadow: inset -10px 0 16px -18px color-mix(in srgb, rgb(28 20 16) 7%, transparent);
   }
 
   .read-chapter-open-book-page--left::after {
@@ -655,7 +924,14 @@
   }
 
   .dark .read-chapter-open-book-page--left {
-    box-shadow: inset -16px 0 28px -20px color-mix(in srgb, rgb(0 0 0) 14%, transparent);
+    background-color: #221c17;
+    background-image: linear-gradient(180deg, rgba(26, 20, 16, 0.44), rgba(14, 11, 9, 0.78)),
+      image-set(
+        url("/read/parchment-scroll-bg.webp") type("image/webp"),
+        url("/read/parchment-scroll-bg.jpg") type("image/jpeg")
+      );
+    background-blend-mode: multiply, normal;
+    box-shadow: inset -10px 0 16px -18px color-mix(in srgb, rgb(0 0 0) 10%, transparent);
   }
 
   .dark .read-chapter-open-book-page--left::after {
@@ -673,7 +949,7 @@
     padding: clamp(2.2rem, 4.4vw, 3.1rem) clamp(1rem, 2vw, 1.45rem) clamp(1.15rem, 2.2vw, 1.6rem)
       var(--read-open-book-page-pad-left);
     border-radius: 0 var(--read-open-book-radius) var(--read-open-book-radius) 0;
-    box-shadow: inset 16px 0 28px -20px color-mix(in srgb, rgb(28 20 16) 9%, transparent);
+    box-shadow: inset 10px 0 16px -18px color-mix(in srgb, rgb(28 20 16) 7%, transparent);
   }
 
   .read-chapter-open-book-page--right::after {
@@ -692,7 +968,7 @@
   }
 
   .dark .read-chapter-open-book-page--right {
-    box-shadow: inset 16px 0 28px -20px color-mix(in srgb, rgb(0 0 0) 14%, transparent);
+    box-shadow: inset 10px 0 16px -18px color-mix(in srgb, rgb(0 0 0) 10%, transparent);
   }
 
   .dark .read-chapter-open-book-page--right::after {
@@ -759,6 +1035,55 @@
 
 .read-chapter-paragraph-break {
   height: 0.8rem;
+}
+
+.read-chapter-paragraph-break--rule {
+  display: flex;
+  align-items: center;
+  height: 1.1rem;
+}
+
+.read-chapter-paragraph-break--rule::before {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  margin-left: 0.15rem;
+  background: color-mix(in srgb, rgb(92 58 28) 28%, transparent);
+}
+
+.dark .read-chapter-paragraph-break--rule::before {
+  background: color-mix(in srgb, rgb(234 219 196) 28%, transparent);
+}
+
+.read-chapter-verse-paragraph-flow {
+  margin: 0 0 0.65rem;
+  font-size: var(--read-bible-verse-font-size, 1.1875rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.012em;
+  text-wrap: pretty;
+}
+
+.read-chapter-verse-inline-chunk {
+  white-space: normal;
+}
+
+.read-chapter-verse-inline-num {
+  margin-right: 0.2em;
+  font-size: 0.72em;
+  font-weight: 650;
+  vertical-align: baseline;
+  color: color-mix(in srgb, rgb(92 58 28) 72%, transparent);
+}
+
+.read-chapter-verse-inline-chunk--search-focus .read-chapter-verse-inline-num,
+.read-chapter-verse-inline-chunk--audio-active .read-chapter-verse-inline-num {
+  color: color-mix(in srgb, rgb(92 58 28) 92%, transparent);
+}
+
+.dark .read-chapter-verse-inline-num {
+  color: color-mix(in srgb, rgb(234 219 196) 72%, transparent);
 }
 
 .read-chapter-segment-heading {
@@ -914,6 +1239,47 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
+  }
+
+  .read-chapter-post-reading-editions-spread-parts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.1rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .read-chapter-post-reading-editions-spread-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .read-chapter-post-reading-editions-spread-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .read-chapter-post-reading-editions-spread-section-label {
+    margin: 0;
+    font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", ui-serif, Georgia, serif;
+    font-size: 0.96rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, rgb(28 22 16) 88%, transparent);
+  }
+
+  .dark .read-chapter-post-reading-editions-spread-section {
+    background: transparent;
+  }
+
+  .dark .read-chapter-post-reading-editions-spread-section-label {
+    color: color-mix(in srgb, rgb(245 235 220) 92%, transparent);
   }
 
   .read-chapter-post-reading-editions--spread .read-chapter-post-reading-editions-panels .read-chapter-info-edition-invite,
@@ -1878,6 +2244,252 @@
   );
 }
 
+.read-chapter-verses-root--highlight-mode {
+  padding-bottom: 5.5rem;
+}
+
+.read-chapter-verse--highlight-mode {
+  user-select: none;
+}
+
+.read-chapter-verse-text-highlight {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  border-radius: 2px;
+  padding: 0 0.04em;
+}
+
+.read-chapter-verse-text-unit {
+  display: inline;
+  margin: 0;
+  padding: 0 0.02em;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-bottom: 1px dashed color-mix(in srgb, rgb(92 58 18) 28%, transparent);
+  border-radius: 2px;
+}
+
+.read-chapter-verse-text-unit--selected {
+  border-bottom-color: transparent;
+}
+
+.read-chapter-verse--selected,
+.read-chapter-verse-inline-chunk--selected {
+  background: color-mix(in srgb, rgb(120 72 24) 10%, transparent);
+  border-radius: 0.35rem;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.read-chapter-verse-num--selected {
+  color: color-mix(in srgb, rgb(120 72 24) 88%, currentColor);
+}
+
+.read-chapter-highlight-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  display: flex;
+  width: min(22rem, calc(100vw - 1.5rem));
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, rgb(92 58 18) 16%, transparent);
+  background: color-mix(in srgb, rgb(255 252 245) 94%, transparent);
+  box-shadow: 0 8px 28px color-mix(in srgb, rgb(28 20 16) 14%, transparent);
+}
+
+.dark .read-chapter-highlight-bar {
+  border-color: color-mix(in srgb, rgb(245 230 210) 14%, transparent);
+  background: color-mix(in srgb, rgb(28 24 20) 92%, transparent);
+}
+
+.read-chapter-highlight-bar-title {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(92 58 18);
+}
+
+.dark .read-chapter-highlight-bar-title {
+  color: rgb(245 230 210);
+}
+
+.read-chapter-highlight-colors {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.read-chapter-highlight-color-chip {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.read-chapter-highlight-color-chip--active {
+  border-color: color-mix(in srgb, rgb(28 20 16) 72%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, rgb(255 252 245) 90%, transparent);
+}
+
+.read-chapter-highlight-done {
+  flex-shrink: 0;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgb(92 58 18);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(255 252 245);
+  cursor: pointer;
+}
+
+.read-chapter-verse-action-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+.read-chapter-verse-action-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, rgb(28 20 16) 38%, transparent);
+  cursor: pointer;
+}
+
+.read-chapter-verse-action-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(22rem, 100%);
+  padding: 0.85rem 0.75rem 0.65rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, rgb(92 58 18) 14%, transparent);
+  background: rgb(255 252 245);
+  box-shadow: 0 12px 40px color-mix(in srgb, rgb(28 20 16) 18%, transparent);
+}
+
+.dark .read-chapter-verse-action-sheet {
+  background: rgb(28 24 20);
+  border-color: color-mix(in srgb, rgb(245 230 210) 12%, transparent);
+}
+
+.read-chapter-verse-action-title {
+  margin: 0 0 0.65rem;
+  padding: 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgb(92 58 18);
+}
+
+.dark .read-chapter-verse-action-title {
+  color: rgb(245 230 210);
+}
+
+.read-chapter-verse-action-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.72rem 0.85rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, rgb(92 58 18) 6%, transparent);
+  text-align: left;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: rgb(52 34 18);
+  cursor: pointer;
+}
+
+.read-chapter-verse-action-btn--muted {
+  color: rgb(92 58 18 / 0.62);
+  background: transparent;
+}
+
+.read-chapter-selection-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 56;
+  display: flex;
+  width: min(22rem, calc(100vw - 1.5rem));
+  transform: translateX(-50%);
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, rgb(92 58 18) 16%, transparent);
+  background: color-mix(in srgb, rgb(255 252 245) 94%, transparent);
+  box-shadow: 0 8px 28px color-mix(in srgb, rgb(28 20 16) 14%, transparent);
+}
+
+.dark .read-chapter-selection-bar {
+  border-color: color-mix(in srgb, rgb(245 230 210) 14%, transparent);
+  background: color-mix(in srgb, rgb(28 24 20) 92%, transparent);
+}
+
+.read-chapter-selection-bar-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  color: color-mix(in srgb, rgb(92 58 18) 86%, transparent);
+}
+
+.dark .read-chapter-selection-bar-title {
+  color: color-mix(in srgb, rgb(214 198 180) 86%, transparent);
+}
+
+.read-chapter-selection-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.read-chapter-selection-btn {
+  flex: 1;
+  border: 0;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, rgb(92 58 18) 7%, transparent);
+  padding: 0.68rem 0.7rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(52 34 18);
+  cursor: pointer;
+}
+
+.read-chapter-selection-btn--primary {
+  background: color-mix(in srgb, rgb(92 58 18) 14%, transparent);
+}
+
+.dark .read-chapter-selection-btn {
+  color: rgb(245 230 210);
+  background: color-mix(in srgb, rgb(245 230 210) 10%, transparent);
+}
+
+.dark .read-chapter-selection-btn--primary {
+  background: color-mix(in srgb, rgb(245 230 210) 16%, transparent);
+}
+
+.dark .read-chapter-verse-action-btn {
+  color: rgb(245 230 210);
+  background: color-mix(in srgb, rgb(245 230 210) 8%, transparent);
+}
+
 .read-verse-bookmark-feedback {
   position: fixed;
   left: 50%;
@@ -1930,7 +2542,7 @@
 
 /* 引号内其他人说话（神言区间优先，不重复上色） */
 .read-chapter-human-speech {
-  font-weight: 400;
+  font-weight: 700;
   color: #38486c;
 }
 

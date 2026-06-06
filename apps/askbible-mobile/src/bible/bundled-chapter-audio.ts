@@ -1,7 +1,7 @@
 import { Asset } from "expo-asset";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 import { effectiveVoiceForBook } from "./cuv-chapter-audio-voices";
-import { translationUsesWebChapterAudio } from "./web-chapter-audio";
+import { chapterAudioScopeForTranslation, translationUsesWebChapterAudio } from "./web-chapter-audio";
 
 type ChapterAudioModules = Record<string, number>;
 
@@ -29,7 +29,7 @@ function moduleKey(
 ): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (translationUsesWebChapterAudio(translationId)) {
-    return `web-en:${id}-${chapter}`;
+    return `${chapterAudioScopeForTranslation(translationId)}:${id}-${chapter}`;
   }
   const voice = effectiveVoiceForBook(voiceId ?? "mandarin", id);
   if (voice === "teochew-nt") return `teochew-nt:${id}-${chapter}`;

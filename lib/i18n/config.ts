@@ -1,5 +1,5 @@
 /** 与 `locales/*.json` 对齐；新增语言时同步增加目录与 `MESSAGES`。 */
-export const SUPPORTED_LOCALES = ["zh-CN", "en"] as const;
+export const SUPPORTED_LOCALES = ["en", "zh-TW", "zh-CN"] as const;
 
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -13,7 +13,7 @@ export const LOCALE_COOKIE_NAME = "selah_locale";
 const LOCALE_COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 400;
 
 export function parseLocale(raw: string | null | undefined): AppLocale {
-  if (raw === "en" || raw === "zh-CN") return raw;
+  if (raw === "en" || raw === "zh-CN" || raw === "zh-TW") return raw;
   return DEFAULT_LOCALE;
 }
 
@@ -25,6 +25,14 @@ export function mapLanguageTagToAppLocale(tag: string): AppLocale {
   const t = tag.trim().toLowerCase();
   if (!t) return DEFAULT_LOCALE;
   if (t === "en" || t.startsWith("en-")) return "en";
+  if (
+    t === "zh-tw" ||
+    t === "zh-hk" ||
+    t === "zh-mo" ||
+    t.includes("hant")
+  ) {
+    return "zh-TW";
+  }
   if (t.startsWith("zh")) return "zh-CN";
   return "en";
 }

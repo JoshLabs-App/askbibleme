@@ -1,99 +1,81 @@
 "use client";
 
 import Link from "next/link";
+import { EXPLORE_ENTRIES, SCRIPTURE_ANTHOLOGY_IDS } from "@/lib/explore/exploreEntries";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export function ExploreHomeContent() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+
+  const scriptureAnthologyEntries = SCRIPTURE_ANTHOLOGY_IDS.map((id) =>
+    EXPLORE_ENTRIES.find((entry) => entry.id === id),
+  ).filter((entry): entry is (typeof EXPLORE_ENTRIES)[number] => Boolean(entry));
+
+  const topEntries = EXPLORE_ENTRIES.filter(
+    (entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as (typeof SCRIPTURE_ANTHOLOGY_IDS)[number]),
+  );
+
+  const anthologyHeading =
+    locale === "en" ? "Scripture Anthology" : locale === "zh-TW" ? "經文彙編" : "经文汇编";
 
   return (
-    <div className="mx-auto w-full max-w-xl flex-1 px-5 pb-24 pt-6 text-ink sm:max-w-2xl md:px-8">
+    <div className="mx-auto w-full max-w-md flex-1 px-5 pb-24 pt-6 text-ink md:px-8">
       <header className="text-center">
         <h1 className="font-serif text-[clamp(1.35rem,4vw,1.85rem)] font-medium leading-snug tracking-[0.03em] text-ink/90">
           {t("pages.explore.title")}
         </h1>
         <div className="mx-auto mt-5 h-px w-10 bg-border/55" aria-hidden />
-        <p className="mt-5 text-[14px] font-normal leading-relaxed text-ink/78 sm:text-[15px]">{t("pages.explore.lead")}</p>
-        <p className="mt-4 text-[13px] leading-[1.65] text-muted sm:text-[14px]">{t("pages.explore.body")}</p>
+        <p className="mt-5 text-[14px] font-normal leading-relaxed text-ink/78 sm:text-[15px]">
+          {t("pages.explore.lead")}
+        </p>
       </header>
 
-      <section className="mt-14 border-t border-ink/10 pt-10">
-        <h2 className="text-center font-serif text-[1.05rem] font-medium text-ink/88">{t("pages.explore.availableHeading")}</h2>
-        <p className="mx-auto mt-2 max-w-md text-center text-[12px] leading-relaxed text-muted">{t("pages.explore.availableHint")}</p>
+      <section className="mt-12">
+        <div className="grid grid-cols-3 gap-2.5">
+          {topEntries.map((entry) => (
+            <Link
+              key={entry.id}
+              href={entry.href}
+              className="flex flex-col items-center rounded-2xl border border-ink/10 bg-canvas/60 px-2 py-4 text-center transition hover:border-ink/18 hover:bg-canvas/85"
+            >
+              <span
+                aria-hidden
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink/10 bg-canvas/80 text-[1.35rem]"
+              >
+                {entry.icon}
+              </span>
+              <span className="mt-2.5 line-clamp-2 text-[12px] font-medium leading-snug text-ink/82">
+                {t(entry.labelKey)}
+              </span>
+            </Link>
+          ))}
+        </div>
 
-        <ul className="mx-auto mt-8 max-w-md space-y-3">
-          <li>
+        <div className="my-8 h-px bg-border/50" aria-hidden />
+
+        <p className="text-center text-[12px] font-medium tracking-[0.06em] text-muted uppercase">
+          {anthologyHeading}
+        </p>
+
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          {scriptureAnthologyEntries.map((entry) => (
             <Link
-              href="/explore/word-of-god"
-              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
+              key={entry.id}
+              href={entry.href}
+              className="flex flex-col items-center rounded-2xl border border-ink/10 bg-canvas/60 px-2 py-4 text-center transition hover:border-ink/18 hover:bg-canvas/85"
             >
-              <span className="inline-flex items-center gap-2 font-serif text-[1.08rem] font-medium text-ink/90">
-                <span
-                  aria-hidden
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink/12 bg-canvas/80 text-[1.05rem]"
-                >
-                  📖
-                </span>
-                <span>{t("pages.explore.wordOfGodCardTitle")}</span>
+              <span
+                aria-hidden
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink/10 bg-canvas/80 text-[1.35rem]"
+              >
+                {entry.icon}
               </span>
-              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.wordOfGodCardLead")}</span>
-              <span className="mt-3 text-[13px] font-medium text-ink/80 underline decoration-ink/25 underline-offset-[0.2em]">
-                {t("pages.explore.wordOfGodCardCta")}
+              <span className="mt-2.5 line-clamp-2 text-[12px] font-medium leading-snug text-ink/82">
+                {t(entry.labelKey)}
               </span>
             </Link>
-          </li>
-          <li>
-            <Link
-              href="/explore/biblical-feasts"
-              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
-            >
-              <span className="inline-flex items-center gap-2 font-serif text-[1.08rem] font-medium text-ink/90">
-                <span
-                  aria-hidden
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-ink/12 bg-canvas/80 text-[1.05rem]"
-                >
-                  🗓️
-                </span>
-                <span>{t("pages.explore.biblicalFeastsCardTitle")}</span>
-              </span>
-              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.biblicalFeastsCardLead")}</span>
-              <span className="mt-3 flex items-center gap-2 text-[11px] text-ink/62">
-                <span className="font-medium">{t("pages.explore.biblicalFeasts.feasts.passover.month")}</span>
-                <span className="relative h-px flex-1 bg-border/70">
-                  <span className="absolute left-[10%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
-                  <span className="absolute left-[38%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
-                  <span className="absolute left-[66%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
-                  <span className="absolute left-[92%] top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-amber-700/85" />
-                </span>
-                <span className="font-medium">{t("pages.explore.biblicalFeasts.feasts.tabernacles.month")}</span>
-              </span>
-              <span className="mt-3 text-[13px] font-medium text-ink/80 underline decoration-ink/25 underline-offset-[0.2em]">
-                {t("pages.explore.biblicalFeastsCardCta")}
-              </span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/explore/year-day-count"
-              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
-            >
-              <span className="font-serif text-[1.08rem] font-medium text-ink/90">
-                {t("pages.explore.yearDayCountTitle")}
-              </span>
-              <span className="mt-2 text-[13px] leading-relaxed text-ink/72">{t("pages.explore.yearDayCountLead")}</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/explore/years-days-eternity"
-              className="flex flex-col rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-4 text-left transition hover:border-ink/18 hover:bg-canvas/80"
-            >
-              <span className="font-serif text-[1.08rem] font-medium text-ink/90">
-                {t("pages.explore.yearsDaysEternityTitle")}
-              </span>
-            </Link>
-          </li>
-        </ul>
+          ))}
+        </div>
       </section>
     </div>
   );

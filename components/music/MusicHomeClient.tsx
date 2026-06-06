@@ -3,19 +3,43 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DeviceMusicLibrarySection } from "@/components/music/DeviceMusicLibrarySection";
+import {
+  IconRepeatAll,
+  IconRepeatOne,
+  IconSkipNext,
+  IconSkipPrev,
+  IconTimer,
+  MusicHomeAlbumIconGlyph,
+} from "@/components/music/MusicHomeIcons";
+import { MusicHomeQueue } from "@/components/music/MusicHomeQueue";
+import { MusicHomeVisuals } from "@/components/music/MusicHomeVisuals";
+import { MusicHomeBackdropScene } from "@/components/music/MusicHomeBackdropScene";
+import { MusicHomeProgressBar } from "@/components/music/MusicHomeProgressBar";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import {
+  MUSIC_HOME_ALBUM_SWATCH,
+  MUSIC_HOME_DEFAULT_ALBUM,
+  musicHomeAlbumCssKey,
+  musicHomeAlbumIcon,
+} from "@/components/music/music-home-album-theme";
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
-import { HomeVerseRotatorWithPrayerPool } from "@/components/home/HomeVerseRotatorWithPrayerPool";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
+import { useMusicHomeWideScreen } from "@/hooks/useMusicHomeWideScreen";
+import { useMusicHomeSwipe } from "@/hooks/useMusicHomeSwipe";
+import { useTrackAnalysis } from "@/hooks/useTrackAnalysis";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { resolveLocalized } from "@/lib/i18n/localized-text";
-import { landscapeNarrowMedia as ln } from "@/lib/ui/landscape-tailwind";
+import { setMusicAutoHideChrome } from "@/lib/music/music-auto-hide-chrome";
+import {
+  analysisSrcFromAudioPath,
+  sampleTrackAnalysisAt,
+} from "@/lib/music/track-analysis";
 
 type Props = {
   initialStore: MusicCompanionStore;
@@ -27,19 +51,10 @@ type Props = {
 };
 
 const KNOWN_MUSIC_ALBUMS = ["安静", "下午茶", "专注工作", "睡眠"] as const;
-const DEFAULT_ALBUM = "安静";
-const ALBUM_SWATCH_CLASS: Record<string, string> = {
-  安静: "bg-[linear-gradient(135deg,#89c2ff_0%,#4f7db8_100%)]",
-  下午茶: "bg-[linear-gradient(135deg,#ffd8a8_0%,#c88c52_100%)]",
-  专注工作: "bg-[linear-gradient(135deg,#b6bcc8_0%,#707786_100%)]",
-  睡眠: "bg-[linear-gradient(135deg,#c7b6ff_0%,#6d5aa9_100%)]",
-};
-const FALLBACK_SWATCH_CLASSES = [
-  "bg-[linear-gradient(135deg,#8aa8d8_0%,#5b6d8a_100%)]",
-  "bg-[linear-gradient(135deg,#b495cf_0%,#7f5c9f_100%)]",
-  "bg-[linear-gradient(135deg,#8eb7b0_0%,#567f78_100%)]",
-  "bg-[linear-gradient(135deg,#d0a48d_0%,#9f6e56_100%)]",
-] as const;
+const DEFAULT_ALBUM = MUSIC_HOME_DEFAULT_ALBUM;
+const MUSIC_UI_AUTO_HIDE_MS = 5000;
+
+type MusicRepeatMode = "off" | "one" | "all";
 
 function firstTag(tags: string[]): string | null {
   for (const raw of tags) {
@@ -58,12 +73,6 @@ function albumFromRemark(remark: string): string | null {
     if (fromPrefix) return fromPrefix;
   }
   return null;
-}
-
-function fallbackSwatchClass(albumName: string): string {
-  let h = 0;
-  for (let i = 0; i < albumName.length; i += 1) h = (h * 31 + albumName.charCodeAt(i)) | 0;
-  return FALLBACK_SWATCH_CLASSES[Math.abs(h) % FALLBACK_SWATCH_CLASSES.length]!;
 }
 
 function inferTrackAlbum(track: AudioTrack): string {
@@ -92,6 +101,14 @@ function pickScene(store: MusicCompanionStore): Scene | null {
     if (s) return s;
   }
   return [...scenes].sort((a, b) => a.order - b.order)[0] ?? null;
+}
+
+function formatNowClock(d: Date): string {
+  return d.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function formatTime(sec: number): string {
@@ -155,15 +172,12 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
   return store.audioTracks.filter((t) => t.src?.trim()).length;
 }
 
-/** 与自然首页 `NatureVideoExperience` 中 `HomeVerseRotator` 同版心、同最小高度（浅色主区用 `variant="light"`） */
-const MUSIC_HOME_VERSE_CLASS =
-  "w-full min-h-[6.5rem] sm:min-h-[7.5rem] landscape:min-h-0 [@media(max-height:500px)_and_(orientation:portrait)]:min-h-[4rem] [@media(max-height:500px)_and_(orientation:portrait)]:sm:min-h-[4.25rem]";
-
 export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) {
   const { t, locale } = useLocale();
   const { bootstrapped, user } = useAskbibleUser();
   const showAdminMusicLink = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const landscapeNarrow = useLandscapeNarrow();
+  const musicWide = useMusicHomeWideScreen();
   const inTemplateChrome = layout === "templateChrome";
 
   const {
@@ -175,7 +189,20 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     musicStore,
     deviceLibraryPlayback,
     clearDeviceLibraryPlayback,
+    playing,
+    sleepTimerMinutes,
+    setSleepTimerMinutes,
+    getAudioElement,
+    togglePlayMusic,
+    canPlayMusic,
   } = useMusicShellPlayback();
+  const [musicRepeatMode, setMusicRepeatMode] = useState<MusicRepeatMode>("all");
+  const [uiVisible, setUiVisible] = useState(true);
+  const [landscapeMenuVisible, setLandscapeMenuVisible] = useState(false);
+  const [seekDragging, setSeekDragging] = useState(false);
+  const [seekPreview, setSeekPreview] = useState(0);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const uiHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 与壳层曲库同源：避免进页再打一遍 `/api/music/companion`；壳层拉取后自动更新 */
   const store = musicStore ?? initialStore;
   const initialSi = initialSceneIndex(initialStore);
@@ -318,7 +345,44 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     return tracksWithSrc[Math.min(resolvedTrackIdx, tracksWithSrc.length - 1)];
   }, [tracksWithSrc, resolvedTrackIdx]);
 
+  const queueRows = useMemo(
+    () =>
+      tracksWithSrc.map((tr) => ({
+        id: tr.id,
+        title: resolveLocalized(tr.title, locale).trim() || t("music.home.trackUntitled"),
+      })),
+    [tracksWithSrc, locale, t],
+  );
+
   const audioSrc = track?.src?.trim() ?? "";
+  const analysisSrc =
+    track?.analysisSrc?.trim() ||
+    (audioSrc ? analysisSrcFromAudioPath(audioSrc) : null) ||
+    null;
+  const analysis = useTrackAnalysis(analysisSrc);
+  const musicActive =
+    Boolean(audioSrc) &&
+    Boolean(effectiveSrc.trim()) &&
+    !isCuvChapterAudioEffectiveSrc(effectiveSrc);
+  const duration = musicActive && durationSec > 0 ? durationSec : 0;
+  const position = musicActive
+    ? seekDragging
+      ? seekPreview * (duration || 1)
+      : currentSec
+    : 0;
+  const progressRatio = duration > 0 ? Math.min(1, position / duration) : 0;
+
+  const coffeeRhythmPulse = useMemo(() => {
+    if (album !== "下午茶" || !analysis || !musicActive || !playing) return 0;
+    const s = sampleTrackAnalysisAt(analysis, currentSec);
+    const e = s.low * 0.45 + s.mid * 0.25 + s.rms * 0.3;
+    return Math.max(0, Math.min(1, (e - 0.12) * 1.2));
+  }, [album, analysis, currentSec, musicActive, playing]);
+
+  const sleepAutoHideEnabled = album === "睡眠";
+  const sleepUiAutoHideEnabled = sleepAutoHideEnabled && musicActive && playing;
+  const chromeVisible = landscapeNarrow ? landscapeMenuVisible : uiVisible;
+  const nowClockText = useMemo(() => formatNowClock(new Date(nowMs)), [nowMs]);
 
   useEffect(() => {
     if (deviceLibraryPlayback) return;
@@ -338,19 +402,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     setPlaybackSrcRef.current(want);
   }, [audioSrc, effectiveSrc, deviceLibraryPlayback]);
 
-  const shuffleTrack = useCallback(() => {
-    clearDeviceLibraryPlayback();
-    bumpUserSkip();
-    const n = tracksWithSrc.length;
-    if (n <= 1) return;
-    const cur = resolvedTrackIdxRef.current;
-    let next = cur;
-    for (let g = 0; g < 40 && next === cur; g++) {
-      next = Math.floor(Math.random() * n);
-    }
-    setTrackPoolIdx(next);
-  }, [tracksWithSrc.length, clearDeviceLibraryPlayback, bumpUserSkip]);
-
   const selectTrack = useCallback(
     (idx: number) => {
       clearDeviceLibraryPlayback();
@@ -359,6 +410,220 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     },
     [clearDeviceLibraryPlayback, bumpUserSkip],
   );
+
+  const selectAlbum = useCallback(
+    (nextAlbum: string) => {
+      if (nextAlbum === album) return;
+      if (nextAlbum === "睡眠" || nextAlbum === "专注工作") {
+        setMusicRepeatMode("one");
+      } else if (nextAlbum === "安静" || nextAlbum === "下午茶") {
+        setMusicRepeatMode("all");
+      }
+      if (nextAlbum === "睡眠") {
+        if (sleepTimerMinutes === 0) setSleepTimerMinutes(30);
+      } else if (sleepTimerMinutes > 0) {
+        setSleepTimerMinutes(0);
+      }
+      setAlbum(nextAlbum);
+      if (track && inferTrackAlbum(track) === nextAlbum) return;
+      const nextTracks = allTracksWithSrc.filter((tr) => inferTrackAlbum(tr) === nextAlbum);
+      if (nextTracks.length === 0) return;
+      const pick = nextTracks[Math.floor(Math.random() * nextTracks.length)]!;
+      clearDeviceLibraryPlayback();
+      bumpUserSkip();
+      const src = (pick.src ?? "").trim();
+      if (src) setPlaybackSrc(src);
+    },
+    [
+      album,
+      allTracksWithSrc,
+      bumpUserSkip,
+      clearDeviceLibraryPlayback,
+      setPlaybackSrc,
+      setSleepTimerMinutes,
+      sleepTimerMinutes,
+      track,
+    ],
+  );
+
+  useEffect(() => {
+    setSeekDragging(false);
+    setSeekPreview(0);
+  }, [resolvedTrackIdx, effectiveSrc]);
+
+  useEffect(() => {
+    if ((album === "安静" || album === "下午茶") && musicRepeatMode !== "all") {
+      setMusicRepeatMode("all");
+    }
+  }, [album, musicRepeatMode]);
+
+  useEffect(() => {
+    const audio = getAudioElement();
+    if (!audio) return;
+    audio.loop = musicRepeatMode === "one";
+  }, [getAudioElement, musicRepeatMode, effectiveSrc]);
+
+  useEffect(() => {
+    const audio = getAudioElement();
+    if (!audio) return;
+    audio.volume = album === "睡眠" ? 0.3 : 1;
+  }, [album, getAudioElement, effectiveSrc]);
+
+  const resetUiAutoHide = useCallback(() => {
+    if (uiHideTimeoutRef.current) {
+      clearTimeout(uiHideTimeoutRef.current);
+      uiHideTimeoutRef.current = null;
+    }
+    if (landscapeNarrow) {
+      setLandscapeMenuVisible(true);
+    } else {
+      setUiVisible(true);
+    }
+    if (!sleepUiAutoHideEnabled || !audioSrc) return;
+    uiHideTimeoutRef.current = setTimeout(() => {
+      if (landscapeNarrow) {
+        setLandscapeMenuVisible(false);
+      } else {
+        setUiVisible(false);
+      }
+      uiHideTimeoutRef.current = null;
+    }, MUSIC_UI_AUTO_HIDE_MS);
+  }, [audioSrc, landscapeNarrow, sleepUiAutoHideEnabled]);
+
+  useEffect(() => {
+    if (!sleepUiAutoHideEnabled || !audioSrc) {
+      if (uiHideTimeoutRef.current) {
+        clearTimeout(uiHideTimeoutRef.current);
+        uiHideTimeoutRef.current = null;
+      }
+      if (!landscapeNarrow) setUiVisible(true);
+      return;
+    }
+    resetUiAutoHide();
+    return () => {
+      if (uiHideTimeoutRef.current) {
+        clearTimeout(uiHideTimeoutRef.current);
+        uiHideTimeoutRef.current = null;
+      }
+    };
+  }, [audioSrc, landscapeNarrow, resetUiAutoHide, sleepUiAutoHideEnabled]);
+
+  useEffect(() => {
+    if (!landscapeNarrow) {
+      setLandscapeMenuVisible(false);
+      return;
+    }
+    setLandscapeMenuVisible(false);
+  }, [landscapeNarrow]);
+
+  useEffect(() => {
+    if (!landscapeNarrow && !musicWide) return;
+    setNowMs(Date.now());
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [chromeVisible, landscapeNarrow, musicWide]);
+
+  const onLandscapeStageToggle = useCallback(() => {
+    if (!landscapeNarrow) return;
+    if (landscapeMenuVisible) {
+      setLandscapeMenuVisible(false);
+      if (!playing && tracksWithSrc.length > 0 && canPlayMusic) void togglePlayMusic();
+      return;
+    }
+    setLandscapeMenuVisible(true);
+    if (playing) void togglePlayMusic();
+  }, [
+    canPlayMusic,
+    landscapeMenuVisible,
+    landscapeNarrow,
+    playing,
+    togglePlayMusic,
+    tracksWithSrc.length,
+  ]);
+
+  useEffect(() => {
+    const hideBottomNav = landscapeNarrow || (sleepUiAutoHideEnabled && !uiVisible);
+    if (landscapeNarrow) {
+      setMusicAutoHideChrome(true);
+    } else {
+      setMusicAutoHideChrome(sleepUiAutoHideEnabled && !uiVisible);
+    }
+    if (typeof document !== "undefined") {
+      if (hideBottomNav) {
+        document.documentElement.dataset.musicBottomNavHidden = "1";
+      } else {
+        Reflect.deleteProperty(document.documentElement.dataset, "musicBottomNavHidden");
+      }
+    }
+    return () => {
+      setMusicAutoHideChrome(false);
+      if (typeof document !== "undefined") {
+        Reflect.deleteProperty(document.documentElement.dataset, "musicBottomNavHidden");
+      }
+    };
+  }, [landscapeNarrow, sleepUiAutoHideEnabled, uiVisible]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.dataset.musicHomeShell = "1";
+    return () => {
+      Reflect.deleteProperty(document.documentElement.dataset, "musicHomeShell");
+      Reflect.deleteProperty(document.documentElement.dataset, "musicBottomNavHidden");
+    };
+  }, []);
+
+  const onPrev = useCallback(() => {
+    if (musicActive && currentSec > 3) {
+      seekRatio(0);
+      return;
+    }
+    if (tracksWithSrc.length <= 1) return;
+    const prevIdx = resolvedTrackIdx <= 0 ? tracksWithSrc.length - 1 : resolvedTrackIdx - 1;
+    selectTrack(prevIdx);
+  }, [currentSec, musicActive, resolvedTrackIdx, seekRatio, selectTrack, tracksWithSrc.length]);
+
+  const onNext = useCallback(() => {
+    if (tracksWithSrc.length <= 1) return;
+    const nextIdx = (resolvedTrackIdx + 1) % tracksWithSrc.length;
+    selectTrack(nextIdx);
+  }, [resolvedTrackIdx, selectTrack, tracksWithSrc.length]);
+
+  const onMusicSwipe = useCallback(
+    (direction: "left" | "right") => {
+      if (tracksWithSrc.length === 0) return;
+      if (direction === "left") onNext();
+      else onPrev();
+    },
+    [onNext, onPrev, tracksWithSrc.length],
+  );
+
+  const swipeHandlers = useMusicHomeSwipe(
+    Boolean(audioSrc) && tracksWithSrc.length > 0,
+    onMusicSwipe,
+  );
+
+  const cycleSleepTimer = useCallback(() => {
+    if (sleepTimerMinutes === 0) {
+      setSleepTimerMinutes(15);
+      return;
+    }
+    if (sleepTimerMinutes === 15) {
+      setSleepTimerMinutes(30);
+      return;
+    }
+    if (sleepTimerMinutes === 30) {
+      setSleepTimerMinutes(60);
+      return;
+    }
+    if (sleepTimerMinutes === 60) {
+      setSleepTimerMinutes(120);
+      return;
+    }
+    setSleepTimerMinutes(0);
+  }, [setSleepTimerMinutes, sleepTimerMinutes]);
+
+  const sleepTimerBadge = sleepTimerMinutes > 0 ? String(sleepTimerMinutes) : null;
+  const albumCssKey = musicHomeAlbumCssKey(album);
 
   useEffect(() => {
     if (!landscapeNarrow) {
@@ -371,7 +636,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    /** iOS：对 documentElement 自动全屏易触发系统回收 / 黑屏闪回（与自然页一致，仅用 CSS 沉浸）。 */
     if (isIosLikeUserAgent()) {
       if (document.fullscreenElement === document.documentElement) {
         void exitFullscreenCompat();
@@ -387,13 +651,24 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     void requestFullscreenCompat(document.documentElement).catch(() => {});
   }, [landscapeNarrow]);
 
+  const rootClass = inTemplateChrome
+    ? "music-home-root min-h-0 w-full flex-1"
+    : "music-home-root relative mx-auto flex h-dvh max-h-dvh w-full flex-col overflow-hidden lg:h-full lg:max-h-none lg:min-h-0 lg:flex-1";
+
+  const backdropOrbClass =
+    album === "安静" || album === "专注工作"
+      ? "music-home-backdrop--no-side-orbs"
+      : album === "睡眠"
+        ? "music-home-backdrop--flat"
+        : album === "下午茶"
+          ? "music-home-backdrop--sway-center"
+          : "";
+
   return (
     <div
-      className={
-        inTemplateChrome
-          ? "relative mx-auto flex min-h-0 min-w-0 w-full max-w-md flex-1 flex-col overflow-hidden text-ink lg:mx-0 lg:max-w-none"
-          : "relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-canvas text-ink lg:mx-0 lg:h-full lg:max-h-none lg:min-h-0 lg:w-full lg:max-w-none lg:flex-1 lg:rounded-none"
-      }
+      className={rootClass}
+      data-shell-swipe-nav-exclude
+      {...swipeHandlers}
     >
       <Suspense fallback={null}>
         <MusicHomeTrackFromQuery
@@ -402,166 +677,265 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
           setTrackPoolIdx={setTrackPoolIdx}
         />
       </Suspense>
-      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {!inTemplateChrome ? <AppShellTopBar tone="onLight" landscapeImmersive={landscapeNarrow} /> : null}
 
-        <div
-          className={`flex min-h-0 flex-1 flex-col overflow-hidden ${ln}:min-h-0 ${ln}:flex-row ${ln}:gap-2 ${ln}:px-2 ${ln}:pb-1`}
-        >
-          <div
-            className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
-              inTemplateChrome
-                ? `pt-1 ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
-                : `pt-[max(0.25rem,env(safe-area-inset-top,0px))] ${ln}:min-w-0 ${ln}:pt-[max(0.15rem,calc(env(safe-area-inset-top)+0.4rem))]`
-            }`}
+      {!inTemplateChrome ? <AppShellTopBar tone="onDark" landscapeImmersive={landscapeNarrow} /> : null}
+
+      <div
+        className={[
+          `music-home-backdrop music-home-backdrop--${albumCssKey}`,
+          backdropOrbClass,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-hidden
+      >
+        {album !== "安静" && album !== "专注工作" ? (
+          <>
+            <span className="music-home-side-orb music-home-side-orb--left" />
+            <span className="music-home-side-orb music-home-side-orb--right" />
+          </>
+        ) : null}
+        {album !== "安静" && album !== "睡眠" && album !== "专注工作" ? (
+          <span className="music-home-center-orb" />
+        ) : null}
+        <MusicHomeBackdropScene album={album} />
+      </div>
+
+      {musicWide && !landscapeNarrow && audioSrc ? (
+        <div className="music-home-wide-clock" aria-hidden>
+          <time
+            className={[
+              "music-home-wide-clock-text",
+              album === "睡眠" ? "music-home-wide-clock-text--sleep" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
           >
-            <div
-              className={`relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-4 sm:px-5 lg:px-6 xl:px-8 ${ln}:px-3`}
-            >
-              <div
-                className={`flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch] ${ln}:py-2`}
-              >
-                <div className="flex w-full max-w-lg flex-col items-center justify-center sm:max-w-xl lg:max-w-2xl landscape:max-w-[min(92vw,48rem)] lg:landscape:max-w-[min(85vw,54rem)]">
-                  <div className="min-w-0 w-full px-0 pt-2 sm:pt-3">
-                    {tracksWithSrc.length > 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => shuffleTrack()}
-                        aria-label={t("music.home.shuffleTrack")}
-                        className="group w-full rounded-2xl px-2 py-4 text-center transition active:scale-[0.99] sm:px-3 lg:rounded-3xl lg:px-5 lg:py-7 lg:transition-colors lg:hover:bg-ink/[0.04]"
-                      >
-                        <HomeVerseRotatorWithPrayerPool
-                          variant="light"
-                          prominence="nature"
-                          className={MUSIC_HOME_VERSE_CLASS}
-                        />
-                      </button>
-                    ) : (
-                      <HomeVerseRotatorWithPrayerPool
-                        variant="light"
-                        prominence="nature"
-                        className={MUSIC_HOME_VERSE_CLASS}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
+            {nowClockText}
+          </time>
+        </div>
+      ) : null}
 
-              {allTracksWithSrc.length > 0 ? (
-                <section className="mx-auto w-full max-w-md shrink-0 px-2 pb-2 pt-3 sm:max-w-lg">
-                  <div className="mb-3 flex items-center justify-center gap-2 rounded-2xl border border-ink/10 bg-ink/[0.04] p-2">
-                    {albumNames.map((albumName) => {
-                      const active = albumName === album;
-                      return (
-                        <button
-                          key={albumName}
-                          type="button"
-                          onClick={() => setAlbum(albumName)}
-                          aria-pressed={active}
-                          aria-label={albumName}
-                          title={albumName}
-                          className={`h-12 w-[5.4rem] rounded-xl border-2 transition sm:h-14 sm:w-[6.2rem] ${
-                            active
-                              ? "border-white/75 shadow-[0_0_0_1px_rgba(0,0,0,0.18)]"
-                              : "border-transparent opacity-80 hover:border-white/45 hover:opacity-100"
-                          }`}
-                        >
-                          <span
-                            className={`block h-full w-full rounded-[0.6rem] ${
-                              ALBUM_SWATCH_CLASS[albumName] ?? fallbackSwatchClass(albumName)
-                            }`}
-                          />
-                          <span className="sr-only">
-                            {albumName}（{albumCounts[albumName] ?? 0}）
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {tracksWithSrc.length > 0 ? (
-                    <ul className="mx-auto max-h-[min(40dvh,20rem)] space-y-0.5 overflow-y-auto overscroll-y-contain text-center [-webkit-overflow-scrolling:touch]">
-                      {tracksWithSrc.map((tr, idx) => {
-                        const active = idx === resolvedTrackIdx;
-                        const titleText =
-                          resolveLocalized(tr.title, locale).trim() || t("music.home.trackUntitled");
-                        const artistText = resolveLocalized(tr.artist, locale).trim();
-                        const line = artistText ? `${titleText} · ${artistText}` : titleText;
-                        return (
-                          <li key={tr.id}>
-                            <button
-                              type="button"
-                              onClick={() => selectTrack(idx)}
-                              aria-current={active ? "true" : undefined}
-                              className={[
-                                "w-full max-w-full border-0 bg-transparent px-2 py-2.5 text-center transition-[color,font-size] motion-reduce:transition-none",
-                                active
-                                  ? "text-[17px] font-medium leading-snug text-ink/20 sm:text-[18px]"
-                                  : "text-[16px] font-normal leading-snug text-ink/20 hover:text-ink/25 sm:text-[17px]",
-                              ].join(" ")}
-                            >
-                              <span className="inline-block max-w-full whitespace-normal break-words text-balance">
-                                {line}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="py-4 text-center text-[12px] text-ink/35">该专辑暂无曲目</p>
-                  )}
-                </section>
-              ) : null}
+      {landscapeNarrow && !chromeVisible && audioSrc ? (
+        <div className="music-home-landscape-clock" aria-hidden>
+          <time
+            className={[
+              "music-home-landscape-clock-text",
+              album === "睡眠" ? "music-home-landscape-clock-text--sleep" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {nowClockText}
+          </time>
+        </div>
+      ) : null}
 
-              <DeviceMusicLibrarySection tone="onLight" />
+      {landscapeNarrow && !chromeVisible ? (
+        <button
+          type="button"
+          className="music-home-landscape-tap-layer"
+          aria-label="切换横屏音乐菜单"
+          onClick={onLandscapeStageToggle}
+        />
+      ) : null}
 
-              {!audioSrc ? (
-                <p className="shrink-0 px-2 pb-3 pt-1 text-center text-xs leading-relaxed text-muted sm:text-sm">
-                  {showAdminMusicLink ? (
-                    <>
-                      {t("music.home.noAudioBefore")}{" "}
-                      <Link href="/admin/music" className="underline underline-offset-2">
-                        {t("music.home.adminMusic")}
-                      </Link>{" "}
-                      {t("music.home.noAudioAfter")}
-                    </>
-                  ) : (
-                    t("music.home.noAudioPlain")
-                  )}
-                </p>
-              ) : null}
-            </div>
+      {landscapeNarrow && chromeVisible ? (
+        <button
+          type="button"
+          className="music-home-landscape-center-tap"
+          aria-label="隐藏横屏音乐菜单"
+          onClick={onLandscapeStageToggle}
+        />
+      ) : null}
+
+      {allTracksWithSrc.length === 0 ? (
+        <p className="music-home-empty">
+          {showAdminMusicLink ? (
+            <>
+              {t("music.home.noAudioBefore")}{" "}
+              <Link href="/admin/music">{t("music.home.adminMusic")}</Link>{" "}
+              {t("music.home.noAudioAfter")}
+            </>
+          ) : (
+            t("music.home.noAudioPlain")
+          )}
+        </p>
+      ) : (
+        <div
+          className={[
+            "music-home-foreground",
+            landscapeNarrow ? "music-home-foreground--landscape" : "",
+            musicWide ? "music-home-foreground--wide" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onPointerDown={landscapeNarrow ? undefined : resetUiAutoHide}
+        >
+          <div className="music-home-upper">
+            <MusicHomeVisuals
+              album={album}
+              centered={landscapeNarrow || musicWide}
+              rhythmPulse={coffeeRhythmPulse}
+            />
           </div>
 
-          <footer
-            className={`relative z-10 mt-0 flex w-full shrink-0 flex-col items-stretch gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 text-xs text-ink/55 lg:mx-auto lg:max-w-2xl lg:gap-4 lg:px-6 lg:pb-5 lg:pt-4 lg:text-[13px] lg:text-ink/50 xl:max-w-3xl xl:px-8 ${ln}:mx-0 ${ln}:max-w-none ${ln}:w-[min(13rem,36vw)] ${ln}:max-w-[42%] ${ln}:shrink-0 ${ln}:self-stretch ${ln}:justify-center ${ln}:gap-2 ${ln}:border-l ${ln}:border-ink/12 ${ln}:px-3 ${ln}:py-2 ${ln}:pt-2 ${ln}:pb-[max(0.5rem,env(safe-area-inset-bottom))] ${ln}:pr-[max(0.25rem,env(safe-area-inset-right))]`}
+          <div
+            className={[
+              "music-home-panel",
+              landscapeNarrow ? "music-home-panel--landscape" : "",
+              musicWide ? "music-home-panel--wide" : "",
+              !chromeVisible ? "music-home-panel--hidden" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onPointerDown={landscapeNarrow ? resetUiAutoHide : undefined}
           >
+            {tracksWithSrc.length > 0 ? (
+              <div className={!chromeVisible ? "music-home-chrome-hidden" : undefined}>
+                <MusicHomeQueue
+                  tracks={queueRows}
+                  activeIdx={resolvedTrackIdx}
+                  albumKey={album}
+                  onSelect={selectTrack}
+                />
+              </div>
+            ) : (
+              <p className="music-home-empty">该专辑暂无曲目</p>
+            )}
+
+            <div className={!chromeVisible ? "music-home-chrome-hidden" : undefined}>
+            <div className="music-home-album-row">
+              {albumNames.map((albumName) => {
+                const selected = albumName === album;
+                const icon = musicHomeAlbumIcon(albumName);
+                const swatch = MUSIC_HOME_ALBUM_SWATCH[albumName];
+                return (
+                  <button
+                    key={albumName}
+                    type="button"
+                    className={[
+                      "music-home-album-btn",
+                      selected ? "music-home-album-btn--active" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-pressed={selected}
+                    aria-label={`${albumName}（${albumCounts[albumName] ?? 0}）`}
+                    onClick={() => selectAlbum(albumName)}
+                  >
+                    <MusicHomeAlbumIconGlyph
+                      kind={icon}
+                      color={selected && swatch ? swatch : undefined}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
             {audioSrc ? (
-              <div className="flex items-center gap-3.5 text-[11px] tabular-nums text-ink lg:text-[12px]">
-                <span className="min-w-[2.5rem] shrink-0 opacity-50">{formatTime(currentSec)}</span>
-                <button
-                  type="button"
-                  aria-label={t("music.home.progress")}
-                  className="group relative h-[3px] flex-1 overflow-hidden rounded-full bg-ink/15 lg:h-[3px]"
-                  onClick={(e) => {
-                    const r = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - r.left;
-                    seekRatio(x / r.width);
+              <div className="music-home-transport">
+                <p className="music-home-time-line">
+                  {formatTime(position)}
+                  <span className="music-home-time-sep"> / </span>
+                  {formatTime(duration)}
+                </p>
+                <MusicHomeProgressBar
+                  progress={progressRatio}
+                  disabled={!duration}
+                  ariaLabel={t("music.home.progress")}
+                  onSeekStart={() => setSeekDragging(true)}
+                  onSeekPreview={setSeekPreview}
+                  onSeekRatio={(r) => {
+                    setSeekPreview(r);
+                    seekRatio(r);
+                    setSeekDragging(false);
                   }}
+                />
+                <div
+                  className={[
+                    "music-home-controls",
+                    landscapeNarrow ? "music-home-controls--landscape" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 >
-                  <span
-                    className="absolute inset-y-0 left-0 rounded-full bg-ink/70 transition-[width] duration-150 ease-out group-hover:bg-ink/85"
-                    style={{
-                      width: `${durationSec ? Math.min(100, (currentSec / durationSec) * 100) : 0}%`,
-                    }}
-                  />
-                </button>
-                <span className="min-w-[2.5rem] shrink-0 text-right opacity-50">{formatTime(durationSec)}</span>
+                  <button
+                    type="button"
+                    className="music-home-icon-btn"
+                    aria-label={t("music.home.prevTrack")}
+                    onClick={onPrev}
+                  >
+                    <IconSkipPrev />
+                  </button>
+                  <button
+                    type="button"
+                    className={[
+                      "music-home-icon-btn",
+                      musicRepeatMode === "one" ? "music-home-icon-btn--on" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-pressed={musicRepeatMode === "one"}
+                    aria-label={musicRepeatMode === "one" ? "单曲循环已开启" : "单曲循环已关闭"}
+                    onClick={() =>
+                      setMusicRepeatMode((mode) => (mode === "one" ? "off" : "one"))
+                    }
+                  >
+                    <IconRepeatOne />
+                  </button>
+                  <button
+                    type="button"
+                    className={[
+                      "music-home-icon-btn",
+                      musicRepeatMode === "all" ? "music-home-icon-btn--on" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-pressed={musicRepeatMode === "all"}
+                    aria-label={musicRepeatMode === "all" ? "全部循环已开启" : "全部循环已关闭"}
+                    onClick={() =>
+                      setMusicRepeatMode((mode) => (mode === "all" ? "off" : "all"))
+                    }
+                  >
+                    <IconRepeatAll />
+                  </button>
+                  <button
+                    type="button"
+                    className={[
+                      "music-home-icon-btn music-home-timer-btn",
+                      sleepTimerMinutes > 0 ? "music-home-icon-btn--on" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-pressed={sleepTimerMinutes > 0}
+                    aria-label={
+                      sleepTimerMinutes > 0
+                        ? `睡眠定时 ${sleepTimerMinutes} 分钟，点按切换`
+                        : t("music.sleepTimer.watchAria")
+                    }
+                    onClick={cycleSleepTimer}
+                  >
+                    <IconTimer />
+                    {sleepTimerBadge ? (
+                      <span className="music-home-timer-badge">{sleepTimerBadge}</span>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    className="music-home-icon-btn"
+                    aria-label={t("music.home.nextTrack")}
+                    onClick={onNext}
+                  >
+                    <IconSkipNext />
+                  </button>
+                </div>
               </div>
             ) : null}
-          </footer>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

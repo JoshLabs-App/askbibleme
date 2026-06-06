@@ -31,6 +31,11 @@ const YEAR_DAY_COUNT_BOTTOM_CONTEXT = {
     scripture: ["圣经《诗篇》90篇说：“我们一生的年日是七十岁，若是强壮可到八十岁；", "但其中所矜夸的，不过是劳苦愁烦，转眼成空，我们便如飞而去。”"],
     ref: "诗篇 90:10",
   },
+  "zh-TW": {
+    prose: ["據 Our World in Data 資料，2023 年全球平均預期壽命約為 73 歲。"],
+    scripture: ["聖經《詩篇》90 篇說：「我們一生的年日是七十歲，若是強壯可到八十歲；", "但其中所矜誇的，不過是勞苦愁煩，轉眼成空，我們便如飛而去。」"],
+    ref: "詩篇 90:10",
+  },
 } as const;
 
 export function ExploreYearDayCountScreen() {

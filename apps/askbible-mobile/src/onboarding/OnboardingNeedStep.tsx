@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
+import { toZhTwText } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { theme } from "../theme";
 import type { CompanionNeedOption } from "./onboarding-devotion-data";
@@ -40,25 +41,42 @@ export function OnboardingNeedStep({
   onToggleNeed,
   options,
 }: OnboardingNeedStepProps) {
+  const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
+
   return (
     <View>
       <View style={styles.localeRow}>
         <Pressable
-          style={[styles.localeChip, locale === "zh-CN" ? styles.localeChipActive : undefined]}
-          onPress={() => onLocaleChange("zh-CN")}
-        >
-          <Text style={[styles.localeChipText, locale === "zh-CN" ? styles.localeChipTextActive : undefined]}>
-            中文
-          </Text>
-        </Pressable>
-        <Pressable
           style={[styles.localeChip, locale === "en" ? styles.localeChipActive : undefined]}
           onPress={() => onLocaleChange("en")}
+          accessibilityRole="button"
+          accessibilityState={{ selected: locale === "en" }}
+          accessibilityLabel="英文（美国旗）"
         >
-          <Text style={[styles.localeChipText, locale === "en" ? styles.localeChipTextActive : undefined]}>EN</Text>
+          <Text style={[styles.localeChipIcon, locale === "en" ? styles.localeChipIconActive : undefined]}>🇺🇸</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.localeChip, locale === "zh-TW" ? styles.localeChipActive : undefined]}
+          onPress={() => onLocaleChange("zh-TW")}
+          accessibilityRole="button"
+          accessibilityState={{ selected: locale === "zh-TW" }}
+          accessibilityLabel="繁體（台湾旗）"
+        >
+          <Text style={[styles.localeChipIcon, locale === "zh-TW" ? styles.localeChipIconActive : undefined]}>🇹🇼</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.localeChip, locale === "zh-CN" ? styles.localeChipActive : undefined]}
+          onPress={() => onLocaleChange("zh-CN")}
+          accessibilityRole="button"
+          accessibilityState={{ selected: locale === "zh-CN" }}
+          accessibilityLabel="中简（中国旗）"
+        >
+          <Text style={[styles.localeChipIcon, locale === "zh-CN" ? styles.localeChipIconActive : undefined]}>🇨🇳</Text>
         </Pressable>
       </View>
-      <Text style={styles.title}>{locale === "en" ? "What kind of support do you need most?" : "你最需要哪一种陪伴？"}</Text>
+      <Text style={styles.title}>
+        {locale === "en" ? "What kind of support do you need most?" : zhText("你最需要哪一种陪伴？")}
+      </Text>
 
       <View style={styles.cardList}>
         {options.map((option) => {
@@ -95,15 +113,15 @@ export function OnboardingNeedStep({
 
 const styles = StyleSheet.create({
   localeRow: {
-    marginBottom: 10,
+    marginBottom: 14,
     flexDirection: "row",
     justifyContent: "center",
-    gap: 8,
+    gap: 10,
   },
   localeChip: {
-    minWidth: 56,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    minWidth: 72,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "rgba(120, 53, 15, 0.24)",
@@ -115,12 +133,13 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 177, 1, 0.86)",
     backgroundColor: "rgba(255, 177, 1, 0.16)",
   },
-  localeChipText: {
-    fontSize: 13,
+  localeChipIcon: {
+    fontSize: 22,
+    lineHeight: 24,
     color: "rgba(43, 29, 21, 0.72)",
     fontWeight: "600",
   },
-  localeChipTextActive: {
+  localeChipIconActive: {
     color: LOGO_YELLOW,
   },
   title: {

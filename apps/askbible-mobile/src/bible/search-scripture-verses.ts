@@ -16,6 +16,17 @@ export type { ScriptureSearchHit, ScriptureSearchScope };
 
 const SCOPED_FETCH_LIMIT = 120;
 
+function isNativeDatabaseRejectedError(err: unknown): boolean {
+  const message = String(err instanceof Error ? err.message : err).toLowerCase();
+  return (
+    message.includes("nativedatabase.prepareasync") ||
+    message.includes("nativedatabase.preparesync") ||
+    message.includes("prepareasync") ||
+    message.includes("preparesync") ||
+    (message.includes("call to function") && message.includes("nativedatabase."))
+  );
+}
+
 export async function searchScriptureVersesMobile(
   translationId: string,
   query: string,
@@ -33,13 +44,19 @@ export async function searchScriptureVersesMobile(
   const like = `%${escapeSqliteLikePattern(q)}%`;
   const fetchLimit = scope === "all" ? SCRIPTURE_SEARCH_LIMIT : SCOPED_FETCH_LIMIT;
 
-  const rows = await retryScriptureDatabaseOnPrepareError(tid, (db) =>
-    db.getAllAsync<Record<string, unknown>>(
-      "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ORDER BY book_id, chapter, verse LIMIT ?",
-      like,
-      fetchLimit,
-    ),
-  );
+  let rows: Record<string, unknown>[];
+  try {
+    rows = await retryScriptureDatabaseOnPrepareError(tid, (db) =>
+      db.getAllAsync<Record<string, unknown>>(
+        "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ORDER BY book_id, chapter, verse LIMIT ?",
+        like,
+        fetchLimit,
+      ),
+    );
+  } catch (err) {
+    if (!isNativeDatabaseRejectedError(err)) throw err;
+    return [];
+  }
 
   const filtered = rows
     .filter((row) => isBookInScriptureSearchScope(String(row.book_id ?? row.BOOK_ID ?? ""), scope))

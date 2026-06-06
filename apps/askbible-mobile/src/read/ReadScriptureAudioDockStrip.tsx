@@ -6,6 +6,10 @@ import {
   useMusicPlayback,
   type ScriptureAudioRepeatMode,
 } from "../music/MusicPlaybackContext";
+import {
+  normalizeScripturePlaybackRate,
+  SCRIPTURE_PLAYBACK_RATES,
+} from "../music/music-playback-prefs";
 import { MinimalProgressBar } from "../ui/MinimalProgressBar";
 import { SHELL_TAB_BAR_ICON } from "../shell/shellChromeIcons";
 import { SPLASH_BACKGROUND as LOGO_COLOR } from "../shell/splash-branding.generated";
@@ -34,6 +38,8 @@ export function ReadScriptureAudioDockStrip() {
     scriptureDurationSec,
     scriptureAudioRepeatMode,
     setScriptureAudioRepeatMode,
+    scripturePlaybackRate,
+    setScripturePlaybackRate,
     seekRatio,
   } = useMusicPlayback();
 
@@ -56,6 +62,13 @@ export function ReadScriptureAudioDockStrip() {
     },
     [seekRatio],
   );
+
+  const cyclePlaybackRate = useCallback(() => {
+    const current = normalizeScripturePlaybackRate(scripturePlaybackRate);
+    const idx = SCRIPTURE_PLAYBACK_RATES.findIndex((rate) => rate === current);
+    const next = SCRIPTURE_PLAYBACK_RATES[(idx + 1) % SCRIPTURE_PLAYBACK_RATES.length] ?? 1;
+    void setScripturePlaybackRate(next);
+  }, [scripturePlaybackRate, setScripturePlaybackRate]);
 
   if (!show) return null;
 
@@ -110,6 +123,17 @@ export function ReadScriptureAudioDockStrip() {
       />
 
       <View style={styles.repeatRow}>
+        <Pressable
+          onPress={cyclePlaybackRate}
+          hitSlop={6}
+          style={({ pressed }) => [styles.speedBtn, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={`语音速度 ${scripturePlaybackRate.toFixed(2).replace(/\.00$/, "")}x`}
+        >
+          <Text style={styles.speedText}>
+            {scripturePlaybackRate.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1")}x
+          </Text>
+        </Pressable>
         {repeatBtn("chapter")}
         {repeatBtn("book")}
       </View>
@@ -150,6 +174,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexShrink: 0,
     gap: 4,
+  },
+  speedBtn: {
+    minWidth: 48,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    paddingHorizontal: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  speedText: {
+    color: "rgba(255,255,255,0.92)",
+    fontSize: 12,
+    fontVariant: ["tabular-nums"],
+    letterSpacing: -0.1,
   },
   repeatBtn: {
     width: 32,

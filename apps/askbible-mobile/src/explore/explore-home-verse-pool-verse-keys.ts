@@ -1,4 +1,4 @@
-import { scriptureBooks } from "../../../../lib/bible/scripture-books";
+import { scriptureBooks } from "../bible/scripture-books";
 import {
   YEAR_DAY_COUNT_LEAD_REF,
   YEAR_DAY_COUNT_SCRIPTURES,

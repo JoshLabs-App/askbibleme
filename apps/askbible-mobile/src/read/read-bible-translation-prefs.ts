@@ -10,7 +10,9 @@ export const READ_BIBLE_TRANSLATION_MODE_STORAGE_KEY = "selah_read_bible_transla
 export type ReadBibleTranslationPrefsV1 = {
   version: 1;
   primaryTranslationId: string;
-  contrastTranslationId: string | null;
+  contrastTranslationIds: string[];
+  /** 兼容旧数据：单选时代字段 */
+  contrastTranslationId?: string | null;
   /** `null` = 朗读与屏幕主译本相同 */
   audioTranslationId: string | null;
 };
@@ -20,7 +22,7 @@ export type ReadBibleTranslationPrefMode = "auto" | "manual";
 export const DEFAULT_READ_BIBLE_TRANSLATION_PREFS: ReadBibleTranslationPrefsV1 = {
   version: 1,
   primaryTranslationId: "cuv-simp",
-  contrastTranslationId: null,
+  contrastTranslationIds: [],
   audioTranslationId: null,
 };
 
@@ -66,14 +68,26 @@ export function normalizeReadBiblePrimaryTranslationId(
   return s && allowedIds(index).has(s) ? s : fallback;
 }
 
-export function normalizeReadBibleContrastTranslationId(
+export function normalizeReadBibleContrastTranslationIds(
   raw: unknown,
   index: BibleTranslationsIndex,
   primaryId: string,
-): string | null {
-  const s = typeof raw === "string" ? raw.trim() : "";
-  if (!s || s === primaryId) return null;
-  return allowedIds(index).has(s) ? s : null;
+): string[] {
+  const allowed = allowedIds(index);
+  if (Array.isArray(raw)) {
+    const seen = new Set<string>();
+    const picked: string[] = [];
+    for (const item of raw) {
+      const s = typeof item === "string" ? item.trim() : "";
+      if (!s || s === primaryId || seen.has(s) || !allowed.has(s)) continue;
+      seen.add(s);
+      picked.push(s);
+    }
+    return picked;
+  }
+  const single = typeof raw === "string" ? raw.trim() : "";
+  if (!single || single === primaryId || !allowed.has(single)) return [];
+  return [single];
 }
 
 export function parseReadBibleTranslationPrefs(
@@ -84,7 +98,7 @@ export function parseReadBibleTranslationPrefs(
   const fallback: ReadBibleTranslationPrefsV1 = {
     version: 1,
     primaryTranslationId: resolveDefaultPrimaryTranslationId(index, locale),
-    contrastTranslationId: null,
+    contrastTranslationIds: [],
     audioTranslationId: null,
   };
   if (!raw?.trim()) return fallback;
@@ -96,8 +110,8 @@ export function parseReadBibleTranslationPrefs(
       index,
       locale,
     );
-    const contrastTranslationId = normalizeReadBibleContrastTranslationId(
-      j.contrastTranslationId,
+    const contrastTranslationIds = normalizeReadBibleContrastTranslationIds(
+      j.contrastTranslationIds ?? j.contrastTranslationId,
       index,
       primaryTranslationId,
     );
@@ -106,7 +120,7 @@ export function parseReadBibleTranslationPrefs(
       index,
       primaryTranslationId,
     );
-    return { version: 1, primaryTranslationId, contrastTranslationId, audioTranslationId };
+    return { version: 1, primaryTranslationId, contrastTranslationIds, audioTranslationId };
   } catch {
     return fallback;
   }
@@ -140,8 +154,8 @@ export async function writeReadBibleTranslationPrefs(
   const normalized: ReadBibleTranslationPrefsV1 = {
     version: 1,
     primaryTranslationId: normalizeReadBiblePrimaryTranslationId(prefs.primaryTranslationId, index),
-    contrastTranslationId: normalizeReadBibleContrastTranslationId(
-      prefs.contrastTranslationId,
+    contrastTranslationIds: normalizeReadBibleContrastTranslationIds(
+      prefs.contrastTranslationIds ?? prefs.contrastTranslationId,
       index,
       normalizeReadBiblePrimaryTranslationId(prefs.primaryTranslationId, index),
     ),

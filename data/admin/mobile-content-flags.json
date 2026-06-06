@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "flags": {
+    "memberRegisterEnabled": true,
+    "remoteContentManifestEnabled": true,
+    "exploreCategoriesRemoteEnabled": true
+  },
+  "announcement": null,
+  "updatedAt": "2026-06-06T00:00:00.000Z"
+}

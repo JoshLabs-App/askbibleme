@@ -17,9 +17,9 @@ import {
   getTripleLoopProgressServerSnapshot,
   getTripleLoopProgressSnapshot,
   hasUserTripleLoopProgress,
-  resetTripleLoopProgressToEpochDefault,
   subscribeTripleLoopProgress,
 } from "@/lib/read/triple-loop-progress";
+import { resetTripleLoopPlanToEasterDefault } from "@/lib/read/triple-loop-plan-sync";
 
 const TRACKS: TripleLoopTrack[] = ["ot", "nt", "wisdom"];
 
@@ -133,7 +133,7 @@ export function ReadTripleLoopPlanDetailClient() {
             onClick={() => {
               setResetting(true);
               try {
-                resetTripleLoopProgressToEpochDefault();
+                resetTripleLoopPlanToEasterDefault();
                 router.refresh();
               } finally {
                 setResetting(false);

@@ -6,6 +6,17 @@ export const HOME_PRAYER_PREFS_STORAGE_KEY = "askbible-home-verse-prefs-v1";
 export const HOME_PRAYER_PREFS_STORAGE_KEY_LEGACY = "selah-home-verse-prefs-v1";
 
 export const HOME_PRAYER_PREFS_UPDATED_EVENT = "selah:home-prayer-verse-prefs-updated";
+const listeners = new Set<() => void>();
+
+function emitPrefsUpdated() {
+  listeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      /* ignore listener errors */
+    }
+  });
+}
 
 export type VerseDisplayModeV1 = "primary" | "bilingual";
 export type HomePrimaryTranslationMode = "auto" | "manual";
@@ -30,7 +41,9 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
 };
 
 export function defaultHomePrimaryTranslationIdForLocale(locale: AppLocale): string {
-  return locale === "en" ? "web-en" : "cuv-simp";
+  if (locale === "en") return "kjv";
+  if (locale === "zh-TW") return "cuv-trad";
+  return "cuv-simp";
 }
 
 function normalizePrimaryTranslationMode(raw: unknown): HomePrimaryTranslationMode {
@@ -92,6 +105,12 @@ export async function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): P
   };
   await AsyncStorage.setItem(HOME_PRAYER_PREFS_STORAGE_KEY, JSON.stringify(normalized));
   await AsyncStorage.removeItem(HOME_PRAYER_PREFS_STORAGE_KEY_LEGACY);
+  emitPrefsUpdated();
+}
+
+export function subscribeHomePrayerVersePrefs(onStore: () => void): () => void {
+  listeners.add(onStore);
+  return () => listeners.delete(onStore);
 }
 
 export function verseTranslationIdsFromPrefs(
@@ -115,6 +134,7 @@ export function verseTranslationIdsFromPrefs(
 export function flowLocaleForHomeVerseTranslationId(translationId: string): AppLocale {
   const id = translationId.trim().toLowerCase();
   if (!id) return "en";
+  if (id === "cuv-trad" || id.includes("hant")) return "zh-TW";
   if (id.startsWith("cuv") || id.includes("zh")) return "zh-CN";
   return "en";
 }

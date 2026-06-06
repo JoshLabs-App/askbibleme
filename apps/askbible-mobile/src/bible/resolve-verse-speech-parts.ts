@@ -5,13 +5,18 @@ import {
 } from "./infer-divine-speech-spans";
 import type { VerseSpeechPart } from "./verse-annotations";
 
+function hasNonPlainSpeech(parts: VerseSpeechPart[] | null | undefined): boolean {
+  return Boolean(parts?.some((p) => p.kind !== "plain"));
+}
+
 export function resolveVerseSpeechParts(
   verse: { text: string; speechParts: VerseSpeechPart[] | null },
   ctx: { translationId: string; bookId: string; chapter: number; verse: number },
 ): VerseSpeechPart[] | null {
-  if (verse.speechParts?.length) return verse.speechParts;
-  if (!translationSupportsSpeechHighlight(ctx.translationId)) return null;
-  return splitTextBySpeechHighlights(verse.text, ctx);
+  if (!translationSupportsSpeechHighlight(ctx.translationId)) return verse.speechParts;
+  const inferred = splitTextBySpeechHighlights(verse.text, ctx);
+  if (hasNonPlainSpeech(inferred)) return inferred;
+  return verse.speechParts ?? inferred;
 }
 
 export function resolveChapterVerseSpeechParts(
@@ -29,11 +34,8 @@ export function resolveChapterVerseSpeechParts(
     : null;
 
   verses.forEach((v, idx) => {
-    if (v.speechParts?.length) {
-      out.set(v.verse, v.speechParts);
-      return;
-    }
-    out.set(v.verse, inferred?.[idx] ?? null);
+    const inferredParts = inferred?.[idx] ?? null;
+    out.set(v.verse, hasNonPlainSpeech(inferredParts) ? inferredParts : (v.speechParts ?? inferredParts));
   });
   return out;
 }

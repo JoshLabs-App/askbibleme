@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ReadChapterInfoEditionBlock } from "@/components/bible/ReadChapterInfoEditionBlock";
 import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
@@ -32,6 +32,16 @@ type PanelCopy = {
   title: string;
   blurb: string;
   tagIcon: ReactNode;
+};
+
+type SpreadEditionBlockProps = {
+  label: string;
+  variant: InfoEditionReaderVariant;
+  roleId: string | null;
+  initialPublished: InfoEditionV1PublishedChapter | null;
+  bookId: string;
+  chapter: number;
+  onBack?: () => void;
 };
 
 function panelClass(active: boolean, side: "guide" | "info"): string {
@@ -137,6 +147,34 @@ function PostReadingPanel({
   );
 }
 
+function SpreadEditionBlock({
+  label,
+  variant,
+  roleId,
+  initialPublished,
+  bookId,
+  chapter,
+  onBack,
+}: SpreadEditionBlockProps) {
+  return (
+    <section className="read-chapter-post-reading-editions-spread-section" aria-label={label}>
+      <header className="read-chapter-post-reading-editions-spread-section-header">
+        <p className="read-chapter-post-reading-editions-spread-section-label">{label}</p>
+      </header>
+      <ReadChapterInfoEditionBlock
+        key={`${variant}-${bookId}-${chapter}-${roleId ?? "default"}`}
+        variant={variant}
+        bookId={bookId}
+        chapter={chapter}
+        roleId={roleId}
+        isActive
+        initialPublished={initialPublished}
+        onBack={onBack}
+      />
+    </section>
+  );
+}
+
 export function ReadChapterPostReadingEditions({
   bookId,
   chapter,
@@ -150,7 +188,6 @@ export function ReadChapterPostReadingEditions({
   const { t, locale } = useLocale();
   const isSpread = useReadChapterSpreadLayout();
   const [active, setActive] = useState<InfoEditionReaderVariant | null>(null);
-  const hasAutoSelectedSpreadDefault = useRef(false);
 
   const selectVariant = (variant: InfoEditionReaderVariant) => {
     setActive(variant);
@@ -162,17 +199,6 @@ export function ReadChapterPostReadingEditions({
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  useEffect(() => {
-    if (isSpread && active === null && !hasAutoSelectedSpreadDefault.current) {
-      setActive("guide");
-      hasAutoSelectedSpreadDefault.current = true;
-    }
-
-    if (!isSpread) {
-      hasAutoSelectedSpreadDefault.current = false;
-    }
-  }, [isSpread, active]);
 
   const showGuide = active === "guide";
   const showInfo = active === "info";
@@ -228,25 +254,6 @@ export function ReadChapterPostReadingEditions({
         </div>
       </header>
 
-      {isSpread ? (
-        <div
-          className="read-chapter-edition-switcher"
-          role="tablist"
-          aria-label={t("pages.read.postReadingEditionsChoicesAria")}
-        >
-          <PostReadingEditionPill
-            panel={panels[0]}
-            active={active === "guide"}
-            onSelect={() => selectVariant("guide")}
-          />
-          <PostReadingEditionPill
-            panel={panels[1]}
-            active={active === "info"}
-            onSelect={() => selectVariant("info")}
-          />
-        </div>
-      ) : null}
-
       {!isSpread ? (
         <div
           className="read-chapter-post-reading-editions-board-wrap read-chapter-post-reading-editions-book"
@@ -267,36 +274,59 @@ export function ReadChapterPostReadingEditions({
       ) : null}
 
       <div className="read-chapter-post-reading-editions-panels">
-        {showGuide ? (
-          <div id="read-edition-panel-guide" role="tabpanel" aria-labelledby="read-edition-tab-guide">
-            <ReadChapterInfoEditionBlock
-              key={`guide-${bookId}-${chapter}-${effectiveGuideRoleId ?? "default"}`}
+        {isSpread ? (
+          <div className="read-chapter-post-reading-editions-spread-parts">
+            <SpreadEditionBlock
+              label={t("pages.read.postReadingEditionGuideTitle")}
               variant="guide"
-              bookId={bookId}
-              chapter={chapter}
               roleId={effectiveGuideRoleId}
-              isActive
               initialPublished={initialGuidePublished}
-              onBack={goBackToChoices}
-            />
-          </div>
-        ) : null}
-        {showInfo ? (
-          <div id="read-edition-panel-info" role="tabpanel" aria-labelledby="read-edition-tab-info">
-            <ReadChapterInfoEditionBlock
-              key={`info-${bookId}-${chapter}-${effectiveInfoRoleId ?? "default"}`}
-              variant="info"
               bookId={bookId}
               chapter={chapter}
+            />
+            <SpreadEditionBlock
+              label={t("pages.read.postReadingEditionInfoTitle")}
+              variant="info"
               roleId={effectiveInfoRoleId}
-              isActive
               initialPublished={initialInfoPublished}
-              onBack={goBackToChoices}
+              bookId={bookId}
+              chapter={chapter}
             />
           </div>
-        ) : null}
+        ) : (
+          <>
+            {showGuide ? (
+              <div id="read-edition-panel-guide" role="tabpanel" aria-labelledby="read-edition-tab-guide">
+                <ReadChapterInfoEditionBlock
+                  key={`guide-${bookId}-${chapter}-${effectiveGuideRoleId ?? "default"}`}
+                  variant="guide"
+                  bookId={bookId}
+                  chapter={chapter}
+                  roleId={effectiveGuideRoleId}
+                  isActive
+                  initialPublished={initialGuidePublished}
+                  onBack={goBackToChoices}
+                />
+              </div>
+            ) : null}
+            {showInfo ? (
+              <div id="read-edition-panel-info" role="tabpanel" aria-labelledby="read-edition-tab-info">
+                <ReadChapterInfoEditionBlock
+                  key={`info-${bookId}-${chapter}-${effectiveInfoRoleId ?? "default"}`}
+                  variant="info"
+                  bookId={bookId}
+                  chapter={chapter}
+                  roleId={effectiveInfoRoleId}
+                  isActive
+                  initialPublished={initialInfoPublished}
+                  onBack={goBackToChoices}
+                />
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
-      {active ? (
+      {!isSpread && active ? (
         <div className="read-chapter-post-reading-bottom-actions" aria-label={t("pages.read.chapterEndNavAria")}>
           <div className="read-chapter-post-reading-bottom-actions-side">
             {prevChapterHref ? (

@@ -289,7 +289,10 @@ export function ReadChapterInfoEditionBlock({
 
           {phase === "ready" && published ? (
             <div className="read-chapter-info-edition-panel">
-              <ReadChapterInfoEditionMarkdown content={published.markdown} />
+              <ReadChapterInfoEditionMarkdown
+                content={published.markdown}
+                hideKeyScenes={variant === "info"}
+              />
               {onBack ? (
                 <button
                   type="button"

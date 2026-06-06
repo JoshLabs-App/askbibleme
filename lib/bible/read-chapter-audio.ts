@@ -26,6 +26,7 @@ export async function resolveChapterAudioPlayableSrc(args: {
     return resolveWebChapterAudioPlayableSrc({
       bookId: args.bookId,
       chapter: args.chapter,
+      translationId: args.translationId,
     });
   }
   if (translationSupportsCuvChapterAudio(args.translationId)) {

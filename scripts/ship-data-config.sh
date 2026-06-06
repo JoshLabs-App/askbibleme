@@ -14,6 +14,7 @@ PATHS=(
   "data/relax-settings.json"
   "data/branding.json"
   "data/admin/generation-roles.json"
+  "data/admin/mobile-content-flags.json"
   "data/bible/info-edition-v1-published.json"
 )
 

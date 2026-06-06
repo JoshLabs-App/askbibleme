@@ -1,0 +1,143 @@
+"use client";
+
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
+
+export type NatureHomeSettingsSelectOption = {
+  id: string;
+  label: string;
+  shortLabel?: string;
+};
+
+type Props = {
+  accessibilityLabel: string;
+  value: string;
+  options: NatureHomeSettingsSelectOption[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (id: string) => void;
+  disabled?: boolean;
+  className?: string;
+};
+
+/** 对齐 App `NatureHomeSettingsSelect`；下拉挂 body，避免面板 overflow 裁切 */
+export function NatureHomeSettingsSelect({
+  accessibilityLabel,
+  value,
+  options,
+  open,
+  onOpenChange,
+  onSelect,
+  disabled = false,
+  className = "",
+}: Props) {
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const [portalReady, setPortalReady] = useState(false);
+  const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  const active = options.find((o) => o.id === value) ?? options[0];
+  const display = active?.shortLabel ?? active?.label ?? "";
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current) {
+      setMenuRect(null);
+      return;
+    }
+    const measure = () => {
+      const node = anchorRef.current;
+      if (!node) return;
+      const r = node.getBoundingClientRect();
+      setMenuRect({ top: r.bottom + 4, left: r.left, width: r.width });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [open, options.length]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [open, onOpenChange]);
+
+  const menu =
+    open && !disabled && menuRect && portalReady
+      ? createPortal(
+          <div
+            className="fixed z-[96] max-h-40 overflow-y-auto overscroll-y-contain rounded-[7px] border border-zinc-600 bg-zinc-800 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+            style={{
+              top: menuRect.top,
+              left: menuRect.left,
+              width: menuRect.width,
+            }}
+            role="listbox"
+            aria-label={accessibilityLabel}
+          >
+            {options.map((opt) => {
+              const selected = opt.id === value;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => onSelect(opt.id)}
+                  className={[
+                    "flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left text-[12px] transition",
+                    selected ? "bg-zinc-700 text-white" : "text-white/82 hover:bg-zinc-700/70",
+                  ].join(" ")}
+                >
+                  <span className="min-w-0 truncate">{opt.label}</span>
+                  {selected ? (
+                    <ShellMaterialIcon name="check" size={16} color="#fff" />
+                  ) : (
+                    <span className="w-4 shrink-0" aria-hidden />
+                  )}
+                </button>
+              );
+            })}
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <>
+      {menu}
+      <div className={`relative min-w-0 flex-1 ${className}`.trim()}>
+        <button
+          ref={anchorRef}
+          type="button"
+          disabled={disabled}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-label={accessibilityLabel}
+          onClick={() => onOpenChange(!open)}
+          className={[
+            "flex min-h-[34px] w-full items-center justify-between gap-1 rounded-[7px] border border-zinc-600 bg-zinc-800 px-2.5 py-1.5 text-left transition",
+            disabled ? "opacity-35" : "hover:bg-zinc-700/80 active:bg-zinc-700",
+          ].join(" ")}
+        >
+          <span className="min-w-0 flex-1 truncate text-[12px] text-white/90">{display}</span>
+          <ShellMaterialIcon
+            name={open ? "expand_less" : "expand_more"}
+            size={18}
+            color={disabled ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.72)"}
+          />
+        </button>
+      </div>
+    </>
+  );
+}

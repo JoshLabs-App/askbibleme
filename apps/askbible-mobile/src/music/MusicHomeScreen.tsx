@@ -367,7 +367,7 @@ function SleepCrescentMoon({ active, centered = false }: { active: boolean; cent
   if (!active) return null;
   const moonOpacity = phase.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.17, 0.38],
+    outputRange: [0.42, 0.78],
   });
   return (
     <View style={[styles.sleepMoonWrap, centered && styles.centerVisualLandscape]} pointerEvents="none">
@@ -575,8 +575,8 @@ function CoffeeBeanOrbit({
             inputRange: [0, 0.25, 0.5, 0.75, 1],
             outputRange: [0, 2, 14, 6, 0],
           });
-          const mainBeanOpacity = 0.09 + pseudoRandom01(i * 97 + 13) * 0.1;
-          const beanOpacity = reverseDark ? 0.3 : mainBeanOpacity;
+          const mainBeanOpacity = 0.22 + pseudoRandom01(i * 97 + 13) * 0.18;
+          const beanOpacity = reverseDark ? 0.62 : mainBeanOpacity;
           const pulseLift = rhythmPulse * (isFollower ? 0.35 : 1);
           const pulseScale = 1 + rhythmPulse * (isFollower ? 0.06 : 0.1);
           return (
@@ -950,45 +950,37 @@ function SlowFish({
   viewportTop?: number;
   centerMode?: "lower" | "center";
 }) {
-  const orbit = useRef(new Animated.Value(0)).current;
+  const [motionMs, setMotionMs] = useState(0);
 
   useEffect(() => {
-    orbit.stopAnimation();
-    if (!active) return;
-    orbit.setValue(0);
-    const loop = Animated.loop(
-      Animated.timing(orbit, {
-        toValue: 1,
-        duration: 68000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    loop.start();
+    if (!active) {
+      setMotionMs(0);
+      return;
+    }
+    const startedAt = Date.now();
+    const timer = setInterval(() => {
+      setMotionMs(Date.now() - startedAt);
+    }, 33);
 
     return () => {
-      loop.stop();
-      orbit.stopAnimation();
+      clearInterval(timer);
     };
-  }, [active, orbit]);
+  }, [active]);
 
   const cx = width * 0.5;
   // 与主视觉圆心保持一致，避免旋转中心偏移。
   const cy = coffeeVisualCenterY(height, centerMode === "center", viewportHeight, viewportTop);
-  const orbitDeg = orbit.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  const orbitTurns = motionMs / 42000;
+  const shimmerPhase = (motionMs % 8200) / 8200;
 
   return (
     <View pointerEvents="none" style={styles.fishLayer}>
-      <Animated.View
+      <View
         style={[
           styles.fishOrbitGroup,
           {
             left: cx,
             top: cy,
-            transform: [{ rotate: orbitDeg }],
           },
         ]}
       >
@@ -1003,17 +995,35 @@ function SlowFish({
           const radiusJitter = pseudoRandom01(i * 23 + 11) * 20;
           const radius = radiusBase + radiusJitter;
           const size = 0.55 + pseudoRandom01(i * 31 + 17) * 0.68;
-          const opacity = 0.18 + pseudoRandom01(i * 37 + 3) * 0.18;
+          const opacity = 0.34 + pseudoRandom01(i * 37 + 3) * 0.28;
+          const ringSpeedBoost = 0.7 + ring * 0.14;
+          const randomSpeed = 0.45 + pseudoRandom01(i * 41 + 9) * 1.7;
+          const speedFactor = ringSpeedBoost * randomSpeed * 0.58;
+          const orbitOffset = pseudoRandom01(i * 67 + 21) * 360;
+          const fishOrbitAngle = orbitTurns * 360 * speedFactor + orbitOffset;
+          const localShimmer = (shimmerPhase + i / FISH_COUNT) % 1;
+          const shimmerOpacityFactor =
+            localShimmer <= 0.5 ? 0.88 + localShimmer * 0.24 : 1 - (localShimmer - 0.5) * 0.24;
+          const bobY = localShimmer <= 0.5 ? -2.4 + localShimmer * 9.6 : 2.4 - (localShimmer - 0.5) * 9.6;
+          // 在环形轨道上增加轻微扭动，保留绕圆主轨迹但更像鱼在主动游动。
+          const swimPhase = (motionMs / (2600 + pseudoRandom01(i * 73 + 33) * 2600) + i * 0.21) % 1;
+          const swimWave = Math.sin(swimPhase * Math.PI * 2);
+          const tangentialSway = swimWave * (1.6 + pseudoRandom01(i * 79 + 27) * 2.2);
+          const radialSway = Math.cos(swimPhase * Math.PI * 2) * (1.6 + pseudoRandom01(i * 83 + 31) * 3.2);
+          const headingWiggle = swimWave * (1.2 + pseudoRandom01(i * 89 + 37) * 2.6);
           return (
             <View
               key={`fish-${i}`}
               style={[
                 styles.fishOrbitNode,
                 {
-                  opacity,
+                  opacity: opacity * shimmerOpacityFactor,
                   transform: [
-                    { rotate: `${angle}deg` },
-                    { translateX: radius },
+                    { rotate: `${angle + fishOrbitAngle}deg` },
+                    { translateX: radius + radialSway },
+                    { translateY: tangentialSway },
+                    { translateY: bobY },
+                    { rotate: `${headingWiggle}deg` },
                     { rotate: "90deg" },
                     { scale: size },
                   ],
@@ -1024,7 +1034,7 @@ function SlowFish({
             </View>
           );
         })}
-      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -1526,7 +1536,11 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
           style={inTab ? shellFullBleedBackdropStyle(fullBleedFrame) : styles.backdrop}
         >
           {showArtwork ? (
-            <Image source={{ uri: current.artworkUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+            <Image
+              source={current.artworkUri ? { uri: current.artworkUri } : undefined}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+            />
           ) : (
             <>
               <MusicEnergyGlow
@@ -2109,6 +2123,7 @@ const styles = StyleSheet.create({
   sleepMoonImage: {
     width: 86,
     height: 86,
+    tintColor: "rgba(229,242,255,0.98)",
   },
   breathPulseCircle: {
     position: "absolute",

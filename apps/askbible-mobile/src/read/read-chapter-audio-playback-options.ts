@@ -26,7 +26,7 @@ function isCuvVoiceOptionId(id: string): id is CuvChapterAudioVoiceId {
 /**
  * 朗读选项 id：
  * - `mandarin` / `teochew-nt`：人声（译本跟上方「圣经版本」）
- * - `web-en` / `bbe-en`：英文朗读音轨
+ * - `web-en` / `bbe-en` / `blm-es`：跟随译本的整章音轨
  */
 export function encodeChapterAudioPlaybackOptionId(
   audioTranslationId: string | null,

@@ -17,6 +17,7 @@ if (!fs.existsSync(srcRoot)) {
 
 /** @type {Record<string, Record<string, unknown>>} */
 const bundle = {
+  "cuv-v20": {},
   "cuv-simp": {},
   "web-en": {},
   "teochew-nt": {},
@@ -34,7 +35,9 @@ function ingestDir(scopeId, dir) {
   return count;
 }
 
-const cuvCount = ingestDir("cuv-simp", srcRoot);
+const cuvRootCount = ingestDir("cuv-simp", srcRoot);
+const cuvV20Dir = path.join(srcRoot, "cuv-v20");
+const cuvV20Count = fs.existsSync(cuvV20Dir) ? ingestDir("cuv-v20", cuvV20Dir) : 0;
 const webDir = path.join(srcRoot, "web-en");
 const teochewDir = path.join(srcRoot, "teochew-nt");
 const webCount = fs.existsSync(webDir) ? ingestDir("web-en", webDir) : 0;
@@ -45,5 +48,5 @@ fs.writeFileSync(dest, JSON.stringify(bundle));
 
 const mb = (fs.statSync(dest).size / (1024 * 1024)).toFixed(2);
 console.log(
-  `Wrote verse-timings-bundle.json (${mb} MB): cuv=${cuvCount}, web-en=${webCount}, teochew-nt=${teochewCount}`,
+  `Wrote verse-timings-bundle.json (${mb} MB): cuv-v20=${cuvV20Count}, cuv-legacy=${cuvRootCount}, web-en=${webCount}, teochew-nt=${teochewCount}`,
 );

@@ -1,8 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL } from "@/lib/home-prayer-pools/constants";
+import {
+  HOME_VERSE_POOL_SCOPE_OPTIONS,
+  DEFAULT_HOME_VERSE_POOL_SCOPE,
+  type HomeVersePoolScopeId,
+} from "@/lib/explore/explore-home-verse-pool-scopes";
+import {
+  getHomeVersePoolScope,
+  hydrateHomeVersePoolScope,
+  setHomeVersePoolScope,
+  subscribeHomeVersePoolScope,
+} from "@/lib/home/home-verse-pool-scope-prefs";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import {
   normalizeGoldenVerseFontFamily,
   normalizeGoldenVerseTextEffect,
@@ -19,7 +31,7 @@ import type { BibleTranslationsIndex } from "@/lib/bible/translations-types";
 
 type Catalog = { version: 1; translations: { id: string; labelZh: string; labelEn: string; language: string }[] };
 
-type HomeVerseSettingsSection = "translation" | "goldenFont";
+type HomeVerseSettingsSection = "translation" | "goldenFont" | "versePoolScope";
 
 /** 自然首页：本页经文 `zoom` 档位（与 `nature-home-text-scale-prefs` 同源） */
 export type NatureVerseTextScaleDockProps = {
@@ -124,12 +136,23 @@ export function HomePrayerVerseDockSettings({
   const sections = sectionsProp ?? (["translation"] as HomeVerseSettingsSection[]);
   const showTranslation = sections.includes("translation");
   const showGoldenFont = sections.includes("goldenFont");
+  const showVersePoolScope = sections.includes("versePoolScope");
   const goldenFontIntroText = showTranslation
     ? t("pages.goldenVerses.fontLegend")
     : t("nature.homeVerse.goldenFontPrefsHint");
   const [open, setOpen] = useState(false);
+  const [poolPickerOpen, setPoolPickerOpen] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [prefs, setPrefs] = useState<HomePrayerVersePrefsV1>(() => readHomePrayerVersePrefs());
+  const homeVersePoolScope = useSyncExternalStore(
+    subscribeHomeVersePoolScope,
+    getHomeVersePoolScope,
+    () => DEFAULT_HOME_VERSE_POOL_SCOPE,
+  );
+
+  useEffect(() => {
+    hydrateHomeVersePoolScope();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,8 +227,7 @@ export function HomePrayerVerseDockSettings({
         {
           ...base,
           primaryTranslationId: translationId,
-          contrastTranslationId:
-            base.contrastTranslationId === translationId ? null : base.contrastTranslationId,
+          contrastTranslationIds: base.contrastTranslationIds.filter((id) => id !== translationId),
         },
         index,
       );
@@ -238,6 +260,56 @@ export function HomePrayerVerseDockSettings({
           : "space-y-3 rounded-lg border border-neutral-200/80 bg-white/60 px-2.5 py-2.5 text-[13px] text-[#37352f]/90 backdrop-blur-sm sm:text-[14px]"
       }
     >
+      {showVersePoolScope && placement === "drawer" ? (
+        <fieldset className="space-y-2 border-0 p-0">
+          <legend className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#37352f]/50">
+            {locale === "en" ? "Home verse pool" : locale === "zh-TW" ? toZhTwText("主页经文池") : "主页经文池"}
+          </legend>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 rounded-md border border-neutral-200/90 bg-white px-2.5 py-2 text-left text-[13px] text-[#37352f] transition hover:bg-neutral-50"
+            onClick={() => setPoolPickerOpen((v) => !v)}
+          >
+            <span className="text-[#37352f]/55">{locale === "en" ? "Current" : locale === "zh-TW" ? toZhTwText("当前选择") : "当前选择"}</span>
+            <span className="min-w-0 truncate font-medium">
+              {(() => {
+                const current =
+                  HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
+                  HOME_VERSE_POOL_SCOPE_OPTIONS[0]!;
+                return locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh;
+              })()}
+            </span>
+          </button>
+          {poolPickerOpen ? (
+            <ul className="space-y-0.5 rounded-md border border-neutral-200/90 bg-white p-1">
+              {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope) => {
+                const selected = homeVersePoolScope === scope.id;
+                const label =
+                  locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh;
+                return (
+                  <li key={scope.id}>
+                    <button
+                      type="button"
+                      className={[
+                        "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-[13px] transition",
+                        selected ? "bg-[#f3ece2] font-medium text-[#5c4528]" : "text-[#37352f]/88 hover:bg-neutral-50",
+                      ].join(" ")}
+                      onClick={() => {
+                        setPoolPickerOpen(false);
+                        setHomeVersePoolScope(scope.id as HomeVersePoolScopeId);
+                        requestHomePrayerVerseFeedReload();
+                      }}
+                    >
+                      <span>{label}</span>
+                      {selected ? <span aria-hidden className="text-[#A56A2D]">✓</span> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </fieldset>
+      ) : null}
 
       {showTranslation && zhCatalog.length > 0 && enCatalog.length > 0 ? (
         <fieldset className="space-y-2 border-0 p-0">
@@ -417,6 +489,93 @@ export function HomePrayerVerseDockSettings({
 
   const formInnerPage = (
     <div className={isPopover ? "mt-0 space-y-4" : "mt-4 space-y-5"}>
+      {showVersePoolScope && isPageLike ? (
+        <div>
+          <p
+            className={
+              isPopover
+                ? "px-4 pb-1.5 text-[13px] font-normal leading-snug text-canvas/55"
+                : "px-4 pb-1.5 text-[13px] font-normal leading-snug text-muted"
+            }
+          >
+            {locale === "en" ? "Home verse pool" : locale === "zh-TW" ? toZhTwText("主页经文池") : "主页经文池"}
+          </p>
+          <div
+            className={
+              isPopover
+                ? "overflow-hidden rounded-[10px] bg-zinc-800"
+                : "overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
+            }
+          >
+            {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope, index) => {
+              const selected = homeVersePoolScope === scope.id;
+              const label =
+                locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh;
+              return (
+                <button
+                  key={scope.id}
+                  type="button"
+                  className={[
+                    "flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[17px] leading-snug transition",
+                    index > 0
+                      ? isPopover
+                        ? "border-t border-zinc-700"
+                        : "border-t border-black/[0.06] dark:border-white/[0.08]"
+                      : "",
+                    selected
+                      ? isPopover
+                        ? "text-canvas/95"
+                        : "font-medium text-ink dark:text-white"
+                      : isPopover
+                        ? "text-canvas/80 hover:bg-white/5"
+                        : "text-ink/85 hover:bg-black/[0.03] dark:text-white/85 dark:hover:bg-white/[0.03]",
+                  ].join(" ")}
+                  onClick={() => {
+                    setHomeVersePoolScope(scope.id as HomeVersePoolScopeId);
+                    requestHomePrayerVerseFeedReload();
+                  }}
+                >
+                  <span className="min-w-0 truncate">{label}</span>
+                  {selected ? (
+                    <span className={isPopover ? "text-sky-300" : "text-[#A56A2D]"} aria-hidden>
+                      ✓
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {natureVerseTextScale && isPopover ? (
+        <>
+          <p className="px-4 text-[13px] font-medium leading-snug text-canvas/70">
+            {t("nature.homeVerse.sizeOnHome")}
+          </p>
+          <div className="mx-4 flex items-center justify-center gap-2 overflow-hidden rounded-[10px] bg-zinc-800 px-2 py-2">
+            <button
+              type="button"
+              disabled={natureVerseTextScale.atMin}
+              aria-label={t("nature.textScaleSmallerAria")}
+              className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-700 text-canvas transition hover:bg-zinc-600 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              onClick={natureVerseTextScale.onSmaller}
+            >
+              <IconTextScaleSmallerDock className="h-[1.3rem] w-[1.3rem] opacity-90" />
+            </button>
+            <button
+              type="button"
+              disabled={natureVerseTextScale.atMax}
+              aria-label={t("nature.textScaleLargerAria")}
+              className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-700 text-canvas transition hover:bg-zinc-600 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35"
+              onClick={natureVerseTextScale.onLarger}
+            >
+              <IconTextScaleLargerDock className="h-[1.3rem] w-[1.3rem] opacity-90" />
+            </button>
+          </div>
+        </>
+      ) : null}
+
       {showGoldenFont ? (
         <div>
           <p

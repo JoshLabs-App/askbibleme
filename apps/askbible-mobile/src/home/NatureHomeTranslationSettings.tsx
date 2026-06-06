@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { bundledBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
 import type { BibleTranslationMeta } from "../bible/translations-types";
+import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import {
@@ -18,41 +19,64 @@ import {
 } from "./NatureHomeSettingsSelect";
 
 const CONTRAST_OFF_ID = "";
+const PRIMARY_SYSTEM_DEFAULT_ID = "__system_default__";
 
 type Props = {
   onPrefsChanged: () => void;
 };
 
 const SHORT_LABEL_ZH: Record<string, string> = {
+  asv: "ASV",
   "cuv-simp": "和合本",
   "cuv-trad": "繁体",
+  "otb-zh-hans": "Open简体",
+  "otb-zh-hant": "Open繁体",
+  "otb-en-gb": "Open英",
   "web-en": "WEB",
   "bbe-en": "BBE",
   "heb-leningrad": "希伯来",
+  kjv: "KJV",
   "rv1909-es": "西语",
 };
 
 const SHORT_LABEL_EN: Record<string, string> = {
+  asv: "ASV",
   "cuv-simp": "CUV",
   "cuv-trad": "CUV Trad",
+  "otb-zh-hans": "OTB ZH",
+  "otb-zh-hant": "OTB ZH-T",
+  "otb-en-gb": "OTB EN",
   "web-en": "WEB",
   "bbe-en": "BBE",
   "heb-leningrad": "Hebrew",
+  kjv: "KJV",
   "rv1909-es": "Spanish",
 };
 
-function translationShortLabel(tr: BibleTranslationMeta, locale: "zh-CN" | "en"): string {
-  const short = locale === "zh-CN" ? SHORT_LABEL_ZH[tr.id] : SHORT_LABEL_EN[tr.id];
+function translationShortLabel(tr: BibleTranslationMeta, locale: AppLocale): string {
+  const short = locale === "en" ? SHORT_LABEL_EN[tr.id] : SHORT_LABEL_ZH[tr.id];
   if (short) return short;
-  return locale === "zh-CN" ? tr.labelZh : tr.labelEn;
+  return locale === "en" ? tr.labelEn : tr.labelZh;
 }
 
-function toOptions(catalog: BibleTranslationMeta[], locale: "zh-CN" | "en"): NatureHomeSettingsSelectOption[] {
-  return catalog.map((tr) => ({
+function toOptions(catalog: BibleTranslationMeta[], locale: AppLocale): NatureHomeSettingsSelectOption[] {
+  return [...catalog]
+    .sort((a, b) => {
+      const rank = (id: string): number => {
+        if (id === "kjv") return 0;
+        if (id === "cuv-simp") return 1;
+        if (id === "cuv-trad") return 2;
+        return 100;
+      };
+      const diff = rank(a.id) - rank(b.id);
+      if (diff !== 0) return diff;
+      return 0;
+    })
+    .map((tr) => ({
     id: tr.id,
-    label: locale === "zh-CN" ? tr.labelZh : tr.labelEn,
+    label: locale === "en" ? tr.labelEn : tr.labelZh,
     shortLabel: translationShortLabel(tr, locale),
-  }));
+    }));
 }
 
 type OpenMenu = "primary" | "contrast" | null;
@@ -76,6 +100,10 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
   }, []);
 
   const allOptions = useMemo(() => toOptions(catalog, locale), [catalog, locale]);
+  const localeDefaultPrimaryId = useMemo(
+    () => defaultHomePrimaryTranslationIdForLocale(locale),
+    [locale],
+  );
 
   const contrastOptions = useMemo((): NatureHomeSettingsSelectOption[] => {
     const none: NatureHomeSettingsSelectOption = {
@@ -89,6 +117,26 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
   const resolvedIds = useMemo(() => verseTranslationIdsFromPrefs(prefs, locale), [prefs, locale]);
   const primaryId = resolvedIds.primary;
   const contrastId = prefs.verseTextEnTranslationId;
+  const systemDefaultPrimaryLabel = locale === "en" ? "System default" : "系统默认";
+  const systemDefaultPrimaryOption = useMemo((): NatureHomeSettingsSelectOption => {
+    const matched = allOptions.find((opt) => opt.id === localeDefaultPrimaryId);
+    if (!matched) {
+      return {
+        id: PRIMARY_SYSTEM_DEFAULT_ID,
+        label: systemDefaultPrimaryLabel,
+        shortLabel: systemDefaultPrimaryLabel,
+      };
+    }
+    return {
+      id: PRIMARY_SYSTEM_DEFAULT_ID,
+      label: `${systemDefaultPrimaryLabel} · ${matched.label}`,
+      shortLabel: systemDefaultPrimaryLabel,
+    };
+  }, [allOptions, localeDefaultPrimaryId, systemDefaultPrimaryLabel]);
+  const primaryOptions = useMemo(
+    (): NatureHomeSettingsSelectOption[] => [systemDefaultPrimaryOption, ...allOptions],
+    [systemDefaultPrimaryOption, allOptions],
+  );
 
   const persist = useCallback(
     async (next: HomePrayerVersePrefsV1) => {
@@ -143,17 +191,19 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
 
   if (allOptions.length === 0) return null;
 
-  const primaryValue = allOptions.some((o) => o.id === primaryId)
-    ? primaryId
-    : allOptions[0]!.id;
+  const primaryValue = prefs.primaryTranslationMode === "auto"
+    ? PRIMARY_SYSTEM_DEFAULT_ID
+    : allOptions.some((o) => o.id === primaryId)
+      ? primaryId
+      : allOptions[0]!.id;
   const contrastValue =
     !contrastId.trim() || !catalog.some((x) => x.id === contrastId)
       ? CONTRAST_OFF_ID
       : contrastId;
 
   const primaryDisplay =
-    allOptions.find((o) => o.id === primaryValue)?.shortLabel ??
-    allOptions.find((o) => o.id === primaryValue)?.label ??
+    primaryOptions.find((o) => o.id === primaryValue)?.shortLabel ??
+    primaryOptions.find((o) => o.id === primaryValue)?.label ??
     primaryValue;
   const contrastDisplay =
     contrastOptions.find((o) => o.id === contrastValue)?.shortLabel ??
@@ -163,16 +213,37 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
   return (
     <View style={styles.row}>
       <View style={styles.selectRow}>
+        {openMenu ? (
+          <Pressable
+            style={styles.dismissOverlay}
+            onPress={() => setOpenMenu(null)}
+            accessibilityRole="button"
+            accessibilityLabel={locale === "en" ? "Close translation dropdown" : "关闭译本下拉"}
+          />
+        ) : null}
         <NatureHomeSettingsSelect
           style={styles.select}
-          menuPlacement="above"
           accessibilityLabel={primaryDisplay}
           value={primaryValue}
-          options={allOptions}
+          options={primaryOptions}
           open={openMenu === "primary"}
           onOpenChange={(open) => setOpenMenu(open ? "primary" : null)}
           onSelect={(id) => {
             setOpenMenu(null);
+            if (id === PRIMARY_SYSTEM_DEFAULT_ID) {
+              const nextAutoPrimary = catalog.some((x) => x.id === localeDefaultPrimaryId)
+                ? localeDefaultPrimaryId
+                : catalog[0]!.id;
+              const nextContrast =
+                prefs.verseTextEnTranslationId.trim() === nextAutoPrimary ? "" : prefs.verseTextEnTranslationId;
+              void persist({
+                ...prefs,
+                primaryTranslationMode: "auto",
+                verseTextZhTranslationId: nextAutoPrimary,
+                verseTextEnTranslationId: nextContrast,
+              });
+              return;
+            }
             const nextContrast =
               prefs.verseTextEnTranslationId.trim() === id
                 ? ""
@@ -187,7 +258,6 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
         />
         <NatureHomeSettingsSelect
           style={styles.select}
-          menuPlacement="above"
           accessibilityLabel={contrastDisplay}
           value={contrastValue}
           options={contrastOptions}
@@ -215,10 +285,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   selectRow: {
+    position: "relative",
     width: "100%",
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 8,
+  },
+  dismissOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
   },
   select: {
     flex: 1,

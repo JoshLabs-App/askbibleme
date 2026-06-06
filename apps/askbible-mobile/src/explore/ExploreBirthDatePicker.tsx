@@ -29,7 +29,7 @@ export function ExploreBirthDatePicker({ value, onChange }: Props) {
   );
 
   const formatMonth = useCallback((month: number) => {
-    if (getLocale() === "zh-CN") return `${month}月`;
+    if (getLocale() !== "en") return `${month}月`;
     return EN_MONTH_SHORT[month - 1] ?? String(month);
   }, []);
 

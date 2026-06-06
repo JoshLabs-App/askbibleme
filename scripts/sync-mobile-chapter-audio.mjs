@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 章朗读 mp3：默认不复制进安装包（省 ~1GB）；联网时走 theaudiopower / 自托管 URL。
+ * 章朗读 mp3：默认不复制进安装包（省 ~1GB）；联网时走 FHL(version=20) / 自托管 URL。
  * 需要打进 APK 时：MOBILE_BUNDLE_CHAPTER_AUDIO=1 npm run mobile:sync-chapter-audio
  */
 import fs from "node:fs";
@@ -32,6 +32,8 @@ function rmDirIfExists(dir) {
 function clearBundledChapterAudioFiles() {
   fs.mkdirSync(destRoot, { recursive: true });
   rmDirIfExists(path.join(destRoot, "web-en"));
+  rmDirIfExists(path.join(destRoot, "blm-es"));
+  rmDirIfExists(path.join(destRoot, "cuv-v20"));
   rmDirIfExists(path.join(destRoot, "teochew-nt"));
   for (const name of fs.readdirSync(destRoot)) {
     if (!name.endsWith(".mp3")) continue;
@@ -93,6 +95,10 @@ if (fs.existsSync(publicAudio)) {
     if (!fs.statSync(full).isDirectory()) continue;
     if (name === "web-en") {
       walkFlat("web-en", "web-en");
+    } else if (name === "blm-es") {
+      walkFlat("blm-es", "blm-es");
+    } else if (name === "cuv-v20") {
+      walkFlat("cuv-v20", "cuv-v20");
     } else if (name === "teochew-nt") {
       walkFlat("teochew-nt", "teochew-nt");
     }

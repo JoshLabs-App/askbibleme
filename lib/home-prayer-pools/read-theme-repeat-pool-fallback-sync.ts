@@ -31,7 +31,7 @@ export function readThemeRepeatPoolFallbackSync(
   minCount: number = DEFAULT_THEME_REPEAT_MIN_COUNT,
 ): Record<AppLocale, HomeVerseEntry[]> {
   const want = new Set(locales);
-  const empty: Record<AppLocale, HomeVerseEntry[]> = { "zh-CN": [], en: [] };
+  const empty: Record<AppLocale, HomeVerseEntry[]> = { "zh-CN": [], "zh-TW": [], en: [] };
   const scopeId = themeRepeatPoolScopeId(minCount);
   const manifestPath = path.join(poolDir(cwd, scopeId), "manifest.json");
   if (!fs.existsSync(manifestPath)) return empty;
@@ -74,6 +74,7 @@ export function readThemeRepeatPoolFallbackSync(
   }
 
   const zh: HomeVerseEntry[] = [];
+  const zhTw: HomeVerseEntry[] = [];
   const en: HomeVerseEntry[] = [];
   for (const key of keys) {
     const row = bodies.get(key);
@@ -81,10 +82,15 @@ export function readThemeRepeatPoolFallbackSync(
     if (want.has("zh-CN") && row.locales["zh-CN"]?.lines?.length) {
       zh.push(normalizeEntry(row.locales["zh-CN"]));
     }
+    if (want.has("zh-TW") && row.locales["zh-TW"]?.lines?.length) {
+      zhTw.push(normalizeEntry(row.locales["zh-TW"]));
+    } else if (want.has("zh-TW") && row.locales["zh-CN"]?.lines?.length) {
+      zhTw.push(normalizeEntry(row.locales["zh-CN"]));
+    }
     if (want.has("en") && row.locales.en?.lines?.length) {
       en.push(normalizeEntry(row.locales.en));
     }
   }
 
-  return { "zh-CN": zh, en: en };
+  return { "zh-CN": zh, "zh-TW": zhTw.length ? zhTw : zh, en: en };
 }

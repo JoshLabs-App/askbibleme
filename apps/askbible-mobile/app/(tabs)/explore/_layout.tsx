@@ -19,7 +19,6 @@ export default function ExploreStackLayout() {
         <Stack.Screen name="encouraging-words/index" />
         <Stack.Screen name="narrow-gate/index" />
         <Stack.Screen name="praise-worship/index" />
-        <Stack.Screen name="rest-restore/index" />
         <Stack.Screen name="prayer/index" />
       </Stack>
     </ReadParchmentBackground>

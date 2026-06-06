@@ -80,5 +80,6 @@ const READ_SCRIPTURE_ABOUT_EN: HomeVerseEntry[] = [
 
 export const READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE: Record<AppLocale, HomeVerseEntry[]> = {
   "zh-CN": READ_SCRIPTURE_ABOUT_ZH,
+  "zh-TW": READ_SCRIPTURE_ABOUT_ZH,
   en: READ_SCRIPTURE_ABOUT_EN,
 };

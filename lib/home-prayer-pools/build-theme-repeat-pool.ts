@@ -157,7 +157,6 @@ export async function writeThemeRepeatPrayerPool(
       const parsed = parseVerseKey(exploreVerseKey);
       if (!parsed) continue;
       sourceRowsWithExplore.push({
-        verseKey: exploreVerseKey,
         repeatCount: Math.max(1, minCount),
         bookId: parsed.bookId,
         chapter: parsed.chapter,
@@ -231,6 +230,7 @@ export async function writeThemeRepeatPrayerPool(
       if (entry?.lines?.length) byTranslationId[tid] = entry;
     }
     const zhDefault = byTranslationId[defaultZhTid];
+    const zhTwDefault = byTranslationId["cuv-trad"] ?? zhDefault;
     const enDefault = byTranslationId[defaultEnTid];
     if (!zhDefault?.lines?.length || !enDefault?.lines?.length) {
       skippedResolve += 1;
@@ -249,7 +249,7 @@ export async function writeThemeRepeatPrayerPool(
     resolved.push({
       verseKey,
       weight: Math.max(1, row.repeatCount),
-      locales: { "zh-CN": zhDefault, en: enDefault },
+      locales: { "zh-CN": zhDefault, "zh-TW": zhTwDefault, en: enDefault },
       byTranslationId,
     });
   }

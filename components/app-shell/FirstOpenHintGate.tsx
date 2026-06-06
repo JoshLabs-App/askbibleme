@@ -9,7 +9,11 @@ function isFirstOpenHintEnabled(): boolean {
   return process.env.NEXT_PUBLIC_FIRST_OPEN_HINT_ENABLED !== "0";
 }
 
-export function FirstOpenHintGate() {
+type Props = {
+  onDismiss?: () => void;
+};
+
+export function FirstOpenHintGate({ onDismiss }: Props) {
   const { t } = useLocale();
   const [visible, setVisible] = useState(false);
   const enabled = useMemo(() => isFirstOpenHintEnabled(), []);
@@ -23,6 +27,7 @@ export function FirstOpenHintGate() {
     trackTap(target);
     setVisible(false);
     markFirstOpenHintSeen();
+    onDismiss?.();
   };
 
   if (!enabled || !visible) return null;

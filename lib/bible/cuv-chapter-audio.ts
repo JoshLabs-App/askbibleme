@@ -2,14 +2,16 @@
  * 和合本（CUV）整章朗读音源。
  * - 自托管（推荐生产）：仅 ` /audio/{BOOK}-{chapter}.mp3 `（public 或 DATA_ROOT/audio）
  * - 潮州语新约：`/audio/teochew-nt/{BOOK}-{chapter}.mp3`（见 teochew-nt-audio-manifest.json）
- * - 开发回退：未开自托管时，本地不存在则回退 theaudiopower.org
+ * - 开发回退：未开自托管时，本地不存在则回退 FHL（version=20）
  */
 
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
 import { effectiveVoiceForBook, voiceSupportsBook } from "@/lib/bible/cuv-chapter-audio-voices";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { resolveTeochewNtChapterAudioPlayableSrc, teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
 
-export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://theaudiopower.org/CUV/Recordings";
+export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://media.fhl.net/unvdavid";
+export const CUV_CHAPTER_AUDIO_LOCAL_SUBDIR = "cuv-v20";
 
 /** 生产自托管：仅使用本站 `/audio/{BOOK}-{章}.mp3`，不回退外部 CDN */
 export function isCuvChapterAudioSelfHosted(): boolean {
@@ -26,16 +28,19 @@ export function translationSupportsCuvChapterAudio(translationId: string): boole
     .startsWith("cuv");
 }
 
-export function buildExternalCuvChapterAudioUrl(bookName: string, chapter: number): string {
-  const name = String(bookName || "").trim();
-  if (!name || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `${CUV_CHAPTER_AUDIO_REMOTE_BASE}/${encodeURIComponent(`${name} ${chapter}`)}.mp3`;
+export function buildExternalCuvChapterAudioUrl(bookId: string, chapter: number): string {
+  const id = String(bookId || "").trim().toUpperCase();
+  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  const meta = scriptureBooks.find((b) => b.bookId === id);
+  if (!meta) return "";
+  const bid = meta.bookNumber;
+  return `${CUV_CHAPTER_AUDIO_REMOTE_BASE}/${bid}/${bid}_${String(chapter).padStart(3, "0")}.mp3`;
 }
 
 export function buildLocalCuvChapterAudioUrl(bookId: string, chapter: number): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `/audio/${id}-${chapter}.mp3`;
+  return `/audio/${CUV_CHAPTER_AUDIO_LOCAL_SUBDIR}/${id}-${chapter}.mp3`;
 }
 
 /** 与 AskBible `readerAudioSourceSameAs` 一致：比较时归一化为绝对 URL。 */
@@ -90,7 +95,7 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
     return { ok: false };
   }
 
-  const remote = buildExternalCuvChapterAudioUrl(args.bookName, args.chapter);
+  const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
   if (!remote) return { ok: false };
   return { ok: true, src: remote };
 }

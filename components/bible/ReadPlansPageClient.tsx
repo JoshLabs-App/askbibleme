@@ -183,7 +183,11 @@ export function ReadPlanDetailClient({ bundle }: DetailProps) {
               {day.readings.map((r, idx) => (
                 <li key={`${day.dayIndex}-${idx}`} className="text-[13px] leading-snug">
                   <Link
-                    href={readingPlanChapterHref(r.bookId, r.startChapter)}
+                    href={readingPlanChapterHref(
+                      r.bookId,
+                      r.startChapter,
+                      prefs.planId === bundle.planId,
+                    )}
                     className="font-medium text-amber-950 underline decoration-amber-800/25 underline-offset-[0.15em] hover:decoration-amber-800/50 dark:text-stone-100 dark:decoration-stone-500/35 dark:hover:decoration-stone-400/55"
                   >
                     {formatReadingPlanRange(r)}

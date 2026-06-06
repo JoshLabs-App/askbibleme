@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** 顺序跑完所有 batch（Render Shell；约 1GB 总量，可分批重试） */
+/** 顺序跑完所有 batch（FHL version=20；约 1GB 总量，可分批重试） */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";

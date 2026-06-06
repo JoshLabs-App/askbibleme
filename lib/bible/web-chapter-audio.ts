@@ -1,7 +1,7 @@
 /**
- * World English Bible（WEB）整章朗读；`bbe-en` 与 `web-en` 共用此音轨。
- * - 自托管：`/audio/web-en/{BOOK}-{chapter}.mp3`
- * - 开发回退：theaudiopower.org（旧约 WEB2，新约 WEB）
+ * WEB / BBE / BLM-ES 整章朗读。
+ * - 自托管：`/audio/{scope}/{BOOK}-{chapter}.mp3`
+ * - 开发回退：theaudiopower.org（WEB）或 ebible.org（BLM-ES）
  */
 
 import {
@@ -10,12 +10,38 @@ import {
 } from "@/lib/bible/web-chapter-audio-book-names";
 
 export const WEB_CHAPTER_AUDIO_SUBDIR = "web-en";
+export const BLM_ES_CHAPTER_AUDIO_SUBDIR = "blm-es";
+export const BLM_ES_CHAPTER_AUDIO_REMOTE_BASE = "https://ebible.org/spablm/mp3";
+
+const BLM_ES_CANONICAL_ALIAS: Record<string, string> = {
+  ECC: "ECL",
+  NAM: "NAH",
+  ZEC: "ZAC",
+  PHM: "FLM",
+};
+
+const OLD_TESTAMENT_MAX = 39;
+const BOOK_NUMBER: Record<string, number> = {
+  GEN: 1, EXO: 2, LEV: 3, NUM: 4, DEU: 5, JOS: 6, JDG: 7, RUT: 8,
+  "1SA": 9, "2SA": 10, "1KI": 11, "2KI": 12, "1CH": 13, "2CH": 14,
+  EZR: 15, NEH: 16, EST: 17, JOB: 18, PSA: 19, PRO: 20, ECC: 21, SNG: 22,
+  ISA: 23, JER: 24, LAM: 25, EZK: 26, DAN: 27, HOS: 28, JOL: 29, AMO: 30,
+  OBA: 31, JON: 32, MIC: 33, NAM: 34, HAB: 35, ZEP: 36, HAG: 37, ZEC: 38, MAL: 39,
+  MAT: 40, MRK: 41, LUK: 42, JHN: 43, ACT: 44, ROM: 45, "1CO": 46, "2CO": 47,
+  GAL: 48, EPH: 49, PHP: 50, COL: 51, "1TH": 52, "2TH": 53, "1TI": 54, "2TI": 55,
+  TIT: 56, PHM: 57, HEB: 58, JAS: 59, "1PE": 60, "2PE": 61, "1JN": 62, "2JN": 63,
+  "3JN": 64, JUD: 65, REV: 66,
+};
 
 export function translationUsesWebChapterAudio(translationId: string): boolean {
-  const id = String(translationId || "")
-    .trim()
-    .toLowerCase();
-  return id === "web-en" || id === "bbe-en";
+  const id = String(translationId || "").trim().toLowerCase();
+  return id === "web-en" || id === "bbe-en" || id === "blm-es";
+}
+
+export function chapterAudioScopeForTranslation(translationId: string): string {
+  const id = String(translationId || "").trim().toLowerCase();
+  if (id === "blm-es") return BLM_ES_CHAPTER_AUDIO_SUBDIR;
+  return WEB_CHAPTER_AUDIO_SUBDIR;
 }
 
 export function isWebChapterAudioSelfHosted(): boolean {
@@ -27,7 +53,30 @@ export function isWebChapterAudioSelfHosted(): boolean {
   );
 }
 
-export function buildExternalWebChapterAudioUrl(bookId: string, chapter: number): string {
+function blmEsAudioBookOrdinal(bookId: string): number | null {
+  const n = BOOK_NUMBER[bookId.toUpperCase()];
+  if (!n) return null;
+  return n <= OLD_TESTAMENT_MAX ? n : n + 30;
+}
+
+function buildExternalBlmEsChapterAudioUrl(bookId: string, chapter: number): string {
+  const id = String(bookId || "").trim().toUpperCase();
+  const ordinal = blmEsAudioBookOrdinal(id);
+  if (!ordinal || !Number.isInteger(chapter) || chapter < 1) return "";
+  if (id === "PSA") return "";
+  const remoteBook = BLM_ES_CANONICAL_ALIAS[id] ?? id;
+  const ord = String(ordinal).padStart(2, "0");
+  const ch = String(chapter).padStart(2, "0");
+  return `${BLM_ES_CHAPTER_AUDIO_REMOTE_BASE}/spablm_${ord}_${remoteBook}_${ch}.mp3`;
+}
+
+export function buildExternalWebChapterAudioUrl(
+  bookId: string,
+  chapter: number,
+  translationId: string = "web-en",
+): string {
+  const tid = String(translationId || "").trim().toLowerCase();
+  if (tid === "blm-es") return buildExternalBlmEsChapterAudioUrl(bookId, chapter);
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
   const name = webChapterAudioBookNameEn(id);
@@ -35,17 +84,24 @@ export function buildExternalWebChapterAudioUrl(bookId: string, chapter: number)
   return `${base}/${encodeURIComponent(`${name} ${chapter}`)}.mp3`;
 }
 
-export function buildLocalWebChapterAudioUrl(bookId: string, chapter: number): string {
+export function buildLocalWebChapterAudioUrl(
+  bookId: string,
+  chapter: number,
+  translationId: string = "web-en",
+): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `/audio/${WEB_CHAPTER_AUDIO_SUBDIR}/${id}-${chapter}.mp3`;
+  const scope = chapterAudioScopeForTranslation(translationId);
+  return `/audio/${scope}/${id}-${chapter}.mp3`;
 }
 
 export async function resolveWebChapterAudioPlayableSrc(args: {
   bookId: string;
   chapter: number;
+  translationId?: string;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
-  const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter);
+  const translationId = args.translationId ?? "web-en";
+  const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
   if (!local) return { ok: false };
 
   const tryLocal = async (): Promise<{ ok: true; src: string } | null> => {
@@ -65,7 +121,7 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
     return { ok: false };
   }
 
-  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter);
+  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
   if (!remote) return { ok: false };
   return { ok: true, src: remote };
 }

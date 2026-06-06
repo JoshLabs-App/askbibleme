@@ -90,7 +90,7 @@ async function verifyEnvelope(
     const ok = await window.crypto.subtle.verify(
       { name: "ECDSA", hash: "SHA-256" },
       key,
-      signature,
+      new Uint8Array(signature),
       payloadBytes,
     );
     if (!ok) return null;

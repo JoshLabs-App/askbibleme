@@ -10,7 +10,7 @@ import {
 
 const listeners = new Set<() => void>();
 
-let cacheRaw: string | undefined;
+let cacheRaw: string | null | undefined;
 let cacheStore: ScriptureVerseBookmarkStore = {};
 
 function emit() {

@@ -6,7 +6,6 @@ import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFe
 import { ShellTemplateDockPreviewProvider } from "@/components/shell/ShellTemplateDockPreviewContext";
 import { NatureBackgroundVideoPrefetch } from "@/components/nature/NatureBackgroundVideoPrefetch";
 import { AppShellFixedChrome } from "@/components/app-shell/AppShellFixedChrome";
-import { FirstOpenHintGate } from "@/components/app-shell/FirstOpenHintGate";
 import { AppShellScrollArea } from "@/components/app-shell/AppShellScrollArea";
 import { ReadBibleTypographyProvider } from "@/components/bible/ReadBibleTypographyProvider";
 import { TelemetryProvider } from "@/components/telemetry/TelemetryProvider";
@@ -29,7 +28,6 @@ export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
                 <NatureBackgroundVideoPrefetch />
                 <AppShellScrollArea>{children}</AppShellScrollArea>
                 <HomeBottomNav />
-                <FirstOpenHintGate />
               </HomePrayerVerseFeedProvider>
             </HomeDockChromeProvider>
           </ShellTemplateDockPreviewProvider>

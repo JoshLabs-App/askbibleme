@@ -45,10 +45,15 @@ export const SHELL_TABS_SCREEN_OPTIONS = {
   safeAreaInsets: { top: 0, bottom: 0, left: 0, right: 0 },
   tabBarStyle: {
     position: "absolute" as const,
+    left: 0,
+    right: 0,
+    bottom: 0,
     height: 0,
     backgroundColor: "transparent",
     borderTopWidth: 0,
+    borderTopColor: "transparent",
     elevation: 0,
+    shadowOpacity: 0,
   },
   sceneStyle: { backgroundColor: "transparent" },
 };

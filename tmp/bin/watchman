@@ -1,0 +1,2 @@
+#!/bin/sh
+exec node /Users/joshua/Desktop/APP/01AskBible/tmp/watchman-mock.js "$@"

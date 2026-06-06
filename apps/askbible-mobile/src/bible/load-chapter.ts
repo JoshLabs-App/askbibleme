@@ -1,7 +1,7 @@
 import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
 import { getScriptureBookDisplayName } from "./scripture-book-display-name";
 import { scriptureBooks } from "./scripture-books";
-import { retryScriptureDatabaseOnPrepareError } from "./scripture-database";
+import { getScriptureDatabase, retryScriptureDatabaseOnPrepareError } from "./scripture-database";
 import { loadedChapterVerseFromRow } from "./verse-annotations";
 import type { LoadedChapter } from "./types";
 import {
@@ -30,6 +30,17 @@ type VerseRow = {
   theme_repeat_count?: number;
 };
 
+function isNativeDatabaseRejectedError(err: unknown): boolean {
+  const message = String(err instanceof Error ? err.message : err).toLowerCase();
+  return (
+    message.includes("nativedatabase.prepareasync") ||
+    message.includes("nativedatabase.preparesync") ||
+    message.includes("prepareasync") ||
+    message.includes("preparesync") ||
+    (message.includes("call to function") && message.includes("nativedatabase."))
+  );
+}
+
 async function queryChapterVerses(
   db: Awaited<ReturnType<typeof getScriptureDatabase>>,
   bookId: string,
@@ -56,7 +67,7 @@ async function queryChapterVerses(
         bookId,
         chapter,
       );
-      return legacy.map((row) => ({ verse: row.verse, text: row.text }));
+      return legacy.map((row: { verse: number; text: string }) => ({ verse: row.verse, text: row.text }));
     }
   }
 }
@@ -87,9 +98,13 @@ export async function loadChapterFromBundledTranslation(
   const ch = Number(chapter);
   if (!Number.isInteger(ch) || ch < 1 || ch > bookMeta.chapters) return null;
 
-  const rows = await retryScriptureDatabaseOnPrepareError(tid, (db) =>
-    queryChapterVerses(db, id, ch),
-  );
+  let rows: VerseRow[];
+  try {
+    rows = await retryScriptureDatabaseOnPrepareError(tid, (db) => queryChapterVerses(db, id, ch));
+  } catch (err) {
+    if (!isNativeDatabaseRejectedError(err)) throw err;
+    return null;
+  }
 
   const verses = rows
     .map((row) =>

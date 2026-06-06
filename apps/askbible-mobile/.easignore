@@ -1,26 +1,43 @@
+.git
+.git/
+.git/**
+**/.git/
+**/.git/**
 node_modules/
 **/node_modules/
 **/node_modules/**
 .expo/
+.expo/**
 dist/
+dist/**
 web-build/
+web-build/**
 expo-env.d.ts
 
 # Android build artifacts
 android/.gradle/
+android/.gradle/**
 android/build/
+android/build/**
 android/app/build/
+android/app/build/**
 android/app/.cxx/
+android/app/.cxx/**
 android/.cxx/
+android/.cxx/**
 **/.gradle/
 **/.cxx/
 **/build/
 
 # iOS build artifacts
 ios/build/
+ios/build/**
 ios/Pods/
+ios/Pods/**
 ios/DerivedData/
+ios/DerivedData/**
 ios/.symlinks/
+ios/.symlinks/**
 
 # Metro / logs / local env
 .metro-health-check*
@@ -30,3 +47,4 @@ yarn-debug.*
 yarn-error.*
 .env*.local
 .DS_Store
+

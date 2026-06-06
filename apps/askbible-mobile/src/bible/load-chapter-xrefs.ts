@@ -1,6 +1,17 @@
 import { retryScriptureXrefDatabaseOnPrepareError } from "./scripture-xref-database";
 import type { ScriptureVerseXrefs, ScriptureXrefTarget } from "./scripture-xref-types";
 
+function isNativeDatabaseRejectedError(err: unknown): boolean {
+  const message = String(err instanceof Error ? err.message : err).toLowerCase();
+  return (
+    message.includes("nativedatabase.prepareasync") ||
+    message.includes("nativedatabase.preparesync") ||
+    message.includes("prepareasync") ||
+    message.includes("preparesync") ||
+    (message.includes("call to function") && message.includes("nativedatabase."))
+  );
+}
+
 function rowToTarget(
   bookId: string,
   chapter: number,
@@ -25,8 +36,9 @@ export async function loadChapterXrefs(
   const ch = Number(chapter);
   if (!id || !Number.isInteger(ch) || ch < 1) return null;
 
-  return retryScriptureXrefDatabaseOnPrepareError(async (db) => {
-    const byVerse = new Map<number, ScriptureVerseXrefs>();
+  try {
+    return await retryScriptureXrefDatabaseOnPrepareError(async (db) => {
+      const byVerse = new Map<number, ScriptureVerseXrefs>();
 
     const outRows = await db.getAllAsync<{
       from_verse: number;
@@ -94,6 +106,10 @@ export async function loadChapterXrefs(
       bucket.incoming.push(target);
     }
 
-    return [...byVerse.values()].sort((a, b) => a.verse - b.verse);
-  });
+      return [...byVerse.values()].sort((a, b) => a.verse - b.verse);
+    });
+  } catch (err) {
+    if (!isNativeDatabaseRejectedError(err)) throw err;
+    return null;
+  }
 }

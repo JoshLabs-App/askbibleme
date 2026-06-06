@@ -14,7 +14,6 @@ import {
 } from "./cuv-chapter-audio";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 import { effectiveVoiceForBook } from "./cuv-chapter-audio-voices";
-import { scriptureBooks } from "./scripture-books";
 import {
   buildExternalWebChapterAudioUrl,
   buildLocalWebChapterAudioUrl,
@@ -26,19 +25,20 @@ import { resolveDownloadedChapterAudioUri } from "../read/read-audio-package-dow
 function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string): boolean {
   const src = cachedSrc.trim().toLowerCase();
   if (!src) return true;
+  // WEB/BBE/BLM 在线音轨容易因为开发基址变化拿到失效缓存地址；每次重算更稳。
+  if (translationUsesWebChapterAudio(translationId)) {
+    return true;
+  }
   // CUV 历史外链在部分章节会 404；开发态优先重算更稳的 askbible 自托管链接。
   if (
     translationSupportsCuvChapterAudio(translationId) &&
-    src.includes("theaudiopower.org/cuv/recordings/")
+    (src.includes("theaudiopower.org/cuv/recordings/") ||
+      src.includes("media.fhl.net/unvdavid/") ||
+      src.includes("askbible.me/audio/cuv-v20/"))
   ) {
     return true;
   }
   return false;
-}
-
-function cuvRemoteBookName(bookId: string, bookName: string): string {
-  const meta = scriptureBooks.find((b) => b.bookId === String(bookId || "").trim().toUpperCase());
-  return meta?.bookName ?? bookName;
 }
 
 /** 同步拼出可播 URL（不探测网络），供注册与 Android 播放兜底 */
@@ -63,12 +63,13 @@ export function buildChapterAudioPlayableSrcSync(args: {
   if (bundled) return bundled;
 
   if (translationUsesWebChapterAudio(args.translationId)) {
-    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter);
-    const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter);
-    if (!local) return remote || null;
+    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
+    const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
+    if (remote) return remote;
+    if (!local) return null;
     const trusted = absoluteSelfHostedChapterAudioUrl(baseUrl, local);
     const askBibleFallback = toAbsoluteUrl("https://askbible.me", local);
-    return trusted || askBibleFallback || remote || null;
+    return trusted || askBibleFallback || null;
   }
 
   if (!translationSupportsCuvChapterAudio(args.translationId)) return null;
@@ -86,14 +87,14 @@ export function buildChapterAudioPlayableSrcSync(args: {
   if (!local) return null;
 
   const remote = buildExternalCuvChapterAudioUrl(
-    cuvRemoteBookName(args.bookId, args.bookName),
+    args.bookId,
     args.chapter,
   );
 
   const trusted = absoluteSelfHostedChapterAudioUrl(baseUrl, local);
-  if (trusted) return trusted;
-  const askBibleFallback = toAbsoluteUrl("https://askbible.me", local);
-  return askBibleFallback || remote || null;
+  // v20 目录在生产站点可能尚未同步，移动端先优先使用可直连的远端源避免静音。
+  if (trusted && !local.includes("/cuv-v20/")) return trusted;
+  return remote || toAbsoluteUrl("https://askbible.me", local) || null;
 }
 
 export function translationSupportsChapterAudio(translationId: string): boolean {
@@ -116,6 +117,7 @@ export async function resolveChapterAudioPlayableSrc(args: {
   if (translationUsesWebChapterAudio(args.translationId)) {
     return resolveWebChapterAudioPlayableSrc({
       baseUrl,
+      translationId: args.translationId,
       bookId: args.bookId,
       chapter: args.chapter,
     });

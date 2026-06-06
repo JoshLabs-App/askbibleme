@@ -11,7 +11,8 @@ export type ReadingPlanPrefs = {
   dayCount?: number;
 };
 
-export const READING_PLAN_PREFS_STORAGE_KEY = "selah-reading-plan-prefs-v1";
+export const READING_PLAN_PREFS_STORAGE_KEY = "askbible-reading-plan-prefs-v1";
+export const READING_PLAN_PREFS_STORAGE_KEY_LEGACY = "selah-reading-plan-prefs-v1";
 
 import { TRIPLE_LOOP_PLAN_DAY_COUNT, TRIPLE_LOOP_PLAN_ID } from "@/lib/bible/reading-plans/triple-loop-plan";
 import { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
@@ -47,7 +48,13 @@ export function subscribeReadingPlanPrefs(onStore: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   listeners.add(onStore);
   const onStorage = (e: StorageEvent) => {
-    if (e.key === READING_PLAN_PREFS_STORAGE_KEY || e.key === null) onStore();
+    if (
+      e.key === READING_PLAN_PREFS_STORAGE_KEY ||
+      e.key === READING_PLAN_PREFS_STORAGE_KEY_LEGACY ||
+      e.key === null
+    ) {
+      onStore();
+    }
   };
   window.addEventListener("storage", onStorage);
   return () => {
@@ -108,10 +115,28 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
   }
 }
 
+function readRawReadingPlanPrefsFromStorage(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    let raw = localStorage.getItem(READING_PLAN_PREFS_STORAGE_KEY);
+    if (raw == null) {
+      const legacy = localStorage.getItem(READING_PLAN_PREFS_STORAGE_KEY_LEGACY);
+      if (legacy != null) {
+        localStorage.setItem(READING_PLAN_PREFS_STORAGE_KEY, legacy);
+        localStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY_LEGACY);
+        raw = legacy;
+      }
+    }
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
 function refreshPrefsSnapshotFromStorage(): ReadingPlanPrefs | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(READING_PLAN_PREFS_STORAGE_KEY);
+    const raw = readRawReadingPlanPrefsFromStorage();
     const key = raw ?? "";
     if (key === snapshotRaw) return snapshotPrefs;
     snapshotRaw = key;
@@ -201,12 +226,14 @@ export function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): void {
   try {
     if (!prefs) {
       localStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY);
+      localStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY_LEGACY);
       snapshotRaw = "";
       snapshotPrefs = null;
       snapshotEffectivePrefs = null;
     } else {
       const json = JSON.stringify(prefs);
       localStorage.setItem(READING_PLAN_PREFS_STORAGE_KEY, json);
+      localStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY_LEGACY);
       snapshotRaw = json;
       snapshotPrefs = prefs;
       snapshotEffectivePrefs = null;

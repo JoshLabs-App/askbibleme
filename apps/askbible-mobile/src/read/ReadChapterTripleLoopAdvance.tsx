@@ -10,10 +10,10 @@ import {
   trackForBookId,
 } from "./reading-plan/triple-loop-reading";
 import { markTodayReadingChapterVisit } from "./reading-plan/today-reading-done";
+import { resetTripleLoopPlanToEasterDefault } from "./reading-plan/triple-loop-plan-sync";
 import {
   advanceTripleLoopProgressTrack,
   hasUserTripleLoopProgress,
-  resetTripleLoopProgressToEpochDefault,
 } from "./reading-plan/triple-loop-progress";
 import {
   useEffectiveReadingPlanPrefs,
@@ -55,7 +55,7 @@ export function ReadChapterTripleLoopAdvance({ bookId, chapter }: Props) {
   const resetToDefault = async () => {
     setSaving(true);
     try {
-      await resetTripleLoopProgressToEpochDefault();
+      await resetTripleLoopPlanToEasterDefault();
       refresh();
     } finally {
       setSaving(false);

@@ -1,8 +1,10 @@
 import type {
   HomePrayerVersePrefsV1,
+  HomePrimaryTranslationMode,
   VerseDisplayModeV1,
   VerseScopeV1,
 } from "@/lib/home-prayer-pools/types";
+import type { AppLocale } from "@/lib/i18n/config";
 import { HOME_PRAYER_PREFS_STORAGE_KEY, VERSE_DISPLAY_COOKIE_NAME } from "@/lib/home-prayer-pools/constants";
 import {
   normalizeGoldenVerseFontFamily,
@@ -43,12 +45,23 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   version: 1,
   verseScope: DEFAULT_VERSE_SCOPE,
   verseDisplay: "primary",
+  primaryTranslationMode: "auto",
   verseTextZhTranslationId: "cuv-simp",
-  verseTextEnTranslationId: "web-en",
+  verseTextEnTranslationId: "",
   memoryByNamespace: {},
   goldenVerseFontFamily: "sans",
   goldenVerseTextEffect: "insetCarved",
 };
+
+export function defaultHomePrimaryTranslationIdForLocale(locale: AppLocale): string {
+  if (locale === "en") return "kjv";
+  if (locale === "zh-TW") return "cuv-trad";
+  return "cuv-simp";
+}
+
+function normalizePrimaryTranslationMode(raw: unknown): HomePrimaryTranslationMode {
+  return raw === "manual" ? "manual" : "auto";
+}
 
 /** 任意 prefs 写入后派发（同标签页）；用于金句页字体等无需重拉祷告池的 UI 同步 */
 export const HOME_PRAYER_PREFS_UPDATED_EVENT = "selah:home-prayer-verse-prefs-updated";
@@ -59,8 +72,8 @@ export function normalizeVerseZhTranslationId(raw: unknown): string {
 }
 
 export function normalizeVerseEnTranslationId(raw: unknown): string {
-  const s = typeof raw === "string" && raw.trim() ? raw.trim() : "";
-  return s || "web-en";
+  if (typeof raw !== "string") return "";
+  return raw.trim();
 }
 
 export function memoryNamespaceFromScope(scope: VerseScopeV1): string {
@@ -76,6 +89,15 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
     if (p?.version !== 1) return DEFAULT_HOME_PRAYER_PREFS;
     const verseScope = normalizeScope(p.verseScope);
     const verseDisplay: VerseDisplayModeV1 = p.verseDisplay === "bilingual" ? "bilingual" : "primary";
+    const normalizedPrimary = normalizeVerseZhTranslationId(p.verseTextZhTranslationId);
+    const normalizedContrast = normalizeVerseEnTranslationId(p.verseTextEnTranslationId);
+    const modeFromStorage = normalizePrimaryTranslationMode(p.primaryTranslationMode);
+    const inferredMode: HomePrimaryTranslationMode =
+      p.primaryTranslationMode == null
+        ? normalizedPrimary === "cuv-simp" && !normalizedContrast
+          ? "auto"
+          : "manual"
+        : modeFromStorage;
     const memoryByNamespace =
       p.memoryByNamespace && typeof p.memoryByNamespace === "object" && !Array.isArray(p.memoryByNamespace)
         ? (p.memoryByNamespace as HomePrayerVersePrefsV1["memoryByNamespace"])
@@ -84,8 +106,9 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
       version: 1,
       verseScope,
       verseDisplay,
-      verseTextZhTranslationId: normalizeVerseZhTranslationId(p.verseTextZhTranslationId),
-      verseTextEnTranslationId: normalizeVerseEnTranslationId(p.verseTextEnTranslationId),
+      primaryTranslationMode: inferredMode,
+      verseTextZhTranslationId: normalizedPrimary,
+      verseTextEnTranslationId: normalizedContrast,
       memoryByNamespace,
       goldenVerseFontFamily: normalizeGoldenVerseFontFamily(p.goldenVerseFontFamily),
       goldenVerseTextEffect: normalizeGoldenVerseTextEffect(p.goldenVerseTextEffect),
@@ -109,7 +132,18 @@ function normalizeScope(raw: unknown): VerseScopeV1 {
 export function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(HOME_PRAYER_PREFS_STORAGE_KEY, JSON.stringify(next));
+    const normalized: HomePrayerVersePrefsV1 = {
+      version: 1,
+      verseScope: next.verseScope,
+      verseDisplay: next.verseDisplay === "bilingual" ? "bilingual" : "primary",
+      primaryTranslationMode: normalizePrimaryTranslationMode(next.primaryTranslationMode),
+      verseTextZhTranslationId: normalizeVerseZhTranslationId(next.verseTextZhTranslationId),
+      verseTextEnTranslationId: normalizeVerseEnTranslationId(next.verseTextEnTranslationId),
+      memoryByNamespace: next.memoryByNamespace,
+      goldenVerseFontFamily: normalizeGoldenVerseFontFamily(next.goldenVerseFontFamily),
+      goldenVerseTextEffect: normalizeGoldenVerseTextEffect(next.goldenVerseTextEffect),
+    };
+    window.localStorage.setItem(HOME_PRAYER_PREFS_STORAGE_KEY, JSON.stringify(normalized));
     persistVerseDisplayToCookie(next.verseDisplay);
     window.dispatchEvent(new Event(HOME_PRAYER_PREFS_UPDATED_EVENT));
   } catch {
@@ -129,9 +163,19 @@ export function scopeIdFromPrefs(scope: VerseScopeV1): string {
   return themeRepeatPoolScopeId(scope.minCount);
 }
 
-export function verseTranslationIdsFromPrefs(prefs: HomePrayerVersePrefsV1): { zh: string; en: string } {
+export function verseTranslationIdsFromPrefs(
+  prefs: HomePrayerVersePrefsV1,
+  locale: AppLocale = "zh-CN",
+): { zh: string; en: string; primary: string; contrast: string } {
+  const primary =
+    prefs.primaryTranslationMode === "manual"
+      ? normalizeVerseZhTranslationId(prefs.verseTextZhTranslationId)
+      : defaultHomePrimaryTranslationIdForLocale(locale);
+  const contrast = normalizeVerseEnTranslationId(prefs.verseTextEnTranslationId);
   return {
-    zh: normalizeVerseZhTranslationId(prefs.verseTextZhTranslationId),
-    en: normalizeVerseEnTranslationId(prefs.verseTextEnTranslationId),
+    zh: primary,
+    en: contrast,
+    primary,
+    contrast,
   };
 }

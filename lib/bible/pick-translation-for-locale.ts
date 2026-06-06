@@ -20,6 +20,13 @@ function firstMatch(
 
 /** 首页轮播等：实现见文件头「产品拍板」。 */
 export function pickTranslationIdForLocale(index: BibleTranslationsIndex, locale: AppLocale): string | null {
+  if (locale === "zh-TW") {
+    return (
+      firstMatch(index, (id, lang) => id === "cuv-trad" || lang === "zh-hant") ??
+      firstMatch(index, (id, lang) => id === "cuv-simp" || lang === "zh-hans") ??
+      index.defaultTranslationId
+    );
+  }
   if (locale === "zh-CN") {
     return (
       firstMatch(index, (id, lang) => id === "cuv-simp" || lang === "zh-hans") ??

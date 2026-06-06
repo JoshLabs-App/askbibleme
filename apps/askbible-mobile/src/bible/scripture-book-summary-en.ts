@@ -1,4 +1,5 @@
 import type { AppLocale } from "../i18n/config";
+import { toZhTwText } from "../i18n/site-copy";
 
 /** English one-line summaries for canon catalog (zh source in scripture-book-notes). */
 export const scriptureBookSummaryEn: Record<string, string> = {
@@ -75,6 +76,7 @@ export function summaryLabelForLocale(
   zhSummary: string,
   locale: AppLocale,
 ): string {
+  if (locale === "zh-TW") return toZhTwText(zhSummary);
   if (locale !== "en") return zhSummary;
   const en = scriptureBookSummaryEn[bookId.trim().toUpperCase()];
   return en?.trim() || zhSummary;

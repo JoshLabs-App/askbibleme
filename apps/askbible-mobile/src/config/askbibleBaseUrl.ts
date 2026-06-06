@@ -6,7 +6,7 @@ import { Platform } from "react-native";
  * - 生产：`EXPO_PUBLIC_ASKBIBLE_BASE_URL=https://askbible.me`
  * - iOS 模拟器：`localhost:3450`（勿改成局域网 IP）
  * - Android 模拟器：`10.0.2.2:3450`
- * - 真机 Wi‑Fi：`http://<Mac-LAN-IP>:3450`（见 `.env.device.example`）
+ * - 真机 Wi‑Fi：`http://<Mac-LAN-IP>:3450`（见 `env.device.example`）
  * - 真机 USB（adb reverse）：`http://127.0.0.1:3450`
  */
 function isAndroidEmulator(): boolean {

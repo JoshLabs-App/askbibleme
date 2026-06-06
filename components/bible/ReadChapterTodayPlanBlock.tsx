@@ -126,7 +126,7 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
           return (
             <li key={key} className="w-full text-[13px] leading-snug">
               <Link
-                href={readingPlanChapterHref(ref.bookId, ref.chapter)}
+                href={readingPlanChapterHref(ref.bookId, ref.chapter, true)}
                 className={[
                   "font-medium underline decoration-amber-800/25 underline-offset-[0.15em] hover:decoration-amber-800/50 dark:decoration-stone-500/35",
                   isCurrent

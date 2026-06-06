@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { scriptureBooks } from "../bible/scripture-books";
+import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -72,7 +73,7 @@ function formatRefPart(part: RefVersePart): string {
   return part.start === part.end ? `${part.start}` : `${part.start}-${part.end}`;
 }
 
-function localizeRefLabel(rawRef: string, locale: "zh-CN" | "en"): string {
+function localizeRefLabel(rawRef: string, locale: AppLocale): string {
   if (locale !== "en") return rawRef;
   const parsed = parseZhRefParts(rawRef);
   if (!parsed) return rawRef;

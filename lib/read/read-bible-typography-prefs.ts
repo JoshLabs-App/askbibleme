@@ -14,7 +14,11 @@ export type ReadBibleSizeId =
 
 export type ReadBibleTypographyPrefsV1 = {
   size: ReadBibleSizeId;
+  verseParagraphFlow: boolean;
+  chapterSegmentMode: "default" | "t1";
 };
+
+export type ChapterSegmentMode = ReadBibleTypographyPrefsV1["chapterSegmentMode"];
 
 /** 羊皮卷 / 读经 / 祷告正文：系统界面黑体栈（不再提供字体切换） */
 export const READ_BIBLE_FONT_STACK_SYSTEM =
@@ -114,6 +118,8 @@ const READ_BIBLE_SIZE_TOKENS: Record<ReadBibleSizeId, SizeTokens> = {
 
 export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
   size: "l",
+  verseParagraphFlow: true,
+  chapterSegmentMode: "default",
 };
 
 export function readBibleTypographyCssVars(prefs: ReadBibleTypographyPrefsV1): Record<string, string> {
@@ -143,6 +149,9 @@ export const READ_BIBLE_SIZE_ORDER: ReadBibleSizeId[] = [
   "xxxxxxxl",
 ];
 
+/** 一键大字预设：用于读经页设置里的「TT」快速按钮 */
+export const READ_BIBLE_SIZE_PRESET_LARGE: ReadBibleSizeId = "xl";
+
 export function readBibleSizeAtMin(size: ReadBibleSizeId): boolean {
   return size === READ_BIBLE_SIZE_ORDER[0];
 }
@@ -158,15 +167,27 @@ export function stepReadBibleSize(size: ReadBibleSizeId, delta: -1 | 1): ReadBib
 }
 
 export function parseReadBibleTypographyPrefs(raw: string | null): ReadBibleTypographyPrefsV1 {
-  if (!raw || typeof raw !== "string") return { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
+  const fallback = { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
+  if (!raw || typeof raw !== "string") return fallback;
   try {
     const j = JSON.parse(raw) as Partial<ReadBibleTypographyPrefsV1> & { font?: string };
     const size = READ_BIBLE_SIZE_ORDER.includes(j.size as ReadBibleSizeId)
       ? (j.size as ReadBibleSizeId)
-      : DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size;
-    return { size };
+      : fallback.size;
+    return {
+      size,
+      verseParagraphFlow:
+        typeof j.verseParagraphFlow === "boolean" ? j.verseParagraphFlow : fallback.verseParagraphFlow,
+      chapterSegmentMode:
+        (j.chapterSegmentMode as string | undefined) === "t1"
+          ? "t1"
+          : (j.chapterSegmentMode as string | undefined) === "t2" ||
+              (j.chapterSegmentMode as string | undefined) === "story"
+            ? "t1"
+            : "default",
+    };
   } catch {
-    return { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
+    return fallback;
   }
 }
 
@@ -182,10 +203,14 @@ export function readReadBibleTypographyPrefsFromStorage(): ReadBibleTypographyPr
 export function writeReadBibleTypographyPrefsToStorage(prefs: ReadBibleTypographyPrefsV1): void {
   if (typeof window === "undefined") return;
   try {
-    const size = READ_BIBLE_SIZE_ORDER.includes(prefs.size)
-    ? prefs.size
-    : DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size;
-    window.localStorage.setItem(READ_BIBLE_TYPOGRAPHY_STORAGE_KEY, JSON.stringify({ size }));
+    const normalized: ReadBibleTypographyPrefsV1 = {
+      size: READ_BIBLE_SIZE_ORDER.includes(prefs.size)
+        ? prefs.size
+        : DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size,
+      verseParagraphFlow: prefs.verseParagraphFlow === true,
+      chapterSegmentMode: prefs.chapterSegmentMode === "t1" ? "t1" : "default",
+    };
+    window.localStorage.setItem(READ_BIBLE_TYPOGRAPHY_STORAGE_KEY, JSON.stringify(normalized));
   } catch {
     /* ignore */
   }

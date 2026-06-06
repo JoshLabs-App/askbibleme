@@ -8,6 +8,7 @@ import {
   parseAskbibleUserSessionCookie,
   signAskbibleUserSessionCookie,
 } from "@/lib/askbible-user-session";
+import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
 import { getAskbibleUserById, registerAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
 
 export const runtime = "nodejs";
@@ -61,6 +62,10 @@ export async function POST(req: Request) {
   }
 
   if (action === "register") {
+    const flags = readMobileContentFlagsSync(process.cwd()).flags;
+    if (!flags.memberRegisterEnabled) {
+      return NextResponse.json({ error: "会员注册尚未开放。" }, { status: 503 });
+    }
     const reg = await registerAskbibleSqliteUser({ dbPath, email, password, name });
     if (!reg.ok) {
       return NextResponse.json({ error: reg.error }, { status: reg.status });

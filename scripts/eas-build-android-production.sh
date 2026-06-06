@@ -17,7 +17,7 @@ npm run mobile:sync-icons
 npm run mobile:sync-content
 # Bundle music/nature offline media into release assets.
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
-MOBILE_OFFLINE_MEDIA_EXCLUDE_TRACK_IDS="track-mpkpc8f7zrte" \
+MOBILE_OFFLINE_MEDIA_EXCLUDE_TRACK_IDS="track-mpkpc8f7zrte,track-mpkm1m4fly5r,track-mpg4a9ix6n6h" \
 npm run mobile:sync-offline-media
 
 cd apps/askbible-mobile

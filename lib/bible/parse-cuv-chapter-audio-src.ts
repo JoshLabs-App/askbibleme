@@ -1,6 +1,7 @@
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
 import { chineseBookNameToBookId } from "@/lib/bible/chinese-book-name-to-id";
 import { englishBookNameToBookId } from "@/lib/bible/english-book-name-to-id";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { WEB_CHAPTER_AUDIO_SUBDIR } from "@/lib/bible/web-chapter-audio";
 
 const LOCAL_TEOCHEW = /\/audio\/teochew-nt\/([A-Za-z0-9]{2,8})-(\d+)\.mp3(\?|#|$)/i;
@@ -9,8 +10,11 @@ const LOCAL_WEB = new RegExp(
   "i",
 );
 const LOCAL_MANDARIN = /\/audio\/([A-Za-z0-9]{2,8})-(\d+)\.mp3(\?|#|$)/i;
+const LOCAL_MANDARIN_V20 = /\/audio\/cuv-v20\/([A-Za-z0-9]{2,8})-(\d+)\.mp3(\?|#|$)/i;
+const FHL_UNVDAVID = /media\.fhl\.net\/unvdavid\/(\d{1,2})\/\1_(\d{3})\.mp3(\?|#|$)/i;
 
 const BOOK_ID_RE = /^[A-Z0-9]{2,8}$/;
+const BID_TO_BOOK_ID = new Map(scriptureBooks.map((b) => [b.bookNumber, b.bookId]));
 
 export type ParsedCuvChapterAudioSrc = {
   bookId: string;
@@ -31,7 +35,7 @@ function parseLocalBookChapter(
 }
 
 /**
- * 从壳层当前播放 URL 解析整章朗读对应的书卷、章与人声（本地 `/audio/…` 或 theaudiopower CUV）。
+ * 从壳层当前播放 URL 解析整章朗读对应的书卷、章与人声（本地 `/audio/…`、FHL、或历史 theaudiopower）。
  */
 export function tryParseCuvChapterAudioEffectiveSrc(src: string): ParsedCuvChapterAudioSrc | null {
   const s = String(src || "").trim();
@@ -50,6 +54,20 @@ export function tryParseCuvChapterAudioEffectiveSrc(src: string): ParsedCuvChapt
   const mandarin = s.match(LOCAL_MANDARIN);
   if (mandarin) {
     return parseLocalBookChapter(mandarin[1]!.toUpperCase(), Number(mandarin[2]), "mandarin");
+  }
+
+  const mandarinV20 = s.match(LOCAL_MANDARIN_V20);
+  if (mandarinV20) {
+    return parseLocalBookChapter(mandarinV20[1]!.toUpperCase(), Number(mandarinV20[2]), "mandarin");
+  }
+
+  const fhl = s.match(FHL_UNVDAVID);
+  if (fhl) {
+    const bid = Number(fhl[1]);
+    const chapter = Number(fhl[2]);
+    const bookId = BID_TO_BOOK_ID.get(bid);
+    if (!bookId) return null;
+    return parseLocalBookChapter(bookId, chapter, "mandarin");
   }
 
   if (s.includes("theaudiopower.org/WEB/") || s.includes("theaudiopower.org/WEB2/")) {

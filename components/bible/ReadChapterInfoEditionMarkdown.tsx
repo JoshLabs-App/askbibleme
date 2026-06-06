@@ -7,6 +7,40 @@ import remarkGfm from "remark-gfm";
 import { normalizeInfoEditionCompareMarkdown } from "@/lib/bible/info-edition-v1-format";
 import { askbibleReadPath, parseAskbibleReadLink } from "@/lib/bible/parse-askbible-read-link";
 
+function stripSectionByHeading(
+  markdown: string,
+  headingPatterns: RegExp[],
+): string {
+  if (!markdown.trim()) return markdown;
+  const lines = markdown.split(/\r?\n/);
+  const keep: string[] = [];
+  let i = 0;
+
+  const isHeading = (line: string): { level: number; text: string } | null => {
+    const m = line.match(/^(#{1,6})\s+(.*\S)\s*$/);
+    if (!m) return null;
+    return { level: m[1]!.length, text: m[2]! };
+  };
+
+  while (i < lines.length) {
+    const heading = isHeading(lines[i] ?? "");
+    if (heading && heading.level <= 3 && headingPatterns.some((re) => re.test(heading.text))) {
+      const startLevel = heading.level;
+      i += 1;
+      while (i < lines.length) {
+        const nextHeading = isHeading(lines[i] ?? "");
+        if (nextHeading && nextHeading.level <= startLevel) break;
+        i += 1;
+      }
+      continue;
+    }
+    keep.push(lines[i] ?? "");
+    i += 1;
+  }
+
+  return keep.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 const components: Partial<Components> = {
   h1: ({ children }) => (
     <h2 className="read-info-edition-h1">{children}</h2>
@@ -73,8 +107,17 @@ const components: Partial<Components> = {
   },
 };
 
-export function ReadChapterInfoEditionMarkdown({ content }: { content: string }) {
-  const trimmed = normalizeInfoEditionCompareMarkdown(content);
+export function ReadChapterInfoEditionMarkdown({
+  content,
+  hideKeyScenes = false,
+}: {
+  content: string;
+  hideKeyScenes?: boolean;
+}) {
+  let trimmed = normalizeInfoEditionCompareMarkdown(content);
+  if (hideKeyScenes) {
+    trimmed = stripSectionByHeading(trimmed, [/^关键画面$/, /^Key\s+Scenes$/i, /^Key\s+Visuals$/i]);
+  }
   if (!trimmed) return null;
   return (
     <div className="read-chapter-info-edition-md select-text">

@@ -22,8 +22,9 @@ import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { parchmentSans } from "../fonts/parchmentType";
 import { getNatureMediaBaseUrl } from "../bible/chapter-audio-url";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { resolveLocalizedField, t } from "../i18n/site-copy";
-import { getLocale } from "../i18n/locale-store";
+import { resolveLocalizedField, t, toZhTwText } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
+import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as parchment } from "../read/readParchmentTheme";
 import {
   readNatureActiveSceneId,
@@ -148,6 +149,7 @@ function ambientIconColor(selected: boolean, enabled: boolean): string {
 }
 
 export function HomeNatureScreen() {
+  const { locale } = useLocale();
   const naturePackRev = useNatureResourcePackSync();
   const insets = useSafeAreaInsets();
   const sceneStripSwipeExclude = useShellSwipeExcludeHandlers();
@@ -207,7 +209,7 @@ export function HomeNatureScreen() {
     translationId: string;
     speechMain: string;
     speechReference: string;
-    speechLocale: "zh-CN" | "en";
+    speechLocale: AppLocale;
   } | null>(null);
   const [voicePreparing, setVoicePreparing] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking] = useState(false);
@@ -222,7 +224,7 @@ export function HomeNatureScreen() {
     translationId: string;
     speechMain: string;
     speechReference: string;
-    speechLocale: "zh-CN" | "en";
+    speechLocale: AppLocale;
   } | null>(null);
   const advanceVerseRef = useRef<(() => Promise<void>) | null>(null);
   const sceneScrollRef = useRef<ScrollView>(null);
@@ -798,7 +800,7 @@ export function HomeNatureScreen() {
       primaryTranslationId: string;
       speechMain: string;
       speechReference: string;
-      speechLocale: "zh-CN" | "en";
+      speechLocale: AppLocale;
     }) => {
       const verseKey = payload.verseKey?.trim() || "";
       if (!verseKey || !parseVerseKey(verseKey)) {
@@ -810,7 +812,7 @@ export function HomeNatureScreen() {
         translationId: payload.primaryTranslationId || "cuv-simp",
         speechMain: payload.speechMain?.trim() || "",
         speechReference: payload.speechReference?.trim() || "",
-        speechLocale: payload.speechLocale === "en" ? "en" : "zh-CN",
+        speechLocale: payload.speechLocale,
       });
     },
     [],
@@ -849,7 +851,7 @@ export function HomeNatureScreen() {
         translationId: string;
         speechMain: string;
         speechReference: string;
-        speechLocale: "zh-CN" | "en";
+        speechLocale: AppLocale;
       },
       sessionId: number,
     ) => {
@@ -860,7 +862,8 @@ export function HomeNatureScreen() {
         setVoiceHint(t("nature.homeVoice.noVerse"));
         return;
       }
-      const language = target.speechLocale === "en" ? "en-US" : "zh-CN";
+      const language =
+        target.speechLocale === "en" ? "en-US" : target.speechLocale === "zh-TW" ? "zh-TW" : "zh-CN";
       const activeTtsPrefs = ttsPrefsRef.current;
       const selectedVoiceId = String(activeTtsPrefs.voiceId || "").trim();
       const selectedVoiceLang = selectedVoiceId
@@ -1174,7 +1177,7 @@ export function HomeNatureScreen() {
               {NATURE_AMBIENT_SCENE_SLOTS.map((slot) => {
                 const enabled = typeof BUNDLED_AMBIENT_SCENE_AUDIO[slot.id] === "number";
                 const selected = activeAmbientSlotId === slot.id;
-                const label = getLocale() === "en" ? slot.labelEn : slot.label;
+                const label = locale === "en" ? slot.labelEn : locale === "zh-TW" ? toZhTwText(slot.label) : slot.label;
                 return (
                   <Pressable
                     key={slot.id}

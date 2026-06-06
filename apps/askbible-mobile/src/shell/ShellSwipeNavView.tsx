@@ -44,8 +44,8 @@ function ShellSwipeNavBody({ children }: { children: ReactNode }) {
   return (
     <View
       style={{ flex: 1 }}
-      onTouchStartCapture={onTouchStart}
-      onTouchEndCapture={onTouchEnd}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       {children}
     </View>

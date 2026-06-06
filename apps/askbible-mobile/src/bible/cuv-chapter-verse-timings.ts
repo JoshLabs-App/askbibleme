@@ -16,15 +16,27 @@ export function buildChapterVerseTimingsUrl(
   bookId: string,
   chapter: number,
 ): string {
+  return buildChapterVerseTimingsCandidates(translationId, voiceId, bookId, chapter)[0] ?? "";
+}
+
+export function buildChapterVerseTimingsCandidates(
+  translationId: string,
+  voiceId: CuvChapterAudioVoiceId,
+  bookId: string,
+  chapter: number,
+): string[] {
   const id = String(bookId || "").trim().toUpperCase();
-  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  if (!id || !Number.isInteger(chapter) || chapter < 1) return [];
   if (translationUsesWebChapterAudio(translationId)) {
-    return `/verse-timings/web-en/${id}-${chapter}.json`;
+    return [`/verse-timings/web-en/${id}-${chapter}.json`];
   }
   if (voiceId === "teochew-nt") {
-    return `/verse-timings/teochew-nt/${id}-${chapter}.json`;
+    return [`/verse-timings/teochew-nt/${id}-${chapter}.json`];
   }
-  return `/verse-timings/${id}-${chapter}.json`;
+  return [
+    `/verse-timings/cuv-v20/${id}-${chapter}.json`,
+    `/verse-timings/${id}-${chapter}.json`,
+  ];
 }
 
 export function buildCuvChapterVerseTimingsUrl(bookId: string, chapter: number): string {
@@ -53,13 +65,14 @@ export function verseNumberAtChapterAudioTime(
   timings: readonly CuvChapterVerseTiming[],
 ): number | null {
   if (!timings.length || !Number.isFinite(currentSec)) return null;
-  let pick = timings[0]!;
+  let pick: CuvChapterVerseTiming | null = null;
   for (let i = timings.length - 1; i >= 0; i--) {
     if (timings[i]!.start <= currentSec) {
       pick = timings[i]!;
       break;
     }
   }
+  if (!pick) return null;
   const n = Number(pick.verse);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
@@ -83,17 +96,21 @@ export async function fetchChapterVerseTimings(
     return loadBundledChapterVerseTimings(translationId, voiceId, bookId, chapter);
   }
 
-  const path = buildChapterVerseTimingsUrl(translationId, voiceId, bookId, chapter);
-  if (!path) return null;
-  const url = toAbsoluteUrl(baseUrl, path);
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data: unknown = await res.json();
-    return parseCuvChapterVerseTimingsPayload(data);
-  } catch {
-    return null;
+  const paths = buildChapterVerseTimingsCandidates(translationId, voiceId, bookId, chapter);
+  if (!paths.length) return null;
+  for (const path of paths) {
+    const url = toAbsoluteUrl(baseUrl, path);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data: unknown = await res.json();
+      const parsed = parseCuvChapterVerseTimingsPayload(data);
+      if (parsed?.length) return parsed;
+    } catch {
+      /* try next */
+    }
   }
+  return null;
 }
 
 export async function fetchCuvChapterVerseTimings(

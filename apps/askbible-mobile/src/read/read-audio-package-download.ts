@@ -11,13 +11,15 @@ import { scriptureBooks } from "../bible/scripture-books";
 import {
   buildExternalWebChapterAudioUrl,
   buildLocalWebChapterAudioUrl,
+  chapterAudioScopeForTranslation,
   translationUsesWebChapterAudio,
 } from "../bible/web-chapter-audio";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
 
 const STORAGE_KEY = "askbible.mobile.read.audio-package-download.v1";
 const AUDIO_PACKAGE_ROOT = `${FileSystem.documentDirectory}read-audio-packages`;
+// 音频包与 verse-timings 需要同批次更新；升级这里可以让旧下载包失效，避免声音/文字继续串版本。
+const AUDIO_PACKAGE_VERSION = "v2";
 
 type DownloadStatus = "idle" | "running" | "paused" | "done" | "error";
 
@@ -177,7 +179,13 @@ export async function ensureAudioPackageDownloadHydrated(): Promise<void> {
 }
 
 function packageKeyForSelection(selection: AudioPackageSelection): string {
-  if (translationUsesWebChapterAudio(selection.translationId)) return "web-en";
+  return `${packageKeyBaseForSelection(selection)}-${AUDIO_PACKAGE_VERSION}`;
+}
+
+function packageKeyBaseForSelection(selection: Pick<AudioPackageSelection, "translationId" | "voiceId">): string {
+  if (translationUsesWebChapterAudio(selection.translationId)) {
+    return chapterAudioScopeForTranslation(selection.translationId);
+  }
   if (selection.voiceId === "teochew-nt") return "cuv-teochew-nt";
   return "cuv-mandarin";
 }
@@ -203,15 +211,14 @@ function uniqueNonEmpty(items: string[]): string[] {
 }
 
 function chapterRefsForSelection(selection: AudioPackageSelection): DownloadChapterRef[] {
-  if (isMobileOfflineFirst()) return [];
   const baseUrl = getAskBibleBaseUrl();
   const useWeb = translationUsesWebChapterAudio(selection.translationId);
   const refs: DownloadChapterRef[] = [];
   for (const book of scriptureBooks) {
     for (let chapter = 1; chapter <= book.chapters; chapter += 1) {
       if (useWeb) {
-        const local = buildLocalWebChapterAudioUrl(book.bookId, chapter);
-        const remote = buildExternalWebChapterAudioUrl(book.bookId, chapter);
+        const local = buildLocalWebChapterAudioUrl(book.bookId, chapter, selection.translationId);
+        const remote = buildExternalWebChapterAudioUrl(book.bookId, chapter, selection.translationId);
         refs.push({
           refKey: `${book.bookId}:${chapter}`,
           bookId: book.bookId,
@@ -234,7 +241,7 @@ function chapterRefsForSelection(selection: AudioPackageSelection): DownloadChap
         continue;
       }
       const local = buildLocalCuvChapterAudioUrl(book.bookId, chapter);
-      const remote = buildExternalCuvChapterAudioUrl(book.bookName, chapter);
+      const remote = buildExternalCuvChapterAudioUrl(book.bookId, chapter);
       refs.push({
         refKey: `${book.bookId}:${chapter}`,
         bookId: book.bookId,
@@ -445,8 +452,7 @@ export function chapterAudioPackageKey(args: {
   translationId: string;
   voiceId: CuvChapterAudioVoiceId;
 }): string {
-  if (translationUsesWebChapterAudio(args.translationId)) return "web-en";
-  return args.voiceId === "teochew-nt" ? "cuv-teochew-nt" : "cuv-mandarin";
+  return `${packageKeyBaseForSelection(args)}-${AUDIO_PACKAGE_VERSION}`;
 }
 
 export async function resolveDownloadedChapterAudioUri(args: {
@@ -468,4 +474,3 @@ export async function resolveDownloadedChapterAudioUri(args: {
   }
   return null;
 }
-

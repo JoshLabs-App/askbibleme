@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { StyleSheet, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
+import { toZhTwText } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { theme } from "../theme";
 import type { SolutionCard } from "./onboarding-devotion-data";
@@ -26,13 +27,15 @@ function mapSolutionIcon(name: string): keyof typeof MaterialCommunityIcons.glyp
 }
 
 export function OnboardingSolutionStep({ locale, cards }: OnboardingSolutionStepProps) {
+  const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
+
   return (
     <View>
-      <Text style={styles.title}>{locale === "en" ? "What Makes Us Different" : "这里与众不同"}</Text>
+      <Text style={styles.title}>{locale === "en" ? "What Makes Us Different" : zhText("这里与众不同")}</Text>
       <Text style={styles.subtitle}>
         {locale === "en"
           ? "No pressure. No performance. With devotional music and Scripture support, you can always return to God's Word."
-          : "不靠压力，不靠打卡；用音乐灵修 + 经文支持，帮你稳定地回到神的话语。"}
+          : zhText("不靠压力，不靠打卡；用音乐灵修 + 经文支持，帮你稳定地回到神的话语。")}
       </Text>
 
       <View style={styles.cardList}>

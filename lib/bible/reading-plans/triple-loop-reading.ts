@@ -1,3 +1,4 @@
+import { normalizeTripleLoopChaptersReadKeys } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 import { scriptureBooks, type ScriptureBook } from "@/lib/bible/scripture-books";
 
 export type TripleLoopTrack = "ot" | "nt" | "wisdom";
@@ -7,10 +8,24 @@ export type TripleLoopPointer = {
   chapter: number;
 };
 
+export type TripleLoopChaptersRead = {
+  ot: number;
+  nt: number;
+  wisdom: number;
+};
+
+export type TripleLoopChaptersReadKeys = {
+  ot: string[];
+  nt: string[];
+  wisdom: string[];
+};
+
 export type TripleLoopReadingState = {
   ot: TripleLoopPointer;
   nt: TripleLoopPointer;
   wisdom: TripleLoopPointer;
+  chaptersReadKeys?: Partial<TripleLoopChaptersReadKeys>;
+  chaptersRead?: Partial<TripleLoopChaptersRead>;
   startedAt?: string;
 };
 
@@ -60,6 +75,23 @@ export function createDefaultTripleLoopReadingState(): TripleLoopReadingState {
     ot: { bookId: "GEN", chapter: 1 },
     nt: { bookId: "MAT", chapter: 1 },
     wisdom: { bookId: "JOB", chapter: 1 },
+    chaptersReadKeys: { ot: [], nt: [], wisdom: [] },
+    chaptersRead: { ot: 0, nt: 0, wisdom: 0 },
+  };
+}
+
+function normalizeChaptersRead(
+  raw: Partial<TripleLoopChaptersRead> | undefined,
+  fallback: TripleLoopChaptersRead,
+): TripleLoopChaptersRead {
+  const n = (v: unknown, d: number) => {
+    const x = typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : d;
+    return Math.max(0, x);
+  };
+  return {
+    ot: n(raw?.ot, fallback.ot),
+    nt: n(raw?.nt, fallback.nt),
+    wisdom: n(raw?.wisdom, fallback.wisdom),
   };
 }
 
@@ -78,6 +110,8 @@ export function normalizeTripleLoopReadingState(
       Number(raw.wisdom?.chapter) || 1,
       TRIPLE_LOOP_WISDOM_BOOK_IDS,
     ),
+    chaptersReadKeys: normalizeTripleLoopChaptersReadKeys(raw.chaptersReadKeys ?? d.chaptersReadKeys),
+    chaptersRead: normalizeChaptersRead(raw.chaptersRead, d.chaptersRead as TripleLoopChaptersRead),
     startedAt: typeof raw.startedAt === "string" && raw.startedAt.trim() ? raw.startedAt.trim() : undefined,
   };
 }

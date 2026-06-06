@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { readChapterHrefFromVerseKey } from "@/lib/bible/parse-verse-key";
-import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
+import { HOME_VERSE_FADE_MS, NATURE_HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import { useOptionalHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useStandaloneVerseCarousel } from "@/components/home/useStandaloneVerseCarousel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -17,6 +17,10 @@ import {
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { READ_SCRIPTURE_ABOUT_VERSES_BY_LOCALE } from "@/lib/i18n/read-scripture-about-verses";
 import type { NatureHomeVerseTextEffectV1 } from "@/lib/home/nature-home-verse-appearance-prefs";
+import {
+  natureHomeVerseContrastStyle,
+  natureHomeVerseShadowStyle,
+} from "@/lib/home/nature-home-verse-video-style";
 
 function natureHomePrimaryOnVideo(effect: NatureHomeVerseTextEffectV1, isDark: boolean): string {
   if (effect === "flat" || effect === "classic") {
@@ -198,7 +202,11 @@ export function HomeVerseRotator({
   const bilingual = useStandaloneFeed ? (ctx?.bilingual ?? false) : ctx!.bilingual;
   /** 双语时固定「英文大在上、中文小在下」；单语时随界面语言。 */
   const primaryLocale: AppLocale = bilingual ? "en" : locale;
-  const secondaryLocale: AppLocale | null = bilingual ? "zh-CN" : null;
+  const secondaryLocale: AppLocale | null = bilingual
+    ? locale === "zh-TW"
+      ? "zh-TW"
+      : "zh-CN"
+    : null;
 
   const HOME_VERSES = useMemo(() => {
     if (standaloneVersesByLocale) {
@@ -238,6 +246,9 @@ export function HomeVerseRotator({
   const nhSerif = nhFont === "serif";
   const nhFace = nhSerif ? "font-serif" : "font-sans";
   const nhEffect: NatureHomeVerseTextEffectV1 = natureHomeTextEffect ?? "classic";
+  /** 自然首页视频上：对齐 App `HomeVerseOverlay` + `verseTextStyle` */
+  const nhMobileVideo = isNature && natureHomeTypography && isDark && !isGoldenVerses;
+  const nhBoldFx = nhEffect === "bold";
   /** 无衬线 +（首页原版｜平面）：与加偏好前首页经文视觉完全一致 */
   const nhLegacyDefault =
     natureHomeTypography && nhFont === "sans" && (nhEffect === "classic" || nhEffect === "flat");
@@ -317,7 +328,11 @@ export function HomeVerseRotator({
 
   const lineClass = (() => {
     /** 双语时英文主文：行距空隙减半 `1 + (L-1)/2` */
-    const L = (loose: number, tight: string) => (bilingual ? tight : `leading-[${loose}]`);
+    const L = (loose: number, tight: string) => (bilingual && !nhMobileVideo ? tight : `leading-[${loose}]`);
+    if (nhMobileVideo) {
+      const wt = nhBoldFx ? "font-black" : "font-bold";
+      return `m-0 ${nhFace} text-[1.125rem] ${wt} leading-[1.55] tracking-[0.018em] text-white`;
+    }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const ink = isDark ? "text-[#f7ecda]" : "text-[#5F2E00]";
@@ -355,7 +370,11 @@ export function HomeVerseRotator({
   })();
 
   const secondaryLineClass = (() => {
-    const S = (tight: string, normal: string) => (bilingual ? tight : normal);
+    const S = (tight: string, normal: string) => (bilingual && !nhMobileVideo ? tight : normal);
+    if (nhMobileVideo) {
+      const wt = nhBoldFx ? "font-black" : "font-bold";
+      return `m-0 ${nhFace} ${wt} tracking-[0.018em] text-white`;
+    }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const ink = isDark ? "text-[#f2e6d2]" : "text-[#5F2E00]";
@@ -388,6 +407,10 @@ export function HomeVerseRotator({
   })();
 
   const refClass = (() => {
+    if (nhMobileVideo) {
+      const wt = nhBoldFx ? "font-black" : "font-bold";
+      return `mt-3 ${nhFace} text-[0.8125rem] ${wt} leading-[1.45] tracking-[0.14em] text-white`;
+    }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const ink = isDark ? "text-[#e8dcc6]" : "text-[#5F2E00]";
@@ -448,6 +471,10 @@ export function HomeVerseRotator({
   })();
 
   const secondaryRefClass = (() => {
+    if (nhMobileVideo) {
+      const wt = nhBoldFx ? "font-black" : "font-bold";
+      return `${bilingual ? "mt-1" : "mt-1.5"} ${nhFace} text-[0.8125rem] ${wt} leading-[1.45] tracking-[0.14em] text-white`;
+    }
     if (isGoldenVerses) {
       const face = goldenVerseFontFamily === "serif" ? "font-serif" : "font-sans";
       const ink = isDark ? "text-[#e8dcc6]" : "text-[#5F2E00]";
@@ -512,22 +539,20 @@ export function HomeVerseRotator({
   }
 
   const cinematicNatureFadeMs = Math.max(HOME_VERSE_FADE_MS, 4000);
+  const natureFadeMs = nhMobileVideo ? NATURE_HOME_VERSE_FADE_MS : cinematicNatureFadeMs;
+  const nhBodyShadowStyle = nhMobileVideo
+    ? natureHomeVerseShadowStyle(nhEffect, "body", prefersReducedMotion)
+    : undefined;
+  const nhRefShadowStyle = nhMobileVideo
+    ? natureHomeVerseShadowStyle(nhEffect, "ref", prefersReducedMotion)
+    : undefined;
+  const nhContrastStyle = nhMobileVideo && showSecondary
+    ? natureHomeVerseContrastStyle(nhEffect, prefersReducedMotion)
+    : undefined;
+  const nhBarStrip = nhMobileVideo && nhEffect === "barStrip";
 
-  const blockquoteEl = (
-    <blockquote
-      className={`m-0 text-center transition-[opacity,transform,filter] ${blockquoteStack} ${isNature ? "min-w-0 max-w-full" : ""} ${readChapterHref ? "cursor-pointer" : ""}`.trim()}
-      style={{
-        opacity: homeVerseVisible ? 1 : 0,
-        transform: prefersReducedMotion
-          ? "none"
-          : homeVerseVisible
-            ? "translate3d(0, 0, 0) scale(1)"
-            : "translate3d(0, 10px, 0) scale(0.992)",
-        filter: prefersReducedMotion ? "none" : homeVerseVisible ? "blur(0px)" : "blur(6px)",
-        transitionDuration: `${prefersReducedMotion ? Math.min(800, HOME_VERSE_FADE_MS) : isNature ? cinematicNatureFadeMs : HOME_VERSE_FADE_MS}ms`,
-        transitionTimingFunction: isNature ? "cubic-bezier(0.22, 1, 0.36, 1)" : "ease-in-out",
-      }}
-    >
+  const verseContent = (
+    <>
         {primaryFlowText ? (
           <p
             key={`${safeIndex}-p-flow`}
@@ -535,7 +560,7 @@ export function HomeVerseRotator({
             style={
               isGoldenVerses
                 ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "primary", prefersReducedMotion)
-                : undefined
+                : nhBodyShadowStyle
             }
             data-golden-fit={isGoldenVerses ? "line" : undefined}
           >
@@ -547,7 +572,7 @@ export function HomeVerseRotator({
           style={
             isGoldenVerses
               ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "ref", prefersReducedMotion)
-              : undefined
+              : nhRefShadowStyle
           }
           data-golden-fit={isGoldenVerses ? "ref" : undefined}
         >
@@ -562,7 +587,7 @@ export function HomeVerseRotator({
                 style={
                   isGoldenVerses
                     ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "secondary", prefersReducedMotion)
-                    : undefined
+                    : nhContrastStyle
                 }
                 data-golden-fit={isGoldenVerses ? "secondary" : undefined}
               >
@@ -575,7 +600,7 @@ export function HomeVerseRotator({
                 style={
                   isGoldenVerses
                     ? goldenVerseTextShadowStyle(goldenVerseTextEffect, "ref", prefersReducedMotion)
-                    : undefined
+                    : nhRefShadowStyle
                 }
                 data-golden-fit={isGoldenVerses ? "ref" : undefined}
               >
@@ -584,6 +609,32 @@ export function HomeVerseRotator({
             ) : null}
           </div>
         ) : null}
+    </>
+  );
+
+  const blockquoteEl = (
+    <blockquote
+      className={`m-0 text-center ${nhMobileVideo ? "transition-opacity" : "transition-[opacity,transform,filter]"} ${blockquoteStack} ${isNature ? "min-w-0 max-w-full" : ""} ${readChapterHref ? "cursor-pointer" : ""}`.trim()}
+      style={{
+        opacity: homeVerseVisible ? 1 : 0,
+        transform:
+          nhMobileVideo || prefersReducedMotion
+            ? "none"
+            : homeVerseVisible
+              ? "translate3d(0, 0, 0) scale(1)"
+              : "translate3d(0, 10px, 0) scale(0.992)",
+        filter: nhMobileVideo || prefersReducedMotion ? "none" : homeVerseVisible ? "blur(0px)" : "blur(6px)",
+        transitionDuration: `${prefersReducedMotion ? Math.min(800, natureFadeMs) : isNature ? natureFadeMs : HOME_VERSE_FADE_MS}ms`,
+        transitionTimingFunction: nhMobileVideo ? "ease-in-out" : isNature ? "cubic-bezier(0.22, 1, 0.36, 1)" : "ease-in-out",
+      }}
+    >
+      {nhBarStrip ? (
+        <div className="mx-auto max-w-[88%] overflow-hidden rounded-[10px] bg-black/30 px-2.5 py-2">
+          {verseContent}
+        </div>
+      ) : (
+        verseContent
+      )}
     </blockquote>
   );
 

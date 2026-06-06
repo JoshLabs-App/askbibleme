@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const MANDARIN_FILENAME_RE = /^[A-Z0-9]{2,8}-\d+\.mp3$/i;
+const MANDARIN_V20_REL_RE = /^cuv-v20\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 const TEOCHEW_REL_RE = /^teochew-nt\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 const WEB_EN_REL_RE = /^web-en\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 
@@ -13,14 +14,19 @@ export function cuvChapterAudioDataDir(): string | null {
   return path.join(root, "audio");
 }
 
-/** 相对路径：`GEN-1.mp3` 或 `teochew-nt/MAT-1.mp3` */
+/** 相对路径：`GEN-1.mp3` / `cuv-v20/GEN-1.mp3` / `teochew-nt/MAT-1.mp3` */
 export function isSafeChapterAudioRelativePath(relativePath: string): boolean {
   const norm = String(relativePath || "")
     .trim()
     .replace(/\\/g, "/")
     .replace(/^\/+/, "");
   if (!norm || norm.includes("..")) return false;
-  return MANDARIN_FILENAME_RE.test(norm) || TEOCHEW_REL_RE.test(norm) || WEB_EN_REL_RE.test(norm);
+  return (
+    MANDARIN_FILENAME_RE.test(norm) ||
+    MANDARIN_V20_REL_RE.test(norm) ||
+    TEOCHEW_REL_RE.test(norm) ||
+    WEB_EN_REL_RE.test(norm)
+  );
 }
 
 /** @deprecated use isSafeChapterAudioRelativePath */

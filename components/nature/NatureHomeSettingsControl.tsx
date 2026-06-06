@@ -1,41 +1,72 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { HomeSleepTimerControl } from "@/components/home/HomeSleepTimerControl";
-import type { NatureVerseTextScaleDockProps } from "@/components/home/HomePrayerVerseDockSettings";
-import { NatureHomeVerseAppearancePanel } from "@/components/nature/NatureHomeVerseAppearancePanel";
+import { NatureHomeLevelSegment } from "@/components/nature/NatureHomeLevelSegment";
+import { NatureHomeSleepTimerSection } from "@/components/nature/NatureHomeSleepTimerSection";
+import { NatureHomeTextScaleRow } from "@/components/nature/NatureHomeTextScaleRow";
+import { NatureHomeTtsSettingsSection } from "@/components/nature/NatureHomeTtsSettingsSection";
+import { NatureHomeTranslationSettings } from "@/components/nature/NatureHomeTranslationSettings";
+import { NatureHomeVerseEffectPicker } from "@/components/nature/NatureHomeVerseEffectPicker";
+import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
+import {
+  readNatureHomeVerseAppearance,
+  writeNatureHomeVerseAppearance,
+  type NatureHomeVerseAppearanceV1,
+} from "@/lib/home/nature-home-verse-appearance-prefs";
+import {
+  SHELL_CHROME_HIT_PX,
+  SHELL_SETTINGS_ICON_SIZE_PX,
+} from "@/lib/shell/shell-chrome-icons";
+import type { NatureVisualLevel } from "@/lib/nature/nature-visual-level-prefs";
+import {
+  getHomeTtsExperimentEnabled,
+  subscribeHomeTtsExperiment,
+} from "@/lib/home/home-experimental-features";
 
-const TOP_BAR_BTN =
-  "touch-manipulation inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-0 text-white/[0.9] transition hover:text-white active:scale-[0.97]";
+const DIM_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
+  0: "brightness_low",
+  1: "brightness_5",
+  2: "tonality",
+  3: "brightness_high",
+};
 
-/** 单屏、无滚动；内容靠紧凑行距塞入一卡 */
-const PANEL_SHELL =
-  "pointer-events-auto absolute right-full top-0 z-[60] mr-2 w-[11.25rem] shrink-0 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 px-2 py-2 text-left shadow-[0_8px_32px_-10px_rgba(0,0,0,0.55)]";
+const BLUR_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
+  0: "blur_off",
+  1: "blur_circular",
+  2: "blur_linear",
+  3: "blur_on",
+};
 
-const DIVIDER = "my-1.5 border-t border-zinc-700";
+const SETTINGS_BTN =
+  "touch-manipulation inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition active:scale-[0.97]";
 
-const ROW = "flex min-h-[32px] items-center justify-between gap-2";
+const SHEET =
+  "pointer-events-auto relative z-10 flex flex-col gap-1.5 overflow-visible rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left shadow-[0_8px_32px_-10px_rgba(0,0,0,0.55)]";
 
-const MICRO = "w-7 shrink-0 text-[10px] text-white/50";
+const ROW = "flex min-h-[34px] items-center gap-2";
 
-const RANGE = "h-1 min-w-0 flex-1 accent-white";
+const ROW_ICON = "flex w-[26px] shrink-0 items-center justify-center";
 
-function IconSettings(props: { className?: string }) {
+function IconSettingRow({
+  icon,
+  ariaLabel,
+  children,
+  alignTop = false,
+}: {
+  icon: string;
+  ariaLabel: string;
+  children: React.ReactNode;
+  alignTop?: boolean;
+}) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
-      <path
-        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.41.57.94.6 1.51V11a2 2 0 0 1 0 4h-.09c-.03.57-.24 1.1-.6 1.51Z"
-        stroke="currentColor"
-        strokeWidth="1.35"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className={`${ROW} ${alignTop ? "items-start" : ""}`.trim()} aria-label={ariaLabel}>
+      <div className={`${ROW_ICON} ${alignTop ? "pt-2" : ""}`.trim()} aria-hidden>
+        <ShellMaterialIcon name={icon} size={18} color="rgba(255,255,255,0.5)" />
+      </div>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
   );
 }
 
@@ -43,164 +74,184 @@ export type NatureHomeSettingsControlProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   hasNatureVisual: boolean;
-  showFullscreenBtn: boolean;
-  docElementFullscreen: boolean;
-  onFullscreenClick: () => void;
-  softFocusDraftOpacity: number;
-  softFocusDraftBlur: number;
-  natureBgSoftFocus: boolean;
-  onSoftFocusOpacityChange: (value: number) => void;
-  onSoftFocusBlurChange: (value: number) => void;
-  onSoftFocusClear: () => void;
-  natureVerseTextScale: NatureVerseTextScaleDockProps;
+  dimLevel: NatureVisualLevel;
+  blurLevel: NatureVisualLevel;
+  onDimLevelChange: (level: NatureVisualLevel) => void;
+  onBlurLevelChange: (level: NatureVisualLevel) => void;
+  onPrefsChanged?: () => void;
 };
 
 /**
- * 自然首页右上：单一设置入口；极简单卡，一屏内展示全部项。
+ * 自然首页右上：与 App `NatureHomeSettingsPanel` 同序同项。
  */
 export function NatureHomeSettingsControl({
   open,
   onOpenChange,
   hasNatureVisual,
-  showFullscreenBtn,
-  docElementFullscreen,
-  onFullscreenClick,
-  softFocusDraftOpacity,
-  softFocusDraftBlur,
-  natureBgSoftFocus,
-  onSoftFocusOpacityChange,
-  onSoftFocusBlurChange,
-  onSoftFocusClear,
-  natureVerseTextScale,
+  dimLevel,
+  blurLevel,
+  onDimLevelChange,
+  onBlurLevelChange,
+  onPrefsChanged,
 }: NatureHomeSettingsControlProps) {
   const { t } = useLocale();
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [portalReady, setPortalReady] = useState(false);
+  const [verseAppearance, setVerseAppearance] = useState<NatureHomeVerseAppearanceV1>(() =>
+    readNatureHomeVerseAppearance(),
+  );
+  const [showTtsControls, setShowTtsControls] = useState(false);
+
+  useEffect(() => {
+    setShowTtsControls(getHomeTtsExperimentEnabled());
+    return subscribeHomeTtsExperiment(() => setShowTtsControls(getHomeTtsExperimentEnabled()));
+  }, []);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      const w = wrapRef.current;
-      if (!w || w.contains(e.target as Node)) return;
-      onOpenChange(false);
-    };
+    setVerseAppearance(readNatureHomeVerseAppearance());
+    onPrefsChanged?.();
+  }, [open, onPrefsChanged]);
+
+  useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onOpenChange(false);
     };
-    document.addEventListener("mousedown", onDoc, true);
     document.addEventListener("keydown", onKey, true);
-    return () => {
-      document.removeEventListener("mousedown", onDoc, true);
-      document.removeEventListener("keydown", onKey, true);
-    };
+    return () => document.removeEventListener("keydown", onKey, true);
   }, [open, onOpenChange]);
 
-  return (
-    <div ref={wrapRef} className="relative isolate shrink-0">
-      {open ? (
-        <div
-          id="nature-home-settings-panel"
-          role="region"
-          aria-label={t("nature.homeSettings.panelTitle")}
-          data-shell-swipe-nav-exclude
-          className={PANEL_SHELL}
-        >
-          {hasNatureVisual ? (
-            <>
-              <div className="space-y-1">
-                <div className={`${ROW} gap-1.5`}>
-                  <span className={MICRO}>{t("nature.homeSettings.softFocusShort")}</span>
-                  <label className="sr-only" htmlFor="nature-home-settings-soft-focus-overlay">
-                    {t("nature.bgSoftFocusOverlayLabel")}
-                  </label>
-                  <input
-                    id="nature-home-settings-soft-focus-overlay"
-                    type="range"
-                    min={0.08}
-                    max={0.82}
-                    step={0.01}
-                    value={softFocusDraftOpacity}
-                    className={RANGE}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      if (!Number.isFinite(v)) return;
-                      onSoftFocusOpacityChange(v);
-                    }}
-                  />
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  const sheetWidth = useMemo(() => {
+    if (typeof window === "undefined") return 320;
+    const edge = 20;
+    const ratio = window.matchMedia("(orientation: landscape)").matches ? 0.72 : 0.86;
+    return Math.max(280, Math.round(window.innerWidth * ratio - edge));
+  }, [open]);
+
+  const panel =
+    open && portalReady
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[90] pointer-events-none"
+            data-shell-swipe-nav-exclude
+            role="presentation"
+          >
+            <button
+              type="button"
+              className="pointer-events-auto absolute inset-0 z-0 border-0 bg-black/40"
+              aria-label={t("nature.homeSettings.closeAria")}
+              onClick={() => onOpenChange(false)}
+            />
+            <div
+              className="pointer-events-none absolute inset-0 z-[1] flex items-start justify-end"
+            >
+            <div
+              id="nature-home-settings-panel"
+              role="region"
+              aria-label={t("nature.homeSettings.panelTitle")}
+              className={SHEET}
+              style={{
+                width: sheetWidth,
+                marginTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+                marginRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {hasNatureVisual ? (
+                <>
+                  <IconSettingRow icon="tonality" ariaLabel={t("nature.homeSettings.dimSection")}>
+                    <NatureHomeLevelSegment
+                      selected={dimLevel}
+                      onSelect={onDimLevelChange}
+                      iconForLevel={(level) => DIM_LEVEL_ICONS[level]}
+                      ariaLabel={t("nature.homeSettings.dimSection")}
+                    />
+                  </IconSettingRow>
+                  <IconSettingRow icon="blur_on" ariaLabel={t("nature.homeSettings.blurSection")}>
+                    <NatureHomeLevelSegment
+                      selected={blurLevel}
+                      onSelect={onBlurLevelChange}
+                      iconForLevel={(level) => BLUR_LEVEL_ICONS[level]}
+                      ariaLabel={t("nature.homeSettings.blurSection")}
+                    />
+                  </IconSettingRow>
+                </>
+              ) : null}
+
+              <IconSettingRow icon="timer" ariaLabel={t("nature.homeSettings.sleepSection")}>
+                <NatureHomeSleepTimerSection />
+              </IconSettingRow>
+
+              {showTtsControls ? <NatureHomeTtsSettingsSection onPrefsChanged={onPrefsChanged} /> : null}
+
+              <IconSettingRow icon="text_fields" ariaLabel={t("nature.homeSettings.verseEffectSection")}>
+                <NatureHomeVerseEffectPicker
+                  selected={verseAppearance.textEffect}
+                  onSelect={(effect) => {
+                    const next = { ...verseAppearance, textEffect: effect };
+                    setVerseAppearance(next);
+                    writeNatureHomeVerseAppearance(next);
+                    onPrefsChanged?.();
+                  }}
+                />
+              </IconSettingRow>
+
+              <IconSettingRow icon="format_size" ariaLabel={t("nature.homeSettings.verseSizeSection")}>
+                <NatureHomeTextScaleRow panelOpen={open} onPrefsChanged={onPrefsChanged} />
+              </IconSettingRow>
+
+              <div className={`${ROW} items-start`}>
+                <div className={`${ROW_ICON} pt-2`} aria-hidden>
+                  <ShellMaterialIcon name="menu_book" size={18} color="rgba(255,255,255,0.5)" />
                 </div>
-                <div className={`${ROW} gap-1.5`}>
-                  <span className={MICRO}>{t("nature.homeSettings.softBlurShort")}</span>
-                  <label className="sr-only" htmlFor="nature-home-settings-soft-focus-blur">
-                    {t("nature.bgSoftFocusBlurLabel")}
-                  </label>
-                  <input
-                    id="nature-home-settings-soft-focus-blur"
-                    type="range"
-                    min={2}
-                    max={48}
-                    step={1}
-                    value={softFocusDraftBlur}
-                    className={RANGE}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      if (!Number.isFinite(v)) return;
-                      onSoftFocusBlurChange(Math.round(v));
-                    }}
-                  />
+                <div className="min-w-0 flex-1">
+                  <NatureHomeTranslationSettings onPrefsChanged={onPrefsChanged} />
                 </div>
-                {natureBgSoftFocus ? (
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      className="px-1 py-0.5 text-[10px] text-white/55 transition hover:text-white/85"
-                      onClick={onSoftFocusClear}
-                    >
-                      {t("nature.homeSettings.softFocusOff")}
-                    </button>
-                  </div>
-                ) : null}
               </div>
-            </>
-          ) : null}
+            </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
 
-          <div className={DIVIDER} aria-hidden />
-
-          <NatureHomeVerseAppearancePanel compact natureVerseTextScale={natureVerseTextScale} />
-
-          <div className={DIVIDER} aria-hidden />
-
-          <HomeSleepTimerControl embedded compact />
-
-          {showFullscreenBtn ? (
-            <>
-              <div className={DIVIDER} aria-hidden />
-              <button
-                type="button"
-                aria-pressed={docElementFullscreen}
-                aria-label={docElementFullscreen ? t("nature.fullscreenExitAria") : t("nature.fullscreenEnterAria")}
-                onClick={onFullscreenClick}
-                className={`${ROW} w-full rounded-md px-1 text-[11px] text-white/82 transition hover:bg-zinc-800 hover:text-white`}
-              >
-                <span>{t("nature.homeSettings.fullscreenShort")}</span>
-                <span className="text-white/45">{docElementFullscreen ? "▢" : "⤢"}</span>
-              </button>
-            </>
-          ) : null}
-        </div>
-      ) : null}
-
+  return (
+    <>
+      {panel}
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
         aria-expanded={open}
         aria-controls={open ? "nature-home-settings-panel" : undefined}
         aria-label={open ? t("nature.homeSettings.closeAria") : t("nature.homeSettings.openAria")}
-        className={[
-          TOP_BAR_BTN,
-          open ? "text-white [filter:drop-shadow(0_0_6px_rgba(255,255,255,0.85))]" : "",
-        ].join(" ")}
+        className={SETTINGS_BTN}
+        style={{
+          width: SHELL_CHROME_HIT_PX,
+          height: SHELL_CHROME_HIT_PX,
+          opacity: open ? 0.72 : 0.5,
+        }}
       >
-        <IconSettings className="h-[1.25rem] w-[1.25rem] opacity-90" />
+        <ShellMaterialIcon
+          name="settings"
+          size={SHELL_SETTINGS_ICON_SIZE_PX}
+          color="#FFFFFF"
+          legibilityShadow
+        />
       </button>
-    </div>
+    </>
   );
 }

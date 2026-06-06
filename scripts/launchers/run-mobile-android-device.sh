@@ -15,7 +15,7 @@ echo "  ③ Metro      http://<Mac局域网IP>:8081"
 echo "  ④ 编译安装到已连接的 Android 手机（USB 调试）"
 echo ""
 echo "  请：开启 USB 调试、用数据线连 Mac、手机上点「允许调试」"
-echo "  若 .env.local 仍是 localhost，请参考 apps/askbible-mobile/.env.device.example"
+echo "  若 .env.local 仍是 localhost，请参考 apps/askbible-mobile/env.device.example"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 

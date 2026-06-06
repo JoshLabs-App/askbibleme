@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
@@ -24,24 +16,29 @@ import {
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
 import {
-  NATURE_SOFT_FOCUS_DEFAULTS,
-  readNatureSoftFocusPrefs,
-  writeNatureSoftFocusPrefs,
-} from "@/lib/nature/nature-soft-focus-prefs";
+  mergeNatureVisualPrefs,
+  readNatureVisualLevels,
+  writeNatureVisualLevels,
+  type NatureVisualLevel,
+} from "@/lib/nature/nature-visual-level-prefs";
 import {
   NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
   NATURE_HOME_TEXT_SCALE_STEPS,
   natureHomeTextScaleAtStep,
   readNatureHomeTextScaleStepIndex,
-  writeNatureHomeTextScaleStepIndex,
 } from "@/lib/home/nature-home-text-scale-prefs";
 import {
   NATURE_HOME_VERSE_APPEARANCE_UPDATED_EVENT,
   readNatureHomeVerseAppearance,
 } from "@/lib/home/nature-home-verse-appearance-prefs";
+import { NATURE_HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
+import { setNatureHomeVerseTimingOverride } from "@/lib/home/nature-home-verse-timing-override";
 import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
-import { defaultNatureHomeActiveVideoId, resolveNatureHomeActiveVideoId } from "@/lib/home/nature-home-active-scene-prefs";
-import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
+import {
+  defaultNatureHomeActiveVideoId,
+  resolveNatureHomeActiveVideoId,
+  writeNatureHomeActiveSceneId,
+} from "@/lib/home/nature-home-active-scene-prefs";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import {
@@ -60,6 +57,19 @@ import { useNatureHomeFullVideoFetch } from "@/hooks/useNatureHomeFullVideoFetch
 import { NatureVideoLoadProgress } from "@/components/nature/NatureVideoLoadProgress";
 import { useShellBackgroundVideoCoordination } from "@/hooks/useShellBackgroundVideoCoordination";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
+import { NatureHomeBottomBand } from "@/components/nature/NatureHomeBottomBand";
+import { NatureHomeAmbientSlotAudio } from "@/components/nature/NatureHomeAmbientSlotAudio";
+import {
+  readNatureHomeAmbientSceneSlotId,
+  writeNatureHomeAmbientSceneSlotId,
+} from "@/lib/home/nature-home-ambient-scene-prefs";
+import {
+  readNatureHomeLoopAllScenesEnabled,
+  writeNatureHomeLoopAllScenesEnabled,
+} from "@/lib/home/nature-home-loop-all-scenes-prefs";
+import { SCENE_LOOP_SWITCH_MS } from "@/lib/nature/home-scene-strip-metrics";
+import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots";
 
 /**
  * 停留后再挂 `<video>` 解码（非「切换」时刻）。
@@ -108,12 +118,13 @@ function isNatureVideoFullyLoaded(v: HTMLVideoElement): boolean {
 const SLOW_INTRO_HINT_DELAY_MS = INTRO_REVEAL_MIN_DELAY_MS + 2500;
 /** 播放中 rebuffer 稍候再提示，避免闪一下 */
 const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
+
 /**
  * 自然：有首图时进页显静图、后台 fetch 整段 MP4，下完再挂 `<video>` 并淡出静图；否则约 3s 起流式缓冲揭晓。
  */
 export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "" }: Props) {
   const { t } = useLocale();
-  const { canPlayMusic, togglePlayMusic } = useMusicShellPlayback();
+  const { canPlayMusic, playing, togglePlayMusic } = useMusicShellPlayback();
   const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
@@ -126,12 +137,12 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
   const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
-  const [softFocusCommittedOpacity, setSoftFocusCommittedOpacity] = useState(
-    NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity,
-  );
-  const [softFocusCommittedBlur, setSoftFocusCommittedBlur] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
-  const [softFocusDraftOpacity, setSoftFocusDraftOpacity] = useState(NATURE_SOFT_FOCUS_DEFAULTS.overlayOpacity);
-  const [softFocusDraftBlur, setSoftFocusDraftBlur] = useState(NATURE_SOFT_FOCUS_DEFAULTS.blurPx);
+  const [dimLevel, setDimLevel] = useState<NatureVisualLevel>(0);
+  const [blurLevel, setBlurLevel] = useState<NatureVisualLevel>(0);
+  const [softFocusCommittedOpacity, setSoftFocusCommittedOpacity] = useState(0);
+  const [softFocusCommittedBlur, setSoftFocusCommittedBlur] = useState(0);
+  const [softFocusDraftOpacity, setSoftFocusDraftOpacity] = useState(0);
+  const [softFocusDraftBlur, setSoftFocusDraftBlur] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
@@ -142,17 +153,19 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [dwellPolicyResolved, setDwellPolicyResolved] = useState(false);
   const [natureSettings, setNatureSettings] = useState<NatureSettingsV2>(initial);
   const [activeVideoId, setActiveVideoId] = useState(() => defaultNatureHomeActiveVideoId(initial));
+  const [loopAllScenesEnabled, setLoopAllScenesEnabled] = useState(false);
+  const [activeAmbientSlotId, setActiveAmbientSlotId] = useState<NatureAmbientSceneSlotId | "">("");
+  const ambientPrefsHydratedRef = useRef(false);
+  const loopAllPrefsHydratedRef = useRef(false);
   const activeSceneHydratedRef = useRef(false);
   const landscapeNarrow = useLandscapeNarrow();
   /** 用户用右上按钮进入整页全屏时保留，避免与「竖屏 / 换源」自动退出逻辑冲突 */
   const natureHomeUserDocFullscreenRef = useRef(false);
   const [docElementFullscreen, setDocElementFullscreen] = useState(false);
-  /** 避免 SSR（无 navigator）与客户端 iOS UA 不一致导致顶栏子树 hydration 错位 */
-  const [iosUaResolved, setIosUaResolved] = useState(false);
   useEffect(() => {
-    setIosUaResolved(true);
+    setNatureHomeVerseTimingOverride({ fadeMs: NATURE_HOME_VERSE_FADE_MS });
+    return () => setNatureHomeVerseTimingOverride(null);
   }, []);
-  const showNatureDocFullscreenBtn = !iosUaResolved || !isIosLikeUserAgent();
   const natureVerseFitBoxRef = useRef<HTMLDivElement>(null);
   const natureVerseFitMeasureRef = useRef<HTMLDivElement>(null);
   const [natureVerseFitCompress, setNatureVerseFitCompress] = useState(1);
@@ -168,6 +181,19 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     activeSceneHydratedRef.current = true;
     setActiveVideoId(resolveNatureHomeActiveVideoId(natureSettings));
   }, [natureSettings]);
+
+  useLayoutEffect(() => {
+    if (ambientPrefsHydratedRef.current) return;
+    ambientPrefsHydratedRef.current = true;
+    const stored = readNatureHomeAmbientSceneSlotId()?.trim() ?? "";
+    if (stored) setActiveAmbientSlotId(stored as NatureAmbientSceneSlotId);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (loopAllPrefsHydratedRef.current) return;
+    loopAllPrefsHydratedRef.current = true;
+    setLoopAllScenesEnabled(readNatureHomeLoopAllScenesEnabled());
+  }, []);
 
   useEffect(() => {
     markNatureSettingsRevisionSynced(settingsRevision);
@@ -264,6 +290,70 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     }),
     [natureSettings, activeVideoId],
   );
+  const sceneEntries = playbackSettings.videos;
+
+  const ambientClipById = useMemo(
+    () => new Map((natureSettings.ambientClips ?? []).map((clip) => [clip.id, clip])),
+    [natureSettings.ambientClips],
+  );
+
+  useEffect(() => {
+    if (!activeAmbientSlotId) return;
+    if (ambientClipById.has(activeAmbientSlotId)) return;
+    setActiveAmbientSlotId("");
+    writeNatureHomeAmbientSceneSlotId("");
+  }, [activeAmbientSlotId, ambientClipById]);
+
+  const activeAmbientSrc = activeAmbientSlotId
+    ? ambientClipById.get(activeAmbientSlotId)?.src.trim() ?? ""
+    : "";
+
+  const selectScene = useCallback(
+    (id: string, opts?: { keepLoopMode?: boolean }) => {
+      const next = id.trim();
+      if (!next) return;
+      if (!opts?.keepLoopMode) {
+        setLoopAllScenesEnabled(false);
+        writeNatureHomeLoopAllScenesEnabled(false);
+      }
+      setActiveVideoId((prev) => {
+        if (prev === next) return prev;
+        writeNatureHomeActiveSceneId(next);
+        return next;
+      });
+    },
+    [],
+  );
+
+  const onSelectLoopAll = useCallback(() => {
+    setLoopAllScenesEnabled(true);
+    writeNatureHomeLoopAllScenesEnabled(true);
+    if (!activeVideoId.trim() && sceneEntries.length > 0) {
+      const firstId = sceneEntries[0]?.id;
+      if (firstId) selectScene(firstId, { keepLoopMode: true });
+    }
+  }, [activeVideoId, sceneEntries, selectScene]);
+
+  const onToggleAmbientSlot = useCallback((slotId: NatureAmbientSceneSlotId) => {
+    setActiveAmbientSlotId((prev) => {
+      const next = prev === slotId ? "" : slotId;
+      writeNatureHomeAmbientSceneSlotId(next);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!loopAllScenesEnabled) return;
+    if (sceneEntries.length < 2) return;
+    const timer = window.setInterval(() => {
+      const idx = sceneEntries.findIndex((v) => v.id === activeVideoId);
+      const nextIdx = idx >= 0 ? (idx + 1) % sceneEntries.length : 0;
+      const nextId = sceneEntries[nextIdx]?.id;
+      if (!nextId) return;
+      selectScene(nextId, { keepLoopMode: true });
+    }, SCENE_LOOP_SWITCH_MS);
+    return () => window.clearInterval(timer);
+  }, [loopAllScenesEnabled, activeVideoId, sceneEntries, selectScene]);
 
   const activeNatureRow = useMemo(() => {
     const s = playbackSettings;
@@ -767,11 +857,15 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   }, []);
 
   useEffect(() => {
-    const p = readNatureSoftFocusPrefs();
-    setSoftFocusCommittedOpacity(p.overlayOpacity);
-    setSoftFocusCommittedBlur(p.blurPx);
-    setSoftFocusDraftOpacity(p.overlayOpacity);
-    setSoftFocusDraftBlur(p.blurPx);
+    const levels = readNatureVisualLevels();
+    const prefs = mergeNatureVisualPrefs(levels.dimLevel, levels.blurLevel);
+    setDimLevel(levels.dimLevel);
+    setBlurLevel(levels.blurLevel);
+    setSoftFocusCommittedOpacity(prefs.overlayOpacity);
+    setSoftFocusCommittedBlur(prefs.blurPx);
+    setSoftFocusDraftOpacity(prefs.overlayOpacity);
+    setSoftFocusDraftBlur(prefs.blurPx);
+    setNatureBgSoftFocus(levels.dimLevel > 0 || levels.blurLevel > 0);
   }, []);
 
   useLayoutEffect(() => {
@@ -785,22 +879,17 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   }, []);
 
 
-  const applySoftFocusAt = useCallback((next: { opacity?: number; blur?: number }) => {
-    const opacity = next.opacity ?? softFocusDraftOpacity;
-    const blur = next.blur ?? softFocusDraftBlur;
-    writeNatureSoftFocusPrefs({ overlayOpacity: opacity, blurPx: blur });
-    setSoftFocusCommittedOpacity(opacity);
-    setSoftFocusCommittedBlur(blur);
-    setSoftFocusDraftOpacity(opacity);
-    setSoftFocusDraftBlur(blur);
-    setNatureBgSoftFocus(true);
-  }, [softFocusDraftOpacity, softFocusDraftBlur]);
-
-  const clearSoftFocus = useCallback(() => {
-    setSoftFocusDraftOpacity(softFocusCommittedOpacity);
-    setSoftFocusDraftBlur(softFocusCommittedBlur);
-    setNatureBgSoftFocus(false);
-  }, [softFocusCommittedOpacity, softFocusCommittedBlur]);
+  const applyVisualLevels = useCallback((nextDim: NatureVisualLevel, nextBlur: NatureVisualLevel) => {
+    const prefs = mergeNatureVisualPrefs(nextDim, nextBlur);
+    writeNatureVisualLevels({ dimLevel: nextDim, blurLevel: nextBlur });
+    setDimLevel(nextDim);
+    setBlurLevel(nextBlur);
+    setSoftFocusCommittedOpacity(prefs.overlayOpacity);
+    setSoftFocusCommittedBlur(prefs.blurPx);
+    setSoftFocusDraftOpacity(prefs.overlayOpacity);
+    setSoftFocusDraftBlur(prefs.blurPx);
+    setNatureBgSoftFocus(nextDim > 0 || nextBlur > 0);
+  }, []);
 
   const onHomeSettingsOpenChange = useCallback(
     (open: boolean) => {
@@ -834,35 +923,27 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   }, [homeSettingsOpen, onHomeSettingsOpenChange, canPlayMusic, togglePlayMusic]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
-  const textScaleMin = textScaleStepIndex <= 0;
-  const textScaleMax = textScaleStepIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1;
-  const textScaleAtDefault = textScaleStepIndex === NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX;
 
-  const bumpTextScaleStep = useCallback((delta: 1 | -1) => {
-    setTextScaleStepIndex((prev) => {
-      const next = Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, Math.max(0, prev + delta));
-      writeNatureHomeTextScaleStepIndex(next);
-      return next;
-    });
+  const onNatureHomePrefsChanged = useCallback(() => {
+    setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
+    setNatureVerseAppearance(readNatureHomeVerseAppearance());
   }, []);
 
-  const resetTextScaleToDefault = useCallback(() => {
-    setTextScaleStepIndex(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
-    writeNatureHomeTextScaleStepIndex(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
-  }, []);
-
-  const onNatureHomeFullscreenClick = useCallback(() => {
-    if (typeof document === "undefined" || isIosLikeUserAgent()) return;
-    if (document.fullscreenElement === document.documentElement) {
-      natureHomeUserDocFullscreenRef.current = false;
-      void exitFullscreenCompat();
-      return;
-    }
-    natureHomeUserDocFullscreenRef.current = true;
-    void requestFullscreenCompat(document.documentElement).catch(() => {
-      natureHomeUserDocFullscreenRef.current = false;
-    });
-  }, []);
+  const renderBottomBand = () => {
+    if (sceneEntries.length === 0) return null;
+    return (
+      <NatureHomeBottomBand
+        settings={natureSettings}
+        scenes={sceneEntries}
+        activeVideoId={activeVideoId}
+        loopAllScenesEnabled={loopAllScenesEnabled}
+        activeAmbientSlotId={activeAmbientSlotId}
+        onSelectScene={(id) => selectScene(id)}
+        onSelectLoopAll={onSelectLoopAll}
+        onToggleAmbientSlot={onToggleAmbientSlot}
+      />
+    );
+  };
 
   useLayoutEffect(() => {
     if (!hasNatureVisual) return;
@@ -919,23 +1000,11 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
             open={homeSettingsOpen}
             onOpenChange={onHomeSettingsOpenChange}
             hasNatureVisual={hasNatureVisual}
-            showFullscreenBtn={showNatureDocFullscreenBtn}
-            docElementFullscreen={docElementFullscreen}
-            onFullscreenClick={onNatureHomeFullscreenClick}
-            softFocusDraftOpacity={softFocusDraftOpacity}
-            softFocusDraftBlur={softFocusDraftBlur}
-            onSoftFocusOpacityChange={(opacity) => applySoftFocusAt({ opacity })}
-            onSoftFocusBlurChange={(blur) => applySoftFocusAt({ blur })}
-            onSoftFocusClear={clearSoftFocus}
-            natureBgSoftFocus={natureBgSoftFocus}
-            natureVerseTextScale={{
-              atMin: textScaleMin,
-              atMax: textScaleMax,
-              atDefault: textScaleAtDefault,
-              onSmaller: () => bumpTextScaleStep(-1),
-              onLarger: () => bumpTextScaleStep(1),
-              onResetToDefault: resetTextScaleToDefault,
-            }}
+            dimLevel={dimLevel}
+            blurLevel={blurLevel}
+            onDimLevelChange={(level) => applyVisualLevels(level, blurLevel)}
+            onBlurLevelChange={(level) => applyVisualLevels(dimLevel, level)}
+            onPrefsChanged={onNatureHomePrefsChanged}
           />
         }
       />
@@ -1107,7 +1176,13 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
               </div>
             </div>
           </div>
+          {renderBottomBand()}
           <HomeShellFloatingRouteNav placement="videoStage" shellRoot={shellRoot} />
+          <NatureHomeAmbientSlotAudio
+            slotId={activeAmbientSlotId}
+            src={activeAmbientSrc}
+            playbackRate={rate}
+          />
         </div>
       ) : (
         <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
@@ -1129,7 +1204,13 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
               </div>
             </div>
           </div>
+          {renderBottomBand()}
           <HomeShellFloatingRouteNav placement="videoStage" shellRoot={shellRoot} />
+          <NatureHomeAmbientSlotAudio
+            slotId={activeAmbientSlotId}
+            src={activeAmbientSrc}
+            playbackRate={rate}
+          />
         </div>
       )}
     </div>

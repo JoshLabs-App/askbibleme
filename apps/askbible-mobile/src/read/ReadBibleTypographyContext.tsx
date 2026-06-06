@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -17,6 +18,7 @@ import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import type { BibleTranslationMeta, BibleTranslationsIndex } from "../bible/translations-types";
 import {
   defaultReadBibleTypographyPrefs,
+  READ_BIBLE_SIZE_PRESET_LARGE,
   readBibleSizeAtMax,
   readBibleSizeAtMin,
   readBibleTypographyPx,
@@ -45,6 +47,12 @@ import {
 type ReadBibleTypographyContextValue = {
   typography: ReadBibleTypographyPrefsV1;
   px: ReadBibleTypographyPx;
+  verseParagraphFlow: boolean;
+  setVerseParagraphFlow: (enabled: boolean) => void;
+  chapterSegmentMode: "default" | "t1";
+  setChapterSegmentMode: (mode: "default" | "t1") => void;
+  sizeAtLargePreset: boolean;
+  setSizeToLargePreset: () => void;
   sizeAtMin: boolean;
   sizeAtMax: boolean;
   sizeAtDefault: boolean;
@@ -56,10 +64,12 @@ type ReadBibleTypographyContextValue = {
   translationCatalog: BibleTranslationMeta[];
   translationCatalogReady: boolean;
   primaryTranslationId: string;
+  contrastTranslationIds: string[];
   contrastTranslationId: string | null;
   audioTranslationId: string | null;
   chapterAudioTranslationId: string;
   setPrimaryTranslationId: (id: string) => Promise<void>;
+  setContrastTranslationIds: (ids: string[]) => Promise<void>;
   setContrastTranslationId: (id: string | null) => Promise<void>;
   setAudioTranslationId: (id: string | null) => Promise<void>;
 };
@@ -77,12 +87,13 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       { translations: [], defaultTranslationId: null },
       getLocale(),
     ),
-    contrastTranslationId: null,
+    contrastTranslationIds: [],
     audioTranslationId: null,
   }));
   const [translationCatalog, setTranslationCatalog] = useState<BibleTranslationMeta[]>([]);
   const [defaultTranslationId, setDefaultTranslationId] = useState<string | null>("cuv-simp");
   const [translationCatalogReady, setTranslationCatalogReady] = useState(false);
+  const contrastWriteSeqRef = useRef(0);
 
   const translationIndex = useMemo(
     (): BibleTranslationsIndex => ({
@@ -146,7 +157,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
           {
             version: 1,
             primaryTranslationId: localeDefaultPrimary,
-            contrastTranslationId: null,
+            contrastTranslationIds: [],
             audioTranslationId: null,
           },
           index,
@@ -180,10 +191,11 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   const sizeAtMin = readBibleSizeAtMin(typography.size);
   const sizeAtMax = readBibleSizeAtMax(typography.size);
   const sizeAtDefault = typography.size === defaultReadBibleTypographyPrefs().size;
+  const sizeAtLargePreset = typography.size === READ_BIBLE_SIZE_PRESET_LARGE;
 
   const bumpSize = useCallback((delta: -1 | 1) => {
     setTypography((prev) => {
-      const next = { size: stepReadBibleSize(prev.size, delta) };
+      const next = { ...prev, size: stepReadBibleSize(prev.size, delta) };
       if (next.size === prev.size) return prev;
       void writeReadBibleTypographyPrefs(next);
       return next;
@@ -194,6 +206,33 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     setTypography((prev) => {
       const next = { ...defaultReadBibleTypographyPrefs() };
       if (next.size === prev.size) return prev;
+      void writeReadBibleTypographyPrefs(next);
+      return next;
+    });
+  }, []);
+
+  const setSizeToLargePreset = useCallback(() => {
+    setTypography((prev) => {
+      const next = { ...prev, size: READ_BIBLE_SIZE_PRESET_LARGE };
+      if (next.size === prev.size) return prev;
+      void writeReadBibleTypographyPrefs(next);
+      return next;
+    });
+  }, []);
+
+  const setVerseParagraphFlow = useCallback((enabled: boolean) => {
+    setTypography((prev) => {
+      const next = { ...prev, verseParagraphFlow: enabled };
+      if (next.verseParagraphFlow === prev.verseParagraphFlow) return prev;
+      void writeReadBibleTypographyPrefs(next);
+      return next;
+    });
+  }, []);
+
+  const setChapterSegmentMode = useCallback((mode: "default" | "t1") => {
+    setTypography((prev) => {
+      const next = { ...prev, chapterSegmentMode: mode };
+      if (next.chapterSegmentMode === prev.chapterSegmentMode) return prev;
       void writeReadBibleTypographyPrefs(next);
       return next;
     });
@@ -211,8 +250,9 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
         {
           ...translation,
           primaryTranslationId: id,
-          contrastTranslationId:
-            translation.contrastTranslationId === id ? null : translation.contrastTranslationId,
+          contrastTranslationIds: translation.contrastTranslationIds.filter((item) => item !== id),
+          // 主译本变更后恢复「语音跟随主译本」。
+          audioTranslationId: null,
         },
         translationIndex,
       );
@@ -222,15 +262,43 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     [translation, translationIndex, syncHomeVersePrefsFromPrimary],
   );
 
-  const setContrastTranslationId = useCallback(
-    async (id: string | null) => {
+  const setContrastTranslationIds = useCallback(
+    async (ids: string[]) => {
+      const allowed = new Set(translationIndex.translations.map((item) => item.id));
+      const seen = new Set<string>();
+      const normalized = ids
+        .map((item) => item.trim())
+        .filter((item) => {
+          if (!item) return false;
+          if (item === translation.primaryTranslationId) return false;
+          if (!allowed.has(item)) return false;
+          if (seen.has(item)) return false;
+          seen.add(item);
+          return true;
+        });
+      // Optimistic update so the UI/reader reflects the latest choice immediately.
+      setTranslation((prev) => ({
+        ...prev,
+        contrastTranslationIds: normalized.filter((item) => item !== prev.primaryTranslationId),
+      }));
+      const seq = contrastWriteSeqRef.current + 1;
+      contrastWriteSeqRef.current = seq;
       const next = await writeReadBibleTranslationPrefs(
-        { ...translation, contrastTranslationId: id && id.trim() ? id.trim() : null },
+        { ...translation, contrastTranslationIds: normalized },
         translationIndex,
       );
-      setTranslation(next);
+      if (contrastWriteSeqRef.current === seq) {
+        setTranslation(next);
+      }
     },
     [translation, translationIndex],
+  );
+
+  const setContrastTranslationId = useCallback(
+    async (id: string | null) => {
+      await setContrastTranslationIds(id && id.trim() ? [id.trim()] : []);
+    },
+    [setContrastTranslationIds],
   );
 
   const setAudioTranslationId = useCallback(
@@ -245,14 +313,21 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   );
 
   const chapterAudioTranslationId = useMemo(
-    () => resolveChapterAudioTranslationId(translation),
-    [translation],
+    () => resolveChapterAudioTranslationId(translation, translationIndex),
+    [translation, translationIndex],
   );
 
   const value = useMemo(
     (): ReadBibleTypographyContextValue => ({
       typography,
       px,
+      verseParagraphFlow: typography.verseParagraphFlow,
+      setVerseParagraphFlow,
+      chapterSegmentMode:
+        typography.chapterSegmentMode === "t1" ? "t1" : "default",
+      setChapterSegmentMode,
+      sizeAtLargePreset,
+      setSizeToLargePreset,
       sizeAtMin,
       sizeAtMax,
       sizeAtDefault,
@@ -264,16 +339,22 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       translationCatalog,
       translationCatalogReady,
       primaryTranslationId: translation.primaryTranslationId,
-      contrastTranslationId: translation.contrastTranslationId,
+      contrastTranslationIds: translation.contrastTranslationIds,
+      contrastTranslationId: translation.contrastTranslationIds[0] ?? null,
       audioTranslationId: translation.audioTranslationId,
       chapterAudioTranslationId,
       setPrimaryTranslationId,
+      setContrastTranslationIds,
       setContrastTranslationId,
       setAudioTranslationId,
     }),
     [
       typography,
       px,
+      setVerseParagraphFlow,
+      setChapterSegmentMode,
+      sizeAtLargePreset,
+      setSizeToLargePreset,
       sizeAtMin,
       sizeAtMax,
       sizeAtDefault,
@@ -286,6 +367,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       translationCatalogReady,
       chapterAudioTranslationId,
       setPrimaryTranslationId,
+      setContrastTranslationIds,
       setContrastTranslationId,
       setAudioTranslationId,
     ],

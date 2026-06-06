@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
+import { toZhTwText } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
+import { trackTap } from "../telemetry/tap";
 import { getCompanionNeedOptions, getSolutionCards } from "./onboarding-devotion-data";
 import {
   completeOnboardingDevotionIntro,
@@ -19,6 +21,7 @@ type OnboardingDevotionIntroProps = {
 
 export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroProps) {
   const { locale, setLocale } = useLocale();
+  const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const [step, setStep] = useState<1 | 2>(1);
   const [nickname, setNickname] = useState("");
   const [selectedNeeds, setSelectedNeeds] = useState<CompanionNeedId[]>([]);
@@ -26,13 +29,12 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
 
   const companionNeedOptions = useMemo(() => getCompanionNeedOptions(locale), [locale]);
   const solutionCards = useMemo(() => getSolutionCards(locale), [locale]);
-  const canGoNext = selectedNeeds.length > 0;
   const canOpenSpace = nickname.trim().length > 0;
   const isLastStep = step === 2;
 
   const progressText = useMemo(() => {
     if (locale === "en") return step === 1 ? "Step 1 of 2" : "Step 2 of 2";
-    return step === 1 ? "第 1 步（共 2 步）" : "第 2 步（共 2 步）";
+    return step === 1 ? zhText("第 1 步（共 2 步）") : zhText("第 2 步（共 2 步）");
   }, [locale, step]);
 
   const toggleNeed = (id: CompanionNeedId) => {
@@ -57,9 +59,16 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     onComplete();
   };
 
+  const handleSkip = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    trackTap("intro.skip");
+    await completeOnboardingDevotionIntro([], "");
+    onComplete();
+  };
+
   const handlePrimaryButtonPress = () => {
     if (step === 1) {
-      if (!canGoNext) return;
       setStep(2);
       return;
     }
@@ -70,6 +79,11 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     <View style={styles.overlay}>
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.topBrandWrap}>
+          <View style={styles.topActions}>
+            <Pressable onPress={() => void handleSkip()} hitSlop={8}>
+              <Text style={styles.skipText}>{locale === "en" ? "Skip" : zhText("跳过")}</Text>
+            </Pressable>
+          </View>
           <Text style={styles.brand}>AskBible.me</Text>
           <View style={styles.brandLine} />
           <Text style={styles.progress}>{progressText}</Text>
@@ -99,11 +113,13 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
         <View style={styles.footer}>
           {step === 2 ? (
             <View style={styles.nicknameWrap}>
-              <Text style={styles.nicknameLabel}>{locale === "en" ? "Enter your nickname" : "请输入你的昵称"}</Text>
+              <Text style={styles.nicknameLabel}>
+                {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
+              </Text>
               <TextInput
                 value={nickname}
                 onChangeText={setNickname}
-                placeholder={locale === "en" ? "Enter your nickname" : "请输入你的昵称"}
+                placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
                 placeholderTextColor="rgba(77, 53, 34, 0.45)"
                 style={styles.nicknameInput}
                 autoCapitalize="none"
@@ -115,10 +131,10 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
           ) : null}
           <Pressable
             onPress={handlePrimaryButtonPress}
-            disabled={submitting || (isLastStep ? !canOpenSpace : !canGoNext)}
+            disabled={submitting || (isLastStep && !canOpenSpace)}
             style={({ pressed }) => [
               styles.primaryButtonWrap,
-              (isLastStep ? !canOpenSpace : !canGoNext) || submitting ? styles.primaryDisabled : undefined,
+              (isLastStep && !canOpenSpace) || submitting ? styles.primaryDisabled : undefined,
               pressed ? styles.primaryPressed : undefined,
             ]}
           >
@@ -129,7 +145,13 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
               style={styles.primaryButton}
             >
               <Text style={styles.primaryButtonText}>
-                {isLastStep ? (locale === "en" ? "Open my space" : "打开我的空间") : locale === "en" ? "Next" : "下一步"}
+                {isLastStep
+                  ? locale === "en"
+                    ? "Open my space"
+                    : zhText("打开我的空间")
+                  : locale === "en"
+                    ? "Next"
+                    : zhText("下一步")}
               </Text>
             </LinearGradient>
           </Pressable>
@@ -152,6 +174,17 @@ const styles = StyleSheet.create({
   topBrandWrap: {
     paddingHorizontal: 20,
     paddingTop: 6,
+  },
+  topActions: {
+    minHeight: 24,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "rgba(77, 53, 34, 0.76)",
+    paddingHorizontal: 4,
   },
   brand: {
     alignSelf: "center",

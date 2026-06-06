@@ -70,6 +70,31 @@ html.dark[data-app-shell-safe-fill="parchment"]::before {
   background-blend-mode: multiply, normal;
 }
 
+/* 只有真正的超大屏「读经章页」才去掉羊皮卷；`/read` 首页仍保留纸面质感。 */
+@media (min-width: 1536px) and (orientation: landscape) {
+  html[data-app-shell-safe-fill="parchment"]:has(.read-chapter-header)::before {
+    background-color: #746553;
+    background-image: none;
+  }
+
+  html.dark[data-app-shell-safe-fill="parchment"]:has(.read-chapter-header)::before {
+    background-color: #746553;
+    background-image: none;
+    background-blend-mode: normal;
+  }
+
+  html[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]:has(.read-chapter-header) .app-shell-parchment-backdrop {
+    background-color: #746553;
+    background-image: none;
+  }
+
+  html.dark[data-read-parchment-samsung="1"][data-app-shell-safe-fill="parchment"]:has(.read-chapter-header) .app-shell-parchment-backdrop {
+    background-color: #746553;
+    background-image: none;
+    background-blend-mode: normal;
+  }
+}
+
 html[data-app-shell-safe-fill="parchment"] body {
   position: relative;
   z-index: 1;

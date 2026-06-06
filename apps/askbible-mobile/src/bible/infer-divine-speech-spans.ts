@@ -96,7 +96,10 @@ export function splitTextBySpeechHighlights(
   text: string,
   ctx: DivineSpeechInferContext,
 ): Array<{ kind: SpeechHighlightKind; text: string }> {
-  return splitVerseSpeechHighlights(text, ctx, false).parts;
+  return splitVerseSpeechHighlights(text, ctx, null, {
+    pendingDivineReply: false,
+    divineDiscourseActive: false,
+  }).parts;
 }
 
 export function splitChapterVersesBySpeechHighlights(
@@ -106,55 +109,104 @@ export function splitChapterVersesBySpeechHighlights(
   if (!translationSupportsSpeechHighlight(base.translationId)) {
     return verses.map((v) => [{ kind: "plain", text: v.text }]);
   }
-  let insideDivineQuote = false;
+  let quoteContinuation: QuoteContinuationState = null;
+  let speakerState: SpeakerInferenceState = {
+    pendingDivineReply: false,
+    divineDiscourseActive: false,
+  };
   const out: Array<Array<{ kind: SpeechHighlightKind; text: string }>> = [];
   for (const v of verses) {
     const ctx = { ...base, verse: v.verse };
-    const { parts, insideDivineQuote: next } = splitVerseSpeechHighlights(v.text, ctx, insideDivineQuote);
+    const { parts, quoteContinuation: next, speakerState: nextSpeakerState } = splitVerseSpeechHighlights(
+      v.text,
+      ctx,
+      quoteContinuation,
+      speakerState,
+    );
     out.push(parts);
-    insideDivineQuote = next;
+    quoteContinuation = next;
+    speakerState = nextSpeakerState;
   }
   return out;
 }
 
+type QuoteContinuationState = {
+  kind: Exclude<SpeechHighlightKind, "plain">;
+  closeChar: string;
+} | null;
+
+type SpeakerInferenceState = {
+  pendingDivineReply: boolean;
+  divineDiscourseActive: boolean;
+};
+
+const ZH_CLOSE_QUOTES = ["」", "』", "﹂", "﹄"] as const;
+
 function splitVerseSpeechHighlights(
   text: string,
   ctx: DivineSpeechInferContext,
-  insideDivineQuote: boolean,
-): { parts: Array<{ kind: SpeechHighlightKind; text: string }>; insideDivineQuote: boolean } {
+  quoteContinuation: QuoteContinuationState,
+  speakerState: SpeakerInferenceState,
+): {
+  parts: Array<{ kind: SpeechHighlightKind; text: string }>;
+  quoteContinuation: QuoteContinuationState;
+  speakerState: SpeakerInferenceState;
+} {
   if (!translationSupportsSpeechHighlight(ctx.translationId)) {
-    return { parts: [{ kind: "plain", text }], insideDivineQuote: false };
+    return {
+      parts: [{ kind: "plain", text }],
+      quoteContinuation: null,
+      speakerState,
+    };
   }
-  if (!text.length) return { parts: [], insideDivineQuote: false };
+  if (!text.length) {
+    return {
+      parts: [],
+      quoteContinuation: null,
+      speakerState: { ...speakerState, pendingDivineReply: false },
+    };
+  }
 
   const loc = heuristicLocale(ctx.translationId);
+  const kinds: SpeechHighlightKind[] = Array(text.length).fill("plain");
   const divine: DivineSpeechSpan[] = [];
-  let nextInside = false;
+  let nextContinuation: QuoteContinuationState = null;
+  let nextSpeakerState: SpeakerInferenceState = { ...speakerState, pendingDivineReply: false };
 
-  if (loc === "zh" && insideDivineQuote) {
-    const closeAt = zhFirstCloseGuillemetIndex(text);
-    if (closeAt === -1) {
-      divine.push({ start: 0, end: text.length });
-      nextInside = true;
-    } else {
-      divine.push({ start: 0, end: closeAt + 1 });
-      const rest = text.slice(closeAt + 1);
-      if (rest.trim()) {
-        divine.push(...offsetSpans(inferDivineSpeechSpans(rest, ctx), closeAt + 1));
-      }
-      nextInside = false;
+  if (quoteContinuation) {
+    const closeAt = findContinuationCloseIndex(text, quoteContinuation.closeChar);
+    const end = closeAt === -1 ? text.length : closeAt + 1;
+    for (let i = 0; i < end; i++) {
+      kinds[i] = quoteContinuation.kind;
     }
-  } else {
-    divine.push(...inferDivineSpeechSpans(text, ctx));
-    if (loc === "zh" && verseOpensDivineGuillemetContinuation(text, ctx)) {
-      nextInside = true;
+    if (closeAt === -1) {
+      return {
+        parts: coalesceSpeechKinds(text, kinds),
+        quoteContinuation,
+        speakerState: {
+          ...nextSpeakerState,
+          divineDiscourseActive: quoteContinuation.kind === "divine",
+        },
+      };
     }
   }
 
   const quoted = inferAllQuotedSpeechSpans(text, ctx.translationId);
+  const divineFromTriggers = intersectSpans(inferDivineSpeechSpans(text, ctx), quoted);
+  divine.push(...divineFromTriggers);
+  const treatQuotedAsDivineByContext = shouldTreatQuotedAsDivineByContext(
+    text,
+    ctx,
+    loc,
+    quoted,
+    divineFromTriggers,
+    speakerState,
+  );
+  if (treatQuotedAsDivineByContext) {
+    divine.push(...quoted);
+  }
   const human = subtractSpans(quoted, divine);
 
-  const kinds: SpeechHighlightKind[] = Array(text.length).fill("plain");
   for (const s of human) {
     for (let i = s.start; i < s.end; i++) kinds[i] = "human";
   }
@@ -162,32 +214,130 @@ function splitVerseSpeechHighlights(
     for (let i = s.start; i < s.end; i++) kinds[i] = "divine";
   }
 
-  return { parts: coalesceSpeechKinds(text, kinds), insideDivineQuote: nextInside };
+  const unmatched = findLastUnclosedQuote(text);
+  if (unmatched) {
+    const innerIdx = unmatched.openIndex + 1;
+    const k = innerIdx < kinds.length ? kinds[innerIdx] : "plain";
+    const continuationKind: Exclude<SpeechHighlightKind, "plain"> = k === "divine" ? "divine" : "human";
+    nextContinuation = { kind: continuationKind, closeChar: unmatched.closeChar };
+  }
+
+  const hasQuotedSpeech = quoted.length > 0;
+  const hasExplicitDivineCue = divineFromTriggers.length > 0;
+  const hasAskingDivineCue = detectAskingDivineCue(text, loc);
+  const hasStrongHumanCue = detectStrongHumanCue(text, loc);
+
+  const verseDivineSpeech =
+    hasQuotedSpeech && (hasExplicitDivineCue || treatQuotedAsDivineByContext || nextContinuation?.kind === "divine");
+  nextSpeakerState.divineDiscourseActive = verseDivineSpeech || (speakerState.divineDiscourseActive && !hasStrongHumanCue);
+  if (hasStrongHumanCue) {
+    nextSpeakerState.divineDiscourseActive = false;
+  }
+  if (hasAskingDivineCue) {
+    nextSpeakerState.pendingDivineReply = true;
+  }
+
+  return {
+    parts: coalesceSpeechKinds(text, kinds),
+    quoteContinuation: nextContinuation,
+    speakerState: nextSpeakerState,
+  };
 }
 
-function offsetSpans(spans: DivineSpeechSpan[], offset: number): DivineSpeechSpan[] {
-  return spans.map((s) => ({ start: s.start + offset, end: s.end + offset }));
+function shouldTreatQuotedAsDivineByContext(
+  text: string,
+  ctx: DivineSpeechInferContext,
+  loc: "zh" | "en" | null,
+  quoted: readonly DivineSpeechSpan[],
+  divineFromTriggers: readonly DivineSpeechSpan[],
+  state: SpeakerInferenceState,
+): boolean {
+  if (!quoted.length || !loc) return false;
+  if (divineFromTriggers.length > 0) return true;
+  if (!GOSPEL_BOOKS.has(ctx.bookId)) return false;
+  if (detectStrongHumanCue(text, loc)) return false;
+
+  const startsWithQuote = startsWithKnownOpenQuote(text);
+  const hasPronounSpeechCue = detectPronounSpeechCue(text, loc);
+  if (state.pendingDivineReply && (hasPronounSpeechCue || startsWithQuote)) return true;
+  if (state.divineDiscourseActive && startsWithQuote) return true;
+  return false;
 }
 
-function zhFirstCloseGuillemetIndex(text: string): number {
+function findContinuationCloseIndex(text: string, closeChar: string): number {
+  if (!ZH_CLOSE_QUOTES.includes(closeChar as (typeof ZH_CLOSE_QUOTES)[number])) {
+    return text.indexOf(closeChar);
+  }
   let best = -1;
-  for (const close of ["」", "』"] as const) {
-    const idx = text.indexOf(close);
+  for (const c of ZH_CLOSE_QUOTES) {
+    const idx = text.indexOf(c);
     if (idx !== -1 && (best === -1 || idx < best)) best = idx;
   }
   return best;
 }
 
-function verseOpensDivineGuillemetContinuation(
-  text: string,
-  ctx: DivineSpeechInferContext,
-): boolean {
-  if (!zhSpansFromSpeechTriggers(text, ctx).length) return false;
-  const lastOpen = Math.max(text.lastIndexOf("「"), text.lastIndexOf("『"));
-  if (lastOpen === -1) return false;
-  const o = text[lastOpen]!;
-  const close = o === "「" ? "」" : "』";
-  return text.indexOf(close, lastOpen + 1) === -1;
+const QUOTE_PAIRS = new Map<string, string>([
+  ["「", "」"],
+  ["『", "』"],
+  ["“", "”"],
+  ["‘", "’"],
+  ["﹁", "﹂"],
+  ["﹃", "﹄"],
+  ['"', '"'],
+]);
+
+const OPEN_QUOTES = new Set<string>(QUOTE_PAIRS.keys());
+
+function startsWithKnownOpenQuote(text: string): boolean {
+  const s = text.trimStart();
+  if (!s) return false;
+  return OPEN_QUOTES.has(s[0]!);
+}
+
+const ZH_PRONOUN_SPEECH_CUE_RE =
+  /(?:^|[，。；\s])他(?:就|又)?(?:說|说|回答說|回答说|回答|對[^「」『』“”‘’﹁﹂﹃﹄\n]{0,12}說|对[^「」『』“”‘’﹁﹂﹃﹄\n]{0,12}说|大聲說|大声说|吩咐|講|讲)\s*[:：]?/;
+const EN_PRONOUN_SPEECH_CUE_RE =
+  /(?:^|[\s,.;])he(?:\s+(?:said|answered|replied|cried|spoke|told(?:\s+\w+)?))\s*:?\s*/i;
+
+const ZH_ASKING_DIVINE_CUE_RE =
+  /(?:(?:问|問|对|對|向|求)[^「」『』“”‘’﹁﹂﹃﹄\n]{0,8}(?:耶穌|耶稣|主耶穌|主耶稣|耶和華|耶和华|神|主)|(?:門徒|门徒|眾人|众人|法利賽人|法利赛人|百姓)[^「」『』“”‘’﹁﹂﹃﹄\n]{0,8}(?:问|問)[^「」『』“”‘’﹁﹂﹃﹄\n]{0,6}(?:耶穌|耶稣|主耶穌|主耶稣|耶和華|耶和华|神|主))[^「」『』“”‘’﹁﹂﹃﹄\n]{0,12}(?:說|说|請教|请教|回答|回覆|回复)/;
+const EN_ASKING_DIVINE_CUE_RE =
+  /(?:asked|said to|spoke to|questioned)\s+(?:jesus|the lord|yahweh|god)\b/i;
+
+const ZH_STRONG_HUMAN_CUE_RE =
+  /(?:蛇|女人|婦人|妇人|門徒|门徒|眾人|众人|法利賽人|法利赛人|百姓|彼得|亞伯拉罕|亚伯拉罕|摩西|撒但|魔鬼|他們|他们)[^「」『』“”‘’﹁﹂﹃﹄\n]{0,12}(?:說|说|問|问|回答|大聲說|大声说|吩咐)/;
+const EN_STRONG_HUMAN_CUE_RE =
+  /(?:the disciples|the crowd|the people|pharisees|the woman|the serpent|peter|they)\b[^"\n]{0,18}(?:said|asked|answered|replied|cried)/i;
+
+function detectPronounSpeechCue(text: string, loc: "zh" | "en"): boolean {
+  return loc === "zh" ? ZH_PRONOUN_SPEECH_CUE_RE.test(text) : EN_PRONOUN_SPEECH_CUE_RE.test(text);
+}
+
+function detectAskingDivineCue(text: string, loc: "zh" | "en" | null): boolean {
+  if (!loc) return false;
+  return loc === "zh" ? ZH_ASKING_DIVINE_CUE_RE.test(text) : EN_ASKING_DIVINE_CUE_RE.test(text);
+}
+
+function detectStrongHumanCue(text: string, loc: "zh" | "en" | null): boolean {
+  if (!loc) return false;
+  return loc === "zh" ? ZH_STRONG_HUMAN_CUE_RE.test(text) : EN_STRONG_HUMAN_CUE_RE.test(text);
+}
+
+function findLastUnclosedQuote(text: string): { openIndex: number; closeChar: string } | null {
+  const stack: Array<{ openIndex: number; closeChar: string }> = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    const closeChar = QUOTE_PAIRS.get(ch);
+    if (closeChar) {
+      stack.push({ openIndex: i, closeChar });
+      continue;
+    }
+    if (!stack.length) continue;
+    const top = stack[stack.length - 1]!;
+    if (ch === top.closeChar) stack.pop();
+  }
+  // 续引号按最外层未闭合引号延续，避免内层嵌套打乱下一节颜色。
+  return stack.length ? stack[0]! : null;
 }
 
 function subtractSpans(from: readonly DivineSpeechSpan[], remove: readonly DivineSpeechSpan[]): DivineSpeechSpan[] {
@@ -206,6 +356,24 @@ function subtractSpans(from: readonly DivineSpeechSpan[], remove: readonly Divin
     parts = mergeDivineSpeechSpans(next);
   }
   return parts;
+}
+
+function intersectSpans(a: readonly DivineSpeechSpan[], b: readonly DivineSpeechSpan[]): DivineSpeechSpan[] {
+  const aa = mergeDivineSpeechSpans([...a]);
+  const bb = mergeDivineSpeechSpans([...b]);
+  const out: DivineSpeechSpan[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < aa.length && j < bb.length) {
+    const x = aa[i]!;
+    const y = bb[j]!;
+    const start = Math.max(x.start, y.start);
+    const end = Math.min(x.end, y.end);
+    if (start < end) out.push({ start, end });
+    if (x.end < y.end) i++;
+    else j++;
+  }
+  return mergeDivineSpeechSpans(out);
 }
 
 function coalesceSpeechKinds(
@@ -227,17 +395,7 @@ function coalesceSpeechKinds(
 }
 
 function zhAllQuotedSpans(text: string): DivineSpeechSpan[] {
-  const spans: DivineSpeechSpan[] = [];
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]!;
-    if (c !== "「" && c !== "『") continue;
-    const sp = zhSpanFromGuillemet(text, i);
-    if (sp) {
-      spans.push(sp);
-      i = Math.max(i, sp.end - 1);
-    }
-  }
-  return spans;
+  return collectQuotedInnerSpans(text, ZH_QUOTE_PAIRS);
 }
 
 function enAllQuotedSpans(text: string): DivineSpeechSpan[] {
@@ -302,11 +460,11 @@ function skipChineseColon(text: string, start: number): number {
   return j;
 }
 
-function zhSpanFromGuillemet(text: string, openIdx: number): DivineSpeechSpan | null {
+function zhSpanFromOpenQuote(text: string, openIdx: number): DivineSpeechSpan | null {
   if (openIdx < 0 || openIdx >= text.length) return null;
-  const o = text[openIdx];
-  if (o !== "「" && o !== "『") return null;
-  const close = o === "「" ? "」" : "』";
+  const o = text[openIdx]!;
+  const close = ZH_QUOTE_PAIRS.get(o);
+  if (!close) return null;
   const innerStart = openIdx + 1;
   const closeIdx = text.indexOf(close, innerStart);
   if (closeIdx === -1) return { start: innerStart, end: text.length };
@@ -314,7 +472,7 @@ function zhSpanFromGuillemet(text: string, openIdx: number): DivineSpeechSpan | 
 }
 
 const ZH_DIVINE_SPEECH_TRIGGER_RE =
-  /(?:神吩咐这一切的话说|耶和华如此说|耶和華如此說|万军之耶和华说|萬軍之耶和華說|主耶和华说|主耶和華说|耶和华说|耶和華说|神晓谕|神曉諭|神吩咐|神说|神說|神就说|神就說|从天上有声音说|從天上有聲音說|有声音从天上说|有聲音從天上說|有声音从天上来[，,]?说|有聲音從天上來[，,]?說|有声音从云里出来说|有聲音從雲裡出來說|有声音从云彩里出来说|有聲音從雲彩裡出來說|有声音从云里出来[，,]?说|有聲音從雲裡出來[，,]?說|有声音从云彩里出来[，,]?说|有聲音從雲彩裡出來[，,]?說|耶穌回答說|耶稣回答说|耶穌對他們說|耶稣对他们说|耶穌就對他們說|耶稣就对他们说|耶穌說|耶稣说|(?:耶和华|耶和華|万军之耶和华|萬軍之耶和華|主耶和华|主耶和華|神|耶穌|耶稣)(?:[^。！？「」\n]{0,40}?)(?:说|說|吩咐|晓谕|曉諭))/g;
+  /(?:神吩咐这一切的话说|耶和华如此说|耶和華如此說|万军之耶和华说|萬軍之耶和華說|主耶和华说|主耶和華说|耶和华说|耶和華说|神晓谕|神曉諭|神吩咐|神说|神說|神就说|神就說|神(?:就)?(?:称|稱)[^。！？「」\n]{0,20}?(?:为|為)|从天上有声音说|從天上有聲音說|有声音从天上说|有聲音從天上說|有声音从天上来[，,]?说|有聲音從天上來[，,]?說|有声音从云里出来说|有聲音從雲裡出來說|有声音从云彩里出来说|有聲音從雲彩裡出來說|有声音从云里出来[，,]?说|有聲音從雲裡出來[，,]?說|有声音从云彩里出来[，,]?说|有聲音從雲彩裡出來[，,]?說|耶穌回答說|耶稣回答说|耶穌對他們說|耶稣对他们说|耶穌就對他們說|耶稣就对他们说|耶穌說|耶稣说|(?:耶和华|耶和華|万军之耶和华|萬軍之耶和華|主耶和华|主耶和華|神)(?:[^。！？；;：「」『』\n]{0,14}?)(?:说|說|吩咐|晓谕|曉諭)|(?:耶穌|耶稣)(?:就|又|便)?(?:回答說|回答说|說|说|對[^。！？；;：「」『』\n]{0,8}說|对[^。！？；;：「」『』\n]{0,8}说))/g;
 const ZH_GOSPEL_JESUS_PRONOUN_TRIGGER_RE =
   /(?:他用比喻对他们讲许多道理，说|他用比喻對他們講許多道理，說)/g;
 
@@ -357,8 +515,42 @@ function zhSpanAfterSpeechCue(text: string, cueEnd: number): DivineSpeechSpan | 
   j = skipChineseColon(text, j);
   if (j >= text.length) return null;
   const c = text[j]!;
-  if (c === "「" || c === "『") return zhSpanFromGuillemet(text, j);
+  if (ZH_QUOTE_PAIRS.has(c)) return zhSpanFromOpenQuote(text, j);
   return { start: j, end: text.length };
+}
+
+const ZH_QUOTE_PAIRS = new Map<string, string>([
+  ["「", "」"],
+  ["『", "』"],
+  ["“", "”"],
+  ["‘", "’"],
+  ["﹁", "﹂"],
+  ["﹃", "﹄"],
+]);
+
+function collectQuotedInnerSpans(text: string, pairs: ReadonlyMap<string, string>): DivineSpeechSpan[] {
+  const stack: Array<{ open: number; close: string }> = [];
+  const spans: DivineSpeechSpan[] = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    const close = pairs.get(ch);
+    if (close) {
+      stack.push({ open: i, close });
+      continue;
+    }
+    if (!stack.length) continue;
+    const top = stack[stack.length - 1]!;
+    if (ch !== top.close) continue;
+    stack.pop();
+    const start = top.open + 1;
+    const end = i;
+    if (start < end) spans.push({ start, end });
+  }
+  for (const unclosed of stack) {
+    const start = unclosed.open + 1;
+    if (start < text.length) spans.push({ start, end: text.length });
+  }
+  return mergeDivineSpeechSpans(spans);
 }
 
 const EN_TRIGGER_SOURCE =

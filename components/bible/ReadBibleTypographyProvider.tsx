@@ -9,12 +9,14 @@ import {
   readBibleSizeAtMax,
   readBibleSizeAtMin,
   readBibleTypographyCssVars,
+  READ_BIBLE_SIZE_PRESET_LARGE,
   READ_BIBLE_TYPOGRAPHY_STORAGE_KEY,
   readReadBibleTypographyPrefsFromStorage,
   stepReadBibleSize,
   writeReadBibleTypographyPrefsToStorage,
   type ReadBibleSizeId,
   type ReadBibleTypographyPrefsV1,
+  type ChapterSegmentMode,
 } from "@/lib/read/read-bible-typography-prefs";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { resolveChapterAudioTranslationId } from "@/lib/read/read-chapter-audio-translation";
@@ -44,10 +46,17 @@ type ReadBibleReadSettingsContextValue = {
   sizeAtDefault: boolean;
   bumpSize: (delta: -1 | 1) => void;
   resetSizeToDefault: () => void;
+  setSizeToLargePreset: () => void;
+  sizeAtLargePreset: boolean;
+  setVerseParagraphFlow: (enabled: boolean) => void;
+  setChapterSegmentMode: (mode: ChapterSegmentMode) => void;
   translation: ReadBibleTranslationPrefsV1;
+  contrastTranslationIds: string[];
+  contrastTranslationId: string | null;
   translationCatalog: CatalogResponse["translations"];
   translationCatalogReady: boolean;
   setPrimaryTranslationId: (id: string) => ReadBibleTranslationPrefsV1;
+  setContrastTranslationIds: (ids: string[]) => ReadBibleTranslationPrefsV1;
   setContrastTranslationId: (id: string | null) => ReadBibleTranslationPrefsV1;
   setAudioTranslationId: (id: string | null) => ReadBibleTranslationPrefsV1;
   chapterAudioTranslationId: string;
@@ -118,7 +127,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
                 { translations: [], defaultTranslationId: null },
                 locale,
               ),
-              contrastTranslationId: null,
+              contrastTranslationIds: [],
               audioTranslationId: null,
             },
           );
@@ -149,7 +158,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
 
   const setSize = useCallback((size: ReadBibleSizeId) => {
     setTypography((p) => {
-      const next = { size };
+      const next = { ...p, size };
       writeReadBibleTypographyPrefsToStorage(next);
       return next;
     });
@@ -158,7 +167,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   const bumpSize = useCallback(
     (delta: -1 | 1) => {
       setTypography((p) => {
-        const next = { size: stepReadBibleSize(p.size, delta) };
+        const next = { ...p, size: stepReadBibleSize(p.size, delta) };
         if (next.size === p.size) return p;
         writeReadBibleTypographyPrefsToStorage(next);
         return next;
@@ -169,8 +178,36 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
 
   const resetSizeToDefault = useCallback(() => {
     setTypography((p) => {
-      const next = { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
+      const next = { ...p, size: DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size };
       if (next.size === p.size) return p;
+      writeReadBibleTypographyPrefsToStorage(next);
+      return next;
+    });
+  }, []);
+
+  const setSizeToLargePreset = useCallback(() => {
+    setTypography((p) => {
+      const next = { ...p, size: READ_BIBLE_SIZE_PRESET_LARGE };
+      if (next.size === p.size) return p;
+      writeReadBibleTypographyPrefsToStorage(next);
+      return next;
+    });
+  }, []);
+
+  const setVerseParagraphFlow = useCallback((enabled: boolean) => {
+    setTypography((p) => {
+      const next = { ...p, verseParagraphFlow: enabled };
+      if (next.verseParagraphFlow === p.verseParagraphFlow) return p;
+      writeReadBibleTypographyPrefsToStorage(next);
+      return next;
+    });
+  }, []);
+
+  const setChapterSegmentMode = useCallback((mode: ChapterSegmentMode) => {
+    setTypography((p) => {
+      const normalized: ChapterSegmentMode = mode === "t1" ? "t1" : "default";
+      const next: ReadBibleTypographyPrefsV1 = { ...p, chapterSegmentMode: normalized };
+      if (next.chapterSegmentMode === p.chapterSegmentMode) return p;
       writeReadBibleTypographyPrefsToStorage(next);
       return next;
     });
@@ -179,6 +216,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   const sizeAtMin = readBibleSizeAtMin(typography.size);
   const sizeAtMax = readBibleSizeAtMax(typography.size);
   const sizeAtDefault = typography.size === DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size;
+  const sizeAtLargePreset = typography.size === READ_BIBLE_SIZE_PRESET_LARGE;
 
   const translationIndex = useMemo(
     (): BibleTranslationsIndex => ({
@@ -195,14 +233,17 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
         {
           ...base,
           primaryTranslationId: id,
-          contrastTranslationId:
-            base.contrastTranslationId === id ? null : base.contrastTranslationId,
+          contrastTranslationIds: base.contrastTranslationIds.filter((item) => item !== id),
         },
         translationIndex,
       );
       setTranslation(next);
       const selected = translationIndex.translations.find((t) => t.id === next.primaryTranslationId);
-      const selectedLocale = /^en\b/i.test(selected?.language ?? "") ? "en" : "zh-CN";
+      const selectedLocale = /^en\b/i.test(selected?.language ?? "")
+        ? "en"
+        : selected?.id === "cuv-trad" || /hant/i.test(selected?.language ?? "")
+          ? "zh-TW"
+          : "zh-CN";
       const homePrefs = readHomePrayerVersePrefs();
       if (selectedLocale === "en") {
         if (homePrefs.verseTextEnTranslationId !== next.primaryTranslationId) {
@@ -227,17 +268,28 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     [translation, translationIndex, locale, setLocale],
   );
 
-  const setContrastTranslationId = useCallback(
-    (id: string | null) => {
+  const setContrastTranslationIds = useCallback(
+    (ids: string[]) => {
       const base = translation ?? readReadBibleTranslationPrefsFromStorage(translationIndex, locale);
+      const normalized = ids.map((item) => item.trim()).filter(Boolean);
       const next = writeReadBibleTranslationPrefsToStorage(
-        { ...base, contrastTranslationId: id && id.trim() ? id.trim() : null },
+        {
+          ...base,
+          contrastTranslationIds: normalized.filter((item) => item !== base.primaryTranslationId),
+        },
         translationIndex,
       );
       setTranslation(next);
       return next;
     },
     [translation, translationIndex, locale],
+  );
+
+  const setContrastTranslationId = useCallback(
+    (id: string | null) => {
+      return setContrastTranslationIds(id && id.trim() ? [id.trim()] : []);
+    },
+    [setContrastTranslationIds],
   );
 
   const setAudioTranslationId = useCallback(
@@ -260,14 +312,17 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       : {
           version: 1 as const,
           primaryTranslationId: resolveDefaultPrimaryTranslationId(translationIndex, locale),
-          contrastTranslationId: null,
+          contrastTranslationIds: [],
           audioTranslationId: null,
         });
 
   const chapterAudioTranslationId = useMemo(
-    () => resolveChapterAudioTranslationId(resolvedTranslation),
-    [resolvedTranslation],
+    () => resolveChapterAudioTranslationId(resolvedTranslation, translationIndex),
+    [resolvedTranslation, translationIndex],
   );
+
+  const contrastTranslationIds = resolvedTranslation.contrastTranslationIds;
+  const contrastTranslationId = contrastTranslationIds[0] ?? null;
 
   const value = useMemo(
     (): ReadBibleReadSettingsContextValue => ({
@@ -276,12 +331,19 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       sizeAtMin,
       sizeAtMax,
       sizeAtDefault,
+      sizeAtLargePreset,
       bumpSize,
       resetSizeToDefault,
+      setSizeToLargePreset,
+      setVerseParagraphFlow,
+      setChapterSegmentMode,
       translation: resolvedTranslation,
+      contrastTranslationIds,
+      contrastTranslationId,
       translationCatalog,
       translationCatalogReady,
       setPrimaryTranslationId,
+      setContrastTranslationIds,
       setContrastTranslationId,
       setAudioTranslationId,
       chapterAudioTranslationId,
@@ -292,12 +354,19 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       sizeAtMin,
       sizeAtMax,
       sizeAtDefault,
+      sizeAtLargePreset,
       bumpSize,
       resetSizeToDefault,
+      setSizeToLargePreset,
+      setVerseParagraphFlow,
+      setChapterSegmentMode,
       resolvedTranslation,
+      contrastTranslationIds,
+      contrastTranslationId,
       translationCatalog,
       translationCatalogReady,
       setPrimaryTranslationId,
+      setContrastTranslationIds,
       setContrastTranslationId,
       setAudioTranslationId,
       chapterAudioTranslationId,
@@ -316,8 +385,12 @@ export function useReadBibleTypography(): Pick<
   | "sizeAtMin"
   | "sizeAtMax"
   | "sizeAtDefault"
+  | "sizeAtLargePreset"
   | "bumpSize"
   | "resetSizeToDefault"
+  | "setSizeToLargePreset"
+  | "setVerseParagraphFlow"
+  | "setChapterSegmentMode"
 > {
   const v = useContext(ReadBibleReadSettingsContext);
   if (!v) throw new Error("useReadBibleTypography must be used under ReadBibleTypographyProvider");
@@ -327,17 +400,24 @@ export function useReadBibleTypography(): Pick<
     sizeAtMin: v.sizeAtMin,
     sizeAtMax: v.sizeAtMax,
     sizeAtDefault: v.sizeAtDefault,
+    sizeAtLargePreset: v.sizeAtLargePreset,
     bumpSize: v.bumpSize,
     resetSizeToDefault: v.resetSizeToDefault,
+    setSizeToLargePreset: v.setSizeToLargePreset,
+    setVerseParagraphFlow: v.setVerseParagraphFlow,
+    setChapterSegmentMode: v.setChapterSegmentMode,
   };
 }
 
 export function useReadBibleTranslationSettings(): Pick<
   ReadBibleReadSettingsContextValue,
   | "translation"
+  | "contrastTranslationIds"
+  | "contrastTranslationId"
   | "translationCatalog"
   | "translationCatalogReady"
   | "setPrimaryTranslationId"
+  | "setContrastTranslationIds"
   | "setContrastTranslationId"
   | "setAudioTranslationId"
   | "chapterAudioTranslationId"
@@ -346,9 +426,12 @@ export function useReadBibleTranslationSettings(): Pick<
   if (!v) throw new Error("useReadBibleTranslationSettings must be used under ReadBibleTypographyProvider");
   return {
     translation: v.translation,
+    contrastTranslationIds: v.contrastTranslationIds,
+    contrastTranslationId: v.contrastTranslationId,
     translationCatalog: v.translationCatalog,
     translationCatalogReady: v.translationCatalogReady,
     setPrimaryTranslationId: v.setPrimaryTranslationId,
+    setContrastTranslationIds: v.setContrastTranslationIds,
     setContrastTranslationId: v.setContrastTranslationId,
     setAudioTranslationId: v.setAudioTranslationId,
     chapterAudioTranslationId: v.chapterAudioTranslationId,

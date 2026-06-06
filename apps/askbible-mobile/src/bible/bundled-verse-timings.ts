@@ -3,6 +3,7 @@ import { parseCuvChapterVerseTimingsPayload } from "./cuv-chapter-verse-timings"
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 
 type VerseTimingsBundleFile = {
+  "cuv-v20"?: Record<string, unknown>;
   "cuv-simp"?: Record<string, unknown>;
   "web-en"?: Record<string, unknown>;
   "teochew-nt"?: Record<string, unknown>;
@@ -18,7 +19,7 @@ function scopeForTranslation(
   if (voiceId === "teochew-nt") return "teochew-nt";
   const id = translationId.trim().toLowerCase();
   if (id === "web-en" || id.startsWith("web")) return "web-en";
-  return "cuv-simp";
+  return "cuv-v20";
 }
 
 function chapterKey(bookId: string, chapter: number): string {
@@ -32,8 +33,14 @@ export function loadBundledChapterVerseTimings(
   chapter: number,
 ): CuvChapterVerseTiming[] | null {
   const scope = scopeForTranslation(translationId, voiceId);
-  const table = bundle[scope];
-  if (!table) return null;
-  const raw = table[chapterKey(bookId, chapter)];
-  return parseCuvChapterVerseTimingsPayload(raw);
+  const key = chapterKey(bookId, chapter);
+  const fromScope = bundle[scope]?.[key];
+  const parsedScope = parseCuvChapterVerseTimingsPayload(fromScope);
+  if (parsedScope?.length) return parsedScope;
+  if (scope === "cuv-v20") {
+    const legacy = bundle["cuv-simp"]?.[key];
+    const parsedLegacy = parseCuvChapterVerseTimingsPayload(legacy);
+    if (parsedLegacy?.length) return parsedLegacy;
+  }
+  return null;
 }

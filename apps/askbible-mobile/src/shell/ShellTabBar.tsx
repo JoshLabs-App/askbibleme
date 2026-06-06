@@ -1,7 +1,7 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { usePathname, useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useSyncExternalStore } from "react";
 import {
   getHomeAutoHideChrome,
   getHomeLandscapeImmersive,
@@ -55,24 +55,64 @@ function tabLabel(routeName: string): string {
   }
 }
 
-function tabIcon(routeName: string) {
-  const size = 24;
-  const color = SHELL_TAB_BAR_ICON;
+const TAB_ICON_SIZE = 28;
+const PLAY_ICON_SIZE = 28;
+
+function tabIcon(routeName: string, active: boolean) {
+  const color = active ? "rgba(255,255,255,0.95)" : SHELL_TAB_BAR_ICON;
   switch (routeName as TabKey) {
     case "index":
-      return <ShellMaterialIcon name="home" size={size} color={color} />;
+      return <ShellMaterialIcon name="home" size={TAB_ICON_SIZE} color={color} />;
     case "music":
-      return <ShellMaterialIcon name="music-note" size={size} color={color} />;
+      return <ShellMaterialIcon name="music-note" size={TAB_ICON_SIZE} color={color} />;
     case "read":
-      return <ShellMaterialIcon name="menu-book" size={size} color={color} />;
+      return <ShellMaterialIcon name="menu-book" size={TAB_ICON_SIZE} color={color} />;
     case "explore":
-      return <ShellMaterialIcon name="explore" size={size} color={color} />;
+      return <ShellMaterialIcon name="explore" size={TAB_ICON_SIZE} color={color} />;
     default:
-      return <ShellMaterialIcon name="circle" size={size} color={color} />;
+      return <ShellMaterialIcon name="circle" size={TAB_ICON_SIZE} color={color} />;
   }
 }
 
-/** 与网站 `HomeShellFloatingRouteNav` 同构：半透明图标，选中项略亮 + 下划线 */
+type TabBarPortalStore = {
+  props: BottomTabBarProps | null;
+  listeners: Set<() => void>;
+};
+
+const tabBarPortalStore: TabBarPortalStore = {
+  props: null,
+  listeners: new Set(),
+};
+
+function subscribeTabBarPortal(listener: () => void) {
+  tabBarPortalStore.listeners.add(listener);
+  return () => tabBarPortalStore.listeners.delete(listener);
+}
+
+function getTabBarPortalProps() {
+  return tabBarPortalStore.props;
+}
+
+/** 挂在 Tabs `tabBar` 槽内同步状态，实际 UI 由 `ShellTabBarPortal` 浮在导航器外渲染 */
+export function ShellTabBarCapture(props: BottomTabBarProps) {
+  useLayoutEffect(() => {
+    tabBarPortalStore.props = props;
+    tabBarPortalStore.listeners.forEach((listener) => listener());
+  });
+  return null;
+}
+
+export function ShellTabBarPortal() {
+  const props = useSyncExternalStore(
+    subscribeTabBarPortal,
+    getTabBarPortalProps,
+    getTabBarPortalProps,
+  );
+  if (!props) return null;
+  return <ShellTabBar {...props} />;
+}
+
+/** 与网站 `HomeShellFloatingRouteNav` 同构：无底栏胶囊、无图标底色/边框，选中项略亮 */
 export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
@@ -94,7 +134,6 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
   const musicActive = playbackMode === "music" && playing;
   const scriptureActive = playbackMode === "scripture" && (playing || scripturePreparing);
   const fabActive = readFabUsesScripture ? scriptureActive : musicActive;
-  const hideFabBorder = fabActive || musicActive;
   const homeLandscapeImmersive = useSyncExternalStore(
     subscribeHomeLandscapeImmersive,
     getHomeLandscapeImmersive,
@@ -149,12 +188,12 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
       onLongPress={() => {
         navigation.emit({ type: "tabLongPress", target: routeKey });
       }}
-      style={styles.tabBtn}
+      style={({ pressed }) => [styles.tabBtn, pressed && styles.tabBtnPressed]}
       accessibilityRole="button"
       accessibilityState={{ selected: isFocused }}
       accessibilityLabel={tabLabel(routeName)}
     >
-      {tabIcon(routeName)}
+      {tabIcon(routeName, isFocused)}
     </Pressable>
   );
 
@@ -169,8 +208,8 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
       {readBottomChrome ? (
         <ReadChapterActionChrome />
       ) : null}
-      <View style={styles.bar}>
-        <View style={styles.side}>
+      <View style={styles.row}>
+        <View style={[styles.side, styles.sideLeft]}>
           {leftRoutes.map((route) => {
             const i = state.routes.findIndex((r) => r.key === route.key);
             return renderTab(route.name, route.key, state.index === i);
@@ -182,11 +221,7 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
             void (readFabUsesScripture ? togglePlayScripture() : togglePlayMusic())
           }
           disabled={!canPlayFab}
-          style={[
-            styles.playFab,
-            hideFabBorder && styles.playFabActive,
-            !canPlayFab && styles.playFabDisabled,
-          ]}
+          style={[styles.playFab, !canPlayFab && styles.playFabDisabled]}
           accessibilityRole="button"
           accessibilityLabel={
             !canPlayFab
@@ -202,12 +237,12 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
         >
           <ShellMaterialIcon
             name={fabActive ? "pause" : "play-arrow"}
-            size={28}
+            size={PLAY_ICON_SIZE}
             color={fabActive ? LOGO_COLOR : SHELL_TAB_BAR_ICON}
           />
         </Pressable>
 
-        <View style={styles.side}>
+        <View style={[styles.side, styles.sideRight]}>
           {rightRoutes.map((route) => {
             const i = state.routes.findIndex((r) => r.key === route.key);
             return renderTab(route.name, route.key, state.index === i);
@@ -228,41 +263,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     gap: 6,
+    backgroundColor: "transparent",
   },
-  bar: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
     maxWidth: 400,
+    width: "100%",
+    paddingHorizontal: 12,
+    backgroundColor: "transparent",
   },
   side: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    minWidth: 0,
+  },
+  sideLeft: {
+    justifyContent: "flex-end",
+    paddingRight: 6,
+  },
+  sideRight: {
+    justifyContent: "flex-start",
+    paddingLeft: 6,
   },
   tabBtn: {
-    minWidth: 44,
-    minHeight: 44,
+    width: 52,
+    height: 52,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 22,
   },
+  tabBtnPressed: { opacity: 0.8 },
   playFab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 10,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.2)",
   },
   playFabDisabled: { opacity: 0.4 },
-  playFabActive: {
-    backgroundColor: "transparent",
-    borderColor: "transparent",
-    borderWidth: 0,
-  },
 });

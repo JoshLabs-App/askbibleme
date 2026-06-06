@@ -53,22 +53,6 @@ html[data-read-parchment-bg="3"] {
 }
 
 /**
- * 宽屏横卷：`html::before` 只读 `--read-parchment-bg-image`。
- * 此处必须用裸 url()，勿把 image-set 赋给该变量（部分浏览器会回退竖图）。
+ * 宽屏横卷：`html::before` 由 `syncReadParchmentWideDataset` 写入横图 url()，
+ * 这里保留默认变量，不再覆盖成纯色。
  */
-html[data-app-shell-safe-fill="parchment"][data-read-parchment-wide="1"] {
-  --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
-}
-
-@media (min-width: 480px) and (min-aspect-ratio: 1 / 1) {
-  html[data-app-shell-safe-fill="parchment"] {
-    --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
-  }
-}
-
-/* 读经章双栏：与 `useReadChapterSpreadLayout` 同断点，竖屏 iPad 宽≥1024 也用横卷 */
-@media (min-width: 1024px) {
-  html[data-app-shell-safe-fill="parchment"]:has(.read-bible-parchment-column--read-chapter) {
-    --read-parchment-bg-image: url("/read/parchment-scroll-bg-wide.webp");
-  }
-}

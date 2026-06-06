@@ -17,8 +17,9 @@ const COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 400;
 export type ReadBibleTranslationPrefsV1 = {
   version: 1;
   primaryTranslationId: string;
-  /** `null` = 无对照 */
-  contrastTranslationId: string | null;
+  contrastTranslationIds: string[];
+  /** 兼容旧数据：单选时代字段 */
+  contrastTranslationId?: string | null;
   /** `null` = 朗读与屏幕主译本相同 */
   audioTranslationId: string | null;
 };
@@ -26,12 +27,21 @@ export type ReadBibleTranslationPrefsV1 = {
 export const DEFAULT_READ_BIBLE_TRANSLATION_PREFS: ReadBibleTranslationPrefsV1 = {
   version: 1,
   primaryTranslationId: "cuv-simp",
-  contrastTranslationId: null,
+  contrastTranslationIds: [],
   audioTranslationId: null,
 };
 
 function allowedIds(index: BibleTranslationsIndex): Set<string> {
   return new Set(index.translations.map((t) => t.id));
+}
+
+function firstAvailableTranslationId(index: BibleTranslationsIndex, ids: string[]): string | null {
+  const allowed = allowedIds(index);
+  for (const id of ids) {
+    const tid = id.trim();
+    if (tid && allowed.has(tid)) return tid;
+  }
+  return null;
 }
 
 /** 无已存偏好时：界面 `zh-CN` → 和合本；`en` → WEB 等英文译本 */
@@ -43,7 +53,12 @@ export function resolveDefaultPrimaryTranslationId(
     const picked = pickTranslationIdForLocale(index, locale);
     if (picked && allowedIds(index).has(picked)) return picked;
   }
-  return index.defaultTranslationId ?? index.translations[0]?.id ?? "cuv-simp";
+  return (
+    firstAvailableTranslationId(index, ["cuv-simp", "cuv-trad"]) ??
+    index.defaultTranslationId ??
+    index.translations[0]?.id ??
+    "cuv-simp"
+  );
 }
 
 export function normalizeReadBiblePrimaryTranslationId(
@@ -56,14 +71,44 @@ export function normalizeReadBiblePrimaryTranslationId(
   return s && allowedIds(index).has(s) ? s : fallback;
 }
 
-export function normalizeReadBibleContrastTranslationId(
+export function normalizeReadBibleContrastTranslationIds(
   raw: unknown,
   index: BibleTranslationsIndex,
   primaryId: string,
-): string | null {
-  const s = typeof raw === "string" ? raw.trim() : "";
-  if (!s || s === primaryId) return null;
-  return allowedIds(index).has(s) ? s : null;
+): string[] {
+  const allowed = allowedIds(index);
+  if (Array.isArray(raw)) {
+    const seen = new Set<string>();
+    const picked: string[] = [];
+    for (const item of raw) {
+      const s = typeof item === "string" ? item.trim() : "";
+      if (!s || s === primaryId || seen.has(s) || !allowed.has(s)) continue;
+      seen.add(s);
+      picked.push(s);
+    }
+    return picked;
+  }
+  const single = typeof raw === "string" ? raw.trim() : "";
+  if (!single || single === primaryId || !allowed.has(single)) return [];
+  return [single];
+}
+
+/** 首项对照（兼容旧 UI / Cookie 单值读取） */
+export function firstContrastTranslationId(prefs: ReadBibleTranslationPrefsV1): string | null {
+  return prefs.contrastTranslationIds[0] ?? null;
+}
+
+function parseContrastIdsFromCookie(raw: string | null | undefined): string[] {
+  if (!raw?.trim()) return [];
+  try {
+    const decoded = decodeURIComponent(raw.trim());
+    if (decoded.includes(",")) {
+      return decoded.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+    return decoded ? [decoded] : [];
+  } catch {
+    return raw.trim() ? [raw.trim()] : [];
+  }
 }
 
 export function parseReadBibleTranslationPrefs(
@@ -84,8 +129,8 @@ export function parseReadBibleTranslationPrefs(
       index,
       locale,
     );
-    const contrastTranslationId = normalizeReadBibleContrastTranslationId(
-      j.contrastTranslationId,
+    const contrastTranslationIds = normalizeReadBibleContrastTranslationIds(
+      j.contrastTranslationIds ?? j.contrastTranslationId,
       index,
       primaryTranslationId,
     );
@@ -94,7 +139,7 @@ export function parseReadBibleTranslationPrefs(
       index,
       primaryTranslationId,
     );
-    return { version: 1, primaryTranslationId, contrastTranslationId, audioTranslationId };
+    return { version: 1, primaryTranslationId, contrastTranslationIds, audioTranslationId };
   } catch {
     return fallback;
   }
@@ -129,7 +174,7 @@ export function persistReadBibleTranslationCookies(prefs: ReadBibleTranslationPr
   try {
     const base = `path=/;max-age=${COOKIE_MAX_AGE_SEC};SameSite=Lax`;
     document.cookie = `${READ_BIBLE_PRIMARY_TRANSLATION_COOKIE}=${encodeURIComponent(prefs.primaryTranslationId)};${base}`;
-    const contrast = prefs.contrastTranslationId ?? "";
+    const contrast = prefs.contrastTranslationIds.join(",");
     document.cookie = `${READ_BIBLE_CONTRAST_TRANSLATION_COOKIE}=${encodeURIComponent(contrast)};${base}`;
     const audio = prefs.audioTranslationId ?? "";
     document.cookie = `${READ_BIBLE_AUDIO_TRANSLATION_COOKIE}=${encodeURIComponent(audio)};${base}`;
@@ -142,18 +187,19 @@ export function writeReadBibleTranslationPrefsToStorage(
   prefs: ReadBibleTranslationPrefsV1,
   index: BibleTranslationsIndex,
 ): ReadBibleTranslationPrefsV1 {
+  const primaryTranslationId = normalizeReadBiblePrimaryTranslationId(prefs.primaryTranslationId, index);
   const normalized: ReadBibleTranslationPrefsV1 = {
     version: 1,
-    primaryTranslationId: normalizeReadBiblePrimaryTranslationId(prefs.primaryTranslationId, index),
-    contrastTranslationId: normalizeReadBibleContrastTranslationId(
-      prefs.contrastTranslationId,
+    primaryTranslationId,
+    contrastTranslationIds: normalizeReadBibleContrastTranslationIds(
+      prefs.contrastTranslationIds ?? prefs.contrastTranslationId,
       index,
-      normalizeReadBiblePrimaryTranslationId(prefs.primaryTranslationId, index),
+      primaryTranslationId,
     ),
     audioTranslationId: normalizeReadBibleAudioTranslationId(
       prefs.audioTranslationId,
       index,
-      normalizeReadBiblePrimaryTranslationId(prefs.primaryTranslationId, index),
+      primaryTranslationId,
     ),
   };
   if (typeof window === "undefined") return normalized;
@@ -176,8 +222,8 @@ export function resolveReadBibleTranslationPrefsFromCookies(
   const primaryRaw = cookieStore.get(READ_BIBLE_PRIMARY_TRANSLATION_COOKIE)?.value;
   const contrastRaw = cookieStore.get(READ_BIBLE_CONTRAST_TRANSLATION_COOKIE)?.value;
   const primaryTranslationId = normalizeReadBiblePrimaryTranslationId(primaryRaw ?? null, index, locale);
-  const contrastTranslationId = normalizeReadBibleContrastTranslationId(
-    contrastRaw ?? null,
+  const contrastTranslationIds = normalizeReadBibleContrastTranslationIds(
+    parseContrastIdsFromCookie(contrastRaw),
     index,
     primaryTranslationId,
   );
@@ -187,5 +233,5 @@ export function resolveReadBibleTranslationPrefsFromCookies(
     index,
     primaryTranslationId,
   );
-  return { version: 1, primaryTranslationId, contrastTranslationId, audioTranslationId };
+  return { version: 1, primaryTranslationId, contrastTranslationIds, audioTranslationId };
 }

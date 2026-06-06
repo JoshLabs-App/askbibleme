@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parchmentSans } from "../fonts/parchmentType";
+import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
@@ -191,7 +192,7 @@ const ENCOURAGING_WORDS_SECTIONS: EncouragingSection[] = [
   },
 ];
 
-function sectionTitle(section: EncouragingSection, locale: "zh-CN" | "en"): string {
+function sectionTitle(section: EncouragingSection, locale: AppLocale): string {
   return locale === "en" ? section.titleEn : section.titleZh;
 }
 

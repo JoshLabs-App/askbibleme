@@ -4,9 +4,12 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { AppLocale } from "@/lib/i18n/config";
 import { formatScriptureXrefLabel } from "@/lib/bible/format-scripture-xref-label";
 import { scriptureXrefSnippetKey } from "@/lib/bible/join-verse-range-text";
 import type { ScriptureVerseXrefs, ScriptureXrefTarget } from "@/lib/bible/scripture-xref-types";
+
+const EMPTY_XREF_TARGETS: ScriptureXrefTarget[] = [];
 
 type Props = {
   open: boolean;
@@ -34,7 +37,7 @@ function XrefListSection({
   refs: ScriptureXrefTarget[];
   snippets: Record<string, string>;
   loading: boolean;
-  locale: "zh-CN" | "en";
+  locale: AppLocale;
   onClose: () => void;
 }) {
   if (!refs.length) return null;
@@ -83,9 +86,17 @@ export function ReadChapterVerseXrefSheet({
   const [snippets, setSnippets] = useState<Record<string, string>>({});
   const [loadingSnippets, setLoadingSnippets] = useState(false);
 
-  const incoming = bundle?.incoming ?? [];
-  const outgoing = bundle?.outgoing ?? [];
-  const allRefs = useMemo(() => [...incoming, ...outgoing], [incoming, outgoing]);
+  const incoming = bundle?.incoming ?? EMPTY_XREF_TARGETS;
+  const outgoing = bundle?.outgoing ?? EMPTY_XREF_TARGETS;
+  const allRefs = useMemo(() => {
+    if (!incoming.length && !outgoing.length) return EMPTY_XREF_TARGETS;
+    return [...incoming, ...outgoing];
+  }, [incoming, outgoing]);
+
+  const refsFetchKey = useMemo(
+    () => allRefs.map((ref) => scriptureXrefSnippetKey(ref)).join("\n"),
+    [allRefs],
+  );
 
   useEffect(() => {
     setPortalReady(true);
@@ -122,8 +133,8 @@ export function ReadChapterVerseXrefSheet({
 
   useEffect(() => {
     if (!open || allRefs.length === 0) {
-      setSnippets({});
-      setLoadingSnippets(false);
+      setSnippets((prev) => (Object.keys(prev).length === 0 ? prev : {}));
+      setLoadingSnippets((prev) => (prev ? false : prev));
       return;
     }
     let cancelled = false;
@@ -150,7 +161,7 @@ export function ReadChapterVerseXrefSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, translationId, locale, allRefs]);
+  }, [open, translationId, locale, refsFetchKey, allRefs]);
 
   if (!portalReady || !visible) return null;
 

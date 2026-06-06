@@ -18,6 +18,7 @@ import {
 } from "@/lib/i18n/config";
 import { MESSAGES } from "@/lib/i18n/messages";
 import { translate } from "@/lib/i18n/translate";
+import { toZhTwText, zhTwOverrideForKey } from "@/lib/i18n/zh-tw-text";
 
 type LocaleContextValue = {
   locale: AppLocale;
@@ -85,7 +86,8 @@ export function LocaleProvider({ children, initialLocaleGuess }: LocaleProviderP
   const locale = useSyncExternalStore(subscribeLocale, getSnapshot, getServerSnapshot);
 
   useLayoutEffect(() => {
-    document.documentElement.lang = locale === "en" ? "en" : "zh-CN";
+    document.documentElement.lang =
+      locale === "en" ? "en" : locale === "zh-TW" ? "zh-Hant" : "zh-CN";
   }, [locale]);
 
   const setLocale = useCallback((next: AppLocale) => {
@@ -95,7 +97,8 @@ export function LocaleProvider({ children, initialLocaleGuess }: LocaleProviderP
       /* ignore */
     }
     persistLocaleToCookie(next);
-    document.documentElement.lang = next === "en" ? "en" : "zh-CN";
+    document.documentElement.lang =
+      next === "en" ? "en" : next === "zh-TW" ? "zh-Hant" : "zh-CN";
     emitLocaleChange();
   }, []);
 
@@ -114,10 +117,28 @@ export function LocaleProvider({ children, initialLocaleGuess }: LocaleProviderP
 
   const t = useCallback(
     (path: string, vars?: Record<string, string>) => {
+      if (locale === "zh-TW") {
+        const override = zhTwOverrideForKey(path);
+        if (override) {
+          let s = override;
+          if (vars) {
+            for (const [k, v] of Object.entries(vars)) {
+              s = s.replaceAll(`{{${k}}}`, v);
+            }
+          }
+          return s;
+        }
+      }
       const primary = MESSAGES[locale];
       const fallbacks =
-        locale === "zh-CN" ? [MESSAGES.en] : [MESSAGES["zh-CN"]];
-      return translate(primary, path, vars, fallbacks);
+        locale === "en"
+          ? [MESSAGES["zh-CN"]]
+          : locale === "zh-TW"
+            ? [MESSAGES["zh-CN"], MESSAGES.en]
+            : [MESSAGES.en];
+      let s = translate(primary, path, vars, fallbacks);
+      if (locale === "zh-TW") s = toZhTwText(s);
+      return s;
     },
     [locale],
   );

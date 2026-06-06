@@ -1,13 +1,19 @@
 export const NATURE_AMBIENT_SCENE_SLOTS = [
-  { id: "scene-water", label: "水" },
-  { id: "scene-rain", label: "雨" },
-  { id: "scene-waves", label: "海浪" },
-  { id: "scene-thunder", label: "雷" },
-  { id: "scene-birds", label: "鸟" },
-  { id: "scene-wind", label: "风" },
-  { id: "scene-white-noise", label: "白噪音" },
-  { id: "scene-cafe", label: "咖啡厅" },
-] as const;
+  { id: "scene-fire", label: "火", labelEn: "Fire", icon: "fire" },
+  { id: "scene-rain", label: "雨", labelEn: "Rain", icon: "weather-rainy" },
+  { id: "scene-waves", label: "海浪", labelEn: "Waves", icon: "waves" },
+  { id: "scene-thunder", label: "雷", labelEn: "Thunder", icon: "weather-lightning" },
+  { id: "scene-birds", label: "鸟", labelEn: "Birds", icon: "bird" },
+  { id: "scene-wind", label: "风", labelEn: "Wind", icon: "weather-windy" },
+  { id: "scene-white-noise", label: "白噪音", labelEn: "White Noise", icon: "radio-tower" },
+  { id: "scene-cafe", label: "咖啡厅", labelEn: "Cafe", icon: "coffee" },
+  { id: "scene-water", label: "水", labelEn: "Water", icon: "water" },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  label: string;
+  labelEn: string;
+  icon: string;
+}>;
 
 export type NatureAmbientSceneSlotId = (typeof NATURE_AMBIENT_SCENE_SLOTS)[number]["id"];
 

@@ -22,7 +22,6 @@ function emit() {
 
 function isScopeId(v: string): v is HomeVersePoolScopeId {
   return (
-    v === "encouragement" ||
     v === "comprehensive" ||
     v === "praise_worship" ||
     v === "word_of_god" ||

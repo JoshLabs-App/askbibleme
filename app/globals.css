@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
+@import url("https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,6 +39,22 @@
    * 不设底栏槽占位；自然页路由叠在视频上，其它页为 fixed 浮层。回退 `calc(100dvh - slot)` 中 slot 多为 0。
    */
   --home-bottom-nav-slot: 0px;
+}
+
+/** Google Material Icons（与 App `ShellMaterialIcon` 同 ligature 名） */
+.shell-material-icon {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 html,
@@ -336,6 +355,108 @@ html[data-golden-verses-chromeless] {
 
 html[data-golden-verses-chromeless] .home-bottom-nav {
   display: none;
+}
+
+/** 壳层底栏：放大触控区，左右对称，中央播放键居中对齐（对齐 iOS ShellTabBar） */
+.home-bottom-nav__bar {
+  display: flex;
+  width: min(100%, 25rem);
+  align-items: center;
+  justify-content: center;
+}
+
+.home-bottom-nav__side {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.home-bottom-nav__side--left {
+  justify-content: flex-end;
+  padding-right: 0.625rem;
+}
+
+.home-bottom-nav__side--right {
+  justify-content: flex-start;
+  padding-left: 0.625rem;
+}
+
+.home-bottom-nav__tab {
+  display: inline-flex;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fff;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.home-bottom-nav__tab:hover {
+  color: #fff;
+  opacity: 0.92;
+}
+
+.home-bottom-nav__tab:active {
+  transform: scale(0.97);
+  opacity: 0.8;
+}
+
+.home-bottom-nav__tab--active {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.home-bottom-nav__tab-icon {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1.75rem;
+  /* 轻量可读阴影：介于「全无」与旧版多层 heavy 之间，对齐 iOS shell 图标 */
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.42);
+}
+
+.home-bottom-nav__play-icon {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1.75rem;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.42);
+}
+
+.home-bottom-nav__play {
+  display: inline-flex;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.home-bottom-nav__play:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.home-bottom-nav__play:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 0.8;
+}
+
+.home-bottom-nav__play:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.home-bottom-nav__play--active {
+  border-color: transparent;
+  background: transparent;
 }
 
 /** 宽视口兜底：横屏沉浸标记误触时仍保留主导航（与 `useLandscapeNarrow` 上沿一致） */

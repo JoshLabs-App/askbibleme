@@ -6,9 +6,11 @@ import {
   type TripleLoopReadingState,
   type TripleLoopTrack,
 } from "@/lib/bible/reading-plans/triple-loop-reading";
+import { addUserChapterReadToState } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
 
-export const TRIPLE_LOOP_PROGRESS_STORAGE_KEY = "selah-triple-loop-progress-v1";
+export const TRIPLE_LOOP_PROGRESS_STORAGE_KEY = "askbible-triple-loop-progress-v1";
+export const TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY = "selah-triple-loop-progress-v1";
 
 let snapshotRaw: string | undefined;
 let snapshotStored: TripleLoopReadingState | null = null;
@@ -36,7 +38,13 @@ export function subscribeTripleLoopProgress(onStore: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   listeners.add(onStore);
   const onStorage = (e: StorageEvent) => {
-    if (e.key === TRIPLE_LOOP_PROGRESS_STORAGE_KEY || e.key === null) onStore();
+    if (
+      e.key === TRIPLE_LOOP_PROGRESS_STORAGE_KEY ||
+      e.key === TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY ||
+      e.key === null
+    ) {
+      onStore();
+    }
   };
   window.addEventListener("storage", onStorage);
   return () => {
@@ -58,9 +66,30 @@ export function parseTripleLoopProgress(raw: string | null): TripleLoopReadingSt
 export function hasUserTripleLoopProgress(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY) != null;
+    return (
+      localStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY) != null ||
+      localStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY) != null
+    );
   } catch {
     return false;
+  }
+}
+
+function readRawTripleLoopProgressFromStorage(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    let raw = localStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY);
+    if (raw == null) {
+      const legacy = localStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
+      if (legacy != null) {
+        localStorage.setItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY, legacy);
+        localStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
+        raw = legacy;
+      }
+    }
+    return raw;
+  } catch {
+    return null;
   }
 }
 
@@ -85,7 +114,7 @@ function refreshStoredSnapshot(): { stored: TripleLoopReadingState; hasSaved: bo
     return { stored: createDefaultTripleLoopReadingState(), hasSaved: false };
   }
   try {
-    const raw = localStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY);
+    const raw = readRawTripleLoopProgressFromStorage();
     const key = raw ?? "";
     const hasSaved = raw != null;
     if (key === snapshotRaw && snapshotStored) {
@@ -142,6 +171,7 @@ export function writeTripleLoopProgress(state: TripleLoopReadingState): void {
   try {
     const json = JSON.stringify(state);
     localStorage.setItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY, json);
+    localStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
     snapshotRaw = json;
     snapshotStored = state;
     snapshotHasSaved = true;
@@ -165,10 +195,11 @@ export function advanceTripleLoopProgressTrack(track: TripleLoopTrack, now = new
 }
 
 /** 清除本机三循环指针，回到「按复活节历元 + 默认顺序」的推算位置。 */
-export function resetTripleLoopProgressToEpochDefault(): TripleLoopReadingState {
-  if (typeof window === "undefined") return defaultProgressForEpoch();
+export function resetTripleLoopProgressToEpochDefault(now = new Date()): TripleLoopReadingState {
+  if (typeof window === "undefined") return defaultProgressForEpoch(now);
   try {
     localStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY);
+    localStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
     snapshotRaw = "";
     snapshotStored = createDefaultTripleLoopReadingState();
     snapshotHasSaved = false;
@@ -178,5 +209,18 @@ export function resetTripleLoopProgressToEpochDefault(): TripleLoopReadingState 
   } catch {
     /* ignore */
   }
-  return defaultProgressForEpoch();
+  return defaultProgressForEpoch(now);
+}
+
+/** 用户实际读完某一章时写入（与计划排程指针无关） */
+export function markTripleLoopChapterRead(
+  bookId: string,
+  chapter: number,
+  now = new Date(),
+): TripleLoopReadingState {
+  const { stored, hasSaved } = refreshStoredSnapshot();
+  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now);
+  const next = addUserChapterReadToState(base, bookId, chapter);
+  writeTripleLoopProgress(next);
+  return next;
 }

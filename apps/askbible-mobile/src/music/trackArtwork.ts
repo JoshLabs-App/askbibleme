@@ -92,9 +92,9 @@ export function enrichPlaybackTracks(
 ): PlaybackTrack[] {
   const tracks: PlaybackTrack[] = [];
   for (const [index, t] of store.audioTracks.entries()) {
-      const remoteSrc = toAbsoluteUrl(baseUrl, t.src);
-      const playback = resolveMusicTrackPlayback(t.id, remoteSrc);
-      if (!playback.src.trim() && playback.bundledModule == null) continue;
+      const catalogSrc = toAbsoluteUrl(baseUrl, t.src);
+      const playback = resolveMusicTrackPlayback(t.id, catalogSrc);
+      const localReady = Boolean(playback.src.trim() || playback.bundledModule != null);
       const visual = visualForTrack(store, t.id);
       let artworkUri: string | null = null;
       let gradientColors = gradientColorsForTrackId(t.id);
@@ -120,6 +120,8 @@ export function enrichPlaybackTracks(
         artist: resolveMusicLocalizedField(t.artist) || "",
         album: inferTrackAlbum(t),
         src: playback.src,
+        catalogSrc,
+        localReady,
         analysisSrc,
         artworkUri,
         gradientColors,

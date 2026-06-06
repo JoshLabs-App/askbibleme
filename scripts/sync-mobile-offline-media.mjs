@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * 将自然场景 720p、海报、音乐音轨与分析 JSON 复制进 Expo assets，并生成 require 注册表。
- * 供 `EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1` 的 Release APK 完全离线播放媒体。
+ * 将自然场景 720p、海报、音乐 starter 曲与分析 JSON 复制进 Expo assets，并生成 require 注册表。
+ * - 默认：仅打包 1 首 starter 音乐（MOBILE_STARTER_MUSIC_TRACK_ID，默认 Silent Prayer）
+ * - MOBILE_BUNDLE_OFFLINE_MEDIA=1：打包自然场景；MOBILE_BUNDLE_MUSIC_LIMIT 控制音乐曲数（生产建议 1）
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -19,12 +20,13 @@ const naturePosterDir = path.join(repoRoot, "apps", "askbible-mobile", "assets",
 const musicTrackDir = path.join(repoRoot, "apps", "askbible-mobile", "assets", "music", "tracks");
 const musicAnalysisDir = path.join(repoRoot, "apps", "askbible-mobile", "assets", "music", "analysis");
 const bundleEnabled = process.env.MOBILE_BUNDLE_OFFLINE_MEDIA === "1";
-const excludedTrackIds = new Set(
-  String(process.env.MOBILE_OFFLINE_MEDIA_EXCLUDE_TRACK_IDS || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean),
-);
+const starterTrackId = String(process.env.MOBILE_STARTER_MUSIC_TRACK_ID || "track-mpg4a7xcip5q").trim();
+const bundleMusicLimitRaw = process.env.MOBILE_BUNDLE_MUSIC_LIMIT?.trim();
+const bundleMusicLimit = bundleMusicLimitRaw
+  ? Math.max(1, Number(bundleMusicLimitRaw) || 1)
+  : bundleEnabled
+    ? Number.POSITIVE_INFINITY
+    : 1;
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -197,14 +199,26 @@ function syncMusic() {
 
   const trackEntries = [];
   const analysisEntries = [];
+  const orderedTracks = [...tracks];
+  if (starterTrackId) {
+    orderedTracks.sort((a, b) => {
+      const aHit = String(a.id || "").trim() === starterTrackId ? 0 : 1;
+      const bHit = String(b.id || "").trim() === starterTrackId ? 0 : 1;
+      return aHit - bHit;
+    });
+  }
 
-  console.log("Music tracks:");
-  for (const t of tracks) {
+  console.log(
+    bundleMusicLimit === Number.POSITIVE_INFINITY
+      ? "Music tracks:"
+      : `Music tracks (bundle limit=${bundleMusicLimit}, starter=${starterTrackId || "first"}):`,
+  );
+  for (const t of orderedTracks) {
+    if (trackEntries.length >= bundleMusicLimit) break;
     const id = String(t.id || "").trim();
     const srcRel = String(t.src || "").trim();
     if (!id || !srcRel) continue;
-    if (excludedTrackIds.has(id)) {
-      console.log(`  skip excluded track ${id}`);
+    if (starterTrackId && trackEntries.length === 0 && bundleMusicLimit === 1 && id !== starterTrackId) {
       continue;
     }
     const ext = path.extname(srcRel) || ".m4a";
@@ -254,21 +268,12 @@ if (!bundleEnabled) {
     "../../../assets/nature/posters",
     { moduleGetter: "BundledNaturePosterModule" },
   );
-  emitResolver(
-    "bundled-music-tracks.ts",
-    "resolveBundledMusicTrackUri",
-    [],
-    "../../../assets/music/tracks",
-    { moduleGetter: "BundledMusicTrackModule" },
-  );
-  emitJsonMap(
-    "bundled-music-analysis.ts",
-    "getBundledMusicAnalysis",
-    [],
-    "../../../assets/music/analysis",
+  const music = syncMusic();
+  console.log(
+    `Offline media: nature streamed/downloaded at runtime; bundled starter music=${music.trackCount} track(s).`,
   );
   console.log(
-    "Offline media: skipped bundle (default). Stream/download at runtime; set MOBILE_BUNDLE_OFFLINE_MEDIA=1 to bundle.",
+    "Set MOBILE_BUNDLE_OFFLINE_MEDIA=1 to bundle nature + more music for fully offline APK.",
   );
   process.exit(0);
 }

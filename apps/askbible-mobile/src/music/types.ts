@@ -40,7 +40,11 @@ export type PlaybackTrack = {
   title: string;
   artist: string;
   album: string;
+  /** 可播放本地 URI（下载包或安装包内置） */
   src: string;
+  /** askbible.me 上的曲库地址（用于下载包；不用于常规直连播放） */
+  catalogSrc: string;
+  localReady: boolean;
   /** `require()` 模块 id；Release APK 内音轨在 Android 上须直连模块 */
   bundledModule?: number;
   analysisSrc: string | null;

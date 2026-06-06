@@ -3,17 +3,6 @@ import { Asset } from "expo-asset";
 
 const modules = {
   "track-mpg4a7xcip5q": require("../../../assets/music/tracks/track-mpg4a7xcip5q.mp3"),
-  "track-mpg4a8h3jhwl": require("../../../assets/music/tracks/track-mpg4a8h3jhwl.mp3"),
-  "track-mpg4a8zi2sjk": require("../../../assets/music/tracks/track-mpg4a8zi2sjk.mp3"),
-  "track-mpg4aa1q1473": require("../../../assets/music/tracks/track-mpg4aa1q1473.mp3"),
-  "track-mpg4aajof3c7": require("../../../assets/music/tracks/track-mpg4aajof3c7.mp3"),
-  "track-mpkljem5ewpo": require("../../../assets/music/tracks/track-mpkljem5ewpo.mp3"),
-  "track-mpkmwq6ej8y8": require("../../../assets/music/tracks/track-mpkmwq6ej8y8.mp3"),
-  "track-mpkn1s6ax3sk": require("../../../assets/music/tracks/track-mpkn1s6ax3sk.mp3"),
-  "track-mpkm1n2z3z7z": require("../../../assets/music/tracks/track-mpkm1n2z3z7z.mp3"),
-  "track-mpkm1mjz4zd1": require("../../../assets/music/tracks/track-mpkm1mjz4zd1.mp3"),
-  "track-mpknl837n9oq": require("../../../assets/music/tracks/track-mpknl837n9oq.mp3"),
-  "track-mpknyhqpr8qw": require("../../../assets/music/tracks/track-mpknyhqpr8qw.mp3"),
 } as const;
 
 export function resolveBundledMusicTrackUri(id: string): string | null {

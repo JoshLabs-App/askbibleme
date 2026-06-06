@@ -2,15 +2,7 @@
 import { Asset } from "expo-asset";
 
 const modules = {
-  "9cc949f2-3c1d-49c0-8357-2dc1d32bd954": require("../../../assets/nature/posters/9cc949f2-3c1d-49c0-8357-2dc1d32bd954.jpg"),
-  "3c8150de-7baa-4334-9c89-4042781ced66": require("../../../assets/nature/posters/3c8150de-7baa-4334-9c89-4042781ced66.jpg"),
-  "7536456b-50fe-42c0-ad70-e78c9710e762": require("../../../assets/nature/posters/7536456b-50fe-42c0-ad70-e78c9710e762.jpg"),
-  "d721567f-395f-41d0-b022-7f78a4ef456e": require("../../../assets/nature/posters/d721567f-395f-41d0-b022-7f78a4ef456e.jpg"),
-  "d86754f9-2c16-4896-a00f-31a29858b547": require("../../../assets/nature/posters/d86754f9-2c16-4896-a00f-31a29858b547.jpg"),
-  "3ebc424b-5a1b-48dd-accb-0906186dfda0": require("../../../assets/nature/posters/3ebc424b-5a1b-48dd-accb-0906186dfda0.jpg"),
-  "c6eed3e9-7b57-4fd8-9843-4af6fb321b0c": require("../../../assets/nature/posters/c6eed3e9-7b57-4fd8-9843-4af6fb321b0c.jpg"),
-  "260b958e-f95a-4900-80b5-3ae9e7b2d720": require("../../../assets/nature/posters/260b958e-f95a-4900-80b5-3ae9e7b2d720.jpg"),
-  "8132b70e-f9dc-44a3-9cb0-35f43a46ef33": require("../../../assets/nature/posters/8132b70e-f9dc-44a3-9cb0-35f43a46ef33.jpg"),
+
 } as const;
 
 export function resolveBundledNaturePosterUri(id: string): string | null {

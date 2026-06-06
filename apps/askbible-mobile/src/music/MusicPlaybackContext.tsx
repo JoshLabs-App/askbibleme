@@ -444,17 +444,16 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         }
         await hydrateMusicResourcePackState();
         const syncedStore = await readSyncedMusicCompanionStore();
-        if (hasAtLeastBundledTracks(syncedStore, bundledStore)) {
-          setStore(syncedStore);
-          await writeCachedMusicCompanionStore(syncedStore);
-        } else {
-          const activated = await hasMusicPlaybackActivated();
-          if (activated) {
-            const cached = await readCachedMusicCompanionStore();
-            if (hasAtLeastBundledTracks(cached, bundledStore)) {
-              setStore(cached);
-            }
-          }
+        const remote = await fetchMusicCompanionStoreFromRemote();
+        const nextStore =
+          remote && hasAtLeastBundledTracks(remote, bundledStore)
+            ? remote
+            : syncedStore && hasAtLeastBundledTracks(syncedStore, bundledStore)
+              ? syncedStore
+              : bundledStore;
+        setStore(nextStore);
+        if (nextStore !== bundledStore) {
+          await writeCachedMusicCompanionStore(nextStore);
         }
         void audioModeWarmup;
       } finally {

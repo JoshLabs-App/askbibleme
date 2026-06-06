@@ -1,8 +1,7 @@
 /**
  * 和合本（CUV）整章朗读音源。
- * - 自托管（推荐生产）：仅 ` /audio/{BOOK}-{chapter}.mp3 `（public 或 DATA_ROOT/audio）
- * - 潮州语新约：`/audio/teochew-nt/{BOOK}-{chapter}.mp3`（见 teochew-nt-audio-manifest.json）
- * - 开发回退：未开自托管时，本地不存在则回退 FHL（version=20）
+ * - 默认：FHL 原始站点（`media.fhl.net/unvdavid`）
+ * - 可选自托管：`/audio/cuv-v20/{BOOK}-{chapter}.mp3`（`NEXT_PUBLIC_CUV_CHAPTER_AUDIO_SELF_HOSTED=1`）
  */
 
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
@@ -75,27 +74,23 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   }
   if (!voiceSupportsBook(voice, args.bookId)) return { ok: false };
 
+  if (!isCuvChapterAudioSelfHosted()) {
+    const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
+    if (remote) return { ok: true, src: remote };
+  }
+
   const local = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
   if (!local) return { ok: false };
 
-  const tryLocal = async (): Promise<{ ok: true; src: string } | null> => {
-    try {
-      const check = await fetch(local, { method: "HEAD", cache: "force-cache" });
-      if (check.ok) return { ok: true, src: local };
-    } catch {
-      /* missing */
-    }
-    return null;
-  };
-
-  const localHit = await tryLocal();
-  if (localHit) return localHit;
-
   if (isCuvChapterAudioSelfHosted()) {
-    return { ok: false };
+    try {
+      const check = await fetch(local, { method: "HEAD", cache: "no-store" });
+      if (check.ok) return { ok: true, src: local };
+      return { ok: false };
+    } catch {
+      return { ok: false };
+    }
   }
 
-  const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
-  if (!remote) return { ok: false };
-  return { ok: true, src: remote };
+  return { ok: true, src: local };
 }

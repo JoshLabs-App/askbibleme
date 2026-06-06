@@ -1,7 +1,5 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
-import { absoluteSelfHostedChapterAudioUrl } from "./chapter-audio-url";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
-import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 
 export const WEB_CHAPTER_AUDIO_REMOTE_NT = "https://theaudiopower.org/WEB/Recordings";
 export const WEB_CHAPTER_AUDIO_REMOTE_OT = "https://theaudiopower.org/WEB2/Recordings";
@@ -234,35 +232,6 @@ export function buildExternalWebChapterAudioUrl(
   return `${webRemoteBase(id)}/${encodeURIComponent(`${name} ${chapter}`)}.mp3`;
 }
 
-async function probeChapterAudioUrl(absolute: string): Promise<boolean> {
-  const isAudioContentType = (contentType: string | null): boolean =>
-    String(contentType || "")
-      .toLowerCase()
-      .includes("audio/");
-
-  try {
-    const head = await fetch(absolute, { method: "HEAD" });
-    if (head.ok && isAudioContentType(head.headers.get("content-type"))) return true;
-  } catch {
-    /* ignore */
-  }
-  try {
-    const ranged = await fetch(absolute, { headers: { Range: "bytes=0-1" } });
-    if (ranged.status === 206) return true;
-    if (ranged.ok && isAudioContentType(ranged.headers.get("content-type"))) return true;
-  } catch {
-    /* ignore */
-  }
-  return false;
-}
-
-async function headOk(baseUrl: string, path: string): Promise<string | null> {
-  const absolute = toAbsoluteUrl(baseUrl, path);
-  if (!absolute) return null;
-  const ok = await probeChapterAudioUrl(absolute);
-  return ok ? absolute : null;
-}
-
 export async function resolveWebChapterAudioPlayableSrc(args: {
   baseUrl: string;
   translationId: string;
@@ -277,19 +246,5 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
       })
     : null;
   if (bundled) return { ok: true, src: bundled };
-  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
-
-  const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
-  if (!local) return { ok: false };
-
-  const localHit = await headOk(args.baseUrl, local);
-  if (localHit) return { ok: true, src: localHit };
-
-  const trusted = absoluteSelfHostedChapterAudioUrl(args.baseUrl, local);
-  if (trusted && (await probeChapterAudioUrl(trusted))) {
-    return { ok: true, src: trusted };
-  }
-
-  if (!remote) return { ok: false };
-  return { ok: true, src: remote };
+  return { ok: false };
 }

@@ -36,6 +36,12 @@ import { getScriptureBookDisplayName } from "../bible/scripture-book-display-nam
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import {
+  checkMusicResourcePackUpdate,
+  ensureMusicResourcePackSync,
+  hydrateMusicResourcePackState,
+  readSyncedMusicCompanionStore,
+} from "../media/musicResourcePackSync";
+import {
   fetchMusicCompanionStoreFromRemote,
   getBundledMusicCompanionStore,
   hasMusicPlaybackActivated,
@@ -433,25 +439,22 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         const bundledStore = getBundledMusicCompanionStore();
         setStore(bundledStore);
         if (isMobileBundledOnly()) {
-          // 侧载独立包：只读安装包内曲库，不用缓存/线上覆盖，避免命中未打包轨道导致不可播。
           await audioModeWarmup;
           return;
         }
-        const activated = await hasMusicPlaybackActivated();
-        if (activated) {
-          const cached = await readCachedMusicCompanionStore();
-          if (hasAtLeastBundledTracks(cached, bundledStore)) {
-            setStore(cached);
+        await hydrateMusicResourcePackState();
+        const syncedStore = await readSyncedMusicCompanionStore();
+        if (hasAtLeastBundledTracks(syncedStore, bundledStore)) {
+          setStore(syncedStore);
+          await writeCachedMusicCompanionStore(syncedStore);
+        } else {
+          const activated = await hasMusicPlaybackActivated();
+          if (activated) {
+            const cached = await readCachedMusicCompanionStore();
+            if (hasAtLeastBundledTracks(cached, bundledStore)) {
+              setStore(cached);
+            }
           }
-        }
-        // 开发态常见：本机 3450 未启动时，本地相对路径会失效；这里主动拉一轮远端并即时覆盖，避免“媒体文件像丢了”。
-        const remote = await fetchMusicCompanionStoreFromRemote();
-        if (hasAtLeastBundledTracks(remote, bundledStore)) {
-          setStore((prev) => {
-            const cur = prev ?? bundledStore;
-            return isMusicCompanionStoreDifferent(remote, cur) ? remote : cur;
-          });
-          await writeCachedMusicCompanionStore(remote);
         }
         void audioModeWarmup;
       } finally {
@@ -470,6 +473,11 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       latestRemoteMusicStoreRef.current = null;
       setMusicCatalogUpdateAvailable(false);
       return false;
+    }
+    const packCheck = await checkMusicResourcePackUpdate();
+    if (packCheck.available) {
+      setMusicCatalogUpdateAvailable(true);
+      return true;
     }
     const bundled = getBundledMusicCompanionStore();
     const current = storeRef.current ?? bundled;
@@ -497,24 +505,30 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (!remote || !isMusicCompanionStoreDifferent(remote, current)) {
       remote = await fetchMusicCompanionStoreFromRemote();
     }
-    if (
-      !remote ||
-      !hasAtLeastBundledTracks(remote, bundled) ||
-      !isMusicCompanionStoreDifferent(remote, current)
-    ) {
+    const synced = await ensureMusicResourcePackSync(true);
+    const syncedStore = (await readSyncedMusicCompanionStore()) ?? remote;
+    const nextStore =
+      syncedStore && hasAtLeastBundledTracks(syncedStore, bundled)
+        ? syncedStore
+        : remote && hasAtLeastBundledTracks(remote, bundled)
+          ? remote
+          : null;
+    if (!synced && !nextStore) {
       latestRemoteMusicStoreRef.current = null;
       setMusicCatalogUpdateAvailable(false);
       return false;
     }
-    const currentTrackId = tracks[trackIndexRef.current]?.id ?? "";
-    const nextTrackIndex = remote.audioTracks.findIndex((x) => x.id === currentTrackId);
-    setStore(remote);
-    storeRef.current = remote;
-    setTrackIndex(nextTrackIndex >= 0 ? nextTrackIndex : 0);
+    if (nextStore) {
+      const currentTrackId = tracks[trackIndexRef.current]?.id ?? "";
+      const nextTrackIndex = nextStore.audioTracks.findIndex((x) => x.id === currentTrackId);
+      setStore(nextStore);
+      storeRef.current = nextStore;
+      setTrackIndex(nextTrackIndex >= 0 ? nextTrackIndex : 0);
+      await writeCachedMusicCompanionStore(nextStore);
+    }
     latestRemoteMusicStoreRef.current = null;
     setMusicCatalogUpdateAvailable(false);
-    await writeCachedMusicCompanionStore(remote);
-    return true;
+    return synced || Boolean(nextStore);
   }, [tracks]);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 /**
  * WEB / BBE / BLM-ES 整章朗读。
- * - 自托管：`/audio/{scope}/{BOOK}-{chapter}.mp3`
- * - 开发回退：theaudiopower.org（WEB）或 ebible.org（BLM-ES）
+ * - 默认：theaudiopower.org / ebible.org 原始站点
+ * - 可选自托管：`/audio/{scope}/{BOOK}-{chapter}.mp3`
  */
 
 import {
@@ -101,27 +101,23 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
   translationId?: string;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   const translationId = args.translationId ?? "web-en";
+  if (!isWebChapterAudioSelfHosted()) {
+    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
+    if (remote) return { ok: true, src: remote };
+  }
+
   const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
   if (!local) return { ok: false };
 
-  const tryLocal = async (): Promise<{ ok: true; src: string } | null> => {
-    try {
-      const check = await fetch(local, { method: "HEAD", cache: "force-cache" });
-      if (check.ok) return { ok: true, src: local };
-    } catch {
-      /* missing */
-    }
-    return null;
-  };
-
-  const localHit = await tryLocal();
-  if (localHit) return localHit;
-
   if (isWebChapterAudioSelfHosted()) {
-    return { ok: false };
+    try {
+      const check = await fetch(local, { method: "HEAD", cache: "no-store" });
+      if (check.ok) return { ok: true, src: local };
+      return { ok: false };
+    } catch {
+      return { ok: false };
+    }
   }
 
-  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
-  if (!remote) return { ok: false };
-  return { ok: true, src: remote };
+  return { ok: true, src: local };
 }

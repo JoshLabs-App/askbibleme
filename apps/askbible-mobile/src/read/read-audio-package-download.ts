@@ -1,20 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
-import {
-  buildExternalCuvChapterAudioUrl,
-  buildLocalCuvChapterAudioUrl,
-  buildLocalTeochewNtChapterAudioUrl,
-  translationSupportsCuvChapterAudio,
-} from "../bible/cuv-chapter-audio";
+import { translationSupportsCuvChapterAudio } from "../bible/cuv-chapter-audio";
+import { buildChapterAudioDownloadCandidates } from "../bible/chapter-audio-sources";
 import { scriptureBooks } from "../bible/scripture-books";
 import {
-  buildExternalWebChapterAudioUrl,
-  buildLocalWebChapterAudioUrl,
   chapterAudioScopeForTranslation,
   translationUsesWebChapterAudio,
 } from "../bible/web-chapter-audio";
-import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 
 const STORAGE_KEY = "askbible.mobile.read.audio-package-download.v1";
 const AUDIO_PACKAGE_ROOT = `${FileSystem.documentDirectory}read-audio-packages`;
@@ -198,55 +192,28 @@ function chapterFileUri(packageKey: string, bookId: string, chapter: number): st
   return `${packageDir(packageKey)}/${bookId.toUpperCase()}-${chapter}.mp3`;
 }
 
-function uniqueNonEmpty(items: string[]): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const raw of items) {
-    const s = String(raw || "").trim();
-    if (!s || seen.has(s)) continue;
-    seen.add(s);
-    out.push(s);
-  }
-  return out;
-}
-
 function chapterRefsForSelection(selection: AudioPackageSelection): DownloadChapterRef[] {
   const baseUrl = getAskBibleBaseUrl();
-  const useWeb = translationUsesWebChapterAudio(selection.translationId);
   const refs: DownloadChapterRef[] = [];
   for (const book of scriptureBooks) {
     for (let chapter = 1; chapter <= book.chapters; chapter += 1) {
-      if (useWeb) {
-        const local = buildLocalWebChapterAudioUrl(book.bookId, chapter, selection.translationId);
-        const remote = buildExternalWebChapterAudioUrl(book.bookId, chapter, selection.translationId);
-        refs.push({
-          refKey: `${book.bookId}:${chapter}`,
-          bookId: book.bookId,
-          chapter,
-          candidates: uniqueNonEmpty([toAbsoluteUrl(baseUrl, local), remote]),
-        });
+      if (
+        !translationUsesWebChapterAudio(selection.translationId) &&
+        !translationSupportsCuvChapterAudio(selection.translationId)
+      ) {
         continue;
       }
-      if (selection.voiceId === "teochew-nt") {
-        const localTeochew = buildLocalTeochewNtChapterAudioUrl(book.bookId, chapter);
-        refs.push({
-          refKey: `${book.bookId}:${chapter}`,
-          bookId: book.bookId,
-          chapter,
-          candidates: uniqueNonEmpty([
-            toAbsoluteUrl(baseUrl, localTeochew),
-            toAbsoluteUrl("https://askbible.me", localTeochew),
-          ]),
-        });
-        continue;
-      }
-      const local = buildLocalCuvChapterAudioUrl(book.bookId, chapter);
-      const remote = buildExternalCuvChapterAudioUrl(book.bookId, chapter);
       refs.push({
         refKey: `${book.bookId}:${chapter}`,
         bookId: book.bookId,
         chapter,
-        candidates: uniqueNonEmpty([toAbsoluteUrl(baseUrl, local), remote]),
+        candidates: buildChapterAudioDownloadCandidates({
+          translationId: selection.translationId,
+          bookId: book.bookId,
+          chapter,
+          voiceId: selection.voiceId,
+          siteBaseUrl: baseUrl,
+        }),
       });
     }
   }

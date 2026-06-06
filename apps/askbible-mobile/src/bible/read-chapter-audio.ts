@@ -1,22 +1,12 @@
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
-import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import {
-  absoluteSelfHostedChapterAudioUrl,
-  getChapterAudioBaseUrl,
-} from "./chapter-audio-url";
+import { getChapterAudioBaseUrl } from "./chapter-audio-url";
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
 import {
-  buildExternalCuvChapterAudioUrl,
-  buildLocalCuvChapterAudioUrl,
-  buildLocalTeochewNtChapterAudioUrl,
   resolveCuvChapterAudioPlayableSrc,
   translationSupportsCuvChapterAudio,
 } from "./cuv-chapter-audio";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
-import { effectiveVoiceForBook } from "./cuv-chapter-audio-voices";
 import {
-  buildExternalWebChapterAudioUrl,
-  buildLocalWebChapterAudioUrl,
   resolveWebChapterAudioPlayableSrc,
   translationUsesWebChapterAudio,
 } from "./web-chapter-audio";
@@ -41,7 +31,7 @@ function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string
   return false;
 }
 
-/** 同步拼出可播 URL（不探测网络），供注册与 Android 播放兜底 */
+/** 同步拼出可播 URL：仅安装包内置（常规播放走本地下载包）。 */
 export function buildChapterAudioPlayableSrcSync(args: {
   translationId: string;
   bookId: string;
@@ -50,51 +40,15 @@ export function buildChapterAudioPlayableSrcSync(args: {
   voiceId?: CuvChapterAudioVoiceId;
   baseUrl?: string;
 }): string | null {
-  const baseUrl = args.baseUrl ?? getChapterAudioBaseUrl();
-
-  const bundled = isMobileBundledOnly()
-    ? resolveBundledChapterAudioUri({
-        translationId: args.translationId,
-        bookId: args.bookId,
-        chapter: args.chapter,
-        voiceId: args.voiceId,
-      })
-    : null;
-  if (bundled) return bundled;
-
-  if (translationUsesWebChapterAudio(args.translationId)) {
-    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
-    const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
-    if (remote) return remote;
-    if (!local) return null;
-    const trusted = absoluteSelfHostedChapterAudioUrl(baseUrl, local);
-    const askBibleFallback = toAbsoluteUrl("https://askbible.me", local);
-    return trusted || askBibleFallback || null;
-  }
-
-  if (!translationSupportsCuvChapterAudio(args.translationId)) return null;
-
-  const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
-  if (voice === "teochew-nt") {
-    const teochewLocal = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-    if (!teochewLocal) return null;
-    const selfHosted = absoluteSelfHostedChapterAudioUrl(baseUrl, teochewLocal);
-    if (selfHosted) return selfHosted;
-    return toAbsoluteUrl("https://askbible.me", teochewLocal) || null;
-  }
-
-  const local = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
-  if (!local) return null;
-
-  const remote = buildExternalCuvChapterAudioUrl(
-    args.bookId,
-    args.chapter,
+  if (!isMobileBundledOnly()) return null;
+  return (
+    resolveBundledChapterAudioUri({
+      translationId: args.translationId,
+      bookId: args.bookId,
+      chapter: args.chapter,
+      voiceId: args.voiceId,
+    }) ?? null
   );
-
-  const trusted = absoluteSelfHostedChapterAudioUrl(baseUrl, local);
-  // v20 目录在生产站点可能尚未同步，移动端先优先使用可直连的远端源避免静音。
-  if (trusted && !local.includes("/cuv-v20/")) return trusted;
-  return remote || toAbsoluteUrl("https://askbible.me", local) || null;
 }
 
 export function translationSupportsChapterAudio(translationId: string): boolean {
@@ -137,7 +91,7 @@ export async function resolveChapterAudioPlayableSrc(args: {
   return { ok: false };
 }
 
-/** 读经章播放：优先缓存 URL，否则异步解析（含 WEB 外链 / CUV 自托管） */
+/** 读经章播放：优先本地下载包，其次安装包内置；不直连外链播放。 */
 export async function resolveScripturePlayableSrcForChapter(args: {
   translationId: string;
   bookId: string;

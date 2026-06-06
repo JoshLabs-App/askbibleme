@@ -12,7 +12,9 @@ config.maxWorkers = 1;
 // Keep Metro scoped to the app root so it does not watch the large workspace
 // data tree. The bundled chapter segments now live inside the app.
 config.resolver.useWatchman = false;
-config.watchFolders = [];
+const repoRoot = path.resolve(projectRoot, "../..");
+// 允许从仓库 data/bible 引入 teochew manifest（仅 JSON，不含大体积 uploads）。
+config.watchFolders = [path.join(repoRoot, "data", "bible")];
 
 config.resolver.assetExts = [...config.resolver.assetExts, "sqlite", "db"];
 module.exports = config;

@@ -33,12 +33,35 @@ export function getChapterAudioBaseUrl(): string {
   return "";
 }
 
+function isLocalDevAskBibleBase(baseUrl: string): boolean {
+  try {
+    const u = new URL(baseUrl.replace(/\/$/, "") || baseUrl);
+    const h = u.hostname.trim().toLowerCase();
+    if (!h) return true;
+    if (h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return true;
+    if (h.startsWith("10.") || h.startsWith("192.168.")) return true;
+    const m = h.match(/^172\.(\d+)\./);
+    if (m) {
+      const octet = Number(m[1]);
+      if (Number.isFinite(octet) && octet >= 16 && octet <= 31) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * 自然场景静态资源（缩略图、资源包下载）的站点根 URL。
  * 成片播放仍只走 APK / 已下载包（见 `resolveNatureCoverPlayback`），此处仅用于拼路径与拉取更新包。
+ * 模拟器联调 localhost 时默认改走 askbible.me，避免本机未起 dev 时缩略图全失败。
  */
 export function getNatureRemoteAssetBaseUrl(): string {
-  return getAskBibleBaseUrl().replace(/\/$/, "");
+  const primary = getAskBibleBaseUrl().replace(/\/$/, "");
+  if (__DEV__ && isLocalDevAskBibleBase(primary)) {
+    return "https://askbible.me";
+  }
+  return primary;
 }
 
 /** @deprecated 使用 `getNatureRemoteAssetBaseUrl` */

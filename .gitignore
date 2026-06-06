@@ -22,8 +22,8 @@
 /build
 /dist/mobile/
 
-# Expo 离线 APK 媒体（npm run mobile:sync-offline-media 生成，体积大）
-/apps/askbible-mobile/assets/nature/
+# Expo 离线 APK 媒体（npm run mobile:sync-offline-media 生成；视频体积大，缩略图可入库）
+/apps/askbible-mobile/assets/nature/videos/
 /apps/askbible-mobile/assets/music/tracks/
 /apps/askbible-mobile/assets/music/analysis/
 

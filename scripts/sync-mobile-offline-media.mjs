@@ -252,8 +252,40 @@ function syncMusic() {
   return { trackCount: trackEntries.length, analysisCount: analysisEntries.length };
 }
 
+function syncNaturePostersOnly() {
+  const settings = JSON.parse(fs.readFileSync(natureSettingsPath, "utf8"));
+  const videos = Array.isArray(settings.videos) ? settings.videos : [];
+  rmDirIfExists(naturePosterDir);
+  ensureDir(naturePosterDir);
+
+  const posterEntries = [];
+  console.log("Nature scene posters (APK thumbnails):");
+  for (const v of videos) {
+    const id = String(v.id || "").trim();
+    if (!id) continue;
+    const posterRel = String(v.thumbSrc || v.previewFrameSrc || "").trim();
+    if (!posterRel) continue;
+    const ext = path.extname(posterRel) || ".jpg";
+    const posterFile = `${id}${ext}`;
+    if (copyIfExists(posterRel, path.join(naturePosterDir, posterFile))) {
+      posterEntries.push({ id, file: posterFile });
+    }
+  }
+
+  emitResolver(
+    "bundled-nature-posters.ts",
+    "resolveBundledNaturePosterUri",
+    posterEntries,
+    "../../../assets/nature/posters",
+    { moduleGetter: "BundledNaturePosterModule" },
+  );
+  return posterEntries.length;
+}
+
 if (!bundleEnabled) {
-  clearBundledOfflineMediaFiles();
+  rmDirIfExists(natureVideoDir);
+  rmDirIfExists(musicTrackDir);
+  rmDirIfExists(musicAnalysisDir);
   emitResolver(
     "bundled-nature-videos.ts",
     "resolveBundledNatureVideoUri",
@@ -261,16 +293,10 @@ if (!bundleEnabled) {
     "../../../assets/nature/videos",
     { videoExtras: true, moduleGetter: "BundledNatureVideoModule" },
   );
-  emitResolver(
-    "bundled-nature-posters.ts",
-    "resolveBundledNaturePosterUri",
-    [],
-    "../../../assets/nature/posters",
-    { moduleGetter: "BundledNaturePosterModule" },
-  );
+  const posterCount = syncNaturePostersOnly();
   const music = syncMusic();
   console.log(
-    `Offline media: nature streamed/downloaded at runtime; bundled starter music=${music.trackCount} track(s).`,
+    `Offline media: bundled ${posterCount} scene poster(s) + ${music.trackCount} starter music track(s); videos download from askbible.me.`,
   );
   console.log(
     "Set MOBILE_BUNDLE_OFFLINE_MEDIA=1 to bundle nature + more music for fully offline APK.",

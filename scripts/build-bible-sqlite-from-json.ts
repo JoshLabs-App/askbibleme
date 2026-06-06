@@ -10,6 +10,7 @@ import {
 } from "../lib/bible/golden-verse-theme-repeat";
 import { loadSpeechSpansSnapshot } from "../lib/bible/speech-spans-snapshot";
 import { writeScriptureSqliteFromBooks } from "../lib/bible/build-scripture-sqlite";
+import { scriptureSqlitePath } from "../lib/bible/scripture-sqlite-db";
 import { readTranslationsIndex, resolveTranslationAbsolutePath } from "../lib/bible/translations-store";
 import { parseAndValidateBiblePayload } from "../lib/bible/validate-bible-json";
 
@@ -40,7 +41,13 @@ async function main(): Promise<void> {
 
   for (const t of index.translations) {
     const abs = resolveTranslationAbsolutePath(cwd, t.id);
+    const sqliteAbs = scriptureSqlitePath(cwd, t.id);
     if (!fs.existsSync(abs)) {
+      if (fs.existsSync(sqliteAbs)) {
+        const bytes = fs.statSync(sqliteAbs).size;
+        console.error(`[build-bible-sqlite] ${t.id}: using committed sqlite (${bytes} bytes, no uploads JSON)`);
+        continue;
+      }
       console.error(`[build-bible-sqlite] 缺少 JSON: ${abs}`);
       process.exit(1);
     }

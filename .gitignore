@@ -37,8 +37,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# 由 `npm run build:bible-sqlite` / prebuild 从 uploads JSON 生成（不入库，部署时构建）
-/data/bible/sqlite/*.sqlite
+# 译本 JSON 仅本机导入（体积大）；线上/CI 使用已入库的 data/bible/sqlite/*.sqlite
+# 本机改 JSON 后：npm run build:bible-sqlite
 
 # 由 npm run import:reader-verse-themes 从 BIBLE JSON 生成的本地主题库（体积大，不入库）
 /data/scripture/reader-verse-themes.sqlite

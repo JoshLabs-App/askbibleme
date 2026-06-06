@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Render Build Command: bash scripts/render-build.sh  （或 Dashboard 用 npm install && npm run build）
+# AskBible.me — Render Build Command（在 Dashboard 填：bash scripts/render-build.sh）
+# Render 会先跑默认 npm install；production 环境可能缺 devDependencies，此脚本补齐后再 build。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,7 +9,7 @@ cd "$ROOT"
 echo "[render-build] node=$(node -v) npm=$(npm -v) NODE_ENV=${NODE_ENV:-} PWD=$ROOT"
 
 if [[ ! -d node_modules/typescript || ! -d node_modules/tailwindcss ]]; then
-  echo "[render-build] installing devDependencies …"
+  echo "[render-build] dev toolchain missing; running npm install --include=dev …"
   npm install --include=dev --no-audit --no-fund
 fi
 

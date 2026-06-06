@@ -519,6 +519,12 @@
   padding: 0;
 }
 
+button.bible-catalog-chapter-cell {
+  cursor: pointer;
+  font: inherit;
+  appearance: none;
+}
+
 .bible-catalog-chapter-cell {
   display: flex;
   align-items: center;

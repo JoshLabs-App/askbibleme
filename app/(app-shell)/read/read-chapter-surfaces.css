@@ -3261,6 +3261,142 @@ button.read-chapter-verse-num--xref {
   background: color-mix(in srgb, #44403c 56%, #1e40af 44%);
 }
 
+.read-chapter-jump-panel--catalog {
+  max-height: min(88dvh, 720px);
+}
+
+.read-chapter-jump-header--catalog {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.read-chapter-jump-back {
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  color: color-mix(in srgb, #3d2a10 88%, transparent);
+  transition: background-color 0.15s ease;
+}
+
+.read-chapter-jump-back:hover {
+  background: color-mix(in srgb, #3d2a10 8%, transparent);
+}
+
+.read-chapter-jump-header-spacer {
+  width: 2.5rem;
+}
+
+.read-chapter-jump-catalog-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0.15rem 0.35rem;
+}
+
+.read-chapter-jump-footer-close {
+  margin-top: 0.35rem;
+  align-self: center;
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, #5c4030 78%, transparent);
+  cursor: pointer;
+}
+
+.bible-catalog-read-outline--jump-columns {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.bible-catalog-read-outline--jump-columns .bc-jump-testament {
+  flex: 1;
+  min-width: 0;
+}
+
+.bible-catalog-read-outline--jump-columns .bible-catalog-read-testament-body::before {
+  display: none;
+}
+
+.bc-jump-section-block {
+  margin-bottom: 0.5rem;
+  border-left: 3px solid color-mix(in srgb, var(--bc-border) 70%, #8b6914 30%);
+  padding-left: 0.35rem;
+}
+
+.bc-jump-section-title {
+  margin: 0 0 0.2rem;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.bc-jump-books {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.bc-jump-book-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, #fff8eb 52%, transparent);
+  padding: 0.28rem 0.35rem;
+  text-align: left;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.bc-jump-book-row:hover {
+  background: color-mix(in srgb, #ffb101 16%, #fff8eb 84%);
+}
+
+.bc-jump-book-row--active {
+  background: color-mix(in srgb, #ffb101 22%, #fff8eb 78%);
+}
+
+.bc-jump-book-num {
+  flex-shrink: 0;
+  min-width: 1.35rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, #8b6914 82%, #3d2a10 18%);
+}
+
+.bc-jump-book-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #37352f;
+}
+
+.bc-sheet-root--jump-catalog {
+  z-index: 10160;
+}
+
+.bc-sheet-root--jump-catalog .bc-sheet-panel {
+  box-shadow: 0 16px 48px color-mix(in srgb, #1a1208 22%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .read-chapter-jump-backdrop,
   .read-chapter-jump-panel {

@@ -31,7 +31,12 @@ const nextConfig = {
 
   /** 旧书签 `/music-visual-console` → 管理概览 */
   async redirects() {
-    return [{ source: "/music-visual-console", destination: "/admin", permanent: true }];
+    return [
+      { source: "/music-visual-console", destination: "/admin", permanent: true },
+      { source: "/JD", destination: "/jd/", permanent: true },
+      { source: "/JD/:path*", destination: "/jd/:path*", permanent: true },
+      { source: "/jd", destination: "/jd/", permanent: true },
+    ];
   },
 
   /** 讲道集静态播放器（public/jd，由 03CHURCH 的 npm run deploy:jd 同步） */

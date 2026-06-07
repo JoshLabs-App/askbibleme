@@ -1068,7 +1068,7 @@ function updateTrackRefs(track) {
 function syncControlLabels() {
   if ($playToggle) {
     const playing = Boolean(state.currentTrack) && !$audio.paused;
-    $playToggle.textContent = playing ? '❚❚' : '▶';
+    $playToggle.classList.toggle('is-playing', playing);
     $playToggle.setAttribute('aria-label', playing ? '暂停' : '播放');
   }
 

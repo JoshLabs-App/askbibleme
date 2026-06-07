@@ -580,7 +580,27 @@ button {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--ink);
-  font-size: 1.1rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.play-toggle-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.play-toggle-icon--pause {
+  display: none;
+}
+
+.play-toggle.is-playing .play-toggle-icon--play {
+  display: none;
+}
+
+.play-toggle.is-playing .play-toggle-icon--pause {
+  display: block;
 }
 
 .control-button:hover,

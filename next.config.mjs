@@ -33,9 +33,8 @@ const nextConfig = {
   async redirects() {
     return [
       { source: "/music-visual-console", destination: "/admin", permanent: true },
-      { source: "/JD", destination: "/jd/", permanent: true },
+      { source: "/JD", destination: "/jd", permanent: true },
       { source: "/JD/:path*", destination: "/jd/:path*", permanent: true },
-      { source: "/jd", destination: "/jd/", permanent: true },
     ];
   },
 

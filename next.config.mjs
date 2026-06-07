@@ -29,25 +29,18 @@ const nextConfig = {
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根
   outputFileTracingRoot: path.join(__dirname),
 
-  // 避免 /jd 与 /jd/ 互相 308 导致资源加载失败
-  skipTrailingSlashRedirect: true,
-
   /** 旧书签 `/music-visual-console` → 管理概览 */
   async redirects() {
     return [
       { source: "/music-visual-console", destination: "/admin", permanent: true },
-      { source: "/JD", destination: "/jd", permanent: true },
-      { source: "/JD/:path*", destination: "/jd/:path*", permanent: true },
+      { source: "/JD", destination: "/jd/index.html", permanent: true },
+      { source: "/jd", destination: "/jd/index.html", permanent: false },
     ];
   },
 
-  /** 讲道集静态播放器（public/jd，由 03CHURCH 的 npm run deploy:jd 同步） */
+  /** 讲道分享链接 /jd/826 → 播放器 */
   async rewrites() {
-    return [
-      { source: "/jd", destination: "/jd/index.html" },
-      { source: "/jd/", destination: "/jd/index.html" },
-      { source: "/jd/:id(\\d+)", destination: "/jd/index.html" },
-    ];
+    return [{ source: "/jd/:id(\\d+)", destination: "/jd/index.html" }];
   },
 
   /**

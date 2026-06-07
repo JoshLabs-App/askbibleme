@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFB100" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="讲道集" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="app-base" content="/jd" />
+    <title>讲道集</title>
+    <link rel="manifest" href="icons/manifest.webmanifest" />
+    <link rel="icon" href="icons/icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page app-shell">
+      <section class="app-card" aria-label="讲道集">
+        <div class="page-scroll">
+          <div class="category-tabs" role="tablist" aria-label="分类">
+            <button
+              id="tab-sunday"
+              class="category-tab"
+              type="button"
+              role="tab"
+              data-category="主日"
+              aria-controls="category-book-list"
+            >
+              主日
+            </button>
+            <button
+              id="tab-new"
+              class="category-tab"
+              type="button"
+              role="tab"
+              data-category="新约"
+              aria-controls="category-book-list"
+            >
+              新约
+            </button>
+            <button
+              id="tab-old"
+              class="category-tab"
+              type="button"
+              role="tab"
+              data-category="旧约"
+              aria-controls="category-book-list"
+            >
+              旧约
+            </button>
+            <button
+              id="tab-other"
+              class="category-tab"
+              type="button"
+              role="tab"
+              data-category="系列"
+              aria-controls="category-book-list"
+            >
+              系列
+            </button>
+          </div>
+          <div id="category-book-list" class="category-book-list" role="tabpanel" aria-label="书卷列表"></div>
+        </div>
+
+        <section class="hero-card player-section" aria-label="正在播放">
+          <div class="hero-copy">
+            <div class="hero-line">
+              <button
+                id="speed-button"
+                class="icon-action-button speed-button"
+                type="button"
+                aria-label="调整播放速度"
+                title="播放速度"
+              >
+                1x
+              </button>
+              <button
+                id="share-button"
+                class="icon-action-button"
+                type="button"
+                aria-label="复制分享链接"
+                title="复制短链接"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M13.5 4.5l6 6-6 6M19.5 10.5H9a3 3 0 0 0-3 3v1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            <h2 id="track-title">未选择讲道</h2>
+            <div class="track-panel" aria-label="当前系列">
+              <div id="selected-book-tracks" class="track-pills" aria-label="章节列表"></div>
+            </div>
+            <div class="track-meta">
+              <span id="track-book">等待播放</span>
+              <span id="track-date">--</span>
+            </div>
+          </div>
+
+          <div class="hero-progress">
+            <div class="time-row">
+              <span id="time-current">0:00</span>
+              <span id="time-total">0:00</span>
+            </div>
+            <input
+              id="progress-slider"
+              class="progress-slider"
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              aria-label="播放进度"
+            />
+          </div>
+
+          <div class="control-row" aria-label="播放控制">
+            <button id="skip-back-button" class="control-button subtle" type="button" aria-label="后退十五秒">
+              ↺15
+            </button>
+            <button id="prev-button" class="control-button" type="button" aria-label="上一篇">
+              ❮
+            </button>
+            <button id="play-toggle" class="play-toggle" type="button" aria-label="播放或暂停">
+              ▶
+            </button>
+            <button id="next-button" class="control-button" type="button" aria-label="下一篇">
+              ❯
+            </button>
+            <button id="skip-forward-button" class="control-button subtle" type="button" aria-label="前进十五秒">
+              15↻
+            </button>
+          </div>
+
+        </section>
+      </section>
+    </main>
+
+    <audio id="audio" class="hidden-audio" preload="metadata" playsinline></audio>
+
+    <div id="install-guide" class="install-guide" hidden aria-hidden="true">
+      <button class="install-guide-backdrop" type="button" data-action="dismiss-install" aria-label="关闭"></button>
+      <section class="install-guide-sheet" role="dialog" aria-labelledby="install-guide-title" aria-modal="true">
+        <div class="install-guide-icon" aria-hidden="true">
+          <img src="icons/icon-192.png" width="72" height="72" alt="" />
+        </div>
+        <h2 id="install-guide-title" class="install-guide-title">添加到主屏幕</h2>
+        <p class="install-guide-lead">安装后可像 App 一样，从桌面图标快速打开讲道集</p>
+        <ol id="install-guide-steps" class="install-guide-steps"></ol>
+        <div class="install-guide-actions">
+          <button id="install-guide-primary" class="install-guide-button primary" type="button" hidden>
+            立即安装
+          </button>
+          <button id="install-guide-dismiss" class="install-guide-button ghost" type="button">稍后再说</button>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="install.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

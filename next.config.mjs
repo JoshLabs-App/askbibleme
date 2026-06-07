@@ -34,6 +34,15 @@ const nextConfig = {
     return [{ source: "/music-visual-console", destination: "/admin", permanent: true }];
   },
 
+  /** 讲道集静态播放器（public/jd，由 03CHURCH 的 npm run deploy:jd 同步） */
+  async rewrites() {
+    return [
+      { source: "/jd", destination: "/jd/index.html" },
+      { source: "/jd/", destination: "/jd/index.html" },
+      { source: "/jd/:id(\\d+)", destination: "/jd/index.html" },
+    ];
+  },
+
   /**
    * 旧版「编译指示」相关；黑色「N」DevTools 浮标另见
    * `scripts/write-next-devtools-config.mjs`（由 npm dev 脚本在启动前写入 `.next/cache`）。

@@ -29,6 +29,9 @@ const nextConfig = {
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根
   outputFileTracingRoot: path.join(__dirname),
 
+  // 避免 /jd 与 /jd/ 互相 308 导致资源加载失败
+  skipTrailingSlashRedirect: true,
+
   /** 旧书签 `/music-visual-console` → 管理概览 */
   async redirects() {
     return [

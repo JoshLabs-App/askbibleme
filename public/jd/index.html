@@ -13,6 +13,11 @@
     <link rel="manifest" href="/jd/icons/manifest.webmanifest" />
     <link rel="icon" href="/jd/icons/icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="/jd/icons/apple-touch-icon.png" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/jd/sw.js', { scope: '/jd/' }).catch(function () {});
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -166,7 +171,7 @@
         <p class="install-guide-lead">安装后可像 App 一样，从桌面图标快速打开讲道集</p>
         <ol id="install-guide-steps" class="install-guide-steps"></ol>
         <div class="install-guide-actions">
-          <button id="install-guide-primary" class="install-guide-button primary" type="button" hidden>
+          <button id="install-guide-primary" class="install-guide-button primary" type="button">
             立即安装
           </button>
           <button id="install-guide-dismiss" class="install-guide-button ghost" type="button">稍后再说</button>

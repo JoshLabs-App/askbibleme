@@ -1198,6 +1198,10 @@ body.install-guide-open {
   font-weight: 700;
 }
 
+.install-guide-steps[hidden] {
+  display: none;
+}
+
 .install-guide-actions {
   display: grid;
   gap: 10px;
@@ -1221,6 +1225,11 @@ body.install-guide-open {
 
 .install-guide-button.primary:hover {
   background: #f0a600;
+}
+
+.install-guide-button.primary:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .install-guide-button.ghost {

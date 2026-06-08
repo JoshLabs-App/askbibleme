@@ -494,6 +494,40 @@ function buildShareIndex(tracks) {
   });
 }
 
+function resolveCatalogTrack(track) {
+  if (!track) return null;
+
+  if (track.storageKey) {
+    const byKey = state.tracks.find((item) => item.storageKey === track.storageKey);
+    if (byKey) return byKey;
+  }
+
+  if (track.audioSrc) {
+    const bySrc = state.tracks.find((item) => item.audioSrc === track.audioSrc);
+    if (bySrc) return bySrc;
+  }
+
+  if (track.bookTitle && track.trackNo) {
+    const key = trackStorageKey(track.bookTitle, track.trackNo);
+    const byBook = state.tracks.find((item) => item.storageKey === key);
+    if (byBook) return byBook;
+    if (track.audioSrc) {
+      return {
+        ...track,
+        storageKey: key,
+      };
+    }
+  }
+
+  return track.storageKey || track.audioSrc ? track : null;
+}
+
+function getTrackShareId(track = state.currentTrack) {
+  const resolved = resolveCatalogTrack(track);
+  if (!resolved?.storageKey) return 0;
+  return shareIdByKey.get(resolved.storageKey) || 0;
+}
+
 function resolveShareReference(ref) {
   const trimmed = String(ref || '').trim();
   if (!trimmed) return '';
@@ -549,12 +583,13 @@ function parseShareFromUrl() {
 }
 
 function buildShareUrl(track = state.currentTrack) {
-  const shareId = shareIdByKey.get(track?.storageKey || '');
+  const shareId = getTrackShareId(track);
   if (!shareId) {
     return getShareBaseUrl();
   }
 
-  return `${window.location.origin}${getAppBasePath()}/${shareId}`;
+  const base = getAppBasePath();
+  return `${window.location.origin}${base}/${shareId}`;
 }
 
 function clearShareFromUrl() {
@@ -708,13 +743,14 @@ function isFirstVisit() {
 }
 
 function restoreTrack(track, { autoplay = false } = {}) {
-  if (!track) return;
-  state.currentTrack = track;
-  $audio.src = track.audioSrc;
+  const resolved = resolveCatalogTrack(track);
+  if (!resolved) return;
+  state.currentTrack = resolved;
+  $audio.src = resolved.audioSrc;
   $audio.playbackRate = state.playbackRate;
   $audio.load();
   try {
-    window.localStorage.setItem(CURRENT_KEY, track.storageKey || audioKey(track.audioSrc));
+    window.localStorage.setItem(CURRENT_KEY, resolved.storageKey || audioKey(resolved.audioSrc));
   } catch {}
   scheduleSaveSession();
   if (autoplay) {
@@ -1145,15 +1181,16 @@ function renderAll() {
 }
 
 function selectTrack(track, { autoplay = false } = {}) {
-  if (!track) return;
-  state.currentTrack = track;
-  setSelectedBookTitle(track.bookTitle);
-  setSelectedCategory(track.bookCategory);
-  setCategorySelection(track.bookCategory, track.bookTitle);
+  const resolved = resolveCatalogTrack(track);
+  if (!resolved) return;
+  state.currentTrack = resolved;
+  setSelectedBookTitle(resolved.bookTitle);
+  setSelectedCategory(resolved.bookCategory);
+  setCategorySelection(resolved.bookCategory, resolved.bookTitle);
   try {
-    window.localStorage.setItem(CURRENT_KEY, track.storageKey || audioKey(track.audioSrc));
+    window.localStorage.setItem(CURRENT_KEY, resolved.storageKey || audioKey(resolved.audioSrc));
   } catch {}
-  $audio.src = track.audioSrc;
+  $audio.src = resolved.audioSrc;
   $audio.playbackRate = state.playbackRate;
   $audio.load();
   renderAll();
@@ -1168,19 +1205,12 @@ function selectBook(title, { autoplay = false } = {}) {
   if (!book) return;
   setSelectedBookTitle(book.title);
   setSelectedCategory(book.category);
-  const currentInBook = state.currentTrack?.bookTitle === book.title
-    ? state.currentTrack
-    : null;
-  const track = currentInBook || book.lessons[0];
+  const currentInBook =
+    state.currentTrack?.bookTitle === book.title ? resolveCatalogTrack(state.currentTrack) : null;
+  const firstInBook = state.tracks.find((item) => item.bookTitle === book.title);
+  const track = currentInBook || firstInBook;
   if (track) {
-    selectTrack(
-      {
-        ...track,
-        bookTitle: book.title,
-        bookCategory: book.category,
-      },
-      { autoplay }
-    );
+    selectTrack(track, { autoplay });
   } else {
     renderAll();
   }

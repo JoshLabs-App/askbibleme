@@ -1,5 +1,6 @@
 import type { AppLocale } from "../i18n/config";
 import {
+  getBundledExploreFeaturedArticlesBundle,
   getExploreFeaturedArticleView,
   listExploreFeaturedArticleViews,
   type ExploreFeaturedArticle,
@@ -8,15 +9,23 @@ import { getActiveExploreFeaturedArticlesBundle } from "./fetchExploreFeaturedAr
 
 export type { ExploreFeaturedArticle } from "./exploreFeaturedArticlesBundleCore";
 
+function activeExploreFeaturedArticlesBundle() {
+  try {
+    return getActiveExploreFeaturedArticlesBundle();
+  } catch {
+    return getBundledExploreFeaturedArticlesBundle();
+  }
+}
+
 export function getExploreFeaturedArticleBySlug(
   slug: string,
   locale: AppLocale = "zh-CN",
 ): ExploreFeaturedArticle | null {
-  return getExploreFeaturedArticleView(getActiveExploreFeaturedArticlesBundle(), slug, locale);
+  return getExploreFeaturedArticleView(activeExploreFeaturedArticlesBundle(), slug, locale);
 }
 
 export function listExploreFeaturedArticles(locale: AppLocale = "zh-CN"): ExploreFeaturedArticle[] {
-  return listExploreFeaturedArticleViews(getActiveExploreFeaturedArticlesBundle(), locale);
+  return listExploreFeaturedArticleViews(activeExploreFeaturedArticlesBundle(), locale);
 }
 
 export function exploreArticleHref(slug: string): `/explore/articles/${string}` {
@@ -29,6 +38,3 @@ export function exploreArticleRoute(slug: string) {
     params: { slug },
   };
 }
-
-/** @deprecated Use listExploreFeaturedArticles(locale) */
-export const EXPLORE_FEATURED_ARTICLES = listExploreFeaturedArticles("zh-CN");

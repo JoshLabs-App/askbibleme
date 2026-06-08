@@ -83,3 +83,24 @@ export function listExploreFeaturedArticleViews(
     .map((entry) => getExploreFeaturedArticleView(bundle, entry.slug, locale))
     .filter((item): item is ExploreFeaturedArticle => Boolean(item));
 }
+
+/** 探索首页图标：只本地化标题，避免对大段正文做 zh-TW 转换 */
+export function listExploreFeaturedArticleTileViews(
+  bundle: ExploreFeaturedArticlesBundle,
+  locale: AppLocale,
+): ExploreFeaturedArticle[] {
+  return bundle.articles
+    .map((entry) => {
+      const block = entry[sourceLocale(locale)];
+      const exploreLabel =
+        locale === "zh-TW" ? toZhTwText(block.exploreLabel) : block.exploreLabel;
+      const title = locale === "zh-TW" ? toZhTwText(block.title) : block.title;
+      return {
+        slug: entry.slug,
+        title,
+        exploreLabel,
+        body: "",
+      };
+    })
+    .filter((item) => item.slug.trim().length > 0);
+}

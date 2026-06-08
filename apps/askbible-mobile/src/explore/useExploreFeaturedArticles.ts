@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppLocale } from "../i18n/config";
 import {
-  listExploreFeaturedArticleViews,
+  getExploreFeaturedArticleView,
+  listExploreFeaturedArticleTileViews,
   type ExploreFeaturedArticle,
 } from "./exploreFeaturedArticlesBundleCore";
 import {
@@ -12,13 +13,8 @@ import {
   subscribeExploreFeaturedArticlesBundle,
 } from "./fetchExploreFeaturedArticles";
 
-export function useExploreFeaturedArticles(locale: AppLocale): {
-  articles: ExploreFeaturedArticle[];
-  refresh: () => Promise<void>;
-} {
-  const [bundle, setBundle] = useState(getActiveExploreFeaturedArticlesBundle);
-
-  const articles = useMemo(() => listExploreFeaturedArticleViews(bundle, locale), [bundle, locale]);
+function useExploreFeaturedArticlesBundle() {
+  const [bundle, setBundle] = useState(() => getActiveExploreFeaturedArticlesBundle());
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +36,15 @@ export function useExploreFeaturedArticles(locale: AppLocale): {
     setBundle(next);
   }, []);
 
+  return { bundle, refresh };
+}
+
+export function useExploreFeaturedArticles(locale: AppLocale): {
+  articles: ExploreFeaturedArticle[];
+  refresh: () => Promise<void>;
+} {
+  const { bundle, refresh } = useExploreFeaturedArticlesBundle();
+  const articles = useMemo(() => listExploreFeaturedArticleTileViews(bundle, locale), [bundle, locale]);
   return { articles, refresh };
 }
 
@@ -49,10 +54,10 @@ export function useExploreFeaturedArticle(
 ): {
   article: ExploreFeaturedArticle | null;
 } {
-  const { articles } = useExploreFeaturedArticles(locale);
+  const { bundle } = useExploreFeaturedArticlesBundle();
   const article = useMemo(() => {
     if (!slug) return null;
-    return articles.find((item) => item.slug === slug) ?? null;
-  }, [articles, slug]);
+    return getExploreFeaturedArticleView(bundle, slug, locale);
+  }, [bundle, slug, locale]);
   return { article };
 }

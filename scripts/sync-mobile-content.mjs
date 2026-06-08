@@ -2,6 +2,7 @@
 /**
  * 将网站真源内容复制到 Expo 资源目录（文案、首页金句、圣经目录、音乐曲库等）。
  */
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -127,3 +128,9 @@ export function getBundledReadingPlanBundle(planId: string): BundledReadingPlanB
 
 fs.writeFileSync(path.join(generatedDir, "bundled-reading-plans.ts"), generatedTs);
 console.log(`Wrote ${path.relative(repoRoot, path.join(generatedDir, "bundled-reading-plans.ts"))} (${bundledPlans.length} plans)`);
+
+const exploreSync = spawnSync("node", ["scripts/sync-explore-featured-articles-localized.mjs"], {
+  cwd: repoRoot,
+  stdio: "inherit",
+});
+if (exploreSync.status !== 0) process.exit(exploreSync.status ?? 1);

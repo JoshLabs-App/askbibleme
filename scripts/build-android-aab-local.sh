@@ -20,6 +20,7 @@ export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mpg
 echo "→ 同步图标与离线内容…"
 npm run mobile:sync-icons
 npm run mobile:sync-content
+node scripts/sync-explore-featured-articles-localized.mjs
 npm run mobile:sync-android-icons
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
 MOBILE_BUNDLE_MUSIC_LIMIT=1 \

@@ -8,6 +8,7 @@ import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScroll
 import { ReadChapterInfoEditionMarkdown } from "../read/ReadChapterInfoEditionMarkdown";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
+import { resolveRouteParam } from "../navigation/resolveRouteParam";
 import { getExploreFeaturedArticleBySlug } from "./exploreFeaturedArticles";
 import { linkifyExploreArticleScriptureRefsForLocale } from "./linkifyExploreArticleScriptureRefsForLocale";
 import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s } from "./exploreParchmentStyles";
@@ -18,8 +19,9 @@ export function ExploreArticleScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
-  const { slug } = useLocalSearchParams<{ slug: string }>();
-  const article = typeof slug === "string" ? getExploreFeaturedArticleBySlug(slug, locale) : null;
+  const { slug: slugParam } = useLocalSearchParams<{ slug?: string | string[] }>();
+  const slug = resolveRouteParam(slugParam);
+  const article = slug ? getExploreFeaturedArticleBySlug(slug, locale) : null;
   const linkedBody = useMemo(
     () => (article ? linkifyExploreArticleScriptureRefsForLocale(article.body, locale) : ""),
     [article, locale],

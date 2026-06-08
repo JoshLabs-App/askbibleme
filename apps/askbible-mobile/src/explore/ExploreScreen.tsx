@@ -7,7 +7,7 @@ import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { EXPLORE_ENTRIES } from "./exploreEntries";
-import { exploreArticleHref, listExploreFeaturedArticles } from "./exploreFeaturedArticles";
+import { exploreArticleRoute, listExploreFeaturedArticles } from "./exploreFeaturedArticles";
 import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "./exploreFeaturedArticleIcons";
 import { exploreFeaturedArticleLabel } from "./exploreFeaturedArticleLabels";
 import { ExploreEntryIcon } from "./ExploreEntryIcon";
@@ -47,7 +47,7 @@ export function ExploreScreen() {
   const renderArticleTile = (article: (typeof featuredArticles)[number]) => (
     <Pressable
       key={article.slug}
-      onPress={() => router.push(exploreArticleHref(article.slug))}
+      onPress={() => router.push(exploreArticleRoute(article.slug))}
       style={({ pressed }) => [
         s.iconTile,
         { width: iconTileW },

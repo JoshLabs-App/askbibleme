@@ -18,7 +18,11 @@ import {
 } from "react-native";
 import { EdgeFadeHorizontalScrollView } from "../ui/EdgeFadeHorizontalScrollView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { fetchNatureSettings, getBundledNatureSettings } from "../api/fetchNatureSettings";
+import {
+  ensureNatureSettingsLocallyPlayable,
+  fetchNatureSettings,
+  getBundledNatureSettings,
+} from "../api/fetchNatureSettings";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { parchmentSans } from "../fonts/parchmentType";
 import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
@@ -42,6 +46,7 @@ import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { resolveNaturePlayback } from "../nature/resolveNaturePlayback";
 import type { NatureSettingsV2, NatureVideoEntry } from "../types/nature";
 import { FullBleedCoverVideo } from "./FullBleedCoverVideo";
+import { isNatureCoverPlaybackPlayable } from "./natureCoverPlayback";
 import { NatureHomeSoftFocusLayer } from "./NatureHomeSoftFocusLayer";
 import {
   ShellSwipeExclude,
@@ -243,14 +248,15 @@ export function HomeNatureScreen() {
   const autoImmersiveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const applySettings = useCallback((data: NatureSettingsV2, stored: string | null) => {
-    setSettings(data);
+    const playable = ensureNatureSettingsLocallyPlayable(data, baseUrl);
+    setSettings(playable);
     const id =
-      stored?.trim() ||
-      data.activeVideoId?.trim() ||
-      data.videos[0]?.id ||
+      (stored?.trim() && playable.videos.some((v) => v.id === stored.trim()) ? stored.trim() : "") ||
+      playable.activeVideoId?.trim() ||
+      playable.videos[0]?.id ||
       "";
     setLocalActiveId(id);
-  }, []);
+  }, [baseUrl]);
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
@@ -402,7 +408,7 @@ export function HomeNatureScreen() {
     const timer = setTimeout(() => {
       setLoading(false);
       setSettings((prev) => {
-        if (prev?.videos.length) return prev;
+        if (prev?.videos.length) return ensureNatureSettingsLocallyPlayable(prev, baseUrl);
         const bundled = getBundledNatureSettings();
         return bundled.videos.length > 0 ? bundled : prev;
       });
@@ -413,7 +419,7 @@ export function HomeNatureScreen() {
       });
     }, 4500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [baseUrl]);
 
   useEffect(() => {
     if (!error) return;
@@ -431,6 +437,10 @@ export function HomeNatureScreen() {
       : "";
     return resolveNaturePosterPlaybackUri(sceneId.trim(), remote) || remote;
   }, [sceneId, playback?.posterSrc, baseUrl, naturePackRev]);
+  const posterModule = useMemo(
+    () => (sceneId.trim() ? resolveNaturePosterPlaybackModule(sceneId.trim()) : null),
+    [sceneId, naturePackRev],
+  );
   const clampedRate = Math.min(2, Math.max(0.5, settings?.playbackRate ?? 1));
 
   const sceneList = useMemo(() => {
@@ -637,7 +647,10 @@ export function HomeNatureScreen() {
   }, []);
 
   const landscapeImmersive = landscapeNarrow;
-  const hasVideoStage = !loading && !error && Boolean(settings && playback && currentPlayback);
+  const hasVideoStage =
+    !loading &&
+    !error &&
+    Boolean(settings && playback && isNatureCoverPlaybackPlayable(currentPlayback));
   const showLandscapeVideo = landscapeImmersive && hasVideoStage;
   const canArmAutoImmersive =
     hasVideoStage &&
@@ -1043,6 +1056,7 @@ export function HomeNatureScreen() {
   const sceneStripBottomPad =
     showLandscapeVideo && landscapeScenePickerOpen ? Math.max(insets.bottom, 12) : bottomNavSlot;
   const trimmedPosterFallback = posterUri.trim();
+  const hasPosterFallback = posterModule != null || trimmedPosterFallback.length > 0;
 
   const renderSceneThumb = (item: NatureVideoEntry) => {
     const selected = !loopAllScenesEnabled && item.id === sceneId;
@@ -1090,13 +1104,21 @@ export function HomeNatureScreen() {
             nativeFullCover={Platform.OS === "android"}
             onSceneVideoReady={handleSceneVideoReady}
           />
-        ) : trimmedPosterFallback ? (
+        ) : hasPosterFallback ? (
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <Image
-              source={{ uri: trimmedPosterFallback }}
-              style={StyleSheet.absoluteFillObject}
-              resizeMode="cover"
-            />
+            {posterModule != null ? (
+              <Image
+                source={posterModule}
+                style={StyleSheet.absoluteFillObject}
+                resizeMode="cover"
+              />
+            ) : (
+              <Image
+                source={{ uri: trimmedPosterFallback }}
+                style={StyleSheet.absoluteFillObject}
+                resizeMode="cover"
+              />
+            )}
           </View>
         ) : null}
         {hasVideoStage &&

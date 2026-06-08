@@ -22,3 +22,8 @@ export function natureCoverVideoSource(playback: NatureCoverPlayback | null): st
   const uri = playback.uri.trim();
   return uri || null;
 }
+
+export function isNatureCoverPlaybackPlayable(playback: NatureCoverPlayback | null): boolean {
+  if (!playback) return false;
+  return playback.bundledModule != null || playback.uri.trim().length > 0;
+}

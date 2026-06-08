@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -214,6 +215,16 @@ export function NatureHomeSettingsControl({
                   <NatureHomeTranslationSettings onPrefsChanged={onPrefsChanged} />
                 </div>
               </div>
+
+              <IconSettingRow icon="smartphone" ariaLabel={t("install.menuAction")}>
+                <Link
+                  href="/install"
+                  className="text-[13px] leading-snug text-white/78 underline decoration-white/25 underline-offset-[3px] transition hover:text-white/92"
+                  onClick={() => onOpenChange(false)}
+                >
+                  {t("install.menuAction")}
+                </Link>
+              </IconSettingRow>
             </div>
             </div>
           </div>,

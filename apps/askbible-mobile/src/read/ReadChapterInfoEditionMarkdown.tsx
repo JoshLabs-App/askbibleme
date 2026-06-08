@@ -12,7 +12,7 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { toZhTwText } from "../i18n/site-copy";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { postReadingTheme as pr } from "./postReadingTheme";
-import { useReadBibleTypography } from "./ReadBibleTypographyContext";
+import { useReadBibleTypographyPx } from "./ReadBibleTypographyContext";
 
 type Props = {
   content: string;
@@ -165,7 +165,7 @@ export function ReadChapterInfoEditionMarkdown({ content, variant, onLinkPress }
     return locale === "zh-TW" ? toZhTwText(text) : text;
   }, [content, locale, variant]);
   const { heading, body } = useMemo(() => splitPrimaryHeading(localized), [localized]);
-  const { px } = useReadBibleTypography();
+  const px = useReadBibleTypographyPx();
   const textScale = useMemo(
     () => Math.max(0.8, Math.min(2.8, px.verseFontSize / 16)),
     [px.verseFontSize],

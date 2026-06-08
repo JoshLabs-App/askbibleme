@@ -36,6 +36,10 @@
     "menuHint": "告诉我们你的想法或遇到的问题。",
     "menuAction": "发送反馈"
   },
+  "install": {
+    "menuAction": "安装 App 测试版",
+    "guideLink": "查看安装说明"
+  },
   "auth": {
     "pageTitle": "登录",
     "email": "邮箱",
@@ -204,10 +208,10 @@
     "playbackVisual": "播放视觉",
     "updateAvailable": "有新版本。点一下刷新即可载入最新界面（无需重新安装到桌面）。",
     "updateForced": "发现新版本，页面将在片刻后自动刷新以载入最新界面。",
-    "pwaInstallTitle": "安装 AskBible App",
-    "pwaInstallBody": "不再推荐添加到主屏幕。请直接下载安装文件后完成安装。",
-    "pwaInstallActionAndroid": "Android 安装文件",
-    "pwaInstallActionIos": "iOS 安装文件",
+    "pwaInstallTitle": "安装 AskBible App 测试版",
+    "pwaInstallBody": "iOS 通过 TestFlight，Android 通过 Google Play 测试邀请安装。",
+    "pwaInstallActionAndroid": "Android 测试邀请",
+    "pwaInstallActionIos": "iOS TestFlight",
     "pwaInstallDismiss": "暂不",
     "offlinePageTitle": "当前无法连接",
     "offlinePageBody": "请检查网络后重试。若你曾打开过某一章或音乐页，可返回上一页再试。",

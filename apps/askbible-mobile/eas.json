@@ -60,8 +60,7 @@
         "ascAppId": "6771996188",
         "ascApiKeyId": "9HDA27WY8C",
         "ascApiKeyIssuerId": "a56f0624-e4a4-438d-be5d-92403dd9969b",
-        "ascApiKeyPath": "$ASC_API_KEY_PATH",
-        "groups": ["aaa"]
+        "ascApiKeyPath": "$ASC_API_KEY_PATH"
       },
       "android": {
         "track": "production",

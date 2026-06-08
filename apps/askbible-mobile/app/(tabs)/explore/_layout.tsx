@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
 import { ReadParchmentBackground } from "../../../src/read/ReadParchmentBackground";
+import { ReadBibleTypographyProvider } from "../../../src/read/ReadBibleTypographyContext";
 
 export default function ExploreStackLayout() {
   return (
+    <ReadBibleTypographyProvider>
     <ReadParchmentBackground>
       <Stack
         screenOptions={{
@@ -23,5 +25,6 @@ export default function ExploreStackLayout() {
         <Stack.Screen name="articles/[slug]/index" />
       </Stack>
     </ReadParchmentBackground>
+    </ReadBibleTypographyProvider>
   );
 }

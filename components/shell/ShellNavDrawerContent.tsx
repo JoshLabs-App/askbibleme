@@ -232,6 +232,11 @@ export function ShellNavDrawerContent({ onClose }: Props) {
       ) : null}
       <div className="h-1" aria-hidden />
       <ShellNavDrawerMenuRow
+        label={t("install.menuAction")}
+        href="/install"
+        onClick={onClose}
+      />
+      <ShellNavDrawerMenuRow
         label={t("feedback.menuAction")}
         detail={SUPPORT_EMAIL}
         onClick={() => {

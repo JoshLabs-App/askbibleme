@@ -1,21 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isDisplayStandalone } from "@/lib/pwa/display-mode";
+import {
+  APP_INSTALL_ANDROID_URL,
+  APP_INSTALL_IOS_URL,
+} from "@/lib/app-install-urls";
 import {
   isInstallDismissedRecently,
   markInstallDismissed,
 } from "@/lib/pwa/install-prompt-persistence";
 
 const SHOW_DELAY_MS = 2_500;
-const APP_INSTALL_ANDROID_URL = process.env.NEXT_PUBLIC_APP_INSTALL_ANDROID_URL?.trim() ?? "";
-const APP_INSTALL_IOS_URL = process.env.NEXT_PUBLIC_APP_INSTALL_IOS_URL?.trim() ?? "";
 
 function shouldOfferOnPath(pathname: string): boolean {
   const p = pathname || "/";
   if (p.startsWith("/admin") || p.startsWith("/studio") || p.startsWith("/api")) return false;
+  if (p === "/install" || p.startsWith("/install/")) return false;
   return true;
 }
 
@@ -148,6 +152,12 @@ export function PwaInstallPrompt() {
             {t("chrome.pwaInstallActionIos")}
           </a>
         ) : null}
+        <Link
+          href="/install"
+          className="rounded-full px-3 py-1.5 text-[13px] text-ink/65 transition hover:text-ink"
+        >
+          {t("install.guideLink")}
+        </Link>
         <button
           type="button"
           onClick={onDismiss}

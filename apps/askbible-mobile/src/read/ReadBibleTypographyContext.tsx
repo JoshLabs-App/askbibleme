@@ -438,6 +438,14 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   );
 }
 
+export function useReadBibleTypographyPx(): ReadBibleTypographyPx {
+  const ctx = useContext(ReadBibleTypographyContext);
+  return useMemo(
+    () => ctx?.px ?? readBibleTypographyPx(defaultReadBibleTypographyPrefs().size),
+    [ctx?.px],
+  );
+}
+
 export function useReadBibleTypography(): ReadBibleTypographyContextValue {
   const ctx = useContext(ReadBibleTypographyContext);
   if (!ctx) {

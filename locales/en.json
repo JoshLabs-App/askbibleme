@@ -36,6 +36,10 @@
     "menuHint": "Tell us what you think or report an issue.",
     "menuAction": "Send feedback"
   },
+  "install": {
+    "menuAction": "Install the beta app",
+    "guideLink": "Full install guide"
+  },
   "auth": {
     "pageTitle": "Sign in",
     "email": "Email",
@@ -204,10 +208,10 @@
     "playbackVisual": "Playback visuals",
     "updateAvailable": "A new version is available. Tap refresh to load the latest—no need to reinstall from the home screen.",
     "updateForced": "A new version is available. This page will refresh automatically in a moment.",
-    "pwaInstallTitle": "Install AskBible App",
-    "pwaInstallBody": "Instead of adding to home screen, download the app installer file directly.",
-    "pwaInstallActionAndroid": "Android installer",
-    "pwaInstallActionIos": "iOS installer",
+    "pwaInstallTitle": "Install the AskBible beta",
+    "pwaInstallBody": "Join via TestFlight on iOS or Google Play testing on Android.",
+    "pwaInstallActionAndroid": "Android beta invite",
+    "pwaInstallActionIos": "iOS TestFlight",
     "pwaInstallDismiss": "Not now",
     "offlinePageTitle": "You’re offline",
     "offlinePageBody": "Check your connection and try again. If you opened a chapter or Music before, try going back.",

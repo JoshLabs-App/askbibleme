@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { NatureSettingsV2 } from "../types/nature";
-import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
-import { readSyncedNatureSettings } from "../media/natureResourcePackSync";
+import { readSyncedNatureSettings, resolveNatureResourcePackUri } from "../media/natureResourcePackSync";
+import { getBundledNatureVideoModule } from "../media/generated/bundled-nature-videos";
 
 const bundledRaw = require("../../assets/content/nature-settings.json") as NatureSettingsV2;
 const NATURE_SETTINGS_CACHE_KEY = "askbible-nature-settings-cache-v1";
@@ -21,6 +22,54 @@ function normalizeNatureSettings(raw: NatureSettingsV2): NatureSettingsV2 {
 }
 
 const bundledSettings = normalizeNatureSettings(bundledRaw);
+
+function preferredVideoSrc(row: NatureSettingsV2["videos"][number]): string {
+  return row.src4k?.trim() || row.src1080?.trim() || row.src?.trim() || "";
+}
+
+function isNatureVideoRowLocallyPlayable(
+  row: NatureSettingsV2["videos"][number],
+  baseUrl: string,
+): boolean {
+  const id = row.id.trim();
+  if (id && getBundledNatureVideoModule(id) != null) return true;
+  const rel = preferredVideoSrc(row);
+  if (!rel) return false;
+  return Boolean(resolveNatureResourcePackUri(toAbsoluteUrl(baseUrl, rel)));
+}
+
+function resolveActiveVideoId(
+  wantActive: string,
+  videos: NatureSettingsV2["videos"],
+  fallbackActive: string,
+): string {
+  const trimmed = wantActive.trim();
+  if (trimmed && videos.some((v) => v.id === trimmed)) return trimmed;
+  const fallback = fallbackActive.trim();
+  if (fallback && videos.some((v) => v.id === fallback)) return fallback;
+  return videos[0]?.id ?? "";
+}
+
+/** 仅保留安装包内或已下载资源包可播的场景，避免远程列表覆盖后黑屏。 */
+export function ensureNatureSettingsLocallyPlayable(
+  settings: NatureSettingsV2,
+  baseUrl = getAskBibleBaseUrl(),
+): NatureSettingsV2 {
+  const playable = settings.videos.filter((row) => isNatureVideoRowLocallyPlayable(row, baseUrl));
+  const videos = playable.length > 0 ? playable : bundledSettings.videos;
+  const activeVideoId = resolveActiveVideoId(
+    settings.activeVideoId ?? "",
+    videos,
+    bundledSettings.activeVideoId ?? "",
+  );
+  return {
+    ...settings,
+    videos,
+    activeVideoId,
+    ambientClips:
+      settings.ambientClips.length > 0 ? settings.ambientClips : bundledSettings.ambientClips,
+  };
+}
 
 function isNatureSettingsShape(raw: unknown): raw is NatureSettingsV2 {
   if (!raw || typeof raw !== "object") return false;
@@ -142,7 +191,7 @@ export function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): Natur
       : "") ||
     (videos[0]?.id ?? "");
 
-  return {
+  return ensureNatureSettingsLocallyPlayable({
     ...remote,
     version: remote.version ?? bundledSettings.version,
     ambientClips:
@@ -151,7 +200,7 @@ export function mergeBundledScenesByRemoteOrder(remote: NatureSettingsV2): Natur
     activeVideoId,
     playbackRate: remote.playbackRate ?? bundledSettings.playbackRate,
     posterSrc: remote.posterSrc ?? bundledSettings.posterSrc,
-  };
+  });
 }
 
 export function getBundledNatureSettings(): NatureSettingsV2 {
@@ -218,7 +267,7 @@ export async function fetchNatureSettings(): Promise<NatureSettingsV2> {
   const remote = await fetchNatureSettingsFromRemote();
   if (remote) {
     const merged = mergeBundledScenesByRemoteOrder(remote);
-    await writeCachedNatureSettings(remote);
+    await writeCachedNatureSettings(merged);
     return merged;
   }
 

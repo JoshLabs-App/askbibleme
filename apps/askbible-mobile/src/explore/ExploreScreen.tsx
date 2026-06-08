@@ -7,7 +7,8 @@ import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { EXPLORE_ENTRIES } from "./exploreEntries";
-import { exploreArticleRoute, listExploreFeaturedArticles } from "./exploreFeaturedArticles";
+import { exploreArticleRoute } from "./exploreFeaturedArticles";
+import { useExploreFeaturedArticles } from "./useExploreFeaturedArticles";
 import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "./exploreFeaturedArticleIcons";
 import { exploreFeaturedArticleLabel } from "./exploreFeaturedArticleLabels";
 import { ExploreEntryIcon } from "./ExploreEntryIcon";
@@ -42,7 +43,7 @@ export function ExploreScreen() {
   ).filter((entry): entry is (typeof EXPLORE_ENTRIES)[number] => Boolean(entry));
   const topEntries = EXPLORE_ENTRIES.filter((entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as never));
 
-  const featuredArticles = listExploreFeaturedArticles(locale);
+  const { articles: featuredArticles } = useExploreFeaturedArticles(locale);
 
   const renderArticleTile = (article: (typeof featuredArticles)[number]) => (
     <Pressable

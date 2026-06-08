@@ -3,6 +3,7 @@
  * Bundle explore featured article markdown + meta into JSON for Web cache and mobile.
  * Run: node scripts/sync-explore-featured-articles-localized.mjs
  */
+import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,7 +31,11 @@ const articles = meta.articles.map((entry) => {
   };
 });
 
-const bundle = { schemaVersion: 1, articles };
+const contentVersion = createHash("sha256")
+  .update(JSON.stringify({ schemaVersion: 1, articles }))
+  .digest("hex")
+  .slice(0, 16);
+const bundle = { schemaVersion: 1, contentVersion, articles };
 const outWeb = path.join(contentDir, "bundle.json");
 const outMobile = path.join(
   repoRoot,

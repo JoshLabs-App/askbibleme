@@ -1,11 +1,7 @@
 import type { AppLocale } from "@/lib/i18n/config";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import bundleJson from "@/data/explore-featured-articles/bundle.json";
-import {
-  EXPLORE_FEATURED_ARTICLE_SLUGS,
-  isExploreFeaturedArticleSlug,
-  type ExploreFeaturedArticleSlug,
-} from "@/lib/explore/explore-featured-article-slugs";
+import type { ExploreFeaturedArticleSlug } from "@/lib/explore/explore-featured-article-slugs";
 
 type LocaleBlock = {
   title: string;
@@ -44,20 +40,20 @@ export function readExploreFeaturedArticleView(
   slug: string,
   locale: AppLocale,
 ): ExploreFeaturedArticleView | null {
-  if (!isExploreFeaturedArticleSlug(slug)) return null;
   const entry = bundle.articles.find((item) => item.slug === slug);
   if (!entry) return null;
   const block = localizeBlock(entry[sourceLocale(locale)], locale);
-  return { slug, ...block };
+  return { slug: entry.slug as ExploreFeaturedArticleSlug, ...block };
+}
+
+export function readExploreFeaturedArticleSlugs(): string[] {
+  return bundle.articles.map((entry) => entry.slug);
 }
 
 export function readExploreFeaturedArticleViews(locale: AppLocale): ExploreFeaturedArticleView[] {
-  return EXPLORE_FEATURED_ARTICLE_SLUGS.map((slug) => {
-    const entry = bundle.articles.find((item) => item.slug === slug);
-    if (!entry) return null;
-    const block = localizeBlock(entry[sourceLocale(locale)], locale);
-    return { slug, ...block };
-  }).filter((item): item is ExploreFeaturedArticleView => Boolean(item));
+  return bundle.articles
+    .map((entry) => readExploreFeaturedArticleView(entry.slug, locale))
+    .filter((item): item is ExploreFeaturedArticleView => Boolean(item));
 }
 
 export function exploreFeaturedArticleLabelForLocale(slug: string, locale: AppLocale): string | null {

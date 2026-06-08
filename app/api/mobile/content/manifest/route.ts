@@ -48,6 +48,14 @@ function buildItems(): ManifestItem[] {
       fallback: "bundled",
     },
     {
+      id: "explore-featured-articles",
+      kind: "api-json",
+      schemaVersion: 1,
+      url: "/api/mobile/explore/featured-articles",
+      ttlSec: 86400,
+      fallback: "bundled",
+    },
+    {
       id: "mobile-content-flags",
       kind: "api-json",
       schemaVersion: 1,

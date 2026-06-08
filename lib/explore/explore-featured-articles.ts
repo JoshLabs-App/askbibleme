@@ -23,6 +23,7 @@ export {
 
 export {
   exploreFeaturedArticleLabelForLocale,
+  readExploreFeaturedArticleSlugs,
   readExploreFeaturedArticleView,
   readExploreFeaturedArticleViews,
   type ExploreFeaturedArticleView,

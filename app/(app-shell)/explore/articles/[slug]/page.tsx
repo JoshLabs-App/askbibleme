@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { ExploreArticleContent } from "@/components/explore/ExploreArticleContent";
 import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import {
-  EXPLORE_FEATURED_ARTICLE_SLUGS,
   readExploreFeaturedArticleBySlug,
+  readExploreFeaturedArticleSlugs,
 } from "@/lib/explore/explore-featured-articles";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export function generateStaticParams() {
-  return EXPLORE_FEATURED_ARTICLE_SLUGS.map((slug) => ({ slug }));
+  return readExploreFeaturedArticleSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

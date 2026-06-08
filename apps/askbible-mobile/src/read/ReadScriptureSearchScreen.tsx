@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -20,7 +20,10 @@ import {
 } from "../bible/search-scripture-verses";
 import { SCRIPTURE_SEARCH_MIN_LEN } from "../bible/scripture-search";
 import { t } from "../i18n/site-copy";
-import { useReadBibleTypography } from "./ReadBibleTypographyContext";
+import { bundledBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { inferAppLocaleFromDevice } from "../i18n/config";
+import { resolveDefaultPrimaryTranslationId } from "./read-bible-translation-prefs";
+import { ReadBibleTypographyContext } from "./ReadBibleTypographyContext";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readTypography } from "./readTypography";
@@ -46,10 +49,30 @@ function renderHighlightedHitText(text: string, query: string) {
   ));
 }
 
+function useScriptureSearchTranslationPrefs(): {
+  primaryTranslationId: string;
+  translationCatalogReady: boolean;
+} {
+  const typography = useContext(ReadBibleTypographyContext);
+  return useMemo(() => {
+    if (typography) {
+      return {
+        primaryTranslationId: typography.primaryTranslationId,
+        translationCatalogReady: typography.translationCatalogReady,
+      };
+    }
+    const catalog = bundledBibleTranslationsCatalog();
+    return {
+      primaryTranslationId: resolveDefaultPrimaryTranslationId(catalog, inferAppLocaleFromDevice()),
+      translationCatalogReady: true,
+    };
+  }, [typography]);
+}
+
 export function ReadScriptureSearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { primaryTranslationId, translationCatalogReady } = useReadBibleTypography();
+  const { primaryTranslationId, translationCatalogReady } = useScriptureSearchTranslationPrefs();
   const [scope, setScope] = useState<ScriptureSearchScope>("all");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScriptureSearchHit[]>([]);
@@ -171,7 +194,11 @@ export function ReadScriptureSearchScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={insets.top}
     >
-      <ReadParchmentPageScroll keyboardShouldPersistTaps="handled">
+      <ReadParchmentPageScroll
+        inset="sub"
+        keyboardShouldPersistTaps="handled"
+        maskEnabled={Platform.OS !== "android"}
+      >
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
           <Text style={styles.backText}>{t("pages.read.catalogBack")}</Text>
         </Pressable>
@@ -206,7 +233,7 @@ export function ReadScriptureSearchScreen() {
           autoCorrect={false}
           autoCapitalize="none"
           returnKeyType="search"
-          clearButtonMode="while-editing"
+          {...(Platform.OS === "ios" ? { clearButtonMode: "while-editing" as const } : {})}
           accessibilityLabel={t("pages.read.scriptureSearchPlaceholder")}
         />
 

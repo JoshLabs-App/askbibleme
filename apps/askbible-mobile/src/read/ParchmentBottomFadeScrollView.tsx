@@ -26,6 +26,8 @@ function nativeMaskedViewAvailable(): boolean {
 type Props = ScrollViewProps & {
   /** auto：按路由自动判定；prose：探索长文；tabbar：更重；default：更轻 */
   fadePreset?: ReadParchmentFadePreset | "auto";
+  /** Android 上 MaskedView + TextInput 可能触发原生崩溃，搜索等输入页可关闭 */
+  maskEnabled?: boolean;
 };
 
 function normalizePath(pathname: string): string {
@@ -46,12 +48,12 @@ function isShellTabRoute(pathname: string): boolean {
  */
 export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
   function ParchmentBottomFadeScrollView(
-    { style, children, contentContainerStyle, fadePreset = "auto", ...rest },
+    { style, children, contentContainerStyle, fadePreset = "auto", maskEnabled = true, ...rest },
     ref,
   ) {
     const pathname = usePathname();
     const [viewportHeight, setViewportHeight] = useState(0);
-    const canMask = nativeMaskedViewAvailable();
+    const canMask = maskEnabled && nativeMaskedViewAvailable();
     const MaskedView = useMemo(
       () =>
         canMask

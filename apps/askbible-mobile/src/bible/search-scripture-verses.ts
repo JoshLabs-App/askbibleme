@@ -34,7 +34,7 @@ export async function searchScriptureVersesMobile(
   const tid = String(translationId || "").trim();
   if (!tid) return [];
   if (!(await isScriptureTranslationInstalled(tid))) {
-    throw new Error(`译本未下载：${tid}`);
+    return [];
   }
 
   const q = normalizeScriptureSearchQuery(query);

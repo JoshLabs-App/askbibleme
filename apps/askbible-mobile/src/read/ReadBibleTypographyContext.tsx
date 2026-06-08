@@ -84,7 +84,7 @@ type ReadBibleTypographyContextValue = {
   setAudioTranslationId: (id: string | null) => Promise<void>;
 };
 
-const ReadBibleTypographyContext = createContext<ReadBibleTypographyContextValue | null>(null);
+export const ReadBibleTypographyContext = createContext<ReadBibleTypographyContextValue | null>(null);
 
 export function ReadBibleTypographyProvider({ children }: { children: ReactNode }) {
   const [typography, setTypography] = useState<ReadBibleTypographyPrefsV1>(

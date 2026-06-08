@@ -77,6 +77,7 @@ import { readingIncludesChapter } from "./reading-plan/today-reading-done";
 import { loadTodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
 import { readEffectiveReadingPlanPrefs } from "./reading-plan/reading-plan-prefs";
 import { jumpReadChapter, navigateReadChapter, type ReadChapterNavDirection } from "./read-chapter-nav";
+import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
 import { trackTelemetry } from "../telemetry/client";
 import { writeLastReadPosition } from "./read-last-position";
 import {
@@ -1551,7 +1552,7 @@ export function ReadChapterScreen() {
           ]}
         >
           <Pressable
-            onPress={() => router.push("/read/search")}
+            onPress={() => router.push(readScriptureSearchRoute())}
             disabled={verseSelectionMode}
             style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
             accessibilityRole="button"

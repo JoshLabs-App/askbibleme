@@ -1,10 +1,10 @@
 import type { AppLocale } from "../i18n/config";
 import {
-  getActiveExploreFeaturedArticlesBundle,
   getExploreFeaturedArticleView,
   listExploreFeaturedArticleViews,
   type ExploreFeaturedArticle,
 } from "./exploreFeaturedArticlesBundleCore";
+import { getActiveExploreFeaturedArticlesBundle } from "./fetchExploreFeaturedArticles";
 
 export type { ExploreFeaturedArticle } from "./exploreFeaturedArticlesBundleCore";
 

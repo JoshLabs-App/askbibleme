@@ -23,6 +23,7 @@ export type ReadParchmentPageInset = "home" | "sub";
 type Props = ScrollViewProps & {
   /** `home`：圣经首页、搜索等；`sub`：带返回的次级列表 */
   inset?: ReadParchmentPageInset;
+  maskEnabled?: boolean;
 };
 
 /**
@@ -30,7 +31,7 @@ type Props = ScrollViewProps & {
  */
 export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
   function ReadParchmentPageScroll(
-    { contentContainerStyle, inset = "home", style, ...rest },
+    { contentContainerStyle, inset = "home", maskEnabled, style, ...rest },
     ref,
   ) {
     const insets = useSafeAreaInsets();
@@ -44,6 +45,7 @@ export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
     return (
       <ParchmentBottomFadeScrollView
         ref={ref}
+        maskEnabled={maskEnabled}
         style={[styles.flex, style]}
         contentContainerStyle={[
           styles.content,

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppLocale } from "../i18n/config";
 import {
-  getActiveExploreFeaturedArticlesBundle,
   listExploreFeaturedArticleViews,
   type ExploreFeaturedArticle,
 } from "./exploreFeaturedArticlesBundleCore";
 import {
   forceRefreshExploreFeaturedArticles,
+  getActiveExploreFeaturedArticlesBundle,
   hydrateExploreFeaturedArticlesFromDisk,
   refreshExploreFeaturedArticlesInBackground,
   subscribeExploreFeaturedArticlesBundle,

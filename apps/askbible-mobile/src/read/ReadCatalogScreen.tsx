@@ -27,6 +27,7 @@ import {
 } from "../bible/types";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { readLastReadPosition, type ReadLastPosition } from "./read-last-position";
+import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
 import { ReadTodayPlanFooter, ReadTodayPlanReadings } from "./ReadTodayPlanPanel";
 import { useTodayReadingPlan } from "./useTodayReadingPlan";
 import { getLocalReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
@@ -235,7 +236,7 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
       {homeMode ? (
         <View style={[styles.topActions, { top: insets.top + 50, right: Math.max(insets.right, 8) }]}>
           <Pressable
-            onPress={() => router.push("/read/search")}
+            onPress={() => router.push(readScriptureSearchRoute())}
             style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
             accessibilityRole="button"
             accessibilityLabel={t("pages.read.chapterChromeSearch")}

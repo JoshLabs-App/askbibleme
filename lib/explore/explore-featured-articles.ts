@@ -5,6 +5,7 @@ import {
 } from "@/lib/explore/explore-featured-article-slugs";
 import {
   exploreFeaturedArticleLabelForLocale,
+  readExploreFeaturedArticleSlugs,
   readExploreFeaturedArticleView,
   readExploreFeaturedArticleViews,
   type ExploreFeaturedArticleView,

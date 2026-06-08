@@ -20,6 +20,7 @@ export default function ExploreStackLayout() {
         <Stack.Screen name="narrow-gate/index" />
         <Stack.Screen name="praise-worship/index" />
         <Stack.Screen name="prayer/index" />
+        <Stack.Screen name="articles/[slug]/index" />
       </Stack>
     </ReadParchmentBackground>
   );

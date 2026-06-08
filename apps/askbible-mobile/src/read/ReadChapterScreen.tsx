@@ -22,8 +22,12 @@ import {
 } from "../bible/copy-scripture-verse-clipboard";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
 import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
-import { ensureScriptureTranslationReady } from "../bible/scripture-translation-download";
+import {
+  ensureScriptureTranslationReady,
+  ensureScriptureTranslationReadyWithFallback,
+} from "../bible/scripture-translation-download";
 import { loadBundledChapterSegments } from "../bible/bundled-chapter-segments";
+import { resolveChapterSegmentHeadingText } from "../bible/chapter-segment-display";
 import { loadChapterXrefs } from "../bible/load-chapter-xrefs";
 import type { ScriptureVerseXrefs } from "../bible/scripture-xref-types";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
@@ -344,37 +348,17 @@ export function ReadChapterScreen() {
         translations: translationCatalog,
         defaultTranslationId: null as string | null,
       };
-      await ensureScriptureTranslationReady(
+      const readyPrimaryId = await ensureScriptureTranslationReadyWithFallback(
         primaryTranslationId,
         translationMetaFromCatalog(catalogIndex, primaryTranslationId)?.downloadUrl,
       );
-      for (const meta of contrastMetas) {
-        await ensureScriptureTranslationReady(
-          meta.id,
-          translationMetaFromCatalog(catalogIndex, meta.id)?.downloadUrl,
-        );
-      }
 
       const loaded = await loadChapterFromBundledTranslation(
         bookId,
         chapter,
-        primaryTranslationId,
+        readyPrimaryId,
         primaryLabels,
       );
-
-      const [contrastResults, xrefsResult] = await Promise.allSettled([
-        Promise.allSettled(
-          contrastMetas.map((meta) =>
-            loadChapterFromBundledTranslation(
-              bookId,
-              chapter,
-              meta.id,
-              { labelZh: meta.labelZh, labelEn: meta.labelEn },
-            ),
-          ),
-        ),
-        loadChapterXrefs(bookId, chapter),
-      ]);
 
       if (!loaded) {
         setChapterData(null);
@@ -383,11 +367,40 @@ export function ReadChapterScreen() {
       }
       setChapterData(loaded);
       setChapterSegments(loadBundledChapterSegments(loaded.bookId, loaded.chapter, chapterSegmentMode));
-      setChapterXrefs(xrefsResult.status === "fulfilled" ? xrefsResult.value : null);
       void recordTodayReadingChapterFraction(loaded.bookId, loaded.chapter, 0.1);
+      void writeLastReadPosition({
+        bookId: loaded.bookId,
+        chapter: loaded.chapter,
+        bookName: loaded.bookName,
+      });
 
-      const contrastSettledRows = contrastResults.status === "fulfilled" ? contrastResults.value : [];
-      if (contrastSettledRows.length > 0) {
+      // 对照译本与交叉引用不阻塞首屏经文。
+      void (async () => {
+        const [contrastResults, xrefsResult] = await Promise.allSettled([
+          Promise.allSettled(
+            contrastMetas.map(async (meta) => {
+              try {
+                await ensureScriptureTranslationReady(
+                  meta.id,
+                  translationMetaFromCatalog(catalogIndex, meta.id)?.downloadUrl,
+                );
+              } catch {
+                return null;
+              }
+              return loadChapterFromBundledTranslation(
+                bookId,
+                chapter,
+                meta.id,
+                { labelZh: meta.labelZh, labelEn: meta.labelEn },
+              );
+            }),
+          ),
+          loadChapterXrefs(bookId, chapter),
+        ]);
+        setChapterXrefs(xrefsResult.status === "fulfilled" ? xrefsResult.value : null);
+        const contrastSettledRows =
+          contrastResults.status === "fulfilled" ? contrastResults.value : [];
+        if (contrastSettledRows.length === 0) return;
         const map = new Map<number, ContrastVerseLine[]>();
         for (const row of contrastSettledRows) {
           if (row.status !== "fulfilled" || !row.value?.verses?.length) continue;
@@ -398,12 +411,7 @@ export function ReadChapterScreen() {
           }
         }
         setContrastByVerse(map.size ? map : null);
-      }
-      await writeLastReadPosition({
-        bookId: loaded.bookId,
-        chapter: loaded.chapter,
-        bookName: loaded.bookName,
-      });
+      })();
     } catch (e) {
       setChapterData(null);
       setError(e instanceof Error ? e.message : String(e));
@@ -492,12 +500,10 @@ export function ReadChapterScreen() {
   const segmentMeta = useMemo(() => {
     const headingByVerse = new Map<number, string[]>();
     const paragraphStarts = new Set<number>();
-    const headingDisplayLocale = readDisplayLocale;
     for (const row of chapterSegments ?? []) {
       if (!Number.isInteger(row.verseStart) || row.verseStart == null) continue;
       if (row.type === "heading") {
-        const raw = headingDisplayLocale === "en" ? row.title : row.titleZh || row.title;
-        const text = (headingDisplayLocale === "zh-TW" ? localeZhText(raw ?? "") : raw)?.trim();
+        const text = resolveChapterSegmentHeadingText(row, locale, localeZhText);
         if (text) {
           const bucket = headingByVerse.get(row.verseStart) ?? [];
           bucket.push(text);
@@ -509,7 +515,7 @@ export function ReadChapterScreen() {
       }
     }
     return { headingByVerse, paragraphStarts };
-  }, [chapterSegments, readDisplayLocale, localeZhText]);
+  }, [chapterSegments, locale, localeZhText]);
   const useParagraphFlowLayout = verseParagraphFlow && contrastTranslationIds.length === 0;
   const activeHighlightMap = highlightModeActive
     ? (highlightDraftMap ?? highlightedVerseIndexes)
@@ -1092,6 +1098,10 @@ export function ReadChapterScreen() {
                           });
                           const audioActive =
                             !searchFocus && !bookmarked && verseIndex >= 0 && activeVerseIndex === verseIndex;
+                          const verseAudioChunkKey =
+                            Platform.OS === "android"
+                              ? `pv:${v.verse}:audio:${audioActive ? "on" : "off"}`
+                              : `pv:${v.verse}`;
                           const suppressVerseMarker = selected || searchFocus || audioActive;
                           const verseHighlight = suppressVerseMarker
                             ? undefined
@@ -1111,7 +1121,7 @@ export function ReadChapterScreen() {
                           const hasXref = Boolean(xrefBundle);
                           return (
                             <Text
-                              key={`pv:${v.verse}`}
+                              key={verseAudioChunkKey}
                               onPress={
                                 highlightModeActive
                                   ? undefined
@@ -1132,7 +1142,9 @@ export function ReadChapterScreen() {
                                 styles.verseInlineChunk,
                                 selected && styles.verseInlineChunkSelected,
                                 searchFocus && styles.verseInlineChunkSearchFocus,
-                                audioActive && styles.verseInlineChunkAudioActive,
+                                audioActive
+                                  ? styles.verseInlineChunkAudioActive
+                                  : styles.verseInlineChunkAudioIdle,
                               ]}
                             >
                               <Text
@@ -1224,6 +1236,10 @@ export function ReadChapterScreen() {
                   verse: v.verse,
                 });
                 const audioActive = !searchFocus && !bookmarked && activeVerseIndex === i;
+                const verseBlockKey =
+                  Platform.OS === "android"
+                    ? `v:${v.verse}:audio:${audioActive ? "on" : "off"}`
+                    : `${v.verse}`;
                 const suppressVerseMarker = selectedVerses.includes(v.verse) || searchFocus || audioActive;
                 const verseHighlight = suppressVerseMarker
                   ? undefined
@@ -1242,7 +1258,7 @@ export function ReadChapterScreen() {
                 const xrefBundle = xrefsByVerse?.get(v.verse);
                 const hasXref = Boolean(xrefBundle);
                 return (
-                  <Fragment key={v.verse}>
+                  <Fragment key={verseBlockKey}>
                     {showParagraphBreak ? (
                       showParagraphRule ? (
                         <View style={styles.segmentParagraphBreakWithRule}>
@@ -1297,7 +1313,7 @@ export function ReadChapterScreen() {
                           nextHasParagraphBreak && styles.verseBlockBeforeSegmentBreak,
                           selectedVerses.includes(v.verse) && styles.verseBlockSelected,
                           searchFocus && styles.verseLineSearchFocus,
-                          audioActive && styles.verseLineActive,
+                          audioActive ? styles.verseLineActive : styles.verseLineIdle,
                         ]}
                       >
                         <Text
@@ -1836,6 +1852,9 @@ const styles = StyleSheet.create({
   verseInlineChunkAudioActive: {
     backgroundColor: "#FFB103",
   },
+  verseInlineChunkAudioIdle: {
+    backgroundColor: "transparent",
+  },
   versePrimaryLine: {
     ...parchmentSans(500),
     color: readTypography.verseColor,
@@ -1874,6 +1893,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
+  },
+  verseLineIdle: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: "transparent",
+    marginHorizontal: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 0,
   },
   verseLineSearchFocus: {
     backgroundColor: "#FFB103",

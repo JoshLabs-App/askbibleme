@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
+# EAS 云端 Android 构建（备用）。默认请用本机：npm run mobile:build:android:production
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+echo "提示：默认已改为本机 Gradle 构建。云端 EAS 仅作备用。"
+echo "本机 AAB：npm run mobile:build:android:production"
+echo ""
 
 if ! npx eas whoami >/dev/null 2>&1; then
   echo ""
@@ -22,34 +27,15 @@ MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a7xcip5q \
 npm run mobile:sync-offline-media
 
 echo "→ 离线媒体体积审计…"
-du -sh apps/askbible-mobile/assets/nature/videos apps/askbible-mobile/assets/music/tracks apps/askbible-mobile/assets/audio 2>/dev/null || true
-node - <<'NODE'
-const fs = require("node:fs");
-const path = require("node:path");
-const root = path.join(process.cwd(), "apps/askbible-mobile/assets");
-function dirBytes(p) {
-  if (!fs.existsSync(p)) return 0;
-  let n = 0;
-  for (const f of fs.readdirSync(p)) {
-    const fp = path.join(p, f);
-    const st = fs.statSync(fp);
-    n += st.isDirectory() ? dirBytes(fp) : st.size;
-  }
-  return n;
-}
-const musicTracks = dirBytes(path.join(root, "music/tracks"));
-const mb = (n) => (n / (1024 * 1024)).toFixed(1);
-console.log(`bundled music tracks: ${mb(musicTracks)} MB (${fs.existsSync(path.join(root,"music/tracks")) ? fs.readdirSync(path.join(root,"music/tracks")).length : 0} file(s))`);
-if (musicTracks > 80 * 1024 * 1024) {
-  console.error("ERROR: bundled music exceeds 80MB — check MOBILE_BUNDLE_MUSIC_LIMIT before building.");
-  process.exit(1);
-}
-NODE
+npm run mobile:audit:bundle-size
+
+echo "→ 校验 EAS 归档是否包含 mp3/mp4/sqlite…"
+EAS_ARCHIVE_PLATFORM=android node scripts/verify-eas-archive-assets.mjs
 
 cd apps/askbible-mobile
 
 echo "→ 提交 EAS Android production 构建（AAB）…"
-EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=0 \
+EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=1 \
 EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=0 \
 EXPO_PUBLIC_MEMBER_REGISTER_ENABLED=1 \
 EXPO_PUBLIC_ASKBIBLE_BASE_URL="https://askbible.me" \

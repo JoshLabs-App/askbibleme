@@ -29,6 +29,7 @@ import { ReadVerseBookmarkFeedback } from "@/components/bible/ReadVerseBookmarkF
 import { useScriptureVerseBookmarks } from "@/components/bible/useScriptureVerseBookmarks";
 import { formatScriptureVerseClipboard } from "@/lib/bible/format-scripture-verse-clipboard";
 import { useReadBibleTranslationSettings, useReadBibleTypography } from "@/components/bible/ReadBibleTypographyProvider";
+import { resolveChapterSegmentHeadingText } from "@/lib/bible/chapter-segment-display";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import type { AppLocale } from "@/lib/i18n/config";
 import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
@@ -355,12 +356,10 @@ export function ReadChapterVersesClient({
   const segmentMeta = useMemo(() => {
     const headingByVerse = new Map<number, string[]>();
     const paragraphStarts = new Set<number>();
-    const headingLocale: AppLocale = locale;
     for (const row of resolvedSegments ?? []) {
       if (!Number.isInteger(row.verseStart) || row.verseStart == null) continue;
       if (row.type === "heading") {
-        const raw = headingLocale === "en" ? row.title : row.titleZh || row.title;
-        const text = (headingLocale === "zh-TW" ? toZhTwText(raw ?? "") : raw)?.trim();
+        const text = resolveChapterSegmentHeadingText(row, locale, toZhTwText);
         if (text) {
           const bucket = headingByVerse.get(row.verseStart) ?? [];
           bucket.push(text);

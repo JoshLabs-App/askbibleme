@@ -1,94 +1,78 @@
-# Root-level EAS archive excludes (monorepo)
+# EAS 归档：排除 monorepo Web/数据/媒体真源；仅保留 apps/askbible-mobile 进包。
+# 勿使用 `*` 全忽略（会导致上传空包）。
 
-# VCS / cache
 .git
 .git/
-.git/**
 **/.git/
-**/.git/**
 .cursor/
 node_modules/
 **/node_modules/
-**/node_modules/**
 .next/
 coverage/
-build/
 out/
-
-# Large generated artifacts in repo root
 dist/
 
-# Monorepo: exclude non-mobile app packages
+# 非 Mobile 包（路径锚定仓库根 — 勿写 app/，会误伤 apps/askbible-mobile/app/ Expo Router）
 apps/askbible-tv-webos/
+/app/
+/app/**
+/components/
+/components/**
+/hooks/
+/hooks/**
+/lib/
+/lib/**
+/locales/
+/locales/**
+/scripts/
+/scripts/**
+/docs/
+/docs/**
+/studio/
+/studio/**
+/supabase/
+/supabase/**
+/types/
+/types/**
+/middleware.ts
+/next.config.mjs
+/next-env.d.ts
+/postcss.config.mjs
+/tailwind.config.ts
+/tsconfig.json
+/tsconfig.tsbuildinfo
+/render.yaml
+/ship.command
+/AGENTS.md
+/package.json
+/package-lock.json
 
-# Web/runtime content not needed for Expo mobile build upload
-public/
-data/
-docs/
-studio/
-supabase/
-app/
-components/
-hooks/
-lib/
-locales/
-scripts/
-types/
-middleware.ts
-next.config.mjs
-next-env.d.ts
-postcss.config.mjs
-tailwind.config.ts
-tsconfig.json
-tsconfig.tsbuildinfo
-package.json
-package-lock.json
-!apps/askbible-mobile/package.json
-!apps/askbible-mobile/package-lock.json
-render.yaml
-ship.command
-AGENTS.md
+# 大体积 Web / 数据真源（圣经章朗读 mp3、全量 sqlite 等；锚定根目录 public/、data/）
+/public/
+/public/**
+/data/
+/data/**
 
-# Keep all mobile app sources in EAS archive
-!apps/askbible-mobile/**
-!data/
-!data/**
-!lib/
-!lib/**
-!hooks/
-!hooks/**
-!components/
-!components/**
-!types/
-!types/**
-!tsconfig.json
-
-# Source media libraries (not required in EAS archive)
-public/music/uploads/
-public/nature/uploads/
-public/nature/audio-uploads/
-public/golden-verses/bg-uploads/
-public/audio/
-data/bible/uploads/
-data/bible/sqlite/
-
-# TV experiments (exclude from mobile EAS builds)
-apps/askbible-tv-webos/
-app/(tv)/
-components/tv/
-lib/media/tv-client.ts
-lib/media/tv-shell-boot.ts
-scripts/sync-tv-content.mjs
-
-# Mobile app build artifacts / local deps
+# Mobile 依赖与本地构建缓存
 apps/askbible-mobile/node_modules/
 apps/askbible-mobile/node_modules/**
 apps/askbible-mobile/.expo/
 apps/askbible-mobile/.expo/**
 apps/askbible-mobile/dist/
 apps/askbible-mobile/dist/**
+apps/askbible-mobile/*.aab
+apps/askbible-mobile/build-*.aab
 apps/askbible-mobile/web-build/
 apps/askbible-mobile/web-build/**
+
+apps/askbible-mobile/ios/.xcode.env.local
+apps/askbible-mobile/ios/Pods/
+apps/askbible-mobile/ios/Pods/**
+apps/askbible-mobile/ios/build/
+apps/askbible-mobile/ios/build/**
+apps/askbible-mobile/ios/DerivedData/
+apps/askbible-mobile/ios/DerivedData/**
+
 apps/askbible-mobile/android/.gradle/
 apps/askbible-mobile/android/.gradle/**
 apps/askbible-mobile/android/build/
@@ -97,15 +81,59 @@ apps/askbible-mobile/android/app/build/
 apps/askbible-mobile/android/app/build/**
 apps/askbible-mobile/android/app/.cxx/
 apps/askbible-mobile/android/app/.cxx/**
-apps/askbible-mobile/ios/build/
-apps/askbible-mobile/ios/build/**
-apps/askbible-mobile/ios/Pods/
-apps/askbible-mobile/ios/Pods/**
-apps/askbible-mobile/**/build/
 apps/askbible-mobile/**/.gradle/
 apps/askbible-mobile/**/.cxx/
-# Logs / local env
+apps/askbible-mobile/**/build/
+
 *.log
 apps/askbible-mobile/.env
 apps/askbible-mobile/.env.*
 apps/askbible-mobile/.env*.local
+
+# --- EAS 云端 sync 所需真源（构建机上重新生成 assets，避免空壳 IPA）---
+!package.json
+!package-lock.json
+!scripts/
+!scripts/**
+scripts/whisper-env/
+scripts/whisper-env/**
+scripts/**/__pycache__/
+scripts/**/node_modules/
+tmp/
+tmp/**
+!locales/
+!locales/**
+!data/nature-settings.json
+!data/music-companion.json
+!data/bible/scripture_canon_catalog.json
+!data/bible/bible_book_history_eras.json
+!data/bible/info-edition-v1-published.json
+!data/bible/sqlite/
+!data/bible/sqlite/**
+!data/bible-reading-plans/
+!data/bible-reading-plans/**
+!data/admin/generation-roles.json
+!data/bible/teochew-nt-audio-manifest.json
+!public/read/
+!public/read/**
+!public/music/
+!public/music/**
+!public/nature/
+!public/nature/**
+!public/branding/
+!public/branding/**
+
+# Expo Router 路由（勿被 /app/ 规则误伤）
+!apps/askbible-mobile/app/
+!apps/askbible-mobile/app/**
+
+# --- 离线安装包媒体（sync 生成、.gitignore 排除；必须进 EAS 归档）---
+!apps/askbible-mobile/assets/music/tracks/**
+!apps/askbible-mobile/assets/music/analysis/**
+!apps/askbible-mobile/assets/nature/videos/**
+!apps/askbible-mobile/assets/nature/posters/**
+!apps/askbible-mobile/assets/scripture/**
+!apps/askbible-mobile/assets/content/**
+!apps/askbible-mobile/assets/audio/scenes/**
+!apps/askbible-mobile/assets/bible/**
+!apps/askbible-mobile/assets/images/**

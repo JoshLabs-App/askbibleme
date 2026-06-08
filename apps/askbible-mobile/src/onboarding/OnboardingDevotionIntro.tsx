@@ -1,7 +1,16 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { toZhTwText } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
@@ -20,6 +29,8 @@ type OnboardingDevotionIntroProps = {
 };
 
 export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroProps) {
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
   const { locale, setLocale } = useLocale();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const [step, setStep] = useState<1 | 2>(1);
@@ -78,87 +89,100 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
   return (
     <View style={styles.overlay}>
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <View style={styles.topBrandWrap}>
-          <View style={styles.topActions}>
-            <Pressable onPress={() => void handleSkip()} hitSlop={8}>
-              <Text style={styles.skipText}>{locale === "en" ? "Skip" : zhText("跳过")}</Text>
-            </Pressable>
-          </View>
-          <Text style={styles.brand}>AskBible.me</Text>
-          <View style={styles.brandLine} />
-          <Text style={styles.progress}>{progressText}</Text>
-          <View style={styles.progressDots}>
-            <View style={[styles.dot, styles.dotActive]} />
-            <View style={[styles.dot, step === 2 ? styles.dotActive : undefined]} />
-          </View>
-        </View>
-
-        <ScrollView style={styles.content} contentContainerStyle={styles.contentInner} showsVerticalScrollIndicator={false}>
-          {step === 1 ? (
-            <OnboardingNeedStep
-              locale={locale}
-              onLocaleChange={setLocale}
-              selectedNeeds={selectedNeeds}
-              onToggleNeed={toggleNeed}
-              options={companionNeedOptions}
-            />
-          ) : (
-            <OnboardingSolutionStep
-              locale={locale}
-              cards={solutionCards}
-            />
-          )}
-        </ScrollView>
-
-        <View style={styles.footer}>
-          {step === 2 ? (
-            <View style={styles.nicknameWrap}>
-              <Text style={styles.nicknameLabel}>
-                {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-              </Text>
-              <TextInput
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-                placeholderTextColor="rgba(77, 53, 34, 0.45)"
-                style={styles.nicknameInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="done"
-                maxLength={24}
-              />
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={insets.top}
+        >
+          <View style={styles.topBrandWrap}>
+            <View style={styles.topActions}>
+              <Pressable onPress={() => void handleSkip()} hitSlop={8}>
+                <Text style={styles.skipText}>{locale === "en" ? "Skip" : zhText("跳过")}</Text>
+              </Pressable>
             </View>
-          ) : null}
-          <Pressable
-            onPress={handlePrimaryButtonPress}
-            disabled={submitting || (isLastStep && !canOpenSpace)}
-            style={({ pressed }) => [
-              styles.primaryButtonWrap,
-              (isLastStep && !canOpenSpace) || submitting ? styles.primaryDisabled : undefined,
-              pressed ? styles.primaryPressed : undefined,
-            ]}
+            <Text style={styles.brand}>AskBible.me</Text>
+            <View style={styles.brandLine} />
+            <Text style={styles.progress}>{progressText}</Text>
+            <View style={styles.progressDots}>
+              <View style={[styles.dot, styles.dotActive]} />
+              <View style={[styles.dot, step === 2 ? styles.dotActive : undefined]} />
+            </View>
+          </View>
+
+          <ScrollView
+            ref={scrollRef}
+            style={styles.content}
+            contentContainerStyle={styles.contentInner}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           >
-            <LinearGradient
-              colors={[LOGO_YELLOW, LOGO_YELLOW]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.primaryButton}
-            >
-              <Text style={styles.primaryButtonText}>
-                {isLastStep
-                  ? locale === "en"
-                    ? "Open my space"
-                    : zhText("打开我的空间")
-                  : locale === "en"
-                    ? "Next"
-                    : zhText("下一步")}
-              </Text>
-            </LinearGradient>
-          </Pressable>
-        </View>
+            {step === 1 ? (
+              <OnboardingNeedStep
+                locale={locale}
+                onLocaleChange={setLocale}
+                selectedNeeds={selectedNeeds}
+                onToggleNeed={toggleNeed}
+                options={companionNeedOptions}
+              />
+            ) : (
+              <OnboardingSolutionStep locale={locale} cards={solutionCards} />
+            )}
+
+            <View style={styles.footer}>
+              {step === 2 ? (
+                <View style={styles.nicknameWrap}>
+                  <Text style={styles.nicknameLabel}>
+                    {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
+                  </Text>
+                  <TextInput
+                    value={nickname}
+                    onChangeText={setNickname}
+                    placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
+                    placeholderTextColor="rgba(77, 53, 34, 0.45)"
+                    style={styles.nicknameInput}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    maxLength={24}
+                    onFocus={() => {
+                      requestAnimationFrame(() => {
+                        scrollRef.current?.scrollToEnd({ animated: true });
+                      });
+                    }}
+                  />
+                </View>
+              ) : null}
+              <Pressable
+                onPress={handlePrimaryButtonPress}
+                disabled={submitting || (isLastStep && !canOpenSpace)}
+                style={({ pressed }) => [
+                  styles.primaryButtonWrap,
+                  (isLastStep && !canOpenSpace) || submitting ? styles.primaryDisabled : undefined,
+                  pressed ? styles.primaryPressed : undefined,
+                ]}
+              >
+                <LinearGradient
+                  colors={[LOGO_YELLOW, LOGO_YELLOW]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.primaryButton}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    {isLastStep
+                      ? locale === "en"
+                        ? "Open my space"
+                        : zhText("打开我的空间")
+                      : locale === "en"
+                        ? "Next"
+                        : zhText("下一步")}
+                  </Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
-      <View style={styles.bottomDecorationLeft} />
-      <View style={styles.bottomDecorationRight} />
     </View>
   );
 }
@@ -169,6 +193,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#efe1c8",
   },
   safeArea: {
+    flex: 1,
+  },
+  keyboardAvoid: {
     flex: 1,
   },
   topBrandWrap: {
@@ -226,11 +253,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   contentInner: {
+    flexGrow: 1,
     paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingBottom: 28,
   },
   footer: {
-    paddingHorizontal: 20,
+    marginTop: 8,
     paddingTop: 8,
     paddingBottom: 6,
   },
@@ -277,23 +305,5 @@ const styles = StyleSheet.create({
   },
   primaryPressed: {
     transform: [{ scale: 0.99 }],
-  },
-  bottomDecorationLeft: {
-    position: "absolute",
-    left: -44,
-    bottom: -36,
-    width: 148,
-    height: 148,
-    borderRadius: 999,
-    backgroundColor: "rgba(147, 111, 70, 0.09)",
-  },
-  bottomDecorationRight: {
-    position: "absolute",
-    right: -52,
-    bottom: -56,
-    width: 180,
-    height: 180,
-    borderRadius: 999,
-    backgroundColor: "rgba(255, 177, 1, 0.1)",
   },
 });

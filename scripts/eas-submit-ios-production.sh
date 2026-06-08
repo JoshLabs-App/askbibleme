@@ -31,3 +31,7 @@ cd apps/askbible-mobile
 
 echo "→ 提交最新 iOS production 构建到 App Store Connect…"
 npx eas submit --profile production --platform ios --latest --non-interactive "$@"
+
+echo ""
+echo "→ 挂到已有 TestFlight 外部测试组（无需重新添加测试员）…"
+node "$ROOT/scripts/ios-testflight-distribute-latest.mjs"

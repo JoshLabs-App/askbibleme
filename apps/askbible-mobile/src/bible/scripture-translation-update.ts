@@ -1,6 +1,6 @@
-import * as FileSystem from "expo-file-system/legacy";
 import { fetchBibleTranslationsCatalogFresh } from "../api/fetchBibleTranslationsCatalog";
-import type { BibleTranslationMeta } from "./translations-types";
+import type { BibleTranslationMeta, BibleTranslationsIndex } from "./translations-types";
+import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
 import { getLocalScriptureTranslationByteSize } from "./scripture-database";
 import {
   downloadScriptureTranslation,
@@ -10,6 +10,28 @@ import {
 } from "./scripture-translation-download";
 
 export type ScriptureTranslationUpdateReason = "missing" | "outdated";
+
+export type ScriptureTranslationInstallStatus = "bundled" | "installed" | "missing" | "outdated";
+
+export async function resolveScriptureTranslationInstallStatus(
+  tr: BibleTranslationMeta,
+): Promise<ScriptureTranslationInstallStatus> {
+  const serverBytes = typeof tr.bytes === "number" && tr.bytes > 0 ? tr.bytes : 0;
+  const localBytes = await getLocalScriptureTranslationByteSize(tr.id);
+  if (serverBytes > 0 && localBytes > 0 && localBytes !== serverBytes) return "outdated";
+  if (localBytes <= 0) return "missing";
+  if (tr.bundled || isBundledScriptureTranslation(tr.id)) return "bundled";
+  return "installed";
+}
+
+export async function listScriptureTranslationInstallStates(
+  catalog: BibleTranslationsIndex,
+): Promise<Record<string, ScriptureTranslationInstallStatus>> {
+  const entries = await Promise.all(
+    catalog.translations.map(async (tr) => [tr.id, await resolveScriptureTranslationInstallStatus(tr)] as const),
+  );
+  return Object.fromEntries(entries);
+}
 
 export type ScriptureTranslationUpdateItem = {
   translationId: string;

@@ -9,7 +9,7 @@ import {
 } from "react";
 import { loginMobileMember, registerMobileMember } from "../api/memberAuth";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
+import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { hydrateMemberRegisterEnabled } from "./member-register-enabled";
 import {
@@ -107,33 +107,13 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (input: { email: string; password: string }) => {
-    if (isMobileOfflineFirst()) {
+    if (isMobileBundledOnly()) {
       return { ok: false as const, error: "network" };
     }
-    const result = await loginMobileMember(input);
-    if (!result.ok) {
-      return { ok: false as const, error: result.error };
-    }
-    await persistSession({
-      sessionToken: result.sessionToken,
-      expiresAt: result.expiresAt,
-      user: result.user,
-    });
-    setUser(result.user);
-    return { ok: true as const };
-  }, []);
-
-  const completeRegistration = useCallback(
-    async (input: { email: string; password: string; name?: string; locale?: string }) => {
-      if (isMobileOfflineFirst()) {
-        return { ok: false as const, error: "network" };
-      }
-      const result = await registerMobileMember(input);
+    try {
+      const result = await loginMobileMember(input);
       if (!result.ok) {
         return { ok: false as const, error: result.error };
-      }
-      if (!result.sessionToken || !result.expiresAt) {
-        return { ok: false as const, error: "invalid_response" };
       }
       await persistSession({
         sessionToken: result.sessionToken,
@@ -142,6 +122,34 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
       });
       setUser(result.user);
       return { ok: true as const };
+    } catch {
+      return { ok: false as const, error: "network" };
+    }
+  }, []);
+
+  const completeRegistration = useCallback(
+    async (input: { email: string; password: string; name?: string; locale?: string }) => {
+      if (isMobileBundledOnly()) {
+        return { ok: false as const, error: "network" };
+      }
+      try {
+        const result = await registerMobileMember(input);
+        if (!result.ok) {
+          return { ok: false as const, error: result.error };
+        }
+        if (!result.sessionToken || !result.expiresAt) {
+          return { ok: false as const, error: "invalid_response" };
+        }
+        await persistSession({
+          sessionToken: result.sessionToken,
+          expiresAt: result.expiresAt,
+          user: result.user,
+        });
+        setUser(result.user);
+        return { ok: true as const };
+      } catch {
+        return { ok: false as const, error: "network" };
+      }
     },
     [],
   );

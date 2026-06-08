@@ -204,20 +204,18 @@ async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void>
     await FileSystem.deleteAsync(legacyDest, { idempotent: true });
     await FileSystem.deleteAsync(schemaVersionPath(legacyDest), { idempotent: true });
   }
-  const [info, bundledSize, remoteBytes] = await Promise.all([
+  const [info, remoteBytes] = await Promise.all([
     FileSystem.getInfoAsync(dest),
-    bundledAssetByteSize(assetModule),
     readRemoteBytesMarker(dest),
   ]);
   const installedVer = info.exists ? await readInstalledSchemaVersion(dest) : null;
   const destSize = info.exists && typeof info.size === "number" ? info.size : 0;
+  // 内置译本：schema + 非空文件即视为就绪，避免每次 Asset.downloadAsync 探测体积。
   const upToDate =
     info.exists &&
     installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION &&
-    destSize > 0 &&
-    (remoteBytes != null
-      ? destSize === remoteBytes
-      : bundledSize > 0 && destSize === bundledSize);
+    destSize >= 512 * 1024 &&
+    (remoteBytes == null || destSize === remoteBytes);
 
   if (upToDate) {
     return;

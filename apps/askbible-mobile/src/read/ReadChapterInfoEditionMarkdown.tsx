@@ -1,7 +1,11 @@
 import Markdown from "react-native-markdown-display";
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { normalizeInfoEditionCompareMarkdown } from "../bible/info-edition-format";
+import {
+  INFO_EDITION_KEY_SCENES_HEADING_PATTERNS,
+  normalizeInfoEditionCompareMarkdown,
+  stripInfoEditionSectionByHeading,
+} from "../bible/info-edition-format";
 import type { InfoEditionReaderVariant } from "../bible/info-edition-types";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
@@ -13,6 +17,7 @@ import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 type Props = {
   content: string;
   variant: InfoEditionReaderVariant;
+  onLinkPress?: (url: string) => boolean | void;
 };
 
 function splitPrimaryHeading(markdown: string): { heading: string | null; body: string } {
@@ -137,6 +142,11 @@ function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number
     blockquote_text: {
       color: "#8C562A",
     },
+    link: {
+      color: accent,
+      textDecorationLine: "underline",
+      textDecorationColor: "rgba(165, 106, 45, 0.45)",
+    },
     hr: {
       backgroundColor: "transparent",
       height: 0,
@@ -145,13 +155,15 @@ function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number
   });
 }
 
-export function ReadChapterInfoEditionMarkdown({ content, variant }: Props) {
+export function ReadChapterInfoEditionMarkdown({ content, variant, onLinkPress }: Props) {
   const { locale } = useLocale();
-  const trimmed = normalizeInfoEditionCompareMarkdown(content);
-  const localized = useMemo(
-    () => (locale === "zh-TW" ? toZhTwText(trimmed) : trimmed),
-    [locale, trimmed],
-  );
+  const localized = useMemo(() => {
+    let text = normalizeInfoEditionCompareMarkdown(content);
+    if (variant === "info") {
+      text = stripInfoEditionSectionByHeading(text, INFO_EDITION_KEY_SCENES_HEADING_PATTERNS);
+    }
+    return locale === "zh-TW" ? toZhTwText(text) : text;
+  }, [content, locale, variant]);
   const { heading, body } = useMemo(() => splitPrimaryHeading(localized), [localized]);
   const { px } = useReadBibleTypography();
   const textScale = useMemo(
@@ -168,7 +180,9 @@ export function ReadChapterInfoEditionMarkdown({ content, variant }: Props) {
           <Text style={markdownStyles.titleText}>{heading}</Text>
         </View>
       ) : null}
-      <Markdown style={markdownStyles}>{body || localized}</Markdown>
+      <Markdown style={markdownStyles} onLinkPress={onLinkPress}>
+        {body || localized}
+      </Markdown>
     </View>
   );
 }

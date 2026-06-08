@@ -24,7 +24,7 @@ function nativeMaskedViewAvailable(): boolean {
 }
 
 type Props = ScrollViewProps & {
-  /** auto：按路由自动判定；tabbar：更重；default：更轻 */
+  /** auto：按路由自动判定；prose：探索长文；tabbar：更重；default：更轻 */
   fadePreset?: ReadParchmentFadePreset | "auto";
 };
 

@@ -11,6 +11,8 @@ expo-env.d.ts
 
 # Native
 .kotlin/
+android/keystore.properties
+android/app/upload.keystore
 android/.gradle/
 android/build/
 android/app/build/
@@ -47,10 +49,19 @@ yarn-error.*
 assets/scripture/*.sqlite
 assets/content/*
 !assets/content/.gitkeep
+assets/bible/*
+!assets/bible/.gitkeep
 assets/audio/web-en/
 assets/audio/teochew-nt/
 assets/audio/*.mp3
 !assets/audio/today-plan-complete.mp3
+
+# 本地构建产物（勿进 EAS / Git）
+dist/
+*.aab
+build-*.aab
+*.ipa
+build-*.ipa
 
 # 原生目录已由 `expo prebuild` / `expo run:android` 生成并纳入版本管理，便于 CI 与协作。
 # 若改用「持续 prebuild」工作流，可再改回忽略 ios/、android/。

@@ -51,7 +51,9 @@ AskBible.me Studio — 双击启动（仅 macOS）
   npm run mobile:dev:android:device # 真机 Android（USB）
   npm run mobile:dev:iphone         # 真机 iPhone（USB）
   npm run mobile:install:apk:device # Android 正式包侧载（USB）
-  npm run mobile:build:apk:local    # 只打 APK 到 dist/mobile/
+  npm run mobile:build:apk:local    # 只打 APK 到 dist/mobile/（侧载）
+  npm run mobile:build:android:production  # 本机 Gradle 打 Play AAB
+  npm run mobile:release:android:internal  # 本机 AAB + 提交 Play 内部测试
   npm run mobile:build:ios:internal # EAS 云端打 iOS 内测包
 
 真机连本机 API 时：

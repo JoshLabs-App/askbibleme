@@ -1,0 +1,442 @@
+@import "../read/read-chapter-surfaces.css";
+
+/* 探索页：与 iOS `exploreParchmentStyles` + `ExploreScreen` 对齐 */
+.prayer-on-parchment .explore-parchment-root {
+  color: color-mix(in srgb, rgb(28 20 16) 94%, transparent);
+}
+
+.dark .prayer-on-parchment .explore-parchment-root {
+  color: color-mix(in srgb, rgb(244 235 225) 94%, transparent);
+}
+
+.prayer-on-parchment .explore-parchment-root [class*="border-ink"],
+.prayer-on-parchment .explore-parchment-root [class*="divide-ink"] {
+  border-color: var(--prayer-line) !important;
+}
+
+.prayer-on-parchment .explore-parchment-root [class*="bg-canvas"],
+.prayer-on-parchment .explore-parchment-root [class*="bg-border"] {
+  background-color: rgba(255, 252, 245, 0.55) !important;
+}
+
+.dark .prayer-on-parchment .explore-parchment-root [class*="bg-canvas"],
+.dark .prayer-on-parchment .explore-parchment-root [class*="bg-border"] {
+  background-color: color-mix(in srgb, rgb(28 20 16) 48%, transparent) !important;
+}
+
+.prayer-on-parchment .explore-parchment-root [class*="text-ink"] {
+  color: color-mix(in srgb, currentColor 78%, transparent);
+}
+
+.prayer-on-parchment .explore-parchment-root :is(h1, h2, h3) [class*="text-ink"],
+.prayer-on-parchment .explore-parchment-root :is(h1, h2, h3)[class*="text-ink"] {
+  color: color-mix(in srgb, currentColor 94%, transparent);
+}
+
+.prayer-on-parchment .explore-parchment-root .text-muted {
+  color: color-mix(in srgb, currentColor 52%, transparent);
+}
+
+.prayer-on-parchment .explore-parchment-root [class*="decoration-ink"] {
+  text-decoration-color: var(--prayer-line-emphasis) !important;
+}
+
+.prayer-on-parchment .explore-home {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 448px;
+  margin-inline: auto;
+  flex: 1;
+  padding-inline: 22px;
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.prayer-on-parchment .explore-home-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 35px;
+  text-align: center;
+  color: inherit;
+}
+
+.prayer-on-parchment .explore-home-rule {
+  margin: 18px auto 0;
+  height: 1px;
+  width: 48px;
+  background: rgba(120, 53, 15, 0.28);
+}
+
+.dark .prayer-on-parchment .explore-home-rule {
+  background: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+}
+
+.prayer-on-parchment .explore-home-lead {
+  margin: 18px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  text-align: center;
+  color: #5c4030;
+}
+
+.dark .prayer-on-parchment .explore-home-lead {
+  color: color-mix(in srgb, rgb(244 235 225) 66%, transparent);
+}
+
+.prayer-on-parchment .explore-page-section {
+  margin-top: 36px;
+  padding-top: 8px;
+}
+
+.prayer-on-parchment .explore-section-label {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .explore-section-label {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}
+
+.prayer-on-parchment .explore-articles-heading {
+  margin-top: 28px;
+}
+
+.prayer-on-parchment .explore-section-divider {
+  margin: 18px 0 10px;
+  height: 1px;
+  background: rgba(120, 53, 15, 0.28);
+  opacity: 0.8;
+}
+
+.dark .prayer-on-parchment .explore-section-divider {
+  background: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+}
+
+.prayer-on-parchment .explore-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+.prayer-on-parchment .explore-icon-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 160ms ease;
+}
+
+.prayer-on-parchment .explore-icon-tile:hover {
+  opacity: 0.88;
+}
+
+.prayer-on-parchment .explore-icon-circle {
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 53, 15, 0.28);
+  background: rgba(255, 252, 245, 0.55);
+  color: #1c1410;
+}
+
+.dark .prayer-on-parchment .explore-icon-circle {
+  border-color: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+  background: color-mix(in srgb, rgb(28 20 16) 48%, transparent);
+  color: inherit;
+}
+
+.prayer-on-parchment .explore-icon-label {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+  text-align: center;
+  color: inherit;
+}
+
+.prayer-on-parchment .explore-articles-card {
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 53, 15, 0.28);
+  background: rgba(255, 252, 245, 0.55);
+}
+
+.dark .prayer-on-parchment .explore-articles-card {
+  border-color: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+  background: color-mix(in srgb, rgb(28 20 16) 48%, transparent);
+}
+
+.prayer-on-parchment .explore-articles-row {
+  display: block;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    opacity 160ms ease,
+    background 160ms ease;
+}
+
+.prayer-on-parchment .explore-articles-row--bordered {
+  border-top: 1px solid rgba(120, 53, 15, 0.28);
+}
+
+.dark .prayer-on-parchment .explore-articles-row--bordered {
+  border-top-color: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+}
+
+.prayer-on-parchment .explore-articles-row:hover {
+  opacity: 0.88;
+  background: rgba(255, 252, 245, 0.82);
+}
+
+.prayer-on-parchment .explore-articles-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  color: inherit;
+}
+
+.prayer-on-parchment .explore-articles-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .explore-articles-meta {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}
+
+/* ── 探索长文页（文章 / 专题）：实色墨色、清晰层次，避免与羊皮底色糊在一起 ── */
+.prayer-on-parchment .explore-prose-page {
+  color: #1c1410;
+}
+
+.dark .prayer-on-parchment .explore-prose-page {
+  color: #f4ebe1;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-back {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5c4030;
+  text-decoration-color: rgba(120, 53, 15, 0.38);
+  text-underline-offset: 0.2em;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-back {
+  color: color-mix(in srgb, rgb(244 235 225) 72%, transparent);
+  text-decoration-color: color-mix(in srgb, rgb(244 235 225) 28%, transparent);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-header {
+  margin-top: 1rem;
+  padding-bottom: 1.35rem;
+  border-bottom: 1px solid rgba(120, 53, 15, 0.22);
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-header {
+  border-bottom-color: color-mix(in srgb, rgb(244 235 225) 18%, transparent);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-title {
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  font-size: clamp(1.45rem, 4vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: 0.01em;
+  color: #1c1410;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-title {
+  color: #f4ebe1;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-subtitle {
+  margin-top: 0.75rem;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 500;
+  color: #5c4030;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-subtitle {
+  color: color-mix(in srgb, rgb(244 235 225) 74%, transparent);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-body {
+  margin-top: 2rem;
+}
+
+/* 取消 explore 根节点对长文页的二次透明稀释 */
+.prayer-on-parchment .explore-prose-page [class*="text-ink"] {
+  color: inherit;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-h1 {
+  margin: 0 0 1rem;
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: #1c1410;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-h2 {
+  margin: 2rem 0 0.85rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(165, 106, 45, 0.32);
+  font-family: var(--font-serif, ui-serif, Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #1c1410;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #2a1810;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-h4 {
+  margin: 1rem 0 0.35rem;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b4428;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-p,
+.prayer-on-parchment .explore-prose-page .explore-prose-li {
+  font-size: 16px;
+  line-height: 1.78;
+  color: rgba(28, 20, 16, 0.94);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-p {
+  margin: 0 0 1.1rem;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-ul,
+.prayer-on-parchment .explore-prose-page .explore-prose-ol {
+  margin: 0 0 1.1rem 1.25rem;
+  font-size: 16px;
+  line-height: 1.72;
+  color: rgba(28, 20, 16, 0.94);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-ul {
+  list-style-type: disc;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-ol {
+  list-style-type: decimal;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-li {
+  margin-bottom: 0.45rem;
+  padding-left: 0.2rem;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-strong {
+  font-weight: 600;
+  color: #1c1410;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-em {
+  font-style: italic;
+  color: rgba(28, 20, 16, 0.9);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-blockquote {
+  margin: 1.25rem 0;
+  padding: 0.15rem 0 0.15rem 1rem;
+  border-left: 3px solid #a56a2d;
+  font-size: 15px;
+  line-height: 1.72;
+  color: #6b4428;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-link {
+  font-weight: 600;
+  color: #8b5a2b;
+  text-decoration: underline;
+  text-decoration-color: rgba(139, 90, 43, 0.42);
+  text-underline-offset: 0.22em;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-link:hover {
+  color: #5c3a1e;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid rgba(120, 53, 15, 0.2);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-verse {
+  font-size: 16px;
+  line-height: 1.72;
+  color: rgba(28, 20, 16, 0.94);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-ref {
+  margin-top: 0.25rem;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-h1,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-h2,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-title,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-strong {
+  color: #f4ebe1;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-h3,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-p,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-li,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-ul,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-ol,
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-verse {
+  color: color-mix(in srgb, rgb(244 235 225) 92%, transparent);
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-blockquote {
+  color: #d8a97a;
+  border-left-color: #a56a2d;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-link {
+  color: #d8a97a;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-ref {
+  color: color-mix(in srgb, rgb(244 235 225) 58%, transparent);
+}

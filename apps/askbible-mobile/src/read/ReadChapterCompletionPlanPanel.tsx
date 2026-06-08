@@ -319,7 +319,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
         <View style={styles.titleWrap}>
           <Text style={styles.titleName}>{displayName || (isEnglishDisplay ? "Friend" : localeZhText("你"))}</Text>
           <Text style={styles.titleMain}>
-            {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 真棒！本章已完成")}
+            {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 非常好！本章已完成")}
           </Text>
         </View>
 

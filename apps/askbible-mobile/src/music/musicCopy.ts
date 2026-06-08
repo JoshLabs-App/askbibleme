@@ -3,6 +3,8 @@ export const musicCopy = {
   untitled: "Untitled",
   artistFallback: "Instrumental Worship",
   noAudio: "No tracks available yet.",
+  tapToDownload: "Tap to download",
+  downloading: "Downloading…",
   visualThemeLabel: "Color",
   visualThemeAuto: "Auto",
   visualThemeLogo: "Logo",

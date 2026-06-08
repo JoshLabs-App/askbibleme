@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 
-export type ReadParchmentFadePreset = "default" | "tabbar";
+export type ReadParchmentFadePreset = "default" | "prose" | "tabbar";
 
 type FadePresetMetrics = {
   edgeFadeTopPx: number;
@@ -19,6 +19,14 @@ const PRESET_METRICS: Record<ReadParchmentFadePreset, FadePresetMetrics> = {
     tabNearPx: 11,
     topTabNearPx: 6,
     tabMaskOpacity: 0.02,
+  },
+  /** 探索长文：保留轻微顶缘，底部几乎不淡掉正文 */
+  prose: {
+    edgeFadeTopPx: 28,
+    edgeFadeBottomPx: 18,
+    tabNearPx: 14,
+    topTabNearPx: 10,
+    tabMaskOpacity: 0.01,
   },
   /** 主页面有底部图标/Tab 时：底部渐隐更重，贴近原有视觉 */
   tabbar: {

@@ -50,7 +50,11 @@ export function isScriptureParchmentPath(pathname: string): boolean {
   return (
     p === "/read" ||
     p.startsWith("/read/") ||
-    p === "/dev/info-edition-batch"
+    p === "/dev/info-edition-batch" ||
+    p === "/dev/legacy-articles" ||
+    p.startsWith("/dev/legacy-articles/") ||
+    p === "/explore" ||
+    p.startsWith("/explore/")
   );
 }
 

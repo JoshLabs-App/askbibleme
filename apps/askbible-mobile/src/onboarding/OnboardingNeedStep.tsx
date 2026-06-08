@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
+import { getLocalePickerLabel } from "../i18n/locale-display-labels";
 import { toZhTwText } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { theme } from "../theme";
@@ -46,33 +47,20 @@ export function OnboardingNeedStep({
   return (
     <View>
       <View style={styles.localeRow}>
-        <Pressable
-          style={[styles.localeChip, locale === "en" ? styles.localeChipActive : undefined]}
-          onPress={() => onLocaleChange("en")}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "en" }}
-          accessibilityLabel="英文（美国旗）"
-        >
-          <Text style={[styles.localeChipIcon, locale === "en" ? styles.localeChipIconActive : undefined]}>🇺🇸</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.localeChip, locale === "zh-TW" ? styles.localeChipActive : undefined]}
-          onPress={() => onLocaleChange("zh-TW")}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "zh-TW" }}
-          accessibilityLabel="繁體（台湾旗）"
-        >
-          <Text style={[styles.localeChipIcon, locale === "zh-TW" ? styles.localeChipIconActive : undefined]}>🇹🇼</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.localeChip, locale === "zh-CN" ? styles.localeChipActive : undefined]}
-          onPress={() => onLocaleChange("zh-CN")}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "zh-CN" }}
-          accessibilityLabel="中简（中国旗）"
-        >
-          <Text style={[styles.localeChipIcon, locale === "zh-CN" ? styles.localeChipIconActive : undefined]}>🇨🇳</Text>
-        </Pressable>
+        {(["en", "zh-TW", "zh-CN"] as const).map((item) => (
+          <Pressable
+            key={item}
+            style={[styles.localeChip, locale === item ? styles.localeChipActive : undefined]}
+            onPress={() => onLocaleChange(item)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: locale === item }}
+            accessibilityLabel={getLocalePickerLabel(item)}
+          >
+            <Text style={[styles.localeChipLabel, locale === item ? styles.localeChipLabelActive : undefined]}>
+              {getLocalePickerLabel(item)}
+            </Text>
+          </Pressable>
+        ))}
       </View>
       <Text style={styles.title}>
         {locale === "en" ? "What kind of support do you need most?" : zhText("你最需要哪一种陪伴？")}
@@ -119,7 +107,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   localeChip: {
-    minWidth: 72,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
@@ -133,13 +120,13 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 177, 1, 0.86)",
     backgroundColor: "rgba(255, 177, 1, 0.16)",
   },
-  localeChipIcon: {
-    fontSize: 22,
-    lineHeight: 24,
+  localeChipLabel: {
+    fontSize: 13,
+    lineHeight: 18,
     color: "rgba(43, 29, 21, 0.72)",
     fontWeight: "600",
   },
-  localeChipIconActive: {
+  localeChipLabelActive: {
     color: LOGO_YELLOW,
   },
   title: {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  InteractionManager,
   Pressable,
   StyleSheet,
   Text,
@@ -19,6 +20,7 @@ import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { getScriptureCanonCatalogSections } from "./canonCatalog";
 import { useLocale } from "../i18n/LocaleProvider";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
+import { ensureScriptureTranslationReadyWithFallback } from "../bible/scripture-translation-download";
 import {
   DEFAULT_SCRIPTURE_LABEL_EN,
   DEFAULT_SCRIPTURE_LABEL_ZH,
@@ -74,7 +76,7 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
     } catch {
       return [];
     }
-  }, []);
+  }, [locale]);
   const catalogBookIds = useMemo(
     () => sections.flatMap((section) => section.books.map((book) => book.bookId)),
     [sections],
@@ -171,32 +173,37 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
       labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
     };
     const versionLabel = (locale === "en" ? labels.labelEn : labels.labelZh).trim();
-    void Promise.all(
-      HOME_VERSE_ROTATION.map(async (ref) => {
-        const loaded = await loadChapterFromBundledTranslation(
-          ref.bookId,
-          ref.chapter,
-          primaryTranslationId,
-          labels,
-        );
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+      const readyPrimaryId = await ensureScriptureTranslationReadyWithFallback(primaryTranslationId);
+      const items = await Promise.all(
+        HOME_VERSE_ROTATION.map(async (ref) => {
+          const loaded = await loadChapterFromBundledTranslation(
+            ref.bookId,
+            ref.chapter,
+            readyPrimaryId,
+            labels,
+          );
         const bookName = loaded?.bookName || getScriptureBookDisplayName(ref.bookId, locale);
         const verseText = loaded?.verses.find((row) => row.verse === ref.verse)?.text.trim() || "";
         const reference = `${bookName} ${ref.chapter}:${ref.verse}${
           versionLabel ? ` · ${versionLabel}` : ""
         }`;
-        return {
-          text: verseText,
-          reference,
-        };
-      }),
-    ).then((items) => {
+          return {
+            text: verseText,
+            reference,
+          };
+        }),
+      );
       if (cancelled) return;
       const usable = items.filter((row) => row.text.length > 0);
       setHomeVerses(usable);
       setVerseIndex(0);
+      })();
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, [homeMode, locale, primaryTranslationId, translationCatalog]);
 

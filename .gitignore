@@ -33,6 +33,8 @@
 .env*.local
 *.aab
 *.pem
+# App Store / Play 上传密钥（本地 AA/ 目录，勿提交）
+/AA/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

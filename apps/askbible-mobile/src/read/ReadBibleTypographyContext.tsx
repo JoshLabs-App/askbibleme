@@ -8,7 +8,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
+import {
+  bundledBibleTranslationsCatalog,
+  fetchBibleTranslationsCatalog,
+  fetchBibleTranslationsCatalogFresh,
+} from "../api/fetchBibleTranslationsCatalog";
+import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
+import { preloadPrimaryScriptureTranslation } from "../bible/scripture-translation-download";
 import { inferAppLocaleFromDevice } from "../i18n/config";
 import {
   getLocale,
@@ -66,6 +72,7 @@ type ReadBibleTypographyContextValue = {
   translation: ReadBibleTranslationPrefsV1;
   translationCatalog: BibleTranslationMeta[];
   translationCatalogReady: boolean;
+  refreshTranslationCatalog: () => Promise<void>;
   primaryTranslationId: string;
   contrastTranslationIds: string[];
   contrastTranslationId: string | null;
@@ -172,7 +179,12 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     void (async () => {
       await hydrateLocaleFromStorage();
       const locale = getLocale();
-      const index = await fetchBibleTranslationsCatalog();
+      const offlineIndex = bundledBibleTranslationsCatalog();
+      const earlyPrimary = resolveDefaultPrimaryTranslationId(offlineIndex, locale);
+      void preloadPrimaryScriptureTranslation(earlyPrimary);
+      const index = isMobileOfflineFirst()
+        ? bundledBibleTranslationsCatalog()
+        : await fetchBibleTranslationsCatalog();
       if (cancelled) return;
       setTranslationCatalog(index.translations);
       setDefaultTranslationId(index.defaultTranslationId);
@@ -202,6 +214,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       if (!cancelled) {
         setTranslation(normalized);
         setTranslationCatalogReady(true);
+        void preloadPrimaryScriptureTranslation(normalized.primaryTranslationId);
       }
     })();
     return () => {
@@ -351,6 +364,17 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     [translation, translationIndex],
   );
 
+  const refreshTranslationCatalog = useCallback(async () => {
+    const index = await fetchBibleTranslationsCatalogFresh();
+    setTranslationCatalog(index.translations);
+    setDefaultTranslationId(index.defaultTranslationId);
+    setTranslationCatalogReady(true);
+    const locale = getLocale();
+    const prefs = await readReadBibleTranslationPrefs(index, locale);
+    const normalized = await writeReadBibleTranslationPrefs(prefs, index);
+    setTranslation(normalized);
+  }, []);
+
   const value = useMemo(
     (): ReadBibleTypographyContextValue => ({
       typography,
@@ -372,6 +396,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       translation,
       translationCatalog,
       translationCatalogReady,
+      refreshTranslationCatalog,
       primaryTranslationId: translation.primaryTranslationId,
       contrastTranslationIds: translation.contrastTranslationIds,
       contrastTranslationId: translation.contrastTranslationIds[0] ?? null,
@@ -399,6 +424,7 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
       translation,
       translationCatalog,
       translationCatalogReady,
+      refreshTranslationCatalog,
       chapterAudioTranslationId,
       setPrimaryTranslationId,
       setContrastTranslationIds,

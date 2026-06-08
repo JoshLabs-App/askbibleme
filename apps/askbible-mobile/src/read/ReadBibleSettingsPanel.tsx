@@ -37,10 +37,16 @@ import {
 import { trackTap } from "../telemetry/tap";
 import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
 import {
+  downloadScriptureTranslation,
   ensureScriptureTranslationReady,
   readScriptureTranslationDownloadState,
   subscribeScriptureTranslationDownload,
 } from "../bible/scripture-translation-download";
+import {
+  listScriptureTranslationInstallStates,
+  type ScriptureTranslationInstallStatus,
+} from "../bible/scripture-translation-update";
+import type { BibleTranslationsIndex } from "../bible/translations-types";
 
 type Props = {
   visible: boolean;
@@ -176,6 +182,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     setAudioVoiceId: persistAudioVoiceId,
     translationCatalog,
     translationCatalogReady,
+    refreshTranslationCatalog,
     primaryTranslationId,
     contrastTranslationIds,
     audioTranslationId,
@@ -210,6 +217,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   const [translationDownloadState, setTranslationDownloadState] = useState(() =>
     readScriptureTranslationDownloadState(),
   );
+  const [installStates, setInstallStates] = useState<Record<string, ScriptureTranslationInstallStatus>>({});
   const [contrastDraftIds, setContrastDraftIds] = useState<string[]>(contrastTranslationIds);
   const localeZhText = useCallback(
     (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text),
@@ -237,6 +245,87 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     });
   }, []);
 
+  const translationCatalogIndex = useMemo(
+    (): BibleTranslationsIndex => ({
+      translations: translationCatalog,
+      defaultTranslationId: null,
+    }),
+    [translationCatalog],
+  );
+
+  const refreshInstallStates = useCallback(async () => {
+    if (translationCatalog.length === 0) return;
+    const states = await listScriptureTranslationInstallStates(translationCatalogIndex);
+    setInstallStates(states);
+  }, [translationCatalog.length, translationCatalogIndex]);
+
+  useEffect(() => {
+    if (!visible) return;
+    void refreshTranslationCatalog();
+  }, [visible, refreshTranslationCatalog]);
+
+  useEffect(() => {
+    if (!visible || !translationCatalogReady || translationCatalog.length === 0) return;
+    void refreshInstallStates();
+  }, [visible, translationCatalogReady, translationCatalog, refreshInstallStates]);
+
+  useEffect(() => {
+    if (!visible || translationDownloadState.status !== "done") return;
+    void refreshInstallStates();
+  }, [visible, translationDownloadState.status, refreshInstallStates]);
+
+  const optionDownloadState = useCallback(
+    (translationId: string): ReadSettingsSelectOption["downloadState"] => {
+      if (
+        translationDownloadState.status === "running" &&
+        translationDownloadState.translationId === translationId
+      ) {
+        return "downloading";
+      }
+      const status = installStates[translationId];
+      if (status === "missing") return "missing";
+      if (status === "outdated") return "outdated";
+      return null;
+    },
+    [installStates, translationDownloadState],
+  );
+
+  const translationStatusSuffix = useCallback(
+    (translationId: string): string => {
+      const state = optionDownloadState(translationId);
+      if (state === "downloading") {
+        return translationDownloadState.translationId === translationId
+          ? ` (${translationDownloadState.percent}%)`
+          : "";
+      }
+      if (state === "missing") {
+        return locale === "en" ? " · download" : " · 需下载";
+      }
+      if (state === "outdated") {
+        return locale === "en" ? " · update" : " · 可更新";
+      }
+      return "";
+    },
+    [locale, optionDownloadState, translationDownloadState],
+  );
+
+  const onDownloadTranslation = useCallback(
+    async (translationId: string) => {
+      const meta = translationMetaFromCatalog(translationCatalogIndex, translationId);
+      if (!meta) return;
+      const status = installStates[translationId];
+      try {
+        await downloadScriptureTranslation(translationId, meta.downloadUrl, {
+          force: status === "outdated",
+        });
+        await refreshInstallStates();
+      } catch {
+        /* surfaced via translationDownloadState */
+      }
+    },
+    [installStates, refreshInstallStates, translationCatalogIndex],
+  );
+
   const ensureTranslationDownloaded = useCallback(
     async (translationId: string) => {
       const meta = translationMetaFromCatalog(
@@ -249,28 +338,16 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   );
 
   const primaryOptions = useMemo((): ReadSettingsSelectOption[] => {
-    const downloadingId =
-      translationDownloadState.status === "running" ? translationDownloadState.translationId : null;
     return sortPickerTranslations(translationCatalog).map((tr) => {
       const label = translationOptionLabel(tr, locale);
-      const needsDownload = tr.bundled === false;
-      const suffix =
-        downloadingId === tr.id
-          ? locale === "en"
-            ? ` (${translationDownloadState.percent}%)`
-            : ` (${translationDownloadState.percent}%)`
-          : needsDownload
-            ? locale === "en"
-              ? " ↓"
-              : " ↓"
-            : "";
       return {
         id: tr.id,
-        label: `${label}${suffix}`,
+        label: `${label}${translationStatusSuffix(tr.id)}`,
         shortLabel: shortLabel(tr.id, locale, label),
+        downloadState: optionDownloadState(tr.id),
       };
     });
-  }, [translationCatalog, locale, translationDownloadState]);
+  }, [translationCatalog, locale, optionDownloadState, translationStatusSuffix]);
 
   const contrastOptions = useMemo((): ReadSettingsSelectOption[] => {
     const all = sortPickerTranslations(
@@ -278,7 +355,12 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
       .filter((tr) => tr.id !== primaryTranslationId)
       .map((tr) => {
         const label = translationOptionLabel(tr, locale);
-        return { id: tr.id, label, shortLabel: shortLabel(tr.id, locale, label) };
+        return {
+          id: tr.id,
+          label: `${label}${translationStatusSuffix(tr.id)}`,
+          shortLabel: shortLabel(tr.id, locale, label),
+          downloadState: optionDownloadState(tr.id),
+        };
       }),
     );
     if (contrastDraftIds.length === 0) return all;
@@ -286,7 +368,14 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     const picked = all.filter((opt) => selectedSet.has(opt.id));
     const rest = all.filter((opt) => !selectedSet.has(opt.id));
     return [...picked, ...rest];
-  }, [translationCatalog, primaryTranslationId, locale, contrastDraftIds]);
+  }, [
+    translationCatalog,
+    primaryTranslationId,
+    locale,
+    contrastDraftIds,
+    optionDownloadState,
+    translationStatusSuffix,
+  ]);
 
   const chapterAudioPlaybackOptions = useMemo((): ReadSettingsSelectOption[] => {
     return buildChapterAudioPlaybackOptions(translationCatalog, locale, t).map((opt) => ({
@@ -549,6 +638,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
                 open={openMenu === "primary"}
                 onOpenChange={(open) => setOpenMenu(open ? "primary" : null)}
                 onSelect={onPrimarySelect}
+                onDownloadOption={onDownloadTranslation}
                 disabled={!translationCatalogReady || primaryOptions.length === 0}
               />
               <ReadSettingsSelect
@@ -560,6 +650,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
                 open={openMenu === "contrast"}
                 onOpenChange={(open) => setOpenMenu(open ? "contrast" : null)}
                 onToggleSelect={onContrastToggleSelect}
+                onDownloadOption={onDownloadTranslation}
                 disabled={!translationCatalogReady || contrastOptions.length === 0}
               />
             </View>

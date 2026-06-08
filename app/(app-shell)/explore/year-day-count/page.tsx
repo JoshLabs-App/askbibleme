@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { ExploreYearDayCountContent } from "@/components/explore/ExploreYearDayCountContent";
-import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import { loadAllYearDayCountScriptureTexts } from "@/lib/explore/year-day-count-scriptures";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
@@ -17,8 +17,8 @@ export default async function ExploreYearDayCountPage() {
   const initialScriptureTexts = await loadAllYearDayCountScriptureTexts(locale);
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
+    <ExploreParchmentChrome proseScroll>
       <ExploreYearDayCountContent initialScriptureTexts={initialScriptureTexts} />
-    </ShellTemplateChromeLayout>
+    </ExploreParchmentChrome>
   );
 }

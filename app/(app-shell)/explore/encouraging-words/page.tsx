@@ -1,5 +1,5 @@
 import { ExploreEncouragingWordsContent } from "@/components/explore/ExploreEncouragingWordsContent";
-import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata = {
@@ -9,8 +9,8 @@ export const metadata = {
 
 export default function ExploreEncouragingWordsPage() {
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
+    <ExploreParchmentChrome proseScroll>
       <ExploreEncouragingWordsContent />
-    </ShellTemplateChromeLayout>
+    </ExploreParchmentChrome>
   );
 }

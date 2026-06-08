@@ -1,5 +1,6 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { resolveSelfHostedChapterAudioPlayableUrl } from "./chapter-audio-sources";
+import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
 
 export const WEB_CHAPTER_AUDIO_REMOTE_NT = "https://theaudiopower.org/WEB/Recordings";
 export const WEB_CHAPTER_AUDIO_REMOTE_OT = "https://theaudiopower.org/WEB2/Recordings";
@@ -238,13 +239,25 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
   bookId: string;
   chapter: number;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
-  const bundled = isMobileBundledOnly()
-    ? resolveBundledChapterAudioUri({
-        translationId: args.translationId,
-        bookId: args.bookId,
-        chapter: args.chapter,
-      })
-    : null;
+  const bundled = resolveBundledChapterAudioUri({
+    translationId: args.translationId,
+    bookId: args.bookId,
+    chapter: args.chapter,
+  });
   if (bundled) return { ok: true, src: bundled };
+
+  if (isMobileScriptureReadLocalOnly()) return { ok: false };
+
+  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
+  if (remote) return { ok: true, src: remote };
+
+  const selfHosted = resolveSelfHostedChapterAudioPlayableUrl({
+    translationId: args.translationId,
+    bookId: args.bookId,
+    chapter: args.chapter,
+    siteBaseUrl: args.baseUrl,
+  });
+  if (selfHosted) return { ok: true, src: selfHosted };
+
   return { ok: false };
 }

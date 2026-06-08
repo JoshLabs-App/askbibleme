@@ -18,7 +18,11 @@ export function NatureHomeSleepTimerSection() {
   const { sleepTimerMinutes, setSleepTimerMinutes } = useMusicShellPlayback();
 
   return (
-    <div className="flex rounded-lg bg-zinc-800 p-[3px]" role="radiogroup" aria-label={t("nature.homeSettings.sleepSection")}>
+    <div
+      className="inline-flex rounded-lg bg-zinc-800 p-[3px]"
+      role="radiogroup"
+      aria-label={t("nature.homeSettings.sleepSection")}
+    >
       {SLEEP_OPTIONS.map((minutes) => {
         const selected = sleepTimerMinutes === minutes;
         return (
@@ -30,7 +34,7 @@ export function NatureHomeSleepTimerSection() {
             aria-label={`${t(sleepLabelKey(minutes))} min`}
             onClick={() => setSleepTimerMinutes(selected ? 0 : minutes)}
             className={[
-              "min-h-[34px] flex-1 rounded-md border-0 px-1 text-[11px] font-semibold tabular-nums transition",
+              "flex h-[34px] w-[2.25rem] shrink-0 items-center justify-center rounded-md border-0 px-0 text-[11px] font-semibold tabular-nums transition",
               selected ? "bg-zinc-600 text-white" : "bg-transparent text-white/50 hover:text-white/70",
             ].join(" ")}
           >

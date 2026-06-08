@@ -14,7 +14,7 @@ type Props = {
 export function NatureHomeLevelSegment({ selected, onSelect, iconForLevel, ariaLabel }: Props) {
   return (
     <div
-      className="flex rounded-[7px] bg-zinc-800 p-0.5"
+      className="inline-flex rounded-[7px] bg-zinc-800 p-0.5"
       role="radiogroup"
       aria-label={ariaLabel}
     >
@@ -29,7 +29,7 @@ export function NatureHomeLevelSegment({ selected, onSelect, iconForLevel, ariaL
             aria-label={`${ariaLabel} ${level}`}
             onClick={() => onSelect(level)}
             className={[
-              "flex min-h-[30px] flex-1 items-center justify-center rounded-[5px] border-0 bg-transparent p-0 transition",
+              "flex h-[30px] w-[34px] shrink-0 items-center justify-center rounded-[5px] border-0 bg-transparent p-0 transition",
               isOn ? "bg-zinc-600" : "hover:bg-zinc-700/60",
             ].join(" ")}
           >

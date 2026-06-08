@@ -2,6 +2,7 @@
 
 import { AppShellModal } from "@/components/ui/AppShellModal";
 import { SUPPORTED_LOCALES, type AppLocale } from "@/lib/i18n/config";
+import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import { useLocale } from "./LocaleProvider";
 
 type Props = {
@@ -28,7 +29,7 @@ export function LocalePickerModal({ open, onDismiss }: Props) {
         <ul className="mt-4 flex flex-col gap-1" role="listbox" aria-label={t("localePicker.listLabel")}>
           {SUPPORTED_LOCALES.map((id) => {
             const selected = locale === id;
-            const label = t(`localeNames.${id}`);
+            const label = getLocalePickerLabel(id);
             return (
               <li key={id} role="option" aria-selected={selected}>
                 <button

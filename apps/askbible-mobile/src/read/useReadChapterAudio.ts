@@ -2,11 +2,13 @@ import { useIsFocused } from "@react-navigation/native";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ScrollView } from "react-native";
 import {
+  chapterAudioVerseSyncTranslationId,
   fetchChapterVerseTimings,
   verseIndexForVerseNumber,
   verseNumberAtChapterAudioTime,
   type CuvChapterVerseTiming,
 } from "../bible/cuv-chapter-verse-timings";
+import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
 import {
   buildChapterAudioPlayableSrcSync,
   translationSupportsChapterAudio,
@@ -49,6 +51,7 @@ export function useReadChapterAudio(
 
   const [chapterAudioSrc, setChapterAudioSrc] = useState<string | null>(null);
   const [verseTimings, setVerseTimings] = useState<CuvChapterVerseTiming[] | null>(null);
+  const [weightVerses, setWeightVerses] = useState<readonly { text: string }[] | null>(null);
   const lastFollowIndexRef = useRef<number | null>(null);
   const onAdvanceChapterRef = useRef(onAdvanceChapter);
   onAdvanceChapterRef.current = onAdvanceChapter;
@@ -57,6 +60,10 @@ export function useReadChapterAudio(
   const isFocused = useIsFocused();
 
   const supported = chapterData ? translationSupportsChapterAudio(chapterAudioTranslationId) : false;
+  const verseSyncTranslationId = useMemo(
+    () => chapterAudioVerseSyncTranslationId(chapterAudioTranslationId, audioVoiceId),
+    [audioVoiceId, chapterAudioTranslationId],
+  );
 
   const chapterAudioKey = useMemo(() => {
     if (!chapterData) return null;
@@ -117,6 +124,7 @@ export function useReadChapterAudio(
         chapter: snapshot.chapter,
         bookName: snapshot.bookName,
         translationId: chapterAudioTranslationId,
+        voiceId: audioVoiceId,
         onAdvanceNextChapter: reg.onAdvanceNextChapter,
         onAdvanceNextInBook: reg.onAdvanceNextInBook,
       });
@@ -159,11 +167,42 @@ export function useReadChapterAudio(
     return () => {
       cancelled = true;
     };
-  }, [audioVoiceId, baseUrl, chapterAudioTranslationId, chapterData, supported]);
+  }, [audioVoiceId, baseUrl, chapterAudioTranslationId, chapterData, supported, verseSyncTranslationId]);
+
+  useEffect(() => {
+    if (!chapterData || !supported) {
+      setWeightVerses(null);
+      return;
+    }
+    if (verseSyncTranslationId === chapterData.translationId) {
+      setWeightVerses(chapterData.verses);
+      return;
+    }
+    let cancelled = false;
+    void loadChapterFromBundledTranslation(
+      chapterData.bookId,
+      chapterData.chapter,
+      verseSyncTranslationId,
+    ).then((loaded) => {
+      if (cancelled) return;
+      setWeightVerses(loaded?.verses ?? chapterData.verses);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    chapterData,
+    chapterData?.bookId,
+    chapterData?.chapter,
+    chapterData?.translationId,
+    chapterData?.verses,
+    supported,
+    verseSyncTranslationId,
+  ]);
 
   const weights = useMemo(
-    () => (chapterData ? verseWeightsForReadChapterAudio(chapterData.verses) : []),
-    [chapterData],
+    () => (weightVerses ? verseWeightsForReadChapterAudio(weightVerses) : []),
+    [weightVerses],
   );
 
   const audioMatchesChapter =

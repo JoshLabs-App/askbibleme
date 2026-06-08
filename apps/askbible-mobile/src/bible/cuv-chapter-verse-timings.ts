@@ -1,7 +1,8 @@
 import { loadBundledChapterVerseTimings } from "./bundled-verse-timings";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { translationUsesWebChapterAudio } from "./web-chapter-audio";
+import { teochewNtVoiceActive } from "./teochew-nt-audio";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 
 export type CuvChapterVerseTiming = {
@@ -33,10 +34,8 @@ export function buildChapterVerseTimingsCandidates(
   if (voiceId === "teochew-nt") {
     return [`/verse-timings/teochew-nt/${id}-${chapter}.json`];
   }
-  return [
-    `/verse-timings/cuv-v20/${id}-${chapter}.json`,
-    `/verse-timings/${id}-${chapter}.json`,
-  ];
+  // 仅 cuv-v20（与 FHL 闫大卫音频对齐）；旧版根目录 JSON 时间轴已过时，勿再回落。
+  return [`/verse-timings/cuv-v20/${id}-${chapter}.json`];
 }
 
 export function buildCuvChapterVerseTimingsUrl(bookId: string, chapter: number): string {
@@ -65,16 +64,26 @@ export function verseNumberAtChapterAudioTime(
   timings: readonly CuvChapterVerseTiming[],
 ): number | null {
   if (!timings.length || !Number.isFinite(currentSec)) return null;
-  let pick: CuvChapterVerseTiming | null = null;
-  for (let i = timings.length - 1; i >= 0; i--) {
-    if (timings[i]!.start <= currentSec) {
-      pick = timings[i]!;
-      break;
+  for (let i = 0; i < timings.length; i++) {
+    const row = timings[i]!;
+    const nextStart = timings[i + 1]?.start;
+    const upper =
+      nextStart != null && Number.isFinite(nextStart)
+        ? nextStart
+        : Number.isFinite(row.end) && row.end > row.start
+          ? row.end
+          : Infinity;
+    if (currentSec >= row.start && currentSec < upper) {
+      const n = Number(row.verse);
+      return Number.isFinite(n) && n > 0 ? n : null;
     }
   }
-  if (!pick) return null;
-  const n = Number(pick.verse);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  const last = timings[timings.length - 1]!;
+  if (currentSec >= last.start) {
+    const n = Number(last.verse);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  return null;
 }
 
 export function verseIndexForVerseNumber(
@@ -85,6 +94,18 @@ export function verseIndexForVerseNumber(
   return idx >= 0 ? idx : null;
 }
 
+/** 节朗读时间轴与字数估算应对齐的译本（繁体屏显仍用 cuv-simp 对齐 FHL 普通话）。 */
+export function chapterAudioVerseSyncTranslationId(
+  translationId: string,
+  voiceId: CuvChapterAudioVoiceId,
+): string {
+  if (translationUsesWebChapterAudio(translationId)) return translationId.trim();
+  if (teochewNtVoiceActive(voiceId)) return "cuv-simp";
+  const id = translationId.trim().toLowerCase();
+  if (id.startsWith("cuv")) return "cuv-simp";
+  return translationId.trim();
+}
+
 export async function fetchChapterVerseTimings(
   baseUrl: string,
   translationId: string,
@@ -92,11 +113,13 @@ export async function fetchChapterVerseTimings(
   bookId: string,
   chapter: number,
 ): Promise<CuvChapterVerseTiming[] | null> {
-  if (isMobileBundledOnly()) {
-    return loadBundledChapterVerseTimings(translationId, voiceId, bookId, chapter);
-  }
+  const syncTranslationId = chapterAudioVerseSyncTranslationId(translationId, voiceId);
+  const bundled = loadBundledChapterVerseTimings(syncTranslationId, voiceId, bookId, chapter);
+  if (bundled?.length) return bundled;
 
-  const paths = buildChapterVerseTimingsCandidates(translationId, voiceId, bookId, chapter);
+  if (isMobileScriptureReadLocalOnly()) return null;
+
+  const paths = buildChapterVerseTimingsCandidates(syncTranslationId, voiceId, bookId, chapter);
   if (!paths.length) return null;
   for (const path of paths) {
     const url = toAbsoluteUrl(baseUrl, path);
@@ -110,7 +133,7 @@ export async function fetchChapterVerseTimings(
       /* try next */
     }
   }
-  return null;
+  return loadBundledChapterVerseTimings(syncTranslationId, voiceId, bookId, chapter);
 }
 
 export async function fetchCuvChapterVerseTimings(

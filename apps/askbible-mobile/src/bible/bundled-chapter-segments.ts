@@ -50,9 +50,11 @@ function toStorySegments(rows: ChapterSegment[]): ChapterSegment[] {
     const storyTitle = toStoryTitle(titleRaw);
     if (!storyTitle) continue;
     headingStarts.add(row.verseStart);
+    const titleRawEn = String(row.title || "").trim();
+    const storyTitleEn = titleRawEn ? toStoryTitle(titleRawEn) || titleRawEn : "";
     out.push({
       ...row,
-      title: storyTitle,
+      title: storyTitleEn,
       titleZh: storyTitle,
     });
   }
@@ -92,7 +94,7 @@ function mergeStoryWithDefaultSegments(
     .map((row, idx) => ({
       id: `story:${row.id || idx}`,
       verseStart: row.verseStart as number,
-      title: String(row.titleZh || row.title || "").trim(),
+      titleZh: String(row.titleZh || row.title || "").trim(),
     }));
 
   if (storyHeadings.length === 0) return defaultRows;
@@ -100,7 +102,7 @@ function mergeStoryWithDefaultSegments(
   const byVerse = new Map<number, string[]>();
   for (const row of storyHeadings) {
     const bucket = byVerse.get(row.verseStart) ?? [];
-    bucket.push(row.title);
+    bucket.push(row.titleZh);
     byVerse.set(row.verseStart, bucket);
   }
 
@@ -112,9 +114,10 @@ function mergeStoryWithDefaultSegments(
       const pick = candidates.find((title) => !usedTitles.has(`${row.verseStart}:${title}`));
       if (pick) {
         usedTitles.add(`${row.verseStart}:${pick}`);
+        const preservedEn = String(row.title || "").trim();
         merged.push({
           ...row,
-          title: pick,
+          title: preservedEn,
           titleZh: pick,
         });
         continue;
@@ -139,8 +142,8 @@ function mergeStoryWithDefaultSegments(
       chapter: defaultRows[0]?.chapter ?? 1,
       verseStart: row.verseStart,
       verseEnd: row.verseStart,
-      title: row.title,
-      titleZh: row.title,
+      title: "",
+      titleZh: row.titleZh,
     });
   }
 

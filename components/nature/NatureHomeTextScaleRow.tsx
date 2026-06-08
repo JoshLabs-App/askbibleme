@@ -38,10 +38,10 @@ export function NatureHomeTextScaleRow({ panelOpen = false, onPrefsChanged }: Pr
   };
 
   const btn =
-    "flex min-h-[30px] flex-1 items-center justify-center rounded-[5px] border-0 bg-zinc-600 text-slate-100 transition disabled:opacity-35";
+    "flex h-[30px] w-[34px] shrink-0 items-center justify-center rounded-[5px] border-0 bg-zinc-600 text-slate-100 transition disabled:opacity-35";
 
   return (
-    <div className="flex w-full items-center gap-1" aria-label={scaleA11y}>
+    <div className="inline-flex items-center gap-1" aria-label={scaleA11y}>
       <button
         type="button"
         disabled={atDefault}

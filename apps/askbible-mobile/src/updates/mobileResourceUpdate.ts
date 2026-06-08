@@ -8,15 +8,7 @@ import {
   checkMusicResourcePackUpdate,
   ensureMusicResourcePackSync,
 } from "../media/musicResourcePackSync";
-import {
-  checkScriptureTranslationUpdates,
-  downloadScriptureTranslationUpdate,
-  readScriptureTranslationDownloadState,
-  subscribeScriptureTranslationDownload,
-  type ScriptureTranslationUpdateItem,
-} from "../bible/scripture-translation-update";
-
-export type MobileResourceUpdateKind = "nature" | "music" | "scripture";
+export type MobileResourceUpdateKind = "nature" | "music";
 
 export type MobileResourceUpdateItem = {
   kind: MobileResourceUpdateKind;
@@ -25,7 +17,6 @@ export type MobileResourceUpdateItem = {
   labelEn: string;
   bytes: number;
   reason?: "version" | "missing" | "outdated";
-  scripture?: ScriptureTranslationUpdateItem;
 };
 
 export type MobileResourceUpdatePhase = "idle" | "checking" | "downloading" | "done" | "error";
@@ -102,11 +93,10 @@ export async function checkMobileResourceUpdates(
   const items: MobileResourceUpdateItem[] = [];
 
   try {
-    const [natureCheck, musicPackCheck, musicExtra, scriptureItems] = await Promise.all([
+    const [natureCheck, musicPackCheck, musicExtra] = await Promise.all([
       checkNatureResourcePackUpdate(),
       checkMusicResourcePackUpdate(),
       deps.isMusicUpdateAvailable?.() ?? Promise.resolve(false),
-      checkScriptureTranslationUpdates(),
     ]);
 
     if (natureCheck.available) {
@@ -128,18 +118,6 @@ export async function checkMobileResourceUpdates(
         labelEn: "Music resources",
         bytes: 0,
         reason: "version",
-      });
-    }
-
-    for (const tr of scriptureItems) {
-      items.push({
-        kind: "scripture",
-        id: tr.translationId,
-        labelZh: tr.labelZh,
-        labelEn: tr.labelEn,
-        bytes: tr.bytes,
-        reason: tr.reason,
-        scripture: tr,
       });
     }
 
@@ -209,24 +187,6 @@ export async function applyMobileResourceUpdates(
           ok = ok || metaOk;
         }
         if (!ok) failed.push(item);
-      } else if (item.kind === "scripture" && item.scripture) {
-        const off = subscribeScriptureTranslationDownload(() => {
-          const dl = readScriptureTranslationDownloadState();
-          if (dl.status === "running" && dl.translationId === item.scripture?.translationId) {
-            setState({
-              overallPercent: stepOverallPercent(i, stepCount, dl.percent / 100),
-              currentLabel: label,
-            });
-          }
-        });
-        try {
-          await downloadScriptureTranslationUpdate(item.scripture, { force: true });
-          setState({
-            overallPercent: stepOverallPercent(i + 1, stepCount, 0),
-          });
-        } finally {
-          off();
-        }
       }
     } catch (e) {
       failed.push(item);

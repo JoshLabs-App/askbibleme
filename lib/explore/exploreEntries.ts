@@ -2,6 +2,7 @@
 export type ExploreEntry = {
   id: string;
   href: `/explore/${string}`;
+  iconSet: "material-community";
   icon: string;
   labelKey: string;
 };
@@ -10,50 +11,37 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
   {
     id: "year-day-count",
     href: "/explore/year-day-count",
-    icon: "📊",
+    iconSet: "material-community",
+    icon: "chart-timeline-variant",
     labelKey: "pages.explore.yearDayCountIconLabel",
-  },
-  {
-    id: "biblical-feasts",
-    href: "/explore/biblical-feasts",
-    icon: "🗓️",
-    labelKey: "pages.explore.biblicalFeastsIconLabel",
   },
   {
     id: "years-days-eternity",
     href: "/explore/years-days-eternity",
-    icon: "∞",
+    iconSet: "material-community",
+    icon: "infinity",
     labelKey: "pages.explore.yearsDaysEternityIconLabel",
   },
   {
     id: "narrow-gate",
     href: "/explore/narrow-gate",
-    icon: "🚪",
+    iconSet: "material-community",
+    icon: "door-closed",
     labelKey: "pages.explore.narrowGateIconLabel",
   },
   {
     id: "praise-worship",
     href: "/explore/praise-worship",
-    icon: "👑",
+    iconSet: "material-community",
+    icon: "crown",
     labelKey: "pages.explore.praiseWorshipIconLabel",
   },
   {
     id: "prayer",
     href: "/explore/prayer",
-    icon: "🙏",
+    iconSet: "material-community",
+    icon: "hands-pray",
     labelKey: "pages.explore.prayerIconLabel",
-  },
-  {
-    id: "encouraging-words",
-    href: "/explore/encouraging-words",
-    icon: "💬",
-    labelKey: "pages.explore.encouragingWordsIconLabel",
-  },
-  {
-    id: "word-of-god",
-    href: "/explore/word-of-god",
-    icon: "📖",
-    labelKey: "pages.explore.wordOfGodIconLabel",
   },
 ];
 
@@ -63,3 +51,6 @@ export const SCRIPTURE_ANTHOLOGY_IDS = [
   "narrow-gate",
   "praise-worship",
 ] as const;
+
+/** iOS 探索页图标区列数 */
+export const EXPLORE_ICON_COLUMNS = 3;

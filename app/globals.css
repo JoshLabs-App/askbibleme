@@ -338,6 +338,24 @@ select,
   }
 }
 
+/* 自然首页：点主画面收起底栏、场景条与环境音 */
+html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
+html[data-nature-home-chrome-hidden] .home-bottom-nav {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.75rem);
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
+  html[data-nature-home-chrome-hidden] .home-bottom-nav {
+    transition: none;
+  }
+}
+
 /* 自然首页：仅手机式横屏沉浸时隐藏底栏（平板/桌面横屏保留，见 `useLandscapeNarrow`） */
 html[data-nature-landscape-immersive] .home-bottom-nav {
   display: none;

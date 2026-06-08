@@ -13,6 +13,7 @@ import {
 } from "@/lib/explore/explore-home-verse-pool-scopes";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import type { AppLocale } from "@/lib/i18n/config";
+import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import {
   getHomeVersePoolScope,
   hydrateHomeVersePoolScope,
@@ -74,34 +75,19 @@ function ShellNavDrawerLocaleRow() {
   return (
     <div className="shell-nav-drawer-inline-row">
       <span className="shell-nav-drawer-row-text">{zh ? "语言" : "Language"}</span>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="shell-nav-drawer-locale-chip"
-          aria-pressed={locale === "en"}
-          aria-label={zh ? "英文（美国旗）" : "English (US flag)"}
-          onClick={() => pick("en")}
-        >
-          🇺🇸
-        </button>
-        <button
-          type="button"
-          className="shell-nav-drawer-locale-chip"
-          aria-pressed={locale === "zh-TW"}
-          aria-label="繁体"
-          onClick={() => pick("zh-TW")}
-        >
-          🇹🇼
-        </button>
-        <button
-          type="button"
-          className="shell-nav-drawer-locale-chip"
-          aria-pressed={locale === "zh-CN"}
-          aria-label="中简"
-          onClick={() => pick("zh-CN")}
-        >
-          🇨🇳
-        </button>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {(["en", "zh-TW", "zh-CN"] as const).map((item) => (
+          <button
+            key={item}
+            type="button"
+            className="shell-nav-drawer-locale-chip"
+            aria-pressed={locale === item}
+            aria-label={getLocalePickerLabel(item)}
+            onClick={() => pick(item)}
+          >
+            {getLocalePickerLabel(item)}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -235,14 +221,13 @@ export function ShellNavDrawerContent({ onClose }: Props) {
           })();
         }}
       />
-      {registerOpen ? (
+      {bootstrapped && !user ? (
         <>
           <div className="h-1" aria-hidden />
-          <ShellNavDrawerMenuRow
-            label={t("auth.drawerRegister")}
-            href="/register"
-            onClick={onClose}
-          />
+          <ShellNavDrawerMenuRow label={t("auth.drawerLogin")} href="/login" onClick={onClose} />
+          {registerOpen ? (
+            <ShellNavDrawerMenuRow label={t("auth.drawerRegister")} href="/register" onClick={onClose} />
+          ) : null}
         </>
       ) : null}
       <div className="h-1" aria-hidden />

@@ -19,6 +19,8 @@ type Props = {
   onSelect: (id: string) => void;
   disabled?: boolean;
   className?: string;
+  /** 自然首页紧凑行：固定窄宽，不随面板拉宽 */
+  compact?: boolean;
 };
 
 /** 对齐 App `NatureHomeSettingsSelect`；下拉挂 body，避免面板 overflow 裁切 */
@@ -31,6 +33,7 @@ export function NatureHomeSettingsSelect({
   onSelect,
   disabled = false,
   className = "",
+  compact = false,
 }: Props) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [portalReady, setPortalReady] = useState(false);
@@ -116,7 +119,15 @@ export function NatureHomeSettingsSelect({
   return (
     <>
       {menu}
-      <div className={`relative min-w-0 flex-1 ${className}`.trim()}>
+      <div
+        className={[
+          "relative shrink-0",
+          compact ? "w-[4.75rem]" : "min-w-0 flex-1",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <button
           ref={anchorRef}
           type="button"
@@ -126,11 +137,11 @@ export function NatureHomeSettingsSelect({
           aria-label={accessibilityLabel}
           onClick={() => onOpenChange(!open)}
           className={[
-            "flex min-h-[34px] w-full items-center justify-between gap-1 rounded-[7px] border border-zinc-600 bg-zinc-800 px-2.5 py-1.5 text-left transition",
+            "flex min-h-[34px] w-full items-center justify-between gap-0.5 rounded-[7px] border border-zinc-600 bg-zinc-800 px-2 py-1.5 text-left transition",
             disabled ? "opacity-35" : "hover:bg-zinc-700/80 active:bg-zinc-700",
           ].join(" ")}
         >
-          <span className="min-w-0 flex-1 truncate text-[12px] text-white/90">{display}</span>
+          <span className="min-w-0 flex-1 truncate text-[11px] text-white/90">{display}</span>
           <ShellMaterialIcon
             name={open ? "expand_less" : "expand_more"}
             size={18}

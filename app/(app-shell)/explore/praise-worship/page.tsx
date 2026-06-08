@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { ExploreScriptureAccordionContent } from "@/components/explore/ExploreScriptureAccordionContent";
-import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import { loadExploreRefVerseTexts } from "@/lib/explore/explore-scripture-ref";
 import {
   PRAISE_WORSHIP_BOOK_ABBR_TO_ID,
@@ -32,7 +32,7 @@ export default async function ExplorePraiseWorshipPage() {
   });
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
+    <ExploreParchmentChrome proseScroll>
       <ExploreScriptureAccordionContent
         backLabelKey="pages.explore.praiseWorshipBack"
         titleKey="pages.explore.praiseWorshipTitle"
@@ -41,6 +41,6 @@ export default async function ExplorePraiseWorshipPage() {
         bookAbbrMap={PRAISE_WORSHIP_BOOK_ABBR_TO_ID}
         verseTextByRef={verseTextByRef}
       />
-    </ShellTemplateChromeLayout>
+    </ExploreParchmentChrome>
   );
 }

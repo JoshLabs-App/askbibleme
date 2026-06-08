@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "postinstall": "bash scripts/patch-expo-av-ios.sh"
+    "postinstall": "bash scripts/patch-expo-av-ios.sh",
+    "eas-build-post-install": "node scripts/eas-sync-offline-on-cloud.mjs && node scripts/verify-bundled-assets.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/noto-sans-sc": "^0.4.3",

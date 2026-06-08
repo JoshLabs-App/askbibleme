@@ -5,7 +5,7 @@ import { scriptureBooks, OLD_TESTAMENT_MAX_BOOK_NUMBER } from "../bible/scriptur
 import { scriptureBookNotes } from "../bible/scripture-book-notes";
 import type { AppLocale } from "../i18n/config";
 import { getLocale } from "../i18n/locale-store";
-import { t } from "../i18n/site-copy";
+import { toZhTwText, t } from "../i18n/site-copy";
 
 export type ScriptureCanonCatalogBook = {
   bookId: string;
@@ -40,10 +40,11 @@ const booksById = new Map(scriptureBooks.map((b) => [b.bookId, b]));
 const notesByBookId = new Map(scriptureBookNotes.map((n) => [n.bookId, n]));
 
 function canonSectionTitle(sectionId: string, zhTitle: string, locale: AppLocale): string {
-  if (locale !== "en") return zhTitle;
+  if (locale === "zh-CN") return zhTitle;
   const key = `pages.read.canonSections.${sectionId}.title`;
   const hit = t(key);
-  return hit === key ? zhTitle : hit;
+  if (hit !== key) return hit;
+  return locale === "zh-TW" ? toZhTwText(zhTitle) : zhTitle;
 }
 
 function buildBook(bookId: string, locale: AppLocale): ScriptureCanonCatalogBook {
@@ -80,7 +81,13 @@ export function getScriptureCanonCatalogSections(): ScriptureCanonCatalogSection
       taglines:
         locale === "en"
           ? []
-          : (sec.taglines || []).map((line) => String(line).trim()).filter(Boolean),
+          : (sec.taglines || [])
+              .map((line) => {
+                const trimmed = String(line).trim();
+                if (!trimmed) return "";
+                return locale === "zh-TW" ? toZhTwText(trimmed) : trimmed;
+              })
+              .filter(Boolean),
       books: sec.bookIds.map((id) => buildBook(id, locale)),
     }));
   cachedSections = { locale, sections };

@@ -1,4 +1,5 @@
 import type { AppLocale } from "../i18n/config";
+import { toZhTwText } from "../i18n/site-copy";
 
 /** English divine-role labels for canon catalog (zh from scripture-book-notes). */
 export const scriptureBookDivineEn: Record<string, string> = {
@@ -75,6 +76,7 @@ export function divineLabelForLocale(
   zhDivine: string,
   locale: AppLocale,
 ): string {
+  if (locale === "zh-TW") return toZhTwText(zhDivine);
   if (locale !== "en") return zhDivine;
   const en = scriptureBookDivineEn[bookId.trim().toUpperCase()];
   return en?.trim() || zhDivine;

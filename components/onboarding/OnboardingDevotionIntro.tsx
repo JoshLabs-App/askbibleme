@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
+import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import {
   getCompanionNeedOptions,
@@ -70,21 +71,22 @@ function OnboardingNeedStep({
 
   return (
     <div>
-      <div className="mb-3.5 flex justify-center gap-2.5">
+      <div className="mb-3.5 flex flex-wrap justify-center gap-2.5">
         {(["en", "zh-TW", "zh-CN"] as const).map((item) => (
           <button
             key={item}
             type="button"
             onClick={() => onLocaleChange(item)}
             aria-pressed={locale === item}
+            aria-label={getLocalePickerLabel(item)}
             className={[
-              "inline-flex h-9 w-9 items-center justify-center rounded-full border text-[18px] transition",
+              "inline-flex min-h-9 items-center justify-center rounded-full border px-3.5 text-[13px] font-semibold transition",
               locale === item
                 ? "border-[rgba(255,177,1,0.72)] bg-[rgba(255,177,1,0.16)]"
                 : "border-[rgba(120,53,15,0.18)] bg-white/70",
             ].join(" ")}
           >
-            {item === "en" ? "🇺🇸" : item === "zh-TW" ? "🇹🇼" : "🇨🇳"}
+            {getLocalePickerLabel(item)}
           </button>
         ))}
       </div>
@@ -258,7 +260,7 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
           </div>
         </div>
 
-        <div className="mt-2 flex-1 pb-4">
+        <div className="mt-2 flex-1 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {step === 1 ? (
             <OnboardingNeedStep
               locale={locale}
@@ -270,43 +272,48 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
           ) : (
             <OnboardingSolutionStep locale={locale} cards={solutionCards} />
           )}
-        </div>
 
-        <div className="pt-2">
-          {step === 2 ? (
-            <label className="mb-2.5 block">
-              <span className="mb-1.5 block text-[14px] font-semibold text-[rgba(77,53,34,0.9)]">
-                {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-              </span>
-              <input
-                value={nickname}
-                onChange={(event) => setNickname(event.target.value)}
-                placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-                autoCapitalize="off"
-                autoCorrect="off"
-                maxLength={24}
-                className="min-h-[46px] w-full rounded-xl border border-[rgba(120,53,15,0.24)] bg-[rgba(255,252,245,0.92)] px-3.5 py-2.5 text-[16px] font-medium text-[#2b1d15] outline-none focus:border-[rgba(255,177,1,0.55)]"
-              />
-            </label>
-          ) : null}
-          <button
-            type="button"
-            onClick={handlePrimaryButtonPress}
-            disabled={submitting || (isLastStep && !canOpenSpace)}
-            className={[
-              "inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-4 text-[16px] font-bold tracking-[0.02em] text-[#fffdf8] transition",
-              (isLastStep && !canOpenSpace) || submitting ? "opacity-45" : "hover:brightness-[0.98] active:scale-[0.99]",
-            ].join(" ")}
-            style={{ backgroundColor: LOGO_YELLOW }}
-          >
-            {isLastStep
-              ? locale === "en"
-                ? "Open my space"
-                : zhText("打开我的空间")
-              : locale === "en"
-                ? "Next"
-                : zhText("下一步")}
-          </button>
+          <div className="mt-2 pt-2">
+            {step === 2 ? (
+              <label className="mb-2.5 block scroll-mt-24">
+                <span className="mb-1.5 block text-[14px] font-semibold text-[rgba(77,53,34,0.9)]">
+                  {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
+                </span>
+                <input
+                  value={nickname}
+                  onChange={(event) => setNickname(event.target.value)}
+                  placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  maxLength={24}
+                  onFocus={(event) => {
+                    requestAnimationFrame(() => {
+                      event.currentTarget.scrollIntoView({ block: "center", behavior: "smooth" });
+                    });
+                  }}
+                  className="min-h-[46px] w-full rounded-xl border border-[rgba(120,53,15,0.24)] bg-[rgba(255,252,245,0.92)] px-3.5 py-2.5 text-[16px] font-medium text-[#2b1d15] outline-none focus:border-[rgba(255,177,1,0.55)]"
+                />
+              </label>
+            ) : null}
+            <button
+              type="button"
+              onClick={handlePrimaryButtonPress}
+              disabled={submitting || (isLastStep && !canOpenSpace)}
+              className={[
+                "inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-4 text-[16px] font-bold tracking-[0.02em] text-[#fffdf8] transition",
+                (isLastStep && !canOpenSpace) || submitting ? "opacity-45" : "hover:brightness-[0.98] active:scale-[0.99]",
+              ].join(" ")}
+              style={{ backgroundColor: LOGO_YELLOW }}
+            >
+              {isLastStep
+                ? locale === "en"
+                  ? "Open my space"
+                  : zhText("打开我的空间")
+                : locale === "en"
+                  ? "Next"
+                  : zhText("下一步")}
+            </button>
+          </div>
         </div>
       </div>
     </div>

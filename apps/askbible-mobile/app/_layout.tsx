@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { LogBox, NativeModules, Platform, StyleSheet } from "react-native";
 import { AppLogoSplash } from "../src/shell/AppLogoSplash";
+import { ShellErrorBoundary } from "../src/shell/ShellErrorBoundary";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MemberAuthProvider } from "../src/auth/MemberAuthProvider";
 import { LocaleProvider } from "../src/i18n/LocaleProvider";
@@ -19,6 +20,10 @@ import { theme } from "../src/theme";
 import { OnboardingDevotionIntro } from "../src/onboarding/OnboardingDevotionIntro";
 import { subscribeOnboardingDevotionOpen } from "../src/onboarding/onboarding-devotion-gate";
 import { shouldShowOnboardingDevotionIntro } from "../src/onboarding/onboarding-devotion-prefs";
+import { bundledBibleTranslationsCatalog } from "../src/api/fetchBibleTranslationsCatalog";
+import { preloadPrimaryScriptureTranslation } from "../src/bible/scripture-translation-download";
+import { inferAppLocaleFromDevice } from "../src/i18n/config";
+import { resolveDefaultPrimaryTranslationId } from "../src/read/read-bible-translation-prefs";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -49,6 +54,12 @@ export default function RootLayout() {
   const fontsReady = useAndroidNotoFonts();
   const [onboardingReady, setOnboardingReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [bootTimedOut, setBootTimedOut] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setBootTimedOut(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!__DEV__) return;
@@ -76,6 +87,15 @@ export default function RootLayout() {
     };
   }, []);
 
+  /** 避免 AsyncStorage 等偶发挂起时永远停在橙黄启动页（TestFlight 真机） */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNavReady(true);
+      setOnboardingReady(true);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     return subscribeOnboardingDevotionOpen(() => {
       setShowOnboarding(true);
@@ -88,7 +108,14 @@ export default function RootLayout() {
     installAndroidFontSizeGuard();
   }, []);
 
-  const appReady = navReady && fontsReady && onboardingReady;
+  const appReady = bootTimedOut || (navReady && fontsReady && onboardingReady);
+
+  useEffect(() => {
+    if (!appReady) return;
+    const index = bundledBibleTranslationsCatalog();
+    const primaryId = resolveDefaultPrimaryTranslationId(index, inferAppLocaleFromDevice());
+    void preloadPrimaryScriptureTranslation(primaryId);
+  }, [appReady]);
 
   return (
     <SafeAreaProvider>
@@ -96,9 +123,9 @@ export default function RootLayout() {
       <MemberAuthProvider>
       <TelemetryProvider>
       <ShellNavMenuProvider>
-        <MusicPlaybackProvider>
           {appReady ? (
-            <>
+            <ShellErrorBoundary>
+            <MusicPlaybackProvider>
               <StatusBar style="dark" />
               <Stack
                 screenOptions={{
@@ -119,11 +146,11 @@ export default function RootLayout() {
               <ShellInsetClock />
               <ShellNavDrawer />
               {showOnboarding ? <OnboardingDevotionIntro onComplete={() => setShowOnboarding(false)} /> : null}
-            </>
+            </MusicPlaybackProvider>
+            </ShellErrorBoundary>
           ) : (
             <AppLogoSplash />
           )}
-        </MusicPlaybackProvider>
       </ShellNavMenuProvider>
       </TelemetryProvider>
       </MemberAuthProvider>

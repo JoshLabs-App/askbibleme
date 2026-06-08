@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { NatureSettingsV2 } from "../types/nature";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { readSyncedNatureSettings } from "../media/natureResourcePackSync";
 
@@ -211,6 +212,9 @@ export async function fetchNatureSettingsFromRemote(): Promise<NatureSettingsV2 
 }
 
 export async function fetchNatureSettings(): Promise<NatureSettingsV2> {
+  if (isMobileBundledOnly()) {
+    return bundledSettings;
+  }
   const remote = await fetchNatureSettingsFromRemote();
   if (remote) {
     const merged = mergeBundledScenesByRemoteOrder(remote);

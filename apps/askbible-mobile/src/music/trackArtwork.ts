@@ -86,6 +86,17 @@ function visualForTrack(store: MusicCompanionStore, trackId: string): Background
   return visuals.find((v) => v.id === scene.backgroundVisualId) ?? visuals[0] ?? null;
 }
 
+export function isTrackPlayable(track: PlaybackTrack): boolean {
+  if (track.localReady) return true;
+  if (isMobileBundledOnly()) return false;
+  return Boolean(track.catalogSrc?.trim() || track.src?.trim());
+}
+
+export function firstPlayableTrackIndex(tracks: readonly PlaybackTrack[]): number {
+  const idx = tracks.findIndex((t) => isTrackPlayable(t));
+  return idx >= 0 ? idx : 0;
+}
+
 export function enrichPlaybackTracks(
   store: MusicCompanionStore,
   baseUrl: string,
@@ -94,7 +105,7 @@ export function enrichPlaybackTracks(
   for (const [index, t] of store.audioTracks.entries()) {
       const catalogSrc = toAbsoluteUrl(baseUrl, t.src);
       const playback = resolveMusicTrackPlayback(t.id, catalogSrc);
-      const localReady = Boolean(playback.src.trim() || playback.bundledModule != null);
+      const localReady = playback.localReady;
       const visual = visualForTrack(store, t.id);
       let artworkUri: string | null = null;
       let gradientColors = gradientColorsForTrackId(t.id);

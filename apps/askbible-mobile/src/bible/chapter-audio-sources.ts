@@ -19,6 +19,7 @@ import {
   buildLocalWebChapterAudioUrl,
   translationUsesWebChapterAudio,
 } from "./web-chapter-audio";
+import { absoluteSelfHostedChapterAudioUrl } from "./chapter-audio-url";
 
 function uniqueNonEmpty(items: string[]): string[] {
   const out: string[] = [];
@@ -58,6 +59,35 @@ export function resolveChapterAudioExternalUrl(args: {
     return buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
   }
   return "";
+}
+
+/** 自托管 askbible.me `/audio/...` 绝对 URL（移动端不 HEAD 探测，直接拼 URL）。 */
+export function resolveSelfHostedChapterAudioPlayableUrl(args: {
+  translationId: string;
+  bookId: string;
+  chapter: number;
+  voiceId?: CuvChapterAudioVoiceId;
+  siteBaseUrl?: string;
+}): string | null {
+  const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
+  let relPath = "";
+  if (teochewNtVoiceActive(voice)) {
+    relPath = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
+  } else if (translationUsesWebChapterAudio(args.translationId)) {
+    relPath = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
+  } else if (translationSupportsCuvChapterAudio(args.translationId)) {
+    relPath = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
+  }
+  if (!relPath) return null;
+  const bases = uniqueNonEmpty([
+    String(args.siteBaseUrl || "").trim().replace(/\/$/, ""),
+    "https://askbible.me",
+  ]);
+  for (const base of bases) {
+    const url = absoluteSelfHostedChapterAudioUrl(base, relPath);
+    if (url) return url;
+  }
+  return null;
 }
 
 export function buildChapterAudioDownloadCandidates(args: {

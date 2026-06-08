@@ -1,4 +1,3 @@
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { getChapterAudioBaseUrl } from "./chapter-audio-url";
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
 import {
@@ -10,7 +9,11 @@ import {
   resolveWebChapterAudioPlayableSrc,
   translationUsesWebChapterAudio,
 } from "./web-chapter-audio";
-import { resolveDownloadedChapterAudioUri } from "../read/read-audio-package-download";
+import {
+  resolveDownloadedChapterAudioUri,
+  scheduleChapterAudioBackgroundCache,
+} from "../read/read-audio-package-download";
+import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
 
 function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string): boolean {
   const src = cachedSrc.trim().toLowerCase();
@@ -31,7 +34,7 @@ function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string
   return false;
 }
 
-/** 同步拼出可播 URL：仅安装包内置（常规播放走本地下载包）。 */
+/** 同步拼出可播 URL：安装包内置章朗读（若有）。 */
 export function buildChapterAudioPlayableSrcSync(args: {
   translationId: string;
   bookId: string;
@@ -40,7 +43,6 @@ export function buildChapterAudioPlayableSrcSync(args: {
   voiceId?: CuvChapterAudioVoiceId;
   baseUrl?: string;
 }): string | null {
-  if (!isMobileBundledOnly()) return null;
   return (
     resolveBundledChapterAudioUri({
       translationId: args.translationId,
@@ -91,7 +93,7 @@ export async function resolveChapterAudioPlayableSrc(args: {
   return { ok: false };
 }
 
-/** 读经章播放：优先本地下载包，其次安装包内置；不直连外链播放。 */
+/** 读经章播放：本地下载包 → 安装包内置 → 联网自托管 / 外链（非纯本地包时）。 */
 export async function resolveScripturePlayableSrcForChapter(args: {
   translationId: string;
   bookId: string;
@@ -112,6 +114,16 @@ export async function resolveScripturePlayableSrcForChapter(args: {
   if (cached && !shouldIgnoreCachedScriptureSrc(cached, args.translationId)) return cached;
   if (!translationSupportsChapterAudio(args.translationId)) return null;
 
+  const bundledSync = buildChapterAudioPlayableSrcSync({
+    translationId: args.translationId,
+    bookId: args.bookId,
+    chapter: args.chapter,
+    bookName: args.bookName,
+    voiceId: args.voiceId,
+  });
+  if (bundledSync) return bundledSync;
+  if (isMobileScriptureReadLocalOnly()) return null;
+
   const resolved = await resolveChapterAudioPlayableSrc({
     translationId: args.translationId,
     bookId: args.bookId,
@@ -119,7 +131,18 @@ export async function resolveScripturePlayableSrcForChapter(args: {
     bookName: args.bookName,
     voiceId: args.voiceId,
   });
-  if (resolved.ok) return resolved.src;
+  if (resolved.ok) {
+    if (!isMobileScriptureReadLocalOnly() && /^https?:\/\//i.test(resolved.src)) {
+      scheduleChapterAudioBackgroundCache({
+        translationId: args.translationId,
+        voiceId: args.voiceId ?? "mandarin",
+        bookId: args.bookId,
+        chapter: args.chapter,
+        remoteSrc: resolved.src,
+      });
+    }
+    return resolved.src;
+  }
 
   return buildChapterAudioPlayableSrcSync({
     translationId: args.translationId,

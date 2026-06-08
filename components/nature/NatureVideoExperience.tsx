@@ -56,7 +56,6 @@ import { canNatureHomeFullVideoFetch } from "@/lib/nature/can-nature-home-full-v
 import { useNatureHomeFullVideoFetch } from "@/hooks/useNatureHomeFullVideoFetch";
 import { NatureVideoLoadProgress } from "@/components/nature/NatureVideoLoadProgress";
 import { useShellBackgroundVideoCoordination } from "@/hooks/useShellBackgroundVideoCoordination";
-import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { HomeShellFloatingRouteNav } from "@/components/home/HomeShellFloatingRouteNav";
 import { NatureHomeBottomBand } from "@/components/nature/NatureHomeBottomBand";
 import { NatureHomeAmbientSlotAudio } from "@/components/nature/NatureHomeAmbientSlotAudio";
@@ -70,6 +69,7 @@ import {
 } from "@/lib/home/nature-home-loop-all-scenes-prefs";
 import { SCENE_LOOP_SWITCH_MS } from "@/lib/nature/home-scene-strip-metrics";
 import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots";
+import { useScreenWakeLock } from "@/hooks/useScreenWakeLock";
 
 /**
  * 停留后再挂 `<video>` 解码（非「切换」时刻）。
@@ -124,7 +124,6 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
  */
 export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "" }: Props) {
   const { t } = useLocale();
-  const { canPlayMusic, playing, togglePlayMusic } = useMusicShellPlayback();
   const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
@@ -170,6 +169,10 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const natureVerseFitMeasureRef = useRef<HTMLDivElement>(null);
   const [natureVerseFitCompress, setNatureVerseFitCompress] = useState(1);
   const [verseTightLineClamp, setVerseTightLineClamp] = useState(false);
+  /** 点主画面：收起底栏、场景条与环境音；再点恢复 */
+  const [homeChromeHidden, setHomeChromeHidden] = useState(false);
+
+  useScreenWakeLock(true);
 
   useEffect(() => {
     setNatureSettings(initial);
@@ -562,6 +565,15 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   }, [landscapeImmersive]);
 
   useEffect(() => {
+    if (homeChromeHidden) {
+      document.documentElement.setAttribute("data-nature-home-chrome-hidden", "");
+    } else {
+      document.documentElement.removeAttribute("data-nature-home-chrome-hidden");
+    }
+    return () => document.documentElement.removeAttribute("data-nature-home-chrome-hidden");
+  }, [homeChromeHidden]);
+
+  useEffect(() => {
     if (typeof document === "undefined") return;
     const sync = () => {
       setDocElementFullscreen(document.fullscreenElement === document.documentElement);
@@ -913,14 +925,14 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     ? Math.min(softFocusDisplayBlur, 10)
     : softFocusDisplayBlur;
 
-  /** 视频空白：收起设置面板；否则切换背景音乐播放 */
+  /** 视频空白：收起设置面板；否则切换底栏 / 场景条 / 环境音可见性 */
   const onNatureVideoBlankClick = useCallback(() => {
     if (homeSettingsOpen) {
       onHomeSettingsOpenChange(false);
       return;
     }
-    if (canPlayMusic) void togglePlayMusic();
-  }, [homeSettingsOpen, onHomeSettingsOpenChange, canPlayMusic, togglePlayMusic]);
+    setHomeChromeHidden((hidden) => !hidden);
+  }, [homeSettingsOpen, onHomeSettingsOpenChange]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
 

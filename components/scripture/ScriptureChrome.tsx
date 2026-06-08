@@ -8,6 +8,8 @@ type Props = {
   children: ReactNode;
   /** `/read`、`/prayer` 首页：整列 flex 排版（渐隐与章页相同，见 `read-chapter-surfaces.css`） */
   scrollHome?: boolean;
+  /** 叠加在 `.read-bible-parchment-scroll`（如探索长文 `read-bible-parchment-scroll--explore-prose`） */
+  parchmentScrollClassName?: string;
   /** 叠加在 `.read-bible-parchment-column`（如目录页 `read-bible-parchment-column--catalog`） */
   parchmentColumnClassName?: string;
 };
@@ -15,7 +17,12 @@ type Props = {
 /**
  * 圣经 /read 与祷告 /prayer 共用：immersive 壳 + 右上阅读版式 + 羊皮卷滚动区。
  */
-export function ScriptureChrome({ children, scrollHome = false, parchmentColumnClassName }: Props) {
+export function ScriptureChrome({
+  children,
+  scrollHome = false,
+  parchmentScrollClassName,
+  parchmentColumnClassName,
+}: Props) {
   return (
     <>
       <ScriptureParchmentShellChromeEffect />
@@ -30,6 +37,7 @@ export function ScriptureChrome({ children, scrollHome = false, parchmentColumnC
           className={[
             "read-bible-parchment-scroll",
             scrollHome ? "read-bible-parchment-scroll--read-home" : "",
+            parchmentScrollClassName,
           ]
             .filter(Boolean)
             .join(" ")}

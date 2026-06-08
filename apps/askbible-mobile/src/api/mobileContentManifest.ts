@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { applyMemberRegisterEnabledFromServer } from "../auth/member-register-enabled";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 
 const STORAGE_KEY = "askbible.mobile.content-manifest.v1";
@@ -180,7 +180,7 @@ async function writeCachedManifest(m: MobileContentManifest): Promise<void> {
 }
 
 export async function fetchMobileContentManifest(): Promise<MobileContentManifest> {
-  if (isMobileBundledOnly() || isMobileOfflineFirst()) {
+  if (isMobileBundledOnly()) {
     return bundledManifest;
   }
 

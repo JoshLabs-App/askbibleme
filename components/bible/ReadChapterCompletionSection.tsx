@@ -227,7 +227,7 @@ function ReadChapterCompletionPlanPanel({
           {displayName || (isEnglishDisplay ? "Friend" : localeZhText("你"))}
         </p>
         <p className="mt-0.5 text-[clamp(1.25rem,3.5vw,1.5rem)] font-bold leading-snug text-[#2A170A] dark:text-stone-100">
-          {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 真棒！本章已完成")}
+          {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 非常好！本章已完成")}
         </p>
 
         <ul className="mt-2.5 space-y-2 text-left">

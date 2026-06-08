@@ -7,6 +7,7 @@ export type ReadSettingsSelectOption = {
   id: string;
   label: string;
   shortLabel?: string;
+  downloadState?: "missing" | "outdated" | "downloading" | null;
 };
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   onSelect?: (id: string) => void;
   onToggleSelect?: (id: string) => void;
+  onDownloadOption?: (id: string) => void;
   emptyDisplay?: string;
   disabled?: boolean;
   style?: View["props"]["style"];
@@ -35,6 +37,7 @@ export function ReadSettingsSelect({
   onOpenChange,
   onSelect,
   onToggleSelect,
+  onDownloadOption,
   emptyDisplay,
   disabled,
   style,
@@ -90,36 +93,62 @@ export function ReadSettingsSelect({
         >
           {options.map((opt) => {
             const selected = multi ? selectedIds.includes(opt.id) : opt.id === value;
+            const showDownload =
+              Boolean(onDownloadOption) &&
+              (opt.downloadState === "missing" || opt.downloadState === "outdated");
+            const downloading = opt.downloadState === "downloading";
             return (
-              <Pressable
-                key={opt.id || "__none"}
-                onPress={() => {
-                  if (multi) {
-                    onToggleSelect?.(opt.id);
-                  } else {
-                    onSelect?.(opt.id);
-                  }
-                }}
-                style={({ pressed }) => [
-                  styles.option,
-                  selected && styles.optionActive,
-                  pressed && styles.optionPressed,
-                ]}
-              >
-                {multi ? (
-                  <MaterialIcons
-                    name={selected ? "check-box" : "check-box-outline-blank"}
-                    size={16}
-                    color={selected ? c.ink : c.faint}
-                  />
-                ) : null}
-                <Text
-                  style={[styles.optionText, selected && styles.optionTextActive]}
-                  numberOfLines={2}
+              <View key={opt.id || "__none"} style={[styles.option, selected && styles.optionActive]}>
+                <Pressable
+                  onPress={() => {
+                    if (multi) {
+                      onToggleSelect?.(opt.id);
+                    } else {
+                      onSelect?.(opt.id);
+                    }
+                  }}
+                  style={({ pressed }) => [
+                    styles.optionMain,
+                    pressed && styles.optionPressed,
+                  ]}
                 >
-                  {opt.label}
-                </Text>
-              </Pressable>
+                  {multi ? (
+                    <MaterialIcons
+                      name={selected ? "check-box" : "check-box-outline-blank"}
+                      size={16}
+                      color={selected ? c.ink : c.faint}
+                    />
+                  ) : null}
+                  <Text
+                    style={[styles.optionText, selected && styles.optionTextActive]}
+                    numberOfLines={2}
+                  >
+                    {opt.label}
+                  </Text>
+                </Pressable>
+                {showDownload ? (
+                  <Pressable
+                    onPress={() => onDownloadOption?.(opt.id)}
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                      styles.optionDownloadBtn,
+                      pressed && styles.optionDownloadBtnPressed,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      opt.downloadState === "outdated" ? "Update translation" : "Download translation"
+                    }
+                  >
+                    <MaterialIcons
+                      name={opt.downloadState === "outdated" ? "system-update" : "download"}
+                      size={18}
+                      color={c.parchmentAccent}
+                    />
+                  </Pressable>
+                ) : downloading ? (
+                  <MaterialIcons name="hourglass-top" size={16} color={c.faint} />
+                ) : null}
+              </View>
             );
           })}
         </ScrollView>
@@ -192,15 +221,33 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
+    paddingRight: 4,
+  },
+  optionMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     paddingHorizontal: 10,
     paddingVertical: 9,
+    minWidth: 0,
   },
   optionActive: {
     backgroundColor: c.hover,
   },
   optionPressed: {
     backgroundColor: "rgba(69, 45, 28, 0.1)",
+  },
+  optionDownloadBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionDownloadBtnPressed: {
+    backgroundColor: "rgba(69, 45, 28, 0.08)",
   },
   optionText: {
     fontSize: 13,

@@ -1,10 +1,17 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { resolveSelfHostedChapterAudioPlayableUrl } from "./chapter-audio-sources";
+import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
 import {
   buildExternalTeochewNtChapterAudioUrl,
   buildLocalTeochewNtChapterAudioUrl,
+  resolveTeochewNtChapterAudioPlayableSrc,
+  teochewNtVoiceActive,
 } from "./teochew-nt-audio";
-import { type CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
+import {
+  effectiveVoiceForBook,
+  type CuvChapterAudioVoiceId,
+  voiceSupportsBook,
+} from "./cuv-chapter-audio-voices";
 import { scriptureBooks } from "./scripture-books";
 
 export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://media.fhl.net/unvdavid";
@@ -41,15 +48,40 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   chapter: number;
   voiceId?: CuvChapterAudioVoiceId;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
-  const bundled = isMobileBundledOnly()
-    ? resolveBundledChapterAudioUri({
-        translationId: "cuv-simp",
-        bookId: args.bookId,
-        chapter: args.chapter,
-        voiceId: args.voiceId,
-      })
-    : null;
+  const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
+
+  const bundled = resolveBundledChapterAudioUri({
+    translationId: "cuv-simp",
+    bookId: args.bookId,
+    chapter: args.chapter,
+    voiceId: args.voiceId,
+  });
   if (bundled) return { ok: true, src: bundled };
+
+  if (teochewNtVoiceActive(voice)) {
+    return resolveTeochewNtChapterAudioPlayableSrc({
+      bookId: args.bookId,
+      chapter: args.chapter,
+      baseUrl: args.baseUrl,
+    });
+  }
+  if (!voiceSupportsBook(voice, args.bookId)) return { ok: false };
+
+  if (isMobileScriptureReadLocalOnly()) return { ok: false };
+
+  // 与 Web 一致：默认 FHL 外链；自托管 cuv-v20 仅部分章节上架，作备选。
+  const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
+  if (remote) return { ok: true, src: remote };
+
+  const selfHosted = resolveSelfHostedChapterAudioPlayableUrl({
+    translationId: "cuv-simp",
+    bookId: args.bookId,
+    chapter: args.chapter,
+    voiceId: args.voiceId,
+    siteBaseUrl: args.baseUrl,
+  });
+  if (selfHosted) return { ok: true, src: selfHosted };
+
   return { ok: false };
 }
 

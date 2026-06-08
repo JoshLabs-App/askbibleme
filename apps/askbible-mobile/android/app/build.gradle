@@ -81,6 +81,21 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def uploadStoreFileProp =
+        keystoreProperties.getProperty("MYAPP_UPLOAD_STORE_FILE") ?: findProperty("MYAPP_UPLOAD_STORE_FILE")
+def uploadStorePasswordProp =
+        keystoreProperties.getProperty("MYAPP_UPLOAD_STORE_PASSWORD") ?: findProperty("MYAPP_UPLOAD_STORE_PASSWORD")
+def uploadKeyAliasProp =
+        keystoreProperties.getProperty("MYAPP_UPLOAD_KEY_ALIAS") ?: findProperty("MYAPP_UPLOAD_KEY_ALIAS")
+def uploadKeyPasswordProp =
+        keystoreProperties.getProperty("MYAPP_UPLOAD_KEY_PASSWORD") ?: findProperty("MYAPP_UPLOAD_KEY_PASSWORD")
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -89,15 +104,15 @@ android {
 
     namespace 'me.askbible'
     def hasUploadSigning =
-            project.hasProperty('MYAPP_UPLOAD_STORE_FILE') &&
-            project.hasProperty('MYAPP_UPLOAD_KEY_ALIAS') &&
-            project.hasProperty('MYAPP_UPLOAD_STORE_PASSWORD') &&
-            project.hasProperty('MYAPP_UPLOAD_KEY_PASSWORD')
+            uploadStoreFileProp &&
+            uploadKeyAliasProp &&
+            uploadStorePasswordProp &&
+            uploadKeyPasswordProp
     defaultConfig {
         applicationId 'me.askbible'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
+        versionCode 13
         versionName "1.0.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
@@ -111,10 +126,10 @@ android {
         }
         release {
             if (hasUploadSigning) {
-                storeFile file(MYAPP_UPLOAD_STORE_FILE)
-                storePassword MYAPP_UPLOAD_STORE_PASSWORD
-                keyAlias MYAPP_UPLOAD_KEY_ALIAS
-                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+                storeFile file(uploadStoreFileProp)
+                storePassword uploadStorePasswordProp
+                keyAlias uploadKeyAliasProp
+                keyPassword uploadKeyPasswordProp
             }
         }
     }

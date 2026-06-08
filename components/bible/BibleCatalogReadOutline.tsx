@@ -60,6 +60,18 @@ function computeJumpCatalogPanelLayout(): PanelLayout {
   return { top, left, width: panelW, maxHeight: maxH };
 }
 
+/** 首页 / 独立目录选章：居中 Modal（对齐 iOS `BibleCatalogOutline`） */
+function computeCenteredChapterSheetLayout(): PanelLayout {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const pad = 20;
+  const panelW = Math.min(360, vw - pad * 2);
+  const left = Math.max(pad, (vw - panelW) / 2);
+  const maxH = Math.min(Math.round(vh * 0.7), 520);
+  const top = Math.max(pad, Math.round((vh - maxH) / 2));
+  return { top, left, width: panelW, maxHeight: maxH };
+}
+
 function computePanelLayout(s: SheetModel): PanelLayout {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -144,12 +156,15 @@ export function BibleCatalogReadOutline({
   const [portalReady, setPortalReady] = useState(false);
   const [layoutTick, setLayoutTick] = useState(0);
 
+  const centerChapterSheet = showBookSummary && !jumpCatalog;
+
   const panelLayout = useMemo(() => {
     void layoutTick;
     if (!sheet) return null;
     if (jumpCatalog) return computeJumpCatalogPanelLayout();
+    if (centerChapterSheet) return computeCenteredChapterSheetLayout();
     return computePanelLayout(sheet);
-  }, [sheet, layoutTick, jumpCatalog]);
+  }, [sheet, layoutTick, jumpCatalog, centerChapterSheet]);
 
   useEffect(() => {
     setPortalReady(true);
@@ -230,7 +245,7 @@ export function BibleCatalogReadOutline({
     panelLayout &&
     createPortal(
       <div
-        className={`bc-sheet-root bible-catalog-page--read${sheetOpen ? " bc-sheet-root--open" : ""}${jumpCatalog ? " bc-sheet-root--jump-catalog" : ""}`}
+        className={`bc-sheet-root bible-catalog-page--read${sheetOpen ? " bc-sheet-root--open" : ""}${jumpCatalog ? " bc-sheet-root--jump-catalog" : ""}${centerChapterSheet ? " bc-sheet-root--centered" : ""}`}
         role="presentation"
       >
         <button type="button" className="bc-sheet-backdrop" aria-label="关闭选章" onClick={closeSheet} />
@@ -253,15 +268,25 @@ export function BibleCatalogReadOutline({
                 <h2 id="bc-sheet-title" className="bc-sheet-title">
                   {sheet.bookName}
                 </h2>
-                <p className="bc-sheet-sub" aria-hidden="true">
-                  1–{sheet.chapters}
-                </p>
+                {centerChapterSheet ? null : (
+                  <p className="bc-sheet-sub" aria-hidden="true">
+                    1–{sheet.chapters}
+                  </p>
+                )}
               </div>
               <button type="button" className="bc-sheet-close" onClick={closeSheet} aria-label="关闭">
                 ×
               </button>
             </header>
-            <nav className="bible-catalog-chapters-grid bc-sheet-chapters" aria-label={`${sheet.bookName} 章次`}>
+            <nav
+              className={[
+                "bible-catalog-chapters-grid bc-sheet-chapters",
+                centerChapterSheet ? "bc-sheet-chapters--centered" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-label={`${sheet.bookName} 章次`}
+            >
               {Array.from({ length: sheet.chapters }, (_, i) => i + 1).map((ch) =>
                 onChapterNavigate ? (
                   <button
@@ -293,42 +318,47 @@ export function BibleCatalogReadOutline({
 
   return (
     <>
-      {paginateByTestament ? (
-        <div
-          className={[
-            "bc-home-testament-frame mb-1.5 w-full",
-            activeTestament === "old" ? "bc-home-testament-frame--old" : "bc-home-testament-frame--new",
-          ].join(" ")}
-        >
-          <div className="bc-home-testament-pager" role="tablist" aria-label={t("pages.read.catalogSection")}>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTestament === "old"}
-              className={[
-                "bc-home-testament-tab bc-home-testament-tab--old",
-                activeTestament === "old" ? "bc-home-testament-tab--active" : "",
-              ].join(" ")}
-              onClick={() => setActiveTestament("old")}
-            >
-              {t("pages.read.catalogTestamentOld")}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTestament === "new"}
-              className={[
-                "bc-home-testament-tab bc-home-testament-tab--new",
-                activeTestament === "new" ? "bc-home-testament-tab--active" : "",
-              ].join(" ")}
-              onClick={() => setActiveTestament("new")}
-            >
-              {t("pages.read.catalogTestamentNew")}
-            </button>
-          </div>
-          <p className="bc-home-testament-intro">{testamentIntro[activeTestament]}</p>
-        </div>
-      ) : null}
+      <div
+        className={
+          paginateByTestament
+            ? [
+                "bc-home-testament-frame mb-1.5 w-full",
+                activeTestament === "old" ? "bc-home-testament-frame--old" : "bc-home-testament-frame--new",
+              ].join(" ")
+            : "contents"
+        }
+      >
+        {paginateByTestament ? (
+          <>
+            <div className="bc-home-testament-pager" role="tablist" aria-label={t("pages.read.catalogSection")}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTestament === "old"}
+                className={[
+                  "bc-home-testament-tab bc-home-testament-tab--old",
+                  activeTestament === "old" ? "bc-home-testament-tab--active" : "",
+                ].join(" ")}
+                onClick={() => setActiveTestament("old")}
+              >
+                {t("pages.read.catalogTestamentOld")}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTestament === "new"}
+                className={[
+                  "bc-home-testament-tab bc-home-testament-tab--new",
+                  activeTestament === "new" ? "bc-home-testament-tab--active" : "",
+                ].join(" ")}
+                onClick={() => setActiveTestament("new")}
+              >
+                {t("pages.read.catalogTestamentNew")}
+              </button>
+            </div>
+            <p className="bc-home-testament-intro">{testamentIntro[activeTestament]}</p>
+          </>
+        ) : null}
 
       <nav
         className={[
@@ -558,6 +588,7 @@ export function BibleCatalogReadOutline({
           </div>
         ))}
       </nav>
+      </div>
       {sheetNode}
     </>
   );

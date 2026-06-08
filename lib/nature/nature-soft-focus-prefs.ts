@@ -6,8 +6,8 @@ export type NatureSoftFocusPrefs = {
 };
 
 export const NATURE_SOFT_FOCUS_DEFAULTS: NatureSoftFocusPrefs = {
-  overlayOpacity: 0.5,
-  blurPx: 24,
+  overlayOpacity: 0,
+  blurPx: 0,
 };
 
 const OVERLAY_MIN = 0.08;
@@ -27,8 +27,8 @@ function normalize(p: Partial<NatureSoftFocusPrefs> | null | undefined): NatureS
   const b =
     typeof p?.blurPx === "number" && Number.isFinite(p.blurPx) ? p.blurPx : NATURE_SOFT_FOCUS_DEFAULTS.blurPx;
   return {
-    overlayOpacity: clamp(o, OVERLAY_MIN, OVERLAY_MAX),
-    blurPx: clamp(Math.round(b), BLUR_MIN, BLUR_MAX),
+    overlayOpacity: o <= 0 ? 0 : clamp(o, OVERLAY_MIN, OVERLAY_MAX),
+    blurPx: b <= 0 ? 0 : clamp(Math.round(b), BLUR_MIN, BLUR_MAX),
   };
 }
 

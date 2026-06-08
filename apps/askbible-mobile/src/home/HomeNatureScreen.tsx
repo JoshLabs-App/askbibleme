@@ -7,6 +7,7 @@ import { configureShellAudioMode } from "../audio/shellAudioMode";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -113,7 +114,9 @@ import {
 } from "./homeExperimentalFeatures";
 
 const bundledOnBoot = getBundledNatureSettings();
-const bootWithBundled = isMobileBundledOnly();
+/** Release 安装包内已有场景时秒开，避免 TestFlight 首启等网络卡在占位屏。 */
+const bootWithBundled =
+  isMobileBundledOnly() || (!__DEV__ && bundledOnBoot.videos.length > 0);
 const AUTO_IMMERSIVE_DELAY_MS = 60_000;
 const HOME_VOICE_NEXT_DELAY_MS = 5000;
 const HOME_VOICE_REFERENCE_DELAY_MS = 1000;
@@ -220,6 +223,8 @@ export function HomeNatureScreen() {
   const [voiceSpeaking, setVoiceSpeaking] = useState(false);
   const [voiceHint, setVoiceHint] = useState<string | null>(null);
   const [sceneUsageMap, setSceneUsageMap] = useState<NatureSceneUsageMap>({});
+  /** 首帧后再挂视频层，避免与启动音频会话 / 导航切换抢 native 资源导致闪退。 */
+  const [videoStageMounted, setVideoStageMounted] = useState(false);
   const [ttsPrefs, setTtsPrefs] = useState<NatureHomeTtsPrefs>(DEFAULT_NATURE_HOME_TTS_PREFS);
   const homeVoiceSessionIdRef = useRef(0);
   const ttsPrefsRef = useRef<NatureHomeTtsPrefs>(DEFAULT_NATURE_HOME_TTS_PREFS);
@@ -304,6 +309,11 @@ export function HomeNatureScreen() {
   );
 
   useEffect(() => {
+    const timer = setTimeout(() => setVideoStageMounted(true), 320);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     const bundled = getBundledNatureSettings();
     if (bootWithBundled && bundled.videos.length > 0) {
       applySettings(bundled, null);
@@ -331,6 +341,7 @@ export function HomeNatureScreen() {
         }
       })();
     }
+    if (isMobileBundledOnly()) return;
     void load({ silent: bootWithBundled && bundled.videos.length > 0 });
   }, [applySettings, load]);
 
@@ -372,9 +383,11 @@ export function HomeNatureScreen() {
       const row = settings.videos.find((v) => v.id === id) ?? null;
       if (!row) return null;
       const pb = resolveNaturePlayback({ ...settings, activeVideoId: id });
+      const remote = pb?.videoSrc ? toAbsoluteUrl(baseUrl, pb.videoSrc) : "";
+      const resolved = resolveNatureCoverPlayback(id, remote);
+      if (resolved.bundledModule != null || resolved.uri.trim()) return resolved;
       if (!pb?.videoSrc) return null;
-      const remote = toAbsoluteUrl(baseUrl, pb.videoSrc);
-      return resolveNatureCoverPlayback(id, remote);
+      return resolved;
     },
     [settings, baseUrl, naturePackRev],
   );
@@ -384,7 +397,23 @@ export function HomeNatureScreen() {
     [sceneId, resolveScenePlayback],
   );
 
-  const homeContentReady = Boolean(settings && playback && currentPlayback);
+  // 首启兜底：弱网 / 旧包配置异常时，最多 4.5s 后强制用安装包内场景进首页。
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+      setSettings((prev) => {
+        if (prev?.videos.length) return prev;
+        const bundled = getBundledNatureSettings();
+        return bundled.videos.length > 0 ? bundled : prev;
+      });
+      setLocalActiveId((prev) => {
+        if (prev.trim()) return prev;
+        const bundled = getBundledNatureSettings();
+        return bundled.activeVideoId?.trim() || bundled.videos[0]?.id || prev;
+      });
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!error) return;
@@ -1006,13 +1035,14 @@ export function HomeNatureScreen() {
     voiceSpeaking,
   ]);
 
-  if (loading || !homeContentReady) {
+  if (loading && !settings?.videos.length) {
     return <AppLogoSplash />;
   }
 
   const showSceneStrip = !showLandscapeVideo || landscapeScenePickerOpen;
   const sceneStripBottomPad =
     showLandscapeVideo && landscapeScenePickerOpen ? Math.max(insets.bottom, 12) : bottomNavSlot;
+  const trimmedPosterFallback = posterUri.trim();
 
   const renderSceneThumb = (item: NatureVideoEntry) => {
     const selected = !loopAllScenesEnabled && item.id === sceneId;
@@ -1049,16 +1079,26 @@ export function HomeNatureScreen() {
         style={videoBackdropStyle}
         collapsable={false}
       >
-        <FullBleedCoverVideo
-          sceneId={sceneId}
-          resolveScenePlayback={resolveScenePlayback}
-          posterUri={posterUri || undefined}
-          forcePosterMode={androidBlurUsesPosterStage}
-          rate={clampedRate}
-          layoutMode={showLandscapeVideo ? "landscape-cover" : "portrait-cover"}
-          nativeFullCover={Platform.OS === "android"}
-          onSceneVideoReady={handleSceneVideoReady}
-        />
+        {videoStageMounted ? (
+          <FullBleedCoverVideo
+            sceneId={sceneId}
+            resolveScenePlayback={resolveScenePlayback}
+            posterUri={posterUri || undefined}
+            forcePosterMode={androidBlurUsesPosterStage}
+            rate={clampedRate}
+            layoutMode={showLandscapeVideo ? "landscape-cover" : "portrait-cover"}
+            nativeFullCover={Platform.OS === "android"}
+            onSceneVideoReady={handleSceneVideoReady}
+          />
+        ) : trimmedPosterFallback ? (
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+            <Image
+              source={{ uri: trimmedPosterFallback }}
+              style={StyleSheet.absoluteFillObject}
+              resizeMode="cover"
+            />
+          </View>
+        ) : null}
         {hasVideoStage &&
         (settingsOpen || softFocus.blurPx > 0.02 || softFocus.overlayOpacity > 0.02) ? (
           <NatureHomeSoftFocusLayer prefs={softFocus} posterUri={posterUri || undefined} />

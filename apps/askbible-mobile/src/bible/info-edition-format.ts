@@ -1,3 +1,45 @@
+/** 查找资料中隐藏的版块标题（与 Web `ReadChapterInfoEditionMarkdown` 一致） */
+export const INFO_EDITION_KEY_SCENES_HEADING_PATTERNS = [
+  /^关键画面$/,
+  /^關鍵畫面$/,
+  /^Key\s+Scenes$/i,
+  /^Key\s+Visuals$/i,
+];
+
+export function stripInfoEditionSectionByHeading(
+  markdown: string,
+  headingPatterns: RegExp[],
+): string {
+  if (!markdown.trim()) return markdown;
+  const lines = markdown.split(/\r?\n/);
+  const keep: string[] = [];
+  let i = 0;
+
+  const isHeading = (line: string): { level: number; text: string } | null => {
+    const m = line.match(/^(#{1,6})\s+(.*\S)\s*$/);
+    if (!m) return null;
+    return { level: m[1]!.length, text: m[2]! };
+  };
+
+  while (i < lines.length) {
+    const heading = isHeading(lines[i] ?? "");
+    if (heading && heading.level <= 3 && headingPatterns.some((re) => re.test(heading.text))) {
+      const startLevel = heading.level;
+      i += 1;
+      while (i < lines.length) {
+        const nextHeading = isHeading(lines[i] ?? "");
+        if (nextHeading && nextHeading.level <= startLevel) break;
+        i += 1;
+      }
+      continue;
+    }
+    keep.push(lines[i] ?? "");
+    i += 1;
+  }
+
+  return keep.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 /** 与网站 `lib/bible/info-edition-v1-format.ts` 一致 */
 export function normalizeInfoEditionCompareMarkdown(raw: string): string {
   let text = raw.trim();

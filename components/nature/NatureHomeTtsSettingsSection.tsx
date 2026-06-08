@@ -91,12 +91,12 @@ export function NatureHomeTtsSettingsSection({ onPrefsChanged }: Props) {
 
   return (
     <>
-      <div className="flex min-h-[34px] items-start gap-2" aria-label={t("nature.homeSettings.ttsRateSection")}>
+      <div className="flex w-max max-w-full min-h-[34px] items-start gap-2" aria-label={t("nature.homeSettings.ttsRateSection")}>
         <div className="flex w-[26px] shrink-0 items-center justify-center pt-2" aria-hidden>
           <ShellMaterialIcon name="tune" size={18} color="rgba(255,255,255,0.5)" />
         </div>
-        <div className="flex min-w-0 flex-1 gap-2">
-          <div className="min-w-0 flex-1">
+        <div className="flex w-max shrink-0 gap-2">
+          <div className="w-[5.5rem] shrink-0">
             <div className="mb-1 flex items-center gap-2">
               <ShellMaterialIcon name="speed" size={16} color="rgba(255,255,255,0.5)" />
               <span className="sr-only">{t("nature.homeSettings.ttsRateSection")}</span>
@@ -116,7 +116,7 @@ export function NatureHomeTtsSettingsSection({ onPrefsChanged }: Props) {
               }}
             />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="w-[5.5rem] shrink-0">
             <div className="mb-1 flex items-center gap-2">
               <ShellMaterialIcon name="graphic_eq" size={16} color="rgba(255,255,255,0.5)" />
               <span className="sr-only">{t("nature.homeSettings.ttsPitchSection")}</span>
@@ -139,11 +139,11 @@ export function NatureHomeTtsSettingsSection({ onPrefsChanged }: Props) {
         </div>
       </div>
 
-      <div className="flex min-h-[34px] items-center gap-2" aria-label={t("nature.homeSettings.ttsVoiceSection")}>
+      <div className="flex w-max max-w-full min-h-[34px] items-center gap-2" aria-label={t("nature.homeSettings.ttsVoiceSection")}>
         <div className="flex w-[26px] shrink-0 items-center justify-center" aria-hidden>
           <ShellMaterialIcon name="record_voice_over" size={18} color="rgba(255,255,255,0.5)" />
         </div>
-        <div className="min-w-0 flex-1 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <div className="max-w-[12.5rem] shrink-0 overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <div className="flex items-center gap-1.5 pr-1">
             <button
               type="button"

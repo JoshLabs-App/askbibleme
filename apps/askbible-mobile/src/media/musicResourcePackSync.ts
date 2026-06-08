@@ -69,28 +69,65 @@ async function persistState() {
   }
 }
 
+async function pruneMissingPackFiles(byPath: Record<string, string>): Promise<Record<string, string>> {
+  const entries = Object.entries(byPath);
+  if (entries.length === 0) return byPath;
+  const next: Record<string, string> = {};
+  await Promise.all(
+    entries.map(async ([key, uri]) => {
+      const path = String(uri || "").trim();
+      if (!path) return;
+      try {
+        const info = await FileSystem.getInfoAsync(path);
+        if (info.exists) next[key] = path;
+      } catch {
+        /* drop stale path */
+      }
+    }),
+  );
+  return next;
+}
+
 async function hydrateState() {
   if (hydrated) return;
   try {
     const raw = (await AsyncStorage.getItem(STORAGE_KEY))?.trim();
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<MusicPackState>;
+      const byPath =
+        parsed.byPath && typeof parsed.byPath === "object"
+          ? (parsed.byPath as Record<string, string>)
+          : {};
+      const pruned = await pruneMissingPackFiles(byPath);
       state = {
         version: typeof parsed.version === "string" ? parsed.version : "",
         store:
           parsed.store && typeof parsed.store === "object"
             ? (parsed.store as MusicCompanionStore)
             : null,
-        byPath:
-          parsed.byPath && typeof parsed.byPath === "object"
-            ? (parsed.byPath as Record<string, string>)
-            : {},
+        byPath: pruned,
       };
+      if (Object.keys(pruned).length !== Object.keys(byPath).length) {
+        await persistState();
+      }
     }
   } catch {
     state = { version: "", store: null, byPath: {} };
   } finally {
     hydrated = true;
+  }
+}
+
+async function isMusicAssetLocal(assetPath: string): Promise<boolean> {
+  const key = normalizeMusicAssetPath(assetPath);
+  if (!key) return false;
+  const uri = state.byPath[key]?.trim();
+  if (!uri) return false;
+  try {
+    const info = await FileSystem.getInfoAsync(uri);
+    return Boolean(info.exists);
+  } catch {
+    return false;
   }
 }
 
@@ -294,4 +331,137 @@ export async function readSyncedMusicCompanionStore(): Promise<MusicCompanionSto
 export function subscribeMusicResourcePackChange(onChange: () => void): () => void {
   listeners.add(onChange);
   return () => listeners.delete(onChange);
+}
+
+export type MusicTrackDownloadInput = {
+  src: string;
+  analysisSrc?: string;
+};
+
+async function downloadMusicAssetDirect(
+  baseUrl: string,
+  assetPath: string,
+  onUnitProgress?: (percent: number) => void,
+): Promise<string | null> {
+  const pathNorm = normalizeMusicAssetPath(assetPath);
+  if (!pathNorm.startsWith("/music/") || pathNorm.includes("..")) return null;
+  const remote = toAbsoluteUrl(baseUrl, pathNorm);
+  if (!remote) return null;
+  const target = localUriForPath(pathNorm);
+  await ensureParentDir(target);
+  try {
+    await FileSystem.deleteAsync(target, { idempotent: true });
+  } catch {
+    /* ignore */
+  }
+  if (onUnitProgress) {
+    const resumable = FileSystem.createDownloadResumable(remote, target, {}, (progress) => {
+      const total = progress.totalBytesExpectedToWrite;
+      const pct =
+        total > 0 ? Math.min(100, Math.floor((progress.totalBytesWritten / total) * 100)) : 0;
+      onUnitProgress(pct);
+    });
+    const result = await resumable.downloadAsync();
+    if (!result?.uri || result.status !== 200) return null;
+    onUnitProgress(100);
+    return target;
+  }
+  const result = await FileSystem.downloadAsync(remote, target);
+  if (!result?.uri || result.status !== 200) return null;
+  return target;
+}
+
+/** 按需下载单首曲目（mp3 + 分析 JSON），写入 DocumentDirectory，供本地播放。 */
+export async function downloadMusicTrackAssets(
+  track: MusicTrackDownloadInput,
+  options: ResourcePackSyncOptions = {},
+): Promise<boolean> {
+  await hydrateState();
+  const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
+  const wanted = [
+    normalizeMusicAssetPath(track.src),
+    track.analysisSrc?.trim() ? normalizeMusicAssetPath(track.analysisSrc) : null,
+  ].filter((p): p is string => Boolean(p));
+
+  if (wanted.length === 0) return false;
+
+  const localChecks = await Promise.all(wanted.map((p) => isMusicAssetLocal(p)));
+  if (localChecks.every(Boolean)) return true;
+
+  let assetsToFetch: MusicPackAsset[] = [];
+  try {
+    const manifest = await fetchMusicPackManifest();
+    if (manifest) {
+      assetsToFetch = manifest.assets.filter((asset) =>
+        wanted.includes(normalizeMusicAssetPath(asset.path)),
+      );
+      if (manifest.store && typeof manifest.store === "object") {
+        state.store = manifest.store;
+      }
+    }
+  } catch {
+    assetsToFetch = [];
+  }
+
+  const total = Math.max(1, assetsToFetch.length || wanted.length);
+  let completed = 0;
+
+  for (const assetPath of wanted) {
+    const key = normalizeMusicAssetPath(assetPath);
+    if (await isMusicAssetLocal(key)) {
+      completed += 1;
+      continue;
+    }
+    const manifestAsset = assetsToFetch.find((a) => normalizeMusicAssetPath(a.path) === key);
+    options.onProgress?.({
+      completedUnits: completed,
+      totalUnits: total,
+      currentLabel: key,
+      unitPercent: 0,
+    });
+    const onUnitProgress = (unitPercent: number) => {
+      options.onProgress?.({
+        completedUnits: completed,
+        totalUnits: total,
+        currentLabel: key,
+        unitPercent,
+      });
+    };
+    // 单曲按需下载：优先直存（大文件 MD5 校验在部分机型上过慢或失败）。
+    let uri = await downloadMusicAssetDirect(baseUrl, key, onUnitProgress);
+    if (!uri && manifestAsset) {
+      uri = await downloadAsset(baseUrl, manifestAsset, onUnitProgress);
+    }
+    if (!uri) {
+      delete state.byPath[key];
+      await persistState();
+      return false;
+    }
+    if (manifestAsset) {
+      try {
+        const info = await FileSystem.getInfoAsync(uri);
+        if (!info.exists || (typeof info.size === "number" && info.size !== manifestAsset.size)) {
+          delete state.byPath[key];
+          await persistState();
+          return false;
+        }
+      } catch {
+        delete state.byPath[key];
+        await persistState();
+        return false;
+      }
+    }
+    state.byPath[key] = uri;
+    completed += 1;
+  }
+
+  await persistState();
+  emit();
+  options.onProgress?.({
+    completedUnits: total,
+    totalUnits: total,
+    currentLabel: "",
+    unitPercent: 100,
+  });
+  return true;
 }

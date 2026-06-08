@@ -35,10 +35,16 @@ MOBILE_BUNDLE_MUSIC_LIMIT=1 \
 MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a7xcip5q \
 npm run mobile:sync-offline-media
 
+echo "→ 离线资源体积审计…"
+npm run mobile:audit:bundle-size
+
+echo "→ 校验 EAS 归档是否包含 mp3/mp4/sqlite…"
+node scripts/verify-eas-archive-assets.mjs
+
 cd apps/askbible-mobile
 
 echo "→ 提交 EAS iOS production 构建…"
-EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=0 \
+EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=1 \
 EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=0 \
 EXPO_PUBLIC_MEMBER_REGISTER_ENABLED=1 \
 EXPO_PUBLIC_ASKBIBLE_BASE_URL="https://askbible.me" \

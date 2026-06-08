@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ExploreProsePage } from "@/components/explore/ExploreProsePage";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   formatExploreRefLabel,
@@ -51,19 +52,14 @@ export function ExploreScriptureAccordionContent({
   const pending = locale === "en" ? "Loading verse..." : "经文加载中…";
 
   return (
-    <div className="mx-auto w-full max-w-xl flex-1 px-5 pb-24 pt-6 text-ink sm:max-w-2xl md:px-8">
-      <Link
-        href={backHref}
-        className="text-[13px] font-medium text-ink/72 underline decoration-ink/20 underline-offset-[0.2em]"
-      >
+    <ExploreProsePage>
+      <Link href={backHref} className="explore-prose-back underline">
         {t(backLabelKey)}
       </Link>
 
-      <header className="mt-4 text-center">
-        <h1 className="font-serif text-[clamp(1.6rem,4.5vw,2rem)] font-medium leading-snug tracking-[-0.02em] text-ink/92">
-          {t(titleKey)}
-        </h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-ink/68">{t(subtitleKey)}</p>
+      <header className="explore-prose-header text-center">
+        <h1 className="explore-prose-title">{t(titleKey)}</h1>
+        <p className="explore-prose-subtitle">{t(subtitleKey)}</p>
       </header>
 
       <div className="mt-8 space-y-2.5">
@@ -98,10 +94,10 @@ export function ExploreScriptureAccordionContent({
                 <div className="space-y-3 border-t border-ink/8 px-4 pb-4 pt-2">
                   {category.refs.map((ref) => (
                     <div key={`${category.title}-${ref}`}>
-                      <p className="text-[16px] leading-relaxed text-ink/78">
+                      <p className="explore-prose-verse">
                         {verseTextByRef[ref] ?? pending}
                       </p>
-                      <p className="mt-1 text-right text-[12px] font-semibold text-ink/45">
+                      <p className="explore-prose-ref">
                         — {formatExploreRefLabel(ref, parsedByRaw[ref], locale)}
                       </p>
                     </div>
@@ -112,6 +108,6 @@ export function ExploreScriptureAccordionContent({
           );
         })}
       </div>
-    </div>
+    </ExploreProsePage>
   );
 }

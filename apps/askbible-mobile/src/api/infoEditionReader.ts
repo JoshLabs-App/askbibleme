@@ -1,5 +1,5 @@
 import { loadBundledInfoEditionChapter } from "../bible/bundled-info-edition";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { t } from "../i18n/site-copy";
 import type {
@@ -70,7 +70,7 @@ export async function fetchInfoEditionCache(
   roleId?: string | null,
 ): Promise<InfoEditionReaderCachePayload> {
   const bundled = bundledCachePayload(bookId, chapter, variant, roleId);
-  if (bundled.status === "ready" || isMobileBundledOnly()) {
+  if (bundled.status === "ready" || isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled;
   }
 
@@ -91,7 +91,7 @@ export async function postInfoEditionGenerate(
   roleId?: string | null,
 ): Promise<InfoEditionReaderCachePayload> {
   const bundled = bundledCachePayload(bookId, chapter, variant, roleId);
-  if (bundled.status === "ready" || isMobileBundledOnly()) {
+  if (bundled.status === "ready" || isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled;
   }
 
@@ -126,7 +126,7 @@ export async function pollInfoEditionUntilReady(
   roleId?: string | null,
 ): Promise<InfoEditionReaderCachePayload> {
   const bundled = bundledCachePayload(bookId, chapter, variant, roleId);
-  if (bundled.status === "ready" || isMobileBundledOnly()) {
+  if (bundled.status === "ready" || isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled;
   }
 
@@ -146,7 +146,7 @@ export async function loadOrGenerateInfoEdition(
   roleId?: string | null,
 ): Promise<InfoEditionReaderCachePayload> {
   const bundled = bundledCachePayload(bookId, chapter, variant, roleId);
-  if (bundled.status === "ready" || isMobileBundledOnly()) {
+  if (bundled.status === "ready" || isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled;
   }
 

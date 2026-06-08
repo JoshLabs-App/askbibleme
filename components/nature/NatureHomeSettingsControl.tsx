@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { NatureHomeLevelSegment } from "@/components/nature/NatureHomeLevelSegment";
@@ -45,7 +45,7 @@ const SETTINGS_BTN =
 const SHEET =
   "pointer-events-auto relative z-10 flex flex-col gap-1.5 overflow-visible rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left shadow-[0_8px_32px_-10px_rgba(0,0,0,0.55)]";
 
-const ROW = "flex min-h-[34px] items-center gap-2";
+const ROW = "flex w-max max-w-full min-h-[34px] items-center gap-2";
 
 const ROW_ICON = "flex w-[26px] shrink-0 items-center justify-center";
 
@@ -65,7 +65,7 @@ function IconSettingRow({
       <div className={`${ROW_ICON} ${alignTop ? "pt-2" : ""}`.trim()} aria-hidden>
         <ShellMaterialIcon name={icon} size={18} color="rgba(255,255,255,0.5)" />
       </div>
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="w-max max-w-full shrink-0">{children}</div>
     </div>
   );
 }
@@ -134,13 +134,6 @@ export function NatureHomeSettingsControl({
     };
   }, [open]);
 
-  const sheetWidth = useMemo(() => {
-    if (typeof window === "undefined") return 320;
-    const edge = 20;
-    const ratio = window.matchMedia("(orientation: landscape)").matches ? 0.72 : 0.86;
-    return Math.max(280, Math.round(window.innerWidth * ratio - edge));
-  }, [open]);
-
   const panel =
     open && portalReady
       ? createPortal(
@@ -162,9 +155,8 @@ export function NatureHomeSettingsControl({
               id="nature-home-settings-panel"
               role="region"
               aria-label={t("nature.homeSettings.panelTitle")}
-              className={SHEET}
+              className={`${SHEET} w-max max-w-[min(calc(100vw-1.5rem),20rem)] shrink-0`}
               style={{
-                width: sheetWidth,
                 marginTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
                 marginRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
               }}
@@ -218,7 +210,7 @@ export function NatureHomeSettingsControl({
                 <div className={`${ROW_ICON} pt-2`} aria-hidden>
                   <ShellMaterialIcon name="menu_book" size={18} color="rgba(255,255,255,0.5)" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="w-max max-w-full shrink-0">
                   <NatureHomeTranslationSettings onPrefsChanged={onPrefsChanged} />
                 </div>
               </div>

@@ -13,7 +13,7 @@ export function isShellPrimaryAppRoute(pathname: string): boolean {
   if (isNatureHomeShellPath(p)) return true;
   if (p === "/music") return true;
   if (p === "/explore") return true;
-  if (p === "/read" || p === "/read/catalog") return true;
+  if (p === "/read") return true;
   if (p === "/scenes") return true;
   return false;
 }

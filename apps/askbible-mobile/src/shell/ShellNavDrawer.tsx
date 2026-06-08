@@ -17,10 +17,10 @@ import {
   Text,
   View,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type AppLocale } from "../i18n/config";
+import { getLocalePickerLabel } from "../i18n/locale-display-labels";
 import { useLocale } from "../i18n/LocaleProvider";
 import { resolveLocalizedField } from "../i18n/site-copy";
 import {
@@ -147,43 +147,57 @@ function inferVoiceGender(voice: DeviceVoice): "female" | "male" | "unknown" {
   return "unknown";
 }
 
+function TtsLevelStepPicker({
+  value,
+  onChange,
+  labelForLevel,
+}: {
+  value: NatureHomeTtsLevel;
+  onChange: (level: NatureHomeTtsLevel) => void;
+  labelForLevel: (level: NatureHomeTtsLevel) => string;
+}) {
+  return (
+    <View style={styles.ttsStepTrack} accessibilityRole="radiogroup">
+      <View style={styles.ttsStepRail} pointerEvents="none" />
+      {TTS_LEVELS.map((level) => {
+        const selected = value === level;
+        return (
+          <Pressable
+            key={level}
+            onPress={() => onChange(level)}
+            style={styles.ttsStepHit}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            accessibilityLabel={labelForLevel(level)}
+          >
+            <View style={[styles.ttsStepThumb, selected && styles.ttsStepThumbActive]} />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function LocaleInlineRow({ locale, onLocaleChange, zh, switching }: LocaleInlineRowProps) {
   return (
     <View style={[styles.row, styles.rowInline]}>
       <Text style={styles.rowText}>{zh ? "语言" : "Language"}</Text>
       <View style={styles.localeInlineGroup}>
-        <Pressable
-          onPress={() => onLocaleChange("en")}
-          style={[styles.localeInlineChip, locale === "en" && styles.localeInlineChipActive]}
-          disabled={switching}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "en" }}
-          accessibilityLabel={zh ? "英文（美国旗）" : "English (US flag)"}
-        >
-          <Text style={[styles.localeInlineIcon, locale === "en" && styles.localeInlineIconActive]}>
-            🇺🇸
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => onLocaleChange("zh-TW")}
-          style={[styles.localeInlineChip, locale === "zh-TW" && styles.localeInlineChipActive]}
-          disabled={switching}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "zh-TW" }}
-          accessibilityLabel="繁体"
-        >
-          <Text style={[styles.localeInlineIcon, locale === "zh-TW" && styles.localeInlineIconActive]}>🇹🇼</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => onLocaleChange("zh-CN")}
-          style={[styles.localeInlineChip, locale === "zh-CN" && styles.localeInlineChipActive]}
-          disabled={switching}
-          accessibilityRole="button"
-          accessibilityState={{ selected: locale === "zh-CN" }}
-          accessibilityLabel="中简"
-        >
-          <Text style={[styles.localeInlineIcon, locale === "zh-CN" && styles.localeInlineIconActive]}>🇨🇳</Text>
-        </Pressable>
+        {(["en", "zh-TW", "zh-CN"] as const).map((item) => (
+          <Pressable
+            key={item}
+            onPress={() => onLocaleChange(item)}
+            style={[styles.localeInlineChip, locale === item && styles.localeInlineChipActive]}
+            disabled={switching}
+            accessibilityRole="button"
+            accessibilityState={{ selected: locale === item }}
+            accessibilityLabel={getLocalePickerLabel(item)}
+          >
+            <Text style={[styles.localeInlineLabel, locale === item && styles.localeInlineLabelActive]}>
+              {getLocalePickerLabel(item)}
+            </Text>
+          </Pressable>
+        ))}
       </View>
     </View>
   );
@@ -372,12 +386,14 @@ export function ShellNavDrawer() {
     void writeNatureHomeTtsPrefs(next);
   };
 
-  const rateLabel = zh
-    ? ["很慢", "偏慢", "标准", "偏快", "很快"][ttsRateLevel]
-    : ["Very slow", "Slow", "Normal", "Fast", "Very fast"][ttsRateLevel];
-  const pitchLabel = zh
-    ? ["很低", "偏低", "标准", "偏高", "很高"][ttsPitchLevel]
-    : ["Very low", "Low", "Normal", "High", "Very high"][ttsPitchLevel];
+  const rateLabels = zh
+    ? (["很慢", "偏慢", "标准", "偏快", "很快"] as const)
+    : (["Very slow", "Slow", "Normal", "Fast", "Very fast"] as const);
+  const pitchLabels = zh
+    ? (["很低", "偏低", "标准", "偏高", "很高"] as const)
+    : (["Very low", "Low", "Normal", "High", "Very high"] as const);
+  const rateLabel = rateLabels[ttsRateLevel] ?? rateLabels[2];
+  const pitchLabel = pitchLabels[ttsPitchLevel] ?? pitchLabels[2];
   const voiceOptions = [
     { id: "", label: zh ? "系统默认" : "System default", gender: "unknown" as const },
     ...ttsVoices.map((voice) => ({
@@ -537,7 +553,12 @@ export function ShellNavDrawer() {
                 </Pressable>
               </View>
 
-              <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.scroll}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
                 <LocaleInlineRow locale={locale} onLocaleChange={handleLocaleChange} zh={zh} switching={localeSwitching} />
                 <View style={styles.compactGap} />
                 <Text style={styles.sectionLabelCompact}>{zh ? "主页经文池" : "Home verse pool"}</Text>
@@ -610,18 +631,10 @@ export function ShellNavDrawer() {
                         <Text style={styles.ttsSliderLabel}>{zh ? "语速" : "Speed"}</Text>
                         <Text style={styles.ttsSliderValue}>{rateLabel}</Text>
                       </View>
-                      <Slider
-                        style={styles.ttsSlider}
-                        minimumValue={0}
-                        maximumValue={4}
-                        step={1}
+                      <TtsLevelStepPicker
                         value={ttsRateLevel}
-                        minimumTrackTintColor="rgba(255, 177, 1, 0.9)"
-                        maximumTrackTintColor="rgba(120, 53, 15, 0.25)"
-                        thumbTintColor="#C28A2A"
-                        onValueChange={(value) => setTtsRateLevel(TTS_LEVELS[Math.round(value)] ?? 2)}
-                        onSlidingComplete={(value) => {
-                          const nextRate = TTS_LEVELS[Math.round(value)] ?? 2;
+                        labelForLevel={(level) => rateLabels[level] ?? rateLabels[2]}
+                        onChange={(nextRate) => {
                           persistTtsPrefs({
                             rateLevel: nextRate,
                             pitchLevel: ttsPitchLevel,
@@ -634,18 +647,10 @@ export function ShellNavDrawer() {
                         <Text style={styles.ttsSliderLabel}>{zh ? "音调" : "Pitch"}</Text>
                         <Text style={styles.ttsSliderValue}>{pitchLabel}</Text>
                       </View>
-                      <Slider
-                        style={styles.ttsSlider}
-                        minimumValue={0}
-                        maximumValue={4}
-                        step={1}
+                      <TtsLevelStepPicker
                         value={ttsPitchLevel}
-                        minimumTrackTintColor="rgba(255, 177, 1, 0.9)"
-                        maximumTrackTintColor="rgba(120, 53, 15, 0.25)"
-                        thumbTintColor="#C28A2A"
-                        onValueChange={(value) => setTtsPitchLevel(TTS_LEVELS[Math.round(value)] ?? 2)}
-                        onSlidingComplete={(value) => {
-                          const nextPitch = TTS_LEVELS[Math.round(value)] ?? 2;
+                        labelForLevel={(level) => pitchLabels[level] ?? pitchLabels[2]}
+                        onChange={(nextPitch) => {
                           persistTtsPrefs({
                             rateLevel: ttsRateLevel,
                             pitchLevel: nextPitch,
@@ -993,10 +998,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "rgba(120, 95, 60, 0.85)",
   },
-  ttsSlider: {
-    width: "100%",
-    height: 28,
-    marginBottom: 2,
+  ttsStepTrack: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+    minHeight: 36,
+    position: "relative",
+  },
+  ttsStepRail: {
+    position: "absolute",
+    left: "10%",
+    right: "10%",
+    top: "50%",
+    marginTop: -1,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: "rgba(120, 53, 15, 0.2)",
+  },
+  ttsStepHit: {
+    flex: 1,
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ttsStepThumb: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.35)",
+    backgroundColor: "rgba(255, 248, 235, 0.95)",
+  },
+  ttsStepThumbActive: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderColor: "#C28A2A",
+    backgroundColor: "rgba(255, 177, 1, 0.92)",
   },
   ttsVoiceRow: {
     marginTop: 2,
@@ -1073,8 +1111,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   localeInlineChip: {
-    minWidth: 42,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     minHeight: 32,
     borderRadius: 999,
     alignItems: "center",
@@ -1087,13 +1124,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 177, 1, 0.18)",
     borderColor: "rgba(255, 177, 1, 0.75)",
   },
-  localeInlineIcon: {
-    fontSize: 18,
-    lineHeight: 20,
+  localeInlineLabel: {
+    fontSize: 12,
+    lineHeight: 16,
     color: "rgba(55, 53, 47, 0.72)",
     ...parchmentSans(600),
   },
-  localeInlineIconActive: {
+  localeInlineLabelActive: {
     color: "rgba(120, 75, 30, 0.95)",
   },
   rowSelected: {

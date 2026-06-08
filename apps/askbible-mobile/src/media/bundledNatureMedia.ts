@@ -15,38 +15,49 @@ export {
 } from "./natureSceneReadiness";
 
 export function resolveNatureVideoPlaybackUri(videoId: string, remoteAbsolute: string): string {
+  const id = videoId.trim();
+  if (id) {
+    const bundled = resolveBundledNatureVideoUri(id);
+    if (bundled) return bundled;
+  }
   const synced = resolveNatureResourcePackUri(remoteAbsolute);
   if (synced) return synced;
-  const id = videoId.trim();
-  if (!id) return "";
-  return resolveBundledNatureVideoUri(id) ?? "";
+  return "";
 }
 
-/** APK 内场景：有内置 mp4 则直连 require；否则才用远程 URI */
+/** 安装包内置 mp4 优先；其次已下载资源包；不常规直连远端 URL。 */
 export function resolveNatureCoverPlayback(
   videoId: string,
   remoteAbsolute: string,
 ): NatureCoverPlayback {
   const id = videoId.trim();
+  const bundledModule = id ? (getBundledNatureVideoModule(id) ?? undefined) : undefined;
+  if (bundledModule != null) {
+    return {
+      sceneId: id,
+      uri: resolveBundledNatureVideoUri(id) ?? "",
+      bundledModule,
+    };
+  }
   const synced = resolveNatureResourcePackUri(remoteAbsolute);
   if (synced) {
     return { sceneId: id, uri: synced };
   }
-  const bundledModule = id ? (getBundledNatureVideoModule(id) ?? undefined) : undefined;
-  const uri = bundledModule != null ? resolveBundledNatureVideoUri(id) ?? "" : "";
-  return { sceneId: id, uri, bundledModule };
+  return { sceneId: id, uri: "" };
 }
 
 export function resolveNaturePosterPlaybackUri(
   videoId: string,
   remoteAbsolute: string,
 ): string {
+  const id = videoId.trim();
+  if (id) {
+    const bundled = resolveBundledNaturePosterUri(id);
+    if (bundled) return bundled;
+  }
   const synced = resolveNatureResourcePackUri(remoteAbsolute);
   if (synced) return synced;
-  const id = videoId.trim();
-  if (!id) return "";
-  const bundled = resolveBundledNaturePosterUri(id);
-  return bundled ?? "";
+  return "";
 }
 
 export function resolveNaturePosterPlaybackModule(videoId: string): number | null {

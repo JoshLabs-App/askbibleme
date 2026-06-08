@@ -1,30 +1,6 @@
-import { BibleCatalogReadOutline } from "@/components/bible/BibleCatalogReadOutline";
-import { ReadCatalogFooterLink, ReadCatalogTopBack } from "@/components/bible/ReadCatalogNavLinks";
-import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
-import { readScriptureCanonCatalog } from "@/lib/bible/read-scripture-canon-catalog";
-import { sitePageTitle } from "@/lib/site-metadata-defaults";
-import "./bible-catalog.css";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: sitePageTitle("六十六卷"),
-  description: "圣经正典目录与历史时期线索。",
-};
-
-export default function ReadCatalogPage() {
-  const canon = readScriptureCanonCatalog();
-
-  return (
-    <ScriptureChrome parchmentColumnClassName="read-bible-parchment-column--catalog">
-      <div className="bible-catalog-page--read bible-catalog-on-parchment min-h-0 w-full">
-        <header className="bible-catalog-read-header">
-          <ReadCatalogTopBack />
-          <h1 className="bible-catalog-read-h1">六十六卷</h1>
-        </header>
-
-        <BibleCatalogReadOutline sections={canon.sections} />
-
-        <ReadCatalogFooterLink />
-      </div>
-    </ScriptureChrome>
-  );
+/** 兼容旧链接；真源路由为 `/read/read`（对齐 iOS stack）。 */
+export default function ReadCatalogLegacyPage() {
+  redirect("/read/read");
 }

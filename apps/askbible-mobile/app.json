@@ -6,11 +6,20 @@
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
     "updates": {
-      "enabled": true,
-      "checkAutomatically": "ON_LOAD",
+      "enabled": false,
+      "checkAutomatically": "NEVER",
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/69075cfd-d810-4e00-a8ca-022ba18418c9"
     },
+    "assetBundlePatterns": [
+      "assets/music/**/*",
+      "assets/nature/**/*",
+      "assets/scripture/**/*",
+      "assets/content/**/*",
+      "assets/audio/scenes/**/*",
+      "assets/bible/**/*",
+      "assets/images/**/*"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,6 +30,7 @@
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
+      "buildNumber": "18",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -30,7 +40,7 @@
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 6,
+      "versionCode": 13,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

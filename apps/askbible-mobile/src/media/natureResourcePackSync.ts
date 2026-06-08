@@ -69,23 +69,47 @@ async function persistState() {
   }
 }
 
+async function pruneMissingPackFiles(byPath: Record<string, string>): Promise<Record<string, string>> {
+  const entries = Object.entries(byPath);
+  if (entries.length === 0) return byPath;
+  const next: Record<string, string> = {};
+  await Promise.all(
+    entries.map(async ([key, uri]) => {
+      const path = String(uri || "").trim();
+      if (!path) return;
+      try {
+        const info = await FileSystem.getInfoAsync(path);
+        if (info.exists) next[key] = path;
+      } catch {
+        /* drop stale path */
+      }
+    }),
+  );
+  return next;
+}
+
 async function hydrateState() {
   if (hydrated) return;
   try {
     const raw = (await AsyncStorage.getItem(STORAGE_KEY))?.trim();
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<NaturePackState>;
+      const byPath =
+        parsed.byPath && typeof parsed.byPath === "object"
+          ? (parsed.byPath as Record<string, string>)
+          : {};
+      const pruned = await pruneMissingPackFiles(byPath);
       state = {
         version: typeof parsed.version === "string" ? parsed.version : "",
         settings:
           parsed.settings && typeof parsed.settings === "object"
             ? (parsed.settings as NatureSettingsV2)
             : null,
-        byPath:
-          parsed.byPath && typeof parsed.byPath === "object"
-            ? (parsed.byPath as Record<string, string>)
-            : {},
+        byPath: pruned,
       };
+      if (Object.keys(pruned).length !== Object.keys(byPath).length) {
+        await persistState();
+      }
     }
   } catch {
     state = { version: "", settings: null, byPath: {} };

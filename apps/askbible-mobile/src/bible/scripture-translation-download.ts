@@ -1,7 +1,12 @@
 import * as FileSystem from "expo-file-system/legacy";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
-import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
 import {
+  BUNDLED_SCRIPTURE_TRANSLATION_IDS,
+  isBundledScriptureTranslation,
+} from "./bundled-scripture-translations";
+import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
+import {
+  getScriptureDatabase,
   getScriptureDatabaseDestPath,
   isScriptureTranslationInstalled,
   markScriptureDatabaseInstalled,
@@ -144,6 +149,71 @@ export async function ensureScriptureTranslationReady(
   translationId: string,
   downloadUrl?: string | null,
 ): Promise<void> {
-  if (await isScriptureTranslationInstalled(translationId)) return;
-  await downloadScriptureTranslation(translationId, downloadUrl);
+  const id = String(translationId || "").trim();
+  if (!id) throw new Error("译本 id 无效");
+  if (isBundledScriptureTranslation(id)) {
+    await getScriptureDatabase(id);
+    return;
+  }
+  if (await isScriptureTranslationInstalled(id)) return;
+  if (isMobileOfflineFirst()) {
+    throw new Error("译本未安装");
+  }
+  await downloadScriptureTranslation(id, downloadUrl);
+}
+
+/** 联网下载失败时回退到安装包内译本，避免读经页空白。 */
+export async function ensureScriptureTranslationReadyWithFallback(
+  translationId: string,
+  downloadUrl?: string | null,
+): Promise<string> {
+  const id = String(translationId || "").trim() || "cuv-simp";
+  if (isMobileOfflineFirst()) {
+    if (isBundledScriptureTranslation(id)) {
+      await ensureScriptureTranslationReady(id);
+      return id;
+    }
+    if (await isScriptureTranslationInstalled(id)) return id;
+    for (const fallbackId of BUNDLED_SCRIPTURE_TRANSLATION_IDS) {
+      try {
+        await ensureScriptureTranslationReady(fallbackId);
+        return fallbackId;
+      } catch {
+        /* try next bundled translation */
+      }
+    }
+    await ensureScriptureTranslationReady("cuv-simp");
+    return "cuv-simp";
+  }
+  try {
+    await ensureScriptureTranslationReady(id, downloadUrl);
+    return id;
+  } catch {
+    for (const fallbackId of BUNDLED_SCRIPTURE_TRANSLATION_IDS) {
+      if (fallbackId === id) continue;
+      try {
+        await ensureScriptureTranslationReady(fallbackId);
+        return fallbackId;
+      } catch {
+        /* try next bundled translation */
+      }
+    }
+    await ensureScriptureTranslationReady("cuv-simp");
+    return "cuv-simp";
+  }
+}
+
+/** 仅预热主译本（~5MB），避免首次进读经时复制全部 3 个内置 sqlite（~15MB）。 */
+export async function preloadPrimaryScriptureTranslation(translationId: string): Promise<void> {
+  const id = String(translationId || "").trim();
+  if (!isBundledScriptureTranslation(id)) return;
+  await getScriptureDatabase(id).catch(() => undefined);
+}
+
+export async function preloadBundledScriptureTranslations(): Promise<void> {
+  await Promise.all(
+    BUNDLED_SCRIPTURE_TRANSLATION_IDS.map((id) =>
+      getScriptureDatabase(id).catch(() => undefined),
+    ),
+  );
 }

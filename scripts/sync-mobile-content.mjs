@@ -26,6 +26,7 @@ const copies = [
   ["data/bible/info-edition-v1-published.json", "info-edition-v1-published.json"],
   ["data/admin/generation-roles.json", "generation-roles.json"],
   ["data/bible-reading-plans/registry.json", "reading-plans-registry.json"],
+  ["data/bible/teochew-nt-audio-manifest.json", "../bible/teochew-nt-audio-manifest.json"],
 ];
 
 fs.mkdirSync(destDir, { recursive: true });
@@ -37,6 +38,7 @@ for (const [relSrc, destName] of copies) {
     console.error(`Missing ${src}`);
     process.exit(1);
   }
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.copyFileSync(src, dest);
   const kb = (fs.statSync(dest).size / 1024).toFixed(1);
   console.log(`Copied ${relSrc} (${kb} KB) → apps/askbible-mobile/assets/content/${destName}`);

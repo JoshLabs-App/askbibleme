@@ -28,14 +28,7 @@ type Props = {
 };
 
 function itemLabel(item: MobileResourceUpdateItem, zh: boolean): string {
-  const base = zh ? item.labelZh : item.labelEn;
-  if (item.kind === "scripture" && item.reason === "missing") {
-    return zh ? `${base}（新译本）` : `${base} (new)`;
-  }
-  if (item.kind === "scripture" && item.reason === "outdated") {
-    return zh ? `${base}（更新）` : `${base} (update)`;
-  }
-  return base || item.id;
+  return (zh ? item.labelZh : item.labelEn) || item.id;
 }
 
 export function ResourceUpdateSheet({

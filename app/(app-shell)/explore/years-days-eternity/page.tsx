@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { ExploreYearsDaysEternityContent } from "@/components/explore/ExploreYearsDaysEternityContent";
-import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import { loadChapterFromTranslation } from "@/lib/bible/load-chapter-from-default-translation";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
@@ -129,11 +129,11 @@ export default async function ExploreYearsDaysEternityPage() {
   const { enScriptureBodyByRef, enRefLabelByRaw } = await loadEnScriptureOverrides(locale);
 
   return (
-    <ShellTemplateChromeLayout contentClassName="gap-0">
+    <ExploreParchmentChrome proseScroll>
       <ExploreYearsDaysEternityContent
         enScriptureBodyByRef={enScriptureBodyByRef}
         enRefLabelByRaw={enRefLabelByRaw}
       />
-    </ShellTemplateChromeLayout>
+    </ExploreParchmentChrome>
   );
 }

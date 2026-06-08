@@ -103,16 +103,17 @@
 
 .shell-nav-drawer-locale-chip {
   display: inline-flex;
-  min-width: 42px;
   min-height: 32px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   border: 1px solid rgba(120, 53, 15, 0.24);
   background: rgba(255, 248, 235, 0.45);
-  padding: 0 8px;
-  font-size: 18px;
-  line-height: 1.1;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease;

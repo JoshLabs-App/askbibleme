@@ -17,10 +17,12 @@ import {
 import { parchmentSans } from "../fonts/parchmentType";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MinimalProgressBar } from "../ui/MinimalProgressBar";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { MusicEnergyGlow } from "./MusicEnergyGlow";
 import { musicCopy } from "./musicCopy";
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { useMusicPlayback } from "./MusicPlaybackContext";
+import { isTrackPlayable } from "./trackArtwork";
 import { setMusicAutoHideChrome } from "./musicAutoHideChrome";
 import { useTrackAnalysis } from "./useTrackAnalysis";
 import { sampleTrackAnalysisAt } from "./trackAnalysis";
@@ -1077,6 +1079,7 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
     sleepTimerMinutes,
     setSleepTimerMinutes,
     setMusicGain,
+    downloadingTrackId,
   } = useMusicPlayback();
 
   const inTab = layout === "tab";
@@ -1175,13 +1178,15 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
     void setMusicGain(album === "睡眠" ? 0.3 : 1);
   }, [album, setMusicGain]);
 
+  const offlineMusicOnly = isMobileBundledOnly();
   const filteredTrackIndices = useMemo(
     () =>
       tracks
         .map((tr, index) => ({ tr, index }))
         .filter(({ tr }) => inferTrackAlbumLabel(tr) === album)
+        .filter(({ tr }) => !offlineMusicOnly || tr.localReady)
         .map(({ index }) => index),
-    [album, tracks],
+    [album, offlineMusicOnly, tracks],
   );
   const albumNames = useMemo(() => {
     const seen = new Set<string>();
@@ -1211,6 +1216,14 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
     const next = albumNames.find((name) => (albumCounts[name] ?? 0) > 0) ?? DEFAULT_ALBUM;
     if (next !== album) setAlbum(next);
   }, [album, albumCounts, albumNames]);
+
+  useEffect(() => {
+    if (!offlineMusicOnly || filteredTrackIndices.length > 0) return;
+    const nextAlbum = albumNames.find((name) =>
+      tracks.some((tr) => inferTrackAlbumLabel(tr) === name && tr.localReady),
+    );
+    if (nextAlbum && nextAlbum !== album) setAlbum(nextAlbum);
+  }, [album, albumNames, filteredTrackIndices.length, offlineMusicOnly, tracks]);
   const selectAlbum = useCallback(
     (nextAlbum: string) => {
       if (nextAlbum === album) return;
@@ -1227,17 +1240,22 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
         // 非睡眠专辑不自动保留定时，避免看起来“音乐都自动开定时”。
         setSleepTimerMinutes(0);
       }
-      const nextIndices = tracks
+      const albumIndices = tracks
         .map((tr, index) => ({ tr, index }))
         .filter(({ tr }) => inferTrackAlbumLabel(tr) === nextAlbum)
         .map(({ index }) => index);
-      if (nextIndices.length === 0) return;
-      if (nextIndices.includes(trackIndex)) return;
-      const randomOffset = Math.floor(Math.random() * nextIndices.length);
-      const randomTrackIndex = nextIndices[randomOffset] ?? nextIndices[0]!;
-      void playTrackAt(randomTrackIndex);
+      if (albumIndices.length === 0) return;
+      const currentTrack = tracks[trackIndex];
+      const currentAlbumLabel = currentTrack ? inferTrackAlbumLabel(currentTrack) : "";
+      if (nextAlbum === currentAlbumLabel && albumIndices.includes(trackIndex)) return;
+      const playable = albumIndices.filter((idx) => {
+        const tr = tracks[idx];
+        return tr && isTrackPlayable(tr);
+      });
+      void setMusicGain(nextAlbum === "睡眠" ? 0.3 : 1);
+      void playTrackAt((playable[0] ?? albumIndices[0])!);
     },
-    [album, playTrackAt, setMusicRepeatMode, setSleepTimerMinutes, sleepTimerMinutes, trackIndex, tracks],
+    [album, playTrackAt, setMusicGain, setMusicRepeatMode, setSleepTimerMinutes, sleepTimerMinutes, trackIndex, tracks],
   );
   const currentFilteredIndex = useMemo(
     () => filteredTrackIndices.findIndex((idx) => idx === trackIndex),
@@ -1497,10 +1515,14 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
             const tr = tracks[index]!;
             const active = index === trackIndex;
             const label = tr.title.trim() || musicCopy.untitled;
+            const isDownloading = downloadingTrackId === tr.id;
+            const needsCache = !tr.localReady && !offlineMusicOnly && isTrackPlayable(tr);
             return (
               <Pressable
                 key={`${tr.id}-${displayIdx}`}
-                onPress={() => void playTrackAt(index)}
+                onPress={() => {
+                  void playTrackAt(index);
+                }}
                 style={({ pressed }) => [
                   styles.queueRow,
                   {
@@ -1512,6 +1534,16 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
+                {isDownloading ? (
+                  <ActivityIndicator size="small" color="rgba(255,255,255,0.7)" style={styles.queueDownloadIcon} />
+                ) : needsCache ? (
+                  <MaterialIcons
+                    name="cloud-download"
+                    size={16}
+                    color="rgba(255,255,255,0.55)"
+                    style={styles.queueDownloadIcon}
+                  />
+                ) : null}
                 <Text
                   style={[styles.queueText, active && styles.queueTextActive]}
                   numberOfLines={1}
@@ -1523,7 +1555,15 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
           })}
         </View>
       ) : null,
-    [playTrackAt, queueDisplayIndices, queueScrollY, trackIndex, tracks],
+    [
+      downloadingTrackId,
+      offlineMusicOnly,
+      playTrackAt,
+      queueDisplayIndices,
+      queueScrollY,
+      trackIndex,
+      tracks,
+    ],
   );
 
   return (
@@ -2067,9 +2107,15 @@ const styles = StyleSheet.create({
   },
   queueRow: {
     minHeight: QUEUE_ROW_HEIGHT,
+    flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
     paddingVertical: 6,
     paddingHorizontal: 4,
+    gap: 6,
+  },
+  queueDownloadIcon: {
+    marginRight: 2,
   },
   queueText: {
     fontSize: 14,

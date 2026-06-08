@@ -60,6 +60,26 @@
   overflow-y: auto;
 }
 
+/* 探索长文（文章、经文专题）：保留轻微顶缘渐隐，底部不再把正文淡到几乎看不见 */
+.read-bible-parchment-scroll.read-bible-parchment-scroll--explore-prose {
+  --read-parchment-edge-fade-top: 64px;
+  --read-parchment-edge-fade-bottom: 40px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    hsla(0, 0%, 100%, 0) 0,
+    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
+    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
+    hsla(0, 0%, 100%, 1) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    hsla(0, 0%, 100%, 0) 0,
+    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
+    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
+    hsla(0, 0%, 100%, 1) 100%
+  );
+}
+
 .read-bible-parchment-scroll--read-home > .read-bible-parchment-column {
   flex: 0 0 auto;
   width: 100%;

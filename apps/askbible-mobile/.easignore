@@ -1,8 +1,11 @@
+# 与仓库根 .easignore 互补；从 apps/askbible-mobile 发起 build 时生效。
+
 .git
 .git/
 .git/**
 **/.git/
 **/.git/**
+
 node_modules/
 **/node_modules/
 **/node_modules/**
@@ -13,8 +16,10 @@ dist/**
 web-build/
 web-build/**
 expo-env.d.ts
+*.aab
+build-*.aab
 
-# Android build artifacts
+# 本地 Gradle / Xcode 产物（勿上传）
 android/.gradle/
 android/.gradle/**
 android/build/
@@ -29,7 +34,6 @@ android/.cxx/**
 **/.cxx/
 **/build/
 
-# iOS build artifacts
 ios/build/
 ios/build/**
 ios/Pods/
@@ -39,7 +43,22 @@ ios/DerivedData/**
 ios/.symlinks/
 ios/.symlinks/**
 
-# Metro / logs / local env
+# 圣经章朗读 mp3 只走线上包 / 按需下载，不进 EAS 归档（场景环境音 scenes/ 仍随 App）
+assets/audio/web-en/
+assets/audio/teochew-nt/
+assets/audio/blm-es/
+assets/audio/cuv-v20/
+assets/audio/cuv/
+
+# Monorepo 大目录（章朗读源 public/audio、译本 sqlite 真源等）
+../../public/
+../../public/**
+../../data/
+../../data/**
+../../node_modules/
+../../.next/
+../../apps/askbible-tv-webos/
+
 .metro-health-check*
 *.log
 npm-debug.*
@@ -47,4 +66,3 @@ yarn-debug.*
 yarn-error.*
 .env*.local
 .DS_Store
-

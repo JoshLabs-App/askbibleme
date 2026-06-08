@@ -67,8 +67,12 @@ export function mergeNatureVisualPrefs(
 }
 
 export function readNatureVisualLevels(): NatureVisualLevels {
+  const defaults: NatureVisualLevels = {
+    dimLevel: DEFAULT_DIM_LEVEL,
+    blurLevel: DEFAULT_BLUR_LEVEL,
+  };
   if (typeof window === "undefined") {
-    return { dimLevel: DEFAULT_DIM_LEVEL, blurLevel: DEFAULT_BLUR_LEVEL };
+    return defaults;
   }
   try {
     const raw =
@@ -84,11 +88,17 @@ export function readNatureVisualLevels(): NatureVisualLevels {
   } catch {
     /* fall through */
   }
-  const legacy = readNatureSoftFocusPrefs();
-  return {
-    dimLevel: levelFromLegacyOpacity(legacy.overlayOpacity),
-    blurLevel: levelFromLegacyBlur(legacy.blurPx),
-  };
+  try {
+    const legacyRaw = window.localStorage.getItem("selah-nature-soft-focus-v1");
+    if (!legacyRaw?.trim()) return defaults;
+    const legacy = readNatureSoftFocusPrefs();
+    return {
+      dimLevel: levelFromLegacyOpacity(legacy.overlayOpacity),
+      blurLevel: levelFromLegacyBlur(legacy.blurPx),
+    };
+  } catch {
+    return defaults;
+  }
 }
 
 export function writeNatureVisualLevels(levels: NatureVisualLevels): void {

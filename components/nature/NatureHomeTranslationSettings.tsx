@@ -210,9 +210,10 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
     contrastOffLabel;
 
   return (
-    <div className="relative w-full">
-      <div className="relative flex w-full gap-2">
+    <div className="relative w-max max-w-full">
+      <div className="relative flex w-max gap-2">
         <NatureHomeSettingsSelect
+          compact
           accessibilityLabel={primaryDisplay}
           value={primaryValue}
           options={primaryOptions}
@@ -247,6 +248,7 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
           }}
         />
         <NatureHomeSettingsSelect
+          compact
           accessibilityLabel={contrastDisplay}
           value={contrastValue}
           options={contrastOptions}

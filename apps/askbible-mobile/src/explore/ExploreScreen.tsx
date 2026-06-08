@@ -7,7 +7,11 @@ import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { EXPLORE_ENTRIES } from "./exploreEntries";
+import { exploreArticleHref, listExploreFeaturedArticles } from "./exploreFeaturedArticles";
+import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "./exploreFeaturedArticleIcons";
+import { exploreFeaturedArticleLabel } from "./exploreFeaturedArticleLabels";
 import { ExploreEntryIcon } from "./ExploreEntryIcon";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s } from "./exploreParchmentStyles";
 
 const EXPLORE_SCROLL_MAX_W = 448;
@@ -37,6 +41,38 @@ export function ExploreScreen() {
     EXPLORE_ENTRIES.find((entry) => entry.id === id),
   ).filter((entry): entry is (typeof EXPLORE_ENTRIES)[number] => Boolean(entry));
   const topEntries = EXPLORE_ENTRIES.filter((entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as never));
+
+  const featuredArticles = listExploreFeaturedArticles(locale);
+
+  const renderArticleTile = (article: (typeof featuredArticles)[number]) => (
+    <Pressable
+      key={article.slug}
+      onPress={() => router.push(exploreArticleHref(article.slug))}
+      style={({ pressed }) => [
+        s.iconTile,
+        { width: iconTileW },
+        pressed && s.iconTilePressed,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={exploreFeaturedArticleLabel(article.slug, locale, article.title)}
+    >
+      <View style={s.iconCircle}>
+        <MaterialCommunityIcons
+          name={(EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG[article.slug] ?? "file-document-outline") as never}
+          size={28}
+          color={c.ink}
+        />
+      </View>
+      <Text
+        style={s.iconLabel}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+        maxFontSizeMultiplier={1.1}
+      >
+        {exploreFeaturedArticleLabel(article.slug, locale, article.exploreLabel)}
+      </Text>
+    </Pressable>
+  );
 
   const renderEntryTile = (entry: (typeof EXPLORE_ENTRIES)[number]) => (
     <Pressable
@@ -93,6 +129,13 @@ export function ExploreScreen() {
           </Text>
           <View style={s.iconGrid}>
             {scriptureAnthologyEntries.map(renderEntryTile)}
+          </View>
+
+          <Text style={[s.sectionCaption, { marginTop: 28 }]}>
+            {t("pages.explore.articlesHeading")}
+          </Text>
+          <View style={s.iconGrid}>
+            {featuredArticles.map(renderArticleTile)}
           </View>
         </View>
       </ParchmentBottomFadeScrollView>

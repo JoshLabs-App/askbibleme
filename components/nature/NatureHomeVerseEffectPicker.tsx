@@ -30,8 +30,8 @@ export function NatureHomeVerseEffectPicker({ selected, onSelect }: Props) {
   const { t } = useLocale();
 
   return (
-    <div className="flex w-full gap-1" role="radiogroup" aria-label={t("nature.homeSettings.verseEffectSection")}>
-      <div className="flex w-full rounded-lg bg-zinc-800 p-[3px]">
+    <div className="inline-flex" role="radiogroup" aria-label={t("nature.homeSettings.verseEffectSection")}>
+      <div className="inline-flex rounded-lg bg-zinc-800 p-[3px]">
       {NATURE_HOME_VERSE_TEXT_EFFECTS.map((effect) => {
         const isOn = selected === effect;
         const textShadow = natureHomeVerseVideoTextShadow(effect, "body");
@@ -44,7 +44,7 @@ export function NatureHomeVerseEffectPicker({ selected, onSelect }: Props) {
             aria-label={labelForEffect(effect, t)}
             onClick={() => onSelect(effect)}
             className={[
-              "flex min-h-[34px] flex-1 items-center justify-center rounded-md border-0 transition",
+              "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md border-0 transition",
               isOn ? "bg-zinc-600" : "bg-transparent hover:bg-zinc-700/60",
             ].join(" ")}
           >

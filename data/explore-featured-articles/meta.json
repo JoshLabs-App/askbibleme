@@ -1,0 +1,37 @@
+{
+  "articles": [
+    {
+      "slug": "a-mnw5wdz7-14908d",
+      "zh-CN": {
+        "title": "让经文自己发声",
+        "exploreLabel": "让经文发声"
+      },
+      "en": {
+        "title": "Let Scripture Speak",
+        "exploreLabel": "Let Scripture Speak"
+      }
+    },
+    {
+      "slug": "a-mnwkmd4g-cb4d00",
+      "zh-CN": {
+        "title": "圣经中的查经模型",
+        "exploreLabel": "圣经的模型"
+      },
+      "en": {
+        "title": "Models of Bible Study in Scripture",
+        "exploreLabel": "Scripture's Model"
+      }
+    },
+    {
+      "slug": "article_1778108127353_fzymbc",
+      "zh-CN": {
+        "title": "关于读经计划的思考",
+        "exploreLabel": "读经的计划"
+      },
+      "en": {
+        "title": "Reflections on a Reading Plan",
+        "exploreLabel": "Reading Plan"
+      }
+    }
+  ]
+}

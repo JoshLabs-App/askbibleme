@@ -1,4 +1,6 @@
-import manifest from "../../../../data/bible/teochew-nt-audio-manifest.json";
+import manifest from "../../assets/bible/teochew-nt-audio-manifest.json";
+import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
+import { absoluteSelfHostedChapterAudioUrl } from "./chapter-audio-url";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 import { voiceSupportsBook } from "./cuv-chapter-audio-voices";
 
@@ -50,4 +52,24 @@ export function teochewNtVoiceActive(voiceId: CuvChapterAudioVoiceId): boolean {
 
 export function teochewNtVoiceSupportsBook(bookId: string): boolean {
   return voiceSupportsBook("teochew-nt", bookId);
+}
+
+export async function resolveTeochewNtChapterAudioPlayableSrc(args: {
+  bookId: string;
+  chapter: number;
+  baseUrl: string;
+}): Promise<{ ok: true; src: string } | { ok: false }> {
+  if (!voiceSupportsBook("teochew-nt", args.bookId)) return { ok: false };
+  if (!getTeochewNtManifestEntry(args.bookId, args.chapter)) return { ok: false };
+  if (isMobileScriptureReadLocalOnly()) return { ok: false };
+
+  const local = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
+  const selfHosted =
+    (local ? absoluteSelfHostedChapterAudioUrl(args.baseUrl, local) : null) ??
+    (local ? absoluteSelfHostedChapterAudioUrl("https://askbible.me", local) : null);
+  if (selfHosted) return { ok: true, src: selfHosted };
+
+  const external = buildExternalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
+  if (external) return { ok: true, src: external };
+  return { ok: false };
 }

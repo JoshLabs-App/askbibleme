@@ -17,7 +17,6 @@ import {
   getMemberRegisterEnabled,
   subscribeMemberRegisterEnabled,
 } from "./member-register-enabled";
-import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { theme } from "../theme";
@@ -43,10 +42,6 @@ export function MemberRegisterScreen() {
     if (pending) return;
     if (!registerOpen) {
       setError(t("auth.registerClosed"));
-      return;
-    }
-    if (isMobileOfflineFirst()) {
-      setError(t("auth.errorNetwork"));
       return;
     }
     setPending(true);

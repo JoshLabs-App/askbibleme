@@ -21,8 +21,10 @@ Default release order follows repository rules: iOS first, Android second.
 
 - Build production IPA on EAS:
   - `npm run mobile:build:ios:production`
-- Submit latest iOS build:
+- Submit latest iOS build (upload + attach to existing TestFlight groups):
   - `npm run mobile:submit:ios:production`
+  - External testers stay in group **External Testers**; only each new build is attached automatically.
+  - Re-run distribution only: `npm run mobile:distribute:ios:testflight` (optional build number arg, e.g. `14`)
 - App Store Connect checks:
   - Build processing complete
   - Internal testers can install and open app
@@ -30,10 +32,18 @@ Default release order follows repository rules: iOS first, Android second.
 
 ## 3) Android (Internal Testing)
 
-- Build production AAB on EAS:
+- One-time upload keystore (from EAS → local Gradle):
+  - `npm run mobile:setup:android:keystore`
+  - Copy `android/keystore.properties.example` → `android/keystore.properties`
+- Build production AAB locally (Gradle, not EAS cloud):
   - `npm run mobile:build:android:production`
-- Submit latest Android build to Play internal track:
-  - `npm run mobile:submit:android:production`
+- Audit bundled assets (included in build script):
+  - `npm run mobile:audit:bundle-size`
+- Submit local AAB directly to Google Play (fastlane supply, not Expo Submit):
+  - `npm run mobile:submit:android:internal`
+  - Or build + submit in one step: `npm run mobile:release:android:internal`
+- EAS cloud Android build (fallback only):
+  - `npm run mobile:build:android:production:eas`
 - Play Console checks:
   - Internal track rollout created
   - Testers can install and open app

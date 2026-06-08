@@ -1,5 +1,5 @@
 import manifest from "../../assets/bible/teochew-nt-audio-manifest.json";
-import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
+import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 import { absoluteSelfHostedChapterAudioUrl } from "./chapter-audio-url";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 import { voiceSupportsBook } from "./cuv-chapter-audio-voices";
@@ -61,7 +61,7 @@ export async function resolveTeochewNtChapterAudioPlayableSrc(args: {
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   if (!voiceSupportsBook("teochew-nt", args.bookId)) return { ok: false };
   if (!getTeochewNtManifestEntry(args.bookId, args.chapter)) return { ok: false };
-  if (isMobileScriptureReadLocalOnly()) return { ok: false };
+  if (!isMobileScriptureAudioStreamAllowed()) return { ok: false };
 
   const local = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
   const selfHosted =

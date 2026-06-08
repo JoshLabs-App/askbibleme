@@ -1,5 +1,5 @@
 import { loadBundledChapterVerseTimings } from "./bundled-verse-timings";
-import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
+import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { translationUsesWebChapterAudio } from "./web-chapter-audio";
 import { teochewNtVoiceActive } from "./teochew-nt-audio";
@@ -117,7 +117,7 @@ export async function fetchChapterVerseTimings(
   const bundled = loadBundledChapterVerseTimings(syncTranslationId, voiceId, bookId, chapter);
   if (bundled?.length) return bundled;
 
-  if (isMobileScriptureReadLocalOnly()) return null;
+  if (!isMobileScriptureAudioStreamAllowed()) return null;
 
   const paths = buildChapterVerseTimingsCandidates(syncTranslationId, voiceId, bookId, chapter);
   if (!paths.length) return null;

@@ -26,13 +26,15 @@ export async function configureShellAudioMode(): Promise<void> {
   }
 }
 
-/** Android：`http(s)` 远程流式播放；本地 `file://` 等仍直连。 */
+/** Android：`http(s)` 远程流式播放；`file://` 直连；其余 asset 类 URI 先落盘再播。 */
 export function shellSoundDownloadFirst(source: AVPlaybackSource): boolean {
   if (Platform.OS !== "android") return false;
   if (typeof source !== "object" || source === null || !("uri" in source)) return false;
   const uri = String(source.uri ?? "");
+  if (!uri) return false;
   if (/^https?:\/\//i.test(uri)) return false;
-  return Boolean(uri);
+  if (/^file:\/\//i.test(uri)) return false;
+  return true;
 }
 
 /** 创建 Sound 后确保可听（模拟器上 isPlaying 为 true 但音量为 0 / 被 duck 的常见兜底）。 */

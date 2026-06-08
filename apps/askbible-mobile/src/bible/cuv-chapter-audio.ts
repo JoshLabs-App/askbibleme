@@ -1,6 +1,6 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
 import { resolveSelfHostedChapterAudioPlayableUrl } from "./chapter-audio-sources";
-import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
+import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 import {
   buildExternalTeochewNtChapterAudioUrl,
   buildLocalTeochewNtChapterAudioUrl,
@@ -67,9 +67,9 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   }
   if (!voiceSupportsBook(voice, args.bookId)) return { ok: false };
 
-  if (isMobileScriptureReadLocalOnly()) return { ok: false };
+  if (!isMobileScriptureAudioStreamAllowed()) return { ok: false };
 
-  // 与 Web 一致：默认 FHL 外链；自托管 cuv-v20 仅部分章节上架，作备选。
+  // 与 Web 一致：中文默认 FHL 闫大卫（unvdavid）；自托管 cuv-v20 作备选。
   const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
   if (remote) return { ok: true, src: remote };
 

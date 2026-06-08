@@ -7,6 +7,10 @@ import {
   shellSoundDownloadFirst,
 } from "../audio/shellAudioMode";
 import {
+  resolveScriptureAvSource,
+  resolveScriptureBundledModule,
+} from "../audio/scriptureAudioPlayback";
+import {
   logShellSoundError,
   safeGetSoundStatus,
   safePauseSound,
@@ -994,12 +998,26 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         const soundId = ++activeSoundIdRef.current;
         let sound: Audio.Sound;
         try {
-          const scriptureSource = { uri: trimmed };
+          const rc = readChapterRef.current;
+          const voiceId = rc ? await readCuvChapterAudioVoice() : undefined;
+          const bundledModule = rc
+            ? resolveScriptureBundledModule({
+                translationId: rc.translationId,
+                bookId: rc.bookId,
+                chapter: rc.chapter,
+                voiceId,
+              })
+            : null;
+          const avSource = await resolveScriptureAvSource(trimmed, bundledModule);
+          if (!avSource) {
+            setScripturePreparing(false);
+            return;
+          }
           if (__DEV__) {
-            console.warn("[scripture-audio] playScripture source", trimmed);
+            console.warn("[scripture-audio] playScripture source", trimmed, bundledModule ?? "remote");
           }
           const created = await Audio.Sound.createAsync(
-            scriptureSource,
+            avSource,
             {
               shouldPlay: true,
               progressUpdateIntervalMillis: 350,
@@ -1076,7 +1094,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
                 rc.onAdvanceNextChapter();
               }
             },
-            shellSoundDownloadFirst(scriptureSource),
+            shellSoundDownloadFirst(avSource),
           );
           sound = created.sound;
           await primeShellSoundPlayback(sound);
@@ -1480,12 +1498,12 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const readChapterSupportsAudio = Boolean(
     activeReadForAudio && translationSupportsChapterAudio(activeReadForAudio.translationId),
   );
+  const readChapterAudioAvailable = readChapterSupportsAudio;
   const hasPlayableMusic = tracks.some((t) => isTrackPlayable(t));
   const canTogglePlayback =
     readChapterSupportsAudio ||
     hasPlayableMusic ||
     (!isMobileBundledOnly() && tracks.length > 0);
-  const readChapterAudioAvailable = readChapterSupportsAudio;
 
   const value = useMemo(
     (): MusicPlaybackContextValue => ({

@@ -22,9 +22,17 @@ export function isMobileBundledOnly(): boolean {
   return !__DEV__;
 }
 
-/** 读经相关：安装包内 + 用户已下载更新包；不常规打远端。 */
+/**
+ * 读经正文/导读/目录等：离线优先，不常规打 askbible.me。
+ * 整章朗读播放见 `isMobileScriptureAudioStreamAllowed`（未下载时可联网）。
+ */
 export function isMobileScriptureReadLocalOnly(): boolean {
   return isMobileOfflineFirst() || isMobileBundledOnly();
+}
+
+/** 章朗读：已下载/包内优先；未下载时允许 FHL 闫大卫等远端流式（仅 BUNDLED_ONLY=1 时完全禁止）。 */
+export function isMobileScriptureAudioStreamAllowed(): boolean {
+  return !isMobileBundledOnly();
 }
 
 export { isMemberRegisterEnabled } from "../auth/member-register-enabled";

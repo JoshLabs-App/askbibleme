@@ -13,7 +13,7 @@ import {
   resolveDownloadedChapterAudioUri,
   scheduleChapterAudioBackgroundCache,
 } from "../read/read-audio-package-download";
-import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
+import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 
 function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string): boolean {
   const src = cachedSrc.trim().toLowerCase();
@@ -93,7 +93,7 @@ export async function resolveChapterAudioPlayableSrc(args: {
   return { ok: false };
 }
 
-/** 读经章播放：本地下载包 → 安装包内置 → 联网自托管 / 外链（非纯本地包时）。 */
+/** 读经章播放：本地下载包 → 安装包内置 → 联网（FHL 闫大卫 / 自托管，未下载时流式）。 */
 export async function resolveScripturePlayableSrcForChapter(args: {
   translationId: string;
   bookId: string;
@@ -122,7 +122,7 @@ export async function resolveScripturePlayableSrcForChapter(args: {
     voiceId: args.voiceId,
   });
   if (bundledSync) return bundledSync;
-  if (isMobileScriptureReadLocalOnly()) return null;
+  if (!isMobileScriptureAudioStreamAllowed()) return null;
 
   const resolved = await resolveChapterAudioPlayableSrc({
     translationId: args.translationId,
@@ -132,7 +132,7 @@ export async function resolveScripturePlayableSrcForChapter(args: {
     voiceId: args.voiceId,
   });
   if (resolved.ok) {
-    if (!isMobileScriptureReadLocalOnly() && /^https?:\/\//i.test(resolved.src)) {
+    if (isMobileScriptureAudioStreamAllowed() && /^https?:\/\//i.test(resolved.src)) {
       scheduleChapterAudioBackgroundCache({
         translationId: args.translationId,
         voiceId: args.voiceId ?? "mandarin",

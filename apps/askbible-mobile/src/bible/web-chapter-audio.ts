@@ -1,6 +1,6 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
 import { resolveSelfHostedChapterAudioPlayableUrl } from "./chapter-audio-sources";
-import { isMobileScriptureReadLocalOnly } from "../config/mobileBundledOnly";
+import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 
 export const WEB_CHAPTER_AUDIO_REMOTE_NT = "https://theaudiopower.org/WEB/Recordings";
 export const WEB_CHAPTER_AUDIO_REMOTE_OT = "https://theaudiopower.org/WEB2/Recordings";
@@ -246,7 +246,7 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
   });
   if (bundled) return { ok: true, src: bundled };
 
-  if (isMobileScriptureReadLocalOnly()) return { ok: false };
+  if (!isMobileScriptureAudioStreamAllowed()) return { ok: false };
 
   const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
   if (remote) return { ok: true, src: remote };

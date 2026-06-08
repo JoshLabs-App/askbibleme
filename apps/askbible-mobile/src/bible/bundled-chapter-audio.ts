@@ -36,13 +36,23 @@ function moduleKey(
   return `cuv:${id}-${chapter}`;
 }
 
+export function resolveBundledChapterAudioModule(args: {
+  translationId: string;
+  bookId: string;
+  chapter: number;
+  voiceId?: CuvChapterAudioVoiceId;
+}): number | null {
+  const mod = loadModules()[moduleKey(args.translationId, args.bookId, args.chapter, args.voiceId)];
+  return mod ?? null;
+}
+
 export function resolveBundledChapterAudioUri(args: {
   translationId: string;
   bookId: string;
   chapter: number;
   voiceId?: CuvChapterAudioVoiceId;
 }): string | null {
-  const mod = loadModules()[moduleKey(args.translationId, args.bookId, args.chapter, args.voiceId)];
+  const mod = resolveBundledChapterAudioModule(args);
   if (mod == null) return null;
   return Asset.fromModule(mod).uri;
 }

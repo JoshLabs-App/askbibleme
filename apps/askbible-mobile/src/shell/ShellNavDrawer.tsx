@@ -52,6 +52,7 @@ import {
 } from "../updates/mobileResourceUpdate";
 import { ResourceUpdateSheet } from "../updates/ResourceUpdateSheet";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { getMobileAppVersionLabel } from "./mobileAppVersion";
 import {
   fetchMobileContentManifest,
   type MobileContentManifestAnnouncement,
@@ -812,6 +813,9 @@ export function ShellNavDrawer() {
                   }}
                 />
               </ScrollView>
+              <Text style={styles.versionFooter} accessibilityRole="text">
+                {getMobileAppVersionLabel()}
+              </Text>
             </View>
           </ImageBackground>
         </Animated.View>
@@ -1155,5 +1159,14 @@ const styles = StyleSheet.create({
   rowDetailSelected: {
     color: "rgba(120, 95, 60, 0.85)",
     ...parchmentSans(500),
+  },
+  versionFooter: {
+    marginTop: 8,
+    paddingHorizontal: 4,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 0.2,
+    color: "rgba(55, 53, 47, 0.42)",
+    textAlign: "center",
   },
 });

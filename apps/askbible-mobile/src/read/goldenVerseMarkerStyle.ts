@@ -1,7 +1,7 @@
 import type { TextStyle } from "react-native";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 
-export type VerseTextHighlightKind = "golden" | "bookmark";
+export type VerseTextHighlightKind = "golden" | "bookmark" | "selection";
 
 /** 主题库金句：字下荧光笔色带（非整节块底） */
 export function goldenVerseMarkerTextStyle(): TextStyle {
@@ -20,6 +20,14 @@ export function verseTextHighlightStyle(kind: VerseTextHighlightKind): TextStyle
       borderRadius: 999,
       overflow: "hidden",
       paddingHorizontal: 5,
+      paddingVertical: 1,
+    };
+  }
+  if (kind === "selection") {
+    return {
+      backgroundColor: c.verseSelectionMarker,
+      borderRadius: 2,
+      paddingHorizontal: 2,
       paddingVertical: 1,
     };
   }

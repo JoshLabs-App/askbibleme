@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   type NativeSyntheticEvent,
+  Platform,
   Text,
   type TextLayoutEventData,
   type GestureResponderEvent,
@@ -39,6 +40,9 @@ type Props = {
   isGolden?: boolean;
   highlight?: VerseTextHighlightKind;
   textHighlightColor?: string;
+  /** Android 嵌套 Text 有字下色带时会吞掉父级 onPress；收藏双击改由此传入 */
+  onPress?: () => void;
+  onLongPress?: () => void;
 };
 
 function speechSegmentStyle(kind: VerseSpeechPart["kind"]) {
@@ -113,6 +117,21 @@ function tokenizeHighlightUnits(text: string): HighlightUnit[] {
   return units;
 }
 
+/** Android 嵌套 Text 的 onPress 常失效；轻点改由 responder 在抬手时处理。 */
+const USE_DEFERRED_HIGHLIGHT_TOUCH = Platform.OS === "android";
+const HIGHLIGHT_TAP_SLOP_PX = 10;
+
+function unitFullySelected(
+  unit: HighlightUnit,
+  selected: Map<number, string> | null | undefined,
+): boolean {
+  if (!unit.selectable || !selected?.size) return false;
+  for (let i = unit.start; i < unit.end; i += 1) {
+    if (!selected.has(i)) return false;
+  }
+  return true;
+}
+
 export function ReadChapterVerseText({
   text,
   parts,
@@ -128,6 +147,8 @@ export function ReadChapterVerseText({
   isGolden = false,
   highlight,
   textHighlightColor,
+  onPress,
+  onLongPress,
 }: Props) {
   const { px } = useReadBibleTypography();
   const kind = highlight ?? (isGolden ? "golden" : undefined);
@@ -225,6 +246,11 @@ export function ReadChapterVerseText({
     selected: Map<number, string>;
     seen?: Set<number>;
   } | null>(null);
+  const touchGestureRef = useRef<{
+    startLocalX: number;
+    startLocalY: number;
+    dragged: boolean;
+  } | null>(null);
 
   const editableTokenUnits = useMemo(() => {
     if (!highlightEditMode || (!onToggleHighlightUnit && !onReplaceHighlightSelection)) return null;
@@ -321,7 +347,9 @@ export function ReadChapterVerseText({
 
       if (onPaintHighlightUnit) {
         if (begin || !dragStateRef.current) {
-          const mode: "add" | "remove" = "add";
+          const mode: "add" | "remove" = unitFullySelected(touched, highlightedCharIndexes)
+            ? "remove"
+            : "add";
           const seen = new Set<number>([unitIndex]);
           dragStateRef.current = {
             active: true,
@@ -361,7 +389,7 @@ export function ReadChapterVerseText({
 
       if (begin || !dragStateRef.current) {
         const selectedNow = highlightedCharIndexes ?? new Map<number, string>();
-        const mode: "add" | "remove" = "add";
+        const mode: "add" | "remove" = unitFullySelected(touched, selectedNow) ? "remove" : "add";
         const next = applyUnitToSelection(selectedNow, unitIndex, mode, activeHighlightColor);
         dragStateRef.current = { active: true, mode, lastUnit: unitIndex, selected: next };
         onReplaceHighlightSelection(next);
@@ -440,7 +468,9 @@ export function ReadChapterVerseText({
   useEffect(() => {
     if (!highlightEditMode) return;
     updateRootWindowOrigin();
-  }, [highlightEditMode, updateRootWindowOrigin]);
+    const timer = setTimeout(updateRootWindowOrigin, 120);
+    return () => clearTimeout(timer);
+  }, [highlightEditMode, layoutMeasureTick, updateRootWindowOrigin]);
 
   const editableUnits = useMemo(() => {
     if (!editableTokenUnits) return null;
@@ -531,7 +561,14 @@ export function ReadChapterVerseText({
   const handleTouchStart = useCallback(
     (e: GestureResponderEvent) => {
       const pt = resolveLocalPoint(e);
-      beginOrExtendDragSelection(pt.localX, pt.localY, true);
+      touchGestureRef.current = {
+        startLocalX: pt.localX,
+        startLocalY: pt.localY,
+        dragged: false,
+      };
+      if (!USE_DEFERRED_HIGHLIGHT_TOUCH) {
+        beginOrExtendDragSelection(pt.localX, pt.localY, true);
+      }
       if (onHighlightTracePoint) {
         onHighlightTracePoint(pt.pageX, pt.pageY, true);
       }
@@ -542,7 +579,20 @@ export function ReadChapterVerseText({
   const handleTouchMove = useCallback(
     (e: GestureResponderEvent) => {
       const pt = resolveLocalPoint(e);
-      beginOrExtendDragSelection(pt.localX, pt.localY, false);
+      const touch = touchGestureRef.current;
+      if (touch && !touch.dragged) {
+        const dx = pt.localX - touch.startLocalX;
+        const dy = pt.localY - touch.startLocalY;
+        if (dx * dx + dy * dy >= HIGHLIGHT_TAP_SLOP_PX * HIGHLIGHT_TAP_SLOP_PX) {
+          touch.dragged = true;
+          if (USE_DEFERRED_HIGHLIGHT_TOUCH) {
+            beginOrExtendDragSelection(pt.localX, pt.localY, true);
+          }
+        }
+      }
+      if (!USE_DEFERRED_HIGHLIGHT_TOUCH || touch?.dragged) {
+        beginOrExtendDragSelection(pt.localX, pt.localY, false);
+      }
       if (onHighlightTracePoint) {
         onHighlightTracePoint(pt.pageX, pt.pageY, false);
       }
@@ -550,23 +600,74 @@ export function ReadChapterVerseText({
     [beginOrExtendDragSelection, onHighlightTracePoint, resolveLocalPoint],
   );
 
+  const handleTouchEnd = useCallback(
+    (e: GestureResponderEvent) => {
+      if (USE_DEFERRED_HIGHLIGHT_TOUCH && onToggleHighlightUnit) {
+        const pt = resolveLocalPoint(e);
+        const touch = touchGestureRef.current;
+        if (touch && !touch.dragged) {
+          const unitIndex = hitTestUnitIndex(pt.localX, pt.localY);
+          const unitWrap = editableTokenUnits?.[unitIndex];
+          if (unitWrap?.unit.selectable) {
+            onToggleHighlightUnit(
+              unitWrap.unit.start,
+              unitWrap.unit.end,
+              activeHighlightColor,
+            );
+          }
+        }
+      }
+      touchGestureRef.current = null;
+      endDragSelection();
+    },
+    [
+      activeHighlightColor,
+      editableTokenUnits,
+      endDragSelection,
+      hitTestUnitIndex,
+      onToggleHighlightUnit,
+      resolveLocalPoint,
+    ],
+  );
+
+  const highlightTouchEnabled =
+    highlightEditMode &&
+    (onToggleHighlightUnit || onReplaceHighlightSelection || onPaintHighlightUnit);
+
+  const verseBodyPressProps = useMemo(
+    () =>
+      highlightEditMode || !onPress
+        ? null
+        : ({
+            onPress,
+            onLongPress,
+            suppressHighlighting: true,
+          } as const),
+    [highlightEditMode, onLongPress, onPress],
+  );
+
   const dragGestureProps = useMemo(
     () =>
-      onReplaceHighlightSelection
+      highlightTouchEnabled
         ? ({
             onStartShouldSetResponder: () => true,
             onMoveShouldSetResponder: () => true,
             onResponderGrant: handleTouchStart,
             onResponderMove: handleTouchMove,
-            onResponderRelease: endDragSelection,
-            onResponderTerminate: endDragSelection,
+            onResponderRelease: handleTouchEnd,
+            onResponderTerminate: handleTouchEnd,
             onTouchStart: handleTouchStart,
             onTouchMove: handleTouchMove,
-            onTouchEnd: endDragSelection,
-            onTouchCancel: endDragSelection,
+            onTouchEnd: handleTouchEnd,
+            onTouchCancel: handleTouchEnd,
           } as const)
         : null,
-    [endDragSelection, handleTouchMove, handleTouchStart, onReplaceHighlightSelection],
+    [
+      handleTouchEnd,
+      handleTouchMove,
+      handleTouchStart,
+      highlightTouchEnabled,
+    ],
   );
 
   useEffect(() => {
@@ -589,6 +690,7 @@ export function ReadChapterVerseText({
       return (
         <Text
           ref={rootTextRef}
+          collapsable={false}
           onLayout={(e) => {
             updateRootWindowOrigin();
             const { width, height } = e.nativeEvent.layout;
@@ -602,21 +704,36 @@ export function ReadChapterVerseText({
       );
     }
     if (highlightedChars) {
-      return <Text style={baseStyle}>{highlightedChars}</Text>;
+      return (
+        <Text style={baseStyle} {...(verseBodyPressProps as object)}>
+          {highlightedChars}
+        </Text>
+      );
     }
     if (!parts?.length) {
-      return marker ? <Text style={marker}>{text}</Text> : <Text>{text}</Text>;
+      return marker ? (
+        <Text style={marker} {...(verseBodyPressProps as object)}>
+          {text}
+        </Text>
+      ) : (
+        <Text {...(verseBodyPressProps as object)}>{text}</Text>
+      );
     }
     if (marker) {
-      return <Text style={marker}>{segments}</Text>;
+      return (
+        <Text style={marker} {...(verseBodyPressProps as object)}>
+          {segments}
+        </Text>
+      );
     }
-    return <Text>{segments}</Text>;
+    return <Text {...(verseBodyPressProps as object)}>{segments}</Text>;
   }
 
   if (editableUnits) {
     return (
       <Text
         ref={rootTextRef}
+        collapsable={false}
         style={baseStyle}
         onLayout={(e) => {
           updateRootWindowOrigin();

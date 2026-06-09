@@ -52,6 +52,8 @@ const light = {
   goldenVerseMarker: "rgba(218, 178, 100, 0.10)",
   /** 双击收藏：#FFAF00 字下高亮（半透明，避免过跳） */
   verseBookmarkMarker: "rgba(255, 175, 0, 0.32)",
+  /** 多选复制：节文选中反馈（与朗读/搜索同系暖黄） */
+  verseSelectionMarker: "rgba(255, 177, 3, 0.52)",
   /** 羊皮卷强调色：年日数字、时间轴圆点、今日计划勾选等 */
   parchmentAccent: "#D97707",
   parchmentAccentGlow: "rgba(217, 119, 7, 0.24)",
@@ -94,6 +96,7 @@ const dark = {
   humanSpeech: "#38486C",
   goldenVerseMarker: "rgba(255, 198, 140, 0.08)",
   verseBookmarkMarker: "rgba(255, 175, 0, 0.26)",
+  verseSelectionMarker: "rgba(255, 177, 3, 0.38)",
   parchmentAccent: "#D97707",
   parchmentAccentGlow: "rgba(217, 119, 7, 0.28)",
 } as const;

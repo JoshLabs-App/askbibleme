@@ -830,6 +830,8 @@
       "verseActionVerseTitle": "Verse {{verse}}",
       "verseActionCopy": "Copy this verse",
       "verseActionMultiCopy": "Copy selected",
+      "verseActionBookmark": "Bookmark",
+      "verseActionUnbookmark": "Remove bookmark",
       "verseActionShare": "Share",
       "verseActionClose": "Close",
       "verseHighlightAction": "Highlight words",

@@ -830,6 +830,8 @@
       "verseActionVerseTitle": "第 {{verse}} 节",
       "verseActionCopy": "本节复制",
       "verseActionMultiCopy": "多选复制",
+      "verseActionBookmark": "双击收藏",
+      "verseActionUnbookmark": "取消收藏",
       "verseActionShare": "分享",
       "verseActionClose": "关闭",
       "verseHighlightAction": "划重点（按字上底色）",

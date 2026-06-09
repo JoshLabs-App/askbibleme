@@ -741,6 +741,34 @@ export function ReadChapterScreen() {
     [chapterData, highlightModeActive, swipe, verseSelectionMode],
   );
 
+  /** Android 收藏字下色带会拦截父级 Text/Pressable 的点击，改由节文组件接收 */
+  const verseBodyPressProps = useCallback(
+    (verse: number, text: string) => {
+      if (highlightModeActive || Platform.OS !== "android") return {};
+      return {
+        onPress: () => onVersePress(verse, text),
+        onLongPress: () => onVerseLongPress(verse, text),
+      };
+    },
+    [highlightModeActive, onVerseLongPress, onVersePress],
+  );
+
+  const parentVersePressHandler = useCallback(
+    (verse: number, text: string) => {
+      if (highlightModeActive || Platform.OS === "android") return undefined;
+      return () => onVersePress(verse, text);
+    },
+    [highlightModeActive, onVersePress],
+  );
+
+  const parentVerseLongPressHandler = useCallback(
+    (verse: number, text: string) => {
+      if (highlightModeActive || Platform.OS === "android") return undefined;
+      return () => onVerseLongPress(verse, text);
+    },
+    [highlightModeActive, onVerseLongPress],
+  );
+
   const copySelectedVerses = useCallback(async () => {
     if (!chapterData || selectedVerses.length === 0) {
       setBookmarkFeedback(tr("pages.read.verseSelectionEmpty"));
@@ -784,7 +812,39 @@ export function ReadChapterScreen() {
     );
     setBookmarkFeedback(copied ? tr("pages.read.verseCopied") : tr("pages.read.verseCopyFailed"));
     setVerseActionMenu(null);
-  }, [chapterData, verseActionMenu, localeZhText, tr]);
+  }, [chapterData, displayBookName, verseActionMenu, localeZhText, tr]);
+
+  const runToggleVerseBookmarkFromMenu = useCallback(async () => {
+    if (!chapterData || !verseActionMenu) return;
+    const ref = {
+      bookId: chapterData.bookId,
+      bookName: displayBookName,
+      chapter: chapterData.chapter,
+      verse: verseActionMenu.verse,
+      translationId: chapterData.translationId,
+      text: localeZhText(verseActionMenu.text),
+    };
+    const added = await toggleVerseBookmark(ref);
+    void Haptics.notificationAsync(
+      added
+        ? Haptics.NotificationFeedbackType.Success
+        : Haptics.NotificationFeedbackType.Warning,
+    );
+    setBookmarkFeedback(
+      added ? tr("pages.read.verseBookmarkSaved") : tr("pages.read.verseBookmarkRemoved"),
+    );
+    setVerseActionMenu(null);
+  }, [chapterData, displayBookName, localeZhText, toggleVerseBookmark, tr, verseActionMenu]);
+
+  const verseActionMenuBookmarked = useMemo(() => {
+    if (!chapterData || !verseActionMenu) return false;
+    return isBookmarked({
+      translationId: chapterData.translationId,
+      bookId: chapterData.bookId,
+      chapter: chapterData.chapter,
+      verse: verseActionMenu.verse,
+    });
+  }, [chapterData, isBookmarked, verseActionMenu]);
 
   const runStartMultiCopy = useCallback(() => {
     if (!verseActionMenu) return;
@@ -1103,7 +1163,7 @@ export function ReadChapterScreen() {
                             Platform.OS === "android"
                               ? `pv:${v.verse}:audio:${audioActive ? "on" : "off"}`
                               : `pv:${v.verse}`;
-                          const suppressVerseMarker = selected || searchFocus || audioActive;
+                          const suppressVerseMarker = searchFocus || audioActive;
                           const verseHighlight = suppressVerseMarker
                             ? undefined
                             : verseTextHighlightStyleForVerse({
@@ -1111,28 +1171,29 @@ export function ReadChapterScreen() {
                                 bookmarked,
                               });
                           const verseNumHighlight = undefined;
-                          const highlightKind = suppressVerseMarker
-                            ? undefined
-                            : bookmarked
-                              ? "bookmark"
-                              : v.isGolden
-                                ? "golden"
-                                : undefined;
+                          const highlightKind = selected
+                            ? "selection"
+                            : suppressVerseMarker
+                              ? undefined
+                              : bookmarked
+                                ? "bookmark"
+                                : v.isGolden
+                                  ? "golden"
+                                  : undefined;
+                          const verseChunkBackgroundStyle = selected
+                            ? styles.verseInlineChunkSelected
+                            : searchFocus
+                              ? styles.verseInlineChunkSearchFocus
+                              : audioActive
+                                ? styles.verseInlineChunkAudioActive
+                                : styles.verseInlineChunkAudioIdle;
                           const xrefBundle = xrefsByVerse?.get(v.verse);
                           const hasXref = Boolean(xrefBundle);
                           return (
                             <Text
                               key={verseAudioChunkKey}
-                              onPress={
-                                highlightModeActive
-                                  ? undefined
-                                  : () => onVersePress(v.verse, v.text)
-                              }
-                              onLongPress={
-                                highlightModeActive
-                                  ? undefined
-                                  : () => onVerseLongPress(v.verse, v.text)
-                              }
+                              onPress={parentVersePressHandler(v.verse, v.text)}
+                              onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
                               suppressHighlighting
                               onLayout={(e) => {
                                 const { y, height } = e.nativeEvent.layout;
@@ -1141,11 +1202,7 @@ export function ReadChapterScreen() {
                               }}
                               style={[
                                 styles.verseInlineChunk,
-                                selected && styles.verseInlineChunkSelected,
-                                searchFocus && styles.verseInlineChunkSearchFocus,
-                                audioActive
-                                  ? styles.verseInlineChunkAudioActive
-                                  : styles.verseInlineChunkAudioIdle,
+                                verseChunkBackgroundStyle,
                               ]}
                             >
                               <Text
@@ -1202,6 +1259,7 @@ export function ReadChapterScreen() {
                                 parts={speechPartsByVerse?.get(v.verse) ?? null}
                                 highlightedCharIndexes={highlightedIndexes}
                                 highlightEditMode={highlightModeActive}
+                                {...verseBodyPressProps(v.verse, v.text)}
                                 onToggleHighlightUnit={(start, end, color) =>
                                   toggleVerseHighlightUnit(v.verse, highlightedIndexes, start, end, color)
                                 }
@@ -1241,7 +1299,8 @@ export function ReadChapterScreen() {
                   Platform.OS === "android"
                     ? `v:${v.verse}:audio:${audioActive ? "on" : "off"}`
                     : `${v.verse}`;
-                const suppressVerseMarker = selectedVerses.includes(v.verse) || searchFocus || audioActive;
+                const selected = selectedVerses.includes(v.verse);
+                const suppressVerseMarker = searchFocus || audioActive;
                 const verseHighlight = suppressVerseMarker
                   ? undefined
                   : verseTextHighlightStyleForVerse({
@@ -1249,13 +1308,22 @@ export function ReadChapterScreen() {
                       bookmarked,
                     });
                 const verseNumHighlight = undefined;
-                const highlightKind = suppressVerseMarker
-                  ? undefined
-                  : bookmarked
-                    ? "bookmark"
-                    : v.isGolden
-                      ? "golden"
-                      : undefined;
+                const highlightKind = selected
+                  ? "selection"
+                  : suppressVerseMarker
+                    ? undefined
+                    : bookmarked
+                      ? "bookmark"
+                      : v.isGolden
+                        ? "golden"
+                        : undefined;
+                const verseBlockBackgroundStyle = selected
+                  ? styles.verseBlockSelected
+                  : searchFocus
+                    ? styles.verseLineSearchFocus
+                    : audioActive
+                      ? styles.verseLineActive
+                      : styles.verseLineIdle;
                 const xrefBundle = xrefsByVerse?.get(v.verse);
                 const hasXref = Boolean(xrefBundle);
                 return (
@@ -1285,16 +1353,8 @@ export function ReadChapterScreen() {
                     ))}
                     <Pressable
                       pointerEvents={highlightModeActive ? "box-none" : "auto"}
-                      onPress={
-                        highlightModeActive
-                          ? undefined
-                          : () => onVersePress(v.verse, v.text)
-                      }
-                      onLongPress={
-                        highlightModeActive
-                          ? undefined
-                          : () => onVerseLongPress(v.verse, v.text)
-                      }
+                      onPress={parentVersePressHandler(v.verse, v.text)}
+                      onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
                       delayLongPress={280}
                       onLayout={(e) => {
                         const { y, height } = e.nativeEvent.layout;
@@ -1312,9 +1372,7 @@ export function ReadChapterScreen() {
                         style={[
                           styles.verseBlock,
                           nextHasParagraphBreak && styles.verseBlockBeforeSegmentBreak,
-                          selectedVerses.includes(v.verse) && styles.verseBlockSelected,
-                          searchFocus && styles.verseLineSearchFocus,
-                          audioActive ? styles.verseLineActive : styles.verseLineIdle,
+                          verseBlockBackgroundStyle,
                         ]}
                       >
                         <Text
@@ -1342,7 +1400,7 @@ export function ReadChapterScreen() {
                               },
                               searchFocus && styles.verseNumSearchFocus,
                               audioActive && styles.verseNumActive,
-                              selectedVerses.includes(v.verse) && styles.verseNumSelected,
+                              selected && styles.verseNumSelected,
                               verseNumHighlight,
                               hasXref && styles.verseNumXref,
                             ]}
@@ -1380,6 +1438,7 @@ export function ReadChapterScreen() {
                             parts={speechPartsByVerse?.get(v.verse) ?? null}
                             highlightedCharIndexes={highlightedIndexes}
                             highlightEditMode={highlightModeActive}
+                            {...verseBodyPressProps(v.verse, v.text)}
                             onToggleHighlightUnit={(start, end, color) =>
                               toggleVerseHighlightUnit(v.verse, highlightedIndexes, start, end, color)
                             }
@@ -1631,6 +1690,24 @@ export function ReadChapterScreen() {
                 <View style={styles.verseActionBtnRow}>
                   <MaterialIcons name="done-all" size={18} color={c.ink} />
                   <Text style={styles.verseActionBtnText}>{localeZhText("多选复制")}</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={() => void runToggleVerseBookmarkFromMenu()}
+                style={styles.verseActionBtn}
+              >
+                <View style={styles.verseActionBtnRow}>
+                  <MaterialIcons
+                    name={verseActionMenuBookmarked ? "bookmark" : "bookmark-border"}
+                    size={18}
+                    color={c.ink}
+                  />
+                  <Text style={styles.verseActionBtnText}>
+                    {verseActionMenuBookmarked
+                      ? tr("pages.read.verseActionUnbookmark")
+                      : tr("pages.read.verseActionBookmark")}
+                  </Text>
                 </View>
               </Pressable>
 

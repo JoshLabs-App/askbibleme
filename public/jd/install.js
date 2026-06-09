@@ -7,9 +7,14 @@ const $steps = document.querySelector('#install-guide-steps');
 const $primary = document.querySelector('#install-guide-primary');
 const $dismiss = document.querySelector('#install-guide-dismiss');
 const $lead = document.querySelector('#install-guide-lead');
+const $updateBanner = document.querySelector('#app-update-banner');
+const $updateRefresh = document.querySelector('#app-update-refresh');
 
 let deferredInstallPrompt = null;
 let installPromptWaiters = [];
+let waitingServiceWorker = null;
+let updateRefreshPending = false;
+let serviceWorkerRegistration = null;
 
 function isStandalone() {
   return (
@@ -244,7 +249,87 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   const base = getAppBasePath();
   const scope = base ? `${base}/` : '/';
-  void navigator.serviceWorker.register(appAssetPath('/sw.js'), { scope }).catch(() => {});
+  void navigator.serviceWorker
+    .register(appAssetPath('/sw.js'), { scope })
+    .then((registration) => {
+      serviceWorkerRegistration = registration;
+      bindAppUpdate(registration);
+      void registration.update();
+    })
+    .catch(() => {});
+}
+
+function showUpdateBanner() {
+  if (!$updateBanner) return;
+  $updateBanner.hidden = false;
+  document.body.classList.add('app-update-open');
+}
+
+function hideUpdateBanner() {
+  if (!$updateBanner) return;
+  $updateBanner.hidden = true;
+  document.body.classList.remove('app-update-open');
+}
+
+function markWaitingServiceWorker(worker) {
+  if (!worker) return;
+  waitingServiceWorker = worker;
+  showUpdateBanner();
+}
+
+function bindAppUpdate(registration) {
+  if (registration.waiting) {
+    markWaitingServiceWorker(registration.waiting);
+  }
+
+  registration.addEventListener('updatefound', () => {
+    const installingWorker = registration.installing;
+    if (!installingWorker) return;
+    installingWorker.addEventListener('statechange', () => {
+      if (installingWorker.state !== 'installed') return;
+      if (!navigator.serviceWorker.controller) return;
+      markWaitingServiceWorker(installingWorker);
+    });
+  });
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!updateRefreshPending) return;
+    window.location.reload();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    void registration.update();
+  });
+
+  window.setInterval(() => {
+    void registration.update();
+  }, 60 * 60 * 1000);
+}
+
+function applyAppUpdate() {
+  updateRefreshPending = true;
+  hideUpdateBanner();
+
+  if (waitingServiceWorker) {
+    waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    window.setTimeout(() => {
+      if (updateRefreshPending) {
+        window.location.reload();
+      }
+    }, 2500);
+    return;
+  }
+
+  void serviceWorkerRegistration?.update().finally(() => {
+    window.location.reload();
+  });
+}
+
+function bindAppUpdateUi() {
+  $updateRefresh?.addEventListener('click', () => {
+    applyAppUpdate();
+  });
 }
 
 async function scheduleInstallGuide() {
@@ -263,6 +348,7 @@ async function scheduleInstallGuide() {
 
 export function initInstallGuide() {
   registerServiceWorker();
+  bindAppUpdateUi();
   bindInstallGuide();
   void scheduleInstallGuide();
 }

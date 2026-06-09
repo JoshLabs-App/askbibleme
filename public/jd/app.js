@@ -1,4 +1,11 @@
 import { appAssetPath, getAppBasePath } from './base-path.js';
+import {
+  detectSundayOccasions,
+  extractSundayBibleBook,
+  matchesSundayBookFilter,
+  matchesSundayOccasionFilter,
+  SUNDAY_OCCASION_FILTERS,
+} from './sunday-classify.js';
 
 const STORAGE_KEY = 'sermon-progress-v2';
 const LISTENED_KEY = 'sermon-listened-v2';
@@ -10,6 +17,9 @@ const RATE_KEY = 'sermon-rate-v2';
 const FAVORITES_KEY = 'sermon-favorites-v2';
 const NOTES_KEY = 'sermon-notes-v2';
 const SESSION_KEY = 'sermon-session-v1';
+const SUNDAY_BOOK_FILTER_KEY = 'sermon-sunday-book-filter-v1';
+const SUNDAY_OCCASION_FILTER_KEY = 'sermon-sunday-occasion-filter-v1';
+const SEARCH_QUERY_KEY = 'sermon-search-query-v1';
 const SHARE_QUERY_KEY = 'p';
 
 const CATEGORY_ORDER = ['主日', '新约', '旧约', '系列'];
@@ -28,7 +38,10 @@ const state = {
   selectedBookTitle: loadStoredString(DIRECTORY_KEY),
   selectedCategory: loadSelectedCategory() || DEFAULT_CATEGORY,
   categorySelections: normalizeCategorySelections(loadJSON(CATEGORY_SELECT_KEY, {})),
-  searchQuery: '',
+  searchQuery: loadStoredString(SEARCH_QUERY_KEY) || '',
+  sundayCatalog: [],
+  sundayBookFilter: loadStoredString(SUNDAY_BOOK_FILTER_KEY) || 'all',
+  sundayOccasionFilter: loadStoredString(SUNDAY_OCCASION_FILTER_KEY) || 'all',
   playbackRate: loadPlaybackRate(),
   sleepTimerId: null,
   sleepTimerLabel: '',
@@ -44,6 +57,9 @@ const $trackDate = document.querySelector('#track-date');
 const $timeCurrent = document.querySelector('#time-current');
 const $timeTotal = document.querySelector('#time-total');
 const $categoryBookList = document.querySelector('#category-book-list');
+const $sundayFilterPanel = document.querySelector('#sunday-filter-panel');
+const $catalogSearchInput = document.querySelector('#catalog-search-input');
+const $catalogSearchClear = document.querySelector('#catalog-search-clear');
 const $categoryTabs = document.querySelectorAll('.category-tab');
 const $selectedBookTracks = document.querySelector('#selected-book-tracks');
 const $skipBackButton = document.querySelector('#skip-back-button');
@@ -54,6 +70,7 @@ const $shareButton = document.querySelector('#share-button');
 const $speedButton = document.querySelector('#speed-button');
 
 let saveSessionTimer = null;
+let searchRenderTimer = null;
 let pendingScrollTop = 0;
 let shareToastTimer = null;
 let shareIdByKey = new Map();
@@ -124,6 +141,39 @@ function normalize(value) {
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function matchesSearchQuery(parts, query = normalize(state.searchQuery)) {
+  if (!query) return true;
+  return normalize(parts.filter(Boolean).join(' ')).includes(query);
+}
+
+function setSearchQuery(value) {
+  state.searchQuery = String(value || '').trim();
+  try {
+    if (state.searchQuery) {
+      window.localStorage.setItem(SEARCH_QUERY_KEY, state.searchQuery);
+    } else {
+      window.localStorage.removeItem(SEARCH_QUERY_KEY);
+    }
+  } catch {}
+  syncSearchField();
+}
+
+function clearSearchQuery() {
+  setSearchQuery('');
+  renderAll();
+  scheduleSaveSession();
+}
+
+function syncSearchField() {
+  if (!$catalogSearchInput) return;
+  if ($catalogSearchInput.value !== state.searchQuery) {
+    $catalogSearchInput.value = state.searchQuery;
+  }
+  if ($catalogSearchClear) {
+    $catalogSearchClear.hidden = !state.searchQuery;
+  }
 }
 
 function formatTime(seconds) {
@@ -199,27 +249,154 @@ function formatSundaySermonTitle(lesson) {
   return raw || '未命名讲道';
 }
 
-function getSundaySermons() {
-  const query = normalize(state.searchQuery);
-  return state.books
+function buildSundayCatalogEntry(lesson, book) {
+  const displayTitle = formatSundaySermonTitle(lesson);
+  const entry = {
+    ...lesson,
+    bookTitle: book.title,
+    displayTitle,
+    bibleBook: extractSundayBibleBook(displayTitle),
+  };
+  entry.occasions = detectSundayOccasions(entry);
+  return entry;
+}
+
+function rebuildSundayCatalog() {
+  state.sundayCatalog = state.books
     .filter((book) => book.category === '主日')
-    .flatMap((book) =>
-      book.lessons.map((lesson) => ({
-        ...lesson,
-        bookTitle: book.title,
-        displayTitle: formatSundaySermonTitle(lesson),
-      })),
-    )
-    .filter((sermon) => {
-      if (!query) return true;
-      const haystack = [sermon.displayTitle, sermon.lessonDate, sermon.bookTitle, sermon.teacher].join(' ');
-      return normalize(haystack).includes(query);
-    })
+    .flatMap((book) => book.lessons.map((lesson) => buildSundayCatalogEntry(lesson, book)));
+}
+
+function getSundayCatalogBySearch() {
+  return state.sundayCatalog.filter((sermon) =>
+    matchesSearchQuery([
+      sermon.displayTitle,
+      sermon.lesson,
+      sermon.lessonDate,
+      sermon.bookTitle,
+      sermon.teacher,
+      sermon.bibleBook,
+    ]),
+  );
+}
+
+function getSundaySermons() {
+  return getSundayCatalogBySearch()
+    .filter((sermon) => matchesSundayBookFilter(sermon, state.sundayBookFilter))
+    .filter((sermon) => matchesSundayOccasionFilter(sermon, state.sundayOccasionFilter))
     .sort((a, b) => {
       const delta = new Date(b.lessonDate || 0).getTime() - new Date(a.lessonDate || 0).getTime();
       if (delta !== 0) return delta;
       return a.displayTitle.localeCompare(b.displayTitle, 'zh-Hans');
     });
+}
+
+function getSundayBookFilterOptions(catalog) {
+  const counts = new Map();
+  let themeCount = 0;
+  for (const sermon of catalog) {
+    if (sermon.bibleBook) {
+      counts.set(sermon.bibleBook, (counts.get(sermon.bibleBook) || 0) + 1);
+    } else {
+      themeCount += 1;
+    }
+  }
+  const books = [...counts.entries()]
+    .map(([book, count]) => ({ book, count }))
+    .sort((a, b) => b.count - a.count || a.book.localeCompare(b.book, 'zh-Hans'));
+  return { books, themeCount, total: catalog.length };
+}
+
+function getSundayOccasionFilterCounts(catalog) {
+  const counts = new Map(SUNDAY_OCCASION_FILTERS.map((item) => [item.id, 0]));
+  for (const sermon of catalog) {
+    for (const occasion of sermon.occasions || []) {
+      counts.set(occasion, (counts.get(occasion) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+function setSundayBookFilter(value) {
+  state.sundayBookFilter = value || 'all';
+  try {
+    window.localStorage.setItem(SUNDAY_BOOK_FILTER_KEY, state.sundayBookFilter);
+  } catch {}
+}
+
+function setSundayOccasionFilter(value) {
+  state.sundayOccasionFilter = value || 'all';
+  try {
+    window.localStorage.setItem(SUNDAY_OCCASION_FILTER_KEY, state.sundayOccasionFilter);
+  } catch {}
+}
+
+function renderSundayFilterChip(label, filterValue, activeValue, action, count) {
+  const active = filterValue === activeValue ? 'is-active' : '';
+  const countLabel = Number.isFinite(count) ? ` (${count})` : '';
+  return `
+    <button
+      class="sunday-filter-chip ${active}"
+      type="button"
+      data-action="${escapeHtml(action)}"
+      data-filter="${escapeHtml(filterValue)}"
+      aria-pressed="${filterValue === activeValue ? 'true' : 'false'}"
+    >${escapeHtml(label)}${escapeHtml(countLabel)}</button>
+  `;
+}
+
+function renderSundayFilters() {
+  if (!$sundayFilterPanel) return;
+
+  if (getSelectedCategory() !== '主日') {
+    $sundayFilterPanel.hidden = true;
+    $sundayFilterPanel.innerHTML = '';
+    return;
+  }
+
+  const catalogForBooks = getSundayCatalogBySearch().filter((sermon) =>
+    matchesSundayOccasionFilter(sermon, state.sundayOccasionFilter),
+  );
+  const catalogForOccasions = getSundayCatalogBySearch().filter((sermon) =>
+    matchesSundayBookFilter(sermon, state.sundayBookFilter),
+  );
+  const { books, themeCount, total } = getSundayBookFilterOptions(catalogForBooks);
+  const occasionCounts = getSundayOccasionFilterCounts(catalogForOccasions);
+
+  const bookEntries = [
+    { label: '主题讲道', filter: 'theme', count: themeCount },
+    ...books.map(({ book, count }) => ({ label: book, filter: book, count })),
+  ].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh-Hans'));
+
+  const bookChips = [
+    renderSundayFilterChip('全部', 'all', state.sundayBookFilter, 'sunday-filter-book', total),
+    ...bookEntries.map(({ label, filter, count }) =>
+      renderSundayFilterChip(label, filter, state.sundayBookFilter, 'sunday-filter-book', count),
+    ),
+  ].join('');
+
+  const occasionEntries = [...SUNDAY_OCCASION_FILTERS]
+    .map(({ id, label }) => ({ id, label, count: occasionCounts.get(id) || 0 }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh-Hans'));
+
+  const occasionChips = [
+    renderSundayFilterChip('全部', 'all', state.sundayOccasionFilter, 'sunday-filter-occasion', catalogForOccasions.length),
+    ...occasionEntries.map(({ id, label, count }) =>
+      renderSundayFilterChip(label, id, state.sundayOccasionFilter, 'sunday-filter-occasion', count),
+    ),
+  ].join('');
+
+  $sundayFilterPanel.hidden = false;
+  $sundayFilterPanel.innerHTML = `
+    <div class="sunday-filter-group">
+      <span class="sunday-filter-label">经卷</span>
+      <div class="sunday-filter-chips" role="group" aria-label="经卷筛选">${bookChips}</div>
+    </div>
+    <div class="sunday-filter-group">
+      <span class="sunday-filter-label">节期</span>
+      <div class="sunday-filter-chips" role="group" aria-label="节期筛选">${occasionChips}</div>
+    </div>
+  `;
 }
 
 function isGaoTeacher(teacher) {
@@ -318,11 +495,26 @@ function sundayBookOrder(book) {
   return year > 0 ? -year : 0;
 }
 
+function seriesBookOrder(book) {
+  if (book.isSundaySeries) {
+    const latest = Date.parse(book.latestDate || '');
+    if (Number.isFinite(latest)) return -latest;
+  }
+  return bookOrder(book);
+}
+
 function compareBooks(a, b) {
   const categoryDelta = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
   if (categoryDelta !== 0) return categoryDelta;
   if (a.category === '主日' && b.category === '主日') {
     return sundayBookOrder(a) - sundayBookOrder(b);
+  }
+  if (a.category === '系列' && b.category === '系列') {
+    const sundaySeriesDelta = Number(Boolean(a.isSundaySeries)) - Number(Boolean(b.isSundaySeries));
+    if (sundaySeriesDelta !== 0) return sundaySeriesDelta;
+    if (a.isSundaySeries && b.isSundaySeries) {
+      return seriesBookOrder(a) - seriesBookOrder(b);
+    }
   }
   return bookOrder(a) - bookOrder(b);
 }
@@ -358,7 +550,7 @@ function normalizeBook(book) {
       videoUrl: lesson.videoUrl || '',
       teacher: lesson.teacher || book.latestTeacher || '讲员',
       displayLabel:
-        book.category === '主日'
+        book.category === '主日' || book.isSundaySeries
           ? formatSundaySermonTitle(lesson)
           : resolveLessonDisplayLabel(lesson, index),
       trackNo: index + 1,
@@ -815,19 +1007,21 @@ function getSelectedCategory() {
 }
 
 function getBooksByCategory(category) {
-  const query = normalize(state.searchQuery);
   return state.books.filter((book) => {
-    const categoryMatch = book.category === category;
-    if (!categoryMatch) return false;
-    if (!query) return true;
-    const haystack = [
+    if (book.category !== category) return false;
+    return matchesSearchQuery([
       book.title,
       book.category,
       book.latestTeacher,
       book.latestLesson,
-      ...(book.lessons || []).slice(0, 8).map((lesson) => `${lesson.displayLabel} ${lesson.teacher} ${lesson.lessonDate}`),
-    ].join(' ');
-    return normalize(haystack).includes(query);
+      ...(book.lessons || []).flatMap((lesson) => [
+        lesson.lesson,
+        lesson.displayLabel,
+        lesson.teacher,
+        lesson.lessonDate,
+        lesson.date,
+      ]),
+    ]);
   });
 }
 
@@ -949,7 +1143,7 @@ function getCurrentTrackIndex() {
 }
 
 function getTrackLabel(track) {
-  if (track.bookCategory === '主日') {
+  if (track.bookCategory === '主日' || track.isSundaySeries) {
     const title = String(track.lesson || '').trim();
     if (title) return title.length > 42 ? `${title.slice(0, 42)}…` : title;
   }
@@ -979,11 +1173,15 @@ function renderCategoryTabs() {
 
   if (!$categoryBookList) return;
 
+  renderSundayFilters();
+
   if (activeCategory === '主日') {
     const sermons = getSundaySermons();
     if (sermons.length === 0) {
+      const filtered =
+        state.sundayBookFilter !== 'all' || state.sundayOccasionFilter !== 'all' || state.searchQuery;
       $categoryBookList.innerHTML = `
-        <div class="category-book-empty">没有找到主日讲道</div>
+        <div class="category-book-empty">${filtered ? '没有找到符合条件的主日讲道' : '没有找到主日讲道'}</div>
       `;
       return;
     }
@@ -1015,8 +1213,15 @@ function renderCategoryTabs() {
 
   const books = getBooksByCategory(activeCategory);
   if (books.length === 0) {
+    const emptyLabel = state.searchQuery
+      ? '没有找到匹配的讲道'
+      : activeCategory === '系列'
+        ? '系列'
+        : activeCategory === '主日'
+          ? '主日讲道'
+          : `${activeCategory}书卷`;
     $categoryBookList.innerHTML = `
-      <div class="category-book-empty">没有找到${escapeHtml(activeCategory === '系列' ? '系列' : activeCategory === '主日' ? '主日讲道' : `${activeCategory}书卷`)}</div>
+      <div class="category-book-empty">没有找到${escapeHtml(emptyLabel)}</div>
     `;
     return;
   }
@@ -1054,14 +1259,36 @@ function renderSelectedBookPanel() {
     return;
   }
 
+  const visibleLessons = book.lessons.filter((lesson) =>
+    matchesSearchQuery([
+      book.title,
+      lesson.lesson,
+      lesson.displayLabel,
+      lesson.teacher,
+      lesson.lessonDate,
+      lesson.date,
+    ]),
+  );
+
+  if (visibleLessons.length === 0) {
+    $selectedBookTracks.innerHTML = state.searchQuery
+      ? `<div class="track-pill-empty">没有找到匹配的讲道</div>`
+      : '';
+    return;
+  }
+
   const currentSrc = state.currentTrack?.audioSrc || '';
-  $selectedBookTracks.innerHTML = book.lessons
+  $selectedBookTracks.innerHTML = visibleLessons
     .map((lesson, index) => {
       const active = lesson.audioSrc === currentSrc;
       const heard = hasListened(lesson.audioSrc);
       const note = getNote(lesson.audioSrc);
       const favorite = isFavorite(lesson.audioSrc);
-      const label = String(lesson.trackNo || index + 1);
+      const label =
+        book.isSundaySeries || state.searchQuery
+          ? String(lesson.displayLabel || lesson.lesson || lesson.trackNo || index + 1)
+          : String(lesson.trackNo || index + 1);
+      const compactLabel = label.length > 18 ? `${label.slice(0, 18)}…` : label;
       return `
         <button
           class="track-pill ${active ? 'is-active' : ''} ${heard ? 'is-heard' : ''} ${favorite ? 'is-favorite' : ''}"
@@ -1070,8 +1297,9 @@ function renderSelectedBookPanel() {
           data-src="${escapeHtml(lesson.audioSrc)}"
           aria-pressed="${active ? 'true' : 'false'}"
           aria-label="播放 ${escapeHtml(book.title)} ${escapeHtml(label)}"
+          title="${escapeHtml(label)}"
         >
-          <span class="track-pill-label">${escapeHtml(label)}</span>
+          <span class="track-pill-label">${escapeHtml(compactLabel)}</span>
           ${note ? '<span class="track-pill-note">笔记</span>' : ''}
         </button>
       `;
@@ -1094,7 +1322,9 @@ function updateTrackRefs(track) {
   }
 
   $trackTitle.textContent =
-    track.bookCategory === '主日' ? getTrackLabel(track) : `${track.bookTitle} · ${getTrackLabel(track)}`;
+    track.bookCategory === '主日' || track.isSundaySeries
+      ? getTrackLabel(track)
+      : `${track.bookTitle} · ${getTrackLabel(track)}`;
   $trackBook.textContent = track.teacher || '';
   $trackBook.hidden = !track.teacher;
   $trackDate.textContent = track.date ? formatDate(track.date) : '--';
@@ -1174,6 +1404,7 @@ function updatePlaybackUI() {
 }
 
 function renderAll() {
+  syncSearchField();
   renderCategoryTabs();
   renderSelectedBookPanel();
   renderSummary();
@@ -1325,19 +1556,12 @@ function toggleFavoriteCurrent() {
 }
 
 function openSearch() {
-  const next = window.prompt('搜索讲道、系列或讲员', state.searchQuery || '');
-  if (next === null) return;
-  state.searchQuery = next.trim();
-  renderAll();
-}
-
-function scrollToPlaylist() {
-  document.querySelector('.hero-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $catalogSearchInput?.focus();
+  $catalogSearchInput?.select();
 }
 
 function clearSearchAndShowAll() {
-  state.searchQuery = '';
-  renderAll();
+  clearSearchQuery();
   document.querySelector('.page-scroll')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1408,6 +1632,20 @@ function bindControls() {
       playTrackBySrc(button.dataset.src || '', { autoplay: true });
       return;
     }
+
+    if (action === 'sunday-filter-book') {
+      setSundayBookFilter(button.dataset.filter || 'all');
+      renderAll();
+      scheduleSaveSession();
+      return;
+    }
+
+    if (action === 'sunday-filter-occasion') {
+      setSundayOccasionFilter(button.dataset.filter || 'all');
+      renderAll();
+      scheduleSaveSession();
+      return;
+    }
   });
 
   $playToggle.addEventListener('click', () => {
@@ -1454,6 +1692,28 @@ function bindControls() {
       scheduleSaveSession();
     });
   });
+
+  $catalogSearchInput?.addEventListener('input', () => {
+    window.clearTimeout(searchRenderTimer);
+    searchRenderTimer = window.setTimeout(() => {
+      setSearchQuery($catalogSearchInput.value);
+      renderAll();
+      scheduleSaveSession();
+    }, 120);
+  });
+
+  $catalogSearchInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      clearSearchQuery();
+      $catalogSearchInput.blur();
+    }
+  });
+
+  $catalogSearchClear?.addEventListener('click', () => {
+    clearSearchQuery();
+    $catalogSearchInput?.focus();
+  });
 }
 
 function prepareCatalog() {
@@ -1463,6 +1723,7 @@ function prepareCatalog() {
     .filter((book) => book.lessons.length > 0)
     .sort(compareBooks);
   state.books = books;
+  rebuildSundayCatalog();
   buildAudioAliasIndex(books);
   migrateLegacyStorage();
 
@@ -1470,10 +1731,11 @@ function prepareCatalog() {
     book.lessons.map((lesson) => ({
       bookTitle: book.title,
       bookCategory: book.category,
+      isSundaySeries: Boolean(book.isSundaySeries),
       trackNo: lesson.trackNo,
       storageKey: trackStorageKey(book.title, lesson.trackNo),
       lesson:
-        book.category === '主日'
+        book.category === '主日' || book.isSundaySeries
           ? lesson.lesson || lesson.displayLabel || `第${lesson.trackNo}课`
           : lesson.displayLabel || lesson.lesson || `第${lesson.trackNo}课`,
       teacher: lesson.teacher || book.latestTeacher || '讲员',

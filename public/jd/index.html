@@ -13,11 +13,6 @@
     <link rel="manifest" href="/jd/icons/manifest.webmanifest" />
     <link rel="icon" href="/jd/icons/icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="/jd/icons/apple-touch-icon.png" />
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/jd/sw.js', { scope: '/jd/' }).catch(function () {});
-      }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -72,6 +67,39 @@
               系列
             </button>
           </div>
+          <div class="catalog-search" role="search" aria-label="搜索讲道">
+            <label class="catalog-search-field">
+              <svg class="catalog-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15zm8.9 2.1-3.8-3.8"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input
+                id="catalog-search-input"
+                class="catalog-search-input"
+                type="search"
+                enterkeyhint="search"
+                placeholder="搜索讲道、系列、讲员"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false"
+              />
+              <button
+                id="catalog-search-clear"
+                class="catalog-search-clear"
+                type="button"
+                hidden
+                aria-label="清除搜索"
+              >
+                ×
+              </button>
+            </label>
+          </div>
+          <div id="sunday-filter-panel" class="sunday-filter-panel" hidden aria-label="主日筛选"></div>
           <div id="category-book-list" class="category-book-list" role="tabpanel" aria-label="书卷列表"></div>
         </div>
 
@@ -160,6 +188,14 @@
     </main>
 
     <audio id="audio" class="hidden-audio" preload="metadata" playsinline></audio>
+
+    <div id="app-update-banner" class="app-update-banner" hidden role="alertdialog" aria-labelledby="app-update-title" aria-modal="false">
+      <div class="app-update-copy">
+        <strong id="app-update-title">讲道集有新版本</strong>
+        <p class="app-update-lead">内容已更新，点击立即刷新以获取最新讲道与功能。</p>
+      </div>
+      <button id="app-update-refresh" class="app-update-button" type="button">立即更新</button>
+    </div>
 
     <div id="install-guide" class="install-guide" hidden aria-hidden="true">
       <button class="install-guide-backdrop" type="button" data-action="dismiss-install" aria-label="关闭"></button>

@@ -3,13 +3,16 @@ import type { ReactNode } from "react";
 import {
   ImageBackground,
   StyleSheet,
+  View,
   type ImageStyle,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 
-const parchmentSource = require("../../assets/images/read-parchment-scroll-bg.jpg");
+export const READ_PARCHMENT_SCROLL_SOURCE = require("../../assets/images/read-parchment-scroll-bg.jpg");
+
+const parchmentSource = READ_PARCHMENT_SCROLL_SOURCE;
 
 const DEFAULT_EDGE_FADE_TOP_PX = 14;
 const DEFAULT_EDGE_FADE_BOTTOM_PX = 18;
@@ -44,21 +47,64 @@ type ReadParchmentBackgroundProps = {
   imageStyle?: StyleProp<ImageStyle>;
 };
 
-/** 读经羊皮底图默认样式：拉伸铺满容器。 */
+const styles = StyleSheet.create({
+  parchmentContainer: {
+    backgroundColor: c.canvas,
+  },
+  parchmentShell: {
+    position: "relative",
+    overflow: "hidden",
+  },
+  parchmentForeground: {
+    position: "relative",
+    zIndex: 1,
+  },
+  fillImage: {
+    width: "100%",
+    height: "100%",
+  },
+  edgeFade: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+  },
+});
+
+/** 与 {@link ReadParchmentBackground} 相同：绝对铺满父级的羊皮 JPG 实图层。 */
+export function ReadParchmentFillLayer({
+  style,
+  imageStyle,
+}: {
+  style?: StyleProp<ViewStyle>;
+  imageStyle?: StyleProp<ImageStyle>;
+}) {
+  return (
+    <ImageBackground
+      source={parchmentSource}
+      resizeMode="stretch"
+      style={[StyleSheet.absoluteFillObject, style]}
+      imageStyle={[styles.fillImage, imageStyle]}
+      pointerEvents="none"
+    />
+  );
+}
+
+/**
+ * 弹层/卡片羊皮底：实图层绝对铺满外壳，正文（含 padding）叠在上层。
+ * 避免 ImageBackground 包裹子节点时在 Modal 内高度不同步，或 padding 区露出纯色底。
+ */
 export function ReadParchmentBackgroundImage({
   children,
   style,
   imageStyle,
 }: ReadParchmentBackgroundProps) {
   return (
-    <ImageBackground
-      source={parchmentSource}
-      resizeMode="stretch"
-      style={style}
-      imageStyle={imageStyle}
-    >
-      {children}
-    </ImageBackground>
+    <View style={[styles.parchmentContainer, styles.parchmentShell]} collapsable={false}>
+      <ReadParchmentFillLayer imageStyle={imageStyle} />
+      <View style={[styles.parchmentForeground, style]} pointerEvents="box-none">
+        {children}
+      </View>
+    </View>
   );
 }
 
@@ -92,11 +138,3 @@ export function ReadParchmentEdgeFadeOverlay({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  edgeFade: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-  },
-});

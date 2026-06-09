@@ -34,6 +34,8 @@ function fileMb(rel) {
 let ok = true;
 ok = mustExist("music/tracks/track-mpg4a7xcip5q.mp3", "starter 音乐") && ok;
 ok = mustExist("scripture/cuv-simp.sqlite", "和合本简体") && ok;
+ok = mustExist("scripture/cuv-trad.sqlite", "和合本繁体") && ok;
+ok = mustExist("scripture/web-en.sqlite", "WEB 英译本") && ok;
 ok = mustExist("content/music-companion.json", "音乐目录") && ok;
 ok = mustExist("content/nature-settings.json", "自然场景配置") && ok;
 ok = mustExist("audio/scenes/scene-waves-ocean.mp3", "环境音") && ok;
@@ -45,9 +47,22 @@ if (videoCount < 1) {
 }
 
 const musicMb = fileMb("music/tracks/track-mpg4a7xcip5q.mp3");
-const bibleMb = fileMb("scripture/cuv-simp.sqlite");
+const cuvSimpMb = fileMb("scripture/cuv-simp.sqlite");
+const cuvTradMb = fileMb("scripture/cuv-trad.sqlite");
+const webEnMb = fileMb("scripture/web-en.sqlite");
+for (const [rel, label, minMb] of [
+  ["scripture/cuv-simp.sqlite", "cuv-simp", 4],
+  ["scripture/cuv-trad.sqlite", "cuv-trad", 4],
+  ["scripture/web-en.sqlite", "web-en", 4],
+]) {
+  const mb = fileMb(rel);
+  if (mb < minMb) {
+    console.error(`[verify-bundled-assets] ${label} too small (${mb.toFixed(2)} MB)`);
+    ok = false;
+  }
+}
 console.log(
-  `[verify-bundled-assets] starter music ${musicMb.toFixed(1)} MB, cuv-simp ${bibleMb.toFixed(1)} MB, nature videos ${videoCount}`,
+  `[verify-bundled-assets] starter music ${musicMb.toFixed(1)} MB, cuv-simp ${cuvSimpMb.toFixed(1)} MB, cuv-trad ${cuvTradMb.toFixed(1)} MB, web-en ${webEnMb.toFixed(1)} MB, nature videos ${videoCount}`,
 );
 
 if (!ok) {

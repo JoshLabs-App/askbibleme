@@ -2,9 +2,12 @@ import * as Haptics from "expo-haptics";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
+  InteractionManager,
   Modal,
   Platform,
   Pressable,
@@ -27,8 +30,10 @@ import {
   ensureScriptureTranslationReadyWithFallback,
 } from "../bible/scripture-translation-download";
 import { loadBundledChapterSegments } from "../bible/bundled-chapter-segments";
-import { resolveChapterSegmentHeadingText } from "../bible/chapter-segment-display";
-import { loadChapterXrefs } from "../bible/load-chapter-xrefs";
+import { resolveChapterSegmentHeadingText, preferEnglishChapterSegmentTitles } from "../bible/chapter-segment-display";
+import { loadChapterXrefVerseNumbers, loadVerseXrefs } from "../bible/load-chapter-xrefs";
+import { warmScriptureSearchDatabase } from "../bible/scripture-database";
+import { warmScriptureXrefDatabase } from "../bible/scripture-xref-database";
 import type { ScriptureVerseXrefs } from "../bible/scripture-xref-types";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import type { LoadedChapter } from "../bible/types";
@@ -40,11 +45,13 @@ import {
 import { scriptureBooks, testamentForBookNumber } from "../bible/scripture-books";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { useLocale } from "../i18n/LocaleProvider";
-import { createT, toZhTwText } from "../i18n/site-copy";
+import { createT, t, toZhTwText } from "../i18n/site-copy";
 import type { AppLocale } from "../i18n/config";
 import { BibleCatalogOutline } from "./BibleCatalogOutline";
+import { BibleChapterPickerPanel } from "./BibleChapterPickerPanel";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import {
+  bookNameForId,
   getScriptureCanonCatalogSections,
   type ScriptureCanonCatalogSection,
 } from "./canonCatalog";
@@ -62,9 +69,7 @@ import { resolveChapterVerseSpeechParts } from "../bible/resolve-verse-speech-pa
 import { verseTextHighlightStyleForVerse } from "./goldenVerseMarkerStyle";
 import { ReadChapterVerseText } from "./ReadChapterVerseText";
 import { ReadChapterVerseXrefSheet } from "./ReadChapterVerseXrefSheet";
-import {
-  ReadParchmentBackgroundImage,
-} from "./ReadParchmentSurface";
+import { READ_PARCHMENT_SCROLL_SOURCE } from "./ReadParchmentSurface";
 import { parchmentSans, readTypography } from "./readTypography";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { useReadChapterAudio } from "./useReadChapterAudio";
@@ -153,8 +158,8 @@ function buildFallbackCatalogSections(tx: (key: string) => string): ScriptureCan
 }
 
 type ReadChapterPlanRef = { bookId: string; chapter: number };
-type VerseLayout = { y: number; height: number };
 type VerseActionMenuState = { verse: number; text: string } | null;
+const JUMP_CATALOG_VIEWPORT_H = 460;
 type VerseHighlightMap = Map<number, string>;
 type ChapterHighlightMap = Map<number, VerseHighlightMap>;
 type ContrastVerseLine = { translationId: string; text: string };
@@ -201,6 +206,7 @@ function resolveTodayPlanLoopNextTarget(
 export function ReadChapterScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const chapterFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const params = useLocalSearchParams<{ bookId: string; chapter: string; verse?: string; planFlow?: string }>();
@@ -213,9 +219,15 @@ export function ReadChapterScreen() {
   const [chapterData, setChapterData] = useState<LoadedChapter | null>(null);
   const [chapterSegments, setChapterSegments] = useState<ChapterSegment[] | null>(null);
   const [contrastByVerse, setContrastByVerse] = useState<Map<number, ContrastVerseLine[]> | null>(null);
-  const [chapterXrefs, setChapterXrefs] = useState<ScriptureVerseXrefs[] | null>(null);
+  const [contrastLoadRequested, setContrastLoadRequested] = useState(false);
+  const [highlightsLoadRequested, setHighlightsLoadRequested] = useState(false);
+  const [postReadingReady, setPostReadingReady] = useState(false);
+  const [xrefVerseNumbers, setXrefVerseNumbers] = useState<Set<number> | null>(null);
+  const [xrefSheetBundle, setXrefSheetBundle] = useState<ScriptureVerseXrefs | null>(null);
+  const [xrefSheetLoading, setXrefSheetLoading] = useState(false);
   const [xrefSheetVerse, setXrefSheetVerse] = useState<number | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
+  const [jumpPickerBookId, setJumpPickerBookId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const scrollHeaderHeightRef = useRef(0);
   const lastVerseTapRef = useRef<{ verse: number; at: number } | null>(null);
@@ -238,7 +250,11 @@ export function ReadChapterScreen() {
   const [audioViewportHeight, setAudioViewportHeight] = useState(0);
   const chapterCompletionMarkedRef = useRef(false);
   const chapterScrollIntentRef = useRef(false);
-  const verseLayoutsRef = useRef<Map<number, VerseLayout>>(new Map());
+  const deferredXrefTaskRef = useRef<{ cancel: () => void } | null>(null);
+  const deferredContrastTaskRef = useRef<{ cancel: () => void } | null>(null);
+  const lastRecordedFractionRef = useRef<{ bookId: string; chapter: number; fraction: number } | null>(
+    null,
+  );
   const clearBookmarkFeedback = useCallback(() => setBookmarkFeedback(null), []);
   const { isBookmarked, toggle: toggleVerseBookmark } = useScriptureVerseBookmarks();
   const { locale } = useLocale();
@@ -248,18 +264,39 @@ export function ReadChapterScreen() {
     primaryTranslationId,
     contrastTranslationIds,
     translationCatalog,
+    translationCatalogReady,
     verseParagraphFlow,
     chapterSegmentMode,
   } =
     useReadBibleTypography();
-  const { searchFocusVerse, onScrollViewportLayout, onVerseLayout } = useReadChapterSearchFocus(
-    chapterData,
-    params.verse,
-    scrollRef,
-  );
+  const translationCatalogRef = useRef(translationCatalog);
+  translationCatalogRef.current = translationCatalog;
+  const chapterDataRef = useRef(chapterData);
+  chapterDataRef.current = chapterData;
+  const navigationRef = useRef(navigation);
+  navigationRef.current = navigation;
+  const chapterLoadSeqRef = useRef(0);
+  const {
+    searchFocusVerse,
+    verseLayoutsRef,
+    scrollOffsetRef,
+    scrollViewportHeight,
+    onScrollViewportLayout,
+    onChapterScrollOffset,
+    reportVerseLayoutFromEvent,
+    refreshScrollViewportTop,
+  } = useReadChapterSearchFocus(chapterData, params.verse, scrollRef);
   const primaryTranslationMeta = useMemo(
     () => translationCatalog.find((tr) => tr.id === primaryTranslationId),
     [translationCatalog, primaryTranslationId],
+  );
+  const preferEnglishSegmentTitles = useMemo(
+    () =>
+      preferEnglishChapterSegmentTitles(
+        primaryTranslationId,
+        primaryTranslationMeta?.language,
+      ),
+    [primaryTranslationId, primaryTranslationMeta?.language],
   );
   const readDisplayLocale = useMemo<AppLocale>(() => {
     const lang = String(primaryTranslationMeta?.language ?? "").toLowerCase();
@@ -323,36 +360,57 @@ export function ReadChapterScreen() {
   }, [tr]);
 
   const load = useCallback(async () => {
+    if (!translationCatalogReady) {
+      const cached = chapterDataRef.current;
+      if (
+        cached?.bookId === bookId &&
+        cached?.chapter === chapter &&
+        cached?.translationId === primaryTranslationId
+      ) {
+        setChapterData(cached);
+        setLoading(false);
+        setError(null);
+      }
+      return;
+    }
+
+    const loadSeq = chapterLoadSeqRef.current;
     if (!bookId || chapter == null) {
-      setError(tr("pages.read.invalidChapter"));
+      setError(t("pages.read.invalidChapter"));
       setChapterData(null);
       setLoading(false);
       return;
     }
-    setLoading(true);
+
+    const cached = chapterDataRef.current;
+    const hasCachedChapter =
+      cached?.bookId === bookId &&
+      cached?.chapter === chapter &&
+      cached?.translationId === primaryTranslationId;
+
+    if (!hasCachedChapter) {
+      setLoading(true);
+    }
     setError(null);
-    setChapterData(null);
-    setChapterSegments(null);
-    setContrastByVerse(null);
-    setChapterXrefs(null);
+
     try {
-      const primaryMeta = translationCatalog.find((tr) => tr.id === primaryTranslationId);
-      const contrastMetas = contrastTranslationIds
-        .map((id) => translationCatalog.find((tr) => tr.id === id))
-        .filter((item): item is NonNullable<typeof item> => Boolean(item));
+      const catalog = translationCatalogRef.current;
+      const primaryMeta = catalog.find((item) => item.id === primaryTranslationId);
       const primaryLabels = {
         labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
         labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
       };
 
       const catalogIndex = {
-        translations: translationCatalog,
+        translations: catalog,
         defaultTranslationId: null as string | null,
       };
       const readyPrimaryId = await ensureScriptureTranslationReadyWithFallback(
         primaryTranslationId,
         translationMetaFromCatalog(catalogIndex, primaryTranslationId)?.downloadUrl,
       );
+
+      if (loadSeq !== chapterLoadSeqRef.current) return;
 
       const loaded = await loadChapterFromBundledTranslation(
         bookId,
@@ -361,80 +419,167 @@ export function ReadChapterScreen() {
         primaryLabels,
       );
 
+      if (loadSeq !== chapterLoadSeqRef.current) return;
+
       if (!loaded) {
         setChapterData(null);
-        setError(tr("pages.read.chapterLoadError"));
+        setError(t("pages.read.chapterLoadError"));
         return;
       }
       setChapterData(loaded);
-      setChapterSegments(loadBundledChapterSegments(loaded.bookId, loaded.chapter, chapterSegmentMode));
-      void recordTodayReadingChapterFraction(loaded.bookId, loaded.chapter, 0.1);
-      void writeLastReadPosition({
-        bookId: loaded.bookId,
-        chapter: loaded.chapter,
-        bookName: loaded.bookName,
+      setChapterSegments(
+        loadBundledChapterSegments(loaded.bookId, loaded.chapter, chapterSegmentMode, {
+          preferEnglishTitles: preferEnglishSegmentTitles,
+        }),
+      );
+      InteractionManager.runAfterInteractions(() => {
+        void writeLastReadPosition({
+          bookId: loaded.bookId,
+          chapter: loaded.chapter,
+          bookName: loaded.bookName,
+        });
       });
 
-      // 对照译本与交叉引用不阻塞首屏经文。
-      void (async () => {
-        const [contrastResults, xrefsResult] = await Promise.allSettled([
-          Promise.allSettled(
-            contrastMetas.map(async (meta) => {
-              try {
-                await ensureScriptureTranslationReady(
-                  meta.id,
-                  translationMetaFromCatalog(catalogIndex, meta.id)?.downloadUrl,
-                );
-              } catch {
-                return null;
-              }
-              return loadChapterFromBundledTranslation(
-                bookId,
-                chapter,
-                meta.id,
-                { labelZh: meta.labelZh, labelEn: meta.labelEn },
-              );
-            }),
-          ),
-          loadChapterXrefs(bookId, chapter),
-        ]);
-        setChapterXrefs(xrefsResult.status === "fulfilled" ? xrefsResult.value : null);
-        const contrastSettledRows =
-          contrastResults.status === "fulfilled" ? contrastResults.value : [];
-        if (contrastSettledRows.length === 0) return;
-        const map = new Map<number, ContrastVerseLine[]>();
-        for (const row of contrastSettledRows) {
-          if (row.status !== "fulfilled" || !row.value?.verses?.length) continue;
-          for (const v of row.value.verses) {
-            const bucket = map.get(v.verse) ?? [];
-            bucket.push({ translationId: row.value.translationId, text: v.text });
-            map.set(v.verse, bucket);
-          }
-        }
-        setContrastByVerse(map.size ? map : null);
-      })();
+      // 对照译本不阻塞首屏；交叉引用仅建索引，详情在打开 sheet 时按需加载。
+      deferredXrefTaskRef.current?.cancel();
+      deferredContrastTaskRef.current?.cancel();
+      InteractionManager.runAfterInteractions(() => {
+        void recordTodayReadingChapterFraction(loaded.bookId, loaded.chapter, 0.1);
+      });
+      deferredXrefTaskRef.current = InteractionManager.runAfterInteractions(() => {
+        void (async () => {
+          if (!navigationRef.current.isFocused()) return;
+          await warmScriptureXrefDatabase();
+          if (!navigationRef.current.isFocused()) return;
+          const verseNumbers = await loadChapterXrefVerseNumbers(bookId, chapter);
+          if (!navigationRef.current.isFocused()) return;
+          if (loadSeq !== chapterLoadSeqRef.current) return;
+          setXrefVerseNumbers(verseNumbers.length ? new Set(verseNumbers) : new Set());
+        })();
+      });
     } catch (e) {
+      if (loadSeq !== chapterLoadSeqRef.current) return;
       setChapterData(null);
       setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      if (loadSeq === chapterLoadSeqRef.current) {
+        setLoading(false);
+      }
     }
-  }, [bookId, chapter, primaryTranslationId, contrastTranslationIds, translationCatalog, chapterSegmentMode, tr]);
+  }, [
+    bookId,
+    chapter,
+    primaryTranslationId,
+    chapterSegmentMode,
+    translationCatalogReady,
+    preferEnglishSegmentTitles,
+  ]);
+
+  useEffect(() => {
+    if (!chapterData || !translationCatalogReady) return;
+    setChapterSegments(
+      loadBundledChapterSegments(chapterData.bookId, chapterData.chapter, chapterSegmentMode, {
+        preferEnglishTitles: preferEnglishSegmentTitles,
+      }),
+    );
+  }, [
+    chapterData?.bookId,
+    chapterData?.chapter,
+    chapterSegmentMode,
+    preferEnglishSegmentTitles,
+    translationCatalogReady,
+  ]);
 
   useLayoutEffect(() => {
+    chapterLoadSeqRef.current += 1;
     setChapterData(null);
     setChapterSegments(null);
     setContrastByVerse(null);
-    setChapterXrefs(null);
+    setContrastLoadRequested(false);
+    setHighlightsLoadRequested(false);
+    setPostReadingReady(false);
+    setXrefVerseNumbers(null);
+    setXrefSheetBundle(null);
+    setXrefSheetLoading(false);
     verseLayoutsRef.current.clear();
+    lastRecordedFractionRef.current = null;
     setLoading(true);
     setError(null);
     chapterScrollIntentRef.current = false;
   }, [bookId, chapter]);
 
+  const prevPrimaryTranslationIdRef = useRef(primaryTranslationId);
+  useEffect(() => {
+    if (prevPrimaryTranslationIdRef.current === primaryTranslationId) return;
+    prevPrimaryTranslationIdRef.current = primaryTranslationId;
+    chapterLoadSeqRef.current += 1;
+  }, [primaryTranslationId]);
+
   useEffect(() => {
     void load();
   }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!bookId || chapter == null) return;
+      const cached = chapterDataRef.current;
+      if (
+        cached?.bookId === bookId &&
+        cached?.chapter === chapter &&
+        cached?.translationId === primaryTranslationId
+      ) {
+        setChapterData(cached);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+      if (!translationCatalogReady) {
+        setLoading(true);
+        return;
+      }
+      void load();
+    }, [bookId, chapter, primaryTranslationId, load, translationCatalogReady]),
+  );
+
+  useEffect(() => {
+    if (!chapterFocused || loading || error || chapterData) return;
+    if (!bookId || chapter == null) return;
+    if (!translationCatalogReady) {
+      setLoading(true);
+      return;
+    }
+    setLoading(true);
+    void load();
+  }, [
+    bookId,
+    chapter,
+    chapterData,
+    chapterFocused,
+    error,
+    load,
+    loading,
+    translationCatalogReady,
+  ]);
+
+  useEffect(() => {
+    if (!chapterFocused || !translationCatalogReady || !bookId || chapter == null) return;
+    const cached = chapterDataRef.current;
+    if (
+      cached?.bookId === bookId &&
+      cached?.chapter === chapter &&
+      cached?.translationId === primaryTranslationId
+    ) {
+      return;
+    }
+    void load();
+  }, [bookId, chapter, chapterFocused, load, primaryTranslationId, translationCatalogReady]);
+
+  useEffect(() => {
+    return () => {
+      deferredXrefTaskRef.current?.cancel();
+      deferredContrastTaskRef.current?.cancel();
+    };
+  }, []);
 
   useEffect(() => {
     highlightDraftMapRef.current = highlightDraftMap;
@@ -446,11 +591,115 @@ export function ReadChapterScreen() {
 
   useEffect(() => {
     if (!chapterData) return;
-    trackTelemetry("read_chapter_open", {
-      book_id: chapterData.bookId,
-      chapter: chapterData.chapter,
+    const task = InteractionManager.runAfterInteractions(() => {
+      trackTelemetry("read_chapter_open", {
+        book_id: chapterData.bookId,
+        chapter: chapterData.chapter,
+      });
     });
+    return () => task.cancel();
   }, [chapterData?.bookId, chapterData?.chapter]);
+
+  useEffect(() => {
+    if (!chapterData || contrastTranslationIds.length === 0 || contrastLoadRequested) return;
+    const timer = setTimeout(() => {
+      if (chapterFocused) setContrastLoadRequested(true);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [
+    chapterData?.bookId,
+    chapterData?.chapter,
+    chapterFocused,
+    contrastLoadRequested,
+    contrastTranslationIds.length,
+  ]);
+
+  useEffect(() => {
+    if (!chapterData || highlightsLoadRequested) return;
+    const timer = setTimeout(() => {
+      if (chapterFocused) setHighlightsLoadRequested(true);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [chapterData?.bookId, chapterData?.chapter, chapterFocused, highlightsLoadRequested]);
+
+  useEffect(() => {
+    if (!chapterData || postReadingReady) return;
+    const timer = setTimeout(() => {
+      if (chapterFocused) setPostReadingReady(true);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [chapterData?.bookId, chapterData?.chapter, chapterFocused, postReadingReady]);
+
+  useEffect(() => {
+    if (highlightModeActive) setHighlightsLoadRequested(true);
+  }, [highlightModeActive]);
+
+  useEffect(() => {
+    if (chapterCompleted) setPostReadingReady(true);
+  }, [chapterCompleted]);
+
+  useEffect(() => {
+    if (!chapterData || !contrastLoadRequested || contrastTranslationIds.length === 0) return;
+
+    const contrastMetas = contrastTranslationIds
+      .map((id) => translationCatalog.find((tr) => tr.id === id))
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    if (!contrastMetas.length) return;
+
+    const catalogIndex = {
+      translations: translationCatalog,
+      defaultTranslationId: null as string | null,
+    };
+
+    deferredContrastTaskRef.current?.cancel();
+    deferredContrastTaskRef.current = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+        if (!navigation.isFocused()) return;
+
+        const map = new Map<number, ContrastVerseLine[]>();
+        for (const meta of contrastMetas) {
+          if (!navigation.isFocused()) return;
+          try {
+            await ensureScriptureTranslationReady(
+              meta.id,
+              translationMetaFromCatalog(catalogIndex, meta.id)?.downloadUrl,
+            );
+          } catch {
+            continue;
+          }
+          const loaded = await loadChapterFromBundledTranslation(
+            bookId,
+            chapter,
+            meta.id,
+            { labelZh: meta.labelZh, labelEn: meta.labelEn },
+          );
+          if (!loaded?.verses?.length) continue;
+          for (const v of loaded.verses) {
+            const bucket = map.get(v.verse) ?? [];
+            bucket.push({ translationId: loaded.translationId, text: v.text });
+            map.set(v.verse, bucket);
+          }
+        }
+        if (!navigation.isFocused()) return;
+        setContrastByVerse(map.size ? map : null);
+      })();
+    });
+
+    return () => {
+      deferredContrastTaskRef.current?.cancel();
+    };
+  }, [
+    bookId,
+    chapter,
+    chapterData,
+    contrastLoadRequested,
+    contrastTranslationIds,
+    navigation,
+    translationCatalog,
+  ]);
 
   const neighbors = useMemo(() => {
     if (!chapterData) return { prev: null, next: null };
@@ -464,17 +713,27 @@ export function ReadChapterScreen() {
     [isZhLocale],
   );
 
-  const xrefsByVerse = useMemo(() => {
-    if (!chapterXrefs?.length) return null;
-    const m = new Map<number, ScriptureVerseXrefs>();
-    for (const row of chapterXrefs) {
-      if (row.incoming.length || row.outgoing.length) m.set(row.verse, row);
+  useEffect(() => {
+    if (xrefSheetVerse == null || !bookId || chapter == null) {
+      setXrefSheetBundle(null);
+      setXrefSheetLoading(false);
+      return;
     }
-    return m.size ? m : null;
-  }, [chapterXrefs]);
-
-  const xrefSheetBundle =
-    xrefSheetVerse != null ? (xrefsByVerse?.get(xrefSheetVerse) ?? null) : null;
+    let cancelled = false;
+    setXrefSheetLoading(true);
+    setXrefSheetBundle(null);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void loadVerseXrefs(bookId, chapter, xrefSheetVerse).then((bundle) => {
+        if (cancelled) return;
+        setXrefSheetBundle(bundle);
+        setXrefSheetLoading(false);
+      });
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
+  }, [bookId, chapter, xrefSheetVerse]);
 
   const verseIndexByVerse = useMemo(() => {
     const map = new Map<number, number>();
@@ -504,7 +763,12 @@ export function ReadChapterScreen() {
     for (const row of chapterSegments ?? []) {
       if (!Number.isInteger(row.verseStart) || row.verseStart == null) continue;
       if (row.type === "heading") {
-        const text = resolveChapterSegmentHeadingText(row, locale, localeZhText);
+        const text = resolveChapterSegmentHeadingText(
+          row,
+          readDisplayLocale,
+          localeZhText,
+          preferEnglishSegmentTitles,
+        );
         if (text) {
           const bucket = headingByVerse.get(row.verseStart) ?? [];
           bucket.push(text);
@@ -516,7 +780,7 @@ export function ReadChapterScreen() {
       }
     }
     return { headingByVerse, paragraphStarts };
-  }, [chapterSegments, locale, localeZhText]);
+  }, [chapterSegments, readDisplayLocale, localeZhText, preferEnglishSegmentTitles]);
   const useParagraphFlowLayout = verseParagraphFlow && contrastTranslationIds.length === 0;
   const activeHighlightMap = highlightModeActive
     ? (highlightDraftMap ?? highlightedVerseIndexes)
@@ -575,8 +839,11 @@ export function ReadChapterScreen() {
     scrollRef,
     scrollHeaderHeightRef,
     onAdvanceChapterAudio,
-    verseLayoutsRef,
-    audioViewportHeight,
+    {
+      verseLayoutsRef,
+      scrollViewportHeight: audioViewportHeight || scrollViewportHeight,
+      scrollOffsetRef,
+    },
   );
 
   const markChapterDone = useCallback(() => {
@@ -592,13 +859,16 @@ export function ReadChapterScreen() {
     if (!chapterData) return;
     chapterCompletionMarkedRef.current = false;
     let cancelled = false;
-    void isReadChapterCompleted(chapterData.bookId, chapterData.chapter).then((done) => {
-      if (cancelled) return;
-      setChapterCompleted(done);
-      if (done) chapterCompletionMarkedRef.current = true;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void isReadChapterCompleted(chapterData.bookId, chapterData.chapter).then((done) => {
+        if (cancelled) return;
+        setChapterCompleted(done);
+        if (done) chapterCompletionMarkedRef.current = true;
+      });
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, [chapterData?.bookId, chapterData?.chapter]);
 
@@ -616,16 +886,25 @@ export function ReadChapterScreen() {
       };
     }) => {
       const { y } = event.nativeEvent.contentOffset;
+      onChapterScrollOffset(y);
       const { height: contentH } = event.nativeEvent.contentSize;
       const { height: viewportH } = event.nativeEvent.layoutMeasurement;
       if (contentH <= 0 || viewportH <= 0) return;
-      if (y > 12) chapterScrollIntentRef.current = true;
+      if (y > 12) {
+        chapterScrollIntentRef.current = true;
+        setContrastLoadRequested((prev) => prev || true);
+        setHighlightsLoadRequested((prev) => prev || true);
+      }
       if (!chapterScrollIntentRef.current) return;
+      const scrollProgress = (y + viewportH) / contentH;
+      if (scrollProgress > 0.58 || y + viewportH >= contentH - 160) {
+        setPostReadingReady(true);
+      }
       if (y + viewportH >= contentH - 48) {
         markChapterDone();
       }
     },
-    [markChapterDone],
+    [markChapterDone, onChapterScrollOffset],
   );
 
   useEffect(() => {
@@ -636,7 +915,23 @@ export function ReadChapterScreen() {
         ? activeVerseIndex
         : -1;
     const fraction = verseIdx >= 0 ? Math.min(1, (verseIdx + 1) / total) : 0;
-    void recordTodayReadingChapterFraction(chapterData.bookId, chapterData.chapter, fraction);
+    const prev = lastRecordedFractionRef.current;
+    if (
+      prev?.bookId === chapterData.bookId &&
+      prev?.chapter === chapterData.chapter &&
+      Math.abs(prev.fraction - fraction) < 0.04
+    ) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      lastRecordedFractionRef.current = {
+        bookId: chapterData.bookId,
+        chapter: chapterData.chapter,
+        fraction,
+      };
+      void recordTodayReadingChapterFraction(chapterData.bookId, chapterData.chapter, fraction);
+    }, 700);
+    return () => clearTimeout(timer);
   }, [chapterData, activeVerseIndex]);
 
   useEffect(() => {
@@ -645,19 +940,24 @@ export function ReadChapterScreen() {
       return;
     }
     let cancelled = false;
-    void (async () => {
-      try {
-        const prefs = await readEffectiveReadingPlanPrefs();
-        const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: prefs.dayCount });
-        if (cancelled) return;
-        setPlanFlowNextTarget(resolveTodayPlanLoopNextTarget(payload, chapterData.bookId, chapterData.chapter));
-      } catch {
-        if (cancelled) return;
-        setPlanFlowNextTarget(null);
-      }
-    })();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        try {
+          const prefs = await readEffectiveReadingPlanPrefs();
+          const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: prefs.dayCount });
+          if (cancelled) return;
+          setPlanFlowNextTarget(
+            resolveTodayPlanLoopNextTarget(payload, chapterData.bookId, chapterData.chapter),
+          );
+        } catch {
+          if (cancelled) return;
+          setPlanFlowNextTarget(null);
+        }
+      })();
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, [chapterData?.bookId, chapterData?.chapter, isPlanFlow]);
 
@@ -985,23 +1285,32 @@ export function ReadChapterScreen() {
   }, [cancelHighlightModeByChapterChange, chapterData?.bookId, chapterData?.chapter]);
 
   useEffect(() => {
-    if (!chapterData) {
-      setHighlightedVerseIndexes(new Map());
+    if (!chapterData || !highlightsLoadRequested) {
+      if (!chapterData) setHighlightedVerseIndexes(new Map());
       return;
     }
     let cancelled = false;
-    void readChapterVerseTextHighlights({
-      translationId: chapterData.translationId,
-      bookId: chapterData.bookId,
-      chapter: chapterData.chapter,
-    }).then((map) => {
-      if (cancelled) return;
-      setHighlightedVerseIndexes(map);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readChapterVerseTextHighlights({
+        translationId: chapterData.translationId,
+        bookId: chapterData.bookId,
+        chapter: chapterData.chapter,
+      }).then((map) => {
+        if (cancelled || !chapterFocused) return;
+        setHighlightedVerseIndexes(map);
+      });
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
-  }, [chapterData?.translationId, chapterData?.bookId, chapterData?.chapter]);
+  }, [
+    chapterData?.translationId,
+    chapterData?.bookId,
+    chapterData?.chapter,
+    chapterFocused,
+    highlightsLoadRequested,
+  ]);
 
   const jumpToChapter = useCallback(
     (nextBookId: string, nextChapter: number) => {
@@ -1014,6 +1323,10 @@ export function ReadChapterScreen() {
   const openCatalogChrome = useCallback(() => {
     setJumpOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (!jumpOpen) setJumpPickerBookId(null);
+  }, [jumpOpen]);
 
   const goReadHomeFromCatalog = useCallback(() => {
     setJumpOpen(false);
@@ -1082,6 +1395,7 @@ export function ReadChapterScreen() {
             const h = e.nativeEvent.layout.height;
             onScrollViewportLayout(h);
             setAudioViewportHeight(h > 0 ? Math.round(h) : 0);
+            refreshScrollViewportTop();
           }}
           onScroll={onChapterScroll}
           scrollEventThrottle={120}
@@ -1187,19 +1501,14 @@ export function ReadChapterScreen() {
                               : audioActive
                                 ? styles.verseInlineChunkAudioActive
                                 : styles.verseInlineChunkAudioIdle;
-                          const xrefBundle = xrefsByVerse?.get(v.verse);
-                          const hasXref = Boolean(xrefBundle);
+                          const hasXref = Boolean(xrefVerseNumbers?.has(v.verse));
                           return (
                             <Text
                               key={verseAudioChunkKey}
                               onPress={parentVersePressHandler(v.verse, v.text)}
                               onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
                               suppressHighlighting
-                              onLayout={(e) => {
-                                const { y, height } = e.nativeEvent.layout;
-                                onVerseLayout(v.verse, y, height);
-                                verseLayoutsRef.current.set(v.verse, { y, height });
-                              }}
+                              onLayout={(e) => reportVerseLayoutFromEvent(v.verse, e)}
                               style={[
                                 styles.verseInlineChunk,
                                 verseChunkBackgroundStyle,
@@ -1324,8 +1633,7 @@ export function ReadChapterScreen() {
                     : audioActive
                       ? styles.verseLineActive
                       : styles.verseLineIdle;
-                const xrefBundle = xrefsByVerse?.get(v.verse);
-                const hasXref = Boolean(xrefBundle);
+                const hasXref = Boolean(xrefVerseNumbers?.has(v.verse));
                 return (
                   <Fragment key={verseBlockKey}>
                     {showParagraphBreak ? (
@@ -1356,11 +1664,7 @@ export function ReadChapterScreen() {
                       onPress={parentVersePressHandler(v.verse, v.text)}
                       onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
                       delayLongPress={280}
-                      onLayout={(e) => {
-                        const { y, height } = e.nativeEvent.layout;
-                        onVerseLayout(v.verse, y, height);
-                        verseLayoutsRef.current.set(v.verse, { y, height });
-                      }}
+                      onLayout={(e) => reportVerseLayoutFromEvent(v.verse, e)}
                       accessibilityRole="button"
                       accessibilityHint={
                         verseSelectionMode
@@ -1532,20 +1836,22 @@ export function ReadChapterScreen() {
             ) : null}
           </View>
 
-          <ReadChapterPostReadingEditions
-            bookId={chapterData.bookId}
-            chapter={chapterData.chapter}
-            displayLocale={postReadingDisplayLocale}
-            infoRoleId={prefersEnglishInfoEdition ? INFO_EDITION_V1_EN_ROLE_ID : null}
-            guideRoleId={prefersEnglishInfoEdition ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : null}
-            onBackToTop={scrollToTop}
-            onGoPrevChapter={
-              neighbors.prev ? () => goNeighbor(neighbors.prev, "back") : undefined
-            }
-            onGoNextChapter={
-              neighbors.next ? () => goNeighbor(neighbors.next, "forward") : undefined
-            }
-          />
+          {postReadingReady ? (
+            <ReadChapterPostReadingEditions
+              bookId={chapterData.bookId}
+              chapter={chapterData.chapter}
+              displayLocale={postReadingDisplayLocale}
+              infoRoleId={prefersEnglishInfoEdition ? INFO_EDITION_V1_EN_ROLE_ID : null}
+              guideRoleId={prefersEnglishInfoEdition ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : null}
+              onBackToTop={scrollToTop}
+              onGoPrevChapter={
+                neighbors.prev ? () => goNeighbor(neighbors.prev, "back") : undefined
+              }
+              onGoNextChapter={
+                neighbors.next ? () => goNeighbor(neighbors.next, "forward") : undefined
+              }
+            />
+          ) : null}
 
           {chapterCompleted ? (
             <ReadChapterCompletionPlanPanel
@@ -1556,7 +1862,18 @@ export function ReadChapterScreen() {
           ) : null}
 
         </ParchmentBottomFadeScrollView>
-      ) : null}
+      ) : (
+        <View style={[styles.centered, { paddingTop: insets.top }]}>
+          <ActivityIndicator color={c.muted} />
+          <Text style={styles.statusText}>{tr("pages.read.loadingChapter")}</Text>
+          <Pressable
+            onPress={() => void load()}
+            style={({ pressed }) => [styles.retryBtn, pressed && styles.pressed, { marginTop: 12 }]}
+          >
+            <Text style={styles.retryBtnText}>{tr("pages.read.retry")}</Text>
+          </Pressable>
+        </View>
+      )}
 
       <ReadVerseBookmarkFeedback message={bookmarkFeedback} onClear={clearBookmarkFeedback} />
 
@@ -1569,6 +1886,7 @@ export function ReadChapterScreen() {
           chapter={chapterData.chapter}
           verse={xrefSheetVerse ?? 0}
           bundle={xrefSheetBundle}
+          bundleLoading={xrefSheetLoading}
         />
       ) : null}
 
@@ -1611,7 +1929,10 @@ export function ReadChapterScreen() {
           ]}
         >
           <Pressable
-            onPress={() => router.push(readScriptureSearchRoute())}
+            onPress={() => {
+              void warmScriptureSearchDatabase(primaryTranslationId);
+              router.push(readScriptureSearchRoute());
+            }}
             disabled={verseSelectionMode}
             style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
             accessibilityRole="button"
@@ -1791,53 +2112,69 @@ export function ReadChapterScreen() {
       <Modal visible={jumpOpen} animationType="slide" transparent onRequestClose={() => setJumpOpen(false)}>
         <Pressable style={styles.jumpBackdrop} onPress={() => setJumpOpen(false)}>
           <Pressable style={styles.jumpSheet} onPress={(e) => e.stopPropagation()}>
-            <ReadParchmentBackgroundImage
-              style={[styles.jumpSheetBg, { paddingBottom: 16 + insets.bottom }]}
+            <ImageBackground
+              source={READ_PARCHMENT_SCROLL_SOURCE}
+              resizeMode="stretch"
+              style={styles.jumpSheetImageBg}
               imageStyle={styles.jumpSheetBgImage}
             >
-              <View style={styles.jumpHeaderRow}>
-                <Pressable
-                  onPress={goReadHomeFromCatalog}
-                  style={({ pressed }) => [styles.jumpBackBtn, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={tr("pages.read.backToBibleHome")}
-                >
-                  <MaterialIcons name="arrow-back-ios-new" size={16} color={c.ink} />
+              <View style={[styles.jumpSheetContent, { paddingBottom: 16 + insets.bottom }]}>
+                <View style={styles.jumpHeaderRow}>
+                  <Pressable
+                    onPress={goReadHomeFromCatalog}
+                    style={({ pressed }) => [styles.jumpBackBtn, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel={tr("pages.read.backToBibleHome")}
+                  >
+                    <MaterialIcons name="arrow-back-ios-new" size={16} color={c.ink} />
+                  </Pressable>
+                  <Text
+                    style={styles.jumpTitle}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    allowFontScaling={false}
+                  >
+                    {jumpPickerBookId ? bookNameForId(jumpPickerBookId) : tr("pages.read.chapterJumpTitle")}
+                  </Text>
+                  <View style={styles.jumpHeaderSpacer} />
+                </View>
+                <View style={styles.jumpCatalogScrollWrap}>
+                  {jumpPickerBookId ? (
+                    <BibleChapterPickerPanel
+                      bookId={jumpPickerBookId}
+                      viewportHeight={JUMP_CATALOG_VIEWPORT_H}
+                      embedded
+                      lockTextScale
+                      onBack={() => setJumpPickerBookId(null)}
+                      onPickChapter={(chapter) => jumpToChapter(jumpPickerBookId, chapter)}
+                    />
+                  ) : (
+                    <ScrollView
+                      style={styles.jumpCatalogScroll}
+                      showsVerticalScrollIndicator
+                      keyboardShouldPersistTaps="handled"
+                    >
+                      <BibleCatalogOutline
+                        sections={catalogSections}
+                        activeBookId={bookId}
+                        onPickChapter={jumpToChapter}
+                        onBookPress={(book) => setJumpPickerBookId(book.bookId)}
+                        splitByTestamentColumns
+                        bookMetaMode="none"
+                        compactMode
+                        showSectionTint={false}
+                        sectionGapPx={8}
+                        sectionStripeFullHeight
+                        lockTextScale
+                      />
+                    </ScrollView>
+                  )}
+                </View>
+                <Pressable onPress={() => setJumpOpen(false)} style={styles.jumpClose}>
+                  <Text style={styles.jumpCloseText}>{tr("pages.read.chapterJumpClose")}</Text>
                 </Pressable>
-                <Text
-                  style={styles.jumpTitle}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  allowFontScaling={false}
-                >
-                  {tr("pages.read.chapterJumpTitle")}
-                </Text>
-                <View style={styles.jumpHeaderSpacer} />
               </View>
-              <View style={styles.jumpCatalogScrollWrap}>
-                <ParchmentBottomFadeScrollView
-                  style={styles.jumpCatalogScroll}
-                  fadePreset="default"
-                  keyboardShouldPersistTaps="handled"
-                >
-                  <BibleCatalogOutline
-                    sections={catalogSections}
-                    activeBookId={bookId}
-                    onPickChapter={jumpToChapter}
-                    splitByTestamentColumns
-                    bookMetaMode="none"
-                    compactMode
-                    showSectionTint={false}
-                    sectionGapPx={8}
-                    sectionStripeFullHeight
-                    lockTextScale
-                  />
-                </ParchmentBottomFadeScrollView>
-              </View>
-              <Pressable onPress={() => setJumpOpen(false)} style={styles.jumpClose}>
-                <Text style={styles.jumpCloseText}>{tr("pages.read.chapterJumpClose")}</Text>
-              </Pressable>
-            </ReadParchmentBackgroundImage>
+            </ImageBackground>
           </Pressable>
         </Pressable>
       </Modal>
@@ -2081,15 +2418,18 @@ const styles = StyleSheet.create({
   },
   jumpBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: c.modalBackdrop },
   jumpSheet: {
+    width: "100%",
     maxHeight: "82%",
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     overflow: "hidden",
   },
-  jumpSheetBg: {
+  jumpSheetImageBg: {
+    width: "100%",
+  },
+  jumpSheetContent: {
     paddingTop: 10,
     paddingHorizontal: 12,
-    backgroundColor: "rgba(236, 217, 185, 0.64)",
   },
   jumpSheetBgImage: {
     borderTopLeftRadius: 18,
@@ -2126,11 +2466,12 @@ const styles = StyleSheet.create({
   },
   jumpCatalogScrollWrap: {
     position: "relative",
-    height: 460,
+    height: JUMP_CATALOG_VIEWPORT_H,
     overflow: "hidden",
   },
   jumpCatalogScroll: {
-    flex: 1,
+    height: "100%",
+    width: "100%",
   },
   jumpClose: { marginTop: 4, alignSelf: "center", paddingVertical: 6 },
   jumpCloseText: { fontSize: 14, color: c.muted },

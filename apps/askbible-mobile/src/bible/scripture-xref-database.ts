@@ -158,3 +158,19 @@ export async function retryScriptureXrefDatabaseOnPrepareError<T>(
     }
   });
 }
+
+let xrefDatabaseWarmed = false;
+
+/** 打开 xref SQLite 并执行轻量查询，缩短章节首次交叉引用索引耗时。 */
+export async function warmScriptureXrefDatabase(): Promise<void> {
+  if (xrefDatabaseWarmed) return;
+  try {
+    await retryScriptureXrefDatabaseOnPrepareError(async (db) => {
+      await db.getFirstAsync<{ ok: number }>("SELECT 1 AS ok LIMIT 1");
+      return { ok: 1 };
+    });
+    xrefDatabaseWarmed = true;
+  } catch {
+    /* warmup best-effort */
+  }
+}

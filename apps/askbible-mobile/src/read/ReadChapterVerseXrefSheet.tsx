@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  InteractionManager,
   Modal,
   Pressable,
   ScrollView,
@@ -30,6 +31,7 @@ type Props = {
   chapter: number;
   verse: number;
   bundle: ScriptureVerseXrefs | null;
+  bundleLoading?: boolean;
 };
 
 const EMPTY_XREFS: ScriptureXrefTarget[] = [];
@@ -85,6 +87,7 @@ export function ReadChapterVerseXrefSheet({
   chapter,
   verse,
   bundle,
+  bundleLoading = false,
 }: Props) {
   const router = useRouter();
   const { locale } = useLocale();
@@ -112,18 +115,21 @@ export function ReadChapterVerseXrefSheet({
     }
     let cancelled = false;
     setLoadingSnippets(true);
-    void loadScriptureXrefSnippets(primaryTranslationId, allRefs)
-      .then((map) => {
-        if (!cancelled) {
-          setSnippets(map);
-          setLoadingSnippets(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLoadingSnippets(false);
-      });
+    const task = InteractionManager.runAfterInteractions(() => {
+      void loadScriptureXrefSnippets(primaryTranslationId, allRefs)
+        .then((map) => {
+          if (!cancelled) {
+            setSnippets(map);
+            setLoadingSnippets(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setLoadingSnippets(false);
+        });
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, [visible, primaryTranslationId, allRefs]);
 
@@ -161,6 +167,9 @@ export function ReadChapterVerseXrefSheet({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator
           >
+            {bundleLoading ? (
+              <Text style={styles.snippetMuted}>…</Text>
+            ) : null}
             <XrefListSection
               title={tx("pages.read.verseXrefIncoming")}
               refs={incoming}

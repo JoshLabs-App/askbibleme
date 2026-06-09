@@ -1,5 +1,6 @@
+import { useIsFocused } from "@react-navigation/native";
 import { usePathname } from "expo-router";
-import { forwardRef, useMemo, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -52,8 +53,47 @@ export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
     ref,
   ) {
     const pathname = usePathname();
+    const focused = useIsFocused();
+    const rootRef = useRef<View>(null);
+    const lastViewportHeightRef = useRef(0);
+    const maskActivatedRef = useRef(false);
     const [viewportHeight, setViewportHeight] = useState(0);
+    const [maskReady, setMaskReady] = useState(false);
     const canMask = maskEnabled && nativeMaskedViewAvailable();
+
+    const remeasureViewport = () => {
+      rootRef.current?.measure((_x, _y, _w, h) => {
+        const next = Math.round(h);
+        if (next > 0) setViewportHeight(next);
+      });
+    };
+
+    useEffect(() => {
+      if (!focused) return;
+      requestAnimationFrame(remeasureViewport);
+    }, [focused]);
+
+    useEffect(() => {
+      if (viewportHeight > 0) lastViewportHeightRef.current = viewportHeight;
+    }, [viewportHeight]);
+
+    useEffect(() => {
+      if (viewportHeight <= 0) return;
+      let cancelled = false;
+      const frame = requestAnimationFrame(() => {
+        if (cancelled) return;
+        requestAnimationFrame(() => {
+          if (!cancelled) {
+            maskActivatedRef.current = true;
+            setMaskReady(true);
+          }
+        });
+      });
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(frame);
+      };
+    }, [viewportHeight]);
     const MaskedView = useMemo(
       () =>
         canMask
@@ -91,14 +131,22 @@ export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
       </ScrollView>
     );
 
+    const effectiveViewportHeight =
+      viewportHeight > 0 ? viewportHeight : lastViewportHeightRef.current;
+    const showMask =
+      canMask &&
+      MaskedView &&
+      effectiveViewportHeight > 0 &&
+      (maskReady || maskActivatedRef.current);
+
     return (
-      <View style={styles.flex} onLayout={onLayout}>
-        {canMask && viewportHeight > 0 && MaskedView ? (
+      <View ref={rootRef} style={styles.flex} onLayout={onLayout} collapsable={false}>
+        {showMask ? (
           <MaskedView
             style={styles.flex}
             maskElement={
               <ReadParchmentScrollMask
-                viewportHeight={viewportHeight}
+                viewportHeight={effectiveViewportHeight}
                 preset={resolvedPreset}
               />
             }

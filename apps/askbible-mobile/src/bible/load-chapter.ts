@@ -1,8 +1,12 @@
 import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
-import { isScriptureTranslationInstalled } from "./scripture-database";
+import {
+  isScriptureTranslationInstalled,
+  rebuildBundledScriptureDatabase,
+  retryScriptureDatabaseOnPrepareError,
+} from "./scripture-database";
 import { getScriptureBookDisplayName } from "./scripture-book-display-name";
 import { scriptureBooks } from "./scripture-books";
-import { getScriptureDatabase, retryScriptureDatabaseOnPrepareError } from "./scripture-database";
+import { getScriptureDatabase } from "./scripture-database";
 import { loadedChapterVerseFromRow } from "./verse-annotations";
 import type { LoadedChapter } from "./types";
 import {
@@ -73,6 +77,44 @@ async function queryChapterVerses(
   }
 }
 
+function rowsToLoadedVerses(rows: VerseRow[]): LoadedChapter["verses"] {
+  return rows
+    .map((row) =>
+      loadedChapterVerseFromRow({
+        verse: Number(row.verse),
+        text: String(row.text ?? ""),
+        speech_spans: String(row.speech_spans ?? ""),
+        flags: Number(row.flags ?? 0),
+        theme_repeat_count: Number(row.theme_repeat_count ?? 0),
+      }),
+    )
+    .filter((v): v is NonNullable<typeof v> => v != null);
+}
+
+async function fetchChapterVerseRows(
+  translationId: string,
+  bookId: string,
+  chapter: number,
+): Promise<VerseRow[]> {
+  return retryScriptureDatabaseOnPrepareError(translationId, (db) =>
+    queryChapterVerses(db, bookId, chapter),
+  );
+}
+
+type CachedChapterBody = {
+  translationId: string;
+  bookId: string;
+  bookName: string;
+  chapter: number;
+  verses: LoadedChapter["verses"];
+};
+
+const loadedChapterSessionCache = new Map<string, CachedChapterBody>();
+
+function loadedChapterCacheKey(translationId: string, bookId: string, chapter: number): string {
+  return `${translationId}:${bookId}:${chapter}`;
+}
+
 /**
  * 从设备内 SQLite 读取一章（离线）。查询与 Web `loadChapterFromSqlite` 一致。
  */
@@ -99,35 +141,55 @@ export async function loadChapterFromBundledTranslation(
   const ch = Number(chapter);
   if (!Number.isInteger(ch) || ch < 1 || ch > bookMeta.chapters) return null;
 
-  let rows: VerseRow[];
-  try {
-    rows = await retryScriptureDatabaseOnPrepareError(tid, (db) => queryChapterVerses(db, id, ch));
-  } catch (err) {
-    if (!isNativeDatabaseRejectedError(err)) throw err;
-    return null;
+  const cacheKey = loadedChapterCacheKey(tid, id, ch);
+  const cached = loadedChapterSessionCache.get(cacheKey);
+  if (cached) {
+    return {
+      ...cached,
+      labelZh: labels.labelZh,
+      labelEn: labels.labelEn,
+    };
   }
 
-  const verses = rows
-    .map((row) =>
-      loadedChapterVerseFromRow({
-        verse: Number(row.verse),
-        text: String(row.text ?? ""),
-        speech_spans: String(row.speech_spans ?? ""),
-        flags: Number(row.flags ?? 0),
-        theme_repeat_count: Number(row.theme_repeat_count ?? 0),
-      }),
-    )
-    .filter((v): v is NonNullable<typeof v> => v != null);
+  let rows: VerseRow[];
+  try {
+    rows = await fetchChapterVerseRows(tid, id, ch);
+  } catch (err) {
+    if (!isNativeDatabaseRejectedError(err)) throw err;
+    if (isBundledScriptureTranslation(tid)) {
+      await rebuildBundledScriptureDatabase(tid);
+      try {
+        rows = await fetchChapterVerseRows(tid, id, ch);
+      } catch (err2) {
+        if (!isNativeDatabaseRejectedError(err2)) throw err2;
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  let verses = rowsToLoadedVerses(rows);
+  if (verses.length === 0 && isBundledScriptureTranslation(tid)) {
+    await rebuildBundledScriptureDatabase(tid);
+    rows = await fetchChapterVerseRows(tid, id, ch);
+    verses = rowsToLoadedVerses(rows);
+  }
 
   if (verses.length === 0) return null;
 
-  return {
+  const body: CachedChapterBody = {
     translationId: tid,
-    labelZh: labels.labelZh,
-    labelEn: labels.labelEn,
     bookId: id,
     bookName: getScriptureBookDisplayName(id),
     chapter: ch,
     verses,
+  };
+  loadedChapterSessionCache.set(cacheKey, body);
+
+  return {
+    ...body,
+    labelZh: labels.labelZh,
+    labelEn: labels.labelEn,
   };
 }

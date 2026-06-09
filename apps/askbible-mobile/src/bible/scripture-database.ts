@@ -1,6 +1,7 @@
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 import * as SQLite from "expo-sqlite";
+import { Platform } from "react-native";
 import { getBundledScriptureAssetModule, isBundledScriptureTranslation } from "./bundled-scripture-translations";
 import { DEFAULT_SCRIPTURE_TRANSLATION_ID } from "./types";
 
@@ -8,8 +9,9 @@ import { DEFAULT_SCRIPTURE_TRANSLATION_ID } from "./types";
  * 与主仓库 `askbible-scripture-sqlite-v3`（含 theme_repeat_count）对齐；升级后须递增。
  * v5: 强制刷新设备侧已安装 sqlite，确保经文源文本修订（如个别汉字显示异常修复）能落地。
  * v6: 强制刷新说话标注修订（四福音神言/人话纠偏）。
+ * v7: Android 内置 sqlite 复制校验 + 可读性探针，修复简体/繁体「无法读取本章」。
  */
-export const SCRIPTURE_SQLITE_SCHEMA_VERSION = 6;
+export const SCRIPTURE_SQLITE_SCHEMA_VERSION = 7;
 
 const openPromises = new Map<string, Promise<SQLite.SQLiteDatabase>>();
 const openDatabases = new Map<string, SQLite.SQLiteDatabase>();
@@ -132,12 +134,38 @@ async function removeInstalledDatabase(dest: string, translationId: string): Pro
   await removeScriptureDatabaseFiles(translationId);
 }
 
-async function bundledAssetByteSize(assetModule: number): Promise<number> {
+async function fileByteSize(uri: string): Promise<number> {
+  const info = await FileSystem.getInfoAsync(uri);
+  return info.exists && typeof info.size === "number" ? info.size : 0;
+}
+
+/** Android release 上 `Asset.fromModule().localUri` 偶发不可 copy；与章朗读/音乐播放一致走 loadAsync。 */
+async function resolveBundledAssetLocalUri(assetModule: number): Promise<string> {
+  if (Platform.OS === "android") {
+    try {
+      const [asset] = await Asset.loadAsync(assetModule);
+      const localUri = (asset?.localUri || asset?.uri || "").trim();
+      if (localUri) return localUri;
+    } catch {
+      /* fall through */
+    }
+  }
   const asset = Asset.fromModule(assetModule);
   await asset.downloadAsync();
-  if (!asset.localUri) return 0;
-  const info = await FileSystem.getInfoAsync(asset.localUri);
-  return info.exists && typeof info.size === "number" ? info.size : 0;
+  const localUri = (asset.localUri || asset.uri || "").trim();
+  if (!localUri) {
+    throw new Error("无法解析内置资源 URI");
+  }
+  return localUri;
+}
+
+async function bundledAssetByteSize(assetModule: number): Promise<number> {
+  try {
+    const localUri = await resolveBundledAssetLocalUri(assetModule);
+    return fileByteSize(localUri);
+  } catch {
+    return 0;
+  }
 }
 
 /** 本地已安装译本 SQLite 体积；内置译本无文档副本时回退到安装包 asset 大小。 */
@@ -158,6 +186,65 @@ export async function getLocalScriptureTranslationByteSize(translationId: string
   return 0;
 }
 
+async function copyFilePreservingBytes(from: string, to: string, expectedSize: number): Promise<void> {
+  try {
+    await FileSystem.copyAsync({ from, to });
+    const copiedSize = await fileByteSize(to);
+    if (copiedSize === expectedSize) return;
+    await FileSystem.deleteAsync(to, { idempotent: true });
+  } catch {
+    await FileSystem.deleteAsync(to, { idempotent: true });
+  }
+
+  if (Platform.OS === "android") {
+    const base64 = await FileSystem.readAsStringAsync(from, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    await FileSystem.writeAsStringAsync(to, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    const copiedSize = await fileByteSize(to);
+    if (copiedSize === expectedSize) return;
+    await FileSystem.deleteAsync(to, { idempotent: true });
+  }
+
+  throw new Error("复制失败");
+}
+
+async function verifyBundledScriptureDatabaseProbe(translationId: string): Promise<void> {
+  const name = dbFileName(translationId);
+  let db: SQLite.SQLiteDatabase | null = null;
+  try {
+    db = await SQLite.openDatabaseAsync(name);
+    const row = await db.getFirstAsync<{ c: number }>(
+      "SELECT COUNT(*) AS c FROM verse WHERE book_id = ? AND chapter = ?",
+      "GEN",
+      1,
+    );
+    if (Number(row?.c ?? 0) < 1) {
+      throw new Error(`内置圣经数据库无可读经文：${translationId}`);
+    }
+  } finally {
+    if (db) {
+      try {
+        await db.closeAsync();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+/** 删库并从 APK 内 asset 重拷（简体/繁体读章失败时由 load-chapter 调用）。 */
+export async function rebuildBundledScriptureDatabase(translationId: string): Promise<void> {
+  const id = String(translationId || "").trim();
+  if (!isBundledScriptureTranslation(id)) return;
+  await closeOpenedDatabase(id);
+  clearOpenPromise(id);
+  await removeScriptureDatabaseFiles(id);
+  await ensureBundledDatabaseOnDisk(id);
+}
+
 async function copyBundledDatabaseToDisk(
   translationId: string,
   dest: string,
@@ -166,13 +253,17 @@ async function copyBundledDatabaseToDisk(
   const sqliteDir = `${FileSystem.documentDirectory}SQLite`;
   await FileSystem.makeDirectoryAsync(sqliteDir, { intermediates: true });
 
-  const asset = Asset.fromModule(assetModule);
-  await asset.downloadAsync();
-  if (!asset.localUri) {
+  const localUri = await resolveBundledAssetLocalUri(assetModule);
+  const bundledSize = await fileByteSize(localUri);
+  if (bundledSize < 512 * 1024) {
     throw new Error(`无法从资源包加载圣经数据库：${translationId}`);
   }
-  await FileSystem.copyAsync({ from: asset.localUri, to: dest });
+
+  await copyFilePreservingBytes(localUri, dest, bundledSize);
+
   await writeInstalledSchemaVersion(dest, SCRIPTURE_SQLITE_SCHEMA_VERSION);
+  await clearRemoteBytesMarker(dest);
+  await verifyBundledScriptureDatabaseProbe(translationId);
 }
 
 async function ensureDownloadedDatabaseOnDisk(translationId: string): Promise<void> {
@@ -204,18 +295,16 @@ async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void>
     await FileSystem.deleteAsync(legacyDest, { idempotent: true });
     await FileSystem.deleteAsync(schemaVersionPath(legacyDest), { idempotent: true });
   }
-  const [info, remoteBytes] = await Promise.all([
-    FileSystem.getInfoAsync(dest),
-    readRemoteBytesMarker(dest),
-  ]);
+  const bundledSize = await bundledAssetByteSize(assetModule);
+  const info = await FileSystem.getInfoAsync(dest);
   const installedVer = info.exists ? await readInstalledSchemaVersion(dest) : null;
   const destSize = info.exists && typeof info.size === "number" ? info.size : 0;
-  // 内置译本：schema + 非空文件即视为就绪，避免每次 Asset.downloadAsync 探测体积。
+  // 内置译本：设备副本须与 APK 内 asset 字节一致（xref DB 同策略），避免 Android 上 copy 截断仍被误判为就绪。
   const upToDate =
     info.exists &&
     installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION &&
-    destSize >= 512 * 1024 &&
-    (remoteBytes == null || destSize === remoteBytes);
+    bundledSize >= 512 * 1024 &&
+    destSize === bundledSize;
 
   if (upToDate) {
     return;
@@ -255,6 +344,25 @@ export async function getScriptureDatabase(
     openPromises.set(id, openPromise);
   }
   return openPromise;
+}
+
+const warmedSearchTranslationIds = new Set<string>();
+
+/** 打开译本 SQLite 并执行轻量查询，缩短首次搜索冷启动。 */
+export async function warmScriptureSearchDatabase(
+  translationId: string = DEFAULT_SCRIPTURE_TRANSLATION_ID,
+): Promise<void> {
+  const id = String(translationId || "").trim();
+  if (!id || warmedSearchTranslationIds.has(id)) return;
+  if (!(await isScriptureTranslationInstalled(id))) return;
+  try {
+    await retryScriptureDatabaseOnPrepareError(id, (db) =>
+      db.getFirstAsync<{ ok: number }>("SELECT 1 AS ok LIMIT 1"),
+    );
+    warmedSearchTranslationIds.add(id);
+  } catch {
+    /* warmup best-effort */
+  }
 }
 
 function isNativeDatabaseRejectedError(err: unknown): boolean {

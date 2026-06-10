@@ -26,10 +26,23 @@
   --accent-strong: #9a6800;
   --accent-soft: #fff3d6;
   --accent-deep: #7a5200;
+  --accent-hover: #f0a600;
+  --on-accent: #2a2826;
   --rose-soft: #ffeede;
   --rose-text: #b45a28;
   --blue-soft: #fff8ec;
   --blue-text: #8a6840;
+  --progress-track: rgba(122, 82, 0, 0.16);
+  --scrollbar-thumb: rgba(42, 40, 38, 0.12);
+  --overlay: rgba(42, 40, 38, 0.42);
+  --surface-shine: rgba(255, 255, 255, 0.08);
+  --surface-shine-strong: rgba(255, 255, 255, 0.28);
+  --surface-shine-line: rgba(255, 255, 255, 0.42);
+  --hover-surface: rgba(255, 255, 255, 0.88);
+  --sheet-top: #fffdf8;
+  --sheet-bottom: #fff7ea;
+  --sheet-inset: rgba(255, 255, 255, 0.8);
+  --frame-border: rgba(255, 255, 255, 0.16);
   --shadow-sm: 0 1px 3px rgba(42, 40, 38, 0.04);
   --shadow-md: 0 4px 16px rgba(42, 40, 38, 0.06);
   --shadow-float:
@@ -43,6 +56,60 @@
   --radius-lg: 16px;
   --font-serif: "Noto Serif SC", "Songti SC", "STSong", "Iowan Old Style", serif;
   --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --backdrop: #0f0e0d;
+  --backdrop-mid: #141210;
+  --backdrop-light: #1a1816;
+  --canvas: #141210;
+  --surface: #242220;
+  --surface-list: #1e1c1a;
+  --surface-soft: #2a2724;
+  --surface-player-top: #2a261e;
+  --surface-player: #221f1a;
+  --surface-player-deep: #1a1814;
+  --player-border: rgba(255, 177, 0, 0.14);
+  --player-line: rgba(255, 177, 0, 0.1);
+  --player-control-bg: rgba(255, 255, 255, 0.06);
+  --player-control-border: rgba(255, 177, 0, 0.12);
+  --player-muted: #a89880;
+  --player-muted-2: #887868;
+  --ink: #f2ece2;
+  --muted: #a89888;
+  --muted-2: #7a6f62;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --accent: #ffb100;
+  --accent-rgb: 255, 177, 0;
+  --accent-strong: #ffc840;
+  --accent-soft: rgba(255, 177, 0, 0.14);
+  --accent-deep: #ffb100;
+  --accent-hover: #ffc020;
+  --on-accent: #2a2826;
+  --rose-soft: rgba(180, 90, 40, 0.18);
+  --rose-text: #e89660;
+  --blue-soft: rgba(255, 177, 0, 0.08);
+  --blue-text: #c4a870;
+  --progress-track: rgba(255, 177, 0, 0.18);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --overlay: rgba(0, 0, 0, 0.62);
+  --surface-shine: rgba(255, 255, 255, 0.04);
+  --surface-shine-strong: rgba(255, 255, 255, 0.08);
+  --surface-shine-line: rgba(255, 255, 255, 0.1);
+  --hover-surface: rgba(255, 255, 255, 0.1);
+  --sheet-top: #2a2724;
+  --sheet-bottom: #1e1c1a;
+  --sheet-inset: rgba(255, 255, 255, 0.06);
+  --frame-border: rgba(255, 255, 255, 0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.32);
+  --shadow-float:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 2px 6px rgba(0, 0, 0, 0.28),
+    0 14px 32px rgba(0, 0, 0, 0.36),
+    0 32px 64px rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -130,7 +197,7 @@ button {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 18%);
+  background: linear-gradient(180deg, var(--surface-shine) 0%, transparent 18%);
   z-index: 2;
 }
 
@@ -168,7 +235,7 @@ button {
 }
 
 .page-scroll::-webkit-scrollbar-thumb {
-  background: rgba(42, 40, 38, 0.12);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 
@@ -200,7 +267,7 @@ button {
   left: 0;
   right: 0;
   height: 1px;
-  background: rgba(255, 255, 255, 0.42);
+  background: var(--surface-shine-line);
   pointer-events: none;
 }
 
@@ -210,7 +277,7 @@ button {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(ellipse 90% 70% at 50% 0%, rgba(255, 255, 255, 0.28), transparent 62%);
+  background: radial-gradient(ellipse 90% 70% at 50% 0%, var(--surface-shine-strong), transparent 62%);
 }
 
 .player-section .hero-copy,
@@ -242,19 +309,19 @@ button {
     90deg,
     var(--accent) 0%,
     var(--accent) var(--progress, 0%),
-    rgba(122, 82, 0, 0.16) var(--progress, 0%),
-    rgba(122, 82, 0, 0.16) 100%
+    var(--progress-track) var(--progress, 0%),
+    var(--progress-track) 100%
   );
 }
 
 .player-section .progress-slider::-moz-range-track {
-  background: rgba(122, 82, 0, 0.16);
+  background: var(--progress-track);
 }
 
 .player-section .control-button {
   background: var(--player-control-bg);
   border-color: var(--player-control-border);
-  box-shadow: 0 1px 2px rgba(122, 82, 0, 0.08);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .player-section .control-button.subtle {
@@ -424,8 +491,19 @@ button {
   height: 18px;
 }
 
+.hero-line-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-toggle .theme-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .icon-action-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--hover-surface);
   transform: scale(0.98);
 }
 
@@ -508,15 +586,15 @@ button {
     90deg,
     var(--accent) 0%,
     var(--accent) var(--progress, 0%),
-    rgba(42, 40, 38, 0.08) var(--progress, 0%),
-    rgba(42, 40, 38, 0.08) 100%
+    var(--progress-track) var(--progress, 0%),
+    var(--progress-track) 100%
   );
 }
 
 .progress-slider::-moz-range-track {
   height: 3px;
   border-radius: 2px;
-  background: rgba(42, 40, 38, 0.08);
+  background: var(--progress-track);
 }
 
 .progress-slider::-moz-range-progress {
@@ -534,7 +612,7 @@ button {
   border-radius: 50%;
   border: 2px solid var(--surface);
   background: var(--accent);
-  box-shadow: 0 1px 4px rgba(42, 40, 38, 0.15);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 15%, transparent);
 }
 
 .progress-slider::-moz-range-thumb {
@@ -543,7 +621,7 @@ button {
   border-radius: 50%;
   border: 2px solid var(--surface);
   background: var(--accent);
-  box-shadow: 0 1px 4px rgba(42, 40, 38, 0.15);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 15%, transparent);
 }
 
 .control-row {
@@ -579,7 +657,7 @@ button {
 .play-toggle {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--ink);
+  color: var(--on-accent);
   display: grid;
   place-items: center;
   padding: 0;
@@ -1089,7 +1167,7 @@ button {
 .track-pill.is-active {
   border-color: var(--accent);
   background: var(--accent);
-  color: var(--ink);
+  color: var(--on-accent);
 }
 
 .track-pill:hover {
@@ -1162,7 +1240,7 @@ a:focus-visible {
   }
 
   .app-card {
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid var(--frame-border);
     border-top: 3px solid var(--accent);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-float);
@@ -1258,7 +1336,7 @@ body.app-update-open {
   padding: 12px 14px;
   border-bottom: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
   background: color-mix(in srgb, var(--accent-soft) 88%, var(--surface));
-  box-shadow: 0 8px 24px rgba(42, 40, 38, 0.08);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .app-update-banner[hidden] {
@@ -1289,7 +1367,7 @@ body.app-update-open {
   border: 0;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -1298,6 +1376,136 @@ body.app-update-open {
 
 .app-update-button:hover {
   background: var(--accent-strong);
+}
+
+/* ── Share sheet ── */
+
+body.share-sheet-open {
+  overflow: hidden;
+}
+
+.share-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  display: grid;
+  place-items: end center;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+}
+
+.share-sheet[hidden] {
+  display: none;
+}
+
+.share-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+
+.share-sheet-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--phone-width));
+  padding: 20px 18px 16px;
+  border-radius: 20px 20px 16px 16px;
+  background: linear-gradient(180deg, var(--sheet-top) 0%, var(--sheet-bottom) 100%);
+  box-shadow:
+    0 1px 0 var(--sheet-inset) inset,
+    0 18px 48px color-mix(in srgb, var(--ink) 24%, transparent);
+}
+
+.share-sheet-heading {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.share-sheet-title {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.share-sheet-lead {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.share-sheet-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.share-sheet-button {
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.share-sheet-button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.share-sheet-button.primary:hover {
+  background: var(--accent-hover);
+}
+
+.share-sheet-button.ghost {
+  background: transparent;
+  color: var(--muted);
+}
+
+.share-sheet-button:hover {
+  background: var(--accent-soft);
+}
+
+.share-sheet-button.primary:hover {
+  background: var(--accent-hover);
+}
+
+.share-sheet-button.ghost:hover {
+  background: var(--surface-soft);
+}
+
+.share-sheet-status {
+  min-height: 1.2em;
+  margin: 12px 0 0;
+  color: var(--accent-strong);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .share-sheet {
+    place-items: center;
+  }
+
+  .share-sheet-panel {
+    border-radius: 20px;
+  }
 }
 
 .install-guide {
@@ -1321,7 +1529,7 @@ body.app-update-open {
   position: absolute;
   inset: 0;
   border: 0;
-  background: rgba(42, 40, 38, 0.42);
+  background: var(--overlay);
   backdrop-filter: blur(3px);
   cursor: pointer;
 }
@@ -1332,10 +1540,10 @@ body.app-update-open {
   width: min(100%, var(--phone-width));
   padding: 22px 20px 18px;
   border-radius: 20px 20px 16px 16px;
-  background: linear-gradient(180deg, #fffdf8 0%, #fff7ea 100%);
+  background: linear-gradient(180deg, var(--sheet-top) 0%, var(--sheet-bottom) 100%);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 18px 48px rgba(48, 38, 22, 0.24);
+    0 1px 0 var(--sheet-inset) inset,
+    0 18px 48px color-mix(in srgb, var(--ink) 24%, transparent);
 }
 
 .install-guide-icon {
@@ -1411,11 +1619,11 @@ body.app-update-open {
 .install-guide-button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--ink);
+  color: var(--on-accent);
 }
 
 .install-guide-button.primary:hover {
-  background: #f0a600;
+  background: var(--accent-hover);
 }
 
 .install-guide-button.primary:disabled {
@@ -1424,13 +1632,13 @@ body.app-update-open {
 }
 
 .install-guide-button.ghost {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--player-control-bg);
   border-color: var(--line-strong);
   color: var(--muted);
 }
 
 .install-guide-button.ghost:hover {
-  background: #fff;
+  background: var(--hover-surface);
 }
 
 @media (min-width: 768px) {
@@ -1531,7 +1739,7 @@ body.repair-page .page.repair-shell {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: conic-gradient(var(--accent) calc(var(--progress) * 1%), rgba(42, 40, 38, 0.06) 0);
+  background: conic-gradient(var(--accent) calc(var(--progress) * 1%), var(--progress-track) 0);
   padding: 8px;
 }
 

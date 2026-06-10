@@ -67,7 +67,13 @@ const $skipForwardButton = document.querySelector('#skip-forward-button');
 const $prevButton = document.querySelector('#prev-button');
 const $nextButton = document.querySelector('#next-button');
 const $shareButton = document.querySelector('#share-button');
+const $shareSheet = document.querySelector('#share-sheet');
+const $shareSheetTitle = document.querySelector('#share-sheet-title');
+const $shareSheetLead = document.querySelector('#share-sheet-lead');
+const $shareSheetStatus = document.querySelector('#share-sheet-status');
 const $speedButton = document.querySelector('#speed-button');
+
+const AUDIO_SOURCE_HOSTS = new Set(['ochopechurch.org', 'www.ochopechurch.org']);
 
 let saveSessionTimer = null;
 let searchRenderTimer = null;
@@ -798,19 +804,202 @@ function clearShareFromUrl() {
 
 function showShareToast(message) {
   if (!$shareButton) return;
-  const originalLabel = $shareButton.getAttribute('aria-label') || '复制分享链接';
+  const originalLabel = $shareButton.getAttribute('aria-label') || '分享讲道';
   $shareButton.setAttribute('aria-label', message);
   $shareButton.title = message;
   window.clearTimeout(shareToastTimer);
   shareToastTimer = window.setTimeout(() => {
     $shareButton.setAttribute('aria-label', originalLabel);
-    $shareButton.title = '复制分享链接';
+    $shareButton.title = '分享讲道';
   }, 1800);
+}
+
+function showShareFeedback(message) {
+  if ($shareSheet && !$shareSheet.hidden && $shareSheetStatus) {
+    $shareSheetStatus.textContent = message;
+    return;
+  }
+  showShareToast(message);
+}
+
+function getTrackShareTitle(track = state.currentTrack) {
+  if (!track) return '讲道';
+  return String(track.lesson || track.displayLabel || track.bookTitle || '讲道').trim();
+}
+
+function getTrackMp3Url(track = state.currentTrack) {
+  if (!track) return '';
+  return cleanRemoteAudioUrl(track.audioUrl) || track.audioSrc || '';
+}
+
+function getTrackMp3Filename(track = state.currentTrack) {
+  const url = getTrackMp3Url(track);
+  const fromUrl = url ? decodeURIComponent(url.split('/').pop()?.split('?')[0] || '') : '';
+  if (/\.mp3$/i.test(fromUrl)) return fromUrl;
+  return `${getTrackShareTitle(track).replace(/[\\/:*?"<>|]/g, '_')}.mp3`;
+}
+
+function getMp3FetchUrl(sourceUrl) {
+  if (!sourceUrl) return '';
+  try {
+    const parsed = new URL(sourceUrl, window.location.origin);
+    if (parsed.origin === window.location.origin) return parsed.href;
+    if (!AUDIO_SOURCE_HOSTS.has(parsed.hostname)) return parsed.href;
+    return `${appAssetPath('/api/audio')}?url=${encodeURIComponent(parsed.href)}`;
+  } catch {
+    return sourceUrl;
+  }
+}
+
+async function fetchMp3Blob(track = state.currentTrack) {
+  const sourceUrl = getTrackMp3Url(track);
+  if (!sourceUrl) throw new Error('no audio');
+
+  const candidates = [];
+  const proxyUrl = getMp3FetchUrl(sourceUrl);
+  if (proxyUrl !== sourceUrl) candidates.push(proxyUrl);
+  candidates.push(sourceUrl);
+
+  let lastError = null;
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`http ${response.status}`);
+      const blob = await response.blob();
+      if (!blob.size) throw new Error('empty blob');
+      return blob;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('fetch failed');
+}
+
+function openShareSheet() {
+  if (!state.currentTrack) {
+    showShareToast('请先选择讲道');
+    return;
+  }
+  if (!$shareSheet) {
+    void shareMp3File();
+    return;
+  }
+
+  if ($shareSheetTitle) $shareSheetTitle.textContent = getTrackShareTitle();
+  if ($shareSheetLead) $shareSheetLead.textContent = getTrackSubtitle(state.currentTrack);
+  if ($shareSheetStatus) $shareSheetStatus.textContent = '';
+  $shareSheet.hidden = false;
+  $shareSheet.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('share-sheet-open');
+}
+
+function closeShareSheet() {
+  if (!$shareSheet) return;
+  $shareSheet.hidden = true;
+  $shareSheet.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('share-sheet-open');
+}
+
+async function shareMp3File() {
+  const track = state.currentTrack;
+  if (!track) {
+    showShareFeedback('请先选择讲道');
+    return;
+  }
+
+  const sourceUrl = getTrackMp3Url(track);
+  if (!sourceUrl) {
+    showShareFeedback('暂无音频文件');
+    return;
+  }
+
+  const title = getTrackShareTitle(track);
+  const filename = getTrackMp3Filename(track);
+  const subtitle = getTrackSubtitle(track);
+
+  try {
+    const blob = await fetchMp3Blob(track);
+    const file = new File([blob], filename, { type: blob.type || 'audio/mpeg' });
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title, text: subtitle });
+      showShareFeedback('已分享 MP3 文件');
+      closeShareSheet();
+      return;
+    }
+  } catch (error) {
+    if (error?.name === 'AbortError') return;
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text: subtitle, url: sourceUrl });
+      showShareFeedback('已分享 MP3 链接');
+      closeShareSheet();
+      return;
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+    }
+  }
+
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+    await navigator.clipboard.writeText(sourceUrl);
+    showShareFeedback('已复制 MP3 链接');
+  } catch {
+    showShareFeedback('分享失败，请尝试下载');
+  }
+}
+
+function downloadMp3File() {
+  const track = state.currentTrack;
+  if (!track) {
+    showShareFeedback('请先选择讲道');
+    return;
+  }
+
+  const sourceUrl = getTrackMp3Url(track);
+  if (!sourceUrl) {
+    showShareFeedback('暂无音频文件');
+    return;
+  }
+
+  const filename = getTrackMp3Filename(track);
+  const fetchUrl = getMp3FetchUrl(sourceUrl);
+  const anchor = document.createElement('a');
+  anchor.href = fetchUrl;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+
+  if (fetchUrl === sourceUrl) {
+    showShareFeedback('已打开 MP3，可保存或转发');
+  } else {
+    showShareFeedback('正在下载…');
+  }
+}
+
+async function copyMp3Link() {
+  const sourceUrl = getTrackMp3Url();
+  if (!sourceUrl) {
+    showShareFeedback('暂无音频文件');
+    return;
+  }
+
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+    await navigator.clipboard.writeText(sourceUrl);
+    showShareFeedback('已复制 MP3 链接');
+  } catch {
+    showShareFeedback('复制失败');
+  }
 }
 
 async function copyShareLink() {
   if (!state.currentTrack) {
-    showShareToast('请先选择讲道');
+    showShareFeedback('请先选择讲道');
     return;
   }
 
@@ -821,9 +1010,9 @@ async function copyShareLink() {
       throw new Error('clipboard unavailable');
     }
     await navigator.clipboard.writeText(url);
-    showShareToast('已复制');
+    showShareFeedback('已复制播放页链接');
   } catch {
-    showShareToast('复制失败');
+    showShareFeedback('复制失败');
   }
 }
 
@@ -1666,7 +1855,33 @@ function bindControls() {
   $prevButton.addEventListener('click', () => playRelativeTrack(-1));
   $nextButton.addEventListener('click', () => playRelativeTrack(1));
   $shareButton?.addEventListener('click', () => {
-    void copyShareLink();
+    openShareSheet();
+  });
+
+  $shareSheet?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-action]');
+    if (!button) return;
+
+    const action = button.dataset.action || '';
+    if (action === 'close-share') {
+      closeShareSheet();
+      return;
+    }
+    if (action === 'share-mp3') {
+      void shareMp3File();
+      return;
+    }
+    if (action === 'download-mp3') {
+      downloadMp3File();
+      return;
+    }
+    if (action === 'copy-mp3-link') {
+      void copyMp3Link();
+      return;
+    }
+    if (action === 'copy-page-link') {
+      void copyShareLink();
+    }
   });
   $speedButton?.addEventListener('click', () => cyclePlaybackRate());
 

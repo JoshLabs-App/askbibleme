@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#FFB100" />
+    <script>
+      (function () {
+        var key = 'sermon-theme-v1';
+        var stored = localStorage.getItem(key);
+        var dark =
+          stored === 'dark' ||
+          (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        document.documentElement.dataset.themeMode = stored === 'light' || stored === 'dark' ? stored : 'system';
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="讲道集" />
@@ -20,6 +31,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/jd/styles.css" />
+    <script type="module" src="/jd/theme.js"></script>
   </head>
   <body>
     <main class="page app-shell">
@@ -115,13 +127,41 @@
               >
                 1x
               </button>
-              <button
-                id="share-button"
-                class="icon-action-button"
-                type="button"
-                aria-label="复制分享链接"
-                title="复制短链接"
-              >
+              <div class="hero-line-actions">
+                <button
+                  id="theme-toggle"
+                  class="icon-action-button theme-toggle"
+                  type="button"
+                  aria-label="切换到深色模式"
+                  title="切换外观"
+                >
+                  <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden>
+                    <circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      d="M20 14.5A7.5 7.5 0 0 1 9.5 4 6 6 0 1 0 20 14.5z"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  id="share-button"
+                  class="icon-action-button"
+                  type="button"
+                aria-label="分享讲道"
+                title="分享讲道"
+                >
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path
                     d="M13.5 4.5l6 6-6 6M19.5 10.5H9a3 3 0 0 0-3 3v1.5"
@@ -133,6 +173,7 @@
                   />
                 </svg>
               </button>
+              </div>
             </div>
             <h2 id="track-title">未选择讲道</h2>
             <div class="track-panel" aria-label="当前系列">
@@ -212,6 +253,30 @@
           </button>
           <button id="install-guide-dismiss" class="install-guide-button ghost" type="button">稍后再说</button>
         </div>
+      </section>
+    </div>
+
+    <div id="share-sheet" class="share-sheet" hidden aria-hidden="true">
+      <button class="share-sheet-backdrop" type="button" data-action="close-share" aria-label="关闭"></button>
+      <section class="share-sheet-panel" role="dialog" aria-labelledby="share-sheet-heading" aria-modal="true">
+        <h2 id="share-sheet-heading" class="share-sheet-heading">分享讲道</h2>
+        <p id="share-sheet-title" class="share-sheet-title"></p>
+        <p id="share-sheet-lead" class="share-sheet-lead"></p>
+        <div class="share-sheet-actions">
+          <button class="share-sheet-button primary" type="button" data-action="share-mp3">
+            分享 MP3 文件
+          </button>
+          <button class="share-sheet-button" type="button" data-action="download-mp3">
+            下载 MP3
+          </button>
+          <button class="share-sheet-button" type="button" data-action="copy-mp3-link">
+            复制 MP3 链接
+          </button>
+          <button class="share-sheet-button ghost" type="button" data-action="copy-page-link">
+            复制播放页链接
+          </button>
+        </div>
+        <p id="share-sheet-status" class="share-sheet-status" aria-live="polite"></p>
       </section>
     </div>
 

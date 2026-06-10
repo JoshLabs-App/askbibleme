@@ -1,8 +1,6 @@
 const THEME_KEY = 'sermon-theme-v1';
 
 const $themeToggle = document.querySelector('#theme-toggle');
-const $themeSun = document.querySelector('.theme-icon--sun');
-const $themeMoon = document.querySelector('.theme-icon--moon');
 
 function readStoredTheme() {
   const stored = window.localStorage.getItem(THEME_KEY);
@@ -23,9 +21,6 @@ function updateThemeColor(theme) {
 
 function updateToggleUi(theme) {
   const isDark = theme === 'dark';
-  if ($themeSun) $themeSun.hidden = !isDark;
-  if ($themeMoon) $themeMoon.hidden = isDark;
-
   const label = isDark ? '切换到浅色模式' : '切换到深色模式';
   if ($themeToggle) {
     $themeToggle.setAttribute('aria-label', label);

@@ -34,6 +34,21 @@
     <script type="module" src="/jd/theme.js"></script>
   </head>
   <body>
+    <div id="install-guide" class="install-banner" hidden aria-hidden="true" role="region" aria-labelledby="install-guide-title">
+      <div class="install-banner-icon" aria-hidden="true">
+        <img src="/jd/icons/icon-192.png" width="40" height="40" alt="" />
+      </div>
+      <div class="install-banner-copy">
+        <strong id="install-guide-title" class="install-banner-title">添加到主屏幕</strong>
+        <p id="install-guide-lead" class="install-banner-lead"></p>
+        <ol id="install-guide-steps" class="install-banner-steps" hidden></ol>
+      </div>
+      <div class="install-banner-actions">
+        <button id="install-guide-primary" class="install-banner-button" type="button" hidden>添加</button>
+        <button id="install-guide-dismiss" class="install-banner-close" type="button" aria-label="关闭">×</button>
+      </div>
+    </div>
+
     <main class="page app-shell">
       <section class="app-card" aria-label="讲道集">
         <div class="page-scroll">
@@ -236,24 +251,6 @@
         <p class="app-update-lead">内容已更新，点击立即刷新以获取最新讲道与功能。</p>
       </div>
       <button id="app-update-refresh" class="app-update-button" type="button">立即更新</button>
-    </div>
-
-    <div id="install-guide" class="install-guide" hidden aria-hidden="true">
-      <button class="install-guide-backdrop" type="button" data-action="dismiss-install" aria-label="关闭"></button>
-      <section class="install-guide-sheet" role="dialog" aria-labelledby="install-guide-title" aria-modal="true">
-        <div class="install-guide-icon" aria-hidden="true">
-          <img src="/jd/icons/icon-192.png" width="72" height="72" alt="" />
-        </div>
-        <h2 id="install-guide-title" class="install-guide-title">添加到主屏幕</h2>
-        <p class="install-guide-lead">安装后可像 App 一样，从桌面图标快速打开讲道集</p>
-        <ol id="install-guide-steps" class="install-guide-steps"></ol>
-        <div class="install-guide-actions">
-          <button id="install-guide-primary" class="install-guide-button primary" type="button">
-            立即安装
-          </button>
-          <button id="install-guide-dismiss" class="install-guide-button ghost" type="button">稍后再说</button>
-        </div>
-      </section>
     </div>
 
     <div id="share-sheet" class="share-sheet" hidden aria-hidden="true">

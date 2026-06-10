@@ -1315,14 +1315,156 @@ a:focus-visible {
   }
 }
 
-/* ── Add to Home Screen guide ── */
+/* ── Add to Home Screen banner ── */
 
-body.install-guide-open {
-  overflow: hidden;
+body.install-banner-open {
+  --install-banner-offset: 0px;
+}
+
+body.install-banner-open .install-banner {
+  top: calc(env(safe-area-inset-top, 0px) + var(--app-update-banner-offset, 0px));
 }
 
 body.app-update-open {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 72px);
+  --app-update-banner-offset: 72px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--app-update-banner-offset));
+}
+
+body.install-banner-open .page.app-shell {
+  padding-top: var(--install-banner-offset, 0px);
+}
+
+.install-banner {
+  position: fixed;
+  inset: env(safe-area-inset-top, 0px) 0 auto;
+  z-index: 39;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ink) 10%, transparent);
+  pointer-events: auto;
+  animation: install-banner-in 0.35s ease;
+}
+
+.install-banner[hidden] {
+  display: none !important;
+}
+
+@keyframes install-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.install-banner-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.22);
+}
+
+.install-banner-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.install-banner-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.install-banner-title {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.install-banner-lead {
+  margin: 3px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.install-banner-steps {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  color: var(--ink);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.install-banner-steps li + li {
+  margin-top: 4px;
+}
+
+.install-banner-steps strong {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.install-banner-steps[hidden] {
+  display: none;
+}
+
+.install-banner-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.install-banner-button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.install-banner-button:hover {
+  background: var(--accent-strong);
+}
+
+.install-banner-button[hidden] {
+  display: none;
+}
+
+.install-banner-close {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--player-control-bg);
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.install-banner-close:hover {
+  background: var(--hover-surface);
+  color: var(--ink);
 }
 
 .app-update-banner {
@@ -1504,149 +1646,6 @@ body.share-sheet-open {
   }
 
   .share-sheet-panel {
-    border-radius: 20px;
-  }
-}
-
-.install-guide {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: grid;
-  place-items: end center;
-  padding:
-    max(12px, env(safe-area-inset-top))
-    max(12px, env(safe-area-inset-right))
-    max(12px, env(safe-area-inset-bottom))
-    max(12px, env(safe-area-inset-left));
-}
-
-.install-guide[hidden] {
-  display: none;
-}
-
-.install-guide-backdrop {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: var(--overlay);
-  backdrop-filter: blur(3px);
-  cursor: pointer;
-}
-
-.install-guide-sheet {
-  position: relative;
-  z-index: 1;
-  width: min(100%, var(--phone-width));
-  padding: 22px 20px 18px;
-  border-radius: 20px 20px 16px 16px;
-  background: linear-gradient(180deg, var(--sheet-top) 0%, var(--sheet-bottom) 100%);
-  box-shadow:
-    0 1px 0 var(--sheet-inset) inset,
-    0 18px 48px color-mix(in srgb, var(--ink) 24%, transparent);
-}
-
-.install-guide-icon {
-  display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 14px;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.28);
-}
-
-.install-guide-icon img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.install-guide-title {
-  margin: 0;
-  text-align: center;
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.install-guide-lead {
-  margin: 8px 0 0;
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.88rem;
-  line-height: 1.55;
-}
-
-.install-guide-steps {
-  margin: 18px 0 0;
-  padding-left: 1.15rem;
-  color: var(--ink);
-  font-size: 0.92rem;
-  line-height: 1.65;
-}
-
-.install-guide-steps li + li {
-  margin-top: 8px;
-}
-
-.install-guide-steps strong {
-  color: var(--accent-strong);
-  font-weight: 700;
-}
-
-.install-guide-steps[hidden] {
-  display: none;
-}
-
-.install-guide-actions {
-  display: grid;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.install-guide-button {
-  min-height: 44px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.install-guide-button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
-}
-
-.install-guide-button.primary:hover {
-  background: var(--accent-hover);
-}
-
-.install-guide-button.primary:disabled {
-  opacity: 0.55;
-  cursor: wait;
-}
-
-.install-guide-button.ghost {
-  background: var(--player-control-bg);
-  border-color: var(--line-strong);
-  color: var(--muted);
-}
-
-.install-guide-button.ghost:hover {
-  background: var(--hover-surface);
-}
-
-@media (min-width: 768px) {
-  .install-guide {
-    place-items: center;
-  }
-
-  .install-guide-sheet {
     border-radius: 20px;
   }
 }

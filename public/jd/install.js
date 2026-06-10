@@ -1,6 +1,7 @@
 import { appAssetPath, getAppBasePath } from './base-path.js';
 
-const INSTALL_DISMISS_KEY = 'sermon-install-dismiss-v1';
+const INSTALL_DISMISS_KEY = 'sermon-install-dismiss-v2';
+const INSTALL_SHOW_DELAY_MS = 10000;
 
 const $guide = document.querySelector('#install-guide');
 const $steps = document.querySelector('#install-guide-steps');
@@ -15,6 +16,7 @@ let installPromptWaiters = [];
 let waitingServiceWorker = null;
 let updateRefreshPending = false;
 let serviceWorkerRegistration = null;
+let installGuideScheduled = false;
 
 function isStandalone() {
   return (
@@ -47,16 +49,6 @@ function getInstallPlatform() {
   return 'other';
 }
 
-function isMobileInstallTarget() {
-  const platform = getInstallPlatform();
-  return platform === 'ios' || platform === 'android';
-}
-
-function getInstallUrl() {
-  const base = getAppBasePath();
-  return `${window.location.origin}${base}/index.html`;
-}
-
 function canDirectInstall() {
   return Boolean(deferredInstallPrompt);
 }
@@ -67,6 +59,7 @@ function notifyInstallPromptReady() {
   }
   installPromptWaiters = [];
   syncInstallGuide();
+  maybeOpenInstallGuide();
 }
 
 function waitForInstallPrompt(timeoutMs = 8000) {
@@ -85,34 +78,20 @@ function waitForInstallPrompt(timeoutMs = 8000) {
 
 function shouldOfferInstallGuide() {
   if (isStandalone() || isDismissed()) return false;
-  if (!isMobileInstallTarget() && !canDirectInstall()) return false;
-  return true;
+
+  const platform = getInstallPlatform();
+  if (platform === 'ios') return true;
+  if (platform === 'android' && canDirectInstall()) return true;
+  return false;
 }
 
-function renderSteps(platform, { showInstructions = false } = {}) {
+function renderIosSteps() {
   if (!$steps) return;
-
-  if (canDirectInstall() && !showInstructions) {
-    $steps.hidden = true;
-    $steps.innerHTML = '';
-    return;
-  }
-
   $steps.hidden = false;
-
-  if (platform === 'ios') {
-    $steps.innerHTML = `
-      <li>点击上方 <strong>立即安装</strong>，打开系统分享菜单</li>
-      <li>选择 <strong>添加到主屏幕</strong></li>
-      <li>确认后点击 <strong>添加</strong></li>
-    `;
-    return;
-  }
-
   $steps.innerHTML = `
-    <li>请使用 Chrome 打开本页</li>
-    <li>点击 <strong>立即安装</strong> 或浏览器菜单中的 <strong>安装应用</strong></li>
-    <li>确认后即可从桌面图标打开</li>
+    <li>点 Safari 底部 <strong>分享</strong> 按钮</li>
+    <li>选择 <strong>添加到主屏幕</strong></li>
+    <li>点右上角 <strong>添加</strong></li>
   `;
 }
 
@@ -120,28 +99,42 @@ function syncInstallGuide() {
   const platform = getInstallPlatform();
 
   if ($lead) {
-    if (canDirectInstall()) {
-      $lead.textContent = '点击下方按钮，一键安装到主屏幕';
-    } else if (platform === 'ios') {
-      $lead.textContent = '点击安装按钮，在分享菜单中选择「添加到主屏幕」';
+    if (platform === 'ios') {
+      $lead.textContent = '像 App 一样从桌面打开，随时收听讲道';
     } else {
-      $lead.textContent = '安装后可像 App 一样，从桌面图标快速打开讲道集';
+      $lead.textContent = '安装后可从桌面快速打开讲道集';
     }
   }
 
   if ($primary) {
-    $primary.hidden = false;
+    const showAndroidButton = platform === 'android' && canDirectInstall();
+    $primary.hidden = !showAndroidButton;
     $primary.disabled = false;
-    if (canDirectInstall()) {
-      $primary.textContent = '立即安装';
-    } else if (platform === 'ios') {
-      $primary.textContent = '立即安装';
+    $primary.textContent = '添加';
+  }
+
+  if ($steps) {
+    if (platform === 'ios') {
+      renderIosSteps();
     } else {
-      $primary.textContent = '立即安装';
+      $steps.hidden = true;
+      $steps.innerHTML = '';
     }
   }
 
-  renderSteps(platform);
+  if ($guide && !$guide.hidden) {
+    syncInstallBannerOffset();
+  }
+}
+
+function syncInstallBannerOffset() {
+  if (!$guide || $guide.hidden) {
+    document.body.style.removeProperty('--install-banner-offset');
+    return;
+  }
+
+  const height = Math.ceil($guide.getBoundingClientRect().height);
+  document.body.style.setProperty('--install-banner-offset', `${height}px`);
 }
 
 function openInstallGuide() {
@@ -149,14 +142,18 @@ function openInstallGuide() {
   syncInstallGuide();
   $guide.hidden = false;
   $guide.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('install-guide-open');
+  document.body.classList.add('install-banner-open');
+  window.requestAnimationFrame(() => {
+    syncInstallBannerOffset();
+  });
 }
 
 function closeInstallGuide({ dismiss = false } = {}) {
   if (!$guide) return;
   $guide.hidden = true;
   $guide.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('install-guide-open');
+  document.body.classList.remove('install-banner-open');
+  document.body.style.removeProperty('--install-banner-offset');
   if (dismiss) setDismissed();
 }
 
@@ -172,56 +169,12 @@ async function triggerDirectInstall() {
   return true;
 }
 
-async function triggerIosInstall() {
-  const url = getInstallUrl();
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: '讲道集',
-        text: '添加到主屏幕，随时收听讲道',
-        url,
-      });
-      return true;
-    } catch (error) {
-      if (error?.name === 'AbortError') return false;
-    }
-  }
-
-  renderSteps('ios', { showInstructions: true });
-  return false;
-}
-
 async function handleInstallClick() {
-  if (canDirectInstall()) {
-    await triggerDirectInstall();
-    return;
-  }
-
-  const platform = getInstallPlatform();
-  if (platform === 'ios') {
-    await triggerIosInstall();
-    return;
-  }
-
-  if (platform === 'android') {
-    const ready = await waitForInstallPrompt(1200);
-    if (ready && canDirectInstall()) {
-      await triggerDirectInstall();
-      return;
-    }
-    renderSteps('android', { showInstructions: true });
-  }
+  if (getInstallPlatform() !== 'android' || !canDirectInstall()) return;
+  await triggerDirectInstall();
 }
 
 function bindInstallGuide() {
-  $guide?.addEventListener('click', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-    if (target.closest('[data-action="dismiss-install"]')) {
-      closeInstallGuide();
-    }
-  });
-
   $primary?.addEventListener('click', () => {
     void handleInstallClick();
   });
@@ -234,15 +187,21 @@ function bindInstallGuide() {
     event.preventDefault();
     deferredInstallPrompt = event;
     notifyInstallPromptReady();
-    if (shouldOfferInstallGuide() && $guide?.hidden) {
-      openInstallGuide();
-    }
   });
 
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     closeInstallGuide({ dismiss: true });
   });
+
+  window.addEventListener('resize', () => {
+    syncInstallBannerOffset();
+  });
+}
+
+function maybeOpenInstallGuide() {
+  if (!installGuideScheduled || !shouldOfferInstallGuide() || !$guide?.hidden) return;
+  openInstallGuide();
 }
 
 function registerServiceWorker() {
@@ -333,17 +292,24 @@ function bindAppUpdateUi() {
 }
 
 async function scheduleInstallGuide() {
-  if (!shouldOfferInstallGuide()) return;
+  installGuideScheduled = false;
+
+  await new Promise((resolve) => window.setTimeout(resolve, INSTALL_SHOW_DELAY_MS));
+  installGuideScheduled = true;
+
+  if (isStandalone() || isDismissed()) return;
 
   const platform = getInstallPlatform();
-  if (platform === 'android' || platform === 'other') {
-    await waitForInstallPrompt(platform === 'android' ? 2500 : 1200);
-  } else {
-    await new Promise((resolve) => window.setTimeout(resolve, 1200));
+  if (platform === 'android') {
+    if (!canDirectInstall()) {
+      await waitForInstallPrompt(4000);
+    }
+    if (!canDirectInstall()) return;
+  } else if (platform !== 'ios') {
+    return;
   }
 
-  if (!shouldOfferInstallGuide()) return;
-  openInstallGuide();
+  maybeOpenInstallGuide();
 }
 
 export function initInstallGuide() {

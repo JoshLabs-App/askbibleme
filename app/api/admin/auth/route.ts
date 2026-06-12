@@ -18,6 +18,9 @@ import {
 } from "@/lib/admin-gate";
 import { authCookieSecure } from "@/lib/auth-cookie-secure";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
+import { createSupabaseMobileAuthClient } from "@/lib/supabase/mobile-server";
+import { fetchAskbibleProfile } from "@/lib/askbible-supabase-auth";
 
 function timingSafeEqualUtf8(a: string, b: string): boolean {
   try {
@@ -30,10 +33,14 @@ function timingSafeEqualUtf8(a: string, b: string): boolean {
   }
 }
 
-/** 登录页用：是否可走 AskBible 库 / 工作室口令 */
+/** 登录页用：是否可走 AskBible 库 / Supabase / 工作室口令 */
 export async function GET() {
   return NextResponse.json({
-    askbible: Boolean(getAskbibleAuthSqlitePath() || isLegacyRemoteAdminAuthConfigured()),
+    askbible: Boolean(
+      isSupabaseAuthConfigured() ||
+        getAskbibleAuthSqlitePath() ||
+        isLegacyRemoteAdminAuthConfigured(),
+    ),
   });
 }
 
@@ -79,6 +86,39 @@ export async function POST(req: Request) {
       { error: remote.error || "Wrong email or password" },
       { status: remote.status >= 400 && remote.status < 600 ? remote.status : 502 },
     );
+  }
+
+  if (isSupabaseAuthConfigured() && emailRaw) {
+    const supabase = createSupabaseMobileAuthClient();
+    if (supabase) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailRaw,
+        password,
+      });
+      if (!error && data.user) {
+        const profile = await fetchAskbibleProfile(supabase, data.user.id);
+        const isAdmin = Boolean(profile?.is_admin) || isSelahSuperAdminEmail(emailRaw);
+        if (isAdmin) {
+          const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
+          const token = await signAskbibleSessionCookie({
+            v: 1,
+            sub: data.user.id,
+            email: data.user.email || emailRaw,
+            exp,
+          });
+          const res = NextResponse.json({ ok: true, mode: "askbible-supabase" });
+          const secure = authCookieSecure(req);
+          res.cookies.set(ADMIN_ASKBIBLE_SESSION_COOKIE, token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure,
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+          });
+          return res;
+        }
+      }
+    }
   }
 
   const dbPath = getAskbibleAuthSqlitePath();

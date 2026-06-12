@@ -21,6 +21,7 @@ type Ctx = {
   loading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ ok: true } | { ok: false; error: string; code?: string }>;
 };
 
 const AskbibleUserContext = createContext<Ctx | null>(null);
@@ -41,10 +42,14 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
         setIsAdmin(false);
         return;
       }
-      const data = (await res.json()) as { configured?: boolean; user?: AskbibleAppUser | null };
+      const data = (await res.json()) as {
+        configured?: boolean;
+        user?: AskbibleAppUser | null;
+        isAdmin?: boolean;
+      };
       setConfigured(Boolean(data.configured));
       setUser(data.user || null);
-      setIsAdmin(false);
+      setIsAdmin(Boolean(data.isAdmin));
     } catch {
       setConfigured(false);
       setUser(null);
@@ -67,9 +72,31 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
     }
   }, [refresh]);
 
+  const deleteAccount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/askbible/account", { method: "DELETE" });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+        code?: string;
+      } | null;
+      if (!res.ok || data?.ok !== true) {
+        return {
+          ok: false as const,
+          error: typeof data?.error === "string" ? data.error : "delete_failed",
+          code: typeof data?.code === "string" ? data.code : undefined,
+        };
+      }
+      await refresh();
+      return { ok: true as const };
+    } catch {
+      return { ok: false as const, error: "network", code: "network" };
+    }
+  }, [refresh]);
+
   const value = useMemo(
-    () => ({ bootstrapped, configured, user, isAdmin, loading, refresh, logout }),
-    [bootstrapped, configured, user, isAdmin, loading, refresh, logout],
+    () => ({ bootstrapped, configured, user, isAdmin, loading, refresh, logout, deleteAccount }),
+    [bootstrapped, configured, user, isAdmin, loading, refresh, logout, deleteAccount],
   );
 
   return <AskbibleUserContext.Provider value={value}>{children}</AskbibleUserContext.Provider>;

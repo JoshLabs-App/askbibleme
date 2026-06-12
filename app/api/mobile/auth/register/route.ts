@@ -3,6 +3,13 @@ import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
 import { registerAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
 import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
 import { issueMobileUserSessionToken } from "@/lib/mobile-auth-session";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
+import { createSupabaseMobileAuthClient } from "@/lib/supabase/mobile-server";
+import {
+  supabaseSessionFromAuth,
+  toAskbibleAuthUser,
+  upsertAskbibleProfile,
+} from "@/lib/askbible-supabase-auth";
 
 export const runtime = "nodejs";
 
@@ -89,9 +96,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return missingSqliteResponse();
-
   let body: RegisterRequestV1;
   try {
     body = (await req.json()) as RegisterRequestV1;
@@ -126,7 +130,7 @@ export async function POST(req: Request) {
   const email = trimString(body.email).toLowerCase();
   const password = typeof body.password === "string" ? body.password : "";
   const name = trimString(body.name);
-  const locale = trimString(body.locale).slice(0, 24);
+  const locale = trimString(body.locale).slice(0, 24) || "zh";
   const source = trimString(body.source).slice(0, 60);
 
   if (!validEmail(email)) {
@@ -152,6 +156,82 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  if (isSupabaseAuthConfigured()) {
+    const supabase = createSupabaseMobileAuthClient();
+    if (!supabase) return missingSqliteResponse();
+
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name: name || email } },
+    });
+
+    if (signUpError) {
+      const msg = signUpError.message || "注册失败";
+      const code = /already registered|already exists/i.test(msg) ? "email_already_exists" : "register_failed";
+      const status = code === "email_already_exists" ? 409 : 400;
+      return NextResponse.json(
+        {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: msg,
+          code,
+        },
+        { status },
+      );
+    }
+
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError || !signInData.user || !signInData.session) {
+      return NextResponse.json(
+        {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: "注册成功但自动登录失败，请手动登录。",
+          code: "login_after_register_failed",
+        },
+        { status: 500 },
+      );
+    }
+
+    await upsertAskbibleProfile({
+      userId: signInData.user.id,
+      displayName: name || email,
+      locale,
+    });
+
+    const user = toAskbibleAuthUser(signInData.user);
+    const session = supabaseSessionFromAuth(signInData.session);
+    if (!session) {
+      return NextResponse.json(
+        {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: "注册失败。",
+          code: "register_failed",
+        },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      schemaVersion: SCHEMA_VERSION,
+      user: { id: user.id, email: user.email, name: user.name },
+      sessionToken: session.sessionToken,
+      expiresAt: session.expiresAt,
+      nextAction: "login",
+      context: { locale, source },
+    });
+  }
+
+  const dbPath = getAskbibleAuthSqlitePath();
+  if (!dbPath) return missingSqliteResponse();
 
   const created = await registerAskbibleSqliteUser({ dbPath, email, password, name });
   if (!created.ok) {

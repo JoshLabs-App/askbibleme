@@ -3,6 +3,13 @@ import { verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
 import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
 import { issueMobileUserSessionToken } from "@/lib/mobile-auth-session";
 import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
+import { createSupabaseMobileAuthClient } from "@/lib/supabase/mobile-server";
+import {
+  fetchAskbibleProfile,
+  supabaseSessionFromAuth,
+  toAskbibleAuthUser,
+} from "@/lib/askbible-supabase-auth";
 
 export const runtime = "nodejs";
 
@@ -81,9 +88,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return missingSqliteResponse();
-
   let body: LoginRequestV1;
   try {
     body = (await req.json()) as LoginRequestV1;
@@ -128,6 +132,50 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+
+  if (isSupabaseAuthConfigured()) {
+    const supabase = createSupabaseMobileAuthClient();
+    if (!supabase) return missingSqliteResponse();
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user || !data.session) {
+      return NextResponse.json(
+        {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: "邮箱或密码错误。",
+          code: "invalid_credentials",
+        },
+        { status: 401 },
+      );
+    }
+
+    const profile = await fetchAskbibleProfile(supabase, data.user.id);
+    const user = toAskbibleAuthUser(data.user, profile);
+    const session = supabaseSessionFromAuth(data.session);
+    if (!session) {
+      return NextResponse.json(
+        {
+          ok: false,
+          schemaVersion: SCHEMA_VERSION,
+          error: "登录失败。",
+          code: "auth_failed",
+        },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      schemaVersion: SCHEMA_VERSION,
+      user: { id: user.id, email: user.email, name: user.name },
+      sessionToken: session.sessionToken,
+      expiresAt: session.expiresAt,
+    });
+  }
+
+  const dbPath = getAskbibleAuthSqlitePath();
+  if (!dbPath) return missingSqliteResponse();
 
   const auth = await verifyAskbibleUserCredentials(dbPath, email, password);
   if (!auth.ok) {

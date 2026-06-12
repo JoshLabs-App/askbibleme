@@ -20,6 +20,7 @@ const imageCopies = [
 const copies = [
   ["locales/zh-CN.json", "zh-CN.json"],
   ["locales/en.json", "en.json"],
+  ["lib/oauth-brand-icon-paths.ts", "../../src/auth/oauth-brand-icon-paths.ts"],
   ["data/bible/scripture_canon_catalog.json", "scripture_canon_catalog.json"],
   ["data/bible/bible_book_history_eras.json", "bible_book_history_eras.json"],
   ["data/music-companion.json", "music-companion.json"],

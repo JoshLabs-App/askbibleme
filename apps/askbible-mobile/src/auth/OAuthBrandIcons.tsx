@@ -7,7 +7,7 @@ import {
   GOOGLE_BRAND_ICON_PX,
   GOOGLE_BRAND_VIEWBOX,
   GOOGLE_G_PATHS,
-} from "../../../../lib/oauth-brand-icon-paths";
+} from "./oauth-brand-icon-paths";
 
 type IconProps = {
   size?: number;

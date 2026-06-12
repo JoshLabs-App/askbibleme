@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMemberAuth } from "./MemberAuthProvider";
+import { MemberAppleSignInButton, MemberAuthMethodDivider, MemberGoogleSignInButton } from "./MemberSocialSignInButtons";
 import {
   getMemberRegisterEnabled,
   subscribeMemberRegisterEnabled,
@@ -25,7 +26,7 @@ export function MemberRegisterScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { locale, t } = useLocale();
-  const { completeRegistration } = useMemberAuth();
+  const { completeRegistration, signInWithGoogle, signInWithApple } = useMemberAuth();
   const registerOpen = useSyncExternalStore(
     subscribeMemberRegisterEnabled,
     getMemberRegisterEnabled,
@@ -37,6 +38,66 @@ export function MemberRegisterScreen() {
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function onGoogleSignIn() {
+    if (pending) return;
+    if (!registerOpen) {
+      setError(t("auth.registerClosed"));
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      const result = await signInWithGoogle();
+      if (!result.ok) {
+        if (result.cancelled) return;
+        setError(
+          result.error === "network"
+            ? t("auth.errorNetwork")
+            : result.error === "google_not_configured" || result.error === "google_failed"
+              ? t("auth.errorOAuth")
+              : result.error || t("auth.errorOAuth"),
+        );
+        return;
+      }
+      router.back();
+    } catch {
+      setError(t("auth.errorNetwork"));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onAppleSignIn() {
+    if (pending) return;
+    if (!registerOpen) {
+      setError(t("auth.registerClosed"));
+      return;
+    }
+    setPending(true);
+    setError(null);
+    try {
+      const result = await signInWithApple();
+      if (!result.ok) {
+        if (result.cancelled) return;
+        setError(
+          result.error === "network"
+            ? t("auth.errorNetwork")
+            : result.error === "apple_not_available" ||
+                result.error === "apple_failed" ||
+                result.error === "apple_auth_failed"
+              ? t("auth.errorOAuth")
+              : result.error || t("auth.errorOAuth"),
+        );
+        return;
+      }
+      router.back();
+    } catch {
+      setError(t("auth.errorNetwork"));
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function onSubmit() {
     if (pending) return;
@@ -82,6 +143,9 @@ export function MemberRegisterScreen() {
 
           {registerOpen ? (
             <View style={styles.form}>
+              <MemberGoogleSignInButton pending={pending} onPress={onGoogleSignIn} />
+              <MemberAppleSignInButton pending={pending} onPress={onAppleSignIn} />
+              <MemberAuthMethodDivider />
               <Text style={styles.label}>{t("auth.email")}</Text>
               <TextInput
                 value={email}

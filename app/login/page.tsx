@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { AuthMethodDivider, SocialSignInButtons } from "@/components/auth/SocialSignInButtons";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 
 function LoginPageFallback() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-5 py-12 text-ink/90">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-5 py-12 text-ink/90">
       <div className="h-8 w-8 animate-pulse rounded-full bg-ink/10" aria-hidden />
     </div>
   );
@@ -29,12 +30,19 @@ function LoginPageInner() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const oauthError = searchParams.get("error");
 
   useEffect(() => {
     if (user) {
       router.replace(safeNext);
     }
   }, [user, router, safeNext]);
+
+  useEffect(() => {
+    if (oauthError === "oauth") {
+      setError(t("auth.errorOAuth"));
+    }
+  }, [oauthError, t]);
 
   const onSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -77,7 +85,7 @@ function LoginPageInner() {
 
   if (!configured) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6 py-12 text-center text-ink/88">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-6 py-12 text-center text-ink/88">
         <p className="max-w-sm text-[15px] leading-relaxed">{t("auth.notConfigured")}</p>
         <Link
           href="/"
@@ -90,10 +98,12 @@ function LoginPageInner() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-5 py-12 text-ink">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-5 py-12 text-ink">
       <div className="w-full max-w-sm">
         <h1 className="text-center text-[18px] font-medium tracking-tight text-ink">{t("auth.pageTitle")}</h1>
-        <form className="mt-8 flex flex-col gap-4" onSubmit={onSubmit}>
+        <SocialSignInButtons nextPath={safeNext} className="mt-8" />
+        <AuthMethodDivider className="my-5" />
+        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-medium uppercase tracking-wide text-ink/45">{t("auth.email")}</span>
             <input

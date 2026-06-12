@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AuthMethodDivider, SocialSignInButtons } from "@/components/auth/SocialSignInButtons";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 
@@ -59,7 +60,7 @@ export function RegisterClient({ registerOpen }: Props) {
 
   if (!bootstrapped) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-5 py-12 text-ink/90">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-5 py-12 text-ink/90">
         <div className="h-8 w-8 animate-pulse rounded-full bg-ink/10" aria-hidden />
       </div>
     );
@@ -67,7 +68,7 @@ export function RegisterClient({ registerOpen }: Props) {
 
   if (!registerOpen) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6 py-12 text-center text-ink/88">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-6 py-12 text-center text-ink/88">
         <h1 className="text-[18px] font-medium tracking-tight text-ink">{t("auth.registerPageTitle")}</h1>
         <p className="mt-6 max-w-sm text-[15px] leading-relaxed text-ink/60">{t("auth.registerClosed")}</p>
         <Link
@@ -82,7 +83,7 @@ export function RegisterClient({ registerOpen }: Props) {
 
   if (!configured) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6 py-12 text-center text-ink/88">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-6 py-12 text-center text-ink/88">
         <p className="max-w-sm text-[15px] leading-relaxed">{t("auth.notConfigured")}</p>
         <Link
           href="/"
@@ -95,11 +96,13 @@ export function RegisterClient({ registerOpen }: Props) {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-5 py-12 text-ink">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-transparent px-5 py-12 text-ink">
       <div className="w-full max-w-sm">
         <h1 className="text-center text-[18px] font-medium tracking-tight text-ink">{t("auth.registerPageTitle")}</h1>
         <p className="mt-3 text-center text-[13px] leading-relaxed text-ink/55">{t("auth.registerIntro")}</p>
-        <form className="mt-8 flex flex-col gap-4" onSubmit={onSubmit}>
+        <SocialSignInButtons nextPath="/" className="mt-8" />
+        <AuthMethodDivider className="my-5" />
+        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-medium uppercase tracking-wide text-ink/45">{t("auth.email")}</span>
             <input

@@ -75,6 +75,43 @@ function ensureUsersTable(db: SqlJsDb): void {
   `);
 }
 
+export async function deleteAskbibleSqliteUser(input: {
+  dbPath: string;
+  userId: string;
+}): Promise<
+  | { ok: true }
+  | { ok: false; status: number; error: string; code: "not_found" | "admin_account" | "delete_failed" }
+> {
+  const userId = String(input.userId || "").trim();
+  if (!userId) {
+    return { ok: false, status: 400, error: "缺少用户标识。", code: "not_found" };
+  }
+
+  const { db, close, save } = await openDb(input.dbPath);
+  try {
+    const stmt = db.prepare("SELECT id, is_admin FROM users WHERE id = ? LIMIT 1");
+    stmt.bind([userId]);
+    if (!stmt.step()) {
+      stmt.free();
+      return { ok: false, status: 404, error: "账号不存在。", code: "not_found" };
+    }
+    const row = stmt.getAsObject();
+    stmt.free();
+    if (Number(row.is_admin ?? 0) === 1) {
+      return { ok: false, status: 403, error: "管理员账号无法在此注销。", code: "admin_account" };
+    }
+
+    db.run("DELETE FROM users WHERE id = ?", [userId]);
+    save();
+    return { ok: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "sqlite 删除失败";
+    return { ok: false, status: 500, error: message, code: "delete_failed" };
+  } finally {
+    close();
+  }
+}
+
 export async function getAskbibleUserById(dbPath: string, userId: string): Promise<AskbibleSqlUser | null> {
   const { db, close } = await openDb(dbPath);
   try {

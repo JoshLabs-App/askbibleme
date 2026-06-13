@@ -207,11 +207,11 @@ export function NatureHomeSettingsControl({
                 <NatureHomeTextScaleRow panelOpen={open} onPrefsChanged={onPrefsChanged} />
               </IconSettingRow>
 
-              <div className={`${ROW} items-start`}>
+              <div className="flex w-full max-w-full min-h-[34px] items-start gap-2">
                 <div className={`${ROW_ICON} pt-2`} aria-hidden>
                   <ShellMaterialIcon name="menu_book" size={18} color="rgba(255,255,255,0.5)" />
                 </div>
-                <div className="w-max max-w-full shrink-0">
+                <div className="min-w-0 flex-1">
                   <NatureHomeTranslationSettings onPrefsChanged={onPrefsChanged} />
                 </div>
               </div>

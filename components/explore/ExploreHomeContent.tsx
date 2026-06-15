@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { EXPLORE_ENTRIES, SCRIPTURE_ANTHOLOGY_IDS } from "@/lib/explore/exploreEntries";
+import { ExploreAppInstallHint } from "@/components/explore/ExploreAppInstallHint";
 import { ExploreFeaturedArticlesCard } from "@/components/explore/ExploreFeaturedArticlesCard";
 import { ExploreEntryIcon } from "@/components/explore/ExploreEntryIcon";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -52,6 +53,8 @@ export function ExploreHomeContent({ featuredArticles }: Props) {
         <div className="explore-icon-grid">{scriptureAnthologyEntries.map(renderEntryTile)}</div>
 
         <ExploreFeaturedArticlesCard articles={featuredArticles} />
+
+        <ExploreAppInstallHint />
       </section>
     </div>
   );

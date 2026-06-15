@@ -55,7 +55,7 @@
     "errorSubmit": "提交失败，请稍后重试。"
   },
   "install": {
-    "menuAction": "安装 App 测试版",
+    "menuAction": "安装 AskBible App",
     "guideLink": "查看安装说明"
   },
   "auth": {
@@ -241,10 +241,12 @@
     "playbackVisual": "播放视觉",
     "updateAvailable": "有新版本。点一下刷新即可载入最新界面（无需重新安装到桌面）。",
     "updateForced": "发现新版本，页面将在片刻后自动刷新以载入最新界面。",
-    "pwaInstallTitle": "安装 AskBible App 测试版",
-    "pwaInstallBody": "iOS 通过 TestFlight，Android 通过 Google Play 测试邀请安装。",
-    "pwaInstallActionAndroid": "Android 测试邀请",
-    "pwaInstallActionIos": "iOS TestFlight",
+    "pwaInstallTitle": "安装 AskBible App",
+    "pwaInstallBody": "iOS 可直接从 App Store 下载；Android 试用版请发邮件申请。",
+    "pwaInstallActionAndroid": "邮件申请 Android 试用",
+    "pwaInstallActionIos": "App Store 下载",
+    "pwaInstallAndroidMailSubject": "AskBible.me Android 试用申请",
+    "pwaInstallAndroidMailBody": "你好，我想申请 AskBible.me Android 试用版。\n\n我的设备型号：\n\n谢谢。",
     "pwaInstallDismiss": "暂不",
     "offlinePageTitle": "当前无法连接",
     "offlinePageBody": "请检查网络后重试。若你曾打开过某一章或音乐页，可返回上一页再试。",

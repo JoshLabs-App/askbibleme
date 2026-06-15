@@ -1,0 +1,12 @@
+/* 自然首页：壳层与安全区底色透明，避免底栏下方露出品牌深色条 */
+html[data-nature-home-shell="1"],
+html[data-nature-home-shell="1"] body {
+  background-color: rgb(var(--brand-canvas-rgb)) !important;
+}
+
+html[data-nature-home-shell="1"] .app-shell-fixed-chrome-outer,
+html[data-nature-home-shell="1"] .app-shell-fixed-chrome-inner,
+html[data-nature-home-shell="1"] .app-shell-safe-area-fill,
+html[data-nature-home-shell="1"] [data-app-shell-scroll] {
+  background-color: transparent !important;
+}

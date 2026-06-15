@@ -15,6 +15,7 @@ import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
+import { DEFAULT_BRAND_COLORS } from "@/lib/site-branding-colors";
 import {
   mergeNatureVisualPrefs,
   readNatureVisualLevels,
@@ -33,7 +34,6 @@ import {
 } from "@/lib/home/nature-home-verse-appearance-prefs";
 import { NATURE_HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import { setNatureHomeVerseTimingOverride } from "@/lib/home/nature-home-verse-timing-override";
-import { readAppShellScrollContentBoxClientHeight } from "@/lib/shell/home-dock-nav-bg";
 import {
   defaultNatureHomeActiveVideoId,
   resolveNatureHomeActiveVideoId,
@@ -41,11 +41,8 @@ import {
 } from "@/lib/home/nature-home-active-scene-prefs";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
-import {
-  NATURE_HOME_PORTRAIT_PAN_DELAY_SEC,
-  NATURE_HOME_PORTRAIT_PAN_DURATION_SEC,
-} from "@/lib/nature/nature-home-portrait-pan";
 import "@/components/nature/nature-home-portrait-pan.css";
+import "@/app/(app-shell)/nature/nature-home-shell.css";
 import {
   fetchNatureSettingsIfStale,
   markNatureSettingsRevisionSynced,
@@ -89,11 +86,11 @@ type Props = {
   shellRoot?: string;
 };
 
-/** 背景视频槽：与滚动区 `canvas` 对齐；底栏用 `appDark`，与主区背景色系一致衔接 */
+/** 背景视频槽：与滚动区 `canvas` 对齐；flex 填满顶栏以下区域 */
 const NATURE_VIDEO_STAGE_FRAME =
-  "relative z-[1] w-full shrink-0 overflow-hidden bg-canvas transform-gpu min-h-[12rem]";
+  "relative z-[1] flex min-h-0 w-full flex-1 overflow-hidden bg-canvas transform-gpu";
 
-/** 与背景 `<video>` 同定位；竖屏平移见 `nature-home-portrait-pan.css` */
+/** 与背景 `<video>` 同定位；竖屏贴左 cover，见 `nature-home-portrait-pan.css` */
 const NATURE_BG_COVER_MEDIA =
   "nature-bg-cover-media absolute top-1/2 h-full min-h-full w-full min-w-full object-cover";
 
@@ -131,8 +128,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const introSessionRevealedRef = useRef(false);
   const introStillLoadStartedAtRef = useRef(0);
   const playbackWaitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** 与量高逻辑配合：忽略 ±12px 内抖动，减轻 iOS 周期性闪屏 */
-  const videoStageHeightCommitRef = useRef(0);
 
   const [natureBgSoftFocus, setNatureBgSoftFocus] = useState(false);
   const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
@@ -146,8 +141,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [textScaleStepIndex, setTextScaleStepIndex] = useState(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX);
   const [natureVerseAppearance, setNatureVerseAppearance] = useState(() => readNatureHomeVerseAppearance());
   const [videoBroken, setVideoBroken] = useState(false);
-  /** 主壳滚动区可视高度（px），与底栏 flex 分配同源，避免 `100dvh` 与实高偏差 */
-  const [videoStageHeightPx, setVideoStageHeightPx] = useState(0);
   const [dwellVideoAllowed, setDwellVideoAllowed] = useState(false);
   const [dwellPolicyResolved, setDwellPolicyResolved] = useState(false);
   const [natureSettings, setNatureSettings] = useState<NatureSettingsV2>(initial);
@@ -234,57 +227,6 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [settingsRevision]);
-
-  useLayoutEffect(() => {
-    const root = document.querySelector<HTMLElement>("[data-app-shell-scroll]");
-    if (!root) return;
-
-    /** iOS：visualViewport `scroll` 会高频触发；与 RO 叠加时 `clientHeight` 常在 ±1px 抖动，整槽高度重算会像周期性闪屏。仅采纳明显变化（≥12px），并短防抖。 */
-    let debounceId: number | null = null;
-
-    const applyHeight = () => {
-      const readH = readAppShellScrollContentBoxClientHeight(root);
-      if (readH <= 0) return;
-      /** Android：safe-area 常为 0，scroll 盒 `clientHeight` 也可能小于可见视口，取较大值避免顶缘露壳层色条 */
-      const vvH = typeof window !== "undefined" ? window.visualViewport?.height ?? 0 : 0;
-      const innerH = typeof window !== "undefined" ? window.innerHeight : 0;
-      const h = Math.max(readH, vvH || 0, innerH || 0);
-      const prev = videoStageHeightCommitRef.current;
-      if (prev !== 0 && Math.abs(h - prev) < 12) return;
-      videoStageHeightCommitRef.current = h;
-      setVideoStageHeightPx(h);
-    };
-
-    const schedule = () => {
-      if (debounceId != null) window.clearTimeout(debounceId);
-      debounceId = window.setTimeout(() => {
-        debounceId = null;
-        applyHeight();
-      }, 140);
-    };
-
-    applyHeight();
-    requestAnimationFrame(() => applyHeight());
-
-    const ro = new ResizeObserver(() => schedule());
-    ro.observe(root);
-    const onWin = () => schedule();
-    window.addEventListener("resize", onWin);
-    const vv = window.visualViewport;
-    if (vv) {
-      vv.addEventListener("resize", onWin);
-      vv.addEventListener("scroll", onWin);
-    }
-    return () => {
-      if (debounceId != null) window.clearTimeout(debounceId);
-      ro.disconnect();
-      window.removeEventListener("resize", onWin);
-      if (vv) {
-        vv.removeEventListener("resize", onWin);
-        vv.removeEventListener("scroll", onWin);
-      }
-    };
-  }, []);
 
   const playbackSettings = useMemo(
     () => ({
@@ -545,15 +487,13 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   const landscapeImmersive = landscapeNarrow && showNatureVideoDecoder;
 
-  const videoStageShellStyle: CSSProperties = useMemo(
-    () => ({
-      height:
-        videoStageHeightPx > 0
-          ? `${videoStageHeightPx}px`
-          : "max(100dvh, 100svh, 100vh)",
-    }),
-    [videoStageHeightPx],
-  );
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.dataset.natureHomeShell = "1";
+    return () => {
+      Reflect.deleteProperty(document.documentElement.dataset, "natureHomeShell");
+    };
+  }, []);
 
   useEffect(() => {
     if (!landscapeImmersive) {
@@ -843,8 +783,8 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     const prevHtmlBg = html.style.backgroundColor;
     const prevBodyBg = body.style.backgroundColor;
     const prevColorScheme = html.style.colorScheme;
-    html.style.backgroundColor = NATURE_HOME_ROOT_THEME;
-    body.style.backgroundColor = NATURE_HOME_ROOT_THEME;
+    html.style.backgroundColor = DEFAULT_BRAND_COLORS.canvas;
+    body.style.backgroundColor = DEFAULT_BRAND_COLORS.canvas;
     html.style.colorScheme = "dark";
     return () => {
       Reflect.deleteProperty(html.dataset, NATURE_HOME_THEME_LOCK_DATASET_KEY);
@@ -1022,20 +962,12 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
       />
 
       {hasNatureVisual ? (
-        <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
+        <div className={NATURE_VIDEO_STAGE_FRAME}>
           <div
             className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-sky-300/25 via-teal-950/15 to-transparent"
             aria-hidden
           />
-          <div
-            className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-canvas"
-            style={
-              {
-                "--nature-home-portrait-pan-delay": `${NATURE_HOME_PORTRAIT_PAN_DELAY_SEC}s`,
-                "--nature-home-portrait-pan-duration": `${NATURE_HOME_PORTRAIT_PAN_DURATION_SEC}s`,
-              } as CSSProperties
-            }
-          >
+          <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden bg-canvas">
             {showNatureVideoDecoder ? (
               <video
                 ref={videoRef}
@@ -1197,7 +1129,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
           />
         </div>
       ) : (
-        <div className={NATURE_VIDEO_STAGE_FRAME} style={videoStageShellStyle}>
+        <div className={NATURE_VIDEO_STAGE_FRAME}>
           <div
             className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-300/20 via-canvas to-canvas"
             aria-hidden

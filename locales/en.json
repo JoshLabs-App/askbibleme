@@ -55,7 +55,7 @@
     "errorSubmit": "Could not submit. Please try again."
   },
   "install": {
-    "menuAction": "Install the beta app",
+    "menuAction": "Install AskBible App",
     "guideLink": "Full install guide"
   },
   "auth": {
@@ -241,10 +241,12 @@
     "playbackVisual": "Playback visuals",
     "updateAvailable": "A new version is available. Tap refresh to load the latest—no need to reinstall from the home screen.",
     "updateForced": "A new version is available. This page will refresh automatically in a moment.",
-    "pwaInstallTitle": "Install the AskBible beta",
-    "pwaInstallBody": "Join via TestFlight on iOS or Google Play testing on Android.",
-    "pwaInstallActionAndroid": "Android beta invite",
-    "pwaInstallActionIos": "iOS TestFlight",
+    "pwaInstallTitle": "Install AskBible App",
+    "pwaInstallBody": "Download on the App Store for iOS, or email us to request the Android trial.",
+    "pwaInstallActionAndroid": "Email for Android trial",
+    "pwaInstallActionIos": "Download on App Store",
+    "pwaInstallAndroidMailSubject": "AskBible.me Android trial request",
+    "pwaInstallAndroidMailBody": "Hello, I would like to request the AskBible.me Android trial.\n\nMy device model:\n\nThank you.",
     "pwaInstallDismiss": "Not now",
     "offlinePageTitle": "You’re offline",
     "offlinePageBody": "Check your connection and try again. If you opened a chapter or Music before, try going back.",

@@ -12,8 +12,11 @@ import {
   SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
 } from "@/lib/read/scripture-parchment-shell";
 import "./globals.css";
+import "./(app-shell)/read/read-parchment-background.css";
+import "./(app-shell)/read/read-parchment-shell-chrome.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
-import { PwaInstallPrompt } from "@/components/app-shell/PwaInstallPrompt";
+import { PwaServiceWorkerRegistration } from "@/components/app-shell/PwaServiceWorkerRegistration";
+import { ParchmentShellRouteEffect } from "@/components/shell/ParchmentShellRouteEffect";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { CuvChapterAudioVoiceProvider } from "@/components/bible/CuvChapterAudioVoiceContext";
@@ -139,8 +142,9 @@ export default async function RootLayout({
               <CuvChapterAudioVoiceProvider>
                 <MusicShellPlaybackProvider>
                   <MediaPlaybackCoordinatorProvider>
+                    <ParchmentShellRouteEffect />
                     {children}
-                    <PwaInstallPrompt />
+                    <PwaServiceWorkerRegistration />
                     <AppUpdateNotifier />
                   </MediaPlaybackCoordinatorProvider>
                 </MusicShellPlaybackProvider>

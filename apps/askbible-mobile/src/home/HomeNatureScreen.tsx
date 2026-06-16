@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import {
   ActivityIndicator,
   Image,
+  InteractionManager,
   Platform,
   Pressable,
   ScrollView,
@@ -23,12 +24,12 @@ import {
   fetchNatureSettings,
   getBundledNatureSettings,
 } from "../api/fetchNatureSettings";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { parchmentSans } from "../fonts/parchmentType";
 import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
 import { ensureNatureResourcePackSync } from "../media/natureResourcePackSync";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { resolveLocalizedField, t, toZhTwText } from "../i18n/site-copy";
+import { resolveLocalizedField, resolveUiText, t, toZhTwText } from "../i18n/site-copy";
 import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as parchment } from "../read/readParchmentTheme";
@@ -45,6 +46,10 @@ import {
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { resolveNaturePlayback } from "../nature/resolveNaturePlayback";
 import type { NatureSettingsV2, NatureVideoEntry } from "../types/nature";
+import {
+  getCoverVideoPosterOnly,
+  subscribeCoverVideoPosterOnly,
+} from "./coverVideoPosterFallback";
 import { FullBleedCoverVideo } from "./FullBleedCoverVideo";
 import { isNatureCoverPlaybackPlayable } from "./natureCoverPlayback";
 import { NatureHomeSoftFocusLayer } from "./NatureHomeSoftFocusLayer";
@@ -76,7 +81,6 @@ import { useLandscapeNarrow } from "./useLandscapeNarrow";
 import type { NatureCoverPlayback } from "./natureCoverPlayback";
 import {
   preloadAdjacentNatureSceneVideos,
-  preloadAllNatureSceneVideos,
   resolveNatureCoverPlayback,
   resolveNaturePosterPlaybackModule,
   resolveNaturePosterPlaybackUri,
@@ -112,9 +116,9 @@ import {
   ttsRateFromLevel,
   type NatureHomeTtsPrefs,
 } from "./natureHomePrefs";
+import { filterNonFemaleTtsVoices, resolveMaleTtsVoiceId, type NatureHomeTtsDeviceVoice } from "./natureHomeTtsVoices";
 import {
   getHomeTtsExperimentEnabled,
-  hydrateHomeTtsExperiment,
   subscribeHomeTtsExperiment,
 } from "./homeExperimentalFeatures";
 
@@ -159,7 +163,9 @@ function ambientIconColor(selected: boolean, enabled: boolean): string {
 
 export function HomeNatureScreen() {
   const { locale } = useLocale();
-  const naturePackRev = useNatureResourcePackSync();
+  const [homeFocused, setHomeFocused] = useState(true);
+  const homeFocusedRef = useRef(true);
+  const naturePackRev = useNatureResourcePackSync(homeFocused);
   const insets = useSafeAreaInsets();
   const sceneStripSwipeExclude = useShellSwipeExcludeHandlers();
   const baseUrl = getNatureRemoteAssetBaseUrl();
@@ -174,6 +180,11 @@ export function HomeNatureScreen() {
     getHomeTtsExperimentEnabled,
     getHomeTtsExperimentEnabled,
   );
+  const coverVideoPosterOnly = useSyncExternalStore(
+    subscribeCoverVideoPosterOnly,
+    getCoverVideoPosterOnly,
+    getCoverVideoPosterOnly,
+  );
   const ttsPrefsVersion = useSyncExternalStore(
     subscribeNatureHomeTtsPrefs,
     getNatureHomeTtsPrefsVersion,
@@ -183,15 +194,13 @@ export function HomeNatureScreen() {
 
   useHomeOrientationUnlock();
 
-  useFocusEffect(
-    useCallback(() => {
-      void configureShellAudioMode();
-    }, []),
-  );
-
   useEffect(() => {
-    void ensureNatureResourcePackSync();
-  }, []);
+    if (!homeFocused) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void ensureNatureResourcePackSync();
+    });
+    return () => task.cancel();
+  }, [homeFocused]);
 
   const [loading, setLoading] = useState(() => !bootWithBundled || bundledOnBoot.videos.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +224,6 @@ export function HomeNatureScreen() {
   const [autoImmersiveActive, setAutoImmersiveActive] = useState(false);
   const [hasHomeInteraction, setHasHomeInteraction] = useState(false);
   const [activeAmbientSlotId, setActiveAmbientSlotId] = useState<NatureAmbientSceneSlotId | "">("");
-  const [ambientTapNonce, setAmbientTapNonce] = useState(0);
   const [ambientStripViewportWidth, setAmbientStripViewportWidth] = useState(0);
   const [displayedVerseAudioTarget, setDisplayedVerseAudioTarget] = useState<{
     verseKey: string;
@@ -230,10 +238,11 @@ export function HomeNatureScreen() {
   const [sceneUsageMap, setSceneUsageMap] = useState<NatureSceneUsageMap>({});
   /** 首帧后再挂视频层，避免与启动音频会话 / 导航切换抢 native 资源导致闪退。 */
   const [videoStageMounted, setVideoStageMounted] = useState(false);
+  const videoStageMountedOnceRef = useRef(false);
   const [ttsPrefs, setTtsPrefs] = useState<NatureHomeTtsPrefs>(DEFAULT_NATURE_HOME_TTS_PREFS);
   const homeVoiceSessionIdRef = useRef(0);
   const ttsPrefsRef = useRef<NatureHomeTtsPrefs>(DEFAULT_NATURE_HOME_TTS_PREFS);
-  const ttsVoiceLanguageMapRef = useRef<Record<string, string>>({});
+  const ttsVoiceCatalogRef = useRef<NatureHomeTtsDeviceVoice[]>([]);
   const displayedVerseAudioTargetRef = useRef<{
     verseKey: string;
     translationId: string;
@@ -257,6 +266,32 @@ export function HomeNatureScreen() {
       "";
     setLocalActiveId(id);
   }, [baseUrl]);
+
+  const hydrateNatureHomePrefs = useCallback(
+    async (data: NatureSettingsV2) => {
+      const [stored, sf, storedAmbient, loopAllScenes, usage] = await Promise.all([
+        readNatureActiveSceneId(),
+        readNatureSoftFocusPrefs(),
+        readNatureAmbientSceneSlotId(),
+        readNatureLoopAllScenesEnabled(),
+        readNatureSceneUsageMap(),
+      ]);
+      applySettings(data, stored);
+      setLoopAllScenesEnabled(loopAllScenes);
+      setSoftFocus(sf);
+      setSceneUsageMap(usage);
+      if (
+        storedAmbient &&
+        (typeof BUNDLED_AMBIENT_SCENE_AUDIO[storedAmbient as NatureAmbientSceneSlotId] === "number" ||
+          data.ambientClips.some((clip) => clip.id === storedAmbient))
+      ) {
+        setActiveAmbientSlotId(storedAmbient as NatureAmbientSceneSlotId);
+      } else {
+        setActiveAmbientSlotId("");
+      }
+    },
+    [applySettings],
+  );
 
   const load = useCallback(
     async (opts?: { silent?: boolean }) => {
@@ -310,51 +345,66 @@ export function HomeNatureScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      refreshSoftFocusPrefs();
-    }, [refreshSoftFocusPrefs]),
+      const task = InteractionManager.runAfterInteractions(() => {
+        void readNatureSoftFocusPrefs().then(setSoftFocus);
+      });
+      return () => task.cancel();
+    }, []),
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => setVideoStageMounted(true), 320);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const bundled = getBundledNatureSettings();
-    if (bootWithBundled && bundled.videos.length > 0) {
-      applySettings(bundled, null);
-      setLoading(false);
-      void (async () => {
-        const [stored, sf, storedAmbient, loopAllScenes, usage] = await Promise.all([
-          readNatureActiveSceneId(),
-          readNatureSoftFocusPrefs(),
-          readNatureAmbientSceneSlotId(),
-          readNatureLoopAllScenesEnabled(),
-          readNatureSceneUsageMap(),
-        ]);
-        applySettings(bundled, stored);
-        setLoopAllScenesEnabled(loopAllScenes);
-        setSoftFocus(sf);
-        setSceneUsageMap(usage);
-        if (
-          storedAmbient &&
-          (typeof BUNDLED_AMBIENT_SCENE_AUDIO[storedAmbient as NatureAmbientSceneSlotId] === "number" ||
-            bundled.ambientClips.some((clip) => clip.id === storedAmbient))
-        ) {
-          setActiveAmbientSlotId(storedAmbient as NatureAmbientSceneSlotId);
-        } else {
-          setActiveAmbientSlotId("");
-        }
-      })();
+    if (!homeFocused) {
+      setVideoStageMounted(false);
+      return;
     }
-    if (isMobileBundledOnly()) return;
-    void load({ silent: bootWithBundled && bundled.videos.length > 0 });
-  }, [applySettings, load]);
+    if (videoStageMountedOnceRef.current) {
+      setVideoStageMounted(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      videoStageMountedOnceRef.current = true;
+      setVideoStageMounted(true);
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [homeFocused]);
 
   useEffect(() => {
-    if (naturePackRev <= 0) return;
-    void load({ silent: true });
-  }, [naturePackRev, load]);
+    if (!homeFocused) return;
+    const bundled = getBundledNatureSettings();
+    let prefsTask: { cancel: () => void } | null = null;
+    if (bootWithBundled && bundled.videos.length > 0) {
+      setSettings((prev) => {
+        if (prev?.videos.length) return prev;
+        return ensureNatureSettingsLocallyPlayable(bundled, baseUrl);
+      });
+      setLoading(false);
+      prefsTask = InteractionManager.runAfterInteractions(() => {
+        void hydrateNatureHomePrefs(bundled);
+      });
+    }
+    if (isMobileBundledOnly()) {
+      return () => prefsTask?.cancel();
+    }
+    const silent = bootWithBundled && bundled.videos.length > 0;
+    const runLoad = () => void load({ silent });
+    if (isMobileOfflineFirst()) {
+      runLoad();
+      return () => prefsTask?.cancel();
+    }
+    const loadTask = InteractionManager.runAfterInteractions(runLoad);
+    return () => {
+      prefsTask?.cancel();
+      loadTask.cancel();
+    };
+  }, [baseUrl, homeFocused, hydrateNatureHomePrefs, load]);
+
+  useEffect(() => {
+    if (!homeFocused || naturePackRev <= 0) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void load({ silent: true });
+    });
+    return () => task.cancel();
+  }, [homeFocused, naturePackRev, load]);
 
   const rawSceneId = (localActiveId || settings?.activeVideoId || "").trim();
   const sceneId = useMemo(() => {
@@ -465,11 +515,15 @@ export function HomeNatureScreen() {
   const voiceActive = voicePreparing || voiceSpeaking;
   const activeAmbientLayer = useMemo(() => {
     if (!activeAmbientSlotId) return [];
-    // 环境音与圣经播放互斥：经文朗读激活时关闭环境音轨。
-    if (scriptureModeActive) return [];
     const assetModule = BUNDLED_AMBIENT_SCENE_AUDIO[activeAmbientSlotId];
     if (typeof assetModule !== "number") return [];
-    const gain = voiceActive ? 0.03 : musicModeActive ? 0.2 : 1;
+    const gain = scriptureModeActive
+      ? 0
+      : voiceActive
+        ? 0.03
+        : musicModeActive
+          ? 0.2
+          : 1;
     return [
       {
         layerId: activeAmbientSlotId,
@@ -486,11 +540,8 @@ export function HomeNatureScreen() {
   }, [setMusicGain, voiceActive]);
 
   const ambientLayersKey = useMemo(
-    () =>
-      `${activeAmbientLayer
-        .map((layer) => `${layer.layerId}:${layer.src}:${layer.volume.toFixed(3)}`)
-        .join("|")}|tap:${ambientTapNonce}`,
-    [activeAmbientLayer, ambientTapNonce],
+    () => activeAmbientLayer.map((layer) => `${layer.layerId}:${layer.src}`).join("|"),
+    [activeAmbientLayer],
   );
 
   useNatureAmbientMix(
@@ -498,23 +549,34 @@ export function HomeNatureScreen() {
     activeAmbientLayer,
     ambientLayersKey,
     clampedRate,
-    activeAmbientLayer.length > 0,
+    homeFocused && activeAmbientLayer.length > 0,
   );
 
   const sceneIdList = useMemo(() => sceneList.map((v) => v.id), [sceneList]);
 
   useEffect(() => {
-    if (!sceneIdList.length) return;
-    void preloadAllNatureSceneVideos(sceneIdList);
-  }, [sceneIdList]);
+    if (!homeFocused || !sceneId || loading || !sceneIdList.length) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void ensureNatureSceneVideoReady(sceneId);
+      void preloadAdjacentNatureSceneVideos(sceneIdList, sceneId);
+    });
+    return () => task.cancel();
+  }, [homeFocused, sceneId, sceneIdList, loading]);
 
   useEffect(() => {
-    if (!sceneId || loading || sceneIdList.length < 2) return;
-    void preloadAdjacentNatureSceneVideos(sceneIdList, sceneId);
-  }, [sceneId, sceneIdList, loading]);
+    if (coverVideoPosterOnly) {
+      setWaitingSceneId(null);
+      setShowSceneLoader(false);
+    }
+  }, [coverVideoPosterOnly]);
 
   useEffect(() => {
     if (!waitingSceneId) {
+      setShowSceneLoader(false);
+      return;
+    }
+    if (coverVideoPosterOnly) {
+      setWaitingSceneId(null);
       setShowSceneLoader(false);
       return;
     }
@@ -529,10 +591,12 @@ export function HomeNatureScreen() {
     }
     const timer = setTimeout(() => setShowSceneLoader(true), 220);
     return () => clearTimeout(timer);
-  }, [waitingSceneId, softFocus.blurPx]);
+  }, [coverVideoPosterOnly, waitingSceneId, softFocus.blurPx]);
 
   useEffect(() => {
+    if (!homeFocused) return;
     if (Platform.OS !== "android") return;
+    if (coverVideoPosterOnly) return;
     if (softFocus.blurPx > 0.02) return;
     const current = sceneId.trim();
     if (!current) return;
@@ -541,8 +605,11 @@ export function HomeNatureScreen() {
       return;
     }
     setWaitingSceneId(current);
-    void ensureNatureSceneVideoReady(current);
-  }, [sceneId, softFocus.blurPx]);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void ensureNatureSceneVideoReady(current);
+    });
+    return () => task.cancel();
+  }, [coverVideoPosterOnly, homeFocused, sceneId, softFocus.blurPx]);
 
   const handleSceneVideoReady = useCallback((id: string) => {
     markNatureSceneVideoReady(id);
@@ -562,6 +629,16 @@ export function HomeNatureScreen() {
     [sceneList],
   );
 
+  const preloadAdjacentWhenFocused = useCallback(
+    (list: readonly string[], activeId: string) => {
+      if (!homeFocusedRef.current) return;
+      InteractionManager.runAfterInteractions(() => {
+        void preloadAdjacentNatureSceneVideos(list, activeId);
+      });
+    },
+    [],
+  );
+
   const selectScene = useCallback(
     (id: string, opts?: { keepLoopMode?: boolean; source?: "user" | "auto" }) => {
       const next = id.trim();
@@ -577,11 +654,11 @@ export function HomeNatureScreen() {
       scrollSceneStripToId(next);
       void writeNatureActiveSceneId(next);
 
-      if (Platform.OS === "android" && softFocus.blurPx > 0.02) {
+      if (coverVideoPosterOnly || (Platform.OS === "android" && softFocus.blurPx > 0.02)) {
         setWaitingSceneId(null);
         setShowSceneLoader(false);
         setLocalActiveId(next);
-        void preloadAdjacentNatureSceneVideos(sceneIdList, next);
+        void preloadAdjacentWhenFocused(sceneIdList, next);
         return;
       }
 
@@ -589,22 +666,21 @@ export function HomeNatureScreen() {
         setWaitingSceneId(null);
         setShowSceneLoader(false);
         setLocalActiveId(next);
-        void preloadAdjacentNatureSceneVideos(sceneIdList, next);
+        void preloadAdjacentWhenFocused(sceneIdList, next);
         return;
       }
 
       setWaitingSceneId(next);
       setLocalActiveId(next);
       void ensureNatureSceneVideoReady(next);
-      void preloadAdjacentNatureSceneVideos(sceneIdList, next);
+      void preloadAdjacentWhenFocused(sceneIdList, next);
     },
-    [sceneId, sceneIdList, scrollSceneStripToId, softFocus.blurPx],
+    [coverVideoPosterOnly, preloadAdjacentWhenFocused, sceneId, sceneIdList, scrollSceneStripToId, softFocus.blurPx],
   );
 
   const toggleAmbientSlot = useCallback((slotId: NatureAmbientSceneSlotId) => {
     setActiveAmbientSlotId((prev) => {
       const next = prev === slotId ? "" : slotId;
-      setAmbientTapNonce((n) => n + 1);
       void writeNatureAmbientSceneSlotId(next);
       return next;
     });
@@ -612,7 +688,10 @@ export function HomeNatureScreen() {
 
   useEffect(() => {
     if (!sceneId || loading) return;
-    scrollSceneStripToId(sceneId);
+    const task = InteractionManager.runAfterInteractions(() => {
+      scrollSceneStripToId(sceneId);
+    });
+    return () => task.cancel();
   }, [loading, sceneId, scrollSceneStripToId]);
 
   const prevSceneRef = useRef<string | null>(null);
@@ -620,18 +699,21 @@ export function HomeNatureScreen() {
 
   useEffect(() => {
     if (!sceneId || loading) return;
-    const prev = prevSceneRef.current;
-    if (prev && prev !== sceneId) {
-      trackTelemetry("scene_session", {
-        scene_id: prev,
-        duration_ms: Date.now() - sceneSessionStartRef.current,
-      });
-    }
-    if (prev !== sceneId) {
-      trackTelemetry("scene_view", { scene_id: sceneId });
-      prevSceneRef.current = sceneId;
-      sceneSessionStartRef.current = Date.now();
-    }
+    const task = InteractionManager.runAfterInteractions(() => {
+      const prev = prevSceneRef.current;
+      if (prev && prev !== sceneId) {
+        trackTelemetry("scene_session", {
+          scene_id: prev,
+          duration_ms: Date.now() - sceneSessionStartRef.current,
+        });
+      }
+      if (prev !== sceneId) {
+        trackTelemetry("scene_view", { scene_id: sceneId });
+        prevSceneRef.current = sceneId;
+        sceneSessionStartRef.current = Date.now();
+      }
+    });
+    return () => task.cancel();
   }, [sceneId, loading]);
 
   useEffect(() => {
@@ -661,7 +743,8 @@ export function HomeNatureScreen() {
     !showSceneLoader;
   const showAutoImmersive = autoImmersiveActive && canArmAutoImmersive;
   const showFullscreenVideo = showLandscapeVideo;
-  const androidBlurUsesPosterStage = Platform.OS === "android" && softFocus.blurPx > 0.02;
+  const androidBlurUsesPosterStage =
+    Platform.OS === "android" && (softFocus.blurPx > 0.02 || coverVideoPosterOnly);
   const videoBackdropStyle = useMemo(
     () => (showFullscreenVideo ? styles.fullBleedBackdropFill : shellFullBleedBackdropStyle(fullBleedFrame)),
     [fullBleedFrame, showFullscreenVideo],
@@ -766,39 +849,66 @@ export function HomeNatureScreen() {
   }, [ttsPrefs]);
 
   useEffect(() => {
-    void readNatureHomeTtsPrefs().then(setTtsPrefs);
-  }, [prefsVersion, ttsPrefsVersion]);
-
-  useEffect(() => {
     let cancelled = false;
-    void Speech.getAvailableVoicesAsync()
-      .then((voices) => {
-        if (cancelled) return;
-        const map: Record<string, string> = {};
-        voices.forEach((voice) => {
-          const id = String(voice.identifier || "").trim();
-          if (!id) return;
-          map[id] = String(voice.language || "").trim().toLowerCase();
-        });
-        ttsVoiceLanguageMapRef.current = map;
-      })
-      .catch(() => {
-        if (!cancelled) ttsVoiceLanguageMapRef.current = {};
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readNatureHomeTtsPrefs().then((prefs) => {
+        if (!cancelled) setTtsPrefs(prefs);
       });
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
-  }, [prefsVersion]);
+  }, [prefsVersion, ttsPrefsVersion]);
+
+  useFocusEffect(
+    useCallback(() => {
+      homeFocusedRef.current = true;
+      setHomeFocused(true);
+      void configureShellAudioMode();
+      let cancelled = false;
+      let voiceTask: { cancel: () => void } | null = null;
+      if (homeTtsExperimentEnabled) {
+        voiceTask = InteractionManager.runAfterInteractions(() => {
+          void Speech.getAvailableVoicesAsync()
+            .then((voices) => {
+              if (cancelled) return;
+              const catalog = filterNonFemaleTtsVoices(
+                voices
+                  .map((voice) => ({
+                    identifier: String(voice.identifier || "").trim(),
+                    name: typeof voice.name === "string" ? voice.name : undefined,
+                    language: typeof voice.language === "string" ? voice.language : undefined,
+                  }))
+                  .filter((voice) => voice.identifier.length > 0),
+              );
+              ttsVoiceCatalogRef.current = catalog;
+            })
+            .catch(() => {
+              if (!cancelled) {
+                ttsVoiceCatalogRef.current = [];
+              }
+            });
+        });
+      }
+      return () => {
+        cancelled = true;
+        voiceTask?.cancel();
+        homeFocusedRef.current = false;
+        setHomeFocused(false);
+        homeVoiceSessionIdRef.current += 1;
+        void Speech.stop();
+        setVoicePreparing(false);
+        setVoiceSpeaking(false);
+      };
+    }, [homeTtsExperimentEnabled]),
+  );
 
   useEffect(() => {
     return () => {
       homeVoiceSessionIdRef.current += 1;
       void Speech.stop();
     };
-  }, []);
-
-  useEffect(() => {
-    void hydrateHomeTtsExperiment();
   }, []);
 
   useEffect(() => {
@@ -810,9 +920,8 @@ export function HomeNatureScreen() {
     (id: string) => {
       if (id.trim() !== sceneId) selectScene(id);
       setLandscapeScenePickerOpen(false);
-      if (tracks.length > 0 && !playing) void togglePlayMusic();
     },
-    [sceneId, selectScene, tracks.length, playing, togglePlayMusic],
+    [sceneId, selectScene],
   );
 
   const onLandscapeBackdropPress = useCallback(() => {
@@ -822,12 +931,11 @@ export function HomeNatureScreen() {
     }
     if (landscapeScenePickerOpen) {
       setLandscapeScenePickerOpen(false);
-      if (tracks.length > 0 && !playing) void togglePlayMusic();
       return;
     }
     if (playing) void togglePlayMusic();
     setLandscapeScenePickerOpen(true);
-  }, [settingsOpen, landscapeScenePickerOpen, playing, togglePlayMusic, tracks.length]);
+  }, [settingsOpen, landscapeScenePickerOpen, playing, togglePlayMusic]);
 
   const onPortraitBackdropPress = useCallback(() => {
     if (settingsOpen) {
@@ -913,12 +1021,11 @@ export function HomeNatureScreen() {
         target.speechLocale === "en" ? "en-US" : target.speechLocale === "zh-TW" ? "zh-TW" : "zh-CN";
       const activeTtsPrefs = ttsPrefsRef.current;
       const selectedVoiceId = String(activeTtsPrefs.voiceId || "").trim();
-      const selectedVoiceLang = selectedVoiceId
-        ? (ttsVoiceLanguageMapRef.current[selectedVoiceId] || "").toLowerCase()
-        : "";
       const expectedPrefix = target.speechLocale === "en" ? "en" : "zh";
-      const safeVoice =
-        selectedVoiceId && selectedVoiceLang.startsWith(expectedPrefix) ? selectedVoiceId : undefined;
+      const safeVoice = resolveMaleTtsVoiceId(ttsVoiceCatalogRef.current, {
+        preferredId: selectedVoiceId,
+        langPrefix: expectedPrefix,
+      });
       const proceedToNextVerse = () => {
         if (sessionId !== homeVoiceSessionIdRef.current) return;
         const advanceNow = advanceVerseRef.current;
@@ -1098,11 +1205,13 @@ export function HomeNatureScreen() {
             sceneId={sceneId}
             resolveScenePlayback={resolveScenePlayback}
             posterUri={posterUri || undefined}
+            posterModule={posterModule}
             forcePosterMode={androidBlurUsesPosterStage}
             rate={clampedRate}
             layoutMode={showLandscapeVideo ? "landscape-cover" : "portrait-cover"}
             nativeFullCover={Platform.OS === "android"}
             onSceneVideoReady={handleSceneVideoReady}
+            playbackActive={homeFocused}
           />
         ) : hasPosterFallback ? (
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
@@ -1165,7 +1274,7 @@ export function HomeNatureScreen() {
       <HomeVerseOverlay
         prefsVersion={prefsVersion}
         layout={showLandscapeVideo ? "homeLandscape" : "home"}
-        pauseRotation={voicePreparing || voiceSpeaking}
+        pauseRotation={voicePreparing || voiceSpeaking || !homeFocused}
         onDisplayedVerseChange={onDisplayedVerseChange}
         onAdvanceControllerReady={onAdvanceControllerReady}
       />
@@ -1259,7 +1368,11 @@ export function HomeNatureScreen() {
                     ]}
                     accessibilityRole="button"
                     accessibilityState={{ selected, disabled: !enabled }}
-                    accessibilityLabel={enabled ? `${label}${selected ? "（已选中）" : ""}` : `${label}（未上传）`}
+                    accessibilityLabel={
+                      enabled
+                        ? `${label}${selected ? resolveUiText(locale, "（已选中）", " (selected)") : ""}`
+                        : `${label}${resolveUiText(locale, "（未上传）", " (not uploaded)")}`
+                    }
                   >
                     <MaterialCommunityIcons
                       name={slot.icon as keyof typeof MaterialCommunityIcons.glyphMap}

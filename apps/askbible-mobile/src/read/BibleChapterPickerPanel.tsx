@@ -1,6 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
+  Dimensions,
+  InteractionManager,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +14,7 @@ import {
 } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
+import { resolveUiText } from "../i18n/site-copy";
 import { bookNameForId, chaptersForBookId } from "./canonCatalog";
 import { ReadParchmentBackgroundImage } from "./ReadParchmentSurface";
 import { readParchmentTheme as c } from "./readParchmentTheme";
@@ -22,6 +27,30 @@ const CHAPTER_SHEET_PAD = 16;
 const CHAPTER_BACKDROP_PAD = 20;
 const CHAPTER_HEADER_H = 48;
 
+export const CHAPTER_PICKER_MIN_VIEWPORT_H = 320;
+
+/** 选章 Modal 打开后短暂忽略背景点击，避免 Android 同一次触摸误触关闭（TCL 等慢机更明显）。 */
+export const CHAPTER_PICKER_OPEN_GUARD_MS = 850;
+
+export function markChapterPickerOpenGuard(now = Date.now()): number {
+  return now + CHAPTER_PICKER_OPEN_GUARD_MS;
+}
+
+export function isWithinChapterPickerOpenGuard(until: number, now = Date.now()): boolean {
+  return now < until;
+}
+
+/** Android Modal 打开时 useWindowDimensions 偶发为 0，需回退到 Dimensions。 */
+export function resolveChapterPickerWindowWidth(windowWidth: number): number {
+  const resolved = windowWidth > 0 ? windowWidth : Dimensions.get("window").width;
+  return Math.max(280, resolved);
+}
+
+export function resolveChapterPickerViewportHeight(windowHeight: number): number {
+  const resolved = windowHeight > 0 ? windowHeight : Dimensions.get("window").height;
+  return Math.max(CHAPTER_PICKER_MIN_VIEWPORT_H, Math.round(resolved * 0.7));
+}
+
 export function estimateChapterPickerLayout(
   chapterCount: number,
   windowWidth: number,
@@ -29,6 +58,7 @@ export function estimateChapterPickerLayout(
   opts?: { inline?: boolean },
 ) {
   const inline = opts?.inline === true;
+  const safeViewportMaxHeight = Math.max(CHAPTER_PICKER_MIN_VIEWPORT_H, viewportMaxHeight);
   const modalInnerWidth = windowWidth - CHAPTER_BACKDROP_PAD * 2;
   const gridWidth = inline ? windowWidth - 24 : modalInnerWidth - CHAPTER_SHEET_PAD * 2;
   const cols = Math.max(
@@ -44,14 +74,106 @@ export function estimateChapterPickerLayout(
     ? CHAPTER_HEADER_H
     : CHAPTER_SHEET_PAD * 2 + CHAPTER_HEADER_H;
   const contentHeight = chromeHeight + gridHeight;
-  const scrollNeeded = contentHeight > viewportMaxHeight;
+  const scrollNeeded = contentHeight > safeViewportMaxHeight;
+  const sheetHeight = scrollNeeded
+    ? safeViewportMaxHeight
+    : Math.max(CHAPTER_HEADER_H + CHAPTER_SHEET_PAD * 2 + 80, contentHeight);
 
   return {
     scrollNeeded,
-    sheetHeight: scrollNeeded ? viewportMaxHeight : undefined,
-    scrollHeight: scrollNeeded ? viewportMaxHeight - chromeHeight : undefined,
+    sheetHeight,
+    scrollHeight: scrollNeeded
+      ? Math.max(120, safeViewportMaxHeight - chromeHeight)
+      : undefined,
   };
 }
+
+/** Android 上先关 Modal 再导航，避免透明遮罩残留拦截触摸。 */
+export function deferChapterPickerNavigation(action: () => void): void {
+  if (Platform.OS !== "android") {
+    action();
+    return;
+  }
+  InteractionManager.runAfterInteractions(() => {
+    requestAnimationFrame(action);
+  });
+}
+
+type ChapterPickerModalProps = {
+  visible: boolean;
+  sheetHeight: number;
+  onRequestClose: () => void;
+  onBackdropPress: () => void;
+  onBackdropLayout?: (height: number) => void;
+  children: ReactNode;
+};
+
+/** 选章 Modal 外壳：背景与内容分离，避免 Android 嵌套 Pressable 吞掉章号点击。 */
+export function ChapterPickerModal({
+  visible,
+  sheetHeight,
+  onRequestClose,
+  onBackdropPress,
+  onBackdropLayout,
+  children,
+}: ChapterPickerModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent
+      presentationStyle="overFullScreen"
+      statusBarTranslucent={Platform.OS === "android"}
+      onRequestClose={onRequestClose}
+    >
+      <View
+        style={modalFrameStyles.backdrop}
+        onLayout={(e) => {
+          const h = Math.round(e.nativeEvent.layout.height);
+          if (h > 0) onBackdropLayout?.(h);
+        }}
+      >
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={onBackdropPress}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        />
+        <View
+          style={[modalFrameStyles.sheet, { height: sheetHeight }]}
+          pointerEvents="auto"
+        >
+          <View style={modalFrameStyles.sheetBody} collapsable={false}>
+            {children}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const modalFrameStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: c.modalBackdrop,
+    justifyContent: "center",
+    paddingHorizontal: CHAPTER_BACKDROP_PAD,
+  },
+  sheet: {
+    width: "100%",
+    maxHeight: "70%",
+    minHeight: 160,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    ...(Platform.OS === "android" ? { elevation: 8 } : null),
+  },
+  sheetBody: {
+    width: "100%",
+    height: "100%",
+  },
+});
 
 type Props = {
   bookId: string;
@@ -72,7 +194,8 @@ export function BibleChapterPickerPanel({
   lockTextScale = true,
 }: Props) {
   const { locale } = useLocale();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidthRaw } = useWindowDimensions();
+  const windowWidth = resolveChapterPickerWindowWidth(windowWidthRaw);
   const chapterCount = chaptersForBookId(bookId);
   const chapters =
     chapterCount > 0 ? Array.from({ length: chapterCount }, (_, i) => i + 1) : [];
@@ -95,7 +218,7 @@ export function BibleChapterPickerPanel({
           hitSlop={12}
           style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
           accessibilityRole="button"
-          accessibilityLabel={locale === "en" ? "Back to books" : "返回书卷"}
+          accessibilityLabel={resolveUiText(locale, "返回书卷", "Back to books")}
         >
           <MaterialIcons name="arrow-back-ios-new" size={16} color={c.ink} />
         </Pressable>
@@ -168,19 +291,32 @@ export function BibleChapterPickerPanel({
   );
 
   if (embedded) {
-    return <View style={[styles.embeddedRoot, { height: viewportHeight }]}>{gridBody}</View>;
+    return (
+      <View
+        style={[
+          styles.embeddedRoot,
+          { height: Math.max(CHAPTER_PICKER_MIN_VIEWPORT_H, viewportHeight) },
+        ]}
+      >
+        {gridBody}
+      </View>
+    );
   }
 
   return (
-    <ReadParchmentBackgroundImage
-      style={[
-        styles.modalSheetBg,
-        layout.scrollNeeded ? styles.modalSheetBgFill : null,
-      ]}
-      imageStyle={styles.modalSheetBgImage}
-    >
-      {gridBody}
-    </ReadParchmentBackgroundImage>
+    <View style={styles.modalSheetOuter} collapsable={false}>
+      <ReadParchmentBackgroundImage
+        fill
+        style={[
+          styles.modalSheetRoot,
+          styles.modalSheetBg,
+          layout.scrollNeeded ? styles.modalSheetBgFill : null,
+        ]}
+        imageStyle={styles.modalSheetBgImage}
+      >
+        {gridBody}
+      </ReadParchmentBackgroundImage>
+    </View>
   );
 }
 
@@ -222,6 +358,16 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     color: c.faint,
     paddingHorizontal: 4,
+  },
+  modalSheetOuter: {
+    width: "100%",
+    height: "100%",
+    alignSelf: "stretch",
+  },
+  modalSheetRoot: {
+    width: "100%",
+    height: "100%",
+    alignSelf: "stretch",
   },
   modalSheetBg: {
     padding: CHAPTER_SHEET_PAD,

@@ -56,3 +56,66 @@ html[data-read-parchment-bg="3"] {
  * 宽屏横卷：`html::before` 由 `syncReadParchmentWideDataset` 写入横图 url()，
  * 这里保留默认变量，不再覆盖成纯色。
  */
+
+/** 弹出层 / Sheet 羊皮底（对齐 App ReadParchmentBackgroundImage） */
+.read-parchment-modal-surface {
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.dark .read-parchment-modal-surface {
+  background-color: var(--read-parchment-bg-canvas, #1a1512);
+}
+
+/** 弹出层内按钮 / 格子（半透羊皮控件，fallback 供非 shell 上下文） */
+.read-parchment-modal-control {
+  border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
+  background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
+}
+
+.dark .read-parchment-modal-control {
+  border-color: var(--parchment-control-border, color-mix(in srgb, rgb(244 235 225) 16%, transparent));
+  background: var(--parchment-control-fill, color-mix(in srgb, rgb(41 37 36) 72%, transparent));
+}
+
+.read-parchment-chip-btn {
+  display: inline-flex;
+  min-height: 40px;
+  min-width: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--parchment-control-radius-sm, 10px);
+  border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
+  background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
+  padding: 0 0.5rem;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  color: #1c1410;
+  transition: opacity 160ms ease, transform 120ms ease;
+}
+
+.read-parchment-chip-btn:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.read-parchment-chip-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.read-parchment-chip-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.read-parchment-chip-btn--active {
+  border-color: var(--parchment-control-border-focus, rgba(120, 53, 15, 0.42));
+  background: var(--parchment-control-fill-strong, rgba(255, 252, 245, 0.62));
+}
+
+.dark .read-parchment-chip-btn {
+  color: #f4ebe1;
+}

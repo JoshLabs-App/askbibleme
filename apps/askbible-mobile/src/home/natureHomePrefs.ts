@@ -292,7 +292,7 @@ export async function readNatureVisualLevels(): Promise<NatureVisualLevels> {
   }
 }
 
-async function writeNatureVisualLevels(levels: NatureVisualLevels): Promise<void> {
+export async function writeNatureVisualLevels(levels: NatureVisualLevels): Promise<void> {
   await AsyncStorage.setItem(
     KEYS.softFocus,
     JSON.stringify({
@@ -424,4 +424,41 @@ export async function readShellChromeTune(): Promise<ShellChromeTune> {
   } catch {
     return DEFAULT_SHELL_CHROME_TUNE;
   }
+}
+
+export async function writeShellChromeTune(next: ShellChromeTune): Promise<void> {
+  const normalized = clampShellChromeTune({ ...DEFAULT_SHELL_CHROME_TUNE, ...next });
+  await AsyncStorage.setItem(KEYS.chromeTune, JSON.stringify(normalized));
+  await AsyncStorage.removeItem(LEGACY_KEYS.chromeTune);
+}
+
+export type NatureHomeUiSyncBundle = {
+  version: 1;
+  ttsPrefs: NatureHomeTtsPrefs;
+  visualLevels: NatureVisualLevels;
+  verseAppearance: NatureHomeVerseAppearance;
+  textScaleIndex: number;
+  chromeTune: ShellChromeTune;
+};
+
+export async function readNatureHomeUiSyncBundle(): Promise<NatureHomeUiSyncBundle> {
+  const [ttsPrefs, visualLevels, verseAppearance, textScaleIndex, chromeTune] = await Promise.all([
+    readNatureHomeTtsPrefs(),
+    readNatureVisualLevels(),
+    readNatureHomeVerseAppearance(),
+    readNatureHomeTextScaleIndex(),
+    readShellChromeTune(),
+  ]);
+  return { version: 1, ttsPrefs, visualLevels, verseAppearance, textScaleIndex, chromeTune };
+}
+
+export async function applyNatureHomeUiSyncBundle(bundle: NatureHomeUiSyncBundle): Promise<void> {
+  if (bundle.version !== 1) return;
+  await Promise.all([
+    writeNatureHomeTtsPrefs(bundle.ttsPrefs),
+    writeNatureVisualLevels(bundle.visualLevels),
+    writeNatureHomeVerseAppearance(bundle.verseAppearance),
+    writeNatureHomeTextScaleIndex(bundle.textScaleIndex),
+    writeShellChromeTune(bundle.chromeTune),
+  ]);
 }

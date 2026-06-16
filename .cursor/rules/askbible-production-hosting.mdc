@@ -14,3 +14,10 @@ alwaysApply: true
 - 引导版/导读版线上缓存清理：删磁盘上对应 `chapter_key`（如 `GEN:34:role_356f0ffb`），或 Render 挂载盘中的 published 文件条目
 
 本地开发、Studio、后台 API 密钥仍以本机 Git + `data/admin/` 为准。
+
+## 部署与 push（Agent 默认）
+
+- **默认只本地部署/同步**，不要自动 `git commit` 或 `git push`，除非用户明确说 **上线 / 发布 / push / ship**。
+- 每次 push 到 `main` 会触发 **Render 完整 build**（`scripts/render-build.sh`）和 **GitHub CI**，消耗 Build Pipeline 分钟；与 push 体积无关，与 **部署次数** 有关。
+- 讲道集 `/jd` 源项目在 `03CHURCH`：先 `SKIP_UPDATE=1 npm run deploy:jd` 同步到 `public/jd/`，本机 `npm run dev` 验证；用户确认上线后再单独 commit/push 相关文件。
+- 推送时只 add 本次相关路径，不要用 `git add -A` 带入无关工作区改动。

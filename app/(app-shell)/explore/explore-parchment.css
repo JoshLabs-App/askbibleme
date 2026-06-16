@@ -492,6 +492,24 @@
   color: #6b4428;
 }
 
+.prayer-on-parchment .explore-prose-page .explore-prose-blockquote.explore-prose-scripture-block {
+  margin: 0.65rem 0 1.1rem;
+  padding: 0.85rem 0.95rem 0.75rem;
+  border-left-width: 3px;
+  border-radius: 0 10px 10px 0;
+  background: rgba(120, 53, 15, 0.06);
+  color: rgba(28, 20, 16, 0.92);
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-scripture-block > p:last-child {
+  margin-top: 0.45rem;
+  margin-bottom: 0;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6e5240;
+}
+
 .prayer-on-parchment .explore-prose-page .explore-prose-link {
   font-weight: 600;
   color: #8b5a2b;
@@ -543,6 +561,15 @@
 .dark .prayer-on-parchment .explore-prose-page .explore-prose-blockquote {
   color: #d8a97a;
   border-left-color: #a56a2d;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-blockquote.explore-prose-scripture-block {
+  background: color-mix(in srgb, rgb(244 235 225) 6%, transparent);
+  color: color-mix(in srgb, rgb(244 235 225) 92%, transparent);
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-scripture-block > p:last-child {
+  color: color-mix(in srgb, rgb(244 235 225) 58%, transparent);
 }
 
 .dark .prayer-on-parchment .explore-prose-page .explore-prose-link {

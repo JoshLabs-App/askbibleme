@@ -38,11 +38,11 @@
 - Web：`NEXT_PUBLIC_TELEMETRY_DISABLED=1`
 - Mobile：`EXPO_PUBLIC_TELEMETRY_DISABLED=1`
 
-## 正式 App 构建（EAS）
+## 正式 App 构建（本机 Release）
 
 机内资源与统计分开：**可保持** `EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1`（经文/场景走 APK 包内），同时有网时上报到 `https://askbible.me/api/telemetry/ingest`。
 
-[`apps/askbible-mobile/eas.json`](../apps/askbible-mobile/eas.json) 的 `preview` / `production` 已默认：
+发版**禁止 EAS 云端构建**；环境变量以本机 Release 脚本 / [`apps/askbible-mobile/eas.json`](../apps/askbible-mobile/eas.json) 的 `production` profile 为准（仅作 `--local` 构建参考）：
 
 - `EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1`
 - `EXPO_PUBLIC_ASKBIBLE_BASE_URL=https://askbible.me`

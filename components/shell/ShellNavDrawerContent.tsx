@@ -194,7 +194,7 @@ function ShellNavDrawerResourceUpdate() {
 
 export function ShellNavDrawerContent({ onClose }: Props) {
   const { locale, t } = useLocale();
-  const { bootstrapped, user, isAdmin, logout } = useAskbibleUser();
+  const { bootstrapped, user, isAdmin, logout, deleteAccount } = useAskbibleUser();
   const registerOpen = isMemberRegisterEnabledClient();
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
   const zh = locale === "zh-CN" || locale === "zh-TW";
@@ -280,6 +280,26 @@ export function ShellNavDrawerContent({ onClose }: Props) {
             onClick={() => {
               onClose();
               void logout();
+            }}
+          />
+          <ShellNavDrawerMenuRow
+            label={t("auth.deleteAccount")}
+            onClick={() => {
+              onClose();
+              if (!window.confirm(`${t("auth.deleteAccountTitle")}\n\n${t("auth.deleteAccountMessage")}`)) {
+                return;
+              }
+              void (async () => {
+                const result = await deleteAccount();
+                if (result.ok) return;
+                const message =
+                  result.code === "admin_account"
+                    ? t("auth.deleteAccountAdminBlocked")
+                    : result.code === "network"
+                      ? t("auth.errorNetwork")
+                      : t("auth.deleteAccountFailedMessage");
+                window.alert(`${t("auth.deleteAccountFailedTitle")}\n\n${message}`);
+              })();
             }}
           />
           {isSelahSuperAdminEmail(user.email) ? (

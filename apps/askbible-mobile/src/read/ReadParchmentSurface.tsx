@@ -45,6 +45,8 @@ type ReadParchmentBackgroundProps = {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ImageStyle>;
+  /** Modal 内撑满父级高度，避免部分 Android 机型章网格高度塌缩。 */
+  fill?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -54,6 +56,11 @@ const styles = StyleSheet.create({
   parchmentShell: {
     position: "relative",
     overflow: "hidden",
+  },
+  parchmentShellFill: {
+    flex: 1,
+    width: "100%",
+    alignSelf: "stretch",
   },
   parchmentForeground: {
     position: "relative",
@@ -97,9 +104,13 @@ export function ReadParchmentBackgroundImage({
   children,
   style,
   imageStyle,
+  fill = false,
 }: ReadParchmentBackgroundProps) {
   return (
-    <View style={[styles.parchmentContainer, styles.parchmentShell]} collapsable={false}>
+    <View
+      style={[styles.parchmentContainer, styles.parchmentShell, fill && styles.parchmentShellFill]}
+      collapsable={false}
+    >
       <ReadParchmentFillLayer imageStyle={imageStyle} />
       <View style={[styles.parchmentForeground, style]} pointerEvents="box-none">
         {children}

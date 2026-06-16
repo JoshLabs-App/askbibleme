@@ -3,6 +3,11 @@ import { usePathname, useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useLayoutEffect, useSyncExternalStore } from "react";
 import {
+  getTabBarPortalProps,
+  setTabBarPortalProps,
+  subscribeTabBarPortal,
+} from "./shellTabBarPortalStore";
+import {
   getHomeAutoHideChrome,
   getHomeLandscapeImmersive,
   subscribeHomeLandscapeImmersive,
@@ -74,30 +79,10 @@ function tabIcon(routeName: string, active: boolean) {
   }
 }
 
-type TabBarPortalStore = {
-  props: BottomTabBarProps | null;
-  listeners: Set<() => void>;
-};
-
-const tabBarPortalStore: TabBarPortalStore = {
-  props: null,
-  listeners: new Set(),
-};
-
-function subscribeTabBarPortal(listener: () => void) {
-  tabBarPortalStore.listeners.add(listener);
-  return () => tabBarPortalStore.listeners.delete(listener);
-}
-
-function getTabBarPortalProps() {
-  return tabBarPortalStore.props;
-}
-
 /** 挂在 Tabs `tabBar` 槽内同步状态，实际 UI 由 `ShellTabBarPortal` 浮在导航器外渲染 */
 export function ShellTabBarCapture(props: BottomTabBarProps) {
   useLayoutEffect(() => {
-    tabBarPortalStore.props = props;
-    tabBarPortalStore.listeners.forEach((listener) => listener());
+    setTabBarPortalProps(props);
   });
   return null;
 }
@@ -153,7 +138,6 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
   );
   const onMusicTab = state.routes[state.index]?.name === "music";
   const hideForMusicScene = onMusicTab && musicAutoHideChrome;
-
   const leftRoutes = state.routes.filter((r) => r.name === "index" || r.name === "music");
   const rightRoutes = state.routes.filter((r) => r.name === "read" || r.name === "explore");
 
@@ -260,12 +244,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 100,
+    elevation: 2,
     alignItems: "center",
     paddingHorizontal: 12,
     gap: 6,
     backgroundColor: "transparent",
   },
   row: {
+    zIndex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

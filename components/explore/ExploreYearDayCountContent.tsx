@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ExploreBirthDatePicker } from "@/components/explore/ExploreBirthDatePicker";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   getCenturyTimeline,
@@ -33,9 +34,20 @@ import {
   getBiblicalLifespans,
   isBiblicalLifespanNewTestamentEra,
 } from "@/lib/explore/biblical-lifespans";
+import { PARCHMENT_CONTROL_SURFACE_CLASS } from "@/lib/shell/parchment-control-surface";
+import { ExploreYearsDaysEternitySection } from "@/components/explore/ExploreYearsDaysEternitySection";
+import {
+  filterEternityProse,
+  filterEternityScriptures,
+  formatScriptureBlockBody,
+} from "@/lib/explore/years-days-eternity-blocks";
+import { YEARS_DAYS_ETERNITY_EN } from "@/lib/explore/years-days-eternity-content-en";
+import { YEARS_DAYS_ETERNITY_ZH } from "@/lib/explore/years-days-eternity-content";
 
 type Props = {
   initialScriptureTexts: Record<string, string>;
+  enScriptureBodyByRef?: Record<string, string>;
+  enRefLabelByRaw?: Record<string, string>;
 };
 
 function LifeDayBattery({ filledSegments }: { filledSegments: number }) {
@@ -68,25 +80,20 @@ function BirthSettingsModal({
 }) {
   const { t } = useLocale();
   const [name, setName] = useState("");
-  const [year, setYear] = useState(defaultBirthDate().year);
-  const [month, setMonth] = useState(defaultBirthDate().month);
-  const [day, setDay] = useState(defaultBirthDate().day);
+  const [selectedDate, setSelectedDate] = useState<ExploreBirthDate>(() => defaultBirthDate());
 
   useEffect(() => {
     if (!open) return;
     const profile = readExploreYearDayProfile();
     if (profile.displayName) setName(profile.displayName);
-    if (profile.birthDate) {
-      setYear(profile.birthDate.year);
-      setMonth(profile.birthDate.month);
-      setDay(profile.birthDate.day);
-    }
+    if (profile.birthDate) setSelectedDate(profile.birthDate);
+    else setSelectedDate(defaultBirthDate());
   }, [open]);
 
   if (!open) return null;
 
   const save = () => {
-    const birthDate = clampBirthDateToToday(clampBirthDate({ year, month, day }));
+    const birthDate = clampBirthDateToToday(clampBirthDate(selectedDate));
     if (!isValidBirthDate(birthDate)) return;
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -96,66 +103,46 @@ function BirthSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/35 p-4 sm:items-center">
+    <div className={`${PARCHMENT_CONTROL_SURFACE_CLASS.modalOverlay} parchment-control-overlay--fullscreen-form`}>
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-md rounded-2xl border border-ink/10 bg-canvas px-5 py-6 shadow-lg"
+        className={`relative z-[1] mx-auto w-full max-w-md flex-1 overflow-y-auto px-5 py-6 sm:max-w-lg ${PARCHMENT_CONTROL_SURFACE_CLASS.sheet} parchment-control-sheet--fullscreen-form`}
       >
-        <h2 className="font-serif text-[1.2rem] font-medium text-ink/90">{t("pages.explore.birthYearModalTitle")}</h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-muted">{t("pages.explore.birthYearModalHint")}</p>
+        <h2 className="text-center font-serif text-[1.2rem] font-medium text-ink/90">
+          {t("pages.explore.birthYearModalTitle")}
+        </h2>
+        <p className="mt-2 text-center text-[13px] leading-relaxed text-muted">
+          {t("pages.explore.birthYearModalHint")}
+        </p>
 
-        <label className="mt-5 block text-[13px] font-medium text-ink/75">
+        <label className={PARCHMENT_CONTROL_SURFACE_CLASS.label}>
           {t("pages.explore.birthYearModalNameLabel")}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("pages.explore.birthYearModalNamePlaceholder")}
-            className="mt-1.5 w-full rounded-xl border border-ink/12 bg-canvas/80 px-3 py-2.5 text-[15px] outline-none focus:border-ink/25"
+            className={`mt-1.5 text-center ${PARCHMENT_CONTROL_SURFACE_CLASS.field}`}
           />
         </label>
 
-        <p className="mt-4 text-[13px] font-medium text-ink/75">{t("pages.explore.birthYearModalDateLabel")}</p>
-        <div className="mt-1.5 grid grid-cols-3 gap-2">
-          <input
-            type="number"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="rounded-xl border border-ink/12 bg-canvas/80 px-3 py-2.5 text-[15px] outline-none"
-            aria-label="year"
-          />
-          <input
-            type="number"
-            min={1}
-            max={12}
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="rounded-xl border border-ink/12 bg-canvas/80 px-3 py-2.5 text-[15px] outline-none"
-            aria-label="month"
-          />
-          <input
-            type="number"
-            min={1}
-            max={31}
-            value={day}
-            onChange={(e) => setDay(Number(e.target.value))}
-            className="rounded-xl border border-ink/12 bg-canvas/80 px-3 py-2.5 text-[15px] outline-none"
-            aria-label="day"
-          />
-        </div>
+        <p className={PARCHMENT_CONTROL_SURFACE_CLASS.label}>
+          {t("pages.explore.birthYearModalDateLabel")}
+        </p>
+        <ExploreBirthDatePicker value={selectedDate} onChange={setSelectedDate} />
 
         <div className="mt-6 flex gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-ink/12 px-4 py-2.5 text-[14px] font-medium text-ink/75"
+            className={`flex-1 ${PARCHMENT_CONTROL_SURFACE_CLASS.btn}`}
           >
             {t("pages.explore.birthYearModalCancel")}
           </button>
           <button
             type="button"
             onClick={save}
-            className="flex-1 rounded-xl bg-ink px-4 py-2.5 text-[14px] font-medium text-canvas"
+            className={`flex-1 ${PARCHMENT_CONTROL_SURFACE_CLASS.btnPrimary}`}
           >
             {t("pages.explore.birthYearModalSave")}
           </button>
@@ -165,7 +152,11 @@ function BirthSettingsModal({
   );
 }
 
-export function ExploreYearDayCountContent({ initialScriptureTexts }: Props) {
+export function ExploreYearDayCountContent({
+  initialScriptureTexts,
+  enScriptureBodyByRef,
+  enRefLabelByRaw,
+}: Props) {
   const { t, locale } = useLocale();
   const [birthDate, setBirthDate] = useState<ExploreBirthDate | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -190,27 +181,15 @@ export function ExploreYearDayCountContent({ initialScriptureTexts }: Props) {
   const lifeDayTarget = YEAR_DAY_COUNT_LIFE_DAY_READ_TARGET;
   const orderedRefs = useMemo(() => [...YEAR_DAY_COUNT_SCRIPTURES].reverse(), []);
 
-  const bottomContext =
-    locale === "en"
-      ? {
-          prose: "Global life expectancy is still brief. Our days pass quickly, but they are precious before God.",
-          scripture:
-            "The days of our years are threescore years and ten; and if by reason of strength they be fourscore years...",
-          ref: "Psalm 90:10",
-        }
-      : {
-          prose: "据 Our World in Data 数据，2023年全球平均预期寿命约为73岁。",
-          scripture:
-            "圣经《诗篇》90篇说：「我们一生的年日是七十岁，若是强壮可到八十岁；但其中所矜夸的，不过是劳苦愁烦，转眼成空，我们便如飞而去。」",
-          ref: "诗篇 90:10",
-        };
+  const lifeExpectancyIntro =
+    locale === "en" ? YEARS_DAYS_ETERNITY_EN.intro : YEARS_DAYS_ETERNITY_ZH.intro;
 
   const openRef = (ref: YearDayCountScriptureRef) => {
     window.location.href = `/read/${ref.bookId}/${ref.chapter}?verse=${ref.verseStart}`;
   };
 
   return (
-    <div className="mx-auto w-full max-w-xl flex-1 px-5 pb-24 pt-6 text-ink sm:max-w-2xl md:px-8">
+    <div className="relative mx-auto w-full max-w-xl flex-1 px-5 pb-24 pt-6 text-ink sm:max-w-2xl md:px-8">
       <Link
         href="/explore"
         className="text-[13px] font-medium text-ink/72 underline decoration-ink/20 underline-offset-[0.2em]"
@@ -340,11 +319,22 @@ export function ExploreYearDayCountContent({ initialScriptureTexts }: Props) {
         </ul>
       </section>
 
-      <section className="mt-10 space-y-3 text-[14px] leading-relaxed text-ink/72">
-        <p>{bottomContext.prose}</p>
-        <p>{bottomContext.scripture}</p>
-        <p className="text-right text-[12px] font-semibold text-ink/45">— {bottomContext.ref}</p>
+      <section className="mt-10 space-y-3 text-center text-[14px] leading-relaxed text-ink/72">
+        {filterEternityProse(lifeExpectancyIntro).map((lines, i) => (
+          <p key={`prose-${i}`}>{lines.join(locale === "en" ? " " : "")}</p>
+        ))}
+        {filterEternityScriptures(lifeExpectancyIntro).map((block, i) => (
+          <div key={`scripture-${i}`} className="w-full max-w-[380px] mx-auto">
+            <p>{formatScriptureBlockBody(block.lines)}</p>
+            <p className="mt-1 text-right text-[12px] font-semibold text-ink/45">— {block.ref}</p>
+          </div>
+        ))}
       </section>
+
+      <ExploreYearsDaysEternitySection
+        enScriptureBodyByRef={enScriptureBodyByRef}
+        enRefLabelByRaw={enRefLabelByRaw}
+      />
 
       <BirthSettingsModal
         open={settingsOpen}

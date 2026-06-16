@@ -5,6 +5,7 @@ import {
   type TripleLoopReadingState,
   type TripleLoopTrack,
 } from "@/lib/bible/reading-plans/triple-loop-reading";
+import { TRIPLE_LOOP_TRACK_CHAPTER_TOTALS } from "@/lib/bible/reading-plans/triple-loop-track-progress";
 import type { ReadingPlanDay, ReadingPlanRange, ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 
 export const TRIPLE_LOOP_PLAN_ID = "triple-loop";
@@ -43,6 +44,7 @@ export function buildTripleLoopReadingPlanDay(
       startChapter: ptr.chapter,
       endChapter: ptr.chapter,
       label,
+      planChapterTotal: TRIPLE_LOOP_TRACK_CHAPTER_TOTALS[track],
     };
   });
   return { dayIndex: 0, readings };

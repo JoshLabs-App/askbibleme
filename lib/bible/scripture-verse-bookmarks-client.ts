@@ -78,3 +78,12 @@ export async function toggleScriptureVerseBookmark(
   emit();
   return { added: true, store };
 }
+
+export function replaceScriptureVerseBookmarkStore(store: ScriptureVerseBookmarkStore): void {
+  if (typeof window === "undefined") return;
+  const json = JSON.stringify(store);
+  window.localStorage.setItem(SCRIPTURE_VERSE_BOOKMARKS_STORAGE_KEY, json);
+  cacheRaw = json;
+  cacheStore = store;
+  emit();
+}

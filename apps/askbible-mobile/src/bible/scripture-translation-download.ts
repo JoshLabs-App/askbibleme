@@ -23,6 +23,8 @@ export type ScriptureTranslationDownloadState = {
   error: string | null;
 };
 
+const DOWNLOAD_TIMEOUT_MS = 45_000;
+
 const listeners = new Set<() => void>();
 
 let state: ScriptureTranslationDownloadState = {
@@ -113,7 +115,24 @@ export async function downloadScriptureTranslation(
   activeDownload = resumable;
 
   try {
-    const result = await resumable.downloadAsync();
+    let downloadTimer: ReturnType<typeof setTimeout> | undefined;
+    const result = await Promise.race([
+      resumable.downloadAsync(),
+      new Promise<null>((resolve) => {
+        downloadTimer = setTimeout(() => resolve(null), DOWNLOAD_TIMEOUT_MS);
+      }),
+    ]).finally(() => {
+      if (downloadTimer) clearTimeout(downloadTimer);
+    });
+    if (!result) {
+      try {
+        await resumable.pauseAsync();
+      } catch {
+        /* ignore */
+      }
+      activeDownload = null;
+      throw new Error("译本下载超时");
+    }
     activeDownload = null;
     if (!result || result.status < 200 || result.status >= 300) {
       throw new Error(`下载失败（HTTP ${result?.status ?? "?"}）`);
@@ -169,11 +188,15 @@ export async function ensureScriptureTranslationReadyWithFallback(
 ): Promise<string> {
   const id = String(translationId || "").trim() || "cuv-simp";
   if (isMobileOfflineFirst()) {
-    if (isBundledScriptureTranslation(id)) {
-      await ensureScriptureTranslationReady(id);
-      return id;
+    try {
+      if (isBundledScriptureTranslation(id)) {
+        await ensureScriptureTranslationReady(id);
+        return id;
+      }
+      if (await isScriptureTranslationInstalled(id)) return id;
+    } catch {
+      /* fall through to bundled fallbacks */
     }
-    if (await isScriptureTranslationInstalled(id)) return id;
     for (const fallbackId of BUNDLED_SCRIPTURE_TRANSLATION_IDS) {
       try {
         await ensureScriptureTranslationReady(fallbackId);
@@ -204,10 +227,22 @@ export async function ensureScriptureTranslationReadyWithFallback(
 }
 
 /** 仅预热主译本（~5MB），避免首次进读经时复制全部 3 个内置 sqlite（~15MB）。 */
+const preloadTranslationPromises = new Map<string, Promise<void>>();
+
 export async function preloadPrimaryScriptureTranslation(translationId: string): Promise<void> {
   const id = String(translationId || "").trim();
   if (!isBundledScriptureTranslation(id)) return;
-  await getScriptureDatabase(id).catch(() => undefined);
+  const pending = preloadTranslationPromises.get(id);
+  if (pending) return pending;
+  const work = getScriptureDatabase(id)
+    .catch(() => undefined)
+    .then(() => undefined);
+  preloadTranslationPromises.set(id, work);
+  try {
+    await work;
+  } finally {
+    preloadTranslationPromises.delete(id);
+  }
 }
 
 export async function preloadBundledScriptureTranslations(): Promise<void> {

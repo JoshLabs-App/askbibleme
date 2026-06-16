@@ -1,7 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import type { ComponentProps } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  InteractionManager,
   Modal,
   Pressable,
   StyleSheet,
@@ -18,7 +19,7 @@ import {
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t, toZhTwText } from "../i18n/site-copy";
-import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import { getMusicPlaybackControlSnapshot } from "../music/MusicPlaybackContext";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
@@ -144,7 +145,8 @@ function translationOptionLabel(
   tr: { labelZh: string; labelEn: string },
   locale: string,
 ): string {
-  return locale === "en" ? tr.labelEn : tr.labelZh;
+  if (locale === "en") return tr.labelEn;
+  return locale === "zh-TW" ? toZhTwText(tr.labelZh) : tr.labelZh;
 }
 
 function rankTranslationForPicker(id: string): number {
@@ -156,12 +158,140 @@ function sortPickerTranslations<T extends { id: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => rankTranslationForPicker(a.id) - rankTranslationForPicker(b.id));
 }
 
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: c.modalBackdrop,
+    alignItems: "flex-end",
+    justifyContent: "flex-start",
+  },
+  sheet: {
+    width: "90%",
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surfaceSolid,
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 16,
+    gap: 8,
+    shadowColor: "#2a1810",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  rowIcon: {
+    width: 22,
+    paddingTop: 8,
+    alignItems: "center",
+  },
+  rowBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  translationRow: {
+    flexDirection: "column",
+    gap: 8,
+    width: "100%",
+  },
+  translationSelect: {
+    width: "100%",
+  },
+  audioPlaybackRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  audioPlaybackSelect: {
+    flex: 1,
+  },
+  audioDownloadIconBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  audioDownloadIconBtnPressed: {
+    backgroundColor: c.hover,
+  },
+  sizeActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  sizeActionsTrailing: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
+  },
+  sizeSection: {
+    gap: 8,
+  },
+  segmentModeText: {
+    fontSize: 12,
+    color: c.muted,
+    ...parchmentSans(700),
+  },
+  segmentModeTextActive: {
+    color: c.parchmentAccent,
+  },
+  sizeActionBtn: {
+    width: 36,
+    height: 34,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sizeActionBtnPressed: {
+    backgroundColor: c.hover,
+  },
+  sizeActionBtnDisabled: {
+    opacity: 0.48,
+  },
+  sizeActionBtnActive: {
+    backgroundColor: c.parchmentAccentGlow,
+    borderColor: c.parchmentAccent,
+  },
+  sizeActionText: {
+    fontSize: 13,
+    color: c.ink,
+    ...parchmentSans(600),
+  },
+  sizeActionTextPreset: {
+    fontSize: 14,
+    letterSpacing: 0.3,
+    color: c.ink,
+    ...parchmentSans(700),
+  },
+  sizeActionTextDisabled: {
+    color: c.muted,
+  },
+});
+
 function ParchmentSettingRow({
   icon,
   children,
 }: {
   icon: MaterialIconName;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <View style={styles.row}>
@@ -182,7 +312,6 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     setAudioVoiceId: persistAudioVoiceId,
     translationCatalog,
     translationCatalogReady,
-    refreshTranslationCatalog,
     primaryTranslationId,
     contrastTranslationIds,
     audioTranslationId,
@@ -201,6 +330,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     setPrimaryTranslationId,
     setContrastTranslationIds,
     setAudioTranslationId,
+    refreshTranslationCatalog,
   } = useReadBibleTypography();
   const setChapterSegmentModeSafe = useCallback(
     (mode: "default" | "t1") => {
@@ -211,13 +341,19 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     [setChapterSegmentModeMaybe],
   );
 
-  const { playing, togglePlayScripture, playbackMode } = useMusicPlayback();
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const openMenuRef = useRef<OpenMenu>(null);
+  const openMenuOptionsSnapshotRef = useRef<Partial<Record<Exclude<OpenMenu, null>, ReadSettingsSelectOption[]>>>(
+    {},
+  );
   const [downloadState, setDownloadState] = useState(() => readAudioPackageDownloadState());
   const [translationDownloadState, setTranslationDownloadState] = useState(() =>
     readScriptureTranslationDownloadState(),
   );
   const [installStates, setInstallStates] = useState<Record<string, ScriptureTranslationInstallStatus>>({});
+  const installStatesRef = useRef(installStates);
+  openMenuRef.current = openMenu;
+  installStatesRef.current = installStates;
   const [contrastDraftIds, setContrastDraftIds] = useState<string[]>(contrastTranslationIds);
   const localeZhText = useCallback(
     (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text),
@@ -229,18 +365,36 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   }, [visible]);
 
   useEffect(() => {
+    if (openMenu === null) {
+      openMenuOptionsSnapshotRef.current = {};
+    }
+  }, [openMenu]);
+
+  useEffect(() => {
+    openMenuOptionsSnapshotRef.current = {};
+  }, [translationCatalog.length]);
+
+  useEffect(() => {
     setContrastDraftIds(contrastTranslationIds);
   }, [contrastTranslationIds]);
 
   useEffect(() => {
-    void ensureAudioPackageDownloadHydrated();
-    return subscribeAudioPackageDownload(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      void ensureAudioPackageDownloadHydrated();
+    });
+    const unsub = subscribeAudioPackageDownload(() => {
+      if (openMenuRef.current) return;
       setDownloadState(readAudioPackageDownloadState());
     });
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, []);
 
   useEffect(() => {
     return subscribeScriptureTranslationDownload(() => {
+      if (openMenuRef.current) return;
       setTranslationDownloadState(readScriptureTranslationDownloadState());
     });
   }, []);
@@ -254,10 +408,19 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   );
 
   const refreshInstallStates = useCallback(async () => {
-    if (translationCatalog.length === 0) return;
+    if (translationCatalog.length === 0 || openMenuRef.current) return;
     const states = await listScriptureTranslationInstallStates(translationCatalogIndex);
+    if (openMenuRef.current) return;
     setInstallStates(states);
   }, [translationCatalog.length, translationCatalogIndex]);
+
+  useEffect(() => {
+    if (!visible || openMenu || !translationCatalogReady || translationCatalog.length === 0) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void refreshInstallStates();
+    });
+    return () => task.cancel();
+  }, [visible, openMenu, translationCatalogReady, translationCatalog.length, refreshInstallStates]);
 
   useEffect(() => {
     if (!visible) return;
@@ -265,14 +428,12 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   }, [visible, refreshTranslationCatalog]);
 
   useEffect(() => {
-    if (!visible || !translationCatalogReady || translationCatalog.length === 0) return;
-    void refreshInstallStates();
-  }, [visible, translationCatalogReady, translationCatalog, refreshInstallStates]);
-
-  useEffect(() => {
-    if (!visible || translationDownloadState.status !== "done") return;
-    void refreshInstallStates();
-  }, [visible, translationDownloadState.status, refreshInstallStates]);
+    if (!visible || openMenu || translationDownloadState.status !== "done") return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void refreshInstallStates();
+    });
+    return () => task.cancel();
+  }, [visible, openMenu, translationDownloadState.status, refreshInstallStates]);
 
   const optionDownloadState = useCallback(
     (translationId: string): ReadSettingsSelectOption["downloadState"] => {
@@ -299,10 +460,10 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
           : "";
       }
       if (state === "missing") {
-        return locale === "en" ? " · download" : " · 需下载";
+        return locale === "en" ? " · download" : ` · ${localeZhText("需下载")}`;
       }
       if (state === "outdated") {
-        return locale === "en" ? " · update" : " · 可更新";
+        return locale === "en" ? " · update" : ` · ${localeZhText("可更新")}`;
       }
       return "";
     },
@@ -313,7 +474,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     async (translationId: string) => {
       const meta = translationMetaFromCatalog(translationCatalogIndex, translationId);
       if (!meta) return;
-      const status = installStates[translationId];
+      const status = installStatesRef.current[translationId];
       try {
         await downloadScriptureTranslation(translationId, meta.downloadUrl, {
           force: status === "outdated",
@@ -323,7 +484,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
         /* surfaced via translationDownloadState */
       }
     },
-    [installStates, refreshInstallStates, translationCatalogIndex],
+    [refreshInstallStates, translationCatalogIndex],
   );
 
   const ensureTranslationDownloaded = useCallback(
@@ -363,7 +524,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
         };
       }),
     );
-    if (contrastDraftIds.length === 0) return all;
+    if (contrastDraftIds.length === 0 || openMenu === "contrast") return all;
     const selectedSet = new Set(contrastDraftIds);
     const picked = all.filter((opt) => selectedSet.has(opt.id));
     const rest = all.filter((opt) => !selectedSet.has(opt.id));
@@ -373,6 +534,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     primaryTranslationId,
     locale,
     contrastDraftIds,
+    openMenu,
     optionDownloadState,
     translationStatusSuffix,
   ]);
@@ -388,6 +550,31 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   const chapterAudioPlaybackValue = useMemo(
     () => (translationUsesWebChapterAudio(chapterAudioTranslationId) ? chapterAudioTranslationId : audioVoiceId),
     [chapterAudioTranslationId, audioVoiceId],
+  );
+
+  const freezeSelectOptions = useCallback(
+    (menu: Exclude<OpenMenu, null>, live: ReadSettingsSelectOption[]) => {
+      if (openMenu !== menu) return live;
+      // 目录仍只有内置 3 译本时不冻结，避免 Android 上后台拉取完成后列表不刷新。
+      if (live.length <= 3) return live;
+      const snap = openMenuOptionsSnapshotRef.current;
+      if (!snap[menu]) snap[menu] = live;
+      return snap[menu]!;
+    },
+    [openMenu],
+  );
+
+  const primarySelectOptions = useMemo(
+    () => freezeSelectOptions("primary", primaryOptions),
+    [freezeSelectOptions, primaryOptions],
+  );
+  const contrastSelectOptions = useMemo(
+    () => freezeSelectOptions("contrast", contrastOptions),
+    [freezeSelectOptions, contrastOptions],
+  );
+  const playbackSelectOptions = useMemo(
+    () => freezeSelectOptions("playback", chapterAudioPlaybackOptions),
+    [freezeSelectOptions, chapterAudioPlaybackOptions],
   );
 
   const primaryDisplay =
@@ -453,10 +640,11 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
   );
 
   const restartScriptureIfPlaying = useCallback(async () => {
+    const { playing, playbackMode, togglePlayScripture } = getMusicPlaybackControlSnapshot();
     if (playing && playbackMode === "scripture") {
       await togglePlayScripture();
     }
-  }, [playing, playbackMode, togglePlayScripture]);
+  }, []);
 
   const onPrimarySelect = useCallback(
     (id: string) => {
@@ -506,6 +694,24 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     },
     [setContrastTranslationIds, ensureTranslationDownloaded],
   );
+
+  const onPrimaryOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && translationCatalog.length <= 3) void refreshTranslationCatalog();
+      setOpenMenu(open ? "primary" : null);
+    },
+    [translationCatalog.length, refreshTranslationCatalog],
+  );
+  const onContrastOpenChange = useCallback(
+    (open: boolean) => {
+      if (open && translationCatalog.length <= 3) void refreshTranslationCatalog();
+      setOpenMenu(open ? "contrast" : null);
+    },
+    [translationCatalog.length, refreshTranslationCatalog],
+  );
+  const onPlaybackOpenChange = useCallback((open: boolean) => {
+    setOpenMenu(open ? "playback" : null);
+  }, []);
 
   const onChapterAudioPlaybackSelect = useCallback(
     (optionId: string) => {
@@ -634,24 +840,24 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
                 style={styles.translationSelect}
                 accessibilityLabel={`${t("pages.read.typography.primaryTranslation")} ${primaryDisplay}`}
                 value={primaryTranslationId}
-                options={primaryOptions}
+                options={primarySelectOptions}
                 open={openMenu === "primary"}
-                onOpenChange={(open) => setOpenMenu(open ? "primary" : null)}
+                onOpenChange={onPrimaryOpenChange}
                 onSelect={onPrimarySelect}
                 onDownloadOption={onDownloadTranslation}
-                disabled={!translationCatalogReady || primaryOptions.length === 0}
+                disabled={!translationCatalogReady || primarySelectOptions.length === 0}
               />
               <ReadSettingsSelect
                 style={styles.translationSelect}
                 accessibilityLabel={`${t("pages.read.typography.contrastTranslation")} ${contrastDisplay}`}
                 values={contrastDraftIds}
                 emptyDisplay={t("pages.read.typography.contrastNone")}
-                options={contrastOptions}
+                options={contrastSelectOptions}
                 open={openMenu === "contrast"}
-                onOpenChange={(open) => setOpenMenu(open ? "contrast" : null)}
+                onOpenChange={onContrastOpenChange}
                 onToggleSelect={onContrastToggleSelect}
                 onDownloadOption={onDownloadTranslation}
-                disabled={!translationCatalogReady || contrastOptions.length === 0}
+                disabled={!translationCatalogReady || contrastSelectOptions.length === 0}
               />
             </View>
           </ParchmentSettingRow>
@@ -667,9 +873,9 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
                       ? chapterAudioPlaybackValue
                       : chapterAudioPlaybackOptions[0]!.id
                   }
-                  options={chapterAudioPlaybackOptions}
+                  options={playbackSelectOptions}
                   open={openMenu === "playback"}
-                  onOpenChange={(open) => setOpenMenu(open ? "playback" : null)}
+                  onOpenChange={onPlaybackOpenChange}
                   onSelect={onChapterAudioPlaybackSelect}
                   disabled={!translationCatalogReady}
                 />
@@ -691,6 +897,31 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
           <ParchmentSettingRow icon="format-size">
             <View style={styles.sizeSection}>
               <View style={styles.sizeActions}>
+                <Pressable
+                  onPress={onToggleChapterSegmentMode}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: chapterSegmentMode === "t1" }}
+                  accessibilityLabel={
+                    locale === "en"
+                      ? "Toggle section titles (T1)"
+                      : localeZhText("切换分段标题（T1）")
+                  }
+                  style={({ pressed }) => [
+                    styles.sizeActionBtn,
+                    chapterSegmentMode === "t1" && styles.sizeActionBtnActive,
+                    pressed && styles.sizeActionBtnPressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentModeText,
+                      chapterSegmentMode === "t1" && styles.segmentModeTextActive,
+                    ]}
+                  >
+                    T1
+                  </Text>
+                </Pressable>
+                <View style={styles.sizeActionsTrailing}>
                 <Pressable
                   onPress={() => setVerseParagraphFlow(!verseParagraphFlow)}
                   accessibilityRole="switch"
@@ -774,33 +1005,7 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
                 >
                   <Text style={[styles.sizeActionText, sizeAtMin && styles.sizeActionTextDisabled]}>T-</Text>
                 </Pressable>
-              </View>
-
-              <View style={styles.segmentModeRow}>
-                <Pressable
-                  onPress={onToggleChapterSegmentMode}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: chapterSegmentMode === "t1" }}
-                  accessibilityLabel={
-                    locale === "en"
-                      ? "Toggle section titles (T1)"
-                      : localeZhText("切换分段标题（T1）")
-                  }
-                  style={({ pressed }) => [
-                    styles.sizeActionBtn,
-                    chapterSegmentMode === "t1" && styles.sizeActionBtnActive,
-                    pressed && styles.sizeActionBtnPressed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentModeText,
-                      chapterSegmentMode === "t1" && styles.segmentModeTextActive,
-                    ]}
-                  >
-                    T1
-                  </Text>
-                </Pressable>
+                </View>
               </View>
             </View>
           </ParchmentSettingRow>
@@ -810,130 +1015,3 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: c.modalBackdrop,
-    alignItems: "flex-end",
-    justifyContent: "flex-start",
-  },
-  sheet: {
-    width: 272,
-    maxWidth: "88%",
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surfaceSolid,
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    paddingBottom: 16,
-    gap: 8,
-    shadowColor: "#2a1810",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  rowIcon: {
-    width: 22,
-    paddingTop: 8,
-    alignItems: "center",
-  },
-  rowBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  translationRow: {
-    flexDirection: "column",
-    gap: 8,
-    width: "100%",
-  },
-  translationSelect: {
-    width: "100%",
-  },
-  audioPlaybackRow: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  audioPlaybackSelect: {
-    flex: 1,
-  },
-  audioDownloadIconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  audioDownloadIconBtnPressed: {
-    backgroundColor: c.hover,
-  },
-  sizeActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 8,
-  },
-  sizeSection: {
-    gap: 8,
-  },
-  segmentModeRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  segmentModeText: {
-    fontSize: 12,
-    color: c.muted,
-    ...parchmentSans(700),
-  },
-  segmentModeTextActive: {
-    color: c.parchmentAccent,
-  },
-  sizeActionBtn: {
-    width: 36,
-    height: 34,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sizeActionBtnPressed: {
-    backgroundColor: c.hover,
-  },
-  sizeActionBtnDisabled: {
-    opacity: 0.48,
-  },
-  sizeActionBtnActive: {
-    backgroundColor: c.parchmentAccentGlow,
-    borderColor: c.parchmentAccent,
-  },
-  sizeActionText: {
-    fontSize: 13,
-    color: c.ink,
-    ...parchmentSans(600),
-  },
-  sizeActionTextPreset: {
-    fontSize: 14,
-    letterSpacing: 0.3,
-    color: c.ink,
-    ...parchmentSans(700),
-  },
-  sizeActionTextDisabled: {
-    color: c.muted,
-  },
-});

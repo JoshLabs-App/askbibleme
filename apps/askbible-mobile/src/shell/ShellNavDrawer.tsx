@@ -9,6 +9,7 @@ import {
   Dimensions,
   Easing,
   ImageBackground,
+  InteractionManager,
   Linking,
   Modal,
   Pressable,
@@ -22,9 +23,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { type AppLocale } from "../i18n/config";
 import { getLocalePickerLabel } from "../i18n/locale-display-labels";
 import { useLocale } from "../i18n/LocaleProvider";
-import { resolveLocalizedField } from "../i18n/site-copy";
+import { resolveLocalizedField, resolveUiText, t } from "../i18n/site-copy";
 import {
   HOME_VERSE_POOL_SCOPE_OPTIONS,
+  resolveHomeVersePoolScopeLabel,
   type HomeVersePoolScopeId,
 } from "../explore/explore-home-verse-pool-scopes";
 import {
@@ -44,6 +46,11 @@ import {
   writeNatureHomeTtsPrefs,
   type NatureHomeTtsLevel,
 } from "../home/natureHomePrefs";
+import {
+  filterTtsVoicesForLocale,
+  inferTtsVoiceGender,
+  sanitizeTtsVoiceId,
+} from "../home/natureHomeTtsVoices";
 import {
   checkMobileResourceUpdates,
   readMobileResourceUpdateState,
@@ -92,9 +99,10 @@ type MenuRowProps = {
   onPress: () => void;
   detail?: string;
   selected?: boolean;
+  destructive?: boolean;
 };
 
-function MenuRow({ label, onPress, detail, selected }: MenuRowProps) {
+function MenuRow({ label, onPress, detail, selected, destructive }: MenuRowProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -106,8 +114,12 @@ function MenuRow({ label, onPress, detail, selected }: MenuRowProps) {
       accessibilityRole="button"
       accessibilityState={{ selected: Boolean(selected) }}
     >
-      <Text style={styles.rowText}>{label}</Text>
-      {detail ? <Text style={[styles.rowDetail, selected && styles.rowDetailSelected]}>{detail}</Text> : null}
+      <Text style={[styles.rowText, destructive && styles.rowTextDestructive]}>{label}</Text>
+      {detail ? (
+        <Text style={[styles.rowDetail, selected && styles.rowDetailSelected, destructive && styles.rowDetailDestructive]}>
+          {detail}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -115,7 +127,6 @@ function MenuRow({ label, onPress, detail, selected }: MenuRowProps) {
 type LocaleInlineRowProps = {
   locale: AppLocale;
   onLocaleChange: (next: AppLocale) => void;
-  zh: boolean;
   switching: boolean;
 };
 
@@ -127,25 +138,6 @@ function compactVoiceName(voice: DeviceVoice): string {
   const normalized = raw.replace(/\s+/g, " ");
   const firstWord = normalized.split(" ")[0]?.trim() || normalized;
   return firstWord.length > 10 ? firstWord.slice(0, 10) : firstWord;
-}
-
-function inferVoiceGender(voice: DeviceVoice): "female" | "male" | "unknown" {
-  const text = `${voice.name || ""} ${voice.identifier || ""}`.toLowerCase();
-  if (
-    /\bfemale\b|\bwoman\b|girl|tingting|meijia|samantha|victoria|karen|siri_female|xiaoyi/.test(
-      text,
-    )
-  ) {
-    return "female";
-  }
-  if (
-    /\bmale\b|\bman\b|boy|alex|daniel|tom|fred|siri_male|yunxi|yunjian|tian-tian/.test(
-      text,
-    )
-  ) {
-    return "male";
-  }
-  return "unknown";
 }
 
 function TtsLevelStepPicker({
@@ -179,10 +171,10 @@ function TtsLevelStepPicker({
   );
 }
 
-function LocaleInlineRow({ locale, onLocaleChange, zh, switching }: LocaleInlineRowProps) {
+function LocaleInlineRow({ locale, onLocaleChange, switching }: LocaleInlineRowProps) {
   return (
     <View style={[styles.row, styles.rowInline]}>
-      <Text style={styles.rowText}>{zh ? "语言" : "Language"}</Text>
+      <Text style={styles.rowText}>{t("nav.language")}</Text>
       <View style={styles.localeInlineGroup}>
         {(["en", "zh-TW", "zh-CN"] as const).map((item) => (
           <Pressable
@@ -216,7 +208,7 @@ export function ShellNavDrawer() {
     getMemberRegisterEnabled,
     getMemberRegisterEnabled,
   );
-  const { user, signOut } = useMemberAuth();
+  const { user, signOut, deleteAccount } = useMemberAuth();
 
   const panelW = drawerWidth();
   const slideX = useRef(new Animated.Value(-panelW)).current;
@@ -251,8 +243,11 @@ export function ShellNavDrawer() {
   } = useMusicPlayback();
 
   useEffect(() => {
-    void hydrateHomeTtsExperiment();
-    void hydrateHomeVersePoolScope();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void hydrateHomeTtsExperiment();
+      void hydrateHomeVersePoolScope();
+    });
+    return () => task.cancel();
   }, []);
 
   useEffect(() => {
@@ -262,17 +257,20 @@ export function ShellNavDrawer() {
       const prefs = await readNatureHomeTtsPrefs();
       const voicesRaw = (await Speech.getAvailableVoicesAsync().catch(() => [])) as DeviceVoice[];
       if (!alive) return;
+      const langPrefix = locale === "en" ? "en" : "zh";
+      const filteredVoices = filterTtsVoicesForLocale(voicesRaw, langPrefix);
+      const safeVoiceId = sanitizeTtsVoiceId(filteredVoices, prefs.voiceId, langPrefix);
+      setTtsVoices(filteredVoices);
       setTtsRateLevel(prefs.rateLevel);
       setTtsPitchLevel(prefs.pitchLevel);
-      setTtsVoiceId(prefs.voiceId);
-      const langPrefix = locale === "en" ? "en" : "zh";
-      const validVoices = voicesRaw.filter((voice) => typeof voice.identifier === "string" && voice.identifier.trim());
-      const preferredVoices = validVoices.filter((voice) =>
-        String(voice.language || "")
-          .toLowerCase()
-          .startsWith(langPrefix),
-      );
-      setTtsVoices(preferredVoices.length > 0 ? preferredVoices : validVoices);
+      setTtsVoiceId(safeVoiceId);
+      if (safeVoiceId !== prefs.voiceId) {
+        void writeNatureHomeTtsPrefs({
+          rateLevel: prefs.rateLevel,
+          pitchLevel: prefs.pitchLevel,
+          voiceId: safeVoiceId,
+        });
+      }
     })();
     return () => {
       alive = false;
@@ -347,38 +345,66 @@ export function ShellNavDrawer() {
 
   useEffect(() => {
     if (!open) return;
-    void checkResourceUpdates();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void checkResourceUpdates();
+    });
+    return () => task.cancel();
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     let alive = true;
-    void (async () => {
-      try {
-        const manifest = await fetchMobileContentManifest();
-        if (!alive) return;
-        const announcement = manifest.announcement ?? null;
-        if (!announcement) {
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        try {
+          const manifest = await fetchMobileContentManifest();
+          if (!alive) return;
+          const announcement = manifest.announcement ?? null;
+          if (!announcement) {
+            setResourceAnnouncement(null);
+            setResourceAnnouncementActive(false);
+            return;
+          }
+          const active = await shouldShowUpdateAnnouncement(announcement.announcementId);
+          if (!alive) return;
+          setResourceAnnouncement(announcement);
+          setResourceAnnouncementActive(active);
+        } catch {
+          if (!alive) return;
           setResourceAnnouncement(null);
           setResourceAnnouncementActive(false);
-          return;
         }
-        const active = await shouldShowUpdateAnnouncement(announcement.announcementId);
-        if (!alive) return;
-        setResourceAnnouncement(announcement);
-        setResourceAnnouncementActive(active);
-      } catch {
-        if (!alive) return;
-        setResourceAnnouncement(null);
-        setResourceAnnouncementActive(false);
-      }
-    })();
+      })();
+    });
     return () => {
       alive = false;
+      task.cancel();
     };
   }, [open]);
 
-  const zh = locale !== "en";
+  const confirmDeleteAccount = useCallback(() => {
+    closeMenu();
+    Alert.alert(t("auth.deleteAccountTitle"), t("auth.deleteAccountMessage"), [
+      { text: t("auth.deleteAccountCancel"), style: "cancel" },
+      {
+        text: t("auth.deleteAccountConfirm"),
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            const result = await deleteAccount();
+            if (result.ok) return;
+            const message =
+              result.code === "admin_account"
+                ? t("auth.deleteAccountAdminBlocked")
+                : result.code === "network"
+                  ? t("auth.errorNetwork")
+                  : t("auth.deleteAccountFailedMessage");
+            Alert.alert(t("auth.deleteAccountFailedTitle"), message);
+          })();
+        },
+      },
+    ]);
+  }, [closeMenu, deleteAccount, t]);
 
   const persistTtsPrefs = (next: { rateLevel: NatureHomeTtsLevel; pitchLevel: NatureHomeTtsLevel; voiceId: string }) => {
     setTtsRateLevel(next.rateLevel);
@@ -387,20 +413,23 @@ export function ShellNavDrawer() {
     void writeNatureHomeTtsPrefs(next);
   };
 
-  const rateLabels = zh
-    ? (["很慢", "偏慢", "标准", "偏快", "很快"] as const)
-    : (["Very slow", "Slow", "Normal", "Fast", "Very fast"] as const);
-  const pitchLabels = zh
-    ? (["很低", "偏低", "标准", "偏高", "很高"] as const)
-    : (["Very low", "Low", "Normal", "High", "Very high"] as const);
+  const rateLabels = (
+    locale === "en"
+      ? (["Very slow", "Slow", "Normal", "Fast", "Very fast"] as const)
+      : (["很慢", "偏慢", "标准", "偏快", "很快"] as const).map((label) => resolveUiText(locale, label, label))
+  ) as readonly string[];
+  const pitchLabels = (
+    locale === "en"
+      ? (["Very low", "Low", "Normal", "High", "Very high"] as const)
+      : (["很低", "偏低", "标准", "偏高", "很高"] as const).map((label) => resolveUiText(locale, label, label))
+  ) as readonly string[];
   const rateLabel = rateLabels[ttsRateLevel] ?? rateLabels[2];
   const pitchLabel = pitchLabels[ttsPitchLevel] ?? pitchLabels[2];
   const voiceOptions = [
-    { id: "", label: zh ? "系统默认" : "System default", gender: "unknown" as const },
     ...ttsVoices.map((voice) => ({
       id: voice.identifier,
       label: compactVoiceName(voice),
-      gender: inferVoiceGender(voice),
+      gender: inferTtsVoiceGender(voice),
     })),
   ];
   const currentPool =
@@ -409,28 +438,16 @@ export function ShellNavDrawer() {
   const resourceUpdateApplying = resourceUpdateProgress.phase === "downloading";
   const resourceNeedsAttention = resourceUpdateAvailable || resourceAnnouncementActive;
   const resourceUpdateDetail = resourceUpdateApplying
-    ? zh
-      ? `下载中 ${resourceUpdateProgress.overallPercent}%`
-      : `Downloading ${resourceUpdateProgress.overallPercent}%`
+    ? resolveUiText(locale, `下载中 ${resourceUpdateProgress.overallPercent}%`, `Downloading ${resourceUpdateProgress.overallPercent}%`)
     : resourceUpdateChecking
-      ? zh
-        ? "检查中…"
-        : "Checking..."
+      ? resolveUiText(locale, "检查中…", "Checking...")
       : resourceUpdateAvailable && resourceAnnouncementActive
-        ? zh
-          ? "发现新资源与通知"
-          : "New resources and notice"
+        ? resolveUiText(locale, "发现新资源与通知", "New resources and notice")
         : resourceUpdateAvailable
-          ? zh
-            ? `${resourceUpdateItems.length} 项可更新`
-            : `${resourceUpdateItems.length} updates`
+          ? resolveUiText(locale, `${resourceUpdateItems.length} 项可更新`, `${resourceUpdateItems.length} updates`)
           : resourceAnnouncementActive
-            ? zh
-              ? "有新通知"
-              : "New notice"
-            : zh
-              ? "已是最新"
-              : "Up to date";
+            ? resolveUiText(locale, "有新通知", "New notice")
+            : resolveUiText(locale, "已是最新", "Up to date");
 
   const showAnnouncementPrompt = () => {
     const announcement = resourceAnnouncement;
@@ -442,7 +459,7 @@ export function ShellNavDrawer() {
     const snoozeHours = announcement.snoozeHours ?? (announcement.level === "critical" ? 12 : 24);
     const buttons: { text: string; style?: "cancel" | "default" | "destructive"; onPress?: () => void }[] = [
       {
-        text: zh ? "稍后提醒" : "Remind later",
+        text: resolveUiText(locale, "稍后提醒", "Remind later"),
         style: "cancel",
         onPress: () => {
           void snoozeUpdateAnnouncement(announcement.announcementId, snoozeHours);
@@ -452,7 +469,7 @@ export function ShellNavDrawer() {
     ];
     if (announcement.allowDismissForever !== false) {
       buttons.push({
-        text: zh ? "不再提示" : "Don't remind again",
+        text: resolveUiText(locale, "不再提示", "Don't remind again"),
         style: "destructive",
         onPress: () => {
           void dismissUpdateAnnouncementForever(announcement.announcementId);
@@ -462,7 +479,7 @@ export function ShellNavDrawer() {
     }
     if (announcement.actionUrl) {
       buttons.push({
-        text: actionLabel || (zh ? "查看详情" : "View details"),
+        text: actionLabel || resolveUiText(locale, "查看详情", "View details"),
         onPress: () => {
           void Linking.openURL(announcement.actionUrl as string).catch(() => undefined);
           void snoozeUpdateAnnouncement(announcement.announcementId, 6);
@@ -470,7 +487,11 @@ export function ShellNavDrawer() {
         },
       });
     }
-    Alert.alert(title, body || (zh ? "你可以稍后再处理此提醒。" : "You can handle this reminder later."), buttons);
+    Alert.alert(
+      title,
+      body || resolveUiText(locale, "你可以稍后再处理此提醒。", "You can handle this reminder later."),
+      buttons,
+    );
   };
 
   const handleLocaleChange = useCallback(
@@ -560,9 +581,11 @@ export function ShellNavDrawer() {
                 nestedScrollEnabled
                 showsVerticalScrollIndicator={false}
               >
-                <LocaleInlineRow locale={locale} onLocaleChange={handleLocaleChange} zh={zh} switching={localeSwitching} />
+                <LocaleInlineRow locale={locale} onLocaleChange={handleLocaleChange} switching={localeSwitching} />
                 <View style={styles.compactGap} />
-                <Text style={styles.sectionLabelCompact}>{zh ? "主页经文池" : "Home verse pool"}</Text>
+                <Text style={styles.sectionLabelCompact}>
+                  {resolveUiText(locale, "主页经文池", "Home verse pool")}
+                </Text>
                 <Pressable
                   style={({ pressed }) => [
                     styles.poolSelectTrigger,
@@ -570,10 +593,10 @@ export function ShellNavDrawer() {
                   ]}
                   onPress={() => setPoolPickerOpen((v) => !v)}
                 >
-                  <Text style={styles.poolSelectLabel}>{zh ? "当前选择" : "Current"}</Text>
+                  <Text style={styles.poolSelectLabel}>{resolveUiText(locale, "当前选择", "Current")}</Text>
                   <View style={styles.poolSelectValueWrap}>
                     <Text style={styles.poolSelectValue}>
-                      {zh ? currentPool.labelZh : currentPool.labelEn}
+                      {resolveHomeVersePoolScopeLabel(currentPool, locale)}
                     </Text>
                     <MaterialIcons
                       name={poolPickerOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"}
@@ -601,7 +624,7 @@ export function ShellNavDrawer() {
                               selected ? styles.poolSelectOptionTextActive : null,
                             ]}
                           >
-                            {zh ? scope.labelZh : scope.labelEn}
+                            {resolveHomeVersePoolScopeLabel(scope, locale)}
                           </Text>
                           {selected ? (
                             <MaterialIcons name="check" size={14} color="#A56A2D" />
@@ -612,7 +635,9 @@ export function ShellNavDrawer() {
                   </View>
                 ) : null}
                 <View style={styles.compactGap} />
-                <Text style={styles.sectionLabelCompact}>{zh ? "实验功能" : "Experimental features"}</Text>
+                <Text style={styles.sectionLabelCompact}>
+                  {resolveUiText(locale, "实验功能", "Experimental features")}
+                </Text>
                 <Pressable
                   style={({ pressed }) => [styles.ttsMasterRow, pressed ? styles.ttsMasterRowPressed : null]}
                   onPress={() => {
@@ -620,16 +645,18 @@ export function ShellNavDrawer() {
                   }}
                 >
                   <Text style={styles.ttsMasterLabel}>
-                    {zh ? "尝试TTS读经文（实验）" : "Try TTS verse reading (experimental)"}
+                    {resolveUiText(locale, "尝试TTS读经文（实验）", "Try TTS verse reading (experimental)")}
                   </Text>
                   <Text style={styles.ttsMasterDetail}>
-                    {homeTtsExperimentEnabled ? (zh ? "已开启" : "Enabled") : zh ? "已关闭" : "Disabled"}
+                    {homeTtsExperimentEnabled
+                      ? resolveUiText(locale, "已开启", "Enabled")
+                      : resolveUiText(locale, "已关闭", "Disabled")}
                   </Text>
                 </Pressable>
                 {homeTtsExperimentEnabled ? (
                   <View style={styles.ttsControlsWrap}>
                       <View style={styles.ttsSliderRow}>
-                        <Text style={styles.ttsSliderLabel}>{zh ? "语速" : "Speed"}</Text>
+                        <Text style={styles.ttsSliderLabel}>{resolveUiText(locale, "语速", "Speed")}</Text>
                         <Text style={styles.ttsSliderValue}>{rateLabel}</Text>
                       </View>
                       <TtsLevelStepPicker
@@ -645,7 +672,7 @@ export function ShellNavDrawer() {
                       />
 
                       <View style={styles.ttsSliderRow}>
-                        <Text style={styles.ttsSliderLabel}>{zh ? "音调" : "Pitch"}</Text>
+                        <Text style={styles.ttsSliderLabel}>{resolveUiText(locale, "音调", "Pitch")}</Text>
                         <Text style={styles.ttsSliderValue}>{pitchLabel}</Text>
                       </View>
                       <TtsLevelStepPicker
@@ -661,7 +688,7 @@ export function ShellNavDrawer() {
                       />
 
                       <View style={styles.ttsVoiceRow}>
-                        <Text style={styles.ttsSliderLabel}>{zh ? "声音" : "Voices"}</Text>
+                        <Text style={styles.ttsSliderLabel}>{resolveUiText(locale, "声音", "Voices")}</Text>
                         <ScrollView
                           horizontal
                           showsHorizontalScrollIndicator={false}
@@ -671,13 +698,7 @@ export function ShellNavDrawer() {
                           {voiceOptions.map((voice) => {
                             const selected = ttsVoiceId === voice.id;
                             const iconName =
-                              voice.id === ""
-                                ? "cog-outline"
-                                : voice.gender === "female"
-                                  ? "face-woman-profile"
-                                  : voice.gender === "male"
-                                    ? "face-man-profile"
-                                    : "account-circle";
+                              voice.gender === "male" ? "face-man-profile" : "account-circle";
                             return (
                               <Pressable
                                 key={voice.id || "__default_voice__"}
@@ -707,7 +728,7 @@ export function ShellNavDrawer() {
                 ) : null}
                 <View style={styles.compactGap} />
                 <MenuRow
-                  label={zh ? "资源更新" : "Resource updates"}
+                  label={resolveUiText(locale, "资源更新", "Resource updates")}
                   detail={resourceUpdateDetail}
                   selected={resourceNeedsAttention}
                   onPress={async () => {
@@ -721,8 +742,8 @@ export function ShellNavDrawer() {
                         return;
                       }
                       Alert.alert(
-                        zh ? "已是最新" : "Up to date",
-                        zh ? "当前本地资源已是最新。" : "Your local resources are already up to date.",
+                        resolveUiText(locale, "已是最新", "Up to date"),
+                        resolveUiText(locale, "当前本地资源已是最新。", "Your local resources are already up to date."),
                       );
                       return;
                     }
@@ -731,7 +752,6 @@ export function ShellNavDrawer() {
                 />
                 <ResourceUpdateSheet
                   visible={resourceUpdateSheetOpen}
-                  zh={zh}
                   locale={locale}
                   items={resourceUpdateItems}
                   downloadMusicUpdate={downloadMusicCatalogUpdate}
@@ -749,7 +769,7 @@ export function ShellNavDrawer() {
                 />
                 <View style={styles.compactGap} />
                 <MenuRow
-                  label={zh ? "欢迎页" : "Welcome page"}
+                  label={resolveUiText(locale, "欢迎页", "Welcome page")}
                   onPress={async () => {
                     closeMenu();
                     await resetOnboardingDevotionIntro();
@@ -773,6 +793,12 @@ export function ShellNavDrawer() {
                             closeMenu();
                             void signOut();
                           }}
+                        />
+                        <View style={styles.compactGap} />
+                        <MenuRow
+                          label={t("auth.deleteAccount")}
+                          destructive
+                          onPress={confirmDeleteAccount}
                         />
                         <View style={styles.compactGap} />
                       </>
@@ -1150,6 +1176,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#37352f",
   },
+  rowTextDestructive: {
+    color: "#B42318",
+  },
   rowDetail: {
     marginTop: 2,
     fontSize: 12,
@@ -1159,6 +1188,9 @@ const styles = StyleSheet.create({
   rowDetailSelected: {
     color: "rgba(120, 95, 60, 0.85)",
     ...parchmentSans(500),
+  },
+  rowDetailDestructive: {
+    color: "rgba(180, 35, 24, 0.72)",
   },
   versionFooter: {
     marginTop: 8,

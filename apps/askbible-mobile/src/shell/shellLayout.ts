@@ -41,6 +41,7 @@ export function shellFullBleedBackdropStyle(frame: {
 
 /** 隐藏系统 TabBar 占位，自定义 `ShellTabBar` 浮在场景之上 */
 export const SHELL_TABS_SCREEN_OPTIONS = {
+  lazy: true,
   headerShown: false,
   safeAreaInsets: { top: 0, bottom: 0, left: 0, right: 0 },
   tabBarStyle: {

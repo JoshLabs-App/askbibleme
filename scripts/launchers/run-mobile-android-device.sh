@@ -35,6 +35,11 @@ if [[ -z "$SERIAL" ]]; then
 fi
 echo "→ 已识别真机: $SERIAL"
 
+echo "→ adb reverse（USB 真机 API/Metro 走 127.0.0.1）"
+adb -s "$SERIAL" reverse --remove-all 2>/dev/null || true
+adb -s "$SERIAL" reverse tcp:8081 tcp:8081
+adb -s "$SERIAL" reverse tcp:3450 tcp:3450
+
 node scripts/free-port.mjs 3450
 node scripts/free-port.mjs 8081
 sleep 1
@@ -53,7 +58,7 @@ METRO_LOG="${TMPDIR:-/tmp}/askbible-metro-android-device.log"
 echo "→ [2/3] 后台启动 Metro（--lan）…  日志: tail -f $METRO_LOG"
 
 cd "$ROOT/apps/askbible-mobile"
-npx expo start --lan --clear >"$METRO_LOG" 2>&1 &
+npx expo start --localhost --clear >"$METRO_LOG" 2>&1 &
 METRO_PID=$!
 
 cleanup() {
@@ -100,9 +105,11 @@ else
 fi
 
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+# USB + adb reverse：Dev Client 必须连 127.0.0.1:8081（不是 Mac 局域网 IP，否则断 Wi‑Fi 即白屏）
+export REACT_NATIVE_PACKAGER_HOSTNAME="127.0.0.1"
 if [ -n "$LAN_IP" ]; then
-  echo "    真机访问: API http://${LAN_IP}:3450  Metro http://${LAN_IP}:8081"
-  export REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP"
+  echo "    USB Metro（adb reverse）: http://127.0.0.1:8081"
+  echo "    同网 Wi‑Fi 备用: http://${LAN_IP}:8081"
 fi
 
 echo ""
@@ -112,6 +119,14 @@ echo ""
 
 export ANDROID_SERIAL="$SERIAL"
 npx expo run:android --no-bundler
+
+BUNDLE_URL="http://127.0.0.1:8081/node_modules/expo-router/entry.bundle?platform=android&dev=true&minify=false"
+ENCODED_URL="$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$BUNDLE_URL")"
+echo "→ 用 USB 隧道 URL 启动 App（避免 Wi‑Fi/LAN 白屏）"
+adb -s "$SERIAL" shell am force-stop me.askbible >/dev/null 2>&1 || true
+sleep 0.5
+adb -s "$SERIAL" shell am start -a android.intent.action.VIEW \
+  -d "askbible://expo-development-client/?url=${ENCODED_URL}" me.askbible >/dev/null 2>&1 || true
 
 echo ""
 echo "✓ 使用完毕请在本窗口 Control+C 停止服务"

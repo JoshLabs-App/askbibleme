@@ -8,12 +8,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { InteractionManager } from "react-native";
 import {
   bundledBibleTranslationsCatalog,
-  fetchBibleTranslationsCatalog,
+  clearBibleTranslationsCatalogCache,
   fetchBibleTranslationsCatalogFresh,
 } from "../api/fetchBibleTranslationsCatalog";
-import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { preloadPrimaryScriptureTranslation } from "../bible/scripture-translation-download";
 import { inferAppLocaleFromDevice } from "../i18n/config";
 import {
@@ -148,6 +148,9 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
     [translationIndex],
   );
 
+  const syncHomeVersePrefsRef = useRef(syncHomeVersePrefsFromPrimary);
+  syncHomeVersePrefsRef.current = syncHomeVersePrefsFromPrimary;
+
   const refreshVoice = useCallback(() => {
     void readCuvChapterAudioVoice().then(setAudioVoiceIdState);
   }, []);
@@ -169,54 +172,86 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   }, [translationCatalogReady, translationIndex, syncHomeVersePrefsFromPrimary]);
 
   useEffect(() => {
-    void readReadBibleTypographyPrefs().then(setTypography);
-    refreshVoice();
-    return subscribeCuvChapterAudioVoice(refreshVoice);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readReadBibleTypographyPrefs().then(setTypography);
+      refreshVoice();
+    });
+    const unsub = subscribeCuvChapterAudioVoice(refreshVoice);
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, [refreshVoice]);
 
   useEffect(() => {
     let cancelled = false;
+    const offlineIndex = bundledBibleTranslationsCatalog();
+
+    setTranslationCatalog(offlineIndex.translations);
+    setDefaultTranslationId(offlineIndex.defaultTranslationId);
+    setTranslationCatalogReady(true);
+
     void (async () => {
-      await hydrateLocaleFromStorage();
-      const locale = getLocale();
-      const offlineIndex = bundledBibleTranslationsCatalog();
-      const earlyPrimary = resolveDefaultPrimaryTranslationId(offlineIndex, locale);
-      void preloadPrimaryScriptureTranslation(earlyPrimary);
-      const index = isMobileOfflineFirst()
-        ? bundledBibleTranslationsCatalog()
-        : await fetchBibleTranslationsCatalog();
-      if (cancelled) return;
-      setTranslationCatalog(index.translations);
-      setDefaultTranslationId(index.defaultTranslationId);
-      const hasStoredPrefs = await hasReadBibleTranslationPrefsStored();
-      let normalized: ReadBibleTranslationPrefsV1;
-      if (!hasStoredPrefs) {
-        const localeDefaultPrimary = resolveDefaultPrimaryTranslationId(index, locale);
-        normalized = await writeReadBibleTranslationPrefs(
-          {
-            version: 1,
-            primaryTranslationId: localeDefaultPrimary,
-            contrastTranslationIds: [],
-            audioTranslationId: null,
-          },
-          index,
-        );
-        await writeReadBibleTranslationPrefMode("auto");
-        await syncHomeVersePrefsFromPrimary(normalized.primaryTranslationId, { mode: "auto" });
-      } else {
-        const prefs = await readReadBibleTranslationPrefs(index, locale);
-        normalized = await writeReadBibleTranslationPrefs(prefs, index);
-        const mode = await readReadBibleTranslationPrefMode();
-        if (mode === "auto") {
-          await syncHomeVersePrefsFromPrimary(normalized.primaryTranslationId, { mode: "auto" });
-        }
-      }
-      if (!cancelled) {
-        setTranslation(normalized);
+      try {
+        await hydrateLocaleFromStorage();
+        if (cancelled) return;
+
+        const locale = getLocale();
+        const earlyPrimary = resolveDefaultPrimaryTranslationId(offlineIndex, locale);
+        void preloadPrimaryScriptureTranslation(earlyPrimary);
+
+        const applyCatalog = async (index: BibleTranslationsIndex) => {
+        if (cancelled) return;
+        setTranslationCatalog(index.translations);
+        setDefaultTranslationId(index.defaultTranslationId);
         setTranslationCatalogReady(true);
-        void preloadPrimaryScriptureTranslation(normalized.primaryTranslationId);
+
+        const hasStoredPrefs = await hasReadBibleTranslationPrefsStored();
+        let normalized: ReadBibleTranslationPrefsV1;
+        if (!hasStoredPrefs) {
+          const localeDefaultPrimary = resolveDefaultPrimaryTranslationId(index, locale);
+          normalized = await writeReadBibleTranslationPrefs(
+            {
+              version: 1,
+              primaryTranslationId: localeDefaultPrimary,
+              contrastTranslationIds: [],
+              audioTranslationId: null,
+            },
+            index,
+          );
+          await writeReadBibleTranslationPrefMode("auto");
+          await syncHomeVersePrefsRef.current(normalized.primaryTranslationId, { mode: "auto" });
+        } else {
+          const prefs = await readReadBibleTranslationPrefs(index, locale);
+          normalized = await writeReadBibleTranslationPrefs(prefs, index);
+          const mode = await readReadBibleTranslationPrefMode();
+          if (mode === "auto") {
+            await syncHomeVersePrefsRef.current(normalized.primaryTranslationId, { mode: "auto" });
+          }
+        }
+        if (!cancelled) {
+          setTranslation(normalized);
+          void preloadPrimaryScriptureTranslation(normalized.primaryTranslationId);
+        }
+      };
+
+      await applyCatalog(offlineIndex);
+
+      void (async () => {
+        try {
+          const index = await fetchBibleTranslationsCatalogFresh();
+          if (cancelled) return;
+          if (index.translations.length <= offlineIndex.translations.length) return;
+          await applyCatalog(index);
+        } catch {
+          /* 保留已就绪的内置目录 */
+        }
+      })();
+      } catch {
+        /* 内置目录已在上方同步就绪 */
       }
     })();
+
     return () => {
       cancelled = true;
     };
@@ -365,14 +400,30 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   );
 
   const refreshTranslationCatalog = useCallback(async () => {
+    await clearBibleTranslationsCatalogCache();
     const index = await fetchBibleTranslationsCatalogFresh();
+    if (index.translations.length <= bundledBibleTranslationsCatalog().translations.length) return;
     setTranslationCatalog(index.translations);
     setDefaultTranslationId(index.defaultTranslationId);
     setTranslationCatalogReady(true);
     const locale = getLocale();
     const prefs = await readReadBibleTranslationPrefs(index, locale);
     const normalized = await writeReadBibleTranslationPrefs(prefs, index);
-    setTranslation(normalized);
+    setTranslation((prev) => {
+      const sameContrast =
+        prev.contrastTranslationIds.length === normalized.contrastTranslationIds.length &&
+        prev.contrastTranslationIds.every(
+          (id, index) => id === normalized.contrastTranslationIds[index],
+        );
+      if (
+        prev.primaryTranslationId === normalized.primaryTranslationId &&
+        prev.audioTranslationId === normalized.audioTranslationId &&
+        sameContrast
+      ) {
+        return prev;
+      }
+      return normalized;
+    });
   }, []);
 
   const value = useMemo(

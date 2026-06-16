@@ -1,5 +1,5 @@
 /* App shell version — bumped on deploy to trigger update prompt */
-const APP_VERSION = '2026-06-10T01:32:25Z';
+const APP_VERSION = '2026-06-10T10:30:40Z';
 
 self.addEventListener('install', () => {
   // Wait for user confirmation before activating (see install.js)

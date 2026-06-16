@@ -1,0 +1,10 @@
+appId: me.askbible
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "User menu"
+    timeout: 45000
+- tapOn: "User menu"
+- tapOn: "繁體中文"
+- waitForAnimationToEnd

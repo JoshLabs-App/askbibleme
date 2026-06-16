@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { memo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
@@ -27,7 +28,111 @@ type Props = {
   style?: View["props"]["style"];
 };
 
-export function ReadSettingsSelect({
+const styles = StyleSheet.create({
+  block: {
+    minWidth: 0,
+    position: "relative",
+  },
+  blockOpen: {
+    zIndex: 30,
+  },
+  label: {
+    marginBottom: 4,
+    fontSize: 10,
+    ...parchmentSans(600),
+    letterSpacing: 0.5,
+    color: c.faint,
+  },
+  trigger: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+    minHeight: 34,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    backgroundColor: c.surface,
+  },
+  triggerDisabled: {
+    opacity: 0.5,
+  },
+  triggerPressed: {
+    backgroundColor: c.hover,
+  },
+  value: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    color: c.ink,
+    ...parchmentSans(500),
+  },
+  valueDisabled: {
+    color: c.muted,
+  },
+  menu: {
+    position: "absolute",
+    top: 37,
+    left: 0,
+    right: 0,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surfaceSolid,
+    overflow: "hidden",
+    maxHeight: 360,
+    zIndex: 20,
+    elevation: 6,
+  },
+  menuContent: {
+    paddingVertical: 2,
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingRight: 4,
+  },
+  optionMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    minWidth: 0,
+  },
+  optionActive: {
+    backgroundColor: c.hover,
+  },
+  optionPressed: {
+    backgroundColor: "rgba(69, 45, 28, 0.1)",
+  },
+  optionDownloadBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionDownloadBtnPressed: {
+    backgroundColor: "rgba(69, 45, 28, 0.08)",
+  },
+  optionText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: c.muted,
+    ...parchmentSans(400),
+  },
+  optionTextActive: {
+    color: c.ink,
+    ...parchmentSans(600),
+  },
+});
+
+function ReadSettingsSelectInner({
   label,
   accessibilityLabel,
   value,
@@ -157,106 +262,22 @@ export function ReadSettingsSelect({
   );
 }
 
-const styles = StyleSheet.create({
-  block: {
-    minWidth: 0,
-    position: "relative",
-  },
-  blockOpen: {
-    zIndex: 30,
-  },
-  label: {
-    marginBottom: 4,
-    fontSize: 10,
-    ...parchmentSans(600),
-    letterSpacing: 0.5,
-    color: c.faint,
-  },
-  trigger: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 6,
-    minHeight: 34,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    backgroundColor: c.surface,
-  },
-  triggerDisabled: {
-    opacity: 0.5,
-  },
-  triggerPressed: {
-    backgroundColor: c.hover,
-  },
-  value: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    color: c.ink,
-    ...parchmentSans(500),
-  },
-  valueDisabled: {
-    color: c.muted,
-  },
-  menu: {
-    position: "absolute",
-    top: 37,
-    left: 0,
-    right: 0,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surfaceSolid,
-    overflow: "hidden",
-    maxHeight: 360,
-    zIndex: 20,
-    elevation: 6,
-  },
-  menuContent: {
-    paddingVertical: 2,
-  },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingRight: 4,
-  },
-  optionMain: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    minWidth: 0,
-  },
-  optionActive: {
-    backgroundColor: c.hover,
-  },
-  optionPressed: {
-    backgroundColor: "rgba(69, 45, 28, 0.1)",
-  },
-  optionDownloadBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  optionDownloadBtnPressed: {
-    backgroundColor: "rgba(69, 45, 28, 0.08)",
-  },
-  optionText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: c.muted,
-    ...parchmentSans(400),
-  },
-  optionTextActive: {
-    color: c.ink,
-    ...parchmentSans(600),
-  },
-});
+function propsEqual(prev: Props, next: Props): boolean {
+  return (
+    prev.label === next.label &&
+    prev.accessibilityLabel === next.accessibilityLabel &&
+    prev.value === next.value &&
+    prev.values === next.values &&
+    prev.options === next.options &&
+    prev.open === next.open &&
+    prev.disabled === next.disabled &&
+    prev.emptyDisplay === next.emptyDisplay &&
+    prev.style === next.style &&
+    prev.onOpenChange === next.onOpenChange &&
+    prev.onSelect === next.onSelect &&
+    prev.onToggleSelect === next.onToggleSelect &&
+    prev.onDownloadOption === next.onDownloadOption
+  );
+}
+
+export const ReadSettingsSelect = memo(ReadSettingsSelectInner, propsEqual);

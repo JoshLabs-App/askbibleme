@@ -91,6 +91,14 @@ function writeRecord(record: TodayReadingChapterFractionRecord): void {
   }
 }
 
+export function readTodayReadingChapterFractionRecord(): TodayReadingChapterFractionRecord | null {
+  return readRecord();
+}
+
+export function replaceTodayReadingChapterFractionRecord(record: TodayReadingChapterFractionRecord): void {
+  writeRecord(record);
+}
+
 export function readTodayReadingChapterFractions(scopeKey: string): Record<string, number> {
   const record = readRecord();
   if (!record || record.scopeKey !== scopeKey) return {};

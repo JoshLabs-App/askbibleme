@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
+import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   loadOrGenerateInfoEdition,
@@ -16,6 +17,7 @@ import { ReadChapterInfoEditionMarkdown } from "./ReadChapterInfoEditionMarkdown
 import { postReadingTheme as pr } from "./postReadingTheme";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
+import { ContentCorrectionEntry } from "../content-correction/ContentCorrectionEntry";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 
 type Props = {
@@ -48,6 +50,7 @@ export function ReadChapterInfoEditionBlock({
   onBack,
 }: Props) {
   const t = useMemo(() => createT(displayLocale), [displayLocale]);
+  const screenFocused = useIsFocused();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const { px } = useReadBibleTypography();
   const textScale = Math.max(0.8, Math.min(2.8, px.verseFontSize / 16));
@@ -67,6 +70,7 @@ export function ReadChapterInfoEditionBlock({
     setPhase("loading");
     try {
       const result = await loadOrGenerateInfoEdition(bookId, chapter, variant, roleId);
+      if (!screenFocused) return;
       const ready = publishedFromPayload(result);
       if (ready) {
         setPublished(ready);
@@ -89,7 +93,7 @@ export function ReadChapterInfoEditionBlock({
       setErr(e instanceof Error ? e.message : String(e));
       setPhase("error");
     }
-  }, [bookId, chapter, variant, roleId]);
+  }, [bookId, chapter, roleId, screenFocused, t, variant]);
 
   useEffect(() => {
     loadStartedRef.current = false;
@@ -99,12 +103,21 @@ export function ReadChapterInfoEditionBlock({
   }, [bookId, chapter, variant, roleId]);
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive || !screenFocused) return;
     if (phase === "ready" || phase === "error") return;
     if (loadStartedRef.current) return;
     loadStartedRef.current = true;
-    void loadOrGenerate();
-  }, [isActive, loadOrGenerate, phase]);
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void loadOrGenerate().finally(() => {
+        if (cancelled) loadStartedRef.current = false;
+      });
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
+  }, [isActive, loadOrGenerate, phase, screenFocused]);
 
   if (!isActive) return null;
 
@@ -145,6 +158,17 @@ export function ReadChapterInfoEditionBlock({
           >
             {disclaimer}
           </Text>
+          <ContentCorrectionEntry
+            tone="edition"
+            context={{
+              scope: variant === "guide" ? "guide_edition" : "info_edition",
+              bookId,
+              chapter,
+              roleId: published?.roleId ?? roleId,
+              roleLabel: published?.roleLabel ?? null,
+              publishedAt: published?.publishedAt ?? null,
+            }}
+          />
         </View>
 
         {phase === "error" && err ? (

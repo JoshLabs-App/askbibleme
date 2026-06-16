@@ -20,6 +20,7 @@ export default async function ExplorePrayerPage() {
   const locale = resolveRequestLocale(cookieStore, headerList.get("accept-language"));
   const categories = PRAYER_SCRIPTURE_SCENARIOS.map((scenario) => ({
     title: scenario.title,
+    titleTw: scenario.titleTw,
     titleEn: scenario.titleEn,
     refs: scenario.refs,
   }));

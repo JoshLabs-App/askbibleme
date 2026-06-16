@@ -3,6 +3,7 @@ import { applyMemberRegisterEnabledFromServer } from "../auth/member-register-en
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 
 const STORAGE_KEY = "askbible.mobile.content-manifest.v1";
 const SCHEMA_VERSION = 1;
@@ -55,6 +56,9 @@ const bundledManifest: MobileContentManifest = {
     remoteContentManifestEnabled: false,
     exploreCategoriesRemoteEnabled: false,
   },
+  serverCapabilities: {
+    memberRegisterEnabled: true,
+  },
   items: [
     {
       id: "nature-settings",
@@ -85,6 +89,22 @@ const bundledManifest: MobileContentManifest = {
       kind: "api-json",
       schemaVersion: 1,
       url: "/api/mobile/explore/featured-articles",
+      ttlSec: 86400,
+      fallback: "bundled",
+    },
+    {
+      id: "explore-legacy-figures",
+      kind: "api-json",
+      schemaVersion: 2,
+      url: "/api/mobile/explore/legacy-figures",
+      ttlSec: 86400,
+      fallback: "bundled",
+    },
+    {
+      id: "explore-modules",
+      kind: "api-json",
+      schemaVersion: 1,
+      url: "/api/mobile/explore/modules",
       ttlSec: 86400,
       fallback: "bundled",
     },
@@ -189,6 +209,11 @@ async function writeCachedManifest(m: MobileContentManifest): Promise<void> {
 
 export async function fetchMobileContentManifest(): Promise<MobileContentManifest> {
   if (isMobileBundledOnly()) {
+    return bundledManifest;
+  }
+  if (!(await isNetworkAvailable())) {
+    const cached = await readCachedManifest();
+    if (cached) return cached;
     return bundledManifest;
   }
 

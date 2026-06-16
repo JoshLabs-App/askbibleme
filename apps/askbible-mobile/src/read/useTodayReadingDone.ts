@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { InteractionManager } from "react-native";
 import {
   buildTodayReadingScopeKey,
   readTodayReadingDoneKeys,
@@ -30,8 +31,12 @@ export function useTodayReadingDone(plan: TodayReadingPlanState) {
   }, [scopeKey]);
 
   useEffect(() => {
-    refresh();
-    return subscribeTodayReadingDone(refresh);
+    const task = InteractionManager.runAfterInteractions(refresh);
+    const unsub = subscribeTodayReadingDone(refresh);
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, [refresh]);
 
   const isDone = useCallback((r: ReadingPlanRange) => doneKeys.has(todayReadingItemKey(r)), [doneKeys]);

@@ -1,22 +1,28 @@
+import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { InteractionManager, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/site-copy";
+import { useLocale } from "../i18n/LocaleProvider";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { ExploreScriptureFadeScroll } from "./ExploreScriptureFadeScroll";
+import { pushExploreReadChapter, EXPLORE_YEAR_DAY_COUNT_PATH } from "./explore-read-chapter-nav";
 import { exploreStyles as exploreS } from "./exploreParchmentStyles";
 import {
   formatYearDayCountRef,
-  loadAllYearDayCountScriptureTexts,
-  YEAR_DAY_COUNT_SCRIPTURES,
+  loadYearDayCountScriptureTextsProgressive,
+  getYearDayCountScriptures,
   type YearDayCountScriptureRef,
 } from "./year-day-count-scriptures";
+import { useExploreModulesBundle } from "./useExploreModules";
 
 const BOX_MAX_HEIGHT = 140;
 
 type Props = {
   maxHeight?: number;
+  enabled?: boolean;
+  exploreReturn?: string | null;
 };
 
 function ScriptureRows({
@@ -63,57 +69,81 @@ function ScriptureRows({
   });
 }
 
-export function ExploreYearDayCountScriptureList({ maxHeight = BOX_MAX_HEIGHT }: Props) {
+export function ExploreYearDayCountScriptureList({
+  maxHeight = BOX_MAX_HEIGHT,
+  enabled = true,
+  exploreReturn: exploreReturnProp,
+}: Props) {
   const router = useRouter();
-  const [textById, setTextById] = useState<Record<string, string> | null>(null);
+  const exploreReturn = exploreReturnProp ?? EXPLORE_YEAR_DAY_COUNT_PATH;
+  const { locale } = useLocale();
+  const screenFocused = useIsFocused();
+  const loadEnabled = enabled && screenFocused;
+  const [textById, setTextById] = useState<Record<string, string>>({});
   const [loopSegmentHeight, setLoopSegmentHeight] = useState(0);
-  const orderedRefs = useMemo(() => [...YEAR_DAY_COUNT_SCRIPTURES].reverse(), []);
+  const modules = useExploreModulesBundle();
+  const orderedRefs = useMemo(
+    () => [...getYearDayCountScriptures()].reverse(),
+    [modules.contentVersion],
+  );
 
   useEffect(() => {
+    if (!loadEnabled) return;
+    setTextById({});
     let cancelled = false;
-    void loadAllYearDayCountScriptureTexts().then((map) => {
-      if (!cancelled) setTextById(map);
+    let cancelProgressive: (() => void) | null = null;
+    const task = InteractionManager.runAfterInteractions(() => {
+      const progressive = loadYearDayCountScriptureTextsProgressive(
+        orderedRefs,
+        (partial) => {
+          if (cancelled) return;
+          setTextById((prev) => ({ ...prev, ...partial }));
+        },
+        { batchSize: 6 },
+      );
+      cancelProgressive = progressive.cancel;
+      void progressive.promise.then((final) => {
+        if (cancelled) return;
+        setTextById(final);
+      });
     });
     return () => {
       cancelled = true;
+      cancelProgressive?.();
+      task.cancel();
     };
-  }, []);
+  }, [loadEnabled, locale, orderedRefs]);
 
   const openInBible = (ref: YearDayCountScriptureRef) => {
-    router.push({
-      pathname: "/read/[bookId]/[chapter]",
-      params: {
+    pushExploreReadChapter(
+      router,
+      {
         bookId: ref.bookId,
-        chapter: String(ref.chapter),
-        verse: String(ref.verseStart),
+        chapter: ref.chapter,
+        verse: ref.verseStart,
       },
-    });
+      exploreReturn,
+    );
   };
 
   return (
     <View style={[styles.wrap, exploreS.yearDayCountScriptureWrap]}>
-      {textById == null ? (
-        <View style={[styles.loading, { height: maxHeight }]}>
-          <ActivityIndicator color={c.muted} />
-        </View>
-      ) : (
-        <ExploreScriptureFadeScroll
-          height={maxHeight}
-          autoScroll
-          loopSegmentHeight={loopSegmentHeight}
+      <ExploreScriptureFadeScroll
+        height={maxHeight}
+        autoScroll
+        loopSegmentHeight={loopSegmentHeight}
+      >
+        <View
+          collapsable={false}
+          onLayout={(e) => {
+            const h = Math.round(e.nativeEvent.layout.height);
+            if (h > 0) setLoopSegmentHeight(h);
+          }}
         >
-          <View
-            collapsable={false}
-            onLayout={(e) => {
-              const h = Math.round(e.nativeEvent.layout.height);
-              if (h > 0) setLoopSegmentHeight(h);
-            }}
-          >
-            <ScriptureRows refs={orderedRefs} textById={textById} keyPrefix="a" onOpen={openInBible} />
-          </View>
-          <ScriptureRows refs={orderedRefs} textById={textById} keyPrefix="b" onOpen={openInBible} />
-        </ExploreScriptureFadeScroll>
-      )}
+          <ScriptureRows refs={orderedRefs} textById={textById} keyPrefix="a" onOpen={openInBible} />
+        </View>
+        <ScriptureRows refs={orderedRefs} textById={textById} keyPrefix="b" onOpen={openInBible} />
+      </ExploreScriptureFadeScroll>
     </View>
   );
 }
@@ -124,10 +154,6 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
-  },
-  loading: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   row: {
     paddingHorizontal: 10,

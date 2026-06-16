@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { mergeMusicCompanionTrackDisplay } from "./mergeTrackDisplay";
 import type { MusicCompanionStore } from "./types";
 
@@ -119,6 +120,7 @@ function normalizeRemoteStoreUrls(
 }
 
 export async function fetchMusicCompanionStoreFromRemote(): Promise<MusicCompanionStore | null> {
+  if (!(await isNetworkAvailable())) return null;
   const primaryBase = getAskBibleBaseUrl();
   const candidates = [primaryBase];
   if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {

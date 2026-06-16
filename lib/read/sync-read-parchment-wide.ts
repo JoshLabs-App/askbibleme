@@ -7,6 +7,7 @@ import {
   SCRIPTURE_PARCHMENT_WIDE_DATASET_VALUE,
   SCRIPTURE_PARCHMENT_WIDE_MEDIA,
 } from "@/lib/read/scripture-parchment-shell";
+import { isNarrowParchmentPath } from "@/lib/shell/narrow-parchment-shell";
 
 /** 与 `read-parchment-shell-chrome.css` 宽屏规则一致：宽 ≥ 高且足够宽 */
 export const READ_PARCHMENT_WIDE_MIN_WIDTH_PX = 480;
@@ -33,6 +34,8 @@ export function shouldUseReadParchmentWideBackground(
   height = typeof window !== "undefined" ? window.innerHeight : 0,
   pathname = typeof window !== "undefined" ? window.location.pathname : "",
 ): boolean {
+  const p = pathname.replace(/\/$/, "") || "/";
+  if (isNarrowParchmentPath(p)) return false;
   if (isReadChapterPath(pathname) && width >= READ_CHAPTER_SPREAD_MIN_WIDTH_PX) {
     return true;
   }

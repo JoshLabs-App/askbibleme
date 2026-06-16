@@ -30,13 +30,6 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     labelKey: "pages.explore.yearDayCountIconLabel",
   },
   {
-    id: "years-days-eternity",
-    href: "/explore/years-days-eternity",
-    iconSet: "material-community",
-    icon: "infinity",
-    labelKey: "pages.explore.yearsDaysEternityIconLabel",
-  },
-  {
     id: "narrow-gate",
     href: "/explore/narrow-gate",
     iconSet: "material-community",
@@ -58,10 +51,10 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     labelKey: "pages.explore.prayerIconLabel",
   },
   {
-    id: "encouraging-words",
-    href: "/explore/encouraging-words",
+    id: "figures",
+    href: "/explore/figures",
     iconSet: "material-community",
-    icon: "comment-text-outline",
-    labelKey: "pages.explore.encouragingWordsIconLabel",
+    icon: "account-group",
+    labelKey: "pages.explore.figuresIconLabel",
   },
 ];

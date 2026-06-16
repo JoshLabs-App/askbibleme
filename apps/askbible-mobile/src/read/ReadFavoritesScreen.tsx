@@ -9,7 +9,7 @@ import {
   type ScriptureVerseBookmark,
 } from "../bible/scripture-verse-bookmarks";
 import { useLocale } from "../i18n/LocaleProvider";
-import { t } from "../i18n/site-copy";
+import { t, localizeZhText } from "../i18n/site-copy";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { ReadParchmentPageScroll } from "./ReadParchmentPageScroll";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -29,7 +29,7 @@ export function ReadFavoritesScreen() {
     (translationId: string) => {
       const meta = translationCatalog.find((tr) => tr.id === translationId);
       if (!meta) return translationId;
-      return locale === "en" ? meta.labelEn : meta.labelZh;
+      return locale === "en" ? meta.labelEn : localizeZhText(locale, meta.labelZh);
     },
     [translationCatalog, locale],
   );

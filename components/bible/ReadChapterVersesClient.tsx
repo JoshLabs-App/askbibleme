@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-param";
+import { normalizeScriptureSearchQuery } from "@/lib/bible/scripture-search";
 import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
@@ -168,6 +169,11 @@ export function ReadChapterVersesClient({
     const n = Number(m[1]);
     return Number.isInteger(n) && n >= 1 ? n : null;
   }, [searchParams]);
+
+  const searchQueryFromUrl = useMemo(
+    () => normalizeScriptureSearchQuery(searchParams.get("q") ?? ""),
+    [searchParams],
+  );
 
   const initialFocusVerse = initialFocusVerseProp ?? focusVerseFromUrl;
   const [bookmarkFeedback, setBookmarkFeedback] = useState<string | null>(null);
@@ -724,6 +730,11 @@ export function ReadChapterVersesClient({
                         bookId={bookId}
                         chapter={chapter}
                         searchFocus={searchFocusVerse === v.verse}
+                        searchKeyword={
+                          searchFocusVerse === v.verse && searchQueryFromUrl
+                            ? searchQueryFromUrl
+                            : null
+                        }
                         bookmarked={isBookmarked({
                           translationId,
                           bookId,
@@ -775,6 +786,9 @@ export function ReadChapterVersesClient({
           headings={segmentMeta.headingByVerse.get(v.verse) ?? []}
           showParagraphBreak={i > 0 && segmentMeta.paragraphStarts.has(v.verse)}
           searchFocus={searchFocusVerse === v.verse}
+          searchKeyword={
+            searchFocusVerse === v.verse && searchQueryFromUrl ? searchQueryFromUrl : null
+          }
           bookmarked={(() => {
             const bm = isBookmarked({ translationId, bookId, chapter, verse: v.verse });
             return bm;
@@ -861,6 +875,7 @@ type ReadChapterInlineVerseChunkProps = {
   bookId: string;
   chapter: number;
   searchFocus: boolean;
+  searchKeyword?: string | null;
   bookmarked: boolean;
   active: boolean;
   highlightModeActive: boolean;
@@ -882,6 +897,7 @@ function ReadChapterInlineVerseChunk({
   bookId,
   chapter,
   searchFocus,
+  searchKeyword = null,
   bookmarked,
   active,
   highlightModeActive,
@@ -929,6 +945,7 @@ function ReadChapterInlineVerseChunk({
         onPaintHighlightUnit={onPaintHighlightUnit}
         goldenMark={v.isGolden && !bookmarked}
         bookmarkMark={bookmarked}
+        searchKeyword={searchKeyword}
       />{" "}
     </span>
   );
@@ -943,6 +960,7 @@ type VerseParagraphProps = {
   headings: string[];
   showParagraphBreak: boolean;
   searchFocus: boolean;
+  searchKeyword?: string | null;
   bookmarked: boolean;
   active: boolean;
   contrastLines: ContrastVerseLine[] | null;
@@ -971,6 +989,7 @@ function ReadChapterVerseParagraph({
   headings,
   showParagraphBreak,
   searchFocus,
+  searchKeyword = null,
   bookmarked,
   active,
   contrastLines,
@@ -1059,6 +1078,7 @@ function ReadChapterVerseParagraph({
             onPaintHighlightUnit={onPaintHighlightUnit}
             goldenMark={goldenMark}
             bookmarkMark={bookmarkMark}
+            searchKeyword={searchKeyword}
           />
         </span>
         {contrastLines?.map((row) => (

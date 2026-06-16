@@ -116,7 +116,7 @@ export function ShellTemplateChromeLayout({
   const musicLandscapeImmersive =
     onMusicPath && (landscapeNarrow || musicAutoHideChrome);
   const { shellTemplateBrand } = useAppSkin();
-  const previewThemeId = shellTemplateBrand ?? "lagoonPaper";
+  const previewThemeId = shellTemplateBrand ?? "parchmentShell";
   const theme = shellTemplatePreviewThemeById(previewThemeId);
   const dockPreview = useShellTemplateDockPreviewOptional();
 

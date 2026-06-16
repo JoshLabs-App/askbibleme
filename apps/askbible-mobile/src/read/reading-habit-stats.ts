@@ -103,6 +103,10 @@ export function snapshotFromRecord(
   };
 }
 
+export async function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord): Promise<void> {
+  await writeReadingHabitStats(record);
+}
+
 /** 今日计划是否全部读完时同步日历完成记录 */
 export async function syncReadingHabitDayCompletion(allDoneToday: boolean): Promise<ReadingHabitStatsRecord> {
   const today = toLocalDateString(new Date());

@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { getLocale } from "../i18n/locale-store";
+import { resolveUiText } from "../i18n/site-copy";
 import { AppLogoSplash } from "./AppLogoSplash";
 
 type Props = {
@@ -39,7 +41,7 @@ export class ShellErrorBoundary extends Component<Props, State> {
             </Text>
           ) : null}
           <Pressable style={styles.retry} onPress={this.retry} accessibilityRole="button">
-            <Text style={styles.retryText}>重试</Text>
+            <Text style={styles.retryText}>{resolveUiText(getLocale(), "重试", "Retry")}</Text>
           </Pressable>
         </View>
       );

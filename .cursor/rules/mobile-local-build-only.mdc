@@ -1,0 +1,39 @@
+---
+description: AskBible.me 移动端发版禁止 EAS 云端构建，默认本机 Xcode / Gradle 打包
+globs:
+  - apps/askbible-mobile/**
+  - scripts/eas-build-*.sh
+  - scripts/build-android-aab-local.sh
+  - scripts/build-ios-ipa-xcode-local.sh
+  - scripts/submit-ios-ipa-appstore.sh
+  - scripts/release-ios-testflight-local.sh
+  - scripts/release-android-internal-local.sh
+  - docs/mobile-release-checklist.md
+alwaysApply: false
+---
+
+# 移动端发版：禁止 EAS 云端构建
+
+## 强制约定
+
+- **不要**使用 EAS 云端构建：`eas build`（无 `--local`）、`npm run mobile:build:ios:production:eas`、`npm run mobile:build:android:production:eas`、`npm run mobile:build:apk`（云端预览 APK）。
+- **不要**在常规 iOS 发版中使用 EAS 本机构建 + Expo 远程凭证（`mobile:build:ios:production:eas-local`），易卡在过期 Provisioning Profile。
+- **默认**发版路径见 `docs/mobile-release-checklist.md` §0。
+
+## 正确命令
+
+| 目的 | 命令 |
+|------|------|
+| iOS 商店包 | `npm run mobile:build:ios:production`（本机 **Xcode**，不经 Expo 凭证） |
+| iOS 签名准备（首次） | `npm run mobile:setup:ios:signing` |
+| iOS 上传 TestFlight | `npm run mobile:submit:ios:production`（`xcrun altool` + ASC API Key） |
+| iOS 一键构建+上传 | `npm run mobile:release:ios:testflight` |
+| Android 商店包 | `npm run mobile:build:android:production`（本机 Gradle） |
+| Android 内部测试一键 | `npm run mobile:release:android:internal` |
+
+## Agent 行为
+
+- 用户要求「打包 / 发版 / 上传商店」时，**只**推荐上述本机命令。
+- iOS 上传走 `scripts/submit-ios-ipa-appstore.sh`，**不要**默认 `eas submit`。
+- Android 上传走 fastlane supply，**不要**默认 Expo Submit。
+- 发版前递增 iOS `CFBundleVersion` / Android `versionCode`（见 checklist §2–§3）。

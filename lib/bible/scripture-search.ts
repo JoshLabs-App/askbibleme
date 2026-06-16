@@ -42,6 +42,37 @@ export function normalizeScriptureSearchQuery(raw: string): string {
   return raw.trim().replace(/\s+/g, " ");
 }
 
+export type ScriptureSearchTextSegment = {
+  text: string;
+  match: boolean;
+};
+
+/** 按搜索词切分经文（大小写不敏感），供章页关键词高亮。 */
+export function splitTextByScriptureSearchKeyword(
+  text: string,
+  keyword: string,
+): ScriptureSearchTextSegment[] {
+  const q = normalizeScriptureSearchQuery(keyword);
+  if (!q) return [{ text, match: false }];
+  const lowerText = text.toLowerCase();
+  const lowerQ = q.toLowerCase();
+  const segments: ScriptureSearchTextSegment[] = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    const idx = lowerText.indexOf(lowerQ, cursor);
+    if (idx < 0) {
+      segments.push({ text: text.slice(cursor), match: false });
+      break;
+    }
+    if (idx > cursor) {
+      segments.push({ text: text.slice(cursor, idx), match: false });
+    }
+    segments.push({ text: text.slice(idx, idx + q.length), match: true });
+    cursor = idx + q.length;
+  }
+  return segments.length ? segments : [{ text, match: false }];
+}
+
 export function escapeSqliteLikePattern(raw: string): string {
   return raw.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
 }

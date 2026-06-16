@@ -17,6 +17,8 @@ type Props = {
   centerOrbSway?: boolean;
   showSideOrbs?: boolean;
   flatGradientOnly?: boolean;
+  /** Tab 底栏页关闭底部压暗，避免与浮动图标区叠一层渐变 */
+  showBottomScrim?: boolean;
 };
 
 function startBreathLoop(value: Animated.Value, periodMs: number): Animated.CompositeAnimation {
@@ -49,6 +51,7 @@ export function MusicEnergyGlow({
   centerOrbSway = false,
   showSideOrbs = true,
   flatGradientOnly = false,
+  showBottomScrim = true,
 }: Props) {
   const breathMain = useRef(new Animated.Value(0)).current;
   const breathLeft = useRef(new Animated.Value(0.32)).current;
@@ -249,12 +252,14 @@ export function MusicEnergyGlow({
         />
       ) : null}
 
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.35)", "rgba(0,0,0,0.72)"]}
-        locations={[0, 0.55, 1]}
-        style={styles.scrim}
-        pointerEvents="none"
-      />
+      {showBottomScrim ? (
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.35)", "rgba(0,0,0,0.72)"]}
+          locations={[0, 0.55, 1]}
+          style={styles.scrim}
+          pointerEvents="none"
+        />
+      ) : null}
     </View>
   );
 }

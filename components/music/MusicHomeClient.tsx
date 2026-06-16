@@ -698,7 +698,11 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
         {album !== "安静" && album !== "睡眠" && album !== "专注工作" ? (
           <span className="music-home-center-orb" />
         ) : null}
-        <MusicHomeBackdropScene album={album} />
+        <MusicHomeBackdropScene
+          album={album}
+          decorVisible={musicActive}
+          decorActive={musicActive && playing}
+        />
       </div>
 
       {musicWide && !landscapeNarrow && audioSrc ? (
@@ -777,6 +781,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
               album={album}
               centered={landscapeNarrow || musicWide}
               rhythmPulse={coffeeRhythmPulse}
+              decorVisible={musicActive}
+              decorActive={musicActive && playing}
             />
           </div>
 

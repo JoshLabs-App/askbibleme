@@ -15,7 +15,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 25,
-          "label": "Luke 1:1-25"
+          "label": "Luke 1:1-25",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -28,7 +29,8 @@
           "endChapter": 1,
           "startVerse": 26,
           "endVerse": 56,
-          "label": "Luke 1:26-56"
+          "label": "Luke 1:26-56",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -41,7 +43,8 @@
           "endChapter": 1,
           "startVerse": 57,
           "endVerse": 80,
-          "label": "Luke 1:57-80"
+          "label": "Luke 1:57-80",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -54,7 +57,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 21,
-          "label": "Luke 2:1-21"
+          "label": "Luke 2:1-21",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -67,7 +71,8 @@
           "endChapter": 2,
           "startVerse": 22,
           "endVerse": 52,
-          "label": "Luke 2:22-52"
+          "label": "Luke 2:22-52",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -80,7 +85,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 22,
-          "label": "Luke 3:1-22"
+          "label": "Luke 3:1-22",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -93,7 +99,8 @@
           "startVerse": 23,
           "endChapter": 4,
           "endVerse": 13,
-          "label": "Luke 3:23-4:13"
+          "label": "Luke 3:23-4:13",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -106,7 +113,8 @@
           "endChapter": 4,
           "startVerse": 14,
           "endVerse": 44,
-          "label": "Luke 4:14-44"
+          "label": "Luke 4:14-44",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -119,7 +127,8 @@
           "startVerse": 1,
           "endChapter": 6,
           "endVerse": 16,
-          "label": "Luke 5:1-6:16"
+          "label": "Luke 5:1-6:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -132,7 +141,8 @@
           "endChapter": 6,
           "startVerse": 17,
           "endVerse": 49,
-          "label": "Luke 6:17-49"
+          "label": "Luke 6:17-49",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -145,7 +155,8 @@
           "endChapter": 7,
           "startVerse": 1,
           "endVerse": 35,
-          "label": "Luke 7:1-35"
+          "label": "Luke 7:1-35",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -158,7 +169,8 @@
           "startVerse": 36,
           "endChapter": 8,
           "endVerse": 3,
-          "label": "Luke 7:36-8:3"
+          "label": "Luke 7:36-8:3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -171,7 +183,8 @@
           "endChapter": 8,
           "startVerse": 4,
           "endVerse": 21,
-          "label": "Luke 8:4-21"
+          "label": "Luke 8:4-21",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -184,7 +197,8 @@
           "endChapter": 8,
           "startVerse": 22,
           "endVerse": 56,
-          "label": "Luke 8:22-56"
+          "label": "Luke 8:22-56",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -197,7 +211,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 50,
-          "label": "Luke 9:1-50"
+          "label": "Luke 9:1-50",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -210,7 +225,8 @@
           "startVerse": 51,
           "endChapter": 10,
           "endVerse": 24,
-          "label": "Luke 9:51-10:24"
+          "label": "Luke 9:51-10:24",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -223,7 +239,8 @@
           "endChapter": 10,
           "startVerse": 25,
           "endVerse": 42,
-          "label": "Luke 10:25-42"
+          "label": "Luke 10:25-42",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -236,7 +253,8 @@
           "endChapter": 11,
           "startVerse": 1,
           "endVerse": 36,
-          "label": "Luke 11:1-36"
+          "label": "Luke 11:1-36",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -249,7 +267,8 @@
           "startVerse": 37,
           "endChapter": 12,
           "endVerse": 12,
-          "label": "Luke 11:37-12:12"
+          "label": "Luke 11:37-12:12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -262,7 +281,8 @@
           "endChapter": 12,
           "startVerse": 13,
           "endVerse": 48,
-          "label": "Luke 12:13-48"
+          "label": "Luke 12:13-48",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -275,7 +295,8 @@
           "startVerse": 49,
           "endChapter": 13,
           "endVerse": 9,
-          "label": "Luke 12:49-13:9"
+          "label": "Luke 12:49-13:9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -288,7 +309,8 @@
           "endChapter": 13,
           "startVerse": 10,
           "endVerse": 35,
-          "label": "Luke 13:10-35"
+          "label": "Luke 13:10-35",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -299,7 +321,8 @@
           "bookId": "LUK",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Luke 14"
+          "label": "Luke 14",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -310,7 +333,8 @@
           "bookId": "LUK",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Luke 15"
+          "label": "Luke 15",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -323,7 +347,8 @@
           "startVerse": 1,
           "endChapter": 17,
           "endVerse": 10,
-          "label": "Luke 16:1-17:10"
+          "label": "Luke 16:1-17:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -336,7 +361,8 @@
           "endChapter": 17,
           "startVerse": 11,
           "endVerse": 37,
-          "label": "Luke 17:11-37"
+          "label": "Luke 17:11-37",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -349,7 +375,8 @@
           "endChapter": 18,
           "startVerse": 1,
           "endVerse": 30,
-          "label": "Luke 18:1-30"
+          "label": "Luke 18:1-30",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -362,7 +389,8 @@
           "startVerse": 31,
           "endChapter": 19,
           "endVerse": 27,
-          "label": "Luke 18:31-19:27"
+          "label": "Luke 18:31-19:27",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -375,7 +403,8 @@
           "endChapter": 19,
           "startVerse": 28,
           "endVerse": 46,
-          "label": "Luke 19:28-46"
+          "label": "Luke 19:28-46",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -388,7 +417,8 @@
           "startVerse": 47,
           "endChapter": 20,
           "endVerse": 44,
-          "label": "Luke 19:47-20:44"
+          "label": "Luke 19:47-20:44",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -401,7 +431,8 @@
           "startVerse": 45,
           "endChapter": 21,
           "endVerse": 38,
-          "label": "Luke 20:45-21:38"
+          "label": "Luke 20:45-21:38",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -414,7 +445,8 @@
           "endChapter": 22,
           "startVerse": 1,
           "endVerse": 46,
-          "label": "Luke 22:1-46"
+          "label": "Luke 22:1-46",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -427,7 +459,8 @@
           "startVerse": 47,
           "endChapter": 23,
           "endVerse": 25,
-          "label": "Luke 22:47-23:25"
+          "label": "Luke 22:47-23:25",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -440,7 +473,8 @@
           "endChapter": 23,
           "startVerse": 26,
           "endVerse": 56,
-          "label": "Luke 23:26-56"
+          "label": "Luke 23:26-56",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -451,7 +485,8 @@
           "bookId": "LUK",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Luke 24"
+          "label": "Luke 24",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -462,7 +497,8 @@
           "bookId": "ACT",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Acts 1"
+          "label": "Acts 1",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -473,7 +509,8 @@
           "bookId": "ACT",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Acts 2"
+          "label": "Acts 2",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -486,7 +523,8 @@
           "startVerse": 1,
           "endChapter": 4,
           "endVerse": 31,
-          "label": "Acts 3:1-4:31"
+          "label": "Acts 3:1-4:31",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -499,7 +537,8 @@
           "startVerse": 32,
           "endChapter": 6,
           "endVerse": 7,
-          "label": "Acts 4:32-6:7"
+          "label": "Acts 4:32-6:7",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -512,7 +551,8 @@
           "startVerse": 8,
           "endChapter": 7,
           "endVerse": 60,
-          "label": "Acts 6:8-7:60"
+          "label": "Acts 6:8-7:60",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -523,7 +563,8 @@
           "bookId": "ACT",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Acts 8"
+          "label": "Acts 8",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -536,7 +577,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 31,
-          "label": "Acts 9:1-31"
+          "label": "Acts 9:1-31",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -549,7 +591,8 @@
           "endChapter": 9,
           "startVerse": 32,
           "endVerse": 43,
-          "label": "Acts 9:32-43"
+          "label": "Acts 9:32-43",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -562,7 +605,8 @@
           "startVerse": 1,
           "endChapter": 11,
           "endVerse": 18,
-          "label": "Acts 10:1-11:18"
+          "label": "Acts 10:1-11:18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -575,7 +619,8 @@
           "endChapter": 11,
           "startVerse": 19,
           "endVerse": 30,
-          "label": "Acts 11:19-30"
+          "label": "Acts 11:19-30",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -586,7 +631,8 @@
           "bookId": "ACT",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Acts 12"
+          "label": "Acts 12",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -597,7 +643,8 @@
           "bookId": "ACT",
           "startChapter": 13,
           "endChapter": 14,
-          "label": "Acts 13-14"
+          "label": "Acts 13-14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -610,7 +657,8 @@
           "endChapter": 15,
           "startVerse": 1,
           "endVerse": 35,
-          "label": "Acts 15:1-35"
+          "label": "Acts 15:1-35",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -623,7 +671,8 @@
           "startVerse": 36,
           "endChapter": 17,
           "endVerse": 15,
-          "label": "Acts 15:36-17:15"
+          "label": "Acts 15:36-17:15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -636,7 +685,8 @@
           "endChapter": 17,
           "startVerse": 16,
           "endVerse": 34,
-          "label": "Acts 17:16-34"
+          "label": "Acts 17:16-34",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -649,7 +699,8 @@
           "endChapter": 18,
           "startVerse": 1,
           "endVerse": 22,
-          "label": "Acts 18:1-22"
+          "label": "Acts 18:1-22",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -662,7 +713,8 @@
           "startVerse": 23,
           "endChapter": 19,
           "endVerse": 22,
-          "label": "Acts 18:23-19:22"
+          "label": "Acts 18:23-19:22",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -675,7 +727,8 @@
           "startVerse": 23,
           "endChapter": 20,
           "endVerse": 16,
-          "label": "Acts 19:23-20:16"
+          "label": "Acts 19:23-20:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -688,7 +741,8 @@
           "startVerse": 17,
           "endChapter": 21,
           "endVerse": 16,
-          "label": "Acts 20:17-21:16"
+          "label": "Acts 20:17-21:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -701,7 +755,8 @@
           "startVerse": 17,
           "endChapter": 23,
           "endVerse": 11,
-          "label": "Acts 21:17-23:11"
+          "label": "Acts 21:17-23:11",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -714,7 +769,8 @@
           "startVerse": 12,
           "endChapter": 24,
           "endVerse": 27,
-          "label": "Acts 23:12-24:27"
+          "label": "Acts 23:12-24:27",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -725,7 +781,8 @@
           "bookId": "ACT",
           "startChapter": 25,
           "endChapter": 26,
-          "label": "Acts 25-26"
+          "label": "Acts 25-26",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -738,7 +795,8 @@
           "startVerse": 1,
           "endChapter": 28,
           "endVerse": 15,
-          "label": "Acts 27:1-28:15"
+          "label": "Acts 27:1-28:15",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -751,7 +809,8 @@
           "endChapter": 28,
           "startVerse": 16,
           "endVerse": 31,
-          "label": "Acts 28:16-31"
+          "label": "Acts 28:16-31",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -764,7 +823,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Romans 1:1-17"
+          "label": "Romans 1:1-17",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -777,7 +837,8 @@
           "endChapter": 1,
           "startVerse": 18,
           "endVerse": 32,
-          "label": "Romans 1:18-32"
+          "label": "Romans 1:18-32",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -790,7 +851,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 16,
-          "label": "Romans 2:1-16"
+          "label": "Romans 2:1-16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -803,7 +865,8 @@
           "startVerse": 17,
           "endChapter": 3,
           "endVerse": 8,
-          "label": "Romans 2:17-3:8"
+          "label": "Romans 2:17-3:8",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -816,7 +879,8 @@
           "endChapter": 3,
           "startVerse": 9,
           "endVerse": 20,
-          "label": "Romans 3:9-20"
+          "label": "Romans 3:9-20",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -829,7 +893,8 @@
           "endChapter": 3,
           "startVerse": 21,
           "endVerse": 31,
-          "label": "Romans 3:21-31"
+          "label": "Romans 3:21-31",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -840,7 +905,8 @@
           "bookId": "ROM",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Romans 4"
+          "label": "Romans 4",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -853,7 +919,8 @@
           "endChapter": 5,
           "startVerse": 1,
           "endVerse": 11,
-          "label": "Romans 5:1-11"
+          "label": "Romans 5:1-11",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -866,7 +933,8 @@
           "endChapter": 5,
           "startVerse": 12,
           "endVerse": 21,
-          "label": "Romans 5:12-21"
+          "label": "Romans 5:12-21",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -877,7 +945,8 @@
           "bookId": "ROM",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Romans 6"
+          "label": "Romans 6",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -888,7 +957,8 @@
           "bookId": "ROM",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Romans 7"
+          "label": "Romans 7",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -901,7 +971,8 @@
           "endChapter": 8,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Romans 8:1-17"
+          "label": "Romans 8:1-17",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -914,7 +985,8 @@
           "endChapter": 8,
           "startVerse": 18,
           "endVerse": 39,
-          "label": "Romans 8:18-39"
+          "label": "Romans 8:18-39",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -927,7 +999,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 29,
-          "label": "Romans 9:1-29"
+          "label": "Romans 9:1-29",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -940,7 +1013,8 @@
           "startVerse": 30,
           "endChapter": 10,
           "endVerse": 21,
-          "label": "Romans 9:30-10:21"
+          "label": "Romans 9:30-10:21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -951,7 +1025,8 @@
           "bookId": "ROM",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Romans 11"
+          "label": "Romans 11",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -962,7 +1037,8 @@
           "bookId": "ROM",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Romans 12"
+          "label": "Romans 12",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -973,7 +1049,8 @@
           "bookId": "ROM",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Romans 13"
+          "label": "Romans 13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -984,7 +1061,8 @@
           "bookId": "ROM",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Romans 14"
+          "label": "Romans 14",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -997,7 +1075,8 @@
           "endChapter": 15,
           "startVerse": 1,
           "endVerse": 13,
-          "label": "Romans 15:1-13"
+          "label": "Romans 15:1-13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1010,7 +1089,8 @@
           "endChapter": 15,
           "startVerse": 14,
           "endVerse": 33,
-          "label": "Romans 15:14-33"
+          "label": "Romans 15:14-33",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1021,7 +1101,8 @@
           "bookId": "ROM",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Romans 16"
+          "label": "Romans 16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1034,7 +1115,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "1Corinthians 1:1-17"
+          "label": "1Corinthians 1:1-17",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1047,7 +1129,8 @@
           "endChapter": 1,
           "startVerse": 18,
           "endVerse": 31,
-          "label": "1Corinthians 1:18-31"
+          "label": "1Corinthians 1:18-31",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1058,7 +1141,8 @@
           "bookId": "1CO",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "1Corinthians 2"
+          "label": "1Corinthians 2",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1069,7 +1153,8 @@
           "bookId": "1CO",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "1Corinthians 3"
+          "label": "1Corinthians 3",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1080,7 +1165,8 @@
           "bookId": "1CO",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "1Corinthians 4"
+          "label": "1Corinthians 4",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1091,7 +1177,8 @@
           "bookId": "1CO",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "1Corinthians 5"
+          "label": "1Corinthians 5",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1102,7 +1189,8 @@
           "bookId": "1CO",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "1Corinthians 6"
+          "label": "1Corinthians 6",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1113,7 +1201,8 @@
           "bookId": "1CO",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "1Corinthians 7"
+          "label": "1Corinthians 7",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1124,7 +1213,8 @@
           "bookId": "1CO",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "1Corinthians 8"
+          "label": "1Corinthians 8",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1135,7 +1225,8 @@
           "bookId": "1CO",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "1Corinthians 9"
+          "label": "1Corinthians 9",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1148,7 +1239,8 @@
           "startVerse": 1,
           "endChapter": 11,
           "endVerse": 1,
-          "label": "1Corinthians 10:1-11:1"
+          "label": "1Corinthians 10:1-11:1",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1161,7 +1253,8 @@
           "endChapter": 11,
           "startVerse": 2,
           "endVerse": 34,
-          "label": "1Corinthians 11:2-34"
+          "label": "1Corinthians 11:2-34",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1172,7 +1265,8 @@
           "bookId": "1CO",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "1Corinthians 12"
+          "label": "1Corinthians 12",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1183,7 +1277,8 @@
           "bookId": "1CO",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "1Corinthians 13"
+          "label": "1Corinthians 13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1194,7 +1289,8 @@
           "bookId": "1CO",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "1Corinthians 14"
+          "label": "1Corinthians 14",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1205,7 +1301,8 @@
           "bookId": "1CO",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "1Corinthians 15"
+          "label": "1Corinthians 15",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1216,7 +1313,8 @@
           "bookId": "1CO",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "1Corinthians 16"
+          "label": "1Corinthians 16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -1229,7 +1327,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 11,
-          "label": "2Corinthians 1:1-11"
+          "label": "2Corinthians 1:1-11",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -1242,7 +1341,8 @@
           "startVerse": 12,
           "endChapter": 2,
           "endVerse": 11,
-          "label": "2Corinthians 1:12-2:11"
+          "label": "2Corinthians 1:12-2:11",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1255,7 +1355,8 @@
           "startVerse": 12,
           "endChapter": 3,
           "endVerse": 18,
-          "label": "2Corinthians 2:12-3:18"
+          "label": "2Corinthians 2:12-3:18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1268,7 +1369,8 @@
           "startVerse": 1,
           "endChapter": 5,
           "endVerse": 10,
-          "label": "2Corinthians 4:1-5:10"
+          "label": "2Corinthians 4:1-5:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1281,7 +1383,8 @@
           "startVerse": 11,
           "endChapter": 6,
           "endVerse": 10,
-          "label": "2Corinthians 5:11-6:10"
+          "label": "2Corinthians 5:11-6:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1294,7 +1397,8 @@
           "startVerse": 11,
           "endChapter": 7,
           "endVerse": 16,
-          "label": "2Corinthians 6:11-7:16"
+          "label": "2Corinthians 6:11-7:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1305,7 +1409,8 @@
           "bookId": "2CO",
           "startChapter": 8,
           "endChapter": 9,
-          "label": "2Corinthians 8-9"
+          "label": "2Corinthians 8-9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1318,7 +1423,8 @@
           "endChapter": 10,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "2Corinthians 10:1-12"
+          "label": "2Corinthians 10:1-12",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -1331,7 +1437,8 @@
           "startVerse": 13,
           "endChapter": 12,
           "endVerse": 13,
-          "label": "2Corinthians 10:13-12:13"
+          "label": "2Corinthians 10:13-12:13",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1344,7 +1451,8 @@
           "startVerse": 14,
           "endChapter": 13,
           "endVerse": 14,
-          "label": "2Corinthians 12:14-13:14"
+          "label": "2Corinthians 12:14-13:14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1357,7 +1465,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 10,
-          "label": "Galatians 1:1-10"
+          "label": "Galatians 1:1-10",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1370,7 +1479,8 @@
           "endChapter": 1,
           "startVerse": 11,
           "endVerse": 24,
-          "label": "Galatians 1:11-24"
+          "label": "Galatians 1:11-24",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1381,7 +1491,8 @@
           "bookId": "GAL",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Galatians 2"
+          "label": "Galatians 2",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1392,7 +1503,8 @@
           "bookId": "GAL",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Galatians 3"
+          "label": "Galatians 3",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1403,7 +1515,8 @@
           "bookId": "GAL",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Galatians 4"
+          "label": "Galatians 4",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1414,7 +1527,8 @@
           "bookId": "GAL",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "Galatians 5"
+          "label": "Galatians 5",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1425,7 +1539,8 @@
           "bookId": "GAL",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Galatians 6"
+          "label": "Galatians 6",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1436,7 +1551,8 @@
           "bookId": "EPH",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Ephesians 1"
+          "label": "Ephesians 1",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1447,7 +1563,8 @@
           "bookId": "EPH",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Ephesians 2"
+          "label": "Ephesians 2",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1458,7 +1575,8 @@
           "bookId": "EPH",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Ephesians 3"
+          "label": "Ephesians 3",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1471,7 +1589,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 16,
-          "label": "Ephesians 4:1-16"
+          "label": "Ephesians 4:1-16",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1484,7 +1603,8 @@
           "endChapter": 4,
           "startVerse": 17,
           "endVerse": 32,
-          "label": "Ephesians 4:17-32"
+          "label": "Ephesians 4:17-32",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1497,7 +1617,8 @@
           "endChapter": 5,
           "startVerse": 1,
           "endVerse": 21,
-          "label": "Ephesians 5:1-21"
+          "label": "Ephesians 5:1-21",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1510,7 +1631,8 @@
           "startVerse": 22,
           "endChapter": 6,
           "endVerse": 9,
-          "label": "Ephesians 5:22-6:9"
+          "label": "Ephesians 5:22-6:9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1523,7 +1645,8 @@
           "endChapter": 6,
           "startVerse": 10,
           "endVerse": 24,
-          "label": "Ephesians 6:10-24"
+          "label": "Ephesians 6:10-24",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1536,7 +1659,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 26,
-          "label": "Philippians 1:1-26"
+          "label": "Philippians 1:1-26",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1549,7 +1673,8 @@
           "startVerse": 27,
           "endChapter": 2,
           "endVerse": 11,
-          "label": "Philippians 1:27-2:11"
+          "label": "Philippians 1:27-2:11",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1562,7 +1687,8 @@
           "endChapter": 2,
           "startVerse": 12,
           "endVerse": 30,
-          "label": "Philippians 2:12-30"
+          "label": "Philippians 2:12-30",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1575,7 +1701,8 @@
           "startVerse": 1,
           "endChapter": 4,
           "endVerse": 1,
-          "label": "Philippians 3:1-4:1"
+          "label": "Philippians 3:1-4:1",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1588,7 +1715,8 @@
           "endChapter": 4,
           "startVerse": 2,
           "endVerse": 23,
-          "label": "Philippians 4:2-23"
+          "label": "Philippians 4:2-23",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1601,7 +1729,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 20,
-          "label": "Colossians 1:1-20"
+          "label": "Colossians 1:1-20",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1614,7 +1743,8 @@
           "startVerse": 21,
           "endChapter": 2,
           "endVerse": 5,
-          "label": "Colossians 1:21-2:5"
+          "label": "Colossians 1:21-2:5",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1627,7 +1757,8 @@
           "endChapter": 2,
           "startVerse": 6,
           "endVerse": 23,
-          "label": "Colossians 2:6-23"
+          "label": "Colossians 2:6-23",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1640,7 +1771,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Colossians 3:1-17"
+          "label": "Colossians 3:1-17",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1653,7 +1785,8 @@
           "startVerse": 18,
           "endChapter": 4,
           "endVerse": 18,
-          "label": "Colossians 3:18-4:18"
+          "label": "Colossians 3:18-4:18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1664,7 +1797,8 @@
           "bookId": "1TH",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "1Thessalonians 1"
+          "label": "1Thessalonians 1",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -1677,7 +1811,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 16,
-          "label": "1Thessalonians 2:1-16"
+          "label": "1Thessalonians 2:1-16",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -1690,7 +1825,8 @@
           "startVerse": 17,
           "endChapter": 3,
           "endVerse": 13,
-          "label": "1Thessalonians 2:17-3:13"
+          "label": "1Thessalonians 2:17-3:13",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1703,7 +1839,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "1Thessalonians 4:1-12"
+          "label": "1Thessalonians 4:1-12",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -1716,7 +1853,8 @@
           "startVerse": 13,
           "endChapter": 5,
           "endVerse": 11,
-          "label": "1 Thessalonians 4:13-5:11"
+          "label": "1 Thessalonians 4:13-5:11",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1729,7 +1867,8 @@
           "endChapter": 5,
           "startVerse": 12,
           "endVerse": 22,
-          "label": "1 Thessalonians 5:12-22"
+          "label": "1 Thessalonians 5:12-22",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -1742,7 +1881,8 @@
           "endChapter": 5,
           "startVerse": 23,
           "endVerse": 28,
-          "label": "1 Thessalonians 5:23-28"
+          "label": "1 Thessalonians 5:23-28",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -1753,7 +1893,8 @@
           "bookId": "2TH",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "2 Thessalonians 1"
+          "label": "2 Thessalonians 1",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1766,7 +1907,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "2 Thessalonians 2:1-12"
+          "label": "2 Thessalonians 2:1-12",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1779,7 +1921,8 @@
           "startVerse": 13,
           "endChapter": 3,
           "endVerse": 5,
-          "label": "2 Thessalonians 2:13-3:5"
+          "label": "2 Thessalonians 2:13-3:5",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1792,7 +1935,8 @@
           "endChapter": 3,
           "startVerse": 6,
           "endVerse": 18,
-          "label": "2 Thessalonians 3:6-18"
+          "label": "2 Thessalonians 3:6-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1803,7 +1947,8 @@
           "bookId": "1TI",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "1 Timothy 1"
+          "label": "1 Timothy 1",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1814,7 +1959,8 @@
           "bookId": "1TI",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "1 Timothy 2"
+          "label": "1 Timothy 2",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1825,7 +1971,8 @@
           "bookId": "1TI",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "1 Timothy 3"
+          "label": "1 Timothy 3",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1836,7 +1983,8 @@
           "bookId": "1TI",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "1 Timothy 4"
+          "label": "1 Timothy 4",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1849,7 +1997,8 @@
           "startVerse": 1,
           "endChapter": 6,
           "endVerse": 2,
-          "label": "1 Timothy 5:1-6:2"
+          "label": "1 Timothy 5:1-6:2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1862,7 +2011,8 @@
           "endChapter": 6,
           "startVerse": 3,
           "endVerse": 21,
-          "label": "1 Timothy 6:3-21"
+          "label": "1 Timothy 6:3-21",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -1875,7 +2025,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 7,
-          "label": "2 Timothy 1:1-7"
+          "label": "2 Timothy 1:1-7",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1888,7 +2039,8 @@
           "endChapter": 1,
           "startVerse": 8,
           "endVerse": 18,
-          "label": "2 Timothy 1:8-18"
+          "label": "2 Timothy 1:8-18",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1899,7 +2051,8 @@
           "bookId": "2TI",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "2 Timothy 2"
+          "label": "2 Timothy 2",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1912,7 +2065,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 9,
-          "label": "2Timothy 3:1-9"
+          "label": "2Timothy 3:1-9",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1925,7 +2079,8 @@
           "startVerse": 10,
           "endChapter": 4,
           "endVerse": 8,
-          "label": "2 Timothy 3:10-4:8"
+          "label": "2 Timothy 3:10-4:8",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1938,7 +2093,8 @@
           "endChapter": 4,
           "startVerse": 9,
           "endVerse": 22,
-          "label": "2 Timothy 4:9-22"
+          "label": "2 Timothy 4:9-22",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1951,7 +2107,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 4,
-          "label": "Titus 1:1-4"
+          "label": "Titus 1:1-4",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1964,7 +2121,8 @@
           "endChapter": 1,
           "startVerse": 5,
           "endVerse": 16,
-          "label": "Titus 1:5-16"
+          "label": "Titus 1:5-16",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1975,7 +2133,8 @@
           "bookId": "TIT",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Titus 2"
+          "label": "Titus 2",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1988,7 +2147,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "Titus 3:1-8"
+          "label": "Titus 3:1-8",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2001,7 +2161,8 @@
           "endChapter": 3,
           "startVerse": 8,
           "endVerse": 11,
-          "label": "Titus 3:8-11"
+          "label": "Titus 3:8-11",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2014,7 +2175,8 @@
           "endChapter": 3,
           "startVerse": 12,
           "endVerse": 15,
-          "label": "Titus 3:12-15"
+          "label": "Titus 3:12-15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2025,7 +2187,8 @@
           "bookId": "PHM",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Philemon 1-3"
+          "label": "Philemon 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2036,7 +2199,8 @@
           "bookId": "PHM",
           "startChapter": 4,
           "endChapter": 7,
-          "label": "Philemon 4-7"
+          "label": "Philemon 4-7",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2047,7 +2211,8 @@
           "bookId": "PHM",
           "startChapter": 8,
           "endChapter": 22,
-          "label": "Philemon 8-22"
+          "label": "Philemon 8-22",
+          "planChapterTotal": 15
         }
       ]
     },
@@ -2058,7 +2223,8 @@
           "bookId": "PHM",
           "startChapter": 23,
           "endChapter": 25,
-          "label": "Philemon 23-25"
+          "label": "Philemon 23-25",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2071,7 +2237,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Matthew 1:1-17"
+          "label": "Matthew 1:1-17",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2084,7 +2251,8 @@
           "startVerse": 18,
           "endChapter": 2,
           "endVerse": 12,
-          "label": "Matthew 1:18-2:12"
+          "label": "Matthew 1:18-2:12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2097,7 +2265,8 @@
           "endChapter": 2,
           "startVerse": 13,
           "endVerse": 23,
-          "label": "Matthew 2:13-23"
+          "label": "Matthew 2:13-23",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2108,7 +2277,8 @@
           "bookId": "MAT",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Matthew 3"
+          "label": "Matthew 3",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2121,7 +2291,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 11,
-          "label": "Matthew 4:1-11"
+          "label": "Matthew 4:1-11",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2134,7 +2305,8 @@
           "endChapter": 4,
           "startVerse": 12,
           "endVerse": 25,
-          "label": "Matthew 4:12-25"
+          "label": "Matthew 4:12-25",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2147,7 +2319,8 @@
           "endChapter": 5,
           "startVerse": 1,
           "endVerse": 16,
-          "label": "Matthew 5:1-16"
+          "label": "Matthew 5:1-16",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2160,7 +2333,8 @@
           "endChapter": 5,
           "startVerse": 17,
           "endVerse": 48,
-          "label": "Matthew 5:17-48"
+          "label": "Matthew 5:17-48",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2173,7 +2347,8 @@
           "endChapter": 6,
           "startVerse": 1,
           "endVerse": 18,
-          "label": "Matthew 6:1-18"
+          "label": "Matthew 6:1-18",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2186,7 +2361,8 @@
           "endChapter": 6,
           "startVerse": 19,
           "endVerse": 24,
-          "label": "Matthew 6:19-24"
+          "label": "Matthew 6:19-24",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2199,7 +2375,8 @@
           "endChapter": 6,
           "startVerse": 25,
           "endVerse": 34,
-          "label": "Matthew 6:25-34"
+          "label": "Matthew 6:25-34",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2212,7 +2389,8 @@
           "endChapter": 7,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "Matthew 7:1-12"
+          "label": "Matthew 7:1-12",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2225,7 +2403,8 @@
           "endChapter": 7,
           "startVerse": 13,
           "endVerse": 29,
-          "label": "Matthew 7:13-29"
+          "label": "Matthew 7:13-29",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2236,7 +2415,8 @@
           "bookId": "MAT",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Matthew 8"
+          "label": "Matthew 8",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2247,7 +2427,8 @@
           "bookId": "MAT",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "Matthew 9"
+          "label": "Matthew 9",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2258,7 +2439,8 @@
           "bookId": "MAT",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Matthew 10"
+          "label": "Matthew 10",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2269,7 +2451,8 @@
           "bookId": "MAT",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Matthew 11"
+          "label": "Matthew 11",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2280,7 +2463,8 @@
           "bookId": "MAT",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Matthew 12"
+          "label": "Matthew 12",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2291,7 +2475,8 @@
           "bookId": "MAT",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Matthew 13"
+          "label": "Matthew 13",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2302,7 +2487,8 @@
           "bookId": "MAT",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Matthew 14"
+          "label": "Matthew 14",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2313,7 +2499,8 @@
           "bookId": "MAT",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Matthew 15"
+          "label": "Matthew 15",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2324,7 +2511,8 @@
           "bookId": "MAT",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Matthew 16"
+          "label": "Matthew 16",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2335,7 +2523,8 @@
           "bookId": "MAT",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "Matthew 17"
+          "label": "Matthew 17",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2346,7 +2535,8 @@
           "bookId": "MAT",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "Matthew 18"
+          "label": "Matthew 18",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2359,7 +2549,8 @@
           "startVerse": 1,
           "endChapter": 20,
           "endVerse": 16,
-          "label": "Matthew 19:1-20:16"
+          "label": "Matthew 19:1-20:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2372,7 +2563,8 @@
           "startVerse": 17,
           "endChapter": 21,
           "endVerse": 11,
-          "label": "Matthew 20:17-21:11"
+          "label": "Matthew 20:17-21:11",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2385,7 +2577,8 @@
           "endChapter": 21,
           "startVerse": 12,
           "endVerse": 27,
-          "label": "Matthew 21:12-27"
+          "label": "Matthew 21:12-27",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2398,7 +2591,8 @@
           "startVerse": 28,
           "endChapter": 22,
           "endVerse": 14,
-          "label": "Matthew 21:28-22:14"
+          "label": "Matthew 21:28-22:14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2411,7 +2605,8 @@
           "endChapter": 22,
           "startVerse": 15,
           "endVerse": 46,
-          "label": "Matthew 22:15-46"
+          "label": "Matthew 22:15-46",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2422,7 +2617,8 @@
           "bookId": "MAT",
           "startChapter": 23,
           "endChapter": 23,
-          "label": "Matthew 23"
+          "label": "Matthew 23",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2433,7 +2629,8 @@
           "bookId": "MAT",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Matthew 24"
+          "label": "Matthew 24",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2444,7 +2641,8 @@
           "bookId": "MAT",
           "startChapter": 25,
           "endChapter": 25,
-          "label": "Matthew 25"
+          "label": "Matthew 25",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2457,7 +2655,8 @@
           "endChapter": 26,
           "startVerse": 1,
           "endVerse": 29,
-          "label": "Matthew 26:1-29"
+          "label": "Matthew 26:1-29",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2470,7 +2669,8 @@
           "endChapter": 26,
           "startVerse": 30,
           "endVerse": 75,
-          "label": "Matthew 26:30-75"
+          "label": "Matthew 26:30-75",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2483,7 +2683,8 @@
           "endChapter": 27,
           "startVerse": 1,
           "endVerse": 26,
-          "label": "Matthew 27:1-26"
+          "label": "Matthew 27:1-26",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2496,7 +2697,8 @@
           "endChapter": 27,
           "startVerse": 27,
           "endVerse": 66,
-          "label": "Matthew 27:27-66"
+          "label": "Matthew 27:27-66",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2507,7 +2709,8 @@
           "bookId": "MAT",
           "startChapter": 28,
           "endChapter": 28,
-          "label": "Matthew 28"
+          "label": "Matthew 28",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -2518,7 +2721,8 @@
           "bookId": "HEB",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Hebrews 1"
+          "label": "Hebrews 1",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2529,7 +2733,8 @@
           "bookId": "HEB",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Hebrews 2"
+          "label": "Hebrews 2",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2542,7 +2747,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 6,
-          "label": "Hebrews 3:1-6"
+          "label": "Hebrews 3:1-6",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2555,7 +2761,8 @@
           "startVerse": 7,
           "endChapter": 4,
           "endVerse": 13,
-          "label": "Hebrews 3:7-4:13"
+          "label": "Hebrews 3:7-4:13",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2568,7 +2775,8 @@
           "startVerse": 14,
           "endChapter": 5,
           "endVerse": 10,
-          "label": "Hebrews 4:14-5:10"
+          "label": "Hebrews 4:14-5:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2581,7 +2789,8 @@
           "startVerse": 11,
           "endChapter": 6,
           "endVerse": 20,
-          "label": "Hebrews 5:11-6:20"
+          "label": "Hebrews 5:11-6:20",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2592,7 +2801,8 @@
           "bookId": "HEB",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Hebrews 7"
+          "label": "Hebrews 7",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2605,7 +2815,8 @@
           "startVerse": 1,
           "endChapter": 9,
           "endVerse": 10,
-          "label": "Hebrews 8:1-9:10"
+          "label": "Hebrews 8:1-9:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2618,7 +2829,8 @@
           "startVerse": 11,
           "endChapter": 10,
           "endVerse": 18,
-          "label": "Hebrews 9:11-10:18"
+          "label": "Hebrews 9:11-10:18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2631,7 +2843,8 @@
           "endChapter": 10,
           "startVerse": 19,
           "endVerse": 39,
-          "label": "Hebrews 10:19-39"
+          "label": "Hebrews 10:19-39",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2644,7 +2857,8 @@
           "startVerse": 1,
           "endChapter": 12,
           "endVerse": 2,
-          "label": "Hebrews 11:1-12:2"
+          "label": "Hebrews 11:1-12:2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2657,7 +2871,8 @@
           "endChapter": 12,
           "startVerse": 3,
           "endVerse": 29,
-          "label": "Hebrews 12:3-29"
+          "label": "Hebrews 12:3-29",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2670,7 +2885,8 @@
           "endChapter": 13,
           "startVerse": 1,
           "endVerse": 19,
-          "label": "Hebrews 13:1-19"
+          "label": "Hebrews 13:1-19",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2683,7 +2899,8 @@
           "endChapter": 13,
           "startVerse": 20,
           "endVerse": 25,
-          "label": "Hebrews 13:20-25"
+          "label": "Hebrews 13:20-25",
+          "planChapterTotal": 13
         }
       ]
     },
@@ -2694,7 +2911,8 @@
           "bookId": "MRK",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Mark 1"
+          "label": "Mark 1",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2705,7 +2923,8 @@
           "bookId": "MRK",
           "startChapter": 2,
           "endChapter": 3,
-          "label": "Mark 2-3"
+          "label": "Mark 2-3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2718,7 +2937,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 34,
-          "label": "Mark 4:1-34"
+          "label": "Mark 4:1-34",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2731,7 +2951,8 @@
           "startVerse": 35,
           "endChapter": 5,
           "endVerse": 43,
-          "label": "Mark 4:35-5:43"
+          "label": "Mark 4:35-5:43",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2742,7 +2963,8 @@
           "bookId": "MRK",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Mark 6"
+          "label": "Mark 6",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2755,7 +2977,8 @@
           "startVerse": 1,
           "endChapter": 8,
           "endVerse": 26,
-          "label": "Mark 7:1-8:26"
+          "label": "Mark 7:1-8:26",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2768,7 +2991,8 @@
           "startVerse": 27,
           "endChapter": 9,
           "endVerse": 50,
-          "label": "Mark 8:27-9:50"
+          "label": "Mark 8:27-9:50",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2779,7 +3003,8 @@
           "bookId": "MRK",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Mark 10"
+          "label": "Mark 10",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2790,7 +3015,8 @@
           "bookId": "MRK",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Mark 11"
+          "label": "Mark 11",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2801,7 +3027,8 @@
           "bookId": "MRK",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Mark 12"
+          "label": "Mark 12",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2812,7 +3039,8 @@
           "bookId": "MRK",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Mark 13"
+          "label": "Mark 13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2823,7 +3051,8 @@
           "bookId": "MRK",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Mark 14"
+          "label": "Mark 14",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2834,7 +3063,8 @@
           "bookId": "MRK",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Mark 15"
+          "label": "Mark 15",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2845,7 +3075,8 @@
           "bookId": "MRK",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Mark 16"
+          "label": "Mark 16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -2858,7 +3089,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "1Peter 1:1-12"
+          "label": "1Peter 1:1-12",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2871,7 +3103,8 @@
           "startVerse": 13,
           "endChapter": 2,
           "endVerse": 3,
-          "label": "1Peter 1:13-2:3"
+          "label": "1Peter 1:13-2:3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2884,7 +3117,8 @@
           "endChapter": 2,
           "startVerse": 4,
           "endVerse": 10,
-          "label": "1Peter 2:4-10"
+          "label": "1Peter 2:4-10",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2897,7 +3131,8 @@
           "startVerse": 11,
           "endChapter": 3,
           "endVerse": 12,
-          "label": "1Peter 2:11-3:12"
+          "label": "1Peter 2:11-3:12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2910,7 +3145,8 @@
           "startVerse": 13,
           "endChapter": 4,
           "endVerse": 19,
-          "label": "1Peter 3:13-4:19"
+          "label": "1Peter 3:13-4:19",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2921,7 +3157,8 @@
           "bookId": "1PE",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "1Peter 5"
+          "label": "1Peter 5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2934,7 +3171,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 11,
-          "label": "2Peter 1:1-11"
+          "label": "2Peter 1:1-11",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2947,7 +3185,8 @@
           "endChapter": 1,
           "startVerse": 12,
           "endVerse": 21,
-          "label": "2Peter 1:12-21"
+          "label": "2Peter 1:12-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2958,7 +3197,8 @@
           "bookId": "2PE",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "2Peter 2"
+          "label": "2Peter 2",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2969,7 +3209,8 @@
           "bookId": "2PE",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "2Peter 3"
+          "label": "2Peter 3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2982,7 +3223,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 25,
-          "label": "Luke 1:1-25"
+          "label": "Luke 1:1-25",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -2995,7 +3237,8 @@
           "endChapter": 1,
           "startVerse": 26,
           "endVerse": 56,
-          "label": "Luke 1:26-56"
+          "label": "Luke 1:26-56",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3008,7 +3251,8 @@
           "endChapter": 1,
           "startVerse": 57,
           "endVerse": 80,
-          "label": "Luke 1:57-80"
+          "label": "Luke 1:57-80",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3021,7 +3265,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 21,
-          "label": "Luke 2:1-21"
+          "label": "Luke 2:1-21",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3034,7 +3279,8 @@
           "endChapter": 2,
           "startVerse": 22,
           "endVerse": 52,
-          "label": "Luke 2:22-52"
+          "label": "Luke 2:22-52",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3047,7 +3293,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 22,
-          "label": "Luke 3:1-22"
+          "label": "Luke 3:1-22",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3060,7 +3307,8 @@
           "startVerse": 23,
           "endChapter": 4,
           "endVerse": 13,
-          "label": "Luke 3:23-4:13"
+          "label": "Luke 3:23-4:13",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3073,7 +3321,8 @@
           "endChapter": 4,
           "startVerse": 14,
           "endVerse": 44,
-          "label": "Luke 4:14-44"
+          "label": "Luke 4:14-44",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3086,7 +3335,8 @@
           "startVerse": 1,
           "endChapter": 6,
           "endVerse": 16,
-          "label": "Luke 5:1-6:16"
+          "label": "Luke 5:1-6:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3099,7 +3349,8 @@
           "endChapter": 6,
           "startVerse": 17,
           "endVerse": 49,
-          "label": "Luke 6:17-49"
+          "label": "Luke 6:17-49",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3112,7 +3363,8 @@
           "endChapter": 7,
           "startVerse": 1,
           "endVerse": 35,
-          "label": "Luke 7:1-35"
+          "label": "Luke 7:1-35",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3125,7 +3377,8 @@
           "startVerse": 36,
           "endChapter": 8,
           "endVerse": 3,
-          "label": "Luke 7:36-8:3"
+          "label": "Luke 7:36-8:3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3138,7 +3391,8 @@
           "endChapter": 8,
           "startVerse": 4,
           "endVerse": 21,
-          "label": "Luke 8:4-21"
+          "label": "Luke 8:4-21",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3151,7 +3405,8 @@
           "endChapter": 8,
           "startVerse": 22,
           "endVerse": 56,
-          "label": "Luke 8:22-56"
+          "label": "Luke 8:22-56",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3164,7 +3419,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 50,
-          "label": "Luke 9:1-50"
+          "label": "Luke 9:1-50",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3177,7 +3433,8 @@
           "startVerse": 51,
           "endChapter": 10,
           "endVerse": 24,
-          "label": "Luke 9:51-10:24"
+          "label": "Luke 9:51-10:24",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3190,7 +3447,8 @@
           "endChapter": 10,
           "startVerse": 25,
           "endVerse": 42,
-          "label": "Luke 10:25-42"
+          "label": "Luke 10:25-42",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3203,7 +3461,8 @@
           "endChapter": 11,
           "startVerse": 1,
           "endVerse": 36,
-          "label": "Luke 11:1-36"
+          "label": "Luke 11:1-36",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3216,7 +3475,8 @@
           "startVerse": 37,
           "endChapter": 12,
           "endVerse": 12,
-          "label": "Luke 11:37-12:12"
+          "label": "Luke 11:37-12:12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3229,7 +3489,8 @@
           "endChapter": 12,
           "startVerse": 13,
           "endVerse": 48,
-          "label": "Luke 12:13-48"
+          "label": "Luke 12:13-48",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3242,7 +3503,8 @@
           "startVerse": 49,
           "endChapter": 13,
           "endVerse": 9,
-          "label": "Luke 12:49-13:9"
+          "label": "Luke 12:49-13:9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3255,7 +3517,8 @@
           "endChapter": 13,
           "startVerse": 10,
           "endVerse": 35,
-          "label": "Luke 13:10-35"
+          "label": "Luke 13:10-35",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3266,7 +3529,8 @@
           "bookId": "LUK",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Luke 14"
+          "label": "Luke 14",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3277,7 +3541,8 @@
           "bookId": "LUK",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Luke 15"
+          "label": "Luke 15",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3290,7 +3555,8 @@
           "startVerse": 1,
           "endChapter": 17,
           "endVerse": 10,
-          "label": "Luke 16:1-17:10"
+          "label": "Luke 16:1-17:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3303,7 +3569,8 @@
           "endChapter": 17,
           "startVerse": 11,
           "endVerse": 37,
-          "label": "Luke 17:11-37"
+          "label": "Luke 17:11-37",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3316,7 +3583,8 @@
           "endChapter": 18,
           "startVerse": 1,
           "endVerse": 30,
-          "label": "Luke 18:1-30"
+          "label": "Luke 18:1-30",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3329,7 +3597,8 @@
           "startVerse": 31,
           "endChapter": 19,
           "endVerse": 27,
-          "label": "Luke 18:31-19:27"
+          "label": "Luke 18:31-19:27",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3342,7 +3611,8 @@
           "endChapter": 19,
           "startVerse": 28,
           "endVerse": 46,
-          "label": "Luke 19:28-46"
+          "label": "Luke 19:28-46",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3355,7 +3625,8 @@
           "startVerse": 47,
           "endChapter": 20,
           "endVerse": 44,
-          "label": "Luke 19:47-20:44"
+          "label": "Luke 19:47-20:44",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3368,7 +3639,8 @@
           "startVerse": 45,
           "endChapter": 21,
           "endVerse": 38,
-          "label": "Luke 20:45-21:38"
+          "label": "Luke 20:45-21:38",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3381,7 +3653,8 @@
           "endChapter": 22,
           "startVerse": 1,
           "endVerse": 46,
-          "label": "Luke 22:1-46"
+          "label": "Luke 22:1-46",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3394,7 +3667,8 @@
           "startVerse": 47,
           "endChapter": 23,
           "endVerse": 25,
-          "label": "Luke 22:47-23:25"
+          "label": "Luke 22:47-23:25",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3407,7 +3681,8 @@
           "endChapter": 23,
           "startVerse": 26,
           "endVerse": 56,
-          "label": "Luke 23:26-56"
+          "label": "Luke 23:26-56",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3418,7 +3693,8 @@
           "bookId": "LUK",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Luke 24"
+          "label": "Luke 24",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3431,7 +3707,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Romans 1:1-17"
+          "label": "Romans 1:1-17",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3444,7 +3721,8 @@
           "endChapter": 1,
           "startVerse": 18,
           "endVerse": 32,
-          "label": "Romans 1:18-32"
+          "label": "Romans 1:18-32",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3457,7 +3735,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 16,
-          "label": "Romans 2:1-16"
+          "label": "Romans 2:1-16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3470,7 +3749,8 @@
           "startVerse": 17,
           "endChapter": 3,
           "endVerse": 8,
-          "label": "Romans 2:17-3:8"
+          "label": "Romans 2:17-3:8",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3483,7 +3763,8 @@
           "endChapter": 3,
           "startVerse": 9,
           "endVerse": 20,
-          "label": "Romans 3:9-20"
+          "label": "Romans 3:9-20",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3496,7 +3777,8 @@
           "endChapter": 3,
           "startVerse": 21,
           "endVerse": 31,
-          "label": "Romans 3:21-31"
+          "label": "Romans 3:21-31",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3507,7 +3789,8 @@
           "bookId": "ROM",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Romans 4"
+          "label": "Romans 4",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3520,7 +3803,8 @@
           "endChapter": 5,
           "startVerse": 1,
           "endVerse": 11,
-          "label": "Romans 5:1-11"
+          "label": "Romans 5:1-11",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3533,7 +3817,8 @@
           "endChapter": 5,
           "startVerse": 12,
           "endVerse": 21,
-          "label": "Romans 5:12-21"
+          "label": "Romans 5:12-21",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3544,7 +3829,8 @@
           "bookId": "ROM",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Romans 6"
+          "label": "Romans 6",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3555,7 +3841,8 @@
           "bookId": "ROM",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Romans 7"
+          "label": "Romans 7",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3568,7 +3855,8 @@
           "endChapter": 8,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Romans 8:1-17"
+          "label": "Romans 8:1-17",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3581,7 +3869,8 @@
           "endChapter": 8,
           "startVerse": 18,
           "endVerse": 39,
-          "label": "Romans 8:18-39"
+          "label": "Romans 8:18-39",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3594,7 +3883,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 29,
-          "label": "Romans 9:1-29"
+          "label": "Romans 9:1-29",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3607,7 +3897,8 @@
           "startVerse": 30,
           "endChapter": 10,
           "endVerse": 21,
-          "label": "Romans 9:30-10:21"
+          "label": "Romans 9:30-10:21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3618,7 +3909,8 @@
           "bookId": "ROM",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Romans 11"
+          "label": "Romans 11",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3629,7 +3921,8 @@
           "bookId": "ROM",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Romans 12"
+          "label": "Romans 12",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3640,7 +3933,8 @@
           "bookId": "ROM",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Romans 13"
+          "label": "Romans 13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3651,7 +3945,8 @@
           "bookId": "ROM",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Romans 14"
+          "label": "Romans 14",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3664,7 +3959,8 @@
           "endChapter": 15,
           "startVerse": 1,
           "endVerse": 13,
-          "label": "Romans 15:1-13"
+          "label": "Romans 15:1-13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3677,7 +3973,8 @@
           "endChapter": 15,
           "startVerse": 14,
           "endVerse": 33,
-          "label": "Romans 15:14-33"
+          "label": "Romans 15:14-33",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3688,7 +3985,8 @@
           "bookId": "ROM",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Romans 16"
+          "label": "Romans 16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3699,7 +3997,8 @@
           "bookId": "JAS",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "James 1"
+          "label": "James 1",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3712,7 +4011,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 13,
-          "label": "James 2:1-13"
+          "label": "James 2:1-13",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3725,7 +4025,8 @@
           "endChapter": 2,
           "startVerse": 14,
           "endVerse": 26,
-          "label": "James 2:14-26"
+          "label": "James 2:14-26",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3738,7 +4039,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "James 3:1-12"
+          "label": "James 3:1-12",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3751,7 +4053,8 @@
           "endChapter": 3,
           "startVerse": 13,
           "endVerse": 18,
-          "label": "James 3:13-18"
+          "label": "James 3:13-18",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3764,7 +4067,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 10,
-          "label": "James 4:1-10"
+          "label": "James 4:1-10",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3777,7 +4081,8 @@
           "startVerse": 11,
           "endChapter": 5,
           "endVerse": 12,
-          "label": "James 4:11-5:12"
+          "label": "James 4:11-5:12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3790,7 +4095,8 @@
           "endChapter": 5,
           "startVerse": 13,
           "endVerse": 20,
-          "label": "James 5:13-20"
+          "label": "James 5:13-20",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3803,7 +4109,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 18,
-          "label": "John 1:1-18"
+          "label": "John 1:1-18",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3816,7 +4123,8 @@
           "endChapter": 1,
           "startVerse": 19,
           "endVerse": 51,
-          "label": "John 1:19-51"
+          "label": "John 1:19-51",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3827,7 +4135,8 @@
           "bookId": "JHN",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "John 2"
+          "label": "John 2",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3840,7 +4149,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 21,
-          "label": "John 3:1-21"
+          "label": "John 3:1-21",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3853,7 +4163,8 @@
           "endChapter": 3,
           "startVerse": 22,
           "endVerse": 36,
-          "label": "John 3:22-36"
+          "label": "John 3:22-36",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3866,7 +4177,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 42,
-          "label": "John 4:1-42"
+          "label": "John 4:1-42",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3879,7 +4191,8 @@
           "startVerse": 43,
           "endChapter": 5,
           "endVerse": 18,
-          "label": "John 4:43-5:18"
+          "label": "John 4:43-5:18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3892,7 +4205,8 @@
           "endChapter": 5,
           "startVerse": 19,
           "endVerse": 47,
-          "label": "John 5:19-47"
+          "label": "John 5:19-47",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3905,7 +4219,8 @@
           "endChapter": 6,
           "startVerse": 1,
           "endVerse": 21,
-          "label": "John 6:1-21"
+          "label": "John 6:1-21",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3918,7 +4233,8 @@
           "endChapter": 6,
           "startVerse": 22,
           "endVerse": 71,
-          "label": "John 6:22-71"
+          "label": "John 6:22-71",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3929,7 +4245,8 @@
           "bookId": "JHN",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "John 7"
+          "label": "John 7",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3940,7 +4257,8 @@
           "bookId": "JHN",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "John 8"
+          "label": "John 8",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3951,7 +4269,8 @@
           "bookId": "JHN",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "John 9"
+          "label": "John 9",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3964,7 +4283,8 @@
           "endChapter": 10,
           "startVerse": 1,
           "endVerse": 18,
-          "label": "John 10:1-18"
+          "label": "John 10:1-18",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3977,7 +4297,8 @@
           "endChapter": 10,
           "startVerse": 19,
           "endVerse": 42,
-          "label": "John 10:19-42"
+          "label": "John 10:19-42",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3990,7 +4311,8 @@
           "endChapter": 11,
           "startVerse": 1,
           "endVerse": 54,
-          "label": "John 11:1-54"
+          "label": "John 11:1-54",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4003,7 +4325,8 @@
           "startVerse": 55,
           "endChapter": 12,
           "endVerse": 19,
-          "label": "John 11:55-12:19"
+          "label": "John 11:55-12:19",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4016,7 +4339,8 @@
           "endChapter": 12,
           "startVerse": 20,
           "endVerse": 50,
-          "label": "John 12:20-50"
+          "label": "John 12:20-50",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4027,7 +4351,8 @@
           "bookId": "JHN",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "John 13"
+          "label": "John 13",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4038,7 +4363,8 @@
           "bookId": "JHN",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "John 14"
+          "label": "John 14",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4051,7 +4377,8 @@
           "endChapter": 15,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "John 15:1-17"
+          "label": "John 15:1-17",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4064,7 +4391,8 @@
           "startVerse": 18,
           "endChapter": 16,
           "endVerse": 15,
-          "label": "John 15:18-16:15"
+          "label": "John 15:18-16:15",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4077,7 +4405,8 @@
           "endChapter": 16,
           "startVerse": 16,
           "endVerse": 33,
-          "label": "John 16:16-33"
+          "label": "John 16:16-33",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4088,7 +4417,8 @@
           "bookId": "JHN",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "John 17"
+          "label": "John 17",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4101,7 +4431,8 @@
           "endChapter": 18,
           "startVerse": 1,
           "endVerse": 27,
-          "label": "John 18:1-27"
+          "label": "John 18:1-27",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4114,7 +4445,8 @@
           "startVerse": 28,
           "endChapter": 19,
           "endVerse": 16,
-          "label": "John 18:28-19:16"
+          "label": "John 18:28-19:16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4127,7 +4459,8 @@
           "endChapter": 19,
           "startVerse": 17,
           "endVerse": 42,
-          "label": "John 19:17-42"
+          "label": "John 19:17-42",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4138,7 +4471,8 @@
           "bookId": "JHN",
           "startChapter": 20,
           "endChapter": 20,
-          "label": "John 20"
+          "label": "John 20",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4149,7 +4483,8 @@
           "bookId": "JHN",
           "startChapter": 21,
           "endChapter": 21,
-          "label": "John 21"
+          "label": "John 21",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4162,7 +4497,8 @@
           "startVerse": 1,
           "endChapter": 2,
           "endVerse": 6,
-          "label": "1John 1:1-2:6"
+          "label": "1John 1:1-2:6",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4175,7 +4511,8 @@
           "endChapter": 2,
           "startVerse": 7,
           "endVerse": 17,
-          "label": "1John 2:7-17"
+          "label": "1John 2:7-17",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4188,7 +4525,8 @@
           "startVerse": 18,
           "endChapter": 3,
           "endVerse": 3,
-          "label": "1John 2:18-3:3"
+          "label": "1John 2:18-3:3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4201,7 +4539,8 @@
           "endChapter": 3,
           "startVerse": 4,
           "endVerse": 24,
-          "label": "1John 3:4-24"
+          "label": "1John 3:4-24",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4212,7 +4551,8 @@
           "bookId": "1JN",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "1John 4"
+          "label": "1John 4",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4223,7 +4563,8 @@
           "bookId": "1JN",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "1John 5"
+          "label": "1John 5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4234,7 +4575,8 @@
           "bookId": "2JN",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "2Joh"
+          "label": "2Joh",
+          "planChapterTotal": 1
         }
       ]
     },
@@ -4245,7 +4587,8 @@
           "bookId": "3JN",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "3Joh"
+          "label": "3Joh",
+          "planChapterTotal": 1
         }
       ]
     },
@@ -4256,7 +4599,8 @@
           "bookId": "JUD",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Jud"
+          "label": "Jud",
+          "planChapterTotal": 1
         }
       ]
     },
@@ -4267,7 +4611,8 @@
           "bookId": "REV",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Revelation 1"
+          "label": "Revelation 1",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4278,7 +4623,8 @@
           "bookId": "REV",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Revelation 2"
+          "label": "Revelation 2",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4289,7 +4635,8 @@
           "bookId": "REV",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Revelation 3"
+          "label": "Revelation 3",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4300,7 +4647,8 @@
           "bookId": "REV",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Revelation 4"
+          "label": "Revelation 4",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4311,7 +4659,8 @@
           "bookId": "REV",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "Revelation 5"
+          "label": "Revelation 5",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4322,7 +4671,8 @@
           "bookId": "REV",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Revelation 6"
+          "label": "Revelation 6",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4335,7 +4685,8 @@
           "startVerse": 1,
           "endChapter": 8,
           "endVerse": 5,
-          "label": "Revelation 7:1-8:5"
+          "label": "Revelation 7:1-8:5",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4348,7 +4699,8 @@
           "startVerse": 6,
           "endChapter": 9,
           "endVerse": 21,
-          "label": "Revelation 8:6-9:21"
+          "label": "Revelation 8:6-9:21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4359,7 +4711,8 @@
           "bookId": "REV",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Revelation 10"
+          "label": "Revelation 10",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4370,7 +4723,8 @@
           "bookId": "REV",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Revelation 11"
+          "label": "Revelation 11",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4381,7 +4735,8 @@
           "bookId": "REV",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Revelation 12"
+          "label": "Revelation 12",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4392,7 +4747,8 @@
           "bookId": "REV",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Revelation 13"
+          "label": "Revelation 13",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4403,7 +4759,8 @@
           "bookId": "REV",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Revelation 14"
+          "label": "Revelation 14",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4414,7 +4771,8 @@
           "bookId": "REV",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Revelation 15"
+          "label": "Revelation 15",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4425,7 +4783,8 @@
           "bookId": "REV",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Revelation 16"
+          "label": "Revelation 16",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4436,7 +4795,8 @@
           "bookId": "REV",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "Revelation 17"
+          "label": "Revelation 17",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4447,7 +4807,8 @@
           "bookId": "REV",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "Revelation 18"
+          "label": "Revelation 18",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4458,7 +4819,8 @@
           "bookId": "REV",
           "startChapter": 19,
           "endChapter": 19,
-          "label": "Revelation 19"
+          "label": "Revelation 19",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4469,7 +4831,8 @@
           "bookId": "REV",
           "startChapter": 20,
           "endChapter": 20,
-          "label": "Revelation 20"
+          "label": "Revelation 20",
+          "planChapterTotal": 22
         }
       ]
     },
@@ -4482,7 +4845,8 @@
           "startVerse": 1,
           "endChapter": 22,
           "endVerse": 5,
-          "label": "Revelation 21:1-22:5"
+          "label": "Revelation 21:1-22:5",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4495,7 +4859,8 @@
           "endChapter": 22,
           "startVerse": 6,
           "endVerse": 21,
-          "label": "Revelation 22:6-21"
+          "label": "Revelation 22:6-21",
+          "planChapterTotal": 22
         }
       ]
     }

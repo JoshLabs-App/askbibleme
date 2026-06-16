@@ -30,9 +30,12 @@ import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import {
+  clampScrollY,
   isVerseVisibleInScrollViewport,
+  readVerseScrollFocusRatio,
   scrollYToCenterVerse,
   type VerseLayout,
+  type VerseScrollFocusOpts,
 } from "./read-chapter-verse-layout";
 
 type ChapterTarget = { bookId: string; chapter: number };
@@ -41,6 +44,7 @@ type FollowScrollOpts = {
   verseLayoutsRef?: React.RefObject<Map<number, VerseLayout>>;
   scrollViewportHeight?: number;
   scrollOffsetRef?: React.RefObject<number>;
+  scrollContentHeightRef?: React.RefObject<number>;
 };
 
 export function useReadChapterAudio(
@@ -53,6 +57,11 @@ export function useReadChapterAudio(
   const verseLayoutsRef = followScroll?.verseLayoutsRef;
   const scrollViewportHeight = followScroll?.scrollViewportHeight ?? 0;
   const scrollOffsetRef = followScroll?.scrollOffsetRef;
+  const scrollContentHeightRef = followScroll?.scrollContentHeightRef;
+
+  const scrollFocusOpts = (): VerseScrollFocusOpts => ({
+    contentHeight: scrollContentHeightRef?.current,
+  });
   const {
     registerReadChapter,
     playing,
@@ -296,7 +305,7 @@ export function useReadChapterAudio(
   })();
 
   useEffect(() => {
-    if (activeVerseIndex === null || !scrollRef.current) return;
+    if (!isFocused || activeVerseIndex === null || !scrollRef.current) return;
     if (!scrollViewportHeight || scrollViewportHeight <= 0) return;
 
     let cancelled = false;
@@ -311,15 +320,16 @@ export function useReadChapterAudio(
       const now = Date.now();
 
       if (layout) {
+        const focusOpts = scrollFocusOpts();
         if (
-          isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight) &&
+          isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight, focusOpts) &&
           now - lastFollowScrollAtRef.current < 900
         ) {
           return;
         }
         lastFollowScrollAtRef.current = now;
         scrollRef.current.scrollTo({
-          y: scrollYToCenterVerse(layout, scrollViewportHeight),
+          y: scrollYToCenterVerse(layout, scrollViewportHeight, focusOpts),
           animated: true,
         });
         return;
@@ -334,8 +344,10 @@ export function useReadChapterAudio(
       if (now - lastFollowScrollAtRef.current < 900) return;
       lastFollowScrollAtRef.current = now;
       const headerY = scrollHeaderHeightRef?.current ?? 0;
+      const focusRatio = readVerseScrollFocusRatio();
+      const fallbackIdeal = headerY + activeVerseIndex * 44 - scrollViewportHeight * focusRatio;
       scrollRef.current.scrollTo({
-        y: Math.max(0, headerY + activeVerseIndex * 44 - scrollViewportHeight * 0.28),
+        y: clampScrollY(fallbackIdeal, scrollViewportHeight, scrollContentHeightRef?.current),
         animated: true,
       });
     };
@@ -347,6 +359,7 @@ export function useReadChapterAudio(
   }, [
     activeVerseIndex,
     chapterData?.verses,
+    isFocused,
     scrollRef,
     scrollHeaderHeightRef,
     scrollOffsetRef,
@@ -355,7 +368,7 @@ export function useReadChapterAudio(
   ]);
 
   useEffect(() => {
-    if (activeVerseIndex === null || !audioMatchesChapter || !scrollRef.current) return;
+    if (!isFocused || activeVerseIndex === null || !audioMatchesChapter || !scrollRef.current) return;
     if (!scrollViewportHeight || scrollViewportHeight <= 0) return;
 
     const verseNum = chapterData?.verses?.[activeVerseIndex]?.verse ?? null;
@@ -363,19 +376,22 @@ export function useReadChapterAudio(
     if (!layout) return;
 
     const scrollOffsetY = scrollOffsetRef?.current ?? 0;
-    if (isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight)) return;
+    const focusOpts = scrollFocusOpts();
+    if (isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight, focusOpts)) return;
 
     const now = Date.now();
     if (now - lastFollowScrollAtRef.current < 900) return;
     lastFollowScrollAtRef.current = now;
     scrollRef.current.scrollTo({
-      y: scrollYToCenterVerse(layout, scrollViewportHeight),
+      y: scrollYToCenterVerse(layout, scrollViewportHeight, focusOpts),
       animated: true,
     });
   }, [
     activeVerseIndex,
     audioMatchesChapter,
     chapterData?.verses,
+    isFocused,
+    scrollContentHeightRef,
     scrollRef,
     scrollOffsetRef,
     scrollViewportHeight,

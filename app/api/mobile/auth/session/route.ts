@@ -29,7 +29,9 @@ export async function GET(req: Request) {
       ok: true,
       schemaVersion: SCHEMA_VERSION,
       configured: true,
-      user: user ? { id: user.id, email: user.email, name: user.name } : null,
+      user: user
+        ? { id: user.id, email: user.email, name: user.name, locale: user.locale }
+        : null,
     });
   }
 

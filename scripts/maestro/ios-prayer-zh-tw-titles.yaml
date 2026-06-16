@@ -1,0 +1,19 @@
+appId: me.askbible
+---
+- launchApp
+- tapOn:
+    point: "92%,9%"
+    optional: true
+- tapOn:
+    point: "90%,94%"
+- extendedWaitUntil:
+    visible:
+      text: ".*祷告.*|.*禱告.*"
+    timeout: 20000
+- tapOn:
+    text: ".*禱告.*"
+- extendedWaitUntil:
+    visible: "為自己"
+    timeout: 20000
+- assertVisible: "為孩子"
+- assertVisible: "為婚姻"

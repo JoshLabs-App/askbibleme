@@ -21,7 +21,7 @@ export function isShellPrimaryTabPathname(pathname: string): boolean {
 /** 读经 Tab 目录首页：显示右上译本/排版设置 */
 export function isReadCatalogPathname(pathname: string): boolean {
   const p = normalizePath(pathname);
-  return isReadBibleHomeRoute(pathname) || /(^|\/)read\/read$/.test(p);
+  return isReadBibleHomeRoute(pathname) || /(^|\/)read\/catalog$/.test(p);
 }
 
 /** 读经章页（如 `/(tabs)/read/GEN/1`） */

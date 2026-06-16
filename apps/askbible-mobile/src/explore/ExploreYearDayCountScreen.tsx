@@ -1,98 +1,141 @@
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { InteractionManager, Modal, Pressable, Text, View } from "react-native";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { READ_PARCHMENT_PAGE_BOTTOM } from "../read/ReadParchmentPageScroll";
-import { ExploreBirthYearSettingsModal } from "./ExploreBirthYearSettingsModal";
+import { ReadParchmentBackground } from "../read/ReadParchmentBackground";
 import { ExploreCenturyTimeline } from "./ExploreCenturyTimeline";
 import { ExploreBiblicalLifespanChart } from "./ExploreBiblicalLifespanChart";
+import { ExploreBirthYearSettingsScreen } from "./ExploreBirthYearSettingsScreen";
+import { ExploreYearDayCountLifeExpectancyIntro } from "./ExploreYearDayCountLifeExpectancyIntro";
 import { ExploreYearDayCountScriptureList } from "./ExploreYearDayCountScriptureList";
-import { isExploreYearDayProfileComplete, readExploreYearDayProfile } from "./explore-birth-year-prefs";
-import { YEAR_DAY_COUNT_LIFE_DAY_READ_TARGET } from "./year-day-count-scriptures";
-import { exploreStyles as s } from "./exploreParchmentStyles";
-
-const YEAR_DAY_COUNT_BOTTOM_CONTEXT = {
-  en: {
-    prose: [
-      "Global life expectancy is still brief.",
-      "Our days pass quickly, but they are precious before God.",
-    ],
-    scripture: [
-      "The days of our years are threescore years and ten;",
-      "and if by reason of strength they be fourscore years...",
-    ],
-    ref: "Psalm 90:10",
-  },
-  "zh-CN": {
-    prose: ["据 Our World in Data 数据，2023年全球平均预期寿命约为73岁。"],
-    scripture: ["圣经《诗篇》90篇说：“我们一生的年日是七十岁，若是强壮可到八十岁；", "但其中所矜夸的，不过是劳苦愁烦，转眼成空，我们便如飞而去。”"],
-    ref: "诗篇 90:10",
-  },
-  "zh-TW": {
-    prose: ["據 Our World in Data 資料，2023 年全球平均預期壽命約為 73 歲。"],
-    scripture: ["聖經《詩篇》90 篇說：「我們一生的年日是七十歲，若是強壯可到八十歲；", "但其中所矜誇的，不過是勞苦愁煩，轉眼成空，我們便如飛而去。」"],
-    ref: "詩篇 90:10",
-  },
-} as const;
+import { ExploreYearsDaysEternitySection } from "./ExploreYearsDaysEternitySection";
+import {
+  isExploreYearDayProfileComplete,
+  readExploreYearDayProfile,
+  type ExploreYearDayProfile,
+} from "./explore-birth-year-prefs";
+import {
+  canAutoPromptRequiredYearDayBirthProfile,
+  resetRequiredYearDayBirthProfilePromptDismissal,
+} from "./explore-year-day-birth-prompt-session";
+import { pushExploreReadChapter, useExploreReadReturnPath, EXPLORE_YEAR_DAY_COUNT_PATH } from "./explore-read-chapter-nav";
+import { getYearDayCountLifeDayReadTarget } from "./year-day-count-scriptures";
+import { exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
 
 export function ExploreYearDayCountScreen() {
   const router = useRouter();
+  const exploreReturn = useExploreReadReturnPath() ?? EXPLORE_YEAR_DAY_COUNT_PATH;
   const insets = useSafeAreaInsets();
-  const { locale } = useLocale();
-  const [birthSettingsOpen, setBirthSettingsOpen] = useState(false);
+  const scrollContentStyle = useExploreScrollContentStyle({
+    paddingTop: 8 + insets.top,
+    paddingBottom: READ_PARCHMENT_PAGE_BOTTOM + insets.bottom,
+  });
   const [birthRefreshKey, setBirthRefreshKey] = useState(0);
+  const [profile, setProfile] = useState<ExploreYearDayProfile | null>(null);
+  const [heavySectionsReady, setHeavySectionsReady] = useState(false);
+  const [scriptureReady, setScriptureReady] = useState(false);
+  const [tailSectionsReady, setTailSectionsReady] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsRequired, setSettingsRequired] = useState(false);
+  const profileLoadSeqRef = useRef(0);
+  const didOfferRequiredSettingsRef = useRef(false);
 
   useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => setHeavySectionsReady(true));
+    return () => task.cancel();
+  }, []);
+
+  useEffect(() => {
+    if (!heavySectionsReady) {
+      setScriptureReady(false);
+      setTailSectionsReady(false);
+      return;
+    }
+    const scriptureTask = InteractionManager.runAfterInteractions(() => setScriptureReady(true));
+    const tailTask = InteractionManager.runAfterInteractions(() => {
+      InteractionManager.runAfterInteractions(() => setTailSectionsReady(true));
+    });
+    return () => {
+      scriptureTask.cancel();
+      tailTask.cancel();
+    };
+  }, [heavySectionsReady]);
+
+  const loadProfile = useCallback(() => {
+    const loadSeq = ++profileLoadSeqRef.current;
     let cancelled = false;
-    void readExploreYearDayProfile().then((profile) => {
-      if (cancelled) return;
-      if (!isExploreYearDayProfileComplete(profile)) {
-        setBirthSettingsOpen(true);
-      }
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readExploreYearDayProfile().then(async (next) => {
+        if (cancelled || loadSeq !== profileLoadSeqRef.current) return;
+        setProfile(next);
+        setBirthRefreshKey((k) => k + 1);
+        if (isExploreYearDayProfileComplete(next)) {
+          resetRequiredYearDayBirthProfilePromptDismissal();
+          return;
+        }
+        if (didOfferRequiredSettingsRef.current) return;
+        const canPrompt = await canAutoPromptRequiredYearDayBirthProfile();
+        if (cancelled || loadSeq !== profileLoadSeqRef.current || !canPrompt) return;
+        didOfferRequiredSettingsRef.current = true;
+        setSettingsRequired(true);
+        setSettingsOpen(true);
+      });
     });
     return () => {
       cancelled = true;
+      if (loadSeq === profileLoadSeqRef.current) {
+        profileLoadSeqRef.current += 1;
+      }
+      task.cancel();
     };
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!settingsOpen) {
+        return loadProfile();
+      }
+      return undefined;
+    }, [loadProfile, settingsOpen]),
+  );
+
   const openBirthSettings = useCallback(() => {
-    setBirthSettingsOpen(true);
+    setSettingsRequired(false);
+    setSettingsOpen(true);
   }, []);
 
   const closeBirthSettings = useCallback(() => {
-    setBirthSettingsOpen(false);
+    setSettingsOpen(false);
+    setSettingsRequired(false);
   }, []);
 
-  const onBirthSaved = useCallback(() => {
-    setBirthRefreshKey((k) => k + 1);
-  }, []);
+  const handleBirthSettingsSaved = useCallback(() => {
+    setSettingsOpen(false);
+    setSettingsRequired(false);
+    loadProfile();
+  }, [loadProfile]);
 
   const openLifeDayInBible = useCallback(() => {
-    const target = YEAR_DAY_COUNT_LIFE_DAY_READ_TARGET;
-    router.push({
-      pathname: "/read/[bookId]/[chapter]",
-      params: {
+    const target = getYearDayCountLifeDayReadTarget();
+    pushExploreReadChapter(
+      router,
+      {
         bookId: target.bookId,
-        chapter: String(target.chapter),
-        verse: String(target.verseStart),
+        chapter: target.chapter,
+        verse: target.verseStart,
       },
-    });
-  }, [router]);
+      exploreReturn,
+    );
+  }, [exploreReturn, router]);
 
   return (
     <View style={s.root}>
       <ParchmentBottomFadeScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          s.scroll,
-          {
-            paddingTop: 8 + insets.top,
-            paddingBottom: READ_PARCHMENT_PAGE_BOTTOM + insets.bottom,
-          },
-        ]}
+        contentContainerStyle={scrollContentStyle}
       >
         <Pressable onPress={() => router.back()} style={s.yearDayCountBackLink} accessibilityRole="button">
           <Text style={s.backLinkText}>{t("pages.explore.yearDayCountBack")}</Text>
@@ -101,37 +144,52 @@ export function ExploreYearDayCountScreen() {
         <Text style={s.yearDayCountTitle}>{t("pages.explore.yearDayCountTitle")}</Text>
         <View style={s.yearDayCountRule} />
 
-        <View style={s.yearDayCountTimelineSection}>
-          <ExploreCenturyTimeline
-            onOpenSettings={openBirthSettings}
-            onOpenLifeDay={openLifeDayInBible}
-            refreshKey={birthRefreshKey}
-          />
-        </View>
+        {heavySectionsReady ? (
+          <>
+            <View style={s.yearDayCountTimelineSection}>
+              <ExploreCenturyTimeline
+                birthDate={profile?.birthDate ?? null}
+                onOpenSettings={openBirthSettings}
+                onOpenLifeDay={openLifeDayInBible}
+                refreshKey={birthRefreshKey}
+              />
+            </View>
 
-        <ExploreYearDayCountScriptureList />
+            {scriptureReady ? <ExploreYearDayCountScriptureList exploreReturn={exploreReturn} /> : null}
 
-        <ExploreBiblicalLifespanChart
-          profileRefreshKey={birthRefreshKey}
-          onOpenProfileSettings={openBirthSettings}
-        />
+            {tailSectionsReady ? (
+              <>
+                <ExploreBiblicalLifespanChart
+                  profile={profile}
+                  profileRefreshKey={birthRefreshKey}
+                  onOpenProfileSettings={openBirthSettings}
+                  exploreReturn={exploreReturn}
+                />
 
-        <View style={s.yearDayCountBottomContext}>
-          <Text style={s.yearDayCountBottomParagraph}>
-            {YEAR_DAY_COUNT_BOTTOM_CONTEXT[locale].prose.join(locale === "en" ? " " : "")}
-          </Text>
-          <Text style={s.yearDayCountBottomParagraph}>
-            {YEAR_DAY_COUNT_BOTTOM_CONTEXT[locale].scripture.join(locale === "en" ? " " : "")}
-          </Text>
-          <Text style={s.yearDayCountBottomRefLine}>{YEAR_DAY_COUNT_BOTTOM_CONTEXT[locale].ref}</Text>
-        </View>
+                <ExploreYearDayCountLifeExpectancyIntro />
+
+                <ExploreYearsDaysEternitySection />
+              </>
+            ) : null}
+          </>
+        ) : null}
       </ParchmentBottomFadeScrollView>
 
-      <ExploreBirthYearSettingsModal
-        visible={birthSettingsOpen}
-        onClose={closeBirthSettings}
-        onSaved={onBirthSaved}
-      />
+      <Modal
+        visible={settingsOpen}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={closeBirthSettings}
+      >
+        <ReadParchmentBackground>
+          <ExploreBirthYearSettingsScreen
+            embedded
+            required={settingsRequired}
+            onClose={closeBirthSettings}
+            onSaved={handleBirthSettingsSaved}
+          />
+        </ReadParchmentBackground>
+      </Modal>
     </View>
   );
 }

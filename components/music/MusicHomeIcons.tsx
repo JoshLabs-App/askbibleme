@@ -3,61 +3,37 @@ import type { MusicHomeAlbumIcon } from "@/components/music/music-home-album-the
 type Props = { kind: MusicHomeAlbumIcon; color?: string; className?: string };
 
 export function MusicHomeAlbumIconGlyph({ kind, color, className = "h-5 w-5" }: Props) {
-  const stroke = color ?? "currentColor";
+  const fill = color ?? "currentColor";
   switch (kind) {
     case "calm":
       return (
-        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-          <path
-            d="M12 3c-2.8 3.2-4 5.8-4 8.5a4 4 0 1 0 8 0c0-2.7-1.2-5.3-4-8.5Z"
-            stroke={stroke}
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-          />
-          <path d="M9 20h6" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+        <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
+          <path d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C8.62 2 7.5 2 6.12 2S3.62 3.12 3.62 4.5l.02.19C3.23 4.41 2.75 4.25 2.22 4.25c-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25z" />
         </svg>
       );
     case "coffee":
       return (
-        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-          <path
-            d="M5 8h11a3 3 0 0 1 0 6H5V8Z"
-            stroke={stroke}
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-          />
-          <path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M7 19h8" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+        <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
+          <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z" />
         </svg>
       );
     case "work":
       return (
-        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-          <path
-            d="M4 9h16v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9Z"
-            stroke={stroke}
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-          />
-          <path d="M9 9V7a3 3 0 0 1 6 0v2" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+        <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
+          <path d="M14 6V4h-4v2H4v14h16V6h-4zM4 20V8h16v12H4zm10-14h-4V4h4v2z" fillRule="evenodd" />
         </svg>
       );
     case "sleep":
       return (
-        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-          <path
-            d="M20 14.5A7.5 7.5 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5Z"
-            stroke={stroke}
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-          />
+        <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
+          <path d="M9.37 5.51C9.19 6.15 9.1 6.82 9.1 7.5c0 4.08 3.32 7.4 7.4 7.4 1.68 0 3.22-.56 4.46-1.5 0 2.22-.92 4.23-2.4 5.68 7.07-.72 12.54-6.84 11.84-14.12-.51-4.66-4.21-8.35-8.86-8.86-7.28-.7-13.4 4.77-12.54 11.84z" />
         </svg>
       );
     default:
       return (
         <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-          <circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.6" />
-          <circle cx="12" cy="12" r="2.5" fill={stroke} />
+          <circle cx="12" cy="12" r="8" stroke={fill} strokeWidth="1.6" />
+          <circle cx="12" cy="12" r="2.5" fill={fill} />
         </svg>
       );
   }

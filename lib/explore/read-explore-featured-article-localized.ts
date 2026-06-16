@@ -2,6 +2,7 @@ import type { AppLocale } from "@/lib/i18n/config";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import bundleJson from "@/data/explore-featured-articles/bundle.json";
 import type { ExploreFeaturedArticleSlug } from "@/lib/explore/explore-featured-article-slugs";
+import { stripExploreArticleBodyLeadHeading } from "@/lib/explore/strip-explore-article-body-lead-heading";
 
 type LocaleBlock = {
   title: string;
@@ -43,7 +44,11 @@ export function readExploreFeaturedArticleView(
   const entry = bundle.articles.find((item) => item.slug === slug);
   if (!entry) return null;
   const block = localizeBlock(entry[sourceLocale(locale)], locale);
-  return { slug: entry.slug as ExploreFeaturedArticleSlug, ...block };
+  return {
+    slug: entry.slug as ExploreFeaturedArticleSlug,
+    ...block,
+    body: stripExploreArticleBodyLeadHeading(block.body),
+  };
 }
 
 export function readExploreFeaturedArticleSlugs(): string[] {

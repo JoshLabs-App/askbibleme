@@ -12,6 +12,7 @@ import {
 import {
   inferAppLocaleFromNavigator,
   LOCALE_STORAGE_KEY,
+  LOCALE_SYNC_EVENT,
   persistLocaleToCookie,
   parseLocale,
   type AppLocale,
@@ -47,9 +48,11 @@ function subscribeLocale(onStore: () => void) {
     if (e.key === LOCALE_STORAGE_KEY || e.key === null) onStore();
   };
   window.addEventListener("storage", onStorage);
+  window.addEventListener(LOCALE_SYNC_EVENT, onStore);
   return () => {
     localeListeners.delete(onStore);
     window.removeEventListener("storage", onStorage);
+    window.removeEventListener(LOCALE_SYNC_EVENT, onStore);
   };
 }
 

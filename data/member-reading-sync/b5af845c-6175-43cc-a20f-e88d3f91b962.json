@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "userId": "b5af845c-6175-43cc-a20f-e88d3f91b962",
+  "revision": "1781573595394-86smunhh",
+  "updatedAt": "2026-06-16T01:33:15.394Z",
+  "blobs": {
+    "tripleLoopProgress": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "ot": {
+          "bookId": "EXO",
+          "chapter": 22
+        },
+        "nt": {
+          "bookId": "JHN",
+          "chapter": 4
+        },
+        "wisdom": {
+          "bookId": "PSA",
+          "chapter": 30
+        },
+        "startedAt": "2026-04-05",
+        "chaptersReadKeys": {
+          "ot": [
+            "EXO:22"
+          ],
+          "nt": [
+            "JHN:4"
+          ],
+          "wisdom": [
+            "PSA:30"
+          ]
+        },
+        "chaptersRead": {
+          "ot": 1,
+          "nt": 1,
+          "wisdom": 1
+        }
+      }
+    },
+    "readTypography": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "size": "m",
+        "verseParagraphFlow": true,
+        "chapterSegmentMode": "t1"
+      }
+    },
+    "readTranslation": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "prefs": {
+          "version": 1,
+          "primaryTranslationId": "cuv-simp",
+          "contrastTranslationIds": [],
+          "contrastTranslationId": null,
+          "audioTranslationId": null
+        },
+        "mode": "auto"
+      }
+    },
+    "homeNatureUi": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "ttsPrefs": {
+          "rateLevel": 2,
+          "pitchLevel": 2,
+          "voiceId": ""
+        },
+        "visualLevels": {
+          "dimLevel": 0,
+          "blurLevel": 0
+        },
+        "verseAppearance": {
+          "fontFamily": "sans",
+          "textEffect": "classic"
+        },
+        "textScaleIndex": 12,
+        "chromeTune": {
+          "topHeightRem": 5.25,
+          "topHeightMinPx": 88,
+          "bottomHeightRem": 13,
+          "bottomHeightMinPx": 200,
+          "topSolidEndPct": 2,
+          "bottomSolidEndPct": 5,
+          "topStop1Pct": 26,
+          "topStop1Alpha": 0.42,
+          "topStop2Pct": 58,
+          "topStop2Alpha": 0.14,
+          "bottomStop1Pct": 30,
+          "bottomStop1Alpha": 0.38,
+          "bottomStop2Pct": 58,
+          "bottomStop2Alpha": 0.12
+        }
+      }
+    },
+    "homePrayerVerse": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "verseDisplay": "primary",
+        "primaryTranslationMode": "auto",
+        "verseTextZhTranslationId": "cuv-simp",
+        "verseTextEnTranslationId": ""
+      }
+    },
+    "homeVersePoolScope": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "scopeId": "all"
+      }
+    },
+    "natureSceneUi": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "activeSceneId": "9cc949f2-3c1d-49c0-8357-2dc1d32bd954",
+        "loopAllScenes": false,
+        "ambientSceneSlotId": null,
+        "ambientMasterVolume": 0
+      }
+    },
+    "musicVisualTheme": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "theme": "aqua"
+      }
+    },
+    "scripturePlaybackRate": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "rate": 1
+      }
+    },
+    "cuvAudioVoice": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "voiceId": "mandarin"
+      }
+    },
+    "appLocale": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "locale": "zh-CN"
+      }
+    },
+    "readingPlanPrefs": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "planId": "triple-loop",
+        "anchor": "calendar-easter",
+        "startedOn": "2026-04-05",
+        "dayCount": 1
+      }
+    },
+    "todayReadingDone": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "scopeKey": "triple-loop:epoch:72",
+        "doneKeys": [
+          "nt:JHN:4",
+          "wisdom:PSA:30",
+          "ot:EXO:22"
+        ]
+      }
+    },
+    "habitStats": {
+      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "value": {
+        "version": 1,
+        "completedDates": [
+          "2026-06-15"
+        ]
+      }
+    }
+  }
+}

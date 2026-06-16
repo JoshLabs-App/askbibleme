@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { InteractionManager, StyleSheet, View } from "react-native";
 import { chromeScrimGradientColors } from "../shell/chromeScrim";
 import { readShellChromeTune } from "./natureHomePrefs";
 
@@ -14,7 +14,16 @@ export function HomeChromeScrim({ bottomInset, prefsVersion = 0 }: Props) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    void readShellChromeTune().then(() => setTick((n) => n + 1));
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readShellChromeTune().then(() => {
+        if (!cancelled) setTick((n) => n + 1);
+      });
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
   }, [prefsVersion]);
 
   const scrim = useMemo(() => chromeScrimGradientColors(), [tick]);

@@ -1,32 +1,23 @@
 import { useRouter } from "expo-router";
 import { useState, useSyncExternalStore } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { AuthParchmentScreen } from "./AuthParchmentScreen";
+import { authFormSurface as s } from "./authFormSurface";
 import { useMemberAuth } from "./MemberAuthProvider";
 import { MemberAppleSignInButton, MemberAuthMethodDivider, MemberGoogleSignInButton } from "./MemberSocialSignInButtons";
 import {
   getMemberRegisterEnabled,
   subscribeMemberRegisterEnabled,
 } from "./member-register-enabled";
-import { parchmentSans } from "../fonts/parchmentType";
+import { resolveMemberOAuthError } from "./resolveMemberOAuthError";
 import { useLocale } from "../i18n/LocaleProvider";
-import { theme } from "../theme";
+import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
 export function MemberRegisterScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { locale, t } = useLocale();
   const { completeRegistration, signInWithGoogle, signInWithApple } = useMemberAuth();
+
   const registerOpen = useSyncExternalStore(
     subscribeMemberRegisterEnabled,
     getMemberRegisterEnabled,
@@ -37,76 +28,72 @@ export function MemberRegisterScreen() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
+  const [applePending, setApplePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [appleError, setAppleError] = useState<string | null>(null);
+
+  const oauthBusy = googlePending || applePending;
 
   async function onGoogleSignIn() {
-    if (pending) return;
+    if (pending || oauthBusy) return;
     if (!registerOpen) {
       setError(t("auth.registerClosed"));
       return;
     }
-    setPending(true);
+    setGooglePending(true);
     setError(null);
+    setGoogleError(null);
+    setAppleError(null);
     try {
       const result = await signInWithGoogle();
       if (!result.ok) {
-        if (result.cancelled) return;
-        setError(
-          result.error === "network"
-            ? t("auth.errorNetwork")
-            : result.error === "google_not_configured" || result.error === "google_failed"
-              ? t("auth.errorOAuth")
-              : result.error || t("auth.errorOAuth"),
-        );
+        const message = resolveMemberOAuthError("google", t, result);
+        if (message) setGoogleError(message);
         return;
       }
-      router.back();
     } catch {
-      setError(t("auth.errorNetwork"));
+      setGoogleError(t("auth.errorNetwork"));
     } finally {
-      setPending(false);
+      setGooglePending(false);
     }
   }
 
   async function onAppleSignIn() {
-    if (pending) return;
+    if (pending || oauthBusy) return;
     if (!registerOpen) {
       setError(t("auth.registerClosed"));
       return;
     }
-    setPending(true);
+    setApplePending(true);
     setError(null);
+    setGoogleError(null);
+    setAppleError(null);
     try {
       const result = await signInWithApple();
       if (!result.ok) {
-        if (result.cancelled) return;
-        setError(
-          result.error === "network"
-            ? t("auth.errorNetwork")
-            : result.error === "apple_not_available" ||
-                result.error === "apple_failed" ||
-                result.error === "apple_auth_failed"
-              ? t("auth.errorOAuth")
-              : result.error || t("auth.errorOAuth"),
-        );
+        const message = resolveMemberOAuthError("apple", t, result);
+        if (message) setAppleError(message);
         return;
       }
-      router.back();
     } catch {
-      setError(t("auth.errorNetwork"));
+      setAppleError(t("auth.errorNetwork"));
     } finally {
-      setPending(false);
+      setApplePending(false);
     }
   }
 
   async function onSubmit() {
-    if (pending) return;
+    if (pending || oauthBusy) return;
     if (!registerOpen) {
       setError(t("auth.registerClosed"));
       return;
     }
     setPending(true);
     setError(null);
+    setGoogleError(null);
+    setAppleError(null);
     try {
       const result = await completeRegistration({
         email: email.trim(),
@@ -118,7 +105,6 @@ export function MemberRegisterScreen() {
         setError(result.error === "network" ? t("auth.errorNetwork") : result.error || t("auth.errorNetwork"));
         return;
       }
-      router.back();
     } catch {
       setError(t("auth.errorNetwork"));
     } finally {
@@ -127,131 +113,62 @@ export function MemberRegisterScreen() {
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16 }]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button">
-            <Text style={styles.backText}>{t("auth.backHome")}</Text>
+    <AuthParchmentScreen>
+      <Pressable onPress={() => router.back()} style={s.backBtn} accessibilityRole="button">
+        <Text style={s.backText}>{t("auth.backHome")}</Text>
+      </Pressable>
+
+      <Text style={s.title}>{t("auth.registerPageTitle")}</Text>
+      <Text style={s.intro}>{registerOpen ? t("auth.registerIntro") : t("auth.registerClosed")}</Text>
+
+      {registerOpen ? (
+        <View style={s.form}>
+          <MemberGoogleSignInButton pending={googlePending} disabled={oauthBusy} errorMessage={googleError} onPress={onGoogleSignIn} />
+          <MemberAppleSignInButton pending={applePending} disabled={oauthBusy} errorMessage={appleError} onPress={onAppleSignIn} />
+          <MemberAuthMethodDivider />
+          <Text style={s.label}>{t("auth.email")}</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            style={s.input}
+          />
+          <Text style={s.label}>{t("auth.registerName")}</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            textContentType="name"
+            style={s.input}
+          />
+          <Text style={s.label}>{t("auth.password")}</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            textContentType="newPassword"
+            style={s.input}
+          />
+          {error ? <Text style={s.error}>{error}</Text> : null}
+          <Pressable
+            onPress={() => void onSubmit()}
+            disabled={pending}
+            style={({ pressed }) => [s.submit, pressed && s.submitPressed, pending && s.submitDisabled]}
+          >
+            {pending ? (
+              <ActivityIndicator color={c.ink} />
+            ) : (
+              <Text style={s.submitText}>{t("auth.registerSubmit")}</Text>
+            )}
           </Pressable>
-
-          <Text style={styles.title}>{t("auth.registerPageTitle")}</Text>
-          <Text style={styles.intro}>{registerOpen ? t("auth.registerIntro") : t("auth.registerClosed")}</Text>
-
-          {registerOpen ? (
-            <View style={styles.form}>
-              <MemberGoogleSignInButton pending={pending} onPress={onGoogleSignIn} />
-              <MemberAppleSignInButton pending={pending} onPress={onAppleSignIn} />
-              <MemberAuthMethodDivider />
-              <Text style={styles.label}>{t("auth.email")}</Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                style={styles.input}
-              />
-              <Text style={styles.label}>{t("auth.registerName")}</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                textContentType="name"
-                style={styles.input}
-              />
-              <Text style={styles.label}>{t("auth.password")}</Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                textContentType="newPassword"
-                style={styles.input}
-              />
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-              <Pressable
-                onPress={() => void onSubmit()}
-                disabled={pending}
-                style={({ pressed }) => [styles.submit, pressed && styles.submitPressed, pending && styles.submitDisabled]}
-              >
-                {pending ? (
-                  <ActivityIndicator color={theme.ink} />
-                ) : (
-                  <Text style={styles.submitText}>{t("auth.registerSubmit")}</Text>
-                )}
-              </Pressable>
-              <Pressable onPress={() => router.replace("/login")} style={styles.linkBtn}>
-                <Text style={styles.linkText}>{t("auth.registerGoLogin")}</Text>
-              </Pressable>
-            </View>
-          ) : null}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+          <Pressable onPress={() => router.replace("/login")} style={s.linkBtn}>
+            <Text style={s.linkText}>{t("auth.registerGoLogin")}</Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </AuthParchmentScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.canvas },
-  flex: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingBottom: 24 },
-  backBtn: { alignSelf: "flex-start", paddingVertical: 8 },
-  backText: { fontSize: 14, color: "rgba(55,53,47,0.55)", ...parchmentSans(500) },
-  title: {
-    marginTop: 8,
-    fontSize: 22,
-    color: theme.ink,
-    ...parchmentSans(600),
-  },
-  intro: {
-    marginTop: 10,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "rgba(55,53,47,0.62)",
-    ...parchmentSans(400),
-  },
-  form: { marginTop: 24, gap: 8 },
-  label: {
-    marginTop: 8,
-    fontSize: 11,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    color: "rgba(55,53,47,0.45)",
-    ...parchmentSans(600),
-  },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(55,53,47,0.18)",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: theme.ink,
-    backgroundColor: "rgba(255,255,255,0.45)",
-    ...parchmentSans(400),
-  },
-  error: {
-    marginTop: 8,
-    fontSize: 13,
-    color: "#b42318",
-    textAlign: "center",
-    ...parchmentSans(500),
-  },
-  submit: {
-    marginTop: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-    borderRadius: 12,
-    backgroundColor: "rgba(55,53,47,0.12)",
-  },
-  submitPressed: { opacity: 0.88 },
-  submitDisabled: { opacity: 0.55 },
-  submitText: { fontSize: 15, color: theme.ink, ...parchmentSans(600) },
-  linkBtn: { marginTop: 14, alignItems: "center", paddingVertical: 8 },
-  linkText: { fontSize: 13, color: "rgba(55,53,47,0.62)", textDecorationLine: "underline", ...parchmentSans(500) },
-});

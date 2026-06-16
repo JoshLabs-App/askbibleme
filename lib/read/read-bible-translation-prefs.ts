@@ -235,3 +235,33 @@ export function resolveReadBibleTranslationPrefsFromCookies(
   );
   return { version: 1, primaryTranslationId, contrastTranslationIds, audioTranslationId };
 }
+
+export type ReadBibleTranslationSyncBundle = {
+  version: 1;
+  prefs: ReadBibleTranslationPrefsV1 | null;
+  mode: "auto" | "manual";
+};
+
+export function readReadBibleTranslationSyncBundle(
+  index: BibleTranslationsIndex,
+  locale?: AppLocale,
+): ReadBibleTranslationSyncBundle {
+  if (typeof window === "undefined") {
+    return { version: 1, prefs: null, mode: "auto" };
+  }
+  const raw = window.localStorage.getItem(READ_BIBLE_TRANSLATION_STORAGE_KEY);
+  if (!raw?.trim()) return { version: 1, prefs: null, mode: "auto" };
+  return {
+    version: 1,
+    prefs: parseReadBibleTranslationPrefs(raw, index, locale),
+    mode: "auto",
+  };
+}
+
+export function applyReadBibleTranslationSyncBundle(
+  bundle: ReadBibleTranslationSyncBundle,
+  index: BibleTranslationsIndex,
+): void {
+  if (bundle.version !== 1 || !bundle.prefs) return;
+  writeReadBibleTranslationPrefsToStorage(bundle.prefs, index);
+}

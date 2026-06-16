@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { InteractionManager } from "react-native";
 import {
   readReadingHabitStats,
   snapshotFromRecord,
@@ -23,8 +24,12 @@ export function useReadingHabitStats() {
   }, []);
 
   useEffect(() => {
-    refresh();
-    return subscribeReadingHabitStats(refresh);
+    const task = InteractionManager.runAfterInteractions(refresh);
+    const unsub = subscribeReadingHabitStats(refresh);
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, [refresh]);
 
   const syncTodayComplete = useCallback(async (allDoneToday: boolean) => {

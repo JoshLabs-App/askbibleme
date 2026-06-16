@@ -1,6 +1,5 @@
 import { Audio, type AVPlaybackStatus } from "expo-av";
-import { Asset } from "expo-asset";
-import { AppState, Platform, type AppStateStatus } from "react-native";
+import { AppState, InteractionManager, type AppStateStatus } from "react-native";
 import {
   configureShellAudioMode,
   primeShellSoundPlayback,
@@ -26,6 +25,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
@@ -41,6 +41,7 @@ import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import {
   checkMusicResourcePackUpdate,
   downloadMusicTrackAssets,
@@ -58,8 +59,8 @@ import {
   readCachedMusicCompanionStore,
   writeCachedMusicCompanionStore,
 } from "./fetchMusicCompanion";
-import { musicTrackAvSource } from "./musicTrackPlayback";
-import { enrichPlaybackTracks, firstPlayableTrackIndex, isTrackPlayable } from "./trackArtwork";
+import { musicTrackAvSource, resolveMusicTrackAvSourceForPlay, warmBundledModuleUri } from "./musicTrackPlayback";
+import { enrichPlaybackTracks, firstPlayableTrackIndex, firstPlayableTrackIndexInAlbum, isTrackPlayable, resolveShellMusicPlayIndex } from "./trackArtwork";
 import type { MusicCompanionStore, PlaybackTrack } from "./types";
 import { trackTelemetry } from "../telemetry/client";
 import {
@@ -164,6 +165,23 @@ type MusicPlaybackContextValue = {
 };
 
 const MusicPlaybackContext = createContext<MusicPlaybackContextValue | null>(null);
+
+type MusicPlaybackControlSnapshot = {
+  playing: boolean;
+  playbackMode: PlaybackMode;
+  togglePlayScripture: () => Promise<void>;
+};
+
+const musicPlaybackControlSnapshot: MusicPlaybackControlSnapshot = {
+  playing: false,
+  playbackMode: "music",
+  togglePlayScripture: async () => {},
+};
+
+/** 读经设置等低频 UI：读取播放快照，避免订阅整段进度导致每秒重渲染。 */
+export function getMusicPlaybackControlSnapshot(): MusicPlaybackControlSnapshot {
+  return musicPlaybackControlSnapshot;
+}
 
 function pickRandomNextTrackIndex(current: number, total: number): number {
   if (total <= 1) return 0;
@@ -278,6 +296,58 @@ function hasAtLeastBundledTracks(
   return candidateCount >= bundledCount;
 }
 
+const MUSIC_PROGRESS_UI_INTERVAL_SEC = 0.25;
+const SCRIPTURE_PROGRESS_UI_INTERVAL_SEC = 0.35;
+
+const scripturePlaybackSecStore = {
+  current: 0,
+  listeners: new Set<() => void>(),
+};
+
+function subscribeScripturePlaybackSec(listener: () => void): () => void {
+  scripturePlaybackSecStore.listeners.add(listener);
+  return () => {
+    scripturePlaybackSecStore.listeners.delete(listener);
+  };
+}
+
+function getScripturePlaybackSecSnapshot(): number {
+  return scripturePlaybackSecStore.current;
+}
+
+function publishScripturePlaybackSec(sec: number): void {
+  if (sec === scripturePlaybackSecStore.current) return;
+  scripturePlaybackSecStore.current = sec;
+  for (const listener of scripturePlaybackSecStore.listeners) {
+    listener();
+  }
+}
+
+/** 经文高亮/跟读用：不受进度条 UI 节流影响 */
+export function useScripturePlaybackSec(): number {
+  return useSyncExternalStore(
+    subscribeScripturePlaybackSec,
+    getScripturePlaybackSecSnapshot,
+    getScripturePlaybackSecSnapshot,
+  );
+}
+
+function shouldEmitPlaybackSecUpdate(
+  lastSecRef: { current: number },
+  nextSec: number,
+  intervalSec: number,
+): boolean {
+  if (lastSecRef.current < 0) {
+    lastSecRef.current = nextSec;
+    return true;
+  }
+  if (Math.abs(nextSec - lastSecRef.current) >= intervalSec) {
+    lastSecRef.current = nextSec;
+    return true;
+  }
+  return false;
+}
+
 export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [trackIndex, setTrackIndex] = useState(0);
@@ -315,6 +385,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const scriptureAudioRepeatRef = useRef<ScriptureAudioRepeatMode>("off");
   const scripturePlaybackRateRef = useRef(1);
   const playTrackAtRef = useRef<(index: number) => Promise<void>>(async () => {});
+  const lastMusicProgressSecRef = useRef(-1);
+  const lastScriptureProgressSecRef = useRef(-1);
   const musicSessionRef = useRef<{ trackId: string; startedAt: number } | null>(null);
   const calmLoopTransitioningRef = useRef(false);
   const playTrackGenerationRef = useRef(0);
@@ -417,14 +489,18 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void readScripturePlaybackRate().then((rate) => {
-      const normalized = normalizeScripturePlaybackRate(rate);
-      scripturePlaybackRateRef.current = normalized;
-      setScripturePlaybackRateState(normalized);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readScripturePlaybackRate().then((rate) => {
+        const normalized = normalizeScripturePlaybackRate(rate);
+        scripturePlaybackRateRef.current = normalized;
+        setScripturePlaybackRateState(normalized);
+      });
     });
+    return () => task.cancel();
   }, []);
 
   useEffect(() => {
+    if (sleepTimerMinutes === 0) return;
     const id = setInterval(() => {
       const d = sleepTimerDeadlineRef.current;
       if (d == null || Date.now() < d) return;
@@ -433,7 +509,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       void pauseShellPlayback();
     }, 1000);
     return () => clearInterval(id);
-  }, [pauseShellPlayback]);
+  }, [pauseShellPlayback, sleepTimerMinutes]);
 
   const seekRatio = useCallback(async (ratio: number) => {
     const sound = soundRef.current;
@@ -445,8 +521,11 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (!ok) return;
     const sec = clamped * (st.durationMillis / 1000);
     if (playbackModeRef.current === "music") {
+      lastMusicProgressSecRef.current = sec;
       setMusicCurrentSec(sec);
     } else {
+      publishScripturePlaybackSec(sec);
+      lastScriptureProgressSecRef.current = sec;
       setScriptureCurrentSec(sec);
     }
   }, []);
@@ -467,6 +546,10 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const loadingGuard = setTimeout(() => setLoading(false), 4000);
+    let remoteTask: { cancel: () => void } | null = null;
+    let localTask: { cancel: () => void } | null = null;
+    let alive = true;
+
     void (async () => {
       setLoading(true);
       try {
@@ -474,39 +557,69 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
           configureShellAudioMode(),
           new Promise<void>((resolve) => setTimeout(resolve, 1200)),
         ]);
-        // 启动先用内置曲库，保证秒开；再按条件覆盖本机缓存与线上新数据。
+        // 启动先用内置曲库，保证秒开；本机缓存与线上数据延后到交互空闲后再覆盖。
         const bundledStore = getBundledMusicCompanionStore();
         setStore(bundledStore);
         if (isMobileBundledOnly()) {
           const tracks = enrichPlaybackTracks(bundledStore, getAskBibleBaseUrl());
-          setTrackIndex(firstPlayableTrackIndex(tracks));
-          await new Promise<void>((resolve) => setTimeout(resolve, 480));
+          const calmIdx = firstPlayableTrackIndexInAlbum(tracks, "安静");
+          setTrackIndex(calmIdx >= 0 ? calmIdx : firstPlayableTrackIndex(tracks));
           await audioModeWarmup;
           return;
         }
-        await hydrateMusicResourcePackState();
-        const syncedStore = await readSyncedMusicCompanionStore();
-        const cachedStore = await readCachedMusicCompanionStore();
-        const remote = await fetchMusicCompanionStoreFromRemote();
-        const nextStore =
-          remote && hasAtLeastBundledTracks(remote, bundledStore)
-            ? remote
-            : syncedStore && hasAtLeastBundledTracks(syncedStore, bundledStore)
-              ? syncedStore
-              : cachedStore && hasAtLeastBundledTracks(cachedStore, bundledStore)
-                ? cachedStore
-                : bundledStore;
-        setStore(nextStore);
-        if (nextStore !== bundledStore) {
-          await writeCachedMusicCompanionStore(nextStore);
-        }
         void audioModeWarmup;
+
+        localTask = InteractionManager.runAfterInteractions(() => {
+          void (async () => {
+            if (!alive) return;
+            try {
+              await hydrateMusicResourcePackState();
+              if (!alive) return;
+              const syncedStore = await readSyncedMusicCompanionStore();
+              const cachedStore = await readCachedMusicCompanionStore();
+              const localStore =
+                syncedStore && hasAtLeastBundledTracks(syncedStore, bundledStore)
+                  ? syncedStore
+                  : cachedStore && hasAtLeastBundledTracks(cachedStore, bundledStore)
+                    ? cachedStore
+                    : bundledStore;
+              if (!alive) return;
+              if (localStore !== bundledStore) {
+                setStore(localStore);
+              }
+
+              remoteTask = InteractionManager.runAfterInteractions(() => {
+                void (async () => {
+                  if (!alive) return;
+                  if (!(await isNetworkAvailable())) return;
+                  try {
+                    const remote = await fetchMusicCompanionStoreFromRemote();
+                    if (!alive) return;
+                    if (!remote || !hasAtLeastBundledTracks(remote, bundledStore)) return;
+                    if (remote !== storeRef.current) {
+                      setStore(remote);
+                    }
+                    await writeCachedMusicCompanionStore(remote);
+                  } catch {
+                    /* 离线或超时：保留已应用的本地曲库 */
+                  }
+                })();
+              });
+            } catch {
+              /* 本地曲库 hydrate 失败：保留内置曲库 */
+            }
+          })();
+        });
       } finally {
         setLoading(false);
       }
     })();
+
     return () => {
       clearTimeout(loadingGuard);
+      alive = false;
+      localTask?.cancel();
+      remoteTask?.cancel();
       const sound = soundRef.current;
       soundRef.current = null;
       if (sound) void safeStopAndUnloadSound(sound);
@@ -517,9 +630,23 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (!isMobileBundledOnly() || tracks.length === 0) return;
     const current = tracks[trackIndex];
     if (current?.localReady) return;
-    const next = firstPlayableTrackIndex(tracks);
+    const calmIdx = firstPlayableTrackIndexInAlbum(tracks, "安静");
+    const next = calmIdx >= 0 ? calmIdx : firstPlayableTrackIndex(tracks);
     if (next !== trackIndex) setTrackIndex(next);
   }, [tracks, trackIndex]);
+
+  useEffect(() => {
+    if (tracks.length === 0) return;
+    const calmLocal = tracks.find(
+      (t) =>
+        isTrackPlayable(t) &&
+        t.localReady &&
+        (t.album || "").trim() === "安静" &&
+        t.bundledModule != null,
+    );
+    if (!calmLocal?.bundledModule) return;
+    void warmBundledModuleUri(calmLocal.bundledModule);
+  }, [tracks]);
 
   const checkMusicCatalogUpdate = useCallback(async (): Promise<boolean> => {
     if (isMobileBundledOnly()) {
@@ -585,26 +712,31 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, [tracks]);
 
   useEffect(() => {
-    if (loading) return;
-    void checkMusicCatalogUpdate();
-  }, [loading, checkMusicCatalogUpdate]);
-
-  useEffect(() => {
     if (tracks.length === 0 || playbackResumeHydratedRef.current) return;
-    playbackResumeHydratedRef.current = true;
-    void (async () => {
-      const saved = await readMusicPlaybackResume();
-      if (!saved) return;
-      let idx = tracks.findIndex((x) => x.id === saved.trackId);
-      if (idx < 0) return;
-      if (isMobileBundledOnly() && !tracks[idx]?.localReady) {
-        idx = firstPlayableTrackIndex(tracks);
-      }
-      resumeTrackIdRef.current = tracks[idx]?.id ?? saved.trackId;
-      resumePositionSecRef.current = Math.max(0, saved.positionSec);
-      setTrackIndex(idx);
-      setMusicCurrentSec(Math.max(0, saved.positionSec));
-    })();
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      if (cancelled || playbackResumeHydratedRef.current) return;
+      playbackResumeHydratedRef.current = true;
+      void (async () => {
+        const saved = await readMusicPlaybackResume();
+        if (cancelled || !saved) return;
+        let idx = tracks.findIndex((x) => x.id === saved.trackId);
+        if (idx < 0) return;
+        if (isMobileBundledOnly() && !tracks[idx]?.localReady) {
+          const calmIdx = firstPlayableTrackIndexInAlbum(tracks, "安静");
+          idx = calmIdx >= 0 ? calmIdx : firstPlayableTrackIndex(tracks);
+        }
+        resumeTrackIdRef.current = tracks[idx]?.id ?? saved.trackId;
+        resumePositionSecRef.current = Math.max(0, saved.positionSec);
+        setTrackIndex(idx);
+        lastMusicProgressSecRef.current = Math.max(0, saved.positionSec);
+        setMusicCurrentSec(Math.max(0, saved.positionSec));
+      })();
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
   }, [tracks]);
 
   useEffect(() => {
@@ -631,6 +763,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     await unloadCurrent();
     scriptureSrcRef.current = null;
     scriptureStopAtSecRef.current = null;
+    publishScripturePlaybackSec(0);
+    lastScriptureProgressSecRef.current = -1;
     setScriptureCurrentSec(0);
     setScriptureDurationSec(0);
     setPlaying(false);
@@ -640,19 +774,23 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
 
   const cacheMusicTrackInBackground = useCallback((trackId: string) => {
     if (isMobileBundledOnly()) return;
-    const storeTrack = storeRef.current?.audioTracks.find((t) => t.id === trackId);
-    if (!storeTrack) return;
-    setDownloadingTrackId(trackId);
-    void downloadMusicTrackAssets({
-      src: storeTrack.src,
-      analysisSrc: storeTrack.analysisSrc,
-    })
-      .then((ok) => {
-        if (ok) setMusicPackRevision((n) => n + 1);
-      })
-      .finally(() => {
-        setDownloadingTrackId((current) => (current === trackId ? null : current));
-      });
+    InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        if (!(await isNetworkAvailable())) return;
+        const storeTrack = storeRef.current?.audioTracks.find((t) => t.id === trackId);
+        if (!storeTrack) return;
+        setDownloadingTrackId(trackId);
+        try {
+          const ok = await downloadMusicTrackAssets({
+            src: storeTrack.src,
+            analysisSrc: storeTrack.analysisSrc,
+          });
+          if (ok) setMusicPackRevision((n) => n + 1);
+        } finally {
+          setDownloadingTrackId((current) => (current === trackId ? null : current));
+        }
+      })();
+    });
   }, []);
 
   const downloadMusicTrackAt = useCallback(
@@ -684,7 +822,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       const generation = ++playTrackGenerationRef.current;
       const i = ((index % tracks.length) + tracks.length) % tracks.length;
       const track = tracks[i]!;
-      const avSource = musicTrackAvSource(track);
+      let avSource = await resolveMusicTrackAvSourceForPlay(track);
       if (!track.localReady && !isMobileBundledOnly()) {
         cacheMusicTrackInBackground(track.id);
       }
@@ -718,18 +856,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         setPlaying(false);
         return;
       }
-      // iOS：直连 require() 模块；Android 再尝试 Asset 本地 URI（部分机型对大包更稳）。
-      if (track.bundledModule != null && Platform.OS === "android") {
-        try {
-          const [asset] = await Asset.loadAsync(track.bundledModule);
-          const localUri = (asset?.localUri || asset?.uri || "").trim();
-          if (localUri) {
-            avSource = { uri: localUri };
-          }
-        } catch {
-          // bundled 资源预热失败时，回退到原始 avSource 继续尝试播放。
-        }
-      }
       calmLoopTransitioningRef.current = false;
       const prevTrack = tracks[trackIndexRef.current] ?? null;
       const { fadeOutMs, fadeInMs } = resolveCalmSwitchFadeMs(prevTrack, track);
@@ -749,6 +875,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       await unloadCurrent();
       if (generation !== playTrackGenerationRef.current) return;
       await configureShellAudioMode();
+      lastMusicProgressSecRef.current = -1;
       setMusicCurrentSec(0);
       setMusicDurationSec(0);
       const epoch = playbackEpochRef.current;
@@ -756,13 +883,14 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       const resumeSecForTrack =
         resumeTrackIdRef.current === track.id ? Math.max(0, resumePositionSecRef.current) : 0;
       const calmLoopProfileForTrack = resolveCalmLoopProfile(track);
+      const startImmediately = fadeInMs === 0 && resumeSecForTrack === 0;
       let sound: Audio.Sound;
       try {
         const created = await Audio.Sound.createAsync(
           avSource,
           {
-            shouldPlay: false,
-            progressUpdateIntervalMillis: 120,
+            shouldPlay: startImmediately,
+            progressUpdateIntervalMillis: 250,
             volume: fadeInMs > 0 ? 0 : musicGainRef.current,
             isMuted: false,
           },
@@ -776,7 +904,16 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
                 calmLoopProfile != null &&
                 musicRepeatModeRef.current === "one" &&
                 (status.durationMillis ?? 0) > calmLoopProfile.endTrimMs + 80;
-              setMusicCurrentSec(status.positionMillis / 1000);
+              const musicSec = status.positionMillis / 1000;
+              if (
+                shouldEmitPlaybackSecUpdate(
+                  lastMusicProgressSecRef,
+                  musicSec,
+                  MUSIC_PROGRESS_UI_INTERVAL_SEC,
+                )
+              ) {
+                setMusicCurrentSec(musicSec);
+              }
               setMusicDurationSec(
                 status.durationMillis != null
                   ? Math.max(
@@ -892,24 +1029,36 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
           shellSoundDownloadFirst(avSource),
         );
         sound = created.sound;
-        await primeShellSoundPlayback(sound);
+        try {
+          await sound.setIsMutedAsync(false);
+          if (fadeInMs === 0) {
+            await sound.setVolumeAsync(musicGainRef.current);
+          }
+        } catch {
+          /* ignore volume prep failures */
+        }
         if (resumeSecForTrack > 0) {
           await sound.setPositionAsync(Math.floor(resumeSecForTrack * 1000));
+          lastMusicProgressSecRef.current = resumeSecForTrack;
           setMusicCurrentSec(resumeSecForTrack);
         } else if (
           (calmLoopProfileForTrack?.startOffsetMs ?? 0) > 0
         ) {
           const startOffsetMs = Math.max(0, Math.floor(calmLoopProfileForTrack?.startOffsetMs ?? 0));
           await sound.setPositionAsync(startOffsetMs);
+          lastMusicProgressSecRef.current = startOffsetMs / 1000;
           setMusicCurrentSec(startOffsetMs / 1000);
         } else {
+          lastMusicProgressSecRef.current = -1;
           setMusicCurrentSec(0);
         }
-        const resumedPlay = await safePlaySound(sound);
-        if (!resumedPlay) {
-          setPlaying(false);
-          await safeStopAndUnloadSound(sound);
-          return;
+        if (!startImmediately) {
+          const resumedPlay = await safePlaySound(sound);
+          if (!resumedPlay) {
+            setPlaying(false);
+            await safeStopAndUnloadSound(sound);
+            return;
+          }
         }
         if (fadeInMs > 0) {
           await fadeSoundVolume(sound, 0, musicGainRef.current, fadeInMs);
@@ -1035,7 +1184,17 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
                 return;
               }
               setPlaying(status.isPlaying);
-              setScriptureCurrentSec(status.positionMillis / 1000);
+              const scriptureSec = status.positionMillis / 1000;
+              publishScripturePlaybackSec(scriptureSec);
+              if (
+                shouldEmitPlaybackSecUpdate(
+                  lastScriptureProgressSecRef,
+                  scriptureSec,
+                  SCRIPTURE_PROGRESS_UI_INTERVAL_SEC,
+                )
+              ) {
+                setScriptureCurrentSec(scriptureSec);
+              }
               setScriptureDurationSec(
                 status.durationMillis != null ? status.durationMillis / 1000 : 0,
               );
@@ -1315,6 +1474,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
             if (st?.isLoaded) {
               const nextSec = Math.max(0, seekSec ?? 0);
               await sound.setPositionAsync(Math.floor(nextSec * 1000));
+              publishScripturePlaybackSec(nextSec);
+              lastScriptureProgressSecRef.current = nextSec;
               setScriptureCurrentSec(nextSec);
             }
           }
@@ -1342,18 +1503,25 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
 
   const togglePlayMusic = useCallback(async () => {
     if (tracks.length === 0) return;
-    const playIdx = isMobileBundledOnly()
-      ? firstPlayableTrackIndex(tracks)
-      : trackIndexRef.current;
-    if (isMobileBundledOnly() && !tracks[playIdx]?.localReady) return;
+    const playIdx = resolveShellMusicPlayIndex(tracks, trackIndexRef.current);
+    const playTrack = tracks[playIdx];
+    if (!playTrack || !isTrackPlayable(playTrack)) return;
+    if (isMobileBundledOnly() && !playTrack.localReady) return;
     try {
       await configureShellAudioMode();
       const sound = soundRef.current;
       const st = sound ? await safeGetSoundStatus(sound) : null;
-      const currentTrack = tracks[playIdx] ?? null;
+      const currentTrack = tracks[trackIndexRef.current] ?? null;
       const useCalmFade = shouldUseCalmAlbumFade(currentTrack);
+      const loadedTrack = tracks[trackIndexRef.current];
+      const sameLoadedTrack = loadedTrack?.id === playTrack.id;
 
-      if (playbackModeRef.current !== "music" || !sound || !st?.isLoaded) {
+      if (
+        playbackModeRef.current !== "music" ||
+        !sound ||
+        !st?.isLoaded ||
+        !sameLoadedTrack
+      ) {
         await playTrackAt(playIdx);
         return;
       }
@@ -1393,6 +1561,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       }
       setPlaying(true);
       if (st.durationMillis != null) {
+        lastMusicProgressSecRef.current = st.positionMillis / 1000;
         setMusicCurrentSec(st.positionMillis / 1000);
         setMusicDurationSec(st.durationMillis / 1000);
       }
@@ -1504,6 +1673,10 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     readChapterSupportsAudio ||
     hasPlayableMusic ||
     (!isMobileBundledOnly() && tracks.length > 0);
+
+  musicPlaybackControlSnapshot.playing = playing;
+  musicPlaybackControlSnapshot.playbackMode = playbackMode;
+  musicPlaybackControlSnapshot.togglePlayScripture = togglePlayScripture;
 
   const value = useMemo(
     (): MusicPlaybackContextValue => ({

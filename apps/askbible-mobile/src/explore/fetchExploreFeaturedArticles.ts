@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import {
   getBundledExploreFeaturedArticlesBundle,
   isExploreFeaturedArticlesBundle,
@@ -112,6 +113,7 @@ async function readExploreRemoteEnabledFromCachedManifest(): Promise<boolean> {
 }
 
 export async function fetchExploreFeaturedArticlesBundleFromRemote(): Promise<ExploreFeaturedArticlesBundle | null> {
+  if (!(await isNetworkAvailable())) return null;
   const primaryBase = getAskBibleBaseUrl().replace(/\/$/, "");
   const candidates = [primaryBase];
   if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {

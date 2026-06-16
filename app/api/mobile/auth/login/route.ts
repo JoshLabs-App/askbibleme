@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
-import { verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { issueMobileUserSessionToken } from "@/lib/mobile-auth-session";
 import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
-import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
-import { createSupabaseMobileAuthClient } from "@/lib/supabase/mobile-server";
-import {
-  fetchAskbibleProfile,
-  supabaseSessionFromAuth,
-  toAskbibleAuthUser,
-} from "@/lib/askbible-supabase-auth";
+import { signInMemberWithPasswordMobile } from "@/lib/member-auth-backend";
 
 export const runtime = "nodejs";
 
@@ -22,6 +13,7 @@ type LoginRequestV1 = {
   schemaVersion?: number;
   email?: unknown;
   password?: unknown;
+  locale?: unknown;
 };
 
 function trimString(v: unknown): string {
@@ -121,6 +113,7 @@ export async function POST(req: Request) {
 
   const email = trimString(body.email).toLowerCase();
   const password = typeof body.password === "string" ? body.password : "";
+  const locale = trimString(body.locale).slice(0, 24);
   if (!email || !password) {
     return NextResponse.json(
       {
@@ -133,71 +126,25 @@ export async function POST(req: Request) {
     );
   }
 
-  if (isSupabaseAuthConfigured()) {
-    const supabase = createSupabaseMobileAuthClient();
-    if (!supabase) return missingSqliteResponse();
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user || !data.session) {
-      return NextResponse.json(
-        {
-          ok: false,
-          schemaVersion: SCHEMA_VERSION,
-          error: "邮箱或密码错误。",
-          code: "invalid_credentials",
-        },
-        { status: 401 },
-      );
-    }
-
-    const profile = await fetchAskbibleProfile(supabase, data.user.id);
-    const user = toAskbibleAuthUser(data.user, profile);
-    const session = supabaseSessionFromAuth(data.session);
-    if (!session) {
-      return NextResponse.json(
-        {
-          ok: false,
-          schemaVersion: SCHEMA_VERSION,
-          error: "登录失败。",
-          code: "auth_failed",
-        },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({
-      ok: true,
-      schemaVersion: SCHEMA_VERSION,
-      user: { id: user.id, email: user.email, name: user.name },
-      sessionToken: session.sessionToken,
-      expiresAt: session.expiresAt,
-    });
-  }
-
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return missingSqliteResponse();
-
-  const auth = await verifyAskbibleUserCredentials(dbPath, email, password);
+  const auth = await signInMemberWithPasswordMobile(email, password, locale || undefined);
   if (!auth.ok) {
+    if (auth.code === "auth_not_configured") return missingSqliteResponse();
     return NextResponse.json(
       {
         ok: false,
         schemaVersion: SCHEMA_VERSION,
-        error: "邮箱或密码错误。",
-        code: "invalid_credentials",
+        error: auth.error,
+        code: auth.code,
       },
-      { status: 401 },
+      { status: auth.status },
     );
   }
-
-  const user = { id: auth.userId, email: auth.email, name: auth.name };
-  const session = await issueMobileUserSessionToken(user);
 
   return NextResponse.json({
     ok: true,
     schemaVersion: SCHEMA_VERSION,
-    user,
-    sessionToken: session.sessionToken,
-    expiresAt: session.expiresAt,
+    user: auth.user,
+    sessionToken: auth.sessionToken,
+    expiresAt: auth.expiresAt,
   });
 }

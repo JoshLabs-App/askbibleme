@@ -1,9 +1,9 @@
 import { scriptureBooks } from "../bible/scripture-books";
 import {
-  YEAR_DAY_COUNT_LEAD_REF,
-  YEAR_DAY_COUNT_SCRIPTURES,
+  getYearDayCountLeadRef,
+  getYearDayCountScriptures,
 } from "./year-day-count-refs";
-import { YEARS_DAYS_ETERNITY_ZH } from "./years-days-eternity-content";
+import { getYearsDaysEternityZh } from "./years-days-eternity-content";
 import type { YearsDaysEternityBlock } from "./years-days-eternity-types";
 
 type WordOfGodCategory = {
@@ -197,7 +197,7 @@ function collectWordOfGodVerseKeys(target: Set<string>) {
 }
 
 function collectYearDayCountVerseKeys(target: Set<string>) {
-  const refs = [YEAR_DAY_COUNT_LEAD_REF, ...YEAR_DAY_COUNT_SCRIPTURES];
+  const refs = [getYearDayCountLeadRef(), ...getYearDayCountScriptures()];
   for (const ref of refs) {
     const end = ref.verseEnd ?? ref.verseStart;
     for (let v = ref.verseStart; v <= end; v += 1) {
@@ -213,9 +213,10 @@ function collectYearsDaysEternityVerseKeys(target: Set<string>) {
       if (block.type === "scripture") scriptureRefs.push(block.ref);
     }
   };
-  collectBlockRef(YEARS_DAYS_ETERNITY_ZH.intro);
-  for (const section of YEARS_DAYS_ETERNITY_ZH.sections) collectBlockRef(section.blocks);
-  scriptureRefs.push(YEARS_DAYS_ETERNITY_ZH.finale.scripture.ref);
+  const yearsDaysEternityZh = getYearsDaysEternityZh();
+  collectBlockRef(yearsDaysEternityZh.intro);
+  for (const section of yearsDaysEternityZh.sections) collectBlockRef(section.blocks);
+  scriptureRefs.push(yearsDaysEternityZh.finale.scripture.ref);
 
   for (const rawRef of scriptureRefs) {
     const parsed = parseZhRefParts(rawRef);

@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { t, tFormat } from "../i18n/site-copy";
+import { useLocale } from "../i18n/LocaleProvider";
+import { localizeZhText, t, tFormat } from "../i18n/site-copy";
 import { ReadParchmentPageScroll } from "./ReadParchmentPageScroll";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
@@ -23,6 +24,7 @@ function trPlanField(planId: string, field: "title" | "subtitle" | "blurb"): str
 
 export function ReadPlansScreen() {
   const router = useRouter();
+  const { locale } = useLocale();
   const { prefs } = useEffectiveReadingPlanPrefs();
   const [plans, setPlans] = useState<ReadingPlanRegistryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,9 @@ export function ReadPlansScreen() {
           <View style={styles.list}>
             {plans.map((p) => {
               const titleZh = trPlanField(p.planId, "title") || p.name;
-              const title = isTripleLoopPlanId(p.planId) ? `${titleZh}（推荐）` : titleZh;
+              const title = isTripleLoopPlanId(p.planId)
+                ? `${titleZh}${localizeZhText(locale, "（推荐）")}`
+                : titleZh;
               const subtitle = trPlanField(p.planId, "subtitle");
               const blurb = trPlanField(p.planId, "blurb");
               const isActive = prefs.planId === p.planId;

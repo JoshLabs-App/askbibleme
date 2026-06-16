@@ -8,8 +8,7 @@ import {
 import { resolveNatureHomePortraitCoverLayout } from "./natureHomePortraitCoverLayout";
 
 /**
- * 竖屏首页背景：自左缘起势（translateX=0），线性平移至右缘（translateX=-panDistance）后瞬间回左侧，循环。
- * 与网站 `object-position: 0% → 100%` 同向。
+ * @deprecated 竖屏首页已改为居中 cover 静止显示；保留供旧实验引用。
  */
 export function useNatureHomePortraitPan(
   enabled: boolean,

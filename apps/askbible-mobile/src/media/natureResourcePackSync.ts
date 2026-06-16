@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import type { NatureSettingsV2 } from "../types/nature";
 
@@ -193,6 +194,7 @@ async function downloadAsset(
 }
 
 async function fetchNaturePackManifest(): Promise<NaturePackManifest | null> {
+  if (!(await isNetworkAvailable())) return null;
   const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
   const manifestUrl = `${baseUrl}/api/mobile/resource-pack/nature/manifest`;
   const res = await fetchWithTimeout(manifestUrl, {

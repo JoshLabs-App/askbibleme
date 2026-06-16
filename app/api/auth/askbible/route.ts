@@ -10,6 +10,8 @@ import {
 } from "@/lib/askbible-user-session";
 import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
 import { getAskbibleUserById, registerAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
+import { signInMemberWithPasswordServer, shouldFallbackMemberRegisterToSqlite } from "@/lib/member-auth-backend";
+import { jsonResponseWithCookies } from "@/lib/next-response-cookies";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -38,30 +40,40 @@ export async function GET() {
     if (!supabase) return NextResponse.json({ configured: false, user: null });
 
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
-      return NextResponse.json({ configured: true, user: null });
+    if (!error && data.user) {
+      const profile = await fetchAskbibleProfile(supabase, data.user.id);
+      const user = toAskbibleAuthUser(data.user, profile);
+      return NextResponse.json({
+        configured: true,
+        user: { id: user.id, email: user.email, name: user.name },
+        isAdmin: user.isAdmin,
+      });
     }
-
-    const profile = await fetchAskbibleProfile(supabase, data.user.id);
-    const user = toAskbibleAuthUser(data.user, profile);
-    return NextResponse.json({
-      configured: true,
-      user: { id: user.id, email: user.email, name: user.name },
-      isAdmin: user.isAdmin,
-    });
   }
 
   const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return NextResponse.json({ configured: false, user: null });
+  if (!dbPath) {
+    return NextResponse.json({
+      configured: isSupabaseAuthConfigured(),
+      user: null,
+    });
+  }
 
   const store = await cookies();
   const sessionCookie = store.get(ASKBIBLE_USER_SESSION_COOKIE)?.value;
 
   const session = await parseAskbibleUserSessionCookie(sessionCookie);
-  if (!session) return NextResponse.json({ configured: true, user: null });
+  if (!session) {
+    return NextResponse.json({
+      configured: true,
+      user: null,
+    });
+  }
 
   const user = await getAskbibleUserById(dbPath, session.sub);
-  if (!user) return NextResponse.json({ configured: true, user: null });
+  if (!user) {
+    return NextResponse.json({ configured: true, user: null });
+  }
   return NextResponse.json({ configured: true, user });
 }
 
@@ -85,11 +97,13 @@ export async function POST(req: Request) {
   }
 
   if (isSupabaseAuthConfigured()) {
-    const res = NextResponse.json({ ok: false });
-    const supabase = await createSupabaseServerClient(res);
+    const cookieRes = NextResponse.json({ ok: false });
+    const supabase = await createSupabaseServerClient(cookieRes);
     if (!supabase) {
       return NextResponse.json({ error: "Supabase auth not configured" }, { status: 503 });
     }
+
+    let useSqliteRegister = false;
 
     if (action === "register") {
       const flags = readMobileContentFlagsSync(process.cwd()).flags;
@@ -107,36 +121,80 @@ export async function POST(req: Request) {
 
       if (signUpError) {
         const msg = signUpError.message || "注册失败";
-        const status = /already registered|already exists/i.test(msg) ? 409 : 400;
-        return NextResponse.json({ error: msg }, { status });
-      }
+        if (shouldFallbackMemberRegisterToSqlite(msg) && getAskbibleAuthSqlitePath()) {
+          useSqliteRegister = true;
+        } else {
+          const status = /already registered|already exists/i.test(msg) ? 409 : 400;
+          return NextResponse.json({ error: msg }, { status });
+        }
+      } else {
+        const user = signUpData.user;
+        if (user) {
+          await upsertAskbibleProfile({
+            userId: user.id,
+            displayName: name || email,
+            locale,
+          });
+        }
 
-      const user = signUpData.user;
-      if (user) {
-        await upsertAskbibleProfile({
-          userId: user.id,
-          displayName: name || email,
-          locale,
-        });
+        if (signUpData.session?.user) {
+          const profile = await fetchAskbibleProfile(supabase, signUpData.session.user.id);
+          const signedInUser = toAskbibleAuthUser(signUpData.session.user, profile);
+          return jsonResponseWithCookies(
+            {
+              ok: true,
+              user: { id: signedInUser.id, email: signedInUser.email, name: signedInUser.name },
+            },
+            cookieRes,
+          );
+        }
+
+        if (signUpData.user) {
+          const auth = await signInMemberWithPasswordServer(supabase, email, password);
+          if (!auth.ok && auth.status === 401) {
+            return NextResponse.json(
+              { error: "注册成功，请查收确认邮件后再登录。" },
+              { status: 403 },
+            );
+          }
+          if (auth.ok && auth.backend === "supabase") {
+            return jsonResponseWithCookies({ ok: true, user: auth.user }, cookieRes);
+          }
+          if (auth.ok && auth.backend === "sqlite") {
+            useSqliteRegister = true;
+          }
+        }
       }
     }
 
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    if (!useSqliteRegister) {
+      const auth = await signInMemberWithPasswordServer(supabase, email, password);
+      if (!auth.ok) {
+        if (action === "register" && auth.status === 401) {
+          return NextResponse.json(
+            { error: "注册成功，请查收确认邮件后再登录。" },
+            { status: 403 },
+          );
+        }
+        return NextResponse.json({ error: auth.error }, { status: auth.status });
+      }
 
-    if (signInError || !signInData.user) {
+      if (auth.backend === "supabase") {
+        return jsonResponseWithCookies(
+          {
+            ok: true,
+            user: auth.user,
+          },
+          cookieRes,
+        );
+      }
+
+      useSqliteRegister = true;
+    }
+
+    if (!useSqliteRegister) {
       return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
     }
-
-    const profile = await fetchAskbibleProfile(supabase, signInData.user.id);
-    const user = toAskbibleAuthUser(signInData.user, profile);
-
-    return NextResponse.json({
-      ok: true,
-      user: { id: user.id, email: user.email, name: user.name },
-    });
   }
 
   const dbPath = getAskbibleAuthSqlitePath();

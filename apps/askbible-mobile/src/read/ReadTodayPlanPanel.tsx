@@ -1,12 +1,13 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
 import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 import { computeTodayReadingItemProgress } from "./reading-plan/compute-today-reading-progress";
+import { TODAY_READING_AUTO_DONE_FRACTION } from "./reading-plan/today-reading-chapter-fraction";
 import { todayReadingItemKey } from "./reading-plan/today-reading-done";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "./useTodayReadingPlan";
 import { useTodayReadingDone } from "./useTodayReadingDone";
@@ -28,8 +29,8 @@ type ReadingsProps = {
 /** 今日读经：年日轴 + 统计 + 今日章节 */
 export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
   const { payload, loading } = plan;
-  const { isDone, allDone, toggleDone, doneKeys } = useTodayReadingDone(plan);
-  const { fractions, tripleCurrent, tripleProgressKey } = useTodayReadingChapterFractions(plan);
+  const { isDone, toggleDone } = useTodayReadingDone(plan);
+  const { fractions, tripleCurrent } = useTodayReadingChapterFractions(plan);
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
   const { isTripleLoop } = plan;
   const readings = payload?.day?.readings ?? [];
@@ -43,10 +44,11 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
         setCompletedChapterKeys(keys);
       });
     };
-    reload();
+    const task = InteractionManager.runAfterInteractions(reload);
     const unsub = subscribeReadChapterCompletion(reload);
     return () => {
       cancelled = true;
+      task.cancel();
       unsub();
     };
   }, []);
@@ -71,26 +73,31 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
     const doneByItem = new Map<string, boolean>();
     for (const r of readings) {
       const itemKey = todayReadingItemKey(r);
-      doneByItem.set(itemKey, isTripleLoop ? isDone(r) : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1);
+      const fraction = fractions[itemKey] ?? 0;
+      doneByItem.set(
+        itemKey,
+        isTripleLoop
+          ? isDone(r) || fraction >= TODAY_READING_AUTO_DONE_FRACTION
+          : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
+      );
     }
     return doneByItem;
-  }, [chapterCompletionProgress, isDone, isTripleLoop, readings]);
+  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings]);
 
   const todayAllDone = useMemo(
     () =>
       !loading &&
       readings.length > 0 &&
-      (isTripleLoop
-        ? allDone(readings)
-        : readings.every((r) => (chapterCompletionProgress.get(todayReadingItemKey(r)) ?? 0) >= 1)),
-    [loading, readings, isTripleLoop, allDone, chapterCompletionProgress],
+      readings.every((r) => isReadingDone.get(todayReadingItemKey(r)) ?? false),
+    [loading, readings, isReadingDone],
   );
 
   useEffect(() => {
-    void syncTodayComplete(todayAllDone);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void syncTodayComplete(todayAllDone);
+    });
+    return () => task.cancel();
   }, [todayAllDone, syncTodayComplete]);
-
-  const progressKey = `${[...doneKeys].join(",")}|${tripleProgressKey}|${JSON.stringify(fractions)}`;
 
   return (
     <View style={styles.readingsSection}>
@@ -115,7 +122,7 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
               });
               return (
                 <ReadTodayPlanReadingRow
-                  key={`${itemKey}-${progressKey}`}
+                  key={itemKey}
                   reading={r}
                   done={done}
                   progress={progress}

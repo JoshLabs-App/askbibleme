@@ -13,7 +13,8 @@
           "bookId": "GEN",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Genesis 1-3"
+          "label": "Genesis 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -24,7 +25,8 @@
           "bookId": "GEN",
           "startChapter": 4,
           "endChapter": 7,
-          "label": "Genesis 4-7"
+          "label": "Genesis 4-7",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -35,7 +37,8 @@
           "bookId": "GEN",
           "startChapter": 8,
           "endChapter": 11,
-          "label": "Genesis 8-11"
+          "label": "Genesis 8-11",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -46,7 +49,8 @@
           "bookId": "JOB",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "Job 1-5"
+          "label": "Job 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -57,7 +61,8 @@
           "bookId": "JOB",
           "startChapter": 6,
           "endChapter": 9,
-          "label": "Job 6-9"
+          "label": "Job 6-9",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -68,7 +73,8 @@
           "bookId": "JOB",
           "startChapter": 10,
           "endChapter": 13,
-          "label": "Job 10-13"
+          "label": "Job 10-13",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -79,7 +85,8 @@
           "bookId": "JOB",
           "startChapter": 14,
           "endChapter": 16,
-          "label": "Job 14-16"
+          "label": "Job 14-16",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -90,7 +97,8 @@
           "bookId": "JOB",
           "startChapter": 17,
           "endChapter": 20,
-          "label": "Job 17-20"
+          "label": "Job 17-20",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -101,7 +109,8 @@
           "bookId": "JOB",
           "startChapter": 21,
           "endChapter": 23,
-          "label": "Job 21-23"
+          "label": "Job 21-23",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -112,7 +121,8 @@
           "bookId": "JOB",
           "startChapter": 24,
           "endChapter": 28,
-          "label": "Job 24-28"
+          "label": "Job 24-28",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -123,7 +133,8 @@
           "bookId": "JOB",
           "startChapter": 29,
           "endChapter": 31,
-          "label": "Job 29-31"
+          "label": "Job 29-31",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -134,7 +145,8 @@
           "bookId": "JOB",
           "startChapter": 32,
           "endChapter": 34,
-          "label": "Job 32-34"
+          "label": "Job 32-34",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -145,7 +157,8 @@
           "bookId": "JOB",
           "startChapter": 35,
           "endChapter": 37,
-          "label": "Job 35-37"
+          "label": "Job 35-37",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -156,7 +169,8 @@
           "bookId": "JOB",
           "startChapter": 38,
           "endChapter": 39,
-          "label": "Job 38-39"
+          "label": "Job 38-39",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -167,7 +181,8 @@
           "bookId": "JOB",
           "startChapter": 40,
           "endChapter": 42,
-          "label": "Job 40-42"
+          "label": "Job 40-42",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -178,7 +193,8 @@
           "bookId": "GEN",
           "startChapter": 12,
           "endChapter": 15,
-          "label": "Genesis 12-15"
+          "label": "Genesis 12-15",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -189,7 +205,8 @@
           "bookId": "GEN",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "Genesis 16-18"
+          "label": "Genesis 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -200,7 +217,8 @@
           "bookId": "GEN",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "Genesis 19-21"
+          "label": "Genesis 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -211,7 +229,8 @@
           "bookId": "GEN",
           "startChapter": 22,
           "endChapter": 24,
-          "label": "Genesis 22-24"
+          "label": "Genesis 22-24",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -222,7 +241,8 @@
           "bookId": "GEN",
           "startChapter": 25,
           "endChapter": 26,
-          "label": "Genesis 25-26"
+          "label": "Genesis 25-26",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -233,7 +253,8 @@
           "bookId": "GEN",
           "startChapter": 27,
           "endChapter": 29,
-          "label": "Genesis 27-29"
+          "label": "Genesis 27-29",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -244,7 +265,8 @@
           "bookId": "GEN",
           "startChapter": 30,
           "endChapter": 31,
-          "label": "Genesis 30-31"
+          "label": "Genesis 30-31",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -255,7 +277,8 @@
           "bookId": "GEN",
           "startChapter": 32,
           "endChapter": 34,
-          "label": "Genesis 32-34"
+          "label": "Genesis 32-34",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -266,7 +289,8 @@
           "bookId": "GEN",
           "startChapter": 35,
           "endChapter": 37,
-          "label": "Genesis 35-37"
+          "label": "Genesis 35-37",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -277,7 +301,8 @@
           "bookId": "GEN",
           "startChapter": 38,
           "endChapter": 40,
-          "label": "Genesis 38-40"
+          "label": "Genesis 38-40",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -288,7 +313,8 @@
           "bookId": "GEN",
           "startChapter": 41,
           "endChapter": 42,
-          "label": "Genesis 41-42"
+          "label": "Genesis 41-42",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -299,7 +325,8 @@
           "bookId": "GEN",
           "startChapter": 43,
           "endChapter": 45,
-          "label": "Genesis 43-45"
+          "label": "Genesis 43-45",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -310,7 +337,8 @@
           "bookId": "GEN",
           "startChapter": 46,
           "endChapter": 47,
-          "label": "Genesis 46-47"
+          "label": "Genesis 46-47",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -321,7 +349,8 @@
           "bookId": "GEN",
           "startChapter": 48,
           "endChapter": 50,
-          "label": "Genesis 48-50"
+          "label": "Genesis 48-50",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -332,7 +361,8 @@
           "bookId": "EXO",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Exodus 1-3"
+          "label": "Exodus 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -343,7 +373,8 @@
           "bookId": "EXO",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Exodus 4-6"
+          "label": "Exodus 4-6",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -354,7 +385,8 @@
           "bookId": "EXO",
           "startChapter": 7,
           "endChapter": 9,
-          "label": "Exodus 7-9"
+          "label": "Exodus 7-9",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -365,7 +397,8 @@
           "bookId": "EXO",
           "startChapter": 10,
           "endChapter": 12,
-          "label": "Exodus 10-12"
+          "label": "Exodus 10-12",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -376,7 +409,8 @@
           "bookId": "EXO",
           "startChapter": 13,
           "endChapter": 15,
-          "label": "Exodus 13-15"
+          "label": "Exodus 13-15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -387,7 +421,8 @@
           "bookId": "EXO",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "Exodus 16-18"
+          "label": "Exodus 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -398,7 +433,8 @@
           "bookId": "EXO",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "Exodus 19-21"
+          "label": "Exodus 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -409,7 +445,8 @@
           "bookId": "EXO",
           "startChapter": 22,
           "endChapter": 24,
-          "label": "Exodus 22-24"
+          "label": "Exodus 22-24",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -420,7 +457,8 @@
           "bookId": "EXO",
           "startChapter": 25,
           "endChapter": 27,
-          "label": "Exodus 25-27"
+          "label": "Exodus 25-27",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -431,7 +469,8 @@
           "bookId": "EXO",
           "startChapter": 28,
           "endChapter": 29,
-          "label": "Exodus 28-29"
+          "label": "Exodus 28-29",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -442,7 +481,8 @@
           "bookId": "EXO",
           "startChapter": 30,
           "endChapter": 32,
-          "label": "Exodus 30-32"
+          "label": "Exodus 30-32",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -453,7 +493,8 @@
           "bookId": "EXO",
           "startChapter": 33,
           "endChapter": 35,
-          "label": "Exodus 33-35"
+          "label": "Exodus 33-35",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -464,7 +505,8 @@
           "bookId": "EXO",
           "startChapter": 36,
           "endChapter": 38,
-          "label": "Exodus 36-38"
+          "label": "Exodus 36-38",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -475,7 +517,8 @@
           "bookId": "EXO",
           "startChapter": 39,
           "endChapter": 40,
-          "label": "Exodus 39-40"
+          "label": "Exodus 39-40",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -486,7 +529,8 @@
           "bookId": "LEV",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Leviticus 1-4"
+          "label": "Leviticus 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -497,7 +541,8 @@
           "bookId": "LEV",
           "startChapter": 5,
           "endChapter": 7,
-          "label": "Leviticus 5-7"
+          "label": "Leviticus 5-7",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -508,7 +553,8 @@
           "bookId": "LEV",
           "startChapter": 8,
           "endChapter": 10,
-          "label": "Leviticus 8-10"
+          "label": "Leviticus 8-10",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -519,7 +565,8 @@
           "bookId": "LEV",
           "startChapter": 11,
           "endChapter": 13,
-          "label": "Leviticus 11-13"
+          "label": "Leviticus 11-13",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -530,7 +577,8 @@
           "bookId": "LEV",
           "startChapter": 14,
           "endChapter": 15,
-          "label": "Leviticus 14-15"
+          "label": "Leviticus 14-15",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -541,7 +589,8 @@
           "bookId": "LEV",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "Leviticus 16-18"
+          "label": "Leviticus 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -552,7 +601,8 @@
           "bookId": "LEV",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "Leviticus 19-21"
+          "label": "Leviticus 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -563,7 +613,8 @@
           "bookId": "LEV",
           "startChapter": 22,
           "endChapter": 23,
-          "label": "Leviticus 22-23"
+          "label": "Leviticus 22-23",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -574,7 +625,8 @@
           "bookId": "LEV",
           "startChapter": 24,
           "endChapter": 25,
-          "label": "Leviticus 24-25"
+          "label": "Leviticus 24-25",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -585,7 +637,8 @@
           "bookId": "LEV",
           "startChapter": 26,
           "endChapter": 27,
-          "label": "Leviticus 26-27"
+          "label": "Leviticus 26-27",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -596,7 +649,8 @@
           "bookId": "NUM",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "Numbers 1-2"
+          "label": "Numbers 1-2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -607,7 +661,8 @@
           "bookId": "NUM",
           "startChapter": 3,
           "endChapter": 4,
-          "label": "Numbers 3-4"
+          "label": "Numbers 3-4",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -618,7 +673,8 @@
           "bookId": "NUM",
           "startChapter": 5,
           "endChapter": 6,
-          "label": "Numbers 5-6"
+          "label": "Numbers 5-6",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -629,7 +685,8 @@
           "bookId": "NUM",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Numbers 7"
+          "label": "Numbers 7",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -640,7 +697,8 @@
           "bookId": "NUM",
           "startChapter": 8,
           "endChapter": 10,
-          "label": "Numbers 8-10"
+          "label": "Numbers 8-10",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -651,7 +709,8 @@
           "bookId": "NUM",
           "startChapter": 11,
           "endChapter": 13,
-          "label": "Numbers 11-13"
+          "label": "Numbers 11-13",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -662,13 +721,15 @@
           "bookId": "NUM",
           "startChapter": 14,
           "endChapter": 15,
-          "label": "Numbers 14-15"
+          "label": "Numbers 14-15",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 90,
           "endChapter": 90,
-          "label": "Psalm 90"
+          "label": "Psalm 90",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -679,7 +740,8 @@
           "bookId": "NUM",
           "startChapter": 16,
           "endChapter": 17,
-          "label": "Numbers 16-17"
+          "label": "Numbers 16-17",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -690,7 +752,8 @@
           "bookId": "NUM",
           "startChapter": 18,
           "endChapter": 20,
-          "label": "Numbers 18-20"
+          "label": "Numbers 18-20",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -701,7 +764,8 @@
           "bookId": "NUM",
           "startChapter": 21,
           "endChapter": 22,
-          "label": "Numbers 21-22"
+          "label": "Numbers 21-22",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -712,7 +776,8 @@
           "bookId": "NUM",
           "startChapter": 23,
           "endChapter": 25,
-          "label": "Numbers 23-25"
+          "label": "Numbers 23-25",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -723,7 +788,8 @@
           "bookId": "NUM",
           "startChapter": 26,
           "endChapter": 27,
-          "label": "Numbers 26-27"
+          "label": "Numbers 26-27",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -734,7 +800,8 @@
           "bookId": "NUM",
           "startChapter": 28,
           "endChapter": 30,
-          "label": "Numbers 28-30"
+          "label": "Numbers 28-30",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -745,7 +812,8 @@
           "bookId": "NUM",
           "startChapter": 31,
           "endChapter": 32,
-          "label": "Numbers 31-32"
+          "label": "Numbers 31-32",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -756,7 +824,8 @@
           "bookId": "NUM",
           "startChapter": 33,
           "endChapter": 34,
-          "label": "Numbers 33-34"
+          "label": "Numbers 33-34",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -767,7 +836,8 @@
           "bookId": "NUM",
           "startChapter": 35,
           "endChapter": 36,
-          "label": "Numbers 35-36"
+          "label": "Numbers 35-36",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -778,7 +848,8 @@
           "bookId": "DEU",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "Deuteronomy 1-2"
+          "label": "Deuteronomy 1-2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -789,7 +860,8 @@
           "bookId": "DEU",
           "startChapter": 3,
           "endChapter": 4,
-          "label": "Deuteronomy 3-4"
+          "label": "Deuteronomy 3-4",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -800,7 +872,8 @@
           "bookId": "DEU",
           "startChapter": 5,
           "endChapter": 7,
-          "label": "Deuteronomy 5-7"
+          "label": "Deuteronomy 5-7",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -811,7 +884,8 @@
           "bookId": "DEU",
           "startChapter": 8,
           "endChapter": 10,
-          "label": "Deuteronomy 8-10"
+          "label": "Deuteronomy 8-10",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -822,7 +896,8 @@
           "bookId": "DEU",
           "startChapter": 11,
           "endChapter": 13,
-          "label": "Deuteronomy 11-13"
+          "label": "Deuteronomy 11-13",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -833,7 +908,8 @@
           "bookId": "DEU",
           "startChapter": 14,
           "endChapter": 16,
-          "label": "Deuteronomy 14-16"
+          "label": "Deuteronomy 14-16",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -844,7 +920,8 @@
           "bookId": "DEU",
           "startChapter": 17,
           "endChapter": 20,
-          "label": "Deuteronomy 17-20"
+          "label": "Deuteronomy 17-20",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -855,7 +932,8 @@
           "bookId": "DEU",
           "startChapter": 21,
           "endChapter": 23,
-          "label": "Deuteronomy 21-23"
+          "label": "Deuteronomy 21-23",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -866,7 +944,8 @@
           "bookId": "DEU",
           "startChapter": 24,
           "endChapter": 27,
-          "label": "Deuteronomy 24-27"
+          "label": "Deuteronomy 24-27",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -877,7 +956,8 @@
           "bookId": "DEU",
           "startChapter": 28,
           "endChapter": 29,
-          "label": "Deuteronomy 28-29"
+          "label": "Deuteronomy 28-29",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -888,7 +968,8 @@
           "bookId": "DEU",
           "startChapter": 30,
           "endChapter": 31,
-          "label": "Deuteronomy 30-31"
+          "label": "Deuteronomy 30-31",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -899,13 +980,15 @@
           "bookId": "DEU",
           "startChapter": 32,
           "endChapter": 34,
-          "label": "Deuteronomy 32-34"
+          "label": "Deuteronomy 32-34",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 91,
           "endChapter": 91,
-          "label": "Psalm 91"
+          "label": "Psalm 91",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -916,7 +999,8 @@
           "bookId": "JOS",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Joshua 1-4"
+          "label": "Joshua 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -927,7 +1011,8 @@
           "bookId": "JOS",
           "startChapter": 5,
           "endChapter": 8,
-          "label": "Joshua 5-8"
+          "label": "Joshua 5-8",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -938,7 +1023,8 @@
           "bookId": "JOS",
           "startChapter": 9,
           "endChapter": 11,
-          "label": "Joshua 9-11"
+          "label": "Joshua 9-11",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -949,7 +1035,8 @@
           "bookId": "JOS",
           "startChapter": 12,
           "endChapter": 15,
-          "label": "Joshua 12-15"
+          "label": "Joshua 12-15",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -960,7 +1047,8 @@
           "bookId": "JOS",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "Joshua 16-18"
+          "label": "Joshua 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -971,7 +1059,8 @@
           "bookId": "JOS",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "Joshua 19-21"
+          "label": "Joshua 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -982,7 +1071,8 @@
           "bookId": "JOS",
           "startChapter": 22,
           "endChapter": 24,
-          "label": "Joshua 22-24"
+          "label": "Joshua 22-24",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -993,7 +1083,8 @@
           "bookId": "JDG",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "Judges 1-2"
+          "label": "Judges 1-2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1004,7 +1095,8 @@
           "bookId": "JDG",
           "startChapter": 3,
           "endChapter": 5,
-          "label": "Judges 3-5"
+          "label": "Judges 3-5",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1015,7 +1107,8 @@
           "bookId": "JDG",
           "startChapter": 6,
           "endChapter": 7,
-          "label": "Judges 6-7"
+          "label": "Judges 6-7",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1026,7 +1119,8 @@
           "bookId": "JDG",
           "startChapter": 8,
           "endChapter": 9,
-          "label": "Judges 8-9"
+          "label": "Judges 8-9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1037,7 +1131,8 @@
           "bookId": "JDG",
           "startChapter": 10,
           "endChapter": 12,
-          "label": "Judges 10-12"
+          "label": "Judges 10-12",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1048,7 +1143,8 @@
           "bookId": "JDG",
           "startChapter": 13,
           "endChapter": 15,
-          "label": "Judges 13-15"
+          "label": "Judges 13-15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1059,7 +1155,8 @@
           "bookId": "JDG",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "Judges 16-18"
+          "label": "Judges 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1070,7 +1167,8 @@
           "bookId": "JDG",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "Judges 19-21"
+          "label": "Judges 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1081,7 +1179,8 @@
           "bookId": "RUT",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Ruth 1-4"
+          "label": "Ruth 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1092,7 +1191,8 @@
           "bookId": "1SA",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "1Samuel 1-3"
+          "label": "1Samuel 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1103,7 +1203,8 @@
           "bookId": "1SA",
           "startChapter": 4,
           "endChapter": 8,
-          "label": "1Samuel 4-8"
+          "label": "1Samuel 4-8",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -1114,7 +1215,8 @@
           "bookId": "1SA",
           "startChapter": 9,
           "endChapter": 12,
-          "label": "1Samuel 9-12"
+          "label": "1Samuel 9-12",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1125,7 +1227,8 @@
           "bookId": "1SA",
           "startChapter": 13,
           "endChapter": 14,
-          "label": "1Samuel 13-14"
+          "label": "1Samuel 13-14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1136,7 +1239,8 @@
           "bookId": "1SA",
           "startChapter": 15,
           "endChapter": 17,
-          "label": "1Samuel 15-17"
+          "label": "1Samuel 15-17",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1147,19 +1251,22 @@
           "bookId": "1SA",
           "startChapter": 18,
           "endChapter": 20,
-          "label": "1Samuel 18-20"
+          "label": "1Samuel 18-20",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Psalm 11"
+          "label": "Psalm 11",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 59,
           "endChapter": 59,
-          "label": "Psalm 59"
+          "label": "Psalm 59",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1170,7 +1277,8 @@
           "bookId": "1SA",
           "startChapter": 21,
           "endChapter": 24,
-          "label": "1Samuel 21-24"
+          "label": "1Samuel 21-24",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1181,31 +1289,36 @@
           "bookId": "PSA",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Psalm 7"
+          "label": "Psalm 7",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 27,
           "endChapter": 27,
-          "label": "Psalm 27"
+          "label": "Psalm 27",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 31,
           "endChapter": 31,
-          "label": "Psalm 31"
+          "label": "Psalm 31",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 34,
           "endChapter": 34,
-          "label": "Psalm 34"
+          "label": "Psalm 34",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 52,
           "endChapter": 52,
-          "label": "Psalm 52"
+          "label": "Psalm 52",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1216,19 +1329,22 @@
           "bookId": "PSA",
           "startChapter": 56,
           "endChapter": 56,
-          "label": "Psalm 56"
+          "label": "Psalm 56",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 120,
           "endChapter": 120,
-          "label": "Psalm 120"
+          "label": "Psalm 120",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 140,
           "endChapter": 142,
-          "label": "Psalm 140-142"
+          "label": "Psalm 140-142",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1239,7 +1355,8 @@
           "bookId": "1SA",
           "startChapter": 25,
           "endChapter": 27,
-          "label": "1Samuel 25-27"
+          "label": "1Samuel 25-27",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1250,25 +1367,29 @@
           "bookId": "PSA",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "Psalm 17"
+          "label": "Psalm 17",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 35,
           "endChapter": 35,
-          "label": "Psalm 35"
+          "label": "Psalm 35",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 54,
           "endChapter": 54,
-          "label": "Psalm 54"
+          "label": "Psalm 54",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 63,
           "endChapter": 63,
-          "label": "Psalm 63"
+          "label": "Psalm 63",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1279,13 +1400,15 @@
           "bookId": "1SA",
           "startChapter": 28,
           "endChapter": 31,
-          "label": "1Samuel 28-31"
+          "label": "1Samuel 28-31",
+          "planChapterTotal": 4
         },
         {
           "bookId": "PSA",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "Psalm 18"
+          "label": "Psalm 18",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1296,19 +1419,22 @@
           "bookId": "PSA",
           "startChapter": 121,
           "endChapter": 121,
-          "label": "Psalm 121"
+          "label": "Psalm 121",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 123,
           "endChapter": 125,
-          "label": "Psalm 123-125"
+          "label": "Psalm 123-125",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 128,
           "endChapter": 130,
-          "label": "Psalm 128-130"
+          "label": "Psalm 128-130",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1319,7 +1445,8 @@
           "bookId": "2SA",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "2Samuel 1-4"
+          "label": "2Samuel 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1330,37 +1457,43 @@
           "bookId": "PSA",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Psalm 6"
+          "label": "Psalm 6",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 8,
           "endChapter": 10,
-          "label": "Psalm 8-10"
+          "label": "Psalm 8-10",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Psalm 14"
+          "label": "Psalm 14",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Psalm 16"
+          "label": "Psalm 16",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 19,
           "endChapter": 19,
-          "label": "Psalm 19"
+          "label": "Psalm 19",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 21,
           "endChapter": 21,
-          "label": "Psalm 21"
+          "label": "Psalm 21",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1371,7 +1504,8 @@
           "bookId": "1CH",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "1Chronicles 1-2"
+          "label": "1Chronicles 1-2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1382,25 +1516,29 @@
           "bookId": "PSA",
           "startChapter": 43,
           "endChapter": 45,
-          "label": "Psalm 43-45"
+          "label": "Psalm 43-45",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 49,
           "endChapter": 49,
-          "label": "Psalm 49"
+          "label": "Psalm 49",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 84,
           "endChapter": 85,
-          "label": "Psalm 84-85"
+          "label": "Psalm 84-85",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 87,
           "endChapter": 87,
-          "label": "Psalm 87"
+          "label": "Psalm 87",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1411,7 +1549,8 @@
           "bookId": "1CH",
           "startChapter": 3,
           "endChapter": 5,
-          "label": "1Chronicles 3-5"
+          "label": "1Chronicles 3-5",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1422,13 +1561,15 @@
           "bookId": "PSA",
           "startChapter": 73,
           "endChapter": 73,
-          "label": "Psalm 73"
+          "label": "Psalm 73",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 77,
           "endChapter": 78,
-          "label": "Psalm 77-78"
+          "label": "Psalm 77-78",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1439,7 +1580,8 @@
           "bookId": "1CH",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "1Chronicles 6"
+          "label": "1Chronicles 6",
+          "planChapterTotal": 29
         }
       ]
     },
@@ -1450,19 +1592,22 @@
           "bookId": "PSA",
           "startChapter": 81,
           "endChapter": 81,
-          "label": "Psalm 81"
+          "label": "Psalm 81",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 88,
           "endChapter": 88,
-          "label": "Psalm 88"
+          "label": "Psalm 88",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 92,
           "endChapter": 93,
-          "label": "Psalm 92-93"
+          "label": "Psalm 92-93",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1473,7 +1618,8 @@
           "bookId": "1CH",
           "startChapter": 7,
           "endChapter": 10,
-          "label": "1Chronicles 7-10"
+          "label": "1Chronicles 7-10",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1484,7 +1630,8 @@
           "bookId": "PSA",
           "startChapter": 102,
           "endChapter": 104,
-          "label": "Psalm 102-104"
+          "label": "Psalm 102-104",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1497,13 +1644,15 @@
           "endChapter": 5,
           "startVerse": 1,
           "endVerse": 10,
-          "label": "2Samuel 5:1-10"
+          "label": "2Samuel 5:1-10",
+          "planChapterTotal": 24
         },
         {
           "bookId": "1CH",
           "startChapter": 11,
           "endChapter": 12,
-          "label": "1Chronicles 11-12"
+          "label": "1Chronicles 11-12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1514,7 +1663,8 @@
           "bookId": "PSA",
           "startChapter": 133,
           "endChapter": 133,
-          "label": "Psalm 133"
+          "label": "Psalm 133",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1525,7 +1675,8 @@
           "bookId": "PSA",
           "startChapter": 106,
           "endChapter": 107,
-          "label": "Psalm 106-107"
+          "label": "Psalm 106-107",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1538,13 +1689,15 @@
           "startVerse": 11,
           "endChapter": 6,
           "endVerse": 23,
-          "label": "2Samuel 5:11-6:23"
+          "label": "2Samuel 5:11-6:23",
+          "planChapterTotal": 2
         },
         {
           "bookId": "1CH",
           "startChapter": 13,
           "endChapter": 16,
-          "label": "1Chronicles 13-16"
+          "label": "1Chronicles 13-16",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -1555,31 +1708,36 @@
           "bookId": "PSA",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "Psalm 1-2"
+          "label": "Psalm 1-2",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Psalm 15"
+          "label": "Psalm 15",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 22,
           "endChapter": 24,
-          "label": "Psalm 22-24"
+          "label": "Psalm 22-24",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 47,
           "endChapter": 47,
-          "label": "Psalm 47"
+          "label": "Psalm 47",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 68,
           "endChapter": 68,
-          "label": "Psalm 68"
+          "label": "Psalm 68",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1590,37 +1748,43 @@
           "bookId": "PSA",
           "startChapter": 89,
           "endChapter": 89,
-          "label": "Psalm 89"
+          "label": "Psalm 89",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 96,
           "endChapter": 96,
-          "label": "Psalm 96"
+          "label": "Psalm 96",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 100,
           "endChapter": 100,
-          "label": "Psalm 100"
+          "label": "Psalm 100",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 101,
           "endChapter": 101,
-          "label": "Psalm 101"
+          "label": "Psalm 101",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 105,
           "endChapter": 105,
-          "label": "Psalm 105"
+          "label": "Psalm 105",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 132,
           "endChapter": 132,
-          "label": "Psalm 132"
+          "label": "Psalm 132",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1631,13 +1795,15 @@
           "bookId": "2SA",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "2Samuel 7"
+          "label": "2Samuel 7",
+          "planChapterTotal": 24
         },
         {
           "bookId": "1CH",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "1Chronicles 17"
+          "label": "1Chronicles 17",
+          "planChapterTotal": 29
         }
       ]
     },
@@ -1648,31 +1814,36 @@
           "bookId": "PSA",
           "startChapter": 25,
           "endChapter": 25,
-          "label": "Psalm 25"
+          "label": "Psalm 25",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 29,
           "endChapter": 29,
-          "label": "Psalm 29"
+          "label": "Psalm 29",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 33,
           "endChapter": 33,
-          "label": "Psalm 33"
+          "label": "Psalm 33",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 36,
           "endChapter": 36,
-          "label": "Psalm 36"
+          "label": "Psalm 36",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 39,
           "endChapter": 39,
-          "label": "Psalm 39"
+          "label": "Psalm 39",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1683,13 +1854,15 @@
           "bookId": "2SA",
           "startChapter": 8,
           "endChapter": 9,
-          "label": "2Samuel 8-9"
+          "label": "2Samuel 8-9",
+          "planChapterTotal": 2
         },
         {
           "bookId": "1CH",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "1Chronicles 18"
+          "label": "1Chronicles 18",
+          "planChapterTotal": 29
         }
       ]
     },
@@ -1700,25 +1873,29 @@
           "bookId": "PSA",
           "startChapter": 50,
           "endChapter": 50,
-          "label": "Psalm 50"
+          "label": "Psalm 50",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 53,
           "endChapter": 53,
-          "label": "Psalm 53"
+          "label": "Psalm 53",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 60,
           "endChapter": 60,
-          "label": "Psalm 60"
+          "label": "Psalm 60",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 75,
           "endChapter": 75,
-          "label": "Psalm 75"
+          "label": "Psalm 75",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1729,19 +1906,22 @@
           "bookId": "2SA",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "2Samuel 10"
+          "label": "2Samuel 10",
+          "planChapterTotal": 24
         },
         {
           "bookId": "1CH",
           "startChapter": 19,
           "endChapter": 19,
-          "label": "1Chronicles 19"
+          "label": "1Chronicles 19",
+          "planChapterTotal": 29
         },
         {
           "bookId": "PSA",
           "startChapter": 20,
           "endChapter": 20,
-          "label": "Psalm 20"
+          "label": "Psalm 20",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1752,13 +1932,15 @@
           "bookId": "PSA",
           "startChapter": 65,
           "endChapter": 67,
-          "label": "Psalm 65-67"
+          "label": "Psalm 65-67",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 69,
           "endChapter": 70,
-          "label": "Psalm 69-70"
+          "label": "Psalm 69-70",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1769,13 +1951,15 @@
           "bookId": "2SA",
           "startChapter": 11,
           "endChapter": 12,
-          "label": "2Samuel 11-12"
+          "label": "2Samuel 11-12",
+          "planChapterTotal": 2
         },
         {
           "bookId": "1CH",
           "startChapter": 20,
           "endChapter": 20,
-          "label": "1Chronicles 20"
+          "label": "1Chronicles 20",
+          "planChapterTotal": 29
         }
       ]
     },
@@ -1786,25 +1970,29 @@
           "bookId": "PSA",
           "startChapter": 32,
           "endChapter": 32,
-          "label": "Psalm 32"
+          "label": "Psalm 32",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 51,
           "endChapter": 51,
-          "label": "Psalm 51"
+          "label": "Psalm 51",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 86,
           "endChapter": 86,
-          "label": "Psalm 86"
+          "label": "Psalm 86",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 122,
           "endChapter": 122,
-          "label": "Psalm 122"
+          "label": "Psalm 122",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1815,7 +2003,8 @@
           "bookId": "2SA",
           "startChapter": 13,
           "endChapter": 15,
-          "label": "2Samuel 13-15"
+          "label": "2Samuel 13-15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1826,25 +2015,29 @@
           "bookId": "PSA",
           "startChapter": 3,
           "endChapter": 4,
-          "label": "Psalm 3-4"
+          "label": "Psalm 3-4",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 12,
           "endChapter": 13,
-          "label": "Psalm 12-13"
+          "label": "Psalm 12-13",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 28,
           "endChapter": 28,
-          "label": "Psalm 28"
+          "label": "Psalm 28",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 55,
           "endChapter": 55,
-          "label": "Psalm 55"
+          "label": "Psalm 55",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1855,7 +2048,8 @@
           "bookId": "2SA",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "2Samuel 16-18"
+          "label": "2Samuel 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1866,31 +2060,36 @@
           "bookId": "PSA",
           "startChapter": 26,
           "endChapter": 26,
-          "label": "Psalm 26"
+          "label": "Psalm 26",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 40,
           "endChapter": 40,
-          "label": "Psalm 40"
+          "label": "Psalm 40",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 58,
           "endChapter": 58,
-          "label": "Psalm 58"
+          "label": "Psalm 58",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 61,
           "endChapter": 62,
-          "label": "Psalm 61-62"
+          "label": "Psalm 61-62",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 64,
           "endChapter": 64,
-          "label": "Psalm 64"
+          "label": "Psalm 64",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1901,7 +2100,8 @@
           "bookId": "2SA",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "2Samuel 19-21"
+          "label": "2Samuel 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1912,19 +2112,22 @@
           "bookId": "PSA",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "Psalm 5"
+          "label": "Psalm 5",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 38,
           "endChapter": 38,
-          "label": "Psalm 38"
+          "label": "Psalm 38",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 41,
           "endChapter": 42,
-          "label": "Psalm 41-42"
+          "label": "Psalm 41-42",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1935,13 +2138,15 @@
           "bookId": "2SA",
           "startChapter": 22,
           "endChapter": 23,
-          "label": "2Samuel 22-23"
+          "label": "2Samuel 22-23",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 57,
           "endChapter": 57,
-          "label": "Psalm 57"
+          "label": "Psalm 57",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1952,13 +2157,15 @@
           "bookId": "PSA",
           "startChapter": 95,
           "endChapter": 95,
-          "label": "Psalm 95"
+          "label": "Psalm 95",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 97,
           "endChapter": 99,
-          "label": "Psalm 97-99"
+          "label": "Psalm 97-99",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -1969,19 +2176,22 @@
           "bookId": "2SA",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "2Samuel 24"
+          "label": "2Samuel 24",
+          "planChapterTotal": 24
         },
         {
           "bookId": "1CH",
           "startChapter": 21,
           "endChapter": 22,
-          "label": "1Chronicles 21-22"
+          "label": "1Chronicles 21-22",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 30,
           "endChapter": 30,
-          "label": "Psalm 30"
+          "label": "Psalm 30",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1992,7 +2202,8 @@
           "bookId": "PSA",
           "startChapter": 108,
           "endChapter": 110,
-          "label": "Psalm 108-110"
+          "label": "Psalm 108-110",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2003,7 +2214,8 @@
           "bookId": "1CH",
           "startChapter": 23,
           "endChapter": 25,
-          "label": "1Chronicles 23-25"
+          "label": "1Chronicles 23-25",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2014,19 +2226,22 @@
           "bookId": "PSA",
           "startChapter": 131,
           "endChapter": 131,
-          "label": "Psalm 131"
+          "label": "Psalm 131",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 138,
           "endChapter": 139,
-          "label": "Psalm 138-139"
+          "label": "Psalm 138-139",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 143,
           "endChapter": 145,
-          "label": "Psalm 143-145"
+          "label": "Psalm 143-145",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2037,13 +2252,15 @@
           "bookId": "1CH",
           "startChapter": 26,
           "endChapter": 29,
-          "label": "1Chronicles 26-29"
+          "label": "1Chronicles 26-29",
+          "planChapterTotal": 4
         },
         {
           "bookId": "PSA",
           "startChapter": 127,
           "endChapter": 127,
-          "label": "Psalm 127"
+          "label": "Psalm 127",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2054,7 +2271,8 @@
           "bookId": "PSA",
           "startChapter": 111,
           "endChapter": 118,
-          "label": "Psalm 111-118"
+          "label": "Psalm 111-118",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2065,25 +2283,29 @@
           "bookId": "1KI",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "1Kings 1-2"
+          "label": "1Kings 1-2",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 37,
           "endChapter": 37,
-          "label": "Psalm 37"
+          "label": "Psalm 37",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 71,
           "endChapter": 71,
-          "label": "Psalm 71"
+          "label": "Psalm 71",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 94,
           "endChapter": 94,
-          "label": "Psalm 94"
+          "label": "Psalm 94",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2096,7 +2318,8 @@
           "endChapter": 119,
           "startVerse": 1,
           "endVerse": 88,
-          "label": "Psalm 119:1-88"
+          "label": "Psalm 119:1-88",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2107,19 +2330,22 @@
           "bookId": "1KI",
           "startChapter": 3,
           "endChapter": 4,
-          "label": "1Kings 3-4"
+          "label": "1Kings 3-4",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "2Chronicles 1"
+          "label": "2Chronicles 1",
+          "planChapterTotal": 36
         },
         {
           "bookId": "PSA",
           "startChapter": 72,
           "endChapter": 72,
-          "label": "Psalm 72"
+          "label": "Psalm 72",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2132,7 +2358,8 @@
           "endChapter": 119,
           "startVerse": 89,
           "endVerse": 176,
-          "label": "Psalm 119:89-176"
+          "label": "Psalm 119:89-176",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2143,7 +2370,8 @@
           "bookId": "SNG",
           "startChapter": 1,
           "endChapter": 8,
-          "label": "SongOfSongs 1-8"
+          "label": "SongOfSongs 1-8",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2154,7 +2382,8 @@
           "bookId": "PRO",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Proverbs 1-3"
+          "label": "Proverbs 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2165,7 +2394,8 @@
           "bookId": "PRO",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Proverbs 4-6"
+          "label": "Proverbs 4-6",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2176,7 +2406,8 @@
           "bookId": "PRO",
           "startChapter": 7,
           "endChapter": 9,
-          "label": "Proverbs 7-9"
+          "label": "Proverbs 7-9",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2187,7 +2418,8 @@
           "bookId": "PRO",
           "startChapter": 10,
           "endChapter": 12,
-          "label": "Proverbs 10-12"
+          "label": "Proverbs 10-12",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2198,7 +2430,8 @@
           "bookId": "PRO",
           "startChapter": 13,
           "endChapter": 15,
-          "label": "Proverbs 13-15"
+          "label": "Proverbs 13-15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2209,7 +2442,8 @@
           "bookId": "PRO",
           "startChapter": 16,
           "endChapter": 18,
-          "label": "Proverbs 16-18"
+          "label": "Proverbs 16-18",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2220,7 +2454,8 @@
           "bookId": "PRO",
           "startChapter": 19,
           "endChapter": 21,
-          "label": "Proverbs 19-21"
+          "label": "Proverbs 19-21",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2231,7 +2466,8 @@
           "bookId": "PRO",
           "startChapter": 22,
           "endChapter": 24,
-          "label": "Proverbs 22-24"
+          "label": "Proverbs 22-24",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2242,13 +2478,15 @@
           "bookId": "1KI",
           "startChapter": 5,
           "endChapter": 6,
-          "label": "1Kings 5-6"
+          "label": "1Kings 5-6",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 2,
           "endChapter": 3,
-          "label": "2Chronicles 2-3"
+          "label": "2Chronicles 2-3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2259,13 +2497,15 @@
           "bookId": "1KI",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "1Kings 7"
+          "label": "1Kings 7",
+          "planChapterTotal": 22
         },
         {
           "bookId": "2CH",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "2Chronicles 4"
+          "label": "2Chronicles 4",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2276,13 +2516,15 @@
           "bookId": "1KI",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "1Kings 8"
+          "label": "1Kings 8",
+          "planChapterTotal": 22
         },
         {
           "bookId": "2CH",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "2Chronicles 5"
+          "label": "2Chronicles 5",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2293,13 +2535,15 @@
           "bookId": "2CH",
           "startChapter": 6,
           "endChapter": 7,
-          "label": "2Chronicles 6-7"
+          "label": "2Chronicles 6-7",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 136,
           "endChapter": 136,
-          "label": "Psalm 136"
+          "label": "Psalm 136",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2310,13 +2554,15 @@
           "bookId": "PSA",
           "startChapter": 134,
           "endChapter": 134,
-          "label": "Psalm 134"
+          "label": "Psalm 134",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 146,
           "endChapter": 150,
-          "label": "Psalm 146-150"
+          "label": "Psalm 146-150",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2327,13 +2573,15 @@
           "bookId": "1KI",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "1Kings 9"
+          "label": "1Kings 9",
+          "planChapterTotal": 22
         },
         {
           "bookId": "2CH",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "2Chronicles 8"
+          "label": "2Chronicles 8",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2344,7 +2592,8 @@
           "bookId": "PRO",
           "startChapter": 25,
           "endChapter": 26,
-          "label": "Proverbs 25-26"
+          "label": "Proverbs 25-26",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2355,7 +2604,8 @@
           "bookId": "PRO",
           "startChapter": 27,
           "endChapter": 29,
-          "label": "Proverbs 27-29"
+          "label": "Proverbs 27-29",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2366,7 +2616,8 @@
           "bookId": "ECC",
           "startChapter": 1,
           "endChapter": 6,
-          "label": "Ecclesiastes 1-6"
+          "label": "Ecclesiastes 1-6",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -2377,7 +2628,8 @@
           "bookId": "ECC",
           "startChapter": 7,
           "endChapter": 12,
-          "label": "Ecclesiastes 7-12"
+          "label": "Ecclesiastes 7-12",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -2388,13 +2640,15 @@
           "bookId": "1KI",
           "startChapter": 10,
           "endChapter": 11,
-          "label": "1Kings 10-11"
+          "label": "1Kings 10-11",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "2Chronicles 9"
+          "label": "2Chronicles 9",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2405,7 +2659,8 @@
           "bookId": "PRO",
           "startChapter": 30,
           "endChapter": 31,
-          "label": "Proverbs 30-31"
+          "label": "Proverbs 30-31",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2416,7 +2671,8 @@
           "bookId": "1KI",
           "startChapter": 12,
           "endChapter": 14,
-          "label": "1Kings 12-14"
+          "label": "1Kings 12-14",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2427,7 +2683,8 @@
           "bookId": "2CH",
           "startChapter": 10,
           "endChapter": 12,
-          "label": "2Chronicles 10-12"
+          "label": "2Chronicles 10-12",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2440,13 +2697,15 @@
           "endChapter": 15,
           "startVerse": 1,
           "endVerse": 24,
-          "label": "1Kings 15:1-24"
+          "label": "1Kings 15:1-24",
+          "planChapterTotal": 22
         },
         {
           "bookId": "2CH",
           "startChapter": 13,
           "endChapter": 16,
-          "label": "2Chronicles 13-16"
+          "label": "2Chronicles 13-16",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2459,13 +2718,15 @@
           "startVerse": 25,
           "endChapter": 16,
           "endVerse": 34,
-          "label": "1Kings 15:25-16:34"
+          "label": "1Kings 15:25-16:34",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "2Chronicles 17"
+          "label": "2Chronicles 17",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2476,7 +2737,8 @@
           "bookId": "1KI",
           "startChapter": 17,
           "endChapter": 19,
-          "label": "1Kings 17-19"
+          "label": "1Kings 17-19",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2487,7 +2749,8 @@
           "bookId": "1KI",
           "startChapter": 20,
           "endChapter": 21,
-          "label": "1Kings 20-21"
+          "label": "1Kings 20-21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2498,13 +2761,15 @@
           "bookId": "1KI",
           "startChapter": 22,
           "endChapter": 22,
-          "label": "1Kings 22"
+          "label": "1Kings 22",
+          "planChapterTotal": 22
         },
         {
           "bookId": "2CH",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "2Chronicles 18"
+          "label": "2Chronicles 18",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2515,7 +2780,8 @@
           "bookId": "2CH",
           "startChapter": 19,
           "endChapter": 23,
-          "label": "2Chronicles 19-23"
+          "label": "2Chronicles 19-23",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2526,13 +2792,15 @@
           "bookId": "OBA",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Obadiah 1"
+          "label": "Obadiah 1",
+          "planChapterTotal": 1
         },
         {
           "bookId": "PSA",
           "startChapter": 82,
           "endChapter": 83,
-          "label": "Psalm 82-83"
+          "label": "Psalm 82-83",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2543,7 +2811,8 @@
           "bookId": "2KI",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "2Kings 1-4"
+          "label": "2Kings 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2554,7 +2823,8 @@
           "bookId": "2KI",
           "startChapter": 5,
           "endChapter": 8,
-          "label": "2Kings 5-8"
+          "label": "2Kings 5-8",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2565,7 +2835,8 @@
           "bookId": "2KI",
           "startChapter": 9,
           "endChapter": 11,
-          "label": "2Kings 9-11"
+          "label": "2Kings 9-11",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2576,13 +2847,15 @@
           "bookId": "2KI",
           "startChapter": 12,
           "endChapter": 13,
-          "label": "2Kings 12-13"
+          "label": "2Kings 12-13",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "2Chronicles 24"
+          "label": "2Chronicles 24",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2593,13 +2866,15 @@
           "bookId": "2KI",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "2Kings 14"
+          "label": "2Kings 14",
+          "planChapterTotal": 25
         },
         {
           "bookId": "2CH",
           "startChapter": 25,
           "endChapter": 25,
-          "label": "2Chronicles 25"
+          "label": "2Chronicles 25",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2610,7 +2885,8 @@
           "bookId": "JON",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Jonah 1-4"
+          "label": "Jonah 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2621,13 +2897,15 @@
           "bookId": "2KI",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "2Kings 15"
+          "label": "2Kings 15",
+          "planChapterTotal": 25
         },
         {
           "bookId": "2CH",
           "startChapter": 26,
           "endChapter": 26,
-          "label": "2Chronicles 26"
+          "label": "2Chronicles 26",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -2638,7 +2916,8 @@
           "bookId": "ISA",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Isaiah 1-4"
+          "label": "Isaiah 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2649,7 +2928,8 @@
           "bookId": "ISA",
           "startChapter": 5,
           "endChapter": 8,
-          "label": "Isaiah 5-8"
+          "label": "Isaiah 5-8",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2660,7 +2940,8 @@
           "bookId": "AMO",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "Amos 1-5"
+          "label": "Amos 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2671,7 +2952,8 @@
           "bookId": "AMO",
           "startChapter": 6,
           "endChapter": 9,
-          "label": "Amos 6-9"
+          "label": "Amos 6-9",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2682,13 +2964,15 @@
           "bookId": "2CH",
           "startChapter": 27,
           "endChapter": 27,
-          "label": "2Chronicles 27"
+          "label": "2Chronicles 27",
+          "planChapterTotal": 36
         },
         {
           "bookId": "ISA",
           "startChapter": 9,
           "endChapter": 12,
-          "label": "Isaiah 9-12"
+          "label": "Isaiah 9-12",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2699,7 +2983,8 @@
           "bookId": "MIC",
           "startChapter": 1,
           "endChapter": 7,
-          "label": "Micah 1-7"
+          "label": "Micah 1-7",
+          "planChapterTotal": 7
         }
       ]
     },
@@ -2710,13 +2995,15 @@
           "bookId": "2CH",
           "startChapter": 28,
           "endChapter": 28,
-          "label": "2Chronicles 28"
+          "label": "2Chronicles 28",
+          "planChapterTotal": 36
         },
         {
           "bookId": "2KI",
           "startChapter": 16,
           "endChapter": 17,
-          "label": "2Kings 16-17"
+          "label": "2Kings 16-17",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2727,7 +3014,8 @@
           "bookId": "ISA",
           "startChapter": 13,
           "endChapter": 17,
-          "label": "Isaiah 13-17"
+          "label": "Isaiah 13-17",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2738,7 +3026,8 @@
           "bookId": "ISA",
           "startChapter": 18,
           "endChapter": 22,
-          "label": "Isaiah 18-22"
+          "label": "Isaiah 18-22",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2749,7 +3038,8 @@
           "bookId": "ISA",
           "startChapter": 23,
           "endChapter": 27,
-          "label": "Isaiah 23-27"
+          "label": "Isaiah 23-27",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2762,19 +3052,22 @@
           "endChapter": 18,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "2Kings 18:1-8"
+          "label": "2Kings 18:1-8",
+          "planChapterTotal": 25
         },
         {
           "bookId": "2CH",
           "startChapter": 29,
           "endChapter": 31,
-          "label": "2Chronicles 29-31"
+          "label": "2Chronicles 29-31",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 48,
           "endChapter": 48,
-          "label": "Psalm 48"
+          "label": "Psalm 48",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2785,7 +3078,8 @@
           "bookId": "HOS",
           "startChapter": 1,
           "endChapter": 7,
-          "label": "Hosea 1-7"
+          "label": "Hosea 1-7",
+          "planChapterTotal": 7
         }
       ]
     },
@@ -2796,7 +3090,8 @@
           "bookId": "HOS",
           "startChapter": 8,
           "endChapter": 14,
-          "label": "Hosea 8-14"
+          "label": "Hosea 8-14",
+          "planChapterTotal": 7
         }
       ]
     },
@@ -2807,7 +3102,8 @@
           "bookId": "ISA",
           "startChapter": 28,
           "endChapter": 30,
-          "label": "Isaiah 28-30"
+          "label": "Isaiah 28-30",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2818,7 +3114,8 @@
           "bookId": "ISA",
           "startChapter": 31,
           "endChapter": 34,
-          "label": "Isaiah 31-34"
+          "label": "Isaiah 31-34",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2829,7 +3126,8 @@
           "bookId": "ISA",
           "startChapter": 35,
           "endChapter": 36,
-          "label": "Isaiah 35-36"
+          "label": "Isaiah 35-36",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2840,13 +3138,15 @@
           "bookId": "ISA",
           "startChapter": 37,
           "endChapter": 39,
-          "label": "Isaiah 37-39"
+          "label": "Isaiah 37-39",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 76,
           "endChapter": 76,
-          "label": "Psalm 76"
+          "label": "Psalm 76",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2857,7 +3157,8 @@
           "bookId": "ISA",
           "startChapter": 40,
           "endChapter": 43,
-          "label": "Isaiah 40-43"
+          "label": "Isaiah 40-43",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -2868,7 +3169,8 @@
           "bookId": "ISA",
           "startChapter": 44,
           "endChapter": 48,
-          "label": "Isaiah 44-48"
+          "label": "Isaiah 44-48",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2881,25 +3183,29 @@
           "startVerse": 9,
           "endChapter": 19,
           "endVerse": 37,
-          "label": "2Kings 18:9-19:37"
+          "label": "2Kings 18:9-19:37",
+          "planChapterTotal": 2
         },
         {
           "bookId": "PSA",
           "startChapter": 46,
           "endChapter": 46,
-          "label": "Psalm 46"
+          "label": "Psalm 46",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 80,
           "endChapter": 80,
-          "label": "Psalm 80"
+          "label": "Psalm 80",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 135,
           "endChapter": 135,
-          "label": "Psalm 135"
+          "label": "Psalm 135",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2910,7 +3216,8 @@
           "bookId": "ISA",
           "startChapter": 49,
           "endChapter": 53,
-          "label": "Isaiah 49-53"
+          "label": "Isaiah 49-53",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2921,7 +3228,8 @@
           "bookId": "ISA",
           "startChapter": 54,
           "endChapter": 58,
-          "label": "Isaiah 54-58"
+          "label": "Isaiah 54-58",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2932,7 +3240,8 @@
           "bookId": "ISA",
           "startChapter": 59,
           "endChapter": 63,
-          "label": "Isaiah 59-63"
+          "label": "Isaiah 59-63",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -2943,7 +3252,8 @@
           "bookId": "ISA",
           "startChapter": 64,
           "endChapter": 66,
-          "label": "Isaiah 64-66"
+          "label": "Isaiah 64-66",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2954,7 +3264,8 @@
           "bookId": "2KI",
           "startChapter": 20,
           "endChapter": 21,
-          "label": "2Kings 20-21"
+          "label": "2Kings 20-21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2965,7 +3276,8 @@
           "bookId": "2CH",
           "startChapter": 32,
           "endChapter": 33,
-          "label": "2Chronicles 32-33"
+          "label": "2Chronicles 32-33",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2976,7 +3288,8 @@
           "bookId": "NAM",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Nahum 1-3"
+          "label": "Nahum 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -2987,13 +3300,15 @@
           "bookId": "2KI",
           "startChapter": 22,
           "endChapter": 23,
-          "label": "2Kings 22-23"
+          "label": "2Kings 22-23",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 34,
           "endChapter": 35,
-          "label": "2Chronicles 34-35"
+          "label": "2Chronicles 34-35",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3004,7 +3319,8 @@
           "bookId": "ZEP",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Zephaniah 1-3"
+          "label": "Zephaniah 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3015,7 +3331,8 @@
           "bookId": "JER",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Jeremiah 1-3"
+          "label": "Jeremiah 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3026,7 +3343,8 @@
           "bookId": "JER",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Jeremiah 4-6"
+          "label": "Jeremiah 4-6",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3037,7 +3355,8 @@
           "bookId": "JER",
           "startChapter": 7,
           "endChapter": 9,
-          "label": "Jeremiah 7-9"
+          "label": "Jeremiah 7-9",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3048,7 +3367,8 @@
           "bookId": "JER",
           "startChapter": 10,
           "endChapter": 13,
-          "label": "Jeremiah 10-13"
+          "label": "Jeremiah 10-13",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3059,7 +3379,8 @@
           "bookId": "JER",
           "startChapter": 14,
           "endChapter": 17,
-          "label": "Jeremiah 14-17"
+          "label": "Jeremiah 14-17",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3070,7 +3391,8 @@
           "bookId": "JER",
           "startChapter": 18,
           "endChapter": 22,
-          "label": "Jeremiah 18-22"
+          "label": "Jeremiah 18-22",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3081,7 +3403,8 @@
           "bookId": "JER",
           "startChapter": 23,
           "endChapter": 25,
-          "label": "Jeremiah 23-25"
+          "label": "Jeremiah 23-25",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3092,7 +3415,8 @@
           "bookId": "JER",
           "startChapter": 26,
           "endChapter": 29,
-          "label": "Jeremiah 26-29"
+          "label": "Jeremiah 26-29",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3103,7 +3427,8 @@
           "bookId": "JER",
           "startChapter": 30,
           "endChapter": 31,
-          "label": "Jeremiah 30-31"
+          "label": "Jeremiah 30-31",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3114,7 +3439,8 @@
           "bookId": "JER",
           "startChapter": 32,
           "endChapter": 34,
-          "label": "Jeremiah 32-34"
+          "label": "Jeremiah 32-34",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3125,7 +3451,8 @@
           "bookId": "JER",
           "startChapter": 35,
           "endChapter": 37,
-          "label": "Jeremiah 35-37"
+          "label": "Jeremiah 35-37",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3136,19 +3463,22 @@
           "bookId": "JER",
           "startChapter": 38,
           "endChapter": 40,
-          "label": "Jeremiah 38-40"
+          "label": "Jeremiah 38-40",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 74,
           "endChapter": 74,
-          "label": "Psalm 74"
+          "label": "Psalm 74",
+          "planChapterTotal": 150
         },
         {
           "bookId": "PSA",
           "startChapter": 79,
           "endChapter": 79,
-          "label": "Psalm 79"
+          "label": "Psalm 79",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3159,13 +3489,15 @@
           "bookId": "2KI",
           "startChapter": 24,
           "endChapter": 25,
-          "label": "2Kings 24-25"
+          "label": "2Kings 24-25",
+          "planChapterTotal": 2
         },
         {
           "bookId": "2CH",
           "startChapter": 36,
           "endChapter": 36,
-          "label": "2Chronicles 36"
+          "label": "2Chronicles 36",
+          "planChapterTotal": 36
         }
       ]
     },
@@ -3176,7 +3508,8 @@
           "bookId": "HAB",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Habakkuk 1-3"
+          "label": "Habakkuk 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3187,7 +3520,8 @@
           "bookId": "JER",
           "startChapter": 41,
           "endChapter": 45,
-          "label": "Jeremiah 41-45"
+          "label": "Jeremiah 41-45",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3198,7 +3532,8 @@
           "bookId": "JER",
           "startChapter": 46,
           "endChapter": 48,
-          "label": "Jeremiah 46-48"
+          "label": "Jeremiah 46-48",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3209,7 +3544,8 @@
           "bookId": "JER",
           "startChapter": 49,
           "endChapter": 50,
-          "label": "Jeremiah 49-50"
+          "label": "Jeremiah 49-50",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3220,7 +3556,8 @@
           "bookId": "JER",
           "startChapter": 51,
           "endChapter": 52,
-          "label": "Jeremiah 51-52"
+          "label": "Jeremiah 51-52",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3233,7 +3570,8 @@
           "startVerse": 1,
           "endChapter": 3,
           "endVerse": 36,
-          "label": "Lamentations 1:1-3:36"
+          "label": "Lamentations 1:1-3:36",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3246,7 +3584,8 @@
           "startVerse": 37,
           "endChapter": 5,
           "endVerse": 22,
-          "label": "Lamentations 3:37-5:22"
+          "label": "Lamentations 3:37-5:22",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3257,7 +3596,8 @@
           "bookId": "EZK",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Ezekiel 1-4"
+          "label": "Ezekiel 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3268,7 +3608,8 @@
           "bookId": "EZK",
           "startChapter": 5,
           "endChapter": 8,
-          "label": "Ezekiel 5-8"
+          "label": "Ezekiel 5-8",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3279,7 +3620,8 @@
           "bookId": "EZK",
           "startChapter": 9,
           "endChapter": 12,
-          "label": "Ezekiel 9-12"
+          "label": "Ezekiel 9-12",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3290,7 +3632,8 @@
           "bookId": "EZK",
           "startChapter": 13,
           "endChapter": 15,
-          "label": "Ezekiel 13-15"
+          "label": "Ezekiel 13-15",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3301,7 +3644,8 @@
           "bookId": "EZK",
           "startChapter": 16,
           "endChapter": 17,
-          "label": "Ezekiel 16-17"
+          "label": "Ezekiel 16-17",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3312,7 +3656,8 @@
           "bookId": "EZK",
           "startChapter": 18,
           "endChapter": 19,
-          "label": "Ezekiel 18-19"
+          "label": "Ezekiel 18-19",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3323,7 +3668,8 @@
           "bookId": "EZK",
           "startChapter": 20,
           "endChapter": 21,
-          "label": "Ezekiel 20-21"
+          "label": "Ezekiel 20-21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3334,7 +3680,8 @@
           "bookId": "EZK",
           "startChapter": 22,
           "endChapter": 23,
-          "label": "Ezekiel 22-23"
+          "label": "Ezekiel 22-23",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3345,7 +3692,8 @@
           "bookId": "EZK",
           "startChapter": 24,
           "endChapter": 27,
-          "label": "Ezekiel 24-27"
+          "label": "Ezekiel 24-27",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3356,7 +3704,8 @@
           "bookId": "EZK",
           "startChapter": 28,
           "endChapter": 31,
-          "label": "Ezekiel 28-31"
+          "label": "Ezekiel 28-31",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3367,7 +3716,8 @@
           "bookId": "EZK",
           "startChapter": 32,
           "endChapter": 34,
-          "label": "Ezekiel 32-34"
+          "label": "Ezekiel 32-34",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3378,7 +3728,8 @@
           "bookId": "EZK",
           "startChapter": 35,
           "endChapter": 37,
-          "label": "Ezekiel 35-37"
+          "label": "Ezekiel 35-37",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3389,7 +3740,8 @@
           "bookId": "EZK",
           "startChapter": 38,
           "endChapter": 39,
-          "label": "Ezekiel 38-39"
+          "label": "Ezekiel 38-39",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3400,7 +3752,8 @@
           "bookId": "EZK",
           "startChapter": 40,
           "endChapter": 41,
-          "label": "Ezekiel 40-41"
+          "label": "Ezekiel 40-41",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3411,7 +3764,8 @@
           "bookId": "EZK",
           "startChapter": 42,
           "endChapter": 43,
-          "label": "Ezekiel 42-43"
+          "label": "Ezekiel 42-43",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3422,7 +3776,8 @@
           "bookId": "EZK",
           "startChapter": 44,
           "endChapter": 45,
-          "label": "Ezekiel 44-45"
+          "label": "Ezekiel 44-45",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3433,7 +3788,8 @@
           "bookId": "EZK",
           "startChapter": 46,
           "endChapter": 48,
-          "label": "Ezekiel 46-48"
+          "label": "Ezekiel 46-48",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3444,7 +3800,8 @@
           "bookId": "JOL",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Joel 1-3"
+          "label": "Joel 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3455,7 +3812,8 @@
           "bookId": "DAN",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Daniel 1-3"
+          "label": "Daniel 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3466,7 +3824,8 @@
           "bookId": "DAN",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Daniel 4-6"
+          "label": "Daniel 4-6",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3477,7 +3836,8 @@
           "bookId": "DAN",
           "startChapter": 7,
           "endChapter": 9,
-          "label": "Daniel 7-9"
+          "label": "Daniel 7-9",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3488,7 +3848,8 @@
           "bookId": "DAN",
           "startChapter": 10,
           "endChapter": 12,
-          "label": "Daniel 10-12"
+          "label": "Daniel 10-12",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3499,7 +3860,8 @@
           "bookId": "EZR",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Ezra 1-3"
+          "label": "Ezra 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3510,13 +3872,15 @@
           "bookId": "EZR",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Ezra 4-6"
+          "label": "Ezra 4-6",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 137,
           "endChapter": 137,
-          "label": "Psalm 137"
+          "label": "Psalm 137",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3527,7 +3891,8 @@
           "bookId": "HAG",
           "startChapter": 1,
           "endChapter": 2,
-          "label": "Haggai 1-2"
+          "label": "Haggai 1-2",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3538,7 +3903,8 @@
           "bookId": "ZEC",
           "startChapter": 1,
           "endChapter": 7,
-          "label": "Zechariah 1-7"
+          "label": "Zechariah 1-7",
+          "planChapterTotal": 7
         }
       ]
     },
@@ -3549,7 +3915,8 @@
           "bookId": "ZEC",
           "startChapter": 8,
           "endChapter": 14,
-          "label": "Zechariah 8-14"
+          "label": "Zechariah 8-14",
+          "planChapterTotal": 7
         }
       ]
     },
@@ -3560,7 +3927,8 @@
           "bookId": "EST",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "Esther 1-5"
+          "label": "Esther 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3571,7 +3939,8 @@
           "bookId": "EST",
           "startChapter": 6,
           "endChapter": 10,
-          "label": "Esther 6-10"
+          "label": "Esther 6-10",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3582,7 +3951,8 @@
           "bookId": "EZR",
           "startChapter": 7,
           "endChapter": 10,
-          "label": "Ezra 7-10"
+          "label": "Ezra 7-10",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3593,7 +3963,8 @@
           "bookId": "NEH",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "Nehemiah 1-5"
+          "label": "Nehemiah 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -3604,7 +3975,8 @@
           "bookId": "NEH",
           "startChapter": 6,
           "endChapter": 7,
-          "label": "Nehemiah 6-7"
+          "label": "Nehemiah 6-7",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3615,7 +3987,8 @@
           "bookId": "NEH",
           "startChapter": 8,
           "endChapter": 10,
-          "label": "Nehemiah 8-10"
+          "label": "Nehemiah 8-10",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3626,13 +3999,15 @@
           "bookId": "NEH",
           "startChapter": 11,
           "endChapter": 13,
-          "label": "Nehemiah 11-13"
+          "label": "Nehemiah 11-13",
+          "planChapterTotal": 3
         },
         {
           "bookId": "PSA",
           "startChapter": 126,
           "endChapter": 126,
-          "label": "Psalm 126"
+          "label": "Psalm 126",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3643,7 +4018,8 @@
           "bookId": "MAL",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Malachi 1-4"
+          "label": "Malachi 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -3654,7 +4030,8 @@
           "bookId": "LUK",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Luke 1"
+          "label": "Luke 1",
+          "planChapterTotal": 24
         },
         {
           "bookId": "JHN",
@@ -3662,7 +4039,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 14,
-          "label": "John 1:1-14"
+          "label": "John 1:1-14",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3673,7 +4051,8 @@
           "bookId": "MAT",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Matthew 1"
+          "label": "Matthew 1",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
@@ -3681,7 +4060,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 38,
-          "label": "Luke 2:1-38"
+          "label": "Luke 2:1-38",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3692,7 +4072,8 @@
           "bookId": "MAT",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Matthew 2"
+          "label": "Matthew 2",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
@@ -3700,7 +4081,8 @@
           "endChapter": 2,
           "startVerse": 39,
           "endVerse": 52,
-          "label": "Luke 2:39-52"
+          "label": "Luke 2:39-52",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3711,19 +4093,22 @@
           "bookId": "MAT",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Matthew 3"
+          "label": "Matthew 3",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Mark 1"
+          "label": "Mark 1",
+          "planChapterTotal": 16
         },
         {
           "bookId": "LUK",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Luke 3"
+          "label": "Luke 3",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3734,13 +4119,15 @@
           "bookId": "MAT",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Matthew 4"
+          "label": "Matthew 4",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
           "startChapter": 4,
           "endChapter": 5,
-          "label": "Luke 4-5"
+          "label": "Luke 4-5",
+          "planChapterTotal": 2
         },
         {
           "bookId": "JHN",
@@ -3748,7 +4135,8 @@
           "endChapter": 1,
           "startVerse": 15,
           "endVerse": 51,
-          "label": "John 1:15-51"
+          "label": "John 1:15-51",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3759,7 +4147,8 @@
           "bookId": "JHN",
           "startChapter": 2,
           "endChapter": 4,
-          "label": "John 2-4"
+          "label": "John 2-4",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3770,7 +4159,8 @@
           "bookId": "MRK",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Mark 2"
+          "label": "Mark 2",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3781,7 +4171,8 @@
           "bookId": "JHN",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "John 5"
+          "label": "John 5",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3794,19 +4185,22 @@
           "endChapter": 12,
           "startVerse": 1,
           "endVerse": 21,
-          "label": "Matthew 12:1-21"
+          "label": "Matthew 12:1-21",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Mark 3"
+          "label": "Mark 3",
+          "planChapterTotal": 16
         },
         {
           "bookId": "LUK",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Luke 6"
+          "label": "Luke 6",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3817,7 +4211,8 @@
           "bookId": "MAT",
           "startChapter": 5,
           "endChapter": 7,
-          "label": "Matthew 5-7"
+          "label": "Matthew 5-7",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -3830,13 +4225,15 @@
           "endChapter": 8,
           "startVerse": 1,
           "endVerse": 13,
-          "label": "Matthew 8:1-13"
+          "label": "Matthew 8:1-13",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Luke 7"
+          "label": "Luke 7",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3847,7 +4244,8 @@
           "bookId": "MAT",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Matthew 11"
+          "label": "Matthew 11",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -3860,13 +4258,15 @@
           "endChapter": 12,
           "startVerse": 22,
           "endVerse": 50,
-          "label": "Matthew 12:22-50"
+          "label": "Matthew 12:22-50",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Luke 11"
+          "label": "Luke 11",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3877,13 +4277,15 @@
           "bookId": "MAT",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Matthew 13"
+          "label": "Matthew 13",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Luke 8"
+          "label": "Luke 8",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3896,13 +4298,15 @@
           "endChapter": 8,
           "startVerse": 14,
           "endVerse": 34,
-          "label": "Matthew 8:14-34"
+          "label": "Matthew 8:14-34",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 4,
           "endChapter": 5,
-          "label": "Mark 4-5"
+          "label": "Mark 4-5",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3913,7 +4317,8 @@
           "bookId": "MAT",
           "startChapter": 9,
           "endChapter": 10,
-          "label": "Matthew 9-10"
+          "label": "Matthew 9-10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -3924,13 +4329,15 @@
           "bookId": "MAT",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Matthew 14"
+          "label": "Matthew 14",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Mark 6"
+          "label": "Mark 6",
+          "planChapterTotal": 16
         },
         {
           "bookId": "LUK",
@@ -3938,7 +4345,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 17,
-          "label": "Luke 9:1-17"
+          "label": "Luke 9:1-17",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -3949,7 +4357,8 @@
           "bookId": "JHN",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "John 6"
+          "label": "John 6",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -3960,13 +4369,15 @@
           "bookId": "MAT",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Matthew 15"
+          "label": "Matthew 15",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Mark 7"
+          "label": "Mark 7",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -3977,13 +4388,15 @@
           "bookId": "MAT",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Matthew 16"
+          "label": "Matthew 16",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Mark 8"
+          "label": "Mark 8",
+          "planChapterTotal": 16
         },
         {
           "bookId": "LUK",
@@ -3991,7 +4404,8 @@
           "endChapter": 9,
           "startVerse": 18,
           "endVerse": 27,
-          "label": "Luke 9:18-27"
+          "label": "Luke 9:18-27",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -4002,13 +4416,15 @@
           "bookId": "MAT",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "Matthew 17"
+          "label": "Matthew 17",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "Mark 9"
+          "label": "Mark 9",
+          "planChapterTotal": 16
         },
         {
           "bookId": "LUK",
@@ -4016,7 +4432,8 @@
           "endChapter": 9,
           "startVerse": 28,
           "endVerse": 62,
-          "label": "Luke 9:28-62"
+          "label": "Luke 9:28-62",
+          "planChapterTotal": 24
         }
       ]
     },
@@ -4027,7 +4444,8 @@
           "bookId": "MAT",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "Matthew 18"
+          "label": "Matthew 18",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -4038,7 +4456,8 @@
           "bookId": "JHN",
           "startChapter": 7,
           "endChapter": 8,
-          "label": "John 7-8"
+          "label": "John 7-8",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4051,7 +4470,8 @@
           "startVerse": 1,
           "endChapter": 10,
           "endVerse": 21,
-          "label": "John 9:1-10:21"
+          "label": "John 9:1-10:21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4062,7 +4482,8 @@
           "bookId": "LUK",
           "startChapter": 10,
           "endChapter": 11,
-          "label": "Luke 10-11"
+          "label": "Luke 10-11",
+          "planChapterTotal": 2
         },
         {
           "bookId": "JHN",
@@ -4070,7 +4491,8 @@
           "endChapter": 10,
           "startVerse": 22,
           "endVerse": 42,
-          "label": "John 10:22-42"
+          "label": "John 10:22-42",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4081,7 +4503,8 @@
           "bookId": "LUK",
           "startChapter": 12,
           "endChapter": 13,
-          "label": "Luke 12-13"
+          "label": "Luke 12-13",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4092,7 +4515,8 @@
           "bookId": "LUK",
           "startChapter": 14,
           "endChapter": 15,
-          "label": "Luke 14-15"
+          "label": "Luke 14-15",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4105,7 +4529,8 @@
           "startVerse": 1,
           "endChapter": 17,
           "endVerse": 10,
-          "label": "Luke 16-17:10"
+          "label": "Luke 16-17:10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4116,7 +4541,8 @@
           "bookId": "JHN",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "John 11"
+          "label": "John 11",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4129,7 +4555,8 @@
           "startVerse": 11,
           "endChapter": 18,
           "endVerse": 14,
-          "label": "Luke 17:11-18:14"
+          "label": "Luke 17:11-18:14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4140,13 +4567,15 @@
           "bookId": "MAT",
           "startChapter": 19,
           "endChapter": 19,
-          "label": "Matthew 19"
+          "label": "Matthew 19",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Mark 10"
+          "label": "Mark 10",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -4157,7 +4586,8 @@
           "bookId": "MAT",
           "startChapter": 20,
           "endChapter": 21,
-          "label": "Matthew 20-21"
+          "label": "Matthew 20-21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4170,7 +4600,8 @@
           "startVerse": 15,
           "endChapter": 19,
           "endVerse": 48,
-          "label": "Luke 18:15-19:48"
+          "label": "Luke 18:15-19:48",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4181,13 +4612,15 @@
           "bookId": "MRK",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Mark 11"
+          "label": "Mark 11",
+          "planChapterTotal": 16
         },
         {
           "bookId": "JHN",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "John 12"
+          "label": "John 12",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4198,13 +4631,15 @@
           "bookId": "MAT",
           "startChapter": 22,
           "endChapter": 22,
-          "label": "Matthew 22"
+          "label": "Matthew 22",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Mark 12"
+          "label": "Mark 12",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -4215,13 +4650,15 @@
           "bookId": "MAT",
           "startChapter": 23,
           "endChapter": 23,
-          "label": "Matthew 23"
+          "label": "Matthew 23",
+          "planChapterTotal": 28
         },
         {
           "bookId": "LUK",
           "startChapter": 20,
           "endChapter": 21,
-          "label": "Luke 20-21"
+          "label": "Luke 20-21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4232,7 +4669,8 @@
           "bookId": "MRK",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Mark 13"
+          "label": "Mark 13",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -4243,7 +4681,8 @@
           "bookId": "MAT",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Matthew 24"
+          "label": "Matthew 24",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -4254,7 +4693,8 @@
           "bookId": "MAT",
           "startChapter": 25,
           "endChapter": 25,
-          "label": "Matthew 25"
+          "label": "Matthew 25",
+          "planChapterTotal": 28
         }
       ]
     },
@@ -4265,13 +4705,15 @@
           "bookId": "MAT",
           "startChapter": 26,
           "endChapter": 26,
-          "label": "Matthew 26"
+          "label": "Matthew 26",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Mark 14"
+          "label": "Mark 14",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -4282,13 +4724,15 @@
           "bookId": "LUK",
           "startChapter": 22,
           "endChapter": 22,
-          "label": "Luke 22"
+          "label": "Luke 22",
+          "planChapterTotal": 24
         },
         {
           "bookId": "JHN",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "John 13"
+          "label": "John 13",
+          "planChapterTotal": 21
         }
       ]
     },
@@ -4299,7 +4743,8 @@
           "bookId": "JHN",
           "startChapter": 14,
           "endChapter": 17,
-          "label": "John 14-17"
+          "label": "John 14-17",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4310,13 +4755,15 @@
           "bookId": "MAT",
           "startChapter": 27,
           "endChapter": 27,
-          "label": "Matthew 27"
+          "label": "Matthew 27",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Mark 15"
+          "label": "Mark 15",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -4327,13 +4774,15 @@
           "bookId": "LUK",
           "startChapter": 23,
           "endChapter": 23,
-          "label": "Luke 23"
+          "label": "Luke 23",
+          "planChapterTotal": 24
         },
         {
           "bookId": "JHN",
           "startChapter": 18,
           "endChapter": 19,
-          "label": "John 18-19"
+          "label": "John 18-19",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4344,13 +4793,15 @@
           "bookId": "MAT",
           "startChapter": 28,
           "endChapter": 28,
-          "label": "Matthew 28"
+          "label": "Matthew 28",
+          "planChapterTotal": 28
         },
         {
           "bookId": "MRK",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Mark 16"
+          "label": "Mark 16",
+          "planChapterTotal": 16
         }
       ]
     },
@@ -4361,13 +4812,15 @@
           "bookId": "LUK",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Luke 24"
+          "label": "Luke 24",
+          "planChapterTotal": 24
         },
         {
           "bookId": "JHN",
           "startChapter": 20,
           "endChapter": 21,
-          "label": "John 20-21"
+          "label": "John 20-21",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4378,7 +4831,8 @@
           "bookId": "ACT",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Acts 1-3"
+          "label": "Acts 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4389,7 +4843,8 @@
           "bookId": "ACT",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Acts 4-6"
+          "label": "Acts 4-6",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4400,7 +4855,8 @@
           "bookId": "ACT",
           "startChapter": 7,
           "endChapter": 8,
-          "label": "Acts 7-8"
+          "label": "Acts 7-8",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4411,7 +4867,8 @@
           "bookId": "ACT",
           "startChapter": 9,
           "endChapter": 10,
-          "label": "Acts 9-10"
+          "label": "Acts 9-10",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4422,7 +4879,8 @@
           "bookId": "ACT",
           "startChapter": 11,
           "endChapter": 12,
-          "label": "Acts 11-12"
+          "label": "Acts 11-12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4433,7 +4891,8 @@
           "bookId": "ACT",
           "startChapter": 13,
           "endChapter": 14,
-          "label": "Acts 13-14"
+          "label": "Acts 13-14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4444,7 +4903,8 @@
           "bookId": "JAS",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "James 1-5"
+          "label": "James 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4455,7 +4915,8 @@
           "bookId": "ACT",
           "startChapter": 15,
           "endChapter": 16,
-          "label": "Acts 15-16"
+          "label": "Acts 15-16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4466,7 +4927,8 @@
           "bookId": "GAL",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Galatians 1-3"
+          "label": "Galatians 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4477,7 +4939,8 @@
           "bookId": "GAL",
           "startChapter": 4,
           "endChapter": 6,
-          "label": "Galatians 4-6"
+          "label": "Galatians 4-6",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4490,7 +4953,8 @@
           "startVerse": 1,
           "endChapter": 18,
           "endVerse": 18,
-          "label": "Acts 17-18:18"
+          "label": "Acts 17-18:18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4501,13 +4965,15 @@
           "bookId": "1TH",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "1 Thes 1-5"
+          "label": "1 Thes 1-5",
+          "planChapterTotal": 5
         },
         {
           "bookId": "2TH",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "2 Thes 1-3"
+          "label": "2 Thes 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4520,7 +4986,8 @@
           "startVerse": 19,
           "endChapter": 19,
           "endVerse": 41,
-          "label": "Acts 18:19-19:41"
+          "label": "Acts 18:19-19:41",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4531,7 +4998,8 @@
           "bookId": "1CO",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "1Corinthians 1-4"
+          "label": "1Corinthians 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4542,7 +5010,8 @@
           "bookId": "1CO",
           "startChapter": 5,
           "endChapter": 8,
-          "label": "1Corinthians 5-8"
+          "label": "1Corinthians 5-8",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4553,7 +5022,8 @@
           "bookId": "1CO",
           "startChapter": 9,
           "endChapter": 11,
-          "label": "1Corinthians 9-11"
+          "label": "1Corinthians 9-11",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4564,7 +5034,8 @@
           "bookId": "1CO",
           "startChapter": 12,
           "endChapter": 14,
-          "label": "1Corinthians 12-14"
+          "label": "1Corinthians 12-14",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4575,7 +5046,8 @@
           "bookId": "1CO",
           "startChapter": 15,
           "endChapter": 16,
-          "label": "1Corinthians 15-16"
+          "label": "1Corinthians 15-16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4586,7 +5058,8 @@
           "bookId": "2CO",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "2Corinthians 1-4"
+          "label": "2Corinthians 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4597,7 +5070,8 @@
           "bookId": "2CO",
           "startChapter": 5,
           "endChapter": 9,
-          "label": "2Corinthians 5-9"
+          "label": "2Corinthians 5-9",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4608,7 +5082,8 @@
           "bookId": "2CO",
           "startChapter": 10,
           "endChapter": 13,
-          "label": "2Corinthians 10-13"
+          "label": "2Corinthians 10-13",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4621,13 +5096,15 @@
           "endChapter": 20,
           "startVerse": 1,
           "endVerse": 3,
-          "label": "Acts 20:1-3"
+          "label": "Acts 20:1-3",
+          "planChapterTotal": 28
         },
         {
           "bookId": "ROM",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Romans 1-3"
+          "label": "Romans 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4638,7 +5115,8 @@
           "bookId": "ROM",
           "startChapter": 4,
           "endChapter": 7,
-          "label": "Romans 4-7"
+          "label": "Romans 4-7",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4649,7 +5127,8 @@
           "bookId": "ROM",
           "startChapter": 8,
           "endChapter": 10,
-          "label": "Romans 8-10"
+          "label": "Romans 8-10",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4660,7 +5139,8 @@
           "bookId": "ROM",
           "startChapter": 11,
           "endChapter": 13,
-          "label": "Romans 11-13"
+          "label": "Romans 11-13",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4671,7 +5151,8 @@
           "bookId": "ROM",
           "startChapter": 14,
           "endChapter": 16,
-          "label": "Romans 14-16"
+          "label": "Romans 14-16",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4684,7 +5165,8 @@
           "startVerse": 4,
           "endChapter": 23,
           "endVerse": 35,
-          "label": "Acts 20:4-23:35"
+          "label": "Acts 20:4-23:35",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4695,7 +5177,8 @@
           "bookId": "ACT",
           "startChapter": 24,
           "endChapter": 26,
-          "label": "Acts 24-26"
+          "label": "Acts 24-26",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4706,7 +5189,8 @@
           "bookId": "ACT",
           "startChapter": 27,
           "endChapter": 28,
-          "label": "Acts 27-28"
+          "label": "Acts 27-28",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -4717,13 +5201,15 @@
           "bookId": "COL",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Colossians 1-4"
+          "label": "Colossians 1-4",
+          "planChapterTotal": 4
         },
         {
           "bookId": "PHM",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Philemon 1"
+          "label": "Philemon 1",
+          "planChapterTotal": 1
         }
       ]
     },
@@ -4734,7 +5220,8 @@
           "bookId": "EPH",
           "startChapter": 1,
           "endChapter": 6,
-          "label": "Ephesians 1-6"
+          "label": "Ephesians 1-6",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -4745,7 +5232,8 @@
           "bookId": "PHP",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "Philippians 1-4"
+          "label": "Philippians 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4756,7 +5244,8 @@
           "bookId": "1TI",
           "startChapter": 1,
           "endChapter": 6,
-          "label": "1Timothy 1-6"
+          "label": "1Timothy 1-6",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -4767,7 +5256,8 @@
           "bookId": "TIT",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "Titus 1-3"
+          "label": "Titus 1-3",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4778,7 +5268,8 @@
           "bookId": "1PE",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "1Peter 1-5"
+          "label": "1Peter 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4789,7 +5280,8 @@
           "bookId": "HEB",
           "startChapter": 1,
           "endChapter": 6,
-          "label": "Hebrews 1-6"
+          "label": "Hebrews 1-6",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -4800,7 +5292,8 @@
           "bookId": "HEB",
           "startChapter": 7,
           "endChapter": 10,
-          "label": "Hebrews 7-10"
+          "label": "Hebrews 7-10",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4811,7 +5304,8 @@
           "bookId": "HEB",
           "startChapter": 11,
           "endChapter": 13,
-          "label": "Hebrews 11-13"
+          "label": "Hebrews 11-13",
+          "planChapterTotal": 3
         }
       ]
     },
@@ -4822,7 +5316,8 @@
           "bookId": "2TI",
           "startChapter": 1,
           "endChapter": 4,
-          "label": "2Timothy 1-4"
+          "label": "2Timothy 1-4",
+          "planChapterTotal": 4
         }
       ]
     },
@@ -4833,13 +5328,15 @@
           "bookId": "2PE",
           "startChapter": 1,
           "endChapter": 3,
-          "label": "2Peter 1-3"
+          "label": "2Peter 1-3",
+          "planChapterTotal": 3
         },
         {
           "bookId": "JUD",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Jude 1"
+          "label": "Jude 1",
+          "planChapterTotal": 1
         }
       ]
     },
@@ -4850,7 +5347,8 @@
           "bookId": "1JN",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "1John 1-5"
+          "label": "1John 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4861,13 +5359,15 @@
           "bookId": "2JN",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "2John 1"
+          "label": "2John 1",
+          "planChapterTotal": 1
         },
         {
           "bookId": "3JN",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "3John 1"
+          "label": "3John 1",
+          "planChapterTotal": 1
         }
       ]
     },
@@ -4878,7 +5378,8 @@
           "bookId": "REV",
           "startChapter": 1,
           "endChapter": 5,
-          "label": "Revelation 1-5"
+          "label": "Revelation 1-5",
+          "planChapterTotal": 5
         }
       ]
     },
@@ -4889,7 +5390,8 @@
           "bookId": "REV",
           "startChapter": 6,
           "endChapter": 11,
-          "label": "Revelation 6-11"
+          "label": "Revelation 6-11",
+          "planChapterTotal": 6
         }
       ]
     },
@@ -4900,7 +5402,8 @@
           "bookId": "REV",
           "startChapter": 12,
           "endChapter": 18,
-          "label": "Revelation 12-18"
+          "label": "Revelation 12-18",
+          "planChapterTotal": 7
         }
       ]
     },
@@ -4911,7 +5414,8 @@
           "bookId": "REV",
           "startChapter": 19,
           "endChapter": 22,
-          "label": "Revelation 19-22"
+          "label": "Revelation 19-22",
+          "planChapterTotal": 4
         }
       ]
     }

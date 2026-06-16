@@ -1,7 +1,7 @@
 const READ_CHAPTER_COMPLETION_KEY = "askbible-read-chapter-completion-v1";
 const READ_CHAPTER_COMPLETION_KEY_LEGACY = "selah-read-chapter-completion-v1";
 
-type ReadChapterCompletionRecord = {
+export type ReadChapterCompletionRecord = {
   version: 1;
   completed: string[];
 };
@@ -90,6 +90,17 @@ export function markReadChapterCompleted(bookId: string, chapter: number): boole
 
 export function readCompletedChapterKeySet(): Set<string> {
   return readCompletionSet();
+}
+
+export function readReadChapterCompletionRecord(): ReadChapterCompletionRecord {
+  return { version: 1, completed: [...readCompletionSet()].sort() };
+}
+
+export function replaceReadChapterCompletionRecord(record: ReadChapterCompletionRecord): void {
+  const completed = Array.isArray(record.completed)
+    ? record.completed.filter((entry): entry is string => typeof entry === "string" && entry.length > 0)
+    : [];
+  writeCompletionSet(new Set(completed));
 }
 
 export function readCompletedChapterCountsByBook(bookIds: string[]): Record<string, number> {

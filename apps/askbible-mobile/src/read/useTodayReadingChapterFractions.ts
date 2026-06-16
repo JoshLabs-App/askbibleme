@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { InteractionManager } from "react-native";
 import {
   readTodayReadingChapterFractions,
   subscribeTodayReadingChapterFraction,
@@ -22,8 +23,12 @@ export function useTodayReadingChapterFractions(plan: TodayReadingPlanState) {
   }, [scopeKey]);
 
   useEffect(() => {
-    refreshFractions();
-    return subscribeTodayReadingChapterFraction(refreshFractions);
+    const task = InteractionManager.runAfterInteractions(refreshFractions);
+    const unsub = subscribeTodayReadingChapterFraction(refreshFractions);
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, [refreshFractions]);
 
   return {

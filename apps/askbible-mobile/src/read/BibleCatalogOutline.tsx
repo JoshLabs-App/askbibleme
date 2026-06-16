@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Modal,
+  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { t } from "../i18n/site-copy";
@@ -14,7 +14,20 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { useLocale } from "../i18n/LocaleProvider";
-import { ReadParchmentBackgroundImage } from "./ReadParchmentSurface";
+import {
+  BibleChapterPickerPanel,
+  ChapterPickerModal,
+  deferChapterPickerNavigation,
+  estimateChapterPickerLayout,
+  isWithinChapterPickerOpenGuard,
+  markChapterPickerOpenGuard,
+  resolveChapterPickerViewportHeight,
+  resolveChapterPickerWindowWidth,
+} from "./BibleChapterPickerPanel";
+import {
+  PARCHMENT_CATALOG_MAX_WIDTH_PHONE,
+  useParchmentColumnMaxWidth,
+} from "./parchmentColumnLayout";
 import {
   chaptersForBookId,
   groupCanonSectionsByTestament,
@@ -22,7 +35,6 @@ import {
   type ScriptureCanonCatalogSection,
 } from "./canonCatalog";
 
-const OUTLINE_MAX_W = 380;
 const READ_DONE_ACCENT = "#65775C";
 const TESTAMENT_INTRO = {
   "zh-CN": {
@@ -81,6 +93,10 @@ type Props = {
   sectionGapPx?: number;
   sectionStripeFullHeight?: boolean;
   lockTextScale?: boolean;
+  /** 由父级接管选章（如跳转章节弹层），点击书卷时不弹内层 Modal。 */
+  onBookPress?: (book: ScriptureCanonCatalogBook) => void;
+  /** 旧约/新约分页切换时通知父级（用于关闭外层选章弹层）。 */
+  onTestamentChange?: () => void;
 };
 
 export function BibleCatalogOutline({
@@ -97,19 +113,58 @@ export function BibleCatalogOutline({
   sectionGapPx,
   sectionStripeFullHeight = false,
   lockTextScale = true,
+  onBookPress,
+  onTestamentChange,
 }: Props) {
   const { px } = useReadBibleTypography();
   const { locale } = useLocale();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const catalogMaxWidth = useParchmentColumnMaxWidth(PARCHMENT_CATALOG_MAX_WIDTH_PHONE);
+  const catalogNarrowStyle =
+    catalogMaxWidth != null ? { maxWidth: catalogMaxWidth } : null;
   const groups = groupCanonSectionsByTestament(sections);
   const [picker, setPicker] = useState<ScriptureCanonCatalogBook | null>(null);
   const [activeTestament, setActiveTestament] = useState<"old" | "new">("old");
   const didAutoPickTestamentRef = useRef(false);
+  const appliedHomeDefaultTestamentRef = useRef(false);
+  const chapterPickerOpenGuardUntilRef = useRef(0);
+  const chapterPickerModalHeight = resolveChapterPickerViewportHeight(windowHeight);
+  const [measuredModalViewportH, setMeasuredModalViewportH] = useState(0);
+  const chapterPickerViewportHeight = Math.max(
+    chapterPickerModalHeight,
+    measuredModalViewportH,
+  );
+  const chapterPickerLayoutWidth = resolveChapterPickerWindowWidth(windowWidth);
+  const chapterPickerLayout = useMemo(() => {
+    if (!picker) return null;
+    return estimateChapterPickerLayout(
+      chaptersForBookId(picker.bookId),
+      chapterPickerLayoutWidth,
+      chapterPickerViewportHeight,
+    );
+  }, [chapterPickerLayoutWidth, chapterPickerViewportHeight, picker]);
 
   useEffect(() => {
     if (!paginateByTestament) return;
+    if (appliedHomeDefaultTestamentRef.current) return;
+    appliedHomeDefaultTestamentRef.current = true;
     // 首页分页固定默认新约；不跟随上次阅读自动跳到旧约。
     setActiveTestament("new");
   }, [paginateByTestament]);
+
+  const closePicker = useCallback(() => {
+    setPicker(null);
+    setMeasuredModalViewportH(0);
+  }, []);
+
+  const selectTestament = useCallback(
+    (testament: "old" | "new") => {
+      setActiveTestament(testament);
+      closePicker();
+      onTestamentChange?.();
+    },
+    [closePicker, onTestamentChange],
+  );
 
   useEffect(() => {
     if (paginateByTestament) return;
@@ -125,14 +180,29 @@ export function BibleCatalogOutline({
     didAutoPickTestamentRef.current = true;
   }, [activeBookId, groups, paginateByTestament]);
 
-  const openBook = useCallback((book: ScriptureCanonCatalogBook) => {
-    setPicker(book);
-  }, []);
+  const closePickerFromBackdrop = useCallback(() => {
+    if (isWithinChapterPickerOpenGuard(chapterPickerOpenGuardUntilRef.current)) return;
+    closePicker();
+  }, [closePicker]);
 
-  const chapters =
-    picker && chaptersForBookId(picker.bookId) > 0
-      ? Array.from({ length: chaptersForBookId(picker.bookId) }, (_, i) => i + 1)
-      : [];
+  const openBook = useCallback(
+    (book: ScriptureCanonCatalogBook) => {
+      if (onBookPress) {
+        onBookPress(book);
+        return;
+      }
+      const showPicker = () => {
+        chapterPickerOpenGuardUntilRef.current = markChapterPickerOpenGuard();
+        setPicker(book);
+      };
+      if (Platform.OS === "android") {
+        setTimeout(showPicker, 120);
+        return;
+      }
+      showPicker();
+    },
+    [onBookPress],
+  );
 
   const columnLayout = splitByTestamentColumns && !paginateByTestament;
   const allowFontScaling = !lockTextScale;
@@ -146,6 +216,7 @@ export function BibleCatalogOutline({
         group.testament === "new" && !columnLayout && styles.testamentNt,
         columnLayout && styles.testamentColumn,
         compactMode && styles.testamentCompact,
+        !columnLayout && catalogNarrowStyle,
       ]}
     >
       <View style={styles.testamentBody}>
@@ -343,10 +414,10 @@ export function BibleCatalogOutline({
   const catalogContent = (
     <>
       {paginateByTestament ? (
-        <View style={styles.testamentPagerWrap}>
+        <View style={[styles.testamentPagerWrap, catalogNarrowStyle]}>
           <View style={styles.testamentPager}>
             <Pressable
-              onPress={() => setActiveTestament("old")}
+              onPress={() => selectTestament("old")}
               style={[
                 styles.testamentPagerBtn,
                 activeTestament === "old" && styles.testamentPagerBtnActive,
@@ -366,7 +437,7 @@ export function BibleCatalogOutline({
               </Text>
             </Pressable>
             <Pressable
-              onPress={() => setActiveTestament("new")}
+              onPress={() => selectTestament("new")}
               style={[
                 styles.testamentPagerBtn,
                 activeTestament === "new" && styles.testamentPagerBtnActive,
@@ -419,74 +490,47 @@ export function BibleCatalogOutline({
     </>
   );
 
+  const catalogBody =
+    paginateByTestament ? (
+      <View
+        style={[
+          styles.paginatedCatalogFrame,
+          activeTestament === "old"
+            ? styles.paginatedCatalogFrameOldActive
+            : styles.paginatedCatalogFrameNewActive,
+        ]}
+      >
+        {catalogContent}
+      </View>
+    ) : (
+      catalogContent
+    );
+
   return (
     <>
-      {paginateByTestament ? (
-        <View
-          style={[
-            styles.paginatedCatalogFrame,
-            activeTestament === "old"
-              ? styles.paginatedCatalogFrameOldActive
-              : styles.paginatedCatalogFrameNewActive,
-          ]}
+      {catalogBody}
+      {!onBookPress && picker && chapterPickerLayout ? (
+        <ChapterPickerModal
+          visible
+          sheetHeight={chapterPickerLayout.sheetHeight}
+          onRequestClose={closePicker}
+          onBackdropPress={closePickerFromBackdrop}
+          onBackdropLayout={(h) => {
+            setMeasuredModalViewportH(Math.max(chapterPickerModalHeight, Math.round(h * 0.82)));
+          }}
         >
-          {catalogContent}
-        </View>
-      ) : (
-        catalogContent
-      )}
-      <Modal visible={picker != null} animationType="fade" transparent onRequestClose={() => setPicker(null)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setPicker(null)}>
-          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation()}>
-            <ReadParchmentBackgroundImage style={styles.modalSheetBg} imageStyle={styles.modalSheetBgImage}>
-              {picker ? (
-                <>
-                  <View style={styles.modalHeader}>
-                    <View>
-                      <Text
-                        style={styles.modalTitle}
-                        allowFontScaling={allowFontScaling}
-                        maxFontSizeMultiplier={scaledMax(1.1)}
-                      >
-                        {bookNameForId(picker.bookId)}
-                      </Text>
-                    </View>
-                    <Pressable onPress={() => setPicker(null)} hitSlop={12}>
-                      <Text
-                        style={styles.modalClose}
-                        allowFontScaling={allowFontScaling}
-                        maxFontSizeMultiplier={scaledMax(1)}
-                      >
-                        ×
-                      </Text>
-                    </Pressable>
-                  </View>
-                  <ScrollView contentContainerStyle={styles.chapterGrid}>
-                    {chapters.map((ch) => (
-                      <Pressable
-                        key={ch}
-                        onPress={() => {
-                          onPickChapter(picker.bookId, ch);
-                          setPicker(null);
-                        }}
-                        style={({ pressed }) => [styles.chapterCell, pressed && styles.chapterCellPressed]}
-                      >
-                        <Text
-                          style={styles.chapterCellText}
-                          allowFontScaling={allowFontScaling}
-                          maxFontSizeMultiplier={scaledMax(1)}
-                        >
-                          {ch}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </>
-              ) : null}
-            </ReadParchmentBackgroundImage>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          <BibleChapterPickerPanel
+            bookId={picker.bookId}
+            viewportHeight={chapterPickerViewportHeight}
+            lockTextScale={lockTextScale}
+            onBack={closePicker}
+            onPickChapter={(chapter) => {
+              closePicker();
+              deferChapterPickerNavigation(() => onPickChapter(picker.bookId, chapter));
+            }}
+          />
+        </ChapterPickerModal>
+      ) : null}
     </>
   );
 }
@@ -512,7 +556,6 @@ const styles = StyleSheet.create({
   },
   testamentPagerWrap: {
     width: "100%",
-    maxWidth: OUTLINE_MAX_W,
     alignSelf: "center",
     marginBottom: 6,
   },
@@ -583,7 +626,7 @@ const styles = StyleSheet.create({
   testamentHeadersRow: {
     marginBottom: 2,
   },
-  testament: { marginTop: 4, width: "100%", maxWidth: OUTLINE_MAX_W },
+  testament: { marginTop: 4, width: "100%" },
   testamentNt: { marginTop: 0 },
   testamentColumn: {
     flex: 1,
@@ -816,50 +859,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.15,
     color: c.ink,
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: c.modalBackdrop,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  modalSheet: {
-    maxHeight: "70%",
-    borderRadius: 14,
-    overflow: "hidden",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-  },
-  modalSheetBg: {
-    padding: 16,
-    backgroundColor: "rgba(236, 217, 185, 0.66)",
-  },
-  modalSheetBgImage: {
-    borderRadius: 14,
-    opacity: 0.92,
-  },
-  modalHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
-  modalTitle: { fontSize: 18, ...parchmentSans(600), color: c.ink },
-  modalClose: { fontSize: 28, lineHeight: 28, color: c.faint, paddingHorizontal: 4 },
-  chapterGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingTop: 14,
-    justifyContent: "center",
-  },
-  chapterCell: {
-    width: 52,
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255, 250, 242, 0.58)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.chapterCellBorder,
-  },
-  chapterCellPressed: {
-    backgroundColor: "rgba(255, 246, 234, 0.74)",
-    borderColor: c.borderStrong,
-  },
-  chapterCellText: { fontSize: 15, ...parchmentSans(600), color: c.ink },
 });

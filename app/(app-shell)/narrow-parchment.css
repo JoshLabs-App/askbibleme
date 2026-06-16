@@ -1,0 +1,44 @@
+@import "./explore/explore-parchment.css";
+
+/* 静态信息页：羊皮卷全页默认底，版心始终手机窄栏居中 */
+html[data-app-shell-safe-fill="parchment"]:has(.narrow-parchment-root) {
+  --read-parchment-column-max: min(28rem, 100%);
+}
+
+@media (min-width: 768px) {
+  html[data-app-shell-safe-fill="parchment"]:has(.narrow-parchment-root) {
+    --read-parchment-column-max: min(28rem, 100%);
+  }
+}
+
+@media (min-width: 768px) and (orientation: landscape) {
+  html[data-app-shell-safe-fill="parchment"]:has(.narrow-parchment-root) {
+    --read-parchment-column-max: min(28rem, 100%);
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-app-shell-safe-fill="parchment"]:has(.narrow-parchment-root) {
+    --read-parchment-column-max: min(28rem, 100%);
+  }
+}
+
+.read-bible-parchment-column--narrow {
+  --read-parchment-pad-top: calc(
+    3.25rem + var(--app-shell-safe-top-effective, env(safe-area-inset-top, 0px))
+  );
+  --read-parchment-pad-x: max(1.25rem, calc(env(safe-area-inset-left, 0px) + 0.25rem));
+  --read-parchment-pad-x-end: max(1.25rem, calc(env(safe-area-inset-right, 0px) + 0.25rem));
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.narrow-parchment-root {
+  width: 100%;
+  max-width: min(var(--read-parchment-column-max, 28rem), 100%);
+  margin-inline: auto;
+  color: color-mix(in srgb, rgb(28 20 16) 94%, transparent);
+}
+
+.dark .narrow-parchment-root {
+  color: color-mix(in srgb, rgb(244 235 225) 94%, transparent);
+}

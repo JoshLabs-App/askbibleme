@@ -27,3 +27,177 @@
 .read-bible-typography :is(.font-serif, .font-sans) {
   font-family: inherit;
 }
+
+/** 读经设置弹层：对齐 App `ReadBibleSettingsPanel`（约 90% 屏宽、上限 ~360px） */
+.read-bible-settings-sheet {
+  width: min(90vw, 22.5rem);
+  max-width: 22.5rem;
+  border-radius: 10px;
+  padding: 0.625rem 0.625rem 1rem;
+  gap: 0.5rem;
+}
+
+.read-bible-settings-sheet .read-bible-settings-field-label {
+  display: block;
+  margin: 0.5rem 0 0.25rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: color-mix(in srgb, #5c4030 72%, transparent);
+}
+
+.read-bible-settings-sheet .read-bible-settings-field-label:first-child {
+  margin-top: 0;
+}
+
+.read-bible-settings-select {
+  position: relative;
+  margin-top: 0.25rem;
+}
+
+.read-bible-settings-select--open {
+  z-index: 25;
+}
+
+.read-bible-settings-select__trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  min-height: 2.125rem;
+  border-radius: 6px;
+  border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
+  background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
+  padding: 0.4375rem 0.625rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.read-bible-settings-select__trigger:hover:not(:disabled) {
+  background: var(--parchment-control-fill-strong, rgba(255, 252, 245, 0.62));
+}
+
+.read-bible-settings-select__trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.read-bible-settings-select__value {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #1c1410;
+}
+
+.dark .read-bible-settings-select__value {
+  color: #f4ebe1;
+}
+
+.read-bible-settings-select__menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 16rem;
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 6px;
+  border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
+  background: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  box-shadow: 0 8px 24px rgba(28, 20, 16, 0.12);
+}
+
+.dark .read-bible-settings-select__menu {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.read-bible-settings-select__option {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  padding: 0.5625rem 0.625rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.read-bible-settings-select__option:hover {
+  background: rgba(118, 95, 62, 0.1);
+}
+
+.read-bible-settings-select__option--active {
+  background: rgba(118, 95, 62, 0.08);
+}
+
+.read-bible-settings-select__check {
+  flex-shrink: 0;
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, #5c4030 42%, transparent);
+  background: rgba(255, 252, 245, 0.72);
+  font-size: 0;
+  line-height: 0;
+}
+
+.read-bible-settings-select__option--active .read-bible-settings-select__check {
+  border-color: color-mix(in srgb, #5c4030 62%, transparent);
+  background: rgba(118, 95, 62, 0.14);
+}
+
+.read-bible-settings-select__check::after {
+  content: "";
+  display: block;
+  width: 0.45rem;
+  height: 0.25rem;
+  border-bottom: 1.5px solid color-mix(in srgb, #3d2a10 88%, transparent);
+  border-left: 1.5px solid color-mix(in srgb, #3d2a10 88%, transparent);
+  transform: rotate(-45deg) translateY(-1px);
+  opacity: 0;
+}
+
+.read-bible-settings-select__option--active .read-bible-settings-select__check::after {
+  opacity: 1;
+}
+
+.read-bible-settings-select__option-label {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: color-mix(in srgb, #5c4030 82%, transparent);
+}
+
+.read-bible-settings-select__option--active .read-bible-settings-select__option-label {
+  font-weight: 600;
+  color: #1c1410;
+}
+
+.dark .read-bible-settings-select__option-label {
+  color: color-mix(in srgb, rgb(244 235 225) 62%, transparent);
+}
+
+.dark .read-bible-settings-select__option--active .read-bible-settings-select__option-label {
+  color: #f4ebe1;
+}
+
+.dark .read-bible-settings-sheet .read-bible-settings-field-label {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}

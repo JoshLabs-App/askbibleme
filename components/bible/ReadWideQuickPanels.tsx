@@ -37,7 +37,7 @@ function PanelCard({
   children: ReactNode;
 }) {
   return (
-    <section className="relative w-[min(56rem,calc(100vw-1rem))] max-w-[56rem] overflow-hidden rounded-[1.35rem] border border-[rgba(82,61,40,0.24)] bg-[#f5ece0] shadow-[0_28px_80px_rgba(32,20,12,0.34)] dark:border-[rgba(244,235,225,0.12)] dark:bg-[#211c18] dark:shadow-[0_30px_88px_rgba(0,0,0,0.58)]">
+    <section className="parchment-control-sheet relative w-[min(56rem,calc(100vw-1rem))] max-w-[56rem] overflow-hidden rounded-[1.35rem]">
       <header className="flex items-center justify-between gap-3 border-b border-[rgba(82,61,40,0.14)] px-5 py-4 dark:border-[rgba(244,235,225,0.1)]">
         <h2 id={titleId} className="text-[1rem] font-semibold tracking-[0.02em] text-[#1c1410] dark:text-stone-50">
           {title}

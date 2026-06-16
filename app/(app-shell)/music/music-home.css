@@ -143,8 +143,8 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   display: flex;
   flex: 1;
   min-height: 5rem;
-  align-items: stretch;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-end;
   padding-bottom: 0.5rem;
   position: relative;
 }
@@ -523,6 +523,11 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
+.music-home-album-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 .music-home-album-btn:hover {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -679,32 +684,95 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   pointer-events: none;
 }
 
-.music-home-backdrop-scene--work {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.music-home-backdrop-scene--work .music-home-work-mist,
-.music-home-backdrop-scene--work .music-home-work-planet,
-.music-home-backdrop-scene--work .music-home-work-orbit {
-  position: absolute;
-  left: 50%;
-  top: 42%;
-}
-
-.music-home-backdrop-stars {
+/* —— 专注工作：全屏行星（对齐 iOS WorkSpacePlanets）—— */
+.music-home-work-planet-layer {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.music-home-sleep-meteor--c {
-  top: 12%;
-  left: 62%;
-  animation: music-home-meteor 14s ease-in-out infinite 7s;
+.music-home-work-orbit-anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.music-home-work-core-mist-outer {
+  position: absolute;
+  width: 18.25rem;
+  height: 18.25rem;
+  border-radius: 999px;
+  background: rgba(164, 188, 226, 0.14);
+}
+
+.music-home-work-core-mist-inner {
+  position: absolute;
+  width: 14.75rem;
+  height: 14.75rem;
+  border-radius: 999px;
+  background: rgba(176, 201, 236, 0.18);
+}
+
+.music-home-work-planet-orb {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.music-home-work-planet-orb--core {
+  width: 11rem;
+  height: 11rem;
+  background: rgba(160, 182, 222, 0.34);
+  box-shadow: 0 0 30px rgba(159, 184, 232, 0.5);
+}
+
+.music-home-work-planet-orb--sat-a {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: rgba(124, 150, 198, 0.26);
+  box-shadow: 0 0 20px rgba(137, 169, 221, 0.44);
+}
+
+.music-home-work-planet-orb--sat-b {
+  width: 2.625rem;
+  height: 2.625rem;
+  background: rgba(193, 214, 245, 0.3);
+  box-shadow: 0 0 14px rgba(189, 211, 245, 0.48);
+}
+
+/* —— 睡眠：全屏星野 + 流星（对齐 iOS SlowStars / SlowMeteors）—— */
+.music-home-sleep-sky-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.music-home-sleep-star-dot {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(241, 248, 255, 0.95);
+  box-shadow: 0 0 4px rgba(229, 242, 255, 0.6);
+  will-change: transform, opacity;
+}
+
+.music-home-sleep-meteor-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 34%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.music-home-sleep-meteor-streak {
+  position: absolute;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(229, 243, 255, 0.82);
+  box-shadow: 0 0 10px rgba(219, 238, 255, 0.78);
+  transform-origin: left center;
+  will-change: transform, opacity;
 }
 
 /* —— 安静：呼吸圆 + 鱼群（对齐 iOS BreathingRing / SlowFish）—— */
@@ -716,6 +784,7 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  align-self: stretch;
 }
 
 .music-home-breath-ring-wrap {
@@ -825,90 +894,111 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   opacity: 0.95;
 }
 
-/* —— Upper：下午茶 —— */
+/* —— Upper：下午茶（对齐 iOS CoffeeBeanOrbit / SunOrb）—— */
+.music-home-coffee-stage {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  align-self: stretch;
+}
+
 .music-home-coffee-bean-layer {
   position: absolute;
-  left: 50%;
-  bottom: 5.5rem;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.music-home-coffee-orbit-group {
+  position: absolute;
   width: 0;
   height: 0;
-  z-index: 1;
 }
 
 .music-home-coffee-bean {
   position: absolute;
   left: 0;
   top: 0;
-  margin-left: calc(var(--bean-radius, 80px) * -0.08);
-  margin-top: -0.25rem;
-  border-radius: 999px;
-  background: linear-gradient(145deg, #6b4a33 0%, #3d281c 100%);
-  transform: rotate(var(--bean-angle, 0deg)) translateX(var(--bean-radius, 80px));
-  animation: music-home-bean-orbit var(--bean-orbit-duration, 28s) linear infinite;
-  animation-delay: var(--bean-orbit-delay, 0s);
-  opacity: calc(0.72 + var(--coffee-rhythm, 0) * 0.18);
+  will-change: transform, opacity;
 }
 
-.music-home-coffee-bean--light {
-  background: linear-gradient(145deg, #f3e6d8 0%, #dcc4ab 100%);
+.music-home-coffee-bean-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(22%) sepia(18%) saturate(1800%) hue-rotate(346deg)
+    brightness(92%) contrast(92%);
 }
 
-@keyframes music-home-bean-orbit {
-  from {
-    transform: rotate(var(--bean-angle, 0deg)) translateX(var(--bean-radius, 80px))
-      rotate(calc(var(--bean-angle, 0deg) * -1));
-  }
-  to {
-    transform: rotate(calc(var(--bean-angle, 0deg) + 360deg)) translateX(var(--bean-radius, 80px))
-      rotate(calc((var(--bean-angle, 0deg) + 360deg) * -1));
-  }
+.music-home-coffee-bean-image--light {
+  filter: brightness(0) invert(98%);
 }
 
-.music-home-sun-orb-wrap {
+.music-home-coffee-wrap {
   position: relative;
   width: 13.75rem;
-  height: 8.75rem;
-  margin-bottom: 1.25rem;
+  height: 11.875rem;
+  margin-bottom: 0.375rem;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
+  flex-shrink: 0;
 }
 
-.music-home-sun-orb-glow {
+.music-home-coffee-glow {
   position: absolute;
   width: 6.125rem;
   height: 6.125rem;
   border-radius: 999px;
   background: rgba(255, 245, 232, 0.28);
   box-shadow: 0 0 34px rgba(255, 243, 230, 0.45);
-  animation: music-home-orb-breathe 5.2s ease-in-out infinite;
 }
 
-.music-home-sun-orb-cup {
+.music-home-coffee-cup-icon {
   position: relative;
   z-index: 1;
-  width: 3.25rem !important;
-  height: 3.25rem !important;
+  width: 5.5rem !important;
+  height: 5.5rem !important;
   filter: drop-shadow(0 0 10px rgba(255, 245, 232, 0.5));
+}
+
+.music-home-sleep-stage {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  align-self: stretch;
 }
 
 .music-home-sleep-moon-wrap {
   position: relative;
   width: 13.75rem;
-  height: 8.75rem;
-  margin-bottom: 1.25rem;
+  height: 11.875rem;
+  margin-bottom: 1.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .music-home-sleep-moon-image {
-  width: 9.625rem;
-  height: auto;
-  animation: music-home-orb-breathe 7.2s ease-in-out infinite;
-  opacity: 0.72;
+  display: block;
+  width: 5.375rem;
+  height: 5.375rem;
+  object-fit: contain;
+  /* 对齐 iOS tintColor rgba(229,242,255,0.98) */
+  filter: brightness(0) invert(98%) sepia(8%) saturate(420%) hue-rotate(176deg);
 }
 
 .music-home-center-visual-landscape {

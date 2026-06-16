@@ -1,7 +1,9 @@
 import { Tabs } from "expo-router";
 import { StyleSheet, View } from "react-native";
+import { ReadBibleTypographyProvider } from "../../src/read/ReadBibleTypographyContext";
 import { ShellSwipeNavView } from "../../src/shell/ShellSwipeNavView";
 import { SHELL_TABS_SCREEN_OPTIONS } from "../../src/shell/shellLayout";
+import { ShellTabBarBottomScrimLayer } from "../../src/shell/ShellTabBarBottomScrimLayer";
 import { ShellTabBarCapture, ShellTabBarPortal } from "../../src/shell/ShellTabBar";
 
 export const unstable_settings = {
@@ -10,6 +12,7 @@ export const unstable_settings = {
 
 export default function TabsLayout() {
   return (
+    <ReadBibleTypographyProvider>
     <View style={styles.root}>
       <ShellSwipeNavView>
         <Tabs
@@ -17,17 +20,19 @@ export default function TabsLayout() {
           tabBar={(props) => <ShellTabBarCapture {...props} />}
           screenOptions={SHELL_TABS_SCREEN_OPTIONS}
         >
-          <Tabs.Screen name="index" />
-          <Tabs.Screen name="music" />
-          <Tabs.Screen name="read" />
-          <Tabs.Screen name="explore" />
+          <Tabs.Screen name="index" options={{ freezeOnBlur: true }} />
+          <Tabs.Screen name="music" options={{ freezeOnBlur: true }} />
+          <Tabs.Screen name="read" options={{ freezeOnBlur: true }} />
+          <Tabs.Screen name="explore" options={{ freezeOnBlur: true }} />
           <Tabs.Screen name="journey" options={{ href: null }} />
         </Tabs>
       </ShellSwipeNavView>
       <View style={styles.tabBarHost} pointerEvents="box-none">
+        <ShellTabBarBottomScrimLayer />
         <ShellTabBarPortal />
       </View>
     </View>
+    </ReadBibleTypographyProvider>
   );
 }
 

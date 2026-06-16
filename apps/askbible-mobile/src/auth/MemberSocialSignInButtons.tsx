@@ -1,54 +1,59 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import * as AppleAuthentication from "expo-apple-authentication";
+import { StyleSheet, Text, View } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
-import { theme } from "../theme";
+import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { isNativeAppleSignInAvailable } from "./appleSignIn";
-import { isNativeGoogleSignInAvailable } from "./googleSignIn";
-import { GoogleBrandIcon } from "./OAuthBrandIcons";
+import { isGoogleSignInAvailable } from "./googleAuthAvailability";
+import { OAuthProviderButton } from "./OAuthProviderButton";
 
 type ButtonProps = {
   pending?: boolean;
+  disabled?: boolean;
+  errorMessage?: string | null;
   onPress: () => void | Promise<void>;
 };
 
-export function MemberGoogleSignInButton({ pending = false, onPress }: ButtonProps) {
-  const { t } = useLocale();
-  const [localPending, setLocalPending] = useState(false);
-  const busy = pending || localPending;
-
-  if (!isNativeGoogleSignInAvailable()) return null;
-
+function OAuthInlineError({ message }: { message?: string | null }) {
+  if (!message) return null;
   return (
-    <Pressable
-      onPress={() => {
-        if (busy) return;
-        setLocalPending(true);
-        void Promise.resolve(onPress()).finally(() => setLocalPending(false));
-      }}
-      disabled={busy}
-      style={({ pressed }) => [styles.googleButton, pressed && styles.buttonPressed, busy && styles.buttonDisabled]}
-      accessibilityRole="button"
-    >
-      {busy ? (
-        <ActivityIndicator color={theme.ink} />
-      ) : (
-        <View style={styles.buttonContent}>
-          <View style={styles.buttonIconSlot}>
-            <GoogleBrandIcon />
-          </View>
-          <Text style={styles.googleButtonText}>{t("auth.continueWithGoogle")}</Text>
-        </View>
-      )}
-    </Pressable>
+    <Text style={styles.oauthError} accessibilityRole="alert">
+      {message}
+    </Text>
   );
 }
 
-export function MemberAppleSignInButton({ pending = false, onPress }: ButtonProps) {
+export function MemberGoogleSignInButton({ pending = false, disabled = false, errorMessage = null, onPress }: ButtonProps) {
+  const { t } = useLocale();
+  const [localPending, setLocalPending] = useState(false);
+  const busy = pending || localPending;
+  const inactive = disabled && !busy;
+
+  if (!isGoogleSignInAvailable()) return null;
+
+  return (
+    <View style={styles.oauthBlock}>
+      <OAuthProviderButton
+        variant="google"
+        label={t("auth.continueWithGoogle")}
+        pending={busy}
+        disabled={inactive}
+        onPress={() => {
+          setLocalPending(true);
+          void Promise.resolve(onPress()).finally(() => setLocalPending(false));
+        }}
+      />
+      <OAuthInlineError message={errorMessage} />
+    </View>
+  );
+}
+
+export function MemberAppleSignInButton({ pending = false, disabled = false, errorMessage = null, onPress }: ButtonProps) {
+  const { t } = useLocale();
   const [available, setAvailable] = useState(false);
   const [localPending, setLocalPending] = useState(false);
   const busy = pending || localPending;
+  const inactive = disabled && !busy;
 
   useEffect(() => {
     void isNativeAppleSignInAvailable().then(setAvailable);
@@ -56,25 +61,20 @@ export function MemberAppleSignInButton({ pending = false, onPress }: ButtonProp
 
   if (!available) return null;
 
-  if (busy) {
-    return (
-      <View style={styles.appleNativeButtonBusy}>
-        <ActivityIndicator color="#fff" />
-      </View>
-    );
-  }
-
   return (
-    <AppleAuthentication.AppleAuthenticationButton
-      buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-      buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-      cornerRadius={12}
-      style={styles.appleNativeButton}
-      onPress={() => {
-        setLocalPending(true);
-        void Promise.resolve(onPress()).finally(() => setLocalPending(false));
-      }}
-    />
+    <View style={styles.oauthBlock}>
+      <OAuthProviderButton
+        variant="apple"
+        label={t("auth.continueWithApple")}
+        pending={busy}
+        disabled={inactive}
+        onPress={() => {
+          setLocalPending(true);
+          void Promise.resolve(onPress()).finally(() => setLocalPending(false));
+        }}
+      />
+      <OAuthInlineError message={errorMessage} />
+    </View>
   );
 }
 
@@ -90,53 +90,21 @@ export function MemberAuthMethodDivider() {
 }
 
 const styles = StyleSheet.create({
-  googleButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(55,53,47,0.18)",
-    backgroundColor: "rgba(255,255,255,0.45)",
+  oauthBlock: { gap: 6 },
+  oauthError: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#b42318",
+    textAlign: "center",
+    ...parchmentSans(500),
   },
-  appleNativeButton: {
-    width: "100%",
-    height: 48,
-  },
-  appleNativeButtonBusy: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    minHeight: 48,
-    borderRadius: 12,
-    backgroundColor: "#111111",
-  },
-  buttonPressed: { opacity: 0.88 },
-  buttonDisabled: { opacity: 0.55 },
-  buttonContent: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    paddingHorizontal: 16,
-  },
-  buttonIconSlot: {
-    position: "absolute",
-    left: 16,
-    width: 18,
-    height: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  googleButtonText: { fontSize: 15, color: theme.ink, ...parchmentSans(600) },
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 16 },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: "rgba(55,53,47,0.12)" },
+  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: c.border },
   dividerText: {
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: "uppercase",
-    color: "rgba(55,53,47,0.38)",
+    color: c.faint,
     ...parchmentSans(600),
   },
 });

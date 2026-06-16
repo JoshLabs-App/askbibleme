@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { InteractionManager } from "react-native";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 import { getReadingPlanDaySinceEpoch } from "./reading-plan/reading-plan-epoch";
@@ -16,7 +17,11 @@ function planTitleKey(planId: string): string {
   return `pages.read.plansCatalog.${planId}.title`;
 }
 
-export function useTodayReadingPlan(registryPlans: ReadingPlanRegistryEntry[]) {
+export function useTodayReadingPlan(
+  registryPlans: ReadingPlanRegistryEntry[],
+  options?: { enabled?: boolean },
+) {
+  const enabled = options?.enabled ?? true;
   const { prefs } = useEffectiveReadingPlanPrefs();
   const { progress } = useTripleLoopProgress();
 
@@ -51,8 +56,12 @@ export function useTodayReadingPlan(registryPlans: ReadingPlanRegistryEntry[]) {
     : "";
 
   useEffect(() => {
-    void loadToday();
-  }, [loadToday, tripleProgressKey]);
+    if (!enabled) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void loadToday();
+    });
+    return () => task.cancel();
+  }, [enabled, loadToday, tripleProgressKey]);
 
   return {
     prefs,

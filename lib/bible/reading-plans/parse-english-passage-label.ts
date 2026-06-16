@@ -1,6 +1,11 @@
 import { ENGLISH_BOOK_ALIASES_SORTED } from "@/lib/bible/reading-plans/english-book-aliases";
+import { withBundledReadingPlanChapterTotal } from "@/lib/bible/reading-plans/plan-chapter-total";
 import type { ReadingPlanRange } from "@/lib/bible/reading-plans/types";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
+
+function finish(range: Omit<ReadingPlanRange, "planChapterTotal">): ReadingPlanRange {
+  return withBundledReadingPlanChapterTotal(range);
+}
 
 const CROSS_CHAPTER_VERSES = /^(\d+):(\d+)-(\d+):(\d+)$/;
 const SAME_CHAPTER_VERSE_RANGE = /^(\d+):(\d+)-(\d+)$/;
@@ -39,7 +44,7 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
   if (!rest) {
     const meta = scriptureBooks.find((b) => b.bookId === bookId);
     if (meta?.chapters === 1) {
-      return { bookId, startChapter: 1, endChapter: 1, label };
+      return finish({ bookId, startChapter: 1, endChapter: 1, label });
     }
     throw new Error(`[reading-plan] missing chapter in label: ${JSON.stringify(label)}`);
   }
@@ -53,7 +58,7 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     if (![startChapter, startVerse, endChapter, endVerse].every((n) => Number.isFinite(n) && n >= 1)) {
       throw new Error(`[reading-plan] invalid cross span: ${JSON.stringify(label)}`);
     }
-    return { bookId, startChapter, startVerse, endChapter, endVerse, label };
+    return finish({ bookId, startChapter, startVerse, endChapter, endVerse, label });
   }
 
   cross = SAME_CHAPTER_VERSE_RANGE.exec(rest);
@@ -64,7 +69,7 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     if (![chapter, startVerse, endVerse].every((n) => Number.isFinite(n) && n >= 1) || endVerse < startVerse) {
       throw new Error(`[reading-plan] invalid same-chapter span: ${JSON.stringify(label)}`);
     }
-    return { bookId, startChapter: chapter, endChapter: chapter, startVerse, endVerse, label };
+    return finish({ bookId, startChapter: chapter, endChapter: chapter, startVerse, endVerse, label });
   }
 
   const singleV = SINGLE_CHAPTER_VERSE.exec(rest);
@@ -74,7 +79,14 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     if (![chapter, verse].every((n) => Number.isFinite(n) && n >= 1)) {
       throw new Error(`[reading-plan] invalid single verse: ${JSON.stringify(label)}`);
     }
-    return { bookId, startChapter: chapter, endChapter: chapter, startVerse: verse, endVerse: verse, label };
+    return finish({
+      bookId,
+      startChapter: chapter,
+      endChapter: chapter,
+      startVerse: verse,
+      endVerse: verse,
+      label,
+    });
   }
 
   const ctv = CHAPTER_THROUGH_CHAPTER_VERSE.exec(rest);
@@ -88,7 +100,7 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     ) {
       throw new Error(`[reading-plan] invalid chapter-through span: ${JSON.stringify(label)}`);
     }
-    return { bookId, startChapter, startVerse: 1, endChapter, endVerse, label };
+    return finish({ bookId, startChapter, startVerse: 1, endChapter, endVerse, label });
   }
 
   const cr = CHAPTER_RANGE.exec(rest);
@@ -98,7 +110,7 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     if (![startChapter, endChapter].every((n) => Number.isFinite(n) && n >= 1) || endChapter < startChapter) {
       throw new Error(`[reading-plan] invalid chapter range: ${JSON.stringify(label)}`);
     }
-    return { bookId, startChapter, endChapter, label };
+    return finish({ bookId, startChapter, endChapter, label });
   }
 
   const sc = SINGLE_CHAPTER.exec(rest);
@@ -107,7 +119,7 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     if (!Number.isFinite(chapter) || chapter < 1) {
       throw new Error(`[reading-plan] invalid chapter: ${JSON.stringify(label)}`);
     }
-    return { bookId, startChapter: chapter, endChapter: chapter, label };
+    return finish({ bookId, startChapter: chapter, endChapter: chapter, label });
   }
 
   throw new Error(`[reading-plan] unparseable tail ${JSON.stringify(rest)} in ${JSON.stringify(label)}`);

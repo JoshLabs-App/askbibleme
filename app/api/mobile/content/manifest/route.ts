@@ -4,7 +4,7 @@ import {
   readMobileContentFlagsSync,
   type MobileContentAnnouncement,
 } from "@/lib/admin/mobile-content-flags-store";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
+import { isMemberAuthBackendConfigured } from "@/lib/member-auth-backend";
 import { isTelemetryWritableDiskAvailable } from "@/lib/telemetry/disk-path";
 
 export const runtime = "nodejs";
@@ -56,6 +56,22 @@ function buildItems(): ManifestItem[] {
       fallback: "bundled",
     },
     {
+      id: "explore-legacy-figures",
+      kind: "api-json",
+      schemaVersion: 2,
+      url: "/api/mobile/explore/legacy-figures",
+      ttlSec: 86400,
+      fallback: "bundled",
+    },
+    {
+      id: "explore-modules",
+      kind: "api-json",
+      schemaVersion: 1,
+      url: "/api/mobile/explore/modules",
+      ttlSec: 86400,
+      fallback: "bundled",
+    },
+    {
       id: "mobile-content-flags",
       kind: "api-json",
       schemaVersion: 1,
@@ -99,7 +115,8 @@ export async function GET() {
     serverCapabilities: {
       feedbackEnabled: hasDataRoot || process.env.NODE_ENV !== "production",
       telemetryEnabled: isTelemetryWritableDiskAvailable(),
-      memberRegisterEnabled: cfg.flags.memberRegisterEnabled && Boolean(getAskbibleAuthSqlitePath()),
+      memberRegisterEnabled:
+        cfg.flags.memberRegisterEnabled && isMemberAuthBackendConfigured(),
       infoEditionDiskSaveEnabled,
     },
     items,

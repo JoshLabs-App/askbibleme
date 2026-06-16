@@ -10,6 +10,10 @@ import {
   type NatureHomeTtsLevel,
   type NatureHomeTtsPrefs,
 } from "@/lib/home/nature-home-tts-prefs";
+import {
+  filterTtsVoicesForLocale,
+  resolveMaleTtsVoiceId,
+} from "@/lib/home/nature-home-tts-voices";
 import type { AppLocale } from "@/lib/i18n/config";
 
 const TTS_LEVELS: readonly NatureHomeTtsLevel[] = [0, 1, 2, 3, 4];
@@ -50,8 +54,18 @@ function loadDeviceVoices(locale: AppLocale): DeviceVoice[] {
       name: v.name,
       lang: v.lang,
     }));
-  const preferred = valid.filter((v) => (v.lang || "").toLowerCase().startsWith(langPrefix));
-  return preferred.length > 0 ? preferred : valid;
+  return filterTtsVoicesForLocale(
+    valid.map((voice) => ({
+      identifier: voice.id,
+      name: voice.name,
+      language: voice.lang,
+    })),
+    langPrefix,
+  ).map((voice) => ({
+    id: voice.identifier,
+    name: voice.name || voice.identifier,
+    lang: voice.language || "",
+  }));
 }
 
 type Props = {
@@ -65,10 +79,24 @@ export function NatureHomeTtsSettingsSection({ onPrefsChanged }: Props) {
   const [deviceVoices, setDeviceVoices] = useState<DeviceVoice[]>([]);
 
   useEffect(() => {
-    setPrefs(readNatureHomeTtsPrefs());
-    const syncVoices = () => setDeviceVoices(loadDeviceVoices(locale));
-    syncVoices();
+    const nextPrefs = readNatureHomeTtsPrefs();
+    const voices = loadDeviceVoices(locale);
+    const langPrefix = locale === "en" ? "en" : "zh";
+    const safeVoiceId = resolveMaleTtsVoiceId(
+      voices.map((voice) => ({ identifier: voice.id, name: voice.name, language: voice.lang })),
+      { preferredId: nextPrefs.voiceId, langPrefix },
+    );
+    const normalized = { ...nextPrefs, voiceId: safeVoiceId ?? "" };
+    if (normalized.voiceId !== nextPrefs.voiceId) {
+      writeNatureHomeTtsPrefs(normalized);
+    }
+    setPrefs(normalized);
+    setDeviceVoices(voices);
     if (typeof window !== "undefined" && window.speechSynthesis) {
+      const syncVoices = () => {
+        const refreshed = loadDeviceVoices(locale);
+        setDeviceVoices(refreshed);
+      };
       window.speechSynthesis.addEventListener("voiceschanged", syncVoices);
       return () => window.speechSynthesis.removeEventListener("voiceschanged", syncVoices);
     }

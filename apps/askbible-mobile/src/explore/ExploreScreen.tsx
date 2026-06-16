@@ -1,5 +1,7 @@
 import { useRouter } from "expo-router";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { InteractionManager, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,19 +10,19 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { EXPLORE_ENTRIES } from "./exploreEntries";
 import { exploreArticleRoute } from "./exploreFeaturedArticles";
-import { useExploreFeaturedArticles } from "./useExploreFeaturedArticles";
+import { useExploreFeaturedArticles, refreshExploreFeaturedArticlesWhenFocused } from "./useExploreFeaturedArticles";
+import { refreshExploreContentWhenFocused } from "./refreshExploreContent";
 import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "./exploreFeaturedArticleIcons";
 import { exploreFeaturedArticleLabel } from "./exploreFeaturedArticleLabels";
 import { ExploreEntryIcon } from "./ExploreEntryIcon";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s } from "./exploreParchmentStyles";
+import { PARCHMENT_COLUMN_MAX_WIDTH_PHONE, parchmentColumnMaxWidth } from "../read/parchmentColumnLayout";
+import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
 
-const EXPLORE_SCROLL_MAX_W = 448;
 const EXPLORE_SCROLL_PAD_X = 22;
 const EXPLORE_ICON_COLS = 3;
 const EXPLORE_ICON_GRID_GAP = 10;
 const SCRIPTURE_ANTHOLOGY_IDS = [
-  "years-days-eternity",
   "word-of-god",
   "narrow-gate",
   "praise-worship",
@@ -28,15 +30,21 @@ const SCRIPTURE_ANTHOLOGY_IDS = [
 
 export function ExploreScreen() {
   const router = useRouter();
+  const exploreFocused = useIsFocused();
   const insets = useSafeAreaInsets();
-  const { width: windowW } = useWindowDimensions();
+  const { width: windowW, height: windowH } = useWindowDimensions();
+  const scrollContentStyle = useExploreScrollContentStyle({
+    paddingTop: EXPLORE_PAGE_TOP_PAD + insets.top,
+    paddingBottom: shellTabBarScrollPad(insets.bottom),
+  });
+  const contentMaxW = parchmentColumnMaxWidth(windowW, windowH, PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
   const { locale } = useLocale();
 
+  // 须按「当前屏宽 ∩ 版心」算栅格，勿只用 448 上限；否则 iPhone 上 tile 过宽只能排 2 个。
+  const layoutWidth = Math.min(windowW, contentMaxW ?? windowW);
+  const iconGridWidth = layoutWidth - EXPLORE_SCROLL_PAD_X * 2;
   const iconTileW = Math.floor(
-    (Math.min(windowW, EXPLORE_SCROLL_MAX_W) -
-      EXPLORE_SCROLL_PAD_X * 2 -
-      EXPLORE_ICON_GRID_GAP * (EXPLORE_ICON_COLS - 1)) /
-      EXPLORE_ICON_COLS,
+    (iconGridWidth - EXPLORE_ICON_GRID_GAP * (EXPLORE_ICON_COLS - 1)) / EXPLORE_ICON_COLS,
   );
   const scriptureAnthologyEntries = SCRIPTURE_ANTHOLOGY_IDS.map((id) =>
     EXPLORE_ENTRIES.find((entry) => entry.id === id),
@@ -44,6 +52,22 @@ export function ExploreScreen() {
   const topEntries = EXPLORE_ENTRIES.filter((entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as never));
 
   const { articles: featuredArticles } = useExploreFeaturedArticles(locale);
+  const [iconGridsReady, setIconGridsReady] = useState(false);
+
+  useEffect(() => {
+    if (!exploreFocused) {
+      setIconGridsReady(false);
+      return;
+    }
+    const task = InteractionManager.runAfterInteractions(() => setIconGridsReady(true));
+    return () => task.cancel();
+  }, [exploreFocused]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshExploreContentWhenFocused();
+    }, []),
+  );
 
   const renderArticleTile = (article: (typeof featuredArticles)[number]) => (
     <Pressable
@@ -103,15 +127,7 @@ export function ExploreScreen() {
 
   return (
     <View style={s.root}>
-      <ParchmentBottomFadeScrollView
-        contentContainerStyle={[
-          s.scroll,
-          {
-            paddingTop: EXPLORE_PAGE_TOP_PAD + insets.top,
-            paddingBottom: shellTabBarScrollPad(insets.bottom),
-          },
-        ]}
-      >
+      <ParchmentBottomFadeScrollView contentContainerStyle={scrollContentStyle}>
         <Text style={s.title} maxFontSizeMultiplier={1.2}>
           {t("pages.explore.title")}
         </Text>
@@ -120,6 +136,7 @@ export function ExploreScreen() {
           {t("pages.explore.lead")}
         </Text>
 
+        {iconGridsReady ? (
         <View style={s.section}>
           <View style={s.iconGrid}>
             {topEntries.map(renderEntryTile)}
@@ -139,6 +156,7 @@ export function ExploreScreen() {
             {featuredArticles.map(renderArticleTile)}
           </View>
         </View>
+        ) : null}
       </ParchmentBottomFadeScrollView>
     </View>
   );

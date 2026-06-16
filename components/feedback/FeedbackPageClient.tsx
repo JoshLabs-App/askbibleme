@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { StaticParchmentPageFooter } from "@/components/shell/StaticParchmentPageFooter";
+import { PARCHMENT_CONTROL_SURFACE_CLASS } from "@/lib/shell/parchment-control-surface";
 
 type FeedbackType = "bug" | "idea" | "content" | "other";
 
@@ -12,6 +14,8 @@ type SubmitState =
   | { kind: "submitting" }
   | { kind: "error"; message: string }
   | { kind: "success"; id: string };
+
+const fieldClassName = PARCHMENT_CONTROL_SURFACE_CLASS.field;
 
 export function FeedbackPageClient() {
   const pathname = usePathname() ?? "/feedback";
@@ -80,27 +84,27 @@ export function FeedbackPageClient() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl flex-1 px-5 pb-24 pt-8 text-ink md:px-8">
+    <div className="narrow-parchment-root select-text">
       <header className="text-center">
-        <h1 className="font-serif text-[clamp(1.35rem,4vw,1.85rem)] font-medium tracking-[0.03em] text-ink/90">
+        <h1 className="font-serif text-[clamp(1.35rem,4.5vw,1.75rem)] font-medium leading-snug tracking-[0.02em] text-[#2b1d15]">
           {isZh ? "意见反馈" : "Feedback"}
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-ink/75 sm:text-[15px]">
+        <p className="mx-auto mt-4 max-w-md text-[15px] leading-[1.75] text-[rgba(43,29,21,0.76)]">
           {isZh
             ? "你可以告诉我们遇到的问题、想法或期待的方向。每条反馈都会进入同一个队列，便于持续改进。"
             : "Share bugs, ideas, or requests. Every submission goes into a single queue so we can improve steadily."}
         </p>
       </header>
 
-      <form className="mx-auto mt-8 max-w-xl space-y-4" onSubmit={onSubmit}>
+      <form className="mt-8 space-y-4" onSubmit={onSubmit}>
         <label className="block">
-          <span className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-ink/50">
+          <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.12em] text-[rgba(77,53,34,0.55)]">
             {isZh ? "反馈类型" : "Feedback type"}
           </span>
           <select
             value={feedbackType}
             onChange={(e) => setFeedbackType(e.target.value as FeedbackType)}
-            className="w-full rounded-xl border border-ink/12 bg-canvas/70 px-3 py-2.5 text-[15px] text-ink outline-none transition focus:border-ink/30"
+            className={fieldClassName}
           >
             {typeOptions.map((item) => (
               <option key={item.value} value={item.value}>
@@ -111,7 +115,7 @@ export function FeedbackPageClient() {
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-ink/50">
+          <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.12em] text-[rgba(77,53,34,0.55)]">
             {isZh ? "反馈内容" : "Message"}
           </span>
           <textarea
@@ -120,16 +124,18 @@ export function FeedbackPageClient() {
             maxLength={1200}
             required
             rows={8}
-            placeholder={isZh ? "例如：在读经页切换章节时，偶尔会回到顶部。" : "Example: Chapter switch sometimes jumps to top."}
-            className="w-full resize-y rounded-xl border border-ink/12 bg-canvas/70 px-3 py-2.5 text-[15px] leading-relaxed text-ink outline-none transition placeholder:text-ink/35 focus:border-ink/30"
+            placeholder={
+              isZh ? "例如：在读经页切换章节时，偶尔会回到顶部。" : "Example: Chapter switch sometimes jumps to top."
+            }
+            className={`${fieldClassName} resize-y leading-relaxed`}
           />
-          <p className="mt-1 text-right text-[12px] text-ink/45">
+          <p className="mt-1 text-right text-[12px] text-[rgba(77,53,34,0.55)]">
             {isZh ? `还可输入 ${remain} 字` : `${remain} characters left`}
           </p>
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-ink/50">
+          <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.12em] text-[rgba(77,53,34,0.55)]">
             {isZh ? "邮箱（可选）" : "Email (optional)"}
           </span>
           <input
@@ -138,17 +144,17 @@ export function FeedbackPageClient() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={isZh ? "用于回访或补充信息" : "If you want a follow-up"}
-            className="w-full rounded-xl border border-ink/12 bg-canvas/70 px-3 py-2.5 text-[15px] text-ink outline-none transition placeholder:text-ink/35 focus:border-ink/30"
+            className={fieldClassName}
           />
         </label>
 
         {state.kind === "error" ? (
-          <p className="rounded-lg border border-red-300/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-200">
+          <p className="rounded-lg border border-red-300/40 bg-red-500/10 px-3 py-2 text-[13px] text-red-900">
             {state.message}
           </p>
         ) : null}
         {state.kind === "success" ? (
-          <p className="rounded-lg border border-emerald-300/30 bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-100">
+          <p className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-900">
             {isZh ? `提交成功，反馈编号：${state.id}` : `Submitted successfully. Feedback ID: ${state.id}`}
           </p>
         ) : null}
@@ -156,7 +162,8 @@ export function FeedbackPageClient() {
         <button
           type="submit"
           disabled={state.kind === "submitting"}
-          className="w-full rounded-xl bg-white/[0.14] px-4 py-3 text-[15px] font-medium text-ink transition hover:bg-white/[0.2] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
+          className="w-full rounded-full px-4 py-3 text-[15px] font-bold tracking-[0.02em] text-[#fffdf8] transition hover:brightness-[0.98] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
+          style={{ backgroundColor: "#ffb101" }}
         >
           {state.kind === "submitting"
             ? isZh
@@ -169,13 +176,18 @@ export function FeedbackPageClient() {
       </form>
 
       {supportEmail ? (
-        <p className="mx-auto mt-6 max-w-xl text-center text-[12px] leading-relaxed text-ink/55">
+        <p className="mt-6 text-center text-[12px] leading-relaxed text-[rgba(77,53,34,0.55)]">
           {isZh ? "也可直接邮件联系：" : "Or email us directly:"}{" "}
-          <a className="underline decoration-ink/30 underline-offset-4" href={`mailto:${supportEmail}`}>
+          <a
+            className="underline decoration-[rgba(77,53,34,0.25)] underline-offset-4"
+            href={`mailto:${supportEmail}`}
+          >
             {supportEmail}
           </a>
         </p>
       ) : null}
+
+      <StaticParchmentPageFooter />
     </div>
   );
 }

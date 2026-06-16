@@ -1,5 +1,6 @@
 import { Audio } from "expo-av";
 import { useEffect, useRef } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 import {
   configureShellAudioMode,
   primeShellSoundPlayback,
@@ -30,14 +31,15 @@ export function useNatureAmbientMix(
 ) {
   const layersRef = useRef(layers);
   layersRef.current = layers;
+  const soundsRef = useRef<Audio.Sound[]>([]);
 
   useEffect(() => {
     let disposed = false;
-    const sounds: Audio.Sound[] = [];
 
     async function disposeAll() {
+      const batch = soundsRef.current.splice(0);
       await Promise.all(
-        sounds.splice(0).map(async (s) => {
+        batch.map(async (s) => {
           try {
             await s.unloadAsync();
           } catch {
@@ -48,6 +50,7 @@ export function useNatureAmbientMix(
     }
 
     (async () => {
+      await disposeAll();
       const L = layersRef.current;
       if (!active || L.length === 0) {
         return;
@@ -102,7 +105,7 @@ export function useNatureAmbientMix(
               /* ignore */
             }
           }
-          sounds.push(sound);
+          soundsRef.current.push(sound);
         } catch {
           /* skip broken layer */
         }
@@ -114,4 +117,53 @@ export function useNatureAmbientMix(
       void disposeAll();
     };
   }, [baseUrl, layersKey, playbackRate, active]);
+
+  /** Duck / restore without unload; volume 0 时 pause 以省 CPU。 */
+  useEffect(() => {
+    const L = layersRef.current;
+    if (!active || L.length === 0 || soundsRef.current.length === 0) return;
+    void (async () => {
+      const sounds = soundsRef.current;
+      for (let i = 0; i < Math.min(L.length, sounds.length); i += 1) {
+        const vol = Math.min(1, Math.max(0, L[i]!.volume));
+        try {
+          const st = await sounds[i]!.getStatusAsync();
+          if (!st.isLoaded) continue;
+          if (vol <= 0) {
+            if (st.isPlaying) await sounds[i]!.pauseAsync();
+            continue;
+          }
+          if (!st.isPlaying) await sounds[i]!.playAsync();
+          await sounds[i]!.setVolumeAsync(vol);
+        } catch {
+          /* ignore */
+        }
+      }
+    })();
+  }, [active, layers]);
+
+  /** 后台暂停环境音，回前台恢复，减少后台 CPU/解码消耗。 */
+  useEffect(() => {
+    if (!active) return;
+    const sync = (state: AppStateStatus) => {
+      const shouldPlay = state === "active";
+      void (async () => {
+        for (const sound of soundsRef.current) {
+          try {
+            const st = await sound.getStatusAsync();
+            if (!st.isLoaded) continue;
+            if (shouldPlay) {
+              if (!st.isPlaying) await sound.playAsync();
+            } else if (st.isPlaying) {
+              await sound.pauseAsync();
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      })();
+    };
+    const sub = AppState.addEventListener("change", sync);
+    return () => sub.remove();
+  }, [active, layersKey]);
 }

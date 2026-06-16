@@ -114,6 +114,14 @@ function writeRecord(record: TodayReadingDoneRecord): void {
   }
 }
 
+export function readTodayReadingDoneRecord(): TodayReadingDoneRecord | null {
+  return readRecord();
+}
+
+export function replaceTodayReadingDoneRecord(record: TodayReadingDoneRecord): void {
+  writeRecord(record);
+}
+
 export function readTodayReadingDoneKeys(scopeKey: string): Set<string> {
   const record = readRecord();
   if (!record || record.scopeKey !== scopeKey) return new Set();

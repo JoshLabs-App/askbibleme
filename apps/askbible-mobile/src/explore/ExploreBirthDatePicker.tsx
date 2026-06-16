@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { getLocale } from "../i18n/locale-store";
-import { readParchmentTheme as c } from "../read/readParchmentTheme";
+import {
+  parchmentControlStyles,
+  parchmentModalControlStyles,
+  parchmentOverlayControlStyles,
+} from "../shell/parchmentControlSurface";
 import {
   buildBirthDayOptions,
   buildBirthMonthOptions,
@@ -17,9 +21,13 @@ const EN_MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", 
 type Props = {
   value: ExploreBirthDate;
   onChange: (date: ExploreBirthDate) => void;
+  /** 叠在羊皮卷 overlay 上时用更透明的控件面 */
+  onParchment?: boolean;
+  /** 探索弹层内：实底滚轮 */
+  inModal?: boolean;
 };
 
-export function ExploreBirthDatePicker({ value, onChange }: Props) {
+export function ExploreBirthDatePicker({ value, onChange, onParchment = false, inModal = false }: Props) {
   const now = useMemo(() => new Date(), []);
   const years = useMemo(() => buildBirthYearOptions(now.getFullYear()), [now]);
   const months = useMemo(() => buildBirthMonthOptions(value.year, now), [value.year, now]);
@@ -48,10 +56,15 @@ export function ExploreBirthDatePicker({ value, onChange }: Props) {
   const setDay = useCallback((day: number) => apply({ ...value, day }), [value, apply]);
 
   const pickerHeight = EXPLORE_WHEEL_ROW_HEIGHT * 5;
+  const surface = inModal
+    ? parchmentModalControlStyles
+    : onParchment
+      ? parchmentOverlayControlStyles
+      : parchmentControlStyles;
 
   return (
-    <View style={[styles.wrap, { height: pickerHeight }]}>
-      <View style={styles.selectionBand} pointerEvents="none" />
+    <View style={[surface.pickerWrap, { height: pickerHeight }]}>
+      <View style={surface.pickerSelectionBand} pointerEvents="none" />
       <View style={styles.columns}>
         <ExploreWheelColumn options={years} value={value.year} onChange={setYear} flex={1.15} />
         <ExploreWheelColumn
@@ -68,28 +81,6 @@ export function ExploreBirthDatePicker({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginTop: 14,
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: "rgba(255, 252, 245, 0.72)",
-  },
-  selectionBand: {
-    position: "absolute",
-    left: 8,
-    right: 8,
-    top: "50%",
-    marginTop: -EXPLORE_WHEEL_ROW_HEIGHT / 2,
-    height: EXPLORE_WHEEL_ROW_HEIGHT,
-    borderRadius: 10,
-    backgroundColor: "rgba(42, 36, 28, 0.06)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    zIndex: 0,
-  },
   columns: {
     flex: 1,
     flexDirection: "row",

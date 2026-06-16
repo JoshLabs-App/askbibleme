@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { ReadBibleTypographySettingsControl } from "@/components/bible/ReadBibleTypographySettingsControl";
-import { ScriptureParchmentShellChromeEffect } from "@/components/scripture/ScriptureParchmentShellChromeEffect";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { PRAYER_SHELL_FILL_LIGHT } from "@/lib/prayer/prayer-shell-fill";
 
@@ -12,6 +11,8 @@ type Props = {
   parchmentScrollClassName?: string;
   /** 叠加在 `.read-bible-parchment-column`（如目录页 `read-bible-parchment-column--catalog`） */
   parchmentColumnClassName?: string;
+  /** 登录 / 注册等静态页不显示阅读版式角标 */
+  hideTypographyControl?: boolean;
 };
 
 /**
@@ -22,15 +23,14 @@ export function ScriptureChrome({
   scrollHome = false,
   parchmentScrollClassName,
   parchmentColumnClassName,
+  hideTypographyControl = false,
 }: Props) {
   return (
-    <>
-      <ScriptureParchmentShellChromeEffect />
-      <ShellTemplateChromeLayout
+    <ShellTemplateChromeLayout
         contentClassName="gap-0"
         appShellBackground={PRAYER_SHELL_FILL_LIGHT}
         immersive
-        topBarRightAccessory={<ReadBibleTypographySettingsControl />}
+        topBarRightAccessory={hideTypographyControl ? undefined : <ReadBibleTypographySettingsControl />}
       >
       <div className="read-bible-parchment-shell flex-1 text-amber-950 dark:text-stone-50">
         <div
@@ -55,6 +55,5 @@ export function ScriptureChrome({
         </div>
       </div>
     </ShellTemplateChromeLayout>
-    </>
   );
 }

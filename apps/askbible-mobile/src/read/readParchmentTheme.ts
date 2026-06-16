@@ -32,6 +32,8 @@ const light = {
   chapterCellPressed: "#f5ead8",
   chapterCellBorder: "rgba(120, 53, 15, 0.30)",
   modalBackdrop: "rgba(28, 20, 16, 0.35)",
+  /** 默认节号（无交叉引用）：对齐网站 `.read-chapter-verse-inline-num` */
+  verseNumMuted: "rgba(92, 58, 28, 0.78)",
   verseNum: "#C98300",
   tabInactive: "rgba(28, 20, 16, 0.52)",
   playFabBg: "rgba(28, 20, 16, 0.08)",
@@ -50,8 +52,8 @@ const light = {
   humanSpeech: "#38486C",
   /** 主题库金句：字下色带（inline 背景，非整节块） */
   goldenVerseMarker: "rgba(218, 178, 100, 0.10)",
-  /** 双击收藏：#FFAF00 字下高亮（半透明，避免过跳） */
-  verseBookmarkMarker: "rgba(255, 175, 0, 0.32)",
+  /** 双击收藏：LOGO 黄 #FFB103，与划重点默认色一致 */
+  verseBookmarkMarker: "#FFB103",
   /** 多选复制：节文选中反馈（与朗读/搜索同系暖黄） */
   verseSelectionMarker: "rgba(255, 177, 3, 0.52)",
   /** 羊皮卷强调色：年日数字、时间轴圆点、今日计划勾选等 */
@@ -82,6 +84,7 @@ const dark = {
   chapterCellPressed: "rgba(63, 58, 54, 0.62)",
   chapterCellBorder: "rgba(244, 235, 225, 0.16)",
   modalBackdrop: "rgba(12, 10, 8, 0.55)",
+  verseNumMuted: "rgba(234, 219, 196, 0.72)",
   verseNum: "#FFB103",
   tabInactive: "rgba(244, 235, 225, 0.52)",
   playFabBg: "rgba(244, 235, 225, 0.1)",
@@ -95,7 +98,7 @@ const dark = {
   divineSpeech: "rgba(255, 198, 140, 0.95)",
   humanSpeech: "#38486C",
   goldenVerseMarker: "rgba(255, 198, 140, 0.08)",
-  verseBookmarkMarker: "rgba(255, 175, 0, 0.26)",
+  verseBookmarkMarker: "#FFB103",
   verseSelectionMarker: "rgba(255, 177, 3, 0.38)",
   parchmentAccent: "#D97707",
   parchmentAccentGlow: "rgba(217, 119, 7, 0.28)",

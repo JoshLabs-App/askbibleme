@@ -4,7 +4,11 @@ import {
   ADMIN_ASKBIBLE_SESSION_COOKIE,
   verifyAskbibleSessionCookie,
 } from "@/lib/admin-askbible-session";
-import { ADMIN_GATE_COOKIE, verifyAdminGateCookie } from "@/lib/admin-gate";
+import {
+  ADMIN_GATE_COOKIE,
+  isAdminLoginBypassedInDevelopment,
+  verifyAdminGateCookie,
+} from "@/lib/admin-gate";
 import { isSelahOnlineEditorSurfaceAllowed } from "@/lib/selah-online-editor-surface";
 import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
 
@@ -29,11 +33,27 @@ function isPrivilegedEditorPath(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  // Supabase OAuth may fall back to Site URL (/) with ?code= when redirectTo is not allow-listed.
+  if (pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const callback = request.nextUrl.clone();
+    callback.pathname = "/auth/callback";
+    return NextResponse.redirect(callback);
+  }
+
   if (isPrivilegedEditorPath(pathname) && !isSelahOnlineEditorSurfaceAllowed()) {
     return new NextResponse(null, { status: 404 });
   }
 
   if (!pathname.startsWith("/admin")) {
+    return nextWithRequestPathname(request);
+  }
+
+  if (isAdminLoginBypassedInDevelopment()) {
+    if (pathname === "/admin/login") {
+      const nextRaw = request.nextUrl.searchParams.get("next")?.trim() || "/admin";
+      const safe = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/admin";
+      return NextResponse.redirect(new URL(safe, request.nextUrl.origin));
+    }
     return nextWithRequestPathname(request);
   }
 

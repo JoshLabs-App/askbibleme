@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ExploreProsePage } from "@/components/explore/ExploreProsePage";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import {
   formatExploreRefLabel,
   parseExploreRef,
@@ -12,6 +13,7 @@ import {
 
 export type ExploreScriptureCategory = {
   title: string;
+  titleTw?: string;
   titleEn?: string;
   refs: string[];
 };
@@ -64,10 +66,14 @@ export function ExploreScriptureAccordionContent({
 
       <div className="mt-8 space-y-2.5">
         {categories.map((category, index) => {
+          const zhTitle =
+            locale === "zh-TW"
+              ? category.titleTw ?? toZhTwText(category.title)
+              : category.title;
           const title =
             locale === "en" && category.titleEn
               ? stripCategoryTitlePrefix(category.titleEn)
-              : stripCategoryTitlePrefix(category.title);
+              : stripCategoryTitlePrefix(zhTitle);
           const expanded = expandedIndex === index;
 
           return (

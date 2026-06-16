@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { InteractionManager, Pressable, StyleSheet, View } from "react-native";
 import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
 import type { BibleTranslationMeta } from "../bible/translations-types";
 import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
-import { t } from "../i18n/site-copy";
+import { t, localizeZhText, resolveUiText } from "../i18n/site-copy";
 import {
   defaultHomePrimaryTranslationIdForLocale,
   DEFAULT_HOME_PRAYER_PREFS,
@@ -39,6 +39,20 @@ const SHORT_LABEL_ZH: Record<string, string> = {
   "rv1909-es": "西语",
 };
 
+const SHORT_LABEL_ZH_TW: Record<string, string> = {
+  asv: "ASV",
+  "cuv-simp": "和合本",
+  "cuv-trad": "繁體",
+  "otb-zh-hans": "Open簡體",
+  "otb-zh-hant": "Open繁體",
+  "otb-en-gb": "Open英",
+  "web-en": "WEB",
+  "bbe-en": "BBE",
+  "heb-leningrad": "希伯來",
+  kjv: "KJV",
+  "rv1909-es": "西語",
+};
+
 const SHORT_LABEL_EN: Record<string, string> = {
   asv: "ASV",
   "cuv-simp": "CUV",
@@ -54,9 +68,11 @@ const SHORT_LABEL_EN: Record<string, string> = {
 };
 
 function translationShortLabel(tr: BibleTranslationMeta, locale: AppLocale): string {
-  const short = locale === "en" ? SHORT_LABEL_EN[tr.id] : SHORT_LABEL_ZH[tr.id];
+  const shortMap =
+    locale === "en" ? SHORT_LABEL_EN : locale === "zh-TW" ? SHORT_LABEL_ZH_TW : SHORT_LABEL_ZH;
+  const short = shortMap[tr.id];
   if (short) return short;
-  return locale === "en" ? tr.labelEn : tr.labelZh;
+  return locale === "en" ? tr.labelEn : localizeZhText(locale, tr.labelZh);
 }
 
 function toOptions(catalog: BibleTranslationMeta[], locale: AppLocale): NatureHomeSettingsSelectOption[] {
@@ -74,7 +90,7 @@ function toOptions(catalog: BibleTranslationMeta[], locale: AppLocale): NatureHo
     })
     .map((tr) => ({
     id: tr.id,
-    label: locale === "en" ? tr.labelEn : tr.labelZh,
+    label: locale === "en" ? tr.labelEn : localizeZhText(locale, tr.labelZh),
     shortLabel: translationShortLabel(tr, locale),
     }));
 }
@@ -91,21 +107,27 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchBibleTranslationsCatalog().then((index) => {
-      if (!cancelled) setCatalog(index.translations);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void fetchBibleTranslationsCatalog().then((index) => {
+        if (!cancelled) setCatalog(index.translations);
+      });
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    void readHomePrayerVersePrefs().then((p) => {
-      if (!cancelled) setPrefs(p);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readHomePrayerVersePrefs().then((p) => {
+        if (!cancelled) setPrefs(p);
+      });
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, []);
 
@@ -127,7 +149,7 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
   const resolvedIds = useMemo(() => verseTranslationIdsFromPrefs(prefs, locale), [prefs, locale]);
   const primaryId = resolvedIds.primary;
   const contrastId = prefs.verseTextEnTranslationId;
-  const systemDefaultPrimaryLabel = locale === "en" ? "System default" : "系统默认";
+  const systemDefaultPrimaryLabel = resolveUiText(locale, "系统默认", "System default");
   const systemDefaultPrimaryOption = useMemo((): NatureHomeSettingsSelectOption => {
     const matched = allOptions.find((opt) => opt.id === localeDefaultPrimaryId);
     if (!matched) {
@@ -228,7 +250,7 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
             style={styles.dismissOverlay}
             onPress={() => setOpenMenu(null)}
             accessibilityRole="button"
-            accessibilityLabel={locale === "en" ? "Close translation dropdown" : "关闭译本下拉"}
+            accessibilityLabel={resolveUiText(locale, "关闭译本下拉", "Close translation dropdown")}
           />
         ) : null}
         <NatureHomeSettingsSelect

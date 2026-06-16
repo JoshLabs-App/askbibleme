@@ -227,4 +227,53 @@ export async function writeReadBibleTranslationPrefMode(
   } catch {
     /* ignore */
   }
+  emit();
+}
+
+export type ReadBibleTranslationSyncBundle = {
+  version: 1;
+  prefs: ReadBibleTranslationPrefsV1 | null;
+  mode: ReadBibleTranslationPrefMode;
+};
+
+export async function readReadBibleTranslationSyncBundle(): Promise<ReadBibleTranslationSyncBundle> {
+  try {
+    const [raw, mode] = await Promise.all([
+      AsyncStorage.getItem(READ_BIBLE_TRANSLATION_STORAGE_KEY),
+      readReadBibleTranslationPrefMode(),
+    ]);
+    if (!raw?.trim()) return { version: 1, prefs: null, mode };
+    const parsed = JSON.parse(raw) as Partial<ReadBibleTranslationPrefsV1>;
+    if (parsed?.version !== 1 || typeof parsed.primaryTranslationId !== "string") {
+      return { version: 1, prefs: null, mode };
+    }
+    return {
+      version: 1,
+      prefs: {
+        version: 1,
+        primaryTranslationId: parsed.primaryTranslationId,
+        contrastTranslationIds: Array.isArray(parsed.contrastTranslationIds)
+          ? parsed.contrastTranslationIds.filter((x): x is string => typeof x === "string")
+          : [],
+        contrastTranslationId: parsed.contrastTranslationId ?? null,
+        audioTranslationId:
+          typeof parsed.audioTranslationId === "string" || parsed.audioTranslationId === null
+            ? parsed.audioTranslationId
+            : null,
+      },
+      mode,
+    };
+  } catch {
+    return { version: 1, prefs: null, mode: "auto" };
+  }
+}
+
+export async function applyReadBibleTranslationSyncBundle(
+  bundle: ReadBibleTranslationSyncBundle,
+  index: BibleTranslationsIndex,
+): Promise<void> {
+  if (bundle.version !== 1) return;
+  await writeReadBibleTranslationPrefMode(bundle.mode);
+  if (!bundle.prefs) return;
+  await writeReadBibleTranslationPrefs(bundle.prefs, index);
 }

@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { LOGO_TEXT_ACCENT_COLOR as LOGO_COLOR } from "../shell/logo-colors";
-import { LIFE_BATTERY_SEGMENT_COUNT } from "./century-timeline";
+import { getLifeBatterySegmentCount } from "./century-timeline";
 
 type Props = {
   filledSegments: number;
@@ -25,16 +25,14 @@ const REMAINING = "#34C759";
 
 /** 人生 90 岁满格：5 格分段电池（每格 18 岁，四舍五入） */
 export function ExploreLifeDayBattery({ filledSegments }: Props) {
-  const filled = Math.min(
-    LIFE_BATTERY_SEGMENT_COUNT,
-    Math.max(0, Math.round(filledSegments)),
-  );
+  const segmentCount = getLifeBatterySegmentCount();
+  const filled = Math.min(segmentCount, Math.max(0, Math.round(filledSegments)));
 
   return (
     <View style={styles.shell} importantForAccessibility="no">
       <View style={styles.body}>
         <View style={styles.inner}>
-          {Array.from({ length: LIFE_BATTERY_SEGMENT_COUNT }, (_, i) => (
+          {Array.from({ length: segmentCount }, (_, i) => (
             <View
               key={i}
               style={[styles.segment, i < filled ? styles.segmentLived : styles.segmentRemaining]}

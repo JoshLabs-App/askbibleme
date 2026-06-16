@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Slider from "@react-native-community/slider";
 import {
+  InteractionManager,
   Linking,
   Modal,
   Platform,
@@ -46,6 +47,11 @@ import {
   type NatureHomeVerseAppearance,
   type NatureVisualLevel,
 } from "./natureHomePrefs";
+import {
+  filterTtsVoicesForLocale,
+  inferTtsVoiceGender,
+  sanitizeTtsVoiceId,
+} from "./natureHomeTtsVoices";
 import {
   BLUR_LEVEL_COPY_KEYS,
   DIM_LEVEL_COPY_KEYS,
@@ -113,27 +119,8 @@ function compactVoiceName(voice: DeviceVoice): string {
   return firstWord.length > 10 ? firstWord.slice(0, 10) : firstWord;
 }
 
-function inferVoiceGender(voice: DeviceVoice): "female" | "male" | "unknown" {
-  const text = `${voice.name || ""} ${voice.identifier || ""}`.toLowerCase();
-  if (
-    /\bfemale\b|\bwoman\b|girl|tingting|meijia|samantha|victoria|karen|siri_female|xiaoyi/.test(
-      text,
-    )
-  ) {
-    return "female";
-  }
-  if (
-    /\bmale\b|\bman\b|boy|alex|daniel|tom|fred|siri_male|yunxi|yunjian|tian-tian/.test(text)
-  ) {
-    return "male";
-  }
-  return "unknown";
-}
-
-function genderGlyph(g: "female" | "male" | "unknown"): string {
-  if (g === "female") return "♀";
-  if (g === "male") return "♂";
-  return "◦";
+function genderGlyph(g: "male" | "unknown"): string {
+  return g === "male" ? "♂" : "◦";
 }
 
 const styles = StyleSheet.create({
@@ -430,10 +417,18 @@ export function NatureHomeSettingsPanel({
       const locale = getLocale();
       const voicesRaw = (await Speech.getAvailableVoicesAsync()) as DeviceVoice[];
       const langPrefix = locale === "en" ? "en" : "zh";
-      const valid = voicesRaw.filter((v) => typeof v.identifier === "string" && v.identifier.trim().length > 0);
-      const preferred = valid.filter((v) => (v.language || "").toLowerCase().startsWith(langPrefix));
-      // 按当前界面语言过滤；若该语言无可用声线，回退到全部，避免空列表。
-      setDeviceVoices(preferred.length > 0 ? preferred : valid);
+      const filtered = filterTtsVoicesForLocale(voicesRaw, langPrefix);
+      setDeviceVoices(filtered);
+      setTtsVoiceId((current) => {
+        const safe = sanitizeTtsVoiceId(filtered, current, langPrefix);
+        if (safe !== current) {
+          lastSavedTtsRef.current = {
+            ...lastSavedTtsRef.current,
+            voiceId: safe,
+          };
+        }
+        return safe;
+      });
     } catch {
       setDeviceVoices([]);
     }
@@ -446,10 +441,13 @@ export function NatureHomeSettingsPanel({
   useEffect(() => {
     if (!visible) return;
     ttsHydratedRef.current = false;
-    void load().then(() => {
-      onPrefsChanged();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void load().then(() => {
+        onPrefsChanged();
+      });
+      void loadDeviceVoices();
     });
-    void loadDeviceVoices();
+    return () => task.cancel();
   }, [visible, load, loadDeviceVoices, onPrefsChanged]);
 
   useEffect(() => {
@@ -648,7 +646,8 @@ export function NatureHomeSettingsPanel({
                       (v) => compactVoiceName(v).toLowerCase() === baseLabel.toLowerCase(),
                     ).length;
                     const label = duplicateCount > 1 ? `${baseLabel}${idx + 1}` : baseLabel;
-                    const gender = inferVoiceGender(voice);
+                    const gender = inferTtsVoiceGender(voice);
+                    const genderMark = gender === "male" ? genderGlyph("male") : genderGlyph("unknown");
                     return (
                       <Pressable
                         key={voice.identifier}
@@ -662,7 +661,7 @@ export function NatureHomeSettingsPanel({
                       >
                         <View style={styles.voiceChipInner}>
                           <Text style={[styles.voiceGenderText, selected && styles.voiceGenderTextOn]}>
-                            {genderGlyph(gender)}
+                            {genderMark}
                           </Text>
                           <Text style={[styles.voiceChipText, selected && styles.voiceChipTextOn]}>{label}</Text>
                         </View>

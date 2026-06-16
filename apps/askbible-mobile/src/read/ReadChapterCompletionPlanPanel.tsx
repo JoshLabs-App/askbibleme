@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, InteractionManager, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { AppLocale } from "../i18n/config";
 import { toZhTwText } from "../i18n/site-copy";
@@ -97,12 +97,15 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
 
   useEffect(() => {
     let active = true;
-    void readOnboardingNickname().then((saved) => {
-      if (!active) return;
-      setNickname(saved);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readOnboardingNickname().then((saved) => {
+        if (!active) return;
+        setNickname(saved);
+      });
     });
     return () => {
       active = false;
+      task.cancel();
     };
   }, []);
 
@@ -112,19 +115,22 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
       return;
     }
     let active = true;
-    void (async () => {
-      try {
-        const key = `${TODAY_COMPLETE_CELEBRATION_SHOWN_KEY_PREFIX}:${scopeKey}`;
-        const raw = await AsyncStorage.getItem(key);
-        if (!active) return;
-        setHasShownCelebrateForScope(raw === "1");
-      } catch {
-        if (!active) return;
-        setHasShownCelebrateForScope(false);
-      }
-    })();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        try {
+          const key = `${TODAY_COMPLETE_CELEBRATION_SHOWN_KEY_PREFIX}:${scopeKey}`;
+          const raw = await AsyncStorage.getItem(key);
+          if (!active) return;
+          setHasShownCelebrateForScope(raw === "1");
+        } catch {
+          if (!active) return;
+          setHasShownCelebrateForScope(false);
+        }
+      })();
+    });
     return () => {
       active = false;
+      task.cancel();
     };
   }, [scopeKey]);
 
@@ -223,32 +229,35 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      setLoading(true);
-      try {
-        const effective = await readEffectiveReadingPlanPrefs();
-        const payload = await loadTodayReadingPlanPayload(effective, { dayCount: effective.dayCount });
-        if (cancelled) return;
-        const key = buildTodayReadingScopeKey({
-          planId: effective.planId,
-          isTripleLoop: isTripleLoopPlanId(effective.planId),
-          epochDay: getReadingPlanDaySinceEpoch(),
-          dayIndex: isTripleLoopPlanId(effective.planId)
-            ? null
-            : resolveReadingPlanDayIndex(effective, effective.dayCount ?? 365),
-        });
-        setReadings(payload?.day?.readings ?? []);
-        setScopeKey(key);
-      } catch {
-        if (cancelled) return;
-        setReadings([]);
-        setScopeKey(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        setLoading(true);
+        try {
+          const effective = await readEffectiveReadingPlanPrefs();
+          const payload = await loadTodayReadingPlanPayload(effective, { dayCount: effective.dayCount });
+          if (cancelled) return;
+          const key = buildTodayReadingScopeKey({
+            planId: effective.planId,
+            isTripleLoop: isTripleLoopPlanId(effective.planId),
+            epochDay: getReadingPlanDaySinceEpoch(),
+            dayIndex: isTripleLoopPlanId(effective.planId)
+              ? null
+              : resolveReadingPlanDayIndex(effective, effective.dayCount ?? 365),
+          });
+          setReadings(payload?.day?.readings ?? []);
+          setScopeKey(key);
+        } catch {
+          if (cancelled) return;
+          setReadings([]);
+          setScopeKey(null);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      })();
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, tripleProgressKey]);
 
@@ -262,7 +271,10 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
   }, [scopeKey]);
 
   useEffect(() => {
-    void reloadDoneKeys();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void reloadDoneKeys();
+    });
+    return () => task.cancel();
   }, [reloadDoneKeys]);
 
   useEffect(() => {

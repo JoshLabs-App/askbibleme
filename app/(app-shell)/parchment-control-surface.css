@@ -1,0 +1,275 @@
+/**
+ * 羊皮卷壳层默认表单控件（对齐 lib/shell/parchment-control-surface.ts）
+ */
+html[data-app-shell-safe-fill="parchment"] {
+  --parchment-control-fill: rgba(255, 252, 245, 0.52);
+  --parchment-control-fill-muted: rgba(255, 252, 245, 0.38);
+  --parchment-control-fill-strong: rgba(255, 252, 245, 0.62);
+  --parchment-control-border: rgba(120, 53, 15, 0.28);
+  --parchment-control-border-focus: rgba(120, 53, 15, 0.42);
+  --parchment-control-selection-band: rgba(42, 36, 28, 0.06);
+  --parchment-control-wheel-row-height: 44px;
+  --parchment-control-radius-md: 12px;
+  --parchment-control-radius-sm: 10px;
+}
+
+.dark html[data-app-shell-safe-fill="parchment"] {
+  --parchment-control-fill: color-mix(in srgb, rgb(41 37 36) 72%, transparent);
+  --parchment-control-fill-muted: color-mix(in srgb, rgb(41 37 36) 58%, transparent);
+  --parchment-control-fill-strong: color-mix(in srgb, rgb(41 37 36) 88%, transparent);
+  --parchment-control-border: color-mix(in srgb, rgb(244 235 225) 16%, transparent);
+  --parchment-control-border-focus: color-mix(in srgb, rgb(244 235 225) 24%, transparent);
+  --parchment-control-selection-band: color-mix(in srgb, rgb(244 235 225) 8%, transparent);
+}
+
+.parchment-control-label {
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #5c4030;
+}
+
+.dark .parchment-control-label {
+  color: color-mix(in srgb, rgb(244 235 225) 66%, transparent);
+}
+
+.parchment-control-field {
+  width: 100%;
+  border-radius: var(--parchment-control-radius-sm);
+  border: 1px solid var(--parchment-control-border);
+  background: var(--parchment-control-fill);
+  padding: 0.65rem 0.875rem;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #1c1410;
+  outline: none;
+  transition: border-color 160ms ease;
+}
+
+.parchment-control-field::placeholder {
+  color: rgba(43, 29, 21, 0.35);
+}
+
+.parchment-control-field:focus {
+  border-color: var(--parchment-control-border-focus);
+}
+
+.dark .parchment-control-field {
+  color: #f4ebe1;
+}
+
+.parchment-control-sheet {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--parchment-control-border);
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 0 18px 48px rgba(28, 20, 16, 0.14);
+}
+
+.dark .parchment-control-sheet {
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+}
+
+.parchment-control-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/** 页面内 overlay：与探索页共用同一羊皮底，不再 fixed 重铺 */
+.parchment-control-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.parchment-control-overlay .parchment-control-modal-dim {
+  margin: 0;
+}
+
+.parchment-control-overlay .parchment-control-field,
+.parchment-control-overlay .parchment-control-picker,
+.parchment-control-overlay .parchment-control-btn {
+  background: var(--parchment-control-fill);
+}
+
+.parchment-control-overlay .parchment-control-btn--primary {
+  background: #1c1410;
+}
+
+.parchment-control-modal-dim {
+  flex: 1;
+  margin: -1rem -1rem 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(28, 20, 16, 0.35);
+}
+
+@media (min-width: 640px) {
+  .parchment-control-modal-backdrop {
+    justify-content: center;
+  }
+
+  .parchment-control-modal-dim {
+    margin: -1rem;
+  }
+}
+
+.parchment-control-picker {
+  position: relative;
+  margin-top: 0.875rem;
+  overflow: hidden;
+  border-radius: var(--parchment-control-radius-md);
+  border: 1px solid var(--parchment-control-border);
+  background: var(--parchment-control-fill);
+}
+
+.parchment-control-picker__band {
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: var(--parchment-control-wheel-row-height);
+  margin-top: calc(var(--parchment-control-wheel-row-height) / -2);
+  border-radius: var(--parchment-control-radius-sm);
+  border: 1px solid var(--parchment-control-border);
+  background: var(--parchment-control-selection-band);
+}
+
+.parchment-control-picker__columns {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  height: calc(var(--parchment-control-wheel-row-height) * 5);
+}
+
+.parchment-control-overlay--fullscreen-form {
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.parchment-control-sheet--fullscreen-form {
+  max-height: none;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  box-shadow: none;
+}
+
+.parchment-control-picker__column {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.parchment-control-picker__column::-webkit-scrollbar {
+  display: none;
+}
+
+.parchment-control-picker__column--year {
+  flex: 1.15;
+}
+
+.parchment-control-picker__column--month {
+  flex: 0.95;
+}
+
+.parchment-control-picker__column--day {
+  flex: 0.85;
+}
+
+.parchment-control-picker__pad {
+  height: var(--parchment-control-wheel-row-height);
+  flex-shrink: 0;
+}
+
+.parchment-control-picker__row {
+  display: flex;
+  width: 100%;
+  height: var(--parchment-control-wheel-row-height);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0 4px;
+  font-size: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: #6e5240;
+  cursor: pointer;
+}
+
+.parchment-control-picker__row--selected {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1c1410;
+}
+
+.dark .parchment-control-picker__row {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}
+
+.dark .parchment-control-picker__row--selected {
+  color: #f4ebe1;
+}
+
+.parchment-control-btn {
+  min-width: 100px;
+  border-radius: var(--parchment-control-radius-pill, 999px);
+  border: 1px solid var(--parchment-control-border);
+  background: var(--parchment-control-fill-muted);
+  padding: 0.65rem 1.125rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5c4030;
+  transition: opacity 160ms ease;
+}
+
+.parchment-control-btn:hover {
+  opacity: 0.88;
+}
+
+.parchment-control-btn--primary {
+  border-color: #1c1410;
+  background: #1c1410;
+  color: #fffaf2;
+}
+
+.parchment-control-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}

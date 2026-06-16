@@ -83,4 +83,13 @@ export const YEARS_DAYS_ETERNITY_EN: YearsDaysEternityDocument = {
       ref: "John 11:25",
     },
   },
+  encouragement: {
+    type: "scripture",
+    lines: [
+      "This is eternal life:",
+      "that they should know you, the only true God,",
+      "and him whom you sent, Jesus Christ.",
+    ],
+    ref: "John 17:3",
+  },
 };

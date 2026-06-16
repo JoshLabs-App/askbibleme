@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import type { AppLocale } from "../i18n/config";
+import { localizeZhText, resolveUiText } from "../i18n/site-copy";
 import {
   applyMobileResourceUpdates,
   readMobileResourceUpdateState,
@@ -19,7 +20,6 @@ import {
 
 type Props = {
   visible: boolean;
-  zh: boolean;
   locale: AppLocale;
   items: MobileResourceUpdateItem[];
   onClose: () => void;
@@ -27,13 +27,14 @@ type Props = {
   downloadMusicUpdate?: () => Promise<boolean>;
 };
 
-function itemLabel(item: MobileResourceUpdateItem, zh: boolean): string {
-  return (zh ? item.labelZh : item.labelEn) || item.id;
+function itemLabel(item: MobileResourceUpdateItem, locale: AppLocale): string {
+  if (locale === "en") return item.labelEn || item.id;
+  return localizeZhText(locale, item.labelZh || item.labelEn || item.id);
 }
 
 export function ResourceUpdateSheet({
   visible,
-  zh,
+  locale,
   items,
   onClose,
   onComplete,
@@ -60,14 +61,16 @@ export function ResourceUpdateSheet({
 
   const summary = useMemo(() => {
     if (downloading) {
-      return zh
-        ? `正在下载 ${updateState.overallPercent}%`
-        : `Downloading ${updateState.overallPercent}%`;
+      return resolveUiText(
+        locale,
+        `正在下载 ${updateState.overallPercent}%`,
+        `Downloading ${updateState.overallPercent}%`,
+      );
     }
-    if (done) return zh ? "更新完成" : "Update complete";
-    if (errored) return zh ? "部分未完成" : "Partially complete";
-    return zh ? `${items.length} 项可更新` : `${items.length} updates available`;
-  }, [downloading, done, errored, items.length, updateState.overallPercent, zh]);
+    if (done) return resolveUiText(locale, "更新完成", "Update complete");
+    if (errored) return resolveUiText(locale, "部分未完成", "Partially complete");
+    return resolveUiText(locale, `${items.length} 项可更新`, `${items.length} updates available`);
+  }, [downloading, done, errored, items.length, locale, updateState.overallPercent]);
 
   const onStart = () => {
     if (started || downloading) return;
@@ -83,7 +86,7 @@ export function ResourceUpdateSheet({
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={downloading ? undefined : onClose} />
         <View style={styles.sheet}>
-          <Text style={styles.title}>{zh ? "资源更新" : "Resource updates"}</Text>
+          <Text style={styles.title}>{resolveUiText(locale, "资源更新", "Resource updates")}</Text>
           <Text style={styles.summary}>{summary}</Text>
 
           {downloading ? (
@@ -93,7 +96,7 @@ export function ResourceUpdateSheet({
               </View>
               {updateState.currentLabel ? (
                 <Text style={styles.progressDetail} numberOfLines={2}>
-                  {updateState.currentLabel}
+                  {localizeZhText(locale, updateState.currentLabel)}
                 </Text>
               ) : null}
               <ActivityIndicator size="small" color="rgba(120, 75, 30, 0.9)" />
@@ -102,7 +105,7 @@ export function ResourceUpdateSheet({
             <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
               {items.map((item) => (
                 <Text key={`${item.kind}:${item.id}`} style={styles.listItem}>
-                  · {itemLabel(item, zh)}
+                  · {itemLabel(item, locale)}
                 </Text>
               ))}
             </ScrollView>
@@ -121,13 +124,13 @@ export function ResourceUpdateSheet({
                   onPress={onClose}
                   style={({ pressed }) => [styles.btn, styles.btnGhost, pressed && styles.btnPressed]}
                 >
-                  <Text style={styles.btnGhostText}>{zh ? "稍后" : "Later"}</Text>
+                  <Text style={styles.btnGhostText}>{resolveUiText(locale, "稍后", "Later")}</Text>
                 </Pressable>
                 <Pressable
                   onPress={onStart}
                   style={({ pressed }) => [styles.btn, styles.btnPrimary, pressed && styles.btnPressed]}
                 >
-                  <Text style={styles.btnPrimaryText}>{zh ? "全部下载" : "Download all"}</Text>
+                  <Text style={styles.btnPrimaryText}>{resolveUiText(locale, "全部下载", "Download all")}</Text>
                 </Pressable>
               </>
             ) : (
@@ -143,7 +146,9 @@ export function ResourceUpdateSheet({
                 ]}
               >
                 <Text style={styles.btnPrimaryText}>
-                  {downloading ? (zh ? "下载中…" : "Downloading…") : zh ? "完成" : "Done"}
+                  {downloading
+                    ? resolveUiText(locale, "下载中…", "Downloading…")
+                    : resolveUiText(locale, "完成", "Done")}
                 </Text>
               </Pressable>
             )}

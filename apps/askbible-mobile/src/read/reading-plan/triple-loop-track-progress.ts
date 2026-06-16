@@ -25,6 +25,12 @@ export function totalChaptersInTripleLoopTrack(track: TripleLoopTrack): number {
   }, 0);
 }
 
+export const TRIPLE_LOOP_TRACK_CHAPTER_TOTALS: Record<TripleLoopTrack, number> = {
+  ot: totalChaptersInTripleLoopTrack("ot"),
+  nt: totalChaptersInTripleLoopTrack("nt"),
+  wisdom: totalChaptersInTripleLoopTrack("wisdom"),
+};
+
 function chaptersBeforePointer(track: TripleLoopTrack, pointer: TripleLoopPointer): number {
   const order = orderForTripleLoopTrack(track);
   if (!order.length) return 0;

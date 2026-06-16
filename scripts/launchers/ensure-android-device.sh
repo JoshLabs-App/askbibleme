@@ -58,13 +58,25 @@ APPLESCRIPT
 }
 
 start_android_emulator_avd() {
-  local avd_name emu log flags
+  local avd_name emu log f has_gpu
+  local -a emu_flags
   avd_name="${ANDROID_AVD_NAME:-Expo_API_34}"
   emu="$ANDROID_HOME/emulator/emulator"
   log="${TMPDIR:-/tmp}/askbible-android-emulator.log"
-  flags="${ANDROID_EMULATOR_FLAGS:--no-boot-anim -no-metrics}"
-  if [[ "$(uname -s)" == "Darwin" ]] && [[ " $flags " != *" -gpu "* ]]; then
-    flags="$flags -gpu host"
+  if [[ -n "${ANDROID_EMULATOR_FLAGS:-}" ]]; then
+    # shellcheck disable=SC2206
+    emu_flags=($ANDROID_EMULATOR_FLAGS)
+  else
+    emu_flags=(-no-boot-anim -no-metrics)
+  fi
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    has_gpu=0
+    for f in "${emu_flags[@]}"; do
+      [[ "$f" == "-gpu" ]] && has_gpu=1
+    done
+    if [[ "$has_gpu" -eq 0 ]]; then
+      emu_flags+=(-gpu host)
+    fi
   fi
 
   if [[ ! -x "$emu" ]]; then
@@ -83,8 +95,7 @@ start_android_emulator_avd() {
   echo "→ 正在启动模拟器窗口: $avd_name"
   echo "  首次约需 1–3 分钟，请留意弹出的 Android 模拟器（不要只盯着本终端）。"
   echo "  详细日志: $log"
-  # shellcheck disable=SC2086
-  "$emu" -avd "$avd_name" $flags >>"$log" 2>&1 &
+  "$emu" -avd "$avd_name" "${emu_flags[@]}" >>"$log" 2>&1 &
   disown 2>/dev/null || true
 
   sleep 2

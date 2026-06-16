@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { InteractionManager } from "react-native";
 import {
   getScriptureVerseBookmarkStoreSync,
   hydrateScriptureVerseBookmarkStore,
@@ -10,7 +11,10 @@ import {
 
 export function useScriptureVerseBookmarks() {
   useEffect(() => {
-    void hydrateScriptureVerseBookmarkStore();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void hydrateScriptureVerseBookmarkStore();
+    });
+    return () => task.cancel();
   }, []);
 
   const store = useSyncExternalStore(

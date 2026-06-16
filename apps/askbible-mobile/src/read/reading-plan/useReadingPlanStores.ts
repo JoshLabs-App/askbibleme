@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { InteractionManager } from "react-native";
 import {
   buildDefaultReadingPlanPrefs,
   readEffectiveReadingPlanPrefs,
@@ -34,8 +35,12 @@ export function useEffectiveReadingPlanPrefs(): {
   }, []);
 
   useEffect(() => {
-    refresh();
-    return subscribeReadingPlanPrefs(refresh);
+    const task = InteractionManager.runAfterInteractions(refresh);
+    const unsub = subscribeReadingPlanPrefs(refresh);
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, [refresh]);
 
   return { prefs, refresh };
@@ -63,8 +68,12 @@ export function useTripleLoopProgress(): {
   }, []);
 
   useEffect(() => {
-    refresh();
-    return subscribeTripleLoopProgress(refresh);
+    const task = InteractionManager.runAfterInteractions(refresh);
+    const unsub = subscribeTripleLoopProgress(refresh);
+    return () => {
+      task.cancel();
+      unsub();
+    };
   }, [refresh]);
 
   return { progress, refresh };

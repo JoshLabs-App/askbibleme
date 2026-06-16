@@ -86,7 +86,7 @@ function buildComponents(
     ),
     em: ({ children }) => <em className={explore ? "explore-prose-em" : "italic text-ink/82"}>{children}</em>,
     blockquote: ({ children }) => (
-      <blockquote className={explore ? "explore-prose-blockquote" : "my-5 border-l-2 border-ink/20 py-1 pl-4 text-[15px] leading-[1.75] text-ink/68"}>
+      <blockquote className={explore ? "explore-prose-blockquote explore-prose-scripture-block" : "my-5 border-l-2 border-ink/20 py-1 pl-4 text-[15px] leading-[1.75] text-ink/68"}>
         {children}
       </blockquote>
     ),

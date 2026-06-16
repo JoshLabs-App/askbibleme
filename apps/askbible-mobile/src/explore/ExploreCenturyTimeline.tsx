@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
 import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
@@ -8,8 +8,8 @@ import type { ExploreBirthDate } from "./explore-birth-date";
 import { readExploreYearDayProfile } from "./explore-birth-year-prefs";
 import {
   getCenturyTimeline,
+  getLifeBatterySegmentCount,
   lifeBatteryFilledSegments,
-  LIFE_BATTERY_SEGMENT_COUNT,
 } from "./century-timeline";
 import { ExploreLifeDayBattery } from "./ExploreLifeDayBattery";
 
@@ -30,16 +30,32 @@ type Props = {
   onOpenLifeDay?: () => void;
   /** 保存生日后由父级递增，用于重新读取 */
   refreshKey?: number;
+  /** 父级已读 profile 时传入，避免重复 AsyncStorage 读取 */
+  birthDate?: ExploreBirthDate | null;
 };
 
-export function ExploreCenturyTimeline({ onOpenSettings, onOpenLifeDay, refreshKey = 0 }: Props) {
-  const [birthDate, setBirthDate] = useState<ExploreBirthDate | null>(null);
+export function ExploreCenturyTimeline({
+  onOpenSettings,
+  onOpenLifeDay,
+  refreshKey = 0,
+  birthDate: birthDateProp,
+}: Props) {
+  const [birthDateLocal, setBirthDateLocal] = useState<ExploreBirthDate | null>(null);
+  const birthDate = birthDateProp !== undefined ? birthDateProp : birthDateLocal;
 
   useEffect(() => {
-    void readExploreYearDayProfile().then((profile) => {
-      setBirthDate(profile.birthDate);
+    if (birthDateProp !== undefined) return;
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readExploreYearDayProfile().then((profile) => {
+        if (!cancelled) setBirthDateLocal(profile.birthDate);
+      });
     });
-  }, [refreshKey]);
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
+  }, [birthDateProp, refreshKey]);
 
   const now = useMemo(() => new Date(), []);
   const century = useMemo(
@@ -65,7 +81,7 @@ export function ExploreCenturyTimeline({ onOpenSettings, onOpenLifeDay, refreshK
           start: century.startYear,
           end: century.endYear,
           filled: filledSegments,
-          total: LIFE_BATTERY_SEGMENT_COUNT,
+          total: getLifeBatterySegmentCount(),
         });
 
   return (

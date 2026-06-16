@@ -1,26 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useMemo, useState } from "react";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { toZhTwText } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { trackTap } from "../telemetry/tap";
 import { getCompanionNeedOptions, getSolutionCards } from "./onboarding-devotion-data";
-import {
-  completeOnboardingDevotionIntro,
-  readOnboardingNickname,
-  type CompanionNeedId,
-} from "./onboarding-devotion-prefs";
+import { completeOnboardingDevotionIntro, type CompanionNeedId } from "./onboarding-devotion-prefs";
 import { OnboardingNeedStep } from "./OnboardingNeedStep";
 import { OnboardingSolutionStep } from "./OnboardingSolutionStep";
 
@@ -29,18 +16,14 @@ type OnboardingDevotionIntroProps = {
 };
 
 export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroProps) {
-  const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView>(null);
   const { locale, setLocale } = useLocale();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const [step, setStep] = useState<1 | 2>(1);
-  const [nickname, setNickname] = useState("");
   const [selectedNeeds, setSelectedNeeds] = useState<CompanionNeedId[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const companionNeedOptions = useMemo(() => getCompanionNeedOptions(locale), [locale]);
   const solutionCards = useMemo(() => getSolutionCards(locale), [locale]);
-  const canOpenSpace = nickname.trim().length > 0;
   const isLastStep = step === 2;
 
   const progressText = useMemo(() => {
@@ -52,30 +35,27 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     setSelectedNeeds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
-  useEffect(() => {
-    let active = true;
-    void readOnboardingNickname().then((saved) => {
-      if (!active) return;
-      if (saved) setNickname(saved);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
   const openDevotionCompanionSpace = async () => {
     if (submitting) return;
     setSubmitting(true);
-    await completeOnboardingDevotionIntro(selectedNeeds, nickname);
-    onComplete();
+    try {
+      await completeOnboardingDevotionIntro(selectedNeeds);
+      onComplete();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSkip = async () => {
     if (submitting) return;
     setSubmitting(true);
     trackTap("intro.skip");
-    await completeOnboardingDevotionIntro([], "");
-    onComplete();
+    try {
+      await completeOnboardingDevotionIntro([]);
+      onComplete();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handlePrimaryButtonPress = () => {
@@ -89,11 +69,7 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
   return (
     <View style={styles.overlay}>
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoid}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={insets.top}
-        >
+        <View style={styles.main}>
           <View style={styles.topBrandWrap}>
             <View style={styles.topActions}>
               <Pressable onPress={() => void handleSkip()} hitSlop={8}>
@@ -110,7 +86,6 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
           </View>
 
           <ScrollView
-            ref={scrollRef}
             style={styles.content}
             contentContainerStyle={styles.contentInner}
             showsVerticalScrollIndicator={false}
@@ -130,35 +105,12 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
             )}
 
             <View style={styles.footer}>
-              {step === 2 ? (
-                <View style={styles.nicknameWrap}>
-                  <Text style={styles.nicknameLabel}>
-                    {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-                  </Text>
-                  <TextInput
-                    value={nickname}
-                    onChangeText={setNickname}
-                    placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-                    placeholderTextColor="rgba(77, 53, 34, 0.45)"
-                    style={styles.nicknameInput}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="done"
-                    maxLength={24}
-                    onFocus={() => {
-                      requestAnimationFrame(() => {
-                        scrollRef.current?.scrollToEnd({ animated: true });
-                      });
-                    }}
-                  />
-                </View>
-              ) : null}
               <Pressable
                 onPress={handlePrimaryButtonPress}
-                disabled={submitting || (isLastStep && !canOpenSpace)}
+                disabled={submitting}
                 style={({ pressed }) => [
                   styles.primaryButtonWrap,
-                  (isLastStep && !canOpenSpace) || submitting ? styles.primaryDisabled : undefined,
+                  submitting ? styles.primaryDisabled : undefined,
                   pressed ? styles.primaryPressed : undefined,
                 ]}
               >
@@ -181,7 +133,7 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
               </Pressable>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -190,12 +142,14 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 10000,
+    elevation: 10000,
     backgroundColor: "#efe1c8",
   },
   safeArea: {
     flex: 1,
   },
-  keyboardAvoid: {
+  main: {
     flex: 1,
   },
   topBrandWrap: {
@@ -261,27 +215,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     paddingBottom: 6,
-  },
-  nicknameWrap: {
-    marginBottom: 10,
-    gap: 6,
-  },
-  nicknameLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "rgba(77, 53, 34, 0.9)",
-  },
-  nicknameInput: {
-    minHeight: 46,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(120, 53, 15, 0.24)",
-    backgroundColor: "rgba(255, 252, 245, 0.92)",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#2b1d15",
-    fontWeight: "500",
   },
   primaryButtonWrap: {
     borderRadius: 999,

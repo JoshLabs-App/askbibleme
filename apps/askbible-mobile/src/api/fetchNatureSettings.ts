@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { NatureSettingsV2 } from "../types/nature";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { readSyncedNatureSettings, resolveNatureResourcePackUri } from "../media/natureResourcePackSync";
 import { getBundledNatureVideoModule } from "../media/generated/bundled-nature-videos";
 
@@ -237,6 +238,7 @@ async function writeCachedNatureSettings(settings: NatureSettingsV2): Promise<vo
 
 /** 从 askbible.me（或联调本机）拉取 Web 真源场景配置。 */
 export async function fetchNatureSettingsFromRemote(): Promise<NatureSettingsV2 | null> {
+  if (!(await isNetworkAvailable())) return null;
   const primaryBase = getAskBibleBaseUrl().replace(/\/$/, "");
   const candidates = [primaryBase];
   if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {
@@ -260,17 +262,7 @@ export async function fetchNatureSettingsFromRemote(): Promise<NatureSettingsV2 
   return null;
 }
 
-export async function fetchNatureSettings(): Promise<NatureSettingsV2> {
-  if (isMobileBundledOnly()) {
-    return bundledSettings;
-  }
-  const remote = await fetchNatureSettingsFromRemote();
-  if (remote) {
-    const merged = mergeBundledScenesByRemoteOrder(remote);
-    await writeCachedNatureSettings(merged);
-    return merged;
-  }
-
+async function fetchNatureSettingsFromLocalSources(): Promise<NatureSettingsV2> {
   try {
     const localPack = await readSyncedNatureSettings();
     if (localPack?.videos?.length) {
@@ -285,5 +277,22 @@ export async function fetchNatureSettings(): Promise<NatureSettingsV2> {
     return mergeBundledScenesByRemoteOrder(cached);
   }
 
-  return bundledSettings;
+  return ensureNatureSettingsLocallyPlayable(bundledSettings);
+}
+
+export async function fetchNatureSettings(): Promise<NatureSettingsV2> {
+  if (isMobileBundledOnly()) {
+    return bundledSettings;
+  }
+  if (isMobileOfflineFirst()) {
+    return fetchNatureSettingsFromLocalSources();
+  }
+  const remote = await fetchNatureSettingsFromRemote();
+  if (remote) {
+    const merged = mergeBundledScenesByRemoteOrder(remote);
+    await writeCachedNatureSettings(merged);
+    return merged;
+  }
+
+  return fetchNatureSettingsFromLocalSources();
 }

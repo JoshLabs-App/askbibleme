@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppleBrandIcon } from "@/components/auth/OAuthBrandIcons";
+import { OAuthButtonLabel } from "@/components/auth/OAuthButtonLabel";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 
@@ -18,13 +19,13 @@ export function AppleSignInButton({ nextPath = "/" }: Props) {
   const onAppleSignIn = useCallback(async () => {
     if (pending) return;
     if (!isSupabaseAuthConfigured()) {
-      setError(t("auth.errorOAuth"));
+      setError(t("auth.errorOAuthApple"));
       return;
     }
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setError(t("auth.errorOAuth"));
+      setError(t("auth.errorOAuthApple"));
       return;
     }
 
@@ -41,7 +42,7 @@ export function AppleSignInButton({ nextPath = "/" }: Props) {
         options: { redirectTo },
       });
       if (oauthError) {
-        setError(oauthError.message || t("auth.errorOAuth"));
+        setError(oauthError.message || t("auth.errorOAuthApple"));
         setPending(false);
       }
     } catch {
@@ -58,15 +59,21 @@ export function AppleSignInButton({ nextPath = "/" }: Props) {
         type="button"
         onClick={() => void onAppleSignIn()}
         disabled={pending}
-        className="relative flex w-full items-center justify-center gap-2.5 rounded-lg border border-ink/14 bg-ink/[0.88] px-4 py-3 text-[15px] font-medium text-white transition hover:bg-ink/[0.94] active:scale-[0.99] disabled:opacity-50"
+        aria-label={t("auth.continueWithApple")}
+        className="relative flex min-h-[52px] w-full items-center justify-center rounded-lg border border-[rgba(43,29,21,0.14)] bg-[#2b1d15] px-4 py-3 text-[15px] font-medium text-white transition hover:bg-[#241810] active:scale-[0.99] disabled:opacity-50"
       >
         <span className="absolute left-4 flex h-[22px] w-[18px] items-center justify-center" aria-hidden>
           <AppleBrandIcon color="#ffffff" />
         </span>
-        {pending ? t("auth.appleSubmitting") : t("auth.continueWithApple")}
+        <OAuthButtonLabel
+          line1={t("auth.continueWithAppleLine1")}
+          line2={t("auth.continueWithAppleLine2")}
+          pending={pending}
+          pendingText={t("auth.appleSubmitting")}
+        />
       </button>
       {error ? (
-        <p className="mt-3 text-center text-[13px] text-red-300/95" role="alert">
+        <p className="mt-3 text-center text-[13px] text-red-700/90 dark:text-red-300/95" role="alert">
           {error}
         </p>
       ) : null}

@@ -5,6 +5,7 @@ export type AskbibleAuthUser = {
   id: string;
   email: string;
   name: string;
+  locale: string | null;
   isAdmin: boolean;
 };
 
@@ -35,6 +36,7 @@ export function toAskbibleAuthUser(user: User, profile?: AskbibleProfileRow | nu
     id: user.id,
     email: user.email || "",
     name,
+    locale: profile?.locale?.trim() || null,
     isAdmin: Boolean(profile?.is_admin),
   };
 }
@@ -77,6 +79,53 @@ export async function upsertAskbibleProfile(input: {
 
   const { error } = await admin.from("askbible_profiles").upsert(row, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
+}
+
+/** 登录后合并 OAuth / 客户端 locale 与已有 askbible_profiles（保留已有 display_name）。 */
+export async function ensureAskbibleMemberProfile(input: {
+  supabase: SupabaseClient;
+  user: User;
+  locale?: string;
+  displayName?: string;
+}): Promise<AskbibleProfileRow | null> {
+  const locale = input.locale?.trim().slice(0, 24) || "";
+  const oauthName = input.displayName?.trim() || "";
+  const metaName = displayNameFromUser(input.user);
+
+  let profile = await fetchAskbibleProfile(input.supabase, input.user.id);
+  if (!profile) {
+    try {
+      await upsertAskbibleProfile({
+        userId: input.user.id,
+        displayName: oauthName || metaName,
+        locale: locale || "zh",
+      });
+    } catch {
+      return null;
+    }
+    return fetchAskbibleProfile(input.supabase, input.user.id);
+  }
+
+  const resolvedName = profile.display_name?.trim() || oauthName || metaName;
+  const shouldUpdateName = !profile.display_name?.trim() && Boolean(oauthName || metaName);
+  const shouldUpdateLocale = Boolean(locale && locale !== (profile.locale ?? ""));
+
+  if (!shouldUpdateName && !shouldUpdateLocale) {
+    return profile;
+  }
+
+  try {
+    await upsertAskbibleProfile({
+      userId: input.user.id,
+      displayName: resolvedName,
+      ...(shouldUpdateLocale ? { locale } : {}),
+    });
+    profile = await fetchAskbibleProfile(input.supabase, input.user.id);
+  } catch {
+    // Keep existing profile row.
+  }
+
+  return profile;
 }
 
 export async function getAskbibleUserFromAccessToken(

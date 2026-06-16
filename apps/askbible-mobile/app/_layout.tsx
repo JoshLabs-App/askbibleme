@@ -1,11 +1,12 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { LogBox, NativeModules, Platform, StyleSheet } from "react-native";
+import { NativeModules, Platform, StyleSheet } from "react-native";
 import { AppLogoSplash } from "../src/shell/AppLogoSplash";
 import { ShellErrorBoundary } from "../src/shell/ShellErrorBoundary";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MemberAuthProvider } from "../src/auth/MemberAuthProvider";
+import { MemberReadingSyncBridge } from "../src/member-sync/MemberReadingSyncBridge";
 import { LocaleProvider } from "../src/i18n/LocaleProvider";
 import { MusicPlaybackProvider } from "../src/music/MusicPlaybackContext";
 import { clearStaleNavigationState } from "../src/shell/clearStaleNavigationState";
@@ -20,23 +21,10 @@ import { theme } from "../src/theme";
 import { OnboardingDevotionIntro } from "../src/onboarding/OnboardingDevotionIntro";
 import { subscribeOnboardingDevotionOpen } from "../src/onboarding/onboarding-devotion-gate";
 import { shouldShowOnboardingDevotionIntro } from "../src/onboarding/onboarding-devotion-prefs";
-import { bundledBibleTranslationsCatalog } from "../src/api/fetchBibleTranslationsCatalog";
-import { preloadPrimaryScriptureTranslation } from "../src/bible/scripture-translation-download";
-import { inferAppLocaleFromDevice } from "../src/i18n/config";
-import { resolveDefaultPrimaryTranslationId } from "../src/read/read-bible-translation-prefs";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
-
-if (__DEV__) {
-  LogBox.ignoreAllLogs(true);
-  LogBox.ignoreLogs([
-    "[expo-av]: Expo AV has been deprecated",
-    "Sending `onAnimatedValueUpdate` with no listeners registered",
-    "An error occurred while requiring the 'ExpoClipboard' module",
-  ]);
-}
 
 let androidFontSizeGuardInstalled = false;
 
@@ -110,21 +98,16 @@ export default function RootLayout() {
 
   const appReady = bootTimedOut || (navReady && fontsReady && onboardingReady);
 
-  useEffect(() => {
-    if (!appReady) return;
-    const index = bundledBibleTranslationsCatalog();
-    const primaryId = resolveDefaultPrimaryTranslationId(index, inferAppLocaleFromDevice());
-    void preloadPrimaryScriptureTranslation(primaryId);
-  }, [appReady]);
-
   return (
     <SafeAreaProvider>
+      <ShellErrorBoundary>
       <LocaleProvider>
       <MemberAuthProvider>
+      <MemberReadingSyncBridge />
       <TelemetryProvider>
       <ShellNavMenuProvider>
           {appReady ? (
-            <ShellErrorBoundary>
+            <>
             <MusicPlaybackProvider>
               <StatusBar style="dark" />
               <Stack
@@ -139,15 +122,29 @@ export default function RootLayout() {
                 <Stack.Screen name="scenes" options={{ headerShown: false, animation: "slide_from_right" }} />
                 <Stack.Screen name="relax" options={{ headerShown: false }} />
                 <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
-                <Stack.Screen name="register" options={{ headerShown: false, animation: "slide_from_right" }} />
-                <Stack.Screen name="login" options={{ headerShown: false, animation: "slide_from_right" }} />
+                <Stack.Screen
+                  name="register"
+                  options={{
+                    headerShown: false,
+                    animation: "slide_from_right",
+                    contentStyle: { flex: 1, backgroundColor: "transparent" },
+                  }}
+                />
+                <Stack.Screen
+                  name="login"
+                  options={{
+                    headerShown: false,
+                    animation: "slide_from_right",
+                    contentStyle: { flex: 1, backgroundColor: "transparent" },
+                  }}
+                />
               </Stack>
               <ShellMenuButton />
               <ShellInsetClock />
               <ShellNavDrawer />
               {showOnboarding ? <OnboardingDevotionIntro onComplete={() => setShowOnboarding(false)} /> : null}
             </MusicPlaybackProvider>
-            </ShellErrorBoundary>
+            </>
           ) : (
             <AppLogoSplash />
           )}
@@ -155,6 +152,7 @@ export default function RootLayout() {
       </TelemetryProvider>
       </MemberAuthProvider>
       </LocaleProvider>
+      </ShellErrorBoundary>
     </SafeAreaProvider>
   );
 }

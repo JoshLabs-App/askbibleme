@@ -15,6 +15,31 @@ import {
 } from "../read/read-audio-package-download";
 import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 
+function scriptureChapterAudioCacheKey(args: {
+  translationId: string;
+  bookId: string;
+  chapter: number;
+  voiceId?: CuvChapterAudioVoiceId;
+}): string {
+  return `${args.translationId}:${args.bookId}:${args.chapter}:${args.voiceId ?? "mandarin"}`;
+}
+
+const resolvedSrcPrefetch = new Map<string, string>();
+
+/** 空闲时预解析下一章音频 URL，不创建 Sound、不播放。 */
+export async function prefetchScriptureChapterAudioSrc(args: {
+  translationId: string;
+  bookId: string;
+  chapter: number;
+  bookName: string;
+  voiceId?: CuvChapterAudioVoiceId;
+}): Promise<void> {
+  const key = scriptureChapterAudioCacheKey(args);
+  if (resolvedSrcPrefetch.has(key)) return;
+  const src = await resolveScripturePlayableSrcForChapter(args);
+  if (src) resolvedSrcPrefetch.set(key, src);
+}
+
 function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string): boolean {
   const src = cachedSrc.trim().toLowerCase();
   if (!src) return true;
@@ -102,13 +127,20 @@ export async function resolveScripturePlayableSrcForChapter(args: {
   voiceId?: CuvChapterAudioVoiceId;
   cachedSrc?: string | null;
 }): Promise<string | null> {
+  const cacheKey = scriptureChapterAudioCacheKey(args);
   const downloaded = await resolveDownloadedChapterAudioUri({
     translationId: args.translationId,
     voiceId: args.voiceId ?? "mandarin",
     bookId: args.bookId,
     chapter: args.chapter,
   });
-  if (downloaded) return downloaded;
+  if (downloaded) {
+    resolvedSrcPrefetch.set(cacheKey, downloaded);
+    return downloaded;
+  }
+
+  const prefetched = resolvedSrcPrefetch.get(cacheKey);
+  if (prefetched) return prefetched;
 
   const cached = args.cachedSrc?.trim();
   if (cached && !shouldIgnoreCachedScriptureSrc(cached, args.translationId)) return cached;
@@ -121,7 +153,10 @@ export async function resolveScripturePlayableSrcForChapter(args: {
     bookName: args.bookName,
     voiceId: args.voiceId,
   });
-  if (bundledSync) return bundledSync;
+  if (bundledSync) {
+    resolvedSrcPrefetch.set(cacheKey, bundledSync);
+    return bundledSync;
+  }
   if (!isMobileScriptureAudioStreamAllowed()) return null;
 
   const resolved = await resolveChapterAudioPlayableSrc({
@@ -141,14 +176,17 @@ export async function resolveScripturePlayableSrcForChapter(args: {
         remoteSrc: resolved.src,
       });
     }
+    resolvedSrcPrefetch.set(cacheKey, resolved.src);
     return resolved.src;
   }
 
-  return buildChapterAudioPlayableSrcSync({
+  const fallback = buildChapterAudioPlayableSrcSync({
     translationId: args.translationId,
     bookId: args.bookId,
     chapter: args.chapter,
     bookName: args.bookName,
     voiceId: args.voiceId,
   });
+  if (fallback) resolvedSrcPrefetch.set(cacheKey, fallback);
+  return fallback;
 }

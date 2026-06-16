@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-# EAS 云端 Android 构建（备用）。默认请用本机：npm run mobile:build:android:production
+# 已弃用：EAS 云端 Android 构建。默认请用本机：npm run mobile:build:android:production
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo "提示：默认已改为本机 Gradle 构建。云端 EAS 仅作备用。"
-echo "本机 AAB：npm run mobile:build:android:production"
+echo "⚠️  此脚本为 EAS 云端构建（已弃用）。常规发版请用："
+echo "    npm run mobile:build:android:production"
+echo ""
+if [[ "${EAS_CLOUD_BUILD_OK:-}" != "1" ]]; then
+  echo "已取消。若确需云端构建，请设 EAS_CLOUD_BUILD_OK=1"
+  exit 1
+fi
+
+echo "提示：默认已改为本机 Gradle 构建。"
 echo ""
 
 if ! npx eas whoami >/dev/null 2>&1; then

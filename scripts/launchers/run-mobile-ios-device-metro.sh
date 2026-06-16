@@ -33,10 +33,10 @@ npm run dev >"$WEB_LOG" 2>&1 &
 WEB_PID=$!
 
 METRO_LOG="${TMPDIR:-/tmp}/askbible-metro-device.log"
-echo "→ [2/3] 后台启动 Metro（--lan）…  日志: tail -f $METRO_LOG"
+echo "→ [2/3] 后台启动 Metro（--tunnel，真机可连）…  日志: tail -f $METRO_LOG"
 
 cd "$ROOT/apps/askbible-mobile"
-npx expo start --lan --clear >"$METRO_LOG" 2>&1 &
+npx expo start --tunnel --clear >"$METRO_LOG" 2>&1 &
 METRO_PID=$!
 
 cleanup() {
@@ -82,23 +82,50 @@ else
   echo "    ✓ Metro 已就绪"
 fi
 
+TUNNEL_URL=""
+for _ in $(seq 1 60); do
+  TUNNEL_URL="$(curl -sf http://127.0.0.1:4040/api/tunnels 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(next((t['public_url'] for t in d.get('tunnels',[]) if t.get('proto')=='http'), ''))" 2>/dev/null || true)"
+  if [ -n "$TUNNEL_URL" ]; then
+    echo "    ✓ Tunnel: $TUNNEL_URL"
+    break
+  fi
+  sleep 1
+done
+
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 if [ -n "$LAN_IP" ]; then
-  echo "    真机应能访问: http://${LAN_IP}:8081"
   export REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP"
 fi
 
+IOS_DEVICE="${IOS_DEVICE:-}"
+if [ -z "$IOS_DEVICE" ]; then
+  IOS_DEVICE="$(xcrun devicectl list devices 2>/dev/null | awk '/available \(paired\)/ { print $1; exit }' || true)"
+fi
+if [ -z "$IOS_DEVICE" ]; then
+  echo "✗ 未找到已配对且在线的 iPhone。请连接设备并在「设置 → 通用 → VPN 与设备管理」信任开发者证书。"
+  exit 1
+fi
+
 echo ""
-echo "→ [3/3] expo run:ios --device（Debug；装完后勿关 Metro）"
+echo "→ [3/3] expo run:ios --device ${IOS_DEVICE}（Debug；装完后勿关 Metro）"
 echo ""
 
-npx expo run:ios --device
+npx expo run:ios --device "$IOS_DEVICE" --no-bundler
+
+if [ -n "$TUNNEL_URL" ]; then
+  ENC="$(python3 -c "import urllib.parse; print(urllib.parse.quote('$TUNNEL_URL', safe=''))")"
+  echo ""
+  echo "→ 用 Tunnel 启动 App（避免 No script URL 红屏）…"
+  xcrun devicectl device process launch --device "$IOS_DEVICE" me.askbible --payload-url "askbible://expo-development-client/?url=${ENC}" 2>/dev/null || true
+fi
 
 echo ""
 echo "✓ 若 App 仍报 No script URL："
-echo "  - 确认 Metro 在跑（tail -f $METRO_LOG）"
-echo "  - iPhone 与 Mac 同一 Wi‑Fi，关闭 VPN"
-echo "  - 摇一摇 → Configure Bundler → ${LAN_IP:-Mac局域网IP}:8081"
+echo "  - 确认 Metro tunnel 在跑（tail -f $METRO_LOG）"
+if [ -n "$TUNNEL_URL" ]; then
+  ENC="$(python3 -c "import urllib.parse; print(urllib.parse.quote('$TUNNEL_URL', safe=''))")"
+  echo "  - Safari 打开: askbible://expo-development-client/?url=${ENC}"
+fi
 echo "  - 或改装独立版: npm run mobile:ios:device"
 echo ""
 echo "→ Metro 保持运行 (pid $METRO_PID)。结束请 Control+C"

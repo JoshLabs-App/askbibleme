@@ -16,6 +16,15 @@ export function getAdminGateSecret(): string {
   return process.env.ADMIN_GATE_SECRET?.trim() || "selah-admin-gate-dev";
 }
 
+/**
+ * 本地 `next dev` 默认免登录进 `/admin`（与 Studio 磁盘写入默认可用一致）。
+ * 设 `ADMIN_REQUIRE_LOGIN=1` 可在开发环境继续测登录流程。
+ */
+export function isAdminLoginBypassedInDevelopment(): boolean {
+  if (process.env.NODE_ENV !== "development") return false;
+  return process.env.ADMIN_REQUIRE_LOGIN?.trim() !== "1";
+}
+
 /** Edge / Node 均可用 */
 export async function computeAdminGateToken(): Promise<string> {
   const secret = getAdminGateSecret();

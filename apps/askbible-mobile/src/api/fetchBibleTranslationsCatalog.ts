@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { BUNDLED_SCRIPTURE_TRANSLATION_IDS } from "../bible/bundled-scripture-translations";
 import type { BibleTranslationMeta, BibleTranslationsIndex } from "../bible/translations-types";
 
 const CATALOG_CACHE_KEY = "askbible.mobile.bible-translations-catalog.v1";
 const CATALOG_CACHE_TTL_MS = 60_000;
+const REMOTE_CATALOG_BASE = "https://askbible.me";
 
 const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
   translations: [
@@ -37,6 +38,7 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
 type CachedCatalog = {
   fetchedAt: number;
   index: BibleTranslationsIndex;
+  baseUrl?: string;
 };
 
 function isCatalogShape(raw: unknown): raw is BibleTranslationsIndex {
@@ -45,7 +47,11 @@ function isCatalogShape(raw: unknown): raw is BibleTranslationsIndex {
   return Array.isArray(o.translations);
 }
 
-function normalizeCatalog(raw: unknown): BibleTranslationsIndex | null {
+function isSparseCatalog(index: BibleTranslationsIndex | null | undefined): boolean {
+  return !index || index.translations.length <= OFFLINE_BUNDLED_INDEX.translations.length;
+}
+
+function normalizeCatalog(raw: unknown, catalogBaseUrl: string): BibleTranslationsIndex | null {
   if (!isCatalogShape(raw)) return null;
   const translations = raw.translations
     .filter((t): t is BibleTranslationMeta => Boolean(t?.id))
@@ -56,7 +62,12 @@ function normalizeCatalog(raw: unknown): BibleTranslationsIndex | null {
       language: String(t.language || "").trim(),
       bundled: Boolean(t.bundled) || (BUNDLED_SCRIPTURE_TRANSLATION_IDS as readonly string[]).includes(t.id),
       bytes: typeof t.bytes === "number" && t.bytes >= 0 ? t.bytes : undefined,
-      downloadUrl: typeof t.downloadUrl === "string" ? t.downloadUrl : t.downloadUrl === null ? null : undefined,
+      downloadUrl:
+        typeof t.downloadUrl === "string" && t.downloadUrl.trim()
+          ? toAbsoluteUrl(catalogBaseUrl, t.downloadUrl.trim())
+          : t.downloadUrl === null
+            ? null
+            : undefined,
     }))
     .filter((t) => Boolean(t.id));
   const defaultTranslationId =
@@ -79,15 +90,17 @@ async function readCachedCatalog(maxAgeMs?: number): Promise<BibleTranslationsIn
     const parsed = JSON.parse(raw) as CachedCatalog;
     if (!parsed?.index) return null;
     if (maxAgeMs != null && Date.now() - parsed.fetchedAt > maxAgeMs) return null;
-    return normalizeCatalog(parsed.index);
+    const normalized = normalizeCatalog(parsed.index, parsed.baseUrl || REMOTE_CATALOG_BASE);
+    if (isSparseCatalog(normalized)) return null;
+    return normalized;
   } catch {
     return null;
   }
 }
 
-async function writeCachedCatalog(index: BibleTranslationsIndex): Promise<void> {
+async function writeCachedCatalog(index: BibleTranslationsIndex, baseUrl: string): Promise<void> {
   try {
-    const payload: CachedCatalog = { fetchedAt: Date.now(), index };
+    const payload: CachedCatalog = { fetchedAt: Date.now(), index, baseUrl };
     await AsyncStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(payload));
   } catch {
     /* ignore */
@@ -99,20 +112,52 @@ function catalogCandidates(base: string): string[] {
   return [`${trimmed}/api/mobile/bible/translations`, `${trimmed}/api/home/bible-translations-catalog`];
 }
 
-async function fetchRemoteCatalog(): Promise<BibleTranslationsIndex | null> {
-  const base = getAskBibleBaseUrl();
-  for (const url of catalogCandidates(base)) {
+function remoteCatalogUrls(): string[] {
+  const urls: string[] = [];
+  const addBase = (base: string) => {
+    for (const url of catalogCandidates(base)) {
+      if (!urls.includes(url)) urls.push(url);
+    }
+  };
+  addBase(REMOTE_CATALOG_BASE);
+  const configured = getAskBibleBaseUrl();
+  if (!/askbible\.me/i.test(configured)) addBase(configured);
+  return urls;
+}
+
+async function fetchRemoteCatalogOnce(): Promise<BibleTranslationsIndex | null> {
+  for (const url of remoteCatalogUrls()) {
     try {
-      const res = await fetchWithTimeout(url, { timeoutMs: 12_000 });
+      const res = await fetchWithTimeout(url, {
+        timeoutMs: 15_000,
+        headers: { Accept: "application/json" },
+      });
       if (!res.ok) continue;
       const json = (await res.json()) as unknown;
-      const normalized = normalizeCatalog(json);
-      if (normalized && normalized.translations.length > 0) {
-        await writeCachedCatalog(normalized);
+      let catalogBase = REMOTE_CATALOG_BASE;
+      try {
+        catalogBase = new URL(url).origin;
+      } catch {
+        /* keep default */
+      }
+      const normalized = normalizeCatalog(json, catalogBase);
+      if (normalized && !isSparseCatalog(normalized)) {
+        await writeCachedCatalog(normalized, catalogBase);
         return normalized;
       }
     } catch {
       /* try next */
+    }
+  }
+  return null;
+}
+
+async function fetchRemoteCatalog(): Promise<BibleTranslationsIndex | null> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const index = await fetchRemoteCatalogOnce();
+    if (index) return index;
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
     }
   }
   return null;
@@ -141,6 +186,15 @@ export async function fetchBibleTranslationsCatalogFresh(): Promise<BibleTransla
   const cached = await readCachedCatalog();
   if (cached) return cached;
   return OFFLINE_BUNDLED_INDEX;
+}
+
+/** 清除可能只含内置 3 译本的旧缓存（升级目录拉取逻辑后一次性修复）。 */
+export async function clearBibleTranslationsCatalogCache(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(CATALOG_CACHE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function translationMetaFromCatalog(

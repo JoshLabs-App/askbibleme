@@ -15,7 +15,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "Ecclesiastes 3:1-8"
+          "label": "Ecclesiastes 3:1-8",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -26,7 +27,8 @@
           "bookId": "PSA",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Psalm 1"
+          "label": "Psalm 1",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -37,7 +39,8 @@
           "bookId": "PSA",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Psalm 2"
+          "label": "Psalm 2",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -48,7 +51,8 @@
           "bookId": "PSA",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Psalm 3"
+          "label": "Psalm 3",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -59,7 +63,8 @@
           "bookId": "PSA",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Psalm 4"
+          "label": "Psalm 4",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -70,7 +75,8 @@
           "bookId": "PSA",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "Psalm 5"
+          "label": "Psalm 5",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -81,7 +87,8 @@
           "bookId": "PSA",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Psalm 6"
+          "label": "Psalm 6",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -92,7 +99,8 @@
           "bookId": "PSA",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Psalm 7"
+          "label": "Psalm 7",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -103,7 +111,8 @@
           "bookId": "PSA",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Psalm 8"
+          "label": "Psalm 8",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -114,7 +123,8 @@
           "bookId": "PSA",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "Psalm 9"
+          "label": "Psalm 9",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -125,7 +135,8 @@
           "bookId": "PSA",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Psalm 10"
+          "label": "Psalm 10",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -136,7 +147,8 @@
           "bookId": "PSA",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Psalm 11"
+          "label": "Psalm 11",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -147,7 +159,8 @@
           "bookId": "PSA",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Psalm 12"
+          "label": "Psalm 12",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -158,7 +171,8 @@
           "bookId": "PSA",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Psalm 13"
+          "label": "Psalm 13",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -169,7 +183,8 @@
           "bookId": "PSA",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Psalm 14"
+          "label": "Psalm 14",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -180,7 +195,8 @@
           "bookId": "PSA",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Psalm 15"
+          "label": "Psalm 15",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -191,7 +207,8 @@
           "bookId": "PSA",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Psalm 16"
+          "label": "Psalm 16",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -202,7 +219,8 @@
           "bookId": "PSA",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "Psalm 17"
+          "label": "Psalm 17",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -213,7 +231,8 @@
           "bookId": "PSA",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "Psalm 18"
+          "label": "Psalm 18",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -224,7 +243,8 @@
           "bookId": "PSA",
           "startChapter": 19,
           "endChapter": 19,
-          "label": "Psalm 19"
+          "label": "Psalm 19",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -235,7 +255,8 @@
           "bookId": "PSA",
           "startChapter": 20,
           "endChapter": 20,
-          "label": "Psalm 20"
+          "label": "Psalm 20",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -246,7 +267,8 @@
           "bookId": "PSA",
           "startChapter": 21,
           "endChapter": 21,
-          "label": "Psalm 21"
+          "label": "Psalm 21",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -257,7 +279,8 @@
           "bookId": "PSA",
           "startChapter": 22,
           "endChapter": 22,
-          "label": "Psalm 22"
+          "label": "Psalm 22",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -268,7 +291,8 @@
           "bookId": "PSA",
           "startChapter": 23,
           "endChapter": 23,
-          "label": "Psalm 23"
+          "label": "Psalm 23",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -279,7 +303,8 @@
           "bookId": "PSA",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Psalm 24"
+          "label": "Psalm 24",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -290,7 +315,8 @@
           "bookId": "PSA",
           "startChapter": 25,
           "endChapter": 25,
-          "label": "Psalm 25"
+          "label": "Psalm 25",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -301,7 +327,8 @@
           "bookId": "PSA",
           "startChapter": 26,
           "endChapter": 26,
-          "label": "Psalm 26"
+          "label": "Psalm 26",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -312,7 +339,8 @@
           "bookId": "PSA",
           "startChapter": 27,
           "endChapter": 27,
-          "label": "Psalm 27"
+          "label": "Psalm 27",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -323,7 +351,8 @@
           "bookId": "PSA",
           "startChapter": 28,
           "endChapter": 28,
-          "label": "Psalm 28"
+          "label": "Psalm 28",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -334,7 +363,8 @@
           "bookId": "PSA",
           "startChapter": 29,
           "endChapter": 29,
-          "label": "Psalm 29"
+          "label": "Psalm 29",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -345,7 +375,8 @@
           "bookId": "PSA",
           "startChapter": 30,
           "endChapter": 30,
-          "label": "Psalm 30"
+          "label": "Psalm 30",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -356,7 +387,8 @@
           "bookId": "PSA",
           "startChapter": 31,
           "endChapter": 31,
-          "label": "Psalm 31"
+          "label": "Psalm 31",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -367,7 +399,8 @@
           "bookId": "PSA",
           "startChapter": 32,
           "endChapter": 32,
-          "label": "Psalm 32"
+          "label": "Psalm 32",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -378,7 +411,8 @@
           "bookId": "PSA",
           "startChapter": 33,
           "endChapter": 33,
-          "label": "Psalm 33"
+          "label": "Psalm 33",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -389,7 +423,8 @@
           "bookId": "PSA",
           "startChapter": 34,
           "endChapter": 34,
-          "label": "Psalm 34"
+          "label": "Psalm 34",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -400,7 +435,8 @@
           "bookId": "PSA",
           "startChapter": 35,
           "endChapter": 35,
-          "label": "Psalm 35"
+          "label": "Psalm 35",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -411,7 +447,8 @@
           "bookId": "PSA",
           "startChapter": 36,
           "endChapter": 36,
-          "label": "Psalm 36"
+          "label": "Psalm 36",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -422,7 +459,8 @@
           "bookId": "PSA",
           "startChapter": 37,
           "endChapter": 37,
-          "label": "Psalm 37"
+          "label": "Psalm 37",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -433,7 +471,8 @@
           "bookId": "PSA",
           "startChapter": 38,
           "endChapter": 38,
-          "label": "Psalm 38"
+          "label": "Psalm 38",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -444,7 +483,8 @@
           "bookId": "PSA",
           "startChapter": 39,
           "endChapter": 39,
-          "label": "Psalm 39"
+          "label": "Psalm 39",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -455,7 +495,8 @@
           "bookId": "PSA",
           "startChapter": 40,
           "endChapter": 40,
-          "label": "Psalm 40"
+          "label": "Psalm 40",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -466,7 +507,8 @@
           "bookId": "PSA",
           "startChapter": 41,
           "endChapter": 41,
-          "label": "Psalm 41"
+          "label": "Psalm 41",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -477,7 +519,8 @@
           "bookId": "PSA",
           "startChapter": 42,
           "endChapter": 43,
-          "label": "Psalm 42-43"
+          "label": "Psalm 42-43",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -488,7 +531,8 @@
           "bookId": "PSA",
           "startChapter": 44,
           "endChapter": 44,
-          "label": "Psalm 44"
+          "label": "Psalm 44",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -499,7 +543,8 @@
           "bookId": "PSA",
           "startChapter": 45,
           "endChapter": 45,
-          "label": "Psalm 45"
+          "label": "Psalm 45",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -510,7 +555,8 @@
           "bookId": "PSA",
           "startChapter": 46,
           "endChapter": 46,
-          "label": "Psalm 46"
+          "label": "Psalm 46",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -521,7 +567,8 @@
           "bookId": "PSA",
           "startChapter": 47,
           "endChapter": 47,
-          "label": "Psalm 47"
+          "label": "Psalm 47",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -532,7 +579,8 @@
           "bookId": "PSA",
           "startChapter": 48,
           "endChapter": 48,
-          "label": "Psalm 48"
+          "label": "Psalm 48",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -543,7 +591,8 @@
           "bookId": "PSA",
           "startChapter": 49,
           "endChapter": 49,
-          "label": "Psalm 49"
+          "label": "Psalm 49",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -554,7 +603,8 @@
           "bookId": "PSA",
           "startChapter": 50,
           "endChapter": 50,
-          "label": "Psalm 50"
+          "label": "Psalm 50",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -565,7 +615,8 @@
           "bookId": "PSA",
           "startChapter": 51,
           "endChapter": 51,
-          "label": "Psalm 51"
+          "label": "Psalm 51",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -576,7 +627,8 @@
           "bookId": "PSA",
           "startChapter": 52,
           "endChapter": 52,
-          "label": "Psalm 52"
+          "label": "Psalm 52",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -587,7 +639,8 @@
           "bookId": "PSA",
           "startChapter": 53,
           "endChapter": 53,
-          "label": "Psalm 53"
+          "label": "Psalm 53",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -598,7 +651,8 @@
           "bookId": "PSA",
           "startChapter": 54,
           "endChapter": 54,
-          "label": "Psalm 54"
+          "label": "Psalm 54",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -609,7 +663,8 @@
           "bookId": "PSA",
           "startChapter": 55,
           "endChapter": 55,
-          "label": "Psalm 55"
+          "label": "Psalm 55",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -620,7 +675,8 @@
           "bookId": "PSA",
           "startChapter": 56,
           "endChapter": 56,
-          "label": "Psalm 56"
+          "label": "Psalm 56",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -631,7 +687,8 @@
           "bookId": "PSA",
           "startChapter": 57,
           "endChapter": 57,
-          "label": "Psalm 57"
+          "label": "Psalm 57",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -642,7 +699,8 @@
           "bookId": "PSA",
           "startChapter": 58,
           "endChapter": 58,
-          "label": "Psalm 58"
+          "label": "Psalm 58",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -653,7 +711,8 @@
           "bookId": "PSA",
           "startChapter": 59,
           "endChapter": 59,
-          "label": "Psalm 59"
+          "label": "Psalm 59",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -664,7 +723,8 @@
           "bookId": "PSA",
           "startChapter": 60,
           "endChapter": 60,
-          "label": "Psalm 60"
+          "label": "Psalm 60",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -675,7 +735,8 @@
           "bookId": "PSA",
           "startChapter": 61,
           "endChapter": 61,
-          "label": "Psalm 61"
+          "label": "Psalm 61",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -686,7 +747,8 @@
           "bookId": "PSA",
           "startChapter": 62,
           "endChapter": 62,
-          "label": "Psalm 62"
+          "label": "Psalm 62",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -697,7 +759,8 @@
           "bookId": "PSA",
           "startChapter": 63,
           "endChapter": 63,
-          "label": "Psalm 63"
+          "label": "Psalm 63",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -708,7 +771,8 @@
           "bookId": "PSA",
           "startChapter": 64,
           "endChapter": 64,
-          "label": "Psalm 64"
+          "label": "Psalm 64",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -719,7 +783,8 @@
           "bookId": "PSA",
           "startChapter": 65,
           "endChapter": 65,
-          "label": "Psalm 65"
+          "label": "Psalm 65",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -730,7 +795,8 @@
           "bookId": "PSA",
           "startChapter": 66,
           "endChapter": 66,
-          "label": "Psalm 66"
+          "label": "Psalm 66",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -741,7 +807,8 @@
           "bookId": "PSA",
           "startChapter": 67,
           "endChapter": 67,
-          "label": "Psalm 67"
+          "label": "Psalm 67",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -752,7 +819,8 @@
           "bookId": "PSA",
           "startChapter": 68,
           "endChapter": 68,
-          "label": "Psalm 68"
+          "label": "Psalm 68",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -763,7 +831,8 @@
           "bookId": "PSA",
           "startChapter": 69,
           "endChapter": 69,
-          "label": "Psalm 69"
+          "label": "Psalm 69",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -774,7 +843,8 @@
           "bookId": "PSA",
           "startChapter": 70,
           "endChapter": 70,
-          "label": "Psalm 70"
+          "label": "Psalm 70",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -785,7 +855,8 @@
           "bookId": "PSA",
           "startChapter": 71,
           "endChapter": 71,
-          "label": "Psalm 71"
+          "label": "Psalm 71",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -796,7 +867,8 @@
           "bookId": "PSA",
           "startChapter": 72,
           "endChapter": 72,
-          "label": "Psalm 72"
+          "label": "Psalm 72",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -807,7 +879,8 @@
           "bookId": "PSA",
           "startChapter": 73,
           "endChapter": 73,
-          "label": "Psalm 73"
+          "label": "Psalm 73",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -818,7 +891,8 @@
           "bookId": "PSA",
           "startChapter": 74,
           "endChapter": 74,
-          "label": "Psalm 74"
+          "label": "Psalm 74",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -829,7 +903,8 @@
           "bookId": "PSA",
           "startChapter": 75,
           "endChapter": 75,
-          "label": "Psalm 75"
+          "label": "Psalm 75",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -840,7 +915,8 @@
           "bookId": "PSA",
           "startChapter": 76,
           "endChapter": 76,
-          "label": "Psalm 76"
+          "label": "Psalm 76",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -851,7 +927,8 @@
           "bookId": "PSA",
           "startChapter": 77,
           "endChapter": 77,
-          "label": "Psalm 77"
+          "label": "Psalm 77",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -862,7 +939,8 @@
           "bookId": "PSA",
           "startChapter": 78,
           "endChapter": 78,
-          "label": "Psalm 78"
+          "label": "Psalm 78",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -873,7 +951,8 @@
           "bookId": "PSA",
           "startChapter": 79,
           "endChapter": 79,
-          "label": "Psalm 79"
+          "label": "Psalm 79",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -884,7 +963,8 @@
           "bookId": "PSA",
           "startChapter": 80,
           "endChapter": 80,
-          "label": "Psalm 80"
+          "label": "Psalm 80",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -895,7 +975,8 @@
           "bookId": "PSA",
           "startChapter": 81,
           "endChapter": 81,
-          "label": "Psalm 81"
+          "label": "Psalm 81",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -906,7 +987,8 @@
           "bookId": "PSA",
           "startChapter": 82,
           "endChapter": 82,
-          "label": "Psalm 82"
+          "label": "Psalm 82",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -917,7 +999,8 @@
           "bookId": "PSA",
           "startChapter": 83,
           "endChapter": 83,
-          "label": "Psalm 83"
+          "label": "Psalm 83",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -928,7 +1011,8 @@
           "bookId": "PSA",
           "startChapter": 84,
           "endChapter": 84,
-          "label": "Psalm 84"
+          "label": "Psalm 84",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -939,7 +1023,8 @@
           "bookId": "PSA",
           "startChapter": 85,
           "endChapter": 85,
-          "label": "Psalm 85"
+          "label": "Psalm 85",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -950,7 +1035,8 @@
           "bookId": "PSA",
           "startChapter": 86,
           "endChapter": 86,
-          "label": "Psalm 86"
+          "label": "Psalm 86",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -961,7 +1047,8 @@
           "bookId": "PSA",
           "startChapter": 87,
           "endChapter": 87,
-          "label": "Psalm 87"
+          "label": "Psalm 87",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -972,7 +1059,8 @@
           "bookId": "PSA",
           "startChapter": 88,
           "endChapter": 88,
-          "label": "Psalm 88"
+          "label": "Psalm 88",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -983,7 +1071,8 @@
           "bookId": "PSA",
           "startChapter": 89,
           "endChapter": 89,
-          "label": "Psalm 89"
+          "label": "Psalm 89",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -994,7 +1083,8 @@
           "bookId": "PSA",
           "startChapter": 90,
           "endChapter": 90,
-          "label": "Psalm 90"
+          "label": "Psalm 90",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1005,7 +1095,8 @@
           "bookId": "PSA",
           "startChapter": 91,
           "endChapter": 91,
-          "label": "Psalm 91"
+          "label": "Psalm 91",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1016,7 +1107,8 @@
           "bookId": "PSA",
           "startChapter": 92,
           "endChapter": 92,
-          "label": "Psalm 92"
+          "label": "Psalm 92",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1027,7 +1119,8 @@
           "bookId": "PSA",
           "startChapter": 93,
           "endChapter": 93,
-          "label": "Psalm 93"
+          "label": "Psalm 93",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1038,7 +1131,8 @@
           "bookId": "PSA",
           "startChapter": 94,
           "endChapter": 94,
-          "label": "Psalm 94"
+          "label": "Psalm 94",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1049,7 +1143,8 @@
           "bookId": "PSA",
           "startChapter": 95,
           "endChapter": 95,
-          "label": "Psalm 95"
+          "label": "Psalm 95",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1060,7 +1155,8 @@
           "bookId": "PSA",
           "startChapter": 96,
           "endChapter": 96,
-          "label": "Psalm 96"
+          "label": "Psalm 96",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1071,7 +1167,8 @@
           "bookId": "PSA",
           "startChapter": 97,
           "endChapter": 97,
-          "label": "Psalm 97"
+          "label": "Psalm 97",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1082,7 +1179,8 @@
           "bookId": "PSA",
           "startChapter": 98,
           "endChapter": 98,
-          "label": "Psalm 98"
+          "label": "Psalm 98",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1093,7 +1191,8 @@
           "bookId": "PSA",
           "startChapter": 99,
           "endChapter": 99,
-          "label": "Psalm 99"
+          "label": "Psalm 99",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1104,7 +1203,8 @@
           "bookId": "PSA",
           "startChapter": 100,
           "endChapter": 100,
-          "label": "Psalm 100"
+          "label": "Psalm 100",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1115,7 +1215,8 @@
           "bookId": "PSA",
           "startChapter": 101,
           "endChapter": 101,
-          "label": "Psalm 101"
+          "label": "Psalm 101",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1126,7 +1227,8 @@
           "bookId": "PSA",
           "startChapter": 102,
           "endChapter": 102,
-          "label": "Psalm 102"
+          "label": "Psalm 102",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1137,7 +1239,8 @@
           "bookId": "PSA",
           "startChapter": 103,
           "endChapter": 103,
-          "label": "Psalm 103"
+          "label": "Psalm 103",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1148,7 +1251,8 @@
           "bookId": "PSA",
           "startChapter": 104,
           "endChapter": 104,
-          "label": "Psalm 104"
+          "label": "Psalm 104",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1159,7 +1263,8 @@
           "bookId": "PSA",
           "startChapter": 105,
           "endChapter": 105,
-          "label": "Psalm 105"
+          "label": "Psalm 105",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1170,7 +1275,8 @@
           "bookId": "PSA",
           "startChapter": 106,
           "endChapter": 106,
-          "label": "Psalm 106"
+          "label": "Psalm 106",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1181,7 +1287,8 @@
           "bookId": "PSA",
           "startChapter": 107,
           "endChapter": 107,
-          "label": "Psalm 107"
+          "label": "Psalm 107",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1192,7 +1299,8 @@
           "bookId": "PSA",
           "startChapter": 108,
           "endChapter": 108,
-          "label": "Psalm 108"
+          "label": "Psalm 108",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1203,7 +1311,8 @@
           "bookId": "PSA",
           "startChapter": 109,
           "endChapter": 109,
-          "label": "Psalm 109"
+          "label": "Psalm 109",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1214,7 +1323,8 @@
           "bookId": "PSA",
           "startChapter": 110,
           "endChapter": 110,
-          "label": "Psalm 110"
+          "label": "Psalm 110",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1225,7 +1335,8 @@
           "bookId": "PSA",
           "startChapter": 111,
           "endChapter": 111,
-          "label": "Psalm 111"
+          "label": "Psalm 111",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1236,7 +1347,8 @@
           "bookId": "PSA",
           "startChapter": 112,
           "endChapter": 112,
-          "label": "Psalm 112"
+          "label": "Psalm 112",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1247,7 +1359,8 @@
           "bookId": "PSA",
           "startChapter": 113,
           "endChapter": 113,
-          "label": "Psalm 113"
+          "label": "Psalm 113",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1258,7 +1371,8 @@
           "bookId": "PSA",
           "startChapter": 114,
           "endChapter": 114,
-          "label": "Psalm 114"
+          "label": "Psalm 114",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1269,7 +1383,8 @@
           "bookId": "PSA",
           "startChapter": 115,
           "endChapter": 115,
-          "label": "Psalm 115"
+          "label": "Psalm 115",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1280,7 +1395,8 @@
           "bookId": "PSA",
           "startChapter": 116,
           "endChapter": 116,
-          "label": "Psalm 116"
+          "label": "Psalm 116",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1291,7 +1407,8 @@
           "bookId": "PSA",
           "startChapter": 117,
           "endChapter": 117,
-          "label": "Psalm 117"
+          "label": "Psalm 117",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1302,7 +1419,8 @@
           "bookId": "PSA",
           "startChapter": 118,
           "endChapter": 118,
-          "label": "Psalm 118"
+          "label": "Psalm 118",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1315,7 +1433,8 @@
           "endChapter": 119,
           "startVerse": 1,
           "endVerse": 88,
-          "label": "Psalm 119:1-88"
+          "label": "Psalm 119:1-88",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1328,7 +1447,8 @@
           "endChapter": 119,
           "startVerse": 89,
           "endVerse": 176,
-          "label": "Psalm 119:89-176"
+          "label": "Psalm 119:89-176",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1339,7 +1459,8 @@
           "bookId": "PSA",
           "startChapter": 120,
           "endChapter": 120,
-          "label": "Psalm 120"
+          "label": "Psalm 120",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1350,7 +1471,8 @@
           "bookId": "PSA",
           "startChapter": 121,
           "endChapter": 121,
-          "label": "Psalm 121"
+          "label": "Psalm 121",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1361,7 +1483,8 @@
           "bookId": "PSA",
           "startChapter": 122,
           "endChapter": 122,
-          "label": "Psalm 122"
+          "label": "Psalm 122",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1372,7 +1495,8 @@
           "bookId": "PSA",
           "startChapter": 123,
           "endChapter": 123,
-          "label": "Psalm 123"
+          "label": "Psalm 123",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1383,7 +1507,8 @@
           "bookId": "PSA",
           "startChapter": 124,
           "endChapter": 124,
-          "label": "Psalm 124"
+          "label": "Psalm 124",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1394,7 +1519,8 @@
           "bookId": "PSA",
           "startChapter": 125,
           "endChapter": 125,
-          "label": "Psalm 125"
+          "label": "Psalm 125",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1405,7 +1531,8 @@
           "bookId": "PSA",
           "startChapter": 126,
           "endChapter": 126,
-          "label": "Psalm 126"
+          "label": "Psalm 126",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1416,7 +1543,8 @@
           "bookId": "PSA",
           "startChapter": 127,
           "endChapter": 127,
-          "label": "Psalm 127"
+          "label": "Psalm 127",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1427,7 +1555,8 @@
           "bookId": "PSA",
           "startChapter": 128,
           "endChapter": 128,
-          "label": "Psalm 128"
+          "label": "Psalm 128",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1438,7 +1567,8 @@
           "bookId": "PSA",
           "startChapter": 129,
           "endChapter": 129,
-          "label": "Psalm 129"
+          "label": "Psalm 129",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1449,7 +1579,8 @@
           "bookId": "PSA",
           "startChapter": 130,
           "endChapter": 130,
-          "label": "Psalm 130"
+          "label": "Psalm 130",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1460,7 +1591,8 @@
           "bookId": "PSA",
           "startChapter": 131,
           "endChapter": 131,
-          "label": "Psalm 131"
+          "label": "Psalm 131",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1471,7 +1603,8 @@
           "bookId": "PSA",
           "startChapter": 132,
           "endChapter": 132,
-          "label": "Psalm 132"
+          "label": "Psalm 132",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1482,7 +1615,8 @@
           "bookId": "PSA",
           "startChapter": 133,
           "endChapter": 133,
-          "label": "Psalm 133"
+          "label": "Psalm 133",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1493,7 +1627,8 @@
           "bookId": "PSA",
           "startChapter": 134,
           "endChapter": 134,
-          "label": "Psalm 134"
+          "label": "Psalm 134",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1504,7 +1639,8 @@
           "bookId": "PSA",
           "startChapter": 135,
           "endChapter": 135,
-          "label": "Psalm 135"
+          "label": "Psalm 135",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1515,7 +1651,8 @@
           "bookId": "PSA",
           "startChapter": 136,
           "endChapter": 136,
-          "label": "Psalm 136"
+          "label": "Psalm 136",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1526,7 +1663,8 @@
           "bookId": "PSA",
           "startChapter": 137,
           "endChapter": 137,
-          "label": "Psalm 137"
+          "label": "Psalm 137",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1537,7 +1675,8 @@
           "bookId": "PSA",
           "startChapter": 138,
           "endChapter": 138,
-          "label": "Psalm 138"
+          "label": "Psalm 138",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1548,7 +1687,8 @@
           "bookId": "PSA",
           "startChapter": 139,
           "endChapter": 139,
-          "label": "Psalm 139"
+          "label": "Psalm 139",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1559,7 +1699,8 @@
           "bookId": "PSA",
           "startChapter": 140,
           "endChapter": 140,
-          "label": "Psalm 140"
+          "label": "Psalm 140",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1570,7 +1711,8 @@
           "bookId": "PSA",
           "startChapter": 141,
           "endChapter": 141,
-          "label": "Psalm 141"
+          "label": "Psalm 141",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1581,7 +1723,8 @@
           "bookId": "PSA",
           "startChapter": 142,
           "endChapter": 142,
-          "label": "Psalm 142"
+          "label": "Psalm 142",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1592,7 +1735,8 @@
           "bookId": "PSA",
           "startChapter": 143,
           "endChapter": 143,
-          "label": "Psalm 143"
+          "label": "Psalm 143",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1603,7 +1747,8 @@
           "bookId": "PSA",
           "startChapter": 144,
           "endChapter": 144,
-          "label": "Psalm 144"
+          "label": "Psalm 144",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1614,7 +1759,8 @@
           "bookId": "PSA",
           "startChapter": 145,
           "endChapter": 145,
-          "label": "Psalm 145"
+          "label": "Psalm 145",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1625,7 +1771,8 @@
           "bookId": "PSA",
           "startChapter": 146,
           "endChapter": 146,
-          "label": "Psalm 146"
+          "label": "Psalm 146",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1636,7 +1783,8 @@
           "bookId": "PSA",
           "startChapter": 147,
           "endChapter": 147,
-          "label": "Psalm 147"
+          "label": "Psalm 147",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1647,7 +1795,8 @@
           "bookId": "PSA",
           "startChapter": 148,
           "endChapter": 148,
-          "label": "Psalm 148"
+          "label": "Psalm 148",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1658,7 +1807,8 @@
           "bookId": "PSA",
           "startChapter": 149,
           "endChapter": 149,
-          "label": "Psalm 149"
+          "label": "Psalm 149",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1669,7 +1819,8 @@
           "bookId": "PSA",
           "startChapter": 150,
           "endChapter": 150,
-          "label": "Psalm 150"
+          "label": "Psalm 150",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -1682,7 +1833,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 7,
-          "label": "Proverbs 1:1-7"
+          "label": "Proverbs 1:1-7",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1695,7 +1847,8 @@
           "endChapter": 1,
           "startVerse": 8,
           "endVerse": 19,
-          "label": "Proverbs 1:8-19"
+          "label": "Proverbs 1:8-19",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1708,7 +1861,8 @@
           "endChapter": 1,
           "startVerse": 20,
           "endVerse": 33,
-          "label": "Proverbs 1:20-33"
+          "label": "Proverbs 1:20-33",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1719,7 +1873,8 @@
           "bookId": "PRO",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Proverbs 2"
+          "label": "Proverbs 2",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1732,7 +1887,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 12,
-          "label": "Proverbs 3:1-12"
+          "label": "Proverbs 3:1-12",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1745,7 +1901,8 @@
           "endChapter": 3,
           "startVerse": 13,
           "endVerse": 20,
-          "label": "Proverbs 3:13-20"
+          "label": "Proverbs 3:13-20",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1758,7 +1915,8 @@
           "endChapter": 3,
           "startVerse": 21,
           "endVerse": 35,
-          "label": "Proverbs 3:21-35"
+          "label": "Proverbs 3:21-35",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1769,7 +1927,8 @@
           "bookId": "PRO",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Proverbs 4"
+          "label": "Proverbs 4",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1780,7 +1939,8 @@
           "bookId": "PRO",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "Proverbs 5"
+          "label": "Proverbs 5",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1793,7 +1953,8 @@
           "endChapter": 6,
           "startVerse": 1,
           "endVerse": 19,
-          "label": "Proverbs 6:1-19"
+          "label": "Proverbs 6:1-19",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1806,7 +1967,8 @@
           "endChapter": 6,
           "startVerse": 20,
           "endVerse": 35,
-          "label": "Proverbs 6:20-35"
+          "label": "Proverbs 6:20-35",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1817,7 +1979,8 @@
           "bookId": "PRO",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Proverbs 7"
+          "label": "Proverbs 7",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1828,7 +1991,8 @@
           "bookId": "PRO",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Proverbs 8"
+          "label": "Proverbs 8",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1839,7 +2003,8 @@
           "bookId": "PRO",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "Proverbs 9"
+          "label": "Proverbs 9",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1850,7 +2015,8 @@
           "bookId": "PRO",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Proverbs 10"
+          "label": "Proverbs 10",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1861,7 +2027,8 @@
           "bookId": "PRO",
           "startChapter": 11,
           "endChapter": 12,
-          "label": "Proverbs 11-12"
+          "label": "Proverbs 11-12",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1872,7 +2039,8 @@
           "bookId": "PRO",
           "startChapter": 13,
           "endChapter": 14,
-          "label": "Proverbs 13-14"
+          "label": "Proverbs 13-14",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1883,7 +2051,8 @@
           "bookId": "PRO",
           "startChapter": 15,
           "endChapter": 16,
-          "label": "Proverbs 15-16"
+          "label": "Proverbs 15-16",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1894,7 +2063,8 @@
           "bookId": "PRO",
           "startChapter": 17,
           "endChapter": 18,
-          "label": "Proverbs 17-18"
+          "label": "Proverbs 17-18",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1905,7 +2075,8 @@
           "bookId": "PRO",
           "startChapter": 19,
           "endChapter": 20,
-          "label": "Proverbs 19-20"
+          "label": "Proverbs 19-20",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1916,7 +2087,8 @@
           "bookId": "PRO",
           "startChapter": 21,
           "endChapter": 22,
-          "label": "Proverbs 21-22"
+          "label": "Proverbs 21-22",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1927,7 +2099,8 @@
           "bookId": "PRO",
           "startChapter": 23,
           "endChapter": 24,
-          "label": "Proverbs 23-24"
+          "label": "Proverbs 23-24",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1938,7 +2111,8 @@
           "bookId": "PRO",
           "startChapter": 25,
           "endChapter": 26,
-          "label": "Proverbs 25-26"
+          "label": "Proverbs 25-26",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1949,7 +2123,8 @@
           "bookId": "PRO",
           "startChapter": 27,
           "endChapter": 28,
-          "label": "Proverbs 27-28"
+          "label": "Proverbs 27-28",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1960,7 +2135,8 @@
           "bookId": "PRO",
           "startChapter": 29,
           "endChapter": 29,
-          "label": "Proverbs 29"
+          "label": "Proverbs 29",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1973,7 +2149,8 @@
           "startVerse": 1,
           "endChapter": 31,
           "endVerse": 9,
-          "label": "Proverbs 30:1-31:9"
+          "label": "Proverbs 30:1-31:9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -1986,7 +2163,8 @@
           "endChapter": 31,
           "startVerse": 10,
           "endVerse": 31,
-          "label": "Proverbs 31:10-31"
+          "label": "Proverbs 31:10-31",
+          "planChapterTotal": 31
         }
       ]
     },
@@ -1999,7 +2177,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 3,
-          "label": "Ecclesiastes 1:1-3"
+          "label": "Ecclesiastes 1:1-3",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2012,7 +2191,8 @@
           "endChapter": 1,
           "startVerse": 4,
           "endVerse": 11,
-          "label": "Ecclesiastes 1:4-11"
+          "label": "Ecclesiastes 1:4-11",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2025,7 +2205,8 @@
           "endChapter": 1,
           "startVerse": 12,
           "endVerse": 18,
-          "label": "Ecclesiastes 1:12-18"
+          "label": "Ecclesiastes 1:12-18",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2038,7 +2219,8 @@
           "endChapter": 2,
           "startVerse": 1,
           "endVerse": 11,
-          "label": "Ecclesiastes 2:1-11"
+          "label": "Ecclesiastes 2:1-11",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2051,7 +2233,8 @@
           "endChapter": 2,
           "startVerse": 12,
           "endVerse": 17,
-          "label": "Ecclesiastes 2:12-17"
+          "label": "Ecclesiastes 2:12-17",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2064,7 +2247,8 @@
           "endChapter": 2,
           "startVerse": 18,
           "endVerse": 23,
-          "label": "Ecclesiastes 2:18-23"
+          "label": "Ecclesiastes 2:18-23",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2077,7 +2261,8 @@
           "endChapter": 2,
           "startVerse": 24,
           "endVerse": 26,
-          "label": "Ecclesiastes 2:24-26"
+          "label": "Ecclesiastes 2:24-26",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2090,7 +2275,8 @@
           "endChapter": 3,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "Ecclesiastes 3:1-8"
+          "label": "Ecclesiastes 3:1-8",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2103,7 +2289,8 @@
           "endChapter": 3,
           "startVerse": 9,
           "endVerse": 22,
-          "label": "Ecclesiastes 3:9-22"
+          "label": "Ecclesiastes 3:9-22",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2114,7 +2301,8 @@
           "bookId": "ECC",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Ecclesiastes 4"
+          "label": "Ecclesiastes 4",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2127,7 +2315,8 @@
           "endChapter": 5,
           "startVerse": 1,
           "endVerse": 7,
-          "label": "Ecclesiastes 5:1-7"
+          "label": "Ecclesiastes 5:1-7",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2140,7 +2329,8 @@
           "endChapter": 5,
           "startVerse": 8,
           "endVerse": 17,
-          "label": "Ecclesiastes 5:8-17"
+          "label": "Ecclesiastes 5:8-17",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2153,7 +2343,8 @@
           "endChapter": 5,
           "startVerse": 18,
           "endVerse": 20,
-          "label": "Ecclesiastes 5:18-20"
+          "label": "Ecclesiastes 5:18-20",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2164,7 +2355,8 @@
           "bookId": "ECC",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Ecclesiastes 6"
+          "label": "Ecclesiastes 6",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2177,7 +2369,8 @@
           "endChapter": 7,
           "startVerse": 1,
           "endVerse": 14,
-          "label": "Ecclesiastes 7:1-14"
+          "label": "Ecclesiastes 7:1-14",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2190,7 +2383,8 @@
           "endChapter": 7,
           "startVerse": 15,
           "endVerse": 29,
-          "label": "Ecclesiastes 7:15-29"
+          "label": "Ecclesiastes 7:15-29",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2201,7 +2395,8 @@
           "bookId": "ECC",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Ecclesiastes 8"
+          "label": "Ecclesiastes 8",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2214,7 +2409,8 @@
           "endChapter": 9,
           "startVerse": 1,
           "endVerse": 10,
-          "label": "Ecclesiastes 9:1-10"
+          "label": "Ecclesiastes 9:1-10",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2227,7 +2423,8 @@
           "endChapter": 9,
           "startVerse": 11,
           "endVerse": 18,
-          "label": "Ecclesiastes 9:11-18"
+          "label": "Ecclesiastes 9:11-18",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2238,7 +2435,8 @@
           "bookId": "ECC",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Ecclesiastes 10"
+          "label": "Ecclesiastes 10",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2251,7 +2449,8 @@
           "endChapter": 11,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "Ecclesiastes 11:1-8"
+          "label": "Ecclesiastes 11:1-8",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2264,7 +2463,8 @@
           "startVerse": 9,
           "endChapter": 12,
           "endVerse": 8,
-          "label": "Ecclesiastes 11:9-12:8"
+          "label": "Ecclesiastes 11:9-12:8",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2277,7 +2477,8 @@
           "endChapter": 12,
           "startVerse": 9,
           "endVerse": 14,
-          "label": "Ecclesiastes 12:9-14"
+          "label": "Ecclesiastes 12:9-14",
+          "planChapterTotal": 12
         }
       ]
     },
@@ -2290,7 +2491,8 @@
           "endChapter": 1,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "SongOfSongs 1:1-8"
+          "label": "SongOfSongs 1:1-8",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2303,7 +2505,8 @@
           "startVerse": 9,
           "endChapter": 2,
           "endVerse": 7,
-          "label": "SongOfSongs 1:9-2:7"
+          "label": "SongOfSongs 1:9-2:7",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2316,7 +2519,8 @@
           "endChapter": 2,
           "startVerse": 8,
           "endVerse": 17,
-          "label": "SongOfSongs 2:8-17"
+          "label": "SongOfSongs 2:8-17",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2327,7 +2531,8 @@
           "bookId": "SNG",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "SongOfSongs 3"
+          "label": "SongOfSongs 3",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2340,7 +2545,8 @@
           "endChapter": 4,
           "startVerse": 1,
           "endVerse": 8,
-          "label": "SongOfSongs 4:1-8"
+          "label": "SongOfSongs 4:1-8",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2353,7 +2559,8 @@
           "startVerse": 9,
           "endChapter": 5,
           "endVerse": 1,
-          "label": "SongOfSongs 4:9-5:1"
+          "label": "SongOfSongs 4:9-5:1",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2366,7 +2573,8 @@
           "endChapter": 5,
           "startVerse": 2,
           "endVerse": 9,
-          "label": "SongOfSongs 5:2-9"
+          "label": "SongOfSongs 5:2-9",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2379,7 +2587,8 @@
           "startVerse": 10,
           "endChapter": 6,
           "endVerse": 3,
-          "label": "SongOfSongs 5:10-6:3"
+          "label": "SongOfSongs 5:10-6:3",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2392,7 +2601,8 @@
           "endChapter": 6,
           "startVerse": 4,
           "endVerse": 12,
-          "label": "SongOfSongs 6:4-12"
+          "label": "SongOfSongs 6:4-12",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2405,7 +2615,8 @@
           "startVerse": 13,
           "endChapter": 7,
           "endVerse": 9,
-          "label": "SongOfSongs 6:13-7:9"
+          "label": "SongOfSongs 6:13-7:9",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2418,7 +2629,8 @@
           "endChapter": 7,
           "startVerse": 10,
           "endVerse": 13,
-          "label": "SongOfSongs 7:10-13"
+          "label": "SongOfSongs 7:10-13",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2431,7 +2643,8 @@
           "endChapter": 8,
           "startVerse": 1,
           "endVerse": 7,
-          "label": "SongOfSongs 8:1-7"
+          "label": "SongOfSongs 8:1-7",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2444,7 +2657,8 @@
           "endChapter": 8,
           "startVerse": 8,
           "endVerse": 14,
-          "label": "SongOfSongs 8:8-14"
+          "label": "SongOfSongs 8:8-14",
+          "planChapterTotal": 8
         }
       ]
     },
@@ -2455,7 +2669,8 @@
           "bookId": "PSA",
           "startChapter": 1,
           "endChapter": 1,
-          "label": "Psalm 1"
+          "label": "Psalm 1",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2466,7 +2681,8 @@
           "bookId": "PSA",
           "startChapter": 2,
           "endChapter": 2,
-          "label": "Psalm 2"
+          "label": "Psalm 2",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2477,7 +2693,8 @@
           "bookId": "PSA",
           "startChapter": 3,
           "endChapter": 3,
-          "label": "Psalm 3"
+          "label": "Psalm 3",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2488,7 +2705,8 @@
           "bookId": "PSA",
           "startChapter": 4,
           "endChapter": 4,
-          "label": "Psalm 4"
+          "label": "Psalm 4",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2499,7 +2717,8 @@
           "bookId": "PSA",
           "startChapter": 5,
           "endChapter": 5,
-          "label": "Psalm 5"
+          "label": "Psalm 5",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2510,7 +2729,8 @@
           "bookId": "PSA",
           "startChapter": 6,
           "endChapter": 6,
-          "label": "Psalm 6"
+          "label": "Psalm 6",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2521,7 +2741,8 @@
           "bookId": "PSA",
           "startChapter": 7,
           "endChapter": 7,
-          "label": "Psalm 7"
+          "label": "Psalm 7",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2532,7 +2753,8 @@
           "bookId": "PSA",
           "startChapter": 8,
           "endChapter": 8,
-          "label": "Psalm 8"
+          "label": "Psalm 8",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2543,7 +2765,8 @@
           "bookId": "PSA",
           "startChapter": 9,
           "endChapter": 9,
-          "label": "Psalm 9"
+          "label": "Psalm 9",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2554,7 +2777,8 @@
           "bookId": "PSA",
           "startChapter": 10,
           "endChapter": 10,
-          "label": "Psalm 10"
+          "label": "Psalm 10",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2565,7 +2789,8 @@
           "bookId": "PSA",
           "startChapter": 11,
           "endChapter": 11,
-          "label": "Psalm 11"
+          "label": "Psalm 11",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2576,7 +2801,8 @@
           "bookId": "PSA",
           "startChapter": 12,
           "endChapter": 12,
-          "label": "Psalm 12"
+          "label": "Psalm 12",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2587,7 +2813,8 @@
           "bookId": "PSA",
           "startChapter": 13,
           "endChapter": 13,
-          "label": "Psalm 13"
+          "label": "Psalm 13",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2598,7 +2825,8 @@
           "bookId": "PSA",
           "startChapter": 14,
           "endChapter": 14,
-          "label": "Psalm 14"
+          "label": "Psalm 14",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2609,7 +2837,8 @@
           "bookId": "PSA",
           "startChapter": 15,
           "endChapter": 15,
-          "label": "Psalm 15"
+          "label": "Psalm 15",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2620,7 +2849,8 @@
           "bookId": "PSA",
           "startChapter": 16,
           "endChapter": 16,
-          "label": "Psalm 16"
+          "label": "Psalm 16",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2631,7 +2861,8 @@
           "bookId": "PSA",
           "startChapter": 17,
           "endChapter": 17,
-          "label": "Psalm 17"
+          "label": "Psalm 17",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2642,7 +2873,8 @@
           "bookId": "PSA",
           "startChapter": 18,
           "endChapter": 18,
-          "label": "Psalm 18"
+          "label": "Psalm 18",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2653,7 +2885,8 @@
           "bookId": "PSA",
           "startChapter": 19,
           "endChapter": 19,
-          "label": "Psalm 19"
+          "label": "Psalm 19",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2664,7 +2897,8 @@
           "bookId": "PSA",
           "startChapter": 20,
           "endChapter": 20,
-          "label": "Psalm 20"
+          "label": "Psalm 20",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2675,7 +2909,8 @@
           "bookId": "PSA",
           "startChapter": 21,
           "endChapter": 21,
-          "label": "Psalm 21"
+          "label": "Psalm 21",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2686,7 +2921,8 @@
           "bookId": "PSA",
           "startChapter": 22,
           "endChapter": 22,
-          "label": "Psalm 22"
+          "label": "Psalm 22",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2697,7 +2933,8 @@
           "bookId": "PSA",
           "startChapter": 23,
           "endChapter": 23,
-          "label": "Psalm 23"
+          "label": "Psalm 23",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2708,7 +2945,8 @@
           "bookId": "PSA",
           "startChapter": 24,
           "endChapter": 24,
-          "label": "Psalm 24"
+          "label": "Psalm 24",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2719,7 +2957,8 @@
           "bookId": "PSA",
           "startChapter": 25,
           "endChapter": 25,
-          "label": "Psalm 25"
+          "label": "Psalm 25",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2730,7 +2969,8 @@
           "bookId": "PSA",
           "startChapter": 26,
           "endChapter": 26,
-          "label": "Psalm 26"
+          "label": "Psalm 26",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2741,7 +2981,8 @@
           "bookId": "PSA",
           "startChapter": 27,
           "endChapter": 27,
-          "label": "Psalm 27"
+          "label": "Psalm 27",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2752,7 +2993,8 @@
           "bookId": "PSA",
           "startChapter": 28,
           "endChapter": 28,
-          "label": "Psalm 28"
+          "label": "Psalm 28",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2763,7 +3005,8 @@
           "bookId": "PSA",
           "startChapter": 29,
           "endChapter": 29,
-          "label": "Psalm 29"
+          "label": "Psalm 29",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2774,7 +3017,8 @@
           "bookId": "PSA",
           "startChapter": 30,
           "endChapter": 30,
-          "label": "Psalm 30"
+          "label": "Psalm 30",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2785,7 +3029,8 @@
           "bookId": "PSA",
           "startChapter": 31,
           "endChapter": 31,
-          "label": "Psalm 31"
+          "label": "Psalm 31",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2796,7 +3041,8 @@
           "bookId": "PSA",
           "startChapter": 32,
           "endChapter": 32,
-          "label": "Psalm 32"
+          "label": "Psalm 32",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2807,7 +3053,8 @@
           "bookId": "PSA",
           "startChapter": 33,
           "endChapter": 33,
-          "label": "Psalm 33"
+          "label": "Psalm 33",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2818,7 +3065,8 @@
           "bookId": "PSA",
           "startChapter": 34,
           "endChapter": 34,
-          "label": "Psalm 34"
+          "label": "Psalm 34",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2829,7 +3077,8 @@
           "bookId": "PSA",
           "startChapter": 35,
           "endChapter": 35,
-          "label": "Psalm 35"
+          "label": "Psalm 35",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2840,7 +3089,8 @@
           "bookId": "PSA",
           "startChapter": 36,
           "endChapter": 36,
-          "label": "Psalm 36"
+          "label": "Psalm 36",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2851,7 +3101,8 @@
           "bookId": "PSA",
           "startChapter": 37,
           "endChapter": 37,
-          "label": "Psalm 37"
+          "label": "Psalm 37",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2862,7 +3113,8 @@
           "bookId": "PSA",
           "startChapter": 38,
           "endChapter": 38,
-          "label": "Psalm 38"
+          "label": "Psalm 38",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2873,7 +3125,8 @@
           "bookId": "PSA",
           "startChapter": 39,
           "endChapter": 39,
-          "label": "Psalm 39"
+          "label": "Psalm 39",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2884,7 +3137,8 @@
           "bookId": "PSA",
           "startChapter": 40,
           "endChapter": 40,
-          "label": "Psalm 40"
+          "label": "Psalm 40",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2895,7 +3149,8 @@
           "bookId": "PSA",
           "startChapter": 41,
           "endChapter": 41,
-          "label": "Psalm 41"
+          "label": "Psalm 41",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2906,7 +3161,8 @@
           "bookId": "PSA",
           "startChapter": 42,
           "endChapter": 43,
-          "label": "Psalm 42-43"
+          "label": "Psalm 42-43",
+          "planChapterTotal": 2
         }
       ]
     },
@@ -2917,7 +3173,8 @@
           "bookId": "PSA",
           "startChapter": 44,
           "endChapter": 44,
-          "label": "Psalm 44"
+          "label": "Psalm 44",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2928,7 +3185,8 @@
           "bookId": "PSA",
           "startChapter": 45,
           "endChapter": 45,
-          "label": "Psalm 45"
+          "label": "Psalm 45",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2939,7 +3197,8 @@
           "bookId": "PSA",
           "startChapter": 46,
           "endChapter": 46,
-          "label": "Psalm 46"
+          "label": "Psalm 46",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2950,7 +3209,8 @@
           "bookId": "PSA",
           "startChapter": 47,
           "endChapter": 47,
-          "label": "Psalm 47"
+          "label": "Psalm 47",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2961,7 +3221,8 @@
           "bookId": "PSA",
           "startChapter": 48,
           "endChapter": 48,
-          "label": "Psalm 48"
+          "label": "Psalm 48",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2972,7 +3233,8 @@
           "bookId": "PSA",
           "startChapter": 49,
           "endChapter": 49,
-          "label": "Psalm 49"
+          "label": "Psalm 49",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2983,7 +3245,8 @@
           "bookId": "PSA",
           "startChapter": 50,
           "endChapter": 50,
-          "label": "Psalm 50"
+          "label": "Psalm 50",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -2994,7 +3257,8 @@
           "bookId": "PSA",
           "startChapter": 51,
           "endChapter": 51,
-          "label": "Psalm 51"
+          "label": "Psalm 51",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3005,7 +3269,8 @@
           "bookId": "PSA",
           "startChapter": 52,
           "endChapter": 52,
-          "label": "Psalm 52"
+          "label": "Psalm 52",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3016,7 +3281,8 @@
           "bookId": "PSA",
           "startChapter": 53,
           "endChapter": 53,
-          "label": "Psalm 53"
+          "label": "Psalm 53",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3027,7 +3293,8 @@
           "bookId": "PSA",
           "startChapter": 54,
           "endChapter": 54,
-          "label": "Psalm 54"
+          "label": "Psalm 54",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3038,7 +3305,8 @@
           "bookId": "PSA",
           "startChapter": 55,
           "endChapter": 55,
-          "label": "Psalm 55"
+          "label": "Psalm 55",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3049,7 +3317,8 @@
           "bookId": "PSA",
           "startChapter": 56,
           "endChapter": 56,
-          "label": "Psalm 56"
+          "label": "Psalm 56",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3060,7 +3329,8 @@
           "bookId": "PSA",
           "startChapter": 57,
           "endChapter": 57,
-          "label": "Psalm 57"
+          "label": "Psalm 57",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3071,7 +3341,8 @@
           "bookId": "PSA",
           "startChapter": 58,
           "endChapter": 58,
-          "label": "Psalm 58"
+          "label": "Psalm 58",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3082,7 +3353,8 @@
           "bookId": "PSA",
           "startChapter": 59,
           "endChapter": 59,
-          "label": "Psalm 59"
+          "label": "Psalm 59",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3093,7 +3365,8 @@
           "bookId": "PSA",
           "startChapter": 60,
           "endChapter": 60,
-          "label": "Psalm 60"
+          "label": "Psalm 60",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3104,7 +3377,8 @@
           "bookId": "PSA",
           "startChapter": 61,
           "endChapter": 61,
-          "label": "Psalm 61"
+          "label": "Psalm 61",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3115,7 +3389,8 @@
           "bookId": "PSA",
           "startChapter": 62,
           "endChapter": 62,
-          "label": "Psalm 62"
+          "label": "Psalm 62",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3126,7 +3401,8 @@
           "bookId": "PSA",
           "startChapter": 63,
           "endChapter": 63,
-          "label": "Psalm 63"
+          "label": "Psalm 63",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3137,7 +3413,8 @@
           "bookId": "PSA",
           "startChapter": 64,
           "endChapter": 64,
-          "label": "Psalm 64"
+          "label": "Psalm 64",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3148,7 +3425,8 @@
           "bookId": "PSA",
           "startChapter": 65,
           "endChapter": 65,
-          "label": "Psalm 65"
+          "label": "Psalm 65",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3159,7 +3437,8 @@
           "bookId": "PSA",
           "startChapter": 66,
           "endChapter": 66,
-          "label": "Psalm 66"
+          "label": "Psalm 66",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3170,7 +3449,8 @@
           "bookId": "PSA",
           "startChapter": 67,
           "endChapter": 67,
-          "label": "Psalm 67"
+          "label": "Psalm 67",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3181,7 +3461,8 @@
           "bookId": "PSA",
           "startChapter": 68,
           "endChapter": 68,
-          "label": "Psalm 68"
+          "label": "Psalm 68",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3192,7 +3473,8 @@
           "bookId": "PSA",
           "startChapter": 69,
           "endChapter": 69,
-          "label": "Psalm 69"
+          "label": "Psalm 69",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3203,7 +3485,8 @@
           "bookId": "PSA",
           "startChapter": 70,
           "endChapter": 70,
-          "label": "Psalm 70"
+          "label": "Psalm 70",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3214,7 +3497,8 @@
           "bookId": "PSA",
           "startChapter": 71,
           "endChapter": 71,
-          "label": "Psalm 71"
+          "label": "Psalm 71",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3225,7 +3509,8 @@
           "bookId": "PSA",
           "startChapter": 72,
           "endChapter": 72,
-          "label": "Psalm 72"
+          "label": "Psalm 72",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3236,7 +3521,8 @@
           "bookId": "PSA",
           "startChapter": 73,
           "endChapter": 73,
-          "label": "Psalm 73"
+          "label": "Psalm 73",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3247,7 +3533,8 @@
           "bookId": "PSA",
           "startChapter": 74,
           "endChapter": 74,
-          "label": "Psalm 74"
+          "label": "Psalm 74",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3258,7 +3545,8 @@
           "bookId": "PSA",
           "startChapter": 75,
           "endChapter": 75,
-          "label": "Psalm 75"
+          "label": "Psalm 75",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3269,7 +3557,8 @@
           "bookId": "PSA",
           "startChapter": 76,
           "endChapter": 76,
-          "label": "Psalm 76"
+          "label": "Psalm 76",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3280,7 +3569,8 @@
           "bookId": "PSA",
           "startChapter": 77,
           "endChapter": 77,
-          "label": "Psalm 77"
+          "label": "Psalm 77",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3291,7 +3581,8 @@
           "bookId": "PSA",
           "startChapter": 78,
           "endChapter": 78,
-          "label": "Psalm 78"
+          "label": "Psalm 78",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3302,7 +3593,8 @@
           "bookId": "PSA",
           "startChapter": 79,
           "endChapter": 79,
-          "label": "Psalm 79"
+          "label": "Psalm 79",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3313,7 +3605,8 @@
           "bookId": "PSA",
           "startChapter": 80,
           "endChapter": 80,
-          "label": "Psalm 80"
+          "label": "Psalm 80",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3324,7 +3617,8 @@
           "bookId": "PSA",
           "startChapter": 81,
           "endChapter": 81,
-          "label": "Psalm 81"
+          "label": "Psalm 81",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3335,7 +3629,8 @@
           "bookId": "PSA",
           "startChapter": 82,
           "endChapter": 82,
-          "label": "Psalm 82"
+          "label": "Psalm 82",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3346,7 +3641,8 @@
           "bookId": "PSA",
           "startChapter": 83,
           "endChapter": 83,
-          "label": "Psalm 83"
+          "label": "Psalm 83",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3357,7 +3653,8 @@
           "bookId": "PSA",
           "startChapter": 84,
           "endChapter": 84,
-          "label": "Psalm 84"
+          "label": "Psalm 84",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3368,7 +3665,8 @@
           "bookId": "PSA",
           "startChapter": 85,
           "endChapter": 85,
-          "label": "Psalm 85"
+          "label": "Psalm 85",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3379,7 +3677,8 @@
           "bookId": "PSA",
           "startChapter": 86,
           "endChapter": 86,
-          "label": "Psalm 86"
+          "label": "Psalm 86",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3390,7 +3689,8 @@
           "bookId": "PSA",
           "startChapter": 87,
           "endChapter": 87,
-          "label": "Psalm 87"
+          "label": "Psalm 87",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3401,7 +3701,8 @@
           "bookId": "PSA",
           "startChapter": 88,
           "endChapter": 88,
-          "label": "Psalm 88"
+          "label": "Psalm 88",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3412,7 +3713,8 @@
           "bookId": "PSA",
           "startChapter": 89,
           "endChapter": 89,
-          "label": "Psalm 89"
+          "label": "Psalm 89",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3423,7 +3725,8 @@
           "bookId": "PSA",
           "startChapter": 90,
           "endChapter": 90,
-          "label": "Psalm 90"
+          "label": "Psalm 90",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3434,7 +3737,8 @@
           "bookId": "PSA",
           "startChapter": 91,
           "endChapter": 91,
-          "label": "Psalm 91"
+          "label": "Psalm 91",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3445,7 +3749,8 @@
           "bookId": "PSA",
           "startChapter": 92,
           "endChapter": 92,
-          "label": "Psalm 92"
+          "label": "Psalm 92",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3456,7 +3761,8 @@
           "bookId": "PSA",
           "startChapter": 93,
           "endChapter": 93,
-          "label": "Psalm 93"
+          "label": "Psalm 93",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3467,7 +3773,8 @@
           "bookId": "PSA",
           "startChapter": 94,
           "endChapter": 94,
-          "label": "Psalm 94"
+          "label": "Psalm 94",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3478,7 +3785,8 @@
           "bookId": "PSA",
           "startChapter": 95,
           "endChapter": 95,
-          "label": "Psalm 95"
+          "label": "Psalm 95",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3489,7 +3797,8 @@
           "bookId": "PSA",
           "startChapter": 96,
           "endChapter": 96,
-          "label": "Psalm 96"
+          "label": "Psalm 96",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3500,7 +3809,8 @@
           "bookId": "PSA",
           "startChapter": 97,
           "endChapter": 97,
-          "label": "Psalm 97"
+          "label": "Psalm 97",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3511,7 +3821,8 @@
           "bookId": "PSA",
           "startChapter": 98,
           "endChapter": 98,
-          "label": "Psalm 98"
+          "label": "Psalm 98",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3522,7 +3833,8 @@
           "bookId": "PSA",
           "startChapter": 99,
           "endChapter": 99,
-          "label": "Psalm 99"
+          "label": "Psalm 99",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3533,7 +3845,8 @@
           "bookId": "PSA",
           "startChapter": 100,
           "endChapter": 100,
-          "label": "Psalm 100"
+          "label": "Psalm 100",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3544,7 +3857,8 @@
           "bookId": "PSA",
           "startChapter": 101,
           "endChapter": 101,
-          "label": "Psalm 101"
+          "label": "Psalm 101",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3555,7 +3869,8 @@
           "bookId": "PSA",
           "startChapter": 102,
           "endChapter": 102,
-          "label": "Psalm 102"
+          "label": "Psalm 102",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3566,7 +3881,8 @@
           "bookId": "PSA",
           "startChapter": 103,
           "endChapter": 103,
-          "label": "Psalm 103"
+          "label": "Psalm 103",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3577,7 +3893,8 @@
           "bookId": "PSA",
           "startChapter": 104,
           "endChapter": 104,
-          "label": "Psalm 104"
+          "label": "Psalm 104",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3588,7 +3905,8 @@
           "bookId": "PSA",
           "startChapter": 105,
           "endChapter": 105,
-          "label": "Psalm 105"
+          "label": "Psalm 105",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3599,7 +3917,8 @@
           "bookId": "PSA",
           "startChapter": 106,
           "endChapter": 106,
-          "label": "Psalm 106"
+          "label": "Psalm 106",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3610,7 +3929,8 @@
           "bookId": "PSA",
           "startChapter": 107,
           "endChapter": 107,
-          "label": "Psalm 107"
+          "label": "Psalm 107",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3621,7 +3941,8 @@
           "bookId": "PSA",
           "startChapter": 108,
           "endChapter": 108,
-          "label": "Psalm 108"
+          "label": "Psalm 108",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3632,7 +3953,8 @@
           "bookId": "PSA",
           "startChapter": 109,
           "endChapter": 109,
-          "label": "Psalm 109"
+          "label": "Psalm 109",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3643,7 +3965,8 @@
           "bookId": "PSA",
           "startChapter": 110,
           "endChapter": 110,
-          "label": "Psalm 110"
+          "label": "Psalm 110",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3654,7 +3977,8 @@
           "bookId": "PSA",
           "startChapter": 111,
           "endChapter": 111,
-          "label": "Psalm 111"
+          "label": "Psalm 111",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3665,7 +3989,8 @@
           "bookId": "PSA",
           "startChapter": 112,
           "endChapter": 112,
-          "label": "Psalm 112"
+          "label": "Psalm 112",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3676,7 +4001,8 @@
           "bookId": "PSA",
           "startChapter": 113,
           "endChapter": 113,
-          "label": "Psalm 113"
+          "label": "Psalm 113",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3687,7 +4013,8 @@
           "bookId": "PSA",
           "startChapter": 114,
           "endChapter": 114,
-          "label": "Psalm 114"
+          "label": "Psalm 114",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3698,7 +4025,8 @@
           "bookId": "PSA",
           "startChapter": 115,
           "endChapter": 115,
-          "label": "Psalm 115"
+          "label": "Psalm 115",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3709,7 +4037,8 @@
           "bookId": "PSA",
           "startChapter": 116,
           "endChapter": 116,
-          "label": "Psalm 116"
+          "label": "Psalm 116",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3720,7 +4049,8 @@
           "bookId": "PSA",
           "startChapter": 117,
           "endChapter": 117,
-          "label": "Psalm 117"
+          "label": "Psalm 117",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3731,7 +4061,8 @@
           "bookId": "PSA",
           "startChapter": 118,
           "endChapter": 118,
-          "label": "Psalm 118"
+          "label": "Psalm 118",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3744,7 +4075,8 @@
           "endChapter": 119,
           "startVerse": 1,
           "endVerse": 88,
-          "label": "Psalm 119:1-88"
+          "label": "Psalm 119:1-88",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3757,7 +4089,8 @@
           "endChapter": 119,
           "startVerse": 89,
           "endVerse": 176,
-          "label": "Psalm 119:89-176"
+          "label": "Psalm 119:89-176",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3768,7 +4101,8 @@
           "bookId": "PSA",
           "startChapter": 120,
           "endChapter": 120,
-          "label": "Psalm 120"
+          "label": "Psalm 120",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3779,7 +4113,8 @@
           "bookId": "PSA",
           "startChapter": 121,
           "endChapter": 121,
-          "label": "Psalm 121"
+          "label": "Psalm 121",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3790,7 +4125,8 @@
           "bookId": "PSA",
           "startChapter": 122,
           "endChapter": 122,
-          "label": "Psalm 122"
+          "label": "Psalm 122",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3801,7 +4137,8 @@
           "bookId": "PSA",
           "startChapter": 123,
           "endChapter": 123,
-          "label": "Psalm 123"
+          "label": "Psalm 123",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3812,7 +4149,8 @@
           "bookId": "PSA",
           "startChapter": 124,
           "endChapter": 124,
-          "label": "Psalm 124"
+          "label": "Psalm 124",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3823,7 +4161,8 @@
           "bookId": "PSA",
           "startChapter": 125,
           "endChapter": 125,
-          "label": "Psalm 125"
+          "label": "Psalm 125",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3834,7 +4173,8 @@
           "bookId": "PSA",
           "startChapter": 126,
           "endChapter": 126,
-          "label": "Psalm 126"
+          "label": "Psalm 126",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3845,7 +4185,8 @@
           "bookId": "PSA",
           "startChapter": 127,
           "endChapter": 127,
-          "label": "Psalm 127"
+          "label": "Psalm 127",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3856,7 +4197,8 @@
           "bookId": "PSA",
           "startChapter": 128,
           "endChapter": 128,
-          "label": "Psalm 128"
+          "label": "Psalm 128",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3867,7 +4209,8 @@
           "bookId": "PSA",
           "startChapter": 129,
           "endChapter": 129,
-          "label": "Psalm 129"
+          "label": "Psalm 129",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3878,7 +4221,8 @@
           "bookId": "PSA",
           "startChapter": 130,
           "endChapter": 130,
-          "label": "Psalm 130"
+          "label": "Psalm 130",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3889,7 +4233,8 @@
           "bookId": "PSA",
           "startChapter": 131,
           "endChapter": 131,
-          "label": "Psalm 131"
+          "label": "Psalm 131",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3900,7 +4245,8 @@
           "bookId": "PSA",
           "startChapter": 132,
           "endChapter": 132,
-          "label": "Psalm 132"
+          "label": "Psalm 132",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3911,7 +4257,8 @@
           "bookId": "PSA",
           "startChapter": 133,
           "endChapter": 133,
-          "label": "Psalm 133"
+          "label": "Psalm 133",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3922,7 +4269,8 @@
           "bookId": "PSA",
           "startChapter": 134,
           "endChapter": 134,
-          "label": "Psalm 134"
+          "label": "Psalm 134",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3933,7 +4281,8 @@
           "bookId": "PSA",
           "startChapter": 135,
           "endChapter": 135,
-          "label": "Psalm 135"
+          "label": "Psalm 135",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3944,7 +4293,8 @@
           "bookId": "PSA",
           "startChapter": 136,
           "endChapter": 136,
-          "label": "Psalm 136"
+          "label": "Psalm 136",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3955,7 +4305,8 @@
           "bookId": "PSA",
           "startChapter": 137,
           "endChapter": 137,
-          "label": "Psalm 137"
+          "label": "Psalm 137",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3966,7 +4317,8 @@
           "bookId": "PSA",
           "startChapter": 138,
           "endChapter": 138,
-          "label": "Psalm 138"
+          "label": "Psalm 138",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3977,7 +4329,8 @@
           "bookId": "PSA",
           "startChapter": 139,
           "endChapter": 139,
-          "label": "Psalm 139"
+          "label": "Psalm 139",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3988,7 +4341,8 @@
           "bookId": "PSA",
           "startChapter": 140,
           "endChapter": 140,
-          "label": "Psalm 140"
+          "label": "Psalm 140",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -3999,7 +4353,8 @@
           "bookId": "PSA",
           "startChapter": 141,
           "endChapter": 141,
-          "label": "Psalm 141"
+          "label": "Psalm 141",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4010,7 +4365,8 @@
           "bookId": "PSA",
           "startChapter": 142,
           "endChapter": 142,
-          "label": "Psalm 142"
+          "label": "Psalm 142",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4021,7 +4377,8 @@
           "bookId": "PSA",
           "startChapter": 143,
           "endChapter": 143,
-          "label": "Psalm 143"
+          "label": "Psalm 143",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4032,7 +4389,8 @@
           "bookId": "PSA",
           "startChapter": 144,
           "endChapter": 144,
-          "label": "Psalm 144"
+          "label": "Psalm 144",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4043,7 +4401,8 @@
           "bookId": "PSA",
           "startChapter": 145,
           "endChapter": 145,
-          "label": "Psalm 145"
+          "label": "Psalm 145",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4054,7 +4413,8 @@
           "bookId": "PSA",
           "startChapter": 146,
           "endChapter": 146,
-          "label": "Psalm 146"
+          "label": "Psalm 146",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4065,7 +4425,8 @@
           "bookId": "PSA",
           "startChapter": 147,
           "endChapter": 147,
-          "label": "Psalm 147"
+          "label": "Psalm 147",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4076,7 +4437,8 @@
           "bookId": "PSA",
           "startChapter": 148,
           "endChapter": 148,
-          "label": "Psalm 148"
+          "label": "Psalm 148",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4087,7 +4449,8 @@
           "bookId": "PSA",
           "startChapter": 149,
           "endChapter": 149,
-          "label": "Psalm 149"
+          "label": "Psalm 149",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4098,7 +4461,8 @@
           "bookId": "PSA",
           "startChapter": 150,
           "endChapter": 150,
-          "label": "Psalm 150"
+          "label": "Psalm 150",
+          "planChapterTotal": 150
         }
       ]
     },
@@ -4109,7 +4473,8 @@
           "bookId": "PSA",
           "startChapter": 90,
           "endChapter": 90,
-          "label": "Psalm 90"
+          "label": "Psalm 90",
+          "planChapterTotal": 150
         }
       ]
     }

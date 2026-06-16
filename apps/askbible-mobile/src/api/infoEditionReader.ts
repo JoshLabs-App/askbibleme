@@ -1,6 +1,7 @@
 import { loadBundledInfoEditionChapter } from "../bible/bundled-info-edition";
 import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { t } from "../i18n/site-copy";
 import type {
   InfoEditionReaderCachePayload,
@@ -73,6 +74,9 @@ export async function fetchInfoEditionCache(
   if (bundled.status === "ready" || isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled;
   }
+  if (!(await isNetworkAvailable())) {
+    return bundled.status === "ready" ? bundled : { ok: false, status: "failed", error: t("pages.read.infoEditionLoadFailed") };
+  }
 
   const res = await fetch(cacheUrl(bookId, chapter, variant, roleId), {
     headers: { Accept: "application/json" },
@@ -93,6 +97,9 @@ export async function postInfoEditionGenerate(
   const bundled = bundledCachePayload(bookId, chapter, variant, roleId);
   if (bundled.status === "ready" || isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled;
+  }
+  if (!(await isNetworkAvailable())) {
+    return { ok: false, status: "failed", error: t("pages.read.infoEditionLoadFailed") };
   }
 
   const base = getAskBibleBaseUrl();

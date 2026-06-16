@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,6 +8,7 @@ import {
   Animated,
   Easing,
   Image,
+  InteractionManager,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +20,8 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MinimalProgressBar } from "../ui/MinimalProgressBar";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { useLocale } from "../i18n/LocaleProvider";
+import { localizeZhText, resolveUiText } from "../i18n/site-copy";
 import { MusicEnergyGlow } from "./MusicEnergyGlow";
 import { musicCopy } from "./musicCopy";
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
@@ -162,12 +166,14 @@ function rowScaleByScroll(rowIndex: number, scrollY: number, active: boolean): n
 
 function BreathingRing({
   active,
+  visible,
   centered = false,
   containerHeight,
   viewportHeight,
   viewportTop = 0,
 }: {
   active: boolean;
+  visible: boolean;
   centered?: boolean;
   containerHeight: number;
   viewportHeight: number;
@@ -179,11 +185,9 @@ function BreathingRing({
     const inhaleMs = 7000;
     const holdMs = 1800;
     const exhaleMs = 8000;
-    const cycleMs = inhaleMs + holdMs + exhaleMs + holdMs;
 
     if (!active) {
       phase.stopAnimation();
-      phase.setValue(0);
       return;
     }
 
@@ -231,6 +235,7 @@ function BreathingRing({
   const baseY = containerHeight - (BREATH_RING_WRAP_MARGIN_BOTTOM + BREATH_RING_WRAP_HEIGHT / 2);
   const targetY = coffeeVisualCenterY(containerHeight, centered, viewportHeight, viewportTop);
   const ringTranslateY = centered ? 0 : targetY - baseY;
+  if (!visible) return null;
   return (
     <View
       style={[
@@ -265,12 +270,14 @@ function BreathingRing({
 
 function SunOrb({
   active,
+  visible,
   centered = false,
   containerHeight,
   viewportHeight,
   viewportTop = 0,
 }: {
   active: boolean;
+  visible: boolean;
   centered?: boolean;
   containerHeight: number;
   viewportHeight: number;
@@ -281,7 +288,6 @@ function SunOrb({
   useEffect(() => {
     if (!active) {
       phase.stopAnimation();
-      phase.setValue(0);
       return;
     }
     const loop = Animated.loop(
@@ -311,6 +317,7 @@ function SunOrb({
   const baseY = containerHeight - (BREATH_RING_WRAP_MARGIN_BOTTOM + BREATH_RING_WRAP_HEIGHT / 2);
   const targetY = coffeeVisualCenterY(containerHeight, centered, viewportHeight, viewportTop);
   const coffeeTranslateY = centered ? 0 : targetY - baseY;
+  if (!visible) return null;
   return (
     <View
       style={[
@@ -338,12 +345,19 @@ function SunOrb({
   );
 }
 
-function SleepCrescentMoon({ active, centered = false }: { active: boolean; centered?: boolean }) {
+function SleepCrescentMoon({
+  active,
+  visible,
+  centered = false,
+}: {
+  active: boolean;
+  visible: boolean;
+  centered?: boolean;
+}) {
   const phase = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    phase.stopAnimation();
     if (!active) {
-      phase.setValue(0);
+      phase.stopAnimation();
       return;
     }
     const loop = Animated.loop(
@@ -366,7 +380,7 @@ function SleepCrescentMoon({ active, centered = false }: { active: boolean; cent
     return () => loop.stop();
   }, [active, phase]);
 
-  if (!active) return null;
+  if (!visible) return null;
   const moonOpacity = phase.interpolate({
     inputRange: [0, 1],
     outputRange: [0.42, 0.78],
@@ -382,6 +396,7 @@ function SleepCrescentMoon({ active, centered = false }: { active: boolean; cent
 
 function CoffeeBeanOrbit({
   active,
+  visible,
   width,
   height,
   viewportHeight,
@@ -390,6 +405,7 @@ function CoffeeBeanOrbit({
   rhythmPulse = 0,
 }: {
   active: boolean;
+  visible: boolean;
   width: number;
   height: number;
   viewportHeight: number;
@@ -416,7 +432,6 @@ function CoffeeBeanOrbit({
       );
       const baseDuration = isLeader ? 24500 : isFollower ? 27200 : 29400;
       const jitter = Math.floor(pseudoRandom01(i * 31 + 7) * 9000);
-      v.setValue(0);
       return Animated.loop(
         Animated.timing(v, {
           toValue: 1,
@@ -458,7 +473,7 @@ function CoffeeBeanOrbit({
     };
   }, [active, bobValuesRef, orbitValuesRef]);
 
-  if (!active) return null;
+  if (!visible) return null;
   const cx = width * 0.5;
   const cy = coffeeVisualCenterY(height, centered, viewportHeight, viewportTop);
   const cyOnScreen = viewportTop + cy;
@@ -625,7 +640,17 @@ function CoffeeBeanOrbit({
   );
 }
 
-function SlowMeteors({ active, width, height }: { active: boolean; width: number; height: number }) {
+function SlowMeteors({
+  active,
+  visible,
+  width,
+  height,
+}: {
+  active: boolean;
+  visible: boolean;
+  width: number;
+  height: number;
+}) {
   const valuesRef = useRef(Array.from({ length: METEOR_COUNT }, () => new Animated.Value(0)));
   const values = valuesRef.current;
 
@@ -633,7 +658,6 @@ function SlowMeteors({ active, width, height }: { active: boolean; width: number
     values.forEach((v) => v.stopAnimation());
     if (!active) return;
     const loops = values.map((v, i) => {
-      v.setValue(0);
       return Animated.loop(
         Animated.sequence([
           Animated.timing(v, {
@@ -655,6 +679,8 @@ function SlowMeteors({ active, width, height }: { active: boolean; width: number
     loops.forEach((l) => l.start());
     return () => loops.forEach((l) => l.stop());
   }, [active, values]);
+
+  if (!visible) return null;
 
   return (
     <View pointerEvents="none" style={styles.meteorLayer}>
@@ -692,7 +718,17 @@ function SlowMeteors({ active, width, height }: { active: boolean; width: number
   );
 }
 
-function SlowStars({ active, width, height }: { active: boolean; width: number; height: number }) {
+function SlowStars({
+  active,
+  visible,
+  width,
+  height,
+}: {
+  active: boolean;
+  visible: boolean;
+  width: number;
+  height: number;
+}) {
   const valuesRef = useRef(Array.from({ length: STAR_COUNT }, () => new Animated.Value(0.35)));
   const values = valuesRef.current;
 
@@ -726,6 +762,8 @@ function SlowStars({ active, width, height }: { active: boolean; width: number; 
 
     return () => loops.forEach((l) => l.stop());
   }, [active, values]);
+
+  if (!visible) return null;
 
   return (
     <View pointerEvents="none" style={styles.starLayer}>
@@ -765,7 +803,17 @@ function SlowStars({ active, width, height }: { active: boolean; width: number; 
   );
 }
 
-function WorkSpacePlanets({ active, width, height }: { active: boolean; width: number; height: number }) {
+function WorkSpacePlanets({
+  active,
+  visible,
+  width,
+  height,
+}: {
+  active: boolean;
+  visible: boolean;
+  width: number;
+  height: number;
+}) {
   const orbitA = useRef(new Animated.Value(0)).current;
   const orbitB = useRef(new Animated.Value(0)).current;
   const mistPhase = useRef(new Animated.Value(0)).current;
@@ -775,9 +823,6 @@ function WorkSpacePlanets({ active, width, height }: { active: boolean; width: n
     orbitB.stopAnimation();
     mistPhase.stopAnimation();
     if (!active) return;
-    orbitA.setValue(0);
-    orbitB.setValue(0);
-    mistPhase.setValue(0);
     const loopA = Animated.loop(
       Animated.timing(orbitA, {
         toValue: 1,
@@ -823,7 +868,7 @@ function WorkSpacePlanets({ active, width, height }: { active: boolean; width: n
     };
   }, [active, mistPhase, orbitA, orbitB]);
 
-  if (!active) return null;
+  if (!visible) return null;
   const cx = width * 0.5;
   const cy = height * FOCUS_ORB_CENTER_Y_RATIO;
   const orbitADeg = orbitA.interpolate({
@@ -970,7 +1015,6 @@ function SlowFish({
   }, [active]);
 
   const cx = width * 0.5;
-  // 与主视觉圆心保持一致，避免旋转中心偏移。
   const cy = coffeeVisualCenterY(height, centerMode === "center", viewportHeight, viewportTop);
   const orbitTurns = motionMs / 42000;
   const shimmerPhase = (motionMs % 8200) / 8200;
@@ -992,7 +1036,6 @@ function SlowFish({
           const angleBase = slot * 30;
           const angleJitter = (pseudoRandom01(i * 19 + 7) - 0.5) * 44;
           const angle = angleBase + angleJitter + ring * 2.5;
-          // 中心留白加大：半径只向外随机，避免鱼压到中间圆。
           const radiusBase = 132 + ring * 13.5;
           const radiusJitter = pseudoRandom01(i * 23 + 11) * 20;
           const radius = radiusBase + radiusJitter;
@@ -1007,7 +1050,6 @@ function SlowFish({
           const shimmerOpacityFactor =
             localShimmer <= 0.5 ? 0.88 + localShimmer * 0.24 : 1 - (localShimmer - 0.5) * 0.24;
           const bobY = localShimmer <= 0.5 ? -2.4 + localShimmer * 9.6 : 2.4 - (localShimmer - 0.5) * 9.6;
-          // 在环形轨道上增加轻微扭动，保留绕圆主轨迹但更像鱼在主动游动。
           const swimPhase = (motionMs / (2600 + pseudoRandom01(i * 73 + 33) * 2600) + i * 0.21) % 1;
           const swimWave = Math.sin(swimPhase * Math.PI * 2);
           const tangentialSway = swimWave * (1.6 + pseudoRandom01(i * 79 + 27) * 2.2);
@@ -1043,6 +1085,7 @@ function SlowFish({
 
 export function MusicHomeScreen({ layout = "tab" }: Props) {
   const router = useRouter();
+  const { locale } = useLocale();
   const insets = useSafeAreaInsets();
   const { width: windowW, height: windowH } = useWindowDimensions();
   const fullBleedFrame = useShellFullBleedFrame();
@@ -1080,15 +1123,22 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
     setSleepTimerMinutes,
     setMusicGain,
     downloadingTrackId,
+    checkMusicCatalogUpdate,
   } = useMusicPlayback();
 
   const inTab = layout === "tab";
+  const isFocused = useIsFocused();
   const isLandscape = windowW > windowH;
   const compactLandscape = inTab && isLandscape;
   const bottomPad = (inTab ? SHELL_TAB_BAR_CLEARANCE_MUSIC : 16) + insets.bottom;
   const contentBottomPad = compactLandscape ? Math.max(insets.bottom, 12) : bottomPad;
   const current = tracks[trackIndex];
   const musicActive = playbackMode === "music";
+  /** 专辑装饰可见：音乐模式下暂停也保留画面；仅切到非音乐模式时隐藏。 */
+  const albumDecorVisible = musicActive;
+  /** 鱼、咖啡豆、呼吸环等：播放中且本页聚焦才动；暂停或切 Tab 时停在当前帧。 */
+  const albumDecorMotionActive = musicActive && playing && isFocused;
+  const musicMotionActive = albumDecorMotionActive;
   const duration = musicActive && musicDurationSec > 0 ? musicDurationSec : 0;
   const position = musicActive
     ? seekDragging
@@ -1101,14 +1151,27 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
   const chromeVisible = compactLandscape ? landscapeMenuVisible : uiVisible;
   const nowClockText = useMemo(() => formatNowClock(new Date(nowMs)), [nowMs]);
 
-  const analysis = useTrackAnalysis(current?.analysisSrc ?? null);
+  const shouldLoadTrackAnalysis =
+    isFocused && albumDecorMotionActive && album === "下午茶" && Boolean(current?.analysisSrc);
+  const analysis = useTrackAnalysis(current?.analysisSrc ?? null, shouldLoadTrackAnalysis);
   const coffeeRhythmPulse = useMemo(() => {
-    if (!analysis || !musicActive || !playing) return 0;
+    if (!analysis || !albumDecorMotionActive) return 0;
     const s = sampleTrackAnalysisAt(analysis, musicCurrentSec);
     const e = s.low * 0.45 + s.mid * 0.25 + s.rms * 0.3;
     // 仅在下午茶做柔和节拍，避免“硬跳”。
     return Math.max(0, Math.min(1, (e - 0.12) * 1.2));
-  }, [analysis, musicActive, musicCurrentSec, playing]);
+  }, [analysis, albumDecorMotionActive, musicCurrentSec]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (loading) return;
+      const task = InteractionManager.runAfterInteractions(() => {
+        void checkMusicCatalogUpdate();
+      });
+      return () => task.cancel();
+    }, [checkMusicCatalogUpdate, loading]),
+  );
+
   const showArtwork = false;
   const glowColors = albumGlowColors(album);
   const landscapeSafeHorizontal = useMemo(
@@ -1589,29 +1652,33 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
                 colors={glowColors}
                 analysis={analysis}
                 currentSec={musicCurrentSec}
-                playing={playing && musicActive}
+                playing={musicMotionActive}
                 flatGradientOnly={album === "睡眠"}
+                showBottomScrim={!inTab}
                 showCenterOrb={album !== "安静" && album !== "睡眠" && album !== "专注工作"}
                 centerOrbSway={album === "下午茶"}
                 showSideOrbs={album !== "安静" && album !== "专注工作"}
               />
               {album === "专注工作" ? (
                 <WorkSpacePlanets
-                  active
+                  visible={albumDecorVisible}
+                  active={albumDecorMotionActive}
                   width={inTab ? fullBleedFrame.width : windowW}
                   height={inTab ? fullBleedFrame.height : windowH}
                 />
               ) : null}
               {album === "睡眠" ? (
                 <SlowStars
-                  active
+                  visible={albumDecorVisible}
+                  active={albumDecorMotionActive}
                   width={inTab ? fullBleedFrame.width : windowW}
                   height={inTab ? fullBleedFrame.height : windowH}
                 />
               ) : null}
               {album === "睡眠" ? (
                 <SlowMeteors
-                  active
+                  visible={albumDecorVisible}
+                  active={albumDecorMotionActive}
                   width={inTab ? fullBleedFrame.width : windowW}
                   height={inTab ? fullBleedFrame.height : windowH}
                 />
@@ -1637,7 +1704,7 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
           style={styles.landscapeTapLayer}
           onPress={onLandscapeStageToggle}
           accessibilityRole="button"
-          accessibilityLabel="切换横屏音乐菜单"
+          accessibilityLabel={resolveUiText(locale, "切换横屏音乐菜单", "Show landscape music menu")}
         />
       ) : null}
       {compactLandscape && chromeVisible ? (
@@ -1645,7 +1712,7 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
           style={[styles.landscapeCenterTapTarget, landscapeCenterTapPosition]}
           onPress={onLandscapeStageToggle}
           accessibilityRole="button"
-          accessibilityLabel="隐藏横屏音乐菜单"
+          accessibilityLabel={resolveUiText(locale, "隐藏横屏音乐菜单", "Hide landscape music menu")}
         />
       ) : null}
 
@@ -1697,7 +1764,7 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
           >
             {album === "安静" && upperSize.width > 0 && upperSize.height > 0 ? (
               <SlowFish
-                active
+                active={albumDecorMotionActive}
                 width={upperSize.width}
                 height={upperSize.height}
                 viewportHeight={inTab ? fullBleedFrame.height : windowH}
@@ -1707,7 +1774,8 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
             ) : null}
             {album === "下午茶" && upperSize.width > 0 && upperSize.height > 0 ? (
               <CoffeeBeanOrbit
-                active
+                visible={albumDecorVisible}
+                active={albumDecorMotionActive}
                 width={upperSize.width}
                 height={upperSize.height}
                 viewportHeight={inTab ? fullBleedFrame.height : windowH}
@@ -1718,7 +1786,8 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
             ) : null}
             {album === "安静" ? (
               <BreathingRing
-                active
+                visible={albumDecorVisible}
+                active={albumDecorMotionActive}
                 centered={compactLandscape}
                 containerHeight={upperSize.height}
                 viewportHeight={inTab ? fullBleedFrame.height : windowH}
@@ -1727,14 +1796,21 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
             ) : null}
             {album === "下午茶" ? (
               <SunOrb
-                active
+                visible={albumDecorVisible}
+                active={albumDecorMotionActive}
                 centered={compactLandscape}
                 containerHeight={upperSize.height}
                 viewportHeight={inTab ? fullBleedFrame.height : windowH}
                 viewportTop={compactLandscape ? 0 : insets.top + 8}
               />
             ) : null}
-            {album === "睡眠" ? <SleepCrescentMoon active centered={compactLandscape} /> : null}
+            {album === "睡眠" ? (
+              <SleepCrescentMoon
+                visible={albumDecorVisible}
+                active={albumDecorMotionActive}
+                centered={compactLandscape}
+              />
+            ) : null}
           </View>
 
           <View
@@ -1781,7 +1857,7 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
                       ]}
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
-                      accessibilityLabel={`${albumName}（${albumCounts[albumName] ?? 0}）`}
+                      accessibilityLabel={`${localizeZhText(locale, albumName)}（${albumCounts[albumName] ?? 0}）`}
                     >
                       <MaterialIcons
                         name={albumIconName(albumName)}
@@ -1841,7 +1917,11 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
                     ]}
                     accessibilityRole="button"
                     accessibilityState={{ selected: musicRepeatMode === "one" }}
-                    accessibilityLabel={musicRepeatMode === "one" ? "单曲循环已开启" : "单曲循环已关闭"}
+                    accessibilityLabel={
+                      musicRepeatMode === "one"
+                        ? resolveUiText(locale, "单曲循环已开启", "Repeat one on")
+                        : resolveUiText(locale, "单曲循环已关闭", "Repeat one off")
+                    }
                   >
                     <MaterialIcons
                       name="repeat-one"
@@ -1860,7 +1940,11 @@ export function MusicHomeScreen({ layout = "tab" }: Props) {
                     ]}
                     accessibilityRole="button"
                     accessibilityState={{ selected: musicRepeatMode === "all" }}
-                    accessibilityLabel={musicRepeatMode === "all" ? "全部循环已开启" : "全部循环已关闭"}
+                    accessibilityLabel={
+                      musicRepeatMode === "all"
+                        ? resolveUiText(locale, "全部循环已开启", "Repeat all on")
+                        : resolveUiText(locale, "全部循环已关闭", "Repeat all off")
+                    }
                   >
                     <MaterialIcons
                       name="repeat"

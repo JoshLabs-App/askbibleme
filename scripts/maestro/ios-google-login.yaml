@@ -1,0 +1,27 @@
+appId: me.askbible
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "Rest"
+    timeout: 120000
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn: "User menu"
+- tapOn: "Sign in"
+- tapOn: "Continue with Google"
+- extendedWaitUntil:
+    visible: "使用 Google 账号登录"
+    timeout: 60000
+- tapOn: "使用 Google 账号登录"
+- tapOn: "邮箱或电话号码"
+- inputText: "josh.zeng.ca@gmail.com"
+- tapOn:
+    text: "下一步"
+    optional: true
+- tapOn:
+    text: "Next"
+    optional: true
+- extendedWaitUntil:
+    visible: "Signed in"
+    timeout: 120000

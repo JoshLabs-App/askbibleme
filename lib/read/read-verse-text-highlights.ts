@@ -80,6 +80,14 @@ function writeStore(store: VerseTextHighlightStore): void {
   localStorage.setItem(READ_VERSE_TEXT_HIGHLIGHTS_STORAGE_KEY, JSON.stringify(store));
 }
 
+export function readVerseTextHighlightStore(): VerseTextHighlightStore {
+  return readStore();
+}
+
+export function replaceVerseTextHighlightStore(store: VerseTextHighlightStore): void {
+  writeStore(store);
+}
+
 export function readChapterVerseTextHighlights(ref: {
   translationId: string;
   bookId: string;

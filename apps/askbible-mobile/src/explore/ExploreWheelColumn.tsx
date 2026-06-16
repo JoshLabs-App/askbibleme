@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useRef } from "react";
 import {
-  FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  type ListRenderItemInfo,
 } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
+import { parchmentControlSurface } from "../shell/parchmentControlSurface";
 
-export const EXPLORE_WHEEL_ROW_HEIGHT = 44;
-const VISIBLE_ROWS = 5;
+export const EXPLORE_WHEEL_ROW_HEIGHT = parchmentControlSurface.wheelRowHeight;
+const VISIBLE_ROWS = parchmentControlSurface.wheelVisibleRows;
+const PAD_ROWS = Math.floor(VISIBLE_ROWS / 2);
 
 type Props<T extends string | number> = {
   options: readonly T[];
@@ -30,16 +32,15 @@ export function ExploreWheelColumn<T extends string | number>({
   formatLabel = (item) => String(item),
   flex = 1,
 }: Props<T>) {
-  const listRef = useRef<FlatList<T>>(null);
-  const paddingVertical = EXPLORE_WHEEL_ROW_HEIGHT * Math.floor(VISIBLE_ROWS / 2);
+  const scrollRef = useRef<ScrollView>(null);
   const pickerHeight = EXPLORE_WHEEL_ROW_HEIGHT * VISIBLE_ROWS;
 
   const scrollToValue = useCallback(
     (target: T, animated: boolean) => {
       const index = options.indexOf(target);
       if (index < 0) return;
-      listRef.current?.scrollToOffset({
-        offset: index * EXPLORE_WHEEL_ROW_HEIGHT,
+      scrollRef.current?.scrollTo({
+        y: index * EXPLORE_WHEEL_ROW_HEIGHT,
         animated,
       });
     },
@@ -55,6 +56,10 @@ export function ExploreWheelColumn<T extends string | number>({
   }, [value, options]);
 
   const onPickerLayout = useCallback(() => {
+    scrollToValueRef.current(value, false);
+  }, [value]);
+
+  const onContentSizeChange = useCallback(() => {
     scrollToValueRef.current(value, false);
   }, [value]);
 
@@ -77,48 +82,54 @@ export function ExploreWheelColumn<T extends string | number>({
     [syncFromOffset],
   );
 
-  const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<T>) => {
-      const selected = item === value;
-      return (
-        <Pressable
-          onPress={() => {
-            onChange(item);
-            scrollToValue(item, true);
-          }}
-          style={styles.row}
-          accessibilityRole="button"
-          accessibilityState={{ selected }}
-        >
-          <Text style={[styles.rowText, selected && styles.rowTextSelected]} numberOfLines={1}>
-            {formatLabel(item)}
-          </Text>
-        </Pressable>
-      );
-    },
-    [value, onChange, scrollToValue, formatLabel],
-  );
-
   return (
-    <View style={[styles.wrap, { height: pickerHeight, flex }]}>
-      <FlatList
-        ref={listRef}
-        data={options as T[]}
-        keyExtractor={(item) => String(item)}
-        renderItem={renderItem}
+    <View
+      style={[styles.wrap, { height: pickerHeight, flex }]}
+      onStartShouldSetResponder={() => Platform.OS === "android"}
+      onMoveShouldSetResponder={(_, gestureState) =>
+        Platform.OS === "android" && Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
+      }
+    >
+      <ScrollView
+        ref={scrollRef}
+        style={styles.list}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
         snapToInterval={EXPLORE_WHEEL_ROW_HEIGHT}
         decelerationRate="fast"
-        getItemLayout={(_, index) => ({
-          length: EXPLORE_WHEEL_ROW_HEIGHT,
-          offset: EXPLORE_WHEEL_ROW_HEIGHT * index,
-          index,
-        })}
-        contentContainerStyle={{ paddingVertical }}
         onLayout={onPickerLayout}
+        onContentSizeChange={onContentSizeChange}
         onMomentumScrollEnd={onScrollEnd}
         onScrollEndDrag={onScrollEnd}
-      />
+        keyboardShouldPersistTaps="handled"
+      >
+        {Array.from({ length: PAD_ROWS }, (_, index) => (
+          <View key={`pad-top-${index}`} style={styles.padRow} />
+        ))}
+        {options.map((item) => {
+          const selected = item === value;
+          return (
+            <Pressable
+              key={String(item)}
+              delayPressIn={120}
+              onPress={() => {
+                onChange(item);
+                scrollToValue(item, true);
+              }}
+              style={styles.row}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+            >
+              <Text style={[styles.rowText, selected && styles.rowTextSelected]} numberOfLines={1}>
+                {formatLabel(item)}
+              </Text>
+            </Pressable>
+          );
+        })}
+        {Array.from({ length: PAD_ROWS }, (_, index) => (
+          <View key={`pad-bottom-${index}`} style={styles.padRow} />
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -127,6 +138,12 @@ const styles = StyleSheet.create({
   wrap: {
     minWidth: 0,
     overflow: "hidden",
+  },
+  list: {
+    flex: 1,
+  },
+  padRow: {
+    height: EXPLORE_WHEEL_ROW_HEIGHT,
   },
   row: {
     height: EXPLORE_WHEEL_ROW_HEIGHT,

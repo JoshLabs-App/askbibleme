@@ -1,10 +1,11 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { InteractionManager, Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { t, tFormat } from "../i18n/site-copy";
 import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
+import { pushExploreReadChapter, EXPLORE_YEAR_DAY_COUNT_PATH } from "./explore-read-chapter-nav";
 import { LOGO_TEXT_ACCENT_COLOR as LOGO_COLOR } from "../shell/logo-colors";
 import {
   birthDateAgeYears,
@@ -16,10 +17,10 @@ import {
   readExploreYearDayProfile,
   type ExploreYearDayProfile,
 } from "./explore-birth-year-prefs";
-import { CENTURY_SPAN_YEARS } from "./century-timeline";
+import { getCenturySpanYears } from "./century-timeline";
 import {
-  BIBLICAL_LIFESPAN_NT_SCALE_YEARS,
-  BIBLICAL_LIFESPAN_SCALE_YEARS,
+  getBiblicalLifespanNtScaleYears,
+  getBiblicalLifespanScaleYears,
   getBiblicalLifespans,
   getBiblicalLifespanModernEra,
   biblicalLifespanBarWidthPct,
@@ -223,27 +224,38 @@ function LifespanChartBlock({
 type Props = {
   profileRefreshKey?: number;
   onOpenProfileSettings?: () => void;
+  /** 父级已读 profile 时传入，避免重复 AsyncStorage 读取 */
+  profile?: ExploreYearDayProfile | null;
+  exploreReturn?: string | null;
 };
 
 export function ExploreBiblicalLifespanChart({
   profileRefreshKey = 0,
   onOpenProfileSettings,
+  profile: profileProp,
+  exploreReturn: exploreReturnProp,
 }: Props) {
   const { locale } = useLocale();
   const router = useRouter();
-  const [profile, setProfile] = useState<ExploreYearDayProfile | null>(null);
+  const exploreReturn = exploreReturnProp ?? EXPLORE_YEAR_DAY_COUNT_PATH;
+  const [profileLocal, setProfileLocal] = useState<ExploreYearDayProfile | null>(null);
+  const profile = profileProp !== undefined ? profileProp : profileLocal;
   const entries = useMemo(() => getBiblicalLifespans(locale), [locale]);
   const modernEraLabel = useMemo(() => getBiblicalLifespanModernEra(locale), [locale]);
 
   useEffect(() => {
+    if (profileProp !== undefined) return;
     let cancelled = false;
-    void readExploreYearDayProfile().then((next) => {
-      if (!cancelled) setProfile(next);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readExploreYearDayProfile().then((next) => {
+        if (!cancelled) setProfileLocal(next);
+      });
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
-  }, [profileRefreshKey]);
+  }, [profileProp, profileRefreshKey]);
 
   const modernProfile = useMemo(() => {
     if (!profile || !isExploreYearDayProfileComplete(profile)) return null;
@@ -261,14 +273,15 @@ export function ExploreBiblicalLifespanChart({
   }, [entries]);
 
   const openInBible = (entry: BiblicalLifespanEntry) => {
-    router.push({
-      pathname: "/read/[bookId]/[chapter]",
-      params: {
+    pushExploreReadChapter(
+      router,
+      {
         bookId: entry.bookId,
-        chapter: String(entry.chapter),
-        verse: String(entry.verseStart),
+        chapter: entry.chapter,
+        verse: entry.verseStart,
       },
-    });
+      exploreReturn,
+    );
   };
 
   return (
@@ -280,7 +293,7 @@ export function ExploreBiblicalLifespanChart({
               modernEraLabel={modernEraLabel}
               displayName={modernProfile.displayName}
               birthDate={modernProfile.birthDate}
-              scaleYears={CENTURY_SPAN_YEARS}
+              scaleYears={getCenturySpanYears()}
               isLastInModern={
                 !modernProfile.weddingAnniversary && !modernProfile.baptismDate
               }
@@ -316,7 +329,7 @@ export function ExploreBiblicalLifespanChart({
         <View style={styles.ntSection}>
           <Text style={styles.ntScaleHint}>
             {tFormat("pages.explore.yearDayCountLifespanNtScale", {
-              years: BIBLICAL_LIFESPAN_NT_SCALE_YEARS,
+              years: getBiblicalLifespanNtScaleYears(),
             })}
           </Text>
           <View style={styles.ntDisciplesHeadingRow}>
@@ -329,7 +342,7 @@ export function ExploreBiblicalLifespanChart({
           </View>
           <LifespanChartBlock
             entries={newTestamentEntries}
-            scaleYears={BIBLICAL_LIFESPAN_NT_SCALE_YEARS}
+            scaleYears={getBiblicalLifespanNtScaleYears()}
             onOpen={openInBible}
             chartStyle={styles.ntChartCompact}
           />
@@ -342,12 +355,12 @@ export function ExploreBiblicalLifespanChart({
         ) : null}
         <Text style={styles.scaleHint}>
           {tFormat("pages.explore.yearDayCountLifespanScale", {
-            years: BIBLICAL_LIFESPAN_SCALE_YEARS,
+            years: getBiblicalLifespanScaleYears(),
           })}
         </Text>
         <LifespanChartBlock
           entries={mainEntries}
-          scaleYears={BIBLICAL_LIFESPAN_SCALE_YEARS}
+          scaleYears={getBiblicalLifespanScaleYears()}
           onOpen={openInBible}
         />
       </View>

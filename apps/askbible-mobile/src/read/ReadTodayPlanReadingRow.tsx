@@ -4,7 +4,9 @@ import { t } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
+import { useLocale } from "../i18n/LocaleProvider";
 import { formatReadingPlanRange } from "./reading-plan/format-reading-range";
+import { formatReadingPlanChapterTotalLabel } from "./reading-plan/plan-chapter-total";
 import type { ReadingPlanRange } from "./reading-plan/types";
 
 type Props = {
@@ -28,8 +30,14 @@ export function ReadTodayPlanReadingRow({
   showCheckbox = true,
   dimDoneText = true,
 }: Props) {
+  const { locale } = useLocale();
   const pct = Math.min(1, Math.max(0, progress));
   const fillWidth = `${Math.round(pct * 100)}%` as const;
+  const chapterTotalLabel = formatReadingPlanChapterTotalLabel(
+    reading.planChapterTotal,
+    reading.bookId,
+    locale,
+  );
 
   return (
     <View style={styles.readingRow}>
@@ -79,6 +87,9 @@ export function ReadTodayPlanReadingRow({
             />
           </View>
         </View>
+        <Text style={styles.chapterTotal} numberOfLines={1}>
+          {chapterTotalLabel}
+        </Text>
       </Pressable>
     </View>
   );
@@ -121,7 +132,15 @@ const styles = StyleSheet.create({
   },
   barTrackWrap: {
     width: "100%",
-    paddingRight: 30,
+  },
+  chapterTotal: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    ...parchmentSans(500),
+    color: c.faint,
+    textAlign: "left",
+    letterSpacing: 0.1,
   },
   barTrack: {
     height: 4,

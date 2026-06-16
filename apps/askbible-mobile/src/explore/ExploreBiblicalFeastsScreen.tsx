@@ -6,7 +6,8 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
-import { exploreStyles as shared } from "./exploreParchmentStyles";
+import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import { pushExploreReadChapter, useExploreReadReturnPath } from "./explore-read-chapter-nav";
 import { useState } from "react";
 
 type ReadTarget = {
@@ -230,7 +231,12 @@ const BOTTOM_PAD = 140;
 
 export function ExploreBiblicalFeastsScreen() {
   const router = useRouter();
+  const exploreReturn = useExploreReadReturnPath();
   const insets = useSafeAreaInsets();
+  const scrollContentStyle = useExploreScrollContentStyle({
+    paddingTop: 8 + insets.top,
+    paddingBottom: BOTTOM_PAD + insets.bottom,
+  });
   const { locale } = useLocale();
   const [expandedFeastId, setExpandedFeastId] = useState<string>("advent");
   const springLabel = locale === "en" ? "Spring Feasts" : t("pages.explore.biblicalFeastsSeasonSpring");
@@ -253,27 +259,22 @@ export function ExploreBiblicalFeastsScreen() {
   const churchFeastRows = mapRows(CHURCH_FEAST_TIMELINE, "churchFeasts");
 
   const openRead = (target: ReadTarget) => {
-    router.push({
-      pathname: "/read/[bookId]/[chapter]",
-      params: {
+    pushExploreReadChapter(
+      router,
+      {
         bookId: target.bookId,
-        chapter: String(target.chapter),
-        verse: String(target.verse),
+        chapter: target.chapter,
+        verse: target.verse,
       },
-    });
+      exploreReturn,
+    );
   };
 
   return (
     <View style={shared.root}>
       <ParchmentBottomFadeScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          shared.scroll,
-          {
-            paddingTop: 8 + insets.top,
-            paddingBottom: BOTTOM_PAD + insets.bottom,
-          },
-        ]}
+        contentContainerStyle={scrollContentStyle}
       >
         <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
           <Text style={shared.backLinkText}>{t("pages.explore.biblicalFeastsBack")}</Text>

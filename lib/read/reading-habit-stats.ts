@@ -102,6 +102,10 @@ export function snapshotFromRecord(
   };
 }
 
+export function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord): void {
+  writeReadingHabitStats(record);
+}
+
 export function syncReadingHabitDayCompletion(allDoneToday: boolean): ReadingHabitStatsRecord {
   const today = toLocalDateString(new Date());
   const record = readReadingHabitStats();

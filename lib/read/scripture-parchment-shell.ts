@@ -2,6 +2,7 @@ import {
   NATURE_HOME_THEME_LOCK_DATASET_KEY,
   NATURE_HOME_THEME_LOCK_VALUE,
 } from "@/lib/nature/root-theme";
+import { isParchmentShellPath } from "@/lib/shell/parchment-shell-path";
 
 /** `document.documentElement.dataset`：壳层安全区用羊皮底图而非品牌深色块 */
 export const SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY = "appShellSafeFill";
@@ -45,17 +46,9 @@ export function scriptureParchmentStatusBarTheme(dark: boolean, samsung: boolean
   return SCRIPTURE_PARCHMENT_STATUS_BAR_THEME;
 }
 
+/** 前台默认：全站羊皮卷壳；自然首页 / 场景 / 音乐 / 后台等见 {@link isParchmentShellExcludedPath} */
 export function isScriptureParchmentPath(pathname: string): boolean {
-  const p = pathname || "";
-  return (
-    p === "/read" ||
-    p.startsWith("/read/") ||
-    p === "/dev/info-edition-batch" ||
-    p === "/dev/legacy-articles" ||
-    p.startsWith("/dev/legacy-articles/") ||
-    p === "/explore" ||
-    p.startsWith("/explore/")
-  );
+  return isParchmentShellPath(pathname);
 }
 
 export function isThemeColorManagedOnDocument(): boolean {

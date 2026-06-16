@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type { AppLocale } from "../i18n/config";
 import {
   getExploreFeaturedArticleView,
@@ -8,32 +8,24 @@ import {
 import {
   forceRefreshExploreFeaturedArticles,
   getActiveExploreFeaturedArticlesBundle,
-  hydrateExploreFeaturedArticlesFromDisk,
-  refreshExploreFeaturedArticlesInBackground,
   subscribeExploreFeaturedArticlesBundle,
 } from "./fetchExploreFeaturedArticles";
+import { refreshExploreContentWhenFocused } from "./refreshExploreContent";
+
+/** Explore Tab 聚焦时再拉线上内容，避免冷启动占用网络。 */
+export function refreshExploreFeaturedArticlesWhenFocused(): void {
+  refreshExploreContentWhenFocused();
+}
 
 function useExploreFeaturedArticlesBundle() {
-  const [bundle, setBundle] = useState(() => getActiveExploreFeaturedArticlesBundle());
-
-  useEffect(() => {
-    let cancelled = false;
-    void hydrateExploreFeaturedArticlesFromDisk().then((next) => {
-      if (!cancelled) setBundle(next);
-    });
-    const unsubscribe = subscribeExploreFeaturedArticlesBundle((next) => {
-      if (!cancelled) setBundle(next);
-    });
-    refreshExploreFeaturedArticlesInBackground();
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, []);
+  const bundle = useSyncExternalStore(
+    subscribeExploreFeaturedArticlesBundle,
+    getActiveExploreFeaturedArticlesBundle,
+    getActiveExploreFeaturedArticlesBundle,
+  );
 
   const refresh = useCallback(async () => {
-    const next = await forceRefreshExploreFeaturedArticles();
-    setBundle(next);
+    return forceRefreshExploreFeaturedArticles();
   }, []);
 
   return { bundle, refresh };
@@ -41,7 +33,7 @@ function useExploreFeaturedArticlesBundle() {
 
 export function useExploreFeaturedArticles(locale: AppLocale): {
   articles: ExploreFeaturedArticle[];
-  refresh: () => Promise<void>;
+  refresh: () => ReturnType<typeof forceRefreshExploreFeaturedArticles>;
 } {
   const { bundle, refresh } = useExploreFeaturedArticlesBundle();
   const articles = useMemo(() => listExploreFeaturedArticleTileViews(bundle, locale), [bundle, locale]);

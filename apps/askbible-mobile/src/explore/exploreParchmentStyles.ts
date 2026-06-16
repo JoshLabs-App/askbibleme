@@ -1,5 +1,16 @@
-import { StyleSheet } from "react-native";
+import { useMemo } from "react";
+import {
+  StyleSheet,
+  useWindowDimensions,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
+import {
+  PARCHMENT_CATALOG_MAX_WIDTH_PHONE,
+  PARCHMENT_COLUMN_MAX_WIDTH_PHONE,
+  parchmentColumnMaxWidth,
+} from "../read/parchmentColumnLayout";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
 /** 与读经首页 `READ_PARCHMENT_PAGE_TOP_HOME` 同量级，略留标题呼吸感 */
@@ -10,10 +21,9 @@ export const YEAR_DAY_COUNT_SCRIPTURE_TEXT_OPACITY = 0.7;
 
 /** 与读经/祷告羊皮卷页对齐 */
 export const exploreStyles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "transparent" },
+  root: { flex: 1, backgroundColor: "transparent", overflow: "hidden" },
   scroll: {
     paddingHorizontal: 22,
-    maxWidth: 448,
     width: "100%",
     alignSelf: "center",
   },
@@ -130,7 +140,6 @@ export const exploreStyles = StyleSheet.create({
   },
   yearDayCountBottomParagraph: {
     width: "100%",
-    maxWidth: 380,
     fontSize: 14,
     lineHeight: 21,
     ...parchmentSans(500),
@@ -147,13 +156,24 @@ export const exploreStyles = StyleSheet.create({
   yearDayCountBottomRefLine: {
     marginTop: -6,
     width: "100%",
-    maxWidth: 380,
     fontSize: 10,
     lineHeight: 16,
     ...parchmentSans(500),
     color: c.faint,
     letterSpacing: 0.1,
     textAlign: "right",
+  },
+  yearDayCountRelatedSection: {
+    marginTop: 28,
+    alignItems: "center",
+    paddingTop: 8,
+  },
+  yearDayCountRelatedDivider: {
+    marginBottom: 18,
+    height: StyleSheet.hairlineWidth,
+    width: "100%",
+    backgroundColor: c.border,
+    opacity: 0.8,
   },
   iconGrid: {
     marginTop: 16,
@@ -252,3 +272,21 @@ export const exploreStyles = StyleSheet.create({
     marginTop: 18,
   },
 });
+
+export function useExploreScrollContentStyle(
+  extra?: StyleProp<ViewStyle>,
+): StyleProp<ViewStyle> {
+  const { width, height } = useWindowDimensions();
+  return useMemo(() => {
+    const maxWidth = parchmentColumnMaxWidth(width, height, PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
+    return [exploreStyles.scroll, maxWidth != null ? { maxWidth } : null, extra];
+  }, [width, height, extra]);
+}
+
+export function useExploreCatalogMaxWidth(): number | undefined {
+  const { width, height } = useWindowDimensions();
+  return useMemo(
+    () => parchmentColumnMaxWidth(width, height, PARCHMENT_CATALOG_MAX_WIDTH_PHONE),
+    [width, height],
+  );
+}

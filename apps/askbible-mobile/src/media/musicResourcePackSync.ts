@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
+import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import type { MusicCompanionStore } from "../music/types";
 
@@ -194,6 +195,7 @@ async function downloadAsset(
 }
 
 async function fetchMusicPackManifest(): Promise<MusicPackManifest | null> {
+  if (!(await isNetworkAvailable())) return null;
   const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
   const manifestUrl = `${baseUrl}/api/mobile/resource-pack/music/manifest`;
   const res = await fetchWithTimeout(manifestUrl, {

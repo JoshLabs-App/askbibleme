@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsFocused } from "@react-navigation/native";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  InteractionManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +19,7 @@ import {
   type ScriptureSearchHit,
   type ScriptureSearchScope,
 } from "../bible/search-scripture-verses";
+import { warmScriptureSearchDatabase } from "../bible/scripture-database";
 import { SCRIPTURE_SEARCH_MIN_LEN } from "../bible/scripture-search";
 import { t } from "../i18n/site-copy";
 import { bundledBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
@@ -27,14 +29,16 @@ import { ReadBibleTypographyContext } from "./ReadBibleTypographyContext";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readTypography } from "./readTypography";
+import {
+  pushScriptureRecentSearch,
+  readScriptureRecentSearches,
+} from "./scripture-recent-searches";
 
 const SCOPE_OPTIONS: { key: ScriptureSearchScope; labelKey: string }[] = [
   { key: "all", labelKey: "pages.read.scriptureSearchScopeAll" },
   { key: "old", labelKey: "pages.read.scriptureSearchScopeOld" },
   { key: "new", labelKey: "pages.read.scriptureSearchScopeNew" },
 ];
-const RECENT_SEARCH_STORAGE_KEY = "askbible-mobile-scripture-recent-searches-v1";
-const RECENT_SEARCH_MAX_ITEMS = 8;
 
 function renderHighlightedHitText(text: string, query: string) {
   const keyword = query.trim();
@@ -72,6 +76,7 @@ function useScriptureSearchTranslationPrefs(): {
 export function ReadScriptureSearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const { primaryTranslationId, translationCatalogReady } = useScriptureSearchTranslationPrefs();
   const [scope, setScope] = useState<ScriptureSearchScope>("all");
   const [query, setQuery] = useState("");
@@ -81,53 +86,30 @@ export function ReadScriptureSearchScreen() {
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
-  const persistRecentSearches = useCallback(async (next: string[]) => {
-    try {
-      await AsyncStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Ignore storage write failures.
-    }
+  const pushRecentSearch = useCallback((raw: string) => {
+    void pushScriptureRecentSearch(raw).then((record) => setRecentSearches(record.terms));
   }, []);
-
-  const pushRecentSearch = useCallback(
-    (raw: string) => {
-      const normalized = raw.trim().replace(/\s+/g, " ");
-      if (normalized.length < SCRIPTURE_SEARCH_MIN_LEN) return;
-      setRecentSearches((prev) => {
-        const next = [
-          normalized,
-          ...prev.filter((item) => item.toLowerCase() !== normalized.toLowerCase()),
-        ].slice(0, RECENT_SEARCH_MAX_ITEMS);
-        void persistRecentSearches(next);
-        return next;
-      });
-    },
-    [persistRecentSearches],
-  );
 
   useEffect(() => {
     let cancelled = false;
-    const loadRecent = async () => {
-      try {
-        const raw = await AsyncStorage.getItem(RECENT_SEARCH_STORAGE_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw) as unknown;
-        if (!Array.isArray(parsed)) return;
-        const cleaned = parsed
-          .filter((item): item is string => typeof item === "string")
-          .map((item) => item.trim())
-          .filter((item) => item.length >= SCRIPTURE_SEARCH_MIN_LEN)
-          .slice(0, RECENT_SEARCH_MAX_ITEMS);
-        if (!cancelled) setRecentSearches(cleaned);
-      } catch {
-        // Ignore malformed storage data.
-      }
-    };
-    void loadRecent();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readScriptureRecentSearches().then((record) => {
+        if (!cancelled) setRecentSearches(record.terms);
+      });
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isFocused || !translationCatalogReady) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void warmScriptureSearchDatabase(primaryTranslationId);
+    });
+    return () => task.cancel();
+  }, [isFocused, primaryTranslationId, translationCatalogReady]);
 
   const runSearch = useCallback(
     async (raw: string) => {
@@ -159,6 +141,7 @@ export function ReadScriptureSearchScreen() {
   );
 
   useEffect(() => {
+    if (!isFocused) return;
     const q = query.trim();
     if (!q) {
       setResults([]);
@@ -168,17 +151,19 @@ export function ReadScriptureSearchScreen() {
     }
     const timer = setTimeout(() => {
       void runSearch(q);
-    }, 320);
+    }, 360);
     return () => clearTimeout(timer);
-  }, [query, scope, runSearch]);
+  }, [isFocused, query, scope, runSearch]);
 
   const openHit = (hit: ScriptureSearchHit) => {
+    const q = query.trim();
     router.push({
       pathname: "/read/[bookId]/[chapter]",
       params: {
         bookId: hit.bookId,
         chapter: String(hit.chapter),
         verse: String(hit.verse),
+        ...(q ? { q } : {}),
       },
     });
   };

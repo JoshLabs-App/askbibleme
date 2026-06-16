@@ -7,15 +7,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { InteractionManager } from "react-native";
-import { loginMobileMember, loginMobileMemberWithApple, loginMobileMemberWithGoogle, registerMobileMember, deleteMobileMemberAccount } from "../api/memberAuth";
-import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
-import { fetchWithTimeout } from "../api/fetchWithTimeout";
+import { InteractionManager, Linking } from "react-native";
+import { loginMobileMember, loginMobileMemberWithGoogle, registerMobileMember, deleteMobileMemberAccount } from "../api/memberAuth";
+import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { hydrateMemberRegisterEnabled, scheduleMemberRegisterEnabledRemoteHydrate } from "./member-register-enabled";
 import { signInWithAppleNative } from "./appleSignIn";
-import { signInWithGoogleNative } from "./googleSignIn";
+import { exchangeAppleNativeCredential } from "./appleSignInExchange";
+import { signInWithGoogleMobile } from "./googleSignIn";
+import { handleGoogleOAuthDeepLink } from "./googleOAuthDeepLink";
+import { installGoogleOAuthLinkingCapture } from "./googleOAuthLinking";
+import { isGoogleOAuthCallbackUrl } from "./googleOAuthSession";
+import { syncMemberReadingAfterLogin } from "../member-sync/useMemberReadingSync";
+import { pullMemberProfileFromServer } from "./syncMemberProfileFromServer";
 import { getLocale } from "../i18n/locale-store";
 import {
   clearMemberSession,
@@ -28,9 +32,10 @@ import {
 type MemberAuthContextValue = {
   bootstrapped: boolean;
   user: MemberUser | null;
+  syncSessionFromStorage: () => Promise<void>;
   signIn: (input: { email: string; password: string }) => Promise<{ ok: true } | { ok: false; error: string }>;
-  signInWithGoogle: () => Promise<{ ok: true } | { ok: false; error: string; cancelled?: boolean }>;
-  signInWithApple: () => Promise<{ ok: true } | { ok: false; error: string; cancelled?: boolean }>;
+  signInWithGoogle: () => Promise<{ ok: true } | { ok: false; error: string; code?: string; cancelled?: boolean }>;
+  signInWithApple: () => Promise<{ ok: true } | { ok: false; error: string; code?: string; cancelled?: boolean }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<{ ok: true } | { ok: false; error: string; code?: string }>;
   completeRegistration: (input: {
@@ -43,44 +48,78 @@ type MemberAuthContextValue = {
 
 const MemberAuthContext = createContext<MemberAuthContextValue | null>(null);
 
+installGoogleOAuthLinkingCapture();
+
 async function verifyRemoteSession(session: MemberSession): Promise<MemberUser | null> {
-  const base = getAskBibleBaseUrl();
-  const res = await fetchWithTimeout(toAbsoluteUrl(base, "/api/mobile/auth/session"), {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${session.sessionToken}`,
-    },
-    timeoutMs: 10_000,
-  });
-  if (!res.ok) return session.user;
-  const data = (await res.json().catch(() => null)) as {
-    user?: { id?: string; email?: string; name?: string } | null;
-  } | null;
-  const remoteUser = data?.user;
-  if (!remoteUser || typeof remoteUser.id !== "string" || typeof remoteUser.email !== "string") return null;
-  return {
-    id: remoteUser.id,
-    email: remoteUser.email,
-    name: typeof remoteUser.name === "string" ? remoteUser.name : remoteUser.email,
-  };
+  const synced = await pullMemberProfileFromServer(session.sessionToken);
+  return synced;
 }
 
-async function persistSession(input: {
+async function commitMemberSession(input: {
   sessionToken: string;
   expiresAt: string;
   user: MemberUser;
-}): Promise<void> {
+}): Promise<MemberUser> {
+  const synced = await pullMemberProfileFromServer(input.sessionToken);
+  const user = synced ?? input.user;
   await writeMemberSession({
     sessionToken: input.sessionToken,
     expiresAt: input.expiresAt,
-    user: input.user,
+    user,
   });
+  void syncMemberReadingAfterLogin(input.sessionToken);
+  return user;
+}
+
+async function dismissOAuthBrowserQuietly(): Promise<void> {
+  try {
+    const WebBrowser = await import("expo-web-browser");
+    WebBrowser.dismissBrowser?.();
+  } catch {
+    // optional
+  }
 }
 
 export function MemberAuthProvider({ children }: { children: ReactNode }) {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [user, setUser] = useState<MemberUser | null>(null);
+
+  useEffect(() => {
+    const onUrl = ({ url }: { url: string }) => {
+      void (async () => {
+        const outcome = await handleGoogleOAuthDeepLink(url);
+        if (!outcome.handled) return;
+        void dismissOAuthBrowserQuietly();
+        if (!outcome.result.ok) {
+          if (outcome.result.code === "pending_handoff") return;
+          if (__DEV__) {
+            console.warn("[MemberAuthProvider] deep link oauth", outcome.result.error, url);
+          }
+          return;
+        }
+        try {
+          const user = await commitMemberSession({
+            sessionToken: outcome.result.sessionToken,
+            expiresAt: outcome.result.expiresAt,
+            user: outcome.result.user,
+          });
+          setUser(user);
+        } catch (error) {
+          if (__DEV__) {
+            console.warn("[MemberAuthProvider] commitMemberSession from deep link", error);
+          }
+        }
+      })();
+    };
+    const sub = Linking.addEventListener("url", onUrl);
+    void Linking.getInitialURL().then((initial) => {
+      if (!initial) return;
+      // 冷启动时 Android 可能仍带着上次 OAuth 深链；+native-intent 已回首页，勿再换码/改栈
+      if (isGoogleOAuthCallbackUrl(initial)) return;
+      onUrl({ url: initial });
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +147,11 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
                   await clearMemberSession();
                   setUser(null);
                 } else {
+                  await writeMemberSession({
+                    sessionToken: local.sessionToken,
+                    expiresAt: local.expiresAt,
+                    user: remote,
+                  });
                   setUser(remote);
                 }
               } catch {
@@ -125,21 +169,23 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const syncSessionFromStorage = useCallback(async () => {
+    const local = await readMemberSession();
+    setUser(local?.user ?? null);
+  }, []);
+
   const signIn = useCallback(async (input: { email: string; password: string }) => {
-    if (isMobileBundledOnly()) {
-      return { ok: false as const, error: "network" };
-    }
     try {
-      const result = await loginMobileMember(input);
+      const result = await loginMobileMember({ ...input, locale: getLocale() });
       if (!result.ok) {
         return { ok: false as const, error: result.error };
       }
-      await persistSession({
+      const user = await commitMemberSession({
         sessionToken: result.sessionToken,
         expiresAt: result.expiresAt,
         user: result.user,
       });
-      setUser(result.user);
+      setUser(user);
       return { ok: true as const };
     } catch {
       return { ok: false as const, error: "network" };
@@ -147,74 +193,105 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    if (isMobileBundledOnly()) {
-      return { ok: false as const, error: "network" };
+    let result: Awaited<ReturnType<typeof signInWithGoogleMobile>>;
+    try {
+      result = await signInWithGoogleMobile();
+    } catch (err) {
+      if (__DEV__) {
+        console.warn("[MemberAuthProvider] signInWithGoogleMobile threw", err);
+      }
+      return { ok: false as const, error: "network", code: "network" };
     }
-    const native = await signInWithGoogleNative();
-    if (!native.ok) {
-      if (native.code === "google_cancelled") {
+    if (!result.ok) {
+      if (result.code === "google_cancelled") {
         return { ok: false as const, error: "cancelled", cancelled: true };
       }
-      return { ok: false as const, error: native.error || "google_failed" };
+      const existing = await readMemberSession();
+      if (existing?.sessionToken) {
+        setUser(existing.user);
+        return { ok: true as const };
+      }
+      return { ok: false as const, error: result.error || "google_failed", code: result.code ?? result.error };
     }
+
+    if (result.kind === "session") {
+      try {
+        const user = await commitMemberSession({
+          sessionToken: result.sessionToken,
+          expiresAt: result.expiresAt,
+          user: result.user,
+        });
+        setUser(user);
+        return { ok: true as const };
+      } catch (persistError) {
+        if (__DEV__) {
+          console.warn("[MemberAuthProvider] commitMemberSession after Google OAuth", persistError);
+        }
+        return { ok: false as const, error: "session_save_failed", code: "session_save_failed" };
+      }
+    }
+
+    // 兼容旧 bundle：idToken 仍走服务端（googleSignIn 新版已在内层完成 exchange）。
     try {
-      const result = await loginMobileMemberWithGoogle({
-        idToken: native.idToken,
+      const apiResult = await loginMobileMemberWithGoogle({
+        idToken: result.idToken,
         locale: getLocale(),
       });
-      if (!result.ok) {
-        return { ok: false as const, error: result.error };
+      if (!apiResult.ok) {
+        return { ok: false as const, error: apiResult.error, code: apiResult.code };
       }
-      await persistSession({
-        sessionToken: result.sessionToken,
-        expiresAt: result.expiresAt,
-        user: result.user,
+      const user = await commitMemberSession({
+        sessionToken: apiResult.sessionToken,
+        expiresAt: apiResult.expiresAt,
+        user: apiResult.user,
       });
-      setUser(result.user);
+      setUser(user);
       return { ok: true as const };
-    } catch {
-      return { ok: false as const, error: "network" };
+    } catch (apiError) {
+      if (__DEV__) {
+        console.warn("[MemberAuthProvider] loginMobileMemberWithGoogle", apiError);
+      }
+      return { ok: false as const, error: "network", code: "network" };
     }
   }, []);
 
   const signInWithApple = useCallback(async () => {
-    if (isMobileBundledOnly()) {
-      return { ok: false as const, error: "network" };
-    }
     const native = await signInWithAppleNative();
     if (!native.ok) {
       if (native.code === "apple_cancelled") {
         return { ok: false as const, error: "cancelled", cancelled: true };
       }
-      return { ok: false as const, error: native.error || "apple_failed" };
+      return { ok: false as const, error: native.error || "apple_failed", code: native.code ?? native.error };
     }
     try {
-      const result = await loginMobileMemberWithApple({
+      const result = await exchangeAppleNativeCredential({
         idToken: native.idToken,
         nonce: native.nonce,
-        locale: getLocale(),
         displayName: native.displayName,
       });
       if (!result.ok) {
-        return { ok: false as const, error: result.error };
+        if (__DEV__) {
+          console.warn("[MemberAuthProvider] Apple exchange failed", result.code, result.error);
+        }
+        return { ok: false as const, error: result.error, code: result.code };
       }
-      await persistSession({
+      const user = await commitMemberSession({
         sessionToken: result.sessionToken,
         expiresAt: result.expiresAt,
         user: result.user,
       });
-      setUser(result.user);
+      setUser(user);
       return { ok: true as const };
-    } catch {
-      return { ok: false as const, error: "network" };
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("[MemberAuthProvider] exchangeAppleNativeCredential", error);
+      }
+      return { ok: false as const, error: "network", code: "network" };
     }
   }, []);
 
   const completeRegistration = useCallback(
     async (input: { email: string; password: string; name?: string; locale?: string }) => {
-      if (isMobileBundledOnly()) {
-        return { ok: false as const, error: "network" };
-      }
       try {
         const result = await registerMobileMember(input);
         if (!result.ok) {
@@ -223,12 +300,12 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
         if (!result.sessionToken || !result.expiresAt) {
           return { ok: false as const, error: "invalid_response" };
         }
-        await persistSession({
+        const user = await commitMemberSession({
           sessionToken: result.sessionToken,
           expiresAt: result.expiresAt,
           user: result.user,
         });
-        setUser(result.user);
+        setUser(user);
         return { ok: true as const };
       } catch {
         return { ok: false as const, error: "network" };
@@ -243,9 +320,6 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteAccount = useCallback(async () => {
-    if (isMobileBundledOnly()) {
-      return { ok: false as const, error: "network", code: "network" };
-    }
     try {
       const result = await deleteMobileMemberAccount();
       if (!result.ok) {
@@ -264,8 +338,8 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ bootstrapped, user, signIn, signInWithGoogle, signInWithApple, signOut, deleteAccount, completeRegistration }),
-    [bootstrapped, user, signIn, signInWithGoogle, signInWithApple, signOut, deleteAccount, completeRegistration],
+    () => ({ bootstrapped, user, syncSessionFromStorage, signIn, signInWithGoogle, signInWithApple, signOut, deleteAccount, completeRegistration }),
+    [bootstrapped, user, syncSessionFromStorage, signIn, signInWithGoogle, signInWithApple, signOut, deleteAccount, completeRegistration],
   );
 
   return <MemberAuthContext.Provider value={value}>{children}</MemberAuthContext.Provider>;

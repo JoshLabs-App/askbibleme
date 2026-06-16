@@ -62,6 +62,7 @@
 - **复用 AskBible 2 管理员账号**：部署环境能读取 `admin_data/auth.sqlite` 时，设 `ASKBIBLE_AUTH_SQLITE_PATH` 或 `ASKBIBLE_REPO`（见 `.env.example`）。`/admin/login` 用旧站同一邮箱+密码（`is_admin=1`）；登录后签发 `selah_admin_askbible` cookie。本地未设变量时，会尝试默认桌面路径下的老仓库（仅开发机）。Vercel 等无盘环境必须把 sqlite 放到可访问路径并配置变量。
 - **复用 AskBible 2 管理员账号（同一 auth.sqlite）**：部署机能读到 `admin_data/auth.sqlite` 时配置 `ASKBIBLE_AUTH_SQLITE_PATH` 或 `ASKBIBLE_REPO`（见 `.env.example`）。`/admin/login` 用旧站邮箱+密码（`is_admin=1`）；签发 `selah_admin_askbible` cookie。本地未设变量时可回退到桌面默认老仓库路径（仅开发机）；Vercel 须把 sqlite 放到可读路径。
 - **账号登录（sqlite）**：优先复用 AskBible `auth.sqlite`（见上两条）；未配置 sqlite 时可用工作室口令（`ADMIN_PASSWORD`）进入 `/admin`。
+- **本地免登录**：`npm run dev` 下 `/admin` **默认不要求**邮箱或口令（与 Studio 磁盘默认可写一致）。若要本地仍测登录页，在 `.env.local` 设 `ADMIN_REQUIRE_LOGIN=1` 并重启 dev。
 - **从 AskBible 2 导出管理员邮箱**（仅用于审计/对照）：本机有老仓库时运行 `npm run migrate:askbible-admin-emails`。
 - 与前台共用：`LocaleProvider` 包在根 `app/layout.tsx`，故后台与前台共享 `t()` 与语言存储（同站点同设备）。
 

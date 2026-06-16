@@ -15,6 +15,7 @@ export function useReadChapterSearchFocus(
   chapterData: LoadedChapter | null,
   verseParam: string | string[] | undefined,
   scrollRef: React.RefObject<ScrollView | null>,
+  scrollContentHeightRef?: React.RefObject<number>,
 ) {
   const [searchFocusVerse, setSearchFocusVerse] = useState<number | null>(null);
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
@@ -85,10 +86,12 @@ export function useReadChapterSearchFocus(
     didScrollRef.current = true;
     pendingScrollVerseRef.current = null;
     scrollRef.current.scrollTo({
-      y: scrollYToCenterVerse(layout, scrollViewportHeight),
+      y: scrollYToCenterVerse(layout, scrollViewportHeight, {
+        contentHeight: scrollContentHeightRef?.current,
+      }),
       animated: true,
     });
-  }, [scrollRef, scrollViewportHeight]);
+  }, [scrollContentHeightRef, scrollRef, scrollViewportHeight]);
 
   const onScrollViewportLayout = useCallback(
     (height: number) => {

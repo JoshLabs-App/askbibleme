@@ -2,6 +2,8 @@ import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { CUV_CHAPTER_AUDIO_VOICES } from "../bible/cuv-chapter-audio-voices";
 import { translationSupportsCuvChapterAudio } from "../bible/cuv-chapter-audio";
 import { translationUsesWebChapterAudio } from "../bible/web-chapter-audio";
+import type { AppLocale } from "../i18n/config";
+import { localizeZhText } from "../i18n/site-copy";
 import type { BibleTranslationMeta } from "../bible/translations-types";
 import { translationCatalogWithChapterAudio } from "./read-chapter-audio-translation";
 
@@ -15,8 +17,8 @@ const VOICE_LABEL_KEYS: Record<CuvChapterAudioVoiceId, string> = {
   "teochew-nt": "pages.read.chapterAudioVoiceTeochewNt",
 };
 
-function translationLabel(tr: BibleTranslationMeta, locale: string): string {
-  return locale === "en" ? tr.labelEn : tr.labelZh;
+function translationLabel(tr: BibleTranslationMeta, locale: AppLocale): string {
+  return locale === "en" ? tr.labelEn : localizeZhText(locale, tr.labelZh);
 }
 
 function isCuvVoiceOptionId(id: string): id is CuvChapterAudioVoiceId {
@@ -71,7 +73,7 @@ export function decodeChapterAudioPlaybackOptionId(
 /** 圣经版本在「圣经版本」里选；此处仅列朗读人声与英文音轨（各出现一次） */
 export function buildChapterAudioPlaybackOptions(
   catalog: BibleTranslationMeta[],
-  locale: string,
+  locale: AppLocale,
   t: (key: string) => string,
 ): ChapterAudioPlaybackOption[] {
   const audioCatalog = translationCatalogWithChapterAudio({

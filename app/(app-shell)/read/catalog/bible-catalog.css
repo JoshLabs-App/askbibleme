@@ -625,39 +625,50 @@ button.bible-catalog-chapter-cell {
 }
 
 .bc-sheet-root.bible-catalog-page--read .bc-sheet-panel {
-  background: color-mix(in srgb, var(--read-parchment-bg-canvas, #e5d2bf) 93%, #fff 7%);
-  border: 1px solid color-mix(in srgb, rgb(120 53 15) 24%, transparent);
+  border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
   box-shadow:
     0 14px 44px color-mix(in srgb, rgb(35 18 10) 22%, transparent),
     0 0 0 1px color-mix(in srgb, rgb(120 53 15) 14%, transparent);
 }
 
 .dark .bc-sheet-root.bible-catalog-page--read .bc-sheet-panel {
-  background: color-mix(in srgb, #1c1917 82%, var(--read-parchment-bg-canvas, #3d3428) 18%);
-  border: 1px solid color-mix(in srgb, #f4ebe1 14%, transparent);
+  border: 1px solid var(--parchment-control-border, color-mix(in srgb, #f4ebe1 14%, transparent));
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.52),
     0 0 0 1px color-mix(in srgb, #f4ebe1 11%, transparent);
 }
 
+.bc-sheet-root.bible-catalog-page--read .bc-sheet-panel,
+.bc-sheet-root--jump-catalog .bc-sheet-panel {
+  background-color: var(--read-parchment-bg-canvas, #ecd9b9);
+  background-image: var(--read-parchment-bg-image);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.dark .bc-sheet-root.bible-catalog-page--read .bc-sheet-panel,
+.dark .bc-sheet-root--jump-catalog .bc-sheet-panel {
+  background-color: var(--read-parchment-bg-canvas, #1a1512);
+}
+
 .bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell {
-  background: color-mix(in srgb, #fff 26%, var(--read-parchment-bg-canvas, #e5d2bf) 74%);
-  border-color: color-mix(in srgb, rgb(120 53 15) 30%, transparent);
+  background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
+  border-color: var(--parchment-control-border, rgba(120, 53, 15, 0.28));
 }
 
 .bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell:hover {
-  background: color-mix(in srgb, #fff 42%, var(--read-parchment-bg-canvas, #e5d2bf) 58%);
-  border-color: color-mix(in srgb, rgb(120 53 15) 42%, transparent);
+  background: var(--parchment-control-fill-strong, rgba(255, 252, 245, 0.62));
+  border-color: var(--parchment-control-border-focus, rgba(120, 53, 15, 0.42));
 }
 
 .dark .bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell {
-  background: color-mix(in srgb, #292524 58%, #44403c 42%);
-  border-color: color-mix(in srgb, #f4ebe1 16%, transparent);
+  background: var(--parchment-control-fill, color-mix(in srgb, rgb(41 37 36) 72%, transparent));
+  border-color: var(--parchment-control-border, color-mix(in srgb, #f4ebe1 16%, transparent));
 }
 
 .dark .bc-sheet-root.bible-catalog-page--read .bible-catalog-chapter-cell:hover {
-  background: color-mix(in srgb, #3f3a36 62%, #57534e 38%);
-  border-color: color-mix(in srgb, #f4ebe1 24%, transparent);
+  background: var(--parchment-control-fill-strong, color-mix(in srgb, rgb(41 37 36) 88%, transparent));
+  border-color: var(--parchment-control-border-focus, color-mix(in srgb, #f4ebe1 24%, transparent));
 }
 
 .bc-sheet-root--open .bc-sheet-panel {
@@ -710,19 +721,19 @@ button.bible-catalog-chapter-cell {
   padding: 0.5rem 0.25rem;
   font-size: 0.9375rem;
   border-radius: 10px;
-  background: rgba(255, 250, 242, 0.58);
+  background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
 }
 
 .bc-sheet-root.bible-catalog-page--read .bc-sheet-chapters--centered .bible-catalog-chapter-cell {
-  background: color-mix(in srgb, #fff 26%, var(--read-parchment-bg-canvas, #e5d2bf) 74%);
+  background: var(--parchment-control-fill, rgba(255, 252, 245, 0.52));
 }
 
 .bc-sheet-root.bible-catalog-page--read .bc-sheet-chapters--centered .bible-catalog-chapter-cell:hover {
-  background: color-mix(in srgb, #fff 42%, var(--read-parchment-bg-canvas, #e5d2bf) 58%);
+  background: var(--parchment-control-fill-strong, rgba(255, 252, 245, 0.62));
 }
 
 .dark .bc-sheet-root.bible-catalog-page--read .bc-sheet-chapters--centered .bible-catalog-chapter-cell {
-  background: color-mix(in srgb, #292524 58%, #44403c 42%);
+  background: var(--parchment-control-fill, color-mix(in srgb, rgb(41 37 36) 72%, transparent));
 }
 
 .bc-sheet-panel-inner {

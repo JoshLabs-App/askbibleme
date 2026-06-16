@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import { InteractionManager } from "react-native";
 import { type AppLocale } from "./config";
 import { getLocale, hydrateLocaleFromStorage, setLocale as persistLocale, subscribeLocale } from "./locale-store";
 import { createT, type SiteCopyVars } from "./site-copy";
@@ -19,7 +20,10 @@ export function LocaleProvider({ children }: Props) {
   const locale = useSyncExternalStore(subscribeLocale, getLocale, () => DEFAULT_LOCALE_FALLBACK);
 
   useEffect(() => {
-    void hydrateLocaleFromStorage();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void hydrateLocaleFromStorage();
+    });
+    return () => task.cancel();
   }, []);
 
   const setLocale = useCallback((next: AppLocale) => {

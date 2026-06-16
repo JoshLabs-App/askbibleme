@@ -1119,4 +1119,13 @@ export const YEARS_DAYS_ETERNITY_ZH: YearsDaysEternityDocument = {
       ref: "约翰福音 11:25",
     },
   },
+  encouragement: {
+    type: "scripture",
+    lines: [
+      "认识你独一的真神，",
+      "并且认识你所差来的耶稣基督，",
+      "这就是永生。",
+    ],
+    ref: "约翰福音 17:3",
+  },
 };

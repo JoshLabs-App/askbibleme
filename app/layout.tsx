@@ -18,6 +18,7 @@ import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
 import { PwaServiceWorkerRegistration } from "@/components/app-shell/PwaServiceWorkerRegistration";
 import { ParchmentShellRouteEffect } from "@/components/shell/ParchmentShellRouteEffect";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
+import { MemberReadingSyncBridge } from "@/components/member/MemberReadingSyncBridge";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { CuvChapterAudioVoiceProvider } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { MediaPlaybackCoordinatorProvider } from "@/components/media/MediaPlaybackCoordinatorProvider";
@@ -139,6 +140,7 @@ export default async function RootLayout({
         <AppSkinProvider>
           <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
             <AskbibleUserProvider>
+              <MemberReadingSyncBridge />
               <CuvChapterAudioVoiceProvider>
                 <MusicShellPlaybackProvider>
                   <MediaPlaybackCoordinatorProvider>

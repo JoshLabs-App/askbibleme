@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
 import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
@@ -27,7 +27,10 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   const [stored, setStored] = useState<Awaited<ReturnType<typeof readReadingPlanPrefs>>>(null);
 
   useEffect(() => {
-    void readReadingPlanPrefs().then(setStored);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void readReadingPlanPrefs().then(setStored);
+    });
+    return () => task.cancel();
   }, [effective]);
 
   const isTripleLoop = isTripleLoopPlanId(planId);

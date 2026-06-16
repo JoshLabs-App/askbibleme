@@ -89,6 +89,17 @@ export async function hydrateScriptureVerseBookmarkStore(): Promise<void> {
   await readStoreFromDisk();
 }
 
+export async function replaceScriptureVerseBookmarkStore(
+  store: ScriptureVerseBookmarkStore,
+): Promise<void> {
+  const json = JSON.stringify(store);
+  await AsyncStorage.setItem(SCRIPTURE_VERSE_BOOKMARKS_STORAGE_KEY, json);
+  await AsyncStorage.removeItem(SCRIPTURE_VERSE_BOOKMARKS_STORAGE_KEY_LEGACY);
+  cacheRaw = json;
+  cacheStore = store;
+  emit();
+}
+
 /** 按收藏时间倒序（新在前） */
 export function listScriptureVerseBookmarks(
   store: ScriptureVerseBookmarkStore,

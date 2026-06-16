@@ -51,7 +51,7 @@ function syncParchmentThemeColor() {
     meta.setAttribute("content", statusBar);
   }
   root.style.backgroundColor = canvas;
-  document.body.style.backgroundColor = canvas;
+  document.body.style.backgroundColor = "transparent";
 }
 
 /**

@@ -1,8 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  InteractionManager,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,9 +12,10 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { fetchNatureSettings } from "../api/fetchNatureSettings";
+import { fetchNatureSettings, getBundledNatureSettings } from "../api/fetchNatureSettings";
 import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { resolveLocalizedField, t } from "../i18n/site-copy";
 import {
   readNatureActiveSceneId,
@@ -39,6 +42,8 @@ import {
 } from "../nature/natureSceneUsage";
 import type { NatureVideoEntry } from "../types/nature";
 
+const bundledOnBoot = getBundledNatureSettings();
+
 function sceneTitleText(raw: NatureVideoEntry["title"]): string {
   if (typeof raw === "string") return raw.trim();
   if (raw && typeof raw === "object") {
@@ -48,42 +53,85 @@ function sceneTitleText(raw: NatureVideoEntry["title"]): string {
 }
 
 export function ScenesScreen() {
-  const naturePackRev = useNatureResourcePackSync();
+  const scenesFocused = useIsFocused();
+  const naturePackRev = useNatureResourcePackSync(scenesFocused);
   const baseUrl = getNatureRemoteAssetBaseUrl();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<NatureSettingsV2 | null>(null);
-  const [activeId, setActiveId] = useState("");
+  const [loading, setLoading] = useState(() => bundledOnBoot.videos.length === 0);
+  const [settings, setSettings] = useState<NatureSettingsV2 | null>(() =>
+    bundledOnBoot.videos.length > 0 ? bundledOnBoot : null,
+  );
+  const [activeId, setActiveId] = useState(() => {
+    if (bundledOnBoot.videos.length === 0) return "";
+    return bundledOnBoot.activeVideoId?.trim() || bundledOnBoot.videos[0]?.id || "";
+  });
   const [sceneUsageMap, setSceneUsageMap] = useState<NatureSceneUsageMap>({});
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
-      const [data, usage] = await Promise.all([fetchNatureSettings(), readNatureSceneUsageMap()]);
+      const [data, usage, stored] = await Promise.all([
+        fetchNatureSettings(),
+        readNatureSceneUsageMap(),
+        readNatureActiveSceneId(),
+      ]);
       setSettings(data);
       setSceneUsageMap(usage);
-      const stored = await readNatureActiveSceneId();
       const id = stored || data.activeVideoId?.trim() || data.videos[0]?.id || "";
       setActiveId(id);
     } catch {
-      setSettings(null);
+      if (!opts?.silent) setSettings(null);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
+    let prefsTask: { cancel: () => void } | null = null;
+    let loadTask: { cancel: () => void } | null = null;
+
+    if (bundledOnBoot.videos.length > 0) {
+      setLoading(false);
+      prefsTask = InteractionManager.runAfterInteractions(() => {
+        void readNatureSceneUsageMap().then(setSceneUsageMap);
+        void readNatureActiveSceneId().then((stored) => {
+          const id = stored || bundledOnBoot.activeVideoId?.trim() || bundledOnBoot.videos[0]?.id || "";
+          if (id) setActiveId(id);
+        });
+      });
+    }
+    if (isMobileBundledOnly()) {
+      return () => prefsTask?.cancel();
+    }
+    const silent = bundledOnBoot.videos.length > 0;
+    const runLoad = () => void load({ silent });
+    if (isMobileOfflineFirst()) {
+      runLoad();
+      return () => prefsTask?.cancel();
+    }
+    loadTask = InteractionManager.runAfterInteractions(runLoad);
+    return () => {
+      prefsTask?.cancel();
+      loadTask?.cancel();
+    };
   }, [load]);
 
-  useEffect(() => {
-    void ensureNatureResourcePackSync();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const task = InteractionManager.runAfterInteractions(() => {
+        void ensureNatureResourcePackSync();
+      });
+      return () => task.cancel();
+    }, []),
+  );
 
   useEffect(() => {
     if (naturePackRev <= 0) return;
-    void load();
+    const task = InteractionManager.runAfterInteractions(() => {
+      void load({ silent: true });
+    });
+    return () => task.cancel();
   }, [naturePackRev, load]);
 
 

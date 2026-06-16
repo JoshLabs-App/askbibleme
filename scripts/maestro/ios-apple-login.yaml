@@ -1,0 +1,38 @@
+appId: me.askbible
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: "Skip"
+    timeout: 90000
+    optional: true
+- tapOn:
+    text: "Skip"
+    optional: true
+- extendedWaitUntil:
+    visible: "User menu"
+    timeout: 90000
+- tapOn: "User menu"
+- extendedWaitUntil:
+    visible: "Sign in"
+    timeout: 15000
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Continue with Apple"
+    timeout: 15000
+- tapOn: "Continue with Apple"
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 20000
+    optional: true
+- tapOn:
+    text: "Continue"
+    optional: true
+- tapOn:
+    text: "Sign In"
+    optional: true
+- extendedWaitUntil:
+    visible: "Signed in"
+    timeout: 60000
+- assertVisible: "Signed in"

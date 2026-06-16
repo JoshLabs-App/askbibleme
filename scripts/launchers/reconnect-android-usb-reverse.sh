@@ -52,7 +52,7 @@ fi
 
 if ! curl -sf -o /dev/null "http://127.0.0.1:8081/status"; then
   echo "→ 启动 Metro…"
-  (cd "$ROOT/apps/askbible-mobile" && npx expo start --clear >"${TMPDIR:-/tmp}/askbible-metro-usb.log" 2>&1 &)
+  (cd "$ROOT/apps/askbible-mobile" && npx expo start --localhost --clear >"${TMPDIR:-/tmp}/askbible-metro-usb.log" 2>&1 &)
   for _ in $(seq 1 90); do
     curl -sf -o /dev/null "http://127.0.0.1:8081/status" && break
     sleep 1

@@ -20,7 +20,7 @@ type VerseTextHighlightRef = {
 
 type VerseCharHighlightMap = Map<number, string>;
 type VerseTextHighlightEntry = { i: number; c: string };
-type VerseTextHighlightStore = Record<string, VerseTextHighlightEntry[]>;
+export type VerseTextHighlightStore = Record<string, VerseTextHighlightEntry[]>;
 
 function highlightKey(ref: VerseTextHighlightRef): string {
   return `${ref.translationId}:${ref.bookId}:${ref.chapter}:${ref.verse}`;
@@ -79,6 +79,14 @@ async function readStore(): Promise<VerseTextHighlightStore> {
 
 async function writeStore(store: VerseTextHighlightStore): Promise<void> {
   await AsyncStorage.setItem(READ_VERSE_TEXT_HIGHLIGHTS_STORAGE_KEY, JSON.stringify(store));
+}
+
+export async function readVerseTextHighlightStore(): Promise<VerseTextHighlightStore> {
+  return readStore();
+}
+
+export async function replaceVerseTextHighlightStore(store: VerseTextHighlightStore): Promise<void> {
+  await writeStore(store);
 }
 
 export async function readChapterVerseTextHighlights(ref: {

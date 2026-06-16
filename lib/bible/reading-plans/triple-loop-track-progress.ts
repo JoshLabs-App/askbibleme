@@ -25,6 +25,13 @@ export function totalChaptersInTripleLoopTrack(track: TripleLoopTrack): number {
   }, 0);
 }
 
+/** 三环读经各轨总章数（构建计划时写入，不在 UI 层重复计算）。 */
+export const TRIPLE_LOOP_TRACK_CHAPTER_TOTALS: Record<TripleLoopTrack, number> = {
+  ot: totalChaptersInTripleLoopTrack("ot"),
+  nt: totalChaptersInTripleLoopTrack("nt"),
+  wisdom: totalChaptersInTripleLoopTrack("wisdom"),
+};
+
 function chaptersBeforePointer(track: TripleLoopTrack, pointer: TripleLoopPointer): number {
   const order = orderForTripleLoopTrack(track);
   if (!order.length) return 0;

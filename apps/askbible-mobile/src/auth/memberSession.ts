@@ -6,6 +6,7 @@ export type MemberUser = {
   id: string;
   email: string;
   name: string;
+  locale?: string | null;
 };
 
 type StoredMemberSession = {

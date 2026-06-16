@@ -35,4 +35,5 @@ export type YearsDaysEternityDocument = {
   sections: YearsDaysEternitySection[];
   closing: YearsDaysEternityBlock[];
   finale: YearsDaysEternityFinale;
+  encouragement: YearsDaysEternityScriptureBlock;
 };

@@ -5,6 +5,7 @@ export type ReadingPlanRange = {
   startVerse?: number;
   endVerse?: number;
   label: string;
+  planChapterTotal: number;
 };
 
 export type ReadingPlanDay = {

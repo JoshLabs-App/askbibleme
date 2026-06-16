@@ -62,6 +62,8 @@ apps/askbible-mobile/dist/
 apps/askbible-mobile/dist/**
 apps/askbible-mobile/*.aab
 apps/askbible-mobile/build-*.aab
+apps/askbible-mobile/*.ipa
+apps/askbible-mobile/build-*.ipa
 apps/askbible-mobile/web-build/
 apps/askbible-mobile/web-build/**
 

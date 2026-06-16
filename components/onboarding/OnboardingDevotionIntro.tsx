@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
@@ -13,7 +13,6 @@ import {
 } from "@/lib/onboarding/onboarding-devotion-data";
 import {
   completeOnboardingDevotionIntro,
-  readOnboardingNickname,
   type CompanionNeedId,
 } from "@/lib/onboarding/onboarding-devotion-prefs";
 import { trackTap } from "@/lib/telemetry/tap";
@@ -178,13 +177,11 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
   const { locale, setLocale } = useLocale();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const [step, setStep] = useState<1 | 2>(1);
-  const [nickname, setNickname] = useState("");
   const [selectedNeeds, setSelectedNeeds] = useState<CompanionNeedId[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const companionNeedOptions = useMemo(() => getCompanionNeedOptions(locale), [locale]);
   const solutionCards = useMemo(() => getSolutionCards(locale), [locale]);
-  const canOpenSpace = nickname.trim().length > 0;
   const isLastStep = step === 2;
 
   const progressText = useMemo(() => {
@@ -196,21 +193,10 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     setSelectedNeeds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
-  useEffect(() => {
-    let active = true;
-    void readOnboardingNickname().then((saved) => {
-      if (!active) return;
-      if (saved) setNickname(saved);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
   const openDevotionCompanionSpace = async () => {
     if (submitting) return;
     setSubmitting(true);
-    await completeOnboardingDevotionIntro(selectedNeeds, nickname);
+    await completeOnboardingDevotionIntro(selectedNeeds);
     onComplete();
   };
 
@@ -218,7 +204,7 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     if (submitting) return;
     setSubmitting(true);
     trackTap("intro.skip");
-    await completeOnboardingDevotionIntro([], "");
+    await completeOnboardingDevotionIntro([]);
     onComplete();
   };
 
@@ -274,34 +260,13 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
           )}
 
           <div className="mt-2 pt-2">
-            {step === 2 ? (
-              <label className="mb-2.5 block scroll-mt-24">
-                <span className="mb-1.5 block text-[14px] font-semibold text-[rgba(77,53,34,0.9)]">
-                  {locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-                </span>
-                <input
-                  value={nickname}
-                  onChange={(event) => setNickname(event.target.value)}
-                  placeholder={locale === "en" ? "Enter your nickname" : zhText("请输入你的昵称")}
-                  autoCapitalize="off"
-                  autoCorrect="off"
-                  maxLength={24}
-                  onFocus={(event) => {
-                    requestAnimationFrame(() => {
-                      event.currentTarget.scrollIntoView({ block: "center", behavior: "smooth" });
-                    });
-                  }}
-                  className="min-h-[46px] w-full rounded-xl border border-[rgba(120,53,15,0.24)] bg-[rgba(255,252,245,0.92)] px-3.5 py-2.5 text-[16px] font-medium text-[#2b1d15] outline-none focus:border-[rgba(255,177,1,0.55)]"
-                />
-              </label>
-            ) : null}
             <button
               type="button"
               onClick={handlePrimaryButtonPress}
-              disabled={submitting || (isLastStep && !canOpenSpace)}
+              disabled={submitting}
               className={[
                 "inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-4 text-[16px] font-bold tracking-[0.02em] text-[#fffdf8] transition",
-                (isLastStep && !canOpenSpace) || submitting ? "opacity-45" : "hover:brightness-[0.98] active:scale-[0.99]",
+                submitting ? "opacity-45" : "hover:brightness-[0.98] active:scale-[0.99]",
               ].join(" ")}
               style={{ backgroundColor: LOGO_YELLOW }}
             >

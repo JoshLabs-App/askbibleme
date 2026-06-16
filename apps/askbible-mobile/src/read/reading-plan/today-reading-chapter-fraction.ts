@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import {
   buildTodayReadingScopeKey,
+  markTodayReadingItemDone,
+  readTodayReadingDoneKeys,
   readingIncludesChapter,
   todayReadingItemKey,
 } from "./today-reading-done";
@@ -14,6 +16,9 @@ import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 import { markTripleLoopChapterRead } from "./triple-loop-progress";
 import { trackForBookId } from "./triple-loop-reading";
 import type { ReadingPlanRange } from "./types";
+
+/** 读到该比例即视为今日计划该行已完成（与滚动/音频进度共用）。 */
+export const TODAY_READING_AUTO_DONE_FRACTION = 0.88;
 
 export const TODAY_READING_CHAPTER_FRACTION_KEY = "askbible-today-reading-chapter-fraction-v1";
 export const TODAY_READING_CHAPTER_FRACTION_KEY_LEGACY = "selah-today-reading-chapter-fraction-v1";
@@ -91,6 +96,16 @@ async function writeRecord(record: TodayReadingChapterFractionRecord): Promise<v
   }
 }
 
+export async function readTodayReadingChapterFractionRecord(): Promise<TodayReadingChapterFractionRecord | null> {
+  return readRecord();
+}
+
+export async function replaceTodayReadingChapterFractionRecord(
+  record: TodayReadingChapterFractionRecord,
+): Promise<void> {
+  await writeRecord(record);
+}
+
 export async function readTodayReadingChapterFractions(
   scopeKey: string,
 ): Promise<Record<string, number>> {
@@ -111,6 +126,17 @@ export async function setTodayReadingChapterFraction(
   base[itemKey] = next;
   await writeRecord({ version: 1, scopeKey, fractions: base });
   return base;
+}
+
+async function maybeAutoMarkTodayReadingItemDone(
+  scopeKey: string,
+  itemKey: string,
+  fraction: number,
+): Promise<void> {
+  if (fraction < TODAY_READING_AUTO_DONE_FRACTION) return;
+  const done = await readTodayReadingDoneKeys(scopeKey);
+  if (done.has(itemKey)) return;
+  await markTodayReadingItemDone(scopeKey, itemKey);
 }
 
 export function readingPlanRangeUnitCount(r: ReadingPlanRange): number {
@@ -149,4 +175,5 @@ export async function recordTodayReadingChapterFraction(
   const units = readingPlanRangeUnitCount(reading);
   const total = units <= 1 ? perChapter : perChapter / units;
   await setTodayReadingChapterFraction(scopeKey, itemKey, total);
+  await maybeAutoMarkTodayReadingItemDone(scopeKey, itemKey, total);
 }

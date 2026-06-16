@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
+# 已弃用：本机 EAS iOS 构建（仍走 Expo 远程凭证，易卡在旧 Profile）。
+# 常规发版请用：npm run mobile:build:ios:production（本机 Xcode，不经 Expo）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+# shellcheck source=scripts/mobile-load-google-oauth-env.sh
+source "$ROOT/scripts/mobile-load-google-oauth-env.sh"
+load_mobile_google_oauth_env "$ROOT"
 
 if ! command -v xcodebuild >/dev/null 2>&1; then
   echo ""

@@ -1,0 +1,309 @@
+/* 人物馆详情 · 对齐读经主页羊皮卷 + explore-prose / App figureScreenStyles */
+
+.prayer-on-parchment .figure-parchment-page {
+  max-width: min(28rem, 100%);
+  font-family: var(
+    --read-bible-font-family,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    "Noto Sans CJK SC",
+    "Noto Sans SC",
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Microsoft YaHei",
+    "Source Han Sans SC",
+    "WenQuanYi Micro Hei",
+    sans-serif
+  );
+}
+
+.prayer-on-parchment .figure-parchment-page :is(h1, h2, h3, p, button, a, li) {
+  font-family: inherit;
+}
+
+/* 页头：主标题与正文拉开层次，统一黑体 */
+.prayer-on-parchment .figure-parchment-page .explore-prose-title {
+  font-family: inherit;
+  font-size: clamp(1.875rem, 6vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* explore-prose 正文标题类同样继承黑体（覆盖 explore-parchment 的 serif） */
+.prayer-on-parchment .figure-parchment-page .explore-prose-h1,
+.prayer-on-parchment .figure-parchment-page .explore-prose-h2,
+.prayer-on-parchment .figure-parchment-page .explore-prose-h3,
+.prayer-on-parchment .figure-parchment-page .explore-prose-h4 {
+  font-family: inherit;
+}
+
+.prayer-on-parchment .figure-parchment-page .explore-prose-subtitle {
+  margin-top: 1rem;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.prayer-on-parchment .figure-parchment-page .explore-prose-verse {
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+.prayer-on-parchment .figure-parchment-page .explore-prose-ref {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.prayer-on-parchment .figure-parchment-page .figure-parchment-period {
+  margin: 0.5rem 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .figure-parchment-page .figure-parchment-period {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-page .figure-parchment-hint {
+  margin-top: 0.65rem;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .figure-parchment-page .figure-parchment-hint {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}
+
+/* 单块羊皮叠层（对齐 explore-articles-card / 读经目录块） */
+.prayer-on-parchment .figure-parchment-stack {
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 53, 15, 0.28);
+  background: rgba(255, 252, 245, 0.38);
+}
+
+.dark .prayer-on-parchment .figure-parchment-stack {
+  border-color: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
+  background: color-mix(in srgb, rgb(28 20 16) 42%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-group {
+  padding: 14px 16px 16px;
+  border-top: 1px solid rgba(120, 53, 15, 0.22);
+}
+
+.prayer-on-parchment .figure-parchment-group:first-child {
+  border-top: none;
+}
+
+.dark .prayer-on-parchment .figure-parchment-group {
+  border-top-color: color-mix(in srgb, rgb(244 235 225) 18%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-group-title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: #1c1410;
+}
+
+.dark .prayer-on-parchment .figure-parchment-group-title {
+  color: #f4ebe1;
+}
+
+.prayer-on-parchment .figure-parchment-group-body {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prayer-on-parchment .figure-parchment-group--synthesis .figure-parchment-group-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.prayer-on-parchment .figure-parchment-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .figure-parchment-page .figure-parchment-note {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-explain {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: #5c4030;
+}
+
+.dark .prayer-on-parchment .figure-parchment-page .figure-parchment-explain {
+  color: color-mix(in srgb, rgb(244 235 225) 74%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-toggle {
+  align-self: flex-start;
+  margin: 0;
+  padding: 6px 2px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #1c1410;
+  text-decoration: underline;
+  text-decoration-color: rgba(120, 53, 15, 0.38);
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+}
+
+.prayer-on-parchment .figure-parchment-toggle:hover {
+  opacity: 0.86;
+}
+
+.dark .prayer-on-parchment .figure-parchment-toggle {
+  color: #f4ebe1;
+  text-decoration-color: color-mix(in srgb, rgb(244 235 225) 28%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-toggle--sub {
+  font-size: 13px;
+  color: #5c4030;
+  padding: 4px 2px;
+}
+
+.dark .prayer-on-parchment .figure-parchment-toggle--sub {
+  color: color-mix(in srgb, rgb(244 235 225) 66%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-scriptures {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prayer-on-parchment .figure-parchment-verse-link {
+  display: block;
+  padding: 4px 0;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prayer-on-parchment .figure-parchment-verse-link:hover {
+  opacity: 0.88;
+}
+
+.prayer-on-parchment .figure-parchment-sub {
+  margin-top: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 53, 15, 0.14);
+  background: rgba(120, 53, 15, 0.06);
+  padding: 10px 12px;
+}
+
+.dark .prayer-on-parchment .figure-parchment-sub {
+  border-color: color-mix(in srgb, rgb(244 235 225) 14%, transparent);
+  background: color-mix(in srgb, rgb(244 235 225) 6%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-sub-title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 600;
+  color: #1c1410;
+}
+
+.dark .prayer-on-parchment .figure-parchment-sub-title {
+  color: #f4ebe1;
+}
+
+.prayer-on-parchment .figure-parchment-chapter-link {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1410;
+  text-decoration: underline;
+  text-decoration-color: rgba(120, 53, 15, 0.38);
+  text-underline-offset: 0.22em;
+}
+
+.prayer-on-parchment .figure-parchment-chapter-link:hover {
+  opacity: 0.86;
+}
+
+.dark .prayer-on-parchment .figure-parchment-chapter-link {
+  color: #f4ebe1;
+  text-decoration-color: color-mix(in srgb, rgb(244 235 225) 28%, transparent);
+}
+
+.prayer-on-parchment .figure-parchment-group--synthesis .figure-parchment-group-body {
+  gap: 12px;
+}
+
+.prayer-on-parchment .figure-parchment-synthesis-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: figure-synthesis;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.prayer-on-parchment .figure-parchment-synthesis-point {
+  counter-increment: figure-synthesis;
+  position: relative;
+  margin: 0;
+  padding-left: 1.35rem;
+  font-size: 14px;
+  line-height: 1.65;
+  font-weight: 500;
+  color: #5c4030;
+}
+
+.prayer-on-parchment .figure-parchment-synthesis-point::before {
+  content: counter(figure-synthesis) ".";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6e5240;
+}
+
+.dark .prayer-on-parchment .figure-parchment-synthesis-point {
+  color: color-mix(in srgb, rgb(244 235 225) 74%, transparent);
+}
+
+.dark .prayer-on-parchment .figure-parchment-synthesis-point::before {
+  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+}

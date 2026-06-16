@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { InteractionManager } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-scopes";
 import {
@@ -178,52 +179,63 @@ export function useHomeThemeRepeatVerse(
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
-      await refreshTranslations();
-      const manifest = await loadHomeVerseManifest();
-      if (cancelled) return;
-      manifestRef.current = manifest;
-      memoryRef.current = await readHomeVerseMemory();
-      if (!manifest?.entries.length) {
-        const flow = flowLocaleForHomeVerseTranslationId(translationRef.current.primary);
-        setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
-        setContrastEntry(null);
-        setVerseKey(null);
-        setReady(true);
-        return;
-      }
-      const first = await pickShow(
-        manifest,
-        memoryRef.current,
-        locale,
-        translationRef.current.primary,
-        translationRef.current.contrast,
-      );
-      if (!cancelled) {
-        if (first) {
-          setEntry(first.primary);
-          setContrastEntry(first.contrast);
-          setVerseKey(first.verseKey);
-        } else {
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        await refreshTranslations();
+        const manifest = await loadHomeVerseManifest();
+        if (cancelled) return;
+        manifestRef.current = manifest;
+        memoryRef.current = await readHomeVerseMemory();
+        if (!manifest?.entries.length) {
           const flow = flowLocaleForHomeVerseTranslationId(translationRef.current.primary);
           setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
           setContrastEntry(null);
           setVerseKey(null);
+          setReady(true);
+          return;
         }
-        setReady(true);
-      }
-    })();
+        const first = await pickShow(
+          manifest,
+          memoryRef.current,
+          locale,
+          translationRef.current.primary,
+          translationRef.current.contrast,
+        );
+        if (!cancelled) {
+          if (first) {
+            setEntry(first.primary);
+            setContrastEntry(first.contrast);
+            setVerseKey(first.verseKey);
+          } else {
+            const flow = flowLocaleForHomeVerseTranslationId(translationRef.current.primary);
+            setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
+            setContrastEntry(null);
+            setVerseKey(null);
+          }
+          setReady(true);
+        }
+      })();
+    });
     return () => {
       cancelled = true;
+      task.cancel();
     };
   }, [locale, refreshTranslations, poolScopeId]);
 
   useEffect(() => {
     if (!ready) return;
-    void (async () => {
-      await refreshTranslations();
-      await reloadCurrentVerse();
-    })();
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        await refreshTranslations();
+        if (cancelled) return;
+        await reloadCurrentVerse();
+      })();
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
   }, [prefsVersion, homePrefsVersion, ready, refreshTranslations, reloadCurrentVerse]);
 
   useEffect(() => {

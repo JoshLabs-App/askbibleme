@@ -1,0 +1,49 @@
+appId: me.askbible
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      text: ".*Step 1.*|.*User menu.*|.*用户菜单.*"
+    timeout: 60000
+- tapOn:
+    text: ".*跳过.*|.*Skip.*"
+    optional: true
+- tapOn:
+    text: ".*Step 2.*"
+    optional: true
+- tapOn:
+    text: ".*跳过.*|.*Skip.*"
+    optional: true
+- extendedWaitUntil:
+    visible: "User menu"
+    timeout: 45000
+- tapOn: "User menu"
+- extendedWaitUntil:
+    visible: "繁體中文"
+    timeout: 15000
+- tapOn: "繁體中文"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%,50%"
+    optional: true
+- waitForAnimationToEnd
+- openLink: askbible://explore/prayer
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      text: ".*為健康.*"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: ".*為健康.*"
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    text: ".*為健康.*"
+- extendedWaitUntil:
+    visible:
+      text: ".*稱頌.*"
+    timeout: 35000
+- assertNotVisible: "称颂"
+- assertNotVisible: "医治"

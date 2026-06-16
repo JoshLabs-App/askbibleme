@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { Animated, InteractionManager, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parseVerseKey } from "../bible/parse-verse-key";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
@@ -25,7 +25,6 @@ import { useHomeThemeRepeatVerse } from "./useHomeThemeRepeatVerse";
 import { verseTypography } from "./verseTextStyle";
 import {
   getHomeVersePoolScope,
-  hydrateHomeVersePoolScope,
   subscribeHomeVersePoolScope,
 } from "./homeVersePoolScopePrefs";
 
@@ -141,9 +140,6 @@ export function HomeVerseOverlay({
   const { ready, entry, contrastEntry, verseKey, primaryTranslationId, contrastTranslationId, advanceNow } =
     useHomeThemeRepeatVerse(locale, undefined, prefsVersion, pauseRotation, homeVersePoolScope);
 
-  useEffect(() => {
-    void hydrateHomeVersePoolScope();
-  }, []);
   const fadeAnim = useState(() => new Animated.Value(1))[0];
   const [displayVerse, setDisplayVerse] = useState(() => ({
     entry: null as typeof entry,
@@ -160,14 +156,22 @@ export function HomeVerseOverlay({
   const FADE_OUT_MS = 2000;
 
   useEffect(() => {
-    void (async () => {
-      const [nextAppearance, nextScaleIndex] = await Promise.all([
-        readNatureHomeVerseAppearance(),
-        readNatureHomeTextScaleIndex(),
-      ]);
-      setAppearance(nextAppearance);
-      setScaleIndex(nextScaleIndex);
-    })();
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void (async () => {
+        const [nextAppearance, nextScaleIndex] = await Promise.all([
+          readNatureHomeVerseAppearance(),
+          readNatureHomeTextScaleIndex(),
+        ]);
+        if (cancelled) return;
+        setAppearance(nextAppearance);
+        setScaleIndex(nextScaleIndex);
+      })();
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
   }, [prefsVersion]);
 
   useEffect(() => {

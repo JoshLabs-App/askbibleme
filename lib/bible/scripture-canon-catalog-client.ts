@@ -1,6 +1,7 @@
 import type { AppLocale } from "@/lib/i18n/config";
 import { MESSAGES } from "@/lib/i18n/messages";
 import { translate } from "@/lib/i18n/translate";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import { scriptureBookNotes } from "@/lib/bible/scripture-book-notes";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
@@ -24,6 +25,7 @@ const notesByBookId = new Map(scriptureBookNotes.map((n) => [n.bookId, n]));
 
 function sectionTitle(sectionId: string, zhTitle: string, locale: AppLocale): string {
   if (locale === "zh-CN") return zhTitle;
+  if (locale === "zh-TW") return toZhTwText(zhTitle);
   const key = `pages.read.canonSections.${sectionId}.title`;
   const hit = translate(MESSAGES[locale], key);
   return hit === key ? zhTitle : hit;

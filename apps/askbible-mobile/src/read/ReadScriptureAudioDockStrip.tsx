@@ -1,6 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useParchmentColumnMaxWidth } from "./parchmentColumnLayout";
 import { t } from "../i18n/site-copy";
 import {
   useMusicPlayback,
@@ -29,6 +30,7 @@ function clamp01(n: number): number {
 
 /** 和合本整章朗读：底栏播放钮上方（极简时长 + 进度 + 重复） */
 export function ReadScriptureAudioDockStrip() {
+  const columnMaxWidth = useParchmentColumnMaxWidth();
   const {
     playing,
     playbackMode,
@@ -104,7 +106,10 @@ export function ReadScriptureAudioDockStrip() {
   };
 
   return (
-    <View style={styles.wrap} accessibilityLabel={t("playback.scriptureDockLabel")}>
+    <View
+      style={[styles.wrap, columnMaxWidth != null ? { maxWidth: columnMaxWidth } : null]}
+      accessibilityLabel={t("playback.scriptureDockLabel")}
+    >
       <Text style={styles.time} numberOfLines={1}>
         <Text style={styles.timeCur}>{cur}</Text>
         <Text style={styles.timeSep}> / </Text>
@@ -147,7 +152,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     width: "100%",
-    maxWidth: 448,
     borderRadius: 999,
     backgroundColor: "rgba(0, 0, 0, 0.4)",
     paddingHorizontal: 12,

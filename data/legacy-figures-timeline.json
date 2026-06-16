@@ -1,0 +1,2721 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "7243dfbd3e6862c9",
+  "bookRows": [
+    {
+      "bookNumber": 1,
+      "bookId": "GEN",
+      "testament": "old",
+      "eraCompact": "前4000",
+      "eraAria": "约公元前4000年",
+      "figures": [
+        {
+          "id": "adam",
+          "slug": "figure-adam",
+          "displayNameZh": "亚当",
+          "englishName": "Adam",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-adam",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚当：人类始祖"
+        },
+        {
+          "id": "eve",
+          "slug": "figure-eve",
+          "displayNameZh": "夏娃",
+          "englishName": "Eve",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-eve",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "夏娃：人类之母的顺从与智慧"
+        },
+        {
+          "id": "figure-cain",
+          "slug": "cain",
+          "displayNameZh": "该隐",
+          "englishName": "",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-cain",
+          "profileStatus": "article_only",
+          "articleTitle": "该隐：嫉妒与逃避责任的象征"
+        },
+        {
+          "id": "figure-abel",
+          "slug": "abel",
+          "displayNameZh": "亚伯",
+          "englishName": "",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-abel",
+          "profileStatus": "article_only",
+          "articleTitle": "亚伯：献祭蒙悦的忠实善良之人"
+        },
+        {
+          "id": "noah",
+          "slug": "figure-noah",
+          "displayNameZh": "挪亚",
+          "englishName": "Noah",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-noah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "挪亚：义人顺从的方舟建造者"
+        },
+        {
+          "id": "sarah",
+          "slug": "figure-sarah",
+          "displayNameZh": "撒拉",
+          "englishName": "Sarah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-sarah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "撒拉：信心之母"
+        },
+        {
+          "id": "abraham",
+          "slug": "abraham",
+          "displayNameZh": "亚伯拉罕",
+          "englishName": "Abraham",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-abraham",
+          "profileStatus": "seed",
+          "articleTitle": "亚伯拉罕：信心之父"
+        },
+        {
+          "id": "lot",
+          "slug": "figure-lot",
+          "displayNameZh": "罗得",
+          "englishName": "Lot",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-lot",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "罗得：义人和好客的典范"
+        },
+        {
+          "id": "hagar",
+          "slug": "figure-hagar",
+          "displayNameZh": "夏甲",
+          "englishName": "Hagar",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-hagar",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "夏甲：信靠与顺从的使女"
+        },
+        {
+          "id": "ishmael",
+          "slug": "figure-ishmael",
+          "displayNameZh": "以实玛利",
+          "englishName": "Ishmael",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-ishmael",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以实玛利：艰难生命中的神的应许"
+        },
+        {
+          "id": "isaac",
+          "slug": "figure-isaac",
+          "displayNameZh": "以撒",
+          "englishName": "Isaac",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-isaac",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以撒：信心之子"
+        },
+        {
+          "id": "laban",
+          "slug": "figure-laban",
+          "displayNameZh": "拉班",
+          "englishName": "Laban",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-laban",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "拉班：狡诈的亲属"
+        },
+        {
+          "id": "rebekah",
+          "slug": "figure-rebekah",
+          "displayNameZh": "利百加",
+          "englishName": "Rebekah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-rebekah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "利百加：贤良能干的母亲"
+        },
+        {
+          "id": "esau",
+          "slug": "figure-esau",
+          "displayNameZh": "以扫",
+          "englishName": "Esau",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-esau",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以扫：粗犷的长子与猎人"
+        },
+        {
+          "id": "jacob-patriarch",
+          "slug": "jacob-patriarch",
+          "displayNameZh": "族长·雅各",
+          "englishName": "Jacob",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jacob",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "族长·雅各：以奋斗为名的族长"
+        },
+        {
+          "id": "leah",
+          "slug": "figure-leah",
+          "displayNameZh": "利亚",
+          "englishName": "Leah",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-leah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "利亚：温柔与坚韧并存的女性"
+        },
+        {
+          "id": "rachel",
+          "slug": "figure-rachel",
+          "displayNameZh": "拉结",
+          "englishName": "Rachel",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-rachel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "拉结：美丽与诡计并存的母亲"
+        },
+        {
+          "id": "judah-ot",
+          "slug": "judah-ot",
+          "displayNameZh": "旧约·犹大",
+          "englishName": "Judah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah-ot",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "旧约·犹大：雅各的儿子"
+        },
+        {
+          "id": "benjamin",
+          "slug": "figure-benjamin",
+          "displayNameZh": "便雅悯",
+          "englishName": "Benjamin",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-benjamin",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "便雅悯：勇敢坚定的爱家之子"
+        },
+        {
+          "id": "joseph-genesis",
+          "slug": "joseph-genesis",
+          "displayNameZh": "创世·约瑟",
+          "englishName": "Joseph (son of Jacob)",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joseph",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "创世·约瑟：有远见的忠诚者"
+        },
+        {
+          "id": "pharaoh-joseph",
+          "slug": "pharaoh-joseph",
+          "displayNameZh": "约瑟·法老",
+          "englishName": "Pharaoh of Joseph",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-pharaoh-670b",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约瑟·法老：解梦与收留"
+        },
+        {
+          "id": "figure-potiphar",
+          "slug": "potiphar",
+          "displayNameZh": "波提乏",
+          "englishName": "",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-potiphar",
+          "profileStatus": "article_only",
+          "articleTitle": "波提乏：忠诚与信任的官员"
+        },
+        {
+          "id": "figure-potiphar-s-wife",
+          "slug": "potiphar-s-wife",
+          "displayNameZh": "波提乏的妻子",
+          "englishName": "",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-potiphar-s-wife",
+          "profileStatus": "article_only",
+          "articleTitle": "波提乏的妻子：诱惑与背叛的象征"
+        }
+      ]
+    },
+    {
+      "bookNumber": 2,
+      "bookId": "EXO",
+      "testament": "old",
+      "eraCompact": "前1526",
+      "eraAria": "约公元前1526年",
+      "figures": [
+        {
+          "id": "pharaoh-exodus",
+          "slug": "pharaoh-exodus",
+          "displayNameZh": "出埃及·法老",
+          "englishName": "Pharaoh of the Exodus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-pharaoh",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "出埃及·法老：傲慢无礼的压迫者"
+        },
+        {
+          "id": "miriam",
+          "slug": "figure-miriam",
+          "displayNameZh": "米利暗",
+          "englishName": "Miriam",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-miriam",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "米利暗：女先知与领导者"
+        },
+        {
+          "id": "moses",
+          "slug": "moses",
+          "displayNameZh": "摩西",
+          "englishName": "Moses",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-moses",
+          "profileStatus": "seed",
+          "articleTitle": "摩西：伟大的领袖与代祷者"
+        },
+        {
+          "id": "aaron",
+          "slug": "figure-aaron",
+          "displayNameZh": "亚伦",
+          "englishName": "Aaron",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-aaron",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚伦：忠心顺服的大祭司"
+        },
+        {
+          "id": "joshua",
+          "slug": "figure-joshua",
+          "displayNameZh": "约书亚",
+          "englishName": "Joshua",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚：神的勇敢领袖"
+        }
+      ]
+    },
+    {
+      "bookNumber": 3,
+      "bookId": "LEV",
+      "testament": "old",
+      "eraCompact": "前1445",
+      "eraAria": "约公元前1445年",
+      "figures": [
+        {
+          "id": "moses",
+          "slug": "moses",
+          "displayNameZh": "摩西",
+          "englishName": "Moses",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-moses",
+          "profileStatus": "seed",
+          "articleTitle": "摩西：伟大的领袖与代祷者"
+        },
+        {
+          "id": "aaron",
+          "slug": "figure-aaron",
+          "displayNameZh": "亚伦",
+          "englishName": "Aaron",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-aaron",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚伦：忠心顺服的大祭司"
+        }
+      ]
+    },
+    {
+      "bookNumber": 4,
+      "bookId": "NUM",
+      "testament": "old",
+      "eraCompact": "前1445",
+      "eraAria": "约公元前1445年",
+      "figures": [
+        {
+          "id": "aaron",
+          "slug": "figure-aaron",
+          "displayNameZh": "亚伦",
+          "englishName": "Aaron",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-aaron",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚伦：忠心顺服的大祭司"
+        },
+        {
+          "id": "miriam",
+          "slug": "figure-miriam",
+          "displayNameZh": "米利暗",
+          "englishName": "Miriam",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-miriam",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "米利暗：女先知与领导者"
+        },
+        {
+          "id": "caleb",
+          "slug": "figure-caleb",
+          "displayNameZh": "迦勒",
+          "englishName": "Caleb",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-caleb",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "迦勒：信靠与勇气的象征"
+        },
+        {
+          "id": "joshua",
+          "slug": "figure-joshua",
+          "displayNameZh": "约书亚",
+          "englishName": "Joshua",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚：神的勇敢领袖"
+        },
+        {
+          "id": "moses",
+          "slug": "moses",
+          "displayNameZh": "摩西",
+          "englishName": "Moses",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-moses",
+          "profileStatus": "seed",
+          "articleTitle": "摩西：伟大的领袖与代祷者"
+        },
+        {
+          "id": "balaam",
+          "slug": "figure-balaam",
+          "displayNameZh": "巴兰",
+          "englishName": "Balaam",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-balaam",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "巴兰：贪爱金银的占卜者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 5,
+      "bookId": "DEU",
+      "testament": "old",
+      "eraCompact": "前1406",
+      "eraAria": "约公元前1406年",
+      "figures": [
+        {
+          "id": "moses",
+          "slug": "moses",
+          "displayNameZh": "摩西",
+          "englishName": "Moses",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-moses",
+          "profileStatus": "seed",
+          "articleTitle": "摩西：伟大的领袖与代祷者"
+        },
+        {
+          "id": "joshua",
+          "slug": "figure-joshua",
+          "displayNameZh": "约书亚",
+          "englishName": "Joshua",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚：神的勇敢领袖"
+        }
+      ]
+    },
+    {
+      "bookNumber": 6,
+      "bookId": "JOS",
+      "testament": "old",
+      "eraCompact": "前1406",
+      "eraAria": "约公元前1406年",
+      "figures": [
+        {
+          "id": "amos",
+          "slug": "figure-amos",
+          "displayNameZh": "阿摩司",
+          "englishName": "Amos",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-amos",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "阿摩司：公义的先知"
+        },
+        {
+          "id": "daniel",
+          "slug": "figure-daniel",
+          "displayNameZh": "但以理",
+          "englishName": "Daniel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-daniel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "但以理：智慧与信仰的模范"
+        },
+        {
+          "id": "ezekiel",
+          "slug": "figure-ezekiel",
+          "displayNameZh": "以西结",
+          "englishName": "Ezekiel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-ezekiel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以西结：神的忠诚先知"
+        },
+        {
+          "id": "habakkuk",
+          "slug": "figure-habakkuk",
+          "displayNameZh": "哈巴谷",
+          "englishName": "Habakkuk",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-habakkuk",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "哈巴谷：宣告公义的信靠者"
+        },
+        {
+          "id": "haggai",
+          "slug": "figure-haggai",
+          "displayNameZh": "哈该",
+          "englishName": "Haggai",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-haggai",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "哈该：勇敢的重建先知"
+        },
+        {
+          "id": "hosea",
+          "slug": "figure-hosea",
+          "displayNameZh": "何西阿",
+          "englishName": "Hosea",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-hosea",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "何西阿：爱的先知"
+        },
+        {
+          "id": "isaiah",
+          "slug": "figure-isaiah",
+          "displayNameZh": "以赛亚",
+          "englishName": "Isaiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-isaiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以赛亚：伟大的先知"
+        },
+        {
+          "id": "james-apostle",
+          "slug": "james-apostle",
+          "displayNameZh": "雅各书·雅各",
+          "englishName": "James (brother of the Lord)",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-james-apostle",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "雅各书·雅各：主的兄弟"
+        },
+        {
+          "id": "jeremiah",
+          "slug": "figure-jeremiah",
+          "displayNameZh": "耶利米",
+          "englishName": "Jeremiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jeremiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶利米：忧伤之先知"
+        },
+        {
+          "id": "joel",
+          "slug": "figure-joel",
+          "displayNameZh": "约珥",
+          "englishName": "Joel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约珥：忠诚先知的警醒之声"
+        },
+        {
+          "id": "jonah",
+          "slug": "figure-jonah",
+          "displayNameZh": "约拿",
+          "englishName": "Jonah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jonah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约拿：逃避的先知"
+        },
+        {
+          "id": "joshua-the-high-priest",
+          "slug": "figure-joshua-the-high-priest",
+          "displayNameZh": "约书亚大祭司",
+          "englishName": "Joshua the High Priest",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua-the-high-priest",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚大祭司：谦卑顺服的领袖"
+        },
+        {
+          "id": "jude-author",
+          "slug": "jude-author",
+          "displayNameZh": "犹大书·犹大",
+          "englishName": "Jude",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jude-author",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "犹大书·犹大：短书的作者"
+        },
+        {
+          "id": "malachi",
+          "slug": "figure-malachi",
+          "displayNameZh": "玛拉基",
+          "englishName": "Malachi",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-malachi",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "玛拉基：神的先知"
+        },
+        {
+          "id": "micah",
+          "slug": "figure-micah",
+          "displayNameZh": "弥迦",
+          "englishName": "Micah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-micah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "弥迦：公义的先知，呼吁谦卑"
+        },
+        {
+          "id": "nahum",
+          "slug": "figure-nahum",
+          "displayNameZh": "那鸿",
+          "englishName": "Nahum",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-nahum",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "那鸿：安慰的先知"
+        },
+        {
+          "id": "nebuchadnezzar",
+          "slug": "figure-nebuchadnezzar",
+          "displayNameZh": "尼布甲尼撒",
+          "englishName": "Nebuchadnezzar",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-nebuchadnezzar",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "尼布甲尼撒：骄傲刚愎，心中后悔，崇拜真神"
+        },
+        {
+          "id": "obadiah",
+          "slug": "figure-obadiah",
+          "displayNameZh": "俄巴底亚",
+          "englishName": "Obadiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-obadiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "俄巴底亚：忠心仆人"
+        },
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        },
+        {
+          "id": "zechariah-prophet",
+          "slug": "zechariah-prophet",
+          "displayNameZh": "先知·撒迦利亚",
+          "englishName": "Zechariah the prophet",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zechariah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "先知·撒迦利亚：信靠神的启示先知"
+        },
+        {
+          "id": "zephaniah",
+          "slug": "figure-zephaniah",
+          "displayNameZh": "西番雅",
+          "englishName": "Zephaniah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zephaniah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "西番雅：勇敢的公义先知"
+        },
+        {
+          "id": "腓利门",
+          "slug": "figure-腓利门",
+          "displayNameZh": "腓利门",
+          "englishName": "Philemon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-腓利门",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "腓利门：被请求接纳的人"
+        },
+        {
+          "id": "gomer",
+          "slug": "figure-gomer",
+          "displayNameZh": "歌篾",
+          "englishName": "Gomer",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-gomer",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "歌篾：不忠之妻的象征"
+        },
+        {
+          "id": "提摩太",
+          "slug": "figure-提摩太",
+          "displayNameZh": "提摩太",
+          "englishName": "Timothy",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-提摩太",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "提摩太：年轻的同工"
+        },
+        {
+          "id": "阿尼西母",
+          "slug": "figure-阿尼西母",
+          "displayNameZh": "阿尼西母",
+          "englishName": "Onesimus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-阿尼西母",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "阿尼西母：从逃奴到弟兄"
+        },
+        {
+          "id": "rahab",
+          "slug": "figure-rahab",
+          "displayNameZh": "喇合",
+          "englishName": "Rahab",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-rahab",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "喇合：信心与智慧的女英雄"
+        },
+        {
+          "id": "提多",
+          "slug": "figure-提多",
+          "displayNameZh": "提多",
+          "englishName": "Titus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-提多",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "提多：忠心的同工"
+        },
+        {
+          "id": "zerubbabel",
+          "slug": "figure-zerubbabel",
+          "displayNameZh": "所罗巴伯",
+          "englishName": "Zerubbabel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zerubbabel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗巴伯：重建圣殿的忠心领袖"
+        },
+        {
+          "id": "mary-mother-of-jesus",
+          "slug": "mary-mother-of-jesus",
+          "displayNameZh": "马利亚",
+          "englishName": "Mary",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-mary",
+          "profileStatus": "seed",
+          "articleTitle": "马利亚：耶稣之母"
+        },
+        {
+          "id": "约翰",
+          "slug": "figure-约翰",
+          "displayNameZh": "约翰",
+          "englishName": "John",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-约翰",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约翰：耶稣所爱的门徒"
+        },
+        {
+          "id": "belshazzar",
+          "slug": "figure-belshazzar",
+          "displayNameZh": "伯沙撒",
+          "englishName": "Belshazzar",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-belshazzar",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "伯沙撒：骄傲的统治者"
+        },
+        {
+          "id": "job",
+          "slug": "figure-job",
+          "displayNameZh": "约伯",
+          "englishName": "Job",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-job",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约伯：信心坚定的义人"
+        },
+        {
+          "id": "joshua",
+          "slug": "figure-joshua",
+          "displayNameZh": "约书亚",
+          "englishName": "Joshua",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚：神的勇敢领袖"
+        },
+        {
+          "id": "judas-iscariot",
+          "slug": "judas-iscariot",
+          "displayNameZh": "卖主的犹大",
+          "englishName": "Judas Iscariot",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "卖主的犹大：背叛者的象征"
+        },
+        {
+          "id": "gideon",
+          "slug": "figure-gideon",
+          "displayNameZh": "基甸",
+          "englishName": "Gideon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-gideon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "基甸：以信心与勇气领导的士师"
+        },
+        {
+          "id": "caleb",
+          "slug": "figure-caleb",
+          "displayNameZh": "迦勒",
+          "englishName": "Caleb",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-caleb",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "迦勒：信靠与勇气的象征"
+        },
+        {
+          "id": "zedekiah",
+          "slug": "figure-zedekiah",
+          "displayNameZh": "西底家",
+          "englishName": "Zedekiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zedekiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "西底家：犹大最后的王"
+        },
+        {
+          "id": "baruch",
+          "slug": "figure-baruch",
+          "displayNameZh": "巴录",
+          "englishName": "Baruch",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-baruch",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "巴录：忠心的书记与先知助手"
+        },
+        {
+          "id": "hezekiah",
+          "slug": "figure-hezekiah",
+          "displayNameZh": "希西家",
+          "englishName": "Hezekiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-hezekiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "希西家：忠信的改革者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 7,
+      "bookId": "JDG",
+      "testament": "old",
+      "eraCompact": "前1375",
+      "eraAria": "约公元前1375年",
+      "figures": [
+        {
+          "id": "deborah",
+          "slug": "figure-deborah",
+          "displayNameZh": "底波拉",
+          "englishName": "Deborah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-deborah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "底波拉：智慧与勇气的女先知"
+        },
+        {
+          "id": "gideon",
+          "slug": "figure-gideon",
+          "displayNameZh": "基甸",
+          "englishName": "Gideon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-gideon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "基甸：以信心与勇气领导的士师"
+        },
+        {
+          "id": "samson",
+          "slug": "figure-samson",
+          "displayNameZh": "参孙",
+          "englishName": "Samson",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-samson",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "参孙：力量与誓言的化身"
+        }
+      ]
+    },
+    {
+      "bookNumber": 8,
+      "bookId": "RUT",
+      "testament": "old",
+      "eraCompact": "前1200",
+      "eraAria": "约公元前1200年",
+      "figures": [
+        {
+          "id": "naomi",
+          "slug": "figure-naomi",
+          "displayNameZh": "拿俄米",
+          "englishName": "Naomi",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-naomi",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "拿俄米：坚韧的婆婆"
+        },
+        {
+          "id": "ruth",
+          "slug": "figure-ruth",
+          "displayNameZh": "路得",
+          "englishName": "Ruth",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-ruth",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "路得：忠诚与善良的化身"
+        },
+        {
+          "id": "boaz",
+          "slug": "figure-boaz",
+          "displayNameZh": "波阿斯",
+          "englishName": "Boaz",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-boaz",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "波阿斯：仁慈与保护者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 9,
+      "bookId": "1SA",
+      "testament": "old",
+      "eraCompact": "前1100",
+      "eraAria": "约公元前1100年",
+      "figures": [
+        {
+          "id": "samuel",
+          "slug": "figure-samuel",
+          "displayNameZh": "撒母耳",
+          "englishName": "Samuel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-samuel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "撒母耳：先知与以色列的领袖"
+        },
+        {
+          "id": "saul",
+          "slug": "figure-saul",
+          "displayNameZh": "扫罗",
+          "englishName": "Saul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-saul",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "扫罗：以色列第一任国王的悲剧"
+        },
+        {
+          "id": "jonathan",
+          "slug": "figure-jonathan",
+          "displayNameZh": "约拿单",
+          "englishName": "Jonathan",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jonathan",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约拿单：忠诚的朋友与勇士"
+        },
+        {
+          "id": "david",
+          "slug": "david",
+          "displayNameZh": "大卫",
+          "englishName": "David",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-david",
+          "profileStatus": "seed",
+          "articleTitle": "大卫：合神心意的人"
+        }
+      ]
+    },
+    {
+      "bookNumber": 10,
+      "bookId": "2SA",
+      "testament": "old",
+      "eraCompact": "前1010",
+      "eraAria": "约公元前1010年",
+      "figures": [
+        {
+          "id": "david",
+          "slug": "david",
+          "displayNameZh": "大卫",
+          "englishName": "David",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-david",
+          "profileStatus": "seed",
+          "articleTitle": "大卫：合神心意的人"
+        },
+        {
+          "id": "nathan",
+          "slug": "figure-nathan",
+          "displayNameZh": "拿单",
+          "englishName": "Nathan",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-nathan",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "拿单：先知与王的忠诚顾问"
+        },
+        {
+          "id": "absalom",
+          "slug": "figure-absalom",
+          "displayNameZh": "押沙龙",
+          "englishName": "Absalom",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-absalom",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "押沙龙：反叛的王子"
+        }
+      ]
+    },
+    {
+      "bookNumber": 11,
+      "bookId": "1KI",
+      "testament": "old",
+      "eraCompact": "前970",
+      "eraAria": "约公元前970年",
+      "figures": [
+        {
+          "id": "solomon",
+          "slug": "figure-solomon",
+          "displayNameZh": "所罗门",
+          "englishName": "Solomon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-solomon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗门：智慧之王"
+        },
+        {
+          "id": "rehoboam",
+          "slug": "figure-rehoboam",
+          "displayNameZh": "罗波安",
+          "englishName": "Rehoboam",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-rehoboam",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "罗波安：挥霍无道的王"
+        },
+        {
+          "id": "ahab",
+          "slug": "figure-ahab",
+          "displayNameZh": "亚哈",
+          "englishName": "Ahab",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-ahab",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚哈：邪恶的王"
+        },
+        {
+          "id": "jezebel",
+          "slug": "figure-jezebel",
+          "displayNameZh": "耶洗别",
+          "englishName": "Jezebel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jezebel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶洗别：阴险大胆的以色列王后"
+        },
+        {
+          "id": "elijah",
+          "slug": "figure-elijah",
+          "displayNameZh": "以利亚",
+          "englishName": "Elijah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-elijah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以利亚：先知之父"
+        },
+        {
+          "id": "elisha",
+          "slug": "figure-elisha",
+          "displayNameZh": "以利沙",
+          "englishName": "Elisha",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-elisha",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以利沙：坚定的信心与神迹的先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 12,
+      "bookId": "2KI",
+      "testament": "old",
+      "eraCompact": "前853",
+      "eraAria": "约公元前853年",
+      "figures": [
+        {
+          "id": "elisha",
+          "slug": "figure-elisha",
+          "displayNameZh": "以利沙",
+          "englishName": "Elisha",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-elisha",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以利沙：坚定的信心与神迹的先知"
+        },
+        {
+          "id": "asa",
+          "slug": "figure-asa",
+          "displayNameZh": "亚撒",
+          "englishName": "Asa",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-asa",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚撒：忠诚的改革者"
+        },
+        {
+          "id": "hezekiah",
+          "slug": "figure-hezekiah",
+          "displayNameZh": "希西家",
+          "englishName": "Hezekiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-hezekiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "希西家：忠信的改革者"
+        },
+        {
+          "id": "josiah",
+          "slug": "figure-josiah",
+          "displayNameZh": "约西亚",
+          "englishName": "Josiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-josiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约西亚：改革之王"
+        }
+      ]
+    },
+    {
+      "bookNumber": 13,
+      "bookId": "1CH",
+      "testament": "old",
+      "eraCompact": "前1000",
+      "eraAria": "约公元前1000年",
+      "figures": [
+        {
+          "id": "david",
+          "slug": "david",
+          "displayNameZh": "大卫",
+          "englishName": "David",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-david",
+          "profileStatus": "seed",
+          "articleTitle": "大卫：合神心意的人"
+        }
+      ]
+    },
+    {
+      "bookNumber": 14,
+      "bookId": "2CH",
+      "testament": "old",
+      "eraCompact": "前970",
+      "eraAria": "约公元前970年",
+      "figures": [
+        {
+          "id": "solomon",
+          "slug": "figure-solomon",
+          "displayNameZh": "所罗门",
+          "englishName": "Solomon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-solomon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗门：智慧之王"
+        },
+        {
+          "id": "rehoboam",
+          "slug": "figure-rehoboam",
+          "displayNameZh": "罗波安",
+          "englishName": "Rehoboam",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-rehoboam",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "罗波安：挥霍无道的王"
+        },
+        {
+          "id": "asa",
+          "slug": "figure-asa",
+          "displayNameZh": "亚撒",
+          "englishName": "Asa",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-asa",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "亚撒：忠诚的改革者"
+        },
+        {
+          "id": "jehoshaphat",
+          "slug": "figure-jehoshaphat",
+          "displayNameZh": "约沙法",
+          "englishName": "Jehoshaphat",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jehoshaphat",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约沙法：公义的王"
+        },
+        {
+          "id": "hezekiah",
+          "slug": "figure-hezekiah",
+          "displayNameZh": "希西家",
+          "englishName": "Hezekiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-hezekiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "希西家：忠信的改革者"
+        },
+        {
+          "id": "josiah",
+          "slug": "figure-josiah",
+          "displayNameZh": "约西亚",
+          "englishName": "Josiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-josiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约西亚：改革之王"
+        }
+      ]
+    },
+    {
+      "bookNumber": 15,
+      "bookId": "EZR",
+      "testament": "old",
+      "eraCompact": "前538",
+      "eraAria": "约公元前538年",
+      "figures": [
+        {
+          "id": "zerubbabel",
+          "slug": "figure-zerubbabel",
+          "displayNameZh": "所罗巴伯",
+          "englishName": "Zerubbabel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zerubbabel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗巴伯：重建圣殿的忠心领袖"
+        },
+        {
+          "id": "ezra",
+          "slug": "figure-ezra",
+          "displayNameZh": "以斯拉",
+          "englishName": "Ezra",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-ezra",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以斯拉：宗教改革者与虔诚的文士"
+        }
+      ]
+    },
+    {
+      "bookNumber": 16,
+      "bookId": "NEH",
+      "testament": "old",
+      "eraCompact": "前445",
+      "eraAria": "约公元前445年",
+      "figures": [
+        {
+          "id": "nehemiah",
+          "slug": "figure-nehemiah",
+          "displayNameZh": "尼希米",
+          "englishName": "Nehemiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-nehemiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "尼希米：重建耶路撒冷的忠心仆人"
+        },
+        {
+          "id": "ezra",
+          "slug": "figure-ezra",
+          "displayNameZh": "以斯拉",
+          "englishName": "Ezra",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-ezra",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以斯拉：宗教改革者与虔诚的文士"
+        }
+      ]
+    },
+    {
+      "bookNumber": 17,
+      "bookId": "EST",
+      "testament": "old",
+      "eraCompact": "前483",
+      "eraAria": "约公元前483年",
+      "figures": [
+        {
+          "id": "esther",
+          "slug": "figure-esther",
+          "displayNameZh": "以斯帖",
+          "englishName": "Esther",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-esther",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以斯帖：果敢智慧的波斯女王"
+        },
+        {
+          "id": "mordecai",
+          "slug": "figure-mordecai",
+          "displayNameZh": "末底改",
+          "englishName": "Mordecai",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-mordecai",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "末底改：忠心勇敢的犹太人"
+        },
+        {
+          "id": "haman",
+          "slug": "figure-haman",
+          "displayNameZh": "哈曼",
+          "englishName": "Haman",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-haman",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "哈曼：邪恶的阴谋家"
+        }
+      ]
+    },
+    {
+      "bookNumber": 18,
+      "bookId": "JOB",
+      "testament": "old",
+      "eraCompact": "前2000",
+      "eraAria": "约公元前2000年",
+      "figures": [
+        {
+          "id": "job",
+          "slug": "figure-job",
+          "displayNameZh": "约伯",
+          "englishName": "Job",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-job",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约伯：信心坚定的义人"
+        }
+      ]
+    },
+    {
+      "bookNumber": 19,
+      "bookId": "PSA",
+      "testament": "old",
+      "eraCompact": "前1000",
+      "eraAria": "约公元前1000年",
+      "figures": [
+        {
+          "id": "david",
+          "slug": "david",
+          "displayNameZh": "大卫",
+          "englishName": "David",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-david",
+          "profileStatus": "seed",
+          "articleTitle": "大卫：合神心意的人"
+        }
+      ]
+    },
+    {
+      "bookNumber": 20,
+      "bookId": "PRO",
+      "testament": "old",
+      "eraCompact": "前970",
+      "eraAria": "约公元前970年",
+      "figures": [
+        {
+          "id": "solomon",
+          "slug": "figure-solomon",
+          "displayNameZh": "所罗门",
+          "englishName": "Solomon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-solomon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗门：智慧之王"
+        }
+      ]
+    },
+    {
+      "bookNumber": 21,
+      "bookId": "ECC",
+      "testament": "old",
+      "eraCompact": "前935",
+      "eraAria": "约公元前935年",
+      "figures": [
+        {
+          "id": "solomon",
+          "slug": "figure-solomon",
+          "displayNameZh": "所罗门",
+          "englishName": "Solomon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-solomon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗门：智慧之王"
+        },
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        },
+        {
+          "id": "jesus",
+          "slug": "figure-jesus",
+          "displayNameZh": "耶稣",
+          "englishName": "Jesus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jesus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶稣：仁爱与救赎之主"
+        },
+        {
+          "id": "巴拿巴",
+          "slug": "figure-巴拿巴",
+          "displayNameZh": "巴拿巴",
+          "englishName": "Barnabas",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-巴拿巴",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "巴拿巴：劝子与同行者"
+        },
+        {
+          "id": "司提反",
+          "slug": "figure-司提反",
+          "displayNameZh": "司提反",
+          "englishName": "Stephen",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-司提反",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "司提反：首位殉道者"
+        },
+        {
+          "id": "腓利",
+          "slug": "figure-腓利",
+          "displayNameZh": "腓利",
+          "englishName": "Philip",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-腓利",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "腓利：传福音的执事"
+        }
+      ]
+    },
+    {
+      "bookNumber": 22,
+      "bookId": "SNG",
+      "testament": "old",
+      "eraCompact": "前970",
+      "eraAria": "约公元前970年",
+      "figures": [
+        {
+          "id": "solomon",
+          "slug": "figure-solomon",
+          "displayNameZh": "所罗门",
+          "englishName": "Solomon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-solomon",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗门：智慧之王"
+        },
+        {
+          "id": "书拉密女",
+          "slug": "figure-书拉密女",
+          "displayNameZh": "书拉密女",
+          "englishName": "Shulammite",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-shulammite-woman",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "书拉密女：爱的象征与美丽姑娘"
+        }
+      ]
+    },
+    {
+      "bookNumber": 23,
+      "bookId": "ISA",
+      "testament": "old",
+      "eraCompact": "前740",
+      "eraAria": "约公元前740年",
+      "figures": [
+        {
+          "id": "isaiah",
+          "slug": "figure-isaiah",
+          "displayNameZh": "以赛亚",
+          "englishName": "Isaiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-isaiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以赛亚：伟大的先知"
+        },
+        {
+          "id": "hezekiah",
+          "slug": "figure-hezekiah",
+          "displayNameZh": "希西家",
+          "englishName": "Hezekiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-hezekiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "希西家：忠信的改革者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 24,
+      "bookId": "JER",
+      "testament": "old",
+      "eraCompact": "前627",
+      "eraAria": "约公元前627年",
+      "figures": [
+        {
+          "id": "jeremiah",
+          "slug": "figure-jeremiah",
+          "displayNameZh": "耶利米",
+          "englishName": "Jeremiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jeremiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶利米：忧伤之先知"
+        },
+        {
+          "id": "zedekiah",
+          "slug": "figure-zedekiah",
+          "displayNameZh": "西底家",
+          "englishName": "Zedekiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zedekiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "西底家：犹大最后的王"
+        },
+        {
+          "id": "baruch",
+          "slug": "figure-baruch",
+          "displayNameZh": "巴录",
+          "englishName": "Baruch",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-baruch",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "巴录：忠心的书记与先知助手"
+        }
+      ]
+    },
+    {
+      "bookNumber": 25,
+      "bookId": "LAM",
+      "testament": "old",
+      "eraCompact": "前586",
+      "eraAria": "约公元前586年",
+      "figures": [
+        {
+          "id": "jeremiah",
+          "slug": "figure-jeremiah",
+          "displayNameZh": "耶利米",
+          "englishName": "Jeremiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jeremiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶利米：忧伤之先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 26,
+      "bookId": "EZK",
+      "testament": "old",
+      "eraCompact": "前593",
+      "eraAria": "约公元前593年",
+      "figures": [
+        {
+          "id": "ezekiel",
+          "slug": "figure-ezekiel",
+          "displayNameZh": "以西结",
+          "englishName": "Ezekiel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-ezekiel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "以西结：神的忠诚先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 27,
+      "bookId": "DAN",
+      "testament": "old",
+      "eraCompact": "前605",
+      "eraAria": "约公元前605年",
+      "figures": [
+        {
+          "id": "daniel",
+          "slug": "figure-daniel",
+          "displayNameZh": "但以理",
+          "englishName": "Daniel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-daniel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "但以理：智慧与信仰的模范"
+        },
+        {
+          "id": "nebuchadnezzar",
+          "slug": "figure-nebuchadnezzar",
+          "displayNameZh": "尼布甲尼撒",
+          "englishName": "Nebuchadnezzar",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-nebuchadnezzar",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "尼布甲尼撒：骄傲刚愎，心中后悔，崇拜真神"
+        },
+        {
+          "id": "belshazzar",
+          "slug": "figure-belshazzar",
+          "displayNameZh": "伯沙撒",
+          "englishName": "Belshazzar",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-belshazzar",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "伯沙撒：骄傲的统治者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 28,
+      "bookId": "HOS",
+      "testament": "old",
+      "eraCompact": "前755",
+      "eraAria": "约公元前755年",
+      "figures": [
+        {
+          "id": "gomer",
+          "slug": "figure-gomer",
+          "displayNameZh": "歌篾",
+          "englishName": "Gomer",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-gomer",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "歌篾：不忠之妻的象征"
+        },
+        {
+          "id": "hosea",
+          "slug": "figure-hosea",
+          "displayNameZh": "何西阿",
+          "englishName": "Hosea",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-hosea",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "何西阿：爱的先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 29,
+      "bookId": "JOL",
+      "testament": "old",
+      "eraCompact": "前835",
+      "eraAria": "约公元前835年",
+      "figures": [
+        {
+          "id": "joel",
+          "slug": "figure-joel",
+          "displayNameZh": "约珥",
+          "englishName": "Joel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约珥：忠诚先知的警醒之声"
+        }
+      ]
+    },
+    {
+      "bookNumber": 30,
+      "bookId": "AMO",
+      "testament": "old",
+      "eraCompact": "前760",
+      "eraAria": "约公元前760年",
+      "figures": [
+        {
+          "id": "amos",
+          "slug": "figure-amos",
+          "displayNameZh": "阿摩司",
+          "englishName": "Amos",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-amos",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "阿摩司：公义的先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 31,
+      "bookId": "OBA",
+      "testament": "old",
+      "eraCompact": "前586",
+      "eraAria": "约公元前586年",
+      "figures": [
+        {
+          "id": "obadiah",
+          "slug": "figure-obadiah",
+          "displayNameZh": "俄巴底亚",
+          "englishName": "Obadiah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-obadiah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "俄巴底亚：忠心仆人"
+        }
+      ]
+    },
+    {
+      "bookNumber": 32,
+      "bookId": "JON",
+      "testament": "old",
+      "eraCompact": "前780",
+      "eraAria": "约公元前780年",
+      "figures": [
+        {
+          "id": "jonah",
+          "slug": "figure-jonah",
+          "displayNameZh": "约拿",
+          "englishName": "Jonah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jonah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约拿：逃避的先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 33,
+      "bookId": "MIC",
+      "testament": "old",
+      "eraCompact": "前735",
+      "eraAria": "约公元前735年",
+      "figures": [
+        {
+          "id": "micah",
+          "slug": "figure-micah",
+          "displayNameZh": "弥迦",
+          "englishName": "Micah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-micah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "弥迦：公义的先知，呼吁谦卑"
+        }
+      ]
+    },
+    {
+      "bookNumber": 34,
+      "bookId": "NAM",
+      "testament": "old",
+      "eraCompact": "前650",
+      "eraAria": "约公元前650年",
+      "figures": [
+        {
+          "id": "nahum",
+          "slug": "figure-nahum",
+          "displayNameZh": "那鸿",
+          "englishName": "Nahum",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-nahum",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "那鸿：安慰的先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 35,
+      "bookId": "HAB",
+      "testament": "old",
+      "eraCompact": "前609",
+      "eraAria": "约公元前609年",
+      "figures": [
+        {
+          "id": "habakkuk",
+          "slug": "figure-habakkuk",
+          "displayNameZh": "哈巴谷",
+          "englishName": "Habakkuk",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-habakkuk",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "哈巴谷：宣告公义的信靠者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 36,
+      "bookId": "ZEP",
+      "testament": "old",
+      "eraCompact": "前640",
+      "eraAria": "约公元前640年",
+      "figures": [
+        {
+          "id": "zephaniah",
+          "slug": "figure-zephaniah",
+          "displayNameZh": "西番雅",
+          "englishName": "Zephaniah",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zephaniah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "西番雅：勇敢的公义先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 37,
+      "bookId": "HAG",
+      "testament": "old",
+      "eraCompact": "前520",
+      "eraAria": "约公元前520年",
+      "figures": [
+        {
+          "id": "haggai",
+          "slug": "figure-haggai",
+          "displayNameZh": "哈该",
+          "englishName": "Haggai",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-haggai",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "哈该：勇敢的重建先知"
+        },
+        {
+          "id": "joshua-the-high-priest",
+          "slug": "figure-joshua-the-high-priest",
+          "displayNameZh": "约书亚大祭司",
+          "englishName": "Joshua the High Priest",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua-the-high-priest",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚大祭司：谦卑顺服的领袖"
+        },
+        {
+          "id": "zerubbabel",
+          "slug": "figure-zerubbabel",
+          "displayNameZh": "所罗巴伯",
+          "englishName": "Zerubbabel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zerubbabel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗巴伯：重建圣殿的忠心领袖"
+        }
+      ]
+    },
+    {
+      "bookNumber": 38,
+      "bookId": "ZEC",
+      "testament": "old",
+      "eraCompact": "前520",
+      "eraAria": "约公元前520年",
+      "figures": [
+        {
+          "id": "zechariah-prophet",
+          "slug": "zechariah-prophet",
+          "displayNameZh": "先知·撒迦利亚",
+          "englishName": "Zechariah the prophet",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zechariah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "先知·撒迦利亚：信靠神的启示先知"
+        },
+        {
+          "id": "joshua-the-high-priest",
+          "slug": "figure-joshua-the-high-priest",
+          "displayNameZh": "约书亚大祭司",
+          "englishName": "Joshua the High Priest",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-joshua-the-high-priest",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约书亚大祭司：谦卑顺服的领袖"
+        },
+        {
+          "id": "zerubbabel",
+          "slug": "figure-zerubbabel",
+          "displayNameZh": "所罗巴伯",
+          "englishName": "Zerubbabel",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-zerubbabel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "所罗巴伯：重建圣殿的忠心领袖"
+        }
+      ]
+    },
+    {
+      "bookNumber": 39,
+      "bookId": "MAL",
+      "testament": "old",
+      "eraCompact": "前430",
+      "eraAria": "约公元前430年",
+      "figures": [
+        {
+          "id": "malachi",
+          "slug": "figure-malachi",
+          "displayNameZh": "玛拉基",
+          "englishName": "Malachi",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-malachi",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "玛拉基：神的先知"
+        }
+      ]
+    },
+    {
+      "bookNumber": 40,
+      "bookId": "MAT",
+      "testament": "new",
+      "eraCompact": "前4",
+      "eraAria": "约公元前4年",
+      "figures": [
+        {
+          "id": "jesus",
+          "slug": "figure-jesus",
+          "displayNameZh": "耶稣",
+          "englishName": "Jesus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jesus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶稣：仁爱与救赎之主"
+        },
+        {
+          "id": "joseph-gospel",
+          "slug": "joseph-gospel",
+          "displayNameZh": "福音·约瑟",
+          "englishName": "Joseph (husband of Mary)",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-joseph-gospel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "福音·约瑟：马利亚的丈夫"
+        },
+        {
+          "id": "mary-mother-of-jesus",
+          "slug": "mary-mother-of-jesus",
+          "displayNameZh": "马利亚",
+          "englishName": "Mary",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-mary",
+          "profileStatus": "seed",
+          "articleTitle": "马利亚：耶稣之母"
+        },
+        {
+          "id": "john-the-baptist",
+          "slug": "figure-john-the-baptist",
+          "displayNameZh": "施洗约翰",
+          "englishName": "John the Baptist",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-john-the-baptist",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "施洗约翰：基督的先锋"
+        },
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        },
+        {
+          "id": "judas-iscariot",
+          "slug": "judas-iscariot",
+          "displayNameZh": "卖主的犹大",
+          "englishName": "Judas Iscariot",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "卖主的犹大：背叛者的象征"
+        }
+      ]
+    },
+    {
+      "bookNumber": 41,
+      "bookId": "MRK",
+      "testament": "new",
+      "eraCompact": "前4",
+      "eraAria": "约公元前4年",
+      "figures": [
+        {
+          "id": "jesus",
+          "slug": "figure-jesus",
+          "displayNameZh": "耶稣",
+          "englishName": "Jesus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jesus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶稣：仁爱与救赎之主"
+        },
+        {
+          "id": "john-the-baptist",
+          "slug": "figure-john-the-baptist",
+          "displayNameZh": "施洗约翰",
+          "englishName": "John the Baptist",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-john-the-baptist",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "施洗约翰：基督的先锋"
+        },
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        },
+        {
+          "id": "judas-iscariot",
+          "slug": "judas-iscariot",
+          "displayNameZh": "卖主的犹大",
+          "englishName": "Judas Iscariot",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "卖主的犹大：背叛者的象征"
+        }
+      ]
+    },
+    {
+      "bookNumber": 42,
+      "bookId": "LUK",
+      "testament": "new",
+      "eraCompact": "前4",
+      "eraAria": "约公元前4年",
+      "figures": [
+        {
+          "id": "zechariah-luke",
+          "slug": "zechariah-luke",
+          "displayNameZh": "路加·撒迦利亚",
+          "englishName": "Zechariah (father of John)",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-zechariah-luke",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "路加·撒迦利亚：施洗约翰的父亲"
+        },
+        {
+          "id": "elizabeth",
+          "slug": "figure-elizabeth",
+          "displayNameZh": "伊利莎白",
+          "englishName": "Elizabeth",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-elizabeth",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "伊利莎白：信心的女性"
+        },
+        {
+          "id": "mary-mother-of-jesus",
+          "slug": "mary-mother-of-jesus",
+          "displayNameZh": "马利亚",
+          "englishName": "Mary",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-mary",
+          "profileStatus": "seed",
+          "articleTitle": "马利亚：耶稣之母"
+        },
+        {
+          "id": "joseph-gospel",
+          "slug": "joseph-gospel",
+          "displayNameZh": "福音·约瑟",
+          "englishName": "Joseph (husband of Mary)",
+          "characterRoleZh": "相关人物",
+          "linkedArticleSlug": "figure-joseph-gospel",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "福音·约瑟：马利亚的丈夫"
+        },
+        {
+          "id": "john-the-baptist",
+          "slug": "figure-john-the-baptist",
+          "displayNameZh": "施洗约翰",
+          "englishName": "John the Baptist",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-john-the-baptist",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "施洗约翰：基督的先锋"
+        },
+        {
+          "id": "jesus",
+          "slug": "figure-jesus",
+          "displayNameZh": "耶稣",
+          "englishName": "Jesus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jesus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶稣：仁爱与救赎之主"
+        },
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        },
+        {
+          "id": "judas-iscariot",
+          "slug": "judas-iscariot",
+          "displayNameZh": "卖主的犹大",
+          "englishName": "Judas Iscariot",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "卖主的犹大：背叛者的象征"
+        },
+        {
+          "id": "martha",
+          "slug": "figure-martha",
+          "displayNameZh": "马大",
+          "englishName": "Martha",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-martha",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "马大：忠实的仆人"
+        }
+      ]
+    },
+    {
+      "bookNumber": 43,
+      "bookId": "JHN",
+      "testament": "new",
+      "eraCompact": "前4",
+      "eraAria": "约公元前4年",
+      "figures": [
+        {
+          "id": "jesus",
+          "slug": "figure-jesus",
+          "displayNameZh": "耶稣",
+          "englishName": "Jesus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jesus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶稣：仁爱与救赎之主"
+        },
+        {
+          "id": "john-the-baptist",
+          "slug": "figure-john-the-baptist",
+          "displayNameZh": "施洗约翰",
+          "englishName": "John the Baptist",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-john-the-baptist",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "施洗约翰：基督的先锋"
+        },
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        },
+        {
+          "id": "mary-mother-of-jesus",
+          "slug": "mary-mother-of-jesus",
+          "displayNameZh": "马利亚",
+          "englishName": "Mary",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-mary",
+          "profileStatus": "seed",
+          "articleTitle": "马利亚：耶稣之母"
+        },
+        {
+          "id": "judas-iscariot",
+          "slug": "judas-iscariot",
+          "displayNameZh": "卖主的犹大",
+          "englishName": "Judas Iscariot",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "卖主的犹大：背叛者的象征"
+        },
+        {
+          "id": "lazarus",
+          "slug": "figure-lazarus",
+          "displayNameZh": "拉撒路",
+          "englishName": "Lazarus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-lazarus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "拉撒路：复活的朋友"
+        },
+        {
+          "id": "martha",
+          "slug": "figure-martha",
+          "displayNameZh": "马大",
+          "englishName": "Martha",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-martha",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "马大：忠实的仆人"
+        },
+        {
+          "id": "约翰",
+          "slug": "figure-约翰",
+          "displayNameZh": "约翰",
+          "englishName": "John",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-约翰",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约翰：耶稣所爱的门徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 44,
+      "bookId": "ACT",
+      "testament": "new",
+      "eraCompact": "30",
+      "eraAria": "约公元30年",
+      "figures": [
+        {
+          "id": "judas-iscariot",
+          "slug": "judas-iscariot",
+          "displayNameZh": "卖主的犹大",
+          "englishName": "Judas Iscariot",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-judah",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "卖主的犹大：背叛者的象征"
+        },
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        },
+        {
+          "id": "巴拿巴",
+          "slug": "figure-巴拿巴",
+          "displayNameZh": "巴拿巴",
+          "englishName": "Barnabas",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-巴拿巴",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "巴拿巴：劝子与同行者"
+        },
+        {
+          "id": "司提反",
+          "slug": "figure-司提反",
+          "displayNameZh": "司提反",
+          "englishName": "Stephen",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-司提反",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "司提反：首位殉道者"
+        },
+        {
+          "id": "腓利",
+          "slug": "figure-腓利",
+          "displayNameZh": "腓利",
+          "englishName": "Philip",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-腓利",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "腓利：传福音的执事"
+        },
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        },
+        {
+          "id": "james-apostle",
+          "slug": "james-apostle",
+          "displayNameZh": "雅各书·雅各",
+          "englishName": "James (brother of the Lord)",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-james-apostle",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "雅各书·雅各：主的兄弟"
+        }
+      ]
+    },
+    {
+      "bookNumber": 45,
+      "bookId": "ROM",
+      "testament": "new",
+      "eraCompact": "57",
+      "eraAria": "约公元57年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 46,
+      "bookId": "1CO",
+      "testament": "new",
+      "eraCompact": "55",
+      "eraAria": "约公元55年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 47,
+      "bookId": "2CO",
+      "testament": "new",
+      "eraCompact": "56",
+      "eraAria": "约公元56年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 48,
+      "bookId": "GAL",
+      "testament": "new",
+      "eraCompact": "48",
+      "eraAria": "约公元48年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 49,
+      "bookId": "EPH",
+      "testament": "new",
+      "eraCompact": "60",
+      "eraAria": "约公元60年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 50,
+      "bookId": "PHP",
+      "testament": "new",
+      "eraCompact": "61",
+      "eraAria": "约公元61年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 51,
+      "bookId": "COL",
+      "testament": "new",
+      "eraCompact": "60",
+      "eraAria": "约公元60年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 52,
+      "bookId": "1TH",
+      "testament": "new",
+      "eraCompact": "51",
+      "eraAria": "约公元51年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 53,
+      "bookId": "2TH",
+      "testament": "new",
+      "eraCompact": "51",
+      "eraAria": "约公元51年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 54,
+      "bookId": "1TI",
+      "testament": "new",
+      "eraCompact": "63",
+      "eraAria": "约公元63年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        },
+        {
+          "id": "提摩太",
+          "slug": "figure-提摩太",
+          "displayNameZh": "提摩太",
+          "englishName": "Timothy",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-提摩太",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "提摩太：年轻的同工"
+        }
+      ]
+    },
+    {
+      "bookNumber": 55,
+      "bookId": "2TI",
+      "testament": "new",
+      "eraCompact": "66",
+      "eraAria": "约公元66年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        },
+        {
+          "id": "提摩太",
+          "slug": "figure-提摩太",
+          "displayNameZh": "提摩太",
+          "englishName": "Timothy",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-提摩太",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "提摩太：年轻的同工"
+        }
+      ]
+    },
+    {
+      "bookNumber": 56,
+      "bookId": "TIT",
+      "testament": "new",
+      "eraCompact": "63",
+      "eraAria": "约公元63年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        },
+        {
+          "id": "提多",
+          "slug": "figure-提多",
+          "displayNameZh": "提多",
+          "englishName": "Titus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-提多",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "提多：忠心的同工"
+        }
+      ]
+    },
+    {
+      "bookNumber": 57,
+      "bookId": "PHM",
+      "testament": "new",
+      "eraCompact": "60",
+      "eraAria": "约公元60年",
+      "figures": [
+        {
+          "id": "paul",
+          "slug": "paul",
+          "displayNameZh": "保罗",
+          "englishName": "Paul",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-paul",
+          "profileStatus": "seed",
+          "articleTitle": "保罗：外邦使徒"
+        },
+        {
+          "id": "腓利门",
+          "slug": "figure-腓利门",
+          "displayNameZh": "腓利门",
+          "englishName": "Philemon",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-腓利门",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "腓利门：被请求接纳的人"
+        },
+        {
+          "id": "阿尼西母",
+          "slug": "figure-阿尼西母",
+          "displayNameZh": "阿尼西母",
+          "englishName": "Onesimus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-阿尼西母",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "阿尼西母：从逃奴到弟兄"
+        }
+      ]
+    },
+    {
+      "bookNumber": 59,
+      "bookId": "JAS",
+      "testament": "new",
+      "eraCompact": "44",
+      "eraAria": "约公元44年",
+      "figures": [
+        {
+          "id": "james-apostle",
+          "slug": "james-apostle",
+          "displayNameZh": "雅各书·雅各",
+          "englishName": "James (brother of the Lord)",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-james-apostle",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "雅各书·雅各：主的兄弟"
+        }
+      ]
+    },
+    {
+      "bookNumber": 60,
+      "bookId": "1PE",
+      "testament": "new",
+      "eraCompact": "62",
+      "eraAria": "约公元62年",
+      "figures": [
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        }
+      ]
+    },
+    {
+      "bookNumber": 61,
+      "bookId": "2PE",
+      "testament": "new",
+      "eraCompact": "64",
+      "eraAria": "约公元64年",
+      "figures": [
+        {
+          "id": "peter",
+          "slug": "figure-peter",
+          "displayNameZh": "彼得",
+          "englishName": "Peter",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-peter",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "彼得：教会的磐石"
+        }
+      ]
+    },
+    {
+      "bookNumber": 62,
+      "bookId": "1JN",
+      "testament": "new",
+      "eraCompact": "85",
+      "eraAria": "约公元85年",
+      "figures": [
+        {
+          "id": "约翰",
+          "slug": "figure-约翰",
+          "displayNameZh": "约翰",
+          "englishName": "John",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-约翰",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约翰：耶稣所爱的门徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 63,
+      "bookId": "2JN",
+      "testament": "new",
+      "eraCompact": "85",
+      "eraAria": "约公元85年",
+      "figures": [
+        {
+          "id": "约翰",
+          "slug": "figure-约翰",
+          "displayNameZh": "约翰",
+          "englishName": "John",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-约翰",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约翰：耶稣所爱的门徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 64,
+      "bookId": "3JN",
+      "testament": "new",
+      "eraCompact": "85",
+      "eraAria": "约公元85年",
+      "figures": [
+        {
+          "id": "约翰",
+          "slug": "figure-约翰",
+          "displayNameZh": "约翰",
+          "englishName": "John",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-约翰",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约翰：耶稣所爱的门徒"
+        }
+      ]
+    },
+    {
+      "bookNumber": 65,
+      "bookId": "JUD",
+      "testament": "new",
+      "eraCompact": "65",
+      "eraAria": "约公元65年",
+      "figures": [
+        {
+          "id": "jude-author",
+          "slug": "jude-author",
+          "displayNameZh": "犹大书·犹大",
+          "englishName": "Jude",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jude-author",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "犹大书·犹大：短书的作者"
+        }
+      ]
+    },
+    {
+      "bookNumber": 66,
+      "bookId": "REV",
+      "testament": "new",
+      "eraCompact": "95",
+      "eraAria": "约公元95年",
+      "figures": [
+        {
+          "id": "jesus",
+          "slug": "figure-jesus",
+          "displayNameZh": "耶稣",
+          "englishName": "Jesus",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-jesus",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "耶稣：仁爱与救赎之主"
+        },
+        {
+          "id": "约翰",
+          "slug": "figure-约翰",
+          "displayNameZh": "约翰",
+          "englishName": "John",
+          "characterRoleZh": "主人物",
+          "linkedArticleSlug": "figure-约翰",
+          "profileStatus": "legacy_imported",
+          "articleTitle": "约翰：耶稣所爱的门徒"
+        }
+      ]
+    }
+  ]
+}

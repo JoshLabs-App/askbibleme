@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
+# 已弃用：EAS 云端 iOS 构建。请用 npm run mobile:build:ios:production（本机 --local）。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+
+echo "⚠️  此脚本为 EAS 云端构建（已弃用）。常规发版请用："
+echo "    npm run mobile:build:ios:production"
+echo ""
+if [[ "${EAS_CLOUD_BUILD_OK:-}" != "1" ]]; then
+  echo "已取消。若确需云端构建，请设 EAS_CLOUD_BUILD_OK=1"
+  exit 1
+fi
 
 if ! npx eas whoami >/dev/null 2>&1; then
   echo ""

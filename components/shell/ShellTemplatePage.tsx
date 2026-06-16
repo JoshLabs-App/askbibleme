@@ -11,7 +11,7 @@ import { useAppSkin } from "@/components/theme/AppSkinProvider";
  */
 export function ShellTemplatePage() {
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
-  const previewThemeId = shellTemplateBrand ?? "lagoonPaper";
+  const previewThemeId = shellTemplateBrand ?? "parchmentShell";
   const previewRootRef = useRef<HTMLDivElement>(null);
 
   return (

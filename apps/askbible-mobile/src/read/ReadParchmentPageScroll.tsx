@@ -1,5 +1,5 @@
 import { usePathname } from "expo-router";
-import { forwardRef } from "react";
+import { forwardRef, useMemo } from "react";
 import {
   StyleSheet,
   type ScrollView,
@@ -10,13 +10,18 @@ import { ParchmentBottomFadeScrollView } from "./ParchmentBottomFadeScrollView";
 import { SHELL_TAB_BAR_CLEARANCE } from "../shell/shellLayout";
 import { READ_CHAPTER_SCROLL_BOTTOM_EXTRA } from "./read-chapter-chrome-inset";
 import { readRouteUsesBottomActionChrome } from "./read-route-chrome";
+import {
+  PARCHMENT_COLUMN_MAX_WIDTH_PHONE,
+  READ_PARCHMENT_PAGE_MAX_WIDTH,
+  useParchmentColumnMaxWidth,
+} from "./parchmentColumnLayout";
 
 /** 与 `ReadCatalogScreen` / 网站 `.read-bible-parchment-scroll` 对齐 */
 export const READ_PARCHMENT_PAGE_TOP_HOME = 48;
 export const READ_PARCHMENT_PAGE_TOP_SUB = 20;
 export const READ_PARCHMENT_PAGE_BOTTOM = SHELL_TAB_BAR_CLEARANCE + 28;
 export const READ_PARCHMENT_PAGE_PAD_X = 20;
-export const READ_PARCHMENT_PAGE_MAX_WIDTH = 448;
+export { READ_PARCHMENT_PAGE_MAX_WIDTH };
 
 export type ReadParchmentPageInset = "home" | "sub";
 
@@ -36,6 +41,14 @@ export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
   ) {
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
+    const columnMaxWidth = useParchmentColumnMaxWidth(PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
+    const contentColumnStyle = useMemo(
+      () => [
+        styles.content,
+        columnMaxWidth != null ? { maxWidth: columnMaxWidth } : null,
+      ],
+      [columnMaxWidth],
+    );
     const topPad =
       inset === "home" ? READ_PARCHMENT_PAGE_TOP_HOME : READ_PARCHMENT_PAGE_TOP_SUB;
     const actionChromePad = readRouteUsesBottomActionChrome(pathname)
@@ -48,7 +61,7 @@ export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
         maskEnabled={maskEnabled}
         style={[styles.flex, style]}
         contentContainerStyle={[
-          styles.content,
+          contentColumnStyle,
           {
             paddingTop: topPad + insets.top,
             paddingBottom: READ_PARCHMENT_PAGE_BOTTOM + actionChromePad + insets.bottom,
@@ -65,7 +78,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: {
     paddingHorizontal: READ_PARCHMENT_PAGE_PAD_X,
-    maxWidth: READ_PARCHMENT_PAGE_MAX_WIDTH,
     width: "100%",
     alignSelf: "center",
   },

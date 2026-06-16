@@ -1,9 +1,11 @@
 import type { AppLocale } from "../../i18n/config";
 import { getAskBibleBaseUrl } from "../../config/askbibleBaseUrl";
-import { isMobileBundledOnly } from "../../config/mobileBundledOnly";
+import { isMobileBundledOnly, isMobileOfflineFirst } from "../../config/mobileBundledOnly";
+import { isNetworkAvailable } from "../../network/isNetworkAvailable";
 import { flowLocaleForHomeVerseTranslationId } from "../homePrayerVersePrefs";
 import { loadChapterFromBundledTranslation } from "../../bible/load-chapter";
 import { parseVerseKey } from "../../bible/parse-verse-key";
+import { resolveSameAsPreviousVerseText } from "../../bible/resolve-same-as-previous-verse";
 import { getScriptureBookDisplayName } from "../../bible/scripture-book-display-name";
 import {
   HOME_VERSE_POOL_SCOPE_KEYS,
@@ -32,6 +34,7 @@ export function getBundledHomeVerseManifest(): HomePrayerManifestV1 | null {
 }
 
 async function fetchManifestFromNetwork(): Promise<HomePrayerManifestV1 | null> {
+  if (isMobileOfflineFirst() || !(await isNetworkAvailable())) return null;
   try {
     const base = getAskBibleBaseUrl();
     const res = await fetch(`${base}/data/home-prayer-pools/${HOME_VERSE_POOL_SCOPE_ID}/manifest.json`);
@@ -82,7 +85,7 @@ export async function loadHomeVerseManifest(): Promise<HomePrayerManifestV1 | nu
   const selectedScopeId = await hydrateHomeVersePoolScope();
   const selectedScopeVerseKeys = HOME_VERSE_POOL_SCOPE_KEYS[selectedScopeId];
   const bundled = getBundledHomeVerseManifest();
-  if (isMobileBundledOnly()) {
+  if (isMobileBundledOnly() || isMobileOfflineFirst()) {
     return bundled ? filterManifestToScope(bundled, selectedScopeVerseKeys, selectedScopeId) : bundled;
   }
   const merged = bundled ?? (await fetchManifestFromNetwork());
@@ -114,7 +117,10 @@ async function resolveVerseEntryByTranslation(
   if (!tid) return null;
   const chapter = await loadChapterCached(parsed.bookId, parsed.chapter, tid);
   if (!chapter) return null;
-  const verseText = chapter.verses.find((v) => v.verse === parsed.verse)?.text?.trim();
+  const verseTextByVerse = new Map(chapter.verses.map((v) => [v.verse, v.text]));
+  const rawText = verseTextByVerse.get(parsed.verse)?.trim();
+  if (!rawText) return null;
+  const verseText = resolveSameAsPreviousVerseText(parsed.verse, rawText, verseTextByVerse).trim();
   if (!verseText) return null;
   const flow = flowLocaleForHomeVerseTranslationId(tid);
   const refLocale: AppLocale = flow === "en" ? "en" : flow === "zh-TW" ? "zh-TW" : "zh-CN";

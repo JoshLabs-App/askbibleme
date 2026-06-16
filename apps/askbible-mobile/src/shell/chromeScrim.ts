@@ -91,7 +91,7 @@ export function chromeScrimGradientColors(
   const a1b = d.bottomStop1Alpha * aMul;
   const a2b = d.bottomStop2Alpha * aMul;
 
-  const solid = `rgb(${r},${g},${b})`;
+  const solid = `rgba(${r},${g},${b},1)`;
   const topColors = [
     solid,
     solid,
@@ -127,5 +127,30 @@ export function chromeScrimGradientColors(
     bottom: { colors: bottomColors, locations: bottomLocations },
     topHeightPx: Math.max(d.topHeightMinPx, d.topHeightRem * 16),
     bottomHeightPx: Math.max(d.bottomHeightMinPx, d.bottomHeightRem * 16),
+  };
+}
+
+/** 底栏羊皮渐隐：与网站 `shellTemplateChromeScrimBackgrounds` 底缘同源；单段 rgba 渐隐，避免 RN 上 rgb/rgba 混用呈色块。 */
+export function parchmentTabBarBottomGradient(
+  tune: ShellChromeTune = DEFAULT_SHELL_CHROME_TUNE,
+): {
+  colors: [string, string, ...string[]];
+  locations: [number, number, ...number[]];
+} {
+  const d = clampShellChromeTune(tune);
+  const { r, g, b } = parseHex(APP_DARK);
+  const aMul = 0.52;
+  const a1 = d.bottomStop1Alpha * aMul;
+  const a2 = d.bottomStop2Alpha * aMul;
+  const c = (alpha: number) => `rgba(${r}, ${g}, ${b}, ${alpha})`;
+
+  return {
+    colors: [c(1), c(a1), c(a2), c(0)],
+    locations: [
+      0,
+      d.bottomStop1Pct / 100,
+      d.bottomStop2Pct / 100,
+      1,
+    ],
   };
 }

@@ -9,6 +9,9 @@ import { formatVerseRefFootnote } from "@/lib/bible/format-verse-ref-footnote";
 export { formatVerseRefFootnote } from "@/lib/bible/format-verse-ref-footnote";
 import { stripZhVerseDisplayNotes } from "@/lib/bible/strip-zh-verse-display-notes";
 import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
+import {
+  resolveSameAsPreviousVerseText,
+} from "@/lib/bible/resolve-same-as-previous-verse";
 
 /** 缺章 / 缺节 / 节内部分缺失时的策略（计划：统一在 resolver）。 */
 export type ResolveVerseRefWhenIncomplete = "skip" | "ref-only" | "partial-span";
@@ -21,12 +24,6 @@ export type ResolveVerseRefOptions = {
 /** 统计「有字形」长度，用于判断是否为孤行（标点不计）。 */
 function countZhContentChars(s: string): number {
   return s.replace(/[，。、；：！？「」『』""''\s\u3000]/g, "").length;
-}
-
-const SAME_AS_PREVIOUS_VERSE_RE = /^[\s]*[并並][于於]上[节節][。.]?[\s]*$/;
-
-function isSameAsPreviousVerseMarker(text: string): boolean {
-  return SAME_AS_PREVIOUS_VERSE_RE.test(text);
 }
 
 /**
@@ -139,23 +136,13 @@ export async function resolveVerseRefToHomeEntry(
   }
 
   const loadedVerseTextByVerse = new Map(loaded.verses.map((x) => [x.verse, x.text]));
-  const resolveDisplaySourceText = (verse: number, rawText: string): string => {
-    if (!isSameAsPreviousVerseMarker(rawText)) return rawText;
-    // 「并于上节」是占位文案，向前回溯到最近可展示正文。
-    for (let prev = verse - 1; prev >= 1; prev -= 1) {
-      const hit = loadedVerseTextByVerse.get(prev);
-      if (!hit) continue;
-      const t = hit.trim();
-      if (!t || isSameAsPreviousVerseMarker(t)) continue;
-      return hit;
-    }
-    return rawText;
-  };
+  const resolveDisplaySourceText = (verse: number, rawText: string): string =>
+    resolveSameAsPreviousVerseText(verse, rawText, loadedVerseTextByVerse);
 
   const verseBodyForSplit = (raw: string): string => {
     const t = raw.trim();
     if (!t) return "";
-    const pass = locale === "zh-CN" ? stripZhVerseDisplayNotes(t) : t;
+    const pass = locale === "zh-CN" || locale === "zh-TW" ? stripZhVerseDisplayNotes(t) : t;
     return normalizeVerseTextForHomeDisplay(pass);
   };
 
@@ -190,7 +177,7 @@ export async function resolveVerseRefToHomeEntry(
 
   const fallbackLine =
     normalizeVerseTextForHomeDisplay(
-      locale === "zh-CN"
+      locale === "zh-CN" || locale === "zh-TW"
         ? stripZhVerseDisplayNotes(resolveDisplaySourceText(picked[0].verse, picked[0].text))
         : resolveDisplaySourceText(picked[0].verse, picked[0].text).trim(),
     ) || resolveDisplaySourceText(picked[0].verse, picked[0].text).trim();

@@ -9,9 +9,10 @@ import {
   type ScriptureSearchHit,
   type ScriptureSearchScope,
 } from "@/lib/bible/scripture-search";
-
-const RECENT_SEARCH_STORAGE_KEY = "askbible-read-scripture-recent-searches-v1";
-const RECENT_SEARCH_MAX_ITEMS = 8;
+import {
+  pushScriptureRecentSearch,
+  readScriptureRecentSearches,
+} from "@/lib/read/scripture-recent-searches";
 
 const SCOPE_OPTIONS: { key: ScriptureSearchScope; labelKey: string }[] = [
   { key: "all", labelKey: "pages.read.scriptureSearchScopeAll" },
@@ -31,47 +32,13 @@ export function ReadScriptureSearchClient() {
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
-  const saveRecentSearches = useCallback((next: string[]) => {
-    setRecentSearches(next);
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(RECENT_SEARCH_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // Ignore storage write failures in private mode / quota issues.
-    }
+  const pushRecentSearch = useCallback((raw: string) => {
+    const record = pushScriptureRecentSearch(raw);
+    setRecentSearches(record.terms);
   }, []);
 
-  const pushRecentSearch = useCallback(
-    (raw: string) => {
-      const normalized = raw.trim().replace(/\s+/g, " ");
-      if (normalized.length < SCRIPTURE_SEARCH_MIN_LEN) return;
-      const next = [
-        normalized,
-        ...recentSearches.filter((item) => item.toLowerCase() !== normalized.toLowerCase()),
-      ].slice(0, RECENT_SEARCH_MAX_ITEMS);
-      saveRecentSearches(next);
-    },
-    [recentSearches, saveRecentSearches],
-  );
-
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(RECENT_SEARCH_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return;
-      const cleaned = parsed
-        .filter((item): item is string => typeof item === "string")
-        .map((item) => item.trim())
-        .filter((item) => item.length >= SCRIPTURE_SEARCH_MIN_LEN)
-        .slice(0, RECENT_SEARCH_MAX_ITEMS);
-      if (cleaned.length > 0) {
-        setRecentSearches(cleaned);
-      }
-    } catch {
-      // Ignore malformed or unavailable localStorage data.
-    }
+    setRecentSearches(readScriptureRecentSearches().terms);
   }, []);
 
   const runSearch = useCallback(
@@ -202,7 +169,9 @@ export function ReadScriptureSearchClient() {
         {results.map((hit) => (
           <li key={`${hit.bookId}:${hit.chapter}:${hit.verse}`}>
             <Link
-              href={`/read/${encodeURIComponent(hit.bookId)}/${hit.chapter}?verse=${hit.verse}`}
+              href={`/read/${encodeURIComponent(hit.bookId)}/${hit.chapter}?verse=${hit.verse}${
+                query.trim() ? `&q=${encodeURIComponent(query.trim())}` : ""
+              }`}
               className="read-scripture-search-hit"
             >
               <span className="read-scripture-search-hit-ref">

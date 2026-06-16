@@ -5,6 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=scripts/mobile-load-google-oauth-env.sh
+source "$ROOT/scripts/mobile-load-google-oauth-env.sh"
+load_mobile_google_oauth_env "$ROOT"
+
 MOBILE="$ROOT/apps/askbible-mobile"
 ANDROID="$MOBILE/android"
 KEYSTORE_PROPS="$ANDROID/keystore.properties"

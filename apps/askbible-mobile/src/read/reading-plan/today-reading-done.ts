@@ -103,6 +103,14 @@ async function writeRecord(record: TodayReadingDoneRecord): Promise<void> {
   }
 }
 
+export async function readTodayReadingDoneRecord(): Promise<TodayReadingDoneRecord | null> {
+  return readRecord();
+}
+
+export async function replaceTodayReadingDoneRecord(record: TodayReadingDoneRecord): Promise<void> {
+  await writeRecord(record);
+}
+
 export async function readTodayReadingDoneKeys(scopeKey: string): Promise<Set<string>> {
   const record = await readRecord();
   if (!record || record.scopeKey !== scopeKey) return new Set();

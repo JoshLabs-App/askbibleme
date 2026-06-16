@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   type NativeSyntheticEvent,
   Platform,
+  Pressable,
   Text,
+  View,
   type TextLayoutEventData,
   type GestureResponderEvent,
   type LayoutRectangle,
@@ -18,6 +20,7 @@ import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readTypography } from "./readTypography";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR } from "./read-verse-text-highlights";
+import { splitTextByScriptureSearchKeyword } from "../bible/scripture-search";
 
 type Props = {
   text: string;
@@ -43,6 +46,10 @@ type Props = {
   /** Android 嵌套 Text 有字下色带时会吞掉父级 onPress；收藏双击改由此传入 */
   onPress?: () => void;
   onLongPress?: () => void;
+  /** 弹窗内逐词 Pressable，点选更准（划重点词） */
+  preciseHighlightUnits?: boolean;
+  /** 经文搜索跳入：在节内高亮匹配词 */
+  searchKeyword?: string | null;
 };
 
 function speechSegmentStyle(kind: VerseSpeechPart["kind"]) {
@@ -118,8 +125,9 @@ function tokenizeHighlightUnits(text: string): HighlightUnit[] {
 }
 
 /** Android 嵌套 Text 的 onPress 常失效；轻点改由 responder 在抬手时处理。 */
-const USE_DEFERRED_HIGHLIGHT_TOUCH = Platform.OS === "android";
-const HIGHLIGHT_TAP_SLOP_PX = 10;
+const USE_DEFERRED_VERSE_TOUCH = Platform.OS === "android";
+const VERSE_TOUCH_SLOP_PX = 10;
+const VERSE_LONG_PRESS_MS = 280;
 
 function unitFullySelected(
   unit: HighlightUnit,
@@ -149,6 +157,8 @@ export function ReadChapterVerseText({
   textHighlightColor,
   onPress,
   onLongPress,
+  preciseHighlightUnits = false,
+  searchKeyword = null,
 }: Props) {
   const { px } = useReadBibleTypography();
   const kind = highlight ?? (isGolden ? "golden" : undefined);
@@ -251,6 +261,15 @@ export function ReadChapterVerseText({
     startLocalY: number;
     dragged: boolean;
   } | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   const editableTokenUnits = useMemo(() => {
     if (!highlightEditMode || (!onToggleHighlightUnit && !onReplaceHighlightSelection)) return null;
@@ -566,14 +585,30 @@ export function ReadChapterVerseText({
         startLocalY: pt.localY,
         dragged: false,
       };
-      if (!USE_DEFERRED_HIGHLIGHT_TOUCH) {
-        beginOrExtendDragSelection(pt.localX, pt.localY, true);
+      longPressTriggeredRef.current = false;
+      clearLongPressTimer();
+      if (highlightEditMode) {
+        if (!USE_DEFERRED_VERSE_TOUCH) {
+          beginOrExtendDragSelection(pt.localX, pt.localY, true);
+        }
+      } else if (USE_DEFERRED_VERSE_TOUCH && onLongPress) {
+        longPressTimerRef.current = setTimeout(() => {
+          longPressTriggeredRef.current = true;
+          onLongPress();
+        }, VERSE_LONG_PRESS_MS);
       }
       if (onHighlightTracePoint) {
         onHighlightTracePoint(pt.pageX, pt.pageY, true);
       }
     },
-    [beginOrExtendDragSelection, onHighlightTracePoint, resolveLocalPoint],
+    [
+      beginOrExtendDragSelection,
+      clearLongPressTimer,
+      highlightEditMode,
+      onHighlightTracePoint,
+      onLongPress,
+      resolveLocalPoint,
+    ],
   );
 
   const handleTouchMove = useCallback(
@@ -583,29 +618,31 @@ export function ReadChapterVerseText({
       if (touch && !touch.dragged) {
         const dx = pt.localX - touch.startLocalX;
         const dy = pt.localY - touch.startLocalY;
-        if (dx * dx + dy * dy >= HIGHLIGHT_TAP_SLOP_PX * HIGHLIGHT_TAP_SLOP_PX) {
+        if (dx * dx + dy * dy >= VERSE_TOUCH_SLOP_PX * VERSE_TOUCH_SLOP_PX) {
           touch.dragged = true;
-          if (USE_DEFERRED_HIGHLIGHT_TOUCH) {
+          clearLongPressTimer();
+          if (highlightEditMode && USE_DEFERRED_VERSE_TOUCH) {
             beginOrExtendDragSelection(pt.localX, pt.localY, true);
           }
         }
       }
-      if (!USE_DEFERRED_HIGHLIGHT_TOUCH || touch?.dragged) {
+      if (highlightEditMode && (!USE_DEFERRED_VERSE_TOUCH || touch?.dragged)) {
         beginOrExtendDragSelection(pt.localX, pt.localY, false);
       }
       if (onHighlightTracePoint) {
         onHighlightTracePoint(pt.pageX, pt.pageY, false);
       }
     },
-    [beginOrExtendDragSelection, onHighlightTracePoint, resolveLocalPoint],
+    [beginOrExtendDragSelection, clearLongPressTimer, highlightEditMode, onHighlightTracePoint, resolveLocalPoint],
   );
 
   const handleTouchEnd = useCallback(
     (e: GestureResponderEvent) => {
-      if (USE_DEFERRED_HIGHLIGHT_TOUCH && onToggleHighlightUnit) {
-        const pt = resolveLocalPoint(e);
-        const touch = touchGestureRef.current;
-        if (touch && !touch.dragged) {
+      clearLongPressTimer();
+      const pt = resolveLocalPoint(e);
+      const touch = touchGestureRef.current;
+      if (highlightEditMode) {
+        if (USE_DEFERRED_VERSE_TOUCH && onToggleHighlightUnit && touch && !touch.dragged) {
           const unitIndex = hitTestUnitIndex(pt.localX, pt.localY);
           const unitWrap = editableTokenUnits?.[unitIndex];
           if (unitWrap?.unit.selectable) {
@@ -616,39 +653,56 @@ export function ReadChapterVerseText({
             );
           }
         }
+      } else if (
+        USE_DEFERRED_VERSE_TOUCH &&
+        onPress &&
+        touch &&
+        !touch.dragged &&
+        !longPressTriggeredRef.current
+      ) {
+        onPress();
       }
       touchGestureRef.current = null;
+      longPressTriggeredRef.current = false;
       endDragSelection();
     },
     [
       activeHighlightColor,
+      clearLongPressTimer,
       editableTokenUnits,
       endDragSelection,
+      highlightEditMode,
       hitTestUnitIndex,
+      onPress,
       onToggleHighlightUnit,
       resolveLocalPoint,
     ],
   );
 
+  useEffect(() => () => clearLongPressTimer(), [clearLongPressTimer]);
+
   const highlightTouchEnabled =
     highlightEditMode &&
     (onToggleHighlightUnit || onReplaceHighlightSelection || onPaintHighlightUnit);
 
+  const androidVersePressEnabled =
+    USE_DEFERRED_VERSE_TOUCH && !highlightEditMode && Boolean(onPress || onLongPress);
+
   const verseBodyPressProps = useMemo(
     () =>
-      highlightEditMode || !onPress
+      highlightEditMode || !onPress || androidVersePressEnabled
         ? null
         : ({
             onPress,
             onLongPress,
             suppressHighlighting: true,
           } as const),
-    [highlightEditMode, onLongPress, onPress],
+    [androidVersePressEnabled, highlightEditMode, onLongPress, onPress],
   );
 
-  const dragGestureProps = useMemo(
+  const deferredTouchProps = useMemo(
     () =>
-      highlightTouchEnabled
+      highlightTouchEnabled || androidVersePressEnabled
         ? ({
             onStartShouldSetResponder: () => true,
             onMoveShouldSetResponder: () => true,
@@ -663,11 +717,20 @@ export function ReadChapterVerseText({
           } as const)
         : null,
     [
+      androidVersePressEnabled,
       handleTouchEnd,
       handleTouchMove,
       handleTouchStart,
       highlightTouchEnabled,
     ],
+  );
+
+  const inlineTouchSpread = useMemo(
+    () => ({
+      ...(verseBodyPressProps as object),
+      ...(deferredTouchProps as object),
+    }),
+    [deferredTouchProps, verseBodyPressProps],
   );
 
   useEffect(() => {
@@ -685,7 +748,76 @@ export function ReadChapterVerseText({
     return () => clearTimeout(timer);
   }, [editableTokenUnits, highlightEditMode, layoutMeasureTick, onHighlightUnitLayout]);
 
+  const preciseHighlightBody = useMemo(() => {
+    if (!highlightEditMode || !preciseHighlightUnits || !editableTokenUnits?.length || !onToggleHighlightUnit) {
+      return null;
+    }
+    const selectedIndexes = highlightedCharIndexes ?? new Map<number, string>();
+    return (
+      <View style={styles.preciseHighlightFlow}>
+        {editableTokenUnits.map(({ idx, unit, kindStyle }) => {
+          const unitSelected =
+            unit.selectable &&
+            Array.from({ length: unit.end - unit.start }).every((_, offset) =>
+              selectedIndexes.has(unit.start + offset),
+            );
+          const unitHighlightColor = selectedIndexes.get(unit.start) ?? activeHighlightColor;
+          const toggle = onToggleHighlightUnit;
+          return (
+            <Pressable
+              key={`pu:${idx}:${unit.start}`}
+              disabled={!unit.selectable}
+              onPress={
+                unit.selectable
+                  ? () => toggle(unit.start, unit.end, activeHighlightColor)
+                  : undefined
+              }
+              style={({ pressed }) => [
+                styles.preciseHighlightUnit,
+                unitSelected && { backgroundColor: unitHighlightColor },
+                unit.selectable && pressed && styles.preciseHighlightUnitPressed,
+              ]}
+            >
+              <Text style={[baseStyle, kindStyle, styles.preciseHighlightUnitText]}>{unit.text}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }, [
+    activeHighlightColor,
+    baseStyle,
+    editableTokenUnits,
+    highlightEditMode,
+    highlightedCharIndexes,
+    onToggleHighlightUnit,
+    preciseHighlightUnits,
+  ]);
+
+  const searchKeywordBody = useMemo(() => {
+    if (!searchKeyword) return null;
+    return splitTextByScriptureSearchKeyword(text, searchKeyword).map((seg, i) =>
+      seg.match ? (
+        <Text key={`sk:${i}`} style={styles.searchKeyword}>
+          {seg.text}
+        </Text>
+      ) : (
+        seg.text
+      ),
+    );
+  }, [searchKeyword, text]);
+
   if (inline) {
+    if (preciseHighlightBody) {
+      return preciseHighlightBody;
+    }
+    if (searchKeywordBody) {
+      return (
+        <Text style={baseStyle} {...inlineTouchSpread}>
+          {searchKeywordBody}
+        </Text>
+      );
+    }
     if (editableUnits) {
       return (
         <Text
@@ -697,7 +829,7 @@ export function ReadChapterVerseText({
             if (width > 0 && height > 0) rootLayoutRef.current = { width, height };
           }}
           onTextLayout={onRootTextLayout}
-          {...(dragGestureProps as any)}
+          {...(deferredTouchProps as any)}
         >
           {editableUnits}
         </Text>
@@ -705,28 +837,36 @@ export function ReadChapterVerseText({
     }
     if (highlightedChars) {
       return (
-        <Text style={baseStyle} {...(verseBodyPressProps as object)}>
+        <Text style={baseStyle} {...inlineTouchSpread}>
           {highlightedChars}
         </Text>
       );
     }
     if (!parts?.length) {
       return marker ? (
-        <Text style={marker} {...(verseBodyPressProps as object)}>
+        <Text style={marker} {...inlineTouchSpread}>
           {text}
         </Text>
       ) : (
-        <Text {...(verseBodyPressProps as object)}>{text}</Text>
+        <Text {...inlineTouchSpread}>{text}</Text>
       );
     }
     if (marker) {
       return (
-        <Text style={marker} {...(verseBodyPressProps as object)}>
+        <Text style={marker} {...inlineTouchSpread}>
           {segments}
         </Text>
       );
     }
-    return <Text {...(verseBodyPressProps as object)}>{segments}</Text>;
+    return <Text {...inlineTouchSpread}>{segments}</Text>;
+  }
+
+  if (preciseHighlightBody) {
+    return preciseHighlightBody;
+  }
+
+  if (searchKeywordBody) {
+    return <Text style={baseStyle}>{searchKeywordBody}</Text>;
   }
 
   if (editableUnits) {
@@ -741,7 +881,7 @@ export function ReadChapterVerseText({
           if (width > 0 && height > 0) rootLayoutRef.current = { width, height };
         }}
         onTextLayout={onRootTextLayout}
-        {...(dragGestureProps as any)}
+        {...(deferredTouchProps as any)}
       >
         {editableUnits}
       </Text>
@@ -776,5 +916,27 @@ const styles = {
     borderRadius: 2,
     paddingHorizontal: 1,
     paddingVertical: 0,
+  },
+  preciseHighlightFlow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+  },
+  preciseHighlightUnit: {
+    borderRadius: 3,
+    marginRight: 1,
+    marginBottom: 2,
+    paddingHorizontal: 1,
+    paddingVertical: 1,
+  },
+  preciseHighlightUnitPressed: {
+    opacity: 0.82,
+  },
+  preciseHighlightUnitText: {
+    includeFontPadding: false,
+  },
+  searchKeyword: {
+    color: c.parchmentAccent,
+    ...parchmentSans(700),
   },
 };

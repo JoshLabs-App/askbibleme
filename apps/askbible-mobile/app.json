@@ -3,8 +3,8 @@
     "name": "AskBible.me",
     "slug": "askbible-me",
     "scheme": "askbible",
-    "version": "1.0.0",
-    "runtimeVersion": "1.0.0",
+    "version": "1.0.1",
+    "runtimeVersion": "1.0.1",
     "updates": {
       "enabled": false,
       "checkAutomatically": "NEVER",
@@ -30,17 +30,21 @@
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "34",
+      "buildNumber": "37",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
+        ],
+        "NSLocalNetworkUsageDescription": "Allow AskBible.me to connect to the development server on your local network for live updates during development.",
+        "NSBonjourServices": [
+          "_metro._tcp"
         ]
       }
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 34,
+      "versionCode": 37,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

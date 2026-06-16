@@ -1,23 +1,10 @@
 import { scriptureBooks } from "../bible/scripture-books";
-import {
-  NARROW_GATE_BOOK_ABBR_TO_ID,
-  NARROW_GATE_CATEGORIES,
-} from "./ExploreNarrowGateScreen";
-import {
-  PRAYER_SCRIPTURE_BOOK_ABBR_TO_ID,
-  PRAYER_SCRIPTURE_SCENARIOS,
-} from "./ExplorePrayerScriptureScreen";
-import {
-  PRAISE_WORSHIP_BOOK_ABBR_TO_ID,
-  PRAISE_WORSHIP_CATEGORIES,
-} from "./ExplorePraiseWorshipScreen";
-import {
-  WORD_OF_GOD_BOOK_ABBR_TO_ID,
-  WORD_OF_GOD_CATEGORIES,
-} from "./ExploreWordOfGodScreen";
+import { getExploreModulesContent } from "./exploreModuleContent";
 import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "./explore-home-verse-pool-verse-keys";
-import { YEARS_DAYS_ETERNITY_ZH } from "./years-days-eternity-content";
+import { getYearsDaysEternityZh } from "./years-days-eternity-content";
 import type { YearsDaysEternityBlock } from "./years-days-eternity-types";
+import type { AppLocale } from "../i18n/config";
+import { localizeZhText } from "../i18n/site-copy";
 
 export type HomeVersePoolScopeId =
   | "comprehensive"
@@ -45,6 +32,14 @@ export const HOME_VERSE_POOL_SCOPE_OPTIONS: HomeVersePoolScopeOption[] = [
 ];
 
 export const DEFAULT_HOME_VERSE_POOL_SCOPE: HomeVersePoolScopeId = "all";
+
+export function resolveHomeVersePoolScopeLabel(
+  scope: HomeVersePoolScopeOption,
+  locale: AppLocale,
+): string {
+  if (locale === "en") return scope.labelEn;
+  return localizeZhText(locale, scope.labelZh);
+}
 
 type ParsedRef = { bookId: string; chapter: number; verseList: number[] };
 type RefVersePart = { chapter: number; start: number; end: number };
@@ -152,9 +147,10 @@ function collectYearsDaysEternityVerseKeys(): Set<string> {
       if (block.type === "scripture") scriptureRefs.push(block.ref);
     }
   };
-  collectBlockRef(YEARS_DAYS_ETERNITY_ZH.intro);
-  for (const section of YEARS_DAYS_ETERNITY_ZH.sections) collectBlockRef(section.blocks);
-  scriptureRefs.push(YEARS_DAYS_ETERNITY_ZH.finale.scripture.ref);
+  const yearsDaysEternityZh = getYearsDaysEternityZh();
+  collectBlockRef(yearsDaysEternityZh.intro);
+  for (const section of yearsDaysEternityZh.sections) collectBlockRef(section.blocks);
+  scriptureRefs.push(yearsDaysEternityZh.finale.scripture.ref);
 
   for (const rawRef of scriptureRefs) {
     const parsed = parseZhRefParts(rawRef);
@@ -170,9 +166,10 @@ function collectYearsDaysEternityVerseKeys(): Set<string> {
 
 function collectPrayerScriptureVerseWeights(): Map<string, number> {
   const weights = new Map<string, number>();
-  for (const scenario of PRAYER_SCRIPTURE_SCENARIOS) {
+  const prayer = getExploreModulesContent().prayer;
+  for (const scenario of prayer.scenarios) {
     for (const ref of scenario.refs) {
-      const parsed = parseRefWithBookMap(ref, PRAYER_SCRIPTURE_BOOK_ABBR_TO_ID);
+      const parsed = parseRefWithBookMap(ref, prayer.bookAbbrToId);
       if (!parsed) continue;
       for (const verse of parsed.verseList) {
         const key = verseKey(parsed.bookId, parsed.chapter, verse);
@@ -191,10 +188,11 @@ function unionSets(...sets: Set<string>[]): Set<string> {
   return out;
 }
 
-const praiseWorshipKeys = collectByCategories(PRAISE_WORSHIP_CATEGORIES, PRAISE_WORSHIP_BOOK_ABBR_TO_ID);
-const wordOfGodKeys = collectByCategories(WORD_OF_GOD_CATEGORIES, WORD_OF_GOD_BOOK_ABBR_TO_ID);
+const modules = getExploreModulesContent();
+const praiseWorshipKeys = collectByCategories(modules.praiseWorship.categories, modules.praiseWorship.bookAbbrToId);
+const wordOfGodKeys = collectByCategories(modules.wordOfGod.categories, modules.wordOfGod.bookAbbrToId);
 const yearsDaysEternityKeys = collectYearsDaysEternityVerseKeys();
-const narrowGateKeys = collectByCategories(NARROW_GATE_CATEGORIES, NARROW_GATE_BOOK_ABBR_TO_ID);
+const narrowGateKeys = collectByCategories(modules.narrowGate.categories, modules.narrowGate.bookAbbrToId);
 const prayerScriptureWeights = collectPrayerScriptureVerseWeights();
 const prayerScriptureKeys = new Set(prayerScriptureWeights.keys());
 const comprehensiveKeys = new Set(EXPLORE_HOME_VERSE_POOL_VERSE_KEYS);

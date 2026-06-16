@@ -4,7 +4,7 @@ import {
   type HomeVersePoolScopeId,
 } from "../explore/explore-home-verse-pool-scopes";
 
-const HOME_VERSE_POOL_SCOPE_KEY = "askbible-home-verse-pool-scope-v1";
+export const HOME_VERSE_POOL_SCOPE_KEY = "askbible-home-verse-pool-scope-v1";
 
 let currentScope: HomeVersePoolScopeId = DEFAULT_HOME_VERSE_POOL_SCOPE;
 let hydrated = false;
@@ -60,6 +60,17 @@ export async function setHomeVersePoolScope(next: HomeVersePoolScopeId): Promise
   hydrated = true;
   try {
     await AsyncStorage.setItem(HOME_VERSE_POOL_SCOPE_KEY, next);
+  } catch {
+    /* ignore */
+  }
+  emit();
+}
+
+export async function replaceHomeVersePoolScopeForSync(next: HomeVersePoolScopeId): Promise<void> {
+  currentScope = isScopeId(next) ? next : DEFAULT_HOME_VERSE_POOL_SCOPE;
+  hydrated = true;
+  try {
+    await AsyncStorage.setItem(HOME_VERSE_POOL_SCOPE_KEY, currentScope);
   } catch {
     /* ignore */
   }

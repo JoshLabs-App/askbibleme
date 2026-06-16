@@ -69,6 +69,8 @@ const SECTIONS: NavSection[] = [
       { href: "/admin/read/verse-backgrounds", labelKey: "admin.items.versePageBackgrounds" },
       { href: "/admin/read/segments", labelKey: "admin.items.readSegments" },
       { href: "/admin/read/info-edition-v1", labelKey: "admin.items.infoEditionV1" },
+      { href: "/admin/read/info-edition-v3", labelKey: "admin.items.infoEditionV3" },
+      { href: "/admin/read/info-edition-v3-batch", labelKey: "admin.items.infoEditionV3Batch" },
       { href: "/admin/read/info-edition-batch", labelKey: "admin.items.infoEditionBatch" },
     ],
   },

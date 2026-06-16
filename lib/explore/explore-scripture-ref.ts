@@ -13,7 +13,9 @@ export type { ParsedExploreRef } from "./explore-scripture-ref-parse";
 export { formatExploreRefLabel, parseExploreRef } from "./explore-scripture-ref-parse";
 
 function translationIdForLocale(locale: AppLocale): string {
-  return locale === "en" ? "web-en" : DEFAULT_SCRIPTURE_TRANSLATION_ID;
+  if (locale === "en") return "web-en";
+  if (locale === "zh-TW") return "cuv-trad";
+  return DEFAULT_SCRIPTURE_TRANSLATION_ID;
 }
 
 function verseTextForParsedRef(

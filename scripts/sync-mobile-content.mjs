@@ -135,3 +135,15 @@ const exploreSync = spawnSync("node", ["scripts/sync-explore-featured-articles-l
   stdio: "inherit",
 });
 if (exploreSync.status !== 0) process.exit(exploreSync.status ?? 1);
+
+const figuresSync = spawnSync("npx", ["tsx", "scripts/sync-legacy-figures-bundles.ts"], {
+  cwd: repoRoot,
+  stdio: "inherit",
+});
+if (figuresSync.status !== 0) process.exit(figuresSync.status ?? 1);
+
+const exploreModulesSync = spawnSync("npx", ["tsx", "scripts/sync-explore-modules-bundles.ts"], {
+  cwd: repoRoot,
+  stdio: "inherit",
+});
+if (exploreModulesSync.status !== 0) process.exit(exploreModulesSync.status ?? 1);

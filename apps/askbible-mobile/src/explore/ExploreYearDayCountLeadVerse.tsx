@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, Text } from "react-native";
+import { InteractionManager, Pressable, Text } from "react-native";
 import { t } from "../i18n/site-copy";
 import {
   formatYearDayCountRef,
+  getYearDayCountLeadRef,
   loadYearDayCountScriptureText,
-  YEAR_DAY_COUNT_LEAD_REF,
 } from "./year-day-count-scriptures";
 import { splitYearDayCountLeadVerseLines } from "./year-day-count-lead-verse";
 import { exploreStyles as s } from "./exploreParchmentStyles";
@@ -15,17 +15,21 @@ type Props = {
 
 export function ExploreYearDayCountLeadVerse({ onOpen }: Props) {
   const [text, setText] = useState<string | null>(null);
-  const refLabel = formatYearDayCountRef(YEAR_DAY_COUNT_LEAD_REF);
+  const leadRef = getYearDayCountLeadRef();
+  const refLabel = formatYearDayCountRef(leadRef);
 
   useEffect(() => {
     let cancelled = false;
-    void loadYearDayCountScriptureText(YEAR_DAY_COUNT_LEAD_REF).then((verse) => {
-      if (!cancelled) setText(verse);
+    const task = InteractionManager.runAfterInteractions(() => {
+      void loadYearDayCountScriptureText(leadRef).then((verse) => {
+        if (!cancelled) setText(verse);
+      });
     });
     return () => {
       cancelled = true;
+      task.cancel();
     };
-  }, []);
+  }, [leadRef.bookId, leadRef.chapter, leadRef.verseStart, leadRef.verseEnd]);
 
   const lines = useMemo(() => {
     const body = text?.trim();

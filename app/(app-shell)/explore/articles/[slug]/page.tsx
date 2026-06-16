@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { ExploreArticleContent } from "@/components/explore/ExploreArticleContent";
+import { ExploreArticleScriptureContent } from "@/components/explore/ExploreArticleScriptureContent";
 import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
 import {
   readExploreFeaturedArticleBySlug,
@@ -37,7 +37,7 @@ export default async function ExploreArticlePage({ params }: Props) {
 
   return (
     <ExploreParchmentChrome proseScroll>
-      <ExploreArticleContent article={article} />
+      <ExploreArticleScriptureContent article={article} locale={locale} />
     </ExploreParchmentChrome>
   );
 }

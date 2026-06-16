@@ -2,9 +2,16 @@
 
 type PrayerScenario = {
   title: string;
+  titleTw: string;
   titleEn: string;
   refs: string[];
 };
+
+export function resolvePrayerScenarioTitle(scenario: PrayerScenario, locale: string): string {
+  if (locale === "en") return scenario.titleEn;
+  if (locale === "zh-TW") return scenario.titleTw;
+  return scenario.title;
+}
 
 export const PRAYER_SCRIPTURE_BOOK_ABBR_TO_ID: Record<string, string> = {
   创世记: "GEN",
@@ -73,6 +80,7 @@ export const PRAYER_SCRIPTURE_BOOK_ABBR_TO_ID: Record<string, string> = {
 export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   {
     title: "1. 为自己",
+    titleTw: "1. 為自己",
     titleEn: "1. For Myself",
     refs: [
       "诗篇 139:23-24",
@@ -94,6 +102,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "2. 为孩子",
+    titleTw: "2. 為孩子",
     titleEn: "2. For Children",
     refs: [
       "箴言 22:6",
@@ -115,6 +124,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "3. 为婚姻",
+    titleTw: "3. 為婚姻",
     titleEn: "3. For Marriage",
     refs: [
       "创世记 2:24",
@@ -136,6 +146,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "4. 为家庭",
+    titleTw: "4. 為家庭",
     titleEn: "4. For Family",
     refs: [
       "约书亚记 24:15",
@@ -157,6 +168,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "5. 为工作",
+    titleTw: "5. 為工作",
     titleEn: "5. For Work",
     refs: [
       "歌罗西书 3:23-24",
@@ -178,6 +190,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "6. 为健康",
+    titleTw: "6. 為健康",
     titleEn: "6. For Health",
     refs: [
       "诗篇 103:2-5",
@@ -199,6 +212,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "7. 为父母",
+    titleTw: "7. 為父母",
     titleEn: "7. For Parents",
     refs: [
       "出埃及记 20:12",
@@ -220,6 +234,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "8. 为关系",
+    titleTw: "8. 為關係",
     titleEn: "8. For Relationships",
     refs: [
       "罗马书 12:18",
@@ -241,6 +256,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "9. 为经济",
+    titleTw: "9. 為經濟",
     titleEn: "9. For Finances",
     refs: [
       "腓立比书 4:19",
@@ -262,6 +278,7 @@ export const PRAYER_SCRIPTURE_SCENARIOS: PrayerScenario[] = [
   },
   {
     title: "10. 为前路",
+    titleTw: "10. 為前路",
     titleEn: "10. For the Road Ahead",
     refs: [
       "箴言 3:5-6",

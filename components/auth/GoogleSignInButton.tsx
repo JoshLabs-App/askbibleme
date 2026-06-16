@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { GoogleBrandIcon } from "@/components/auth/OAuthBrandIcons";
+import { OAuthButtonLabel } from "@/components/auth/OAuthButtonLabel";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 
@@ -19,13 +20,13 @@ export function GoogleSignInButton({ nextPath = "/", className }: Props) {
   const onGoogleSignIn = useCallback(async () => {
     if (pending) return;
     if (!isSupabaseAuthConfigured()) {
-      setError(t("auth.errorOAuth"));
+      setError(t("auth.errorOAuthGoogle"));
       return;
     }
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setError(t("auth.errorOAuth"));
+      setError(t("auth.errorOAuthGoogle"));
       return;
     }
 
@@ -39,10 +40,13 @@ export function GoogleSignInButton({ nextPath = "/", className }: Props) {
       const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: {
+          redirectTo,
+          queryParams: { prompt: "select_account" },
+        },
       });
       if (oauthError) {
-        setError(oauthError.message || t("auth.errorOAuth"));
+        setError(oauthError.message || t("auth.errorOAuthGoogle"));
         setPending(false);
       }
     } catch {
@@ -59,15 +63,21 @@ export function GoogleSignInButton({ nextPath = "/", className }: Props) {
         type="button"
         onClick={() => void onGoogleSignIn()}
         disabled={pending}
-        className="relative flex w-full items-center justify-center gap-2.5 rounded-lg border border-ink/14 bg-white/[0.92] px-4 py-3 text-[15px] font-medium text-ink transition hover:bg-white active:scale-[0.99] disabled:opacity-50"
+        aria-label={t("auth.continueWithGoogle")}
+        className="relative flex min-h-[52px] w-full items-center justify-center rounded-lg border border-[rgba(43,29,21,0.14)] bg-white/[0.92] px-4 py-3 text-[15px] font-medium text-[#2b1d15] transition hover:bg-white active:scale-[0.99] disabled:opacity-50"
       >
         <span className="absolute left-4 flex h-[18px] w-[18px] items-center justify-center" aria-hidden>
           <GoogleBrandIcon />
         </span>
-        {pending ? t("auth.googleSubmitting") : t("auth.continueWithGoogle")}
+        <OAuthButtonLabel
+          line1={t("auth.continueWithGoogleLine1")}
+          line2={t("auth.continueWithGoogleLine2")}
+          pending={pending}
+          pendingText={t("auth.googleSubmitting")}
+        />
       </button>
       {error ? (
-        <p className="mt-3 text-center text-[13px] text-red-300/95" role="alert">
+        <p className="mt-3 text-center text-[13px] text-red-700/90 dark:text-red-300/95" role="alert">
           {error}
         </p>
       ) : null}
@@ -79,9 +89,11 @@ export function AuthMethodDivider({ className }: { className?: string }) {
   const { t } = useLocale();
   return (
     <div className={`flex items-center gap-3 ${className ?? ""}`}>
-      <span className="h-px flex-1 bg-ink/10" aria-hidden />
-      <span className="text-[11px] font-medium uppercase tracking-wide text-ink/38">{t("auth.orDivider")}</span>
-      <span className="h-px flex-1 bg-ink/10" aria-hidden />
+      <span className="h-px flex-1 bg-[rgba(43,29,21,0.1)] dark:bg-stone-50/10" aria-hidden />
+      <span className="text-[11px] font-medium uppercase tracking-wide text-[rgba(43,29,21,0.38)] dark:text-stone-50/38">
+        {t("auth.orDivider")}
+      </span>
+      <span className="h-px flex-1 bg-[rgba(43,29,21,0.1)] dark:bg-stone-50/10" aria-hidden />
     </div>
   );
 }

@@ -2,16 +2,34 @@ import {
   READ_PARCHMENT_BG_IMAGE_CSS_VAR,
   readParchmentBgImageCssValue,
 } from "@/lib/read/read-parchment-background";
+import { NARROW_PARCHMENT_PATHS } from "@/lib/shell/narrow-parchment-shell";
 import { SCRIPTURE_PARCHMENT_WIDE_MEDIA } from "@/lib/read/scripture-parchment-shell";
 
+const NARROW_PARCHMENT_PATHS_JSON = JSON.stringify(NARROW_PARCHMENT_PATHS);
+
 /**
- * 在 React 水合前执行：读经 PWA 首帧即改 `theme-color` 与根节点羊皮底，避免 Samsung 等仍露非羊皮 manifest 顶栏。
+ * 在 React 水合前执行：羊皮卷 PWA 首帧即改 `theme-color` 与根节点羊皮底，避免 Samsung 等仍露非羊皮 manifest 顶栏。
  * 由 `app/layout.tsx` 以 `beforeInteractive` 注入。
  */
 export const PARCHMENT_SHELL_BOOT_SCRIPT = `
 (function () {
-  var p = window.location.pathname;
-  if (p !== "/read" && p.indexOf("/read/") !== 0) return;
+  var p = window.location.pathname || "/";
+  if (p !== "/" && p.endsWith("/")) p = p.slice(0, -1);
+  if (p === "") p = "/";
+
+  function isExcluded(path) {
+    if (path === "/" || path === "/nature" || path.indexOf("/nature/") === 0) return true;
+    if (path === "/tv" || path.indexOf("/tv/") === 0) return true;
+    if (path === "/scenes" || path.indexOf("/scenes/") === 0) return true;
+    if (path === "/music" || path.indexOf("/music/") === 0) return true;
+    if (path === "/admin" || path.indexOf("/admin/") === 0) return true;
+    if (path === "/studio" || path.indexOf("/studio/") === 0) return true;
+    return false;
+  }
+
+  if (isExcluded(p)) return;
+
+  var narrowPaths = ${NARROW_PARCHMENT_PATHS_JSON};
 
   var html = document.documentElement;
   var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -28,8 +46,17 @@ export const PARCHMENT_SHELL_BOOT_SCRIPT = `
     return /^\\/read\\/[^/]+\\/\\d+\\/?$/.test(path || "");
   }
 
+  function isNarrowParchmentPath(path) {
+    return narrowPaths.indexOf(path) !== -1;
+  }
+
   function syncReadParchmentWide() {
     try {
+      if (isNarrowParchmentPath(p)) {
+        delete html.dataset.readParchmentWide;
+        html.style.removeProperty(${JSON.stringify(READ_PARCHMENT_BG_IMAGE_CSS_VAR)});
+        return;
+      }
       var w = window.innerWidth || 0;
       var h = window.innerHeight || 0;
       var wide =

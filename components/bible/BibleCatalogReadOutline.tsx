@@ -15,6 +15,7 @@ import {
   readCompletedChapterCountsByBook,
   subscribeReadChapterCompletion,
 } from "@/lib/read/read-chapter-completion";
+import { canonSectionTheme } from "@/lib/read/canon-section-theme";
 
 type Props = {
   sections: ScriptureCanonCatalogSection[];
@@ -23,6 +24,10 @@ type Props = {
   activeBookId?: string;
   /** 章页底栏「读经目录」：双列正典 + 居中选章（对齐 iOS） */
   jumpCatalog?: boolean;
+  /** 跳转目录内点书卷：由父级内嵌选章（对齐 iOS onBookPress） */
+  onJumpBookPress?: (book: ScriptureCanonCatalogBook) => void;
+  /** 跳转目录宽屏：高亮当前选中书卷（第三栏选章） */
+  jumpHighlightedBookId?: string;
   onChapterNavigate?: (bookId: string, chapter: number) => void;
 };
 
@@ -122,6 +127,8 @@ export function BibleCatalogReadOutline({
   showBookSummary = false,
   activeBookId,
   jumpCatalog = false,
+  onJumpBookPress,
+  jumpHighlightedBookId,
   onChapterNavigate,
 }: Props) {
   const { t, locale } = useLocale();
@@ -217,6 +224,10 @@ export function BibleCatalogReadOutline({
   );
 
   const openSheet = useCallback((book: ScriptureCanonCatalogBook, el: HTMLElement) => {
+    if (jumpCatalog && onJumpBookPress) {
+      onJumpBookPress(book);
+      return;
+    }
     const n = chaptersByBookId.get(book.bookId);
     if (typeof n !== "number" || n < 1) return;
     const r = el.getBoundingClientRect();
@@ -229,7 +240,7 @@ export function BibleCatalogReadOutline({
       anchorLeft: r.left,
       anchorWidth: r.width,
     });
-  }, []);
+  }, [onJumpBookPress, jumpCatalog]);
 
   const closeSheetAndNavigate = useCallback(
     (targetBookId: string, ch: number) => {
@@ -243,6 +254,7 @@ export function BibleCatalogReadOutline({
     portalReady &&
     sheet &&
     panelLayout &&
+    !onJumpBookPress &&
     createPortal(
       <div
         className={`bc-sheet-root bible-catalog-page--read${sheetOpen ? " bc-sheet-root--open" : ""}${jumpCatalog ? " bc-sheet-root--jump-catalog" : ""}${centerChapterSheet ? " bc-sheet-root--centered" : ""}`}
@@ -360,6 +372,21 @@ export function BibleCatalogReadOutline({
           </>
         ) : null}
 
+      {jumpCatalog ? (
+        <div className="bc-jump-testament-headers" aria-hidden>
+          {visibleGroups.map((group) => (
+            <p
+              key={`header:${group.testament}`}
+              className={`bc-jump-testament-header bc-jump-testament-header--${group.testament}`}
+            >
+              {group.testament === "old"
+                ? t("pages.read.catalogTestamentOld")
+                : t("pages.read.catalogTestamentNew")}
+            </p>
+          ))}
+        </div>
+      ) : null}
+
       <nav
         className={[
           "bible-catalog-read-outline",
@@ -374,7 +401,13 @@ export function BibleCatalogReadOutline({
           <div
             key={group.testament}
             role="group"
-            className={`bible-catalog-read-testament bible-catalog-read-testament--${group.testament}`}
+            className={[
+              "bible-catalog-read-testament",
+              `bible-catalog-read-testament--${group.testament}`,
+              jumpCatalog ? "bc-jump-testament" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             aria-labelledby={paginateByTestament ? undefined : `bc-testament-${group.testament}`}
           >
             <div className="bible-catalog-read-testament-body">
@@ -392,6 +425,7 @@ export function BibleCatalogReadOutline({
                 const plainSection =
                   showBookSummary &&
                   (section.sectionId === "canon-torah" || section.sectionId === "canon-gospels");
+                const sectionTheme = canonSectionTheme(section.sectionId, group.testament);
                 return (
                 <section
                   key={section.sectionId}
@@ -400,15 +434,26 @@ export function BibleCatalogReadOutline({
                     "bible-catalog-read-block",
                     showBookSummary ? "bc-home-section-block" : "",
                     plainSection ? "bc-home-section-block--plain" : "",
+                    jumpCatalog ? "bc-jump-section-block" : "",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                   data-section-id={section.sectionId}
+                  style={
+                    jumpCatalog
+                      ? ({ ["--bc-jump-accent" as string]: sectionTheme.accent } as React.CSSProperties)
+                      : undefined
+                  }
                 >
                   {showBookSummary ? (
                     <h2 className="bc-home-section-title">{section.title}</h2>
                   ) : jumpCatalog ? (
-                    <h2 className="bc-jump-section-title bible-catalog-read-title">{section.title}</h2>
+                    <h2
+                      className="bc-jump-section-title bible-catalog-read-title"
+                      style={{ color: sectionTheme.accent }}
+                    >
+                      {section.title}
+                    </h2>
                   ) : (
                     <h2 className="bible-catalog-read-title bible-catalog-read-heading-row">
                       <span className="bible-catalog-read-heading-left">{section.title}</span>
@@ -434,7 +479,9 @@ export function BibleCatalogReadOutline({
                       );
                       const progressRatio =
                         totalChapters > 0 ? Math.max(0, Math.min(1, completedChapters / totalChapters)) : 0;
-                      const selected = activeBookId === book.bookId;
+                      const selected = jumpCatalog
+                        ? (jumpHighlightedBookId ?? activeBookId) === book.bookId
+                        : activeBookId === book.bookId;
 
                       if (showBookSummary) {
                         return (
@@ -502,7 +549,7 @@ export function BibleCatalogReadOutline({
                             key={book.bookId}
                             type="button"
                             className={[
-                              "bc-jump-book-row",
+                              "bc-jump-book-row bc-jump-book-row--compact",
                               selected ? "bc-jump-book-row--active" : "",
                             ]
                               .filter(Boolean)
@@ -512,7 +559,11 @@ export function BibleCatalogReadOutline({
                             aria-haspopup="dialog"
                             onClick={(e) => openSheet(book, e.currentTarget)}
                           >
-                            <span className="bc-jump-book-num" aria-hidden>
+                            <span
+                              className="bc-jump-book-num"
+                              style={{ color: sectionTheme.accent }}
+                              aria-hidden
+                            >
                               {String(book.bookNumber).padStart(2, "0")}
                             </span>
                             <span className="bc-jump-book-name">{book.bookName}</span>

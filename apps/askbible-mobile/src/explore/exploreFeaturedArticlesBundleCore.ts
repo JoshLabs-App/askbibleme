@@ -1,6 +1,7 @@
 import type { AppLocale } from "../i18n/config";
 import { toZhTwText } from "../i18n/site-copy";
 import bundledJson from "./explore-featured-articles-localized.json";
+import { stripExploreArticleBodyLeadHeading } from "./stripExploreArticleBodyLeadHeading";
 
 export type ExploreFeaturedArticleLocaleBlock = {
   title: string;
@@ -72,7 +73,11 @@ export function getExploreFeaturedArticleView(
   const entry = bundle.articles.find((item) => item.slug === slug);
   if (!entry) return null;
   const block = localizeBlock(entry[sourceLocale(locale)], locale);
-  return { slug, ...block };
+  return {
+    slug,
+    ...block,
+    body: stripExploreArticleBodyLeadHeading(block.body),
+  };
 }
 
 export function listExploreFeaturedArticleViews(

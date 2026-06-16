@@ -6,11 +6,9 @@ export type PortraitCoverLayout = {
   top: number;
   width: number;
   height: number;
-  /** 自左向右平移距离（px） */
-  panDistance: number;
 };
 
-/** 竖屏首页 cover 层几何（贴左、可横向平移） */
+/** 竖屏首页 cover 层几何（贴左裁切、静止显示，与 Web object-position: left center 一致） */
 export function resolveNatureHomePortraitCoverLayout(
   viewportWidth: number,
   viewportHeight: number,
@@ -25,7 +23,6 @@ export function resolveNatureHomePortraitCoverLayout(
     top: rect.top,
     width: rect.width,
     height: rect.height,
-    panDistance: Math.max(0, rect.width - viewportWidth),
   };
 }
 

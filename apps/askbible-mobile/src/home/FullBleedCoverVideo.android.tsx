@@ -1,14 +1,19 @@
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AccessibilityInfo,
   Animated,
   AppState,
-  Image,
   StyleSheet,
   View,
   type AppStateStatus,
 } from "react-native";
+import { CoverVideoPosterBackdrop } from "./CoverVideoPosterBackdrop";
+import {
+  COVER_VIDEO_READY_TIMEOUT_MS,
+  getCoverVideoPosterOnly,
+  hasCoverVideoPosterAsset,
+  markCoverVideoSessionPosterOnly,
+} from "./coverVideoPosterFallback";
 import {
   resolveNatureHomePortraitCoverLayout,
   type PortraitCoverLayout,
@@ -20,110 +25,168 @@ import {
   type ResolveNatureCoverPlayback,
 } from "./natureCoverPlayback";
 import { useCoverVideoCrossfade } from "./useCoverVideoCrossfade";
-import { useNatureHomePortraitPan } from "./useNatureHomePortraitPan";
-import { useNatureHomeFullscreenStepPan } from "./useNatureHomeFullscreenStepPan";
 export type FullBleedCoverVideoLayoutMode = "portrait-cover" | "landscape-cover";
 
 const STAGE_BACKDROP = "#14110e";
 const VIDEO_OVERDRAW_PX = 2;
 const FULLSCREEN_VIDEO_ASPECT = 16 / 9;
 
+type CoverLayerFrame = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
 type Props = {
   sceneId: string;
   resolveScenePlayback: ResolveNatureCoverPlayback;
   posterUri?: string;
+  posterModule?: number | null;
   /** Android: 模糊模式下直接用静帧，停用视频层 */
   forcePosterMode?: boolean;
   rate?: number;
   layoutMode?: FullBleedCoverVideoLayoutMode;
   nativeFullCover?: boolean;
   onSceneVideoReady?: (sceneId: string) => void;
+  /** Tab 失焦时暂停解码，回到 Home 再续播 */
+  playbackActive?: boolean;
 };
 
+function safePlayerCall(onReleased: () => void, fn: () => void) {
+  try {
+    fn();
+  } catch {
+    onReleased();
+  }
+}
+
+function resolveLandscapeCoverLayerFrame(viewportWidth: number, viewportHeight: number): CoverLayerFrame {
+  const width = Math.max(viewportWidth, Math.round(viewportHeight * FULLSCREEN_VIDEO_ASPECT));
+  return {
+    left: (viewportWidth - width) / 2,
+    top: 0,
+    width,
+    height: viewportHeight,
+  };
+}
+
 function CoverVideoSlotInner({
-  slotKey,
   sceneId,
   source,
   rate,
-  layerWidth,
-  layerHeight,
-  layerTop,
-  panX,
-  panEnabled,
+  layerFrame,
   opacity,
   onReady,
+  onPlaybackError,
+  playbackActive,
 }: {
-  slotKey: string;
   sceneId: string;
   source: string | number;
   rate: number;
-  layerWidth: number;
-  layerHeight: number;
-  layerTop: number;
-  panX: Animated.Value;
-  panEnabled: boolean;
+  layerFrame: CoverLayerFrame;
   opacity: Animated.Value;
   onReady: () => void;
+  onPlaybackError: () => void;
+  playbackActive: boolean;
 }) {
   const readyRef = useRef(false);
+  const aliveRef = useRef(true);
   const clampedRate = Math.min(2, Math.max(0.5, rate));
+  const onReleased = onPlaybackError;
+  const layerWidth = layerFrame.width;
 
   const player = useVideoPlayer(source, (p) => {
-    p.loop = true;
-    p.muted = true;
-    p.audioMixingMode = "mixWithOthers";
-    p.playbackRate = clampedRate;
-    p.play();
+    safePlayerCall(onReleased, () => {
+      p.loop = true;
+      p.muted = true;
+      p.audioMixingMode = "mixWithOthers";
+      p.playbackRate = clampedRate;
+      p.play();
+    });
   });
 
   useEffect(() => {
+    aliveRef.current = true;
     readyRef.current = false;
-  }, [sceneId]);
+    return () => {
+      aliveRef.current = false;
+    };
+  }, [sceneId, source]);
 
   useEffect(() => {
-    player.playbackRate = clampedRate;
-  }, [clampedRate, player]);
+    safePlayerCall(onReleased, () => {
+      player.playbackRate = clampedRate;
+    });
+  }, [clampedRate, onReleased, player]);
+
+  useEffect(() => {
+    const sync = (state: AppStateStatus) => {
+      if (!aliveRef.current) return;
+      safePlayerCall(onReleased, () => {
+        if (playbackActive && state === "active") player.play();
+        else player.pause();
+      });
+    };
+    sync(AppState.currentState);
+    const sub = AppState.addEventListener("change", sync);
+    return () => sub.remove();
+  }, [onReleased, playbackActive, player]);
 
   useEffect(() => {
     if (!source) return;
+    let stallTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearStallTimer = () => {
+      if (stallTimer) clearTimeout(stallTimer);
+      stallTimer = null;
+    };
     const markReady = () => {
-      if (readyRef.current) return;
+      if (!aliveRef.current || readyRef.current) return;
       readyRef.current = true;
       onReady();
+      clearStallTimer();
+      stallTimer = setTimeout(() => {
+        if (!aliveRef.current) return;
+        safePlayerCall(onReleased, () => {
+          if (player.currentTime < 0.05) onPlaybackError();
+        });
+      }, 2200);
     };
     const playingSub = player.addListener("playingChange", ({ isPlaying }) => {
+      if (!aliveRef.current) return;
       if (isPlaying) markReady();
     });
-    const statusSub = player.addListener("statusChange", ({ status }) => {
+    const statusSub = player.addListener("statusChange", ({ status, error }) => {
+      if (!aliveRef.current) return;
       if (status === "readyToPlay") markReady();
+      if (status === "error" || error) onPlaybackError();
     });
     return () => {
+      clearStallTimer();
       playingSub.remove();
       statusSub.remove();
     };
-  }, [onReady, player, sceneId, source]);
+  }, [onPlaybackError, onReady, onReleased, player, sceneId, source]);
 
   return (
     <Animated.View
       style={[
         styles.slot,
         {
+          left: layerFrame.left,
+          top: layerFrame.top,
           width: layerWidth,
-          height: layerHeight,
-          top: layerTop,
+          height: layerFrame.height,
           opacity,
         },
-        panEnabled ? { transform: [{ translateX: panX }] } : null,
       ]}
       pointerEvents="none"
-      renderToHardwareTextureAndroid
     >
       <VideoView
-        key={`${slotKey}|${sceneId}`}
         player={player}
         style={{
           width: layerWidth + VIDEO_OVERDRAW_PX * 2,
-          height: layerHeight,
+          height: layerFrame.height,
           marginLeft: -VIDEO_OVERDRAW_PX,
         }}
         contentFit="cover"
@@ -139,29 +202,25 @@ function CoverVideoSlot({
   sceneId,
   resolveScenePlayback,
   rate,
-  portraitLayout,
-  portraitMode,
-  panX,
-  panEnabled,
+  layerFrame,
   opacity,
-  viewportWidth,
-  viewportHeight,
   onNaturalAspect,
   onReady,
+  onPlaybackError,
+  playbackActive,
+  portraitMode,
 }: {
   slotKey: string;
   sceneId: string;
   resolveScenePlayback: ResolveNatureCoverPlayback;
   rate: number;
-  portraitLayout: PortraitCoverLayout | null;
-  portraitMode: boolean;
-  panX: Animated.Value;
-  panEnabled: boolean;
+  layerFrame: CoverLayerFrame;
   opacity: Animated.Value;
-  viewportWidth: number;
-  viewportHeight: number;
   onNaturalAspect: (aspect: number) => void;
   onReady: () => void;
+  onPlaybackError: () => void;
+  playbackActive: boolean;
+  portraitMode: boolean;
 }) {
   const playback = resolveScenePlayback(sceneId);
   const source = natureCoverVideoSource(playback);
@@ -174,36 +233,18 @@ function CoverVideoSlot({
 
   if (!sceneId.trim() || source == null) return null;
 
-  const layout = portraitLayout;
-  const layerWidth = portraitMode && layout ? layout.width : Math.max(viewportWidth, Math.round(viewportHeight * FULLSCREEN_VIDEO_ASPECT));
-  const layerHeight = portraitMode && layout ? layout.height : viewportHeight;
-  const layerTop = portraitMode && layout ? layout.top : 0;
-
-  const slot = (
+  return (
     <CoverVideoSlotInner
-      slotKey={slotKey}
+      key={`${slotKey}|${sceneId}`}
       sceneId={sceneId}
       source={source}
       rate={rate}
-      layerWidth={layerWidth}
-      layerHeight={layerHeight}
-      layerTop={layerTop}
-      panX={panX}
-      panEnabled={panEnabled}
+      layerFrame={layerFrame}
       opacity={opacity}
       onReady={onReady}
+      onPlaybackError={onPlaybackError}
+      playbackActive={playbackActive}
     />
-  );
-
-  if (!panEnabled || !layout) return slot;
-
-  return (
-    <View
-      style={[styles.clipViewport, { width: viewportWidth, height: viewportHeight }]}
-      pointerEvents="none"
-    >
-      {slot}
-    </View>
   );
 }
 
@@ -212,19 +253,22 @@ export function FullBleedCoverVideo({
   sceneId,
   resolveScenePlayback,
   posterUri,
+  posterModule = null,
   forcePosterMode = false,
   rate = 1,
   layoutMode = "portrait-cover",
   onSceneVideoReady,
+  playbackActive = true,
 }: Props) {
   const trimmedScene = sceneId.trim();
   const trimmedPoster = posterUri?.trim() ?? "";
+  const hasPoster = hasCoverVideoPosterAsset(posterModule, trimmedPoster);
   const frame = useShellFullBleedFrame();
   const winW = frame.width;
   const winH = frame.height;
   const landscapeCover = layoutMode === "landscape-cover";
-  const [reduceMotion, setReduceMotion] = useState(false);
   const [mediaAspect, setMediaAspect] = useState(NATURE_HOME_VIDEO_LANDSCAPE_ASPECT);
+  const videoReadyRef = useRef(false);
   const {
     slotAScene,
     slotBScene,
@@ -240,25 +284,22 @@ export function FullBleedCoverVideo({
     [landscapeCover, winW, winH, mediaAspect],
   );
   const portraitMode = !landscapeCover;
-  const fullscreenSweepWidth = Math.max(winW, Math.round(winH * FULLSCREEN_VIDEO_ASPECT));
-  // Android home should stay visually stable during testing: disable auto pan.
-  const panEnabled = false;
-  const portraitPanX = useNatureHomePortraitPan(
-    panEnabled,
-    portraitLayout?.width ?? fullscreenSweepWidth,
-    winW,
-    trimmedScene,
+  const layerFrame = useMemo(
+    () =>
+      portraitLayout
+        ? portraitLayout
+        : resolveLandscapeCoverLayerFrame(winW, winH),
+    [portraitLayout, winH, winW],
   );
-  const fullscreenPanX = useNatureHomeFullscreenStepPan(
-    landscapeCover && panEnabled,
-    fullscreenSweepWidth,
-    winW,
-    `${trimmedScene}|${layoutMode}`,
-  );
-  const panX = landscapeCover ? fullscreenPanX : portraitPanX;
   const [showInitialPoster, setShowInitialPoster] = useState(
-    () => Boolean(trimmedPoster) && allowInitialPoster,
+    () => hasPoster && allowInitialPoster,
   );
+
+  const activatePosterFallback = useCallback(() => {
+    if (!hasPoster || getCoverVideoPosterOnly()) return;
+    markCoverVideoSessionPosterOnly();
+    if (trimmedScene) onSceneVideoReady?.(trimmedScene);
+  }, [hasPoster, onSceneVideoReady, trimmedScene]);
 
   const onNaturalAspect = useCallback((aspect: number) => {
     if (!Number.isFinite(aspect) || aspect <= 0) return;
@@ -266,24 +307,23 @@ export function FullBleedCoverVideo({
   }, []);
 
   useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
-    return () => sub.remove();
-  }, []);
-
-  useEffect(() => {
     if (!allowInitialPoster) setShowInitialPoster(false);
   }, [allowInitialPoster]);
 
   useEffect(() => {
-    const resume = (state: AppStateStatus) => {
-      if (state !== "active" || !trimmedScene) return;
-    };
-    const sub = AppState.addEventListener("change", resume);
-    return () => sub.remove();
-  }, [trimmedScene]);
+    videoReadyRef.current = false;
+    if (forcePosterMode || getCoverVideoPosterOnly() || !trimmedScene || !hasPoster) return;
+
+    const timer = setTimeout(() => {
+      if (videoReadyRef.current || getCoverVideoPosterOnly()) return;
+      activatePosterFallback();
+    }, COVER_VIDEO_READY_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [activatePosterFallback, forcePosterMode, hasPoster, trimmedScene]);
 
   const onSlotAReadyOnce = () => {
+    videoReadyRef.current = true;
     onSlotAReady();
     setShowInitialPoster(false);
     if (slotAScene.trim()) onSceneVideoReady?.(slotAScene.trim());
@@ -295,14 +335,24 @@ export function FullBleedCoverVideo({
     if (slotBScene.trim()) onSceneVideoReady?.(slotBScene.trim());
   };
 
+  const handlePlaybackError = useCallback(() => {
+    activatePosterFallback();
+  }, [activatePosterFallback]);
+
   if (!trimmedScene) return null;
 
-  if (forcePosterMode && trimmedPoster) {
+  const posterStageActive = forcePosterMode || getCoverVideoPosterOnly();
+
+  if (posterStageActive && hasPoster) {
     return (
       <View style={styles.stage} pointerEvents="none">
-        <View style={styles.posterCover} pointerEvents="none">
-          <Image source={{ uri: trimmedPoster }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-        </View>
+        <CoverVideoPosterBackdrop
+          posterModule={posterModule}
+          posterUri={trimmedPoster || undefined}
+          portraitLayout={portraitLayout}
+          viewportWidth={winW}
+          viewportHeight={winH}
+        />
       </View>
     );
   }
@@ -314,60 +364,35 @@ export function FullBleedCoverVideo({
         sceneId={slotAScene}
         resolveScenePlayback={resolveScenePlayback}
         rate={rate}
-        portraitLayout={portraitLayout}
-        portraitMode={portraitMode}
-        panX={panX}
-        panEnabled={panEnabled}
+        layerFrame={layerFrame}
         opacity={opacityA}
-        viewportWidth={winW}
-        viewportHeight={winH}
+        portraitMode={portraitMode}
         onNaturalAspect={onNaturalAspect}
         onReady={onSlotAReadyOnce}
+        onPlaybackError={handlePlaybackError}
+        playbackActive={playbackActive}
       />
       <CoverVideoSlot
         slotKey="cover-b"
         sceneId={slotBScene}
         resolveScenePlayback={resolveScenePlayback}
         rate={rate}
-        portraitLayout={portraitLayout}
-        portraitMode={portraitMode}
-        panX={panX}
-        panEnabled={panEnabled}
+        layerFrame={layerFrame}
         opacity={opacityB}
-        viewportWidth={winW}
-        viewportHeight={winH}
+        portraitMode={portraitMode}
         onNaturalAspect={onNaturalAspect}
         onReady={onSlotBReadyOnce}
+        onPlaybackError={handlePlaybackError}
+        playbackActive={playbackActive}
       />
-      {showInitialPoster && trimmedPoster ? (
-        portraitLayout ? (
-          <View
-            style={[styles.clipViewport, styles.posterCover, { width: winW, height: winH }]}
-            pointerEvents="none"
-          >
-            <Animated.View
-              style={[
-                styles.posterPan,
-                {
-                  width: portraitLayout.width,
-                  height: portraitLayout.height,
-                  top: portraitLayout.top,
-                },
-                panEnabled ? { transform: [{ translateX: panX }] } : null,
-              ]}
-            >
-              <Image
-                source={{ uri: trimmedPoster }}
-                style={{ width: portraitLayout.width, height: portraitLayout.height }}
-                resizeMode="cover"
-              />
-            </Animated.View>
-          </View>
-        ) : (
-          <View style={styles.posterCover} pointerEvents="none">
-            <Image source={{ uri: trimmedPoster }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-          </View>
-        )
+      {showInitialPoster && hasPoster ? (
+        <CoverVideoPosterBackdrop
+          posterModule={posterModule}
+          posterUri={trimmedPoster || undefined}
+          portraitLayout={portraitLayout}
+          viewportWidth={winW}
+          viewportHeight={winH}
+        />
       ) : null}
     </View>
   );
@@ -379,24 +404,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: STAGE_BACKDROP,
   },
-  clipViewport: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    overflow: "hidden",
-  },
   slot: {
     position: "absolute",
-    left: 0,
-  },
-  posterPan: {
-    position: "absolute",
-    left: 0,
-    overflow: "hidden",
-  },
-  posterCover: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 4,
-    backgroundColor: STAGE_BACKDROP,
   },
 });

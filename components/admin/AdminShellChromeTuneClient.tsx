@@ -22,7 +22,7 @@ export function AdminShellChromeTuneClient() {
   const { t } = useLocale();
   const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
   const previewRootRef = useRef<HTMLDivElement>(null);
-  const previewThemeId = (shellTemplateBrand ?? "lagoonPaper") as ShellTemplatePreviewThemeId;
+  const previewThemeId = (shellTemplateBrand ?? "parchmentShell") as ShellTemplatePreviewThemeId;
 
   const [chromeTune, setChromeTune] = useState<ShellTemplateChromeTune>(() =>
     readShellTemplateChromeTuneFromStorage(),

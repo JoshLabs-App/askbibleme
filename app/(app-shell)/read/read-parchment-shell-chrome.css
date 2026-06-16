@@ -1,3 +1,5 @@
+@import "../parchment-control-surface.css";
+
 /**
  * 读经 / 祷告：单层羊皮底（`html::before` fixed 全屏 + 透明 theme-color，顶栏下仍是同一张底图）
  */
@@ -42,6 +44,10 @@ html[data-app-shell-safe-fill="parchment"] {
     --read-parchment-column-max: min(56rem, 78vw);
     --read-parchment-catalog-column-max: min(58rem, 80vw);
   }
+}
+
+html[data-app-shell-safe-fill="parchment"] body {
+  background-color: transparent;
 }
 
 html[data-app-shell-safe-fill="parchment"]::before {

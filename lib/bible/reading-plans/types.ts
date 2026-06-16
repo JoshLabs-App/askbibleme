@@ -10,6 +10,8 @@ export type ReadingPlanRange = {
   endVerse?: number;
   /** Original upstream label (English), for display / audit. */
   label: string;
+  /** 预计算：该读经项所属计划章数（bundle 导入或三环构建时写入）。 */
+  planChapterTotal: number;
 };
 
 export type ReadingPlanDay = {

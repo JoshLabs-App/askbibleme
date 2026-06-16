@@ -26,8 +26,8 @@ type ReadingsProps = {
 export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
   const { t } = useLocale();
   const { payload, loading, isTripleLoop } = plan;
-  const { isDone, allDone, toggleDone, doneKeys } = useTodayReadingDone(plan);
-  const { fractions, tripleCurrent, tripleProgressKey } = useTodayReadingChapterFractions(plan);
+  const { isDone, allDone, toggleDone } = useTodayReadingDone(plan);
+  const { fractions, tripleCurrent } = useTodayReadingChapterFractions(plan);
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
   const readings = payload?.day?.readings ?? [];
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
@@ -80,8 +80,6 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
     void syncTodayComplete(todayAllDone);
   }, [todayAllDone, syncTodayComplete]);
 
-  const progressKey = `${[...doneKeys].join(",")}|${tripleProgressKey}|${JSON.stringify(fractions)}`;
-
   return (
     <div className="read-bible-today-readings mx-auto w-full max-w-[340px]">
       <ReadYearDayTimeline />
@@ -104,7 +102,7 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
             });
             return (
               <ReadTodayPlanReadingRow
-                key={`${itemKey}-${progressKey}`}
+                key={itemKey}
                 reading={r}
                 done={done}
                 progress={progress}

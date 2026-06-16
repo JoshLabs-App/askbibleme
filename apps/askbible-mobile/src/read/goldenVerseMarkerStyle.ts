@@ -17,9 +17,8 @@ export function verseTextHighlightStyle(kind: VerseTextHighlightKind): TextStyle
   if (kind === "bookmark") {
     return {
       backgroundColor: c.verseBookmarkMarker,
-      borderRadius: 999,
-      overflow: "hidden",
-      paddingHorizontal: 5,
+      borderRadius: 2,
+      paddingHorizontal: 2,
       paddingVertical: 1,
     };
   }

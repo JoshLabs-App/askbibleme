@@ -7,6 +7,7 @@ import {
   tokenizeHighlightUnits,
   type VerseSpeechKind,
 } from "@/lib/read/read-verse-highlight-utils";
+import { splitTextByScriptureSearchKeyword } from "@/lib/bible/scripture-search";
 
 type Props = {
   text: string;
@@ -18,6 +19,8 @@ type Props = {
   onPaintHighlightUnit?: (start: number, end: number, mode: "add" | "remove", color: string) => void;
   goldenMark?: boolean;
   bookmarkMark?: boolean;
+  /** 经文搜索跳入：在节内高亮匹配词 */
+  searchKeyword?: string | null;
 };
 
 function speechClass(kind: VerseSpeechKind): string {
@@ -289,6 +292,35 @@ function SpeechPartsBody({
   );
 }
 
+function SearchKeywordBody({
+  text,
+  keyword,
+  goldenMark,
+  bookmarkMark,
+}: {
+  text: string;
+  keyword: string;
+  goldenMark?: boolean;
+  bookmarkMark?: boolean;
+}) {
+  const mark = markerClass(goldenMark, bookmarkMark);
+  return (
+    <>
+      {splitTextByScriptureSearchKeyword(text, keyword).map((seg, i) =>
+        seg.match ? (
+          <mark key={i} className="read-chapter-verse-search-keyword">
+            {seg.text}
+          </mark>
+        ) : (
+          <span key={i} className={mark.trim() || undefined}>
+            {seg.text}
+          </span>
+        ),
+      )}
+    </>
+  );
+}
+
 export function ReadChapterVerseText({
   text,
   parts,
@@ -299,6 +331,7 @@ export function ReadChapterVerseText({
   onPaintHighlightUnit,
   goldenMark = false,
   bookmarkMark = false,
+  searchKeyword = null,
 }: Props) {
   if (highlightEditMode && onToggleHighlightUnit) {
     return (
@@ -309,6 +342,17 @@ export function ReadChapterVerseText({
         activeHighlightColor={activeHighlightColor}
         onToggleHighlightUnit={onToggleHighlightUnit}
         onPaintHighlightUnit={onPaintHighlightUnit}
+      />
+    );
+  }
+
+  if (searchKeyword) {
+    return (
+      <SearchKeywordBody
+        text={text}
+        keyword={searchKeyword}
+        goldenMark={goldenMark}
+        bookmarkMark={bookmarkMark}
       />
     );
   }

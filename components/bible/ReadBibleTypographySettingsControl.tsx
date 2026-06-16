@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ReadChapterAudioVoiceSettingsFields } from "@/components/bible/ReadChapterAudioVoiceSettingsFields";
+import { ReadBibleSettingsSelect } from "@/components/bible/ReadBibleSettingsSelect";
 import {
   useReadBibleTranslationSettings,
   useReadBibleTypography,
@@ -46,14 +47,11 @@ function IconGear(props: { className?: string }) {
   );
 }
 
-const selectClass =
-  "mt-1.5 w-full rounded-[0.9rem] border border-amber-900/14 bg-[#fffdf8] px-2.75 py-2.25 text-[15px] text-amber-950 outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] focus:border-amber-900/30 dark:border-stone-500/30 dark:bg-stone-950/90 dark:text-stone-100";
+const sizeBtnClass = "read-parchment-chip-btn";
 
-const sizeBtnClass =
-  "inline-flex min-h-[40px] min-w-[44px] shrink-0 items-center justify-center rounded-[0.8rem] border border-amber-900/14 bg-[#fffdf8] text-[17px] font-semibold leading-none tracking-tight text-amber-950 transition hover:bg-[#fffefb] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-35 dark:border-stone-500/30 dark:bg-stone-950/90 dark:text-stone-100 dark:hover:bg-stone-900";
+type SettingsMenu = "primary" | "contrast" | "audioTranslation" | "audioVoice" | null;
 
-const layoutBtnClass =
-  "inline-flex min-h-[40px] min-w-[44px] shrink-0 items-center justify-center rounded-[0.8rem] border border-amber-900/14 bg-[#fffdf8] px-2 text-[13px] font-semibold leading-none text-amber-950 transition hover:bg-[#fffefb] active:scale-[0.97] dark:border-stone-500/30 dark:bg-stone-950/90 dark:text-stone-100 dark:hover:bg-stone-900";
+const layoutBtnClass = "read-parchment-chip-btn px-2 text-[13px]";
 
 /** 圣经 /read 系路由顶栏右上：译本、对照、字号。 */
 export function ReadBibleTypographySettingsControl() {
@@ -73,11 +71,16 @@ export function ReadBibleTypographySettingsControl() {
     chapterAudioTranslationId,
   } = useReadBibleTranslationSettings();
   const [open, setOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<SettingsMenu>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
   const showTranslation = pathname?.startsWith("/read") ?? false;
   const onChapterRoute = /^\/read\/[^/]+\/\d+\/?$/.test(pathname ?? "");
+
+  useEffect(() => {
+    if (!open) setOpenMenu(null);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -99,6 +102,18 @@ export function ReadBibleTypographySettingsControl() {
     if (onChapterRoute) router.refresh();
   };
 
+  const primaryOptions = useMemo(
+    () =>
+      translationCatalog.map((tr) => ({
+        id: tr.id,
+        label: translationOptionLabel(tr, locale),
+      })),
+    [translationCatalog, locale],
+  );
+
+  const primaryDisplay =
+    primaryOptions.find((o) => o.id === translation.primaryTranslationId)?.label ?? "";
+
   const audioTranslationOptions = useMemo(() => {
     const index = { translations: translationCatalog, defaultTranslationId: null };
     const audioCatalog = translationCatalogWithChapterAudio(index);
@@ -112,9 +127,32 @@ export function ReadBibleTypographySettingsControl() {
     ];
   }, [translationCatalog, locale, t]);
 
-  const iconBtn = `${HIT} text-white transition active:scale-[0.97] [filter:drop-shadow(0_1px_1px_rgba(0,0,0,0.28))_drop-shadow(0_0_2px_rgba(0,0,0,0.1))]`;
-  const panelTitleClass = "text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-900/65 dark:text-stone-400";
+  const audioTranslationValue =
+    translation.audioTranslationId ?? READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY;
 
+  const audioTranslationDisplay =
+    audioTranslationOptions.find((o) => o.id === audioTranslationValue)?.label ?? "";
+
+  const contrastOptions = useMemo(
+    () =>
+      translationCatalog
+        .filter((tr) => tr.id !== translation.primaryTranslationId)
+        .map((tr) => ({
+          id: tr.id,
+          label: translationOptionLabel(tr, locale),
+        })),
+    [translationCatalog, translation.primaryTranslationId, locale],
+  );
+
+  const contrastDisplay =
+    contrastTranslationIds.length > 0
+      ? contrastTranslationIds
+          .map((id) => contrastOptions.find((o) => o.id === id)?.label ?? "")
+          .filter(Boolean)
+          .join(", ")
+      : t("pages.read.typography.contrastNone");
+
+  const iconBtn = `${HIT} text-white transition active:scale-[0.97] [filter:drop-shadow(0_1px_1px_rgba(0,0,0,0.28))_drop-shadow(0_0_2px_rgba(0,0,0,0.1))]`;
   return (
     <div className="relative" ref={rootRef}>
       <button
@@ -133,104 +171,73 @@ export function ReadBibleTypographySettingsControl() {
           id={titleId}
           role="dialog"
           aria-label={t("pages.read.typography.dialogTitle")}
-          className="absolute right-0 top-[calc(100%+0.4rem)] z-[60] w-[min(20rem,calc(100vw-1.25rem))] max-h-[min(34rem,72vh)] overflow-y-auto overscroll-y-contain rounded-[1.05rem] border border-amber-900/14 bg-[#fbf5ea] px-3.5 pt-3.5 pb-4 text-left text-amber-950 shadow-[0_18px_42px_rgba(26,18,8,0.18)] backdrop-blur-sm [-webkit-overflow-scrolling:touch] dark:border-stone-500/25 dark:bg-stone-900/97 dark:text-stone-50"
+          className="read-bible-settings-sheet parchment-control-sheet absolute right-0 top-[calc(100%+0.4rem)] z-[60] max-h-[min(34rem,72vh)] overflow-y-auto overscroll-y-contain text-left text-amber-950 [-webkit-overflow-scrolling:touch] dark:text-stone-50"
         >
-          <p className={panelTitleClass}>
-            {t("pages.read.typography.dialogTitle")}
-          </p>
-
           {showTranslation ? (
             <>
-              <label
-                className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200"
-                htmlFor="read-bible-primary-translation"
-              >
+              <p className="read-bible-settings-field-label">
                 {t("pages.read.typography.primaryTranslation")}
-              </label>
-              <select
-                id="read-bible-primary-translation"
-                className={selectClass}
-                disabled={!translationCatalogReady}
+              </p>
+              <ReadBibleSettingsSelect
                 value={translation.primaryTranslationId}
-                onChange={(e) => {
-                  setPrimaryTranslationId(e.target.value);
+                options={primaryOptions}
+                open={openMenu === "primary"}
+                onOpenChange={(next) => setOpenMenu(next ? "primary" : null)}
+                disabled={!translationCatalogReady || primaryOptions.length === 0}
+                ariaLabel={`${t("pages.read.typography.primaryTranslation")} ${primaryDisplay}`}
+                onSelect={(id) => {
+                  if (id === translation.primaryTranslationId) return;
+                  setPrimaryTranslationId(id);
                   refreshChapterIfNeeded();
                 }}
-              >
-                {translationCatalog.map((tr) => (
-                  <option key={tr.id} value={tr.id}>
-                    {translationOptionLabel(tr, locale)}
-                  </option>
-                ))}
-              </select>
+              />
 
-              <p className="mt-3 text-[13px] font-medium text-amber-950/90 dark:text-stone-200">
+              <p className="read-bible-settings-field-label">
                 {t("pages.read.typography.contrastTranslation")}
               </p>
-              <ul className="mt-1.5 max-h-40 space-y-1 overflow-y-auto rounded-[0.9rem] border border-amber-900/14 bg-[#fffdf8] p-2 dark:border-stone-500/30 dark:bg-stone-950/90">
-                {translationCatalog
-                  .filter((tr) => tr.id !== translation.primaryTranslationId)
-                  .map((tr) => {
-                    const checked = contrastTranslationIds.includes(tr.id);
-                    return (
-                      <li key={tr.id}>
-                        <label className="flex cursor-pointer items-center gap-2 rounded-[0.65rem] px-1.75 py-1.75 text-[14px] text-amber-950 hover:bg-amber-950/[0.04] dark:text-stone-100 dark:hover:bg-white/[0.06]">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 shrink-0 accent-amber-800"
-                            disabled={!translationCatalogReady}
-                            checked={checked}
-                            onChange={() => {
-                              const next = checked
-                                ? contrastTranslationIds.filter((id) => id !== tr.id)
-                                : [...contrastTranslationIds, tr.id];
-                              setContrastTranslationIds(next);
-                              refreshChapterIfNeeded();
-                            }}
-                          />
-                          <span>{translationOptionLabel(tr, locale)}</span>
-                        </label>
-                      </li>
-                    );
-                  })}
-              </ul>
-              {contrastTranslationIds.length === 0 ? (
-                <p className="mt-1.5 text-[12px] text-amber-900/55 dark:text-stone-400">
-                  {t("pages.read.typography.contrastNone")}
-                </p>
-              ) : (
-                <p className="mt-2 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">
+              <ReadBibleSettingsSelect
+                values={contrastTranslationIds}
+                options={contrastOptions}
+                open={openMenu === "contrast"}
+                onOpenChange={(next) => setOpenMenu(next ? "contrast" : null)}
+                emptyDisplay={t("pages.read.typography.contrastNone")}
+                disabled={!translationCatalogReady || contrastOptions.length === 0}
+                ariaLabel={`${t("pages.read.typography.contrastTranslation")} ${contrastDisplay}`}
+                onToggleSelect={(id) => {
+                  const checked = contrastTranslationIds.includes(id);
+                  const next = checked
+                    ? contrastTranslationIds.filter((item) => item !== id)
+                    : [...contrastTranslationIds, id];
+                  setContrastTranslationIds(next);
+                  refreshChapterIfNeeded();
+                }}
+              />
+              {contrastTranslationIds.length > 0 ? (
+                <p className="mt-1.5 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">
                   {t("pages.read.typography.contrastHint")}
                 </p>
-              )}
+              ) : null}
 
               {audioTranslationOptions.length > 1 ? (
                 <>
-                  <label
-                    className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200"
-                    htmlFor="read-bible-audio-translation"
-                  >
+                  <p className="read-bible-settings-field-label">
                     {t("pages.read.typography.audioTranslation")}
-                  </label>
-                  <select
-                    id="read-bible-audio-translation"
-                    className={selectClass}
+                  </p>
+                  <ReadBibleSettingsSelect
+                    value={audioTranslationValue}
+                    options={audioTranslationOptions}
+                    open={openMenu === "audioTranslation"}
+                    onOpenChange={(next) => setOpenMenu(next ? "audioTranslation" : null)}
                     disabled={!translationCatalogReady}
-                    value={translation.audioTranslationId ?? READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY}
-                    onChange={(e) => {
-                      const v = e.target.value;
+                    ariaLabel={`${t("pages.read.typography.audioTranslation")} ${audioTranslationDisplay}`}
+                    onSelect={(id) => {
+                      if (id === audioTranslationValue) return;
                       setAudioTranslationId(
-                        !v || v === READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY ? null : v,
+                        !id || id === READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY ? null : id,
                       );
                       refreshChapterIfNeeded();
                     }}
-                  >
-                    {audioTranslationOptions.map((opt) => (
-                      <option key={opt.id || "follow"} value={opt.id}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </>
               ) : null}
               {translation.audioTranslationId &&
@@ -243,10 +250,15 @@ export function ReadBibleTypographySettingsControl() {
             </>
           ) : null}
 
-          {showTranslation ? <ReadChapterAudioVoiceSettingsFields /> : null}
+          {showTranslation ? (
+            <ReadChapterAudioVoiceSettingsFields
+              open={openMenu === "audioVoice"}
+              onOpenChange={(next) => setOpenMenu(next ? "audioVoice" : null)}
+            />
+          ) : null}
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <span className="text-[13px] font-medium text-amber-950/90 dark:text-stone-200">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="read-bible-settings-field-label mt-0">
               {t("pages.read.typography.sizeLabel")}
             </span>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -258,9 +270,7 @@ export function ReadBibleTypographySettingsControl() {
                 title={t("pages.read.typography.verseParagraphFlowLabel")}
                 className={[
                   layoutBtnClass,
-                  typography.verseParagraphFlow
-                    ? "border-amber-800/35 bg-amber-950/[0.08] text-amber-900 dark:border-amber-200/25 dark:bg-amber-100/10 dark:text-amber-100"
-                    : "",
+                  typography.verseParagraphFlow ? "read-parchment-chip-btn--active" : "",
                 ].join(" ")}
                 onClick={() => setVerseParagraphFlow(!typography.verseParagraphFlow)}
               >
@@ -274,9 +284,7 @@ export function ReadBibleTypographySettingsControl() {
                 title={t("pages.read.typography.chapterSegmentModeT1Aria")}
                 className={[
                   layoutBtnClass,
-                  typography.chapterSegmentMode === "t1"
-                    ? "border-amber-800/35 bg-amber-950/[0.08] text-amber-900 dark:border-amber-200/25 dark:bg-amber-100/10 dark:text-amber-100"
-                    : "",
+                  typography.chapterSegmentMode === "t1" ? "read-parchment-chip-btn--active" : "",
                 ].join(" ")}
                 onClick={() =>
                   setChapterSegmentMode(typography.chapterSegmentMode === "t1" ? "default" : "t1")

@@ -5,6 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=scripts/mobile-load-google-oauth-env.sh
+source "$ROOT/scripts/mobile-load-google-oauth-env.sh"
+load_mobile_google_oauth_env "$ROOT"
+
 export EXPO_NO_DOTENV=1
 export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-1}"
 export EXPO_PUBLIC_TELEMETRY_DISABLED="${EXPO_PUBLIC_TELEMETRY_DISABLED:-1}"

@@ -1,25 +1,16 @@
 /**
- * 首页 / 自然页背景：保持静止显示（不自动平移）。
+ * 首页 / 自然页背景：静止显示（不自动平移）；竖屏贴左裁切。
  */
 .nature-bg-cover-media {
-  left: 50%;
-  transform: translate(-50%, -50%);
-  object-position: center center;
+  left: 0;
+  transform: translate(0, -50%);
+  object-position: left center;
 }
 
 @media (orientation: portrait) {
   .nature-bg-cover-media {
     left: 0;
-    transform: translateY(-50%);
-    object-position: 0% center;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  @media (orientation: portrait) {
-    .nature-bg-cover-media {
-      animation: none;
-      object-position: 0% center;
-    }
+    transform: translate(0, -50%);
+    object-position: left center;
   }
 }

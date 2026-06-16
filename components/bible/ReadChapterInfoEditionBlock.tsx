@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ContentCorrectionEntry } from "@/components/content-correction/ContentCorrectionEntry";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
@@ -269,6 +270,17 @@ export function ReadChapterInfoEditionBlock({
         >
           <header className="read-chapter-info-edition-header">
             <p className="read-chapter-info-edition-disclaimer">{disclaimer}</p>
+            <ContentCorrectionEntry
+              tone="edition"
+              context={{
+                scope: variant === "guide" ? "guide_edition" : "info_edition",
+                bookId,
+                chapter,
+                roleId: published?.roleId ?? roleId,
+                roleLabel: published?.roleLabel ?? null,
+                publishedAt: published?.publishedAt ?? null,
+              }}
+            />
           </header>
 
           {phase === "error" && err ? (

@@ -61,3 +61,19 @@ export function persistLocaleToCookie(locale: AppLocale): void {
     /* ignore */
   }
 }
+
+export const LOCALE_SYNC_EVENT = "askbible-locale-sync";
+
+export function applyStoredAppLocale(next: AppLocale): void {
+  if (typeof window === "undefined") return;
+  const locale = parseLocale(next);
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    /* ignore */
+  }
+  persistLocaleToCookie(locale);
+  document.documentElement.lang =
+    locale === "en" ? "en" : locale === "zh-TW" ? "zh-Hant" : "zh-CN";
+  window.dispatchEvent(new Event(LOCALE_SYNC_EVENT));
+}

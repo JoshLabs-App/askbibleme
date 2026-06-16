@@ -14,6 +14,10 @@ export function isShellPrimaryAppRoute(pathname: string): boolean {
   if (p === "/music") return true;
   if (p === "/explore") return true;
   if (p === "/read") return true;
+  if (p === "/about") return true;
+  if (p === "/feedback") return true;
+  if (p === "/install") return true;
+  if (p === "/privacy") return true;
   if (p === "/scenes") return true;
   return false;
 }

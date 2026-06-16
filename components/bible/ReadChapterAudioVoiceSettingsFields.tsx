@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+import { ReadBibleSettingsSelect } from "@/components/bible/ReadBibleSettingsSelect";
 import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -12,20 +14,33 @@ import {
 } from "@/lib/bible/cuv-chapter-audio-voices";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 
-const selectClass =
-  "mt-1.5 w-full rounded-lg border border-amber-900/18 bg-white/90 px-2.5 py-2 text-[15px] text-amber-950 outline-none focus:border-amber-900/35 dark:border-stone-500/35 dark:bg-stone-950/80 dark:text-stone-100";
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
 /** 阅读设置弹层：整章朗读人声（普通话 / 潮州语新约）。 */
-export function ReadChapterAudioVoiceSettingsFields() {
+export function ReadChapterAudioVoiceSettingsFields({ open, onOpenChange }: Props) {
   const { t } = useLocale();
   const { voiceId, setVoiceId } = useCuvChapterAudioVoice();
-  const { translation, chapterAudioTranslationId } = useReadBibleTranslationSettings();
+  const { chapterAudioTranslationId } = useReadBibleTranslationSettings();
   const { playing, effectiveSrc, pausePlayback } = useMusicShellPlayback();
 
   const primarySupportsAudio = translationSupportsChapterAudio(chapterAudioTranslationId);
   const webAudioOnly = translationUsesWebChapterAudio(chapterAudioTranslationId);
 
-  const onChange = (next: string) => {
+  const voiceOptions = useMemo(
+    () =>
+      CUV_CHAPTER_AUDIO_VOICES.map((v) => ({
+        id: v.id,
+        label: t(v.labelKey),
+      })),
+    [t],
+  );
+
+  const voiceDisplay = voiceOptions.find((o) => o.id === voiceId)?.label ?? "";
+
+  const onSelectVoice = (next: string) => {
     const id = next as CuvChapterAudioVoiceId;
     if (id === voiceId) return;
     setVoiceId(id);
@@ -38,24 +53,17 @@ export function ReadChapterAudioVoiceSettingsFields() {
     <>
       {!webAudioOnly ? (
         <>
-          <label
-            className="mt-3 block text-[13px] font-medium text-amber-950/90 dark:text-stone-200"
-            htmlFor="read-bible-chapter-audio-voice"
-          >
+          <p className="read-bible-settings-field-label">
             {t("pages.read.typography.chapterAudioVoiceLabel")}
-          </label>
-          <select
-            id="read-bible-chapter-audio-voice"
-            className={selectClass}
+          </p>
+          <ReadBibleSettingsSelect
             value={voiceId}
-            onChange={(e) => onChange(e.target.value)}
-          >
-            {CUV_CHAPTER_AUDIO_VOICES.map((v) => (
-              <option key={v.id} value={v.id}>
-                {t(v.labelKey)}
-              </option>
-            ))}
-          </select>
+            options={voiceOptions}
+            open={open}
+            onOpenChange={onOpenChange}
+            ariaLabel={`${t("pages.read.typography.chapterAudioVoiceLabel")} ${voiceDisplay}`}
+            onSelect={onSelectVoice}
+          />
         </>
       ) : null}
       <p className="mt-2 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">

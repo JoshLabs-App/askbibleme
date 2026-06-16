@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const READ_CHAPTER_COMPLETION_KEY = "askbible-read-chapter-completion-v1";
 const READ_CHAPTER_COMPLETION_KEY_LEGACY = "selah-read-chapter-completion-v1";
 
-type ReadChapterCompletionRecord = {
+export type ReadChapterCompletionRecord = {
   version: 1;
   completed: string[];
 };
@@ -56,6 +56,20 @@ async function readCompletionSet(): Promise<Set<string>> {
 
 export async function readCompletedChapterKeySet(): Promise<Set<string>> {
   return readCompletionSet();
+}
+
+export async function readReadChapterCompletionRecord(): Promise<ReadChapterCompletionRecord> {
+  const completed = [...(await readCompletionSet())].sort();
+  return { version: 1, completed };
+}
+
+export async function replaceReadChapterCompletionRecord(
+  record: ReadChapterCompletionRecord,
+): Promise<void> {
+  const completed = Array.isArray(record.completed)
+    ? record.completed.filter((entry): entry is string => typeof entry === "string" && entry.length > 0)
+    : [];
+  await writeCompletionSet(new Set(completed));
 }
 
 async function writeCompletionSet(next: Set<string>): Promise<void> {

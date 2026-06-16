@@ -20,6 +20,8 @@ function joinVerseRangeText(
     .join(" ");
 }
 
+const xrefSnippetSessionCache = new Map<string, string>();
+
 export async function loadScriptureXrefSnippets(
   translationId: string,
   refs: ScriptureXrefTarget[],
@@ -34,6 +36,13 @@ export async function loadScriptureXrefSnippets(
     const key = scriptureXrefSnippetKey(ref);
     if (out[key]) continue;
 
+    const snippetCacheKey = `${tid}:${key}`;
+    const cachedSnippet = xrefSnippetSessionCache.get(snippetCacheKey);
+    if (cachedSnippet) {
+      out[key] = cachedSnippet;
+      continue;
+    }
+
     const bookId = ref.bookId.trim().toUpperCase();
     const chKey = `${tid}:${bookId}:${ref.chapter}`;
     let loaded = chapterCache.get(chKey);
@@ -45,7 +54,10 @@ export async function loadScriptureXrefSnippets(
 
     const end = ref.verseEnd ?? ref.verseStart;
     const raw = joinVerseRangeText(loaded.verses, ref.verseStart, end);
-    if (raw) out[key] = raw;
+    if (raw) {
+      out[key] = raw;
+      xrefSnippetSessionCache.set(snippetCacheKey, raw);
+    }
   }
 
   return out;

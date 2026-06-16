@@ -18,6 +18,8 @@ web-build/**
 expo-env.d.ts
 *.aab
 build-*.aab
+*.ipa
+build-*.ipa
 
 # 本地 Gradle / Xcode 产物（勿上传）
 android/.gradle/

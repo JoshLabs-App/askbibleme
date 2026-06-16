@@ -40,22 +40,35 @@ function toStoryTitle(raw: string): string {
   return words.slice(0, 5).join(" ");
 }
 
-function toStorySegments(rows: ChapterSegment[]): ChapterSegment[] {
+function toStorySegments(rows: ChapterSegment[], preferEnglish = false): ChapterSegment[] {
   const chapter = rows[0]?.chapter ?? 1;
   const headingStarts = new Set<number>();
   const out: ChapterSegment[] = [];
   for (const row of rows) {
     if (row.type !== "heading" || !Number.isInteger(row.verseStart) || row.verseStart == null) continue;
-    const titleRaw = row.titleZh || row.title || "";
-    const storyTitle = toStoryTitle(titleRaw);
-    if (!storyTitle) continue;
-    headingStarts.add(row.verseStart);
+    const titleRawZh = String(row.titleZh || row.title || "").trim();
     const titleRawEn = String(row.title || "").trim();
-    const storyTitleEn = titleRawEn ? toStoryTitle(titleRawEn) || titleRawEn : "";
+    const storyTitleZh = toStoryTitle(titleRawZh);
+    const storyTitleEn =
+      titleRawEn && !isHanText(titleRawEn) ? toStoryTitle(titleRawEn) || titleRawEn : "";
+
+    if (preferEnglish) {
+      if (!storyTitleEn) continue;
+      headingStarts.add(row.verseStart);
+      out.push({
+        ...row,
+        title: storyTitleEn,
+        titleZh: storyTitleZh || titleRawZh,
+      });
+      continue;
+    }
+
+    if (!storyTitleZh) continue;
+    headingStarts.add(row.verseStart);
     out.push({
       ...row,
       title: storyTitleEn,
-      titleZh: storyTitle,
+      titleZh: storyTitleZh,
     });
   }
   if (out.length === 0) return rows;
@@ -79,10 +92,24 @@ function toStorySegments(rows: ChapterSegment[]): ChapterSegment[] {
   return sorted;
 }
 
+function isHanText(text: string): boolean {
+  return /[\u3400-\u9FFF]/.test(text);
+}
+
+function englishHeadingTitle(row: ChapterSegment): string {
+  const en = String(row.title || "").trim();
+  if (!en || isHanText(en)) return "";
+  const words = en.split(/\s+/).filter(Boolean);
+  if (words.length <= 8) return en;
+  return toStoryTitle(en) || en;
+}
+
 function mergeStoryWithDefaultSegments(
   defaultRows: ChapterSegment[],
   storyRows: ChapterSegment[],
+  opts?: { preferEnglishTitles?: boolean },
 ): ChapterSegment[] {
+  const preferEnglishTitles = Boolean(opts?.preferEnglishTitles);
   const storyHeadings = storyRows
     .filter(
       (row) =>
@@ -95,6 +122,7 @@ function mergeStoryWithDefaultSegments(
       id: `story:${row.id || idx}`,
       verseStart: row.verseStart as number,
       titleZh: String(row.titleZh || row.title || "").trim(),
+      titleEn: englishHeadingTitle(row),
     }));
 
   if (storyHeadings.length === 0) return defaultRows;
@@ -115,9 +143,14 @@ function mergeStoryWithDefaultSegments(
       if (pick) {
         usedTitles.add(`${row.verseStart}:${pick}`);
         const preservedEn = String(row.title || "").trim();
+        const storyMatch = storyHeadings.find(
+          (item) => item.verseStart === row.verseStart && item.titleZh === pick,
+        );
         merged.push({
           ...row,
-          title: preservedEn,
+          title: preferEnglishTitles
+            ? storyMatch?.titleEn || englishHeadingTitle(row) || preservedEn
+            : preservedEn,
           titleZh: pick,
         });
         continue;
@@ -142,7 +175,7 @@ function mergeStoryWithDefaultSegments(
       chapter: defaultRows[0]?.chapter ?? 1,
       verseStart: row.verseStart,
       verseEnd: row.verseStart,
-      title: "",
+      title: preferEnglishTitles ? row.titleEn : "",
       titleZh: row.titleZh,
     });
   }
@@ -160,18 +193,20 @@ export function loadBundledChapterSegments(
   bookId: string,
   chapter: number,
   mode: ChapterSegmentMode = "default",
+  opts?: { preferEnglishTitles?: boolean },
 ): ChapterSegment[] | null {
   const id = String(bookId || "").trim().toUpperCase();
   const ch = Number(chapter);
   if (!id || !Number.isInteger(ch) || ch < 1) return null;
   const rows = chapterSegmentsFile?.books?.[id]?.[String(ch)];
   if (!Array.isArray(rows) || rows.length === 0) return null;
+  const preferEnglishTitles = Boolean(opts?.preferEnglishTitles);
   if (mode === "t1") {
     const storyRows = storyT1ChapterSegmentsFile?.books?.[id]?.[String(ch)];
     if (Array.isArray(storyRows) && storyRows.length > 0) {
-      return mergeStoryWithDefaultSegments(rows, storyRows);
+      return mergeStoryWithDefaultSegments(rows, storyRows, { preferEnglishTitles });
     }
-    return toStorySegments(rows);
+    return toStorySegments(rows, preferEnglishTitles);
   }
   return rows;
 }

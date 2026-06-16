@@ -12,7 +12,7 @@ const ZH_TW_OVERRIDES: Record<string, string> = {
   "pages.read.chapterJumpNewTestament": "新約",
   "pages.read.scriptureSearchScopeOld": "舊約",
   "pages.read.scriptureSearchScopeNew": "新約",
-  "pages.read.todayReadingStatYearDayLabel": "已走過",
+  "pages.read.todayReadingStatYearDayLabel": "今年已過",
   "pages.read.todayReadingStatReadLabel": "讀經天",
   "pages.read.todayReadingStatStreakLabel": "連續天",
   "pages.read.todayPlanEmpty": "今日暫無經文段。",

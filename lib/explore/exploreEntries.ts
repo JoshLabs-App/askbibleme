@@ -16,13 +16,6 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     labelKey: "pages.explore.yearDayCountIconLabel",
   },
   {
-    id: "years-days-eternity",
-    href: "/explore/years-days-eternity",
-    iconSet: "material-community",
-    icon: "infinity",
-    labelKey: "pages.explore.yearsDaysEternityIconLabel",
-  },
-  {
     id: "narrow-gate",
     href: "/explore/narrow-gate",
     iconSet: "material-community",
@@ -43,10 +36,16 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     icon: "hands-pray",
     labelKey: "pages.explore.prayerIconLabel",
   },
+  {
+    id: "figures",
+    href: "/explore/figures",
+    iconSet: "material-community",
+    icon: "account-group",
+    labelKey: "pages.explore.figuresIconLabel",
+  },
 ];
 
 export const SCRIPTURE_ANTHOLOGY_IDS = [
-  "years-days-eternity",
   "word-of-god",
   "narrow-gate",
   "praise-worship",

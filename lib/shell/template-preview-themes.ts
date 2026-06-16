@@ -186,6 +186,7 @@ export function shellChromeBottomLayerStyleForNatureVideoStage(
 
 /** 壳模板页预览主题色板；可选经左菜单写入本机并由 `AppSkinProvider` 全站覆盖 `--brand-*` */
 export type ShellTemplatePreviewThemeId =
+  | "parchmentShell"
   | "lagoonPaper"
   | "lightBlue"
   | "pinkBloom"
@@ -307,6 +308,11 @@ const ADMIN_DESK: Pick<
 };
 
 export const SHELL_TEMPLATE_PREVIEW_THEMES: ShellTemplatePreviewTheme[] = [
+  {
+    id: "parchmentShell",
+    pageCanvas: DEFAULT_BRAND_COLORS.canvas,
+    colors: { ...DEFAULT_BRAND_COLORS },
+  },
   {
     id: "lagoonPaper",
     pageCanvas: "#D8ECF7",

@@ -1,4 +1,4 @@
-/** 首页自然场景：竖屏下自左向右平移一整遍的时长（秒）；与 `lib/nature/nature-home-portrait-pan.ts` 同步 */
+/** @deprecated 竖屏平移已移除；保留常量供旧引用。 */
 export const NATURE_HOME_PORTRAIT_PAN_DURATION_SEC = 30 * 60;
 
 /** 自然场景横屏片源常见比例；用于估算 cover 后水平可平移距离 */

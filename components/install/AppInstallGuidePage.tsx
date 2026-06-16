@@ -4,11 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { StaticParchmentPageFooter } from "@/components/shell/StaticParchmentPageFooter";
 import {
-  APP_INSTALL_ANDROID_URL,
   APP_INSTALL_IOS_URL,
+  buildAndroidTrialMailto,
+  resolveAppInstallAndroidEmail,
 } from "@/lib/app-install-urls";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
+
+const LOGO_GOLD = "#ffb101";
 
 type Platform = "ios" | "android" | "other";
 
@@ -20,6 +24,7 @@ type PlatformGuide = {
   steps: string[];
   actionLabel: string;
   href: string;
+  external?: boolean;
 };
 
 function detectPlatform(): Platform {
@@ -32,24 +37,25 @@ function detectPlatform(): Platform {
 
 function PlatformCard({ guide }: { guide: PlatformGuide }) {
   return (
-    <section className="rounded-2xl border border-ink/10 bg-canvas/60 px-5 py-6 md:px-6">
-      <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-ink/45">
+    <section className="rounded-[18px] border border-[rgba(120,53,15,0.2)] bg-[rgba(255,252,245,0.92)] px-4 py-5">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgba(77,53,34,0.55)]">
         {guide.eyebrow}
       </p>
-      <h2 className="mt-2 font-serif text-[1.2rem] font-medium tracking-[0.02em] text-ink/90">
+      <h2 className="mt-2 font-serif text-[1.15rem] font-medium tracking-[0.02em] text-[#2b1d15]">
         {guide.title}
       </h2>
-      <p className="mt-3 text-[15px] leading-[1.75] text-ink/75">{guide.intro}</p>
-      <ol className="mt-4 list-decimal space-y-2 pl-5 text-[15px] leading-[1.75] text-ink/78 marker:text-ink/35">
+      <p className="mt-3 text-[15px] leading-[1.75] text-[rgba(43,29,21,0.76)]">{guide.intro}</p>
+      <ol className="mt-4 list-decimal space-y-2 pl-5 text-[15px] leading-[1.75] text-[rgba(43,29,21,0.78)] marker:text-[rgba(77,53,34,0.35)]">
         {guide.steps.map((step) => (
           <li key={step}>{step}</li>
         ))}
       </ol>
       <a
         href={guide.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-ink/[0.08] px-4 py-3 text-[15px] font-medium text-ink transition hover:bg-ink/[0.12] active:scale-[0.99] sm:w-auto sm:min-w-[15rem]"
+        {...(guide.external
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+        className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.88)] px-4 py-3 text-[15px] font-semibold text-[#2b1d15] transition hover:border-[rgba(120,53,15,0.32)] active:scale-[0.99]"
       >
         {guide.actionLabel}
       </a>
@@ -58,9 +64,10 @@ function PlatformCard({ guide }: { guide: PlatformGuide }) {
 }
 
 export function AppInstallGuidePage() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const isZh = locale === "zh-CN";
   const [platform, setPlatform] = useState<Platform>("other");
+  const androidEmail = resolveAppInstallAndroidEmail();
 
   useEffect(() => {
     setPlatform(detectPlatform());
@@ -70,111 +77,108 @@ export function AppInstallGuidePage() {
     const ios: PlatformGuide = {
       id: "ios",
       eyebrow: isZh ? "iPhone / iPad" : "iPhone / iPad",
-      title: isZh ? "通过 TestFlight 安装" : "Install with TestFlight",
+      title: isZh ? "从 App Store 安装" : "Install from the App Store",
       intro: isZh
-        ? "这是 Apple 官方测试渠道。接受邀请后，可在 TestFlight 中安装与更新 AskBible.me 测试版。"
-        : "Apple's official beta channel. After accepting the invite, install and update the AskBible.me beta in TestFlight.",
+        ? "AskBible.me 已在 App Store 上架。可直接下载正式版，并在 App Store 中接收更新。"
+        : "AskBible.me is live on the App Store. Download the release build and receive updates there.",
       steps: isZh
         ? [
-            "点击下方按钮打开 TestFlight 邀请链接。",
-            "若尚未安装 TestFlight，请先从 App Store 安装 TestFlight。",
-            "在 TestFlight 中接受邀请，然后安装 AskBible.me。",
+            "点击下方按钮打开 App Store 页面。",
+            "点击「获取」或「下载」完成安装。",
+            "安装后打开 App，即可安静回到经文。",
           ]
         : [
-            "Tap the button below to open the TestFlight invite.",
-            "Install TestFlight from the App Store first if you do not have it.",
-            "Accept the invite in TestFlight, then install AskBible.me.",
+            "Tap the button below to open the App Store listing.",
+            "Tap Get or Download to install.",
+            "Open the app when installation finishes.",
           ],
-      actionLabel: isZh ? "加入 TestFlight 测试" : "Join TestFlight beta",
+      actionLabel: isZh ? "前往 App Store" : "Open App Store",
       href: APP_INSTALL_IOS_URL,
+      external: true,
     };
 
     const android: PlatformGuide = {
       id: "android",
       eyebrow: isZh ? "Android" : "Android",
-      title: isZh ? "通过 Google Play 测试安装" : "Install via Google Play testing",
+      title: isZh ? "邮件申请 Android 试用版" : "Request the Android trial by email",
       intro: isZh
-        ? "这是 Google Play 内部测试渠道。需使用受邀 Google 账号登录并接受测试后，才能从 Play 商店安装。"
-        : "Google Play closed testing. Sign in with your invited Google account and opt in before installing from the Play Store.",
+        ? `Android 试用版暂未公开上架。请发送邮件至 ${androidEmail}，我们会回复安装方式。`
+        : `The Android trial is not publicly listed yet. Email ${androidEmail} and we will reply with install steps.`,
       steps: isZh
         ? [
-            "点击下方按钮打开 Play 测试邀请页。",
-            "使用受邀 Google 账号登录，并点击成为测试员。",
-            "在 Play 商店搜索 AskBible.me 并完成安装。",
+            "点击下方按钮打开邮件应用（已预填主题与说明）。",
+            "补充你的设备型号或遇到的问题，然后发送邮件。",
+            "收到回复后，按邮件中的步骤安装试用版。",
           ]
         : [
-            "Tap the button below to open the Play testing invite.",
-            "Sign in with your invited Google account and become a tester.",
-            "Find AskBible.me in the Play Store and install it.",
+            "Tap the button below to open your mail app with a prefilled message.",
+            "Add your device model or any notes, then send the email.",
+            "Follow the install steps in our reply.",
           ],
-      actionLabel: isZh ? "加入 Android 测试" : "Join Android beta",
-      href: APP_INSTALL_ANDROID_URL,
+      actionLabel: isZh ? "发送试用申请邮件" : "Send trial request email",
+      href: buildAndroidTrialMailto(
+        t("chrome.pwaInstallAndroidMailSubject"),
+        t("chrome.pwaInstallAndroidMailBody"),
+      ),
     };
 
     if (platform === "android") return [android, ios];
     return [ios, android];
-  }, [isZh, platform]);
+  }, [androidEmail, isZh, platform, t]);
 
   return (
-    <div className="min-h-dvh bg-canvas text-ink">
-      <div className="mx-auto w-full max-w-2xl px-5 pb-20 pt-10 md:px-8 md:pt-14">
-        <header className="border-b border-ink/10 pb-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-[18px] border border-ink/10 bg-canvas shadow-[0_8px_24px_-12px_rgba(15,40,60,0.18)]">
-            <Image
-              src="/branding/app-icon.png"
-              alt={ASKBIBLE_PRODUCT_NAME}
-              width={64}
-              height={64}
-              className="h-full w-full object-cover"
-              priority
-            />
-          </div>
-          <p className="mt-5 text-[12px] font-medium uppercase tracking-[0.14em] text-ink/45">
-            {isZh ? "测试版邀请" : "Beta invite"}
-          </p>
-          <h1 className="mt-3 font-serif text-[clamp(1.5rem,4.5vw,2rem)] font-medium tracking-[0.02em] text-ink/92">
-            {ASKBIBLE_PRODUCT_NAME}
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-ink/72">
-            {isZh
-              ? "安静回到经文的入口。请选择你的设备，按步骤加入测试并安装 App。"
-              : "A quiet entry back into Scripture. Choose your device and follow the steps to join the beta."}
-          </p>
-        </header>
-
-        <div className="mt-10 space-y-5">
-          {guides.map((guide) => (
-            <PlatformCard key={guide.id} guide={guide} />
-          ))}
+    <div className="narrow-parchment-root select-text">
+      <header className="border-b border-[rgba(120,53,15,0.12)] pb-8 text-center">
+        <div
+          className="mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-[18px] border border-[rgba(120,53,15,0.14)] shadow-[0_8px_24px_-12px_rgba(15,40,60,0.14)]"
+          style={{ backgroundColor: LOGO_GOLD }}
+        >
+          <Image
+            src="/branding/app-icon.png"
+            alt={ASKBIBLE_PRODUCT_NAME}
+            width={72}
+            height={72}
+            className="h-full w-full object-cover"
+            priority
+          />
         </div>
-
-        <p className="mt-8 text-center text-[14px] leading-relaxed text-ink/58">
-          {isZh
-            ? "测试版可能仍有未完成之处；欢迎通过反馈页告诉我们你的体验。"
-            : "The beta may still be rough in places — we welcome your feedback."}
+        <p className="mt-5 text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgba(77,53,34,0.62)]">
+          {isZh ? "安装 App" : "Install the app"}
         </p>
+        <h1 className="mt-3 text-[18px] font-semibold tracking-[0.04em] text-[#4d3522]">
+          {ASKBIBLE_PRODUCT_NAME}
+        </h1>
+        <div className="mx-auto mt-2 h-px w-[86px]" style={{ backgroundColor: "rgba(255,177,1,0.62)" }} />
+        <p className="mx-auto mt-4 max-w-md text-[15px] leading-[1.75] text-[rgba(43,29,21,0.76)]">
+          {isZh
+            ? "安静回到经文的入口。请选择你的设备，按步骤安装 App。"
+            : "A quiet entry back into Scripture. Choose your device and follow the steps below."}
+        </p>
+      </header>
 
-        <footer className="mt-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-ink/10 pt-8 text-[14px] text-ink/62">
-          <Link
-            href="/feedback"
-            className="underline decoration-ink/20 underline-offset-4 transition hover:text-ink/85"
-          >
-            {isZh ? "意见反馈" : "Feedback"}
-          </Link>
-          <Link
-            href="/privacy"
-            className="underline decoration-ink/20 underline-offset-4 transition hover:text-ink/85"
-          >
-            {isZh ? "隐私政策" : "Privacy"}
-          </Link>
-          <Link
-            href="/"
-            className="underline decoration-ink/20 underline-offset-4 transition hover:text-ink/85"
-          >
-            {isZh ? "继续使用网页版" : "Continue on web"}
-          </Link>
-        </footer>
+      <div className="mt-10 space-y-2.5">
+        {guides.map((guide) => (
+          <PlatformCard key={guide.id} guide={guide} />
+        ))}
       </div>
+
+      <p className="mt-8 text-center text-[14px] leading-relaxed text-[rgba(43,29,21,0.68)]">
+        {isZh
+          ? "如有安装或使用问题，欢迎通过反馈页告诉我们。"
+          : "If you run into install or usage issues, we welcome your feedback."}
+      </p>
+
+      <div className="mt-8 flex flex-col items-stretch gap-3">
+        <Link
+          href="/about"
+          className="inline-flex min-h-[50px] items-center justify-center rounded-full px-5 text-[15px] font-bold tracking-[0.02em] text-[#fffdf8] transition hover:brightness-[0.98] active:scale-[0.99]"
+          style={{ backgroundColor: LOGO_GOLD }}
+        >
+          {isZh ? "了解 AskBible.me" : "About AskBible.me"}
+        </Link>
+      </div>
+
+      <StaticParchmentPageFooter />
     </div>
   );
 }

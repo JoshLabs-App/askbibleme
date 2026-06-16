@@ -19,7 +19,7 @@ import {
   writeThemeRepeatAllowlist,
   type ThemeRepeatAllowlistRow,
 } from "@/lib/home-prayer-pools/theme-repeat-allowlist";
-import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "../../apps/askbible-mobile/src/explore/explore-home-verse-pool-verse-keys";
+import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "@/lib/explore/explore-home-verse-pool-verse-keys";
 
 const HOME_POOL_ZH_TRANSLATION_IDS = ["cuv-simp", "cuv-trad"] as const;
 const HOME_POOL_EN_TRANSLATION_IDS = ["web-en", "bbe-en"] as const;

@@ -14,6 +14,7 @@ import {
   readBrandingState,
   writeBrandingState,
 } from "@/lib/site-branding";
+import { readMultipartForm, type MultipartForm } from "@/lib/http/multipart-form";
 import {
   DEFAULT_BRAND_COLORS,
   isValidHex6,
@@ -37,9 +38,9 @@ export async function POST(req: Request) {
     );
   }
 
-  let form: Awaited<ReturnType<Request["formData"]>>;
+  let form: MultipartForm;
   try {
-    form = await req.formData();
+    form = await readMultipartForm(req);
   } catch {
     return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
   }

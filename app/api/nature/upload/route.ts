@@ -8,6 +8,7 @@ import {
 } from "@/lib/nature/extract-video-preview-frame";
 import { transcodeNatureVideoRenditions } from "@/lib/nature/transcode-nature-video-renditions";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
+import { readMultipartForm, type MultipartForm } from "@/lib/http/multipart-form";
 
 /** 允许上传 4K 母片；转码后为两路 H.264 */
 const MAX_BYTES = 450 * 1024 * 1024;
@@ -45,9 +46,9 @@ export async function POST(req: Request) {
     );
   }
 
-  let form: Awaited<ReturnType<Request["formData"]>>;
+  let form: MultipartForm;
   try {
-    form = await req.formData();
+    form = await readMultipartForm(req);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json(

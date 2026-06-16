@@ -122,6 +122,7 @@ export function ReadChapterTodayPlanBlock({ bookId, chapter }: Props) {
             startChapter: ref.chapter,
             endChapter: ref.chapter,
             label: "",
+            planChapterTotal: 1,
           });
           return (
             <li key={key} className="w-full text-[13px] leading-snug">

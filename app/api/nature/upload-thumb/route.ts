@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
+import { readMultipartForm, type MultipartForm } from "@/lib/http/multipart-form";
 
 const MAX_BYTES = 3 * 1024 * 1024;
 
@@ -32,9 +33,9 @@ export async function POST(req: Request) {
     );
   }
 
-  let form: Awaited<ReturnType<Request["formData"]>>;
+  let form: MultipartForm;
   try {
-    form = await req.formData();
+    form = await readMultipartForm(req);
   } catch {
     return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
   }

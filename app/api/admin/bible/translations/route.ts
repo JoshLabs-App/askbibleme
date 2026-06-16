@@ -10,6 +10,7 @@ import {
   writeTranslationsIndex,
 } from "@/lib/bible/translations-store";
 import { parseAndValidateBiblePayload } from "@/lib/bible/validate-bible-json";
+import { readFormString, readMultipartForm, type MultipartForm } from "@/lib/http/multipart-form";
 
 const MAX_UPLOAD_BYTES = 18 * 1024 * 1024;
 const ID_RE = /^[a-z0-9][a-z0-9_-]{0,47}$/;
@@ -39,16 +40,16 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   if (!isStudioDiskSaveAllowed(req)) return disk403();
-  let form: Awaited<ReturnType<Request["formData"]>>;
+  let form: MultipartForm;
   try {
-    form = await req.formData();
+    form = await readMultipartForm(req);
   } catch {
     return NextResponse.json({ error: "须为 multipart 表单。" }, { status: 400 });
   }
-  const id = String(form.get("id") ?? "").trim();
-  const labelZh = String(form.get("labelZh") ?? "").trim();
-  const labelEn = String(form.get("labelEn") ?? "").trim();
-  const language = String(form.get("language") ?? "").trim();
+  const id = readFormString(form, "id");
+  const labelZh = readFormString(form, "labelZh");
+  const labelEn = readFormString(form, "labelEn");
+  const language = readFormString(form, "language");
   const file = form.get("file");
 
   if (!ID_RE.test(id)) {

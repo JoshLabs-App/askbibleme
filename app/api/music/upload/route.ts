@@ -10,6 +10,7 @@ import {
   transcodeToStreamingM4a,
 } from "@/lib/music/transcode-upload";
 import { analyzeAudioFileToV1 } from "@/lib/music/build-track-analysis-server";
+import { readMultipartForm } from "@/lib/http/multipart-form";
 
 /** 大文件上传；如开启转码会调用 ffmpeg。部署平台（如 Vercel）仍可能对请求体有套餐上限，与本应用内校验无关。 */
 export const maxDuration = 120;
@@ -127,7 +128,7 @@ export async function POST(req: Request) {
   // 兼容两类客户端：标准 multipart（浏览器）与直接音频流（部分 WebView / 设备端）。
   if (isMultipart) {
     try {
-      const form = await req.formData();
+      const form = await readMultipartForm(req);
       const file = form.get("file");
       if (file && file instanceof File) {
         origName = file.name || "audio";

@@ -96,6 +96,7 @@ export function ReadTripleLoopPlanDetailClient() {
               startChapter: ptr.chapter,
               endChapter: ptr.chapter,
               label: "",
+              planChapterTotal: 1,
             };
             return (
               <li key={track} className="text-[13px] leading-snug">

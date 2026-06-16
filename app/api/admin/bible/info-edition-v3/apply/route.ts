@@ -98,9 +98,7 @@ export async function POST(req: Request) {
   return NextResponse.json(
     {
       ok,
-      bookId,
       bookName: bookMeta.bookName,
-      chapter,
       dryRun,
       ...result,
     },

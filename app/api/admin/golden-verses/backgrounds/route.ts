@@ -9,6 +9,7 @@ import {
   removeGoldenVerseBackgrounds,
 } from "@/lib/golden-verses/settings-file";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
+import { readMultipartForm, type MultipartForm } from "@/lib/http/multipart-form";
 
 function diskDenied() {
   return NextResponse.json(
@@ -37,9 +38,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   if (!isStudioDiskSaveAllowed(req)) return diskDenied();
-  let form: FormData;
+  let form: MultipartForm;
   try {
-    form = await req.formData();
+    form = await readMultipartForm(req);
   } catch {
     return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
   }

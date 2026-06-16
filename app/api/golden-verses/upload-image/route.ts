@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { saveGoldenVerseBackgroundFile } from "@/lib/golden-verses/background-uploads";
 import { addGoldenVerseBackground } from "@/lib/golden-verses/settings-file";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
+import { readMultipartForm, type MultipartForm } from "@/lib/http/multipart-form";
 
 /**
  * 金句页背景图 → `public/golden-verses/bg-uploads/`，追加到 `data/golden-verses-settings.json` 目录。
@@ -18,9 +19,9 @@ export async function POST(req: Request) {
     );
   }
 
-  let form: Awaited<ReturnType<Request["formData"]>>;
+  let form: MultipartForm;
   try {
-    form = await req.formData();
+    form = await readMultipartForm(req);
   } catch {
     return NextResponse.json({ error: "请求体须为 multipart/form-data。" }, { status: 400 });
   }

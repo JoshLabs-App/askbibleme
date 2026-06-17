@@ -44,6 +44,40 @@ import { YEARS_DAYS_ETERNITY_EN } from "../lib/explore/years-days-eternity-conte
 import { YEARS_DAYS_ETERNITY_ZH } from "../lib/explore/years-days-eternity-content";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const outWeb = path.join(repoRoot, "data/explore-modules/bundle.json");
+const outMobile = path.join(repoRoot, "apps/askbible-mobile/src/explore/explore-modules-bundled.json");
+
+const DEFAULT_EXPLORE_HOME = {
+  visibleStagedEntryIds: [] as string[],
+  sectionCaption: { zh: "更多探索", zhTw: "更多探索", en: "More to explore" },
+  entryLabels: {} as Record<string, { zh?: string; zhTw?: string; en?: string }>,
+  remoteModules: Object.fromEntries(
+    ["scripture-pool-01", "scripture-pool-02", "scripture-pool-03", "scripture-pool-04", "scripture-pool-05"].map(
+      (id) => [id, { bookAbbrToId: {}, categories: [] }],
+    ),
+  ),
+};
+
+function readExistingExploreHome(): typeof DEFAULT_EXPLORE_HOME {
+  try {
+    const raw = fs.readFileSync(outWeb, "utf-8");
+    const parsed = JSON.parse(raw) as { exploreHome?: typeof DEFAULT_EXPLORE_HOME };
+    if (parsed.exploreHome && typeof parsed.exploreHome === "object") {
+      return {
+        ...DEFAULT_EXPLORE_HOME,
+        ...parsed.exploreHome,
+        entryLabels: parsed.exploreHome.entryLabels ?? DEFAULT_EXPLORE_HOME.entryLabels,
+        remoteModules: {
+          ...DEFAULT_EXPLORE_HOME.remoteModules,
+          ...(parsed.exploreHome.remoteModules ?? {}),
+        },
+      };
+    }
+  } catch {
+    /* first run */
+  }
+  return DEFAULT_EXPLORE_HOME;
+}
 
 const payload = {
   schemaVersion: 1 as const,
@@ -86,6 +120,7 @@ const payload = {
     spanYears: CENTURY_SPAN_YEARS,
     batterySegmentCount: LIFE_BATTERY_SEGMENT_COUNT,
   },
+  exploreHome: readExistingExploreHome(),
 };
 
 const contentVersion = createHash("sha256")
@@ -94,8 +129,6 @@ const contentVersion = createHash("sha256")
   .slice(0, 16);
 
 const bundle = { ...payload, contentVersion };
-const outWeb = path.join(repoRoot, "data/explore-modules/bundle.json");
-const outMobile = path.join(repoRoot, "apps/askbible-mobile/src/explore/explore-modules-bundled.json");
 
 fs.mkdirSync(path.dirname(outWeb), { recursive: true });
 const json = `${JSON.stringify(bundle)}\n`;

@@ -33,6 +33,31 @@ export type ExploreModulesYearDayCountScriptureRef = {
   refDisplay: string;
 };
 
+/** 探索首页第二行（预埋）图标：远程可见性 + 可选文案覆盖 */
+export type ExploreHomeLocalizedText = {
+  zh?: string;
+  zhTw?: string;
+  en?: string;
+};
+
+/** 预埋槽位 `staged-04`…`staged-09` 的远程经文汇编模块 */
+export type ExploreModulesRemoteStagedModule = {
+  pageTitle?: string;
+  pageTitleTw?: string;
+  pageTitleEn?: string;
+  bookAbbrToId: Record<string, string>;
+  categories: ExploreModulesCategory[];
+  titlesEn?: string[];
+};
+
+export type ExploreModulesExploreHome = {
+  /** 远程放出的预埋图标 id；默认空数组 = 全部隐藏 */
+  visibleStagedEntryIds: string[];
+  sectionCaption?: ExploreHomeLocalizedText;
+  entryLabels?: Record<string, ExploreHomeLocalizedText>;
+  remoteModules?: Record<string, ExploreModulesRemoteStagedModule>;
+};
+
 export type ExploreModulesBundle = {
   schemaVersion: 1;
   contentVersion: string;
@@ -75,6 +100,7 @@ export type ExploreModulesBundle = {
     spanYears: number;
     batterySegmentCount: number;
   };
+  exploreHome?: ExploreModulesExploreHome;
 };
 
 export function isExploreModulesBundle(raw: unknown): raw is ExploreModulesBundle {

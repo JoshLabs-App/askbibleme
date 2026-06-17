@@ -49,11 +49,13 @@ import {
   writeTripleLoopProgress,
 } from "../read/reading-plan/triple-loop-progress";
 import {
-  replaceTodayReadingChapterFractionRecord,
-} from "../read/reading-plan/today-reading-chapter-fraction";
-import {
+  normalizeTodayReadingDoneForLocalPrefs,
   replaceTodayReadingDoneRecord,
 } from "../read/reading-plan/today-reading-done";
+import {
+  normalizeTodayReadingFractionForLocalPrefs,
+  replaceTodayReadingChapterFractionRecord,
+} from "../read/reading-plan/today-reading-chapter-fraction";
 import {
   replaceScriptureRecentSearches,
 } from "../read/scripture-recent-searches";
@@ -112,10 +114,16 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       if (isTripleLoopState(value)) await writeTripleLoopProgress(value);
       break;
     case "todayReadingDone":
-      if (isTodayDoneRecord(value)) await replaceTodayReadingDoneRecord(value);
+      if (isTodayDoneRecord(value)) {
+        await replaceTodayReadingDoneRecord(await normalizeTodayReadingDoneForLocalPrefs(value));
+      }
       break;
     case "todayReadingFraction":
-      if (isTodayFractionRecord(value)) await replaceTodayReadingChapterFractionRecord(value);
+      if (isTodayFractionRecord(value)) {
+        await replaceTodayReadingChapterFractionRecord(
+          await normalizeTodayReadingFractionForLocalPrefs(value),
+        );
+      }
       break;
     case "habitStats":
       if (isHabitStats(value)) await replaceReadingHabitStatsRecord(value);

@@ -30,7 +30,7 @@
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "42",
+      "buildNumber": "43",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -44,7 +44,7 @@
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 42,
+      "versionCode": 43,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

@@ -2,9 +2,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import {
   buildTodayReadingScopeKey,
+  isSameTodayReadingPlanScope,
   markTodayReadingItemDone,
   readTodayReadingDoneKeys,
   readingIncludesChapter,
+  resolveLocalTodayReadingScopeKey,
   todayReadingItemKey,
 } from "./today-reading-done";
 import { loadTodayReadingPlanPayload } from "./today-reading-plan-payload";
@@ -86,11 +88,17 @@ async function readRecord(): Promise<TodayReadingChapterFractionRecord | null> {
   }
 }
 
+async function persistTodayReadingChapterFractionRecord(
+  record: TodayReadingChapterFractionRecord,
+): Promise<void> {
+  await AsyncStorage.setItem(TODAY_READING_CHAPTER_FRACTION_KEY, JSON.stringify(record));
+  await AsyncStorage.removeItem(TODAY_READING_CHAPTER_FRACTION_KEY_LEGACY);
+  emit();
+}
+
 async function writeRecord(record: TodayReadingChapterFractionRecord): Promise<void> {
   try {
-    await AsyncStorage.setItem(TODAY_READING_CHAPTER_FRACTION_KEY, JSON.stringify(record));
-    await AsyncStorage.removeItem(TODAY_READING_CHAPTER_FRACTION_KEY_LEGACY);
-    emit();
+    await persistTodayReadingChapterFractionRecord(record);
     const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
     notifyMemberReadingLocalChanged("todayReadingFraction");
   } catch {
@@ -105,15 +113,29 @@ export async function readTodayReadingChapterFractionRecord(): Promise<TodayRead
 export async function replaceTodayReadingChapterFractionRecord(
   record: TodayReadingChapterFractionRecord,
 ): Promise<void> {
-  await writeRecord(record);
+  try {
+    await persistTodayReadingChapterFractionRecord(record);
+  } catch {
+    /* ignore */
+  }
 }
 
 export async function readTodayReadingChapterFractions(
   scopeKey: string,
 ): Promise<Record<string, number>> {
   const record = await readRecord();
-  if (!record || record.scopeKey !== scopeKey) return {};
-  return { ...record.fractions };
+  if (!record) return {};
+  if (record.scopeKey === scopeKey || isSameTodayReadingPlanScope(record.scopeKey, scopeKey)) {
+    return { ...record.fractions };
+  }
+  return {};
+}
+
+export async function normalizeTodayReadingFractionForLocalPrefs(
+  record: TodayReadingChapterFractionRecord,
+): Promise<TodayReadingChapterFractionRecord> {
+  const scopeKey = await resolveLocalTodayReadingScopeKey();
+  return { version: 1, scopeKey, fractions: { ...record.fractions } };
 }
 
 export async function setTodayReadingChapterFraction(
@@ -123,7 +145,9 @@ export async function setTodayReadingChapterFraction(
 ): Promise<Record<string, number>> {
   const record = await readRecord();
   const base =
-    record?.scopeKey === scopeKey ? { ...record.fractions } : ({} as Record<string, number>);
+    record && (record.scopeKey === scopeKey || isSameTodayReadingPlanScope(record.scopeKey, scopeKey))
+      ? { ...record.fractions }
+      : ({} as Record<string, number>);
   const next = clampFraction(Math.max(base[itemKey] ?? 0, fraction));
   base[itemKey] = next;
   await writeRecord({ version: 1, scopeKey, fractions: base });

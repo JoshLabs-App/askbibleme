@@ -67,7 +67,8 @@ export async function runMemberReadingSync(
     const pushed = pushResult.response;
 
     if (pushed?.ok && pushed.blobs) {
-      await applyMemberReadingSyncBlobs(pushed.blobs);
+      const merged = mergeMemberReadingSyncPush(pushed.blobs, localPush);
+      await applyMemberReadingSyncBlobs(merged);
       await writeMemberReadingSyncMeta({
         revision: pushed.revision ?? null,
         lastSyncedAt: new Date().toISOString(),

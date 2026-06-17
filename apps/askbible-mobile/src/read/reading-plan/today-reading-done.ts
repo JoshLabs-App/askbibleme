@@ -48,6 +48,43 @@ export function buildTodayReadingScopeKey(opts: {
   return opts.planId;
 }
 
+export function planIdFromTodayReadingScopeKey(scopeKey: string | null | undefined): string | null {
+  if (!scopeKey?.trim()) return null;
+  return scopeKey.split(":")[0]?.trim() || null;
+}
+
+/** 同一读经计划（planId 相同）视为可合并的今日进度 scope。 */
+export function isSameTodayReadingPlanScope(
+  scopeA: string | null | undefined,
+  scopeB: string | null | undefined,
+): boolean {
+  if (!scopeA || !scopeB) return false;
+  if (scopeA === scopeB) return true;
+  const planA = planIdFromTodayReadingScopeKey(scopeA);
+  const planB = planIdFromTodayReadingScopeKey(scopeB);
+  return Boolean(planA && planB && planA === planB);
+}
+
+export async function resolveLocalTodayReadingScopeKey(): Promise<string> {
+  const prefs = await readEffectiveReadingPlanPrefs();
+  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+  const dayCount = prefs.dayCount ?? 365;
+  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  return buildTodayReadingScopeKey({
+    planId: prefs.planId,
+    isTripleLoop,
+    epochDay: getReadingPlanDaySinceEpoch(),
+    dayIndex,
+  });
+}
+
+export async function normalizeTodayReadingDoneForLocalPrefs(
+  record: TodayReadingDoneRecord,
+): Promise<TodayReadingDoneRecord> {
+  const scopeKey = await resolveLocalTodayReadingScopeKey();
+  return { version: 1, scopeKey, doneKeys: [...record.doneKeys] };
+}
+
 export function todayReadingItemKey(r: ReadingPlanRange): string {
   const track = trackForBookId(r.bookId);
   if (track) return `${track}:${r.bookId}:${r.startChapter}`;
@@ -123,8 +160,11 @@ export async function replaceTodayReadingDoneRecord(record: TodayReadingDoneReco
 
 export async function readTodayReadingDoneKeys(scopeKey: string): Promise<Set<string>> {
   const record = await readRecord();
-  if (!record || record.scopeKey !== scopeKey) return new Set();
-  return new Set(record.doneKeys);
+  if (!record) return new Set();
+  if (record.scopeKey === scopeKey || isSameTodayReadingPlanScope(record.scopeKey, scopeKey)) {
+    return new Set(record.doneKeys);
+  }
+  return new Set();
 }
 
 export async function clearTodayReadingDoneForScope(scopeKey: string): Promise<void> {
@@ -139,10 +179,10 @@ export async function setTodayReadingItemDone(
   done: boolean,
 ): Promise<Set<string>> {
   const record = await readRecord();
-  const base =
-    record?.scopeKey === scopeKey
-      ? new Set(record.doneKeys)
-      : new Set<string>();
+  const base = new Set<string>();
+  if (record && (record.scopeKey === scopeKey || isSameTodayReadingPlanScope(record.scopeKey, scopeKey))) {
+    record.doneKeys.forEach((k) => base.add(k));
+  }
   if (done) base.add(itemKey);
   else base.delete(itemKey);
   const doneKeys = [...base];

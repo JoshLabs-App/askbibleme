@@ -1,4 +1,9 @@
 import {
+  isSameTodayReadingPlanScope,
+  planIdFromTodayReadingScopeKey,
+  readTodayReadingDoneKeysFromValue,
+} from "./today-reading-scope";
+import {
   isMemberReadingSyncBlobKey,
   type MemberReadingSyncBlob,
   type MemberReadingSyncBlobKey,
@@ -78,7 +83,7 @@ function mergeFractions(a: unknown, b: unknown): unknown {
   if (!b || typeof b !== "object") return a;
   const scopeA = (a as { scopeKey?: string }).scopeKey;
   const scopeB = (b as { scopeKey?: string }).scopeKey;
-  if (scopeA && scopeB && scopeA !== scopeB) {
+  if (scopeA && scopeB && scopeA !== scopeB && !isSameTodayReadingPlanScope(scopeA, scopeB)) {
     return parseIsoMs((b as { updatedAt?: string }).updatedAt) >= parseIsoMs((a as { updatedAt?: string }).updatedAt)
       ? b
       : a;
@@ -132,6 +137,21 @@ function mergeTodayReadingDone(a: unknown, b: unknown): unknown {
   if (scopeA && scopeB && scopeA === scopeB) {
     return mergeStringSetRecords(a, b, "doneKeys");
   }
+  const planA = planIdFromTodayReadingScopeKey(scopeA);
+  const planB = planIdFromTodayReadingScopeKey(scopeB);
+  if (planA && planB && planA === planB) {
+    const keysA = readTodayReadingDoneKeysFromValue(a);
+    const keysB = readTodayReadingDoneKeysFromValue(b);
+    return {
+      version: 1,
+      scopeKey: scopeB ?? scopeA ?? "",
+      doneKeys: [...new Set([...keysA, ...keysB])].sort(),
+    };
+  }
+  const keysA = readTodayReadingDoneKeysFromValue(a);
+  const keysB = readTodayReadingDoneKeysFromValue(b);
+  if (keysB.length > keysA.length) return b;
+  if (keysA.length > keysB.length) return a;
   return b;
 }
 

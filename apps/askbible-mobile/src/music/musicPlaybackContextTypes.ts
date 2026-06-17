@@ -46,4 +46,5 @@ export type MusicPlaybackContextValue = {
   downloadMusicCatalogUpdate: () => Promise<boolean>;
   downloadingTrackId: string | null;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
+  setReadHomeTodayScriptureReady: (ready: boolean) => void;
 };

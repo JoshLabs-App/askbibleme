@@ -67,6 +67,8 @@ async function writeReadingHabitStats(record: ReadingHabitStatsRecord): Promise<
     await AsyncStorage.setItem(READING_HABIT_STATS_STORAGE_KEY, JSON.stringify(record));
     await AsyncStorage.removeItem(READING_HABIT_STATS_STORAGE_KEY_LEGACY);
     emit();
+    const { notifyMemberReadingLocalChanged } = await import("../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("habitStats");
   } catch {
     /* ignore */
   }

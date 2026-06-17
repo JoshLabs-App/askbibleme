@@ -15,6 +15,17 @@ import { flushSync } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
+import {
+  defaultRepeatModeForAlbum,
+  inferTrackAlbumFromCompanionTrack,
+  pickRandomNextTrackIndexInAlbum,
+  type MusicAlbumRepeatMode,
+} from "@/lib/music/album-playback";
+import { prefetchMusicTrackBundle } from "@/lib/music/prefetch-music-track";
+import {
+  pickRandomShellAudioTrackSrcInAlbum,
+  resolveShellMusicEndedAction,
+} from "@/lib/music/shell-music-advance";
 import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
   musicCompanionStoreHasPlayableTracks,
@@ -55,6 +66,9 @@ import {
   writeReadingPlanAudioSession,
 } from "@/lib/read/reading-plan-audio-session";
 import { prepareReadingPlanAudioSessionForChapter } from "@/lib/read/prepare-reading-plan-audio-session";
+import { setPlanFlowActive } from "@/lib/read/plan-flow-session";
+import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
+import { prepareTodayReadingAudioSessionFromStart } from "@/lib/read/today-reading-audio-start";
 import { readPlanFlowActive } from "@/lib/read/plan-flow-session";
 import { resolveTodayPlanLoopNextTarget } from "@/lib/read/resolve-today-plan-loop-next-target";
 
@@ -179,6 +193,11 @@ export type MusicShellPlaybackValue = {
   /** 整章经朗读：重复本章 / 重复本卷（离开该音源时自动复位为 off） */
   scriptureAudioRepeatMode: ScriptureAudioRepeatMode;
   setScriptureAudioRepeatMode: (mode: ScriptureAudioRepeatMode) => void;
+  /** 音乐页覆盖壳层「曲末 / 下一首」循环策略；null 表示按专辑默认 */
+  setMusicAlbumRepeatModeOverride: (mode: MusicAlbumRepeatMode | null) => void;
+  /** 读经首页：今日读经是否可壳层播放 */
+  readHomeScripturePlaybackReady: boolean;
+  setReadHomeScripturePlaybackReady: (ready: boolean) => void;
 };
 
 const MusicShellPlaybackContext = createContext<MusicShellPlaybackValue | null>(null);
@@ -239,6 +258,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const shellPlaybackLastPersistAtRef = useRef(0);
   /** 曲目自然结束后切到下一首并自动播放（避免 `ended` 时 `paused` 导致仅绑 src 不 play） */
   const playAfterNextBindRef = useRef(false);
+  const musicAlbumRepeatModeOverrideRef = useRef<MusicAlbumRepeatMode | null>(null);
+  const readHomeScriptureReadyRef = useRef(false);
+  const [readHomeScripturePlaybackReady, setReadHomeScripturePlaybackReadyState] = useState(false);
   const scriptureAudioRepeatRef = useRef<ScriptureAudioRepeatMode>("off");
   scriptureAudioRepeatRef.current = scriptureAudioRepeatMode;
   const sleepPauseHandlersRef = useRef(new Set<() => void>());
@@ -406,6 +428,15 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     if (opts?.persist !== false) {
       writeScriptureAudioRepeatModePersisted(mode);
     }
+  }, []);
+
+  const setMusicAlbumRepeatModeOverride = useCallback((mode: MusicAlbumRepeatMode | null) => {
+    musicAlbumRepeatModeOverrideRef.current = mode;
+  }, []);
+
+  const setReadHomeScripturePlaybackReady = useCallback((ready: boolean) => {
+    readHomeScriptureReadyRef.current = ready;
+    setReadHomeScripturePlaybackReadyState(ready);
   }, []);
 
   useEffect(() => {
@@ -918,25 +949,23 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         return;
       }
       if (!st) return;
-      const tracks = st.audioTracks.filter((t) => Boolean(t.src?.trim()));
-      const n = tracks.length;
-      if (n === 0) return;
-      if (n === 1) {
+
+      const ended = resolveShellMusicEndedAction({
+        store: st,
+        currentSrc: cur,
+        repeatModeOverride: musicAlbumRepeatModeOverrideRef.current,
+      });
+      if (ended.kind === "stop") {
+        setPlaying(false);
+        return;
+      }
+      if (ended.kind === "loop_same") {
         a.currentTime = 0;
         void attemptShellPlay(a);
         return;
       }
-      const randomNext = pickRandomShellAudioTrackSrc(st, cur);
-      const nextSrc =
-        randomNext?.trim() ||
-        (() => {
-          let idx = tracks.findIndex((t) => shellPlaybackUrlsEqual((t.src ?? "").trim(), cur));
-          if (idx < 0) idx = 0;
-          return (tracks[(idx + 1) % n]?.src ?? "").trim();
-        })();
-      if (!nextSrc) return;
       playAfterNextBindRef.current = true;
-      setPlaybackSrc(nextSrc);
+      setPlaybackSrc(ended.src);
     };
 
     a.addEventListener("ended", onEndedAdvance);
@@ -964,13 +993,29 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const a = audioRef.current;
     if (!a || loading) return;
 
-    const readCh = parseReadChapterPath(pathname);
+    let readCh = parseReadChapterPath(pathname);
+    if (!readCh && isReadBibleHomePath(pathname)) {
+      const eff = effectiveSrcRef.current.trim();
+      if (playing && eff && isCuvChapterAudioEffectiveSrc(eff)) {
+        a.pause();
+        setPlaying(false);
+        return;
+      }
+      const start = await prepareTodayReadingAudioSessionFromStart();
+      if (!start) return;
+      const tid = await fetchDefaultTranslationIdCached();
+      if (!tid || !translationSupportsChapterAudio(tid)) return;
+      setPlanFlowActive(true);
+      setScriptureAudioRepeatMode("off", { persist: false });
+      readCh = start.first;
+      router.push(`/read/${readCh.bookId}/${readCh.chapter}?planFlow=1`);
+    }
     if (!readCh) return;
 
     const tid = await fetchDefaultTranslationIdCached();
     if (!tid || !translationSupportsChapterAudio(tid)) return;
 
-    const bookMeta = scriptureBooks.find((b) => b.bookId === readCh.bookId);
+    const bookMeta = scriptureBooks.find((b) => b.bookId === readCh!.bookId);
     if (!bookMeta) return;
 
     const planSession = await prepareReadingPlanAudioSessionForChapter(readCh.bookId, readCh.chapter);
@@ -1001,7 +1046,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       return;
     }
     await attemptShellPlay(a);
-  }, [loading, pathname, setPlaybackSrc, attemptShellPlay, effectiveVoiceId, setScriptureAudioRepeatMode]);
+  }, [loading, pathname, router, setPlaybackSrc, attemptShellPlay, effectiveVoiceId, setScriptureAudioRepeatMode, playing]);
 
   const togglePlayMusic = useCallback(async () => {
     flushSync(() => {
@@ -1058,13 +1103,10 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       const nearEnd = Number.isFinite(dur) && dur > 0 && t0 >= dur - 0.75;
       if (nearStart || nearEnd) {
         const curUrl = (a.currentSrc || a.src || eff).trim();
-        let pick = tracks[Math.floor(Math.random() * tracks.length)]!;
-        for (let g = 0; g < 28 && tracks.length > 1; g++) {
-          const ps = (pick.src ?? "").trim();
-          if (!shellPlaybackUrlsEqual(ps, curUrl)) break;
-          pick = tracks[Math.floor(Math.random() * tracks.length)]!;
-        }
-        const ns = (pick.src ?? "").trim();
+        const ns =
+          (st ? pickRandomShellAudioTrackSrcInAlbum(st, curUrl) : null)?.trim() ||
+          pickRandomShellAudioTrackSrc(st!, curUrl)?.trim() ||
+          "";
         if (ns) {
           playAfterNextBindRef.current = true;
           setPlaybackSrc(ns);
@@ -1075,6 +1117,23 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
 
     await attemptShellPlay(a);
   }, [loading, setPlaybackSrc, attemptShellPlay, setScriptureAudioRepeatMode]);
+
+  useEffect(() => {
+    if (!playing || !store || !effectiveSrc.trim() || isCuvChapterAudioEffectiveSrc(effectiveSrc)) {
+      return;
+    }
+    const tracks = store.audioTracks.filter((t) => Boolean(t.src?.trim()));
+    const idx = tracks.findIndex((t) => shellPlaybackUrlsEqual((t.src ?? "").trim(), effectiveSrc.trim()));
+    if (idx < 0) return;
+    const album = inferTrackAlbumFromCompanionTrack(tracks[idx]!);
+    const repeatMode =
+      musicAlbumRepeatModeOverrideRef.current ?? defaultRepeatModeForAlbum(album) ?? "all";
+    if (repeatMode !== "all") return;
+    const nextIdx = pickRandomNextTrackIndexInAlbum(tracks, idx, album);
+    const next = tracks[nextIdx];
+    if (!next || next.id === tracks[idx]!.id) return;
+    prefetchMusicTrackBundle({ src: next.src, analysisSrc: next.analysisSrc });
+  }, [playing, store, effectiveSrc]);
 
   const value = useMemo<MusicShellPlaybackValue>(
     () => ({
@@ -1109,6 +1168,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       setShellAudioMuted,
       scriptureAudioRepeatMode,
       setScriptureAudioRepeatMode,
+      setMusicAlbumRepeatModeOverride,
+      setReadHomeScripturePlaybackReady,
+      readHomeScripturePlaybackReady,
     }),
     [
       canPlayMusic,
@@ -1142,6 +1204,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       setShellAudioMuted,
       scriptureAudioRepeatMode,
       setScriptureAudioRepeatMode,
+      setMusicAlbumRepeatModeOverride,
+      setReadHomeScripturePlaybackReady,
+      readHomeScripturePlaybackReady,
     ],
   );
 

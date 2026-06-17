@@ -42,6 +42,7 @@ export type MusicPlaybackContextValueArgs = {
   checkMusicCatalogUpdate: MusicPlaybackContextValue["checkMusicCatalogUpdate"];
   downloadMusicCatalogUpdate: MusicPlaybackContextValue["downloadMusicCatalogUpdate"];
   downloadingTrackId: string | null;
+  setReadHomeTodayScriptureReady: MusicPlaybackContextValue["setReadHomeTodayScriptureReady"];
 };
 
 export function buildMusicPlaybackContextValue(args: MusicPlaybackContextValueArgs): MusicPlaybackContextValue {

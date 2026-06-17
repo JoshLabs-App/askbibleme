@@ -80,6 +80,8 @@ async function writeCompletionSet(next: Set<string>): Promise<void> {
     );
     await AsyncStorage.removeItem(READ_CHAPTER_COMPLETION_KEY_LEGACY);
     emit();
+    const { notifyMemberReadingLocalChanged } = await import("../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("chapterCompletion");
   } catch {
     /* ignore persistence errors */
   }

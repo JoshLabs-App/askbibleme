@@ -122,6 +122,21 @@ function mergeRecentSearches(a: unknown, b: unknown): unknown {
   return { version: 1, terms: merged };
 }
 
+function scopeKeyFromRecord(v: unknown): string | null {
+  if (!v || typeof v !== "object") return null;
+  const s = (v as { scopeKey?: unknown }).scopeKey;
+  return typeof s === "string" ? s : null;
+}
+
+function mergeTodayReadingDone(a: unknown, b: unknown): unknown {
+  const scopeA = scopeKeyFromRecord(a);
+  const scopeB = scopeKeyFromRecord(b);
+  if (scopeA && scopeB && scopeA === scopeB) {
+    return mergeStringSetRecords(a, b, "doneKeys");
+  }
+  return b;
+}
+
 function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): unknown {
   switch (key) {
     case "bookmarks":
@@ -131,7 +146,7 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
     case "chapterCompletion":
       return mergeStringSetRecords(a, b, "completed");
     case "todayReadingDone":
-      return mergeStringSetRecords(a, b, "doneKeys");
+      return mergeTodayReadingDone(a, b);
     case "habitStats":
       return mergeStringSetRecords(a, b, "completedDates");
     case "todayReadingFraction":

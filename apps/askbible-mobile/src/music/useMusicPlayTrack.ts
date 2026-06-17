@@ -2,6 +2,7 @@ import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import { useMusicPlayTrackAt } from "./useMusicPlayTrackAt";
 import { useMusicTogglePlayMusic } from "./useMusicTogglePlayMusic";
 import type { PlaybackTrack } from "./types";
+import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
 type PlaybackMode = "music" | "scripture";
 
@@ -20,6 +21,7 @@ type UseMusicPlayTrackArgs = {
   setMusicDurationSec: (sec: number) => void;
   cacheMusicTrackInBackground: (trackId: string) => void;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
+  musicRepeatModeRef: MusicPlaybackRefs["musicRepeatModeRef"];
 };
 
 export function useMusicPlayTrack(args: UseMusicPlayTrackArgs) {

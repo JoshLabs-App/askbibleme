@@ -19,6 +19,7 @@ export function useMusicPlaybackProviderState() {
   const [sleepTimerMinutes, setSleepTimerMinutesState] = useState<0 | ShellSleepTimerMinutes>(0);
   const [musicCatalogUpdateAvailable, setMusicCatalogUpdateAvailable] = useState(false);
   const [downloadingTrackId, setDownloadingTrackId] = useState<string | null>(null);
+  const [readHomeTodayAudioReady, setReadHomeTodayAudioReady] = useState(false);
 
   return {
     store,
@@ -51,6 +52,8 @@ export function useMusicPlaybackProviderState() {
     setMusicCatalogUpdateAvailable,
     downloadingTrackId,
     setDownloadingTrackId,
+    readHomeTodayAudioReady,
+    setReadHomeTodayAudioReady,
   };
 }
 

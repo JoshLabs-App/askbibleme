@@ -95,6 +95,8 @@ export async function writeTripleLoopProgress(state: TripleLoopReadingState): Pr
     await AsyncStorage.setItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY, JSON.stringify(state));
     await AsyncStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
     emit();
+    const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("tripleLoopProgress");
   } catch {
     /* ignore */
   }

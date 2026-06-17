@@ -11,7 +11,7 @@ async function syncIfLoggedIn(): Promise<void> {
   scheduleMemberReadingSync(session.sessionToken);
 }
 
-/** 登录后、冷启动与回到前台时增量同步读经进度。 */
+/** 登录后、冷启动、回到前台与活跃轮询时增量同步读经进度。 */
 export function useMemberReadingSync(enabled: boolean): void {
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
@@ -30,6 +30,15 @@ export function useMemberReadingSync(enabled: boolean): void {
     const sub = AppState.addEventListener("change", onChange);
     return () => sub.remove();
   }, []);
+
+  useEffect(() => {
+    if (!enabled || isMobileOfflineFirst()) return;
+    const id = setInterval(() => {
+      if (!enabledRef.current) return;
+      void syncIfLoggedIn();
+    }, 45_000);
+    return () => clearInterval(id);
+  }, [enabled]);
 }
 
 export async function syncMemberReadingAfterLogin(sessionToken: string): Promise<void> {

@@ -217,7 +217,6 @@ export function useReadChapterAudio(
     activeVerseIndex,
     chapterVerses: chapterData?.verses,
     audioMatchesChapter,
-    scripturePlaybackSec,
   });
 
   return {

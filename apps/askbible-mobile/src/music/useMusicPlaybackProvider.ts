@@ -1,3 +1,4 @@
+import { useTogglePlayScriptureWithReadHome } from "./useTogglePlayScriptureWithReadHome";
 import {
   resolveCanTogglePlayback,
   resolveReadChapterAudioAvailable,
@@ -49,6 +50,8 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     sleepTimerMinutes,
     musicCatalogUpdateAvailable,
     downloadingTrackId,
+    readHomeTodayAudioReady,
+    setReadHomeTodayAudioReady,
   } = state;
 
   const {
@@ -94,10 +97,21 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     endMusicSession,
   });
 
-  const readChapterAudioAvailable = resolveReadChapterAudioAvailable(shell.readChapterRef, readChapter);
+  const togglePlayScripture = useTogglePlayScriptureWithReadHome({
+    playing,
+    playbackMode,
+    readHomeTodayAudioReady,
+    togglePlayScriptureBase: shell.togglePlayScripture,
+  });
+
+  const readChapterAudioAvailable = resolveReadChapterAudioAvailable(
+    shell.readChapterRef,
+    readChapter,
+    readHomeTodayAudioReady,
+  );
   const canTogglePlayback = resolveCanTogglePlayback(tracks, readChapterAudioAvailable);
 
-  syncMusicPlaybackControlSnapshot(playing, playbackMode, shell.togglePlayScripture);
+  syncMusicPlaybackControlSnapshot(playing, playbackMode, togglePlayScripture);
 
   return useMusicPlaybackContextValue({
     store,
@@ -118,7 +132,7 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     scripturePlaybackRate,
     setScripturePlaybackRate,
     seekRatio,
-    shell,
+    shell: { ...shell, togglePlayScripture },
     setMusicGain,
     musicRepeatMode,
     setMusicRepeatMode,
@@ -130,5 +144,6 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     checkMusicCatalogUpdate,
     downloadMusicCatalogUpdate,
     downloadingTrackId,
+    setReadHomeTodayScriptureReady: setReadHomeTodayAudioReady,
   });
 }

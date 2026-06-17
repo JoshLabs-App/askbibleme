@@ -30,7 +30,8 @@ export function getTripleLoopRegistryEntry(): ReadingPlanRegistryEntry {
   };
 }
 
-const TRACKS: TripleLoopTrack[] = ["ot", "nt", "wisdom"];
+/** 圣经首页今日读经展示顺序：新约 → 智慧诗 → 旧约 */
+const TRACKS: TripleLoopTrack[] = ["nt", "wisdom", "ot"];
 
 export function buildTripleLoopReadingPlanDay(
   rawState?: Partial<TripleLoopReadingState> | null,

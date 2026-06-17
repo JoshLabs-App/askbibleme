@@ -33,7 +33,8 @@ export const MUSIC_ALBUM_ICON: Record<string, keyof typeof MaterialIcons.glyphMa
 export function normalizeMusicAlbumLabel(rawAlbum: string | null | undefined): string {
   const input = (rawAlbum || "").trim();
   if (!input) return DEFAULT_MUSIC_ALBUM;
-  if (input === "工作") return "专注工作";
+  if (input === "工作" || input === "专注") return "专注工作";
+  if (input === "放松") return "安静";
   return input;
 }
 

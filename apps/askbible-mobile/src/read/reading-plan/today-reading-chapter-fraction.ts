@@ -91,6 +91,8 @@ async function writeRecord(record: TodayReadingChapterFractionRecord): Promise<v
     await AsyncStorage.setItem(TODAY_READING_CHAPTER_FRACTION_KEY, JSON.stringify(record));
     await AsyncStorage.removeItem(TODAY_READING_CHAPTER_FRACTION_KEY_LEGACY);
     emit();
+    const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("todayReadingFraction");
   } catch {
     /* ignore */
   }

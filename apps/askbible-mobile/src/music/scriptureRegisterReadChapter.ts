@@ -1,5 +1,6 @@
 import { scriptureAudioUrlsEqual } from "../bible/cuv-chapter-audio";
 import { logShellSoundError } from "../audio/safeShellSound";
+import { consumeReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
 import { setActiveReadChapterPlayback } from "../read/read-chapter-playback-store";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 import type { ChapterPlaybackCtx } from "./scriptureChapterPlaybackTypes";
@@ -20,7 +21,7 @@ export function registerReadChapterPlayback(
     return;
   }
 
-  if (reg.chapterAudioSrc && ctx.autoPlayScriptureRef.current) {
+  if (reg.chapterAudioSrc && (ctx.autoPlayScriptureRef.current || consumeReadPlanFlowAutoplay())) {
     ctx.autoPlayScriptureRef.current = false;
     void ctx.tryPlayScriptureWithFallback(reg, reg.chapterAudioSrc).catch((err) =>
       logShellSoundError("auto-play-scripture", err),

@@ -21,6 +21,7 @@ export function useReadChapterSearchFocus(
   const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
   const [verseLayoutTick, setVerseLayoutTick] = useState(0);
   const verseLayoutsRef = useRef<Map<number, VerseLayout>>(new Map());
+  const verseNativeTargetsRef = useRef<Map<number, number>>(new Map());
   const scrollOffsetRef = useRef(0);
   const scrollViewportTopRef = useRef(0);
   const pendingScrollVerseRef = useRef<number | null>(null);
@@ -28,6 +29,7 @@ export function useReadChapterSearchFocus(
 
   useEffect(() => {
     verseLayoutsRef.current.clear();
+    verseNativeTargetsRef.current.clear();
     didScrollRef.current = false;
     const v = parseScriptureVerseParam(verseParam);
     pendingScrollVerseRef.current = v;
@@ -62,6 +64,7 @@ export function useReadChapterSearchFocus(
   const reportVerseLayoutFromEvent = useCallback(
     (verseNum: number, event: LayoutChangeEvent) => {
       const target = nativeTargetFromLayoutEvent(event);
+      if (target != null) verseNativeTargetsRef.current.set(verseNum, target);
       if (target == null) {
         const { y, height } = event.nativeEvent.layout;
         recordVerseLayout(verseNum, y, height);
@@ -78,6 +81,31 @@ export function useReadChapterSearchFocus(
     },
     [recordVerseLayout],
   );
+
+  const remeasureVerseLayoutInContent = useCallback((verseNum: number): Promise<VerseLayout | null> => {
+    return new Promise((resolve) => {
+      refreshScrollViewportTop();
+      const target = verseNativeTargetsRef.current.get(verseNum);
+      if (target == null) {
+        resolve(verseLayoutsRef.current.get(verseNum) ?? null);
+        return;
+      }
+      UIManager.measureInWindow(target, (_vx, vy, _vw, vh) => {
+        if (!Number.isFinite(vy) || !Number.isFinite(vh) || vh <= 0) {
+          resolve(verseLayoutsRef.current.get(verseNum) ?? null);
+          return;
+        }
+        const contentY = verseContentYFromWindow(
+          vy,
+          scrollViewportTopRef.current,
+          scrollOffsetRef.current,
+        );
+        const layout = { y: Math.max(0, contentY), height: vh };
+        verseLayoutsRef.current.set(verseNum, layout);
+        resolve(layout);
+      });
+    });
+  }, [refreshScrollViewportTop]);
 
   const scrollToSearchVerse = useCallback(() => {
     const verseNum = pendingScrollVerseRef.current;
@@ -136,6 +164,7 @@ export function useReadChapterSearchFocus(
     onChapterScrollOffset,
     onVerseLayout,
     reportVerseLayoutFromEvent,
+    remeasureVerseLayoutInContent,
     refreshScrollViewportTop,
   };
 }

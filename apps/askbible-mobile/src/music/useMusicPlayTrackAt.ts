@@ -8,7 +8,9 @@ import {
   prepareMusicTrackForPlay,
   scheduleMusicTrackPlayFallback,
 } from "./musicTrackPlayPrepare";
+import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
+import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
 type PlaybackMode = "music" | "scripture";
 
@@ -26,6 +28,7 @@ type Args = {
   setMusicDurationSec: (sec: number) => void;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
   cacheMusicTrackInBackground: (trackId: string) => void;
+  musicRepeatModeRef: MusicPlaybackRefs["musicRepeatModeRef"];
 };
 
 export function useMusicPlayTrackAt({
@@ -42,6 +45,7 @@ export function useMusicPlayTrackAt({
   setMusicDurationSec,
   downloadMusicTrackAt,
   cacheMusicTrackInBackground,
+  musicRepeatModeRef,
 }: Args) {
   const { playTrackGenerationRef, storeRef, failedTrackIdsRef, playTrackAtRef } = bridge;
 
@@ -60,6 +64,7 @@ export function useMusicPlayTrackAt({
         playTrackAtRef,
         downloadMusicTrackAt,
         cacheMusicTrackInBackground,
+        musicRepeatModeRef,
         setPlaying,
       });
       if (!prepared.ok) return;
@@ -95,6 +100,7 @@ export function useMusicPlayTrackAt({
       bridge,
       cacheMusicTrackInBackground,
       downloadMusicTrackAt,
+      musicRepeatModeRef,
       endMusicSession,
       failedTrackIdsRef,
       persistMusicResume,
@@ -103,6 +109,7 @@ export function useMusicPlayTrackAt({
       setMusicCurrentSec,
       setMusicDurationSec,
       setPlaybackMode,
+      musicRepeatModeRef,
       setPlaying,
       setTrackIndex,
       storeRef,

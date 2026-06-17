@@ -3,18 +3,23 @@ import type { ScrollView } from "react-native";
 import type { LoadedChapter } from "../bible/types";
 import {
   clampScrollY,
-  isVerseVisibleInScrollViewport,
-  readVerseScrollFocusRatio,
   scrollYToCenterVerse,
   type VerseLayout,
   type VerseScrollFocusOpts,
 } from "./read-chapter-verse-layout";
+
+/** 音频跟读：高亮经文对齐视口垂直中心 */
+const AUDIO_VERSE_SCROLL_FOCUS_OPTS: VerseScrollFocusOpts = {
+  topInsetRatio: 0.1,
+  bottomInsetRatio: 0.1,
+};
 
 export type ReadChapterAudioScrollFollowOpts = {
   verseLayoutsRef?: React.RefObject<Map<number, VerseLayout>>;
   scrollViewportHeight?: number;
   scrollOffsetRef?: React.RefObject<number>;
   scrollContentHeightRef?: React.RefObject<number>;
+  remeasureVerseLayoutInContent?: (verseNum: number) => Promise<VerseLayout | null>;
 };
 
 type Args = {
@@ -25,7 +30,6 @@ type Args = {
   activeVerseIndex: number | null;
   chapterVerses: LoadedChapter["verses"] | undefined;
   audioMatchesChapter: boolean;
-  scripturePlaybackSec: number;
 };
 
 export function useReadChapterAudioScrollFollow({
@@ -36,111 +40,102 @@ export function useReadChapterAudioScrollFollow({
   activeVerseIndex,
   chapterVerses,
   audioMatchesChapter,
-  scripturePlaybackSec,
 }: Args) {
   const verseLayoutsRef = followScroll?.verseLayoutsRef;
   const scrollViewportHeight = followScroll?.scrollViewportHeight ?? 0;
-  const scrollOffsetRef = followScroll?.scrollOffsetRef;
   const scrollContentHeightRef = followScroll?.scrollContentHeightRef;
+  const remeasureVerseLayoutInContent = followScroll?.remeasureVerseLayoutInContent;
+
+  const lastFollowedVerseIndexRef = useRef<number | null>(null);
 
   const scrollFocusOpts = (): VerseScrollFocusOpts => ({
+    ...AUDIO_VERSE_SCROLL_FOCUS_OPTS,
     contentHeight: scrollContentHeightRef?.current,
   });
 
-  const lastFollowScrollAtRef = useRef(0);
-
   useEffect(() => {
-    if (!isFocused || activeVerseIndex === null || !scrollRef.current) return;
+    if (!isFocused || !audioMatchesChapter || activeVerseIndex === null || !scrollRef.current) {
+      if (!audioMatchesChapter) lastFollowedVerseIndexRef.current = null;
+      return;
+    }
+    if (lastFollowedVerseIndexRef.current === activeVerseIndex) return;
     if (!scrollViewportHeight || scrollViewportHeight <= 0) return;
 
     let cancelled = false;
-    let attempts = 0;
 
-    const followActiveVerse = () => {
+    const centerActiveVerse = async () => {
       if (cancelled || !scrollRef.current) return;
 
       const verseNum = chapterVerses?.[activeVerseIndex]?.verse ?? null;
-      const layout = verseNum != null ? verseLayoutsRef?.current?.get(verseNum) : null;
-      const scrollOffsetY = scrollOffsetRef?.current ?? 0;
-      const now = Date.now();
+      let layout =
+        verseNum != null && remeasureVerseLayoutInContent
+          ? await remeasureVerseLayoutInContent(verseNum)
+          : null;
+      if (!layout && verseNum != null) {
+        layout = verseLayoutsRef?.current?.get(verseNum) ?? null;
+      }
+
+      if (cancelled || !scrollRef.current) return;
 
       if (layout) {
-        const focusOpts = scrollFocusOpts();
-        if (
-          isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight, focusOpts) &&
-          now - lastFollowScrollAtRef.current < 900
-        ) {
-          return;
-        }
-        lastFollowScrollAtRef.current = now;
+        lastFollowedVerseIndexRef.current = activeVerseIndex;
         scrollRef.current.scrollTo({
-          y: scrollYToCenterVerse(layout, scrollViewportHeight, focusOpts),
+          y: scrollYToCenterVerse(layout, scrollViewportHeight, scrollFocusOpts()),
           animated: true,
         });
         return;
       }
 
-      attempts += 1;
-      if (attempts < 10) {
-        requestAnimationFrame(followActiveVerse);
-        return;
-      }
-
-      if (now - lastFollowScrollAtRef.current < 900) return;
-      lastFollowScrollAtRef.current = now;
-      const headerY = scrollHeaderHeightRef?.current ?? 0;
-      const focusRatio = readVerseScrollFocusRatio();
-      const fallbackIdeal = headerY + activeVerseIndex * 44 - scrollViewportHeight * focusRatio;
-      scrollRef.current.scrollTo({
-        y: clampScrollY(fallbackIdeal, scrollViewportHeight, scrollContentHeightRef?.current),
-        animated: true,
-      });
+      let attempts = 0;
+      const retry = () => {
+        if (cancelled || !scrollRef.current) return;
+        const fallbackVerseNum = chapterVerses?.[activeVerseIndex]?.verse ?? null;
+        const retryLayout =
+          fallbackVerseNum != null ? verseLayoutsRef?.current?.get(fallbackVerseNum) : null;
+        if (retryLayout) {
+          lastFollowedVerseIndexRef.current = activeVerseIndex;
+          scrollRef.current.scrollTo({
+            y: scrollYToCenterVerse(retryLayout, scrollViewportHeight, scrollFocusOpts()),
+            animated: true,
+          });
+          return;
+        }
+        attempts += 1;
+        if (attempts < 12) {
+          requestAnimationFrame(retry);
+          return;
+        }
+        lastFollowedVerseIndexRef.current = activeVerseIndex;
+        const headerY = scrollHeaderHeightRef?.current ?? 0;
+        const focusRatio =
+          AUDIO_VERSE_SCROLL_FOCUS_OPTS.topInsetRatio! +
+          (1 -
+            (AUDIO_VERSE_SCROLL_FOCUS_OPTS.topInsetRatio ?? 0) -
+            (AUDIO_VERSE_SCROLL_FOCUS_OPTS.bottomInsetRatio ?? 0)) /
+            2;
+        const fallbackIdeal = headerY + activeVerseIndex * 44 - scrollViewportHeight * focusRatio;
+        scrollRef.current.scrollTo({
+          y: clampScrollY(fallbackIdeal, scrollViewportHeight, scrollContentHeightRef?.current),
+          animated: true,
+        });
+      };
+      retry();
     };
 
-    followActiveVerse();
+    void centerActiveVerse();
     return () => {
       cancelled = true;
     };
   }, [
     activeVerseIndex,
-    chapterVerses,
-    isFocused,
-    scrollRef,
-    scrollHeaderHeightRef,
-    scrollOffsetRef,
-    scrollViewportHeight,
-    verseLayoutsRef,
-  ]);
-
-  useEffect(() => {
-    if (!isFocused || activeVerseIndex === null || !audioMatchesChapter || !scrollRef.current) return;
-    if (!scrollViewportHeight || scrollViewportHeight <= 0) return;
-
-    const verseNum = chapterVerses?.[activeVerseIndex]?.verse ?? null;
-    const layout = verseNum != null ? verseLayoutsRef?.current?.get(verseNum) : null;
-    if (!layout) return;
-
-    const scrollOffsetY = scrollOffsetRef?.current ?? 0;
-    const focusOpts = scrollFocusOpts();
-    if (isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight, focusOpts)) return;
-
-    const now = Date.now();
-    if (now - lastFollowScrollAtRef.current < 900) return;
-    lastFollowScrollAtRef.current = now;
-    scrollRef.current.scrollTo({
-      y: scrollYToCenterVerse(layout, scrollViewportHeight, focusOpts),
-      animated: true,
-    });
-  }, [
-    activeVerseIndex,
     audioMatchesChapter,
     chapterVerses,
     isFocused,
+    remeasureVerseLayoutInContent,
     scrollContentHeightRef,
+    scrollHeaderHeightRef,
     scrollRef,
-    scrollOffsetRef,
     scrollViewportHeight,
-    scripturePlaybackSec,
     verseLayoutsRef,
   ]);
 }

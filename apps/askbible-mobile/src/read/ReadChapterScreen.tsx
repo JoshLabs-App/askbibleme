@@ -157,6 +157,7 @@ export function ReadChapterScreen() {
     onChapterScrollOffset,
     reportVerseLayoutFromEvent,
     refreshScrollViewportTop,
+    remeasureVerseLayoutInContent,
   } = useReadChapterSearchFocus(chapterData, params.verse, scrollRef, scrollContentHeightRef);
 
   const verseActions = useReadChapterVerseActions({
@@ -196,6 +197,7 @@ export function ReadChapterScreen() {
       scrollViewportHeight: audioViewportHeight || scrollViewportHeight,
       scrollOffsetRef,
       scrollContentHeightRef,
+      remeasureVerseLayoutInContent,
     },
   );
 

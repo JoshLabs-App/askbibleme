@@ -10,6 +10,8 @@ import {
 } from "@/components/bible/ReadTodayPlanPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useTodayReadingPlan } from "@/hooks/useTodayReadingPlan";
+import { useReadHomeScripturePlaybackReady } from "@/hooks/useReadHomeScripturePlaybackReady";
+import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import { getScriptureCanonCatalogSectionsClient } from "@/lib/bible/scripture-canon-catalog-client";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import type { ReadHomeVerseItem } from "@/lib/read/read-home-verse-rotation";
@@ -28,6 +30,11 @@ export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) 
     [locale],
   );
   const plan = useTodayReadingPlan(readingPlanRegistry);
+  const { translation } = useReadBibleTranslationSettings();
+  useReadHomeScripturePlaybackReady({
+    payload: plan.payload,
+    defaultTranslationId: translation.primaryTranslationId,
+  });
   const [lastReadBookId, setLastReadBookId] = useState<string | undefined>();
 
   useEffect(() => {

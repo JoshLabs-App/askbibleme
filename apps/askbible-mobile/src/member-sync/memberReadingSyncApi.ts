@@ -27,10 +27,15 @@ export async function writeMemberReadingSyncMeta(meta: MemberReadingSyncMeta): P
   await AsyncStorage.setItem(MEMBER_READING_SYNC_META_KEY, JSON.stringify(meta));
 }
 
+export type MemberReadingSyncFetchResult = {
+  response: MemberReadingSyncResponseV1 | null;
+  httpStatus: number | null;
+};
+
 async function memberReadingSyncFetch(
   sessionToken: string,
   init: RequestInit,
-): Promise<MemberReadingSyncResponseV1 | null> {
+): Promise<MemberReadingSyncFetchResult> {
   const base = getAskBibleBaseUrl();
   try {
     const res = await fetchWithTimeout(toAbsoluteUrl(base, "/api/member/reading-sync"), {
@@ -43,27 +48,52 @@ async function memberReadingSyncFetch(
       timeoutMs: 15_000,
     });
     const data = (await res.json().catch(() => null)) as MemberReadingSyncResponseV1 | null;
-    if (!data || data.schemaVersion !== MEMBER_READING_SYNC_SCHEMA_VERSION) return null;
-    if (!res.ok || !data.ok) return data;
-    return data;
+    if (!data || data.schemaVersion !== MEMBER_READING_SYNC_SCHEMA_VERSION) {
+      return { response: null, httpStatus: res.status };
+    }
+    if (!res.ok || !data.ok) return { response: data, httpStatus: res.status };
+    return { response: data, httpStatus: res.status };
   } catch (err) {
     if (__DEV__) {
       console.warn("[memberReadingSync] fetch failed", base, err);
     }
-    return null;
+    return { response: null, httpStatus: null };
   }
+}
+
+function unwrapFetch(result: MemberReadingSyncFetchResult): MemberReadingSyncResponseV1 | null {
+  return result.response;
 }
 
 export async function pullMemberReadingSync(
   sessionToken: string,
 ): Promise<MemberReadingSyncResponseV1 | null> {
-  return memberReadingSyncFetch(sessionToken, { method: "GET" });
+  return unwrapFetch(await memberReadingSyncFetch(sessionToken, { method: "GET" }));
 }
 
 export async function pushMemberReadingSync(
   sessionToken: string,
   push: MemberReadingSyncPushV1,
 ): Promise<MemberReadingSyncResponseV1 | null> {
+  return unwrapFetch(
+    await memberReadingSyncFetch(sessionToken, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(push),
+    }),
+  );
+}
+
+export async function pullMemberReadingSyncDetailed(
+  sessionToken: string,
+): Promise<MemberReadingSyncFetchResult> {
+  return memberReadingSyncFetch(sessionToken, { method: "GET" });
+}
+
+export async function pushMemberReadingSyncDetailed(
+  sessionToken: string,
+  push: MemberReadingSyncPushV1,
+): Promise<MemberReadingSyncFetchResult> {
   return memberReadingSyncFetch(sessionToken, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

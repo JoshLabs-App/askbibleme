@@ -105,6 +105,7 @@ export function useMusicPlaybackShellWiring(args: Args) {
     setMusicDurationSec,
     cacheMusicTrackInBackground,
     downloadMusicTrackAt,
+    musicRepeatModeRef: refs.musicRepeatModeRef,
   });
 
   refs.playTrackAtRef.current = playTrackAt;
@@ -112,7 +113,9 @@ export function useMusicPlaybackShellWiring(args: Args) {
   const { playNext, playPrev } = useMusicPlayNavigation({
     playbackModeRef: refs.playbackModeRef,
     trackIndex,
+    tracks,
     tracksLength: tracks.length,
+    musicRepeatModeRef: refs.musicRepeatModeRef,
     playTrackAt,
     resolveActiveReadChapter: scripture.resolveActiveReadChapter,
   });

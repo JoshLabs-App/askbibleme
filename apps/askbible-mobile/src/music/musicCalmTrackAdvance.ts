@@ -1,4 +1,6 @@
 import type { PlaybackTrack } from "./types";
+import { normalizeMusicAlbumLabel } from "./musicAlbumCatalog";
+import { pickRandomNextIndex } from "../../../../lib/music/album-playback";
 
 /** 避免 iOS 模拟器 / 坏源在加载瞬间误报曲末，导致 playTrackAt 连环切换。 */
 export function shouldAdvanceMusicOnEnd(
@@ -15,13 +17,7 @@ export function shouldAdvanceMusicOnEnd(
 }
 
 export function pickRandomNextTrackIndex(current: number, total: number): number {
-  if (total <= 1) return 0;
-  let next = current;
-  for (let i = 0; i < 8 && next === current; i += 1) {
-    next = Math.floor(Math.random() * total);
-  }
-  if (next === current) return (current + 1) % total;
-  return next;
+  return pickRandomNextIndex(current, total);
 }
 
 export function pickRandomNextTrackIndexInAlbum(
@@ -30,11 +26,11 @@ export function pickRandomNextTrackIndexInAlbum(
   fallbackTotal: number,
 ): number {
   const current = tracks[currentIndex];
-  const albumKey = (current?.album || "").trim();
+  const albumKey = normalizeMusicAlbumLabel(current?.album);
   if (!albumKey) return pickRandomNextTrackIndex(currentIndex, fallbackTotal);
   const sameAlbumIndices = tracks
     .map((tr, idx) => ({ tr, idx }))
-    .filter(({ tr }) => (tr.album || "").trim() === albumKey)
+    .filter(({ tr }) => normalizeMusicAlbumLabel(tr.album) === albumKey)
     .map(({ idx }) => idx);
   if (sameAlbumIndices.length <= 1) return currentIndex;
   const currentPos = sameAlbumIndices.findIndex((idx) => idx === currentIndex);

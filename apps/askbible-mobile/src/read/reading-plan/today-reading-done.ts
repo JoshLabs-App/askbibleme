@@ -93,11 +93,17 @@ async function readRecord(): Promise<TodayReadingDoneRecord | null> {
   }
 }
 
+async function persistTodayReadingDoneRecord(record: TodayReadingDoneRecord): Promise<void> {
+  await AsyncStorage.setItem(TODAY_READING_DONE_STORAGE_KEY, JSON.stringify(record));
+  await AsyncStorage.removeItem(TODAY_READING_DONE_STORAGE_KEY_LEGACY);
+  emit();
+}
+
 async function writeRecord(record: TodayReadingDoneRecord): Promise<void> {
   try {
-    await AsyncStorage.setItem(TODAY_READING_DONE_STORAGE_KEY, JSON.stringify(record));
-    await AsyncStorage.removeItem(TODAY_READING_DONE_STORAGE_KEY_LEGACY);
-    emit();
+    await persistTodayReadingDoneRecord(record);
+    const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("todayReadingDone");
   } catch {
     /* ignore */
   }
@@ -108,7 +114,11 @@ export async function readTodayReadingDoneRecord(): Promise<TodayReadingDoneReco
 }
 
 export async function replaceTodayReadingDoneRecord(record: TodayReadingDoneRecord): Promise<void> {
-  await writeRecord(record);
+  try {
+    await persistTodayReadingDoneRecord(record);
+  } catch {
+    /* ignore */
+  }
 }
 
 export async function readTodayReadingDoneKeys(scopeKey: string): Promise<Set<string>> {

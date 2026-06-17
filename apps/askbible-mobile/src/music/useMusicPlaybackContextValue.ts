@@ -37,6 +37,7 @@ export function useMusicPlaybackContextValue(args: MusicPlaybackContextValueArgs
     checkMusicCatalogUpdate,
     downloadMusicCatalogUpdate,
     downloadingTrackId,
+    setReadHomeTodayScriptureReady,
   } = args;
 
   return useMemo(
@@ -72,6 +73,7 @@ export function useMusicPlaybackContextValue(args: MusicPlaybackContextValueArgs
         checkMusicCatalogUpdate,
         downloadMusicCatalogUpdate,
         downloadingTrackId,
+        setReadHomeTodayScriptureReady,
       }),
     [
       store,
@@ -104,6 +106,7 @@ export function useMusicPlaybackContextValue(args: MusicPlaybackContextValueArgs
       checkMusicCatalogUpdate,
       downloadMusicCatalogUpdate,
       downloadingTrackId,
+      setReadHomeTodayScriptureReady,
     ],
   );
 }

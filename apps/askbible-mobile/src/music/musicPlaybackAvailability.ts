@@ -8,9 +8,13 @@ import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 export function resolveReadChapterAudioAvailable(
   readChapterRef: { current: ReadChapterPlaybackRegistration | null },
   readChapter: ReadChapterPlaybackRegistration | null,
+  readHomeTodayAudioReady = false,
 ): boolean {
   const activeReadForAudio = getActiveReadChapterPlayback() ?? readChapterRef.current ?? readChapter;
-  return Boolean(activeReadForAudio && translationSupportsChapterAudio(activeReadForAudio.translationId));
+  if (activeReadForAudio && translationSupportsChapterAudio(activeReadForAudio.translationId)) {
+    return true;
+  }
+  return readHomeTodayAudioReady;
 }
 
 export function resolveCanTogglePlayback(tracks: PlaybackTrack[], readChapterSupportsAudio: boolean): boolean {

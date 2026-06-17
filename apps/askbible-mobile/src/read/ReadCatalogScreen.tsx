@@ -21,6 +21,9 @@ import { readCatalogScreenStyles as styles } from "./readCatalogScreenStyles";
 import { ReadTodayPlanFooter, ReadTodayPlanReadings } from "./ReadTodayPlanPanel";
 import { warmScriptureSearchDatabase } from "../bible/scripture-database";
 import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
+import { useIsFocused } from "@react-navigation/native";
+import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import { useReadHomeTodayScriptureAvailability } from "./useReadHomeTodayScriptureAvailability";
 import { useReadCatalogScreen } from "./useReadCatalogScreen";
 
 type ReadCatalogScreenProps = {
@@ -29,6 +32,8 @@ type ReadCatalogScreenProps = {
 
 export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
   const insets = useSafeAreaInsets();
+  const catalogFocused = useIsFocused();
+  const { setReadHomeTodayScriptureReady } = useMusicPlayback();
   const {
     px,
     primaryTranslationId,
@@ -53,6 +58,14 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
     setMeasuredPickerViewportH,
     windowHeight,
   } = useReadCatalogScreen({ homeMode });
+
+  useReadHomeTodayScriptureAvailability({
+    enabled: catalogFocused,
+    homeMode,
+    payload: todayPlan.payload,
+    translationId: primaryTranslationId,
+    onReadyChange: setReadHomeTodayScriptureReady,
+  });
 
   return (
     <View style={styles.root}>

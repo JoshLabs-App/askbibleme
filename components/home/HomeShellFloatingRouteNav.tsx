@@ -10,6 +10,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
+import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
 import {
   SHELL_TAB_BAR_ICON,
   SHELL_TAB_ICON_SIZE_PX,
@@ -123,11 +124,21 @@ type Props = { placement: Placement; /** 电视壳：`/tv` */ shellRoot?: string
 export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) {
   const pathname = usePathname() ?? "";
   const { t } = useLocale();
-  const { canPlayMusic, playing, effectiveSrc, togglePlayMusic } = useMusicShellPlayback();
-  const musicActive = playing && !isCuvChapterAudioEffectiveSrc(effectiveSrc);
+  const { canPlayMusic, playing, effectiveSrc, togglePlayMusic, togglePlayScripture, readHomeScripturePlaybackReady } =
+    useMusicShellPlayback();
   const readChapterRoute = useMemo(() => parseReadChapterRoute(pathname), [pathname]);
+  const isReadHome = isReadBibleHomePath(pathname);
   const [readCatalogOpen, setReadCatalogOpen] = useState(false);
   const { left: navLeft, right: navRight } = buildNavItems(shellRoot);
+  const onReadTab =
+    navRight.find((item) => item.labelKey === "nav.read")?.match(pathname) ?? false;
+  const readFabUsesScripture = onReadTab;
+  const musicActive = playing && !isCuvChapterAudioEffectiveSrc(effectiveSrc);
+  const scriptureActive = playing && isCuvChapterAudioEffectiveSrc(effectiveSrc);
+  const canPlayFab = readFabUsesScripture
+    ? readChapterRoute !== null || (isReadHome && readHomeScripturePlaybackReady)
+    : canPlayMusic;
+  const fabActive = readFabUsesScripture ? scriptureActive : musicActive;
 
   useEffect(() => {
     if (readChapterRoute === null) setReadCatalogOpen(false);
@@ -215,26 +226,32 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
 
         <button
           type="button"
-          disabled={!canPlayMusic}
+          disabled={!canPlayFab}
           aria-label={
-            !canPlayMusic
+            !canPlayFab
               ? t("playback.noTrack")
-              : musicActive
-                ? t("playback.pauseMusic")
-                : t("playback.playMusic")
+              : readFabUsesScripture
+                ? scriptureActive
+                  ? t("pages.read.chapterChromeAudioPause")
+                  : t("pages.read.chapterChromeAudio")
+                : musicActive
+                  ? t("playback.pauseMusic")
+                  : t("playback.playMusic")
           }
-          onClick={() => void togglePlayMusic()}
+          onClick={() =>
+            void (readFabUsesScripture ? togglePlayScripture() : togglePlayMusic())
+          }
           className={[
             "home-bottom-nav__play",
-            musicActive ? "home-bottom-nav__play--active" : "",
+            fabActive ? "home-bottom-nav__play--active" : "",
           ]
             .filter(Boolean)
             .join(" ")}
         >
           <ShellMaterialIcon
-            name={musicActive ? "pause" : "play-arrow"}
+            name={fabActive ? "pause" : "play-arrow"}
             size={SHELL_TAB_ICON_SIZE_PX}
-            color={musicActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
+            color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
             className="home-bottom-nav__play-icon"
           />
         </button>

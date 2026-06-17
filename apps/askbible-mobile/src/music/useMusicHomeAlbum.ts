@@ -60,6 +60,11 @@ export function useMusicHomeAlbum({
     void setMusicGain(defaultMusicGainForAlbum(album));
   }, [album, setMusicGain]);
 
+  useEffect(() => {
+    const repeatMode = defaultRepeatModeForAlbum(album);
+    if (repeatMode) setMusicRepeatMode(repeatMode);
+  }, [album, setMusicRepeatMode]);
+
   const selectAlbum = useCallback(
     (nextAlbum: string) => {
       if (nextAlbum === album) return;

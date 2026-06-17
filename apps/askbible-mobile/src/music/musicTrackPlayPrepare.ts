@@ -5,6 +5,8 @@ import { resolveMusicTrackPlayback } from "../media/bundledMusicMedia";
 import { getAskBibleBaseUrl, isIosSimulator, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { findNextMusicTrackFallbackIndex, resolveMusicTrackAvSourceForPlay } from "./musicTrackPlayback";
+import { pickRandomNextTrackIndexInAlbum } from "./musicCalmPlayback";
+import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { MusicCompanionStore, PlaybackTrack } from "./types";
 
 export function normalizeMusicTrackIndex(index: number, length: number): number {
@@ -37,6 +39,7 @@ type PrepareArgs = {
   playTrackAtRef: MutableRefObject<(index: number) => Promise<void>>;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
   cacheMusicTrackInBackground: (trackId: string) => void;
+  musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   setPlaying: (playing: boolean) => void;
 };
 
@@ -55,6 +58,7 @@ export async function prepareMusicTrackForPlay({
   playTrackAtRef,
   downloadMusicTrackAt,
   cacheMusicTrackInBackground,
+  musicRepeatModeRef,
   setPlaying,
 }: PrepareArgs): Promise<PreparedMusicTrack> {
   const i = normalizeMusicTrackIndex(index, tracks.length);
@@ -80,6 +84,14 @@ export async function prepareMusicTrackForPlay({
     }
   } else if (!playableTrack.localReady && !isMobileBundledOnly()) {
     cacheMusicTrackInBackground(playableTrack.id);
+  }
+
+  if (musicRepeatModeRef.current === "all" && !isMobileBundledOnly()) {
+    const nextIdx = pickRandomNextTrackIndexInAlbum(tracks, i, tracks.length);
+    const nextTrack = tracks[nextIdx];
+    if (nextTrack && nextTrack.id !== playableTrack.id) {
+      cacheMusicTrackInBackground(nextTrack.id);
+    }
   }
 
   const avSource = await resolveMusicTrackAvSourceForPlay(playableTrack);

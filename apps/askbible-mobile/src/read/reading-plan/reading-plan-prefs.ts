@@ -141,6 +141,8 @@ export async function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): Pro
       await AsyncStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY_LEGACY);
     }
     emit();
+    const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("readingPlanPrefs");
   } catch {
     /* ignore */
   }

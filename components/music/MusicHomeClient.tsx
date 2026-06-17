@@ -23,6 +23,10 @@ import {
   musicHomeAlbumIcon,
 } from "@/components/music/music-home-album-theme";
 import type { AudioTrack, MusicCompanionStore, Scene } from "@/lib/music-companion/types";
+import {
+  inferTrackAlbumFromCompanionTrack,
+  MUSIC_ALBUMS as KNOWN_MUSIC_ALBUMS,
+} from "@/lib/music/album-playback";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
@@ -50,48 +54,10 @@ type Props = {
   layout?: "standalone" | "templateChrome";
 };
 
-const KNOWN_MUSIC_ALBUMS = ["安静", "下午茶", "专注工作", "睡眠"] as const;
 const DEFAULT_ALBUM = MUSIC_HOME_DEFAULT_ALBUM;
 const MUSIC_UI_AUTO_HIDE_MS = 5000;
 
 type MusicRepeatMode = "off" | "one" | "all";
-
-function firstTag(tags: string[]): string | null {
-  for (const raw of tags) {
-    const t = raw.trim();
-    if (t) return t;
-  }
-  return null;
-}
-
-function albumFromRemark(remark: string): string | null {
-  const trimmed = remark.trim();
-  if (!trimmed) return null;
-  const m = trimmed.match(/专辑[:：]\s*([^\n;；。]+)/);
-  if (m?.[1]) {
-    const fromPrefix = m[1].trim();
-    if (fromPrefix) return fromPrefix;
-  }
-  return null;
-}
-
-function inferTrackAlbum(track: AudioTrack): string {
-  const tags = Array.isArray(track.tags) ? track.tags : [];
-  for (const album of KNOWN_MUSIC_ALBUMS) {
-    if (tags.includes(album)) return album;
-  }
-  if (tags.includes("工作")) return "专注工作";
-  const customFromTag = firstTag(tags);
-  if (customFromTag) return customFromTag;
-  const remarkRaw = typeof track.remark === "string" ? track.remark : track.remark?.["zh-CN"] ?? "";
-  if (remarkRaw.includes("专注工作") || remarkRaw.includes("工作")) return "专注工作";
-  for (const album of KNOWN_MUSIC_ALBUMS) {
-    if (remarkRaw.includes(album)) return album;
-  }
-  const customFromRemark = albumFromRemark(remarkRaw);
-  if (customFromRemark) return customFromRemark;
-  return DEFAULT_ALBUM;
-}
 
 function pickScene(store: MusicCompanionStore): Scene | null {
   const { scenes, defaultSceneId } = store;
@@ -195,6 +161,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     getAudioElement,
     togglePlayMusic,
     canPlayMusic,
+    setMusicAlbumRepeatModeOverride,
   } = useMusicShellPlayback();
   const [musicRepeatMode, setMusicRepeatMode] = useState<MusicRepeatMode>("all");
   const [uiVisible, setUiVisible] = useState(true);
@@ -246,7 +213,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     [store.audioTracks],
   );
   const tracksWithSrc = useMemo(
-    () => allTracksWithSrc.filter((t) => inferTrackAlbum(t) === album),
+    () => allTracksWithSrc.filter((t) => inferTrackAlbumFromCompanionTrack(t) === album),
     [allTracksWithSrc, album],
   );
   const albumNames = useMemo(() => {
@@ -257,7 +224,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
       ordered.push(name);
     }
     for (const t of allTracksWithSrc) {
-      const name = inferTrackAlbum(t).trim() || DEFAULT_ALBUM;
+      const name = inferTrackAlbumFromCompanionTrack(t).trim() || DEFAULT_ALBUM;
       if (seen.has(name)) continue;
       seen.add(name);
       ordered.push(name);
@@ -267,7 +234,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
   const albumCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const t of allTracksWithSrc) {
-      const name = inferTrackAlbum(t).trim() || DEFAULT_ALBUM;
+      const name = inferTrackAlbumFromCompanionTrack(t).trim() || DEFAULT_ALBUM;
       counts[name] = (counts[name] ?? 0) + 1;
     }
     return counts;
@@ -425,8 +392,8 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
         setSleepTimerMinutes(0);
       }
       setAlbum(nextAlbum);
-      if (track && inferTrackAlbum(track) === nextAlbum) return;
-      const nextTracks = allTracksWithSrc.filter((tr) => inferTrackAlbum(tr) === nextAlbum);
+      if (track && inferTrackAlbumFromCompanionTrack(track) === nextAlbum) return;
+      const nextTracks = allTracksWithSrc.filter((tr) => inferTrackAlbumFromCompanionTrack(tr) === nextAlbum);
       if (nextTracks.length === 0) return;
       const pick = nextTracks[Math.floor(Math.random() * nextTracks.length)]!;
       clearDeviceLibraryPlayback();
@@ -456,6 +423,17 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
       setMusicRepeatMode("all");
     }
   }, [album, musicRepeatMode]);
+
+  useEffect(() => {
+    if ((album === "睡眠" || album === "专注工作") && musicRepeatMode !== "one") {
+      setMusicRepeatMode("one");
+    }
+  }, [album, musicRepeatMode]);
+
+  useEffect(() => {
+    setMusicAlbumRepeatModeOverride(musicRepeatMode);
+    return () => setMusicAlbumRepeatModeOverride(null);
+  }, [musicRepeatMode, setMusicAlbumRepeatModeOverride]);
 
   useEffect(() => {
     const audio = getAudioElement();

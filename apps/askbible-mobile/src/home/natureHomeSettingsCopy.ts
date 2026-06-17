@@ -10,12 +10,14 @@ const HOME_SETTINGS: Record<
     dimSection: string;
     dimHint: string;
     dimLevelNone: string;
+    dimLevelFaint: string;
     dimLevelSubtle: string;
     dimLevelLight: string;
     dimLevelStrong: string;
     blurSection: string;
     blurHint: string;
     blurLevelNone: string;
+    blurLevelFaint: string;
     blurLevelSubtle: string;
     blurLevelLight: string;
     blurLevelStrong: string;
@@ -53,12 +55,14 @@ const HOME_SETTINGS: Record<
     dimSection: "压暗",
     dimHint: "",
     dimLevelNone: "关",
+    dimLevelFaint: "极淡",
     dimLevelSubtle: "微微",
     dimLevelLight: "轻",
     dimLevelStrong: "深",
     blurSection: "模糊",
     blurHint: "",
     blurLevelNone: "关",
+    blurLevelFaint: "微",
     blurLevelSubtle: "极弱",
     blurLevelLight: "弱",
     blurLevelStrong: "中",
@@ -95,12 +99,14 @@ const HOME_SETTINGS: Record<
     dimSection: "壓暗",
     dimHint: "",
     dimLevelNone: "關",
+    dimLevelFaint: "極淡",
     dimLevelSubtle: "微微",
     dimLevelLight: "輕",
     dimLevelStrong: "深",
     blurSection: "模糊",
     blurHint: "",
     blurLevelNone: "關",
+    blurLevelFaint: "微",
     blurLevelSubtle: "極弱",
     blurLevelLight: "弱",
     blurLevelStrong: "中",
@@ -137,12 +143,14 @@ const HOME_SETTINGS: Record<
     dimSection: "Dim",
     dimHint: "",
     dimLevelNone: "Off",
+    dimLevelFaint: "Faint",
     dimLevelSubtle: "Subtle",
     dimLevelLight: "Light",
     dimLevelStrong: "Strong",
     blurSection: "Blur",
     blurHint: "",
     blurLevelNone: "Off",
+    blurLevelFaint: "Minimal",
     blurLevelSubtle: "Very low",
     blurLevelLight: "Low",
     blurLevelStrong: "Medium",
@@ -202,6 +210,7 @@ export function tNatureHomeSettings(key: NatureHomeSettingsCopyKey): string {
 
 export const DIM_LEVEL_COPY_KEYS = [
   "dimLevelNone",
+  "dimLevelFaint",
   "dimLevelSubtle",
   "dimLevelLight",
   "dimLevelStrong",
@@ -209,6 +218,7 @@ export const DIM_LEVEL_COPY_KEYS = [
 
 export const BLUR_LEVEL_COPY_KEYS = [
   "blurLevelNone",
+  "blurLevelFaint",
   "blurLevelSubtle",
   "blurLevelLight",
   "blurLevelStrong",

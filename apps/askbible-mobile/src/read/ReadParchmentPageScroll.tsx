@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParchmentBottomFadeScrollView } from "./ParchmentBottomFadeScrollView";
+import type { ReadParchmentFadePreset } from "./readParchmentScrollMask";
 import { SHELL_TAB_BAR_CLEARANCE } from "../shell/shellLayout";
 import { READ_CHAPTER_SCROLL_BOTTOM_EXTRA } from "./read-chapter-chrome-inset";
 import { readRouteUsesBottomActionChrome } from "./read-route-chrome";
@@ -29,6 +30,7 @@ type Props = ScrollViewProps & {
   /** `home`：圣经首页、搜索等；`sub`：带返回的次级列表 */
   inset?: ReadParchmentPageInset;
   maskEnabled?: boolean;
+  fadePreset?: ReadParchmentFadePreset | "auto";
 };
 
 /**
@@ -36,7 +38,7 @@ type Props = ScrollViewProps & {
  */
 export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
   function ReadParchmentPageScroll(
-    { contentContainerStyle, inset = "home", maskEnabled, style, ...rest },
+    { contentContainerStyle, inset = "home", maskEnabled, fadePreset, style, ...rest },
     ref,
   ) {
     const insets = useSafeAreaInsets();
@@ -59,6 +61,7 @@ export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
       <ParchmentBottomFadeScrollView
         ref={ref}
         maskEnabled={maskEnabled}
+        fadePreset={fadePreset}
         style={[styles.flex, style]}
         contentContainerStyle={[
           contentColumnStyle,

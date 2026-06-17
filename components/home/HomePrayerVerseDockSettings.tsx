@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL } from "@/lib/home-prayer-pools/constants";
 import {
+  appendHomeVersePoolScopeCount,
+  getHomeVersePoolScopeVerseCount,
   HOME_VERSE_POOL_SCOPE_OPTIONS,
   DEFAULT_HOME_VERSE_POOL_SCOPE,
   type HomeVersePoolScopeId,
@@ -276,7 +278,11 @@ export function HomePrayerVerseDockSettings({
                 const current =
                   HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
                   HOME_VERSE_POOL_SCOPE_OPTIONS[0]!;
-                return locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh;
+                return appendHomeVersePoolScopeCount(
+                  locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh,
+                  getHomeVersePoolScopeVerseCount(current.id),
+                  locale,
+                );
               })()}
             </span>
           </button>
@@ -284,8 +290,11 @@ export function HomePrayerVerseDockSettings({
             <ul className="space-y-0.5 rounded-md border border-neutral-200/90 bg-white p-1">
               {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope) => {
                 const selected = homeVersePoolScope === scope.id;
-                const label =
-                  locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh;
+                const label = appendHomeVersePoolScopeCount(
+                  locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh,
+                  getHomeVersePoolScopeVerseCount(scope.id),
+                  locale,
+                );
                 return (
                   <li key={scope.id}>
                     <button
@@ -509,8 +518,11 @@ export function HomePrayerVerseDockSettings({
           >
             {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope, index) => {
               const selected = homeVersePoolScope === scope.id;
-              const label =
-                locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh;
+              const label = appendHomeVersePoolScopeCount(
+                locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh,
+                getHomeVersePoolScopeVerseCount(scope.id),
+                locale,
+              );
               return (
                 <button
                   key={scope.id}

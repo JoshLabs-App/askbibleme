@@ -7,7 +7,7 @@ type Props = {
   children: ReactNode;
   /** `/read`、`/prayer` 首页：整列 flex 排版（渐隐与章页相同，见 `read-chapter-surfaces.css`） */
   scrollHome?: boolean;
-  /** 叠加在 `.read-bible-parchment-scroll`（如探索长文 `read-bible-parchment-scroll--explore-prose`） */
+  /** 叠加在 `.read-bible-parchment-scroll`（如窄栏 `read-bible-parchment-scroll--narrow`） */
   parchmentScrollClassName?: string;
   /** 叠加在 `.read-bible-parchment-column`（如目录页 `read-bible-parchment-column--catalog`） */
   parchmentColumnClassName?: string;

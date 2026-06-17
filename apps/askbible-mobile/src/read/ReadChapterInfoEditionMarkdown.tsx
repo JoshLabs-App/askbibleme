@@ -35,7 +35,7 @@ function splitPrimaryHeading(markdown: string): { heading: string | null; body: 
   return { heading: m[1].trim(), body: next.join("\n").trim() };
 }
 
-function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number) {
+function titleStylesFor(textScale: number) {
   const accent = "#A56A2D";
   const sx = (n: number) => Math.max(1, Math.round(n * textScale * 10) / 10);
   const mx = (n: number) => Math.round(n * textScale * 10) / 10;
@@ -56,6 +56,15 @@ function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number
       textAlign: "center",
       width: "100%",
     },
+  });
+}
+
+function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number) {
+  const accent = "#A56A2D";
+  const sx = (n: number) => Math.max(1, Math.round(n * textScale * 10) / 10);
+  const mx = (n: number) => Math.round(n * textScale * 10) / 10;
+
+  return StyleSheet.create({
     body: {
       ...parchmentSans(400),
       color: pr.mdBody,
@@ -170,17 +179,21 @@ export function ReadChapterInfoEditionMarkdown({ content, variant, onLinkPress }
     () => Math.max(0.8, Math.min(2.8, px.verseFontSize / 16)),
     [px.verseFontSize],
   );
+  const titleStyles = useMemo(() => titleStylesFor(textScale), [textScale]);
   const markdownStyles = useMemo(() => markdownStylesFor(variant, textScale), [variant, textScale]);
   if (!localized) return null;
 
   return (
     <View>
       {heading ? (
-        <View style={markdownStyles.titleWrap}>
-          <Text style={markdownStyles.titleText}>{heading}</Text>
+        <View style={titleStyles.titleWrap}>
+          <Text style={titleStyles.titleText}>{heading}</Text>
         </View>
       ) : null}
-      <Markdown style={markdownStyles} onLinkPress={onLinkPress}>
+      <Markdown
+        style={markdownStyles}
+        onLinkPress={onLinkPress ? (url) => Boolean(onLinkPress(url)) : undefined}
+      >
         {body || localized}
       </Markdown>
     </View>

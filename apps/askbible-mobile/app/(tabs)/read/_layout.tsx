@@ -15,7 +15,7 @@ export default function ReadStackLayout() {
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
-          freezeOnBlur: true,
+          freezeOnBlur: false,
           contentStyle: { flex: 1, backgroundColor: "transparent" },
         }}
       >
@@ -27,7 +27,7 @@ export default function ReadStackLayout() {
         <Stack.Screen name="plans/[planId]" />
         <Stack.Screen
           name="[bookId]/[chapter]"
-          dangerouslySingular={({ params }) => {
+          dangerouslySingular={(_name, params) => {
             const bookId = Array.isArray(params?.bookId) ? params?.bookId[0] : params?.bookId;
             const chapter = Array.isArray(params?.chapter) ? params?.chapter[0] : params?.chapter;
             return `${bookId ?? ""}:${chapter ?? ""}`;

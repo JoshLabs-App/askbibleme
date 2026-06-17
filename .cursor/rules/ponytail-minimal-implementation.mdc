@@ -1,0 +1,24 @@
+---
+description: Ponytail minimal implementation — smallest correct diff; deletion over addition.
+globs: apps/**/*.{ts,tsx},lib/**/*.ts,scripts/**/*.ts,components/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Ponytail (AskBible)
+
+Lazy means efficient, not careless. The best code is the code never written.
+
+Before writing code, stop at the first rung that holds:
+
+1. Does this need to exist? (YAGNI — also check `AGENTS.md` product boundaries)
+2. Stdlib / platform API already covers it?
+3. Already-installed dependency covers it?
+4. One line?
+5. Only then: minimum that works.
+
+- No abstractions nobody asked for. Deletion over addition. Fewest files.
+- Mark intentional shortcuts with `ponytail:` comment (ceiling + upgrade path).
+
+**Never override** (domain rules win): mobile local media playback, iOS-first platform order, no compression on remote fetches, Render production hosting, mobile local-only builds.
+
+Not lazy about: trust-boundary validation, data-loss errors, security, accessibility, explicitly requested behavior.

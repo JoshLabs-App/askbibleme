@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BibleCatalogReadOutline } from "@/components/bible/BibleCatalogReadOutline";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import type { ScriptureCanonCatalogSection } from "@/lib/bible/read-scripture-canon-catalog";
+import { getScriptureCanonCatalogSectionsClient } from "@/lib/bible/scripture-canon-catalog-client";
 import { readLastReadPosition } from "@/lib/read/read-last-position";
 
-type Props = {
-  catalogSections: ScriptureCanonCatalogSection[];
-};
-
 /** 独立目录页 — 对齐 iOS `ReadCatalogScreen`（homeMode=false）。 */
-export function ReadCatalogStandaloneClient({ catalogSections }: Props) {
-  const { t } = useLocale();
+export function ReadCatalogStandaloneClient() {
+  const { locale, t } = useLocale();
+  const catalogSections = useMemo(
+    () => getScriptureCanonCatalogSectionsClient(locale),
+    [locale],
+  );
   const [lastReadBookId, setLastReadBookId] = useState<string | undefined>();
   const hasCatalog = catalogSections.length > 0;
 

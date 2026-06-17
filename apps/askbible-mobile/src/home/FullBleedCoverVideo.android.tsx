@@ -1,12 +1,5 @@
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  AppState,
-  StyleSheet,
-  View,
-  type AppStateStatus,
-} from "react-native";
+import { View } from "react-native";
 import { CoverVideoPosterBackdrop } from "./CoverVideoPosterBackdrop";
 import {
   COVER_VIDEO_READY_TIMEOUT_MS,
@@ -14,29 +7,19 @@ import {
   hasCoverVideoPosterAsset,
   markCoverVideoSessionPosterOnly,
 } from "./coverVideoPosterFallback";
-import {
-  resolveNatureHomePortraitCoverLayout,
-  type PortraitCoverLayout,
-} from "./natureHomePortraitCoverLayout";
+import { resolveNatureHomePortraitCoverLayout } from "./natureHomePortraitCoverLayout";
 import { NATURE_HOME_VIDEO_LANDSCAPE_ASPECT } from "./nature-home-portrait-pan";
 import { useShellFullBleedFrame } from "../shell/shellLayout";
-import {
-  natureCoverVideoSource,
-  type ResolveNatureCoverPlayback,
-} from "./natureCoverPlayback";
+import type { ResolveNatureCoverPlayback } from "./natureCoverPlayback";
 import { useCoverVideoCrossfade } from "./useCoverVideoCrossfade";
-export type FullBleedCoverVideoLayoutMode = "portrait-cover" | "landscape-cover";
+import { AndroidCoverVideoSlot } from "./FullBleedCoverVideoSlots.android";
+import {
+  fullBleedCoverVideoStyles as styles,
+  resolveLandscapeCoverLayerFrame,
+  type FullBleedCoverVideoLayoutMode,
+} from "./fullBleedCoverVideoShared";
 
-const STAGE_BACKDROP = "#14110e";
-const VIDEO_OVERDRAW_PX = 2;
-const FULLSCREEN_VIDEO_ASPECT = 16 / 9;
-
-type CoverLayerFrame = {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-};
+export type { FullBleedCoverVideoLayoutMode } from "./fullBleedCoverVideoShared";
 
 type Props = {
   sceneId: string;
@@ -51,202 +34,9 @@ type Props = {
   onSceneVideoReady?: (sceneId: string) => void;
   /** Tab 失焦时暂停解码，回到 Home 再续播 */
   playbackActive?: boolean;
+  /** false：场景切换瞬时切，避免双路解码（省电 / 减发热） */
+  crossfadeAnimated?: boolean;
 };
-
-function safePlayerCall(onReleased: () => void, fn: () => void) {
-  try {
-    fn();
-  } catch {
-    onReleased();
-  }
-}
-
-function resolveLandscapeCoverLayerFrame(viewportWidth: number, viewportHeight: number): CoverLayerFrame {
-  const width = Math.max(viewportWidth, Math.round(viewportHeight * FULLSCREEN_VIDEO_ASPECT));
-  return {
-    left: (viewportWidth - width) / 2,
-    top: 0,
-    width,
-    height: viewportHeight,
-  };
-}
-
-function CoverVideoSlotInner({
-  sceneId,
-  source,
-  rate,
-  layerFrame,
-  opacity,
-  onReady,
-  onPlaybackError,
-  playbackActive,
-}: {
-  sceneId: string;
-  source: string | number;
-  rate: number;
-  layerFrame: CoverLayerFrame;
-  opacity: Animated.Value;
-  onReady: () => void;
-  onPlaybackError: () => void;
-  playbackActive: boolean;
-}) {
-  const readyRef = useRef(false);
-  const aliveRef = useRef(true);
-  const clampedRate = Math.min(2, Math.max(0.5, rate));
-  const onReleased = onPlaybackError;
-  const layerWidth = layerFrame.width;
-
-  const player = useVideoPlayer(source, (p) => {
-    safePlayerCall(onReleased, () => {
-      p.loop = true;
-      p.muted = true;
-      p.audioMixingMode = "mixWithOthers";
-      p.playbackRate = clampedRate;
-      p.play();
-    });
-  });
-
-  useEffect(() => {
-    aliveRef.current = true;
-    readyRef.current = false;
-    return () => {
-      aliveRef.current = false;
-    };
-  }, [sceneId, source]);
-
-  useEffect(() => {
-    safePlayerCall(onReleased, () => {
-      player.playbackRate = clampedRate;
-    });
-  }, [clampedRate, onReleased, player]);
-
-  useEffect(() => {
-    const sync = (state: AppStateStatus) => {
-      if (!aliveRef.current) return;
-      safePlayerCall(onReleased, () => {
-        if (playbackActive && state === "active") player.play();
-        else player.pause();
-      });
-    };
-    sync(AppState.currentState);
-    const sub = AppState.addEventListener("change", sync);
-    return () => sub.remove();
-  }, [onReleased, playbackActive, player]);
-
-  useEffect(() => {
-    if (!source) return;
-    let stallTimer: ReturnType<typeof setTimeout> | null = null;
-    const clearStallTimer = () => {
-      if (stallTimer) clearTimeout(stallTimer);
-      stallTimer = null;
-    };
-    const markReady = () => {
-      if (!aliveRef.current || readyRef.current) return;
-      readyRef.current = true;
-      onReady();
-      clearStallTimer();
-      stallTimer = setTimeout(() => {
-        if (!aliveRef.current) return;
-        safePlayerCall(onReleased, () => {
-          if (player.currentTime < 0.05) onPlaybackError();
-        });
-      }, 2200);
-    };
-    const playingSub = player.addListener("playingChange", ({ isPlaying }) => {
-      if (!aliveRef.current) return;
-      if (isPlaying) markReady();
-    });
-    const statusSub = player.addListener("statusChange", ({ status, error }) => {
-      if (!aliveRef.current) return;
-      if (status === "readyToPlay") markReady();
-      if (status === "error" || error) onPlaybackError();
-    });
-    return () => {
-      clearStallTimer();
-      playingSub.remove();
-      statusSub.remove();
-    };
-  }, [onPlaybackError, onReady, onReleased, player, sceneId, source]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.slot,
-        {
-          left: layerFrame.left,
-          top: layerFrame.top,
-          width: layerWidth,
-          height: layerFrame.height,
-          opacity,
-        },
-      ]}
-      pointerEvents="none"
-    >
-      <VideoView
-        player={player}
-        style={{
-          width: layerWidth + VIDEO_OVERDRAW_PX * 2,
-          height: layerFrame.height,
-          marginLeft: -VIDEO_OVERDRAW_PX,
-        }}
-        contentFit="cover"
-        nativeControls={false}
-        allowsPictureInPicture={false}
-      />
-    </Animated.View>
-  );
-}
-
-function CoverVideoSlot({
-  slotKey,
-  sceneId,
-  resolveScenePlayback,
-  rate,
-  layerFrame,
-  opacity,
-  onNaturalAspect,
-  onReady,
-  onPlaybackError,
-  playbackActive,
-  portraitMode,
-}: {
-  slotKey: string;
-  sceneId: string;
-  resolveScenePlayback: ResolveNatureCoverPlayback;
-  rate: number;
-  layerFrame: CoverLayerFrame;
-  opacity: Animated.Value;
-  onNaturalAspect: (aspect: number) => void;
-  onReady: () => void;
-  onPlaybackError: () => void;
-  playbackActive: boolean;
-  portraitMode: boolean;
-}) {
-  const playback = resolveScenePlayback(sceneId);
-  const source = natureCoverVideoSource(playback);
-
-  useEffect(() => {
-    if (playback && portraitMode) {
-      onNaturalAspect(NATURE_HOME_VIDEO_LANDSCAPE_ASPECT);
-    }
-  }, [onNaturalAspect, playback, portraitMode, sceneId]);
-
-  if (!sceneId.trim() || source == null) return null;
-
-  return (
-    <CoverVideoSlotInner
-      key={`${slotKey}|${sceneId}`}
-      sceneId={sceneId}
-      source={source}
-      rate={rate}
-      layerFrame={layerFrame}
-      opacity={opacity}
-      onReady={onReady}
-      onPlaybackError={onPlaybackError}
-      playbackActive={playbackActive}
-    />
-  );
-}
 
 /** Android：包内 mp4 + 双槽交叉淡入（expo-video；避免 expo-av Video 与 native-driver 动画黑屏） */
 export function FullBleedCoverVideo({
@@ -259,6 +49,7 @@ export function FullBleedCoverVideo({
   layoutMode = "portrait-cover",
   onSceneVideoReady,
   playbackActive = true,
+  crossfadeAnimated = true,
 }: Props) {
   const trimmedScene = sceneId.trim();
   const trimmedPoster = posterUri?.trim() ?? "";
@@ -277,7 +68,7 @@ export function FullBleedCoverVideo({
     onSlotAReady,
     onSlotBReady,
     allowInitialPoster,
-  } = useCoverVideoCrossfade(trimmedScene, !landscapeCover);
+  } = useCoverVideoCrossfade(trimmedScene, crossfadeAnimated && !landscapeCover);
 
   const portraitLayout = useMemo(
     () => (landscapeCover ? null : resolveNatureHomePortraitCoverLayout(winW, winH, mediaAspect)),
@@ -343,23 +134,25 @@ export function FullBleedCoverVideo({
 
   const posterStageActive = forcePosterMode || getCoverVideoPosterOnly();
 
-  if (posterStageActive && hasPoster) {
+  if (posterStageActive) {
     return (
       <View style={styles.stage} pointerEvents="none">
-        <CoverVideoPosterBackdrop
-          posterModule={posterModule}
-          posterUri={trimmedPoster || undefined}
-          portraitLayout={portraitLayout}
-          viewportWidth={winW}
-          viewportHeight={winH}
-        />
+        {hasPoster ? (
+          <CoverVideoPosterBackdrop
+            posterModule={posterModule}
+            posterUri={trimmedPoster || undefined}
+            portraitLayout={portraitLayout}
+            viewportWidth={winW}
+            viewportHeight={winH}
+          />
+        ) : null}
       </View>
     );
   }
 
   return (
     <View style={styles.stage} pointerEvents="none">
-      <CoverVideoSlot
+      <AndroidCoverVideoSlot
         slotKey="cover-a"
         sceneId={slotAScene}
         resolveScenePlayback={resolveScenePlayback}
@@ -372,7 +165,7 @@ export function FullBleedCoverVideo({
         onPlaybackError={handlePlaybackError}
         playbackActive={playbackActive}
       />
-      <CoverVideoSlot
+      <AndroidCoverVideoSlot
         slotKey="cover-b"
         sceneId={slotBScene}
         resolveScenePlayback={resolveScenePlayback}
@@ -397,14 +190,3 @@ export function FullBleedCoverVideo({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  stage: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: "hidden",
-    backgroundColor: STAGE_BACKDROP,
-  },
-  slot: {
-    position: "absolute",
-  },
-});

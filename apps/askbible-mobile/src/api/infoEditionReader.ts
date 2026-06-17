@@ -75,7 +75,7 @@ export async function fetchInfoEditionCache(
     return bundled;
   }
   if (!(await isNetworkAvailable())) {
-    return bundled.status === "ready" ? bundled : { ok: false, status: "failed", error: t("pages.read.infoEditionLoadFailed") };
+    return { ok: false, status: "failed", error: t("pages.read.infoEditionLoadFailed") };
   }
 
   const res = await fetch(cacheUrl(bookId, chapter, variant, roleId), {

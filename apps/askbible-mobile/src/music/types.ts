@@ -47,6 +47,8 @@ export type PlaybackTrack = {
   localReady: boolean;
   /** `require()` 模块 id；Release APK 内音轨在 Android 上须直连模块 */
   bundledModule?: number;
+  /** 曲库元数据时长（秒），用于续播落点校正 */
+  durationSec?: number;
   analysisSrc: string | null;
   artworkUri: string | null;
   gradientColors: readonly [string, string, string];

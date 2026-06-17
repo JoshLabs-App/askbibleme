@@ -7,7 +7,7 @@ import {
   tokenizeHighlightUnits,
   type VerseSpeechKind,
 } from "@/lib/read/read-verse-highlight-utils";
-import { splitTextByScriptureSearchKeyword } from "@/lib/bible/scripture-search";
+import { ScriptureSearchHighlightedText } from "@/components/bible/ScriptureSearchHighlightedText";
 
 type Props = {
   text: string;
@@ -295,29 +295,16 @@ function SpeechPartsBody({
 function SearchKeywordBody({
   text,
   keyword,
-  goldenMark,
-  bookmarkMark,
 }: {
   text: string;
   keyword: string;
-  goldenMark?: boolean;
-  bookmarkMark?: boolean;
 }) {
-  const mark = markerClass(goldenMark, bookmarkMark);
   return (
-    <>
-      {splitTextByScriptureSearchKeyword(text, keyword).map((seg, i) =>
-        seg.match ? (
-          <mark key={i} className="read-chapter-verse-search-keyword">
-            {seg.text}
-          </mark>
-        ) : (
-          <span key={i} className={mark.trim() || undefined}>
-            {seg.text}
-          </span>
-        ),
-      )}
-    </>
+    <ScriptureSearchHighlightedText
+      text={text}
+      query={keyword}
+      highlightClassName="read-chapter-verse-search-keyword"
+    />
   );
 }
 
@@ -347,14 +334,7 @@ export function ReadChapterVerseText({
   }
 
   if (searchKeyword) {
-    return (
-      <SearchKeywordBody
-        text={text}
-        keyword={searchKeyword}
-        goldenMark={goldenMark}
-        bookmarkMark={bookmarkMark}
-      />
-    );
+    return <SearchKeywordBody text={text} keyword={searchKeyword} />;
   }
 
   if (highlightedCharIndexes?.size) {

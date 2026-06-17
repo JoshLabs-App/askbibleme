@@ -37,7 +37,7 @@ function metroLanHost(): string | null {
   return host;
 }
 
-function isIosSimulator(): boolean {
+export function isIosSimulator(): boolean {
   if (Platform.OS !== "ios") return false;
   if (Constants.platform?.ios?.simulator === true) return true;
   if (Constants.isDevice === false) return true;
@@ -126,7 +126,7 @@ function resolveDevBaseUrl(configured: string): string {
   return trimmed;
 }
 
-function isLocalDevHost(host: string): boolean {
+export function isLocalDevHost(host: string): boolean {
   const h = host.trim().toLowerCase();
   if (!h) return true;
   if (h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return true;

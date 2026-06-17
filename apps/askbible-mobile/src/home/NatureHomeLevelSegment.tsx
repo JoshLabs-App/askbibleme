@@ -2,7 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
-import { NATURE_VISUAL_LEVELS, type NatureVisualLevel } from "./natureHomePrefs";
+import { NATURE_VISUAL_EFFECT_LEVELS, NATURE_VISUAL_LEVELS, type NatureVisualLevel } from "./natureHomePrefs";
 
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
@@ -18,6 +18,8 @@ type Props = {
   segBtnOnStyle?: object;
   segTextStyle?: object;
   segTextOnStyle?: object;
+  /** 仅展示强度档（四档；不含「关」）；再点已选档回调 `onSelect(0)` */
+  allowToggleOff?: boolean;
 };
 
 export function NatureHomeLevelSegment({
@@ -32,17 +34,19 @@ export function NatureHomeLevelSegment({
   segBtnOnStyle,
   segTextStyle,
   segTextOnStyle,
+  allowToggleOff = false,
 }: Props) {
+  const visibleLevels = allowToggleOff ? NATURE_VISUAL_EFFECT_LEVELS : levels;
   return (
     <View style={[styles.segment, segmentStyle]} accessibilityRole="radiogroup">
-      {levels.map((level) => {
+      {visibleLevels.map((level) => {
         const isOn = selected === level;
         const label = labelForLevel(level);
         const iconName = iconForLevel?.(level);
         return (
           <Pressable
             key={level}
-            onPress={() => onSelect(level)}
+            onPress={() => onSelect(allowToggleOff && isOn ? 0 : level)}
             style={[styles.segBtn, segBtnStyle, isOn && [styles.segBtnOn, segBtnOnStyle]]}
             accessibilityRole="radio"
             accessibilityState={{ selected: isOn }}

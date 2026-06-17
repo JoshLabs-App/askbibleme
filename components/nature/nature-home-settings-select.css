@@ -1,0 +1,23 @@
+/** 自然首页设置下拉：挂 body portal，字色须写死，避免继承 `text-ink` / 羊皮卷棕字。 */
+.nature-home-settings-select-menu {
+  color-scheme: dark;
+  background-color: rgb(39 39 42);
+  border-color: rgb(82 82 91);
+}
+
+.nature-home-settings-select-option {
+  color: rgb(244 244 245);
+}
+
+.nature-home-settings-select-option:hover {
+  background-color: rgb(63 63 70 / 0.72);
+}
+
+.nature-home-settings-select-option--selected {
+  color: #fff;
+  background-color: rgb(63 63 70);
+}
+
+.nature-home-settings-select-option-label {
+  color: inherit;
+}

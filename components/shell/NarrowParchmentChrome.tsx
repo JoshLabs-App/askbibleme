@@ -6,7 +6,7 @@ export function NarrowParchmentChrome({ children }: { children: ReactNode }) {
   return (
     <ScriptureChrome
       scrollHome
-      parchmentScrollClassName="read-bible-parchment-scroll--explore-prose read-bible-parchment-scroll--narrow"
+      parchmentScrollClassName="read-bible-parchment-scroll--narrow"
       parchmentColumnClassName="read-bible-parchment-column--narrow prayer-on-parchment"
     >
       {children}

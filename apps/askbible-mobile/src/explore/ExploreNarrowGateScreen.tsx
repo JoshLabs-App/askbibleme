@@ -8,6 +8,7 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { t, localizeZhText } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
+import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
 import { loadExploreVerseTextsForRefsProgressive, clearExploreChapterVerseCache, scheduleExploreCategoryVerseLoad } from "./load-explore-category-verses";
@@ -138,6 +139,7 @@ export function ExploreNarrowGateScreen() {
   return (
     <View style={shared.root}>
       <ParchmentBottomFadeScrollView
+        fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >

@@ -28,9 +28,10 @@ import {
 
 const DIM_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
   0: "brightness_low",
-  1: "brightness_5",
-  2: "tonality",
-  3: "brightness_high",
+  1: "brightness_6",
+  2: "brightness_5",
+  3: "tonality",
+  4: "brightness_high",
 };
 
 const BLUR_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
@@ -38,6 +39,7 @@ const BLUR_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
   1: "blur_circular",
   2: "blur_linear",
   3: "blur_on",
+  4: "filter_vintage",
 };
 
 const SETTINGS_BTN =
@@ -172,6 +174,7 @@ export function NatureHomeSettingsControl({
                       onSelect={onDimLevelChange}
                       iconForLevel={(level) => DIM_LEVEL_ICONS[level]}
                       ariaLabel={t("nature.homeSettings.dimSection")}
+                      allowToggleOff
                     />
                   </IconSettingRow>
                   <IconSettingRow icon="blur_on" ariaLabel={t("nature.homeSettings.blurSection")}>
@@ -180,6 +183,7 @@ export function NatureHomeSettingsControl({
                       onSelect={onBlurLevelChange}
                       iconForLevel={(level) => BLUR_LEVEL_ICONS[level]}
                       ariaLabel={t("nature.homeSettings.blurSection")}
+                      allowToggleOff
                     />
                   </IconSettingRow>
                 </>

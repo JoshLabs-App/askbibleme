@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { localizeZhText, t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
+import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { ReadChapterInfoEditionMarkdown } from "../read/ReadChapterInfoEditionMarkdown";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
@@ -78,7 +79,7 @@ export function ExploreArticleScreen() {
   if (!article) {
     return (
       <View style={s.root}>
-        <ParchmentBottomFadeScrollView fadePreset="prose" contentContainerStyle={scrollContentStyle}>
+        <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
           <Pressable onPress={() => router.back()} style={s.backLink} accessibilityRole="button">
             <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
           </Pressable>
@@ -92,7 +93,7 @@ export function ExploreArticleScreen() {
 
   return (
     <View style={s.root}>
-      <ParchmentBottomFadeScrollView fadePreset="prose" contentContainerStyle={scrollContentStyle}>
+      <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
         <Pressable onPress={() => router.back()} style={s.backLink} accessibilityRole="button">
           <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
         </Pressable>

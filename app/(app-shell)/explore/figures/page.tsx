@@ -24,7 +24,7 @@ export default async function ExploreFiguresPage() {
   const bookRows = readLegacyFiguresTimelineBookRows();
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <LegacyFiguresTimeline bookRows={bookRows} locale={locale} />
     </ExploreParchmentChrome>
   );

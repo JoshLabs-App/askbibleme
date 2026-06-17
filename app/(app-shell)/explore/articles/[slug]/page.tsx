@@ -36,7 +36,7 @@ export default async function ExploreArticlePage({ params }: Props) {
   if (!article) notFound();
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreArticleScriptureContent article={article} locale={locale} />
     </ExploreParchmentChrome>
   );

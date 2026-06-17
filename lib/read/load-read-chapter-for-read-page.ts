@@ -9,9 +9,11 @@ import {
   loadChapterSegmentsFromLocalDataset,
   loadChapterSegmentsFromOpenUsfm,
 } from "@/lib/bible/load-chapter-segments";
-import { resolveReadBibleTranslationPrefsFromCookies } from "@/lib/read/read-bible-translation-prefs";
+import { resolveReadBibleTranslationPrefsFromCookies, resolveReadChapterPrimaryTranslationId } from "@/lib/read/read-bible-translation-prefs";
 import { DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS } from "@/lib/read/read-bible-typography-prefs";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
+import type { AppLocale } from "@/lib/i18n/config";
 
 export type ReadChapterContrastLoaded = {
   translationId: string;
@@ -23,7 +25,13 @@ export type ReadChapterWithContrast = {
   /** @deprecated 首项对照；请用 `contrasts` */
   contrast: LoadedChapter | null;
   contrasts: ReadChapterContrastLoaded[];
+  locale: AppLocale;
+  displayBookName: string;
 };
+
+export function formatReadChapterTitleChapterSuffix(chapter: number, locale: AppLocale): string {
+  return locale === "en" ? String(chapter) : `第${chapter}章`;
+}
 
 /** 读经章页：按 Cookie / 默认读本加载主译本，可选多个对照译本。 */
 export async function loadReadChapterForReadPage(
@@ -36,12 +44,13 @@ export async function loadReadChapterForReadPage(
   const headerList = await headers();
   const locale = resolveRequestLocale(cookieStore, headerList.get("accept-language"));
   const prefs = resolveReadBibleTranslationPrefsFromCookies(cookieStore, index, locale);
+  const primaryTranslationId = resolveReadChapterPrimaryTranslationId(prefs, index, locale);
 
   const primary = await loadChapterFromTranslation(
     cwd,
     bookId,
     chapter,
-    prefs.primaryTranslationId,
+    primaryTranslationId,
   );
   if (!primary) return null;
 
@@ -66,5 +75,7 @@ export async function loadReadChapterForReadPage(
     primary,
     contrast: contrasts[0]?.chapter ?? null,
     contrasts,
+    locale,
+    displayBookName: getScriptureBookDisplayName(primary.bookId, locale),
   };
 }

@@ -2,7 +2,9 @@ import type { AppLocale } from "@/lib/i18n/config";
 import { MESSAGES } from "@/lib/i18n/messages";
 import { translate } from "@/lib/i18n/translate";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
+import { divineLabelForLocale } from "@/lib/bible/scripture-book-divine-en";
 import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
+import { summaryLabelForLocale } from "@/lib/bible/scripture-book-summary-en";
 import { scriptureBookNotes } from "@/lib/bible/scripture-book-notes";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import type { ScriptureCanonCatalogSection } from "@/lib/bible/read-scripture-canon-catalog";
@@ -42,19 +44,27 @@ export function getScriptureCanonCatalogSectionsClient(locale: AppLocale): Scrip
       taglines:
         locale === "en"
           ? []
-          : (sec.taglines || []).map((line) => String(line).trim()).filter(Boolean),
+          : (sec.taglines || [])
+              .map((line) => {
+                const trimmed = String(line).trim();
+                if (!trimmed) return "";
+                return locale === "zh-TW" ? toZhTwText(trimmed) : trimmed;
+              })
+              .filter(Boolean),
       books: sec.bookIds.map((bookId) => {
         const book = booksById.get(bookId);
         const note = notesByBookId.get(bookId);
         if (!book || !note) {
           throw new Error(`[canon-client] missing book or note: ${bookId}`);
         }
+        const zhDivine = String(note.spiritualFrame?.divine ?? "").trim();
+        const zhSummary = String(note.summary || "").trim();
         return {
           bookId: book.bookId,
           bookNumber: book.bookNumber,
           bookName: getScriptureBookDisplayName(book.bookId, locale),
-          divine: String(note.spiritualFrame?.divine ?? "").trim(),
-          summary: String(note.summary || "").trim(),
+          divine: divineLabelForLocale(bookId, zhDivine, locale),
+          summary: summaryLabelForLocale(bookId, zhSummary, locale),
         };
       }),
     }));

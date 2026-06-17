@@ -1,197 +1,28 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system/legacy";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
-import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import type { NatureSettingsV2 } from "../types/nature";
+import {
+  downloadNaturePackAsset,
+  emitNatureResourcePackChange,
+  getNatureResourcePackState,
+  getNatureResourcePackSyncPromise,
+  getNatureResourcePackSyncing,
+  hydrateNatureResourcePackStateInternal,
+  isValidNaturePackManifest,
+  normalizeNatureAssetPath,
+  persistNatureResourcePackState,
+  ResourcePackSyncOptions,
+  ResourcePackSyncProgress,
+  setNatureResourcePackState,
+  setNatureResourcePackSyncPromise,
+  setNatureResourcePackSyncing,
+  shouldUpdateNaturePackFromManifest,
+  subscribeNatureResourcePackChange,
+  type NaturePackManifest,
+} from "./natureResourcePackState";
 
-type NaturePackAsset = {
-  path: string;
-  size: number;
-  md5: string;
-};
-
-type NaturePackManifest = {
-  packType: "nature";
-  packVersion: string;
-  settings?: NatureSettingsV2;
-  assets: NaturePackAsset[];
-  generatedAt?: string;
-};
-
-type NaturePackState = {
-  version: string;
-  settings: NatureSettingsV2 | null;
-  byPath: Record<string, string>;
-};
-
-const STORAGE_KEY = "askbible.mobile.nature-resource-pack.v1";
-const ROOT = `${FileSystem.documentDirectory}nature-resource-pack`;
-const CURRENT_DIR = `${ROOT}/current`;
-
-let hydrated = false;
-let syncing = false;
-let syncPromise: Promise<boolean> | null = null;
-let state: NaturePackState = { version: "", settings: null, byPath: {} };
-const listeners = new Set<() => void>();
-
-function normalizeNatureAssetPath(raw: string): string {
-  const s = raw.trim();
-  if (!s) return "";
-  if (/^https?:\/\//i.test(s)) {
-    try {
-      return new URL(s).pathname;
-    } catch {
-      return "";
-    }
-  }
-  return s.startsWith("/") ? s : `/${s}`;
-}
-
-function localUriForPath(assetPath: string): string {
-  return `${CURRENT_DIR}/${assetPath.replace(/^\//, "")}`;
-}
-
-function emit() {
-  listeners.forEach((l) => {
-    try {
-      l();
-    } catch {
-      // ignore listener failure
-    }
-  });
-}
-
-async function persistState() {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // ignore storage failure
-  }
-}
-
-async function pruneMissingPackFiles(byPath: Record<string, string>): Promise<Record<string, string>> {
-  const entries = Object.entries(byPath);
-  if (entries.length === 0) return byPath;
-  const next: Record<string, string> = {};
-  await Promise.all(
-    entries.map(async ([key, uri]) => {
-      const path = String(uri || "").trim();
-      if (!path) return;
-      try {
-        const info = await FileSystem.getInfoAsync(path);
-        if (info.exists) next[key] = path;
-      } catch {
-        /* drop stale path */
-      }
-    }),
-  );
-  return next;
-}
-
-async function hydrateState() {
-  if (hydrated) return;
-  try {
-    const raw = (await AsyncStorage.getItem(STORAGE_KEY))?.trim();
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<NaturePackState>;
-      const byPath =
-        parsed.byPath && typeof parsed.byPath === "object"
-          ? (parsed.byPath as Record<string, string>)
-          : {};
-      const pruned = await pruneMissingPackFiles(byPath);
-      state = {
-        version: typeof parsed.version === "string" ? parsed.version : "",
-        settings:
-          parsed.settings && typeof parsed.settings === "object"
-            ? (parsed.settings as NatureSettingsV2)
-            : null,
-        byPath: pruned,
-      };
-      if (Object.keys(pruned).length !== Object.keys(byPath).length) {
-        await persistState();
-      }
-    }
-  } catch {
-    state = { version: "", settings: null, byPath: {} };
-  } finally {
-    hydrated = true;
-  }
-}
-
-async function ensureParentDir(fileUri: string) {
-  const lastSlash = fileUri.lastIndexOf("/");
-  const dir = lastSlash > 0 ? fileUri.slice(0, lastSlash) : CURRENT_DIR;
-  await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-}
-
-function isValidManifest(raw: unknown): raw is NaturePackManifest {
-  if (!raw || typeof raw !== "object") return false;
-  const obj = raw as Partial<NaturePackManifest>;
-  if (obj.packType !== "nature") return false;
-  if (typeof obj.packVersion !== "string" || !obj.packVersion.trim()) return false;
-  if (!Array.isArray(obj.assets)) return false;
-  return true;
-}
-
-export type ResourcePackSyncProgress = {
-  completedUnits: number;
-  totalUnits: number;
-  currentLabel: string;
-  unitPercent: number;
-};
-
-export type ResourcePackSyncOptions = {
-  force?: boolean;
-  onProgress?: (progress: ResourcePackSyncProgress) => void;
-};
-
-async function downloadAsset(
-  baseUrl: string,
-  asset: NaturePackAsset,
-  onUnitProgress?: (percent: number) => void,
-): Promise<string | null> {
-  const pathNorm = normalizeNatureAssetPath(asset.path);
-  if (!pathNorm.startsWith("/nature/") || pathNorm.includes("..")) return null;
-
-  const target = localUriForPath(pathNorm);
-  const existing = await FileSystem.getInfoAsync(target, { md5: true });
-  if (existing.exists && existing.size === asset.size && existing.md5 === asset.md5) {
-    onUnitProgress?.(100);
-    return target;
-  }
-
-  const remote = toAbsoluteUrl(baseUrl, pathNorm);
-  if (!remote) return null;
-
-  await ensureParentDir(target);
-  try {
-    await FileSystem.deleteAsync(target, { idempotent: true });
-  } catch {
-    // ignore
-  }
-
-  if (onUnitProgress) {
-    const resumable = FileSystem.createDownloadResumable(remote, target, {}, (progress) => {
-      const total = progress.totalBytesExpectedToWrite;
-      const pct =
-        total > 0 ? Math.min(100, Math.floor((progress.totalBytesWritten / total) * 100)) : 0;
-      onUnitProgress(pct);
-    });
-    const result = await resumable.downloadAsync();
-    if (!result?.uri || result.status !== 200) return null;
-    const verified = await FileSystem.getInfoAsync(target, { md5: true });
-    if (!verified.exists || verified.size !== asset.size || verified.md5 !== asset.md5) return null;
-    onUnitProgress(100);
-    return target;
-  }
-
-  const result = await FileSystem.downloadAsync(remote, target, { md5: true });
-  if (!result?.uri) return null;
-  if (result.status !== 200) return null;
-  if (result.md5 !== asset.md5) return null;
-  return result.uri;
-}
+export type { ResourcePackSyncProgress, ResourcePackSyncOptions } from "./natureResourcePackState";
 
 async function fetchNaturePackManifest(): Promise<NaturePackManifest | null> {
   if (!(await isNetworkAvailable())) return null;
@@ -203,24 +34,19 @@ async function fetchNaturePackManifest(): Promise<NaturePackManifest | null> {
   });
   if (!res.ok) return null;
   const raw: unknown = await res.json();
-  if (!isValidManifest(raw)) return null;
+  if (!isValidNaturePackManifest(raw)) return null;
   return raw;
 }
 
-function shouldUpdateFromManifest(manifest: NaturePackManifest): boolean {
-  if (state.version !== manifest.packVersion) return true;
-  return Object.keys(state.byPath).length === 0;
-}
-
 async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boolean> {
-  await hydrateState();
-  if (syncing) return false;
-  syncing = true;
+  await hydrateNatureResourcePackStateInternal();
+  if (getNatureResourcePackSyncing()) return false;
+  setNatureResourcePackSyncing(true);
   try {
     const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
     const manifest = await fetchNaturePackManifest();
     if (!manifest) return false;
-    if (!options.force && !shouldUpdateFromManifest(manifest)) {
+    if (!options.force && !shouldUpdateNaturePackFromManifest(manifest)) {
       return false;
     }
 
@@ -234,7 +60,7 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
         currentLabel: asset.path,
         unitPercent: 0,
       });
-      const uri = await downloadAsset(baseUrl, asset, (unitPercent) => {
+      const uri = await downloadNaturePackAsset(baseUrl, asset, (unitPercent) => {
         options.onProgress?.({
           completedUnits: i,
           totalUnits: total,
@@ -249,16 +75,16 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
 
     if (Object.keys(nextByPath).length === 0) return false;
 
-    state = {
+    setNatureResourcePackState({
       version: manifest.packVersion,
       settings:
         manifest.settings && typeof manifest.settings === "object"
           ? manifest.settings
           : null,
       byPath: nextByPath,
-    };
-    await persistState();
-    emit();
+    });
+    await persistNatureResourcePackState();
+    emitNatureResourcePackChange();
     options.onProgress?.({
       completedUnits: total,
       totalUnits: total,
@@ -269,7 +95,7 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
   } catch {
     return false;
   } finally {
-    syncing = false;
+    setNatureResourcePackSyncing(false);
   }
 }
 
@@ -279,21 +105,23 @@ export type NaturePackUpdateCheck = {
 };
 
 export async function ensureNatureResourcePackSync(options?: ResourcePackSyncOptions): Promise<boolean> {
-  if (!syncPromise) {
-    syncPromise = runSyncOnce(options ?? {}).finally(() => {
-      syncPromise = null;
-    });
+  if (!getNatureResourcePackSyncPromise()) {
+    setNatureResourcePackSyncPromise(
+      runSyncOnce(options ?? {}).finally(() => {
+        setNatureResourcePackSyncPromise(null);
+      }),
+    );
   }
-  return syncPromise;
+  return getNatureResourcePackSyncPromise()!;
 }
 
 export async function checkNatureResourcePackUpdate(): Promise<NaturePackUpdateCheck> {
-  await hydrateState();
+  await hydrateNatureResourcePackStateInternal();
   try {
     const manifest = await fetchNaturePackManifest();
     if (!manifest) return { available: false, latestVersion: "" };
     return {
-      available: shouldUpdateFromManifest(manifest),
+      available: shouldUpdateNaturePackFromManifest(manifest),
       latestVersion: manifest.packVersion,
     };
   } catch {
@@ -302,22 +130,18 @@ export async function checkNatureResourcePackUpdate(): Promise<NaturePackUpdateC
 }
 
 export async function hydrateNatureResourcePackState(): Promise<void> {
-  await hydrateState();
+  await hydrateNatureResourcePackStateInternal();
 }
 
 export function resolveNatureResourcePackUri(pathOrUrl: string): string | null {
   const key = normalizeNatureAssetPath(pathOrUrl);
   if (!key) return null;
-  return state.byPath[key] ?? null;
+  return getNatureResourcePackState().byPath[key] ?? null;
 }
 
 export async function readSyncedNatureSettings(): Promise<NatureSettingsV2 | null> {
-  await hydrateState();
-  return state.settings;
+  await hydrateNatureResourcePackStateInternal();
+  return getNatureResourcePackState().settings;
 }
 
-export function subscribeNatureResourcePackChange(onChange: () => void): () => void {
-  listeners.add(onChange);
-  return () => listeners.delete(onChange);
-}
-
+export { subscribeNatureResourcePackChange };

@@ -32,7 +32,7 @@ export default async function ExploreNarrowGatePage() {
   });
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreScriptureAccordionContent
         backLabelKey="pages.explore.narrowGateBack"
         titleKey="pages.explore.narrowGateTitle"

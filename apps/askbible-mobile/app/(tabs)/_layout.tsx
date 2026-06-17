@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { ReadBibleTypographyProvider } from "../../src/read/ReadBibleTypographyContext";
+import { readParchmentTheme as parchment } from "../../src/read/readParchmentTheme";
 import { ShellSwipeNavView } from "../../src/shell/ShellSwipeNavView";
 import { SHELL_TABS_SCREEN_OPTIONS } from "../../src/shell/shellLayout";
 import { ShellTabBarBottomScrimLayer } from "../../src/shell/ShellTabBarBottomScrimLayer";
@@ -20,9 +21,9 @@ export default function TabsLayout() {
           tabBar={(props) => <ShellTabBarCapture {...props} />}
           screenOptions={SHELL_TABS_SCREEN_OPTIONS}
         >
-          <Tabs.Screen name="index" options={{ freezeOnBlur: true }} />
+          <Tabs.Screen name="index" options={{ lazy: false, freezeOnBlur: false }} />
           <Tabs.Screen name="music" options={{ freezeOnBlur: true }} />
-          <Tabs.Screen name="read" options={{ freezeOnBlur: true }} />
+          <Tabs.Screen name="read" options={{ lazy: false, freezeOnBlur: false }} />
           <Tabs.Screen name="explore" options={{ freezeOnBlur: true }} />
           <Tabs.Screen name="journey" options={{ href: null }} />
         </Tabs>
@@ -37,9 +38,12 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, backgroundColor: parchment.canvas },
   tabBarHost: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 100,
   },
 });

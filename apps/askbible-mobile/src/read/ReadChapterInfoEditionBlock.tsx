@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, InteractionManager, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   loadOrGenerateInfoEdition,
@@ -15,8 +15,7 @@ import { createT } from "../i18n/site-copy";
 import { getLocale } from "../i18n/locale-store";
 import { ReadChapterInfoEditionMarkdown } from "./ReadChapterInfoEditionMarkdown";
 import { postReadingTheme as pr } from "./postReadingTheme";
-import { parchmentSans } from "../fonts/parchmentType";
-import { readParchmentTheme as c } from "./readParchmentTheme";
+import { readChapterInfoEditionBlockStyles as styles } from "./readChapterInfoEditionBlockStyles";
 import { ContentCorrectionEntry } from "../content-correction/ContentCorrectionEntry";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 
@@ -286,103 +285,3 @@ export function ReadChapterInfoEditionBlock({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { marginTop: 24, width: "100%" },
-  edition: { width: "100%" },
-  editionDiscover: {},
-  editionConsult: {},
-  headerZone: {
-    alignItems: "center",
-    paddingBottom: 14,
-    marginBottom: 4,
-  },
-  disclaimer: {
-    fontSize: 12,
-    lineHeight: 19,
-    color: c.muted,
-    textAlign: "center",
-    marginTop: 10,
-    maxWidth: 320,
-    paddingHorizontal: 8,
-  },
-  bodyFullscreenShell: {
-    position: "relative",
-    width: "100%",
-    backgroundColor: "transparent",
-    borderRadius: 0,
-    borderTopWidth: 0,
-    borderBottomWidth: 0,
-    borderTopColor: "transparent",
-    borderBottomColor: "transparent",
-    paddingHorizontal: 12,
-    paddingTop: 14,
-    paddingBottom: 14,
-    justifyContent: "flex-start",
-  },
-  bodyPanel: {
-    position: "relative",
-    zIndex: 1,
-    borderTopLeftRadius: 18,
-    borderBottomLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderBottomRightRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(150, 112, 64, 0.18)",
-    backgroundColor: "#F2E4CF",
-    flexDirection: "row",
-    alignItems: "stretch",
-    overflow: "hidden",
-    shadowColor: "#000000",
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  bodyPaper: {
-    flex: 1,
-    position: "relative",
-    backgroundColor: "#F2E4CF",
-    borderLeftWidth: 0,
-    zIndex: 1,
-    overflow: "hidden",
-  },
-  bodyPaperContent: {
-    flex: 1,
-    zIndex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 22,
-  },
-  loadingText: {
-    fontSize: 12,
-    lineHeight: 20,
-    color: c.muted,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  errorText: { fontSize: 13, lineHeight: 20, color: c.muted, textAlign: "center" },
-  retryBtn: {
-    alignSelf: "center",
-    marginTop: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-  },
-  retryText: { fontSize: 14, ...parchmentSans(600), color: c.ink },
-  backBtn: {
-    alignSelf: "center",
-    marginTop: 50,
-    marginBottom: 100,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-  backBtnText: {
-    ...parchmentSans(600),
-    color: "#8C5A2A",
-    letterSpacing: 0.3,
-  },
-  pressed: { opacity: 0.88 },
-});

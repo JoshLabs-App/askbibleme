@@ -86,13 +86,14 @@ export function ReadParchmentFillLayer({
   imageStyle?: StyleProp<ImageStyle>;
 }) {
   return (
-    <ImageBackground
-      source={parchmentSource}
-      resizeMode="stretch"
-      style={[StyleSheet.absoluteFillObject, style]}
-      imageStyle={[styles.fillImage, imageStyle]}
-      pointerEvents="none"
-    />
+    <View style={[StyleSheet.absoluteFillObject, style]} pointerEvents="none">
+      <ImageBackground
+        source={parchmentSource}
+        resizeMode="stretch"
+        style={StyleSheet.absoluteFillObject}
+        imageStyle={[styles.fillImage, imageStyle]}
+      />
+    </View>
   );
 }
 

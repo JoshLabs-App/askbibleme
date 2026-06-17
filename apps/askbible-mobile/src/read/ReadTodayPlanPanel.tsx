@@ -6,7 +6,6 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
-import { computeTodayReadingItemProgress } from "./reading-plan/compute-today-reading-progress";
 import { TODAY_READING_AUTO_DONE_FRACTION } from "./reading-plan/today-reading-chapter-fraction";
 import { todayReadingItemKey } from "./reading-plan/today-reading-done";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "./useTodayReadingPlan";
@@ -30,7 +29,7 @@ type ReadingsProps = {
 export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
   const { payload, loading } = plan;
   const { isDone, toggleDone } = useTodayReadingDone(plan);
-  const { fractions, tripleCurrent } = useTodayReadingChapterFractions(plan);
+  const { fractions } = useTodayReadingChapterFractions(plan);
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
   const { isTripleLoop } = plan;
   const readings = payload?.day?.readings ?? [];
@@ -108,24 +107,19 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
         {loading ? (
           <ActivityIndicator color={c.muted} style={styles.loader} />
         ) : readings.length ? (
-          <View style={styles.readings}>
-            {readings.map((r, idx) => {
+          <>
+            <Text style={styles.todayReadingsTitle} maxFontSizeMultiplier={1.1}>
+              {t("pages.read.todayPlanTitle")}
+            </Text>
+            <View style={styles.readings}>
+            {readings.map((r) => {
               const done = isReadingDone.get(todayReadingItemKey(r)) ?? false;
               const itemKey = todayReadingItemKey(r);
-              const chapterProgress = chapterCompletionProgress.get(itemKey) ?? 0;
-              const progress = computeTodayReadingItemProgress({
-                reading: r,
-                isDone: done,
-                chapterFraction: isTripleLoop ? (fractions[itemKey] ?? 0) : chapterProgress,
-                isTripleLoop,
-                currentTriple: tripleCurrent,
-              });
               return (
                 <ReadTodayPlanReadingRow
                   key={itemKey}
                   reading={r}
                   done={done}
-                  progress={progress}
                   showCheckbox={isTripleLoop}
                   dimDoneText={isTripleLoop}
                   checkboxDisabled={!isTripleLoop}
@@ -134,7 +128,8 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
                 />
               );
             })}
-          </View>
+            </View>
+          </>
         ) : (
           <Text style={styles.empty} maxFontSizeMultiplier={1.1}>
             {t("pages.read.todayPlanEmpty")}
@@ -228,6 +223,17 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
   },
   loader: { marginTop: 10, alignSelf: "flex-start" },
+  todayReadingsTitle: {
+    width: "100%",
+    marginTop: 6,
+    marginBottom: 2,
+    paddingLeft: 30,
+    fontSize: 14,
+    letterSpacing: 0.6,
+    ...parchmentSans(600),
+    color: c.ink,
+    textAlign: "left",
+  },
   readings: {
     marginTop: 2,
     width: "100%",

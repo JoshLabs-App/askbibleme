@@ -44,7 +44,7 @@ export default async function ExploreFigureDetailPage({ params }: Props) {
     locale !== "en" && profile.englishName && profile.englishName !== view.displayNameZh;
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreProsePage className="figure-parchment-page">
         <Link href="/explore/figures" className="explore-prose-back underline">
           {exploreCopy.figuresBack}

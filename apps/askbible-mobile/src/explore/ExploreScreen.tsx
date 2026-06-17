@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { InteractionManager, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
+import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
@@ -15,6 +16,8 @@ import { refreshExploreContentWhenFocused } from "./refreshExploreContent";
 import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "./exploreFeaturedArticleIcons";
 import { exploreFeaturedArticleLabel } from "./exploreFeaturedArticleLabels";
 import { ExploreEntryIcon } from "./ExploreEntryIcon";
+import { asExploreEntryIconShape } from "./exploreStagedEntries";
+import { useExploreStagedEntries } from "./useExploreStagedEntries";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { PARCHMENT_COLUMN_MAX_WIDTH_PHONE, parchmentColumnMaxWidth } from "../read/parchmentColumnLayout";
 import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
@@ -52,6 +55,8 @@ export function ExploreScreen() {
   const topEntries = EXPLORE_ENTRIES.filter((entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as never));
 
   const { articles: featuredArticles } = useExploreFeaturedArticles(locale);
+  const { entries: stagedEntries, sectionCaption: stagedSectionCaption, labelFor: stagedLabelFor } =
+    useExploreStagedEntries();
   const [iconGridsReady, setIconGridsReady] = useState(false);
 
   useEffect(() => {
@@ -99,6 +104,32 @@ export function ExploreScreen() {
     </Pressable>
   );
 
+  const renderStagedEntryTile = (entry: (typeof stagedEntries)[number]) => (
+    <Pressable
+      key={entry.id}
+      onPress={() => router.push(entry.href)}
+      style={({ pressed }) => [
+        s.iconTile,
+        { width: iconTileW },
+        pressed && s.iconTilePressed,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={stagedLabelFor(entry)}
+    >
+      <View style={s.iconCircle}>
+        <ExploreEntryIcon entry={asExploreEntryIconShape(entry)} size={28} color={c.ink} />
+      </View>
+      <Text
+        style={s.iconLabel}
+        numberOfLines={2}
+        ellipsizeMode="tail"
+        maxFontSizeMultiplier={1.1}
+      >
+        {stagedLabelFor(entry)}
+      </Text>
+    </Pressable>
+  );
+
   const renderEntryTile = (entry: (typeof EXPLORE_ENTRIES)[number]) => (
     <Pressable
       key={entry.id}
@@ -127,7 +158,10 @@ export function ExploreScreen() {
 
   return (
     <View style={s.root}>
-      <ParchmentBottomFadeScrollView contentContainerStyle={scrollContentStyle}>
+      <ParchmentBottomFadeScrollView
+        fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
+        contentContainerStyle={scrollContentStyle}
+      >
         <Text style={s.title} maxFontSizeMultiplier={1.2}>
           {t("pages.explore.title")}
         </Text>
@@ -141,6 +175,17 @@ export function ExploreScreen() {
           <View style={s.iconGrid}>
             {topEntries.map(renderEntryTile)}
           </View>
+
+          {stagedEntries.length > 0 ? (
+            <>
+              <View style={s.sectionDivider} />
+              <Text style={s.sectionCaption}>{stagedSectionCaption}</Text>
+              <View style={s.iconGrid}>
+                {stagedEntries.map(renderStagedEntryTile)}
+              </View>
+            </>
+          ) : null}
+
           <View style={s.sectionDivider} />
           <Text style={s.sectionCaption}>
             {locale === "en" ? "Scripture Anthology" : locale === "zh-TW" ? "經文彙編" : "经文汇编"}

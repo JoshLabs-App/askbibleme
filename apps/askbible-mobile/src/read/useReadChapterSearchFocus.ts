@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UIManager, type LayoutChangeEvent, type ScrollView } from "react-native";
+import { findNodeHandle, UIManager, type LayoutChangeEvent, type ScrollView } from "react-native";
 import { parseScriptureVerseParam } from "../bible/parse-scripture-verse-param";
 import type { LoadedChapter } from "../bible/types";
 import {
@@ -41,7 +41,9 @@ export function useReadChapterSearchFocus(
   }, [searchFocusVerse, chapterData?.bookId, chapterData?.chapter]);
 
   const refreshScrollViewportTop = useCallback(() => {
-    scrollRef.current?.measureInWindow((_x, y) => {
+    const handle = scrollRef.current ? findNodeHandle(scrollRef.current) : null;
+    if (handle == null) return;
+    UIManager.measureInWindow(handle, (_x: number, y: number) => {
       if (Number.isFinite(y)) scrollViewportTopRef.current = y;
     });
   }, [scrollRef]);

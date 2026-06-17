@@ -205,9 +205,9 @@ export function ReadChapterPostReadingEditions({
   const normalizedInfoRoleId = infoRoleId?.trim() || null;
   const normalizedGuideRoleId = guideRoleId?.trim() || null;
   const effectiveInfoRoleId =
-    normalizedInfoRoleId ?? (locale === "en" ? INFO_EDITION_V1_EN_ROLE_ID : null);
+    locale === "en" ? INFO_EDITION_V1_EN_ROLE_ID : normalizedInfoRoleId;
   const effectiveGuideRoleId =
-    normalizedGuideRoleId ?? (locale === "en" ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : null);
+    locale === "en" ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : normalizedGuideRoleId;
 
   const panels: PanelCopy[] = [
     {

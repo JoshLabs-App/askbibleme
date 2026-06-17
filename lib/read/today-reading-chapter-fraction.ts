@@ -17,6 +17,9 @@ import { trackForBookId } from "@/lib/bible/reading-plans/triple-loop-reading";
 export const TODAY_READING_CHAPTER_FRACTION_KEY = "askbible-today-reading-chapter-fraction-v1";
 export const TODAY_READING_CHAPTER_FRACTION_KEY_LEGACY = "selah-today-reading-chapter-fraction-v1";
 
+/** 读到该比例即视为今日计划该行已完成（与 App 三轨计划一致）。 */
+export const TODAY_READING_AUTO_DONE_FRACTION = 0.88;
+
 export type TodayReadingChapterFractionRecord = {
   version: 1;
   scopeKey: string;

@@ -41,7 +41,7 @@ function parseRecord(raw: string | null): ReadingHabitStatsRecord | null {
   }
 }
 
-export async function readReadingHabitStats(): Promise<ReadingHabitStatsRecord> {
+async function readReadingHabitStatsRecord(): Promise<ReadingHabitStatsRecord> {
   try {
     const raw =
       (await AsyncStorage.getItem(READING_HABIT_STATS_STORAGE_KEY)) ??
@@ -54,6 +54,12 @@ export async function readReadingHabitStats(): Promise<ReadingHabitStatsRecord> 
   } catch {
     return { version: 1, completedDates: [] };
   }
+}
+
+export async function readReadingHabitStats(): Promise<ReadingHabitStatsRecord> {
+  const record = await readReadingHabitStatsRecord();
+  snapshotFromRecord(record);
+  return record;
 }
 
 async function writeReadingHabitStats(record: ReadingHabitStatsRecord): Promise<void> {
@@ -92,25 +98,45 @@ export type ReadingHabitStatsSnapshot = {
   streakDays: number;
 };
 
+const EMPTY_SNAPSHOT: ReadingHabitStatsSnapshot = { readDays: 0, streakDays: 0 };
+
+let cachedSnapshot: ReadingHabitStatsSnapshot | null = null;
+
+export function getCachedReadingHabitStatsSnapshot(): ReadingHabitStatsSnapshot {
+  return cachedSnapshot ?? EMPTY_SNAPSHOT;
+}
+
+export function readingHabitStatsSnapshotsEqual(
+  a: ReadingHabitStatsSnapshot,
+  b: ReadingHabitStatsSnapshot,
+): boolean {
+  return a.readDays === b.readDays && a.streakDays === b.streakDays;
+}
+
 export function snapshotFromRecord(
   record: ReadingHabitStatsRecord,
   today: string = toLocalDateString(new Date()),
 ): ReadingHabitStatsSnapshot {
   const dates = record.completedDates;
-  return {
+  const snapshot = {
     readDays: dates.length,
     streakDays: computeReadingStreak(dates, today),
   };
+  cachedSnapshot = snapshot;
+  return snapshot;
 }
 
 export async function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord): Promise<void> {
   await writeReadingHabitStats(record);
+  snapshotFromRecord(record);
 }
 
 /** 今日计划是否全部读完时同步日历完成记录 */
 export async function syncReadingHabitDayCompletion(allDoneToday: boolean): Promise<ReadingHabitStatsRecord> {
   const today = toLocalDateString(new Date());
   const record = await readReadingHabitStats();
+  const hadToday = record.completedDates.includes(today);
+  if (allDoneToday === hadToday) return record;
   const set = new Set(record.completedDates);
   if (allDoneToday) set.add(today);
   else set.delete(today);
@@ -119,5 +145,6 @@ export async function syncReadingHabitDayCompletion(allDoneToday: boolean): Prom
     completedDates: [...set].sort(),
   };
   await writeReadingHabitStats(next);
+  snapshotFromRecord(next);
   return next;
 }

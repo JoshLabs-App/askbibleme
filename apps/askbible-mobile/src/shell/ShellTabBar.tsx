@@ -1,6 +1,6 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { usePathname, useRouter } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useLayoutEffect, useSyncExternalStore } from "react";
 import {
   getTabBarPortalProps,
@@ -27,57 +27,8 @@ import { SPLASH_BACKGROUND as LOGO_COLOR } from "./splash-branding.generated";
 import { trackTelemetry } from "../telemetry/client";
 import { SHELL_TAB_BAR_ICON } from "./shellChromeIcons";
 import { ShellMaterialIcon } from "./ShellMaterialIcon";
-
-type TabKey = "index" | "music" | "read" | "explore";
-
-function tabTelemetryName(routeName: string): "home" | "music" | "read" | "explore" | null {
-  switch (routeName as TabKey) {
-    case "index":
-      return "home";
-    case "music":
-      return "music";
-    case "read":
-      return "read";
-    case "explore":
-      return "explore";
-    default:
-      return null;
-  }
-}
-
-function tabLabel(routeName: string): string {
-  switch (routeName as TabKey) {
-    case "index":
-      return t("nav.home");
-    case "music":
-      return t("nav.music");
-    case "read":
-      return t("nav.read");
-    case "explore":
-      return t("nav.explore");
-    default:
-      return routeName;
-  }
-}
-
-const TAB_ICON_SIZE = 28;
-const PLAY_ICON_SIZE = 28;
-
-function tabIcon(routeName: string, active: boolean) {
-  const color = active ? "rgba(255,255,255,0.95)" : SHELL_TAB_BAR_ICON;
-  switch (routeName as TabKey) {
-    case "index":
-      return <ShellMaterialIcon name="home" size={TAB_ICON_SIZE} color={color} />;
-    case "music":
-      return <ShellMaterialIcon name="music-note" size={TAB_ICON_SIZE} color={color} />;
-    case "read":
-      return <ShellMaterialIcon name="menu-book" size={TAB_ICON_SIZE} color={color} />;
-    case "explore":
-      return <ShellMaterialIcon name="explore" size={TAB_ICON_SIZE} color={color} />;
-    default:
-      return <ShellMaterialIcon name="circle" size={TAB_ICON_SIZE} color={color} />;
-  }
-}
+import { PLAY_ICON_SIZE, tabIcon, tabLabel, tabTelemetryName } from "./shellTabBarHelpers";
+import { shellTabBarStyles as styles } from "./shellTabBarStyles";
 
 /** 挂在 Tabs `tabBar` 槽内同步状态，实际 UI 由 `ShellTabBarPortal` 浮在导航器外渲染 */
 export function ShellTabBarCapture(props: BottomTabBarProps) {
@@ -236,59 +187,3 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 100,
-    elevation: 2,
-    alignItems: "center",
-    paddingHorizontal: 12,
-    gap: 6,
-    backgroundColor: "transparent",
-  },
-  row: {
-    zIndex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    maxWidth: 400,
-    width: "100%",
-    paddingHorizontal: 12,
-    backgroundColor: "transparent",
-  },
-  side: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    minWidth: 0,
-  },
-  sideLeft: {
-    justifyContent: "flex-end",
-    paddingRight: 6,
-  },
-  sideRight: {
-    justifyContent: "flex-start",
-    paddingLeft: 6,
-  },
-  tabBtn: {
-    width: 52,
-    height: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabBtnPressed: { opacity: 0.8 },
-  playFab: {
-    width: 56,
-    height: 56,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 10,
-  },
-  playFabDisabled: { opacity: 0.4 },
-});

@@ -114,14 +114,17 @@
   overscroll-behavior: contain;
   border-radius: 6px;
   border: 1px solid var(--parchment-control-border, rgba(120, 53, 15, 0.28));
-  background: var(--read-parchment-bg-canvas, #ecd9b9);
-  background-image: var(--read-parchment-bg-image);
-  background-size: 100% 100%;
+  background-color: var(--parchment-control-fill-strong, rgba(255, 252, 245, 0.96));
+  background-image: none;
   box-shadow: 0 8px 24px rgba(28, 20, 16, 0.12);
+  color-scheme: light;
 }
 
 .dark .read-bible-settings-select__menu {
+  background-color: rgb(41 37 36);
+  border-color: color-mix(in srgb, rgb(244 235 225) 18%, transparent);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
 }
 
 .read-bible-settings-select__option {
@@ -134,14 +137,27 @@
   padding: 0.5625rem 0.625rem;
   text-align: left;
   cursor: pointer;
+  color: #1c1410;
+}
+
+.dark .read-bible-settings-select__option {
+  color: rgb(244 235 225);
 }
 
 .read-bible-settings-select__option:hover {
   background: rgba(118, 95, 62, 0.1);
 }
 
+.dark .read-bible-settings-select__option:hover {
+  background: color-mix(in srgb, rgb(244 235 225) 10%, transparent);
+}
+
 .read-bible-settings-select__option--active {
   background: rgba(118, 95, 62, 0.08);
+}
+
+.dark .read-bible-settings-select__option--active {
+  background: color-mix(in srgb, rgb(244 235 225) 8%, transparent);
 }
 
 .read-bible-settings-select__check {
@@ -182,22 +198,13 @@
   min-width: 0;
   font-size: 13px;
   line-height: 1.35;
-  color: color-mix(in srgb, #5c4030 82%, transparent);
+  color: inherit;
 }
 
 .read-bible-settings-select__option--active .read-bible-settings-select__option-label {
   font-weight: 600;
-  color: #1c1410;
-}
-
-.dark .read-bible-settings-select__option-label {
-  color: color-mix(in srgb, rgb(244 235 225) 62%, transparent);
-}
-
-.dark .read-bible-settings-select__option--active .read-bible-settings-select__option-label {
-  color: #f4ebe1;
 }
 
 .dark .read-bible-settings-sheet .read-bible-settings-field-label {
-  color: color-mix(in srgb, rgb(244 235 225) 52%, transparent);
+  color: color-mix(in srgb, rgb(244 235 225) 72%, transparent);
 }

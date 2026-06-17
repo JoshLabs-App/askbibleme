@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
+import "./nature-home-settings-select.css";
 
 export type NatureHomeSettingsSelectOption = {
   id: string;
@@ -79,7 +80,7 @@ export function NatureHomeSettingsSelect({
     open && !disabled && menuRect && portalReady
       ? createPortal(
           <div
-            className="fixed z-[96] max-h-40 overflow-y-auto overscroll-y-contain rounded-[7px] border border-zinc-600 bg-zinc-800 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+            className="nature-home-settings-select-menu fixed z-[96] max-h-40 overflow-y-auto overscroll-y-contain rounded-[7px] border py-1 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
             style={{
               top: menuRect.top,
               left: menuRect.left,
@@ -98,11 +99,15 @@ export function NatureHomeSettingsSelect({
                   aria-selected={selected}
                   onClick={() => onSelect(opt.id)}
                   className={[
-                    "flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left text-[12px] transition",
-                    selected ? "bg-zinc-700 text-white" : "text-white/82 hover:bg-zinc-700/70",
-                  ].join(" ")}
+                    "nature-home-settings-select-option flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left text-[12px] transition",
+                    selected ? "nature-home-settings-select-option--selected" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 >
-                  <span className="min-w-0 truncate">{opt.label}</span>
+                  <span className="nature-home-settings-select-option-label min-w-0 truncate">
+                    {opt.label}
+                  </span>
                   {selected ? (
                     <ShellMaterialIcon name="check" size={16} color="#fff" />
                   ) : (

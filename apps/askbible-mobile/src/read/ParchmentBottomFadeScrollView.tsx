@@ -7,6 +7,7 @@ import {
   StyleSheet,
   UIManager,
   View,
+  useWindowDimensions,
   type LayoutChangeEvent,
   type ScrollViewProps,
 } from "react-native";
@@ -43,8 +44,7 @@ function isShellTabRoute(pathname: string): boolean {
 }
 
 /**
- * 羊皮卷滚动区：顶/底 mask 让正文渐隐（无羊皮色/黑色叠层）。
- * 读经列表/首页请用 {@link ReadParchmentPageScroll}（版心 + 内边距与圣经首页一致）。
+ * 羊皮卷滚动区：顶/底 MaskedView 让正文渐隐。
  * 需 RNCMaskedView（`npx expo run:ios`）；未编入时与普通 ScrollView 相同。
  */
 export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
@@ -54,11 +54,10 @@ export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
   ) {
     const pathname = usePathname();
     const focused = useIsFocused();
+    const { height: windowHeight } = useWindowDimensions();
     const rootRef = useRef<View>(null);
     const lastViewportHeightRef = useRef(0);
-    const maskActivatedRef = useRef(false);
     const [viewportHeight, setViewportHeight] = useState(0);
-    const [maskReady, setMaskReady] = useState(false);
     const canMask = maskEnabled && nativeMaskedViewAvailable();
 
     const remeasureViewport = () => {
@@ -77,23 +76,6 @@ export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
       if (viewportHeight > 0) lastViewportHeightRef.current = viewportHeight;
     }, [viewportHeight]);
 
-    useEffect(() => {
-      if (viewportHeight <= 0) return;
-      let cancelled = false;
-      const frame = requestAnimationFrame(() => {
-        if (cancelled) return;
-        requestAnimationFrame(() => {
-          if (!cancelled) {
-            maskActivatedRef.current = true;
-            setMaskReady(true);
-          }
-        });
-      });
-      return () => {
-        cancelled = true;
-        cancelAnimationFrame(frame);
-      };
-    }, [viewportHeight]);
     const MaskedView = useMemo(
       () =>
         canMask
@@ -132,18 +114,19 @@ export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
     );
 
     const effectiveViewportHeight =
-      viewportHeight > 0 ? viewportHeight : lastViewportHeightRef.current;
-    const showMask =
-      canMask &&
-      MaskedView &&
-      effectiveViewportHeight > 0 &&
-      (maskReady || maskActivatedRef.current);
+      viewportHeight > 0
+        ? viewportHeight
+        : lastViewportHeightRef.current > 0
+          ? lastViewportHeightRef.current
+          : Math.round(windowHeight);
+    const showScrollMask = canMask && MaskedView && effectiveViewportHeight > 0;
 
     return (
       <View ref={rootRef} style={styles.flex} onLayout={onLayout} collapsable={false}>
-        {showMask ? (
+        {showScrollMask ? (
           <MaskedView
-            style={styles.flex}
+            style={styles.maskedScroll}
+            needsOffscreenAlphaCompositing={Platform.OS === "ios"}
             maskElement={
               <ReadParchmentScrollMask
                 viewportHeight={effectiveViewportHeight}
@@ -163,5 +146,9 @@ export const ParchmentBottomFadeScrollView = forwardRef<ScrollView, Props>(
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  maskedScroll: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
   scroll: { flex: 1, backgroundColor: "transparent" },
 });

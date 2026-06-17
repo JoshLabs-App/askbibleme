@@ -1,0 +1,127 @@
+import { StyleSheet } from "react-native";
+import { parchmentSans } from "../fonts/parchmentType";
+
+export const shellNavDrawerTtsStyles = StyleSheet.create({
+  ttsMasterRow: {
+    minHeight: 30,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.2)",
+    backgroundColor: "rgba(255, 248, 235, 0.5)",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  ttsMasterRowPressed: {
+    backgroundColor: "rgba(255, 177, 1, 0.14)",
+  },
+  ttsMasterLabel: {
+    fontSize: 13,
+    color: "rgba(55, 53, 47, 0.86)",
+    ...parchmentSans(600),
+  },
+  ttsMasterDetail: {
+    fontSize: 12,
+    color: "rgba(120, 95, 60, 0.85)",
+  },
+  ttsControlsWrap: {
+    marginTop: 4,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.18)",
+    backgroundColor: "rgba(255, 248, 235, 0.28)",
+    paddingHorizontal: 8,
+    paddingTop: 6,
+    paddingBottom: 4,
+  },
+  ttsSliderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  ttsSliderLabel: {
+    fontSize: 13,
+    color: "rgba(55, 53, 47, 0.82)",
+    ...parchmentSans(600),
+  },
+  ttsSliderValue: {
+    fontSize: 12,
+    color: "rgba(120, 95, 60, 0.85)",
+  },
+  ttsStepTrack: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+    minHeight: 36,
+    position: "relative",
+  },
+  ttsStepRail: {
+    position: "absolute",
+    left: "10%",
+    right: "10%",
+    top: "50%",
+    marginTop: -1,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: "rgba(120, 53, 15, 0.2)",
+  },
+  ttsStepHit: {
+    flex: 1,
+    minHeight: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ttsStepThumb: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.35)",
+    backgroundColor: "rgba(255, 248, 235, 0.95)",
+  },
+  ttsStepThumbActive: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderColor: "#C28A2A",
+    backgroundColor: "rgba(255, 177, 1, 0.92)",
+  },
+  ttsVoiceRow: {
+    marginTop: 2,
+  },
+  ttsVoiceScroll: {
+    width: "100%",
+    marginTop: 4,
+  },
+  ttsVoiceList: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingRight: 4,
+  },
+  ttsVoiceChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    minHeight: 24,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.24)",
+    backgroundColor: "rgba(255, 248, 235, 0.62)",
+    paddingHorizontal: 8,
+  },
+  ttsVoiceChipSelected: {
+    borderColor: "rgba(255, 177, 1, 0.8)",
+    backgroundColor: "rgba(255, 177, 1, 0.2)",
+  },
+  ttsVoiceChipText: {
+    fontSize: 12,
+    color: "rgba(55, 53, 47, 0.78)",
+    ...parchmentSans(600),
+  },
+  ttsVoiceChipTextSelected: {
+    color: "rgba(120, 75, 30, 0.96)",
+  },
+});

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { InteractionManager } from "react-native";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
@@ -29,6 +29,8 @@ export function useTodayReadingPlan(
 
   const [payload, setPayload] = useState<TodayReadingPlanPayload | null>(null);
   const [loading, setLoading] = useState(false);
+  const payloadRef = useRef(payload);
+  payloadRef.current = payload;
 
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = registryById.get(prefs.planId)?.dayCount ?? prefs.dayCount;
@@ -40,7 +42,7 @@ export function useTodayReadingPlan(
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (payloadRef.current == null) setLoading(true);
     try {
       const j = await loadTodayReadingPlanPayload(prefs, { dayCount: dayCount ?? undefined });
       setPayload(j);

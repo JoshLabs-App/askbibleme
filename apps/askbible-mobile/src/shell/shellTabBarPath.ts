@@ -7,18 +7,20 @@ export function isShellVideoStageTabRoute(routeName: string | undefined): boolea
   return routeName === "index" || routeName === "music";
 }
 
-/** 仅读经 / 探索 Tab 需要底栏羊皮渐隐。 */
+/** 探索 Tab 曾用底栏 scrim；现与读经一致改由 scroll mask 渐隐。 */
 export function isParchmentTabBarRoute(routeName: string | undefined): boolean {
-  return routeName === "read" || routeName === "explore";
+  return routeName === "explore";
 }
 
 /**
  * 是否渲染底栏羊皮渐隐层。
+ * 读经 / 探索关闭：正文由 `ReadParchmentScrollMask` 渐隐，羊皮底纹保持实色不叠 scrim。
  * 以 Tab `routeName` 为准（pathname 切 Tab 时可能仍指上一栈）；首页 / 音乐 Tab 强制关闭。
  */
 export function shouldShowParchmentTabBarScrim(routeName: string | undefined): boolean {
   if (!routeName) return false;
   if (isShellVideoStageTabRoute(routeName)) return false;
+  if (routeName === "read" || routeName === "explore") return false;
   return isParchmentTabBarRoute(routeName);
 }
 

@@ -3,6 +3,12 @@ import { StyleSheet, View } from "react-native";
 
 export type ReadParchmentFadePreset = "default" | "prose" | "tabbar";
 
+/** 主 Tab 羊皮卷滚动页（读经 / 探索等）：共用同一套 scroll mask */
+export const SHELL_TAB_SCROLL_FADE_PRESET: ReadParchmentFadePreset = "tabbar";
+
+/** @deprecated 使用 {@link SHELL_TAB_SCROLL_FADE_PRESET} */
+export const READ_TAB_SCROLL_FADE_PRESET = SHELL_TAB_SCROLL_FADE_PRESET;
+
 type FadePresetMetrics = {
   edgeFadeTopPx: number;
   edgeFadeBottomPx: number;

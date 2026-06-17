@@ -143,14 +143,11 @@ export function parchmentTabBarBottomGradient(
   const a1 = d.bottomStop1Alpha * aMul;
   const a2 = d.bottomStop2Alpha * aMul;
   const c = (alpha: number) => `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const solidEnd = d.bottomStop1Pct / 100;
+  const fadeMid = solidEnd + ((d.bottomStop2Pct / 100 - solidEnd) * 0.5);
 
   return {
-    colors: [c(1), c(a1), c(a2), c(0)],
-    locations: [
-      0,
-      d.bottomStop1Pct / 100,
-      d.bottomStop2Pct / 100,
-      1,
-    ],
+    colors: [c(1), c(1), c(a1), c(a2), c(0)],
+    locations: [0, solidEnd, fadeMid, d.bottomStop2Pct / 100, 1],
   };
 }

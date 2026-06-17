@@ -256,3 +256,26 @@ export const HOME_VERSE_POOL_SCOPE_KEYS: Record<HomeVersePoolScopeId, Set<string
   prayer_scripture: prayerScriptureKeys,
   all: allKeys,
 };
+
+export function getHomeVersePoolScopeVerseCount(scopeId: HomeVersePoolScopeId): number {
+  return HOME_VERSE_POOL_SCOPE_KEYS[scopeId].size;
+}
+
+export function appendHomeVersePoolScopeCount(
+  label: string,
+  count: number,
+  locale: AppLocale,
+): string {
+  return locale === "en" ? `${label} (${count})` : `${label}（${count}）`;
+}
+
+export function resolveHomeVersePoolScopeLabelWithCount(
+  scope: HomeVersePoolScopeOption,
+  locale: AppLocale,
+): string {
+  return appendHomeVersePoolScopeCount(
+    resolveHomeVersePoolScopeLabel(scope, locale),
+    getHomeVersePoolScopeVerseCount(scope.id),
+    locale,
+  );
+}

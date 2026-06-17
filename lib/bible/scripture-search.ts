@@ -42,6 +42,13 @@ export function normalizeScriptureSearchQuery(raw: string): string {
   return raw.trim().replace(/\s+/g, " ");
 }
 
+export function parseScriptureSearchQueryParam(
+  raw: string | string[] | null | undefined,
+): string {
+  const s = Array.isArray(raw) ? raw[0] : raw;
+  return normalizeScriptureSearchQuery(s ?? "");
+}
+
 export type ScriptureSearchTextSegment = {
   text: string;
   match: boolean;

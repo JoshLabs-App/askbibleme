@@ -1,0 +1,25 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 90000
+- waitForAnimationToEnd
+- takeScreenshot: tab-home-0
+- tapOn:
+    point: "68%, 93%"
+- waitForAnimationToEnd
+- takeScreenshot: tab-read-0
+- tapOn:
+    point: "12%, 93%"
+- waitForAnimationToEnd
+- takeScreenshot: tab-home-1
+- tapOn:
+    point: "68%, 93%"
+- waitForAnimationToEnd
+- takeScreenshot: tab-read-1
+- tapOn:
+    point: "12%, 93%"
+- waitForAnimationToEnd
+- takeScreenshot: tab-home-2

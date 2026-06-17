@@ -1,0 +1,14 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 60000
+- repeat:
+    times: 8
+    commands:
+      - openLink: askbible://read
+      - waitForAnimationToEnd
+      - openLink: askbible://
+      - waitForAnimationToEnd

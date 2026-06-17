@@ -6,7 +6,7 @@ export function AuthParchmentChrome({ children }: { children: ReactNode }) {
   return (
     <ScriptureChrome
       hideTypographyControl
-      parchmentScrollClassName="read-bible-parchment-scroll--explore-prose read-bible-parchment-scroll--narrow"
+      parchmentScrollClassName="read-bible-parchment-scroll--narrow"
       parchmentColumnClassName="read-bible-parchment-column--narrow prayer-on-parchment flex min-h-[min(100dvh,100vh)] flex-col items-center justify-center"
     >
       {children}

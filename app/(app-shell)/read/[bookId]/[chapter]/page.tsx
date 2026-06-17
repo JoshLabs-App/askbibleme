@@ -9,7 +9,9 @@ import { ReadChapterTodayPlanBlock } from "@/components/bible/ReadChapterTodayPl
 import { ReadChapterVersesClient } from "@/components/bible/ReadChapterVersesClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadChapterXrefs } from "@/lib/bible/load-chapter-xrefs";
-import { loadReadChapterForReadPage } from "@/lib/read/load-read-chapter-for-read-page";
+import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-param";
+import { parseScriptureSearchQueryParam } from "@/lib/bible/scripture-search";
+import { loadReadChapterForReadPage, formatReadChapterTitleChapterSuffix } from "@/lib/read/load-read-chapter-for-read-page";
 import { ReadChapterPostReadingEditions } from "@/components/bible/ReadChapterPostReadingEditions";
 import {
   getInfoEditionReaderCacheAsync,
@@ -18,25 +20,28 @@ import {
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
 import { ReadChapterTelemetry } from "@/components/telemetry/ReadChapterTelemetry";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
-import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
 import {
   INFO_EDITION_GUIDE_V2_EN_ROLE_ID,
 } from "@/lib/bible/info-edition-v1-publish";
 
 const INFO_EDITION_V1_EN_ROLE_ID = "info_edition_v1_en";
 
-type Props = { params: Promise<{ bookId: string; chapter: string }> };
+type Props = {
+  params: Promise<{ bookId: string; chapter: string }>;
+  searchParams: Promise<{ verse?: string | string[]; q?: string | string[] }>;
+};
 
 export async function generateMetadata({ params }: Props) {
   const { bookId, chapter } = await params;
   const loaded = await loadReadChapterForReadPage(bookId, Number(chapter));
   if (!loaded) return { title: sitePageTitle("经文") };
   const data = loaded.primary;
-  return { title: sitePageTitle(`${data.bookName} ${data.chapter}`) };
+  return { title: sitePageTitle(`${loaded.displayBookName} ${data.chapter}`) };
 }
 
-export default async function ReadChapterPage({ params }: Props) {
+export default async function ReadChapterPage({ params, searchParams }: Props) {
   const { bookId, chapter } = await params;
+  const sp = await searchParams;
   const ch = Number(chapter);
   if (!Number.isFinite(ch)) notFound();
   const loaded = await loadReadChapterForReadPage(bookId, ch);
@@ -44,21 +49,22 @@ export default async function ReadChapterPage({ params }: Props) {
 
   const data = loaded.primary;
   const contrasts = loaded.contrasts;
+  const { locale, displayBookName } = loaded;
+  const initialFocusVerse = parseScriptureVerseParam(sp.verse);
+  const initialSearchQuery = parseScriptureSearchQueryParam(sp.q);
 
   const { prev, next } = resolveReadChapterNeighbors(data.bookId, data.chapter);
 
   const cwd = process.cwd();
-  const translations = readTranslationsIndexSync(cwd);
-  const primaryMeta = translations.translations.find((t) => t.id === data.translationId);
-  const prefersEnglishEdition = /^en\b/i.test(primaryMeta?.language ?? "");
+  const useEnglishEditions = locale === "en";
 
   const infoTarget = resolveInfoEditionReaderTarget(cwd, {
     edition: "info",
-    roleId: prefersEnglishEdition ? INFO_EDITION_V1_EN_ROLE_ID : undefined,
+    roleId: useEnglishEditions ? INFO_EDITION_V1_EN_ROLE_ID : undefined,
   });
   const guideTarget = resolveInfoEditionReaderTarget(cwd, {
     edition: "guide",
-    roleId: prefersEnglishEdition ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : undefined,
+    roleId: useEnglishEditions ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : undefined,
   });
   const infoCache =
     "error" in infoTarget
@@ -85,7 +91,7 @@ export default async function ReadChapterPage({ params }: Props) {
       <Suspense fallback={null}>
         <ReadChapterPlanFlowSync />
       </Suspense>
-      <ReadChapterLastPositionSync bookId={data.bookId} chapter={data.chapter} bookName={data.bookName} />
+      <ReadChapterLastPositionSync bookId={data.bookId} chapter={data.chapter} bookName={displayBookName} />
       <ReadChapterTelemetry bookId={data.bookId} chapter={data.chapter} />
       <article className="read-chapter-article">
         <div className="read-chapter-spread">
@@ -93,31 +99,35 @@ export default async function ReadChapterPage({ params }: Props) {
             <div className="read-chapter-spread-scripture read-chapter-open-book-page read-chapter-open-book-page--left">
               <header className="read-chapter-header">
                 <h1 className="read-chapter-title">
-                  {data.bookName}{" "}
+                  {displayBookName}{" "}
                   <span className="read-chapter-title-chapter tabular-nums">
-                    第{data.chapter}章
+                    {formatReadChapterTitleChapterSuffix(data.chapter, locale)}
                   </span>
                 </h1>
               </header>
               <div className="read-chapter-scripture">
-                <ReadChapterVersesClient
-                  translationId={data.translationId}
-                  bookId={data.bookId}
-                  bookName={data.bookName}
-                  chapter={data.chapter}
-                  verses={data.verses}
-                  segments={data.segments ?? null}
-                  contrasts={contrasts.map((c) => ({
-                    translationId: c.translationId,
-                    verses: c.chapter.verses,
-                  }))}
-                  chapterXrefs={chapterXrefs}
-                />
+                <Suspense fallback={null}>
+                  <ReadChapterVersesClient
+                    translationId={data.translationId}
+                    bookId={data.bookId}
+                    bookName={displayBookName}
+                    chapter={data.chapter}
+                    verses={data.verses}
+                    segments={data.segments ?? null}
+                    contrasts={contrasts.map((c) => ({
+                      translationId: c.translationId,
+                      verses: c.chapter.verses,
+                    }))}
+                    chapterXrefs={chapterXrefs}
+                    initialFocusVerse={initialFocusVerse}
+                    initialSearchQuery={initialSearchQuery || null}
+                  />
+                </Suspense>
               </div>
               <div className="read-chapter-ending">
                 <ReadChapterEndNav
                   bookId={data.bookId}
-                  bookName={data.bookName}
+                  bookName={displayBookName}
                   chapter={data.chapter}
                   prev={prev}
                   next={next}

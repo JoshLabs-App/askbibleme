@@ -12,7 +12,7 @@ import { useTodayReadingDone } from "@/hooks/useTodayReadingDone";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "@/hooks/useTodayReadingPlan";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import { READ_PARCHMENT_FAINT, READ_PARCHMENT_MUTED } from "@/lib/read/read-parchment-accents";
-import { computeTodayReadingItemProgress } from "@/lib/read/compute-today-reading-progress";
+import { TODAY_READING_AUTO_DONE_FRACTION } from "@/lib/read/today-reading-chapter-fraction";
 import {
   readCompletedChapterKeySet,
   subscribeReadChapterCompletion,
@@ -27,7 +27,7 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
   const { t } = useLocale();
   const { payload, loading, isTripleLoop } = plan;
   const { isDone, allDone, toggleDone } = useTodayReadingDone(plan);
-  const { fractions, tripleCurrent } = useTodayReadingChapterFractions(plan);
+  const { fractions } = useTodayReadingChapterFractions(plan);
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
   const readings = payload?.day?.readings ?? [];
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
@@ -60,11 +60,13 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
       const itemKey = todayReadingItemKey(r);
       doneByItem.set(
         itemKey,
-        isTripleLoop ? isDone(r) : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
+        isTripleLoop
+          ? isDone(r) || (fractions[itemKey] ?? 0) >= TODAY_READING_AUTO_DONE_FRACTION
+          : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
       );
     }
     return doneByItem;
-  }, [chapterCompletionProgress, isDone, isTripleLoop, readings]);
+  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings]);
 
   const todayAllDone = useMemo(
     () =>
@@ -88,32 +90,26 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
       {loading ? (
         <p className="mt-2 text-[12px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanLoading")}</p>
       ) : readings.length ? (
-        <div className="mt-0.5 w-full pl-[30px]">
-          {readings.map((r) => {
-            const itemKey = todayReadingItemKey(r);
-            const done = isReadingDone.get(itemKey) ?? false;
-            const chapterProgress = chapterCompletionProgress.get(itemKey) ?? 0;
-            const progress = computeTodayReadingItemProgress({
-              reading: r,
-              isDone: done,
-              chapterFraction: isTripleLoop ? (fractions[itemKey] ?? 0) : chapterProgress,
-              isTripleLoop,
-              currentTriple: tripleCurrent,
-            });
-            return (
-              <ReadTodayPlanReadingRow
-                key={itemKey}
-                reading={r}
-                done={done}
-                progress={progress}
-                showCheckbox={isTripleLoop}
-                dimDoneText={isTripleLoop}
-                checkboxDisabled={!isTripleLoop}
-                onToggleDone={() => toggleDone(r)}
-              />
-            );
-          })}
-        </div>
+        <>
+          <h2 className="read-bible-today-readings-heading">{t("pages.read.todayPlanTitle")}</h2>
+          <div className="read-bible-today-readings-list mt-0.5 w-full pl-[30px]">
+            {readings.map((r) => {
+              const itemKey = todayReadingItemKey(r);
+              const done = isReadingDone.get(itemKey) ?? false;
+              return (
+                <ReadTodayPlanReadingRow
+                  key={itemKey}
+                  reading={r}
+                  done={done}
+                  showCheckbox={isTripleLoop}
+                  dimDoneText={isTripleLoop}
+                  checkboxDisabled={!isTripleLoop}
+                  onToggleDone={() => toggleDone(r)}
+                />
+              );
+            })}
+          </div>
+        </>
       ) : (
         <p className="mt-2 text-[13px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanEmpty")}</p>
       )}

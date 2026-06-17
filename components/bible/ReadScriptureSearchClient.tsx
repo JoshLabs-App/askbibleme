@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ScriptureSearchHighlightedText } from "@/components/bible/ScriptureSearchHighlightedText";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import {
@@ -13,6 +14,7 @@ import {
   pushScriptureRecentSearch,
   readScriptureRecentSearches,
 } from "@/lib/read/scripture-recent-searches";
+import { resolveReadChapterPrimaryTranslationId } from "@/lib/read/read-bible-translation-prefs";
 
 const SCOPE_OPTIONS: { key: ScriptureSearchScope; labelKey: string }[] = [
   { key: "all", labelKey: "pages.read.scriptureSearchScopeAll" },
@@ -21,9 +23,21 @@ const SCOPE_OPTIONS: { key: ScriptureSearchScope; labelKey: string }[] = [
 ];
 
 export function ReadScriptureSearchClient() {
-  const { t } = useLocale();
-  const { translation } = useReadBibleTranslationSettings();
-  const primaryTranslationId = translation.primaryTranslationId;
+  const { t, locale } = useLocale();
+  const { translation, translationCatalog, translationCatalogReady } = useReadBibleTranslationSettings();
+  const searchTranslationId = useMemo(() => {
+    if (!translationCatalogReady || translationCatalog.length === 0) {
+      return translation.primaryTranslationId;
+    }
+    return resolveReadChapterPrimaryTranslationId(
+      translation,
+      {
+        translations: translationCatalog,
+        defaultTranslationId: translationCatalog[0]?.id ?? translation.primaryTranslationId,
+      },
+      locale,
+    );
+  }, [locale, translation, translationCatalog, translationCatalogReady]);
   const [scope, setScope] = useState<ScriptureSearchScope>("all");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScriptureSearchHit[]>([]);
@@ -55,7 +69,7 @@ export function ReadScriptureSearchClient() {
       try {
         const params = new URLSearchParams({
           q,
-          translationId: primaryTranslationId,
+          translationId: searchTranslationId,
           scope,
         });
         const res = await fetch(`/api/read/scripture-search?${params.toString()}`, { cache: "no-store" });
@@ -79,7 +93,7 @@ export function ReadScriptureSearchClient() {
         setLoading(false);
       }
     },
-    [primaryTranslationId, pushRecentSearch, scope, t],
+    [searchTranslationId, pushRecentSearch, scope, t],
   );
 
   useEffect(() => {
@@ -177,7 +191,9 @@ export function ReadScriptureSearchClient() {
               <span className="read-scripture-search-hit-ref">
                 {hit.bookName} {hit.chapter}:{hit.verse}
               </span>
-              <span className="read-scripture-search-hit-text">{hit.text}</span>
+              <span className="read-scripture-search-hit-text">
+                <ScriptureSearchHighlightedText text={hit.text} query={query} />
+              </span>
             </Link>
           </li>
         ))}

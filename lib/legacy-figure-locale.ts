@@ -5,14 +5,15 @@ import {
   type LegacyFigureEnProfileBlock,
 } from "@/lib/legacy-figure-articles-en-bundle";
 import type { LegacyFigureArticle, LegacyFigureProfile } from "@/lib/legacy-figure-preview";
+import {
+  resolveLegacyFigureEnglishDisplayName,
+  legacyFigureCharacterRoleEn,
+} from "@/lib/legacy-figure-english-display-name";
 
-const CHARACTER_ROLE_EN: Record<string, string> = {
-  主人物: "Primary character",
-  相关人物: "Related figure",
-};
+export { resolveLegacyFigureEnglishDisplayName } from "@/lib/legacy-figure-english-display-name";
 
 function localizeCharacterRoleZh(text: string, locale: AppLocale): string {
-  if (locale === "en") return CHARACTER_ROLE_EN[text] ?? text;
+  if (locale === "en") return legacyFigureCharacterRoleEn(text) ?? text;
   if (locale === "zh-TW") return toZhTwText(text);
   return text;
 }
@@ -36,7 +37,11 @@ function applyEnBlock(
 
   return {
     ...profile,
-    displayNameZh: en.displayName || profile.englishName || profile.displayNameZh,
+    displayNameZh: resolveLegacyFigureEnglishDisplayName(
+      profile.englishName,
+      en.displayName,
+      profile.displayNameZh,
+    ),
     scripturePersonalityZh: en.scripturePersonality ?? profile.scripturePersonalityZh,
     periodLabelZh: en.periodLabel ?? profile.periodLabelZh,
     lifespanZh: en.lifespan ?? profile.lifespanZh,
@@ -51,7 +56,11 @@ export function legacyFigureDisplayName(
 ): string {
   if (locale === "en") {
     const en = readLegacyFigureEnBlockById(profile.id);
-    return en?.displayName || profile.englishName || profile.displayNameZh;
+    return resolveLegacyFigureEnglishDisplayName(
+      profile.englishName,
+      en?.displayName,
+      profile.displayNameZh,
+    );
   }
   if (locale === "zh-TW") return toZhTwText(profile.displayNameZh);
   return profile.displayNameZh;
@@ -91,7 +100,11 @@ export function localizeLegacyFigureProfileView(
     if (en) return applyEnBlock(profile, en);
     return {
       ...profile,
-      displayNameZh: profile.englishName || profile.displayNameZh,
+      displayNameZh: resolveLegacyFigureEnglishDisplayName(
+        profile.englishName,
+        undefined,
+        profile.displayNameZh,
+      ),
       characterRoleZh: localizeCharacterRoleZh(profile.characterRoleZh, locale),
     };
   }

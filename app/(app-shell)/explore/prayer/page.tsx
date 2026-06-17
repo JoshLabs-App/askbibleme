@@ -32,7 +32,7 @@ export default async function ExplorePrayerPage() {
   });
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreScriptureAccordionContent
         backLabelKey="pages.explore.prayerScriptureBack"
         titleKey="pages.explore.prayerScriptureTitle"

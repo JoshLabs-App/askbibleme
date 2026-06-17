@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { InteractionManager, Modal, Pressable, Text, View } from "react-native";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
+import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { t } from "../i18n/site-copy";
 import { READ_PARCHMENT_PAGE_BOTTOM } from "../read/ReadParchmentPageScroll";
@@ -134,6 +135,7 @@ export function ExploreYearDayCountScreen() {
   return (
     <View style={s.root}>
       <ParchmentBottomFadeScrollView
+        fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >

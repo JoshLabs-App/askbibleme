@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ReadChapterJumpSheet } from "@/components/bible/ReadChapterJumpSheet";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useReadChapterHref } from "@/hooks/useReadChapterHref";
+import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import type { ReadChapterNeighbor } from "@/lib/bible/read-chapter-neighbors";
 
 type Props = {
@@ -36,6 +37,7 @@ export function ReadChapterEndNav({ bookId, bookName, chapter, prev, next }: Pro
   const chapterHref = useReadChapterHref();
   const [jumpOpen, setJumpOpen] = useState(false);
   const isEnglish = locale === "en";
+  const displayBookName = getScriptureBookDisplayName(bookId, locale) || bookName;
 
   const neighborLabel = (target: ReadChapterNeighbor) =>
     isEnglish ? `Ch. ${target.chapter}` : `第${target.chapter}章`;
@@ -57,9 +59,9 @@ export function ReadChapterEndNav({ bookId, bookName, chapter, prev, next }: Pro
           type="button"
           className="read-chapter-end-nav-center"
           onClick={() => setJumpOpen(true)}
-          aria-label={t("pages.read.chapterEndNavPickBook", { bookName })}
+          aria-label={t("pages.read.chapterEndNavPickBook", { bookName: displayBookName })}
         >
-          {bookName}
+          {displayBookName}
         </button>
         <div className="read-chapter-end-nav-side read-chapter-end-nav-side--next">
           {next ? (

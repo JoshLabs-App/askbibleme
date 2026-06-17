@@ -1,7 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { ReadBibleHomeClient } from "@/components/bible/ReadBibleHomeClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
-import { readScriptureCanonCatalog } from "@/lib/bible/read-scripture-canon-catalog";
 import { readReadingPlanRegistrySync } from "@/lib/bible/reading-plans/reading-plans-store";
 import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
@@ -20,7 +19,6 @@ export default async function ReadPlaceholderPage() {
   const cookieStore = await cookies();
   const headerList = await headers();
   const locale = resolveRequestLocale(cookieStore, headerList.get("accept-language"));
-  const canon = readScriptureCanonCatalog();
   const readingPlanRegistry = readReadingPlanRegistrySync(cwd)?.plans ?? [];
   const translationIndex = readTranslationsIndexSync(cwd);
   const translationPrefs = resolveReadBibleTranslationPrefsFromCookies(cookieStore, translationIndex, locale);
@@ -32,7 +30,6 @@ export default async function ReadPlaceholderPage() {
   return (
     <ScriptureChrome scrollHome>
       <ReadBibleHomeClient
-        catalogSections={canon.sections}
         readingPlanRegistry={readingPlanRegistry}
         homeVerses={homeVerses}
       />

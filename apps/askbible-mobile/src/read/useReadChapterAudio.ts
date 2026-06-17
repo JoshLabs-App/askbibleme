@@ -10,7 +10,6 @@ import {
 } from "../bible/cuv-chapter-verse-timings";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
 import {
-  buildChapterAudioPlayableSrcSync,
   prefetchScriptureChapterAudioSrc,
   translationSupportsChapterAudio,
 } from "../bible/read-chapter-audio";
@@ -19,49 +18,28 @@ import {
   verseWeightsForReadChapterAudio,
 } from "../bible/read-chapter-audio-verse-from-progress";
 import type { LoadedChapter } from "../bible/types";
-import { getChapterAudioBaseUrl } from "../bible/chapter-audio-url";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import {
-  resolveReadChapterAudioRegistration,
   useMusicPlayback,
   useScripturePlaybackSec,
 } from "../music/MusicPlaybackContext";
-import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
-import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import {
-  clampScrollY,
-  isVerseVisibleInScrollViewport,
-  readVerseScrollFocusRatio,
-  scrollYToCenterVerse,
-  type VerseLayout,
-  type VerseScrollFocusOpts,
-} from "./read-chapter-verse-layout";
+  useReadChapterAudioScrollFollow,
+  type ReadChapterAudioScrollFollowOpts,
+} from "./useReadChapterAudioScrollFollow";
+import { useReadChapterAudioRegistration } from "./useReadChapterAudioRegistration";
 
 type ChapterTarget = { bookId: string; chapter: number };
-
-type FollowScrollOpts = {
-  verseLayoutsRef?: React.RefObject<Map<number, VerseLayout>>;
-  scrollViewportHeight?: number;
-  scrollOffsetRef?: React.RefObject<number>;
-  scrollContentHeightRef?: React.RefObject<number>;
-};
 
 export function useReadChapterAudio(
   chapterData: LoadedChapter | null,
   scrollRef: React.RefObject<ScrollView | null>,
   scrollHeaderHeightRef?: React.RefObject<number>,
   onAdvanceChapter?: (target: ChapterTarget) => void,
-  followScroll?: FollowScrollOpts,
+  followScroll?: ReadChapterAudioScrollFollowOpts,
 ) {
-  const verseLayoutsRef = followScroll?.verseLayoutsRef;
-  const scrollViewportHeight = followScroll?.scrollViewportHeight ?? 0;
-  const scrollOffsetRef = followScroll?.scrollOffsetRef;
-  const scrollContentHeightRef = followScroll?.scrollContentHeightRef;
-
-  const scrollFocusOpts = (): VerseScrollFocusOpts => ({
-    contentHeight: scrollContentHeightRef?.current,
-  });
   const {
     registerReadChapter,
     playing,
@@ -73,12 +51,8 @@ export function useReadChapterAudio(
   const registerReadChapterRef = useRef(registerReadChapter);
   registerReadChapterRef.current = registerReadChapter;
 
-  const [chapterAudioSrc, setChapterAudioSrc] = useState<string | null>(null);
   const [verseTimings, setVerseTimings] = useState<CuvChapterVerseTiming[] | null>(null);
   const [weightVerses, setWeightVerses] = useState<readonly { text: string }[] | null>(null);
-  const lastFollowScrollAtRef = useRef(0);
-  const onAdvanceChapterRef = useRef(onAdvanceChapter);
-  onAdvanceChapterRef.current = onAdvanceChapter;
   const baseUrl = useMemo(() => getAskBibleBaseUrl(), []);
   const { audioVoiceId, chapterAudioTranslationId } = useReadBibleTypography();
   const isFocused = useIsFocused();
@@ -94,83 +68,14 @@ export function useReadChapterAudio(
     return `${chapterData.bookId}:${chapterData.chapter}:${chapterAudioTranslationId}:${audioVoiceId}`;
   }, [chapterData, chapterAudioTranslationId, audioVoiceId]);
 
-  useEffect(() => {
-    return () => {
-      registerReadChapterRef.current(null);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!chapterData || !chapterAudioKey) {
-      registerReadChapterRef.current(null);
-      setChapterAudioSrc(null);
-      return;
-    }
-
-    const snapshot = chapterData;
-    const syncSrc = buildChapterAudioPlayableSrcSync({
-      baseUrl: getChapterAudioBaseUrl(),
-      translationId: chapterAudioTranslationId,
-      bookId: snapshot.bookId,
-      chapter: snapshot.chapter,
-      bookName: snapshot.bookName,
-      voiceId: audioVoiceId,
-    });
-    const reg = {
-      bookId: snapshot.bookId,
-      chapter: snapshot.chapter,
-      bookName: snapshot.bookName,
-      translationId: chapterAudioTranslationId,
-      chapterAudioSrc: syncSrc,
-      onAdvanceNextChapter: () => {},
-      onAdvanceNextInBook: () => {},
-    };
-    reg.onAdvanceNextChapter = () => {
-      const { next } = resolveReadChapterNeighbors(snapshot.bookId, snapshot.chapter);
-      if (!next) return;
-      onAdvanceChapterRef.current?.(next);
-    };
-    reg.onAdvanceNextInBook = () => {
-      const next = getNextScriptureChapterInBook(snapshot.bookId, snapshot.chapter);
-      if (!next) return;
-      onAdvanceChapterRef.current?.(next);
-    };
-
-    setChapterAudioSrc(reg.chapterAudioSrc);
-    registerReadChapterRef.current(reg);
-
-    let cancelled = false;
-    const resolveTask = InteractionManager.runAfterInteractions(() => {
-      void (async () => {
-        const resolved = await resolveReadChapterAudioRegistration({
-          bookId: snapshot.bookId,
-          chapter: snapshot.chapter,
-          bookName: snapshot.bookName,
-          translationId: chapterAudioTranslationId,
-          voiceId: audioVoiceId,
-          onAdvanceNextChapter: reg.onAdvanceNextChapter,
-          onAdvanceNextInBook: reg.onAdvanceNextInBook,
-        });
-        if (cancelled) return;
-        setChapterAudioSrc(resolved.chapterAudioSrc);
-        registerReadChapterRef.current(resolved);
-      })();
-    });
-
-    return () => {
-      cancelled = true;
-      resolveTask.cancel();
-      // 章节、语音或聚焦状态变化时，先注销旧章节，避免音频继续播上一章却用新章节正文高亮。
-      registerReadChapterRef.current(null);
-    };
-  }, [
+  const { chapterAudioSrc } = useReadChapterAudioRegistration({
+    chapterData,
     chapterAudioKey,
-    audioVoiceId,
-    chapterData?.bookId,
-    chapterData?.chapter,
     chapterAudioTranslationId,
-    chapterData?.bookName,
-  ]);
+    audioVoiceId,
+    registerReadChapterRef,
+    onAdvanceChapter,
+  });
 
   useEffect(() => {
     if (!chapterData || !supported || !isFocused) return;
@@ -304,100 +209,16 @@ export function useReadChapterAudio(
     );
   })();
 
-  useEffect(() => {
-    if (!isFocused || activeVerseIndex === null || !scrollRef.current) return;
-    if (!scrollViewportHeight || scrollViewportHeight <= 0) return;
-
-    let cancelled = false;
-    let attempts = 0;
-
-    const followActiveVerse = () => {
-      if (cancelled || !scrollRef.current) return;
-
-      const verseNum = chapterData?.verses?.[activeVerseIndex]?.verse ?? null;
-      const layout = verseNum != null ? verseLayoutsRef?.current?.get(verseNum) : null;
-      const scrollOffsetY = scrollOffsetRef?.current ?? 0;
-      const now = Date.now();
-
-      if (layout) {
-        const focusOpts = scrollFocusOpts();
-        if (
-          isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight, focusOpts) &&
-          now - lastFollowScrollAtRef.current < 900
-        ) {
-          return;
-        }
-        lastFollowScrollAtRef.current = now;
-        scrollRef.current.scrollTo({
-          y: scrollYToCenterVerse(layout, scrollViewportHeight, focusOpts),
-          animated: true,
-        });
-        return;
-      }
-
-      attempts += 1;
-      if (attempts < 10) {
-        requestAnimationFrame(followActiveVerse);
-        return;
-      }
-
-      if (now - lastFollowScrollAtRef.current < 900) return;
-      lastFollowScrollAtRef.current = now;
-      const headerY = scrollHeaderHeightRef?.current ?? 0;
-      const focusRatio = readVerseScrollFocusRatio();
-      const fallbackIdeal = headerY + activeVerseIndex * 44 - scrollViewportHeight * focusRatio;
-      scrollRef.current.scrollTo({
-        y: clampScrollY(fallbackIdeal, scrollViewportHeight, scrollContentHeightRef?.current),
-        animated: true,
-      });
-    };
-
-    followActiveVerse();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    activeVerseIndex,
-    chapterData?.verses,
-    isFocused,
+  useReadChapterAudioScrollFollow({
     scrollRef,
     scrollHeaderHeightRef,
-    scrollOffsetRef,
-    scrollViewportHeight,
-    verseLayoutsRef,
-  ]);
-
-  useEffect(() => {
-    if (!isFocused || activeVerseIndex === null || !audioMatchesChapter || !scrollRef.current) return;
-    if (!scrollViewportHeight || scrollViewportHeight <= 0) return;
-
-    const verseNum = chapterData?.verses?.[activeVerseIndex]?.verse ?? null;
-    const layout = verseNum != null ? verseLayoutsRef?.current?.get(verseNum) : null;
-    if (!layout) return;
-
-    const scrollOffsetY = scrollOffsetRef?.current ?? 0;
-    const focusOpts = scrollFocusOpts();
-    if (isVerseVisibleInScrollViewport(layout, scrollOffsetY, scrollViewportHeight, focusOpts)) return;
-
-    const now = Date.now();
-    if (now - lastFollowScrollAtRef.current < 900) return;
-    lastFollowScrollAtRef.current = now;
-    scrollRef.current.scrollTo({
-      y: scrollYToCenterVerse(layout, scrollViewportHeight, focusOpts),
-      animated: true,
-    });
-  }, [
-    activeVerseIndex,
-    audioMatchesChapter,
-    chapterData?.verses,
+    followScroll,
     isFocused,
-    scrollContentHeightRef,
-    scrollRef,
-    scrollOffsetRef,
-    scrollViewportHeight,
+    activeVerseIndex,
+    chapterVerses: chapterData?.verses,
+    audioMatchesChapter,
     scripturePlaybackSec,
-    verseLayoutsRef,
-  ]);
+  });
 
   return {
     supported,

@@ -18,11 +18,11 @@
   background: transparent;
 }
 
-/* 实际滚动区：顶缘渐隐 + 底缘更重渐隐（经文在底部由有到无）；顶栏由 padding 避让固定菜单/设置角标 */
+/* 实际滚动区：顶/底 mask 渐隐（与 App `SHELL_TAB_SCROLL_FADE_PRESET` / tabbar 对齐） */
 .read-bible-parchment-scroll,
 .read-chapter-scroll {
-  --read-parchment-edge-fade-top: 150px;
-  --read-parchment-edge-fade-bottom: 220px;
+  --read-parchment-edge-fade-top: 70px;
+  --read-parchment-edge-fade-bottom: 120px;
   box-sizing: border-box;
   flex: 1;
   min-height: 0;
@@ -36,7 +36,6 @@
     hsla(0, 0%, 100%, 0) 0,
     hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
     hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
-    hsla(0, 0%, 100%, 0.28) calc(100% - 5.5rem),
     hsla(0, 0%, 100%, 0) 100%
   );
   mask-image: linear-gradient(
@@ -44,7 +43,6 @@
     hsla(0, 0%, 100%, 0) 0,
     hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
     hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
-    hsla(0, 0%, 100%, 0.28) calc(100% - 5.5rem),
     hsla(0, 0%, 100%, 0) 100%
   );
   -webkit-mask-size: 100% 100%;
@@ -60,24 +58,10 @@
   overflow-y: auto;
 }
 
-/* 探索长文（文章、经文专题）：保留轻微顶缘渐隐，底部不再把正文淡到几乎看不见 */
+/* @deprecated 探索/长文已与 shell tab scroll mask 对齐；保留类名避免旧链接失效 */
 .read-bible-parchment-scroll.read-bible-parchment-scroll--explore-prose {
-  --read-parchment-edge-fade-top: 64px;
-  --read-parchment-edge-fade-bottom: 40px;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    hsla(0, 0%, 100%, 0) 0,
-    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
-    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
-    hsla(0, 0%, 100%, 1) 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    hsla(0, 0%, 100%, 0) 0,
-    hsla(0, 0%, 100%, 1) var(--read-parchment-edge-fade-top),
-    hsla(0, 0%, 100%, 1) calc(100% - var(--read-parchment-edge-fade-bottom)),
-    hsla(0, 0%, 100%, 1) 100%
-  );
+  --read-parchment-edge-fade-top: 70px;
+  --read-parchment-edge-fade-bottom: 120px;
 }
 
 .read-bible-parchment-scroll--read-home > .read-bible-parchment-column {
@@ -420,6 +404,12 @@
   color: color-mix(in srgb, rgb(28 20 16) 88%, transparent);
 }
 
+.read-scripture-search-hit-keyword {
+  color: color-mix(in srgb, rgb(139 90 43) 96%, rgb(92 58 28));
+  font-weight: 700;
+  background: transparent;
+}
+
 .dark .read-scripture-search-title {
   color: color-mix(in srgb, rgb(250 250 249) 92%, transparent);
 }
@@ -467,6 +457,10 @@
 
 .dark .read-scripture-search-hit-text {
   color: color-mix(in srgb, rgb(244 235 225) 88%, transparent);
+}
+
+.dark .read-scripture-search-hit-keyword {
+  color: color-mix(in srgb, rgb(218 178 120) 92%, rgb(245 230 210));
 }
 
 .read-chapter-header-top {
@@ -683,6 +677,23 @@
   padding-top: 0.125rem;
 }
 
+.read-bible-today-readings-heading {
+  width: 100%;
+  margin-top: 0.375rem;
+  margin-bottom: 0.125rem;
+  padding-left: 30px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-align: left;
+  color: #1c1410;
+}
+
+.dark .read-bible-today-readings-heading {
+  color: #f4ebe1;
+}
+
 .read-bible-today-stats {
   margin-top: 0.625rem;
   margin-bottom: 0.5rem;
@@ -701,10 +712,6 @@
     rgba(120, 53, 15, 0.28) 84%,
     transparent 100%
   );
-}
-
-.read-bible-today-reading-bar {
-  background: rgba(120, 53, 15, 0.12);
 }
 
 .read-bible-read-home-catalog {
@@ -739,10 +746,6 @@
     rgba(244, 235, 225, 0.22) 84%,
     transparent 100%
   );
-}
-
-.dark .read-bible-today-reading-bar {
-  background: rgba(244, 235, 225, 0.14);
 }
 
 .read-chapter-article {
@@ -2240,9 +2243,11 @@
 }
 
 .read-chapter-verse-search-keyword {
-  color: color-mix(in srgb, rgb(139 90 43) 92%, rgb(92 58 28));
+  color: color-mix(in srgb, rgb(139 90 43) 96%, rgb(92 58 28));
   font-weight: 700;
-  background: transparent;
+  background: color-mix(in srgb, rgb(218 178 100) 22%, transparent);
+  border-radius: 0.12em;
+  padding: 0 0.06em;
 }
 
 .dark .read-chapter-verse-search-keyword {

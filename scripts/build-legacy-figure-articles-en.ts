@@ -20,6 +20,7 @@ import {
   type LegacyFigureEnProfileBlock,
 } from "../lib/legacy-figure-articles-en-bundle";
 import { buildLegacyFiguresForBookTable } from "../lib/legacy-figure-preview";
+import { containsHanText } from "../lib/legacy-figure-english-display-name";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const bundlePath = path.join(repoRoot, "data", "legacy-figure-articles", "bundle.json");
@@ -184,6 +185,12 @@ async function translateProfile(
     parsed.characterRole = normalizeCharacterRole(parsed.characterRole, profile.characterRoleZh);
   }
   if (!parsed.displayName && profile.englishName) {
+    parsed.displayName = profile.englishName;
+  } else if (
+    profile.englishName &&
+    containsHanText(parsed.displayName) &&
+    !containsHanText(profile.englishName)
+  ) {
     parsed.displayName = profile.englishName;
   }
 

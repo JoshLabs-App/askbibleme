@@ -2,9 +2,13 @@ const path = require("path");
 const { getDefaultConfig } = require("expo/metro-config");
 
 const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, "../..");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(projectRoot);
+
+// Shared lib/ helpers (e.g. legacy-figure display names) without watching all of data/.
+config.watchFolders = [path.join(workspaceRoot, "lib")];
 
 // Lower Metro concurrency to keep file-handle pressure down on this machine.
 config.maxWorkers = 1;

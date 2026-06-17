@@ -1,0 +1,4 @@
+appId: me.askbible
+---
+- tapOn:
+    point: "12%, 93%"

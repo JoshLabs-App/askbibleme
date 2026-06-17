@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { InteractionManager } from "react-native";
 import {
+  getCachedReadingHabitStatsSnapshot,
   readReadingHabitStats,
+  readingHabitStatsSnapshotsEqual,
   snapshotFromRecord,
   subscribeReadingHabitStats,
   syncReadingHabitDayCompletion,
@@ -9,17 +11,21 @@ import {
 } from "./reading-habit-stats";
 import { getYearDayTimeline } from "./year-day-timeline";
 
+function applySnapshot(
+  setSnapshot: Dispatch<SetStateAction<ReadingHabitStatsSnapshot>>,
+  next: ReadingHabitStatsSnapshot,
+) {
+  setSnapshot((prev) => (readingHabitStatsSnapshotsEqual(prev, next) ? prev : next));
+}
+
 export function useReadingHabitStats() {
-  const [snapshot, setSnapshot] = useState<ReadingHabitStatsSnapshot>({
-    readDays: 0,
-    streakDays: 0,
-  });
+  const [snapshot, setSnapshot] = useState(getCachedReadingHabitStatsSnapshot);
 
   const yearDay = useMemo(() => getYearDayTimeline().dayOfYear, []);
 
   const refresh = useCallback(() => {
     void readReadingHabitStats().then((record) => {
-      setSnapshot(snapshotFromRecord(record));
+      applySnapshot(setSnapshot, snapshotFromRecord(record));
     });
   }, []);
 
@@ -34,7 +40,7 @@ export function useReadingHabitStats() {
 
   const syncTodayComplete = useCallback(async (allDoneToday: boolean) => {
     const record = await syncReadingHabitDayCompletion(allDoneToday);
-    setSnapshot(snapshotFromRecord(record));
+    applySnapshot(setSnapshot, snapshotFromRecord(record));
   }, []);
 
   return { yearDay, snapshot, syncTodayComplete };

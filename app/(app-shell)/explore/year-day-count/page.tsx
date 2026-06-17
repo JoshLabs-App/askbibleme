@@ -21,7 +21,7 @@ export default async function ExploreYearDayCountPage() {
   ]);
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreYearDayCountContent
         initialScriptureTexts={initialScriptureTexts}
         enScriptureBodyByRef={enScriptureBodyByRef}

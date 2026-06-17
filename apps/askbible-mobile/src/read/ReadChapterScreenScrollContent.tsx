@@ -1,0 +1,222 @@
+import { useRouter } from "expo-router";
+import {
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
+import type { EdgeInsets } from "react-native-safe-area-context";
+import type { LoadedChapter } from "../bible/types";
+import type { ContrastVerseLine } from "./readChapterScreenConstants";
+import { ReadChapterCompletionPlanPanel } from "./ReadChapterCompletionPlanPanel";
+import { ReadChapterPostReadingEditions } from "./ReadChapterPostReadingEditions";
+import { ReadChapterScreenEndingSection } from "./ReadChapterScreenEndingSection";
+import { ReadChapterScreenVerseList } from "./ReadChapterScreenVerseList";
+import { ParchmentBottomFadeScrollView } from "./ParchmentBottomFadeScrollView";
+import { READ_TAB_SCROLL_FADE_PRESET } from "./readParchmentScrollMask";
+import { readChapterScrollBottomPad } from "./read-chapter-chrome-inset";
+import type { ReadBibleTypographyPx } from "./read-bible-typography-prefs";
+import {
+  INFO_EDITION_GUIDE_V2_EN_ROLE_ID,
+  INFO_EDITION_V1_EN_ROLE_ID,
+  READ_CHAPTER_SCROLL_TOP_PAD,
+} from "./readChapterScreenConstants";
+import { readChapterScreenStyles as styles } from "./readChapterScreenStyles";
+import { useReadChapterScreenDisplay } from "./useReadChapterScreenDisplay";
+import { useReadChapterScreenNav } from "./useReadChapterScreenNav";
+import { useReadChapterVerseActions } from "./useReadChapterVerseActions";
+
+type DisplayProps = Omit<ReturnType<typeof useReadChapterScreenDisplay>, "clearXrefOnRouteChange">;
+type VerseActionsProps = ReturnType<typeof useReadChapterVerseActions>;
+type NavProps = Omit<ReturnType<typeof useReadChapterScreenNav>, "onAdvanceChapterAudio">;
+
+type Props = {
+  insets: EdgeInsets;
+  chapterData: LoadedChapter;
+  searchQuery: string;
+  scrollRef: React.RefObject<ScrollView | null>;
+  scrollHeaderHeightRef: React.MutableRefObject<number>;
+  scrollColumnMaxWidth: number | undefined;
+  setAudioViewportHeight: (height: number) => void;
+  onScrollViewportLayout: (height: number) => void;
+  refreshScrollViewportTop: () => void;
+  onChapterScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  onChapterContentSizeChange: (width: number, height: number) => void;
+  px: ReadBibleTypographyPx;
+  searchFocusVerse: number | null;
+  activeVerseIndex: number | null;
+  contrastByVerse: Map<number, ContrastVerseLine[]> | null;
+  xrefVerseNumbers: Set<number> | null;
+  postReadingReady: boolean;
+  chapterCompleted: boolean;
+  reportVerseLayoutFromEvent: (verse: number, e: LayoutChangeEvent) => void;
+  isBookmarked: (ref: {
+    translationId: string;
+    bookId: string;
+    chapter: number;
+    verse: number;
+  }) => boolean;
+  display: DisplayProps;
+  verseActions: VerseActionsProps;
+  nav: NavProps;
+};
+
+export function ReadChapterScreenScrollContent({
+  insets,
+  chapterData,
+  searchQuery,
+  scrollRef,
+  scrollHeaderHeightRef,
+  scrollColumnMaxWidth,
+  setAudioViewportHeight,
+  onScrollViewportLayout,
+  refreshScrollViewportTop,
+  onChapterScroll,
+  onChapterContentSizeChange,
+  px,
+  searchFocusVerse,
+  activeVerseIndex,
+  contrastByVerse,
+  xrefVerseNumbers,
+  postReadingReady,
+  chapterCompleted,
+  reportVerseLayoutFromEvent,
+  isBookmarked,
+  display,
+  verseActions,
+  nav,
+}: Props) {
+  const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const {
+    tr,
+    localeZhText,
+    localeDisplayText,
+    displayBookName,
+    chapterTitleText,
+    formatNeighborChapterLabel,
+    endNavNext,
+    endNavPrev,
+    speechPartsByVerse,
+    segmentMeta,
+    paragraphGroups,
+    useParagraphFlowLayout,
+    verseIndexByVerse,
+    postReadingDisplayLocale,
+    isEnglishPostReading,
+    prefersEnglishInfoEdition,
+    setXrefSheetVerse,
+  } = display;
+  const {
+    highlightWordEditor,
+    selectedVerses,
+    verseSelectionMode,
+    highlightedVerseIndexes,
+    parentVersePressHandler,
+    parentVerseLongPressHandler,
+    verseBodyPressProps,
+  } = verseActions;
+  const { scrollToTop, goNextChrome, goPrevChrome } = nav;
+
+  return (
+    <ParchmentBottomFadeScrollView
+      ref={scrollRef}
+      fadePreset={READ_TAB_SCROLL_FADE_PRESET}
+      style={styles.scroll}
+      scrollEnabled={highlightWordEditor == null}
+      onLayout={(e) => {
+        const h = e.nativeEvent.layout.height;
+        onScrollViewportLayout(h);
+        setAudioViewportHeight(h > 0 ? Math.round(h) : 0);
+        refreshScrollViewportTop();
+      }}
+      onScroll={onChapterScroll}
+      onContentSizeChange={onChapterContentSizeChange}
+      scrollEventThrottle={120}
+      contentContainerStyle={[
+        styles.scrollContent,
+        scrollColumnMaxWidth != null ? { maxWidth: scrollColumnMaxWidth } : null,
+        {
+          paddingTop: READ_CHAPTER_SCROLL_TOP_PAD + insets.top,
+          paddingBottom: readChapterScrollBottomPad(insets.bottom, true),
+        },
+      ]}
+    >
+      <View
+        style={styles.header}
+        onLayout={(e) => {
+          scrollHeaderHeightRef.current = Math.round(e.nativeEvent.layout.height);
+        }}
+      >
+        <Text style={[styles.chapterTitle, { fontSize: px.chapterTitleSize }]}>
+          {chapterTitleText}
+        </Text>
+      </View>
+
+      <ReadChapterScreenVerseList
+        chapterData={chapterData}
+        px={px}
+        useParagraphFlowLayout={useParagraphFlowLayout}
+        paragraphGroups={paragraphGroups}
+        segmentMeta={segmentMeta}
+        searchFocusVerse={searchFocusVerse}
+        searchQuery={searchQuery}
+        selectedVerses={selectedVerses}
+        verseSelectionMode={verseSelectionMode}
+        highlightedVerseIndexes={highlightedVerseIndexes}
+        xrefVerseNumbers={xrefVerseNumbers}
+        activeVerseIndex={activeVerseIndex}
+        verseIndexByVerse={verseIndexByVerse}
+        speechPartsByVerse={speechPartsByVerse}
+        contrastByVerse={contrastByVerse}
+        localeZhText={localeZhText}
+        verseXrefA11yLabel={tr("pages.read.verseXrefMarkerA11y")}
+        verseSelectionTapA11yHint={tr("pages.read.verseSelectionTapA11yHint")}
+        verseBookmarkA11yHint={tr("pages.read.verseBookmarkA11yHint")}
+        isBookmarked={isBookmarked}
+        parentVersePressHandler={parentVersePressHandler}
+        parentVerseLongPressHandler={parentVerseLongPressHandler}
+        verseBodyPressProps={verseBodyPressProps}
+        reportVerseLayoutFromEvent={reportVerseLayoutFromEvent}
+        onXrefVersePress={setXrefSheetVerse}
+      />
+
+      <ReadChapterScreenEndingSection
+        screenWidth={screenWidth}
+        displayBookName={displayBookName}
+        chapterCompleted={chapterCompleted}
+        completedLabel={isEnglishPostReading ? "Completed" : localeDisplayText("已完成读经")}
+        endNavPrev={endNavPrev}
+        endNavNext={endNavNext}
+        formatNeighborChapterLabel={formatNeighborChapterLabel}
+        onGoPrev={goPrevChrome}
+        onGoNext={goNextChrome}
+        onOpenCatalog={() => router.push("/read/catalog")}
+      />
+
+      {postReadingReady ? (
+        <ReadChapterPostReadingEditions
+          bookId={chapterData.bookId}
+          chapter={chapterData.chapter}
+          displayLocale={postReadingDisplayLocale}
+          infoRoleId={prefersEnglishInfoEdition ? INFO_EDITION_V1_EN_ROLE_ID : null}
+          guideRoleId={prefersEnglishInfoEdition ? INFO_EDITION_GUIDE_V2_EN_ROLE_ID : null}
+          onBackToTop={scrollToTop}
+          onGoPrevChapter={endNavPrev ? goPrevChrome : undefined}
+          onGoNextChapter={endNavNext ? goNextChrome : undefined}
+        />
+      ) : null}
+
+      {chapterCompleted ? (
+        <ReadChapterCompletionPlanPanel
+          bookId={chapterData.bookId}
+          chapter={chapterData.chapter}
+          displayLocale={postReadingDisplayLocale}
+        />
+      ) : null}
+    </ParchmentBottomFadeScrollView>
+  );
+}

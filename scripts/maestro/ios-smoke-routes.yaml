@@ -1,0 +1,41 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 60000
+- openLink: askbible://music
+- waitForAnimationToEnd
+- openLink: askbible://read
+- waitForAnimationToEnd
+- openLink: askbible://read/catalog
+- waitForAnimationToEnd
+- openLink: askbible://read/GEN/1
+- waitForAnimationToEnd
+- openLink: askbible://read/search
+- waitForAnimationToEnd
+- openLink: askbible://read/favorites
+- waitForAnimationToEnd
+- openLink: askbible://read/plans
+- waitForAnimationToEnd
+- openLink: askbible://explore
+- waitForAnimationToEnd
+- openLink: askbible://explore/year-day-count
+- waitForAnimationToEnd
+- openLink: askbible://explore/narrow-gate
+- waitForAnimationToEnd
+- openLink: askbible://explore/praise-worship
+- waitForAnimationToEnd
+- openLink: askbible://explore/prayer
+- waitForAnimationToEnd
+- openLink: askbible://explore/figures
+- waitForAnimationToEnd
+- openLink: askbible://explore/biblical-feasts
+- waitForAnimationToEnd
+- openLink: askbible://explore/years-days-eternity
+- waitForAnimationToEnd
+- openLink: askbible://explore/word-of-god
+- waitForAnimationToEnd
+- openLink: askbible://
+- waitForAnimationToEnd

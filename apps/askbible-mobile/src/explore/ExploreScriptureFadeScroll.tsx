@@ -9,10 +9,12 @@ import {
   View,
   type LayoutChangeEvent,
 } from "react-native";
-import { EdgeFadeScrollMask } from "../ui/edgeFadeScrollMask";
+import {
+  type ReadParchmentFadePreset,
+  ReadParchmentScrollMask,
+  SHELL_TAB_SCROLL_FADE_PRESET,
+} from "../read/readParchmentScrollMask";
 
-const FADE_TOP_PX = 112;
-const FADE_BOTTOM_PX = 112;
 /** 每秒上移像素 */
 const AUTO_SCROLL_PX_PER_SEC = 9;
 
@@ -27,8 +29,7 @@ function nativeMaskedViewAvailable(): boolean {
 type Props = {
   height: number;
   children: ReactNode;
-  fadeTopPx?: number;
-  fadeBottomPx?: number;
+  fadePreset?: ReadParchmentFadePreset;
   /** 缓慢上滚并无缝循环 */
   autoScroll?: boolean;
   /** 单圈经文块高度（由父级 onLayout 测量） */
@@ -36,14 +37,13 @@ type Props = {
 };
 
 /**
- * 经文区：mask 让文字在顶/底缘自身渐隐（无羊皮色叠层）。
+ * 经文区：mask 让文字在顶/底缘渐隐（与读经 / 探索主 scroll 同一 preset）。
  * autoScroll 用 translate 动画，避免 MaskedView 内 scrollTo 卡住。
  */
 export function ExploreScriptureFadeScroll({
   height,
   children,
-  fadeTopPx = FADE_TOP_PX,
-  fadeBottomPx = FADE_BOTTOM_PX,
+  fadePreset = SHELL_TAB_SCROLL_FADE_PRESET,
   autoScroll = false,
   loopSegmentHeight = 0,
 }: Props) {
@@ -116,11 +116,7 @@ export function ExploreScriptureFadeScroll({
         <MaskedView
           style={[styles.masked, { height: viewportHeight }]}
           maskElement={
-            <EdgeFadeScrollMask
-              viewportHeight={viewportHeight}
-              fadeTopPx={fadeTopPx}
-              fadeBottomPx={fadeBottomPx}
-            />
+            <ReadParchmentScrollMask viewportHeight={viewportHeight} preset={fadePreset} />
           }
         >
           <View style={[styles.viewport, { height: viewportHeight }]}>{body}</View>

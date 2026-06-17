@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BibleCatalogReadOutline } from "@/components/bible/BibleCatalogReadOutline";
 import { ReadBibleHomeTopActions } from "@/components/bible/ReadBibleHomeTopActions";
 import { ReadBibleHomeVerseRotator } from "@/components/bible/ReadBibleHomeVerseRotator";
@@ -10,20 +10,23 @@ import {
 } from "@/components/bible/ReadTodayPlanPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useTodayReadingPlan } from "@/hooks/useTodayReadingPlan";
-import type { ScriptureCanonCatalogSection } from "@/lib/bible/read-scripture-canon-catalog";
+import { getScriptureCanonCatalogSectionsClient } from "@/lib/bible/scripture-canon-catalog-client";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import type { ReadHomeVerseItem } from "@/lib/read/read-home-verse-rotation";
 import { readLastReadPosition } from "@/lib/read/read-last-position";
 
 type Props = {
-  catalogSections: ScriptureCanonCatalogSection[];
   readingPlanRegistry: ReadingPlanRegistryEntry[];
   homeVerses: ReadHomeVerseItem[];
 };
 
 /** `/read` 首页 — 对齐 iOS `ReadCatalogScreen`（homeMode）。 */
-export function ReadBibleHomeClient({ catalogSections, readingPlanRegistry, homeVerses }: Props) {
-  const { t } = useLocale();
+export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) {
+  const { locale, t } = useLocale();
+  const catalogSections = useMemo(
+    () => getScriptureCanonCatalogSectionsClient(locale),
+    [locale],
+  );
   const plan = useTodayReadingPlan(readingPlanRegistry);
   const [lastReadBookId, setLastReadBookId] = useState<string | undefined>();
 

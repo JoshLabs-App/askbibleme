@@ -32,7 +32,7 @@ export default async function ExploreWordOfGodPage() {
   });
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreScriptureAccordionContent
         backLabelKey="pages.explore.wordOfGodBack"
         titleKey="pages.explore.wordOfGodTitle"

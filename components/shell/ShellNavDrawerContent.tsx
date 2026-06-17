@@ -8,6 +8,8 @@ import { HomeTtsExperimentDrawerSection } from "@/components/home/HomeTtsExperim
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import {
+  appendHomeVersePoolScopeCount,
+  getHomeVersePoolScopeVerseCount,
   HOME_VERSE_POOL_SCOPE_OPTIONS,
   type HomeVersePoolScopeId,
 } from "@/lib/explore/explore-home-verse-pool-scopes";
@@ -73,9 +75,9 @@ function ShellNavDrawerLocaleRow() {
   };
 
   return (
-    <div className="shell-nav-drawer-inline-row">
+    <div className="shell-nav-drawer-locale-row">
       <span className="shell-nav-drawer-row-text">{zh ? "语言" : "Language"}</span>
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="shell-nav-drawer-locale-chips">
         {(["en", "zh-TW", "zh-CN"] as const).map((item) => (
           <button
             key={item}
@@ -117,8 +119,11 @@ function ShellNavDrawerVersePoolSection() {
   const current =
     HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
     HOME_VERSE_POOL_SCOPE_OPTIONS[0]!;
-  const currentValue =
-    locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh;
+  const currentValue = appendHomeVersePoolScopeCount(
+    locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh,
+    getHomeVersePoolScopeVerseCount(current.id),
+    locale,
+  );
 
   return (
     <div>
@@ -147,8 +152,11 @@ function ShellNavDrawerVersePoolSection() {
         <div className="shell-nav-drawer-select-options">
           {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope) => {
             const selected = homeVersePoolScope === scope.id;
-            const label =
-              locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh;
+            const label = appendHomeVersePoolScopeCount(
+              locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh,
+              getHomeVersePoolScopeVerseCount(scope.id),
+              locale,
+            );
             return (
               <button
                 key={scope.id}

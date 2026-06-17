@@ -16,7 +16,7 @@ type Props = {
 };
 
 /**
- * 读经 / 探索底栏后的羊皮渐隐底 — 不依赖滚动区 MaskedView，避免 Tab 切换后偶发透明。
+ * 底栏后的羊皮渐隐底（当前无 Tab 启用；读经 / 探索由 scroll mask 渐隐）。
  * 首页 / 音乐不使用此层（视频与封面本身已足够，不需要额外压暗）。
  */
 export function ShellTabBarBottomScrim({

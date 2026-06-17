@@ -1,0 +1,11 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://explore/figures/figure-amos
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000
+- openLink: askbible://explore/year-day-count/birth-settings
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 30000

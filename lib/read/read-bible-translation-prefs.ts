@@ -4,6 +4,34 @@ import { LOCALE_COOKIE_NAME, parseLocale, type AppLocale } from "@/lib/i18n/conf
 import type { BibleTranslationsIndex } from "@/lib/bible/translations-types";
 import { normalizeReadBibleAudioTranslationId } from "@/lib/read/read-chapter-audio-translation";
 
+function translationLangFamily(language: string): "en" | "zh-hant" | "zh-hans" | "other" {
+  const lang = language.trim().toLowerCase();
+  if (lang.startsWith("en")) return "en";
+  if (lang.includes("hant") || lang === "zh-tw") return "zh-hant";
+  if (lang.startsWith("zh")) return "zh-hans";
+  return "other";
+}
+
+export function uiLocaleScriptureLangFamily(locale: AppLocale): "en" | "zh-hant" | "zh-hans" {
+  if (locale === "en") return "en";
+  if (locale === "zh-TW") return "zh-hant";
+  return "zh-hans";
+}
+
+/** 章页 SSR：界面语言与已存译本语言不一致时，跟界面语言走。 */
+export function resolveReadChapterPrimaryTranslationId(
+  prefs: ReadBibleTranslationPrefsV1,
+  index: BibleTranslationsIndex,
+  locale: AppLocale,
+): string {
+  const stored = prefs.primaryTranslationId;
+  const meta = index.translations.find((t) => t.id === stored);
+  const storedFamily = translationLangFamily(meta?.language ?? "");
+  const localeFamily = uiLocaleScriptureLangFamily(locale);
+  if (storedFamily === localeFamily) return stored;
+  return resolveDefaultPrimaryTranslationId(index, locale);
+}
+
 export const READ_BIBLE_TRANSLATION_STORAGE_KEY = "selah_read_bible_translation_v1";
 
 export const READ_BIBLE_PRIMARY_TRANSLATION_COOKIE = "selah_read_primary_tid";

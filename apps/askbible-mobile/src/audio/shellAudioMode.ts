@@ -38,7 +38,10 @@ export function shellSoundDownloadFirst(source: AVPlaybackSource): boolean {
 }
 
 /** 创建 Sound 后确保可听（模拟器上 isPlaying 为 true 但音量为 0 / 被 duck 的常见兜底）。 */
-export async function primeShellSoundPlayback(sound: Audio.Sound): Promise<void> {
+export async function primeShellSoundPlayback(
+  sound: Audio.Sound,
+  options?: { autoPlay?: boolean },
+): Promise<void> {
   await configureShellAudioMode();
   try {
     await sound.setIsMutedAsync(false);
@@ -46,6 +49,7 @@ export async function primeShellSoundPlayback(sound: Audio.Sound): Promise<void>
   } catch {
     /* ignore */
   }
+  if (options?.autoPlay === false) return;
   try {
     const status = await sound.getStatusAsync();
     if (status.isLoaded && !status.isPlaying) {

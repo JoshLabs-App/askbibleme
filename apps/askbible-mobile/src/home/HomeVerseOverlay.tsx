@@ -1,16 +1,10 @@
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { Animated, InteractionManager, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parseVerseKey } from "../bible/parse-verse-key";
-import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import type { AppLocale } from "../i18n/config";
-import { SHELL_TAB_BAR_CLEARANCE } from "../shell/shellLayout";
-import {
-  HOME_SCENE_THUMB_SIZE,
-  HOME_SCENE_THUMB_SLOT_PAD,
-} from "./HomeSceneThumb";
 import {
   readNatureHomeTextScaleIndex,
   readNatureHomeVerseAppearance,
@@ -27,6 +21,16 @@ import {
   getHomeVersePoolScope,
   subscribeHomeVersePoolScope,
 } from "./homeVersePoolScopePrefs";
+import {
+  GOLDEN_UPPER,
+  HOME_VERSE_UP_SHIFT,
+  hasCjkChars,
+  homeVerseMaxHeightPx,
+  referenceForSpeechByVerseKey,
+  resolveSpeechLocale,
+} from "./homeVerseOverlayHelpers";
+import { homeVerseOverlayStyles as styles } from "./homeVerseOverlayStyles";
+import { useHomeVerseOverlayFade } from "./useHomeVerseOverlayFade";
 
 type Props = {
   prefsVersion?: number;
@@ -43,81 +47,6 @@ type Props = {
   }) => void;
   onAdvanceControllerReady?: (advanceNow: () => Promise<void>) => void;
 };
-
-const PHI = (1 + Math.sqrt(5)) / 2;
-/** 上黄金线（距安全区顶 ≈ 38.2%） */
-const GOLDEN_UPPER = 1 - 1 / PHI;
-/** 首页经文整体上移 10% 视口高度 */
-const HOME_VERSE_UP_SHIFT = 0.1;
-const HOME_VERSE_TOP_PAD = 12;
-/** 与 `HomeNatureScreen` `bottomBand` + 场景条行高对齐 */
-const HOME_SCENE_STRIP_BAND_H =
-  12 + 6 + (HOME_SCENE_THUMB_SIZE + HOME_SCENE_THUMB_SLOT_PAD * 2) + 6;
-const CJK_CHAR_RE = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
-
-function homeVerseMaxHeightPx(
-  screenH: number,
-  insets: { top: number; bottom: number },
-): number {
-  const usableH = Math.max(1, screenH - insets.top - insets.bottom);
-  const goldenY = insets.top + usableH * (GOLDEN_UPPER - HOME_VERSE_UP_SHIFT);
-  const spaceAbove = Math.max(0, goldenY - insets.top - HOME_VERSE_TOP_PAD);
-  const stripTop = screenH - (SHELL_TAB_BAR_CLEARANCE + insets.bottom) - HOME_SCENE_STRIP_BAND_H;
-  const spaceBelow = Math.max(0, stripTop - goldenY);
-  // 以“中线”对齐黄金线：块体上下各占一半。
-  return Math.floor(Math.min(spaceAbove, spaceBelow) * 2);
-}
-
-function hasCjkChars(text: string): boolean {
-  return CJK_CHAR_RE.test(text);
-}
-
-const LATIN_CHAR_RE = /[A-Za-z]/;
-
-function resolveSpeechLocale(
-  speechMain: string,
-  translationId: string,
-): AppLocale {
-  const text = speechMain.trim();
-  if (text) {
-    if (LATIN_CHAR_RE.test(text) && !hasCjkChars(text)) return "en";
-    if (hasCjkChars(text)) return "zh-CN";
-  }
-  return flowLocaleForHomeVerseTranslationId(translationId);
-}
-
-function referenceForSpeech(ref: string, isEnglish: boolean): string {
-  const raw = String(ref || "").trim();
-  if (!raw) return "";
-  return raw.replace(
-    /(\d+)\s*:\s*(\d+)(?:\s*[-~—]\s*(\d+))?/g,
-    (_m, chapterRaw: string, verseStartRaw: string, verseEndRaw?: string) => {
-      const chapter = String(chapterRaw).trim();
-      const verseStart = String(verseStartRaw).trim();
-      const verseEnd = verseEndRaw ? String(verseEndRaw).trim() : "";
-      if (isEnglish) {
-        return verseEnd
-          ? `chapter ${chapter} verse ${verseStart} to ${verseEnd}`
-          : `chapter ${chapter} verse ${verseStart}`;
-      }
-      return verseEnd ? `${chapter}章${verseStart}到${verseEnd}节` : `${chapter}章${verseStart}节`;
-    },
-  );
-}
-
-function referenceForSpeechByVerseKey(
-  verseKey: string | null | undefined,
-  ref: string,
-  isEnglish: boolean,
-): string {
-  const parsed = verseKey ? parseVerseKey(verseKey) : null;
-  if (!parsed) return referenceForSpeech(ref, isEnglish);
-  const bookName = getScriptureBookDisplayName(parsed.bookId, isEnglish ? "en" : "zh-CN");
-  if (isEnglish) {
-    return `${bookName} chapter ${parsed.chapter} verse ${parsed.verse}`;
-  }
-  return `${bookName}${parsed.chapter}章${parsed.verse}节`;
-}
 
 /** 自然首页轮播经文：竖屏与网站 `top-[38.2%]` 对齐；横屏整块落黄金位。 */
 export function HomeVerseOverlay({
@@ -140,20 +69,25 @@ export function HomeVerseOverlay({
   const { ready, entry, contrastEntry, verseKey, primaryTranslationId, contrastTranslationId, advanceNow } =
     useHomeThemeRepeatVerse(locale, undefined, prefsVersion, pauseRotation, homeVersePoolScope);
 
-  const fadeAnim = useState(() => new Animated.Value(1))[0];
-  const [displayVerse, setDisplayVerse] = useState(() => ({
-    entry: null as typeof entry,
-    contrastEntry: null as typeof contrastEntry,
-    verseKey: null as typeof verseKey,
-    primaryTranslationId: "",
-    contrastTranslationId: "",
-  }));
-  const displayVerseRef = useRef(displayVerse);
   const [appearance, setAppearance] = useState<NatureHomeVerseAppearance | null>(null);
   const [scaleIndex, setScaleIndex] = useState(12);
   const [blockH, setBlockH] = useState(40);
-  const FADE_IN_MS = 2000;
-  const FADE_OUT_MS = 2000;
+
+  const {
+    fadeAnim,
+    effectiveEntry,
+    effectiveContrastEntry,
+    effectiveVerseKey,
+    effectivePrimaryTranslationId,
+    effectiveContrastTranslationId,
+  } = useHomeVerseOverlayFade({
+    ready,
+    entry,
+    contrastEntry,
+    verseKey,
+    primaryTranslationId,
+    contrastTranslationId,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -173,78 +107,6 @@ export function HomeVerseOverlay({
       task.cancel();
     };
   }, [prefsVersion]);
-
-  useEffect(() => {
-    displayVerseRef.current = displayVerse;
-  }, [displayVerse]);
-
-  useEffect(() => {
-    if (!ready || !entry) return;
-    const current = displayVerseRef.current;
-    const next = {
-      entry,
-      contrastEntry,
-      verseKey,
-      primaryTranslationId,
-      contrastTranslationId,
-    };
-
-    if (!current.entry) {
-      setDisplayVerse(next);
-      fadeAnim.stopAnimation();
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: FADE_IN_MS,
-        useNativeDriver: true,
-      }).start();
-      return;
-    }
-
-    const currentKey = (current.verseKey ?? "").trim();
-    const nextKey = (next.verseKey ?? "").trim();
-    const sameVerse = currentKey === nextKey;
-    const sameTranslations =
-      current.primaryTranslationId === next.primaryTranslationId &&
-      current.contrastTranslationId === next.contrastTranslationId;
-    if (sameVerse && sameTranslations) {
-      fadeAnim.stopAnimation();
-      fadeAnim.setValue(1);
-      return;
-    }
-
-    fadeAnim.stopAnimation();
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: FADE_OUT_MS,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (!finished) return;
-      setDisplayVerse(next);
-      fadeAnim.setValue(0);
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: FADE_IN_MS,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [
-    ready,
-    entry,
-    contrastEntry,
-    verseKey,
-    primaryTranslationId,
-    contrastTranslationId,
-    fadeAnim,
-  ]);
-
-  const effectiveEntry = displayVerse.entry ?? entry;
-  const effectiveContrastEntry = displayVerse.contrastEntry ?? contrastEntry;
-  const effectiveVerseKey = displayVerse.verseKey ?? verseKey;
-  const effectivePrimaryTranslationId =
-    displayVerse.primaryTranslationId || primaryTranslationId;
-  const effectiveContrastTranslationId =
-    displayVerse.contrastTranslationId || contrastTranslationId;
 
   useEffect(() => {
     onAdvanceControllerReady?.(advanceNow);
@@ -428,51 +290,3 @@ export function HomeVerseOverlay({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapHomeStage: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 12,
-  },
-  goldenSlot: {
-    position: "absolute",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  goldenSlotText: {
-    width: "100%",
-    maxWidth: 560,
-    textAlign: "center",
-  },
-  barStripCard: {
-    maxWidth: "88%",
-    borderRadius: 10,
-    backgroundColor: "rgba(0,0,0,0.30)",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  barStripText: {
-    textAlign: "center",
-    maxWidth: 560,
-  },
-  barStripInlineCard: {
-    alignSelf: "center",
-  },
-  cjkText: {
-    letterSpacing: 0,
-  },
-  wrapInline: {
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-  },
-  tapTarget: {
-    alignItems: "center",
-    maxWidth: "100%",
-  },
-  tapTargetPressed: {
-    opacity: 0.88,
-  },
-});

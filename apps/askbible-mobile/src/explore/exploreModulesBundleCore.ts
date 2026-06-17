@@ -34,6 +34,28 @@ export type ExploreModulesYearDayCountScriptureRef = {
   verseEnd?: number;
 };
 
+export type ExploreHomeLocalizedText = {
+  zh?: string;
+  zhTw?: string;
+  en?: string;
+};
+
+export type ExploreModulesRemoteStagedModule = {
+  pageTitle?: string;
+  pageTitleTw?: string;
+  pageTitleEn?: string;
+  bookAbbrToId: Record<string, string>;
+  categories: ExploreModulesCategory[];
+  titlesEn?: string[];
+};
+
+export type ExploreModulesExploreHome = {
+  visibleStagedEntryIds: string[];
+  sectionCaption?: ExploreHomeLocalizedText;
+  entryLabels?: Record<string, ExploreHomeLocalizedText>;
+  remoteModules?: Record<string, ExploreModulesRemoteStagedModule>;
+};
+
 export type ExploreModulesBundle = {
   schemaVersion: 1;
   contentVersion: string;
@@ -76,6 +98,7 @@ export type ExploreModulesBundle = {
     spanYears: number;
     batterySegmentCount: number;
   };
+  exploreHome?: ExploreModulesExploreHome;
 };
 
 export function isExploreModulesBundle(raw: unknown): raw is ExploreModulesBundle {

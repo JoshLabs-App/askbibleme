@@ -1,45 +1,49 @@
 import type { AppLocale } from "../i18n/config";
 import { localizeZhText } from "../i18n/site-copy";
+import {
+  legacyFigureCharacterRoleEn,
+  resolveLegacyFigureEnglishDisplayName,
+} from "./legacyFigureEnglishDisplayName";
 import type { MobileLegacyFigureProfile, MobileLegacyFigureTimelineEntry } from "./mobileLegacyFiguresCore";
 import { getMobileLegacyFigureProfileById } from "./mobileLegacyFiguresCore";
-
-const CHARACTER_ROLE_EN: Record<string, string> = {
-  主人物: "Primary character",
-  相关人物: "Related figure",
-};
 
 export function resolveMobileLegacyFigureView(
   profile: MobileLegacyFigureProfile,
   locale: AppLocale,
 ): MobileLegacyFigureProfile {
-  if (locale === "en" && profile.en) {
-    const en = profile.en;
-    return {
-      ...profile,
-      displayNameZh: en.displayName || profile.englishName || profile.displayNameZh,
-      scripturePersonalityZh: en.scripturePersonality ?? profile.scripturePersonalityZh,
-      periodLabelZh: en.periodLabel ?? profile.periodLabelZh,
-      lifespanZh: en.lifespan ?? profile.lifespanZh,
-      characterRoleZh: en.characterRole ?? CHARACTER_ROLE_EN[profile.characterRoleZh ?? ""] ?? profile.characterRoleZh,
-      article: en.article
-        ? {
-            ...(profile.article ?? {
-              slug: profile.linkedArticleSlug || profile.slug,
-            }),
-            title: en.article.title,
-            summary: en.article.summary,
-            body: en.article.body,
-          }
-        : profile.article,
-    };
-  }
-
   if (locale === "en") {
+    const en = profile.en;
+    const displayNameZh = resolveLegacyFigureEnglishDisplayName(
+      profile.englishName,
+      en?.displayName,
+      profile.displayNameZh,
+    );
+    if (en) {
+      return {
+        ...profile,
+        displayNameZh,
+        scripturePersonalityZh: en.scripturePersonality ?? profile.scripturePersonalityZh,
+        periodLabelZh: en.periodLabel ?? profile.periodLabelZh,
+        lifespanZh: en.lifespan ?? profile.lifespanZh,
+        characterRoleZh:
+          en.characterRole ?? legacyFigureCharacterRoleEn(profile.characterRoleZh) ?? profile.characterRoleZh,
+        article: en.article
+          ? {
+              ...(profile.article ?? {
+                slug: profile.linkedArticleSlug || profile.slug,
+              }),
+              title: en.article.title,
+              summary: en.article.summary,
+              body: en.article.body,
+            }
+          : profile.article,
+      };
+    }
     return {
       ...profile,
-      displayNameZh: profile.englishName || profile.displayNameZh,
+      displayNameZh,
       characterRoleZh:
-        CHARACTER_ROLE_EN[profile.characterRoleZh ?? ""] ?? profile.characterRoleZh,
+        legacyFigureCharacterRoleEn(profile.characterRoleZh) ?? profile.characterRoleZh,
     };
   }
 
@@ -73,6 +77,8 @@ export function mobileLegacyFigureDisplayName(
 ): string {
   const full = getMobileLegacyFigureProfileById(figure.id);
   if (full) return resolveMobileLegacyFigureView(full, locale).displayNameZh;
-  if (locale === "en") return figure.englishName || figure.displayNameZh;
+  if (locale === "en") {
+    return resolveLegacyFigureEnglishDisplayName(figure.englishName, undefined, figure.displayNameZh);
+  }
   return localizeZhText(locale, figure.displayNameZh);
 }

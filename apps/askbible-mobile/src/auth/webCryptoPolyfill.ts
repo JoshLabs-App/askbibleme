@@ -13,29 +13,34 @@ async function sha256(data: ArrayBuffer): Promise<ArrayBuffer> {
   return out.buffer;
 }
 
+function bufferFromSource(data: BufferSource): ArrayBuffer {
+  if (data instanceof ArrayBuffer) return data;
+  if (ArrayBuffer.isView(data)) {
+    return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  }
+  return new Uint8Array(data as unknown as ArrayLike<number>).buffer;
+}
+
 /** Supabase PKCE needs `crypto.subtle.digest(SHA-256)` in React Native. */
 export function installWebCryptoSubtlePolyfill(): void {
   const root = globalThis as typeof globalThis & { crypto?: Crypto };
   if (!root.crypto) {
-    root.crypto = {} as Crypto;
+    Object.defineProperty(globalThis, "crypto", { value: {} as Crypto, configurable: true });
   }
-  if (root.crypto.subtle?.digest) return;
+  const cryptoRef = root.crypto!;
+  if (typeof cryptoRef.subtle?.digest === "function") return;
 
-  root.crypto.subtle = {
+  const subtle = {
     digest: async (algorithm: AlgorithmIdentifier, data: BufferSource) => {
       const name = typeof algorithm === "string" ? algorithm : algorithm.name;
       if (name !== "SHA-256") {
         throw new Error(`Unsupported algorithm: ${name}`);
       }
-      const buffer =
-        data instanceof ArrayBuffer
-          ? data
-          : data instanceof Uint8Array
-            ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
-            : new Uint8Array(data as ArrayLike<number>).buffer;
-      return sha256(buffer);
+      return sha256(bufferFromSource(data));
     },
   } as SubtleCrypto;
+
+  Object.defineProperty(cryptoRef, "subtle", { value: subtle, configurable: true });
 }
 
 installWebCryptoSubtlePolyfill();

@@ -32,7 +32,7 @@ async function ensureXrefDatabaseOnDisk(): Promise<void> {
   const dest = `${sqliteDir}/${XREF_DB_NAME}`;
   const legacyDest = `${sqliteDir}/${XREF_DB_LEGACY_NAME}`;
 
-  if (XREF_DB_LEGACY_NAME !== XREF_DB_NAME) {
+  if (XREF_DB_LEGACY_NAME !== (XREF_DB_NAME as string)) {
     try {
       await SQLite.deleteDatabaseAsync(XREF_DB_LEGACY_NAME);
     } catch {

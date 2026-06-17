@@ -38,7 +38,7 @@ export default async function ExploreFigureOrphanArticlePage({ params }: Props) 
   const exploreCopy = getMessages(locale).pages.explore;
 
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreProsePage className="figure-parchment-page">
         <Link href="/explore/figures" className="explore-prose-back underline">
           {exploreCopy.figuresBack}

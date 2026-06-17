@@ -263,3 +263,15 @@ export const HOME_VERSE_POOL_SCOPE_KEYS: Record<HomeVersePoolScopeId, Set<string
 export function isHomeVersePoolScopeId(v: string): v is HomeVersePoolScopeId {
   return v in HOME_VERSE_POOL_SCOPE_KEYS;
 }
+
+export function getHomeVersePoolScopeVerseCount(scopeId: HomeVersePoolScopeId): number {
+  return HOME_VERSE_POOL_SCOPE_KEYS[scopeId].size;
+}
+
+export function appendHomeVersePoolScopeCount(
+  label: string,
+  count: number,
+  locale: "en" | "zh-CN" | "zh-TW",
+): string {
+  return locale === "en" ? `${label} (${count})` : `${label}（${count}）`;
+}

@@ -7,6 +7,7 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { localizeZhText, t } from "../i18n/site-copy";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
+import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { exploreStyles as shared, useExploreScrollContentStyle } from "../explore/exploreParchmentStyles";
 import { useMobileLegacyFiguresBundle } from "./useMobileLegacyFigures";
@@ -64,7 +65,11 @@ export function ExploreLegacyFiguresScreen() {
 
   return (
     <View style={shared.root}>
-      <ParchmentBottomFadeScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollContentStyle}>
+      <ParchmentBottomFadeScrollView
+        fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={scrollContentStyle}
+      >
         <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
           <Text style={shared.backLinkText}>{t("pages.explore.articlesBack")}</Text>
         </Pressable>
@@ -86,8 +91,8 @@ export function ExploreLegacyFiguresScreen() {
                   <View style={styles.bodyCol}>
                     <Text style={styles.testamentLabel}>
                       {entry.testament === "old"
-                        ? localizeZhText(locale, "旧约")
-                        : localizeZhText(locale, "新约")}
+                        ? t("pages.read.catalogTestamentOld")
+                        : t("pages.read.catalogTestamentNew")}
                     </Text>
                   </View>
                 </View>

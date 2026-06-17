@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { localizeZhText, t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
+import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { ReadChapterInfoEditionMarkdown } from "../read/ReadChapterInfoEditionMarkdown";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { resolveRouteParam } from "../navigation/resolveRouteParam";
@@ -83,7 +84,7 @@ export function ExploreLegacyFigureScreen() {
   if (!profile) {
     return (
       <View style={shared.root}>
-        <ParchmentBottomFadeScrollView fadePreset="prose" contentContainerStyle={scrollContentStyle}>
+        <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
           <Pressable onPress={() => router.back()} style={shared.backLink} accessibilityRole="button">
             <Text style={shared.backLinkText}>{t("pages.explore.articlesBack")}</Text>
           </Pressable>
@@ -102,16 +103,16 @@ export function ExploreLegacyFigureScreen() {
 
   return (
     <View style={shared.root}>
-      <ParchmentBottomFadeScrollView fadePreset="prose" contentContainerStyle={scrollContentStyle}>
+      <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
         <Pressable onPress={() => router.back()} style={shared.backLink} accessibilityRole="button">
           <Text style={shared.backLinkText}>{t("pages.explore.figuresBack")}</Text>
         </Pressable>
 
         <View style={shared.articleHeader}>
           <Text style={shared.articleTitle} maxFontSizeMultiplier={1.15}>
-            {localizeZhText(locale, profile.displayNameZh)}
+            {profile.displayNameZh}
           </Text>
-          {profile.englishName ? (
+          {locale !== "en" && profile.englishName ? (
             <Text style={styles.detailPeriod}>{profile.englishName}</Text>
           ) : null}
           {profile.scripturePersonalityZh ? (

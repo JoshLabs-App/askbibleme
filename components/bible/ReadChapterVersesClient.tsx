@@ -123,6 +123,8 @@ type Props = {
   chapterXrefs?: ScriptureVerseXrefsSerialized[] | null;
   /** 经文搜索跳入：高亮该节并滚到视口中央 */
   initialFocusVerse?: number | null;
+  /** 经文搜索跳入：节内高亮关键词（服务端 ?q=） */
+  initialSearchQuery?: string | null;
 };
 
 export function ReadChapterVersesClient({
@@ -136,6 +138,7 @@ export function ReadChapterVersesClient({
   contrasts = null,
   chapterXrefs = null,
   initialFocusVerse: initialFocusVerseProp = null,
+  initialSearchQuery: initialSearchQueryProp = null,
 }: Props) {
   const { t, locale } = useLocale();
   const isWideScreen = useReadChapterSpreadLayout();
@@ -170,10 +173,11 @@ export function ReadChapterVersesClient({
     return Number.isInteger(n) && n >= 1 ? n : null;
   }, [searchParams]);
 
-  const searchQueryFromUrl = useMemo(
-    () => normalizeScriptureSearchQuery(searchParams.get("q") ?? ""),
-    [searchParams],
-  );
+  const searchQueryFromUrl = useMemo(() => {
+    const fromProp = initialSearchQueryProp?.trim();
+    if (fromProp) return normalizeScriptureSearchQuery(fromProp);
+    return normalizeScriptureSearchQuery(searchParams.get("q") ?? "");
+  }, [initialSearchQueryProp, searchParams]);
 
   const initialFocusVerse = initialFocusVerseProp ?? focusVerseFromUrl;
   const [bookmarkFeedback, setBookmarkFeedback] = useState<string | null>(null);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -34,6 +35,13 @@ export function ExploreWheelColumn<T extends string | number>({
 }: Props<T>) {
   const scrollRef = useRef<ScrollView>(null);
   const pickerHeight = EXPLORE_WHEEL_ROW_HEIGHT * VISIBLE_ROWS;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_ev, gestureState) =>
+        Platform.OS === "android" &&
+        Math.abs(gestureState.dy) > Math.abs(gestureState.dx),
+    }),
+  ).current;
 
   const scrollToValue = useCallback(
     (target: T, animated: boolean) => {
@@ -85,10 +93,7 @@ export function ExploreWheelColumn<T extends string | number>({
   return (
     <View
       style={[styles.wrap, { height: pickerHeight, flex }]}
-      onStartShouldSetResponder={() => Platform.OS === "android"}
-      onMoveShouldSetResponder={(_, gestureState) =>
-        Platform.OS === "android" && Math.abs(gestureState.dy) > Math.abs(gestureState.dx)
-      }
+      {...(Platform.OS === "android" ? panResponder.panHandlers : {})}
     >
       <ScrollView
         ref={scrollRef}
@@ -111,7 +116,6 @@ export function ExploreWheelColumn<T extends string | number>({
           return (
             <Pressable
               key={String(item)}
-              delayPressIn={120}
               onPress={() => {
                 onChange(item);
                 scrollToValue(item, true);

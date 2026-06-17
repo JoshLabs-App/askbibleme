@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ExploreBiblicalFeastsPage() {
   return (
-    <ExploreParchmentChrome proseScroll>
+    <ExploreParchmentChrome>
       <ExploreBiblicalFeastsContent />
     </ExploreParchmentChrome>
   );

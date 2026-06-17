@@ -44,7 +44,7 @@ export async function loadChapterXrefVerseNumbers(
   if (!ref) return [];
 
   try {
-    return await retryScriptureXrefDatabaseOnPrepareError(async (db) => {
+    return (await retryScriptureXrefDatabaseOnPrepareError(async (db) => {
       const rows = await db.getAllAsync<{ verse: number }>(
         `SELECT DISTINCT from_verse AS verse FROM xref_out
          WHERE from_book_id = ? AND from_chapter = ?
@@ -58,7 +58,7 @@ export async function loadChapterXrefVerseNumbers(
         ref.ch,
       );
       return rows.map((row) => Number(row.verse)).filter((v) => Number.isInteger(v) && v >= 1);
-    });
+    })) ?? [];
   } catch (err) {
     if (!isNativeDatabaseRejectedError(err)) throw err;
     return [];

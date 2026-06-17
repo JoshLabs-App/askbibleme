@@ -3,16 +3,12 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
-import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
-import { useLocale } from "../i18n/LocaleProvider";
 import { formatReadingPlanRange } from "./reading-plan/format-reading-range";
-import { formatReadingPlanChapterTotalLabel } from "./reading-plan/plan-chapter-total";
 import type { ReadingPlanRange } from "./reading-plan/types";
 
 type Props = {
   reading: ReadingPlanRange;
   done: boolean;
-  progress: number;
   onToggleDone: () => void;
   onOpen: () => void;
   checkboxDisabled?: boolean;
@@ -23,22 +19,12 @@ type Props = {
 export function ReadTodayPlanReadingRow({
   reading,
   done,
-  progress,
   onToggleDone,
   onOpen,
   checkboxDisabled = false,
   showCheckbox = true,
   dimDoneText = true,
 }: Props) {
-  const { locale } = useLocale();
-  const pct = Math.min(1, Math.max(0, progress));
-  const fillWidth = `${Math.round(pct * 100)}%` as const;
-  const chapterTotalLabel = formatReadingPlanChapterTotalLabel(
-    reading.planChapterTotal,
-    reading.bookId,
-    locale,
-  );
-
   return (
     <View style={styles.readingRow}>
       {showCheckbox ? (
@@ -72,24 +58,6 @@ export function ReadTodayPlanReadingRow({
         <Text style={[styles.readingText, dimDoneText && done && styles.readingTextDone]}>
           {formatReadingPlanRange(reading)}
         </Text>
-        <View style={styles.barTrackWrap}>
-          <View
-            style={styles.barTrack}
-            accessibilityRole="progressbar"
-            accessibilityValue={{ min: 0, max: 100, now: Math.round(pct * 100) }}
-          >
-            <View
-              style={[
-                styles.barFill,
-                { width: fillWidth },
-                pct > 0 && pct < 1 ? styles.barFillMin : null,
-              ]}
-            />
-          </View>
-        </View>
-        <Text style={styles.chapterTotal} numberOfLines={1}>
-          {chapterTotalLabel}
-        </Text>
       </Pressable>
     </View>
   );
@@ -118,7 +86,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     minWidth: 0,
-    gap: 4,
+    gap: 2,
   },
   readingText: {
     fontSize: 15,
@@ -129,33 +97,6 @@ const styles = StyleSheet.create({
   },
   readingTextDone: {
     color: c.muted,
-  },
-  barTrackWrap: {
-    width: "100%",
-  },
-  chapterTotal: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 15,
-    ...parchmentSans(500),
-    color: c.faint,
-    textAlign: "left",
-    letterSpacing: 0.1,
-  },
-  barTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(120, 53, 15, 0.12)",
-    overflow: "hidden",
-    width: "100%",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 2,
-    backgroundColor: READ_NEW_TESTAMENT_ACCENT,
-  },
-  barFillMin: {
-    minWidth: 3,
   },
   pressed: { opacity: 0.88 },
 });

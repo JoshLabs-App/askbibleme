@@ -267,6 +267,22 @@ async function main() {
   }
   ensureDir(SIGNING_DIR);
 
+  const manifestPath = path.join(SIGNING_DIR, "manifest.json");
+  if (fs.existsSync(manifestPath)) {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const profilePath = manifest.profilePath;
+    if (
+      manifest.bundleId === BUNDLE_ID &&
+      manifest.profileName &&
+      profilePath &&
+      fs.existsSync(profilePath)
+    ) {
+      console.log(`→ 复用本地签名 manifest（跳过 ASC API）：${manifest.profileName}`);
+      console.log(JSON.stringify(manifest, null, 2));
+      return;
+    }
+  }
+
   let cert = await getDistributionCert();
   const { keyPath, csrContent } = generateCsr();
 

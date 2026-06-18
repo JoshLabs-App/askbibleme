@@ -20,6 +20,7 @@ type NeighborTarget = { bookId: string; chapter: number } | null;
 type ChapterScreenNavigation = {
   isFocused: () => boolean;
   addListener: NavigationProp<ParamListBase>["addListener"];
+  getState: NavigationProp<ParamListBase>["getState"];
 };
 
 type Args = {
@@ -56,9 +57,11 @@ export function useReadChapterScreenNav({
       if (!target || !chapterData) return;
       if (target.bookId === chapterData.bookId && target.chapter === chapterData.chapter) return;
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      navigateReadChapter(router, target, direction);
+      navigateReadChapter(router, target, direction, {
+        getNavigationState: () => navigation.getState(),
+      });
     },
-    [chapterData, router],
+    [chapterData, navigation, router],
   );
 
   const onAdvanceChapterAudio = useCallback(

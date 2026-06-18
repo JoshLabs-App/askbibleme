@@ -1,6 +1,7 @@
 import { buildTripleLoopReadingPlanDay, isTripleLoopPlanId, TRIPLE_LOOP_PLAN_DAY_COUNT } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanDay } from "@/lib/bible/reading-plans/types";
 import { fetchReadingPlanDayClient, type ReadingPlanDayPayload } from "@/lib/read/fetch-reading-plan-day-client";
+import { resolveEffectiveReadingPlanDayIndex } from "@/lib/read/reading-plan-ahead";
 import {
   resolveReadingPlanDayIndex,
   type ReadingPlanPrefs,
@@ -27,7 +28,7 @@ export async function loadTodayReadingPlanPayload(
     return buildTripleLoopDayPayload();
   }
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
-  const dayIndex = resolveReadingPlanDayIndex(prefs, dayCount);
+  const dayIndex = resolveEffectiveReadingPlanDayIndex(prefs, dayCount);
   return fetchReadingPlanDayClient(prefs.planId, dayIndex);
 }
 

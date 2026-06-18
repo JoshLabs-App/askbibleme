@@ -1,4 +1,5 @@
 import {
+  advanceTripleLoopOneCalendarDay,
   advanceTripleLoopTrack,
   createDefaultTripleLoopReadingState,
   normalizeTripleLoopReadingState,
@@ -181,6 +182,23 @@ export function writeTripleLoopProgress(state: TripleLoopReadingState): void {
   } catch {
     /* ignore */
   }
+}
+
+export function advanceTripleLoopOnePlanDay(now = new Date()): TripleLoopReadingState {
+  const { stored, hasSaved } = refreshStoredSnapshot();
+  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now);
+  let next = advanceTripleLoopOneCalendarDay(base);
+  if (!next.startedAt) {
+    next = { ...next, startedAt: READING_PLAN_EASTER_EPOCH_DATE };
+  }
+  writeTripleLoopProgress(next);
+  return next;
+}
+
+export function resetTripleLoopToCalendarToday(now = new Date()): TripleLoopReadingState {
+  const state = defaultProgressForEpoch(now);
+  writeTripleLoopProgress(state);
+  return state;
 }
 
 export function advanceTripleLoopProgressTrack(track: TripleLoopTrack, now = new Date()): TripleLoopReadingState {

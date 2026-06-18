@@ -85,8 +85,9 @@ export async function runMemberReadingSyncWeb(): Promise<MemberReadingSyncOutcom
     body: JSON.stringify(localPush),
   });
 
-  if (pushed?.ok && pushed.blobs) {
-    await applyMemberReadingSyncBlobsWeb(pushed.blobs);
+    if (pushed?.ok && pushed.blobs) {
+      const merged = mergeMemberReadingSyncPush(pushed.blobs, localPush);
+      await applyMemberReadingSyncBlobsWeb(merged);
     await writeMemberReadingSyncMetaWeb({
       revision: pushed.revision ?? null,
       lastSyncedAt: new Date().toISOString(),

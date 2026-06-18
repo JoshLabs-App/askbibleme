@@ -3,6 +3,11 @@ import { InteractionManager } from "react-native";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 import { getReadingPlanDaySinceEpoch } from "./reading-plan/reading-plan-epoch";
+import {
+  readAheadDays,
+  resolveEffectiveEpochDay,
+  resolveEffectiveReadingPlanDayIndex,
+} from "./reading-plan/reading-plan-ahead";
 import { resolveReadingPlanDayIndex } from "./reading-plan/reading-plan-prefs";
 import {
   loadTodayReadingPlanPayload,
@@ -34,10 +39,15 @@ export function useTodayReadingPlan(
 
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = registryById.get(prefs.planId)?.dayCount ?? prefs.dayCount;
+  const aheadDays = readAheadDays(prefs);
+  const calendarEpochDay = getReadingPlanDaySinceEpoch();
+  const effectiveEpochDay = resolveEffectiveEpochDay(prefs);
   const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  const effectiveDayIndex =
+    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
 
   const loadToday = useCallback(async () => {
-    if (!isTripleLoop && dayIndex == null) {
+    if (!isTripleLoop && effectiveDayIndex == null) {
       setPayload(null);
       setLoading(false);
       return;
@@ -51,11 +61,11 @@ export function useTodayReadingPlan(
     } finally {
       setLoading(false);
     }
-  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, dayIndex, dayCount, isTripleLoop]);
+  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, prefs.aheadDays, effectiveDayIndex, dayCount, isTripleLoop]);
 
   const tripleProgressKey = isTripleLoop
-    ? `${progress.ot.bookId}:${progress.ot.chapter}|${progress.nt.bookId}:${progress.nt.chapter}|${progress.wisdom.bookId}:${progress.wisdom.chapter}|r:${progress.chaptersRead?.ot ?? 0},${progress.chaptersRead?.nt ?? 0},${progress.chaptersRead?.wisdom ?? 0}`
-    : "";
+    ? `${progress.ot.bookId}:${progress.ot.chapter}|${progress.nt.bookId}:${progress.nt.chapter}|${progress.wisdom.bookId}:${progress.wisdom.chapter}|a:${aheadDays}|r:${progress.chaptersRead?.ot ?? 0},${progress.chaptersRead?.nt ?? 0},${progress.chaptersRead?.wisdom ?? 0}`
+    : `ahead:${aheadDays}`;
 
   useEffect(() => {
     if (!enabled) return;
@@ -70,8 +80,13 @@ export function useTodayReadingPlan(
     payload,
     loading,
     isTripleLoop,
+    dayCount,
+    aheadDays,
     dayIndex,
-    epochDay: getReadingPlanDaySinceEpoch(),
+    effectiveDayIndex,
+    calendarEpochDay,
+    effectiveEpochDay,
+    epochDay: effectiveEpochDay,
   };
 }
 

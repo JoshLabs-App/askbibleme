@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { EXPLORE_ENTRIES, SCRIPTURE_ANTHOLOGY_IDS } from "@/lib/explore/exploreEntries";
 import { ExploreAppInstallHint } from "@/components/explore/ExploreAppInstallHint";
-import { ExploreFeaturedArticlesCard } from "@/components/explore/ExploreFeaturedArticlesCard";
 import { ExploreEntryIcon } from "@/components/explore/ExploreEntryIcon";
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "@/lib/explore/explore-featured-article-icons";
+import { exploreFeaturedArticleLabel } from "@/lib/explore/explore-featured-article-labels";
+import { exploreArticleHref, isExploreFeaturedArticleSlug } from "@/lib/explore/explore-featured-article-slugs";
 import type { ExploreFeaturedArticleView } from "@/lib/explore/read-explore-featured-article-localized";
 
 type Props = {
@@ -22,9 +25,6 @@ export function ExploreHomeContent({ featuredArticles }: Props) {
   const topEntries = EXPLORE_ENTRIES.filter(
     (entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as (typeof SCRIPTURE_ANTHOLOGY_IDS)[number]),
   );
-
-  const anthologyHeading =
-    locale === "en" ? "Scripture Anthology" : locale === "zh-TW" ? "經文彙編" : "经文汇编";
 
   const renderEntryTile = (entry: (typeof EXPLORE_ENTRIES)[number]) => (
     <Link key={entry.id} href={entry.href} className="explore-icon-tile">
@@ -44,15 +44,30 @@ export function ExploreHomeContent({ featuredArticles }: Props) {
       </header>
 
       <section className="explore-page-section">
-        <div className="explore-icon-grid">{topEntries.map(renderEntryTile)}</div>
+        <div className="explore-icon-grid">
+          {topEntries.map(renderEntryTile)}
+          {scriptureAnthologyEntries.map(renderEntryTile)}
+          {featuredArticles.map((article) => {
+            const icon = isExploreFeaturedArticleSlug(article.slug)
+              ? EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG[article.slug]
+              : "file-document-outline";
 
-        <div className="explore-section-divider" aria-hidden />
-
-        <p className="explore-section-label">{anthologyHeading}</p>
-
-        <div className="explore-icon-grid">{scriptureAnthologyEntries.map(renderEntryTile)}</div>
-
-        <ExploreFeaturedArticlesCard articles={featuredArticles} />
+            return (
+              <Link
+                key={article.slug}
+                href={exploreArticleHref(article.slug)}
+                className="explore-icon-tile"
+              >
+                <span aria-hidden className="explore-icon-circle">
+                  <ShellMaterialCommunityIcon name={icon} size={28} />
+                </span>
+                <span className="explore-icon-label">
+                  {exploreFeaturedArticleLabel(article.slug, locale) ?? article.exploreLabel}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
 
         <ExploreAppInstallHint />
       </section>

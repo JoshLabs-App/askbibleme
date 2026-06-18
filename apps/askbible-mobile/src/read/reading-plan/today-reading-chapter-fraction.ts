@@ -9,12 +9,12 @@ import {
   resolveLocalTodayReadingScopeKey,
   todayReadingItemKey,
 } from "./today-reading-done";
-import { loadTodayReadingPlanPayload } from "./today-reading-plan-payload";
 import {
-  readEffectiveReadingPlanPrefs,
-  resolveReadingPlanDayIndex,
-} from "./reading-plan-prefs";
-import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
+  resolveEffectiveEpochDay,
+  resolveEffectiveReadingPlanDayIndex,
+} from "./reading-plan-ahead";
+import { loadTodayReadingPlanPayload } from "./today-reading-plan-payload";
+import { readEffectiveReadingPlanPrefs } from "./reading-plan-prefs";
 import { markTripleLoopChapterRead } from "./triple-loop-progress";
 import { trackForBookId } from "./triple-loop-reading";
 import type { ReadingPlanRange } from "./types";
@@ -179,7 +179,8 @@ export async function recordTodayReadingChapterFraction(
   const prefs = await readEffectiveReadingPlanPrefs();
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
-  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  const dayIndex =
+    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
   if (!isTripleLoop && dayIndex == null) return;
 
   const perChapter = clampFraction(fraction);
@@ -194,7 +195,7 @@ export async function recordTodayReadingChapterFraction(
   const scopeKey = buildTodayReadingScopeKey({
     planId: prefs.planId,
     isTripleLoop,
-    epochDay: getReadingPlanDaySinceEpoch(),
+    epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
   const itemKey = todayReadingItemKey(reading);

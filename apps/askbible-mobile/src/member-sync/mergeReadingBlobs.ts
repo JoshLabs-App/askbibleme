@@ -1,3 +1,5 @@
+import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-ahead";
+import { mergeTripleLoopReadingState } from "../read/reading-plan/merge-triple-loop-reading-state";
 import {
   isSameTodayReadingPlanScope,
   planIdFromTodayReadingScopeKey,
@@ -180,7 +182,7 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return mergeRecentSearches(a, b);
     case "lastPosition":
     case "readingPlanPrefs":
-    case "tripleLoopProgress":
+      return mergeReadingPlanPrefsValue(a, b);
     case "readTypography":
     case "readTranslation":
     case "homeNatureUi":
@@ -193,6 +195,8 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
     case "exploreYearDayProfile":
     case "appLocale":
       return b;
+    case "tripleLoopProgress":
+      return mergeTripleLoopReadingState(a, b);
     default:
       return b;
   }

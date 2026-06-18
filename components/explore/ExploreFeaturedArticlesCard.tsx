@@ -13,16 +13,12 @@ type Props = {
 };
 
 export function ExploreFeaturedArticlesCard({ articles }: Props) {
-  const { t, locale } = useLocale();
+  const { locale } = useLocale();
 
   if (!articles.length) return null;
 
   return (
     <>
-      <h2 className="explore-section-label explore-articles-heading">
-        {t("pages.explore.articlesHeading")}
-      </h2>
-
       <div className="explore-icon-grid">
         {articles.map((article) => {
           const icon = isExploreFeaturedArticleSlug(article.slug)

@@ -10,6 +10,7 @@ import { TODAY_READING_AUTO_DONE_FRACTION } from "./reading-plan/today-reading-c
 import { todayReadingItemKey } from "./reading-plan/today-reading-done";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "./useTodayReadingPlan";
 import { useTodayReadingDone } from "./useTodayReadingDone";
+import { ReadTodayPlanAheadControls } from "./ReadTodayPlanAheadControls";
 import { ReadTodayPlanReadingRow } from "./ReadTodayPlanReadingRow";
 import { ReadTodayReadingStats } from "./ReadTodayReadingStats";
 import { ReadYearDayTimeline } from "./ReadYearDayTimeline";
@@ -129,6 +130,7 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
               );
             })}
             </View>
+            <ReadTodayPlanAheadControls plan={plan} todayAllDone={todayAllDone} />
           </>
         ) : (
           <Text style={styles.empty} maxFontSizeMultiplier={1.1}>
@@ -148,7 +150,7 @@ type FooterProps = {
 export function ReadTodayPlanFooter({ plan }: FooterProps) {
   const router = useRouter();
   const { locale } = useLocale();
-  const { prefs, payload, loading, isTripleLoop, dayIndex, epochDay } = plan;
+  const { prefs, payload, loading, isTripleLoop, dayIndex, aheadDays, effectiveEpochDay } = plan;
 
   const titleKey = planTitleKey(prefs.planId);
   const localizedTitle = t(titleKey);
@@ -166,15 +168,15 @@ export function ReadTodayPlanFooter({ plan }: FooterProps) {
 
       {isTripleLoop ? (
         <Text style={styles.meta} maxFontSizeMultiplier={1.1}>
-          {tFormat("pages.read.todayPlanDayMeta", { n: epochDay })}
+          {tFormat("pages.read.todayPlanDayMeta", { n: effectiveEpochDay })}
           <Text style={styles.metaDot}> · </Text>
-          {t("pages.read.todayPlanAnchorEaster")}
+          {aheadDays > 0 ? t("pages.read.todayPlanAheadLabel") : t("pages.read.todayPlanAnchorEaster")}
         </Text>
       ) : dayIndex != null ? (
         <Text style={styles.meta} maxFontSizeMultiplier={1.1}>
-          {tFormat("pages.read.todayPlanDayMeta", { n: dayIndex + 1 })}
+          {tFormat("pages.read.todayPlanDayMeta", { n: dayIndex + 1 + aheadDays })}
           <Text style={styles.metaDot}> · </Text>
-          {anchorHint}
+          {aheadDays > 0 ? t("pages.read.todayPlanAheadLabel") : anchorHint}
         </Text>
       ) : null}
 

@@ -27,7 +27,8 @@ export function useEffectiveReadingPlanPrefs(): {
         prev.planId === next.planId &&
         prev.anchor === next.anchor &&
         prev.startedOn === next.startedOn &&
-        prev.dayCount === next.dayCount
+        prev.dayCount === next.dayCount &&
+        prev.aheadDays === next.aheadDays
           ? prev
           : next,
       );

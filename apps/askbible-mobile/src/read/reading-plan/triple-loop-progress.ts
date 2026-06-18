@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  advanceTripleLoopOneCalendarDay,
   advanceTripleLoopTrack,
   createDefaultTripleLoopReadingState,
   normalizeTripleLoopReadingState,
@@ -92,14 +93,53 @@ export async function hasUserTripleLoopProgress(): Promise<boolean> {
 
 export async function writeTripleLoopProgress(state: TripleLoopReadingState): Promise<void> {
   try {
-    await AsyncStorage.setItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY, JSON.stringify(state));
-    await AsyncStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
-    emit();
+    await persistTripleLoopProgress(state);
     const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
     notifyMemberReadingLocalChanged("tripleLoopProgress");
   } catch {
     /* ignore */
   }
+}
+
+export async function replaceTripleLoopProgress(state: TripleLoopReadingState): Promise<void> {
+  try {
+    await persistTripleLoopProgress(state);
+  } catch {
+    /* ignore */
+  }
+}
+
+async function persistTripleLoopProgress(state: TripleLoopReadingState): Promise<void> {
+  await AsyncStorage.setItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY, JSON.stringify(state));
+  await AsyncStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
+  emit();
+}
+
+export async function advanceTripleLoopOnePlanDay(now = new Date()): Promise<TripleLoopReadingState> {
+  const raw =
+    (await AsyncStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY)) ??
+    (await AsyncStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY));
+  if (raw != null) {
+    await AsyncStorage.setItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY, raw);
+    await AsyncStorage.removeItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY);
+  }
+  const hasSaved = raw != null;
+  const stored = hasSaved
+    ? normalizeTripleLoopReadingState(parseTripleLoopProgress(raw) ?? undefined)
+    : createDefaultTripleLoopReadingState();
+  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now);
+  let next = advanceTripleLoopOneCalendarDay(base);
+  if (!next.startedAt) {
+    next = { ...next, startedAt: READING_PLAN_EASTER_EPOCH_DATE };
+  }
+  await writeTripleLoopProgress(next);
+  return next;
+}
+
+export async function resetTripleLoopToCalendarToday(now = new Date()): Promise<TripleLoopReadingState> {
+  const state = defaultProgressForEpoch(now);
+  await writeTripleLoopProgress(state);
+  return state;
 }
 
 export async function advanceTripleLoopProgressTrack(

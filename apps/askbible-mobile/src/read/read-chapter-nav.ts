@@ -2,7 +2,38 @@ import type { Router } from "expo-router";
 
 export type ReadChapterNavDirection = "forward" | "back";
 
+type NavRoute = { params?: Record<string, unknown> };
+type NavState = { routes?: NavRoute[]; index?: number };
+
 const CHAPTER_PATH = "/read/[bookId]/[chapter]" as const;
+
+function paramString(value: unknown): string {
+  if (Array.isArray(value)) return String(value[0] ?? "").trim();
+  return String(value ?? "").trim();
+}
+
+/** 导航栈上一屏是否就是目标章（否则 back 会落到首页等非相邻章路由）。 */
+export function readChapterTargetMatchesRoute(
+  route: NavRoute | undefined,
+  target: { bookId: string; chapter: number },
+): boolean {
+  if (!route?.params) return false;
+  const bookId = paramString(route.params.bookId).toUpperCase();
+  const chapter = Number(paramString(route.params.chapter));
+  if (!bookId || !Number.isInteger(chapter) || chapter < 1) return false;
+  return (
+    bookId === paramString(target.bookId).toUpperCase() && chapter === Number(target.chapter)
+  );
+}
+
+export function canPopToReadChapterTarget(
+  getNavigationState: (() => NavState | undefined) | undefined,
+  target: { bookId: string; chapter: number },
+): boolean {
+  const state = getNavigationState?.();
+  if (!state?.routes?.length || state.index == null || state.index < 1) return false;
+  return readChapterTargetMatchesRoute(state.routes[state.index - 1], target);
+}
 
 export function readChapterRouteParams(target: { bookId: string; chapter: number }) {
   return {
@@ -25,14 +56,19 @@ export function chapterNavDirection(
 /**
  * 相邻章导航。
  * - 下一章 push（系统右进）
- * - 上一章 back（系统左出）
+ * - 上一章：栈顶前一屏是目标章时 back（系统左出），否则 replace
  */
 export function navigateReadChapter(
   router: Pick<Router, "push" | "back" | "canGoBack" | "replace" | "setParams">,
   target: { bookId: string; chapter: number },
   direction: ReadChapterNavDirection,
+  opts?: { getNavigationState?: () => NavState | undefined },
 ) {
-  if (direction === "back" && router.canGoBack()) {
+  if (
+    direction === "back" &&
+    router.canGoBack() &&
+    canPopToReadChapterTarget(opts?.getNavigationState, target)
+  ) {
     router.back();
     return;
   }

@@ -3,10 +3,12 @@ import { isTripleLoopPlanId } from "./triple-loop-plan";
 import { trackForBookId } from "./triple-loop-reading";
 import type { ReadingPlanRange } from "./types";
 import {
+  resolveEffectiveEpochDay,
+  resolveEffectiveReadingPlanDayIndex,
+} from "./reading-plan-ahead";
+import {
   readEffectiveReadingPlanPrefs,
-  resolveReadingPlanDayIndex,
 } from "./reading-plan-prefs";
-import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 import { loadTodayReadingPlanPayload } from "./today-reading-plan-payload";
 import { markTripleLoopChapterRead } from "./triple-loop-progress";
 import type { TripleLoopTrack } from "./triple-loop-reading";
@@ -69,11 +71,12 @@ export async function resolveLocalTodayReadingScopeKey(): Promise<string> {
   const prefs = await readEffectiveReadingPlanPrefs();
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = prefs.dayCount ?? 365;
-  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  const dayIndex =
+    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
   return buildTodayReadingScopeKey({
     planId: prefs.planId,
     isTripleLoop,
-    epochDay: getReadingPlanDaySinceEpoch(),
+    epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
 }
@@ -222,7 +225,8 @@ export async function markTodayReadingChapterVisit(
   const prefs = await readEffectiveReadingPlanPrefs();
   const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
-  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
+  const dayIndex =
+    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
   if (!isTripleLoop && dayIndex == null) return;
 
   const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: opts?.dayCount });
@@ -232,7 +236,7 @@ export async function markTodayReadingChapterVisit(
   const scopeKey = buildTodayReadingScopeKey({
     planId: prefs.planId,
     isTripleLoop,
-    epochDay: getReadingPlanDaySinceEpoch(),
+    epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
   await markTodayReadingItemDone(scopeKey, todayReadingItemKey(reading));

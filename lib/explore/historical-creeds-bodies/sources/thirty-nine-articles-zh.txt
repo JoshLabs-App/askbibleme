@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en-US" >
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="http://www.torontoemmanuel.ca/wp-content/uploads/2018/02/tec_logo_final-03_square.jpg" /> 
+		<link rel="pingback" href="https://www.torontoemmanuel.ca/xmlrpc.php">
+	<title>三十九條（1571） &#8211; Toronto Emmanuel Church</title>
+<style type="text/css">
+
+/* Content Color Setting */
+
+/*   Blog Color Setting */
+</style>
+
+<style>
+.custom-logo{width: 154px; height: auto;}
+</style>
+
+<style type="text/css">
+.container.container_default{ max-width: 1170px;}
+.container.slide-caption { max-width: 1170px;}
+.carousel-inner .format-aside { max-width: 1170px !important;}
+.service-section0 .container, .service-section1 .container, .service-section2 .container , .service-section3 .container, .service-section4 .container ,.service-section5 .container ,.service7 .container 
+{ max-width: 1170px; }
+.callout-section .container {  max-width: 1170px; }
+.portfolio-section .container {  max-width: 1170px; }
+.testimonial-section .container  {  max-width: 1170px; }
+.blog-section .container {  max-width: 1170px; }
+.team-section1 .container {  max-width: 1170px; }
+.clients-section .container {  max-width: 1170px; } 
+.footer-contact-detail-section .container  {  max-width: 1170px; } 
+</style><meta name='robots' content='max-image-preview:large' />
+<link rel="alternate" type="application/rss+xml" title="Toronto Emmanuel Church &raquo; Feed" href="https://www.torontoemmanuel.ca/feed" />
+<link rel="alternate" type="application/rss+xml" title="Toronto Emmanuel Church &raquo; Comments Feed" href="https://www.torontoemmanuel.ca/comments/feed" />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://www.torontoemmanuel.ca/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.torontoemmanuel.ca%2Fabout_us%2F39articles_1571_chinese" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://www.torontoemmanuel.ca/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.torontoemmanuel.ca%2Fabout_us%2F39articles_1571_chinese&#038;format=xml" />
+<style id='wp-img-auto-sizes-contain-inline-css' type='text/css'>
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<link rel='stylesheet' id='appointment-theme-fonts-css' href='https://www.torontoemmanuel.ca/wp-content/fonts/30830ee056091ec3665994ee5bc39a72.css?ver=20201110' type='text/css' media='all' />
+<style id='wp-emoji-styles-inline-css' type='text/css'>
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id='wp-block-library-inline-css' type='text/css'>
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}.has-text-align-center{text-align:center}.has-text-align-left{text-align:left}.has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;word-wrap:normal!important}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style*=border-top-color]){border-top-style:solid}html :where([style*=border-right-color]){border-right-style:solid}html :where([style*=border-bottom-color]){border-bottom-style:solid}html :where([style*=border-left-color]){border-left-style:solid}html :where([style*=border-width]){border-style:solid}html :where([style*=border-top-width]){border-top-style:solid}html :where([style*=border-right-width]){border-right-style:solid}html :where([style*=border-bottom-width]){border-bottom-style:solid}html :where([style*=border-left-width]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=wp-block-library-inline-css */
+</style>
+<style id='classic-theme-styles-inline-css' type='text/css'>
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+<style id='global-styles-inline-css' type='text/css'>
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel='stylesheet' id='contact-form-7-css' href='https://www.torontoemmanuel.ca/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=6.1.6' type='text/css' media='all' />
+<link rel='stylesheet' id='simple-banner-style-css' href='https://www.torontoemmanuel.ca/wp-content/plugins/simple-banner/simple-banner.css?ver=3.3.0' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-style-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/style.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-bootstrap-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/bootstrap.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='default-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/red.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-menu-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/theme-menu.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-font-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/font/font.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-font-awesome-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/font-awesome/css/all.min.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-lightbox-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/lightbox.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-media-responsive-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/media-responsive.css?ver=6.9.4' type='text/css' media='all' />
+<link rel='stylesheet' id='appointment-element-css-css' href='https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/css/element.css?ver=6.9.4' type='text/css' media='all' />
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script type="text/javascript" id="simple-banner-script-js-before">
+/* <![CDATA[ */
+const simpleBannerScriptParams = {"pro_version_enabled":"","debug_mode":false,"id":560,"version":"3.3.0","banner_params":[{"hide_simple_banner":"yes","simple_banner_prepend_element":false,"simple_banner_position":"","header_margin":"","header_padding":"","wp_body_open_enabled":"","wp_body_open":true,"simple_banner_z_index":"","simple_banner_text":"<a href=\"http:\/\/www.torontoemmanuel.ca\/covid-19-memo\">\u6559\u6703\u6709\u95dc\u65b0\u578b\u51a0\u72c0\u75c5\u6bd2\u7684\u901a\u544a<\/a>","disabled_on_current_page":false,"disabled_pages_array":[],"is_current_page_a_post":false,"disabled_on_posts":"","simple_banner_disabled_page_paths":false,"simple_banner_font_size":"","simple_banner_color":"#ff952b","simple_banner_text_color":"","simple_banner_link_color":"#ffffff","simple_banner_close_color":"","simple_banner_custom_css":"","simple_banner_scrolling_custom_css":"","simple_banner_text_custom_css":"","simple_banner_button_css":"","site_custom_css":"","keep_site_custom_css":"","site_custom_js":"","keep_site_custom_js":"","close_button_enabled":"","close_button_expiration":"","close_button_cookie_set":false,"current_date":{"date":"2026-06-17 19:01:58.262436","timezone_type":3,"timezone":"UTC"},"start_date":{"date":"2026-06-17 19:01:58.262442","timezone_type":3,"timezone":"UTC"},"end_date":{"date":"2026-06-17 19:01:58.262445","timezone_type":3,"timezone":"UTC"},"simple_banner_start_after_date":false,"simple_banner_remove_after_date":"","simple_banner_insert_inside_element":""}]}
+//# sourceURL=simple-banner-script-js-before
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/plugins/simple-banner/simple-banner.js?ver=3.3.0" id="simple-banner-script-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/jquery-ui.js?ver=6.9.4" id="appointment-jquery-ui-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/bootstrap.bundle.min.js?ver=6.9.4" id="appointment-bootstrap-js-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/menu/menu.js?ver=6.9.4" id="appointment-menu-js-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/page-scroll.js?ver=6.9.4" id="appointment-page-scroll-js-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/carousel.js?ver=6.9.4" id="appointment-carousel-js-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/lightbox/lightbox-2.6.min.js?ver=6.9.4" id="appointment-lightbox-2.6.min-js-js"></script>
+<link rel="https://api.w.org/" href="https://www.torontoemmanuel.ca/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://www.torontoemmanuel.ca/wp-json/wp/v2/pages/560" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.torontoemmanuel.ca/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 6.9.4" />
+<link rel="canonical" href="https://www.torontoemmanuel.ca/about_us/39articles_1571_chinese" />
+<link rel='shortlink' href='https://www.torontoemmanuel.ca/?p=560' />
+<style id="simple-banner-hide" type="text/css">.simple-banner{display:none;}</style><style id="simple-banner-background-color" type="text/css">.simple-banner{background:#ff952b;}</style><style id="simple-banner-text-color" type="text/css">.simple-banner .simple-banner-text{color: #ffffff;}</style><style id="simple-banner-link-color" type="text/css">.simple-banner .simple-banner-text a{color:#ffffff;}</style><style id="simple-banner-z-index" type="text/css">.simple-banner{z-index: 99999;}</style><style id="simple-banner-site-custom-css-dummy" type="text/css"></style><script id="simple-banner-site-custom-js-dummy" type="text/javascript"></script><style>/* CSS added by WP Meta and Date Remover*/.wp-block-post-author__name{display:none !important;} .wp-block-post-date{display:none !important;} .entry-meta {display:none !important;} .home .entry-meta { display: none; } .entry-footer {display:none !important;} .home .entry-footer { display: none; }</style><style>body.boxed{ background-image:url("https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/images/bg-pattern/bg-img0.png");}</style><link rel="icon" href="https://www.torontoemmanuel.ca/wp-content/uploads/2018/02/cropped-tec_logo_final-03_square-32x32.jpg" sizes="32x32" />
+<link rel="icon" href="https://www.torontoemmanuel.ca/wp-content/uploads/2018/02/cropped-tec_logo_final-03_square-192x192.jpg" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://www.torontoemmanuel.ca/wp-content/uploads/2018/02/cropped-tec_logo_final-03_square-180x180.jpg" />
+<meta name="msapplication-TileImage" content="https://www.torontoemmanuel.ca/wp-content/uploads/2018/02/cropped-tec_logo_final-03_square-270x270.jpg" />
+	</head>
+	<body class="wp-singular page-template-default page page-id-560 page-child parent-pageid-114 wp-custom-logo wp-theme-appointment-pro_old wide light" >
+<div id="wrapper" class="wrapper-header-preset2">
+<!--Logo & Menu Section-->	
+<nav class="1 navbar navbar-default navbar-expand-lg navbar1 header-preset2  ">
+	<div class="container">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+		
+					<a class="navbar-brand" href="https://www.torontoemmanuel.ca/">
+			<img src="https://www.torontoemmanuel.ca/wp-content/uploads/2019/06/tec_logo_final-01.png" class=" img-fluid custom-logo">
+			</a>
+              <a href="https://www.torontoemmanuel.ca/" class="navbar-brand sticky-logo 2" style="display: none;">
+    <img src="https://www.torontoemmanuel.ca/wp-content/uploads/2019/06/tec_logo_final-01.png" class="custom-logo"></a>
+  					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#bs-example-navbar-collapse-1" aria-controls="bs-example-navbar-collapse-1" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right ms-auto"><li id="menu-item-4506" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-4506 dropdown"><a href="https://www.torontoemmanuel.ca/news">最新消息<b class="caret"></b></a>
+<ul class="dropdown-menu">
+	<li id="menu-item-7853" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7853"><a href="https://www.torontoemmanuel.ca/tec-15th-anniversary-time-wall">教會十五週年時間牆 TEC 15th Anniversary Time Wall</a></li>
+</ul>
+</li>
+<li id="menu-item-4507" class="menu-item menu-item-type-post_type menu-item-object-page current-page-ancestor menu-item-has-children menu-item-4507 dropdown"><a href="https://www.torontoemmanuel.ca/about_us">關於我們<b class="caret"></b></a>
+<ul class="dropdown-menu">
+	<li id="menu-item-7169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7169"><a href="https://www.torontoemmanuel.ca/about_us/our-pastoral-team">我們的牧者</a></li>
+	<li id="menu-item-7170" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7170"><a href="https://www.torontoemmanuel.ca/about_us/amia/what_to_expect">來到「加拿大聖公會宣教」的教會，你會遇到…</a></li>
+	<li id="menu-item-7171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7171"><a href="https://www.torontoemmanuel.ca/about_us/amia/amia_core_values">加拿大聖公會宣教的價值觀</a></li>
+	<li id="menu-item-7172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7172"><a href="https://www.torontoemmanuel.ca/about_us/amia/what_is_anglican">普世聖公會</a></li>
+</ul>
+</li>
+<li id="menu-item-7850" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-7850 dropdown"><a href="https://www.torontoemmanuel.ca/worship">敬拜<b class="caret"></b></a>
+<ul class="dropdown-menu">
+	<li id="menu-item-7851" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7851"><a href="https://www.torontoemmanuel.ca/worship/morning_prayer">早禱崇拜</a></li>
+	<li id="menu-item-7852" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-7852"><a href="https://www.torontoemmanuel.ca/worship/holy_communion">聖餐崇拜</a></li>
+</ul>
+</li>
+<li id="menu-item-4591" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-4591"><a href="https://www.torontoemmanuel.ca/topics/grow">成長</a></li>
+<li id="menu-item-4589" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-4589"><a href="https://www.torontoemmanuel.ca/topics/care">相顧</a></li>
+<li id="menu-item-4592" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children menu-item-4592 dropdown"><a href="https://www.torontoemmanuel.ca/topics/witness">見證<b class="caret"></b></a>
+<ul class="dropdown-menu">
+	<li id="menu-item-7182" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-7182"><a href="https://www.torontoemmanuel.ca/topics/witness/testimonies">Testimonies / 得救見證</a></li>
+</ul>
+</li>
+<li id="menu-item-4594" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-4594"><a href="https://www.torontoemmanuel.ca/topics/media/sermon-recording">講道</a></li>
+<li id="menu-item-4595" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children menu-item-4595 dropdown"><a href="https://www.torontoemmanuel.ca/topics/media">影音<b class="caret"></b></a>
+<ul class="dropdown-menu">
+	<li id="menu-item-6288" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6288"><a href="https://www.torontoemmanuel.ca/advent_2021">寶貴禮物 2021</a></li>
+	<li id="menu-item-5918" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5918"><a href="https://www.torontoemmanuel.ca/lent_easter_2021">學我樣式 2021</a></li>
+	<li id="menu-item-5872" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5872"><a href="https://www.torontoemmanuel.ca/advent_2020">靜候慈聲 2020</a></li>
+	<li id="menu-item-5873" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-5873"><a href="https://www.torontoemmanuel.ca/topics/media/photo">相片</a></li>
+</ul>
+</li>
+<li id="menu-item-5099" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5099"><a href="https://www.torontoemmanuel.ca/contact_us">聯絡</a></li>
+<li id="menu-item-5442" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5442"><a href="https://www.torontoemmanuel.ca/donation">奉獻</a></li>
+<li id="menu-item-6960" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-6960"><a href="https://www.torontoemmanuel.ca/welcome-eng">ENG</a></li>
+<li><div class="header-module"><div class="search-bar">
+                    <div class="search-box-outer">
+                      <div class="dropdown">
+                        <a href="#" title="Search" class="menu-item search-icon dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                         <i class="fa fa-search"></i>
+                         <span class="sub-arrow"></span>
+                        </a>
+                        <ul class="dropdown-menu pull-right search-panel" role="group" aria-hidden="true" aria-expanded="false">
+                          <li class="dropdown-item panel-outer">
+                            <div class="form-container">
+                                <form id="searchform" role="search" method="get" autocomplete="off" class="search-form" action="https://www.torontoemmanuel.ca/">
+                                    <label>
+                                      <input type="search" class="menu-item search-field" placeholder="Search …" value="" name="s" id="s">
+                                    </label>
+                                    <input type="submit" class="menu-item search-submit header-toggle-search" value="Search">
+                                </form>                   
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div></div></li><ul class="head-contact-social"><li class="facebook"><a href="https://www.facebook.com/torontoemmanuel/"target="_blank"><i class="fa-brands fa-facebook-f"></i></a></li><li class="youtube"><a href="https://www.youtube.com/@TorontoEmmanuelChurch"target="_blank"><i class="fa-brands fa-youtube"></i></a></li></ul>		</div><!-- /.navbar-collapse -->
+	</div><!-- /.container-fluid -->
+</nav>	
+<!--/Logo & Menu Section-->	
+
+<div class="clearfix"></div><!--Search Box Content-->
+    <div id="searchbar_fullscreen" >
+        <button type="button" class="close">×</button>
+        <form method="get" id="searchform" autocomplete="off" class="search-form" action="https://www.torontoemmanuel.ca/">
+            <input type="search" class="search-field" placeholder="Search …" value="" name="s">
+            <input type="submit" class="btn btn-primary" value="Search">
+        </form> 
+    </div>
+<!--/Search Box Content-->
+<div class="clearfix"></div>
+<!-- Page Title Section -->
+<div class="page-title-section">		
+	<div class="overlay">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="page-title">
+						<h1>三十九條（1571）</h1>					</div>
+				</div>
+				<div class="col-md-6">
+					<ul class="page-breadcrumb">
+						<li><a href="https://www.torontoemmanuel.ca">Home</a> &nbsp &#47; &nbsp<a href="https://www.torontoemmanuel.ca/about_us">關於我們</a>&nbsp &#47; &nbsp  <li class="active">三十九條（1571）</li></li>					</ul>
+				</div>
+			</div>
+		</div>	
+	</div>
+</div>
+<!-- /Page Title Section -->
+<div class="clearfix"></div><!-- Blog Section with Sidebar -->
+<div class="page-builder">
+	<div class="container container_default">
+		<div class="row">
+			<!-- Blog Area -->
+			<div class="col-md-12">			
+			<div class="blog-lg-area-left entry-content">
+					
+			<p>《三十九條》是英格蘭教會（安立甘宗，<em>Anglican</em>）的教義文獻。在伊利莎白一世女王統治下經過幾次努力於1563年公布（當時為了安撫天主教信徒而未含其中關於主餐的第29條，最後由1571年的教務會議通過全文。）</p>
+<p>《三十九條》是安立甘宗就一系列有爭論的問題提出的看法，其目的在於維持安立甘教會和安立甘宗的聯合一致。這些信綱一方面反對羅馬教會的某些觀點，另一方面也反對重洗派（Anabaptist）的立場。自1865年起，英國聖公會的教牧人員按規定必須確認這些原則。而在「加拿大聖公會宣教」（Anglican Mission in Canada）事奉的牧者，則必須每年確認包括《三十九條》在內的教會信仰綱領和法規。<br />
+________________________</p>
+<p><strong>第一條 論信靠三位一體上主</strong><br />
+只有一位永活的真神，祂永存：沒有始、沒有終。祂不被肉身和肢體所限，不為外力所動。祂的權能、智慧、美善是無盡的，是能見及不能見之萬物的創造者和保存者。在這獨一上主裏面，是同體、同權，並永恆的三位，即聖父、聖子、聖靈。</p>
+<p><strong>第二條 論道或神的兒子真成為人</strong><br />
+聖子是聖父之道，從永遠到永遠是聖父之子。聖子是真，並永恆的神，與聖父同體。在蒙福童女的腹中，聖子從她取了我們的人性。因此，有兩種純全之性，即祂的神性和我們的人性，聯為一體，永不分離。所以，是一個基督，真神亦是真人﹔祂真實的受苦，被釘在十字架上，死了，葬了。祂透過犠牲自己，不但為了人的原罪，也為人所行的惡，叫天父與我們和好（林後5:19）。</p>
+<p><strong>第三條 論基督下到陰間</strong><br />
+正如基督為我們死了，葬了，我們也當信祂曾下到陰間。</p>
+<p><strong>第四條 論基督復活</strong><br />
+基督確實從死復活。復活乃是肉身的復活，包括骨和肉，並為完整人性所必須有的一切。祂升天也是肉身的升天，坐在父神的右邊，直至末期，再來審判世人。</p>
+<p><strong>第五條 論聖靈</strong><br />
+聖靈自聖父、聖子而出，與聖父聖子同體、同權、同榮，是永恆的真神。</p>
+<p><strong>第六條 論聖經足以使人得救</strong><br />
+聖經包含我們所需，一切得救的要道。所以凡未記於聖經，或未為聖經所證實的，不必視為需要相信的信條，或是賴以得救的要道。</p>
+<p>所謂聖經，我們明白新舊約內的正典各卷，它們的權柄在教會裡從來未被質疑。</p>
+<p>關於正典各卷的名稱和數目：創世記，出埃及記，利未記，民數記，申命記，約書亞記，士師記，路得記，撒母耳記上，撒母耳記下，列王紀上，列王紀下，歷代志上，歷代志下，以斯拉一書（即：以斯拉記），以斯拉二書（即：尼希米記），以斯帖記，約伯記，詩篇，箴言，傳道書，雅歌，四大先知書，和十二小先知書。</p>
+<p>新約的各卷，它們已被教會所接納，我們亦同樣接納它們，並視為正典。</p>
+<p>此外還有別的書，教會用作生活楷模和教訓而誦讀（如耶柔米〔Jerome〕所說），但教會則不會以它們來建立教義。它們乃是：以斯拉三書，以斯拉四書，多比傳，猶滴傳，以斯帖補編，智慧書，便西拉智訓，巴錄書，三童歌，蘇撒拿傳，比勒與大龍，瑪拿西禱言，瑪喀比傳上卷，瑪喀比傳下卷。</p>
+<p><strong>第七條 論舊約</strong><br />
+舊約與新約並不衝突，因二者都指出兼為神和人，在神人之間作惟一中保的基督，將永生賜給人類。因此，那說舊約時代父老只盼望暫時的應許，乃是不當聽信的。神藉摩西所曉諭的律法，其關乎儀禮的，基督徒並無必要遵守，而其中的民事政訓也不必為任何政府所接受，然其有關道德的誡條，任何基督徒都當順從。</p>
+<p><strong>第八條 論三信經</strong><br />
+三信經：尼西亞信經，亞他那修信經，和通稱的使徒信經，我們都當接受及相信，因為它們都可藉聖經所證明。</p>
+<p><strong>第九條 論原罪</strong><br />
+原罪並不是效法亞當所犯的罪（如伯拉糾（Pelagius）派所妄言的），而是人人本性的敗壞，是亞當後裔生來便有的﹔因此人遠離原本的義，本性傾向惡，私慾常與聖靈相違。因此，於凡生在世之人裡頭，都有原罪，是神所惱怒，理當受罰的。這被感染的本性也存留在重生者裏面，因此肉體的情慾，在希臘文稱為「弗羅內馬•撒爾珂斯」（有翻作自逞智慧的，或作隨從血氣的，或作縱情恣慾的，或作體貼肉體的），並不順服神的律法。凡信而受洗者，雖不被定罪，然而使徒保羅承認：邪情私慾都是屬乎罪惡的。</p>
+<p><strong>第十條 論自由意志</strong><br />
+自亞當墮落以後，人的處境，勢不能藉自己的力量和善行回心轉意，信奉神，呼求神。若非神藉基督所賜之恩，先臨到我們，使我們有一善念，並與我們同工，我們便無能力行神所悅納的善行。</p>
+<p><strong>第十一條 論稱義</strong><br />
+我們在神面前得稱為義，只因信靠我們救主耶穌基督的功勞，而非因我們自己行善，或功勞。因此唯獨因信稱義才是最完備、最安慰人心的教義。這在講道集中的「稱義講辭」中，有更詳細的說明。</p>
+<p><strong>第十二條 論善行</strong><br />
+我們稱義之後，因信而生的善行，既不能除去我們的罪惡，也不堪受神嚴格的審察。然而因著基督之故，是蒙神悅納，且定必是從真誠活潑的信仰產生出來﹔我們觀善行即知其信仰之活潑，正如觀好果而知好樹。</p>
+<p><strong>第十三條 論稱義前的善行</strong><br />
+人未受基督恩典，未蒙聖靈感化，所作的善行，既不是因信靠耶穌基督成就的，就不能得著神的喜悅，也不能使人因此配接受恩典，或（如經院著作家所說）配得相當的恩典﹔相反，它們既不是照著神的旨意和命令成就的，未免仍是屬於罪惡的。</p>
+<p><strong>第十四條 論分外功德</strong><br />
+人若教導說，在神所命之外有分外功德（supererogation），這莫不是狂妄和不敬的話。因人以此自稱，不但盡了本分去事奉神，而且為著祂超過了本分所要求的﹔殊不知基督明明地說，你們做完了一切所吩咐你們的，只當說：我們是無用的僕人（路17:10）。</p>
+<p><strong>第十五條 論惟獨基督無罪</strong><br />
+基督真取了人性，凡事與我們一樣，只是沒有罪，祂的身和靈都是沒有罪的。祂來到世間，彷彿無疵的羔羊，一次獻上己身為祭，除去世人的罪，（如聖約翰所說）祂自己並沒有罪。我們雖然受了洗，在基督裏重生了，仍會犯罪﹔我們若說沒有罪，就是自欺，真理不在我們裏頭了（約壹1:8）。</p>
+<p><strong>第十六條 論受洗後所犯的罪</strong><br />
+在受洗後而犯的「死罪」（譯註：羅馬教Deadly Sins），並不都是那得罪聖靈和不可赦免的罪。因此凡受洗後陷在罪裏的，仍准其悔改。我們受了聖靈後，可能辜負神恩，陷在罪裏，但藉神恩仍可改過遷善。所以，若有人說，人受洗後今世決不能再犯罪，或說，人犯罪後，雖誠心悔改，也不能得赦免，這些話都應受譴責。</p>
+<p><strong>第十七條 論預定和揀選</strong><br />
+預定得生是神的永恆目的，按此目的祂在創世以前用祂隱秘和恆常的意旨規定要救那些由祂在基督裏從人類中所揀選出來的人，脫離咒詛刑罰，並藉基督引導他們得永遠的拯救，使他們歸於祂自己，如同貴重的器皿。所以凡蒙神這樣大恩的人，照著神旨，到了定規的時候，必蒙聖靈感召﹔他們因恩典而順服召命﹔他們白白地得稱為義﹔他們被接納作神的義子﹔他們得以有祂獨生子耶穌基督的形像﹔他們敬虔地行善﹔最後靠神的慈悲，得享永福。</p>
+<p>凡心裏受基督的靈感化，克制肉體情慾及其肢體，專心仰望天上之事的虔誠人，若恭恭敬敬默想那在基督裏的預定，和蒙揀選的道理，便滿有甜蜜，美妙，和不可言喻的安慰，因為他們默想這道理，就大大堅固他們因基督得享永遠拯救的信心，激發他們對神的愛心。凡好奇的，順從情慾的，沒有受基督的靈感化的人，若時常想念神的預定，就必對他們大有損害，因為魔鬼藉此必使他們陷入灰心絕望中，或陷入極其敗壞，危險無異於灰心絕望的不潔生活中。</p>
+<p>再者，聖經上傳述神的應許是怎樣，我們就應當怎樣聽信，並且我們所行所為，都當遵奉聖經所指示的神旨而行。</p>
+<p><strong>第十八條 論惟靠基督之名永遠得救</strong><br />
+若有人膽敢說：無論人信甚麼理，奉甚麼教，只要他能按著所信的理，和自然之光奮勉而行，就可以得救﹔那麼這話便該受譴責，因為聖經上明白指示，人惟靠耶穌基督之名，才可以得救。</p>
+<p><strong>第十九條 論教會</strong><br />
+凡是誠心相信的人，聚集成會，傳講神的正道，遵守基督的命令以施行聖禮，不遺棄聖禮中的要事，那麼這會便是基督有形的教會。</p>
+<p>昔日耶路撒冷的教會，安提阿的教會，亞力山大的教會，都曾陷在錯謬中，同樣，羅馬的教會也陷在錯謬中，不僅是在禮儀上，也是在信仰上。</p>
+<p><strong>第二十條 論教會的權柄</strong><br />
+教會有權柄設立禮儀，並有議決信仰爭辯的權柄。但是，教會不可設立與聖經相反的禮儀，也不可講解一處經文的意義，而與其他經文相違。所以教會雖是聖經的見證者和保守者，然而它所頒布的，既不當與聖經相反，也不當強迫人相信聖經以外的任何教義為得救所必須的。</p>
+<p><strong>第二十一條 論議會的權威</strong><br />
+議會未奉君王命令和意旨不可召開。它們既得以召開（它們既是人的會，一切的事並非都為神的靈和話所統治），它們可能有錯，並且已曾有錯，甚至在屬於神的事上也曾有錯。所以，它們規定為得救所必須的事，除非得以證實是從聖經來的，否則既沒有力量，也沒有權威。</p>
+<p><strong>第二十二條 論煉獄</strong><br />
+羅馬教關於煉獄，解罪，跪拜聖像，崇敬遺物，並祈求聖徒的教導，均屬虛構，不但沒有聖經理據，實與聖經大相逕庭。</p>
+<p><strong>第二十三條 論會眾中作牧養</strong><br />
+人未先合法地被選召和派遣，而擅自在會中講道，或施行聖禮，乃是不合法的。而凡由會眾中稟有選召並派遣人到主葡萄園之權者，他所選召的人，便是我們理當認為合法地被選召和派遣的牧者。</p>
+<p><strong>第二十四條 論會中宜用人所懂的語言</strong><br />
+凡在教會率眾祈禱，或施行聖禮，用人所不懂的語言，這是顯然違反聖經和初期教會之習慣的。</p>
+<p><strong>第二十五條 論聖禮</strong><br />
+基督所設立的聖禮，不僅是基督徒信奉基督的記號，也是神對我們的恩典和善意確實的憑證，及有效的表徵，祂藉聖禮在我們裏面潛移默化，不僅激發，而且加強堅定我們對祂的信心。</p>
+<p>主基督在福音書中所設立的聖禮有二，即洗禮，和主餐。</p>
+<p>至於其他五個所謂的聖禮，即堅信禮，懺悔禮，授聖職禮，婚禮，臨終膏油禮，皆不得算為福音的聖禮，因為它們一部分是由於誤解使徒之意而來，一部分雖是聖經所許可的生活常態，可是並沒有像洗禮和主餐聖禮的性質，因它們沒有神所設立的有形表象或禮儀。</p>
+<p>基督設立聖禮，原非供人觀望，或肩擡示眾，而是要我們合宜使用。聖禮對配領受者才發生健全的影響或作用﹔凡不配受者是自取刑罰，有如聖保羅所言。</p>
+<p><strong>第二十六條 論牧者不善無礙聖禮的功效</strong><br />
+雖然在有形教會中惡人常與善人相混，並且有時惡人操講道和施行聖禮之權，可是他們行這些事既非奉自己的名，而是奉基督的名，受祂的委任和權威，所以我們仍可以藉他們聽到神的道，領受聖禮。人若用信仰正當地領受聖禮，施禮者雖然是惡，基督聖禮的功效並不因此而被廢掉，神的恩典也不因此而被減少﹔因為基督的設立和應許，它們雖是由惡人施行，卻仍然有效。</p>
+<p>然而，教會的法規要求對邪惡的牧者加以審查，由知道他們罪行之人加以控告，最後，經公正的判斷，既查出罪來，便把他們革職。</p>
+<p><strong>第二十七條 論洗禮</strong><br />
+洗禮不僅是宣認的表記，及基督徒因此與未受洗者有所區別的標記；洗禮也是重生或新生的表記。藉洗禮，如同藉著一個工具，凡合法受洗的人，就被連於教會上。我們藉聖靈罪得赦免，並被收為神之兒女的應許，都在洗禮中有形地得了印證﹔這樣，信仰得以堅定，又因向神的祈求，恩典越發增多。</p>
+<p>孩童洗禮是與基督設立洗禮之意極其相合，理當保存在教會裡。</p>
+<p><strong>第二十八條 論主餐</strong><br />
+主餐不僅是基督徒應彼此相愛的表記，而且是基督受死贖罪的聖禮。凡正確地藉信心來領受的，吃那擘開的餅，便是領受基督的身體，喝那祝謝的杯，便是領受基督的血。</p>
+<p>聖餐化質說（即餅酒變質）不但不能取證於聖經，實乃違反聖經的明文，推翻聖禮的本旨，並且構成許多迷信。</p>
+<p>在主餐中基督的身體僅是屬天、屬靈地給了，取了，喫了，而在<strong>主</strong>餐中領受並吃基督身體的媒介乃是信心。</p>
+<p>基督設立主餐，並未命人將餅酒存留，擡來擡去，或高舉，或崇拜。</p>
+<p><strong>第二十九條 論惡人領主餐非吃基督的身體</strong><br />
+惡人和沒有活潑信仰的人，雖顯然用口吃喝（如聖奧古士丁所說）聖禮的餅酒，卻決不是領受基督；相反，當他們吃喝如此大事的表記或聖禮時，乃是吃喝自己的罪。</p>
+<p><strong>第三十條 論餅酒皆當分給平信徒</strong><br />
+主的杯不可不分給平信徒，因為按基督的安排和命令，聖禮的餅酒皆當同樣分給一切基督徒。</p>
+<p><strong>第三十一條 論基督在十字架上已一次完成的祭</strong><br />
+基督一次獻身為祭，便全然救贖了普天下人的原罪和本身的罪﹔救贖人罪，並無別法，只有此法。因此，所謂在彌撒禮時，神甫將基督獻祭，以贖已死未死者的痛苦罪愆，這乃是褻瀆的妄談，危險的欺詐。</p>
+<p><strong>第三十二條 論牧者婚娶</strong><br />
+神的律法並未命令主教，牧師，會吏（譯註：或稱執事）許願抱獨身，或禁絕婚娶。所以他們如認娶妻對敬虔最為有益，即可各聽其便，一如其他基督徒娶妻，是同樣合法的。</p>
+<p><strong>第三十三條 論被逐出教會之人，及如何避免</strong><br />
+那由教會按著教律明令逐出教會的人，應當由全體信徒看為外邦人和稅吏一樣，直到他顯然懊悔，與教會復和，由教會中有權柄的審判者再接入教會。</p>
+<p><strong>第三十四條 論教會的遺傳</strong><br />
+各地的遺傳和禮儀不必盡同，亦不需相似，因為它們歷來便非一律，並且可隨國度，時勢，民俗而變易，只要所規定的，不與聖經相背。凡因私見故意公然破壞本教會所有不違反聖經，而又為共同權威所製定所批准的傳統和禮儀者，當公開斥責（使他人知所警惕）為違犯教會公共秩序，損害官長權威，並損害軟弱弟兄的良心。</p>
+<p>各國教會有權製定、更改，或廢除那僅憑人的權威所製定的教會禮儀，只要凡事是都為造就人而行。</p>
+<p><strong>第三十五條 論講道集</strong><br />
+《第二講道集》——其講題目開列於本條之下——實在是包含著純正教理，為這些時代所需要的，正如愛德華六世時所訂第一講道集一樣﹔所以我們認為它們應由牧師在教堂裏殷勤清晰地宣讀，使眾人明瞭。</p>
+<p>《第二講道集》中的講題為 : 一）論教堂的正當使用。二）反神像敬拜。三）論修繕清理教堂。四）論善功 : 首論禁食。五）反貪食醉酒。六）反奇裝艷服。七）論祈禱。八）論祈禱時地。九）論公眾祈禱並舉行聖禮當用聽眾了解的言語。十）論尊重聖經。十一）論賙濟。十二）論基督誕生。十三）論基督受難。十四）論基督復活。十五）論配領基督聖體寶血之聖禮。十六）論聖靈的恩賜。十七）升天節前三日祈禱日（Rogation-days）講辭。十八）論婚姻。十九）論悔改。二十）反怠惰。二十一）反叛逆。</p>
+<p><strong>第三十六條 論祝聖主教和牧者</strong><br />
+祝聖大主教、主教，並按立牧師和會吏（譯註：或稱執事）的儀文，就是在愛德華六世晚近時所訂，並於那時由議院的權柄所允准的，實在包含著這種祝聖和按立的一切要事﹔並無迷信，或邪惡在內。所以，自從愛德華王第二年，直到如今或以後，凡照著此儀文禮節祝聖或按立的，我們宣佈他們都是由正當合法地受了祝聖和按立。</p>
+<p><strong>第三十七條 論國家官長</strong><br />
+女王在英國及她的領土內有超群的主權，凡這國度裏的產業，無論是教會的或國家的，其主要掌管權皆屬之，此權既不是也不當受制於任何國外的管轄。</p>
+<p>我們將主要掌管權歸於女王之舉，觸怒了若干誹謗者的心﹔但我們並不將講道和舉行聖禮之權給予國王，這件事也由我們的女王以利沙伯近來所頒佈的諭令極其明顯地證實了。但是我們在聖經中看出，皇室的特權當由神親自授予敬虔的國王，那就是，他們應當掌管神所託付的一切產業和位階，無論是教會的或國家的，並用劍約束頑梗和作惡的。</p>
+<p>羅馬主教在英國無管轄權。</p>
+<p>英國法律可以用死刑處罰作奸犯科的基督徒。</p>
+<p>基督徒奉官長的命令武裝作戰，是合法的。</p>
+<p><strong>第三十八條 論基督徒的財產並非公有</strong><br />
+基督徒的財產，就其主權而言，並不如若干重洗派所妄言為公有的。然而凡所擁有的，應慷慨按其能力賙濟貧窮。</p>
+<p><strong>第三十九條 論基督徒起誓</strong><br />
+我們既承認主耶穌基督與祂的使徒雅各禁止信徒輕易起誓，便可推斷基督教並不禁止起誓，反倒當受官府命令，為信義的原固，在必須起誓時，就可按照先知的教訓：在公義，見識，和真理中起誓。</p>
+							</div>
+			
+								</div>
+			<!-- /Blog Area -->			
+			<!--Sidebar Area-->
+			<div class="col-md-4 sd-widget rest-sidebar">
+							</div>
+			<!--Sidebar Area-->
+		</div>
+	</div>
+</div>
+<!-- /Blog Section with Sidebar -->
+<!-- Footer Section -->
+	
+			<div class="clearfix"></div>
+		</div>
+	</div>
+</div>
+<!-- /Footer Section -->
+<div class="clearfix"></div>
+<!-- Footer Copyright Section -->
+<div class="footer-copyright-section">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-8">
+								<div class="footer-copyright">
+					<p>© Toronto Emmanuel Church</p>					</a>
+				</div>
+							</div>
+							<div class="col-md-4">
+			<ul class="footer-contact-social">
+										<li class="facebook"><a href="https://www.facebook.com/torontoemmanuel/" target='_blank' ><i class="fa-brands fa-facebook-f"></i></a></li>
+										<li class="youtube"><a href="https://www.youtube.com/@TorontoEmmanuelChurch" target='_blank' ><i class="fa-brands fa-youtube"></i></a></li>
+									</ul>
+			</div>
+					</div>
+	</div>
+</div>
+<!-- /Footer Copyright Section -->
+
+<style type="text/css">
+.header-sticky.stickymenu1, .header-sticky.stickymenu, .header-sticky.shrink1
+{
+	opacity: 1;
+	}
+</style>
+
+<!--Scroll To Top--> 
+<a href="#" class="hc_scrollup"><i class="fa fa-chevron-up"></i></a>
+<!--/Scroll To Top--> 
+				<script type='text/javascript'><!--
+			var seriesdropdown = document.getElementById("orgseries_dropdown");
+			if (seriesdropdown) {
+			 function onSeriesChange() {
+					if ( seriesdropdown.options[seriesdropdown.selectedIndex].value != ( 0 || -1 ) ) {
+						location.href = "http://www.torontoemmanuel.ca/series/"+seriesdropdown.options[seriesdropdown.selectedIndex].value;
+					}
+				}
+				seriesdropdown.onchange = onSeriesChange;
+			}
+			--></script>
+			<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/appointment-pro_old/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<div class="simple-banner simple-banner-text" style="display:none !important"></div><script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-includes/js/dist/hooks.min.js?ver=dd5603f07f9220ed27f1" id="wp-hooks-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-includes/js/dist/i18n.min.js?ver=c26c3dc7bed366793375" id="wp-i18n-js"></script>
+<script type="text/javascript" id="wp-i18n-js-after">
+/* <![CDATA[ */
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+//# sourceURL=wp-i18n-js-after
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=6.1.6" id="swv-js"></script>
+<script type="text/javascript" id="contact-form-7-js-before">
+/* <![CDATA[ */
+var wpcf7 = {
+    "api": {
+        "root": "https:\/\/www.torontoemmanuel.ca\/wp-json\/",
+        "namespace": "contact-form-7\/v1"
+    }
+};
+//# sourceURL=contact-form-7-js-before
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/plugins/contact-form-7/includes/js/index.js?ver=6.1.6" id="contact-form-7-js"></script>
+<script type="text/javascript" id="custom-script-js-extra">
+/* <![CDATA[ */
+var wpdata = {"object_id":"560","site_url":"https://www.torontoemmanuel.ca"};
+//# sourceURL=custom-script-js-extra
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/plugins/wp-meta-and-date-remover/assets/js/inspector.js?ver=1.1" id="custom-script-js"></script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-includes/js/comment-reply.min.js?ver=6.9.4" id="comment-reply-js" async="async" data-wp-strategy="async" fetchpriority="low"></script>
+<script type="text/javascript" id="appointment-ajax-search-js-extra">
+/* <![CDATA[ */
+var appointment_ajax = {"ajax_url":"https://www.torontoemmanuel.ca/wp-admin/admin-ajax.php","searching_text":"Searching..."};
+//# sourceURL=appointment-ajax-search-js-extra
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://www.torontoemmanuel.ca/wp-content/themes/appointment-pro_old/js/ajax-search.js" id="appointment-ajax-search-js"></script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://www.torontoemmanuel.ca/wp-includes/js/wp-emoji-release.min.js?ver=6.9.4"}}
+</script>
+<script type="module">
+/* <![CDATA[ */
+/*! This file is auto-generated */
+const a=JSON.parse(document.getElementById("wp-emoji-settings").textContent),o=(window._wpemojiSettings=a,"wpEmojiSettingsSupports"),s=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const a=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===a[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,a){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!a(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,a){let r;const o=(r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),s=(o.textBaseline="top",o.font="600 32px Arial",{});return e.forEach(e=>{s[e]=t(o,e,n,a)}),s}function r(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}a.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),c.toString(),p.toString()].join(",")+"));",a=new Blob([e],{type:"text/javascript"});const r=new Worker(URL.createObjectURL(a),{name:"wpTestEmojiSupports"});return void(r.onmessage=e=>{i(n=e.data),r.terminate(),t(n)})}catch(e){}i(n=f(s,u,c,p))}t(n)}).then(e=>{for(const n in e)a.supports[n]=e[n],a.supports.everything=a.supports.everything&&a.supports[n],"flag"!==n&&(a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&a.supports[n]);var t;a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&!a.supports.flag,a.supports.everything||((t=a.source||{}).concatemoji?r(t.concatemoji):t.wpemoji&&t.twemoji&&(r(t.twemoji),r(t.wpemoji)))});
+//# sourceURL=https://www.torontoemmanuel.ca/wp-includes/js/wp-emoji-loader.min.js
+/* ]]> */
+</script>
+</div>
+</body>
+</html>

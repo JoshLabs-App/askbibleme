@@ -86,58 +86,59 @@
 }
 
 .prayer-on-parchment .explore-app-install-card {
-  margin-top: 28px;
-  padding: 16px 18px 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(120, 53, 15, 0.28);
-  background: rgba(255, 252, 245, 0.55);
-  text-align: left;
+  margin-top: 52px;
+  padding: 0 4px;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  text-align: center;
 }
 
 .dark .prayer-on-parchment .explore-app-install-card {
-  border-color: color-mix(in srgb, rgb(244 235 225) 22%, transparent);
-  background: color-mix(in srgb, rgb(28 20 16) 48%, transparent);
+  border: none;
+  background: transparent;
 }
 
 .prayer-on-parchment .explore-app-install-title {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 22px;
-  letter-spacing: -0.01em;
-  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, currentColor 48%, transparent);
 }
 
 .prayer-on-parchment .explore-app-install-body {
-  margin: 8px 0 0;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 22px;
-  color: color-mix(in srgb, currentColor 72%, transparent);
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 19px;
+  color: color-mix(in srgb, currentColor 42%, transparent);
 }
 
 .prayer-on-parchment .explore-app-install-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
+  justify-content: center;
+  gap: 6px 10px;
+  margin-top: 12px;
 }
 
 .prayer-on-parchment .explore-app-install-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 7px 14px;
+  min-height: 32px;
+  padding: 5px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(120, 53, 15, 0.32);
-  background: rgba(255, 252, 245, 0.82);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
+  border: 1px solid rgba(120, 53, 15, 0.16);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 17px;
   text-decoration: none;
-  color: inherit;
+  color: color-mix(in srgb, currentColor 58%, transparent);
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease,
@@ -145,31 +146,32 @@
 }
 
 .dark .prayer-on-parchment .explore-app-install-btn {
-  border-color: color-mix(in srgb, rgb(244 235 225) 24%, transparent);
-  background: color-mix(in srgb, rgb(28 20 16) 62%, transparent);
+  border-color: color-mix(in srgb, rgb(244 235 225) 14%, transparent);
+  background: transparent;
 }
 
 .prayer-on-parchment .explore-app-install-btn:hover {
-  background: rgba(255, 252, 245, 0.96);
-  border-color: rgba(120, 53, 15, 0.42);
+  background: rgba(255, 252, 245, 0.35);
+  border-color: rgba(120, 53, 15, 0.24);
+  color: color-mix(in srgb, currentColor 72%, transparent);
 }
 
 .dark .prayer-on-parchment .explore-app-install-btn:hover {
-  background: color-mix(in srgb, rgb(28 20 16) 78%, transparent);
+  background: color-mix(in srgb, rgb(28 20 16) 28%, transparent);
 }
 
 .prayer-on-parchment .explore-app-install-guide {
-  padding: 7px 10px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 18px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
   text-decoration: none;
-  color: color-mix(in srgb, currentColor 58%, transparent);
+  color: color-mix(in srgb, currentColor 38%, transparent);
   transition: color 0.15s ease;
 }
 
 .prayer-on-parchment .explore-app-install-guide:hover {
-  color: color-mix(in srgb, currentColor 78%, transparent);
+  color: color-mix(in srgb, currentColor 58%, transparent);
 }
 
 .prayer-on-parchment .explore-page-section {

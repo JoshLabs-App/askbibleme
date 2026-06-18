@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ReadTodayPlanAheadControls } from "@/components/bible/ReadTodayPlanAheadControls";
 import { ReadTodayPlanReadingRow } from "@/components/bible/ReadTodayPlanReadingRow";
 import { ReadTodayReadingStats } from "@/components/bible/ReadTodayReadingStats";
 import { ReadYearDayTimeline } from "@/components/bible/ReadYearDayTimeline";
@@ -109,6 +110,7 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
               );
             })}
           </div>
+          <ReadTodayPlanAheadControls plan={plan} todayAllDone={todayAllDone} />
         </>
       ) : (
         <p className="mt-2 text-[13px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanEmpty")}</p>
@@ -124,7 +126,7 @@ type FooterProps = {
 
 export function ReadTodayPlanFooter({ plan, variant = "panel" }: FooterProps) {
   const { t, locale } = useLocale();
-  const { prefs, payload, loading, isTripleLoop, dayIndex, epochDay } = plan;
+  const { prefs, payload, loading, isTripleLoop, dayIndex, aheadDays, effectiveEpochDay } = plan;
 
   const titleKey = planTitleKey(prefs.planId);
   const localizedTitle = t(titleKey);
@@ -161,9 +163,18 @@ export function ReadTodayPlanFooter({ plan, variant = "panel" }: FooterProps) {
           ].join(" ")}
           style={home ? { color: READ_PARCHMENT_FAINT } : undefined}
         >
-          {t("pages.read.todayPlanDayMeta", { n: String(epochDay) })}
-          <span className="mx-1.5 opacity-60">·</span>
-          {t("pages.read.todayPlanAnchorEaster")}
+          {t("pages.read.todayPlanDayMeta", { n: String(effectiveEpochDay) })}
+          {aheadDays > 0 ? (
+            <>
+              <span className="mx-1.5 opacity-60">·</span>
+              {t("pages.read.todayPlanAheadLabel")}
+            </>
+          ) : (
+            <>
+              <span className="mx-1.5 opacity-60">·</span>
+              {t("pages.read.todayPlanAnchorEaster")}
+            </>
+          )}
         </p>
       ) : dayIndex != null ? (
         <p
@@ -173,9 +184,20 @@ export function ReadTodayPlanFooter({ plan, variant = "panel" }: FooterProps) {
           ].join(" ")}
           style={home ? { color: READ_PARCHMENT_FAINT } : undefined}
         >
-          {t("pages.read.todayPlanDayMeta", { n: String(dayIndex + 1) })}
-          <span className="mx-1.5 opacity-60">·</span>
-          {anchorHint}
+          {t("pages.read.todayPlanDayMeta", {
+            n: String((dayIndex ?? 0) + 1 + aheadDays),
+          })}
+          {aheadDays > 0 ? (
+            <>
+              <span className="mx-1.5 opacity-60">·</span>
+              {t("pages.read.todayPlanAheadLabel")}
+            </>
+          ) : (
+            <>
+              <span className="mx-1.5 opacity-60">·</span>
+              {anchorHint}
+            </>
+          )}
         </p>
       ) : null}
       <p className="mt-2 text-[12px]">

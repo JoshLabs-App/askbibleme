@@ -11,17 +11,17 @@ import type { ReadingPlanRange } from "./reading-plan/types";
 import type { TodayReadingPlanState } from "./useTodayReadingPlan";
 
 export function useTodayReadingDone(plan: TodayReadingPlanState) {
-  const { prefs, isTripleLoop, dayIndex, epochDay } = plan;
+  const { prefs, isTripleLoop, effectiveDayIndex, effectiveEpochDay } = plan;
 
   const scopeKey = useMemo(
     () =>
       buildTodayReadingScopeKey({
         planId: prefs.planId,
         isTripleLoop,
-        epochDay,
-        dayIndex,
+        epochDay: effectiveEpochDay,
+        dayIndex: effectiveDayIndex,
       }),
-    [prefs.planId, isTripleLoop, epochDay, dayIndex],
+    [prefs.planId, isTripleLoop, effectiveEpochDay, effectiveDayIndex],
   );
 
   const [doneKeys, setDoneKeys] = useState<Set<string>>(new Set());

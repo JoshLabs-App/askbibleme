@@ -46,7 +46,7 @@ import {
 } from "../read/reading-habit-stats";
 import { writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
-  writeTripleLoopProgress,
+  replaceTripleLoopProgress,
 } from "../read/reading-plan/triple-loop-progress";
 import {
   normalizeTodayReadingDoneForLocalPrefs,
@@ -111,7 +111,7 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       else if (isReadingPlanPrefs(value)) await writeReadingPlanPrefs(value);
       break;
     case "tripleLoopProgress":
-      if (isTripleLoopState(value)) await writeTripleLoopProgress(value);
+      if (isTripleLoopState(value)) await replaceTripleLoopProgress(value);
       break;
     case "todayReadingDone":
       if (isTodayDoneRecord(value)) {

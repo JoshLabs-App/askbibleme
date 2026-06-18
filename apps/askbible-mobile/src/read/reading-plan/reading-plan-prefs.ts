@@ -13,6 +13,8 @@ export type ReadingPlanPrefs = {
   anchor: ReadingPlanAnchor;
   startedOn?: string;
   dayCount?: number;
+  /** Days read ahead of calendar today (0 = on calendar). Synced across devices. */
+  aheadDays?: number;
 };
 
 export const READING_PLAN_PREFS_STORAGE_KEY = "askbible-reading-plan-prefs-v1";
@@ -80,6 +82,10 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
     if (j.anchor === "from-today" && !startedOn) return null;
     const dayCount =
       typeof j.dayCount === "number" && Number.isInteger(j.dayCount) && j.dayCount > 0 ? j.dayCount : undefined;
+    const aheadDays =
+      typeof j.aheadDays === "number" && Number.isInteger(j.aheadDays) && j.aheadDays > 0
+        ? j.aheadDays
+        : undefined;
     const planId = j.planId.trim();
     return {
       version: 1,
@@ -87,6 +93,7 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
       anchor: j.anchor,
       startedOn: j.anchor === "calendar-easter" ? READING_PLAN_EASTER_EPOCH_DATE : startedOn,
       dayCount,
+      aheadDays,
     };
   } catch {
     return null;

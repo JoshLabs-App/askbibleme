@@ -55,8 +55,7 @@ export function ExploreScreen() {
   const topEntries = EXPLORE_ENTRIES.filter((entry) => !SCRIPTURE_ANTHOLOGY_IDS.includes(entry.id as never));
 
   const { articles: featuredArticles } = useExploreFeaturedArticles(locale);
-  const { entries: stagedEntries, sectionCaption: stagedSectionCaption, labelFor: stagedLabelFor } =
-    useExploreStagedEntries();
+  const { entries: stagedEntries, labelFor: stagedLabelFor } = useExploreStagedEntries();
   const [iconGridsReady, setIconGridsReady] = useState(false);
 
   useEffect(() => {
@@ -174,30 +173,8 @@ export function ExploreScreen() {
         <View style={s.section}>
           <View style={s.iconGrid}>
             {topEntries.map(renderEntryTile)}
-          </View>
-
-          {stagedEntries.length > 0 ? (
-            <>
-              <View style={s.sectionDivider} />
-              <Text style={s.sectionCaption}>{stagedSectionCaption}</Text>
-              <View style={s.iconGrid}>
-                {stagedEntries.map(renderStagedEntryTile)}
-              </View>
-            </>
-          ) : null}
-
-          <View style={s.sectionDivider} />
-          <Text style={s.sectionCaption}>
-            {locale === "en" ? "Scripture Anthology" : locale === "zh-TW" ? "經文彙編" : "经文汇编"}
-          </Text>
-          <View style={s.iconGrid}>
             {scriptureAnthologyEntries.map(renderEntryTile)}
-          </View>
-
-          <Text style={[s.sectionCaption, { marginTop: 28 }]}>
-            {t("pages.explore.articlesHeading")}
-          </Text>
-          <View style={s.iconGrid}>
+            {stagedEntries.map(renderStagedEntryTile)}
             {featuredArticles.map(renderArticleTile)}
           </View>
         </View>

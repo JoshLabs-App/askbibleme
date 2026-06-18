@@ -1,5 +1,5 @@
-import { ExploreStagedEntryScreen } from "../../../../src/explore/ExploreStagedEntryScreen";
+import { ExploreHistoricalCreedsScreen } from "../../../../src/explore/ExploreHistoricalCreedsScreen";
 
 export default function ExploreHistoricalCreedsRoute() {
-  return <ExploreStagedEntryScreen entryId="historical-creeds" />;
+  return <ExploreHistoricalCreedsScreen />;
 }

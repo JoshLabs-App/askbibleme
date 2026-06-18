@@ -57,4 +57,11 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     icon: "account-group",
     labelKey: "pages.explore.figuresIconLabel",
   },
+  {
+    id: "historical-creeds",
+    href: "/explore/historical-creeds",
+    iconSet: "material-community",
+    icon: "script-text-outline",
+    labelKey: "pages.explore.historicalCreedsIconLabel",
+  },
 ];

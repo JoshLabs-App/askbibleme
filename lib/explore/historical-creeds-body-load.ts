@@ -1,9 +1,17 @@
 import type { AppLocale } from "../i18n/config";
 import type { HistoricalCreedBodyContent } from "./historical-creeds-bodies";
 import { INLINE_HISTORICAL_CREED_BODIES } from "./historical-creeds-bodies";
-import { cleanupHistoricalCreedBodyParagraph } from "./historical-creeds-text-cleanup";
+import {
+  cleanupHistoricalCreedEnglishText,
+  normalizeHistoricalCreedChineseText,
+} from "./historical-creeds-text-cleanup.mjs";
 import { linkifyNormalizedChineseRefs } from "./historical-creeds-scripture-links";
 import { linkifyHistoricalCreedEnglishRefs } from "./historical-creeds-linkify-en";
+
+function cleanupHistoricalCreedBodyParagraph(text: string, locale: "zh" | "en"): string {
+  if (locale === "en") return cleanupHistoricalCreedEnglishText(text);
+  return normalizeHistoricalCreedChineseText(text);
+}
 
 const LAZY_BODY_LOADERS: Record<string, () => Promise<HistoricalCreedBodyContent>> = {
   "chicago-inerrancy": () =>

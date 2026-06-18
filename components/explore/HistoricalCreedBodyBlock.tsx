@@ -104,7 +104,7 @@ function renderAffirmDenySegment(segment: CreedBodySegment, index: number) {
       className={[BODY_CLASS, segment.level === "affirm" ? "mt-1.5" : "mt-2.5"].join(" ")}
     >
       {segment.title ? (
-        <span className={stanceLabelClass(segment.level)}>
+        <span className={stanceLabelClass(segment.level as "affirm" | "deny")}>
           {segment.title}
           {labelSuffix}
         </span>
@@ -122,7 +122,7 @@ function renderChicagoStanceContent(segments: CreedBodySegment[]) {
         return (
           <span key={index}>
             {segment.title ? (
-              <span className={stanceLabelClass(segment.level, true)}>
+              <span className={stanceLabelClass(segment.level as "affirm" | "deny", true)}>
                 {segment.title}
                 {labelSuffix}
               </span>

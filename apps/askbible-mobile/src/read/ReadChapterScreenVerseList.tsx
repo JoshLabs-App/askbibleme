@@ -104,17 +104,8 @@ export function ReadChapterScreenVerseList({
                   {heading}
                 </Text>
               ))}
-              <View style={styles.verseParagraphBlock}>
-                <Text
-                  style={[
-                    styles.versePrimaryLine,
-                    {
-                      fontSize: px.verseFontSize,
-                      lineHeight: px.verseLineHeight,
-                    },
-                  ]}
-                >
-                  {group.verses.map((v) => {
+              <View style={[styles.verseParagraphBlock, styles.verseParagraphFlow]}>
+                {group.verses.map((v) => {
                     const verseIndex = verseIndexByVerse.get(v.verse) ?? -1;
                     const searchFocus = searchFocusVerse === v.verse;
                     const selected = selectedVerses.includes(v.verse);
@@ -150,14 +141,24 @@ export function ReadChapterScreenVerseList({
                           : styles.verseInlineChunkAudioIdle;
                     const hasXref = Boolean(xrefVerseNumbers?.has(v.verse));
                     return (
-                      <Text
+                      <View
                         key={verseAudioChunkKey}
-                        onPress={parentVersePressHandler(v.verse, v.text)}
-                        onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
-                        suppressHighlighting
+                        collapsable={false}
                         onLayout={(e) => reportVerseLayoutFromEvent(v.verse, e)}
-                        style={[styles.verseInlineChunk, verseChunkBackgroundStyle]}
+                        style={[styles.verseInlineChunkWrap, verseChunkBackgroundStyle]}
                       >
+                        <Text
+                          style={[
+                            styles.versePrimaryLine,
+                            {
+                              fontSize: px.verseFontSize,
+                              lineHeight: px.verseLineHeight,
+                            },
+                          ]}
+                          onPress={parentVersePressHandler(v.verse, v.text)}
+                          onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
+                          suppressHighlighting
+                        >
                         <Text
                           style={[
                             styles.verseNum,
@@ -205,10 +206,10 @@ export function ReadChapterScreenVerseList({
                           {...verseBodyPressProps(v.verse, v.text)}
                         />
                         <Text>{" "}</Text>
-                      </Text>
+                        </Text>
+                      </View>
                     );
                   })}
-                </Text>
               </View>
             </Fragment>
           );

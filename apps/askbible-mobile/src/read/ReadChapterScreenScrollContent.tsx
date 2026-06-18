@@ -38,11 +38,13 @@ type Props = {
   chapterData: LoadedChapter;
   searchQuery: string;
   scrollRef: React.RefObject<ScrollView | null>;
+  scrollContentAnchorRef: React.RefObject<View | null>;
   scrollHeaderHeightRef: React.MutableRefObject<number>;
   scrollColumnMaxWidth: number | undefined;
   setAudioViewportHeight: (height: number) => void;
   onScrollViewportLayout: (height: number) => void;
   refreshScrollViewportTop: () => void;
+  onScrollContentAnchorLayout: () => void;
   onChapterScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onChapterContentSizeChange: (width: number, height: number) => void;
   px: ReadBibleTypographyPx;
@@ -69,11 +71,13 @@ export function ReadChapterScreenScrollContent({
   chapterData,
   searchQuery,
   scrollRef,
+  scrollContentAnchorRef,
   scrollHeaderHeightRef,
   scrollColumnMaxWidth,
   setAudioViewportHeight,
   onScrollViewportLayout,
   refreshScrollViewportTop,
+  onScrollContentAnchorLayout,
   onChapterScroll,
   onChapterContentSizeChange,
   px,
@@ -146,6 +150,11 @@ export function ReadChapterScreenScrollContent({
       ]}
     >
       <View
+        ref={scrollContentAnchorRef}
+        collapsable={false}
+        onLayout={() => onScrollContentAnchorLayout()}
+      >
+      <View
         style={styles.header}
         onLayout={(e) => {
           scrollHeaderHeightRef.current = Math.round(e.nativeEvent.layout.height);
@@ -217,6 +226,7 @@ export function ReadChapterScreenScrollContent({
           displayLocale={postReadingDisplayLocale}
         />
       ) : null}
+      </View>
     </ParchmentBottomFadeScrollView>
   );
 }

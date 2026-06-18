@@ -25,6 +25,8 @@ import {
   verseWeightsForReadChapterAudio,
 } from "@/lib/bible/read-chapter-audio-verse-from-progress";
 import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
+import { tryParseCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
+import { scrollReadChapterVerseIntoView } from "@/lib/read/scroll-read-chapter-verse-into-view";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ReadVerseBookmarkFeedback } from "@/components/bible/ReadVerseBookmarkFeedback";
 import { useScriptureVerseBookmarks } from "@/components/bible/useScriptureVerseBookmarks";
@@ -187,7 +189,7 @@ export function ReadChapterVersesClient({
   const [resolvedChapterSrc, setResolvedChapterSrc] = useState<string | null>(null);
   const [verseTimings, setVerseTimings] = useState<CuvChapterVerseTiming[] | null>(null);
   const [verseTimingsReady, setVerseTimingsReady] = useState<"idle" | "pending" | "yes" | "no">("idle");
-  const verseElRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+  const verseElRefs = useRef<(HTMLElement | null)[]>([]);
   const lastFollowIndexRef = useRef<number | null>(null);
   const searchFocusScrolledRef = useRef(false);
   const [searchFocusVerse, setSearchFocusVerse] = useState<number | null>(initialFocusVerse);
@@ -414,10 +416,14 @@ export function ReadChapterVersesClient({
     return { contentStartSec: leadInSec, contentEndTrimSec: trailOutSec };
   }, [supported, bookId, chapter, playVoice, verseTimingsReady]);
 
-  const audioMatchesThisChapter =
-    Boolean(resolvedChapterSrc) &&
-    Boolean(effectiveSrc.trim()) &&
-    shellPlaybackUrlsEqual(resolvedChapterSrc!, effectiveSrc.trim());
+  const audioMatchesThisChapter = (() => {
+    if (!supported || !playing || !effectiveSrc.trim()) return false;
+    const parsed = tryParseCuvChapterAudioEffectiveSrc(effectiveSrc.trim());
+    if (parsed && parsed.bookId === bookId.toUpperCase() && parsed.chapter === chapter) {
+      return true;
+    }
+    return Boolean(resolvedChapterSrc) && shellPlaybackUrlsEqual(resolvedChapterSrc!, effectiveSrc.trim());
+  })();
 
   const verseFollowEnabled = supported;
 
@@ -445,6 +451,18 @@ export function ReadChapterVersesClient({
     void recordTodayReadingChapterFraction(bookId, chapter, fraction);
   }, [bookId, chapter, verses.length, activeIndex]);
 
+  const scrollVerseIntoReadableCenter = useCallback(
+    (el: HTMLElement) => {
+      const reduceMotion =
+        typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      scrollReadChapterVerseIntoView(el, {
+        audioDockVisible: playing && audioMatchesThisChapter,
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+    },
+    [audioMatchesThisChapter, playing],
+  );
+
   useLayoutEffect(() => {
     if (searchFocusVerse == null || searchFocusScrolledRef.current) return;
     const idx = verses.findIndex((v) => v.verse === searchFocusVerse);
@@ -452,17 +470,11 @@ export function ReadChapterVersesClient({
     const el = verseElRefs.current[idx];
     if (!el) return;
     searchFocusScrolledRef.current = true;
-    const reduceMotion =
-      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({
-      block: "center",
-      inline: "nearest",
-      behavior: reduceMotion ? "auto" : "smooth",
-    });
-  }, [searchFocusVerse, verses]);
+    scrollVerseIntoReadableCenter(el);
+  }, [searchFocusVerse, scrollVerseIntoReadableCenter, verses]);
 
   useLayoutEffect(() => {
-    if (!playing) {
+    if (!playing || !audioMatchesThisChapter) {
       lastFollowIndexRef.current = null;
       return;
     }
@@ -474,14 +486,8 @@ export function ReadChapterVersesClient({
     lastFollowIndexRef.current = activeIndex;
     const el = verseElRefs.current[activeIndex];
     if (!el) return;
-    const reduceMotion =
-      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({
-      block: "center",
-      inline: "nearest",
-      behavior: reduceMotion ? "auto" : "smooth",
-    });
-  }, [playing, activeIndex, verses.length]);
+    scrollVerseIntoReadableCenter(el);
+  }, [playing, audioMatchesThisChapter, activeIndex, scrollVerseIntoReadableCenter, verses.length]);
 
   const onVerseDoubleClick = (v: LoadedChapterVerse) => {
     if (highlightModeActive || verseSelectionMode) return;
@@ -693,7 +699,6 @@ export function ReadChapterVersesClient({
         ? paragraphGroups.map((group, groupIndex) => {
             const firstVerse = group.verses[0];
             if (!firstVerse) return null;
-            const firstIndex = verses.findIndex((v) => v.verse === firstVerse.verse);
             const headings = segmentMeta.headingByVerse.get(firstVerse.verse) ?? [];
             const showParagraphBreak = groupIndex > 0;
             const showParagraphRule = showParagraphBreak && headings.length > 0;
@@ -717,12 +722,7 @@ export function ReadChapterVersesClient({
                     {title}
                   </h2>
                 ))}
-                <p
-                  className="read-chapter-verse-paragraph-flow"
-                  ref={(node) => {
-                    if (firstIndex >= 0) verseElRefs.current[firstIndex] = node;
-                  }}
-                >
+                <p className="read-chapter-verse-paragraph-flow">
                   {group.verses.map((v) => {
                     const i = verses.findIndex((row) => row.verse === v.verse);
                     return (
@@ -730,6 +730,9 @@ export function ReadChapterVersesClient({
                         key={`pv:${v.verse}`}
                         verse={v}
                         index={i}
+                        verseRef={(node) => {
+                          if (i >= 0) verseElRefs.current[i] = node;
+                        }}
                         translationId={translationId}
                         bookId={bookId}
                         chapter={chapter}
@@ -875,6 +878,7 @@ export function ReadChapterVersesClient({
 type ReadChapterInlineVerseChunkProps = {
   verse: LoadedChapterVerse;
   index: number;
+  verseRef?: (node: HTMLElement | null) => void;
   translationId: string;
   bookId: string;
   chapter: number;
@@ -897,6 +901,7 @@ type ReadChapterInlineVerseChunkProps = {
 
 function ReadChapterInlineVerseChunk({
   verse: v,
+  verseRef,
   translationId,
   bookId,
   chapter,
@@ -925,6 +930,7 @@ function ReadChapterInlineVerseChunk({
   });
   return (
     <span
+      ref={verseRef}
       data-verse={v.verse}
       className={[
         "read-chapter-verse-inline-chunk",
@@ -980,7 +986,7 @@ type VerseParagraphProps = {
   onDoubleClick: () => void;
   onOpenActionMenu: () => void;
   onOpenXref: () => void;
-  verseRef: (node: HTMLParagraphElement | null) => void;
+  verseRef: (node: HTMLElement | null) => void;
   t: (path: string, vars?: Record<string, string>) => string;
   enableLongPress: boolean;
 };

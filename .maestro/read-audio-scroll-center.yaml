@@ -1,0 +1,19 @@
+appId: me.askbible
+---
+- openLink: askbible://read/GEN/1
+- extendedWaitUntil:
+    visible:
+      text: "創世記 第1章"
+    timeout: 60000
+- scrollUntilVisible:
+    element:
+      text: "兩個大光"
+    direction: DOWN
+    timeout: 20000
+    optional: true
+# 深链已在读经 Tab + 章页；底栏中央为整章朗读 FAB
+- tapOn:
+    point: "50%,92%"
+- waitForAnimationToEnd:
+    timeout: 12000
+- takeScreenshot: read-audio-scroll-center

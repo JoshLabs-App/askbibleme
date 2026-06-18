@@ -62,6 +62,7 @@ export function ReadChapterScreen() {
   const returnToExplore = useReadChapterExploreReturnHandler(exploreReturn);
 
   const scrollRef = useRef<ScrollView>(null);
+  const scrollContentAnchorRef = useRef<View>(null);
   const scrollHeaderHeightRef = useRef(0);
   const scrollContentHeightRef = useRef(0);
   const [chapterCompleted, setChapterCompleted] = useState(false);
@@ -158,7 +159,16 @@ export function ReadChapterScreen() {
     reportVerseLayoutFromEvent,
     refreshScrollViewportTop,
     remeasureVerseLayoutInContent,
-  } = useReadChapterSearchFocus(chapterData, params.verse, scrollRef, scrollContentHeightRef);
+    onScrollContentAnchorLayout,
+    scrollVerseToReadableCenter,
+  } = useReadChapterSearchFocus(
+    chapterData,
+    params.verse,
+    scrollRef,
+    scrollContentHeightRef,
+    scrollContentAnchorRef,
+    insets,
+  );
 
   const verseActions = useReadChapterVerseActions({
     chapterData,
@@ -193,11 +203,7 @@ export function ReadChapterScreen() {
     scrollHeaderHeightRef,
     onAdvanceChapterAudio,
     {
-      verseLayoutsRef,
-      scrollViewportHeight: audioViewportHeight || scrollViewportHeight,
-      scrollOffsetRef,
-      scrollContentHeightRef,
-      remeasureVerseLayoutInContent,
+      scrollVerseToReadableCenter,
     },
   );
 
@@ -252,11 +258,13 @@ export function ReadChapterScreen() {
         chapterData={chapterData}
         searchQuery={searchQuery}
         scrollRef={scrollRef}
+        scrollContentAnchorRef={scrollContentAnchorRef}
         scrollHeaderHeightRef={scrollHeaderHeightRef}
         scrollColumnMaxWidth={scrollColumnMaxWidth}
         setAudioViewportHeight={setAudioViewportHeight}
         onScrollViewportLayout={onScrollViewportLayout}
         refreshScrollViewportTop={refreshScrollViewportTop}
+        onScrollContentAnchorLayout={onScrollContentAnchorLayout}
         onChapterScroll={onChapterScroll}
         onChapterContentSizeChange={onChapterContentSizeChange}
         px={px}

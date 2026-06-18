@@ -1,5 +1,6 @@
 import {
   ScrollView,
+  View,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -25,11 +26,13 @@ type Props = {
   chapterData: LoadedChapter | null;
   searchQuery: string;
   scrollRef: React.RefObject<ScrollView | null>;
+  scrollContentAnchorRef: React.RefObject<View | null>;
   scrollHeaderHeightRef: React.MutableRefObject<number>;
   scrollColumnMaxWidth: number | undefined;
   setAudioViewportHeight: (height: number) => void;
   onScrollViewportLayout: (height: number) => void;
   refreshScrollViewportTop: () => void;
+  onScrollContentAnchorLayout: () => void;
   onChapterScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onChapterContentSizeChange: (width: number, height: number) => void;
   px: ReadBibleTypographyPx;
@@ -60,11 +63,13 @@ export function ReadChapterScreenBody({
   chapterData,
   searchQuery,
   scrollRef,
+  scrollContentAnchorRef,
   scrollHeaderHeightRef,
   scrollColumnMaxWidth,
   setAudioViewportHeight,
   onScrollViewportLayout,
   refreshScrollViewportTop,
+  onScrollContentAnchorLayout,
   onChapterScroll,
   onChapterContentSizeChange,
   px,
@@ -91,11 +96,13 @@ export function ReadChapterScreenBody({
           chapterData={chapterData}
           searchQuery={searchQuery}
           scrollRef={scrollRef}
+          scrollContentAnchorRef={scrollContentAnchorRef}
           scrollHeaderHeightRef={scrollHeaderHeightRef}
           scrollColumnMaxWidth={scrollColumnMaxWidth}
           setAudioViewportHeight={setAudioViewportHeight}
           onScrollViewportLayout={onScrollViewportLayout}
           refreshScrollViewportTop={refreshScrollViewportTop}
+          onScrollContentAnchorLayout={onScrollContentAnchorLayout}
           onChapterScroll={onChapterScroll}
           onChapterContentSizeChange={onChapterContentSizeChange}
           px={px}

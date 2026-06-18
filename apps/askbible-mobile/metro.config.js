@@ -18,4 +18,20 @@ config.maxWorkers = 1;
 config.resolver.useWatchman = false;
 
 config.resolver.assetExts = [...config.resolver.assetExts, "sqlite", "db"];
+
+const defaultResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName.startsWith("@/")) {
+    const aliased = path.join(workspaceRoot, moduleName.slice(2));
+    if (defaultResolveRequest) {
+      return defaultResolveRequest(context, aliased, platform);
+    }
+    return context.resolveRequest(context, aliased, platform);
+  }
+  if (defaultResolveRequest) {
+    return defaultResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = config;

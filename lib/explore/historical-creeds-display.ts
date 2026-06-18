@@ -1,4 +1,4 @@
-import type { AppLocale } from "@/lib/i18n/config";
+import type { AppLocale } from "../i18n/config";
 import { historicalCreedHasBody } from "./historical-creeds-body-load";
 import {
   HISTORICAL_CREED_GROUP_ORDER,

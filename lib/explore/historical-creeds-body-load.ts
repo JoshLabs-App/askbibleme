@@ -1,4 +1,4 @@
-import type { AppLocale } from "@/lib/i18n/config";
+import type { AppLocale } from "../i18n/config";
 import type { HistoricalCreedBodyContent } from "./historical-creeds-bodies";
 import { INLINE_HISTORICAL_CREED_BODIES } from "./historical-creeds-bodies";
 import { cleanupHistoricalCreedBodyParagraph } from "./historical-creeds-text-cleanup";

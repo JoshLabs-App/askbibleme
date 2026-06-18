@@ -1,4 +1,4 @@
-import type { AppLocale } from "@/lib/i18n/config";
+import type { AppLocale } from "../i18n/config";
 import {
   HEIDELBERG_INTRO_LORD_DAY,
   HEIDELBERG_LORDS_DAY_COUNT,

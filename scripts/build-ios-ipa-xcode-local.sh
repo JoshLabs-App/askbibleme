@@ -48,6 +48,8 @@ ASC_API_KEY_ISSUER_ID="${EXPO_ASC_ISSUER_ID:-${ASC_API_KEY_ISSUER_ID:-a56f0624-e
 
 XCODE_AUTH_ARGS=()
 if [[ -n "${ASC_API_KEY_PATH:-}" && -f "${ASC_API_KEY_PATH}" ]]; then
+  ASC_API_KEY_PATH="$(cd "$(dirname "${ASC_API_KEY_PATH}")" && pwd)/$(basename "${ASC_API_KEY_PATH}")"
+  export ASC_API_KEY_PATH
   XCODE_AUTH_ARGS=(
     -allowProvisioningUpdates
     -authenticationKeyPath "${ASC_API_KEY_PATH}"

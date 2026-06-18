@@ -1,6 +1,6 @@
-import { askbibleReadPath } from "@/lib/bible/parse-askbible-read-link";
-import { webChapterAudioBookNameEn } from "@/lib/bible/web-chapter-audio-book-names";
-import { scriptureBooks } from "@/lib/bible/scripture-books";
+import { askbibleReadPath } from "../bible/parse-askbible-read-link";
+import { webChapterAudioBookNameEn } from "../bible/web-chapter-audio-book-names";
+import { scriptureBooks } from "../bible/scripture-books";
 
 type BookToken = { token: string; bookId: string };
 

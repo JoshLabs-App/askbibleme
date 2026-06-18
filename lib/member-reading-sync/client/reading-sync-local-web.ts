@@ -72,6 +72,9 @@ import {
   type ReadingHabitStatsRecord,
 } from "@/lib/read/reading-habit-stats";
 import { readTripleLoopProgress, writeTripleLoopProgress } from "@/lib/read/triple-loop-progress";
+import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { reconcileTripleLoopAheadDays } from "@/lib/read/triple-loop-effective-plan-day";
+import { readAheadDays } from "@/lib/read/reading-plan-ahead";
 import type { TripleLoopReadingState } from "@/lib/bible/reading-plans/triple-loop-reading";
 import {
   readTodayReadingChapterFractionRecord,
@@ -281,6 +284,15 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
   }
 }
 
+async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<void> {
+  const prefs = readReadingPlanPrefs();
+  if (!prefs || !isTripleLoopPlanId(prefs.planId)) return;
+  const progress = readTripleLoopProgress();
+  const next = reconcileTripleLoopAheadDays(prefs, progress);
+  if (readAheadDays(next) === readAheadDays(prefs)) return;
+  writeReadingPlanPrefs(next);
+}
+
 export async function applyMemberReadingSyncBlobsWeb(
   blobs: Partial<Record<MemberReadingSyncBlobKey, MemberReadingSyncBlob>> | undefined,
 ): Promise<void> {
@@ -290,4 +302,5 @@ export async function applyMemberReadingSyncBlobsWeb(
     if (!blob) continue;
     await applyBlob(key, blob.value);
   }
+  await reconcileTripleLoopReadingPlanAfterSyncWeb();
 }

@@ -10,6 +10,7 @@ import {
   createDefaultTripleLoopReadingState,
   type TripleLoopReadingState,
 } from "./triple-loop-reading";
+import { normalizeTripleLoopChaptersReadKeys } from "./triple-loop-chapters-read";
 import {
   readTripleLoopProgress,
   subscribeTripleLoopProgress,
@@ -55,16 +56,21 @@ export function useTripleLoopProgress(): {
 
   const refresh = useCallback(() => {
     void readTripleLoopProgress().then((next) => {
-      setProgress((prev) =>
-        prev.ot.bookId === next.ot.bookId &&
-        prev.ot.chapter === next.ot.chapter &&
-        prev.nt.bookId === next.nt.bookId &&
-        prev.nt.chapter === next.nt.chapter &&
-        prev.wisdom.bookId === next.wisdom.bookId &&
-        prev.wisdom.chapter === next.wisdom.chapter
+      const keys = normalizeTripleLoopChaptersReadKeys(next.chaptersReadKeys);
+      const keysSig = `${keys.ot.join(",")}|${keys.nt.join(",")}|${keys.wisdom.join(",")}`;
+      setProgress((prev) => {
+        const prevKeys = normalizeTripleLoopChaptersReadKeys(prev.chaptersReadKeys);
+        const prevKeysSig = `${prevKeys.ot.join(",")}|${prevKeys.nt.join(",")}|${prevKeys.wisdom.join(",")}`;
+        return prev.ot.bookId === next.ot.bookId &&
+          prev.ot.chapter === next.ot.chapter &&
+          prev.nt.bookId === next.nt.bookId &&
+          prev.nt.chapter === next.nt.chapter &&
+          prev.wisdom.bookId === next.wisdom.bookId &&
+          prev.wisdom.chapter === next.wisdom.chapter &&
+          prevKeysSig === keysSig
           ? prev
-          : next,
-      );
+          : next;
+      });
     });
   }, []);
 

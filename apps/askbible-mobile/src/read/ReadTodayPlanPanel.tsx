@@ -6,7 +6,6 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
-import { TODAY_READING_AUTO_DONE_FRACTION } from "./reading-plan/today-reading-chapter-fraction";
 import { todayReadingItemKey } from "./reading-plan/today-reading-done";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "./useTodayReadingPlan";
 import { useTodayReadingDone } from "./useTodayReadingDone";
@@ -16,6 +15,8 @@ import { ReadTodayReadingStats } from "./ReadTodayReadingStats";
 import { ReadYearDayTimeline } from "./ReadYearDayTimeline";
 import { useReadingHabitStats } from "./useReadingHabitStats";
 import { useTodayReadingChapterFractions } from "./useTodayReadingChapterFractions";
+import { useTripleLoopProgress } from "./reading-plan/useReadingPlanStores";
+import { isTripleLoopTodayReadingItemComplete } from "./reading-plan/triple-loop-today-reading-complete";
 import {
   readCompletedChapterKeySet,
   subscribeReadChapterCompletion,
@@ -31,6 +32,7 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
   const { payload, loading } = plan;
   const { isDone, toggleDone } = useTodayReadingDone(plan);
   const { fractions } = useTodayReadingChapterFractions(plan);
+  const { progress: tripleProgress } = useTripleLoopProgress();
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
   const { isTripleLoop } = plan;
   const readings = payload?.day?.readings ?? [];
@@ -77,12 +79,17 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
       doneByItem.set(
         itemKey,
         isTripleLoop
-          ? isDone(r) || fraction >= TODAY_READING_AUTO_DONE_FRACTION
+          ? isTripleLoopTodayReadingItemComplete({
+              reading: r,
+              isDone: isDone(r),
+              fraction,
+              progress: tripleProgress,
+            })
           : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
       );
     }
     return doneByItem;
-  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings]);
+  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings, tripleProgress]);
 
   const todayAllDone = useMemo(
     () =>

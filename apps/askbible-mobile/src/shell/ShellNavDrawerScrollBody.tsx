@@ -9,6 +9,7 @@ import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-sc
 import { ShellNavDrawerHomeVersePoolSection } from "./ShellNavDrawerHomeVersePoolSection";
 import { ShellNavDrawerLocaleRow } from "./ShellNavDrawerLocaleRow";
 import { ShellNavDrawerMenuRow } from "./ShellNavDrawerMenuRow";
+import { ShellNavDrawerReadingSyncSection } from "./ShellNavDrawerReadingSyncSection";
 import { ShellNavDrawerTtsExperimentSection } from "./ShellNavDrawerTtsExperimentSection";
 import { SUPPORT_EMAIL } from "./shellNavDrawerConstants";
 import { shellNavDrawerStyles as styles } from "./shellNavDrawerStyles";
@@ -205,6 +206,7 @@ export function ShellNavDrawerScrollBody({
           router.push("/feedback");
         }}
       />
+      {user ? <ShellNavDrawerReadingSyncSection locale={locale} /> : null}
     </ScrollView>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { ReadTodayPlanAheadControls } from "@/components/bible/ReadTodayPlanAheadControls";
 import { ReadTodayPlanReadingRow } from "@/components/bible/ReadTodayPlanReadingRow";
 import { ReadTodayReadingStats } from "@/components/bible/ReadTodayReadingStats";
@@ -11,9 +11,13 @@ import { useReadingHabitStats } from "@/hooks/useReadingHabitStats";
 import { useTodayReadingChapterFractions } from "@/hooks/useTodayReadingChapterFractions";
 import { useTodayReadingDone } from "@/hooks/useTodayReadingDone";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "@/hooks/useTodayReadingPlan";
+import {
+  getTripleLoopProgressSnapshot,
+  subscribeTripleLoopProgress,
+} from "@/lib/read/triple-loop-progress";
+import { isTripleLoopTodayReadingItemComplete } from "@/lib/read/triple-loop-today-reading-complete";
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import { READ_PARCHMENT_FAINT, READ_PARCHMENT_MUTED } from "@/lib/read/read-parchment-accents";
-import { TODAY_READING_AUTO_DONE_FRACTION } from "@/lib/read/today-reading-chapter-fraction";
 import {
   readCompletedChapterKeySet,
   subscribeReadChapterCompletion,
@@ -27,8 +31,13 @@ type ReadingsProps = {
 export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
   const { t } = useLocale();
   const { payload, loading, isTripleLoop } = plan;
-  const { isDone, allDone, toggleDone } = useTodayReadingDone(plan);
+  const { isDone, toggleDone } = useTodayReadingDone(plan);
   const { fractions } = useTodayReadingChapterFractions(plan);
+  const tripleProgress = useSyncExternalStore(
+    subscribeTripleLoopProgress,
+    getTripleLoopProgressSnapshot,
+    getTripleLoopProgressSnapshot,
+  );
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
   const readings = payload?.day?.readings ?? [];
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
@@ -62,21 +71,24 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
       doneByItem.set(
         itemKey,
         isTripleLoop
-          ? isDone(r) || (fractions[itemKey] ?? 0) >= TODAY_READING_AUTO_DONE_FRACTION
+          ? isTripleLoopTodayReadingItemComplete({
+              reading: r,
+              isDone: isDone(r),
+              fraction: fractions[itemKey] ?? 0,
+              progress: tripleProgress,
+            })
           : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
       );
     }
     return doneByItem;
-  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings]);
+  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings, tripleProgress]);
 
   const todayAllDone = useMemo(
     () =>
       !loading &&
       readings.length > 0 &&
-      (isTripleLoop
-        ? allDone(readings)
-        : readings.every((r) => (chapterCompletionProgress.get(todayReadingItemKey(r)) ?? 0) >= 1)),
-    [loading, readings, isTripleLoop, allDone, chapterCompletionProgress],
+      readings.every((r) => isReadingDone.get(todayReadingItemKey(r)) ?? false),
+    [loading, readings, isReadingDone],
   );
 
   useEffect(() => {

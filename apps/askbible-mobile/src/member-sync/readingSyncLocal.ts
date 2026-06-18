@@ -2,6 +2,7 @@ export { exportLocalReadingBlobs } from "./readingSyncLocalExport";
 export { applyReadingSyncBlob } from "./readingSyncLocalApply";
 
 import { MEMBER_READING_SYNC_BLOB_KEYS, type MemberReadingSyncBlob, type MemberReadingSyncBlobKey } from "./schema";
+import { reconcileTripleLoopReadingPlanAfterSync } from "../read/reading-plan/reconcile-triple-loop-reading-sync";
 import { applyReadingSyncBlob } from "./readingSyncLocalApply";
 
 let applyingRemoteMemberSync = false;
@@ -21,6 +22,7 @@ export async function applyMemberReadingSyncBlobs(
       if (!blob) continue;
       await applyReadingSyncBlob(key, blob.value);
     }
+    await reconcileTripleLoopReadingPlanAfterSync();
   } finally {
     applyingRemoteMemberSync = false;
   }

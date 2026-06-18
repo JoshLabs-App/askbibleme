@@ -93,7 +93,13 @@ export function mergeReadingPlanPrefsValue(a: unknown, b: unknown): ReadingPlanP
   const left = a as ReadingPlanPrefs;
   const right = b as ReadingPlanPrefs;
   const ahead = Math.max(readAheadDays(left), readAheadDays(right));
-  const base = right.version === 1 ? right : left;
+  const base = readAheadDays(right) >= readAheadDays(left)
+    ? right.version === 1
+      ? right
+      : left
+    : left.version === 1
+      ? left
+      : right;
   return { ...base, aheadDays: ahead > 0 ? ahead : undefined };
 }
 

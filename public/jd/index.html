@@ -52,47 +52,77 @@
     <main class="page app-shell">
       <section class="app-card" aria-label="讲道集">
         <div class="page-scroll">
-          <div class="category-tabs" role="tablist" aria-label="分类">
-            <button
-              id="tab-sunday"
-              class="category-tab"
-              type="button"
-              role="tab"
-              data-category="主日"
-              aria-controls="category-book-list"
-            >
-              主日
-            </button>
-            <button
-              id="tab-new"
-              class="category-tab"
-              type="button"
-              role="tab"
-              data-category="新约"
-              aria-controls="category-book-list"
-            >
-              新约
-            </button>
-            <button
-              id="tab-old"
-              class="category-tab"
-              type="button"
-              role="tab"
-              data-category="旧约"
-              aria-controls="category-book-list"
-            >
-              旧约
-            </button>
-            <button
-              id="tab-other"
-              class="category-tab"
-              type="button"
-              role="tab"
-              data-category="系列"
-              aria-controls="category-book-list"
-            >
-              系列
-            </button>
+          <div class="catalog-nav" id="catalog-nav">
+            <div class="catalog-nav-speakers">
+              <div class="speaker-tabs" role="tablist" aria-label="讲员">
+                <button
+                  id="tab-speaker-gaolu"
+                  class="speaker-tab"
+                  type="button"
+                  role="tab"
+                  data-speaker="gaolu"
+                  aria-controls="category-book-list"
+                >
+                  高路牧师
+                </button>
+                <button
+                  id="tab-speaker-kou"
+                  class="speaker-tab"
+                  type="button"
+                  role="tab"
+                  data-speaker="kou"
+                  aria-controls="category-book-list"
+                >
+                  寇绍涵牧师
+                </button>
+              </div>
+            </div>
+            <div class="catalog-nav-categories">
+              <span class="catalog-nav-label" aria-hidden="true">分类</span>
+              <div class="category-tabs" id="category-tabs" role="tablist" aria-label="分类">
+                <button
+                  id="tab-sunday"
+                  class="category-tab"
+                  type="button"
+                  role="tab"
+                  data-category="主日"
+                  data-speakers="gaolu"
+                  aria-controls="category-book-list"
+                >
+                  主日
+                </button>
+                <button
+                  id="tab-new"
+                  class="category-tab"
+                  type="button"
+                  role="tab"
+                  data-category="新约"
+                  aria-controls="category-book-list"
+                >
+                  新约
+                </button>
+                <button
+                  id="tab-old"
+                  class="category-tab"
+                  type="button"
+                  role="tab"
+                  data-category="旧约"
+                  aria-controls="category-book-list"
+                >
+                  旧约
+                </button>
+                <button
+                  id="tab-other"
+                  class="category-tab"
+                  type="button"
+                  role="tab"
+                  data-category="系列"
+                  aria-controls="category-book-list"
+                >
+                  系列
+                </button>
+              </div>
+            </div>
           </div>
           <div class="catalog-search" role="search" aria-label="搜索讲道">
             <label class="catalog-search-field">
@@ -234,14 +264,6 @@
     </main>
 
     <audio id="audio" class="hidden-audio" preload="metadata" playsinline></audio>
-
-    <div id="app-update-banner" class="app-update-banner" hidden role="alertdialog" aria-labelledby="app-update-title" aria-modal="false">
-      <div class="app-update-copy">
-        <strong id="app-update-title">讲道集有新版本</strong>
-        <p class="app-update-lead">内容已更新，点击立即刷新以获取最新讲道与功能。</p>
-      </div>
-      <button id="app-update-refresh" class="app-update-button" type="button">立即更新</button>
-    </div>
 
     <div id="share-sheet" class="share-sheet" hidden aria-hidden="true">
       <button class="share-sheet-backdrop" type="button" data-action="close-share" aria-label="关闭"></button>

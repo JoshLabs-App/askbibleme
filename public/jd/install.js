@@ -8,8 +8,6 @@ const $steps = document.querySelector('#install-guide-steps');
 const $primary = document.querySelector('#install-guide-primary');
 const $dismiss = document.querySelector('#install-guide-dismiss');
 const $lead = document.querySelector('#install-guide-lead');
-const $updateBanner = document.querySelector('#app-update-banner');
-const $updateRefresh = document.querySelector('#app-update-refresh');
 
 let deferredInstallPrompt = null;
 let installPromptWaiters = [];
@@ -218,27 +216,15 @@ function registerServiceWorker() {
     .catch(() => {});
 }
 
-function showUpdateBanner() {
-  if (!$updateBanner) return;
-  $updateBanner.hidden = false;
-  document.body.classList.add('app-update-open');
-}
-
-function hideUpdateBanner() {
-  if (!$updateBanner) return;
-  $updateBanner.hidden = true;
-  document.body.classList.remove('app-update-open');
-}
-
-function markWaitingServiceWorker(worker) {
+function activateWaitingServiceWorker(worker) {
   if (!worker) return;
   waitingServiceWorker = worker;
-  showUpdateBanner();
+  applyAppUpdate();
 }
 
 function bindAppUpdate(registration) {
   if (registration.waiting) {
-    markWaitingServiceWorker(registration.waiting);
+    activateWaitingServiceWorker(registration.waiting);
   }
 
   registration.addEventListener('updatefound', () => {
@@ -247,7 +233,7 @@ function bindAppUpdate(registration) {
     installingWorker.addEventListener('statechange', () => {
       if (installingWorker.state !== 'installed') return;
       if (!navigator.serviceWorker.controller) return;
-      markWaitingServiceWorker(installingWorker);
+      activateWaitingServiceWorker(installingWorker);
     });
   });
 
@@ -267,8 +253,8 @@ function bindAppUpdate(registration) {
 }
 
 function applyAppUpdate() {
+  if (updateRefreshPending) return;
   updateRefreshPending = true;
-  hideUpdateBanner();
 
   if (waitingServiceWorker) {
     waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
@@ -282,12 +268,6 @@ function applyAppUpdate() {
 
   void serviceWorkerRegistration?.update().finally(() => {
     window.location.reload();
-  });
-}
-
-function bindAppUpdateUi() {
-  $updateRefresh?.addEventListener('click', () => {
-    applyAppUpdate();
   });
 }
 
@@ -314,7 +294,6 @@ async function scheduleInstallGuide() {
 
 export function initInstallGuide() {
   registerServiceWorker();
-  bindAppUpdateUi();
   bindInstallGuide();
   void scheduleInstallGuide();
 }

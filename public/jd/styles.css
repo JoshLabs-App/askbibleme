@@ -384,6 +384,7 @@ button {
 .track-pill,
 .recent-item,
 .category-tab,
+.speaker-tab,
 .category-book-item {
   transition:
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -720,29 +721,107 @@ button {
 }
 
 .category-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--surface-list);
+  display: none;
 }
 
-.category-tab {
-  min-height: 44px;
-  padding: 0 10px;
-  border: 0;
-  border-right: 1px solid var(--line);
+.catalog-nav {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--surface-list);
+  border-bottom: 1px solid var(--line);
+}
+
+.catalog-nav-speakers {
+  padding: 10px 12px 8px;
+}
+
+.speaker-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
   background: var(--surface-soft);
+}
+
+.speaker-tab {
+  flex: 1 1 0;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.speaker-tab.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.speaker-tab:hover:not(.is-active) {
+  color: var(--accent-strong);
+}
+
+.catalog-nav-categories {
+  display: flex;
+  align-items: stretch;
+  min-height: 38px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-soft) 42%, var(--surface-list));
+}
+
+.catalog-nav-label {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border-right: 1px solid var(--line);
+  color: var(--muted-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.catalog-nav-categories .category-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.category-tab {
+  flex: 1 1 0;
+  min-height: 38px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.category-tab.is-hidden {
+  display: none;
 }
 
 .category-tab:last-child {
@@ -750,19 +829,18 @@ button {
 }
 
 .category-tab.is-active {
-  background: var(--surface);
   color: var(--accent-strong);
+  font-weight: 700;
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 .category-tab:hover:not(.is-active) {
-  background: var(--accent-soft);
   color: var(--accent-strong);
 }
 
 .catalog-search {
   position: sticky;
-  top: 44px;
+  top: 92px;
   z-index: 3;
   padding: 10px 14px;
   border-bottom: 1px solid var(--line);
@@ -1310,6 +1388,7 @@ a:focus-visible {
   .track-pill,
   .recent-item,
   .category-tab,
+  .speaker-tab,
   .category-book-item {
     transition: none;
   }
@@ -1322,12 +1401,7 @@ body.install-banner-open {
 }
 
 body.install-banner-open .install-banner {
-  top: calc(env(safe-area-inset-top, 0px) + var(--app-update-banner-offset, 0px));
-}
-
-body.app-update-open {
-  --app-update-banner-offset: 72px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + var(--app-update-banner-offset));
+  top: calc(env(safe-area-inset-top, 0px));
 }
 
 body.install-banner-open .page.app-shell {
@@ -1465,59 +1539,6 @@ body.install-banner-open .page.app-shell {
 .install-banner-close:hover {
   background: var(--hover-surface);
   color: var(--ink);
-}
-
-.app-update-banner {
-  position: fixed;
-  inset: env(safe-area-inset-top, 0px) 0 auto;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
-  background: color-mix(in srgb, var(--accent-soft) 88%, var(--surface));
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 8%, transparent);
-}
-
-.app-update-banner[hidden] {
-  display: none !important;
-}
-
-.app-update-copy {
-  min-width: 0;
-}
-
-.app-update-copy strong {
-  display: block;
-  font-size: 0.92rem;
-  color: var(--ink);
-}
-
-.app-update-lead {
-  margin: 4px 0 0;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.app-update-button {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.app-update-button:hover {
-  background: var(--accent-strong);
 }
 
 /* ── Share sheet ── */

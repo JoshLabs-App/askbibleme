@@ -12,7 +12,8 @@ const LISTENED_KEY = 'sermon-listened-v2';
 const CURRENT_KEY = 'sermon-current-v2';
 const DIRECTORY_KEY = 'sermon-directory-v2';
 const CATEGORY_KEY = 'sermon-category-v2';
-const CATEGORY_SELECT_KEY = 'sermon-category-select-v1';
+const CATEGORY_SELECT_KEY = 'sermon-category-select-v2';
+const SPEAKER_KEY = 'sermon-speaker-v1';
 const RATE_KEY = 'sermon-rate-v2';
 const FAVORITES_KEY = 'sermon-favorites-v2';
 const NOTES_KEY = 'sermon-notes-v2';
@@ -24,10 +25,16 @@ const SHARE_QUERY_KEY = 'p';
 
 const CATEGORY_ORDER = ['主日', '新约', '旧约', '系列'];
 const DEFAULT_CATEGORY = '新约';
+const SPEAKERS = [
+  { id: 'gaolu', label: '高路牧师' },
+  { id: 'kou', label: '寇绍涵牧师' },
+];
+const DEFAULT_SPEAKER = 'gaolu';
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2];
 
 const state = {
   data: null,
+  catalogBooks: [],
   books: [],
   tracks: [],
   progress: loadJSON(STORAGE_KEY, {}),
@@ -36,6 +43,7 @@ const state = {
   notes: loadJSON(NOTES_KEY, {}),
   currentTrack: null,
   selectedBookTitle: loadStoredString(DIRECTORY_KEY),
+  selectedSpeaker: loadSelectedSpeaker() || DEFAULT_SPEAKER,
   selectedCategory: loadSelectedCategory() || DEFAULT_CATEGORY,
   categorySelections: normalizeCategorySelections(loadJSON(CATEGORY_SELECT_KEY, {})),
   searchQuery: loadStoredString(SEARCH_QUERY_KEY) || '',
@@ -60,6 +68,7 @@ const $categoryBookList = document.querySelector('#category-book-list');
 const $sundayFilterPanel = document.querySelector('#sunday-filter-panel');
 const $catalogSearchInput = document.querySelector('#catalog-search-input');
 const $catalogSearchClear = document.querySelector('#catalog-search-clear');
+const $speakerTabs = document.querySelectorAll('.speaker-tab');
 const $categoryTabs = document.querySelectorAll('.category-tab');
 const $selectedBookTracks = document.querySelector('#selected-book-tracks');
 const $skipBackButton = document.querySelector('#skip-back-button');
@@ -120,13 +129,109 @@ function normalizeCategory(category) {
   return CATEGORY_ORDER.includes(category) ? category : '';
 }
 
-function normalizeCategorySelections(selections) {
+function normalizeCategorySelectionsFlat(selections) {
   const next = {};
   for (const [category, title] of Object.entries(selections || {})) {
     const normalized = normalizeCategory(category);
     if (normalized) next[normalized] = title;
   }
   return next;
+}
+
+function normalizeCategorySelections(selections) {
+  if (!selections || typeof selections !== 'object') {
+    return { gaolu: {}, kou: {} };
+  }
+
+  if ('gaolu' in selections || 'kou' in selections) {
+    return {
+      gaolu: normalizeCategorySelectionsFlat(selections.gaolu),
+      kou: normalizeCategorySelectionsFlat(selections.kou),
+    };
+  }
+
+  return {
+    gaolu: normalizeCategorySelectionsFlat(selections),
+    kou: {},
+  };
+}
+
+function loadSelectedSpeaker() {
+  const stored = loadStoredString(SPEAKER_KEY);
+  return SPEAKERS.some((speaker) => speaker.id === stored) ? stored : '';
+}
+
+function getBookSpeaker(book) {
+  return book?.speaker || 'gaolu';
+}
+
+function getSpeakerSelections(speaker = state.selectedSpeaker) {
+  return state.categorySelections[speaker] || {};
+}
+
+function setCategorySelection(category, title, speaker = state.selectedSpeaker) {
+  const normalized = normalizeCategory(category);
+  if (!normalized) return;
+  if (!state.categorySelections[speaker]) {
+    state.categorySelections[speaker] = {};
+  }
+  if (title) {
+    state.categorySelections[speaker][normalized] = title;
+  } else {
+    delete state.categorySelections[speaker][normalized];
+  }
+  saveCategorySelections();
+}
+
+function setSelectedSpeaker(speaker) {
+  const nextSpeaker = SPEAKERS.some((item) => item.id === speaker) ? speaker : DEFAULT_SPEAKER;
+  state.selectedSpeaker = nextSpeaker;
+  try {
+    window.localStorage.setItem(SPEAKER_KEY, nextSpeaker);
+  } catch {}
+  if (nextSpeaker === 'kou' && state.selectedCategory === '主日') {
+    setSelectedCategory(getDefaultCategoryForSpeaker(nextSpeaker));
+  }
+  refreshSpeakerCatalog();
+  scheduleSaveSession();
+}
+
+function getDefaultCategoryForSpeaker(speaker = state.selectedSpeaker) {
+  if (speaker === 'kou') {
+    return (
+      CATEGORY_ORDER.find(
+        (category) => category !== '主日' && state.books.some((book) => book.category === category),
+      ) || '新约'
+    );
+  }
+  return DEFAULT_CATEGORY;
+}
+
+function refreshSpeakerCatalog() {
+  state.books = state.catalogBooks.filter((book) => getBookSpeaker(book) === state.selectedSpeaker);
+  rebuildSundayCatalog();
+  buildAudioAliasIndex(state.books);
+  state.tracks = state.books.flatMap((book) =>
+    book.lessons.map((lesson) => ({
+      bookTitle: book.title,
+      bookCategory: book.category,
+      speaker: getBookSpeaker(book),
+      isSundaySeries: Boolean(book.isSundaySeries),
+      trackNo: lesson.trackNo,
+      storageKey: trackStorageKey(getBookSpeaker(book), book.title, lesson.trackNo),
+      lesson:
+        book.category === '主日' || book.isSundaySeries
+          ? lesson.lesson || lesson.displayLabel || `第${lesson.trackNo}课`
+          : lesson.displayLabel || lesson.lesson || `第${lesson.trackNo}课`,
+      teacher: lesson.teacher || book.latestTeacher || '讲员',
+      audioSrc: lesson.audioSrc,
+      date: lesson.lessonDate,
+      fileUrl: lesson.lessonFileUrl,
+      videoUrl: lesson.videoUrl,
+      note: getNote(lesson.audioSrc),
+    })),
+  );
+  buildShareIndex(state.tracks);
 }
 
 function loadSelectedCategory() {
@@ -269,7 +374,7 @@ function buildSundayCatalogEntry(lesson, book) {
 
 function rebuildSundayCatalog() {
   state.sundayCatalog = state.books
-    .filter((book) => book.category === '主日')
+    .filter((book) => book.category === '主日' && getBookSpeaker(book) === 'gaolu')
     .flatMap((book) => book.lessons.map((lesson) => buildSundayCatalogEntry(lesson, book)));
 }
 
@@ -409,6 +514,19 @@ function isGaoTeacher(teacher) {
   return normalize(teacher).includes('高路');
 }
 
+function isKouTeacher(teacher) {
+  const value = normalize(teacher);
+  return value.includes('寇') && (value.includes('绍') || value.includes('紹'));
+}
+
+function isKouLesson(lesson) {
+  return lesson?.speaker === 'kou' || Boolean(lesson?.isKou) || isKouTeacher(lesson?.teacher);
+}
+
+function isKouBook(book) {
+  return getBookSpeaker(book) === 'kou';
+}
+
 function isExcludedBookTitle(title) {
   return normalize(title).includes('慕道班');
 }
@@ -538,6 +656,9 @@ function isGaoLuPrimaryBook(book) {
 
 function shouldKeepBook(book) {
   if (isExcludedBookTitle(book.title)) return false;
+  if (isKouBook(book)) {
+    return (book.lessons || []).some((lesson) => resolveAudioSrc(lesson) && isKouLesson(lesson));
+  }
   if (book.category === '主日') {
     return (book.lessons || []).some((lesson) => resolveAudioSrc(lesson) && isGaoLuLesson(lesson));
   }
@@ -546,8 +667,12 @@ function shouldKeepBook(book) {
 
 function normalizeBook(book) {
   const unnamedOtherBook = isUnnamedOtherBook(book);
+  const kouBook = isKouBook(book);
   const lessons = (book.lessons || [])
-    .filter((lesson) => unnamedOtherBook || isGaoLuLesson(lesson))
+    .filter((lesson) => {
+      if (kouBook) return isKouLesson(lesson);
+      return unnamedOtherBook || isGaoLuLesson(lesson);
+    })
     .map((lesson, index) => ({
       ...lesson,
       audioSrc: resolveAudioSrc(lesson),
@@ -556,15 +681,18 @@ function normalizeBook(book) {
       videoUrl: lesson.videoUrl || '',
       teacher: lesson.teacher || book.latestTeacher || '讲员',
       displayLabel:
-        book.category === '主日' || book.isSundaySeries
-          ? formatSundaySermonTitle(lesson)
-          : resolveLessonDisplayLabel(lesson, index),
+        kouBook
+          ? lesson.lesson || lesson.displayLabel || String(index + 1)
+          : book.category === '主日' || book.isSundaySeries
+            ? formatSundaySermonTitle(lesson)
+            : resolveLessonDisplayLabel(lesson, index),
       trackNo: index + 1,
     }))
     .filter((lesson) => Boolean(lesson.audioSrc));
 
   return {
     ...book,
+    speaker: getBookSpeaker(book),
     category: normalizeCategory(book.category) || book.category,
     lessonCount: lessons.length,
     lessons,
@@ -608,15 +736,15 @@ function registerAudioAlias(alias, storageKey) {
   state.audioAliases.set(alias, storageKey);
 }
 
-function trackStorageKey(bookTitle, trackNo) {
-  return `${bookTitle}::${trackNo}`;
+function trackStorageKey(speaker, bookTitle, trackNo) {
+  return `${speaker || 'gaolu'}::${bookTitle}::${trackNo}`;
 }
 
 function buildAudioAliasIndex(books) {
   state.audioAliases = new Map();
   for (const book of books) {
     for (const lesson of book.lessons) {
-      const storageKey = trackStorageKey(book.title, lesson.trackNo);
+      const storageKey = trackStorageKey(getBookSpeaker(book), book.title, lesson.trackNo);
       registerAudioAlias(storageKey, storageKey);
       registerAudioAlias(lesson.audioSrc, storageKey);
       registerAudioAlias(lesson.localAudioUrl, storageKey);
@@ -706,7 +834,7 @@ function resolveCatalogTrack(track) {
   }
 
   if (track.bookTitle && track.trackNo) {
-    const key = trackStorageKey(track.bookTitle, track.trackNo);
+    const key = trackStorageKey(track.speaker || getBookSpeaker(getBookByTitle(track.bookTitle)), track.bookTitle, track.trackNo);
     const byBook = state.tracks.find((item) => item.storageKey === key);
     if (byBook) return byBook;
     if (track.audioSrc) {
@@ -742,7 +870,7 @@ function findTrackByReference(ref) {
   if (!ref) return null;
   const resolved = resolveShareReference(ref);
   const storageKey = audioKey(resolved || ref);
-  return (
+  const direct =
     state.tracks.find(
       (track) =>
         track.storageKey === storageKey ||
@@ -750,8 +878,30 @@ function findTrackByReference(ref) {
         track.storageKey === resolved ||
         track.audioSrc === ref ||
         track.audioSrc === storageKey,
-    ) || null
-  );
+    ) || null;
+  if (direct) return direct;
+
+  if (String(ref).includes('::')) {
+    return state.catalogBooks
+      .flatMap((book) =>
+        book.lessons.map((lesson) => ({
+          bookTitle: book.title,
+          bookCategory: book.category,
+          speaker: getBookSpeaker(book),
+          trackNo: lesson.trackNo,
+          storageKey: trackStorageKey(getBookSpeaker(book), book.title, lesson.trackNo),
+          lesson: lesson.displayLabel || lesson.lesson || `第${lesson.trackNo}课`,
+          teacher: lesson.teacher || book.latestTeacher || '讲员',
+          audioSrc: lesson.audioSrc,
+          date: lesson.lessonDate,
+          fileUrl: lesson.lessonFileUrl,
+          videoUrl: lesson.videoUrl,
+        })),
+      )
+      .find((track) => track.storageKey === ref || track.storageKey === storageKey) || null;
+  }
+
+  return null;
 }
 
 function parseSharePath(pathname) {
@@ -1024,6 +1174,7 @@ function saveSession() {
   const scrollTop = getPageScrollElement()?.scrollTop || pendingScrollTop || 0;
   pendingScrollTop = scrollTop;
   saveJSON(SESSION_KEY, {
+    speaker: state.selectedSpeaker,
     category: state.selectedCategory,
     bookTitle: state.selectedBookTitle,
     categorySelections: state.categorySelections,
@@ -1042,6 +1193,13 @@ function applyStoredSession() {
   const session = loadJSON(SESSION_KEY, null);
   if (!session) return null;
 
+  if (session?.speaker && SPEAKERS.some((speaker) => speaker.id === session.speaker)) {
+    state.selectedSpeaker = session.speaker;
+    try {
+      window.localStorage.setItem(SPEAKER_KEY, session.speaker);
+    } catch {}
+  }
+
   if (CATEGORY_ORDER.includes(normalizeCategory(session.category))) {
     setSelectedCategory(session.category);
   }
@@ -1056,6 +1214,7 @@ function applyStoredSession() {
     saveCategorySelections();
   }
   pendingScrollTop = Number(session.scrollTop) || 0;
+  refreshSpeakerCatalog();
   return session;
 }
 
@@ -1140,11 +1299,12 @@ function restoreTrack(track, { autoplay = false } = {}) {
 }
 
 function applyFirstVisitDefaults() {
-  setSelectedCategory(DEFAULT_CATEGORY);
-  const book = getSelectedBookForCategory(DEFAULT_CATEGORY);
+  setSelectedSpeaker(DEFAULT_SPEAKER);
+  setSelectedCategory(getDefaultCategoryForSpeaker(DEFAULT_SPEAKER));
+  const book = getSelectedBookForCategory(state.selectedCategory);
   if (!book) return;
   setSelectedBookTitle(book.title);
-  setCategorySelection(DEFAULT_CATEGORY, book.title);
+  setCategorySelection(state.selectedCategory, book.title);
   const track =
     state.tracks.find((item) => item.bookTitle === book.title && item.trackNo === 1) ||
     state.tracks.find((item) => item.bookTitle === book.title);
@@ -1152,22 +1312,15 @@ function applyFirstVisitDefaults() {
 }
 
 function setSelectedCategory(category) {
-  state.selectedCategory = normalizeCategory(category) || DEFAULT_CATEGORY;
+  let nextCategory = normalizeCategory(category) || DEFAULT_CATEGORY;
+  if (state.selectedSpeaker === 'kou' && nextCategory === '主日') {
+    nextCategory = getDefaultCategoryForSpeaker('kou');
+  }
+  state.selectedCategory = nextCategory;
   try {
     window.localStorage.setItem(CATEGORY_KEY, state.selectedCategory);
   } catch {}
   scheduleSaveSession();
-}
-
-function setCategorySelection(category, title) {
-  const normalized = normalizeCategory(category);
-  if (!normalized) return;
-  if (title) {
-    state.categorySelections[normalized] = title;
-  } else {
-    delete state.categorySelections[normalized];
-  }
-  saveCategorySelections();
 }
 
 function setPlaybackRate(rate) {
@@ -1221,7 +1374,7 @@ function getVisibleBooks() {
 function getSelectedBookForCategory(category) {
   const books = getBooksByCategory(category);
   if (books.length === 0) return null;
-  const stored = state.categorySelections[category];
+  const stored = getSpeakerSelections()[category];
   const known = books.find((book) => book.title === stored);
   if (known) return known;
   return books[0];
@@ -1349,7 +1502,33 @@ function getCurrentBookProgress(book) {
   return { listenedCount, percent };
 }
 
+function renderSpeakerTabs() {
+  const $catalogNav = document.querySelector('#catalog-nav');
+
+  $speakerTabs.forEach((tab) => {
+    const speaker = tab.dataset.speaker || '';
+    const isActive = speaker === state.selectedSpeaker;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    tab.tabIndex = isActive ? 0 : -1;
+  });
+
+  $categoryTabs.forEach((tab) => {
+    const category = tab.dataset.category || '';
+    const speakerScope = tab.dataset.speakers || 'gaolu,kou';
+    const allowedSpeakers = speakerScope.split(',').map((item) => item.trim());
+    const hiddenForSpeaker = !allowedSpeakers.includes(state.selectedSpeaker);
+    tab.hidden = hiddenForSpeaker;
+    tab.classList.toggle('is-hidden', hiddenForSpeaker);
+  });
+
+  if ($catalogNav) {
+    $catalogNav.dataset.speaker = state.selectedSpeaker;
+  }
+}
+
 function renderCategoryTabs() {
+  renderSpeakerTabs();
   const activeCategory = getSelectedCategory();
 
   $categoryTabs.forEach((tab) => {
@@ -1603,10 +1782,13 @@ function renderAll() {
 function selectTrack(track, { autoplay = false } = {}) {
   const resolved = resolveCatalogTrack(track);
   if (!resolved) return;
+  if (resolved.speaker && resolved.speaker !== state.selectedSpeaker) {
+    setSelectedSpeaker(resolved.speaker);
+  }
   state.currentTrack = resolved;
   setSelectedBookTitle(resolved.bookTitle);
   setSelectedCategory(resolved.bookCategory);
-  setCategorySelection(resolved.bookCategory, resolved.bookTitle);
+  setCategorySelection(resolved.bookCategory, resolved.bookTitle, resolved.speaker || state.selectedSpeaker);
   try {
     window.localStorage.setItem(CURRENT_KEY, resolved.storageKey || audioKey(resolved.audioSrc));
   } catch {}
@@ -1908,6 +2090,24 @@ function bindControls() {
     });
   });
 
+  $speakerTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const speaker = tab.dataset.speaker || '';
+      if (!speaker || speaker === state.selectedSpeaker) return;
+      setSelectedSpeaker(speaker);
+      const category = getSelectedCategory();
+      const book = getSelectedBookForCategory(category);
+      if (book) {
+        setSelectedBookTitle(book.title);
+        setCategorySelection(category, book.title, speaker);
+      } else {
+        setSelectedBookTitle('');
+      }
+      renderAll();
+      scheduleSaveSession();
+    });
+  });
+
   $catalogSearchInput?.addEventListener('input', () => {
     window.clearTimeout(searchRenderTimer);
     searchRenderTimer = window.setTimeout(() => {
@@ -1932,36 +2132,13 @@ function bindControls() {
 }
 
 function prepareCatalog() {
-  const books = state.data.books
+  state.catalogBooks = state.data.books
     .filter(shouldKeepBook)
     .map(normalizeBook)
     .filter((book) => book.lessons.length > 0)
     .sort(compareBooks);
-  state.books = books;
-  rebuildSundayCatalog();
-  buildAudioAliasIndex(books);
   migrateLegacyStorage();
-
-  state.tracks = books.flatMap((book) =>
-    book.lessons.map((lesson) => ({
-      bookTitle: book.title,
-      bookCategory: book.category,
-      isSundaySeries: Boolean(book.isSundaySeries),
-      trackNo: lesson.trackNo,
-      storageKey: trackStorageKey(book.title, lesson.trackNo),
-      lesson:
-        book.category === '主日' || book.isSundaySeries
-          ? lesson.lesson || lesson.displayLabel || `第${lesson.trackNo}课`
-          : lesson.displayLabel || lesson.lesson || `第${lesson.trackNo}课`,
-      teacher: lesson.teacher || book.latestTeacher || '讲员',
-      audioSrc: lesson.audioSrc,
-      date: lesson.lessonDate,
-      fileUrl: lesson.lessonFileUrl,
-      videoUrl: lesson.videoUrl,
-      note: getNote(lesson.audioSrc),
-    }))
-  );
-  buildShareIndex(state.tracks);
+  refreshSpeakerCatalog();
 }
 
 async function loadData() {

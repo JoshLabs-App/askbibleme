@@ -1,8 +1,8 @@
-/* App shell version — bumped on deploy to trigger update prompt */
-const APP_VERSION = '2026-06-10T10:30:40Z';
+/* App shell version — bumped on deploy to trigger silent auto-update */
+const APP_VERSION = '2026-06-20T23:27:15Z';
 
-self.addEventListener('install', () => {
-  // Wait for user confirmation before activating (see install.js)
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {

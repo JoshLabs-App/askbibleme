@@ -6,6 +6,8 @@ import {
   writeReadingPlanPrefs,
   type ReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
+
+export type { ReadingPlanPrefs };
 import {
   advanceTripleLoopOnePlanDay,
   resetTripleLoopToCalendarToday,

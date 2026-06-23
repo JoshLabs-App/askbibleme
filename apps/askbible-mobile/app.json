@@ -3,8 +3,8 @@
     "name": "AskBible.me",
     "slug": "askbible-me",
     "scheme": "askbible",
-    "version": "1.0.1",
-    "runtimeVersion": "1.0.1",
+    "version": "1.0.2",
+    "runtimeVersion": "1.0.2",
     "updates": {
       "enabled": false,
       "checkAutomatically": "NEVER",
@@ -25,17 +25,25 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "resizeMode": "cover",
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#FFB101"
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "46",
+      "buildNumber": "56",
       "supportsTablet": true,
+      "appleTeamId": "AJ2998VZH6",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.me.askbible.shared"
+        ]
+      },
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
         ],
+        "NSUserNotificationsUsageDescription": "AskBible.me can send optional daily reading reminders and verse-of-the-day notifications.",
         "NSLocalNetworkUsageDescription": "Allow AskBible.me to connect to the development server on your local network for live updates during development.",
         "NSBonjourServices": [
           "_metro._tcp"
@@ -44,7 +52,7 @@
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 46,
+      "versionCode": 58,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -73,7 +81,15 @@
           "initialOrientation": "PORTRAIT"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#ECD9B9"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "@bacons/apple-targets"
     ],
     "extra": {
       "router": {},

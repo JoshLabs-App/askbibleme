@@ -1,5 +1,10 @@
 import type { MutableRefObject } from "react";
 import { loadAndPlayScriptureSound } from "./scripturePlaySound";
+import {
+  beginScripturePlayAttempt,
+  isScripturePlayAttemptCurrent,
+} from "./scripturePlaybackExclusive";
+import { resetScriptureChapterEndTracking } from "./scriptureChapterEnd";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
@@ -16,7 +21,16 @@ type Args = {
   lastScriptureProgressSecRef: MutableRefObject<number>;
   refs: Pick<
     ScripturePlayEngineRefs,
-    "scripturePlayInFlightRef" | "scriptureSrcRef" | "scriptureStopAtSecRef" | "scriptureStopAtOnEndedRef" | "autoPlayScriptureRef"
+    | "scripturePlayInFlightRef"
+    | "scriptureSrcRef"
+    | "scriptureStopAtSecRef"
+    | "scriptureStopAtOnEndedRef"
+    | "autoPlayScriptureRef"
+    | "scriptureWantPlayingRef"
+    | "scriptureChapterEndHandledRef"
+    | "scriptureChapterHandoffRef"
+    | "scriptureLastProgressMsRef"
+    | "scriptureLastProgressAtRef"
   >;
   setPlaying: (playing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
@@ -49,6 +63,9 @@ export async function runScripturePlayInFlight(args: Args): Promise<void> {
   const { scripturePlayInFlightRef, scriptureSrcRef, scriptureStopAtSecRef, scriptureStopAtOnEndedRef, autoPlayScriptureRef } =
     refs;
 
+  const playSeq = beginScripturePlayAttempt();
+  await unloadCurrent();
+
   const prev = scripturePlayInFlightRef.current;
   if (prev) {
     try {
@@ -57,27 +74,42 @@ export async function runScripturePlayInFlight(args: Args): Promise<void> {
       /* superseded */
     }
   }
+  if (!isScripturePlayAttemptCurrent(playSeq)) return;
 
   const run = async () => {
+    if (!isScripturePlayAttemptCurrent(playSeq)) return;
+    resetScriptureChapterEndTracking(
+      refs.scriptureChapterEndHandledRef,
+      refs.scriptureLastProgressMsRef,
+      refs.scriptureLastProgressAtRef,
+    );
     scriptureSrcRef.current = trimmed;
     scriptureStopAtSecRef.current = null;
     scriptureStopAtOnEndedRef.current = null;
     const loaded = await loadAndPlayScriptureSound({
       bridge,
       src: trimmed,
+      playSeq,
       readChapterRef,
       scripturePlaybackRateRef,
       scriptureAudioRepeatRef,
       lastScriptureProgressSecRef,
       scriptureStopAtSecRef,
       scriptureStopAtOnEndedRef,
-      autoPlayScriptureRef,
+      autoPlayScriptureRef: refs.autoPlayScriptureRef,
+      scriptureWantPlayingRef: refs.scriptureWantPlayingRef,
+      scripturePlayInFlightRef: refs.scripturePlayInFlightRef,
+      scriptureChapterEndHandledRef: refs.scriptureChapterEndHandledRef,
+      scriptureChapterHandoffRef: refs.scriptureChapterHandoffRef,
+      scriptureLastProgressMsRef: refs.scriptureLastProgressMsRef,
+      scriptureLastProgressAtRef: refs.scriptureLastProgressAtRef,
       setPlaying,
       setScriptureCurrentSec,
       setScriptureDurationSec,
       setScripturePreparing,
       setPlaybackMode,
       unloadCurrent,
+      skipInitialUnload: true,
     });
     if (!loaded.ok && !loaded.stale) {
       scriptureSrcRef.current = null;

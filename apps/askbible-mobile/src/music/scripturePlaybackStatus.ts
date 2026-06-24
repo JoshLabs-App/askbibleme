@@ -1,16 +1,27 @@
 import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
 import { SCRIPTURE_PROGRESS_UI_INTERVAL_SEC, shouldEmitPlaybackSecUpdate } from "./musicPlaybackProgress";
-import { handleScriptureDidJustFinish } from "./scripturePlaybackFinish";
+import {
+  finishScriptureChapterOnce,
+  isScriptureChapterEndStalled,
+  isScriptureNearChapterEnd,
+  noteScripturePlaybackProgress,
+  shouldScheduleScriptureMidChapterResume,
+} from "./scriptureChapterEnd";
 import { handleScriptureStopAtStatus } from "./scripturePlaybackStopAt";
 import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
+import {
+  scheduleScriptureResumeAfterInterruption,
+  type ScriptureResumeCtx,
+} from "./scriptureResumeAfterInterruption";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
   ScriptureShellPlaybackBridge,
 } from "./scripturePlaybackTypes";
 
-type StatusHandlerArgs = ScriptureShellPlaybackBridge & {
+type StatusHandlerArgs = ScriptureShellPlaybackBridge &
+  ScriptureResumeCtx & {
   soundId: number;
   setPlaying: (playing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
@@ -21,6 +32,10 @@ type StatusHandlerArgs = ScriptureShellPlaybackBridge & {
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
+  scriptureChapterHandoffRef: MutableRefObject<boolean>;
+  scriptureChapterEndHandledRef: MutableRefObject<boolean>;
+  scriptureLastProgressMsRef: MutableRefObject<number>;
+  scriptureLastProgressAtRef: MutableRefObject<number>;
 };
 
 export function createScripturePlaybackStatusHandler(
@@ -30,6 +45,7 @@ export function createScripturePlaybackStatusHandler(
     soundId,
     activeSoundIdRef,
     soundRef,
+    playbackModeRef,
     setPlaying,
     lastScriptureProgressSecRef,
     setScriptureCurrentSec,
@@ -39,7 +55,23 @@ export function createScripturePlaybackStatusHandler(
     scriptureAudioRepeatRef,
     readChapterRef,
     autoPlayScriptureRef,
+    scriptureChapterHandoffRef,
+    scriptureWantPlayingRef,
+    scripturePlayInFlightRef,
+    scriptureChapterEndHandledRef,
+    scriptureLastProgressMsRef,
+    scriptureLastProgressAtRef,
   } = args;
+
+  const finishArgs = {
+    soundRef,
+    scriptureAudioRepeatRef,
+    readChapterRef,
+    autoPlayScriptureRef,
+    scriptureChapterHandoffRef,
+    setPlaying,
+    chapterEndHandledRef: scriptureChapterEndHandledRef,
+  };
 
   return (status: AVPlaybackStatus) => {
     if (soundId !== activeSoundIdRef.current) return;
@@ -75,12 +107,47 @@ export function createScripturePlaybackStatusHandler(
       return;
     }
 
+    const durationMs = status.durationMillis ?? 0;
+    const positionMs = status.positionMillis ?? 0;
+    noteScripturePlaybackProgress(positionMs, scriptureLastProgressMsRef, scriptureLastProgressAtRef);
+
     if (status.didJustFinish) {
-      handleScriptureDidJustFinish({
+      finishScriptureChapterOnce(finishArgs);
+      return;
+    }
+
+    const nearEnd = durationMs > 0 && isScriptureNearChapterEnd(positionMs, durationMs);
+    const wantContinue =
+      scriptureWantPlayingRef.current && playbackModeRef.current === "scripture";
+
+    if (nearEnd && wantContinue) {
+      if (
+        !status.isPlaying ||
+        isScriptureChapterEndStalled(
+          positionMs,
+          durationMs,
+          scriptureLastProgressMsRef,
+          scriptureLastProgressAtRef,
+        )
+      ) {
+        if (finishScriptureChapterOnce(finishArgs)) {
+          return;
+        }
+      }
+    }
+
+    if (
+      !status.isPlaying &&
+      scriptureWantPlayingRef.current &&
+      playbackModeRef.current === "scripture" &&
+      shouldScheduleScriptureMidChapterResume(positionMs, durationMs)
+    ) {
+      scheduleScriptureResumeAfterInterruption({
+        playbackModeRef,
         soundRef,
-        scriptureAudioRepeatRef,
-        readChapterRef,
-        autoPlayScriptureRef,
+        scriptureWantPlayingRef,
+        scripturePlayInFlightRef,
+        scriptureStopAtSecRef,
         setPlaying,
       });
     }

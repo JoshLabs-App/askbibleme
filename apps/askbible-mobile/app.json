@@ -3,8 +3,8 @@
     "name": "AskBible.me",
     "slug": "askbible-me",
     "scheme": "askbible",
-    "version": "1.0.2",
-    "runtimeVersion": "1.0.2",
+    "version": "1.0.5",
+    "runtimeVersion": "1.0.5",
     "updates": {
       "enabled": false,
       "checkAutomatically": "NEVER",
@@ -31,7 +31,7 @@
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "56",
+      "buildNumber": "59",
       "supportsTablet": true,
       "appleTeamId": "AJ2998VZH6",
       "entitlements": {
@@ -40,6 +40,7 @@
         ]
       },
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "audio"
         ],
@@ -52,7 +53,7 @@
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 58,
+      "versionCode": 61,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

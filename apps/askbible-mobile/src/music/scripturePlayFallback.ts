@@ -3,6 +3,7 @@ import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs
 import { resolveChapterAudioExternalUrl } from "../bible/chapter-audio-sources";
 import { scriptureAudioUrlsEqual } from "../bible/cuv-chapter-audio";
 import { resolveScripturePlayableSrcForChapter } from "../bible/read-chapter-audio";
+import { isSameScriptureChapter } from "./scripturePlaybackExclusive";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 
 export async function resolveScriptureFallbackSrc(
@@ -39,7 +40,18 @@ export async function tryPlayScriptureWithFallback(args: {
   playScripture: (src: string) => Promise<void>;
   patchReadChapterSrc: (src: string) => void;
   isStarted: () => boolean;
+  isBusy?: () => boolean;
+  /** 若 shell 已在播同一章，则跳过（planFlow 换章时必须能强制开播）。 */
+  playingReg?: ReadChapterPlaybackRegistration | null;
 }): Promise<void> {
+  if (
+    args.isBusy?.() &&
+    args.isStarted() &&
+    args.playingReg &&
+    isSameScriptureChapter(args.playingReg, args.reg)
+  ) {
+    return;
+  }
   if (__DEV__) {
     console.warn("[scripture-audio] try primary src", args.preferredSrc);
   }

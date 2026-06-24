@@ -11,6 +11,7 @@ import { fadeSoundVolume, shouldUseCalmAlbumFade } from "./musicCalmPlayback";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import { isTrackPlayable, resolveShellMusicPlayIndex } from "./trackArtwork";
 import type { PlaybackTrack } from "./types";
+import { releaseScriptureShellForMusic } from "./scripturePlaybackPriority";
 
 type Args = {
   bridge: MusicPlayTrackBridge;
@@ -21,6 +22,7 @@ type Args = {
   setPlaying: (playing: boolean) => void;
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
+  stopScripturePlayback: () => Promise<void>;
 };
 
 export function useMusicTogglePlayMusic({
@@ -32,6 +34,7 @@ export function useMusicTogglePlayMusic({
   setPlaying,
   setMusicCurrentSec,
   setMusicDurationSec,
+  stopScripturePlayback,
 }: Args) {
   const { soundRef, playbackModeRef, trackIndexRef, lastMusicProgressSecRef, musicGainRef } = bridge;
 
@@ -51,6 +54,7 @@ export function useMusicTogglePlayMusic({
       const sameLoadedTrack = loadedTrack?.id === playTrack.id;
 
       if (playbackModeRef.current !== "music" || !sound || !st?.isLoaded || !sameLoadedTrack) {
+        await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
         await playTrackAt(playIdx);
         return;
       }
@@ -82,6 +86,7 @@ export function useMusicTogglePlayMusic({
       }
       const ok = await safePlaySound(sound);
       if (!ok) {
+        await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
         await playTrackAt(playIdx);
         return;
       }
@@ -108,6 +113,7 @@ export function useMusicTogglePlayMusic({
     setMusicDurationSec,
     setPlaying,
     soundRef,
+    stopScripturePlayback,
     trackIndex,
     trackIndexRef,
     tracks,

@@ -14,7 +14,7 @@ export async function configureShellAudioMode(): Promise<void> {
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
       interruptionModeIOS: InterruptionModeIOS.DuckOthers,
-      // DoNotMix 在部分 Android 模拟器/真机上会导致 isPlaying 但无声
+      // shouldDuckAndroid=false：其它 App 出声时会暂停本 App 朗读（expo-av 默认行为）；续播见 scriptureResumeAfterInterruption。
       interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
       shouldDuckAndroid: false,
       playThroughEarpieceAndroid: false,
@@ -22,6 +22,25 @@ export async function configureShellAudioMode(): Promise<void> {
   } catch (err) {
     if (__DEV__) {
       console.warn("[playback] configureShellAudioMode", err);
+    }
+  }
+}
+
+/** 圣经朗读：优先占用音频会话，减少与其它 App 混播时被 duck / 打断。 */
+export async function configureScriptureShellAudioMode(): Promise<void> {
+  try {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: true,
+      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      shouldDuckAndroid: false,
+      playThroughEarpieceAndroid: false,
+    });
+  } catch (err) {
+    if (__DEV__) {
+      console.warn("[playback] configureScriptureShellAudioMode", err);
     }
   }
 }

@@ -29,17 +29,30 @@ import {
   useReadChapterAudioScrollFollow,
   type ReadChapterAudioScrollFollowOpts,
 } from "./useReadChapterAudioScrollFollow";
+import { prefetchUpcomingPlanFlowChapterAudio } from "./prefetch-plan-flow-chapter-audio";
 import { useReadChapterAudioRegistration } from "./useReadChapterAudioRegistration";
 
 type ChapterTarget = { bookId: string; chapter: number };
 
+export type UseReadChapterAudioOptions = {
+  scrollHeaderHeightRef?: React.RefObject<number>;
+  onAdvanceChapter?: (target: ChapterTarget) => void;
+  planFlowTick?: string | null;
+  planFlowQueue?: Array<{ bookId: string; chapter: number }>;
+  followScroll?: ReadChapterAudioScrollFollowOpts;
+};
+
 export function useReadChapterAudio(
   chapterData: LoadedChapter | null,
   scrollRef: React.RefObject<ScrollView | null>,
-  scrollHeaderHeightRef?: React.RefObject<number>,
-  onAdvanceChapter?: (target: ChapterTarget) => void,
-  followScroll?: ReadChapterAudioScrollFollowOpts,
+  options: UseReadChapterAudioOptions = {},
 ) {
+  const {
+    onAdvanceChapter,
+    planFlowTick = null,
+    planFlowQueue = [],
+    followScroll,
+  } = options;
   const {
     registerReadChapter,
     playing,
@@ -73,12 +86,27 @@ export function useReadChapterAudio(
     chapterAudioKey,
     chapterAudioTranslationId,
     audioVoiceId,
+    planFlowTick: planFlowTick ?? null,
     registerReadChapterRef,
     onAdvanceChapter,
   });
 
   useEffect(() => {
     if (!chapterData || !supported || !isFocused) return;
+
+    if (planFlowQueue.length > 0) {
+      prefetchUpcomingPlanFlowChapterAudio(
+        planFlowQueue,
+        { bookId: chapterData.bookId, chapter: chapterData.chapter },
+        {
+          translationId: chapterAudioTranslationId,
+          voiceId: audioVoiceId,
+          ahead: 3,
+        },
+      );
+      return;
+    }
+
     const { next, prev } = resolveReadChapterNeighbors(chapterData.bookId, chapterData.chapter);
     const neighbors = [next, prev].filter(
       (target): target is NonNullable<typeof next> => Boolean(target),
@@ -101,6 +129,7 @@ export function useReadChapterAudio(
     chapterAudioTranslationId,
     chapterData,
     isFocused,
+    planFlowQueue,
     supported,
   ]);
 
@@ -211,7 +240,6 @@ export function useReadChapterAudio(
 
   useReadChapterAudioScrollFollow({
     scrollRef,
-    scrollHeaderHeightRef,
     followScroll,
     isFocused,
     activeVerseIndex,

@@ -5,6 +5,7 @@ import { useMusicPlayTrack } from "./useMusicPlayTrack";
 import { useMusicShellUnload } from "./useMusicShellUnload";
 import { useMusicTrackDownload } from "./useMusicTrackDownload";
 import { useScriptureShellPlayback } from "./scriptureShellPlayback";
+import { useScriptureInterruptionRecovery } from "./useScriptureInterruptionRecovery";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 import type { PlaybackTrack } from "./types";
@@ -14,6 +15,8 @@ type Args = {
   refs: MusicPlaybackRefs;
   tracks: PlaybackTrack[];
   trackIndex: number;
+  playing: boolean;
+  scripturePreparing: boolean;
   readChapter: ReadChapterPlaybackRegistration | null;
   setReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
   setPlaying: (playing: boolean) => void;
@@ -38,6 +41,8 @@ export function useMusicPlaybackShellWiring(args: Args) {
     refs,
     tracks,
     trackIndex,
+    playing,
+    scripturePreparing,
     readChapter,
     setReadChapter,
     setPlaying,
@@ -78,6 +83,25 @@ export function useMusicPlaybackShellWiring(args: Args) {
     lastScriptureProgressSecRef: refs.lastScriptureProgressSecRef,
   });
 
+  useScriptureInterruptionRecovery({
+    playing,
+    scripturePreparing,
+    playbackModeRef: refs.playbackModeRef,
+    soundRef: refs.soundRef,
+    scriptureWantPlayingRef: scripture.scriptureWantPlayingRef,
+    scripturePlayInFlightRef: scripture.scripturePlayInFlightRef,
+    scriptureStopAtSecRef: scripture.scriptureStopAtSecRef,
+    readChapterRef: scripture.readChapterRef,
+    autoPlayScriptureRef: scripture.autoPlayScriptureRef,
+    scriptureAudioRepeatRef,
+    scriptureChapterEndHandledRef: scripture.scriptureChapterEndHandledRef,
+    scriptureChapterHandoffRef: scripture.scriptureChapterHandoffRef,
+    scriptureLastProgressMsRef: scripture.scriptureLastProgressMsRef,
+    scriptureLastProgressAtRef: scripture.scriptureLastProgressAtRef,
+    tryPlayScriptureWithFallback: scripture.tryPlayScriptureWithFallback,
+    setPlaying,
+  });
+
   const { cacheMusicTrackInBackground, downloadMusicTrackAt } = useMusicTrackDownload({
     tracks,
     storeRef: refs.storeRef,
@@ -106,6 +130,7 @@ export function useMusicPlaybackShellWiring(args: Args) {
     cacheMusicTrackInBackground,
     downloadMusicTrackAt,
     musicRepeatModeRef: refs.musicRepeatModeRef,
+    stopScripturePlayback: scripture.stopScripturePlayback,
   });
 
   refs.playTrackAtRef.current = playTrackAt;

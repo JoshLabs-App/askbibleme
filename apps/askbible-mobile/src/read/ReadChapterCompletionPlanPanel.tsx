@@ -7,6 +7,7 @@ import { formatReadingPlanRange } from "./reading-plan/format-reading-range";
 import { todayReadingItemKey } from "./reading-plan/today-reading-done";
 import { ReadChapterCompletionCelebrateModal } from "./ReadChapterCompletionCelebrateModal";
 import { readChapterCompletionPlanPanelStyles as styles } from "./readChapterCompletionPlanPanelStyles";
+import { startTodayPlanFlowScripture } from "./startTodayReadingScriptureFromReadHome";
 import { useReadChapterCompletionPlanState } from "./useReadChapterCompletionPlanState";
 
 type Props = {
@@ -20,7 +21,6 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
   const {
     loading,
     readings,
-    doneKeys,
     celebrateVisible,
     closeCelebrate,
     effectiveLocale,
@@ -30,6 +30,8 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
     neighbors,
     nextTarget,
     toggleDone,
+    isReadingDone,
+    planId,
   } = useReadChapterCompletionPlanState({ bookId, chapter, displayLocale });
 
   if (loading || !readings.length) return null;
@@ -46,8 +48,8 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
 
         <View style={styles.readingList}>
           {readings.map((r) => {
-            const key = todayReadingItemKey(r);
-            const done = doneKeys.has(key);
+            const key = todayReadingItemKey(r, planId);
+            const done = isReadingDone(r);
             const label = formatReadingPlanRange(r, effectiveLocale);
             return (
               <View key={key} style={styles.readingRow}>
@@ -65,12 +67,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/read/[bookId]/[chapter]",
-                      params: { bookId: r.bookId, chapter: String(r.startChapter), planFlow: "1" },
-                    })
-                  }
+                  onPress={() => void startTodayPlanFlowScripture(router, { bookId: r.bookId, chapter: r.startChapter })}
                   hitSlop={8}
                   style={({ pressed }) => [styles.readingOpenBtn, pressed && styles.pressed]}
                   accessibilityRole="button"
@@ -91,10 +88,9 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
             {nextTarget ? (
               <Pressable
                 onPress={() =>
-                  router.push({
-                    pathname: "/read/[bookId]/[chapter]",
-                    params: { bookId: nextTarget.bookId, chapter: String(nextTarget.chapter), planFlow: "1" },
-                  })
+                  nextTarget
+                    ? void startTodayPlanFlowScripture(router, nextTarget)
+                    : undefined
                 }
                 hitSlop={8}
                 style={({ pressed }) => [styles.actionBtn, styles.actionPrimary, pressed && styles.pressed]}

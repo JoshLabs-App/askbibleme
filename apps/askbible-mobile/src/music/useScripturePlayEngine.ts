@@ -4,8 +4,13 @@ import {
   patchReadChapterSrc as patchReadChapterSrcHelper,
   tryPlayScriptureWithFallback as tryPlayScriptureWithFallbackHelper,
 } from "./scripturePlayFallback";
+import { markScriptureWantPlaying, clearScriptureResumeTimer } from "./scriptureResumeAfterInterruption";
+import { beginScripturePlayAttempt, isScripturePlaybackBusy } from "./scripturePlaybackExclusive";
 import { isScripturePlaybackStarted } from "./scripturePlaybackHelpers";
+import { resetScriptureChapterEndTracking } from "./scriptureChapterEnd";
+import { clearScriptureChapterHandoff } from "./scripturePlaybackPriority";
 import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
+import { endPlanFlowChapterAdvance, consumeReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
@@ -51,6 +56,19 @@ export function useScripturePlayEngine({
   );
 
   const stopScripturePlayback = useCallback(async () => {
+    markScriptureWantPlaying(refs.scriptureWantPlayingRef, false);
+    refs.autoPlayScriptureRef.current = false;
+    consumeReadPlanFlowAutoplay();
+    beginScripturePlayAttempt();
+    refs.scripturePlayInFlightRef.current = null;
+    clearScriptureResumeTimer();
+    endPlanFlowChapterAdvance();
+    clearScriptureChapterHandoff(refs.scriptureChapterHandoffRef);
+    resetScriptureChapterEndTracking(
+      refs.scriptureChapterEndHandledRef,
+      refs.scriptureLastProgressMsRef,
+      refs.scriptureLastProgressAtRef,
+    );
     setScripturePreparing(false);
     endMusicSession();
     await unloadCurrent();
@@ -67,7 +85,14 @@ export function useScripturePlayEngine({
     endMusicSession,
     lastScriptureProgressSecRef,
     playbackModeRef,
+    refs.scriptureChapterEndHandledRef,
+    refs.scriptureLastProgressAtRef,
+    refs.scriptureLastProgressMsRef,
+    refs.scripturePlayInFlightRef,
     refs.scriptureStopAtSecRef,
+    refs.autoPlayScriptureRef,
+    refs.scriptureChapterHandoffRef,
+    refs.scriptureWantPlayingRef,
     scriptureSrcRef,
     setPlaybackMode,
     setPlaying,
@@ -118,16 +143,27 @@ export function useScripturePlayEngine({
   );
 
   const tryPlayScriptureWithFallback = useCallback(
-    async (reg: ReadChapterPlaybackRegistration, preferredSrc: string) => {
+    async (
+      reg: ReadChapterPlaybackRegistration,
+      preferredSrc: string,
+      playingReg?: ReadChapterPlaybackRegistration | null,
+    ) => {
       await tryPlayScriptureWithFallbackHelper({
         reg,
         preferredSrc,
         playScripture,
         patchReadChapterSrc,
         isStarted,
+        playingReg: playingReg !== undefined ? playingReg : readChapterRef.current,
+        isBusy: () =>
+          isScripturePlaybackBusy({
+            playbackModeRef,
+            soundRef: bridge.soundRef,
+            scripturePlayInFlightRef: refs.scripturePlayInFlightRef,
+          }),
       });
     },
-    [isStarted, patchReadChapterSrc, playScripture],
+    [bridge.soundRef, isStarted, patchReadChapterSrc, playbackModeRef, playScripture, readChapterRef, refs.scripturePlayInFlightRef],
   );
 
   return {

@@ -1,4 +1,4 @@
-import { configureShellAudioMode } from "../audio/shellAudioMode";
+import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import { scriptureAudioUrlsEqual } from "../bible/cuv-chapter-audio";
 import {
@@ -12,11 +12,24 @@ import {
   safePlaySound,
 } from "../audio/safeShellSound";
 import { getActiveReadChapterPlayback } from "../read/read-chapter-playback-store";
+import { markScriptureWantPlaying } from "./scriptureResumeAfterInterruption";
 import type { ChapterPlaybackCtx } from "./scriptureChapterPlaybackTypes";
+
+async function awaitPlayInFlightOrTimeout(
+  ref: ChapterPlaybackCtx["scripturePlayInFlightRef"],
+  timeoutMs = 800,
+): Promise<void> {
+  const op = ref.current;
+  if (!op) return;
+  await Promise.race([op.catch(() => {}), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))]);
+  if (ref.current === op) {
+    ref.current = null;
+  }
+}
 
 export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<void> {
   try {
-    await configureShellAudioMode();
+    await configureScriptureShellAudioMode();
     const rc = getActiveReadChapterPlayback() ?? ctx.readChapterRef.current ?? ctx.readChapter;
     if (!rc || !translationSupportsChapterAudio(rc.translationId)) {
       return;
@@ -47,11 +60,7 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
 
     if (sameScripture) {
       if (ctx.scripturePlayInFlightRef.current) {
-        try {
-          await ctx.scripturePlayInFlightRef.current;
-        } catch {
-          /* ignore */
-        }
+        await awaitPlayInFlightOrTimeout(ctx.scripturePlayInFlightRef);
       }
       const sound = ctx.soundRef.current;
       if (!sound) {
@@ -64,9 +73,11 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
         return;
       }
       if (st.isPlaying) {
+        markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
         await safePauseSound(sound);
         ctx.setPlaying(false);
       } else {
+        markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
         const ok = await safePlaySound(sound);
         ctx.setPlaying(ok);
       }
@@ -77,6 +88,7 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
       if (ctx.soundRef.current) {
         await ctx.unloadCurrent();
       }
+      markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
       await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
       return;
     }

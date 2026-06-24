@@ -2,6 +2,8 @@ import type { MutableRefObject } from "react";
 import type { Audio } from "expo-av";
 import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
+import { markTodayReadingAudioChapterComplete } from "../read/reading-plan/today-reading-done";
+import { markScriptureChapterHandoff } from "./scripturePlaybackPriority";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
@@ -12,6 +14,7 @@ type Args = {
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
+  scriptureChapterHandoffRef: MutableRefObject<boolean>;
   setPlaying: (playing: boolean) => void;
 };
 
@@ -20,6 +23,7 @@ export function handleScriptureDidJustFinish({
   scriptureAudioRepeatRef,
   readChapterRef,
   autoPlayScriptureRef,
+  scriptureChapterHandoffRef,
   setPlaying,
 }: Args): void {
   const mode = scriptureAudioRepeatRef.current;
@@ -27,6 +31,9 @@ export function handleScriptureDidJustFinish({
   if (!rc) {
     setPlaying(false);
     return;
+  }
+  if (mode !== "chapter") {
+    void markTodayReadingAudioChapterComplete(rc.bookId, rc.chapter);
   }
   if (mode === "chapter") {
     const active = soundRef.current;
@@ -43,11 +50,13 @@ export function handleScriptureDidJustFinish({
     const next = getNextScriptureChapterInBook(rc.bookId, rc.chapter);
     if (next) {
       autoPlayScriptureRef.current = true;
+      markScriptureChapterHandoff(scriptureChapterHandoffRef);
       rc.onAdvanceNextInBook();
       return;
     }
   }
   setPlaying(false);
   autoPlayScriptureRef.current = true;
+  markScriptureChapterHandoff(scriptureChapterHandoffRef);
   rc.onAdvanceNextChapter();
 }

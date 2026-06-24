@@ -11,6 +11,7 @@ import { readLastReadPosition, type ReadLastPosition } from "./read-last-positio
 import { useTodayReadingPlan } from "./useTodayReadingPlan";
 import { getLocalReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
 import { setReadChapterBottomChromeApi } from "./read-chapter-chrome-inset";
+import { startTodayPlanFlowScripture } from "./startTodayReadingScriptureFromReadHome";
 import {
   readCompletedChapterCountsByBook,
   subscribeReadChapterCompletion,
@@ -39,12 +40,15 @@ export function useReadCatalogScreen({ homeMode }: Args) {
 
   const openChapterRoute = useCallback(
     (bookId: string, chapter: number, opts?: { planFlow?: boolean }) => {
+      if (opts?.planFlow) {
+        void startTodayPlanFlowScripture(router, { bookId, chapter });
+        return;
+      }
       router.push({
         pathname: "/read/[bookId]/[chapter]",
         params: {
           bookId,
           chapter: String(chapter),
-          ...(opts?.planFlow ? { planFlow: "1" } : null),
         },
       });
     },

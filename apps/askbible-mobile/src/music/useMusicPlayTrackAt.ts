@@ -11,6 +11,7 @@ import {
 import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
+import { releaseScriptureShellForMusic } from "./scripturePlaybackPriority";
 
 type PlaybackMode = "music" | "scripture";
 
@@ -29,6 +30,7 @@ type Args = {
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
   cacheMusicTrackInBackground: (trackId: string) => void;
   musicRepeatModeRef: MusicPlaybackRefs["musicRepeatModeRef"];
+  stopScripturePlayback: () => Promise<void>;
 };
 
 export function useMusicPlayTrackAt({
@@ -46,12 +48,15 @@ export function useMusicPlayTrackAt({
   downloadMusicTrackAt,
   cacheMusicTrackInBackground,
   musicRepeatModeRef,
+  stopScripturePlayback,
 }: Args) {
-  const { playTrackGenerationRef, storeRef, failedTrackIdsRef, playTrackAtRef } = bridge;
+  const { playTrackGenerationRef, storeRef, failedTrackIdsRef, playTrackAtRef, playbackModeRef } =
+    bridge;
 
   return useCallback(
     async (index: number) => {
       if (tracks.length === 0) return;
+      await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
       const generation = ++playTrackGenerationRef.current;
 
       const prepared = await prepareMusicTrackForPlay({
@@ -106,12 +111,13 @@ export function useMusicPlayTrackAt({
       persistMusicResume,
       playTrackAtRef,
       playTrackGenerationRef,
+      playbackModeRef,
       setMusicCurrentSec,
       setMusicDurationSec,
       setPlaybackMode,
-      musicRepeatModeRef,
       setPlaying,
       setTrackIndex,
+      stopScripturePlayback,
       storeRef,
       syncPlayingState,
       tracks,

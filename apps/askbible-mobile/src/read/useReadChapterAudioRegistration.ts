@@ -15,10 +15,11 @@ type Args = {
   chapterAudioKey: string | null;
   chapterAudioTranslationId: string;
   audioVoiceId: CuvChapterAudioVoiceId;
+  planFlowTick?: string | null;
   registerReadChapterRef: React.MutableRefObject<
     (reg: Awaited<ReturnType<typeof resolveReadChapterAudioRegistration>> | null) => void
   >;
-  onAdvanceChapter?: (target: ChapterTarget) => void;
+  onAdvanceChapter?: (target: ChapterTarget | null) => void;
 };
 
 export function useReadChapterAudioRegistration({
@@ -26,6 +27,7 @@ export function useReadChapterAudioRegistration({
   chapterAudioKey,
   chapterAudioTranslationId,
   audioVoiceId,
+  planFlowTick,
   registerReadChapterRef,
   onAdvanceChapter,
 }: Args) {
@@ -66,7 +68,6 @@ export function useReadChapterAudioRegistration({
     };
     reg.onAdvanceNextChapter = () => {
       const { next } = resolveReadChapterNeighbors(snapshot.bookId, snapshot.chapter);
-      if (!next) return;
       onAdvanceChapterRef.current?.(next);
     };
     reg.onAdvanceNextInBook = () => {
@@ -109,6 +110,7 @@ export function useReadChapterAudioRegistration({
     chapterData?.chapter,
     chapterAudioTranslationId,
     chapterData?.bookName,
+    planFlowTick,
     registerReadChapterRef,
   ]);
 

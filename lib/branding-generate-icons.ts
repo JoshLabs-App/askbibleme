@@ -24,6 +24,7 @@ const IOS_SPLASH_LEGACY = path.join(
 );
 const ANDROID_RES_DIR = path.join(MOBILE_ROOT, "android", "app", "src", "main", "res");
 const ANDROID_COLORS_XML = path.join(ANDROID_RES_DIR, "values", "colors.xml");
+const DEFAULT_NOTIFICATION_ICON_COLOR = "#ECD9B9";
 const APP_ICON_MASTER = "app-icon.png";
 const APP_ICON_MARK_SCALE = 0.78;
 
@@ -262,6 +263,24 @@ function mixHexLocal(a: string, b: string, t: number): string {
   return `#${ch(c0.r + (c1.r - c0.r) * u)}${ch(c0.g + (c1.g - c0.g) * u)}${ch(c0.b + (c1.b - c0.b) * u)}`;
 }
 
+async function readMobileNotificationIconColor(): Promise<string> {
+  try {
+    const raw = await fs.readFile(MOBILE_APP_JSON, "utf8");
+    const json = JSON.parse(raw) as {
+      expo?: { plugins?: unknown[] };
+    };
+    for (const plugin of json.expo?.plugins ?? []) {
+      if (Array.isArray(plugin) && plugin[0] === "expo-notifications") {
+        const color = (plugin[1] as { color?: string } | undefined)?.color;
+        if (color && isValidHex6(color)) return color.trim().toUpperCase();
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+  return DEFAULT_NOTIFICATION_ICON_COLOR;
+}
+
 /** 已提交到仓库的 `ios/`、`android/` 原生资源（EAS 本地工程构建会读这里，不只读 Expo assets）。 */
 async function syncNativeMobileAppIcons(opts: {
   icon1024: Buffer;
@@ -274,6 +293,7 @@ async function syncNativeMobileAppIcons(opts: {
   const canvas = canvasHex.toUpperCase();
   const splashBg = splashBackgroundHex.toUpperCase();
   const canvasDark = mixHexLocal(canvas, "#000000", 0.14).toLowerCase();
+  const notificationIconColor = (await readMobileNotificationIconColor()).toLowerCase();
 
   try {
     await fs.mkdir(IOS_APP_ICON_SET, { recursive: true });
@@ -302,6 +322,8 @@ async function syncNativeMobileAppIcons(opts: {
   <color name="iconBackground">${canvas.toLowerCase()}</color>
   <color name="colorPrimary">${canvas.toLowerCase()}</color>
   <color name="colorPrimaryDark">${canvasDark}</color>
+  <color name="notification_icon_color">${notificationIconColor}</color>
+  <color name="parchment_window_fill">#faf3e1</color>
 </resources>
 `,
     );

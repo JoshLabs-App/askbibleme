@@ -7,6 +7,7 @@ import {
   isPlanFlowChapterAdvanceInFlight,
   peekReadPlanFlowAutoplay,
 } from "../read/read-plan-flow-autoplay";
+import { scriptureChapterPool } from "./scripture-chapter-pool";
 import {
   finishScriptureChapterOnce,
   isScriptureChapterEndStalled,
@@ -35,10 +36,12 @@ export type ScriptureBackgroundRecoveryCtx = ScriptureResumeCtx & {
   scriptureChapterEndHandledRef: MutableRefObject<boolean>;
   scriptureLastProgressMsRef: MutableRefObject<number>;
   scriptureLastProgressAtRef: MutableRefObject<number>;
+  scriptureSrcRef: MutableRefObject<string | null>;
   tryPlayScriptureWithFallback: (
     reg: ReadChapterPlaybackRegistration,
     preferredSrc: string,
-  ) => Promise<void>;
+    playingReg?: ReadChapterPlaybackRegistration | null,
+  ) => Promise<boolean>;
 };
 
 let resumeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -71,10 +74,12 @@ function wantsScripturePlayback(ctx: ScriptureBackgroundRecoveryCtx): boolean {
 function chapterEndFinishArgs(ctx: ScriptureBackgroundRecoveryCtx): ScriptureChapterEndFinishArgs {
   return {
     soundRef: ctx.soundRef,
+    scriptureSrcRef: ctx.scriptureSrcRef,
     scriptureAudioRepeatRef: ctx.scriptureAudioRepeatRef,
     readChapterRef: ctx.readChapterRef,
     autoPlayScriptureRef: ctx.autoPlayScriptureRef,
     scriptureChapterHandoffRef: ctx.scriptureChapterHandoffRef,
+    scriptureWantPlayingRef: ctx.scriptureWantPlayingRef,
     setPlaying: ctx.setPlaying,
     chapterEndHandledRef: ctx.scriptureChapterEndHandledRef,
   };
@@ -123,13 +128,15 @@ export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCt
 }
 
 async function flushPlanFlowAutoplayRegistration(ctx: ScriptureBackgroundRecoveryCtx): Promise<boolean> {
+  if (scriptureChapterPool.isActive()) {
+    return scriptureChapterPool.retryCurrent();
+  }
   if (!peekReadPlanFlowAutoplay() && !ctx.autoPlayScriptureRef.current) return false;
   const rc = resolveReadChapterForRecovery(ctx);
   const src = rc?.chapterAudioSrc?.trim();
   if (!rc || !src) return false;
   markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
-  await ctx.tryPlayScriptureWithFallback(rc, src, null);
-  return true;
+  return ctx.tryPlayScriptureWithFallback(rc, src, null);
 }
 
 /**
@@ -142,7 +149,7 @@ export async function watchScriptureChapterEndStall(
   if (ctx.scripturePlayInFlightRef.current) return false;
   if (ctx.scriptureStopAtSecRef.current != null) return false;
   if (!wantsScripturePlayback(ctx)) return false;
-  if (isPlanFlowChapterAdvanceInFlight()) return false;
+  if (isPlanFlowChapterAdvanceInFlight() || scriptureChapterPool.shouldPreservePlaybackOnUIUnmount()) return false;
 
   const sound = ctx.soundRef.current;
   if (!sound) return false;
@@ -176,10 +183,13 @@ export async function watchScriptureChapterEndStall(
 export async function recoverScripturePlaybackAfterBackground(
   ctx: ScriptureBackgroundRecoveryCtx,
 ): Promise<boolean> {
-  if (ctx.playbackModeRef.current !== "scripture") return false;
   if (ctx.scripturePlayInFlightRef.current) return false;
   if (ctx.scriptureStopAtSecRef.current != null) return false;
   if (!wantsScripturePlayback(ctx)) return false;
+
+  if (ctx.playbackModeRef.current !== "scripture") {
+    return flushPlanFlowAutoplayRegistration(ctx);
+  }
 
   const stalled = await watchScriptureChapterEndStall(ctx);
   if (stalled) return true;
@@ -200,7 +210,7 @@ export async function recoverScripturePlaybackAfterBackground(
   const atChapterEnd = isScriptureNearChapterEnd(positionMs, durationMs);
 
   if (atChapterEnd) {
-    if (isPlanFlowChapterAdvanceInFlight()) return false;
+    if (isPlanFlowChapterAdvanceInFlight() || scriptureChapterPool.shouldPreservePlaybackOnUIUnmount()) return false;
     markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
     ctx.autoPlayScriptureRef.current = true;
     return finishScriptureChapterOnce(chapterEndFinishArgs(ctx));

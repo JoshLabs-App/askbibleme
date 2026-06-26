@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import { useGlobalSearchParams, usePathname, useRouter } from "expo-router";
-import { clearReadPlanFlowTodayLoop } from "../read/read-plan-flow-autoplay";
+import { clearReadPlanFlowTodayLoop, clearPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
+import { flushTodayPlanScriptureResume } from "../read/flushTodayPlanScriptureResume";
+import { scriptureChapterPool } from "../music/scripture-chapter-pool";
 import { isReadBibleHomeRoute } from "../read/read-route-chrome";
 import { startTodayReadingScriptureFromReadHome } from "../read/startTodayReadingScriptureFromReadHome";
 import {
@@ -15,7 +17,10 @@ type Args = {
 };
 
 async function pauseShellScripture(togglePlayScriptureBase: () => Promise<void>): Promise<void> {
+  await flushTodayPlanScriptureResume();
+  scriptureChapterPool.stop();
   clearReadPlanFlowTodayLoop();
+  clearPlanFlowSessionActive();
   await togglePlayScriptureBase();
 }
 
@@ -55,6 +60,13 @@ export function useTogglePlayScriptureWithReadHome({
         return;
       }
       if (playbackMode === "scripture" && !playing) {
+        if (!scriptureChapterPool.isActive()) {
+          const started = await startTodayReadingScriptureFromReadHome(router);
+          if (!started) {
+            await togglePlayScriptureBase();
+          }
+          return;
+        }
         await togglePlayScriptureBase();
         return;
       }

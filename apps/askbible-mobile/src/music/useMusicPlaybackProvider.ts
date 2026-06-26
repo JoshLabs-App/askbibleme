@@ -1,4 +1,5 @@
 import { useTogglePlayScriptureWithReadHome } from "./useTogglePlayScriptureWithReadHome";
+import { useTodayPlanScriptureResumePersistence } from "../read/useTodayPlanScriptureResumePersistence";
 import {
   resolveCanTogglePlayback,
   resolveReadChapterAudioAvailable,
@@ -78,6 +79,8 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     refs,
     tracks,
     trackIndex,
+    playing,
+    scripturePreparing,
     readChapter,
     setReadChapter,
     setPlaying,
@@ -100,8 +103,13 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
   const togglePlayScripture = useTogglePlayScriptureWithReadHome({
     playing,
     playbackMode,
-    readHomeTodayAudioReady,
     togglePlayScriptureBase: shell.togglePlayScripture,
+  });
+
+  useTodayPlanScriptureResumePersistence({
+    playing,
+    playbackMode,
+    scriptureDurationSec,
   });
 
   const readChapterAudioAvailable = resolveReadChapterAudioAvailable(

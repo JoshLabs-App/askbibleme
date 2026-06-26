@@ -55,7 +55,8 @@ function makeRecoveryCtx(overrides: Record<string, unknown> = {}) {
     scriptureChapterEndHandledRef: { current: false },
     scriptureLastProgressMsRef: { current: -1 },
     scriptureLastProgressAtRef: { current: Date.now() },
-    tryPlayScriptureWithFallback: vi.fn(async () => {}),
+    scriptureSrcRef: { current: null },
+    tryPlayScriptureWithFallback: vi.fn(async () => true),
     ...overrides,
   });
 }

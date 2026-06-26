@@ -20,7 +20,18 @@ import { useAndroidNotoFonts } from "../src/fonts/useAndroidNotoFonts";
 import { theme } from "../src/theme";
 import { OnboardingDevotionIntro } from "../src/onboarding/OnboardingDevotionIntro";
 import { subscribeOnboardingDevotionOpen } from "../src/onboarding/onboarding-devotion-gate";
+import { NotificationSetupBridge } from "../src/notifications/NotificationSetupBridge";
+import { ReadingAlarmBridge } from "../src/notifications/ReadingAlarmBridge";
+import { PlanFlowPlaybackBridge } from "../src/read/PlanFlowPlaybackBridge";
+import { WidgetReadDeepLinkBridge } from "../src/widget/WidgetReadDeepLinkBridge";
 import { shouldShowOnboardingDevotionIntro } from "../src/onboarding/onboarding-devotion-prefs";
+import { useAndroidImmersiveSystemBars } from "../src/shell/useAndroidImmersiveSystemBars";
+import { runQueuedReadingAlarmDevE2E } from "../src/notifications/readingAlarmDevE2ERunner";
+
+function AndroidImmersiveSystemBars({ enabled }: { enabled: boolean }) {
+  useAndroidImmersiveSystemBars(enabled);
+  return null;
+}
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -98,6 +109,14 @@ export default function RootLayout() {
 
   const appReady = bootTimedOut || (navReady && fontsReady && onboardingReady);
 
+  useEffect(() => {
+    if (!__DEV__ || !appReady) return;
+    const timer = setTimeout(() => {
+      void runQueuedReadingAlarmDevE2E();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [appReady]);
+
   return (
     <SafeAreaProvider>
       <ShellErrorBoundary>
@@ -109,6 +128,7 @@ export default function RootLayout() {
           {appReady ? (
             <>
             <MusicPlaybackProvider>
+              <AndroidImmersiveSystemBars enabled={appReady} />
               <StatusBar style="dark" />
               <Stack
                 screenOptions={{
@@ -139,6 +159,10 @@ export default function RootLayout() {
                   }}
                 />
               </Stack>
+              <NotificationSetupBridge enabled />
+              <ReadingAlarmBridge enabled />
+              <PlanFlowPlaybackBridge />
+              <WidgetReadDeepLinkBridge enabled />
               <ShellMenuButton />
               <ShellInsetClock />
               <ShellNavDrawer />

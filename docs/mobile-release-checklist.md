@@ -59,9 +59,11 @@ Default release order follows repository rules: iOS first, Android second.
   - 首次或证书过期时可单独运行：`npm run mobile:setup:ios:signing`
   - **不依赖** Expo 远程 Provisioning Profile / `eas credentials`
 - Bump build number in **native** iOS project before each store upload:
-  - `apps/askbible-mobile/ios/AskBible.me/Info.plist` → `CFBundleVersion`
-  - `apps/askbible-mobile/ios/AskBible.me.xcodeproj/project.pbxproj` → `CURRENT_PROJECT_VERSION`
-  - Keep in sync with `app.json` → `expo.ios.buildNumber`
+  - 推荐：`npm run mobile:bump:store-version -- 1.0.7 63`（一次同步 `app.json`、Gradle、`Info.plist`、`project.pbxproj`）
+  - 手动时须保持一致：
+  - `apps/askbible-mobile/ios/AskBibleme/Info.plist` → `CFBundleVersion` / `CFBundleShortVersionString`
+  - `apps/askbible-mobile/ios/AskBibleme.xcodeproj/project.pbxproj` → `CURRENT_PROJECT_VERSION` / `MARKETING_VERSION`
+  - `app.json` → `expo.version`、`expo.ios.buildNumber`、`expo.android.versionCode`（**iOS 与 Android 使用同一 build 整数**）
 - App Store Connect checks:
   - Build processing complete
   - Internal testers can install and open app
@@ -86,9 +88,9 @@ Default release order follows repository rules: iOS first, Android second.
   - Or build + submit in one step: `npm run mobile:release:android:internal`
   - Release script uploads to **internal**, then promotes the same `versionCode` to **alpha** (closed testing) so `/install` → `play.google.com/apps/testing/me.askbible` serves the latest build.
   - Manual promote only: `npm run mobile:promote:android:closed -- 34 alpha`
-- Bump `versionCode` in **both**:
-  - `apps/askbible-mobile/app.json` → `expo.android.versionCode`
-  - `apps/askbible-mobile/android/app/build.gradle` → `versionCode`
+- Bump store version (iOS buildNumber = Android versionCode):
+  - `npm run mobile:bump:store-version -- 1.0.7 63`
+  - 或仅递增 build：`npm run mobile:bump:store-version -- --next-build`
 - Play Console checks:
   - Internal track rollout created
   - Testers can install and open app

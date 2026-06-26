@@ -517,7 +517,7 @@
 				CODE_SIGN_ENTITLEMENTS = AskBibleme/AskBibleme.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 63;
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -530,7 +530,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -555,7 +555,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = AskBibleme/AskBibleme.entitlements;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 63;
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				INFOPLIST_FILE = AskBibleme/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -563,7 +563,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -579,9 +579,11 @@
 			
 			
 			
+			
+			
 				CODE_SIGN_STYLE = Manual;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
-				PROVISIONING_PROFILE_SPECIFIER = "AskBible me.askbible AppStore 2026-06-24T12-36-30-813Z";
+				PROVISIONING_PROFILE_SPECIFIER = "AskBible me.askbible AppStore 2026-06-26T13-33-38-160Z";
 			
 			};
 			name = Release;
@@ -716,7 +718,7 @@
 				CODE_SIGN_ENTITLEMENTS = ../targets/widget/generated.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 63;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -730,7 +732,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
@@ -760,7 +762,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = ../targets/widget/generated.entitlements;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 63;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -774,7 +776,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.5;
+				MARKETING_VERSION = 1.0.7;
 				MTL_FAST_MATH = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = me.askbible.widget;
@@ -789,9 +791,11 @@
 			
 			
 			
+			
+			
 				CODE_SIGN_STYLE = Manual;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
-				PROVISIONING_PROFILE_SPECIFIER = "AskBible me.askbible.widget AppStore 2026-06-24T12-36-31-916Z";
+				PROVISIONING_PROFILE_SPECIFIER = "AskBible me.askbible.widget AppStore 2026-06-26T13-33-39-179Z";
 			
 			};
 			name = Release;

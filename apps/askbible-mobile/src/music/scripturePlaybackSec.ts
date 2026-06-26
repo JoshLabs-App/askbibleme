@@ -12,7 +12,7 @@ function subscribeScripturePlaybackSec(listener: () => void): () => void {
   };
 }
 
-function getScripturePlaybackSecSnapshot(): number {
+export function getScripturePlaybackSecSnapshot(): number {
   return scripturePlaybackSecStore.current;
 }
 

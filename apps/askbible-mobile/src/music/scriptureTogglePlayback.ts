@@ -11,6 +11,7 @@ import {
   safePauseSound,
   safePlaySound,
 } from "../audio/safeShellSound";
+import { flushTodayPlanScriptureResume } from "../read/flushTodayPlanScriptureResume";
 import { getActiveReadChapterPlayback } from "../read/read-chapter-playback-store";
 import { markScriptureWantPlaying } from "./scriptureResumeAfterInterruption";
 import type { ChapterPlaybackCtx } from "./scriptureChapterPlaybackTypes";
@@ -74,6 +75,8 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
       }
       if (st.isPlaying) {
         markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
+        ctx.autoPlayScriptureRef.current = false;
+        await flushTodayPlanScriptureResume();
         await safePauseSound(sound);
         ctx.setPlaying(false);
       } else {

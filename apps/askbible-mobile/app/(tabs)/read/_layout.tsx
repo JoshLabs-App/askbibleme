@@ -1,6 +1,9 @@
 import { Stack } from "expo-router";
 import { ReadBibleSettingsButton } from "../../../src/read/ReadBibleSettingsButton";
-import { ReadParchmentBackground } from "../../../src/read/ReadParchmentBackground";
+import {
+  PARCHMENT_STACK_SCREEN_STYLE,
+  ReadParchmentBackground,
+} from "../../../src/read/ReadParchmentBackground";
 import { ReadTripleLoopPlanSync } from "../../../src/read/ReadTripleLoopPlanSync";
 
 export const unstable_settings = {
@@ -16,7 +19,7 @@ export default function ReadStackLayout() {
           headerShown: false,
           animation: "slide_from_right",
           freezeOnBlur: false,
-          contentStyle: { flex: 1, backgroundColor: "transparent" },
+          contentStyle: PARCHMENT_STACK_SCREEN_STYLE,
         }}
       >
         <Stack.Screen name="index" />

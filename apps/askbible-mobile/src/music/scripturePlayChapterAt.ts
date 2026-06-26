@@ -1,13 +1,16 @@
-import { configureShellAudioMode } from "../audio/shellAudioMode";
+import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import {
   resolveScripturePlayableSrcForChapter,
   translationSupportsChapterAudio,
 } from "../bible/read-chapter-audio";
-import { logShellSoundError, safeGetSoundStatus } from "../audio/safeShellSound";
+import { markScriptureWantPlaying } from "./scriptureResumeAfterInterruption";
+import { armReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
 import { setActiveReadChapterPlayback } from "../read/read-chapter-playback-store";
-import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
+import { logShellSoundError, safeGetSoundStatus } from "../audio/safeShellSound";
+import { isSameScriptureChapter, isScripturePlaybackBusy } from "./scripturePlaybackExclusive";
 import { applyScriptureSegmentBounds } from "./scripturePlaybackHelpers";
+import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
 import { buildReadChapterAdvanceHandlers } from "./scriptureReadChapterRegistration";
 import type { ChapterPlaybackCtx, PlayScriptureChapterFn } from "./scriptureChapterPlaybackTypes";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
@@ -19,7 +22,26 @@ export async function playScriptureChapterAt(
   playChapter: PlayScriptureChapterFn,
 ): Promise<boolean> {
   try {
-    await configureShellAudioMode();
+    if (
+      ctx.scripturePlayInFlightRef.current &&
+      isSameScriptureChapter(ctx.readChapterRef.current, args)
+    ) {
+      try {
+        await ctx.scripturePlayInFlightRef.current;
+      } catch {
+        /* superseded */
+      }
+      return ctx.isStarted();
+    }
+    if (
+      isScripturePlaybackBusy(ctx) &&
+      isSameScriptureChapter(ctx.readChapterRef.current, args) &&
+      ctx.isStarted()
+    ) {
+      return true;
+    }
+
+    await configureScriptureShellAudioMode();
     if (!translationSupportsChapterAudio(args.translationId)) {
       return false;
     }
@@ -36,21 +58,45 @@ export async function playScriptureChapterAt(
       return false;
     }
 
-    const reg: ReadChapterPlaybackRegistration = {
-      bookId: args.bookId,
-      chapter: args.chapter,
-      bookName: args.bookName,
-      translationId: args.translationId,
-      chapterAudioSrc: scriptureSrc,
-      ...buildReadChapterAdvanceHandlers(args, playChapter, ctx.setPlaying),
-    };
+    const existing = ctx.readChapterRef.current;
+    const keepExistingHandlers =
+      existing != null &&
+      existing.bookId === args.bookId &&
+      existing.chapter === args.chapter &&
+      existing.translationId === args.translationId;
+
+    const reg: ReadChapterPlaybackRegistration = keepExistingHandlers
+      ? {
+          ...existing,
+          bookName: args.bookName,
+          chapterAudioSrc: scriptureSrc,
+        }
+      : {
+          bookId: args.bookId,
+          chapter: args.chapter,
+          bookName: args.bookName,
+          translationId: args.translationId,
+          chapterAudioSrc: scriptureSrc,
+          ...buildReadChapterAdvanceHandlers(args, playChapter, ctx.setPlaying),
+        };
     ctx.readChapterRef.current = reg;
     setActiveReadChapterPlayback(reg);
     ctx.setReadChapter(reg);
     ctx.patchReadChapterSrc(scriptureSrc);
+    ctx.autoPlayScriptureRef.current = true;
+    markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
+    armReadPlanFlowAutoplay();
 
-    await ctx.tryPlayScriptureWithFallback(reg, scriptureSrc);
-    if (!ctx.isStarted()) {
+    const started = await ctx.tryPlayScriptureWithFallback(reg, scriptureSrc, null);
+    if (!started && !ctx.isStarted()) {
+      if (__DEV__) {
+        console.warn(
+          "[scripture-audio] playScriptureChapter failed",
+          args.bookId,
+          args.chapter,
+          scriptureSrc,
+        );
+      }
       return false;
     }
 

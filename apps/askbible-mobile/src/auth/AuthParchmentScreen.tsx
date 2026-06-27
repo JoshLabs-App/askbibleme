@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Platform, View, type StyleProp, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
-import { useParchmentColumnMaxWidth } from "../read/parchmentColumnLayout";
+import { useParchmentColumnMaxWidth, useParchmentContentPadding } from "../read/parchmentColumnLayout";
 import { ReadParchmentBackground } from "../read/ReadParchmentBackground";
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
 export function AuthParchmentScreen({ children, contentStyle }: Props) {
   const insets = useSafeAreaInsets();
   const columnMaxWidth = useParchmentColumnMaxWidth();
+  const padX = useParchmentContentPadding(20);
 
   return (
     <ReadParchmentBackground>
@@ -27,7 +28,7 @@ export function AuthParchmentScreen({ children, contentStyle }: Props) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             flexGrow: 1,
-            paddingHorizontal: 20,
+            paddingHorizontal: padX,
             paddingTop: insets.top + 8,
             paddingBottom: insets.bottom + 24,
           }}

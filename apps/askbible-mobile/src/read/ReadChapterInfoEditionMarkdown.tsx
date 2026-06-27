@@ -1,12 +1,13 @@
 import Markdown from "react-native-markdown-display";
-import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useMemo, type ReactNode } from "react";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import {
   INFO_EDITION_KEY_SCENES_HEADING_PATTERNS,
   normalizeInfoEditionCompareMarkdown,
   stripInfoEditionSectionByHeading,
 } from "../bible/info-edition-format";
 import type { InfoEditionReaderVariant } from "../bible/info-edition-types";
+import { parseAskbibleReadLink, parseReadPath, normalizeAskbibleAppHref } from "../../../../lib/bible/parse-askbible-read-link";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { toZhTwText } from "../i18n/site-copy";
@@ -18,7 +19,17 @@ type Props = {
   content: string;
   variant: InfoEditionReaderVariant;
   onLinkPress?: (url: string) => boolean | void;
+  /** 探索文章：链接不加下划线 */
+  plainScriptureLinks?: boolean;
+  /** 探索文章：页头已有标题，正文不再拆 H1、不用导读版标题规范化 */
+  exploreArticle?: boolean;
 };
+
+function openMarkdownLink(href: string, onLinkPress?: (url: string) => boolean | void): void {
+  const normalized = normalizeAskbibleAppHref(href);
+  if (onLinkPress?.(normalized) === false) return;
+  void Linking.openURL(normalized).catch(() => {});
+}
 
 function splitPrimaryHeading(markdown: string): { heading: string | null; body: string } {
   const lines = markdown.split(/\r?\n/);
@@ -59,7 +70,7 @@ function titleStylesFor(textScale: number) {
   });
 }
 
-function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number) {
+function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number, plainScriptureLinks: boolean) {
   const accent = "#A56A2D";
   const sx = (n: number) => Math.max(1, Math.round(n * textScale * 10) / 10);
   const mx = (n: number) => Math.round(n * textScale * 10) / 10;
@@ -156,6 +167,14 @@ function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number
       textDecorationLine: "underline",
       textDecorationColor: "rgba(165, 106, 45, 0.45)",
     },
+    ...(plainScriptureLinks
+      ? {
+          plainExploreLink: {
+            color: accent,
+            textDecorationLine: "none",
+          },
+        }
+      : {}),
     hr: {
       backgroundColor: "transparent",
       height: 0,
@@ -164,23 +183,49 @@ function markdownStylesFor(_variant: InfoEditionReaderVariant, textScale: number
   });
 }
 
-export function ReadChapterInfoEditionMarkdown({ content, variant, onLinkPress }: Props) {
+export function ReadChapterInfoEditionMarkdown({
+  content,
+  variant,
+  onLinkPress,
+  plainScriptureLinks = false,
+  exploreArticle = false,
+}: Props) {
   const { locale } = useLocale();
   const localized = useMemo(() => {
-    let text = normalizeInfoEditionCompareMarkdown(content);
-    if (variant === "info") {
+    let text = exploreArticle ? content.trim() : normalizeInfoEditionCompareMarkdown(content);
+    if (variant === "info" && !exploreArticle) {
       text = stripInfoEditionSectionByHeading(text, INFO_EDITION_KEY_SCENES_HEADING_PATTERNS);
     }
     return locale === "zh-TW" ? toZhTwText(text) : text;
-  }, [content, locale, variant]);
-  const { heading, body } = useMemo(() => splitPrimaryHeading(localized), [localized]);
+  }, [content, exploreArticle, locale, variant]);
+  const { heading, body } = useMemo(
+    () => (exploreArticle ? { heading: null, body: localized } : splitPrimaryHeading(localized)),
+    [exploreArticle, localized],
+  );
   const px = useReadBibleTypographyPx();
   const textScale = useMemo(
     () => Math.max(0.8, Math.min(2.8, px.verseFontSize / 16)),
     [px.verseFontSize],
   );
   const titleStyles = useMemo(() => titleStylesFor(textScale), [textScale]);
-  const markdownStyles = useMemo(() => markdownStylesFor(variant, textScale), [variant, textScale]);
+  const markdownStyles = useMemo(
+    () => markdownStylesFor(variant, textScale, plainScriptureLinks),
+    [variant, textScale, plainScriptureLinks],
+  );
+  const markdownRules = useMemo(() => {
+    if (!plainScriptureLinks) return undefined;
+    return {
+      link: (node: { key: string; attributes: { href: string } }, children: ReactNode, _parent: unknown, styles: { link: object; plainExploreLink?: object }) => (
+        <Text
+          key={node.key}
+          style={plainScriptureLinks ? (styles.plainExploreLink ?? styles.link) : styles.link}
+          onPress={() => openMarkdownLink(node.attributes.href, onLinkPress)}
+        >
+          {children}
+        </Text>
+      ),
+    };
+  }, [plainScriptureLinks, onLinkPress]);
   if (!localized) return null;
 
   return (
@@ -192,6 +237,7 @@ export function ReadChapterInfoEditionMarkdown({ content, variant, onLinkPress }
       ) : null}
       <Markdown
         style={markdownStyles}
+        rules={markdownRules}
         onLinkPress={onLinkPress ? (url) => Boolean(onLinkPress(url)) : undefined}
       >
         {body || localized}

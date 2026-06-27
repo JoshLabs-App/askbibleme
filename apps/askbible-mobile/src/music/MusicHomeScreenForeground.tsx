@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
 import { MusicHomeForegroundPanel } from "./MusicHomeForegroundPanel";
 import { musicHomeScreenStyles as styles } from "./musicHomeScreenStyles";
+import { MusicHomeStageTapSurface } from "./MusicHomeStageTapSurface";
 import { MusicHomeUpperDecor } from "./MusicHomeUpperDecor";
 import type { MusicHomeScreenController } from "./useMusicHomeScreenController";
 
@@ -49,18 +50,20 @@ export function MusicHomeScreenForeground({
       ]}
       pointerEvents={compactLandscape ? "box-none" : "auto"}
     >
-      <MusicHomeUpperDecor
-        album={album}
-        upperSize={upper.upperSize}
-        compactLandscape={compactLandscape}
-        viewportHeight={viewportHeight}
-        viewportTop={viewportTop}
-        albumDecorVisible={albumDecorVisible}
-        albumDecorMotionActive={albumDecorMotionActive}
-        coffeeRhythmPulse={coffeeRhythmPulse}
-        onUpperLayout={upper.onUpperLayout}
-        landscapeSafeHorizontal={landscapeSafeHorizontal}
-      />
+      <MusicHomeStageTapSurface compactLandscape={compactLandscape}>
+        <MusicHomeUpperDecor
+          album={album}
+          upperSize={upper.upperSize}
+          compactLandscape={compactLandscape}
+          viewportHeight={viewportHeight}
+          viewportTop={viewportTop}
+          albumDecorVisible={albumDecorVisible}
+          albumDecorMotionActive={albumDecorMotionActive}
+          coffeeRhythmPulse={coffeeRhythmPulse}
+          onUpperLayout={upper.onUpperLayout}
+          landscapeSafeHorizontal={landscapeSafeHorizontal}
+        />
+      </MusicHomeStageTapSurface>
 
       <View
         style={[styles.panel, compactLandscape && styles.panelLandscape]}

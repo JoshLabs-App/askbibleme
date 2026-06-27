@@ -24,7 +24,7 @@ export type VerifiedHomePrayerPoolConfig = {
 function normalizeScopeId(raw: unknown): string | null {
   const v = typeof raw === "string" ? raw.trim() : "";
   if (!v) return null;
-  if (!/^theme-repeat-[a-z0-9-]+$/i.test(v)) return null;
+  if (!/^((theme-repeat-[a-z0-9-]+)|(explore-curated-700))$/i.test(v)) return null;
   return v.toLowerCase();
 }
 

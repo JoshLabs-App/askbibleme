@@ -29,7 +29,7 @@ type Args = {
 
 export function useScriptureShellPlayback(args: Args) {
   const readChapterRef = useRef<ReadChapterPlaybackRegistration | null>(null);
-  readChapterRef.current = args.readChapter;
+  // 禁止在 render 里用 props 覆盖 ref：register/章末换章会写入 ref，render 覆盖会导致仍播上一章或误判 isStarted。
 
   const engine = useScripturePlayEngine({ ...args, readChapterRef });
 

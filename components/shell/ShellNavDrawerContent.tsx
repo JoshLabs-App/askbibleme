@@ -4,15 +4,10 @@ import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { HomeVersePoolMenuPicker } from "@/components/home/HomeVersePoolMenuPicker";
 import { HomeTtsExperimentDrawerSection } from "@/components/home/HomeTtsExperimentDrawerSection";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
-import {
-  appendHomeVersePoolScopeCount,
-  getHomeVersePoolScopeVerseCount,
-  HOME_VERSE_POOL_SCOPE_OPTIONS,
-  type HomeVersePoolScopeId,
-} from "@/lib/explore/explore-home-verse-pool-scopes";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
@@ -97,88 +92,32 @@ function ShellNavDrawerLocaleRow() {
 
 function ShellNavDrawerVersePoolSection() {
   const { locale } = useLocale();
-  const [poolPickerOpen, setPoolPickerOpen] = useState(false);
-  const homeVersePoolScope = useSyncExternalStore(
+  const selectedScope = useSyncExternalStore(
     subscribeHomeVersePoolScope,
     getHomeVersePoolScope,
     getHomeVersePoolScope,
   );
 
   useEffect(() => {
-    void hydrateHomeVersePoolScope();
+    hydrateHomeVersePoolScope();
   }, []);
 
   const sectionLabel =
     locale === "en" ? "Home verse pool" : locale === "zh-TW" ? toZhTwText("主页经文池") : "主页经文池";
-  const currentLabel =
-    locale === "en"
-      ? "Current"
-      : locale === "zh-TW"
-        ? toZhTwText("当前选择")
-        : "当前选择";
-  const current =
-    HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
-    HOME_VERSE_POOL_SCOPE_OPTIONS[0]!;
-  const currentValue = appendHomeVersePoolScopeCount(
-    locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh,
-    getHomeVersePoolScopeVerseCount(current.id),
-    locale,
-  );
+  const poolLabel =
+    locale === "en" ? "Pool" : locale === "zh-TW" ? toZhTwText("当前池") : "当前池";
 
   return (
-    <div>
-      <p className="shell-nav-drawer-section-label">{sectionLabel}</p>
-      <button
-        type="button"
-        className="shell-nav-drawer-select-trigger w-full"
-        onClick={() => setPoolPickerOpen((v) => !v)}
-      >
-        <span className="shell-nav-drawer-select-label">{currentLabel}</span>
-        <span className="shell-nav-drawer-select-value">
-          {currentValue}
-          <svg viewBox="0 0 24 24" className="h-4 w-4 opacity-70" aria-hidden>
-            <path
-              d={poolPickerOpen ? "M7 14l5-5 5 5" : "M7 10l5 5 5-5"}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </span>
-      </button>
-      {poolPickerOpen ? (
-        <div className="shell-nav-drawer-select-options">
-          {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope) => {
-            const selected = homeVersePoolScope === scope.id;
-            const label = appendHomeVersePoolScopeCount(
-              locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh,
-              getHomeVersePoolScopeVerseCount(scope.id),
-              locale,
-            );
-            return (
-              <button
-                key={scope.id}
-                type="button"
-                className={[
-                  "shell-nav-drawer-select-option w-full",
-                  selected ? "shell-nav-drawer-select-option-active" : "",
-                ].join(" ")}
-                onClick={() => {
-                  setPoolPickerOpen(false);
-                  setHomeVersePoolScope(scope.id as HomeVersePoolScopeId);
-                  requestHomePrayerVerseFeedReload();
-                }}
-              >
-                <span>{label}</span>
-                {selected ? <span className="text-[#A56A2D]" aria-hidden>✓</span> : null}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+    <HomeVersePoolMenuPicker
+      locale={locale}
+      selectedScope={selectedScope}
+      poolLabel={sectionLabel}
+      currentLabel={poolLabel}
+      onSelectScope={(next) => {
+        setHomeVersePoolScope(next);
+        requestHomePrayerVerseFeedReload();
+      }}
+    />
   );
 }
 

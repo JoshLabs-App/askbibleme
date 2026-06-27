@@ -9,6 +9,7 @@ export type ReadChapterAudioScrollFollowOpts = {
     audioDockVisible: boolean,
     animated?: boolean,
   ) => Promise<boolean>;
+  audioDockVisible?: boolean;
 };
 
 type Args = {
@@ -17,7 +18,9 @@ type Args = {
   isFocused: boolean;
   activeVerseIndex: number | null;
   chapterVerses: LoadedChapter["verses"] | undefined;
-  audioMatchesChapter: boolean;
+  audioFollowActive: boolean;
+  chapterKey?: string | null;
+  scripturePlaybackSec?: number;
 };
 
 export function useReadChapterAudioScrollFollow({
@@ -26,21 +29,29 @@ export function useReadChapterAudioScrollFollow({
   isFocused,
   activeVerseIndex,
   chapterVerses,
-  audioMatchesChapter,
+  audioFollowActive,
+  chapterKey = null,
+  scripturePlaybackSec = 0,
 }: Args) {
   const scrollVerseToReadableCenter = followScroll?.scrollVerseToReadableCenter;
+  const audioDockVisible = followScroll?.audioDockVisible ?? false;
   const lastFollowedVerseIndexRef = useRef<number | null>(null);
   const pendingVerseIndexRef = useRef<number | null>(null);
 
   useEffect(() => {
+    lastFollowedVerseIndexRef.current = null;
+    pendingVerseIndexRef.current = null;
+  }, [chapterKey]);
+
+  useEffect(() => {
     if (
       !isFocused ||
-      !audioMatchesChapter ||
+      !audioFollowActive ||
       activeVerseIndex === null ||
       !scrollRef.current ||
       !scrollVerseToReadableCenter
     ) {
-      if (!audioMatchesChapter) {
+      if (!audioFollowActive) {
         lastFollowedVerseIndexRef.current = null;
         pendingVerseIndexRef.current = null;
       }
@@ -53,13 +64,21 @@ export function useReadChapterAudioScrollFollow({
     if (verseNum == null) return;
     pendingVerseIndexRef.current = activeVerseIndex;
 
-    const runScroll = async () => {
+    const runScroll = async (attempt = 0) => {
       if (cancelled || !scrollRef.current || pendingVerseIndexRef.current !== activeVerseIndex) {
         return;
       }
-      const ok = await scrollVerseToReadableCenter(verseNum, audioMatchesChapter, true);
+      const ok = await scrollVerseToReadableCenter(verseNum, audioDockVisible, true);
       if (cancelled || pendingVerseIndexRef.current !== activeVerseIndex) return;
-      if (ok) lastFollowedVerseIndexRef.current = activeVerseIndex;
+      if (ok) {
+        lastFollowedVerseIndexRef.current = activeVerseIndex;
+        return;
+      }
+      if (attempt < 2) {
+        setTimeout(() => {
+          void runScroll(attempt + 1);
+        }, 280);
+      }
     };
 
     const task = InteractionManager.runAfterInteractions(() => {
@@ -74,10 +93,12 @@ export function useReadChapterAudioScrollFollow({
     };
   }, [
     activeVerseIndex,
-    audioMatchesChapter,
+    audioDockVisible,
+    audioFollowActive,
     chapterVerses,
     isFocused,
     scrollRef,
     scrollVerseToReadableCenter,
+    scripturePlaybackSec,
   ]);
 }

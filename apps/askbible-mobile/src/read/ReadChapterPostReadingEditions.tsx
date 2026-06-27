@@ -22,6 +22,8 @@ type Props = {
   onBackToTop?: () => void;
   onGoPrevChapter?: () => void;
   onGoNextChapter?: () => void;
+  /** 宽屏右栏：同时展开导读 + 信息版（对齐网站 spread） */
+  spreadLayout?: boolean;
 };
 
 export function ReadChapterPostReadingEditions({
@@ -33,6 +35,7 @@ export function ReadChapterPostReadingEditions({
   onBackToTop,
   onGoPrevChapter,
   onGoNextChapter,
+  spreadLayout = false,
 }: Props) {
   const t = useMemo(() => createT(displayLocale), [displayLocale]);
   const { px } = useReadBibleTypography();
@@ -61,6 +64,62 @@ export function ReadChapterPostReadingEditions({
       blurb: t("pages.read.postReadingEditionInfoBlurb"),
     },
   ];
+
+  if (spreadLayout) {
+    return (
+      <View
+        style={[styles.section, styles.sectionSpread]}
+        accessibilityLabel={t("pages.read.postReadingEditionsAriaLabel")}
+      >
+        <View style={[styles.heading, styles.headingSpread]}>
+          <Text
+            style={[
+              styles.headingText,
+              styles.headingTextSpread,
+              {
+                fontSize: Math.round(20 * textScale * 10) / 10,
+                lineHeight: Math.round(28 * textScale * 10) / 10,
+              },
+            ]}
+          >
+            {t("pages.read.postReadingEditionsHeading")}
+          </Text>
+          <View style={styles.headingRule}>
+            <View style={styles.headingRuleLine} />
+          </View>
+        </View>
+
+        <View style={styles.spreadParts}>
+          <View style={styles.spreadSection}>
+            <Text style={styles.spreadSectionLabel}>{panels[0].title}</Text>
+            <ReadChapterInfoEditionBlock
+              key={`guide-${bookId}-${chapter}-${guideRoleId ?? "default"}`}
+              variant="guide"
+              bookId={bookId}
+              chapter={chapter}
+              displayLocale={displayLocale}
+              roleId={guideRoleId}
+              isActive
+              columnLayout
+            />
+          </View>
+          <View style={styles.spreadSection}>
+            <Text style={styles.spreadSectionLabel}>{panels[1].title}</Text>
+            <ReadChapterInfoEditionBlock
+              key={`info-${bookId}-${chapter}-${infoRoleId ?? "default"}`}
+              variant="info"
+              bookId={bookId}
+              chapter={chapter}
+              displayLocale={displayLocale}
+              roleId={infoRoleId}
+              isActive
+              columnLayout
+            />
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.section} accessibilityLabel={t("pages.read.postReadingEditionsAriaLabel")}>

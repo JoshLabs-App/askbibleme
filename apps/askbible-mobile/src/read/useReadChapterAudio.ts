@@ -37,6 +37,7 @@ type ChapterTarget = { bookId: string; chapter: number };
 export type UseReadChapterAudioOptions = {
   scrollHeaderHeightRef?: React.RefObject<number>;
   onAdvanceChapter?: (target: ChapterTarget) => void;
+  isPlanFlow?: boolean;
   planFlowTick?: string | null;
   planFlowQueue?: Array<{ bookId: string; chapter: number }>;
   followScroll?: ReadChapterAudioScrollFollowOpts;
@@ -49,6 +50,7 @@ export function useReadChapterAudio(
 ) {
   const {
     onAdvanceChapter,
+    isPlanFlow = false,
     planFlowTick = null,
     planFlowQueue = [],
     followScroll,
@@ -86,6 +88,7 @@ export function useReadChapterAudio(
     chapterAudioKey,
     chapterAudioTranslationId,
     audioVoiceId,
+    isPlanFlow,
     planFlowTick: planFlowTick ?? null,
     registerReadChapterRef,
     onAdvanceChapter,
@@ -217,6 +220,8 @@ export function useReadChapterAudio(
 
   const audioMatchesChapter =
     supported && Boolean(chapterAudioSrc) && playbackMode === "scripture" && playing;
+  const audioFollowActive =
+    supported && Boolean(chapterAudioSrc) && playbackMode === "scripture" && (playing || scripturePreparing);
   const scriptureBoundToCurrentChapter =
     supported && Boolean(chapterAudioSrc) && playbackMode === "scripture";
   const nearAudioEnd =
@@ -225,26 +230,37 @@ export function useReadChapterAudio(
     scripturePlaybackSec >= Math.max(0, scriptureDurationSec - 1.2);
 
   const activeVerseIndex = (() => {
-    if (!chapterData || !audioMatchesChapter) return null;
+    if (!chapterData || !audioFollowActive) return null;
     if (verseTimings?.length) {
       const verseNum = verseNumberAtChapterAudioTime(scripturePlaybackSec, verseTimings);
       if (verseNum === null) return null;
       return verseIndexForVerseNumber(chapterData.verses, verseNum);
     }
-    return verseIndexForReadChapterAudioTime(
-      scripturePlaybackSec,
-      scriptureDurationSec,
-      weights,
-    );
+    if (weights.length > 0) {
+      if (!Number.isFinite(scriptureDurationSec) || scriptureDurationSec <= 0.05) {
+        return 0;
+      }
+      return verseIndexForReadChapterAudioTime(
+        scripturePlaybackSec,
+        scriptureDurationSec,
+        weights,
+      );
+    }
+    return null;
   })();
 
   useReadChapterAudioScrollFollow({
     scrollRef,
-    followScroll,
+    followScroll: {
+      ...followScroll,
+      audioDockVisible: Boolean(chapterAudioSrc),
+    },
     isFocused,
     activeVerseIndex,
     chapterVerses: chapterData?.verses,
-    audioMatchesChapter,
+    audioFollowActive,
+    chapterKey: chapterData ? `${chapterData.bookId}:${chapterData.chapter}` : null,
+    scripturePlaybackSec,
   });
 
   return {

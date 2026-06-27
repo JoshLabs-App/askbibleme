@@ -34,4 +34,9 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, moduleName, platform);
 };
 
+// 真机 LAN：listen 0.0.0.0 由 scripts/patch-expo-metro-lan.sh + REACT_NATIVE_PACKAGER_HOSTNAME 处理。
+config.server = {
+  ...(config.server ?? {}),
+};
+
 module.exports = config;

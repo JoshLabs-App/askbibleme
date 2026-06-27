@@ -1,12 +1,19 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  DEFAULT_HOME_VERSE_POOL_SCOPE,
-  type HomeVersePoolScopeId,
-} from "../explore/explore-home-verse-pool-scopes";
+  DEFAULT_HOME_VERSE_POOL_MENU_SCOPE,
+  type HomeVersePoolMenuScopeId,
+  isHomeVersePoolMenuScopeId,
+  parseHomeVersePoolMenuScopeId,
+} from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
 
-export const HOME_VERSE_POOL_SCOPE_KEY = "askbible-home-verse-pool-scope-v1";
+export const HOME_VERSE_POOL_SCOPE_KEY = "askbible-home-verse-pool-scope-v2";
 
-let currentScope: HomeVersePoolScopeId = DEFAULT_HOME_VERSE_POOL_SCOPE;
+/** @deprecated explore filter IDs — use HomeVersePoolMenuScopeId */
+export type HomeVersePoolScopeId = HomeVersePoolMenuScopeId;
+
+export const DEFAULT_HOME_VERSE_POOL_SCOPE = DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
+
+let currentScope: HomeVersePoolMenuScopeId = DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
 let hydrated = false;
 const listeners = new Set<() => void>();
 
@@ -20,19 +27,7 @@ function emit() {
   });
 }
 
-function isScopeId(v: string): v is HomeVersePoolScopeId {
-  return (
-    v === "comprehensive" ||
-    v === "praise_worship" ||
-    v === "word_of_god" ||
-    v === "years_days_eternity" ||
-    v === "narrow_gate" ||
-    v === "prayer_scripture" ||
-    v === "all"
-  );
-}
-
-export function getHomeVersePoolScope(): HomeVersePoolScopeId {
+export function getHomeVersePoolScope(): HomeVersePoolMenuScopeId {
   return currentScope;
 }
 
@@ -41,20 +36,21 @@ export function subscribeHomeVersePoolScope(onStore: () => void): () => void {
   return () => listeners.delete(onStore);
 }
 
-export async function hydrateHomeVersePoolScope(): Promise<HomeVersePoolScopeId> {
+export async function hydrateHomeVersePoolScope(): Promise<HomeVersePoolMenuScopeId> {
   if (hydrated) return currentScope;
   try {
     const raw = (await AsyncStorage.getItem(HOME_VERSE_POOL_SCOPE_KEY))?.trim() ?? "";
-    currentScope = raw && isScopeId(raw) ? raw : DEFAULT_HOME_VERSE_POOL_SCOPE;
+    currentScope = parseHomeVersePoolMenuScopeId(raw);
+    await AsyncStorage.setItem(HOME_VERSE_POOL_SCOPE_KEY, currentScope);
   } catch {
-    currentScope = DEFAULT_HOME_VERSE_POOL_SCOPE;
+    currentScope = DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
   }
   hydrated = true;
   emit();
   return currentScope;
 }
 
-export async function setHomeVersePoolScope(next: HomeVersePoolScopeId): Promise<void> {
+export async function setHomeVersePoolScope(next: HomeVersePoolMenuScopeId): Promise<void> {
   if (currentScope === next && hydrated) return;
   currentScope = next;
   hydrated = true;
@@ -66,8 +62,8 @@ export async function setHomeVersePoolScope(next: HomeVersePoolScopeId): Promise
   emit();
 }
 
-export async function replaceHomeVersePoolScopeForSync(next: HomeVersePoolScopeId): Promise<void> {
-  currentScope = isScopeId(next) ? next : DEFAULT_HOME_VERSE_POOL_SCOPE;
+export async function replaceHomeVersePoolScopeForSync(next: HomeVersePoolMenuScopeId): Promise<void> {
+  currentScope = isHomeVersePoolMenuScopeId(next) ? next : DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
   hydrated = true;
   try {
     await AsyncStorage.setItem(HOME_VERSE_POOL_SCOPE_KEY, currentScope);

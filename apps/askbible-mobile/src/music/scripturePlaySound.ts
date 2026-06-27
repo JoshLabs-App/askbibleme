@@ -32,6 +32,7 @@ type Args = {
   scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureLastProgressMsRef: MutableRefObject<number>;
   scriptureLastProgressAtRef: MutableRefObject<number>;
+  scriptureSrcRef: MutableRefObject<string | null>;
   setPlaying: (playing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
   setScriptureDurationSec: (sec: number) => void;
@@ -60,6 +61,7 @@ export async function loadAndPlayScriptureSound({
   scriptureChapterHandoffRef,
   scriptureLastProgressMsRef,
   scriptureLastProgressAtRef,
+  scriptureSrcRef,
   setPlaying,
   setScriptureCurrentSec,
   setScriptureDurationSec,
@@ -124,6 +126,7 @@ export async function loadAndPlayScriptureSound({
     scriptureChapterHandoffRef,
     scriptureLastProgressMsRef,
     scriptureLastProgressAtRef,
+    scriptureSrcRef,
     setPlaying,
     setScriptureCurrentSec,
     setScriptureDurationSec,

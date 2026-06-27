@@ -1,10 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { t, resolveUiText } from "../i18n/site-copy";
-import {
-  NatureHomeSettingsSelect,
-  type NatureHomeSettingsSelectOption,
-} from "./NatureHomeSettingsSelect";
-import { CONTRAST_OFF_ID } from "./natureHomeTranslationLabels";
+import { NatureHomeSettingsSelect } from "./NatureHomeSettingsSelect";
 import { useNatureHomeTranslationSettings } from "./useNatureHomeTranslationSettings";
 
 type Props = {
@@ -18,22 +14,13 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
     openMenu,
     setOpenMenu,
     primaryOptions,
+    contrastOptions,
     primaryValue,
     contrastValue,
     selectPrimary,
     selectContrast,
+    onDownloadOption,
   } = useNatureHomeTranslationSettings(onPrefsChanged);
-
-  const contrastOffLabel = t("pages.read.typography.contrastNone");
-
-  const contrastOptions: NatureHomeSettingsSelectOption[] = [
-    {
-      id: CONTRAST_OFF_ID,
-      label: contrastOffLabel,
-      shortLabel: contrastOffLabel,
-    },
-    ...allOptions,
-  ];
 
   if (allOptions.length === 0) return null;
 
@@ -41,6 +28,7 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
     primaryOptions.find((o) => o.id === primaryValue)?.shortLabel ??
     primaryOptions.find((o) => o.id === primaryValue)?.label ??
     primaryValue;
+  const contrastOffLabel = t("pages.read.typography.contrastNone");
   const contrastDisplay =
     contrastOptions.find((o) => o.id === contrastValue)?.shortLabel ??
     contrastOptions.find((o) => o.id === contrastValue)?.label ??
@@ -65,6 +53,7 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
           open={openMenu === "primary"}
           onOpenChange={(open) => setOpenMenu(open ? "primary" : null)}
           onSelect={selectPrimary}
+          onDownloadOption={onDownloadOption}
         />
         <NatureHomeSettingsSelect
           style={styles.select}
@@ -74,6 +63,7 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
           open={openMenu === "contrast"}
           onOpenChange={(open) => setOpenMenu(open ? "contrast" : null)}
           onSelect={selectContrast}
+          onDownloadOption={onDownloadOption}
         />
       </View>
     </View>
@@ -90,16 +80,15 @@ const styles = StyleSheet.create({
   selectRow: {
     position: "relative",
     width: "100%",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 10,
   },
   dismissOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
   select: {
-    flex: 1,
-    minWidth: 72,
+    width: "100%",
   },
 });

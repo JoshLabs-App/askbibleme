@@ -21,7 +21,7 @@ function run(cmd, env = {}) {
 
 function assetsReadyForBundle() {
   const checks = [
-    "music/tracks/track-mpg4a7xcip5q.mp3",
+    "music/tracks/track-mpg4a8h3jhwl.mp3",
     "scripture/cuv-simp.sqlite",
     "content/music-companion.json",
     "audio/scenes/scene-waves-ocean.mp3",
@@ -65,7 +65,7 @@ console.log("[eas-sync-offline-on-cloud] → sync-mobile-offline-media");
 run("node scripts/sync-mobile-offline-media.mjs", {
   MOBILE_BUNDLE_OFFLINE_MEDIA: "1",
   MOBILE_BUNDLE_MUSIC_LIMIT: "1",
-  MOBILE_STARTER_MUSIC_TRACK_ID: "track-mpg4a7xcip5q",
+  MOBILE_STARTER_MUSIC_TRACK_ID: "track-mpg4a8h3jhwl",
 });
 
 console.log("[eas-sync-offline-on-cloud] done");

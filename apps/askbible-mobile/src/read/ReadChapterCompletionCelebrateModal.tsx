@@ -1,8 +1,10 @@
 import { Audio } from "expo-av";
-import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
-import { Animated, Easing, Modal, Pressable, Text, View } from "react-native";
+import { Animated, Easing, Modal, Text, View } from "react-native";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { readChapterCompletionPlanPanelStyles as styles } from "./readChapterCompletionPlanPanelStyles";
+
+const AUTO_DISMISS_MS = 2000;
 
 type Props = {
   visible: boolean;
@@ -17,13 +19,13 @@ export function ReadChapterCompletionCelebrateModal({
   isEnglishDisplay,
   localeZhText,
 }: Props) {
-  const router = useRouter();
   const celebrationSoundRef = useRef<Audio.Sound | null>(null);
   const celebrateScale = useRef(new Animated.Value(0.9)).current;
   const celebrateOpacity = useRef(new Animated.Value(0)).current;
   const sparklePulse = useRef(new Animated.Value(0)).current;
-  const celebrateCtaPulse = useRef(new Animated.Value(0)).current;
   const sparkleLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closingRef = useRef(false);
 
   const stopSparkleLoop = useCallback(() => {
     sparkleLoopRef.current?.stop();
@@ -35,7 +37,6 @@ export function ReadChapterCompletionCelebrateModal({
     celebrateScale.setValue(0.9);
     celebrateOpacity.setValue(0);
     sparklePulse.setValue(0);
-    celebrateCtaPulse.setValue(0);
     Animated.parallel([
       Animated.timing(celebrateOpacity, {
         toValue: 1,
@@ -69,23 +70,7 @@ export function ReadChapterCompletionCelebrateModal({
     );
     sparkleLoopRef.current = loop;
     loop.start();
-
-    Animated.sequence([
-      Animated.delay(260),
-      Animated.timing(celebrateCtaPulse, {
-        toValue: 1,
-        duration: 180,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(celebrateCtaPulse, {
-        toValue: 0,
-        duration: 220,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [celebrateCtaPulse, celebrateOpacity, celebrateScale, sparklePulse, stopSparkleLoop]);
+  }, [celebrateOpacity, celebrateScale, sparklePulse, stopSparkleLoop]);
 
   const playCelebrateSound = useCallback(async () => {
     try {
@@ -102,19 +87,50 @@ export function ReadChapterCompletionCelebrateModal({
     }
   }, []);
 
-  const closeCelebrate = useCallback(() => {
+  const dismissCelebrate = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    if (dismissTimerRef.current) {
+      clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = null;
+    }
     stopSparkleLoop();
-    onClose();
-  }, [onClose, stopSparkleLoop]);
+    Animated.timing(celebrateOpacity, {
+      toValue: 0,
+      duration: 280,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        closingRef.current = false;
+        onClose();
+      }
+    });
+  }, [celebrateOpacity, onClose, stopSparkleLoop]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      closingRef.current = false;
+      return;
+    }
     startCelebrateAnimation();
     void playCelebrateSound();
-  }, [visible, startCelebrateAnimation, playCelebrateSound]);
+    dismissTimerRef.current = setTimeout(() => {
+      dismissCelebrate();
+    }, AUTO_DISMISS_MS);
+    return () => {
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+        dismissTimerRef.current = null;
+      }
+    };
+  }, [visible, startCelebrateAnimation, playCelebrateSound, dismissCelebrate]);
 
   useEffect(() => {
     return () => {
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+      }
       stopSparkleLoop();
       const sound = celebrationSoundRef.current;
       if (sound) {
@@ -125,85 +141,43 @@ export function ReadChapterCompletionCelebrateModal({
   }, [stopSparkleLoop]);
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={closeCelebrate}>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={dismissCelebrate}>
       <View style={styles.celebrateMask}>
         <Animated.View
           style={[
-            styles.celebrateCard,
+            styles.celebrateCardWrap,
             {
               opacity: celebrateOpacity,
               transform: [{ scale: celebrateScale }],
             },
           ]}
         >
-          <Animated.View
-            style={[
-              styles.sparkleRow,
-              {
-                opacity: sparklePulse.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }),
-                transform: [
-                  {
-                    translateY: sparklePulse.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [2, -2],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <Text style={styles.sparkle}>✨</Text>
-            <Text style={styles.sparkle}>🎉</Text>
-            <Text style={styles.sparkle}>✨</Text>
-          </Animated.View>
-          <Text style={styles.celebrateEmoji}>🎉</Text>
-          <Text style={styles.celebrateTitle}>
-            {isEnglishDisplay ? "Great Job!" : localeZhText("恭喜你，今天完成了！")}
-          </Text>
-          <Text style={styles.celebrateBody}>
-            {isEnglishDisplay
-              ? "You completed all today's readings. Keep this quiet rhythm tomorrow."
-              : localeZhText("你已完成今天所有读经计划。愿你把这份安静带进下一天。")}
-          </Text>
-          <View style={styles.celebrateActions}>
-            <Pressable
-              onPress={closeCelebrate}
-              style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
-            >
-              <Text style={styles.actionText}>{isEnglishDisplay ? "Keep Reading" : localeZhText("继续阅读")}</Text>
-            </Pressable>
+          <ParchmentModalCard style={styles.celebrateCard}>
             <Animated.View
               style={[
-                styles.celebrateCtaWrap,
+                styles.sparkleRow,
                 {
+                  opacity: sparklePulse.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }),
                   transform: [
                     {
-                      scale: celebrateCtaPulse.interpolate({
+                      translateY: sparklePulse.interpolate({
                         inputRange: [0, 1],
-                        outputRange: [1, 1.04],
+                        outputRange: [2, -2],
                       }),
                     },
                   ],
-                  shadowOpacity: celebrateCtaPulse.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.12, 0.28],
-                  }),
                 },
               ]}
             >
-              <Pressable
-                onPress={() => {
-                  closeCelebrate();
-                  router.push("/read");
-                }}
-                style={({ pressed }) => [styles.actionBtn, styles.actionPrimary, pressed && styles.pressed]}
-              >
-                <Text style={[styles.actionText, styles.actionPrimaryText]}>
-                  {isEnglishDisplay ? "Back to Home" : localeZhText("回到读经首页")}
-                </Text>
-              </Pressable>
+              <Text style={styles.sparkle}>✨</Text>
+              <Text style={styles.sparkle}>🎉</Text>
+              <Text style={styles.sparkle}>✨</Text>
             </Animated.View>
-          </View>
+            <Text style={styles.celebrateEmoji}>🎉</Text>
+            <Text style={styles.celebrateTitle}>
+              {isEnglishDisplay ? "Great Job!" : localeZhText("恭喜你，今天完成了！")}
+            </Text>
+          </ParchmentModalCard>
         </Animated.View>
       </View>
     </Modal>

@@ -7,6 +7,12 @@ import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import type { LoadedChapter } from "../bible/types";
 import { resolveReadChapterAudioRegistration } from "../music/MusicPlaybackContext";
+import {
+  armReadPlanFlowAutoplay,
+  isPlanFlowSessionActive,
+  shouldHoldPlanFlowChapterUnregister,
+} from "./read-plan-flow-autoplay";
+import { scriptureChapterPool } from "../music/scripture-chapter-pool";
 
 type ChapterTarget = { bookId: string; chapter: number };
 
@@ -15,6 +21,7 @@ type Args = {
   chapterAudioKey: string | null;
   chapterAudioTranslationId: string;
   audioVoiceId: CuvChapterAudioVoiceId;
+  isPlanFlow?: boolean;
   planFlowTick?: string | null;
   registerReadChapterRef: React.MutableRefObject<
     (reg: Awaited<ReturnType<typeof resolveReadChapterAudioRegistration>> | null) => void
@@ -27,6 +34,7 @@ export function useReadChapterAudioRegistration({
   chapterAudioKey,
   chapterAudioTranslationId,
   audioVoiceId,
+  isPlanFlow = false,
   planFlowTick,
   registerReadChapterRef,
   onAdvanceChapter,
@@ -37,12 +45,26 @@ export function useReadChapterAudioRegistration({
 
   useEffect(() => {
     return () => {
+      if (
+        isPlanFlow &&
+        (shouldHoldPlanFlowChapterUnregister() ||
+          scriptureChapterPool.shouldPreservePlaybackOnUIUnmount())
+      ) {
+        return;
+      }
       registerReadChapterRef.current(null);
     };
-  }, [registerReadChapterRef]);
+  }, [isPlanFlow, registerReadChapterRef]);
 
   useEffect(() => {
     if (!chapterData || !chapterAudioKey) {
+      if (
+        isPlanFlow &&
+        (shouldHoldPlanFlowChapterUnregister() ||
+          scriptureChapterPool.shouldPreservePlaybackOnUIUnmount())
+      ) {
+        return;
+      }
       registerReadChapterRef.current(null);
       setChapterAudioSrc(null);
       return;
@@ -67,6 +89,10 @@ export function useReadChapterAudioRegistration({
       onAdvanceNextInBook: () => {},
     };
     reg.onAdvanceNextChapter = () => {
+      if (isPlanFlow && scriptureChapterPool.isActive()) {
+        void scriptureChapterPool.skipToNext();
+        return;
+      }
       const { next } = resolveReadChapterNeighbors(snapshot.bookId, snapshot.chapter);
       onAdvanceChapterRef.current?.(next);
     };
@@ -93,6 +119,9 @@ export function useReadChapterAudioRegistration({
         });
         if (cancelled) return;
         setChapterAudioSrc(resolved.chapterAudioSrc);
+        if (isPlanFlow && isPlanFlowSessionActive() && !scriptureChapterPool.isActive()) {
+          armReadPlanFlowAutoplay();
+        }
         registerReadChapterRef.current(resolved);
       })();
     });
@@ -100,7 +129,12 @@ export function useReadChapterAudioRegistration({
     return () => {
       cancelled = true;
       resolveTask.cancel();
-      // 章节、语音或聚焦状态变化时，先注销旧章节，避免音频继续播上一章却用新章节正文高亮。
+      if (isPlanFlow && shouldHoldPlanFlowChapterUnregister()) {
+        return;
+      }
+      if (scriptureChapterPool.shouldPreservePlaybackOnUIUnmount()) {
+        return;
+      }
       registerReadChapterRef.current(null);
     };
   }, [
@@ -110,6 +144,7 @@ export function useReadChapterAudioRegistration({
     chapterData?.chapter,
     chapterAudioTranslationId,
     chapterData?.bookName,
+    isPlanFlow,
     planFlowTick,
     registerReadChapterRef,
   ]);

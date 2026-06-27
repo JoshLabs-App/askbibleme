@@ -38,12 +38,17 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: parchment.canvas },
+  root: {
+    flex: 1,
+    backgroundColor: parchment.canvas,
+  },
   tabBarHost: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: 100,
+    elevation: 0,
+    backgroundColor: "transparent",
   },
 });

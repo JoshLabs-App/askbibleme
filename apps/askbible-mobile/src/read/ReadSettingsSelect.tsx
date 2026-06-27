@@ -1,6 +1,17 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { memo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { memo, useEffect, useRef, useState } from "react";
+import {
+  Dimensions,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 
@@ -27,6 +38,17 @@ type Props = {
   disabled?: boolean;
   style?: View["props"]["style"];
 };
+
+type MenuAnchor = {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+};
+
+const MENU_GAP = 4;
+const MENU_MAX_HEIGHT = 360;
+const MENU_MIN_HEIGHT = 120;
 
 const styles = StyleSheet.create({
   block: {
@@ -72,19 +94,21 @@ const styles = StyleSheet.create({
   valueDisabled: {
     color: c.muted,
   },
-  menu: {
+  menuBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  menuFloating: {
     position: "absolute",
-    top: 37,
-    left: 0,
-    right: 0,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
     backgroundColor: c.surfaceSolid,
     overflow: "hidden",
-    maxHeight: 360,
-    zIndex: 20,
-    elevation: 6,
+    elevation: 8,
+    shadowColor: "#2a1810",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
   },
   menuContent: {
     paddingVertical: 2,
@@ -132,6 +156,35 @@ const styles = StyleSheet.create({
   },
 });
 
+function resolveTopInset(insetsTop: number): number {
+  const statusBar = Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
+  return Math.max(insetsTop, statusBar);
+}
+
+function measureMenuAnchor(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  insets: { top: number; bottom: number },
+): MenuAnchor {
+  const window = Dimensions.get("window");
+  const topInset = resolveTopInset(insets.top);
+  const bottomInset = Math.max(insets.bottom, 8);
+  const spaceBelow = window.height - (y + height) - bottomInset - MENU_GAP;
+  const spaceAbove = y - topInset - MENU_GAP;
+  const openDown = spaceBelow >= MENU_MIN_HEIGHT || spaceBelow >= spaceAbove;
+  const maxHeight = Math.min(
+    MENU_MAX_HEIGHT,
+    Math.max(MENU_MIN_HEIGHT, openDown ? spaceBelow : spaceAbove),
+  );
+  const top = openDown
+    ? y + height + MENU_GAP
+    : Math.max(topInset + MENU_GAP, y - maxHeight);
+
+  return { top, left: x, width, maxHeight };
+}
+
 function ReadSettingsSelectInner({
   label,
   accessibilityLabel,
@@ -147,6 +200,9 @@ function ReadSettingsSelectInner({
   disabled,
   style,
 }: Props) {
+  const insets = useSafeAreaInsets();
+  const triggerRef = useRef<View>(null);
+  const [menuAnchor, setMenuAnchor] = useState<MenuAnchor | null>(null);
   const multi = Array.isArray(values);
   const selectedIds = multi ? values : [];
   const active = options.find((o) => o.id === value) ?? options[0];
@@ -161,102 +217,130 @@ function ReadSettingsSelectInner({
     : active?.shortLabel ?? active?.label ?? "";
   const display = pickedDisplay || emptyDisplay || "";
 
+  useEffect(() => {
+    if (!open || disabled) {
+      setMenuAnchor(null);
+      return;
+    }
+    const task = requestAnimationFrame(() => {
+      triggerRef.current?.measureInWindow((x, y, width, height) => {
+        setMenuAnchor(measureMenuAnchor(x, y, width, height, insets));
+      });
+    });
+    return () => cancelAnimationFrame(task);
+  }, [disabled, insets.bottom, insets.top, open, options.length]);
+
+  const renderOptions = () =>
+    options.map((opt) => {
+      const selected = multi ? selectedIds.includes(opt.id) : opt.id === value;
+      const showDownload =
+        Boolean(onDownloadOption) &&
+        (opt.downloadState === "missing" || opt.downloadState === "outdated");
+      const downloading = opt.downloadState === "downloading";
+      return (
+        <View key={opt.id || "__none"} style={[styles.option, selected && styles.optionActive]}>
+          <Pressable
+            onPress={() => {
+              if (multi) {
+                onToggleSelect?.(opt.id);
+              } else {
+                onSelect?.(opt.id);
+              }
+            }}
+            style={({ pressed }) => [styles.optionMain, pressed && styles.optionPressed]}
+          >
+            {multi ? (
+              <MaterialIcons
+                name={selected ? "check-box" : "check-box-outline-blank"}
+                size={16}
+                color={selected ? c.ink : c.faint}
+              />
+            ) : null}
+            <Text style={[styles.optionText, selected && styles.optionTextActive]} numberOfLines={2}>
+              {opt.label}
+            </Text>
+          </Pressable>
+          {showDownload ? (
+            <Pressable
+              onPress={() => onDownloadOption?.(opt.id)}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.optionDownloadBtn,
+                pressed && styles.optionDownloadBtnPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={
+                opt.downloadState === "outdated" ? "Update translation" : "Download translation"
+              }
+            >
+              <MaterialIcons
+                name={opt.downloadState === "outdated" ? "system-update" : "download"}
+                size={18}
+                color={c.parchmentAccent}
+              />
+            </Pressable>
+          ) : downloading ? (
+            <MaterialIcons name="hourglass-top" size={16} color={c.faint} />
+          ) : null}
+        </View>
+      );
+    });
+
   return (
     <View style={[styles.block, open && styles.blockOpen, style]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <Pressable
-        disabled={disabled}
-        onPress={() => onOpenChange(!open)}
-        style={({ pressed }) => [
-          styles.trigger,
-          disabled && styles.triggerDisabled,
-          pressed && !disabled && styles.triggerPressed,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityState={{ expanded: open, disabled: Boolean(disabled) }}
-      >
-        <Text
-          style={[styles.value, disabled && styles.valueDisabled]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
+      <View ref={triggerRef} collapsable={false}>
+        <Pressable
+          disabled={disabled}
+          onPress={() => onOpenChange(!open)}
+          style={({ pressed }) => [
+            styles.trigger,
+            disabled && styles.triggerDisabled,
+            pressed && !disabled && styles.triggerPressed,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={accessibilityLabel}
+          accessibilityState={{ expanded: open, disabled: Boolean(disabled) }}
         >
-          {display}
-        </Text>
-        <MaterialIcons
-          name={open ? "expand-less" : "expand-more"}
-          size={18}
-          color={disabled ? c.faint : c.muted}
-        />
-      </Pressable>
-      {open && !disabled ? (
-        <ScrollView
-          style={styles.menu}
-          contentContainerStyle={styles.menuContent}
-          showsVerticalScrollIndicator
-          nestedScrollEnabled
-        >
-          {options.map((opt) => {
-            const selected = multi ? selectedIds.includes(opt.id) : opt.id === value;
-            const showDownload =
-              Boolean(onDownloadOption) &&
-              (opt.downloadState === "missing" || opt.downloadState === "outdated");
-            const downloading = opt.downloadState === "downloading";
-            return (
-              <View key={opt.id || "__none"} style={[styles.option, selected && styles.optionActive]}>
-                <Pressable
-                  onPress={() => {
-                    if (multi) {
-                      onToggleSelect?.(opt.id);
-                    } else {
-                      onSelect?.(opt.id);
-                    }
-                  }}
-                  style={({ pressed }) => [
-                    styles.optionMain,
-                    pressed && styles.optionPressed,
-                  ]}
-                >
-                  {multi ? (
-                    <MaterialIcons
-                      name={selected ? "check-box" : "check-box-outline-blank"}
-                      size={16}
-                      color={selected ? c.ink : c.faint}
-                    />
-                  ) : null}
-                  <Text
-                    style={[styles.optionText, selected && styles.optionTextActive]}
-                    numberOfLines={2}
-                  >
-                    {opt.label}
-                  </Text>
-                </Pressable>
-                {showDownload ? (
-                  <Pressable
-                    onPress={() => onDownloadOption?.(opt.id)}
-                    hitSlop={8}
-                    style={({ pressed }) => [
-                      styles.optionDownloadBtn,
-                      pressed && styles.optionDownloadBtnPressed,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      opt.downloadState === "outdated" ? "Update translation" : "Download translation"
-                    }
-                  >
-                    <MaterialIcons
-                      name={opt.downloadState === "outdated" ? "system-update" : "download"}
-                      size={18}
-                      color={c.parchmentAccent}
-                    />
-                  </Pressable>
-                ) : downloading ? (
-                  <MaterialIcons name="hourglass-top" size={16} color={c.faint} />
-                ) : null}
-              </View>
-            );
-          })}
-        </ScrollView>
+          <Text
+            style={[styles.value, disabled && styles.valueDisabled]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {display}
+          </Text>
+          <MaterialIcons
+            name={open ? "expand-less" : "expand-more"}
+            size={18}
+            color={disabled ? c.faint : c.muted}
+          />
+        </Pressable>
+      </View>
+      {open && menuAnchor && !disabled ? (
+        <Modal visible transparent animationType="fade" onRequestClose={() => onOpenChange(false)}>
+          <Pressable style={styles.menuBackdrop} onPress={() => onOpenChange(false)} />
+          <View
+            style={[
+              styles.menuFloating,
+              {
+                top: menuAnchor.top,
+                left: menuAnchor.left,
+                width: menuAnchor.width,
+                maxHeight: menuAnchor.maxHeight,
+              },
+            ]}
+          >
+            <ScrollView
+              style={{ maxHeight: menuAnchor.maxHeight }}
+              contentContainerStyle={styles.menuContent}
+              showsVerticalScrollIndicator
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+            >
+              {renderOptions()}
+            </ScrollView>
+          </View>
+        </Modal>
       ) : null}
     </View>
   );

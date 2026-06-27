@@ -5,7 +5,7 @@ import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-te
 import { HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
 import {
   HOME_PRAYER_POOL_CHUNKS,
-  HOME_PRAYER_POOL_MANIFEST_GE5,
+  HOME_PRAYER_POOL_MANIFEST,
   HOME_PRAYER_POOL_SCOPE_ID,
 } from "@/lib/home-prayer-pools/chunk-registry.generated";
 
@@ -27,7 +27,7 @@ export function chunkUrl(scopeId: string, chunkIndex: number): string {
 
 export async function fetchHomePrayerManifest(scopeId: string): Promise<HomePrayerManifestV1 | null> {
   if (scopeId === HOME_PRAYER_POOL_SCOPE_ID) {
-    return isManifestValid(HOME_PRAYER_POOL_MANIFEST_GE5) ? HOME_PRAYER_POOL_MANIFEST_GE5 : null;
+    return isManifestValid(HOME_PRAYER_POOL_MANIFEST) ? HOME_PRAYER_POOL_MANIFEST : null;
   }
   try {
     const res = await fetch(manifestUrl(scopeId), { cache: "force-cache" });

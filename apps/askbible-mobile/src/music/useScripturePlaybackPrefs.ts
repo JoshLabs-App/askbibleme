@@ -1,6 +1,7 @@
 import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { logShellSoundError } from "../audio/safeShellSound";
+import { registerPlanFlowEntryCallback } from "../read/read-plan-flow-autoplay";
 import {
   normalizeScripturePlaybackRate,
   readScripturePlaybackRate,
@@ -47,6 +48,13 @@ export function useScripturePlaybackPrefs({ soundRef, playbackModeRef }: Args) {
       logShellSoundError("setScripturePlaybackRate", err);
     }
   }, [playbackModeRef, soundRef]);
+
+  useEffect(() => {
+    registerPlanFlowEntryCallback(() => {
+      setScriptureAudioRepeatMode("off");
+    });
+    return () => registerPlanFlowEntryCallback(null);
+  }, [setScriptureAudioRepeatMode]);
 
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {

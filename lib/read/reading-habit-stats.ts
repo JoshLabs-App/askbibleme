@@ -8,6 +8,8 @@ export type ReadingHabitStatsRecord = {
   completedDates: string[];
 };
 
+export const READING_HABIT_MIN_FRACTION = 0.2;
+
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -106,11 +108,35 @@ export function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord):
   writeReadingHabitStats(record);
 }
 
-export function syncReadingHabitDayCompletion(allDoneToday: boolean): ReadingHabitStatsRecord {
+export function mergeReadingHabitStatsRecords(
+  a: ReadingHabitStatsRecord,
+  b: ReadingHabitStatsRecord,
+): ReadingHabitStatsRecord {
+  return {
+    version: 1,
+    completedDates: [...new Set([...a.completedDates, ...b.completedDates])].sort(),
+  };
+}
+
+export function touchReadingHabitDay(date: string = toLocalDateString(new Date())): ReadingHabitStatsRecord {
+  const record = readReadingHabitStats();
+  if (record.completedDates.includes(date)) return record;
+  const next: ReadingHabitStatsRecord = {
+    version: 1,
+    completedDates: [...record.completedDates, date].sort(),
+  };
+  writeReadingHabitStats(next);
+  return next;
+}
+
+export function syncReadingHabitDayCompletion(hasReadingToday: boolean | undefined): ReadingHabitStatsRecord {
+  if (hasReadingToday === undefined) return readReadingHabitStats();
   const today = toLocalDateString(new Date());
   const record = readReadingHabitStats();
+  const hadToday = record.completedDates.includes(today);
+  if (hasReadingToday === hadToday) return record;
   const set = new Set(record.completedDates);
-  if (allDoneToday) set.add(today);
+  if (hasReadingToday) set.add(today);
   else set.delete(today);
   const next: ReadingHabitStatsRecord = {
     version: 1,

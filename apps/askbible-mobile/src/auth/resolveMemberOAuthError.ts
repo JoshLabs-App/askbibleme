@@ -51,6 +51,9 @@ export function resolveMemberOAuthError(
   }
 
   if (code === "apple_not_configured") return t("auth.errorOAuthAppleNotConfigured");
+  if (/audience|client_id|client id|bundle/i.test(message)) {
+    return t("auth.errorOAuthAppleNotConfigured");
+  }
   if (code === "auth_disabled") {
     return message && !message.startsWith("apple_") ? message : t("auth.registerClosed");
   }

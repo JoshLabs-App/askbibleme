@@ -24,9 +24,8 @@ export const contentCorrectionEntryStyles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    backgroundColor: "rgba(255, 248, 235, 0.98)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(120, 53, 15, 0.22)",
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     paddingHorizontal: 18,
     paddingTop: 16,
     maxHeight: "82%",

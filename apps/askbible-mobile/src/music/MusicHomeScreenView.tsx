@@ -42,7 +42,6 @@ export function MusicHomeScreenView(props: Props) {
     inTab,
     compactLandscape,
     landscapeSafeHorizontal,
-    landscapeCenterTapPosition,
   } = layoutState;
   const { chromeVisible, nowClockText, resetUiAutoHide, onLandscapeStageToggle } = uiAutoHide;
   const { album } = albumState;
@@ -75,7 +74,6 @@ export function MusicHomeScreenView(props: Props) {
         hasCurrent={Boolean(current)}
         nowClockText={nowClockText}
         landscapeSafeHorizontal={landscapeSafeHorizontal}
-        landscapeCenterTapPosition={landscapeCenterTapPosition}
         bottomInset={insets.bottom}
         onLandscapeStageToggle={onLandscapeStageToggle}
       />

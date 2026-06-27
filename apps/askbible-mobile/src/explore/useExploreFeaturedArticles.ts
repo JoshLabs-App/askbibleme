@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type { AppLocale } from "../i18n/config";
 import {
-  getExploreFeaturedArticleView,
   listExploreFeaturedArticleTileViews,
+  resolveExploreFeaturedArticleView,
   type ExploreFeaturedArticle,
 } from "./exploreFeaturedArticlesBundleCore";
 import {
@@ -36,7 +36,10 @@ export function useExploreFeaturedArticles(locale: AppLocale): {
   refresh: () => ReturnType<typeof forceRefreshExploreFeaturedArticles>;
 } {
   const { bundle, refresh } = useExploreFeaturedArticlesBundle();
-  const articles = useMemo(() => listExploreFeaturedArticleTileViews(bundle, locale), [bundle, locale]);
+  const articles = useMemo(
+    () => listExploreFeaturedArticleTileViews(bundle, locale),
+    [bundle, locale],
+  );
   return { articles, refresh };
 }
 
@@ -49,7 +52,7 @@ export function useExploreFeaturedArticle(
   const { bundle } = useExploreFeaturedArticlesBundle();
   const article = useMemo(() => {
     if (!slug) return null;
-    return getExploreFeaturedArticleView(bundle, slug, locale);
+    return resolveExploreFeaturedArticleView(bundle, slug, locale);
   }, [bundle, slug, locale]);
   return { article };
 }

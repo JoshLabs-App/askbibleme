@@ -4,6 +4,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { mergeMusicCompanionTrackDisplay } from "@/lib/music-companion/merge-track-display";
+import { filterPublicMusicCompanionStore } from "@/lib/music-companion/public-store";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 import { shippedMusicCompanionStore } from "@/lib/music-companion/shipped-store";
@@ -67,9 +68,11 @@ async function collectAssets(cwd: string, store: MusicCompanionStore): Promise<M
 export async function GET() {
   try {
     const cwd = process.cwd();
-    const store = mergeMusicCompanionTrackDisplay(
-      await readMusicCompanionStore(cwd),
-      shippedMusicCompanionStore,
+    const store = filterPublicMusicCompanionStore(
+      mergeMusicCompanionTrackDisplay(
+        await readMusicCompanionStore(cwd),
+        shippedMusicCompanionStore,
+      ),
     );
     const assets = await collectAssets(cwd, store);
     const hash = createHash("md5");

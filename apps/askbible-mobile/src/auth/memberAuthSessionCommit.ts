@@ -22,7 +22,7 @@ export async function commitMemberSession(input: {
     expiresAt: input.expiresAt,
     user,
   });
-  void syncMemberReadingAfterLogin(input.sessionToken);
+  await syncMemberReadingAfterLogin(input.sessionToken);
   return user;
 }
 

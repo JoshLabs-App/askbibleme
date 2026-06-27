@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { diskAuthHeaders } from "@/lib/disk-auth-headers";
-import type { VerseRepeatRankItem } from "@/lib/scripture/reader-verse-repeat-rank";
+import type {
+  VerseRepeatRankItem,
+  VerseRepeatRankSortBy,
+  VerseRepeatRankTestament,
+} from "@/lib/scripture/reader-verse-repeat-rank";
+import { verseRepeatRankRowKey } from "@/lib/scripture/verse-repeat-rank-keys";
 
 const PAGE_SIZE = 500;
-const LIST_MAX_HEIGHT_PX = 560;
+const LIST_MIN_HEIGHT_PX = 240;
+const LIST_BOTTOM_GAP_PX = 16;
 
 /** 次数快捷筛选：≥ N 次收录 */
 const COUNT_PRESETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 100] as const;
@@ -58,8 +64,15 @@ export function AdminVerseRepeatRankClient() {
   const [maxCount, setMaxCount] = useState("");
   const [debouncedMinCount, setDebouncedMinCount] = useState("");
   const [debouncedMaxCount, setDebouncedMaxCount] = useState("");
+  const [sortBy, setSortBy] = useState<VerseRepeatRankSortBy>("book");
+  const [testament, setTestament] = useState<VerseRepeatRankTestament>("all");
   const [page, setPage] = useState(1);
   const [jumpInput, setJumpInput] = useState("1");
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
+  const [listHeight, setListHeight] = useState(LIST_MIN_HEIGHT_PX);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedQ(query.trim()), 300);
@@ -73,6 +86,31 @@ export function AdminVerseRepeatRankClient() {
     }, 300);
     return () => window.clearTimeout(id);
   }, [minCount, maxCount]);
+
+  const syncListHeight = useCallback(() => {
+    const el = tableWrapRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    setListHeight(Math.max(LIST_MIN_HEIGHT_PX, Math.floor(window.innerHeight - top - LIST_BOTTOM_GAP_PX)));
+  }, []);
+
+  useEffect(() => {
+    syncListHeight();
+    window.addEventListener("resize", syncListHeight);
+    return () => window.removeEventListener("resize", syncListHeight);
+  }, [syncListHeight, loading, page, items.length, sortBy, flash, err]);
+
+  const pageRowKeys = useMemo(
+    () => items.map((row) => verseRepeatRankRowKey(row)),
+    [items],
+  );
+
+  const allPageSelected = pageRowKeys.length > 0 && pageRowKeys.every((key) => selectedKeys.has(key));
+  const somePageSelected = pageRowKeys.some((key) => selectedKeys.has(key));
+
+  useEffect(() => {
+    setSelectedKeys(new Set());
+  }, [debouncedQ, debouncedMinCount, debouncedMaxCount, sortBy, testament, page]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(uniqueVerses / PAGE_SIZE) || 1),
@@ -95,6 +133,8 @@ export function AdminVerseRepeatRankClient() {
         if (debouncedQ) params.set("q", debouncedQ);
         if (debouncedMinCount) params.set("minCount", debouncedMinCount);
         if (debouncedMaxCount) params.set("maxCount", debouncedMaxCount);
+        params.set("sortBy", sortBy);
+        if (testament !== "all") params.set("testament", testament);
         const res = await fetch(`/api/admin/bible/reader-verse-themes?${params}`, {
           headers: { ...diskAuthHeaders() },
         });
@@ -124,12 +164,12 @@ export function AdminVerseRepeatRankClient() {
         setLoading(false);
       }
     },
-    [debouncedMaxCount, debouncedMinCount, debouncedQ, rt],
+    [debouncedMaxCount, debouncedMinCount, debouncedQ, rt, sortBy, testament],
   );
 
   useEffect(() => {
     void fetchPage(1);
-  }, [debouncedQ, debouncedMinCount, debouncedMaxCount]); // eslint-disable-line react-hooks/exhaustive-deps -- filters → page 1
+  }, [debouncedQ, debouncedMinCount, debouncedMaxCount, sortBy, testament]); // eslint-disable-line react-hooks/exhaustive-deps -- filters → page 1
 
   const applyCountPreset = (min: number | null) => {
     setMinCount(min != null ? String(min) : "");
@@ -143,6 +183,58 @@ export function AdminVerseRepeatRankClient() {
   };
 
   const pages = pageWindow(safePage, totalPages);
+
+  const toggleRow = (key: string) => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const togglePageAll = () => {
+    setSelectedKeys((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) {
+        for (const key of pageRowKeys) next.delete(key);
+      } else {
+        for (const key of pageRowKeys) next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const batchDelete = async () => {
+    if (deleting || selectedKeys.size === 0) return;
+    if (!window.confirm(rt("deleteConfirm", { count: String(selectedKeys.size) }))) return;
+    setDeleting(true);
+    setErr(null);
+    setFlash(null);
+    try {
+      const res = await fetch("/api/admin/bible/reader-verse-themes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...diskAuthHeaders() },
+        body: JSON.stringify({
+          action: "batch-delete-verses",
+          rowKeys: [...selectedKeys],
+        }),
+      });
+      const j = await parseJson(res);
+      if (!res.ok || j.ok !== true) {
+        throw new Error(typeof j.error === "string" ? j.error : rt("deleteFailed"));
+      }
+      const deletedRows = Number(j.deletedRows ?? 0);
+      const deletedVerses = Number(j.deletedVerses ?? 0);
+      setFlash(rt("deleteDone", { rows: String(deletedRows), verses: String(deletedVerses) }));
+      setSelectedKeys(new Set());
+      await fetchPage(safePage);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (missingDb) {
     return (
@@ -196,6 +288,52 @@ export function AdminVerseRepeatRankClient() {
             pageSize: String(PAGE_SIZE),
           })}
         </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
+        <span className="mr-0.5 text-adminMuted">{rt("sortLabel")}</span>
+        {(["book", "repeat"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            disabled={loading}
+            onClick={() => setSortBy(mode)}
+            className={[
+              "rounded border px-2.5 py-0.5",
+              sortBy === mode
+                ? "border-adminFg bg-adminFg text-adminBg"
+                : "border-adminBorder text-adminFg hover:bg-adminSurface",
+            ].join(" ")}
+          >
+            {rt(mode === "book" ? "sortByBook" : "sortByRepeat")}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
+        <span className="mr-0.5 text-adminMuted">{rt("testamentLabel")}</span>
+        {(
+          [
+            ["all", rt("countPresetAll")],
+            ["old", rt("testamentOld")],
+            ["new", rt("testamentNew")],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            disabled={loading}
+            onClick={() => setTestament(value)}
+            className={[
+              "rounded border px-2.5 py-0.5",
+              testament === value
+                ? "border-adminFg bg-adminFg text-adminBg"
+                : "border-adminBorder text-adminFg hover:bg-adminSurface",
+            ].join(" ")}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
@@ -323,10 +461,38 @@ export function AdminVerseRepeatRankClient() {
       </div>
 
       {err ? <p className="text-[13px] text-red-600">{err}</p> : null}
+      {flash ? <p className="text-[13px] text-emerald-700 dark:text-emerald-300">{flash}</p> : null}
 
-      <div className="overflow-hidden rounded-lg border border-adminBorder">
-        <div className="grid grid-cols-[3.5rem_1fr_5rem_minmax(0,2fr)_4.5rem] gap-2 border-b border-adminBorder bg-adminSurface px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-adminMuted">
-          <span>{rt("colRank")}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
+        <span className="text-adminMuted">
+          {rt("selectedCount", { count: String(selectedKeys.size) })}
+        </span>
+        <button
+          type="button"
+          disabled={loading || deleting || selectedKeys.size === 0}
+          onClick={() => void batchDelete()}
+          className="rounded border border-red-300/70 bg-red-50 px-3 py-1.5 font-medium text-red-800 hover:bg-red-100 disabled:opacity-40 dark:border-red-400/40 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-950/70"
+        >
+          {deleting ? rt("deleting") : rt("batchDelete")}
+        </button>
+      </div>
+
+      <div ref={tableWrapRef} className="flex flex-col overflow-hidden rounded-lg border border-adminBorder">
+        <div className="grid grid-cols-[2.25rem_3.5rem_1fr_5rem_minmax(0,2fr)_4.5rem] gap-2 border-b border-adminBorder bg-adminSurface px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-adminMuted">
+          <span className="flex items-center justify-center">
+            <input
+              type="checkbox"
+              checked={allPageSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = somePageSelected && !allPageSelected;
+              }}
+              onChange={togglePageAll}
+              disabled={loading || items.length === 0}
+              aria-label={rt("selectPage")}
+              className="size-3.5 accent-adminFg"
+            />
+          </span>
+          <span>{sortBy === "book" ? rt("colSeq") : rt("colRank")}</span>
           <span>{rt("colRef")}</span>
           <span className="text-right">{rt("colCount")}</span>
           <span>{rt("colText")}</span>
@@ -334,25 +500,48 @@ export function AdminVerseRepeatRankClient() {
         </div>
         <div
           className="overflow-auto bg-adminBg"
-          style={{ maxHeight: LIST_MAX_HEIGHT_PX }}
-          aria-busy={loading}
+          style={{ height: listHeight }}
+          aria-busy={loading || deleting}
         >
           {loading ? (
             <p className="px-3 py-6 text-[13px] text-adminMuted">{rt("loadingIndex")}</p>
           ) : items.length === 0 ? (
             <p className="px-3 py-6 text-[13px] text-adminMuted">{rt("empty")}</p>
           ) : (
-            items.map((row) => (
+            items.map((row) => {
+              const rowKey = verseRepeatRankRowKey(row);
+              const checked = selectedKeys.has(rowKey);
+              return (
               <div
-                key={`${row.bookId}:${row.chapter}:${row.verse}`}
-                className="grid grid-cols-[3.5rem_1fr_5rem_minmax(0,2fr)_4.5rem] gap-2 border-b border-adminBorder/60 px-3 py-2.5 text-[13px] text-adminFg"
+                key={rowKey}
+                className={[
+                  "grid grid-cols-[2.25rem_3.5rem_1fr_5rem_minmax(0,2fr)_4.5rem] gap-2 border-b border-adminBorder/60 px-3 py-2.5 text-[13px] text-adminFg",
+                  checked ? "bg-adminFg/[0.04]" : "",
+                ].join(" ")}
               >
+                <span className="flex items-start justify-center pt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleRow(rowKey)}
+                    disabled={deleting}
+                    aria-label={row.reference}
+                    className="size-3.5 accent-adminFg"
+                  />
+                </span>
                 <span className="tabular-nums text-adminMuted">{row.rank}</span>
-                    <span className="min-w-0 truncate" title={row.sourcePassage ? `${row.reference} · ${row.sourcePassage}` : row.reference}>
+                    <span
+                      className="min-w-0 truncate"
+                      title={
+                        row.themeLabels?.length
+                          ? `${row.reference} · ${row.themeLabels.join(" · ")}`
+                          : row.reference
+                      }
+                    >
                       <span className="font-medium">{row.reference}</span>
-                      {row.sourcePassage ? (
+                      {row.themeLabels?.length ? (
                         <span className="mt-0.5 block truncate text-[11px] font-normal text-adminMuted">
-                          {rt("sourcePassage", { ref: row.sourcePassage })}
+                          {row.themeLabels.join(" · ")}
                         </span>
                       ) : null}
                     </span>
@@ -371,7 +560,8 @@ export function AdminVerseRepeatRankClient() {
                   </Link>
                 </span>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

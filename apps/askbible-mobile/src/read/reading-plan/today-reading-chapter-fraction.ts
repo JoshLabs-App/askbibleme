@@ -1,4 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
+import { markNtDeepRepeatChapterRead } from "./nt-deep-repeat-progress";
+import { trackForNtDeepRepeatBookId } from "./nt-deep-repeat-reading";
+import { isPointerReadingPlanId } from "./pointer-reading-plan";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import {
   buildTodayReadingScopeKey,
@@ -17,6 +21,7 @@ import { loadTodayReadingPlanPayload } from "./today-reading-plan-payload";
 import { readEffectiveReadingPlanPrefs } from "./reading-plan-prefs";
 import { markTripleLoopChapterRead } from "./triple-loop-progress";
 import { trackForBookId } from "./triple-loop-reading";
+import { READING_HABIT_MIN_FRACTION } from "../reading-habit-stats";
 import type { ReadingPlanRange } from "./types";
 
 /** 读到该比例即视为今日计划该行已完成（与滚动/音频进度共用）。 */
@@ -169,6 +174,38 @@ export function readingPlanRangeUnitCount(r: ReadingPlanRange): number {
   return Math.max(1, r.endChapter - r.startChapter + 1);
 }
 
+/** 多章范围：按当前读到第几章 + 本章进度折算整段完成度（1/5…5/5）。 */
+export function readingPlanRangeAggregateFraction(
+  reading: ReadingPlanRange,
+  chapter: number,
+  perChapterFraction: number,
+): number {
+  const units = readingPlanRangeUnitCount(reading);
+  const per = clampFraction(perChapterFraction);
+  if (units <= 1) return per;
+  const index = Math.min(units, Math.max(1, Math.trunc(chapter) - reading.startChapter + 1));
+  return clampFraction((index - 1 + per) / units);
+}
+
+export function isTodayReadingPlanItemComplete(
+  reading: ReadingPlanRange,
+  opts: {
+    itemKey: string;
+    doneKeys: Set<string>;
+    completedChapterKeys: Set<string>;
+  },
+): boolean {
+  const start = Math.max(1, Math.trunc(reading.startChapter));
+  const end = Math.max(start, Math.trunc(reading.endChapter));
+  const multi = end > start;
+  for (let ch = start; ch <= end; ch += 1) {
+    if (!opts.completedChapterKeys.has(`${reading.bookId}:${ch}`)) {
+      return multi ? false : opts.doneKeys.has(opts.itemKey);
+    }
+  }
+  return true;
+}
+
 /** 进入今日计划对应章节时更新段落进度（不自动勾选完成） */
 export async function recordTodayReadingChapterFraction(
   bookId: string,
@@ -177,15 +214,18 @@ export async function recordTodayReadingChapterFraction(
   opts?: { dayCount?: number },
 ): Promise<void> {
   const prefs = await readEffectiveReadingPlanPrefs();
-  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+  const isPointerPlan = isPointerReadingPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
   const dayIndex =
-    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
-  if (!isTripleLoop && dayIndex == null) return;
+    !isPointerPlan && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
+  if (!isPointerPlan && dayIndex == null) return;
 
   const perChapter = clampFraction(fraction);
-  if (isTripleLoop && trackForBookId(bookId) && perChapter >= 0.92) {
+  if (isTripleLoopPlanId(prefs.planId) && trackForBookId(bookId) && perChapter >= 0.92) {
     await markTripleLoopChapterRead(bookId, chapter);
+  }
+  if (isNtDeepRepeatPlanId(prefs.planId) && trackForNtDeepRepeatBookId(bookId) && perChapter >= 0.92) {
+    await markNtDeepRepeatChapterRead(bookId, chapter);
   }
 
   const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: opts?.dayCount });
@@ -194,13 +234,16 @@ export async function recordTodayReadingChapterFraction(
 
   const scopeKey = buildTodayReadingScopeKey({
     planId: prefs.planId,
-    isTripleLoop,
+    isTripleLoop: isTripleLoopPlanId(prefs.planId),
     epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
-  const itemKey = todayReadingItemKey(reading);
-  const units = readingPlanRangeUnitCount(reading);
-  const total = units <= 1 ? perChapter : perChapter / units;
+  const itemKey = todayReadingItemKey(reading, prefs.planId);
+  const total = readingPlanRangeAggregateFraction(reading, chapter, perChapter);
   await setTodayReadingChapterFraction(scopeKey, itemKey, total);
   await maybeAutoMarkTodayReadingItemDone(scopeKey, itemKey, total);
+  if (total >= READING_HABIT_MIN_FRACTION) {
+    const { touchReadingHabitDay } = await import("../reading-habit-stats");
+    void touchReadingHabitDay();
+  }
 }

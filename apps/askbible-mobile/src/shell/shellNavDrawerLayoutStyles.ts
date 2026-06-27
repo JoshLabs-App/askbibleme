@@ -131,4 +131,19 @@ export const shellNavDrawerLayoutStyles = StyleSheet.create({
     color: "rgba(120, 75, 30, 0.96)",
     ...parchmentSans(600),
   },
+  poolSelectOptionGroup: {
+    paddingHorizontal: 10,
+    paddingTop: 6,
+    paddingBottom: 2,
+  },
+  poolSelectOptionGroupText: {
+    fontSize: 11,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    color: "rgba(55, 53, 47, 0.46)",
+    ...parchmentSans(600),
+  },
+  poolSelectOptionIndent: {
+    paddingLeft: 18,
+  },
 });

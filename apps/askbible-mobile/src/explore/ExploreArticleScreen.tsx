@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
-import { InteractionManager, Pressable, Text, View } from "react-native";
+import { useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { localizeZhText, t } from "../i18n/site-copy";
@@ -12,18 +12,22 @@ import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { resolveRouteParam } from "../navigation/resolveRouteParam";
 import { useExploreFeaturedArticle, refreshExploreFeaturedArticlesWhenFocused } from "./useExploreFeaturedArticles";
-import { linkifyExploreArticleScriptureRefsForLocale } from "./linkifyExploreArticleScriptureRefsForLocale";
 import { ContentCorrectionEntry } from "../content-correction/ContentCorrectionEntry";
 import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
-import { pushExploreReadChapter, useExploreReadReturnPath } from "./explore-read-chapter-nav";
-
-const READ_CHAPTER_PATH = /^\/read\/([A-Za-z0-9]{2,5})\/(\d+)(?:\?verse=(\d+))?$/;
+import { normalizeAskbibleAppHref, parseReadPath } from "../../../../lib/bible/parse-askbible-read-link";
+import {
+  pushExploreReadChapter,
+  returnToExploreIndex,
+  useExploreReadReturnPath,
+} from "./explore-read-chapter-nav";
+import { pushExploreReadPlan } from "./explore-read-plan-nav";
+import { ExploreFeaturedArticleSections } from "./ExploreFeaturedArticleSections";
+import { exploreFeaturedArticleUsesProseLayout } from "../../../../lib/explore/explore-featured-article-slugs";
 
 export function ExploreArticleScreen() {
   const router = useRouter();
   const exploreReturn = useExploreReadReturnPath();
   const insets = useSafeAreaInsets();
-  const screenFocused = useIsFocused();
   const { locale } = useLocale();
   const { slug: slugParam } = useLocalSearchParams<{ slug?: string | string[] }>();
   const slug = resolveRouteParam(slugParam);
@@ -32,42 +36,24 @@ export function ExploreArticleScreen() {
     paddingTop: EXPLORE_PAGE_TOP_PAD + insets.top,
     paddingBottom: shellTabBarScrollPad(insets.bottom),
   });
-  const [linkedBody, setLinkedBody] = useState("");
-  const [markdownReady, setMarkdownReady] = useState(false);
-
   useFocusEffect(
     useCallback(() => {
       refreshExploreFeaturedArticlesWhenFocused();
     }, []),
   );
 
-  useEffect(() => {
-    setLinkedBody("");
-    setMarkdownReady(false);
-    if (!article || !screenFocused) return;
-    let cancelled = false;
-    const task = InteractionManager.runAfterInteractions(() => {
-      const linked = linkifyExploreArticleScriptureRefsForLocale(article.body, locale);
-      if (cancelled) return;
-      setLinkedBody(linked);
-      setMarkdownReady(true);
-    });
-    return () => {
-      cancelled = true;
-      task.cancel();
-    };
-  }, [article, locale, screenFocused]);
-
   const onLinkPress = useCallback(
     (url: string) => {
-      const match = READ_CHAPTER_PATH.exec(url);
-      if (!match) return true;
+      const href = normalizeAskbibleAppHref(url);
+      if (pushExploreReadPlan(router, href)) return false;
+      const parsed = parseReadPath(href);
+      if (!parsed) return true;
       pushExploreReadChapter(
         router,
         {
-          bookId: match[1]!.toUpperCase(),
-          chapter: Number(match[2]!),
-          ...(match[3] ? { verse: match[3] } : {}),
+          bookId: parsed.bookId,
+          chapter: parsed.chapter,
+          ...(parsed.verse != null ? { verse: parsed.verse } : {}),
         },
         exploreReturn,
       );
@@ -80,7 +66,7 @@ export function ExploreArticleScreen() {
     return (
       <View style={s.root}>
         <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
-          <Pressable onPress={() => router.back()} style={s.backLink} accessibilityRole="button">
+          <Pressable onPress={() => returnToExploreIndex(router)} style={s.backLink} accessibilityRole="button">
             <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
           </Pressable>
           <Text style={[s.lead, { marginTop: 24, textAlign: "left" }]}>
@@ -94,7 +80,7 @@ export function ExploreArticleScreen() {
   return (
     <View style={s.root}>
       <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
-        <Pressable onPress={() => router.back()} style={s.backLink} accessibilityRole="button">
+        <Pressable onPress={() => returnToExploreIndex(router)} style={s.backLink} accessibilityRole="button">
           <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
         </Pressable>
 
@@ -105,13 +91,24 @@ export function ExploreArticleScreen() {
         </View>
 
         <View style={s.articleBody}>
-          {markdownReady ? (
+          {article.sections.length > 0 && !exploreFeaturedArticleUsesProseLayout(article.slug) ? (
+            <>
+              <Text style={s.articleSectionHint}>
+                {locale === "en"
+                  ? "Tap a section to expand or collapse."
+                  : localizeZhText(locale, "点按段落可展开或收起")}
+              </Text>
+              <ExploreFeaturedArticleSections sections={article.sections} onLinkPress={onLinkPress} />
+            </>
+          ) : (
             <ReadChapterInfoEditionMarkdown
-              content={linkedBody || article.body}
+              content={article.body}
               variant="info"
+              exploreArticle
+              plainScriptureLinks
               onLinkPress={onLinkPress}
             />
-          ) : null}
+          )}
           <ContentCorrectionEntry
             context={{
               scope: "explore_article",

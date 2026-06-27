@@ -3,10 +3,9 @@ import { InteractionManager } from "react-native";
 import type { LoadedChapter } from "../bible/types";
 import {
   isReadChapterCompleted,
-  markReadChapterCompleted,
 } from "./read-chapter-completion";
 import { recordTodayReadingChapterFraction } from "./reading-plan/today-reading-chapter-fraction";
-import { markTodayReadingChapterVisit } from "./reading-plan/today-reading-done";
+import { markTodayReadingAudioChapterComplete } from "./reading-plan/today-reading-done";
 
 type Args = {
   chapterData: LoadedChapter | null;
@@ -53,8 +52,7 @@ export function useReadChapterScreenProgress({
     if (chapterCompletionMarkedRef.current) return;
     chapterCompletionMarkedRef.current = true;
     setChapterCompleted(true);
-    void markReadChapterCompleted(chapterData.bookId, chapterData.chapter);
-    void markTodayReadingChapterVisit(chapterData.bookId, chapterData.chapter);
+    void markTodayReadingAudioChapterComplete(chapterData.bookId, chapterData.chapter);
   }, [chapterData]);
 
   useEffect(() => {
@@ -81,7 +79,7 @@ export function useReadChapterScreenProgress({
 
   useEffect(() => {
     if (!chapterData || !chapterCompleted) return;
-    void markTodayReadingChapterVisit(chapterData.bookId, chapterData.chapter);
+    void markTodayReadingAudioChapterComplete(chapterData.bookId, chapterData.chapter);
   }, [chapterData?.bookId, chapterData?.chapter, chapterCompleted]);
 
   const onChapterScroll = useCallback(

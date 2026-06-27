@@ -39,6 +39,9 @@ import {
 } from "../read/reading-habit-stats";
 import { readReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
+  readNtDeepRepeatProgress,
+} from "../read/reading-plan/nt-deep-repeat-progress";
+import {
   readTripleLoopProgress,
 } from "../read/reading-plan/triple-loop-progress";
 import {
@@ -82,6 +85,7 @@ export async function exportLocalReadingBlobs(): Promise<MemberReadingSyncPushV1
     chapterCompletion,
     readingPlanPrefs,
     tripleLoopProgress,
+    ntDeepRepeatProgress,
     todayReadingDone,
     todayReadingFraction,
     habitStats,
@@ -103,6 +107,7 @@ export async function exportLocalReadingBlobs(): Promise<MemberReadingSyncPushV1
     readReadChapterCompletionRecord(),
     readReadingPlanPrefs(),
     readTripleLoopProgress(),
+    readNtDeepRepeatProgress(),
     readTodayReadingDoneRecord(),
     readTodayReadingChapterFractionRecord(),
     readReadingHabitStats(),
@@ -128,6 +133,7 @@ export async function exportLocalReadingBlobs(): Promise<MemberReadingSyncPushV1
   if (chapterCompletion.completed.length) blobs.chapterCompletion = wrapBlob(chapterCompletion, now);
   if (readingPlanPrefs) blobs.readingPlanPrefs = wrapBlob(readingPlanPrefs, now);
   if (tripleLoopProgress) blobs.tripleLoopProgress = wrapBlob(tripleLoopProgress, now);
+  if (ntDeepRepeatProgress) blobs.ntDeepRepeatProgress = wrapBlob(ntDeepRepeatProgress, now);
   if (todayReadingDone?.doneKeys.length) blobs.todayReadingDone = wrapBlob(todayReadingDone, now);
   if (todayReadingFraction && Object.keys(todayReadingFraction.fractions).length) {
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);

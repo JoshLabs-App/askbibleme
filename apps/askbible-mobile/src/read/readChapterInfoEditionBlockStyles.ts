@@ -4,6 +4,7 @@ import { readParchmentTheme as c } from "./readParchmentTheme";
 
 export const readChapterInfoEditionBlockStyles = StyleSheet.create({
   wrap: { marginTop: 24, width: "100%" },
+  wrapColumn: { marginTop: 8 },
   edition: { width: "100%" },
   editionDiscover: {},
   editionConsult: {},

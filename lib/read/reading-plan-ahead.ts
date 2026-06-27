@@ -1,4 +1,6 @@
+import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
 import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   readEffectiveReadingPlanPrefs,
@@ -6,13 +8,17 @@ import {
   writeReadingPlanPrefs,
   type ReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
-
-export type { ReadingPlanPrefs };
+import {
+  advanceNtDeepRepeatOnePlanDay,
+  resetNtDeepRepeatToCalendarToday,
+} from "@/lib/read/nt-deep-repeat-progress";
 import {
   advanceTripleLoopOnePlanDay,
   resetTripleLoopToCalendarToday,
 } from "@/lib/read/triple-loop-progress";
 import { scheduleMemberReadingSyncWeb } from "@/lib/member-reading-sync/client/run-member-reading-sync-web";
+
+export type { ReadingPlanPrefs };
 
 export function readAheadDays(prefs: ReadingPlanPrefs): number {
   const n = prefs.aheadDays;
@@ -21,10 +27,12 @@ export function readAheadDays(prefs: ReadingPlanPrefs): number {
 }
 
 export function resolveEffectiveEpochDay(prefs: ReadingPlanPrefs, now = new Date()): number {
+  if (isNtDeepRepeatPlanId(prefs.planId)) {
+    return resolveNtDeepRepeatPlanDay(prefs, now) + readAheadDays(prefs);
+  }
   return getReadingPlanDaySinceEpoch(now) + readAheadDays(prefs);
 }
 
-/** 0-based effective day index for bundled reading plans (calendar day + ahead offset). */
 export function resolveEffectiveReadingPlanDayIndex(
   prefs: ReadingPlanPrefs,
   dayCount: number,
@@ -43,7 +51,7 @@ export function canAdvanceReadingPlanOneDay(
   dayCount: number | undefined,
   now = new Date(),
 ): boolean {
-  if (isTripleLoopPlanId(prefs.planId)) return true;
+  if (isTripleLoopPlanId(prefs.planId) || isNtDeepRepeatPlanId(prefs.planId)) return true;
   const count = dayCount ?? prefs.dayCount ?? 365;
   if (!Number.isFinite(count) || count < 1) return false;
   const calendarIndex = resolveReadingPlanDayIndex(prefs, count, now);
@@ -67,6 +75,8 @@ export function advanceReadingPlanOneDay(now = new Date()): ReadingPlanPrefs {
 
   if (isTripleLoopPlanId(prefs.planId)) {
     advanceTripleLoopOnePlanDay(now);
+  } else if (isNtDeepRepeatPlanId(prefs.planId)) {
+    advanceNtDeepRepeatOnePlanDay(now);
   }
 
   notifyReadingPlanChangedWeb();
@@ -75,7 +85,8 @@ export function advanceReadingPlanOneDay(now = new Date()): ReadingPlanPrefs {
 
 export function resetReadingPlanAheadToToday(now = new Date()): ReadingPlanPrefs {
   const prefs = readEffectiveReadingPlanPrefs();
-  if (readAheadDays(prefs) === 0 && !isTripleLoopPlanId(prefs.planId)) {
+  const isPointer = isTripleLoopPlanId(prefs.planId) || isNtDeepRepeatPlanId(prefs.planId);
+  if (readAheadDays(prefs) === 0 && !isPointer) {
     return prefs;
   }
 
@@ -84,6 +95,8 @@ export function resetReadingPlanAheadToToday(now = new Date()): ReadingPlanPrefs
 
   if (isTripleLoopPlanId(prefs.planId)) {
     resetTripleLoopToCalendarToday(now);
+  } else if (isNtDeepRepeatPlanId(prefs.planId)) {
+    resetNtDeepRepeatToCalendarToday(now);
   }
 
   notifyReadingPlanChangedWeb();
@@ -106,7 +119,6 @@ export function mergeReadingPlanPrefsValue(a: unknown, b: unknown): ReadingPlanP
   return { ...base, aheadDays: ahead > 0 ? ahead : undefined };
 }
 
-/** When switching plans, clear read-ahead offset. */
 export function stripAheadDaysFromPrefs(prefs: ReadingPlanPrefs): ReadingPlanPrefs {
   if (readAheadDays(prefs) === 0) return prefs;
   const { aheadDays: _omit, ...rest } = prefs;

@@ -4,12 +4,16 @@ import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import type { VerseRef } from "@/lib/bible/verse-ref";
 import { resolveVerseRefToHomeEntry } from "@/lib/bible/resolve-verse-range-for-display";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { readTranslationsIndexSync } from "@/lib/bible/translations-store";
 import {
   getReaderVerseThemesDatabase,
   readerVerseThemesSqlitePath,
 } from "@/lib/scripture/reader-verse-themes-db";
-import { listThemeRepeatPoolSourceRows } from "@/lib/scripture/reader-verse-repeat-rank";
+import {
+  listThemeRepeatPoolSourceRows,
+  type VerseRepeatRankSortBy,
+} from "@/lib/scripture/reader-verse-repeat-rank";
 import { themeRepeatPoolScopeId } from "@/lib/scripture/theme-repeat-pool-scope-id";
 import { HOME_PRAYER_POOL_CHUNK_SIZE } from "@/lib/home-prayer-pools/constants";
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
@@ -23,6 +27,7 @@ import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "@/lib/explore/explore-home-v
 
 const HOME_POOL_ZH_TRANSLATION_IDS = ["cuv-simp", "cuv-trad"] as const;
 const HOME_POOL_EN_TRANSLATION_IDS = ["web-en", "bbe-en"] as const;
+const bookNumberById = new Map(scriptureBooks.map((b) => [b.bookId, b.bookNumber]));
 const CJK_CHAR_RE = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
 const INCOMPLETE_CJK_END_RE = /[，；：、]\s*$/;
 
@@ -55,6 +60,8 @@ export type WriteThemeRepeatPrayerPoolOptions = {
   cap?: number;
   /** 兼容旧行为：补入 explore 兜底经文。严格排行包可关闭。 */
   includeExploreSeeds?: boolean;
+  /** 静态池条目顺序：默认 repeat（次数降序）；菜单池用 book（书卷顺序）。 */
+  sortBy?: VerseRepeatRankSortBy;
 };
 
 export type WriteThemeRepeatPrayerPoolResult = {
@@ -101,11 +108,13 @@ export async function writeThemeRepeatPrayerPool(
   if (!db) throw new Error("无法打开 reader-verse-themes.sqlite");
 
   const mtimeMs = fs.statSync(dbPath).mtimeMs;
+  const sortBy = options.sortBy ?? "repeat";
   const sourceRows = listThemeRepeatPoolSourceRows(db, {
     minCount,
     maxCount: options.maxCount,
     cap: options.cap,
     mtimeMs,
+    sortBy,
   });
   const sourceRowByVerseKey = new Map<string, (typeof sourceRows)[number]>();
   for (const row of sourceRows) {
@@ -166,13 +175,22 @@ export async function writeThemeRepeatPrayerPool(
       forcedExploreAdds += 1;
     }
   }
-  sourceRowsWithExplore.sort(
-    (a, b) =>
-      b.repeatCount - a.repeatCount ||
-      a.bookId.localeCompare(b.bookId, "en") ||
-      a.chapter - b.chapter ||
-      a.verse - b.verse,
-  );
+  if (sortBy === "book") {
+    sourceRowsWithExplore.sort(
+      (a, b) =>
+        (bookNumberById.get(a.bookId) ?? 999) - (bookNumberById.get(b.bookId) ?? 999) ||
+        a.chapter - b.chapter ||
+        a.verse - b.verse,
+    );
+  } else {
+    sourceRowsWithExplore.sort(
+      (a, b) =>
+        b.repeatCount - a.repeatCount ||
+        a.bookId.localeCompare(b.bookId, "en") ||
+        a.chapter - b.chapter ||
+        a.verse - b.verse,
+    );
+  }
 
   const metaPath = path.join(cwd, "data", "scripture", `${scopeId}-meta.json`);
   mkdirSync(path.dirname(metaPath), { recursive: true });

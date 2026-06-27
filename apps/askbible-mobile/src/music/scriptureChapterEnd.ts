@@ -22,10 +22,12 @@ export function shouldScheduleScriptureMidChapterResume(positionMs: number, dura
 
 export type ScriptureChapterEndFinishArgs = {
   soundRef: MutableRefObject<Audio.Sound | null>;
+  scriptureSrcRef: MutableRefObject<string | null>;
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
   scriptureChapterHandoffRef: MutableRefObject<boolean>;
+  scriptureWantPlayingRef: MutableRefObject<boolean>;
   setPlaying: (playing: boolean) => void;
   chapterEndHandledRef: MutableRefObject<boolean>;
 };
@@ -35,10 +37,12 @@ export function finishScriptureChapterOnce(args: ScriptureChapterEndFinishArgs):
   args.chapterEndHandledRef.current = true;
   handleScriptureDidJustFinish({
     soundRef: args.soundRef,
+    scriptureSrcRef: args.scriptureSrcRef,
     scriptureAudioRepeatRef: args.scriptureAudioRepeatRef,
     readChapterRef: args.readChapterRef,
     autoPlayScriptureRef: args.autoPlayScriptureRef,
     scriptureChapterHandoffRef: args.scriptureChapterHandoffRef,
+    scriptureWantPlayingRef: args.scriptureWantPlayingRef,
     setPlaying: args.setPlaying,
   });
   return true;

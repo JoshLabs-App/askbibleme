@@ -1,6 +1,7 @@
 import type { Database } from "sql.js";
 import { loadChapterFromTranslation } from "@/lib/bible/load-chapter-from-default-translation";
-import { scriptureBooks } from "@/lib/bible/scripture-books";
+import { scriptureBooks, testamentForBookNumber } from "@/lib/bible/scripture-books";
+import { canonicalLabel } from "@/lib/scripture/reader-verse-themes-bucket";
 
 /** 排行页正文摘要仅用此译本（与全站默认和合本一致）。 */
 export const VERSE_REPEAT_RANK_TRANSLATION_ID = "cuv-simp";
@@ -52,6 +53,8 @@ export type VerseRepeatRankItem = {
   reference: string;
   /** 主题库经段著录（如「箴言 23:1-3」），仅与 reference 不同时展示 */
   sourcePassage: string | null;
+  /** 主题库收录分类（子标签展示名，按大主题/子标签顺序） */
+  themeLabels: string[];
   /** 和合本（cuv-simp）该节正文截断；不存主题库 verse_text */
   sampleText: string;
   readHref: string;
@@ -86,6 +89,36 @@ type RankIndexCache = {
 let indexCache: RankIndexCache | null = null;
 
 const bookNameById = new Map(scriptureBooks.map((b) => [b.bookId, b.bookName]));
+const bookNumberById = new Map(scriptureBooks.map((b) => [b.bookId, b.bookNumber]));
+const bookTestamentById = new Map(
+  scriptureBooks.map((b) => [b.bookId, testamentForBookNumber(b.bookNumber)]),
+);
+
+export type VerseRepeatRankSortBy = "repeat" | "book";
+
+export type VerseRepeatRankTestament = "all" | "old" | "new";
+
+export function parseVerseRepeatRankTestament(raw: string | null | undefined): VerseRepeatRankTestament {
+  if (raw === "old" || raw === "new") return raw;
+  return "all";
+}
+
+export function parseVerseRepeatRankSortBy(raw: string | null | undefined): VerseRepeatRankSortBy {
+  return raw === "repeat" ? "repeat" : "book";
+}
+
+function compareRankRowsByBook(a: RankRow, b: RankRow): number {
+  const aBook = bookNumberById.get(a.bookId) ?? 999;
+  const bBook = bookNumberById.get(b.bookId) ?? 999;
+  if (aBook !== bBook) return aBook - bBook;
+  if (a.chapter !== b.chapter) return a.chapter - b.chapter;
+  return a.verse - b.verse;
+}
+
+function sortRankRows(rows: RankRow[], sortBy: VerseRepeatRankSortBy): RankRow[] {
+  if (sortBy === "repeat") return rows;
+  return [...rows].sort(compareRankRowsByBook);
+}
 
 function formatCanonicalReference(bookId: string, chapter: number, verse: number): string {
   const name = bookNameById.get(bookId) ?? bookId;
@@ -150,12 +183,20 @@ function rowMatchesCount(row: RankRow, filter: VerseRepeatCountFilter): boolean 
   return true;
 }
 
+function rowMatchesTestament(row: RankRow, testament: VerseRepeatRankTestament): boolean {
+  if (testament === "all") return true;
+  return bookTestamentById.get(row.bookId) === testament;
+}
+
 function filterRankRows(
   rows: RankRow[],
   q: string,
   countFilter: VerseRepeatCountFilter,
+  testament: VerseRepeatRankTestament = "all",
 ): RankRow[] {
-  return rows.filter((r) => rowMatchesQuery(r, q) && rowMatchesCount(r, countFilter));
+  return rows.filter(
+    (r) => rowMatchesQuery(r, q) && rowMatchesCount(r, countFilter) && rowMatchesTestament(r, testament),
+  );
 }
 
 export type ThemeRepeatPoolSourceRow = {
@@ -165,10 +206,16 @@ export type ThemeRepeatPoolSourceRow = {
   repeatCount: number;
 };
 
-/** 按收录次数降序（与索引顺序一致），供静态池构建。 */
+/** 供静态池构建：默认按收录次数降序；`sortBy: "book"` 则按圣经书卷顺序。 */
 export function listThemeRepeatPoolSourceRows(
   db: Database,
-  options: { minCount?: number; maxCount?: number; cap?: number; mtimeMs?: number },
+  options: {
+    minCount?: number;
+    maxCount?: number;
+    cap?: number;
+    mtimeMs?: number;
+    sortBy?: VerseRepeatRankSortBy;
+  },
 ): ThemeRepeatPoolSourceRow[] {
   const mtimeMs = options.mtimeMs ?? 0;
   const countFilter = parseVerseRepeatCountFilter({
@@ -176,7 +223,7 @@ export function listThemeRepeatPoolSourceRows(
     maxCount: options.maxCount,
   });
   const index = getOrBuildRankIndex(db, mtimeMs);
-  const filtered = filterRankRows(index.rows, "", countFilter);
+  const filtered = sortRankRows(filterRankRows(index.rows, "", countFilter), options.sortBy ?? "repeat");
   const cap = options.cap != null && options.cap > 0 ? Math.floor(options.cap) : 0;
   return cap > 0 ? filtered.slice(0, cap) : filtered;
 }
@@ -227,6 +274,8 @@ export function queryVerseRepeatRankPage(
     q?: string;
     minCount?: string | number | null;
     maxCount?: string | number | null;
+    sortBy?: VerseRepeatRankSortBy;
+    testament?: VerseRepeatRankTestament;
     mtimeMs?: number;
   },
 ): VerseRepeatRankPage {
@@ -237,10 +286,14 @@ export function queryVerseRepeatRankPage(
     minCount: options.minCount,
     maxCount: options.maxCount,
   });
+  const testament = options.testament ?? "all";
   const mtimeMs = options.mtimeMs ?? 0;
   const index = getOrBuildRankIndex(db, mtimeMs);
 
-  const filtered = filterRankRows(index.rows, q, countFilter);
+  const filtered = sortRankRows(
+    filterRankRows(index.rows, q, countFilter, testament),
+    options.sortBy ?? "book",
+  );
   const slice = filtered.slice(offset, offset + limit);
 
   const items: VerseRepeatRankItem[] = slice.map((row, i) => {
@@ -255,6 +308,7 @@ export function queryVerseRepeatRankPage(
       repeatCount: row.repeatCount,
       reference,
       sourcePassage,
+      themeLabels: [],
       sampleText: "",
       readHref: `/read/${encodeURIComponent(row.bookId)}/${encodeURIComponent(String(row.chapter))}#v${row.verse}`,
     };
@@ -293,4 +347,63 @@ export async function enrichVerseRepeatRankItems(items: VerseRepeatRankItem[]): 
       it.sampleText = t ? truncateText(t) : "";
     }
   }
+}
+
+/** 填入主题库收录分类（子标签名）。 */
+export function enrichVerseRepeatRankThemeLabels(db: Database, items: VerseRepeatRankItem[]): void {
+  if (items.length === 0) return;
+
+  const byChapter = new Map<string, VerseRepeatRankItem[]>();
+  for (const it of items) {
+    const k = `${it.bookId}:${it.chapter}`;
+    const list = byChapter.get(k) ?? [];
+    list.push(it);
+    byChapter.set(k, list);
+  }
+
+  const stmt = db.prepare(`
+    SELECT v.verse_start AS verse_start, v.verse_end AS verse_end,
+           s.name AS sub_name, c.position AS cat_pos, s.position AS sub_pos
+    FROM verse v
+    JOIN subcategory s ON s.category_id = v.category_id AND s.id = v.sub_id
+    JOIN category c ON c.id = v.category_id
+    WHERE UPPER(TRIM(v.book_id)) = ?
+      AND v.chapter_start = ?
+      AND v.chapter_end = ?
+    ORDER BY c.position, s.position, s.name
+  `);
+
+  type TagRow = { verseStart: number; verseEnd: number; label: string };
+  for (const [key, group] of byChapter) {
+    const [bookId, chStr] = key.split(":");
+    const chapter = Number(chStr);
+    if (!bookId || !Number.isFinite(chapter)) continue;
+
+    stmt.bind([bookId, chapter, chapter]);
+    const tagRows: TagRow[] = [];
+    while (stmt.step()) {
+      const o = stmt.getAsObject() as Record<string, unknown>;
+      const label = canonicalLabel(String(o.sub_name ?? ""));
+      if (!label) continue;
+      tagRows.push({
+        verseStart: Number(o.verse_start ?? 0),
+        verseEnd: Number(o.verse_end ?? 0),
+        label,
+      });
+    }
+    stmt.reset();
+
+    for (const it of group) {
+      const seen = new Set<string>();
+      const labels: string[] = [];
+      for (const row of tagRows) {
+        if (row.verseStart > it.verse || row.verseEnd < it.verse) continue;
+        if (seen.has(row.label)) continue;
+        seen.add(row.label);
+        labels.push(row.label);
+      }
+      it.themeLabels = labels;
+    }
+  }
+  stmt.free();
 }

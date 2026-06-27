@@ -3,6 +3,7 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import { ShellSwipeExclude } from "../shell/ShellSwipeExclude";
 import { HomeSleepTimerSection } from "./HomeSleepTimerSection";
+import { HomeVerseRotationSection } from "./HomeVerseRotationSection";
 import { NatureHomeLevelSegment } from "./NatureHomeLevelSegment";
 import { NatureHomeSettingsIconRow } from "./NatureHomeSettingsIconRow";
 import { NatureHomeSettingsTextScaleSection } from "./NatureHomeSettingsTextScaleSection";
@@ -60,6 +61,8 @@ type Props = {
   setVerseAppearance: (appearance: NatureHomeVerseAppearance) => void;
   scaleIndex: number;
   setScaleIndex: (index: number) => void;
+  verseRotationSec: number;
+  setVerseRotationSec: (sec: number) => void;
 };
 
 export function NatureHomeSettingsPanelSheet({
@@ -85,6 +88,8 @@ export function NatureHomeSettingsPanelSheet({
   setVerseAppearance,
   scaleIndex,
   setScaleIndex,
+  verseRotationSec,
+  setVerseRotationSec,
 }: Props) {
   const labelForDim = (level: NatureVisualLevel) =>
     tNatureHomeSettings(DIM_LEVEL_COPY_KEYS[level] as NatureHomeSettingsCopyKey);
@@ -168,6 +173,12 @@ export function NatureHomeSettingsPanelSheet({
         <NatureHomeSettingsIconRow icon="timer" accessibilityLabel={tNatureHomeSettings("sleepSection")}>
           <HomeSleepTimerSection {...segmentProps} />
         </NatureHomeSettingsIconRow>
+
+        <HomeVerseRotationSection
+          rotationSec={verseRotationSec}
+          setRotationSec={setVerseRotationSec}
+          onPrefsChanged={onPrefsChanged}
+        />
 
         {showTtsControls ? (
           <NatureHomeSettingsTtsSection

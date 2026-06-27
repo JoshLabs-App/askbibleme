@@ -20,6 +20,7 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { AppLocale } from "../i18n/config";
 import { createT } from "../i18n/site-copy";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 
@@ -144,10 +145,10 @@ export function ReadChapterVerseXrefSheet({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { paddingBottom: Math.max(16, insets.bottom + 12) }]}
-          onPress={(e) => e.stopPropagation()}
-        >
+        <Pressable onPress={(e) => e.stopPropagation()} style={{ width: "100%" }}>
+          <ParchmentModalCard
+            style={[styles.sheet, { paddingBottom: Math.max(16, insets.bottom + 12) }]}
+          >
           <View style={styles.header}>
             <Text style={styles.title}>
               {tx("pages.read.verseXrefSheetTitle", {
@@ -190,6 +191,7 @@ export function ReadChapterVerseXrefSheet({
               <Text style={styles.empty}>{tx("pages.read.verseXrefEmpty")}</Text>
             ) : null}
           </ScrollView>
+          </ParchmentModalCard>
         </Pressable>
       </Pressable>
     </Modal>
@@ -207,7 +209,8 @@ const styles = StyleSheet.create({
     maxHeight: "78%",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    backgroundColor: c.surfaceSolid,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     paddingHorizontal: 18,
     paddingTop: 14,
   },

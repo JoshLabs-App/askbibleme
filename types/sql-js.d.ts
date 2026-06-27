@@ -13,6 +13,7 @@ declare module "sql.js" {
     prepare: (sql: string) => Statement;
     export: () => Uint8Array;
     exec: (sql: string) => { columns: string[]; values: unknown[][] }[];
+    getRowsModified: () => number;
   };
 
   export type SqlJsStatic = {

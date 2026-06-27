@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { InteractionManager, Platform } from "react-native";
+import { InteractionManager } from "react-native";
 import type { ChapterHighlightMap, VerseActionMenuState } from "./readChapterScreenConstants";
 import { cloneHighlightMap } from "./readChapterScreenConstants";
 import { readChapterVerseTextHighlights } from "./read-verse-text-highlights";
@@ -131,7 +131,7 @@ export function useReadChapterVerseActions({
 
   const verseBodyPressProps = useCallback(
     (verse: number, text: string) => {
-      if (highlightWordEditor || Platform.OS !== "android") return {};
+      if (highlightWordEditor) return {};
       return {
         onPress: () => onVersePress(verse, text),
         onLongPress: () => onVerseLongPress(verse, text),
@@ -141,19 +141,13 @@ export function useReadChapterVerseActions({
   );
 
   const parentVersePressHandler = useCallback(
-    (verse: number, text: string) => {
-      if (highlightWordEditor || Platform.OS === "android") return undefined;
-      return () => onVersePress(verse, text);
-    },
-    [highlightWordEditor, onVersePress],
+    (_verse: number, _text: string) => undefined,
+    [],
   );
 
   const parentVerseLongPressHandler = useCallback(
-    (verse: number, text: string) => {
-      if (highlightWordEditor || Platform.OS === "android") return undefined;
-      return () => onVerseLongPress(verse, text);
-    },
-    [highlightWordEditor, onVerseLongPress],
+    (_verse: number, _text: string) => undefined,
+    [],
   );
 
   const handleHighlightWordSaved = useCallback((verse: number, highlights: Map<number, string> | null) => {

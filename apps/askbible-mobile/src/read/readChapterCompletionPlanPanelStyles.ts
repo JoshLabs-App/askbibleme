@@ -157,13 +157,11 @@ export const readChapterCompletionPlanPanelStyles = StyleSheet.create({
     justifyContent: "center",
     padding: 22,
   },
-  celebrateCard: {
+  celebrateCardWrap: {
     width: "100%",
     maxWidth: 360,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: "rgba(255, 252, 245, 0.98)",
+  },
+  celebrateCard: {
     paddingHorizontal: 16,
     paddingVertical: 18,
     alignItems: "center",

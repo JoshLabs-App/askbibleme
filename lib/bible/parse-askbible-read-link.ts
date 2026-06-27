@@ -17,10 +17,30 @@ export function parseAskbibleReadLink(
   };
 }
 
+export function parseReadPlanPath(href: string): { planId: string } | null {
+  const raw = normalizeAskbibleAppHref(href);
+  const m = /^\/read\/plans\/([^/?#]+)$/i.exec(raw);
+  if (!m) return null;
+  const planId = decodeURIComponent(m[1]!.trim());
+  return planId ? { planId } : null;
+}
+
+/** Strip site origin so article markdown can use `/read/...` or full askbible.me URLs. */
+export function normalizeAskbibleAppHref(href: string): string {
+  const raw = String(href || "").trim();
+  const siteMatch = /^https?:\/\/(?:www\.)?askbible\.me(\/[^?#]*)/i.exec(raw);
+  if (siteMatch) return siteMatch[1]!;
+  return raw;
+}
+
+export function readPlanHref(planId: string): string {
+  return `/read/plans/${encodeURIComponent(planId)}`;
+}
+
 export function parseReadPath(
   href: string,
 ): { bookId: string; chapter: number; verse?: number } | null {
-  const raw = String(href || "").trim();
+  const raw = normalizeAskbibleAppHref(href);
   const m = /^\/read\/([A-Za-z0-9]{2,5})\/(\d+)(?:\?verse=(\d+))?$/i.exec(raw);
   if (!m) return null;
   const chapter = Number(m[2]);

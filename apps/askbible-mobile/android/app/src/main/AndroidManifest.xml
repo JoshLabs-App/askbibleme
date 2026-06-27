@@ -2,6 +2,14 @@
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+  <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -33,5 +41,49 @@
         <data android:scheme="askbible"/>
       </intent-filter>
     </activity>
+    <activity
+      android:name=".alarm.ReadingAlarmActivity"
+      android:exported="false"
+      android:launchMode="singleTask"
+      android:showWhenLocked="true"
+      android:turnScreenOn="true"
+      android:theme="@style/Theme.ReadingAlarm"/>
+    <receiver
+      android:name=".alarm.ReadingAlarmReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="me.askbible.alarm.ACTION_FIRE"/>
+        <action android:name="me.askbible.alarm.ACTION_AUTO_CONTINUE"/>
+      </intent-filter>
+    </receiver>
+    <receiver
+      android:name=".alarm.ReadingAlarmBootReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+      </intent-filter>
+    </receiver>
+    <service
+      android:name=".alarm.ReadingAlarmPreludeService"
+      android:exported="false"
+      android:foregroundServiceType="mediaPlayback"/>
+    <receiver
+      android:name=".widget.AskBibleDailyVerseWidgetProvider"
+      android:exported="true"
+      android:label="@string/widget_daily_verse_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="me.askbible.widget.ACTION_NEXT_VERSE"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="me.askbible.widget.ACTION_ROTATE_TICK"/>
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/daily_verse_widget_info"/>
+    </receiver>
   </application>
 </manifest>

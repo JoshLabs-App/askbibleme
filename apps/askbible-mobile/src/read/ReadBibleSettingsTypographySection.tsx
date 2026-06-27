@@ -55,94 +55,92 @@ export function ReadBibleSettingsTypographySection({
           >
             <Text
               style={[
-                styles.segmentModeText,
-                chapterSegmentMode === "t1" && styles.segmentModeTextActive,
+                styles.sizeActionLabel,
+                chapterSegmentMode === "t1" && styles.sizeActionLabelActive,
               ]}
             >
               T1
             </Text>
           </Pressable>
-          <View style={styles.sizeActionsTrailing}>
-            <Pressable
-              onPress={() => setVerseParagraphFlow(!verseParagraphFlow)}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: verseParagraphFlow }}
-              accessibilityLabel={t("pages.read.typography.verseParagraphFlowLabel")}
-              style={({ pressed }) => [
-                styles.sizeActionBtn,
-                verseParagraphFlow && styles.sizeActionBtnActive,
-                pressed && styles.sizeActionBtnPressed,
-              ]}
-            >
-              <MaterialIcons
-                name="subject"
-                size={16}
-                color={verseParagraphFlow ? c.parchmentAccent : c.muted}
-              />
-            </Pressable>
-            <Pressable
-              onPress={resetSizeToDefault}
-              disabled={sizeAtDefault}
-              accessibilityRole="button"
-              accessibilityLabel={
-                locale === "en" ? "Reset scripture text size" : localeZhText("恢复默认字号")
-              }
-              style={({ pressed }) => [
-                styles.sizeActionBtn,
-                sizeAtDefault && styles.sizeActionBtnDisabled,
-                pressed && !sizeAtDefault && styles.sizeActionBtnPressed,
-              ]}
-            >
-              <MaterialIcons name="text-fields" size={16} color={sizeAtDefault ? c.muted : c.ink} />
-            </Pressable>
-            <Pressable
-              onPress={setSizeToLargePreset}
-              disabled={sizeAtLargePreset}
-              accessibilityRole="button"
-              accessibilityLabel={
-                locale === "en" ? "Apply large text preset" : localeZhText("切换到大字预设")
-              }
-              style={({ pressed }) => [
-                styles.sizeActionBtn,
-                sizeAtLargePreset && styles.sizeActionBtnDisabled,
-                pressed && !sizeAtLargePreset && styles.sizeActionBtnPressed,
-              ]}
-            >
-              <Text style={[styles.sizeActionTextPreset, sizeAtLargePreset && styles.sizeActionTextDisabled]}>
-                TT
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => bumpSize(1)}
-              disabled={sizeAtMax}
-              accessibilityRole="button"
-              accessibilityLabel={
-                locale === "en" ? "Increase scripture text size" : localeZhText("增大经文字号")
-              }
-              style={({ pressed }) => [
-                styles.sizeActionBtn,
-                sizeAtMax && styles.sizeActionBtnDisabled,
-                pressed && !sizeAtMax && styles.sizeActionBtnPressed,
-              ]}
-            >
-              <Text style={[styles.sizeActionText, sizeAtMax && styles.sizeActionTextDisabled]}>T+</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => bumpSize(-1)}
-              disabled={sizeAtMin}
-              accessibilityRole="button"
-              accessibilityLabel={
-                locale === "en" ? "Decrease scripture text size" : localeZhText("减小经文字号")
-              }
-              style={({ pressed }) => [
-                styles.sizeActionBtn,
-                sizeAtMin && styles.sizeActionBtnDisabled,
-                pressed && !sizeAtMin && styles.sizeActionBtnPressed,
-              ]}
-            >
-              <Text style={[styles.sizeActionText, sizeAtMin && styles.sizeActionTextDisabled]}>T-</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => setVerseParagraphFlow(!verseParagraphFlow)}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: verseParagraphFlow }}
+            accessibilityLabel={t("pages.read.typography.verseParagraphFlowLabel")}
+            style={({ pressed }) => [
+              styles.sizeActionBtn,
+              verseParagraphFlow && styles.sizeActionBtnActive,
+              pressed && styles.sizeActionBtnPressed,
+            ]}
+          >
+            <MaterialIcons
+              name="subject"
+              size={17}
+              color={verseParagraphFlow ? c.parchmentAccent : c.muted}
+            />
+          </Pressable>
+          <Pressable
+            onPress={resetSizeToDefault}
+            disabled={sizeAtDefault}
+            accessibilityRole="button"
+            accessibilityLabel={
+              locale === "en" ? "Reset scripture text size" : localeZhText("恢复默认字号")
+            }
+            style={({ pressed }) => [
+              styles.sizeActionBtn,
+              sizeAtDefault && styles.sizeActionBtnDisabled,
+              pressed && !sizeAtDefault && styles.sizeActionBtnPressed,
+            ]}
+          >
+            <MaterialIcons name="text-fields" size={17} color={sizeAtDefault ? c.muted : c.ink} />
+          </Pressable>
+          <Pressable
+            onPress={setSizeToLargePreset}
+            disabled={sizeAtLargePreset}
+            accessibilityRole="button"
+            accessibilityLabel={
+              locale === "en" ? "Apply large text preset" : localeZhText("切换到大字预设")
+            }
+            style={({ pressed }) => [
+              styles.sizeActionBtn,
+              sizeAtLargePreset && styles.sizeActionBtnDisabled,
+              pressed && !sizeAtLargePreset && styles.sizeActionBtnPressed,
+            ]}
+          >
+            <Text style={[styles.sizeActionLabel, sizeAtLargePreset && styles.sizeActionLabelDisabled]}>
+              TT
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => bumpSize(1)}
+            disabled={sizeAtMax}
+            accessibilityRole="button"
+            accessibilityLabel={
+              locale === "en" ? "Increase scripture text size" : localeZhText("增大经文字号")
+            }
+            style={({ pressed }) => [
+              styles.sizeActionBtn,
+              sizeAtMax && styles.sizeActionBtnDisabled,
+              pressed && !sizeAtMax && styles.sizeActionBtnPressed,
+            ]}
+          >
+            <Text style={[styles.sizeActionLabel, sizeAtMax && styles.sizeActionLabelDisabled]}>T+</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => bumpSize(-1)}
+            disabled={sizeAtMin}
+            accessibilityRole="button"
+            accessibilityLabel={
+              locale === "en" ? "Decrease scripture text size" : localeZhText("减小经文字号")
+            }
+            style={({ pressed }) => [
+              styles.sizeActionBtn,
+              sizeAtMin && styles.sizeActionBtnDisabled,
+              pressed && !sizeAtMin && styles.sizeActionBtnPressed,
+            ]}
+          >
+            <Text style={[styles.sizeActionLabel, sizeAtMin && styles.sizeActionLabelDisabled]}>T-</Text>
+          </Pressable>
         </View>
       </View>
     </ReadBibleSettingsParchmentRow>

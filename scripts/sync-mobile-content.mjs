@@ -11,8 +11,22 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const destDir = path.join(repoRoot, "apps", "askbible-mobile", "assets", "content");
 const generatedDir = path.join(repoRoot, "apps", "askbible-mobile", "src", "read", "reading-plan", "generated");
 
+function filterPublicMusicCompanionStore(raw) {
+  const audioTracks = (Array.isArray(raw.audioTracks) ? raw.audioTracks : []).filter(
+    (t) => t && t.hidden !== true,
+  );
+  const visibleIds = new Set(audioTracks.map((t) => String(t.id || "").trim()).filter(Boolean));
+  const scenes = (Array.isArray(raw.scenes) ? raw.scenes : []).map((scene) => ({
+    ...scene,
+    audioTrackId:
+      scene.audioTrackId && visibleIds.has(scene.audioTrackId) ? scene.audioTrackId : null,
+  }));
+  return { ...raw, audioTracks, scenes };
+}
+
 const imageCopies = [
   ["public/read/parchment-scroll-bg.jpg", "read-parchment-scroll-bg.jpg"],
+  ["public/read/parchment-scroll-bg-wide.jpg", "read-parchment-scroll-bg-wide.jpg"],
   ["public/read/post-reading/discover-self.png", "post-reading/discover-self.png"],
   ["public/read/post-reading/consult-materials.png", "post-reading/consult-materials.png"],
 ];
@@ -41,7 +55,12 @@ for (const [relSrc, destName] of copies) {
     process.exit(1);
   }
   fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(src, dest);
+  if (relSrc === "data/music-companion.json") {
+    const raw = JSON.parse(fs.readFileSync(src, "utf8"));
+    fs.writeFileSync(dest, `${JSON.stringify(filterPublicMusicCompanionStore(raw), null, 2)}\n`);
+  } else {
+    fs.copyFileSync(src, dest);
+  }
   const kb = (fs.statSync(dest).size / 1024).toFixed(1);
   console.log(`Copied ${relSrc} (${kb} KB) → apps/askbible-mobile/assets/content/${destName}`);
 }
@@ -147,3 +166,22 @@ const exploreModulesSync = spawnSync("npx", ["tsx", "scripts/sync-explore-module
   stdio: "inherit",
 });
 if (exploreModulesSync.status !== 0) process.exit(exploreModulesSync.status ?? 1);
+
+const wideParchmentSrc = path.join(repoRoot, "public/read/parchment-scroll-bg-wide.jpg");
+const widgetAssetPaths = [
+  path.join(
+    repoRoot,
+    "apps/askbible-mobile/android/app/src/main/res/drawable-nodpi/widget_parchment_scroll_bg.jpg",
+  ),
+  path.join(
+    repoRoot,
+    "apps/askbible-mobile/targets/widget/Assets.xcassets/WidgetParchmentBg.imageset/WidgetParchmentBg.jpg",
+  ),
+];
+if (fs.existsSync(wideParchmentSrc)) {
+  for (const dest of widgetAssetPaths) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(wideParchmentSrc, dest);
+  }
+  console.log("Synced parchment-scroll-bg-wide.jpg → widget Android/iOS assets");
+}

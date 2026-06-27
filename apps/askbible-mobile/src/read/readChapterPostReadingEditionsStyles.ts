@@ -10,7 +10,15 @@ export const readChapterPostReadingEditionsStyles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
+  sectionSpread: {
+    marginTop: 0,
+    alignItems: "stretch",
+  },
   heading: { marginBottom: 20, alignItems: "center", width: "100%" },
+  headingSpread: {
+    marginBottom: 14,
+    alignItems: "flex-start",
+  },
   headingText: {
     fontSize: 22,
     ...parchmentSans(600),
@@ -19,6 +27,11 @@ export const readChapterPostReadingEditionsStyles = StyleSheet.create({
     color: pr.heading,
     textAlign: "center",
     marginBottom: 10,
+  },
+  headingTextSpread: {
+    textAlign: "left",
+    letterSpacing: 0.4,
+    marginBottom: 6,
   },
   headingLead: {
     ...parchmentSans(400),
@@ -40,6 +53,20 @@ export const readChapterPostReadingEditionsStyles = StyleSheet.create({
     alignSelf: "center",
   },
   headingRuleLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: pr.headingRule },
+  spreadParts: {
+    width: "100%",
+    gap: 18,
+  },
+  spreadSection: {
+    width: "100%",
+  },
+  spreadSectionLabel: {
+    fontSize: 13,
+    ...parchmentSans(600),
+    letterSpacing: 0.35,
+    color: "rgba(120, 75, 30, 0.88)",
+    marginBottom: 6,
+  },
   bookSpread: {
     width: "100%",
     borderRadius: BOOK_RADIUS,

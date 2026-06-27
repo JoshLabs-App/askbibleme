@@ -1,26 +1,55 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { resolveUiText } from "../i18n/site-copy";
 import {
-  HOME_VERSE_POOL_SCOPE_OPTIONS,
-  resolveHomeVersePoolScopeLabelWithCount,
-  type HomeVersePoolScopeId,
-} from "../explore/explore-home-verse-pool-scopes";
+  buildHomeVersePoolMenuRows,
+  DEFAULT_HOME_VERSE_POOL_MENU_SCOPE,
+  resolveHomeVersePoolMenuLabel,
+  type HomeVersePoolMenuScopeId,
+} from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
 import { setHomeVersePoolScope } from "../home/homeVersePoolScopePrefs";
 import { shellNavDrawerStyles as styles } from "./shellNavDrawerStyles";
 
+const OPTIONS_MAX_HEIGHT = 280;
+
+const NEW_TESTAMENT_HEADERS = new Set(["新约", "新約", "New Testament"]);
+const OLD_TESTAMENT_HEADERS = new Set(["旧约", "舊約", "Old Testament"]);
+
+function orderVersePoolMenuRowsNewTestamentFirst(
+  rows: ReturnType<typeof buildHomeVersePoolMenuRows>,
+): ReturnType<typeof buildHomeVersePoolMenuRows> {
+  const head: ReturnType<typeof buildHomeVersePoolMenuRows> = [];
+  const nt: ReturnType<typeof buildHomeVersePoolMenuRows> = [];
+  const ot: ReturnType<typeof buildHomeVersePoolMenuRows> = [];
+  let section: "head" | "nt" | "ot" = "head";
+
+  for (const row of rows) {
+    if (row.kind === "header") {
+      if (NEW_TESTAMENT_HEADERS.has(row.label)) section = "nt";
+      else if (OLD_TESTAMENT_HEADERS.has(row.label)) section = "ot";
+    }
+    if (section === "head") head.push(row);
+    else if (section === "nt") nt.push(row);
+    else ot.push(row);
+  }
+
+  return [...head, ...nt, ...ot];
+}
+
 type Props = {
   locale: AppLocale;
-  homeVersePoolScope: HomeVersePoolScopeId;
+  selectedScope: HomeVersePoolMenuScopeId;
 };
 
-export function ShellNavDrawerHomeVersePoolSection({ locale, homeVersePoolScope }: Props) {
-  const [poolPickerOpen, setPoolPickerOpen] = useState(false);
-  const currentPool =
-    HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
-    HOME_VERSE_POOL_SCOPE_OPTIONS[0];
+export function ShellNavDrawerHomeVersePoolSection({ locale, selectedScope }: Props) {
+  const [open, setOpen] = useState(false);
+  const scope = selectedScope ?? DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
+  const rows = useMemo(
+    () => orderVersePoolMenuRowsNewTestamentFirst(buildHomeVersePoolMenuRows(locale)),
+    [locale],
+  );
 
   return (
     <>
@@ -28,51 +57,61 @@ export function ShellNavDrawerHomeVersePoolSection({ locale, homeVersePoolScope 
         {resolveUiText(locale, "主页经文池", "Home verse pool")}
       </Text>
       <Pressable
-        style={({ pressed }) => [
-          styles.poolSelectTrigger,
-          pressed ? styles.poolSelectTriggerPressed : null,
-        ]}
-        onPress={() => setPoolPickerOpen((v) => !v)}
+        onPress={() => setOpen((v) => !v)}
+        style={({ pressed }) => [styles.poolSelectTrigger, pressed && styles.poolSelectTriggerPressed]}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityHint={resolveUiText(locale, "展开经文池列表", "Expand verse pool list")}
       >
-        <Text style={styles.poolSelectLabel}>{resolveUiText(locale, "当前选择", "Current")}</Text>
+        <Text style={styles.poolSelectLabel}>{resolveUiText(locale, "当前池", "Pool")}</Text>
         <View style={styles.poolSelectValueWrap}>
-          <Text style={styles.poolSelectValue}>
-            {resolveHomeVersePoolScopeLabelWithCount(currentPool, locale)}
-          </Text>
+          <Text style={styles.poolSelectValue}>{resolveHomeVersePoolMenuLabel(scope, locale)}</Text>
           <MaterialIcons
-            name={poolPickerOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-            size={16}
-            color="rgba(85, 64, 36, 0.72)"
+            name={open ? "expand-less" : "expand-more"}
+            size={18}
+            color="rgba(55, 53, 47, 0.55)"
           />
         </View>
       </Pressable>
-      {poolPickerOpen ? (
+      {open ? (
         <View style={styles.poolSelectOptions}>
-          {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope) => {
-            const selected = homeVersePoolScope === scope.id;
-            return (
-              <Pressable
-                key={scope.id}
-                style={[styles.poolSelectOption, selected ? styles.poolSelectOptionActive : null]}
-                onPress={() => {
-                  setPoolPickerOpen(false);
-                  void setHomeVersePoolScope(scope.id as HomeVersePoolScopeId);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.poolSelectOptionText,
-                    selected ? styles.poolSelectOptionTextActive : null,
+          <ScrollView
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+            style={{ maxHeight: OPTIONS_MAX_HEIGHT }}
+            showsVerticalScrollIndicator
+          >
+            {rows.map((row, index) =>
+              row.kind === "header" ? (
+                <View key={`h-${row.label}-${index}`} style={styles.poolSelectOptionGroup}>
+                  <Text style={styles.poolSelectOptionGroupText}>{row.label}</Text>
+                </View>
+              ) : (
+                <Pressable
+                  key={row.scopeId}
+                  onPress={() => {
+                    void setHomeVersePoolScope(row.scopeId);
+                    setOpen(false);
+                  }}
+                  style={({ pressed }) => [
+                    styles.poolSelectOption,
+                    row.indent ? styles.poolSelectOptionIndent : null,
+                    scope === row.scopeId ? styles.poolSelectOptionActive : null,
+                    pressed ? styles.poolSelectTriggerPressed : null,
                   ]}
                 >
-                  {resolveHomeVersePoolScopeLabelWithCount(scope, locale)}
-                </Text>
-                {selected ? (
-                  <MaterialIcons name="check" size={14} color="#A56A2D" />
-                ) : null}
-              </Pressable>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.poolSelectOptionText,
+                      scope === row.scopeId ? styles.poolSelectOptionTextActive : null,
+                    ]}
+                  >
+                    {row.label}
+                  </Text>
+                </Pressable>
+              ),
+            )}
+          </ScrollView>
         </View>
       ) : null}
     </>

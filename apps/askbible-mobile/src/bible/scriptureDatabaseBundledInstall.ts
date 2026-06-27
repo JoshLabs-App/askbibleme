@@ -137,7 +137,9 @@ async function copyBundledDatabaseToDisk(
   await verifyBundledScriptureDatabaseProbe(translationId);
 }
 
-export async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void> {
+const bundledInstallPromises = new Map<string, Promise<void>>();
+
+async function ensureBundledDatabaseOnDiskInner(translationId: string): Promise<void> {
   const assetModule = getBundledScriptureAssetModule(translationId);
   if (assetModule == null) {
     throw new Error(`译本未内置：${translationId}`);
@@ -166,16 +168,36 @@ export async function ensureBundledDatabaseOnDisk(translationId: string): Promis
     destSize === bundledSize;
 
   if (upToDate) {
-    return;
-  }
-
-  clearOpenPromise(translationId);
-
-  if (info.exists) {
-    await removeInstalledDatabase(dest, translationId);
+    try {
+      await verifyBundledScriptureDatabaseProbe(translationId);
+      return;
+    } catch {
+      clearOpenPromise(translationId);
+      await removeInstalledDatabase(dest, translationId);
+    }
+  } else {
+    clearOpenPromise(translationId);
+    if (info.exists) {
+      await removeInstalledDatabase(dest, translationId);
+    }
   }
 
   await copyBundledDatabaseToDisk(translationId, dest, assetModule);
+}
+
+/** 串行化 assets → 文档目录复制，避免 Android 并发复制损坏 sqlite。 */
+export async function ensureBundledDatabaseOnDisk(translationId: string): Promise<void> {
+  const id = String(translationId || "").trim();
+  let pending = bundledInstallPromises.get(id);
+  if (!pending) {
+    pending = ensureBundledDatabaseOnDiskInner(id).finally(() => {
+      if (bundledInstallPromises.get(id) === pending) {
+        bundledInstallPromises.delete(id);
+      }
+    });
+    bundledInstallPromises.set(id, pending);
+  }
+  await pending;
 }
 
 export async function ensureDownloadedDatabaseOnDisk(translationId: string): Promise<void> {
@@ -189,7 +211,7 @@ export async function ensureDownloadedDatabaseOnDisk(translationId: string): Pro
   throw new Error(`译本未下载：${translationId}`);
 }
 
-export async function rebuildBundledScriptureDatabase(translationId: string): Promise<void> {
+export async function rebuildBundledScriptureDatabaseInner(translationId: string): Promise<void> {
   const id = String(translationId || "").trim();
   if (!isBundledScriptureTranslation(id)) return;
   await closeOpenedDatabase(id);

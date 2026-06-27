@@ -26,8 +26,8 @@ export function useReadingHabitStats() {
     return subscribeReadingHabitStats(refresh);
   }, [refresh]);
 
-  const syncTodayComplete = useCallback(async (allDoneToday: boolean) => {
-    const next = syncReadingHabitDayCompletion(allDoneToday);
+  const syncTodayComplete = useCallback(async (hasReadingToday: boolean | undefined) => {
+    const next = syncReadingHabitDayCompletion(hasReadingToday);
     setSnapshot(snapshotFromRecord(next, toLocalDateString(new Date())));
   }, []);
 

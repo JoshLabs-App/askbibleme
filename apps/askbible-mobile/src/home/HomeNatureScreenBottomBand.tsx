@@ -11,6 +11,8 @@ import { ShellSwipeExclude, useShellSwipeExcludeHandlers } from "../shell/ShellS
 import type { NatureVideoEntry } from "../types/nature";
 import {
   HOME_SCENE_STRIP_EDGE_PAD,
+  HOME_SCENE_STRIP_LANDSCAPE_EDGE_PAD,
+  HOME_SCENE_THUMB_LANDSCAPE_SLOT_PAD,
   SCENE_LOOP_ALL_ID,
   ambientIconColor,
   ambientStripContentWidth,
@@ -21,13 +23,14 @@ import {
   HomeSceneThumb,
 } from "./HomeSceneThumb";
 import { homeNatureScreenStyles as styles } from "./homeNatureScreenStyles";
+import { HomeNatureMusicPlayButton } from "./HomeNatureMusicPlayButton";
 import { NATURE_AMBIENT_SCENE_SLOTS } from "./useHomeNatureScreenLoad";
 
 type Props = {
   locale: AppLocale;
   baseUrl: string;
+  landscapeLayout?: boolean;
   sceneStripBottomPad: number;
-  landscapeScenePickerOpen: boolean;
   activeAmbientSlotId: NatureAmbientSceneSlotId | "";
   toggleAmbientSlot: (slotId: NatureAmbientSceneSlotId) => void;
   ambientStripViewportWidth: number;
@@ -40,15 +43,13 @@ type Props = {
   sceneId: string;
   enableLoopAllScenes: () => void;
   selectScene: (id: string, opts?: { keepLoopMode?: boolean; source?: "user" | "auto" }) => void;
-  showLandscapeVideo: boolean;
-  onLandscapeSceneSelect: (id: string) => void;
 };
 
 export function HomeNatureScreenBottomBand({
   locale,
   baseUrl,
+  landscapeLayout = false,
   sceneStripBottomPad,
-  landscapeScenePickerOpen,
   activeAmbientSlotId,
   toggleAmbientSlot,
   ambientStripViewportWidth,
@@ -61,10 +62,10 @@ export function HomeNatureScreenBottomBand({
   sceneId,
   enableLoopAllScenes,
   selectScene,
-  showLandscapeVideo,
-  onLandscapeSceneSelect,
 }: Props) {
   const sceneStripSwipeExclude = useShellSwipeExcludeHandlers();
+  const sceneEdgePad = landscapeLayout ? HOME_SCENE_STRIP_LANDSCAPE_EDGE_PAD : HOME_SCENE_STRIP_EDGE_PAD;
+  const thumbSlotPad = landscapeLayout ? HOME_SCENE_THUMB_LANDSCAPE_SLOT_PAD : undefined;
 
   const renderSceneThumb = (item: NatureVideoEntry) => {
     const selected = !loopAllScenesEnabled && item.id === sceneId;
@@ -72,10 +73,7 @@ export function HomeNatureScreenBottomBand({
     const posterRel = (item.previewFrameSrc || item.thumbSrc)?.trim() ?? "";
     const thumbRemote = posterRel ? toAbsoluteUrl(baseUrl, posterRel) : "";
     const thumbUri = resolveNaturePosterPlaybackUri(item.id, thumbRemote) || thumbRemote;
-    const onPick = () =>
-      showLandscapeVideo && landscapeScenePickerOpen
-        ? onLandscapeSceneSelect(item.id)
-        : selectScene(item.id);
+    const onPick = () => selectScene(item.id);
     return (
       <HomeSceneThumb
         key={item.id}
@@ -84,15 +82,23 @@ export function HomeNatureScreenBottomBand({
         thumbUri={thumbUri}
         fallbackLabel={displayTitle(item.title)}
         onPress={onPick}
+        slotPad={thumbSlotPad}
       />
     );
   };
 
   return (
     <View
-      style={[styles.bottomBand, { paddingBottom: sceneStripBottomPad, zIndex: landscapeScenePickerOpen ? 25 : 10 }]}
+      style={[
+        styles.bottomBand,
+        landscapeLayout && styles.bottomBandLandscape,
+        { paddingBottom: sceneStripBottomPad },
+      ]}
       pointerEvents="box-none"
     >
+      <View style={styles.homeMusicPlayBtnWrap} pointerEvents="box-none">
+        <HomeNatureMusicPlayButton />
+      </View>
       <ShellSwipeExclude style={styles.ambientScrollWrap}>
         <ScrollView
           horizontal
@@ -107,6 +113,8 @@ export function HomeNatureScreenBottomBand({
                 ambientStripContentWidth(NATURE_AMBIENT_SCENE_SLOTS.length),
                 ambientStripViewportWidth,
               ),
+              paddingLeft: sceneEdgePad,
+              paddingRight: sceneEdgePad,
             },
           ]}
           style={styles.ambientScroll}
@@ -157,21 +165,24 @@ export function HomeNatureScreenBottomBand({
           alwaysBounceHorizontal
           directionalLockEnabled
           nestedScrollEnabled
-          fadeLeftPx={22}
-          fadeRightPx={22}
+          fadeLeftPx={0}
+          fadeRightPx={sceneEdgePad}
           fallbackScrimColor="rgba(0,0,0,0.5)"
           onTouchStart={sceneStripSwipeExclude.onTouchStart}
           onScrollBeginDrag={sceneStripSwipeExclude.onScrollBeginDrag}
           contentContainerStyle={[
             styles.sceneRow,
+            landscapeLayout && styles.sceneRowLandscape,
             sceneList.length > 0
               ? {
                   minWidth: Math.max(
-                    homeSceneStripContentWidth(sceneList.length + 2) + HOME_SCENE_STRIP_EDGE_PAD * 2,
+                    homeSceneStripContentWidth(sceneList.length + 2) + sceneEdgePad,
                     sceneStripViewportWidth,
                   ),
+                  paddingLeft: sceneEdgePad,
+                  paddingRight: sceneEdgePad,
                 }
-              : null,
+              : { paddingLeft: sceneEdgePad, paddingRight: sceneEdgePad },
           ]}
           style={styles.sceneListScroll}
           onLayout={(e) => {
@@ -184,6 +195,7 @@ export function HomeNatureScreenBottomBand({
             selected={loopAllScenesEnabled}
             thumbModule={null}
             fallbackLabel="∞"
+            slotPad={thumbSlotPad}
             onPress={() => {
               enableLoopAllScenes();
               if (!sceneId && sceneList.length > 0) {

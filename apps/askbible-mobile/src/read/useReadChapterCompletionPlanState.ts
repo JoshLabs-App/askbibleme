@@ -19,10 +19,17 @@ import {
   subscribeTodayReadingDone,
   todayReadingItemKey,
 } from "./reading-plan/today-reading-done";
+import { isTodayReadingPlanItemComplete } from "./reading-plan/today-reading-chapter-fraction";
 import type { ReadingPlanRange } from "./reading-plan/types";
-import { useEffectiveReadingPlanPrefs, useTripleLoopProgress } from "./reading-plan/useReadingPlanStores";
+import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
+import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
+import { useEffectiveReadingPlanPrefs, useNtDeepRepeatProgress, useTripleLoopProgress } from "./reading-plan/useReadingPlanStores";
 import { readOnboardingNickname } from "../onboarding/onboarding-devotion-prefs";
+import {
+  readCompletedChapterKeySet,
+  subscribeReadChapterCompletion,
+} from "./read-chapter-completion";
 import {
   buildChapterQueue,
   formatDisplayNickname,
@@ -42,24 +49,28 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
   const effectiveLocale = displayLocale ?? locale;
   const isEnglishDisplay = effectiveLocale === "en";
   const { prefs } = useEffectiveReadingPlanPrefs();
-  const { progress } = useTripleLoopProgress();
+  const { progress: tripleProgress } = useTripleLoopProgress();
+  const { progress: ntDeepProgress } = useNtDeepRepeatProgress();
   const [readings, setReadings] = useState<ReadingPlanRange[]>([]);
   const [loading, setLoading] = useState(true);
   const [doneKeys, setDoneKeys] = useState<Set<string>>(new Set());
+  const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
   const [celebrateVisible, setCelebrateVisible] = useState(false);
   const [scopeKey, setScopeKey] = useState<string | null>(null);
   const [nickname, setNickname] = useState("");
   const [hasShownCelebrateForScope, setHasShownCelebrateForScope] = useState<boolean | null>(null);
 
-  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
   const localeZhText = useCallback(
     (text: string) => (effectiveLocale === "zh-TW" ? toZhTwText(text) : text),
     [effectiveLocale],
   );
 
-  const tripleProgressKey = isTripleLoop
-    ? `${progress.ot.bookId}:${progress.ot.chapter}|${progress.nt.bookId}:${progress.nt.chapter}|${progress.wisdom.bookId}:${progress.wisdom.chapter}`
+  const tripleProgressKey = isTripleLoopPlanId(prefs.planId)
+    ? `${tripleProgress.ot.bookId}:${tripleProgress.ot.chapter}|${tripleProgress.nt.bookId}:${tripleProgress.nt.chapter}|${tripleProgress.wisdom.bookId}:${tripleProgress.wisdom.chapter}`
     : "";
+  const ntDeepProgressKey = isNtDeepRepeatPlanId(prefs.planId)
+    ? `${ntDeepProgress.ot.bookId}:${ntDeepProgress.ot.chapter}|i:${ntDeepProgress.curriculumIndex}|d:${ntDeepProgress.dayInSegment}`
+    : tripleProgressKey;
 
   useEffect(() => {
     let active = true;
@@ -113,7 +124,7 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
             planId: effective.planId,
             isTripleLoop: isTripleLoopPlanId(effective.planId),
             epochDay: getReadingPlanDaySinceEpoch(),
-            dayIndex: isTripleLoopPlanId(effective.planId)
+            dayIndex: isPointerReadingPlanId(effective.planId)
               ? null
               : resolveReadingPlanDayIndex(effective, effective.dayCount ?? 365),
           });
@@ -132,7 +143,7 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
       cancelled = true;
       task.cancel();
     };
-  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, tripleProgressKey]);
+  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, ntDeepProgressKey]);
 
   const reloadDoneKeys = useCallback(async () => {
     if (!scopeKey) {
@@ -157,6 +168,35 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
     return unsub;
   }, [reloadDoneKeys]);
 
+  const reloadCompletedChapterKeys = useCallback(async () => {
+    const next = await readCompletedChapterKeySet();
+    setCompletedChapterKeys(next);
+  }, []);
+
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      void reloadCompletedChapterKeys();
+    });
+    return () => task.cancel();
+  }, [reloadCompletedChapterKeys]);
+
+  useEffect(() => {
+    const unsub = subscribeReadChapterCompletion(() => {
+      void reloadCompletedChapterKeys();
+    });
+    return unsub;
+  }, [reloadCompletedChapterKeys]);
+
+  const isReadingDone = useCallback(
+    (r: ReadingPlanRange) =>
+      isTodayReadingPlanItemComplete(r, {
+        itemKey: todayReadingItemKey(r, prefs.planId),
+        doneKeys,
+        completedChapterKeys,
+      }),
+    [completedChapterKeys, doneKeys, prefs.planId],
+  );
+
   const chapterQueue = useMemo(() => buildChapterQueue(readings), [readings]);
   const currentChapter = useMemo<ChapterRef>(() => ({ bookId, chapter }), [bookId, chapter]);
   const currentQueueIndex = useMemo(
@@ -172,8 +212,8 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
 
   const allDone = useMemo(() => {
     if (!readings.length) return false;
-    return readings.every((r) => doneKeys.has(todayReadingItemKey(r)));
-  }, [readings, doneKeys]);
+    return readings.every((r) => isReadingDone(r));
+  }, [readings, isReadingDone]);
 
   useEffect(() => {
     if (!allDone || !scopeKey || hasShownCelebrateForScope !== false) return;
@@ -186,12 +226,12 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
   const toggleDone = useCallback(
     async (r: ReadingPlanRange) => {
       if (!scopeKey) return;
-      const key = todayReadingItemKey(r);
-      const done = !doneKeys.has(key);
+      const key = todayReadingItemKey(r, prefs.planId);
+      const done = !isReadingDone(r);
       const next = await setTodayReadingItemDone(scopeKey, key, done);
       setDoneKeys(next);
     },
-    [scopeKey, doneKeys],
+    [scopeKey, isReadingDone, prefs.planId],
   );
 
   const closeCelebrate = useCallback(() => {
@@ -211,5 +251,7 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
     neighbors,
     nextTarget,
     toggleDone,
+    isReadingDone,
+    planId: prefs.planId,
   };
 }

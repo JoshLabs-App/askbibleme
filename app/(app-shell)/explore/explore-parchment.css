@@ -520,6 +520,16 @@
   text-underline-offset: 0.22em;
 }
 
+.prayer-on-parchment .explore-prose-page .explore-prose-scripture-link {
+  font-weight: 600;
+  color: #8b5a2b;
+  text-decoration: none;
+}
+
+.prayer-on-parchment .explore-prose-page .explore-prose-scripture-link:hover {
+  color: #5c3a1e;
+}
+
 .prayer-on-parchment .explore-prose-page .explore-prose-link:hover {
   color: #5c3a1e;
 }
@@ -576,6 +586,14 @@
 
 .dark .prayer-on-parchment .explore-prose-page .explore-prose-link {
   color: #d8a97a;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-scripture-link {
+  color: #d8a97a;
+}
+
+.dark .prayer-on-parchment .explore-prose-page .explore-prose-scripture-link:hover {
+  color: #e8c4a0;
 }
 
 .dark .prayer-on-parchment .explore-prose-page .explore-prose-ref {

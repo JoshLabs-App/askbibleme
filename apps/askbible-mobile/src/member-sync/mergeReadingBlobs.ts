@@ -1,4 +1,5 @@
 import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-ahead";
+import { mergeNtDeepRepeatReadingState } from "../read/reading-plan/merge-nt-deep-repeat-reading-state";
 import { mergeTripleLoopReadingState } from "../read/reading-plan/merge-triple-loop-reading-state";
 import {
   isSameTodayReadingPlanScope,
@@ -197,6 +198,8 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return b;
     case "tripleLoopProgress":
       return mergeTripleLoopReadingState(a, b);
+    case "ntDeepRepeatProgress":
+      return mergeNtDeepRepeatReadingState(a, b);
     default:
       return b;
   }

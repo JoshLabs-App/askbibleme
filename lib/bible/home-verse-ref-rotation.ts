@@ -7,7 +7,6 @@ import type { VerseRef } from "@/lib/bible/verse-ref";
 import { readThemeRepeatPoolFallbackSync } from "@/lib/home-prayer-pools/read-theme-repeat-pool-fallback-sync";
 import { readExternalHomeVerseRotationSync } from "@/lib/scripture/read-external-home-verse-rotation";
 import { capSiteVersePoolRefs } from "@/lib/scripture/site-verse-pool";
-import { DEFAULT_THEME_REPEAT_MIN_COUNT } from "@/lib/scripture/theme-repeat-pool-scope-id";
 
 const SHELL_LOCALES: AppLocale[] = ["zh-CN", "en"];
 
@@ -24,14 +23,13 @@ export function appLocalesForHomeVerseRotationShell(
   return [uiLocale];
 }
 
-/** 只解析 `locales` 中的语言；正文来自 `theme-repeat-ge{N}` 静态池 bootstrap。 */
+/** 只解析 `locales` 中的语言；正文来自默认 700 句静态池 bootstrap。 */
 export async function buildHomeVerseRotationForLocales(
   cwd: string,
   locales: ReadonlyArray<AppLocale>,
-  minCount: number = DEFAULT_THEME_REPEAT_MIN_COUNT,
 ): Promise<Record<AppLocale, HomeVerseEntry[]>> {
   const want = new Set<AppLocale>(locales);
-  const fromPool = readThemeRepeatPoolFallbackSync(cwd, locales, minCount);
+  const fromPool = readThemeRepeatPoolFallbackSync(cwd, locales);
   const result = {} as Record<AppLocale, HomeVerseEntry[]>;
   for (const locale of SHELL_LOCALES) {
     if (!want.has(locale)) {

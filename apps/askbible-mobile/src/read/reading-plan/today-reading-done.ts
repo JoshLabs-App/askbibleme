@@ -1,4 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
+import { markNtDeepRepeatChapterRead } from "./nt-deep-repeat-progress";
+import { trackForNtDeepRepeatBookId } from "./nt-deep-repeat-reading";
+import { isPointerReadingPlanId } from "./pointer-reading-plan";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import { trackForBookId } from "./triple-loop-reading";
 import type { ReadingPlanRange } from "./types";
@@ -45,7 +49,9 @@ export function buildTodayReadingScopeKey(opts: {
   epochDay: number;
   dayIndex: number | null;
 }): string {
-  if (opts.isTripleLoop) return `${opts.planId}:epoch:${opts.epochDay}`;
+  if (opts.isTripleLoop || isNtDeepRepeatPlanId(opts.planId)) {
+    return `${opts.planId}:epoch:${opts.epochDay}`;
+  }
   if (opts.dayIndex != null) return `${opts.planId}:day:${opts.dayIndex}`;
   return opts.planId;
 }
@@ -69,13 +75,13 @@ export function isSameTodayReadingPlanScope(
 
 export async function resolveLocalTodayReadingScopeKey(): Promise<string> {
   const prefs = await readEffectiveReadingPlanPrefs();
-  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+  const isPointerPlan = isPointerReadingPlanId(prefs.planId);
   const dayCount = prefs.dayCount ?? 365;
   const dayIndex =
-    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
+    !isPointerPlan && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
   return buildTodayReadingScopeKey({
     planId: prefs.planId,
-    isTripleLoop,
+    isTripleLoop: isTripleLoopPlanId(prefs.planId),
     epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
@@ -88,7 +94,12 @@ export async function normalizeTodayReadingDoneForLocalPrefs(
   return { version: 1, scopeKey, doneKeys: [...record.doneKeys] };
 }
 
-export function todayReadingItemKey(r: ReadingPlanRange): string {
+export function todayReadingItemKey(r: ReadingPlanRange, planId?: string | null): string {
+  if (planId && isNtDeepRepeatPlanId(planId)) {
+    const track = trackForNtDeepRepeatBookId(r.bookId);
+    if (track === "ot") return `ndr:ot:${r.bookId}:${r.startChapter}`;
+    if (track === "nt") return `ndr:nt:${r.bookId}:${r.startChapter}:${r.endChapter}`;
+  }
   const track = trackForBookId(r.bookId);
   if (track) return `${track}:${r.bookId}:${r.startChapter}`;
   return `${r.bookId}:${r.startChapter}-${r.endChapter}`;
@@ -195,8 +206,28 @@ export async function setTodayReadingItemDone(
     if (triple) {
       await markTripleLoopChapterRead(triple.bookId, triple.chapter);
     }
+    const ndr = parseNtDeepRepeatItemKey(itemKey);
+    if (ndr) {
+      await markNtDeepRepeatChapterRead(ndr.bookId, ndr.chapter);
+    }
   }
   return base;
+}
+
+function parseNtDeepRepeatItemKey(itemKey: string): { bookId: string; chapter: number } | null {
+  const parts = itemKey.split(":");
+  if (parts[0] !== "ndr") return null;
+  if (parts[1] === "ot" && parts.length === 4) {
+    const chapter = Number(parts[3]);
+    if (!parts[2] || !Number.isInteger(chapter) || chapter < 1) return null;
+    return { bookId: parts[2], chapter };
+  }
+  if (parts[1] === "nt" && parts.length === 5) {
+    const chapter = Number(parts[3]);
+    if (!parts[2] || !Number.isInteger(chapter) || chapter < 1) return null;
+    return { bookId: parts[2], chapter };
+  }
+  return null;
 }
 
 function parseTripleLoopItemKey(itemKey: string): { bookId: string; chapter: number } | null {
@@ -216,6 +247,17 @@ export async function markTodayReadingItemDone(
   return setTodayReadingItemDone(scopeKey, itemKey, true);
 }
 
+/** 章音频自然播完：勾选今日计划对应行 + 章完成记录（与滚动读到末尾一致）。 */
+export async function markTodayReadingAudioChapterComplete(
+  bookId: string,
+  chapter: number,
+  opts?: { dayCount?: number },
+): Promise<void> {
+  const { markReadChapterCompleted } = await import("../read-chapter-completion");
+  await markReadChapterCompleted(bookId, chapter);
+  await markTodayReadingChapterVisit(bookId, chapter, opts);
+}
+
 /** 进入今日读经对应章节时标记为已读 */
 export async function markTodayReadingChapterVisit(
   bookId: string,
@@ -223,11 +265,11 @@ export async function markTodayReadingChapterVisit(
   opts?: { dayCount?: number },
 ): Promise<void> {
   const prefs = await readEffectiveReadingPlanPrefs();
-  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+  const isPointerPlan = isPointerReadingPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
   const dayIndex =
-    !isTripleLoop && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
-  if (!isTripleLoop && dayIndex == null) return;
+    !isPointerPlan && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
+  if (!isPointerPlan && dayIndex == null) return;
 
   const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: opts?.dayCount });
   const reading = payload?.day?.readings.find((r) => readingIncludesChapter(r, bookId, chapter));
@@ -235,9 +277,18 @@ export async function markTodayReadingChapterVisit(
 
   const scopeKey = buildTodayReadingScopeKey({
     planId: prefs.planId,
-    isTripleLoop,
+    isTripleLoop: isTripleLoopPlanId(prefs.planId),
     epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
-  await markTodayReadingItemDone(scopeKey, todayReadingItemKey(reading));
+  const itemKey = todayReadingItemKey(reading, prefs.planId);
+
+  const { readingPlanRangeUnitCount, recordTodayReadingChapterFraction, TODAY_READING_AUTO_DONE_FRACTION } =
+    await import("./today-reading-chapter-fraction");
+  if (readingPlanRangeUnitCount(reading) > 1) {
+    await recordTodayReadingChapterFraction(bookId, chapter, TODAY_READING_AUTO_DONE_FRACTION, opts);
+    return;
+  }
+
+  await markTodayReadingItemDone(scopeKey, itemKey);
 }

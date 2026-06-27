@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import { mergeMusicCompanionTrackDisplay } from "@/lib/music-companion/merge-track-display";
+import { filterPublicMusicCompanionStore } from "@/lib/music-companion/public-store";
 import {
   parseAndValidateMusicStore,
   readMusicCompanionStore,
@@ -10,13 +11,15 @@ import { shippedMusicCompanionStore } from "@/lib/music-companion/shipped-store"
 import type { MusicCompanionStore } from "@/lib/music-companion/types";
 
 /** 公开读取音乐陪伴配置（前台首页与后台编辑用） */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const includeHidden = new URL(req.url).searchParams.get("includeHidden") === "1";
     const store = mergeMusicCompanionTrackDisplay(
       await readMusicCompanionStore(process.cwd()),
       shippedMusicCompanionStore,
     );
-    return NextResponse.json(store, {
+    const payload: MusicCompanionStore = includeHidden ? store : filterPublicMusicCompanionStore(store);
+    return NextResponse.json(payload, {
       headers: {
         /** 曲库 JSON 很小；短私缓存减轻重复请求 */
         "Cache-Control": "private, max-age=30, stale-while-revalidate=120",

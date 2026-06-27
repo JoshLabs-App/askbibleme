@@ -1,21 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL } from "@/lib/home-prayer-pools/constants";
-import {
-  appendHomeVersePoolScopeCount,
-  getHomeVersePoolScopeVerseCount,
-  HOME_VERSE_POOL_SCOPE_OPTIONS,
-  DEFAULT_HOME_VERSE_POOL_SCOPE,
-  type HomeVersePoolScopeId,
-} from "@/lib/explore/explore-home-verse-pool-scopes";
-import {
-  getHomeVersePoolScope,
-  hydrateHomeVersePoolScope,
-  setHomeVersePoolScope,
-  subscribeHomeVersePoolScope,
-} from "@/lib/home/home-verse-pool-scope-prefs";
+import { resolveDefaultHomeVersePoolMenuLabel } from "@/lib/explore/explore-home-verse-pool-scopes";
+import { hydrateHomeVersePoolScope } from "@/lib/home/home-verse-pool-scope-prefs";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import {
   normalizeGoldenVerseFontFamily,
@@ -143,14 +132,8 @@ export function HomePrayerVerseDockSettings({
     ? t("pages.goldenVerses.fontLegend")
     : t("nature.homeVerse.goldenFontPrefsHint");
   const [open, setOpen] = useState(false);
-  const [poolPickerOpen, setPoolPickerOpen] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [prefs, setPrefs] = useState<HomePrayerVersePrefsV1>(() => readHomePrayerVersePrefs());
-  const homeVersePoolScope = useSyncExternalStore(
-    subscribeHomeVersePoolScope,
-    getHomeVersePoolScope,
-    () => DEFAULT_HOME_VERSE_POOL_SCOPE,
-  );
 
   useEffect(() => {
     hydrateHomeVersePoolScope();
@@ -267,56 +250,12 @@ export function HomePrayerVerseDockSettings({
           <legend className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#37352f]/50">
             {locale === "en" ? "Home verse pool" : locale === "zh-TW" ? toZhTwText("主页经文池") : "主页经文池"}
           </legend>
-          <button
-            type="button"
-            className="flex w-full items-center justify-between gap-2 rounded-md border border-neutral-200/90 bg-white px-2.5 py-2 text-left text-[13px] text-[#37352f] transition hover:bg-neutral-50"
-            onClick={() => setPoolPickerOpen((v) => !v)}
-          >
-            <span className="text-[#37352f]/55">{locale === "en" ? "Current" : locale === "zh-TW" ? toZhTwText("当前选择") : "当前选择"}</span>
-            <span className="min-w-0 truncate font-medium">
-              {(() => {
-                const current =
-                  HOME_VERSE_POOL_SCOPE_OPTIONS.find((scope) => scope.id === homeVersePoolScope) ??
-                  HOME_VERSE_POOL_SCOPE_OPTIONS[0]!;
-                return appendHomeVersePoolScopeCount(
-                  locale === "en" ? current.labelEn : locale === "zh-TW" ? toZhTwText(current.labelZh) : current.labelZh,
-                  getHomeVersePoolScopeVerseCount(current.id),
-                  locale,
-                );
-              })()}
+          <div className="flex w-full items-center justify-between gap-2 rounded-md border border-neutral-200/90 bg-white px-2.5 py-2 text-[13px] text-[#37352f]">
+            <span className="text-[#37352f]/55">
+              {locale === "en" ? "Pool" : locale === "zh-TW" ? toZhTwText("当前池") : "当前池"}
             </span>
-          </button>
-          {poolPickerOpen ? (
-            <ul className="space-y-0.5 rounded-md border border-neutral-200/90 bg-white p-1">
-              {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope) => {
-                const selected = homeVersePoolScope === scope.id;
-                const label = appendHomeVersePoolScopeCount(
-                  locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh,
-                  getHomeVersePoolScopeVerseCount(scope.id),
-                  locale,
-                );
-                return (
-                  <li key={scope.id}>
-                    <button
-                      type="button"
-                      className={[
-                        "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-[13px] transition",
-                        selected ? "bg-[#f3ece2] font-medium text-[#5c4528]" : "text-[#37352f]/88 hover:bg-neutral-50",
-                      ].join(" ")}
-                      onClick={() => {
-                        setPoolPickerOpen(false);
-                        setHomeVersePoolScope(scope.id as HomeVersePoolScopeId);
-                        requestHomePrayerVerseFeedReload();
-                      }}
-                    >
-                      <span>{label}</span>
-                      {selected ? <span aria-hidden className="text-[#A56A2D]">✓</span> : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
+            <span className="min-w-0 truncate font-medium">{resolveDefaultHomeVersePoolMenuLabel(locale)}</span>
+          </div>
         </fieldset>
       ) : null}
 
@@ -512,50 +451,11 @@ export function HomePrayerVerseDockSettings({
           <div
             className={
               isPopover
-                ? "overflow-hidden rounded-[10px] bg-zinc-800"
-                : "overflow-hidden rounded-[10px] bg-ink/[0.045] dark:bg-white/[0.06]"
+                ? "overflow-hidden rounded-[10px] bg-zinc-800 px-4 py-3 text-[17px] leading-snug text-canvas/95"
+                : "overflow-hidden rounded-[10px] bg-ink/[0.045] px-4 py-3 text-[17px] leading-snug text-ink dark:bg-white/[0.06] dark:text-white"
             }
           >
-            {HOME_VERSE_POOL_SCOPE_OPTIONS.map((scope, index) => {
-              const selected = homeVersePoolScope === scope.id;
-              const label = appendHomeVersePoolScopeCount(
-                locale === "en" ? scope.labelEn : locale === "zh-TW" ? toZhTwText(scope.labelZh) : scope.labelZh,
-                getHomeVersePoolScopeVerseCount(scope.id),
-                locale,
-              );
-              return (
-                <button
-                  key={scope.id}
-                  type="button"
-                  className={[
-                    "flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-[17px] leading-snug transition",
-                    index > 0
-                      ? isPopover
-                        ? "border-t border-zinc-700"
-                        : "border-t border-black/[0.06] dark:border-white/[0.08]"
-                      : "",
-                    selected
-                      ? isPopover
-                        ? "text-canvas/95"
-                        : "font-medium text-ink dark:text-white"
-                      : isPopover
-                        ? "text-canvas/80 hover:bg-white/5"
-                        : "text-ink/85 hover:bg-black/[0.03] dark:text-white/85 dark:hover:bg-white/[0.03]",
-                  ].join(" ")}
-                  onClick={() => {
-                    setHomeVersePoolScope(scope.id as HomeVersePoolScopeId);
-                    requestHomePrayerVerseFeedReload();
-                  }}
-                >
-                  <span className="min-w-0 truncate">{label}</span>
-                  {selected ? (
-                    <span className={isPopover ? "text-sky-300" : "text-[#A56A2D]"} aria-hidden>
-                      ✓
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
+            {resolveDefaultHomeVersePoolMenuLabel(locale)}
           </div>
         </div>
       ) : null}

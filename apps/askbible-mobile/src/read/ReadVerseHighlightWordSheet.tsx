@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { VerseSpeechPart } from "../bible/verse-annotations";
 import { useLocale } from "../i18n/LocaleProvider";
 import { resolveUiText } from "../i18n/site-copy";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { ReadChapterVerseText } from "./ReadChapterVerseText";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { parchmentSans } from "./readTypography";
@@ -122,10 +123,10 @@ export function ReadVerseHighlightWordSheet({
   return (
     <Modal visible={sheetVisible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { paddingBottom: 16 + insets.bottom, maxHeight: "86%" }]}
-          onPress={(e) => e.stopPropagation()}
-        >
+        <Pressable onPress={(e) => e.stopPropagation()} style={{ width: "100%" }}>
+          <ParchmentModalCard
+            style={[styles.sheet, { paddingBottom: 16 + insets.bottom, maxHeight: "86%" }]}
+          >
           <View style={styles.headerRow}>
             <Text style={styles.title}>{resolveUiText(locale, "划重点词", "Highlight words")}</Text>
             <Pressable
@@ -189,6 +190,7 @@ export function ReadVerseHighlightWordSheet({
               <Text style={styles.doneBtnText}>{resolveUiText(locale, "完成", "Done")}</Text>
             </Pressable>
           </View>
+          </ParchmentModalCard>
         </Pressable>
       </Pressable>
     </Modal>
@@ -204,10 +206,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   sheet: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.borderStrong,
-    backgroundColor: c.surfaceSolid,
     paddingHorizontal: 16,
     paddingTop: 14,
     gap: 10,

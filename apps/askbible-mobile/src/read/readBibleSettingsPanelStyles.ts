@@ -14,26 +14,31 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
-    backgroundColor: c.surfaceSolid,
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    paddingBottom: 16,
-    gap: 8,
+    backgroundColor: "transparent",
     shadowColor: "#2a1810",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
+  /** 须包住各行：ParchmentModalCard 正文在内层 foreground，外层 sheet 的 gap 不生效 */
+  sheetBody: {
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 18,
+    gap: 12,
+  },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
+    gap: 12,
   },
   rowIcon: {
-    width: 22,
-    paddingTop: 8,
+    width: 26,
+    height: 34,
+    marginTop: 0,
     alignItems: "center",
+    justifyContent: "center",
   },
   rowBody: {
     flex: 1,
@@ -41,7 +46,7 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
   },
   translationRow: {
     flexDirection: "column",
-    gap: 8,
+    gap: 10,
     width: "100%",
   },
   translationSelect: {
@@ -51,7 +56,7 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   audioPlaybackSelect: {
     flex: 1,
@@ -72,29 +77,15 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
   sizeActions: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
     gap: 8,
-  },
-  sizeActionsTrailing: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 1,
   },
   sizeSection: {
-    gap: 8,
-  },
-  segmentModeText: {
-    fontSize: 12,
-    color: c.muted,
-    ...parchmentSans(700),
-  },
-  segmentModeTextActive: {
-    color: c.parchmentAccent,
+    width: "100%",
   },
   sizeActionBtn: {
     width: 36,
-    height: 34,
+    height: 36,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -114,18 +105,16 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
     backgroundColor: c.parchmentAccentGlow,
     borderColor: c.parchmentAccent,
   },
-  sizeActionText: {
-    fontSize: 13,
-    color: c.ink,
-    ...parchmentSans(600),
-  },
-  sizeActionTextPreset: {
-    fontSize: 14,
-    letterSpacing: 0.3,
+  sizeActionLabel: {
+    fontSize: 12,
+    lineHeight: 14,
     color: c.ink,
     ...parchmentSans(700),
   },
-  sizeActionTextDisabled: {
+  sizeActionLabelActive: {
+    color: c.parchmentAccent,
+  },
+  sizeActionLabelDisabled: {
     color: c.muted,
   },
 });

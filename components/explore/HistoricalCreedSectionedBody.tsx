@@ -7,7 +7,10 @@ import {
   type CreedBodySection,
   type SectionedCreedBody,
 } from "@/lib/explore/historical-creeds-body-sections";
-import { isChicagoArticleParagraph } from "@/lib/explore/historical-creeds-body-format";
+import {
+  catechismAnswerOnlyParagraph,
+  isChicagoArticleParagraph,
+} from "@/lib/explore/historical-creeds-body-format";
 import type { AppLocale } from "@/lib/i18n/config";
 import { HistoricalCreedBodyBlock } from "@/components/explore/HistoricalCreedBodyBlock";
 
@@ -19,6 +22,95 @@ type Props = {
 
 function sectionedHasPartGroups(sectioned: SectionedCreedBody): boolean {
   return sectioned.sections.some((section) => creedBodySectionHasSubsections(section));
+}
+
+function QuestionAccordionList({
+  creedId,
+  questions,
+  openQuestionId,
+  onToggleQuestion,
+}: {
+  creedId: string;
+  questions: CreedBodySection[];
+  openQuestionId: string | null;
+  onToggleQuestion: (questionId: string) => void;
+}) {
+  return (
+    <div className="space-y-2 pl-1">
+      {questions.map((question) => {
+        const open = openQuestionId === question.id;
+        const paragraph = question.paragraphs[0] ?? "";
+        return (
+          <div
+            key={`${creedId}-question-${question.id}`}
+            className="overflow-hidden rounded-lg border border-ink/10 bg-canvas/55"
+          >
+            <button
+              type="button"
+              className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left"
+              aria-expanded={open}
+              onClick={() => onToggleQuestion(question.id)}
+            >
+              <span className="text-[14px] font-semibold leading-snug text-ink/90">
+                {question.label}
+              </span>
+              <span className="text-[18px] font-semibold leading-none text-amber-700/90" aria-hidden>
+                {open ? "−" : "+"}
+              </span>
+            </button>
+            {open && paragraph ? (
+              <div className="space-y-2 border-t border-ink/8 px-3 pb-3 pt-2">
+                <HistoricalCreedBodyBlock text={catechismAnswerOnlyParagraph(paragraph)} />
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HeidelbergOutlineBody({
+  creedId,
+  sectioned,
+}: {
+  creedId: string;
+  sectioned: SectionedCreedBody;
+}) {
+  const [openQuestionId, setOpenQuestionId] = useState<string | null>(null);
+
+  const toggleQuestion = (questionId: string) => {
+    setOpenQuestionId((current) => (current === questionId ? null : questionId));
+  };
+
+  const renderLordDayBlock = (lordDay: CreedBodySection) => (
+    <div key={`${creedId}-ld-${lordDay.id}`} className="space-y-2">
+      <h4 className="px-0.5 text-[14px] font-bold leading-snug text-ink/88">{lordDay.label}</h4>
+      <QuestionAccordionList
+        creedId={creedId}
+        questions={lordDay.subsections ?? []}
+        openQuestionId={openQuestionId}
+        onToggleQuestion={toggleQuestion}
+      />
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      {sectioned.intro.map((paragraph, index) => (
+        <HistoricalCreedBodyBlock key={`${creedId}-intro-${index}`} text={paragraph} />
+      ))}
+      {sectioned.preamble ? renderLordDayBlock(sectioned.preamble) : null}
+      {sectioned.sections.map((part) => (
+        <section key={`${creedId}-part-${part.id}`} className="space-y-3">
+          <h3 className="text-[16px] font-bold leading-snug text-amber-800/95">{part.label}</h3>
+          <div className="space-y-3">
+            {(part.subsections ?? []).map((lordDay) => renderLordDayBlock(lordDay))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 }
 
 function TopicAccordionList({
@@ -74,11 +166,12 @@ export function HistoricalCreedSectionedBody({ creedId, paragraphs, locale }: Pr
     () => buildSectionedCreedBody(paragraphs, locale, creedId),
     [paragraphs, locale, creedId],
   );
+  const heidelbergOutline = sectioned?.layout === "heidelberg-outline";
   const partGrouped = sectioned ? sectionedHasPartGroups(sectioned) : false;
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sectioned) {
+    if (!sectioned || heidelbergOutline) {
       setOpenSectionId(null);
       return;
     }
@@ -87,7 +180,7 @@ export function HistoricalCreedSectionedBody({ creedId, paragraphs, locale }: Pr
       return;
     }
     setOpenSectionId(sectioned.sections[0]?.id ?? null);
-  }, [creedId, sectioned, partGrouped]);
+  }, [creedId, sectioned, partGrouped, heidelbergOutline]);
 
   if (!sectioned) {
     return (
@@ -106,6 +199,10 @@ export function HistoricalCreedSectionedBody({ creedId, paragraphs, locale }: Pr
         })}
       </div>
     );
+  }
+
+  if (heidelbergOutline) {
+    return <HeidelbergOutlineBody creedId={creedId} sectioned={sectioned} />;
   }
 
   const toggleSection = (sectionId: string) => {

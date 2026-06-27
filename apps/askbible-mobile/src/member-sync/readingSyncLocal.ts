@@ -2,6 +2,7 @@ export { exportLocalReadingBlobs } from "./readingSyncLocalExport";
 export { applyReadingSyncBlob } from "./readingSyncLocalApply";
 
 import { MEMBER_READING_SYNC_BLOB_KEYS, type MemberReadingSyncBlob, type MemberReadingSyncBlobKey } from "./schema";
+import { reconcileNtDeepRepeatReadingPlanAfterSync } from "../read/reading-plan/reconcile-nt-deep-repeat-reading-sync";
 import { reconcileTripleLoopReadingPlanAfterSync } from "../read/reading-plan/reconcile-triple-loop-reading-sync";
 import { applyReadingSyncBlob } from "./readingSyncLocalApply";
 
@@ -23,6 +24,7 @@ export async function applyMemberReadingSyncBlobs(
       await applyReadingSyncBlob(key, blob.value);
     }
     await reconcileTripleLoopReadingPlanAfterSync();
+    await reconcileNtDeepRepeatReadingPlanAfterSync();
   } finally {
     applyingRemoteMemberSync = false;
   }

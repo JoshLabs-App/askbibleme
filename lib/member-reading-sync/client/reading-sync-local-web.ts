@@ -67,14 +67,19 @@ import {
 } from "@/lib/read/read-verse-text-highlights";
 import { readReadingPlanPrefs, writeReadingPlanPrefs, type ReadingPlanPrefs } from "@/lib/read/reading-plan-prefs";
 import {
+  mergeReadingHabitStatsRecords,
   readReadingHabitStats,
   replaceReadingHabitStatsRecord,
   type ReadingHabitStatsRecord,
 } from "@/lib/read/reading-habit-stats";
 import { readTripleLoopProgress, writeTripleLoopProgress } from "@/lib/read/triple-loop-progress";
+import { readNtDeepRepeatProgress, writeNtDeepRepeatProgress } from "@/lib/read/nt-deep-repeat-progress";
+import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { reconcileNtDeepRepeatAheadDays } from "@/lib/read/nt-deep-repeat-effective-plan-day";
 import { reconcileTripleLoopAheadDays } from "@/lib/read/triple-loop-effective-plan-day";
 import { readAheadDays } from "@/lib/read/reading-plan-ahead";
+import type { NtDeepRepeatReadingState } from "@/lib/bible/reading-plans/nt-deep-repeat-reading";
 import type { TripleLoopReadingState } from "@/lib/bible/reading-plans/triple-loop-reading";
 import {
   readTodayReadingChapterFractionRecord,
@@ -139,6 +144,7 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   const chapterCompletion = readReadChapterCompletionRecord();
   const readingPlanPrefs = readReadingPlanPrefs();
   const tripleLoopProgress = readTripleLoopProgress();
+  const ntDeepRepeatProgress = readNtDeepRepeatProgress();
   const todayReadingDone = readTodayReadingDoneRecord();
   const todayReadingFraction = readTodayReadingChapterFractionRecord();
   const habitStats = readReadingHabitStats();
@@ -157,6 +163,7 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   if (chapterCompletion.completed.length) blobs.chapterCompletion = wrapBlob(chapterCompletion, now);
   if (readingPlanPrefs) blobs.readingPlanPrefs = wrapBlob(readingPlanPrefs, now);
   if (tripleLoopProgress) blobs.tripleLoopProgress = wrapBlob(tripleLoopProgress, now);
+  if (ntDeepRepeatProgress) blobs.ntDeepRepeatProgress = wrapBlob(ntDeepRepeatProgress, now);
   if (todayReadingDone?.doneKeys.length) blobs.todayReadingDone = wrapBlob(todayReadingDone, now);
   if (todayReadingFraction && Object.keys(todayReadingFraction.fractions).length) {
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);
@@ -209,6 +216,9 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
     case "tripleLoopProgress":
       if (value && typeof value === "object") writeTripleLoopProgress(value as TripleLoopReadingState);
       break;
+    case "ntDeepRepeatProgress":
+      if (value && typeof value === "object") writeNtDeepRepeatProgress(value as NtDeepRepeatReadingState);
+      break;
     case "todayReadingDone":
       if (value && typeof value === "object") replaceTodayReadingDoneRecord(value as TodayReadingDoneRecord);
       break;
@@ -218,7 +228,12 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
       }
       break;
     case "habitStats":
-      if (value && typeof value === "object") replaceReadingHabitStatsRecord(value as ReadingHabitStatsRecord);
+      if (value && typeof value === "object") {
+        const local = readReadingHabitStats();
+        replaceReadingHabitStatsRecord(
+          mergeReadingHabitStatsRecords(local, value as ReadingHabitStatsRecord),
+        );
+      }
       break;
     case "readTypography":
       if (value && typeof value === "object") {
@@ -293,6 +308,15 @@ async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<void> {
   writeReadingPlanPrefs(next);
 }
 
+async function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(): Promise<void> {
+  const prefs = readReadingPlanPrefs();
+  if (!prefs || !isNtDeepRepeatPlanId(prefs.planId)) return;
+  const progress = readNtDeepRepeatProgress();
+  const next = reconcileNtDeepRepeatAheadDays(prefs, progress);
+  if (readAheadDays(next) === readAheadDays(prefs)) return;
+  writeReadingPlanPrefs(next);
+}
+
 export async function applyMemberReadingSyncBlobsWeb(
   blobs: Partial<Record<MemberReadingSyncBlobKey, MemberReadingSyncBlob>> | undefined,
 ): Promise<void> {
@@ -303,4 +327,5 @@ export async function applyMemberReadingSyncBlobsWeb(
     await applyBlob(key, blob.value);
   }
   await reconcileTripleLoopReadingPlanAfterSyncWeb();
+  await reconcileNtDeepRepeatReadingPlanAfterSyncWeb();
 }

@@ -201,6 +201,7 @@ export function parseAndValidateMusicStore(raw: unknown): MusicCompanionStore {
           : undefined,
       tags,
       remark: parseOptionalLocalized(r.remark, MAX_REMARK, "曲目 remark"),
+      ...(r.hidden === true ? { hidden: true as const } : {}),
     };
     validateTrack(track);
     tracks.push(track);

@@ -12,7 +12,7 @@ import { readExploreYearDayProfile, writeExploreBirthDate, writeExploreYearDayPr
 import {
   replaceHomeVersePoolScopeForSync,
 } from "../home/homeVersePoolScopePrefs";
-import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-scopes";
+import type { HomeVersePoolScopeId } from "../home/homeVersePoolScopePrefs";
 import {
   writeHomePrayerVersePrefs,
 } from "../home/homePrayerVersePrefs";
@@ -43,8 +43,13 @@ import {
 } from "../read/read-verse-text-highlights";
 import {
   replaceReadingHabitStatsRecord,
+  readReadingHabitStats,
+  mergeReadingHabitStatsRecords,
 } from "../read/reading-habit-stats";
 import { writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
+import {
+  replaceNtDeepRepeatProgress,
+} from "../read/reading-plan/nt-deep-repeat-progress";
 import {
   replaceTripleLoopProgress,
 } from "../read/reading-plan/triple-loop-progress";
@@ -79,6 +84,7 @@ import {
   isLastPosition,
   isMusicVisualTheme,
   isNatureSceneUi,
+  isNtDeepRepeatState,
   isReadingPlanPrefs,
   isRecentSearches,
   isScripturePlaybackRate,
@@ -113,6 +119,9 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
     case "tripleLoopProgress":
       if (isTripleLoopState(value)) await replaceTripleLoopProgress(value);
       break;
+    case "ntDeepRepeatProgress":
+      if (isNtDeepRepeatState(value)) await replaceNtDeepRepeatProgress(value);
+      break;
     case "todayReadingDone":
       if (isTodayDoneRecord(value)) {
         await replaceTodayReadingDoneRecord(await normalizeTodayReadingDoneForLocalPrefs(value));
@@ -126,7 +135,10 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       }
       break;
     case "habitStats":
-      if (isHabitStats(value)) await replaceReadingHabitStatsRecord(value);
+      if (isHabitStats(value)) {
+        const local = await readReadingHabitStats();
+        await replaceReadingHabitStatsRecord(mergeReadingHabitStatsRecords(local, value));
+      }
       break;
     case "readTypography":
       if (isTypographyPrefs(value)) await writeReadBibleTypographyPrefs(value);

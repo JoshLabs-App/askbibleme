@@ -203,6 +203,19 @@
   color: rgba(120, 75, 30, 0.96);
 }
 
+.shell-nav-drawer-select-group {
+  padding: 6px 10px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(55, 53, 47, 0.46);
+}
+
+.shell-nav-drawer-select-option-indent {
+  padding-left: 18px;
+}
+
 .shell-nav-drawer-compact-row {
   display: flex;
   min-height: 30px;

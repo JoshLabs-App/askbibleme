@@ -1,4 +1,4 @@
-import { Platform, Pressable, Text, View, type LayoutChangeEvent } from "react-native";
+import { Platform, Text, View, type LayoutChangeEvent } from "react-native";
 import type { LoadedChapter } from "../bible/types";
 import { ReadChapterVerseText } from "./ReadChapterVerseText";
 import type { ReadBibleTypographyPx } from "./read-bible-typography-prefs";
@@ -127,10 +127,7 @@ export function ReadChapterScreenVerseRow({
           {heading}
         </Text>
       ))}
-      <Pressable
-        onPress={parentVersePressHandler(v.verse, v.text)}
-        onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
-        delayLongPress={280}
+      <View
         onLayout={(e) => reportVerseLayoutFromEvent(v.verse, e)}
         accessibilityRole="button"
         accessibilityHint={verseSelectionMode ? verseSelectionTapA11yHint : verseBookmarkA11yHint}
@@ -214,7 +211,7 @@ export function ReadChapterScreenVerseRow({
             </Text>
           ))}
         </View>
-      </Pressable>
+      </View>
     </>
   );
 }

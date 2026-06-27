@@ -1,7 +1,7 @@
 import { Image, ImageSourcePropType, StyleSheet, View } from "react-native";
 import type { PortraitCoverLayout } from "./natureHomePortraitCoverLayout";
 
-const STAGE_BACKDROP = "#14110e";
+const STAGE_BACKDROP = "#ffffff";
 
 type Props = {
   posterModule?: number | null;

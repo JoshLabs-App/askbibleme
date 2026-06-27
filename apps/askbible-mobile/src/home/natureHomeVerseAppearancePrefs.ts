@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import { NATURE_HOME_PREFS_KEYS, NATURE_HOME_PREFS_LEGACY_KEYS } from "./natureHomePrefsKeys";
 
 export type NatureHomeVerseTextEffect =
@@ -39,8 +40,14 @@ export const NATURE_HOME_TEXT_SCALE_STEPS = [
 ] as const;
 
 export const DEFAULT_TEXT_SCALE_INDEX = 12;
+/** Android 默认比 iOS 大一档，抵消系统字体渲染偏小 */
+export const ANDROID_DEFAULT_TEXT_SCALE_INDEX = DEFAULT_TEXT_SCALE_INDEX + 1;
 /** 一键超大字号（约 200%） */
 export const SUPER_LARGE_TEXT_SCALE_INDEX = 24;
+
+export function platformDefaultTextScaleIndex(): number {
+  return Platform.OS === "android" ? ANDROID_DEFAULT_TEXT_SCALE_INDEX : DEFAULT_TEXT_SCALE_INDEX;
+}
 
 function clampStepIndex(n: number): number {
   return Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, Math.max(0, Math.round(n)));
@@ -87,14 +94,19 @@ export async function readNatureHomeTextScaleIndex(): Promise<number> {
     const raw =
       (await AsyncStorage.getItem(NATURE_HOME_PREFS_KEYS.textScale)) ??
       (await AsyncStorage.getItem(NATURE_HOME_PREFS_LEGACY_KEYS.textScale));
-    if (!raw) return DEFAULT_TEXT_SCALE_INDEX;
+    if (!raw) return platformDefaultTextScaleIndex();
     await AsyncStorage.setItem(NATURE_HOME_PREFS_KEYS.textScale, raw);
     await AsyncStorage.removeItem(NATURE_HOME_PREFS_LEGACY_KEYS.textScale);
     const p = JSON.parse(raw) as { stepIndex?: number };
-    if (typeof p.stepIndex === "number") return clampStepIndex(p.stepIndex);
-    return DEFAULT_TEXT_SCALE_INDEX;
+    if (typeof p.stepIndex !== "number") return platformDefaultTextScaleIndex();
+    let index = clampStepIndex(p.stepIndex);
+    if (Platform.OS === "android" && index === DEFAULT_TEXT_SCALE_INDEX) {
+      index = ANDROID_DEFAULT_TEXT_SCALE_INDEX;
+      await writeNatureHomeTextScaleIndex(index);
+    }
+    return index;
   } catch {
-    return DEFAULT_TEXT_SCALE_INDEX;
+    return platformDefaultTextScaleIndex();
   }
 }
 

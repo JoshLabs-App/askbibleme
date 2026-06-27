@@ -1,5 +1,6 @@
 import type { ExploreYearDayProfile } from "../explore/explore-birth-year-prefs";
-import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-scopes";
+import type { HomeVersePoolScopeId } from "../home/homeVersePoolScopePrefs";
+import { isHomeVersePoolMenuScopeId } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
 import type { HomePrayerVersePrefsV1 } from "../home/homePrayerVersePrefs";
 import type { NatureHomeUiSyncBundle } from "../home/natureHomePrefs";
 import type { AppLocale } from "../i18n/config";
@@ -10,6 +11,7 @@ import type { ReadBibleTranslationSyncBundle } from "../read/read-bible-translat
 import type { ReadBibleTypographyPrefsV1 } from "../read/read-bible-typography-prefs";
 import type { VerseTextHighlightStore } from "../read/read-verse-text-highlights";
 import type { ReadingHabitStatsRecord } from "../read/reading-habit-stats";
+import type { NtDeepRepeatReadingState } from "../read/reading-plan/nt-deep-repeat-reading";
 import type { ReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import type { TripleLoopReadingState } from "../read/reading-plan/triple-loop-reading";
 import type { TodayReadingChapterFractionRecord } from "../read/reading-plan/today-reading-chapter-fraction";
@@ -50,6 +52,17 @@ export function isTripleLoopState(value: unknown): value is TripleLoopReadingSta
   if (!value || typeof value !== "object") return false;
   const v = value as TripleLoopReadingState;
   return Boolean(v.ot && v.nt && v.wisdom);
+}
+
+export function isNtDeepRepeatState(value: unknown): value is NtDeepRepeatReadingState {
+  if (!value || typeof value !== "object") return false;
+  const v = value as NtDeepRepeatReadingState;
+  return Boolean(
+    v.ot &&
+      typeof v.curriculumIndex === "number" &&
+      typeof v.dayInSegment === "number" &&
+      typeof v.pace === "number",
+  );
 }
 
 export function isTodayDoneRecord(value: unknown): value is TodayReadingDoneRecord {
@@ -113,7 +126,8 @@ export function isHomeVersePoolScope(value: unknown): value is { version: 1; sco
     value &&
       typeof value === "object" &&
       (value as { version?: unknown }).version === 1 &&
-      typeof (value as { scopeId?: unknown }).scopeId === "string",
+      typeof (value as { scopeId?: unknown }).scopeId === "string" &&
+      isHomeVersePoolMenuScopeId(String((value as { scopeId?: unknown }).scopeId)),
   );
 }
 

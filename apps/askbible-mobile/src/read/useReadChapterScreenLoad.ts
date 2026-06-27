@@ -7,6 +7,7 @@ import type { LoadedChapter } from "../bible/types";
 import type { BibleTranslationMeta } from "../bible/translations-types";
 import { t } from "../i18n/site-copy";
 import { loadReadChapterScreenChapter } from "./loadReadChapterScreenChapter";
+import { isNativeDatabaseRejectedError } from "../bible/scripture-database";
 import { trackTelemetry } from "../telemetry/client";
 import { useReadChapterScreenDeferredLoads } from "./useReadChapterScreenDeferredLoads";
 
@@ -145,7 +146,11 @@ export function useReadChapterScreenLoad({
     } catch (e) {
       if (loadSeq !== chapterLoadSeqRef.current) return;
       setChapterData(null);
-      setError(e instanceof Error ? e.message : String(e));
+      if (isNativeDatabaseRejectedError(e)) {
+        setError(t("pages.read.chapterLoadError"));
+      } else {
+        setError(e instanceof Error ? e.message : String(e));
+      }
     } finally {
       if (loadSeq === chapterLoadSeqRef.current) {
         setLoading(false);

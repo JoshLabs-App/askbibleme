@@ -11,21 +11,6 @@ type OnboardingSolutionStepProps = {
   cards: SolutionCard[];
 };
 
-function mapSolutionIcon(name: string): keyof typeof MaterialCommunityIcons.glyphMap {
-  switch (name) {
-    case "music":
-      return "music-clef-treble";
-    case "candle":
-      return "candle";
-    case "book":
-      return "book-open-page-variant-outline";
-    case "search":
-      return "magnify";
-    default:
-      return "circle-outline";
-  }
-}
-
 export function OnboardingSolutionStep({ locale, cards }: OnboardingSolutionStepProps) {
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
 
@@ -55,6 +40,21 @@ export function OnboardingSolutionStep({ locale, cards }: OnboardingSolutionStep
       </View>
     </View>
   );
+}
+
+function mapSolutionIcon(name: string): keyof typeof MaterialCommunityIcons.glyphMap {
+  switch (name) {
+    case "music":
+      return "music-clef-treble";
+    case "candle":
+      return "candle";
+    case "book":
+      return "book-open-page-variant-outline";
+    case "search":
+      return "magnify";
+    default:
+      return "circle-outline";
+  }
 }
 
 const styles = StyleSheet.create({

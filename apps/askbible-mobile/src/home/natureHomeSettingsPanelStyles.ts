@@ -106,6 +106,21 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     ...parchmentSans(600),
     color: "#f1f5f9",
   },
+  rotationValueWrap: {
+    flex: 1.4,
+    minHeight: 30,
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#27272a",
+    paddingHorizontal: 6,
+  },
+  rotationValueText: {
+    fontSize: 11,
+    ...parchmentSans(600),
+    fontVariant: ["tabular-nums"],
+    color: "rgba(255,255,255,0.82)",
+  },
   voiceScroll: {
     width: "100%",
   },

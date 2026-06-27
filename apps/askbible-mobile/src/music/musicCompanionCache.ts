@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { filterPublicMusicCompanionStore } from "./publicMusicStore";
 import type { MusicCompanionStore } from "./types";
 
 const MUSIC_STORE_CACHE_KEY = "askbible-music-companion-cache-v1";
@@ -16,7 +17,7 @@ export async function readCachedMusicCompanionStore(): Promise<MusicCompanionSto
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (!isMusicStoreShape(parsed)) return null;
-    return parsed;
+    return filterPublicMusicCompanionStore(parsed);
   } catch {
     return null;
   }

@@ -5,12 +5,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-1}"
+export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-0}"
+export EXPO_PUBLIC_MOBILE_OFFLINE_FIRST="${EXPO_PUBLIC_MOBILE_OFFLINE_FIRST:-1}"
+export EXPO_PUBLIC_ASKBIBLE_BASE_URL="${EXPO_PUBLIC_ASKBIBLE_BASE_URL:-https://askbible.me}"
 export EXPO_PUBLIC_TELEMETRY_DISABLED="${EXPO_PUBLIC_TELEMETRY_DISABLED:-1}"
 export MOBILE_BUNDLE_OFFLINE_MEDIA="${MOBILE_BUNDLE_OFFLINE_MEDIA:-1}"
-unset EXPO_PUBLIC_ASKBIBLE_BASE_URL
 
 echo "→ Sync mobile bundled content (scripture, locales, icons, offline media, …)"
+bash "$ROOT/scripts/clear-mobile-bundle-cache.sh"
 npm run mobile:sync-content
 npm run mobile:sync-icons
 npm run mobile:sync-android-icons
@@ -34,7 +36,7 @@ fi
 
 cd "$MOBILE/android"
 
-echo "→ Gradle assembleRelease (bundled-only=$EXPO_PUBLIC_MOBILE_BUNDLED_ONLY, no remote content)"
+echo "→ Gradle assembleRelease (bundled-only=$EXPO_PUBLIC_MOBILE_BUNDLED_ONLY, base=$EXPO_PUBLIC_ASKBIBLE_BASE_URL)"
 ./gradlew assembleRelease
 
 APK="$MOBILE/android/app/build/outputs/apk/release/app-release.apk"

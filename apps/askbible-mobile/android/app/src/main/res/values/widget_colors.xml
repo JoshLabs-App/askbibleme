@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Logo 主黄（小挂件底色 #FFB100） -->
+    <color name="widget_logo_background">#FFB100</color>
+    <color name="widget_text_on_logo">#FFFFFF</color>
+    <color name="widget_divider_on_logo">#57FFFFFF</color>
+    <color name="widget_bubble_fill">#FAF6F0</color>
+    <color name="widget_bubble_stroke">#33A56A2D</color>
+    <color name="widget_bubble_divider">#1AA56A2D</color>
+    <color name="widget_verse_ink">#F01C1410</color>
+    <color name="widget_quote_mark">#D97707</color>
+    <color name="widget_ref">#D11C1410</color>
+    <color name="widget_streak">#7A6B5C</color>
+    <color name="widget_meta_dot">#B8A48E</color>
+</resources>

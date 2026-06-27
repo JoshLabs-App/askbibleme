@@ -103,6 +103,7 @@ export async function runScripturePlayInFlight(args: Args): Promise<void> {
       scriptureChapterHandoffRef: refs.scriptureChapterHandoffRef,
       scriptureLastProgressMsRef: refs.scriptureLastProgressMsRef,
       scriptureLastProgressAtRef: refs.scriptureLastProgressAtRef,
+      scriptureSrcRef: refs.scriptureSrcRef,
       setPlaying,
       setScriptureCurrentSec,
       setScriptureDurationSec,

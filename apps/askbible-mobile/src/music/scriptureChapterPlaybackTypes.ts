@@ -33,7 +33,7 @@ export type ChapterPlaybackCtx = ScriptureShellPlaybackBridge & {
     reg: ReadChapterPlaybackRegistration,
     preferredSrc: string,
     playingReg?: ReadChapterPlaybackRegistration | null,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   playScripture: (src: string) => Promise<void>;
   isStarted: () => boolean;
   stopScripturePlayback: () => Promise<void>;

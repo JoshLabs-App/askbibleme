@@ -9,9 +9,13 @@ export function resolveReadChapterAudioAvailable(
   readChapterRef: { current: ReadChapterPlaybackRegistration | null },
   readChapter: ReadChapterPlaybackRegistration | null,
   readHomeTodayAudioReady = false,
+  primaryTranslationId?: string,
 ): boolean {
   const activeReadForAudio = getActiveReadChapterPlayback() ?? readChapterRef.current ?? readChapter;
   if (activeReadForAudio && translationSupportsChapterAudio(activeReadForAudio.translationId)) {
+    return true;
+  }
+  if (primaryTranslationId && translationSupportsChapterAudio(primaryTranslationId)) {
     return true;
   }
   return readHomeTodayAudioReady;

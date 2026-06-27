@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { resolveUiText } from "../i18n/site-copy";
 import type { AppLocale } from "../i18n/config";
+import { musicCopy } from "./musicCopy";
+import { useMusicPlayback } from "./MusicPlaybackContext";
 
 type Props = {
   locale: AppLocale;
@@ -11,7 +13,6 @@ type Props = {
   hasCurrent: boolean;
   nowClockText: string;
   landscapeSafeHorizontal: { left: number; right: number } | null;
-  landscapeCenterTapPosition: { left: number; top: number } | null;
   bottomInset: number;
   onLandscapeStageToggle: () => void;
 };
@@ -25,10 +26,11 @@ export function MusicHomeLandscapeChrome({
   hasCurrent,
   nowClockText,
   landscapeSafeHorizontal,
-  landscapeCenterTapPosition,
   bottomInset,
   onLandscapeStageToggle,
 }: Props) {
+  const { playing, togglePlayMusic, canTogglePlayback } = useMusicPlayback();
+
   if (!compactLandscape) return null;
 
   return (
@@ -45,7 +47,7 @@ export function MusicHomeLandscapeChrome({
       ) : null}
       {!chromeVisible ? (
         <Pressable
-          style={styles.landscapeTapLayer}
+          style={[styles.landscapeTapLayer, { right: "42%" }]}
           onPress={onLandscapeStageToggle}
           accessibilityRole="button"
           accessibilityLabel={resolveUiText(locale, "切换横屏音乐菜单", "Show landscape music menu")}
@@ -53,10 +55,11 @@ export function MusicHomeLandscapeChrome({
       ) : null}
       {chromeVisible ? (
         <Pressable
-          style={[styles.landscapeCenterTapTarget, landscapeCenterTapPosition]}
-          onPress={onLandscapeStageToggle}
+          style={[styles.landscapeStageTapLayer, { right: "42%" }]}
+          onPress={() => void togglePlayMusic()}
+          disabled={!canTogglePlayback}
           accessibilityRole="button"
-          accessibilityLabel={resolveUiText(locale, "隐藏横屏音乐菜单", "Hide landscape music menu")}
+          accessibilityLabel={playing ? musicCopy.pause : musicCopy.play}
         />
       ) : null}
     </>
@@ -65,14 +68,17 @@ export function MusicHomeLandscapeChrome({
 
 const styles = StyleSheet.create({
   landscapeTapLayer: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
     zIndex: 8,
   },
-  landscapeCenterTapTarget: {
+  landscapeStageTapLayer: {
     position: "absolute",
-    width: 260,
-    height: 260,
-    borderRadius: 999,
+    top: 0,
+    left: 0,
+    bottom: 0,
     zIndex: 8,
   },
   landscapeTimeOverlay: {

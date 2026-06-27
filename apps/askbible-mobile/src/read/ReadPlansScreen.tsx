@@ -1,16 +1,21 @@
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { useLocale } from "../i18n/LocaleProvider";
-import { localizeZhText, t, tFormat } from "../i18n/site-copy";
+import { t, tFormat } from "../i18n/site-copy";
 import { ReadParchmentPageScroll } from "./ReadParchmentPageScroll";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { fetchReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
+import {
+  isFeaturedReadingPlanId,
+  partitionReadingPlanCatalog,
+} from "./reading-plan/featured-reading-plans";
+import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import { stripReadingPlanHtml } from "./reading-plan/strip-html";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 import { useEffectiveReadingPlanPrefs } from "./reading-plan/useReadingPlanStores";
+import { ReadPlansFeaturedPlanCard } from "./ReadPlansFeaturedPlanCard";
 
 function planFieldKey(planId: string, field: "title" | "subtitle" | "blurb"): string {
   return `pages.read.plansCatalog.${planId}.${field}`;
@@ -24,7 +29,6 @@ function trPlanField(planId: string, field: "title" | "subtitle" | "blurb"): str
 
 export function ReadPlansScreen() {
   const router = useRouter();
-  const { locale } = useLocale();
   const { prefs } = useEffectiveReadingPlanPrefs();
   const [plans, setPlans] = useState<ReadingPlanRegistryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +41,8 @@ export function ReadPlansScreen() {
       setLoading(false);
     })();
   }, []);
+
+  const { featured, other } = useMemo(() => partitionReadingPlanCatalog(plans), [plans]);
 
   const openPlan = useCallback(
     (planId: string) => {
@@ -53,56 +59,76 @@ export function ReadPlansScreen() {
         </Pressable>
 
         <Text style={styles.title}>{t("pages.read.plansTitle")}</Text>
-        <Text style={styles.lead}>{t("pages.read.plansLead")}</Text>
+        <Text style={styles.lead}>{t("pages.read.plansLeadIntro")}</Text>
 
         {loading ? (
           <ActivityIndicator color={c.muted} style={{ marginTop: 32 }} />
         ) : plans.length === 0 ? (
           <Text style={styles.empty}>{t("pages.read.plansEmpty")}</Text>
         ) : (
-          <View style={styles.list}>
-            {plans.map((p) => {
-              const titleZh = trPlanField(p.planId, "title") || p.name;
-              const title = isTripleLoopPlanId(p.planId)
-                ? `${titleZh}${localizeZhText(locale, "（推荐）")}`
-                : titleZh;
-              const subtitle = trPlanField(p.planId, "subtitle");
-              const blurb = trPlanField(p.planId, "blurb");
-              const isActive = prefs.planId === p.planId;
-              return (
-                <Pressable
+          <>
+            <View style={styles.featuredList}>
+              {featured.map((p) => (
+                <ReadPlansFeaturedPlanCard
                   key={p.planId}
+                  plan={p}
+                  title={trPlanField(p.planId, "title") || p.name}
+                  subtitle={trPlanField(p.planId, "subtitle")}
+                  blurb={trPlanField(p.planId, "blurb")}
+                  isActive={prefs.planId === p.planId}
                   onPress={() => openPlan(p.planId)}
-                  style={({ pressed }) => [styles.card, pressed && styles.pressed, isActive && styles.cardActive]}
-                >
-                  <View style={styles.cardRow}>
-                    <View style={styles.cardBody}>
-                      <Text style={styles.cardTitle}>{title}</Text>
-                      {subtitle ? <Text style={styles.cardSubtitle}>{subtitle}</Text> : null}
-                      {blurb ? (
-                        <Text style={styles.cardBlurb} numberOfLines={4}>
-                          {blurb}
-                        </Text>
-                      ) : p.description ? (
-                        <Text style={styles.cardBlurb} numberOfLines={3}>
-                          {stripReadingPlanHtml(p.description)}
-                        </Text>
-                      ) : null}
-                      <Text style={styles.cardMeta}>
-                        {isTripleLoopPlanId(p.planId)
-                          ? t("pages.read.tripleLoopPlansMeta")
-                          : tFormat("pages.read.plansMeta", {
-                              days: p.dayCount,
-                              max: p.maxReadingsPerDay,
-                            })}
-                      </Text>
-                    </View>
-                    <Text style={styles.cardOpen}>{t("pages.read.plansOpen")}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
+                />
+              ))}
+            </View>
+
+            {other.length ? (
+              <>
+                <Text style={styles.leadOther}>{t("pages.read.plansLeadOther")}</Text>
+                <View style={styles.list}>
+                  {other.map((p) => {
+                    const title = trPlanField(p.planId, "title") || p.name;
+                    const subtitle = trPlanField(p.planId, "subtitle");
+                    const blurb = trPlanField(p.planId, "blurb");
+                    const isActive = prefs.planId === p.planId;
+                    return (
+                      <Pressable
+                        key={p.planId}
+                        onPress={() => openPlan(p.planId)}
+                        style={({ pressed }) => [
+                          styles.card,
+                          pressed && styles.pressed,
+                          isActive && styles.cardActive,
+                        ]}
+                      >
+                        <View style={styles.cardRow}>
+                          <View style={styles.cardBody}>
+                            <Text style={styles.cardTitle}>{title}</Text>
+                            {subtitle ? <Text style={styles.cardSubtitle}>{subtitle}</Text> : null}
+                            {blurb ? (
+                              <Text style={styles.cardBlurb} numberOfLines={4}>
+                                {blurb}
+                              </Text>
+                            ) : p.description ? (
+                              <Text style={styles.cardBlurb} numberOfLines={3}>
+                                {stripReadingPlanHtml(p.description)}
+                              </Text>
+                            ) : null}
+                            <Text style={styles.cardMeta}>
+                              {tFormat("pages.read.plansMeta", {
+                                days: p.dayCount,
+                                max: p.maxReadingsPerDay,
+                              })}
+                            </Text>
+                          </View>
+                          <Text style={styles.cardOpen}>{t("pages.read.plansOpen")}</Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
+          </>
         )}
       </ReadParchmentPageScroll>
     </View>
@@ -126,13 +152,20 @@ const styles = StyleSheet.create({
     color: c.muted,
     textAlign: "center",
   },
+  leadOther: {
+    marginTop: 24,
+    fontSize: 12,
+    lineHeight: 18,
+    color: c.faint,
+  },
   empty: {
     marginTop: 40,
     fontSize: 14,
     color: c.muted,
     textAlign: "center",
   },
-  list: { marginTop: 28, gap: 12 },
+  featuredList: { marginTop: 20, gap: 12 },
+  list: { marginTop: 12, gap: 12 },
   card: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,

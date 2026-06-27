@@ -11,7 +11,12 @@ import {
   tripleLoopTrackTitle,
   type TripleLoopTrack,
 } from "@/lib/bible/reading-plans/triple-loop-reading";
-import { TRIPLE_LOOP_PLAN_DAY_COUNT, TRIPLE_LOOP_PLAN_ID } from "@/lib/bible/reading-plans/triple-loop-plan";
+import {
+  NT_DEEP_REPEAT_EXPLORE_ARTICLE_SLUG,
+  NT_DEEP_REPEAT_PLAN_ID,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
+import { TRIPLE_LOOP_EXPLORE_ARTICLE_SLUG, TRIPLE_LOOP_PLAN_DAY_COUNT, TRIPLE_LOOP_PLAN_ID } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { exploreArticleHref } from "@/lib/explore/explore-featured-article-slugs";
 import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   getTripleLoopProgressServerSnapshot,
@@ -76,6 +81,14 @@ export function ReadTripleLoopPlanDetailClient() {
         <p className="mt-3 text-pretty text-[11px] leading-relaxed text-amber-800/55 dark:text-stone-500">
           {t("pages.read.tripleLoopEpochNote")} {t("pages.read.todayPlanDayMeta", { n: String(getReadingPlanDaySinceEpoch()) })}
         </p>
+        <p className="mt-2 text-center">
+          <Link
+            href={exploreArticleHref(TRIPLE_LOOP_EXPLORE_ARTICLE_SLUG)}
+            className="text-[12px] font-medium text-amber-800/70 underline decoration-amber-800/25 underline-offset-[0.15em] hover:text-amber-950 dark:text-stone-400 dark:hover:text-stone-200"
+          >
+            {t("pages.read.tripleLoopWhyArticleLink")} →
+          </Link>
+        </p>
       </header>
 
       <section className="mt-6" aria-labelledby="triple-loop-today-heading">
@@ -118,6 +131,36 @@ export function ReadTripleLoopPlanDetailClient() {
         </ul>
       </section>
 
+      <section
+        className="mt-8 rounded-xl border border-amber-900/10 bg-amber-50/35 px-4 py-4 dark:border-stone-600/25 dark:bg-stone-900/30"
+        aria-labelledby="triple-loop-deep-read-heading"
+      >
+        <h2
+          id="triple-loop-deep-read-heading"
+          className="text-[11px] font-semibold tracking-[0.12em] text-amber-900/72 dark:text-stone-400"
+        >
+          {t("pages.read.tripleLoopDeepReadTitle")}
+        </h2>
+        <p className="mt-3 text-pretty text-[12px] leading-relaxed text-amber-900/78 dark:text-stone-400">
+          {t("pages.read.tripleLoopDeepReadLead")}
+        </p>
+        <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[12px]">
+          <Link
+            href={`/read/plans/${NT_DEEP_REPEAT_PLAN_ID}`}
+            className="font-medium text-amber-950 underline decoration-amber-800/25 underline-offset-[0.15em] hover:text-amber-950 dark:text-stone-100"
+          >
+            {t("pages.read.tripleLoopDeepReadPlanLink")} →
+          </Link>
+          <span className="text-amber-800/35 dark:text-stone-600">·</span>
+          <Link
+            href={exploreArticleHref(NT_DEEP_REPEAT_EXPLORE_ARTICLE_SLUG)}
+            className="font-medium text-amber-800/70 underline decoration-amber-800/25 underline-offset-[0.15em] hover:text-amber-950 dark:text-stone-400 dark:hover:text-stone-200"
+          >
+            {t("pages.read.tripleLoopDeepReadArticleLink")} →
+          </Link>
+        </p>
+      </section>
+
       <section className="mt-8 rounded-xl border border-amber-900/10 bg-amber-50/35 px-4 py-4 dark:border-stone-600/25 dark:bg-stone-900/30">
         <h3 className="text-[11px] font-semibold tracking-[0.12em] text-amber-900/72 dark:text-stone-400">
           {t("pages.read.tripleLoopPrinciplesTitle")}
@@ -127,6 +170,14 @@ export function ReadTripleLoopPlanDetailClient() {
           <li>{t("pages.read.tripleLoopPrinciple2")}</li>
           <li>{t("pages.read.tripleLoopPrinciple3")}</li>
         </ul>
+        <p className="mt-3">
+          <Link
+            href={exploreArticleHref(TRIPLE_LOOP_EXPLORE_ARTICLE_SLUG)}
+            className="text-[12px] font-medium text-amber-800/70 underline decoration-amber-800/25 underline-offset-[0.15em] hover:text-amber-950 dark:text-stone-400 dark:hover:text-stone-200"
+          >
+            {t("pages.read.tripleLoopWhyArticleLink")} →
+          </Link>
+        </p>
         {hasUserTripleLoopProgress() ? (
           <button
             type="button"

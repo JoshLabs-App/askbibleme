@@ -1,3 +1,10 @@
+import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
+import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
+import {
+  advanceNtDeepRepeatOnePlanDay,
+  resetNtDeepRepeatToCalendarToday,
+} from "./nt-deep-repeat-progress";
+import { isPointerReadingPlanId } from "./pointer-reading-plan";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 import {
@@ -18,6 +25,9 @@ export function readAheadDays(prefs: ReadingPlanPrefs): number {
 }
 
 export function resolveEffectiveEpochDay(prefs: ReadingPlanPrefs, now = new Date()): number {
+  if (isNtDeepRepeatPlanId(prefs.planId)) {
+    return resolveNtDeepRepeatPlanDay(prefs, now) + readAheadDays(prefs);
+  }
   return getReadingPlanDaySinceEpoch(now) + readAheadDays(prefs);
 }
 
@@ -39,7 +49,7 @@ export function canAdvanceReadingPlanOneDay(
   dayCount: number | undefined,
   now = new Date(),
 ): boolean {
-  if (isTripleLoopPlanId(prefs.planId)) return true;
+  if (isPointerReadingPlanId(prefs.planId)) return true;
   const count = dayCount ?? prefs.dayCount ?? 365;
   if (!Number.isFinite(count) || count < 1) return false;
   const calendarIndex = resolveReadingPlanDayIndex(prefs, count, now);
@@ -64,6 +74,8 @@ export async function advanceReadingPlanOneDay(now = new Date()): Promise<Readin
 
   if (isTripleLoopPlanId(prefs.planId)) {
     await advanceTripleLoopOnePlanDay(now);
+  } else if (isNtDeepRepeatPlanId(prefs.planId)) {
+    await advanceNtDeepRepeatOnePlanDay(now);
   }
 
   await notifyReadingPlanChangedMobile();
@@ -72,7 +84,7 @@ export async function advanceReadingPlanOneDay(now = new Date()): Promise<Readin
 
 export async function resetReadingPlanAheadToToday(now = new Date()): Promise<ReadingPlanPrefs> {
   const prefs = await readEffectiveReadingPlanPrefs();
-  if (readAheadDays(prefs) === 0 && !isTripleLoopPlanId(prefs.planId)) {
+  if (readAheadDays(prefs) === 0 && !isPointerReadingPlanId(prefs.planId)) {
     return prefs;
   }
 
@@ -81,6 +93,8 @@ export async function resetReadingPlanAheadToToday(now = new Date()): Promise<Re
 
   if (isTripleLoopPlanId(prefs.planId)) {
     await resetTripleLoopToCalendarToday(now);
+  } else if (isNtDeepRepeatPlanId(prefs.planId)) {
+    await resetNtDeepRepeatToCalendarToday(now);
   }
 
   await notifyReadingPlanChangedMobile();

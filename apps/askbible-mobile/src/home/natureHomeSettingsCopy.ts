@@ -48,6 +48,11 @@ const HOME_SETTINGS: Record<
     ttsVoiceUnavailable: string;
     ttsVoiceAdd: string;
     ttsVoiceManageHint: string;
+    verseRotationSection: string;
+    verseRotationHint: string;
+    verseRotationValue: string;
+    verseRotationDecreaseAria: string;
+    verseRotationIncreaseAria: string;
   }
 > = {
   "zh-CN": {
@@ -93,6 +98,11 @@ const HOME_SETTINGS: Record<
     ttsVoiceUnavailable: "未发现可用声线",
     ttsVoiceAdd: "添加语音",
     ttsVoiceManageHint: "到系统设置下载/启用语音后，返回这里可选",
+    verseRotationSection: "轮播",
+    verseRotationHint: "首页与小挂件经文展示时间一致",
+    verseRotationValue: "{n} 秒",
+    verseRotationDecreaseAria: "缩短经文展示时间",
+    verseRotationIncreaseAria: "延长经文展示时间",
   },
   "zh-TW": {
     panelTitle: "",
@@ -137,6 +147,11 @@ const HOME_SETTINGS: Record<
     ttsVoiceUnavailable: "未發現可用聲線",
     ttsVoiceAdd: "新增語音",
     ttsVoiceManageHint: "到系統設定下載/啟用語音後，回來這裡可選",
+    verseRotationSection: "輪播",
+    verseRotationHint: "首頁與小掛件經文展示時間一致",
+    verseRotationValue: "{n} 秒",
+    verseRotationDecreaseAria: "縮短經文展示時間",
+    verseRotationIncreaseAria: "延長經文展示時間",
   },
   en: {
     panelTitle: "",
@@ -181,6 +196,11 @@ const HOME_SETTINGS: Record<
     ttsVoiceUnavailable: "No voices available",
     ttsVoiceAdd: "Add voices",
     ttsVoiceManageHint: "Download or enable voices in system settings, then return here.",
+    verseRotationSection: "Rotation",
+    verseRotationHint: "Home and widget use the same display time",
+    verseRotationValue: "{n}s",
+    verseRotationDecreaseAria: "Shorter verse display time",
+    verseRotationIncreaseAria: "Longer verse display time",
   },
 };
 

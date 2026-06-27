@@ -190,5 +190,12 @@ export async function markTodayReadingChapterVisit(
     epochDay: getReadingPlanDaySinceEpoch(),
     dayIndex,
   });
-  markTodayReadingItemDone(scopeKey, todayReadingItemKey(reading));
+  const itemKey = todayReadingItemKey(reading);
+  const { readingPlanRangeUnitCount, recordTodayReadingChapterFraction, TODAY_READING_AUTO_DONE_FRACTION } =
+    await import("@/lib/read/today-reading-chapter-fraction");
+  if (readingPlanRangeUnitCount(reading) > 1) {
+    await recordTodayReadingChapterFraction(bookId, chapter, TODAY_READING_AUTO_DONE_FRACTION, opts);
+    return;
+  }
+  markTodayReadingItemDone(scopeKey, itemKey);
 }

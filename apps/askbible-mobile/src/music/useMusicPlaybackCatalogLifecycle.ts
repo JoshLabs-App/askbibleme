@@ -4,6 +4,7 @@ import {
   useMusicResumeHydration,
   useMusicStoreBootstrap,
   useWarmCalmBundledTrack,
+  useAutoMusicPackDownload,
 } from "./musicStoreCatalog";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import type { MusicCompanionStore, PlaybackTrack } from "./types";
@@ -38,6 +39,7 @@ export function useMusicPlaybackCatalogLifecycle({
     soundRef: refs.soundRef,
     storeRef: refs.storeRef,
   });
+  useAutoMusicPackDownload({ setStore, setTrackIndex });
   useBundledOnlyTrackIndexGuard(tracks, trackIndex, setTrackIndex);
   useWarmCalmBundledTrack(tracks);
 

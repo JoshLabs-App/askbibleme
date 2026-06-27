@@ -3,11 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/site-copy";
 import { ReadParchmentPageScroll } from "./ReadParchmentPageScroll";
+import { ReadNtDeepRepeatPlanDetail } from "./ReadNtDeepRepeatPlanDetail";
+import { ReadTripleLoopPlanDetail } from "./ReadTripleLoopPlanDetail";
 import { ReadPlanActivateControl } from "./ReadPlanActivateControl";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { fetchReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
+import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
+import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 
 function planFieldKey(planId: string, field: "title" | "subtitle" | "blurb"): string {
@@ -59,10 +63,24 @@ export function ReadPlanDetailScreen() {
           <>
             <Text style={styles.title}>{title}</Text>
             {blurb ? <Text style={styles.lead}>{blurb}</Text> : null}
-            {isTripleLoopPlanId(plan.planId) ? (
-              <Text style={styles.tripleHint}>{t("pages.read.tripleLoopActivateHint")}</Text>
-            ) : null}
-            <ReadPlanActivateControl planId={plan.planId} dayCount={plan.dayCount} />
+            {isNtDeepRepeatPlanId(plan.planId) ? (
+              <>
+                <ReadPlanActivateControl planId={plan.planId} dayCount={plan.dayCount} />
+                <ReadNtDeepRepeatPlanDetail />
+              </>
+            ) : isTripleLoopPlanId(plan.planId) ? (
+              <>
+                <ReadPlanActivateControl planId={plan.planId} dayCount={plan.dayCount} />
+                <ReadTripleLoopPlanDetail />
+              </>
+            ) : (
+              <>
+                {isPointerReadingPlanId(plan.planId) ? (
+                  <Text style={styles.tripleHint}>{t("pages.read.tripleLoopActivateHint")}</Text>
+                ) : null}
+                <ReadPlanActivateControl planId={plan.planId} dayCount={plan.dayCount} />
+              </>
+            )}
             <Pressable
               onPress={() => router.push("/read")}
               style={({ pressed }) => [styles.homeLink, pressed && styles.pressed]}

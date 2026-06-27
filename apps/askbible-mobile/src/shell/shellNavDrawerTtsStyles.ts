@@ -124,4 +124,48 @@ export const shellNavDrawerTtsStyles = StyleSheet.create({
   ttsVoiceChipTextSelected: {
     color: "rgba(120, 75, 30, 0.96)",
   },
+  weekdayPickerLabel: {
+    marginTop: 8,
+    marginBottom: 4,
+    fontSize: 12,
+    color: "rgba(55, 53, 47, 0.72)",
+    ...parchmentSans(600),
+  },
+  weekdayPickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 4,
+    marginBottom: 2,
+  },
+  weekdayChip: {
+    flex: 1,
+    minHeight: 28,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.24)",
+    backgroundColor: "rgba(255, 248, 235, 0.62)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  weekdayChipSelected: {
+    borderColor: "rgba(255, 177, 1, 0.8)",
+    backgroundColor: "rgba(255, 177, 1, 0.2)",
+  },
+  weekdayChipPressed: {
+    backgroundColor: "rgba(255, 177, 1, 0.14)",
+  },
+  weekdayChipText: {
+    fontSize: 12,
+    color: "rgba(55, 53, 47, 0.78)",
+    ...parchmentSans(600),
+  },
+  weekdayChipTextSelected: {
+    color: "rgba(120, 75, 30, 0.96)",
+  },
+  timePickerWrap: {
+    alignItems: "center",
+    marginTop: 2,
+    marginBottom: 4,
+  },
 });

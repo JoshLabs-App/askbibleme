@@ -1,12 +1,13 @@
 import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
+import { getScriptureBookDisplayName } from "./scripture-book-display-name";
+import { scriptureBooks } from "./scripture-books";
 import {
   isScriptureTranslationInstalled,
   rebuildBundledScriptureDatabase,
   retryScriptureDatabaseOnPrepareError,
+  isNativeDatabaseRejectedError,
 } from "./scripture-database";
-import { getScriptureBookDisplayName } from "./scripture-book-display-name";
-import { scriptureBooks } from "./scripture-books";
-import { getScriptureDatabase } from "./scripture-database";
+import * as SQLite from "expo-sqlite";
 import { loadedChapterVerseFromRow } from "./verse-annotations";
 import type { LoadedChapter } from "./types";
 import {
@@ -35,19 +36,8 @@ type VerseRow = {
   theme_repeat_count?: number;
 };
 
-function isNativeDatabaseRejectedError(err: unknown): boolean {
-  const message = String(err instanceof Error ? err.message : err).toLowerCase();
-  return (
-    message.includes("nativedatabase.prepareasync") ||
-    message.includes("nativedatabase.preparesync") ||
-    message.includes("prepareasync") ||
-    message.includes("preparesync") ||
-    (message.includes("call to function") && message.includes("nativedatabase."))
-  );
-}
-
 async function queryChapterVerses(
-  db: Awaited<ReturnType<typeof getScriptureDatabase>>,
+  db: SQLite.SQLiteDatabase,
   bookId: string,
   chapter: number,
 ): Promise<VerseRow[]> {

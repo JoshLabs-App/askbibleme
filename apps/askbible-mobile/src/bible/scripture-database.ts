@@ -4,7 +4,7 @@ import {
   ensureBundledDatabaseOnDisk,
   ensureDownloadedDatabaseOnDisk,
   getLocalScriptureTranslationByteSize,
-  rebuildBundledScriptureDatabase,
+  rebuildBundledScriptureDatabaseInner,
 } from "./scriptureDatabaseBundledInstall";
 import { markScriptureDatabaseInstalled, writeRemoteScriptureBytesMarker } from "./scriptureDatabaseMarkers";
 import { SCRIPTURE_SQLITE_SCHEMA_VERSION } from "./scriptureDatabasePaths";
@@ -34,11 +34,11 @@ export {
   isScriptureTranslationInstalled,
   removeScriptureDatabaseFiles,
   getLocalScriptureTranslationByteSize,
-  rebuildBundledScriptureDatabase,
+  isNativeDatabaseRejectedError,
 };
 
-/** 打开指定译本 SQLite；内置译本从 assets 复制，其余须已下载到文档目录。 */
-export async function getScriptureDatabase(
+/** 打开指定译本 SQLite（须在 enqueue 回调内调用，避免与查询并发删库）。 */
+async function openScriptureDatabaseUnlocked(
   translationId: string = DEFAULT_SCRIPTURE_TRANSLATION_ID,
 ): Promise<SQLite.SQLiteDatabase> {
   const id = String(translationId || "").trim();
@@ -50,18 +50,38 @@ export async function getScriptureDatabase(
   let openPromise = getOpenPromise(id);
   if (!openPromise) {
     openPromise = (async () => {
-      if (bundled) {
-        await ensureBundledDatabaseOnDisk(id);
-      } else {
-        await ensureDownloadedDatabaseOnDisk(id);
+      try {
+        if (bundled) {
+          await ensureBundledDatabaseOnDisk(id);
+        } else {
+          await ensureDownloadedDatabaseOnDisk(id);
+        }
+        const db = await SQLite.openDatabaseAsync(dbFileName(id));
+        trackOpenedDatabase(id, db);
+        return db;
+      } catch (err) {
+        clearOpenPromise(id);
+        await closeOpenedDatabase(id);
+        throw err;
       }
-      const db = await SQLite.openDatabaseAsync(dbFileName(id));
-      trackOpenedDatabase(id, db);
-      return db;
     })();
     setOpenPromise(id, openPromise);
   }
   return openPromise;
+}
+
+/** 打开指定译本 SQLite；内置译本从 assets 复制，其余须已下载到文档目录。 */
+export async function getScriptureDatabase(
+  translationId: string = DEFAULT_SCRIPTURE_TRANSLATION_ID,
+): Promise<SQLite.SQLiteDatabase> {
+  const id = String(translationId || "").trim();
+  return enqueueScriptureDbOperation(id, () => openScriptureDatabaseUnlocked(id));
+}
+
+export async function rebuildBundledScriptureDatabase(translationId: string): Promise<void> {
+  const id = String(translationId || "").trim();
+  if (!isBundledScriptureTranslation(id)) return;
+  await enqueueScriptureDbOperation(id, () => rebuildBundledScriptureDatabaseInner(id));
 }
 
 /** 打开译本 SQLite 并执行轻量查询，缩短首次搜索冷启动。 */
@@ -88,27 +108,34 @@ export async function retryScriptureDatabaseOnPrepareError<T>(
 ): Promise<T> {
   const id = String(translationId || "").trim();
   return enqueueScriptureDbOperation(id, async () => {
-    const firstDb = await getScriptureDatabase(id);
+    const firstDb = await openScriptureDatabaseUnlocked(id);
     try {
       return await run(firstDb);
     } catch (err) {
       if (!isNativeDatabaseRejectedError(err)) throw err;
       await closeOpenedDatabase(id);
       clearOpenPromise(id);
-      const reopened = await getScriptureDatabase(id);
+      const reopened = await openScriptureDatabaseUnlocked(id);
       try {
         return await run(reopened);
       } catch (err2) {
         if (!isNativeDatabaseRejectedError(err2)) throw err2;
-        const dest = getScriptureDatabaseDestPath(id);
-        await removeInstalledDatabase(dest, id);
+        await removeInstalledDatabase(getScriptureDatabaseDestPath(id), id);
         if (isBundledScriptureTranslation(id)) {
-          await ensureBundledDatabaseOnDisk(id);
+          await rebuildBundledScriptureDatabaseInner(id);
         } else {
           throw err2;
         }
-        const rebuilt = await getScriptureDatabase(id);
-        return run(rebuilt);
+        const rebuilt = await openScriptureDatabaseUnlocked(id);
+        try {
+          return await run(rebuilt);
+        } catch (err3) {
+          if (!isNativeDatabaseRejectedError(err3)) throw err3;
+          if (!isBundledScriptureTranslation(id)) throw err3;
+          await rebuildBundledScriptureDatabaseInner(id);
+          const again = await openScriptureDatabaseUnlocked(id);
+          return run(again);
+        }
       }
     }
   });

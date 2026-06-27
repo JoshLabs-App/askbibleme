@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  TRIPLE_LOOP_PLAN_DAY_COUNT,
-  TRIPLE_LOOP_PLAN_ID,
-} from "./triple-loop-plan";
+import { NT_DEEP_REPEAT_PLAN_DAY_COUNT, NT_DEEP_REPEAT_PLAN_ID } from "./nt-deep-repeat-plan";
 import { READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
+
+import type { NtDeepRepeatPace } from "./nt-deep-repeat-pace";
+import { isNtDeepRepeatPace, NT_DEEP_REPEAT_DEFAULT_PACE } from "./nt-deep-repeat-pace";
 
 export type ReadingPlanAnchor = "from-today" | "calendar-jan1" | "calendar-easter";
 
@@ -15,6 +15,7 @@ export type ReadingPlanPrefs = {
   dayCount?: number;
   /** Days read ahead of calendar today (0 = on calendar). Synced across devices. */
   aheadDays?: number;
+  ntDeepRepeatPace?: NtDeepRepeatPace;
 };
 
 export const READING_PLAN_PREFS_STORAGE_KEY = "askbible-reading-plan-prefs-v1";
@@ -23,9 +24,10 @@ export const READING_PLAN_PREFS_STORAGE_KEY_LEGACY = "selah-reading-plan-prefs-v
 export { READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
 export { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 
-export const DEFAULT_READING_PLAN_ID = TRIPLE_LOOP_PLAN_ID;
-export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "calendar-easter";
-export const DEFAULT_READING_PLAN_DAY_COUNT = TRIPLE_LOOP_PLAN_DAY_COUNT;
+export const DEFAULT_READING_PLAN_ID = NT_DEEP_REPEAT_PLAN_ID;
+export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "from-today";
+export const DEFAULT_READING_PLAN_DAY_COUNT = NT_DEEP_REPEAT_PLAN_DAY_COUNT;
+export const DEFAULT_NT_DEEP_REPEAT_PACE: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE;
 
 const listeners = new Set<() => void>();
 
@@ -87,6 +89,11 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
         ? j.aheadDays
         : undefined;
     const planId = j.planId.trim();
+    const ntDeepRepeatPace = isNtDeepRepeatPace(j.ntDeepRepeatPace)
+      ? j.ntDeepRepeatPace
+      : planId === NT_DEEP_REPEAT_PLAN_ID
+        ? NT_DEEP_REPEAT_DEFAULT_PACE
+        : undefined;
     return {
       version: 1,
       planId,
@@ -94,19 +101,25 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
       startedOn: j.anchor === "calendar-easter" ? READING_PLAN_EASTER_EPOCH_DATE : startedOn,
       dayCount,
       aheadDays,
+      ntDeepRepeatPace,
     };
   } catch {
     return null;
   }
 }
 
-export function buildDefaultReadingPlanPrefs(dayCount = DEFAULT_READING_PLAN_DAY_COUNT): ReadingPlanPrefs {
+export function buildDefaultReadingPlanPrefs(
+  dayCount = DEFAULT_READING_PLAN_DAY_COUNT,
+  now = new Date(),
+): ReadingPlanPrefs {
+  const startedOn = toLocalDateString(now);
   return {
     version: 1,
     planId: DEFAULT_READING_PLAN_ID,
     anchor: DEFAULT_READING_PLAN_ANCHOR,
-    startedOn: READING_PLAN_EASTER_EPOCH_DATE,
+    startedOn,
     dayCount,
+    ntDeepRepeatPace: DEFAULT_NT_DEEP_REPEAT_PACE,
   };
 }
 
@@ -158,7 +171,7 @@ export async function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): Pro
 export async function setActiveReadingPlan(
   planId: string,
   anchor: ReadingPlanAnchor,
-  opts?: { now?: Date; dayCount?: number },
+  opts?: { now?: Date; dayCount?: number; ntDeepRepeatPace?: NtDeepRepeatPace },
 ): Promise<ReadingPlanPrefs> {
   const now = opts?.now ?? new Date();
   const prefs: ReadingPlanPrefs = {
@@ -172,6 +185,7 @@ export async function setActiveReadingPlan(
           ? READING_PLAN_EASTER_EPOCH_DATE
           : undefined,
     dayCount: opts?.dayCount,
+    ntDeepRepeatPace: opts?.ntDeepRepeatPace,
   };
   await writeReadingPlanPrefs(prefs);
   return prefs;

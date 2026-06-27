@@ -23,6 +23,7 @@ import { subscribeOnboardingDevotionOpen } from "../src/onboarding/onboarding-de
 import { NotificationSetupBridge } from "../src/notifications/NotificationSetupBridge";
 import { ReadingAlarmBridge } from "../src/notifications/ReadingAlarmBridge";
 import { PlanFlowPlaybackBridge } from "../src/read/PlanFlowPlaybackBridge";
+import { ReadingPlanBootstrapBridge } from "../src/read/ReadingPlanBootstrapBridge";
 import { WidgetReadDeepLinkBridge } from "../src/widget/WidgetReadDeepLinkBridge";
 import { shouldShowOnboardingDevotionIntro } from "../src/onboarding/onboarding-devotion-prefs";
 import { useAndroidImmersiveSystemBars } from "../src/shell/useAndroidImmersiveSystemBars";
@@ -122,6 +123,7 @@ export default function RootLayout() {
       <ShellErrorBoundary>
       <LocaleProvider>
       <MemberAuthProvider>
+      <ReadingPlanBootstrapBridge />
       <MemberReadingSyncBridge />
       <TelemetryProvider>
       <ShellNavMenuProvider>

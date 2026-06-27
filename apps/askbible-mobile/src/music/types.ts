@@ -9,6 +9,7 @@ export type AudioTrack = {
   durationSec?: number;
   tags?: string[];
   remark?: LocalizedField;
+  hidden?: boolean;
 };
 
 export type BackgroundVisual = {

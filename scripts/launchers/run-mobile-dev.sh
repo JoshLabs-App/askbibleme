@@ -73,7 +73,8 @@ fi
 
 METRO_ARGS=(--clear)
 case "$MODE" in
-  ios) METRO_ARGS+=(--ios) ;;
+  # 模拟器固定 localhost，避免连到 LAN IP 后 ⌘R 仍读旧 bundle。
+  ios) METRO_ARGS+=(--ios --localhost) ;;
   android) METRO_ARGS+=(--android) ;;
 esac
 

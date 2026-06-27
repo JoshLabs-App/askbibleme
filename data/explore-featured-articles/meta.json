@@ -25,12 +25,23 @@
     {
       "slug": "article_1778108127353_fzymbc",
       "zh-CN": {
-        "title": "关于读经计划的思考",
-        "exploreLabel": "读经的计划"
+        "title": "轻松读经",
+        "exploreLabel": "轻松读经"
       },
       "en": {
-        "title": "Reflections on a Reading Plan",
-        "exploreLabel": "Reading Plan"
+        "title": "Easy Reading",
+        "exploreLabel": "Easy Reading"
+      }
+    },
+    {
+      "slug": "a-macarthur-lifelong-bible-reading",
+      "zh-CN": {
+        "title": "正式研读 · 麦克阿瑟的研读法",
+        "exploreLabel": "正式研读"
+      },
+      "en": {
+        "title": "Formal Study — MacArthur's Method",
+        "exploreLabel": "Formal Study"
       }
     }
   ]

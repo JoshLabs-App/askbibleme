@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 import type { NatureHomeVerseTextEffectV1 } from "@/lib/home/nature-home-verse-appearance-prefs";
 
-/** 与 App `HomeVerseOverlay` `FADE_IN_MS` / `FADE_OUT_MS` 一致 */
-export const NATURE_HOME_VERSE_FADE_MS = 2_000;
+/** 与 App `HomeVerseOverlay` 淡入时长一致（淡出略短，见 `homeVerseFadeTiming.ts`） */
+export const NATURE_HOME_VERSE_FADE_MS = 800;
 
 export const NATURE_HOME_VERSE_BODY_PX = 18;
 export const NATURE_HOME_VERSE_REF_PX = 13;

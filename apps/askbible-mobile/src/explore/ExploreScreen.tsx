@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
-import { InteractionManager, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { InteractionManager, Pressable, Text, View } from "react-native";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
@@ -11,6 +11,7 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { t } from "../i18n/site-copy";
 import { EXPLORE_ENTRIES } from "./exploreEntries";
 import { exploreArticleRoute } from "./exploreFeaturedArticles";
+import { isReadingPlannerExploreSlug, readingPlannerRoute } from "./reading-planner/reading-planner-routes";
 import { useExploreFeaturedArticles, refreshExploreFeaturedArticlesWhenFocused } from "./useExploreFeaturedArticles";
 import { refreshExploreContentWhenFocused } from "./refreshExploreContent";
 import { EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG } from "./exploreFeaturedArticleIcons";
@@ -19,12 +20,9 @@ import { ExploreEntryIcon } from "./ExploreEntryIcon";
 import { asExploreEntryIconShape } from "./exploreStagedEntries";
 import { useExploreStagedEntries } from "./useExploreStagedEntries";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { PARCHMENT_COLUMN_MAX_WIDTH_PHONE, parchmentColumnMaxWidth } from "../read/parchmentColumnLayout";
+import { useExploreIconGridLayout } from "../read/parchmentColumnLayout";
 import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
 
-const EXPLORE_SCROLL_PAD_X = 22;
-const EXPLORE_ICON_COLS = 3;
-const EXPLORE_ICON_GRID_GAP = 10;
 const SCRIPTURE_ANTHOLOGY_IDS = [
   "word-of-god",
   "narrow-gate",
@@ -35,20 +33,12 @@ export function ExploreScreen() {
   const router = useRouter();
   const exploreFocused = useIsFocused();
   const insets = useSafeAreaInsets();
-  const { width: windowW, height: windowH } = useWindowDimensions();
   const scrollContentStyle = useExploreScrollContentStyle({
     paddingTop: EXPLORE_PAGE_TOP_PAD + insets.top,
     paddingBottom: shellTabBarScrollPad(insets.bottom),
   });
-  const contentMaxW = parchmentColumnMaxWidth(windowW, windowH, PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
+  const iconGrid = useExploreIconGridLayout();
   const { locale } = useLocale();
-
-  // 须按「当前屏宽 ∩ 版心」算栅格，勿只用 448 上限；否则 iPhone 上 tile 过宽只能排 2 个。
-  const layoutWidth = Math.min(windowW, contentMaxW ?? windowW);
-  const iconGridWidth = layoutWidth - EXPLORE_SCROLL_PAD_X * 2;
-  const iconTileW = Math.floor(
-    (iconGridWidth - EXPLORE_ICON_GRID_GAP * (EXPLORE_ICON_COLS - 1)) / EXPLORE_ICON_COLS,
-  );
   const scriptureAnthologyEntries = SCRIPTURE_ANTHOLOGY_IDS.map((id) =>
     EXPLORE_ENTRIES.find((entry) => entry.id === id),
   ).filter((entry): entry is (typeof EXPLORE_ENTRIES)[number] => Boolean(entry));
@@ -76,10 +66,14 @@ export function ExploreScreen() {
   const renderArticleTile = (article: (typeof featuredArticles)[number]) => (
     <Pressable
       key={article.slug}
-      onPress={() => router.push(exploreArticleRoute(article.slug))}
+      onPress={() =>
+        router.push(
+          isReadingPlannerExploreSlug(article.slug) ? readingPlannerRoute() : exploreArticleRoute(article.slug),
+        )
+      }
       style={({ pressed }) => [
         s.iconTile,
-        { width: iconTileW },
+        { width: iconGrid.tileW },
         pressed && s.iconTilePressed,
       ]}
       accessibilityRole="button"
@@ -109,7 +103,7 @@ export function ExploreScreen() {
       onPress={() => router.push(entry.href)}
       style={({ pressed }) => [
         s.iconTile,
-        { width: iconTileW },
+        { width: iconGrid.tileW },
         pressed && s.iconTilePressed,
       ]}
       accessibilityRole="button"
@@ -135,7 +129,7 @@ export function ExploreScreen() {
       onPress={() => router.push(entry.href)}
       style={({ pressed }) => [
         s.iconTile,
-        { width: iconTileW },
+        { width: iconGrid.tileW },
         pressed && s.iconTilePressed,
       ]}
       accessibilityRole="button"
@@ -171,7 +165,7 @@ export function ExploreScreen() {
 
         {iconGridsReady ? (
         <View style={s.section}>
-          <View style={s.iconGrid}>
+          <View style={[s.iconGrid, { gap: iconGrid.gap }]}>
             {topEntries.map(renderEntryTile)}
             {scriptureAnthologyEntries.map(renderEntryTile)}
             {stagedEntries.map(renderStagedEntryTile)}

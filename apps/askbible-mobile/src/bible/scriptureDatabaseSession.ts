@@ -91,13 +91,30 @@ export function markWarmedSearchTranslation(id: string): void {
   warmedSearchTranslationIds.add(id);
 }
 
+function collectNativeDatabaseErrorText(err: unknown): string {
+  const parts: string[] = [];
+  let current: unknown = err;
+  for (let depth = 0; depth < 5 && current != null; depth += 1) {
+    if (current instanceof Error) {
+      if (current.message.trim()) parts.push(current.message);
+      current = (current as Error & { cause?: unknown }).cause;
+      continue;
+    }
+    const text = String(current).trim();
+    if (text) parts.push(text);
+    break;
+  }
+  return parts.join(" ").toLowerCase();
+}
+
 function isNativeDatabaseRejectedError(err: unknown): boolean {
-  const message = String(err instanceof Error ? err.message : err).toLowerCase();
+  const message = collectNativeDatabaseErrorText(err);
   return (
     message.includes("nativedatabase.prepareasync") ||
     message.includes("nativedatabase.preparesync") ||
     message.includes("prepareasync") ||
     message.includes("preparesync") ||
+    message.includes("nullpointerexception") ||
     (message.includes("call to function") && message.includes("nativedatabase."))
   );
 }

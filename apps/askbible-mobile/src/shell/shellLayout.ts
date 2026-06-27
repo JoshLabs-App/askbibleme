@@ -29,6 +29,16 @@ export function shellFullBleedBackdropStyle(frame: {
   width: number;
   height: number;
 }): ViewStyle {
+  if (Platform.OS === "android") {
+    return {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 0,
+    };
+  }
   return {
     position: "absolute",
     top: 0,
@@ -56,5 +66,8 @@ export const SHELL_TABS_SCREEN_OPTIONS = {
     elevation: 0,
     shadowOpacity: 0,
   },
-  sceneStyle: { backgroundColor: "transparent" },
+  sceneStyle: {
+    backgroundColor: "transparent",
+    ...(Platform.OS === "android" ? ({ overflow: "visible" } as const) : null),
+  },
 };

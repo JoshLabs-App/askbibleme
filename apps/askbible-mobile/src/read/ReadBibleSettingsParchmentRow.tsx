@@ -16,7 +16,7 @@ export function ReadBibleSettingsParchmentRow({
   return (
     <View style={styles.row}>
       <View style={styles.rowIcon}>
-        <MaterialIcons name={icon} size={17} color={c.faint} />
+        <MaterialIcons name={icon} size={18} color={c.faint} />
       </View>
       <View style={styles.rowBody}>{children}</View>
     </View>

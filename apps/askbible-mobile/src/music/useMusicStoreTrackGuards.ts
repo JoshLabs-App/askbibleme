@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { isTrackPlayable } from "./trackArtwork";
 import { warmBundledModuleUri } from "./musicTrackPlayback";
 import { resolveDefaultCalmTrackIndex } from "./musicStoreHelpers";
+import { warmReadingAlarmPreludePool } from "../notifications/readingAlarmPreludeCache";
 import type { PlaybackTrack } from "./types";
 
 export function useBundledOnlyTrackIndexGuard(
@@ -20,16 +21,23 @@ export function useBundledOnlyTrackIndexGuard(
 }
 
 export function useWarmCalmBundledTrack(tracks: PlaybackTrack[]): void {
+  const lastPreludeKeyRef = useRef("");
+
   useEffect(() => {
     if (tracks.length === 0) return;
-    const calmLocal = tracks.find(
-      (t) =>
-        isTrackPlayable(t) &&
-        t.localReady &&
-        (t.album || "").trim() === "安静" &&
-        t.bundledModule != null,
-    );
-    if (!calmLocal?.bundledModule) return;
-    void warmBundledModuleUri(calmLocal.bundledModule);
+
+    for (const track of tracks) {
+      if (!isTrackPlayable(track) || !track.localReady || track.bundledModule == null) continue;
+      void warmBundledModuleUri(track.bundledModule);
+    }
+
+    const localKey = tracks
+      .filter((t) => t.localReady)
+      .map((t) => t.id)
+      .sort()
+      .join("|");
+    if (localKey === lastPreludeKeyRef.current) return;
+    lastPreludeKeyRef.current = localKey;
+    void warmReadingAlarmPreludePool(tracks);
   }, [tracks]);
 }

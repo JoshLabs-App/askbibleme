@@ -58,6 +58,14 @@ export function HistoricalCreedFullTextPanel({ creedId, locale }: Props) {
     );
   }
 
+  if (!paragraphs || paragraphs.length === 0) {
+    return (
+      <p className="py-3 text-[14px] leading-relaxed text-ink/60">
+        {t("pages.explore.historicalCreedsBodyUnavailable")}
+      </p>
+    );
+  }
+
   return (
     <HistoricalCreedSectionedBody
       creedId={creedId}

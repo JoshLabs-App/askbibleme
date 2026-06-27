@@ -4,7 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { NtDeepRepeatPaceSection } from "@/components/bible/NtDeepRepeatPaceSection";
+import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
+import {
+  NT_DEEP_REPEAT_DEFAULT_PACE,
+  type NtDeepRepeatPace,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { activateNtDeepRepeatPlan } from "@/lib/read/nt-deep-repeat-plan-sync";
 import type { ReadingPlanAnchor } from "@/lib/read/reading-plan-prefs";
 import {
   DEFAULT_READING_PLAN_ANCHOR,
@@ -38,6 +45,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     [stored, dayCount],
   );
   const isTripleLoop = isTripleLoopPlanId(planId);
+  const isNtDeepRepeat = isNtDeepRepeatPlanId(planId);
   const isActive = effective.planId === planId;
   const isImplicitDefault =
     planId === DEFAULT_READING_PLAN_ID && isImplicitDefaultReadingPlan(stored);
@@ -48,10 +56,18 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
         ? DEFAULT_READING_PLAN_ANCHOR
         : "from-today",
   );
+  const [pace, setPace] = useState<NtDeepRepeatPace>(
+    stored?.ntDeepRepeatPace ?? effective.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE,
+  );
 
   useEffect(() => {
     if (isActive) setAnchor(effective.anchor);
   }, [isActive, effective.anchor]);
+
+  useEffect(() => {
+    if (isActive && effective.ntDeepRepeatPace) setPace(effective.ntDeepRepeatPace);
+    else if (stored?.ntDeepRepeatPace) setPace(stored.ntDeepRepeatPace);
+  }, [isActive, effective.ntDeepRepeatPace, stored?.ntDeepRepeatPace]);
 
   const todayDayIndex = useMemo(() => {
     if (!isActive || isTripleLoop) return null;
@@ -59,7 +75,11 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   }, [isActive, effective, dayCount, isTripleLoop]);
 
   const activate = () => {
-    setActiveReadingPlan(planId, isTripleLoop ? "calendar-easter" : anchor, { dayCount });
+    if (isNtDeepRepeat) {
+      activateNtDeepRepeatPlan({ dayCount, pace });
+    } else {
+      setActiveReadingPlan(planId, isTripleLoop ? "calendar-easter" : anchor, { dayCount });
+    }
     router.push("/read");
     router.refresh();
   };
@@ -78,6 +98,13 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
         <p className="mt-3 text-pretty text-[12px] leading-relaxed text-amber-900/78 dark:text-stone-400">
           {t("pages.read.tripleLoopActivateHint")}
         </p>
+      ) : isNtDeepRepeat ? (
+        <>
+          <p className="mt-3 text-pretty text-[12px] leading-relaxed text-amber-900/78 dark:text-stone-400">
+            {t("pages.read.ntDeepRepeatActivateHint")}
+          </p>
+          <NtDeepRepeatPaceSection value={pace} onChange={setPace} />
+        </>
       ) : (
         <fieldset className="mt-3 space-y-2 border-0 p-0">
           <legend className="sr-only">{t("pages.read.planActivateHeading")}</legend>

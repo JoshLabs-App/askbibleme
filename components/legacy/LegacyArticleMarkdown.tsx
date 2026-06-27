@@ -96,14 +96,14 @@ function buildComponents(
         const parsed = parseAskbibleReadLink(href ?? "");
         if (parsed) {
           return (
-            <Link href={askbibleReadPath(parsed)} className={explore ? "explore-prose-link" : "font-medium text-ink/88 underline decoration-ink/35 underline-offset-4 transition hover:text-ink"}>
+            <Link href={askbibleReadPath(parsed)} className={explore ? "explore-prose-scripture-link" : "font-medium text-ink/88 underline decoration-ink/35 underline-offset-4 transition hover:text-ink"}>
               {children}
             </Link>
           );
         }
         if (href && READ_CHAPTER_PATH.test(href)) {
           return (
-            <Link href={href} className={explore ? "explore-prose-link" : "font-medium text-ink/88 underline decoration-ink/35 underline-offset-4 transition hover:text-ink"}>
+            <Link href={href} className={explore ? "explore-prose-scripture-link" : "font-medium text-ink/88 underline decoration-ink/35 underline-offset-4 transition hover:text-ink"}>
               {children}
             </Link>
           );

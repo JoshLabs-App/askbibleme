@@ -137,6 +137,7 @@ export function ExploreLegacyFigureScreen() {
               <ReadChapterInfoEditionMarkdown
                 content={linkedBody || article.body}
                 variant="info"
+                plainScriptureLinks
                 onLinkPress={onLinkPress}
               />
             ) : null

@@ -155,9 +155,6 @@ export function ReadChapterScreenVerseList({
                               lineHeight: px.verseLineHeight,
                             },
                           ]}
-                          onPress={parentVersePressHandler(v.verse, v.text)}
-                          onLongPress={parentVerseLongPressHandler(v.verse, v.text)}
-                          suppressHighlighting
                         >
                         <Text
                           style={[

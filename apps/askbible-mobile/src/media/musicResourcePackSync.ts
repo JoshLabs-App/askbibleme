@@ -17,7 +17,7 @@ import {
   setMusicResourcePackStore,
   setMusicResourcePackSyncPromise,
   setMusicResourcePackSyncing,
-  shouldUpdateMusicPackFromManifest,
+  shouldSyncMusicResourcePack,
   subscribeMusicResourcePackChange,
 } from "./musicResourcePackState";
 
@@ -51,12 +51,13 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
     const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
     const manifest = await fetchMusicPackManifest();
     if (!manifest) return false;
-    if (!options.force && !shouldUpdateMusicPackFromManifest(manifest)) {
+    if (!options.force && !(await shouldSyncMusicResourcePack(manifest))) {
       return false;
     }
 
+    const prev = getMusicResourcePackState();
     const total = manifest.assets.length;
-    const nextByPath: Record<string, string> = {};
+    const nextByPath: Record<string, string> = { ...prev.byPath };
     for (let i = 0; i < manifest.assets.length; i += 1) {
       const asset = manifest.assets[i]!;
       options.onProgress?.({
@@ -80,7 +81,6 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
 
     if (Object.keys(nextByPath).length === 0) return false;
 
-    const prev = getMusicResourcePackState();
     setMusicResourcePackState({
       version: manifest.packVersion,
       store:
@@ -123,7 +123,7 @@ export async function checkMusicResourcePackUpdate(): Promise<MusicPackUpdateChe
     const manifest = await fetchMusicPackManifest();
     if (!manifest) return { available: false, latestVersion: "" };
     return {
-      available: shouldUpdateMusicPackFromManifest(manifest),
+      available: await shouldSyncMusicResourcePack(manifest),
       latestVersion: manifest.packVersion,
     };
   } catch {

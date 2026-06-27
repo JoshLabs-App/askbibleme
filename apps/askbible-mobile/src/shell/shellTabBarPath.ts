@@ -1,3 +1,5 @@
+import { isExploreReadingPlannerRoute } from "../explore/explore-route-chrome";
+
 function normalizePath(pathname: string): string {
   return pathname.replace(/\/$/, "") || "/";
 }
@@ -30,4 +32,9 @@ export function isParchmentTabBarPathname(pathname: string): boolean {
   if (/(^|\/)read(\/|$)/.test(p) || /^\/?\(tabs\)\/read(\/|$)/.test(p)) return true;
   if (/(^|\/)explore(\/|$)/.test(p) || /^\/?\(tabs\)\/explore(\/|$)/.test(p)) return true;
   return false;
+}
+
+/** 全屏流程页：不显示底部 Tab 导航（如探索 · 读经规划器）。 */
+export function shouldHideShellTabBarPathname(pathname: string): boolean {
+  return isExploreReadingPlannerRoute(pathname);
 }

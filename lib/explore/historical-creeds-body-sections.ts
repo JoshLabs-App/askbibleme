@@ -1,4 +1,5 @@
 import type { AppLocale } from "../i18n/config";
+import { extractCatechismQuestionTitle } from "./historical-creeds-body-format";
 import {
   HEIDELBERG_INTRO_LORD_DAY,
   HEIDELBERG_LORDS_DAY_COUNT,
@@ -40,9 +41,14 @@ export function creedBodySectionHasSubsections(
   return Array.isArray(section.subsections) && section.subsections.length > 0;
 }
 
+export type SectionedCreedBodyLayout = "default" | "heidelberg-outline";
+
 export type SectionedCreedBody = {
   intro: string[];
+  /** Heidelberg: Lord's Day 1 before the three parts. */
+  preamble?: CreedBodySection;
   sections: CreedBodySection[];
+  layout?: SectionedCreedBodyLayout;
 };
 
 const DOCTRINE_SECTION_HEAD =
@@ -317,6 +323,41 @@ function parseLordsDayBlocks(paragraphs: string[]): {
   return { intro, dayBlocks };
 }
 
+function lordDaySectionLabel(day: number, locale: AppLocale): string {
+  return locale === "en" ? `Lord's Day ${day}` : `主日 ${day}`;
+}
+
+function buildCatechismQuestionSections(
+  paragraphs: string[],
+  idPrefix: string,
+): CreedBodySection[] {
+  return paragraphs.map((paragraph, index) => {
+    const qIndex = extractCreedParagraphIndex(paragraph);
+    const seq = qIndex ?? index + 1;
+    return {
+      id: `${idPrefix}-q-${seq}`,
+      label: extractCatechismQuestionTitle(paragraph),
+      paragraphs: [paragraph],
+      rangeStart: seq,
+      rangeEnd: seq,
+    };
+  });
+}
+
+function buildHeidelbergLordDaySection(
+  block: { day: number; paragraphs: string[] },
+  locale: AppLocale,
+): CreedBodySection {
+  return {
+    id: `ld-${block.day}`,
+    label: lordDaySectionLabel(block.day, locale),
+    paragraphs: [],
+    subsections: buildCatechismQuestionSections(block.paragraphs, `ld-${block.day}`),
+    rangeStart: block.day,
+    rangeEnd: block.day,
+  };
+}
+
 function buildHeidelbergPartGroupedSections(
   paragraphs: string[],
   locale: AppLocale,
@@ -325,23 +366,15 @@ function buildHeidelbergPartGroupedSections(
   if (dayBlocks.length !== HEIDELBERG_LORDS_DAY_COUNT) return null;
 
   const introLordDay = dayBlocks.find((block) => block.day === HEIDELBERG_INTRO_LORD_DAY);
-  const intro = [...leadingIntro, ...(introLordDay?.paragraphs ?? [])];
+  const intro = leadingIntro;
+  const preamble = introLordDay
+    ? buildHeidelbergLordDaySection(introLordDay, locale)
+    : undefined;
 
   const sections: CreedBodySection[] = HEIDELBERG_PARTS.map((partDef) => {
     const subsections: CreedBodySection[] = dayBlocks
       .filter((block) => block.day >= partDef.startDay && block.day <= partDef.endDay)
-      .map((block) => ({
-        id: `ld-${block.day}`,
-        label:
-          locale === "en"
-            ? `Lord's Day ${block.day}`
-            : locale === "zh-TW"
-              ? `主日 ${block.day}`
-              : `主日 ${block.day}`,
-        paragraphs: block.paragraphs,
-        rangeStart: block.day,
-        rangeEnd: block.day,
-      }));
+      .map((block) => buildHeidelbergLordDaySection(block, locale));
 
     return {
       id: `part-${partDef.part}`,
@@ -353,7 +386,7 @@ function buildHeidelbergPartGroupedSections(
     };
   });
 
-  return { intro, sections };
+  return { intro, preamble, sections, layout: "heidelberg-outline" };
 }
 
 function buildLordsDayGroupedSections(

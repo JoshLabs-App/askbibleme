@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { ExploreFeaturedArticleSections } from "@/components/explore/ExploreFeaturedArticleSections";
 import { LegacyArticleMarkdown } from "@/components/legacy/LegacyArticleMarkdown";
 import { ContentCorrectionEntry } from "@/components/content-correction/ContentCorrectionEntry";
 import { ExploreProsePage } from "@/components/explore/ExploreProsePage";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { linkifyExploreArticleScriptureRefsForLocale } from "@/lib/explore/linkify-explore-article-scripture-refs-for-locale";
+import { exploreFeaturedArticleUsesProseLayout } from "@/lib/explore/explore-featured-article-slugs";
 import {
   readExploreFeaturedArticleView,
   type ExploreFeaturedArticleView,
@@ -23,10 +24,7 @@ export function ExploreArticleContent({ article: initialArticle, enrichedBody }:
     () => readExploreFeaturedArticleView(initialArticle.slug, locale) ?? initialArticle,
     [initialArticle, locale],
   );
-  const linkedBody = useMemo(() => {
-    if (enrichedBody) return enrichedBody;
-    return linkifyExploreArticleScriptureRefsForLocale(article.body, locale);
-  }, [article.body, enrichedBody, locale]);
+  const body = enrichedBody ?? article.body;
 
   return (
     <ExploreProsePage>
@@ -39,7 +37,11 @@ export function ExploreArticleContent({ article: initialArticle, enrichedBody }:
       </header>
 
       <article className="explore-prose-body">
-        <LegacyArticleMarkdown content={linkedBody} linkScriptureRefs variant="explore" />
+        {article.sections.length > 0 && !exploreFeaturedArticleUsesProseLayout(article.slug) ? (
+          <ExploreFeaturedArticleSections sections={article.sections} />
+        ) : (
+          <LegacyArticleMarkdown content={body} linkScriptureRefs variant="explore" />
+        )}
         <ContentCorrectionEntry
           context={{
             scope: "explore_article",

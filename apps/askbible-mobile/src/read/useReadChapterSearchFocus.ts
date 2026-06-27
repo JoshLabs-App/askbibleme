@@ -12,6 +12,7 @@ import type { LoadedChapter } from "../bible/types";
 import {
   nativeTargetFromLayoutEvent,
   readChapterReadableCenterWindowY,
+  readChapterAudioScrollFocusOpts,
   scrollYToCenterVerse,
   scrollYToCenterVerseFromContentAndWindowTarget,
   type VerseLayout,
@@ -178,7 +179,32 @@ export function useReadChapterSearchFocus(
         const target = verseNativeTargetsRef.current.get(verseNum);
         const scrollHandle = scrollRef.current ? findNodeHandle(scrollRef.current) : null;
         const anchorHandle = contentAnchorHandle();
+        const layoutFallback = verseLayoutsRef.current.get(verseNum);
+
+        const finishFromLayout = (layout: VerseLayout) => {
+          if (!scrollRef.current || scrollViewportHeight < 1) {
+            resolve(false);
+            return;
+          }
+          const nextY = scrollYToCenterVerse(layout, scrollViewportHeight, {
+            contentHeight: scrollContentHeightRef?.current,
+            ...readChapterAudioScrollFocusOpts(chrome),
+          });
+          const currentY = scrollOffsetRef.current;
+          if (Math.abs(nextY - currentY) < 8) {
+            resolve(true);
+            return;
+          }
+          scrollRef.current.scrollTo({ y: nextY, animated });
+          scrollOffsetRef.current = nextY;
+          resolve(true);
+        };
+
         if (target == null || scrollHandle == null) {
+          if (layoutFallback) {
+            finishFromLayout(layoutFallback);
+            return;
+          }
           resolve(false);
           return;
         }

@@ -1,7 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { InteractionManager } from "react-native";
 import type { AppLocale } from "../i18n/config";
-import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-scopes";
+import { fetchBibleTranslationsCatalog, translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
+import {
+  ensureScriptureTranslationReady,
+  ensureScriptureTranslationReadyWithFallback,
+} from "../bible/scripture-translation-download";
+import type { HomeVersePoolScopeId } from "./homeVersePoolScopePrefs";
+import {
+  DEFAULT_HOME_VERSE_ROTATION_SEC,
+  getHomeVerseRotationSec,
+  hydrateHomeVerseRotationSec,
+  subscribeHomeVerseRotationSec,
+} from "./homeVerseRotationPrefs";
 import {
   readHomePrayerVersePrefs,
   subscribeHomePrayerVersePrefs,
@@ -23,7 +34,7 @@ const FALLBACK_EN: HomeVerseEntry = {
   ref: "1 Peter 5:7",
 };
 
-export const HOME_VERSE_ROTATE_MS = 14_000;
+export const HOME_VERSE_ROTATE_MS = DEFAULT_HOME_VERSE_ROTATION_SEC * 1000;
 
 async function pickShow(
   manifest: HomePrayerManifestV1,
@@ -86,15 +97,21 @@ async function pickShow(
 }
 
 /**
- * 首页经文：theme-repeat-ge5（约 4k+ 句），按主题库重复热度加权轮播（与网站壳层同源逻辑）。
+ * 首页经文：explore-curated-700（700 句默认池），按探索子库优先级轮播（与网站壳层同源逻辑）。
  */
 export function useHomeThemeRepeatVerse(
   locale: AppLocale,
-  rotateMs = HOME_VERSE_ROTATE_MS,
+  rotateMsOverride?: number,
   prefsVersion = 0,
   pauseRotation = false,
   poolScopeId?: HomeVersePoolScopeId,
 ) {
+  const rotationSec = useSyncExternalStore(
+    subscribeHomeVerseRotationSec,
+    getHomeVerseRotationSec,
+    () => DEFAULT_HOME_VERSE_ROTATION_SEC,
+  );
+  const rotateMs = rotateMsOverride ?? rotationSec * 1000;
   const [ready, setReady] = useState(false);
   const [entry, setEntry] = useState<HomeVerseEntry | null>(null);
   const [contrastEntry, setContrastEntry] = useState<HomeVerseEntry | null>(null);
@@ -102,6 +119,9 @@ export function useHomeThemeRepeatVerse(
   const memoryRef = useRef<Record<string, PrayerMemoryRowV1>>({});
   const manifestRef = useRef<HomePrayerManifestV1 | null>(null);
   const translationRef = useRef({ primary: "cuv-simp", contrast: "" });
+  const verseKeyRef = useRef<string | null>(null);
+  const prefsReloadSkipInitialRef = useRef(true);
+  const advanceInFlightRef = useRef(false);
   const [translationIds, setTranslationIds] = useState({
     primary: "cuv-simp",
     contrast: "",
@@ -114,34 +134,70 @@ export function useHomeThemeRepeatVerse(
     });
   }, []);
 
+  useEffect(() => {
+    void hydrateHomeVerseRotationSec();
+  }, []);
+
   const refreshTranslations = useCallback(async () => {
     const prefs = await readHomePrayerVersePrefs();
     const ids = verseTranslationIdsFromPrefs(prefs, locale);
-    translationRef.current = ids;
-    setTranslationIds(ids);
+    const catalog = await fetchBibleTranslationsCatalog().catch(() => null);
+    const primaryMeta = catalog
+      ? translationMetaFromCatalog(catalog, ids.primary)
+      : null;
+    const primary = await ensureScriptureTranslationReadyWithFallback(
+      ids.primary,
+      primaryMeta?.downloadUrl,
+    );
+    let contrast = "";
+    if (ids.contrast.trim()) {
+      const contrastMeta = catalog
+        ? translationMetaFromCatalog(catalog, ids.contrast)
+        : null;
+      try {
+        await ensureScriptureTranslationReady(ids.contrast, contrastMeta?.downloadUrl);
+        contrast = ids.contrast;
+      } catch {
+        contrast = "";
+      }
+    }
+    translationRef.current = { primary, contrast };
+    setTranslationIds((prev) =>
+      prev.primary === primary && prev.contrast === contrast ? prev : { primary, contrast },
+    );
   }, [locale]);
 
+  useEffect(() => {
+    verseKeyRef.current = verseKey;
+  }, [verseKey]);
+
   const advance = useCallback(async () => {
+    if (advanceInFlightRef.current) return;
     const manifest = manifestRef.current;
     if (!manifest?.entries.length) return;
-    const next = await pickShow(
-      manifest,
-      memoryRef.current,
-      locale,
-      translationRef.current.primary,
-      translationRef.current.contrast,
-      verseKey,
-    );
-    if (next) {
-      setEntry(next.primary);
-      setContrastEntry(next.contrast);
-      setVerseKey(next.verseKey);
+    advanceInFlightRef.current = true;
+    try {
+      const next = await pickShow(
+        manifest,
+        memoryRef.current,
+        locale,
+        translationRef.current.primary,
+        translationRef.current.contrast,
+        verseKeyRef.current,
+      );
+      if (next) {
+        setEntry(next.primary);
+        setContrastEntry(next.contrast);
+        setVerseKey(next.verseKey);
+      }
+    } finally {
+      advanceInFlightRef.current = false;
     }
   }, [locale]);
 
   const reloadCurrentVerse = useCallback(async () => {
     const manifest = manifestRef.current;
-    const key = verseKey;
+    const key = verseKeyRef.current;
     if (!manifest) return;
     if (key) {
       const pair = await resolveHomeVersePair(
@@ -175,7 +231,7 @@ export function useHomeThemeRepeatVerse(
     setEntry(flow === "en" ? FALLBACK_EN : FALLBACK_ZH);
     setContrastEntry(null);
     setVerseKey(null);
-  }, [locale, verseKey]);
+  }, [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +258,8 @@ export function useHomeThemeRepeatVerse(
           translationRef.current.contrast,
         );
         if (!cancelled) {
+          const { primary, contrast } = translationRef.current;
+          setTranslationIds({ primary, contrast });
           if (first) {
             setEntry(first.primary);
             setContrastEntry(first.contrast);
@@ -224,6 +282,10 @@ export function useHomeThemeRepeatVerse(
 
   useEffect(() => {
     if (!ready) return;
+    if (prefsReloadSkipInitialRef.current) {
+      prefsReloadSkipInitialRef.current = false;
+      return;
+    }
     let cancelled = false;
     const task = InteractionManager.runAfterInteractions(() => {
       void (async () => {

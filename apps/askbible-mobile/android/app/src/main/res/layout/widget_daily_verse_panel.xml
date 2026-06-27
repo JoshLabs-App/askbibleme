@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="top"
+    android:orientation="vertical"
+    android:paddingLeft="4dp"
+    android:paddingTop="4dp"
+    android:paddingRight="4dp"
+    android:paddingBottom="4dp">
+
+    <FrameLayout
+        android:id="@+id/widget_bubble_card"
+        style="@style/WidgetBubbleCard">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/widget_parchment_scroll_bg" />
+
+        <LinearLayout style="@style/WidgetBubbleContent">
+
+            <TextView
+                android:id="@+id/widget_verse_line"
+                style="@style/WidgetVerseText" />
+
+            <TextView style="@style/WidgetMetaDivider" />
+
+            <LinearLayout style="@style/WidgetMetaRow">
+
+                <TextView
+                    android:id="@+id/widget_verse_ref"
+                    style="@style/WidgetRefText" />
+
+                <TextView style="@style/WidgetMetaDot" />
+
+                <TextView
+                    android:id="@+id/widget_stats"
+                    style="@style/WidgetStreakText" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

@@ -1,6 +1,7 @@
 import type { AppLocale } from "../i18n/config";
 import type { HistoricalCreedBodyContent } from "./historical-creeds-bodies";
 import { INLINE_HISTORICAL_CREED_BODIES } from "./historical-creeds-bodies";
+import { LAZY_HISTORICAL_CREED_BODIES } from "./historical-creeds-bodies/lazy-bodies";
 import {
   cleanupHistoricalCreedEnglishText,
   normalizeHistoricalCreedChineseText,
@@ -8,34 +9,15 @@ import {
 import { linkifyNormalizedChineseRefs } from "./historical-creeds-scripture-links";
 import { linkifyHistoricalCreedEnglishRefs } from "./historical-creeds-linkify-en";
 
+export { historicalCreedHasBody, isLazyHistoricalCreedBody } from "./historical-creeds-body-meta";
+
 function cleanupHistoricalCreedBodyParagraph(text: string, locale: "zh" | "en"): string {
   if (locale === "en") return cleanupHistoricalCreedEnglishText(text);
   return normalizeHistoricalCreedChineseText(text);
 }
 
-const LAZY_BODY_LOADERS: Record<string, () => Promise<HistoricalCreedBodyContent>> = {
-  "chicago-inerrancy": () =>
-    import("./historical-creeds-bodies/chicago-inerrancy").then((m) => m.chicagoInerrancyBody),
-  "chicago-hermeneutics": () =>
-    import("./historical-creeds-bodies/chicago-hermeneutics").then((m) => m.chicagoHermeneuticsBody),
-  "heidelberg-catechism": () =>
-    import("./historical-creeds-bodies/heidelberg-catechism").then((m) => m.heidelbergCatechismBody),
-  "westminster-shorter-catechism": () =>
-    import("./historical-creeds-bodies/westminster-shorter-catechism").then(
-      (m) => m.westminsterShorterCatechismBody,
-    ),
-  "westminster-larger-catechism": () =>
-    import("./historical-creeds-bodies/westminster-larger-catechism").then(
-      (m) => m.westminsterLargerCatechismBody,
-    ),
-};
-
 const rawBodyCache = new Map<string, HistoricalCreedBodyContent>();
 const processedBodyCache = new Map<string, string[]>();
-
-export function historicalCreedHasBody(creedId: string): boolean {
-  return creedId in INLINE_HISTORICAL_CREED_BODIES || creedId in LAZY_BODY_LOADERS;
-}
 
 function pickBodyLocale(
   content: HistoricalCreedBodyContent,
@@ -66,12 +48,11 @@ export async function loadHistoricalCreedBodyContent(
   const cached = rawBodyCache.get(creedId);
   if (cached) return cached;
 
-  const loader = LAZY_BODY_LOADERS[creedId];
-  if (!loader) return null;
+  const lazy = LAZY_HISTORICAL_CREED_BODIES[creedId];
+  if (!lazy) return null;
 
-  const content = await loader();
-  rawBodyCache.set(creedId, content);
-  return content;
+  rawBodyCache.set(creedId, lazy);
+  return lazy;
 }
 
 /** Load + clean + linkify creed body only when the user opens full text. */
@@ -106,8 +87,4 @@ export function resolveInlineHistoricalCreedBodyParagraphs(
   const processed = processBodyParagraphs(pickBodyLocale(content, locale), locale);
   processedBodyCache.set(cacheKey, processed);
   return processed;
-}
-
-export function isLazyHistoricalCreedBody(creedId: string): boolean {
-  return creedId in LAZY_BODY_LOADERS;
 }

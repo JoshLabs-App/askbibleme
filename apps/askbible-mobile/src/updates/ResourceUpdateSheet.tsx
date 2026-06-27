@@ -11,6 +11,7 @@ import {
 import { parchmentSans } from "../fonts/parchmentType";
 import type { AppLocale } from "../i18n/config";
 import { localizeZhText, resolveUiText } from "../i18n/site-copy";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import {
   applyMobileResourceUpdates,
   readMobileResourceUpdateState,
@@ -85,7 +86,7 @@ export function ResourceUpdateSheet({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={downloading ? undefined : onClose} />
-        <View style={styles.sheet}>
+        <ParchmentModalCard style={styles.sheet}>
           <Text style={styles.title}>{resolveUiText(locale, "资源更新", "Resource updates")}</Text>
           <Text style={styles.summary}>{summary}</Text>
 
@@ -153,7 +154,7 @@ export function ResourceUpdateSheet({
               </Pressable>
             )}
           </View>
-        </View>
+        </ParchmentModalCard>
       </View>
     </Modal>
   );
@@ -167,10 +168,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   sheet: {
-    borderRadius: 14,
-    backgroundColor: "rgba(255, 248, 235, 0.98)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(120, 53, 15, 0.22)",
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,

@@ -1,5 +1,5 @@
 import type { AppLocale } from "../i18n/config";
-import { historicalCreedHasBody } from "./historical-creeds-body-load";
+import { historicalCreedHasBody } from "./historical-creeds-body-meta";
 import {
   HISTORICAL_CREED_GROUP_ORDER,
   HISTORICAL_CREEDS,

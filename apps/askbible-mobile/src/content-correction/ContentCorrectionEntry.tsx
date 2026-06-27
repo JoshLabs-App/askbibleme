@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { contentCorrectionEntryStyles as styles } from "./ContentCorrectionEntryStyles";
 import type { ContentCorrectionContext } from "./types";
 import { useContentCorrectionEntry } from "./useContentCorrectionEntry";
@@ -58,7 +59,7 @@ export function ContentCorrectionEntry({ context, tone = "explore" }: Props) {
             style={StyleSheet.absoluteFill}
             onPress={submitState.kind === "submitting" ? undefined : closeSheet}
           />
-          <View style={[styles.sheet, { paddingBottom: 12 + insets.bottom }]}>
+          <ParchmentModalCard style={[styles.sheet, { paddingBottom: 12 + insets.bottom }]}>
             <Text style={styles.sheetTitle}>{t("contentCorrection.sheetTitle")}</Text>
             <Text style={styles.sheetIntro}>{t("contentCorrection.sheetIntro")}</Text>
             {contextHint ? (
@@ -137,7 +138,7 @@ export function ContentCorrectionEntry({ context, tone = "explore" }: Props) {
                 </Pressable>
               ) : null}
             </View>
-          </View>
+          </ParchmentModalCard>
         </KeyboardAvoidingView>
       </Modal>
     </>

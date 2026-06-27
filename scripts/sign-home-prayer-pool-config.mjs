@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createSign } from "node:crypto";
 
-const DEFAULT_SCOPE_ID = "theme-repeat-ge5";
+const DEFAULT_SCOPE_ID = "explore-curated-700";
 const DEFAULT_OUT_FILE = "public/data/home-prayer-pools/pool-config.signed.json";
 
 function readArg(name) {

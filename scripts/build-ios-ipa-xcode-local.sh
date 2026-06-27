@@ -11,9 +11,22 @@ load_mobile_google_oauth_env "$ROOT"
 
 MOBILE="$ROOT/apps/askbible-mobile"
 IOS="$MOBILE/ios"
-WORKSPACE="$IOS/AskBible.me.xcworkspace"
-SCHEME="AskBible.me"
-ARCHIVE="$IOS/build/AskBible.me.xcarchive"
+
+if [[ -d "$IOS/AskBible.me.xcworkspace" ]]; then
+  WORKSPACE="$IOS/AskBible.me.xcworkspace"
+  SCHEME="AskBible.me"
+  APP_PLIST="$IOS/AskBible.me/Info.plist"
+  ARCHIVE="$IOS/build/AskBible.me.xcarchive"
+elif [[ -d "$IOS/AskBibleme.xcworkspace" ]]; then
+  WORKSPACE="$IOS/AskBibleme.xcworkspace"
+  SCHEME="AskBibleme"
+  APP_PLIST="$IOS/AskBibleme/Info.plist"
+  ARCHIVE="$IOS/build/AskBibleme.xcarchive"
+else
+  echo "缺少 Xcode workspace（AskBible.me 或 AskBibleme）。请先 cd apps/askbible-mobile/ios && pod install" >&2
+  exit 1
+fi
+
 EXPORT_DIR="$IOS/build/export"
 EXPORT_PLIST="$ROOT/scripts/ios/ExportOptions-appstore.plist"
 
@@ -24,7 +37,7 @@ export EXPO_PUBLIC_ASKBIBLE_BASE_URL="${EXPO_PUBLIC_ASKBIBLE_BASE_URL:-https://a
 export EXPO_PUBLIC_MEMBER_SYNC_DEBUG="${EXPO_PUBLIC_MEMBER_SYNC_DEBUG:-1}"
 export MOBILE_BUNDLE_OFFLINE_MEDIA="${MOBILE_BUNDLE_OFFLINE_MEDIA:-1}"
 export MOBILE_BUNDLE_MUSIC_LIMIT="${MOBILE_BUNDLE_MUSIC_LIMIT:-1}"
-export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mpg4a7xcip5q}"
+export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mpg4a8h3jhwl}"
 
 if ! command -v xcodebuild >/dev/null 2>&1; then
   echo "未检测到 Xcode。请先安装完整 Xcode。" >&2
@@ -65,12 +78,13 @@ else
 fi
 
 echo "→ 同步图标与离线内容…"
+bash "$ROOT/scripts/clear-mobile-bundle-cache.sh"
 npm run mobile:sync-icons
 npm run mobile:sync-content
 node scripts/sync-explore-featured-articles-localized.mjs
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
 MOBILE_BUNDLE_MUSIC_LIMIT=1 \
-MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a7xcip5q \
+MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a8h3jhwl \
 npm run mobile:sync-offline-media
 
 echo "→ 离线资源体积审计…"
@@ -96,17 +110,55 @@ rm -rf "$ARCHIVE" "$EXPORT_DIR"
 mkdir -p "$IOS/build"
 
 echo ""
-echo "→ 准备本机 Distribution 证书与 App Store Profile…"
-node "$ROOT/scripts/ios/ensure-ios-distribution-signing.mjs"
-SIGNING_MANIFEST="$IOS/.local-signing/manifest.json"
-if [[ ! -f "$SIGNING_MANIFEST" ]]; then
-  echo "缺少签名 manifest：$SIGNING_MANIFEST" >&2
-  exit 1
+echo "→ 准备 App Groups 能力与签名…"
+node "$ROOT/scripts/ios/enable-ios-app-group-capabilities.mjs"
+EXPORT_PLIST="$IOS/build/ExportOptions-appstore-export.plist"
+HAS_WIDGET=0
+if grep -q "Embed Foundation Extensions" "$IOS/AskBibleme.xcodeproj/project.pbxproj" 2>/dev/null; then
+  HAS_WIDGET=1
 fi
-PROFILE_NAME="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$SIGNING_MANIFEST','utf8')).profileName)")"
-EXPORT_PLIST_MANUAL="$IOS/build/ExportOptions-appstore-manual.plist"
-/usr/libexec/PlistBuddy -c "Clear dict" "$EXPORT_PLIST_MANUAL" 2>/dev/null || true
-cat > "$EXPORT_PLIST_MANUAL" <<PLIST
+
+if [[ "$HAS_WIDGET" == "1" ]]; then
+  echo "→ 检测到 Widget Extension，使用 manual signing + App Store profiles…"
+  FORCE_IOS_SIGNING_REFRESH="${FORCE_IOS_SIGNING_REFRESH:-1}" node "$ROOT/scripts/ios/ensure-ios-distribution-signing.mjs"
+  node "$ROOT/scripts/ios/patch-ios-manual-signing.mjs"
+  SIGNING_MANIFEST="$IOS/.local-signing/manifest.json"
+  PROFILE_NAME="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$SIGNING_MANIFEST','utf8')).profileName)")"
+  WIDGET_PROFILE_NAME="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$SIGNING_MANIFEST','utf8')).widgetProfileName || '')")"
+  cat > "$EXPORT_PLIST" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>teamID</key>
+	<string>AJ2998VZH6</string>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>me.askbible</key>
+		<string>${PROFILE_NAME}</string>
+		<key>me.askbible.widget</key>
+		<string>${WIDGET_PROFILE_NAME}</string>
+	</dict>
+</dict>
+</plist>
+PLIST
+else
+  FORCE_IOS_SIGNING_REFRESH=1 node "$ROOT/scripts/ios/ensure-ios-distribution-signing.mjs"
+  node "$ROOT/scripts/ios/patch-ios-manual-signing.mjs"
+  SIGNING_MANIFEST="$IOS/.local-signing/manifest.json"
+  if [[ ! -f "$SIGNING_MANIFEST" ]]; then
+    echo "缺少签名 manifest：$SIGNING_MANIFEST" >&2
+    exit 1
+  fi
+  PROFILE_NAME="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$SIGNING_MANIFEST','utf8')).profileName)")"
+  echo "→ 导出 IPA 使用 manual signing（主 App Profile）…"
+  cat > "$EXPORT_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -127,18 +179,37 @@ cat > "$EXPORT_PLIST_MANUAL" <<PLIST
 </dict>
 </plist>
 PLIST
+fi
 
 echo ""
 echo "→ Xcode archive（scheme=${SCHEME}，team=AJ2998VZH6）…"
-xcodebuild \
-  -workspace "$WORKSPACE" \
-  -scheme "$SCHEME" \
-  -configuration Release \
-  -destination "generic/platform=iOS" \
-  -archivePath "$ARCHIVE" \
-  archive \
-  "${XCODE_AUTH_ARGS[@]}" \
-  "$@"
+if [[ "$HAS_WIDGET" == "1" ]]; then
+  xcodebuild \
+    -workspace "$WORKSPACE" \
+    -scheme "$SCHEME" \
+    -configuration Release \
+    -destination "generic/platform=iOS" \
+    -archivePath "$ARCHIVE" \
+    archive \
+    CODE_SIGN_STYLE=Manual \
+    DEVELOPMENT_TEAM=AJ2998VZH6 \
+    CODE_SIGN_IDENTITY="Apple Distribution" \
+    "${XCODE_AUTH_ARGS[@]}" \
+    "$@"
+else
+  xcodebuild \
+    -workspace "$WORKSPACE" \
+    -scheme "$SCHEME" \
+    -configuration Release \
+    -destination "generic/platform=iOS" \
+    -archivePath "$ARCHIVE" \
+    archive \
+    CODE_SIGN_STYLE=Manual \
+    DEVELOPMENT_TEAM=AJ2998VZH6 \
+    CODE_SIGN_IDENTITY="Apple Distribution" \
+    "${XCODE_AUTH_ARGS[@]}" \
+    "$@"
+fi
 
 echo ""
 echo "→ 导出 App Store IPA（manual signing）…"
@@ -146,7 +217,7 @@ xcodebuild \
   -exportArchive \
   -archivePath "$ARCHIVE" \
   -exportPath "$EXPORT_DIR" \
-  -exportOptionsPlist "$EXPORT_PLIST_MANUAL"
+  -exportOptionsPlist "$EXPORT_PLIST"
 
 IPA_SRC="$(find "$EXPORT_DIR" -maxdepth 1 -name '*.ipa' | head -1)"
 if [[ -z "$IPA_SRC" || ! -f "$IPA_SRC" ]]; then
@@ -154,7 +225,7 @@ if [[ -z "$IPA_SRC" || ! -f "$IPA_SRC" ]]; then
   exit 1
 fi
 
-BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$IOS/AskBible.me/Info.plist" 2>/dev/null || echo unknown)"
+BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PLIST" 2>/dev/null || echo unknown)"
 OUT="$ROOT/dist/mobile"
 mkdir -p "$OUT"
 STAMP="$(date +%Y%m%d-%H%M)"

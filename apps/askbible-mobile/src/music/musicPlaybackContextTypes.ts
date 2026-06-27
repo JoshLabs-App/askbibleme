@@ -24,6 +24,7 @@ export type MusicPlaybackContextValue = {
   registerReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
   playTrackAt: (index: number) => Promise<void>;
   togglePlayScripture: () => Promise<void>;
+  stopScripturePlayback: () => Promise<void>;
   playScriptureChapter: (args: {
     bookId: string;
     chapter: number;

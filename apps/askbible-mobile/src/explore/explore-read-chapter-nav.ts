@@ -95,6 +95,15 @@ export type ExploreReadChapterTarget = {
 
 type ExploreReadReturnRouter = Pick<Router, "navigate" | "push" | "back" | "canGoBack">;
 
+/** 探索文章等子页返回探索首页（不依赖 router.back，避免跨 Tab 跳入后回到场景主页）。 */
+export function returnToExploreIndex(router: Pick<Router, "navigate" | "push">) {
+  if (typeof router.navigate === "function") {
+    router.navigate("/explore" as Href);
+    return;
+  }
+  router.push("/explore" as Href);
+}
+
 export function returnFromExploreReadChapter(
   router: ExploreReadReturnRouter,
   exploreReturn: string,

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { parchmentSans } from "../fonts/parchmentType";
 import { t } from "../i18n/site-copy";
-import { theme } from "../theme";
+import { readParchmentTheme as c } from "../read/readParchmentTheme";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
+import { parchmentControlSurface } from "../shell/parchmentControlSurface";
 import { trackTap } from "../telemetry/tap";
 import { markFirstOpenHintSeen, shouldShowFirstOpenHint } from "./first-open-hint-prefs";
 
@@ -36,7 +39,7 @@ export function FirstOpenHintGate() {
     <Modal visible transparent animationType="fade" statusBarTranslucent>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => closeWithTarget("intro.skip")} />
-        <View style={styles.card}>
+        <ParchmentModalCard style={styles.card}>
           <Text style={styles.title}>{t("onboarding.firstOpenHint.title")}</Text>
           <Text style={styles.subtitle}>{t("onboarding.firstOpenHint.subtitle")}</Text>
           <Text style={styles.body}>{t("onboarding.firstOpenHint.body")}</Text>
@@ -49,7 +52,7 @@ export function FirstOpenHintGate() {
               <Text style={styles.secondaryButtonText}>{t("onboarding.firstOpenHint.ctaLater")}</Text>
             </Pressable>
           </View>
-        </View>
+        </ParchmentModalCard>
       </View>
     </Modal>
   );
@@ -58,7 +61,7 @@ export function FirstOpenHintGate() {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(8,8,8,0.3)",
+    backgroundColor: c.modalBackdrop,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 18,
@@ -66,35 +69,31 @@ const styles = StyleSheet.create({
   card: {
     width: "92%",
     maxWidth: 420,
-    borderRadius: 18,
-    backgroundColor: theme.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.border,
     paddingHorizontal: 20,
     paddingVertical: 20,
   },
   title: {
     fontSize: 20,
-    fontWeight: "700",
-    color: theme.ink,
+    ...parchmentSans(700),
+    color: c.ink,
   },
   subtitle: {
     marginTop: 6,
     fontSize: 14,
-    color: theme.ink,
-    fontWeight: "600",
+    color: c.ink,
+    ...parchmentSans(600),
   },
   body: {
     marginTop: 10,
     fontSize: 14,
     lineHeight: 22,
-    color: theme.muted,
+    color: c.muted,
   },
   helper: {
     marginTop: 10,
     fontSize: 13,
     lineHeight: 20,
-    color: theme.muted,
+    color: c.muted,
   },
   actions: {
     marginTop: 16,
@@ -103,27 +102,30 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 46,
     borderRadius: 999,
-    backgroundColor: theme.appDark,
+    backgroundColor: c.accentOt,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
   },
   primaryButtonText: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#fff",
+    ...parchmentSans(600),
+    color: c.ink,
   },
   secondaryButton: {
     minHeight: 44,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.border,
+    borderColor: c.border,
+    backgroundColor: parchmentControlSurface.fillMuted,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
   },
   secondaryButtonText: {
     fontSize: 14,
-    color: theme.muted,
+    color: c.muted,
   },
 });

@@ -4,14 +4,20 @@ function normalizePath(pathname: string): string {
   return pathname.replace(/\/$/, "") || "/";
 }
 
+/** 自然首页 Tab（`index`）：非音乐/读经/探索子页 */
+export function isHomeNatureRoute(pathname: string): boolean {
+  const p = normalizePath(pathname);
+  if (p === "/" || p === "/index") return true;
+  return /^\/?\(tabs\)\/?$/.test(p) || /^\/?\(tabs\)\/index\/?$/.test(p);
+}
+
 /**
  * Tab 一级根（首页 / 音乐 / 读经目录 / 探索首页）：显示左上用户菜单。
  * 章页、搜索、计划、数算年日、祷告主题等子页不显示。
  */
 export function isShellPrimaryTabPathname(pathname: string): boolean {
   const p = normalizePath(pathname);
-  if (p === "/" || p === "/index") return true;
-  if (/^\/?\(tabs\)\/?$/.test(p) || /^\/?\(tabs\)\/index\/?$/.test(p)) return true;
+  if (isHomeNatureRoute(pathname)) return true;
   if (/(^|\/)music$/.test(p)) return true;
   if (isReadBibleHomeRoute(pathname)) return true;
   if (/(^|\/)explore$/.test(p) || /(^|\/)explore\/index$/.test(p)) return true;

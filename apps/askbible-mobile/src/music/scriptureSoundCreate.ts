@@ -22,6 +22,13 @@ type CreateArgs = {
   scriptureStopAtSecRef: MutableRefObject<number | null>;
   scriptureStopAtOnEndedRef: MutableRefObject<(() => void) | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
+  scriptureWantPlayingRef: MutableRefObject<boolean>;
+  scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
+  scriptureChapterEndHandledRef: MutableRefObject<boolean>;
+  scriptureChapterHandoffRef: MutableRefObject<boolean>;
+  scriptureLastProgressMsRef: MutableRefObject<number>;
+  scriptureLastProgressAtRef: MutableRefObject<number>;
+  scriptureSrcRef: MutableRefObject<string | null>;
   setPlaying: (playing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
   setScriptureDurationSec: (sec: number) => void;
@@ -46,6 +53,13 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
     scriptureStopAtSecRef,
     scriptureStopAtOnEndedRef,
     autoPlayScriptureRef,
+    scriptureWantPlayingRef,
+    scripturePlayInFlightRef,
+    scriptureChapterEndHandledRef,
+    scriptureChapterHandoffRef,
+    scriptureLastProgressMsRef,
+    scriptureLastProgressAtRef,
+    scriptureSrcRef,
     setPlaying,
     setScriptureCurrentSec,
     setScriptureDurationSec,
@@ -78,6 +92,13 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
         scriptureAudioRepeatRef,
         readChapterRef,
         autoPlayScriptureRef,
+        scriptureWantPlayingRef,
+        scripturePlayInFlightRef,
+        scriptureChapterEndHandledRef,
+        scriptureChapterHandoffRef,
+        scriptureLastProgressMsRef,
+        scriptureLastProgressAtRef,
+        scriptureSrcRef,
       }),
       shellSoundDownloadFirst(avSource),
     );

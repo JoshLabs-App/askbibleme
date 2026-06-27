@@ -38,11 +38,13 @@ export {
 } from "./natureHomeVisualPrefs";
 
 export {
+  ANDROID_DEFAULT_TEXT_SCALE_INDEX,
   DEFAULT_TEXT_SCALE_INDEX,
   DEFAULT_VERSE_APPEARANCE,
   NATURE_HOME_TEXT_SCALE_STEPS,
   NATURE_HOME_VERSE_TEXT_EFFECTS,
   SUPER_LARGE_TEXT_SCALE_INDEX,
+  platformDefaultTextScaleIndex,
   readNatureHomeTextScaleIndex,
   readNatureHomeVerseAppearance,
   textScaleAtIndex,
@@ -53,6 +55,18 @@ export {
 } from "./natureHomeVerseAppearancePrefs";
 
 export { readShellChromeTune, writeShellChromeTune } from "./natureHomeChromeTunePrefs";
+
+export {
+  DEFAULT_HOME_VERSE_ROTATION_SEC,
+  MAX_HOME_VERSE_ROTATION_SEC,
+  MIN_HOME_VERSE_ROTATION_SEC,
+  clampHomeVerseRotationSec,
+  getHomeVerseRotationSec,
+  hydrateHomeVerseRotationSec,
+  readHomeVerseRotationSec,
+  subscribeHomeVerseRotationSec,
+  writeHomeVerseRotationSec,
+} from "./homeVerseRotationPrefs";
 
 export {
   applyNatureHomeUiSyncBundle,

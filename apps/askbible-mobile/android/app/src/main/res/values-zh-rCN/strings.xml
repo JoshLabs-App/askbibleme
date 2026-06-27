@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="reading_alarm_kicker">每日清晨闹钟</string>
+  <string name="reading_alarm_prelude_hint">预备音乐播放中，稍后将自动开始朗读今日读经</string>
+  <string name="reading_alarm_music_only_hint">清晨音乐播放中，点停止结束</string>
+  <string name="reading_alarm_countdown">约 %1$d 秒后开始</string>
+  <string name="reading_alarm_subtitle">约 1 分钟预备音乐后，连续朗读今日读经</string>
+  <string name="reading_alarm_stop">停止</string>
+  <string name="reading_alarm_continue">跳过预备</string>
+  <string name="reading_alarm_notification_title">每日清晨闹钟</string>
+  <string name="reading_alarm_notification_body">轻触开始今日读经音频</string>
+  <string name="reading_alarm_scripture_starting">正在开始今日读经朗读…</string>
+  <string name="reading_alarm_channel_name">每日清晨闹钟</string>
+</resources>

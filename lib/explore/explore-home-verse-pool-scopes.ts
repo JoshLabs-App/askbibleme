@@ -16,6 +16,11 @@ import {
   WORD_OF_GOD_BOOK_ABBR_TO_ID,
   WORD_OF_GOD_CATEGORIES,
 } from "@/lib/explore/word-of-god-content";
+import {
+  DEFAULT_HOME_VERSE_POOL_MENU_SCOPE,
+  resolveHomeVersePoolMenuLabel,
+} from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
+import { EXPLORE_CURATED_700_EXTRA_VERSE_KEY } from "@/lib/scripture/explore-curated-pool-scope-id";
 import { YEARS_DAYS_ETERNITY_ZH } from "@/lib/explore/years-days-eternity-content";
 import type { YearsDaysEternityBlock } from "@/lib/explore/years-days-eternity-types";
 
@@ -206,6 +211,7 @@ const allKeys = unionSets(
   narrowGateKeys,
   prayerScriptureKeys,
 );
+allKeys.add(EXPLORE_CURATED_700_EXTRA_VERSE_KEY);
 
 const allScopePriorityOrder: HomeVersePoolScopeId[] = [
   "comprehensive",
@@ -274,4 +280,9 @@ export function appendHomeVersePoolScopeCount(
   locale: "en" | "zh-CN" | "zh-TW",
 ): string {
   return locale === "en" ? `${label} (${count})` : `${label}（${count}）`;
+}
+
+/** 用户菜单「主页经文池」：默认池展示文案。 */
+export function resolveDefaultHomeVersePoolMenuLabel(locale: "en" | "zh-CN" | "zh-TW"): string {
+  return resolveHomeVersePoolMenuLabel(DEFAULT_HOME_VERSE_POOL_MENU_SCOPE, locale);
 }

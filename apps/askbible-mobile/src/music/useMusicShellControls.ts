@@ -52,6 +52,7 @@ export function useMusicShellControls(args: Args) {
 
   const { setSleepTimerMinutes, pauseShellPlayback } = useMusicSleepTimerControl({
     soundRef,
+    playbackModeRef,
     sleepTimerDeadlineRef,
     sleepTimerMinutes,
     setPlaying,

@@ -9,7 +9,9 @@ import {
   readReadingPlanPrefs,
   setActiveReadingPlan,
 } from "@/lib/read/reading-plan-prefs";
-import { resetTripleLoopProgressToEpochDefault } from "@/lib/read/triple-loop-progress";
+import {
+  resetTripleLoopProgressToEpochDefault,
+} from "@/lib/read/triple-loop-progress";
 import { buildTodayReadingScopeKey, clearTodayReadingDoneForScope } from "@/lib/read/today-reading-done";
 
 /** 确保三轨循环计划 prefs 固定为复活节历元（2026-04-05 起算）。 */

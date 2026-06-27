@@ -25,7 +25,7 @@ export type HomePrayerChunkV1 = {
   verses: HomePrayerChunkVerseV1[];
 };
 
-export type VerseScopeV1 = { type: "themeRepeat"; minCount: number };
+export type VerseScopeV1 = { type: "themeRepeat"; minCount: number } | { type: "curated700" };
 
 export type VerseDisplayModeV1 = "primary" | "bilingual";
 
@@ -60,7 +60,7 @@ export type HomePrayerVersePrefsV1 = {
   verseTextZhTranslationId: string;
   /** 首页经文英文栏：如 `web-en`（WEB）、`bbe-en`（简易英文） */
   verseTextEnTranslationId: string;
-  /** 按范围隔离：如 `theme-repeat-ge5` */
+  /** 按范围隔离：如 `explore-curated-700` */
   memoryByNamespace: Record<string, Record<string, PrayerMemoryRowV1>>;
   goldenVerseFontFamily: GoldenVerseFontFamilyV1;
   goldenVerseTextEffect: GoldenVerseTextEffectV1;

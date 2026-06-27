@@ -23,6 +23,7 @@ import {
   subscribeReadChapterCompletion,
 } from "@/lib/read/read-chapter-completion";
 import { todayReadingItemKey } from "@/lib/read/today-reading-done";
+import { READING_HABIT_MIN_FRACTION } from "@/lib/read/reading-habit-stats";
 
 type ReadingsProps = {
   plan: TodayReadingPlanState;
@@ -83,17 +84,20 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
     return doneByItem;
   }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings, tripleProgress]);
 
-  const todayAllDone = useMemo(
-    () =>
-      !loading &&
-      readings.length > 0 &&
-      readings.every((r) => isReadingDone.get(todayReadingItemKey(r)) ?? false),
-    [loading, readings, isReadingDone],
-  );
+  const todayHasReading = useMemo((): boolean | undefined => {
+    if (loading) return undefined;
+    if (readings.length === 0) return undefined;
+    return readings.some((r) => {
+      const itemKey = todayReadingItemKey(r);
+      if (isReadingDone.get(itemKey)) return true;
+      return (fractions[itemKey] ?? 0) >= READING_HABIT_MIN_FRACTION;
+    });
+  }, [loading, readings, isReadingDone, fractions]);
 
   useEffect(() => {
-    void syncTodayComplete(todayAllDone);
-  }, [todayAllDone, syncTodayComplete]);
+    if (todayHasReading === undefined) return;
+    void syncTodayComplete(todayHasReading);
+  }, [todayHasReading, syncTodayComplete]);
 
   return (
     <div className="read-bible-today-readings mx-auto w-full max-w-[340px]">
@@ -122,7 +126,7 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
               );
             })}
           </div>
-          <ReadTodayPlanAheadControls plan={plan} todayAllDone={todayAllDone} />
+          <ReadTodayPlanAheadControls plan={plan} />
         </>
       ) : (
         <p className="mt-2 text-[13px] text-amber-900/60 dark:text-stone-500">{t("pages.read.todayPlanEmpty")}</p>

@@ -2,9 +2,11 @@ import { useCallback, useEffect, type MutableRefObject } from "react";
 import { safePauseSound } from "../audio/safeShellSound";
 import type { ShellSleepTimerMinutes } from "./musicPlaybackTypes";
 import type { Audio } from "expo-av";
+import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 
 type Args = {
   soundRef: MutableRefObject<Audio.Sound | null>;
+  playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   sleepTimerDeadlineRef: MutableRefObject<number | null>;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
   setPlaying: (playing: boolean) => void;
@@ -13,12 +15,16 @@ type Args = {
 
 export function useMusicSleepTimerControl({
   soundRef,
+  playbackModeRef,
   sleepTimerDeadlineRef,
   sleepTimerMinutes,
   setPlaying,
   setSleepTimerMinutesState,
 }: Args) {
   const pauseShellPlayback = useCallback(async () => {
+    if (playbackModeRef.current === "scripture") {
+      return;
+    }
     const sound = soundRef.current;
     if (!sound) {
       setPlaying(false);
@@ -26,7 +32,7 @@ export function useMusicSleepTimerControl({
     }
     await safePauseSound(sound);
     setPlaying(false);
-  }, [setPlaying, soundRef]);
+  }, [playbackModeRef, setPlaying, soundRef]);
 
   const setSleepTimerMinutes = useCallback((minutes: 0 | ShellSleepTimerMinutes) => {
     setSleepTimerMinutesState(minutes);

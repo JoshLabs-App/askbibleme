@@ -27,6 +27,8 @@ type Props = {
   roleId?: string | null;
   isActive: boolean;
   onBack?: () => void;
+  /** 宽屏右栏内嵌：不撑满屏宽、不用全屏高度 */
+  columnLayout?: boolean;
 };
 
 type PanelPhase = "idle" | "loading" | "ready" | "error";
@@ -47,6 +49,7 @@ export function ReadChapterInfoEditionBlock({
   roleId = null,
   isActive,
   onBack,
+  columnLayout = false,
 }: Props) {
   const t = useMemo(() => createT(displayLocale), [displayLocale]);
   const screenFocused = useIsFocused();
@@ -122,9 +125,10 @@ export function ReadChapterInfoEditionBlock({
 
   const isDiscover = variant === "guide";
   const fullBleedStyle =
-    hostWidth && hostWidth > 0
+    !columnLayout && hostWidth && hostWidth > 0
       ? { width: viewportWidth, marginLeft: (hostWidth - viewportWidth) / 2 }
       : null;
+  const bodyMinHeight = columnLayout ? undefined : viewportHeight;
   const topGradientStop = Math.min(1, 15 / Math.max(viewportHeight, 1));
   const topGradientColors: [string, string, string, string] = [
     "rgba(42,24,13,0.48)",
@@ -140,7 +144,10 @@ export function ReadChapterInfoEditionBlock({
   ];
 
   return (
-    <View style={styles.wrap} accessibilityLabel={t(variant === "guide" ? "pages.read.guideEditionAriaLabel" : "pages.read.infoEditionAriaLabel")}>
+    <View
+      style={[styles.wrap, columnLayout && styles.wrapColumn]}
+      accessibilityLabel={t(variant === "guide" ? "pages.read.guideEditionAriaLabel" : "pages.read.infoEditionAriaLabel")}
+    >
       <View
         style={[styles.edition, isDiscover ? styles.editionDiscover : styles.editionConsult]}
         onLayout={(e) => setHostWidth(e.nativeEvent.layout.width)}
@@ -176,7 +183,7 @@ export function ReadChapterInfoEditionBlock({
             locations={topGradientLocations}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
-            style={[styles.bodyFullscreenShell, { minHeight: viewportHeight }, fullBleedStyle]}
+            style={[styles.bodyFullscreenShell, bodyMinHeight != null ? { minHeight: bodyMinHeight } : null, fullBleedStyle]}
           >
             <View style={styles.bodyPanel}>
               <View style={styles.bodyPaper}>
@@ -222,7 +229,7 @@ export function ReadChapterInfoEditionBlock({
             locations={topGradientLocations}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
-            style={[styles.bodyFullscreenShell, { minHeight: viewportHeight }, fullBleedStyle]}
+            style={[styles.bodyFullscreenShell, bodyMinHeight != null ? { minHeight: bodyMinHeight } : null, fullBleedStyle]}
           >
             <View style={styles.bodyPanel}>
               <View style={styles.bodyPaper}>
@@ -251,7 +258,7 @@ export function ReadChapterInfoEditionBlock({
             locations={topGradientLocations}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
-            style={[styles.bodyFullscreenShell, { minHeight: viewportHeight }, fullBleedStyle]}
+            style={[styles.bodyFullscreenShell, bodyMinHeight != null ? { minHeight: bodyMinHeight } : null, fullBleedStyle]}
           >
             <View style={styles.bodyPanel}>
               <View style={styles.bodyPaper}>

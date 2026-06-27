@@ -41,7 +41,11 @@ export function useReadCatalogScreen({ homeMode }: Args) {
   const openChapterRoute = useCallback(
     (bookId: string, chapter: number, opts?: { planFlow?: boolean }) => {
       if (opts?.planFlow) {
-        void startTodayPlanFlowScripture(router, { bookId, chapter });
+        void startTodayPlanFlowScripture(router, { bookId, chapter }).catch((err) => {
+          if (__DEV__) {
+            console.warn("[planFlow] openChapterRoute failed", err);
+          }
+        });
         return;
       }
       router.push({

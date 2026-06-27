@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { readMemberSession } from "../auth/memberSession";
-import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
-import { scheduleMemberReadingSync } from "./runMemberReadingSync";
+import { rescheduleAllNotifications } from "../notifications/localNotificationScheduler";
+import { syncDailyVerseWidgetSnapshot } from "../widget/syncDailyVerseWidgetSnapshot";
+import { flushMemberReadingSyncNow, scheduleMemberReadingSync } from "./runMemberReadingSync";
 
 async function syncIfLoggedIn(): Promise<void> {
-  if (isMobileOfflineFirst()) return;
   const session = await readMemberSession();
   if (!session?.sessionToken) return;
   scheduleMemberReadingSync(session.sessionToken);
@@ -22,7 +22,6 @@ export function useMemberReadingSync(enabled: boolean): void {
   }, [enabled]);
 
   useEffect(() => {
-    if (isMobileOfflineFirst()) return;
     const onChange = (state: AppStateStatus) => {
       if (state !== "active" || !enabledRef.current) return;
       void syncIfLoggedIn();
@@ -32,7 +31,7 @@ export function useMemberReadingSync(enabled: boolean): void {
   }, []);
 
   useEffect(() => {
-    if (!enabled || isMobileOfflineFirst()) return;
+    if (!enabled) return;
     const id = setInterval(() => {
       if (!enabledRef.current) return;
       void syncIfLoggedIn();
@@ -42,6 +41,7 @@ export function useMemberReadingSync(enabled: boolean): void {
 }
 
 export async function syncMemberReadingAfterLogin(sessionToken: string): Promise<void> {
-  if (isMobileOfflineFirst()) return;
-  scheduleMemberReadingSync(sessionToken);
+  const outcome = await flushMemberReadingSyncNow(sessionToken, "login");
+  if (outcome !== "ok") return;
+  await Promise.all([syncDailyVerseWidgetSnapshot(), rescheduleAllNotifications()]);
 }

@@ -274,7 +274,7 @@ export function MusicAdminClient() {
     setLoading(true);
     setMsg(null);
     try {
-      const res = await fetch("/api/music/companion");
+      const res = await fetch("/api/music/companion?includeHidden=1");
       const data = (await parseJsonBody(res)) as MusicCompanionStore | { error?: string };
       if (!res.ok) {
         setMsg((data as { error?: string }).error ?? "加载失败");

@@ -196,6 +196,13 @@ const narrowGateKeys = collectByCategories(modules.narrowGate.categories, module
 const prayerScriptureWeights = collectPrayerScriptureVerseWeights();
 const prayerScriptureKeys = new Set(prayerScriptureWeights.keys());
 const comprehensiveKeys = new Set(EXPLORE_HOME_VERSE_POOL_VERSE_KEYS);
+/** 与 Web `lib/scripture/explore-curated-pool-scope-id.ts` 一致 */
+import {
+  DEFAULT_HOME_VERSE_POOL_MENU_SCOPE,
+  resolveHomeVersePoolMenuLabel,
+} from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
+import { EXPLORE_CURATED_700_EXTRA_VERSE_KEY } from "@/lib/scripture/explore-curated-pool-scope-id";
+import { YEARS_DAYS_ETERNITY_ZH } from "@/lib/explore/years-days-eternity-content";
 const allKeys = unionSets(
   comprehensiveKeys,
   praiseWorshipKeys,
@@ -204,6 +211,7 @@ const allKeys = unionSets(
   narrowGateKeys,
   prayerScriptureKeys,
 );
+allKeys.add(EXPLORE_CURATED_700_EXTRA_VERSE_KEY);
 
 const allScopePriorityOrder: HomeVersePoolScopeId[] = [
   "comprehensive",
@@ -278,4 +286,9 @@ export function resolveHomeVersePoolScopeLabelWithCount(
     getHomeVersePoolScopeVerseCount(scope.id),
     locale,
   );
+}
+
+/** 用户菜单「主页经文池」：默认池展示文案。 */
+export function resolveDefaultHomeVersePoolMenuLabel(locale: AppLocale): string {
+  return resolveHomeVersePoolMenuLabel(DEFAULT_HOME_VERSE_POOL_MENU_SCOPE, locale);
 }

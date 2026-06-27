@@ -10,6 +10,9 @@ import type { ReadingPlanDay, ReadingPlanRange, ReadingPlanRegistryEntry } from 
 
 export const TRIPLE_LOOP_PLAN_ID = "triple-loop";
 
+/** 探索 · 读经计划思考文章（与本计划配套） */
+export const TRIPLE_LOOP_EXPLORE_ARTICLE_SLUG = "article_1778108127353_fzymbc";
+
 export const TRIPLE_LOOP_PLAN_DAY_COUNT = 1;
 
 export function isTripleLoopPlanId(planId: string): boolean {

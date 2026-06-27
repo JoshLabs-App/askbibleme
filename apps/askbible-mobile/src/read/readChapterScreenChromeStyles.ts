@@ -160,11 +160,10 @@ export const readChapterScreenChromeStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 18,
   },
+  verseActionSheetWrap: {
+    width: "100%",
+  },
   verseActionSheet: {
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surfaceSolid,
     padding: 10,
     gap: 8,
   },

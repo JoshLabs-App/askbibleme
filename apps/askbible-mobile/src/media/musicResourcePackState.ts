@@ -169,7 +169,19 @@ export function isValidMusicPackManifest(raw: unknown): raw is MusicPackManifest
 
 export function shouldUpdateMusicPackFromManifest(manifest: MusicPackManifest): boolean {
   if (state.version !== manifest.packVersion) return true;
-  return Object.keys(state.byPath).length === 0;
+  if (Object.keys(state.byPath).length === 0) return true;
+  return false;
+}
+
+/** 比对 manifest：版本变更、尚无缓存、或仍有曲目/分析文件未落盘时需同步。 */
+export async function shouldSyncMusicResourcePack(manifest: MusicPackManifest): Promise<boolean> {
+  if (shouldUpdateMusicPackFromManifest(manifest)) return true;
+  for (const asset of manifest.assets) {
+    const key = normalizeMusicAssetPath(asset.path);
+    if (!key) continue;
+    if (!(await isMusicAssetLocal(key))) return true;
+  }
+  return false;
 }
 
 export async function ensureMusicPackParentDir(fileUri: string) {

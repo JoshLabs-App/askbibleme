@@ -1,5 +1,5 @@
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
-import { DEFAULT_MUSIC_ALBUM } from "./musicAlbumCatalog";
+import { DEFAULT_MUSIC_ALBUM, normalizeMusicAlbumLabel } from "./musicAlbumCatalog";
 import type { PlaybackTrack } from "./types";
 
 export function isTrackPlayable(track: PlaybackTrack): boolean {
@@ -19,7 +19,9 @@ export function firstPlayableTrackIndexInAlbum(
 ): number {
   const key = album.trim();
   if (!key) return -1;
-  return tracks.findIndex((t) => isTrackPlayable(t) && (t.album || "").trim() === key);
+  return tracks.findIndex(
+    (t) => isTrackPlayable(t) && normalizeMusicAlbumLabel(t.album) === normalizeMusicAlbumLabel(key),
+  );
 }
 
 /** 底部播放键：优先本地可播的「安静」默认曲，避免冷启动拉远端曲目卡顿。 */
@@ -36,7 +38,9 @@ export function resolveShellMusicPlayIndex(
 
   const calmLocalIdx = tracks.findIndex(
     (t) =>
-      isTrackPlayable(t) && t.localReady && (t.album || "").trim() === DEFAULT_MUSIC_ALBUM,
+      isTrackPlayable(t) &&
+      t.localReady &&
+      normalizeMusicAlbumLabel(t.album) === normalizeMusicAlbumLabel(DEFAULT_MUSIC_ALBUM),
   );
   if (calmLocalIdx >= 0) return calmLocalIdx;
 

@@ -155,7 +155,10 @@ export function useReadChapterVerseTextHighlightTouch({
         !touch.dragged &&
         !longPressTriggeredRef.current
       ) {
-        onPress();
+        const unitIndex = hitTestUnitIndex(pt.localX, pt.localY);
+        if (unitIndex >= 0) {
+          onPress();
+        }
       }
       touchGestureRef.current = null;
       longPressTriggeredRef.current = false;

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RemoteViews：TextView / ImageView / LinearLayout / FrameLayout / ViewFlipper。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_parchment_scroll_bg" />
+
+    <FrameLayout
+        android:id="@+id/widget_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="22dp"
+        android:paddingEnd="22dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+
+        <ViewFlipper
+            android:id="@+id/widget_verse_flipper"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:autoStart="false"
+            android:inAnimation="@anim/widget_verse_fade_in"
+            android:outAnimation="@anim/widget_verse_fade_out">
+
+            <FrameLayout
+                android:id="@+id/widget_panel_0"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/widget_verse_line_0"
+                    style="@style/WidgetVerseText"
+                    android:layout_gravity="top|start" />
+
+                <TextView
+                    android:id="@+id/widget_verse_ref_0"
+                    style="@style/WidgetRefText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_weight="0"
+                    android:gravity="end" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/widget_panel_1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/widget_verse_line_1"
+                    style="@style/WidgetVerseText"
+                    android:layout_gravity="top|start" />
+
+                <TextView
+                    android:id="@+id/widget_verse_ref_1"
+                    style="@style/WidgetRefText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_weight="0"
+                    android:gravity="end" />
+            </FrameLayout>
+        </ViewFlipper>
+    </FrameLayout>
+</FrameLayout>

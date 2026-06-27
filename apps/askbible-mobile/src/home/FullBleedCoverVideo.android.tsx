@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useShellFullBleedFrame } from "../shell/shellLayout";
 import { CoverVideoPosterBackdrop } from "./CoverVideoPosterBackdrop";
 import {
   COVER_VIDEO_READY_TIMEOUT_MS,
@@ -9,7 +11,7 @@ import {
 } from "./coverVideoPosterFallback";
 import { resolveNatureHomePortraitCoverLayout } from "./natureHomePortraitCoverLayout";
 import { NATURE_HOME_VIDEO_LANDSCAPE_ASPECT } from "./nature-home-portrait-pan";
-import { useShellFullBleedFrame } from "../shell/shellLayout";
+
 import type { ResolveNatureCoverPlayback } from "./natureCoverPlayback";
 import { useCoverVideoCrossfade } from "./useCoverVideoCrossfade";
 import { AndroidCoverVideoSlot } from "./FullBleedCoverVideoSlots.android";
@@ -54,9 +56,11 @@ export function FullBleedCoverVideo({
   const trimmedScene = sceneId.trim();
   const trimmedPoster = posterUri?.trim() ?? "";
   const hasPoster = hasCoverVideoPosterAsset(posterModule, trimmedPoster);
-  const frame = useShellFullBleedFrame();
-  const winW = frame.width;
-  const winH = frame.height;
+  const screenFrame = useShellFullBleedFrame();
+  const insets = useSafeAreaInsets();
+  const { width: windowW, height: windowH } = useWindowDimensions();
+  const winW = Math.max(windowW, screenFrame.width);
+  const winH = Math.max(windowH, screenFrame.height) + Math.max(insets.bottom, 0);
   const landscapeCover = layoutMode === "landscape-cover";
   const [mediaAspect, setMediaAspect] = useState(NATURE_HOME_VIDEO_LANDSCAPE_ASPECT);
   const videoReadyRef = useRef(false);

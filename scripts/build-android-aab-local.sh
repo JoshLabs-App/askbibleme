@@ -20,16 +20,17 @@ export EXPO_PUBLIC_ASKBIBLE_BASE_URL="${EXPO_PUBLIC_ASKBIBLE_BASE_URL:-https://a
 export EXPO_PUBLIC_MEMBER_SYNC_DEBUG="${EXPO_PUBLIC_MEMBER_SYNC_DEBUG:-1}"
 export MOBILE_BUNDLE_OFFLINE_MEDIA="${MOBILE_BUNDLE_OFFLINE_MEDIA:-1}"
 export MOBILE_BUNDLE_MUSIC_LIMIT="${MOBILE_BUNDLE_MUSIC_LIMIT:-1}"
-export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mpg4a7xcip5q}"
+export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mpg4a8h3jhwl}"
 
 echo "→ 同步图标与离线内容…"
+bash "$ROOT/scripts/clear-mobile-bundle-cache.sh"
 npm run mobile:sync-icons
 npm run mobile:sync-content
 node scripts/sync-explore-featured-articles-localized.mjs
 npm run mobile:sync-android-icons
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
 MOBILE_BUNDLE_MUSIC_LIMIT=1 \
-MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a7xcip5q \
+MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a8h3jhwl \
 npm run mobile:sync-offline-media
 
 echo "→ 离线媒体体积审计…"

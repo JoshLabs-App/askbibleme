@@ -4,6 +4,7 @@ type ShellSlice = {
   registerReadChapter: MusicPlaybackContextValue["registerReadChapter"];
   playTrackAt: MusicPlaybackContextValue["playTrackAt"];
   togglePlayScripture: MusicPlaybackContextValue["togglePlayScripture"];
+  stopScripturePlayback: MusicPlaybackContextValue["stopScripturePlayback"];
   playScriptureChapter: MusicPlaybackContextValue["playScriptureChapter"];
   togglePlayMusic: MusicPlaybackContextValue["togglePlayMusic"];
   playNext: MusicPlaybackContextValue["playNext"];
@@ -52,6 +53,7 @@ export function buildMusicPlaybackContextValue(args: MusicPlaybackContextValueAr
     registerReadChapter: shell.registerReadChapter,
     playTrackAt: shell.playTrackAt,
     togglePlayScripture: shell.togglePlayScripture,
+    stopScripturePlayback: shell.stopScripturePlayback,
     playScriptureChapter: shell.playScriptureChapter,
     togglePlayMusic: shell.togglePlayMusic,
     playNext: shell.playNext,

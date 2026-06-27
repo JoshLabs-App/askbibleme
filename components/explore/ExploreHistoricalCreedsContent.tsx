@@ -88,85 +88,85 @@ export function ExploreHistoricalCreedsContent() {
                         : "mt-2 rounded-2xl border border-ink/10 bg-canvas/70 px-4 py-4"
                     }
                   >
-                  {featured ? (
-                    <span
-                      aria-hidden
-                      className="absolute inset-x-0 top-0 h-1"
-                      style={{ backgroundColor: READ_NEW_TESTAMENT_ACCENT }}
-                    />
-                  ) : null}
-                  {featured ? (
-                    <p className="mb-3 mt-1 inline-flex rounded-full border border-amber-600/40 bg-amber-600/10 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-amber-800">
-                      {t("pages.explore.historicalCreedsCoreEcumenicalBadge")}
-                    </p>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="w-full text-left"
-                    aria-expanded={expanded}
-                    onClick={() => setExpandedCreedId(expanded ? "" : creed.id)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex flex-wrap items-baseline gap-2.5">
-                        <span
-                          className={
-                            featured
-                              ? "font-serif text-[1.28rem] font-bold leading-snug text-amber-700/95"
-                              : "font-serif text-[1.2rem] font-semibold leading-snug text-amber-700/90"
-                          }
-                        >
-                          {creed.orderLabel}
-                        </span>
-                        <h2
-                          className={
-                            featured
-                              ? "font-serif text-[1.28rem] font-bold leading-snug text-ink/95"
-                              : "font-serif text-[1.2rem] font-semibold leading-snug text-ink/92"
-                          }
-                        >
-                          {creed.title}
-                        </h2>
-                      </div>
-                      <div className="flex shrink-0 items-start">
-                        <span className="text-[20px] font-semibold leading-none text-amber-700/90" aria-hidden>
-                          {expanded ? "−" : "+"}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                  <div className="mt-4 space-y-2.5 border-t border-ink/8 pt-4">
-                    <p className="text-[13px] font-bold tracking-[0.04em] text-amber-700/90">
-                      {t("pages.explore.historicalCreedsProblemLabel")}
-                    </p>
-                    <p className="text-[15px] leading-[1.72] text-ink/80">{creed.problemAddressed}</p>
-                  </div>
-                  {expanded ? (
-                    <div className="mt-4 space-y-2.5 border-t border-ink/8 pt-4">
-                      <p className="text-[13px] font-bold tracking-[0.04em] text-amber-700/90">
-                        {t("pages.explore.historicalCreedsSignificanceLabel")}
+                    {featured ? (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-0 top-0 h-1"
+                        style={{ backgroundColor: READ_NEW_TESTAMENT_ACCENT }}
+                      />
+                    ) : null}
+                    {featured ? (
+                      <p className="mb-3 mt-1 inline-flex rounded-full border border-amber-600/40 bg-amber-600/10 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-amber-800">
+                        {t("pages.explore.historicalCreedsCoreEcumenicalBadge")}
                       </p>
-                      <p className="text-[15px] leading-[1.72] text-ink/82">{creed.significance}</p>
-                    </div>
-                  ) : null}
-                  {creed.hasBody ? (
+                    ) : null}
                     <button
                       type="button"
-                      className="mt-4 rounded-full border border-amber-700/35 bg-canvas/80 px-3.5 py-2 text-[13px] font-semibold text-amber-800/90"
-                      onClick={() => setFullTextCreedId(fullTextOpen ? null : creed.id)}
+                      className="w-full text-left"
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedCreedId(expanded ? "" : creed.id)}
                     >
-                      {fullTextOpen
-                        ? t("pages.explore.historicalCreedsCollapseFullLabel")
-                        : t("pages.explore.historicalCreedsReadFullLabel")}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex flex-wrap items-baseline gap-2.5">
+                          <span
+                            className={
+                              featured
+                                ? "font-serif text-[1.28rem] font-bold leading-snug text-amber-700/95"
+                                : "font-serif text-[1.2rem] font-semibold leading-snug text-amber-700/90"
+                            }
+                          >
+                            {creed.orderLabel}
+                          </span>
+                          <h2
+                            className={
+                              featured
+                                ? "font-serif text-[1.28rem] font-bold leading-snug text-ink/95"
+                                : "font-serif text-[1.2rem] font-semibold leading-snug text-ink/92"
+                            }
+                          >
+                            {creed.title}
+                          </h2>
+                        </div>
+                        <div className="flex shrink-0 items-start">
+                          <span className="text-[20px] font-semibold leading-none text-amber-700/90" aria-hidden>
+                            {expanded ? "−" : "+"}
+                          </span>
+                        </div>
+                      </div>
                     </button>
-                  ) : null}
-                  {fullTextOpen ? (
-                    <div className="mt-4 space-y-3 border-t border-ink/8 pt-4">
+                    <div className="mt-4 space-y-2.5 border-t border-ink/8 pt-4">
                       <p className="text-[13px] font-bold tracking-[0.04em] text-amber-700/90">
-                        {t("pages.explore.historicalCreedsFullTextLabel")}
+                        {t("pages.explore.historicalCreedsProblemLabel")}
                       </p>
-                      <HistoricalCreedFullTextPanel creedId={creed.id} locale={locale} />
+                      <p className="text-[15px] leading-[1.72] text-ink/80">{creed.problemAddressed}</p>
                     </div>
-                  ) : null}
+                    {expanded ? (
+                      <div className="mt-4 space-y-2.5 border-t border-ink/8 pt-4">
+                        <p className="text-[13px] font-bold tracking-[0.04em] text-amber-700/90">
+                          {t("pages.explore.historicalCreedsSignificanceLabel")}
+                        </p>
+                        <p className="text-[15px] leading-[1.72] text-ink/82">{creed.significance}</p>
+                      </div>
+                    ) : null}
+                    {creed.hasBody ? (
+                      <button
+                        type="button"
+                        className="mt-4 rounded-full border border-amber-700/35 bg-canvas/80 px-3.5 py-2 text-[13px] font-semibold text-amber-800/90"
+                        onClick={() => setFullTextCreedId(fullTextOpen ? null : creed.id)}
+                      >
+                        {fullTextOpen
+                          ? t("pages.explore.historicalCreedsCollapseFullLabel")
+                          : t("pages.explore.historicalCreedsReadFullLabel")}
+                      </button>
+                    ) : null}
+                    {fullTextOpen ? (
+                      <div className="mt-4 space-y-3 border-t border-ink/8 pt-4">
+                        <p className="text-[13px] font-bold tracking-[0.04em] text-amber-700/90">
+                          {t("pages.explore.historicalCreedsFullTextLabel")}
+                        </p>
+                        <HistoricalCreedFullTextPanel creedId={creed.id} locale={locale} />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </article>

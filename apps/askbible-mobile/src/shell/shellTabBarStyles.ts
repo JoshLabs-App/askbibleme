@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export const shellTabBarStyles = StyleSheet.create({
   wrap: {
@@ -7,7 +7,8 @@ export const shellTabBarStyles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 100,
-    elevation: 2,
+    // Android：透明底栏 + elevation 会渲染成实心黑条，压住全屏视频
+    elevation: Platform.OS === "android" ? 0 : 2,
     alignItems: "center",
     paddingHorizontal: 12,
     gap: 6,
@@ -46,12 +47,30 @@ export const shellTabBarStyles = StyleSheet.create({
     justifyContent: "center",
   },
   tabBtnPressed: { opacity: 0.8 },
-  playFab: {
-    width: 56,
-    height: 56,
+  scriptureFabShell: {
+    width: 60,
+    height: 60,
+    marginHorizontal: 8,
+  },
+  scriptureFab: {
+    width: 60,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 10,
+    marginHorizontal: 8,
+    borderRadius: 30,
   },
-  playFabDisabled: { opacity: 0.4 },
+  scriptureFabIdle: {
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  scriptureFabActive: {
+    backgroundColor: "rgba(255, 177, 1, 0.16)",
+  },
+  scriptureFabDisabled: {
+    opacity: 0.35,
+  },
+  scriptureFabPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.97 }],
+  },
 });

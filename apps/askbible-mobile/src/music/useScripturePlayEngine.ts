@@ -10,7 +10,8 @@ import { isScripturePlaybackStarted } from "./scripturePlaybackHelpers";
 import { resetScriptureChapterEndTracking } from "./scriptureChapterEnd";
 import { clearScriptureChapterHandoff } from "./scripturePlaybackPriority";
 import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
-import { endPlanFlowChapterAdvance, consumeReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
+import { endPlanFlowChapterAdvance, consumeReadPlanFlowAutoplay, clearPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
+import { scriptureChapterPool } from "./scripture-chapter-pool";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
@@ -56,9 +57,11 @@ export function useScripturePlayEngine({
   );
 
   const stopScripturePlayback = useCallback(async () => {
+    scriptureChapterPool.stop();
     markScriptureWantPlaying(refs.scriptureWantPlayingRef, false);
     refs.autoPlayScriptureRef.current = false;
     consumeReadPlanFlowAutoplay();
+    clearPlanFlowSessionActive();
     beginScripturePlayAttempt();
     refs.scripturePlayInFlightRef.current = null;
     clearScriptureResumeTimer();
@@ -147,8 +150,8 @@ export function useScripturePlayEngine({
       reg: ReadChapterPlaybackRegistration,
       preferredSrc: string,
       playingReg?: ReadChapterPlaybackRegistration | null,
-    ) => {
-      await tryPlayScriptureWithFallbackHelper({
+    ): Promise<boolean> => {
+      return tryPlayScriptureWithFallbackHelper({
         reg,
         preferredSrc,
         playScripture,

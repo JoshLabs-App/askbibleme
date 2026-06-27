@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parchmentSans } from "../fonts/parchmentType";
 import type { AppLocale } from "../i18n/config";
 import { resolveUiText } from "../i18n/site-copy";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { readMemberSession } from "../auth/memberSession";
 import {
   clearMemberReadingSyncDebugEvents,
@@ -80,7 +81,7 @@ export function MemberReadingSyncDetailSheet({ visible, locale, onClose }: Props
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={resolveUiText(locale, "关闭", "Close")} />
-        <View
+        <ParchmentModalCard
           style={[
             styles.sheet,
             {
@@ -152,7 +153,7 @@ export function MemberReadingSyncDetailSheet({ visible, locale, onClose }: Props
               </Text>
             </Pressable>
           </View>
-        </View>
+        </ParchmentModalCard>
       </View>
     </Modal>
   );
@@ -168,11 +169,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginBottom: 12,
     maxHeight: "78%",
-    borderRadius: 14,
-    backgroundColor: "#f5efe4",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(92, 64, 48, 0.18)",
-    overflow: "hidden",
   },
   header: {
     flexDirection: "row",

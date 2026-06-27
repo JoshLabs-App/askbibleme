@@ -24,10 +24,12 @@ describe("scriptureChapterEnd", () => {
     const chapterEndHandledRef = { current: false };
     const args = {
       soundRef: { current: null },
+      scriptureSrcRef: { current: null },
       scriptureAudioRepeatRef: { current: "off" as const },
       readChapterRef: { current: null },
       autoPlayScriptureRef: { current: true },
       scriptureChapterHandoffRef: { current: false },
+      scriptureWantPlayingRef: { current: false },
       setPlaying: vi.fn(),
       chapterEndHandledRef,
     };

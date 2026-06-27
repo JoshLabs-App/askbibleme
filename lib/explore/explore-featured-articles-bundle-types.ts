@@ -2,6 +2,7 @@ export type ExploreFeaturedArticleLocaleBlock = {
   title: string;
   exploreLabel: string;
   body: string;
+  sections?: import("@/lib/explore/explore-featured-article-section-types").ExploreFeaturedArticleSection[];
 };
 
 export type ExploreFeaturedArticleBundleEntry = {

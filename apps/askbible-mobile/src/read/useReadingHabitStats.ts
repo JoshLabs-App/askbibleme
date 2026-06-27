@@ -38,8 +38,8 @@ export function useReadingHabitStats() {
     };
   }, [refresh]);
 
-  const syncTodayComplete = useCallback(async (allDoneToday: boolean) => {
-    const record = await syncReadingHabitDayCompletion(allDoneToday);
+  const syncTodayComplete = useCallback(async (hasReadingToday: boolean | undefined) => {
+    const record = await syncReadingHabitDayCompletion(hasReadingToday);
     applySnapshot(setSnapshot, snapshotFromRecord(record));
   }, []);
 

@@ -18,14 +18,39 @@ import {
   toTranslationSelectOptions,
 } from "./natureHomeTranslationLabels";
 import type { NatureHomeSettingsSelectOption } from "./NatureHomeSettingsSelect";
+import {
+  attachNatureHomeTranslationDownloadStates,
+  useNatureHomeTranslationInstallStates,
+} from "./useNatureHomeTranslationInstallStates";
 
 export type OpenTranslationMenu = "primary" | "contrast" | null;
+
+function translationUsable(
+  translationId: string,
+  installStates: Record<string, import("../bible/scripture-translation-update").ScriptureTranslationInstallStatus>,
+): boolean {
+  const status = installStates[translationId];
+  return status === "bundled" || status === "installed" || status === "outdated";
+}
 
 export function useNatureHomeTranslationSettings(onPrefsChanged: () => void) {
   const { locale } = useLocale();
   const [prefs, setPrefs] = useState<HomePrayerVersePrefsV1>(DEFAULT_HOME_PRAYER_PREFS);
   const [openMenu, setOpenMenu] = useState<OpenTranslationMenu>(null);
   const [catalog, setCatalog] = useState<BibleTranslationMeta[]>([]);
+
+  const {
+    installStates,
+    translationDownloadState,
+    setOpenMenuTracked,
+    onDownloadTranslation,
+    ensureTranslationDownloaded,
+    isTranslationReady,
+  } = useNatureHomeTranslationInstallStates(catalog);
+
+  useEffect(() => {
+    setOpenMenuTracked(openMenu);
+  }, [openMenu, setOpenMenuTracked]);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +79,12 @@ export function useNatureHomeTranslationSettings(onPrefsChanged: () => void) {
   }, []);
 
   const allOptions = useMemo(() => toTranslationSelectOptions(catalog, locale), [catalog, locale]);
+  const allOptionsWithDownload = useMemo(
+    () =>
+      attachNatureHomeTranslationDownloadStates(allOptions, installStates, translationDownloadState),
+    [allOptions, installStates, translationDownloadState],
+  );
+
   const localeDefaultPrimaryId = useMemo(
     () => defaultHomePrimaryTranslationIdForLocale(locale),
     [locale],
@@ -114,10 +145,30 @@ export function useNatureHomeTranslationSettings(onPrefsChanged: () => void) {
     });
   }, [catalog, locale, persist, prefs]);
 
+  useEffect(() => {
+    if (catalog.length === 0 || Object.keys(installStates).length === 0) return;
+    const manualPrimary = prefs.primaryTranslationMode === "manual" ? prefs.verseTextZhTranslationId.trim() : "";
+    const contrastVal = prefs.verseTextEnTranslationId.trim();
+    const primaryMissing = manualPrimary && !translationUsable(manualPrimary, installStates);
+    const contrastMissing = contrastVal && !translationUsable(contrastVal, installStates);
+    if (!primaryMissing && !contrastMissing) return;
+
+    const nextAutoPrimary = catalog.some((x) => x.id === localeDefaultPrimaryId)
+      ? localeDefaultPrimaryId
+      : catalog.find((x) => translationUsable(x.id, installStates))?.id ?? catalog[0]!.id;
+
+    void persist({
+      ...prefs,
+      primaryTranslationMode: primaryMissing ? "auto" : prefs.primaryTranslationMode,
+      verseTextZhTranslationId: primaryMissing ? nextAutoPrimary : prefs.verseTextZhTranslationId,
+      verseTextEnTranslationId: contrastMissing ? "" : prefs.verseTextEnTranslationId,
+    });
+  }, [catalog, installStates, localeDefaultPrimaryId, persist, prefs]);
+
   const systemDefaultPrimaryLabel = resolveUiText(locale, "系统默认", "System default");
 
   const systemDefaultPrimaryOption = useMemo((): NatureHomeSettingsSelectOption => {
-    const matched = allOptions.find((opt) => opt.id === localeDefaultPrimaryId);
+    const matched = allOptionsWithDownload.find((opt) => opt.id === localeDefaultPrimaryId);
     if (!matched) {
       return {
         id: PRIMARY_SYSTEM_DEFAULT_ID,
@@ -130,12 +181,24 @@ export function useNatureHomeTranslationSettings(onPrefsChanged: () => void) {
       label: `${systemDefaultPrimaryLabel} · ${matched.label}`,
       shortLabel: systemDefaultPrimaryLabel,
     };
-  }, [allOptions, localeDefaultPrimaryId, systemDefaultPrimaryLabel]);
+  }, [allOptionsWithDownload, localeDefaultPrimaryId, systemDefaultPrimaryLabel]);
 
   const primaryOptions = useMemo(
-    (): NatureHomeSettingsSelectOption[] => [systemDefaultPrimaryOption, ...allOptions],
-    [systemDefaultPrimaryOption, allOptions],
+    (): NatureHomeSettingsSelectOption[] => [systemDefaultPrimaryOption, ...allOptionsWithDownload],
+    [systemDefaultPrimaryOption, allOptionsWithDownload],
   );
+
+  const contrastOptions = useMemo((): NatureHomeSettingsSelectOption[] => {
+    const contrastOffLabel = resolveUiText(locale, "无对照", "No contrast");
+    return [
+      {
+        id: CONTRAST_OFF_ID,
+        label: contrastOffLabel,
+        shortLabel: contrastOffLabel,
+      },
+      ...allOptionsWithDownload,
+    ];
+  }, [allOptionsWithDownload, locale]);
 
   const primaryValue = prefs.primaryTranslationMode === "auto"
     ? PRIMARY_SYSTEM_DEFAULT_ID
@@ -150,8 +213,8 @@ export function useNatureHomeTranslationSettings(onPrefsChanged: () => void) {
 
   const selectPrimary = useCallback(
     (id: string) => {
-      setOpenMenu(null);
       if (id === PRIMARY_SYSTEM_DEFAULT_ID) {
+        setOpenMenu(null);
         const nextAutoPrimary = catalog.some((x) => x.id === localeDefaultPrimaryId)
           ? localeDefaultPrimaryId
           : catalog[0]!.id;
@@ -165,43 +228,75 @@ export function useNatureHomeTranslationSettings(onPrefsChanged: () => void) {
         });
         return;
       }
-      const nextContrast =
-        prefs.verseTextEnTranslationId.trim() === id
-          ? ""
-          : prefs.verseTextEnTranslationId;
-      void persist({
-        ...prefs,
-        primaryTranslationMode: "manual",
-        verseTextZhTranslationId: id,
-        verseTextEnTranslationId: nextContrast,
-      });
+      void (async () => {
+        try {
+          await ensureTranslationDownloaded(id);
+          setOpenMenu(null);
+          const nextContrast =
+            prefs.verseTextEnTranslationId.trim() === id
+              ? ""
+              : prefs.verseTextEnTranslationId;
+          await persist({
+            ...prefs,
+            primaryTranslationMode: "manual",
+            verseTextZhTranslationId: id,
+            verseTextEnTranslationId: nextContrast,
+          });
+        } catch {
+          /* download state surfaced via translationDownloadState */
+        }
+      })();
     },
-    [catalog, localeDefaultPrimaryId, persist, prefs],
+    [catalog, ensureTranslationDownloaded, localeDefaultPrimaryId, persist, prefs],
   );
 
   const selectContrast = useCallback(
     (id: string) => {
-      setOpenMenu(null);
-      const nextContrast = id === CONTRAST_OFF_ID ? "" : id;
-      void persist({
-        ...prefs,
-        verseTextEnTranslationId: nextContrast,
-      });
+      if (id === CONTRAST_OFF_ID) {
+        setOpenMenu(null);
+        void persist({
+          ...prefs,
+          verseTextEnTranslationId: "",
+        });
+        return;
+      }
+      void (async () => {
+        try {
+          await ensureTranslationDownloaded(id);
+          setOpenMenu(null);
+          await persist({
+            ...prefs,
+            verseTextEnTranslationId: id,
+          });
+        } catch {
+          /* download state surfaced via translationDownloadState */
+        }
+      })();
     },
-    [persist, prefs],
+    [ensureTranslationDownloaded, persist, prefs],
+  );
+
+  const onDownloadOption = useCallback(
+    (id: string) => {
+      void onDownloadTranslation(id);
+    },
+    [onDownloadTranslation],
   );
 
   return {
     locale,
     catalog,
-    allOptions,
+    allOptions: allOptionsWithDownload,
     openMenu,
     setOpenMenu,
     primaryOptions,
+    contrastOptions,
     primaryValue,
     contrastValue,
     contrastId,
     selectPrimary,
     selectContrast,
+    onDownloadOption,
+    isTranslationReady,
   };
 }

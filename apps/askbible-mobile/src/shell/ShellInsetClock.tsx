@@ -21,7 +21,7 @@ function isHomePathname(pathname: string): boolean {
   return /^\/?\(tabs\)\/?$/.test(pathname) || /^\/?\(tabs\)\/index\/?$/.test(pathname);
 }
 
-/** 自然首页手机横屏沉浸：底栏隐藏时在中下方显示壳层时间（与网站 `TopShellInsetTime` 横屏位一致）。 */
+/** 自然首页手机横屏沉浸：底栏隐藏时在顶部居中显示壳层时间。 */
 export function ShellInsetClock() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
@@ -54,7 +54,7 @@ export function ShellInsetClock() {
 
   return (
     <Text
-      style={[styles.clock, { bottom: Math.max(insets.bottom, 8) + 10 }]}
+      style={[styles.clock, { top: Math.max(insets.top, 8) + 2 }]}
       pointerEvents="none"
       accessibilityRole="text"
       accessibilityLabel={time}

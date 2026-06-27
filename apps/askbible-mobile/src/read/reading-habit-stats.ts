@@ -6,9 +6,12 @@ export const READING_HABIT_STATS_STORAGE_KEY_LEGACY = "selah-reading-habit-stats
 
 export type ReadingHabitStatsRecord = {
   version: 1;
-  /** 日历日 YYYY-MM-DD：当日读经计划全部勾选完成 */
+  /** 日历日 YYYY-MM-DD：当日有实质读经（读完一章或今日计划有进度） */
   completedDates: string[];
 };
+
+/** 滚动/音频进度达到该比例，即计为当日有读经。 */
+export const READING_HABIT_MIN_FRACTION = 0.2;
 
 const listeners = new Set<() => void>();
 
@@ -133,14 +136,44 @@ export async function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRe
   snapshotFromRecord(record);
 }
 
-/** 今日计划是否全部读完时同步日历完成记录 */
-export async function syncReadingHabitDayCompletion(allDoneToday: boolean): Promise<ReadingHabitStatsRecord> {
+export function mergeReadingHabitStatsRecords(
+  a: ReadingHabitStatsRecord,
+  b: ReadingHabitStatsRecord,
+): ReadingHabitStatsRecord {
+  return {
+    version: 1,
+    completedDates: [...new Set([...a.completedDates, ...b.completedDates])].sort(),
+  };
+}
+
+/** 记录某日已有读经（只增不减，用于读完章节等）。 */
+export async function touchReadingHabitDay(
+  date: string = toLocalDateString(new Date()),
+): Promise<ReadingHabitStatsRecord> {
+  const record = await readReadingHabitStats();
+  if (record.completedDates.includes(date)) return record;
+  const next: ReadingHabitStatsRecord = {
+    version: 1,
+    completedDates: [...record.completedDates, date].sort(),
+  };
+  await writeReadingHabitStats(next);
+  snapshotFromRecord(next, date);
+  return next;
+}
+
+/** 根据今日是否有读经活动更新当日记录；`undefined` 表示状态未知，不写入。 */
+export async function syncReadingHabitDayCompletion(
+  hasReadingToday: boolean | undefined,
+): Promise<ReadingHabitStatsRecord> {
+  if (hasReadingToday === undefined) {
+    return readReadingHabitStats();
+  }
   const today = toLocalDateString(new Date());
   const record = await readReadingHabitStats();
   const hadToday = record.completedDates.includes(today);
-  if (allDoneToday === hadToday) return record;
+  if (hasReadingToday === hadToday) return record;
   const set = new Set(record.completedDates);
-  if (allDoneToday) set.add(today);
+  if (hasReadingToday) set.add(today);
   else set.delete(today);
   const next: ReadingHabitStatsRecord = {
     version: 1,

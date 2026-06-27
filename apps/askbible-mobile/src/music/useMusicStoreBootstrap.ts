@@ -17,7 +17,7 @@ import {
   writeCachedMusicCompanionStore,
 } from "./fetchMusicCompanion";
 import { enrichPlaybackTracks } from "./trackArtwork";
-import { hasAtLeastBundledTracks, resolveDefaultCalmTrackIndex } from "./musicStoreHelpers";
+import { hasAtLeastBundledTracks, resolveSessionDefaultTrackIndex } from "./musicStoreHelpers";
 import type { MusicCompanionStore } from "./types";
 
 type Args = {
@@ -52,7 +52,7 @@ export function useMusicStoreBootstrap({
         setStore(bundledStore);
         if (isMobileBundledOnly()) {
           const tracks = enrichPlaybackTracks(bundledStore, getAskBibleBaseUrl());
-          setTrackIndex(resolveDefaultCalmTrackIndex(tracks));
+          setTrackIndex(resolveSessionDefaultTrackIndex(tracks));
           await audioModeWarmup;
           return;
         }

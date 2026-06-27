@@ -1,5 +1,6 @@
 import { MusicHomeClient } from "@/components/music/MusicHomeClient";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
+import { filterPublicMusicCompanionStore } from "@/lib/music-companion/public-store";
 import { readMusicCompanionStore } from "@/lib/music-companion/store-file";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 import "./music-home.css";
@@ -14,7 +15,7 @@ export const metadata = {
 
 export default async function MusicPage() {
   const cwd = process.cwd();
-  const store = await readMusicCompanionStore(cwd);
+  const store = filterPublicMusicCompanionStore(await readMusicCompanionStore(cwd));
   return (
     <ShellTemplateChromeLayout
       contentClassName="gap-0"

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { getNtDeepRepeatRegistryEntry, isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { getTripleLoopRegistryEntry, isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import type { ReadingPlanBundle, ReadingPlanRegistry } from "@/lib/bible/reading-plans/types";
 
@@ -34,8 +35,14 @@ export function readReadingPlanRegistrySync(cwd: string): ReadingPlanRegistry | 
     const raw = fs.readFileSync(p, "utf-8");
     const j = JSON.parse(raw) as ReadingPlanRegistry;
     if (j?.schemaVersion !== 1 || !Array.isArray(j.plans)) return null;
-    const withoutTriple = j.plans.filter((plan) => !isTripleLoopPlanId(plan.planId));
-    const plans = sortRegistryPlans([getTripleLoopRegistryEntry(), ...withoutTriple]);
+    const withoutNative = j.plans.filter(
+      (plan) => !isTripleLoopPlanId(plan.planId) && !isNtDeepRepeatPlanId(plan.planId),
+    );
+    const plans = sortRegistryPlans([
+      getTripleLoopRegistryEntry(),
+      getNtDeepRepeatRegistryEntry(),
+      ...withoutNative,
+    ]);
     return { ...j, plans };
   } catch {
     return null;
@@ -43,7 +50,7 @@ export function readReadingPlanRegistrySync(cwd: string): ReadingPlanRegistry | 
 }
 
 export function readReadingPlanBundleSync(cwd: string, planId: string): ReadingPlanBundle | null {
-  if (isTripleLoopPlanId(planId)) return null;
+  if (isTripleLoopPlanId(planId) || isNtDeepRepeatPlanId(planId)) return null;
   const p = readingPlanBundlePath(cwd, planId);
   try {
     const raw = fs.readFileSync(p, "utf-8");

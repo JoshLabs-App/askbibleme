@@ -1,18 +1,33 @@
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import {
   ImageBackground,
   StyleSheet,
+  useWindowDimensions,
   View,
   type ImageStyle,
   type StyleProp,
+  type ViewProps,
   type ViewStyle,
 } from "react-native";
 import { readParchmentTheme as c } from "./readParchmentTheme";
+import { shouldUseWideParchmentScrollBackground } from "./parchmentColumnLayout";
 
 export const READ_PARCHMENT_SCROLL_SOURCE = require("../../assets/images/read-parchment-scroll-bg.jpg");
+export const READ_PARCHMENT_SCROLL_SOURCE_WIDE = require("../../assets/images/read-parchment-scroll-bg-wide.jpg");
 
-const parchmentSource = READ_PARCHMENT_SCROLL_SOURCE;
+export function resolveReadParchmentScrollSource(width: number, height: number) {
+  if (shouldUseWideParchmentScrollBackground(width, height)) {
+    return READ_PARCHMENT_SCROLL_SOURCE_WIDE;
+  }
+  return READ_PARCHMENT_SCROLL_SOURCE;
+}
+
+export function useReadParchmentScrollSource() {
+  const { width, height } = useWindowDimensions();
+  return useMemo(() => resolveReadParchmentScrollSource(width, height), [width, height]);
+}
 
 const DEFAULT_EDGE_FADE_TOP_PX = 14;
 const DEFAULT_EDGE_FADE_BOTTOM_PX = 18;
@@ -47,7 +62,7 @@ type ReadParchmentBackgroundProps = {
   imageStyle?: StyleProp<ImageStyle>;
   /** Modal 内撑满父级高度，避免部分 Android 机型章网格高度塌缩。 */
   fill?: boolean;
-};
+} & Pick<ViewProps, "onStartShouldSetResponder">;
 
 const styles = StyleSheet.create({
   parchmentContainer: {
@@ -66,6 +81,10 @@ const styles = StyleSheet.create({
     position: "relative",
     zIndex: 1,
   },
+  parchmentForegroundFill: {
+    flex: 1,
+    width: "100%",
+  },
   fillImage: {
     width: "100%",
     height: "100%",
@@ -81,14 +100,18 @@ const styles = StyleSheet.create({
 export function ReadParchmentFillLayer({
   style,
   imageStyle,
+  source,
 }: {
   style?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ImageStyle>;
+  source?: number;
 }) {
+  const dynamicSource = useReadParchmentScrollSource();
+  const resolvedSource = source ?? dynamicSource;
   return (
     <View style={[StyleSheet.absoluteFillObject, style]} pointerEvents="none">
       <ImageBackground
-        source={parchmentSource}
+        source={resolvedSource}
         resizeMode="stretch"
         style={StyleSheet.absoluteFillObject}
         imageStyle={[styles.fillImage, imageStyle]}
@@ -99,21 +122,26 @@ export function ReadParchmentFillLayer({
 
 /**
  * 弹层/卡片羊皮底：实图层绝对铺满外壳，正文（含 padding）叠在上层。
- * 避免 ImageBackground 包裹子节点时在 Modal 内高度不同步，或 padding 区露出纯色底。
+ * 全屏 Tab 栈请用 {@link ReadParchmentBackground}；圆角卡片 / 自定义尺寸用本组件。
  */
 export function ReadParchmentBackgroundImage({
   children,
   style,
   imageStyle,
   fill = false,
+  ...viewProps
 }: ReadParchmentBackgroundProps) {
   return (
     <View
-      style={[styles.parchmentContainer, styles.parchmentShell, fill && styles.parchmentShellFill]}
+      style={[styles.parchmentContainer, styles.parchmentShell, fill && styles.parchmentShellFill, style]}
       collapsable={false}
+      {...viewProps}
     >
       <ReadParchmentFillLayer imageStyle={imageStyle} />
-      <View style={[styles.parchmentForeground, style]} pointerEvents="box-none">
+      <View
+        style={[styles.parchmentForeground, fill && styles.parchmentForegroundFill]}
+        pointerEvents="box-none"
+      >
         {children}
       </View>
     </View>

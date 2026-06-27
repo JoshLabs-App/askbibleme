@@ -43,20 +43,20 @@ export async function tryPlayScriptureWithFallback(args: {
   isBusy?: () => boolean;
   /** 若 shell 已在播同一章，则跳过（planFlow 换章时必须能强制开播）。 */
   playingReg?: ReadChapterPlaybackRegistration | null;
-}): Promise<void> {
+}): Promise<boolean> {
   if (
     args.isBusy?.() &&
     args.isStarted() &&
     args.playingReg &&
     isSameScriptureChapter(args.playingReg, args.reg)
   ) {
-    return;
+    return true;
   }
   if (__DEV__) {
     console.warn("[scripture-audio] try primary src", args.preferredSrc);
   }
   await args.playScripture(args.preferredSrc);
-  if (args.isStarted()) return;
+  if (args.isStarted()) return true;
 
   const fallbackSrc = await resolveScriptureFallbackSrc(args.reg, args.preferredSrc);
   if (!fallbackSrc) {
@@ -68,7 +68,7 @@ export async function tryPlayScriptureWithFallback(args: {
         args.reg.translationId,
       );
     }
-    return;
+    return false;
   }
 
   if (__DEV__) {
@@ -76,6 +76,7 @@ export async function tryPlayScriptureWithFallback(args: {
   }
   args.patchReadChapterSrc(fallbackSrc);
   await args.playScripture(fallbackSrc);
+  return args.isStarted();
 }
 
 export function patchReadChapterSrc(args: {

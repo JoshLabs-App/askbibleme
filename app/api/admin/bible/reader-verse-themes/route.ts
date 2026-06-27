@@ -3,7 +3,18 @@ import type { Database } from "sql.js";
 import { NextResponse } from "next/server";
 import { chineseBookNameToBookId } from "@/lib/bible/chinese-book-name-to-id";
 import { canonicalLabel } from "@/lib/scripture/reader-verse-themes-bucket";
-import { enrichVerseRepeatRankItems, queryVerseRepeatRankPage } from "@/lib/scripture/reader-verse-repeat-rank";
+import {
+  enrichVerseRepeatRankItems,
+  enrichVerseRepeatRankThemeLabels,
+  parseVerseRepeatRankSortBy,
+  parseVerseRepeatRankTestament,
+  queryVerseRepeatRankPage,
+} from "@/lib/scripture/reader-verse-repeat-rank";
+import {
+  deleteVersesFromReaderThemeLibrary,
+  parseVerseRepeatRankRowKey,
+  persistReaderVerseThemesDatabase,
+} from "@/lib/scripture/reader-verse-themes-mutations";
 import { getReaderVerseThemesDatabase, readerVerseThemesSqlitePath } from "@/lib/scripture/reader-verse-themes-db";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 
@@ -154,9 +165,21 @@ export async function GET(req: Request) {
       const q = (url.searchParams.get("q") ?? "").trim();
       const minCount = url.searchParams.get("minCount");
       const maxCount = url.searchParams.get("maxCount");
+      const sortBy = parseVerseRepeatRankSortBy(url.searchParams.get("sortBy"));
+      const testament = parseVerseRepeatRankTestament(url.searchParams.get("testament"));
       const dbPath = readerVerseThemesSqlitePath(cwd);
       const mtimeMs = fs.existsSync(dbPath) ? fs.statSync(dbPath).mtimeMs : 0;
-      const page = queryVerseRepeatRankPage(db, { limit, offset, q, minCount, maxCount, mtimeMs });
+      const page = queryVerseRepeatRankPage(db, {
+        limit,
+        offset,
+        q,
+        minCount,
+        maxCount,
+        sortBy,
+        testament,
+        mtimeMs,
+      });
+      enrichVerseRepeatRankThemeLabels(db, page.items);
       await enrichVerseRepeatRankItems(page.items);
       return NextResponse.json(
         { ok: true, ...page },
@@ -167,5 +190,69 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: "未知 mode" }, { status: 400 });
   } finally {
     /* db 为进程内缓存，不在此关闭 */
+  }
+}
+
+type BatchDeletePayload = {
+  action?: string;
+  rowKeys?: unknown;
+};
+
+export async function POST(req: Request) {
+  if (!isStudioDiskSaveAllowed(req)) return disk403();
+
+  const cwd = process.cwd();
+  let payload: BatchDeletePayload;
+  try {
+    payload = (await req.json()) as BatchDeletePayload;
+  } catch {
+    return NextResponse.json({ ok: false, error: "请求体不是合法 JSON" }, { status: 400 });
+  }
+
+  if (payload.action !== "batch-delete-verses") {
+    return NextResponse.json({ ok: false, error: "未知 action" }, { status: 400 });
+  }
+
+  const rawKeys = Array.isArray(payload.rowKeys) ? payload.rowKeys : null;
+  if (!rawKeys || rawKeys.length === 0) {
+    return NextResponse.json({ ok: false, error: "rowKeys 必须是非空数组" }, { status: 400 });
+  }
+
+  const coords = rawKeys
+    .map((k) => parseVerseRepeatRankRowKey(String(k ?? "")))
+    .filter((c): c is NonNullable<typeof c> => c != null);
+  if (coords.length === 0) {
+    return NextResponse.json({ ok: false, error: "没有有效的 rowKeys" }, { status: 400 });
+  }
+
+  let db: Database | null;
+  try {
+    db = await getReaderVerseThemesDatabase(cwd);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
+
+  if (!db) {
+    return NextResponse.json(
+      {
+        ok: false,
+        missingDb: true,
+        message: "未找到 data/scripture/reader-verse-themes.sqlite。",
+      },
+      { status: 404 },
+    );
+  }
+
+  try {
+    const result = deleteVersesFromReaderThemeLibrary(db, coords);
+    persistReaderVerseThemesDatabase(cwd, db);
+    return NextResponse.json(
+      { ok: true, ...result, requested: rawKeys.length },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }

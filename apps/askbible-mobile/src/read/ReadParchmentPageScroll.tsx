@@ -14,15 +14,16 @@ import { readRouteUsesBottomActionChrome } from "./read-route-chrome";
 import {
   PARCHMENT_COLUMN_MAX_WIDTH_PHONE,
   READ_PARCHMENT_PAGE_MAX_WIDTH,
+  READ_PARCHMENT_PAGE_PAD_X,
   useParchmentColumnMaxWidth,
+  useReadPagePaddingHorizontal,
 } from "./parchmentColumnLayout";
 
 /** 与 `ReadCatalogScreen` / 网站 `.read-bible-parchment-scroll` 对齐 */
 export const READ_PARCHMENT_PAGE_TOP_HOME = 48;
 export const READ_PARCHMENT_PAGE_TOP_SUB = 20;
 export const READ_PARCHMENT_PAGE_BOTTOM = SHELL_TAB_BAR_CLEARANCE + 28;
-export const READ_PARCHMENT_PAGE_PAD_X = 20;
-export { READ_PARCHMENT_PAGE_MAX_WIDTH };
+export { READ_PARCHMENT_PAGE_MAX_WIDTH, READ_PARCHMENT_PAGE_PAD_X };
 
 export type ReadParchmentPageInset = "home" | "sub";
 
@@ -44,12 +45,14 @@ export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
     const columnMaxWidth = useParchmentColumnMaxWidth(PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
+    const padX = useReadPagePaddingHorizontal();
     const contentColumnStyle = useMemo(
       () => [
         styles.content,
+        { paddingHorizontal: padX },
         columnMaxWidth != null ? { maxWidth: columnMaxWidth } : null,
       ],
-      [columnMaxWidth],
+      [columnMaxWidth, padX],
     );
     const topPad =
       inset === "home" ? READ_PARCHMENT_PAGE_TOP_HOME : READ_PARCHMENT_PAGE_TOP_SUB;
@@ -80,7 +83,6 @@ export const ReadParchmentPageScroll = forwardRef<ScrollView, Props>(
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: {
-    paddingHorizontal: READ_PARCHMENT_PAGE_PAD_X,
     width: "100%",
     alignSelf: "center",
   },

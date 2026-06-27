@@ -106,6 +106,8 @@ export async function markReadChapterCompleted(bookId: string, chapter: number):
   if (done.has(key)) return false;
   done.add(key);
   await writeCompletionSet(done);
+  const { touchReadingHabitDay } = await import("./reading-habit-stats");
+  void touchReadingHabitDay();
   return true;
 }
 

@@ -4,6 +4,7 @@ export const NATURE_HOME_PREFS_KEYS = {
   softFocus: "askbible-nature-soft-focus-v1",
   chromeTune: "askbible.shell-template-chrome-tune-v1",
   ttsPrefs: "askbible-nature-home-tts-v1",
+  verseRotationSec: "askbible-home-verse-rotation-sec-v1",
 } as const;
 
 export const NATURE_HOME_PREFS_LEGACY_KEYS = {

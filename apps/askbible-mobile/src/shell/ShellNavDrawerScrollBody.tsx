@@ -5,10 +5,11 @@ import { requestOpenOnboardingDevotionIntro } from "../onboarding/onboarding-dev
 import { resetOnboardingDevotionIntro } from "../onboarding/onboarding-devotion-prefs";
 import { ResourceUpdateSheet } from "../updates/ResourceUpdateSheet";
 import type { AppLocale } from "../i18n/config";
-import type { HomeVersePoolScopeId } from "../explore/explore-home-verse-pool-scopes";
+import type { HomeVersePoolScopeId } from "../home/homeVersePoolScopePrefs";
 import { ShellNavDrawerHomeVersePoolSection } from "./ShellNavDrawerHomeVersePoolSection";
 import { ShellNavDrawerLocaleRow } from "./ShellNavDrawerLocaleRow";
 import { ShellNavDrawerMenuRow } from "./ShellNavDrawerMenuRow";
+import { ShellNavDrawerNotificationsSection } from "./ShellNavDrawerNotificationsSection";
 import { ShellNavDrawerReadingSyncSection } from "./ShellNavDrawerReadingSyncSection";
 import { ShellNavDrawerTtsExperimentSection } from "./ShellNavDrawerTtsExperimentSection";
 import { SUPPORT_EMAIL } from "./shellNavDrawerConstants";
@@ -79,7 +80,9 @@ export function ShellNavDrawerScrollBody({
     >
       <ShellNavDrawerLocaleRow locale={locale} onLocaleChange={handleLocaleChange} switching={localeSwitching} />
       <View style={styles.compactGap} />
-      <ShellNavDrawerHomeVersePoolSection locale={locale} homeVersePoolScope={homeVersePoolScope} />
+      <ShellNavDrawerHomeVersePoolSection locale={locale} selectedScope={homeVersePoolScope} />
+      <View style={styles.compactGap} />
+      <ShellNavDrawerNotificationsSection locale={locale} />
       <View style={styles.compactGap} />
       <ShellNavDrawerTtsExperimentSection
         locale={locale}

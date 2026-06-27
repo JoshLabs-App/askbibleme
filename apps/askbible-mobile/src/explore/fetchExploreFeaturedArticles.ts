@@ -9,6 +9,7 @@ import {
 import {
   getBundledExploreFeaturedArticlesBundle,
   isExploreFeaturedArticlesBundle,
+  shouldPreferBundledExploreFeaturedContent,
   type ExploreFeaturedArticlesBundle,
 } from "./exploreFeaturedArticlesBundleCore";
 
@@ -106,10 +107,16 @@ export async function hydrateExploreFeaturedArticlesFromDisk(): Promise<ExploreF
   if (hydratePromise) return hydratePromise;
 
   hydratePromise = (async () => {
+    const bundled = getBundledExploreFeaturedArticlesBundle();
     const cached = await readCachedPayload();
     if (cached?.bundle.articles.length) {
-      activeBundle = cached.bundle;
-      lastFetchedAt = cached.fetchedAt;
+      const cachedVersion = cached.contentVersion || cached.bundle.contentVersion;
+      if (shouldPreferBundledExploreFeaturedContent(bundled.contentVersion, cachedVersion)) {
+        activeBundle = bundled;
+      } else {
+        activeBundle = cached.bundle;
+        lastFetchedAt = cached.fetchedAt;
+      }
       notifyListeners();
     }
     return activeBundle;
@@ -142,9 +149,16 @@ async function refreshExploreFeaturedArticlesRemote(force: boolean): Promise<Exp
 
   const remote = await fetchExploreFeaturedArticlesBundleFromRemote();
   if (remote) {
-    activeBundle = remote;
-    lastRemoteFailureAt = 0;
-    await writeCachedBundle(remote);
+    const bundled = getBundledExploreFeaturedArticlesBundle();
+    if (shouldPreferBundledExploreFeaturedContent(bundled.contentVersion, remote.contentVersion)) {
+      activeBundle = bundled;
+      lastRemoteFailureAt = 0;
+      await writeCachedBundle(bundled);
+    } else {
+      activeBundle = remote;
+      lastRemoteFailureAt = 0;
+      await writeCachedBundle(remote);
+    }
     notifyListeners();
     return activeBundle;
   }

@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { ReadPlanDetailClient } from "@/components/bible/ReadPlansPageClient";
+import { ReadNtDeepRepeatPlanDetailClient } from "@/components/bible/ReadNtDeepRepeatPlanDetailClient";
 import { ReadTripleLoopPlanDetailClient } from "@/components/bible/ReadTripleLoopPlanDetailClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
+import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import { readReadingPlanBundleSync, readReadingPlanRegistrySync } from "@/lib/bible/reading-plans/reading-plans-store";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
@@ -10,7 +12,7 @@ type Props = { params: Promise<{ planId: string }> };
 
 export async function generateStaticParams() {
   const reg = readReadingPlanRegistrySync(process.cwd());
-  if (!reg?.plans?.length) return [{ planId: "triple-loop" }];
+  if (!reg?.plans?.length) return [{ planId: "triple-loop" }, { planId: "nt-deep-repeat" }];
   return reg.plans.map((p) => ({ planId: p.planId }));
 }
 
@@ -18,6 +20,7 @@ export async function generateMetadata({ params }: Props) {
   const { planId } = await params;
   const decoded = decodeURIComponent(planId);
   if (isTripleLoopPlanId(decoded)) return { title: sitePageTitle("新旧约循环读经计划") };
+  if (isNtDeepRepeatPlanId(decoded)) return { title: sitePageTitle("新约深读 · 旧约通读") };
   const bundle = readReadingPlanBundleSync(process.cwd(), decoded);
   if (!bundle) return { title: sitePageTitle("读经计划") };
   return { title: sitePageTitle(bundle.name) };
@@ -32,6 +35,14 @@ export default async function ReadPlanDetailPage({ params }: Props) {
     return (
       <ScriptureChrome>
         <ReadTripleLoopPlanDetailClient />
+      </ScriptureChrome>
+    );
+  }
+
+  if (isNtDeepRepeatPlanId(planId)) {
+    return (
+      <ScriptureChrome>
+        <ReadNtDeepRepeatPlanDetailClient />
       </ScriptureChrome>
     );
   }

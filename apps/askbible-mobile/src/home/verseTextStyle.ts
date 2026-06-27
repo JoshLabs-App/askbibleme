@@ -146,7 +146,7 @@ export function verseTypography(
         ? "rgba(30, 41, 59, 0.94)"
         : VIDEO_BODY_COLOR,
       textAlign: "center",
-      letterSpacing: onVideo ? baseSize * 0.018 : 0,
+      letterSpacing: onVideo ? 0 : 0,
       ...bodyFont,
       ...(boldFx ? { fontWeight: "900" } : null),
       ...(onLight
@@ -161,7 +161,7 @@ export function verseTypography(
         : VIDEO_REF_COLOR,
       textAlign: "center",
       marginTop: Math.round(12 * scale),
-      letterSpacing: onVideo ? refSize * 0.14 : 0.1,
+      letterSpacing: onVideo ? 0 : 0.1,
       ...refFont,
       ...(boldFx ? { fontWeight: "900" } : null),
       ...(onLight

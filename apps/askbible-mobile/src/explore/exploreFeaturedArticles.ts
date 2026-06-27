@@ -1,8 +1,8 @@
 import type { AppLocale } from "../i18n/config";
 import {
   getBundledExploreFeaturedArticlesBundle,
-  getExploreFeaturedArticleView,
   listExploreFeaturedArticleViews,
+  resolveExploreFeaturedArticleView,
   type ExploreFeaturedArticle,
 } from "./exploreFeaturedArticlesBundleCore";
 import { getActiveExploreFeaturedArticlesBundle } from "./fetchExploreFeaturedArticles";
@@ -21,7 +21,7 @@ export function getExploreFeaturedArticleBySlug(
   slug: string,
   locale: AppLocale = "zh-CN",
 ): ExploreFeaturedArticle | null {
-  return getExploreFeaturedArticleView(activeExploreFeaturedArticlesBundle(), slug, locale);
+  return resolveExploreFeaturedArticleView(activeExploreFeaturedArticlesBundle(), slug, locale);
 }
 
 export function listExploreFeaturedArticles(locale: AppLocale = "zh-CN"): ExploreFeaturedArticle[] {

@@ -120,10 +120,11 @@ function chmod600(filePath) {
   fs.chmodSync(filePath, 0o600);
 }
 
-async function getBundleIdResource() {
-  const res = await ascRequest("GET", `/v1/bundleIds?filter[identifier]=${BUNDLE_ID}&limit=1`);
-  const item = res.body?.data?.[0];
-  if (!item?.id) throw new Error(`Bundle ID not found: ${BUNDLE_ID}`);
+async function getBundleIdResource(identifier = BUNDLE_ID) {
+  const res = await ascRequest("GET", `/v1/bundleIds?filter[identifier]=${encodeURIComponent(identifier)}&limit=20`);
+  const items = res.body?.data ?? [];
+  const item = items.find((entry) => entry.attributes?.identifier === identifier);
+  if (!item?.id) throw new Error(`Bundle ID not found: ${identifier}`);
   return item.id;
 }
 
@@ -199,9 +200,10 @@ async function findProfileByUuid(uuid) {
   return res.body?.data?.[0] ?? null;
 }
 
-async function resolveAppStoreProfile(certificateId, bundleIdResourceId) {
+async function resolveAppStoreProfile(certificateId, bundleIdResourceId, bundleIdentifier = BUNDLE_ID) {
   const manifestPath = path.join(SIGNING_DIR, "manifest.json");
-  if (fs.existsSync(manifestPath)) {
+  const forceRefresh = process.env.FORCE_IOS_SIGNING_REFRESH === "1";
+  if (!forceRefresh && fs.existsSync(manifestPath)) {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     if (
       manifest.bundleId === BUNDLE_ID &&
@@ -227,17 +229,17 @@ async function resolveAppStoreProfile(certificateId, bundleIdResourceId) {
     return certIds.includes(certificateId) && profileBundleId === bundleIdResourceId;
   });
   matching.sort((a, b) => String(b.attributes?.createdDate).localeCompare(String(a.attributes?.createdDate)));
-  if (matching[0]) {
+  if (!forceRefresh && matching[0]) {
     console.log(`→ 使用已有 App Store Profile：${matching[0].attributes?.name}`);
     return matching[0];
   }
 
-  console.log("→ 创建 App Store Provisioning Profile…");
-  return createAppStoreProfile(bundleIdResourceId, certificateId);
+  console.log(`→ 创建 App Store Provisioning Profile（${bundleIdentifier}）…`);
+  return createAppStoreProfile(bundleIdResourceId, certificateId, bundleIdentifier);
 }
 
-async function createAppStoreProfile(bundleIdResourceId, certId) {
-  const profileName = `AskBible.me AppStore ${new Date().toISOString().replace(/[:.]/g, "-")}`;
+async function createAppStoreProfile(bundleIdResourceId, certId, bundleIdentifier = BUNDLE_ID) {
+  const profileName = `AskBible ${bundleIdentifier} AppStore ${new Date().toISOString().replace(/[:.]/g, "-")}`;
   const res = await ascRequest("POST", "/v1/profiles", {
     data: {
       type: "profiles",
@@ -267,8 +269,9 @@ async function main() {
   }
   ensureDir(SIGNING_DIR);
 
+  const forceRefresh = process.env.FORCE_IOS_SIGNING_REFRESH === "1";
   const manifestPath = path.join(SIGNING_DIR, "manifest.json");
-  if (fs.existsSync(manifestPath)) {
+  if (!forceRefresh && fs.existsSync(manifestPath)) {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     const profilePath = manifest.profilePath;
     if (
@@ -296,8 +299,8 @@ async function main() {
   console.log(`→ 安装 Distribution 证书 (${cert.attributes?.serialNumber ?? cert.id})…`);
   importCertificate(certContent, keyPath);
 
-  const bundleIdResourceId = await getBundleIdResource();
-  let profile = await resolveAppStoreProfile(cert.id, bundleIdResourceId);
+  const bundleIdResourceId = await getBundleIdResource(BUNDLE_ID);
+  const profile = await resolveAppStoreProfile(cert.id, bundleIdResourceId, BUNDLE_ID);
 
   const profileContent = profile.attributes?.profileContent;
   if (!profileContent) throw new Error("Missing provisioning profile content");
@@ -315,7 +318,26 @@ async function main() {
     profilePath,
     updatedAt: new Date().toISOString(),
   };
-  fs.writeFileSync(path.join(SIGNING_DIR, "manifest.json"), JSON.stringify(manifest, null, 2));
+
+  try {
+    const widgetBundleIdResourceId = await getBundleIdResource("me.askbible.widget");
+    const widgetProfile = await resolveAppStoreProfile(cert.id, widgetBundleIdResourceId, "me.askbible.widget");
+    const widgetProfileContent = widgetProfile.attributes?.profileContent;
+    if (widgetProfileContent) {
+      const widgetProfilePath = installProvisioningProfile(
+        widgetProfileContent,
+        widgetProfile.attributes?.name ?? "AskBibleWidgetAppStore",
+      );
+      manifest.widgetBundleId = "me.askbible.widget";
+      manifest.widgetProfileName = widgetProfile.attributes?.name;
+      manifest.widgetProfileUuid = widgetProfile.attributes?.uuid;
+      manifest.widgetProfilePath = widgetProfilePath;
+    }
+  } catch (err) {
+    console.warn(`→ Widget profile skipped: ${err?.message ?? err}`);
+  }
+
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   console.log(JSON.stringify(manifest, null, 2));
 }
 

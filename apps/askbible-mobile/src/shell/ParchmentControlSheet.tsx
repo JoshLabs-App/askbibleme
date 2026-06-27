@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
-import { Modal, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Modal, StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ReadParchmentBackground } from "../read/ReadParchmentBackground";
+import { ReadParchmentBackgroundImage } from "../read/ReadParchmentSurface";
+import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { ShellSwipeExclude } from "./ShellSwipeExclude";
 
 type SheetProps = {
@@ -12,6 +14,26 @@ type SheetProps = {
 /** 与探索页相同的羊皮实图容器（仅包一层透明正文区）。 */
 export function ParchmentControlSheet({ children, style }: SheetProps) {
   return <View style={[styles.sheetContent, style]}>{children}</View>;
+}
+
+/**
+ * 弹层卡片默认羊皮底（settings / 闹钟条等）：新 Modal 优先用此，勿写纯色 sheet。
+ */
+export function ParchmentModalCard({
+  children,
+  style,
+  fill = false,
+  ...viewProps
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  fill?: boolean;
+} & Pick<ViewProps, "onStartShouldSetResponder">) {
+  return (
+    <ReadParchmentBackgroundImage fill={fill} style={[styles.modalCard, style]} {...viewProps}>
+      {children}
+    </ReadParchmentBackgroundImage>
+  );
 }
 
 type OverlayProps = {
@@ -66,5 +88,11 @@ const styles = StyleSheet.create({
   sheetContent: {
     flex: 1,
     backgroundColor: "transparent",
+  },
+  modalCard: {
+    overflow: "hidden",
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
   },
 });

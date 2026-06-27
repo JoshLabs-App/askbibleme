@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export const FULL_BLEED_COVER_VIDEO_BACKDROP = "#14110e";
+export const FULL_BLEED_COVER_VIDEO_BACKDROP = "#ffffff";
 export const FULL_BLEED_VIDEO_OVERDRAW_PX = 2;
 export const FULLSCREEN_VIDEO_ASPECT = 16 / 9;
 

@@ -2,7 +2,7 @@
 import { Asset } from "expo-asset";
 
 const modules = {
-  "track-mpg4a7xcip5q": require("../../../assets/music/tracks/track-mpg4a7xcip5q.mp3"),
+  "track-mpg4a8h3jhwl": require("../../../assets/music/tracks/track-mpg4a8h3jhwl.mp3"),
 } as const;
 
 export function resolveBundledMusicTrackUri(id: string): string | null {

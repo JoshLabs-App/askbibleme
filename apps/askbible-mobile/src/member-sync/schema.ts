@@ -6,6 +6,7 @@ export const MEMBER_READING_SYNC_BLOB_KEYS = [
   "lastPosition",
   "chapterCompletion",
   "tripleLoopProgress",
+  "ntDeepRepeatProgress",
   "readingPlanPrefs",
   "todayReadingDone",
   "todayReadingFraction",

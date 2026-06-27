@@ -98,6 +98,7 @@ export function useMusicPlaybackShellWiring(args: Args) {
     scriptureChapterHandoffRef: scripture.scriptureChapterHandoffRef,
     scriptureLastProgressMsRef: scripture.scriptureLastProgressMsRef,
     scriptureLastProgressAtRef: scripture.scriptureLastProgressAtRef,
+    scriptureSrcRef: scripture.scriptureSrcRef,
     tryPlayScriptureWithFallback: scripture.tryPlayScriptureWithFallback,
     setPlaying,
   });

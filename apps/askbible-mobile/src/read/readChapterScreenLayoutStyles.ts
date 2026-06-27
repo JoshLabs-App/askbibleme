@@ -36,7 +36,6 @@ export const readChapterScreenLayoutStyles = StyleSheet.create({
   retryBtnText: { fontSize: 14, ...parchmentSans(600), color: c.ink },
   scroll: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: 22,
     width: "100%",
     alignSelf: "center",
   },

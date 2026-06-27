@@ -1,49 +1,57 @@
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { Platform, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { parseVerseKey } from "../bible/parse-verse-key";
+import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
+import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import { AppLogoSplash } from "../shell/AppLogoSplash";
+import { shellFullBleedBackdropStyle, useShellFullBleedFrame } from "../shell/shellLayout";
 import {
   getCoverVideoPosterOnly,
   subscribeCoverVideoPosterOnly,
 } from "./coverVideoPosterFallback";
-import { HomeVerseOverlay } from "./HomeVerseOverlay";
-import { NatureHomeSettingsPanel } from "./NatureHomeSettingsPanel";
-import { useHomeOrientationUnlock } from "./useHomeOrientationUnlock";
-import { useShellFullBleedFrame } from "../shell/shellLayout";
-import { useMusicPlayback } from "../music/MusicPlaybackContext";
-import { AppLogoSplash } from "../shell/AppLogoSplash";
-import { useHomeNatureVideoPowerPolicy } from "./useHomeNatureVideoPowerPolicy";
-import { useHomeNatureScreenLoad } from "./useHomeNatureScreenLoad";
-import { useHomeNatureVerseSpeech } from "./useHomeNatureVerseSpeech";
-import { useHomeNatureSceneControl } from "./useHomeNatureSceneControl";
-import { useHomeNatureImmersive } from "./useHomeNatureImmersive";
-import { HomeNatureScreenVideoStage } from "./HomeNatureScreenVideoStage";
-import { HomeNatureScreenBackdrops } from "./HomeNatureScreenBackdrops";
-import { HomeNatureScreenTopChrome } from "./HomeNatureScreenTopChrome";
 import { HomeNatureScreenBottomBand } from "./HomeNatureScreenBottomBand";
+import { HomeNatureScreenInteractionLayer } from "./HomeNatureScreenInteractionLayer";
+import { HomeNatureScreenTopChrome } from "./HomeNatureScreenTopChrome";
+import { HomeNatureScreenVideoStage } from "./HomeNatureScreenVideoStage";
+import { HomeVerseOverlay } from "./HomeVerseOverlay";
 import { homeNatureScreenStyles as styles } from "./homeNatureScreenStyles";
+import { NatureHomeSettingsPanel } from "./NatureHomeSettingsPanel";
+import { useHomeNatureImmersive } from "./useHomeNatureImmersive";
+import { useHomeNatureSceneControl } from "./useHomeNatureSceneControl";
+import { useHomeNatureScreenLoad } from "./useHomeNatureScreenLoad";
+import { useHomeNatureTodayScriptureShellPlayback } from "./useHomeNatureTodayScriptureShellPlayback";
+import { useHomeNatureVerseSpeech } from "./useHomeNatureVerseSpeech";
+import { useHomeNatureVideoPowerPolicy } from "./useHomeNatureVideoPowerPolicy";
+import { useHomeOrientationUnlock } from "./useHomeOrientationUnlock";
 
 export function HomeNatureScreen() {
+  const router = useRouter();
   const { locale } = useLocale();
   const insets = useSafeAreaInsets();
+  const fullBleedFrame = useShellFullBleedFrame();
   const { width: winW, height: winH } = useWindowDimensions();
   const isLandscape = winW > winH;
-  const fullBleedFrame = useShellFullBleedFrame();
   const coverVideoPosterOnly = useSyncExternalStore(
     subscribeCoverVideoPosterOnly,
     getCoverVideoPosterOnly,
     getCoverVideoPosterOnly,
   );
 
-  const { togglePlayMusic, setMusicGain, playing, playbackMode, scripturePreparing } = useMusicPlayback();
+  const { setMusicGain, playing, playbackMode, scripturePreparing } = useMusicPlayback();
 
   useHomeOrientationUnlock();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [ambientStripViewportWidth, setAmbientStripViewportWidth] = useState(0);
+  const [displayedVerseKey, setDisplayedVerseKey] = useState<string | null>(null);
 
   const load = useHomeNatureScreenLoad();
+  useHomeNatureTodayScriptureShellPlayback(load.homeFocused);
 
   const scriptureModeActive = playbackMode === "scripture" && (playing || scripturePreparing);
   const verseSpeech = useHomeNatureVerseSpeech({
@@ -53,7 +61,6 @@ export function HomeNatureScreen() {
 
   const videoPowerPolicy = useHomeNatureVideoPowerPolicy({ softFocus: load.softFocus });
   const forcePosterStage = coverVideoPosterOnly || videoPowerPolicy.preferPosterStage;
-
   const musicModeActive = playbackMode === "music" && playing;
 
   const scene = useHomeNatureSceneControl({
@@ -82,41 +89,68 @@ export function HomeNatureScreen() {
 
   const immersive = useHomeNatureImmersive({
     insets,
-    fullBleedFrame,
     hasVideoStage: scene.hasVideoStage,
     loading: load.loading,
     error: load.error,
     settingsOpen,
-    setSettingsOpen,
     showSceneLoader: scene.showSceneLoader,
-    playing,
-    togglePlayMusic,
     sceneId: scene.sceneId,
     sceneList: scene.sceneList,
     selectScene: scene.selectScene,
-    scrollSceneStripToId: scene.scrollSceneStripToId,
   });
 
   useEffect(() => {
-    const targetMusicGain = verseSpeech.voiceActive ? 0.3 : 1;
-    void setMusicGain(targetMusicGain);
+    void setMusicGain(verseSpeech.voiceActive ? 0.3 : 1);
   }, [setMusicGain, verseSpeech.voiceActive]);
+
+  const handleDisplayedVerseChange = useCallback(
+    (payload: {
+      verseKey: string | null;
+      primaryTranslationId: string;
+      speechMain: string;
+      speechReference: string;
+      speechLocale: AppLocale;
+    }) => {
+      setDisplayedVerseKey(payload.verseKey);
+      verseSpeech.onDisplayedVerseChange(payload);
+    },
+    [verseSpeech.onDisplayedVerseChange],
+  );
+
+  const openDisplayedVerseInBible = useCallback(() => {
+    if (!displayedVerseKey) return;
+    const readTarget = parseVerseKey(displayedVerseKey);
+    if (!readTarget) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/(tabs)/read/[bookId]/[chapter]",
+      params: {
+        bookId: readTarget.bookId,
+        chapter: String(readTarget.chapter),
+        verse: String(readTarget.verse),
+      },
+    });
+  }, [displayedVerseKey, router]);
 
   if (load.loading && !load.settings?.videos.length) {
     return <AppLogoSplash />;
   }
 
-  const sceneStripBottomPad =
-    immersive.showLandscapeVideo && immersive.landscapeScenePickerOpen
-      ? Math.max(insets.bottom, 12)
-      : immersive.bottomNavSlot;
+  const chromeVisible = !immersive.showAutoImmersive;
+  const videoBackdropStyle =
+    Platform.OS === "android"
+      ? {
+          ...shellFullBleedBackdropStyle(fullBleedFrame),
+          bottom: -Math.max(insets.bottom, 0),
+        }
+      : styles.fullBleedBackdropFill;
 
   return (
     <View style={styles.root} onTouchStart={immersive.markHomeInteraction}>
       <StatusBar hidden={false} style="auto" translucent backgroundColor="transparent" />
 
       <HomeNatureScreenVideoStage
-        videoBackdropStyle={immersive.videoBackdropStyle}
+        videoBackdropStyle={videoBackdropStyle}
         videoStageMounted={load.videoStageMounted}
         sceneId={scene.sceneId}
         resolveScenePlayback={scene.resolveScenePlayback}
@@ -134,57 +168,54 @@ export function HomeNatureScreen() {
         showSceneLoader={scene.showSceneLoader}
       />
 
-      <HomeNatureScreenBackdrops
-        showAutoImmersive={immersive.showAutoImmersive}
-        showLandscapeVideo={immersive.showLandscapeVideo}
-        markHomeInteraction={immersive.markHomeInteraction}
-        onLandscapeBackdropPress={immersive.onLandscapeBackdropPress}
-        onPortraitBackdropPress={immersive.onPortraitBackdropPress}
+      <HomeNatureScreenInteractionLayer
+        autoImmersive={immersive.showAutoImmersive}
+        enabled={!settingsOpen}
+        onInteraction={immersive.markHomeInteraction}
       />
 
       <HomeVerseOverlay
         prefsVersion={load.prefsVersion}
         layout={immersive.showLandscapeVideo ? "homeLandscape" : "home"}
         pauseRotation={verseSpeech.voicePreparing || verseSpeech.voiceSpeaking || !load.homeFocused}
-        onDisplayedVerseChange={verseSpeech.onDisplayedVerseChange}
+        onVerseBodyPress={openDisplayedVerseInBible}
+        onDisplayedVerseChange={handleDisplayedVerseChange}
         onAdvanceControllerReady={verseSpeech.onAdvanceControllerReady}
       />
 
-      {!immersive.showAutoImmersive ? (
-        <HomeNatureScreenTopChrome
-          insets={insets}
-          homeTtsExperimentEnabled={verseSpeech.homeTtsExperimentEnabled}
-          voicePreparing={verseSpeech.voicePreparing}
-          voiceSpeaking={verseSpeech.voiceSpeaking}
-          onPlayDisplayedVerseVoice={verseSpeech.onPlayDisplayedVerseVoice}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+      {chromeVisible ? (
+        <>
+          <HomeNatureScreenTopChrome
+            insets={insets}
+            homeTtsExperimentEnabled={verseSpeech.homeTtsExperimentEnabled}
+            voicePreparing={verseSpeech.voicePreparing}
+            voiceSpeaking={verseSpeech.voiceSpeaking}
+            onPlayDisplayedVerseVoice={verseSpeech.onPlayDisplayedVerseVoice}
+            onOpenSettings={() => setSettingsOpen(true)}
+          />
+
+          <HomeNatureScreenBottomBand
+            locale={locale}
+            baseUrl={load.baseUrl}
+            landscapeLayout={immersive.showLandscapeVideo}
+            sceneStripBottomPad={immersive.bottomNavSlot}
+            activeAmbientSlotId={load.activeAmbientSlotId}
+            toggleAmbientSlot={load.toggleAmbientSlot}
+            ambientStripViewportWidth={ambientStripViewportWidth}
+            onAmbientStripLayout={setAmbientStripViewportWidth}
+            sceneScrollRef={scene.sceneScrollRef}
+            sceneList={scene.sceneList}
+            sceneStripViewportWidth={scene.sceneStripViewportWidth}
+            onSceneStripLayout={scene.onSceneStripLayout}
+            loopAllScenesEnabled={load.loopAllScenesEnabled}
+            sceneId={scene.sceneId}
+            enableLoopAllScenes={load.enableLoopAllScenes}
+            selectScene={scene.selectScene}
+          />
+        </>
       ) : null}
 
-      {immersive.showSceneStrip && !immersive.showAutoImmersive ? (
-        <HomeNatureScreenBottomBand
-          locale={locale}
-          baseUrl={load.baseUrl}
-          sceneStripBottomPad={sceneStripBottomPad}
-          landscapeScenePickerOpen={immersive.landscapeScenePickerOpen}
-          activeAmbientSlotId={load.activeAmbientSlotId}
-          toggleAmbientSlot={load.toggleAmbientSlot}
-          ambientStripViewportWidth={ambientStripViewportWidth}
-          onAmbientStripLayout={setAmbientStripViewportWidth}
-          sceneScrollRef={scene.sceneScrollRef}
-          sceneList={scene.sceneList}
-          sceneStripViewportWidth={scene.sceneStripViewportWidth}
-          onSceneStripLayout={scene.onSceneStripLayout}
-          loopAllScenesEnabled={load.loopAllScenesEnabled}
-          sceneId={scene.sceneId}
-          enableLoopAllScenes={load.enableLoopAllScenes}
-          selectScene={scene.selectScene}
-          showLandscapeVideo={immersive.showLandscapeVideo}
-          onLandscapeSceneSelect={immersive.onLandscapeSceneSelect}
-        />
-      ) : null}
-
-      {!immersive.showAutoImmersive ? (
+      {chromeVisible ? (
         <NatureHomeSettingsPanel
           visible={settingsOpen}
           presentation={isLandscape ? "overlay" : "modal"}

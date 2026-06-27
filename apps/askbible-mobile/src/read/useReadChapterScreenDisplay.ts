@@ -14,8 +14,8 @@ import {
 } from "./readChapterScreenConstants";
 import { buildChapterSegmentMeta, buildParagraphGroups } from "./readChapterScreenSegmentMeta";
 import {
-  resolveTodayPlanLoopNextTarget,
-  resolveTodayPlanLoopPrevTarget,
+  resolvePlanFlowNextTarget,
+  resolvePlanFlowPrevTarget,
 } from "./read-plan-flow-nav";
 import type { TodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
 
@@ -54,12 +54,12 @@ export function useReadChapterScreenDisplay({
 
   const planFlowNextTarget = useMemo(() => {
     if (!isPlanFlow || !chapterData) return null;
-    return resolveTodayPlanLoopNextTarget(todayPlanPayload, chapterData.bookId, chapterData.chapter);
+    return resolvePlanFlowNextTarget(todayPlanPayload, chapterData.bookId, chapterData.chapter);
   }, [chapterData?.bookId, chapterData?.chapter, isPlanFlow, todayPlanPayload]);
 
   const planFlowPrevTarget = useMemo(() => {
     if (!isPlanFlow || !chapterData) return null;
-    return resolveTodayPlanLoopPrevTarget(todayPlanPayload, chapterData.bookId, chapterData.chapter);
+    return resolvePlanFlowPrevTarget(todayPlanPayload, chapterData.bookId, chapterData.chapter);
   }, [chapterData?.bookId, chapterData?.chapter, isPlanFlow, todayPlanPayload]);
 
   const readDisplayLocale = useMemo<AppLocale>(() => {

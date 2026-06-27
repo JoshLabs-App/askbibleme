@@ -14,11 +14,9 @@ import {
   DEFAULT_THEME_REPEAT_MIN_COUNT,
   themeRepeatPoolScopeId,
 } from "@/lib/scripture/theme-repeat-pool-scope-id";
+import { EXPLORE_CURATED_700_POOL_SCOPE_ID } from "@/lib/scripture/explore-curated-pool-scope-id";
 
-export const DEFAULT_VERSE_SCOPE: VerseScopeV1 = {
-  type: "themeRepeat",
-  minCount: DEFAULT_THEME_REPEAT_MIN_COUNT,
-};
+export const DEFAULT_VERSE_SCOPE: VerseScopeV1 = { type: "curated700" };
 
 export { normalizeGoldenVerseFontFamily, normalizeGoldenVerseTextEffect };
 
@@ -77,7 +75,7 @@ export function normalizeVerseEnTranslationId(raw: unknown): string {
 }
 
 export function memoryNamespaceFromScope(scope: VerseScopeV1): string {
-  return themeRepeatPoolScopeId(scope.minCount);
+  return scopeIdFromPrefs(scope);
 }
 
 export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
@@ -121,9 +119,13 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
 function normalizeScope(raw: unknown): VerseScopeV1 {
   if (raw && typeof raw === "object") {
     const o = raw as { type?: string; minCount?: number };
+    if (o.type === "curated700") return { type: "curated700" };
     if (o.type === "themeRepeat") {
       const min = Number(o.minCount);
-      if (Number.isFinite(min) && min >= 1) return { type: "themeRepeat", minCount: Math.floor(min) };
+      if (Number.isFinite(min) && min >= 1) {
+        if (Math.floor(min) === DEFAULT_THEME_REPEAT_MIN_COUNT) return { type: "curated700" };
+        return { type: "themeRepeat", minCount: Math.floor(min) };
+      }
     }
   }
   return DEFAULT_VERSE_SCOPE;
@@ -160,6 +162,7 @@ export function requestHomePrayerVerseFeedReload(): void {
 }
 
 export function scopeIdFromPrefs(scope: VerseScopeV1): string {
+  if (scope.type === "curated700") return EXPLORE_CURATED_700_POOL_SCOPE_ID;
   return themeRepeatPoolScopeId(scope.minCount);
 }
 

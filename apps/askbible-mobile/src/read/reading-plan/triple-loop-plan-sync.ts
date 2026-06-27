@@ -13,7 +13,9 @@ import {
   readReadingPlanPrefs,
   setActiveReadingPlan,
 } from "./reading-plan-prefs";
-import { resetTripleLoopProgressToEpochDefault } from "./triple-loop-progress";
+import {
+  resetTripleLoopProgressToEpochDefault,
+} from "./triple-loop-progress";
 import { buildTodayReadingScopeKey, clearTodayReadingDoneForScope } from "./today-reading-done";
 
 export async function ensureTripleLoopPlanPrefs(): Promise<void> {

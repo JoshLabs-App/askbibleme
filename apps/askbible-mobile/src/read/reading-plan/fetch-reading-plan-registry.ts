@@ -1,10 +1,10 @@
 import { getBundledReadingPlanRegistry } from "./bundled-reading-plans";
+import { getNtDeepRepeatRegistryEntry } from "./nt-deep-repeat-plan";
 import { getTripleLoopRegistryEntry } from "./triple-loop-plan";
 import type { ReadingPlanRegistry, ReadingPlanRegistryEntry } from "./types";
 
-function mergePlansWithTripleLoop(plans: ReadingPlanRegistryEntry[]): ReadingPlanRegistryEntry[] {
-  const tripleLoop = getTripleLoopRegistryEntry();
-  const merged = [tripleLoop, ...plans];
+function mergeNativeReadingPlans(plans: ReadingPlanRegistryEntry[]): ReadingPlanRegistryEntry[] {
+  const merged = [getTripleLoopRegistryEntry(), getNtDeepRepeatRegistryEntry(), ...plans];
   const byPlanId = new Map<string, ReadingPlanRegistryEntry>();
   for (const plan of merged) {
     if (!plan?.planId) continue;
@@ -29,7 +29,7 @@ export function fallbackReadingPlanRegistry(): ReadingPlanRegistry {
   return {
     schemaVersion: 1,
     upstreamNote: "",
-    plans: sortPlans(mergePlansWithTripleLoop([])),
+    plans: sortPlans(mergeNativeReadingPlans([])),
   };
 }
 
@@ -37,7 +37,7 @@ export function fallbackReadingPlanRegistry(): ReadingPlanRegistry {
 export function getLocalReadingPlanRegistry(): ReadingPlanRegistry {
   const registry = getBundledReadingPlanRegistry();
   if (registry?.schemaVersion === 1 && Array.isArray(registry.plans) && registry.plans.length > 0) {
-    return { ...registry, plans: sortPlans(mergePlansWithTripleLoop(registry.plans)) };
+    return { ...registry, plans: sortPlans(mergeNativeReadingPlans(registry.plans)) };
   }
   return fallbackReadingPlanRegistry();
 }

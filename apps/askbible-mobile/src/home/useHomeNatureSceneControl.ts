@@ -136,7 +136,7 @@ export function useHomeNatureSceneControl({
       if (idx < 0) return;
       const vw = sceneStripViewportW.current;
       if (vw < 1) return;
-      const target = homeSceneStripScrollX(idx + 1, vw, sceneList.length + 2, HOME_SCENE_STRIP_EDGE_PAD);
+      const target = homeSceneStripScrollX(idx + 1, vw, sceneList.length + 2, 0);
       sceneScrollRef.current?.scrollTo({ x: target, animated });
     },
     [sceneList],

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 将自然场景 720p、海报、音乐 starter 曲与分析 JSON 复制进 Expo assets，并生成 require 注册表。
- * - 默认：仅打包 1 首 starter 音乐（MOBILE_STARTER_MUSIC_TRACK_ID，默认 Silent Prayer）
+ * - 默认：仅打包 1 首 starter 音乐（MOBILE_STARTER_MUSIC_TRACK_ID，默认 Still in His Presence）
  * - MOBILE_BUNDLE_OFFLINE_MEDIA=1：打包自然场景；MOBILE_BUNDLE_MUSIC_LIMIT 控制音乐曲数（生产建议 1）
  */
 import fs from "node:fs";
@@ -20,7 +20,7 @@ const naturePosterDir = path.join(repoRoot, "apps", "askbible-mobile", "assets",
 const musicTrackDir = path.join(repoRoot, "apps", "askbible-mobile", "assets", "music", "tracks");
 const musicAnalysisDir = path.join(repoRoot, "apps", "askbible-mobile", "assets", "music", "analysis");
 const bundleEnabled = process.env.MOBILE_BUNDLE_OFFLINE_MEDIA === "1";
-const starterTrackId = String(process.env.MOBILE_STARTER_MUSIC_TRACK_ID || "track-mpg4a7xcip5q").trim();
+const starterTrackId = String(process.env.MOBILE_STARTER_MUSIC_TRACK_ID || "track-mpg4a8h3jhwl").trim();
 const bundleMusicLimitRaw = process.env.MOBILE_BUNDLE_MUSIC_LIMIT?.trim();
 /** 生产包默认只打 1 首 starter；勿在未设 limit 时打包全库（~420MB）。 */
 const bundleMusicLimit = bundleMusicLimitRaw
@@ -214,6 +214,7 @@ function syncMusic() {
   );
   for (const t of orderedTracks) {
     if (trackEntries.length >= bundleMusicLimit) break;
+    if (t?.hidden === true) continue;
     const id = String(t.id || "").trim();
     const srcRel = String(t.src || "").trim();
     if (!id || !srcRel) continue;
@@ -248,7 +249,41 @@ function syncMusic() {
     analysisEntries,
     "../../../assets/music/analysis",
   );
-  return { trackCount: trackEntries.length, analysisCount: analysisEntries.length };
+  return { trackCount: trackEntries.length, analysisCount: analysisEntries.length, firstTrackFile: trackEntries[0]?.file ?? null };
+}
+
+function syncReadingAlarmPreludeRaw(firstTrackFile) {
+  const rawDir = path.join(repoRoot, "apps", "askbible-mobile", "android", "app", "src", "main", "res", "raw");
+  const iosDir = path.join(repoRoot, "apps", "askbible-mobile", "ios", "AskBibleme", "alarm");
+  ensureDir(rawDir);
+  ensureDir(iosDir);
+  const androidDest = path.join(rawDir, "reading_alarm_prelude.mp3");
+  const iosDest = path.join(iosDir, "reading_alarm_prelude.mp3");
+  let copied = false;
+  let srcPath = null;
+  if (firstTrackFile) {
+    const src = path.join(musicTrackDir, firstTrackFile);
+    if (fs.existsSync(src)) {
+      srcPath = src;
+    }
+  }
+  if (!srcPath) {
+    const fallback = path.join(repoRoot, "apps", "askbible-mobile", "assets", "audio", "today-plan-complete.mp3");
+    if (fs.existsSync(fallback)) {
+      srcPath = fallback;
+    }
+  }
+  if (srcPath) {
+    fs.copyFileSync(srcPath, androidDest);
+    fs.copyFileSync(srcPath, iosDest);
+    copied = true;
+  }
+  if (copied) {
+    const mb = (fs.statSync(androidDest).size / (1024 * 1024)).toFixed(2);
+    console.log(`Synced reading_alarm_prelude → android res/raw + ios/AskBibleme/alarm (${mb} MB)`);
+  } else {
+    console.warn("  skip reading_alarm_prelude raw (no starter track or fallback mp3)");
+  }
 }
 
 function syncNaturePostersOnly() {
@@ -294,6 +329,7 @@ if (!bundleEnabled) {
   );
   const posterCount = syncNaturePostersOnly();
   const music = syncMusic();
+  syncReadingAlarmPreludeRaw(music.firstTrackFile);
   console.log(
     `Offline media: bundled ${posterCount} scene poster(s) + ${music.trackCount} starter music track(s); videos download from askbible.me.`,
   );
@@ -305,6 +341,7 @@ if (!bundleEnabled) {
 
 const nature = syncNature();
 const music = syncMusic();
+syncReadingAlarmPreludeRaw(music.firstTrackFile);
 console.log(
   `\nOffline media ready: ${nature.videoCount} videos, ${nature.posterCount} posters, ${music.trackCount} tracks.`,
 );

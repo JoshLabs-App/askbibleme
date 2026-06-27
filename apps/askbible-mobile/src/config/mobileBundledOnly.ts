@@ -3,6 +3,8 @@
  * - 已下载 / 安装包内资源优先，不常规直连远端媒体 URL 播放
  * - 读经正文 / 导读 / 章音频走本地；译本目录（元数据）仍可联网同步以便选择与下载
  * - 按需下载正文包仍可通过设置或侧栏「资料更新」触发
+ *
+ * 会员读经进度同步不受此开关影响（见 member-sync）。
  */
 export function isMobileOfflineFirst(): boolean {
   const flag = process.env.EXPO_PUBLIC_MOBILE_OFFLINE_FIRST?.trim();
@@ -14,12 +16,13 @@ export function isMobileOfflineFirst(): boolean {
 /**
  * 纯本地包：为 `1` 时禁止请求 askbible.me（无目录同步、无按需下载）。
  * 与 `EXPO_PUBLIC_MOBILE_OFFLINE_FIRST` 独立；生产 TestFlight 应为 `0`（包内 1 首 + 联网拉列表/下载）。
+ * 未显式配置时默认允许联网拉取音乐包（避免本地 Gradle 打包漏设 env 导致永远无法下载）。
  */
 export function isMobileBundledOnly(): boolean {
   const flag = process.env.EXPO_PUBLIC_MOBILE_BUNDLED_ONLY?.trim();
   if (flag === "0") return false;
   if (flag === "1") return true;
-  return !__DEV__;
+  return false;
 }
 
 /**

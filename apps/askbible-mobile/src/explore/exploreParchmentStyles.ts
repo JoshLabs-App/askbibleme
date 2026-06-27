@@ -10,6 +10,7 @@ import {
   PARCHMENT_CATALOG_MAX_WIDTH_PHONE,
   PARCHMENT_COLUMN_MAX_WIDTH_PHONE,
   parchmentColumnMaxWidth,
+  parchmentContentPaddingHorizontal,
 } from "../read/parchmentColumnLayout";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
@@ -19,11 +20,10 @@ export const EXPLORE_PAGE_TOP_PAD = 40;
 /** 数算年日页中间经文区不透明度（30% 透明） */
 export const YEAR_DAY_COUNT_SCRIPTURE_TEXT_OPACITY = 0.7;
 
-/** 与读经/祷告羊皮卷页对齐 */
+/** 与读经/祷告羊皮卷页对齐；底纹由 explore `_layout` 的 {@link ReadParchmentBackground} 统一提供。 */
 export const exploreStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "transparent", overflow: "hidden" },
   scroll: {
-    paddingHorizontal: 22,
     width: "100%",
     alignSelf: "center",
   },
@@ -271,6 +271,14 @@ export const exploreStyles = StyleSheet.create({
   articleBody: {
     marginTop: 18,
   },
+  articleSectionHint: {
+    marginBottom: 12,
+    fontSize: 13,
+    lineHeight: 20,
+    ...parchmentSans(500),
+    color: c.muted,
+    textAlign: "center",
+  },
 });
 
 export function useExploreScrollContentStyle(
@@ -279,7 +287,13 @@ export function useExploreScrollContentStyle(
   const { width, height } = useWindowDimensions();
   return useMemo(() => {
     const maxWidth = parchmentColumnMaxWidth(width, height, PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
-    return [exploreStyles.scroll, maxWidth != null ? { maxWidth } : null, extra];
+    const padX = parchmentContentPaddingHorizontal(width, height);
+    return [
+      exploreStyles.scroll,
+      { paddingHorizontal: padX },
+      maxWidth != null ? { maxWidth } : null,
+      extra,
+    ];
   }, [width, height, extra]);
 }
 

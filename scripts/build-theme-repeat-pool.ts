@@ -33,7 +33,13 @@ const maxCount = readNumArg("max");
 const cap = readNumArg("cap");
 const strict = hasFlag("strict");
 
-void writeThemeRepeatPrayerPool(cwd, { minCount, maxCount, cap, includeExploreSeeds: !strict })
+void writeThemeRepeatPrayerPool(cwd, {
+  minCount,
+  maxCount,
+  cap,
+  includeExploreSeeds: !strict,
+  sortBy: readArg("sort") === "book" ? ("book" as const) : ("repeat" as const),
+})
   .then((r) => {
     console.log(
       `[theme-repeat-pool] ${r.scopeId}: ${r.verseCount} verses, ${r.chunkCount} chunks` +

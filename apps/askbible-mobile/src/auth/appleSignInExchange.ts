@@ -86,7 +86,7 @@ export async function exchangeAppleNativeCredential(input: {
         return {
           ok: false,
           error: msg,
-          code: /not configured|client_id|bundle/i.test(msg) ? "apple_not_configured" : "apple_auth_failed",
+          code: /not configured|client_id|client id|bundle|audience/i.test(msg) ? "apple_not_configured" : "apple_auth_failed",
         };
       }
     } catch (err) {

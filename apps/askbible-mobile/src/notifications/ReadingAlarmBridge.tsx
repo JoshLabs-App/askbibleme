@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, InteractionManager, Platform } from "react-native";
 import type { ReadingReminderMode } from "@/lib/notifications/notification-prefs-types";
-import { configureShellAudioMode } from "../audio/shellAudioMode";
+import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import { useLocale } from "../i18n/LocaleProvider";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import type { NotificationKind } from "./notification-constants";
@@ -19,7 +19,7 @@ import {
   getReadingReminderMode,
   shouldStartReadingAlarmAudio,
 } from "./readingAlarmPlayback";
-import { clearReadPlanFlowTodayLoop, consumeReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
+import { clearReadPlanFlowTodayLoop, clearPlanFlowSessionActive, isPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
 import { startTodayReadingAlarmScriptureFlow } from "./startTodayReadingAlarmScriptureFlow";
 import {
   consumeReadingAlarmTrigger,
@@ -95,8 +95,8 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     alarmHandoffLockRef.current = false;
     nativeHandoffDoneRef.current = true;
     targetRef.current = null;
-    consumeReadPlanFlowAutoplay();
     clearReadPlanFlowTodayLoop();
+    clearPlanFlowSessionActive();
     await stopAllAlarmAudio();
     setUi(null);
   }, [stopAllAlarmAudio]);
@@ -117,11 +117,11 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     const target = targetRef.current;
     if (!target || cancelledRef.current) return false;
 
-    await configureShellAudioMode();
-    await stopAllAlarmAudio();
-    await sleep(500);
+    await configureScriptureShellAudioMode();
+    await stopReadingAlarmPreludeMusic(playback);
+    stopNativeReadingAlarmSound();
+    await sleep(300);
 
-    router.push("/(tabs)/read");
     const startedFlow = await startTodayReadingAlarmScriptureFlow(router, {
       bookId: target.bookId,
       chapter: target.chapter,
@@ -132,21 +132,14 @@ export function ReadingAlarmBridge({ enabled }: Props) {
       InteractionManager.runAfterInteractions(() => resolve());
     });
 
-    let played = await waitForScripturePlayback(30_000);
-
-    if (!played && !cancelledRef.current) {
-      consumeReadPlanFlowAutoplay();
-      played = await waitForScripturePlayback(10_000);
-    } else {
-      consumeReadPlanFlowAutoplay();
-    }
+    const played = await waitForScripturePlayback(30_000);
 
     if (!cancelledRef.current && played) {
       setUi(null);
       targetRef.current = null;
     }
     return played;
-  }, [router, stopAllAlarmAudio, waitForScripturePlayback]);
+  }, [playback, router, waitForScripturePlayback]);
 
   const handoffToAlarmScripture = useCallback(
     async (source: HandoffSource): Promise<boolean> => {
@@ -180,17 +173,21 @@ export function ReadingAlarmBridge({ enabled }: Props) {
       }
       targetRef.current = target;
 
-      alarmHandoffLockRef.current = true;
       await consumeReadingAlarmTrigger();
       nativeHandoffDoneRef.current = true;
+      alarmHandoffLockRef.current = true;
 
-      const started = await beginTodayReadingFlow();
-      scriptureHandoffStartedRef.current = false;
-      sessionActiveRef.current = false;
-      if (!started && !cancelledRef.current) {
-        router.push("/(tabs)/read");
+      try {
+        const started = await beginTodayReadingFlow();
+        if (!started && !cancelledRef.current) {
+          router.push("/(tabs)/read");
+        }
+        return started;
+      } finally {
+        alarmHandoffLockRef.current = false;
+        scriptureHandoffStartedRef.current = false;
+        sessionActiveRef.current = false;
       }
-      return started;
     },
     [beginTodayReadingFlow, router],
   );
@@ -327,6 +324,9 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     const receivedSub = Notifications.addNotificationReceivedListener((notification) => {
       const kind = notification.request.content.data?.kind as NotificationKind | undefined;
       if (!isReadingReminderKind(kind)) return;
+      if (isPlanFlowSessionActive()) return;
+      const pb = playbackRef.current;
+      if (pb.playing && pb.playbackMode === "scripture") return;
       fireNativeReadingAlarmFromNotification();
     });
 

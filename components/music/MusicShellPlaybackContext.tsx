@@ -29,7 +29,7 @@ import {
 import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
 import {
   musicCompanionStoreHasPlayableTracks,
-  shippedMusicCompanionStore,
+  shippedPublicMusicCompanionStore,
 } from "@/lib/music-companion/shipped-store";
 import {
   clearShellPlaybackPersisted,
@@ -218,7 +218,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   useEffect(() => {
     chapterAudioVoiceRef.current = chapterAudioVoiceId;
   }, [chapterAudioVoiceId]);
-  const [store, setStore] = useState<MusicCompanionStore | null>(() => shippedMusicCompanionStore);
+  const [store, setStore] = useState<MusicCompanionStore | null>(() => shippedPublicMusicCompanionStore);
   /** 首屏已有随包曲库；网络刷新不阻塞播放。 */
   const [loading, setLoading] = useState(false);
   /**

@@ -18,6 +18,8 @@ export type AudioTrack = {
   tags?: string[];
   /** 后期备注/标签，如【安静】【敬拜】【睡眠】 */
   remark?: LocalizedField;
+  /** 为 true 时前台与 App 不展示、不打包进 starter */
+  hidden?: boolean;
 };
 
 export type BackgroundVisual = {

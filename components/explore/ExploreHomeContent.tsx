@@ -35,6 +35,23 @@ export function ExploreHomeContent({ featuredArticles }: Props) {
     </Link>
   );
 
+  const renderFeaturedArticleTile = (article: ExploreFeaturedArticleView) => {
+    const icon = isExploreFeaturedArticleSlug(article.slug)
+      ? EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG[article.slug]
+      : "file-document-outline";
+
+    return (
+      <Link key={article.slug} href={exploreArticleHref(article.slug)} className="explore-icon-tile">
+        <span aria-hidden className="explore-icon-circle">
+          <ShellMaterialCommunityIcon name={icon} size={28} />
+        </span>
+        <span className="explore-icon-label">
+          {exploreFeaturedArticleLabel(article.slug, locale) ?? article.exploreLabel}
+        </span>
+      </Link>
+    );
+  };
+
   return (
     <div className="explore-home">
       <header className="explore-home-header">
@@ -47,26 +64,7 @@ export function ExploreHomeContent({ featuredArticles }: Props) {
         <div className="explore-icon-grid">
           {topEntries.map(renderEntryTile)}
           {scriptureAnthologyEntries.map(renderEntryTile)}
-          {featuredArticles.map((article) => {
-            const icon = isExploreFeaturedArticleSlug(article.slug)
-              ? EXPLORE_FEATURED_ARTICLE_ICON_BY_SLUG[article.slug]
-              : "file-document-outline";
-
-            return (
-              <Link
-                key={article.slug}
-                href={exploreArticleHref(article.slug)}
-                className="explore-icon-tile"
-              >
-                <span aria-hidden className="explore-icon-circle">
-                  <ShellMaterialCommunityIcon name={icon} size={28} />
-                </span>
-                <span className="explore-icon-label">
-                  {exploreFeaturedArticleLabel(article.slug, locale) ?? article.exploreLabel}
-                </span>
-              </Link>
-            );
-          })}
+          {featuredArticles.map(renderFeaturedArticleTile)}
         </div>
 
         <ExploreAppInstallHint />

@@ -1,8 +1,8 @@
 import { Pressable, Text, View } from "react-native";
 import {
-  DEFAULT_TEXT_SCALE_INDEX,
   NATURE_HOME_TEXT_SCALE_STEPS,
   SUPER_LARGE_TEXT_SCALE_INDEX,
+  platformDefaultTextScaleIndex,
   textScaleAtIndex,
   writeNatureHomeTextScaleIndex,
 } from "./natureHomePrefs";
@@ -17,9 +17,10 @@ type Props = {
 };
 
 export function NatureHomeSettingsTextScaleSection({ scaleIndex, setScaleIndex, onPrefsChanged }: Props) {
+  const defaultScaleIndex = platformDefaultTextScaleIndex();
   const atMin = scaleIndex <= 0;
   const atMax = scaleIndex >= NATURE_HOME_TEXT_SCALE_STEPS.length - 1;
-  const atDefault = scaleIndex === DEFAULT_TEXT_SCALE_INDEX;
+  const atDefault = scaleIndex === defaultScaleIndex;
   const superLargeIndex = Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, SUPER_LARGE_TEXT_SCALE_INDEX);
   const atSuperLarge = scaleIndex >= superLargeIndex;
   const scaleA11y = `${tNatureHomeSettings("verseSizeSection")} ${Math.round(textScaleAtIndex(scaleIndex) * 100)}%`;
@@ -35,8 +36,8 @@ export function NatureHomeSettingsTextScaleSection({ scaleIndex, setScaleIndex, 
         <Pressable
           disabled={atDefault}
           onPress={async () => {
-            setScaleIndex(DEFAULT_TEXT_SCALE_INDEX);
-            await writeNatureHomeTextScaleIndex(DEFAULT_TEXT_SCALE_INDEX);
+            setScaleIndex(defaultScaleIndex);
+            await writeNatureHomeTextScaleIndex(defaultScaleIndex);
             onPrefsChanged();
           }}
           style={[styles.scaleBtn, atDefault && styles.scaleBtnDefaultOn]}

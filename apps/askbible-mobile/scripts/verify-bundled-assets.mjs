@@ -32,7 +32,7 @@ function fileMb(rel) {
 }
 
 let ok = true;
-ok = mustExist("music/tracks/track-mpg4a7xcip5q.mp3", "starter 音乐") && ok;
+ok = mustExist("music/tracks/track-mpg4a8h3jhwl.mp3", "starter 音乐") && ok;
 ok = mustExist("scripture/cuv-simp.sqlite", "和合本简体") && ok;
 ok = mustExist("scripture/cuv-trad.sqlite", "和合本繁体") && ok;
 ok = mustExist("scripture/web-en.sqlite", "WEB 英译本") && ok;
@@ -46,7 +46,7 @@ if (videoCount < 1) {
   ok = false;
 }
 
-const musicMb = fileMb("music/tracks/track-mpg4a7xcip5q.mp3");
+const musicMb = fileMb("music/tracks/track-mpg4a8h3jhwl.mp3");
 const cuvSimpMb = fileMb("scripture/cuv-simp.sqlite");
 const cuvTradMb = fileMb("scripture/cuv-trad.sqlite");
 const webEnMb = fileMb("scripture/web-en.sqlite");

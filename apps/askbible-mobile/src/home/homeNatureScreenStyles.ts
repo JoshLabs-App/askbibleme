@@ -11,8 +11,8 @@ import {
 export const homeNatureScreenStyles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#000",
-    overflow: "hidden",
+    backgroundColor: "#ffffff",
+    overflow: "visible",
   },
   fullBleedBackdropFill: {
     ...StyleSheet.absoluteFillObject,
@@ -42,6 +42,10 @@ export const homeNatureScreenStyles = StyleSheet.create({
     fontSize: 13,
     color: "rgba(255,255,255,0.78)",
     letterSpacing: 0.2,
+  },
+  sceneMusicTapSurface: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 6,
   },
   errorTitle: {
     fontSize: 15,
@@ -82,21 +86,13 @@ export const homeNatureScreenStyles = StyleSheet.create({
     ...parchmentSans(600),
     color: parchment.ink,
   },
-  landscapeBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 6,
-  },
-  portraitBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 6,
-  },
   autoImmersiveBackdrop: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 30,
   },
   topChrome: {
     position: "absolute",
-    zIndex: 20,
+    zIndex: 50,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -128,10 +124,36 @@ export const homeNatureScreenStyles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingTop: 12,
-    paddingLeft: 14,
-    paddingRight: 14,
-    zIndex: 10,
+    zIndex: 50,
+    elevation: 50,
     alignItems: "center",
+  },
+  bottomBandLandscape: {
+    paddingTop: 0,
+    justifyContent: "flex-end",
+  },
+  homeMusicPlayBtnWrap: {
+    zIndex: 51,
+    elevation: 51,
+  },
+  homeMusicPlayBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  homeMusicPlayBtnActive: {
+    backgroundColor: "rgba(255, 177, 1, 0.16)",
+  },
+  homeMusicPlayBtnDisabled: {
+    opacity: 0.4,
+  },
+  homeMusicPlayBtnPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.97 }],
   },
   ambientScrollWrap: {
     alignSelf: "stretch",
@@ -178,11 +200,14 @@ export const homeNatureScreenStyles = StyleSheet.create({
     flexDirection: "row",
     direction: "ltr",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     gap: HOME_SCENE_THUMB_GAP,
     paddingTop: 6,
     paddingBottom: 6,
-    paddingLeft: HOME_SCENE_STRIP_EDGE_PAD,
     paddingRight: HOME_SCENE_STRIP_EDGE_PAD,
+  },
+  sceneRowLandscape: {
+    paddingTop: 2,
+    paddingBottom: 0,
   },
 });

@@ -205,7 +205,11 @@ export async function ensureScriptureTranslationReadyWithFallback(
         /* try next bundled translation */
       }
     }
-    await ensureScriptureTranslationReady("cuv-simp");
+    try {
+      await ensureScriptureTranslationReady("cuv-simp");
+    } catch {
+      /* loadChapter will surface chapterLoadError */
+    }
     return "cuv-simp";
   }
   try {
@@ -221,7 +225,11 @@ export async function ensureScriptureTranslationReadyWithFallback(
         /* try next bundled translation */
       }
     }
-    await ensureScriptureTranslationReady("cuv-simp");
+    try {
+      await ensureScriptureTranslationReady("cuv-simp");
+    } catch {
+      /* loadChapter will surface chapterLoadError */
+    }
     return "cuv-simp";
   }
 }

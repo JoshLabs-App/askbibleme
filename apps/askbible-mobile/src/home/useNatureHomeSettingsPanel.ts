@@ -3,9 +3,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { InteractionManager, Linking } from "react-native";
 import { getLocale } from "../i18n/locale-store";
 import {
+  DEFAULT_HOME_VERSE_ROTATION_SEC,
+  readHomeVerseRotationSec,
+} from "./homeVerseRotationPrefs";
+import {
   DEFAULT_BLUR_LEVEL,
   DEFAULT_DIM_LEVEL,
-  DEFAULT_TEXT_SCALE_INDEX,
+  platformDefaultTextScaleIndex,
   DEFAULT_VERSE_APPEARANCE,
   readNatureHomeTextScaleIndex,
   readNatureHomeTtsPrefs,
@@ -28,7 +32,7 @@ type Args = {
 };
 
 export function useNatureHomeSettingsPanel({ visible, showTtsControls, onPrefsChanged }: Args) {
-  const [scaleIndex, setScaleIndex] = useState(DEFAULT_TEXT_SCALE_INDEX);
+  const [scaleIndex, setScaleIndex] = useState(platformDefaultTextScaleIndex);
   const [verseAppearance, setVerseAppearance] = useState<NatureHomeVerseAppearance>(
     DEFAULT_VERSE_APPEARANCE,
   );
@@ -37,6 +41,7 @@ export function useNatureHomeSettingsPanel({ visible, showTtsControls, onPrefsCh
   const [ttsRateLevel, setTtsRateLevel] = useState<NatureHomeTtsLevel>(2);
   const [ttsPitchLevel, setTtsPitchLevel] = useState<NatureHomeTtsLevel>(2);
   const [ttsVoiceId, setTtsVoiceId] = useState("");
+  const [verseRotationSec, setVerseRotationSec] = useState(DEFAULT_HOME_VERSE_ROTATION_SEC);
   const [deviceVoices, setDeviceVoices] = useState<DeviceVoice[]>([]);
   const lastSavedTtsRef = useRef<{
     rateLevel: NatureHomeTtsLevel;
@@ -46,16 +51,18 @@ export function useNatureHomeSettingsPanel({ visible, showTtsControls, onPrefsCh
   const ttsHydratedRef = useRef(false);
 
   const load = useCallback(async () => {
-    const [scale, appearance, dim, blur] = await Promise.all([
+    const [scale, appearance, dim, blur, rotationSec] = await Promise.all([
       readNatureHomeTextScaleIndex(),
       readNatureHomeVerseAppearance(),
       readNatureSoftFocusDimLevel(),
       readNatureSoftFocusBlurLevel(),
+      readHomeVerseRotationSec(),
     ]);
     setScaleIndex(scale);
     setVerseAppearance(appearance);
     setDimLevel(dim);
     setBlurLevel(blur);
+    setVerseRotationSec(rotationSec);
     if (showTtsControls) {
       const tts = await readNatureHomeTtsPrefs();
       setTtsRateLevel(tts.rateLevel);
@@ -153,5 +160,7 @@ export function useNatureHomeSettingsPanel({ visible, showTtsControls, onPrefsCh
     setTtsVoiceId,
     deviceVoices,
     openSystemVoiceSettings,
+    verseRotationSec,
+    setVerseRotationSec,
   };
 }

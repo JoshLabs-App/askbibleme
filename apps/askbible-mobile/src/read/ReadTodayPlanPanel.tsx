@@ -11,12 +11,17 @@ import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from ".
 import { useTodayReadingDone } from "./useTodayReadingDone";
 import { ReadTodayPlanAheadControls } from "./ReadTodayPlanAheadControls";
 import { ReadTodayPlanReadingRow } from "./ReadTodayPlanReadingRow";
+import { READING_HABIT_MIN_FRACTION } from "./reading-habit-stats";
 import { ReadTodayReadingStats } from "./ReadTodayReadingStats";
 import { ReadYearDayTimeline } from "./ReadYearDayTimeline";
 import { useReadingHabitStats } from "./useReadingHabitStats";
 import { useTodayReadingChapterFractions } from "./useTodayReadingChapterFractions";
-import { useTripleLoopProgress } from "./reading-plan/useReadingPlanStores";
+import { isNtDeepRepeatTodayReadingItemComplete } from "./reading-plan/nt-deep-repeat-today-reading-complete";
 import { isTripleLoopTodayReadingItemComplete } from "./reading-plan/triple-loop-today-reading-complete";
+import {
+  useNtDeepRepeatProgress,
+  useTripleLoopProgress,
+} from "./reading-plan/useReadingPlanStores";
 import {
   readCompletedChapterKeySet,
   subscribeReadChapterCompletion,
@@ -33,8 +38,9 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
   const { isDone, toggleDone } = useTodayReadingDone(plan);
   const { fractions } = useTodayReadingChapterFractions(plan);
   const { progress: tripleProgress } = useTripleLoopProgress();
+  const { progress: ntDeepProgress } = useNtDeepRepeatProgress();
   const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
-  const { isTripleLoop } = plan;
+  const { isTripleLoop, isNtDeepRepeat } = plan;
   const readings = payload?.day?.readings ?? [];
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
 
@@ -66,15 +72,15 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
       for (let ch = start; ch <= end; ch += 1) {
         if (completedChapterKeys.has(`${r.bookId}:${ch}`)) completed += 1;
       }
-      progressByItem.set(todayReadingItemKey(r), total > 0 ? completed / total : 0);
+      progressByItem.set(todayReadingItemKey(r, plan.prefs.planId), total > 0 ? completed / total : 0);
     }
     return progressByItem;
-  }, [completedChapterKeys, isTripleLoop, readings]);
+  }, [completedChapterKeys, isTripleLoop, readings, plan.prefs.planId]);
 
   const isReadingDone = useMemo(() => {
     const doneByItem = new Map<string, boolean>();
     for (const r of readings) {
-      const itemKey = todayReadingItemKey(r);
+      const itemKey = todayReadingItemKey(r, plan.prefs.planId);
       const fraction = fractions[itemKey] ?? 0;
       doneByItem.set(
         itemKey,
@@ -85,26 +91,34 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
               fraction,
               progress: tripleProgress,
             })
-          : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
+          : isNtDeepRepeat
+            ? isNtDeepRepeatTodayReadingItemComplete({
+                reading: r,
+                isDone: isDone(r),
+                fraction,
+                progress: ntDeepProgress,
+                chapterCompletionFraction: chapterCompletionProgress.get(itemKey) ?? 0,
+              })
+            : (chapterCompletionProgress.get(itemKey) ?? 0) >= 1,
       );
     }
     return doneByItem;
-  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, readings, tripleProgress]);
+  }, [chapterCompletionProgress, fractions, isDone, isTripleLoop, isNtDeepRepeat, readings, tripleProgress, ntDeepProgress, plan.prefs.planId]);
 
-  const todayAllDone = useMemo(
-    () =>
-      !loading &&
-      readings.length > 0 &&
-      readings.every((r) => isReadingDone.get(todayReadingItemKey(r)) ?? false),
-    [loading, readings, isReadingDone],
-  );
+  const todayHasReading = useMemo((): boolean | undefined => {
+    if (loading) return undefined;
+    if (readings.length === 0) return undefined;
+    return readings.some((r) => {
+      const itemKey = todayReadingItemKey(r, plan.prefs.planId);
+      if (isReadingDone.get(itemKey)) return true;
+      return (fractions[itemKey] ?? 0) >= READING_HABIT_MIN_FRACTION;
+    });
+  }, [loading, readings, isReadingDone, fractions]);
 
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      void syncTodayComplete(todayAllDone);
-    });
-    return () => task.cancel();
-  }, [todayAllDone, syncTodayComplete]);
+    if (todayHasReading === undefined) return;
+    void syncTodayComplete(todayHasReading);
+  }, [todayHasReading, syncTodayComplete]);
 
   return (
     <View style={styles.readingsSection}>
@@ -121,15 +135,16 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
             </Text>
             <View style={styles.readings}>
             {readings.map((r) => {
-              const done = isReadingDone.get(todayReadingItemKey(r)) ?? false;
-              const itemKey = todayReadingItemKey(r);
+              const done = isReadingDone.get(todayReadingItemKey(r, plan.prefs.planId)) ?? false;
+              const itemKey = todayReadingItemKey(r, plan.prefs.planId);
+              const showPlanCheckbox = isTripleLoop || isNtDeepRepeat;
               return (
                 <ReadTodayPlanReadingRow
                   key={itemKey}
                   reading={r}
                   done={done}
-                  showCheckbox={isTripleLoop}
-                  dimDoneText={isTripleLoop}
+                  showCheckbox={showPlanCheckbox}
+                  dimDoneText={showPlanCheckbox}
                   checkboxDisabled={!isTripleLoop}
                   onToggleDone={isTripleLoop ? () => void toggleDone(r) : () => {}}
                   onOpen={() => onOpenChapter(r.bookId, r.startChapter, { planFlow: true })}
@@ -137,7 +152,7 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
               );
             })}
             </View>
-            <ReadTodayPlanAheadControls plan={plan} todayAllDone={todayAllDone} />
+            <ReadTodayPlanAheadControls plan={plan} />
           </>
         ) : (
           <Text style={styles.empty} maxFontSizeMultiplier={1.1}>
@@ -157,7 +172,7 @@ type FooterProps = {
 export function ReadTodayPlanFooter({ plan }: FooterProps) {
   const router = useRouter();
   const { locale } = useLocale();
-  const { prefs, payload, loading, isTripleLoop, dayIndex, aheadDays, effectiveEpochDay } = plan;
+  const { prefs, payload, loading, isTripleLoop, isNtDeepRepeat, isPointerPlan, dayIndex, aheadDays, effectiveEpochDay } = plan;
 
   const titleKey = planTitleKey(prefs.planId);
   const localizedTitle = t(titleKey);
@@ -173,11 +188,15 @@ export function ReadTodayPlanFooter({ plan }: FooterProps) {
         {planTitle}
       </Text>
 
-      {isTripleLoop ? (
+      {isTripleLoop || isNtDeepRepeat ? (
         <Text style={styles.meta} maxFontSizeMultiplier={1.1}>
           {tFormat("pages.read.todayPlanDayMeta", { n: effectiveEpochDay })}
           <Text style={styles.metaDot}> · </Text>
-          {aheadDays > 0 ? t("pages.read.todayPlanAheadLabel") : t("pages.read.todayPlanAnchorEaster")}
+          {aheadDays > 0
+            ? t("pages.read.todayPlanAheadLabel")
+            : isNtDeepRepeat
+              ? t("pages.read.todayPlanAnchorToday")
+              : t("pages.read.todayPlanAnchorEaster")}
         </Text>
       ) : dayIndex != null ? (
         <Text style={styles.meta} maxFontSizeMultiplier={1.1}>

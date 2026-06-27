@@ -20,7 +20,10 @@ import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   isReadChapterCompleted,
   markReadChapterCompleted,
+  readCompletedChapterKeySet,
+  subscribeReadChapterCompletion,
 } from "@/lib/read/read-chapter-completion";
+import { isTodayReadingPlanItemComplete } from "@/lib/read/today-reading-chapter-fraction";
 import {
   getEffectiveReadingPlanPrefsSnapshot,
   getEffectiveReadingPlanPrefsServerSnapshot,
@@ -90,6 +93,7 @@ function ReadChapterCompletionPlanPanel({
   const [readings, setReadings] = useState<ReadingPlanRange[]>([]);
   const [loading, setLoading] = useState(true);
   const [doneKeys, setDoneKeys] = useState<Set<string>>(new Set());
+  const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
   const [celebrateVisible, setCelebrateVisible] = useState(false);
   const [scopeKey, setScopeKey] = useState<string | null>(null);
   const [nickname, setNickname] = useState("");
@@ -161,6 +165,26 @@ function ReadChapterCompletionPlanPanel({
 
   useEffect(() => subscribeTodayReadingDone(reloadDoneKeys), [reloadDoneKeys]);
 
+  const reloadCompletedChapterKeys = useCallback(() => {
+    setCompletedChapterKeys(readCompletedChapterKeySet());
+  }, []);
+
+  useEffect(() => {
+    reloadCompletedChapterKeys();
+  }, [reloadCompletedChapterKeys]);
+
+  useEffect(() => subscribeReadChapterCompletion(reloadCompletedChapterKeys), [reloadCompletedChapterKeys]);
+
+  const isReadingDone = useCallback(
+    (r: ReadingPlanRange) =>
+      isTodayReadingPlanItemComplete(r, {
+        itemKey: todayReadingItemKey(r),
+        doneKeys,
+        completedChapterKeys,
+      }),
+    [completedChapterKeys, doneKeys],
+  );
+
   const chapterQueue = useMemo(
     () =>
       readings.flatMap((r) => {
@@ -186,8 +210,8 @@ function ReadChapterCompletionPlanPanel({
 
   const allDone = useMemo(() => {
     if (!readings.length) return false;
-    return readings.every((r) => doneKeys.has(todayReadingItemKey(r)));
-  }, [readings, doneKeys]);
+    return readings.every((r) => isReadingDone(r));
+  }, [readings, isReadingDone]);
 
   useEffect(() => {
     if (!allDone || !scopeKey || hasShownCelebrateForScope !== false) return;
@@ -211,11 +235,11 @@ function ReadChapterCompletionPlanPanel({
     (r: ReadingPlanRange) => {
       if (!scopeKey) return;
       const key = todayReadingItemKey(r);
-      const done = !doneKeys.has(key);
+      const done = !isReadingDone(r);
       const next = setTodayReadingItemDone(scopeKey, key, done);
       setDoneKeys(next);
     },
-    [scopeKey, doneKeys],
+    [scopeKey, isReadingDone],
   );
 
   if (loading || !readings.length) return null;
@@ -233,7 +257,7 @@ function ReadChapterCompletionPlanPanel({
         <ul className="mt-2.5 space-y-2 text-left">
           {readings.map((r) => {
             const key = todayReadingItemKey(r);
-            const done = doneKeys.has(key);
+            const done = isReadingDone(r);
             const label = formatReadingPlanRange(r, displayLocale);
             return (
               <li key={key} className="flex min-h-[42px] items-center gap-2">

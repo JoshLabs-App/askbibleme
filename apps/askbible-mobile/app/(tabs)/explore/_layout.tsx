@@ -1,5 +1,8 @@
 import { Stack } from "expo-router";
-import { ReadParchmentBackground } from "../../../src/read/ReadParchmentBackground";
+import {
+  PARCHMENT_STACK_SCREEN_STYLE,
+  ReadParchmentBackground,
+} from "../../../src/read/ReadParchmentBackground";
 
 export default function ExploreStackLayout() {
   return (
@@ -9,7 +12,7 @@ export default function ExploreStackLayout() {
           headerShown: false,
           animation: "slide_from_right",
           freezeOnBlur: true,
-          contentStyle: { flex: 1, backgroundColor: "transparent" },
+          contentStyle: PARCHMENT_STACK_SCREEN_STYLE,
         }}
       >
         <Stack.Screen name="index" />
@@ -32,6 +35,10 @@ export default function ExploreStackLayout() {
         <Stack.Screen name="figures/index" />
         <Stack.Screen name="figures/[slug]/index" />
         <Stack.Screen name="articles/[slug]/index" />
+        <Stack.Screen
+          name="reading-planner/index"
+          options={{ animation: "slide_from_right", freezeOnBlur: false }}
+        />
       </Stack>
     </ReadParchmentBackground>
   );

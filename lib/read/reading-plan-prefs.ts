@@ -1,4 +1,15 @@
-/** Device-local active reading plan (not synced to cloud). */
+import type { NtDeepRepeatPace } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
+import {
+  isNtDeepRepeatPace,
+  NT_DEEP_REPEAT_DEFAULT_PACE,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
+import {
+  NT_DEEP_REPEAT_PLAN_DAY_COUNT,
+  NT_DEEP_REPEAT_PLAN_ID,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
+import { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
+
+/** Active reading plan prefs (plan id, anchor, pace, ahead days) — synced across devices. */
 export type ReadingPlanAnchor = "from-today" | "calendar-jan1" | "calendar-easter";
 
 export type ReadingPlanPrefs = {
@@ -11,21 +22,21 @@ export type ReadingPlanPrefs = {
   dayCount?: number;
   /** Days read ahead of calendar today (0 = on calendar). Synced across devices. */
   aheadDays?: number;
+  /** 深度读经：每阶连读天数（7 / 14 / 28）。 */
+  ntDeepRepeatPace?: NtDeepRepeatPace;
 };
 
 export const READING_PLAN_PREFS_STORAGE_KEY = "askbible-reading-plan-prefs-v1";
 export const READING_PLAN_PREFS_STORAGE_KEY_LEGACY = "selah-reading-plan-prefs-v1";
 
-import { TRIPLE_LOOP_PLAN_DAY_COUNT, TRIPLE_LOOP_PLAN_ID } from "@/lib/bible/reading-plans/triple-loop-plan";
-import { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
-
 export { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
 export { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 
 /** Implicit plan when the user has not chosen one in local storage. */
-export const DEFAULT_READING_PLAN_ID = TRIPLE_LOOP_PLAN_ID;
-export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "calendar-easter";
-export const DEFAULT_READING_PLAN_DAY_COUNT = TRIPLE_LOOP_PLAN_DAY_COUNT;
+export const DEFAULT_READING_PLAN_ID = NT_DEEP_REPEAT_PLAN_ID;
+export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "from-today";
+export const DEFAULT_READING_PLAN_DAY_COUNT = NT_DEEP_REPEAT_PLAN_DAY_COUNT;
+export const DEFAULT_NT_DEEP_REPEAT_PACE: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE;
 
 /**
  * `useSyncExternalStore` requires a stable snapshot reference when storage is unchanged.
@@ -109,6 +120,11 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
         ? j.aheadDays
         : undefined;
     const planId = j.planId.trim();
+    const ntDeepRepeatPace = isNtDeepRepeatPace(j.ntDeepRepeatPace)
+      ? j.ntDeepRepeatPace
+      : planId === NT_DEEP_REPEAT_PLAN_ID
+        ? NT_DEEP_REPEAT_DEFAULT_PACE
+        : undefined;
     return {
       version: 1,
       planId,
@@ -116,6 +132,7 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
       startedOn: j.anchor === "calendar-easter" ? READING_PLAN_EASTER_EPOCH_DATE : startedOn,
       dayCount,
       aheadDays,
+      ntDeepRepeatPace,
     };
   } catch {
     return null;
@@ -158,13 +175,18 @@ function refreshPrefsSnapshotFromStorage(): ReadingPlanPrefs | null {
   }
 }
 
-export function buildDefaultReadingPlanPrefs(dayCount = DEFAULT_READING_PLAN_DAY_COUNT): ReadingPlanPrefs {
+export function buildDefaultReadingPlanPrefs(
+  dayCount = DEFAULT_READING_PLAN_DAY_COUNT,
+  now = new Date(),
+): ReadingPlanPrefs {
+  const startedOn = toLocalDateString(now);
   return {
     version: 1,
     planId: DEFAULT_READING_PLAN_ID,
     anchor: DEFAULT_READING_PLAN_ANCHOR,
-    startedOn: READING_PLAN_EASTER_EPOCH_DATE,
+    startedOn,
     dayCount,
+    ntDeepRepeatPace: DEFAULT_NT_DEEP_REPEAT_PACE,
   };
 }
 
@@ -258,7 +280,7 @@ export function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): void {
 export function setActiveReadingPlan(
   planId: string,
   anchor: ReadingPlanAnchor,
-  opts?: { now?: Date; dayCount?: number },
+  opts?: { now?: Date; dayCount?: number; ntDeepRepeatPace?: NtDeepRepeatPace },
 ): ReadingPlanPrefs {
   const now = opts?.now ?? new Date();
   const prefs: ReadingPlanPrefs = {
@@ -272,6 +294,7 @@ export function setActiveReadingPlan(
           ? READING_PLAN_EASTER_EPOCH_DATE
           : undefined,
     dayCount: opts?.dayCount,
+    ntDeepRepeatPace: opts?.ntDeepRepeatPace,
   };
   writeReadingPlanPrefs(prefs);
   return prefs;

@@ -6,7 +6,7 @@ import type { ScriptureCanonCatalogSection } from "./canonCatalog";
 import { BibleCatalogOutline } from "./BibleCatalogOutline";
 import { BibleChapterPickerPanel } from "./BibleChapterPickerPanel";
 import { readParchmentTheme as c } from "./readParchmentTheme";
-import { READ_PARCHMENT_SCROLL_SOURCE } from "./ReadParchmentSurface";
+import { useReadParchmentScrollSource } from "./ReadParchmentSurface";
 import { JUMP_CATALOG_VIEWPORT_H } from "./readChapterScreenConstants";
 import { readChapterScreenStyles as styles } from "./readChapterScreenStyles";
 
@@ -41,12 +41,13 @@ export function ReadChapterScreenJumpModal({
   backA11yLabel,
   closeLabel,
 }: Props) {
+  const parchmentSource = useReadParchmentScrollSource();
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.jumpBackdrop} onPress={onClose}>
         <Pressable style={styles.jumpSheet} onPress={(e) => e.stopPropagation()}>
           <ImageBackground
-            source={READ_PARCHMENT_SCROLL_SOURCE}
+            source={parchmentSource}
             resizeMode="stretch"
             style={styles.jumpSheetImageBg}
             imageStyle={styles.jumpSheetBgImage}

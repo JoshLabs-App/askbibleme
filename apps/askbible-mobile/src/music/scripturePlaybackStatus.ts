@@ -36,6 +36,7 @@ type StatusHandlerArgs = ScriptureShellPlaybackBridge &
   scriptureChapterEndHandledRef: MutableRefObject<boolean>;
   scriptureLastProgressMsRef: MutableRefObject<number>;
   scriptureLastProgressAtRef: MutableRefObject<number>;
+  scriptureSrcRef: MutableRefObject<string | null>;
 };
 
 export function createScripturePlaybackStatusHandler(
@@ -61,14 +62,17 @@ export function createScripturePlaybackStatusHandler(
     scriptureChapterEndHandledRef,
     scriptureLastProgressMsRef,
     scriptureLastProgressAtRef,
+    scriptureSrcRef,
   } = args;
 
   const finishArgs = {
     soundRef,
+    scriptureSrcRef,
     scriptureAudioRepeatRef,
     readChapterRef,
     autoPlayScriptureRef,
     scriptureChapterHandoffRef,
+    scriptureWantPlayingRef,
     setPlaying,
     chapterEndHandledRef: scriptureChapterEndHandledRef,
   };

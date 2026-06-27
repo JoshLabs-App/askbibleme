@@ -20,7 +20,7 @@ platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
 
 prepare_react_native_project!
 
-target 'AskBible.me' do
+target 'AskBibleme' do
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
@@ -59,34 +59,19 @@ target 'AskBible.me' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+  end
+end
 
-    installer.pods_project.targets.each do |target|
-      next unless target.name == "fmt"
-      target.build_configurations.each do |config|
-        config.build_settings["CLANG_CXX_LANGUAGE_STANDARD"] = "c++17"
-      end
-    end
 
-    # expo-av: `isPlayable` KVO crashes on iOS 16+ device Release (SIGSEGV at launch).
-    exav_path = File.expand_path("../node_modules/expo-av/ios/EXAV/EXAVPlayerData.m", __dir__)
-    if File.exist?(exav_path)
-      contents = File.read(exav_path)
-      unless contents.include?("removed `isPlayable` as a KVO key")
-        patched = contents.gsub(
-          '[avAsset loadValuesAsynchronouslyForKeys:@[ @"isPlayable", @"duration" ] completionHandler:^{
-    EX_ENSURE_STRONGIFY(self);
-    NSError *error = nil;
-    AVKeyValueStatus status = [avAsset statusOfValueForKey:@"isPlayable" error:&error];
+# apple-targets-extension-loader -- Dynamic loading of target configurations
+Dir.glob(File.join(__dir__, '..', 'targets', '**', 'pods.rb')).each do |target_file|
+  target_name = File.basename(File.dirname(target_file))
+  target target_name do
+    # Create a new binding with access to necessary methods and variables
+    target_binding = binding
+    target_binding.local_variable_set(:podfile_properties, podfile_properties)
 
-    if (status == AVKeyValueStatusLoaded && !avAsset.isPlayable) {',
-          '// iOS 16+ removed `isPlayable` as a KVO key; loading it can SIGSEGV on device Release builds.
-  [avAsset loadValuesAsynchronouslyForKeys:@[ @"duration" ] completionHandler:^{
-    EX_ENSURE_STRONGIFY(self);
-
-    if (!avAsset.isPlayable) {',
-        )
-        File.write(exav_path, patched) if patched != contents
-      end
-    end
+    # Evaluate the target file content in the new binding
+    eval(File.read(target_file), target_binding, target_file)
   end
 end

@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Modal, Pressable, Text, View } from "react-native";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import type { VerseActionMenuState } from "./readChapterScreenConstants";
 import { readChapterScreenStyles as styles } from "./readChapterScreenStyles";
@@ -46,7 +47,8 @@ export function ReadChapterScreenVerseActionModal({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.verseActionBackdrop} onPress={onClose}>
-        <Pressable style={styles.verseActionSheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable onPress={(e) => e.stopPropagation()} style={styles.verseActionSheetWrap}>
+          <ParchmentModalCard style={styles.verseActionSheet}>
           <Text style={styles.verseActionTitle}>{title}</Text>
 
           <Pressable onPress={onCopy} style={styles.verseActionBtn}>
@@ -98,6 +100,7 @@ export function ReadChapterScreenVerseActionModal({
               </Text>
             </View>
           </Pressable>
+          </ParchmentModalCard>
         </Pressable>
       </Pressable>
     </Modal>

@@ -1,82 +1,54 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import type { NatureSettingsV2 } from "../types/nature";
 import { setHomeAutoHideChrome, setHomeLandscapeImmersive } from "./homeLandscapeImmersive";
-import { SHELL_TAB_BAR_CLEARANCE, shellFullBleedBackdropStyle } from "../shell/shellLayout";
+import { SHELL_TAB_BAR_CLEARANCE } from "../shell/shellLayout";
 import { useLandscapeNarrow } from "./useLandscapeNarrow";
-import { homeNatureScreenStyles as styles } from "./homeNatureScreenStyles";
-import { AUTO_IMMERSIVE_DELAY_MS } from "./homeNatureScreenConstants";
+import { AUTO_IMMERSIVE_DELAY_MS, AUTO_IMMERSIVE_LANDSCAPE_DELAY_MS } from "./homeNatureScreenConstants";
 
 type Args = {
   insets: EdgeInsets;
-  fullBleedFrame: { width: number; height: number };
   hasVideoStage: boolean;
   loading: boolean;
   error: string | null;
   settingsOpen: boolean;
-  setSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showSceneLoader: boolean;
-  playing: boolean;
-  togglePlayMusic: () => void | Promise<void>;
   sceneId: string;
   sceneList: NatureSettingsV2["videos"];
   selectScene: (id: string, opts?: { keepLoopMode?: boolean; source?: "user" | "auto" }) => void;
-  scrollSceneStripToId: (id: string, animated?: boolean) => void;
 };
 
 export function useHomeNatureImmersive({
   insets,
-  fullBleedFrame,
   hasVideoStage,
   loading,
   error,
   settingsOpen,
-  setSettingsOpen,
   showSceneLoader,
-  playing,
-  togglePlayMusic,
   sceneId,
   sceneList,
   selectScene,
-  scrollSceneStripToId,
 }: Args) {
   const landscapeNarrow = useLandscapeNarrow();
-  const [landscapeScenePickerOpen, setLandscapeScenePickerOpen] = useState(false);
   const [autoImmersiveActive, setAutoImmersiveActive] = useState(false);
   const [hasHomeInteraction, setHasHomeInteraction] = useState(false);
   const autoImmersiveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const landscapeImmersive = landscapeNarrow;
-  const showLandscapeVideo = landscapeImmersive && hasVideoStage;
+  const showLandscapeVideo = landscapeNarrow && hasVideoStage;
   const canArmAutoImmersive =
-    hasVideoStage &&
-    !loading &&
-    !error &&
-    !settingsOpen &&
-    !landscapeScenePickerOpen &&
-    !showSceneLoader;
+    hasVideoStage && !loading && !error && !settingsOpen && !showSceneLoader;
   const showAutoImmersive = autoImmersiveActive && canArmAutoImmersive;
-  const showFullscreenVideo = showLandscapeVideo;
-
-  const videoBackdropStyle = useMemo(
-    () => (showFullscreenVideo ? styles.fullBleedBackdropFill : shellFullBleedBackdropStyle(fullBleedFrame)),
-    [fullBleedFrame, showFullscreenVideo],
-  );
 
   useEffect(() => {
-    setHomeLandscapeImmersive(landscapeImmersive);
+    setHomeLandscapeImmersive(showLandscapeVideo);
     return () => setHomeLandscapeImmersive(false);
-  }, [landscapeImmersive]);
+  }, [showLandscapeVideo]);
 
   useEffect(() => {
     setHomeAutoHideChrome(showAutoImmersive);
     return () => setHomeAutoHideChrome(false);
   }, [showAutoImmersive]);
-
-  useEffect(() => {
-    if (!showLandscapeVideo) setLandscapeScenePickerOpen(false);
-  }, [showLandscapeVideo]);
 
   const clearAutoImmersiveTimer = useCallback(() => {
     if (!autoImmersiveTimerRef.current) return;
@@ -87,10 +59,11 @@ export function useHomeNatureImmersive({
   const armAutoImmersiveTimer = useCallback(() => {
     clearAutoImmersiveTimer();
     if (!canArmAutoImmersive) return;
+    const delayMs = showLandscapeVideo ? AUTO_IMMERSIVE_LANDSCAPE_DELAY_MS : AUTO_IMMERSIVE_DELAY_MS;
     autoImmersiveTimerRef.current = setTimeout(() => {
       setAutoImmersiveActive(true);
-    }, AUTO_IMMERSIVE_DELAY_MS);
-  }, [canArmAutoImmersive, clearAutoImmersiveTimer]);
+    }, delayMs);
+  }, [canArmAutoImmersive, clearAutoImmersiveTimer, showLandscapeVideo]);
 
   const markHomeInteraction = useCallback(() => {
     if (!hasHomeInteraction) setHasHomeInteraction(true);
@@ -112,11 +85,6 @@ export function useHomeNatureImmersive({
     return clearAutoImmersiveTimer;
   }, [hasHomeInteraction, autoImmersiveActive, showAutoImmersive, armAutoImmersiveTimer, clearAutoImmersiveTimer]);
 
-  useEffect(() => {
-    if (!landscapeScenePickerOpen || !sceneId) return;
-    scrollSceneStripToId(sceneId);
-  }, [landscapeScenePickerOpen, sceneId, scrollSceneStripToId]);
-
   const onSceneSwipe = useCallback(
     (direction: "left" | "right") => {
       if (sceneList.length < 2) return;
@@ -129,61 +97,15 @@ export function useHomeNatureImmersive({
     [sceneList, sceneId, selectScene],
   );
 
-  useShellSwipeAction(
-    !showAutoImmersive &&
-      !loading &&
-      !error &&
-      sceneList.length > 1 &&
-      (!showLandscapeVideo || !landscapeScenePickerOpen),
-    onSceneSwipe,
-  );
-
-  const onLandscapeSceneSelect = useCallback(
-    (id: string) => {
-      if (id.trim() !== sceneId) selectScene(id);
-      setLandscapeScenePickerOpen(false);
-    },
-    [sceneId, selectScene],
-  );
-
-  const onLandscapeBackdropPress = useCallback(() => {
-    if (settingsOpen) {
-      setSettingsOpen(false);
-      return;
-    }
-    if (landscapeScenePickerOpen) {
-      setLandscapeScenePickerOpen(false);
-      return;
-    }
-    if (playing) void togglePlayMusic();
-    setLandscapeScenePickerOpen(true);
-  }, [settingsOpen, landscapeScenePickerOpen, playing, togglePlayMusic, setSettingsOpen]);
-
-  const onPortraitBackdropPress = useCallback(() => {
-    if (settingsOpen) {
-      setSettingsOpen(false);
-      return;
-    }
-    if (showAutoImmersive) {
-      markHomeInteraction();
-      return;
-    }
-    setAutoImmersiveActive(true);
-  }, [settingsOpen, showAutoImmersive, markHomeInteraction, setSettingsOpen]);
-
-  const showSceneStrip = !showLandscapeVideo || landscapeScenePickerOpen;
-  const bottomNavSlot = SHELL_TAB_BAR_CLEARANCE + insets.bottom;
+  useShellSwipeAction(!showAutoImmersive && !loading && !error && sceneList.length > 1, onSceneSwipe);
 
   return {
-    landscapeScenePickerOpen,
     showLandscapeVideo,
     showAutoImmersive,
-    showSceneStrip,
-    videoBackdropStyle,
     markHomeInteraction,
-    onLandscapeSceneSelect,
-    onLandscapeBackdropPress,
-    onPortraitBackdropPress,
-    bottomNavSlot,
+    /** 横屏沉浸时底栏隐藏，场景条仅留安全区；竖屏仍避让浮层 Tab */
+    bottomNavSlot: showLandscapeVideo
+      ? Math.max(insets.bottom, 2)
+      : SHELL_TAB_BAR_CLEARANCE + insets.bottom,
   };
 }

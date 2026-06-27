@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { readParchmentTheme as c } from "./readParchmentTheme";
@@ -34,7 +35,23 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
     planId,
   } = useReadChapterCompletionPlanState({ bookId, chapter, displayLocale });
 
+  const handleCelebrateClose = useCallback(() => {
+    closeCelebrate();
+    router.replace("/read");
+  }, [closeCelebrate, router]);
+
   if (loading || !readings.length) return null;
+
+  if (celebrateVisible) {
+    return (
+      <ReadChapterCompletionCelebrateModal
+        visible
+        onClose={handleCelebrateClose}
+        isEnglishDisplay={isEnglishDisplay}
+        localeZhText={localeZhText}
+      />
+    );
+  }
 
   return (
     <>
@@ -181,13 +198,6 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
           <Text style={styles.chapterSideNavText}>{">"}</Text>
         </Pressable>
       </View>
-
-      <ReadChapterCompletionCelebrateModal
-        visible={celebrateVisible}
-        onClose={closeCelebrate}
-        isEnglishDisplay={isEnglishDisplay}
-        localeZhText={localeZhText}
-      />
     </>
   );
 }

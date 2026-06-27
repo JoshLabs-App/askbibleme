@@ -1,6 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useCallback } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Platform, Pressable, StatusBar, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ShellSwipeExclude } from "../shell/ShellSwipeExclude";
 import { useShellSwipeSuspend } from "../shell/useShellSwipeSuspend";
@@ -12,6 +12,7 @@ import { ReadBibleSettingsTypographySection } from "./ReadBibleSettingsTypograph
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { ReadSettingsSelect } from "./ReadSettingsSelect";
 import { useReadBibleSettingsPanelModel } from "./useReadBibleSettingsPanelModel";
+import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 
 type Props = {
   visible: boolean;
@@ -77,14 +78,23 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
 
   if (!visible) return null;
 
+  const topInset = Math.max(
+    insets.top,
+    Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0,
+  );
+
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <ShellSwipeExclude style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View
-          style={[styles.sheet, { marginTop: insets.top + 48, marginRight: Math.max(insets.right, 10) }]}
+        <ParchmentModalCard
+          style={[
+            styles.sheet,
+            { marginTop: topInset + 48, marginRight: Math.max(insets.right, 10) },
+          ]}
           onStartShouldSetResponder={() => true}
         >
+          <View style={styles.sheetBody}>
           <ReadBibleSettingsParchmentRow icon="menu-book">
             <View style={styles.translationRow}>
               <ReadSettingsSelect
@@ -164,7 +174,8 @@ export function ReadBibleSettingsPanel({ visible, onClose }: Props) {
             setSizeToLargePreset={setSizeToLargePreset}
             bumpSize={bumpSize}
           />
-        </View>
+          </View>
+        </ParchmentModalCard>
       </ShellSwipeExclude>
     </Modal>
   );

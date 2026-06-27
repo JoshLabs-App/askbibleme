@@ -189,6 +189,26 @@ export function splitQuestionAnswerStanzas(body: string): CreedBodySegment[] | n
   return null;
 }
 
+/** Visible row title for catechism Q/A blocks (question line only). */
+export function extractCatechismQuestionTitle(paragraph: string): string {
+  const line = paragraph.trim().split("\n")[0]?.trim() ?? "";
+  if (line) return line.length <= 120 ? line : `${line.slice(0, 117)}…`;
+  const trimmed = paragraph.trim();
+  return trimmed.length <= 120 ? trimmed : `${trimmed.slice(0, 117)}…`;
+}
+
+/** Answer-only body for expanded catechism rows (question already shown in header). */
+export function catechismAnswerOnlyParagraph(paragraph: string): string {
+  const stanzas = splitQuestionAnswerStanzas(paragraph);
+  if (!stanzas) return paragraph;
+  const answer = stanzas.find((segment) => segment.level === "answer");
+  if (!answer?.body) return paragraph;
+  const isZh = /^(问|問)/.test(paragraph.trim());
+  const label = answer.title?.trim() || (isZh ? "答" : "A.");
+  const suffix = /[：:.]$/.test(label) ? "" : isZh ? "：" : ". ";
+  return `${label}${suffix}${answer.body}`;
+}
+
 export function isChicagoStyleArticleLabel(title: string): boolean {
   const t = title.trim();
   return (

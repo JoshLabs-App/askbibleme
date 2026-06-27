@@ -20,11 +20,13 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useReadChapterScreenLoad } from "./useReadChapterScreenLoad";
 import { useShellSwipeNav } from "../shell/ShellSwipeNavContext";
-import { useParchmentColumnMaxWidth } from "./parchmentColumnLayout";
+import { useParchmentColumnMaxWidth, useParchmentContentPadding } from "./parchmentColumnLayout";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { useReadChapterAudio } from "./useReadChapterAudio";
+import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { useReadChapterSearchFocus } from "./useReadChapterSearchFocus";
 import { useScriptureVerseBookmarks } from "./useScriptureVerseBookmarks";
+import { buildPlanChapterQueue } from "./read-plan-flow-nav";
 import { getLocalReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
 import { useTodayReadingPlan } from "./useTodayReadingPlan";
 import {
@@ -49,6 +51,7 @@ export function ReadChapterScreen() {
     verse?: string;
     q?: string;
     planFlow?: string;
+    planFlowTick?: string;
     [EXPLORE_READ_RETURN_PARAM]?: string;
   }>();
   const bookId = parseBookIdParam(params.bookId);
@@ -58,6 +61,9 @@ export function ReadChapterScreen() {
     return normalizeScriptureSearchQuery(raw ?? "");
   }, [params.q, bookId, chapter]);
   const isPlanFlow = String(Array.isArray(params.planFlow) ? params.planFlow[0] : params.planFlow || "") === "1";
+  const planFlowTick = String(
+    Array.isArray(params.planFlowTick) ? params.planFlowTick[0] : params.planFlowTick || "",
+  );
   const exploreReturn = resolveExploreReadReturnParam(params[EXPLORE_READ_RETURN_PARAM]);
   const returnToExplore = useReadChapterExploreReturnHandler(exploreReturn);
 
@@ -84,6 +90,8 @@ export function ReadChapterScreen() {
     translationCatalogReady,
     verseParagraphFlow,
     chapterSegmentMode,
+    audioVoiceId,
+    chapterAudioTranslationId,
   } = useReadBibleTypography();
   const primaryTranslationMeta = useMemo(
     () => translationCatalog.find((tr) => tr.id === primaryTranslationId),
@@ -182,6 +190,13 @@ export function ReadChapterScreen() {
     swipe,
   });
 
+  const planChapterQueue = useMemo(() => {
+    if (!isPlanFlow || !todayPlan.payload?.day?.readings?.length) return [];
+    return buildPlanChapterQueue(todayPlan.payload.day.readings);
+  }, [isPlanFlow, todayPlan.payload]);
+
+  const { playScriptureChapter } = useMusicPlayback();
+
   const nav = useReadChapterScreenNav({
     chapterData,
     navigation,
@@ -189,6 +204,10 @@ export function ReadChapterScreen() {
     isPlanFlow,
     planFlowNextTarget: display.planFlowNextTarget,
     planFlowPrevTarget: display.planFlowPrevTarget,
+    todayPlanPayload: todayPlan.payload,
+    chapterAudioTranslationId,
+    audioVoiceId,
+    playScriptureChapter,
     neighbors: display.neighbors,
     verseSelectionMode: verseActions.verseSelectionMode,
     verseActionMenu: verseActions.verseActionMenu,
@@ -197,15 +216,15 @@ export function ReadChapterScreen() {
 
   const { onAdvanceChapterAudio } = nav;
 
-  const { activeVerseIndex, nearAudioEnd } = useReadChapterAudio(
-    chapterData,
-    scrollRef,
-    scrollHeaderHeightRef,
-    onAdvanceChapterAudio,
-    {
+  const { activeVerseIndex, nearAudioEnd } = useReadChapterAudio(chapterData, scrollRef, {
+    onAdvanceChapter: onAdvanceChapterAudio,
+    isPlanFlow,
+    planFlowTick,
+    planFlowQueue: planChapterQueue,
+    followScroll: {
       scrollVerseToReadableCenter,
     },
-  );
+  });
 
   const { onChapterScroll, onChapterContentSizeChange } = useReadChapterScreenProgress({
     chapterData,

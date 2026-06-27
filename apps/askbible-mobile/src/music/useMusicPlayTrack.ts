@@ -22,6 +22,7 @@ type UseMusicPlayTrackArgs = {
   cacheMusicTrackInBackground: (trackId: string) => void;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
   musicRepeatModeRef: MusicPlaybackRefs["musicRepeatModeRef"];
+  stopScripturePlayback: () => Promise<void>;
 };
 
 export function useMusicPlayTrack(args: UseMusicPlayTrackArgs) {

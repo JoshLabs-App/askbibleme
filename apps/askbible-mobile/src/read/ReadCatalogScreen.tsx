@@ -4,6 +4,7 @@ import {
   Animated,
   Pressable,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,12 +20,14 @@ import {
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readCatalogScreenStyles as styles } from "./readCatalogScreenStyles";
 import { ReadTodayPlanFooter, ReadTodayPlanReadings } from "./ReadTodayPlanPanel";
+import { ReadHomeDeepReadIntro } from "./ReadHomeDeepReadIntro";
 import { warmScriptureSearchDatabase } from "../bible/scripture-database";
 import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
 import { useIsFocused } from "@react-navigation/native";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { useReadHomeTodayScriptureAvailability } from "./useReadHomeTodayScriptureAvailability";
 import { useReadCatalogScreen } from "./useReadCatalogScreen";
+import { shouldSplitTestamentCatalog } from "./parchmentColumnLayout";
 
 type ReadCatalogScreenProps = {
   homeMode?: boolean;
@@ -32,6 +35,8 @@ type ReadCatalogScreenProps = {
 
 export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const ipadCatalogSplit = shouldSplitTestamentCatalog(width, height);
   const catalogFocused = useIsFocused();
   const { setReadHomeTodayScriptureReady } = useMusicPlayback();
   const {
@@ -112,6 +117,7 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
                 {t("pages.read.title")}
               </Text>
             </View>
+            {todayPlan.isNtDeepRepeat ? <ReadHomeDeepReadIntro /> : null}
             <ReadTodayPlanReadings plan={todayPlan} onOpenChapter={openChapter} />
           </View>
         ) : null}
@@ -128,7 +134,8 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
                   onTestamentChange={onCatalogTestamentChange}
                   showBookSummary
                   completedChaptersByBook={completedByBook}
-                  paginateByTestament={homeMode}
+                  paginateByTestament={homeMode && !ipadCatalogSplit}
+                  splitByTestamentColumns={homeMode && ipadCatalogSplit}
                 />
               </View>
             ) : lastReadLoading ? (

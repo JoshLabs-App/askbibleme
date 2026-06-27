@@ -6,7 +6,7 @@ import { startTodayPlanFlowScripture } from "../read/startTodayReadingScriptureF
 
 /** 闹钟预备音乐结束后：进入今日读经 planFlow，章节播完自动续下一章直至今日读完。 */
 export async function startTodayReadingAlarmScriptureFlow(
-  router: Pick<Router, "push">,
+  router: Pick<Router, "push" | "replace">,
   firstChapter?: PlanChapterRef | null,
 ): Promise<boolean> {
   const prefs = await readEffectiveReadingPlanPrefs();
@@ -20,5 +20,5 @@ export async function startTodayReadingAlarmScriptureFlow(
   }
   if (!target) return false;
 
-  return startTodayPlanFlowScripture(router, target, { loopTodayPlan: true });
+  return startTodayPlanFlowScripture(router, target, { loopTodayPlan: true, replace: true });
 }

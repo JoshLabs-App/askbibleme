@@ -7,6 +7,7 @@ export type NatureHomeSettingsSelectOption = {
   label: string;
   /** 收起时按钮上显示的短名 */
   shortLabel?: string;
+  downloadState?: "missing" | "outdated" | "downloading" | null;
 };
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (id: string) => void;
+  onDownloadOption?: (id: string) => void;
   disabled?: boolean;
   style?: View["props"]["style"];
   /** 底行菜单向上展开，避免撑出面板背景 */
@@ -31,6 +33,7 @@ export function NatureHomeSettingsSelect({
   open,
   onOpenChange,
   onSelect,
+  onDownloadOption,
   disabled,
   style,
   menuPlacement = "below",
@@ -76,29 +79,53 @@ export function NatureHomeSettingsSelect({
           >
             {options.map((opt) => {
               const selected = opt.id === value;
+              const showDownload =
+                Boolean(onDownloadOption) &&
+                (opt.downloadState === "missing" || opt.downloadState === "outdated");
+              const downloading = opt.downloadState === "downloading";
               return (
-                <Pressable
-                  key={opt.id}
-                  onPress={() => onSelect(opt.id)}
-                  style={({ pressed }) => [
-                    styles.option,
-                    selected && styles.optionActive,
-                    pressed && styles.optionPressed,
-                  ]}
-                >
-                  <Text
-                    style={[styles.optionText, selected && styles.optionTextActive]}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
+                <View key={opt.id} style={[styles.optionRow, selected && styles.optionActive]}>
+                  <Pressable
+                    onPress={() => onSelect(opt.id)}
+                    style={({ pressed }) => [
+                      styles.option,
+                      pressed && styles.optionPressed,
+                    ]}
                   >
-                    {opt.label}
-                  </Text>
-                  {selected ? (
-                    <MaterialIcons name="check" size={16} color="#fff" />
-                  ) : (
-                    <View style={styles.checkSpacer} />
-                  )}
-                </Pressable>
+                    <Text
+                      style={[styles.optionText, selected && styles.optionTextActive]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {opt.label}
+                    </Text>
+                    {selected ? (
+                      <MaterialIcons name="check" size={16} color="#fff" />
+                    ) : (
+                      <View style={styles.checkSpacer} />
+                    )}
+                  </Pressable>
+                  {showDownload ? (
+                    <Pressable
+                      onPress={() => onDownloadOption?.(opt.id)}
+                      hitSlop={8}
+                      style={({ pressed }) => [
+                        styles.optionDownloadBtn,
+                        pressed && styles.optionDownloadBtnPressed,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Download translation"
+                    >
+                      <MaterialIcons
+                        name={opt.downloadState === "outdated" ? "system-update" : "download"}
+                        size={17}
+                        color="#fbbf24"
+                      />
+                    </Pressable>
+                  ) : downloading ? (
+                    <MaterialIcons name="hourglass-top" size={16} color="rgba(255,255,255,0.45)" />
+                  ) : null}
+                </View>
               );
             })}
           </ScrollView>
@@ -175,15 +202,32 @@ const styles = StyleSheet.create({
     bottom: "100%",
   },
   option: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 8,
     paddingVertical: 8,
     gap: 6,
+    minWidth: 0,
+  },
+  optionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 4,
   },
   optionActive: {
     backgroundColor: "#3f3f46",
+  },
+  optionDownloadBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  optionDownloadBtnPressed: {
+    backgroundColor: "#52525b",
   },
   optionPressed: {
     backgroundColor: "#52525b",

@@ -10,19 +10,12 @@ import { setReadChapterBottomChromeApi } from "./read-chapter-chrome-inset";
 import { jumpReadChapter, navigateReadChapter, type ReadChapterNavDirection } from "./read-chapter-nav";
 import {
   pushReadPlanFlowChapter,
-  replaceReadPlanFlowChapterAudio,
-  resolvePlanFlowNextTarget,
   type PlanChapterRef,
 } from "./read-plan-flow-nav";
-import {
-  armReadPlanFlowAutoplay,
-  beginPlanFlowChapterAdvance,
-  endPlanFlowChapterAdvanceDeferred,
-} from "./read-plan-flow-autoplay";
-import { ensurePlanFlowChapterAudioReady } from "./prefetch-plan-flow-chapter-audio";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import type { TodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
-import { markTodayReadingAudioChapterComplete } from "./reading-plan/today-reading-done";
+import { kickReadChapterScriptureAfterNavigate } from "./advance-read-chapter-scripture-audio";
+import { scriptureChapterPool } from "../music/scripture-chapter-pool";
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { useShellSwipeSuspend } from "../shell/useShellSwipeSuspend";
 import type { HighlightWordEditorTarget } from "./ReadVerseHighlightWordSheet";
@@ -46,6 +39,12 @@ type Args = {
   todayPlanPayload: TodayReadingPlanPayload | null;
   chapterAudioTranslationId: string;
   audioVoiceId: CuvChapterAudioVoiceId;
+  playScriptureChapter: (args: {
+    bookId: string;
+    chapter: number;
+    bookName: string;
+    translationId: string;
+  }) => Promise<boolean>;
   neighbors: { prev: NeighborTarget; next: NeighborTarget };
   verseSelectionMode: boolean;
   verseActionMenu: VerseActionMenuState | null;
@@ -62,6 +61,7 @@ export function useReadChapterScreenNav({
   todayPlanPayload,
   chapterAudioTranslationId,
   audioVoiceId,
+  playScriptureChapter,
   neighbors,
   verseSelectionMode,
   verseActionMenu,
@@ -86,51 +86,24 @@ export function useReadChapterScreenNav({
   const onAdvanceChapterAudio = useCallback(
     (next: { bookId: string; chapter: number } | null) => {
       if (isPlanFlow) {
-        void (async () => {
-          if (chapterData) {
-            void markTodayReadingAudioChapterComplete(chapterData.bookId, chapterData.chapter);
-          }
-          const target =
-            planFlowNextTarget ??
-            (chapterData
-              ? resolvePlanFlowNextTarget(todayPlanPayload, chapterData.bookId, chapterData.chapter)
-              : null);
-          if (!target) return;
-          beginPlanFlowChapterAdvance();
-          try {
-            armReadPlanFlowAutoplay();
-            await ensurePlanFlowChapterAudioReady({
-              ref: target,
-              translationId: chapterAudioTranslationId,
-              voiceId: audioVoiceId,
-            });
-            const sameChapter =
-              chapterData != null &&
-              target.bookId === chapterData.bookId &&
-              target.chapter === chapterData.chapter;
-            replaceReadPlanFlowChapterAudio(
-              router,
-              target,
-              sameChapter ? Date.now() : undefined,
-            );
-          } finally {
-            endPlanFlowChapterAdvanceDeferred();
-          }
-        })();
+        if (!chapterData) return;
+        void scriptureChapterPool.skipToNext();
         return;
       }
       if (!next) return;
       goNeighbor(next, "forward");
+      void kickReadChapterScriptureAfterNavigate(
+        playScriptureChapter,
+        next,
+        chapterAudioTranslationId,
+      );
     },
     [
-      audioVoiceId,
       chapterAudioTranslationId,
       chapterData,
       goNeighbor,
       isPlanFlow,
-      planFlowNextTarget,
-      router,
-      todayPlanPayload,
+      playScriptureChapter,
     ],
   );
 

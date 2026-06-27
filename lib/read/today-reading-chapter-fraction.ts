@@ -3,6 +3,8 @@ import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import { markTripleLoopChapterRead } from "@/lib/read/triple-loop-progress";
 import {
   buildTodayReadingScopeKey,
+  markTodayReadingItemDone,
+  readTodayReadingDoneKeys,
   readingIncludesChapter,
   todayReadingItemKey,
 } from "@/lib/read/today-reading-done";
@@ -126,6 +128,48 @@ export function readingPlanRangeUnitCount(r: ReadingPlanRange): number {
   return Math.max(1, r.endChapter - r.startChapter + 1);
 }
 
+export function readingPlanRangeAggregateFraction(
+  reading: ReadingPlanRange,
+  chapter: number,
+  perChapterFraction: number,
+): number {
+  const units = readingPlanRangeUnitCount(reading);
+  const per = clampFraction(perChapterFraction);
+  if (units <= 1) return per;
+  const index = Math.min(units, Math.max(1, Math.trunc(chapter) - reading.startChapter + 1));
+  return clampFraction((index - 1 + per) / units);
+}
+
+export function isTodayReadingPlanItemComplete(
+  reading: ReadingPlanRange,
+  opts: {
+    itemKey: string;
+    doneKeys: Set<string>;
+    completedChapterKeys: Set<string>;
+  },
+): boolean {
+  const start = Math.max(1, Math.trunc(reading.startChapter));
+  const end = Math.max(start, Math.trunc(reading.endChapter));
+  const multi = end > start;
+  for (let ch = start; ch <= end; ch += 1) {
+    if (!opts.completedChapterKeys.has(`${reading.bookId}:${ch}`)) {
+      return multi ? false : opts.doneKeys.has(opts.itemKey);
+    }
+  }
+  return true;
+}
+
+function maybeAutoMarkTodayReadingItemDone(
+  scopeKey: string,
+  itemKey: string,
+  fraction: number,
+): void {
+  if (fraction < TODAY_READING_AUTO_DONE_FRACTION) return;
+  const done = readTodayReadingDoneKeys(scopeKey);
+  if (done.has(itemKey)) return;
+  markTodayReadingItemDone(scopeKey, itemKey);
+}
+
 export async function recordTodayReadingChapterFraction(
   bookId: string,
   chapter: number,
@@ -154,7 +198,7 @@ export async function recordTodayReadingChapterFraction(
     dayIndex,
   });
   const itemKey = todayReadingItemKey(reading);
-  const units = readingPlanRangeUnitCount(reading);
-  const total = units <= 1 ? perChapter : perChapter / units;
+  const total = readingPlanRangeAggregateFraction(reading, chapter, perChapter);
   setTodayReadingChapterFraction(scopeKey, itemKey, total);
+  maybeAutoMarkTodayReadingItemDone(scopeKey, itemKey, total);
 }

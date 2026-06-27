@@ -30,7 +30,7 @@ npm run mobile:sync-content
 # Bundle music/nature offline media into release assets.
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
 MOBILE_BUNDLE_MUSIC_LIMIT=1 \
-MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a7xcip5q \
+MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a8h3jhwl \
 npm run mobile:sync-offline-media
 
 echo "→ 离线媒体体积审计…"

@@ -9,6 +9,10 @@ type Props = {
 };
 
 export async function ExploreArticleScriptureContent({ article, locale }: Props) {
+  if (article.sections.length > 0) {
+    return <ExploreArticleContent article={article} />;
+  }
+
   const enrichedBody = await enrichArticleMarkdownWithScriptureContent({
     markdown: article.body,
     locale,

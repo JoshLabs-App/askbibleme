@@ -23,8 +23,8 @@ class MainApplication : Application(), ReactApplication {
       object : DefaultReactNativeHost(this) {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-              // Packages that cannot be autolinked yet can be added manually here, for example:
-              // add(MyReactNativePackage())
+              add(me.askbible.widget.AskBibleWidgetPrefsPackage())
+              add(me.askbible.alarm.AskBibleReadingAlarmPackage())
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
@@ -47,6 +47,13 @@ class MainApplication : Application(), ReactApplication {
     }
     loadReactNative(this)
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    me.askbible.alarm.ReadingAlarmPreludeCache.warmAsync(this)
+    val alarmCtx = applicationContext
+    if (me.askbible.alarm.ReadingAlarmPrefs.isEnabled(alarmCtx)) {
+      me.askbible.alarm.ReadingAlarmScheduler.scheduleNext(alarmCtx)
+    } else {
+      me.askbible.alarm.ReadingAlarmScheduler.cancel(alarmCtx)
+    }
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

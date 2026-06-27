@@ -1,9 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { toZhTwText } from "../i18n/site-copy";
+import { readingPlannerRoute } from "../explore/reading-planner/reading-planner-routes";
+import { ReadParchmentBackground } from "../read/ReadParchmentBackground";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { trackTap } from "../telemetry/tap";
 import { getCompanionNeedOptions, getSolutionCards } from "./onboarding-devotion-data";
@@ -16,6 +19,7 @@ type OnboardingDevotionIntroProps = {
 };
 
 export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroProps) {
+  const router = useRouter();
   const { locale, setLocale } = useLocale();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const [step, setStep] = useState<1 | 2>(1);
@@ -35,17 +39,6 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     setSelectedNeeds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
-  const openDevotionCompanionSpace = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-    try {
-      await completeOnboardingDevotionIntro(selectedNeeds);
-      onComplete();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const handleSkip = async () => {
     if (submitting) return;
     setSubmitting(true);
@@ -58,17 +51,31 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
     }
   };
 
+  const openReadingPlanner = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    trackTap("intro.reading-planner");
+    try {
+      await completeOnboardingDevotionIntro(selectedNeeds);
+      onComplete();
+      router.push(readingPlannerRoute());
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handlePrimaryButtonPress = () => {
     if (step === 1) {
       setStep(2);
       return;
     }
-    void openDevotionCompanionSpace();
+    void openReadingPlanner();
   };
 
   return (
     <View style={styles.overlay}>
-      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <ReadParchmentBackground>
+        <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <View style={styles.main}>
           <View style={styles.topBrandWrap}>
             <View style={styles.topActions}>
@@ -123,8 +130,8 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
                   <Text style={styles.primaryButtonText}>
                     {isLastStep
                       ? locale === "en"
-                        ? "Open my space"
-                        : zhText("打开我的空间")
+                        ? "Open easy reading"
+                        : zhText("打开轻松读经")
                       : locale === "en"
                         ? "Next"
                         : zhText("下一步")}
@@ -135,6 +142,7 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
           </ScrollView>
         </View>
       </SafeAreaView>
+      </ReadParchmentBackground>
     </View>
   );
 }
@@ -144,7 +152,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10000,
     elevation: 10000,
-    backgroundColor: "#efe1c8",
   },
   safeArea: {
     flex: 1,

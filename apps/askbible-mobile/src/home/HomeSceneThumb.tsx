@@ -52,7 +52,10 @@ const SCALE_REST = 0.9;
 const SCALE_SELECTED = 1;
 const OPACITY_REST = 0.55;
 const OPACITY_SELECTED = 1;
-const SLOT_H = HOME_SCENE_THUMB_SIZE + HOME_SCENE_THUMB_SLOT_PAD * 2;
+
+function thumbSlotHeight(slotPad: number): number {
+  return HOME_SCENE_THUMB_SIZE + slotPad * 2;
+}
 
 type Props = {
   selected: boolean;
@@ -60,10 +63,19 @@ type Props = {
   thumbUri?: string;
   fallbackLabel: string;
   onPress: () => void;
+  /** 横屏沉浸：缩小槽位上下留白，场景条更贴底 */
+  slotPad?: number;
 };
 
 /** 首页底部场景缩略图：iOS 式 scale + opacity，无描边/指示点 */
-export function HomeSceneThumb({ selected, thumbModule, thumbUri, fallbackLabel, onPress }: Props) {
+export function HomeSceneThumb({
+  selected,
+  thumbModule,
+  thumbUri,
+  fallbackLabel,
+  onPress,
+  slotPad = HOME_SCENE_THUMB_SLOT_PAD,
+}: Props) {
   const focus = useRef(new Animated.Value(selected ? 1 : 0)).current;
   const [thumbFailed, setThumbFailed] = useState(false);
 
@@ -103,7 +115,7 @@ export function HomeSceneThumb({ selected, thumbModule, thumbUri, fallbackLabel,
   };
 
   return (
-    <View style={styles.slot}>
+    <View style={[styles.slot, { height: thumbSlotHeight(slotPad) }]}>
       <Animated.View
         style={[
           styles.animWrap,
@@ -148,7 +160,6 @@ export function HomeSceneThumb({ selected, thumbModule, thumbUri, fallbackLabel,
 const styles = StyleSheet.create({
   slot: {
     width: HOME_SCENE_THUMB_SLOT_WIDTH,
-    height: SLOT_H,
     flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",

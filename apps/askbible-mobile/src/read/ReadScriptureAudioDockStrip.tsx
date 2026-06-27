@@ -88,7 +88,7 @@ export function ReadScriptureAudioDockStrip() {
       <Pressable
         key={mode}
         onPress={() => {
-          if (!on) setScriptureAudioRepeatMode(mode);
+          setScriptureAudioRepeatMode(on ? "off" : mode);
         }}
         hitSlop={6}
         style={({ pressed }) => [styles.repeatBtn, on && styles.repeatBtnActive, pressed && styles.pressed]}

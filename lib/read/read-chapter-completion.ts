@@ -1,3 +1,5 @@
+import { touchReadingHabitDay } from "./reading-habit-stats";
+
 const READ_CHAPTER_COMPLETION_KEY = "askbible-read-chapter-completion-v1";
 const READ_CHAPTER_COMPLETION_KEY_LEGACY = "selah-read-chapter-completion-v1";
 
@@ -85,6 +87,7 @@ export function markReadChapterCompleted(bookId: string, chapter: number): boole
   if (done.has(key)) return false;
   done.add(key);
   writeCompletionSet(done);
+  touchReadingHabitDay();
   return true;
 }
 

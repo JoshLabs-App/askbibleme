@@ -4,6 +4,7 @@ declare module "sql.js" {
     step: () => boolean;
     getAsObject: () => Record<string, unknown>;
     run: (values?: unknown[] | Record<string, unknown>) => void;
+    reset: () => void;
     free: () => void;
   };
 

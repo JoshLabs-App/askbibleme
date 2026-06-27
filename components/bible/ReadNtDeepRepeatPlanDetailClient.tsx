@@ -236,11 +236,11 @@ export function ReadNtDeepRepeatPlanDetailClient() {
                       href={readingPlanChapterHref(primary.bookId, primary.startChapter)}
                       className="text-[13px] font-medium text-amber-950 underline decoration-amber-800/25 underline-offset-[0.12em] dark:text-stone-100"
                     >
-                      {formatNtDeepRepeatSegmentStageRange(segment)}
+                      {formatNtDeepRepeatSegmentStageRange(segment, locale)}
                     </Link>
                   ) : (
                     <span className="text-[13px] text-amber-900/78 dark:text-stone-400">
-                      {formatNtDeepRepeatSegmentStageRange(segment)}
+                      {formatNtDeepRepeatSegmentStageRange(segment, locale)}
                     </span>
                   )}
                   {isCurrent ? (

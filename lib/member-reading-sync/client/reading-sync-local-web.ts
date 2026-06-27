@@ -16,18 +16,18 @@ import {
 import type { BibleTranslationsIndex } from "@/lib/bible/translations-types";
 import { readExploreYearDayProfile, writeExploreYearDayProfile } from "@/lib/explore/explore-birth-year-prefs";
 import type { ExploreYearDayProfile } from "@/lib/explore/explore-birth-year-prefs";
-import type { HomeVersePoolScopeId } from "@/lib/explore/explore-home-verse-pool-scopes";
-import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL } from "@/lib/home-prayer-pools/constants";
-import type { HomePrayerVersePrefsV1 } from "@/lib/home-prayer-pools/types";
-import {
-  readHomePrayerVersePrefs,
-  writeHomePrayerVersePrefs,
-} from "@/lib/home-prayer-pools/prefs";
 import {
   getHomeVersePoolScope,
   hydrateHomeVersePoolScope,
   setHomeVersePoolScope,
 } from "@/lib/home/home-verse-pool-scope-prefs";
+import { HOME_BIBLE_TRANSLATIONS_CATALOG_URL } from "@/lib/home-prayer-pools/constants";
+import { parseHomeVersePoolMenuScopeId } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
+import type { HomePrayerVersePrefsV1 } from "@/lib/home-prayer-pools/types";
+import {
+  readHomePrayerVersePrefs,
+  writeHomePrayerVersePrefs,
+} from "@/lib/home-prayer-pools/prefs";
 import { applyStoredAppLocale, LOCALE_STORAGE_KEY, parseLocale, type AppLocale } from "@/lib/i18n/config";
 import {
   applyNatureHomeUiSyncBundle,
@@ -259,7 +259,7 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
       break;
     case "homeVersePoolScope":
       if (value && typeof value === "object" && typeof (value as { scopeId?: unknown }).scopeId === "string") {
-        setHomeVersePoolScope((value as { scopeId: HomeVersePoolScopeId }).scopeId);
+        setHomeVersePoolScope(parseHomeVersePoolMenuScopeId((value as { scopeId: string }).scopeId));
       }
       break;
     case "natureSceneUi":

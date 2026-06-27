@@ -31,7 +31,7 @@
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "65",
+      "buildNumber": "66",
       "supportsTablet": true,
       "appleTeamId": "AJ2998VZH6",
       "entitlements": {
@@ -53,7 +53,7 @@
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 65,
+      "versionCode": 66,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

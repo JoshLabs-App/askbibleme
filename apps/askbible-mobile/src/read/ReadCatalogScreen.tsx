@@ -20,7 +20,6 @@ import {
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readCatalogScreenStyles as styles } from "./readCatalogScreenStyles";
 import { ReadTodayPlanFooter, ReadTodayPlanReadings } from "./ReadTodayPlanPanel";
-import { ReadHomeDeepReadIntro } from "./ReadHomeDeepReadIntro";
 import { warmScriptureSearchDatabase } from "../bible/scripture-database";
 import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
 import { useIsFocused } from "@react-navigation/native";
@@ -117,7 +116,6 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
                 {t("pages.read.title")}
               </Text>
             </View>
-            {todayPlan.isNtDeepRepeat ? <ReadHomeDeepReadIntro /> : null}
             <ReadTodayPlanReadings plan={todayPlan} onOpenChapter={openChapter} />
           </View>
         ) : null}

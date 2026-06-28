@@ -1,14 +1,22 @@
+import { normalizeNtDeepRepeatChaptersReadKeys } from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";
+import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
+import { NT_DEEP_REPEAT_DEFAULT_PACE } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import {
   normalizeNtDeepRepeatReadingState,
   ntDeepRepeatStateForPlanDay,
   type NtDeepRepeatReadingState,
 } from "@/lib/bible/reading-plans/nt-deep-repeat-reading";
-import { readAheadDays } from "@/lib/read/reading-plan-ahead";
 import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
 import { toLocalDateString, type ReadingPlanPrefs } from "@/lib/read/reading-plan-prefs";
 
 function progressScore(state: NtDeepRepeatReadingState): number {
   return state.curriculumIndex * 1000 + state.dayInSegment;
+}
+
+function aheadDaysFromPrefs(prefs: ReadingPlanPrefs): number {
+  const n = prefs.aheadDays;
+  if (typeof n !== "number" || !Number.isFinite(n)) return 0;
+  return Math.max(0, Math.floor(n));
 }
 
 export function inferNtDeepRepeatPlanDayFromProgress(
@@ -45,7 +53,7 @@ export function reconcileNtDeepRepeatAheadDays(
   progress: Partial<NtDeepRepeatReadingState> | null | undefined,
   now = new Date(),
 ): ReadingPlanPrefs {
-  const fromPrefs = readAheadDays(prefs);
+  const fromPrefs = aheadDaysFromPrefs(prefs);
   const fromProgress = inferNtDeepRepeatAheadDays(progress, prefs, now);
   const ahead = Math.max(fromPrefs, fromProgress);
   if (ahead === fromPrefs) return prefs;
@@ -54,4 +62,51 @@ export function reconcileNtDeepRepeatAheadDays(
     return rest as ReadingPlanPrefs;
   }
   return { ...prefs, aheadDays: ahead };
+}
+
+export function ntDeepRepeatPlanPointersEqual(
+  a: NtDeepRepeatReadingState,
+  b: NtDeepRepeatReadingState,
+): boolean {
+  return (
+    a.ot.bookId === b.ot.bookId &&
+    a.ot.chapter === b.ot.chapter &&
+    a.curriculumIndex === b.curriculumIndex &&
+    a.dayInSegment === b.dayInSegment &&
+    a.segmentDayTarget === b.segmentDayTarget
+  );
+}
+
+/** 旧约随日历每天 +1 章；新约若未超前则随日历，超前时保留用户手动推进的阶/段内天。 */
+export function alignNtDeepRepeatProgressToCalendar(
+  stored: NtDeepRepeatReadingState,
+  prefs: ReadingPlanPrefs,
+  now = new Date(),
+): NtDeepRepeatReadingState {
+  if (!isNtDeepRepeatPlanId(prefs.planId)) return stored;
+
+  const startedAt = prefs.startedOn?.trim() || stored.startedAt?.trim() || toLocalDateString(now);
+  const pace = prefs.ntDeepRepeatPace ?? stored.pace ?? NT_DEEP_REPEAT_DEFAULT_PACE;
+  const calendarPlanDay = resolveNtDeepRepeatPlanDay(prefs, now) + aheadDaysFromPrefs(prefs);
+  const calendarState = ntDeepRepeatStateForPlanDay(calendarPlanDay, { pace, startedAt });
+  const storedPlanDay = inferNtDeepRepeatPlanDayFromProgress(stored, startedAt);
+  const chaptersReadKeys = normalizeNtDeepRepeatChaptersReadKeys(stored.chaptersReadKeys);
+  const ntAhead = storedPlanDay > calendarPlanDay;
+
+  if (ntAhead) {
+    return normalizeNtDeepRepeatReadingState({
+      ...stored,
+      ot: calendarState.ot,
+      pace,
+      startedAt,
+      chaptersReadKeys,
+    });
+  }
+
+  return normalizeNtDeepRepeatReadingState({
+    ...calendarState,
+    pace,
+    startedAt,
+    chaptersReadKeys,
+  });
 }

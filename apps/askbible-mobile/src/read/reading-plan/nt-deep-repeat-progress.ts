@@ -14,6 +14,10 @@ import {
   type NtDeepRepeatTrack,
 } from "./nt-deep-repeat-reading";
 import { addNtDeepRepeatChapterReadToState } from "./nt-deep-repeat-chapters-read";
+import {
+  alignNtDeepRepeatProgressToCalendar,
+  ntDeepRepeatPlanPointersEqual,
+} from "./nt-deep-repeat-effective-plan-day";
 import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
 import {
   readEffectiveReadingPlanPrefs,
@@ -104,7 +108,13 @@ export async function readNtDeepRepeatProgress(): Promise<NtDeepRepeatReadingSta
     const stored = hasSaved
       ? normalizeNtDeepRepeatReadingState(parseNtDeepRepeatProgress(raw) ?? undefined)
       : createDefaultNtDeepRepeatReadingState();
-    return resolveEffectiveNtDeepRepeatProgress(stored, hasSaved);
+    const base = resolveEffectiveNtDeepRepeatProgress(stored, hasSaved);
+    const prefs = await readEffectiveReadingPlanPrefs();
+    const aligned = alignNtDeepRepeatProgressToCalendar(base, prefs);
+    if (!ntDeepRepeatPlanPointersEqual(base, aligned)) {
+      await replaceNtDeepRepeatProgress(aligned);
+    }
+    return aligned;
   } catch {
     return createFreshNtDeepRepeatProgress();
   }

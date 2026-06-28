@@ -12,6 +12,10 @@ import {
 } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
 import {
+  alignNtDeepRepeatProgressToCalendar,
+  ntDeepRepeatPlanPointersEqual,
+} from "@/lib/read/nt-deep-repeat-effective-plan-day";
+import {
   readEffectiveReadingPlanPrefs,
   toLocalDateString,
 } from "@/lib/read/reading-plan-prefs";
@@ -124,13 +128,14 @@ function refreshStoredSnapshot(): { stored: NtDeepRepeatReadingState; hasSaved: 
 
 function refreshEffectiveSnapshot(): NtDeepRepeatReadingState {
   const { stored, hasSaved } = refreshStoredSnapshot();
-  if (hasSaved) {
-    snapshotEffective = stored;
-    return stored;
+  const base = hasSaved ? stored : snapshotEffective ?? createFreshNtDeepRepeatProgress();
+  const aligned = alignNtDeepRepeatProgressToCalendar(base, readEffectiveReadingPlanPrefs());
+  if (!ntDeepRepeatPlanPointersEqual(base, aligned)) {
+    writeNtDeepRepeatProgress(aligned);
+    return aligned;
   }
-  if (snapshotEffective) return snapshotEffective;
-  snapshotEffective = createFreshNtDeepRepeatProgress();
-  return snapshotEffective;
+  snapshotEffective = aligned;
+  return aligned;
 }
 
 export function getNtDeepRepeatProgressSnapshot(): NtDeepRepeatReadingState {

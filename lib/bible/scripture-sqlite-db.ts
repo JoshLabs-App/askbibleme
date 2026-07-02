@@ -32,14 +32,37 @@ export function scriptureSqlitePath(cwd: string, translationId: string): string 
 
 const cache = new Map<string, { mtimeMs: number; db: Database }>();
 
+/** sql.js 会把整库读进 wasm 堆；无上限缓存多译本易 OOM。默认最多保留 4 本，可用环境变量覆盖。 */
+const MAX_OPEN_SCRIPTURE_DATABASES = Math.max(
+  1,
+  Number.parseInt(process.env.SCRIPTURE_SQLITE_CACHE_MAX ?? "4", 10) || 4,
+);
+
+function touchScriptureCache(id: string, entry: { mtimeMs: number; db: Database }): void {
+  cache.delete(id);
+  cache.set(id, entry);
+}
+
+function closeScriptureCacheEntry(entry: { mtimeMs: number; db: Database }): void {
+  try {
+    entry.db.close();
+  } catch {
+    /* ignore */
+  }
+}
+
+function evictOldestScriptureCacheEntry(): void {
+  const oldestId = cache.keys().next().value as string | undefined;
+  if (!oldestId) return;
+  const entry = cache.get(oldestId);
+  if (entry) closeScriptureCacheEntry(entry);
+  cache.delete(oldestId);
+}
+
 export function invalidateScriptureSqliteCache(translationId?: string): void {
   if (translationId === undefined) {
     for (const [, v] of cache) {
-      try {
-        v.db.close();
-      } catch {
-        /* ignore */
-      }
+      closeScriptureCacheEntry(v);
     }
     cache.clear();
     return;
@@ -47,11 +70,7 @@ export function invalidateScriptureSqliteCache(translationId?: string): void {
   const id = String(translationId || "").trim();
   const hit = cache.get(id);
   if (hit) {
-    try {
-      hit.db.close();
-    } catch {
-      /* ignore */
-    }
+    closeScriptureCacheEntry(hit);
     cache.delete(id);
   }
 }
@@ -63,20 +82,23 @@ export async function getScriptureDatabase(cwd: string, translationId: string): 
   if (!fs.existsSync(abs)) return null;
   const st = fs.statSync(abs);
   const hit = cache.get(id);
-  if (hit && hit.mtimeMs === st.mtimeMs) return hit.db;
+  if (hit && hit.mtimeMs === st.mtimeMs) {
+    touchScriptureCache(id, hit);
+    return hit.db;
+  }
 
   if (hit) {
-    try {
-      hit.db.close();
-    } catch {
-      /* ignore */
-    }
+    closeScriptureCacheEntry(hit);
     cache.delete(id);
+  }
+
+  while (cache.size >= MAX_OPEN_SCRIPTURE_DATABASES) {
+    evictOldestScriptureCacheEntry();
   }
 
   const SQL = await getSqlJsStatic(cwd);
   const buf = fs.readFileSync(abs);
   const db = new SQL.Database(new Uint8Array(buf));
-  cache.set(id, { mtimeMs: st.mtimeMs, db });
+  touchScriptureCache(id, { mtimeMs: st.mtimeMs, db });
   return db;
 }

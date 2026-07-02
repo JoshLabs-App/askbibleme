@@ -26,10 +26,35 @@ import {
   infoEditionWritablePublishedPath,
 } from "@/lib/bible/info-edition-published-path";
 
-function readJsonFile(file: string): InfoEditionV1PublishedFile | null {
-  if (!fs.existsSync(file)) return null;
+// 已发布文件很大（bundled 可达数十 MB）。若每次读经请求都同步 readFileSync + JSON.parse，
+// 会长时间阻塞事件循环并瞬时分配大量堆内存，导致 Render 健康检查超时与 OOM 重启。
+// 这里按「文件路径 + mtime + size」做进程内解析缓存；写入时会主动失效（见 writeInfoEditionV1PublishedSync）。
+type ParsedFileCacheEntry = { mtimeMs: number; size: number; value: InfoEditionV1PublishedFile };
+const parsedFileCache = new Map<string, ParsedFileCacheEntry>();
+
+function statSignature(file: string): string {
   try {
-    return normalizeFile(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
+    const st = fs.statSync(file);
+    return `${st.mtimeMs}:${st.size}`;
+  } catch {
+    return "none";
+  }
+}
+
+function readJsonFile(file: string): InfoEditionV1PublishedFile | null {
+  let st: fs.Stats;
+  try {
+    st = fs.statSync(file);
+  } catch {
+    parsedFileCache.delete(file);
+    return null;
+  }
+  const hit = parsedFileCache.get(file);
+  if (hit && hit.mtimeMs === st.mtimeMs && hit.size === st.size) return hit.value;
+  try {
+    const value = normalizeFile(JSON.parse(fs.readFileSync(file, "utf8")) as unknown);
+    parsedFileCache.set(file, { mtimeMs: st.mtimeMs, size: st.size, value });
+    return value;
   } catch {
     return null;
   }
@@ -153,11 +178,33 @@ function readDiskOverlay(cwd: string): InfoEditionV1PublishedFile | null {
   return null;
 }
 
+// 合并结果缓存：bundled 与 overlay 都未变化时复用同一份，避免重复合并/分配。
+let mergedCache: { signature: string; value: InfoEditionV1PublishedFile } | null = null;
+
+function publishedSignature(cwd: string): string {
+  const parts = [
+    infoEditionBundledPublishedPath(cwd),
+    infoEditionWritablePublishedPath(cwd),
+    infoEditionLegacyWritablePublishedPath(cwd),
+  ].map((p) => (p ? `${p}#${statSignature(p)}` : "-"));
+  return parts.join("|");
+}
+
+/** 写入或需要外部强制刷新时，清空进程内解析/合并缓存。 */
+export function invalidateInfoEditionV1PublishedCache(): void {
+  parsedFileCache.clear();
+  mergedCache = null;
+}
+
 export function readInfoEditionV1PublishedSync(cwd: string): InfoEditionV1PublishedFile {
+  const signature = publishedSignature(cwd);
+  if (mergedCache && mergedCache.signature === signature) return mergedCache.value;
+
   const bundled = readJsonFile(infoEditionBundledPublishedPath(cwd)) ?? defaultFile();
   const overlay = readDiskOverlay(cwd);
-  if (!overlay) return bundled;
-  return mergePublishedFiles(bundled, overlay);
+  const value = overlay ? mergePublishedFiles(bundled, overlay) : bundled;
+  mergedCache = { signature, value };
+  return value;
 }
 
 export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1PublishedFile): void {
@@ -176,6 +223,8 @@ export function writeInfoEditionV1PublishedSync(cwd: string, next: InfoEditionV1
     }
     fs.writeFileSync(tmp, payload, { encoding: "utf8", mode: 0o664 });
     fs.renameSync(tmp, file);
+    // 同毫秒写入可能导致 mtime 不变，写成功后主动失效，保证下次读取拿到最新内容。
+    invalidateInfoEditionV1PublishedCache();
   } catch (e) {
     try {
       if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
@@ -260,17 +309,18 @@ export function publishInfoEditionFromGenerations(
   const entry = generationToPublishedChapter(bookId, chapter, picked, now);
   const file = readInfoEditionV1PublishedSync(cwd);
   const key = infoEditionReaderChapterKey(bookId, chapter, entry.roleId);
-  file.chapters[key] = entry;
-  if (file.pending?.[key]) {
-    const pending = { ...file.pending };
+  // 不要就地修改 readInfoEditionV1PublishedSync 返回的对象（它可能被进程内缓存共享）。
+  const chapters = { ...file.chapters, [key]: entry };
+  let pending = file.pending;
+  if (pending?.[key]) {
+    pending = { ...pending };
     delete pending[key];
-    file.pending = pending;
   }
-  if (file.failed?.[key]) {
-    const failed = { ...file.failed };
+  let failed = file.failed;
+  if (failed?.[key]) {
+    failed = { ...failed };
     delete failed[key];
-    file.failed = failed;
   }
-  writeInfoEditionV1PublishedSync(cwd, file);
+  writeInfoEditionV1PublishedSync(cwd, { ...file, chapters, pending, failed });
   return entry;
 }

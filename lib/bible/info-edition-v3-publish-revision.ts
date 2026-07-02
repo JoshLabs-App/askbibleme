@@ -43,17 +43,18 @@ export function publishInfoEditionV3Revision(
 
   const file = readInfoEditionV1PublishedSync(cwd);
   const key = infoEditionReaderChapterKey(bookId, chapter, opts.roleId);
-  file.chapters[key] = entry;
-  if (file.pending?.[key]) {
-    const pending = { ...file.pending };
+  // 不要就地修改 readInfoEditionV1PublishedSync 返回的对象（进程内缓存可能共享）。
+  const chapters = { ...file.chapters, [key]: entry };
+  let pending = file.pending;
+  if (pending?.[key]) {
+    pending = { ...pending };
     delete pending[key];
-    file.pending = pending;
   }
-  if (file.failed?.[key]) {
-    const failed = { ...file.failed };
+  let failed = file.failed;
+  if (failed?.[key]) {
+    failed = { ...failed };
     delete failed[key];
-    file.failed = failed;
   }
-  writeInfoEditionV1PublishedSync(cwd, file);
+  writeInfoEditionV1PublishedSync(cwd, { ...file, chapters, pending, failed });
   return entry;
 }

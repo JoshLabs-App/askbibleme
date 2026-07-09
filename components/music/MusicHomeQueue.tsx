@@ -46,6 +46,7 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const scrollYRef = useRef(0);
+  const programmaticScrollRef = useRef(false);
   const recenterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recenterAnimRafRef = useRef<number | null>(null);
 
@@ -56,6 +57,13 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
     if (!loopEnabled) return tracks;
     return [...tracks, ...tracks, ...tracks];
   }, [tracks, loopEnabled]);
+
+  const commitScrollY = useCallback((nextY: number) => {
+    if (Math.abs(nextY - scrollYRef.current) < 0.5) return false;
+    scrollYRef.current = nextY;
+    setScrollY(nextY);
+    return true;
+  }, []);
 
   const animateScrollTo = useCallback((targetY: number, durationMs = 4000) => {
     const el = scrollRef.current;
@@ -78,17 +86,20 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
       const t = Math.min(1, elapsed / Math.max(1, durationMs));
       const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       const y = startY + delta * eased;
+      programmaticScrollRef.current = true;
       el.scrollTop = y;
-      scrollYRef.current = y;
-      setScrollY(y);
+      commitScrollY(y);
       if (t < 1) {
         recenterAnimRafRef.current = requestAnimationFrame(step);
       } else {
         recenterAnimRafRef.current = null;
+        requestAnimationFrame(() => {
+          programmaticScrollRef.current = false;
+        });
       }
     };
     recenterAnimRafRef.current = requestAnimationFrame(step);
-  }, []);
+  }, [commitScrollY]);
 
   const scrollActiveToCenter = useCallback(
     (animated: boolean) => {
@@ -102,12 +113,15 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
       if (animated) {
         animateScrollTo(targetY);
       } else {
+        programmaticScrollRef.current = true;
         el.scrollTop = targetY;
-        scrollYRef.current = targetY;
-        setScrollY(targetY);
+        commitScrollY(targetY);
+        requestAnimationFrame(() => {
+          programmaticScrollRef.current = false;
+        });
       }
     },
-    [activeIdx, animateScrollTo, blockHeight, loopEnabled, tracks.length],
+    [activeIdx, animateScrollTo, blockHeight, commitScrollY, loopEnabled, tracks.length],
   );
 
   const scheduleAutoRecenter = useCallback(() => {
@@ -121,6 +135,10 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
+    if (programmaticScrollRef.current) {
+      commitScrollY(el.scrollTop);
+      return;
+    }
     if (recenterAnimRafRef.current != null) {
       cancelAnimationFrame(recenterAnimRafRef.current);
       recenterAnimRafRef.current = null;
@@ -135,10 +153,9 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
         el.scrollTop = y;
       }
     }
-    scrollYRef.current = y;
-    setScrollY(y);
+    commitScrollY(y);
     scheduleAutoRecenter();
-  }, [blockHeight, loopEnabled, scheduleAutoRecenter]);
+  }, [blockHeight, commitScrollY, loopEnabled, scheduleAutoRecenter]);
 
   useEffect(() => {
     scrollYRef.current = scrollY;
@@ -154,11 +171,18 @@ export function MusicHomeQueue({ tracks, activeIdx, albumKey, onSelect }: Props)
     requestAnimationFrame(() => {
       const el = scrollRef.current;
       if (!el) return;
+      if (Math.abs(el.scrollTop - y) < 1) {
+        commitScrollY(y);
+        return;
+      }
+      programmaticScrollRef.current = true;
       el.scrollTop = y;
-      scrollYRef.current = y;
-      setScrollY(y);
+      commitScrollY(y);
+      requestAnimationFrame(() => {
+        programmaticScrollRef.current = false;
+      });
     });
-  }, [albumKey, blockHeight, loopEnabled]);
+  }, [albumKey, blockHeight, commitScrollY, loopEnabled]);
 
   useEffect(() => {
     scrollActiveToCenter(false);

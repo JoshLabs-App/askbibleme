@@ -23,7 +23,6 @@ import {
 } from "@/lib/music/album-playback";
 import { prefetchMusicTrackBundle } from "@/lib/music/prefetch-music-track";
 import {
-  pickRandomShellAudioTrackSrcInAlbum,
   resolveShellMusicEndedAction,
 } from "@/lib/music/shell-music-advance";
 import { getShellDefaultAudioSrc, getShellSceneBoundAudioSrc, pickRandomShellAudioTrackSrc } from "@/lib/music-companion/shell-default-audio-src";
@@ -403,18 +402,35 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   }, []);
 
   const attemptShellPlay = useCallback(
-    async (a: HTMLAudioElement) => {
-      await runBeforeShellPlayHandlers();
-      try {
-        await a.play();
-        setPlaying(true);
-      } catch {
-        setPlaying(false);
-      } finally {
-        await runAfterShellPlayHandlers();
+    (a: HTMLAudioElement) => {
+      const playNow = () => {
+        let playPromise: Promise<void> | undefined;
+        try {
+          playPromise = a.play();
+        } catch (err) {
+          setPlaying(false);
+          void runAfterShellPlayHandlers();
+          return;
+        }
+        void Promise.resolve(playPromise)
+          .then(() => {
+            setPlaying(true);
+          })
+          .catch((err) => {
+            setPlaying(false);
+          })
+          .finally(() => {
+            void runAfterShellPlayHandlers();
+          });
+      };
+
+      if (beforeShellPlayHandlersRef.current.size > 0) {
+        void runBeforeShellPlayHandlers().then(playNow, playNow);
+        return;
       }
+      playNow();
     },
-    [runBeforeShellPlayHandlers, runAfterShellPlayHandlers],
+    [runBeforeShellPlayHandlers, runAfterShellPlayHandlers, setPlaying],
   );
 
   const setShellAudioMuted = useCallback((muted: boolean) => {
@@ -1048,12 +1064,14 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     await attemptShellPlay(a);
   }, [loading, pathname, router, setPlaybackSrc, attemptShellPlay, effectiveVoiceId, setScriptureAudioRepeatMode, playing]);
 
-  const togglePlayMusic = useCallback(async () => {
-    flushSync(() => {
-      setShellAudioHomePrimed(true);
-    });
+  const togglePlayMusic = useCallback(() => {
     const a = audioRef.current;
     if (!a || loading) return;
+    if (!isMusicShellPath(pathname)) {
+      flushSync(() => {
+        setShellAudioHomePrimed(true);
+      });
+    }
 
     const st = storeRef.current;
     const eff = effectiveSrcRef.current.trim();
@@ -1095,27 +1113,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       return;
     }
 
-    const tracks = st?.audioTracks.filter((t) => Boolean(t.src?.trim())) ?? [];
-    if (tracks.length > 1 && playbackOverrideRef.current == null && !devicePlaybackRef.current) {
-      const dur = a.duration;
-      const t0 = a.currentTime;
-      const nearStart = !Number.isFinite(dur) || dur <= 0 || t0 < 0.35;
-      const nearEnd = Number.isFinite(dur) && dur > 0 && t0 >= dur - 0.75;
-      if (nearStart || nearEnd) {
-        const curUrl = (a.currentSrc || a.src || eff).trim();
-        const ns =
-          (st ? pickRandomShellAudioTrackSrcInAlbum(st, curUrl) : null)?.trim() ||
-          pickRandomShellAudioTrackSrc(st!, curUrl)?.trim() ||
-          "";
-        if (ns) {
-          playAfterNextBindRef.current = true;
-          setPlaybackSrc(ns);
-          return;
-        }
-      }
-    }
-
-    await attemptShellPlay(a);
+    void attemptShellPlay(a);
   }, [loading, setPlaybackSrc, attemptShellPlay, setScriptureAudioRepeatMode]);
 
   useEffect(() => {

@@ -85,7 +85,9 @@ export function useMusicTogglePlayMusic({
         }
       }
       const ok = await safePlaySound(sound);
-      if (!ok) {
+      const resumed = ok ? await safeGetSoundStatus(sound) : null;
+      const resumedPlaying = !!(resumed && resumed.isLoaded ? resumed.isPlaying : false);
+      if (!ok || !resumed?.isLoaded || !resumedPlaying) {
         await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
         await playTrackAt(playIdx);
         return;

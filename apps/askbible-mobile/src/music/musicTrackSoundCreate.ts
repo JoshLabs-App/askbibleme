@@ -1,10 +1,9 @@
 import { Audio } from "expo-av";
 import type { AVPlaybackSource } from "expo-av";
-import { shellSoundDownloadFirst } from "../audio/shellAudioMode";
+import type { AVPlaybackStatus } from "expo-av";
+import { configureShellAudioMode, shellSoundDownloadFirst } from "../audio/shellAudioMode";
 import {
   logShellSoundError,
-  safeGetSoundStatus,
-  safePlaySound,
   safeStopAndUnloadSound,
 } from "../audio/safeShellSound";
 import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
@@ -12,6 +11,7 @@ import { createMusicPlaybackStatusHandler } from "./musicPlaybackStatus";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import type { PlaybackTrack } from "./types";
 import { applyMusicTrackStartPosition } from "./musicTrackStartPosition";
+import { resolveCalmLoopProfile } from "./musicCalmPlayback";
 
 type CreateArgs = {
   bridge: MusicPlayTrackBridge;
@@ -27,10 +27,12 @@ type CreateArgs = {
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
+  preloadedSound?: Audio.Sound | null;
+  preloadedStatus?: AVPlaybackStatus | null;
 };
 
 export type CreatedMusicTrackSound =
-  | { ok: true; sound: Audio.Sound }
+  | { ok: true; sound: Audio.Sound; status: AVPlaybackStatus }
   | { ok: false; stale: true }
   | { ok: false; stale: false; failedTrackId: string };
 
@@ -49,6 +51,8 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
     setMusicCurrentSec,
     setMusicDurationSec,
     persistMusicResume,
+    preloadedSound = null,
+    preloadedStatus = null,
   } = args;
 
   const {
@@ -71,79 +75,146 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
   } = bridge;
 
   let sound: Audio.Sound;
+  let loadedStatus: AVPlaybackStatus | null = null;
   try {
-    const created = await Audio.Sound.createAsync(
-      avSource,
-      {
-        shouldPlay: false,
-        progressUpdateIntervalMillis: 250,
-        volume: musicGainRef.current,
-        isMuted: false,
-      },
-      createMusicPlaybackStatusHandler({
-        soundId,
-        epoch,
+    const attachHandler = async (target: Audio.Sound) => {
+      try {
+        await target.setOnPlaybackStatusUpdate(
+          createMusicPlaybackStatusHandler({
+            soundId,
+            epoch,
+            track,
+            tracks,
+            activeSoundIdRef,
+            playbackEpochRef,
+            playbackModeRef,
+            soundRef,
+            musicMaxProgressMsRef,
+            musicSoundActivatedAtRef,
+            calmLoopTransitioningRef,
+            lastMusicProgressSecRef,
+            lastMusicPersistMsRef,
+            musicRepeatModeRef,
+            musicGainRef,
+            trackIndexRef,
+            playTrackAtRef,
+            syncPlayingState,
+            setPlaying,
+            setMusicCurrentSec,
+            setMusicDurationSec,
+            persistMusicResume,
+          }),
+        );
+      } catch {
+        /* ignore handler attach failures */
+      }
+    };
+
+    let reusePreloaded = preloadedSound;
+    if (reusePreloaded) {
+      sound = reusePreloaded;
+      await attachHandler(sound);
+      loadedStatus = preloadedStatus ?? (await sound.getStatusAsync());
+    }
+    if (!reusePreloaded) {
+      const created = await Audio.Sound.createAsync(
+        avSource,
+        {
+          shouldPlay: false,
+          progressUpdateIntervalMillis: 250,
+          volume: musicGainRef.current,
+          isMuted: false,
+        },
+        createMusicPlaybackStatusHandler({
+          soundId,
+          epoch,
+          track,
+          tracks,
+          activeSoundIdRef,
+          playbackEpochRef,
+          playbackModeRef,
+          soundRef,
+          musicMaxProgressMsRef,
+          musicSoundActivatedAtRef,
+          calmLoopTransitioningRef,
+          lastMusicProgressSecRef,
+          lastMusicPersistMsRef,
+          musicRepeatModeRef,
+          musicGainRef,
+          trackIndexRef,
+          playTrackAtRef,
+          syncPlayingState,
+          setPlaying,
+          setMusicCurrentSec,
+          setMusicDurationSec,
+          persistMusicResume,
+        }),
+        shellSoundDownloadFirst(avSource),
+      );
+      sound = created.sound;
+      loadedStatus = created.status;
+    } else {
+      // `reusePreloaded` still points to a loaded sound.
+      sound = reusePreloaded;
+    }
+    if (reusePreloaded && musicGainRef.current !== 1) {
+      try {
+        await Promise.all([sound.setIsMutedAsync(false), sound.setVolumeAsync(musicGainRef.current)]);
+      } catch {
+        /* ignore volume prep failures */
+      }
+    }
+    const resumeSecForTrackRaw =
+      resumeTrackIdRef.current === track.id ? Math.max(0, resumePositionSecRef.current) : 0;
+    const calmLoopProfileForTrack = resolveCalmLoopProfile(track);
+    const needsStartPositionSync =
+      resumeSecForTrackRaw > 0 || (calmLoopProfileForTrack?.startOffsetMs ?? 0) > 0;
+    if (needsStartPositionSync) {
+      await applyMusicTrackStartPosition({
+        sound,
         track,
-        tracks,
-        activeSoundIdRef,
-        playbackEpochRef,
-        playbackModeRef,
-        soundRef,
-        musicMaxProgressMsRef,
-        musicSoundActivatedAtRef,
-        calmLoopTransitioningRef,
+        resumeTrackIdRef,
+        resumePositionSecRef,
         lastMusicProgressSecRef,
-        lastMusicPersistMsRef,
-        musicRepeatModeRef,
-        musicGainRef,
-        trackIndexRef,
-        playTrackAtRef,
-        syncPlayingState,
-        setPlaying,
         setMusicCurrentSec,
         setMusicDurationSec,
         persistMusicResume,
-      }),
-      shellSoundDownloadFirst(avSource),
-    );
-    sound = created.sound;
-    try {
-      await sound.setIsMutedAsync(false);
-      await sound.setVolumeAsync(musicGainRef.current);
-    } catch {
-      /* ignore volume prep failures */
-    }
-    const loadedStatus = await safeGetSoundStatus(sound);
-    await applyMusicTrackStartPosition({
-      sound,
-      track,
-      resumeTrackIdRef,
-      resumePositionSecRef,
-      lastMusicProgressSecRef,
-      setMusicCurrentSec,
-      setMusicDurationSec,
-      persistMusicResume,
-      loadedStatus,
-    });
-    if (shouldPlay) {
-      const ok = await safePlaySound(sound);
-      if (!ok) {
-        syncPlayingState(false);
-        await safeStopAndUnloadSound(sound);
-        return { ok: false, stale: false, failedTrackId: track.id };
+        loadedStatus,
+      });
+    } else {
+      lastMusicProgressSecRef.current = -1;
+      setMusicCurrentSec(0);
+      if (track.durationSec != null && Number.isFinite(track.durationSec)) {
+        setMusicDurationSec(Math.max(0, track.durationSec));
       }
-      const playingStatus = await safeGetSoundStatus(sound);
-      if (playingStatus?.isLoaded) {
+    }
+    if (shouldPlay) {
+      try {
+        await sound.playAsync();
+      } catch (err) {
+        try {
+          await configureShellAudioMode();
+          await sound.playAsync();
+        } catch (retryErr) {
+          logShellSoundError("play-retry", retryErr);
+          logShellSoundError("play", err);
+          syncPlayingState(false);
+          await safeStopAndUnloadSound(sound);
+          return { ok: false, stale: false, failedTrackId: track.id };
+        }
+      }
+      if (loadedStatus?.isLoaded) {
         syncShellMediaSessionExplicit({
           title: track.title,
           artist: track.artist,
           album: track.album,
+          assetUri: track.src,
           artworkUri: track.artworkUri,
-          durationSec: playingStatus.durationMillis
-            ? playingStatus.durationMillis / 1000
+          durationSec: loadedStatus.durationMillis
+            ? loadedStatus.durationMillis / 1000
             : track.durationSec ?? 0,
-          positionSec: playingStatus.positionMillis / 1000,
-          playing: playingStatus.isPlaying,
+          positionSec: loadedStatus.positionMillis / 1000,
+          playing: true,
         });
       }
     }
@@ -161,5 +232,5 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
     return { ok: false, stale: true };
   }
 
-  return { ok: true, sound };
+  return { ok: true, sound, status: loadedStatus ?? (await sound.getStatusAsync()) };
 }

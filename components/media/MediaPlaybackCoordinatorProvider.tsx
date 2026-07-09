@@ -91,8 +91,8 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
   }, []);
 
   useEffect(() => {
+    if (policy !== "tvCoexist") return;
     return registerBeforeShellPlayHandler(async () => {
-      if (policy !== "tvCoexist") return;
       setShellAudioReserved(true);
       pauseRegisteredVideos();
       await waitTwoAnimationFrames();

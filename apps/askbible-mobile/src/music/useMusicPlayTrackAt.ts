@@ -1,3 +1,4 @@
+import { Audio } from "expo-av";
 import { useCallback } from "react";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import {
@@ -74,6 +75,25 @@ export function useMusicPlayTrackAt({
       });
       if (!prepared.ok) return false;
 
+      let preloadedSound: Audio.Sound | null = null;
+      let preloadedStatus: import("expo-av").AVPlaybackStatus | null = null;
+      const preloaded = bridge.preloadedMusicSoundRef.current;
+      if (preloaded?.trackId === prepared.track.id) {
+        preloadedSound = preloaded.sound;
+        preloadedStatus = preloaded.status;
+        bridge.preloadedMusicSoundRef.current = null;
+      } else {
+        const pendingPreload = bridge.preloadedMusicSoundWorkRef.current;
+        if (pendingPreload?.trackId === prepared.track.id) {
+          const ready = await pendingPreload.promise;
+          if (ready?.trackId === prepared.track.id) {
+            bridge.preloadedMusicSoundWorkRef.current = null;
+            preloadedSound = ready.sound;
+            preloadedStatus = ready.status;
+          }
+        }
+      }
+
       endMusicSession();
       const loaded: LoadedMusicTrack = await loadAndStartMusicTrackSound({
         bridge,
@@ -91,6 +111,8 @@ export function useMusicPlayTrackAt({
         setPlaybackMode,
         setMusicCurrentSec,
         setMusicDurationSec,
+        preloadedSound,
+        preloadedStatus,
       });
       if (loaded.ok) return true;
       if (loaded.stale) return false;

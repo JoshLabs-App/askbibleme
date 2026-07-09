@@ -1,7 +1,7 @@
 import { Audio } from "expo-av";
 import type { AVPlaybackSource } from "expo-av";
+import type { AVPlaybackStatus } from "expo-av";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
-import { safeGetSoundStatus } from "../audio/safeShellSound";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import type { PlaybackTrack } from "./types";
 import { trackTelemetry } from "../telemetry/client";
@@ -26,6 +26,8 @@ type LoadArgs = {
   setPlaybackMode: (mode: PlaybackMode) => void;
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
+  preloadedSound?: Audio.Sound | null;
+  preloadedStatus?: AVPlaybackStatus | null;
 };
 
 export type LoadedMusicTrack =
@@ -50,6 +52,8 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
     setPlaybackMode,
     setMusicCurrentSec,
     setMusicDurationSec,
+    preloadedSound = null,
+    preloadedStatus = null,
   } = args;
 
   const {
@@ -92,24 +96,26 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
     generation,
     epoch,
     soundId,
-    shouldPlay,
-    syncPlayingState,
-    setPlaying,
-    setMusicCurrentSec,
-    setMusicDurationSec,
+      shouldPlay,
+      syncPlayingState,
+      setPlaying,
+      setMusicCurrentSec,
+      setMusicDurationSec,
     persistMusicResume,
+    preloadedSound,
+    preloadedStatus,
   });
   if (!created.ok) return created;
 
   const { sound } = created;
+  const { status: readyStatus } = created;
   soundRef.current = sound;
   setTrackIndex(index);
   setPlaybackMode("music");
   playbackModeRef.current = "music";
   scriptureSrcRef.current = null;
   musicSoundActivatedAtRef.current = Date.now();
-  const readyStatus = await safeGetSoundStatus(sound);
-  syncPlayingState(Boolean(readyStatus?.isLoaded && readyStatus.isPlaying));
+  syncPlayingState(shouldPlay ? true : Boolean(readyStatus.isLoaded && readyStatus.isPlaying));
   failedTrackIdsRef.current.delete(track.id.trim());
   resumeTrackIdRef.current = track.id;
   resumePositionSecRef.current = 0;

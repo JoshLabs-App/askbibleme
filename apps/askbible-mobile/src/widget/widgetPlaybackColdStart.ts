@@ -61,7 +61,7 @@ function sleep(ms: number): Promise<void> {
 
 async function waitForMusicPlaying(
   read: () => Pick<WidgetPlaybackColdStartArgs, "playing" | "playbackMode">,
-  timeoutMs = 5000,
+  timeoutMs = 2000,
 ): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -140,6 +140,7 @@ export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): v
           log("music not ready", { tracks: latest.tracks.length, trackIndex: latest.trackIndex });
           return;
         }
+        handledPending = true;
         inFlight = true;
         try {
           log("music start prepare");
@@ -148,16 +149,18 @@ export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): v
           log("music playTrackAt begin", { playIdx });
           const started = await latest.playTrackAt(playIdx);
           log("music playTrackAt result", { started });
-          if (!started) return;
-          log("music waitForPlaying begin");
-          const ok = await waitForMusicPlaying(() => argsRef.current);
-          log("music waitForPlaying result", { ok });
-          if (ok) {
-            handledPending = true;
-            getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
-            getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
-            log("music cold start handled");
+          if (!started) {
+            handledPending = false;
+            return;
           }
+          getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
+          getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
+          log("music cold start handled");
+          void (async () => {
+            log("music waitForPlaying begin");
+            const ok = await waitForMusicPlaying(() => argsRef.current, 900);
+            log("music waitForPlaying result", { ok });
+          })();
         } finally {
           inFlight = false;
         }
@@ -172,17 +175,20 @@ export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): v
           log("reading already playing, handled immediately");
           return;
         }
+        handledPending = true;
         inFlight = true;
         try {
           log("reading start begin");
           const started = await latest.startReadingAudio();
           log("reading start result", { started });
-          if (!started) return;
+          if (!started) {
+            handledPending = false;
+            return;
+          }
           log("reading waitForPlaying begin");
           const ok = await waitForScripturePlaying(() => argsRef.current);
           log("reading waitForPlaying result", { ok });
           if (ok) {
-            handledPending = true;
             getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
             getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
             log("reading cold start handled");
@@ -193,8 +199,8 @@ export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): v
       }
     };
 
-    const initialDelayMs = Platform.OS === "android" ? 250 : 900;
-    const intervalMs = Platform.OS === "android" ? 600 : 500;
+    const initialDelayMs = Platform.OS === "android" ? 50 : 900;
+    const intervalMs = Platform.OS === "android" ? 250 : 500;
     log("scheduling attempts", { initialDelayMs, intervalMs });
     const initialDelay = setTimeout(() => void attempt(), initialDelayMs);
     const id = setInterval(() => void attempt(), intervalMs);

@@ -2,9 +2,10 @@ import { useState } from "react";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 import type { MusicPlaybackMode, MusicRepeatMode, ShellSleepTimerMinutes } from "./musicPlaybackTypes";
 import type { MusicCompanionStore } from "./types";
+import { getBundledMusicCompanionStore } from "./musicCompanionBundled";
 
 export function useMusicPlaybackProviderState() {
-  const [store, setStore] = useState<MusicCompanionStore | null>(null);
+  const [store, setStore] = useState<MusicCompanionStore | null>(() => getBundledMusicCompanionStore());
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(true);

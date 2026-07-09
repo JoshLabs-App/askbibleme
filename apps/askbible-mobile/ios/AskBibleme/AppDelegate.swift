@@ -2,6 +2,7 @@ import Expo
 import EXNotifications
 import React
 import ReactAppDependencyProvider
+import AVFoundation
 
 private final class ReadingAlarmNotificationDelegate: NSObject, NotificationDelegate {
   static let shared = ReadingAlarmNotificationDelegate()
@@ -25,6 +26,27 @@ public class AppDelegate: ExpoAppDelegate {
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
+  private static let debugLogFileName = "askbible-shell-media.log"
+
+  private func appendDebugLine(_ message: String) {
+    let timestamp = ISO8601DateFormatter().string(from: Date())
+    let line = "[\(timestamp)] \(message)\n"
+    guard let data = line.data(using: .utf8) else { return }
+    do {
+      let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent(Self.debugLogFileName)
+      if FileManager.default.fileExists(atPath: url.path) {
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: data)
+      } else {
+        try data.write(to: url, options: .atomic)
+      }
+    } catch {
+      // Diagnostics should never affect startup.
+    }
+  }
 
   public override func application(
     _ application: UIApplication,
@@ -46,6 +68,29 @@ public class AppDelegate: ExpoAppDelegate {
       launchOptions: launchOptions)
     NotificationCenterManager.shared.addDelegate(ReadingAlarmNotificationDelegate.shared)
     application.beginReceivingRemoteControlEvents()
+    do {
+      let session = AVAudioSession.sharedInstance()
+      if #available(iOS 13.0, *) {
+        try session.setCategory(
+          .playback,
+          mode: .default,
+          policy: .longFormAudio,
+          options: [.allowBluetooth, .allowAirPlay]
+        )
+      } else {
+        try session.setCategory(
+          .playback,
+          mode: .default,
+          options: [.allowBluetooth, .allowAirPlay]
+        )
+      }
+      try session.setActive(true)
+      NSLog("[askbible-shell-media] app delegate audio session active")
+      appendDebugLine("app delegate audio session active")
+    } catch {
+      NSLog("[askbible-shell-media] app delegate audio session failed: %@", error.localizedDescription)
+      appendDebugLine("app delegate audio session failed: \(error.localizedDescription)")
+    }
     DispatchQueue.main.async { [weak window] in
       window?.rootViewController?.becomeFirstResponder()
     }

@@ -57,12 +57,14 @@ export default function RootLayout() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [shellFeaturesReady, setShellFeaturesReady] = useState(false);
   const appReady = widgetPlaybackBoot || fontsReady;
-  console.warn("[root-layout] render", {
-    widgetPlaybackBoot,
-    fontsReady,
-    shellFeaturesReady,
-    appReady,
-  });
+  if (__DEV__) {
+    console.warn("[root-layout] render", {
+      widgetPlaybackBoot,
+      fontsReady,
+      shellFeaturesReady,
+      appReady,
+    });
+  }
 
   useEffect(() => {
     logStartupTiming("root", "mounted");
@@ -121,67 +123,67 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ShellErrorBoundary>
-      <LocaleProvider>
-      <MemberAuthProvider>
-      <ReadingPlanBootstrapBridge />
-      <MemberReadingSyncBridge />
-      <TelemetryProvider>
-      <ShellNavMenuProvider>
-          {appReady ? (
-            <MusicPlaybackProvider>
-            <>
-            <AndroidImmersiveSystemBars enabled={appReady} />
-            <StatusBar style="dark" />
-            <Stack
-              screenOptions={{
-                contentStyle: { flex: 1, backgroundColor: theme.canvas },
-              }}
-            >
-              <Stack.Screen
-                name="(tabs)"
-                options={{ headerShown: false, contentStyle: { flex: 1, backgroundColor: "transparent" } }}
-              />
-              <Stack.Screen name="scenes" options={{ headerShown: false, animation: "slide_from_right" }} />
-              <Stack.Screen name="relax" options={{ headerShown: false }} />
-              <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
-              <Stack.Screen
-                name="register"
-                options={{
-                  headerShown: false,
-                  animation: "slide_from_right",
-                  contentStyle: { flex: 1, backgroundColor: "transparent" },
-                }}
-              />
-              <Stack.Screen
-                name="login"
-                options={{
-                  headerShown: false,
-                  animation: "slide_from_right",
-                  contentStyle: { flex: 1, backgroundColor: "transparent" },
-                }}
-              />
-            </Stack>
-            <PlanFlowPlaybackBridge />
-            <WidgetReadDeepLinkBridge enabled />
-            {shellFeaturesReady ? (
-              <>
-                <NotificationSetupBridge enabled />
-                <ReadingAlarmBridge enabled />
-                <ShellMenuButton />
-                <ShellInsetClock />
-                <ShellNavDrawer />
-                {showOnboarding ? <OnboardingDevotionIntro onComplete={() => setShowOnboarding(false)} /> : null}
-              </>
-            ) : null}
-            </>
-            </MusicPlaybackProvider>
-          ) : (
-            <AppLogoSplash />
-          )}
-      </ShellNavMenuProvider>
-      </TelemetryProvider>
-      </MemberAuthProvider>
-      </LocaleProvider>
+        <MusicPlaybackProvider>
+          <LocaleProvider>
+            <MemberAuthProvider>
+              <ReadingPlanBootstrapBridge />
+              <MemberReadingSyncBridge />
+              <TelemetryProvider>
+                <ShellNavMenuProvider>
+                  {appReady ? (
+                    <>
+                      <AndroidImmersiveSystemBars enabled={appReady} />
+                      <StatusBar style="dark" />
+                      <Stack
+                        screenOptions={{
+                          contentStyle: { flex: 1, backgroundColor: theme.canvas },
+                        }}
+                      >
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{ headerShown: false, contentStyle: { flex: 1, backgroundColor: "transparent" } }}
+                        />
+                        <Stack.Screen name="scenes" options={{ headerShown: false, animation: "slide_from_right" }} />
+                        <Stack.Screen name="relax" options={{ headerShown: false }} />
+                        <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
+                        <Stack.Screen
+                          name="register"
+                          options={{
+                            headerShown: false,
+                            animation: "slide_from_right",
+                            contentStyle: { flex: 1, backgroundColor: "transparent" },
+                          }}
+                        />
+                        <Stack.Screen
+                          name="login"
+                          options={{
+                            headerShown: false,
+                            animation: "slide_from_right",
+                            contentStyle: { flex: 1, backgroundColor: "transparent" },
+                          }}
+                        />
+                      </Stack>
+                      <PlanFlowPlaybackBridge />
+                      <WidgetReadDeepLinkBridge enabled />
+                      {shellFeaturesReady ? (
+                        <>
+                          <NotificationSetupBridge enabled />
+                          <ReadingAlarmBridge enabled />
+                          <ShellMenuButton />
+                          <ShellInsetClock />
+                          <ShellNavDrawer />
+                          {showOnboarding ? <OnboardingDevotionIntro onComplete={() => setShowOnboarding(false)} /> : null}
+                        </>
+                      ) : null}
+                    </>
+                  ) : (
+                    <AppLogoSplash />
+                  )}
+                </ShellNavMenuProvider>
+              </TelemetryProvider>
+            </MemberAuthProvider>
+          </LocaleProvider>
+        </MusicPlaybackProvider>
       </ShellErrorBoundary>
     </SafeAreaProvider>
   );

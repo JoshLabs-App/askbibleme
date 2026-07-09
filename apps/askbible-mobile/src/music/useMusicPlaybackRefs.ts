@@ -1,10 +1,23 @@
-import { Audio } from "expo-av";
+import { Audio, type AVPlaybackStatus } from "expo-av";
 import { useMemo, useRef } from "react";
 import type { MusicCompanionStore } from "./types";
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
 
+export type PreloadedMusicSound = {
+  trackId: string;
+  sound: Audio.Sound;
+  status: AVPlaybackStatus;
+};
+
+export type PreloadedMusicSoundWork = {
+  trackId: string;
+  promise: Promise<PreloadedMusicSound | null>;
+};
+
 export function useMusicPlaybackRefs() {
   const soundRef = useRef<Audio.Sound | null>(null);
+  const preloadedMusicSoundRef = useRef<PreloadedMusicSound | null>(null);
+  const preloadedMusicSoundWorkRef = useRef<PreloadedMusicSoundWork | null>(null);
   const sleepTimerDeadlineRef = useRef<number | null>(null);
   const activeSoundIdRef = useRef(0);
   const playbackEpochRef = useRef(0);
@@ -32,6 +45,8 @@ export function useMusicPlaybackRefs() {
   return useMemo(
     () => ({
       soundRef,
+      preloadedMusicSoundRef,
+      preloadedMusicSoundWorkRef,
       sleepTimerDeadlineRef,
       activeSoundIdRef,
       playbackEpochRef,
@@ -58,6 +73,8 @@ export function useMusicPlaybackRefs() {
     }),
     [
       soundRef,
+      preloadedMusicSoundRef,
+      preloadedMusicSoundWorkRef,
       sleepTimerDeadlineRef,
       activeSoundIdRef,
       playbackEpochRef,

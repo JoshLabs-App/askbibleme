@@ -4,7 +4,10 @@ import { safeStopAndUnloadSound } from "../audio/safeShellSound";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
 export function useMusicShellUnload(
-  refs: Pick<MusicPlaybackRefs, "playbackEpochRef" | "activeSoundIdRef" | "soundRef">,
+  refs: Pick<
+    MusicPlaybackRefs,
+    "playbackEpochRef" | "activeSoundIdRef" | "soundRef"
+  >,
 ) {
   return useCallback(async () => {
     refs.playbackEpochRef.current += 1;

@@ -13,6 +13,7 @@ export type MusicTrackPlayback = {
 };
 
 const bundledModuleUriCache = new Map<number, string>();
+const bundledModuleUriInFlightCache = new Map<number, Promise<string | null>>();
 const IOS_SIM_BUNDLED_MUSIC_CACHE = `${FileSystem.cacheDirectory ?? ""}askbible-bundled-music/`;
 
 function normalizeIosHttpUri(uri: string): string {
@@ -39,31 +40,41 @@ export function musicTrackAvSource(track: MusicTrackPlayback | null): AVPlayback
 export async function warmBundledModuleUri(bundledModule: number): Promise<string | null> {
   const cached = bundledModuleUriCache.get(bundledModule);
   if (cached) return cached;
-  try {
-    const [asset] = await Asset.loadAsync(bundledModule);
-    const localUri = (asset?.localUri || asset?.uri || "").trim();
-    if (localUri) {
-      if (Platform.OS === "ios" && isIosSimulator() && IOS_SIM_BUNDLED_MUSIC_CACHE) {
-        try {
-          await FileSystem.makeDirectoryAsync(IOS_SIM_BUNDLED_MUSIC_CACHE, { intermediates: true });
-          const dest = `${IOS_SIM_BUNDLED_MUSIC_CACHE}${bundledModule}.mp3`;
-          const info = await FileSystem.getInfoAsync(dest);
-          if (!info.exists) {
-            await FileSystem.copyAsync({ from: localUri, to: dest });
+  const inFlight = bundledModuleUriInFlightCache.get(bundledModule);
+  if (inFlight) return inFlight;
+
+  const loadPromise = (async () => {
+    try {
+      const [asset] = await Asset.loadAsync(bundledModule);
+      const localUri = (asset?.localUri || asset?.uri || "").trim();
+      if (localUri) {
+        if (Platform.OS === "ios" && isIosSimulator() && IOS_SIM_BUNDLED_MUSIC_CACHE) {
+          try {
+            await FileSystem.makeDirectoryAsync(IOS_SIM_BUNDLED_MUSIC_CACHE, { intermediates: true });
+            const dest = `${IOS_SIM_BUNDLED_MUSIC_CACHE}${bundledModule}.mp3`;
+            const info = await FileSystem.getInfoAsync(dest);
+            if (!info.exists) {
+              await FileSystem.copyAsync({ from: localUri, to: dest });
+            }
+            bundledModuleUriCache.set(bundledModule, dest);
+            return dest;
+          } catch {
+            /* fall through to Asset localUri */
           }
-          bundledModuleUriCache.set(bundledModule, dest);
-          return dest;
-        } catch {
-          /* fall through to Asset localUri */
         }
+        bundledModuleUriCache.set(bundledModule, localUri);
+        return localUri;
       }
-      bundledModuleUriCache.set(bundledModule, localUri);
-      return localUri;
+    } catch {
+      /* ignore warm failures */
+    } finally {
+      bundledModuleUriInFlightCache.delete(bundledModule);
     }
-  } catch {
-    /* ignore warm failures */
-  }
-  return null;
+    return null;
+  })();
+
+  bundledModuleUriInFlightCache.set(bundledModule, loadPromise);
+  return loadPromise;
 }
 
 /** 实际创建 Sound 前的播放源：bundled 先预热为本地 file URI（iOS 模拟器上 require 模块常无声）。 */

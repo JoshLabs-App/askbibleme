@@ -127,6 +127,7 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
       title: `${chapter.bookName} ${chapter.chapter}`,
       artist: "AskBible.me",
       album: chapter.translationId,
+      assetUri: chapter.chapterAudioSrc,
       durationSec: playingStatus.durationMillis != null ? playingStatus.durationMillis / 1000 : 0,
       positionSec: playingStatus.positionMillis / 1000,
       playing: playingStatus.isPlaying,

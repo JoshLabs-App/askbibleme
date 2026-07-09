@@ -87,13 +87,15 @@ export function useShellMediaControlsSync(args: Args): void {
   setShellMediaSessionLiveArgs(args);
 
   useEffect(() => {
-    console.warn("[shell-media] sync hook mounted", {
-      platform: Platform.OS,
-      loading: args.loading,
-      mode: args.playbackMode,
-      playing: args.playing,
-    });
-    return subscribeShellMediaRemoteCommands({
+    if (__DEV__) {
+      console.warn("[shell-media] sync hook mounted", {
+        platform: Platform.OS,
+        loading: args.loading,
+        mode: args.playbackMode,
+        playing: args.playing,
+      });
+    }
+    const unsubscribe = subscribeShellMediaRemoteCommands({
       // 锁屏 / 通知媒体键：对当前正在播放的内容做纯暂停/续播（尊重当前模式）。
       onPlay: () => {
         const latest = argsRef.current;
@@ -151,6 +153,12 @@ export function useShellMediaControlsSync(args: Args): void {
         void argsRef.current.togglePlayMusic();
       },
     });
+    return () => {
+      if (__DEV__) {
+        console.warn("[shell-media] sync hook cleanup");
+      }
+      unsubscribe();
+    };
   }, []);
 
   useWidgetPlaybackColdStart({

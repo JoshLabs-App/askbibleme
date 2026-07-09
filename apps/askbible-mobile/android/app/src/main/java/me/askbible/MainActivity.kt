@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.WindowManager
 
 import androidx.core.view.WindowCompat
@@ -23,6 +24,10 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
+  private companion object {
+    const val TAG = "AskBibleMainActivity"
+  }
+
   private val alarmContinueHandler = Handler(Looper.getMainLooper())
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +35,7 @@ class MainActivity : ReactActivity() {
     // coloring the background, status bar, and navigation bar.
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
+    Log.i(TAG, "onCreate saved=${savedInstanceState != null}")
     super.onCreate(null)
     applyEdgeToEdgeWindow()
     handleReadingAlarmIntent(intent)
@@ -38,6 +44,7 @@ class MainActivity : ReactActivity() {
 
   override fun onResume() {
     super.onResume()
+    Log.i(TAG, "onResume")
     applyEdgeToEdgeWindow()
     if (intent != null && intent.getBooleanExtra(ReadingAlarmReceiver.EXTRA_AUTO_PLAY, false)) {
       prepareForReadingAlarmHandoff()
@@ -73,8 +80,17 @@ class MainActivity : ReactActivity() {
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
     setIntent(intent)
+    Log.i(
+      TAG,
+      "onNewIntent widget=${intent?.getBooleanExtra(WidgetPlaybackBridge.EXTRA_WIDGET_PLAYBACK, false) == true}",
+    )
     handleReadingAlarmIntent(intent)
     handleWidgetPlaybackIntent(intent)
+  }
+
+  override fun onDestroy() {
+    Log.i(TAG, "onDestroy")
+    super.onDestroy()
   }
 
   private fun handleWidgetPlaybackIntent(intent: Intent?) {

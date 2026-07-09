@@ -121,7 +121,7 @@ node "$ROOT/scripts/ios/ensure-ios-development-signing.mjs"
 node "$ROOT/scripts/ios/patch-ios-debug-signing.mjs"
 
 echo ""
-echo "→ [4/4] 编译并安装到 ${IOS_DEVICE}（${IOS_UDID}）"
+echo "→ [4/4] 编译并安装到 ${IOS_DEVICE}（${IOS_DEVICE_UDID}）"
 echo ""
 
 set +e
@@ -132,11 +132,11 @@ set -e
 APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/AskBibleme-"*/Build/Products/Debug-iphoneos/AskBibleme.app
 if [[ $RUN_EXIT -ne 0 ]] && compgen -G "$APP_PATH" > /dev/null; then
   echo "→ expo 安装卡住/失败，改用 devicectl 安装…"
-  xcrun devicectl device install app --device "$IOS_UDID" "$(ls -d $APP_PATH | head -1)"
+  xcrun devicectl device install app --device "$IOS_DEVICE_UDID" "$(ls -d $APP_PATH | head -1)"
 fi
 
 echo "→ 启动 App …"
-xcrun devicectl device process launch --device "$IOS_UDID" me.askbible 2>/dev/null || true
+xcrun devicectl device process launch --device "$IOS_DEVICE_UDID" me.askbible 2>/dev/null || true
 
 echo ""
 echo "✓ 开发版已安装。请保持本终端运行（Metro）。"

@@ -77,13 +77,15 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
 
   const { checkMusicCatalogUpdate, downloadMusicCatalogUpdate } = catalog;
 
-  console.warn("[music-provider] render", {
-    loading,
-    mode: playbackMode,
-    playing,
-    tracks: tracks.length,
-    trackIndex,
-  });
+  if (__DEV__) {
+    console.warn("[music-provider] render", {
+      loading,
+      mode: playbackMode,
+      playing,
+      tracks: tracks.length,
+      trackIndex,
+    });
+  }
 
   const shell = useMusicPlaybackShellWiring({
     refs,

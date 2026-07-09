@@ -10,6 +10,7 @@ export type ShellMediaSessionPayload = {
   title: string;
   artist: string;
   album?: string;
+  assetUri?: string | null;
   artworkUri?: string | null;
   durationSec: number;
   positionSec: number;
@@ -21,7 +22,7 @@ type ShellMediaControlsNativeModule = {
   clearSession?: () => void | Promise<void>;
 };
 
-const MODULE_NAME = "AskBibleShellMediaControls";
+const MODULE_NAMES = ["AskBibleShellMediaControls", "AskbibleShellMediaControls"] as const;
 
 type ExpoHostGlobal = typeof globalThis & {
   expo?: { modules?: Record<string, ShellMediaControlsNativeModule | undefined> };
@@ -29,9 +30,10 @@ type ExpoHostGlobal = typeof globalThis & {
 
 type RemoteSubscription = { remove: () => void };
 
-let cachedModule: ShellMediaControlsNativeModule | null | undefined;
+let cachedModule: ShellMediaControlsNativeModule | undefined;
 let lastSessionPayloadKey: string | null = null;
 let lastSessionCleared = false;
+let lastMissingModuleWarnAt = 0;
 
 function isUsableShellMediaModule(
   mod: ShellMediaControlsNativeModule | null | undefined,
@@ -41,45 +43,54 @@ function isUsableShellMediaModule(
 
 /** Expo 54 + New Architecture：优先读 `globalThis.expo.modules`（与 copy-scripture-verse-clipboard 同路）。 */
 function getNativeModule(): ShellMediaControlsNativeModule | null {
-  if (cachedModule !== undefined) return cachedModule;
+  if (cachedModule) return cachedModule;
   if (Platform.OS !== "ios" && Platform.OS !== "android") {
-    cachedModule = null;
     return null;
   }
 
-  const fromHost = (globalThis as ExpoHostGlobal).expo?.modules?.[MODULE_NAME];
-  if (isUsableShellMediaModule(fromHost)) {
-    cachedModule = fromHost;
-    return cachedModule;
-  }
-
-  try {
-    const fromTurbo = TurboModuleRegistry.get(MODULE_NAME) as ShellMediaControlsNativeModule | null;
-    if (isUsableShellMediaModule(fromTurbo)) {
-      cachedModule = fromTurbo;
+  for (const moduleName of MODULE_NAMES) {
+    const fromHost = (globalThis as ExpoHostGlobal).expo?.modules?.[moduleName];
+    if (isUsableShellMediaModule(fromHost)) {
+      cachedModule = fromHost;
       return cachedModule;
     }
-  } catch {
-    /* module not in Turbo registry */
-  }
 
-  try {
-    const fromExpo = requireOptionalNativeModule<ShellMediaControlsNativeModule>(MODULE_NAME);
-    if (isUsableShellMediaModule(fromExpo)) {
-      cachedModule = fromExpo;
+    try {
+      const fromTurbo = TurboModuleRegistry.get(moduleName) as ShellMediaControlsNativeModule | null;
+      if (isUsableShellMediaModule(fromTurbo)) {
+        cachedModule = fromTurbo;
+        return cachedModule;
+      }
+    } catch {
+      /* module not in Turbo registry */
+    }
+
+    try {
+      const fromExpo = requireOptionalNativeModule<ShellMediaControlsNativeModule>(moduleName);
+      if (isUsableShellMediaModule(fromExpo)) {
+        cachedModule = fromExpo;
+        return cachedModule;
+      }
+    } catch {
+      /* optional module probe failed */
+    }
+
+    const legacy = NativeModules[moduleName] as ShellMediaControlsNativeModule | undefined;
+    if (isUsableShellMediaModule(legacy)) {
+      cachedModule = legacy;
       return cachedModule;
     }
-  } catch {
-    /* optional module probe failed */
   }
 
-  const legacy = NativeModules[MODULE_NAME] as ShellMediaControlsNativeModule | undefined;
-  if (isUsableShellMediaModule(legacy)) {
-    cachedModule = legacy;
-    return cachedModule;
+  const now = Date.now();
+  if (now - lastMissingModuleWarnAt > 3000 && __DEV__) {
+    lastMissingModuleWarnAt = now;
+    const expoKeys = Object.keys((globalThis as ExpoHostGlobal).expo?.modules ?? {}).slice(0, 20);
+    const nativeKeys = Object.keys(NativeModules)
+      .filter((key) => key.toLowerCase().includes("media") || key.toLowerCase().includes("askbible"))
+      .slice(0, 20);
+    console.warn("[shell-media] native module unavailable", { expoKeys, nativeKeys });
   }
-
-  cachedModule = null;
   return null;
 }
 
@@ -109,6 +120,14 @@ export function syncShellMediaSession(payload: ShellMediaSessionPayload | null):
   if (payloadKey === lastSessionPayloadKey && !lastSessionCleared) return;
   lastSessionPayloadKey = payloadKey;
   lastSessionCleared = false;
+  if (__DEV__) {
+    console.warn("[shell-media] sync session", {
+      title: payload.title,
+      playing: payload.playing,
+      durationSec: payload.durationSec,
+      positionSec: payload.positionSec,
+    });
+  }
   invokeNativeVoid(() => mod.updateSession?.(payloadKey));
 }
 
@@ -121,7 +140,11 @@ function subscribeExpoRemoteEvents(handlers: {
   onReadingToggle?: () => void;
   onMusicToggle?: () => void;
 }): (() => void) | null {
-  const mod = (globalThis as ExpoHostGlobal).expo?.modules?.[MODULE_NAME];
+  let mod: ShellMediaControlsNativeModule | undefined;
+  for (const moduleName of MODULE_NAMES) {
+    mod = (globalThis as ExpoHostGlobal).expo?.modules?.[moduleName];
+    if (mod) break;
+  }
   if (!mod) return null;
 
   const emitter = new EventEmitter(mod as never) as {

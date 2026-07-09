@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { resolveReadChapterAudioRegistration } from "./scriptureShellPlayback";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 import type { MusicRepeatMode, ShellSleepTimerMinutes } from "./musicPlaybackTypes";
@@ -17,6 +17,16 @@ const MusicPlaybackContext = createContext<MusicPlaybackContextValue | null>(nul
 
 export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const value = useMusicPlaybackProvider();
+  useEffect(() => {
+    if (__DEV__) {
+      console.warn("[music-provider] mount");
+    }
+    return () => {
+      if (__DEV__) {
+        console.warn("[music-provider] unmount");
+      }
+    };
+  }, []);
   return <MusicPlaybackContext.Provider value={value}>{children}</MusicPlaybackContext.Provider>;
 }
 

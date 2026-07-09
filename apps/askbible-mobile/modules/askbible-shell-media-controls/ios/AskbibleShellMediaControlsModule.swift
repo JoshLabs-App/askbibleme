@@ -8,6 +8,32 @@ public class AskbibleShellMediaControlsModule: Module {
   private var lastPayload: [String: Any]?
   private var lastPublishTimestamp: CFAbsoluteTime = 0
   private var refreshTimer: Timer?
+  private static let debugLogFileName = "askbible-shell-media.log"
+
+  private func log(_ message: String) {
+    NSLog("[askbible-shell-media] %@", message)
+    appendDebugLine(message)
+  }
+
+  private func appendDebugLine(_ message: String) {
+    let timestamp = ISO8601DateFormatter().string(from: Date())
+    let line = "[\(timestamp)] \(message)\n"
+    guard let data = line.data(using: .utf8) else { return }
+    do {
+      let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent(Self.debugLogFileName)
+      if FileManager.default.fileExists(atPath: url.path) {
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: data)
+      } else {
+        try data.write(to: url, options: .atomic)
+      }
+    } catch {
+      // Diagnostics should never affect playback.
+    }
+  }
 
   public func definition() -> ModuleDefinition {
     Name("AskBibleShellMediaControls")
@@ -28,7 +54,9 @@ public class AskbibleShellMediaControlsModule: Module {
 
     OnCreate {
       DispatchQueue.main.async {
+        self.log("module create")
         UIApplication.shared.beginReceivingRemoteControlEvents()
+        self.activatePlaybackSessionIfNeeded()
         self.becomePlaybackFirstResponderIfNeeded()
       }
     }
@@ -41,6 +69,7 @@ public class AskbibleShellMediaControlsModule: Module {
     else {
       return
     }
+    log("updateSession")
     ensureRemoteCommands()
     publishNowPlaying(from: obj)
   }
@@ -49,7 +78,9 @@ public class AskbibleShellMediaControlsModule: Module {
     guard !remoteCommandsRegistered else { return }
     remoteCommandsRegistered = true
 
+    log("register remote commands")
     UIApplication.shared.beginReceivingRemoteControlEvents()
+    activatePlaybackSessionIfNeeded()
     becomePlaybackFirstResponderIfNeeded()
 
     let center = MPRemoteCommandCenter.shared()
@@ -103,7 +134,16 @@ public class AskbibleShellMediaControlsModule: Module {
   private func activatePlaybackSessionIfNeeded() {
     let session = AVAudioSession.sharedInstance()
     do {
-      if session.category != .playback {
+      if #available(iOS 13.0, *) {
+        if session.category != .playback || session.routeSharingPolicy != .longFormAudio {
+          try session.setCategory(
+            .playback,
+            mode: .default,
+            policy: .longFormAudio,
+            options: [.allowBluetooth, .allowAirPlay]
+          )
+        }
+      } else if session.category != .playback {
         try session.setCategory(
           .playback,
           mode: .default,
@@ -111,8 +151,13 @@ public class AskbibleShellMediaControlsModule: Module {
         )
       }
       try session.setActive(true, options: [])
+      if #available(iOS 13.0, *) {
+        log("audio session active category=\(session.category.rawValue) policy=\(session.routeSharingPolicy.rawValue)")
+      } else {
+        log("audio session active category=\(session.category.rawValue)")
+      }
     } catch {
-      /* expo-av 已激活时会成功；失败不阻断 Now Playing 元数据写入 */
+      log("audio session activate failed: \(error.localizedDescription)")
     }
   }
 
@@ -121,6 +166,7 @@ public class AskbibleShellMediaControlsModule: Module {
     lastPublishTimestamp = CFAbsoluteTimeGetCurrent()
 
     let playing = jsonBool(payload["playing"])
+    log("publish playing=\(playing)")
     startRefreshTimerIfPlaying(playing)
     publishNowPlayingInternal(payload: payload, advanceElapsed: false)
   }
@@ -143,6 +189,7 @@ public class AskbibleShellMediaControlsModule: Module {
     let title = payload["title"] as? String
     let artist = payload["artist"] as? String
     let album = payload["album"] as? String
+    let assetUri = payload["assetUri"] as? String
     let durationSec = jsonDouble(payload["durationSec"])
     let positionSec = jsonDouble(payload["positionSec"]) ?? 0
     let playing = jsonBool(payload["playing"])
@@ -172,6 +219,16 @@ public class AskbibleShellMediaControlsModule: Module {
     if #available(iOS 13.0, *) {
       info[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
     }
+    info[MPNowPlayingInfoPropertyIsLiveStream] = false
+    info[MPNowPlayingInfoPropertyPlaybackQueueCount] = 1
+    info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = 1
+    info[MPNowPlayingInfoPropertyServiceIdentifier] = "me.askbible"
+    if let assetUri, let url = URL(string: assetUri) {
+      info[MPNowPlayingInfoPropertyAssetURL] = url
+      info[MPNowPlayingInfoPropertyExternalContentIdentifier] = assetUri
+    } else {
+      info[MPNowPlayingInfoPropertyExternalContentIdentifier] = resolvedTitle
+    }
 
     if let artworkUri, let image = loadArtwork(from: artworkUri) {
       let itemArtwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
@@ -179,10 +236,11 @@ public class AskbibleShellMediaControlsModule: Module {
     }
 
     let center = MPNowPlayingInfoCenter.default()
+    center.nowPlayingInfo = info
     if #available(iOS 13.0, *) {
       center.playbackState = playing ? .playing : .paused
     }
-    center.nowPlayingInfo = info
+    log("nowPlaying set title=\(resolvedTitle) playing=\(playing) duration=\(durationSec ?? 0) position=\(elapsed)")
   }
 
   private func clearNowPlaying() {
@@ -190,6 +248,7 @@ public class AskbibleShellMediaControlsModule: Module {
     refreshTimer = nil
     lastPayload = nil
     lastPublishTimestamp = 0
+    log("clear nowPlaying")
 
     let center = MPNowPlayingInfoCenter.default()
     center.nowPlayingInfo = nil

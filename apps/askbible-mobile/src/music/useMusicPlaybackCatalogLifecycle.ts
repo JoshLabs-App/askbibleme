@@ -40,7 +40,7 @@ export function useMusicPlaybackCatalogLifecycle({
   useEffect(() => {
     const timer = setTimeout(
       () => setCatalogReady(true),
-      Platform.OS === "android" ? 400 : 2500,
+      Platform.OS === "android" ? 0 : 2500,
     );
     return () => clearTimeout(timer);
   }, []);
@@ -56,6 +56,8 @@ export function useMusicPlaybackCatalogLifecycle({
     setTrackIndex,
     setLoading,
     soundRef: refs.soundRef,
+    preloadedMusicSoundRef: refs.preloadedMusicSoundRef,
+    preloadedMusicSoundWorkRef: refs.preloadedMusicSoundWorkRef,
     storeRef: refs.storeRef,
   });
   useAutoMusicPackDownload({ enabled: catalogReady, setStore, setTrackIndex });

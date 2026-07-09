@@ -1,4 +1,4 @@
-import type { Audio } from "expo-av";
+import { Audio } from "expo-av";
 import { Platform } from "react-native";
 import { useEffect, type MutableRefObject } from "react";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
@@ -19,6 +19,7 @@ import {
 import { enrichPlaybackTracks } from "./trackArtwork";
 import { hasAtLeastBundledTracks, resolveSessionDefaultTrackIndex } from "./musicStoreHelpers";
 import type { MusicCompanionStore } from "./types";
+import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
 type Args = {
   enabled?: boolean;
@@ -26,6 +27,8 @@ type Args = {
   setTrackIndex: (index: number) => void;
   setLoading: (loading: boolean) => void;
   soundRef: MutableRefObject<Audio.Sound | null>;
+  preloadedMusicSoundRef: MusicPlaybackRefs["preloadedMusicSoundRef"];
+  preloadedMusicSoundWorkRef: MusicPlaybackRefs["preloadedMusicSoundWorkRef"];
   storeRef: MutableRefObject<MusicCompanionStore | null>;
 };
 
@@ -35,12 +38,15 @@ export function useMusicStoreBootstrap({
   setTrackIndex,
   setLoading,
   soundRef,
+  preloadedMusicSoundRef,
+  preloadedMusicSoundWorkRef,
   storeRef,
 }: Args): void {
   useEffect(() => {
     if (!enabled) return;
     const bootStartedAt = Date.now();
     const log = (message: string, ...args_: unknown[]) => {
+      if (!__DEV__) return;
       console.warn(`[music-bootstrap +${Date.now() - bootStartedAt}ms] ${message}`, ...args_);
     };
     log("effect start", { platform: Platform.OS });
@@ -62,6 +68,7 @@ export function useMusicStoreBootstrap({
         ]);
         log("audio mode warmup requested");
         const bundledStore = getBundledMusicCompanionStore();
+        const bundledTracks = enrichPlaybackTracks(bundledStore, getAskBibleBaseUrl());
         log("bundled store ready", {
           audioTracks: bundledStore.audioTracks?.length ?? 0,
           scenes: bundledStore.scenes?.length ?? 0,
@@ -69,9 +76,8 @@ export function useMusicStoreBootstrap({
         });
         setStore(bundledStore);
         if (isMobileBundledOnly()) {
-          const tracks = enrichPlaybackTracks(bundledStore, getAskBibleBaseUrl());
-          setTrackIndex(resolveSessionDefaultTrackIndex(tracks));
-          log("mobile bundled only path finished", { tracks: tracks.length });
+          setTrackIndex(resolveSessionDefaultTrackIndex(bundledTracks));
+          log("mobile bundled only path finished", { tracks: bundledTracks.length });
           await audioModeWarmup;
           return;
         }
@@ -158,6 +164,19 @@ export function useMusicStoreBootstrap({
       const sound = soundRef.current;
       soundRef.current = null;
       if (sound) void safeStopAndUnloadSound(sound);
+      const preloadedSound = preloadedMusicSoundRef.current?.sound ?? null;
+      preloadedMusicSoundRef.current = null;
+      preloadedMusicSoundWorkRef.current = null;
+      if (preloadedSound && preloadedSound !== sound) void safeStopAndUnloadSound(preloadedSound);
     };
-  }, [enabled, setStore, setTrackIndex, setLoading, soundRef, storeRef]);
+  }, [
+    enabled,
+    preloadedMusicSoundRef,
+    preloadedMusicSoundWorkRef,
+    setStore,
+    setTrackIndex,
+    setLoading,
+    soundRef,
+    storeRef,
+  ]);
 }

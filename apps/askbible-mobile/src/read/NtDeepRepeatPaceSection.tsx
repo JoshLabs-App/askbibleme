@@ -61,7 +61,7 @@ export function NtDeepRepeatPaceSection({ value, onChange, previewStart, locale 
     <View style={styles.root}>
       <Text style={styles.title}>{t("pages.read.ntDeepRepeatPaceTitle")}</Text>
       <Text style={styles.intro}>{t("pages.read.ntDeepRepeatPaceIntro")}</Text>
-      <Text style={styles.note}>{t("pages.read.ntDeepRepeatPaceWeekAlignNote")}</Text>
+      <Text style={styles.note}>{t("pages.read.ntDeepRepeatPaceContinuousNote")}</Text>
 
       {NT_DEEP_REPEAT_PACE_OPTIONS.map((option) => (
         <Pressable
@@ -80,6 +80,7 @@ export function NtDeepRepeatPaceSection({ value, onChange, previewStart, locale 
       <Text style={styles.firstNote}>
         {tFormat("pages.read.ntDeepRepeatPaceFirstSegmentNote", {
           days: String(firstDays),
+          nextDay: String(firstDays + 1),
           endDate: formatEndDate(firstEnd, locale),
         })}
       </Text>

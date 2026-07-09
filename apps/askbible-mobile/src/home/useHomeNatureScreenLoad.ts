@@ -1,6 +1,6 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { InteractionManager } from "react-native";
+import { InteractionManager, Platform } from "react-native";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
 import { ensureNatureResourcePackSync } from "../media/natureResourcePackSync";
 import { useNatureResourcePackSync } from "../media/useNatureResourcePackSync";
@@ -9,7 +9,7 @@ import {
   fetchNatureSettings,
   getBundledNatureSettings,
 } from "../api/fetchNatureSettings";
-import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
 import {
   readNatureActiveSceneId,
@@ -33,9 +33,12 @@ import {
   type NatureSoftFocusPrefs,
 } from "./natureHomePrefs";
 import { bootWithBundled, bundledOnBoot } from "./homeNatureScreenConstants";
+import { ensureNatureSceneVideoReady } from "../media/natureSceneReadiness";
+import { peekWidgetPlaybackBoot } from "../widget/widgetPlaybackColdStart";
 
 export function useHomeNatureScreenLoad() {
   const baseUrl = getNatureRemoteAssetBaseUrl();
+  const widgetPlaybackBoot = Platform.OS === "android" && peekWidgetPlaybackBoot();
 
   const [homeFocused, setHomeFocused] = useState(true);
   const homeFocusedRef = useRef(true);
@@ -151,6 +154,8 @@ export function useHomeNatureScreenLoad() {
     refreshSoftFocusPrefs();
   }, [refreshSoftFocusPrefs]);
 
+  const bundledScenesReady = bootWithBundled && bundledOnBoot.videos.length > 0;
+
   useFocusEffect(
     useCallback(() => {
       homeFocusedRef.current = true;
@@ -165,24 +170,53 @@ export function useHomeNatureScreenLoad() {
 
   useEffect(() => {
     if (!homeFocused) return;
-    const task = InteractionManager.runAfterInteractions(() => {
+    const delayMs = bundledScenesReady ? (Platform.OS === "android" ? 450 : 2500) : 1200;
+    const timer = setTimeout(() => {
       void ensureNatureResourcePackSync();
-    });
-    return () => task.cancel();
-  }, [homeFocused]);
+    }, delayMs);
+    return () => clearTimeout(timer);
+  }, [bundledScenesReady, homeFocused]);
 
   useEffect(() => {
     if (videoStageMountedOnceRef.current) {
       setVideoStageMounted(true);
       return;
     }
+    if (widgetPlaybackBoot) return;
     if (!homeFocused) return;
-    const timer = setTimeout(() => {
+
+    const mountVideoStage = () => {
       videoStageMountedOnceRef.current = true;
       setVideoStageMounted(true);
-    }, 320);
+    };
+
+    const bootSceneId =
+      localActiveId.trim() ||
+      settings?.activeVideoId?.trim() ||
+      settings?.videos[0]?.id?.trim() ||
+      bundledOnBoot.videos[0]?.id?.trim() ||
+      "";
+
+    if (bootSceneId) {
+      let cancelled = false;
+      const delayMs = Platform.OS === "android" ? 240 : 480;
+      const timer = setTimeout(() => {
+        if (!cancelled) mountVideoStage();
+      }, delayMs);
+      void ensureNatureSceneVideoReady(bootSceneId).finally(() => {
+        if (cancelled) return;
+        clearTimeout(timer);
+        mountVideoStage();
+      });
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }
+
+    const timer = setTimeout(mountVideoStage, 320);
     return () => clearTimeout(timer);
-  }, [homeFocused]);
+  }, [homeFocused, localActiveId, settings, widgetPlaybackBoot]);
 
   useFocusEffect(
     useCallback(() => {
@@ -195,40 +229,33 @@ export function useHomeNatureScreenLoad() {
 
   useEffect(() => {
     if (!homeFocused) return;
+    if (widgetPlaybackBoot) return;
     const bundled = getBundledNatureSettings();
-    let prefsTask: { cancel: () => void } | null = null;
-    if (bootWithBundled && bundled.videos.length > 0) {
+    if (bundledScenesReady) {
       setSettings((prev) => {
         if (prev?.videos.length) return prev;
         return ensureNatureSettingsLocallyPlayable(bundled, baseUrl);
       });
       setLoading(false);
-      prefsTask = InteractionManager.runAfterInteractions(() => {
-        void hydrateNatureHomePrefs(bundled);
-      });
+      void hydrateNatureHomePrefs(bundled);
     }
     if (isMobileBundledOnly()) {
-      return () => prefsTask?.cancel();
+      return;
     }
-    const silent = bootWithBundled && bundled.videos.length > 0;
+    const silent = bundledScenesReady;
     const runLoad = () => void load({ silent });
-    if (isMobileOfflineFirst()) {
+    const loadDelayMs = bundledScenesReady ? (Platform.OS === "android" ? 120 : 900) : 0;
+    const timer = setTimeout(() => {
       runLoad();
-      return () => prefsTask?.cancel();
-    }
-    const loadTask = InteractionManager.runAfterInteractions(runLoad);
+    }, loadDelayMs);
     return () => {
-      prefsTask?.cancel();
-      loadTask.cancel();
+      clearTimeout(timer);
     };
-  }, [baseUrl, homeFocused, hydrateNatureHomePrefs, load]);
+  }, [baseUrl, bundledScenesReady, homeFocused, hydrateNatureHomePrefs, load, widgetPlaybackBoot]);
 
   useEffect(() => {
     if (!homeFocused || naturePackRev <= 0) return;
-    const task = InteractionManager.runAfterInteractions(() => {
-      void load({ silent: true });
-    });
-    return () => task.cancel();
+    void load({ silent: true });
   }, [homeFocused, naturePackRev, load]);
 
   useEffect(() => {
@@ -244,7 +271,7 @@ export function useHomeNatureScreenLoad() {
         const bundled = getBundledNatureSettings();
         return bundled.activeVideoId?.trim() || bundled.videos[0]?.id || prev;
       });
-    }, 4500);
+    }, Platform.OS === "android" ? 2000 : 4500);
     return () => clearTimeout(timer);
   }, [baseUrl]);
 
@@ -252,7 +279,7 @@ export function useHomeNatureScreenLoad() {
     if (!error) return;
     const timer = setTimeout(() => {
       void load({ silent: true });
-    }, 2500);
+    }, Platform.OS === "android" ? 1200 : 2500);
     return () => clearTimeout(timer);
   }, [error, load]);
 

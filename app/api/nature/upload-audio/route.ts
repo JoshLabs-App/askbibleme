@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json(
-      { error: `multipart 解析失败：${msg}。若为大文件，请确认已重启服务并生效更大的 proxyClientMaxBodySize。` },
+      { error: `multipart 解析失败：${msg}。若为大文件，请确认代理层/部署平台的请求体上限已放宽。` },
       { status: 400 },
     );
   }

@@ -1,5 +1,3 @@
-import * as Haptics from "expo-haptics";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { InteractionManager } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
@@ -34,7 +32,6 @@ import {
   buildChapterQueue,
   formatDisplayNickname,
   sameChapter,
-  TODAY_COMPLETE_CELEBRATION_SHOWN_KEY_PREFIX,
   type ChapterRef,
 } from "./readChapterCompletionPlanPanelHelpers";
 
@@ -55,10 +52,8 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
   const [loading, setLoading] = useState(true);
   const [doneKeys, setDoneKeys] = useState<Set<string>>(new Set());
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
-  const [celebrateVisible, setCelebrateVisible] = useState(false);
   const [scopeKey, setScopeKey] = useState<string | null>(null);
   const [nickname, setNickname] = useState("");
-  const [hasShownCelebrateForScope, setHasShownCelebrateForScope] = useState<boolean | null>(null);
 
   const localeZhText = useCallback(
     (text: string) => (effectiveLocale === "zh-TW" ? toZhTwText(text) : text),
@@ -85,31 +80,6 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
       task.cancel();
     };
   }, []);
-
-  useEffect(() => {
-    if (!scopeKey) {
-      setHasShownCelebrateForScope(null);
-      return;
-    }
-    let active = true;
-    const task = InteractionManager.runAfterInteractions(() => {
-      void (async () => {
-        try {
-          const key = `${TODAY_COMPLETE_CELEBRATION_SHOWN_KEY_PREFIX}:${scopeKey}`;
-          const raw = await AsyncStorage.getItem(key);
-          if (!active) return;
-          setHasShownCelebrateForScope(raw === "1");
-        } catch {
-          if (!active) return;
-          setHasShownCelebrateForScope(false);
-        }
-      })();
-    });
-    return () => {
-      active = false;
-      task.cancel();
-    };
-  }, [scopeKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -215,14 +185,6 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
     return readings.every((r) => isReadingDone(r));
   }, [readings, isReadingDone]);
 
-  useEffect(() => {
-    if (!allDone || !scopeKey || hasShownCelebrateForScope !== false) return;
-    setCelebrateVisible(true);
-    setHasShownCelebrateForScope(true);
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    void AsyncStorage.setItem(`${TODAY_COMPLETE_CELEBRATION_SHOWN_KEY_PREFIX}:${scopeKey}`, "1");
-  }, [allDone, hasShownCelebrateForScope, scopeKey]);
-
   const toggleDone = useCallback(
     async (r: ReadingPlanRange) => {
       if (!scopeKey) return;
@@ -234,16 +196,11 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
     [scopeKey, isReadingDone, prefs.planId],
   );
 
-  const closeCelebrate = useCallback(() => {
-    setCelebrateVisible(false);
-  }, []);
-
   return {
     loading,
     readings,
     doneKeys,
-    celebrateVisible,
-    closeCelebrate,
+    allDone,
     effectiveLocale,
     isEnglishDisplay,
     localeZhText,

@@ -1,0 +1,34 @@
+---
+description: AskBible.me iOS 发版 — 用户说“上传”时自动代写文案 + 本机构建上传 + 提审 + 通过后自动发布
+alwaysApply: true
+---
+
+# iOS 发版：说「上传」= 自动提交并提审
+
+当用户说「上传」「发版」「发新版本」「上架」「提交苹果」之类，且上下文是 iOS/App Store 时，
+默认执行完整发版流程（代写更新说明 → 本机构建上传 → 提审 → 审核通过后自动发布），一条龙不停顿，不要只上传就停，也不要反问确认再动手。
+
+配合 `mobile-local-build-only.mdc`：**iOS 只用本机 Xcode 构建，禁止 EAS 云端构建 / `eas submit`。**
+
+## 执行步骤
+
+1. 递增版本号：`npm run mobile:bump:store-version -- <marketing> <build>`（同步 app.json + 原生工程）。仅升 build 用 `-- --next-build`。用户指定版本号时以用户为准。
+2. 自动代写更新说明：根据本次改动（git diff / 最近提交 / 本轮对话所做修改）生成简洁的用户向 release notes，覆盖写入 `store/ios-release-notes/en.txt`（英文）与 `store/ios-release-notes/zh.txt`（中文）。首行 `Version X.Y.Z` / `版本 X.Y.Z`，下面 2-4 条 `• ` 要点，讲功能收益不用技术术语。写完简要告诉用户写了什么。
+3. 本机构建 + 上传到 App Store Connect（Xcode 打包 + altool 直传 + 挂 TestFlight 组）：
+   ```bash
+   npm run mobile:release:ios:testflight
+   ```
+4. 提审（等 ASC 处理完 build → 分配 build → 写 What's New → 提审 → 审核通过自动发布）：
+   ```bash
+   npm run mobile:submit:ios:review
+   ```
+   一条龙（构建+上传+提审）可用：`npm run mobile:release:ios:appstore`。
+
+## 关键事实
+
+- 认证已就绪：API Key `9HDA27WY8C`、Issuer `a56f0624-e4a4-438d-be5d-92403dd9969b`、App ID `6771996188`、Bundle `me.askbible`，`.p8` 在 `AA/AuthKey_9HDA27WY8C.p8`。
+- 提审脚本 `scripts/submit-ios-app-store-review.mjs`（Node + ASC API，无 fastlane）默认 `releaseType=AFTER_APPROVAL`（通过后自动发布）；想手动发布用 `ASC_RELEASE_TYPE=MANUAL`。
+- What's New 只推送到 ASC 已存在的语言（按语言前缀匹配 `en.txt` / `zh.txt`），不会新建未启用的语言。
+- release notes 一定要先写好再提审，否则商店用的是上一版说明。
+- 构建上传耗时长（本机 Xcode 归档约 10–20 分钟），用后台方式跑，别干等。
+- 用户若说「只上传不提审」或「先别提审」，则停在步骤 3，不要执行提审。

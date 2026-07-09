@@ -3,6 +3,7 @@ package me.askbible.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
@@ -51,10 +52,43 @@ class AskBibleWidgetPrefsModule(reactContext: ReactApplicationContext) :
     }
   }
 
+  @ReactMethod
+  fun setReadingAudioSnapshot(json: String) {
+    val context = reactApplicationContext.applicationContext
+    context
+      .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+      .edit()
+      .putString(READING_AUDIO_SNAPSHOT_KEY, json)
+      .apply()
+    AskBibleDailyVerseWidgetProvider.refreshAll(context)
+  }
+
+  /** 小挂件冷启动：同步读取 pending（music / reading），无则 null。 */
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  fun peekWidgetPlaybackActionSync(): String? {
+    return WidgetPlaybackBridge.peekPendingAction(reactApplicationContext.applicationContext)
+  }
+
+  @ReactMethod
+  fun peekWidgetPlaybackAction(promise: Promise) {
+    promise.resolve(WidgetPlaybackBridge.peekPendingAction(reactApplicationContext.applicationContext))
+  }
+
+  @ReactMethod
+  fun clearWidgetPlaybackAction() {
+    WidgetPlaybackBridge.clearPendingAction(reactApplicationContext.applicationContext)
+  }
+
+  @ReactMethod
+  fun minimizeAfterWidgetPlayback() {
+    me.askbible.playback.AskBibleShellMediaControlsModule.minimizeAppToBackground()
+  }
+
   companion object {
     const val PREFS_NAME = "askbible_widget"
     const val SNAPSHOT_KEY = "askbible-daily-verse-widget-v1"
     const val TEXT_SCALE_KEY = "askbible-daily-verse-widget-text-scale-v1"
     const val ROTATION_INTERVAL_SEC_KEY = "askbible-widget-rotation-interval-sec"
+    const val READING_AUDIO_SNAPSHOT_KEY = "askbible-reading-audio-widget-v1"
   }
 }

@@ -1,6 +1,7 @@
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, AppState, type AppStateStatus } from "react-native";
+import { ensureNatureSceneVideoReady } from "../media/natureSceneReadiness";
 import {
   natureCoverVideoSource,
   type ResolveNatureCoverPlayback,
@@ -113,6 +114,32 @@ function CoverVideoSlotInner({
   );
 }
 
+function useIosCoverVideoSource(
+  sceneId: string,
+  resolveScenePlayback: ResolveNatureCoverPlayback,
+): string | number | null {
+  const [source, setSource] = useState<string | number | null>(null);
+
+  useEffect(() => {
+    const id = sceneId.trim();
+    if (!id) {
+      setSource(null);
+      return;
+    }
+    let alive = true;
+    void (async () => {
+      await ensureNatureSceneVideoReady(id);
+      if (!alive) return;
+      setSource(natureCoverVideoSource(resolveScenePlayback(id)));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [sceneId, resolveScenePlayback]);
+
+  return source;
+}
+
 export function IosCoverVideoSlot({
   slotKey,
   sceneId,
@@ -132,9 +159,8 @@ export function IosCoverVideoSlot({
   onReady: () => void;
   playbackActive: boolean;
 }) {
-  if (!sceneId.trim()) return null;
-  const source = natureCoverVideoSource(resolveScenePlayback(sceneId));
-  if (source == null) return null;
+  const source = useIosCoverVideoSource(sceneId, resolveScenePlayback);
+  if (!sceneId.trim() || source == null) return null;
   return (
     <CoverVideoSlotInner
       slotKey={slotKey}

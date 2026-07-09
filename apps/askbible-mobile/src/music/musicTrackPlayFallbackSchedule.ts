@@ -6,7 +6,7 @@ export function scheduleMusicTrackPlayFallback(args: {
   tracks: PlaybackTrack[];
   index: number;
   failedTrackIdsRef: MutableRefObject<Set<string>>;
-  playTrackAtRef: MutableRefObject<(index: number) => Promise<void>>;
+  playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
   setPlaying: (playing: boolean) => void;
   failedTrackId?: string;
 }): boolean {

@@ -10,6 +10,7 @@ import { resolveDefaultCalmTrackIndex } from "./musicStoreHelpers";
 import type { PlaybackTrack } from "./types";
 
 type Args = {
+  enabled?: boolean;
   tracks: PlaybackTrack[];
   playbackResumeHydratedRef: MutableRefObject<boolean>;
   resumeTrackIdRef: MutableRefObject<string | null>;
@@ -21,6 +22,7 @@ type Args = {
 };
 
 export function useMusicResumeHydration({
+  enabled = true,
   tracks,
   playbackResumeHydratedRef,
   resumeTrackIdRef,
@@ -31,6 +33,7 @@ export function useMusicResumeHydration({
   setMusicDurationSec,
 }: Args): void {
   useEffect(() => {
+    if (!enabled) return;
     if (tracks.length === 0 || playbackResumeHydratedRef.current) return;
     let cancelled = false;
     const task = InteractionManager.runAfterInteractions(() => {
@@ -64,6 +67,7 @@ export function useMusicResumeHydration({
       task.cancel();
     };
   }, [
+    enabled,
     tracks,
     playbackResumeHydratedRef,
     resumeTrackIdRef,

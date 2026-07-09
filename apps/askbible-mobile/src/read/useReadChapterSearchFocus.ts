@@ -188,7 +188,7 @@ export function useReadChapterSearchFocus(
           }
           const nextY = scrollYToCenterVerse(layout, scrollViewportHeight, {
             contentHeight: scrollContentHeightRef?.current,
-            ...readChapterAudioScrollFocusOpts(chrome),
+            ...readChapterAudioScrollFocusOpts(chrome.audioDockVisible),
           });
           const currentY = scrollOffsetRef.current;
           if (Math.abs(nextY - currentY) < 8) {

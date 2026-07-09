@@ -375,6 +375,17 @@ html[data-golden-verses-chromeless] .home-bottom-nav {
   display: none;
 }
 
+/* 全站轻量沉浸：尽量去掉站内 chrome，只保留内容与最小退出入口 */
+html[data-app-immersive] {
+  --home-bottom-nav-slot: 0px;
+}
+
+html[data-app-immersive] .home-bottom-nav,
+html[data-app-immersive] .app-update-notifier,
+html[data-app-immersive] .app-pwa-install-prompt {
+  display: none;
+}
+
 /** 壳层底栏：放大触控区，左右对称，中央播放键居中对齐（对齐 iOS ShellTabBar） */
 .home-bottom-nav__bar {
   display: flex;

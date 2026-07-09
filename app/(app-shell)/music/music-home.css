@@ -509,6 +509,19 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   margin: -0.25rem 0 0.75rem;
 }
 
+.music-home-selected-track {
+  margin: 0 0 0.875rem;
+  padding: 0 1rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.44);
+}
+
+.music-home-selected-track span {
+  color: rgba(255, 255, 255, 0.84);
+}
+
 .music-home-album-btn {
   display: inline-flex;
   width: 2.75rem;
@@ -599,6 +612,11 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   transition: opacity 0.15s ease;
 }
 
+.music-home-icon-btn:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
 .music-home-icon-btn:hover {
   opacity: 1;
 }
@@ -606,6 +624,25 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
 .music-home-icon-btn--on {
   opacity: 1;
   color: rgba(255, 255, 255, 0.96);
+}
+
+.music-home-icon-btn--play {
+  width: 3.375rem;
+  height: 3.375rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
+}
+
+.music-home-icon-btn--play:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.music-home-play-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.125rem;
 }
 
 .music-home-timer-btn {

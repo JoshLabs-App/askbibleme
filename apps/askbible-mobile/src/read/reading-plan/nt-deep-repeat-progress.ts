@@ -173,6 +173,29 @@ export async function resetNtDeepRepeatProgressToFresh(
   return state;
 }
 
+/** 重置进度到指定计划日（1 = 起始当天），用于用户手动选择「从第几天开始读」。 */
+export async function resetNtDeepRepeatProgressToPlanDay(
+  planDay: number,
+  now = new Date(),
+  pace: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE,
+): Promise<NtDeepRepeatReadingState> {
+  const safeDay = Math.max(1, Math.floor(planDay));
+  if (safeDay <= 1) return resetNtDeepRepeatProgressToFresh(now, pace);
+  try {
+    await AsyncStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY);
+    await AsyncStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V4);
+    await AsyncStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V3);
+    emit();
+  } catch {
+    /* ignore */
+  }
+  const startedAt = toLocalDateString(now);
+  const state = ntDeepRepeatStateForPlanDay(safeDay, { pace, startedAt });
+  state.startedAt = startedAt;
+  await writeNtDeepRepeatProgress(state);
+  return state;
+}
+
 export async function advanceNtDeepRepeatProgressTrack(
   track: NtDeepRepeatTrack,
   now = new Date(),

@@ -1,7 +1,7 @@
 /** @type {import('expo/config').ExpoConfig} */
 const fs = require("fs");
 const path = require("path");
-const appJson = require("./app.json");
+const appConfigBase = require("./expo-static-config.js");
 const { resolveGoogleOAuthEnv } = require("./google-oauth.env.js");
 
 function loadEnvFile(filePath) {
@@ -35,25 +35,24 @@ const supabaseAnonKey =
   "";
 
 const plugins = [
-  ...(appJson.expo.plugins || []),
+  ...(appConfigBase.expo.plugins || []),
   "expo-apple-authentication",
   "expo-web-browser",
 ];
-if (google.iosUrlScheme) {
-  plugins.push(["@react-native-google-signin/google-signin", { iosUrlScheme: google.iosUrlScheme }]);
-} else if (google.webClientId) {
-  plugins.push("@react-native-google-signin/google-signin");
-}
 
 module.exports = {
   expo: {
-    ...appJson.expo,
+    ...appConfigBase.expo,
+    experiments: {
+      autolinkingModuleResolution: true,
+    },
     ios: {
-      ...appJson.expo.ios,
+      ...appConfigBase.expo.ios,
       usesAppleSignIn: true,
     },
+    plugins,
     extra: {
-      ...(appJson.expo.extra || {}),
+      ...(appConfigBase.expo.extra || {}),
       supabaseUrl: supabaseUrl || null,
       supabaseAnonKey: supabaseAnonKey || null,
       googleAuth: {
@@ -63,6 +62,5 @@ module.exports = {
         iosUrlScheme: google.iosUrlScheme || null,
       },
     },
-    plugins,
   },
 };

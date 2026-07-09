@@ -168,7 +168,7 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   if (todayReadingFraction && Object.keys(todayReadingFraction.fractions).length) {
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);
   }
-  if (habitStats.completedDates.length) blobs.habitStats = wrapBlob(habitStats, now);
+  blobs.habitStats = wrapBlob(habitStats, now);
 
   blobs.readTypography = wrapBlob(readTypography, now);
   blobs.readTranslation = wrapBlob(readTranslation, now);

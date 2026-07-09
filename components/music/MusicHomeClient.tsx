@@ -16,6 +16,7 @@ import { MusicHomeVisuals } from "@/components/music/MusicHomeVisuals";
 import { MusicHomeBackdropScene } from "@/components/music/MusicHomeBackdropScene";
 import { MusicHomeProgressBar } from "@/components/music/MusicHomeProgressBar";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { IconPause, IconPlay } from "@/components/ui/MediaPlaybackIcons";
 import {
   MUSIC_HOME_ALBUM_SWATCH,
   MUSIC_HOME_DEFAULT_ALBUM,
@@ -38,6 +39,7 @@ import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-aud
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
+import { prefetchMusicTrackBundle } from "@/lib/music/prefetch-music-track";
 import { resolveLocalized } from "@/lib/i18n/localized-text";
 import { setMusicAutoHideChrome } from "@/lib/music/music-auto-hide-chrome";
 import {
@@ -155,7 +157,9 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     musicStore,
     deviceLibraryPlayback,
     clearDeviceLibraryPlayback,
+    pausePlayback,
     playing,
+    canPlay,
     sleepTimerMinutes,
     setSleepTimerMinutes,
     getAudioElement,
@@ -311,6 +315,10 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
     if (tracksWithSrc.length === 0) return null;
     return tracksWithSrc[Math.min(resolvedTrackIdx, tracksWithSrc.length - 1)];
   }, [tracksWithSrc, resolvedTrackIdx]);
+  const selectedTrackTitle = useMemo(() => {
+    if (!track) return null;
+    return resolveLocalized(track.title, locale).trim() || t("music.home.trackUntitled");
+  }, [locale, t, track]);
 
   const queueRows = useMemo(
     () =>
@@ -395,17 +403,27 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
       if (track && inferTrackAlbumFromCompanionTrack(track) === nextAlbum) return;
       const nextTracks = allTracksWithSrc.filter((tr) => inferTrackAlbumFromCompanionTrack(tr) === nextAlbum);
       if (nextTracks.length === 0) return;
-      const pick = nextTracks[Math.floor(Math.random() * nextTracks.length)]!;
+      const pickIndex = Math.floor(Math.random() * nextTracks.length);
+      const pick = nextTracks[pickIndex]!;
+      pausePlayback();
       clearDeviceLibraryPlayback();
       bumpUserSkip();
       const src = (pick.src ?? "").trim();
-      if (src) setPlaybackSrc(src);
+      if (src) {
+        prefetchMusicTrackBundle({ src: pick.src, analysisSrc: pick.analysisSrc });
+        const nextPick = nextTracks[(pickIndex + 1) % nextTracks.length];
+        if (nextPick && nextPick.id !== pick.id) {
+          prefetchMusicTrackBundle({ src: nextPick.src, analysisSrc: nextPick.analysisSrc });
+        }
+        setPlaybackSrc(src);
+      }
     },
     [
       album,
       allTracksWithSrc,
       bumpUserSkip,
       clearDeviceLibraryPlayback,
+      pausePlayback,
       setPlaybackSrc,
       setSleepTimerMinutes,
       sleepTimerMinutes,
@@ -817,6 +835,12 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
               })}
             </div>
 
+            {selectedTrackTitle ? (
+              <p className="music-home-selected-track" aria-live="polite">
+                当前选中：<span>{selectedTrackTitle}</span>
+              </p>
+            ) : null}
+
             {audioSrc ? (
               <div className="music-home-transport">
                 <p className="music-home-time-line">
@@ -851,6 +875,26 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                     onClick={onPrev}
                   >
                     <IconSkipPrev />
+                  </button>
+                  <button
+                    type="button"
+                    className={[
+                      "music-home-icon-btn",
+                      "music-home-icon-btn--play",
+                      playing ? "music-home-icon-btn--on" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    aria-label={playing ? t("playback.pauseMusic") : t("playback.playMusic")}
+                    aria-pressed={playing}
+                    disabled={!canPlay}
+                    onClick={() => void togglePlayMusic()}
+                  >
+                    {playing ? (
+                      <IconPause className="music-home-play-icon" />
+                    ) : (
+                      <IconPlay className="music-home-play-icon" />
+                    )}
                   </button>
                   <button
                     type="button"

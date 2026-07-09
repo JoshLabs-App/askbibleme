@@ -29,16 +29,39 @@ export function isReadingPlannerChoiceActive(
   return prefs.planId === choice.planId;
 }
 
-export async function activateReadingPlanFromPlanner(choice: ReadingPlannerPlanChoice): Promise<void> {
+/** 是否支持「从第几天开始读」（三循环按日历锚定，不适用）。 */
+export function readingPlannerChoiceSupportsStartDay(choice: ReadingPlannerPlanChoice): boolean {
+  return choice.type === "nt-deep-repeat" || choice.type === "other";
+}
+
+/** 「从第几天开始读」的上限。 */
+export function readingPlannerChoiceMaxStartDay(choice: ReadingPlannerPlanChoice): number {
+  if (choice.type === "other") {
+    return Math.max(1, Number.isFinite(choice.dayCount) ? choice.dayCount : 365);
+  }
+  if (choice.type === "nt-deep-repeat") return 365;
+  return 1;
+}
+
+export async function activateReadingPlanFromPlanner(
+  choice: ReadingPlannerPlanChoice,
+  opts?: { startDay?: number },
+): Promise<void> {
+  const startDay = Math.max(1, Math.floor(opts?.startDay ?? 1));
   if (choice.type === "nt-deep-repeat") {
-    await activateNtDeepRepeatPlan({ dayCount: 1, pace: choice.pace });
+    await activateNtDeepRepeatPlan({ dayCount: 1, pace: choice.pace, startDay });
     return;
   }
   if (choice.type === "triple-loop") {
     await setActiveReadingPlan(TRIPLE_LOOP_PLAN_ID, "calendar-easter", { dayCount: 1 });
     return;
   }
-  await setActiveReadingPlan(choice.planId, "from-today", { dayCount: choice.dayCount });
+  const backDated = new Date();
+  backDated.setDate(backDated.getDate() - (startDay - 1));
+  await setActiveReadingPlan(choice.planId, "from-today", {
+    dayCount: choice.dayCount,
+    now: backDated,
+  });
 }
 
 export async function readCurrentPlannerChoice(): Promise<ReadingPlannerPlanChoice | null> {

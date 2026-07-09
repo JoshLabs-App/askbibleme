@@ -93,8 +93,8 @@ export function useScriptureShellPlayback(args: Args) {
     registerReadChapterPlayback(chapterCtxRef.current, reg);
   }, []);
 
-  const togglePlayScripture = useCallback(async () => {
-    await toggleScripturePlayback(chapterCtxRef.current);
+  const togglePlayScripture = useCallback(async (opts?: { forcePause?: boolean }) => {
+    await toggleScripturePlayback(chapterCtxRef.current, opts);
   }, []);
 
   return {

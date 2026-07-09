@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import type { AppLocale } from "../i18n/config";
 import { MinimalProgressBar } from "../ui/MinimalProgressBar";
 import { MusicHomeTransportButtonRow } from "./MusicHomeTransportButtonRow";
@@ -11,6 +12,10 @@ import type { MusicRepeatMode } from "./musicPlaybackTypes";
 type Props = {
   locale: AppLocale;
   compactLandscape: boolean;
+  playing: boolean;
+  canTogglePlayback: boolean;
+  onTogglePlay: () => void;
+  selectedTrackTitle: string;
   position: number;
   duration: number;
   progress: number;
@@ -33,6 +38,10 @@ type Props = {
 export function MusicHomePlaybackControls({
   locale,
   compactLandscape,
+  playing,
+  canTogglePlayback,
+  onTogglePlay,
+  selectedTrackTitle,
   position,
   duration,
   progress,
@@ -71,6 +80,9 @@ export function MusicHomePlaybackControls({
 
   return (
     <View style={styles.transport}>
+      <Text style={styles.selectedTrackLine} numberOfLines={1}>
+        {musicCopy.selectedTrack}: <Text style={styles.selectedTrackTitle}>{selectedTrackTitle}</Text>
+      </Text>
       <Text style={styles.timeLine}>
         {formatPlaybackClock(position)}
         <Text style={styles.timeSep}> / </Text>
@@ -84,6 +96,26 @@ export function MusicHomePlaybackControls({
         onSeekPreview={onSeekPreview}
         onSeekRatio={onSeekRatio}
       />
+      <Pressable
+        onPress={onTogglePlay}
+        hitSlop={12}
+        style={({ pressed }) => [
+          styles.playBtn,
+          playing && styles.playBtnOn,
+          !canTogglePlayback && styles.playBtnDisabled,
+          pressed && styles.pressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={playing ? musicCopy.pause : musicCopy.play}
+        accessibilityState={{ disabled: !canTogglePlayback, selected: playing }}
+        disabled={!canTogglePlayback}
+      >
+        <MaterialIcons
+          name={playing ? "pause" : "play-arrow"}
+          size={28}
+          color={playing ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.78)"}
+        />
+      </Pressable>
       <MusicHomeTransportButtonRow
         locale={locale}
         compactLandscape={compactLandscape}

@@ -68,6 +68,14 @@
       android:name=".alarm.ReadingAlarmPreludeService"
       android:exported="false"
       android:foregroundServiceType="mediaPlayback"/>
+    <service
+      android:name=".playback.ShellPlaybackService"
+      android:exported="false"
+      android:foregroundServiceType="mediaPlayback"/>
+    <service
+      android:name=".widget.WidgetPlaybackLauncherService"
+      android:exported="false"
+      android:foregroundServiceType="mediaPlayback"/>
     <receiver
       android:name=".widget.AskBibleDailyVerseWidgetProvider"
       android:exported="true"
@@ -80,6 +88,12 @@
       </intent-filter>
       <intent-filter>
         <action android:name="me.askbible.widget.ACTION_ROTATE_TICK"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="me.askbible.widget.ACTION_TOGGLE_READING"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="me.askbible.widget.ACTION_TOGGLE_MUSIC"/>
       </intent-filter>
       <meta-data
         android:name="android.appwidget.provider"

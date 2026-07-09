@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import {
   useBundledOnlyTrackIndexGuard,
   useMusicCatalogActions,
@@ -6,6 +8,7 @@ import {
   useWarmCalmBundledTrack,
   useAutoMusicPackDownload,
 } from "./musicStoreCatalog";
+import { logStartupTiming } from "../debug/startupTiming";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import type { MusicCompanionStore, PlaybackTrack } from "./types";
 
@@ -32,16 +35,32 @@ export function useMusicPlaybackCatalogLifecycle({
   setMusicDurationSec,
   setMusicCatalogUpdateAvailable,
 }: Args) {
+  const [catalogReady, setCatalogReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setCatalogReady(true),
+      Platform.OS === "android" ? 400 : 2500,
+    );
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!catalogReady) return;
+    logStartupTiming("music", "catalog_ready");
+  }, [catalogReady]);
+
   useMusicStoreBootstrap({
+    enabled: catalogReady,
     setStore,
     setTrackIndex,
     setLoading,
     soundRef: refs.soundRef,
     storeRef: refs.storeRef,
   });
-  useAutoMusicPackDownload({ setStore, setTrackIndex });
-  useBundledOnlyTrackIndexGuard(tracks, trackIndex, setTrackIndex);
-  useWarmCalmBundledTrack(tracks);
+  useAutoMusicPackDownload({ enabled: catalogReady, setStore, setTrackIndex });
+  useBundledOnlyTrackIndexGuard(tracks, trackIndex, setTrackIndex, catalogReady);
+  useWarmCalmBundledTrack(tracks, catalogReady);
 
   const { checkMusicCatalogUpdate, downloadMusicCatalogUpdate } = useMusicCatalogActions({
     storeRef: refs.storeRef,
@@ -54,6 +73,7 @@ export function useMusicPlaybackCatalogLifecycle({
   });
 
   useMusicResumeHydration({
+    enabled: catalogReady,
     tracks,
     playbackResumeHydratedRef: refs.playbackResumeHydratedRef,
     resumeTrackIdRef: refs.resumeTrackIdRef,

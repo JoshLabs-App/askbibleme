@@ -17,6 +17,7 @@ type Args = {
   coverVideoPosterOnly: boolean;
   forcePosterStage: boolean;
   videoPowerPolicy: HomeNatureVideoPowerPolicy;
+  enabled?: boolean;
 };
 
 export function useHomeNatureSceneVideoReadiness({
@@ -28,21 +29,30 @@ export function useHomeNatureSceneVideoReadiness({
   coverVideoPosterOnly,
   forcePosterStage,
   videoPowerPolicy,
+  enabled = true,
 }: Args) {
   const [waitingSceneId, setWaitingSceneId] = useState<string | null>(null);
   const [showSceneLoader, setShowSceneLoader] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!homeFocused || !sceneId || loading || !sceneIdList.length) return;
     if (videoPowerPolicy.skipAdjacentPreload) return;
-    const task = InteractionManager.runAfterInteractions(() => {
-      void ensureNatureSceneVideoReady(sceneId);
-      void preloadAdjacentNatureSceneVideos(sceneIdList, sceneId);
-    });
-    return () => task.cancel();
-  }, [homeFocused, sceneId, sceneIdList, loading, videoPowerPolicy.skipAdjacentPreload]);
+    let task: { cancel: () => void } | null = null;
+    const timer = setTimeout(() => {
+      task = InteractionManager.runAfterInteractions(() => {
+        void ensureNatureSceneVideoReady(sceneId);
+        void preloadAdjacentNatureSceneVideos(sceneIdList, sceneId);
+      });
+    }, 1800);
+    return () => {
+      clearTimeout(timer);
+      task?.cancel();
+    };
+  }, [enabled, homeFocused, sceneId, sceneIdList, loading, videoPowerPolicy.skipAdjacentPreload]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (coverVideoPosterOnly) {
       setWaitingSceneId(null);
       setShowSceneLoader(false);
@@ -50,6 +60,7 @@ export function useHomeNatureSceneVideoReadiness({
   }, [coverVideoPosterOnly]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!waitingSceneId) {
       setShowSceneLoader(false);
       return;
@@ -65,9 +76,10 @@ export function useHomeNatureSceneVideoReadiness({
     }
     const timer = setTimeout(() => setShowSceneLoader(true), 220);
     return () => clearTimeout(timer);
-  }, [coverVideoPosterOnly, forcePosterStage, waitingSceneId]);
+  }, [enabled, coverVideoPosterOnly, forcePosterStage, waitingSceneId]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!homeFocused) return;
     if (Platform.OS !== "android") return;
     if (coverVideoPosterOnly || forcePosterStage) return;
@@ -78,11 +90,17 @@ export function useHomeNatureSceneVideoReadiness({
       return;
     }
     setWaitingSceneId(current);
-    const task = InteractionManager.runAfterInteractions(() => {
-      void ensureNatureSceneVideoReady(current);
-    });
-    return () => task.cancel();
-  }, [coverVideoPosterOnly, forcePosterStage, homeFocused, sceneId]);
+    let task: { cancel: () => void } | null = null;
+    const timer = setTimeout(() => {
+      task = InteractionManager.runAfterInteractions(() => {
+        void ensureNatureSceneVideoReady(current);
+      });
+    }, 900);
+    return () => {
+      clearTimeout(timer);
+      task?.cancel();
+    };
+  }, [enabled, coverVideoPosterOnly, forcePosterStage, homeFocused, sceneId]);
 
   const handleSceneVideoReady = useCallback((id: string) => {
     markNatureSceneVideoReady(id);

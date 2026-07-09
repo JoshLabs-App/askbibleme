@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { resolveUiText } from "../i18n/site-copy";
@@ -10,6 +10,13 @@ import {
   type HomeVersePoolMenuScopeId,
 } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
 import { setHomeVersePoolScope } from "../home/homeVersePoolScopePrefs";
+import {
+  HOME_VERSE_ROTATION_SEC_OPTIONS,
+  getHomeVerseRotationSec,
+  hydrateHomeVerseRotationSec,
+  subscribeHomeVerseRotationSec,
+  writeHomeVerseRotationSec,
+} from "../home/homeVerseRotationPrefs";
 import { shellNavDrawerStyles as styles } from "./shellNavDrawerStyles";
 
 const OPTIONS_MAX_HEIGHT = 280;
@@ -45,11 +52,22 @@ type Props = {
 
 export function ShellNavDrawerHomeVersePoolSection({ locale, selectedScope }: Props) {
   const [open, setOpen] = useState(false);
+  const stableSec = useSyncExternalStore(
+    subscribeHomeVerseRotationSec,
+    getHomeVerseRotationSec,
+    getHomeVerseRotationSec,
+  );
   const scope = selectedScope ?? DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
   const rows = useMemo(
     () => orderVersePoolMenuRowsNewTestamentFirst(buildHomeVersePoolMenuRows(locale)),
     [locale],
   );
+  const title = resolveUiText(locale, "停留时间", "Hold time");
+  const hint = resolveUiText(locale, "默认 7 秒", "Default 7s");
+
+  useEffect(() => {
+    void hydrateHomeVerseRotationSec();
+  }, []);
 
   return (
     <>
@@ -114,6 +132,35 @@ export function ShellNavDrawerHomeVersePoolSection({ locale, selectedScope }: Pr
           </ScrollView>
         </View>
       ) : null}
+      <View style={styles.holdTimeBlock}>
+        <Text style={styles.sectionLabelCompact}>{title}</Text>
+        <Text style={styles.holdTimeHint}>{hint}</Text>
+        <View style={styles.holdTimeChoicesWrap}>
+          {HOME_VERSE_ROTATION_SEC_OPTIONS.map((sec) => {
+            const selected = stableSec === sec;
+            return (
+              <Pressable
+                key={sec}
+                onPress={() => {
+                  void writeHomeVerseRotationSec(sec);
+                }}
+                style={({ pressed }) => [
+                  styles.holdTimeChoice,
+                  selected ? styles.holdTimeChoiceActive : null,
+                  pressed ? styles.poolSelectTriggerPressed : null,
+                ]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={resolveUiText(locale, `停留时间 ${sec} 秒`, `Hold time ${sec}s`)}
+              >
+                <Text style={[styles.holdTimeChoiceText, selected ? styles.holdTimeChoiceTextActive : null]}>
+                  {resolveUiText(locale, `${sec} 秒`, `${sec}s`)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
     </>
   );
 }

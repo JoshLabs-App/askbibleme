@@ -2,7 +2,7 @@ import type { NatureSettingsV2, NatureVideoEntry } from "../types/nature";
 
 function videoSrcForEntry(entry: NatureVideoEntry | undefined): string {
   if (!entry) return "";
-  return entry.src.trim();
+  return entry.src4k?.trim() || entry.src1080?.trim() || entry.src?.trim() || "";
 }
 
 /** 自然场景成片播放（固定 720p `src`）；环境声层暂未在 App 启用。 */

@@ -11,6 +11,10 @@ type Props = {
   albumCounts: Record<string, number>;
   compactLandscape: boolean;
   chromeVisible: boolean;
+  playing: boolean;
+  canTogglePlayback: boolean;
+  onTogglePlay: () => void;
+  selectedTrackTitle: string;
   position: number;
   duration: number;
   progress: number;

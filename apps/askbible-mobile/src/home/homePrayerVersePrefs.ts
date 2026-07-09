@@ -131,8 +131,8 @@ export function verseTranslationIdsFromPrefs(
 }
 
 /** 经文多行拼接用：按译本 id 推断中文/英文流式规则 */
-export function flowLocaleForHomeVerseTranslationId(translationId: string): AppLocale {
-  const id = translationId.trim().toLowerCase();
+export function flowLocaleForHomeVerseTranslationId(translationId: string | undefined | null): AppLocale {
+  const id = String(translationId ?? "").trim().toLowerCase();
   if (!id) return "en";
   if (id === "cuv-trad" || id.includes("hant")) return "zh-TW";
   if (id.startsWith("cuv") || id.includes("zh")) return "zh-CN";

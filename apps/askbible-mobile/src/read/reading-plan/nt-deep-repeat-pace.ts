@@ -22,24 +22,17 @@ function addLocalDays(d: Date, days: number): Date {
   return out;
 }
 
-function mondayBasedDow(d: Date): number {
-  return (d.getDay() + 6) % 7;
-}
-
+/** 首段天数固定为 `pace` 天。 */
 export function firstSegmentDayCount(start: Date, pace: NtDeepRepeatPace): number {
-  const s = startOfLocalDay(start);
-  const weeks = pace / 7;
-  const fromMonday = mondayBasedDow(s);
-  const daysToSundayOfStartWeek = 6 - fromMonday;
-  const extendToNextSunday = fromMonday > 0 ? 7 : 0;
-  const endOffset = daysToSundayOfStartWeek + extendToNextSunday + (weeks - 1) * 7;
-  return endOffset + 1;
+  void start;
+  return pace;
 }
 
 export function firstSegmentEndDate(start: Date, pace: NtDeepRepeatPace): Date {
   return addLocalDays(startOfLocalDay(start), firstSegmentDayCount(start, pace) - 1);
 }
 
+/** 后续每段固定 pace 天。 */
 export function standardSegmentDayCount(pace: NtDeepRepeatPace): number {
   return pace;
 }
@@ -50,36 +43,30 @@ export function segmentDayTargetForStage(
   planStartedOn: string,
 ): number {
   if (stageIndex === 0) {
-    const start = parseLocalDate(planStartedOn) ?? new Date();
-    return firstSegmentDayCount(start, pace);
+    void planStartedOn;
+    return pace;
   }
   return standardSegmentDayCount(pace);
 }
 
-function parseLocalDate(iso: string): Date | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
-  if (!m) return null;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const da = Number(m[3]);
-  if (!Number.isFinite(y) || mo < 1 || mo > 12 || da < 1 || da > 31) return null;
-  return new Date(y, mo - 1, da);
-}
-
+/** 走完一轮新约（52 阶）的总天数。 */
 export function ntDeepRepeatOneCycleDays(pace: NtDeepRepeatPace, start = new Date()): number {
-  return firstSegmentDayCount(start, pace) + (NT_DEEP_REPEAT_STAGE_COUNT - 1) * pace;
+  void start;
+  return NT_DEEP_REPEAT_STAGE_COUNT * pace;
 }
 
+/**
+ * 同一节奏下连续走完 N 轮 52 阶（少见；一般「N 遍」指每阶连读 N 天的一轮）。
+ * @see ntDeepRepeatOneCycleDays
+ */
 export function ntDeepRepeatDaysForLadderRepeats(
   ladderRepeats: number,
   pace: NtDeepRepeatPace,
   start = new Date(),
 ): number {
+  void start;
   const safeRepeats = Math.max(1, Math.floor(ladderRepeats));
-  const oneCycle = ntDeepRepeatOneCycleDays(pace, start);
-  if (safeRepeats === 1) return oneCycle;
-  const standardFirst = pace;
-  return oneCycle + (safeRepeats - 1) * (standardFirst + (NT_DEEP_REPEAT_STAGE_COUNT - 1) * pace);
+  return safeRepeats * ntDeepRepeatOneCycleDays(pace);
 }
 
 export function formatApproxDurationZh(days: number): string {
@@ -99,15 +86,18 @@ export function formatApproxDurationEn(days: number): string {
 }
 
 export type NtDeepRepeatPaceTimelineRow = {
+  /** 麦克阿瑟式「N 遍」= 每阶连读 N 天，走完 52 阶为一轮。 */
   depthDays: NtDeepRepeatPace;
   days: number;
 };
 
+/** 对比三种深度（7 / 14 / 28 天每阶）各走完一轮新约（52 阶）的天数。 */
 export function buildNtDeepRepeatPaceTimeline(selectedPace: NtDeepRepeatPace, start = new Date()) {
-  const oneCycleDays = ntDeepRepeatOneCycleDays(selectedPace, start);
+  void start;
+  const oneCycleDays = ntDeepRepeatOneCycleDays(selectedPace);
   const passRows = NT_DEEP_REPEAT_PACE_OPTIONS.map((depthDays) => ({
     depthDays,
-    days: ntDeepRepeatOneCycleDays(depthDays, start),
+    days: ntDeepRepeatOneCycleDays(depthDays),
   }));
   const otPassApproxYears = oneCycleDays / 365.25;
   return { oneCycleDays, passRows, otPassApproxYears };

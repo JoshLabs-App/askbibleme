@@ -7,6 +7,7 @@ import {
   safePlaySound,
   safeStopAndUnloadSound,
 } from "../audio/safeShellSound";
+import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
 import { createMusicPlaybackStatusHandler } from "./musicPlaybackStatus";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import type { PlaybackTrack } from "./types";
@@ -20,6 +21,7 @@ type CreateArgs = {
   generation: number;
   epoch: number;
   soundId: number;
+  shouldPlay?: boolean;
   syncPlayingState: (playing: boolean) => void;
   setPlaying: (playing: boolean) => void;
   setMusicCurrentSec: (sec: number) => void;
@@ -41,6 +43,7 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
     generation,
     epoch,
     soundId,
+    shouldPlay = true,
     syncPlayingState,
     setPlaying,
     setMusicCurrentSec,
@@ -122,11 +125,27 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
       persistMusicResume,
       loadedStatus,
     });
-    const ok = await safePlaySound(sound);
-    if (!ok) {
-      syncPlayingState(false);
-      await safeStopAndUnloadSound(sound);
-      return { ok: false, stale: false, failedTrackId: track.id };
+    if (shouldPlay) {
+      const ok = await safePlaySound(sound);
+      if (!ok) {
+        syncPlayingState(false);
+        await safeStopAndUnloadSound(sound);
+        return { ok: false, stale: false, failedTrackId: track.id };
+      }
+      const playingStatus = await safeGetSoundStatus(sound);
+      if (playingStatus?.isLoaded) {
+        syncShellMediaSessionExplicit({
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          artworkUri: track.artworkUri,
+          durationSec: playingStatus.durationMillis
+            ? playingStatus.durationMillis / 1000
+            : track.durationSec ?? 0,
+          positionSec: playingStatus.positionMillis / 1000,
+          playing: playingStatus.isPlaying,
+        });
+      }
     }
     if (generation !== playTrackGenerationRef.current) {
       await sound.unloadAsync();

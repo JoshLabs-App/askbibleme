@@ -127,7 +127,7 @@ export function resolveEffectiveReadingPlanPrefs(
   stored: ReadingPlanPrefs | null,
   opts?: { dayCount?: number },
 ): ReadingPlanPrefs {
-  if (stored) return stored;
+  if (stored && typeof stored.planId === "string" && stored.planId.trim()) return stored;
   return buildDefaultReadingPlanPrefs(opts?.dayCount);
 }
 
@@ -173,6 +173,8 @@ export async function setActiveReadingPlan(
   anchor: ReadingPlanAnchor,
   opts?: { now?: Date; dayCount?: number; ntDeepRepeatPace?: NtDeepRepeatPace },
 ): Promise<ReadingPlanPrefs> {
+  const { preserveReadingHabitBeforePlanSwitch } = await import("../reading-habit-stats");
+  await preserveReadingHabitBeforePlanSwitch();
   const now = opts?.now ?? new Date();
   const prefs: ReadingPlanPrefs = {
     version: 1,

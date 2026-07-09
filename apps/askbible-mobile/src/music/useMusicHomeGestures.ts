@@ -6,7 +6,7 @@ type Args = {
   currentFilteredIndex: number;
   musicActive: boolean;
   musicCurrentSec: number;
-  playTrackAt: (index: number) => Promise<void>;
+  playTrackAt: (index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>;
   playNext: () => Promise<void>;
   playPrev: () => Promise<void>;
   seekRatio: (ratio: number) => Promise<void>;

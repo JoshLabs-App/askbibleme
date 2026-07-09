@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { ReadingPlanStartDayPicker } from "../../read/ReadingPlanStartDayPicker";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
@@ -16,7 +17,11 @@ import type { ReadingPlanRegistryEntry } from "../../read/reading-plan/types";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../../shell/splash-branding.generated";
 import { theme } from "../../theme";
 import { exploreArticleRoute } from "../exploreFeaturedArticles";
-import type { ReadingPlannerPlanChoice } from "./activateReadingPlanFromPlanner";
+import {
+  readingPlannerChoiceMaxStartDay,
+  readingPlannerChoiceSupportsStartDay,
+  type ReadingPlannerPlanChoice,
+} from "./activateReadingPlanFromPlanner";
 import {
   getNtDeepPacePlannerCopy,
   getReadingPlannerPathGuidance,
@@ -28,6 +33,8 @@ type Props = {
   locale: AppLocale;
   choice: ReadingPlannerPlanChoice;
   onChange: (next: ReadingPlannerPlanChoice) => void;
+  startDay: number;
+  onStartDayChange: (next: number) => void;
 };
 
 function planFieldKey(planId: string, field: "title" | "subtitle" | "blurb"): string {
@@ -40,11 +47,14 @@ function trPlanField(planId: string, field: "title" | "subtitle" | "blurb"): str
   return v === key ? "" : v;
 }
 
-export function ReadingPlannerPlanStep({ locale, choice, onChange }: Props) {
+export function ReadingPlannerPlanStep({ locale, choice, onChange, startDay, onStartDayChange }: Props) {
   const router = useRouter();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const [otherExpanded, setOtherExpanded] = useState(choice.type === "other");
   const [otherPlans, setOtherPlans] = useState<ReadingPlanRegistryEntry[]>([]);
+
+  const supportsStartDay = readingPlannerChoiceSupportsStartDay(choice);
+  const maxStartDay = readingPlannerChoiceMaxStartDay(choice);
 
   useEffect(() => {
     void fetchReadingPlanRegistry().then((registry) => {
@@ -233,6 +243,15 @@ export function ReadingPlannerPlanStep({ locale, choice, onChange }: Props) {
           </View>
         ) : null}
       </View>
+
+      {supportsStartDay ? (
+        <ReadingPlanStartDayPicker
+          locale={locale}
+          value={startDay}
+          max={maxStartDay}
+          onChange={onStartDayChange}
+        />
+      ) : null}
     </View>
   );
 }

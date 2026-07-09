@@ -116,8 +116,8 @@ export function ReadTodayPlanReadings({ plan, onOpenChapter }: ReadingsProps) {
   }, [loading, readings, isReadingDone, fractions]);
 
   useEffect(() => {
-    if (todayHasReading === undefined) return;
-    void syncTodayComplete(todayHasReading);
+    if (todayHasReading !== true) return;
+    void syncTodayComplete(true);
   }, [todayHasReading, syncTodayComplete]);
 
   return (

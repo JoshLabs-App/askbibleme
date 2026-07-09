@@ -1,5 +1,6 @@
 import type { Audio, AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
+import { refreshShellMediaSession } from "../audio/shellMediaSessionPayload";
 import {
   MUSIC_PROGRESS_UI_INTERVAL_SEC,
   shouldEmitPlaybackSecUpdate,
@@ -31,7 +32,7 @@ export type MusicPlaybackStatusHandlerArgs = {
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   musicGainRef: MutableRefObject<number>;
   trackIndexRef: MutableRefObject<number>;
-  playTrackAtRef: MutableRefObject<(index: number) => Promise<void>>;
+  playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
   syncPlayingState: (playing: boolean) => void;
   setPlaying: (playing: boolean) => void;
   setMusicCurrentSec: (sec: number) => void;
@@ -76,22 +77,29 @@ export function createMusicPlaybackStatusHandler(
     syncPlayingState(status.isPlaying);
     if (playbackModeRef.current === "music") {
       const musicSec = status.positionMillis / 1000;
-      if (
+      const durationSec = musicDurationSecWithCalmTrim(
+        track,
+        status.durationMillis ?? undefined,
+        musicRepeatModeRef.current,
+      );
+      const shouldRefreshSession =
+        !status.isPlaying ||
         shouldEmitPlaybackSecUpdate(
           lastMusicProgressSecRef,
           musicSec,
           MUSIC_PROGRESS_UI_INTERVAL_SEC,
-        )
-      ) {
+        );
+      if (shouldRefreshSession) {
+        refreshShellMediaSession({
+          playing: status.isPlaying,
+          musicCurrentSec: musicSec,
+          musicDurationSec: durationSec,
+        });
+      }
+      if (shouldRefreshSession) {
         setMusicCurrentSec(musicSec);
       }
-      setMusicDurationSec(
-        musicDurationSecWithCalmTrim(
-          track,
-          status.durationMillis ?? undefined,
-          musicRepeatModeRef.current,
-        ),
-      );
+      setMusicDurationSec(durationSec);
       if (
         handleMusicCalmLoopTrimStatus({
           status,

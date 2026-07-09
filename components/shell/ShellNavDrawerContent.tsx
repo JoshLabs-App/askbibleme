@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
+import { HomeVerseHoldTimeMenuPicker } from "@/components/home/HomeVerseHoldTimeMenuPicker";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HomeVersePoolMenuPicker } from "@/components/home/HomeVersePoolMenuPicker";
 import { HomeTtsExperimentDrawerSection } from "@/components/home/HomeTtsExperimentDrawerSection";
@@ -108,16 +109,19 @@ function ShellNavDrawerVersePoolSection() {
     locale === "en" ? "Pool" : locale === "zh-TW" ? toZhTwText("当前池") : "当前池";
 
   return (
-    <HomeVersePoolMenuPicker
-      locale={locale}
-      selectedScope={selectedScope}
-      poolLabel={sectionLabel}
-      currentLabel={poolLabel}
-      onSelectScope={(next) => {
-        setHomeVersePoolScope(next);
-        requestHomePrayerVerseFeedReload();
-      }}
-    />
+    <div className="space-y-2">
+      <HomeVersePoolMenuPicker
+        locale={locale}
+        selectedScope={selectedScope}
+        poolLabel={sectionLabel}
+        currentLabel={poolLabel}
+        onSelectScope={(next) => {
+          setHomeVersePoolScope(next);
+          requestHomePrayerVerseFeedReload();
+        }}
+      />
+      <HomeVerseHoldTimeMenuPicker />
+    </div>
   );
 }
 

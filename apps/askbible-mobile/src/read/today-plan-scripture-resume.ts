@@ -19,6 +19,27 @@ export type TodayPlanScriptureStartTarget = {
   startAtSec: number;
 };
 
+export function resolveTodayPlanScriptureStartTargetFromSaved(
+  queue: readonly PlanChapterRef[],
+  scopeKey: string,
+  saved: TodayPlanScriptureResume | null,
+  opts?: { durationSec?: number },
+): TodayPlanScriptureStartTarget | null {
+  const first = queue[0];
+  if (!first) return null;
+  if (!saved || saved.scopeKey !== scopeKey) {
+    return { target: first, startAtSec: 0 };
+  }
+
+  const match = queue.find((ref) => ref.bookId === saved.bookId && ref.chapter === saved.chapter);
+  if (!match) {
+    return { target: first, startAtSec: 0 };
+  }
+
+  const startAtSec = normalizeMusicResumeSec(saved.positionSec, opts?.durationSec);
+  return { target: match, startAtSec };
+}
+
 export async function readTodayPlanScriptureResume(): Promise<TodayPlanScriptureResume | null> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -71,20 +92,7 @@ export async function resolveTodayPlanScriptureStartTarget(
   queue: readonly PlanChapterRef[],
   opts?: { durationSec?: number },
 ): Promise<TodayPlanScriptureStartTarget | null> {
-  const first = queue[0];
-  if (!first) return null;
-
   const scopeKey = await resolveLocalTodayReadingScopeKey();
   const saved = await readTodayPlanScriptureResume();
-  if (!saved || saved.scopeKey !== scopeKey) {
-    return { target: first, startAtSec: 0 };
-  }
-
-  const match = queue.find((ref) => ref.bookId === saved.bookId && ref.chapter === saved.chapter);
-  if (!match) {
-    return { target: first, startAtSec: 0 };
-  }
-
-  const startAtSec = normalizeMusicResumeSec(saved.positionSec, opts?.durationSec);
-  return { target: match, startAtSec };
+  return resolveTodayPlanScriptureStartTargetFromSaved(queue, scopeKey, saved, opts);
 }

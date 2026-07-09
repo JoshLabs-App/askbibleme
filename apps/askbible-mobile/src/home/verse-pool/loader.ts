@@ -84,8 +84,10 @@ export async function loadHomeVerseManifest(): Promise<HomePrayerManifestV1 | nu
 
 function normalizeHomeVerseEntry(entry: HomeVerseEntry): HomeVerseEntry {
   return {
-    ref: normalizeVerseTextForHomeDisplay(entry.ref) || entry.ref.trim(),
-    lines: entry.lines.map((line) => normalizeVerseTextForHomeDisplay(line) || line.trim()).filter(Boolean),
+    ref: normalizeVerseTextForHomeDisplay(entry.ref) || String(entry.ref ?? "").trim(),
+    lines: entry.lines
+      .map((line) => normalizeVerseTextForHomeDisplay(line) || String(line ?? "").trim())
+      .filter(Boolean),
   };
 }
 

@@ -13,6 +13,7 @@ type Args = {
   musicModeActive: boolean;
   scriptureModeActive: boolean;
   voiceActive: boolean;
+  enabled?: boolean;
 };
 
 export function useHomeNatureSceneAmbient({
@@ -24,6 +25,7 @@ export function useHomeNatureSceneAmbient({
   musicModeActive,
   scriptureModeActive,
   voiceActive,
+  enabled = true,
 }: Args) {
   const ambientClipById = useMemo(
     () => new Map((settings?.ambientClips ?? []).map((clip) => [clip.id, clip])),
@@ -31,11 +33,12 @@ export function useHomeNatureSceneAmbient({
   );
 
   useEffect(() => {
+    if (!enabled) return;
     if (!activeAmbientSlotId) return;
     const hasBundled = typeof BUNDLED_AMBIENT_SCENE_AUDIO[activeAmbientSlotId] === "number";
     if (hasBundled || ambientClipById.has(activeAmbientSlotId)) return;
     setActiveAmbientSlotId("");
-  }, [activeAmbientSlotId, ambientClipById, setActiveAmbientSlotId]);
+  }, [enabled, activeAmbientSlotId, ambientClipById, setActiveAmbientSlotId]);
 
   const activeAmbientLayer = useMemo(() => {
     if (!activeAmbientSlotId) return [];
@@ -68,6 +71,6 @@ export function useHomeNatureSceneAmbient({
     activeAmbientLayer,
     ambientLayersKey,
     clampedRate,
-    homeFocused && activeAmbientLayer.length > 0,
+    enabled && homeFocused && activeAmbientLayer.length > 0,
   );
 }

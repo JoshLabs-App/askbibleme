@@ -101,6 +101,29 @@ export async function resetReadingPlanAheadToToday(now = new Date()): Promise<Re
   return nextPrefs;
 }
 
+/**
+ * 跨设备合并同一 `from-today` 计划时，取“更早的开始日期”。
+ * 新装/重装设备的 startedOn 会是今天；若采用较新的一份，会把计划进度
+ * （尤其旧约“每天 +1 章”）重置回第 1 天，与另一台设备不一致。
+ */
+function earlierFromTodayStartedOn(
+  left: ReadingPlanPrefs,
+  right: ReadingPlanPrefs,
+  planId: string,
+): string | undefined {
+  const candidates: { startedOn: string; ms: number }[] = [];
+  for (const p of [left, right]) {
+    if (p.anchor !== "from-today" || p.planId !== planId) continue;
+    const s = p.startedOn?.trim();
+    if (!s) continue;
+    const ms = Date.parse(s);
+    if (Number.isFinite(ms)) candidates.push({ startedOn: s, ms });
+  }
+  if (!candidates.length) return undefined;
+  candidates.sort((x, y) => x.ms - y.ms);
+  return candidates[0].startedOn;
+}
+
 export function mergeReadingPlanPrefsValue(a: unknown, b: unknown): ReadingPlanPrefs | unknown {
   if (!a || typeof a !== "object") return b;
   if (!b || typeof b !== "object") return a;
@@ -114,7 +137,14 @@ export function mergeReadingPlanPrefsValue(a: unknown, b: unknown): ReadingPlanP
     : left.version === 1
       ? left
       : right;
-  return { ...base, aheadDays: ahead > 0 ? ahead : undefined };
+  const merged: ReadingPlanPrefs = { ...base, aheadDays: ahead > 0 ? ahead : undefined };
+
+  if (merged.anchor === "from-today") {
+    const earliest = earlierFromTodayStartedOn(left, right, merged.planId);
+    if (earliest) merged.startedOn = earliest;
+  }
+
+  return merged;
 }
 
 export function stripAheadDaysFromPrefs(prefs: ReadingPlanPrefs): ReadingPlanPrefs {

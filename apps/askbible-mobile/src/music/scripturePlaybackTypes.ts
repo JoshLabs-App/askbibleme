@@ -7,6 +7,7 @@ export type ReadChapterPlaybackRegistration = {
   bookName: string;
   translationId: string;
   chapterAudioSrc: string | null;
+  onAdvancePreviousChapter: () => void;
   onAdvanceNextChapter: () => void;
   onAdvanceNextInBook: () => void;
 };

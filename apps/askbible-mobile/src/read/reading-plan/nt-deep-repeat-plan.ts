@@ -31,8 +31,8 @@ export const NT_DEEP_REPEAT_EXPLORE_ARTICLE_SLUG = "a-macarthur-lifelong-bible-r
 
 export const NT_DEEP_REPEAT_PLAN_DAY_COUNT = 1;
 
-export function isNtDeepRepeatPlanId(planId: string): boolean {
-  return planId.trim() === NT_DEEP_REPEAT_PLAN_ID;
+export function isNtDeepRepeatPlanId(planId: string | null | undefined): boolean {
+  return String(planId ?? "").trim() === NT_DEEP_REPEAT_PLAN_ID;
 }
 
 export function getNtDeepRepeatRegistryEntry(): ReadingPlanRegistryEntry {

@@ -32,7 +32,7 @@ function isNatureVideoRowLocallyPlayable(
   row: NatureSettingsV2["videos"][number],
   baseUrl: string,
 ): boolean {
-  const id = row.id.trim();
+  const id = String(row.id ?? "").trim();
   if (id && getBundledNatureVideoModule(id) != null) return true;
   const rel = preferredVideoSrc(row);
   if (!rel) return false;

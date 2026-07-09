@@ -1,4 +1,5 @@
 import Markdown from "react-native-markdown-display";
+import type { ASTNode, RenderRules } from "react-native-markdown-display";
 import { useMemo, type ReactNode } from "react";
 import { Linking, StyleSheet, Text, View } from "react-native";
 import {
@@ -215,16 +216,16 @@ export function ReadChapterInfoEditionMarkdown({
   const markdownRules = useMemo(() => {
     if (!plainScriptureLinks) return undefined;
     return {
-      link: (node: { key: string; attributes: { href: string } }, children: ReactNode, _parent: unknown, styles: { link: object; plainExploreLink?: object }) => (
+      link: (node: ASTNode, children: ReactNode[], _parent: ASTNode[], styles: any) => (
         <Text
           key={node.key}
           style={plainScriptureLinks ? (styles.plainExploreLink ?? styles.link) : styles.link}
-          onPress={() => openMarkdownLink(node.attributes.href, onLinkPress)}
+          onPress={() => openMarkdownLink(String(node.attributes.href ?? ""), onLinkPress)}
         >
           {children}
         </Text>
       ),
-    };
+    } satisfies RenderRules;
   }, [plainScriptureLinks, onLinkPress]);
   if (!localized) return null;
 

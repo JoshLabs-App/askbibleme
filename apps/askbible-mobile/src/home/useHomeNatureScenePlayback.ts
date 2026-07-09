@@ -60,7 +60,7 @@ export function useHomeNatureScenePlayback({
       const pb = resolveNaturePlayback({ ...settings, activeVideoId: id });
       const remote = pb?.videoSrc ? toAbsoluteUrl(baseUrl, pb.videoSrc) : "";
       const resolved = resolveNatureCoverPlayback(id, remote);
-      if (resolved.bundledModule != null || resolved.uri.trim()) return resolved;
+      if (resolved.bundledModule != null || (resolved.uri ?? "").trim()) return resolved;
       if (!pb?.videoSrc) return null;
       return resolved;
     },

@@ -4,10 +4,13 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { ShellNavDrawerContent } from "@/components/shell/ShellNavDrawerContent";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
+import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
+import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import {
   SHELL_CHROME_HIT_PX,
   SHELL_ICON,
@@ -125,6 +128,34 @@ function IconClose(props: { className?: string }) {
   );
 }
 
+function IconEnterFullscreen(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M8 3H3v5M16 3h5v5M3 16v5h5M16 21h5v-5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconExitFullscreen(props: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={props.className} aria-hidden>
+      <path
+        d="M8 3v5H3M16 3v5h5M3 16h5v5M16 21v-5h5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const DRAWER_TRANSITION_MS = 300;
 
 const EDGE_SWIPE_OPEN_PX = 56;
@@ -170,9 +201,13 @@ export function AppShellTopBar({
 }: Props) {
   const pathname = usePathname() ?? "";
   const natureHomeShell = isNatureHomeShellPath(pathname);
+  const readHomeShell = isReadBibleHomePath(pathname);
+  const goldenVerseShell = pathname === "/verse" || pathname.startsWith("/verse/");
+  const showImmersiveToggle = natureHomeShell || readHomeShell || goldenVerseShell;
   const insetClockEnv = useShellInsetClockEnvironment();
+  const { immersive, setImmersive } = useAppImmersive();
   const showTopShellTime =
-    !hideTopShellInsetTime && (insetClockEnv || landscapeImmersive || showTopInsetTime);
+    !immersive && !hideTopShellInsetTime && (insetClockEnv || landscapeImmersive || showTopInsetTime);
   const { t } = useLocale();
   const onLight = tone === "onLight";
   const iconBtn =
@@ -302,6 +337,19 @@ export function AppShellTopBar({
     : iconBtn;
 
   const drawerMotion = "transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] motion-reduce:transition-none motion-reduce:duration-0";
+  const hideMenuButtonResolved = hideMenuButton || immersive;
+
+  const toggleImmersiveMode = useCallback(() => {
+    const next = !immersive;
+    setImmersive(next);
+    if (navOpen) closeNavMenu();
+    if (typeof document === "undefined") return;
+    if (next) {
+      void requestFullscreenCompat(document.documentElement).catch(() => {});
+    } else {
+      void exitFullscreenCompat();
+    }
+  }, [immersive, navOpen, closeNavMenu, setImmersive]);
 
   return (
     <>
@@ -311,7 +359,7 @@ export function AppShellTopBar({
         ref={navEdgeStripRef}
         tabIndex={-1}
         aria-hidden
-        className={`fixed bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] left-0 z-[48] w-6 min-w-[1.25rem] cursor-pointer border-0 bg-transparent py-0 pl-[env(safe-area-inset-left)] pr-0 outline-none ${edgeStripTopClass}`}
+        className={`fixed bottom-[max(5.25rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] left-0 z-[48] w-6 min-w-[1.25rem] cursor-pointer border-0 bg-transparent py-0 pl-[env(safe-area-inset-left)] pr-0 outline-none ${edgeStripTopClass} ${immersive ? "pointer-events-none opacity-0" : ""}`}
         onClick={() => {
           if (suppressNavEdgeClickRef.current) {
             suppressNavEdgeClickRef.current = false;
@@ -323,7 +371,7 @@ export function AppShellTopBar({
       <div
         className={[
           "pointer-events-none fixed inset-x-0 top-0 z-[50] flex items-start gap-2 transition-opacity duration-300 motion-reduce:transition-none",
-          hideMenuButton ? "justify-end" : "justify-between",
+          hideMenuButtonResolved ? "justify-end" : "justify-between",
           topChromePadClass,
           landscapeImmersive
             ? "opacity-0 [&_.chrome-float-hit]:pointer-events-none"
@@ -332,7 +380,7 @@ export function AppShellTopBar({
         aria-hidden={landscapeImmersive ? true : undefined}
         inert={landscapeImmersive ? true : undefined}
       >
-        {hideMenuButton ? null : (
+        {hideMenuButtonResolved ? null : (
           <div className="chrome-float-hit pointer-events-auto">
             <button
               type="button"
@@ -361,7 +409,31 @@ export function AppShellTopBar({
             </button>
           </div>
         )}
-        <div className="chrome-float-hit pointer-events-auto flex flex-col items-end gap-2">{rightAccessory}</div>
+        <div className="chrome-float-hit pointer-events-auto flex flex-col items-end gap-2">
+          {rightAccessory}
+          {showImmersiveToggle ? (
+            <button
+              type="button"
+              onClick={toggleImmersiveMode}
+              aria-label={immersive ? t("chrome.exitImmersive") : t("chrome.enterImmersive")}
+              aria-pressed={immersive}
+              className={[
+                HIT,
+                onLight ? " text-ink/85 hover:bg-ink/[0.06]" : " text-white/[0.9] hover:bg-white/[0.1]",
+                immersive ? "bg-black/[0.08]" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              title={immersive ? t("chrome.exitImmersive") : t("chrome.enterImmersive")}
+            >
+              {immersive ? (
+                <IconExitFullscreen className="h-[1.05rem] w-[1.05rem] opacity-90" />
+              ) : (
+                <IconEnterFullscreen className="h-[1.05rem] w-[1.05rem] opacity-90" />
+              )}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {bodyPortalReady && drawerVisible

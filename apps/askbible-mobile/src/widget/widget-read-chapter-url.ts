@@ -15,9 +15,15 @@ export function widgetReadChapterExpoPath(rawPath: string): string | null {
   if (!match) return null;
   const bookId = match[1]!.toUpperCase();
   const chapter = match[2]!;
-  const verse = new URLSearchParams(queryPart).get("verse");
+  const query = new URLSearchParams(queryPart);
+  const verse = query.get("verse");
+  const autoplay = query.get("autoplay");
+  const out = new URLSearchParams();
+  if (verse) out.set("verse", verse);
+  if (autoplay) out.set("autoplay", autoplay);
+  const qs = out.toString();
   // Route groups like (tabs) are omitted from public URLs — never prefix with /(tabs).
-  return verse ? `/read/${bookId}/${chapter}?verse=${verse}` : `/read/${bookId}/${chapter}`;
+  return qs ? `/read/${bookId}/${chapter}?${qs}` : `/read/${bookId}/${chapter}`;
 }
 
 export type WidgetReadDeepLinkTarget = {

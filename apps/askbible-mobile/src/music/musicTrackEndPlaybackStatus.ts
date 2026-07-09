@@ -22,7 +22,7 @@ type TrackEndArgs = {
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   musicGainRef: MutableRefObject<number>;
   trackIndexRef: MutableRefObject<number>;
-  playTrackAtRef: MutableRefObject<(index: number) => Promise<void>>;
+  playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
   syncPlayingState: (playing: boolean) => void;
   setPlaying: (playing: boolean) => void;
 };

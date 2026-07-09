@@ -44,7 +44,7 @@ export function HomeNatureScreenVideoStage({
   softFocus,
   showSceneLoader,
 }: Props) {
-  const trimmedPosterFallback = posterUri.trim();
+  const trimmedPosterFallback = (posterUri ?? "").trim();
   const hasPosterFallback = posterModule != null || trimmedPosterFallback.length > 0;
 
   return (

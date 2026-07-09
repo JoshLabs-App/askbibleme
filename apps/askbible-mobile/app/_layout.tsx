@@ -25,9 +25,11 @@ import { ReadingAlarmBridge } from "../src/notifications/ReadingAlarmBridge";
 import { PlanFlowPlaybackBridge } from "../src/read/PlanFlowPlaybackBridge";
 import { ReadingPlanBootstrapBridge } from "../src/read/ReadingPlanBootstrapBridge";
 import { WidgetReadDeepLinkBridge } from "../src/widget/WidgetReadDeepLinkBridge";
+import { peekWidgetPlaybackBoot } from "../src/widget/widgetPlaybackColdStart";
 import { shouldShowOnboardingDevotionIntro } from "../src/onboarding/onboarding-devotion-prefs";
 import { useAndroidImmersiveSystemBars } from "../src/shell/useAndroidImmersiveSystemBars";
 import { runQueuedReadingAlarmDevE2E } from "../src/notifications/readingAlarmDevE2ERunner";
+import { logStartupTiming } from "../src/debug/startupTiming";
 
 function AndroidImmersiveSystemBars({ enabled }: { enabled: boolean }) {
   useAndroidImmersiveSystemBars(enabled);
@@ -50,15 +52,20 @@ function installAndroidFontSizeGuard() {
 }
 
 export default function RootLayout() {
-  const [navReady, setNavReady] = useState(false);
+  const [widgetPlaybackBoot] = useState(peekWidgetPlaybackBoot);
   const fontsReady = useAndroidNotoFonts();
-  const [onboardingReady, setOnboardingReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [bootTimedOut, setBootTimedOut] = useState(false);
+  const [shellFeaturesReady, setShellFeaturesReady] = useState(false);
+  const appReady = widgetPlaybackBoot || fontsReady;
+  console.warn("[root-layout] render", {
+    widgetPlaybackBoot,
+    fontsReady,
+    shellFeaturesReady,
+    appReady,
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => setBootTimedOut(true), 6000);
-    return () => clearTimeout(timer);
+    logStartupTiming("root", "mounted");
   }, []);
 
   useEffect(() => {
@@ -68,38 +75,26 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    void clearStaleNavigationState().finally(() => setNavReady(true));
+    const task = setTimeout(() => {
+      void clearStaleNavigationState();
+    }, 0);
+    return () => clearTimeout(task);
   }, []);
 
   useEffect(() => {
     let alive = true;
-    void shouldShowOnboardingDevotionIntro()
-      .then((show) => {
-        if (!alive) return;
-        setShowOnboarding(show);
-      })
-      .finally(() => {
-        if (!alive) return;
-        setOnboardingReady(true);
-      });
+    void shouldShowOnboardingDevotionIntro().then((show) => {
+      if (!alive) return;
+      setShowOnboarding(show);
+    });
     return () => {
       alive = false;
     };
   }, []);
 
-  /** 避免 AsyncStorage 等偶发挂起时永远停在橙黄启动页（TestFlight 真机） */
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setNavReady(true);
-      setOnboardingReady(true);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
   useEffect(() => {
     return subscribeOnboardingDevotionOpen(() => {
       setShowOnboarding(true);
-      setOnboardingReady(true);
     });
   }, []);
 
@@ -108,10 +103,15 @@ export default function RootLayout() {
     installAndroidFontSizeGuard();
   }, []);
 
-  const appReady = bootTimedOut || (navReady && fontsReady && onboardingReady);
+  useEffect(() => {
+    const delayMs = widgetPlaybackBoot ? 1500 : 900;
+    const task = setTimeout(() => setShellFeaturesReady(true), delayMs);
+    return () => clearTimeout(task);
+  }, [widgetPlaybackBoot]);
 
   useEffect(() => {
     if (!__DEV__ || !appReady) return;
+    logStartupTiming("root", "app_ready", `widget=${widgetPlaybackBoot ? "1" : "0"}`);
     const timer = setTimeout(() => {
       void runQueuedReadingAlarmDevE2E();
     }, 800);
@@ -128,49 +128,53 @@ export default function RootLayout() {
       <TelemetryProvider>
       <ShellNavMenuProvider>
           {appReady ? (
-            <>
             <MusicPlaybackProvider>
-              <AndroidImmersiveSystemBars enabled={appReady} />
-              <StatusBar style="dark" />
-              <Stack
-                screenOptions={{
-                  contentStyle: { flex: 1, backgroundColor: theme.canvas },
+            <>
+            <AndroidImmersiveSystemBars enabled={appReady} />
+            <StatusBar style="dark" />
+            <Stack
+              screenOptions={{
+                contentStyle: { flex: 1, backgroundColor: theme.canvas },
+              }}
+            >
+              <Stack.Screen
+                name="(tabs)"
+                options={{ headerShown: false, contentStyle: { flex: 1, backgroundColor: "transparent" } }}
+              />
+              <Stack.Screen name="scenes" options={{ headerShown: false, animation: "slide_from_right" }} />
+              <Stack.Screen name="relax" options={{ headerShown: false }} />
+              <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
+              <Stack.Screen
+                name="register"
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right",
+                  contentStyle: { flex: 1, backgroundColor: "transparent" },
                 }}
-              >
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{ headerShown: false, contentStyle: { flex: 1, backgroundColor: "transparent" } }}
-                />
-                <Stack.Screen name="scenes" options={{ headerShown: false, animation: "slide_from_right" }} />
-                <Stack.Screen name="relax" options={{ headerShown: false }} />
-                <Stack.Screen name="feedback" options={{ headerShown: false, animation: "slide_from_right" }} />
-                <Stack.Screen
-                  name="register"
-                  options={{
-                    headerShown: false,
-                    animation: "slide_from_right",
-                    contentStyle: { flex: 1, backgroundColor: "transparent" },
-                  }}
-                />
-                <Stack.Screen
-                  name="login"
-                  options={{
-                    headerShown: false,
-                    animation: "slide_from_right",
-                    contentStyle: { flex: 1, backgroundColor: "transparent" },
-                  }}
-                />
-              </Stack>
-              <NotificationSetupBridge enabled />
-              <ReadingAlarmBridge enabled />
-              <PlanFlowPlaybackBridge />
-              <WidgetReadDeepLinkBridge enabled />
-              <ShellMenuButton />
-              <ShellInsetClock />
-              <ShellNavDrawer />
-              {showOnboarding ? <OnboardingDevotionIntro onComplete={() => setShowOnboarding(false)} /> : null}
-            </MusicPlaybackProvider>
+              />
+              <Stack.Screen
+                name="login"
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right",
+                  contentStyle: { flex: 1, backgroundColor: "transparent" },
+                }}
+              />
+            </Stack>
+            <PlanFlowPlaybackBridge />
+            <WidgetReadDeepLinkBridge enabled />
+            {shellFeaturesReady ? (
+              <>
+                <NotificationSetupBridge enabled />
+                <ReadingAlarmBridge enabled />
+                <ShellMenuButton />
+                <ShellInsetClock />
+                <ShellNavDrawer />
+                {showOnboarding ? <OnboardingDevotionIntro onComplete={() => setShowOnboarding(false)} /> : null}
+              </>
+            ) : null}
             </>
+            </MusicPlaybackProvider>
           ) : (
             <AppLogoSplash />
           )}

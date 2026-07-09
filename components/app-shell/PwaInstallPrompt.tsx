@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import { isDisplayStandalone } from "@/lib/pwa/display-mode";
 import {
   APP_INSTALL_IOS_URL,
@@ -61,6 +62,7 @@ function registerMinimalServiceWorker(): void {
  */
 export function PwaInstallPrompt() {
   const { t } = useLocale();
+  const { immersive } = useAppImmersive();
   const pathname = usePathname() ?? "";
   const [visible, setVisible] = useState(false);
   const showTimerRef = useRef<number | null>(null);
@@ -89,18 +91,23 @@ export function PwaInstallPrompt() {
 
   const scheduleShow = useCallback(
     () => {
-      if (scheduledRef.current || shouldSuppressPrompt(androidEmail) || !shouldOfferOnPath(pathname)) {
+      if (
+        scheduledRef.current ||
+        immersive ||
+        shouldSuppressPrompt(androidEmail) ||
+        !shouldOfferOnPath(pathname)
+      ) {
         return;
       }
       scheduledRef.current = true;
       clearShowTimer();
       showTimerRef.current = window.setTimeout(() => {
         showTimerRef.current = null;
-        if (shouldSuppressPrompt(androidEmail) || !shouldOfferOnPath(pathname)) return;
+        if (immersive || shouldSuppressPrompt(androidEmail) || !shouldOfferOnPath(pathname)) return;
         setVisible(true);
       }, SHOW_DELAY_MS);
     },
-    [androidEmail, clearShowTimer, pathname],
+    [androidEmail, clearShowTimer, immersive, pathname],
   );
 
   const onDismiss = useCallback(() => {
@@ -117,14 +124,19 @@ export function PwaInstallPrompt() {
   }, [hide, pathname]);
 
   useEffect(() => {
+    if (immersive) {
+      hide();
+      return;
+    }
     if (shouldSuppressPrompt(androidEmail)) return;
     scheduleShow();
 
     return () => {
       clearShowTimer();
     };
-  }, [androidEmail, clearShowTimer, scheduleShow]);
+  }, [androidEmail, clearShowTimer, hide, immersive, scheduleShow]);
 
+  if (immersive) return null;
   if (!visible) return null;
 
   return (
@@ -132,7 +144,7 @@ export function PwaInstallPrompt() {
       role="dialog"
       aria-labelledby="selah-pwa-install-title"
       aria-describedby="selah-pwa-install-body"
-      className="pointer-events-auto fixed left-3 right-3 z-[88] max-w-lg rounded-2xl border border-border/55 bg-canvas/95 px-4 py-3.5 text-left text-ink shadow-[0_8px_32px_-8px_rgba(15,40,60,0.22)] backdrop-blur-md sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
+      className="app-pwa-install-prompt pointer-events-auto fixed left-3 right-3 z-[88] max-w-lg rounded-2xl border border-border/55 bg-canvas/95 px-4 py-3.5 text-left text-ink shadow-[0_8px_32px_-8px_rgba(15,40,60,0.22)] backdrop-blur-md sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
       style={{
         bottom: "max(5.75rem, calc(4.85rem + env(safe-area-inset-bottom, 0px)))",
       }}

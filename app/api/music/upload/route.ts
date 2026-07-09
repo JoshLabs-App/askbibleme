@@ -158,7 +158,7 @@ export async function POST(req: Request) {
     if (Number.isFinite(contentLength) && contentLength > 0 && raw.byteLength < contentLength) {
       return NextResponse.json(
         {
-          error: `上传请求体被截断（收到 ${raw.byteLength} bytes，小于 Content-Length ${contentLength}）。请提高 Next.js proxyClientMaxBodySize（例如 150mb）并让上传接口绕过 middleware 后重试。`,
+          error: `上传请求体被截断（收到 ${raw.byteLength} bytes，小于 Content-Length ${contentLength}）。请确认代理层/部署平台的请求体上限已放宽后重试。`,
         },
         { status: 413 },
       );

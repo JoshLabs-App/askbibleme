@@ -58,8 +58,7 @@ export { readShellChromeTune, writeShellChromeTune } from "./natureHomeChromeTun
 
 export {
   DEFAULT_HOME_VERSE_ROTATION_SEC,
-  MAX_HOME_VERSE_ROTATION_SEC,
-  MIN_HOME_VERSE_ROTATION_SEC,
+  HOME_VERSE_ROTATION_SEC_OPTIONS,
   clampHomeVerseRotationSec,
   getHomeVerseRotationSec,
   hydrateHomeVerseRotationSec,

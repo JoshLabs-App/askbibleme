@@ -54,6 +54,8 @@ export type HomePrayerVersePrefsV1 = {
   version: 1;
   verseScope: VerseScopeV1;
   verseDisplay: VerseDisplayModeV1;
+  /** 首页经文每节默认停留秒数 */
+  homeVerseStableSec: number;
   /** auto: 跟随软件语言；manual: 使用用户手选主译本 */
   primaryTranslationMode: HomePrimaryTranslationMode;
   /** 首页经文中文栏使用的译本 id（须与 `translations.json` / 祷告池 chunk 内键一致） */

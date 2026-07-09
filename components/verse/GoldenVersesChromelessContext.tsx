@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
@@ -27,9 +28,10 @@ export function useGoldenVersesChromeless(): GoldenVersesChromelessContextValue 
 
 export function GoldenVersesChromelessProvider({ children }: { children: ReactNode }) {
   const landscapeNarrow = useLandscapeNarrow();
+  const { immersive } = useAppImmersive();
   const [manualChromeless, setManualChromeless] = useState(false);
 
-  const chromeless = manualChromeless || landscapeNarrow;
+  const chromeless = immersive || manualChromeless || landscapeNarrow;
 
   useEffect(() => {
     if (!chromeless) {

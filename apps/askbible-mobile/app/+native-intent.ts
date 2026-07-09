@@ -33,6 +33,7 @@ function devReadingAlarmExpoPath(path: string): string | null {
   if (
     !trimmed.includes("dev/reading-alarm") &&
     !trimmed.includes("dev/plan-flow-e2e") &&
+    !trimmed.includes("dev/plan-activate-e2e") &&
     !trimmed.includes("dev/plan-flow-pool-live")
   ) {
     return null;
@@ -41,6 +42,7 @@ function devReadingAlarmExpoPath(path: string): string | null {
   const route = normalized.startsWith("/") ? normalized : `/${normalized}`;
   if (route.startsWith("/dev/reading-alarm")) return route;
   if (route.startsWith("/dev/plan-flow-e2e")) return route;
+  if (route.startsWith("/dev/plan-activate-e2e")) return route;
   if (route.startsWith("/dev/plan-flow-pool-live")) return route;
   return null;
 }

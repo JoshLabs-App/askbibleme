@@ -5,6 +5,16 @@ export const musicHomePlaybackControlsStyles = StyleSheet.create({
   transport: {
     alignItems: "stretch",
   },
+  selectedTrackLine: {
+    marginBottom: 7,
+    fontSize: 11,
+    lineHeight: 15,
+    textAlign: "center",
+    color: "rgba(255,255,255,0.42)",
+  },
+  selectedTrackTitle: {
+    color: "rgba(255,255,255,0.86)",
+  },
   timeLine: {
     fontSize: 11,
     fontVariant: ["tabular-nums"],
@@ -32,6 +42,26 @@ export const musicHomePlaybackControlsStyles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  playBtn: {
+    width: 56,
+    height: 56,
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 2,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.11)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  playBtnOn: {
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderColor: "rgba(255,255,255,0.22)",
+  },
+  playBtnDisabled: {
+    opacity: 0.42,
   },
   timerIconBtn: {
     width: 40,

@@ -36,7 +36,7 @@ type PrepareArgs = {
   playTrackGenerationRef: MutableRefObject<number>;
   storeRef: MutableRefObject<MusicCompanionStore | null>;
   failedTrackIdsRef: MutableRefObject<Set<string>>;
-  playTrackAtRef: MutableRefObject<(index: number) => Promise<void>>;
+  playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
   cacheMusicTrackInBackground: (trackId: string) => void;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;

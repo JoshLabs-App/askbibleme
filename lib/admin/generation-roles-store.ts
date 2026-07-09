@@ -10,6 +10,7 @@ import {
   type GenerationRolesFile,
   type GenerationRolesPublic,
 } from "@/lib/admin/generation-roles-types";
+import { infoEditionV4BuiltinRoles } from "@/lib/bible/info-edition-v4-generation-roles";
 
 const REL = path.join("data", "admin", "generation-roles.json");
 const MAX_ROLES = 24;
@@ -31,6 +32,7 @@ function builtinRoles(): GenerationRole[] {
       enabled: true,
       builtin: true,
     },
+    ...infoEditionV4BuiltinRoles(),
   ];
 }
 

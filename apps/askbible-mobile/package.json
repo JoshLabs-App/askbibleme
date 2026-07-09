@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "postinstall": "bash scripts/patch-expo-av-ios.sh && bash scripts/patch-expo-metro-lan.sh",
+    "postinstall": "bash scripts/patch-expo-av-ios.sh && bash scripts/patch-expo-metro-lan.sh && bash scripts/patch-expo-sqlite-ios.sh",
     "eas-build-post-install": "node scripts/eas-sync-offline-on-cloud.mjs && node scripts/verify-bundled-assets.mjs"
   },
   "dependencies": {
@@ -17,12 +17,12 @@
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
-    "@react-native-community/netinfo": "^11.5.2",
+    "@react-native-community/netinfo": "^11.4.1",
     "@react-native-community/slider": "5.0.1",
-    "@react-native-google-signin/google-signin": "^14.0.2",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@supabase/supabase-js": "^2.108.1",
-    "expo": "~54.0.33",
+    "askbible-shell-media-controls": "file:./modules/askbible-shell-media-controls",
+    "expo": "~54.0.35",
     "expo-apple-authentication": "~8.0.8",
     "expo-asset": "~12.0.13",
     "expo-auth-session": "~7.0.11",
@@ -31,25 +31,25 @@
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.9",
-    "expo-file-system": "~19.0.22",
-    "expo-font": "~14.0.11",
+    "expo-file-system": "~19.0.23",
+    "expo-font": "~14.0.12",
     "expo-haptics": "~15.0.8",
     "expo-insights": "~0.10.8",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.12",
     "expo-navigation-bar": "~5.0.10",
     "expo-notifications": "~0.32.16",
-    "expo-router": "~6.0.23",
+    "expo-router": "~6.0.24",
     "expo-screen-orientation": "~9.0.9",
     "expo-speech": "~14.0.8",
     "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.9",
-    "expo-updates": "~29.0.17",
+    "expo-updates": "~29.0.18",
     "expo-video": "~3.0.16",
     "expo-web-browser": "~15.0.11",
     "react": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-get-random-values": "^2.0.0",
+    "react-native-get-random-values": "~1.11.0",
     "react-native-markdown-display": "^7.0.2",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
@@ -62,5 +62,17 @@
     "babel-preset-expo": "~54.0.10",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "react"
+      ]
+    },
+    "doctor": {
+      "appConfigFieldsNotSyncedCheck": {
+        "enabled": false
+      }
+    }
+  }
 }

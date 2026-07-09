@@ -5,6 +5,10 @@
   <string name="expo_runtime_version">1.0.1</string>
   <string name="widget_daily_verse_label"> </string>
   <string name="widget_daily_verse_description">Rotating verses — tap to open chapter</string>
+  <string name="widget_audio_reading_desc">Play or pause Scripture audio</string>
+  <string name="widget_audio_music_desc">Play or pause music</string>
+  <string name="widget_playback_channel_name">Widget playback</string>
+  <string name="widget_playback_starting">Starting playback…</string>
   <string name="widget_open_quote">\u201C</string>
   <string name="widget_close_quote">\u201D</string>
   <string name="reading_alarm_kicker">Daily morning alarm</string>
@@ -19,4 +23,10 @@
   <string name="reading_alarm_notification_body">Tap to start today\'s Scripture audio</string>
   <string name="reading_alarm_scripture_starting">Starting today\'s Scripture reading…</string>
   <string name="reading_alarm_channel_name">Daily morning alarm</string>
+  <string name="shell_playback_channel_name">Audio playback</string>
+  <string name="shell_playback_channel_desc">Shows now playing audio and lock screen controls</string>
+  <string name="shell_playback_play">Play</string>
+  <string name="shell_playback_pause">Pause</string>
+  <string name="shell_playback_previous">Previous</string>
+  <string name="shell_playback_next">Next</string>
 </resources>

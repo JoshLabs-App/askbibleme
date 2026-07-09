@@ -160,6 +160,10 @@ export function AdminGenerationRolesClient() {
         <Link href="/admin/read/info-edition-v1" className="underline underline-offset-2">
           {t("admin.items.infoEditionV1")}
         </Link>
+        {" · "}
+        <Link href="/admin/read/info-edition-v4" className="underline underline-offset-2">
+          {t("admin.items.infoEditionV4")}
+        </Link>
       </p>
 
       {statusLine ? (

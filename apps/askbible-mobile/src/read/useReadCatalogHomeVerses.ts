@@ -78,7 +78,9 @@ export function useReadCatalogHomeVerses({ homeMode, catalogFocused }: Args) {
         labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
         labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
       };
-      const versionLabel = (locale === "en" ? labels.labelEn : localizeZhText(locale, labels.labelZh)).trim();
+      const versionLabel = String(
+        locale === "en" ? labels.labelEn : localizeZhText(locale, labels.labelZh) ?? "",
+      ).trim();
       void (async () => {
         let readyPrimaryId = primaryTranslationId;
         try {
@@ -117,7 +119,8 @@ export function useReadCatalogHomeVerses({ homeMode, catalogFocused }: Args) {
           }
           const loaded = chapterCache.get(cacheKey);
           const bookName = loaded?.bookName || getScriptureBookDisplayName(ref.bookId, locale);
-          const verseText = loaded?.verses.find((row) => row.verse === ref.verse)?.text.trim() || "";
+          const verseText =
+            loaded?.verses.find((row) => row.verse === ref.verse)?.text?.trim() || "";
           const reference = `${bookName} ${ref.chapter}:${ref.verse}${
             versionLabel ? ` · ${versionLabel}` : ""
           }`;

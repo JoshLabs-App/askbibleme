@@ -67,6 +67,8 @@ export function FullBleedCoverVideo({
   const {
     slotAScene,
     slotBScene,
+    slotAMounted,
+    slotBMounted,
     opacityA,
     opacityB,
     onSlotAReady,
@@ -168,6 +170,7 @@ export function FullBleedCoverVideo({
         onReady={onSlotAReadyOnce}
         onPlaybackError={handlePlaybackError}
         playbackActive={playbackActive}
+        mounted={slotAMounted}
       />
       <AndroidCoverVideoSlot
         slotKey="cover-b"
@@ -181,6 +184,7 @@ export function FullBleedCoverVideo({
         onReady={onSlotBReadyOnce}
         onPlaybackError={handlePlaybackError}
         playbackActive={playbackActive}
+        mounted={slotBMounted}
       />
       {showInitialPoster && hasPoster ? (
         <CoverVideoPosterBackdrop

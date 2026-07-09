@@ -214,7 +214,7 @@ export function listExploreFeaturedArticleTileViews(
   locale: AppLocale,
 ): ExploreFeaturedArticle[] {
   const merged = mergeExploreFeaturedArticlesBundles(bundle, getBundledExploreFeaturedArticlesBundle());
-  return EXPLORE_FEATURED_ARTICLE_SLUGS.map((slug) => {
+  const tiles: Array<ExploreFeaturedArticle | null> = EXPLORE_FEATURED_ARTICLE_SLUGS.map((slug) => {
     const entry = merged.articles.find((item) => item.slug === slug);
     if (!entry) return null;
     const block = entry[sourceLocale(locale)];
@@ -226,8 +226,8 @@ export function listExploreFeaturedArticleTileViews(
       title,
       exploreLabel,
       body: "",
-      sections: [],
+      sections: [] as ExploreFeaturedArticleSection[],
     };
-  }).filter((item): item is ExploreFeaturedArticle => Boolean(item));
+  });
+  return tiles.filter((item): item is ExploreFeaturedArticle => item !== null);
 }
-

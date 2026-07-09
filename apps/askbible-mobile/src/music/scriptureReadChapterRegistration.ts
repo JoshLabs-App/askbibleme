@@ -1,7 +1,7 @@
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
+import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
-import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import {
   resolveScripturePlayableSrcForChapter,
   translationSupportsChapterAudio,
@@ -39,8 +39,24 @@ export function buildReadChapterAdvanceHandlers(
   args: ChapterArgs,
   playScriptureChapter: (next: ChapterArgs & { translationId: string }) => Promise<boolean>,
   setPlaying: (playing: boolean) => void,
-): Pick<ReadChapterPlaybackRegistration, "onAdvanceNextChapter" | "onAdvanceNextInBook"> {
+): Pick<
+  ReadChapterPlaybackRegistration,
+  "onAdvancePreviousChapter" | "onAdvanceNextChapter" | "onAdvanceNextInBook"
+> {
   return {
+    onAdvancePreviousChapter: () => {
+      const { prev } = resolveReadChapterNeighbors(args.bookId, args.chapter);
+      if (!prev) {
+        setPlaying(false);
+        return;
+      }
+      void playScriptureChapter({
+        bookId: prev.bookId,
+        chapter: prev.chapter,
+        bookName: prev.bookName,
+        translationId: args.translationId,
+      });
+    },
     onAdvanceNextChapter: () => {
       const { next } = resolveReadChapterNeighbors(args.bookId, args.chapter);
       if (!next) {

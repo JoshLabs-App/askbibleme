@@ -2,8 +2,8 @@ import type { Router } from "expo-router";
 
 export type ReadChapterNavDirection = "forward" | "back";
 
-type NavRoute = { params?: Record<string, unknown> };
-type NavState = { routes?: NavRoute[]; index?: number };
+export type NavRoute = { params?: unknown };
+export type NavState = { routes?: ReadonlyArray<NavRoute>; index?: number };
 
 const CHAPTER_PATH = "/read/[bookId]/[chapter]" as const;
 
@@ -17,9 +17,10 @@ export function readChapterTargetMatchesRoute(
   route: NavRoute | undefined,
   target: { bookId: string; chapter: number },
 ): boolean {
-  if (!route?.params) return false;
-  const bookId = paramString(route.params.bookId).toUpperCase();
-  const chapter = Number(paramString(route.params.chapter));
+  if (!route?.params || typeof route.params !== "object") return false;
+  const params = route.params as Record<string, unknown>;
+  const bookId = paramString(params.bookId).toUpperCase();
+  const chapter = Number(paramString(params.chapter));
   if (!bookId || !Number.isInteger(chapter) || chapter < 1) return false;
   return (
     bookId === paramString(target.bookId).toUpperCase() && chapter === Number(target.chapter)

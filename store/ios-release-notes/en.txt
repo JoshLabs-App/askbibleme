@@ -1,0 +1,4 @@
+Version 1.0.11
+• Widget play buttons now start music or reading directly—no second tap inside the app
+• Faster playback on cold start, then returns you to the home screen
+• Clearer visual feedback on widget audio controls

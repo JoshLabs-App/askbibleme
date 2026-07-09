@@ -50,11 +50,15 @@ export function MusicHomeForegroundPanel({
   const {
     tracks,
     trackIndex,
+    playing,
+    canTogglePlayback,
+    selectedTrackTitle,
     musicRepeatMode,
     sleepTimerMinutes,
     downloadingTrackId,
     toggleMusicRepeatOne,
     toggleMusicRepeatAll,
+    togglePlayMusic,
     playTrackAt,
     playNext,
     seekRatio,
@@ -77,6 +81,10 @@ export function MusicHomeForegroundPanel({
       />
       <MusicHomeTransportControls
         locale={locale}
+        playing={playing}
+        canTogglePlayback={canTogglePlayback}
+        onTogglePlay={() => void togglePlayMusic()}
+        selectedTrackTitle={selectedTrackTitle}
         album={album}
         albumNames={albumNames}
         albumCounts={albumCounts}

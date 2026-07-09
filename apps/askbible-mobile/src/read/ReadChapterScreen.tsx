@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import {
@@ -52,6 +52,7 @@ export function ReadChapterScreen() {
     q?: string;
     planFlow?: string;
     planFlowTick?: string;
+    autoplay?: string;
     [EXPLORE_READ_RETURN_PARAM]?: string;
   }>();
   const bookId = parseBookIdParam(params.bookId);
@@ -196,6 +197,22 @@ export function ReadChapterScreen() {
   }, [isPlanFlow, todayPlan.payload]);
 
   const { playScriptureChapter } = useMusicPlayback();
+
+  const autoplayParam = String(
+    Array.isArray(params.autoplay) ? params.autoplay[0] : params.autoplay || "",
+  );
+  const autoplayConsumedRef = useRef(false);
+  useEffect(() => {
+    if (autoplayParam !== "1" || autoplayConsumedRef.current) return;
+    if (!chapterData) return;
+    autoplayConsumedRef.current = true;
+    void playScriptureChapter({
+      bookId: chapterData.bookId,
+      chapter: chapterData.chapter,
+      bookName: display.displayBookName,
+      translationId: chapterAudioTranslationId,
+    });
+  }, [autoplayParam, chapterData, display.displayBookName, chapterAudioTranslationId, playScriptureChapter]);
 
   const nav = useReadChapterScreenNav({
     chapterData,

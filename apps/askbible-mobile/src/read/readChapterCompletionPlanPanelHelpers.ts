@@ -5,9 +5,6 @@ export type ChapterRef = {
   chapter: number;
 };
 
-export const TODAY_COMPLETE_CELEBRATION_SHOWN_KEY_PREFIX =
-  "askbible-today-complete-celebration-shown-v1";
-
 export function buildChapterQueue(readings: ReadingPlanRange[]): ChapterRef[] {
   const out: ChapterRef[] = [];
   for (const r of readings) {

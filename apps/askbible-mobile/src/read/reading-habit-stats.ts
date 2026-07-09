@@ -132,8 +132,10 @@ export function snapshotFromRecord(
 }
 
 export async function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord): Promise<void> {
-  await writeReadingHabitStats(record);
-  snapshotFromRecord(record);
+  const local = await readReadingHabitStatsRecord();
+  const merged = mergeReadingHabitStatsRecords(local, record);
+  await writeReadingHabitStats(merged);
+  snapshotFromRecord(merged);
 }
 
 export function mergeReadingHabitStatsRecords(
@@ -144,6 +146,29 @@ export function mergeReadingHabitStatsRecords(
     version: 1,
     completedDates: [...new Set([...a.completedDates, ...b.completedDates])].sort(),
   };
+}
+
+/** 换计划前：若今日在任意计划下已有进度，先记入累计读经天（只增不减）。 */
+export async function preserveReadingHabitBeforePlanSwitch(): Promise<void> {
+  const today = toLocalDateString(new Date());
+  const record = await readReadingHabitStats();
+  if (record.completedDates.includes(today)) return;
+
+  const [fractionMod, doneMod] = await Promise.all([
+    import("./reading-plan/today-reading-chapter-fraction"),
+    import("./reading-plan/today-reading-done"),
+  ]);
+  const [fraction, done] = await Promise.all([
+    fractionMod.readTodayReadingChapterFractionRecord(),
+    doneMod.readTodayReadingDoneRecord(),
+  ]);
+  const hasFraction =
+    fraction != null &&
+    Object.values(fraction.fractions).some((value) => value >= READING_HABIT_MIN_FRACTION);
+  const hasDone = (done?.doneKeys.length ?? 0) > 0;
+  if (hasFraction || hasDone) {
+    await touchReadingHabitDay(today);
+  }
 }
 
 /** 记录某日已有读经（只增不减，用于读完章节等）。 */
@@ -161,25 +186,12 @@ export async function touchReadingHabitDay(
   return next;
 }
 
-/** 根据今日是否有读经活动更新当日记录；`undefined` 表示状态未知，不写入。 */
+/** 根据今日是否有读经活动更新当日记录；`undefined` 表示状态未知，不写入。只增不减——换计划不会冲掉历史读经天。 */
 export async function syncReadingHabitDayCompletion(
   hasReadingToday: boolean | undefined,
 ): Promise<ReadingHabitStatsRecord> {
-  if (hasReadingToday === undefined) {
+  if (hasReadingToday !== true) {
     return readReadingHabitStats();
   }
-  const today = toLocalDateString(new Date());
-  const record = await readReadingHabitStats();
-  const hadToday = record.completedDates.includes(today);
-  if (hasReadingToday === hadToday) return record;
-  const set = new Set(record.completedDates);
-  if (hasReadingToday) set.add(today);
-  else set.delete(today);
-  const next: ReadingHabitStatsRecord = {
-    version: 1,
-    completedDates: [...set].sort(),
-  };
-  await writeReadingHabitStats(next);
-  snapshotFromRecord(next);
-  return next;
+  return touchReadingHabitDay();
 }

@@ -105,7 +105,8 @@ export function snapshotFromRecord(
 }
 
 export function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRecord): void {
-  writeReadingHabitStats(record);
+  const local = readReadingHabitStats();
+  writeReadingHabitStats(mergeReadingHabitStatsRecords(local, record));
 }
 
 export function mergeReadingHabitStatsRecords(
@@ -130,18 +131,8 @@ export function touchReadingHabitDay(date: string = toLocalDateString(new Date()
 }
 
 export function syncReadingHabitDayCompletion(hasReadingToday: boolean | undefined): ReadingHabitStatsRecord {
-  if (hasReadingToday === undefined) return readReadingHabitStats();
-  const today = toLocalDateString(new Date());
-  const record = readReadingHabitStats();
-  const hadToday = record.completedDates.includes(today);
-  if (hasReadingToday === hadToday) return record;
-  const set = new Set(record.completedDates);
-  if (hasReadingToday) set.add(today);
-  else set.delete(today);
-  const next: ReadingHabitStatsRecord = {
-    version: 1,
-    completedDates: [...set].sort(),
-  };
-  writeReadingHabitStats(next);
-  return next;
+  if (hasReadingToday !== true) {
+    return readReadingHabitStats();
+  }
+  return touchReadingHabitDay();
 }

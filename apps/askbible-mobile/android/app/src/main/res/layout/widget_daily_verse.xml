@@ -70,5 +70,32 @@
                     android:gravity="end" />
             </FrameLayout>
         </ViewFlipper>
+
+        <LinearLayout
+            android:id="@+id/widget_verse_audio_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/widget_verse_music_toggle"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:contentDescription="@string/widget_audio_music_desc"
+                android:padding="14dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/widget_audio_music" />
+
+            <ImageView
+                android:id="@+id/widget_verse_reading_toggle"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/widget_audio_reading_desc"
+                android:padding="14dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/widget_audio_voice" />
+        </LinearLayout>
     </FrameLayout>
 </FrameLayout>

@@ -26,8 +26,10 @@ const SHARE_QUERY_KEY = 'p';
 const CATEGORY_ORDER = ['主日', '新约', '旧约', '系列'];
 const DEFAULT_CATEGORY = '新约';
 const SPEAKERS = [
-  { id: 'gaolu', label: '高路牧师' },
-  { id: 'kou', label: '寇绍涵牧师' },
+  { id: 'gaolu', label: '高路' },
+  { id: 'kou', label: '寇绍涵' },
+  { id: 'tang', label: '唐崇荣' },
+  { id: 'jiuren', label: '李洁人' },
 ];
 const DEFAULT_SPEAKER = 'gaolu';
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2];
@@ -140,19 +142,23 @@ function normalizeCategorySelectionsFlat(selections) {
 
 function normalizeCategorySelections(selections) {
   if (!selections || typeof selections !== 'object') {
-    return { gaolu: {}, kou: {} };
+    return { gaolu: {}, kou: {}, tang: {}, jiuren: {} };
   }
 
-  if ('gaolu' in selections || 'kou' in selections) {
+  if ('gaolu' in selections || 'kou' in selections || 'tang' in selections || 'jiuren' in selections) {
     return {
       gaolu: normalizeCategorySelectionsFlat(selections.gaolu),
       kou: normalizeCategorySelectionsFlat(selections.kou),
+      tang: normalizeCategorySelectionsFlat(selections.tang),
+      jiuren: normalizeCategorySelectionsFlat(selections.jiuren),
     };
   }
 
   return {
     gaolu: normalizeCategorySelectionsFlat(selections),
     kou: {},
+    tang: {},
+    jiuren: {},
   };
 }
 
@@ -189,7 +195,7 @@ function setSelectedSpeaker(speaker) {
   try {
     window.localStorage.setItem(SPEAKER_KEY, nextSpeaker);
   } catch {}
-  if (nextSpeaker === 'kou' && state.selectedCategory === '主日') {
+  if ((nextSpeaker === 'kou' || nextSpeaker === 'tang' || nextSpeaker === 'jiuren') && state.selectedCategory === '主日') {
     setSelectedCategory(getDefaultCategoryForSpeaker(nextSpeaker));
   }
   refreshSpeakerCatalog();
@@ -197,7 +203,7 @@ function setSelectedSpeaker(speaker) {
 }
 
 function getDefaultCategoryForSpeaker(speaker = state.selectedSpeaker) {
-  if (speaker === 'kou') {
+  if (speaker === 'kou' || speaker === 'tang' || speaker === 'jiuren') {
     return (
       CATEGORY_ORDER.find(
         (category) => category !== '主日' && state.books.some((book) => book.category === category),
@@ -519,12 +525,46 @@ function isKouTeacher(teacher) {
   return value.includes('寇') && (value.includes('绍') || value.includes('紹'));
 }
 
+function isTangTeacher(teacher) {
+  const value = normalize(teacher);
+  return value.includes('唐') && value.includes('崇');
+}
+
+function isJiurenTeacher(teacher) {
+  const value = normalize(teacher);
+  return value.includes('李') && value.includes('洁');
+}
+
 function isKouLesson(lesson) {
   return lesson?.speaker === 'kou' || Boolean(lesson?.isKou) || isKouTeacher(lesson?.teacher);
 }
 
+function isTangLesson(lesson) {
+  return lesson?.speaker === 'tang' || Boolean(lesson?.isTang) || isTangTeacher(lesson?.teacher);
+}
+
+function isJiurenLesson(lesson) {
+  return lesson?.speaker === 'jiuren' || Boolean(lesson?.isJiuren) || isJiurenTeacher(lesson?.teacher);
+}
+
 function isKouBook(book) {
   return getBookSpeaker(book) === 'kou';
+}
+
+function isTangBook(book) {
+  return getBookSpeaker(book) === 'tang';
+}
+
+function isJiurenBook(book) {
+  return getBookSpeaker(book) === 'jiuren';
+}
+
+function isExternalSpeakerBook(book) {
+  return isKouBook(book) || isTangBook(book) || isJiurenBook(book);
+}
+
+function isExternalSpeakerLesson(lesson) {
+  return isKouLesson(lesson) || isTangLesson(lesson) || isJiurenLesson(lesson);
 }
 
 function isExcludedBookTitle(title) {
@@ -656,8 +696,8 @@ function isGaoLuPrimaryBook(book) {
 
 function shouldKeepBook(book) {
   if (isExcludedBookTitle(book.title)) return false;
-  if (isKouBook(book)) {
-    return (book.lessons || []).some((lesson) => resolveAudioSrc(lesson) && isKouLesson(lesson));
+  if (isExternalSpeakerBook(book)) {
+    return (book.lessons || []).some((lesson) => resolveAudioSrc(lesson) && isExternalSpeakerLesson(lesson));
   }
   if (book.category === '主日') {
     return (book.lessons || []).some((lesson) => resolveAudioSrc(lesson) && isGaoLuLesson(lesson));
@@ -667,10 +707,10 @@ function shouldKeepBook(book) {
 
 function normalizeBook(book) {
   const unnamedOtherBook = isUnnamedOtherBook(book);
-  const kouBook = isKouBook(book);
+  const externalBook = isExternalSpeakerBook(book);
   const lessons = (book.lessons || [])
     .filter((lesson) => {
-      if (kouBook) return isKouLesson(lesson);
+      if (externalBook) return isExternalSpeakerLesson(lesson);
       return unnamedOtherBook || isGaoLuLesson(lesson);
     })
     .map((lesson, index) => ({
@@ -681,7 +721,7 @@ function normalizeBook(book) {
       videoUrl: lesson.videoUrl || '',
       teacher: lesson.teacher || book.latestTeacher || '讲员',
       displayLabel:
-        kouBook
+        externalBook
           ? lesson.lesson || lesson.displayLabel || String(index + 1)
           : book.category === '主日' || book.isSundaySeries
             ? formatSundaySermonTitle(lesson)
@@ -1313,8 +1353,13 @@ function applyFirstVisitDefaults() {
 
 function setSelectedCategory(category) {
   let nextCategory = normalizeCategory(category) || DEFAULT_CATEGORY;
-  if (state.selectedSpeaker === 'kou' && nextCategory === '主日') {
-    nextCategory = getDefaultCategoryForSpeaker('kou');
+  if (
+    (state.selectedSpeaker === 'kou' ||
+      state.selectedSpeaker === 'tang' ||
+      state.selectedSpeaker === 'jiuren') &&
+    nextCategory === '主日'
+  ) {
+    nextCategory = getDefaultCategoryForSpeaker(state.selectedSpeaker);
   }
   state.selectedCategory = nextCategory;
   try {
@@ -1515,7 +1560,7 @@ function renderSpeakerTabs() {
 
   $categoryTabs.forEach((tab) => {
     const category = tab.dataset.category || '';
-    const speakerScope = tab.dataset.speakers || 'gaolu,kou';
+    const speakerScope = tab.dataset.speakers || 'gaolu,kou,tang,jiuren';
     const allowedSpeakers = speakerScope.split(',').map((item) => item.trim());
     const hiddenForSpeaker = !allowedSpeakers.includes(state.selectedSpeaker);
     tab.hidden = hiddenForSpeaker;

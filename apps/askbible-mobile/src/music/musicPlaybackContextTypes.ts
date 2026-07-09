@@ -2,6 +2,10 @@ import type { MusicCompanionStore, PlaybackTrack } from "./types";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 import type { MusicPlaybackMode, MusicRepeatMode, ShellSleepTimerMinutes } from "./musicPlaybackTypes";
 
+export type PlayTrackAtOptions = {
+  autoPlay?: boolean;
+};
+
 export type MusicPlaybackContextValue = {
   store: MusicCompanionStore | null;
   tracks: PlaybackTrack[];
@@ -22,8 +26,8 @@ export type MusicPlaybackContextValue = {
   setScripturePlaybackRate: (rate: number) => Promise<void>;
   seekRatio: (ratio: number) => Promise<void>;
   registerReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
-  playTrackAt: (index: number) => Promise<void>;
-  togglePlayScripture: () => Promise<void>;
+  playTrackAt: (index: number, opts?: PlayTrackAtOptions) => Promise<boolean>;
+  togglePlayScripture: (opts?: { forcePause?: boolean }) => Promise<boolean>;
   stopScripturePlayback: () => Promise<void>;
   playScriptureChapter: (args: {
     bookId: string;

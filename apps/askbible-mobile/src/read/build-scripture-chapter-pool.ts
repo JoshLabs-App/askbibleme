@@ -5,11 +5,27 @@ import type { ScripturePoolTrack } from "../music/scripture-chapter-pool";
 import { ensurePlanFlowChapterAudioReady } from "./prefetch-plan-flow-chapter-audio";
 import type { PlanChapterRef } from "./read-plan-flow-nav";
 
+export type BuildScriptureChapterPoolOpts = {
+  /** 只解析本地已准备好的音源，不等待整队列预取。 */
+  lazySrc?: boolean;
+};
+
+async function resolvePlanFlowChapterAudioLocalSrc(args: {
+  ref: PlanChapterRef;
+  translationId: string;
+  voiceId: CuvChapterAudioVoiceId;
+}): Promise<string | null> {
+  // 快速启动模式只先占位，不做逐章本地/下载检查；真正播放时再解析。
+  void args;
+  return "";
+}
+
 /** 将今日 planFlow 队列建成可播放列表（每章一条，含本地 src）。 */
 export async function buildScriptureChapterPool(
   queue: PlanChapterRef[],
   translationId: string,
   voiceId: CuvChapterAudioVoiceId,
+  opts?: BuildScriptureChapterPoolOpts,
 ): Promise<ScripturePoolTrack[]> {
   if (!queue.length || !translationSupportsChapterAudio(translationId)) {
     return [];
@@ -18,12 +34,18 @@ export async function buildScriptureChapterPool(
   const tracks: ScripturePoolTrack[] = [];
   for (const ref of queue) {
     const bookName = getScriptureBookDisplayName(ref.bookId);
-    const src = await ensurePlanFlowChapterAudioReady({
-      ref,
-      translationId,
-      voiceId,
-    });
-    if (!src?.trim()) {
+    const src = opts?.lazySrc
+      ? await resolvePlanFlowChapterAudioLocalSrc({
+          ref,
+          translationId,
+          voiceId,
+        })
+      : await ensurePlanFlowChapterAudioReady({
+          ref,
+          translationId,
+          voiceId,
+        });
+    if (!src?.trim() && !opts?.lazySrc) {
       if (__DEV__) {
         console.warn("[scripture-pool] skip, no local src", ref.bookId, ref.chapter);
       }
@@ -35,7 +57,7 @@ export async function buildScriptureChapterPool(
       chapter: ref.chapter,
       bookName,
       title: `${bookName} ${ref.chapter}`,
-      src: src.trim(),
+      src: src?.trim() ?? "",
       translationId,
     });
   }

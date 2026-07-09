@@ -17,7 +17,7 @@ type Args = {
   bridge: MusicPlayTrackBridge;
   tracks: PlaybackTrack[];
   trackIndex: number;
-  playTrackAt: (index: number) => Promise<void>;
+  playTrackAt: (index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
   setPlaying: (playing: boolean) => void;
   setMusicCurrentSec: (sec: number) => void;

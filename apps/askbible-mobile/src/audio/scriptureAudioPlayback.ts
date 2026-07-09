@@ -4,6 +4,25 @@ import { Platform } from "react-native";
 import { resolveBundledChapterAudioModule } from "../bible/bundled-chapter-audio";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 
+const bundledChapterAudioUriCache = new Map<number, string>();
+
+/** 预热 bundled 章朗读对应的本地 file URI，避免冷启动时重复 Asset.loadAsync。 */
+export async function warmBundledScriptureChapterAudioUri(bundledModule: number): Promise<string | null> {
+  const cached = bundledChapterAudioUriCache.get(bundledModule);
+  if (cached) return cached;
+  try {
+    const [asset] = await Asset.loadAsync(bundledModule);
+    const localUri = (asset?.localUri || asset?.uri || "").trim();
+    if (localUri) {
+      bundledChapterAudioUriCache.set(bundledModule, localUri);
+      return localUri;
+    }
+  } catch {
+    /* ignore warm failures */
+  }
+  return null;
+}
+
 /** 整章朗读：APK 内优先 `require()` 模块，避免 Android 上 Asset.uri 无法播放。 */
 export async function resolveScriptureAvSource(
   src: string,
@@ -14,13 +33,8 @@ export async function resolveScriptureAvSource(
 
   if (bundledModule != null) {
     if (Platform.OS === "android") {
-      try {
-        const [asset] = await Asset.loadAsync(bundledModule);
-        const localUri = (asset?.localUri || asset?.uri || "").trim();
-        if (localUri) return { uri: localUri };
-      } catch {
-        /* fall through to module id */
-      }
+      const cached = bundledChapterAudioUriCache.get(bundledModule);
+      if (cached) return { uri: cached };
     }
     return bundledModule;
   }

@@ -85,8 +85,14 @@ export function useReadChapterAudioRegistration({
       bookName: snapshot.bookName,
       translationId: chapterAudioTranslationId,
       chapterAudioSrc: syncSrc,
+      onAdvancePreviousChapter: () => {},
       onAdvanceNextChapter: () => {},
       onAdvanceNextInBook: () => {},
+    };
+    reg.onAdvancePreviousChapter = () => {
+      const { prev } = resolveReadChapterNeighbors(snapshot.bookId, snapshot.chapter);
+      if (!prev) return;
+      onAdvanceChapterRef.current?.(prev);
     };
     reg.onAdvanceNextChapter = () => {
       if (isPlanFlow && scriptureChapterPool.isActive()) {
@@ -114,6 +120,7 @@ export function useReadChapterAudioRegistration({
           bookName: snapshot.bookName,
           translationId: chapterAudioTranslationId,
           voiceId: audioVoiceId,
+          onAdvancePreviousChapter: reg.onAdvancePreviousChapter,
           onAdvanceNextChapter: reg.onAdvanceNextChapter,
           onAdvanceNextInBook: reg.onAdvanceNextInBook,
         });

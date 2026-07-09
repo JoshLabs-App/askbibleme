@@ -36,7 +36,7 @@ type ChapterTarget = { bookId: string; chapter: number };
 
 export type UseReadChapterAudioOptions = {
   scrollHeaderHeightRef?: React.RefObject<number>;
-  onAdvanceChapter?: (target: ChapterTarget) => void;
+  onAdvanceChapter?: (target: ChapterTarget | null) => void;
   isPlanFlow?: boolean;
   planFlowTick?: string | null;
   planFlowQueue?: Array<{ bookId: string; chapter: number }>;

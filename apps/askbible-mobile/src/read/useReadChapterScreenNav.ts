@@ -20,13 +20,14 @@ import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { useShellSwipeSuspend } from "../shell/useShellSwipeSuspend";
 import type { HighlightWordEditorTarget } from "./ReadVerseHighlightWordSheet";
 import type { VerseActionMenuState } from "./readChapterScreenConstants";
+import type { NavState } from "./read-chapter-nav";
 
 type NeighborTarget = { bookId: string; chapter: number } | null;
 
 type ChapterScreenNavigation = {
   isFocused: () => boolean;
   addListener: NavigationProp<ParamListBase>["addListener"];
-  getState: NavigationProp<ParamListBase>["getState"];
+  getState: () => NavState | undefined;
 };
 
 type Args = {

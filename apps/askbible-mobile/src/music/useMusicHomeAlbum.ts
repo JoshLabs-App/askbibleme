@@ -11,12 +11,14 @@ import {
 } from "./musicAlbumPlayback";
 import type { ShellSleepTimerMinutes, MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
+import type { PlayTrackAtOptions } from "./musicPlaybackContextTypes";
 
 type Args = {
   tracks: PlaybackTrack[];
   trackIndex: number;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
-  playTrackAt: (index: number) => Promise<void>;
+  playTrackAt: (index: number, opts?: PlayTrackAtOptions) => Promise<boolean>;
+  downloadMusicTrackAt: (index: number) => Promise<boolean>;
   setMusicGain: (gain: number) => Promise<void>;
   setMusicRepeatMode: (mode: MusicRepeatMode) => void;
   setSleepTimerMinutes: (minutes: 0 | ShellSleepTimerMinutes) => void;
@@ -27,6 +29,7 @@ export function useMusicHomeAlbum({
   trackIndex,
   sleepTimerMinutes,
   playTrackAt,
+  downloadMusicTrackAt,
   setMusicGain,
   setMusicRepeatMode,
   setSleepTimerMinutes,
@@ -75,10 +78,14 @@ export function useMusicHomeAlbum({
       if (nextSleepTimer != null) setSleepTimerMinutes(nextSleepTimer);
       const startIndex = pickAlbumStartTrackIndex(tracks, nextAlbum, trackIndex);
       void setMusicGain(defaultMusicGainForAlbum(nextAlbum));
-      if (startIndex != null) void playTrackAt(startIndex);
+      if (startIndex != null) {
+        void downloadMusicTrackAt(startIndex);
+        void playTrackAt(startIndex, { autoPlay: false });
+      }
     },
     [
       album,
+      downloadMusicTrackAt,
       playTrackAt,
       setMusicGain,
       setMusicRepeatMode,

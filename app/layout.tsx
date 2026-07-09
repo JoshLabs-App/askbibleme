@@ -15,6 +15,7 @@ import "./globals.css";
 import "./(app-shell)/read/read-parchment-background.css";
 import "./(app-shell)/read/read-parchment-shell-chrome.css";
 import { AppUpdateNotifier } from "@/components/app-shell/AppUpdateNotifier";
+import { AppImmersiveProvider } from "@/components/app-shell/AppImmersiveProvider";
 import { PwaServiceWorkerRegistration } from "@/components/app-shell/PwaServiceWorkerRegistration";
 import { ParchmentShellRouteEffect } from "@/components/shell/ParchmentShellRouteEffect";
 import { AskbibleUserProvider } from "@/components/auth/AskbibleUserProvider";
@@ -138,21 +139,23 @@ export default async function RootLayout({
           {PARCHMENT_SHELL_BOOT_SCRIPT}
         </Script>
         <AppSkinProvider>
-          <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
-            <AskbibleUserProvider>
-              <MemberReadingSyncBridge />
-              <CuvChapterAudioVoiceProvider>
-                <MusicShellPlaybackProvider>
-                  <MediaPlaybackCoordinatorProvider>
-                    <ParchmentShellRouteEffect />
-                    {children}
-                    <PwaServiceWorkerRegistration />
-                    <AppUpdateNotifier />
-                  </MediaPlaybackCoordinatorProvider>
-                </MusicShellPlaybackProvider>
-              </CuvChapterAudioVoiceProvider>
-            </AskbibleUserProvider>
-          </LocaleProvider>
+          <AppImmersiveProvider>
+            <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
+              <AskbibleUserProvider>
+                <MemberReadingSyncBridge />
+                <CuvChapterAudioVoiceProvider>
+                  <MusicShellPlaybackProvider>
+                    <MediaPlaybackCoordinatorProvider>
+                      <ParchmentShellRouteEffect />
+                      {children}
+                      <PwaServiceWorkerRegistration />
+                      <AppUpdateNotifier />
+                    </MediaPlaybackCoordinatorProvider>
+                  </MusicShellPlaybackProvider>
+                </CuvChapterAudioVoiceProvider>
+              </AskbibleUserProvider>
+            </LocaleProvider>
+          </AppImmersiveProvider>
         </AppSkinProvider>
       </body>
     </html>

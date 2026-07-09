@@ -13,15 +13,18 @@ import {
 type Args = {
   playing: boolean;
   playbackMode: "music" | "scripture";
-  togglePlayScriptureBase: () => Promise<void>;
+  togglePlayScriptureBase: (opts?: { forcePause?: boolean }) => Promise<void>;
+  quickStart?: boolean;
 };
 
-async function pauseShellScripture(togglePlayScriptureBase: () => Promise<void>): Promise<void> {
+async function pauseShellScripture(
+  togglePlayScriptureBase: (opts?: { forcePause?: boolean }) => Promise<void>,
+): Promise<void> {
   await flushTodayPlanScriptureResume();
   scriptureChapterPool.stop();
   clearReadPlanFlowTodayLoop();
   clearPlanFlowSessionActive();
-  await togglePlayScriptureBase();
+  await togglePlayScriptureBase({ forcePause: true });
 }
 
 function isPlanFlowChapterParam(planFlow: string | string[] | undefined): boolean {
@@ -34,6 +37,7 @@ export function useTogglePlayScriptureWithReadHome({
   playing,
   playbackMode,
   togglePlayScriptureBase,
+  quickStart,
 }: Args) {
   const pathname = usePathname();
   const router = useRouter();
@@ -43,40 +47,42 @@ export function useTogglePlayScriptureWithReadHome({
     if (isReadChapterPathname(pathname)) {
       if (isPlanFlowChapterParam(params.planFlow)) {
         await togglePlayScriptureBase();
-        return;
+        return true;
       }
       const started = await startTodayReadingScriptureFromReadHome(router, {
         replace: true,
+        quickStart,
       });
       if (!started) {
         await togglePlayScriptureBase();
       }
-      return;
+      return started;
     }
 
     if (isShellPrimaryTabPathname(pathname)) {
       if (playbackMode === "scripture" && playing) {
         await pauseShellScripture(togglePlayScriptureBase);
-        return;
+        return true;
       }
       if (playbackMode === "scripture" && !playing) {
         if (!scriptureChapterPool.isActive()) {
-          const started = await startTodayReadingScriptureFromReadHome(router);
+          const started = await startTodayReadingScriptureFromReadHome(router, { quickStart });
           if (!started) {
             await togglePlayScriptureBase();
           }
-          return;
+          return started;
         }
         await togglePlayScriptureBase();
-        return;
+        return true;
       }
-      const started = await startTodayReadingScriptureFromReadHome(router);
+      const started = await startTodayReadingScriptureFromReadHome(router, { quickStart });
       if (!started && isReadBibleHomeRoute(pathname)) {
         await togglePlayScriptureBase();
       }
-      return;
+      return started;
     }
 
     await togglePlayScriptureBase();
-  }, [params.planFlow, pathname, playbackMode, playing, router, togglePlayScriptureBase]);
+    return true;
+  }, [params.planFlow, pathname, playbackMode, playing, quickStart, router, togglePlayScriptureBase]);
 }

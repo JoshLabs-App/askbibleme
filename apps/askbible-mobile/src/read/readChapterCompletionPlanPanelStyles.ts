@@ -41,6 +41,14 @@ export const readChapterCompletionPlanPanelStyles = StyleSheet.create({
     color: "#2A170A",
     textAlign: "center",
   },
+  todayDoneNote: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    ...parchmentSans(500),
+    color: c.muted,
+    textAlign: "center",
+  },
   readingList: {
     marginTop: 10,
     gap: 8,
@@ -149,58 +157,6 @@ export const readChapterCompletionPlanPanelStyles = StyleSheet.create({
     lineHeight: 28,
     ...parchmentSans(500),
     color: "#6A543B",
-  },
-  celebrateMask: {
-    flex: 1,
-    backgroundColor: "rgba(15, 11, 8, 0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 22,
-  },
-  celebrateCardWrap: {
-    width: "100%",
-    maxWidth: 360,
-  },
-  celebrateCard: {
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    alignItems: "center",
-  },
-  celebrateEmoji: { fontSize: 34 },
-  sparkleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginBottom: 6,
-  },
-  sparkle: {
-    fontSize: 16,
-  },
-  celebrateTitle: {
-    marginTop: 8,
-    fontSize: 22,
-    ...parchmentSans(600),
-    color: c.ink,
-    textAlign: "center",
-  },
-  celebrateBody: {
-    marginTop: 8,
-    fontSize: 13,
-    lineHeight: 20,
-    color: c.muted,
-    textAlign: "center",
-  },
-  celebrateActions: {
-    marginTop: 14,
-    width: "100%",
-    gap: 8,
-  },
-  celebrateCtaWrap: {
-    borderRadius: 14,
-    shadowColor: "#b17200",
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
   },
   pressed: { opacity: 0.88 },
 });

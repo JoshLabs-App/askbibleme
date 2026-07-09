@@ -1,0 +1,13 @@
+{
+  "name": "askbible-shell-media-controls",
+  "version": "1.0.0",
+  "description": "AskBible.me lock screen and Control Center media controls",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "AskBible.me",
+  "homepage": "https://askbible.me",
+  "peerDependencies": {
+    "expo": "*",
+    "react-native": "*"
+  }
+}

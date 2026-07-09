@@ -1,5 +1,6 @@
 import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
+import { refreshShellMediaSession } from "../audio/shellMediaSessionPayload";
 import { SCRIPTURE_PROGRESS_UI_INTERVAL_SEC, shouldEmitPlaybackSecUpdate } from "./musicPlaybackProgress";
 import {
   finishScriptureChapterOnce,
@@ -87,17 +88,33 @@ export function createScripturePlaybackStatusHandler(
     }
     setPlaying(status.isPlaying);
     const scriptureSec = status.positionMillis / 1000;
-    publishScripturePlaybackSec(scriptureSec);
-    if (
-      shouldEmitPlaybackSecUpdate(
-        lastScriptureProgressSecRef,
-        scriptureSec,
-        SCRIPTURE_PROGRESS_UI_INTERVAL_SEC,
-      )
-    ) {
-      setScriptureCurrentSec(scriptureSec);
+    if (playbackModeRef.current === "scripture") {
+      const durationSec = status.durationMillis != null ? status.durationMillis / 1000 : 0;
+      const shouldRefreshSession =
+        !status.isPlaying ||
+        shouldEmitPlaybackSecUpdate(
+          lastScriptureProgressSecRef,
+          scriptureSec,
+          SCRIPTURE_PROGRESS_UI_INTERVAL_SEC,
+        );
+      if (shouldRefreshSession) {
+        refreshShellMediaSession({
+          playing: status.isPlaying,
+          scriptureCurrentSec: scriptureSec,
+          scriptureDurationSec: durationSec,
+        });
+      }
+      publishScripturePlaybackSec(scriptureSec);
+      if (shouldRefreshSession) {
+        setScriptureCurrentSec(scriptureSec);
+      }
+      setScriptureDurationSec(durationSec);
+    } else {
+      publishScripturePlaybackSec(scriptureSec);
     }
-    setScriptureDurationSec(status.durationMillis != null ? status.durationMillis / 1000 : 0);
+    if (playbackModeRef.current !== "scripture") {
+      setScriptureDurationSec(status.durationMillis != null ? status.durationMillis / 1000 : 0);
+    }
 
     if (
       handleScriptureStopAtStatus({

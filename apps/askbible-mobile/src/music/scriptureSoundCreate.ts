@@ -3,6 +3,7 @@ import type { AVPlaybackSource } from "expo-av";
 import type { MutableRefObject } from "react";
 import { primeShellSoundPlayback, shellSoundDownloadFirst } from "../audio/shellAudioMode";
 import { logShellSoundError } from "../audio/safeShellSound";
+import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
 import { createScripturePlaybackStatusHandler } from "./scripturePlaybackStatus";
 import type {
   ReadChapterPlaybackRegistration,
@@ -117,6 +118,19 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
   if (epoch !== playbackEpochRef.current || soundId !== activeSoundIdRef.current) {
     await sound.unloadAsync();
     return { ok: false, stale: true };
+  }
+
+  const chapter = readChapterRef.current;
+  const playingStatus = await sound.getStatusAsync();
+  if (playingStatus.isLoaded && chapter) {
+    syncShellMediaSessionExplicit({
+      title: `${chapter.bookName} ${chapter.chapter}`,
+      artist: "AskBible.me",
+      album: chapter.translationId,
+      durationSec: playingStatus.durationMillis != null ? playingStatus.durationMillis / 1000 : 0,
+      positionSec: playingStatus.positionMillis / 1000,
+      playing: playingStatus.isPlaying,
+    });
   }
 
   return { ok: true, sound };

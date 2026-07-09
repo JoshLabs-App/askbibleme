@@ -54,8 +54,8 @@ export function useMusicPlayTrackAt({
     bridge;
 
   return useCallback(
-    async (index: number) => {
-      if (tracks.length === 0) return;
+    async (index: number, opts?: { autoPlay?: boolean }) => {
+      if (tracks.length === 0) return false;
       await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
       const generation = ++playTrackGenerationRef.current;
 
@@ -72,7 +72,7 @@ export function useMusicPlayTrackAt({
         musicRepeatModeRef,
         setPlaying,
       });
-      if (!prepared.ok) return;
+      if (!prepared.ok) return false;
 
       endMusicSession();
       const loaded: LoadedMusicTrack = await loadAndStartMusicTrackSound({
@@ -82,6 +82,7 @@ export function useMusicPlayTrackAt({
         index: prepared.index,
         avSource: prepared.avSource,
         generation,
+        shouldPlay: opts?.autoPlay !== false,
         unloadCurrent,
         persistMusicResume,
         syncPlayingState,
@@ -91,7 +92,8 @@ export function useMusicPlayTrackAt({
         setMusicCurrentSec,
         setMusicDurationSec,
       });
-      if (loaded.ok || loaded.stale) return;
+      if (loaded.ok) return true;
+      if (loaded.stale) return false;
       scheduleMusicTrackPlayFallback({
         tracks,
         index: prepared.index,
@@ -100,6 +102,7 @@ export function useMusicPlayTrackAt({
         setPlaying,
         failedTrackId: loaded.failedTrackId,
       });
+      return false;
     },
     [
       bridge,

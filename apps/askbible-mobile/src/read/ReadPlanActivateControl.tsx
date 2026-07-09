@@ -1,8 +1,10 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
+import { useLocale } from "../i18n/LocaleProvider";
 import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
+import { ReadingPlanStartDayPicker } from "./ReadingPlanStartDayPicker";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { activateNtDeepRepeatPlan } from "./reading-plan/nt-deep-repeat-plan-sync";
@@ -22,6 +24,7 @@ import {
   setActiveReadingPlan,
   writeReadingPlanPrefs,
 } from "./reading-plan/reading-plan-prefs";
+import { resolveEffectiveEpochDay } from "./reading-plan/reading-plan-ahead";
 import { useEffectiveReadingPlanPrefs } from "./reading-plan/useReadingPlanStores";
 
 type Props = {
@@ -29,8 +32,14 @@ type Props = {
   dayCount: number;
 };
 
+function maxStartDayForPlan(planId: string, dayCount: number, isNtDeepRepeat: boolean): number {
+  if (isNtDeepRepeat) return 365;
+  return Math.max(1, Number.isFinite(dayCount) ? dayCount : 365);
+}
+
 export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   const router = useRouter();
+  const { locale } = useLocale();
   const { prefs: effective, refresh } = useEffectiveReadingPlanPrefs();
   const [stored, setStored] = useState<Awaited<ReturnType<typeof readReadingPlanPrefs>>>(null);
 
@@ -57,6 +66,10 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   const [pace, setPace] = useState<NtDeepRepeatPace>(
     stored?.ntDeepRepeatPace ?? effective.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE,
   );
+  const maxStartDay = maxStartDayForPlan(planId, dayCount, isNtDeepRepeat);
+  const supportsStartDay =
+    isNtDeepRepeat || (!isPointerPlan && !isTripleLoop && anchor === "from-today");
+  const [startDay, setStartDay] = useState(1);
 
   useEffect(() => {
     if (isActive) setAnchor(effective.anchor);
@@ -67,19 +80,38 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     else if (stored?.ntDeepRepeatPace) setPace(stored.ntDeepRepeatPace);
   }, [isActive, effective.ntDeepRepeatPace, stored?.ntDeepRepeatPace]);
 
-  const todayDayIndex = useMemo(() => {
-    if (!isActive || isPointerPlan) return null;
+  const currentPlanDay = useMemo(() => {
+    if (!isActive) return null;
+    if (isNtDeepRepeat) return resolveEffectiveEpochDay(effective);
+    if (isTripleLoop) return null;
     return resolveReadingPlanDayIndex(effective, dayCount) + 1;
-  }, [isActive, effective, dayCount, isPointerPlan]);
+  }, [isActive, effective, dayCount, isNtDeepRepeat, isTripleLoop]);
+
+  useEffect(() => {
+    if (!supportsStartDay) return;
+    if (isActive && currentPlanDay != null) {
+      setStartDay(Math.min(maxStartDay, Math.max(1, currentPlanDay)));
+    }
+  }, [supportsStartDay, isActive, currentPlanDay, maxStartDay]);
 
   const activate = async () => {
+    const safeStartDay = Math.min(maxStartDay, Math.max(1, Math.floor(startDay)));
     if (isNtDeepRepeat) {
-      await activateNtDeepRepeatPlan({ dayCount, pace });
+      await activateNtDeepRepeatPlan({ dayCount, pace, startDay: safeStartDay });
+    } else if (isTripleLoop) {
+      await setActiveReadingPlan(planId, "calendar-easter", { dayCount });
+    } else if (supportsStartDay) {
+      const backDated = new Date();
+      backDated.setDate(backDated.getDate() - (safeStartDay - 1));
+      await setActiveReadingPlan(planId, anchor, { dayCount, now: backDated });
     } else {
-      await setActiveReadingPlan(planId, isTripleLoop ? "calendar-easter" : anchor, { dayCount });
+      await setActiveReadingPlan(planId, anchor, { dayCount });
     }
     refresh();
-    router.replace("/read");
+    void readReadingPlanPrefs().then(setStored);
+    if (!isActive) {
+      router.replace("/read");
+    }
   };
 
   const clear = async () => {
@@ -120,6 +152,15 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
         </View>
       )}
 
+      {supportsStartDay ? (
+        <ReadingPlanStartDayPicker
+          locale={locale}
+          value={startDay}
+          max={maxStartDay}
+          onChange={setStartDay}
+        />
+      ) : null}
+
       <View style={styles.actions}>
         <Pressable onPress={() => void activate()} style={({ pressed }) => [styles.primary, pressed && styles.pressed]}>
           <Text style={styles.primaryText}>
@@ -131,9 +172,9 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
             <Text style={styles.clear}>{t("pages.read.planActivateClear")}</Text>
           </Pressable>
         ) : null}
-        {isActive && todayDayIndex != null ? (
+        {isActive && currentPlanDay != null ? (
           <Text style={styles.dayMeta}>
-            {tFormat("pages.read.planActivateCurrentDay", { n: todayDayIndex })}
+            {tFormat("pages.read.planActivateCurrentDay", { n: currentPlanDay })}
           </Text>
         ) : null}
       </View>

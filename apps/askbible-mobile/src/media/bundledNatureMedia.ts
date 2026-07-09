@@ -1,3 +1,4 @@
+import { Asset } from "expo-asset";
 import type { NatureCoverPlayback } from "../home/natureCoverPlayback";
 import {
   getBundledNaturePosterModule,
@@ -33,9 +34,11 @@ export function resolveNatureCoverPlayback(
   const id = videoId.trim();
   const bundledModule = id ? (getBundledNatureVideoModule(id) ?? undefined) : undefined;
   if (bundledModule != null) {
+    const asset = Asset.fromModule(bundledModule);
+    const uri = (asset.localUri ?? asset.uri ?? resolveBundledNatureVideoUri(id) ?? "").trim();
     return {
       sceneId: id,
-      uri: resolveBundledNatureVideoUri(id) ?? "",
+      uri,
       bundledModule,
     };
   }

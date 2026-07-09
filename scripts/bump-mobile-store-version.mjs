@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 双端商店版本真源：app.json → 同步 iOS / Android 原生工程。
+ * 双端商店版本真源：expo-static-config.js → 同步 iOS / Android 原生工程。
  *
  * Usage:
  *   node scripts/bump-mobile-store-version.mjs 1.0.7 63
@@ -9,10 +9,12 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createRequire } from "node:module";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const MOBILE = path.join(ROOT, "apps", "askbible-mobile");
-const APP_JSON = path.join(MOBILE, "app.json");
+const require = createRequire(import.meta.url);
+const APP_CONFIG_BASE = require(path.join(MOBILE, "expo-static-config.js"));
 const GRADLE = path.join(MOBILE, "android", "app", "build.gradle");
 const INFO_PLIST = path.join(MOBILE, "ios", "AskBibleme", "Info.plist");
 const PBXPROJ = path.join(MOBILE, "ios", "AskBibleme.xcodeproj", "project.pbxproj");
@@ -48,20 +50,20 @@ function parseArgs(argv) {
 }
 
 async function readCurrent() {
-  const app = JSON.parse(await fs.readFile(APP_JSON, "utf8"));
-  const marketing = String(app.expo?.version ?? "").trim();
-  const build = Number(app.expo?.ios?.buildNumber ?? app.expo?.android?.versionCode ?? 0);
+  const marketing = String(APP_CONFIG_BASE.expo?.version ?? "").trim();
+  const build = Number(APP_CONFIG_BASE.expo?.ios?.buildNumber ?? APP_CONFIG_BASE.expo?.android?.versionCode ?? 0);
   return { marketing, build };
 }
 
-async function writeAppJson(marketing, build) {
-  const raw = await fs.readFile(APP_JSON, "utf8");
-  const app = JSON.parse(raw);
-  app.expo.version = marketing;
-  app.expo.runtimeVersion = marketing;
-  app.expo.ios = { ...app.expo.ios, buildNumber: String(build) };
-  app.expo.android = { ...app.expo.android, versionCode: build };
-  await fs.writeFile(APP_JSON, `${JSON.stringify(app, null, 2)}\n`);
+async function writeExpoStaticConfig(marketing, build) {
+  const file = path.join(MOBILE, "expo-static-config.js");
+  const raw = await fs.readFile(file, "utf8");
+  const next = raw
+    .replace(/version: \"[^\"]+\"/, `version: "${marketing}"`)
+    .replace(/runtimeVersion: \"[^\"]+\"/, `runtimeVersion: "${marketing}"`)
+    .replace(/buildNumber: \"[^\"]+\"/, `buildNumber: "${build}"`)
+    .replace(/versionCode: \d+/, `versionCode: ${build}`);
+  await fs.writeFile(file, next);
 }
 
 async function writeGradle(marketing, build) {
@@ -114,13 +116,13 @@ async function main() {
     process.exit(1);
   }
 
-  await writeAppJson(marketing, build);
+  await writeExpoStaticConfig(marketing, build);
   await writeGradle(marketing, build);
   await writeInfoPlist(marketing, build);
   await writePbxproj(marketing, build);
 
   console.log(`Mobile store version synced: ${marketing} (${build})`);
-  console.log("  app.json, build.gradle, Info.plist, project.pbxproj");
+  console.log("  expo-static-config.js, build.gradle, Info.plist, project.pbxproj");
 }
 
 main().catch((err) => {

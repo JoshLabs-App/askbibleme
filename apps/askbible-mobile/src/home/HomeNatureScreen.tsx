@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Platform, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parseVerseKey } from "../bible/parse-verse-key";
@@ -28,6 +28,7 @@ import { useHomeNatureTodayScriptureShellPlayback } from "./useHomeNatureTodaySc
 import { useHomeNatureVerseSpeech } from "./useHomeNatureVerseSpeech";
 import { useHomeNatureVideoPowerPolicy } from "./useHomeNatureVideoPowerPolicy";
 import { useHomeOrientationUnlock } from "./useHomeOrientationUnlock";
+import { logStartupTiming } from "../debug/startupTiming";
 
 export function HomeNatureScreen() {
   const router = useRouter();
@@ -44,19 +45,36 @@ export function HomeNatureScreen() {
 
   const { setMusicGain, playing, playbackMode, scripturePreparing } = useMusicPlayback();
 
-  useHomeOrientationUnlock();
-
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [ambientStripViewportWidth, setAmbientStripViewportWidth] = useState(0);
   const [displayedVerseKey, setDisplayedVerseKey] = useState<string | null>(null);
+  const [startupReady, setStartupReady] = useState(Platform.OS !== "android");
+  const firstRenderLoggedRef = useRef(false);
+  const settingsLoggedRef = useRef(false);
+  const videoMountedLoggedRef = useRef(false);
+
+  useEffect(() => {
+    if (firstRenderLoggedRef.current) return;
+    firstRenderLoggedRef.current = true;
+    logStartupTiming("home", "first_render");
+  }, []);
+
+  useEffect(() => {
+    if (startupReady) return;
+    const timer = setTimeout(() => setStartupReady(true), 0);
+    return () => clearTimeout(timer);
+  }, [startupReady]);
+
+  useHomeOrientationUnlock(startupReady);
 
   const load = useHomeNatureScreenLoad();
-  useHomeNatureTodayScriptureShellPlayback(load.homeFocused);
+  useHomeNatureTodayScriptureShellPlayback(load.homeFocused, startupReady);
 
   const scriptureModeActive = playbackMode === "scripture" && (playing || scripturePreparing);
   const verseSpeech = useHomeNatureVerseSpeech({
     prefsVersion: load.prefsVersion,
     scriptureModeActive,
+    enabled: startupReady,
   });
 
   const videoPowerPolicy = useHomeNatureVideoPowerPolicy({ softFocus: load.softFocus });
@@ -85,6 +103,7 @@ export function HomeNatureScreen() {
     musicModeActive,
     scriptureModeActive,
     voiceActive: verseSpeech.voiceActive,
+    enabled: startupReady,
   });
 
   const immersive = useHomeNatureImmersive({
@@ -97,6 +116,7 @@ export function HomeNatureScreen() {
     sceneId: scene.sceneId,
     sceneList: scene.sceneList,
     selectScene: scene.selectScene,
+    enabled: startupReady,
   });
 
   useEffect(() => {
@@ -131,6 +151,18 @@ export function HomeNatureScreen() {
       },
     });
   }, [displayedVerseKey, router]);
+
+  useEffect(() => {
+    if (settingsLoggedRef.current || !load.settings?.videos.length) return;
+    settingsLoggedRef.current = true;
+    logStartupTiming("home", "settings_ready", `videos=${load.settings.videos.length}`);
+  }, [load.settings]);
+
+  useEffect(() => {
+    if (videoMountedLoggedRef.current || !load.videoStageMounted) return;
+    videoMountedLoggedRef.current = true;
+    logStartupTiming("home", "video_stage_mounted");
+  }, [load.videoStageMounted]);
 
   if (load.loading && !load.settings?.videos.length) {
     return <AppLogoSplash />;

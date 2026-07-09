@@ -102,7 +102,7 @@ class ScriptureChapterPool {
   /** 从池中指定索引开播（音乐 playTrackAt 同款）。 */
   async playAt(
     index: number,
-    opts?: { skipNavigate?: boolean; startAtSec?: number },
+    opts?: { skipNavigate?: boolean; startAtSec?: number; maxAttempts?: number; retryDelayMs?: number },
   ): Promise<boolean> {
     if (!this.deps || !this.active || this.tracks.length === 0) return false;
 
@@ -123,9 +123,11 @@ class ScriptureChapterPool {
       this.deps.navigateToChapter({ bookId: track.bookId, chapter: track.chapter });
     }
 
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+    const maxAttempts = Math.max(1, Math.floor(opts?.maxAttempts ?? 4));
+    const retryDelayMs = Math.max(0, Math.floor(opts?.retryDelayMs ?? 450));
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       if (!this.active) return false;
-      if (attempt > 0) await sleep(450);
+      if (attempt > 0) await sleep(retryDelayMs);
       const playOpts =
         opts?.startAtSec != null && opts.startAtSec > 0
           ? { startAtSec: opts.startAtSec }

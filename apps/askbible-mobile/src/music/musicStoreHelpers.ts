@@ -75,13 +75,13 @@ export function hasAtLeastBundledTracks(
   return candidateCount >= bundledCount;
 }
 
-export function resolveDefaultCalmTrackIndex(tracks: PlaybackTrack[]): number {
+export function resolveDefaultCalmTrackIndex(tracks: readonly PlaybackTrack[]): number {
   const calmIdx = firstPlayableTrackIndexInAlbum(tracks, normalizeMusicAlbumLabel("安静"));
   return calmIdx >= 0 ? calmIdx : firstPlayableTrackIndex(tracks);
 }
 
 /** 新会话默认曲：优先在本地可播曲目中随机，避免安装包仅 1 首 starter 时永远同一首。 */
-export function resolveSessionDefaultTrackIndex(tracks: PlaybackTrack[]): number {
+export function resolveSessionDefaultTrackIndex(tracks: readonly PlaybackTrack[]): number {
   const localIndices = listLocalPlayableTrackIndices(tracks);
   if (localIndices.length > 1) return pickRandomLocalPlayableTrackIndex(tracks);
   return resolveDefaultCalmTrackIndex(tracks);

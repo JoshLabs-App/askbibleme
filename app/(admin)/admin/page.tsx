@@ -66,6 +66,11 @@ const overview: {
         label: "内容生成系统",
         hint: "按书卷章 + 描述规则，多连接 AI 对比生成",
       },
+      {
+        href: "/admin/read/info-edition-v4",
+        label: "V4 经文汇编",
+        hint: "按主题从经文汇编；格式与规则在「生成角色」V4 三项",
+      },
     ],
   },
   {

@@ -6,13 +6,15 @@ import { SHELL_VIDEO_ANIM_NATIVE_DRIVER } from "./shellVideoAnimation";
 const CROSSFADE_MS = 580;
 
 /**
- * 双槽位 A/B 常驻：按 sceneId 切换隐藏槽，首帧就绪后并行交叉淡入淡出。
+ * 双槽位 A/B：默认只保留当前活跃槽，切场景时临时挂起另一槽做交叉淡入淡出。
  * 配合 APK 内 `require()` + 启动预解压，不依赖网络拉流。
  */
 export function useCoverVideoCrossfade(nextSceneId: string, animated = true) {
   const trimmed = nextSceneId.trim();
   const [slotAScene, setSlotAScene] = useState(trimmed);
   const [slotBScene, setSlotBScene] = useState(trimmed);
+  const [slotAMounted, setSlotAMounted] = useState(true);
+  const [slotBMounted, setSlotBMounted] = useState(false);
   const opacityA = useRef(new Animated.Value(1)).current;
   const opacityB = useRef(new Animated.Value(0)).current;
   const activeSlotRef = useRef<"a" | "b">("a");
@@ -48,10 +50,14 @@ export function useCoverVideoCrossfade(nextSceneId: string, animated = true) {
           opacityA.setValue(1);
           opacityB.setValue(0);
           setSlotBReady(false);
+          setSlotAMounted(true);
+          setSlotBMounted(false);
         } else {
           opacityA.setValue(0);
           opacityB.setValue(1);
           setSlotAReady(false);
+          setSlotAMounted(false);
+          setSlotBMounted(true);
         }
         crossfadeAnimRef.current = null;
         return;
@@ -82,9 +88,13 @@ export function useCoverVideoCrossfade(nextSceneId: string, animated = true) {
         if (incoming === "a") {
           opacityB.setValue(0);
           setSlotBReady(false);
+          setSlotAMounted(true);
+          setSlotBMounted(false);
         } else {
           opacityA.setValue(0);
           setSlotAReady(false);
+          setSlotAMounted(false);
+          setSlotBMounted(true);
         }
       });
     },
@@ -116,9 +126,13 @@ export function useCoverVideoCrossfade(nextSceneId: string, animated = true) {
       if (incoming === "a") {
         if (slotAScene !== trimmed) setSlotAScene(trimmed);
         setSlotAReady(incomingAlreadyHasScene);
+        setSlotAMounted(true);
+        setSlotBMounted(true);
       } else {
         if (slotBScene !== trimmed) setSlotBScene(trimmed);
         setSlotBReady(incomingAlreadyHasScene);
+        setSlotAMounted(true);
+        setSlotBMounted(true);
       }
       pendingIncomingRef.current = incoming;
       return;
@@ -130,12 +144,16 @@ export function useCoverVideoCrossfade(nextSceneId: string, animated = true) {
       activeSlotRef.current = "a";
       opacityA.setValue(1);
       opacityB.setValue(0);
+      setSlotAMounted(true);
+      setSlotBMounted(false);
       return;
     }
 
     const incoming: "a" | "b" = activeSlotRef.current === "a" ? "b" : "a";
     transitioningRef.current = true;
     pendingIncomingRef.current = incoming;
+    setSlotAMounted(true);
+    setSlotBMounted(true);
 
     const incomingAlreadyHasScene =
       incoming === "a" ? slotAScene === trimmed : slotBScene === trimmed;
@@ -177,6 +195,8 @@ export function useCoverVideoCrossfade(nextSceneId: string, animated = true) {
   return {
     slotAScene,
     slotBScene,
+    slotAMounted,
+    slotBMounted,
     opacityA,
     opacityB,
     onSlotAReady,

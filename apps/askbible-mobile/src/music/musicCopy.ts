@@ -15,6 +15,7 @@ export const musicCopy = {
   next: "Next track",
   play: "Play",
   pause: "Pause",
+  selectedTrack: "Selected track",
   progress: "Playback progress",
   repeatOneOn: "Repeat one on",
   repeatOneOff: "Repeat one off",

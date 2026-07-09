@@ -2,6 +2,11 @@
 <resources>
     <!-- Logo 主黄（小挂件底色 #FFB100） -->
     <color name="widget_logo_background">#FFB100</color>
+    <!-- 挂件播放按钮：待机（半透明墨色）/ 播放中（主黄高亮） -->
+    <color name="widget_audio_idle_background">#59201812</color>
+    <color name="widget_audio_active_background">#FFB100</color>
+    <!-- 启动中（收到点击、尚未开始播放）：半透明主黄底 -->
+    <color name="widget_audio_pending_background">#4DFFB100</color>
     <color name="widget_text_on_logo">#FFFFFF</color>
     <color name="widget_divider_on_logo">#57FFFFFF</color>
     <color name="widget_bubble_fill">#FAF6F0</color>

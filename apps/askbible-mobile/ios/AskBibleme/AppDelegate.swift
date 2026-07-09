@@ -45,9 +45,17 @@ public class AppDelegate: ExpoAppDelegate {
       in: window,
       launchOptions: launchOptions)
     NotificationCenterManager.shared.addDelegate(ReadingAlarmNotificationDelegate.shared)
+    application.beginReceivingRemoteControlEvents()
+    DispatchQueue.main.async { [weak window] in
+      window?.rootViewController?.becomeFirstResponder()
+    }
 #endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  public override func remoteControlReceived(with event: UIEvent?) {
+    super.remoteControlReceived(with: event)
   }
 
   // Linking API

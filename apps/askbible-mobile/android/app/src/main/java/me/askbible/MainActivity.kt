@@ -13,6 +13,7 @@ import android.view.WindowManager
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.facebook.react.ReactActivity
+import me.askbible.widget.WidgetPlaybackBridge
 import me.askbible.alarm.AskBibleReadingAlarmModule
 import me.askbible.alarm.ReadingAlarmReceiver
 import com.facebook.react.ReactActivityDelegate
@@ -32,6 +33,7 @@ class MainActivity : ReactActivity() {
     super.onCreate(null)
     applyEdgeToEdgeWindow()
     handleReadingAlarmIntent(intent)
+    handleWidgetPlaybackIntent(intent)
   }
 
   override fun onResume() {
@@ -72,6 +74,11 @@ class MainActivity : ReactActivity() {
     super.onNewIntent(intent)
     setIntent(intent)
     handleReadingAlarmIntent(intent)
+    handleWidgetPlaybackIntent(intent)
+  }
+
+  private fun handleWidgetPlaybackIntent(intent: Intent?) {
+    WidgetPlaybackBridge.handleActivityIntent(this, intent)
   }
 
   private fun handleReadingAlarmIntent(intent: Intent?) {

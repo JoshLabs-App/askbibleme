@@ -10,20 +10,23 @@ export function useBundledOnlyTrackIndexGuard(
   tracks: PlaybackTrack[],
   trackIndex: number,
   setTrackIndex: (index: number) => void,
+  enabled = true,
 ): void {
   useEffect(() => {
+    if (!enabled) return;
     if (!isMobileBundledOnly() || tracks.length === 0) return;
     const current = tracks[trackIndex];
     if (current?.localReady) return;
     const next = resolveDefaultCalmTrackIndex(tracks);
     if (next !== trackIndex) setTrackIndex(next);
-  }, [tracks, trackIndex, setTrackIndex]);
+  }, [enabled, tracks, trackIndex, setTrackIndex]);
 }
 
-export function useWarmCalmBundledTrack(tracks: PlaybackTrack[]): void {
+export function useWarmCalmBundledTrack(tracks: PlaybackTrack[], enabled = true): void {
   const lastPreludeKeyRef = useRef("");
 
   useEffect(() => {
+    if (!enabled) return;
     if (tracks.length === 0) return;
 
     for (const track of tracks) {
@@ -38,6 +41,9 @@ export function useWarmCalmBundledTrack(tracks: PlaybackTrack[]): void {
       .join("|");
     if (localKey === lastPreludeKeyRef.current) return;
     lastPreludeKeyRef.current = localKey;
-    void warmReadingAlarmPreludePool(tracks);
-  }, [tracks]);
+    const timer = setTimeout(() => {
+      void warmReadingAlarmPreludePool(tracks);
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, [enabled, tracks]);
 }

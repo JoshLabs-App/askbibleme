@@ -23,9 +23,10 @@ import { speakHomeVerseTarget } from "./homeNatureVerseSpeechSpeak";
 type Args = {
   prefsVersion: number;
   scriptureModeActive: boolean;
+  enabled?: boolean;
 };
 
-export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive }: Args) {
+export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive, enabled = true }: Args) {
   const homeTtsExperimentEnabled = useSyncExternalStore(
     subscribeHomeTtsExperiment,
     getHomeTtsExperimentEnabled,
@@ -71,6 +72,7 @@ export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive }: 
   }, [ttsPrefs]);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     const task = InteractionManager.runAfterInteractions(() => {
       void readNatureHomeTtsPrefs().then((prefs) => {
@@ -81,10 +83,11 @@ export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive }: 
       cancelled = true;
       task.cancel();
     };
-  }, [prefsVersion, ttsPrefsVersion]);
+  }, [enabled, prefsVersion, ttsPrefsVersion]);
 
   useFocusEffect(
     useCallback(() => {
+      if (!enabled) return undefined;
       let cancelled = false;
       let voiceTask: { cancel: () => void } | null = null;
       if (homeTtsExperimentEnabled) {
@@ -118,7 +121,7 @@ export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive }: 
         setVoicePreparing(false);
         setVoiceSpeaking(false);
       };
-    }, [homeTtsExperimentEnabled]),
+    }, [enabled, homeTtsExperimentEnabled]),
   );
 
   const onDisplayedVerseChange = useCallback(
@@ -161,15 +164,17 @@ export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive }: 
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     if (homeTtsExperimentEnabled) return;
     setVoiceHint(null);
     void stopHomeVerseSpeech();
-  }, [homeTtsExperimentEnabled, stopHomeVerseSpeech]);
+  }, [enabled, homeTtsExperimentEnabled, stopHomeVerseSpeech]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!scriptureModeActive) return;
     void stopHomeVerseSpeech();
-  }, [scriptureModeActive, stopHomeVerseSpeech]);
+  }, [enabled, scriptureModeActive, stopHomeVerseSpeech]);
 
   const speakCtxRef = useRef({
     homeVoiceSessionIdRef,

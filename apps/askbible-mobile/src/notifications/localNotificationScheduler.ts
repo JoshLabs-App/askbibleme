@@ -88,7 +88,6 @@ async function scheduleDailyTrigger(args: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour: args.hour,
       minute: args.minute,
-      repeats: true,
     },
   });
 }

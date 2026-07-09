@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import { useGoldenVersesChromeless } from "@/components/verse/GoldenVersesChromelessContext";
 import { GoldenVerseTextScaleControls } from "@/components/verse/GoldenVerseTextScaleControls";
 import { GoldenVersesPageTemplatePicker } from "@/components/verse/GoldenVersesPageTemplatePicker";
@@ -62,13 +63,19 @@ export function GoldenVersesTopActions({
 }: Props) {
   const { t } = useLocale();
   const { chromeless, manualChromeless, landscapeNarrow, setManualChromeless } = useGoldenVersesChromeless();
+  const { immersive, setImmersive } = useAppImmersive();
 
   const floating = layout === "floating";
   const onDark = settingsVariant === "dark" || floating;
 
-  const showExitIcon = manualChromeless || landscapeNarrow;
+  const showExitIcon = immersive || manualChromeless || landscapeNarrow;
 
   const onFullscreenClick = () => {
+    if (immersive) {
+      setImmersive(false);
+      void exitFullscreenCompat();
+      return;
+    }
     if (landscapeNarrow) {
       setManualChromeless(false);
       void exitFullscreenCompat();
@@ -78,8 +85,8 @@ export function GoldenVersesTopActions({
       setManualChromeless(false);
       void exitFullscreenCompat();
       return;
-    }
-    setManualChromeless(true);
+      }
+      setManualChromeless(true);
   };
 
   const wrapClass = floating
@@ -88,21 +95,23 @@ export function GoldenVersesTopActions({
 
   return (
     <div className={wrapClass}>
-      <button
-        type="button"
-        onClick={onFullscreenClick}
-        aria-label={
-          showExitIcon ? t("pages.goldenVerses.fullscreenExit") : t("pages.goldenVerses.fullscreenEnter")
-        }
-        aria-pressed={showExitIcon}
-        className={onDark ? BTN_DARK : BTN_LIGHT}
-      >
-        {showExitIcon ? (
-          <IconExitFullscreen className="h-[15px] w-[15px] opacity-90" />
-        ) : (
-          <IconEnterFullscreen className="h-[15px] w-[15px] opacity-88" />
-        )}
-      </button>
+      {floating ? (
+        <button
+          type="button"
+          onClick={onFullscreenClick}
+          aria-label={
+            showExitIcon ? t("pages.goldenVerses.fullscreenExit") : t("pages.goldenVerses.fullscreenEnter")
+          }
+          aria-pressed={showExitIcon}
+          className={onDark ? BTN_DARK : BTN_LIGHT}
+        >
+          {showExitIcon ? (
+            <IconExitFullscreen className="h-[15px] w-[15px] opacity-90" />
+          ) : (
+            <IconEnterFullscreen className="h-[15px] w-[15px] opacity-88" />
+          )}
+        </button>
+      ) : null}
       <GoldenVerseTextScaleControls variant={settingsVariant ?? (floating ? "dark" : "light")} />
       {uploadedBackgrounds.length > 0 ? (
         <GoldenVersesPageTemplatePicker

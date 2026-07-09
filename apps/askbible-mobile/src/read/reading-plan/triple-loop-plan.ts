@@ -17,8 +17,8 @@ export const TRIPLE_LOOP_EXPLORE_ARTICLE_SLUG = "article_1778108127353_fzymbc";
 
 export const TRIPLE_LOOP_PLAN_DAY_COUNT = 1;
 
-export function isTripleLoopPlanId(planId: string): boolean {
-  return planId.trim() === TRIPLE_LOOP_PLAN_ID;
+export function isTripleLoopPlanId(planId: string | null | undefined): boolean {
+  return String(planId ?? "").trim() === TRIPLE_LOOP_PLAN_ID;
 }
 
 export function getTripleLoopRegistryEntry(): ReadingPlanRegistryEntry {

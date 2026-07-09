@@ -1,5 +1,6 @@
 import { useTogglePlayScriptureWithReadHome } from "./useTogglePlayScriptureWithReadHome";
 import { useTodayPlanScriptureResumePersistence } from "../read/useTodayPlanScriptureResumePersistence";
+import { useShellMediaControlsSync } from "../audio/useShellMediaControlsSync";
 import {
   resolveCanTogglePlayback,
   resolveReadChapterAudioAvailable,
@@ -71,9 +72,18 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     setSleepTimerMinutes,
     seekRatio,
     setMusicGain,
+    pauseShellPlayback,
   } = shellControls;
 
   const { checkMusicCatalogUpdate, downloadMusicCatalogUpdate } = catalog;
+
+  console.warn("[music-provider] render", {
+    loading,
+    mode: playbackMode,
+    playing,
+    tracks: tracks.length,
+    trackIndex,
+  });
 
   const shell = useMusicPlaybackShellWiring({
     refs,
@@ -106,6 +116,13 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     togglePlayScriptureBase: shell.togglePlayScripture,
   });
 
+  const startWidgetReadingAudio = useTogglePlayScriptureWithReadHome({
+    playing,
+    playbackMode,
+    togglePlayScriptureBase: shell.togglePlayScripture,
+    quickStart: true,
+  });
+
   useTodayPlanScriptureResumePersistence({
     playing,
     playbackMode,
@@ -120,6 +137,29 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
   const canTogglePlayback = resolveCanTogglePlayback(tracks, readChapterAudioAvailable);
 
   syncMusicPlaybackControlSnapshot(playing, playbackMode, togglePlayScripture);
+
+  useShellMediaControlsSync({
+    loading,
+    playing,
+    playbackMode,
+    tracks,
+    trackIndex,
+    musicCurrentSec,
+    musicDurationSec,
+    scriptureCurrentSec,
+    scriptureDurationSec,
+    readChapter,
+    togglePlayMusic: shell.togglePlayMusic,
+    pauseShellPlayback,
+    playNext: shell.playNext,
+    playPrev: shell.playPrev,
+    playTrackAt: shell.playTrackAt,
+    // 锁屏 / 通知的远程播放键需要「纯暂停/续播」语义，
+    // 不能用会在读经页触发「开始今日读经」的 read-home 包装版。
+    togglePlayScripture: shell.togglePlayScripture,
+    // 桌面「收听」挂件在非读经模式时用包装版开始今日读经。
+    startReadingAudio: startWidgetReadingAudio,
+  });
 
   return useMusicPlaybackContextValue({
     store,

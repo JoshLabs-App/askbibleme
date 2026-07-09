@@ -3,9 +3,8 @@ import { Platform } from "react-native";
 import { NATURE_HOME_PREFS_KEYS } from "./natureHomePrefsKeys";
 import { syncWidgetRotationIntervalSec } from "../widget/syncWidgetRotationIntervalSec";
 
-export const DEFAULT_HOME_VERSE_ROTATION_SEC = 10;
-export const MIN_HOME_VERSE_ROTATION_SEC = 3;
-export const MAX_HOME_VERSE_ROTATION_SEC = 60;
+export const HOME_VERSE_ROTATION_SEC_OPTIONS = [3, 5, 7, 10, 15] as const;
+export const DEFAULT_HOME_VERSE_ROTATION_SEC = 7;
 
 let currentSec = DEFAULT_HOME_VERSE_ROTATION_SEC;
 let hydrated = false;
@@ -24,7 +23,17 @@ function emit() {
 export function clampHomeVerseRotationSec(raw: unknown): number {
   const n = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
   if (!Number.isFinite(n)) return DEFAULT_HOME_VERSE_ROTATION_SEC;
-  return Math.min(MAX_HOME_VERSE_ROTATION_SEC, Math.max(MIN_HOME_VERSE_ROTATION_SEC, Math.round(n)));
+  const rounded = Math.round(n);
+  let nearest: number = HOME_VERSE_ROTATION_SEC_OPTIONS[0];
+  let bestDelta = Math.abs(rounded - nearest);
+  for (const sec of HOME_VERSE_ROTATION_SEC_OPTIONS) {
+    const delta = Math.abs(rounded - sec);
+    if (delta < bestDelta) {
+      nearest = sec;
+      bestDelta = delta;
+    }
+  }
+  return nearest;
 }
 
 export function getHomeVerseRotationSec(): number {

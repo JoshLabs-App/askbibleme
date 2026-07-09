@@ -1,6 +1,7 @@
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, AppState, type AppStateStatus } from "react-native";
+import { ensureNatureSceneVideoReady } from "../media/natureSceneReadiness";
 import {
   natureCoverVideoSource,
   type ResolveNatureCoverPlayback,
@@ -31,7 +32,7 @@ function CoverVideoSlotInner({
   playbackActive,
 }: {
   sceneId: string;
-  source: string | number;
+  source: string;
   rate: number;
   layerFrame: CoverLayerFrame;
   opacity: Animated.Value;
@@ -84,22 +85,10 @@ function CoverVideoSlotInner({
 
   useEffect(() => {
     if (!source) return;
-    let stallTimer: ReturnType<typeof setTimeout> | null = null;
-    const clearStallTimer = () => {
-      if (stallTimer) clearTimeout(stallTimer);
-      stallTimer = null;
-    };
     const markReady = () => {
       if (!aliveRef.current || readyRef.current) return;
       readyRef.current = true;
       onReady();
-      clearStallTimer();
-      stallTimer = setTimeout(() => {
-        if (!aliveRef.current) return;
-        safePlayerCall(onReleased, () => {
-          if (player.currentTime < 0.05) onPlaybackError();
-        });
-      }, 2200);
     };
     const playingSub = player.addListener("playingChange", ({ isPlaying }) => {
       if (!aliveRef.current) return;
@@ -111,7 +100,6 @@ function CoverVideoSlotInner({
       if (status === "error" || error) onPlaybackError();
     });
     return () => {
-      clearStallTimer();
       playingSub.remove();
       statusSub.remove();
     };
@@ -146,6 +134,40 @@ function CoverVideoSlotInner({
   );
 }
 
+function useAndroidCoverVideoSource(
+  sceneId: string,
+  resolveScenePlayback: ResolveNatureCoverPlayback,
+  enabled: boolean,
+): string | null {
+  const [source, setSource] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      setSource(null);
+      return;
+    }
+    const id = sceneId.trim();
+    if (!id) {
+      setSource(null);
+      return;
+    }
+    let alive = true;
+    void (async () => {
+      await ensureNatureSceneVideoReady(id);
+      if (!alive) return;
+      const playback = resolveScenePlayback(id);
+      const resolved = natureCoverVideoSource(playback);
+      if (!alive) return;
+      setSource(typeof resolved === "string" && resolved.trim() ? resolved.trim() : null);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [enabled, sceneId, resolveScenePlayback]);
+
+  return source;
+}
+
 export function AndroidCoverVideoSlot({
   slotKey,
   sceneId,
@@ -158,6 +180,7 @@ export function AndroidCoverVideoSlot({
   onPlaybackError,
   playbackActive,
   portraitMode,
+  mounted = true,
 }: {
   slotKey: string;
   sceneId: string;
@@ -170,17 +193,19 @@ export function AndroidCoverVideoSlot({
   onPlaybackError: () => void;
   playbackActive: boolean;
   portraitMode: boolean;
+  mounted?: boolean;
 }) {
-  const playback = resolveScenePlayback(sceneId);
-  const source = natureCoverVideoSource(playback);
+  const source = useAndroidCoverVideoSource(sceneId, resolveScenePlayback, mounted);
+  const playback = source ? resolveScenePlayback(sceneId) : null;
 
   useEffect(() => {
+    if (!mounted) return;
     if (playback && portraitMode) {
       onNaturalAspect(NATURE_HOME_VIDEO_LANDSCAPE_ASPECT);
     }
-  }, [onNaturalAspect, playback, portraitMode, sceneId]);
+  }, [mounted, onNaturalAspect, playback, portraitMode, sceneId]);
 
-  if (!sceneId.trim() || source == null) return null;
+  if (!mounted || !sceneId.trim() || !source) return null;
 
   return (
     <CoverVideoSlotInner

@@ -1,25 +1,24 @@
 {
   "schemaVersion": 1,
   "userId": "b5af845c-6175-43cc-a20f-e88d3f91b962",
-  "revision": "1781573595394-86smunhh",
-  "updatedAt": "2026-06-16T01:33:15.394Z",
+  "revision": "1782149176172-soyfvr71",
+  "updatedAt": "2026-06-22T17:26:16.172Z",
   "blobs": {
     "tripleLoopProgress": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "ot": {
           "bookId": "EXO",
-          "chapter": 22
+          "chapter": 29
         },
         "nt": {
           "bookId": "JHN",
-          "chapter": 4
+          "chapter": 11
         },
         "wisdom": {
           "bookId": "PSA",
-          "chapter": 30
+          "chapter": 37
         },
-        "startedAt": "2026-04-05",
         "chaptersReadKeys": {
           "ot": [
             "EXO:22"
@@ -32,14 +31,15 @@
           ]
         },
         "chaptersRead": {
-          "ot": 1,
-          "nt": 1,
-          "wisdom": 1
-        }
+          "ot": 0,
+          "nt": 0,
+          "wisdom": 0
+        },
+        "startedAt": "2026-04-05"
       }
     },
     "readTypography": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "size": "m",
         "verseParagraphFlow": true,
@@ -47,12 +47,12 @@
       }
     },
     "readTranslation": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "prefs": {
           "version": 1,
-          "primaryTranslationId": "cuv-simp",
+          "primaryTranslationId": "cuv-trad",
           "contrastTranslationIds": [],
           "contrastTranslationId": null,
           "audioTranslationId": null
@@ -61,7 +61,7 @@
       }
     },
     "homeNatureUi": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "ttsPrefs": {
@@ -77,7 +77,7 @@
           "fontFamily": "sans",
           "textEffect": "classic"
         },
-        "textScaleIndex": 12,
+        "textScaleIndex": 13,
         "chromeTune": {
           "topHeightRem": 5.25,
           "topHeightMinPx": 88,
@@ -97,89 +97,117 @@
       }
     },
     "homePrayerVerse": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "verseDisplay": "primary",
         "primaryTranslationMode": "auto",
-        "verseTextZhTranslationId": "cuv-simp",
+        "verseTextZhTranslationId": "cuv-trad",
         "verseTextEnTranslationId": ""
       }
     },
     "homeVersePoolScope": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
-        "scopeId": "all"
+        "scopeId": "repeatGe5New"
       }
     },
     "natureSceneUi": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "activeSceneId": "9cc949f2-3c1d-49c0-8357-2dc1d32bd954",
-        "loopAllScenes": false,
+        "loopAllScenes": true,
         "ambientSceneSlotId": null,
         "ambientMasterVolume": 0
       }
     },
     "musicVisualTheme": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "theme": "aqua"
       }
     },
     "scripturePlaybackRate": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "rate": 1
       }
     },
     "cuvAudioVoice": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "voiceId": "mandarin"
       }
     },
     "appLocale": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
-        "locale": "zh-CN"
+        "locale": "zh-TW"
       }
     },
     "readingPlanPrefs": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
-        "planId": "triple-loop",
-        "anchor": "calendar-easter",
-        "startedOn": "2026-04-05",
+        "planId": "nt-deep-repeat",
+        "anchor": "from-today",
+        "startedOn": "2026-06-22",
         "dayCount": 1
       }
     },
     "todayReadingDone": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
-        "scopeKey": "triple-loop:epoch:72",
+        "scopeKey": "nt-deep-repeat:epoch:1",
         "doneKeys": [
           "nt:JHN:4",
-          "wisdom:PSA:30",
-          "ot:EXO:22"
+          "ot:EXO:22",
+          "wisdom:PSA:30"
         ]
       }
     },
     "habitStats": {
-      "updatedAt": "2026-06-16T01:33:13.919Z",
+      "updatedAt": "2026-06-22T17:26:15.091Z",
       "value": {
         "version": 1,
         "completedDates": [
-          "2026-06-15"
+          "2026-06-15",
+          "2026-06-22"
         ]
+      }
+    },
+    "lastPosition": {
+      "updatedAt": "2026-06-22T17:26:15.091Z",
+      "value": {
+        "bookId": "1JN",
+        "chapter": 1,
+        "bookName": "约翰一书"
+      }
+    },
+    "chapterCompletion": {
+      "updatedAt": "2026-06-22T17:26:15.091Z",
+      "value": {
+        "version": 1,
+        "completed": [
+          "1JN:1"
+        ]
+      }
+    },
+    "todayReadingFraction": {
+      "updatedAt": "2026-06-22T17:26:15.091Z",
+      "value": {
+        "version": 1,
+        "scopeKey": "nt-deep-repeat:epoch:1",
+        "fractions": {
+          "ndr:nt:1JN:1:5": 0.29655172413793107
+        }
       }
     }
   }

@@ -17,6 +17,7 @@ type Args = {
   sceneId: string;
   sceneList: NatureSettingsV2["videos"];
   selectScene: (id: string, opts?: { keepLoopMode?: boolean; source?: "user" | "auto" }) => void;
+  enabled?: boolean;
 };
 
 export function useHomeNatureImmersive({
@@ -29,6 +30,7 @@ export function useHomeNatureImmersive({
   sceneId,
   sceneList,
   selectScene,
+  enabled = true,
 }: Args) {
   const landscapeNarrow = useLandscapeNarrow();
   const [autoImmersiveActive, setAutoImmersiveActive] = useState(false);
@@ -41,14 +43,16 @@ export function useHomeNatureImmersive({
   const showAutoImmersive = autoImmersiveActive && canArmAutoImmersive;
 
   useEffect(() => {
+    if (!enabled) return;
     setHomeLandscapeImmersive(showLandscapeVideo);
     return () => setHomeLandscapeImmersive(false);
-  }, [showLandscapeVideo]);
+  }, [enabled, showLandscapeVideo]);
 
   useEffect(() => {
+    if (!enabled) return;
     setHomeAutoHideChrome(showAutoImmersive);
     return () => setHomeAutoHideChrome(false);
-  }, [showAutoImmersive]);
+  }, [enabled, showAutoImmersive]);
 
   const clearAutoImmersiveTimer = useCallback(() => {
     if (!autoImmersiveTimerRef.current) return;
@@ -72,6 +76,7 @@ export function useHomeNatureImmersive({
   }, [hasHomeInteraction, autoImmersiveActive, armAutoImmersiveTimer]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!hasHomeInteraction) {
       clearAutoImmersiveTimer();
       if (autoImmersiveActive) setAutoImmersiveActive(false);
@@ -83,7 +88,7 @@ export function useHomeNatureImmersive({
     }
     armAutoImmersiveTimer();
     return clearAutoImmersiveTimer;
-  }, [hasHomeInteraction, autoImmersiveActive, showAutoImmersive, armAutoImmersiveTimer, clearAutoImmersiveTimer]);
+  }, [enabled, hasHomeInteraction, autoImmersiveActive, showAutoImmersive, armAutoImmersiveTimer, clearAutoImmersiveTimer]);
 
   const onSceneSwipe = useCallback(
     (direction: "left" | "right") => {
@@ -97,7 +102,7 @@ export function useHomeNatureImmersive({
     [sceneList, sceneId, selectScene],
   );
 
-  useShellSwipeAction(!showAutoImmersive && !loading && !error && sceneList.length > 1, onSceneSwipe);
+  useShellSwipeAction(enabled && !showAutoImmersive && !loading && !error && sceneList.length > 1, onSceneSwipe);
 
   return {
     showLandscapeVideo,

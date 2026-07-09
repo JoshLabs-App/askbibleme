@@ -2,6 +2,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useMusicPlayback } from "./MusicPlaybackContext";
 import { useMusicHomeAlbum } from "./useMusicHomeAlbum";
 import { resolveMusicHomePlaybackMetrics } from "./musicHomePlaybackMetrics";
+import { musicCopy } from "./musicCopy";
 import {
   useMusicHomeGlowColors,
   useMusicHomeSeekState,
@@ -34,6 +35,7 @@ export function useMusicHomeScreenPlaybackContext() {
     setMusicGain,
     downloadingTrackId,
     checkMusicCatalogUpdate,
+    downloadMusicTrackAt,
   } = playback;
 
   const seek = useMusicHomeSeekState(trackIndex, playbackMode);
@@ -45,6 +47,7 @@ export function useMusicHomeScreenPlaybackContext() {
     trackIndex,
     sleepTimerMinutes,
     playTrackAt,
+    downloadMusicTrackAt,
     setMusicGain,
     setMusicRepeatMode,
     setSleepTimerMinutes,
@@ -53,6 +56,7 @@ export function useMusicHomeScreenPlaybackContext() {
   const { album } = albumState;
   const glowColors = useMusicHomeGlowColors(album);
   const current = tracks[trackIndex];
+  const selectedTrackTitle = current?.title?.trim() || musicCopy.untitled;
   const metrics = resolveMusicHomePlaybackMetrics({
     playbackMode,
     musicDurationSec,
@@ -68,6 +72,7 @@ export function useMusicHomeScreenPlaybackContext() {
     tracks,
     trackIndex,
     playing,
+    canTogglePlayback: playback.canTogglePlayback,
     loading,
     musicCurrentSec,
     playTrackAt,
@@ -76,6 +81,7 @@ export function useMusicHomeScreenPlaybackContext() {
     togglePlayMusic,
     seekRatio,
     checkMusicCatalogUpdate,
+    downloadMusicTrackAt,
     seek,
     upper,
     sleepTimer,
@@ -89,14 +95,17 @@ export function useMusicHomeScreenPlaybackContext() {
       trackIndex,
       playing,
       loading,
+      canTogglePlayback: playback.canTogglePlayback,
       musicRepeatMode,
       sleepTimerMinutes,
       downloadingTrackId,
+      togglePlayMusic,
       toggleMusicRepeatOne,
       toggleMusicRepeatAll,
       playTrackAt,
       playNext,
       seekRatio,
+      selectedTrackTitle,
     },
   };
 }

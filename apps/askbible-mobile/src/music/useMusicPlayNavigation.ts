@@ -10,7 +10,7 @@ type Args = {
   tracks: PlaybackTrack[];
   tracksLength: number;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
-  playTrackAt: (index: number) => Promise<void>;
+  playTrackAt: (index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>;
   resolveActiveReadChapter: () => ReadChapterPlaybackRegistration | null | undefined;
 };
 
@@ -44,8 +44,12 @@ export function useMusicPlayNavigation({
   ]);
 
   const playPrev = useCallback(async () => {
+    if (playbackModeRef.current === "scripture") {
+      resolveActiveReadChapter()?.onAdvancePreviousChapter();
+      return;
+    }
     await playTrackAt(trackIndex - 1);
-  }, [playTrackAt, trackIndex]);
+  }, [playTrackAt, playbackModeRef, resolveActiveReadChapter, trackIndex]);
 
   return { playNext, playPrev };
 }

@@ -28,7 +28,29 @@ async function awaitPlayInFlightOrTimeout(
   }
 }
 
-export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<void> {
+export async function pauseScriptureShellPlayback(
+  ctx: Pick<
+    ChapterPlaybackCtx,
+    | "soundRef"
+    | "scriptureWantPlayingRef"
+    | "autoPlayScriptureRef"
+    | "setPlaying"
+  >,
+): Promise<void> {
+  markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
+  ctx.autoPlayScriptureRef.current = false;
+  await flushTodayPlanScriptureResume();
+  const sound = ctx.soundRef.current;
+  if (sound) {
+    await safePauseSound(sound);
+  }
+  ctx.setPlaying(false);
+}
+
+export async function toggleScripturePlayback(
+  ctx: ChapterPlaybackCtx,
+  opts?: { forcePause?: boolean },
+): Promise<void> {
   try {
     await configureScriptureShellAudioMode();
     const rc = getActiveReadChapterPlayback() ?? ctx.readChapterRef.current ?? ctx.readChapter;
@@ -53,7 +75,8 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
     if (__DEV__) {
       console.warn("[scripture-audio] resolved src", scriptureSrc);
     }
-    ctx.patchReadChapterSrc(scriptureSrc);
+    ctx.patchReadChapterSrc?.(scriptureSrc);
+    const forcePause = !!opts?.forcePause;
     const sameScripture =
       ctx.playbackModeRef.current === "scripture" &&
       ctx.scriptureSrcRef.current &&
@@ -65,20 +88,24 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
       }
       const sound = ctx.soundRef.current;
       if (!sound) {
+        if (forcePause) {
+          await pauseScriptureShellPlayback(ctx);
+          return;
+        }
         await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
         return;
       }
       const st = await safeGetSoundStatus(sound);
       if (!st?.isLoaded) {
+        if (forcePause) {
+          await pauseScriptureShellPlayback(ctx);
+          return;
+        }
         await ctx.playScripture(scriptureSrc);
         return;
       }
-      if (st.isPlaying) {
-        markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
-        ctx.autoPlayScriptureRef.current = false;
-        await flushTodayPlanScriptureResume();
-        await safePauseSound(sound);
-        ctx.setPlaying(false);
+      if (forcePause || st.isPlaying) {
+        await pauseScriptureShellPlayback(ctx);
       } else {
         markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
         const ok = await safePlaySound(sound);
@@ -88,11 +115,19 @@ export async function toggleScripturePlayback(ctx: ChapterPlaybackCtx): Promise<
     }
 
     if (ctx.playbackModeRef.current !== "scripture") {
+      if (forcePause) {
+        return;
+      }
       if (ctx.soundRef.current) {
         await ctx.unloadCurrent();
       }
       markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
       await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
+      return;
+    }
+
+    if (forcePause) {
+      await pauseScriptureShellPlayback(ctx);
       return;
     }
 

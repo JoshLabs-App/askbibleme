@@ -40,6 +40,7 @@ import {
   HOME_VERSE_POOL_SCOPE_UPDATED_EVENT,
   hydrateHomeVersePoolScope,
 } from "@/lib/home/home-verse-pool-scope-prefs";
+import { useHomeVerseStableMs } from "@/components/home/useHomeVerseStableMs";
 
 /** 各语言列表应对齐；取最短长度用于整体环形平移，双语索引仍一致。 */
 function alignedFallbackSpanLength(by: Record<AppLocale, HomeVerseEntry[]>): number {
@@ -91,6 +92,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
   bilingual: boolean;
   verseKeys: string[] | undefined;
+  homeVerseStableMs: number;
   onVerseCommitted: (key: string) => void;
   onNearEnd: (index: number, total: number) => void;
 } {
@@ -111,6 +113,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
   /** 无祷告池 key 时使用硬编码/RSC 列表：随机起点，避免每次打开都是 rotation 第一条（诗篇 121）。 */
   const fallbackSpinRef = useRef<number | null>(null);
   const fallbackSpinPrefsTokenRef = useRef<number | null>(null);
+  const homeVerseStableMs = useHomeVerseStableMs();
 
   useEffect(() => {
     const onReload = () => setPrefsToken((x) => x + 1);
@@ -312,6 +315,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
     entriesByLocale: merged.entries,
     bilingual: merged.bilingual,
     verseKeys: merged.keys,
+    homeVerseStableMs,
     onVerseCommitted,
     onNearEnd,
   };

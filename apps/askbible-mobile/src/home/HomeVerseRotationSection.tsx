@@ -1,7 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import {
-  MAX_HOME_VERSE_ROTATION_SEC,
-  MIN_HOME_VERSE_ROTATION_SEC,
+  HOME_VERSE_ROTATION_SEC_OPTIONS,
   writeHomeVerseRotationSec,
 } from "./homeVerseRotationPrefs";
 import { tNatureHomeSettings } from "./natureHomeSettingsCopy";
@@ -15,12 +14,10 @@ type Props = {
 };
 
 export function HomeVerseRotationSection({ rotationSec, setRotationSec, onPrefsChanged }: Props) {
-  const atMin = rotationSec <= MIN_HOME_VERSE_ROTATION_SEC;
-  const atMax = rotationSec >= MAX_HOME_VERSE_ROTATION_SEC;
   const label = tNatureHomeSettings("verseRotationSection");
-  const valueLabel = tNatureHomeSettings("verseRotationValue").replace("{n}", String(rotationSec));
 
   const apply = async (next: number) => {
+    if (next === rotationSec) return;
     setRotationSec(next);
     await writeHomeVerseRotationSec(next);
     onPrefsChanged();
@@ -28,36 +25,25 @@ export function HomeVerseRotationSection({ rotationSec, setRotationSec, onPrefsC
 
   return (
     <NatureHomeSettingsIconRow icon="autorenew" accessibilityLabel={label}>
-      <View
-        style={styles.scaleRow}
-        accessibilityRole="adjustable"
-        accessibilityLabel={label}
-        accessibilityHint={tNatureHomeSettings("verseRotationHint")}
-        accessibilityValue={{ text: valueLabel }}
-      >
-        <Pressable
-          disabled={atMin}
-          onPress={() => void apply(rotationSec - 1)}
-          style={[styles.scaleBtn, atMin && styles.scaleBtnDisabled]}
-          accessibilityRole="button"
-          accessibilityLabel={tNatureHomeSettings("verseRotationDecreaseAria")}
-          accessibilityState={{ disabled: atMin }}
-        >
-          <Text style={styles.scaleOpText}>-</Text>
-        </Pressable>
-        <View style={styles.rotationValueWrap} importantForAccessibility="no-hide-descendants">
-          <Text style={styles.rotationValueText}>{valueLabel}</Text>
+      <View style={{ gap: 6 }}>
+        <Text style={styles.voiceHint}>{tNatureHomeSettings("verseRotationHint")}</Text>
+        <View style={styles.rotationChoicesWrap}>
+          {HOME_VERSE_ROTATION_SEC_OPTIONS.map((sec) => {
+            const selected = rotationSec === sec;
+            return (
+              <Pressable
+                key={sec}
+                onPress={() => void apply(sec)}
+                style={[styles.rotationChoice, selected && styles.rotationChoiceOn]}
+                accessibilityRole="button"
+                accessibilityLabel={`${label} ${sec}`}
+                accessibilityState={{ selected }}
+              >
+                <Text style={styles.rotationChoiceText}>{sec}s</Text>
+              </Pressable>
+            );
+          })}
         </View>
-        <Pressable
-          disabled={atMax}
-          onPress={() => void apply(rotationSec + 1)}
-          style={[styles.scaleBtn, atMax && styles.scaleBtnDisabled]}
-          accessibilityRole="button"
-          accessibilityLabel={tNatureHomeSettings("verseRotationIncreaseAria")}
-          accessibilityState={{ disabled: atMax }}
-        >
-          <Text style={styles.scaleOpText}>+</Text>
-        </Pressable>
       </View>
     </NatureHomeSettingsIconRow>
   );

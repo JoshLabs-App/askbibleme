@@ -42,6 +42,7 @@ type Args = {
   musicModeActive: boolean;
   scriptureModeActive: boolean;
   voiceActive: boolean;
+  enabled?: boolean;
 };
 
 export function useHomeNatureSceneControl({
@@ -66,6 +67,7 @@ export function useHomeNatureSceneControl({
   musicModeActive,
   scriptureModeActive,
   voiceActive,
+  enabled = true,
 }: Args) {
   const [sceneStripViewportWidth, setSceneStripViewportWidth] = useState(0);
 
@@ -116,6 +118,7 @@ export function useHomeNatureSceneControl({
     coverVideoPosterOnly,
     forcePosterStage,
     videoPowerPolicy,
+    enabled,
   });
 
   useHomeNatureSceneAmbient({
@@ -127,6 +130,7 @@ export function useHomeNatureSceneControl({
     musicModeActive,
     scriptureModeActive,
     voiceActive,
+    enabled,
   });
 
   const scrollSceneStripToId = useCallback(
@@ -191,14 +195,16 @@ export function useHomeNatureSceneControl({
   );
 
   useEffect(() => {
+    if (!enabled) return;
     if (!sceneId || loading) return;
     const task = InteractionManager.runAfterInteractions(() => {
       scrollSceneStripToId(sceneId);
     });
     return () => task.cancel();
-  }, [loading, sceneId, scrollSceneStripToId]);
+  }, [enabled, loading, sceneId, scrollSceneStripToId]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!sceneId || loading) return;
     const task = InteractionManager.runAfterInteractions(() => {
       const prev = prevSceneRef.current;
@@ -215,9 +221,10 @@ export function useHomeNatureSceneControl({
       }
     });
     return () => task.cancel();
-  }, [sceneId, loading]);
+  }, [enabled, sceneId, loading]);
 
   useEffect(() => {
+    if (!enabled) return;
     return () => {
       const prev = prevSceneRef.current;
       if (!prev) return;
@@ -230,6 +237,7 @@ export function useHomeNatureSceneControl({
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!loopAllScenesEnabled) return;
     if (sceneList.length < 2) return;
     const timer = setInterval(() => {
@@ -240,7 +248,7 @@ export function useHomeNatureSceneControl({
       selectScene(nextId, { keepLoopMode: true, source: "auto" });
     }, SCENE_LOOP_SWITCH_MS);
     return () => clearInterval(timer);
-  }, [loopAllScenesEnabled, sceneId, sceneList, selectScene]);
+  }, [enabled, loopAllScenesEnabled, sceneId, sceneList, selectScene]);
 
   const onSceneStripLayout = useCallback((width: number) => {
     if (width > 0) {

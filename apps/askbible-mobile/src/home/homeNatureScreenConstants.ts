@@ -1,12 +1,16 @@
+import { Platform } from "react-native";
 import { getBundledNatureSettings } from "../api/fetchNatureSettings";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { resolveLocalizedField } from "../i18n/site-copy";
 import { HOME_SCENE_THUMB_SIZE, HOME_SCENE_THUMB_SLOT_PAD } from "./HomeSceneThumb";
 
 export const bundledOnBoot = getBundledNatureSettings();
-/** Release 安装包内已有场景时秒开，避免 TestFlight 首启等网络卡在占位屏。 */
+/**
+ * Android 首启优先用安装包内场景顶住首屏，再异步补远端内容。
+ * 这样开发包在真机上也能更接近“打开就能看见内容”的体感。
+ */
 export const bootWithBundled =
-  isMobileBundledOnly() || (!__DEV__ && bundledOnBoot.videos.length > 0);
+  isMobileBundledOnly() || ((Platform.OS === "android" || !__DEV__) && bundledOnBoot.videos.length > 0);
 
 export const AUTO_IMMERSIVE_DELAY_MS = 60_000;
 /** 横屏窄屏：更快进入沉浸，隐藏场景条与环境音 */

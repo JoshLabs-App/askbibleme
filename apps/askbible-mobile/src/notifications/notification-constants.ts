@@ -1,4 +1,5 @@
 export const NOTIFICATION_PREFS_STORAGE_KEY = "askbible-mobile-notification-prefs-v1";
+export const NOTIFICATION_BOOTSTRAP_STORAGE_KEY = "askbible-mobile-notification-bootstrap-v1";
 
 export const READING_REMINDER_NOTIFICATION_ID = "askbible-reading-reminder";
 
@@ -15,3 +16,4 @@ export type NotificationKind = "reading-reminder" | "reading-alarm-auto-continue
 
 export const APP_GROUP_ID = "group.me.askbible.shared";
 export const WIDGET_SNAPSHOT_STORAGE_KEY = "askbible-daily-verse-widget-v1";
+export const WIDGET_TEXT_SCALE_STORAGE_KEY = "askbible-daily-verse-widget-text-scale-v1";

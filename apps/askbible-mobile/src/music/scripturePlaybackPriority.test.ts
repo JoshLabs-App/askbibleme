@@ -6,6 +6,7 @@ import {
   releaseScriptureShellForMusic,
   type ScripturePriorityRefs,
 } from "./scripturePlaybackPriority";
+import type { MutableRefObject } from "react";
 
 function makeRefs(overrides: Partial<ScripturePriorityRefs> = {}): ScripturePriorityRefs {
   return {
@@ -21,7 +22,7 @@ function makeRefs(overrides: Partial<ScripturePriorityRefs> = {}): ScripturePrio
 
 describe("scripturePlaybackPriority", () => {
   it("stops scripture when user starts music", async () => {
-    const playbackModeRef = { current: "scripture" as const };
+    const playbackModeRef: MutableRefObject<"music" | "scripture"> = { current: "scripture" };
     const stop = vi.fn(async () => {
       playbackModeRef.current = "music";
     });
@@ -30,7 +31,7 @@ describe("scripturePlaybackPriority", () => {
   });
 
   it("skips stop when shell is already in music mode", async () => {
-    const playbackModeRef = { current: "music" as const };
+    const playbackModeRef: MutableRefObject<"music" | "scripture"> = { current: "music" };
     const stop = vi.fn(async () => {});
     await releaseScriptureShellForMusic(playbackModeRef, stop);
     expect(stop).not.toHaveBeenCalled();

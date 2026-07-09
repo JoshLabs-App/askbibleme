@@ -10,7 +10,7 @@ export function useMusicPlaybackRefs() {
   const playbackEpochRef = useRef(0);
   const playbackModeRef = useRef<MusicPlaybackMode>("music");
   const trackIndexRef = useRef(0);
-  const playTrackAtRef = useRef<(index: number) => Promise<void>>(async () => {});
+  const playTrackAtRef = useRef<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>(async () => false);
   const lastMusicProgressSecRef = useRef(-1);
   const lastScriptureProgressSecRef = useRef(-1);
   const musicSessionRef = useRef<{ trackId: string; startedAt: number } | null>(null);

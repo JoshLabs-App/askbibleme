@@ -8,8 +8,6 @@ const nextConfig = {
   /** Render 等小内存构建机：降低 webpack 峰值内存（略增编译时间） */
   experimental: {
     webpackMemoryOptimizations: true,
-    // 自然视频后台允许约 450MB，需留足 multipart 包装与头部开销余量。
-    proxyClientMaxBodySize: "550mb",
   },
 
   eslint: {

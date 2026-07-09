@@ -1,12 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { formatReadingPlanRange } from "./reading-plan/format-reading-range";
 import { todayReadingItemKey } from "./reading-plan/today-reading-done";
-import { ReadChapterCompletionCelebrateModal } from "./ReadChapterCompletionCelebrateModal";
 import { readChapterCompletionPlanPanelStyles as styles } from "./readChapterCompletionPlanPanelStyles";
 import { startTodayPlanFlowScripture } from "./startTodayReadingScriptureFromReadHome";
 import { useReadChapterCompletionPlanState } from "./useReadChapterCompletionPlanState";
@@ -22,8 +20,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
   const {
     loading,
     readings,
-    celebrateVisible,
-    closeCelebrate,
+    allDone,
     effectiveLocale,
     isEnglishDisplay,
     localeZhText,
@@ -35,23 +32,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
     planId,
   } = useReadChapterCompletionPlanState({ bookId, chapter, displayLocale });
 
-  const handleCelebrateClose = useCallback(() => {
-    closeCelebrate();
-    router.replace("/read");
-  }, [closeCelebrate, router]);
-
   if (loading || !readings.length) return null;
-
-  if (celebrateVisible) {
-    return (
-      <ReadChapterCompletionCelebrateModal
-        visible
-        onClose={handleCelebrateClose}
-        isEnglishDisplay={isEnglishDisplay}
-        localeZhText={localeZhText}
-      />
-    );
-  }
 
   return (
     <>
@@ -61,6 +42,13 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
           <Text style={styles.titleMain}>
             {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 非常好！本章已完成")}
           </Text>
+          {allDone ? (
+            <Text style={styles.todayDoneNote}>
+              {isEnglishDisplay
+                ? "You've finished all of today's reading."
+                : localeZhText("今天的读经已全部完成。")}
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.readingList}>

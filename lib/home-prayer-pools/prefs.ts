@@ -5,7 +5,12 @@ import type {
   VerseScopeV1,
 } from "@/lib/home-prayer-pools/types";
 import type { AppLocale } from "@/lib/i18n/config";
-import { HOME_PRAYER_PREFS_STORAGE_KEY, VERSE_DISPLAY_COOKIE_NAME } from "@/lib/home-prayer-pools/constants";
+import {
+  HOME_PRAYER_PREFS_STORAGE_KEY,
+  HOME_VERSE_DEFAULT_STABLE_SEC,
+  HOME_VERSE_STABLE_SEC_OPTIONS,
+  VERSE_DISPLAY_COOKIE_NAME,
+} from "@/lib/home-prayer-pools/constants";
 import {
   normalizeGoldenVerseFontFamily,
   normalizeGoldenVerseTextEffect,
@@ -43,6 +48,7 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
   version: 1,
   verseScope: DEFAULT_VERSE_SCOPE,
   verseDisplay: "primary",
+  homeVerseStableSec: HOME_VERSE_DEFAULT_STABLE_SEC,
   primaryTranslationMode: "auto",
   verseTextZhTranslationId: "cuv-simp",
   verseTextEnTranslationId: "",
@@ -74,6 +80,14 @@ export function normalizeVerseEnTranslationId(raw: unknown): string {
   return raw.trim();
 }
 
+export function normalizeHomeVerseStableSec(raw: unknown): number {
+  const n = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : NaN;
+  const sec = Number.isFinite(n) ? Math.floor(n) : HOME_VERSE_DEFAULT_STABLE_SEC;
+  return HOME_VERSE_STABLE_SEC_OPTIONS.includes(sec as (typeof HOME_VERSE_STABLE_SEC_OPTIONS)[number])
+    ? sec
+    : HOME_VERSE_DEFAULT_STABLE_SEC;
+}
+
 export function memoryNamespaceFromScope(scope: VerseScopeV1): string {
   return scopeIdFromPrefs(scope);
 }
@@ -87,6 +101,7 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
     if (p?.version !== 1) return DEFAULT_HOME_PRAYER_PREFS;
     const verseScope = normalizeScope(p.verseScope);
     const verseDisplay: VerseDisplayModeV1 = p.verseDisplay === "bilingual" ? "bilingual" : "primary";
+    const homeVerseStableSec = normalizeHomeVerseStableSec(p.homeVerseStableSec);
     const normalizedPrimary = normalizeVerseZhTranslationId(p.verseTextZhTranslationId);
     const normalizedContrast = normalizeVerseEnTranslationId(p.verseTextEnTranslationId);
     const modeFromStorage = normalizePrimaryTranslationMode(p.primaryTranslationMode);
@@ -104,6 +119,7 @@ export function readHomePrayerVersePrefs(): HomePrayerVersePrefsV1 {
       version: 1,
       verseScope,
       verseDisplay,
+      homeVerseStableSec,
       primaryTranslationMode: inferredMode,
       verseTextZhTranslationId: normalizedPrimary,
       verseTextEnTranslationId: normalizedContrast,
@@ -138,6 +154,7 @@ export function writeHomePrayerVersePrefs(next: HomePrayerVersePrefsV1): void {
       version: 1,
       verseScope: next.verseScope,
       verseDisplay: next.verseDisplay === "bilingual" ? "bilingual" : "primary",
+      homeVerseStableSec: normalizeHomeVerseStableSec(next.homeVerseStableSec),
       primaryTranslationMode: normalizePrimaryTranslationMode(next.primaryTranslationMode),
       verseTextZhTranslationId: normalizeVerseZhTranslationId(next.verseTextZhTranslationId),
       verseTextEnTranslationId: normalizeVerseEnTranslationId(next.verseTextEnTranslationId),

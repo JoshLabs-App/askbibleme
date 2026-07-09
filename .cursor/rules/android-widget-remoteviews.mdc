@@ -1,0 +1,21 @@
+# Android 桌面小挂件（RemoteViews）约束
+
+适用范围：`apps/askbible-mobile/android/**` 中与 App Widget / RemoteViews 相关的布局与 Kotlin。
+
+## 禁止项（会导致小挂件空白或「无法加载」）
+
+- **禁止**在 widget layout 中使用裸 `<View>`（分隔线请用 `@style/WidgetMetaDivider` 的 TextView）。
+- **禁止**在经文行使用 `layout_weight` + `0dp` 宽度的嵌套横向 `LinearLayout`（RemoteViews 会整卡空白）；左侧竖线请用 `TextView` 的 `drawableStart`。
+- **禁止**未经真机验证就引入 ViewFlipper、RecyclerView、ConstraintLayout 复杂特性、自定义 View。
+- **禁止**布局 ID（`widget_verse_line` 等）与 `AskBibleDailyVerseWidgetProvider.kt` 不同步。
+
+## 修改前必读
+
+- 真源布局：`res/layout/widget_daily_verse.xml`（保持**单面板**、仅 TextView / ImageView / LinearLayout / FrameLayout）。
+- 改 layout 或 Provider 后：**必须** `./gradlew :app:installDebug` 重装，并让用户**删除后重新添加**小挂件。
+- 排障：`adb logcat | rg "Error inflating RemoteViews|not allowed to be inflated"`。
+
+## 数据同步
+
+- 经文快照由 JS `syncDailyVerseWidgetSnapshot()` 写入；用户需至少**打开 App 一次**（开发包需 Metro 跑起来）。
+- 无快照时小挂件应显示占位「Open AskBible.me」，点击打开 App。

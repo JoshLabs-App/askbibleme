@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
+import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
+import { useHomeVerseStableMs } from "@/components/home/useHomeVerseStableMs";
 
 type Args = {
   enabled: boolean;
@@ -18,6 +19,7 @@ export function useStandaloneVerseCarousel({ enabled, nVerses, resetKey }: Args)
   const [activeIndex, setActiveIndex] = useState(0);
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const homeVerseStableMs = useHomeVerseStableMs();
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -54,9 +56,9 @@ export function useStandaloneVerseCarousel({ enabled, nVerses, resetKey }: Args)
           if (cancelled) return;
           setActiveIndex((i) => (i + 1) % nVerses);
           requestAnimationFrame(() => setHomeVerseVisible(true));
-          tid = window.setTimeout(step, fadeMs + HOME_VERSE_STABLE_MS);
+          tid = window.setTimeout(step, fadeMs + homeVerseStableMs);
         }, fadeMs);
-      }, HOME_VERSE_STABLE_MS);
+      }, homeVerseStableMs);
     };
 
     step();
@@ -64,7 +66,7 @@ export function useStandaloneVerseCarousel({ enabled, nVerses, resetKey }: Args)
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [enabled, prefersReducedMotion, nVerses, resetKey]);
+  }, [enabled, prefersReducedMotion, nVerses, resetKey, homeVerseStableMs]);
 
   return { activeIndex, homeVerseVisible };
 }

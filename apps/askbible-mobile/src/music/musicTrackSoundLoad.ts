@@ -17,6 +17,7 @@ type LoadArgs = {
   index: number;
   avSource: AVPlaybackSource;
   generation: number;
+  shouldPlay?: boolean;
   unloadCurrent: () => Promise<void>;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
   syncPlayingState: (playing: boolean) => void;
@@ -40,6 +41,7 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
     index,
     avSource,
     generation,
+    shouldPlay = true,
     unloadCurrent,
     persistMusicResume,
     syncPlayingState,
@@ -90,6 +92,7 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
     generation,
     epoch,
     soundId,
+    shouldPlay,
     syncPlayingState,
     setPlaying,
     setMusicCurrentSec,
@@ -110,8 +113,12 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
   failedTrackIdsRef.current.delete(track.id.trim());
   resumeTrackIdRef.current = track.id;
   resumePositionSecRef.current = 0;
-  trackTelemetry("music_play", { track_id: track.id });
-  musicSessionRef.current = { trackId: track.id, startedAt: Date.now() };
+  if (shouldPlay) {
+    trackTelemetry("music_play", { track_id: track.id });
+    musicSessionRef.current = { trackId: track.id, startedAt: Date.now() };
+  } else {
+    musicSessionRef.current = null;
+  }
   void persistMusicStoreSnapshot(storeRef);
 
   return { ok: true, sound, index };

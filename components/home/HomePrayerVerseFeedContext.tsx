@@ -10,7 +10,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { HOME_VERSE_FADE_MS, HOME_VERSE_STABLE_MS } from "@/components/home/home-verse-constants";
+import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
 import {
   getNatureHomeVerseTimingOverride,
   subscribeNatureHomeVerseTimingOverride,
@@ -24,6 +24,7 @@ export type HomePrayerVerseFeedContextValue = {
   entriesByLocale: Record<AppLocale, HomeVerseEntry[]>;
   bilingual: boolean;
   verseKeys: string[] | undefined;
+  homeVerseStableMs: number;
   onVerseCommitted: (key: string) => void;
   onNearEnd: (index: number, total: number) => void;
   activeIndex: number;
@@ -64,10 +65,11 @@ export function HomePrayerVerseFeedProvider({ fallbackByLocale, children }: Prov
 
 function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: ProviderProps) {
   const { locale } = useLocale();
-  const { entriesByLocale, bilingual, verseKeys, onVerseCommitted, onNearEnd } = useHomePrayerVerseFeed({
-    fallbackByLocale,
-    locale,
-  });
+  const { entriesByLocale, bilingual, verseKeys, homeVerseStableMs, onVerseCommitted, onNearEnd } =
+    useHomePrayerVerseFeed({
+      fallbackByLocale,
+      locale,
+    });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
@@ -112,9 +114,9 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
           if (cancelled) return;
           setActiveIndex((i) => (i + 1) % nVerses);
           requestAnimationFrame(() => setHomeVerseVisible(true));
-          tid = window.setTimeout(step, fadeMs + HOME_VERSE_STABLE_MS);
+          tid = window.setTimeout(step, fadeMs + homeVerseStableMs);
         }, fadeMs);
-      }, HOME_VERSE_STABLE_MS);
+      }, homeVerseStableMs);
     };
 
     step();
@@ -122,7 +124,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride?.fadeMs]);
+  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride?.fadeMs, homeVerseStableMs]);
 
   useEffect(() => {
     setActiveIndex((i) => Math.min(i, Math.max(0, nVerses - 1)));
@@ -153,6 +155,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       entriesByLocale,
       bilingual,
       verseKeys,
+      homeVerseStableMs,
       onVerseCommitted,
       onNearEnd,
       activeIndex,
@@ -162,6 +165,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       entriesByLocale,
       bilingual,
       verseKeys,
+      homeVerseStableMs,
       onVerseCommitted,
       onNearEnd,
       activeIndex,

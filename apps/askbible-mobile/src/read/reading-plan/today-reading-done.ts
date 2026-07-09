@@ -10,9 +10,7 @@ import {
   resolveEffectiveEpochDay,
   resolveEffectiveReadingPlanDayIndex,
 } from "./reading-plan-ahead";
-import {
-  readEffectiveReadingPlanPrefs,
-} from "./reading-plan-prefs";
+import { readEffectiveReadingPlanPrefs, type ReadingPlanPrefs } from "./reading-plan-prefs";
 import { loadTodayReadingPlanPayload } from "./today-reading-plan-payload";
 import { markTripleLoopChapterRead } from "./triple-loop-progress";
 import type { TripleLoopTrack } from "./triple-loop-reading";
@@ -73,8 +71,7 @@ export function isSameTodayReadingPlanScope(
   return Boolean(planA && planB && planA === planB);
 }
 
-export async function resolveLocalTodayReadingScopeKey(): Promise<string> {
-  const prefs = await readEffectiveReadingPlanPrefs();
+export function resolveLocalTodayReadingScopeKeyFromPrefs(prefs: ReadingPlanPrefs): string {
   const isPointerPlan = isPointerReadingPlanId(prefs.planId);
   const dayCount = prefs.dayCount ?? 365;
   const dayIndex =
@@ -85,6 +82,10 @@ export async function resolveLocalTodayReadingScopeKey(): Promise<string> {
     epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
+}
+
+export async function resolveLocalTodayReadingScopeKey(): Promise<string> {
+  return resolveLocalTodayReadingScopeKeyFromPrefs(await readEffectiveReadingPlanPrefs());
 }
 
 export async function normalizeTodayReadingDoneForLocalPrefs(

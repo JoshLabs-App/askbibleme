@@ -101,4 +101,43 @@ export const shellNavDrawerMenuStyles = StyleSheet.create({
     color: "rgba(55, 53, 47, 0.42)",
     textAlign: "center",
   },
+  holdTimeBlock: {
+    marginTop: 6,
+  },
+  holdTimeHint: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: "rgba(55, 53, 47, 0.55)",
+    marginBottom: 6,
+    paddingHorizontal: 2,
+  },
+  holdTimeChoicesWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  holdTimeChoice: {
+    minHeight: 32,
+    minWidth: 52,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 53, 15, 0.18)",
+    backgroundColor: "rgba(255, 248, 235, 0.52)",
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  holdTimeChoiceActive: {
+    backgroundColor: "rgba(255, 177, 1, 0.18)",
+    borderColor: "rgba(255, 177, 1, 0.74)",
+  },
+  holdTimeChoiceText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "rgba(55, 53, 47, 0.75)",
+    ...parchmentSans(600),
+  },
+  holdTimeChoiceTextActive: {
+    color: "rgba(120, 75, 30, 0.97)",
+  },
 });

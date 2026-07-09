@@ -1,0 +1,98 @@
+module.exports = {
+  expo: {
+    name: "AskBible.me",
+    slug: "askbible-me",
+    scheme: "askbible",
+    version: "1.0.11",
+    runtimeVersion: "1.0.11",
+    updates: {
+      enabled: false,
+      checkAutomatically: "NEVER",
+      fallbackToCacheTimeout: 0,
+      url: "https://u.expo.dev/69075cfd-d810-4e00-a8ca-022ba18418c9",
+    },
+    assetBundlePatterns: [
+      "assets/music/**/*",
+      "assets/nature/**/*",
+      "assets/scripture/**/*",
+      "assets/content/**/*",
+      "assets/audio/scenes/**/*",
+      "assets/bible/**/*",
+      "assets/images/**/*",
+    ],
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    splash: {
+      image: "./assets/icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#FFB101",
+    },
+    ios: {
+      bundleIdentifier: "me.askbible",
+      buildNumber: "70",
+      supportsTablet: true,
+      appleTeamId: "AJ2998VZH6",
+      entitlements: {
+        "com.apple.security.application-groups": ["group.me.askbible.shared"],
+      },
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ["audio"],
+        NSUserNotificationsUsageDescription:
+          "AskBible.me can send optional daily reading reminders and verse-of-the-day notifications.",
+        NSLocalNetworkUsageDescription:
+          "Allow AskBible.me to connect to the development server on your local network for live updates during development.",
+        NSBonjourServices: ["_metro._tcp"],
+      },
+    },
+    android: {
+      package: "me.askbible",
+      versionCode: 70,
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ECD9B9",
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+    },
+    web: {
+      favicon: "./assets/favicon.png",
+    },
+    plugins: [
+      "expo-router",
+      "expo-sqlite",
+      "expo-asset",
+      [
+        "expo-video",
+        {
+          supportsPictureInPicture: false,
+          supportsBackgroundPlayback: false,
+        },
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          initialOrientation: "PORTRAIT",
+        },
+      ],
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          color: "#ECD9B9",
+        },
+      ],
+      "@react-native-community/datetimepicker",
+      "@bacons/apple-targets",
+    ],
+    extra: {
+      router: {},
+      eas: {
+        projectId: "69075cfd-d810-4e00-a8ca-022ba18418c9",
+      },
+    },
+    owner: "joshuazeng",
+  },
+};

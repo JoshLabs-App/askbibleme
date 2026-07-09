@@ -1,5 +1,5 @@
 import type { Audio } from "expo-av";
-import { InteractionManager } from "react-native";
+import { Platform } from "react-native";
 import { useEffect, type MutableRefObject } from "react";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
 import { safeStopAndUnloadSound } from "../audio/safeShellSound";
@@ -21,6 +21,7 @@ import { hasAtLeastBundledTracks, resolveSessionDefaultTrackIndex } from "./musi
 import type { MusicCompanionStore } from "./types";
 
 type Args = {
+  enabled?: boolean;
   setStore: (store: MusicCompanionStore) => void;
   setTrackIndex: (index: number) => void;
   setLoading: (loading: boolean) => void;
@@ -29,6 +30,7 @@ type Args = {
 };
 
 export function useMusicStoreBootstrap({
+  enabled = true,
   setStore,
   setTrackIndex,
   setLoading,
@@ -36,34 +38,55 @@ export function useMusicStoreBootstrap({
   storeRef,
 }: Args): void {
   useEffect(() => {
-    const loadingGuard = setTimeout(() => setLoading(false), 4000);
-    let remoteTask: { cancel: () => void } | null = null;
-    let localTask: { cancel: () => void } | null = null;
+    if (!enabled) return;
+    const bootStartedAt = Date.now();
+    const log = (message: string, ...args_: unknown[]) => {
+      console.warn(`[music-bootstrap +${Date.now() - bootStartedAt}ms] ${message}`, ...args_);
+    };
+    log("effect start", { platform: Platform.OS });
+    const loadingGuard = setTimeout(() => {
+      log("loading guard fired");
+      setLoading(false);
+    }, Platform.OS === "android" ? 1400 : 4000);
+    let localDelayTimer: ReturnType<typeof setTimeout> | null = null;
+    let remoteDelayTimer: ReturnType<typeof setTimeout> | null = null;
     let alive = true;
 
     void (async () => {
+      log("setLoading(true)");
       setLoading(true);
       try {
         const audioModeWarmup = Promise.race([
           configureShellAudioMode(),
-          new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+          new Promise<void>((resolve) => setTimeout(resolve, Platform.OS === "android" ? 250 : 1200)),
         ]);
+        log("audio mode warmup requested");
         const bundledStore = getBundledMusicCompanionStore();
+        log("bundled store ready", {
+          audioTracks: bundledStore.audioTracks?.length ?? 0,
+          scenes: bundledStore.scenes?.length ?? 0,
+          defaultSceneId: bundledStore.defaultSceneId ?? null,
+        });
         setStore(bundledStore);
         if (isMobileBundledOnly()) {
           const tracks = enrichPlaybackTracks(bundledStore, getAskBibleBaseUrl());
           setTrackIndex(resolveSessionDefaultTrackIndex(tracks));
+          log("mobile bundled only path finished", { tracks: tracks.length });
           await audioModeWarmup;
           return;
         }
         void audioModeWarmup;
 
-        localTask = InteractionManager.runAfterInteractions(() => {
+        localDelayTimer = setTimeout(() => {
+          log("local hydrate delay fired");
           void (async () => {
             if (!alive) return;
             try {
+              log("hydrateMusicResourcePackState start");
               await hydrateMusicResourcePackState();
               if (!alive) return;
+              log("hydrateMusicResourcePackState done");
+              log("read synced/cached store start");
               const syncedStore = await readSyncedMusicCompanionStore();
               const cachedStore = await readCachedMusicCompanionStore();
               const localStore =
@@ -73,45 +96,68 @@ export function useMusicStoreBootstrap({
                     ? cachedStore
                     : bundledStore;
               if (!alive) return;
+              log("local store resolved", {
+                fromBundled: localStore === bundledStore,
+                audioTracks: localStore.audioTracks?.length ?? 0,
+                scenes: localStore.scenes?.length ?? 0,
+              });
               if (localStore !== bundledStore) {
                 setStore(localStore);
               }
 
-              remoteTask = InteractionManager.runAfterInteractions(() => {
+              remoteDelayTimer = setTimeout(() => {
+                log("remote hydrate delay fired");
                 void (async () => {
                   if (!alive) return;
-                  if (!(await isNetworkAvailable())) return;
+                  const online = await isNetworkAvailable();
+                  log("remote network check", { online });
+                  if (!online) return;
                   try {
+                    log("fetchMusicCompanionStoreFromRemote start");
                     const remote = await fetchMusicCompanionStoreFromRemote();
                     if (!alive) return;
+                    log("fetchMusicCompanionStoreFromRemote done", {
+                      hasRemote: !!remote,
+                      audioTracks: remote?.audioTracks?.length ?? 0,
+                      scenes: remote?.scenes?.length ?? 0,
+                    });
                     if (!remote || !hasAtLeastBundledTracks(remote, bundledStore)) return;
                     if (remote !== storeRef.current) {
+                      log("applying remote store", {
+                        audioTracks: remote.audioTracks?.length ?? 0,
+                        scenes: remote.scenes?.length ?? 0,
+                      });
                       setStore(remote);
                     }
                     await writeCachedMusicCompanionStore(remote);
+                    log("remote store cached");
                   } catch {
                     /* 离线或超时：保留已应用的本地曲库 */
+                    log("remote hydrate failed");
                   }
                 })();
-              });
+              }, Platform.OS === "android" ? 900 : 1800);
             } catch {
               /* 本地曲库 hydrate 失败：保留内置曲库 */
+              log("local hydrate failed");
             }
           })();
-        });
+        }, Platform.OS === "android" ? 0 : 1800);
       } finally {
+        log("setLoading(false) in finally");
         setLoading(false);
       }
     })();
 
     return () => {
+      log("cleanup");
       clearTimeout(loadingGuard);
+      if (localDelayTimer) clearTimeout(localDelayTimer);
+      if (remoteDelayTimer) clearTimeout(remoteDelayTimer);
       alive = false;
-      localTask?.cancel();
-      remoteTask?.cancel();
       const sound = soundRef.current;
       soundRef.current = null;
       if (sound) void safeStopAndUnloadSound(sound);
     };
-  }, [setStore, setTrackIndex, setLoading, soundRef, storeRef]);
+  }, [enabled, setStore, setTrackIndex, setLoading, soundRef, storeRef]);
 }

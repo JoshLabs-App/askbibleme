@@ -2,11 +2,18 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
   markScriptureWantPlaying,
   recoverScripturePlaybackAfterBackground,
+  type ScriptureBackgroundRecoveryCtx,
+  type ScriptureResumeCtx,
   tryResumeScriptureAfterInterruption,
 } from "./scriptureResumeAfterInterruption";
 
+vi.mock("react-native", () => ({
+  Platform: { OS: "ios" },
+}));
+
 vi.mock("../audio/shellAudioMode", () => ({
   configureShellAudioMode: vi.fn(async () => {}),
+  configureScriptureShellAudioMode: vi.fn(async () => {}),
 }));
 
 vi.mock("../audio/safeShellSound", () => ({
@@ -16,7 +23,7 @@ vi.mock("../audio/safeShellSound", () => ({
 
 import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
 
-function makeCtx(overrides: Partial<Parameters<typeof tryResumeScriptureAfterInterruption>[0]> = {}) {
+function makeCtx(overrides: Partial<ScriptureResumeCtx> = {}): ScriptureResumeCtx {
   const scriptureWantPlayingRef = { current: true };
   const playbackModeRef = { current: "scripture" as const };
   const soundRef = { current: { playAsync: vi.fn() } as unknown as import("expo-av").Audio.Sound };
@@ -32,12 +39,14 @@ function makeCtx(overrides: Partial<Parameters<typeof tryResumeScriptureAfterInt
     scriptureStopAtSecRef,
     setPlaying,
     ...overrides,
-  };
+  } satisfies ScriptureResumeCtx;
 }
 
-function makeRecoveryCtx(overrides: Record<string, unknown> = {}) {
+function makeRecoveryCtx(overrides: Partial<ScriptureBackgroundRecoveryCtx> = {}): ScriptureBackgroundRecoveryCtx {
+  const onAdvancePreviousChapter = vi.fn();
   const onAdvanceNextChapter = vi.fn();
-  return makeCtx({
+  return {
+    ...makeCtx(),
     readChapterRef: {
       current: {
         bookId: "GEN",
@@ -45,7 +54,8 @@ function makeRecoveryCtx(overrides: Record<string, unknown> = {}) {
         bookName: "创世记",
         translationId: "cuv-simp",
         chapterAudioSrc: "file:///gen-1.mp3",
-        onAdvanceNextChapter,
+        onAdvancePreviousChapter: onAdvancePreviousChapter,
+        onAdvanceNextChapter: onAdvanceNextChapter,
         onAdvanceNextInBook: vi.fn(),
       },
     },
@@ -58,7 +68,7 @@ function makeRecoveryCtx(overrides: Record<string, unknown> = {}) {
     scriptureSrcRef: { current: null },
     tryPlayScriptureWithFallback: vi.fn(async () => true),
     ...overrides,
-  });
+  } satisfies ScriptureBackgroundRecoveryCtx;
 }
 
 describe("tryResumeScriptureAfterInterruption", () => {

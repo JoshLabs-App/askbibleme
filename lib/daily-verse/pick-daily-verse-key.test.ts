@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { hashStringToUint32, pickDailyVerseKey, pickDailyVerseKeyAtIndex } from "./pick-daily-verse-key";
 
 describe("pickDailyVerseKey", () => {

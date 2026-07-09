@@ -33,6 +33,7 @@ export function useEffectiveReadingPlanPrefs(): {
 
   const refresh = useCallback(() => {
     void readEffectiveReadingPlanPrefs().then((next) => {
+      if (!next?.planId?.trim()) return;
       setPrefs((prev) =>
         prev.planId === next.planId &&
         prev.anchor === next.anchor &&

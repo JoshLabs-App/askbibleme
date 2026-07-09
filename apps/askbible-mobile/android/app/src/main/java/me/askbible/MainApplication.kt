@@ -25,6 +25,7 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               add(me.askbible.widget.AskBibleWidgetPrefsPackage())
               add(me.askbible.alarm.AskBibleReadingAlarmPackage())
+              add(me.askbible.playback.AskBibleShellMediaControlsPackage())
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"

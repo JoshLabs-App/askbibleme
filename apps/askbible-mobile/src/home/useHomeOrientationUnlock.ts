@@ -3,9 +3,10 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { useCallback } from "react";
 
 /** 首页聚焦时允许横屏，离开时锁回竖屏（其它 Tab 保持竖屏）。 */
-export function useHomeOrientationUnlock() {
+export function useHomeOrientationUnlock(enabled = true) {
   useFocusEffect(
     useCallback(() => {
+      if (!enabled) return undefined;
       let cancelled = false;
       void (async () => {
         try {
@@ -25,6 +26,6 @@ export function useHomeOrientationUnlock() {
           }
         })();
       };
-    }, []),
+    }, [enabled]),
   );
 }

@@ -8,6 +8,7 @@ public class AskbibleShellMediaControlsModule: Module {
   private var lastPayload: [String: Any]?
   private var lastPublishTimestamp: CFAbsoluteTime = 0
   private var refreshTimer: Timer?
+  private var lifecycleObservers: [NSObjectProtocol] = []
   private static let debugLogFileName = "askbible-shell-media.log"
 
   private func log(_ message: String) {
@@ -58,6 +59,13 @@ public class AskbibleShellMediaControlsModule: Module {
         UIApplication.shared.beginReceivingRemoteControlEvents()
         self.activatePlaybackSessionIfNeeded()
         self.becomePlaybackFirstResponderIfNeeded()
+        self.registerLifecycleObserversIfNeeded()
+      }
+    }
+
+    OnDestroy {
+      DispatchQueue.main.async {
+        self.unregisterLifecycleObservers()
       }
     }
   }
@@ -171,6 +179,71 @@ public class AskbibleShellMediaControlsModule: Module {
     publishNowPlayingInternal(payload: payload, advanceElapsed: false)
   }
 
+  private func registerLifecycleObserversIfNeeded() {
+    guard lifecycleObservers.isEmpty else { return }
+
+    let center = NotificationCenter.default
+    lifecycleObservers.append(
+      center.addObserver(
+        forName: UIApplication.didBecomeActiveNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.handleAppLifecycleRefresh()
+      }
+    )
+    lifecycleObservers.append(
+      center.addObserver(
+        forName: UIApplication.didEnterBackgroundNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.handleAppLifecycleRefresh()
+      }
+    )
+    lifecycleObservers.append(
+      center.addObserver(
+        forName: AVAudioSession.mediaServicesWereResetNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.log("media services reset")
+        self?.handleAppLifecycleRefresh()
+      }
+    )
+    lifecycleObservers.append(
+      center.addObserver(
+        forName: AVAudioSession.interruptionNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] notification in
+        guard
+          let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+          AVAudioSession.InterruptionType(rawValue: rawType) == .ended
+        else {
+          return
+        }
+        self?.log("audio interruption ended")
+        self?.handleAppLifecycleRefresh()
+      }
+    )
+  }
+
+  private func unregisterLifecycleObservers() {
+    let center = NotificationCenter.default
+    for observer in lifecycleObservers {
+      center.removeObserver(observer)
+    }
+    lifecycleObservers.removeAll()
+  }
+
+  private func handleAppLifecycleRefresh() {
+    activatePlaybackSessionIfNeeded()
+    becomePlaybackFirstResponderIfNeeded()
+    guard let payload = lastPayload else { return }
+    publishNowPlayingInternal(payload: payload, advanceElapsed: false)
+  }
+
   private func startRefreshTimerIfPlaying(_ playing: Bool) {
     refreshTimer?.invalidate()
     refreshTimer = nil
@@ -221,7 +294,7 @@ public class AskbibleShellMediaControlsModule: Module {
     }
     info[MPNowPlayingInfoPropertyIsLiveStream] = false
     info[MPNowPlayingInfoPropertyPlaybackQueueCount] = 1
-    info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = 1
+    info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = 0
     info[MPNowPlayingInfoPropertyServiceIdentifier] = "me.askbible"
     if let assetUri, let url = URL(string: assetUri) {
       info[MPNowPlayingInfoPropertyAssetURL] = url
@@ -240,7 +313,9 @@ public class AskbibleShellMediaControlsModule: Module {
     if #available(iOS 13.0, *) {
       center.playbackState = playing ? .playing : .paused
     }
-    log("nowPlaying set title=\(resolvedTitle) playing=\(playing) duration=\(durationSec ?? 0) position=\(elapsed)")
+    log(
+      "nowPlaying set title=\(resolvedTitle) playing=\(playing) duration=\(durationSec ?? 0) position=\(elapsed) assetUri=\(assetUri ?? "")"
+    )
   }
 
   private func clearNowPlaying() {

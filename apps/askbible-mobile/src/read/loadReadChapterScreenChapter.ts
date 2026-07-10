@@ -1,14 +1,14 @@
 import { InteractionManager } from "react-native";
-import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
 import { loadBundledChapterSegments } from "../bible/bundled-chapter-segments";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
-import { ensureScriptureTranslationReadyWithFallback } from "../bible/scripture-translation-download";
 import type { ChapterSegment, LoadedChapter } from "../bible/types";
 import {
   DEFAULT_SCRIPTURE_LABEL_EN,
   DEFAULT_SCRIPTURE_LABEL_ZH,
 } from "../bible/types";
 import type { BibleTranslationMeta } from "../bible/translations-types";
+import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { ensureScriptureTranslationReadyWithFallback } from "../bible/scripture-translation-download";
 import { t } from "../i18n/site-copy";
 import { recordTodayReadingChapterFraction } from "./reading-plan/today-reading-chapter-fraction";
 import { writeLastReadPosition } from "./read-last-position";
@@ -42,19 +42,27 @@ export async function loadReadChapterScreenChapter({
   cancelDeferredTasks,
   scheduleXrefAfterChapterLoad,
 }: Args): Promise<ReadChapterLoadResult> {
+  console.warn("[read] load chapter start", {
+    bookId,
+    chapter,
+    primaryTranslationId,
+    chapterSegmentMode,
+    preferEnglishSegmentTitles,
+  });
   const primaryMeta = translationCatalog.find((item) => item.id === primaryTranslationId);
   const primaryLabels = {
     labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
     labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
   };
-
-  const catalogIndex = {
-    translations: translationCatalog,
-    defaultTranslationId: null as string | null,
-  };
   const readyPrimaryId = await ensureScriptureTranslationReadyWithFallback(
     primaryTranslationId,
-    translationMetaFromCatalog(catalogIndex, primaryTranslationId)?.downloadUrl,
+    translationMetaFromCatalog(
+      {
+        translations: translationCatalog,
+        defaultTranslationId: null,
+      },
+      primaryTranslationId,
+    )?.downloadUrl,
   );
 
   if (loadSeq !== chapterLoadSeqRef.current) {
@@ -73,6 +81,11 @@ export async function loadReadChapterScreenChapter({
   }
 
   if (!loaded) {
+    console.warn("[read] chapter load failed", {
+      bookId,
+      chapter,
+      readyPrimaryId,
+    });
     return { ok: false, error: t("pages.read.chapterLoadError"), chapter: null };
   }
 

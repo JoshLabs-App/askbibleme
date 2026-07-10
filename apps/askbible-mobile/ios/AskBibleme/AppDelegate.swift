@@ -48,25 +48,7 @@ public class AppDelegate: ExpoAppDelegate {
     }
   }
 
-  public override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-  ) -> Bool {
-    let delegate = ReactNativeDelegate()
-    let factory = ExpoReactNativeFactory(delegate: delegate)
-    delegate.dependencyProvider = RCTAppDependencyProvider()
-
-    reactNativeDelegate = delegate
-    reactNativeFactory = factory
-    bindReactNativeFactory(factory)
-
-#if os(iOS) || os(tvOS)
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
-    NotificationCenterManager.shared.addDelegate(ReadingAlarmNotificationDelegate.shared)
+  private func activateShellPlaybackSession(_ application: UIApplication) {
     application.beginReceivingRemoteControlEvents()
     do {
       let session = AVAudioSession.sharedInstance()
@@ -91,12 +73,49 @@ public class AppDelegate: ExpoAppDelegate {
       NSLog("[askbible-shell-media] app delegate audio session failed: %@", error.localizedDescription)
       appendDebugLine("app delegate audio session failed: \(error.localizedDescription)")
     }
+
     DispatchQueue.main.async { [weak window] in
       window?.rootViewController?.becomeFirstResponder()
     }
+  }
+
+  public override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+  ) -> Bool {
+    let delegate = ReactNativeDelegate()
+    let factory = ExpoReactNativeFactory(delegate: delegate)
+    delegate.dependencyProvider = RCTAppDependencyProvider()
+
+    reactNativeDelegate = delegate
+    reactNativeFactory = factory
+    bindReactNativeFactory(factory)
+
+#if os(iOS) || os(tvOS)
+    window = UIWindow(frame: UIScreen.main.bounds)
+    factory.startReactNative(
+      withModuleName: "main",
+      in: window,
+      launchOptions: launchOptions)
+    NotificationCenterManager.shared.addDelegate(ReadingAlarmNotificationDelegate.shared)
+    activateShellPlaybackSession(application)
 #endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  public override func applicationDidBecomeActive(_ application: UIApplication) {
+    super.applicationDidBecomeActive(application)
+#if os(iOS) || os(tvOS)
+    activateShellPlaybackSession(application)
+#endif
+  }
+
+  public override func applicationDidEnterBackground(_ application: UIApplication) {
+    super.applicationDidEnterBackground(application)
+#if os(iOS) || os(tvOS)
+    activateShellPlaybackSession(application)
+#endif
   }
 
   public override func remoteControlReceived(with event: UIEvent?) {

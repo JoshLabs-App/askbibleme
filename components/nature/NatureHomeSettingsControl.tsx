@@ -7,7 +7,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { NatureHomeLevelSegment } from "@/components/nature/NatureHomeLevelSegment";
 import { NatureHomeSleepTimerSection } from "@/components/nature/NatureHomeSleepTimerSection";
 import { NatureHomeTextScaleRow } from "@/components/nature/NatureHomeTextScaleRow";
-import { NatureHomeTtsSettingsSection } from "@/components/nature/NatureHomeTtsSettingsSection";
 import { NatureHomeTranslationSettings } from "@/components/nature/NatureHomeTranslationSettings";
 import { NatureHomeVerseEffectPicker } from "@/components/nature/NatureHomeVerseEffectPicker";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
@@ -21,10 +20,6 @@ import {
   SHELL_SETTINGS_ICON_SIZE_PX,
 } from "@/lib/shell/shell-chrome-icons";
 import type { NatureVisualLevel } from "@/lib/nature/nature-visual-level-prefs";
-import {
-  getHomeTtsExperimentEnabled,
-  subscribeHomeTtsExperiment,
-} from "@/lib/home/home-experimental-features";
 
 const DIM_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
   0: "brightness_low",
@@ -102,12 +97,6 @@ export function NatureHomeSettingsControl({
   const [verseAppearance, setVerseAppearance] = useState<NatureHomeVerseAppearanceV1>(() =>
     readNatureHomeVerseAppearance(),
   );
-  const [showTtsControls, setShowTtsControls] = useState(false);
-
-  useEffect(() => {
-    setShowTtsControls(getHomeTtsExperimentEnabled());
-    return subscribeHomeTtsExperiment(() => setShowTtsControls(getHomeTtsExperimentEnabled()));
-  }, []);
 
   useEffect(() => {
     setPortalReady(true);
@@ -192,8 +181,6 @@ export function NatureHomeSettingsControl({
               <IconSettingRow icon="timer" ariaLabel={t("nature.homeSettings.sleepSection")}>
                 <NatureHomeSleepTimerSection />
               </IconSettingRow>
-
-              {showTtsControls ? <NatureHomeTtsSettingsSection onPrefsChanged={onPrefsChanged} /> : null}
 
               <IconSettingRow icon="text_fields" ariaLabel={t("nature.homeSettings.verseEffectSection")}>
                 <NatureHomeVerseEffectPicker

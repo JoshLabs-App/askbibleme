@@ -5,6 +5,7 @@ const MANDARIN_FILENAME_RE = /^[A-Z0-9]{2,8}-\d+\.mp3$/i;
 const MANDARIN_V20_REL_RE = /^cuv-v20\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 const TEOCHEW_REL_RE = /^teochew-nt\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 const WEB_EN_REL_RE = /^web-en\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
+const GOLDEN_VERSE_REL_RE = /^golden-verses\/[A-Z0-9]{2,8}-\d+-\d+-32kbps\.mp3$/i;
 
 /** Render 磁盘等：`{DATA_ROOT}/audio` 或 `CUV_AUDIO_DATA_DIR` */
 export function cuvChapterAudioDataDir(): string | null {
@@ -25,7 +26,8 @@ export function isSafeChapterAudioRelativePath(relativePath: string): boolean {
     MANDARIN_FILENAME_RE.test(norm) ||
     MANDARIN_V20_REL_RE.test(norm) ||
     TEOCHEW_REL_RE.test(norm) ||
-    WEB_EN_REL_RE.test(norm)
+    WEB_EN_REL_RE.test(norm) ||
+    GOLDEN_VERSE_REL_RE.test(norm)
   );
 }
 

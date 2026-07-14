@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
+import { NatureGoldenVerseAudioControl } from "@/components/nature/NatureGoldenVerseAudioControl";
 import { NatureHomeSettingsControl } from "@/components/nature/NatureHomeSettingsControl";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
@@ -121,7 +122,7 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
  */
 export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "" }: Props) {
   const { t } = useLocale();
-  const { activeIndex, bilingual, homeVerseVisible } = useHomePrayerVerseFeedContext();
+  const { activeIndex, bilingual, homeVerseVisible, verseKeys } = useHomePrayerVerseFeedContext();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
   /** 本会话内 `<video poster>` 是否仍用 HTML poster（首场景揭晓后不再重复挂） */
@@ -166,6 +167,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [homeChromeHidden, setHomeChromeHidden] = useState(false);
 
   useScreenWakeLock(true);
+  const activeVerseKey = verseKeys?.[activeIndex] ?? null;
 
   useEffect(() => {
     setNatureSettings(initial);
@@ -948,16 +950,19 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         showTopInsetTime={false}
         hideTopShellInsetTime={!landscapeImmersive}
         rightAccessory={
-          <NatureHomeSettingsControl
-            open={homeSettingsOpen}
-            onOpenChange={onHomeSettingsOpenChange}
-            hasNatureVisual={hasNatureVisual}
-            dimLevel={dimLevel}
-            blurLevel={blurLevel}
-            onDimLevelChange={(level) => applyVisualLevels(level, blurLevel)}
-            onBlurLevelChange={(level) => applyVisualLevels(dimLevel, level)}
-            onPrefsChanged={onNatureHomePrefsChanged}
-          />
+          <div className="flex items-center gap-1">
+            <NatureGoldenVerseAudioControl verseKey={activeVerseKey} />
+            <NatureHomeSettingsControl
+              open={homeSettingsOpen}
+              onOpenChange={onHomeSettingsOpenChange}
+              hasNatureVisual={hasNatureVisual}
+              dimLevel={dimLevel}
+              blurLevel={blurLevel}
+              onDimLevelChange={(level) => applyVisualLevels(level, blurLevel)}
+              onBlurLevelChange={(level) => applyVisualLevels(dimLevel, level)}
+              onPrefsChanged={onNatureHomePrefsChanged}
+            />
+          </div>
         }
       />
 

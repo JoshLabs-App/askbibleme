@@ -6,7 +6,6 @@ import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { HomeVerseHoldTimeMenuPicker } from "@/components/home/HomeVerseHoldTimeMenuPicker";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HomeVersePoolMenuPicker } from "@/components/home/HomeVersePoolMenuPicker";
-import { HomeTtsExperimentDrawerSection } from "@/components/home/HomeTtsExperimentDrawerSection";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
@@ -155,8 +154,6 @@ export function ShellNavDrawerContent({ onClose }: Props) {
       <ShellNavDrawerLocaleRow />
       <div className="h-1" aria-hidden />
       <ShellNavDrawerVersePoolSection />
-      <div className="h-1" aria-hidden />
-      <HomeTtsExperimentDrawerSection variant="parchment" />
       <div className="h-1" aria-hidden />
       <ShellNavDrawerResourceUpdate />
       <div className="h-1" aria-hidden />

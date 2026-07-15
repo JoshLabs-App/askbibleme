@@ -6,7 +6,7 @@ export type BibleTranslationDelivery = "bundled" | "local-download" | "chapter-a
 
 type RegistryMeta = BibleTranslationMeta & {
   provider: BibleTranslationProvider;
-  remoteId: string;
+  remoteId: string | null;
   delivery: BibleTranslationDelivery;
   enabled: boolean;
 };

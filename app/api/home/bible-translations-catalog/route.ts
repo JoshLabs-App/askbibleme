@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
-import { readTranslationsIndex } from "@/lib/bible/translations-store";
+import { readBibleTranslationRegistry } from "@/lib/bible/providers/registry";
 
 /**
- * 首页经文设置：只读已安装译本目录（无敏感路径），供客户端下拉选择。
+ * 首页经文设置：已安装译本 + 远端注册译本目录（无敏感路径），供客户端下拉选择。
  */
 export async function GET() {
   try {
-    const index = await readTranslationsIndex(process.cwd());
+    const index = readBibleTranslationRegistry(process.cwd());
     const translations = index.translations.map((t) => ({
       id: t.id,
       labelZh: t.labelZh,
       labelEn: t.labelEn,
       language: t.language,
+      provider: t.provider,
+      remoteId: t.remoteId ?? null,
+      delivery: t.delivery,
+      enabled: t.enabled,
+      copyright: t.copyright ?? null,
+      publisherUrl: t.publisherUrl ?? null,
     }));
     return NextResponse.json(
       {

@@ -1,23 +1,26 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
 import { isMobileBundledScriptureTranslationId } from "@/lib/bible/mobile-bundled-scripture-ids";
+import { readBibleTranslationRegistry } from "@/lib/bible/providers/registry";
 import { scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
-import { readTranslationsIndex } from "@/lib/bible/translations-store";
 
 /**
- * 移动 App：全量译本目录（含是否内置、SQLite 体积与下载路径）。
+ * 移动 App：全量译本目录（含本地、内置与远端注册译本）。
  */
 export async function GET() {
   try {
     const cwd = process.cwd();
-    const index = await readTranslationsIndex(cwd);
+    const index = readBibleTranslationRegistry(cwd);
     const translations = index.translations.map((t) => {
       const bundled = isMobileBundledScriptureTranslationId(t.id);
+      const isRemote = Boolean(t.provider && t.provider !== "local");
       let bytes = 0;
       try {
-        const p = scriptureSqlitePath(cwd, t.id);
-        if (fs.existsSync(p)) {
-          bytes = fs.statSync(p).size;
+        if (!isRemote) {
+          const p = scriptureSqlitePath(cwd, t.id);
+          if (fs.existsSync(p)) {
+            bytes = fs.statSync(p).size;
+          }
         }
       } catch {
         bytes = 0;
@@ -29,7 +32,13 @@ export async function GET() {
         language: t.language,
         bundled,
         bytes,
-        downloadUrl: `/api/mobile/bible/translations/${encodeURIComponent(t.id)}/sqlite`,
+        downloadUrl: isRemote ? null : `/api/mobile/bible/translations/${encodeURIComponent(t.id)}/sqlite`,
+        provider: t.provider,
+        remoteId: t.remoteId ?? null,
+        delivery: t.delivery,
+        enabled: t.enabled,
+        copyright: t.copyright ?? null,
+        publisherUrl: t.publisherUrl ?? null,
       };
     });
 

@@ -10,7 +10,10 @@ export type ExploreFeaturedArticleSlug = (typeof EXPLORE_FEATURED_ARTICLE_SLUGS)
 
 /** 探索文章以完整正文展示（非折叠段落）。 */
 export const EXPLORE_FEATURED_ARTICLE_PROSE_LAYOUT_SLUGS = [
+  "a-mnw5wdz7-14908d",
+  "a-mnwkmd4g-cb4d00",
   "article_1778108127353_fzymbc",
+  "a-macarthur-lifelong-bible-reading",
 ] as const satisfies readonly ExploreFeaturedArticleSlug[];
 
 export function exploreFeaturedArticleUsesProseLayout(slug: string): boolean {

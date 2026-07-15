@@ -1,17 +1,22 @@
 /**
- * WEB / BBE / BLM-ES 整章朗读。
+ * WEB / KJV / BLM-ES 整章朗读。
  * - 默认：theaudiopower.org / ebible.org 原始站点
  * - 可选自托管：`/audio/{scope}/{BOOK}-{chapter}.mp3`
  */
 
 import {
-  webChapterAudioBookNameEn,
-  webChapterAudioRemoteBase,
+  webpChapterAudioUrl,
 } from "@/lib/bible/web-chapter-audio-book-names";
+import {
+  buildAudioTreasureKjvChapterUrl,
+  KJV_CHAPTER_AUDIO_REMOTE_BASE,
+} from "@/lib/bible/kjv-chapter-audio-url";
 
 export const WEB_CHAPTER_AUDIO_SUBDIR = "web-en";
 export const BLM_ES_CHAPTER_AUDIO_SUBDIR = "blm-es";
 export const BLM_ES_CHAPTER_AUDIO_REMOTE_BASE = "https://ebible.org/spablm/mp3";
+export const KJV_CHAPTER_AUDIO_SUBDIR = "kjv";
+export { KJV_CHAPTER_AUDIO_REMOTE_BASE };
 
 const BLM_ES_CANONICAL_ALIAS: Record<string, string> = {
   ECC: "ECL",
@@ -35,12 +40,17 @@ const BOOK_NUMBER: Record<string, number> = {
 
 export function translationUsesWebChapterAudio(translationId: string): boolean {
   const id = String(translationId || "").trim().toLowerCase();
-  return id === "web-en" || id === "bbe-en" || id === "blm-es";
+  return id === "web-en" || id === "kjv" || id === "blm-es";
+}
+
+export function translationUsesKjvChapterAudio(translationId: string): boolean {
+  return String(translationId || "").trim().toLowerCase() === "kjv";
 }
 
 export function chapterAudioScopeForTranslation(translationId: string): string {
   const id = String(translationId || "").trim().toLowerCase();
   if (id === "blm-es") return BLM_ES_CHAPTER_AUDIO_SUBDIR;
+  if (id === "kjv") return KJV_CHAPTER_AUDIO_SUBDIR;
   return WEB_CHAPTER_AUDIO_SUBDIR;
 }
 
@@ -77,11 +87,10 @@ export function buildExternalWebChapterAudioUrl(
 ): string {
   const tid = String(translationId || "").trim().toLowerCase();
   if (tid === "blm-es") return buildExternalBlmEsChapterAudioUrl(bookId, chapter);
+  if (tid === "kjv") return buildAudioTreasureKjvChapterUrl(bookId, chapter);
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  const name = webChapterAudioBookNameEn(id);
-  const base = webChapterAudioRemoteBase(id);
-  return `${base}/${encodeURIComponent(`${name} ${chapter}`)}.mp3`;
+  return webpChapterAudioUrl(id, chapter);
 }
 
 export function buildLocalWebChapterAudioUrl(
@@ -91,6 +100,9 @@ export function buildLocalWebChapterAudioUrl(
 ): string {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
+  // WEBP / KJV 均只引用原始公开站点，不在 AskBible.me 保存副本。
+  const tid = String(translationId || "").trim().toLowerCase();
+  if (tid === "web-en" || translationUsesKjvChapterAudio(tid)) return "";
   const scope = chapterAudioScopeForTranslation(translationId);
   return `/audio/${scope}/${id}-${chapter}.mp3`;
 }
@@ -101,6 +113,14 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
   translationId?: string;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   const translationId = args.translationId ?? "web-en";
+  if (translationId === "web-en") {
+    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
+    return remote ? { ok: true, src: remote } : { ok: false };
+  }
+  if (translationUsesKjvChapterAudio(translationId)) {
+    const remote = buildAudioTreasureKjvChapterUrl(args.bookId, args.chapter);
+    return remote ? { ok: true, src: remote } : { ok: false };
+  }
   if (!isWebChapterAudioSelfHosted()) {
     const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
     if (remote) return { ok: true, src: remote };

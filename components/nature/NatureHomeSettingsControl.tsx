@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -15,11 +14,8 @@ import {
   writeNatureHomeVerseAppearance,
   type NatureHomeVerseAppearanceV1,
 } from "@/lib/home/nature-home-verse-appearance-prefs";
-import {
-  SHELL_CHROME_HIT_PX,
-  SHELL_SETTINGS_ICON_SIZE_PX,
-} from "@/lib/shell/shell-chrome-icons";
 import type { NatureVisualLevel } from "@/lib/nature/nature-visual-level-prefs";
+import "@/app/(app-shell)/read/read-parchment-background.css";
 
 const DIM_LEVEL_ICONS: Record<NatureVisualLevel, string> = {
   0: "brightness_low",
@@ -41,11 +37,11 @@ const SETTINGS_BTN =
   "touch-manipulation inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition active:scale-[0.97]";
 
 const SHEET =
-  "pointer-events-auto relative z-10 flex flex-col gap-1.5 overflow-visible rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left shadow-[0_8px_32px_-10px_rgba(0,0,0,0.55)]";
+  "nature-home-settings-sheet read-parchment-modal-surface pointer-events-auto relative z-10 flex flex-col overflow-visible rounded-xl border px-[14px] py-[10px] text-left shadow-[0_2px_8px_rgba(42,24,16,0.06)]";
 
-const ROW = "flex w-max max-w-full min-h-[34px] items-center gap-2";
+const ROW = "flex w-full min-h-[38px] items-center gap-[10px]";
 
-const ROW_ICON = "flex w-[26px] shrink-0 items-center justify-center";
+const ROW_ICON = "flex h-[38px] w-[34px] shrink-0 items-center justify-center";
 
 function IconSettingRow({
   icon,
@@ -61,9 +57,9 @@ function IconSettingRow({
   return (
     <div className={`${ROW} ${alignTop ? "items-start" : ""}`.trim()} aria-label={ariaLabel}>
       <div className={`${ROW_ICON} ${alignTop ? "pt-2" : ""}`.trim()} aria-hidden>
-        <ShellMaterialIcon name={icon} size={18} color="rgba(255,255,255,0.5)" />
+        <ShellMaterialIcon name={icon} size={24} color="#6e5240" />
       </div>
-      <div className="w-max max-w-full shrink-0">{children}</div>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
@@ -147,10 +143,10 @@ export function NatureHomeSettingsControl({
               id="nature-home-settings-panel"
               role="region"
               aria-label={t("nature.homeSettings.panelTitle")}
-              className={`${SHEET} w-max max-w-[min(calc(100vw-1.5rem),20rem)] shrink-0`}
+              className={`${SHEET} w-[356px] max-w-[calc(100vw-1.5rem)] shrink-0`}
               style={{
                 marginTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-                marginRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+                marginRight: "max(10px, env(safe-area-inset-right, 0px))",
               }}
               onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => e.stopPropagation()}
@@ -198,24 +194,14 @@ export function NatureHomeSettingsControl({
                 <NatureHomeTextScaleRow panelOpen={open} onPrefsChanged={onPrefsChanged} />
               </IconSettingRow>
 
-              <div className="flex w-full max-w-full min-h-[34px] items-start gap-2">
+              <div className="flex w-full max-w-full min-h-[38px] items-start gap-[10px]">
                 <div className={`${ROW_ICON} pt-2`} aria-hidden>
-                  <ShellMaterialIcon name="menu_book" size={18} color="rgba(255,255,255,0.5)" />
+                  <ShellMaterialIcon name="menu_book" size={24} color="#6e5240" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <NatureHomeTranslationSettings onPrefsChanged={onPrefsChanged} />
                 </div>
               </div>
-
-              <IconSettingRow icon="smartphone" ariaLabel={t("install.menuAction")}>
-                <Link
-                  href="/install"
-                  className="text-[13px] leading-snug text-white/78 underline decoration-white/25 underline-offset-[3px] transition hover:text-white/92"
-                  onClick={() => onOpenChange(false)}
-                >
-                  {t("install.menuAction")}
-                </Link>
-              </IconSettingRow>
             </div>
             </div>
           </div>,
@@ -234,14 +220,14 @@ export function NatureHomeSettingsControl({
         aria-label={open ? t("nature.homeSettings.closeAria") : t("nature.homeSettings.openAria")}
         className={SETTINGS_BTN}
         style={{
-          width: SHELL_CHROME_HIT_PX,
-          height: SHELL_CHROME_HIT_PX,
+          width: 52,
+          height: 52,
           opacity: open ? 0.72 : 0.5,
         }}
       >
         <ShellMaterialIcon
           name="settings"
-          size={SHELL_SETTINGS_ICON_SIZE_PX}
+          size={28}
           color="#FFFFFF"
           legibilityShadow
         />

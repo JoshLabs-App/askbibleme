@@ -7,17 +7,32 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PLAY_PACKAGE_NAME="${PLAY_PACKAGE_NAME:-me.askbible}"
 PLAY_TRACK="${PLAY_TRACK:-internal}"
 PLAY_RELEASE_STATUS="${PLAY_RELEASE_STATUS:-completed}"
+PLAY_TIMEOUT_SECONDS="${PLAY_TIMEOUT_SECONDS:-1800}"
+
+resolve_google_key() {
+  local candidate
+  for candidate in \
+    "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-}" \
+    "$ROOT/AA/askbibleme-6e637caa2ceb.json" \
+    "$ROOT/Aa/askbibleme-6e637caa2ceb.json"
+  do
+    if [[ -n "$candidate" && -f "$candidate" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
 
 if [[ -z "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-}" ]]; then
-  DEFAULT_GOOGLE_KEY="$ROOT/Aa/askbibleme-6e637caa2ceb.json"
-  if [[ -f "$DEFAULT_GOOGLE_KEY" ]]; then
+  if DEFAULT_GOOGLE_KEY="$(resolve_google_key)"; then
     export GOOGLE_SERVICE_ACCOUNT_KEY_PATH="$DEFAULT_GOOGLE_KEY"
   fi
 fi
 
 if [[ -z "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-}" || ! -f "${GOOGLE_SERVICE_ACCOUNT_KEY_PATH}" ]]; then
   echo "缺少 Google Play 服务账号密钥：GOOGLE_SERVICE_ACCOUNT_KEY_PATH" >&2
-  echo "默认路径：$ROOT/Aa/askbibleme-6e637caa2ceb.json" >&2
+  echo "默认路径：$ROOT/AA/askbibleme-6e637caa2ceb.json" >&2
   exit 1
 fi
 
@@ -64,6 +79,7 @@ echo "→ 直传 Google Play（不经 Expo）"
 echo "   包名：$PLAY_PACKAGE_NAME"
 echo "   轨道：$PLAY_TRACK"
 echo "   状态：$PLAY_RELEASE_STATUS"
+echo "   超时：$PLAY_TIMEOUT_SECONDS 秒"
 echo "   AAB：$AAB_PATH"
 echo "   账号：$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
 echo ""
@@ -73,6 +89,7 @@ fastlane supply run \
   --aab "$AAB_PATH" \
   --track "$PLAY_TRACK" \
   --release_status "$PLAY_RELEASE_STATUS" \
+  --timeout "$PLAY_TIMEOUT_SECONDS" \
   --json_key "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH" \
   --skip_upload_apk true \
   --skip_upload_metadata true \

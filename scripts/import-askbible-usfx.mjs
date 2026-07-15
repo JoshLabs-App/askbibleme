@@ -3,7 +3,10 @@
  * 从桌面「01 AskBible 2」的 USFX XML 生成 Selah `selah-bible-v1` JSON（data/bible/uploads）。
  *
  * 导入版本（与 AskBible `admin_data/scripture_versions.json` 中 USFX 一致）：
- *   cuv-simp, cuv-trad, bbe-en, web-en, rv1909-es, heb-leningrad
+ *   cuv-simp, cuv-trad, bbe-en, rv1909-es, heb-leningrad
+ *
+ * WEBP (`web-en`) uses the official current source and is imported separately
+ * with `npm run bible:import:webp`, so this legacy importer cannot overwrite it.
  *
  * 希伯来来源文件将 SOS/JOE/EZE/NAH 映射为 SNG/JOL/EZK/NAM；该 USFX 不含以斯帖（EST），故希伯来 JSON 无此书。
  * 西语 RV1909 使用 `<ve />` 闭合标签，解析器已兼容。
@@ -16,6 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
+import { normalizeCuvSimplifiedOrthography } from "../lib/bible/cuv-simplified-orthography.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -225,13 +229,6 @@ function main() {
       language: "en",
     },
     {
-      id: "web-en",
-      xmlFile: "eng-web.usfx.xml",
-      labelZh: "WEB 英译本",
-      labelEn: "World English Bible",
-      language: "en",
-    },
-    {
       id: "rv1909-es",
       xmlFile: "spa-rv1909.usfx.xml",
       labelZh: "西班牙语 Reina-Valera 1909",
@@ -260,6 +257,15 @@ function main() {
     const xml = fs.readFileSync(xmlPath, "utf8");
     const bookSourceIds = job.id === "heb-leningrad" ? HEBREW_XML_BOOK_SOURCE : {};
     const { books, verseCount, missing } = buildBooksFromXml(xml, bookSourceIds);
+    if (job.id === "cuv-simp") {
+      for (const chapters of Object.values(books)) {
+        for (const verses of Object.values(chapters)) {
+          for (const [verse, text] of Object.entries(verses)) {
+            verses[verse] = normalizeCuvSimplifiedOrthography(text);
+          }
+        }
+      }
+    }
     const missingWarn =
       job.id === "heb-leningrad" ? missing.filter((id) => OT_BOOK_IDS.has(id)) : missing;
     if (missingWarn.length) {

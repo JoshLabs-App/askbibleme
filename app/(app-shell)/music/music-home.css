@@ -505,7 +505,7 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1.25rem;
   margin: -0.25rem 0 0.75rem;
 }
 
@@ -627,8 +627,12 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
 }
 
 .music-home-icon-btn--play {
-  width: 3.375rem;
-  height: 3.375rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  align-self: center;
+  margin-top: 0.75rem;
+  margin-bottom: 0.125rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.11);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -640,8 +644,8 @@ html[data-music-home-shell="1"][data-music-bottom-nav-hidden="1"] .music-home-fo
 }
 
 .music-home-play-icon {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 2.5rem;
+  height: 2.5rem;
   margin-left: 0.125rem;
 }
 

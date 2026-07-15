@@ -1,0 +1,21 @@
+appId: me.askbible
+---
+- openLink: askbible://read/MAT/13
+- extendedWaitUntil:
+    visible:
+      text: ".*馬太福音 第13章.*|.*马太福音 第13章.*|.*Matthew 13.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- evalScript: ${output.ready = "1"}
+- repeat:
+    while:
+      true: ${output.ready == "1"}
+    times: 1
+    commands:
+      - takeScreenshot: mat13-ready
+- takeScreenshot: mat13-before-play
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 93%"
+- waitForAnimationToEnd
+- takeScreenshot: mat13-after-play

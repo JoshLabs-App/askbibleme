@@ -2,6 +2,9 @@ import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import type { HomePrayerChunkV1, HomePrayerManifestV1, HomePrayerChunkVerseV1 } from "@/lib/home-prayer-pools/types";
 import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
+import { parseVerseKey } from "@/lib/bible/parse-verse-key";
+import { scriptureXrefSnippetKey } from "@/lib/bible/join-verse-range-text";
+import type { VerseRef } from "@/lib/bible/verse-ref";
 import { HOME_PRAYER_POOL_PUBLIC_BASE } from "@/lib/home-prayer-pools/constants";
 import {
   HOME_PRAYER_POOL_CHUNKS,
@@ -57,6 +60,54 @@ export async function fetchHomePrayerChunk(scopeId: string, chunkIndex: number):
 export type VerseBodyRow = HomePrayerChunkVerseV1;
 
 export type VerseBodyMap = Map<string, VerseBodyRow>;
+
+/** 为预生成经文池中未包含的译本补取正文；远端译本由同源 API 按章读取。 */
+export async function ensureTranslationBodiesLoaded(
+  verseKeys: string[],
+  bodies: VerseBodyMap,
+  translationId: string,
+  locale: AppLocale,
+): Promise<void> {
+  const tid = translationId.trim();
+  if (!tid) return;
+  const refsByVerseKey = new Map<string, VerseRef>();
+  for (const verseKey of verseKeys) {
+    const row = bodies.get(verseKey);
+    if (!row || row.byTranslationId?.[tid]?.lines?.length) continue;
+    const parsed = parseVerseKey(verseKey);
+    if (!parsed) continue;
+    refsByVerseKey.set(verseKey, {
+      bookId: parsed.bookId,
+      chapter: parsed.chapter,
+      verseStart: parsed.verse,
+      verseEnd: parsed.verse,
+    });
+  }
+  if (refsByVerseKey.size === 0) return;
+  try {
+    const response = await fetch("/api/read/verse-snippets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ translationId: tid, locale, refs: [...refsByVerseKey.values()] }),
+    });
+    if (!response.ok) return;
+    const payload = (await response.json()) as { snippets?: Record<string, string> };
+    for (const [verseKey, ref] of refsByVerseKey) {
+      const text = payload.snippets?.[scriptureXrefSnippetKey(ref)]?.trim();
+      const row = bodies.get(verseKey);
+      if (!text || !row) continue;
+      row.byTranslationId = {
+        ...row.byTranslationId,
+        [tid]: {
+          lines: [text],
+          ref: row.locales[locale]?.ref ?? row.locales["zh-CN"]?.ref ?? row.locales.en?.ref ?? verseKey,
+        },
+      };
+    }
+  } catch {
+    /* 保留经文池内的语言兜底，避免网络异常打断首页。 */
+  }
+}
 
 export function verseKeyToChunkIndex(manifest: HomePrayerManifestV1, verseKey: string): number | null {
   const row = manifest.entries.find((e) => e.verseKey === verseKey);
@@ -116,7 +167,7 @@ export function buildEntriesByLocaleFromKeys(
   zhTwTranslationId = "cuv-trad",
 ): Record<AppLocale, HomeVerseEntry[]> | null {
   const zhTid = zhTranslationId.trim() || "cuv-simp";
-  const enTid = enTranslationId.trim() || "web-en";
+  const enTid = enTranslationId.trim() || "kjv";
   const zhTwTid = zhTwTranslationId.trim() || "cuv-trad";
   const zh: HomeVerseEntry[] = [];
   const zhTw: HomeVerseEntry[] = [];

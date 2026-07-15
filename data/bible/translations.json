@@ -81,16 +81,6 @@
       "verseCount": 31090
     },
     {
-      "id": "heb-leningrad",
-      "labelZh": "希伯来语 · Leningrad Codex",
-      "labelEn": "Hebrew (Leningrad / WLC-style)",
-      "language": "he",
-      "sourceFile": "uploads/heb-leningrad.json",
-      "updatedAt": "2026-05-11T21:36:22.913Z",
-      "bytes": 5410022,
-      "verseCount": 23213
-    },
-    {
       "id": "kjv",
       "labelZh": "KJV 英文钦定本",
       "labelEn": "King James Version (KJV)",
@@ -172,12 +162,12 @@
     },
     {
       "id": "web-en",
-      "labelZh": "WEB 英译本",
-      "labelEn": "World English Bible",
+      "labelZh": "WEBP 英译本",
+      "labelEn": "World English Bible (WEBP)",
       "language": "en",
       "sourceFile": "uploads/web-en.json",
-      "updatedAt": "2026-05-11T21:36:22.913Z",
-      "bytes": 4243949,
+      "updatedAt": "2026-07-14T19:48:20.058Z",
+      "bytes": 4247708,
       "verseCount": 31098
     },
     {

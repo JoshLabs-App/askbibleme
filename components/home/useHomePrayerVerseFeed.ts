@@ -6,6 +6,7 @@ import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
 import { HOME_PRAYER_FEED_BATCH_SIZE, HOME_PRAYER_PREFETCH_REMAINING } from "@/lib/home-prayer-pools/constants";
 import {
   buildEntriesByLocaleFromKeys,
+  ensureTranslationBodiesLoaded,
   ensureVerseBodiesLoaded,
   fetchHomePrayerManifest,
   prefetchChunkIdle,
@@ -13,25 +14,18 @@ import {
   type VerseBodyMap,
 } from "@/lib/home-prayer-pools/loader";
 import {
-  advanceMemoryAfterShown,
-  buildInitialVerseKeySequence,
-  pickNextVerseKey,
-} from "@/lib/home-prayer-pools/pick-next";
-import {
   DEFAULT_HOME_PRAYER_PREFS,
   HOME_PRAYER_VERSE_FEED_RELOAD_EVENT,
   persistVerseDisplayToCookie,
   readHomePrayerVersePrefs,
   scopeIdFromPrefs,
   verseTranslationIdsFromPrefs,
-  writeHomePrayerVersePrefs,
 } from "@/lib/home-prayer-pools/prefs";
 import type { HomePrayerChunkV1, HomePrayerManifestV1 } from "@/lib/home-prayer-pools/types";
 import { HOME_PRAYER_POOL_SCOPE_ID } from "@/lib/home-prayer-pools/chunk-registry.generated";
 import { readVerifiedHomePrayerPoolConfig } from "@/lib/home-prayer-pools/remote-config";
 import { filterManifestToMenuScope } from "@/lib/home-prayer-pools/filter-manifest-to-menu-scope";
 import {
-  memoryNamespaceFromMenuScope,
   staticPoolScopeIdForMenuScope,
   type HomeVersePoolMenuScopeId,
 } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
@@ -41,6 +35,11 @@ import {
   hydrateHomeVersePoolScope,
 } from "@/lib/home/home-verse-pool-scope-prefs";
 import { useHomeVerseStableMs } from "@/components/home/useHomeVerseStableMs";
+import { buildFixedVerseFlow } from "@/lib/home-listening/fixed-verse-flow";
+import {
+  completeHomeListeningVerse,
+  homeListeningCursor,
+} from "@/lib/home-listening/progress";
 
 /** 各语言列表应对齐；取最短长度用于整体环形平移，双语索引仍一致。 */
 function alignedFallbackSpanLength(by: Record<AppLocale, HomeVerseEntry[]>): number {
@@ -73,10 +72,6 @@ type Args = {
   locale: AppLocale;
 };
 
-function memoryNamespaceFromMenuScopeId(menuScope: HomeVersePoolMenuScopeId): string {
-  return memoryNamespaceFromMenuScope(menuScope);
-}
-
 function pickScopeIdForFeed(
   localScopeId: string,
   remote: Awaited<ReturnType<typeof readVerifiedHomePrayerPoolConfig>>,
@@ -94,6 +89,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
   verseKeys: string[] | undefined;
   homeVerseStableMs: number;
   onVerseCommitted: (key: string) => void;
+  onVerseAudioCompleted: (key: string, feedIndex: number) => void;
   onNearEnd: (index: number, total: number) => void;
 } {
   const [poolEntries, setPoolEntries] = useState<Record<AppLocale, HomeVerseEntry[]> | null>(null);
@@ -108,6 +104,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
   const scopeIdRef = useRef<string>(EXPLORE_CURATED_700_POOL_SCOPE_ID);
   const menuScopeRef = useRef<HomeVersePoolMenuScopeId>("curated700");
   const keysQueueRef = useRef<string[]>([]);
+  const queueCursorPositionsRef = useRef<number[]>([]);
   const extendingRef = useRef(false);
   const extendCooldownUntilRef = useRef(0);
   /** 无祷告池 key 时使用硬编码/RSC 列表：随机起点，避免每次打开都是 rotation 第一条（诗篇 121）。 */
@@ -162,14 +159,19 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
         return;
       }
       manifestRef.current = manifest;
-      const ns = memoryNamespaceFromMenuScopeId(menuScope);
-      const memory = { ...(prefs.memoryByNamespace[ns] ?? {}) };
-      const keys = buildInitialVerseKeySequence(manifest, memory, HOME_PRAYER_FEED_BATCH_SIZE, Date.now(), Math.random);
+      const cursor = homeListeningCursor(menuScope);
+      const sourceKeys = manifest.entries.map((entry) => entry.verseKey);
+      const keys = buildFixedVerseFlow(sourceKeys, cursor, HOME_PRAYER_FEED_BATCH_SIZE);
       bodiesRef.current = new Map();
       chunkCacheRef.current = new Map();
       await ensureVerseBodiesLoaded(staticPoolScopeIdForMenuScope(menuScope), manifest, keys, bodiesRef.current, chunkCacheRef.current);
       if (cancelled) return;
       const { zh, en } = verseTranslationIdsFromPrefs(prefs, locale);
+      await Promise.all([
+        ensureTranslationBodiesLoaded(keys, bodiesRef.current, zh, locale === "zh-TW" ? "zh-TW" : "zh-CN"),
+        ensureTranslationBodiesLoaded(keys, bodiesRef.current, en, "en"),
+      ]);
+      if (cancelled) return;
       const built = buildEntriesByLocaleFromKeys(keys, bodiesRef.current, zh, en);
       if (!built) {
         setPoolEntries(null);
@@ -178,6 +180,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
         return;
       }
       keysQueueRef.current = [...keys];
+      queueCursorPositionsRef.current = keys.map((_, index) => cursor + index);
       setVerseKeys(keys);
       setPoolEntries(built);
       const lastKey = keys[keys.length - 1];
@@ -204,15 +207,13 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
     };
   }, [prefsToken, locale]);
 
-  const onVerseCommitted = useCallback((key: string) => {
-    const prefs = readHomePrayerVersePrefs();
-    const ns = memoryNamespaceFromMenuScopeId(menuScopeRef.current);
-    const mem = { ...(prefs.memoryByNamespace[ns] ?? {}) };
-    advanceMemoryAfterShown(mem, key, Date.now());
-    writeHomePrayerVersePrefs({
-      ...prefs,
-      memoryByNamespace: { ...prefs.memoryByNamespace, [ns]: mem },
-    });
+  /** 文字轮播不再代表听过；保留旧回调形状供现有轮播组件使用。 */
+  const onVerseCommitted = useCallback((_key: string) => {}, []);
+
+  const onVerseAudioCompleted = useCallback((key: string, feedIndex: number) => {
+    const position = queueCursorPositionsRef.current[feedIndex];
+    if (position == null) return;
+    completeHomeListeningVerse(menuScopeRef.current, key, position + 1);
   }, []);
 
   const extendFeed = useCallback(async () => {
@@ -224,35 +225,26 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
     extendingRef.current = true;
     try {
       const prefs = readHomePrayerVersePrefs();
-      const ns = memoryNamespaceFromMenuScopeId(menuScope);
-      const memory = { ...(prefs.memoryByNamespace[ns] ?? {}) };
       const cur = keysQueueRef.current;
-      const exclude = new Set(cur);
-      const now = Date.now();
-      const rng = Math.random;
-      const tempMem = { ...memory };
-      const more: string[] = [];
       const targetMore = Math.max(8, Math.floor(HOME_PRAYER_FEED_BATCH_SIZE / 2));
-      for (let i = 0; i < targetMore; i++) {
-        let k = pickNextVerseKey(manifest, tempMem, now, rng);
-        let guard = 0;
-        while (exclude.has(k) && guard < manifest.entries.length) {
-          advanceMemoryAfterShown(tempMem, k, now);
-          k = pickNextVerseKey(manifest, tempMem, now, rng);
-          guard++;
-        }
-        if (!k || exclude.has(k)) break;
-        exclude.add(k);
-        more.push(k);
-        advanceMemoryAfterShown(tempMem, k, now);
-      }
+      const startCursor = (queueCursorPositionsRef.current.at(-1) ?? homeListeningCursor(menuScope)) + 1;
+      const sourceKeys = manifest.entries.map((entry) => entry.verseKey);
+      const more = buildFixedVerseFlow(sourceKeys, startCursor, targetMore);
       if (more.length === 0) return;
       const merged = [...cur, ...more];
       await ensureVerseBodiesLoaded(staticScopeId, manifest, merged, bodiesRef.current, chunkCacheRef.current);
       const { zh, en } = verseTranslationIdsFromPrefs(prefs, locale);
+      await Promise.all([
+        ensureTranslationBodiesLoaded(more, bodiesRef.current, zh, locale === "zh-TW" ? "zh-TW" : "zh-CN"),
+        ensureTranslationBodiesLoaded(more, bodiesRef.current, en, "en"),
+      ]);
       const built = buildEntriesByLocaleFromKeys(merged, bodiesRef.current, zh, en);
       if (!built) return;
       keysQueueRef.current = merged;
+      queueCursorPositionsRef.current = [
+        ...queueCursorPositionsRef.current,
+        ...more.map((_, index) => startCursor + index),
+      ];
       setVerseKeys(merged);
       setPoolEntries(built);
       const lastKey = more[more.length - 1];
@@ -317,6 +309,7 @@ export function useHomePrayerVerseFeed({ fallbackByLocale, locale }: Args): {
     verseKeys: merged.keys,
     homeVerseStableMs,
     onVerseCommitted,
+    onVerseAudioCompleted,
     onNearEnd,
   };
 }

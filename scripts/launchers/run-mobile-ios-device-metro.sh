@@ -8,6 +8,7 @@ MOBILE="$ROOT/apps/askbible-mobile"
 # shellcheck source=../ios/resolve-ios-test-device.sh
 source "$ROOT/scripts/ios/resolve-ios-test-device.sh"
 IPROXY="${IPROXY:-$(command -v iproxy || true)}"
+USE_TUNNEL="${MOBILE_METRO_USE_TUNNEL:-0}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  AskBible.me · iPhone 真机（Metro 开发）"
@@ -33,10 +34,16 @@ npm run mobile:sync-content
 # 真机：用 Mac 局域网 IP 连 Metro（与 Android Wi‑Fi 开发一致）。iproxy 会与 Metro 抢 8081，默认不用。
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 mkdir -p "$MOBILE/ios"
-if [[ -n "$LAN_IP" ]]; then
-  printf '%s\n' "export REACT_NATIVE_PACKAGER_HOSTNAME=${LAN_IP}" >"$MOBILE/ios/.xcode.env.local"
-else
+if [[ "$USE_TUNNEL" == "1" ]]; then
+  # 隧道模式优先解决“USB 连着但不在同一 Wi-Fi”时的红屏。
+  # Expo 会自己处理隧道地址，这里不再把 LAN IP 写进 Packager Host。
   printf '%s\n' 'export REACT_NATIVE_PACKAGER_HOSTNAME=localhost' >"$MOBILE/ios/.xcode.env.local"
+else
+  if [[ -n "$LAN_IP" ]]; then
+    printf '%s\n' "export REACT_NATIVE_PACKAGER_HOSTNAME=${LAN_IP}" >"$MOBILE/ios/.xcode.env.local"
+  else
+    printf '%s\n' 'export REACT_NATIVE_PACKAGER_HOSTNAME=localhost' >"$MOBILE/ios/.xcode.env.local"
+  fi
 fi
 if [[ ! -f "$MOBILE/.env.local" ]]; then
   LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo 127.0.0.1)"
@@ -55,12 +62,16 @@ WEB_PID=$!
 
 METRO_LOG="${TMPDIR:-/tmp}/askbible-metro-device.log"
 echo "→ [2/4] 后台启动 Metro（LAN）…  日志: tail -f $METRO_LOG"
-if [[ -n "$LAN_IP" ]]; then
+if [[ "$USE_TUNNEL" == "1" ]]; then
+  echo "    Metro: tunnel mode"
+elif [[ -n "$LAN_IP" ]]; then
   echo "    iPhone 需与 Mac 同一 Wi‑Fi；Metro: http://${LAN_IP}:8081"
 fi
 
 cd "$MOBILE"
-if [[ -n "$LAN_IP" ]]; then
+if [[ "$USE_TUNNEL" == "1" ]]; then
+  npx expo start --tunnel --clear >"$METRO_LOG" 2>&1 &
+elif [[ -n "$LAN_IP" ]]; then
   REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --lan --clear >"$METRO_LOG" 2>&1 &
 else
   npx expo start --tunnel --clear >"$METRO_LOG" 2>&1 &

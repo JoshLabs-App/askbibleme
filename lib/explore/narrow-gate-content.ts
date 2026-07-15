@@ -57,7 +57,7 @@ export const NARROW_GATE_TITLES_EN: string[] = [
   "3. Follow Christ and the cost",
   "4. Holiness and being set apart",
   "5. Character and fruit of the Spirit",
-  "6. Prayer and God's word",
+  "6. Prayer and God's Word",
   "7. Church life",
   "8. Family and marriage",
   "9. Money and vocation",

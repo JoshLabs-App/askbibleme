@@ -5,17 +5,11 @@ export type VerseScrollFocusOpts = {
 };
 
 /** 顶栏/章标题留白占视口比例 */
-export const READ_VERSE_SCROLL_TOP_INSET_RATIO = 0.22;
+export const READ_VERSE_SCROLL_TOP_INSET_RATIO = 0.18;
 /** 底栏 Tab + 快捷行 + 音频条留白占视口比例 */
-export const READ_VERSE_SCROLL_BOTTOM_INSET_RATIO = 0.28;
+export const READ_VERSE_SCROLL_BOTTOM_INSET_RATIO = 0.18;
 /** 朗读中底栏音频条额外占视口比例 */
 export const READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO = 0.08;
-
-/** 与 mobile readChapterScreenConstants / shellLayout 对齐（像素） */
-export const READ_CHAPTER_TOP_CHROME_PX = 6 + 44 + 1 + 44 + 12;
-export const READ_CHAPTER_TAB_BAR_PX = 72;
-export const READ_CHAPTER_ACTION_ROW_PX = 40 + 6;
-export const READ_CHAPTER_AUDIO_DOCK_PX = 44;
 
 export type ReadChapterScrollChromePx = {
   safeTop: number;
@@ -23,20 +17,17 @@ export type ReadChapterScrollChromePx = {
   audioDockVisible?: boolean;
 };
 
-/** 顶栏按钮 + 底栏 Tab/快捷行/音频条之间的屏幕 y 中心。 */
+/** 读经时经节应对齐的可读区中心。底部空间会计入音频条留白。 */
 export function readChapterReadableCenterWindowY(
   scrollWindowY: number,
   scrollViewportHeight: number,
   chrome: ReadChapterScrollChromePx,
 ): number {
-  const readableTop = scrollWindowY + chrome.safeTop + READ_CHAPTER_TOP_CHROME_PX;
-  const bottomReserve =
-    chrome.safeBottom +
-    READ_CHAPTER_TAB_BAR_PX +
-    READ_CHAPTER_ACTION_ROW_PX +
-    (chrome.audioDockVisible ? READ_CHAPTER_AUDIO_DOCK_PX : 0);
-  const readableBottom = scrollWindowY + scrollViewportHeight - bottomReserve;
-  return (readableTop + readableBottom) / 2;
+  const top = READ_VERSE_SCROLL_TOP_INSET_RATIO;
+  const bottom =
+    READ_VERSE_SCROLL_BOTTOM_INSET_RATIO +
+    (chrome.audioDockVisible ? READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO : 0);
+  return scrollWindowY + scrollViewportHeight * (top + (1 - top - bottom) / 2);
 }
 
 /** 可读区垂直中心在视口中的 y 比例（用于加亮经文居中）。 */

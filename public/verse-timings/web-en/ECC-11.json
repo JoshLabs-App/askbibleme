@@ -1,52 +1,52 @@
 [
   {
     "verse": 1,
-    "start": 4.47,
-    "end": 11.36
+    "start": 5.68,
+    "end": 11.42
   },
   {
     "verse": 2,
-    "start": 11.36,
-    "end": 19.08
+    "start": 11.42,
+    "end": 19.16
   },
   {
     "verse": 3,
-    "start": 19.08,
-    "end": 33.02
+    "start": 19.16,
+    "end": 32.57
   },
   {
     "verse": 4,
-    "start": 33.02,
-    "end": 40.68
+    "start": 32.57,
+    "end": 40.59
   },
   {
     "verse": 5,
-    "start": 40.68,
-    "end": 53.4
+    "start": 40.59,
+    "end": 52.94
   },
   {
     "verse": 6,
-    "start": 53.4,
-    "end": 67.7
+    "start": 52.94,
+    "end": 67.33
   },
   {
     "verse": 7,
-    "start": 67.7,
-    "end": 74.7
+    "start": 67.33,
+    "end": 73.39
   },
   {
     "verse": 8,
-    "start": 74.7,
-    "end": 89.58
+    "start": 73.39,
+    "end": 90.76
   },
   {
     "verse": 9,
-    "start": 89.58,
-    "end": 89.6
+    "start": 90.76,
+    "end": 107.14
   },
   {
     "verse": 10,
-    "start": 89.6,
-    "end": 89.8
+    "start": 107.14,
+    "end": 118.92
   }
 ]

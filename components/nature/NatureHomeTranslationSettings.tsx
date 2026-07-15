@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { ReadBibleTranslationPickerOverlay } from "@/components/bible/ReadBibleTranslationPickerOverlay";
 import {
   NatureHomeSettingsSelect,
   type NatureHomeSettingsSelectOption,
@@ -27,7 +28,7 @@ const SHORT_LABEL_ZH: Record<string, string> = {
   "otb-zh-hans": "Open简体",
   "otb-zh-hant": "Open繁体",
   "otb-en-gb": "Open英",
-  "web-en": "WEB",
+  "web-en": "WEBP",
   "bbe-en": "BBE",
   "heb-leningrad": "希伯来",
   kjv: "KJV",
@@ -41,7 +42,7 @@ const SHORT_LABEL_EN: Record<string, string> = {
   "otb-zh-hans": "OTB ZH",
   "otb-zh-hant": "OTB ZH-T",
   "otb-en-gb": "OTB EN",
-  "web-en": "WEB",
+  "web-en": "WEBP",
   "bbe-en": "BBE",
   "heb-leningrad": "Hebrew",
   kjv: "KJV",
@@ -66,6 +67,7 @@ function toOptions(catalog: Catalog["translations"], locale: AppLocale): NatureH
       id: tr.id,
       label: locale === "en" ? tr.labelEn : tr.labelZh,
       shortLabel: translationShortLabel(tr.id, tr.labelZh, tr.labelEn, locale),
+      language: tr.language,
     }));
 }
 
@@ -209,7 +211,45 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
     contrastOptions.find((o) => o.id === contrastValue)?.label ??
     contrastOffLabel;
 
+  const selectPrimary = (id: string) => {
+    setOpenMenu(null);
+    if (id === PRIMARY_SYSTEM_DEFAULT_ID) {
+      const nextAutoPrimary = catalog?.translations.some((x) => x.id === localeDefaultPrimaryId)
+        ? localeDefaultPrimaryId
+        : catalog!.translations[0]!.id;
+      const nextContrast =
+        prefs.verseTextEnTranslationId.trim() === nextAutoPrimary ? "" : prefs.verseTextEnTranslationId;
+      persist({
+        ...prefs,
+        primaryTranslationMode: "auto",
+        verseTextZhTranslationId: nextAutoPrimary,
+        verseTextEnTranslationId: nextContrast,
+        verseDisplay: nextContrast.trim() ? "bilingual" : prefs.verseDisplay,
+      });
+      return;
+    }
+    const nextContrast =
+      prefs.verseTextEnTranslationId.trim() === id ? "" : prefs.verseTextEnTranslationId;
+    persist({
+      ...prefs,
+      primaryTranslationMode: "manual",
+      verseTextZhTranslationId: id,
+      verseTextEnTranslationId: nextContrast,
+      verseDisplay: nextContrast.trim() ? "bilingual" : prefs.verseDisplay,
+    });
+  };
+
+  const selectContrast = (id: string) => {
+    setOpenMenu(null);
+    persist({
+      ...prefs,
+      verseTextEnTranslationId: id === CONTRAST_OFF_ID ? "" : id,
+      verseDisplay: id === CONTRAST_OFF_ID ? "primary" : "bilingual",
+    });
+  };
+
   return (
+    <>
     <div className="relative w-full min-w-[10rem]">
       <div className="relative flex w-full flex-col gap-2">
         <NatureHomeSettingsSelect
@@ -217,53 +257,41 @@ export function NatureHomeTranslationSettings({ onPrefsChanged }: Props) {
           accessibilityLabel={primaryDisplay}
           value={primaryValue}
           options={primaryOptions}
-          open={openMenu === "primary"}
-          onOpenChange={(open) => setOpenMenu(open ? "primary" : null)}
-          onSelect={(id) => {
-            setOpenMenu(null);
-            if (id === PRIMARY_SYSTEM_DEFAULT_ID) {
-              const nextAutoPrimary = catalog?.translations.some((x) => x.id === localeDefaultPrimaryId)
-                ? localeDefaultPrimaryId
-                : catalog!.translations[0]!.id;
-              const nextContrast =
-                prefs.verseTextEnTranslationId.trim() === nextAutoPrimary ? "" : prefs.verseTextEnTranslationId;
-              persist({
-                ...prefs,
-                primaryTranslationMode: "auto",
-                verseTextZhTranslationId: nextAutoPrimary,
-                verseTextEnTranslationId: nextContrast,
-                verseDisplay: nextContrast.trim() ? "bilingual" : prefs.verseDisplay,
-              });
-              return;
-            }
-            const nextContrast =
-              prefs.verseTextEnTranslationId.trim() === id ? "" : prefs.verseTextEnTranslationId;
-            persist({
-              ...prefs,
-              primaryTranslationMode: "manual",
-              verseTextZhTranslationId: id,
-              verseTextEnTranslationId: nextContrast,
-              verseDisplay: nextContrast.trim() ? "bilingual" : prefs.verseDisplay,
-            });
-          }}
+          open={false}
+          onOpenChange={(open) => open && setOpenMenu("primary")}
+          onSelect={selectPrimary}
         />
         <NatureHomeSettingsSelect
           className="w-full"
           accessibilityLabel={contrastDisplay}
           value={contrastValue}
           options={contrastOptions}
-          open={openMenu === "contrast"}
-          onOpenChange={(open) => setOpenMenu(open ? "contrast" : null)}
-          onSelect={(id) => {
-            setOpenMenu(null);
-            persist({
-              ...prefs,
-              verseTextEnTranslationId: id === CONTRAST_OFF_ID ? "" : id,
-              verseDisplay: id === CONTRAST_OFF_ID ? "primary" : "bilingual",
-            });
-          }}
+          open={false}
+          onOpenChange={(open) => open && setOpenMenu("contrast")}
+          onSelect={selectContrast}
         />
       </div>
     </div>
+    <ReadBibleTranslationPickerOverlay
+      open={openMenu !== null}
+      mode="primary"
+      title={
+        openMenu === "contrast"
+          ? t("pages.read.typography.contrastTranslation")
+          : t("pages.read.typography.primaryTranslation")
+      }
+      options={openMenu === "contrast" ? contrastOptions : primaryOptions}
+      primaryValue={openMenu === "contrast" ? contrastValue : primaryValue}
+      contrastValues={[]}
+      noneLabel={contrastOffLabel}
+      confirmLabel={locale === "en" ? "Confirm" : "确认"}
+      onClose={() => setOpenMenu(null)}
+      onSelectPrimary={(id) => {
+        if (openMenu === "contrast") selectContrast(id);
+        else selectPrimary(id);
+      }}
+      onConfirmContrast={() => undefined}
+    />
+    </>
   );
 }

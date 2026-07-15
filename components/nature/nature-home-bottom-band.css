@@ -14,6 +14,46 @@
   pointer-events: none;
 }
 
+.nature-home-audio-controls {
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  pointer-events: auto;
+}
+
+.nature-home-audio-control {
+  display: inline-flex;
+  width: 4.5rem;
+  height: 4.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.2s ease;
+}
+
+.nature-home-audio-control:active:not(:disabled) {
+  opacity: 0.82;
+  transform: scale(0.97);
+}
+
+.nature-home-audio-control:disabled {
+  opacity: 0.24;
+}
+
+.nature-home-audio-control--active {
+  background: rgba(255, 177, 1, 0.16);
+}
+
+.nature-home-audio-control--verse-active {
+  background: rgba(255, 206, 121, 0.18);
+}
+
 .nature-home-ambient-scroll-wrap {
   align-self: stretch;
   margin-bottom: 0.25rem;

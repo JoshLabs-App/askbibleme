@@ -13,6 +13,7 @@ import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-aud
 import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
 import {
   SHELL_TAB_BAR_ICON,
+  SHELL_PLAY_ICON_SIZE_PX,
   SHELL_TAB_ICON_SIZE_PX,
   shellTabMaterialIcon,
   type ShellTabMaterialIconName,
@@ -250,7 +251,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
         >
           <ShellMaterialIcon
             name={fabActive ? "pause" : "play-arrow"}
-            size={SHELL_TAB_ICON_SIZE_PX}
+            size={fabActive ? 28 : SHELL_PLAY_ICON_SIZE_PX}
             color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
             className="home-bottom-nav__play-icon"
           />

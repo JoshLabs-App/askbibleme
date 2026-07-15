@@ -55,16 +55,28 @@ else
   echo "    ⚠ 3450 超时；仍将启动 Metro"
 fi
 
+CONNECTION_MODE="${EXPO_CONNECTION_MODE:-tunnel}"
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
-if [ -n "$LAN_IP" ]; then
+if [ "$CONNECTION_MODE" = "lan" ] && [ -n "$LAN_IP" ]; then
   echo "    真机应连接: http://${LAN_IP}:8081"
   export REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP"
+  mkdir -p "$ROOT/apps/askbible-mobile/ios"
+  printf '%s\n' "export REACT_NATIVE_PACKAGER_HOSTNAME=${LAN_IP}" >"$ROOT/apps/askbible-mobile/ios/.xcode.env.local"
+else
+  echo "    真机应连接: Expo tunnel"
 fi
 
 echo ""
-echo "→ [2/2] 启动 Metro（LAN）: npx expo start --lan --clear"
+if [ "$CONNECTION_MODE" = "lan" ]; then
+  echo "→ [2/2] 启动 Metro（Dev Client + LAN）: npx expo start --dev-client --lan --clear"
+else
+  echo "→ [2/2] 启动 Metro（Dev Client + Tunnel）: npx expo start --dev-client --tunnel --clear"
+fi
 echo ""
 
 cd "$ROOT/apps/askbible-mobile"
-exec npx expo start --lan --clear
-
+if [ "$CONNECTION_MODE" = "lan" ]; then
+  exec npx expo start --dev-client --lan --clear
+else
+  exec npx expo start --dev-client --tunnel --clear
+fi

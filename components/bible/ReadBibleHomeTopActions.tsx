@@ -2,33 +2,12 @@
 
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import Link from "next/link";
-import { READ_PARCHMENT_INK } from "@/lib/read/read-parchment-accents";
 import { useReadWideQuickPanels } from "@/components/bible/ReadWideQuickPanels";
-
-function IconSearch() {
-  return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M16 16l4.5 4.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconBookmark() {
-  return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M7 4.5h10a1 1 0 0 1 1 1v14.5l-6-3.5-6 3.5V5.5a1 1 0 0 1 1-1Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+import { ReadBibleTypographySettingsControl } from "@/components/bible/ReadBibleTypographySettingsControl";
+import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 
 const btnClass =
-  "read-bible-home-top-action inline-flex h-11 w-11 items-center justify-center opacity-50 transition hover:opacity-[0.68]";
+  "read-bible-home-top-action inline-flex h-[52px] w-[52px] items-center justify-center text-white transition active:scale-[0.97] [filter:drop-shadow(0_1px_6px_rgba(0,0,0,0.55))_drop-shadow(0_0_1px_rgba(0,0,0,0.8))]";
 
 /** Floating search + favorites on `/read` home (iOS ReadCatalogScreen). */
 export function ReadBibleHomeTopActions() {
@@ -37,46 +16,45 @@ export function ReadBibleHomeTopActions() {
 
   return (
     <div
-      className="read-bible-home-top-actions pointer-events-none absolute right-[max(0.5rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+3.125rem)] z-50 flex flex-col gap-1"
+      className="read-bible-home-top-actions pointer-events-none absolute right-[max(1rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+0.5rem)] z-50 flex flex-col items-center gap-1"
     >
+      <div className="pointer-events-auto">
+        <ReadBibleTypographySettingsControl buttonSize={52} iconSize={28} />
+      </div>
       {isWideScreen ? (
         <button
           type="button"
           className={`${btnClass} pointer-events-auto`}
-          style={{ color: READ_PARCHMENT_INK }}
           aria-label={t("pages.read.chapterChromeSearch")}
           onClick={() => openPanel("search")}
         >
-          <IconSearch />
+          <ShellMaterialIcon name="search" size={28} color="#fff" />
         </button>
       ) : (
         <Link
           href="/read/search"
           className={`${btnClass} pointer-events-auto`}
-          style={{ color: READ_PARCHMENT_INK }}
           aria-label={t("pages.read.chapterChromeSearch")}
         >
-          <IconSearch />
+          <ShellMaterialIcon name="search" size={28} color="#fff" />
         </Link>
       )}
       {isWideScreen ? (
         <button
           type="button"
           className={`${btnClass} pointer-events-auto`}
-          style={{ color: READ_PARCHMENT_INK }}
           aria-label={t("pages.read.chapterChromeFavorites")}
           onClick={() => openPanel("favorites")}
         >
-          <IconBookmark />
+          <ShellMaterialIcon name="bookmark-border" size={28} color="#fff" />
         </button>
       ) : (
         <Link
           href="/read/favorites"
           className={`${btnClass} pointer-events-auto`}
-          style={{ color: READ_PARCHMENT_INK }}
           aria-label={t("pages.read.chapterChromeFavorites")}
         >
-          <IconBookmark />
+          <ShellMaterialIcon name="bookmark-border" size={28} color="#fff" />
         </Link>
       )}
     </div>

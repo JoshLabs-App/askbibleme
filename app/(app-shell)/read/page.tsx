@@ -28,7 +28,7 @@ export default async function ReadPlaceholderPage() {
   });
 
   return (
-    <ScriptureChrome scrollHome>
+    <ScriptureChrome scrollHome hideTypographyControl>
       <ReadBibleHomeClient
         readingPlanRegistry={readingPlanRegistry}
         homeVerses={homeVerses}

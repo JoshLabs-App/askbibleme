@@ -7,7 +7,10 @@ import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTyp
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { translationSupportsChapterAudio } from "@/lib/bible/read-chapter-audio";
-import { translationUsesWebChapterAudio } from "@/lib/bible/web-chapter-audio";
+import {
+  translationUsesKjvChapterAudio,
+  translationUsesWebChapterAudio,
+} from "@/lib/bible/web-chapter-audio";
 import {
   CUV_CHAPTER_AUDIO_VOICES,
   type CuvChapterAudioVoiceId,
@@ -28,6 +31,7 @@ export function ReadChapterAudioVoiceSettingsFields({ open, onOpenChange }: Prop
 
   const primarySupportsAudio = translationSupportsChapterAudio(chapterAudioTranslationId);
   const webAudioOnly = translationUsesWebChapterAudio(chapterAudioTranslationId);
+  const kjvAudioOnly = translationUsesKjvChapterAudio(chapterAudioTranslationId);
 
   const voiceOptions = useMemo(
     () =>
@@ -68,7 +72,11 @@ export function ReadChapterAudioVoiceSettingsFields({ open, onOpenChange }: Prop
       ) : null}
       <p className="mt-2 text-[11px] leading-snug text-amber-900/55 dark:text-stone-400">
         {webAudioOnly
-          ? t("pages.read.typography.chapterAudioVoiceHintWebEn")
+          ? t(
+              kjvAudioOnly
+                ? "pages.read.typography.chapterAudioVoiceHintKjv"
+                : "pages.read.typography.chapterAudioVoiceHintWebEn",
+            )
           : primarySupportsAudio
             ? t("pages.read.typography.chapterAudioVoiceHint")
             : t("pages.read.typography.chapterAudioVoiceHintNonCuv")}

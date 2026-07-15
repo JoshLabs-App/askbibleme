@@ -1,13 +1,20 @@
 /** 探索页图标入口；与 iOS `exploreEntries.ts` 对齐 */
 export type ExploreEntry = {
   id: string;
-  href: `/explore/${string}`;
+  href: `/explore/${string}` | "/read/plans";
   iconSet: "material-community";
   icon: string;
   labelKey: string;
 };
 
 export const EXPLORE_ENTRIES: ExploreEntry[] = [
+  {
+    id: "reading-plans",
+    href: "/read/plans",
+    iconSet: "material-community",
+    icon: "book-open-page-variant-outline",
+    labelKey: "pages.read.plansTitle",
+  },
   {
     id: "year-day-count",
     href: "/explore/year-day-count",

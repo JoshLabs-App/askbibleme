@@ -30,8 +30,8 @@ export function NatureHomeVerseEffectPicker({ selected, onSelect }: Props) {
   const { t } = useLocale();
 
   return (
-    <div className="inline-flex" role="radiogroup" aria-label={t("nature.homeSettings.verseEffectSection")}>
-      <div className="inline-flex rounded-lg bg-zinc-800 p-[3px]">
+    <div className="flex w-full" role="radiogroup" aria-label={t("nature.homeSettings.verseEffectSection")}>
+      <div className="nature-home-settings-segment flex w-full rounded-[9px] border p-[3px]">
       {NATURE_HOME_VERSE_TEXT_EFFECTS.map((effect) => {
         const isOn = selected === effect;
         const textShadow = natureHomeVerseVideoTextShadow(effect, "body");
@@ -44,12 +44,12 @@ export function NatureHomeVerseEffectPicker({ selected, onSelect }: Props) {
             aria-label={labelForEffect(effect, t)}
             onClick={() => onSelect(effect)}
             className={[
-              "flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md border-0 transition",
-              isOn ? "bg-zinc-600" : "bg-transparent hover:bg-zinc-700/60",
+              "flex min-h-[36px] flex-1 items-center justify-center rounded-[7px] border border-transparent transition",
+              isOn ? "nature-home-verse-effect-choice--active" : "bg-transparent",
             ].join(" ")}
           >
             <span
-              className="font-sans text-[15px] font-bold leading-none text-white"
+              className="nature-home-verse-effect-choice-label font-sans text-[17px] font-bold leading-none text-[#1c1410]"
               style={textShadow ? { textShadow } : undefined}
               aria-hidden
             >

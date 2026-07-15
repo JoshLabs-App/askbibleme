@@ -126,7 +126,7 @@ export const ABOUT_PAGE_COPY: Record<"zh-CN" | "en", AboutPageCopy> = {
         eyebrow: "Quiet",
         title: "Rest before God, not empty mindfulness",
         body:
-          "Quiet nature and music carry Scripture—space to hear God's word again and be renewed in his presence.",
+          "Quiet nature and music carry Scripture—space to hear God's Word again and be renewed in his presence.",
       },
       {
         eyebrow: "Understand",

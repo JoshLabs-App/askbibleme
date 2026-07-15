@@ -1,102 +1,102 @@
 [
   {
     "verse": 1,
-    "start": 0.68,
-    "end": 4.5
+    "start": 0.74,
+    "end": 4.35
   },
   {
     "verse": 2,
-    "start": 4.5,
-    "end": 13.58
+    "start": 4.35,
+    "end": 13.41
   },
   {
     "verse": 3,
-    "start": 13.58,
-    "end": 19.28
+    "start": 13.41,
+    "end": 19.23
   },
   {
     "verse": 4,
-    "start": 19.28,
-    "end": 27.6
+    "start": 19.23,
+    "end": 27.71
   },
   {
     "verse": 5,
-    "start": 27.6,
-    "end": 34.82
+    "start": 27.71,
+    "end": 34.79
   },
   {
     "verse": 6,
-    "start": 34.82,
-    "end": 42.2
+    "start": 34.79,
+    "end": 42.06
   },
   {
     "verse": 7,
-    "start": 42.2,
-    "end": 47.2
+    "start": 42.06,
+    "end": 47.09
   },
   {
     "verse": 8,
-    "start": 47.2,
-    "end": 57.74
+    "start": 47.09,
+    "end": 57.85
   },
   {
     "verse": 9,
-    "start": 57.74,
-    "end": 66.78
+    "start": 57.85,
+    "end": 66.56
   },
   {
     "verse": 10,
-    "start": 66.78,
-    "end": 73.84
+    "start": 66.56,
+    "end": 73.77
   },
   {
     "verse": 11,
-    "start": 73.84,
+    "start": 73.77,
     "end": 79.6
   },
   {
     "verse": 12,
     "start": 79.6,
-    "end": 85.42
+    "end": 84.79
   },
   {
     "verse": 13,
-    "start": 85.42,
-    "end": 100.6
+    "start": 84.79,
+    "end": 100.33
   },
   {
     "verse": 14,
-    "start": 100.6,
-    "end": 111.56
+    "start": 100.33,
+    "end": 111.38
   },
   {
     "verse": 15,
-    "start": 111.56,
-    "end": 118.98
+    "start": 111.38,
+    "end": 119.17
   },
   {
     "verse": 16,
-    "start": 118.98,
-    "end": 127.94
+    "start": 119.17,
+    "end": 127.79
   },
   {
     "verse": 17,
-    "start": 127.94,
+    "start": 127.79,
     "end": 136.6
   },
   {
     "verse": 18,
     "start": 136.6,
-    "end": 143.26
+    "end": 143.35
   },
   {
     "verse": 19,
-    "start": 143.26,
-    "end": 150.9
+    "start": 143.35,
+    "end": 150.55
   },
   {
     "verse": 20,
-    "start": 150.9,
-    "end": 153.06
+    "start": 150.55,
+    "end": 153.04
   }
 ]

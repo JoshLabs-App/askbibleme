@@ -60,7 +60,8 @@ yarn-error.log*
 /data/bible/hakka-audio-manifest.json
 /data/bible/open-usfm-chapter-segments.story.zh.json
 /public/audio/
-/public/verse-timings/
+/public/verse-timings/*
+!/public/verse-timings/kjv/
 /scripts/whisper-env/
 
 # 本机全本导读/引导版批量进度（见 npm run info-edition:batch）

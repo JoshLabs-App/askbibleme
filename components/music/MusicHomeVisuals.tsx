@@ -266,7 +266,11 @@ function CalmVisual({ centered = false }: { centered?: boolean }) {
   }, []);
 
   const cx = size.width * 0.5;
-  const cy = musicVisualCenterY(size.height, centered, viewport.height, viewport.top);
+  // 宽屏时呼吸圆由底部对齐的 ring-wrap 决定位置；鱼群必须使用同一个圆心，
+  // 不能使用舞台自身的几何中心，否则舞台高度变化时鱼群会向上偏移。
+  const cy = centered
+    ? size.height - BREATH_RING_WRAP_HEIGHT / 2
+    : musicVisualCenterY(size.height, centered, viewport.height, viewport.top);
   const baseY = size.height - (BREATH_RING_WRAP_MARGIN_BOTTOM + BREATH_RING_WRAP_HEIGHT / 2);
   const targetY = musicVisualCenterY(size.height, centered, viewport.height, viewport.top);
   const ringTranslateY = centered ? 0 : targetY - baseY;

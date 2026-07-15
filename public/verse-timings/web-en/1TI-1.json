@@ -1,102 +1,102 @@
 [
   {
     "verse": 1,
-    "start": 0.98,
-    "end": 11.2
+    "start": 1.0,
+    "end": 11.46
   },
   {
     "verse": 2,
-    "start": 11.2,
+    "start": 11.46,
     "end": 20.54
   },
   {
     "verse": 3,
     "start": 20.54,
-    "end": 28.34
+    "end": 28.22
   },
   {
     "verse": 4,
-    "start": 28.34,
-    "end": 35.72
+    "start": 28.22,
+    "end": 36.31
   },
   {
     "verse": 5,
-    "start": 35.72,
-    "end": 42.46
+    "start": 36.31,
+    "end": 42.09
   },
   {
     "verse": 6,
-    "start": 42.46,
-    "end": 47.56
+    "start": 42.09,
+    "end": 47.37
   },
   {
     "verse": 7,
-    "start": 47.56,
-    "end": 55.12
+    "start": 47.37,
+    "end": 54.88
   },
   {
     "verse": 8,
-    "start": 55.12,
-    "end": 59.02
+    "start": 54.88,
+    "end": 59.06
   },
   {
     "verse": 9,
-    "start": 59.02,
-    "end": 73.6
+    "start": 59.06,
+    "end": 73.46
   },
   {
     "verse": 10,
-    "start": 73.6,
-    "end": 83.12
+    "start": 73.46,
+    "end": 82.49
   },
   {
     "verse": 11,
-    "start": 83.12,
-    "end": 88.92
+    "start": 82.49,
+    "end": 88.95
   },
   {
     "verse": 12,
-    "start": 88.92,
-    "end": 96.28
+    "start": 88.95,
+    "end": 96.06
   },
   {
     "verse": 13,
-    "start": 96.28,
-    "end": 105.18
+    "start": 96.06,
+    "end": 105.01
   },
   {
     "verse": 14,
-    "start": 105.18,
-    "end": 110.84
+    "start": 105.01,
+    "end": 110.57
   },
   {
     "verse": 15,
-    "start": 110.84,
-    "end": 119.7
+    "start": 110.57,
+    "end": 119.0
   },
   {
     "verse": 16,
-    "start": 119.7,
-    "end": 130.94
+    "start": 119.0,
+    "end": 130.62
   },
   {
     "verse": 17,
-    "start": 130.94,
-    "end": 141.5
+    "start": 130.62,
+    "end": 141.6
   },
   {
     "verse": 18,
-    "start": 141.5,
-    "end": 149.78
+    "start": 141.6,
+    "end": 149.94
   },
   {
     "verse": 19,
-    "start": 149.78,
-    "end": 155.8
+    "start": 149.94,
+    "end": 156.0
   },
   {
     "verse": 20,
-    "start": 155.8,
+    "start": 156.0,
     "end": 162.36
   }
 ]

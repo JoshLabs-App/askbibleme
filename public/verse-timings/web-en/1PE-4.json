@@ -1,97 +1,97 @@
 [
   {
     "verse": 1,
-    "start": 0.88,
-    "end": 9.6
+    "start": 0.98,
+    "end": 9.86
   },
   {
     "verse": 2,
-    "start": 9.6,
-    "end": 16.48
+    "start": 9.86,
+    "end": 16.06
   },
   {
     "verse": 3,
-    "start": 16.48,
-    "end": 29.58
+    "start": 16.06,
+    "end": 29.25
   },
   {
     "verse": 4,
-    "start": 29.58,
-    "end": 35.18
+    "start": 29.25,
+    "end": 35.32
   },
   {
     "verse": 5,
-    "start": 35.18,
-    "end": 39.82
+    "start": 35.32,
+    "end": 39.91
   },
   {
     "verse": 6,
-    "start": 39.82,
-    "end": 48.7
+    "start": 39.91,
+    "end": 48.58
   },
   {
     "verse": 7,
-    "start": 48.7,
-    "end": 55.92
+    "start": 48.58,
+    "end": 55.77
   },
   {
     "verse": 8,
-    "start": 55.92,
-    "end": 62.2
+    "start": 55.77,
+    "end": 62.02
   },
   {
     "verse": 9,
-    "start": 62.2,
-    "end": 65.28
+    "start": 62.02,
+    "end": 65.3
   },
   {
     "verse": 10,
-    "start": 65.28,
-    "end": 73.74
+    "start": 65.3,
+    "end": 73.56
   },
   {
     "verse": 11,
-    "start": 73.74,
-    "end": 91.68
+    "start": 73.56,
+    "end": 89.61
   },
   {
     "verse": 12,
-    "start": 91.68,
-    "end": 99.18
+    "start": 89.61,
+    "end": 98.75
   },
   {
     "verse": 13,
-    "start": 99.18,
-    "end": 107.78
+    "start": 98.75,
+    "end": 107.65
   },
   {
     "verse": 14,
-    "start": 107.78,
-    "end": 118.94
+    "start": 107.65,
+    "end": 118.43
   },
   {
     "verse": 15,
-    "start": 118.94,
-    "end": 126.98
+    "start": 118.43,
+    "end": 127.09
   },
   {
     "verse": 16,
-    "start": 126.98,
-    "end": 134.88
+    "start": 127.09,
+    "end": 135.03
   },
   {
     "verse": 17,
-    "start": 134.88,
-    "end": 143.98
+    "start": 135.03,
+    "end": 144.16
   },
   {
     "verse": 18,
-    "start": 143.98,
-    "end": 149.74
+    "start": 144.16,
+    "end": 149.9
   },
   {
     "verse": 19,
-    "start": 149.74,
-    "end": 157.47
+    "start": 149.9,
+    "end": 157.54
   }
 ]

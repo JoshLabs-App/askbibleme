@@ -4,6 +4,10 @@ import {
 } from "@/lib/bible/cuv-chapter-audio";
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
 import {
+  resolveYouVersionChapterAudioPlayableSrc,
+  translationUsesYouVersionChapterAudio,
+} from "@/lib/bible/youversion-chapter-audio";
+import {
   resolveWebChapterAudioPlayableSrc,
   translationUsesWebChapterAudio,
 } from "@/lib/bible/web-chapter-audio";
@@ -11,7 +15,8 @@ import {
 export function translationSupportsChapterAudio(translationId: string): boolean {
   return (
     translationSupportsCuvChapterAudio(translationId) ||
-    translationUsesWebChapterAudio(translationId)
+    translationUsesWebChapterAudio(translationId) ||
+    translationUsesYouVersionChapterAudio(translationId)
   );
 }
 
@@ -27,6 +32,13 @@ export async function resolveChapterAudioPlayableSrc(args: {
       bookId: args.bookId,
       chapter: args.chapter,
       translationId: args.translationId,
+    });
+  }
+  if (translationUsesYouVersionChapterAudio(args.translationId)) {
+    return resolveYouVersionChapterAudioPlayableSrc({
+      translationId: args.translationId,
+      bookId: args.bookId,
+      chapter: args.chapter,
     });
   }
   if (translationSupportsCuvChapterAudio(args.translationId)) {

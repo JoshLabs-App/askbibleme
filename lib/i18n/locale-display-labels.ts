@@ -4,7 +4,7 @@ import type { AppLocale } from "./config";
 export const LOCALE_PICKER_LABELS: Record<AppLocale, string> = {
   en: "English",
   "zh-CN": "简体中文",
-  "zh-TW": "繁体中文",
+  "zh-TW": "繁體中文",
 };
 
 export function getLocalePickerLabel(locale: AppLocale): string {

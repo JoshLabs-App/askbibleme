@@ -103,9 +103,9 @@ function ShellNavDrawerVersePoolSection() {
   }, []);
 
   const sectionLabel =
-    locale === "en" ? "Home verse pool" : locale === "zh-TW" ? toZhTwText("主页经文池") : "主页经文池";
+    locale === "en" ? "Home Scripture range" : locale === "zh-TW" ? toZhTwText("首页经文范围") : "首页经文范围";
   const poolLabel =
-    locale === "en" ? "Pool" : locale === "zh-TW" ? toZhTwText("当前池") : "当前池";
+    locale === "en" ? "Range" : locale === "zh-TW" ? toZhTwText("当前范围") : "当前范围";
 
   return (
     <div className="space-y-2">

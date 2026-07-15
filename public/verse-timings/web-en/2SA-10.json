@@ -1,97 +1,97 @@
 [
   {
     "verse": 1,
-    "start": 7.16,
-    "end": 20.1
+    "start": 2.14,
+    "end": 19.84
   },
   {
     "verse": 2,
-    "start": 20.1,
-    "end": 39.14
+    "start": 19.84,
+    "end": 38.27
   },
   {
     "verse": 3,
-    "start": 39.14,
-    "end": 57.68
+    "start": 38.27,
+    "end": 57.39
   },
   {
     "verse": 4,
-    "start": 57.68,
-    "end": 69.5
+    "start": 57.39,
+    "end": 69.06
   },
   {
     "verse": 5,
-    "start": 69.5,
-    "end": 83.46
+    "start": 69.06,
+    "end": 83.12
   },
   {
     "verse": 6,
-    "start": 83.46,
-    "end": 104.8
+    "start": 83.12,
+    "end": 104.98
   },
   {
     "verse": 7,
-    "start": 104.8,
-    "end": 111.4
+    "start": 104.98,
+    "end": 111.01
   },
   {
     "verse": 8,
-    "start": 111.4,
-    "end": 129.44
+    "start": 111.01,
+    "end": 125.65
   },
   {
     "verse": 9,
-    "start": 129.44,
-    "end": 145.5
+    "start": 125.65,
+    "end": 145.22
   },
   {
     "verse": 10,
-    "start": 145.5,
-    "end": 154.72
+    "start": 145.22,
+    "end": 154.58
   },
   {
     "verse": 11,
-    "start": 154.72,
-    "end": 167.46
+    "start": 154.58,
+    "end": 167.3
   },
   {
     "verse": 12,
-    "start": 167.46,
-    "end": 177.4
+    "start": 167.3,
+    "end": 177.58
   },
   {
     "verse": 13,
-    "start": 177.4,
-    "end": 186.04
+    "start": 177.58,
+    "end": 186.16
   },
   {
     "verse": 14,
-    "start": 186.04,
-    "end": 201.2
+    "start": 186.16,
+    "end": 201.19
   },
   {
     "verse": 15,
-    "start": 201.2,
-    "end": 207.78
+    "start": 201.19,
+    "end": 207.58
   },
   {
     "verse": 16,
-    "start": 207.78,
-    "end": 219.8
+    "start": 207.58,
+    "end": 219.46
   },
   {
     "verse": 17,
-    "start": 219.8,
-    "end": 234.88
+    "start": 219.46,
+    "end": 234.95
   },
   {
     "verse": 18,
-    "start": 234.88,
-    "end": 252.44
+    "start": 234.95,
+    "end": 252.64
   },
   {
     "verse": 19,
-    "start": 252.44,
+    "start": 252.64,
     "end": 266.64
   }
 ]

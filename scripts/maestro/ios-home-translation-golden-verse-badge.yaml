@@ -1,0 +1,11 @@
+appId: me.askbible
+---
+- openLink: askbible://
+- waitForAnimationToEnd
+- tapOn:
+    point: "90%, 11%"
+- waitForAnimationToEnd
+- tapOn:
+    point: "53%, 46%"
+- waitForAnimationToEnd
+- takeScreenshot: home-translation-golden-verse-badge

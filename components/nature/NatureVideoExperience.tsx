@@ -4,7 +4,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { AppShellTopBar } from "@/components/app-shell/AppShellTopBar";
-import { NatureGoldenVerseAudioControl } from "@/components/nature/NatureGoldenVerseAudioControl";
 import { NatureHomeSettingsControl } from "@/components/nature/NatureHomeSettingsControl";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { HomeVerseRotator } from "@/components/home/HomeVerseRotator";
@@ -68,6 +67,7 @@ import {
 import { SCENE_LOOP_SWITCH_MS } from "@/lib/nature/home-scene-strip-metrics";
 import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots";
 import { useScreenWakeLock } from "@/hooks/useScreenWakeLock";
+import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 
 /**
  * 停留后再挂 `<video>` 解码（非「切换」时刻）。
@@ -122,7 +122,14 @@ const PLAYBACK_WAIT_HINT_DELAY_MS = 2800;
  */
 export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "" }: Props) {
   const { t } = useLocale();
-  const { activeIndex, bilingual, homeVerseVisible, verseKeys } = useHomePrayerVerseFeedContext();
+  const {
+    activeIndex,
+    bilingual,
+    homeVerseVisible,
+    verseKeys,
+    verseAudioSequenceActive,
+  } = useHomePrayerVerseFeedContext();
+  const { togglePlayMusic } = useMusicShellPlayback();
   const videoRef = useRef<HTMLVideoElement>(null);
   const introRevealGuardRef = useRef(false);
   /** 本会话内 `<video poster>` 是否仍用 HTML poster（首场景揭晓后不再重复挂） */
@@ -867,14 +874,18 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     ? Math.min(softFocusDisplayBlur, 10)
     : softFocusDisplayBlur;
 
-  /** 视频空白：收起设置面板；否则切换底栏 / 场景条 / 环境音可见性 */
+  /** 与 iOS 一致：沉浸态先恢复控件；普通态点主画面切换背景音乐。 */
   const onNatureVideoBlankClick = useCallback(() => {
     if (homeSettingsOpen) {
       onHomeSettingsOpenChange(false);
       return;
     }
-    setHomeChromeHidden((hidden) => !hidden);
-  }, [homeSettingsOpen, onHomeSettingsOpenChange]);
+    if (homeChromeHidden) {
+      setHomeChromeHidden(false);
+      return;
+    }
+    if (!verseAudioSequenceActive) void togglePlayMusic();
+  }, [homeChromeHidden, homeSettingsOpen, onHomeSettingsOpenChange, togglePlayMusic, verseAudioSequenceActive]);
 
   const verseTextZoom = natureHomeTextScaleAtStep(textScaleStepIndex);
 
@@ -892,6 +903,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         activeVideoId={activeVideoId}
         loopAllScenesEnabled={loopAllScenesEnabled}
         activeAmbientSlotId={activeAmbientSlotId}
+        activeVerseKey={activeVerseKey}
         onSelectScene={(id) => selectScene(id)}
         onSelectLoopAll={onSelectLoopAll}
         onToggleAmbientSlot={onToggleAmbientSlot}
@@ -950,9 +962,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         showTopInsetTime={false}
         hideTopShellInsetTime={!landscapeImmersive}
         rightAccessory={
-          <div className="flex items-center gap-1">
-            <NatureGoldenVerseAudioControl verseKey={activeVerseKey} />
-            <NatureHomeSettingsControl
+          <NatureHomeSettingsControl
               open={homeSettingsOpen}
               onOpenChange={onHomeSettingsOpenChange}
               hasNatureVisual={hasNatureVisual}
@@ -961,8 +971,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
               onDimLevelChange={(level) => applyVisualLevels(level, blurLevel)}
               onBlurLevelChange={(level) => applyVisualLevels(dimLevel, level)}
               onPrefsChanged={onNatureHomePrefsChanged}
-            />
-          </div>
+          />
         }
       />
 

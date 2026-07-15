@@ -1,21 +1,22 @@
-/** 自然首页设置下拉：挂 body portal，字色须写死，避免继承 `text-ink` / 羊皮卷棕字。 */
+/** 自然首页设置下拉：与 iOS `NatureHomeSettingsSelect` 的羊皮菜单一致。 */
 .nature-home-settings-select-menu {
-  color-scheme: dark;
-  background-color: rgb(39 39 42);
-  border-color: rgb(82 82 91);
+  color-scheme: light;
+  background-color: #f5ebe0;
+  border-color: rgba(120, 53, 15, 0.42);
+  box-shadow: 0 8px 24px rgba(28, 20, 16, 0.14);
 }
 
 .nature-home-settings-select-option {
-  color: rgb(244 244 245);
+  color: rgba(28, 20, 16, 0.94);
 }
 
 .nature-home-settings-select-option:hover {
-  background-color: rgb(63 63 70 / 0.72);
+  background-color: rgba(42, 24, 16, 0.07);
 }
 
 .nature-home-settings-select-option--selected {
-  color: #fff;
-  background-color: rgb(63 63 70);
+  color: #1c1410;
+  background-color: rgba(217, 119, 7, 0.14);
 }
 
 .nature-home-settings-select-option-label {

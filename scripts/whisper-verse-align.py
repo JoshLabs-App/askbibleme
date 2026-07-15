@@ -5,7 +5,7 @@ Whisper / stable-ts forced alignment: map CUV verse text to chapter MP3 timestam
 Used for Mandarin CUV (AskBible) and Teochew NT (screen text stays CUV; audio is Teochew).
 
 Usage:
-  python3 scripts/whisper-verse-align.py <audio_file> <verse_texts_json> [--model small]
+  python3 scripts/whisper-verse-align.py <audio_file> <verse_texts_json> [--model small] [--language zh]
 """
 
 import sys
@@ -13,6 +13,19 @@ import json
 import argparse
 import os
 from difflib import SequenceMatcher
+
+
+_MODEL_CACHE = {}
+
+
+def _load_model_once(model_name: str):
+    import stable_whisper
+
+    model = _MODEL_CACHE.get(model_name)
+    if model is None:
+        model = stable_whisper.load_model(model_name)
+        _MODEL_CACHE[model_name] = model
+    return model
 
 
 def _duration_from_words(words: list) -> float:
@@ -42,36 +55,38 @@ def _flatten_aligned_words(result) -> list:
     return words
 
 
-def _ref_index_to_recon_index(ref_pos: int, full_ref: str, recon: str) -> int:
-    if ref_pos <= 0:
-        return 0
-    if ref_pos >= len(full_ref):
-        return len(recon)
-
+def _build_ref_to_recon_map(full_ref: str, recon: str) -> list[int]:
     if full_ref == recon:
-        return ref_pos
-
+        return list(range(len(full_ref) + 1))
+    mapped: list[int | None] = [None] * (len(full_ref) + 1)
     sm = SequenceMatcher(a=full_ref, b=recon, autojunk=False)
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
         if tag == "equal":
-            if i1 <= ref_pos < i2:
-                return j1 + (ref_pos - i1)
-            if ref_pos == i2:
-                return j2
+            for ref_pos in range(i1, i2 + 1):
+                if mapped[ref_pos] is None:
+                    mapped[ref_pos] = j1 + (ref_pos - i1)
         elif tag == "replace":
-            if i1 <= ref_pos < i2:
-                span = max(1, i2 - i1)
-                span_b = max(1, j2 - j1)
-                return j1 + int((ref_pos - i1) * span_b / span)
-            if ref_pos == i2:
-                return j2
+            span = max(1, i2 - i1)
+            span_b = max(1, j2 - j1)
+            for ref_pos in range(i1, i2 + 1):
+                if mapped[ref_pos] is None:
+                    mapped[ref_pos] = j1 + int((ref_pos - i1) * span_b / span)
         elif tag == "delete":
-            if i1 <= ref_pos <= i2:
-                return j1
+            for ref_pos in range(i1, i2 + 1):
+                if mapped[ref_pos] is None:
+                    mapped[ref_pos] = j1
         elif tag == "insert":
-            if ref_pos == i1:
-                return j1
-    return len(recon)
+            if mapped[i1] is None:
+                mapped[i1] = j1
+    last = 0
+    for i, value in enumerate(mapped):
+        if value is None:
+            mapped[i] = last
+        else:
+            last = value
+    mapped[0] = 0
+    mapped[-1] = len(recon)
+    return [int(value) for value in mapped]
 
 
 def _time_at_recon_char(words: list, recon: str, recon_pos: int, total_duration: float) -> float:
@@ -94,20 +109,19 @@ def _time_at_recon_char(words: list, recon: str, recon_pos: int, total_duration:
     return float(words[-1]["end"])
 
 
-def align_verses(audio_path: str, verses: list, model_name: str = "small") -> list:
-    import stable_whisper
-
+def align_verses(audio_path: str, verses: list, model_name: str = "small", language: str = "zh") -> list:
     full_ref = "".join(v["text"] for v in verses)
     if not full_ref.strip():
         return []
 
-    model = stable_whisper.load_model(model_name)
+    model = _load_model_once(model_name)
     result = model.align(
         audio_path,
         full_ref,
-        language="zh",
+        language=language,
         token_step=200,
         fast_mode=True,
+        verbose=None,
     )
 
     if result is None:
@@ -119,6 +133,7 @@ def align_verses(audio_path: str, verses: list, model_name: str = "small") -> li
 
     recon = "".join(w["word"] for w in words)
     total_duration = _duration_from_words(words)
+    ref_to_recon = _build_ref_to_recon_map(full_ref, recon)
 
     timings = []
     char_pos = 0
@@ -127,8 +142,8 @@ def align_verses(audio_path: str, verses: list, model_name: str = "small") -> li
         start_ref = char_pos
         end_ref = char_pos + vlen
 
-        r0 = _ref_index_to_recon_index(start_ref, full_ref, recon)
-        r1 = _ref_index_to_recon_index(end_ref, full_ref, recon)
+        r0 = ref_to_recon[start_ref]
+        r1 = ref_to_recon[end_ref]
 
         start_time = _time_at_recon_char(words, recon, r0, total_duration)
         end_time = _time_at_recon_char(words, recon, r1, total_duration)
@@ -151,11 +166,50 @@ def align_verses(audio_path: str, verses: list, model_name: str = "small") -> li
     return timings
 
 
+def transcribe_verses(audio_path: str, verses: list, model_name: str = "small", language: str = "zh") -> list:
+    """Fallback for recordings whose wording differs enough for forced alignment to stop early."""
+    full_ref = "".join(v["text"] for v in verses)
+    if not full_ref.strip():
+        return []
+    model = _load_model_once(model_name)
+    result = model.transcribe(audio_path, language=language, word_timestamps=True)
+    words = _flatten_aligned_words(result)
+    if not words:
+        return _fallback_proportional(verses, 1.0)
+
+    recon = "".join(w["word"] for w in words)
+    duration = _duration_from_words(words)
+    ref_to_recon = _build_ref_to_recon_map(full_ref, recon)
+    timings = []
+    char_pos = 0
+    for verse in verses:
+        end_ref = char_pos + len(verse["text"])
+        start_time = _time_at_recon_char(
+            words, recon, ref_to_recon[char_pos], duration
+        )
+        end_time = _time_at_recon_char(
+            words, recon, ref_to_recon[end_ref], duration
+        )
+        timings.append({
+            "verse": verse["verse"],
+            "start": round(start_time, 2),
+            "end": round(max(start_time, end_time), 2),
+        })
+        char_pos = end_ref
+
+    for index in range(len(timings) - 1):
+        boundary = round((timings[index]["end"] + timings[index + 1]["start"]) / 2, 2)
+        timings[index]["end"] = boundary
+        timings[index + 1]["start"] = boundary
+    return timings
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("audio", help="Path to MP3/audio file")
     parser.add_argument("verses_json", help="Path to JSON file with verse texts")
     parser.add_argument("--model", default="small", choices=["tiny", "base", "small", "medium", "large"])
+    parser.add_argument("--language", default="zh")
     args = parser.parse_args()
 
     if not os.path.exists(args.audio):
@@ -165,7 +219,7 @@ def main():
     with open(args.verses_json, "r", encoding="utf-8") as f:
         verses = json.load(f)
 
-    timings = align_verses(args.audio, verses, args.model)
+    timings = align_verses(args.audio, verses, args.model, args.language)
     print(json.dumps(timings, ensure_ascii=False, indent=2))
 
 

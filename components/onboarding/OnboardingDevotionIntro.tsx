@@ -144,7 +144,7 @@ function OnboardingSolutionStep({ locale, cards }: { locale: AppLocale; cards: S
   return (
     <div>
       <h2 className="text-center text-[clamp(1.35rem,4vw,1.75rem)] font-bold leading-snug tracking-[0.01em] text-[#2b1d15]">
-        {locale === "en" ? "What Makes Us Different" : zhText("这里与众不同")}
+        {locale === "en" ? "What Makes This Different" : zhText("这里与众不同")}
       </h2>
       <p className="mt-1.5 px-2 text-center text-[14px] leading-relaxed text-[rgba(43,29,21,0.74)]">
         {locale === "en"

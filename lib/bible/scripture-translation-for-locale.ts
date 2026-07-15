@@ -6,7 +6,7 @@ import { DEFAULT_SCRIPTURE_TRANSLATION_ID } from "@/lib/bible/translations-types
 const PREFERRED_TRANSLATION_IDS: Partial<Record<AppLocale, readonly string[]>> = {
   "zh-CN": ["cuv-simp"],
   "zh-TW": ["cuv-trad"],
-  en: ["web-en", "asv", "bbe-en"],
+  en: ["kjv", "web-en", "asv", "bbe-en"],
 };
 
 function resolvePreferredTranslationId(cwd: string, locale: AppLocale): string {
@@ -26,6 +26,6 @@ export function scriptureTranslationLabelForLocale(cwd: string, locale: AppLocal
   const index = readTranslationsIndexSync(cwd);
   const translationId = resolvePreferredTranslationId(cwd, locale);
   const meta = index.translations.find((row) => row.id === translationId);
-  if (locale === "en") return meta?.labelEn ?? "World English Bible";
+  if (locale === "en") return meta?.labelEn ?? "King James Version (KJV)";
   return meta?.labelZh ?? (locale === "zh-TW" ? "和合本（繁體）" : "和合本（简体）");
 }

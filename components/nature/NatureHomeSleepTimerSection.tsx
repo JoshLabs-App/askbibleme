@@ -19,7 +19,7 @@ export function NatureHomeSleepTimerSection() {
 
   return (
     <div
-      className="inline-flex rounded-lg bg-zinc-800 p-[3px]"
+      className="nature-home-settings-segment flex w-full rounded-[9px] border p-[3px]"
       role="radiogroup"
       aria-label={t("nature.homeSettings.sleepSection")}
     >
@@ -34,8 +34,8 @@ export function NatureHomeSleepTimerSection() {
             aria-label={`${t(sleepLabelKey(minutes))} min`}
             onClick={() => setSleepTimerMinutes(selected ? 0 : minutes)}
             className={[
-              "flex h-[34px] w-[2.25rem] shrink-0 items-center justify-center rounded-md border-0 px-0 text-[11px] font-semibold tabular-nums transition",
-              selected ? "bg-zinc-600 text-white" : "bg-transparent text-white/50 hover:text-white/70",
+              "flex min-h-[36px] flex-1 items-center justify-center rounded-[7px] border border-transparent px-0 text-[16px] font-semibold tabular-nums text-[#1c1410] transition",
+              selected ? "nature-home-settings-choice--active" : "",
             ].join(" ")}
           >
             {t(sleepLabelKey(minutes))}

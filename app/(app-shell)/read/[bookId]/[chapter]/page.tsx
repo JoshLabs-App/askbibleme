@@ -86,7 +86,7 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
   const chapterXrefs = await loadChapterXrefs(cwd, data.bookId, data.chapter);
 
   return (
-    <ScriptureChrome parchmentColumnClassName="read-bible-parchment-column--read-chapter">
+    <ScriptureChrome hideTypographyControl parchmentColumnClassName="read-bible-parchment-column--read-chapter">
       <ReadChapterTopActions />
       <Suspense fallback={null}>
         <ReadChapterPlanFlowSync />

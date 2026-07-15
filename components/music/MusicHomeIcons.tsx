@@ -8,7 +8,7 @@ export function MusicHomeAlbumIconGlyph({ kind, color, className = "h-5 w-5" }: 
     case "calm":
       return (
         <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
-          <path d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C8.62 2 7.5 2 6.12 2S3.62 3.12 3.62 4.5l.02.19C3.23 4.41 2.75 4.25 2.22 4.25c-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25z" />
+          <path d="M8.55 12zm10.43-1.61zm-3.49-.76c-.18-2.79-1.31-5.51-3.43-7.63a12.188 12.188 0 0 0-3.55 7.63c1.28.68 2.46 1.56 3.49 2.63 1.03-1.06 2.21-1.94 3.49-2.63zm-6.5 2.65c-.14-.1-.3-.19-.45-.29.15.11.31.19.45.29zm6.42-.25c-.13.09-.27.16-.4.26.13-.1.27-.17.4-.26zM12 15.45C9.85 12.17 6.18 10 2 10c0 5.32 3.36 9.82 8.03 11.49.63.23 1.29.4 1.97.51.68-.12 1.33-.29 1.97-.51C18.64 19.82 22 15.32 22 10c-4.18 0-7.85 2.17-10 5.45z" />
         </svg>
       );
     case "coffee":
@@ -20,13 +20,13 @@ export function MusicHomeAlbumIconGlyph({ kind, color, className = "h-5 w-5" }: 
     case "work":
       return (
         <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
-          <path d="M14 6V4h-4v2H4v14h16V6h-4zM4 20V8h16v12H4zm10-14h-4V4h4v2z" fillRule="evenodd" />
+          <path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2l.01-11c0-1.11.88-2 1.99-2h4V4c0-1.11.89-2 2-2h4c1.11 0 2 .89 2 2v2h4z" fillRule="evenodd" />
         </svg>
       );
     case "sleep":
       return (
         <svg viewBox="0 0 24 24" fill={fill} className={className} aria-hidden>
-          <path d="M9.37 5.51C9.19 6.15 9.1 6.82 9.1 7.5c0 4.08 3.32 7.4 7.4 7.4 1.68 0 3.22-.56 4.46-1.5 0 2.22-.92 4.23-2.4 5.68 7.07-.72 12.54-6.84 11.84-14.12-.51-4.66-4.21-8.35-8.86-8.86-7.28-.7-13.4 4.77-12.54 11.84z" />
+          <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
         </svg>
       );
     default:
@@ -39,7 +39,7 @@ export function MusicHomeAlbumIconGlyph({ kind, color, className = "h-5 w-5" }: 
   }
 }
 
-function IconSkipPrev({ className = "h-[26px] w-[26px]" }: { className?: string }) {
+function IconSkipPrev({ className = "h-[34px] w-[34px]" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <path d="M6 6v12M16 7l-5 5 5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
@@ -47,7 +47,7 @@ function IconSkipPrev({ className = "h-[26px] w-[26px]" }: { className?: string 
   );
 }
 
-function IconSkipNext({ className = "h-[26px] w-[26px]" }: { className?: string }) {
+function IconSkipNext({ className = "h-[34px] w-[34px]" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <path d="M18 6v12M8 7l5 5-5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
@@ -55,7 +55,7 @@ function IconSkipNext({ className = "h-[26px] w-[26px]" }: { className?: string 
   );
 }
 
-function IconRepeatOne({ className = "h-[17px] w-[17px]" }: { className?: string }) {
+function IconRepeatOne({ className = "h-[27px] w-[27px]" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <path d="M7 7h8a4 4 0 0 1 4 4v1M17 17H9a4 4 0 0 1-4-4v-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -65,7 +65,7 @@ function IconRepeatOne({ className = "h-[17px] w-[17px]" }: { className?: string
   );
 }
 
-function IconRepeatAll({ className = "h-[17px] w-[17px]" }: { className?: string }) {
+function IconRepeatAll({ className = "h-[27px] w-[27px]" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <path d="M7 7h8a4 4 0 0 1 4 4v1M17 17H9a4 4 0 0 1-4-4v-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -74,7 +74,7 @@ function IconRepeatAll({ className = "h-[17px] w-[17px]" }: { className?: string
   );
 }
 
-function IconTimer({ className = "h-[17px] w-[17px]" }: { className?: string }) {
+function IconTimer({ className = "h-[27px] w-[27px]" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
       <circle cx="12" cy="13" r="7" stroke="currentColor" strokeWidth="1.6" />

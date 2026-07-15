@@ -1,0 +1,10 @@
+{
+  "requested": 1189,
+  "completed": 0,
+  "skipped": 1189,
+  "failed": [],
+  "elapsedSec": 0.2,
+  "model": "small",
+  "audioSource": "theaudiopower.org WEB/WEB2 MP3",
+  "reference": "data/bible/uploads/web-en.json"
+}

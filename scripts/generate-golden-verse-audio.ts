@@ -4,6 +4,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
+import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import { getScriptureDatabase } from "@/lib/bible/scripture-sqlite-db";
 import type { ParsedVerseKey } from "@/lib/bible/parse-verse-key";
 
@@ -18,8 +19,10 @@ const DEFAULT_SPEED = 0.94;
 const DEFAULT_OUT_DIR = path.join("tmp", "audio-samples", "production-voice-cedar");
 const DEFAULT_CONCURRENCY = 1;
 const MAX_ATTEMPTS = 4;
-const DEFAULT_INSTRUCTIONS =
+const DEFAULT_ZH_INSTRUCTIONS =
   "Use a calm, deep, mature male voice with standard Mandarin pronunciation and no regional accent. Read slightly slower than normal, steady and quiet, with clear authority and a natural, unhurried cadence. Separate the scripture text and the reference clearly.";
+const DEFAULT_EN_INSTRUCTIONS =
+  "Use a calm, deep, mature male voice with clear, neutral English pronunciation and no strong regional accent. Read slightly slower than normal, steady and quiet, with gentle authority and a natural, unhurried cadence. Separate the scripture text and the reference clearly.";
 
 type SpeechResponse = Response;
 
@@ -33,6 +36,7 @@ function parseArgs(argv: string[]): {
   speed: number;
   concurrency: number;
   overwrite: boolean;
+  verseKeys: string[];
 } {
   const out = {
     count: DEFAULT_COUNT,
@@ -44,6 +48,7 @@ function parseArgs(argv: string[]): {
     speed: DEFAULT_SPEED,
     concurrency: DEFAULT_CONCURRENCY,
     overwrite: true,
+    verseKeys: [] as string[],
   };
 
   for (let i = 2; i < argv.length; i += 1) {
@@ -86,6 +91,14 @@ function parseArgs(argv: string[]): {
     }
     if (arg === "--concurrency" && next) {
       out.concurrency = Math.max(1, Math.min(12, Number.parseInt(next, 10) || DEFAULT_CONCURRENCY));
+      i += 1;
+      continue;
+    }
+    if (arg === "--verses" && next) {
+      out.verseKeys = next
+        .split(",")
+        .map((value) => value.trim().toUpperCase())
+        .filter(Boolean);
       i += 1;
       continue;
     }
@@ -133,10 +146,28 @@ function verseKeyToFileStem(verseKey: string): string {
   return `${p.bookId}-${p.chapter}-${p.verse}`;
 }
 
-function verseLabel(bookId: string, chapter: number, verse: number): string {
+function isEnglishTranslation(translationId: string): boolean {
+  return translationId.trim().toLowerCase() === "web-en";
+}
+
+function verseLabel(
+  bookId: string,
+  chapter: number,
+  verse: number,
+  translationId: string,
+): string {
+  if (isEnglishTranslation(translationId)) {
+    return `${getScriptureBookDisplayName(bookId, "en")} ${chapter}:${verse}`;
+  }
   const book = scriptureBooks.find((b) => b.bookId === bookId);
   const bookName = book?.bookName ?? bookId;
   return `${bookName} ${chapter}章${verse}节`;
+}
+
+function speechInstructions(translationId: string): string {
+  return isEnglishTranslation(translationId)
+    ? DEFAULT_EN_INSTRUCTIONS
+    : DEFAULT_ZH_INSTRUCTIONS;
 }
 
 async function openaiSpeech(opts: {
@@ -252,7 +283,9 @@ async function main(): Promise<void> {
   const cwd = process.cwd();
   const opts = parseArgs(process.argv);
   const apiKey = loadApiKey(cwd);
-  const scopeVerseKeys = await loadScopeVerseKeys(cwd, opts.scope);
+  const scopeVerseKeys = opts.verseKeys.length
+    ? opts.verseKeys
+    : await loadScopeVerseKeys(cwd, opts.scope);
   const verseKeys = scopeVerseKeys.slice(0, opts.count);
   if (!verseKeys.length) throw new Error(`No verse keys found for scope ${opts.scope}`);
 
@@ -280,14 +313,19 @@ async function main(): Promise<void> {
       throw new Error(`Unable to load verse text for ${verseKey} from ${opts.translationId}`);
     }
 
-    const prompt = `${verse.text} ${verseLabel(verse.bookId, verse.chapter, verse.verse)}。`;
+    const prompt = `${verse.text} ${verseLabel(
+      verse.bookId,
+      verse.chapter,
+      verse.verse,
+      opts.translationId,
+    )}${isEnglishTranslation(opts.translationId) ? "." : "。"}`;
     const wav = await openaiSpeechWithRetry({
       apiKey,
       model: opts.model,
       voice: opts.voice,
       input: prompt,
       speed: opts.speed,
-      instructions: DEFAULT_INSTRUCTIONS,
+      instructions: speechInstructions(opts.translationId),
     });
 
     const wavPath = path.join(opts.outDir, `${stem}.tmp.wav`);

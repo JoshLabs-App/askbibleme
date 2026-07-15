@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
-import { SHELL_CHROME_HIT_PX, SHELL_MENU_ICON_SIZE_PX } from "@/lib/shell/shell-chrome-icons";
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
+import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
+import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { buildGoldenVerseAudioSrc } from "@/lib/bible/golden-verse-audio";
-
-const PLAY_BTN =
-  "touch-manipulation inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 text-white transition active:scale-[0.97]";
+import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
+import { addHomeListeningSeconds } from "@/lib/home-listening/progress";
 
 function normalizeAudioSrc(src: string): string {
   try {
@@ -22,14 +22,24 @@ type Props = {
 };
 
 /**
- * 首页右上：当前金句音频播放按钮。
- * 仅播放当前可见金句，对应 `/audio/golden-verses/*-32kbps.mp3`。
+ * 首页底区：连续播放固定经文流；当前录音结束后立即进入下一节。
  */
 export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
   const { locale } = useLocale();
+  const {
+    activeIndex,
+    advanceVerseAudioNow,
+    onVerseAudioCompleted,
+    setVerseAudioSequenceActive,
+  } = useHomePrayerVerseFeedContext();
+  const shellPlayback = useMusicShellPlayback();
+  const getShellAudioElement = shellPlayback.getAudioElement;
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [active, setActive] = useState(false);
   const [ready, setReady] = useState(false);
+  const musicVolumeBeforeRef = useRef<number | null>(null);
+  const lastAudioTimeRef = useRef(0);
+  const unflushedListeningSecondsRef = useRef(0);
 
   const src = useMemo(() => (verseKey ? buildGoldenVerseAudioSrc(verseKey) : null), [verseKey]);
   const zh = locale === "zh-CN" || locale === "zh-TW";
@@ -37,6 +47,19 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
   useEffect(() => {
     setReady(true);
   }, []);
+
+  const flushListeningTime = useCallback(() => {
+    const seconds = unflushedListeningSecondsRef.current;
+    unflushedListeningSecondsRef.current = 0;
+    if (seconds > 0) addHomeListeningSeconds(seconds);
+  }, []);
+
+  const restoreMusicVolume = useCallback(() => {
+    const shellAudio = getShellAudioElement();
+    const before = musicVolumeBeforeRef.current;
+    musicVolumeBeforeRef.current = null;
+    if (shellAudio && typeof before === "number") shellAudio.volume = before;
+  }, [getShellAudioElement]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -46,7 +69,7 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
-      setPlaying(false);
+      setActive(false);
       return;
     }
 
@@ -55,42 +78,77 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
       audio.pause();
       audio.src = src;
       audio.load();
-      if (playing) setPlaying(false);
+      if (active) {
+        audio.currentTime = 0;
+        void audio.play().catch(() => setActive(false));
+      }
     }
-  }, [src, playing]);
+  }, [src, active]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const onEnded = () => setPlaying(false);
-    const onPlay = () => setPlaying(true);
-    const onError = () => setPlaying(false);
+    const onEnded = () => {
+      if (!active) return;
+      flushListeningTime();
+      if (verseKey) onVerseAudioCompleted(verseKey, activeIndex);
+      advanceVerseAudioNow();
+    };
+    const onPlay = () => {
+      lastAudioTimeRef.current = audio.currentTime;
+    };
+    const onTimeUpdate = () => {
+      const now = audio.currentTime;
+      const delta = now - lastAudioTimeRef.current;
+      lastAudioTimeRef.current = now;
+      if (delta > 0 && delta < 5 && !audio.paused) {
+        unflushedListeningSecondsRef.current += delta;
+        if (unflushedListeningSecondsRef.current >= 10) flushListeningTime();
+      }
+    };
+    const onPause = () => flushListeningTime();
+    const onError = () => setActive(false);
 
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("play", onPlay);
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("pause", onPause);
     audio.addEventListener("error", onError);
     return () => {
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("pause", onPause);
       audio.removeEventListener("error", onError);
     };
-  }, []);
+  }, [active, activeIndex, advanceVerseAudioNow, flushListeningTime, onVerseAudioCompleted, verseKey]);
+
+  useEffect(() => {
+    setVerseAudioSequenceActive(active);
+    if (!active) {
+      flushListeningTime();
+      restoreMusicVolume();
+    }
+  }, [active, flushListeningTime, restoreMusicVolume, setVerseAudioSequenceActive]);
 
   useEffect(() => {
     const audio = audioRef.current;
     return () => {
+      flushListeningTime();
       audio?.pause();
+      setVerseAudioSequenceActive(false);
+      restoreMusicVolume();
     };
-  }, []);
+  }, [flushListeningTime, restoreMusicVolume, setVerseAudioSequenceActive]);
 
   const toggle = () => {
     const audio = audioRef.current;
     if (!audio || !src) return;
 
-    if (playing && !audio.paused) {
+    if (active) {
       audio.pause();
-      setPlaying(false);
+      setActive(false);
       return;
     }
 
@@ -99,8 +157,16 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
       audio.load();
     }
 
+    const shellAudio = getShellAudioElement();
+    if (shellPlayback.playing && isCuvChapterAudioEffectiveSrc(shellPlayback.effectiveSrc)) {
+      shellPlayback.pausePlayback();
+    } else if (shellPlayback.playing && shellAudio) {
+      musicVolumeBeforeRef.current = shellAudio.volume;
+      shellAudio.volume = Math.max(0, Math.min(1, shellAudio.volume * 0.28));
+    }
     audio.currentTime = 0;
-    void audio.play().catch(() => setPlaying(false));
+    setActive(true);
+    void audio.play().catch(() => setActive(false));
   };
 
   return (
@@ -109,10 +175,10 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
         type="button"
         onClick={toggle}
         disabled={!src}
-        aria-pressed={playing}
+        aria-pressed={active}
         aria-label={
           src
-            ? playing
+            ? active
               ? zh
                 ? "暂停金句音频"
                 : "Pause verse audio"
@@ -123,18 +189,17 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
               ? "当前没有可播放的金句音频"
               : "No verse audio available"
         }
-        className={PLAY_BTN}
-        style={{
-          width: SHELL_CHROME_HIT_PX,
-          height: SHELL_CHROME_HIT_PX,
-          opacity: ready && src ? (playing ? 0.82 : 0.56) : 0.26,
-        }}
+        className={[
+          "nature-home-audio-control",
+          active ? "nature-home-audio-control--verse-active" : "",
+        ].filter(Boolean).join(" ")}
+        style={{ opacity: ready && src ? 1 : 0.24 }}
       >
-        <ShellMaterialIcon
-          name={playing ? "pause" : "play_arrow"}
-          size={SHELL_MENU_ICON_SIZE_PX}
-          color="#FFFFFF"
-          legibilityShadow
+        <ShellMaterialCommunityIcon
+          name="account-voice"
+          size={33}
+          color={active ? "var(--brand-logo-background)" : "rgba(255,255,255,0.9)"}
+          style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}
         />
       </button>
 

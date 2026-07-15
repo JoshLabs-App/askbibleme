@@ -11,9 +11,9 @@ export type HomeVersePoolMenuCounts = {
 export const HOME_VERSE_POOL_MENU_COUNTS: HomeVersePoolMenuCounts = 
 {
   "curated700": 700,
-  "repeatGe5All": 4291,
+  "repeatGe5All": 4292,
   "repeatGe5Old": 2095,
-  "repeatGe5New": 2196,
+  "repeatGe5New": 2197,
   "books": {
     "GEN": 39,
     "EXO": 56,
@@ -54,7 +54,7 @@ export const HOME_VERSE_POOL_MENU_COUNTS: HomeVersePoolMenuCounts =
     "LUK": 193,
     "JHN": 123,
     "ACT": 99,
-    "ROM": 207,
+    "ROM": 208,
     "1CO": 170,
     "2CO": 83,
     "GAL": 55,

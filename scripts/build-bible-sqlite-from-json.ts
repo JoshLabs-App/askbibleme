@@ -13,10 +13,12 @@ import { writeScriptureSqliteFromBooks } from "../lib/bible/build-scripture-sqli
 import { scriptureSqlitePath } from "../lib/bible/scripture-sqlite-db";
 import { readTranslationsIndex, resolveTranslationAbsolutePath } from "../lib/bible/translations-store";
 import { parseAndValidateBiblePayload } from "../lib/bible/validate-bible-json";
+import { findLegacyCuvSimplifiedOrthography } from "../lib/bible/cuv-simplified-orthography.mjs";
 
 async function main(): Promise<void> {
   const cwd = process.cwd();
   const index = await readTranslationsIndex(cwd);
+  const onlyTranslationId = String(process.env.BIBLE_TRANSLATION_ID || "").trim();
   if (index.translations.length === 0) {
     console.error("[build-bible-sqlite] translations.json 中无译本，跳过。");
     return;
@@ -40,6 +42,7 @@ async function main(): Promise<void> {
   }
 
   for (const t of index.translations) {
+    if (onlyTranslationId && t.id !== onlyTranslationId) continue;
     const abs = resolveTranslationAbsolutePath(cwd, t.id);
     const sqliteAbs = scriptureSqlitePath(cwd, t.id);
     const forceRebuild = process.env.FORCE_BIBLE_SQLITE_REBUILD === "1";
@@ -62,6 +65,17 @@ async function main(): Promise<void> {
     }
     const raw = JSON.parse(fs.readFileSync(abs, "utf8")) as unknown;
     const { books, verseCount } = parseAndValidateBiblePayload(raw);
+    if (t.id === "cuv-simp") {
+      const findings = findLegacyCuvSimplifiedOrthography(JSON.stringify(books));
+      if (findings.length > 0) {
+        const summary = findings
+          .map(({ legacy, modern, count }) => `${legacy}→${modern} ×${count}`)
+          .join(", ");
+        throw new Error(
+          `[build-bible-sqlite] cuv-simp 仍含旧字/异体字：${summary}。请运行 npm run bible:normalize:cuv-simp`,
+        );
+      }
+    }
     const { bytes, verseCount: inserted } = await writeScriptureSqliteFromBooks(cwd, t.id, books, {
       themeRepeatCounts,
       speechSpansByVerseKey: speechSpansSnapshot?.translations.get(t.id) ?? undefined,

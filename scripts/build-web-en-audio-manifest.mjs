@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * 从和合本 manifest 书章列表生成 WEB 整章 MP3 清单（theaudiopower.org WEB / WEB2）。
+ * 从和合本 manifest 书章列表生成官方 WEBP 整章录音清单。
+ * 网页与 App 直接引用 eBible.org 的完整 WEBP OGG，不在本站保存音频副本。
  *
  *   npm run audio:web-en-manifest
  */
@@ -11,10 +12,7 @@ const cwd = process.cwd();
 const cuvManifestPath = path.join(cwd, "data", "bible", "cuv-chapter-audio-manifest.json");
 const outPath = path.join(cwd, "data", "bible", "web-en-chapter-audio-manifest.json");
 
-const WEB_NT = "https://theaudiopower.org/WEB/Recordings";
-const WEB_OT = "https://theaudiopower.org/WEB2/Recordings";
-
-const NAME_OVERRIDES = { PSA: "Psalms", SNG: "Song of Solomon" };
+const WEBP_OGG_BASE = "https://ebible.org/engwebp/ogg";
 
 const BOOK_NAME_EN = {
   GEN: "Genesis",
@@ -154,26 +152,34 @@ const BOOK_NUMBER = {
   REV: 66,
 };
 
-function webBookName(bookId) {
-  return NAME_OVERRIDES[bookId] ?? BOOK_NAME_EN[bookId] ?? bookId;
-}
-
-/** theaudiopower 缺章时的备用直链（公版 ebible.org 等） */
-const REMOTE_URL_OVERRIDES = {
-  "2JN-1": "https://ebible.org/webaudio/2John.mp3",
-  "3JN-1": "https://ebible.org/webaudio/3John.mp3",
-  "JUD-1": "https://ebible.org/webaudio/Jude.mp3",
-  "PHM-1": "https://ebible.org/webaudio/Philemon.mp3",
-  "OBA-1": "https://theaudiopower.org/WEB2/Recordings/Obadiah.mp3",
-};
-
 function remoteUrl(bookId, chapter) {
-  const key = `${bookId}-${chapter}`;
-  if (REMOTE_URL_OVERRIDES[key]) return REMOTE_URL_OVERRIDES[key];
   const n = BOOK_NUMBER[bookId];
-  const base = n != null && n <= 39 ? WEB_OT : WEB_NT;
-  const label = `${webBookName(bookId)} ${chapter}`;
-  return `${base}/${encodeURIComponent(label)}.mp3`;
+  if (!n) throw new Error(`Unknown WEBP book id: ${bookId}`);
+  const name = bookId === "PSA"
+    ? "Psalms"
+    : bookId === "SNG"
+      ? "SongOfSolomon"
+      : bookId === "1CH"
+        ? "1Chron"
+        : bookId === "2CH"
+          ? "2Chron"
+          : (BOOK_NAME_EN[bookId] ?? bookId).replace(/\s+/g, "");
+  const dir = `${String(n).padStart(2, "0")}_${name}`;
+  const unpaddedChapterBooks = new Set([
+    "AMO", "OBA", "JOL", "JON", "MIC", "NAM", "HAB", "ZEP", "HAG", "MAL",
+    "LAM", "GAL", "EPH", "PHP", "COL", "1TH", "2TH", "1TI", "2TI", "TIT",
+    "PHM", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD",
+  ]);
+  const chapterToken = unpaddedChapterBooks.has(bookId)
+    ? String(chapter)
+    : String(chapter).padStart(2, "0");
+  const filenamePrefix = bookId === "GAL"
+    ? "40_Galatians"
+    : bookId === "COL"
+      ? "52_Colossians"
+      : dir;
+  const separator = bookId === "JON" ? "_" : "_C";
+  return `${WEBP_OGG_BASE}/${dir}/${filenamePrefix}${separator}${chapterToken}.ogg`;
 }
 
 function main() {
@@ -192,7 +198,7 @@ function main() {
     entries.push({
       bookId,
       chapter,
-      localFilename: filename,
+      localFilename: filename.replace(/\.mp3$/i, ".ogg"),
       remoteUrl: remoteUrl(bookId, chapter),
     });
   }
@@ -201,7 +207,7 @@ function main() {
   );
   const manifest = {
     version: 1,
-    source: "theaudiopower.org WEB (NT) + WEB2 (OT)",
+    source: "eBible.org WEBP complete recording by James Toebes (official OGG, referenced directly)",
     count: entries.length,
     entries,
   };

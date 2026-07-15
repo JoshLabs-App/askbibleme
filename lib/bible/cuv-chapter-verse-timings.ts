@@ -2,12 +2,17 @@
  * 整章朗读逐节时间轴（Whisper/stable-ts 对齐）。
  * - 普通话：`/verse-timings/{BOOK}-{章}.json`（自 AskBible 同步）
  * - 潮州语新约：`/verse-timings/teochew-nt/{BOOK}-{章}.json`
- * - WEB / BBE：`/verse-timings/web-en/{BOOK}-{章}.json`
+ * - WEBP：官方 OGG 尚无匹配的逐节时间轴，播放时不套用旧 WEB 时间轴
+ * - KJV：`/verse-timings/kjv/{BOOK}-{章}.json`（与 AudioTreasure KJV 对齐）
  */
 
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
 import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
-import { translationUsesWebChapterAudio } from "@/lib/bible/web-chapter-audio";
+import {
+  translationUsesKjvChapterAudio,
+  translationUsesWebChapterAudio,
+} from "@/lib/bible/web-chapter-audio";
+import { translationUsesYouVersionChapterAudio } from "@/lib/bible/youversion-chapter-audio";
 
 export type CuvChapterVerseTiming = {
   verse: number;
@@ -32,8 +37,15 @@ export function buildChapterVerseTimingsCandidates(
 ): string[] {
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return [];
+  if (String(translationId || "").trim().toLowerCase() === "web-en") return [];
+  if (translationUsesKjvChapterAudio(translationId)) {
+    return [`/verse-timings/kjv/${id}-${chapter}.json`];
+  }
   if (translationUsesWebChapterAudio(translationId)) {
     return [`/verse-timings/web-en/${id}-${chapter}.json`];
+  }
+  if (translationUsesYouVersionChapterAudio(translationId)) {
+    return [`/verse-timings/${String(translationId || "").trim().toLowerCase()}/${id}-${chapter}.json`];
   }
   if (teochewNtVoiceActive(voiceId)) {
     return [`/verse-timings/teochew-nt/${id}-${chapter}.json`];

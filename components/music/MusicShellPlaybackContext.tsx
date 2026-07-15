@@ -46,6 +46,7 @@ import {
   writeDevicePlaybackPersisted,
 } from "@/lib/music/device-playback-storage";
 import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   resolveChapterAudioPlayableSrc,
   translationSupportsChapterAudio,
@@ -212,6 +213,7 @@ export function useMusicShellPlayback(): MusicShellPlaybackValue {
 export function MusicShellPlaybackProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
+  const { t } = useLocale();
   const { voiceId: chapterAudioVoiceId, effectiveVoiceId } = useCuvChapterAudioVoice();
   const chapterAudioVoiceRef = useRef(chapterAudioVoiceId);
   useEffect(() => {
@@ -242,6 +244,7 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
   const nonMusicHydrateLockRef = useRef(false);
   /** 避免 `currentSrc` 尚未就绪时反复 `load()` 触发 setState 风暴 */
   const lastBoundEffectiveSrcRef = useRef("");
+  const lastUnavailableKjvSrcRef = useRef("");
   const shellPlaybackRestoreRef = useRef<{
     targetSrc: string;
     timeSec: number;
@@ -836,11 +839,23 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     const onEnded = () => setPlaying(false);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
+    const onError = () => {
+      setPlaying(false);
+      const src = (a.currentSrc || a.src || "").trim();
+      if (
+        src.toLowerCase().includes("audiotreasure.com/content/kjv_at/") &&
+        lastUnavailableKjvSrcRef.current !== src
+      ) {
+        lastUnavailableKjvSrcRef.current = src;
+        window.alert(t("pages.read.chapterAudioUnavailable"));
+      }
+    };
     a.addEventListener("timeupdate", onTime);
     a.addEventListener("loadedmetadata", onMeta);
     a.addEventListener("ended", onEnded);
     a.addEventListener("play", onPlay);
     a.addEventListener("pause", onPause);
+    a.addEventListener("error", onError);
     return () => {
       if (rafId !== 0) cancelAnimationFrame(rafId);
       a.removeEventListener("timeupdate", onTime);
@@ -848,8 +863,9 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
       a.removeEventListener("ended", onEnded);
       a.removeEventListener("play", onPlay);
       a.removeEventListener("pause", onPause);
+      a.removeEventListener("error", onError);
     };
-  }, []);
+  }, [t]);
 
   /** 自动下一首 / 单轨循环（与曲库 `audioTracks` 顺序一致，末首后回到第一首） */
   useEffect(() => {
@@ -884,7 +900,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
         return;
       }
       const audioTranslationId =
-        parsed.webAudio && !translationUsesWebChapterAudio(tid) ? "web-en" : tid;
+        parsed.audioTranslationId ??
+        (parsed.webAudio && !translationUsesWebChapterAudio(tid) ? "web-en" : tid);
       const resolved = await resolveChapterAudioPlayableSrc({
         translationId: audioTranslationId,
         bookName: meta.bookName,

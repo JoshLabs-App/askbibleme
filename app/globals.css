@@ -5,6 +5,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 首页设置面板：与 iOS 的羊皮纸 ParchmentModalCard 同色同层级。 */
+.nature-home-settings-sheet {
+  gap: 9px;
+  color: #1c1410;
+  border-color: rgba(120, 53, 15, 0.42);
+}
+
+.nature-home-settings-segment,
+.nature-home-settings-select-trigger {
+  border-color: rgba(120, 53, 15, 0.3);
+  background: #f0e4d4;
+}
+
+.nature-home-settings-choice--active {
+  border-color: #d97707 !important;
+  background: rgba(255, 252, 245, 0.88) !important;
+}
+
+.nature-home-verse-effect-choice--active {
+  border-color: transparent !important;
+  background: #938d86 !important;
+}
+
+.nature-home-verse-effect-choice--active .nature-home-verse-effect-choice-label {
+  color: #fff !important;
+}
+
+.nature-home-text-scale-choice--active {
+  border-color: rgba(120, 53, 15, 0.3) !important;
+  background: rgba(255, 252, 245, 0.88) !important;
+}
+
 /* 默认品牌变量（无 data/branding.json 或未写入 inline 时生效；与读经羊皮 `--read-parchment-bg-canvas` 对齐） */
 :root {
   --brand-canvas: #ecd9b9;
@@ -392,6 +424,8 @@ html[data-app-immersive] .app-pwa-install-prompt {
   width: min(100%, 25rem);
   align-items: center;
   justify-content: center;
+  gap: 0.625rem;
+  padding-inline: 0.75rem;
 }
 
 .home-bottom-nav__side {
@@ -404,18 +438,19 @@ html[data-app-immersive] .app-pwa-install-prompt {
 
 .home-bottom-nav__side--left {
   justify-content: flex-end;
-  padding-right: 0.625rem;
+  padding-right: 0.375rem;
 }
 
 .home-bottom-nav__side--right {
   justify-content: flex-start;
-  padding-left: 0.625rem;
+  padding-left: 0.375rem;
 }
 
 .home-bottom-nav__tab {
+  position: relative;
   display: inline-flex;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3.625rem;
+  height: 3.625rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -438,33 +473,41 @@ html[data-app-immersive] .app-pwa-install-prompt {
   color: rgba(255, 255, 255, 0.95);
 }
 
+.home-bottom-nav__tab--active::after {
+  position: absolute;
+  bottom: 0.125rem;
+  width: 1.125rem;
+  height: 0.1875rem;
+  border-radius: 0.125rem;
+  background: rgba(255, 255, 255, 0.95);
+  content: "";
+}
+
 .home-bottom-nav__tab-icon {
   display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-  font-size: 1.75rem;
+  width: 2.1875rem;
+  height: 2.1875rem;
+  font-size: 2.1875rem;
   /* 轻量可读阴影：介于「全无」与旧版多层 heavy 之间，对齐 iOS shell 图标 */
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.42);
 }
 
 .home-bottom-nav__play-icon {
   display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-  font-size: 1.75rem;
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.42);
 }
 
 .home-bottom-nav__play {
   display: inline-flex;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 4rem;
+  height: 4rem;
+  margin-inline: 0.5rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   border: 0;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
@@ -485,7 +528,7 @@ html[data-app-immersive] .app-pwa-install-prompt {
 
 .home-bottom-nav__play--active {
   border-color: transparent;
-  background: transparent;
+  background: rgba(255, 177, 1, 0.16);
 }
 
 /** 宽视口兜底：横屏沉浸标记误触时仍保留主导航（与 `useLandscapeNarrow` 上沿一致） */

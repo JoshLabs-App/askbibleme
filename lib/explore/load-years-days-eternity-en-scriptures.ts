@@ -92,7 +92,7 @@ export async function loadYearsDaysEternityEnScriptureOverrides(locale: AppLocal
     for (const part of parsed.parts) {
       const chapterKey = `${parsed.bookId}:${part.chapter}`;
       if (!chapterCache.has(chapterKey)) {
-        const loaded = await loadChapterFromTranslation(cwd, parsed.bookId, part.chapter, "web-en");
+        const loaded = await loadChapterFromTranslation(cwd, parsed.bookId, part.chapter, "kjv");
         chapterCache.set(chapterKey, loaded);
       }
       const loaded = chapterCache.get(chapterKey);

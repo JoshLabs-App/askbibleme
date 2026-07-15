@@ -19,9 +19,19 @@ function usage() {
 
 if (!Number.isFinite(VERSION_CODE) || VERSION_CODE <= 0) usage();
 
+function resolveKeyPath() {
+  const envPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH?.trim();
+  if (envPath && fs.existsSync(envPath)) return envPath;
+
+  for (const rel of ["../AA/askbibleme-6e637caa2ceb.json", "../Aa/askbibleme-6e637caa2ceb.json"]) {
+    const candidate = new URL(rel, import.meta.url).pathname;
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return envPath || new URL("../AA/askbibleme-6e637caa2ceb.json", import.meta.url).pathname;
+}
+
 const keyPath =
-  process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH?.trim() ||
-  new URL("../Aa/askbibleme-6e637caa2ceb.json", import.meta.url).pathname;
+  resolveKeyPath();
 
 if (!fs.existsSync(keyPath)) {
   console.error(`Missing Google Play service account key: ${keyPath}`);
@@ -98,7 +108,7 @@ async function main() {
       releases: [{ status: "completed", versionCodes: [VERSION_CODE] }],
     }),
   });
-  await playApi(token, `/edits/${edit.id}:commit`, { method: "POST" });
+  await playApi(token, `/edits/${edit.id}:commit?changesNotSentForReview=true`, { method: "POST" });
   console.log(`Promoted versionCode ${VERSION_CODE} to Play track "${TARGET_TRACK}" (${PACKAGE}).`);
 }
 

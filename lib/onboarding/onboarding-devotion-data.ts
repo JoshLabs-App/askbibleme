@@ -59,7 +59,7 @@ const companionNeedOptionsEn: CompanionNeedOption[] = [
   {
     id: "encouragement",
     title: "I feel tired and need Scripture support",
-    description: "I do not need more explanations,\njust one reminder from God's word.",
+    description: "I do not need more explanations,\njust one reminder from God's Word.",
     icon: "heart",
   },
   {
@@ -107,18 +107,18 @@ const solutionCardsEn: SolutionCard[] = [
   {
     id: "understand_over_amount",
     title: "Understanding matters more than volume",
-    description: "With Scripture support and gentle guidance, we help you truly understand the Bible.",
+    description: "With Scripture support and gentle guidance, we help you read the Bible with understanding.",
     icon: "search",
   },
   {
     id: "return_over_perfect_plan",
-    title: "Returning to God's word matters more than perfect completion",
+    title: "Returning to God's Word matters more than perfect completion",
     description: "Start with devotional music, then continue with Scripture support whenever you return.",
     icon: "book",
   },
   {
     id: "finish_over_start",
-    title: "Finishing matters more than starting",
+    title: "Following through matters more than starting",
     description: "Keep going. We are with you. Devotional music and Scripture support help you stay steady.",
     icon: "candle",
   },

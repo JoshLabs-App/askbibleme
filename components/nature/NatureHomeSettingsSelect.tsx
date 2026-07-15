@@ -9,6 +9,7 @@ export type NatureHomeSettingsSelectOption = {
   id: string;
   label: string;
   shortLabel?: string;
+  language?: string;
 };
 
 type Props = {
@@ -109,7 +110,7 @@ export function NatureHomeSettingsSelect({
                     {opt.label}
                   </span>
                   {selected ? (
-                    <ShellMaterialIcon name="check" size={16} color="#fff" />
+                    <ShellMaterialIcon name="check" size={16} color="#d97707" />
                   ) : (
                     <span className="w-4 shrink-0" aria-hidden />
                   )}
@@ -142,15 +143,15 @@ export function NatureHomeSettingsSelect({
           aria-label={accessibilityLabel}
           onClick={() => onOpenChange(!open)}
           className={[
-            "flex min-h-[34px] w-full items-center justify-between gap-0.5 rounded-[7px] border border-zinc-600 bg-zinc-800 px-2 py-1.5 text-left transition",
-            disabled ? "opacity-35" : "hover:bg-zinc-700/80 active:bg-zinc-700",
+            "nature-home-settings-select-trigger flex min-h-[38px] w-full items-center justify-between gap-0.5 rounded-[9px] border px-3 py-1.5 text-left transition",
+            disabled ? "opacity-35" : "",
           ].join(" ")}
         >
-          <span className="min-w-0 flex-1 truncate text-[11px] text-white/90">{display}</span>
+          <span className="min-w-0 flex-1 truncate text-[14px] text-[#1c1410]">{display}</span>
           <ShellMaterialIcon
             name={open ? "expand_less" : "expand_more"}
             size={18}
-            color={disabled ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.72)"}
+            color={disabled ? "rgba(28,20,16,0.35)" : "#6e5240"}
           />
         </button>
       </div>

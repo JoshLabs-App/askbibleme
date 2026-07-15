@@ -23,6 +23,7 @@ import {
   buildExternalWebChapterAudioUrl,
   buildLocalWebChapterAudioUrl,
   isWebChapterAudioSelfHosted,
+  translationUsesKjvChapterAudio,
   translationUsesWebChapterAudio,
 } from "@/lib/bible/web-chapter-audio";
 
@@ -35,6 +36,7 @@ export function chapterAudioRequiresSelfHostedOnly(args: {
   if (teochewNtVoiceActive(args.voiceId ?? "mandarin")) {
     return isCuvChapterAudioSelfHosted();
   }
+  if (translationUsesKjvChapterAudio(args.translationId)) return false;
   if (translationUsesWebChapterAudio(args.translationId)) {
     return isWebChapterAudioSelfHosted();
   }

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf .next node_modules/.cache",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prebuild": "node scripts/write-app-build-meta.mjs && node node_modules/tsx/dist/cli.mjs scripts/build-bible-sqlite-from-json.ts",
     "dev": "node scripts/write-app-build-meta.mjs --dev && node scripts/write-next-devtools-config.mjs && next dev --turbopack -p 3450",
     "dev:hot": "node scripts/write-app-build-meta.mjs --dev && node scripts/write-next-devtools-config.mjs && next dev --turbopack -p 3450",
@@ -39,6 +41,8 @@
     "build:speech-spans:ai-gospels": "tsx scripts/build-speech-spans-ai-gospels.ts",
     "build:speech-spans:reset-gospels": "tsx scripts/reset-gospel-speech-overrides.ts",
     "build:bible-sqlite": "tsx scripts/build-bible-sqlite-from-json.ts",
+    "bible:import:webp": "node scripts/import-webp-usfx.mjs",
+    "bible:normalize:cuv-simp": "node scripts/normalize-cuv-simplified-orthography.mjs",
     "build:scripture-xrefs": "tsx scripts/build-scripture-xrefs-sqlite.ts",
     "migrate:askbible-admin-emails": "node scripts/migration/askbible-admin-export.mjs",
     "migrate:askbible-users-to-supabase": "node scripts/migration/askbible-users-to-supabase.mjs",
@@ -62,12 +66,14 @@
     "audio:hakka-pull-all-batches": "node scripts/pull-hakka-audio-all-batches.mjs",
     "audio:verse-timings-sync": "node scripts/sync-cuv-verse-timings.mjs",
     "audio:cuv-v20-timings": "node scripts/generate-cuv-v20-verse-timings.mjs",
+    "audio:kjv-timings": "scripts/whisper-env/bin/python scripts/generate-kjv-verse-timings.py",
+    "audio:kjv-timings-validate": "node scripts/validate-kjv-verse-timings.mjs",
     "audio:teochew-timings": "node scripts/generate-teochew-nt-verse-timings.mjs",
+    "audio:youversion-timings": "tsx scripts/generate-youversion-verse-timings.ts",
     "audio:web-en-manifest": "node scripts/build-web-en-audio-manifest.mjs",
-    "audio:web-en-pull": "node scripts/pull-web-en-audio.mjs",
     "audio:blm-es-manifest": "node scripts/build-blm-es-audio-manifest.mjs",
     "audio:blm-es-pull": "node scripts/pull-blm-es-audio.mjs",
-    "audio:web-en-timings": "node scripts/generate-web-en-verse-timings.mjs",
+    "audio:golden-verse-generate": "tsx scripts/generate-golden-verse-audio.ts",
     "info-edition:sync-disk": "node scripts/sync-info-edition-published-to-data-root.mjs",
     "info-edition:batch": "NODE_ENV=development NODE_OPTIONS='--require ./scripts/register-server-only.cjs' tsx scripts/batch-info-edition-volumes.ts",
     "info-edition:batch:genesis": "NODE_ENV=development INFO_EDITION_BATCH_BOOK_START=GEN INFO_EDITION_BATCH_BOOK_END=GEN INFO_EDITION_BATCH_EDITIONS=info,guide NODE_OPTIONS='--require ./scripts/register-server-only.cjs' tsx scripts/batch-info-edition-volumes.ts",
@@ -170,7 +176,8 @@
     "@types/react-dom": "^19.0.0",
     "eas-cli": "^16.28.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.3.0"
+    "eslint-config-next": "^15.3.0",
+    "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=22.0.0 <23.0.0"

@@ -1,0 +1,8 @@
+appId: me.askbible
+---
+- openLink: askbible://
+- waitForAnimationToEnd
+- tapOn:
+    point: "90%, 11%"
+- waitForAnimationToEnd
+- takeScreenshot: home-settings-no-download-error

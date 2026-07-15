@@ -15,13 +15,18 @@ const FHL_UNVDAVID = /media\.fhl\.net\/unvdavid\/(\d{1,2})\/\1_(\d{3})\.mp3(\?|#
 
 const BOOK_ID_RE = /^[A-Z0-9]{2,8}$/;
 const BID_TO_BOOK_ID = new Map(scriptureBooks.map((b) => [b.bookNumber, b.bookId]));
+const KJV_AUDIOTREASURE = /audiotreasure\.com\/content\/KJV_AT\/(\d{2})_?.*?(\d{3})\.mp3(?:\?|#|$)/i;
+const KJV_AUDIOTREASURE_SINGLE_CHAPTER =
+  /audiotreasure\.com\/content\/KJV_AT\/(57|63|64|65)_[^/]+\.mp3(?:\?|#|$)/i;
 
 export type ParsedCuvChapterAudioSrc = {
   bookId: string;
   chapter: number;
   voiceId: CuvChapterAudioVoiceId;
-  /** WEB 音轨（web-en / bbe-en）；否则为和合本/潮州 */
+  /** 英文音轨；否则为和合本/潮州。 */
   webAudio?: boolean;
+  /** 音频实际对应的译本；用于连续播放时保持同一录音版本。 */
+  audioTranslationId?: string;
 };
 
 function parseLocalBookChapter(
@@ -68,6 +73,22 @@ export function tryParseCuvChapterAudioEffectiveSrc(src: string): ParsedCuvChapt
     const bookId = BID_TO_BOOK_ID.get(bid);
     if (!bookId) return null;
     return parseLocalBookChapter(bookId, chapter, "mandarin");
+  }
+
+  const kjv = s.match(KJV_AUDIOTREASURE);
+  if (kjv) {
+    const bookId = BID_TO_BOOK_ID.get(Number(kjv[1]));
+    if (!bookId) return null;
+    const parsed = parseLocalBookChapter(bookId, Number(kjv[2]), "mandarin", true);
+    return parsed ? { ...parsed, audioTranslationId: "kjv" } : null;
+  }
+
+  const kjvSingleChapter = s.match(KJV_AUDIOTREASURE_SINGLE_CHAPTER);
+  if (kjvSingleChapter) {
+    const bookId = BID_TO_BOOK_ID.get(Number(kjvSingleChapter[1]));
+    if (!bookId) return null;
+    const parsed = parseLocalBookChapter(bookId, 1, "mandarin", true);
+    return parsed ? { ...parsed, audioTranslationId: "kjv" } : null;
   }
 
   if (s.includes("theaudiopower.org/WEB/") || s.includes("theaudiopower.org/WEB2/")) {

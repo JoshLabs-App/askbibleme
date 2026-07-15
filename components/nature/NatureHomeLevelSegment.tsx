@@ -28,7 +28,7 @@ export function NatureHomeLevelSegment({
 
   return (
     <div
-      className="inline-flex rounded-[7px] bg-zinc-800 p-0.5"
+      className="nature-home-settings-segment flex w-full rounded-[9px] border p-[3px]"
       role="radiogroup"
       aria-label={ariaLabel}
     >
@@ -43,14 +43,14 @@ export function NatureHomeLevelSegment({
             aria-label={`${ariaLabel} ${level}`}
             onClick={() => onSelect(allowToggleOff && isOn ? 0 : level)}
             className={[
-              "flex h-[30px] w-[34px] shrink-0 items-center justify-center rounded-[5px] border-0 bg-transparent p-0 transition",
-              isOn ? "bg-zinc-600" : "hover:bg-zinc-700/60",
+              "flex min-h-[36px] flex-1 items-center justify-center rounded-[7px] border border-transparent bg-transparent p-0 transition",
+              isOn ? "nature-home-settings-choice--active" : "",
             ].join(" ")}
           >
             <ShellMaterialIcon
               name={iconForLevel(level)}
               size={17}
-              color={isOn ? "#fff" : "rgba(255,255,255,0.5)"}
+              color={isOn ? "#1c1410" : "#6e5240"}
             />
           </button>
         );

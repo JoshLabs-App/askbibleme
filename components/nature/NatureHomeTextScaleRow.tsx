@@ -38,16 +38,16 @@ export function NatureHomeTextScaleRow({ panelOpen = false, onPrefsChanged }: Pr
   };
 
   const btn =
-    "flex h-[30px] w-[34px] shrink-0 items-center justify-center rounded-[5px] border-0 bg-zinc-600 text-slate-100 transition disabled:opacity-35";
+    "flex min-h-[36px] flex-1 items-center justify-center rounded-[7px] border border-transparent bg-transparent text-[#1c1410] transition disabled:opacity-50";
 
   return (
-    <div className="inline-flex items-center gap-1" aria-label={scaleA11y}>
+    <div className="nature-home-settings-segment flex w-full items-center rounded-[9px] border p-[3px]" aria-label={scaleA11y}>
       <button
         type="button"
         disabled={atDefault}
         aria-label={t("nature.textScaleDefaultAria")}
         onClick={() => applyIndex(NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX)}
-        className={`${btn} ${atDefault ? "border border-zinc-500 bg-zinc-500" : ""}`}
+        className={`${btn} ${atDefault ? "nature-home-text-scale-choice--active" : ""}`}
       >
         <span className="text-[15px] font-semibold leading-none">T</span>
       </button>
@@ -56,7 +56,7 @@ export function NatureHomeTextScaleRow({ panelOpen = false, onPrefsChanged }: Pr
         disabled={atSuperLarge}
         aria-label={t("nature.homeSettings.textScaleSuperAria")}
         onClick={() => applyIndex(NATURE_HOME_SUPER_LARGE_TEXT_SCALE_INDEX)}
-        className={`${btn} ${atSuperLarge ? "border border-zinc-500 bg-zinc-500" : ""}`}
+        className={`${btn} ${atSuperLarge ? "nature-home-text-scale-choice--active" : ""}`}
       >
         <span className="text-[18px] font-bold leading-none tracking-wide">T</span>
       </button>
@@ -67,7 +67,7 @@ export function NatureHomeTextScaleRow({ panelOpen = false, onPrefsChanged }: Pr
         onClick={() => applyIndex(Math.max(0, scaleIndex - 1))}
         className={btn}
       >
-        <span className="text-[20px] font-semibold leading-none">−</span>
+        <span className="relative -top-px text-[17px] font-semibold leading-none">−</span>
       </button>
       <button
         type="button"
@@ -76,7 +76,7 @@ export function NatureHomeTextScaleRow({ panelOpen = false, onPrefsChanged }: Pr
         onClick={() => applyIndex(Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, scaleIndex + 1))}
         className={btn}
       >
-        <span className="text-[20px] font-semibold leading-none">+</span>
+        <span className="text-[18px] font-semibold leading-none">+</span>
       </button>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -26,9 +27,14 @@ export type HomePrayerVerseFeedContextValue = {
   verseKeys: string[] | undefined;
   homeVerseStableMs: number;
   onVerseCommitted: (key: string) => void;
+  onVerseAudioCompleted: (key: string, feedIndex: number) => void;
   onNearEnd: (index: number, total: number) => void;
   activeIndex: number;
   homeVerseVisible: boolean;
+  verseAudioSequenceActive: boolean;
+  setVerseAudioSequenceActive: (active: boolean) => void;
+  advanceVerseNow: () => Promise<void>;
+  advanceVerseAudioNow: () => void;
 };
 
 const HomePrayerVerseFeedContext = createContext<HomePrayerVerseFeedContextValue | null>(null);
@@ -65,7 +71,7 @@ export function HomePrayerVerseFeedProvider({ fallbackByLocale, children }: Prov
 
 function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: ProviderProps) {
   const { locale } = useLocale();
-  const { entriesByLocale, bilingual, verseKeys, homeVerseStableMs, onVerseCommitted, onNearEnd } =
+  const { entriesByLocale, bilingual, verseKeys, homeVerseStableMs, onVerseCommitted, onVerseAudioCompleted, onNearEnd } =
     useHomePrayerVerseFeed({
       fallbackByLocale,
       locale,
@@ -73,6 +79,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
+  const [verseAudioSequenceActive, setVerseAudioSequenceActive] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const natureHomeVerseTimingOverride = useSyncExternalStore(
     subscribeNatureHomeVerseTimingOverride,
@@ -90,6 +97,23 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
 
   const nearEndIndex = Math.min(activeIndex, Math.max(0, nVerses - 1));
 
+  const advanceVerseNow = useCallback(async () => {
+    if (nVerses <= 1) return;
+    const baseFadeMs = natureHomeVerseTimingOverride?.fadeMs ?? HOME_VERSE_FADE_MS;
+    const fadeMs = prefersReducedMotion ? Math.min(800, baseFadeMs) : baseFadeMs;
+    setHomeVerseVisible(false);
+    await new Promise<void>((resolve) => window.setTimeout(resolve, fadeMs));
+    setActiveIndex((i) => (i + 1) % nVerses);
+    requestAnimationFrame(() => setHomeVerseVisible(true));
+  }, [nVerses, natureHomeVerseTimingOverride?.fadeMs, prefersReducedMotion]);
+
+  /** 连续听读不插入人为停顿；音频结束后立即进入固定流下一节。 */
+  const advanceVerseAudioNow = useCallback(() => {
+    if (nVerses <= 1) return;
+    setActiveIndex((i) => (i + 1) % nVerses);
+    setHomeVerseVisible(true);
+  }, [nVerses]);
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setPrefersReducedMotion(mq.matches);
@@ -99,7 +123,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   }, []);
 
   useEffect(() => {
-    if (nVerses <= 1) return;
+    if (nVerses <= 1 || verseAudioSequenceActive) return;
 
     let cancelled = false;
     let tid: number | undefined;
@@ -124,7 +148,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       cancelled = true;
       if (tid !== undefined) window.clearTimeout(tid);
     };
-  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride?.fadeMs, homeVerseStableMs]);
+  }, [prefersReducedMotion, locale, bilingual, nVerses, verseKeysSig, natureHomeVerseTimingOverride?.fadeMs, homeVerseStableMs, verseAudioSequenceActive]);
 
   useEffect(() => {
     setActiveIndex((i) => Math.min(i, Math.max(0, nVerses - 1)));
@@ -134,7 +158,7 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
     setActiveIndex(0);
     setHomeVerseVisible(true);
     lastCommittedIndex.current = -1;
-  }, [locale, verseKeysSig, bilingual]);
+  }, [locale, bilingual, verseKeys?.[0]]);
 
   useEffect(() => {
     if (!verseKeys?.length) return;
@@ -157,9 +181,14 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       verseKeys,
       homeVerseStableMs,
       onVerseCommitted,
+      onVerseAudioCompleted,
       onNearEnd,
       activeIndex,
       homeVerseVisible,
+      verseAudioSequenceActive,
+      setVerseAudioSequenceActive,
+      advanceVerseNow,
+      advanceVerseAudioNow,
     }),
     [
       entriesByLocale,
@@ -167,9 +196,13 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
       verseKeys,
       homeVerseStableMs,
       onVerseCommitted,
+      onVerseAudioCompleted,
       onNearEnd,
       activeIndex,
       homeVerseVisible,
+      verseAudioSequenceActive,
+      advanceVerseNow,
+      advanceVerseAudioNow,
     ],
   );
 

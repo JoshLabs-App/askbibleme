@@ -278,7 +278,7 @@ function enAllQuotedSpans(text: string): DivineSpeechSpan[] {
 function heuristicLocale(translationId: string): "zh" | "en" | null {
   const id = String(translationId || "").toLowerCase().trim();
   if (id === "cuv-simp" || id === "cuv-trad" || id.includes("cuv")) return "zh";
-  if (id === "web-en" || id === "bbe-en") return "en";
+  if (id === "kjv" || id === "web-en" || id === "bbe-en") return "en";
   return null;
 }
 

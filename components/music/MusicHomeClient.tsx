@@ -829,6 +829,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                     <MusicHomeAlbumIconGlyph
                       kind={icon}
                       color={selected && swatch ? swatch : undefined}
+                      className="h-[30px] w-[30px]"
                     />
                   </button>
                 );
@@ -860,6 +861,26 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                     setSeekDragging(false);
                   }}
                 />
+                <button
+                  type="button"
+                  className={[
+                    "music-home-icon-btn",
+                    "music-home-icon-btn--play",
+                    playing ? "music-home-icon-btn--on" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  aria-label={playing ? t("playback.pauseMusic") : t("playback.playMusic")}
+                  aria-pressed={playing}
+                  disabled={!canPlay}
+                  onClick={() => void togglePlayMusic()}
+                >
+                  {playing ? (
+                    <IconPause className="music-home-play-icon" />
+                  ) : (
+                    <IconPlay className="music-home-play-icon" />
+                  )}
+                </button>
                 <div
                   className={[
                     "music-home-controls",
@@ -875,26 +896,6 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
                     onClick={onPrev}
                   >
                     <IconSkipPrev />
-                  </button>
-                  <button
-                    type="button"
-                    className={[
-                      "music-home-icon-btn",
-                      "music-home-icon-btn--play",
-                      playing ? "music-home-icon-btn--on" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    aria-label={playing ? t("playback.pauseMusic") : t("playback.playMusic")}
-                    aria-pressed={playing}
-                    disabled={!canPlay}
-                    onClick={() => void togglePlayMusic()}
-                  >
-                    {playing ? (
-                      <IconPause className="music-home-play-icon" />
-                    ) : (
-                      <IconPlay className="music-home-play-icon" />
-                    )}
                   </button>
                   <button
                     type="button"

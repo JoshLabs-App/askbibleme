@@ -1,102 +1,102 @@
 [
   {
     "verse": 1,
-    "start": 7.05,
-    "end": 28.4
+    "start": 5.72,
+    "end": 28.98
   },
   {
     "verse": 2,
-    "start": 28.4,
-    "end": 36.18
+    "start": 28.98,
+    "end": 36.43
   },
   {
     "verse": 3,
-    "start": 36.18,
-    "end": 53.04
+    "start": 36.43,
+    "end": 53.21
   },
   {
     "verse": 4,
-    "start": 53.04,
-    "end": 62.4
+    "start": 53.21,
+    "end": 62.11
   },
   {
     "verse": 5,
-    "start": 62.4,
-    "end": 80.36
+    "start": 62.11,
+    "end": 80.47
   },
   {
     "verse": 6,
-    "start": 80.36,
-    "end": 95.4
+    "start": 80.47,
+    "end": 95.07
   },
   {
     "verse": 7,
-    "start": 95.4,
-    "end": 109.74
+    "start": 95.07,
+    "end": 109.43
   },
   {
     "verse": 8,
-    "start": 109.74,
-    "end": 126.3
+    "start": 109.43,
+    "end": 126.24
   },
   {
     "verse": 9,
-    "start": 126.3,
-    "end": 136.76
+    "start": 126.24,
+    "end": 136.95
   },
   {
     "verse": 10,
-    "start": 136.76,
-    "end": 143.3
+    "start": 136.95,
+    "end": 143.44
   },
   {
     "verse": 11,
-    "start": 143.3,
-    "end": 158.6
+    "start": 143.44,
+    "end": 158.42
   },
   {
     "verse": 12,
-    "start": 158.6,
-    "end": 165.76
+    "start": 158.42,
+    "end": 166.0
   },
   {
     "verse": 13,
-    "start": 165.76,
-    "end": 174.12
+    "start": 166.0,
+    "end": 174.02
   },
   {
     "verse": 14,
-    "start": 174.12,
-    "end": 193.2
+    "start": 174.02,
+    "end": 192.88
   },
   {
     "verse": 15,
-    "start": 193.2,
-    "end": 201.7
+    "start": 192.88,
+    "end": 201.53
   },
   {
     "verse": 16,
-    "start": 201.7,
-    "end": 212.54
+    "start": 201.53,
+    "end": 211.73
   },
   {
     "verse": 17,
-    "start": 212.54,
-    "end": 228.94
+    "start": 211.73,
+    "end": 229.07
   },
   {
     "verse": 18,
-    "start": 228.94,
-    "end": 240.58
+    "start": 229.07,
+    "end": 240.34
   },
   {
     "verse": 19,
-    "start": 240.58,
-    "end": 263.48
+    "start": 240.34,
+    "end": 263.67
   },
   {
     "verse": 20,
-    "start": 263.48,
+    "start": 263.67,
     "end": 277.58
   }
 ]

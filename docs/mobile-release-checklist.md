@@ -37,6 +37,7 @@ Default release order follows repository rules: iOS first, Android second.
   - Render live check: `npm run mobile:release:preflight -- --strict --base-url=https://askbible.me`
 - Required production env:
   - `DATA_ROOT` (Render persistent disk mount path)
+  - `ESV_API_KEY` (Crossway ESV online text; server-side only)
   - `ASC_API_KEY_PATH` (iOS 签名 + 上传)
   - `GOOGLE_SERVICE_ACCOUNT_KEY_PATH` (Android submit)
 

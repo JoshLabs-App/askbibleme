@@ -7,9 +7,220 @@ import type { BibleTranslationMeta, BibleTranslationsIndex } from "../bible/tran
 const CATALOG_CACHE_KEY = "askbible.mobile.bible-translations-catalog.v1";
 const CATALOG_CACHE_TTL_MS = 60_000;
 const REMOTE_CATALOG_BASE = "https://askbible.me";
+const EXCLUDED_TRANSLATION_IDS = new Set(["heb-leningrad"]);
 
 const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
   translations: [
+    {
+      id: "ccb-zh-hans",
+      labelZh: "当代译本（简体）",
+      labelEn: "Contemporary Chinese Bible (Simplified)",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "36",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "ccb-zh-hant",
+      labelZh: "當代譯本（繁體）",
+      labelEn: "Contemporary Chinese Bible (Traditional)",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "1392",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "cnv-zh-hant",
+      labelZh: "新譯本（繁體）",
+      labelEn: "Chinese New Version (Traditional)",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "40",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "cnvs-zh-hans",
+      labelZh: "新译本（简体）",
+      labelEn: "Chinese New Version (Simplified)",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "41",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "csbs-zh-hans",
+      labelZh: "中文标准译本（简体）",
+      labelEn: "Chinese Standard Bible (Simplified)",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "43",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "csbt-zh-hant",
+      labelZh: "中文標準譯本（繁體）",
+      labelEn: "Chinese Standard Bible (Traditional)",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "312",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "rcuv-zh-hant",
+      labelZh: "和合本修訂版",
+      labelEn: "Revised Chinese Union Version",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "139",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "rcuvss-zh-hans",
+      labelZh: "和合本修订版",
+      labelEn: "Revised Chinese Union Version (Simplified)",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "140",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "cunp-zh-hant",
+      labelZh: "新標點和合本, 神版",
+      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "46",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "cunp-zh-hant-god",
+      labelZh: "新標點和合本, 上帝版",
+      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "414",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "cunpss-zh-hant",
+      labelZh: "新標點和合本, 上帝版",
+      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "47",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "cunpss-zh-hans",
+      labelZh: "新标点和合本, 神版",
+      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "2224",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "feb-zh-hans",
+      labelZh: "免费的易读圣经",
+      labelEn: "Free Easy-to-Read Bible",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "3354",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "mandarin-zh-hans",
+      labelZh: "普通话本",
+      labelEn: "Mandarin Bible",
+      language: "zh-Hans",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "3780",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "rcv-zh-hant",
+      labelZh: "恢復本（繁體）",
+      labelEn: "Recovery Version Traditional Chinese",
+      language: "zh-Hant",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "4230",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
     {
       id: "cuv-simp",
       labelZh: "和合本（简体）",
@@ -25,9 +236,66 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
       bundled: true,
     },
     {
-      id: "web-en",
-      labelZh: "WEB 英译本",
-      labelEn: "World English Bible",
+      id: "niv",
+      labelZh: "NIV 英文新国际版",
+      labelEn: "New International Version (NIV)",
+      language: "en",
+      bundled: false,
+      downloadUrl: null,
+      provider: "youversion",
+      remoteId: "111",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "esv",
+      labelZh: "ESV 英文标准版",
+      labelEn: "English Standard Version (ESV)",
+      language: "en",
+      bundled: false,
+      downloadUrl: null,
+      provider: "esv",
+      remoteId: null,
+      delivery: "chapter-api",
+      enabled: true,
+      copyright:
+        "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 Crossway.",
+      publisherUrl: "https://www.esv.org",
+    },
+    {
+      id: "nlt",
+      labelZh: "NLT 现代英语译本",
+      labelEn: "New Living Translation (NLT)",
+      language: "en",
+      bundled: false,
+      downloadUrl: null,
+      provider: "api-bible",
+      remoteId: "d6e14a625393b4da-01",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "nkjv",
+      labelZh: "NKJV 新钦定版",
+      labelEn: "New King James Version (NKJV)",
+      language: "en",
+      bundled: false,
+      downloadUrl: null,
+      provider: "api-bible",
+      remoteId: "63097d2a0a2f7db3-01",
+      delivery: "chapter-api",
+      enabled: true,
+      copyright: null,
+      publisherUrl: null,
+    },
+    {
+      id: "kjv",
+      labelZh: "KJV 英文钦定本",
+      labelEn: "King James Version (KJV)",
       language: "en",
       bundled: true,
     },
@@ -40,6 +308,36 @@ type CachedCatalog = {
   index: BibleTranslationsIndex;
   baseUrl?: string;
 };
+
+function mergeCatalogIndices(
+  ...indices: Array<BibleTranslationsIndex | null | undefined>
+): BibleTranslationsIndex {
+  const merged = new Map<string, BibleTranslationMeta>();
+  let defaultTranslationId: string | null = null;
+
+  for (const index of indices) {
+    if (!index) continue;
+    if (!defaultTranslationId && index.defaultTranslationId) {
+      defaultTranslationId = index.defaultTranslationId;
+    }
+    for (const item of index.translations) {
+      const id = String(item?.id || "").trim();
+      if (!id) continue;
+      merged.set(id, { ...item, id });
+    }
+  }
+
+  const translations = [...merged.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const resolvedDefault =
+    defaultTranslationId && translations.some((item) => item.id === defaultTranslationId)
+      ? defaultTranslationId
+      : translations[0]?.id ?? "cuv-simp";
+
+  return {
+    translations,
+    defaultTranslationId: resolvedDefault,
+  };
+}
 
 function isCatalogShape(raw: unknown): raw is BibleTranslationsIndex {
   if (!raw || typeof raw !== "object") return false;
@@ -55,7 +353,9 @@ function normalizeCatalog(raw: unknown, catalogBaseUrl: string): BibleTranslatio
   if (!isCatalogShape(raw)) return null;
   const translations = raw.translations
     .filter((t): t is BibleTranslationMeta => Boolean(t?.id))
+    .filter((t) => !EXCLUDED_TRANSLATION_IDS.has(String(t.id).trim()))
     .map((t) => ({
+      ...(t as BibleTranslationMeta),
       id: String(t.id).trim(),
       labelZh: String(t.labelZh || "").trim(),
       labelEn: String(t.labelEn || "").trim(),
@@ -92,7 +392,7 @@ async function readCachedCatalog(maxAgeMs?: number): Promise<BibleTranslationsIn
     if (maxAgeMs != null && Date.now() - parsed.fetchedAt > maxAgeMs) return null;
     const normalized = normalizeCatalog(parsed.index, parsed.baseUrl || REMOTE_CATALOG_BASE);
     if (isSparseCatalog(normalized)) return null;
-    return normalized;
+    return mergeCatalogIndices(OFFLINE_BUNDLED_INDEX, normalized);
   } catch {
     return null;
   }
@@ -119,9 +419,9 @@ function remoteCatalogUrls(): string[] {
       if (!urls.includes(url)) urls.push(url);
     }
   };
-  addBase(REMOTE_CATALOG_BASE);
   const configured = getAskBibleBaseUrl();
   if (!/askbible\.me/i.test(configured)) addBase(configured);
+  addBase(REMOTE_CATALOG_BASE);
   return urls;
 }
 
@@ -142,8 +442,9 @@ async function fetchRemoteCatalogOnce(): Promise<BibleTranslationsIndex | null> 
       }
       const normalized = normalizeCatalog(json, catalogBase);
       if (normalized && !isSparseCatalog(normalized)) {
-        await writeCachedCatalog(normalized, catalogBase);
-        return normalized;
+        const merged = mergeCatalogIndices(OFFLINE_BUNDLED_INDEX, normalized);
+        await writeCachedCatalog(merged, catalogBase);
+        return merged;
       }
     } catch {
       /* try next */
@@ -163,18 +464,18 @@ async function fetchRemoteCatalog(): Promise<BibleTranslationsIndex | null> {
   return null;
 }
 
-/** 同步内置译本表（离线兜底：仅 3 个默认译本） */
+/** 同步内置译本表（离线兜底：保留中文前两项 + 常用英文译本） */
 export function bundledBibleTranslationsCatalog(): BibleTranslationsIndex {
   return OFFLINE_BUNDLED_INDEX;
 }
 
-/** 优先拉 askbible.me 全量目录；离线时回退内置 3 译本。 */
+/** 优先拉 askbible.me 全量目录；离线时回退内置目录。 */
 export async function fetchBibleTranslationsCatalog(): Promise<BibleTranslationsIndex> {
   const cached = await readCachedCatalog(CATALOG_CACHE_TTL_MS);
   if (cached) return cached;
 
   const remote = await fetchRemoteCatalog();
-  if (remote) return remote;
+  if (remote) return mergeCatalogIndices(OFFLINE_BUNDLED_INDEX, remote);
 
   return OFFLINE_BUNDLED_INDEX;
 }
@@ -182,13 +483,13 @@ export async function fetchBibleTranslationsCatalog(): Promise<BibleTranslations
 /** 资源更新检查：跳过短缓存，尽量拉最新目录。 */
 export async function fetchBibleTranslationsCatalogFresh(): Promise<BibleTranslationsIndex> {
   const remote = await fetchRemoteCatalog();
-  if (remote) return remote;
+  if (remote) return mergeCatalogIndices(OFFLINE_BUNDLED_INDEX, remote);
   const cached = await readCachedCatalog();
   if (cached) return cached;
   return OFFLINE_BUNDLED_INDEX;
 }
 
-/** 清除可能只含内置 3 译本的旧缓存（升级目录拉取逻辑后一次性修复）。 */
+/** 清除可能只含旧目录的缓存（升级目录拉取逻辑后一次性修复）。 */
 export async function clearBibleTranslationsCatalogCache(): Promise<void> {
   try {
     await AsyncStorage.removeItem(CATALOG_CACHE_KEY);

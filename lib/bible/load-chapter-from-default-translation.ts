@@ -3,6 +3,11 @@ import { loadedChapterVerseFromRow, type LoadedChapterVerse } from "@/lib/bible/
 import type { ChapterSegment } from "@/lib/bible/load-chapter-segments";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getScriptureDatabase, scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
+import { resolveBibleTranslationMeta } from "@/lib/bible/providers/registry";
+import { loadApiBibleChapterRows } from "@/lib/bible/providers/api-bible";
+import { loadEsvChapterRows } from "@/lib/bible/providers/esv";
+import { loadYouVersionChapterRows } from "@/lib/bible/providers/youversion";
+import { translationUsesYouVersionChapterAudio } from "@/lib/bible/youversion-chapter-audio";
 import { readTranslationsIndexSync, resolveTranslationAbsolutePath } from "@/lib/bible/translations-store";
 import { SELAH_BIBLE_FORMAT, type BibleTranslationMeta } from "@/lib/bible/translations-types";
 
@@ -46,6 +51,11 @@ function loadedChapterFromParts(
     verses,
   };
 }
+
+type RemoteChapterLoadResult = {
+  verses: Array<{ verse: number; text: string }>;
+  segments?: ChapterSegment[] | null;
+};
 
 async function loadChapterFromSqlite(
   cwd: string,
@@ -123,6 +133,33 @@ function loadChapterFromJsonSync(
   return loadedChapterFromParts(tid, meta, bookId, bookName, ch, verses);
 }
 
+async function loadChapterFromRemoteProvider(
+  meta: BibleTranslationMeta,
+  bookId: string,
+  chapter: number,
+): Promise<RemoteChapterLoadResult | null> {
+  if (translationUsesYouVersionChapterAudio(meta.id)) {
+    const verses = await loadYouVersionChapterRows(meta, bookId, chapter);
+    if (verses?.length) return { verses };
+  }
+  if (meta.provider === "api-bible") {
+    const verses = await loadApiBibleChapterRows(meta, bookId, chapter);
+    if (!verses?.length) return null;
+    return { verses };
+  }
+  if (meta.provider === "esv") {
+    const verses = await loadEsvChapterRows(meta, bookId, chapter);
+    if (!verses?.length) return null;
+    return { verses };
+  }
+  if (meta.provider === "youversion") {
+    const verses = await loadYouVersionChapterRows(meta, bookId, chapter);
+    if (!verses?.length) return null;
+    return { verses };
+  }
+  return null;
+}
+
 /**
  * 从指定译本读取一章（服务端）：优先 `data/bible/sqlite/{id}.sqlite`，否则回退 `uploads/{id}.json`。
  */
@@ -140,9 +177,38 @@ export async function loadChapterFromTranslation(
   const ch = Number(chapter);
   if (!Number.isInteger(ch) || ch < 1 || ch > bookMeta.chapters) return null;
 
-  const index = readTranslationsIndexSync(cwd);
-  const meta = index.translations.find((t) => t.id === tid);
+  const meta = resolveBibleTranslationMeta(cwd, tid);
   if (!meta) return null;
+  if (meta.enabled === false) return null;
+
+  if (meta.provider && meta.provider !== "local") {
+    const remote = await loadChapterFromRemoteProvider(meta, id, ch);
+    if (remote?.verses?.length) {
+      const verses = remote.verses
+        .map((row) =>
+          loadedChapterVerseFromRow({
+            verse: row.verse,
+            text: row.text,
+            speech_spans: "",
+            flags: 0,
+            theme_repeat_count: 0,
+          }),
+        )
+        .filter((row): row is LoadedChapterVerse => row != null);
+      if (verses.length > 0) {
+        return {
+          translationId: tid,
+          labelZh: meta.labelZh,
+          labelEn: meta.labelEn,
+          bookId: id,
+          bookName: bookMeta.bookName,
+          chapter: ch,
+          verses,
+          segments: remote.segments ?? undefined,
+        };
+      }
+    }
+  }
 
   if (fs.existsSync(scriptureSqlitePath(cwd, tid))) {
     const fromSql = await loadChapterFromSqlite(cwd, tid, id, ch, meta, bookMeta.bookName);

@@ -71,6 +71,7 @@ async function main() {
   }
 
   optionalEnv("INFO_EDITION_DISK_SAVE", "Set to 1 when enabling online info-edition generation.");
+  optionalEnv("ESV_API_KEY", "Required on Render for the ESV online Bible version.");
   optionalEnv("ASC_API_KEY_PATH", "Required for iOS EAS submit from CI/local release terminal.");
   optionalEnv("GOOGLE_SERVICE_ACCOUNT_KEY_PATH", "Required for Android Play EAS submit.");
 
@@ -91,6 +92,10 @@ async function main() {
     await checkEndpoint(`${normalizedBaseUrl}/api/mobile/content/manifest`, "Mobile content manifest");
     await checkEndpoint(`${normalizedBaseUrl}/api/mobile/resource-pack/nature/manifest`, "Nature manifest");
     await checkEndpoint(`${normalizedBaseUrl}/api/music/companion`, "Music companion");
+    await checkEndpoint(
+      `${normalizedBaseUrl}/api/read/chapter?translationId=esv&bookId=JHN&chapter=3`,
+      "ESV chapter endpoint",
+    );
   } else {
     addWarning("No --base-url provided; skipped live endpoint checks.");
   }

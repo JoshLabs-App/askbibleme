@@ -9,6 +9,18 @@ export type BibleTranslationMeta = {
   updatedAt: string;
   bytes: number;
   verseCount: number;
+  /** 译本来源；未填时视为本地安装包或本地磁盘译本。 */
+  provider?: "local" | "youversion" | "api-bible" | "esv";
+  /** 远端版本标识，如 YouVersion 版本 id 或 API.Bible abbreviation。 */
+  remoteId?: string | null;
+  /** 交付方式。 */
+  delivery?: "bundled" | "local-download" | "chapter-api";
+  /** 是否启用；用于撤销授权或临时下线。 */
+  enabled?: boolean;
+  /** 版权声明或归属说明。 */
+  copyright?: string | null;
+  /** 发布方或版权方链接。 */
+  publisherUrl?: string | null;
 };
 
 export type BibleTranslationsIndex = {

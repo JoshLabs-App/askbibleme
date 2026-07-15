@@ -1,17 +1,13 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo } from "react";
 import {
-  Dimensions,
-  Modal,
-  Platform,
+  ActivityIndicator,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 
@@ -19,7 +15,10 @@ export type ReadSettingsSelectOption = {
   id: string;
   label: string;
   shortLabel?: string;
+  sourceTone?: "bundled" | "youversion" | "api-bible" | "esv";
+  audioBadges?: string[];
   downloadState?: "missing" | "outdated" | "downloading" | null;
+  downloadProgress?: number | null;
 };
 
 type Props = {
@@ -36,19 +35,12 @@ type Props = {
   onDownloadOption?: (id: string) => void;
   emptyDisplay?: string;
   disabled?: boolean;
+  showDownloadButton?: boolean;
   style?: View["props"]["style"];
 };
 
-type MenuAnchor = {
-  top: number;
-  left: number;
-  width: number;
-  maxHeight: number;
-};
-
 const MENU_GAP = 4;
-const MENU_MAX_HEIGHT = 360;
-const MENU_MIN_HEIGHT = 120;
+const MENU_MAX_HEIGHT = 300;
 
 const styles = StyleSheet.create({
   block: {
@@ -86,19 +78,52 @@ const styles = StyleSheet.create({
   },
   value: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    color: c.ink,
+    fontSize: 18,
+    lineHeight: 24,
     ...parchmentSans(500),
   },
   valueDisabled: {
     color: c.muted,
   },
-  menuBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+  valueBundled: {
+    color: c.parchmentAccent,
+  },
+  valueYouVersion: {
+    color: "#2D6CE6",
+  },
+  valueApiBible: {
+    color: "#0F8D73",
+  },
+  triggerMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flexWrap: "wrap",
+  },
+  badge: {
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: "rgba(120, 75, 30, 0.12)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(120, 75, 30, 0.24)",
+  },
+  badgeText: {
+    fontSize: 10,
+    lineHeight: 12,
+    color: c.parchmentAccent,
+    ...parchmentSans(700),
   },
   menuFloating: {
-    position: "absolute",
+    marginTop: MENU_GAP,
+    maxHeight: MENU_MAX_HEIGHT,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -121,12 +146,21 @@ const styles = StyleSheet.create({
   },
   optionMain: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "stretch",
     gap: 8,
     paddingHorizontal: 10,
     paddingVertical: 9,
     minWidth: 0,
+  },
+  optionMainTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minWidth: 0,
+  },
+  optionMetaRow: {
+    paddingLeft: 24,
   },
   optionActive: {
     backgroundColor: c.hover,
@@ -144,45 +178,61 @@ const styles = StyleSheet.create({
   optionDownloadBtnPressed: {
     backgroundColor: "rgba(69, 45, 28, 0.08)",
   },
+  optionDownloadStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingRight: 10,
+  },
+  optionDownloadStatusText: {
+    fontSize: 11,
+    lineHeight: 14,
+    color: c.parchmentAccent,
+    ...parchmentSans(600),
+  },
   optionText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: c.muted,
+    fontSize: 17,
+    lineHeight: 23,
     ...parchmentSans(400),
   },
   optionTextActive: {
-    color: c.ink,
     ...parchmentSans(600),
+  },
+  optionTextBundled: {
+    color: c.parchmentAccent,
+  },
+  optionTextYouVersion: {
+    color: "#2D6CE6",
+  },
+  optionTextApiBible: {
+    color: "#0F8D73",
   },
 });
 
-function resolveTopInset(insetsTop: number): number {
-  const statusBar = Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
-  return Math.max(insetsTop, statusBar);
+function resolveSourceToneStyle(sourceTone?: ReadSettingsSelectOption["sourceTone"]) {
+  switch (sourceTone) {
+    case "youversion":
+      return styles.valueYouVersion;
+    case "api-bible":
+    case "esv":
+      return styles.valueApiBible;
+    case "bundled":
+    default:
+      return styles.valueBundled;
+  }
 }
 
-function measureMenuAnchor(
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  insets: { top: number; bottom: number },
-): MenuAnchor {
-  const window = Dimensions.get("window");
-  const topInset = resolveTopInset(insets.top);
-  const bottomInset = Math.max(insets.bottom, 8);
-  const spaceBelow = window.height - (y + height) - bottomInset - MENU_GAP;
-  const spaceAbove = y - topInset - MENU_GAP;
-  const openDown = spaceBelow >= MENU_MIN_HEIGHT || spaceBelow >= spaceAbove;
-  const maxHeight = Math.min(
-    MENU_MAX_HEIGHT,
-    Math.max(MENU_MIN_HEIGHT, openDown ? spaceBelow : spaceAbove),
-  );
-  const top = openDown
-    ? y + height + MENU_GAP
-    : Math.max(topInset + MENU_GAP, y - maxHeight);
-
-  return { top, left: x, width, maxHeight };
+function resolveOptionToneStyle(sourceTone?: ReadSettingsSelectOption["sourceTone"]) {
+  switch (sourceTone) {
+    case "youversion":
+      return styles.optionTextYouVersion;
+    case "api-bible":
+    case "esv":
+      return styles.optionTextApiBible;
+    case "bundled":
+    default:
+      return styles.optionTextBundled;
+  }
 }
 
 function ReadSettingsSelectInner({
@@ -198,11 +248,9 @@ function ReadSettingsSelectInner({
   onDownloadOption,
   emptyDisplay,
   disabled,
+  showDownloadButton = false,
   style,
 }: Props) {
-  const insets = useSafeAreaInsets();
-  const triggerRef = useRef<View>(null);
-  const [menuAnchor, setMenuAnchor] = useState<MenuAnchor | null>(null);
   const multi = Array.isArray(values);
   const selectedIds = multi ? values : [];
   const active = options.find((o) => o.id === value) ?? options[0];
@@ -216,53 +264,78 @@ function ReadSettingsSelectInner({
         .join(", ")
     : active?.shortLabel ?? active?.label ?? "";
   const display = pickedDisplay || emptyDisplay || "";
+  const activeTone = multi ? options.find((opt) => selectedIds.includes(opt.id))?.sourceTone : active?.sourceTone;
+  const activeBadges = multi ? [] : active?.audioBadges ?? [];
 
-  useEffect(() => {
-    if (!open || disabled) {
-      setMenuAnchor(null);
-      return;
-    }
-    const task = requestAnimationFrame(() => {
-      triggerRef.current?.measureInWindow((x, y, width, height) => {
-        setMenuAnchor(measureMenuAnchor(x, y, width, height, insets));
-      });
-    });
-    return () => cancelAnimationFrame(task);
-  }, [disabled, insets.bottom, insets.top, open, options.length]);
+  const renderBadgeRow = (badges?: string[]) => {
+    if (!badges?.length) return null;
+    return (
+      <View style={styles.badgeRow}>
+        {badges.map((badge) => (
+          <View key={badge} style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   const renderOptions = () =>
     options.map((opt) => {
       const selected = multi ? selectedIds.includes(opt.id) : opt.id === value;
-      const showDownload =
-        Boolean(onDownloadOption) &&
-        (opt.downloadState === "missing" || opt.downloadState === "outdated");
-      const downloading = opt.downloadState === "downloading";
+      const pressMain = () => {
+        if (multi && selected) {
+          onToggleSelect?.(opt.id);
+          return;
+        }
+        if (multi) {
+          onToggleSelect?.(opt.id);
+        } else {
+          onSelect?.(opt.id);
+        }
+      };
       return (
         <View key={opt.id || "__none"} style={[styles.option, selected && styles.optionActive]}>
           <Pressable
-            onPress={() => {
-              if (multi) {
-                onToggleSelect?.(opt.id);
-              } else {
-                onSelect?.(opt.id);
-              }
-            }}
+            onPress={pressMain}
             style={({ pressed }) => [styles.optionMain, pressed && styles.optionPressed]}
           >
-            {multi ? (
-              <MaterialIcons
-                name={selected ? "check-box" : "check-box-outline-blank"}
-                size={16}
-                color={selected ? c.ink : c.faint}
-              />
+            <View style={styles.optionMainTop}>
+              {multi ? (
+                <MaterialIcons
+                  name={selected ? "check-box" : "check-box-outline-blank"}
+                  size={16}
+                  color={selected ? c.ink : c.faint}
+                />
+              ) : null}
+              <Text
+                style={[
+                  styles.optionText,
+                  resolveOptionToneStyle(opt.sourceTone),
+                  selected && styles.optionTextActive,
+                ]}
+                numberOfLines={2}
+              >
+                {opt.label}
+              </Text>
+            </View>
+            {opt.audioBadges?.length ? (
+              <View style={styles.optionMetaRow}>{renderBadgeRow(opt.audioBadges)}</View>
             ) : null}
-            <Text style={[styles.optionText, selected && styles.optionTextActive]} numberOfLines={2}>
-              {opt.label}
-            </Text>
           </Pressable>
-          {showDownload ? (
+          {opt.downloadState === "downloading" ? (
+            <View style={styles.optionDownloadStatus}>
+              <ActivityIndicator size="small" color={c.parchmentAccent} />
+              <Text style={styles.optionDownloadStatusText}>
+                {typeof opt.downloadProgress === "number" ? `${opt.downloadProgress}%` : "下载中"}
+              </Text>
+            </View>
+          ) : showDownloadButton &&
+            onDownloadOption &&
+            !multi &&
+            (opt.downloadState === "missing" || opt.downloadState === "outdated") ? (
             <Pressable
-              onPress={() => onDownloadOption?.(opt.id)}
+              onPress={() => onDownloadOption(opt.id)}
               hitSlop={8}
               style={({ pressed }) => [
                 styles.optionDownloadBtn,
@@ -279,8 +352,6 @@ function ReadSettingsSelectInner({
                 color={c.parchmentAccent}
               />
             </Pressable>
-          ) : downloading ? (
-            <MaterialIcons name="hourglass-top" size={16} color={c.faint} />
           ) : null}
         </View>
       );
@@ -289,7 +360,7 @@ function ReadSettingsSelectInner({
   return (
     <View style={[styles.block, open && styles.blockOpen, style]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View ref={triggerRef} collapsable={false}>
+      <View collapsable={false}>
         <Pressable
           disabled={disabled}
           onPress={() => onOpenChange(!open)}
@@ -302,13 +373,16 @@ function ReadSettingsSelectInner({
           accessibilityLabel={accessibilityLabel}
           accessibilityState={{ expanded: open, disabled: Boolean(disabled) }}
         >
-          <Text
-            style={[styles.value, disabled && styles.valueDisabled]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {display}
-          </Text>
+          <View style={styles.triggerMain}>
+            <Text
+              style={[styles.value, resolveSourceToneStyle(activeTone), disabled && styles.valueDisabled]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {display}
+            </Text>
+            {renderBadgeRow(activeBadges)}
+          </View>
           <MaterialIcons
             name={open ? "expand-less" : "expand-more"}
             size={18}
@@ -316,31 +390,18 @@ function ReadSettingsSelectInner({
           />
         </Pressable>
       </View>
-      {open && menuAnchor && !disabled ? (
-        <Modal visible transparent animationType="fade" onRequestClose={() => onOpenChange(false)}>
-          <Pressable style={styles.menuBackdrop} onPress={() => onOpenChange(false)} />
-          <View
-            style={[
-              styles.menuFloating,
-              {
-                top: menuAnchor.top,
-                left: menuAnchor.left,
-                width: menuAnchor.width,
-                maxHeight: menuAnchor.maxHeight,
-              },
-            ]}
+      {open && !disabled ? (
+        <View style={styles.menuFloating}>
+          <ScrollView
+            style={{ maxHeight: MENU_MAX_HEIGHT }}
+            contentContainerStyle={styles.menuContent}
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
           >
-            <ScrollView
-              style={{ maxHeight: menuAnchor.maxHeight }}
-              contentContainerStyle={styles.menuContent}
-              showsVerticalScrollIndicator
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-            >
-              {renderOptions()}
-            </ScrollView>
-          </View>
-        </Modal>
+            {renderOptions()}
+          </ScrollView>
+        </View>
       ) : null}
     </View>
   );
@@ -355,6 +416,7 @@ function propsEqual(prev: Props, next: Props): boolean {
     prev.options === next.options &&
     prev.open === next.open &&
     prev.disabled === next.disabled &&
+    prev.showDownloadButton === next.showDownloadButton &&
     prev.emptyDisplay === next.emptyDisplay &&
     prev.style === next.style &&
     prev.onOpenChange === next.onOpenChange &&

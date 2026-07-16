@@ -20,6 +20,10 @@ export type MediaPlaybackCoordinatorValue = {
   policy: MediaPlaybackPolicyTier;
   /** 电视 + 壳层音乐在播/将播：背景改静图，卸载视频解码器 */
   shellAudioBlocksVideo: boolean;
+  /** 电视浏览器：任意前台音频在播时，背景退回静图，避免音频 / 视频抢解码器。 */
+  setForegroundAudioActive: (id: string, active: boolean) => void;
+  /** 电视浏览器：前台音频起播前先暂停背景视频并等 UI 露出静图。 */
+  prepareForegroundAudioPlayback: (id: string) => Promise<void>;
   registerBackgroundVideo: (id: string, getEl: VideoGetter) => () => void;
   onBackgroundVideoPlaying: () => void;
 };
@@ -48,7 +52,9 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
   const policy = useMediaPlaybackPolicy();
   const { playing, registerBeforeShellPlayHandler } = useMusicShellPlayback();
   const videosRef = useRef(new Map<string, VideoGetter>());
+  const foregroundAudioIdsRef = useRef(new Set<string>());
   const [shellAudioReserved, setShellAudioReserved] = useState(false);
+  const [foregroundAudioCount, setForegroundAudioCount] = useState(0);
 
   useEffect(() => {
     if (playing) return;
@@ -56,7 +62,17 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
   }, [playing]);
 
   const shellAudioBlocksVideo =
-    policy === "tvCoexist" && (playing || shellAudioReserved);
+    policy === "tvCoexist" && (playing || shellAudioReserved || foregroundAudioCount > 0);
+
+  const setForegroundAudioActive = useCallback((id: string, active: boolean) => {
+    const key = id.trim();
+    if (!key) return;
+    const set = foregroundAudioIdsRef.current;
+    const before = set.size;
+    if (active) set.add(key);
+    else set.delete(key);
+    if (set.size !== before) setForegroundAudioCount(set.size);
+  }, []);
 
   const registerBackgroundVideo = useCallback((id: string, getEl: VideoGetter) => {
     videosRef.current.set(id, getEl);
@@ -90,6 +106,16 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
     }
   }, []);
 
+  const prepareForegroundAudioPlayback = useCallback(
+    async (id: string) => {
+      setForegroundAudioActive(id, true);
+      if (policy !== "tvCoexist") return;
+      pauseRegisteredVideos();
+      await waitTwoAnimationFrames();
+    },
+    [pauseRegisteredVideos, policy, setForegroundAudioActive],
+  );
+
   useEffect(() => {
     if (policy !== "tvCoexist") return;
     return registerBeforeShellPlayHandler(async () => {
@@ -116,10 +142,19 @@ export function MediaPlaybackCoordinatorProvider({ children }: { children: React
     () => ({
       policy,
       shellAudioBlocksVideo,
+      setForegroundAudioActive,
+      prepareForegroundAudioPlayback,
       registerBackgroundVideo,
       onBackgroundVideoPlaying,
     }),
-    [policy, shellAudioBlocksVideo, registerBackgroundVideo, onBackgroundVideoPlaying],
+    [
+      policy,
+      shellAudioBlocksVideo,
+      setForegroundAudioActive,
+      prepareForegroundAudioPlayback,
+      registerBackgroundVideo,
+      onBackgroundVideoPlaying,
+    ],
   );
 
   return (

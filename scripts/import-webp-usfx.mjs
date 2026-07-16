@@ -29,6 +29,26 @@ const BOOK_IDS = [
   "TIT", "PHM", "HEB", "JAS", "1PE", "2PE", "1JN", "2JN", "3JN", "JUD", "REV",
 ];
 
+/**
+ * WEBP follows the critical-text placement of the closing doxology at
+ * Romans 14:24-26. Chinese Union Version and other TR-based editions place
+ * the same text at Romans 16:25-27. Keep aliases at the latter references so
+ * cross-translation verse keys (including the home golden-verse pool) resolve
+ * to the same passage instead of appearing to be missing.
+ */
+function addCrossVersificationAliases(books) {
+  const romans = books.ROM;
+  const source = romans?.["14"];
+  if (!romans || !source?.["24"] || !source?.["25"] || !source?.["26"]) {
+    throw new Error("WEBP source is missing Romans 14:24-26 versification source");
+  }
+  romans["16"] ??= {};
+  romans["16"]["25"] = source["24"];
+  romans["16"]["26"] = source["25"];
+  romans["16"]["27"] = source["26"];
+  return 3;
+}
+
 function decodeXmlEntities(value) {
   return value
     .replace(/&amp;/g, "&")
@@ -94,6 +114,7 @@ function buildPayload(xml) {
     }
     books[bookId] = chapters;
   }
+  verseCount += addCrossVersificationAliases(books);
   return { payload: { format: SELAH_FORMAT, books }, verseCount };
 }
 

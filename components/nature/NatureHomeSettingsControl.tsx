@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { HomeVersePoolMenuPicker } from "@/components/home/HomeVersePoolMenuPicker";
+import { HomeVerseHoldTimeMenuPicker } from "@/components/home/HomeVerseHoldTimeMenuPicker";
 import { NatureHomeLevelSegment } from "@/components/nature/NatureHomeLevelSegment";
 import { NatureHomeSleepTimerSection } from "@/components/nature/NatureHomeSleepTimerSection";
 import { NatureHomeTextScaleRow } from "@/components/nature/NatureHomeTextScaleRow";
 import { NatureHomeTranslationSettings } from "@/components/nature/NatureHomeTranslationSettings";
+import { NatureHomeGoldenVerseAudioSettings } from "@/components/nature/NatureHomeGoldenVerseAudioSettings";
 import { NatureHomeVerseEffectPicker } from "@/components/nature/NatureHomeVerseEffectPicker";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import {
@@ -14,6 +17,13 @@ import {
   writeNatureHomeVerseAppearance,
   type NatureHomeVerseAppearanceV1,
 } from "@/lib/home/nature-home-verse-appearance-prefs";
+import {
+  getHomeVersePoolScope,
+  hydrateHomeVersePoolScope,
+  setHomeVersePoolScope,
+  subscribeHomeVersePoolScope,
+} from "@/lib/home/home-verse-pool-scope-prefs";
+import { requestHomePrayerVerseFeedReload } from "@/lib/home-prayer-pools/prefs";
 import type { NatureVisualLevel } from "@/lib/nature/nature-visual-level-prefs";
 import "@/app/(app-shell)/read/read-parchment-background.css";
 
@@ -88,14 +98,20 @@ export function NatureHomeSettingsControl({
   onBlurLevelChange,
   onPrefsChanged,
 }: NatureHomeSettingsControlProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [portalReady, setPortalReady] = useState(false);
   const [verseAppearance, setVerseAppearance] = useState<NatureHomeVerseAppearanceV1>(() =>
     readNatureHomeVerseAppearance(),
   );
+  const selectedVersePoolScope = useSyncExternalStore(
+    subscribeHomeVersePoolScope,
+    getHomeVersePoolScope,
+    getHomeVersePoolScope,
+  );
 
   useEffect(() => {
     setPortalReady(true);
+    hydrateHomeVersePoolScope();
   }, []);
 
   useEffect(() => {
@@ -178,6 +194,13 @@ export function NatureHomeSettingsControl({
                 <NatureHomeSleepTimerSection />
               </IconSettingRow>
 
+              <IconSettingRow
+                icon="sync"
+                ariaLabel={locale === "en" ? "Hold time" : "停留时间"}
+              >
+                <HomeVerseHoldTimeMenuPicker variant="settings" onPrefsChanged={onPrefsChanged} />
+              </IconSettingRow>
+
               <IconSettingRow icon="text_fields" ariaLabel={t("nature.homeSettings.verseEffectSection")}>
                 <NatureHomeVerseEffectPicker
                   selected={verseAppearance.textEffect}
@@ -194,6 +217,25 @@ export function NatureHomeSettingsControl({
                 <NatureHomeTextScaleRow panelOpen={open} onPrefsChanged={onPrefsChanged} />
               </IconSettingRow>
 
+              <IconSettingRow
+                icon="format_list_bulleted"
+                ariaLabel={locale === "en" ? "Home Scripture range" : "首页经文范围"}
+              >
+                <HomeVersePoolMenuPicker
+                  locale={locale}
+                  selectedScope={selectedVersePoolScope}
+                  poolLabel={locale === "en" ? "Home Scripture range" : "首页经文范围"}
+                  currentLabel={locale === "en" ? "Current pool" : "当前池"}
+                  variant="settings"
+                  showStats={false}
+                  onSelectScope={(next) => {
+                    setHomeVersePoolScope(next);
+                    requestHomePrayerVerseFeedReload();
+                    onPrefsChanged?.();
+                  }}
+                />
+              </IconSettingRow>
+
               <div className="flex w-full max-w-full min-h-[38px] items-start gap-[10px]">
                 <div className={`${ROW_ICON} pt-2`} aria-hidden>
                   <ShellMaterialIcon name="menu_book" size={24} color="#6e5240" />
@@ -202,6 +244,13 @@ export function NatureHomeSettingsControl({
                   <NatureHomeTranslationSettings onPrefsChanged={onPrefsChanged} />
                 </div>
               </div>
+
+              <IconSettingRow
+                icon="record_voice_over"
+                ariaLabel={locale === "en" ? "Verse audio translation" : "金句朗读版本"}
+              >
+                <NatureHomeGoldenVerseAudioSettings onPrefsChanged={onPrefsChanged} />
+              </IconSettingRow>
             </div>
             </div>
           </div>,

@@ -5,9 +5,14 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { useMediaPlaybackCoordinator } from "@/components/media/MediaPlaybackCoordinatorProvider";
 import { buildGoldenVerseAudioSrc } from "@/lib/bible/golden-verse-audio";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { addHomeListeningSeconds } from "@/lib/home-listening/progress";
+import {
+  HOME_GOLDEN_VERSE_AUDIO_PREFS_EVENT,
+  readHomeGoldenVerseAudioTranslationId,
+} from "@/lib/home/home-golden-verse-audio-prefs";
 
 function normalizeAudioSrc(src: string): string {
   try {
@@ -33,19 +38,32 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
     setVerseAudioSequenceActive,
   } = useHomePrayerVerseFeedContext();
   const shellPlayback = useMusicShellPlayback();
+  const { policy, prepareForegroundAudioPlayback, setForegroundAudioActive } = useMediaPlaybackCoordinator();
   const getShellAudioElement = shellPlayback.getAudioElement;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [active, setActive] = useState(false);
   const [ready, setReady] = useState(false);
+  const [audioTranslationId, setAudioTranslationId] = useState(() =>
+    readHomeGoldenVerseAudioTranslationId(),
+  );
   const musicVolumeBeforeRef = useRef<number | null>(null);
   const lastAudioTimeRef = useRef(0);
   const unflushedListeningSecondsRef = useRef(0);
 
-  const src = useMemo(() => (verseKey ? buildGoldenVerseAudioSrc(verseKey) : null), [verseKey]);
+  const src = useMemo(
+    () => (verseKey ? buildGoldenVerseAudioSrc(verseKey, audioTranslationId) : null),
+    [audioTranslationId, verseKey],
+  );
   const zh = locale === "zh-CN" || locale === "zh-TW";
 
   useEffect(() => {
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => setAudioTranslationId(readHomeGoldenVerseAudioTranslationId());
+    window.addEventListener(HOME_GOLDEN_VERSE_AUDIO_PREFS_EVENT, refresh);
+    return () => window.removeEventListener(HOME_GOLDEN_VERSE_AUDIO_PREFS_EVENT, refresh);
   }, []);
 
   const flushListeningTime = useCallback(() => {
@@ -126,11 +144,12 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
 
   useEffect(() => {
     setVerseAudioSequenceActive(active);
+    setForegroundAudioActive("nature-golden-verse-audio", active);
     if (!active) {
       flushListeningTime();
       restoreMusicVolume();
     }
-  }, [active, flushListeningTime, restoreMusicVolume, setVerseAudioSequenceActive]);
+  }, [active, flushListeningTime, restoreMusicVolume, setForegroundAudioActive, setVerseAudioSequenceActive]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -138,11 +157,12 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
       flushListeningTime();
       audio?.pause();
       setVerseAudioSequenceActive(false);
+      setForegroundAudioActive("nature-golden-verse-audio", false);
       restoreMusicVolume();
     };
-  }, [flushListeningTime, restoreMusicVolume, setVerseAudioSequenceActive]);
+  }, [flushListeningTime, restoreMusicVolume, setForegroundAudioActive, setVerseAudioSequenceActive]);
 
-  const toggle = () => {
+  const toggle = async () => {
     const audio = audioRef.current;
     if (!audio || !src) return;
 
@@ -158,13 +178,16 @@ export function NatureGoldenVerseAudioControl({ verseKey }: Props) {
     }
 
     const shellAudio = getShellAudioElement();
-    if (shellPlayback.playing && isCuvChapterAudioEffectiveSrc(shellPlayback.effectiveSrc)) {
+    if (shellPlayback.playing && policy === "tvCoexist") {
+      shellPlayback.pausePlayback();
+    } else if (shellPlayback.playing && isCuvChapterAudioEffectiveSrc(shellPlayback.effectiveSrc)) {
       shellPlayback.pausePlayback();
     } else if (shellPlayback.playing && shellAudio) {
       musicVolumeBeforeRef.current = shellAudio.volume;
       shellAudio.volume = Math.max(0, Math.min(1, shellAudio.volume * 0.28));
     }
     audio.currentTime = 0;
+    await prepareForegroundAudioPlayback("nature-golden-verse-audio");
     setActive(true);
     void audio.play().catch(() => setActive(false));
   };

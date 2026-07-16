@@ -7,14 +7,19 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 function formatSecLabel(locale: string, sec: number): string {
-  if (locale === "en") return `${sec}s`;
-  return `${sec}秒`;
+  return `${sec}s`;
 }
 
-export function HomeVerseHoldTimeMenuPicker() {
+type Props = {
+  variant?: "drawer" | "settings";
+  onPrefsChanged?: () => void;
+};
+
+export function HomeVerseHoldTimeMenuPicker({ variant = "drawer", onPrefsChanged }: Props = {}) {
   const { locale } = useLocale();
   const [stableSec, setStableSec] = useState(() => readHomePrayerVersePrefs().homeVerseStableSec);
   const zh = locale === "zh-CN" || locale === "zh-TW";
+  const settings = variant === "settings";
 
   useEffect(() => {
     const sync = () => setStableSec(readHomePrayerVersePrefs().homeVerseStableSec);
@@ -27,12 +32,22 @@ export function HomeVerseHoldTimeMenuPicker() {
   const hint = locale === "en" ? "Default 7s" : locale === "zh-TW" ? toZhTwText("默认 7 秒") : "默认 7 秒";
 
   return (
-    <div className="space-y-2">
+    <div className={settings ? "w-full" : "space-y-2"}>
+      {settings ? null : (
       <div className="space-y-1">
         <p className="shell-nav-drawer-section-label">{title}</p>
         <p className="px-0.5 text-[11px] leading-5 text-[#37352f]/55">{hint}</p>
       </div>
-      <div className="flex flex-wrap gap-2">
+      )}
+      <div
+        className={
+          settings
+            ? "nature-home-settings-segment flex w-full rounded-[9px] border p-[3px]"
+            : "flex flex-wrap gap-2"
+        }
+        role={settings ? "radiogroup" : undefined}
+        aria-label={title}
+      >
         {HOME_VERSE_STABLE_SEC_OPTIONS.map((sec) => {
           const selected = stableSec === sec;
           return (
@@ -41,19 +56,29 @@ export function HomeVerseHoldTimeMenuPicker() {
               type="button"
               aria-pressed={selected}
               aria-label={`${title} ${formatSecLabel(locale, sec)}`}
-              className={[
-                "min-h-8 min-w-[3.25rem] rounded-full border px-3 py-1.5 text-[12px] font-medium transition active:scale-[0.97]",
-                selected
-                  ? "border-amber-500/55 bg-amber-200/35 text-amber-950 shadow-[0_0_0_1px_rgba(255,183,77,0.15)]"
-                  : "border-amber-900/12 bg-white/55 text-[#37352f]/75 hover:bg-white/80",
-              ].join(" ")}
+              role={settings ? "radio" : undefined}
+              aria-checked={settings ? selected : undefined}
+              className={
+                settings
+                  ? [
+                      "flex min-h-[36px] flex-1 items-center justify-center rounded-[7px] border border-transparent px-0 text-[18px] font-semibold leading-[22px] tabular-nums text-[#1c1410] transition active:scale-[0.97]",
+                      selected ? "nature-home-rotation-choice--active" : "",
+                    ].join(" ")
+                  : [
+                      "min-h-8 min-w-[3.25rem] rounded-full border px-3 py-1.5 text-[12px] font-medium transition active:scale-[0.97]",
+                      selected
+                        ? "border-amber-500/55 bg-amber-200/35 text-amber-950 shadow-[0_0_0_1px_rgba(255,183,77,0.15)]"
+                        : "border-amber-900/12 bg-white/55 text-[#37352f]/75 hover:bg-white/80",
+                    ].join(" ")
+              }
               onClick={() => {
                 const next = { ...readHomePrayerVersePrefs(), homeVerseStableSec: sec };
                 writeHomePrayerVersePrefs(next);
                 setStableSec(sec);
+                onPrefsChanged?.();
               }}
             >
-              {zh ? `${sec} 秒` : `${sec}s`}
+              {settings ? formatSecLabel(locale, sec) : zh ? `${sec} 秒` : `${sec}s`}
             </button>
           );
         })}

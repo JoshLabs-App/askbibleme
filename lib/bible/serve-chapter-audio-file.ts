@@ -20,7 +20,8 @@ function teochewGithubRawUrl(relativePath: string): string {
 
 function goldenVerseGithubRawUrl(relativePath: string): string {
   const repo = process.env.SELAH_GITHUB_REPO?.trim() || "askbibleme/askbibleme";
-  const branch = process.env.GOLDEN_VERSE_AUDIO_GIT_REF?.trim() || "main";
+  const branch =
+    process.env.GOLDEN_VERSE_AUDIO_GIT_REF?.trim() || "golden-verse-audio-webp";
   return `https://raw.githubusercontent.com/${repo}/${branch}/public/audio/${relativePath}`;
 }
 

@@ -33,8 +33,7 @@ const SECTIONS_ZH: Section[] = [
     paragraphs: ["我们不进行跨 App 广告追踪，也不收集："],
     bullets: [
       "用于统计的经文正文、搜索词、书签或阅读笔记。",
-      "精确地理位置或广告标识符。",
-      "麦克风录音（iOS 权限说明为预留未来功能，当前版本不使用录音）。",
+      "精确地理位置、广告标识符或麦克风录音。",
     ],
   },
   {
@@ -58,6 +57,7 @@ const SECTIONS_ZH: Section[] = [
     bullets: [
       "在 App 侧栏的隐私设置中拒绝或关闭匿名统计。",
       "不注册账号 — 核心阅读与探索无需登录即可使用。",
+      "若你创建了账号，可直接在 App 侧栏永久删除账号，无需联系支持。",
       "卸载 App 以清除设备上的本地数据。",
     ],
   },
@@ -99,8 +99,7 @@ const SECTIONS_EN: Section[] = [
     paragraphs: ["We do not use your data for cross-app advertising or tracking. We do not collect:"],
     bullets: [
       "Verse text, search queries, bookmarks, or reading notes for analytics.",
-      "Precise location or advertising identifiers.",
-      "Microphone audio (the iOS permission string is reserved for possible future features; recording is not used today).",
+      "Precise location, advertising identifiers, or microphone audio.",
     ],
   },
   {
@@ -124,6 +123,7 @@ const SECTIONS_EN: Section[] = [
     bullets: [
       "Mobile app: decline or later disable anonymous analytics in the privacy section of the side menu.",
       "Account registration is optional — core reading and exploration work without signing in.",
+      "If you create an account, you can permanently delete it from the app side menu without contacting support.",
       "You can uninstall the app to remove on-device data.",
     ],
   },

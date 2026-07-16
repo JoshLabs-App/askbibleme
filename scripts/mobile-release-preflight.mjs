@@ -59,21 +59,23 @@ async function main() {
   addInfo("Checking mobile release preflight");
 
   const dataRoot = (process.env.DATA_ROOT ?? "").trim();
-  if (!dataRoot) {
-    const msg = "DATA_ROOT not set: Render persistent disk mount path is required for production feedback/telemetry.";
-    if (strict) addError(msg);
-    else addWarning(msg);
-  } else {
-    addInfo("DATA_ROOT set");
-  }
-  if (dataRoot) {
-    checkPathWritable(path.resolve(dataRoot), "DATA_ROOT");
-  }
+  if (!baseUrl) {
+    if (!dataRoot) {
+      const msg = "DATA_ROOT not set: Render persistent disk mount path is required for production feedback/telemetry.";
+      if (strict) addError(msg);
+      else addWarning(msg);
+    } else {
+      addInfo("DATA_ROOT set");
+      checkPathWritable(path.resolve(dataRoot), "DATA_ROOT");
+    }
 
-  optionalEnv("INFO_EDITION_DISK_SAVE", "Set to 1 when enabling online info-edition generation.");
-  optionalEnv("ESV_API_KEY", "Required on Render for the ESV online Bible version.");
-  optionalEnv("ASC_API_KEY_PATH", "Required for iOS EAS submit from CI/local release terminal.");
-  optionalEnv("GOOGLE_SERVICE_ACCOUNT_KEY_PATH", "Required for Android Play EAS submit.");
+    optionalEnv("INFO_EDITION_DISK_SAVE", "Set to 1 when enabling online info-edition generation.");
+    optionalEnv("ESV_API_KEY", "Required on Render for the ESV online Bible version.");
+    optionalEnv("ASC_API_KEY_PATH", "Required for iOS local signing/submission.");
+    optionalEnv("GOOGLE_SERVICE_ACCOUNT_KEY_PATH", "Required for Android Play submission.");
+  } else {
+    addInfo("Live endpoint mode: local release/deployment environment variables skipped");
+  }
 
   if ((process.env.MEMBER_REGISTER_ENABLED ?? "").trim() === "1") {
     const sqlitePath = (process.env.ASKBIBLE_AUTH_SQLITE_PATH ?? "").trim();
@@ -96,6 +98,11 @@ async function main() {
       `${normalizedBaseUrl}/api/read/chapter?translationId=esv&bookId=JHN&chapter=3`,
       "ESV chapter endpoint",
     );
+    await checkEndpoint(
+      `${normalizedBaseUrl}/api/read/chapter-audio?translationId=asv&bookId=JHN&chapter=1`,
+      "Chapter audio resolver",
+    );
+    await checkEndpoint(`${normalizedBaseUrl}/privacy`, "Privacy policy");
   } else {
     addWarning("No --base-url provided; skipped live endpoint checks.");
   }

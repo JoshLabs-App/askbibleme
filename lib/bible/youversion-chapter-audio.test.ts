@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildYouVersionAudioPageUrl,
+  isYouVersionAudioWebProxyRuntime,
   resolveYouVersionChapterAudioPlayableSrc,
   translationUsesYouVersionChapterAudio,
 } from "./youversion-chapter-audio";
@@ -10,8 +11,15 @@ describe("youversion-chapter-audio", () => {
     vi.clearAllMocks();
   });
 
+  it("does not mistake React Native's window global for a DOM browser", () => {
+    expect(isYouVersionAudioWebProxyRuntime({ window: globalThis })).toBe(false);
+    expect(isYouVersionAudioWebProxyRuntime({ window: globalThis, document: {} })).toBe(true);
+  });
+
   it("recognizes rcuvss as a YouVersion audio translation", () => {
     expect(translationUsesYouVersionChapterAudio("rcuvss-zh-hans")).toBe(true);
+    expect(translationUsesYouVersionChapterAudio("esv")).toBe(true);
+    expect(translationUsesYouVersionChapterAudio("cunp-zh-hant")).toBe(true);
   });
 
   it("builds the expected Bible.com audio page URL", () => {
@@ -22,6 +30,16 @@ describe("youversion-chapter-audio", () => {
         chapter: 13,
       }),
     ).toBe("https://www.bible.com/audio-bible/140/MAT.13.RCUVSS");
+  });
+
+  it("uses the official audio edition for simplified CUNPSS", () => {
+    expect(
+      buildYouVersionAudioPageUrl({
+        translationId: "cunpss-zh-hans",
+        bookId: "EPH",
+        chapter: 5,
+      }),
+    ).toBe("https://www.bible.com/audio-bible/48/EPH.5.CUNPSS-Shen");
   });
 
   it("extracts a playable mp3 URL from the chapter page HTML", async () => {
@@ -54,5 +72,25 @@ describe("youversion-chapter-audio", () => {
         }),
       }),
     );
+  });
+
+  it("extracts the current api-cdn URL when the page escapes slashes", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      text: async () =>
+        '<script>"format_mp3_32k":"https:\\/\\/api-cdn.youversionapi.com\\/audio-bible-youversionapi\\/123\\/32k\\/MAT\\/13-hash.mp3?version_id=59"</script>',
+    }));
+    (globalThis as any).fetch = fetchMock;
+
+    const result = await resolveYouVersionChapterAudioPlayableSrc({
+      translationId: "esv",
+      bookId: "MAT",
+      chapter: 13,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      src: "https://api-cdn.youversionapi.com/audio-bible-youversionapi/123/32k/MAT/13-hash.mp3?version_id=59",
+    });
   });
 });

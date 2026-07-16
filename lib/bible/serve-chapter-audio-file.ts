@@ -9,10 +9,18 @@ import { getTeochewNtManifestEntry } from "@/lib/bible/teochew-nt-audio";
 
 const CACHE = "public, max-age=31536000, immutable";
 const TEOCHEW_REL_RE = /^teochew-nt\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
+const GOLDEN_VERSE_REL_RE =
+  /^golden-verses(?:-web-en)?\/[A-Z0-9]{2,8}-\d+-\d+-32kbps\.mp3$/i;
 
 function teochewGithubRawUrl(relativePath: string): string {
   const repo = process.env.SELAH_GITHUB_REPO?.trim() || "askbibleme/askbibleme";
   const branch = process.env.TEOCHEW_AUDIO_GIT_REF?.trim() || "teochew-nt-audio";
+  return `https://raw.githubusercontent.com/${repo}/${branch}/public/audio/${relativePath}`;
+}
+
+function goldenVerseGithubRawUrl(relativePath: string): string {
+  const repo = process.env.SELAH_GITHUB_REPO?.trim() || "askbibleme/askbibleme";
+  const branch = process.env.GOLDEN_VERSE_AUDIO_GIT_REF?.trim() || "main";
   return `https://raw.githubusercontent.com/${repo}/${branch}/public/audio/${relativePath}`;
 }
 
@@ -74,6 +82,25 @@ async function serveTeochewFromRemote(
   return new Response(upstream.body, { status: upstream.status, headers: out });
 }
 
+async function serveGoldenVerseFromRemote(
+  req: NextRequest,
+  relativePath: string,
+): Promise<Response> {
+  const upstream = await fetchTeochewUpstream(goldenVerseGithubRawUrl(relativePath), req);
+  if (!upstream) return new Response("Not found", { status: 404 });
+
+  const headers = new Headers({
+    "Content-Type": "audio/mpeg",
+    "Accept-Ranges": "bytes",
+    "Cache-Control": CACHE,
+  });
+  for (const key of ["content-length", "content-range"] as const) {
+    const value = upstream.headers.get(key);
+    if (value) headers.set(key, value);
+  }
+  return new Response(upstream.body, { status: upstream.status, headers });
+}
+
 function parseByteRange(
   rangeHeader: string,
   size: number,
@@ -119,6 +146,9 @@ export async function serveChapterAudioFile(
   if (!filePath) {
     if (TEOCHEW_REL_RE.test(relativePath)) {
       return serveTeochewFromRemote(req, relativePath);
+    }
+    if (GOLDEN_VERSE_REL_RE.test(relativePath)) {
+      return serveGoldenVerseFromRemote(req, relativePath);
     }
     return new Response("Not found", { status: 404 });
   }

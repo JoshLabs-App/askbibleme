@@ -20,21 +20,25 @@
 
 .nature-home-settings-choice--active {
   border-color: #d97707 !important;
-  background: rgba(255, 252, 245, 0.88) !important;
+  background: #fff8ed !important;
+  color: #d97707 !important;
 }
 
 .nature-home-verse-effect-choice--active {
-  border-color: transparent !important;
-  background: #938d86 !important;
+  border-color: #d97707 !important;
+  background: #fff8ed !important;
 }
 
-.nature-home-verse-effect-choice--active .nature-home-verse-effect-choice-label {
-  color: #fff !important;
+.nature-home-rotation-choice--active {
+  border-color: #d97707 !important;
+  background: #fff8ed !important;
+  color: #1c1410 !important;
 }
 
 .nature-home-text-scale-choice--active {
-  border-color: rgba(120, 53, 15, 0.3) !important;
-  background: rgba(255, 252, 245, 0.88) !important;
+  border-color: #d97707 !important;
+  background: #fff8ed !important;
+  color: #d97707 !important;
 }
 
 /* 默认品牌变量（无 data/branding.json 或未写入 inline 时生效；与读经羊皮 `--read-parchment-bg-canvas` 对齐） */
@@ -370,9 +374,9 @@ select,
   }
 }
 
-/* 自然首页：点主画面收起底栏、场景条与环境音 */
+/* 自然首页：点主画面收起自然首页底带，不影响全站底部主导航 */
 html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
-html[data-nature-home-chrome-hidden] .home-bottom-nav {
+html[data-nature-home-chrome-hidden] .nature-home-bottom-band {
   opacity: 0;
   pointer-events: none;
   transform: translateY(0.75rem);
@@ -383,7 +387,7 @@ html[data-nature-home-chrome-hidden] .home-bottom-nav {
 
 @media (prefers-reduced-motion: reduce) {
   html[data-nature-home-chrome-hidden] .nature-home-bottom-band,
-  html[data-nature-home-chrome-hidden] .home-bottom-nav {
+  html[data-nature-home-chrome-hidden] .nature-home-bottom-band {
     transition: none;
   }
 }

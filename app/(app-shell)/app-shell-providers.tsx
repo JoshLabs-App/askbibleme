@@ -1,6 +1,5 @@
 "use client";
 
-import { HomeBottomNav } from "@/components/home/HomeBottomNav";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
 import { HomePrayerVerseFeedProvider } from "@/components/home/HomePrayerVerseFeedContext";
 import { ShellTemplateDockPreviewProvider } from "@/components/shell/ShellTemplateDockPreviewContext";
@@ -27,7 +26,6 @@ export function AppShellProviders({ children, verseFallbackByLocale }: Props) {
               <HomePrayerVerseFeedProvider fallbackByLocale={verseFallbackByLocale}>
                 <NatureBackgroundVideoPrefetch />
                 <AppShellScrollArea>{children}</AppShellScrollArea>
-                <HomeBottomNav />
               </HomePrayerVerseFeedProvider>
             </HomeDockChromeProvider>
           </ShellTemplateDockPreviewProvider>

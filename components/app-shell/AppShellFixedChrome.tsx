@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { isScenesShellPath, SCENES_PAGE_SURFACE_STYLE } from "@/lib/nature/scenes-page-surface";
 import { measureAppShellSafeTopPx } from "@/lib/read/measure-app-shell-safe-top";
 import { PARCHMENT_SHELL_SURFACE_STYLE } from "@/lib/read/parchment-shell-surface-style";
+import { HomeBottomNav } from "@/components/home/HomeBottomNav";
 import {
   clearReadParchmentWideDataset,
   subscribeReadParchmentWideViewport,
@@ -125,6 +126,7 @@ export function AppShellFixedChrome({ children }: Props) {
       >
         {children}
       </div>
+      <HomeBottomNav />
     </div>
   );
 }

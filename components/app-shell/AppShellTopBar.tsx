@@ -337,7 +337,7 @@ export function AppShellTopBar({
     : iconBtn;
 
   const drawerMotion = "transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] motion-reduce:transition-none motion-reduce:duration-0";
-  const hideMenuButtonResolved = hideMenuButton || immersive;
+  const hideMenuButtonResolved = hideMenuButton;
 
   const toggleImmersiveMode = useCallback(() => {
     const next = !immersive;

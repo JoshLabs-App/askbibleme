@@ -1,27 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useSyncExternalStore } from "react";
+import { useHomeVerseAdvanceGapSec, writeHomeVerseAdvanceGapSec } from "@/components/home/useHomeVerseAdvanceGap";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
-import { HomeVerseHoldTimeMenuPicker } from "@/components/home/HomeVerseHoldTimeMenuPicker";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { HomeVersePoolMenuPicker } from "@/components/home/HomeVersePoolMenuPicker";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import { useAppSkin } from "@/components/theme/AppSkinProvider";
-import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
-import {
-  getHomeVersePoolScope,
-  hydrateHomeVersePoolScope,
-  setHomeVersePoolScope,
-  subscribeHomeVersePoolScope,
-} from "@/lib/home/home-verse-pool-scope-prefs";
-import { requestHomePrayerVerseFeedReload } from "@/lib/home-prayer-pools/prefs";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 
 const SUPPORT_EMAIL = "askbibleme@gmail.com";
+const HOME_VERSE_ADVANCE_GAP_OPTIONS = [3, 5, 7] as const;
 
 type Props = {
   onClose: () => void;
@@ -90,40 +81,6 @@ function ShellNavDrawerLocaleRow() {
   );
 }
 
-function ShellNavDrawerVersePoolSection() {
-  const { locale } = useLocale();
-  const selectedScope = useSyncExternalStore(
-    subscribeHomeVersePoolScope,
-    getHomeVersePoolScope,
-    getHomeVersePoolScope,
-  );
-
-  useEffect(() => {
-    hydrateHomeVersePoolScope();
-  }, []);
-
-  const sectionLabel =
-    locale === "en" ? "Home Scripture range" : locale === "zh-TW" ? toZhTwText("首页经文范围") : "首页经文范围";
-  const poolLabel =
-    locale === "en" ? "Range" : locale === "zh-TW" ? toZhTwText("当前范围") : "当前范围";
-
-  return (
-    <div className="space-y-2">
-      <HomeVersePoolMenuPicker
-        locale={locale}
-        selectedScope={selectedScope}
-        poolLabel={sectionLabel}
-        currentLabel={poolLabel}
-        onSelectScope={(next) => {
-          setHomeVersePoolScope(next);
-          requestHomePrayerVerseFeedReload();
-        }}
-      />
-      <HomeVerseHoldTimeMenuPicker />
-    </div>
-  );
-}
-
 function ShellNavDrawerResourceUpdate() {
   const { locale } = useLocale();
   const zh = locale === "zh-CN" || locale === "zh-TW";
@@ -142,6 +99,50 @@ function ShellNavDrawerResourceUpdate() {
   );
 }
 
+function ShellNavDrawerVerseAdvanceGapRow() {
+  const { locale } = useLocale();
+  const zh = locale === "zh-CN" || locale === "zh-TW";
+  const gapSec = useHomeVerseAdvanceGapSec();
+
+  const labels = {
+    3: zh ? "3秒" : "3S",
+    5: zh ? "5秒" : "5S",
+    7: zh ? "7秒" : "7S",
+  } as const;
+
+  const apply = (next: number) => {
+    writeHomeVerseAdvanceGapSec(next);
+  };
+
+  return (
+    <div className="rounded-2xl border border-amber-900/10 bg-[#fff8ea] px-4 py-4">
+      <div className="mb-3 text-[17px] text-[#37352f]">{zh ? "金句停顿" : "Verse pause"}</div>
+      <div className="flex flex-wrap gap-2">
+        {HOME_VERSE_ADVANCE_GAP_OPTIONS.map((sec) => {
+          const active = gapSec === sec;
+          return (
+            <button
+              key={sec}
+              type="button"
+              onClick={() => apply(sec)}
+              className={[
+                "rounded-full border px-4 py-3 text-[16px] transition-colors",
+                active
+                  ? "border-[#f1b53a] bg-[#f7e0b3] text-[#2b2114]"
+                  : "border-amber-900/12 bg-[#f7f1e7] text-[#2b2114]/90",
+              ].join(" ")}
+              aria-pressed={active}
+              aria-label={`${zh ? "金句停顿" : "Verse pause"} ${sec}`}
+            >
+              {labels[sec]}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ShellNavDrawerContent({ onClose }: Props) {
   const { locale, t } = useLocale();
   const { bootstrapped, user, isAdmin, logout, deleteAccount } = useAskbibleUser();
@@ -153,9 +154,9 @@ export function ShellNavDrawerContent({ onClose }: Props) {
     <div className="flex min-h-0 flex-1 flex-col gap-1 py-1 pr-0.5">
       <ShellNavDrawerLocaleRow />
       <div className="h-1" aria-hidden />
-      <ShellNavDrawerVersePoolSection />
-      <div className="h-1" aria-hidden />
       <ShellNavDrawerResourceUpdate />
+      <div className="h-1" aria-hidden />
+      <ShellNavDrawerVerseAdvanceGapRow />
       <div className="h-1" aria-hidden />
       <ShellNavDrawerMenuRow
         label={zh ? "欢迎页" : "Welcome page"}

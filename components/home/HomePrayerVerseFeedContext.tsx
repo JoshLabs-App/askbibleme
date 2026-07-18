@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { HOME_VERSE_FADE_MS } from "@/components/home/home-verse-constants";
+import { useHomeVerseAdvanceGapSec } from "@/components/home/useHomeVerseAdvanceGap";
 import {
   getNatureHomeVerseTimingOverride,
   subscribeNatureHomeVerseTimingOverride,
@@ -81,12 +82,14 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   const [homeVerseVisible, setHomeVerseVisible] = useState(true);
   const [verseAudioSequenceActive, setVerseAudioSequenceActive] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const verseAdvanceGapSec = useHomeVerseAdvanceGapSec();
   const natureHomeVerseTimingOverride = useSyncExternalStore(
     subscribeNatureHomeVerseTimingOverride,
     getNatureHomeVerseTimingOverride,
     () => null,
   );
   const lastCommittedIndex = useRef(-1);
+  const verseAdvanceTimerRef = useRef<number | null>(null);
   const verseKeysSig = verseKeys?.join("\u0001") ?? "";
 
   const primaryLocale: AppLocale = bilingual ? "en" : locale;
@@ -110,9 +113,17 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   /** 连续听读不插入人为停顿；音频结束后立即进入固定流下一节。 */
   const advanceVerseAudioNow = useCallback(() => {
     if (nVerses <= 1) return;
-    setActiveIndex((i) => (i + 1) % nVerses);
-    setHomeVerseVisible(true);
-  }, [nVerses]);
+    if (verseAdvanceTimerRef.current !== null) {
+      window.clearTimeout(verseAdvanceTimerRef.current);
+      verseAdvanceTimerRef.current = null;
+    }
+    const gapMs = Math.max(0, verseAdvanceGapSec * 1000);
+    verseAdvanceTimerRef.current = window.setTimeout(() => {
+      verseAdvanceTimerRef.current = null;
+      setActiveIndex((i) => (i + 1) % nVerses);
+      setHomeVerseVisible(true);
+    }, gapMs);
+  }, [nVerses, verseAdvanceGapSec]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -153,6 +164,15 @@ function HomePrayerVerseFeedProviderInner({ fallbackByLocale, children }: Provid
   useEffect(() => {
     setActiveIndex((i) => Math.min(i, Math.max(0, nVerses - 1)));
   }, [nVerses]);
+
+  useEffect(() => {
+    return () => {
+      if (verseAdvanceTimerRef.current !== null) {
+        window.clearTimeout(verseAdvanceTimerRef.current);
+        verseAdvanceTimerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setActiveIndex(0);

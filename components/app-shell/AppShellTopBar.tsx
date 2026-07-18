@@ -460,7 +460,7 @@ export function AppShellTopBar({
                 aria-modal="true"
                 aria-label={t("nav.drawerUserMenuTitle")}
                 className={[
-                  "shell-nav-drawer-panel absolute bottom-0 left-0 top-0 flex w-[min(22rem,calc(100vw-12px))] min-h-0 flex-col overflow-hidden",
+                  "shell-nav-drawer-panel absolute bottom-0 left-0 top-0 flex w-[min(22.5rem,calc(100vw-1rem))] min-h-0 flex-col overflow-hidden",
                   drawerMotion,
                   drawerEntered ? "translate-x-0 opacity-100" : "-translate-x-[102%] opacity-100",
                   "pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pl-[max(0.875rem,env(safe-area-inset-left,0px))] pr-2",

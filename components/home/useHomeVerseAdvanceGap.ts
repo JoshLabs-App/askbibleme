@@ -4,7 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "askbible-home-verse-advance-gap-sec-v1";
 const UPDATED_EVENT = "askbible:home-verse-advance-gap-updated";
-const OPTIONS = [3, 5, 7] as const;
+const OPTIONS = [3, 5, 7, 10, 15] as const;
 const DEFAULT_GAP_SEC = 3;
 
 let cached = DEFAULT_GAP_SEC;

@@ -12,7 +12,6 @@ import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
 import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 
 const SUPPORT_EMAIL = "askbibleme@gmail.com";
-const HOME_VERSE_ADVANCE_GAP_OPTIONS = [3, 5, 7] as const;
 
 type Props = {
   onClose: () => void;
@@ -104,37 +103,38 @@ function ShellNavDrawerVerseAdvanceGapRow() {
   const zh = locale === "zh-CN" || locale === "zh-TW";
   const gapSec = useHomeVerseAdvanceGapSec();
 
-  const labels = {
-    3: zh ? "3秒" : "3S",
-    5: zh ? "5秒" : "5S",
-    7: zh ? "7秒" : "7S",
-  } as const;
+  const options = [
+    { id: "3", label: "3s" },
+    { id: "5", label: "5s" },
+    { id: "7", label: "7s" },
+    { id: "10", label: "10s" },
+    { id: "15", label: "15s" },
+  ];
 
   const apply = (next: number) => {
     writeHomeVerseAdvanceGapSec(next);
   };
 
   return (
-    <div className="rounded-2xl border border-amber-900/10 bg-[#fff8ea] px-4 py-4">
-      <div className="mb-3 text-[17px] text-[#37352f]">{zh ? "金句停顿" : "Verse pause"}</div>
-      <div className="flex flex-wrap gap-2">
-        {HOME_VERSE_ADVANCE_GAP_OPTIONS.map((sec) => {
-          const active = gapSec === sec;
+    <div className="shell-nav-drawer-locale-row">
+      <div className="flex items-center justify-between gap-3">
+        <span className="shell-nav-drawer-row-text">{zh ? "金句停顿" : "Verse pause"}</span>
+      </div>
+      <div className="shell-nav-drawer-locale-chips pt-1" role="radiogroup" aria-label={zh ? "金句停顿" : "Verse pause"}>
+        {options.map((option) => {
+          const next = Number(option.id);
+          const active = gapSec === next;
           return (
             <button
-              key={sec}
+              key={option.id}
               type="button"
-              onClick={() => apply(sec)}
-              className={[
-                "rounded-full border px-4 py-3 text-[16px] transition-colors",
-                active
-                  ? "border-[#f1b53a] bg-[#f7e0b3] text-[#2b2114]"
-                  : "border-amber-900/12 bg-[#f7f1e7] text-[#2b2114]/90",
-              ].join(" ")}
+              className="shell-nav-drawer-locale-chip shell-nav-drawer-gap-chip"
+              aria-checked={active}
+              aria-label={option.label}
               aria-pressed={active}
-              aria-label={`${zh ? "金句停顿" : "Verse pause"} ${sec}`}
+              onClick={() => apply(next)}
             >
-              {labels[sec]}
+              <span className="shell-nav-drawer-gap-chip-label">{option.label}</span>
             </button>
           );
         })}

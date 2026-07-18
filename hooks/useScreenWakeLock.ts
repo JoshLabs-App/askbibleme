@@ -60,10 +60,22 @@ export function useScreenWakeLock(active: boolean): void {
       if (!cancelled) void request();
     };
 
+    const onFocus = () => {
+      if (!cancelled) void request();
+    };
+
+    const onPageShow = () => {
+      if (!cancelled) void request();
+    };
+
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pageshow", onPageShow);
     return () => {
       cancelled = true;
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onPageShow);
       releaseHeld();
     };
   }, [active]);

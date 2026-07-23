@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePublicAuthOrigin } from "@/lib/auth/public-auth-origin";
 import { getInvestAccessState } from "@/lib/invest-access";
 import { getInvestTestnetSnapshot } from "@/lib/invest/binance-testnet";
 import {
@@ -18,7 +19,7 @@ function sameOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (!origin) return false;
   try {
-    return new URL(origin).origin === request.nextUrl.origin;
+    return new URL(origin).origin === resolvePublicAuthOrigin(request);
   } catch {
     return false;
   }

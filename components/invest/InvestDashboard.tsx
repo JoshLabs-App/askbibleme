@@ -102,7 +102,9 @@ export function InvestDashboard({
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [automationBusy, setAutomationBusy] = useState<string | null>(null);
-  const [clock, setClock] = useState(() => Date.now());
+  const [clock, setClock] = useState(() =>
+    Date.parse(initialSnapshot.refreshedAt),
+  );
 
   const refresh = useCallback(async () => {
     setRefreshing(true);

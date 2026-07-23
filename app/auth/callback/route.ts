@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sanitizeAuthNextPath } from "@/lib/auth/safe-auth-redirect";
 import { isMobileAppOAuthCallback } from "@/lib/auth/mobile-oauth-app-handoff";
 import { buildMobileOAuthLandingHtml } from "@/lib/auth/mobile-oauth-landing-html";
+import { resolvePublicAuthOrigin } from "@/lib/auth/public-auth-origin";
 import { fetchAskbibleProfile, upsertAskbibleProfile } from "@/lib/askbible-supabase-auth";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const next = sanitizeAuthNextPath(url.searchParams.get("next"));
-  const origin = url.origin;
+  const origin = resolvePublicAuthOrigin(request);
   const isMobileBrowserFlow = isMobileAppOAuthCallback(url.searchParams);
 
   if (!isSupabaseAuthConfigured()) {

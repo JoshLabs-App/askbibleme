@@ -1,4 +1,7 @@
-import { TESTNET_STRATEGY } from "./testnet-strategy";
+import {
+  TESTNET_STRATEGY,
+  type ManagedTestnetPosition,
+} from "./testnet-strategy";
 
 export type BinanceBalance = {
   asset: string;
@@ -117,16 +120,21 @@ export function buildInvestModel(input: {
   trades: BinanceTrade[];
   orders: BinanceOrder[];
   prices: Record<string, number>;
+  managedPositions?: readonly ManagedTestnetPosition[];
 }): InvestModel {
+  const managedPositions: readonly ManagedTestnetPosition[] =
+    input.managedPositions ??
+    (TESTNET_STRATEGY.managedPositions as readonly ManagedTestnetPosition[]);
   const startedAt = Date.parse(TESTNET_STRATEGY.startedAt);
   const managedOrderIds = new Set<number>(
-    TESTNET_STRATEGY.managedPositions.flatMap((position) => [
+    managedPositions.flatMap((position) => [
       position.buyOrderId,
       ...position.protectiveOrderIds,
+      ...(position.emergencyExitOrderIds ?? []),
     ]),
   );
   const managedSymbols = new Set<string>(
-    TESTNET_STRATEGY.managedPositions.map((position) => position.symbol),
+    managedPositions.map((position) => position.symbol),
   );
 
   const rawTrades = input.trades
@@ -210,8 +218,8 @@ export function buildInvestModel(input: {
       .filter((order) => ["NEW", "PARTIALLY_FILLED"].includes(order.status ?? ""))
       .map((order) => numberValue(order.orderId)),
   );
-  const positionConfig = new Map<string, (typeof TESTNET_STRATEGY.managedPositions)[number]>(
-    TESTNET_STRATEGY.managedPositions.map((position) => [
+  const positionConfig = new Map<string, ManagedTestnetPosition>(
+    managedPositions.map((position) => [
       position.symbol,
       position,
     ]),

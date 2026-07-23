@@ -101,6 +101,7 @@ export function InvestDashboard({
     useState<InvestTestnetSnapshot>(initialSnapshot);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [automationBusy, setAutomationBusy] = useState<string | null>(null);
   const [clock, setClock] = useState(() => Date.now());
 
   const refresh = useCallback(async () => {
@@ -125,6 +126,40 @@ export function InvestDashboard({
       setRefreshing(false);
     }
   }, [snapshot.status]);
+
+  const automationAction = useCallback(
+    async (action: "pause" | "resume" | "run") => {
+      setAutomationBusy(action);
+      try {
+        const response = await fetch("/api/invest/testnet/automation", {
+          method: "POST",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        });
+        const payload = (await response.json()) as
+          | InvestTestnetSnapshot
+          | { error?: string };
+        if (!response.ok || !("status" in payload)) {
+          throw new Error(
+            "error" in payload && payload.error
+              ? payload.error
+              : "自动策略操作失败",
+          );
+        }
+        setSnapshot(payload);
+        setRefreshError(null);
+      } catch (error) {
+        setRefreshError(
+          error instanceof Error ? error.message : "自动策略操作失败",
+        );
+      } finally {
+        setAutomationBusy(null);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const clockTimer = window.setInterval(() => setClock(Date.now()), 1_000);
@@ -177,7 +212,9 @@ export function InvestDashboard({
       value: snapshot.decision.state,
       detail: primaryPosition
         ? `${primaryPosition.symbol} · 保护单${primaryPosition.protectionActive ? "有效" : "需检查"}`
-        : "现货测试 · 不用杠杆",
+        : snapshot.automation.paused
+          ? "自动下单已暂停"
+          : "现货测试 · 等待信号",
       tone: primaryPosition?.protectionActive
         ? "text-[#f3ba2f]"
         : "text-rose-300",
@@ -219,33 +256,91 @@ export function InvestDashboard({
         </div>
       ) : null}
 
-      <section className="mt-5 rounded-3xl border border-emerald-400/14 bg-emerald-400/[0.035] p-5 sm:p-6">
+      <section
+        className={`mt-5 rounded-3xl border p-5 sm:p-6 ${
+          snapshot.testnetAutoTradingEnabled
+            ? "border-emerald-400/20 bg-emerald-400/[0.045]"
+            : "border-amber-300/16 bg-amber-300/[0.035]"
+        }`}
+      >
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[11px] font-semibold tracking-[0.16em] text-emerald-300/70">
-              TESTNET CONNECTED
+            <p
+              className={`text-[11px] font-semibold tracking-[0.16em] ${
+                snapshot.testnetAutoTradingEnabled
+                  ? "text-emerald-300/80"
+                  : "text-amber-200/70"
+              }`}
+            >
+              {snapshot.testnetAutoTradingEnabled
+                ? "TESTNET AUTO TRADING ON"
+                : snapshot.automation.paused
+                  ? "TESTNET AUTO TRADING PAUSED"
+                  : "TESTNET CONNECTED"}
             </p>
-            <h2 className="mt-2 text-lg font-semibold">Binance 虚拟账户已连接</h2>
+            <h2 className="mt-2 text-lg font-semibold">
+              {snapshot.testnetAutoTradingEnabled
+                ? "测试网自动执行器正在运行"
+                : snapshot.automation.paused
+                  ? "自动新增订单已暂停"
+                  : "Binance 虚拟账户已连接"}
+            </h2>
             <p className="mt-2 max-w-3xl text-[13px] leading-6 text-white/48">
-              当前只读取 Spot Testnet
-              的虚拟余额、策略持仓、订单和成交。浏览器不会收到 API
-              密钥，真实账户、杠杆、提币和主网交易全部关闭。
+              服务器每 {snapshot.strategy.evaluationIntervalMinutes} 分钟检查
+              BTC 趋势；满足条件时可自动提交不超过{" "}
+              {snapshot.strategy.rules.maxOrderUsdt} USDT 的 Spot Testnet
+              订单，并立即建立止损与止盈保护。浏览器不会收到 API 密钥，真实账户、杠杆、提币和主网交易全部关闭。
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <button
               type="button"
+              onClick={() => automationAction("run")}
+              disabled={
+                Boolean(automationBusy) ||
+                !snapshot.automation.configured ||
+                snapshot.automation.paused
+              }
+              className="rounded-full border border-[#f3ba2f]/25 bg-[#f3ba2f]/10 px-4 py-2 text-[11px] font-medium text-[#f3ba2f] transition hover:bg-[#f3ba2f]/15 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {automationBusy === "run" ? "检查中…" : "立即运行策略"}
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                automationAction(
+                  snapshot.automation.paused ? "resume" : "pause",
+                )
+              }
+              disabled={
+                Boolean(automationBusy) || !snapshot.automation.configured
+              }
+              className="rounded-full border border-white/12 bg-white/[0.035] px-4 py-2 text-[11px] font-medium text-white/68 transition hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {automationBusy
+                ? "处理中…"
+                : snapshot.automation.paused
+                  ? "恢复自动策略"
+                  : "暂停新订单"}
+            </button>
+            <button
+              type="button"
               onClick={refresh}
-              disabled={refreshing}
+              disabled={refreshing || Boolean(automationBusy)}
               className="rounded-full border border-white/12 bg-white/[0.035] px-4 py-2 text-[11px] font-medium text-white/68 transition hover:bg-white/[0.07] disabled:opacity-50"
             >
               {refreshing ? "正在刷新…" : "立即刷新"}
             </button>
-            <span className="rounded-full border border-emerald-400/20 bg-black/20 px-4 py-2 text-[11px] font-medium text-emerald-300/80">
-              LIVE TRADING OFF
+            <span className="rounded-full border border-white/12 bg-black/20 px-4 py-2 text-[11px] font-medium text-white/55">
+              MAINNET OFF
             </span>
           </div>
         </div>
+        {snapshot.automation.pauseReason || snapshot.automation.lastError ? (
+          <p className="mt-4 rounded-2xl border border-amber-200/12 bg-black/15 px-4 py-3 text-xs text-amber-100/65">
+            {snapshot.automation.lastError || snapshot.automation.pauseReason}
+          </p>
+        ) : null}
       </section>
 
       <section className="mt-5 grid gap-3 lg:grid-cols-3">
@@ -262,7 +357,11 @@ export function InvestDashboard({
           <p className="text-[11px] font-semibold tracking-[0.14em] text-white/40">
             下一步
           </p>
-          <h2 className="mt-3 text-lg font-semibold">观察，不自动下单</h2>
+          <h2 className="mt-3 text-lg font-semibold">
+            {snapshot.testnetAutoTradingEnabled
+              ? "按规则自动执行"
+              : "等待恢复或接通"}
+          </h2>
           <p className="mt-3 text-[13px] leading-6 text-white/48">
             {snapshot.decision.nextAction}
           </p>
@@ -286,6 +385,18 @@ export function InvestDashboard({
               </p>
             </div>
             <div>
+              <p className="text-white/32">总投入上限</p>
+              <p className="mt-1 text-white/75">
+                {snapshot.strategy.rules.maxTotalExposurePct}%
+              </p>
+            </div>
+            <div>
+              <p className="text-white/32">每日入场</p>
+              <p className="mt-1 text-white/75">
+                最多 {snapshot.strategy.rules.maxEntriesPerDay} 次
+              </p>
+            </div>
+            <div>
               <p className="text-white/32">止损</p>
               <p className="mt-1 text-white/75">
                 {snapshot.strategy.rules.stopLossPct}%
@@ -298,6 +409,10 @@ export function InvestDashboard({
               </p>
             </div>
           </div>
+          <p className="mt-4 border-t border-white/[0.07] pt-3 text-[11px] leading-5 text-white/35">
+            最大策略回撤 {snapshot.strategy.rules.maxStrategyDrawdownPct}% 后自动暂停；退出后冷静{" "}
+            {snapshot.strategy.rules.cooldownHours} 小时。
+          </p>
         </article>
       </section>
 

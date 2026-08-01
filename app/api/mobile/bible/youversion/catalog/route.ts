@@ -11,6 +11,7 @@ export async function GET() {
     let nextPageToken = "";
     for (let page = 0; page < 100; page += 1) {
       const params = new URLSearchParams();
+      params.append("language_ranges[]", "*");
       if (nextPageToken) params.set("next_page_token", nextPageToken);
       const response = await fetch(`${BASE}/bibles?${params.toString()}`, {
         headers: { "X-YVP-App-Key": key, Accept: "application/json" },

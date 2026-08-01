@@ -10,8 +10,8 @@ export async function GET() {
     const translations: Array<Record<string, unknown>> = [];
     let nextPageToken = "";
     for (let page = 0; page < 100; page += 1) {
-      const params = new URLSearchParams({ page_size: "100" });
-      if (nextPageToken) params.set("page_token", nextPageToken);
+      const params = new URLSearchParams();
+      if (nextPageToken) params.set("next_page_token", nextPageToken);
       const response = await fetch(`${BASE}/bibles?${params.toString()}`, {
         headers: { "X-YVP-App-Key": key, Accept: "application/json" },
         next: { revalidate: 300 },

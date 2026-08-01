@@ -15,7 +15,7 @@ export async function GET() {
       if (nextPageToken) params.set("page_token", nextPageToken);
       const response = await fetch(`${BASE}/bibles?${params.toString()}`, {
         headers: { "X-YVP-App-Key": key, Accept: "application/json" },
-        next: { revalidate: 300 },
+        cache: "no-store",
       });
       if (!response.ok) return NextResponse.json({ ok: false, error: `youversion_http_${response.status}`, translations: [] }, { status: 502 });
       const body = (await response.json()) as { data?: Array<Record<string, unknown>>; next_page_token?: string };

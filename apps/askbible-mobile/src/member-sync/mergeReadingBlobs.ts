@@ -2,6 +2,10 @@ import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-ah
 import { mergeNtDeepRepeatReadingState } from "../read/reading-plan/merge-nt-deep-repeat-reading-state";
 import { mergeTripleLoopReadingState } from "../read/reading-plan/merge-triple-loop-reading-state";
 import {
+  mergeScriptureListenTotalsRecords,
+  parseScriptureListenTotalsRecord,
+} from "../read/scripture-listen-totals";
+import {
   isSameTodayReadingPlanScope,
   planIdFromTodayReadingScopeKey,
 } from "../read/reading-plan/today-reading-done";
@@ -177,6 +181,13 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return mergeTodayReadingDone(a, b);
     case "habitStats":
       return mergeStringSetRecords(a, b, "completedDates");
+    case "scriptureListenTotals": {
+      const left = parseScriptureListenTotalsRecord(a);
+      const right = parseScriptureListenTotalsRecord(b);
+      if (!left) return right ?? b;
+      if (!right) return left;
+      return mergeScriptureListenTotalsRecords(left, right);
+    }
     case "todayReadingFraction":
       return mergeFractions(a, b);
     case "recentSearches":

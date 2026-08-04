@@ -11,6 +11,7 @@ export const MEMBER_READING_SYNC_BLOB_KEYS = [
   "todayReadingDone",
   "todayReadingFraction",
   "habitStats",
+  "scriptureListenTotals",
   "readTypography",
   "readTranslation",
   "recentSearches",

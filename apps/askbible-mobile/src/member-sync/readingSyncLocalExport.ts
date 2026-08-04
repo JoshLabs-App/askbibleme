@@ -37,6 +37,9 @@ import {
 import {
   readReadingHabitStats,
 } from "../read/reading-habit-stats";
+import {
+  readScriptureListenTotalsRecord,
+} from "../read/scripture-listen-totals";
 import { readReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
   readNtDeepRepeatProgress,
@@ -89,6 +92,7 @@ export async function exportLocalReadingBlobs(): Promise<MemberReadingSyncPushV1
     todayReadingDone,
     todayReadingFraction,
     habitStats,
+    scriptureListenTotals,
     readTypography,
     readTranslation,
     recentSearches,
@@ -111,6 +115,7 @@ export async function exportLocalReadingBlobs(): Promise<MemberReadingSyncPushV1
     readTodayReadingDoneRecord(),
     readTodayReadingChapterFractionRecord(),
     readReadingHabitStats(),
+    readScriptureListenTotalsRecord(),
     readReadBibleTypographyPrefs(),
     readReadBibleTranslationSyncBundle(),
     readScriptureRecentSearches(),
@@ -139,6 +144,9 @@ export async function exportLocalReadingBlobs(): Promise<MemberReadingSyncPushV1
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);
   }
   blobs.habitStats = wrapBlob(habitStats, now);
+  if (scriptureListenTotals.totalSec > 0) {
+    blobs.scriptureListenTotals = wrapBlob(scriptureListenTotals, now);
+  }
 
   blobs.readTypography = wrapBlob(readTypography, now);
   blobs.readTranslation = wrapBlob(readTranslation, now);

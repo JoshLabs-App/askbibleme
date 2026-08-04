@@ -11,6 +11,7 @@ import {
 } from "./scriptureChapterEnd";
 import { handleScriptureStopAtStatus } from "./scripturePlaybackStopAt";
 import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
+import { noteScriptureListenProgress } from "../read/scripture-listen-totals";
 import {
   scheduleScriptureResumeAfterInterruption,
   type ScriptureResumeCtx,
@@ -89,6 +90,7 @@ export function createScripturePlaybackStatusHandler(
     setPlaying(status.isPlaying);
     const scriptureSec = status.positionMillis / 1000;
     if (playbackModeRef.current === "scripture") {
+      noteScriptureListenProgress(scriptureSec, status.isPlaying);
       const durationSec = status.durationMillis != null ? status.durationMillis / 1000 : 0;
       const shouldRefreshSession =
         !status.isPlaying ||

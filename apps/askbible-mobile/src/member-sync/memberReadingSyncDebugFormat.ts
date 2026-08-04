@@ -29,6 +29,8 @@ const REASON_ZH: Record<string, string> = {
   todayReadingFraction: "今日进度",
   chapterCompletion: "章完成",
   habitStats: "习惯统计",
+  scriptureListenTotals: "累计听经",
+  readingPlanPrefs: "读经计划",
   "manual-debug": "手动同步",
 };
 
@@ -53,6 +55,7 @@ const BLOB_KEY_ZH: Record<string, string> = {
   readingPlanPrefs: "读经计划",
   chapterCompletion: "章完成",
   habitStats: "习惯统计",
+  scriptureListenTotals: "累计听经",
   bookmarks: "书签",
   highlights: "高亮",
   lastPosition: "上次位置",

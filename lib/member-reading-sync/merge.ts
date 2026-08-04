@@ -170,6 +170,17 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return mergeTodayReadingDone(a, b);
     case "habitStats":
       return mergeStringSetRecords(a, b, "completedDates");
+    case "scriptureListenTotals": {
+      const leftSec =
+        a && typeof a === "object" && typeof (a as { totalSec?: unknown }).totalSec === "number"
+          ? Math.floor((a as { totalSec: number }).totalSec)
+          : 0;
+      const rightSec =
+        b && typeof b === "object" && typeof (b as { totalSec?: unknown }).totalSec === "number"
+          ? Math.floor((b as { totalSec: number }).totalSec)
+          : 0;
+      return { version: 1, totalSec: Math.max(leftSec, rightSec) };
+    }
     case "todayReadingFraction":
       return mergeFractions(a, b);
     case "recentSearches":

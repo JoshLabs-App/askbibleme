@@ -46,6 +46,12 @@ import {
   readReadingHabitStats,
   mergeReadingHabitStatsRecords,
 } from "../read/reading-habit-stats";
+import {
+  mergeScriptureListenTotalsRecords,
+  parseScriptureListenTotalsRecord,
+  readScriptureListenTotalsRecord,
+  replaceScriptureListenTotalsRecord,
+} from "../read/scripture-listen-totals";
 import { writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
   replaceNtDeepRepeatProgress,
@@ -87,6 +93,7 @@ import {
   isNtDeepRepeatState,
   isReadingPlanPrefs,
   isRecentSearches,
+  isScriptureListenTotals,
   isScripturePlaybackRate,
   isTodayDoneRecord,
   isTodayFractionRecord,
@@ -138,6 +145,17 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       if (isHabitStats(value)) {
         const local = await readReadingHabitStats();
         await replaceReadingHabitStatsRecord(mergeReadingHabitStatsRecords(local, value));
+      }
+      break;
+    case "scriptureListenTotals":
+      if (isScriptureListenTotals(value)) {
+        const remote = parseScriptureListenTotalsRecord(value);
+        if (remote) {
+          const local = await readScriptureListenTotalsRecord();
+          await replaceScriptureListenTotalsRecord(
+            mergeScriptureListenTotalsRecords(local, remote),
+          );
+        }
       }
       break;
     case "readTypography":

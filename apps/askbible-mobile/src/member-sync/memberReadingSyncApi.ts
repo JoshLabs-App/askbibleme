@@ -32,13 +32,21 @@ export type MemberReadingSyncFetchResult = {
   httpStatus: number | null;
 };
 
+function syncBaseUrls(primary: string): string[] {
+  const normalized = primary.replace(/\/$/, "");
+  return /10\.0\.2\.2|localhost|127\.0\.0\.1/.test(normalized)
+    ? [normalized, "https://askbible.me"]
+    : [normalized];
+}
+
 async function memberReadingSyncFetch(
   sessionToken: string,
   init: RequestInit,
 ): Promise<MemberReadingSyncFetchResult> {
   const base = getAskBibleBaseUrl();
-  try {
-    const res = await fetchWithTimeout(toAbsoluteUrl(base, "/api/member/reading-sync"), {
+  for (const requestBase of syncBaseUrls(base)) {
+    try {
+      const res = await fetchWithTimeout(toAbsoluteUrl(requestBase, "/api/member/reading-sync"), {
       ...init,
       headers: {
         Accept: "application/json",
@@ -46,19 +54,20 @@ async function memberReadingSyncFetch(
         ...(init.headers ?? {}),
       },
       timeoutMs: 15_000,
-    });
-    const data = (await res.json().catch(() => null)) as MemberReadingSyncResponseV1 | null;
-    if (!data || data.schemaVersion !== MEMBER_READING_SYNC_SCHEMA_VERSION) {
-      return { response: null, httpStatus: res.status };
+      });
+      const data = (await res.json().catch(() => null)) as MemberReadingSyncResponseV1 | null;
+      if (!data || data.schemaVersion !== MEMBER_READING_SYNC_SCHEMA_VERSION) {
+        return { response: null, httpStatus: res.status };
+      }
+      if (!res.ok || !data.ok) return { response: data, httpStatus: res.status };
+      return { response: data, httpStatus: res.status };
+    } catch (err) {
+      if (__DEV__) {
+        console.warn("[memberReadingSync] fetch failed", requestBase, err);
+      }
     }
-    if (!res.ok || !data.ok) return { response: data, httpStatus: res.status };
-    return { response: data, httpStatus: res.status };
-  } catch (err) {
-    if (__DEV__) {
-      console.warn("[memberReadingSync] fetch failed", base, err);
-    }
-    return { response: null, httpStatus: null };
   }
+  return { response: null, httpStatus: null };
 }
 
 function unwrapFetch(result: MemberReadingSyncFetchResult): MemberReadingSyncResponseV1 | null {

@@ -94,6 +94,14 @@ export function isHabitStats(value: unknown): value is ReadingHabitStatsRecord {
   );
 }
 
+export function isScriptureListenTotals(
+  value: unknown,
+): value is { version: 1; totalSec: number } {
+  if (!value || typeof value !== "object") return false;
+  const v = value as { version?: unknown; totalSec?: unknown };
+  return v.version === 1 && typeof v.totalSec === "number" && Number.isFinite(v.totalSec) && v.totalSec >= 0;
+}
+
 export function isTypographyPrefs(value: unknown): value is ReadBibleTypographyPrefsV1 {
   return Boolean(value && typeof value === "object" && typeof (value as ReadBibleTypographyPrefsV1).size === "string");
 }

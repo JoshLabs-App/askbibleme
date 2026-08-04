@@ -72,6 +72,11 @@ import {
   replaceReadingHabitStatsRecord,
   type ReadingHabitStatsRecord,
 } from "@/lib/read/reading-habit-stats";
+import {
+  readScriptureListenTotalsWeb,
+  replaceScriptureListenTotalsWeb,
+  type ScriptureListenTotalsRecord,
+} from "@/lib/read/scripture-listen-totals-web";
 import { readTripleLoopProgress, writeTripleLoopProgress } from "@/lib/read/triple-loop-progress";
 import { readNtDeepRepeatProgress, writeNtDeepRepeatProgress } from "@/lib/read/nt-deep-repeat-progress";
 import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
@@ -169,6 +174,10 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);
   }
   blobs.habitStats = wrapBlob(habitStats, now);
+  const scriptureListenTotals = readScriptureListenTotalsWeb();
+  if (scriptureListenTotals.totalSec > 0) {
+    blobs.scriptureListenTotals = wrapBlob(scriptureListenTotals, now);
+  }
 
   blobs.readTypography = wrapBlob(readTypography, now);
   blobs.readTranslation = wrapBlob(readTranslation, now);
@@ -233,6 +242,16 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
         replaceReadingHabitStatsRecord(
           mergeReadingHabitStatsRecords(local, value as ReadingHabitStatsRecord),
         );
+      }
+      break;
+    case "scriptureListenTotals":
+      if (
+        value &&
+        typeof value === "object" &&
+        (value as ScriptureListenTotalsRecord).version === 1 &&
+        typeof (value as ScriptureListenTotalsRecord).totalSec === "number"
+      ) {
+        replaceScriptureListenTotalsWeb(value as ScriptureListenTotalsRecord);
       }
       break;
     case "readTypography":

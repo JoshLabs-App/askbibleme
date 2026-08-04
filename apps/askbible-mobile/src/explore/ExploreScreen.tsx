@@ -21,7 +21,12 @@ import { asExploreEntryIconShape } from "./exploreStagedEntries";
 import { useExploreStagedEntries } from "./useExploreStagedEntries";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useExploreIconGridLayout } from "../read/parchmentColumnLayout";
-import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import {
+  EXPLORE_PAGE_TOP_PAD,
+  exploreStyles as s,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 
 const SCRIPTURE_ANTHOLOGY_IDS = [
   "word-of-god",
@@ -150,7 +155,7 @@ export function ExploreScreen() {
   );
 
   return (
-    <View style={s.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         contentContainerStyle={scrollContentStyle}
@@ -174,6 +179,6 @@ export function ExploreScreen() {
         </View>
         ) : null}
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

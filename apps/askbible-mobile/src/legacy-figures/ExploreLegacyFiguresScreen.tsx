@@ -9,7 +9,11 @@ import { getScriptureBookDisplayName } from "../bible/scripture-book-display-nam
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "../explore/exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "../explore/exploreParchmentStyles";
 import { useMobileLegacyFiguresBundle } from "./useMobileLegacyFigures";
 import {
   getMobileLegacyFigureBookRows,
@@ -64,7 +68,7 @@ export function ExploreLegacyFiguresScreen() {
   }, [screenFocused]);
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -144,6 +148,6 @@ export function ExploreLegacyFiguresScreen() {
             : null}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

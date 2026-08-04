@@ -13,7 +13,12 @@ import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { resolveRouteParam } from "../navigation/resolveRouteParam";
 import { useExploreFeaturedArticle, refreshExploreFeaturedArticlesWhenFocused } from "./useExploreFeaturedArticles";
 import { ContentCorrectionEntry } from "../content-correction/ContentCorrectionEntry";
-import { EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import {
+  EXPLORE_PAGE_TOP_PAD,
+  exploreStyles as s,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 import { normalizeAskbibleAppHref, parseReadPath } from "../../../../lib/bible/parse-askbible-read-link";
 import {
   pushExploreReadChapter,
@@ -64,7 +69,7 @@ export function ExploreArticleScreen() {
 
   if (!article) {
     return (
-      <View style={s.root}>
+      <ExploreParchmentPage>
         <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
           <Pressable onPress={() => returnToExploreIndex(router)} style={s.backLink} accessibilityRole="button">
             <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
@@ -73,12 +78,12 @@ export function ExploreArticleScreen() {
             {locale === "en" ? "Article not found." : localizeZhText(locale, "找不到这篇文章。")}
           </Text>
         </ParchmentBottomFadeScrollView>
-      </View>
+      </ExploreParchmentPage>
     );
   }
 
   return (
-    <View style={s.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
         <Pressable onPress={() => returnToExploreIndex(router)} style={s.backLink} accessibilityRole="button">
           <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
@@ -118,6 +123,6 @@ export function ExploreArticleScreen() {
           />
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

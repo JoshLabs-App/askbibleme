@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   StyleSheet,
   useWindowDimensions,
@@ -12,6 +12,7 @@ import {
   parchmentColumnMaxWidth,
   parchmentContentPaddingHorizontal,
 } from "../read/parchmentColumnLayout";
+import { ReadParchmentBackground } from "../read/ReadParchmentBackground";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
 /** 与读经首页 `READ_PARCHMENT_PAGE_TOP_HOME` 同量级，略留标题呼吸感 */
@@ -20,7 +21,15 @@ export const EXPLORE_PAGE_TOP_PAD = 40;
 /** 数算年日页中间经文区不透明度（30% 透明） */
 export const YEAR_DAY_COUNT_SCRIPTURE_TEXT_OPACITY = 0.7;
 
-/** 与读经/祷告羊皮卷页对齐；底纹由 explore `_layout` 的 {@link ReadParchmentBackground} 统一提供。 */
+/**
+ * 探索页根壳：直接复用读经的 {@link ReadParchmentBackground}。
+ * Native Stack 可能挡住 layout 外层底图，故在 Screen 内再铺一次。
+ */
+export function ExploreParchmentPage({ children }: { children: ReactNode }) {
+  return <ReadParchmentBackground>{children}</ReadParchmentBackground>;
+}
+
+/** 与读经羊皮卷页对齐；页面根用 {@link ExploreParchmentPage}。 */
 export const exploreStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "transparent", overflow: "hidden" },
   scroll: {

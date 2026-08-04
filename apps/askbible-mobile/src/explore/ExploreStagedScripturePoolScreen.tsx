@@ -13,7 +13,11 @@ import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { resolveExploreStagedEntryLabel } from "./exploreHomeConfig";
 import { getExploreStagedEntry, type ExploreStagedEntryId } from "./exploreStagedEntries";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 import {
   clearExploreChapterVerseCache,
   loadExploreVerseTextsForRefsProgressive,
@@ -168,7 +172,7 @@ export function ExploreStagedScripturePoolScreen({ entryId, module }: Props) {
   }, [categories, expandedCategoryIndex, locale, parsedRefByRaw, screenFocused]);
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -227,7 +231,7 @@ export function ExploreStagedScripturePoolScreen({ entryId, module }: Props) {
           ))}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }
 

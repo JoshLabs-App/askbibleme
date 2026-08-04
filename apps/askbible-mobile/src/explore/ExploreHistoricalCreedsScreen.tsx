@@ -4,7 +4,10 @@ import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScroll
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { ExploreHistoricalCreedsTimelineList } from "./ExploreHistoricalCreedsTimelineList";
 import { historicalCreedsScreenStyles as styles } from "./ExploreHistoricalCreedsScreenStyles";
-import { exploreStyles as shared } from "./exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 import { useExploreHistoricalCreedsScreen } from "./useExploreHistoricalCreedsScreen";
 
 export function ExploreHistoricalCreedsScreen() {
@@ -20,7 +23,7 @@ export function ExploreHistoricalCreedsScreen() {
   } = useExploreHistoricalCreedsScreen();
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -47,6 +50,6 @@ export function ExploreHistoricalCreedsScreen() {
           onToggleFullText={onToggleFullText}
         />
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

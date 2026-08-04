@@ -11,7 +11,11 @@ import { ReadChapterInfoEditionMarkdown } from "../read/ReadChapterInfoEditionMa
 import { shellTabBarScrollPad } from "../shell/shellLayout";
 import { resolveRouteParam } from "../navigation/resolveRouteParam";
 import { linkifyExploreArticleScriptureRefsForLocale } from "../explore/linkifyExploreArticleScriptureRefsForLocale";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "../explore/exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "../explore/exploreParchmentStyles";
 import { pushExploreReadChapter, useExploreReadReturnPath } from "../explore/explore-read-chapter-nav";
 import { useMobileLegacyFiguresBundle } from "./useMobileLegacyFigures";
 import { getMobileLegacyFigureBySlug } from "./mobileLegacyFiguresCore";
@@ -83,7 +87,7 @@ export function ExploreLegacyFigureScreen() {
 
   if (!profile) {
     return (
-      <View style={shared.root}>
+      <ExploreParchmentPage>
         <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
           <Pressable onPress={() => router.back()} style={shared.backLink} accessibilityRole="button">
             <Text style={shared.backLinkText}>{t("pages.explore.articlesBack")}</Text>
@@ -92,7 +96,7 @@ export function ExploreLegacyFigureScreen() {
             {locale === "en" ? "Figure not found." : localizeZhText(locale, "找不到这位人物。")}
           </Text>
         </ParchmentBottomFadeScrollView>
-      </View>
+      </ExploreParchmentPage>
     );
   }
 
@@ -102,7 +106,7 @@ export function ExploreLegacyFigureScreen() {
   );
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
         <Pressable onPress={() => router.back()} style={shared.backLink} accessibilityRole="button">
           <Text style={shared.backLinkText}>{t("pages.explore.figuresBack")}</Text>
@@ -150,6 +154,6 @@ export function ExploreLegacyFigureScreen() {
           )}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

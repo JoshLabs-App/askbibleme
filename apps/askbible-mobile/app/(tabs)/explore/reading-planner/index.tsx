@@ -1,14 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { ExploreParchmentPage } from "../../../../src/explore/exploreParchmentStyles";
 import { ReadingPlannerScreen } from "../../../../src/explore/reading-planner/ReadingPlannerScreen";
 
 export default function ReadingPlannerRoute() {
   return (
-    <View style={styles.root}>
+    <ExploreParchmentPage>
       <ReadingPlannerScreen />
-    </View>
+    </ExploreParchmentPage>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-});

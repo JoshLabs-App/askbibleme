@@ -9,7 +9,11 @@ import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { resolveExploreStagedEntryLabel } from "./exploreHomeConfig";
 import { getExploreStagedEntry, type ExploreStagedEntryId } from "./exploreStagedEntries";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 import { useExploreModulesBundle } from "./useExploreModules";
 
 const BOTTOM_PAD = 120;
@@ -35,7 +39,7 @@ export function ExploreStagedPlaceholderScreen({ entryId }: Props) {
   const placeholder = resolveUiText(locale, "内容筹备中。", "Coming soon.");
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -48,7 +52,7 @@ export function ExploreStagedPlaceholderScreen({ entryId }: Props) {
         <Text style={styles.pageTitle}>{title}</Text>
         <Text style={styles.placeholder}>{placeholder}</Text>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }
 

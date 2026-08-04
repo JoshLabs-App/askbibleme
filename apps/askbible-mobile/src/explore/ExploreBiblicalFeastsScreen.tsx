@@ -2,7 +2,10 @@ import { Pressable, Text, View } from "react-native";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
-import { exploreStyles as shared } from "./exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 import { ExploreBiblicalFeastsTimelineList } from "./ExploreBiblicalFeastsTimelineList";
 import { biblicalFeastsScreenStyles as styles } from "./ExploreBiblicalFeastsScreenStyles";
 import { useExploreBiblicalFeastsScreen } from "./useExploreBiblicalFeastsScreen";
@@ -20,7 +23,7 @@ export function ExploreBiblicalFeastsScreen() {
   } = useExploreBiblicalFeastsScreen();
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -62,6 +65,6 @@ export function ExploreBiblicalFeastsScreen() {
           onOpenRead={openRead}
         />
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

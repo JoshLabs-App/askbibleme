@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import {
-  ImageBackground,
+  Image,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -109,12 +109,13 @@ export function ReadParchmentFillLayer({
   const dynamicSource = useReadParchmentScrollSource();
   const resolvedSource = source ?? dynamicSource;
   return (
-    <View style={[StyleSheet.absoluteFillObject, style]} pointerEvents="none">
-      <ImageBackground
+    <View style={[StyleSheet.absoluteFillObject, style]} pointerEvents="none" collapsable={false}>
+      <Image
         source={resolvedSource}
         resizeMode="stretch"
-        style={StyleSheet.absoluteFillObject}
-        imageStyle={[styles.fillImage, imageStyle]}
+        style={[StyleSheet.absoluteFillObject, styles.fillImage, imageStyle]}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
       />
     </View>
   );

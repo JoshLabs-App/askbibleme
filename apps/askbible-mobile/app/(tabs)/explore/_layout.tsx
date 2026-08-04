@@ -5,13 +5,14 @@ import {
 } from "../../../src/read/ReadParchmentBackground";
 
 export default function ExploreStackLayout() {
+  // 与读经 Tab 共用同一套羊皮栈设置（透明 contentStyle + 外层 ReadParchmentBackground）。
   return (
     <ReadParchmentBackground>
       <Stack
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
-          freezeOnBlur: true,
+          freezeOnBlur: false,
           contentStyle: PARCHMENT_STACK_SCREEN_STYLE,
         }}
       >

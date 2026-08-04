@@ -10,7 +10,11 @@ import { t, localizeZhText } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import {
+  exploreStyles as shared,
+  useExploreScrollContentStyle,
+  ExploreParchmentPage,
+} from "./exploreParchmentStyles";
 import { loadExploreVerseTextsForRefsProgressive, clearExploreChapterVerseCache, scheduleExploreCategoryVerseLoad } from "./load-explore-category-verses";
 import type { ExploreModulesCategory } from "./exploreModulesBundleCore";
 import { getExploreModulesContent } from "./exploreModuleContent";
@@ -137,7 +141,7 @@ export function ExplorePraiseWorshipScreen() {
   }, [expandedCategoryIndex, locale, parsedRefByRaw, screenFocused]);
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -196,7 +200,7 @@ export function ExplorePraiseWorshipScreen() {
           ))}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }
 

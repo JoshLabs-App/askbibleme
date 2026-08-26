@@ -1,0 +1,18 @@
+# AskBible Supabase local/dev CLI config.
+# Remote project ref matches app.config.js default.
+project_id = "tgobadhdylarhssudplc"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[functions]
+verify_jwt = false

@@ -50,6 +50,8 @@
     "build:scripture-xrefs": "tsx scripts/build-scripture-xrefs-sqlite.ts",
     "migrate:askbible-admin-emails": "node scripts/migration/askbible-admin-export.mjs",
     "migrate:askbible-users-to-supabase": "node scripts/migration/askbible-users-to-supabase.mjs",
+    "supabase:verify": "node scripts/supabase-verify.mjs",
+    "supabase:deploy": "bash scripts/supabase-deploy.sh",
     "audio:checkout": "bash scripts/checkout-cuv-chapter-audio.sh",
     "audio:restore": "bash scripts/checkout-cuv-chapter-audio.sh",
     "audio:sync-disk": "node scripts/sync-cuv-audio-to-data-root.mjs",

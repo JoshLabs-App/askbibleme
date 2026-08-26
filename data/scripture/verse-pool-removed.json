@@ -3,6 +3,17 @@
   "reviewedAt": "2026-08-26T21:13:53.405Z",
   "removedCount": 68,
   "poolCountAfter": 4324,
+  "audioRemoved": {
+    "local": {
+      "zh": { "subdir": "golden-verses", "deleted": 68 },
+      "en": { "subdir": "golden-verses-web-en", "deleted": 68 }
+    },
+    "r2": {
+      "bucket": "askbible-media",
+      "objectsDeleted": 136,
+      "note": "68 verses × zh/en; deleted via wrangler 2026-08-26"
+    }
+  },
   "removed": [
     {
       "verseKey": "GAL.5.22",

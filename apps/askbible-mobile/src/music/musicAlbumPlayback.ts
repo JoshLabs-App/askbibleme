@@ -1,11 +1,11 @@
 import type { ShellSleepTimerMinutes, MusicRepeatMode } from "./musicPlaybackTypes";
 import { normalizeMusicAlbumLabel } from "./musicAlbumCatalog";
 import type { PlaybackTrack } from "./types";
-import { isTrackPlayable } from "./trackArtwork";
+import { isTrackPlayable } from "./trackArtworkPlayable";
 
 export function defaultRepeatModeForAlbum(album: string): MusicRepeatMode | null {
   if (album === "睡眠" || album === "专注工作") return "one";
-  if (album === "安静" || album === "下午茶") return "all";
+  if (album === "安静" || album === "下午茶" || album === "钢琴" || album === "赞美诗") return "all";
   return null;
 }
 
@@ -31,7 +31,8 @@ export function buildFilteredTrackIndices(
   return tracks
     .map((tr, index) => ({ tr, index }))
     .filter(({ tr }) => normalizeMusicAlbumLabel(tr.album) === album)
-    .filter(({ tr }) => !offlineMusicOnly || tr.localReady)
+    // 纯本地包：仍列出 R2 可点播曲（TEMP）；勿只留 localReady，否则非首曲整栏消失。
+    .filter(({ tr }) => !offlineMusicOnly || isTrackPlayable(tr))
     .map(({ index }) => index);
 }
 
@@ -56,5 +57,34 @@ export function pickAlbumStartTrackIndex(
     const tr = tracks[idx];
     return tr && isTrackPlayable(tr);
   });
-  return playable[0] ?? albumIndices[0] ?? null;
+  const localReady = playable.filter((idx) => tracks[idx]?.localReady);
+  return localReady[0] ?? playable[0] ?? albumIndices[0] ?? null;
+}
+
+/** 首页点选专辑：从可播曲里随机一首（含 R2），不要固定第一首。 */
+export function pickRandomPlayableTrackIndexInAlbum(
+  tracks: readonly PlaybackTrack[],
+  album: string,
+  excludeIndex?: number,
+  preferLocalReady = false,
+): number | null {
+  const key = normalizeMusicAlbumLabel(album);
+  const candidates: number[] = [];
+  const localReady: number[] = [];
+  for (let i = 0; i < tracks.length; i += 1) {
+    const track = tracks[i];
+    if (!track || !isTrackPlayable(track)) continue;
+    if (normalizeMusicAlbumLabel(track.album) !== key) continue;
+    candidates.push(i);
+    if (track.localReady) localReady.push(i);
+  }
+  const pool =
+    preferLocalReady && localReady.length > 0 ? localReady : candidates;
+  if (excludeIndex != null && pool.length > 1) {
+    const filtered = pool.filter((idx) => idx !== excludeIndex);
+    if (filtered.length > 0) return filtered[Math.floor(Math.random() * filtered.length)]!;
+  }
+  if (pool.length === 0) return null;
+  if (pool.length === 1) return pool[0]!;
+  return pool[Math.floor(Math.random() * pool.length)]!;
 }

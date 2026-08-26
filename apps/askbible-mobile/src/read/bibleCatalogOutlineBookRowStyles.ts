@@ -7,7 +7,7 @@ export const bibleCatalogOutlineBookRowStyles = StyleSheet.create({
   bookRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 1,
+    paddingVertical: 3,
     marginBottom: 1,
     borderRadius: 8,
     borderWidth: 0,
@@ -16,7 +16,7 @@ export const bibleCatalogOutlineBookRowStyles = StyleSheet.create({
     columnGap: 0,
   },
   bookRowCompact: {
-    paddingVertical: 0,
+    paddingVertical: 2,
     marginBottom: 0,
   },
   bookRowSelected: { backgroundColor: "rgba(118, 95, 62, 0.08)" },
@@ -117,6 +117,11 @@ export const bibleCatalogOutlineBookRowStyles = StyleSheet.create({
     color: c.faint,
     opacity: 0.58,
     ...parchmentSans(400),
+  },
+  bookChevronCompact: {
+    fontSize: 16,
+    lineHeight: 18,
+    opacity: 0.45,
   },
   bookSummaryBelow: {
     width: "100%",

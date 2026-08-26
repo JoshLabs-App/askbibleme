@@ -1,5 +1,4 @@
 import manifest from "@/data/bible/teochew-nt-audio-manifest.json";
-import { isCuvChapterAudioSelfHosted } from "@/lib/bible/cuv-chapter-audio";
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
 import { voiceSupportsBook } from "@/lib/bible/cuv-chapter-audio-voices";
 
@@ -34,14 +33,14 @@ export function getTeochewNtManifestEntry(
   return BY_KEY.get(`${id}:${chapter}`) ?? null;
 }
 
-/** 自托管路径：`/audio/teochew-nt/MAT-1.mp3` */
+/** @deprecated 潮语不自托管；保留仅兼容旧路径解析。 */
 export function buildLocalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
   const entry = getTeochewNtManifestEntry(bookId, chapter);
   if (!entry) return "";
   return `/audio/teochew-nt/${entry.localFilename}`;
 }
 
-/** 原始站点（众生命堂 TSTSCC）URL。 */
+/** 众生命堂 TSTSCC 原始公开 URL（唯一音源）。 */
 export function buildExternalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
   const entry = getTeochewNtManifestEntry(bookId, chapter);
   return entry?.remoteUrl?.trim() ?? "";
@@ -52,19 +51,13 @@ export async function resolveTeochewNtChapterAudioPlayableSrc(args: {
   chapter: number;
   toAbsolute?: (relPath: string) => string;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
+  void args.toAbsolute;
   if (!voiceSupportsBook("teochew-nt", args.bookId)) return { ok: false };
 
   const entry = getTeochewNtManifestEntry(args.bookId, args.chapter);
   if (!entry) return { ok: false };
 
   const external = buildExternalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-  const local = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-  const toAbs = args.toAbsolute ?? ((p: string) => p);
-
-  if (external && !isCuvChapterAudioSelfHosted()) {
-    return { ok: true, src: external };
-  }
-  if (local) return { ok: true, src: toAbs(local) };
   if (external) return { ok: true, src: external };
   return { ok: false };
 }

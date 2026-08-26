@@ -1,4 +1,4 @@
-import { getActiveReadChapterPlayback } from "./read-chapter-playback-store";
+import { getPlayingReadChapterPlayback } from "./read-chapter-playback-store";
 import { getScripturePlaybackSecSnapshot } from "../music/scripturePlaybackSec";
 import { scriptureChapterPool } from "../music/scripture-chapter-pool";
 import { isPlanFlowSessionActive } from "./read-plan-flow-autoplay";
@@ -19,7 +19,8 @@ type FlushArgs = {
 export async function flushTodayPlanScriptureResume(args: FlushArgs = {}): Promise<void> {
   if (!scriptureChapterPool.isActive() && !isPlanFlowSessionActive()) return;
 
-  const rc = getActiveReadChapterPlayback();
+  // 进度必须跟实际在播章，勿用 browse。
+  const rc = getPlayingReadChapterPlayback() ?? scriptureChapterPool.getCurrentTrack();
   const bookId = (args.bookId ?? rc?.bookId)?.trim().toUpperCase();
   const chapter = args.chapter ?? rc?.chapter;
   if (!bookId || chapter == null || chapter < 1) return;

@@ -4,14 +4,18 @@ import {
   writeNatureActiveSceneId,
   writeNatureLoopAllScenesEnabled,
 } from "../nature/natureActiveScenePrefs";
-import type { NatureAmbientSceneSlotId } from "../nature/ambientSceneSlots";
+import {
+  NATURE_SCENE_DEFAULT_AMBIENT,
+  type NatureAmbientSceneSlotId,
+} from "../nature/ambientSceneSlots";
+import { writeNatureAmbientSceneSlotId } from "../nature/natureAmbientScenePrefs";
 import {
   bumpNatureSceneUsage,
   sortNatureScenesByUsage,
   type NatureSceneUsageMap,
 } from "../nature/natureSceneUsage";
 import type { NatureSettingsV2 } from "../types/nature";
-import { ensureNatureSceneVideoReady, isNatureSceneVideoReady } from "../media/natureSceneReadiness";
+import { ensureNatureSceneVideoReady, hasBundledNatureSceneVideo, isNatureSceneVideoReady } from "../media/natureSceneReadiness";
 import { trackTelemetry } from "../telemetry/client";
 import { homeSceneStripScrollX } from "./HomeSceneThumb";
 import type { HomeNatureVideoPowerPolicy } from "./useHomeNatureVideoPowerPolicy";
@@ -19,6 +23,7 @@ import { useHomeNatureSceneVideoReadiness } from "./useHomeNatureSceneVideoReadi
 import { useHomeNatureScenePlayback } from "./useHomeNatureScenePlayback";
 import { useHomeNatureSceneAmbient } from "./useHomeNatureSceneAmbient";
 import { HOME_SCENE_STRIP_EDGE_PAD, SCENE_LOOP_SWITCH_MS } from "./homeNatureScreenConstants";
+import { ensureShellMediaSceneArtwork } from "../audio/shellMediaSceneArtwork";
 
 type Args = {
   baseUrl: string;
@@ -38,6 +43,8 @@ type Args = {
   setActiveAmbientSlotId: React.Dispatch<React.SetStateAction<NatureAmbientSceneSlotId | "">>;
   coverVideoPosterOnly: boolean;
   forcePosterStage: boolean;
+  /** 静帧时用预烘焙柔焦海报 */
+  preferSoftPoster?: boolean;
   videoPowerPolicy: HomeNatureVideoPowerPolicy;
   musicModeActive: boolean;
   scriptureModeActive: boolean;
@@ -63,6 +70,7 @@ export function useHomeNatureSceneControl({
   setActiveAmbientSlotId,
   coverVideoPosterOnly,
   forcePosterStage,
+  preferSoftPoster = false,
   videoPowerPolicy,
   musicModeActive,
   scriptureModeActive,
@@ -93,6 +101,7 @@ export function useHomeNatureSceneControl({
     settings,
     localActiveId,
     setLocalActiveId,
+    preferSoftPoster,
   });
 
   const sceneList = useMemo(() => {
@@ -122,7 +131,6 @@ export function useHomeNatureSceneControl({
   });
 
   useHomeNatureSceneAmbient({
-    homeFocused,
     settings,
     activeAmbientSlotId,
     setActiveAmbientSlotId,
@@ -132,6 +140,12 @@ export function useHomeNatureSceneControl({
     voiceActive,
     enabled,
   });
+
+  useEffect(() => {
+    if (!enabled) return;
+    // 锁屏专辑图：随机 1:1 场景海报池，不绑定当前首页场景。
+    ensureShellMediaSceneArtwork();
+  }, [enabled]);
 
   const scrollSceneStripToId = useCallback(
     (id: string, animated = true) => {
@@ -157,11 +171,16 @@ export function useHomeNatureSceneControl({
       if (next === sceneId) return;
       if (opts?.source !== "auto") {
         void bumpNatureSceneUsage(next).then(setSceneUsageMap);
+        const defaultAmbient = NATURE_SCENE_DEFAULT_AMBIENT[next];
+        if (defaultAmbient) {
+          setActiveAmbientSlotId(defaultAmbient);
+          void writeNatureAmbientSceneSlotId(defaultAmbient);
+        }
       }
       scrollSceneStripToId(next);
       void writeNatureActiveSceneId(next);
 
-      if (forcePosterStage) {
+      if (forcePosterStage || !hasBundledNatureSceneVideo(next)) {
         clearSceneSwitchWait();
         setLocalActiveId(next);
         preloadAdjacentWhenFocused(sceneIdList, next);
@@ -185,6 +204,7 @@ export function useHomeNatureSceneControl({
       sceneId,
       sceneIdList,
       scrollSceneStripToId,
+      setActiveAmbientSlotId,
       setLocalActiveId,
       setLoopAllScenesEnabled,
       setSceneUsageMap,

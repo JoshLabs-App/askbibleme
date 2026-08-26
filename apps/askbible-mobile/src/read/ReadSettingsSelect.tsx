@@ -2,6 +2,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { memo } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +12,7 @@ import {
 } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
+import { READ_PARCHMENT_SCROLL_SOURCE_WIDE } from "./ReadParchmentSurface";
 
 export type ReadSettingsSelectOption = {
   id: string;
@@ -37,6 +40,8 @@ type Props = {
   disabled?: boolean;
   showDownloadButton?: boolean;
   style?: View["props"]["style"];
+  onPressTrigger?: () => void;
+  fullScreen?: boolean;
 };
 
 const MENU_GAP = 4;
@@ -137,6 +142,34 @@ const styles = StyleSheet.create({
   },
   menuContent: {
     paddingVertical: 2,
+  },
+  fullScreenBackdrop: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  fullScreenParchment: {
+    flex: 1,
+  },
+  fullScreenCard: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  fullScreenHeader: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: c.border,
+  },
+  fullScreenTitle: {
+    fontSize: 22,
+    color: c.ink,
+    ...parchmentSans(700),
+  },
+  fullScreenMenu: {
+    flex: 1,
   },
   option: {
     flexDirection: "row",
@@ -250,6 +283,8 @@ function ReadSettingsSelectInner({
   disabled,
   showDownloadButton = false,
   style,
+  onPressTrigger,
+  fullScreen = false,
 }: Props) {
   const multi = Array.isArray(values);
   const selectedIds = multi ? values : [];
@@ -327,7 +362,7 @@ function ReadSettingsSelectInner({
             <View style={styles.optionDownloadStatus}>
               <ActivityIndicator size="small" color={c.parchmentAccent} />
               <Text style={styles.optionDownloadStatusText}>
-                {typeof opt.downloadProgress === "number" ? `${opt.downloadProgress}%` : "下载中"}
+                {typeof opt.downloadProgress === "number" ? `${opt.downloadProgress}%` : "准备中"}
               </Text>
             </View>
           ) : showDownloadButton &&
@@ -357,13 +392,31 @@ function ReadSettingsSelectInner({
       );
     });
 
+  const menu = open && !disabled ? (
+    <ScrollView
+      style={fullScreen ? styles.fullScreenMenu : { maxHeight: MENU_MAX_HEIGHT }}
+      contentContainerStyle={styles.menuContent}
+      showsVerticalScrollIndicator
+      nestedScrollEnabled
+      keyboardShouldPersistTaps="handled"
+    >
+      {renderOptions()}
+    </ScrollView>
+  ) : null;
+
   return (
     <View style={[styles.block, open && styles.blockOpen, style]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View collapsable={false}>
         <Pressable
           disabled={disabled}
-          onPress={() => onOpenChange(!open)}
+          onPress={() => {
+            if (onPressTrigger) {
+              onPressTrigger();
+            } else {
+              onOpenChange(!open);
+            }
+          }}
           style={({ pressed }) => [
             styles.trigger,
             disabled && styles.triggerDisabled,
@@ -390,18 +443,28 @@ function ReadSettingsSelectInner({
           />
         </Pressable>
       </View>
-      {open && !disabled ? (
-        <View style={styles.menuFloating}>
-          <ScrollView
-            style={{ maxHeight: MENU_MAX_HEIGHT }}
-            contentContainerStyle={styles.menuContent}
-            showsVerticalScrollIndicator
-            nestedScrollEnabled
-            keyboardShouldPersistTaps="handled"
-          >
-            {renderOptions()}
-          </ScrollView>
-        </View>
+      {fullScreen ? (
+        <Modal visible={open && !disabled} transparent animationType="slide" onRequestClose={() => onOpenChange(false)}>
+          <View style={styles.fullScreenBackdrop}>
+            <ImageBackground
+              source={READ_PARCHMENT_SCROLL_SOURCE_WIDE}
+              resizeMode="stretch"
+              style={styles.fullScreenParchment}
+            >
+              <View style={styles.fullScreenCard}>
+                <View style={styles.fullScreenHeader}>
+                  <Text style={styles.fullScreenTitle}>选择译本</Text>
+                  <Pressable onPress={() => onOpenChange(false)} hitSlop={10}>
+                    <MaterialIcons name="close" size={24} color={c.ink} />
+                  </Pressable>
+                </View>
+                {menu}
+              </View>
+            </ImageBackground>
+          </View>
+        </Modal>
+      ) : open && !disabled ? (
+        <View style={styles.menuFloating}>{menu}</View>
       ) : null}
     </View>
   );
@@ -417,8 +480,10 @@ function propsEqual(prev: Props, next: Props): boolean {
     prev.open === next.open &&
     prev.disabled === next.disabled &&
     prev.showDownloadButton === next.showDownloadButton &&
+    prev.fullScreen === next.fullScreen &&
     prev.emptyDisplay === next.emptyDisplay &&
     prev.style === next.style &&
+    prev.onPressTrigger === next.onPressTrigger &&
     prev.onOpenChange === next.onOpenChange &&
     prev.onSelect === next.onSelect &&
     prev.onToggleSelect === next.onToggleSelect &&

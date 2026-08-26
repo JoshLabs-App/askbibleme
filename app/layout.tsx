@@ -24,7 +24,6 @@ import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { CuvChapterAudioVoiceProvider } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { MediaPlaybackCoordinatorProvider } from "@/components/media/MediaPlaybackCoordinatorProvider";
 import { MusicShellPlaybackProvider } from "@/components/music/MusicShellPlaybackContext";
-import { AppSkinProvider } from "@/components/theme/AppSkinProvider";
 import { getAppBuildId } from "@/lib/app-build-id";
 import { brandingAssetsExist, getResolvedBrandColors, getResolvedLogoBackground } from "@/lib/site-branding";
 import {
@@ -138,25 +137,23 @@ export default async function RootLayout({
         <Script id="selah-parchment-shell-boot" strategy="beforeInteractive">
           {PARCHMENT_SHELL_BOOT_SCRIPT}
         </Script>
-        <AppSkinProvider>
-          <AppImmersiveProvider>
-            <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
-              <AskbibleUserProvider>
-                <MemberReadingSyncBridge />
-                <CuvChapterAudioVoiceProvider>
-                  <MusicShellPlaybackProvider>
-                    <MediaPlaybackCoordinatorProvider>
-                      <ParchmentShellRouteEffect />
-                      {children}
-                      <PwaServiceWorkerRegistration />
-                      <AppUpdateNotifier />
-                    </MediaPlaybackCoordinatorProvider>
-                  </MusicShellPlaybackProvider>
-                </CuvChapterAudioVoiceProvider>
-              </AskbibleUserProvider>
-            </LocaleProvider>
-          </AppImmersiveProvider>
-        </AppSkinProvider>
+        <AppImmersiveProvider>
+          <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
+            <AskbibleUserProvider>
+              <MemberReadingSyncBridge />
+              <CuvChapterAudioVoiceProvider>
+                <MusicShellPlaybackProvider>
+                  <MediaPlaybackCoordinatorProvider>
+                    <ParchmentShellRouteEffect />
+                    {children}
+                    <PwaServiceWorkerRegistration />
+                    <AppUpdateNotifier />
+                  </MediaPlaybackCoordinatorProvider>
+                </MusicShellPlaybackProvider>
+              </CuvChapterAudioVoiceProvider>
+            </AskbibleUserProvider>
+          </LocaleProvider>
+        </AppImmersiveProvider>
       </body>
     </html>
   );

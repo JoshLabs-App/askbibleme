@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
- * 构建前审计 apps/askbible-mobile/assets 体积，防止误打全量音乐等大资源进 AAB。
+ * 构建前审计 apps/askbible-mobile/assets 体积。
+ * 音乐默认每专辑首曲进包（≥4）；全量 / PAD 由环境变量打开。
+ * TEMP：非首曲走 Cloudflare R2（见 musicAudioRemote.ts）。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -8,10 +10,31 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const assetsRoot = path.join(repoRoot, "apps", "askbible-mobile", "assets");
+const androidMusicPad =
+  process.env.MOBILE_ANDROID_MUSIC_PAD === "1" ||
+  process.env.MOBILE_ANDROID_MUSIC_PAD === "true";
+const bundleMusicFull =
+  process.env.MOBILE_BUNDLE_MUSIC_FULL === "1" ||
+  process.env.MOBILE_BUNDLE_MUSIC_FULL === "true";
+const padAssetsDir = path.join(
+  repoRoot,
+  "apps",
+  "askbible-mobile",
+  "android",
+  "music_companion_pack",
+  "src",
+  "main",
+  "assets",
+  "music",
+  "tracks",
+);
 
-const MUSIC_TRACK_LIMIT_MB = 80;
-const ASSETS_WARN_MB = 220;
-const ASSETS_MIN_MB = 50;
+/** companion 全量音乐约数百 MB；starter-only 约数十 MB。 */
+const MUSIC_TRACK_WARN_MB = bundleMusicFull ? 600 : androidMusicPad ? 120 : 160;
+const ASSETS_WARN_MB = bundleMusicFull ? 700 : androidMusicPad ? 400 : 450;
+const ASSETS_MIN_MB = 20;
+/** 默认 ≥4 专辑首曲；全量 ≥10。 */
+const MUSIC_TRACK_MIN_COUNT = bundleMusicFull ? 10 : 4;
 
 function dirBytes(dir) {
   if (!fs.existsSync(dir)) return 0;
@@ -92,21 +115,49 @@ if (topFiles.length > 0) {
 }
 
 console.log(`\nTotal assets: ${mb(total)} MB`);
-console.log(`Expected Play install (assets + native): ~${mb(total + 30 * 1024 * 1024)}–${mb(total + 60 * 1024 * 1024)} MB`);
-console.log("If Play shows ~400MB+, the uploaded build likely bundled full music — rebuild with MOBILE_BUNDLE_MUSIC_LIMIT=1.\n");
+console.log(
+  `Expected install (assets + native): ~${mb(total + 30 * 1024 * 1024)}–${mb(total + 80 * 1024 * 1024)} MB`,
+);
+console.log(
+  androidMusicPad
+    ? "Music policy: Android PAD — album starters in base; rest in music_companion_pack (fast-follow).\n"
+    : bundleMusicFull
+      ? "Music policy: full companion catalog bundled.\n"
+      : "Music policy: album starters in install; rest → Cloudflare R2 stream/cache (TEMPORARY).\n",
+);
 
 let failed = false;
 const musicTracks = dirBytes(path.join(assetsRoot, "music/tracks"));
 const musicCount = fs.existsSync(path.join(assetsRoot, "music/tracks"))
-  ? fs.readdirSync(path.join(assetsRoot, "music/tracks")).length
+  ? fs.readdirSync(path.join(assetsRoot, "music/tracks")).filter((n) => /\.(mp3|m4a)$/i.test(n))
+      .length
   : 0;
+const padMusicCount = fs.existsSync(padAssetsDir)
+  ? fs.readdirSync(padAssetsDir).filter((n) => /\.(mp3|m4a)$/i.test(n)).length
+  : 0;
+const padMusicBytes = dirBytes(padAssetsDir);
 
-if (musicTracks > MUSIC_TRACK_LIMIT_MB * 1024 * 1024) {
-  console.error(`ERROR: bundled music is ${mb(musicTracks)} MB (${musicCount} file(s)) — limit is ${MUSIC_TRACK_LIMIT_MB} MB.`);
+if (musicCount < MUSIC_TRACK_MIN_COUNT) {
+  console.error(
+    `ERROR: expected ≥${MUSIC_TRACK_MIN_COUNT} album-starter tracks in assets, found ${musicCount}. Run npm run mobile:sync-offline-media`,
+  );
   failed = true;
-} else if (musicCount > 1) {
-  console.error(`ERROR: expected 1 starter music track, found ${musicCount}.`);
+}
+if (androidMusicPad && padMusicCount < 1) {
+  console.error(
+    "ERROR: Android PAD enabled but music_companion_pack has no tracks. Run MOBILE_ANDROID_MUSIC_PAD=1 npm run mobile:sync-offline-media",
+  );
   failed = true;
+}
+if (androidMusicPad) {
+  console.log(
+    `PAD pack tracks: ${padMusicCount} file(s), ${mb(padMusicBytes)} MB (not in base assets total above)`,
+  );
+}
+if (musicTracks > MUSIC_TRACK_WARN_MB * 1024 * 1024) {
+  console.warn(
+    `WARN: bundled music is ${mb(musicTracks)} MB (${musicCount} file(s)) — review before store submit.`,
+  );
 }
 
 for (const [rel, label] of [

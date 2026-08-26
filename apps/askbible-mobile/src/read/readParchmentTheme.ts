@@ -53,8 +53,6 @@ const light = {
   divineSpeech: "rgba(153, 72, 18, 0.95)",
   /** 引号内其他人说话（非神言） */
   humanSpeech: "#38486C",
-  /** 主题库金句：字下色带（inline 背景，非整节块） */
-  goldenVerseMarker: "rgba(218, 178, 100, 0.10)",
   /** 双击收藏：LOGO 黄 #FFB103，与划重点默认色一致 */
   verseBookmarkMarker: "#FFB103",
   /** 多选复制：节文选中反馈（与朗读/搜索同系暖黄） */
@@ -100,7 +98,6 @@ const dark = {
   verseSearchFocusNum: "rgba(255, 220, 185, 0.98)",
   divineSpeech: "rgba(255, 198, 140, 0.95)",
   humanSpeech: "#38486C",
-  goldenVerseMarker: "rgba(255, 198, 140, 0.08)",
   verseBookmarkMarker: "#FFB103",
   verseSelectionMarker: "rgba(255, 177, 3, 0.38)",
   parchmentAccent: "#D97707",

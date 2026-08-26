@@ -28,7 +28,7 @@ alwaysApply: false
 | iOS 签名准备（首次） | `npm run mobile:setup:ios:signing` |
 | iOS 上传 TestFlight | `npm run mobile:submit:ios:production`（`xcrun altool` + ASC API Key） |
 | iOS 一键构建+上传 | `npm run mobile:release:ios:testflight` |
-| Android 商店包 | `npm run mobile:build:android:production`（本机 Gradle） |
+| Android 商店包 | `npm run mobile:build:android:production`（本机 Gradle；**默认 PAD=0 / R2 首曲**） |
 | Android 内部测试一键 | `npm run mobile:release:android:internal` |
 
 ## Agent 行为
@@ -36,4 +36,5 @@ alwaysApply: false
 - 用户要求「打包 / 发版 / 上传商店」时，**只**推荐上述本机命令。
 - iOS 上传走 `scripts/submit-ios-ipa-appstore.sh`，**不要**默认 `eas submit`。
 - Android 上传走 fastlane supply，**不要**默认 Expo Submit。
+- Android 发版：**禁止**为 production 设 `MOBILE_ANDROID_MUSIC_PAD=1`（见 `android-release.mdc`）；打完检查 AAB 体积（正常约 160MB，勿到 650MB）。
 - 发版前递增 iOS `CFBundleVersion` / Android `versionCode`（见 checklist §2–§3）。

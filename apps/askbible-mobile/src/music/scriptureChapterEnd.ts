@@ -13,7 +13,11 @@ export const SCRIPTURE_CHAPTER_END_TOLERANCE_MS = 2000;
 export const SCRIPTURE_CHAPTER_END_STALL_MS = 2500;
 
 export function isScriptureNearChapterEnd(positionMs: number, durationMs: number): boolean {
-  return durationMs > 1000 && positionMs >= durationMs - SCRIPTURE_CHAPTER_END_TOLERANCE_MS;
+  // duration 必须大于窗口：Android 缓冲时常短暂报 1–2s，否则开播瞬间会被当成章末并连跳。
+  return (
+    durationMs > SCRIPTURE_CHAPTER_END_TOLERANCE_MS &&
+    positionMs >= durationMs - SCRIPTURE_CHAPTER_END_TOLERANCE_MS
+  );
 }
 
 export function shouldScheduleScriptureMidChapterResume(positionMs: number, durationMs: number): boolean {

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import { Linking } from "react-native";
+import { AppState, Linking } from "react-native";
 import { handleGoogleOAuthDeepLink } from "./googleOAuthDeepLink";
 import { installGoogleOAuthLinkingCapture } from "./googleOAuthLinking";
-import { isGoogleOAuthCallbackUrl } from "./googleOAuthSession";
 import type { MemberUser } from "./memberSession";
 import { commitMemberSession, dismissOAuthBrowserQuietly } from "./memberAuthSessionCommit";
 
@@ -37,11 +36,20 @@ export function useMemberAuthGoogleDeepLink(setUser: (user: MemberUser) => void)
       })();
     };
     const sub = Linking.addEventListener("url", onUrl);
+    const appState = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      void Linking.getInitialURL().then((url) => {
+        if (url) onUrl({ url });
+      });
+    });
     void Linking.getInitialURL().then((initial) => {
       if (!initial) return;
-      if (isGoogleOAuthCallbackUrl(initial)) return;
+      // Android singleTask：OAuth 深链常走 onNewIntent，只有 getInitialURL，没有第二次 url 事件。
       onUrl({ url: initial });
     });
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+      appState.remove();
+    };
   }, [setUser]);
 }

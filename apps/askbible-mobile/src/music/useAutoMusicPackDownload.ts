@@ -21,7 +21,7 @@ type Args = {
   setTrackIndex: (index: number) => void;
 };
 
-/** 打开 App / 回到前台时：联网则后台拉取完整音乐包（安装包内仅 1 首 starter）。 */
+/** 打开 App / 回到前台时：联网则后台拉取音乐更新包（安装包已含全量曲目时多为增量/校验）。 */
 export function useAutoMusicPackDownload({ enabled = true, setStore, setTrackIndex }: Args): void {
   const runningRef = useRef(false);
 

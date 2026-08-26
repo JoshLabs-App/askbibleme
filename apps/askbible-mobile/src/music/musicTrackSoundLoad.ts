@@ -7,6 +7,7 @@ import type { PlaybackTrack } from "./types";
 import { trackTelemetry } from "../telemetry/client";
 import { persistMusicStoreSnapshot } from "./musicTrackStartPosition";
 import { createAndPlayMusicTrackSound } from "./musicTrackSoundCreate";
+import { clearScripturePlayingChapter } from "./scripturePlayingChapterStore";
 
 type PlaybackMode = "music" | "scripture";
 
@@ -114,6 +115,7 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
   setPlaybackMode("music");
   playbackModeRef.current = "music";
   scriptureSrcRef.current = null;
+  clearScripturePlayingChapter();
   musicSoundActivatedAtRef.current = Date.now();
   syncPlayingState(shouldPlay ? true : Boolean(readyStatus.isLoaded && readyStatus.isPlaying));
   failedTrackIdsRef.current.delete(track.id.trim());

@@ -13,6 +13,8 @@ type Props = {
   showSideOrbs?: boolean;
   flatGradientOnly?: boolean;
   showBottomScrim?: boolean;
+  /** 呼吸动画开关：暂停 / 失焦 / 切后台时停下，避免空转。 */
+  breathing?: boolean;
 };
 
 export function MusicEnergyGlow({
@@ -24,8 +26,9 @@ export function MusicEnergyGlow({
   showSideOrbs = true,
   flatGradientOnly = false,
   showBottomScrim = true,
+  breathing = true,
 }: Props) {
-  const breath = useMusicEnergyGlowBreath();
+  const breath = useMusicEnergyGlowBreath(breathing && !flatGradientOnly);
   const span = Math.max(width, height);
   const orbMain = span * 0.92;
   const orbSide = span * 0.55;

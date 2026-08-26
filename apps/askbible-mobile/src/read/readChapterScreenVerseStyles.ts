@@ -33,17 +33,14 @@ export const readChapterScreenVerseStyles = StyleSheet.create({
   },
   verseParagraphBlock: {
     marginBottom: 14,
+    overflow: "visible",
   },
-  verseParagraphFlow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "flex-start",
-  },
-  verseInlineChunkWrap: {
-    flexDirection: "row",
-    flexShrink: 1,
-    maxWidth: "100%",
-    borderRadius: 6,
+  verseAudioFollowOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFB103",
+    borderRadius: 8,
   },
   verseBlockBeforeSegmentBreak: {
     marginBottom: 0,

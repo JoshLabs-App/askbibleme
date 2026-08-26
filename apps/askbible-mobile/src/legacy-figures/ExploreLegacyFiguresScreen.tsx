@@ -9,11 +9,8 @@ import { getScriptureBookDisplayName } from "../bible/scripture-book-display-nam
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
-import {
-  exploreStyles as shared,
-  useExploreScrollContentStyle,
-  ExploreParchmentPage,
-} from "../explore/exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import { useExploreScrollContentStyle, ExploreParchmentPage} from "../explore/exploreParchmentStyles";
 import { useMobileLegacyFiguresBundle } from "./useMobileLegacyFigures";
 import {
   getMobileLegacyFigureBookRows,
@@ -74,9 +71,7 @@ export function ExploreLegacyFiguresScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
-          <Text style={shared.backLinkText}>{t("pages.explore.articlesBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.pageTitle}>{t("pages.explore.figuresTitle")}</Text>
         <Text style={styles.subtitle}>{t("pages.explore.figuresSubtitle")}</Text>

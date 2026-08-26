@@ -225,6 +225,9 @@ export function useHomeNatureVerseSpeech({ prefsVersion, scriptureModeActive, en
     }
     setVoiceSpeaking(true);
     setVoiceHint(t("nature.homeVoice.playingNow"));
+    void import("../read/reading-habit-stats")
+      .then(({ recordAnyReadingActivityDay }) => recordAnyReadingActivityDay())
+      .catch(() => undefined);
     speakHomeVerseTarget(displayedVerseAudioTarget, {
       sessionId,
       ...speakCtxRef.current,

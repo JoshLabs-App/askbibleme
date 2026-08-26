@@ -2,6 +2,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import type { MusicPackAsset, MusicPackManifest } from "./musicResourcePackState";
 import {
   ensureMusicPackParentDir,
@@ -11,6 +12,7 @@ import {
 } from "./musicResourcePackState";
 
 export async function fetchMusicPackManifest(): Promise<MusicPackManifest | null> {
+  if (isMobileBundledOnly()) return null;
   if (!(await isNetworkAvailable())) return null;
   const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
   const manifestUrl = `${baseUrl}/api/mobile/resource-pack/music/manifest`;

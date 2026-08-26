@@ -1,9 +1,14 @@
-import { Text, View } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Pressable, Text, View } from "react-native";
+import type { AppLocale } from "../i18n/config";
+import { createT } from "../i18n/site-copy";
 import { canonSectionTheme } from "./canon-section-theme";
 import { BibleCatalogBookRow } from "./BibleCatalogBookRow";
+import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { BibleCatalogTestamentHeader } from "./BibleCatalogTestamentHeader";
 import { BibleCatalogTestamentPager } from "./BibleCatalogTestamentPager";
 import { bibleCatalogOutlineStyles as styles } from "./bibleCatalogOutlineStyles";
+import { readParchmentTheme as c } from "./readParchmentTheme";
 import type { ScriptureCanonCatalogBook, ScriptureCanonCatalogSection } from "./canonCatalog";
 
 type TestamentGroup = {
@@ -20,6 +25,9 @@ type Props = {
   columnLayout: boolean;
   compactMode: boolean;
   showBookSummary: boolean;
+  enableBookSummaryToggle?: boolean;
+  bookSummaryToggleOn?: boolean;
+  onBookSummaryToggleChange?: (on: boolean) => void;
   completedChaptersByBook?: Record<string, number>;
   bookMetaMode: "progress" | "chapterCount" | "none";
   showSectionTint: boolean;
@@ -27,6 +35,7 @@ type Props = {
   sectionStripeFullHeight: boolean;
   lockTextScale: boolean;
   catalogNarrowStyle: { maxWidth: number } | null;
+  displayLocale?: AppLocale;
   onSelectTestament: (testament: "old" | "new") => void;
   onBookPress: (book: ScriptureCanonCatalogBook) => void;
 };
@@ -36,10 +45,13 @@ export function BibleCatalogOutlineContent({
   activeBookId,
   activeTestament,
   paginateByTestament,
-  splitByTestamentColumns,
+  splitByTestamentColumns: _splitByTestamentColumns,
   columnLayout,
   compactMode,
   showBookSummary,
+  enableBookSummaryToggle = false,
+  bookSummaryToggleOn = false,
+  onBookSummaryToggleChange,
   completedChaptersByBook,
   bookMetaMode,
   showSectionTint,
@@ -47,11 +59,20 @@ export function BibleCatalogOutlineContent({
   sectionStripeFullHeight,
   lockTextScale,
   catalogNarrowStyle,
+  displayLocale = "zh-CN",
   onSelectTestament,
   onBookPress,
 }: Props) {
+  const t = createT(displayLocale);
   const allowFontScaling = !lockTextScale;
   const scaledMax = (value: number) => (lockTextScale ? 1 : value);
+  const { px } = useReadBibleTypography();
+  // 分类标题跟着 +/- 走；以小号 catalog 18 为基准（安卓默认），默认仍是 16/18。
+  const sectionTitleSize = Math.max(
+    12,
+    (compactMode ? 16 : 18) + (px.catalogBookSize - 18),
+  );
+  const sectionTitleLine = Math.round(sectionTitleSize * 1.3);
 
   const renderTestamentBlock = (group: TestamentGroup) => (
     <View
@@ -70,6 +91,7 @@ export function BibleCatalogOutlineContent({
             testament={group.testament}
             compact={columnLayout || compactMode}
             lockTextScale={lockTextScale}
+            displayLocale={displayLocale}
           />
         ) : null}
         {group.sections.map((section) => {
@@ -90,7 +112,7 @@ export function BibleCatalogOutlineContent({
                   style={[
                     styles.sectionTitle,
                     compactMode && styles.sectionTitleCompact,
-                    { color: theme.accent },
+                    { color: theme.accent, fontSize: sectionTitleSize, lineHeight: sectionTitleLine },
                   ]}
                   allowFontScaling={allowFontScaling}
                   numberOfLines={1}
@@ -111,6 +133,7 @@ export function BibleCatalogOutlineContent({
                   themeAccent={theme.accent}
                   onPress={onBookPress}
                   lockTextScale={lockTextScale}
+                  displayLocale={displayLocale}
                 />
               ))}
             </>
@@ -140,6 +163,37 @@ export function BibleCatalogOutlineContent({
     </View>
   );
 
+  const summaryToggle =
+    enableBookSummaryToggle && onBookSummaryToggleChange ? (
+      <Pressable
+        onPress={() => onBookSummaryToggleChange(!bookSummaryToggleOn)}
+        style={({ pressed }) => ({
+          width: 36,
+          height: 36,
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 4,
+          opacity: pressed ? 0.72 : 1,
+        })}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityState={{ selected: bookSummaryToggleOn }}
+        accessibilityLabel={t("pages.read.catalogBookSummaryToggleA11y")}
+      >
+        <MaterialIcons
+          name="notes"
+          size={22}
+          color={bookSummaryToggleOn ? c.ink : c.faint}
+        />
+      </Pressable>
+    ) : null;
+
+  const headerGroups = groups.filter(
+    (group) => !paginateByTestament || group.testament === activeTestament,
+  );
+  const oldHeaderGroup = headerGroups.find((g) => g.testament === "old");
+  const newHeaderGroup = headerGroups.find((g) => g.testament === "new");
+
   const catalogContent = (
     <>
       {paginateByTestament ? (
@@ -148,21 +202,32 @@ export function BibleCatalogOutlineContent({
           onSelectTestament={onSelectTestament}
           catalogNarrowStyle={catalogNarrowStyle}
           lockTextScale={lockTextScale}
+          displayLocale={displayLocale}
         />
       ) : null}
       {columnLayout ? (
-        <View style={[styles.outline, styles.outlineColumns, styles.testamentHeadersRow]}>
-          {groups
-            .filter((group) => !paginateByTestament || group.testament === activeTestament)
-            .map((group) => (
-              <View key={`header:${group.testament}`} style={styles.testamentColumn}>
-                <BibleCatalogTestamentHeader
-                  testament={group.testament}
-                  compact
-                  lockTextScale={lockTextScale}
-                />
-              </View>
-            ))}
+        <View style={[styles.outline, styles.testamentHeadersRow, styles.testamentHeadersWithToggle]}>
+          <View style={styles.testamentHeaderSide}>
+            {oldHeaderGroup ? (
+              <BibleCatalogTestamentHeader
+                testament="old"
+                compact
+                lockTextScale={lockTextScale}
+                displayLocale={displayLocale}
+              />
+            ) : null}
+          </View>
+          {summaryToggle ?? <View style={{ width: 36, height: 36, marginBottom: 4 }} />}
+          <View style={styles.testamentHeaderSide}>
+            {newHeaderGroup ? (
+              <BibleCatalogTestamentHeader
+                testament="new"
+                compact
+                lockTextScale={lockTextScale}
+                displayLocale={displayLocale}
+              />
+            ) : null}
+          </View>
         </View>
       ) : null}
       <View style={[styles.outline, columnLayout && styles.outlineColumns]}>

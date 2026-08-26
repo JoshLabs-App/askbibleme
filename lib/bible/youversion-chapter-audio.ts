@@ -19,7 +19,7 @@ const YOUVERSION_AUDIO_VERSION_IDS: Record<string, string> = {
   "csbt-zh-hant": "312",
   "cunp-zh-hant": "46",
   "cunp-zh-hant-god": "414",
-  // YouVersion 的简体 CUNPSS 文字版为 2224，但官方音频目录对应神版 48。
+  // 简体神版文字/音频均为 48（勿用 2224：高棉文）。
   "cunpss-zh-hans": "48",
   "cunpss-zh-hant": "47",
   "rcuv-zh-hant": "139",
@@ -34,7 +34,7 @@ const YOUVERSION_AUDIO_ABBREVIATIONS: Record<string, string> = {
   asv: "ASV",
   esv: "ESV",
   "ccb-zh-hans": "CCB",
-  "ccb-zh-hant": "CCBT",
+  "ccb-zh-hant": "CCB",
   "cnv-zh-hant": "CNV",
   "cnvs-zh-hans": "CNVS",
   "csbs-zh-hans": "CSBS",
@@ -45,10 +45,30 @@ const YOUVERSION_AUDIO_ABBREVIATIONS: Record<string, string> = {
   "cunpss-zh-hant": "CUNPSS-Shangti",
   "rcuv-zh-hant": "RCUV",
   "rcuvss-zh-hans": "RCUVSS",
-  niv: "NIV11",
+  niv: "NIV",
   nlt: "NLT",
   nkjv: "NKJV",
   kjv: "KJV",
+};
+
+/** 已确认章节页能解析到同译本 MP3 的版本（与上面音轨映射对齐）。 */
+const VERIFIED_YOUVERSION_AUDIO_TRANSLATION_IDS = new Set(
+  Object.keys(YOUVERSION_AUDIO_VERSION_IDS),
+);
+
+const YOUVERSION_AUDIO_LOCALES: Record<string, string> = {
+  "ccb-zh-hans": "zh-CN",
+  "ccb-zh-hant": "zh-TW",
+  "cnv-zh-hant": "zh-TW",
+  "cnvs-zh-hans": "zh-CN",
+  "csbs-zh-hans": "zh-CN",
+  "csbt-zh-hant": "zh-TW",
+  "cunp-zh-hant": "zh-TW",
+  "cunp-zh-hant-god": "zh-TW",
+  "cunpss-zh-hans": "zh-CN",
+  "cunpss-zh-hant": "zh-CN",
+  "rcuv-zh-hant": "zh-TW",
+  "rcuvss-zh-hans": "zh-CN",
 };
 
 const inFlightAudioResolutions = new Map<string, Promise<string | null>>();
@@ -67,6 +87,12 @@ export function isYouVersionAudioWebProxyRuntime(runtime: {
 
 export function translationUsesYouVersionChapterAudio(translationId: string): boolean {
   return Boolean(resolveYouVersionAudioVersionId(translationId));
+}
+
+export function translationHasVerifiedYouVersionChapterAudio(translationId: string): boolean {
+  return VERIFIED_YOUVERSION_AUDIO_TRANSLATION_IDS.has(
+    String(translationId || "").trim().toLowerCase(),
+  );
 }
 
 export function resolveYouVersionAudioVersionId(translationId: string): string | null {
@@ -92,16 +118,36 @@ export function buildYouVersionAudioPageUrl(args: {
   return `${YOUVERSION_AUDIO_BASE_URL}/${versionId}/${bookId}.${chapter}.${abbr}`;
 }
 
+function buildYouVersionAudioPageUrls(args: {
+  translationId: string;
+  bookId: string;
+  chapter: number;
+}): string[] {
+  const fallback = buildYouVersionAudioPageUrl(args);
+  if (!fallback) return [];
+  const id = String(args.translationId || "").trim().toLowerCase();
+  const locale = YOUVERSION_AUDIO_LOCALES[id];
+  if (!locale) return [fallback];
+  return [fallback.replace("https://www.bible.com/", `https://www.bible.com/${locale}/`), fallback];
+}
+
 function cacheKey(args: { translationId: string; bookId: string; chapter: number }): string {
   return `${String(args.translationId || "").trim().toLowerCase()}:${String(args.bookId || "").trim().toUpperCase()}:${Number(args.chapter)}`;
 }
 
 function extractYouVersionAudioMp3Url(html: string): string | null {
-  const raw = String(html || "").replace(/\\\//g, "/");
+  const raw = String(html || "")
+    .replace(/\\\//g, "/")
+    .replace(/\\"/g, '"');
   const re = /"format_mp3_32k"\s*:\s*"((?:https?:)?\/\/(?:audio-bible-cdn|api-cdn)\.youversionapi\.com\/[^"]+?\.mp3(?:\?[^"]*)?)"/i;
   const match = raw.match(re);
-  if (!match?.[1]) return null;
-  return match[1].startsWith("//") ? `https:${match[1]}` : match[1];
+  const src =
+    match?.[1] ??
+    raw.match(
+      /"contentUrl"\s*:\s*"((?:https?:)?\/\/(?:audio-bible-cdn|api-cdn)\.youversionapi\.com\/[^\"]+?\.mp3(?:\?[^\"]*)?)"/i,
+    )?.[1];
+  if (!src) return null;
+  return src.startsWith("//") ? `https:${src}` : src;
 }
 
 async function fetchYouVersionAudioHtml(url: string): Promise<string | null> {
@@ -175,25 +221,30 @@ export async function resolveYouVersionChapterAudioPlayableSrc(args: {
   }
 
   const work = (async () => {
-    const url = buildYouVersionAudioPageUrl(args);
-    if (!url) return null;
-    const html = await fetchYouVersionAudioHtml(url);
-    if (!html) return null;
-    const src = extractYouVersionAudioMp3Url(html);
-    if (isDevRuntime) {
-      console.warn(
-        "[youversion-audio] parsed",
-        JSON.stringify({
-          translationId: args.translationId,
-          bookId: args.bookId,
-          chapter: args.chapter,
-          hasHtml: Boolean(html),
-          hasSrc: Boolean(src),
-        }),
-      );
+    const urls = buildYouVersionAudioPageUrls(args);
+    for (const url of urls) {
+      const html = await fetchYouVersionAudioHtml(url);
+      if (!html) continue;
+      const src = extractYouVersionAudioMp3Url(html);
+      if (isDevRuntime) {
+        console.warn(
+          "[youversion-audio] parsed",
+          JSON.stringify({
+            translationId: args.translationId,
+            bookId: args.bookId,
+            chapter: args.chapter,
+            url,
+            hasHtml: Boolean(html),
+            hasSrc: Boolean(src),
+          }),
+        );
+      }
+      if (src) {
+        resolvedAudioSrcCache.set(key, src);
+        return src;
+      }
     }
-    if (src) resolvedAudioSrcCache.set(key, src);
-    return src;
+    return null;
   })();
 
   inFlightAudioResolutions.set(key, work);

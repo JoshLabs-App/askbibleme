@@ -149,6 +149,12 @@ async function ensureExternalBeta(buildId) {
       },
     });
     if (sub.status !== 201 && sub.status !== 409) {
+      const closed =
+        sub.status === 422 && String(sub.raw || "").includes("CLOSED_VERSION");
+      if (closed) {
+        console.log("    ⚠ 该版本已关闭外部 Beta 审核；商店提审不受影响，跳过 TestFlight 外测提交");
+        return;
+      }
       throw new Error(`提交外部 Beta 审核失败 (${sub.status}): ${sub.raw}`);
     }
     console.log("    ✓ 已提交外部 Beta 审核（通常数分钟至数小时）");

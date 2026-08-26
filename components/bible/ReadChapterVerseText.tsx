@@ -29,9 +29,8 @@ function speechClass(kind: VerseSpeechKind): string {
   return "";
 }
 
-function markerClass(goldenMark?: boolean, bookmarkMark?: boolean): string {
+function markerClass(_goldenMark?: boolean, bookmarkMark?: boolean): string {
   if (bookmarkMark) return " read-chapter-bookmark-marker";
-  if (goldenMark) return " read-chapter-golden-marker";
   return "";
 }
 

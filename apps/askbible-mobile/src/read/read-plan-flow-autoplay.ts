@@ -40,6 +40,21 @@ let loopTodayPlan = false;
 let advanceInFlight = false;
 let planFlowSessionActive = false;
 let advanceReleaseTimer: ReturnType<typeof setTimeout> | null = null;
+/** 章页续播 vs 专用「读经计划播放」页。 */
+export type PlanFlowUiHost = "chapter" | "listen";
+let planFlowUiHost: PlanFlowUiHost = "chapter";
+
+export function setPlanFlowUiHost(host: PlanFlowUiHost): void {
+  planFlowUiHost = host;
+}
+
+export function getPlanFlowUiHost(): PlanFlowUiHost {
+  return planFlowUiHost;
+}
+
+export function clearPlanFlowUiHost(): void {
+  planFlowUiHost = "chapter";
+}
 
 export function beginPlanFlowChapterAdvance(): void {
   advanceInFlight = true;
@@ -82,6 +97,7 @@ export function markPlanFlowSessionActive(): void {
 
 export function clearPlanFlowSessionActive(): void {
   planFlowSessionActive = false;
+  clearPlanFlowUiHost();
 }
 
 export function isPlanFlowSessionActive(): boolean {

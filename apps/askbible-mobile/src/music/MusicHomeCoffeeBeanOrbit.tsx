@@ -4,6 +4,7 @@ import { visualStyles } from "./musicAlbumVisualShared";
 import { resolveCoffeeOrbitLayout } from "./coffeeOrbitLayout";
 import { MusicHomeCoffeeBeanNode } from "./MusicHomeCoffeeBeanNode";
 import { useCoffeeBeanOrbitMotion } from "./useCoffeeBeanOrbitMotion";
+import { useMusicHomeCoffeePulse } from "./useMusicHomeCoffeePulse";
 
 type Props = {
   active: boolean;
@@ -13,7 +14,7 @@ type Props = {
   viewportHeight: number;
   viewportTop?: number;
   centered?: boolean;
-  rhythmPulse?: number;
+  analysisSrc: string | null;
 };
 
 export function CoffeeBeanOrbit({
@@ -24,9 +25,10 @@ export function CoffeeBeanOrbit({
   viewportHeight,
   viewportTop = 0,
   centered = false,
-  rhythmPulse = 0,
+  analysisSrc,
 }: Props) {
   const { orbitValuesRef, bobValuesRef } = useCoffeeBeanOrbitMotion(active);
+  const pulseV = useMusicHomeCoffeePulse(analysisSrc, active);
 
   if (!visible) return null;
 
@@ -44,7 +46,7 @@ export function CoffeeBeanOrbit({
             orbitV={orbitValuesRef[i]!}
             leaderOrbitV={leaderOrbitV}
             layout={layout}
-            rhythmPulse={rhythmPulse}
+            pulseV={pulseV}
           />
         ))}
       </View>

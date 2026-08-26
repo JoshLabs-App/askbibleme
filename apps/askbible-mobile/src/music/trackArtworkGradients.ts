@@ -39,7 +39,7 @@ export function inferTrackAlbum(track: MusicCompanionStore["audioTracks"][number
   if (tags.includes("工作")) return "专注工作";
   const customFromTag = firstTag(tags);
   if (customFromTag) return customFromTag;
-  const remark = resolveMusicLocalizedField(track.remark).trim();
+  const remark = resolveMusicLocalizedField(track.remark, "zh-CN").trim();
   if (remark.includes("专注工作") || remark.includes("工作")) return "专注工作";
   for (const album of KNOWN_MUSIC_ALBUMS) {
     if (remark.includes(album)) return album;

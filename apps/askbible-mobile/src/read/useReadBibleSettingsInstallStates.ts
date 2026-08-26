@@ -110,9 +110,7 @@ export function useReadBibleSettingsInstallStates({
           ? ` (${translationDownloadState.percent}%)`
           : "";
       }
-      if (state === "missing") {
-        return locale === "en" ? " · download" : ` · ${localeZhText("需下载")}`;
-      }
+      // 缺失译本选中后自动准备，列表里不再标「需下载」
       if (state === "outdated") {
         return locale === "en" ? " · update" : ` · ${localeZhText("可更新")}`;
       }
@@ -144,7 +142,9 @@ export function useReadBibleSettingsInstallStates({
         { translations: translationCatalog, defaultTranslationId: null },
         translationId,
       );
-      await ensureScriptureTranslationReady(translationId, meta?.downloadUrl);
+      await ensureScriptureTranslationReady(translationId, meta?.downloadUrl, {
+        delivery: meta?.delivery,
+      });
     },
     [translationCatalog],
   );

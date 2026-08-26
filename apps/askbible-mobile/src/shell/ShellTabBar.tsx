@@ -19,14 +19,22 @@ import {
   subscribeMusicAutoHideChrome,
 } from "../music/musicAutoHideChrome";
 import { ReadChapterActionChrome } from "../read/ReadChapterActionChrome";
-import { isReadBibleHomeRoute } from "../read/read-route-chrome";
+import {
+  isReadBibleHomeRoute,
+  isReadChapterRoute,
+  isReadStandaloneCatalogRoute,
+  readReadStackTopRouteName,
+} from "../read/read-route-chrome";
 import { useReadBottomChrome } from "../read/useReadBottomChrome";
+import { ReadParchmentFillLayer } from "../read/ReadParchmentSurface";
 import { ReadScriptureAudioDockStrip } from "../read/ReadScriptureAudioDockStrip";
+import { shouldShowReadScriptureAudioDock } from "../read/readScriptureDockVisibility";
 import { shouldHideShellTabBarPathname } from "./shellTabBarPath";
 import { trackTelemetry } from "../telemetry/client";
 import { tabIcon, tabLabel, tabTelemetryName } from "./shellTabBarHelpers";
 import { ShellScripturePlayFab } from "./ShellScripturePlayFab";
 import { shellTabBarStyles as styles } from "./shellTabBarStyles";
+import { isReadChapterPathname, isReadPlanPlayPathname } from "./shellPrimaryRoute";
 import {
   isExploreHomeRoute,
   isExploreReadingPlannerStackRoute,
@@ -79,63 +87,104 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
   const onMusicTab = state.routes[state.index]?.name === "music";
   const hideForMusicScene = onMusicTab && musicAutoHideChrome;
   const hideForReadingPlanner = shouldHideShellTabBarPathname(pathname);
+  const onPlanPlay = isReadPlanPlayPathname(pathname);
+  const onReadTab = state.routes[state.index]?.name === "read";
+  const scriptureDockActive = Boolean(
+    playback &&
+      onReadTab &&
+      !onPlanPlay &&
+      shouldShowReadScriptureAudioDock({
+        readChapterAudioAvailable: playback.readChapterAudioAvailable,
+        onChapterPage: isReadChapterPathname(pathname ?? ""),
+        playbackMode: playback.playbackMode,
+        playing: playback.playing,
+        scripturePreparing: playback.scripturePreparing,
+      }),
+  );
   const leftRoutes = state.routes.filter((r) => r.name === "index" || r.name === "music");
   const rightRoutes = state.routes.filter((r) => r.name === "read" || r.name === "explore");
 
-  const renderTab = (routeName: string, routeKey: string, isFocused: boolean) => (
+  const renderTab = (routeName: string, routeKey: string, isFocused: boolean) => {
+    const selected = onPlanPlay ? false : isFocused;
+    return (
     <Pressable
       key={routeKey}
       onPress={() => {
-        if (routeName === "read" && isFocused) {
-          if (readBottomChrome?.openCatalog) {
-            readBottomChrome.openCatalog();
+        const jumpToTab = () => {
+          const pressEvent = navigation.emit({
+            type: "tabPress",
+            target: routeKey,
+            canPreventDefault: true,
+          });
+          if (pressEvent.defaultPrevented) return;
+          const tab = tabTelemetryName(routeName);
+          if (tab) trackTelemetry("tab_select", { tab });
+          if ("jumpTo" in navigation && typeof navigation.jumpTo === "function") {
+            navigation.jumpTo(routeName);
             return;
           }
-          if (!isReadBibleHomeRoute(pathname)) {
+          navigation.navigate(routeName);
+        };
+
+        if (routeName === "read") {
+          const readTab = state.routes.find((r) => r.name === "read");
+          const readTop = readReadStackTopRouteName(
+            readTab?.state as { routes?: { name?: string }[]; index?: number } | undefined,
+          );
+          const catalogOnStack = readTop === "catalog" || isReadStandaloneCatalogRoute(pathname);
+
+          // 从其它 Tab 切回：若停在独立目录页，回到圣经主页（该页不是主页）。
+          // 只用 router.replace，勿再 jumpTo（双导航会闪/错栈）。
+          if (!isFocused && catalogOnStack) {
             router.replace("/read");
+            return;
           }
-          return;
+
+          if (isFocused) {
+            // 主页再点圣经：不要误开 /read/catalog。
+            if (isReadBibleHomeRoute(pathname)) return;
+            // 章页再点：打开独立目录。
+            if (isReadChapterRoute(pathname) && readBottomChrome?.openCatalog) {
+              readBottomChrome.openCatalog();
+              return;
+            }
+            // 目录 / 其它子页：回到主页。
+            if (!isReadBibleHomeRoute(pathname)) {
+              router.replace("/read");
+            }
+            return;
+          }
         }
         if (routeName === "explore") {
           const exploreTab = state.routes.find((r) => r.name === "explore");
           const exploreTop = readExploreStackTopRouteName(
             exploreTab?.state as { routes?: { name?: string }[]; index?: number } | undefined,
           );
-          const plannerOnStack = isExploreReadingPlannerStackRoute(exploreTop);
+          const flowOnStack = isExploreReadingPlannerStackRoute(exploreTop);
           if (isFocused && !isExploreHomeRoute(pathname)) {
             returnToExploreIndex(router);
             return;
           }
-          if (!isFocused && plannerOnStack) {
+          // navigate("/explore") 已切 Tab，勿再 jumpTo。
+          if (!isFocused && flowOnStack) {
             returnToExploreIndex(router);
             return;
           }
         }
-        const pressEvent = navigation.emit({
-          type: "tabPress",
-          target: routeKey,
-          canPreventDefault: true,
-        });
-        if (pressEvent.defaultPrevented) return;
-        const tab = tabTelemetryName(routeName);
-        if (tab) trackTelemetry("tab_select", { tab });
-        if ("jumpTo" in navigation && typeof navigation.jumpTo === "function") {
-          navigation.jumpTo(routeName);
-          return;
-        }
-        navigation.navigate(routeName);
+        jumpToTab();
       }}
       onLongPress={() => {
         navigation.emit({ type: "tabLongPress", target: routeKey });
       }}
       style={({ pressed }) => [styles.tabBtn, pressed && styles.tabBtnPressed]}
       accessibilityRole="button"
-      accessibilityState={{ selected: isFocused }}
+      accessibilityState={{ selected }}
       accessibilityLabel={tabLabel(routeName)}
     >
-      {tabIcon(routeName, isFocused)}
+      {tabIcon(routeName, selected)}
     </Pressable>
   );
+  };
 
   if (hideForHomeLandscape || hideForMusicScene || hideForReadingPlanner) return null;
 
@@ -143,11 +192,20 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
     <View
       style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 8) }]}
       {...(Platform.OS === "android"
-        ? { elevation: 0, backgroundColor: "transparent", collapsable: false }
+        ? {
+            elevation: 0,
+            backgroundColor: "transparent",
+            collapsable: false,
+          }
         : {})}
       pointerEvents="box-none"
     >
-      {playback ? <ReadScriptureAudioDockStrip /> : null}
+      {scriptureDockActive ? (
+        <View pointerEvents="none" style={styles.scriptureDockParchmentHost}>
+          <ReadParchmentFillLayer pinBottom />
+        </View>
+      ) : null}
+      {playback && onReadTab && !onPlanPlay ? <ReadScriptureAudioDockStrip /> : null}
       {readBottomChrome ? (
         <ReadChapterActionChrome />
       ) : null}
@@ -159,7 +217,7 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
           })}
         </View>
 
-        <ShellScripturePlayFab />
+        <ShellScripturePlayFab routeSelected={onPlanPlay} />
 
         <View style={[styles.side, styles.sideRight]}>
           {rightRoutes.map((route) => {

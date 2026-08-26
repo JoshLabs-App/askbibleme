@@ -1,13 +1,18 @@
 import type { Audio } from "expo-av";
 import type { MutableRefObject } from "react";
+import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
 import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
-import { getActiveReadChapterPlayback } from "../read/read-chapter-playback-store";
+import {
+  getActiveReadChapterPlayback,
+  resolveTransportReadChapterPlayback,
+} from "../read/read-chapter-playback-store";
 import {
   isPlanFlowChapterAdvanceInFlight,
   peekReadPlanFlowAutoplay,
 } from "../read/read-plan-flow-autoplay";
 import { scriptureChapterPool } from "./scripture-chapter-pool";
+import { isScriptureUserPauseHeld } from "./scriptureUserPause";
 import {
   finishScriptureChapterOnce,
   isScriptureChapterEndStalled,
@@ -57,13 +62,24 @@ export function markScriptureWantPlaying(ref: MutableRefObject<boolean>, want: b
   ref.current = want;
 }
 
+export {
+  holdScriptureUserPause,
+  isScriptureUserPauseHeld,
+  releaseScriptureUserPause,
+} from "./scriptureUserPause";
+
 function resolveReadChapterForRecovery(
   ctx: ScriptureBackgroundRecoveryCtx,
 ): ReadChapterPlaybackRegistration | null {
-  return ctx.readChapterRef.current ?? getActiveReadChapterPlayback();
+  return resolveTransportReadChapterPlayback() ?? ctx.readChapterRef.current ?? getActiveReadChapterPlayback();
 }
 
 function wantsScripturePlayback(ctx: ScriptureBackgroundRecoveryCtx): boolean {
+  if (isScriptureUserPauseHeld()) return false;
+  // 用户主动暂停后 want/autoPlay 均为 false：即使 planFlow autoplay 仍 armed 也不得强行续播。
+  if (!ctx.scriptureWantPlayingRef.current && !ctx.autoPlayScriptureRef.current) {
+    return false;
+  }
   return (
     ctx.scriptureWantPlayingRef.current ||
     ctx.autoPlayScriptureRef.current ||
@@ -86,6 +102,7 @@ function chapterEndFinishArgs(ctx: ScriptureBackgroundRecoveryCtx): ScriptureCha
 }
 
 export function scheduleScriptureResumeAfterInterruption(ctx: ScriptureResumeCtx): void {
+  if (getShellAudioInterrupted()) return;
   if (!ctx.scriptureWantPlayingRef.current) return;
   if (resumeTimer) clearTimeout(resumeTimer);
   resumeTimer = setTimeout(() => {
@@ -95,6 +112,7 @@ export function scheduleScriptureResumeAfterInterruption(ctx: ScriptureResumeCtx
 }
 
 export function scheduleScriptureBackgroundRecovery(ctx: ScriptureBackgroundRecoveryCtx): void {
+  if (getShellAudioInterrupted()) return;
   if (!wantsScripturePlayback(ctx)) return;
   if (resumeTimer) clearTimeout(resumeTimer);
   resumeTimer = setTimeout(() => {
@@ -104,6 +122,7 @@ export function scheduleScriptureBackgroundRecovery(ctx: ScriptureBackgroundReco
 }
 
 export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCtx): Promise<boolean> {
+  if (getShellAudioInterrupted()) return false;
   if (!ctx.scriptureWantPlayingRef.current) return false;
   if (ctx.playbackModeRef.current !== "scripture") return false;
   if (ctx.scripturePlayInFlightRef.current) return false;
@@ -128,6 +147,8 @@ export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCt
 }
 
 async function flushPlanFlowAutoplayRegistration(ctx: ScriptureBackgroundRecoveryCtx): Promise<boolean> {
+  if (isScriptureUserPauseHeld()) return false;
+  if (ctx.scripturePlayInFlightRef.current) return false;
   if (scriptureChapterPool.isActive()) {
     return scriptureChapterPool.retryCurrent();
   }
@@ -183,6 +204,8 @@ export async function watchScriptureChapterEndStall(
 export async function recoverScripturePlaybackAfterBackground(
   ctx: ScriptureBackgroundRecoveryCtx,
 ): Promise<boolean> {
+  if (getShellAudioInterrupted()) return false;
+  if (isScriptureUserPauseHeld()) return false;
   if (ctx.scripturePlayInFlightRef.current) return false;
   if (ctx.scriptureStopAtSecRef.current != null) return false;
   if (!wantsScripturePlayback(ctx)) return false;

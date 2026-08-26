@@ -46,7 +46,14 @@ import {
   readReadingHabitStats,
   mergeReadingHabitStatsRecords,
 } from "../read/reading-habit-stats";
-import { writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
+import {
+  mergeScriptureListenTotalsRecords,
+  parseScriptureListenTotalsRecord,
+  readScriptureListenTotalsRecord,
+  replaceScriptureListenTotalsRecord,
+} from "../read/scripture-listen-totals";
+import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-prefs-merge";
+import { readReadingPlanPrefs, writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
   replaceNtDeepRepeatProgress,
 } from "../read/reading-plan/nt-deep-repeat-progress";
@@ -87,6 +94,7 @@ import {
   isNtDeepRepeatState,
   isReadingPlanPrefs,
   isRecentSearches,
+  isScriptureListenTotals,
   isScripturePlaybackRate,
   isTodayDoneRecord,
   isTodayFractionRecord,
@@ -113,8 +121,14 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       if (isChapterCompletion(value)) await replaceReadChapterCompletionRecord(value);
       break;
     case "readingPlanPrefs":
-      if (value === null) await writeReadingPlanPrefs(null);
-      else if (isReadingPlanPrefs(value)) await writeReadingPlanPrefs(value);
+      if (value === null) await writeReadingPlanPrefs(null, { notifySync: false });
+      else if (isReadingPlanPrefs(value)) {
+        const local = await readReadingPlanPrefs();
+        const merged = local ? mergeReadingPlanPrefsValue(value, local) : value;
+        if (isReadingPlanPrefs(merged)) {
+          await writeReadingPlanPrefs(merged, { notifySync: false });
+        }
+      }
       break;
     case "tripleLoopProgress":
       if (isTripleLoopState(value)) await replaceTripleLoopProgress(value);
@@ -138,6 +152,17 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       if (isHabitStats(value)) {
         const local = await readReadingHabitStats();
         await replaceReadingHabitStatsRecord(mergeReadingHabitStatsRecords(local, value));
+      }
+      break;
+    case "scriptureListenTotals":
+      if (isScriptureListenTotals(value)) {
+        const remote = parseScriptureListenTotalsRecord(value);
+        if (remote) {
+          const local = await readScriptureListenTotalsRecord();
+          await replaceScriptureListenTotalsRecord(
+            mergeScriptureListenTotalsRecords(local, remote),
+          );
+        }
       }
       break;
     case "readTypography":

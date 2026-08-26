@@ -1,6 +1,7 @@
 import { InteractionManager } from "react-native";
 import { loadBundledChapterSegments } from "../bible/bundled-chapter-segments";
 import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
+import { loadRemoteChapter } from "../bible/load-remote-chapter";
 import type { ChapterSegment, LoadedChapter } from "../bible/types";
 import {
   DEFAULT_SCRIPTURE_LABEL_EN,
@@ -8,7 +9,8 @@ import {
 } from "../bible/types";
 import type { BibleTranslationMeta } from "../bible/translations-types";
 import { translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
-import { ensureScriptureTranslationReadyWithFallback } from "../bible/scripture-translation-download";
+import { ensureScriptureTranslationReady } from "../bible/scripture-translation-download";
+import { isBundledScriptureTranslation } from "../bible/bundled-scripture-translations";
 import { t } from "../i18n/site-copy";
 import { recordTodayReadingChapterFraction } from "./reading-plan/today-reading-chapter-fraction";
 import { writeLastReadPosition } from "./read-last-position";
@@ -54,27 +56,45 @@ export async function loadReadChapterScreenChapter({
     labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
     labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
   };
-  const readyPrimaryId = await ensureScriptureTranslationReadyWithFallback(
+  const catalogMeta = translationMetaFromCatalog(
+    {
+      translations: translationCatalog,
+      defaultTranslationId: null,
+    },
     primaryTranslationId,
-    translationMetaFromCatalog(
-      {
-        translations: translationCatalog,
-        defaultTranslationId: null,
-      },
+  );
+  const isChapterApi = catalogMeta?.delivery === "chapter-api";
+  let loaded: LoadedChapter | null = null;
+
+  if (isChapterApi && catalogMeta) {
+    // 按章在线译本：只拉所选译本，失败不偷换成内置和合本/WEB。
+    loaded = await loadRemoteChapter(catalogMeta, bookId, chapter);
+  } else {
+    try {
+      await ensureScriptureTranslationReady(primaryTranslationId, catalogMeta?.downloadUrl, {
+        delivery: catalogMeta?.delivery,
+      });
+    } catch (err) {
+      if (!isBundledScriptureTranslation(primaryTranslationId)) {
+        console.warn("[read] chapter translation not ready", {
+          bookId,
+          chapter,
+          primaryTranslationId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+        return { ok: false, error: t("pages.read.chapterLoadError"), chapter: null };
+      }
+    }
+    if (loadSeq !== chapterLoadSeqRef.current) {
+      return { ok: false, error: null, chapter: null };
+    }
+    loaded = await loadChapterFromBundledTranslation(
+      bookId,
+      chapter,
       primaryTranslationId,
-    )?.downloadUrl,
-  );
-
-  if (loadSeq !== chapterLoadSeqRef.current) {
-    return { ok: false, error: null, chapter: null };
+      primaryLabels,
+    );
   }
-
-  const loaded = await loadChapterFromBundledTranslation(
-    bookId,
-    chapter,
-    readyPrimaryId,
-    primaryLabels,
-  );
 
   if (loadSeq !== chapterLoadSeqRef.current) {
     return { ok: false, error: null, chapter: null };
@@ -84,10 +104,18 @@ export async function loadReadChapterScreenChapter({
     console.warn("[read] chapter load failed", {
       bookId,
       chapter,
-      readyPrimaryId,
+      primaryTranslationId,
+      delivery: catalogMeta?.delivery ?? null,
     });
     return { ok: false, error: t("pages.read.chapterLoadError"), chapter: null };
   }
+
+  console.warn("[read] chapter load ok", {
+    bookId: loaded.bookId,
+    chapter: loaded.chapter,
+    translationId: loaded.translationId,
+    verses: loaded.verses.length,
+  });
 
   const segments = loadBundledChapterSegments(loaded.bookId, loaded.chapter, chapterSegmentMode, {
     preferEnglishTitles: preferEnglishSegmentTitles,
@@ -104,6 +132,9 @@ export async function loadReadChapterScreenChapter({
   cancelDeferredTasks();
   InteractionManager.runAfterInteractions(() => {
     void recordTodayReadingChapterFraction(loaded.bookId, loaded.chapter, 0.1);
+    void import("./reading-habit-stats").then(({ recordAnyReadingActivityDay }) => {
+      void recordAnyReadingActivityDay();
+    });
   });
   scheduleXrefAfterChapterLoad(loadSeq);
 

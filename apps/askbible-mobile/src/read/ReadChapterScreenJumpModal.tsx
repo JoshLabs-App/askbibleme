@@ -1,11 +1,10 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ImageBackground, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import { bookNameForId } from "./canonCatalog";
 import type { ScriptureCanonCatalogSection } from "./canonCatalog";
 import { BibleCatalogOutline } from "./BibleCatalogOutline";
 import { BibleChapterPickerPanel } from "./BibleChapterPickerPanel";
-import { readParchmentTheme as c } from "./readParchmentTheme";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { useReadParchmentScrollSource } from "./ReadParchmentSurface";
 import { JUMP_CATALOG_VIEWPORT_H } from "./readChapterScreenConstants";
 import { readChapterScreenStyles as styles } from "./readChapterScreenStyles";
@@ -22,7 +21,6 @@ type Props = {
   onClearPickerBook: () => void;
   onPickChapter: (bookId: string, chapter: number) => void;
   jumpTitle: string;
-  backA11yLabel: string;
   closeLabel: string;
 };
 
@@ -38,7 +36,6 @@ export function ReadChapterScreenJumpModal({
   onClearPickerBook,
   onPickChapter,
   jumpTitle,
-  backA11yLabel,
   closeLabel,
 }: Props) {
   const parchmentSource = useReadParchmentScrollSource();
@@ -54,14 +51,7 @@ export function ReadChapterScreenJumpModal({
           >
             <View style={[styles.jumpSheetContent, { paddingBottom: 16 + insets.bottom }]}>
               <View style={styles.jumpHeaderRow}>
-                <Pressable
-                  onPress={onGoReadHome}
-                  style={({ pressed }) => [styles.jumpBackBtn, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={backA11yLabel}
-                >
-                  <MaterialIcons name="arrow-back-ios-new" size={16} color={c.ink} />
-                </Pressable>
+                <ShellSystemBackButton onPress={onGoReadHome} />
                 <Text
                   style={styles.jumpTitle}
                   numberOfLines={1}

@@ -42,6 +42,9 @@ function mapOAuthSignInError(provider: MobileOAuthProvider, message: string): { 
     return { error: "Apple 登录失败，请重试。", code: "apple_auth_failed" };
   }
 
+  if (/nonce/i.test(lower) && /(both exist|mismatch|id_token)/i.test(lower)) {
+    return { error: "Google 登录验证失败，请重试。", code: "google_nonce_mismatch" };
+  }
   if (/invalid.*token|audience/i.test(lower)) {
     return { error: "Google 登录验证失败，请重试。", code: "google_auth_failed" };
   }
@@ -90,7 +93,13 @@ export async function signInMobileMemberWithOAuthIdToken(
 
   return {
     ok: true,
-    user: { id: user.id, email: user.email, name: user.name, locale: user.locale },
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      locale: user.locale,
+      createdAt: user.createdAt,
+    },
     sessionToken: session.sessionToken,
     expiresAt: session.expiresAt,
   };

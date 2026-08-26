@@ -7,8 +7,8 @@ export function isFeaturedReadingPlanId(planId: string): boolean {
   return isTripleLoopPlanId(planId) || isNtDeepRepeatPlanId(planId);
 }
 
-/** 目录页排序：深读 7 天优先，其次三循环。 */
-export const FEATURED_READING_PLAN_ORDER = [NT_DEEP_REPEAT_PLAN_ID, TRIPLE_LOOP_PLAN_ID] as const;
+/** 目录页排序：轻松读经优先，其次正式研读。 */
+export const FEATURED_READING_PLAN_ORDER = [TRIPLE_LOOP_PLAN_ID, NT_DEEP_REPEAT_PLAN_ID] as const;
 
 export function compareReadingPlanCatalogOrder(
   a: Pick<ReadingPlanRegistryEntry, "planId">,

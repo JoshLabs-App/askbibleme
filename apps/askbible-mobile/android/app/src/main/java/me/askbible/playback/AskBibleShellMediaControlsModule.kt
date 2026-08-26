@@ -1,6 +1,7 @@
 package me.askbible.playback
 
-import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -15,13 +16,58 @@ class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicatio
 
   @ReactMethod
   fun updateSession(json: String) {
+    val app = reactApplicationContext.applicationContext
     ShellPlaybackSession.updateFromJson(json)
-    ShellPlaybackService.startOrRefresh(reactApplicationContext.applicationContext)
+    if (ShellPlaybackSession.playing) {
+      ShellCallAudioMonitor.clearStaleInterruptIfIdle(app)
+    }
+    ShellPlaybackService.startOrRefresh(app)
   }
 
   @ReactMethod
   fun clearSession() {
     ShellPlaybackService.stop(reactApplicationContext.applicationContext)
+  }
+
+  @ReactMethod
+  fun pauseAppMusic() {
+    val app = reactApplicationContext.applicationContext
+    Handler(Looper.getMainLooper()).post { ShellPlaybackService.pauseFromJs(app) }
+  }
+
+  @ReactMethod
+  fun resumeAppMusic() {
+    val app = reactApplicationContext.applicationContext
+    Handler(Looper.getMainLooper()).post { ShellPlaybackService.resumeFromJs(app) }
+  }
+
+  @ReactMethod
+  fun seekTo(positionSec: Double) {
+    Handler(Looper.getMainLooper()).post { ShellMainNativePlayer.seekTo(positionSec) }
+  }
+
+  @ReactMethod
+  fun setPlaybackRate(rate: Double) {
+    Handler(Looper.getMainLooper()).post {
+      ShellMainNativePlayer.setRate(rate.toFloat())
+    }
+  }
+
+  @ReactMethod
+  fun setMusicVolume(volume: Double) {
+    Handler(Looper.getMainLooper()).post {
+      ShellMainNativePlayer.setMusicVolume(volume.toFloat())
+    }
+  }
+
+  @ReactMethod
+  fun setSleepTimerDeadlineMs(deadlineMs: Double) {
+    val ms = deadlineMs.toLong()
+    if (ms <= 0L) {
+      ShellSleepTimer.cancel()
+      return
+    }
+    ShellSleepTimer.arm(ms, reactApplicationContext)
   }
 
   @ReactMethod
@@ -45,27 +91,32 @@ class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicatio
       if (moduleInstance === module) moduleInstance = null
     }
 
-    fun emitRemote(event: String) {
-      tryEmitRemote(event)
+    fun emitRemote(event: String, payload: Any? = null) {
+      tryEmitRemote(event, payload)
     }
 
-    fun tryEmitRemote(event: String): Boolean {
+    fun tryEmitRemote(event: String, payload: Any? = null): Boolean {
       val module = moduleInstance ?: return false
       if (!module.reactContext.hasActiveReactInstance()) return false
       module.reactContext
         .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-        .emit(event, null)
+        .emit(event, payload)
       return true
     }
 
     fun minimizeAppToBackground() {
-      moduleInstance?.reactContext?.currentActivity?.moveTaskToBack(true)
+      try {
+        moduleInstance?.reactContext?.currentActivity?.moveTaskToBack(true)
+      } catch (_: Exception) {
+        /* ignore */
+      }
     }
   }
 
   override fun initialize() {
     super.initialize()
     bind(this)
+    ShellCallAudioMonitor.start(reactApplicationContext.applicationContext)
     reactContext.addLifecycleEventListener(
       object : LifecycleEventListener {
         override fun onHostResume() {
@@ -83,6 +134,7 @@ class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicatio
 
   override fun invalidate() {
     unbind(this)
+    ShellCallAudioMonitor.stop(reactApplicationContext.applicationContext)
     super.invalidate()
   }
 }

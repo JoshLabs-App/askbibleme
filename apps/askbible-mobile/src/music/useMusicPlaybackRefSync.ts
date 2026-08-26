@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { getShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
 import type { useMusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
@@ -17,7 +18,8 @@ export function useMusicPlaybackRefSync(
   refs.trackIndexRef.current = state.trackIndex;
   refs.playbackModeRef.current = state.playbackMode;
   refs.musicRepeatModeRef.current = state.musicRepeatMode;
-  refs.playingStateRef.current = state.playing;
+  // 用户已停播时勿把旧 UI playing 刷回 ref，否则续播逻辑会误开。
+  refs.playingStateRef.current = getShellMusicWantPlaying() ? state.playing : false;
 
   // ponytail: syncPlayingState must stay referentially stable for shell wiring deps
   return useCallback(

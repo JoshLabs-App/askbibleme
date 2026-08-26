@@ -23,7 +23,14 @@ class WidgetPlaybackLauncherService : Service() {
       }
 
     ensureChannel()
-    val launchIntent = WidgetPlaybackBridge.buildPlaybackActivityIntent(this, bridgeAction)
+    val verseKey =
+      if (bridgeAction == WidgetPlaybackBridge.ACTION_VERSE) {
+        WidgetPlaybackBridge.peekPendingVerseKey(this)
+      } else {
+        null
+      }
+    val launchIntent =
+      WidgetPlaybackBridge.buildPlaybackActivityIntent(this, bridgeAction, verseKey)
     val pendingIntent =
       PendingIntent.getActivity(
         this,

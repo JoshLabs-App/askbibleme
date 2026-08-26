@@ -129,4 +129,10 @@ export async function writeVerseTextHighlightIndices(
   if (!normalized.length) delete store[key];
   else store[key] = normalized;
   await writeStore(store);
+  try {
+    const { notifyMemberReadingLocalChanged } = await import("../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("highlights");
+  } catch {
+    /* ignore */
+  }
 }

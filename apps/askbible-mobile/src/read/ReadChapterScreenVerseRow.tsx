@@ -38,6 +38,7 @@ type Props = {
   parentVerseLongPressHandler: (verse: number, text: string) => (() => void) | undefined;
   verseBodyPressProps: (verse: number, text: string) => Record<string, unknown>;
   reportVerseLayoutFromEvent: (verse: number, e: LayoutChangeEvent) => void;
+  registerVerseHost: (verse: number, node: unknown) => void;
   onXrefVersePress: (verse: number) => void;
 };
 
@@ -66,6 +67,7 @@ export function ReadChapterScreenVerseRow({
   parentVerseLongPressHandler,
   verseBodyPressProps,
   reportVerseLayoutFromEvent,
+  registerVerseHost,
   onXrefVersePress,
 }: Props) {
   const headings = segmentMeta.headingByVerse.get(v.verse) ?? [];
@@ -90,9 +92,7 @@ export function ReadChapterScreenVerseRow({
       ? undefined
       : bookmarked
         ? "bookmark"
-        : v.isGolden
-          ? "golden"
-          : undefined;
+        : undefined;
   const verseBlockBackgroundStyle = selected
     ? styles.verseBlockSelected
     : searchFocus
@@ -128,6 +128,8 @@ export function ReadChapterScreenVerseRow({
         </Text>
       ))}
       <View
+        collapsable={false}
+        ref={(node) => registerVerseHost(v.verse, node)}
         onLayout={(e) => reportVerseLayoutFromEvent(v.verse, e)}
         accessibilityRole="button"
         accessibilityHint={verseSelectionMode ? verseSelectionTapA11yHint : verseBookmarkA11yHint}

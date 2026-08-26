@@ -4,7 +4,7 @@ import { parchmentSans } from "../fonts/parchmentType";
 export const natureHomeSettingsPanelStyles = StyleSheet.create({
   overlayRoot: {
     ...StyleSheet.absoluteFillObject,
-    zIndex: 30,
+    zIndex: 80,
   },
   backdrop: {
     flex: 1,
@@ -14,11 +14,14 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
   sheet: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#3f3f46",
-    backgroundColor: "#18181b",
+    borderColor: "#c9a875",
+    backgroundColor: "transparent",
+  },
+  sheetBody: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 7,
+    paddingTop: 12,
+    paddingBottom: 18,
+    gap: 12,
   },
   translationSection: {
     flexDirection: "row",
@@ -39,7 +42,7 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
   },
   rowAlignTop: {
     alignItems: "flex-start",
@@ -55,7 +58,7 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
   },
   segment: {
     flexDirection: "row",
-    backgroundColor: "#27272a",
+    backgroundColor: "transparent",
     borderRadius: 7,
     padding: 2,
   },
@@ -63,10 +66,15 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     flex: 1,
     minHeight: 30,
     borderRadius: 5,
+    backgroundColor: "rgba(255, 248, 235, 0.52)",
     alignItems: "center",
     justifyContent: "center",
   },
-  segBtnOn: { backgroundColor: "#3f3f46" },
+  segBtnOn: {
+    backgroundColor: "rgba(255, 177, 1, 0.18)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255, 177, 1, 0.74)",
+  },
   scaleRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -77,59 +85,75 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     flex: 1,
     minHeight: 30,
     borderRadius: 5,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#c9a875",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#3f3f46",
+    backgroundColor: "rgba(255, 248, 235, 0.52)",
   },
   scaleBtnDisabled: { opacity: 0.35 },
   scaleBtnDefaultOn: {
-    backgroundColor: "#52525b",
+    backgroundColor: "rgba(255, 177, 1, 0.18)",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#71717a",
+    borderColor: "rgba(255, 177, 1, 0.74)",
   },
   scaleSuperText: {
     fontSize: 18,
     ...parchmentSans(700),
-    color: "#f1f5f9",
+    color: "#4a3425",
     letterSpacing: 0.1,
   },
   scaleDefaultText: {
     fontSize: 15,
     lineHeight: 17,
     ...parchmentSans(600),
-    color: "#f1f5f9",
+    color: "#4a3425",
     letterSpacing: 0.05,
   },
   scaleOpText: {
     fontSize: 20,
     lineHeight: 20,
     ...parchmentSans(600),
-    color: "#f1f5f9",
+    color: "#4a3425",
   },
   rotationChoicesWrap: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
     gap: 6,
+  },
+  rotationChoicesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  rotationLabel: {
+    width: 28,
+    fontSize: 12,
+    lineHeight: 16,
+    ...parchmentSans(600),
+    color: "#5b4330",
   },
   rotationChoice: {
     minHeight: 30,
     minWidth: 52,
     borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#c9a875",
     paddingHorizontal: 10,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#3f3f46",
+    backgroundColor: "rgba(255, 248, 235, 0.52)",
   },
   rotationChoiceOn: {
-    backgroundColor: "#52525b",
+    backgroundColor: "rgba(255, 177, 1, 0.18)",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#71717a",
+    borderColor: "rgba(255, 177, 1, 0.74)",
   },
   rotationChoiceText: {
     fontSize: 12,
     lineHeight: 15,
     ...parchmentSans(600),
-    color: "#f1f5f9",
+    color: "#4a3425",
     fontVariant: ["tabular-nums"],
   },
   rotationValueWrap: {
@@ -138,14 +162,14 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#27272a",
+    backgroundColor: "rgba(255, 248, 235, 0.52)",
     paddingHorizontal: 6,
   },
   rotationValueText: {
     fontSize: 11,
     ...parchmentSans(600),
     fontVariant: ["tabular-nums"],
-    color: "rgba(255,255,255,0.82)",
+    color: "#5b4330",
   },
   voiceScroll: {
     width: "100%",
@@ -159,8 +183,8 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
   voiceChip: {
     borderRadius: 7,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#3f3f46",
-    backgroundColor: "#27272a",
+    borderColor: "#c9a875",
+    backgroundColor: "rgba(255, 248, 235, 0.52)",
     paddingHorizontal: 9,
     minHeight: 30,
     minWidth: 72,
@@ -168,8 +192,8 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     justifyContent: "center",
   },
   voiceChipOn: {
-    backgroundColor: "#3f3f46",
-    borderColor: "#71717a",
+    backgroundColor: "#d2a85c",
+    borderColor: "#b8893f",
   },
   voiceAddChip: {
     minWidth: 32,
@@ -180,11 +204,11 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 15,
     ...parchmentSans(500),
-    color: "rgba(255,255,255,0.62)",
+    color: "#6b513b",
   },
   voiceChipTextOn: {
     ...parchmentSans(600),
-    color: "#fff",
+    color: "#3f2b1d",
   },
   voiceChipInner: {
     flexDirection: "row",
@@ -195,15 +219,15 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 14,
     ...parchmentSans(700),
-    color: "rgba(255,255,255,0.55)",
+    color: "#6b513b",
   },
   voiceGenderTextOn: {
-    color: "#fff",
+    color: "#3f2b1d",
   },
   voiceHint: {
     fontSize: 12,
     lineHeight: 16,
-    color: "rgba(255,255,255,0.52)",
+    color: "#765b42",
     ...parchmentSans(500),
   },
   ttsSliderWrap: {
@@ -231,9 +255,3 @@ export const natureHomeSettingsPanelStyles = StyleSheet.create({
     height: 30,
   },
 });
-
-export const natureHomeSettingsSegmentProps = {
-  segmentStyle: natureHomeSettingsPanelStyles.segment,
-  segBtnStyle: natureHomeSettingsPanelStyles.segBtn,
-  segBtnOnStyle: natureHomeSettingsPanelStyles.segBtnOn,
-} as const;

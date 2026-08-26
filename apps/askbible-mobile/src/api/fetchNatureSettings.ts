@@ -78,24 +78,6 @@ function isNatureSettingsShape(raw: unknown): raw is NatureSettingsV2 {
   return Array.isArray(o.videos);
 }
 
-function isLocalLikeHostFromBase(base: string): boolean {
-  try {
-    const u = new URL(base);
-    const h = u.hostname.trim().toLowerCase();
-    if (!h) return true;
-    if (h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return true;
-    if (h.startsWith("10.") || h.startsWith("192.168.")) return true;
-    const m = h.match(/^172\.(\d+)\./);
-    if (m) {
-      const octet = Number(m[1]);
-      if (Number.isFinite(octet) && octet >= 16 && octet <= 31) return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
 function mediaFingerprint(row: {
   src?: string;
   src1080?: string;
@@ -236,14 +218,12 @@ async function writeCachedNatureSettings(settings: NatureSettingsV2): Promise<vo
   }
 }
 
-/** 从 askbible.me（或联调本机）拉取 Web 真源场景配置。 */
+/** 联调本机等非主站基址拉取场景配置（不经 askbible.me）。 */
 export async function fetchNatureSettingsFromRemote(): Promise<NatureSettingsV2 | null> {
   if (!(await isNetworkAvailable())) return null;
   const primaryBase = getAskBibleBaseUrl().replace(/\/$/, "");
+  if (!primaryBase || /askbible\.me/i.test(primaryBase)) return null;
   const candidates = [primaryBase];
-  if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {
-    candidates.push("https://askbible.me");
-  }
 
   for (const base of candidates) {
     try {

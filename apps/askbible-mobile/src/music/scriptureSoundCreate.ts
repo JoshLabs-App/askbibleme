@@ -1,10 +1,12 @@
 import { Audio } from "expo-av";
 import type { AVPlaybackSource } from "expo-av";
 import type { MutableRefObject } from "react";
+import { Platform } from "react-native";
 import { primeShellSoundPlayback, shellSoundDownloadFirst } from "../audio/shellAudioMode";
 import { logShellSoundError } from "../audio/safeShellSound";
 import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
 import { createScripturePlaybackStatusHandler } from "./scripturePlaybackStatus";
+import { clearScripturePlayingChapter } from "./scripturePlayingChapterStore";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
@@ -75,7 +77,7 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
       avSource,
       {
         shouldPlay: true,
-        progressUpdateIntervalMillis: 350,
+        progressUpdateIntervalMillis: Platform.OS === "android" ? 400 : 500,
         volume: 1,
         isMuted: false,
         rate: scripturePlaybackRateRef.current,
@@ -110,6 +112,7 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
       setPlaybackMode("music");
       playbackModeRef.current = "music";
       setPlaying(false);
+      clearScripturePlayingChapter();
     }
     logShellSoundError("playScripture-create", err);
     return { ok: false, stale: false };

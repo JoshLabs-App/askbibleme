@@ -47,7 +47,6 @@ export async function hydrateLocaleFromStorage(): Promise<AppLocale> {
       await AsyncStorage.removeItem(LOCALE_STORAGE_KEY_LEGACY);
     } else {
       locale = inferAppLocaleFromDevice();
-      await AsyncStorage.setItem(LOCALE_STORAGE_KEY, locale);
     }
   } catch {
     locale = DEFAULT_LOCALE;

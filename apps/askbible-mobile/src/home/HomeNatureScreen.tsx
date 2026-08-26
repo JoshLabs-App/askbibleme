@@ -2,15 +2,30 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Platform, useWindowDimensions, View } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parseVerseKey } from "../bible/parse-verse-key";
 import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
+import { isShellMusicChromeActive } from "../audio/shellMusicNativePlaying";
+import { useShellMusicSignals } from "../music/useShellMusicSignals";
+import {
+  getShellScriptureWantPlaying,
+  subscribeShellScriptureWantPlaying,
+} from "../audio/shellScriptureWantPlaying";
+import { setShellVerseWantPlaying } from "../audio/shellVerseWantPlaying";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import type { NatureAmbientSceneSlotId } from "../nature/ambientSceneSlots";
+import {
+  setHomeGoldenVerseSessionActive,
+  shouldYieldMusicWhenOpeningAmbient,
+  yieldAmbientIfMusicAndAmbientOpen,
+} from "./homeGoldenVerseTwoSourceMutex";
 import { AppLogoSplash } from "../shell/AppLogoSplash";
+import { useShellNavMenu } from "../shell/ShellNavMenuContext";
 import { shellFullBleedBackdropStyle, useShellFullBleedFrame } from "../shell/shellLayout";
 import {
+  clearCoverVideoSessionPosterOnly,
   getCoverVideoPosterOnly,
   subscribeCoverVideoPosterOnly,
 } from "./coverVideoPosterFallback";
@@ -20,34 +35,69 @@ import { HomeNatureScreenTopChrome } from "./HomeNatureScreenTopChrome";
 import { HomeNatureScreenVideoStage } from "./HomeNatureScreenVideoStage";
 import { HomeVerseOverlay } from "./HomeVerseOverlay";
 import { homeNatureScreenStyles as styles } from "./homeNatureScreenStyles";
-import { NatureHomeSettingsPanel } from "./NatureHomeSettingsPanel";
+import { HOME_SCENE_TOOLS_AUTO_CLOSE_MS } from "./homeNatureScreenConstants";
 import { useHomeNatureImmersive } from "./useHomeNatureImmersive";
 import { useHomeNatureSceneControl } from "./useHomeNatureSceneControl";
 import { useHomeNatureScreenLoad } from "./useHomeNatureScreenLoad";
 import { useHomeNatureTodayScriptureShellPlayback } from "./useHomeNatureTodayScriptureShellPlayback";
 import { useHomeNatureVerseSpeech } from "./useHomeNatureVerseSpeech";
+import { useHomeNatureVerseAudioPlayback } from "./useHomeNatureVerseAudioPlayback";
 import { useHomeNatureVideoPowerPolicy } from "./useHomeNatureVideoPowerPolicy";
 import { useHomeOrientationUnlock } from "./useHomeOrientationUnlock";
 import { logStartupTiming } from "../debug/startupTiming";
+import { writeNatureLiveVideoEnabled } from "./natureHomeLiveVideoPrefs";
+import {
+  consumeQueuedWidgetVerseKey,
+  setWidgetVersePlaying,
+  subscribeWidgetVersePlayRequest,
+  subscribeWidgetVerseStopRequest,
+} from "../widget/widgetPlaybackRequest";
+import { syncWidgetDisplayedVerseFollow } from "../widget/syncWidgetDisplayedVerseFollow";
 
 export function HomeNatureScreen() {
   const router = useRouter();
   const { locale } = useLocale();
   const insets = useSafeAreaInsets();
   const fullBleedFrame = useShellFullBleedFrame();
-  const { width: winW, height: winH } = useWindowDimensions();
-  const isLandscape = winW > winH;
   const coverVideoPosterOnly = useSyncExternalStore(
     subscribeCoverVideoPosterOnly,
     getCoverVideoPosterOnly,
     getCoverVideoPosterOnly,
   );
 
-  const { setMusicGain, playing, playbackMode, scripturePreparing } = useMusicPlayback();
+  const musicSignals = useShellMusicSignals();
+  const {
+    setMusicGain,
+    setMusicRepeatMode,
+    playing,
+    playbackMode,
+    tracks,
+    trackIndex,
+    playTrackAt,
+    scripturePreparing,
+    togglePlayScripture,
+    pauseShellPlayback,
+  } = useMusicPlayback();
+  const { open: navMenuOpen } = useShellNavMenu();
 
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [ambientStripViewportWidth, setAmbientStripViewportWidth] = useState(0);
+  const [sceneToolsOpen, setSceneToolsOpen] = useState(false);
+  const [sceneToolsIdleEpoch, setSceneToolsIdleEpoch] = useState(0);
+  const bumpSceneToolsIdle = useCallback(() => {
+    setSceneToolsIdleEpoch((n) => n + 1);
+  }, []);
   const [displayedVerseKey, setDisplayedVerseKey] = useState<string | null>(null);
+  const [forceVerseKey, setForceVerseKey] = useState<string | null>(null);
+  const [homeVerseAudioActive, setHomeVerseAudioActive] = useState(false);
+  const homeVerseAdvanceRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const homeVersePeekNextRef = useRef<() => string | null>(() => null);
+  const homeVersePeekNextTwoRef = useRef<() => [string | null, string | null]>(() => [null, null]);
+  const homeVersePeekNextKeysRef = useRef<(count: number) => string[]>(() => []);
+  const homeVersePinNextRef = useRef<(key: string | null) => void>(() => undefined);
+  const homeVerseAudioActiveRef = useRef(false);
+  const homeVerseStopFullyRef = useRef<() => Promise<void>>(async () => {});
+  const displayedVerseKeyRef = useRef<string | null>(null);
+  const forceVerseKeyRef = useRef<string | null>(null);
   const [startupReady, setStartupReady] = useState(Platform.OS !== "android");
   const firstRenderLoggedRef = useRef(false);
   const settingsLoggedRef = useRef(false);
@@ -70,16 +120,194 @@ export function HomeNatureScreen() {
   const load = useHomeNatureScreenLoad();
   useHomeNatureTodayScriptureShellPlayback(load.homeFocused, startupReady);
 
+  const stopGoldenVerse = useCallback(() => {
+    setHomeVerseAudioActive(false);
+    setForceVerseKey(null);
+    void homeVerseStopFullyRef.current();
+  }, []);
+
   const scriptureModeActive = playbackMode === "scripture" && (playing || scripturePreparing);
+  const scriptureWantPlaying = useSyncExternalStore(
+    subscribeShellScriptureWantPlaying,
+    getShellScriptureWantPlaying,
+    () => false,
+  );
+  const scriptureAudioLocksVideo = scriptureModeActive || scriptureWantPlaying;
   const verseSpeech = useHomeNatureVerseSpeech({
     prefsVersion: load.prefsVersion,
     scriptureModeActive,
     enabled: startupReady,
   });
+  const handleAdvanceControllerReady = useCallback(
+    (advanceNow: () => Promise<void>) => {
+      homeVerseAdvanceRef.current = advanceNow;
+      verseSpeech.onAdvanceControllerReady(advanceNow);
+    },
+    [verseSpeech.onAdvanceControllerReady],
+  );
+  const handleVerseQueueControllerReady = useCallback(
+    (ctrl: {
+      peekNextVerseKey: () => string | null;
+      peekNextTwoVerseKeys: () => [string | null, string | null];
+      peekNextVerseKeys: (count: number) => string[];
+      pinNextVerseKey: (key: string | null) => void;
+    }) => {
+      homeVersePeekNextRef.current = ctrl.peekNextVerseKey;
+      homeVersePeekNextTwoRef.current = ctrl.peekNextTwoVerseKeys;
+      homeVersePeekNextKeysRef.current = ctrl.peekNextVerseKeys;
+      homeVersePinNextRef.current = ctrl.pinNextVerseKey;
+    },
+    [],
+  );
+  const audioVerseKey = forceVerseKey ?? displayedVerseKey;
+  const homeVerseAudio = useHomeNatureVerseAudioPlayback({
+    baseUrl: load.baseUrl,
+    verseKey: audioVerseKey,
+    active: homeVerseAudioActive && startupReady,
+    // 挂件强制句只锁开播第一句；续播必须清掉 force，否则 advance 只换显示、音频停住。
+    advanceNow: async () => {
+      if (forceVerseKeyRef.current) {
+        forceVerseKeyRef.current = null;
+        setForceVerseKey(null);
+      }
+      await homeVerseAdvanceRef.current();
+    },
+    peekNextVerseKey: () => homeVersePeekNextRef.current(),
+    peekNextTwoVerseKeys: () => homeVersePeekNextTwoRef.current(),
+    peekNextVerseKeys: (count) => homeVersePeekNextKeysRef.current(count),
+    pinNextVerseKey: (key) => homeVersePinNextRef.current(key),
+    onActiveChange: setHomeVerseAudioActive,
+  });
+  homeVerseStopFullyRef.current = homeVerseAudio.stopFully;
 
-  const videoPowerPolicy = useHomeNatureVideoPowerPolicy({ softFocus: load.softFocus });
-  const forcePosterStage = coverVideoPosterOnly || videoPowerPolicy.preferPosterStage;
-  const musicModeActive = playbackMode === "music" && playing;
+  const toggleGoldenVerse = useCallback(() => {
+    bumpSceneToolsIdle();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (homeVerseAudioActive || homeVerseAudio.playing) {
+      stopGoldenVerse();
+      return;
+    }
+    yieldAmbientIfMusicAndAmbientOpen();
+    // 先钉 wantPlaying：安卓立刻卸封面视频，再开金句，避免抢会话。
+    setShellVerseWantPlaying(true);
+    setHomeVerseAudioActive(true);
+    void togglePlayScripture({ forcePause: true });
+  }, [
+    bumpSceneToolsIdle,
+    homeVerseAudio.playing,
+    homeVerseAudioActive,
+    stopGoldenVerse,
+    togglePlayScripture,
+  ]);
+
+  useEffect(() => {
+    homeVerseAudioActiveRef.current = homeVerseAudioActive;
+    setHomeGoldenVerseSessionActive(homeVerseAudioActive);
+    return () => setHomeGoldenVerseSessionActive(false);
+  }, [homeVerseAudioActive]);
+  useEffect(() => {
+    displayedVerseKeyRef.current = displayedVerseKey;
+  }, [displayedVerseKey]);
+  useEffect(() => {
+    forceVerseKeyRef.current = forceVerseKey;
+  }, [forceVerseKey]);
+
+  useEffect(() => {
+    setWidgetVersePlaying(
+      homeVerseAudioActive && (homeVerseAudio.playing || homeVerseAudio.preparing),
+    );
+    return () => setWidgetVersePlaying(false);
+  }, [homeVerseAudio.playing, homeVerseAudio.preparing, homeVerseAudioActive]);
+
+  // 金句朗读时：挂件钉住 App 当前句并停墙钟轮换；停播后解冻。
+  useEffect(() => {
+    const key = (forceVerseKey || displayedVerseKey || "").trim() || null;
+    syncWidgetDisplayedVerseFollow({
+      verseKey: key,
+      frozen: homeVerseAudioActive,
+    });
+  }, [displayedVerseKey, forceVerseKey, homeVerseAudioActive]);
+
+  // 读经计划开播时停金句（续播 / 壳层播放也会走到这里）。
+  useEffect(() => {
+    if (!(playbackMode === "scripture" && playing)) return;
+    if (!homeVerseAudioActiveRef.current) return;
+    setHomeVerseAudioActive(false);
+    setForceVerseKey(null);
+  }, [playbackMode, playing]);
+
+  useEffect(() => {
+    const applyVersePlay = (key: string) => {
+      const normalized = key.trim().toUpperCase();
+      if (!normalized) return;
+      const current =
+        (forceVerseKeyRef.current || displayedVerseKeyRef.current || "").trim().toUpperCase();
+      if (homeVerseAudioActiveRef.current && (!current || current === normalized)) {
+        stopGoldenVerse();
+        return;
+      }
+      // 先停读经，再开金句，避免两路叠音。
+      void (async () => {
+        await togglePlayScripture({ forcePause: true });
+        setForceVerseKey(normalized);
+        yieldAmbientIfMusicAndAmbientOpen();
+        setHomeVerseAudioActive(true);
+      })();
+    };
+    const unsubPlay = subscribeWidgetVersePlayRequest(applyVersePlay);
+    const unsubStop = subscribeWidgetVerseStopRequest(() => {
+      stopGoldenVerse();
+    });
+    const queued = consumeQueuedWidgetVerseKey();
+    if (queued) applyVersePlay(queued);
+    return () => {
+      unsubPlay();
+      unsubStop();
+    };
+  }, [stopGoldenVerse, togglePlayScripture]);
+
+  const liveVideoEnabled = load.liveVideoEnabled;
+  /** 关模糊 = 开循环视频；尊重用户开关。 */
+  const showLiveVideo = liveVideoEnabled;
+  const preferSoftPoster = !showLiveVideo;
+  const videoPowerPolicy = useHomeNatureVideoPowerPolicy({
+    liveVideoEnabled,
+  });
+  // wantPlaying / 原生实播：UI playing 抖 false 时仍算音乐在播（混音 + 图标）。
+  const musicModeActive = isShellMusicChromeActive({
+    playbackMode,
+    playing,
+    wantPlaying: musicSignals.wantPlaying,
+    nativePlaying: musicSignals.nativePlaying,
+  });
+  // 金句可与静音封面同在；读经需卸视频，否则安卓会抢会话把朗读掐掉。
+  // 音乐不再强制静帧：只暂停封面解码，避免切海报抖动。
+  const forcePosterStage =
+    coverVideoPosterOnly || videoPowerPolicy.preferPosterStage || scriptureAudioLocksVideo;
+
+  const toggleSceneTools = useCallback(() => {
+    bumpSceneToolsIdle();
+    setSceneToolsOpen((open) => !open);
+  }, [bumpSceneToolsIdle]);
+
+  useEffect(() => {
+    if (!sceneToolsOpen) return;
+    const id = setTimeout(() => setSceneToolsOpen(false), HOME_SCENE_TOOLS_AUTO_CLOSE_MS);
+    return () => clearTimeout(id);
+  }, [sceneToolsOpen, sceneToolsIdleEpoch]);
+
+  const toggleAmbientSlotWithCap = useCallback(
+    (slotId: NatureAmbientSceneSlotId) => {
+      bumpSceneToolsIdle();
+      const turningOn = load.activeAmbientSlotId !== slotId;
+      // 人声（金句/读经）+ 音乐已占两路：再开环境音时停音乐。toggle 在读经模式下不会停音乐。
+      if (turningOn && shouldYieldMusicWhenOpeningAmbient()) {
+        void pauseShellPlayback();
+      }
+      load.toggleAmbientSlot(slotId);
+    },
+    [bumpSceneToolsIdle, load, pauseShellPlayback],
+  );
 
   const scene = useHomeNatureSceneControl({
     baseUrl: load.baseUrl,
@@ -99,10 +327,12 @@ export function HomeNatureScreen() {
     setActiveAmbientSlotId: load.setActiveAmbientSlotId,
     coverVideoPosterOnly,
     forcePosterStage,
+    preferSoftPoster,
     videoPowerPolicy,
     musicModeActive,
     scriptureModeActive,
-    voiceActive: verseSpeech.voiceActive,
+    // 金句文件朗读也算「人声」：环境音 duck 到 30%；与音乐同开时音乐亦 30%。
+    voiceActive: verseSpeech.voiceActive || homeVerseAudioActive,
     enabled: startupReady,
   });
 
@@ -111,17 +341,24 @@ export function HomeNatureScreen() {
     hasVideoStage: scene.hasVideoStage,
     loading: load.loading,
     error: load.error,
-    settingsOpen,
+    settingsOpen: navMenuOpen,
     showSceneLoader: scene.showSceneLoader,
     sceneId: scene.sceneId,
     sceneList: scene.sceneList,
     selectScene: scene.selectScene,
     enabled: startupReady,
+    idleEpoch: sceneToolsIdleEpoch,
   });
 
   useEffect(() => {
-    void setMusicGain(verseSpeech.voiceActive ? 0.3 : 1);
-  }, [setMusicGain, verseSpeech.voiceActive]);
+    void setMusicGain(verseSpeech.voiceActive || homeVerseAudioActive ? 0.3 : 1);
+  }, [homeVerseAudioActive, setMusicGain, verseSpeech.voiceActive]);
+
+  // 点专辑会把 gain 拉回专辑默认；金句仍在时再压回去，保证叠播而不是全音量盖住人声。
+  useEffect(() => {
+    if (!(verseSpeech.voiceActive || homeVerseAudioActive)) return;
+    void setMusicGain(0.3);
+  }, [homeVerseAudioActive, musicSignals, setMusicGain, trackIndex, verseSpeech.voiceActive]);
 
   const handleDisplayedVerseChange = useCallback(
     (payload: {
@@ -164,11 +401,16 @@ export function HomeNatureScreen() {
     logStartupTiming("home", "video_stage_mounted");
   }, [load.videoStageMounted]);
 
+  const hideLandscapePlayBar = immersive.showLandscapeVideo && immersive.showAutoImmersive;
+  useEffect(() => {
+    if (!hideLandscapePlayBar) return;
+    setSceneToolsOpen(false);
+  }, [hideLandscapePlayBar]);
+
   if (load.loading && !load.settings?.videos.length) {
     return <AppLogoSplash />;
   }
 
-  const chromeVisible = !immersive.showAutoImmersive;
   const videoBackdropStyle =
     Platform.OS === "android"
       ? {
@@ -178,7 +420,7 @@ export function HomeNatureScreen() {
       : styles.fullBleedBackdropFill;
 
   return (
-    <View style={styles.root} onTouchStart={immersive.markHomeInteraction}>
+    <View style={styles.root}>
       <StatusBar hidden={false} style="auto" translucent backgroundColor="transparent" />
 
       <HomeNatureScreenVideoStage
@@ -192,71 +434,93 @@ export function HomeNatureScreen() {
         clampedRate={scene.clampedRate}
         showLandscapeVideo={immersive.showLandscapeVideo}
         homeFocused={load.homeFocused}
+        verseAudioActive={homeVerseAudioActive || verseSpeech.voiceActive}
+        scriptureAudioActive={scriptureAudioLocksVideo}
         handleSceneVideoReady={scene.handleSceneVideoReady}
         videoPowerPolicy={videoPowerPolicy}
-        hasVideoStage={scene.hasVideoStage}
-        settingsOpen={settingsOpen}
-        softFocus={load.softFocus}
         showSceneLoader={scene.showSceneLoader}
       />
 
       <HomeNatureScreenInteractionLayer
         autoImmersive={immersive.showAutoImmersive}
-        enabled={!settingsOpen}
-        onInteraction={immersive.markHomeInteraction}
+        enabled={!navMenuOpen}
+        onInteraction={immersive.toggleHomeChrome}
       />
 
       <HomeVerseOverlay
         prefsVersion={load.prefsVersion}
         layout={immersive.showLandscapeVideo ? "homeLandscape" : "home"}
-        pauseRotation={verseSpeech.voicePreparing || verseSpeech.voiceSpeaking || !load.homeFocused}
+        elevateAboveImmersiveTap={immersive.showAutoImmersive}
+        forceVerseKey={forceVerseKey}
+        pauseRotation={
+          // 金句朗读中只走「播完 → 间隔 → 下一句」，禁止停留时间轮换中途掐断。
+          homeVerseAudioActive ||
+          verseSpeech.voicePreparing ||
+          verseSpeech.voiceSpeaking ||
+          (!load.homeFocused && !homeVerseAudioActive)
+        }
         onVerseBodyPress={openDisplayedVerseInBible}
         onDisplayedVerseChange={handleDisplayedVerseChange}
-        onAdvanceControllerReady={verseSpeech.onAdvanceControllerReady}
+        onAdvanceControllerReady={handleAdvanceControllerReady}
+        onVerseQueueControllerReady={handleVerseQueueControllerReady}
       />
 
-      {chromeVisible ? (
-        <>
-          <HomeNatureScreenTopChrome
-            insets={insets}
-            homeTtsExperimentEnabled={verseSpeech.homeTtsExperimentEnabled}
-            voicePreparing={verseSpeech.voicePreparing}
-            voiceSpeaking={verseSpeech.voiceSpeaking}
-            onPlayDisplayedVerseVoice={verseSpeech.onPlayDisplayedVerseVoice}
-            onOpenSettings={() => setSettingsOpen(true)}
-          />
+      <HomeNatureScreenTopChrome
+        insets={insets}
+        homeTtsExperimentEnabled={verseSpeech.homeTtsExperimentEnabled}
+        voicePreparing={verseSpeech.voicePreparing}
+        voiceSpeaking={verseSpeech.voiceSpeaking}
+        onPlayDisplayedVerseVoice={verseSpeech.onPlayDisplayedVerseVoice}
+      />
 
-          <HomeNatureScreenBottomBand
-            locale={locale}
-            baseUrl={load.baseUrl}
-            landscapeLayout={immersive.showLandscapeVideo}
-            sceneStripBottomPad={immersive.bottomNavSlot}
-            activeAmbientSlotId={load.activeAmbientSlotId}
-            toggleAmbientSlot={load.toggleAmbientSlot}
-            ambientStripViewportWidth={ambientStripViewportWidth}
-            onAmbientStripLayout={setAmbientStripViewportWidth}
-            sceneScrollRef={scene.sceneScrollRef}
-            sceneList={scene.sceneList}
-            sceneStripViewportWidth={scene.sceneStripViewportWidth}
-            onSceneStripLayout={scene.onSceneStripLayout}
-            loopAllScenesEnabled={load.loopAllScenesEnabled}
-            sceneId={scene.sceneId}
-            enableLoopAllScenes={load.enableLoopAllScenes}
-            selectScene={scene.selectScene}
-          />
-        </>
-      ) : null}
-
-      {chromeVisible ? (
-        <NatureHomeSettingsPanel
-          visible={settingsOpen}
-          presentation={isLandscape ? "overlay" : "modal"}
-          posterUri={scene.posterUri || undefined}
-          showTtsControls={false}
-          onClose={() => setSettingsOpen(false)}
-          onPrefsChanged={load.onPrefsChanged}
-        />
-      ) : null}
+      <HomeNatureScreenBottomBand
+        locale={locale}
+        baseUrl={load.baseUrl}
+        landscapeLayout={immersive.showLandscapeVideo}
+        hidden={hideLandscapePlayBar}
+        sceneStripBottomPad={immersive.bottomNavSlot}
+        sceneToolsOpen={sceneToolsOpen}
+        onToggleSceneTools={toggleSceneTools}
+        activeAmbientSlotId={load.activeAmbientSlotId}
+        toggleAmbientSlot={toggleAmbientSlotWithCap}
+        ambientStripViewportWidth={ambientStripViewportWidth}
+        onAmbientStripLayout={setAmbientStripViewportWidth}
+        sceneScrollRef={scene.sceneScrollRef}
+        sceneList={scene.sceneList}
+        sceneStripViewportWidth={scene.sceneStripViewportWidth}
+        onSceneStripLayout={scene.onSceneStripLayout}
+        loopAllScenesEnabled={load.loopAllScenesEnabled}
+        sceneId={scene.sceneId}
+        selectScene={(id, opts) => {
+          bumpSceneToolsIdle();
+          scene.selectScene(id, opts);
+        }}
+        goldenVersePlaying={homeVerseAudioActive || homeVerseAudio.playing}
+        goldenVerseAudible={homeVerseAudio.playing || homeVerseAudio.preparing}
+        goldenVersePreparing={homeVerseAudio.preparing}
+        onToggleGoldenVerse={toggleGoldenVerse}
+        onUserActivity={bumpSceneToolsIdle}
+        onPauseVerseTransport={() => {
+          void homeVerseAudio.pauseTransport();
+        }}
+        onResumeVerseTransport={() => {
+          void homeVerseAudio.resumeTransport();
+        }}
+        liveVideoActive={liveVideoEnabled}
+        onToggleLiveVideo={() => {
+          bumpSceneToolsIdle();
+          const next = !liveVideoEnabled;
+          // 乐观更新：芯片立刻动；低电量时仍可能只出静帧，但开关不再「卡住」。
+          load.setLiveVideoEnabled(next);
+          if (next) clearCoverVideoSessionPosterOnly();
+          void writeNatureLiveVideoEnabled(next).then(load.onPrefsChanged);
+        }}
+        prefsVersion={load.prefsVersion}
+        onPrefsChanged={() => {
+          bumpSceneToolsIdle();
+          load.onPrefsChanged();
+        }}
+      />
     </View>
   );
 }

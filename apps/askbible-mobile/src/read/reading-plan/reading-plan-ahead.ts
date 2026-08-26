@@ -2,6 +2,7 @@ import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
 import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
 import {
   advanceNtDeepRepeatOnePlanDay,
+  jumpNtDeepRepeatProgressToPlanDay,
   resetNtDeepRepeatToCalendarToday,
 } from "./nt-deep-repeat-progress";
 import { isPointerReadingPlanId } from "./pointer-reading-plan";
@@ -14,9 +15,16 @@ import {
   type ReadingPlanPrefs,
 } from "./reading-plan-prefs";
 import {
+  mergeReadingPlanPrefsValue,
+  shouldSyncReadingPlanPrefs,
+} from "./reading-plan-prefs-merge";
+import {
   advanceTripleLoopOnePlanDay,
+  jumpTripleLoopProgressToPlanDay,
   resetTripleLoopToCalendarToday,
 } from "./triple-loop-progress";
+
+export { mergeReadingPlanPrefsValue, shouldSyncReadingPlanPrefs };
 
 export function readAheadDays(prefs: ReadingPlanPrefs): number {
   const n = prefs.aheadDays;
@@ -69,6 +77,7 @@ export async function advanceReadingPlanOneDay(now = new Date()): Promise<Readin
   const nextPrefs: ReadingPlanPrefs = {
     ...prefs,
     aheadDays: readAheadDays(prefs) + 1,
+    chosen: true,
   };
   await writeReadingPlanPrefs(nextPrefs);
 
@@ -88,7 +97,8 @@ export async function resetReadingPlanAheadToToday(now = new Date()): Promise<Re
     return prefs;
   }
 
-  const nextPrefs: ReadingPlanPrefs = { ...prefs, aheadDays: 0 };
+  const { aheadDays: _omit, ...rest } = prefs;
+  const nextPrefs = { ...rest, chosen: true } as ReadingPlanPrefs;
   await writeReadingPlanPrefs(nextPrefs);
 
   if (isTripleLoopPlanId(prefs.planId)) {
@@ -102,49 +112,35 @@ export async function resetReadingPlanAheadToToday(now = new Date()): Promise<Re
 }
 
 /**
- * 跨设备合并同一 `from-today` 计划时，取“更早的开始日期”。
- * 新装/重装设备的 startedOn 会是今天；若采用较新的一份，会把计划进度
- * （尤其旧约“每天 +1 章”）重置回第 1 天，与另一台设备不一致。
+ * 将超前进度设为指定天数（0 = 日历今天）。
+ * 一次写入 prefs + 进度指针，避免连写 N 次被会员同步用旧 aheadDays=0 盖回。
  */
-function earlierFromTodayStartedOn(
-  left: ReadingPlanPrefs,
-  right: ReadingPlanPrefs,
-  planId: string,
-): string | undefined {
-  const candidates: { startedOn: string; ms: number }[] = [];
-  for (const p of [left, right]) {
-    if (p.anchor !== "from-today" || p.planId !== planId) continue;
-    const s = p.startedOn?.trim();
-    if (!s) continue;
-    const ms = Date.parse(s);
-    if (Number.isFinite(ms)) candidates.push({ startedOn: s, ms });
+export async function setReadingPlanAheadDays(
+  targetAhead: number,
+  now = new Date(),
+): Promise<ReadingPlanPrefs> {
+  const target = Math.max(0, Math.floor(targetAhead));
+  const prefs = await readEffectiveReadingPlanPrefs();
+  if (target === readAheadDays(prefs)) return prefs;
+
+  const nextPrefs: ReadingPlanPrefs =
+    target > 0
+      ? { ...prefs, aheadDays: target, chosen: true }
+      : (() => {
+          const { aheadDays: _omit, ...rest } = prefs;
+          return { ...rest, chosen: true } as ReadingPlanPrefs;
+        })();
+
+  await writeReadingPlanPrefs(nextPrefs);
+  if (isNtDeepRepeatPlanId(prefs.planId)) {
+    const planDay = resolveNtDeepRepeatPlanDay(prefs, now) + target;
+    await jumpNtDeepRepeatProgressToPlanDay(planDay, now);
+  } else if (isTripleLoopPlanId(prefs.planId)) {
+    const planDay = getReadingPlanDaySinceEpoch(now) + target;
+    await jumpTripleLoopProgressToPlanDay(planDay);
   }
-  if (!candidates.length) return undefined;
-  candidates.sort((x, y) => x.ms - y.ms);
-  return candidates[0].startedOn;
-}
-
-export function mergeReadingPlanPrefsValue(a: unknown, b: unknown): ReadingPlanPrefs | unknown {
-  if (!a || typeof a !== "object") return b;
-  if (!b || typeof b !== "object") return a;
-  const left = a as ReadingPlanPrefs;
-  const right = b as ReadingPlanPrefs;
-  const ahead = Math.max(readAheadDays(left), readAheadDays(right));
-  const base = readAheadDays(right) >= readAheadDays(left)
-    ? right.version === 1
-      ? right
-      : left
-    : left.version === 1
-      ? left
-      : right;
-  const merged: ReadingPlanPrefs = { ...base, aheadDays: ahead > 0 ? ahead : undefined };
-
-  if (merged.anchor === "from-today") {
-    const earliest = earlierFromTodayStartedOn(left, right, merged.planId);
-    if (earliest) merged.startedOn = earliest;
-  }
-
-  return merged;
+  await notifyReadingPlanChangedMobile();
+  return nextPrefs;
 }
 
 export function stripAheadDaysFromPrefs(prefs: ReadingPlanPrefs): ReadingPlanPrefs {

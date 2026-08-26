@@ -15,6 +15,7 @@ import { ReadParchmentPageScroll } from "./ReadParchmentPageScroll";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readTypography } from "./readTypography";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { useScriptureVerseBookmarks } from "./useScriptureVerseBookmarks";
 
 export function ReadFavoritesScreen() {
@@ -68,9 +69,7 @@ export function ReadFavoritesScreen() {
   return (
     <View style={styles.root}>
       <ReadParchmentPageScroll inset="sub">
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
-          <Text style={styles.backText}>{t("pages.read.catalogBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.title}>{t("pages.read.favoritesTitle")}</Text>
         <Text style={styles.lead}>{t("pages.read.favoritesLead")}</Text>

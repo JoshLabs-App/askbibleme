@@ -1,5 +1,5 @@
+import { Platform } from "react-native";
 import { Audio, type AVPlaybackStatus } from "expo-av";
-import { configureShellAudioMode } from "./shellAudioMode";
 
 /** expo-av 在 unload / 切源并发时常见；避免冒泡成红屏 Uncaught (in promise)。 */
 export function isBenignShellSoundError(err: unknown): boolean {
@@ -26,7 +26,27 @@ export async function safeGetSoundStatus(
 export async function safePauseSound(sound: Audio.Sound): Promise<void> {
   try {
     const st = await sound.getStatusAsync();
-    if (st.isLoaded && st.isPlaying) await sound.pauseAsync();
+    if (!st.isLoaded) return;
+    // 真机上 isPlaying 偶发误报 false，若再 gate 会「点暂停不停」。已加载则一律 pause。
+    await sound.pauseAsync();
+    if (Platform.OS === "android") {
+      try {
+        await sound.setStatusAsync({ shouldPlay: false });
+      } catch (statusErr) {
+        logShellSoundError("pause-shouldPlay", statusErr);
+      }
+    }
+    const after = await sound.getStatusAsync().catch(() => null);
+    if (after?.isLoaded && after.isPlaying) {
+      try {
+        await sound.pauseAsync();
+        if (Platform.OS === "android") {
+          await sound.setStatusAsync({ shouldPlay: false });
+        }
+      } catch (retryErr) {
+        logShellSoundError("pause-retry", retryErr);
+      }
+    }
   } catch (err) {
     logShellSoundError("pause", err);
   }
@@ -44,7 +64,7 @@ export async function safePlaySound(sound: Audio.Sound): Promise<boolean> {
   } catch (err) {
     if (!isBenignShellSoundError(err)) {
       try {
-        await configureShellAudioMode();
+        // 不在 retry 里切到 music/DuckOthers：金句后台续播会被三星 AudioHardening 静音。
         return await attempt();
       } catch (retryErr) {
         logShellSoundError("play-retry", retryErr);

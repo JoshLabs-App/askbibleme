@@ -1,6 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
+import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
 export type NatureHomeSettingsSelectOption = {
   id: string;
@@ -19,6 +20,8 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   onSelect: (id: string) => void;
   onDownloadOption?: (id: string) => void;
+  onPressTrigger?: () => void;
+  showDownloadButton?: boolean;
   disabled?: boolean;
   style?: View["props"]["style"];
   /** 底行菜单向上展开，避免撑出面板背景 */
@@ -34,6 +37,8 @@ export function NatureHomeSettingsSelect({
   onOpenChange,
   onSelect,
   onDownloadOption,
+  onPressTrigger,
+  showDownloadButton = true,
   disabled,
   style,
   menuPlacement = "below",
@@ -46,7 +51,13 @@ export function NatureHomeSettingsSelect({
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <Pressable
         disabled={disabled}
-        onPress={() => onOpenChange(!open)}
+        onPress={() => {
+          if (onPressTrigger) {
+            onPressTrigger();
+          } else {
+            onOpenChange(!open);
+          }
+        }}
         style={({ pressed }) => [
           styles.trigger,
           disabled && styles.triggerDisabled,
@@ -66,7 +77,7 @@ export function NatureHomeSettingsSelect({
         <MaterialIcons
           name={open ? "expand-less" : "expand-more"}
           size={18}
-          color={disabled ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.72)"}
+            color={disabled ? c.muted : c.faint}
         />
       </Pressable>
       {open && !disabled ? (
@@ -80,6 +91,7 @@ export function NatureHomeSettingsSelect({
             {options.map((opt) => {
               const selected = opt.id === value;
               const showDownload =
+                showDownloadButton &&
                 Boolean(onDownloadOption) &&
                 (opt.downloadState === "missing" || opt.downloadState === "outdated");
               const downloading = opt.downloadState === "downloading";
@@ -119,11 +131,11 @@ export function NatureHomeSettingsSelect({
                       <MaterialIcons
                         name={opt.downloadState === "outdated" ? "system-update" : "download"}
                         size={17}
-                        color="#fbbf24"
+                        color="#a96508"
                       />
                     </Pressable>
                   ) : downloading ? (
-                    <MaterialIcons name="hourglass-top" size={16} color="rgba(255,255,255,0.45)" />
+                    <MaterialIcons name="hourglass-top" size={16} color="#8a6b4b" />
                   ) : null}
                 </View>
               );
@@ -146,7 +158,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     ...parchmentSans(600),
-    color: "rgba(255,255,255,0.5)",
+    color: "#765b42",
     letterSpacing: 0.6,
     marginBottom: 4,
   },
@@ -158,26 +170,26 @@ const styles = StyleSheet.create({
     minHeight: 30,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#52525b",
-    backgroundColor: "#27272a",
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
   triggerDisabled: {
     opacity: 0.45,
   },
   triggerPressed: {
-    backgroundColor: "#3f3f46",
+    backgroundColor: c.hover,
   },
   value: {
     flex: 1,
     fontSize: 12,
     lineHeight: 16,
-    color: "rgba(255,255,255,0.92)",
+    color: c.ink,
     ...parchmentSans(500),
   },
   valueDisabled: {
-    color: "rgba(255,255,255,0.4)",
+    color: c.muted,
   },
   menu: {
     position: "absolute",
@@ -187,8 +199,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#52525b",
-    backgroundColor: "#18181b",
+    borderColor: "#c9a875",
+    backgroundColor: "#f3e5c8",
     overflow: "hidden",
     maxHeight: 168,
     zIndex: 8,
@@ -217,7 +229,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   optionActive: {
-    backgroundColor: "#3f3f46",
+    backgroundColor: "#d2a85c",
   },
   optionDownloadBtn: {
     width: 32,
@@ -227,19 +239,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   optionDownloadBtnPressed: {
-    backgroundColor: "#52525b",
+    backgroundColor: "#d2a85c",
   },
   optionPressed: {
-    backgroundColor: "#52525b",
+    backgroundColor: "#d2a85c",
   },
   optionText: {
     flex: 1,
     fontSize: 12,
     lineHeight: 16,
-    color: "rgba(255,255,255,0.62)",
+    color: "#6b513b",
   },
   optionTextActive: {
-    color: "#fff",
+    color: "#3f2b1d",
     ...parchmentSans(600),
   },
   checkSpacer: {

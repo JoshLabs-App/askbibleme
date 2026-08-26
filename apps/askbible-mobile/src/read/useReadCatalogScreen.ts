@@ -18,6 +18,7 @@ import {
 } from "./read-chapter-completion";
 import { useReadCatalogChapterPicker } from "./useReadCatalogChapterPicker";
 import { useReadCatalogHomeVerses } from "./useReadCatalogHomeVerses";
+import { resolveReadDisplayLocale } from "./resolveReadDisplayLocale";
 
 type Args = {
   homeMode: boolean;
@@ -27,8 +28,20 @@ export function useReadCatalogScreen({ homeMode }: Args) {
   const router = useRouter();
   const navigation = useNavigation();
   const catalogFocused = useIsFocused();
-  const { px, primaryTranslationId } = useReadBibleTypography();
+  const { px, primaryTranslationId, translationCatalog } = useReadBibleTypography();
   const { locale } = useLocale();
+  const primaryTranslationMeta = useMemo(
+    () => translationCatalog.find((tr) => tr.id === primaryTranslationId),
+    [primaryTranslationId, translationCatalog],
+  );
+  const readDisplayLocale = useMemo(
+    () =>
+      resolveReadDisplayLocale({
+        appLocale: locale,
+        translationLanguage: primaryTranslationMeta?.language,
+      }),
+    [locale, primaryTranslationMeta?.language],
+  );
   const [lastReadLoading, setLastReadLoading] = useState(true);
   const [lastRead, setLastRead] = useState<ReadLastPosition | null>(null);
   const [completedByBook, setCompletedByBook] = useState<Record<string, number>>({});
@@ -81,11 +94,11 @@ export function useReadCatalogScreen({ homeMode }: Args) {
 
   const sections = useMemo(() => {
     try {
-      return getScriptureCanonCatalogSections();
+      return getScriptureCanonCatalogSections(readDisplayLocale);
     } catch {
       return [];
     }
-  }, [locale]);
+  }, [readDisplayLocale]);
   const catalogBookIds = useMemo(
     () => sections.flatMap((section) => section.books.map((book) => book.bookId)),
     [sections],
@@ -177,6 +190,7 @@ export function useReadCatalogScreen({ homeMode }: Args) {
   return {
     px,
     primaryTranslationId,
+    readDisplayLocale,
     router,
     todayPlan,
     sections,

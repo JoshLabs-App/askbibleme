@@ -1,10 +1,11 @@
 import { SHELL_TAB_BAR_ICON } from "./shellChromeIcons";
 import { ShellMaterialIcon } from "./ShellMaterialIcon";
 import { t } from "../i18n/site-copy";
+import { SPLASH_BACKGROUND as LOGO_COLOR } from "./splash-branding.generated";
 
 type TabKey = "index" | "music" | "read" | "explore";
 
-export const TAB_ICON_SIZE = 28;
+export const TAB_ICON_SIZE = 36;
 export const PLAY_ICON_SIZE = 28;
 
 export function tabTelemetryName(routeName: string): "home" | "music" | "read" | "explore" | null {
@@ -38,7 +39,7 @@ export function tabLabel(routeName: string): string {
 }
 
 export function tabIcon(routeName: string, active: boolean) {
-  const color = active ? "rgba(255,255,255,0.95)" : SHELL_TAB_BAR_ICON;
+  const color = active ? LOGO_COLOR : SHELL_TAB_BAR_ICON;
   switch (routeName as TabKey) {
     case "index":
       return <ShellMaterialIcon name="home" size={TAB_ICON_SIZE} color={color} />;

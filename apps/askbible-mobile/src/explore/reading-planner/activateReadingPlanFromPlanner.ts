@@ -10,6 +10,7 @@ import {
   type ReadingPlanPrefs,
 } from "../../read/reading-plan/reading-plan-prefs";
 import { isTripleLoopPlanId, TRIPLE_LOOP_PLAN_ID } from "../../read/reading-plan/triple-loop-plan";
+import { ensureTripleLoopPlanPrefs } from "../../read/reading-plan/triple-loop-plan-sync";
 
 export type ReadingPlannerPlanChoice =
   | { type: "nt-deep-repeat"; pace: NtDeepRepeatPace }
@@ -24,12 +25,12 @@ export function isReadingPlannerChoiceActive(
     return prefs.planId === NT_DEEP_REPEAT_PLAN_ID && prefs.ntDeepRepeatPace === choice.pace;
   }
   if (choice.type === "triple-loop") {
-    return prefs.planId === TRIPLE_LOOP_PLAN_ID;
+    return prefs.planId === TRIPLE_LOOP_PLAN_ID && prefs.anchor === "calendar-easter";
   }
   return prefs.planId === choice.planId;
 }
 
-/** 是否支持「从第几天开始读」（三循环按日历锚定，不适用）。 */
+/** 是否支持「从第几天开始读」（三循环按复活节历元锚定，不适用）。 */
 export function readingPlannerChoiceSupportsStartDay(choice: ReadingPlannerPlanChoice): boolean {
   return choice.type === "nt-deep-repeat" || choice.type === "other";
 }
@@ -53,7 +54,7 @@ export async function activateReadingPlanFromPlanner(
     return;
   }
   if (choice.type === "triple-loop") {
-    await setActiveReadingPlan(TRIPLE_LOOP_PLAN_ID, "calendar-easter", { dayCount: 1 });
+    await ensureTripleLoopPlanPrefs();
     return;
   }
   const backDated = new Date();

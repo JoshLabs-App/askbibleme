@@ -75,6 +75,12 @@ if [[ -z "$AAB_PATH" || ! -f "$AAB_PATH" ]]; then
   exit 1
 fi
 
+METADATA_DIR="$ROOT/store/android-play-metadata"
+CHANGELOG_ARGS=(--skip_upload_changelogs true)
+if [[ "$PLAY_TRACK" == "production" || "${PLAY_UPLOAD_CHANGELOGS:-}" == "1" ]] && [[ -d "$METADATA_DIR" ]]; then
+  CHANGELOG_ARGS=(--skip_upload_changelogs false --metadata_path "$METADATA_DIR")
+fi
+
 echo "→ 直传 Google Play（不经 Expo）"
 echo "   包名：$PLAY_PACKAGE_NAME"
 echo "   轨道：$PLAY_TRACK"
@@ -82,6 +88,7 @@ echo "   状态：$PLAY_RELEASE_STATUS"
 echo "   超时：$PLAY_TIMEOUT_SECONDS 秒"
 echo "   AAB：$AAB_PATH"
 echo "   账号：$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
+echo "   更新说明：${CHANGELOG_ARGS[*]}"
 echo ""
 
 fastlane supply run \
@@ -93,7 +100,7 @@ fastlane supply run \
   --json_key "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH" \
   --skip_upload_apk true \
   --skip_upload_metadata true \
-  --skip_upload_changelogs true \
+  "${CHANGELOG_ARGS[@]}" \
   --skip_upload_images true \
   --skip_upload_screenshots true
 

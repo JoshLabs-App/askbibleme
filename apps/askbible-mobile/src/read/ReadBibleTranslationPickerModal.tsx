@@ -1,6 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,7 +10,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { ParchmentExploreOverlay } from "../shell/ParchmentControlSheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ParchmentExploreOverlay, ParchmentModalCard } from "../shell/ParchmentControlSheet";
+import { shellTabBarScrollPad } from "../shell/shellLayout";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import type { BibleTranslationMeta } from "../bible/translations-types";
@@ -37,6 +42,15 @@ type Props = {
   translationAccessoryIconName?: (
     translation: BibleTranslationMeta,
   ) => keyof typeof MaterialIcons.glyphMap | null;
+  /**
+   * `stack`：读经 Stack 全页（底栏可见，对齐经文搜索）
+   * `fullScreen` / `card`：Modal
+   */
+  presentation?: "fullScreen" | "card" | "stack";
+  /** 直接先展示语言分类，再展示该语言的版本。 */
+  languageFirst?: boolean;
+  title?: string;
+  subtitle?: string;
 };
 
 type PickerViewMode = "common" | "all";
@@ -46,15 +60,15 @@ const LANGUAGE_PRIORITY = ["zh-Hans", "zh-Hant", "en", "es", "he"] as const;
 function languageDisplayName(language: string, locale: AppLocale): string {
   const lang = String(language || "").trim().toLowerCase();
   if (locale === "en") {
-    if (lang.startsWith("zh-hant")) return "Chinese (Traditional)";
-    if (lang.startsWith("zh")) return "Chinese (Simplified)";
+    if (lang.startsWith("zh-hant")) return "Trad. Chinese";
+    if (lang.startsWith("zh")) return "Simp. Chinese";
     if (lang.startsWith("en")) return "English";
     if (lang.startsWith("es")) return "Spanish";
     if (lang.startsWith("he")) return "Hebrew";
     return lang || "Other";
   }
-  if (lang.startsWith("zh-hant")) return "中文（繁體）";
-  if (lang.startsWith("zh")) return "中文（简体）";
+  if (lang.startsWith("zh-hant")) return "繁中";
+  if (lang.startsWith("zh")) return "简中";
   if (lang.startsWith("en")) return "英文";
   if (lang.startsWith("es")) return "西班牙语";
   if (lang.startsWith("he")) return "希伯来语";
@@ -116,7 +130,12 @@ export function ReadBibleTranslationPickerModal({
   onConfirmTranslations,
   extraOptions,
   translationAccessoryIconName,
+  presentation = "fullScreen",
+  languageFirst = false,
+  title: titleProp,
+  subtitle: subtitleProp,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const groups = useMemo(() => {
     const byLanguage = new Map<string, BibleTranslationMeta[]>();
     for (const tr of translationCatalog) {
@@ -141,11 +160,31 @@ export function ReadBibleTranslationPickerModal({
     const selected = translationCatalog.find((item) => item.id === selectedTranslationId);
     return selected?.language ?? groups[0]?.language ?? "en";
   });
-  const [viewMode, setViewMode] = useState<PickerViewMode>("common");
+  const [viewMode, setViewMode] = useState<PickerViewMode>(languageFirst ? "all" : "common");
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [languageMenuAnchor, setLanguageMenuAnchor] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [searchText, setSearchText] = useState("");
   const [draftSelectedIds, setDraftSelectedIds] = useState<string[]>(selectedTranslationIds ?? []);
   const wasVisibleRef = useRef(false);
+  const languageTriggerRef = useRef<View>(null);
   const searchQuery = useMemo(() => normalizeSearch(searchText), [searchText]);
+
+  const closeLanguageMenu = useCallback(() => {
+    setLanguageMenuOpen(false);
+    setLanguageMenuAnchor(null);
+  }, []);
+
+  const openLanguageMenu = useCallback(() => {
+    languageTriggerRef.current?.measureInWindow((x, y, width, height) => {
+      setLanguageMenuAnchor({ x, y, width, height });
+      setLanguageMenuOpen(true);
+    });
+  }, []);
 
   const commonTranslations = useMemo(
     () => sortPickerTranslations(translationCatalog, locale).slice(0, 10),
@@ -156,12 +195,14 @@ export function ReadBibleTranslationPickerModal({
     if (visible && !wasVisibleRef.current) {
       const selected = translationCatalog.find((item) => item.id === selectedTranslationId);
       setActiveLanguage(selected?.language ?? groups[0]?.language ?? "en");
-      setViewMode("common");
+      setViewMode(languageFirst ? "all" : "common");
+      setLanguageMenuOpen(false);
+      setLanguageMenuAnchor(null);
       setSearchText("");
       setDraftSelectedIds(selectedTranslationIds ?? []);
     }
     wasVisibleRef.current = visible;
-  }, [visible, selectedTranslationId, selectedTranslationIds, translationCatalog, groups]);
+  }, [visible, selectedTranslationId, selectedTranslationIds, translationCatalog, groups, languageFirst]);
 
   useEffect(() => {
     if (!groups.some((group) => group.language === activeLanguage)) {
@@ -204,36 +245,80 @@ export function ReadBibleTranslationPickerModal({
   const visibleTranslations = activeGroup?.items ?? [];
 
   const visibleLanguageGroups = searchQuery ? filteredGroups : groups;
+  const activeLanguageGroup =
+    visibleLanguageGroups.find((group) => group.language === activeLanguage) ?? visibleLanguageGroups[0];
   const isAllView = viewMode === "all";
   const commonLabel = locale === "en" ? "Common" : "常用";
   const allLabel = locale === "en" ? "All" : "全部";
   const confirmLabel = locale === "en" ? "Done" : "完成";
+  const languageMenuLabel = locale === "en" ? "Language" : "语言";
+  const activeLanguageLabel = activeLanguageGroup
+    ? `${languageDisplayName(activeLanguageGroup.language, locale)}  ${activeLanguageGroup.items.length}`
+    : languageMenuLabel;
 
   if (!visible) return null;
 
-  return (
-    <ParchmentExploreOverlay visible={visible} onClose={onClose}>
-      <View style={styles.page}>
-        <View style={styles.header}>
-          <Pressable onPress={onClose} hitSlop={10} style={styles.headerBackBtn}>
-            <MaterialIcons name="arrow-back" size={22} color={c.ink} />
-          </Pressable>
-          <View style={styles.headerTitleWrap}>
-            <Text style={styles.headerTitle}>{locale === "en" ? "Choose translation" : "选择译本"}</Text>
-            <Text style={styles.headerSubtitle}>
-              {locale === "en"
-                ? "Pick a language first, then choose a version."
-                : "先选语言，再选这个语言里的版本。"}
-            </Text>
+  /** 全页（fullScreen / stack）用居中标题，对齐经文搜索；卡片仍用左右标题栏。 */
+  const useCenteredHeader = presentation === "stack" || presentation === "fullScreen";
+  const title =
+    titleProp ??
+    (mode === "multi"
+      ? locale === "en"
+        ? "Choose parallel"
+        : "选择对照本"
+      : locale === "en"
+        ? "Choose translation"
+        : "选择译本");
+  const subtitle =
+    subtitleProp ??
+    (mode === "multi"
+      ? locale === "en"
+        ? "Select one or more, then tap Done."
+        : "可多选，点完成保存。"
+      : locale === "en"
+        ? "Pick a language first, then choose a version."
+        : "先选语言，再选这个语言里的版本。");
+
+  const page = (
+      <View
+        style={[
+          styles.page,
+          presentation === "stack" && [
+            styles.stackPage,
+            {
+              paddingTop: Math.max(insets.top, 12) + 8,
+              paddingBottom: shellTabBarScrollPad(insets.bottom, -8),
+            },
+          ],
+        ]}
+      >
+        {useCenteredHeader ? (
+          <>
+            <ShellSystemBackButton onPress={onClose} />
+            <View>
+              <Text style={styles.stackTitle}>{title}</Text>
+              <Text style={styles.stackSubtitle}>{subtitle}</Text>
+            </View>
+          </>
+        ) : (
+          <View style={styles.header}>
+            <ShellSystemBackButton onPress={onClose} />
+            <View style={styles.headerTitleWrap}>
+              <Text style={styles.headerTitle}>{title}</Text>
+              <Text style={styles.headerSubtitle}>{subtitle}</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.searchRow}>
           <View style={styles.searchBox}>
             <MaterialIcons name="search" size={18} color={c.faint} />
             <TextInput
               value={searchText}
-              onChangeText={setSearchText}
+              onChangeText={(next) => {
+                setSearchText(next);
+                closeLanguageMenu();
+              }}
               placeholder={locale === "en" ? "Search translations" : "搜索译本"}
               placeholderTextColor={c.faint}
               style={styles.searchInput}
@@ -241,6 +326,9 @@ export function ReadBibleTranslationPickerModal({
               autoCorrect={false}
               returnKeyType="search"
               clearButtonMode="never"
+              {...(Platform.OS === "android"
+                ? { includeFontPadding: false, textAlignVertical: "center" as const }
+                : null)}
             />
             {searchText.trim() ? (
               <Pressable
@@ -256,58 +344,57 @@ export function ReadBibleTranslationPickerModal({
           </View>
         </View>
 
-        <View style={styles.viewToggleRow}>
-          <Pressable
-            onPress={() => setViewMode("common")}
-            style={({ pressed }) => [
-              styles.viewToggleChip,
-              !isAllView && styles.viewToggleChipActive,
-              pressed && styles.viewToggleChipPressed,
-            ]}
-          >
-            <Text style={[styles.viewToggleText, !isAllView && styles.viewToggleTextActive]}>
-              {commonLabel}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setViewMode("all")}
-            style={({ pressed }) => [
-              styles.viewToggleChip,
-              isAllView && styles.viewToggleChipActive,
-              pressed && styles.viewToggleChipPressed,
-            ]}
-          >
-            <Text style={[styles.viewToggleText, isAllView && styles.viewToggleTextActive]}>
-              {allLabel}
-            </Text>
-          </Pressable>
-        </View>
+        {!languageFirst ? (
+          <View style={styles.viewToggleRow}>
+            <Pressable
+              onPress={() => setViewMode("common")}
+              style={({ pressed }) => [
+                styles.viewToggleChip,
+                !isAllView && styles.viewToggleChipActive,
+                pressed && styles.viewToggleChipPressed,
+              ]}
+            >
+              <Text style={[styles.viewToggleText, !isAllView && styles.viewToggleTextActive]}>
+                {commonLabel}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setViewMode("all")}
+              style={({ pressed }) => [
+                styles.viewToggleChip,
+                isAllView && styles.viewToggleChipActive,
+                pressed && styles.viewToggleChipPressed,
+              ]}
+            >
+              <Text style={[styles.viewToggleText, isAllView && styles.viewToggleTextActive]}>
+                {allLabel}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
 
-        {isAllView ? (
-          <View style={styles.languageStrip}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.languageStripContent}>
-              {visibleLanguageGroups.map((group) => {
-                const active = group.language === activeLanguage;
-                return (
-                  <Pressable
-                    key={group.language}
-                    onPress={() => setActiveLanguage(group.language)}
-                    style={({ pressed }) => [
-                      styles.languageChip,
-                      active && styles.languageChipActive,
-                      pressed && styles.languageChipPressed,
-                    ]}
-                  >
-                    <Text style={[styles.languageChipText, active && styles.languageChipTextActive]}>
-                      {languageDisplayName(group.language, locale)}
-                    </Text>
-                    <Text style={[styles.languageChipCount, active && styles.languageChipCountActive]}>
-                      {group.items.length}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+        {isAllView || languageFirst ? (
+          <View ref={languageTriggerRef} collapsable={false} style={styles.languageDropdownWrap}>
+            <Pressable
+              onPress={languageMenuOpen ? closeLanguageMenu : openLanguageMenu}
+              style={({ pressed }) => [
+                styles.languageDropdownTrigger,
+                languageMenuOpen && styles.languageDropdownTriggerOpen,
+                pressed && styles.languageDropdownTriggerPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: languageMenuOpen }}
+              accessibilityLabel={languageMenuLabel}
+            >
+              <Text style={styles.languageDropdownValue} numberOfLines={1}>
+                {activeLanguageLabel}
+              </Text>
+              <MaterialIcons
+                name={languageMenuOpen ? "expand-less" : "expand-more"}
+                size={22}
+                color={c.muted}
+              />
+            </Pressable>
           </View>
         ) : (
           <View style={styles.commonStrip}>
@@ -332,7 +419,10 @@ export function ReadBibleTranslationPickerModal({
               ]}
             >
               <View style={styles.versionMain}>
-                <Text style={styles.versionExtraLabel} numberOfLines={2}>
+                <Text
+                  style={[styles.versionExtraLabel, opt.selected && styles.versionLabelSelected]}
+                  numberOfLines={2}
+                >
                   {opt.label}
                 </Text>
                 {opt.meta ? (
@@ -378,7 +468,6 @@ export function ReadBibleTranslationPickerModal({
               : defaultAccessoryIconName;
             const tone = translationSourceTone(tr);
             const label = translationOptionLabel(tr, locale);
-            const short = shortLabel(tr.id, locale, label);
             return (
               <Pressable
                 key={tr.id}
@@ -399,11 +488,11 @@ export function ReadBibleTranslationPickerModal({
                 ]}
               >
                 <View style={styles.versionMain}>
-                  <Text style={[styles.versionLabel, toneStyle(tone)]} numberOfLines={2}>
+                  <Text
+                    style={[styles.versionLabel, toneStyle(tone), selected && styles.versionLabelSelected]}
+                    numberOfLines={2}
+                  >
                     {label}
-                  </Text>
-                  <Text style={styles.versionMeta} numberOfLines={1}>
-                    {short}
                   </Text>
                 </View>
                 <View style={styles.versionTail}>
@@ -444,7 +533,117 @@ export function ReadBibleTranslationPickerModal({
             </Pressable>
           </View>
         ) : null}
+
+        <Modal
+          visible={languageMenuOpen && languageMenuAnchor != null}
+          transparent
+          animationType="fade"
+          statusBarTranslucent={Platform.OS === "android"}
+          onRequestClose={closeLanguageMenu}
+        >
+          <View style={styles.languageDropdownModalRoot}>
+            <Pressable
+              style={styles.languageDropdownScrim}
+              onPress={closeLanguageMenu}
+              accessibilityRole="button"
+              accessibilityLabel={locale === "en" ? "Close language menu" : "关闭语言菜单"}
+            />
+            {languageMenuAnchor ? (
+              <View
+                pointerEvents="box-none"
+                style={[
+                  styles.languageDropdownFloating,
+                  {
+                    top: languageMenuAnchor.y,
+                    left: languageMenuAnchor.x,
+                    width: languageMenuAnchor.width,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={closeLanguageMenu}
+                  style={[styles.languageDropdownTrigger, styles.languageDropdownTriggerOpen]}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: true }}
+                  accessibilityLabel={languageMenuLabel}
+                >
+                  <Text style={styles.languageDropdownValue} numberOfLines={1}>
+                    {activeLanguageLabel}
+                  </Text>
+                  <MaterialIcons name="expand-less" size={22} color={c.muted} />
+                </Pressable>
+                <View style={styles.languageDropdownMenu}>
+                  {visibleLanguageGroups.map((group, index) => {
+                    const active = group.language === activeLanguage;
+                    return (
+                      <Pressable
+                        key={group.language}
+                        onPress={() => {
+                          setActiveLanguage(group.language);
+                          closeLanguageMenu();
+                        }}
+                        style={({ pressed }) => [
+                          styles.languageDropdownOption,
+                          index === 0 && styles.languageDropdownOptionFirst,
+                          active && styles.languageDropdownOptionActive,
+                          pressed && styles.languageDropdownOptionPressed,
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <Text
+                          style={[
+                            styles.languageDropdownOptionText,
+                            active && styles.languageDropdownOptionTextActive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {languageDisplayName(group.language, locale)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.languageDropdownOptionCount,
+                            active && styles.languageDropdownOptionTextActive,
+                          ]}
+                        >
+                          {group.items.length}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+          </View>
+        </Modal>
       </View>
+  );
+
+  if (presentation === "stack") {
+    return page;
+  }
+
+  if (presentation === "card") {
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <View
+          style={[
+            styles.cardBackdrop,
+            {
+              paddingTop: Math.max(insets.top, 12),
+              paddingBottom: Math.max(insets.bottom, 12),
+            },
+          ]}
+        >
+          <ParchmentModalCard fill style={styles.card}>{page}</ParchmentModalCard>
+        </View>
+      </Modal>
+    );
+  }
+
+  return (
+    <ParchmentExploreOverlay visible={visible} onClose={onClose}>
+      {page}
     </ParchmentExploreOverlay>
   );
 }
@@ -454,22 +653,40 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 14,
   },
+  stackPage: {
+    backgroundColor: "transparent",
+  },
+  stackTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    color: c.ink,
+    textAlign: "center",
+    marginBottom: 8,
+    ...parchmentSans(600),
+  },
+  stackSubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: c.muted,
+    textAlign: "center",
+    ...parchmentSans(500),
+  },
+  cardBackdrop: {
+    flex: 1,
+    paddingHorizontal: 10,
+    backgroundColor: c.modalBackdrop,
+  },
+  card: {
+    flex: 1,
+    width: "100%",
+    borderRadius: 16,
+  },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
     paddingHorizontal: 14,
     paddingTop: 10,
-  },
-  headerBackBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
   },
   headerTitleWrap: {
     flex: 1,
@@ -535,8 +752,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    minHeight: Platform.OS === "android" ? 40 : 42,
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: Platform.OS === "android" ? 6 : 9,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -545,7 +763,10 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     minWidth: 0,
-    fontSize: 16,
+    paddingVertical: 0,
+    margin: 0,
+    fontSize: Platform.OS === "android" ? 15 : 16,
+    lineHeight: Platform.OS === "android" ? 20 : undefined,
     color: c.ink,
     ...parchmentSans(500),
   },
@@ -556,46 +777,92 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  languageStrip: {
-    paddingHorizontal: 10,
+  languageDropdownModalRoot: {
+    flex: 1,
   },
-  languageStripContent: {
-    gap: 8,
-    paddingHorizontal: 4,
+  languageDropdownScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(28, 20, 16, 0.38)",
   },
-  languageChip: {
+  languageDropdownWrap: {
+    marginHorizontal: 14,
+  },
+  languageDropdownFloating: {
+    position: "absolute",
+  },
+  languageDropdownTrigger: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: "space-between",
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: c.border,
-    backgroundColor: c.surface,
+    backgroundColor: "#FFFEFA",
   },
-  languageChipActive: {
-    backgroundColor: c.parchmentAccentGlow,
+  languageDropdownTriggerOpen: {
     borderColor: c.parchmentAccent,
+    backgroundColor: "#FFFEFA",
   },
-  languageChipPressed: {
-    opacity: 0.84,
+  languageDropdownTriggerPressed: {
+    opacity: 0.92,
   },
-  languageChipText: {
-    fontSize: 15,
-    color: c.muted,
+  languageDropdownValue: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 16,
+    lineHeight: 22,
+    color: c.ink,
     ...parchmentSans(600),
   },
-  languageChipTextActive: {
-    color: c.parchmentAccent,
+  languageDropdownMenu: {
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: c.borderStrong,
+    backgroundColor: "#FFFEFA",
+    overflow: "hidden",
   },
-  languageChipCount: {
-    fontSize: 13,
+  languageDropdownOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: c.border,
+    backgroundColor: "#FFFEFA",
+  },
+  languageDropdownOptionFirst: {
+    borderTopWidth: 0,
+  },
+  languageDropdownOptionActive: {
+    backgroundColor: "#F3E4CF",
+  },
+  languageDropdownOptionPressed: {
+    backgroundColor: "#F7ECDD",
+  },
+  languageDropdownOptionText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 16,
+    lineHeight: 22,
+    color: c.ink,
+    ...parchmentSans(500),
+  },
+  languageDropdownOptionCount: {
+    fontSize: 14,
+    lineHeight: 20,
     color: c.faint,
-    ...parchmentSans(700),
+    ...parchmentSans(600),
   },
-  languageChipCountActive: {
+  languageDropdownOptionTextActive: {
     color: c.parchmentAccent,
+    ...parchmentSans(600),
   },
   listContent: {
     paddingHorizontal: 12,
@@ -653,7 +920,7 @@ const styles = StyleSheet.create({
     backgroundColor: c.surface,
   },
   versionCardSelected: {
-    backgroundColor: "rgba(255, 177, 3, 0.12)",
+    backgroundColor: c.parchmentAccentGlow,
     borderColor: c.parchmentAccent,
   },
   versionCardPressed: {
@@ -667,6 +934,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     ...parchmentSans(600),
+  },
+  versionLabelSelected: {
+    color: c.parchmentAccent,
   },
   versionExtraLabel: {
     fontSize: 18,

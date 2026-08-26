@@ -963,6 +963,7 @@
       "invalidChapter": "Invalid chapter.",
       "chapterLoadError": "Could not load this chapter. Rebuild the app if this is a fresh install.",
       "loadingChapter": "Loading chapter…",
+      "preparingTranslation": "Preparing translation…",
       "retry": "Retry",
       "catalogBack": "← Scripture",
       "catalogFooter": "Scripture home",
@@ -983,10 +984,12 @@
       "scriptureSearchDbError": "This translation database is not available. Try again or switch translation.",
       "scriptureSearchLoading": "Searching…",
       "scriptureSearchEmpty": "No matching verses",
+      "scriptureSearchNoChapterHint": "No current chapter. Open a chapter first to search within it.",
       "scriptureSearchScopeAria": "Search scope",
       "scriptureSearchScopeAll": "Whole Bible",
       "scriptureSearchScopeOld": "Old Testament",
       "scriptureSearchScopeNew": "New Testament",
+      "scriptureSearchScopeChapter": "This chapter",
       "scriptureSearchRecentTitle": "Recent searches",
       "scriptureSearchRecentAria": "Recent search keywords",
       "favoritesTitle": "Bookmarks",
@@ -1054,7 +1057,7 @@
       "chapterAudioHint": "Plays in the bottom bar player. Prefers `/audio/{BOOK}-{chapter}.mp3` on this site when the file exists.",
       "chapterAudioTeochewHint": "Scripture stays in CUV; Teochew NT audio plays from the bottom bar.",
       "chapterAudioVoiceGroup": "Narration voice",
-      "chapterAudioVoiceMandarin": "Mandarin",
+      "chapterAudioVoiceMandarin": "CUV",
       "chapterAudioVoiceTeochewNt": "Teochew (NT)",
       "catalogTestamentOld": "Old Testament",
       "catalogTestamentNew": "New Testament",
@@ -1062,16 +1065,36 @@
       "catalogInfinityA11y": "From eternity to eternity",
       "catalogSection": "Sixty-six books",
       "canonSections": {
-        "canon-torah": { "title": "Torah" },
-        "canon-history": { "title": "Historical books" },
-        "canon-wisdom": { "title": "Wisdom & poetry" },
-        "canon-major-prophets": { "title": "Major prophets" },
-        "canon-minor-prophets": { "title": "Minor prophets" },
-        "canon-gospels": { "title": "Gospels" },
-        "canon-church-history": { "title": "Church history" },
-        "canon-pauline": { "title": "Pauline epistles" },
-        "canon-general-epistles": { "title": "General epistles" },
-        "canon-apocalyptic": { "title": "Apocalyptic" }
+        "canon-torah": {
+          "title": "Torah"
+        },
+        "canon-history": {
+          "title": "Historical books"
+        },
+        "canon-wisdom": {
+          "title": "Wisdom & poetry"
+        },
+        "canon-major-prophets": {
+          "title": "Major prophets"
+        },
+        "canon-minor-prophets": {
+          "title": "Minor prophets"
+        },
+        "canon-gospels": {
+          "title": "Gospels"
+        },
+        "canon-church-history": {
+          "title": "Church history"
+        },
+        "canon-pauline": {
+          "title": "Pauline epistles"
+        },
+        "canon-general-epistles": {
+          "title": "General epistles"
+        },
+        "canon-apocalyptic": {
+          "title": "Apocalyptic"
+        }
       },
       "catalogOutlineCta": "Open full catalog by section →",
       "plansTitle": "Reading plans",
@@ -1153,6 +1176,28 @@
       "planActivateCurrentDay": "Today is day {{n}}",
       "todayPlanSeeHome": "See today’s readings on Scripture home →",
       "todayPlanTitle": "Today’s readings",
+      "planPlayTitle": "Reading plan",
+      "planPlayHeaderTitle": "{{name}}",
+      "planPlayRepeatChapter": "Repeat chapter",
+      "planPlayRepeatPool": "Repeat playlist",
+      "planPlayRepeatOff": "Repeat off",
+      "planPlayCalendarMonth": "{{m}}/{{y}}",
+      "planPlayCalendarPrevMonth": "Previous month",
+      "planPlayCalendarNextMonth": "Next month",
+      "planPlayLead": "Play today’s reading plan continuously.",
+      "planPlayNowPlaying": "Now playing: {{title}}",
+      "planPlayPoolHeading": "Today’s queue",
+      "planPlayTrackMeta": "{{current}} / {{total}}",
+      "planPlayPlay": "Play today’s reading",
+      "planPlayPrevChapter": "Previous chapter",
+      "planPlayNextChapter": "Next chapter",
+      "planPlayReadChapter": "Read",
+      "planPlayPlayChapterAudio": "Listen",
+      "planPlayPlanDayLabel": "Day {{n}} of this plan",
+      "planPlayListenTotalLabel": "Total listened {{duration}}",
+      "planPlayPrevDay": "Yesterday",
+      "planPlayNextDay": "Tomorrow",
+      "planPlayConfirmDay": "Set progress as today",
       "todayPlanNone": "No reading plan selected yet.",
       "todayPlanChange": "Adjust plan",
       "todayPlanAllPlans": "All plans",
@@ -1187,8 +1232,13 @@
       "ntDeepRepeatStartNote": "Day count from when you chose this plan; today is",
       "ntDeepRepeatTodayTitle": "Today's reading",
       "ntDeepRepeatTodaySummary": "New Testament stage first, then one Old Testament chapter—two independent tracks.",
-      "ntDeepRepeatLadderTitle": "NT deep-reading ladder",
+      "ntDeepRepeatLadderTitle": "52 NT stages",
       "ntDeepRepeatLadderLead": "{{stages}} stages, {{days}} days each—about {{cycle}} days per full cycle.",
+      "ntDeepRepeatStagesBelowHint": "Tap a stage to make it today’s New Testament reading.",
+      "ntDeepRepeatSetStageAsTodayTitle": "Set as today’s reading",
+      "ntDeepRepeatSetStageAsTodayBody": "Set stage {{n}} ({{range}}) as today’s New Testament reading?",
+      "ntDeepRepeatSetStageAsTodayConfirm": "Set as today",
+      "ntDeepRepeatSetStageAsTodayCancel": "Cancel",
       "ntDeepRepeatStageLabel": "Stage {{n}}",
       "ntDeepRepeatStageBookSingle": "{{name}} ch. {{chapter}}",
       "ntDeepRepeatStageBookRange": "{{name}} ch. {{start}}–{{end}}",
@@ -1238,7 +1288,7 @@
       "tripleLoopReadingLine": "{{name}} {{chapter}}",
       "tripleLoopChapterUnit": "",
       "tripleLoopPsalmUnit": "",
-      "tripleLoopAdvanceAria": "Advance OT · NT cycle reading",
+      "tripleLoopAdvanceAria": "Advance easy cycle reading",
       "tripleLoopAdvanceHint": "Finished this section? Advance only “{{track}}” along our book order; the other two stay unchanged.",
       "tripleLoopResetToDefault": "Reset to default progress",
       "tripleLoopAdvanceButton": "Done—advance {{track}}",
@@ -1254,7 +1304,7 @@
         "audioTranslationFollowPrimary": "Same as on-screen text",
         "audioTranslationCrossHint": "When narration and on-screen text differ, highlight follows verse numbers (best with per-verse timings).",
         "chapterAudioVoiceLabel": "Narration language",
-        "chapterAudioVoiceHint": "Teochew audio is available for the New Testament only; Old Testament chapters use Mandarin.",
+        "chapterAudioVoiceHint": "Teochew audio is available for the New Testament only; Old Testament chapters use CUV.",
         "chapterAudioVoiceHintNonCuv": "Narration uses CUV audio; on-screen text can be another translation. Applies when you play from a chapter page.",
         "chapterAudioVoiceHintWebEn": "Narration streams the official World English Bible Protestant (WEBP) recording from eBible.org. Applies when you play from a chapter page.",
         "chapterAudioVoiceHintKjv": "KJV narration comes from AudioTreasure and is available only when the displayed text is KJV. Mobile caches each chapter after first play.",
@@ -1269,12 +1319,12 @@
       },
       "plansCatalog": {
         "triple-loop": {
-          "title": "OT · NT cycle reading plan",
+          "title": "Easy cycle reading plan",
           "subtitle": "AskBible Path 1 · Easy read-through",
           "blurb": "Three independent loops—one short segment per track daily. No catch-up, no “behind.” For first habits or a low-pressure return to Scripture."
         },
         "nt-deep-repeat": {
-          "title": "NT deep repeat · OT read-through",
+          "title": "Formal Scripture Study",
           "subtitle": "AskBible Path 2 · Effective deep study",
           "blurb": "MacArthur-inspired NT study, shaped into 52 stages (4–6 chapters each). From 7 days/stage—optional 14 / 28-day depth (~12 mo / 2 yr / 4 yr per round); one OT chapter daily. New? Start with Path 1."
         },
@@ -1333,7 +1383,9 @@
           "subtitle": "一年编年通读（多段并行）",
           "blurb": "Chronological ordering; some days stack several passages to mirror parallel events—feel free to spread a heavy day across more than one sitting."
         }
-      }
+      },
+      "catalogBookSummaryToggle": "Summaries",
+      "catalogBookSummaryToggleA11y": "Show or hide short book summaries"
     },
     "prayer": {
       "heading": "Prayer with Scripture",
@@ -1380,6 +1432,8 @@
       "birthYearModalRequiredTitle": "Start counting days",
       "birthYearModalHint": "Scroll to choose year, month, and day; your dot on the century line below will follow.",
       "birthYearModalRequiredHint": "Enter your name and birthday before you begin.",
+      "greetingEditTitle": "Edit name",
+      "greetingEditA11y": "Edit name",
       "birthYearModalNameLabel": "Name",
       "birthYearModalNamePlaceholder": "Your name",
       "birthYearModalDateLabel": "Birthday",
@@ -1396,6 +1450,17 @@
       "birthYearModalCancel": "Close",
       "birthYearInvalid": "Enter a four-digit year from 1900 through this year",
       "yearDayCountIconLabel": "Days & years",
+      "welcomeIconLabel": "Welcome",
+      "readingAlarmIconLabel": "Reading reminder",
+      "readingAlarmTitle": "Reading reminder",
+      "readingAlarmLead": "A morning notification opens today’s reading",
+      "readingAlarmTapTime": "Tap to change time",
+      "readingAlarmToggle": "Daily reminder",
+      "readingAlarmPlay": "Play",
+      "readingAlarmScripture": "Reading",
+      "readingAlarmMusic": "Music",
+      "readingAlarmRepeat": "Repeat",
+      "readingPlanIconLabel": "Reading plan",
       "biblicalFeastsIconLabel": "Biblical feasts",
       "biblicalFeastsCardTitle": "Biblical feasts",
       "biblicalFeastsCardLead": "See the core feast days in one year: biblical month/day, key Scripture, and meaning.",

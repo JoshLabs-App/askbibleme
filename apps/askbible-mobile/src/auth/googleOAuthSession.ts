@@ -138,17 +138,32 @@ export async function completeGoogleOAuthFromCallbackUrl(url: string): Promise<G
   return { ok: false, error: "missing_code", code: "google_failed" };
 }
 
-export async function signInWithGoogleIdTokenInApp(idToken: string): Promise<GoogleOAuthSessionResult> {
+function isGoogleNonceMismatchMessage(msg: string): boolean {
+  return /nonce/i.test(msg) && /(both exist|mismatch|id_token)/i.test(msg);
+}
+
+export async function signInWithGoogleIdTokenInApp(
+  idToken: string,
+  nonce?: string,
+): Promise<GoogleOAuthSessionResult> {
   const supabase = createMobileSupabaseClient();
   if (!supabase) return { ok: false, error: "google_not_configured", code: "google_not_configured" };
 
   try {
-    const { data, error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: idToken,
+      ...(nonce ? { nonce } : null),
+    });
     if (error || !data.session?.user) {
+      const message = error?.message ?? "google_auth_failed";
       if (__DEV__) {
-        console.warn("[googleOAuthSession] signInWithIdToken", error?.message ?? "no session");
+        console.warn("[googleOAuthSession] signInWithIdToken", message);
       }
-      return { ok: false, error: error?.message ?? "google_auth_failed", code: "google_auth_failed" };
+      if (isGoogleNonceMismatchMessage(message)) {
+        return { ok: false, error: message, code: "google_nonce_mismatch" };
+      }
+      return { ok: false, error: message, code: "google_auth_failed" };
     }
 
     const expiresAtMs = data.session.expires_at ? data.session.expires_at * 1000 : Date.now() + 3600_000;

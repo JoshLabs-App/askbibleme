@@ -4,12 +4,16 @@ import {
   advanceTripleLoopTrack,
   createDefaultTripleLoopReadingState,
   normalizeTripleLoopReadingState,
+  clipCoordinatedTripleLoopAheadToPlanDay,
+  snapTripleLoopStateToPlanDay,
+  tripleLoopPointersEqual,
   tripleLoopStateForPlanDay,
   type TripleLoopReadingState,
   type TripleLoopTrack,
 } from "./triple-loop-reading";
 import { addUserChapterReadToState } from "./triple-loop-chapters-read";
 import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
+import { readEffectiveReadingPlanPrefs } from "./reading-plan-prefs";
 
 export const TRIPLE_LOOP_PROGRESS_STORAGE_KEY = "askbible-triple-loop-progress-v1";
 export const TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY = "selah-triple-loop-progress-v1";
@@ -47,13 +51,32 @@ function defaultProgressForEpoch(now = new Date()): TripleLoopReadingState {
   return state;
 }
 
+function normalizeAheadDays(aheadDays: number | undefined): number {
+  if (typeof aheadDays !== "number" || !Number.isFinite(aheadDays)) return 0;
+  return Math.max(0, Math.floor(aheadDays));
+}
+
+async function readTripleLoopAheadDays(): Promise<number> {
+  try {
+    return normalizeAheadDays((await readEffectiveReadingPlanPrefs()).aheadDays);
+  } catch {
+    return 0;
+  }
+}
+
+/** 无记录用复活节历元；落后的轨对齐今天；三轨一起超前则拉回（aheadDays 为准）。 */
 export function resolveEffectiveTripleLoopProgress(
   stored: TripleLoopReadingState,
   hasSaved: boolean,
   now = new Date(),
+  aheadDays = 0,
 ): TripleLoopReadingState {
-  if (hasSaved) return stored;
-  return defaultProgressForEpoch(now);
+  const planDay = Math.max(1, getReadingPlanDaySinceEpoch(now) + normalizeAheadDays(aheadDays));
+  const base = hasSaved ? stored : defaultProgressForEpoch(now);
+  return clipCoordinatedTripleLoopAheadToPlanDay(
+    snapTripleLoopStateToPlanDay(base, planDay),
+    planDay,
+  );
 }
 
 export async function readTripleLoopProgress(): Promise<TripleLoopReadingState> {
@@ -69,7 +92,12 @@ export async function readTripleLoopProgress(): Promise<TripleLoopReadingState> 
     const stored = hasSaved
       ? normalizeTripleLoopReadingState(parseTripleLoopProgress(raw) ?? undefined)
       : createDefaultTripleLoopReadingState();
-    return resolveEffectiveTripleLoopProgress(stored, hasSaved);
+    const aheadDays = await readTripleLoopAheadDays();
+    const effective = resolveEffectiveTripleLoopProgress(stored, hasSaved, new Date(), aheadDays);
+    if (hasSaved && !tripleLoopPointersEqual(stored, effective)) {
+      await writeTripleLoopProgress(effective);
+    }
+    return effective;
   } catch {
     return defaultProgressForEpoch();
   }
@@ -127,7 +155,8 @@ export async function advanceTripleLoopOnePlanDay(now = new Date()): Promise<Tri
   const stored = hasSaved
     ? normalizeTripleLoopReadingState(parseTripleLoopProgress(raw) ?? undefined)
     : createDefaultTripleLoopReadingState();
-  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now);
+  const aheadDays = await readTripleLoopAheadDays();
+  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now, aheadDays);
   let next = advanceTripleLoopOneCalendarDay(base);
   if (!next.startedAt) {
     next = { ...next, startedAt: READING_PLAN_EASTER_EPOCH_DATE };
@@ -137,7 +166,29 @@ export async function advanceTripleLoopOnePlanDay(now = new Date()): Promise<Tri
 }
 
 export async function resetTripleLoopToCalendarToday(now = new Date()): Promise<TripleLoopReadingState> {
-  const state = defaultProgressForEpoch(now);
+  return jumpTripleLoopProgressToPlanDay(getReadingPlanDaySinceEpoch(now));
+}
+
+/** 一次跳到指定计划日（保留已读章），供「进度设置为今日」原子写入。 */
+export async function jumpTripleLoopProgressToPlanDay(
+  planDay: number,
+): Promise<TripleLoopReadingState> {
+  let prevKeys: TripleLoopReadingState["chaptersReadKeys"] | undefined;
+  try {
+    const raw =
+      (await AsyncStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY)) ??
+      (await AsyncStorage.getItem(TRIPLE_LOOP_PROGRESS_STORAGE_KEY_LEGACY));
+    if (raw) {
+      prevKeys = normalizeTripleLoopReadingState(parseTripleLoopProgress(raw) ?? undefined).chaptersReadKeys;
+    }
+  } catch {
+    /* ignore */
+  }
+  const state = normalizeTripleLoopReadingState({
+    ...tripleLoopStateForPlanDay(Math.max(1, Math.floor(planDay))),
+    startedAt: READING_PLAN_EASTER_EPOCH_DATE,
+    chaptersReadKeys: prevKeys,
+  });
   await writeTripleLoopProgress(state);
   return state;
 }
@@ -157,7 +208,8 @@ export async function advanceTripleLoopProgressTrack(
   const stored = hasSaved
     ? normalizeTripleLoopReadingState(parseTripleLoopProgress(raw) ?? undefined)
     : createDefaultTripleLoopReadingState();
-  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now);
+  const aheadDays = await readTripleLoopAheadDays();
+  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now, aheadDays);
   let next = advanceTripleLoopTrack(base, track);
   if (!next.startedAt) {
     next = { ...next, startedAt: READING_PLAN_EASTER_EPOCH_DATE };
@@ -183,7 +235,8 @@ export async function markTripleLoopChapterRead(
   const stored = hasSaved
     ? normalizeTripleLoopReadingState(parseTripleLoopProgress(raw) ?? undefined)
     : createDefaultTripleLoopReadingState();
-  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now);
+  const aheadDays = await readTripleLoopAheadDays();
+  const base = resolveEffectiveTripleLoopProgress(stored, hasSaved, now, aheadDays);
   const next = addUserChapterReadToState(base, bookId, chapter);
   await writeTripleLoopProgress(next);
   return next;

@@ -1,9 +1,13 @@
 import type { MutableRefObject } from "react";
+import type { Audio } from "expo-av";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import { resolveChapterAudioExternalUrl } from "../bible/chapter-audio-sources";
 import { scriptureAudioUrlsEqual } from "../bible/cuv-chapter-audio";
 import { resolveScripturePlayableSrcForChapter } from "../bible/read-chapter-audio";
+import { safeGetSoundStatus } from "../audio/safeShellSound";
 import { isSameScriptureChapter } from "./scripturePlaybackExclusive";
+import { setScripturePlayingChapter } from "./scripturePlayingChapterStore";
+import { setPlayingReadChapterPlayback } from "../read/read-chapter-playback-store";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 
 export async function resolveScriptureFallbackSrc(
@@ -41,22 +45,45 @@ export async function tryPlayScriptureWithFallback(args: {
   patchReadChapterSrc: (src: string) => void;
   isStarted: () => boolean;
   isBusy?: () => boolean;
+  soundRef?: MutableRefObject<Audio.Sound | null>;
   /** 若 shell 已在播同一章，则跳过（planFlow 换章时必须能强制开播）。 */
   playingReg?: ReadChapterPlaybackRegistration | null;
 }): Promise<boolean> {
+  const playingChapter = {
+    bookId: args.reg.bookId,
+    chapter: args.reg.chapter,
+    translationId: args.reg.translationId,
+  };
   if (
     args.isBusy?.() &&
     args.isStarted() &&
     args.playingReg &&
     isSameScriptureChapter(args.playingReg, args.reg)
   ) {
-    return true;
+    const sound = args.soundRef?.current ?? null;
+    if (sound) {
+      const st = await safeGetSoundStatus(sound);
+      if (st?.isLoaded && st.isPlaying) {
+        setScripturePlayingChapter(playingChapter);
+        setPlayingReadChapterPlayback(args.reg);
+        return true;
+      }
+      // 暂停 / 未加载：不可当「已在播」跳过
+    } else {
+      setScripturePlayingChapter(playingChapter);
+      setPlayingReadChapterPlayback(args.reg);
+      return true;
+    }
   }
   if (__DEV__) {
     console.warn("[scripture-audio] try primary src", args.preferredSrc);
   }
   await args.playScripture(args.preferredSrc);
-  if (args.isStarted()) return true;
+  if (args.isStarted()) {
+    setScripturePlayingChapter(playingChapter);
+    setPlayingReadChapterPlayback(args.reg);
+    return true;
+  }
 
   const fallbackSrc = await resolveScriptureFallbackSrc(args.reg, args.preferredSrc);
   if (!fallbackSrc) {
@@ -76,7 +103,12 @@ export async function tryPlayScriptureWithFallback(args: {
   }
   args.patchReadChapterSrc(fallbackSrc);
   await args.playScripture(fallbackSrc);
-  return args.isStarted();
+  if (args.isStarted()) {
+    setScripturePlayingChapter(playingChapter);
+    setPlayingReadChapterPlayback(args.reg);
+    return true;
+  }
+  return false;
 }
 
 export function patchReadChapterSrc(args: {

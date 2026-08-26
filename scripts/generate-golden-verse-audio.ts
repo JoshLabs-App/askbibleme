@@ -227,6 +227,10 @@ async function transcodeTo32kbpsMp3(inputPath: string, outputPath: string): Prom
     "libmp3lame",
     "-b:a",
     "32k",
+    "-ac",
+    "1",
+    "-ar",
+    "24000",
     outputPath,
   ]);
 }

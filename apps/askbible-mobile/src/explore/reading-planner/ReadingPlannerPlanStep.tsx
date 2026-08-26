@@ -8,7 +8,6 @@ import { t, tFormat, toZhTwText } from "../../i18n/site-copy";
 import { fetchReadingPlanRegistry } from "../../read/reading-plan/fetch-reading-plan-registry";
 import { isFeaturedReadingPlanId } from "../../read/reading-plan/featured-reading-plans";
 import {
-  NT_DEEP_REPEAT_DEFAULT_PACE,
   NT_DEEP_REPEAT_PACE_OPTIONS,
   type NtDeepRepeatPace,
 } from "../../read/reading-plan/nt-deep-repeat-pace";
@@ -24,7 +23,6 @@ import {
 } from "./activateReadingPlanFromPlanner";
 import {
   getNtDeepPacePlannerCopy,
-  getReadingPlannerPathGuidance,
   getReadingPlannerStep3Intro,
   getTripleLoopPlannerCopy,
 } from "./reading-planner-plan-copy";
@@ -70,7 +68,6 @@ export function ReadingPlannerPlanStep({ locale, choice, onChange, startDay, onS
 
   const tripleLoopCopy = useMemo(() => getTripleLoopPlannerCopy(locale), [locale]);
   const stepIntro = useMemo(() => getReadingPlannerStep3Intro(locale), [locale]);
-  const pathGuidance = useMemo(() => getReadingPlannerPathGuidance(locale), [locale]);
 
   const selectNtDeep = (pace: NtDeepRepeatPace) => {
     onChange({ type: "nt-deep-repeat", pace });
@@ -89,33 +86,42 @@ export function ReadingPlannerPlanStep({ locale, choice, onChange, startDay, onS
       <Text style={styles.title}>{stepIntro.title}</Text>
       <Text style={styles.subtitle}>{stepIntro.subtitle}</Text>
 
-      <View style={styles.pathGuidanceBox}>
-        <Text style={styles.pathGuidanceLead}>{pathGuidance.lead}</Text>
-        <View style={styles.pathGuidanceRow}>
-          <View style={styles.pathGuidanceDotMuted} />
-          <View style={styles.pathGuidanceTextWrap}>
-            <Text style={styles.pathGuidanceLabel}>{pathGuidance.newcomerLabel}</Text>
-            <Text style={styles.pathGuidanceBody}>{pathGuidance.newcomerBody}</Text>
-          </View>
-        </View>
-        <View style={styles.pathGuidanceRow}>
-          <View style={styles.pathGuidanceDotAccent} />
-          <View style={styles.pathGuidanceTextWrap}>
-            <Text style={styles.pathGuidanceLabelAccent}>{pathGuidance.deepReadLabel}</Text>
-            <Text style={styles.pathGuidanceBody}>{pathGuidance.deepReadBody}</Text>
-          </View>
-        </View>
-      </View>
-
       <View style={styles.heroSection}>
         <Text style={styles.sectionLabel}>
-          {locale === "en" ? "RECOMMENDED · FORMAL STUDY" : zhText("推荐 · 正式研读")}
+          {locale === "en" ? "RECOMMENDED · EASY READING" : zhText("推荐 · 轻松读经")}
+        </Text>
+        <Pressable
+          onPress={selectTripleLoop}
+          style={[
+            styles.paceCard,
+            choice.type === "triple-loop" ? styles.paceCardSelected : styles.paceCardIdle,
+          ]}
+        >
+          <View style={styles.paceHeader}>
+            <Text style={styles.paceTitle}>{tripleLoopCopy.title}</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {locale === "en" ? "Start here" : zhText("建议起步")}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.paceBody}>{tripleLoopCopy.body}</Text>
+          <MaterialCommunityIcons
+            name={choice.type === "triple-loop" ? "check-circle" : "checkbox-blank-circle-outline"}
+            size={22}
+            color={choice.type === "triple-loop" ? LOGO_YELLOW : "rgba(138, 90, 11, 0.45)"}
+            style={styles.paceCheck}
+          />
+        </Pressable>
+      </View>
+
+      <View style={styles.altSection}>
+        <Text style={styles.sectionLabelMuted}>
+          {locale === "en" ? "FORMAL STUDY" : zhText("正式研读")}
         </Text>
         <View style={styles.paceList}>
           {paceTimeline.map((pace) => {
-            const selected =
-              choice.type === "nt-deep-repeat" && choice.pace === pace;
-            const isDefault = pace === NT_DEEP_REPEAT_DEFAULT_PACE;
+            const selected = choice.type === "nt-deep-repeat" && choice.pace === pace;
             const copy = getNtDeepPacePlannerCopy(locale, pace);
             return (
               <Pressable
@@ -125,13 +131,6 @@ export function ReadingPlannerPlanStep({ locale, choice, onChange, startDay, onS
               >
                 <View style={styles.paceHeader}>
                   <Text style={styles.paceTitle}>{copy.title}</Text>
-                  {isDefault ? (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>
-                        {locale === "en" ? "Start here" : zhText("建议起步")}
-                      </Text>
-                    </View>
-                  ) : null}
                 </View>
                 <Text style={styles.paceBody}>{copy.body}</Text>
                 {copy.reference ? (
@@ -159,29 +158,6 @@ export function ReadingPlannerPlanStep({ locale, choice, onChange, startDay, onS
         </View>
       </View>
 
-      <View style={styles.altSection}>
-        <Text style={styles.sectionLabelMuted}>
-          {locale === "en" ? "EASY READING · TRIPLE LOOP" : zhText("轻松读经 · 三循环")}
-        </Text>
-        <Pressable
-          onPress={selectTripleLoop}
-          style={[
-            styles.altCard,
-            choice.type === "triple-loop" ? styles.altCardSelected : undefined,
-          ]}
-        >
-          <View style={styles.altText}>
-            <Text style={styles.altTitle}>{tripleLoopCopy.title}</Text>
-            <Text style={styles.altBody}>{tripleLoopCopy.body}</Text>
-          </View>
-          <MaterialCommunityIcons
-            name={choice.type === "triple-loop" ? "check-circle" : "checkbox-blank-circle-outline"}
-            size={22}
-            color={choice.type === "triple-loop" ? LOGO_YELLOW : "rgba(138, 90, 11, 0.45)"}
-          />
-        </Pressable>
-      </View>
-
       <View style={styles.otherSection}>
         <Pressable
           onPress={() => setOtherExpanded((v) => !v)}
@@ -200,8 +176,8 @@ export function ReadingPlannerPlanStep({ locale, choice, onChange, startDay, onS
         </Pressable>
         <Text style={styles.otherHint}>
           {locale === "en"
-            ? "Common calendar-style plans. AskBible recommends the deep-read rhythm above."
-            : zhText("以下为常见表格式计划，可按需选用；我们更推荐上面的正式研读节奏。")}
+            ? "Common calendar-style plans. AskBible recommends easy reading above."
+            : zhText("以下为常见表格式计划，可按需选用；我们更推荐上面的轻松读经。")}
         </Text>
 
         {otherExpanded ? (
@@ -272,61 +248,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "rgba(43, 29, 21, 0.74)",
     paddingHorizontal: 2,
-  },
-  pathGuidanceBox: {
-    marginTop: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(120, 53, 15, 0.18)",
-    backgroundColor: "rgba(255, 252, 245, 0.92)",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 12,
-  },
-  pathGuidanceLead: {
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: "rgba(43, 29, 21, 0.82)",
-    textAlign: "center",
-  },
-  pathGuidanceRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  pathGuidanceDotMuted: {
-    marginTop: 7,
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(77, 53, 34, 0.35)",
-  },
-  pathGuidanceDotAccent: {
-    marginTop: 7,
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: LOGO_YELLOW,
-  },
-  pathGuidanceTextWrap: { flex: 1 },
-  pathGuidanceLabel: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-    color: "rgba(43, 29, 21, 0.78)",
-  },
-  pathGuidanceLabelAccent: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-    color: theme.ink,
-  },
-  pathGuidanceBody: {
-    marginTop: 4,
-    fontSize: 12,
-    lineHeight: 18,
-    color: "rgba(43, 29, 21, 0.76)",
   },
   heroSection: {
     marginTop: 16,
@@ -419,34 +340,6 @@ const styles = StyleSheet.create({
   },
   altSection: {
     marginTop: 18,
-  },
-  altCard: {
-    marginTop: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(120, 53, 15, 0.16)",
-    backgroundColor: "rgba(255, 252, 245, 0.72)",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  altCardSelected: {
-    borderColor: "rgba(255, 177, 1, 0.75)",
-    backgroundColor: "rgba(255, 236, 191, 0.55)",
-  },
-  altText: { flex: 1 },
-  altTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: theme.ink,
-  },
-  altBody: {
-    marginTop: 8,
-    fontSize: 13,
-    lineHeight: 19,
-    color: "rgba(43, 29, 21, 0.8)",
   },
   otherSection: {
     marginTop: 20,

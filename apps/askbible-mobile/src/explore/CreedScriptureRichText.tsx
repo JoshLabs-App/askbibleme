@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { useRouter } from "expo-router";
 import { parseReadPath } from "../../../../lib/bible/parse-askbible-read-link";
 import { splitCreedReadLinks } from "../../../../lib/explore/historical-creeds-scripture-links";

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # 从分支 teochew-nt-audio 恢复 public/audio/teochew-nt（约 260 章 MP3，~692MB）
 set -euo pipefail
+# DEPRECATED: AskBible 不再托管潮语音频。仅当 FORCE_TEOCHEW_LOCAL_MIRROR=1 时继续。
+if [[ "${FORCE_TEOCHEW_LOCAL_MIRROR:-}" != "1" ]]; then
+  echo "Refusing: teochew-nt is external-only (TSTSCC). Set FORCE_TEOCHEW_LOCAL_MIRROR=1 to override." >&2
+  exit 1
+fi
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 

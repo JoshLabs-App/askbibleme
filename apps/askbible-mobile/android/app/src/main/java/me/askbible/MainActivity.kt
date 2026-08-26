@@ -94,7 +94,12 @@ class MainActivity : ReactActivity() {
   }
 
   private fun handleWidgetPlaybackIntent(intent: Intent?) {
+    if (intent?.getBooleanExtra(WidgetPlaybackBridge.EXTRA_WIDGET_PLAYBACK, false) != true) {
+      return
+    }
     WidgetPlaybackBridge.handleActivityIntent(this, intent)
+    // 冷启动播完后回桌面：立刻退后台，后续由 bridge 继续重试。
+    window?.decorView?.post { moveTaskToBack(true) }
   }
 
   private fun handleReadingAlarmIntent(intent: Intent?) {

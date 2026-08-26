@@ -1,68 +1,20 @@
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { signInWithPasswordInApp } from "../auth/supabaseMemberAuth";
+import { isSupabaseAuthConfigured } from "../config/supabaseAuth";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { logAuthApiTarget, parseAuthUser, SCHEMA_VERSION } from "./memberAuthShared";
 import type { MobileLoginRequest, MobileLoginResult } from "./memberAuthTypes";
 
 export async function loginMobileMember(input: MobileLoginRequest & { locale?: string }): Promise<MobileLoginResult> {
-  const base = getAskBibleBaseUrl();
-  const res = await fetchWithTimeout(`${base}/api/mobile/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    timeoutMs: 12_000,
-    body: JSON.stringify({
-      schemaVersion: SCHEMA_VERSION,
-      email: input.email,
-      password: input.password,
-      locale: input.locale ?? "",
-    }),
-  });
-
-  let payload: unknown = null;
-  try {
-    payload = await res.json();
-  } catch {
+  if (!isSupabaseAuthConfigured()) {
     return {
       ok: false,
       schemaVersion: SCHEMA_VERSION,
-      error: `HTTP ${res.status}`,
-      code: "invalid_response",
+      error: "Supabase 未配置",
+      code: "supabase_not_configured",
     };
   }
-
-  const data = payload as Record<string, unknown>;
-  const schemaVersion =
-    typeof data.schemaVersion === "number" && Number.isFinite(data.schemaVersion)
-      ? Math.trunc(data.schemaVersion)
-      : SCHEMA_VERSION;
-
-  if (!res.ok || data.ok !== true) {
-    return {
-      ok: false,
-      schemaVersion,
-      error: typeof data.error === "string" ? data.error : `HTTP ${res.status}`,
-      code: typeof data.code === "string" ? data.code : undefined,
-    };
-  }
-
-  const user = parseAuthUser(data);
-  const sessionToken = typeof data.sessionToken === "string" ? data.sessionToken : "";
-  const expiresAt = typeof data.expiresAt === "string" ? data.expiresAt : "";
-  if (!user || !sessionToken || !expiresAt) {
-    return {
-      ok: false,
-      schemaVersion,
-      error: "Invalid auth response",
-      code: "invalid_response",
-    };
-  }
-
-  return {
-    ok: true,
-    schemaVersion,
-    user,
-    sessionToken,
-    expiresAt,
-  };
+  return signInWithPasswordInApp(input);
 }
 
 export async function loginMobileMemberWithGoogleAt(

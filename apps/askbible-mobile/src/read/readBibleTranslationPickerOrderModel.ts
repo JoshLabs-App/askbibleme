@@ -13,6 +13,7 @@ const TOP_PICKER_ORDER: Record<AppLocale, readonly string[]> = {
     "rcv-zh-hant",
     "csbs-zh-hans",
     "cunpss-zh-hans",
+    "cunpss-zh-hant",
     "cunp-zh-hant",
     "cunp-zh-hant-god",
     "csbt-zh-hant",
@@ -42,9 +43,10 @@ const TOP_PICKER_ORDER: Record<AppLocale, readonly string[]> = {
     "cnv-zh-hant",
     "rcv-zh-hant",
     "csbt-zh-hant",
-    "cunpss-zh-hant",
     "cunp-zh-hant",
     "cunp-zh-hant-god",
+    "cunpss-zh-hans",
+    "cunpss-zh-hant",
     "csbs-zh-hans",
     "cnvs-zh-hans",
     "feb-zh-hans",
@@ -83,7 +85,8 @@ export function sortPickerTranslations<T extends { id: string }>(
   items: T[],
   locale: AppLocale,
 ): T[] {
-  const topOrder = TOP_PICKER_ORDER[locale];
+  // Older persisted locale values may not exist in this version's picker map.
+  const topOrder = TOP_PICKER_ORDER[locale] ?? TOP_PICKER_ORDER.en;
   const rank = new Map(topOrder.map((id, index) => [id, index]));
   return items
     .map((item, index) => ({ item, index }))

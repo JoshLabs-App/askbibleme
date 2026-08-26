@@ -1,13 +1,11 @@
-import { Pressable, Text, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { ExploreHistoricalCreedsTimelineList } from "./ExploreHistoricalCreedsTimelineList";
 import { historicalCreedsScreenStyles as styles } from "./ExploreHistoricalCreedsScreenStyles";
-import {
-  exploreStyles as shared,
-  ExploreParchmentPage,
-} from "./exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import { ExploreParchmentPage} from "./exploreParchmentStyles";
 import { useExploreHistoricalCreedsScreen } from "./useExploreHistoricalCreedsScreen";
 
 export function ExploreHistoricalCreedsScreen() {
@@ -29,13 +27,7 @@ export function ExploreHistoricalCreedsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={[shared.backLink, styles.backLink]}
-          accessibilityRole="button"
-        >
-          <Text style={shared.backLinkText}>{t("pages.explore.historicalCreedsBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.pageTitle}>{t("pages.explore.historicalCreedsTitle")}</Text>
         <Text style={styles.lead}>{t("pages.explore.historicalCreedsLead")}</Text>

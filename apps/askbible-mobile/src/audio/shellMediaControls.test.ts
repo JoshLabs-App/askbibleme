@@ -19,7 +19,10 @@ vi.mock("expo-modules-core", () => ({
   requireOptionalNativeModule: mocks.requireOptionalNativeModule,
 }));
 
-import { subscribeShellMediaRemoteCommands } from "./shellMediaControls";
+import {
+  subscribeShellMediaRemoteCommands,
+  subscribeShellSleepTimerFired,
+} from "./shellMediaControls";
 
 describe("subscribeShellMediaRemoteCommands", () => {
   beforeEach(() => {
@@ -33,6 +36,7 @@ describe("subscribeShellMediaRemoteCommands", () => {
       onToggle: vi.fn(),
       onNext: vi.fn(),
       onPrevious: vi.fn(),
+      onStop: vi.fn(),
     });
 
     expect(mocks.addListener).toHaveBeenCalledWith("RemotePlay", expect.any(Function));
@@ -40,8 +44,25 @@ describe("subscribeShellMediaRemoteCommands", () => {
     expect(mocks.addListener).toHaveBeenCalledWith("RemoteToggle", expect.any(Function));
     expect(mocks.addListener).toHaveBeenCalledWith("RemoteNext", expect.any(Function));
     expect(mocks.addListener).toHaveBeenCalledWith("RemotePrevious", expect.any(Function));
+    expect(mocks.addListener).toHaveBeenCalledWith("RemoteStop", expect.any(Function));
     expect(mocks.eventEmitterCtor).not.toHaveBeenCalled();
     expect(mocks.requireOptionalNativeModule).not.toHaveBeenCalled();
+    expect(typeof unsubscribe).toBe("function");
+  });
+});
+
+describe("subscribeShellSleepTimerFired", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("listens on DeviceEventEmitter on Android", () => {
+    const onFire = vi.fn();
+    const unsubscribe = subscribeShellSleepTimerFired(onFire);
+    expect(mocks.addListener).toHaveBeenCalledWith(
+      "ShellMediaSleepTimerFired",
+      onFire,
+    );
     expect(typeof unsubscribe).toBe("function");
   });
 });

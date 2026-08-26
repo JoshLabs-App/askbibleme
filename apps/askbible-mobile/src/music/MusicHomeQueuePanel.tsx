@@ -1,4 +1,5 @@
-import { ScrollView, View } from "react-native";
+import { Animated, ScrollView, View } from "react-native";
+import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import type { RefObject } from "react";
 import type { ScrollView as ScrollViewType } from "react-native";
 import { MusicHomeQueueRow } from "./MusicHomeQueueRow";
@@ -10,13 +11,13 @@ type Props = {
   queueDisplayIndices: number[];
   tracks: PlaybackTrack[];
   trackIndex: number;
-  queueScrollY: number;
+  queueScrollV: Animated.Value;
   downloadingTrackId: string | null;
   offlineMusicOnly: boolean;
   compactLandscape: boolean;
   chromeVisible: boolean;
   queueScrollRef: RefObject<ScrollViewType | null>;
-  onQueueScroll: (y: number) => void;
+  onQueueScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   onSelectTrack: (index: number) => void;
 };
 
@@ -24,7 +25,7 @@ export function MusicHomeQueuePanel({
   queueDisplayIndices,
   tracks,
   trackIndex,
-  queueScrollY,
+  queueScrollV,
   downloadingTrackId,
   offlineMusicOnly,
   compactLandscape,
@@ -50,7 +51,7 @@ export function MusicHomeQueuePanel({
         contentContainerStyle={styles.queueScrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        onScroll={(e) => onQueueScroll(e.nativeEvent.contentOffset.y)}
+        onScroll={onQueueScroll}
         scrollEventThrottle={16}
       >
         <View style={styles.queue}>
@@ -58,14 +59,14 @@ export function MusicHomeQueuePanel({
             const tr = tracks[index]!;
             const active = index === trackIndex;
             const isDownloading = downloadingTrackId === tr.id;
-            const needsCache = !tr.localReady && !offlineMusicOnly && isTrackPlayable(tr);
+            const needsCache = !tr.localReady && isTrackPlayable(tr);
             return (
               <MusicHomeQueueRow
                 key={`${tr.id}-${displayIdx}`}
                 track={tr}
                 displayIdx={displayIdx}
                 active={active}
-                queueScrollY={queueScrollY}
+                queueScrollV={queueScrollV}
                 isDownloading={isDownloading}
                 needsCache={needsCache}
                 onSelect={() => onSelectTrack(index)}

@@ -25,8 +25,8 @@ export function HomeVerseRotationSection({ rotationSec, setRotationSec, onPrefsC
 
   return (
     <NatureHomeSettingsIconRow icon="autorenew" accessibilityLabel={label}>
-      <View style={{ gap: 6 }}>
-        <Text style={styles.voiceHint}>{tNatureHomeSettings("verseRotationHint")}</Text>
+      <View style={styles.rotationChoicesRow}>
+        <Text style={styles.rotationLabel}>播放</Text>
         <View style={styles.rotationChoicesWrap}>
           {HOME_VERSE_ROTATION_SEC_OPTIONS.map((sec) => {
             const selected = rotationSec === sec;

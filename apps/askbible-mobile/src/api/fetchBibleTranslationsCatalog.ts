@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { BUNDLED_SCRIPTURE_TRANSLATION_IDS } from "../bible/bundled-scripture-translations";
 import type { BibleTranslationMeta, BibleTranslationsIndex } from "../bible/translations-types";
 
-const CATALOG_CACHE_KEY = "askbible.mobile.bible-translations-catalog.v1";
+const CATALOG_CACHE_KEY = "askbible.mobile.bible-translations-catalog.v4";
 const CATALOG_CACHE_TTL_MS = 60_000;
-const REMOTE_CATALOG_BASE = "https://askbible.me";
-const EXCLUDED_TRANSLATION_IDS = new Set(["heb-leningrad"]);
+/** 仍排除的译本（未启用 / 非阅读主线）。 */
+const EXCLUDED_TRANSLATION_IDS = new Set(["heb-leningrad", "cccbst-zh-hant", "tcv2019t-zh-hant"]);
 
 const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
   translations: [
@@ -125,8 +126,8 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
     },
     {
       id: "cunp-zh-hant",
-      labelZh: "新標點和合本, 神版",
-      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      labelZh: "新標點和合本（神版·繁體）",
+      labelEn: "CUNP (Shen, Traditional)",
       language: "zh-Hant",
       bundled: false,
       downloadUrl: null,
@@ -139,8 +140,8 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
     },
     {
       id: "cunp-zh-hant-god",
-      labelZh: "新標點和合本, 上帝版",
-      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      labelZh: "新標點和合本（上帝版·繁體）",
+      labelEn: "CUNP (Shangdi, Traditional)",
       language: "zh-Hant",
       bundled: false,
       downloadUrl: null,
@@ -152,10 +153,11 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
       publisherUrl: null,
     },
     {
+      // YouVersion CUNPSS-Shangti：简体「上帝」；历史 id 含 hant，保留以免打乱本机偏好。
       id: "cunpss-zh-hant",
-      labelZh: "新標點和合本, 上帝版",
-      labelEn: "Chinese Union Version with New Punctuation, God-Version",
-      language: "zh-Hant",
+      labelZh: "新标点和合本（上帝版·简体）",
+      labelEn: "CUNPSS (Shangdi, Simplified)",
+      language: "zh-Hans",
       bundled: false,
       downloadUrl: null,
       provider: "youversion",
@@ -166,14 +168,15 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
       publisherUrl: null,
     },
     {
+      // 文字版正确 id 是 48；2224 是高棉文译本，不可再用。
       id: "cunpss-zh-hans",
-      labelZh: "新标点和合本, 神版",
-      labelEn: "Chinese Union Version with New Punctuation, God-Version",
+      labelZh: "新标点和合本（神版·简体）",
+      labelEn: "CUNPSS (Shen, Simplified)",
       language: "zh-Hans",
       bundled: false,
       downloadUrl: null,
       provider: "youversion",
-      remoteId: "2224",
+      remoteId: "48",
       delivery: "chapter-api",
       enabled: true,
       copyright: null,
@@ -233,6 +236,13 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
       labelZh: "和合本（繁體）",
       labelEn: "Chinese Union Version (Traditional)",
       language: "zh-Hant",
+      bundled: true,
+    },
+    {
+      id: "web-en",
+      labelZh: "WEBP 英译本",
+      labelEn: "World English Bible (WEBP)",
+      language: "en",
       bundled: true,
     },
     {
@@ -322,8 +332,18 @@ function mergeCatalogIndices(
     }
     for (const item of index.translations) {
       const id = String(item?.id || "").trim();
-      if (!id) continue;
-      merged.set(id, { ...item, id });
+      if (!id || EXCLUDED_TRANSLATION_IDS.has(id)) continue;
+      if (item.enabled === false) continue;
+      const prev = merged.get(id);
+      // 远程/缓存条目勿冲掉内置 YouVersion 路由字段（provider / remoteId / delivery）。
+      merged.set(id, {
+        ...prev,
+        ...item,
+        id,
+        provider: item.provider ?? prev?.provider,
+        remoteId: item.remoteId ?? prev?.remoteId,
+        delivery: item.delivery ?? prev?.delivery,
+      });
     }
   }
 
@@ -354,6 +374,7 @@ function normalizeCatalog(raw: unknown, catalogBaseUrl: string): BibleTranslatio
   const translations = raw.translations
     .filter((t): t is BibleTranslationMeta => Boolean(t?.id))
     .filter((t) => !EXCLUDED_TRANSLATION_IDS.has(String(t.id).trim()))
+    .filter((t) => t.enabled !== false)
     .map((t) => ({
       ...(t as BibleTranslationMeta),
       id: String(t.id).trim(),
@@ -390,7 +411,7 @@ async function readCachedCatalog(maxAgeMs?: number): Promise<BibleTranslationsIn
     const parsed = JSON.parse(raw) as CachedCatalog;
     if (!parsed?.index) return null;
     if (maxAgeMs != null && Date.now() - parsed.fetchedAt > maxAgeMs) return null;
-    const normalized = normalizeCatalog(parsed.index, parsed.baseUrl || REMOTE_CATALOG_BASE);
+    const normalized = normalizeCatalog(parsed.index, parsed.baseUrl || getAskBibleBaseUrl());
     if (isSparseCatalog(normalized)) return null;
     return mergeCatalogIndices(OFFLINE_BUNDLED_INDEX, normalized);
   } catch {
@@ -413,16 +434,11 @@ function catalogCandidates(base: string): string[] {
 }
 
 function remoteCatalogUrls(): string[] {
-  const urls: string[] = [];
-  const addBase = (base: string) => {
-    for (const url of catalogCandidates(base)) {
-      if (!urls.includes(url)) urls.push(url);
-    }
-  };
-  const configured = getAskBibleBaseUrl();
-  if (!/askbible\.me/i.test(configured)) addBase(configured);
-  addBase(REMOTE_CATALOG_BASE);
-  return urls;
+  if (isMobileBundledOnly()) return [];
+  const configured = getAskBibleBaseUrl().replace(/\/+$/, "");
+  // 内容目录不经 askbible.me；仅开发/显式非主站基址可拉远程目录。
+  if (!configured || /askbible\.me/i.test(configured)) return [];
+  return catalogCandidates(configured);
 }
 
 async function fetchRemoteCatalogOnce(): Promise<BibleTranslationsIndex | null> {
@@ -434,11 +450,11 @@ async function fetchRemoteCatalogOnce(): Promise<BibleTranslationsIndex | null> 
       });
       if (!res.ok) continue;
       const json = (await res.json()) as unknown;
-      let catalogBase = REMOTE_CATALOG_BASE;
+      let catalogBase = getAskBibleBaseUrl();
       try {
         catalogBase = new URL(url).origin;
       } catch {
-        /* keep default */
+        /* keep configured */
       }
       const normalized = normalizeCatalog(json, catalogBase);
       if (normalized && !isSparseCatalog(normalized)) {
@@ -469,8 +485,11 @@ export function bundledBibleTranslationsCatalog(): BibleTranslationsIndex {
   return OFFLINE_BUNDLED_INDEX;
 }
 
-/** 优先拉 askbible.me 全量目录；离线时回退内置目录。 */
+/** 内容本地包只用内置目录；非 BUNDLED_ONLY 时可拉配置基址（不含 askbible.me）。 */
 export async function fetchBibleTranslationsCatalog(): Promise<BibleTranslationsIndex> {
+  if (isMobileBundledOnly()) {
+    return OFFLINE_BUNDLED_INDEX;
+  }
   const cached = await readCachedCatalog(CATALOG_CACHE_TTL_MS);
   if (cached) return cached;
 
@@ -482,6 +501,9 @@ export async function fetchBibleTranslationsCatalog(): Promise<BibleTranslations
 
 /** 资源更新检查：跳过短缓存，尽量拉最新目录。 */
 export async function fetchBibleTranslationsCatalogFresh(): Promise<BibleTranslationsIndex> {
+  if (isMobileBundledOnly()) {
+    return OFFLINE_BUNDLED_INDEX;
+  }
   const remote = await fetchRemoteCatalog();
   if (remote) return mergeCatalogIndices(OFFLINE_BUNDLED_INDEX, remote);
   const cached = await readCachedCatalog();
@@ -493,6 +515,9 @@ export async function fetchBibleTranslationsCatalogFresh(): Promise<BibleTransla
 export async function clearBibleTranslationsCatalogCache(): Promise<void> {
   try {
     await AsyncStorage.removeItem(CATALOG_CACHE_KEY);
+    await AsyncStorage.removeItem("askbible.mobile.bible-translations-catalog.v1");
+    await AsyncStorage.removeItem("askbible.mobile.bible-translations-catalog.v2");
+    await AsyncStorage.removeItem("askbible.mobile.bible-translations-catalog.v3");
   } catch {
     /* ignore */
   }

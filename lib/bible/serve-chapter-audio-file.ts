@@ -12,12 +12,6 @@ const TEOCHEW_REL_RE = /^teochew-nt\/[A-Z0-9]{2,8}-\d+\.mp3$/i;
 const GOLDEN_VERSE_REL_RE =
   /^golden-verses(?:-web-en)?\/[A-Z0-9]{2,8}-\d+-\d+-32kbps\.mp3$/i;
 
-function teochewGithubRawUrl(relativePath: string): string {
-  const repo = process.env.SELAH_GITHUB_REPO?.trim() || "askbibleme/askbibleme";
-  const branch = process.env.TEOCHEW_AUDIO_GIT_REF?.trim() || "teochew-nt-audio";
-  return `https://raw.githubusercontent.com/${repo}/${branch}/public/audio/${relativePath}`;
-}
-
 function goldenVerseGithubRawUrl(relativePath: string): string {
   const repo = process.env.SELAH_GITHUB_REPO?.trim() || "askbibleme/askbibleme";
   const branch =
@@ -31,7 +25,16 @@ function parseTeochewRelativePath(relativePath: string): { bookId: string; chapt
   return { bookId: m[1]!.toUpperCase(), chapter: Number(m[2]) };
 }
 
-async function fetchTeochewUpstream(
+/** 潮语不存本站：直接 302 到 TSTSCC，不读盘、不代理流量。 */
+function redirectTeochewToSource(relativePath: string): Response {
+  const parsed = parseTeochewRelativePath(relativePath);
+  const entry = parsed ? getTeochewNtManifestEntry(parsed.bookId, parsed.chapter) : null;
+  const remoteUrl = entry?.remoteUrl?.trim();
+  if (!remoteUrl) return new Response("Not found", { status: 404 });
+  return Response.redirect(remoteUrl, 302);
+}
+
+async function fetchUpstream(
   url: string,
   req: NextRequest,
 ): Promise<Response | null> {
@@ -49,45 +52,11 @@ async function fetchTeochewUpstream(
   }
 }
 
-/** 磁盘无文件时，从 GitHub 分支或 manifest 源站代理 */
-async function serveTeochewFromRemote(
-  req: NextRequest,
-  relativePath: string,
-): Promise<Response> {
-  const parsed = parseTeochewRelativePath(relativePath);
-  const entry = parsed ? getTeochewNtManifestEntry(parsed.bookId, parsed.chapter) : null;
-
-  const urls = [teochewGithubRawUrl(relativePath)];
-  if (entry?.remoteUrl) urls.push(entry.remoteUrl);
-
-  let upstream: Response | null = null;
-  for (const url of urls) {
-    upstream = await fetchTeochewUpstream(url, req);
-    if (upstream) break;
-  }
-
-  if (!upstream) {
-    return new Response("Not found", { status: 404 });
-  }
-
-  const out = new Headers({
-    "Content-Type": "audio/mpeg",
-    "Accept-Ranges": "bytes",
-    "Cache-Control": CACHE,
-  });
-  for (const key of ["content-length", "content-range"] as const) {
-    const v = upstream.headers.get(key);
-    if (v) out.set(key, v);
-  }
-
-  return new Response(upstream.body, { status: upstream.status, headers: out });
-}
-
 async function serveGoldenVerseFromRemote(
   req: NextRequest,
   relativePath: string,
 ): Promise<Response> {
-  const upstream = await fetchTeochewUpstream(goldenVerseGithubRawUrl(relativePath), req);
+  const upstream = await fetchUpstream(goldenVerseGithubRawUrl(relativePath), req);
   if (!upstream) return new Response("Not found", { status: 404 });
 
   const headers = new Headers({
@@ -143,11 +112,13 @@ export async function serveChapterAudioFile(
     return new Response("Not found", { status: 404 });
   }
 
+  // 潮语：永不读盘 / 不代理，只跳转源站
+  if (TEOCHEW_REL_RE.test(relativePath)) {
+    return redirectTeochewToSource(relativePath);
+  }
+
   const filePath = resolveCuvChapterAudioFilePath(relativePath);
   if (!filePath) {
-    if (TEOCHEW_REL_RE.test(relativePath)) {
-      return serveTeochewFromRemote(req, relativePath);
-    }
     if (GOLDEN_VERSE_REL_RE.test(relativePath)) {
       return serveGoldenVerseFromRemote(req, relativePath);
     }

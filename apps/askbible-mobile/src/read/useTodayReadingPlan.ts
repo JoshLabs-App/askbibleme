@@ -13,6 +13,7 @@ import {
 import { resolveReadingPlanDayIndex } from "./reading-plan/reading-plan-prefs";
 import {
   loadTodayReadingPlanPayload,
+  todayReadingPayloadMatchesPrefs,
   type TodayReadingPlanPayload,
 } from "./reading-plan/today-reading-plan-payload";
 import {
@@ -77,7 +78,7 @@ export function useTodayReadingPlan(
     } finally {
       setLoading(false);
     }
-  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, prefs.aheadDays, effectiveDayIndex, dayCount, isPointerPlan]);
+  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.dayCount, prefs.aheadDays, effectiveDayIndex, dayCount, isPointerPlan, calendarEpochDay]);
 
   const tripleProgressKey = isTripleLoop
     ? `${tripleProgress.ot.bookId}:${tripleProgress.ot.chapter}|${tripleProgress.nt.bookId}:${tripleProgress.nt.chapter}|${tripleProgress.wisdom.bookId}:${tripleProgress.wisdom.chapter}|a:${aheadDays}|r:${tripleProgress.chaptersRead?.ot ?? 0},${tripleProgress.chaptersRead?.nt ?? 0},${tripleProgress.chaptersRead?.wisdom ?? 0}`
@@ -87,20 +88,24 @@ export function useTodayReadingPlan(
     : tripleProgressKey;
 
   useEffect(() => {
+    setPayload((prev) => (prev && !todayReadingPayloadMatchesPrefs(prev, prefs) ? null : prev));
+  }, [prefs.planId, prefs.anchor, prefs.startedOn, prefs.aheadDays]);
+
+  useEffect(() => {
     if (!enabled) return;
     const primed = peekPrimedTodayReadingPlanPayload();
-    if (primed) {
+    if (primed && todayReadingPayloadMatchesPrefs(primed, prefs)) {
       setPayload(primed);
     }
     const task = InteractionManager.runAfterInteractions(() => {
       void loadToday();
     });
     return () => task.cancel();
-  }, [enabled, loadToday, ntDeepProgressKey]);
+  }, [enabled, loadToday, ntDeepProgressKey, prefs.planId]);
 
   return {
     prefs,
-    payload,
+    payload: payload && todayReadingPayloadMatchesPrefs(payload, prefs) ? payload : null,
     loading,
     isTripleLoop,
     isNtDeepRepeat,

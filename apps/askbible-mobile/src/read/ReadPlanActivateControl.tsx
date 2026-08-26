@@ -15,6 +15,7 @@ import {
 import { NtDeepRepeatPaceSection } from "./NtDeepRepeatPaceSection";
 import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
+import { ensureTripleLoopPlanPrefs } from "./reading-plan/triple-loop-plan-sync";
 import {
   DEFAULT_READING_PLAN_ANCHOR,
   DEFAULT_READING_PLAN_ID,
@@ -26,6 +27,7 @@ import {
 } from "./reading-plan/reading-plan-prefs";
 import { resolveEffectiveEpochDay } from "./reading-plan/reading-plan-ahead";
 import { useEffectiveReadingPlanPrefs } from "./reading-plan/useReadingPlanStores";
+import { pushReadPlanPlay } from "./read-plan-flow-nav";
 
 type Props = {
   planId: string;
@@ -99,7 +101,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     if (isNtDeepRepeat) {
       await activateNtDeepRepeatPlan({ dayCount, pace, startDay: safeStartDay });
     } else if (isTripleLoop) {
-      await setActiveReadingPlan(planId, "calendar-easter", { dayCount });
+      await ensureTripleLoopPlanPrefs();
     } else if (supportsStartDay) {
       const backDated = new Date();
       backDated.setDate(backDated.getDate() - (safeStartDay - 1));
@@ -110,7 +112,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     refresh();
     void readReadingPlanPrefs().then(setStored);
     if (!isActive) {
-      router.replace("/read");
+      pushReadPlanPlay(router);
     }
   };
 

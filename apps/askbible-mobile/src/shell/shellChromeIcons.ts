@@ -1,4 +1,4 @@
-import { Platform, type TextStyle } from "react-native";
+import { type TextStyle } from "react-native";
 
 /** 壳层浮层图标：略压透明度，避免纯白抢眼（对齐网站 inactive text-white/60） */
 export const SHELL_ICON = "rgba(255,255,255,0.72)";
@@ -8,11 +8,11 @@ export const SHELL_ICON_MUTED = "rgba(255,255,255,0.58)";
 /** 底部 Tab 栏：选中与未选中同一白色 */
 export const SHELL_TAB_BAR_ICON = "#FFFFFF";
 
-/** 壳层图标 / 视频上角标：与 iOS 首页一致 */
+/** 壳层图标 / 视频上角标：iOS / Android 同参，羊皮卷上可读 */
 export const SHELL_ICON_TEXT_SHADOW: TextStyle = {
-  textShadowColor: Platform.OS === "android" ? "rgba(0,0,0,0.28)" : "rgba(0,0,0,0.55)",
+  textShadowColor: "rgba(0,0,0,0.55)",
   textShadowOffset: { width: 0, height: 1 },
-  textShadowRadius: Platform.OS === "android" ? 2 : 6,
+  textShadowRadius: 6,
 };
 
 export function shellIconTextShadow(): TextStyle {

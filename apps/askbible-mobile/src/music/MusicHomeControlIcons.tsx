@@ -5,7 +5,7 @@ type IconProps = {
   color: string;
 };
 
-export function MusicRepeatOneIcon({ size = 17, color }: IconProps) {
+export function MusicRepeatOneIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -28,7 +28,7 @@ export function MusicRepeatOneIcon({ size = 17, color }: IconProps) {
   );
 }
 
-export function MusicRepeatAllIcon({ size = 17, color }: IconProps) {
+export function MusicRepeatAllIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path

@@ -52,14 +52,17 @@ export async function verifyAskbibleUserCredentials(
   dbPath: string,
   email: string,
   password: string,
-): Promise<{ ok: true; userId: string; email: string; name: string } | { ok: false }> {
+): Promise<
+  | { ok: true; userId: string; email: string; name: string; createdAt: string | null }
+  | { ok: false }
+> {
   const wasmPath = path.join(process.cwd(), "node_modules", "sql.js", "dist", "sql-wasm.wasm");
   const SQL = await initSqlJs({ locateFile: () => wasmPath });
   const buf = fs.readFileSync(dbPath);
   const db = new SQL.Database(new Uint8Array(buf));
 
   const stmt = db.prepare(
-    "SELECT id, name, email, password_hash FROM users WHERE lower(trim(email)) = lower(trim(?)) LIMIT 1",
+    "SELECT id, name, email, password_hash, created_at FROM users WHERE lower(trim(email)) = lower(trim(?)) LIMIT 1",
   );
   stmt.bind([email]);
   if (!stmt.step()) {
@@ -72,16 +75,19 @@ export async function verifyAskbibleUserCredentials(
     name?: unknown;
     email?: unknown;
     password_hash?: unknown;
+    created_at?: unknown;
   };
   stmt.free();
   db.close();
 
   const hash = String(row.password_hash ?? "");
   if (!verifyPasswordLikeAskBible(password, hash)) return { ok: false };
+  const createdAt = String(row.created_at ?? "").trim() || null;
   return {
     ok: true,
     userId: String(row.id ?? ""),
     email: String(row.email ?? ""),
     name: String(row.name ?? "").trim() || String(row.email ?? ""),
+    createdAt,
   };
 }

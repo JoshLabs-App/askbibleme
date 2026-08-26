@@ -1,4 +1,3 @@
-import { readAheadDays } from "./reading-plan-ahead";
 import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 import type { ReadingPlanPrefs } from "./reading-plan-prefs";
 import {
@@ -65,16 +64,9 @@ export function inferTripleLoopAheadDays(
 
 export function reconcileTripleLoopAheadDays(
   prefs: ReadingPlanPrefs,
-  progress: Partial<TripleLoopReadingState> | null | undefined,
-  now = new Date(),
+  _progress?: Partial<TripleLoopReadingState> | null,
+  _now = new Date(),
 ): ReadingPlanPrefs {
-  const fromPrefs = readAheadDays(prefs);
-  const fromProgress = inferTripleLoopAheadDays(progress, now);
-  const ahead = Math.max(fromPrefs, fromProgress);
-  if (ahead === fromPrefs) return prefs;
-  if (ahead <= 0) {
-    const { aheadDays: _omit, ...rest } = prefs;
-    return rest as ReadingPlanPrefs;
-  }
-  return { ...prefs, aheadDays: ahead };
+  // Prefs win. Raising aheadDays from farther progress undoes「设为今日」after sync.
+  return prefs;
 }

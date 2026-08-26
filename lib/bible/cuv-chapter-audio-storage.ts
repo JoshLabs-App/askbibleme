@@ -15,7 +15,7 @@ export function cuvChapterAudioDataDir(): string | null {
   return path.join(root, "audio");
 }
 
-/** 相对路径：`GEN-1.mp3` / `cuv-v20/GEN-1.mp3` / `teochew-nt/MAT-1.mp3` */
+/** 相对路径：`GEN-1.mp3` / `cuv-v20/GEN-1.mp3` / `teochew-nt/MAT-1.mp3`（路由仍接受；潮语不落盘） */
 export function isSafeChapterAudioRelativePath(relativePath: string): boolean {
   const norm = String(relativePath || "")
     .trim()
@@ -35,13 +35,14 @@ export function isSafeCuvChapterAudioFilename(filename: string): boolean {
   return isSafeChapterAudioRelativePath(filename);
 }
 
-/** 解析磁盘上的 MP3 路径：`public/audio` 优先，其次 `{DATA_ROOT}/audio` */
+/** 解析磁盘上的 MP3 路径：`public/audio` 优先，其次 `{DATA_ROOT}/audio`。潮语永不落盘。 */
 export function resolveCuvChapterAudioFilePath(relativePath: string): string | null {
   const norm = String(relativePath || "")
     .trim()
     .replace(/\\/g, "/")
     .replace(/^\/+/, "");
   if (!isSafeChapterAudioRelativePath(norm)) return null;
+  if (TEOCHEW_REL_RE.test(norm)) return null;
 
   const candidates: string[] = [path.join(process.cwd(), "public", "audio", norm)];
   const dataDir = cuvChapterAudioDataDir();

@@ -49,6 +49,12 @@ export function normalizeScripturePlaybackRate(raw: number | null | undefined): 
   return best;
 }
 
+export function nextScripturePlaybackRate(raw: number): number {
+  const current = normalizeScripturePlaybackRate(raw);
+  const idx = SCRIPTURE_PLAYBACK_RATES.findIndex((rate) => rate === current);
+  return SCRIPTURE_PLAYBACK_RATES[(idx + 1) % SCRIPTURE_PLAYBACK_RATES.length] ?? 1;
+}
+
 export async function readScripturePlaybackRate(): Promise<number> {
   try {
     const raw = await AsyncStorage.getItem(SCRIPTURE_PLAYBACK_RATE_KEY);

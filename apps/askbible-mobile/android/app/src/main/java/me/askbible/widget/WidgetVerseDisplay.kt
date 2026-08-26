@@ -31,13 +31,14 @@ object WidgetVerseDisplay {
     }
   }
 
-  /** 小挂件只展示主语言经文：取首条非空行，忽略对照译本。 */
+  /** 小挂件只展示主语言经文：拼接全部非空行（中文无空格）。 */
   fun joinVerseLines(lines: org.json.JSONArray?): String {
     if (lines == null || lines.length() == 0) return ""
+    val parts = ArrayList<String>()
     for (i in 0 until lines.length()) {
       val part = lines.optString(i).trim()
-      if (part.isNotEmpty()) return part
+      if (part.isNotEmpty()) parts.add(part)
     }
-    return ""
+    return parts.joinToString("")
   }
 }

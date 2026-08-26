@@ -53,13 +53,14 @@ export function useReadBibleSettingsTranslationHandlers({
         setOpenMenu(null);
         return;
       }
+      // 先切换译本 id，下载在章页「准备中」进度条里进行，不单独弹出下载确认。
+      void ensureTranslationDownloaded(id);
       void (async () => {
         try {
-          await ensureTranslationDownloaded(id);
           await setPrimaryTranslationId(id);
           setOpenMenu(null);
         } catch {
-          /* download state surfaced via translationDownloadState */
+          /* ignore */
         }
       })();
     },
@@ -94,6 +95,23 @@ export function useReadBibleSettingsTranslationHandlers({
       });
     },
     [setContrastTranslationIds, ensureTranslationDownloaded, setContrastDraftIds],
+  );
+
+  const onContrastConfirm = useCallback(
+    async (ids: string[]) => {
+      const next = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+      for (const id of next) {
+        try {
+          await ensureTranslationDownloaded(id);
+        } catch {
+          /* ignore */
+        }
+      }
+      setContrastDraftIds(next);
+      await setContrastTranslationIds(next);
+      setOpenMenu(null);
+    },
+    [ensureTranslationDownloaded, setContrastDraftIds, setContrastTranslationIds, setOpenMenu],
   );
 
   const onPrimaryOpenChange = useCallback(
@@ -162,6 +180,7 @@ export function useReadBibleSettingsTranslationHandlers({
   return {
     onPrimarySelect,
     onContrastToggleSelect,
+    onContrastConfirm,
     onPrimaryOpenChange,
     onContrastOpenChange,
     onPlaybackOpenChange,

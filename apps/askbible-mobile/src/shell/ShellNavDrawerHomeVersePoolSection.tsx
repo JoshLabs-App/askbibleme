@@ -9,7 +9,7 @@ import {
   resolveHomeVersePoolMenuLabel,
   type HomeVersePoolMenuScopeId,
 } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
-import { setHomeVersePoolScope } from "../home/homeVersePoolScopePrefs";
+import { hydrateHomeVersePoolScope, setHomeVersePoolScope } from "../home/homeVersePoolScopePrefs";
 import {
   HOME_VERSE_ROTATION_SEC_OPTIONS,
   getHomeVerseRotationSec,
@@ -63,10 +63,10 @@ export function ShellNavDrawerHomeVersePoolSection({ locale, selectedScope }: Pr
     [locale],
   );
   const title = resolveUiText(locale, "停留时间", "Hold time");
-  const hint = resolveUiText(locale, "默认 7 秒", "Default 7s");
 
   useEffect(() => {
     void hydrateHomeVerseRotationSec();
+    void hydrateHomeVersePoolScope();
   }, []);
 
   return (
@@ -134,7 +134,6 @@ export function ShellNavDrawerHomeVersePoolSection({ locale, selectedScope }: Pr
       ) : null}
       <View style={styles.holdTimeBlock}>
         <Text style={styles.sectionLabelCompact}>{title}</Text>
-        <Text style={styles.holdTimeHint}>{hint}</Text>
         <View style={styles.holdTimeChoicesWrap}>
           {HOME_VERSE_ROTATION_SEC_OPTIONS.map((sec) => {
             const selected = stableSec === sec;

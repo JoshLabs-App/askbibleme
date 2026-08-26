@@ -1,5 +1,9 @@
 import { getLocale } from "../i18n/locale-store";
 import {
+  resolveGoldenVerseAudioTranslationForLocale,
+  writeHomeGoldenVerseAudioTranslationId,
+} from "../home/homeGoldenVerseAudioPrefs";
+import {
   defaultHomePrimaryTranslationIdForLocale,
   readHomePrayerVersePrefs,
   writeHomePrayerVersePrefs,
@@ -23,8 +27,13 @@ export async function syncHomeVersePrefsFromPrimary(
       verseTextZhTranslationId: defaultHomePrimaryTranslationIdForLocale(locale),
       verseTextEnTranslationId: "",
     });
+    await writeHomeGoldenVerseAudioTranslationId(
+      resolveGoldenVerseAudioTranslationForLocale(locale),
+    );
     return;
   }
+  // 金句朗读跟主译本语言（仅有 cuv-simp / web-en 音轨）。
+  await writeHomeGoldenVerseAudioTranslationId(isEnglish ? "web-en" : "cuv-simp");
   if (isEnglish) {
     if (home.verseTextEnTranslationId === primaryId && home.primaryTranslationMode === "manual") return;
     await writeHomePrayerVersePrefs({

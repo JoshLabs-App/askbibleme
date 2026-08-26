@@ -1,13 +1,9 @@
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import { shellIconTextShadow } from "../shell/shellChromeIcons";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { parchmentSans } from "./readTypography";
-import {
-  JUMP_CATALOG_VIEWPORT_H,
-  READ_TOP_ACTION_GAP,
-  READ_TOP_ACTION_IDLE_OPACITY,
-  READ_TOP_ACTION_PRESSED_OPACITY,
-  READ_TOP_ACTION_SIZE,
-} from "./readChapterScreenConstants";
+import { JUMP_CATALOG_VIEWPORT_H } from "./readChapterScreenConstants";
+import { READ_TOP_CHROME } from "./readTopChrome";
 
 export const readChapterScreenChromeStyles = StyleSheet.create({
   jumpBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: c.modalBackdrop },
@@ -72,33 +68,46 @@ export const readChapterScreenChromeStyles = StyleSheet.create({
   topActions: {
     position: "absolute",
     zIndex: 50,
-    gap: READ_TOP_ACTION_GAP,
+    gap: READ_TOP_CHROME.gap,
     alignItems: "center",
   },
   topLeftActionWrap: {
     position: "absolute",
     zIndex: 50,
-    alignItems: "center",
-  },
-  topActionBtn: {
-    width: READ_TOP_ACTION_SIZE,
-    height: READ_TOP_ACTION_SIZE,
-    borderRadius: 22,
+    width: READ_TOP_CHROME.btnSize,
+    height: READ_TOP_CHROME.btnSize,
     alignItems: "center",
     justifyContent: "center",
-    opacity: READ_TOP_ACTION_IDLE_OPACITY,
+  },
+  topSystemBack: {
+    marginHorizontal: 0,
+    marginVertical: 0,
+  },
+  topActionBtn: {
+    width: READ_TOP_CHROME.btnSize,
+    height: READ_TOP_CHROME.btnSize,
+    borderRadius: READ_TOP_CHROME.btnSize / 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   topActionPressed: {
-    opacity: READ_TOP_ACTION_PRESSED_OPACITY,
+    opacity: 0.86,
+  },
+  topActionDisabled: {
+    opacity: 0.38,
   },
   topActionIcon: {
-    ...(Platform.OS === "ios"
-      ? {
-          textShadowColor: "rgba(0,0,0,0.55)",
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 6,
-        }
-      : null),
+    ...shellIconTextShadow(),
+  },
+  /** 字号 + / −：同字号同字重 */
+  topActionSizeLabel: {
+    width: READ_TOP_CHROME.btnSize,
+    textAlign: "center",
+    fontSize: 28,
+    lineHeight: 30,
+    fontWeight: "500",
+    color: READ_TOP_CHROME.iconColor,
+    includeFontPadding: false,
   },
   selectionBar: {
     position: "absolute",
@@ -200,4 +209,5 @@ export const readChapterScreenChromeStyles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
+  pressed: { opacity: 0.88 },
 });

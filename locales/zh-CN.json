@@ -963,6 +963,7 @@
       "invalidChapter": "无效的经文章节。",
       "chapterLoadError": "无法读取本章。若首次安装，请重新构建应用。",
       "loadingChapter": "加载本章…",
+      "preparingTranslation": "正在准备译本…",
       "retry": "重试",
       "catalogBack": "← 圣经",
       "catalogFooter": "返回圣经入口",
@@ -983,10 +984,12 @@
       "scriptureSearchDbError": "当前译本数据未就绪，请稍后重试或切换译本。",
       "scriptureSearchLoading": "搜索中…",
       "scriptureSearchEmpty": "没有找到匹配的经文",
+      "scriptureSearchNoChapterHint": "暂无当前章节，请先打开一章后再搜索本章。",
       "scriptureSearchScopeAria": "搜索范围",
       "scriptureSearchScopeAll": "全本",
       "scriptureSearchScopeOld": "旧约",
       "scriptureSearchScopeNew": "新约",
+      "scriptureSearchScopeChapter": "本章",
       "scriptureSearchRecentTitle": "最近搜索",
       "scriptureSearchRecentAria": "最近搜索关键词",
       "favoritesTitle": "收藏",
@@ -1054,7 +1057,7 @@
       "chapterAudioHint": "经底栏同一播放器播放；若站内已有对应 `/audio/` 文件则优先使用。",
       "chapterAudioTeochewHint": "屏幕仍为和合本；潮汕语仅新约朗读，由底栏播放。",
       "chapterAudioVoiceGroup": "朗读人声",
-      "chapterAudioVoiceMandarin": "普通话",
+      "chapterAudioVoiceMandarin": "和合本",
       "chapterAudioVoiceTeochewNt": "潮汕语（新约）",
       "catalogTestamentOld": "旧约",
       "catalogTestamentNew": "新约",
@@ -1062,16 +1065,36 @@
       "catalogInfinityA11y": "从亘古到永远",
       "catalogSection": "六十六卷",
       "canonSections": {
-        "canon-torah": { "title": "摩西五经" },
-        "canon-history": { "title": "历史书" },
-        "canon-wisdom": { "title": "智慧诗" },
-        "canon-major-prophets": { "title": "大先知书" },
-        "canon-minor-prophets": { "title": "小先知书" },
-        "canon-gospels": { "title": "四福音" },
-        "canon-church-history": { "title": "教会历史" },
-        "canon-pauline": { "title": "保罗书信" },
-        "canon-general-epistles": { "title": "普通书信" },
-        "canon-apocalyptic": { "title": "启示文学" }
+        "canon-torah": {
+          "title": "摩西五经"
+        },
+        "canon-history": {
+          "title": "历史书"
+        },
+        "canon-wisdom": {
+          "title": "智慧书"
+        },
+        "canon-major-prophets": {
+          "title": "大先知书"
+        },
+        "canon-minor-prophets": {
+          "title": "小先知书"
+        },
+        "canon-gospels": {
+          "title": "四福音"
+        },
+        "canon-church-history": {
+          "title": "教会历史"
+        },
+        "canon-pauline": {
+          "title": "保罗书信"
+        },
+        "canon-general-epistles": {
+          "title": "普通书信"
+        },
+        "canon-apocalyptic": {
+          "title": "启示文学"
+        }
       },
       "catalogOutlineCta": "按十段总览打开目录 →",
       "plansTitle": "读经计划",
@@ -1153,6 +1176,28 @@
       "planActivateCurrentDay": "今日为第 {{n}} 天",
       "todayPlanSeeHome": "在圣经首页查看今日经文 →",
       "todayPlanTitle": "今日读经",
+      "planPlayTitle": "读经计划",
+      "planPlayHeaderTitle": "{{name}}",
+      "planPlayRepeatChapter": "单章循环",
+      "planPlayRepeatPool": "播放列表循环",
+      "planPlayRepeatOff": "循环关闭",
+      "planPlayCalendarMonth": "{{y}}年{{m}}月",
+      "planPlayCalendarPrevMonth": "上个月",
+      "planPlayCalendarNextMonth": "下个月",
+      "planPlayLead": "连续播放今日读经计划。",
+      "planPlayNowPlaying": "正在朗读：{{title}}",
+      "planPlayPoolHeading": "今日播放",
+      "planPlayTrackMeta": "{{current}} / {{total}}",
+      "planPlayPlay": "播放今日读经",
+      "planPlayPrevChapter": "上一读经章",
+      "planPlayNextChapter": "下一读经章",
+      "planPlayReadChapter": "阅读",
+      "planPlayPlayChapterAudio": "声音",
+      "planPlayPlanDayLabel": "计划已进行第 {{n}} 天",
+      "planPlayListenTotalLabel": "累计听 {{duration}}",
+      "planPlayPrevDay": "昨天",
+      "planPlayNextDay": "明天",
+      "planPlayConfirmDay": "进度设置为今日",
       "todayPlanNone": "尚未选择读经计划。",
       "todayPlanChange": "调整计划",
       "todayPlanAllPlans": "全部计划",
@@ -1187,8 +1232,13 @@
       "ntDeepRepeatStartNote": "自选定计划日起计；今日为",
       "ntDeepRepeatTodayTitle": "今日读经",
       "ntDeepRepeatTodaySummary": "先读新约当前阶，再读旧约一章；两条进度互不影响。",
-      "ntDeepRepeatLadderTitle": "新约深读阶梯",
+      "ntDeepRepeatLadderTitle": "新约 52 版块",
       "ntDeepRepeatLadderLead": "共 {{stages}} 阶，每阶连读 {{days}} 天；约 {{cycle}} 天走完一轮。",
+      "ntDeepRepeatStagesBelowHint": "点选某一阶，可设为今日新约读经。",
+      "ntDeepRepeatSetStageAsTodayTitle": "设为今日读经",
+      "ntDeepRepeatSetStageAsTodayBody": "将第 {{n}} 阶「{{range}}」设为今日新约读经？",
+      "ntDeepRepeatSetStageAsTodayConfirm": "设为今日",
+      "ntDeepRepeatSetStageAsTodayCancel": "取消",
       "ntDeepRepeatStageLabel": "第 {{n}} 阶",
       "ntDeepRepeatStageBookSingle": "{{name}} 第 {{chapter}} 章",
       "ntDeepRepeatStageBookRange": "{{name}} 第 {{start}}–{{end}} 章",
@@ -1238,7 +1288,7 @@
       "tripleLoopReadingLine": "{{name}} 第 {{chapter}} {{unit}}",
       "tripleLoopChapterUnit": "章",
       "tripleLoopPsalmUnit": "篇",
-      "tripleLoopAdvanceAria": "推进新旧约循环读经",
+      "tripleLoopAdvanceAria": "推进轻松循环读经",
       "tripleLoopAdvanceHint": "若已读完本节，可只推进「{{track}}」的下一处（按我们的书卷顺序）；其它两条不会变。",
       "tripleLoopResetToDefault": "恢复为默认进度",
       "tripleLoopAdvanceButton": "本节已读，推进{{track}}",
@@ -1254,7 +1304,7 @@
         "audioTranslationFollowPrimary": "与屏幕版本相同",
         "audioTranslationCrossHint": "屏幕与朗读译本不同时，按节号同步高亮（有逐节时间轴时最准）。",
         "chapterAudioVoiceLabel": "朗读语言",
-        "chapterAudioVoiceHint": "潮汕语仅新约有音频；旧约章自动使用普通话。",
+        "chapterAudioVoiceHint": "潮汕语仅新约有音频；旧约章自动使用和合本。",
         "chapterAudioVoiceHintNonCuv": "朗读音频为和合本录音；屏幕译本可另选。章页底栏播放时生效。",
         "chapterAudioVoiceHintWebEn": "朗读直接使用 eBible.org 的 WEBP 官方英文录音。章页底栏播放时生效。",
         "chapterAudioVoiceHintKjv": "KJV 朗读来自 AudioTreasure，仅在正文为 KJV 时提供；移动端首次播放后会缓存本章。",
@@ -1269,12 +1319,12 @@
       },
       "plansCatalog": {
         "triple-loop": {
-          "title": "新旧约循环读经计划",
+          "title": "轻松循环读经计划",
           "subtitle": "AskBible 方法一 · 无压力通读",
           "blurb": "旧约、新约、智慧书三条独立循环，每日各一小段；不补读、不展示落后。适合第一次建立习惯，或希望低压、可持续回到神话语的人。"
         },
         "nt-deep-repeat": {
-          "title": "新约深读 · 旧约通读",
+          "title": "正式研经",
           "subtitle": "AskBible 方法二 · 有效深读",
           "blurb": "参考麦克阿瑟新约研读法，我们整理为 52 阶（4–6 章/阶）。从每阶 7 天起，可选 14 / 28 天深度；约 12 个月 / 2 年 / 4 年一轮，旧约每日一章并行。若刚开始，建议先用方法一。"
         },
@@ -1333,7 +1383,9 @@
           "subtitle": "One Year Chronological",
           "blurb": "按编年思路编排；部分日期会并列多段经文以贴近历史平行叙事。单日阅读量可能较多，可按自己的节奏延展完成。"
         }
-      }
+      },
+      "catalogBookSummaryToggle": "卷简介",
+      "catalogBookSummaryToggleA11y": "显示或隐藏各卷简短简介"
     },
     "prayer": {
       "heading": "祷告与经文",
@@ -1380,6 +1432,8 @@
       "birthYearModalRequiredTitle": "开始数算年日",
       "birthYearModalHint": "滑动选择年、月、日，保存后可在下方时间轴上看到自己的位置。",
       "birthYearModalRequiredHint": "请先填写你的称呼与生日，再开始数算。",
+      "greetingEditTitle": "修改称呼",
+      "greetingEditA11y": "修改称呼",
       "birthYearModalNameLabel": "称呼",
       "birthYearModalNamePlaceholder": "你的名字",
       "birthYearModalDateLabel": "生日",
@@ -1396,6 +1450,17 @@
       "birthYearModalCancel": "关闭",
       "birthYearInvalid": "请输入 1900 至今年之间的四位数年份",
       "yearDayCountIconLabel": "数算年日",
+      "welcomeIconLabel": "欢迎",
+      "readingAlarmIconLabel": "读经提醒",
+      "readingAlarmTitle": "读经提醒",
+      "readingAlarmLead": "到点通知，点开即可开始今日读经",
+      "readingAlarmTapTime": "点击改时间",
+      "readingAlarmToggle": "每日提醒",
+      "readingAlarmPlay": "播放",
+      "readingAlarmScripture": "读经",
+      "readingAlarmMusic": "音乐",
+      "readingAlarmRepeat": "重复",
+      "readingPlanIconLabel": "读经计划",
       "biblicalFeastsIconLabel": "圣经节期",
       "biblicalFeastsCardTitle": "圣经节期",
       "biblicalFeastsCardLead": "查看一年中的核心节期：圣经月份日期、经文依据与节期意义。",

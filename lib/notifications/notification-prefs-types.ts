@@ -5,6 +5,7 @@ export const READING_REMINDER_WEEKDAYS_ALL: readonly ReadingReminderWeekday[] = 
   1, 2, 3, 4, 5, 6, 7,
 ] as const;
 
+/** music = 预备音乐闹钟；scripture = 直接开今日读经。旧值 notification 读入时归一成 music。 */
 export type ReadingReminderMode = "music" | "scripture";
 
 export type NotificationPrefsV1 = {
@@ -12,29 +13,31 @@ export type NotificationPrefsV1 = {
   readingReminderEnabled: boolean;
   readingReminderHour: number;
   readingReminderMinute: number;
-  /** Subset of weekdays (1=Sun … 7=Sat). Empty normalizes to all days. */
+  /** Always all 7 days (product: daily only; field kept for native schedule JSON). */
   readingReminderWeekdays: ReadingReminderWeekday[];
-  /** Daily morning alarm: play prelude music only, or start Scripture reading only. */
+  /** Prelude music alarm, or Scripture alarm. */
   readingReminderMode: ReadingReminderMode;
   dailyVerseEnabled: boolean;
   dailyVerseHour: number;
   dailyVerseMinute: number;
 };
 
+/** Fresh install: morning verse notification + 07:00 Scripture alarm. */
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefsV1 = {
   version: 1,
-  readingReminderEnabled: false,
+  readingReminderEnabled: true,
   readingReminderHour: 7,
   readingReminderMinute: 0,
   readingReminderWeekdays: [...READING_REMINDER_WEEKDAYS_ALL],
   readingReminderMode: "scripture",
-  dailyVerseEnabled: false,
-  dailyVerseHour: 12,
+  dailyVerseEnabled: true,
+  dailyVerseHour: 8,
   dailyVerseMinute: 0,
 };
 
 export function normalizeReadingReminderMode(raw: unknown): ReadingReminderMode {
-  return raw === "music" ? "music" : "scripture";
+  if (raw === "scripture") return "scripture";
+  return "music";
 }
 
 export function normalizeReadingReminderWeekdays(raw: unknown): ReadingReminderWeekday[] {
@@ -77,9 +80,11 @@ export function normalizeNotificationPrefs(raw: unknown): NotificationPrefsV1 {
       p.readingReminderMinute,
       DEFAULT_NOTIFICATION_PREFS.readingReminderMinute,
     ),
-    readingReminderWeekdays: normalizeReadingReminderWeekdays(p.readingReminderWeekdays),
+    // 读经提醒只做「每天」；旧的按星期子集一律归一成全周。
+    readingReminderWeekdays: [...READING_REMINDER_WEEKDAYS_ALL],
     readingReminderMode: normalizeReadingReminderMode(p.readingReminderMode),
-    dailyVerseEnabled: p.dailyVerseEnabled === true,
+    // 每日金句通知没有设置入口，始终开着，时间用默认或已存值。
+    dailyVerseEnabled: true,
     dailyVerseHour: clampHour(p.dailyVerseHour, DEFAULT_NOTIFICATION_PREFS.dailyVerseHour),
     dailyVerseMinute: clampMinute(p.dailyVerseMinute, DEFAULT_NOTIFICATION_PREFS.dailyVerseMinute),
   };

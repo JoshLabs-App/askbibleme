@@ -7,20 +7,6 @@ const HOME_SETTINGS: Record<
   AppLocale,
   {
     panelTitle: string;
-    dimSection: string;
-    dimHint: string;
-    dimLevelNone: string;
-    dimLevelFaint: string;
-    dimLevelSubtle: string;
-    dimLevelLight: string;
-    dimLevelStrong: string;
-    blurSection: string;
-    blurHint: string;
-    blurLevelNone: string;
-    blurLevelFaint: string;
-    blurLevelSubtle: string;
-    blurLevelLight: string;
-    blurLevelStrong: string;
     verseSizeSection: string;
     verseEffectSection: string;
     translationSection: string;
@@ -54,20 +40,6 @@ const HOME_SETTINGS: Record<
 > = {
   "zh-CN": {
     panelTitle: "",
-    dimSection: "压暗",
-    dimHint: "",
-    dimLevelNone: "关",
-    dimLevelFaint: "极淡",
-    dimLevelSubtle: "微微",
-    dimLevelLight: "轻",
-    dimLevelStrong: "深",
-    blurSection: "模糊",
-    blurHint: "",
-    blurLevelNone: "关",
-    blurLevelFaint: "微",
-    blurLevelSubtle: "极弱",
-    blurLevelLight: "弱",
-    blurLevelStrong: "中",
     verseSizeSection: "字号",
     verseEffectSection: "字效",
     translationSection: "译本",
@@ -100,20 +72,6 @@ const HOME_SETTINGS: Record<
   },
   "zh-TW": {
     panelTitle: "",
-    dimSection: "壓暗",
-    dimHint: "",
-    dimLevelNone: "關",
-    dimLevelFaint: "極淡",
-    dimLevelSubtle: "微微",
-    dimLevelLight: "輕",
-    dimLevelStrong: "深",
-    blurSection: "模糊",
-    blurHint: "",
-    blurLevelNone: "關",
-    blurLevelFaint: "微",
-    blurLevelSubtle: "極弱",
-    blurLevelLight: "弱",
-    blurLevelStrong: "中",
     verseSizeSection: "字號",
     verseEffectSection: "字效",
     translationSection: "譯本",
@@ -146,20 +104,6 @@ const HOME_SETTINGS: Record<
   },
   en: {
     panelTitle: "",
-    dimSection: "Dim",
-    dimHint: "",
-    dimLevelNone: "Off",
-    dimLevelFaint: "Faint",
-    dimLevelSubtle: "Subtle",
-    dimLevelLight: "Light",
-    dimLevelStrong: "Strong",
-    blurSection: "Blur",
-    blurHint: "",
-    blurLevelNone: "Off",
-    blurLevelFaint: "Minimal",
-    blurLevelSubtle: "Very low",
-    blurLevelLight: "Low",
-    blurLevelStrong: "Medium",
     verseSizeSection: "Size",
     verseEffectSection: "Style",
     translationSection: "Translation",
@@ -215,19 +159,3 @@ export function tNatureHomeSettings(key: NatureHomeSettingsCopyKey): string {
   if (!bundleMissed(path, hit)) return hit;
   return HOME_SETTINGS[locale][key] ?? HOME_SETTINGS["zh-CN"][key];
 }
-
-export const DIM_LEVEL_COPY_KEYS = [
-  "dimLevelNone",
-  "dimLevelFaint",
-  "dimLevelSubtle",
-  "dimLevelLight",
-  "dimLevelStrong",
-] as const satisfies readonly NatureHomeSettingsCopyKey[];
-
-export const BLUR_LEVEL_COPY_KEYS = [
-  "blurLevelNone",
-  "blurLevelFaint",
-  "blurLevelSubtle",
-  "blurLevelLight",
-  "blurLevelStrong",
-] as const satisfies readonly NatureHomeSettingsCopyKey[];

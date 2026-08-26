@@ -6,7 +6,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ShellTemplateChromeLayout } from "@/components/shell/ShellTemplateChromeLayout";
 import { ShellTemplateDesignReference } from "@/components/shell/ShellTemplateDesignReference";
 import { ShellTemplateChromeTuningPanel } from "@/components/shell/ShellTemplateChromeTuningPanel";
-import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import {
   readShellTemplateChromeTuneFromStorage,
   writeShellTemplateChromeTuneToStorage,
@@ -20,9 +19,8 @@ import {
 
 export function AdminShellChromeTuneClient() {
   const { t } = useLocale();
-  const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
+  const [previewThemeId, setPreviewThemeId] = useState<ShellTemplatePreviewThemeId>("parchmentShell");
   const previewRootRef = useRef<HTMLDivElement>(null);
-  const previewThemeId = (shellTemplateBrand ?? "parchmentShell") as ShellTemplatePreviewThemeId;
 
   const [chromeTune, setChromeTune] = useState<ShellTemplateChromeTune>(() =>
     readShellTemplateChromeTuneFromStorage(),
@@ -77,7 +75,7 @@ export function AdminShellChromeTuneClient() {
                 <ShellTemplateDesignReference
                   sampleRootRef={previewRootRef}
                   previewThemeId={previewThemeId}
-                  onPreviewThemeId={setShellTemplateBrand}
+                  onPreviewThemeId={setPreviewThemeId}
                 />
               </ShellTemplateChromeLayout>
             </div>

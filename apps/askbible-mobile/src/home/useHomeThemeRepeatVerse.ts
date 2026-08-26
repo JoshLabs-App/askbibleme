@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { InteractionManager } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { fetchBibleTranslationsCatalog, translationMetaFromCatalog } from "../api/fetchBibleTranslationsCatalog";
+import { ensureScriptureTranslationReadyWithFallback } from "../bible/scripture-translation-download";
 import {
-  ensureScriptureTranslationReady,
-  ensureScriptureTranslationReadyWithFallback,
-} from "../bible/scripture-translation-download";
+  readReadBibleTranslationPrefs,
+  subscribeReadBibleTranslation,
+} from "../read/read-bible-translation-prefs";
 import type { HomeVersePoolScopeId } from "./homeVersePoolScopePrefs";
 import {
   DEFAULT_HOME_VERSE_ROTATION_SEC,
@@ -13,16 +14,12 @@ import {
   hydrateHomeVerseRotationSec,
   subscribeHomeVerseRotationSec,
 } from "./homeVerseRotationPrefs";
-import {
-  readHomePrayerVersePrefs,
-  subscribeHomePrayerVersePrefs,
-  flowLocaleForHomeVerseTranslationId,
-  verseTranslationIdsFromPrefs,
-} from "./homePrayerVersePrefs";
+import { flowLocaleForHomeVerseTranslationId } from "./homePrayerVersePrefs";
 import { loadHomeVerseManifest, resolveHomeVersePair } from "./verse-pool/loader";
 import { readHomeVerseMemory, writeHomeVerseMemory } from "./verse-pool/memory-prefs";
 import { advanceMemoryAfterShown, pickNextVerseKey } from "./verse-pool/pick-next";
 import type { HomePrayerManifestV1, HomeVerseEntry, PrayerMemoryRowV1 } from "./verse-pool/types";
+import { ANDROID_GOLDEN_VERSE_PREFETCH_COUNT } from "./goldenVerseAudioRemote";
 
 const FALLBACK_ZH: HomeVerseEntry = {
   lines: ["你们要将一切的忧虑卸给神，因为他顾念你们。"],
@@ -97,7 +94,7 @@ async function pickShow(
 }
 
 /**
- * 首页经文：explore-curated-700（700 句默认池），按探索子库优先级轮播（与网站壳层同源逻辑）。
+ * 首页经文：默认全量 theme-repeat-ge5；菜单筛选项是同一池过滤。
  */
 export function useHomeThemeRepeatVerse(
   locale: AppLocale,
@@ -105,6 +102,7 @@ export function useHomeThemeRepeatVerse(
   prefsVersion = 0,
   pauseRotation = false,
   poolScopeId?: HomeVersePoolScopeId,
+  forceVerseKey?: string | null,
 ) {
   const rotationSec = useSyncExternalStore(
     subscribeHomeVerseRotationSec,
@@ -122,15 +120,20 @@ export function useHomeThemeRepeatVerse(
   const verseKeyRef = useRef<string | null>(null);
   const prefsReloadSkipInitialRef = useRef(true);
   const advanceInFlightRef = useRef(false);
+  /**
+   * 金句后台预取：按序锁定下一句 / 再下一句 key。
+   * 必须与原生 next/nextNext URI 队列同序，否则会先播残留 URI 再被 JS 纠到新 pin。
+   */
+  const pinnedNextVerseKeysRef = useRef<string[]>([]);
   const [translationIds, setTranslationIds] = useState({
     primary: "cuv-simp",
     contrast: "",
   });
-  const [homePrefsVersion, setHomePrefsVersion] = useState(0);
+  const [readTranslationPrefsVersion, setReadTranslationPrefsVersion] = useState(0);
 
   useEffect(() => {
-    return subscribeHomePrayerVersePrefs(() => {
-      setHomePrefsVersion((v) => v + 1);
+    return subscribeReadBibleTranslation(() => {
+      setReadTranslationPrefsVersion((v) => v + 1);
     });
   }, []);
 
@@ -139,28 +142,17 @@ export function useHomeThemeRepeatVerse(
   }, []);
 
   const refreshTranslations = useCallback(async () => {
-    const prefs = await readHomePrayerVersePrefs();
-    const ids = verseTranslationIdsFromPrefs(prefs, locale);
     const catalog = await fetchBibleTranslationsCatalog().catch(() => null);
-    const primaryMeta = catalog
-      ? translationMetaFromCatalog(catalog, ids.primary)
-      : null;
+    const index = catalog ?? { translations: [], defaultTranslationId: null };
+    const prefs = await readReadBibleTranslationPrefs(index, locale);
+    const primaryId = prefs.primaryTranslationId.trim() || "cuv-simp";
+    const primaryMeta = catalog ? translationMetaFromCatalog(catalog, primaryId) : null;
     const primary = await ensureScriptureTranslationReadyWithFallback(
-      ids.primary,
+      primaryId,
       primaryMeta?.downloadUrl,
     );
-    let contrast = "";
-    if (ids.contrast.trim()) {
-      const contrastMeta = catalog
-        ? translationMetaFromCatalog(catalog, ids.contrast)
-        : null;
-      try {
-        await ensureScriptureTranslationReady(ids.contrast, contrastMeta?.downloadUrl);
-        contrast = ids.contrast;
-      } catch {
-        contrast = "";
-      }
-    }
+    // 首页只显示主译本，跟随读经设置；不展示对照。
+    const contrast = "";
     translationRef.current = { primary, contrast };
     setTranslationIds((prev) =>
       prev.primary === primary && prev.contrast === contrast ? prev : { primary, contrast },
@@ -171,12 +163,104 @@ export function useHomeThemeRepeatVerse(
     verseKeyRef.current = verseKey;
   }, [verseKey]);
 
+  const pinNextVerseKey = useCallback((key: string | null) => {
+    const trimmed = (key ?? "").trim().toUpperCase();
+    if (!trimmed) {
+      pinnedNextVerseKeysRef.current = [];
+      return;
+    }
+    const rest = pinnedNextVerseKeysRef.current.filter((k) => k !== trimmed);
+    pinnedNextVerseKeysRef.current = [trimmed, ...rest].slice(0, ANDROID_GOLDEN_VERSE_PREFETCH_COUNT);
+  }, []);
+
+  const pickUnpinnedVerseKey = useCallback((excluded: Set<string>): string | null => {
+    const manifest = manifestRef.current;
+    if (!manifest?.entries.length) return null;
+    for (let i = 0; i < 8; i += 1) {
+      const candidateManifest = {
+        ...manifest,
+        entries: manifest.entries.filter(
+          (e) => !excluded.has((e.verseKey ?? "").trim().toUpperCase()),
+        ),
+      };
+      if (!candidateManifest.entries.length) break;
+      const key = pickNextVerseKey(candidateManifest, memoryRef.current, Date.now(), Math.random);
+      if (!key || excluded.has(key.toUpperCase())) continue;
+      return key;
+    }
+    return null;
+  }, []);
+
+  const peekNextVerseKey = useCallback((): string | null => {
+    const pinned = (pinnedNextVerseKeysRef.current[0] ?? "").trim();
+    if (pinned) return pinned;
+    const excluded = new Set(
+      [(verseKeyRef.current ?? "").trim()].filter(Boolean).map((k) => k.toUpperCase()),
+    );
+    const key = pickUnpinnedVerseKey(excluded);
+    if (!key) return null;
+    pinnedNextVerseKeysRef.current = [key];
+    return key;
+  }, [pickUnpinnedVerseKey]);
+
+  /** 预取 N 句并按序 pin；已有更长队列时不截短。 */
+  const peekNextVerseKeys = useCallback(
+    (count: number): string[] => {
+      const n = Math.max(0, Math.min(ANDROID_GOLDEN_VERSE_PREFETCH_COUNT, Math.floor(count)));
+      const excluded = new Set(
+        [(verseKeyRef.current ?? "").trim()].filter(Boolean).map((k) => k.toUpperCase()),
+      );
+      const keys: string[] = [];
+      for (const pinned of pinnedNextVerseKeysRef.current) {
+        const key = pinned.trim();
+        if (!key) continue;
+        const id = key.toUpperCase();
+        if (excluded.has(id)) continue;
+        keys.push(key);
+        excluded.add(id);
+      }
+      while (keys.length < n) {
+        const next = pickUnpinnedVerseKey(excluded);
+        if (!next) break;
+        keys.push(next);
+        excluded.add(next.toUpperCase());
+      }
+      pinnedNextVerseKeysRef.current = keys;
+      return keys.slice(0, n);
+    },
+    [pickUnpinnedVerseKey],
+  );
+
+  /** 预取两句：两句都按序 pin，与原生 next/nextNext 对齐。 */
+  const peekNextTwoVerseKeys = useCallback(() => {
+    const keys = peekNextVerseKeys(Math.max(2, pinnedNextVerseKeysRef.current.length));
+    return [keys[0] ?? null, keys[1] ?? null] as [string | null, string | null];
+  }, [peekNextVerseKeys]);
+
   const advance = useCallback(async () => {
     if (advanceInFlightRef.current) return;
     const manifest = manifestRef.current;
     if (!manifest?.entries.length) return;
     advanceInFlightRef.current = true;
     try {
+      const pinned = (pinnedNextVerseKeysRef.current.shift() ?? "").trim();
+      if (pinned) {
+        const pair = await resolveHomeVersePair(
+          manifest,
+          pinned,
+          locale,
+          translationRef.current.primary,
+          translationRef.current.contrast,
+        );
+        if (pair) {
+          advanceMemoryAfterShown(memoryRef.current, pinned, Date.now());
+          await writeHomeVerseMemory(memoryRef.current);
+          setEntry(pair.primary);
+          setContrastEntry(pair.contrast);
+          setVerseKey(pinned);
+          return;
+        }
+      }
       const next = await pickShow(
         manifest,
         memoryRef.current,
@@ -298,7 +382,7 @@ export function useHomeThemeRepeatVerse(
       cancelled = true;
       task.cancel();
     };
-  }, [prefsVersion, homePrefsVersion, ready, refreshTranslations, reloadCurrentVerse]);
+  }, [prefsVersion, readTranslationPrefsVersion, ready, refreshTranslations, reloadCurrentVerse]);
 
   useEffect(() => {
     if (!ready || !manifestRef.current?.entries.length || pauseRotation) return;
@@ -307,6 +391,35 @@ export function useHomeThemeRepeatVerse(
     }, rotateMs);
     return () => clearInterval(id);
   }, [ready, advance, rotateMs, pauseRotation]);
+
+  useEffect(() => {
+    const key = (forceVerseKey || "").trim().toUpperCase();
+    if (!ready || !key) return;
+    const manifest = manifestRef.current;
+    if (!manifest) return;
+    let cancelled = false;
+    void (async () => {
+      const pair = await resolveHomeVersePair(
+        manifest,
+        key,
+        locale,
+        translationRef.current.primary,
+        translationRef.current.contrast,
+      );
+      if (cancelled) return;
+      if (pair) {
+        setEntry(pair.primary);
+        setContrastEntry(pair.contrast);
+        setVerseKey(key);
+        return;
+      }
+      // 池外经文：仍锁定 key，正文由音频侧负责；显示回落为当前译本直查。
+      setVerseKey(key);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [forceVerseKey, locale, ready]);
 
   return {
     ready,
@@ -317,5 +430,9 @@ export function useHomeThemeRepeatVerse(
     contrastTranslationId: translationIds.contrast,
     poolSize: manifestRef.current?.entries.length ?? 0,
     advanceNow: advance,
+    peekNextVerseKey,
+    peekNextTwoVerseKeys,
+    peekNextVerseKeys,
+    pinNextVerseKey,
   };
 }

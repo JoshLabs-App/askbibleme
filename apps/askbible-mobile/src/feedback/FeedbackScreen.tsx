@@ -1,4 +1,3 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -14,11 +13,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
-import { isMobileOfflineFirst } from "../config/mobileBundledOnly";
 import { useLocale } from "../i18n/LocaleProvider";
 import { parchmentSans } from "../fonts/parchmentType";
 import { theme } from "../theme";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import { submitFeedbackToSupabase } from "./submitFeedback";
 
 type FeedbackType = "idea" | "bug" | "content" | "other";
 
@@ -41,8 +40,6 @@ export function FeedbackScreen() {
   const [email, setEmail] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
 
-  const baseUrl = getAskBibleBaseUrl();
-  const submitUrl = toAbsoluteUrl(baseUrl, "/api/feedback");
   const remain = Math.max(0, MAX_MESSAGE_CHARS - message.length);
 
   const typeOptions = useMemo(
@@ -63,30 +60,26 @@ export function FeedbackScreen() {
       return;
     }
 
-    if (isMobileOfflineFirst()) {
-      setSubmitState({ kind: "error", message: t("feedback.errorNetwork") });
-      return;
-    }
-
     setSubmitState({ kind: "submitting" });
     try {
-      const res = await fetch(submitUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: feedbackType,
-          message: message.trim(),
-          email: email.trim() || undefined,
-          page: "/mobile/feedback",
-          locale,
-        }),
+      const result = await submitFeedbackToSupabase({
+        type: feedbackType,
+        message: message.trim(),
+        email: email.trim() || undefined,
+        page: "/mobile/feedback",
+        locale,
       });
-      const data = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
-      if (!res.ok || !data.id) {
-        setSubmitState({ kind: "error", message: data.error || t("feedback.errorSubmit") });
+      if (!result.ok) {
+        setSubmitState({
+          kind: "error",
+          message:
+            result.error === "network" || result.error === "supabase_not_configured"
+              ? t("feedback.errorNetwork")
+              : t("feedback.errorSubmit"),
+        });
         return;
       }
-      setSubmitState({ kind: "success", id: data.id });
+      setSubmitState({ kind: "success", id: result.id });
       setMessage("");
       setFeedbackType("idea");
     } catch {
@@ -105,14 +98,10 @@ export function FeedbackScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {router.canGoBack() ? (
-            <Pressable
+            <ShellSystemBackButton
               onPress={() => router.back()}
-              style={({ pressed }) => [styles.back, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel={t("chrome.backHome")}
-            >
-              <MaterialIcons name="arrow-back" size={22} color={theme.sand} />
-            </Pressable>
+              tintColor={theme.sand}
+            />
           ) : null}
 
           <Text style={styles.title}>{t("feedback.title")}</Text>

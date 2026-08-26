@@ -1,5 +1,8 @@
 import type { Audio, AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
+import { safePauseSound } from "../audio/safeShellSound";
+import { getShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
+import { isShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { refreshShellMediaSession } from "../audio/shellMediaSessionPayload";
 import {
   MUSIC_PROGRESS_UI_INTERVAL_SEC,
@@ -32,6 +35,7 @@ export type MusicPlaybackStatusHandlerArgs = {
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   musicGainRef: MutableRefObject<number>;
   trackIndexRef: MutableRefObject<number>;
+  playingStateRef: MutableRefObject<boolean>;
   playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
   syncPlayingState: (playing: boolean) => void;
   setPlaying: (playing: boolean) => void;
@@ -60,6 +64,7 @@ export function createMusicPlaybackStatusHandler(
     musicRepeatModeRef,
     musicGainRef,
     trackIndexRef,
+    playingStateRef,
     playTrackAtRef,
     syncPlayingState,
     setPlaying,
@@ -74,7 +79,19 @@ export function createMusicPlaybackStatusHandler(
     if (status.positionMillis > musicMaxProgressMsRef.current) {
       musicMaxProgressMsRef.current = status.positionMillis;
     }
-    syncPlayingState(status.isPlaying);
+    // 用户意图以 shellMusicWantPlaying 为准（与 UI playing / 系统 isPlaying 解耦）。
+    const wantPlaying = getShellMusicWantPlaying() || playingStateRef.current;
+    const uiPlaying = wantPlaying ? status.isPlaying : false;
+    if (!wantPlaying) {
+      if (status.isPlaying && soundRef.current) {
+        void safePauseSound(soundRef.current);
+      }
+      syncPlayingState(false);
+    } else if (status.isPlaying) {
+      syncPlayingState(true);
+    }
+    // wantPlaying && !isPlaying：系统锁屏/打断暂停 — 保持用户意图，留给 music interruption recovery 续播。
+    // 切勿 syncPlayingState(false)，否则几分钟后 JS 挂起再无续播。
     if (playbackModeRef.current === "music") {
       const musicSec = status.positionMillis / 1000;
       const durationSec = musicDurationSecWithCalmTrim(
@@ -83,7 +100,7 @@ export function createMusicPlaybackStatusHandler(
         musicRepeatModeRef.current,
       );
       const shouldRefreshSession =
-        !status.isPlaying ||
+        !uiPlaying ||
         shouldEmitPlaybackSecUpdate(
           lastMusicProgressSecRef,
           musicSec,
@@ -91,7 +108,8 @@ export function createMusicPlaybackStatusHandler(
         );
       if (shouldRefreshSession) {
         refreshShellMediaSession({
-          playing: status.isPlaying,
+          // 短暂系统暂停时仍报 playing，避免锁屏控件把会话掐死。
+          playing: wantPlaying,
           musicCurrentSec: musicSec,
           musicDurationSec: durationSec,
         });
@@ -114,12 +132,17 @@ export function createMusicPlaybackStatusHandler(
         return;
       }
       const now = Date.now();
-      if (now - lastMusicPersistMsRef.current > 1800 || !status.isPlaying) {
+      if (now - lastMusicPersistMsRef.current > 1800 || !uiPlaying) {
         lastMusicPersistMsRef.current = now;
         void persistMusicResume(track.id, status.positionMillis / 1000);
       }
     }
-    if (status.didJustFinish && playbackModeRef.current === "music") {
+    // iOS 原生引擎在播时，expo-av 已被 pause；偶发 didJustFinish 勿清 wantPlaying / 勿切下一曲。
+    if (
+      status.didJustFinish &&
+      playbackModeRef.current === "music" &&
+      !isShellNativeAudioTakeover()
+    ) {
       handleMusicTrackDidJustFinish({
         status,
         track,

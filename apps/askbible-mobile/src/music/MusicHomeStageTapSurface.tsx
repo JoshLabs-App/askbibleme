@@ -1,29 +1,44 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { musicCopy } from "./musicCopy";
-import { useMusicPlayback } from "./MusicPlaybackContext";
 
 type Props = {
   compactLandscape: boolean;
+  playing: boolean;
+  canTogglePlayback: boolean;
+  hasTracks: boolean;
+  onTogglePlay: () => void;
   children: ReactNode;
 };
 
 /** 音乐页视觉大区域：点一下暂停，再点一下播放（不含下方曲目列表）。 */
-export function MusicHomeStageTapSurface({ compactLandscape, children }: Props) {
-  const { playing, togglePlayMusic, canTogglePlayback, tracks } = useMusicPlayback();
-
-  if (tracks.length === 0) return children;
+export function MusicHomeStageTapSurface({
+  compactLandscape,
+  playing,
+  canTogglePlayback,
+  hasTracks,
+  onTogglePlay,
+  children,
+}: Props) {
+  if (!hasTracks) {
+    return <View style={[styles.surface, compactLandscape && styles.surfaceLandscape]}>{children}</View>;
+  }
 
   return (
-    <Pressable
+    <View
       style={[styles.surface, compactLandscape && styles.surfaceLandscape]}
-      onPress={() => void togglePlayMusic()}
-      disabled={!canTogglePlayback}
-      accessibilityRole="button"
-      accessibilityLabel={playing ? musicCopy.pause : musicCopy.play}
+      pointerEvents="box-none"
     >
-      {children}
-    </Pressable>
+      <Pressable
+        style={styles.tapHit}
+        onPress={onTogglePlay}
+        disabled={!canTogglePlayback}
+        accessibilityRole="button"
+        accessibilityLabel={playing ? musicCopy.pause : musicCopy.play}
+      >
+        {children}
+      </Pressable>
+    </View>
   );
 }
 
@@ -32,10 +47,16 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     minHeight: 80,
+    overflow: "visible",
   },
   surfaceLandscape: {
     ...StyleSheet.absoluteFillObject,
     right: "42%",
     zIndex: 2,
+  },
+  tapHit: {
+    flex: 1,
+    width: "100%",
+    overflow: "visible",
   },
 });

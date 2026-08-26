@@ -1,75 +1,39 @@
 import { useRouter } from "expo-router";
-import { Alert, Linking, ScrollView, Text, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 import { resolveUiText } from "../i18n/site-copy";
-import { requestOpenOnboardingDevotionIntro } from "../onboarding/onboarding-devotion-gate";
-import { resetOnboardingDevotionIntro } from "../onboarding/onboarding-devotion-prefs";
-import { ResourceUpdateSheet } from "../updates/ResourceUpdateSheet";
 import type { AppLocale } from "../i18n/config";
-import type { HomeVersePoolScopeId } from "../home/homeVersePoolScopePrefs";
-import { ShellNavDrawerHomeVersePoolSection } from "./ShellNavDrawerHomeVersePoolSection";
 import { ShellNavDrawerLocaleRow } from "./ShellNavDrawerLocaleRow";
+import { ShellNavDrawerHomeTranslationSection } from "./ShellNavDrawerHomeTranslationSection";
 import { ShellNavDrawerMenuRow } from "./ShellNavDrawerMenuRow";
-import { ShellNavDrawerNotificationsSection } from "./ShellNavDrawerNotificationsSection";
 import { ShellNavDrawerReadingSyncSection } from "./ShellNavDrawerReadingSyncSection";
-import { ShellNavDrawerTtsExperimentSection } from "./ShellNavDrawerTtsExperimentSection";
 import { SUPPORT_EMAIL } from "./shellNavDrawerConstants";
 import { shellNavDrawerStyles as styles } from "./shellNavDrawerStyles";
-import type { useShellNavDrawerResourceUpdates } from "./useShellNavDrawerResourceUpdates";
-import type { useShellNavDrawerTtsState } from "./useShellNavDrawerTtsState";
-
-type ResourceUpdates = ReturnType<typeof useShellNavDrawerResourceUpdates>;
-type TtsState = ReturnType<typeof useShellNavDrawerTtsState>;
-
 type Props = {
   locale: AppLocale;
-  t: (key: string) => string;
   closeMenu: () => void;
   memberAuthEnabled: boolean;
   user: { name?: string | null; email?: string | null } | null;
-  signOut: () => Promise<void>;
+  signOut: () => void;
   confirmDeleteAccount: () => void;
-  homeVersePoolScope: HomeVersePoolScopeId;
-  homeTtsExperimentEnabled: boolean;
-  tts: TtsState;
-  resource: ResourceUpdates;
-  downloadMusicCatalogUpdate: () => Promise<boolean>;
   handleLocaleChange: (next: AppLocale) => void;
   localeSwitching: boolean;
-  showAnnouncementPrompt: () => void;
+  open: boolean;
+  onOpenBibleVersionPicker: () => void;
 };
 
 export function ShellNavDrawerScrollBody({
   locale,
-  t,
   closeMenu,
   memberAuthEnabled,
   user,
   signOut,
   confirmDeleteAccount,
-  homeVersePoolScope,
-  homeTtsExperimentEnabled,
-  tts,
-  resource,
-  downloadMusicCatalogUpdate,
   handleLocaleChange,
   localeSwitching,
-  showAnnouncementPrompt,
+  open,
+  onOpenBibleVersionPicker,
 }: Props) {
   const router = useRouter();
-  const {
-    resourceUpdateChecking,
-    resourceUpdateAvailable,
-    resourceUpdateItems,
-    resourceUpdateSheetOpen,
-    setResourceUpdateSheetOpen,
-    resourceUpdateProgress,
-    resourceAnnouncement,
-    resourceAnnouncementActive,
-    resourceUpdateApplying,
-    resourceNeedsAttention,
-    resourceUpdateDetail,
-    checkResourceUpdates,
-  } = resource;
 
   return (
     <ScrollView
@@ -80,103 +44,36 @@ export function ShellNavDrawerScrollBody({
     >
       <ShellNavDrawerLocaleRow locale={locale} onLocaleChange={handleLocaleChange} switching={localeSwitching} />
       <View style={styles.compactGap} />
-      <ShellNavDrawerHomeVersePoolSection locale={locale} selectedScope={homeVersePoolScope} />
-      <View style={styles.compactGap} />
-      <ShellNavDrawerNotificationsSection locale={locale} />
-      <View style={styles.compactGap} />
-      <ShellNavDrawerTtsExperimentSection
-        locale={locale}
-        homeTtsExperimentEnabled={homeTtsExperimentEnabled}
-        rateLabel={tts.rateLabel}
-        pitchLabel={tts.pitchLabel}
-        rateLabels={tts.rateLabels}
-        pitchLabels={tts.pitchLabels}
-        ttsRateLevel={tts.ttsRateLevel}
-        ttsPitchLevel={tts.ttsPitchLevel}
-        ttsVoiceId={tts.ttsVoiceId}
-        voiceOptions={tts.voiceOptions}
-        persistTtsPrefs={tts.persistTtsPrefs}
-      />
-      <View style={styles.compactGap} />
-      <ShellNavDrawerMenuRow
-        label={resolveUiText(locale, "资源更新", "Resource updates")}
-        detail={resourceUpdateDetail}
-        selected={resourceNeedsAttention}
-        onPress={async () => {
-          if (resourceUpdateChecking || resourceUpdateApplying) return;
-          const hasUpdate = resourceUpdateAvailable
-            ? resourceUpdateItems.length > 0
-            : await checkResourceUpdates();
-          if (!hasUpdate) {
-            if (resourceAnnouncement && resourceAnnouncementActive) {
-              showAnnouncementPrompt();
-              return;
-            }
-            Alert.alert(
-              resolveUiText(locale, "已是最新", "Up to date"),
-              resolveUiText(locale, "当前本地资源已是最新。", "Your local resources are already up to date."),
-            );
-            return;
-          }
-          setResourceUpdateSheetOpen(true);
-        }}
-      />
-      <ResourceUpdateSheet
-        visible={resourceUpdateSheetOpen}
-        locale={locale}
-        items={resourceUpdateItems}
-        downloadMusicUpdate={downloadMusicCatalogUpdate}
-        onClose={() => {
-          if (resourceUpdateProgress.phase === "downloading") return;
-          setResourceUpdateSheetOpen(false);
-          void checkResourceUpdates();
-        }}
-        onComplete={(failedCount) => {
-          void checkResourceUpdates().then(() => {
-            if (failedCount > 0) return;
-            setResourceUpdateSheetOpen(false);
-          });
-        }}
-      />
-      <View style={styles.compactGap} />
-      <ShellNavDrawerMenuRow
-        label={resolveUiText(locale, "欢迎页", "Welcome page")}
-        onPress={async () => {
-          closeMenu();
-          await resetOnboardingDevotionIntro();
-          requestOpenOnboardingDevotionIntro();
-        }}
-      />
-      <View style={styles.compactGap} />
+      {open ? (
+        <ShellNavDrawerHomeTranslationSection
+          locale={locale}
+          onOpenBibleVersionPicker={onOpenBibleVersionPicker}
+        />
+      ) : null}
+      {open ? <View style={styles.compactGap} /> : null}
       {memberAuthEnabled ? (
         <>
           {user ? (
             <>
               <ShellNavDrawerMenuRow
-                label={t("auth.drawerSignedIn")}
+                label={resolveUiText(locale, "已登录", "Signed in")}
                 detail={user.name ?? user.email ?? undefined}
                 onPress={() => closeMenu()}
               />
               <View style={styles.compactGap} />
               <ShellNavDrawerMenuRow
-                label={t("auth.drawerLogout")}
+                label={resolveUiText(locale, "退出登录", "Log out")}
                 onPress={() => {
                   closeMenu();
                   void signOut();
                 }}
               />
               <View style={styles.compactGap} />
-              <ShellNavDrawerMenuRow
-                label={t("auth.deleteAccount")}
-                destructive
-                onPress={confirmDeleteAccount}
-              />
-              <View style={styles.compactGap} />
             </>
           ) : (
             <>
               <ShellNavDrawerMenuRow
-                label={t("auth.drawerLogin")}
+                label={resolveUiText(locale, "登录", "Log in")}
                 onPress={() => {
                   closeMenu();
                   router.push("/login");
@@ -184,7 +81,7 @@ export function ShellNavDrawerScrollBody({
               />
               <View style={styles.compactGap} />
               <ShellNavDrawerMenuRow
-                label={t("auth.drawerRegister")}
+                label={resolveUiText(locale, "注册", "Register")}
                 onPress={() => {
                   closeMenu();
                   router.push("/register");
@@ -196,7 +93,7 @@ export function ShellNavDrawerScrollBody({
         </>
       ) : null}
       <ShellNavDrawerMenuRow
-        label={t("feedback.menuAction")}
+        label={resolveUiText(locale, "发送反馈", "Send feedback")}
         detail={SUPPORT_EMAIL}
         onPress={async () => {
           closeMenu();
@@ -210,6 +107,13 @@ export function ShellNavDrawerScrollBody({
         }}
       />
       {user ? <ShellNavDrawerReadingSyncSection locale={locale} /> : null}
+      {memberAuthEnabled && user ? (
+        <ShellNavDrawerMenuRow
+          label={resolveUiText(locale, "删除账户", "Delete account")}
+          quiet
+          onPress={confirmDeleteAccount}
+        />
+      ) : null}
     </ScrollView>
   );
 }

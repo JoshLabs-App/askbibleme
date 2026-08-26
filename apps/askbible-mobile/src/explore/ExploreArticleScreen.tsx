@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { Pressable, Text, View } from "react-native";
+import { View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { localizeZhText, t } from "../i18n/site-copy";
@@ -10,15 +11,11 @@ import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { ReadChapterInfoEditionMarkdown } from "../read/ReadChapterInfoEditionMarkdown";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { resolveRouteParam } from "../navigation/resolveRouteParam";
 import { useExploreFeaturedArticle, refreshExploreFeaturedArticlesWhenFocused } from "./useExploreFeaturedArticles";
 import { ContentCorrectionEntry } from "../content-correction/ContentCorrectionEntry";
-import {
-  EXPLORE_PAGE_TOP_PAD,
-  exploreStyles as s,
-  useExploreScrollContentStyle,
-  ExploreParchmentPage,
-} from "./exploreParchmentStyles";
+import {EXPLORE_PAGE_TOP_PAD, exploreStyles as s, useExploreScrollContentStyle, ExploreParchmentPage} from "./exploreParchmentStyles";
 import { normalizeAskbibleAppHref, parseReadPath } from "../../../../lib/bible/parse-askbible-read-link";
 import {
   pushExploreReadChapter,
@@ -71,9 +68,7 @@ export function ExploreArticleScreen() {
     return (
       <ExploreParchmentPage>
         <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
-          <Pressable onPress={() => returnToExploreIndex(router)} style={s.backLink} accessibilityRole="button">
-            <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
-          </Pressable>
+          <ShellSystemBackButton onPress={() => returnToExploreIndex(router)} />
           <Text style={[s.lead, { marginTop: 24, textAlign: "left" }]}>
             {locale === "en" ? "Article not found." : localizeZhText(locale, "找不到这篇文章。")}
           </Text>
@@ -85,9 +80,7 @@ export function ExploreArticleScreen() {
   return (
     <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
-        <Pressable onPress={() => returnToExploreIndex(router)} style={s.backLink} accessibilityRole="button">
-          <Text style={s.backLinkText}>{t("pages.explore.articlesBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => returnToExploreIndex(router)} />
 
         <View style={s.articleHeader}>
           <Text style={s.articleTitle} maxFontSizeMultiplier={1.15}>

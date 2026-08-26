@@ -6,27 +6,16 @@ import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-para
 import { normalizeScriptureSearchQuery } from "@/lib/bible/scripture-search";
 import { useCuvChapterAudioVoice } from "@/components/bible/CuvChapterAudioVoiceContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
-import { teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
-import {
-  fetchChapterVerseTimings,
-  type CuvChapterVerseTiming,
-  verseIndexForVerseNumber,
-  verseNumberAtChapterAudioTime,
-} from "@/lib/bible/cuv-chapter-verse-timings";
-import { getCuvChapterAudioContentBounds } from "@/lib/bible/cuv-chapter-audio-content-bounds";
 import type { LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
 import { resolveVerseSpeechParts } from "@/lib/bible/resolve-verse-speech-parts";
 import {
   resolveChapterAudioPlayableSrc,
   translationSupportsChapterAudio,
 } from "@/lib/bible/read-chapter-audio";
-import {
-  verseIndexForReadChapterAudioTime,
-  verseWeightsForReadChapterAudio,
-} from "@/lib/bible/read-chapter-audio-verse-from-progress";
 import { shellPlaybackUrlsEqual } from "@/lib/music-companion/shell-playback-storage";
 import { tryParseCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { scrollReadChapterVerseIntoView } from "@/lib/read/scroll-read-chapter-verse-into-view";
+import { fetchStaticChapterSegments } from "@/lib/read/static-chapter-segments-client";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ReadVerseBookmarkFeedback } from "@/components/bible/ReadVerseBookmarkFeedback";
 import { useScriptureVerseBookmarks } from "@/components/bible/useScriptureVerseBookmarks";
@@ -184,13 +173,10 @@ export function ReadChapterVersesClient({
   const initialFocusVerse = initialFocusVerseProp ?? focusVerseFromUrl;
   const [bookmarkFeedback, setBookmarkFeedback] = useState<string | null>(null);
   const { effectiveVoiceId } = useCuvChapterAudioVoice();
-  const { effectiveSrc, currentSec, durationSec, playing } = useMusicShellPlayback();
+  const { effectiveSrc, playing } = useMusicShellPlayback();
   const playVoice = effectiveVoiceId(bookId);
   const [resolvedChapterSrc, setResolvedChapterSrc] = useState<string | null>(null);
-  const [verseTimings, setVerseTimings] = useState<CuvChapterVerseTiming[] | null>(null);
-  const [verseTimingsReady, setVerseTimingsReady] = useState<"idle" | "pending" | "yes" | "no">("idle");
   const verseElRefs = useRef<(HTMLElement | null)[]>([]);
-  const lastFollowIndexRef = useRef<number | null>(null);
   const searchFocusScrolledRef = useRef(false);
   const [searchFocusVerse, setSearchFocusVerse] = useState<number | null>(initialFocusVerse);
   const anchorKeyRef = useRef("");
@@ -199,10 +185,7 @@ export function ReadChapterVersesClient({
   if (anchorKeyRef.current !== anchorKey) {
     anchorKeyRef.current = anchorKey;
     verseElRefs.current = [];
-    lastFollowIndexRef.current = null;
     searchFocusScrolledRef.current = false;
-    setVerseTimings(null);
-    setVerseTimingsReady("idle");
     setSearchFocusVerse(initialFocusVerse);
     setHighlightModeActive(false);
     setHighlightDraftMap(null);
@@ -259,14 +242,10 @@ export function ReadChapterVersesClient({
       return;
     }
     let cancelled = false;
-    void fetch(
-      `/api/read/chapter-segments?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&mode=${mode}`,
-      { cache: "no-store" },
-    )
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { segments?: ChapterSegment[] } | null) => {
+    void fetchStaticChapterSegments(bookId, chapter, mode)
+      .then((next) => {
         if (cancelled) return;
-        setResolvedSegments(Array.isArray(data?.segments) ? data.segments : segments ?? null);
+        setResolvedSegments(next ?? segments ?? null);
       })
       .catch(() => {
         if (!cancelled) setResolvedSegments(segments ?? null);
@@ -299,38 +278,6 @@ export function ReadChapterVersesClient({
       cancelled = true;
     };
   }, [supported, chapterAudioTranslationId, bookName, bookId, chapter, playVoice]);
-
-  const useVerseTimingsFile = supported;
-
-  useEffect(() => {
-    if (!useVerseTimingsFile) {
-      setVerseTimings(null);
-      setVerseTimingsReady("idle");
-      return;
-    }
-    let cancelled = false;
-    setVerseTimingsReady("pending");
-    setVerseTimings(null);
-    void (async () => {
-      const timings = await fetchChapterVerseTimings(
-        chapterAudioTranslationId,
-        playVoice,
-        bookId,
-        chapter,
-      );
-      if (cancelled) return;
-      if (timings?.length) {
-        setVerseTimings(timings);
-        setVerseTimingsReady("yes");
-      } else {
-        setVerseTimings(null);
-        setVerseTimingsReady("no");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [useVerseTimingsFile, chapterAudioTranslationId, playVoice, bookId, chapter]);
 
   const contrastByVerse = useMemo(() => {
     const rows =
@@ -408,14 +355,6 @@ export function ReadChapterVersesClient({
     return groups;
   }, [useParagraphFlowLayout, verses, segmentMeta.headingByVerse, segmentMeta.paragraphStarts]);
 
-  const weights = useMemo(() => verseWeightsForReadChapterAudio(verses), [verses]);
-
-  const contentBounds = useMemo(() => {
-    if (!supported || teochewNtVoiceActive(playVoice) || verseTimingsReady === "yes") return undefined;
-    const { leadInSec, trailOutSec } = getCuvChapterAudioContentBounds(bookId, chapter);
-    return { contentStartSec: leadInSec, contentEndTrimSec: trailOutSec };
-  }, [supported, bookId, chapter, playVoice, verseTimingsReady]);
-
   const audioMatchesThisChapter = (() => {
     if (!supported || !playing || !effectiveSrc.trim()) return false;
     const parsed = tryParseCuvChapterAudioEffectiveSrc(effectiveSrc.trim());
@@ -425,31 +364,13 @@ export function ReadChapterVersesClient({
     return Boolean(resolvedChapterSrc) && shellPlaybackUrlsEqual(resolvedChapterSrc!, effectiveSrc.trim());
   })();
 
-  const verseFollowEnabled = supported;
-
-  const activeIndex = (() => {
-    if (!verseFollowEnabled || !audioMatchesThisChapter) return null;
-    if (verseTimingsReady === "yes" && verseTimings?.length) {
-      const verseNum = verseNumberAtChapterAudioTime(currentSec, verseTimings);
-      if (verseNum === null) return null;
-      return verseIndexForVerseNumber(verses, verseNum);
-    }
-    if (verseTimingsReady === "pending") return null;
-    return verseIndexForReadChapterAudioTime(currentSec, durationSec, weights, contentBounds);
-  })();
+  // 播经跟读高亮 + 自动滚到屏幕中间已关（与 App 对齐；易错位、跟读态抬重渲染）。
+  // 用户划重点与搜索定位滚屏仍保留。
+  const activeIndex: number | null = null;
 
   useEffect(() => {
     void recordTodayReadingChapterFraction(bookId, chapter, 0.1);
   }, [bookId, chapter]);
-
-  useEffect(() => {
-    if (!verses.length) return;
-    const total = verses.length;
-    const verseIdx =
-      activeIndex != null && activeIndex >= 0 && activeIndex < total ? activeIndex : 0;
-    const fraction = Math.min(1, (verseIdx + 1) / total);
-    void recordTodayReadingChapterFraction(bookId, chapter, fraction);
-  }, [bookId, chapter, verses.length, activeIndex]);
 
   const scrollVerseIntoReadableCenter = useCallback(
     (el: HTMLElement) => {
@@ -472,22 +393,6 @@ export function ReadChapterVersesClient({
     searchFocusScrolledRef.current = true;
     scrollVerseIntoReadableCenter(el);
   }, [searchFocusVerse, scrollVerseIntoReadableCenter, verses]);
-
-  useLayoutEffect(() => {
-    if (!playing || !audioMatchesThisChapter) {
-      lastFollowIndexRef.current = null;
-      return;
-    }
-    if (activeIndex === null) {
-      lastFollowIndexRef.current = null;
-      return;
-    }
-    if (lastFollowIndexRef.current === activeIndex) return;
-    lastFollowIndexRef.current = activeIndex;
-    const el = verseElRefs.current[activeIndex];
-    if (!el) return;
-    scrollVerseIntoReadableCenter(el);
-  }, [playing, audioMatchesThisChapter, activeIndex, scrollVerseIntoReadableCenter, verses.length]);
 
   const onVerseDoubleClick = (v: LoadedChapterVerse) => {
     if (highlightModeActive || verseSelectionMode) return;
@@ -953,7 +858,6 @@ function ReadChapterInlineVerseChunk({
         activeHighlightColor={activeHighlightColor}
         onToggleHighlightUnit={onToggleHighlightUnit}
         onPaintHighlightUnit={onPaintHighlightUnit}
-        goldenMark={v.isGolden && !bookmarked}
         bookmarkMark={bookmarked}
         searchKeyword={searchKeyword}
       />{" "}
@@ -1020,8 +924,6 @@ function ReadChapterVerseParagraph({
   enableLongPress,
 }: VerseParagraphProps) {
   const longPressHandlers = useVerseLongPress(onOpenActionMenu);
-  const goldenMark = v.isGolden && !bookmarked;
-  const bookmarkMark = bookmarked;
   const hasXref = Boolean(xrefBundle);
   const parts = resolveVerseSpeechParts(v, {
     translationId,
@@ -1086,8 +988,7 @@ function ReadChapterVerseParagraph({
             activeHighlightColor={activeHighlightColor}
             onToggleHighlightUnit={onToggleHighlightUnit}
             onPaintHighlightUnit={onPaintHighlightUnit}
-            goldenMark={goldenMark}
-            bookmarkMark={bookmarkMark}
+            bookmarkMark={bookmarked}
             searchKeyword={searchKeyword}
           />
         </span>

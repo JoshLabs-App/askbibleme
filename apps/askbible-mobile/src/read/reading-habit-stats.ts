@@ -6,7 +6,7 @@ export const READING_HABIT_STATS_STORAGE_KEY_LEGACY = "selah-reading-habit-stats
 
 export type ReadingHabitStatsRecord = {
   version: 1;
-  /** 日历日 YYYY-MM-DD：当日有实质读经（读完一章或今日计划有进度） */
+  /** 日历日 YYYY-MM-DD：当日打开过 App 或有读经操作（与计划是否读完无关） */
   completedDates: string[];
 };
 
@@ -104,11 +104,17 @@ export type ReadingHabitStatsSnapshot = {
 };
 
 const EMPTY_SNAPSHOT: ReadingHabitStatsSnapshot = { readDays: 0, streakDays: 0 };
+const EMPTY_COMPLETED_DATES: readonly string[] = [];
 
 let cachedSnapshot: ReadingHabitStatsSnapshot | null = null;
+let cachedCompletedDates: readonly string[] = EMPTY_COMPLETED_DATES;
 
 export function getCachedReadingHabitStatsSnapshot(): ReadingHabitStatsSnapshot {
   return cachedSnapshot ?? EMPTY_SNAPSHOT;
+}
+
+export function getCachedReadingHabitCompletedDates(): readonly string[] {
+  return cachedCompletedDates;
 }
 
 export function readingHabitStatsSnapshotsEqual(
@@ -123,6 +129,7 @@ export function snapshotFromRecord(
   today: string = toLocalDateString(new Date()),
 ): ReadingHabitStatsSnapshot {
   const dates = record.completedDates;
+  cachedCompletedDates = dates.length ? dates : EMPTY_COMPLETED_DATES;
   const snapshot = {
     readDays: dates.length,
     streakDays: computeReadingStreak(dates, today),
@@ -136,6 +143,20 @@ export async function replaceReadingHabitStatsRecord(record: ReadingHabitStatsRe
   const merged = mergeReadingHabitStatsRecords(local, record);
   await writeReadingHabitStats(merged);
   snapshotFromRecord(merged);
+}
+
+/** 帐号切换：清空本机习惯统计（不触发再上传）。 */
+export async function clearReadingHabitStatsLocal(): Promise<void> {
+  try {
+    await AsyncStorage.multiRemove([
+      READING_HABIT_STATS_STORAGE_KEY,
+      READING_HABIT_STATS_STORAGE_KEY_LEGACY,
+    ]);
+  } catch {
+    /* ignore */
+  }
+  snapshotFromRecord({ version: 1, completedDates: [] });
+  emit();
 }
 
 export function mergeReadingHabitStatsRecords(
@@ -175,6 +196,9 @@ export async function preserveReadingHabitBeforePlanSwitch(): Promise<void> {
 export async function touchReadingHabitDay(
   date: string = toLocalDateString(new Date()),
 ): Promise<ReadingHabitStatsRecord> {
+  if (cachedCompletedDates.includes(date)) {
+    return { version: 1, completedDates: [...cachedCompletedDates] };
+  }
   const record = await readReadingHabitStats();
   if (record.completedDates.includes(date)) return record;
   const next: ReadingHabitStatsRecord = {
@@ -186,6 +210,22 @@ export async function touchReadingHabitDay(
   return next;
 }
 
+/**
+ * 任意读经活动记入当日（与当前读经计划无关，只增不减）：
+ * 打开经文章、播章音频、首页金句点播等。同步日历黄标 + 连读日。
+ */
+export async function recordAnyReadingActivityDay(
+  date: string = toLocalDateString(new Date()),
+): Promise<void> {
+  await touchReadingHabitDay(date);
+  try {
+    const { markPlanPlayListenedDate } = await import("./plan-play-listened-dates");
+    await markPlanPlayListenedDate(date);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** 根据今日是否有读经活动更新当日记录；`undefined` 表示状态未知，不写入。只增不减——换计划不会冲掉历史读经天。 */
 export async function syncReadingHabitDayCompletion(
   hasReadingToday: boolean | undefined,
@@ -195,3 +235,5 @@ export async function syncReadingHabitDayCompletion(
   }
   return touchReadingHabitDay();
 }
+
+void readReadingHabitStats();

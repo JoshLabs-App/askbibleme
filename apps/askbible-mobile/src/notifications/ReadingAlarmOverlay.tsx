@@ -24,9 +24,19 @@ export function ReadingAlarmOverlay({ locale, alarm, mode, onDismiss }: Props) {
     <View pointerEvents="box-none" style={[styles.root, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       <ParchmentModalCard style={styles.card}>
         <Text style={styles.kicker}>
-          {resolveUiText(locale, "每日清晨闹钟", "Daily morning alarm")}
+          {isMusic && alarm.verseText?.trim()
+            ? resolveUiText(locale, "今日金句", "Today's verse")
+            : resolveUiText(locale, "每日读经提醒", "Daily reading reminder")}
         </Text>
-        <Text style={styles.title}>{alarm.label}</Text>
+        <Text style={styles.title}>
+          {isMusic
+            ? alarm.verseText?.trim() ||
+              resolveUiText(locale, "清晨音乐", "Morning music")
+            : alarm.label.trim() || resolveUiText(locale, "清晨音乐", "Morning music")}
+        </Text>
+        {isMusic && alarm.verseRef?.trim() ? (
+          <Text style={styles.subtitle}>{alarm.verseRef.trim()}</Text>
+        ) : null}
         <Text style={styles.subtitle}>
           {isMusic
             ? resolveUiText(locale, "清晨音乐播放中，点停止结束", "Morning music is playing. Tap Stop to end.")

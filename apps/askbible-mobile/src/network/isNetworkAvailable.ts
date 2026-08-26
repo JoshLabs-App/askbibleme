@@ -8,7 +8,7 @@ export async function isNetworkAvailable(): Promise<boolean> {
   try {
     const state = await NetInfo.fetch();
     if (state.isConnected === false) return false;
-    if (state.isInternetReachable === false) return false;
+    // 部分机型（尤其 Samsung）会把 isInternetReachable 误报成 false；只要连着网就允许同步。
     return true;
   } catch {
     return true;

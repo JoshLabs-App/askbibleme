@@ -22,12 +22,20 @@ function isLocalPlayableSrc(src: string): boolean {
   return Boolean(s) && !isRemotePlayableSrc(s);
 }
 
-/** 确保单章音频可本地播放；远程源会下载到与「朗读音频下载」相同目录。 */
+/**
+ * 确保单章有可播 URI。
+ * 本地已有 → 直接用；远程 → 默认可先返回 URL 开播，并后台落到 10 天流式缓存。
+ */
 export async function ensurePlanFlowChapterAudioReady(args: {
   ref: PlanChapterRef;
   translationId: string;
   voiceId: CuvChapterAudioVoiceId;
   timeoutMs?: number;
+  /**
+   * true（默认）：远程先流式返回，后台落盘，避免首点干等整文件。
+   * false：等下载完再返回（适合后台预取后续章）。
+   */
+  streamFirst?: boolean;
 }): Promise<string | null> {
   const timeoutMs = args.timeoutMs ?? PLAN_FLOW_CHAPTER_AUDIO_WAIT_MS;
   const work = ensurePlanFlowChapterAudioReadyInner(args);
@@ -48,6 +56,7 @@ async function ensurePlanFlowChapterAudioReadyInner(args: {
   ref: PlanChapterRef;
   translationId: string;
   voiceId: CuvChapterAudioVoiceId;
+  streamFirst?: boolean;
 }): Promise<string | null> {
   if (!translationSupportsChapterAudio(args.translationId)) return null;
 
@@ -58,6 +67,7 @@ async function ensurePlanFlowChapterAudioReadyInner(args: {
     bookId: args.ref.bookId,
     chapter: args.ref.chapter,
   };
+  const streamFirst = args.streamFirst !== false;
 
   const downloaded = await resolveDownloadedChapterAudioUri(cacheArgs);
   if (downloaded) {
@@ -90,6 +100,11 @@ async function ensurePlanFlowChapterAudioReadyInner(args: {
 
   if (!isMobileScriptureAudioStreamAllowed()) return null;
 
+  if (streamFirst) {
+    void downloadChapterAudioToCache({ ...cacheArgs, remoteSrc: resolved });
+    return resolved;
+  }
+
   const cached = await downloadChapterAudioToCache({ ...cacheArgs, remoteSrc: resolved });
   return cached ?? resolved;
 }
@@ -111,7 +126,10 @@ async function runWithConcurrency<T>(
   await Promise.all(runners);
 }
 
-/** 预下载今日 planFlow 队列；默认先 await 首章，其余并行后台拉取。 */
+/**
+ * 预取今日 planFlow 队列音频。
+ * 首章默认 streamFirst（可先播再落盘）；后续章后台尽量下完，减少换章等待。
+ */
 export async function prefetchTodayReadingPlanQueueAudio(
   queue: PlanChapterRef[],
   opts: {
@@ -127,16 +145,21 @@ export async function prefetchTodayReadingPlanQueueAudio(
       ref: queue[0]!,
       translationId: opts.translationId,
       voiceId: opts.voiceId,
+      streamFirst: true,
     });
   }
 
   const rest = opts.awaitFirst === false ? queue : queue.slice(1);
-  await runWithConcurrency(rest, PLAN_FLOW_PREFETCH_CONCURRENCY, async (ref) => {
+  if (!rest.length) return;
+
+  // 后台预取：不 await；后续章等落盘，换章更稳。
+  void runWithConcurrency(rest, PLAN_FLOW_PREFETCH_CONCURRENCY, async (ref) => {
     await ensurePlanFlowChapterAudioReady({
       ref,
       translationId: opts.translationId,
       voiceId: opts.voiceId,
       timeoutMs: PLAN_FLOW_CHAPTER_AUDIO_WAIT_MS * 2,
+      streamFirst: false,
     });
   });
 }

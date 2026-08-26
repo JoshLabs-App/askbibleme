@@ -21,7 +21,10 @@ export function resolveReadChapterAudioAvailable(
   return readHomeTodayAudioReady;
 }
 
+export function resolveCanToggleMusicPlayback(tracks: PlaybackTrack[]): boolean {
+  return tracks.some((t) => isTrackPlayable(t)) || (!isMobileBundledOnly() && tracks.length > 0);
+}
+
 export function resolveCanTogglePlayback(tracks: PlaybackTrack[], readChapterSupportsAudio: boolean): boolean {
-  const hasPlayableMusic = tracks.some((t) => isTrackPlayable(t));
-  return readChapterSupportsAudio || hasPlayableMusic || (!isMobileBundledOnly() && tracks.length > 0);
+  return readChapterSupportsAudio || resolveCanToggleMusicPlayback(tracks);
 }

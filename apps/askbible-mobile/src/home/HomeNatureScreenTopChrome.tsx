@@ -10,7 +10,6 @@ type Props = {
   voicePreparing: boolean;
   voiceSpeaking: boolean;
   onPlayDisplayedVerseVoice: () => void;
-  onOpenSettings: () => void;
 };
 
 export function HomeNatureScreenTopChrome({
@@ -19,8 +18,9 @@ export function HomeNatureScreenTopChrome({
   voicePreparing,
   voiceSpeaking,
   onPlayDisplayedVerseVoice,
-  onOpenSettings,
 }: Props) {
+  if (!homeTtsExperimentEnabled) return null;
+
   return (
     <View
       style={[
@@ -32,34 +32,24 @@ export function HomeNatureScreenTopChrome({
       ]}
       pointerEvents="box-none"
     >
-      {homeTtsExperimentEnabled ? (
-        <Pressable
-          onPress={() => {
-            void onPlayDisplayedVerseVoice();
-          }}
-          style={({ pressed }) => [
-            styles.settingsBtn,
-            styles.voiceBtn,
-            { opacity: pressed ? 0.72 : voicePreparing || voiceSpeaking ? 1 : 0.5 },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={voiceSpeaking ? t("nature.homeVoice.stopAria") : t("nature.homeVoice.playAria")}
-          accessibilityState={{ busy: voicePreparing, selected: voiceSpeaking }}
-        >
-          {voicePreparing ? (
-            <ActivityIndicator size="small" color="rgba(255,255,255,0.92)" />
-          ) : (
-            <ShellMaterialIcon name="record-voice-over" size={22} color="#FFFFFF" />
-          )}
-        </Pressable>
-      ) : null}
       <Pressable
-        onPress={onOpenSettings}
-        style={({ pressed }) => [styles.settingsBtn, { opacity: pressed ? 0.72 : 0.5 }]}
+        onPress={() => {
+          void onPlayDisplayedVerseVoice();
+        }}
+        style={({ pressed }) => [
+          styles.settingsBtn,
+          styles.voiceBtn,
+          { opacity: pressed ? 0.72 : voicePreparing || voiceSpeaking ? 1 : 0.5 },
+        ]}
         accessibilityRole="button"
-        accessibilityLabel={t("nature.homeSettings.openAria")}
+        accessibilityLabel={voiceSpeaking ? t("nature.homeVoice.stopAria") : t("nature.homeVoice.playAria")}
+        accessibilityState={{ busy: voicePreparing, selected: voiceSpeaking }}
       >
-        <ShellMaterialIcon name="settings" size={22} color="#FFFFFF" />
+        {voicePreparing ? (
+          <ActivityIndicator size="small" color="rgba(255,255,255,0.92)" />
+        ) : (
+          <ShellMaterialIcon name="record-voice-over" size={22} color="#FFFFFF" />
+        )}
       </Pressable>
     </View>
   );

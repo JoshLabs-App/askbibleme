@@ -1,7 +1,6 @@
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { useMusicHomeQueueScroll } from "./useMusicHomeQueueScroll";
 import { useMusicHomeUiAutoHide } from "./useMusicHomeUiAutoHide";
-import { useMusicHomeCoffeePulse } from "./useMusicHomeCoffeePulse";
 import { useMusicHomeGestures } from "./useMusicHomeGestures";
 import { useMusicHomeScreenPlaybackContext } from "./useMusicHomeScreenPlaybackContext";
 import { useMusicHomeCatalogCheck, useMusicHomeLayout } from "./useMusicHomeScreenState";
@@ -18,7 +17,6 @@ export function useMusicHomeScreenController(layout: "tab" | "stack") {
     current,
     metrics,
     glowColors,
-    seek,
     upper,
     sleepTimer,
     playbackSlice,
@@ -27,11 +25,11 @@ export function useMusicHomeScreenController(layout: "tab" | "stack") {
     playPrev,
     togglePlayMusic,
     seekRatio,
-    musicCurrentSec,
+    playbackMode,
     checkMusicCatalogUpdate,
   } = ctx;
 
-  const { musicActive, albumDecorVisible, albumDecorMotionActive, duration, position, progress } = metrics;
+  const { musicActive, albumDecorVisible, albumDecorMotionActive, duration } = metrics;
 
   const uiAutoHide = useMusicHomeUiAutoHide({
     album,
@@ -44,13 +42,6 @@ export function useMusicHomeScreenController(layout: "tab" | "stack") {
     togglePlayMusic,
   });
 
-  const { coffeeRhythmPulse } = useMusicHomeCoffeePulse(
-    album,
-    current,
-    musicCurrentSec,
-    albumDecorMotionActive && isFocused,
-  );
-
   useMusicHomeCatalogCheck(loading, checkMusicCatalogUpdate);
 
   const gestures = useMusicHomeGestures({
@@ -58,7 +49,6 @@ export function useMusicHomeScreenController(layout: "tab" | "stack") {
     filteredTrackIndices: albumState.filteredTrackIndices,
     currentFilteredIndex: albumState.currentFilteredIndex,
     musicActive,
-    musicCurrentSec,
     playTrackAt,
     playNext,
     playPrev,
@@ -76,7 +66,6 @@ export function useMusicHomeScreenController(layout: "tab" | "stack") {
   return {
     layoutState,
     playback: playbackSlice,
-    seek,
     upper,
     sleepTimer,
     albumState,
@@ -85,10 +74,10 @@ export function useMusicHomeScreenController(layout: "tab" | "stack") {
     albumDecorVisible,
     albumDecorMotionActive,
     duration,
-    position,
-    progress,
+    musicActive,
+    playbackMode,
+    analysisSrc: current?.analysisSrc ?? null,
     uiAutoHide,
-    coffeeRhythmPulse,
     gestures,
     queue,
   };

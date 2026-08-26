@@ -1,5 +1,17 @@
 #!/usr/bin/env node
 /**
+ * DEPRECATED: AskBible 不再托管潮语新约音频（不落 public/、不落 DATA_ROOT）。
+ * App / Web 只引用 manifest 里的 TSTSCC remoteUrl。
+ * 若仍要本机镜像（例如生成 timing），设 FORCE_TEOCHEW_LOCAL_MIRROR=1。
+ */
+if (process.env.FORCE_TEOCHEW_LOCAL_MIRROR !== "1") {
+  console.error(
+    "Refusing: teochew-nt is external-only (TSTSCC). Set FORCE_TEOCHEW_LOCAL_MIRROR=1 to override.",
+  );
+  process.exit(1);
+}
+
+/**
  * 将 public/audio/teochew-nt/*.mp3 同步到 Render 持久盘（或其它 DATA_ROOT）。
  *
  *   DATA_ROOT=/var/data npm run audio:teochew-sync-disk

@@ -3,8 +3,8 @@ import type {
   TripleLoopChaptersReadKeys,
   TripleLoopReadingState,
   TripleLoopTrack,
-} from "@/lib/bible/reading-plans/triple-loop-reading";
-import { trackForBookId } from "@/lib/bible/reading-plans/triple-loop-reading";
+} from "./triple-loop-reading";
+import { trackForBookId } from "./triple-loop-reading";
 
 export function tripleLoopChapterReadKey(bookId: string, chapter: number): string {
   return `${bookId.trim().toUpperCase()}:${Math.floor(chapter)}`;

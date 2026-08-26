@@ -36,7 +36,11 @@ class AskBibleWidgetPrefsModule(reactContext: ReactApplicationContext) :
     if (ids.isNotEmpty()) {
       AskBibleDailyVerseWidgetProvider.updateWidgets(context, manager, ids)
     }
-    WidgetAlarmScheduler.schedule(context)
+    if (WidgetRotationState.isFollowFrozen(context)) {
+      WidgetAlarmScheduler.cancel(context)
+    } else {
+      WidgetAlarmScheduler.schedule(context)
+    }
   }
 
   @ReactMethod
@@ -63,10 +67,32 @@ class AskBibleWidgetPrefsModule(reactContext: ReactApplicationContext) :
     AskBibleDailyVerseWidgetProvider.refreshAll(context)
   }
 
-  /** 小挂件冷启动：同步读取 pending（music / reading），无则 null。 */
+  /**
+   * App 首页当前金句 → 桌面挂件同步。
+   * freeze=true：金句朗读中，挂件钉住该句并停墙钟轮换。
+   */
+  @ReactMethod
+  fun setDisplayedVerseFollow(verseKey: String?, freeze: Boolean) {
+    val context = reactApplicationContext.applicationContext
+    val keys = AskBibleDailyVerseWidgetProvider.verseKeysFromSnapshot(context)
+    WidgetRotationState.followAppVerse(context, verseKey, keys, freeze)
+    if (freeze) {
+      WidgetAlarmScheduler.cancel(context)
+    } else {
+      WidgetAlarmScheduler.schedule(context)
+    }
+    AskBibleDailyVerseWidgetProvider.refreshAll(context)
+  }
+
+  /** 小挂件冷启动：同步读取 pending（music / reading / verse），无则 null。 */
   @ReactMethod(isBlockingSynchronousMethod = true)
   fun peekWidgetPlaybackActionSync(): String? {
     return WidgetPlaybackBridge.peekPendingAction(reactApplicationContext.applicationContext)
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  fun peekWidgetPlaybackVerseKeySync(): String? {
+    return WidgetPlaybackBridge.peekPendingVerseKey(reactApplicationContext.applicationContext)
   }
 
   @ReactMethod
@@ -81,7 +107,7 @@ class AskBibleWidgetPrefsModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun minimizeAfterWidgetPlayback() {
-    me.askbible.playback.AskBibleShellMediaControlsModule.minimizeAppToBackground()
+    WidgetPlaybackBridge.requestMinimizeNow(reactApplicationContext.applicationContext)
   }
 
   companion object {

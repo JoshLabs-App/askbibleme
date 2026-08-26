@@ -5,7 +5,6 @@ import {
   READING_PLAN_EASTER_EPOCH_DATE,
 } from "@/lib/read/reading-plan-epoch";
 import {
-  readEffectiveReadingPlanPrefs,
   readReadingPlanPrefs,
   setActiveReadingPlan,
 } from "@/lib/read/reading-plan-prefs";
@@ -21,13 +20,11 @@ export function ensureTripleLoopPlanPrefs(): void {
 
 /** 读经页进入时修正已保存但锚点/历元不一致的三轨 prefs。 */
 export function syncTripleLoopPlanPrefsIfNeeded(): void {
-  const effective = readEffectiveReadingPlanPrefs();
-  if (!isTripleLoopPlanId(effective.planId)) return;
-
   const stored = readReadingPlanPrefs();
+  // 隐式默认（未落盘）不写入，避免重装后把云端已选计划盖掉。
+  if (!stored || !isTripleLoopPlanId(stored.planId)) return;
+
   if (
-    !stored ||
-    stored.planId !== TRIPLE_LOOP_PLAN_ID ||
     stored.anchor !== "calendar-easter" ||
     stored.startedOn !== READING_PLAN_EASTER_EPOCH_DATE ||
     stored.dayCount !== TRIPLE_LOOP_PLAN_DAY_COUNT

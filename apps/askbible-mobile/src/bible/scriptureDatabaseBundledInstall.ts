@@ -1,6 +1,11 @@
 import { Asset } from "expo-asset";
-import { Directory, File, Paths } from "expo-file-system";
-import * as SQLite from "expo-sqlite";
+import * as FileSystem from "expo-file-system/legacy";
+import {
+  deleteDatabaseAsync,
+  importDatabaseFromAssetAsync,
+  openDatabaseAsync,
+  type SQLiteDatabase,
+} from "expo-sqlite";
 import { getBundledScriptureAssetModule, isBundledScriptureTranslation } from "./bundled-scripture-translations";
 import { markScriptureDatabaseInstalled, readInstalledSchemaVersion } from "./scriptureDatabaseMarkers";
 import { dbFileName, schemaVersionPath, SCRIPTURE_SQLITE_SCHEMA_VERSION } from "./scriptureDatabasePaths";
@@ -12,34 +17,30 @@ import {
   removeScriptureDatabaseFiles,
 } from "./scriptureDatabaseSession";
 
-async function resolveBundledAssetLocalUri(assetModule: number): Promise<string> {
+async function resolveBundledAsset(assetModule: number): Promise<{ localUri: string; size: number }> {
   const asset = Asset.fromModule(assetModule);
   await asset.downloadAsync();
   const localUri = (asset.localUri || asset.uri || "").trim();
   if (!localUri) {
     throw new Error("无法解析内置资源 URI");
   }
-  return localUri;
-}
-
-function bundledScriptureDatabaseDirectory(): string {
-  return new Directory(Paths.document, "SQLite").uri;
-}
-
-async function openBundledScriptureDatabase(translationId: string): Promise<SQLite.SQLiteDatabase> {
-  const directory = bundledScriptureDatabaseDirectory();
-  return SQLite.openDatabaseAsync(dbFileName(translationId), undefined, directory);
+  const info = await FileSystem.getInfoAsync(localUri);
+  const size = info.exists && typeof info.size === "number" ? info.size : 0;
+  if (size < 1_000) {
+    throw new Error("内置圣经资源无效或过小");
+  }
+  return { localUri, size };
 }
 
 export async function openBundledScriptureDatabaseByTranslation(
   translationId: string,
-): Promise<SQLite.SQLiteDatabase> {
+): Promise<SQLiteDatabase> {
   const assetModule = getBundledScriptureAssetModule(translationId);
   if (assetModule == null) {
     throw new Error(`译本未内置：${translationId}`);
   }
   await ensureBundledDatabaseOnDisk(translationId);
-  return openBundledScriptureDatabase(translationId);
+  return openDatabaseAsync(dbFileName(translationId), { useNewConnection: true });
 }
 
 export async function getLocalScriptureTranslationByteSize(translationId: string): Promise<number> {
@@ -51,26 +52,19 @@ export async function getLocalScriptureTranslationByteSize(translationId: string
   return 0;
 }
 
-async function verifyBundledScriptureDatabaseProbe(translationId: string): Promise<void> {
-  let db: SQLite.SQLiteDatabase | null = null;
-  try {
-    db = await openBundledScriptureDatabase(translationId);
-    const row = await db.getFirstAsync<{ c: number }>(
-      "SELECT COUNT(*) AS c FROM verse WHERE book_id = ? AND chapter = ?",
-      "GEN",
-      1,
-    );
-    if (Number(row?.c ?? 0) < 1) {
-      throw new Error(`内置圣经数据库无可读经文：${translationId}`);
-    }
-  } finally {
-    if (db) {
-      try {
-        await db.closeAsync();
-      } catch {
-        /* ignore */
-      }
-    }
+/** 只比对文件尺寸，不在安装路径里 open/close（Android 上易触发 prepareAsync NPE）。 */
+async function assertBundledDatabaseFileReady(
+  translationId: string,
+  expectedSize: number,
+): Promise<void> {
+  const dest = getScriptureDatabaseDestPath(translationId);
+  const info = await FileSystem.getInfoAsync(dest);
+  const size = info.exists && typeof info.size === "number" ? info.size : 0;
+  if (!info.exists || size < 1_000) {
+    throw new Error(`内置圣经数据库缺失或过小：${translationId}`);
+  }
+  if (expectedSize > 0 && size !== expectedSize) {
+    throw new Error(`内置圣经数据库大小不匹配：${translationId}`);
   }
 }
 
@@ -78,17 +72,16 @@ async function copyBundledDatabaseToDisk(
   translationId: string,
   assetModule: number,
 ): Promise<void> {
-  const localUri = await resolveBundledAssetLocalUri(assetModule);
+  const { size } = await resolveBundledAsset(assetModule);
   const dest = getScriptureDatabaseDestPath(translationId);
-  const dir = new Directory(Paths.document, "SQLite");
-  try {
-    dir.create({ intermediates: true });
-  } catch {
-    /* ignore */
-  }
-  const bytes = await new File(localUri).bytes();
-  new File(dest).write(bytes);
-  await verifyBundledScriptureDatabaseProbe(translationId);
+  const sqliteDir = `${FileSystem.documentDirectory}SQLite`;
+  await FileSystem.makeDirectoryAsync(sqliteDir, { intermediates: true });
+  // 走 expo-sqlite 官方 asset 导入，避免 Android 上自管 copy + 连接复用触发 prepareAsync NPE。
+  await importDatabaseFromAssetAsync(dbFileName(translationId), {
+    assetId: assetModule,
+    forceOverwrite: true,
+  });
+  await assertBundledDatabaseFileReady(translationId, size);
   await markScriptureDatabaseInstalled(dest);
 }
 
@@ -102,40 +95,29 @@ async function ensureBundledDatabaseOnDiskInner(translationId: string): Promise<
 
   const dest = getScriptureDatabaseDestPath(translationId);
   const legacyName = `${translationId}.sqlite`;
-  const legacyDest = `${new Directory(Paths.document, "SQLite").uri}/${legacyName}`;
+  const legacyDest = `${FileSystem.documentDirectory}SQLite/${legacyName}`;
   if (legacyName !== dbFileName(translationId)) {
     try {
-      await SQLite.deleteDatabaseAsync(legacyName);
+      await deleteDatabaseAsync(legacyName);
     } catch {
       /* ignore */
     }
-    try {
-      new File(legacyDest).delete();
-    } catch {
-      /* ignore */
-    }
-    try {
-      new File(schemaVersionPath(legacyDest)).delete();
-    } catch {
-      /* ignore */
-    }
+    await FileSystem.deleteAsync(legacyDest, { idempotent: true });
+    await FileSystem.deleteAsync(schemaVersionPath(legacyDest), { idempotent: true });
   }
+  const { size: bundledSize } = await resolveBundledAsset(assetModule);
   const installedVer = await readInstalledSchemaVersion(dest);
-  const upToDate = installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION;
+  const destInfo = await FileSystem.getInfoAsync(dest);
+  const destSize = destInfo.exists && typeof destInfo.size === "number" ? destInfo.size : 0;
+  const upToDate =
+    installedVer === SCRIPTURE_SQLITE_SCHEMA_VERSION &&
+    destSize > 0 &&
+    destSize === bundledSize;
 
-  if (upToDate) {
-    try {
-      await verifyBundledScriptureDatabaseProbe(translationId);
-      return;
-    } catch {
-      clearOpenPromise(translationId);
-      await removeInstalledDatabase(dest, translationId);
-    }
-  } else {
-    clearOpenPromise(translationId);
-    await removeInstalledDatabase(dest, translationId);
-  }
+  if (upToDate) return;
 
+  clearOpenPromise(translationId);
+  await removeInstalledDatabase(dest, translationId);
   await copyBundledDatabaseToDisk(translationId, assetModule);
 }
 

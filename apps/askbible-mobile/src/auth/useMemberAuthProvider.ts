@@ -10,7 +10,16 @@ import { exchangeAppleNativeCredential } from "./appleSignInExchange";
 import { signInWithAppleNative } from "./appleSignIn";
 import { signInWithGoogleMobile } from "./googleSignIn";
 import { commitMemberSession } from "./memberAuthSessionCommit";
-import { clearMemberSession, readMemberSession, type MemberUser } from "./memberSession";
+import {
+  clearMemberSession,
+  readMemberSession,
+  writeMemberSession,
+  type MemberUser,
+} from "./memberSession";
+import { readMemberReadingSyncMeta } from "../member-sync/memberReadingSyncApi";
+import { clearMemberReadingLocalForSignOut } from "../member-sync/readingSyncLocalClear";
+import { flushPendingMemberReadingLocalChanges } from "../member-sync/requestMemberReadingSync";
+import { awaitMemberReadingSyncIdle } from "../member-sync/runMemberReadingSync";
 import { useMemberAuthBootstrap } from "./useMemberAuthBootstrap";
 import { useMemberAuthGoogleDeepLink } from "./useMemberAuthGoogleDeepLink";
 
@@ -165,9 +174,55 @@ export function useMemberAuthProvider() {
     [],
   );
 
-  const signOut = useCallback(async () => {
-    await clearMemberSession();
+  const updateLocalDisplayName = useCallback(async (name: string) => {
+    const trimmed = name.trim().replace(/\s+/g, " ");
+    if (!trimmed) return false;
+    const session = await readMemberSession();
+    if (!session) return false;
+    const nextUser: MemberUser = { ...session.user, name: trimmed };
+    await writeMemberSession({ ...session, user: nextUser });
+    setUser(nextUser);
+    return true;
+  }, []);
+
+  const signOut = useCallback(async (opts?: { force?: boolean }) => {
+    const finish = async () => {
+      await clearMemberReadingLocalForSignOut();
+      await clearMemberSession();
+      setUser(null);
+      return { ok: true as const };
+    };
+
+    const session = await readMemberSession();
+    if (!session?.sessionToken || opts?.force) {
+      return finish();
+    }
+
+    const token = session.sessionToken;
     setUser(null);
+
+    void (async () => {
+      try {
+        const timedOut = new Promise<"skipped">((resolve) => {
+          setTimeout(() => resolve("skipped"), 12_000);
+        });
+        await Promise.race([flushPendingMemberReadingLocalChanges("sign-out"), timedOut]);
+        await Promise.race([
+          awaitMemberReadingSyncIdle(),
+          new Promise<void>((resolve) => {
+            setTimeout(resolve, 1_500);
+          }),
+        ]);
+      } finally {
+        const current = await readMemberSession();
+        if (!current || current.sessionToken === token) {
+          await clearMemberReadingLocalForSignOut();
+          await clearMemberSession();
+        }
+      }
+    })();
+
+    return { ok: true as const };
   }, []);
 
   const deleteAccount = useCallback(async () => {
@@ -180,6 +235,9 @@ export function useMemberAuthProvider() {
           code: result.code,
         };
       }
+      await flushPendingMemberReadingLocalChanges("delete-account");
+      await awaitMemberReadingSyncIdle();
+      await clearMemberReadingLocalForSignOut();
       await clearMemberSession();
       setUser(null);
       return { ok: true as const };
@@ -196,6 +254,7 @@ export function useMemberAuthProvider() {
       signIn,
       signInWithGoogle,
       signInWithApple,
+      updateLocalDisplayName,
       signOut,
       deleteAccount,
       completeRegistration,
@@ -207,6 +266,7 @@ export function useMemberAuthProvider() {
       signIn,
       signInWithGoogle,
       signInWithApple,
+      updateLocalDisplayName,
       signOut,
       deleteAccount,
       completeRegistration,

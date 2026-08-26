@@ -7,6 +7,17 @@ export const LOCALE_PICKER_LABELS: Record<AppLocale, string> = {
   "zh-TW": "繁體中文",
 };
 
+/** 抽屉等窄栏：缩写显示。 */
+export const LOCALE_PICKER_SHORT_LABELS: Record<AppLocale, string> = {
+  en: "EN",
+  "zh-CN": "简体",
+  "zh-TW": "繁体",
+};
+
 export function getLocalePickerLabel(locale: AppLocale): string {
   return LOCALE_PICKER_LABELS[locale];
+}
+
+export function getLocalePickerShortLabel(locale: AppLocale): string {
+  return LOCALE_PICKER_SHORT_LABELS[locale];
 }

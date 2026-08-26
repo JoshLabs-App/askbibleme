@@ -9,6 +9,7 @@ export function scheduleMusicTrackPlayFallback(args: {
   playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
   setPlaying: (playing: boolean) => void;
   failedTrackId?: string;
+  autoPlay?: boolean;
 }): boolean {
   const failedId = args.failedTrackId?.trim();
   if (failedId) args.failedTrackIdsRef.current.add(failedId);
@@ -18,7 +19,7 @@ export function scheduleMusicTrackPlayFallback(args: {
     args.failedTrackIdsRef.current,
   );
   if (fallbackIndex != null) {
-    void args.playTrackAtRef.current(fallbackIndex);
+    void args.playTrackAtRef.current(fallbackIndex, { autoPlay: args.autoPlay });
     return true;
   }
   if (args.failedTrackIdsRef.current.size >= args.tracks.length) {

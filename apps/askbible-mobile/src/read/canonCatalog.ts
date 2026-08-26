@@ -5,7 +5,7 @@ import { scriptureBooks, OLD_TESTAMENT_MAX_BOOK_NUMBER } from "../bible/scriptur
 import { scriptureBookNotes } from "../bible/scripture-book-notes";
 import type { AppLocale } from "../i18n/config";
 import { getLocale } from "../i18n/locale-store";
-import { toZhTwText, t } from "../i18n/site-copy";
+import { createT, toZhTwText } from "../i18n/site-copy";
 
 export type ScriptureCanonCatalogBook = {
   bookId: string;
@@ -40,11 +40,12 @@ const booksById = new Map(scriptureBooks.map((b) => [b.bookId, b]));
 const notesByBookId = new Map(scriptureBookNotes.map((n) => [n.bookId, n]));
 
 function canonSectionTitle(sectionId: string, zhTitle: string, locale: AppLocale): string {
+  // 跟读经展示语言走（主译本），不要用 App 全局 t()。
   if (locale === "zh-CN") return zhTitle;
+  if (locale === "zh-TW") return toZhTwText(zhTitle);
   const key = `pages.read.canonSections.${sectionId}.title`;
-  const hit = t(key);
-  if (hit !== key) return hit;
-  return locale === "zh-TW" ? toZhTwText(zhTitle) : zhTitle;
+  const hit = createT(locale)(key);
+  return hit === key ? zhTitle : hit;
 }
 
 function buildBook(bookId: string, locale: AppLocale): ScriptureCanonCatalogBook {
@@ -61,7 +62,7 @@ function buildBook(bookId: string, locale: AppLocale): ScriptureCanonCatalogBook
   return {
     bookId: book.bookId,
     bookNumber: book.bookNumber,
-    bookName: getScriptureBookDisplayName(book.bookId),
+    bookName: getScriptureBookDisplayName(book.bookId, locale),
     divine,
     summary: summaryLabelForLocale(book.bookId, String(note.summary || "").trim(), locale),
   };
@@ -69,8 +70,10 @@ function buildBook(bookId: string, locale: AppLocale): ScriptureCanonCatalogBook
 
 let cachedSections: { locale: AppLocale; sections: ScriptureCanonCatalogSection[] } | null = null;
 
-export function getScriptureCanonCatalogSections(): ScriptureCanonCatalogSection[] {
-  const locale = getLocale();
+export function getScriptureCanonCatalogSections(
+  displayLocale: AppLocale = getLocale(),
+): ScriptureCanonCatalogSection[] {
+  const locale = displayLocale;
   if (cachedSections?.locale === locale) return cachedSections.sections;
   const sections = [...raw.sections]
     .sort((a, b) => a.order - b.order)
@@ -94,8 +97,8 @@ export function getScriptureCanonCatalogSections(): ScriptureCanonCatalogSection
   return sections;
 }
 
-export function bookNameForId(bookId: string): string {
-  return getScriptureBookDisplayName(bookId);
+export function bookNameForId(bookId: string, displayLocale: AppLocale = getLocale()): string {
+  return getScriptureBookDisplayName(bookId, displayLocale);
 }
 
 export function chaptersForBookId(bookId: string): number {

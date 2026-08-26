@@ -2,15 +2,82 @@
   "version": 1,
   "audioTracks": [
     {
-      "id": "track-mpg4a7xcip5q",
-      "title": "Silent Prayer",
-      "src": "/music/uploads/b411d78a52ab4dcab9d8c6987ac01762.mp3",
-      "durationSec": 2014,
+      "id": "track-mt391okyjj4i",
+      "title": {
+        "zh-CN": "安息在祢恩典中",
+        "en": "Resting in Your Grace"
+      },
+      "src": "/music/uploads/0e63e309c5fd4e518174ed84ee74b391.mp3",
+      "durationSec": 1679,
       "tags": [
         "安静"
       ],
-      "remark": "专辑：安静",
-      "hidden": true
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt4vkhb4aom4",
+      "title": {
+        "zh-CN": "柔光之下",
+        "en": "Beneath Soft Light"
+      },
+      "src": "/music/uploads/60704b4a1e6f4b5cace44946a7a5e7a7.mp3",
+      "durationSec": 1299,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt4vkhbu1wrw",
+      "title": {
+        "zh-CN": "我来到祢面前",
+        "en": "I Come Before You"
+      },
+      "src": "/music/uploads/8e06e21df4874da29bf327add75e6ff9.mp3",
+      "durationSec": 1485,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt4vkhcg5zla",
+      "title": {
+        "zh-CN": "轻柔盼望",
+        "en": "Gentle Hope"
+      },
+      "src": "/music/uploads/248371d04d8c41caab390a6ef34256a0.mp3",
+      "durationSec": 1178,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt4vkhd762ua",
+      "title": {
+        "zh-CN": "听我的祷告",
+        "en": "Hear My Prayer"
+      },
+      "src": "/music/uploads/1f260d08aac74d3c9a0f01459c99232b.mp3",
+      "durationSec": 1492,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt4w1bwhs1qa",
+      "title": {
+        "zh-CN": "我心依靠祢",
+        "en": "My Heart Trusts in You"
+      },
+      "src": "/music/uploads/3861d48db2a14350a5cb98a749f2346a.mp3",
+      "durationSec": 1262,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
     },
     {
       "id": "track-mpg4a8h3jhwl",
@@ -20,7 +87,8 @@
       "tags": [
         "安静"
       ],
-      "remark": "专辑：安静"
+      "remark": "专辑：安静",
+      "hidden": true
     },
     {
       "id": "track-mpg4a8zi2sjk",
@@ -30,7 +98,8 @@
       "tags": [
         "安静"
       ],
-      "remark": "专辑：安静"
+      "remark": "专辑：安静",
+      "hidden": true
     },
     {
       "id": "track-mpg4a9ix6n6h",
@@ -40,7 +109,8 @@
       "tags": [
         "安静"
       ],
-      "remark": "专辑：安静"
+      "remark": "专辑：安静",
+      "hidden": true
     },
     {
       "id": "track-mpg4aa1q1473",
@@ -50,7 +120,8 @@
       "tags": [
         "安静"
       ],
-      "remark": "专辑：安静"
+      "remark": "专辑：安静",
+      "hidden": true
     },
     {
       "id": "track-mpg4aajof3c7",
@@ -60,7 +131,8 @@
       "tags": [
         "安静"
       ],
-      "remark": "专辑：安静"
+      "remark": "专辑：安静",
+      "hidden": true
     },
     {
       "id": "track-mpkljem5ewpo",
@@ -86,7 +158,7 @@
       "id": "track-mpkn1s6ax3sk",
       "title": "Relaxing Brown Noise",
       "src": "/music/uploads/709e0e58b2974fcb9b1ee502cd6a79b0.mp3",
-      "durationSec": 598,
+      "durationSec": 60,
       "tags": [
         "睡眠"
       ],
@@ -96,7 +168,7 @@
       "id": "track-mpkm1n2z3z7z",
       "title": "Alpha Waves 8 Hz🎧",
       "src": "/music/uploads/d0f96a4573204d4cb91f3c10dc5f53c9.mp3",
-      "durationSec": 1800,
+      "durationSec": 178,
       "tags": [
         "睡眠"
       ],
@@ -106,7 +178,7 @@
       "id": "track-mpkm1m4fly5r",
       "title": "4Hz Theta Brainwaves🎧",
       "src": "/music/uploads/67b3b991f3634446aaf8185e147f9642.mp3",
-      "durationSec": 1802,
+      "durationSec": 178,
       "tags": [
         "睡眠"
       ],
@@ -161,6 +233,2348 @@
         "下午茶"
       ],
       "remark": "专辑：下午茶"
+    },
+    {
+      "id": "track-mt0uzklm451x",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：咏叹调",
+        "en": "Goldberg Variations: Aria"
+      },
+      "artist": {
+        "zh-CN": "石坂希美子",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/0c05f5f82d814874b70399f2dc9cb323.mp3",
+      "durationSec": 300,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0uzklqz6g9",
+      "title": {
+        "zh-CN": "平均律 C 大调前奏曲",
+        "en": "Prelude in C major, BWV 846"
+      },
+      "artist": {
+        "zh-CN": "石坂希美子",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/749dc98ef53b44ad93192f4d0a63fb18.mp3",
+      "durationSec": 163,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0uzklqgha2",
+      "title": {
+        "zh-CN": "吉诺佩迪第一号",
+        "en": "Gymnopédie No. 1"
+      },
+      "artist": {
+        "zh-CN": "Robin Alciatore",
+        "en": "Robin Alciatore"
+      },
+      "src": "/music/uploads/fdee77a58e71462d821422b142e68711.mp3",
+      "durationSec": 184,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0uzklqxuwp",
+      "title": {
+        "zh-CN": "间奏曲 Op.118 No.2",
+        "en": "Intermezzo in A major, Op. 118 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Carlos Gardels",
+        "en": "Carlos Gardels"
+      },
+      "src": "/music/uploads/f40d471e22ba45fd9ee9383ff2e2a9e5.mp3",
+      "durationSec": 328,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wskxyny31",
+      "title": {
+        "zh-CN": "平均律 C 小调前奏曲",
+        "en": "Prelude in C minor, BWV 847"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/88f1e65c69d944bbb4beb78cadad66cf.mp3",
+      "durationSec": 107,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wslgvuj2m",
+      "title": {
+        "zh-CN": "平均律 升 C 大调前奏曲",
+        "en": "Prelude in C-sharp major, BWV 848"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/0fed42b6495e42b281d8378f78ca40bf.mp3",
+      "durationSec": 75,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsmbl281d",
+      "title": {
+        "zh-CN": "平均律 升 C 小调前奏曲",
+        "en": "Prelude in C-sharp minor, BWV 849"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/802e8ba74d7b4ee2a13aa384bba66f63.mp3",
+      "durationSec": 178,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsmxr6ihn",
+      "title": {
+        "zh-CN": "平均律 D 大调前奏曲",
+        "en": "Prelude in D major, BWV 850"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/75ae4ce3d2c140e7b9801e351ee02d62.mp3",
+      "durationSec": 93,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsnlssjnw",
+      "title": {
+        "zh-CN": "平均律 D 小调前奏曲",
+        "en": "Prelude in D minor, BWV 851"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/6763d96549814ec49457917de489f3b9.mp3",
+      "durationSec": 98,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsoq4fvme",
+      "title": {
+        "zh-CN": "平均律 降 E 大调前奏曲",
+        "en": "Prelude in E-flat major, BWV 852"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/aa01e00af3d6413d95e60bdc7b6cd3b5.mp3",
+      "durationSec": 214,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsprlh58l",
+      "title": {
+        "zh-CN": "平均律 降 E 小调前奏曲",
+        "en": "Prelude in E-flat minor, BWV 853"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/88b1b11f46854e858112602440b3280e.mp3",
+      "durationSec": 238,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsqd8gpad",
+      "title": {
+        "zh-CN": "平均律 E 大调前奏曲",
+        "en": "Prelude in E major, BWV 854"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/8391cd1c8b1349ba8447c4b189fc0276.mp3",
+      "durationSec": 105,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsr3316s0",
+      "title": {
+        "zh-CN": "平均律 E 小调前奏曲",
+        "en": "Prelude in E minor, BWV 855"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/27010738b71e4a9a9962a18867b1b40f.mp3",
+      "durationSec": 121,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsrmmyw2e",
+      "title": {
+        "zh-CN": "平均律 F 大调前奏曲",
+        "en": "Prelude in F major, BWV 856"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/140d8f45197c44be8e1e6687f724b764.mp3",
+      "durationSec": 64,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wssieny08",
+      "title": {
+        "zh-CN": "平均律 F 小调前奏曲",
+        "en": "Prelude in F minor, BWV 857"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/414c2ca8652c4217805442eee41bcad9.mp3",
+      "durationSec": 173,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wst1osrud",
+      "title": {
+        "zh-CN": "平均律 升 F 大调前奏曲",
+        "en": "Prelude in F-sharp major, BWV 858"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/919eb064146e47d6a90430dbe56048f5.mp3",
+      "durationSec": 100,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wstjarye6",
+      "title": {
+        "zh-CN": "平均律 升 F 小调前奏曲",
+        "en": "Prelude in F-sharp minor, BWV 859"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/8b3047363195401f890a3faa25985d80.mp3",
+      "durationSec": 65,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsu0p6spq",
+      "title": {
+        "zh-CN": "平均律 G 大调前奏曲",
+        "en": "Prelude in G major, BWV 860"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/20c72e006140444cb1d698ad2d9cfd2b.mp3",
+      "durationSec": 55,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsushxy54",
+      "title": {
+        "zh-CN": "平均律 G 小调前奏曲",
+        "en": "Prelude in G minor, BWV 861"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/5eed36f7a59e46c0adbba0cb0e7cf25d.mp3",
+      "durationSec": 134,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wsvhoozdo",
+      "title": {
+        "zh-CN": "平均律 降 A 大调前奏曲",
+        "en": "Prelude in A-flat major, BWV 862"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/a4a09948b34f4b1899c3021ea997da0a.mp3",
+      "durationSec": 93,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wt0kxwgl4",
+      "title": {
+        "zh-CN": "夜曲 B.108 C 小调",
+        "en": "Nocturne in C minor, B. 108"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/f1a164d5b81f43618538051c7f6eff07.mp3",
+      "durationSec": 193,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wt4plha5p",
+      "title": {
+        "zh-CN": "夜曲 升 C 小调（遗作）",
+        "en": "Nocturne in C-sharp minor, B. 49"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/1658469cb2e346bfa25ad4f4f015937a.mp3",
+      "durationSec": 239,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wt8uau01o",
+      "title": {
+        "zh-CN": "夜曲 Op.15 No.1",
+        "en": "Nocturne in F major, Op. 15 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/e6d3d2c669474fb483ada182fc5f7b79.mp3",
+      "durationSec": 306,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wtddo719b",
+      "title": {
+        "zh-CN": "夜曲 Op.27 No.1",
+        "en": "Nocturne in C-sharp minor, Op. 27 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/69de1a937da94f41803c8169d57612c7.mp3",
+      "durationSec": 352,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wtj12192l",
+      "title": {
+        "zh-CN": "夜曲 Op.27 No.2",
+        "en": "Nocturne in D-flat major, Op. 27 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/d37ba4d77c234d39ba4108c45df9e541.mp3",
+      "durationSec": 378,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wtnofy8t1",
+      "title": {
+        "zh-CN": "夜曲 Op.32 No.1",
+        "en": "Nocturne in B major, Op. 32 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/3b78252093b647909483aa7d00300616.mp3",
+      "durationSec": 301,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wttefy3eu",
+      "title": {
+        "zh-CN": "夜曲 Op.32 No.2",
+        "en": "Nocturne in A-flat major, Op. 32 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/f2a706ba550d402b91aea23582da4714.mp3",
+      "durationSec": 343,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wtygc3szl",
+      "title": {
+        "zh-CN": "夜曲 Op.48 No.1",
+        "en": "Nocturne in C minor, Op. 48 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/46dbb62221e842a7a11b13b64db229a1.mp3",
+      "durationSec": 379,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wu545uljz",
+      "title": {
+        "zh-CN": "夜曲 Op.48 No.2",
+        "en": "Nocturne in F-sharp minor, Op. 48 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/173019465bf446dca05ffd9c40a68adf.mp3",
+      "durationSec": 496,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wua1wd54v",
+      "title": {
+        "zh-CN": "夜曲 Op.55 No.1",
+        "en": "Nocturne in F minor, Op. 55 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/b512a45e1f85411f8132d8d82b3196e7.mp3",
+      "durationSec": 317,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wufc0xrch",
+      "title": {
+        "zh-CN": "夜曲 Op.55 No.2",
+        "en": "Nocturne in E-flat major, Op. 55 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/a5dd8fd509794e4fa03435bb9741cdee.mp3",
+      "durationSec": 310,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wuo3f4wi2",
+      "title": {
+        "zh-CN": "夜曲 Op.62 No.2",
+        "en": "Nocturne in E major, Op. 62 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/fd065528036e46fe920aaf62ed6d4adc.mp3",
+      "durationSec": 340,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wuwfz61yh",
+      "title": {
+        "zh-CN": "夜曲 Op.9 No.1",
+        "en": "Nocturne in B-flat minor, Op. 9 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/b602a54c541b458ebdfd3075c29fab5c.mp3",
+      "durationSec": 337,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wv2v4jz1t",
+      "title": {
+        "zh-CN": "夜曲 Op.9 No.2",
+        "en": "Nocturne in E-flat major, Op. 9 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/4d44e98c2bd54b7ca71b53deea82890f.mp3",
+      "durationSec": 277,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wv87l5ura",
+      "title": {
+        "zh-CN": "夜曲 Op.9 No.3",
+        "en": "Nocturne in B major, Op. 9 No. 3"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/f8fb8138ac974c898fc9985fc6d5253f.mp3",
+      "durationSec": 418,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvc9f6trs",
+      "title": {
+        "zh-CN": "夜曲 Op.72 No.1",
+        "en": "Nocturne in E minor, Op. posth. 72"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/55865fcd43c0465c9b34a8468ccbcead.mp3",
+      "durationSec": 273,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wve1r74an",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.3",
+        "en": "Prelude, Op. 28 No. 3"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/fe2ab4f83a4846a6b9a8f684db336780.mp3",
+      "durationSec": 58,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvhonr6rd",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.6",
+        "en": "Prelude, Op. 28 No. 6"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/81b71a5ef7444032aa84c4d50c1f0508.mp3",
+      "durationSec": 108,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvkwqvpuz",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.7",
+        "en": "Prelude, Op. 28 No. 7"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/e401399a3dd141fda40d4ba9ec45fe45.mp3",
+      "durationSec": 155,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvn8xqheh",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.9",
+        "en": "Prelude, Op. 28 No. 9"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/0395558677b74f6593246198b72b9254.mp3",
+      "durationSec": 79,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvondrng1",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.11",
+        "en": "Prelude, Op. 28 No. 11"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/a166b7414c8f42deb33e70564e862bdb.mp3",
+      "durationSec": 47,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvsarvlbe",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.13",
+        "en": "Prelude, Op. 28 No. 13"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/4f71f4cc24d444e3a504f5e042c94ad6.mp3",
+      "durationSec": 167,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvwb7jcmv",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.15",
+        "en": "Prelude, Op. 28 No. 15"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/f80efc96ee2f479eb662658a061da594.mp3",
+      "durationSec": 295,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wvz2nxn31",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.17",
+        "en": "Prelude, Op. 28 No. 17"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/41ebe3caedbe4c3f9c9b2f05549a11df.mp3",
+      "durationSec": 180,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0ww1qfr7ae",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.21",
+        "en": "Prelude, Op. 28 No. 21"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/9d021efa6f64433b8591eb3e2e3ad6be.mp3",
+      "durationSec": 115,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0ww4k56a6l",
+      "title": {
+        "zh-CN": "前奏曲 Op.28 No.23",
+        "en": "Prelude, Op. 28 No. 23"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/a777309a4e9b4bcc838f24516d995a00.mp3",
+      "durationSec": 61,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxpwgxcp8",
+      "title": {
+        "zh-CN": "平均律 升 G 小调前奏曲",
+        "en": "Prelude in G-sharp minor, BWV 863"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/8c59249d077f4d3d938e4a7a5f043352.mp3",
+      "durationSec": 122,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxr33haml",
+      "title": {
+        "zh-CN": "平均律 A 大调前奏曲",
+        "en": "Prelude in A major, BWV 864"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/349d988af21a4aeea7c944818f689f7b.mp3",
+      "durationSec": 91,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxss41ae1",
+      "title": {
+        "zh-CN": "平均律 A 小调前奏曲",
+        "en": "Prelude in A minor, BWV 865"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/65d116d9975847a194b0f6f93372da89.mp3",
+      "durationSec": 85,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxtv3axmc",
+      "title": {
+        "zh-CN": "平均律 降 B 大调前奏曲",
+        "en": "Prelude in B-flat major, BWV 866"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/dbc1eee29ee444c5aa500a48eee44c5e.mp3",
+      "durationSec": 79,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxv7awvq3",
+      "title": {
+        "zh-CN": "平均律 降 B 小调前奏曲",
+        "en": "Prelude in B-flat minor, BWV 867"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/38ce88264242416cb797e33d63839a16.mp3",
+      "durationSec": 148,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxw8fk0gx",
+      "title": {
+        "zh-CN": "平均律 B 大调前奏曲",
+        "en": "Prelude in B major, BWV 868"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/6077d8cb13d84e1c8b8c1dbfd2fa6613.mp3",
+      "durationSec": 60,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxxk9j4n0",
+      "title": {
+        "zh-CN": "平均律 B 小调前奏曲",
+        "en": "Prelude in B minor, BWV 869"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/088d5b9e11054f7a8675a99a7fb4c406.mp3",
+      "durationSec": 148,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wxz71wo3e",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 9",
+        "en": "Goldberg Variations: Variation 9"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/b199e8ddd2a94cf69e809fcd09d5bc5d.mp3",
+      "durationSec": 126,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wy10pz6wj",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 12",
+        "en": "Goldberg Variations: Variation 12"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/69b09287a0344d4fa9b3d973624ffb4b.mp3",
+      "durationSec": 136,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wy4d1s46k",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 13",
+        "en": "Goldberg Variations: Variation 13"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/25963b43a6904f62a318fa8ce5356303.mp3",
+      "durationSec": 254,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wy70ldupo",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 15",
+        "en": "Goldberg Variations: Variation 15"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/e444b2796eef46c39ee764574f9ad052.mp3",
+      "durationSec": 273,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wy9174d7d",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 18",
+        "en": "Goldberg Variations: Variation 18"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/eaa0cfd43b6e411eb19239dfe04be32c.mp3",
+      "durationSec": 109,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wyarityg2",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 19",
+        "en": "Goldberg Variations: Variation 19"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/284328ca3e6a481c824551c82d86d849.mp3",
+      "durationSec": 85,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wye0d8v57",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 21",
+        "en": "Goldberg Variations: Variation 21"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/343b4cfdf6ab4e92891e623627f2e4e3.mp3",
+      "durationSec": 235,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wygpcwwkm",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 24",
+        "en": "Goldberg Variations: Variation 24"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/169fa22db4b94f11a755f566f42d2f0a.mp3",
+      "durationSec": 166,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wyl7wmnc2",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：变奏 25",
+        "en": "Goldberg Variations: Variation 25"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/1f8aad16fbca454d8cee663ad2f8aab5.mp3",
+      "durationSec": 558,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0wynkxij2a",
+      "title": {
+        "zh-CN": "哥德堡变奏曲：咏叹调（再现）",
+        "en": "Goldberg Variations: Aria da capo"
+      },
+      "artist": {
+        "zh-CN": "Kimiko Ishizaka",
+        "en": "Kimiko Ishizaka"
+      },
+      "src": "/music/uploads/95e53ebbfb634930a54befd755833ceb.mp3",
+      "durationSec": 170,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xe5ddz9fm",
+      "title": {
+        "zh-CN": "圆舞曲 Op.34 No.2",
+        "en": "Waltz in A minor, Op. 34 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/92e062fa3e90443baa33207c82cfac2f.mp3",
+      "durationSec": 303,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xeajy462o",
+      "title": {
+        "zh-CN": "圆舞曲 Op.69 No.1",
+        "en": "Waltz in A-flat major, Op. 69 No. 1"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/e49a523ef060459c89c1eac65eec7fa1.mp3",
+      "durationSec": 248,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xehf6idrp",
+      "title": {
+        "zh-CN": "圆舞曲 Op.69 No.2",
+        "en": "Waltz in B minor, Op. 69 No. 2"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/a5e0cf320f0a452ea766a11e2ac00b0b.mp3",
+      "durationSec": 216,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xelhy9g20",
+      "title": {
+        "zh-CN": "圆舞曲 遗作 A 小调",
+        "en": "Waltz in A minor, Op. posth. B. 150"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/6fc6294679a14f38bdaaa09fbd615cf3.mp3",
+      "durationSec": 131,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xeqge3r89",
+      "title": {
+        "zh-CN": "玛祖卡 Op.17 No.4",
+        "en": "Mazurka in A minor, Op. 17 No. 4"
+      },
+      "artist": {
+        "zh-CN": "Musopen / Set Chopin Free",
+        "en": "Musopen / Set Chopin Free"
+      },
+      "src": "/music/uploads/bb0f24c0ea774f14aadbbf717bc0ef54.mp3",
+      "durationSec": 300,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xesozj8u7",
+      "title": {
+        "zh-CN": "月光奏鸣曲：第一乐章",
+        "en": "Moonlight Sonata: I. Adagio sostenuto"
+      },
+      "artist": {
+        "zh-CN": "Paul Pitman",
+        "en": "Paul Pitman"
+      },
+      "src": "/music/uploads/8cb56263fdd34400a1dc9b54dd155057.mp3",
+      "durationSec": 336,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-mt0xevsw8gnk",
+      "title": {
+        "zh-CN": "悲怆奏鸣曲：慢板",
+        "en": "Pathétique Sonata: II. Adagio cantabile"
+      },
+      "artist": {
+        "zh-CN": "Paul Pitman",
+        "en": "Paul Pitman"
+      },
+      "src": "/music/uploads/b330b474e538498eaa4ab115e7350df8.mp3",
+      "durationSec": 298,
+      "tags": [
+        "钢琴"
+      ],
+      "remark": "专辑：钢琴"
+    },
+    {
+      "id": "track-hymn-amazing-grace",
+      "title": {
+        "zh-CN": "奇异恩典",
+        "en": "Amazing Grace"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/amazing-grace.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-abide-with-me",
+      "title": {
+        "zh-CN": "与主同住",
+        "en": "Abide with Me"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/01/abide-with-me.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-be-still-my-soul",
+      "title": {
+        "zh-CN": "我灵镇静",
+        "en": "Be Still My Soul"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/be-still-my-soul.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-be-thou-my-vision",
+      "title": {
+        "zh-CN": "成为我异象",
+        "en": "Be Thou My Vision"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/be-thou-my-vision.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-holy-holy-holy",
+      "title": {
+        "zh-CN": "圣哉三一",
+        "en": "Holy, Holy, Holy"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/holy-holy-holy.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-it-is-well-with-my-soul",
+      "title": {
+        "zh-CN": "我心灵得安宁",
+        "en": "It Is Well with My Soul"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/it-is-well-with-my-soul.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-what-a-friend-we-have-in-jesus",
+      "title": {
+        "zh-CN": "耶稣恩友",
+        "en": "What a Friend We Have in Jesus"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/what-a-friend-we-have-in-jesus.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-rock-of-ages",
+      "title": {
+        "zh-CN": "万古磐石",
+        "en": "Rock of Ages"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/Rock-of-Ages.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-just-as-i-am",
+      "title": {
+        "zh-CN": "照我本相",
+        "en": "Just As I Am"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/just-as-i-am.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-nearer-my-god-to-thee",
+      "title": {
+        "zh-CN": "更近我主",
+        "en": "Nearer, My God, to Thee"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/nearer-my-god-to-thee.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-sweet-hour-of-prayer",
+      "title": {
+        "zh-CN": "甜美祷告时",
+        "en": "Sweet Hour of Prayer"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/sweet-hour-of-prayer.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-fairest-lord-jesus",
+      "title": {
+        "zh-CN": "美哉主耶稣",
+        "en": "Fairest Lord Jesus"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/fairest-lord-jesus.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-softly-and-tenderly",
+      "title": {
+        "zh-CN": "温柔地召你",
+        "en": "Softly and Tenderly"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/softly-and-tenderly.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-blessed-assurance",
+      "title": {
+        "zh-CN": "有福的确据",
+        "en": "Blessed Assurance"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/blessed-assurance.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-come-thou-fount-of-every-blessing",
+      "title": {
+        "zh-CN": "万福源头",
+        "en": "Come, Thou Fount of Every Blessing"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/come-thou-fount-of-every-blessing.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-how-firm-a-foundation",
+      "title": {
+        "zh-CN": "坚固保障",
+        "en": "How Firm a Foundation"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/how-firm-a-foundation.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-o-god-our-help-in-ages-past",
+      "title": {
+        "zh-CN": "上主是我永远的保障",
+        "en": "O God, Our Help in Ages Past"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/o-god-our-help-in-ages-past.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-praise-to-the-lord-the-almighty",
+      "title": {
+        "zh-CN": "赞美上主",
+        "en": "Praise to the Lord, the Almighty"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/praise-to-the-lord-the-almighty.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-when-i-survey-the-wondrous-cross",
+      "title": {
+        "zh-CN": "奇妙十架",
+        "en": "When I Survey the Wondrous Cross"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/when-i-survey-the-wondrous-cross.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-what-wondrous-love-is-this",
+      "title": {
+        "zh-CN": "何等奇妙的爱",
+        "en": "What Wondrous Love Is This"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/What-Wondrous-Love-is-This.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-near-to-the-heart-of-god",
+      "title": {
+        "zh-CN": "靠近神的心",
+        "en": "Near to the Heart of God"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/near-to-the-heart-of-god.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-savior-like-a-shepherd-lead-us",
+      "title": {
+        "zh-CN": "救主像牧人",
+        "en": "Savior, Like a Shepherd Lead Us"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/savior-like-a-shepherd-lead-us.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-jesus-the-very-thought-of-thee",
+      "title": {
+        "zh-CN": "一想到你耶稣",
+        "en": "Jesus, the Very Thought of Thee"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/jesus-the-very-thought-of-thee.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-children-of-the-heavenly-father",
+      "title": {
+        "zh-CN": "天父的儿女",
+        "en": "Children of the Heavenly Father"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/children-of-the-heavenly-father.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-dear-lord-and-father-of-all-mankind",
+      "title": {
+        "zh-CN": "亲爱主，世人的父",
+        "en": "Dear Lord and Father of Mankind"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/dear-lord-and-father-of-all-mankind.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-for-the-beauty-of-the-earth",
+      "title": {
+        "zh-CN": "大地之美",
+        "en": "For the Beauty of the Earth"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/for-the-beauty-of-the-earth.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-this-is-my-fathers-world",
+      "title": {
+        "zh-CN": "这是天父世界",
+        "en": "This Is My Father's World"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/this-is-my-fathers-world.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-all-creatures-of-our-god-and-king",
+      "title": {
+        "zh-CN": "万物来颂赞",
+        "en": "All Creatures of Our God and King"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/all-creatures-of-our-god-and-king.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-come-thou-long-expected-jesus",
+      "title": {
+        "zh-CN": "久望耶稣",
+        "en": "Come, Thou Long Expected Jesus"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/come-thou-long-expected-jesus.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-o-come-o-come-emmanuel",
+      "title": {
+        "zh-CN": "来吧以马内利",
+        "en": "O Come, O Come, Emmanuel"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/o-come-o-come-emmanuel.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-away-in-a-manger",
+      "title": {
+        "zh-CN": "马槽歌",
+        "en": "Away in a Manger"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/away-in-a-manger.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-o-sacred-head-now-wounded",
+      "title": {
+        "zh-CN": "圣头今受创",
+        "en": "O Sacred Head, Now Wounded"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/O-Sacred-Head-Now-Wounded.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-beneath-the-cross-of-jesus",
+      "title": {
+        "zh-CN": "在主十架下",
+        "en": "Beneath the Cross of Jesus"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/Beneath-the-Cross-of-Jesus.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-in-the-cross-of-christ",
+      "title": {
+        "zh-CN": "十架永存",
+        "en": "In the Cross of Christ I Glory"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/In-the-Cross-of-Christ.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-the-lords-my-shepherd-ill-not-want",
+      "title": {
+        "zh-CN": "耶和华是我的牧者",
+        "en": "The Lord's My Shepherd"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/the-lords-my-shepherd-ill-not-want.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-the-churchs-one-foundation",
+      "title": {
+        "zh-CN": "教会唯一的根基",
+        "en": "The Church's One Foundation"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/the-churchs-one-foundation.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-now-thank-we-all-our-god",
+      "title": {
+        "zh-CN": "今要赞美神",
+        "en": "Now Thank We All Our God"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/now-thank-we-all-our-god.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-now-the-day-is-over",
+      "title": {
+        "zh-CN": "一天又过去",
+        "en": "Now the Day Is Over"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/01/now-the-day-is-over.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-blest-be-the-tie-that-binds",
+      "title": {
+        "zh-CN": "恩结永不断",
+        "en": "Blest Be the Tie That Binds"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/blest-be-the-tie-that-binds.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-my-jesus-i-love-thee",
+      "title": {
+        "zh-CN": "我爱我的救主",
+        "en": "My Jesus, I Love Thee"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/01/my-jesus-i-love-thee.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-i-need-thee-every-hour",
+      "title": {
+        "zh-CN": "每时每刻需要你",
+        "en": "I Need Thee Every Hour"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/01/i-need-thee-every-hour.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-take-my-life-and-let-it-be",
+      "title": {
+        "zh-CN": "将我生命献上",
+        "en": "Take My Life and Let It Be"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/take-my-life-and-let-it-be.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-guide-me-o-thou-great-jehovah",
+      "title": {
+        "zh-CN": "求主引导",
+        "en": "Guide Me, O Thou Great Jehovah"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/guide-me-o-thou-great-jehovah.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-immortal-invisible",
+      "title": {
+        "zh-CN": "永活全能真神",
+        "en": "Immortal, Invisible"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/immortal-invisible.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-all-people-that-on-earth-do-dwell",
+      "title": {
+        "zh-CN": "普天下当赞美主",
+        "en": "All People That on Earth Do Dwell"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/all-people-that-on-earth-do-dwell.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-o-worship-the-king",
+      "title": {
+        "zh-CN": "当崇拜大君王",
+        "en": "O Worship the King"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/o-worship-the-king.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-a-mighty-fortress-is-our-god",
+      "title": {
+        "zh-CN": "上主是我坚固保障",
+        "en": "A Mighty Fortress Is Our God"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/a-mighty-fortress-is-our-god.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-doxology",
+      "title": {
+        "zh-CN": "三一颂",
+        "en": "Doxology"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/doxology.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-jesus-loves-me",
+      "title": {
+        "zh-CN": "耶稣爱我",
+        "en": "Jesus Loves Me"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/jesus-loves-me.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-give-me-jesus",
+      "title": {
+        "zh-CN": "只要耶稣",
+        "en": "Give Me Jesus"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/give-me-jesus.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-were-you-there",
+      "title": {
+        "zh-CN": "你在那里吗",
+        "en": "Were You There?"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/02/Were-You-There.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-come-ye-disconsolate",
+      "title": {
+        "zh-CN": "忧伤的人请来",
+        "en": "Come, Ye Disconsolate"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/03/Come-Ye-Disconsolate.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-cast-thy-burden-upon-the-lord",
+      "title": {
+        "zh-CN": "把重担卸给主",
+        "en": "Cast Thy Burden Upon the Lord"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/03/Cast-Thy-Burden-Upon-the-Lord.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-breathe-on-me-breath-of-god",
+      "title": {
+        "zh-CN": "神的气息吹我",
+        "en": "Breathe on Me, Breath of God"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/03/Breathe-on-Me-Breath-of-God.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-break-thou-the-bread-of-life",
+      "title": {
+        "zh-CN": "生命的粮",
+        "en": "Break Thou the Bread of Life"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/03/Break-Thou-the-Bread-of-Life.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-i-heard-the-voice-of-jesus-say",
+      "title": {
+        "zh-CN": "我听见主声音",
+        "en": "I Heard the Voice of Jesus Say"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/05/I-Heard-the-Voice-of-Jesus-Say.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-he-leadeth-me",
+      "title": {
+        "zh-CN": "主引领我",
+        "en": "He Leadeth Me"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/he-leadeth-me.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-close-to-thee",
+      "title": {
+        "zh-CN": "亲近主",
+        "en": "Close to Thee"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/close-to-thee.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-hiding-in-thee",
+      "title": {
+        "zh-CN": "藏在主里",
+        "en": "Hiding in Thee"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/hiding-in-thee.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-under-his-wings",
+      "title": {
+        "zh-CN": "在他翅膀下",
+        "en": "Under His Wings"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/under-his-wings.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-wonderful-peace",
+      "title": {
+        "zh-CN": "奇妙平安",
+        "en": "Wonderful Peace"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/wonderful-peace.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-day-by-day",
+      "title": {
+        "zh-CN": "日复一日",
+        "en": "Day by Day"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/day-by-day.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-have-thine-own-way-lord",
+      "title": {
+        "zh-CN": "求主陶造我",
+        "en": "Have Thine Own Way, Lord"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/09/have-thine-own-way-lord.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-o-the-deep-deep-love-of-jesus",
+      "title": {
+        "zh-CN": "耶稣深长的爱",
+        "en": "O the Deep, Deep Love of Jesus"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/03/O-the-Deep-Deep-Love-of-Jesus.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-love-divine-all-loves-excelling",
+      "title": {
+        "zh-CN": "神圣的爱",
+        "en": "Love Divine, All Loves Excelling"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/04/Love-Divine-All-Loves-Excelling.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-praise-my-soul-the-king-of-heaven",
+      "title": {
+        "zh-CN": "赞美我灵",
+        "en": "Praise, My Soul, the King of Heaven"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2026/05/Praise-My-Soul-the-King-of-Heaven.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-how-sweet-the-name-of-jesus-sounds",
+      "title": {
+        "zh-CN": "主名何等香甜",
+        "en": "How Sweet the Name of Jesus Sounds"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/how-sweet-the-name-of-jesus-sounds.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-i-am-his-and-he-is-mine",
+      "title": {
+        "zh-CN": "我属他他也属我",
+        "en": "I Am His and He Is Mine"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/i-am-his-and-he-is-mine.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-jesus-paid-it-all",
+      "title": {
+        "zh-CN": "耶稣还清罪债",
+        "en": "Jesus Paid It All"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/10/jesus-paid-it-all.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-the-solid-rock",
+      "title": {
+        "zh-CN": "坚固磐石",
+        "en": "The Solid Rock"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/the-solid-rock.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-near-the-cross",
+      "title": {
+        "zh-CN": "靠近十架",
+        "en": "Near the Cross"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/12/near-the-cross.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-hymn-pass-me-not",
+      "title": {
+        "zh-CN": "求主不要越过我",
+        "en": "Pass Me Not"
+      },
+      "artist": {
+        "zh-CN": "Hymn Commons",
+        "en": "Hymn Commons"
+      },
+      "src": "https://hymncommons.org/wp-content/uploads/2025/11/pass-me-not.mp3",
+      "tags": [
+        "赞美诗"
+      ],
+      "remark": "专辑：赞美诗"
     }
   ],
   "backgroundVisuals": [
@@ -179,7 +2593,7 @@
         "en": "Default scene"
       },
       "order": 0,
-      "audioTrackId": "track-mprxst9jy82y",
+      "audioTrackId": "track-mt391okyjj4i",
       "backgroundVisualId": null
     }
   ],

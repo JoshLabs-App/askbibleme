@@ -38,16 +38,26 @@
 
 ## 工作方式
 
+- **JoshLabs Dev（强制，全项目通用）**：所有开发任务先遵循 `joshlabs-dev` skill（真源：`/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md`）——先思考再执行、最小可用闭环、优先复用、不擅自扩功能、交付前自检；UI 约束仅在做界面时生效；用户说 `DD` 时继续。AskBible 覆盖层见 `.cursor/rules/joshlabs-dev.mdc`。
+- **OAuth 回调先确认终点**：从 App 发起的登录默认必须回到 App；网页 HTTPS 回调只能在明确要求网页完成登录时启用。修改 OAuth 前先确认登录承载端、回调终点与参考实现，不得仅因网页回调可用就替换 App 回调。
 - 所有开发保持**低认知负荷**。
-- **默认先执行**：能从仓库、配置、文档里找到答案的，先自己查再动手。
-- **少打断**：只有在会影响结果、存在风险、或缺少关键信息时才提问。
+- **先思考与质疑，禁止盲目执行**：动手前先判断指令是否合理、是否越界、是否可用更小方案。若冲突、膨胀、重复造轮、或不可逆，先简短质疑并给更紧选项；不要为了听话而做错事。
+- **默认先查再做**：能从仓库、配置、文档里找到答案的，先自己查；清晰且在边界内的小任务直接做。
+- **少打断，但不闭嘴**：只在合理性、范围、风险、或缺少关键信息时提问；不要对每条明确小指令开辩论。
 - **少汇报过程**：只在「开始 / 遇到阻塞 / 完成」三个节点说明进度。
-- **先结果，后解释**：先把可交付结果做出来，再补必要说明。
+- **先结果，后解释**：确认方向后，先把可交付结果做出来，再补必要说明。
 - **不允许**擅自扩展功能；超出范围的想法写入 `docs/10-parking-lot.md`，**不要**在代码里实现。
 - 平台实现与优化顺序固定为：**苹果（iOS）第一优先，安卓第二，网页第三**。
 - 安卓与网页在交互、视觉与体验节奏上，默认**对齐苹果版本**；若受平台能力限制，先记录差异与原因，再给降级方案。
 - 涉及后台/管理端开发流程时，按同一顺序推进：先在苹果标准上完成与验证，再同步安卓，最后同步网页。
-- 移动端媒体（音乐/视频）默认**本地播放优先**：播放只走安装包内或设备已下载资源；远端仅用于检查/下载更新包，不作为常规直连播放源。
+- 移动端媒体（音乐/视频/金句音频）默认**本地播放优先**：播放只走安装包内或设备已下载的商店资源包，不作为常规直连远端播放源。
+- **大体积增量不走 Render**：禁止用 `askbible.me` / Render 当 App 媒体增量下发通道。详见 `.cursor/rules/mobile-local-media-playback-first.mdc`。
+- **金句**：首页文字默认全量池；语音 **TEMPORARY** 走 Cloudflare R2 HTTPS 直链点播（不进安装包、不走 Render）。见 `docs/mobile-golden-verse-audio.md`。恢复本地 zip：`EXPO_PUBLIC_GOLDEN_VERSE_AUDIO_STREAM=0` + `MOBILE_BUNDLE_GOLDEN_VERSE_AUDIO=1`。
+- **音乐默认播放**：首页 / 壳层默认只播「安静」专辑；「下午茶 / 专注工作 / 睡眠」等其它专辑不得混入默认选曲池，仅在音乐栏用户主动切换后才播放。
+- **音乐安装包（现行）**：
+  - **iOS / Android**：默认每专辑只打 **第一首**；其余 **TEMPORARY：Cloudflare R2** 直链 + 本机缓存。见 `musicAudioRemote.ts`。
+  - **Android 商店**：生产构建 **默认 `MOBILE_ANDROID_MUSIC_PAD=0`**。**禁止**为上架误开 `MOBILE_ANDROID_MUSIC_PAD=1`（会把全量曲打进 AAB，约 650MB）。遗留 PAD 见 `docs/mobile-android-music-pad.md`，需 `ALLOW_ANDROID_MUSIC_PAD=1` 才允许。
+  - 调试全量：`MOBILE_BUNDLE_MUSIC_FULL=1`；限量仍可用 `MOBILE_BUNDLE_MUSIC_LIMIT=N`。
 - **移动端发版禁止 EAS 云端构建**：iOS 用 `npm run mobile:build:ios:production`（本机 `--local`），Android 用 `npm run mobile:build:android:production`（本机 Gradle）；流程见 `docs/mobile-release-checklist.md`。
 
 ### 执行节奏

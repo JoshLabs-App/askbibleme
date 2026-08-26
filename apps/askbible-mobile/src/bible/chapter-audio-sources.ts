@@ -1,5 +1,7 @@
 /**
  * 移动端圣经整章朗读音源（与 lib/bible/chapter-audio-sources 对齐）。
+ * 允许：本地包 / FHL / WEB / YouVersion / 潮语 / 主站 `/audio` 语音包。
+ * 自然/音乐等内容库不走这里。
  */
 
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
@@ -11,7 +13,6 @@ import {
 } from "./cuv-chapter-audio";
 import {
   buildExternalTeochewNtChapterAudioUrl,
-  buildLocalTeochewNtChapterAudioUrl,
   teochewNtVoiceActive,
 } from "./teochew-nt-audio";
 import {
@@ -38,7 +39,7 @@ function toAbsoluteSiteUrl(siteBaseUrl: string | undefined, relPath: string): st
   const rel = String(relPath || "").trim();
   if (!rel) return "";
   if (/^https?:\/\//i.test(rel)) return rel;
-  if (!base) return rel.startsWith("/") ? rel : `/${rel}`;
+  if (!base) return "";
   return `${base}${rel.startsWith("/") ? rel : `/${rel}`}`;
 }
 
@@ -61,7 +62,7 @@ export function resolveChapterAudioExternalUrl(args: {
   return "";
 }
 
-/** 自托管 askbible.me `/audio/...` 绝对 URL（移动端不 HEAD 探测，直接拼 URL）。 */
+/** 主站或本机自托管 `/audio/...`（圣经音频白名单）。 */
 export function resolveSelfHostedChapterAudioPlayableUrl(args: {
   translationId: string;
   bookId: string;
@@ -70,24 +71,18 @@ export function resolveSelfHostedChapterAudioPlayableUrl(args: {
   siteBaseUrl?: string;
 }): string | null {
   const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
+  // 潮语只引用 TSTSCC，不走本站 /audio/teochew-nt
+  if (teochewNtVoiceActive(voice)) return null;
   let relPath = "";
-  if (teochewNtVoiceActive(voice)) {
-    relPath = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-  } else if (translationUsesWebChapterAudio(args.translationId)) {
+  if (translationUsesWebChapterAudio(args.translationId)) {
     relPath = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
   } else if (translationSupportsCuvChapterAudio(args.translationId)) {
     relPath = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
   }
   if (!relPath) return null;
-  const bases = uniqueNonEmpty([
-    String(args.siteBaseUrl || "").trim().replace(/\/$/, ""),
-    "https://askbible.me",
-  ]);
-  for (const base of bases) {
-    const url = absoluteSelfHostedChapterAudioUrl(base, relPath);
-    if (url) return url;
-  }
-  return null;
+  const base = String(args.siteBaseUrl || "").trim().replace(/\/$/, "");
+  if (!base) return null;
+  return absoluteSelfHostedChapterAudioUrl(base, relPath);
 }
 
 export function buildChapterAudioDownloadCandidates(args: {
@@ -99,15 +94,15 @@ export function buildChapterAudioDownloadCandidates(args: {
 }): string[] {
   const external = resolveChapterAudioExternalUrl(args);
   const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
-  let selfPath = "";
   if (teochewNtVoiceActive(voice)) {
-    selfPath = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-  } else if (translationUsesWebChapterAudio(args.translationId)) {
+    return uniqueNonEmpty([external]);
+  }
+  let selfPath = "";
+  if (translationUsesWebChapterAudio(args.translationId)) {
     selfPath = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
   } else if (translationSupportsCuvChapterAudio(args.translationId)) {
     selfPath = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
   }
   const selfPrimary = toAbsoluteSiteUrl(args.siteBaseUrl, selfPath);
-  const selfFallback = toAbsoluteSiteUrl("https://askbible.me", selfPath);
-  return uniqueNonEmpty([external, selfPrimary, selfFallback]);
+  return uniqueNonEmpty([external, selfPrimary]);
 }

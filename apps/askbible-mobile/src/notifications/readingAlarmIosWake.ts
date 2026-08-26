@@ -1,25 +1,26 @@
-import { Platform } from "react-native";
 import {
   isNativeReadingAlarmPreludeActive,
-  getNativeReadingAlarmPreludeSecondsRemaining,
   maybeAutoStartDueReadingAlarm,
   peekReadingAlarmTrigger,
 } from "./syncAndroidReadingAlarmSchedule";
+import { resolveReadingAlarmWakeKind, type ReadingAlarmWakeKind } from "./readingAlarmWake";
 
-/** 解锁 / 回前台时：补启动闹钟预备音乐，或接续已完成的预备段进入读经。 */
-export async function tryWakeReadingAlarmOnActive(): Promise<
-  "started" | "handoff" | "prelude-sync" | "none"
-> {
-  if (Platform.OS !== "ios") return "none";
-
-  if (await peekReadingAlarmTrigger()) {
-    return "handoff";
+/** 解锁 / 回前台时：接上原生预备音乐，或进入已到期的读经交接。双端同一套判断。 */
+export async function tryWakeReadingAlarmOnActive(): Promise<ReadingAlarmWakeKind> {
+  const pendingTrigger = await peekReadingAlarmTrigger();
+  const preludeActive = await isNativeReadingAlarmPreludeActive();
+  if (pendingTrigger || preludeActive) {
+    return resolveReadingAlarmWakeKind({
+      pendingTrigger,
+      preludeActive,
+      dueStarted: false,
+    });
   }
 
-  if (await isNativeReadingAlarmPreludeActive()) {
-    return "prelude-sync";
-  }
-
-  const started = await maybeAutoStartDueReadingAlarm();
-  return started ? "started" : "none";
+  const dueStarted = await maybeAutoStartDueReadingAlarm();
+  return resolveReadingAlarmWakeKind({
+    pendingTrigger: false,
+    preludeActive: false,
+    dueStarted,
+  });
 }

@@ -33,7 +33,6 @@ type Props = {
   layoutMeasureTick?: number;
   onHighlightTracePoint?: (x: number, y: number, begin: boolean) => void;
   inline?: boolean;
-  isGolden?: boolean;
   highlight?: VerseTextHighlightKind;
   textHighlightColor?: string;
   onPress?: () => void;
@@ -54,7 +53,6 @@ export function ReadChapterVerseText({
   layoutMeasureTick = 0,
   onHighlightTracePoint,
   inline = false,
-  isGolden = false,
   highlight,
   textHighlightColor,
   onPress,
@@ -63,7 +61,7 @@ export function ReadChapterVerseText({
   searchKeyword = null,
 }: Props) {
   const { px } = useReadBibleTypography();
-  const kind = highlight ?? (isGolden ? "golden" : undefined);
+  const kind = highlight;
   const marker = kind ? verseTextHighlightStyle(kind) : undefined;
   const activeHighlightColor = textHighlightColor ?? DEFAULT_VERSE_TEXT_HIGHLIGHT_COLOR;
 

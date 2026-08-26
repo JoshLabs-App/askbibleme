@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { InteractionManager } from "react-native";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { toZhTwText } from "../i18n/site-copy";
 import type { BibleTranslationsIndex } from "../bible/translations-types";
@@ -101,10 +102,16 @@ export function useReadBibleSettingsTranslationOptions(args: Args) {
     setContrastDraftIds(contrastTranslationIds);
   }, [contrastTranslationIds]);
 
+  // 打开设置时不要立刻 refresh（会清 AsyncStorage + 重算目录，章页整树跟着卡）。
+  // 目录过稀时才在交互空闲后补拉；日常打开用已有 catalog。
   useEffect(() => {
     if (!visible) return;
-    void refreshTranslationCatalog();
-  }, [visible, refreshTranslationCatalog]);
+    if (translationCatalogReady && translationCatalog.length > 3) return;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void refreshTranslationCatalog();
+    });
+    return () => task.cancel();
+  }, [visible, translationCatalogReady, translationCatalog.length, refreshTranslationCatalog]);
 
   const optionDeps = useMemo(
     () => ({ locale, optionDownloadState, translationStatusSuffix }),

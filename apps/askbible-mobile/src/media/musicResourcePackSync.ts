@@ -1,5 +1,6 @@
 import * as FileSystem from "expo-file-system/legacy";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import type { MusicCompanionStore } from "../music/types";
 import { downloadMusicAssetDirect, downloadMusicPackAsset, fetchMusicPackManifest } from "./musicResourcePackDownload";
 import {
@@ -106,6 +107,7 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
 }
 
 export async function ensureMusicResourcePackSync(options?: ResourcePackSyncOptions): Promise<boolean> {
+  if (isMobileBundledOnly()) return false;
   const force = Boolean(options?.force);
   if (!getMusicResourcePackSyncPromise()) {
     setMusicResourcePackSyncPromise(
@@ -153,6 +155,7 @@ export async function downloadMusicTrackAssets(
   track: MusicTrackDownloadInput,
   options: ResourcePackSyncOptions = {},
 ): Promise<boolean> {
+  if (isMobileBundledOnly()) return false;
   await hydrateMusicResourcePackStateInternal();
   const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
   const wanted = [

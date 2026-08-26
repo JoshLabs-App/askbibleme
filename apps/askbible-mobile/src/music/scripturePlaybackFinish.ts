@@ -3,8 +3,8 @@ import type { Audio } from "expo-av";
 import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
 import { markTodayReadingAudioChapterComplete } from "../read/reading-plan/today-reading-done";
+import { resolveTransportReadChapterPlayback } from "../read/read-chapter-playback-store";
 import { scriptureChapterPool } from "./scripture-chapter-pool";
-import { isPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
 import { markScriptureChapterHandoff } from "./scripturePlaybackPriority";
 import { markScriptureWantPlaying } from "./scriptureResumeAfterInterruption";
 import type {
@@ -34,7 +34,8 @@ export function handleScriptureDidJustFinish({
   setPlaying,
 }: Args): void {
   const mode = scriptureAudioRepeatRef.current;
-  const rc = readChapterRef.current;
+  // 续播回调必须来自在播轨，勿用浏览中的 browse 注册。
+  const rc = resolveTransportReadChapterPlayback() ?? readChapterRef.current;
   if (!rc) {
     setPlaying(false);
     return;
@@ -42,7 +43,7 @@ export function handleScriptureDidJustFinish({
   if (mode !== "chapter") {
     void markTodayReadingAudioChapterComplete(rc.bookId, rc.chapter);
   }
-  if (mode === "chapter" && !isPlanFlowSessionActive()) {
+  if (mode === "chapter") {
     const active = soundRef.current;
     if (active) {
       void active

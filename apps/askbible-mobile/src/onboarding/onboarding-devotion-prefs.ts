@@ -1,4 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  clearOnboardingDevotionCompletedThisSession,
+  markOnboardingDevotionCompletedThisSession,
+} from "./onboarding-devotion-gate";
 
 const ONBOARDING_COMPLETED_KEY = "onboardingCompleted";
 const SELECTED_COMPANION_NEEDS_KEY = "selectedCompanionNeeds";
@@ -47,6 +51,8 @@ export async function completeOnboardingDevotionIntro(
   selectedCompanionNeeds: CompanionNeedId[],
   nickname?: string,
 ): Promise<void> {
+  // 先标本会话完成，再写盘：略过导航离开欢迎页时根布局不再盖闪屏/强制跳回。
+  markOnboardingDevotionCompletedThisSession();
   try {
     const trimmed = (nickname ?? "").trim();
     await AsyncStorage.multiSet([
@@ -60,6 +66,7 @@ export async function completeOnboardingDevotionIntro(
 }
 
 export async function resetOnboardingDevotionIntro(): Promise<void> {
+  clearOnboardingDevotionCompletedThisSession();
   try {
     await AsyncStorage.multiRemove([
       ONBOARDING_COMPLETED_KEY,

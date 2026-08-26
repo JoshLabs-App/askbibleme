@@ -20,6 +20,13 @@ export function markCoverVideoSessionPosterOnly(): void {
   listeners.forEach((l) => l());
 }
 
+/** 用户重新打开直播视频时解除会话静帧锁，允许再试解码。 */
+export function clearCoverVideoSessionPosterOnly(): void {
+  if (!sessionPosterOnly) return;
+  sessionPosterOnly = false;
+  listeners.forEach((l) => l());
+}
+
 export function hasCoverVideoPosterAsset(posterModule?: number | null, posterUri?: string): boolean {
   return posterModule != null || Boolean(posterUri?.trim());
 }

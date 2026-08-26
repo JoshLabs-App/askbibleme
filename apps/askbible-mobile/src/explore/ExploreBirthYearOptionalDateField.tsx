@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { parchmentControlStyles } from "../shell/parchmentControlSurface";
 import { ExploreBirthDatePicker } from "./ExploreBirthDatePicker";
 import { type ExploreBirthDate } from "./explore-birth-date";

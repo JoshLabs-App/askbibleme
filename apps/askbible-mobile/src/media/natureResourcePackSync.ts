@@ -1,6 +1,7 @@
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import type { NatureSettingsV2 } from "../types/nature";
 import {
   downloadNaturePackAsset,
@@ -25,6 +26,7 @@ import {
 export type { ResourcePackSyncProgress, ResourcePackSyncOptions } from "./natureResourcePackState";
 
 async function fetchNaturePackManifest(): Promise<NaturePackManifest | null> {
+  if (isMobileBundledOnly()) return null;
   if (!(await isNetworkAvailable())) return null;
   const baseUrl = getAskBibleBaseUrl().replace(/\/$/, "");
   const manifestUrl = `${baseUrl}/api/mobile/resource-pack/nature/manifest`;
@@ -105,6 +107,7 @@ export type NaturePackUpdateCheck = {
 };
 
 export async function ensureNatureResourcePackSync(options?: ResourcePackSyncOptions): Promise<boolean> {
+  if (isMobileBundledOnly()) return false;
   if (!getNatureResourcePackSyncPromise()) {
     setNatureResourcePackSyncPromise(
       runSyncOnce(options ?? {}).finally(() => {

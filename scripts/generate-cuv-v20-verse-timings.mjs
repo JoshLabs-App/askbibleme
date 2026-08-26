@@ -4,7 +4,7 @@
  *
  * Usage:
  *   npm run audio:cuv-v20-timings -- --book MAT --chapter 13 [--model small] [--force]
- *   npm run audio:cuv-v20-timings -- --all [--continue-on-error] [--delay=500]
+ *   npm run audio:cuv-v20-timings -- --all [--continue-on-error]
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -28,7 +28,9 @@ function resolveWhisperPython() {
     path.join(__dirname, "whisper-env", "bin", "python3.14"),
     path.join(__dirname, "whisper-env", "bin", "python3.13"),
     path.join(__dirname, "whisper-env", "bin", "python3.12"),
+    path.join(__dirname, "whisper-env", "bin", "python3.11"),
     path.join(__dirname, "whisper-env", "bin", "python3"),
+    path.join(__dirname, "whisper-env", "bin", "python"),
   ];
   for (const p of localCandidates) {
     if (fs.existsSync(p)) return p;
@@ -80,58 +82,70 @@ function loadCuvSimplifiedVerses(bookId, chapter) {
     .sort((a, b) => a.verse - b.verse);
 }
 
-async function alignChapter(entry, model, tmpDir, force) {
-  const { bookId, chapter, localFilename } = entry;
-  const outPath = path.join(TIMINGS_DIR, localFilename.replace(/\.mp3$/i, ".json"));
-  if (!force && fs.existsSync(outPath)) {
-    console.log(`  [skip] ${bookId}-${chapter} timing exists`);
-    return;
-  }
+function chapterOutPath(localFilename) {
+  return path.join(TIMINGS_DIR, localFilename.replace(/\.mp3$/i, ".json"));
+}
 
+function buildJob(entry, tmpDir) {
+  const { bookId, chapter, localFilename } = entry;
   const audioFile = resolveCuvV20AudioPath(localFilename);
   if (!audioFile) {
     throw new Error(`MP3 missing: ${localFilename} (run npm run audio:pull-all-batches)`);
   }
-
-  console.log(`  [verses] ${bookId} ${chapter} from cuv-simp…`);
   const verses = loadCuvSimplifiedVerses(bookId, chapter);
   if (!verses.length) throw new Error(`empty verses ${bookId} ${chapter}`);
-
   const versesFile = path.join(tmpDir, `${bookId}-${chapter}-verses.json`);
   fs.writeFileSync(versesFile, JSON.stringify(verses, null, 2));
+  return {
+    audio: audioFile,
+    verses: versesFile,
+    out: chapterOutPath(localFilename),
+    label: `${bookId} ${chapter}`,
+  };
+}
 
+function spawnWhisperJobs(jobs, model, continueOnError) {
   if (!fs.existsSync(VENV_PYTHON)) {
     throw new Error(
       `Whisper Python not found at ${VENV_PYTHON}. Create scripts/whisper-env or set ASKBIBLE_REPO / SELAH_WHISPER_PYTHON.`,
     );
   }
-
-  console.log(`  [whisper] ${path.basename(audioFile)} model=${model}…`);
-  const stdout = await new Promise((resolve, reject) => {
-    const proc = spawn(VENV_PYTHON, [WHISPER_SCRIPT, audioFile, versesFile, "--model", model]);
+  fs.mkdirSync(TIMINGS_DIR, { recursive: true });
+  const jobsFile = path.join(os.tmpdir(), `askbible-cuv-v20-jobs-${process.pid}.json`);
+  fs.writeFileSync(jobsFile, JSON.stringify(jobs));
+  const pyArgs = [WHISPER_SCRIPT, "--jobs", jobsFile, "--model", model];
+  if (continueOnError) pyArgs.push("--continue-on-error");
+  return new Promise((resolve, reject) => {
+    const proc = spawn(VENV_PYTHON, pyArgs);
     let out = "";
-    let err = "";
     proc.stdout.on("data", (d) => {
       out += d;
     });
     proc.stderr.on("data", (d) => {
-      err += d;
       process.stderr.write(d);
     });
     proc.on("close", (code) => {
-      if (code !== 0) reject(new Error(`Whisper exit ${code}: ${err}`));
-      else resolve(out);
+      try {
+        fs.unlinkSync(jobsFile);
+      } catch {
+        /* ignore */
+      }
+      let summary = { ok: 0, failed: jobs.length };
+      const trimmed = out.trim();
+      const lastLine = trimmed.split("\n").filter(Boolean).pop() || "";
+      try {
+        const parsed = JSON.parse(lastLine);
+        if (parsed && typeof parsed.ok === "number") summary = parsed;
+      } catch {
+        /* keep defaults */
+      }
+      if (code !== 0 && !continueOnError) {
+        reject(new Error(`Whisper exit ${code}`));
+        return;
+      }
+      resolve(summary);
     });
   });
-
-  const timings = JSON.parse(stdout);
-  fs.mkdirSync(TIMINGS_DIR, { recursive: true });
-  fs.writeFileSync(outPath, `${JSON.stringify(timings, null, 2)}\n`, "utf8");
-  console.log(`  [done] ${outPath} (${timings.length} verses)`);
-}
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
 }
 
 const args = process.argv.slice(2);
@@ -141,8 +155,6 @@ const modelArg = args.find((_, i) => args[i - 1] === "--model") || "small";
 const doAll = args.includes("--all");
 const force = args.includes("--force");
 const continueOnError = args.includes("--continue-on-error");
-const delayEq = args.find((a) => a.startsWith("--delay="));
-const delayMs = delayEq ? Math.max(0, Number(delayEq.split("=")[1]) || 0) : 500;
 
 if (!fs.existsSync(MANIFEST_PATH)) {
   console.error(`Missing ${MANIFEST_PATH}.`);
@@ -183,7 +195,7 @@ if (!bookArg && !doAll) {
   console.log(`Usage:
   npm run audio:cuv-v20-timings -- --book MAT --chapter 13 [--model small] [--force]
   npm run audio:cuv-v20-timings -- --book MAT --all
-  npm run audio:cuv-v20-timings -- --all [--continue-on-error] [--delay=500]
+  npm run audio:cuv-v20-timings -- --all [--continue-on-error]
 `);
   process.exit(0);
 }
@@ -197,22 +209,33 @@ try {
   console.log(`Whisper: ${VENV_PYTHON}`);
   console.log(`Chapters: ${entries.length}\n`);
 
-  for (let i = 0; i < entries.length; i++) {
-    const e = entries[i];
-    console.log(`[${i + 1}/${entries.length}] ${e.bookId} ${e.chapter}`);
-    try {
-      await alignChapter(e, modelArg, tmpDir, force);
+  const jobs = [];
+  for (const e of entries) {
+    const outPath = chapterOutPath(e.localFilename);
+    if (!force && fs.existsSync(outPath)) {
+      console.log(`  [skip] ${e.bookId}-${e.chapter} timing exists`);
       ok++;
+      continue;
+    }
+    try {
+      jobs.push(buildJob(e, tmpDir));
     } catch (err) {
       fail++;
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`  [error] ${msg}`);
+      console.error(`  [error] ${e.bookId} ${e.chapter}: ${msg}`);
       if (!continueOnError) {
         process.exitCode = 1;
+        jobs.length = 0;
         break;
       }
     }
-    if (delayMs > 0 && i < entries.length - 1) await sleep(delayMs);
+  }
+
+  if (jobs.length > 0 && process.exitCode !== 1) {
+    console.log(`Aligning ${jobs.length} chapters (model loaded once)…`);
+    const summary = await spawnWhisperJobs(jobs, modelArg, continueOnError);
+    ok += Number(summary.ok) || 0;
+    fail += Number(summary.failed) || 0;
   }
 } finally {
   try {

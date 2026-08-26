@@ -51,18 +51,13 @@ function LoginPageInner() {
       setError(null);
       setPending(true);
       try {
-        const res = await fetch("/api/auth/askbible", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "login",
-            email: email.trim(),
-            password,
-          }),
+        const { signInAskbibleWebWithPassword } = await import("@/lib/askbible-web-auth-client");
+        const result = await signInAskbibleWebWithPassword({
+          email: email.trim(),
+          password,
         });
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok) {
-          setError(data.error || t("auth.errorWrong"));
+        if (!result.ok) {
+          setError(t("auth.errorWrong"));
           return;
         }
         await refresh();

@@ -1,19 +1,46 @@
 ---
-description: Mobile media playback uses local files first; remote only for package updates
+description: Mobile media is local-first; large increments via store delivery only — never Render
 alwaysApply: true
 ---
 
-# 移动端媒体播放与更新包（强制）
+# 移动端媒体播放与增量交付（强制）
 
-适用范围：`apps/askbible-mobile` 的音乐/视频/音频相关实现与排障。
+适用范围：`apps/askbible-mobile` 的音乐 / 视频 / 金句音频及相关大体积本地资源。
 
-- 播放链路默认且强制：**只使用设备本地可用媒体**（安装包内、已下载到本地资源包、DocumentDirectory 缓存）。
-- 远端（如 `askbible.me`）默认只用于：**检查更新包、下载更新包、拉取 manifest 元数据**。
-- 未进入“更新包流程”前，禁止把远端媒体 URL 直接接入播放器作为常规播放源。
-- 排障顺序必须先查本地链路：本地资源是否存在、索引是否命中、路径是否可读、格式是否可播。
-- 只有用户明确要求“临时在线流式播放”时，才可增加远端直连播放，并在改动说明中写明是临时策略。
+## 播放
+
+- 播放链路默认且强制：**只使用设备本地可用媒体**（安装包内、商店已下发的 asset pack、DocumentDirectory 等本机路径）。
+- 未进入明确的「临时在线流式」例外前，禁止把远端媒体 URL 直接接入播放器作为常规播放源。
+- **默认选曲**：首页 / 壳层默认只从「安静」专辑选曲；其它专辑仅在音乐栏主动切换后才播（见 `DEFAULT_MUSIC_ALBUM` / `resolveSessionDefaultTrackIndex`）。
+- **金句（TEMPORARY 例外）**：文字默认全量池（~4000）；语音走 **Cloudflare R2 HTTPS 直链点播**（包体过大）。禁止 Render / `askbible.me`。详见 `docs/mobile-golden-verse-audio.md`。
+- **音乐（TEMPORARY 例外）**：安装包只留每专辑（安静 / 下午茶 / 专注工作 / 睡眠）**第一首**；其余走 **Cloudflare R2**，点播边播边缓存到 DocumentDirectory（`music-r2-cache`）。禁止 Render / `askbible.me`。见 `musicAudioRemote.ts`。
+- 排障：金句 / 非首曲音乐查 R2 基址与对象键；其它媒体先查本地。不要回落 askbible.me。
+
+## 增量交付（硬规则）
+
+大体积媒体的「装不进 base / 需装完再补」**默认只走应用商店增量通道**。**禁止**用 Render / `askbible.me` 当下发通道。
+
+| 平台 | 交付方式 |
+|------|----------|
+| **iOS / Android（现行）** | 音乐：**每专辑首曲进安装包**；其余 **TEMPORARY：R2 直链 + 本机缓存**；**金句语音 TEMPORARY：R2 直链** |
+| **Android PAD（遗留，默认关）** | 仅当用户明确要求且设 `ALLOW_ANDROID_MUSIC_PAD=1` + `MOBILE_ANDROID_MUSIC_PAD=1`；**禁止**当作商店发版默认 |
+| **调试全量** | `MOBILE_BUNDLE_MUSIC_FULL=1` 可恢复全量音乐进包 |
+
+### 事故防范（必读）
+
+- **2026-08**：曾误用 `MOBILE_ANDROID_MUSIC_PAD=1` 打 production AAB → 约 **650MB**、上传约 25 分钟。正确 R2 首曲包约 **160MB**。
+- Agent / 脚本打「安卓上架」包时：**不要**设 `MOBILE_ANDROID_MUSIC_PAD=1`。构建脚本在未设 `ALLOW_ANDROID_MUSIC_PAD=1` 时会拒绝 PAD。
+- 打完后检查：`ls -lh dist/mobile/askbible-android-latest.aab`；异常偏大先停。
+
+- **禁止**再设计「主站 zip + Wi‑Fi 静默下载」作为音乐 / 金句等增量方案。
+- 站点（Render）可继续托管网页与其它非「App 安装增量」用途；**不得**当作 App 大包媒体的交付管道。
+- 金句 / 非首曲音乐 R2 是用户明确要求的临时在线流式例外；其它媒体未获明确例外前仍本地 / 商店。
+- 曲目清单也走同一 R2 桶（`music/companion.json`），不经 askbible.me；包内曲库作离线底。
+- 只有用户明确要求「临时在线流式 / 临时自建更新包」时，才可另开例外，并在改动说明中写明是临时策略。
 
 ## 实施提示
 
-- 先修“本地媒体缺失/索引错误/打包未同步”，不要先改成网络兜底播放。
-- 更新包下载成功后再切换到新本地资源；切换前继续使用旧本地资源，避免出现“可见曲目但不可播”。
+- 音乐缺首曲先修 sync；非首曲缺文件先查 R2 上传（`npm run mobile:upload:music-r2`），不要接 `askbible.me`。
+- 金句：配置 `EXPO_PUBLIC_GOLDEN_VERSE_AUDIO_BASE_URL`；上传用 `npm run mobile:upload:golden-verse-r2`。
+- 音乐 R2：配置 `EXPO_PUBLIC_MUSIC_AUDIO_BASE_URL`（可与金句同 pub 基址）；对象键 `music/uploads/…`。
+- 遗留 PAD 未就绪时：只播已本地可用部分；勿回落 askbible.me。

@@ -58,7 +58,7 @@ export const DEFAULT_HOME_PRAYER_PREFS: HomePrayerVersePrefsV1 = {
 };
 
 export function defaultHomePrimaryTranslationIdForLocale(locale: AppLocale): string {
-  if (locale === "en") return "kjv";
+  if (locale === "en") return "web-en";
   if (locale === "zh-TW") return "cuv-trad";
   return "cuv-simp";
 }

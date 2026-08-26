@@ -31,13 +31,18 @@ EXPORT_DIR="$IOS/build/export"
 EXPORT_PLIST="$ROOT/scripts/ios/ExportOptions-appstore.plist"
 
 export EXPO_PUBLIC_MOBILE_OFFLINE_FIRST="${EXPO_PUBLIC_MOBILE_OFFLINE_FIRST:-1}"
-export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-0}"
+export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-1}"
 export EXPO_PUBLIC_MEMBER_REGISTER_ENABLED="${EXPO_PUBLIC_MEMBER_REGISTER_ENABLED:-1}"
 export EXPO_PUBLIC_ASKBIBLE_BASE_URL="${EXPO_PUBLIC_ASKBIBLE_BASE_URL:-https://askbible.me}"
 export EXPO_PUBLIC_MEMBER_SYNC_DEBUG="${EXPO_PUBLIC_MEMBER_SYNC_DEBUG:-1}"
 export MOBILE_BUNDLE_OFFLINE_MEDIA="${MOBILE_BUNDLE_OFFLINE_MEDIA:-1}"
-export MOBILE_BUNDLE_MUSIC_LIMIT="${MOBILE_BUNDLE_MUSIC_LIMIT:-1}"
-export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mpg4a8h3jhwl}"
+# 默认不设 LIMIT → sync 全量本地音乐；调试可 export MOBILE_BUNDLE_MUSIC_LIMIT=N
+export MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mt391okyjj4i}"
+
+# Store IPA must never ship with preview OTA enabled.
+unset ASKBIBLE_OTA_CHANNEL || true
+echo "→ OTA native config: store-safe (updates off)"
+ASKBIBLE_OTA_CHANNEL= node "$ROOT/scripts/sync-mobile-ota-native-config.mjs"
 
 if ! command -v xcodebuild >/dev/null 2>&1; then
   echo "未检测到 Xcode。请先安装完整 Xcode。" >&2
@@ -82,13 +87,14 @@ bash "$ROOT/scripts/clear-mobile-bundle-cache.sh"
 npm run mobile:sync-icons
 npm run mobile:sync-content
 node scripts/sync-explore-featured-articles-localized.mjs
+# iOS 全量 companion；勿沿用安卓 PAD 环境变量
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
-MOBILE_BUNDLE_MUSIC_LIMIT=1 \
-MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a8h3jhwl \
+MOBILE_ANDROID_MUSIC_PAD=0 \
+MOBILE_STARTER_MUSIC_TRACK_ID="${MOBILE_STARTER_MUSIC_TRACK_ID:-track-mt391okyjj4i}" \
 npm run mobile:sync-offline-media
 
 echo "→ 离线资源体积审计…"
-npm run mobile:audit:bundle-size
+MOBILE_ANDROID_MUSIC_PAD=0 npm run mobile:audit:bundle-size
 
 ENV_LOCAL="$MOBILE/.env.local"
 ENV_LOCAL_BAK="$MOBILE/.env.local.release-build.bak"
@@ -228,15 +234,13 @@ fi
 BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PLIST" 2>/dev/null || echo unknown)"
 OUT="$ROOT/dist/mobile"
 mkdir -p "$OUT"
-STAMP="$(date +%Y%m%d-%H%M)"
-DEST="$OUT/askbible-ios-v${BUILD_NUMBER}-${STAMP}.ipa"
 LATEST="$OUT/askbible-ios-latest.ipa"
-cp "$IPA_SRC" "$DEST"
 cp "$IPA_SRC" "$LATEST"
+# 只保留一版库存；清掉旧 IPA 与 ios/build 临时 archive/export
+bash "$ROOT/scripts/prune-mobile-dist.sh"
 
 echo ""
-echo "Built IPA: $DEST"
-echo "Latest copy: $LATEST"
+echo "Built IPA: $LATEST (CFBundleVersion ${BUILD_NUMBER})"
 echo ""
 echo "直传 App Store Connect / TestFlight（不经 Expo）："
 echo "  npm run mobile:submit:ios:production"

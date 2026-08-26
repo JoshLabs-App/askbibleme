@@ -13,6 +13,7 @@ export function loadBundledReadingPlanDay(
   planId: string,
   dayIndex: number,
 ): ReadingPlanDayPayload | null {
+  if (typeof planId !== "string" || !planId.trim()) return null;
   const bundle = getBundledReadingPlanBundle(planId);
   if (!bundle || !Array.isArray(bundle.days)) return null;
   const day = bundle.days[dayIndex] ?? null;

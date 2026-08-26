@@ -167,7 +167,7 @@ export function buildEntriesByLocaleFromKeys(
   zhTwTranslationId = "cuv-trad",
 ): Record<AppLocale, HomeVerseEntry[]> | null {
   const zhTid = zhTranslationId.trim() || "cuv-simp";
-  const enTid = enTranslationId.trim() || "kjv";
+  const enTid = enTranslationId.trim() || "web-en";
   const zhTwTid = zhTwTranslationId.trim() || "cuv-trad";
   const zh: HomeVerseEntry[] = [];
   const zhTw: HomeVerseEntry[] = [];

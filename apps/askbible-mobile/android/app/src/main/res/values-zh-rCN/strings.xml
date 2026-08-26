@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="reading_alarm_kicker">每日清晨闹钟</string>
+  <string name="reading_alarm_kicker">每日读经提醒</string>
+  <string name="reading_alarm_verse_kicker">今日金句</string>
   <string name="reading_alarm_prelude_hint">预备音乐播放中，稍后将自动开始朗读今日读经</string>
   <string name="reading_alarm_music_only_hint">清晨音乐播放中，点停止结束</string>
   <string name="reading_alarm_countdown">约 %1$d 秒后开始</string>
   <string name="reading_alarm_subtitle">约 1 分钟预备音乐后，连续朗读今日读经</string>
   <string name="reading_alarm_stop">停止</string>
   <string name="reading_alarm_continue">跳过预备</string>
-  <string name="reading_alarm_notification_title">每日清晨闹钟</string>
-  <string name="reading_alarm_notification_body">轻触开始今日读经音频</string>
+  <string name="reading_alarm_notification_title">每日读经提醒</string>
+  <string name="reading_alarm_notification_body">轻触开始今日读经</string>
   <string name="reading_alarm_scripture_starting">正在开始今日读经朗读…</string>
-  <string name="reading_alarm_channel_name">每日清晨闹钟</string>
-  <string name="widget_audio_reading_desc">播放或暂停读经音频</string>
+  <string name="reading_alarm_channel_name">每日读经提醒</string>
+  <string name="widget_audio_reading_desc">播放今日读经计划</string>
+  <string name="widget_audio_verse_desc">播放本句经文</string>
   <string name="widget_audio_music_desc">播放或暂停音乐</string>
   <string name="widget_playback_channel_name">小挂件播放</string>
   <string name="widget_playback_starting">正在启动播放…</string>

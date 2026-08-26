@@ -3,9 +3,14 @@ import { InteractionManager } from "react-native";
 import { buildScriptureChapterPool } from "./build-scripture-chapter-pool";
 import { scriptureChapterPool } from "../music/scripture-chapter-pool";
 import { warmBundledScriptureChapterAudioUri } from "../audio/scriptureAudioPlayback";
-import { prefetchTodayReadingPlanQueueAudio } from "./prefetch-plan-flow-chapter-audio";
+import { prefetchUpcomingPlanFlowChapterAudio } from "./prefetch-plan-flow-chapter-audio";
+import { purgeExpiredChapterAudioStreamCache } from "./readChapterAudioStreamCache";
 import { readPlanFlowChapterAudioPrefs } from "./read-plan-flow-audio-prefs";
-import { runPlanFlowEntryCallback } from "./read-plan-flow-autoplay";
+import {
+  runPlanFlowEntryCallback,
+  setPlanFlowUiHost,
+  type PlanFlowUiHost,
+} from "./read-plan-flow-autoplay";
 import { readEffectiveReadingPlanPrefs } from "./reading-plan/reading-plan-prefs";
 import { loadTodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
 import { readTodayPlanScriptureResume, resolveTodayPlanScriptureStartTargetFromSaved } from "./today-plan-scripture-resume";
@@ -17,6 +22,7 @@ import {
   type PlanChapterRef,
 } from "./read-plan-flow-nav";
 import { resolveBundledChapterAudioModule } from "../bible/bundled-chapter-audio";
+import { requestWidgetVerseStop } from "../widget/widgetPlaybackRequest";
 import { resolveLocalTodayReadingScopeKeyFromPrefs } from "./reading-plan/today-reading-done";
 
 export type StartTodayPlanFlowOpts = {
@@ -24,6 +30,8 @@ export type StartTodayPlanFlowOpts = {
   replace?: boolean;
   startAtSec?: number;
   quickStart?: boolean;
+  /** `listen`：进入专用读经计划播放页，不跳章页。 */
+  uiHost?: PlanFlowUiHost;
 };
 
 type PreparedPlanFlow = {
@@ -39,6 +47,7 @@ async function startTodayPlanFlowScripturePrepared(
 ): Promise<boolean> {
   try {
     runPlanFlowEntryCallback();
+    setPlanFlowUiHost(opts?.uiHost === "listen" ? "listen" : "chapter");
 
     const quickStart = opts?.quickStart === true;
     if (__DEV__ || quickStart) {
@@ -49,15 +58,11 @@ async function startTodayPlanFlowScripturePrepared(
         quickStart ? "quick" : "full",
         "queue",
         prepared.queue.length,
+        opts?.uiHost === "listen" ? "listen" : "chapter",
       );
     }
-    if (!quickStart) {
-      await prefetchTodayReadingPlanQueueAudio(prepared.queue, {
-        translationId: prepared.audioPrefs.translationId,
-        voiceId: prepared.audioPrefs.voiceId,
-        awaitFirst: true,
-      });
-    }
+    // 流式缓存 10 天未访问清理；不阻塞开播。
+    void purgeExpiredChapterAudioStreamCache();
 
     const targetBundledModule = resolveBundledChapterAudioModule({
       translationId: prepared.audioPrefs.translationId,
@@ -65,7 +70,7 @@ async function startTodayPlanFlowScripturePrepared(
       chapter: target.chapter,
       voiceId: prepared.audioPrefs.voiceId,
     });
-    if (quickStart && targetBundledModule != null) {
+    if (targetBundledModule != null) {
       void warmBundledScriptureChapterAudioUri(targetBundledModule);
     }
 
@@ -73,7 +78,7 @@ async function startTodayPlanFlowScripturePrepared(
       prepared.queue,
       prepared.audioPrefs.translationId,
       prepared.audioPrefs.voiceId,
-      { lazySrc: quickStart },
+      { lazySrc: true },
     );
     if (!tracks.length) return false;
 
@@ -85,25 +90,36 @@ async function startTodayPlanFlowScripturePrepared(
     );
 
     if (!quickStart) {
-      if (opts?.replace) {
-        replaceReadPlanFlowChapterAudio(router, target);
-      } else {
-        pushReadPlanFlowChapter(router, target);
-      }
-      await new Promise<void>((resolve) => {
-        InteractionManager.runAfterInteractions(() => {
-          requestAnimationFrame(() => resolve());
+      if (opts?.uiHost !== "listen") {
+        if (opts?.replace) {
+          replaceReadPlanFlowChapterAudio(router, target);
+        } else {
+          pushReadPlanFlowChapter(router, target);
+        }
+        await new Promise<void>((resolve) => {
+          InteractionManager.runAfterInteractions(() => {
+            requestAnimationFrame(() => resolve());
+          });
         });
-      });
+      }
     }
 
     const started = await scriptureChapterPool.playAt(startIdx >= 0 ? startIdx : 0, {
       startAtSec: opts?.startAtSec,
-      skipNavigate: quickStart,
+      skipNavigate: quickStart || opts?.uiHost === "listen",
       maxAttempts: quickStart ? 2 : 4,
       retryDelayMs: quickStart ? 150 : 450,
     });
-    if (started && quickStart) {
+    if (started) {
+      setTimeout(() => {
+        prefetchUpcomingPlanFlowChapterAudio(prepared.queue, target, {
+          translationId: prepared.audioPrefs.translationId,
+          voiceId: prepared.audioPrefs.voiceId,
+          ahead: 1,
+        });
+      }, 4_000);
+    }
+    if (started && quickStart && opts?.uiHost !== "listen") {
       if (opts?.replace) {
         replaceReadPlanFlowChapterAudio(router, target);
       } else {
@@ -118,13 +134,6 @@ async function startTodayPlanFlowScripturePrepared(
         quickStart ? "quick" : "full",
         started ? "ok" : "fail",
       );
-    }
-    if (started && quickStart) {
-      void prefetchTodayReadingPlanQueueAudio(prepared.queue.slice(1), {
-        translationId: prepared.audioPrefs.translationId,
-        voiceId: prepared.audioPrefs.voiceId,
-        awaitFirst: false,
-      });
     }
     return started;
   } catch (err) {
@@ -174,6 +183,8 @@ export async function startTodayReadingScriptureFromReadHome(
   opts?: StartTodayPlanFlowOpts,
 ): Promise<boolean> {
   try {
+    // 读经计划与金句互斥。
+    requestWidgetVerseStop();
     if (__DEV__ || opts?.quickStart) {
       console.warn("[planFlow] read-home entry", opts?.quickStart ? "quick" : "full");
     }

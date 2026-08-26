@@ -1,23 +1,35 @@
-import { useMemo } from "react";
+import { useEffect, useRef } from "react";
+import { Animated } from "react-native";
 import { useTrackAnalysis } from "./useTrackAnalysis";
 import { sampleTrackAnalysisAt } from "./trackAnalysis";
-import type { PlaybackTrack } from "./types";
+import {
+  getMusicPlaybackProgressTickSnapshot,
+  subscribeMusicPlaybackProgressTick,
+} from "./musicPlaybackProgressTick";
 
-export function useMusicHomeCoffeePulse(
-  album: string,
-  current: PlaybackTrack | undefined,
-  musicCurrentSec: number,
-  motionActive: boolean,
-) {
-  const shouldLoadTrackAnalysis = motionActive && album === "下午茶" && Boolean(current?.analysisSrc);
-  const analysis = useTrackAnalysis(current?.analysisSrc ?? null, shouldLoadTrackAnalysis);
+/**
+ * 节拍脉冲走 Animated.Value，不走 React state。
+ *
+ * 播放位置每 250～400ms 更新一次；如果脉冲是 state，34 颗豆子每次都要重渲染，
+ * 每颗还要重建约 10 个 interpolate。改成 setValue 之后一次重渲染都没有。
+ */
+export function useMusicHomeCoffeePulse(analysisSrc: string | null, motionActive: boolean) {
+  const pulseV = useRef(new Animated.Value(0)).current;
+  const analysis = useTrackAnalysis(analysisSrc, motionActive && Boolean(analysisSrc));
 
-  const coffeeRhythmPulse = useMemo(() => {
-    if (!analysis || !motionActive) return 0;
-    const s = sampleTrackAnalysisAt(analysis, musicCurrentSec);
-    const e = s.low * 0.45 + s.mid * 0.25 + s.rms * 0.3;
-    return Math.max(0, Math.min(1, (e - 0.12) * 1.2));
-  }, [analysis, motionActive, musicCurrentSec]);
+  useEffect(() => {
+    if (!analysis || !motionActive) {
+      pulseV.setValue(0);
+      return;
+    }
+    const apply = () => {
+      const s = sampleTrackAnalysisAt(analysis, getMusicPlaybackProgressTickSnapshot().musicCurrentSec);
+      const e = s.low * 0.45 + s.mid * 0.25 + s.rms * 0.3;
+      pulseV.setValue(Math.max(0, Math.min(1, (e - 0.12) * 1.2)));
+    };
+    apply();
+    return subscribeMusicPlaybackProgressTick(apply);
+  }, [analysis, motionActive, pulseV]);
 
-  return { analysis, coffeeRhythmPulse };
+  return pulseV;
 }

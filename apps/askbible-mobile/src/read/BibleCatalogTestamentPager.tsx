@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
-import { useLocale } from "../i18n/LocaleProvider";
-import { t } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
+import { createT } from "../i18n/site-copy";
 import { TESTAMENT_INTRO } from "./bibleCatalogOutlineConstants";
 import { bibleCatalogOutlineStyles as styles } from "./bibleCatalogOutlineStyles";
 
@@ -9,6 +9,7 @@ type Props = {
   onSelectTestament: (testament: "old" | "new") => void;
   catalogNarrowStyle: { maxWidth: number } | null;
   lockTextScale?: boolean;
+  displayLocale?: AppLocale;
 };
 
 export function BibleCatalogTestamentPager({
@@ -16,8 +17,9 @@ export function BibleCatalogTestamentPager({
   onSelectTestament,
   catalogNarrowStyle,
   lockTextScale = true,
+  displayLocale = "zh-CN",
 }: Props) {
-  const { locale } = useLocale();
+  const t = createT(displayLocale);
   const allowFontScaling = !lockTextScale;
   const scaledMax = (value: number) => (lockTextScale ? 1 : value);
 
@@ -71,7 +73,7 @@ export function BibleCatalogTestamentPager({
         allowFontScaling={allowFontScaling}
         maxFontSizeMultiplier={scaledMax(1.1)}
       >
-        {TESTAMENT_INTRO[locale][activeTestament]}
+        {TESTAMENT_INTRO[displayLocale][activeTestament]}
       </Text>
     </View>
   );

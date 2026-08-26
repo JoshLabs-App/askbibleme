@@ -6,7 +6,7 @@ import type { BibleTranslationsIndex } from "./translations-types";
  * App 界面语言 → 读经主译本默认映射：
  * - zh-CN → 和合本（cuv-simp）
  * - zh-TW → 繁体和合本（cuv-trad）
- * - en → KJV / WEB 等英文译本
+ * - en → WEB（web-en），再回退 KJV 等英文译本
  */
 function firstMatch(
   index: BibleTranslationsIndex,

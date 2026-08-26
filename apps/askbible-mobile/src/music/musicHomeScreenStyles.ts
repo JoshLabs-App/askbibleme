@@ -8,12 +8,17 @@ export const musicHomeScreenStyles = StyleSheet.create({
   foreground: {
     flex: 1,
     zIndex: 2,
+    overflow: "visible",
   },
   foregroundLandscape: {
     justifyContent: "center",
   },
+  /** 与读经计划 column 同版心；横向 padding / maxWidth 由运行时与读经页共用 hook 注入 */
   panel: {
-    paddingHorizontal: 32,
+    width: "100%",
+    alignSelf: "center",
+    zIndex: 5,
+    elevation: 5,
   },
   panelLandscape: {
     position: "absolute",

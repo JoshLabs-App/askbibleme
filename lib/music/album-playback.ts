@@ -1,7 +1,7 @@
 import type { LocalizedField } from "@/lib/i18n/localized-text";
 import type { AudioTrack } from "@/lib/music-companion/types";
 
-export const MUSIC_ALBUMS = ["安静", "下午茶", "专注工作", "睡眠"] as const;
+export const MUSIC_ALBUMS = ["安静", "下午茶", "赞美诗", "钢琴", "睡眠", "专注工作"] as const;
 export type MusicAlbumLabel = (typeof MUSIC_ALBUMS)[number] | string;
 export const DEFAULT_MUSIC_ALBUM: MusicAlbumLabel = "安静";
 
@@ -38,6 +38,7 @@ export function normalizeMusicAlbumLabel(rawAlbum: string | null | undefined): s
   if (!input) return DEFAULT_MUSIC_ALBUM;
   if (input === "工作" || input === "专注") return "专注工作";
   if (input === "放松") return "安静";
+  if (input === "圣诗" || input === "赞美诗") return "赞美诗";
   return input;
 }
 
@@ -60,11 +61,12 @@ export function inferTrackAlbumFromCompanionTrack(track: AudioTrack): string {
   return DEFAULT_MUSIC_ALBUM;
 }
 
-/** 安静 / 下午茶：专辑内轮播；睡眠 / 专注：单曲循环 */
+/** 安静 / 下午茶 / 钢琴 / 赞美诗：专辑内轮播；睡眠 / 专注：单曲循环 */
 export function defaultRepeatModeForAlbum(album: string): MusicAlbumRepeatMode | null {
   const normalized = normalizeMusicAlbumLabel(album);
   if (normalized === "睡眠" || normalized === "专注工作") return "one";
-  if (normalized === "安静" || normalized === "下午茶") return "all";
+  if (normalized === "安静" || normalized === "下午茶" || normalized === "钢琴" || normalized === "赞美诗")
+    return "all";
   return null;
 }
 

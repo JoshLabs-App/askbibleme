@@ -1,5 +1,5 @@
 import { useCallback, useRef, type MutableRefObject } from "react";
-import { getActiveReadChapterPlayback } from "../read/read-chapter-playback-store";
+import { resolveTransportReadChapterPlayback } from "../read/read-chapter-playback-store";
 import {
   playScriptureChapterAt,
   registerReadChapterPlayback,
@@ -41,6 +41,7 @@ export function useScriptureShellPlayback(args: Args) {
     setReadChapter: args.setReadChapter,
     setPlaying: args.setPlaying,
     setScriptureCurrentSec: args.setScriptureCurrentSec,
+    setScripturePreparing: args.setScripturePreparing,
     autoPlayScriptureRef: engine.autoPlayScriptureRef,
     scriptureWantPlayingRef: engine.scriptureWantPlayingRef,
     scriptureChapterHandoffRef: engine.scriptureChapterHandoffRef,
@@ -62,6 +63,7 @@ export function useScriptureShellPlayback(args: Args) {
     setReadChapter: args.setReadChapter,
     setPlaying: args.setPlaying,
     setScriptureCurrentSec: args.setScriptureCurrentSec,
+    setScripturePreparing: args.setScripturePreparing,
     autoPlayScriptureRef: engine.autoPlayScriptureRef,
     scriptureWantPlayingRef: engine.scriptureWantPlayingRef,
     scriptureChapterHandoffRef: engine.scriptureChapterHandoffRef,
@@ -86,7 +88,8 @@ export function useScriptureShellPlayback(args: Args) {
   );
 
   const resolveActiveReadChapter = useCallback((): ReadChapterPlaybackRegistration | null => {
-    return getActiveReadChapterPlayback() ?? readChapterRef.current ?? args.readChapter;
+    // 锁屏 Next/Prev：只读 playing（browse 可能是用户正在翻的另一章）。
+    return resolveTransportReadChapterPlayback() ?? readChapterRef.current ?? args.readChapter;
   }, [args.readChapter]);
 
   const registerReadChapter = useCallback((reg: ReadChapterPlaybackRegistration | null) => {

@@ -28,7 +28,7 @@ export function ParchmentModalCard({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   fill?: boolean;
-} & Pick<ViewProps, "onStartShouldSetResponder">) {
+} & Pick<ViewProps, "accessibilityViewIsModal" | "onStartShouldSetResponder">) {
   return (
     <ReadParchmentBackgroundImage fill={fill} style={[styles.modalCard, style]} {...viewProps}>
       {children}

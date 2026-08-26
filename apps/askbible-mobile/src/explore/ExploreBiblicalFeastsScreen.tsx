@@ -1,11 +1,10 @@
-import { Pressable, Text, View } from "react-native";
+import { View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
-import {
-  exploreStyles as shared,
-  ExploreParchmentPage,
-} from "./exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import { ExploreParchmentPage} from "./exploreParchmentStyles";
 import { ExploreBiblicalFeastsTimelineList } from "./ExploreBiblicalFeastsTimelineList";
 import { biblicalFeastsScreenStyles as styles } from "./ExploreBiblicalFeastsScreenStyles";
 import { useExploreBiblicalFeastsScreen } from "./useExploreBiblicalFeastsScreen";
@@ -29,9 +28,7 @@ export function ExploreBiblicalFeastsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
-          <Text style={shared.backLinkText}>{t("pages.explore.biblicalFeastsBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.pageTitle}>{t("pages.explore.biblicalFeastsTitle")}</Text>
         <Text style={styles.subtitle}>{t("pages.explore.biblicalFeastsSubtitle")}</Text>

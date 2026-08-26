@@ -7,3 +7,4 @@ export {
   markMusicPlaybackActivated,
 } from "./musicCompanionCache";
 export { fetchMusicCompanionStoreFromRemote } from "./musicCompanionRemote";
+export { fetchMusicCompanionStoreFromR2 } from "./musicCompanionR2";

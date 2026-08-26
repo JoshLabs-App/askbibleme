@@ -14,6 +14,32 @@ export const bibleCatalogOutlineSectionStyles = StyleSheet.create({
   testamentHeadersRow: {
     marginBottom: 2,
   },
+  testamentHeadersWithToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 0,
+  },
+  testamentHeaderSide: {
+    flex: 1,
+    alignItems: "center",
+  },
+  summaryToggleBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  summaryToggleBtnPressed: {
+    opacity: 0.72,
+  },
+  summaryToggleSpacer: {
+    width: 36,
+    height: 36,
+    marginBottom: 4,
+  },
   testament: { marginTop: 4, width: "100%" },
   testamentNt: { marginTop: 0 },
   testamentColumn: {
@@ -75,13 +101,13 @@ export const bibleCatalogOutlineSectionStyles = StyleSheet.create({
   sectionTitleRow: {
     borderLeftWidth: 4,
     paddingLeft: 8,
-    marginBottom: 2,
+    marginBottom: 5,
     marginLeft: 2,
   },
   sectionTitleRowCompact: {
     borderLeftWidth: 3,
     paddingLeft: 6,
-    marginBottom: 1,
+    marginBottom: 4,
     marginLeft: 1,
   },
   sectionTitleRowNoStripe: {
@@ -90,14 +116,14 @@ export const bibleCatalogOutlineSectionStyles = StyleSheet.create({
     marginLeft: 0,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 18,
     ...parchmentSans(700),
     letterSpacing: 0.6,
-    lineHeight: 19,
+    lineHeight: 24,
   },
   sectionTitleCompact: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 16,
+    lineHeight: 21,
     letterSpacing: 0.3,
   },
   sectionTaglinesWrap: {

@@ -6,18 +6,26 @@ import { safeStopAndUnloadSound } from "../audio/safeShellSound";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
+import { warmAndroidMusicPadTrackUris } from "../media/androidMusicAssetPack";
 import {
   hydrateMusicResourcePackState,
   readSyncedMusicCompanionStore,
 } from "../media/musicResourcePackSync";
+import { hydrateMusicR2CacheIndex } from "../media/musicR2StreamCache";
 import {
+  fetchMusicCompanionStoreFromR2,
   fetchMusicCompanionStoreFromRemote,
   getBundledMusicCompanionStore,
+  isMusicCompanionStoreDifferent,
   readCachedMusicCompanionStore,
   writeCachedMusicCompanionStore,
 } from "./fetchMusicCompanion";
 import { enrichPlaybackTracks } from "./trackArtwork";
-import { hasAtLeastBundledTracks, resolveSessionDefaultTrackIndex } from "./musicStoreHelpers";
+import {
+  canAdoptRemoteMusicStore,
+  hasAtLeastBundledTracks,
+  resolveSessionDefaultTrackIndex,
+} from "./musicStoreHelpers";
 import type { MusicCompanionStore } from "./types";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
@@ -68,6 +76,15 @@ export function useMusicStoreBootstrap({
         ]);
         log("audio mode warmup requested");
         const bundledStore = getBundledMusicCompanionStore();
+        void hydrateMusicR2CacheIndex().then(() => {
+          if (!alive) return;
+          // R2 本地缓存进内存后刷新 enrich 的 localReady
+          setStore({
+            ...bundledStore,
+            audioTracks: bundledStore.audioTracks.map((t) => ({ ...t })),
+          });
+          log("music R2 cache hydrated");
+        });
         const bundledTracks = enrichPlaybackTracks(bundledStore, getAskBibleBaseUrl());
         log("bundled store ready", {
           audioTracks: bundledStore.audioTracks?.length ?? 0,
@@ -79,9 +96,66 @@ export function useMusicStoreBootstrap({
           setTrackIndex(resolveSessionDefaultTrackIndex(bundledTracks));
           log("mobile bundled only path finished", { tracks: bundledTracks.length });
           await audioModeWarmup;
+          if (Platform.OS === "android") {
+            void warmAndroidMusicPadTrackUris().then((ready) => {
+              if (!alive || ready <= 0) return;
+              // peek 缓存已填：克隆 store 触发 enrichPlaybackTracks 刷新 localReady
+              setStore({
+                ...bundledStore,
+                audioTracks: bundledStore.audioTracks.map((t) => ({ ...t })),
+              });
+              log("android PAD uris warmed", { ready });
+            });
+          }
+          void (async () => {
+            const cachedStore = await readCachedMusicCompanionStore();
+            if (!alive) return;
+            let current = bundledStore;
+            if (
+              cachedStore &&
+              canAdoptRemoteMusicStore(cachedStore, bundledStore) &&
+              isMusicCompanionStoreDifferent(cachedStore, bundledStore)
+            ) {
+              current = cachedStore;
+              setStore(cachedStore);
+              setTrackIndex(
+                resolveSessionDefaultTrackIndex(
+                  enrichPlaybackTracks(cachedStore, getAskBibleBaseUrl()),
+                ),
+              );
+              log("r2 catalog cache applied", { audioTracks: cachedStore.audioTracks.length });
+            }
+            const remote = await fetchMusicCompanionStoreFromR2();
+            if (!alive) return;
+            if (
+              remote &&
+              canAdoptRemoteMusicStore(remote, bundledStore) &&
+              isMusicCompanionStoreDifferent(remote, current)
+            ) {
+              setStore(remote);
+              setTrackIndex(
+                resolveSessionDefaultTrackIndex(
+                  enrichPlaybackTracks(remote, getAskBibleBaseUrl()),
+                ),
+              );
+              await writeCachedMusicCompanionStore(remote);
+              log("r2 catalog applied", { audioTracks: remote.audioTracks.length });
+            }
+          })();
           return;
         }
         void audioModeWarmup;
+        if (Platform.OS === "android") {
+          void warmAndroidMusicPadTrackUris().then((ready) => {
+            if (!alive || ready <= 0 || !storeRef.current) return;
+            const current = storeRef.current;
+            setStore({
+              ...current,
+              audioTracks: current.audioTracks.map((t) => ({ ...t })),
+            });
+            log("android PAD uris warmed", { ready });
+          });
+        }
 
         localDelayTimer = setTimeout(() => {
           log("local hydrate delay fired");

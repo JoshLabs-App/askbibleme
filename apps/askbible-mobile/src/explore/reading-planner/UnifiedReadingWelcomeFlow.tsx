@@ -3,21 +3,16 @@ import { useRouter } from "expo-router";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { useEffect, useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../../i18n/LocaleProvider";
 import { toZhTwText } from "../../i18n/site-copy";
-import { getCompanionNeedOptions } from "../../onboarding/onboarding-devotion-data";
-import {
-  completeOnboardingDevotionIntro,
-  type CompanionNeedId,
-} from "../../onboarding/onboarding-devotion-prefs";
-import { OnboardingNeedStep } from "../../onboarding/OnboardingNeedStep";
+import { completeOnboardingDevotionIntro } from "../../onboarding/onboarding-devotion-prefs";
 import {
   parchmentContentPaddingHorizontal,
   parchmentWizardMaxWidth,
 } from "../../read/parchmentColumnLayout";
-import { NT_DEEP_REPEAT_DEFAULT_PACE } from "../../read/reading-plan/nt-deep-repeat-pace";
 import { useEffectiveReadingPlanPrefs } from "../../read/reading-plan/useReadingPlanStores";
+import { ShellSystemBackButton } from "../../shell/ShellSystemBackButton";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../../shell/splash-branding.generated";
 import { trackTap } from "../../telemetry/tap";
 import { returnToExploreIndex } from "../explore-read-chapter-nav";
@@ -33,7 +28,7 @@ import { getReadingPlannerDirectionCards } from "./reading-planner-data";
 import { ReadingPlannerDirectionStep } from "./ReadingPlannerDirectionStep";
 import { ReadingPlannerPlanStep } from "./ReadingPlannerPlanStep";
 
-const STEP_COUNT = 3;
+const STEP_COUNT = 2;
 
 export type UnifiedReadingWelcomeFlowProps = {
   /** welcome = 首次欢迎页；explore = 探索 · 轻松读经入口 */
@@ -44,25 +39,21 @@ export type UnifiedReadingWelcomeFlowProps = {
 export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingWelcomeFlowProps) {
   const router = useRouter();
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const plannerPadX = parchmentContentPaddingHorizontal(windowWidth, windowHeight, 20);
   const plannerMaxWidth = parchmentWizardMaxWidth(windowWidth, windowHeight);
-  const { locale, setLocale } = useLocale();
+  const { locale } = useLocale();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
   const { prefs, refresh } = useEffectiveReadingPlanPrefs();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [selectedNeeds, setSelectedNeeds] = useState<CompanionNeedId[]>([]);
+  const [step, setStep] = useState<1 | 2>(1);
   const [choice, setChoice] = useState<ReadingPlannerPlanChoice>({
-    type: "nt-deep-repeat",
-    pace: NT_DEEP_REPEAT_DEFAULT_PACE,
+    type: "triple-loop",
   });
   const [startDay, setStartDay] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [prefsHydrated, setPrefsHydrated] = useState(false);
 
-  const companionNeedOptions = useMemo(() => getCompanionNeedOptions(locale), [locale]);
   const directionCards = useMemo(() => getReadingPlannerDirectionCards(locale), [locale]);
 
   useEffect(() => {
@@ -102,12 +93,13 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
     setStartDay(Math.min(max, Math.max(1, Math.floor(next))));
   };
 
-  const toggleNeed = (id: CompanionNeedId) => {
-    setSelectedNeeds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
-  };
-
   const handleSkip = async () => {
-    if (submitting || entry !== "welcome") return;
+    if (submitting) return;
+    if (entry === "explore") {
+      trackTap("reading-planner.skip");
+      returnToExploreIndex(router);
+      return;
+    }
     setSubmitting(true);
     trackTap("intro.skip");
     try {
@@ -123,12 +115,19 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
       if (entry === "explore") router.back();
       return;
     }
-    setStep((prev) => (prev === 3 ? 2 : 1));
+    setStep(1);
   };
 
-  const goNext = () => {
-    if (step < 3) {
-      setStep((prev) => (prev === 1 ? 2 : 3));
+  const goSetPlan = () => {
+    if (submitting) return;
+    trackTap(entry === "welcome" ? "intro.set-plan" : "reading-planner.set-plan");
+    setStep(2);
+  };
+
+  const goPrimary = () => {
+    // 探索 · 轻松读经：第 1 步主按钮为「下一页」，进入选计划。
+    if (step === 1 && entry === "explore") {
+      goSetPlan();
       return;
     }
     void confirmPlan();
@@ -140,12 +139,14 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
     trackTap(entry === "welcome" ? "intro.confirm-plan" : "reading-planner.confirm");
     try {
       if (entry === "welcome") {
-        await completeOnboardingDevotionIntro(selectedNeeds);
+        await completeOnboardingDevotionIntro([]);
         onComplete();
       }
       const supportsStartDay = readingPlannerChoiceSupportsStartDay(choice);
       const startDayToApply = supportsStartDay ? startDay : 1;
-      if (!isActiveChoice || startDayToApply > 1) {
+      // 欢迎第一页「开始」：保持隐式默认（不落盘），便于登录后拉回云端计划。
+      // 第二页「设置读经计划」确认：显式写入并同步。
+      if (step === 2) {
         await activateReadingPlanFromPlanner(choice, { startDay: startDayToApply });
         refresh();
       }
@@ -165,8 +166,11 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
   };
 
   const primaryLabel = useMemo(() => {
-    if (step < 3) {
-      return locale === "en" ? "Next" : zhText("下一步");
+    if (step === 1) {
+      if (entry === "explore") {
+        return locale === "en" ? "Next" : zhText("下一页");
+      }
+      return locale === "en" ? "Start" : zhText("开始");
     }
     const supportsStartDay = readingPlannerChoiceSupportsStartDay(choice);
     if (supportsStartDay && startDay > 1) {
@@ -176,25 +180,12 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
       return locale === "en" ? "Start today's reading" : zhText("开始今日读经");
     }
     return locale === "en" ? "Enable this plan" : zhText("启用这个计划");
-  }, [step, locale, isActiveChoice, choice, startDay, zhText]);
+  }, [step, entry, locale, isActiveChoice, choice, startDay, zhText]);
 
-  const topActionLabel = useMemo(() => {
-    if (entry === "welcome" && step === 1) {
-      return locale === "en" ? "Skip" : zhText("跳过");
-    }
-    if (entry === "explore" && step === 1) {
-      return locale === "en" ? "Explore" : zhText("探索");
-    }
-    return locale === "en" ? "Back" : zhText("上一步");
-  }, [entry, step, locale, zhText]);
+  const setPlanLabel = locale === "en" ? "Set up reading plan" : zhText("设置读经计划");
 
-  const handleTopAction = () => {
-    if (entry === "welcome" && step === 1) {
-      void handleSkip();
-      return;
-    }
-    goBack();
-  };
+  const skipLabel = locale === "en" ? "Skip" : zhText("略过");
+  const showBack = step > 1 || entry === "explore";
 
   return (
     <View style={styles.root}>
@@ -207,16 +198,28 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
               plannerMaxWidth != null ? { maxWidth: plannerMaxWidth, alignSelf: "center" } : null,
             ]}
           >
-            <View style={[styles.topActions, entry === "welcome" && step === 1 ? styles.topActionsEnd : null]}>
-              <Pressable onPress={handleTopAction} hitSlop={8} disabled={submitting}>
-                <Text style={styles.topActionText}>{topActionLabel}</Text>
+            <View style={styles.topActions}>
+              {showBack ? (
+                <ShellSystemBackButton onPress={goBack} disabled={submitting} />
+              ) : (
+                <View style={styles.topActionSide} />
+              )}
+              <Pressable
+                onPress={() => void handleSkip()}
+                hitSlop={8}
+                disabled={submitting}
+                accessibilityRole="button"
+                accessibilityLabel={skipLabel}
+                style={({ pressed }) => [styles.skipBtn, pressed && styles.skipPressed]}
+              >
+                <Text style={styles.skipText}>{skipLabel}</Text>
               </Pressable>
             </View>
             <Text style={styles.brand}>{brandLabel}</Text>
             <View style={styles.brandLine} />
             <Text style={styles.progress}>{progressText}</Text>
             <View style={styles.progressDots}>
-              {[1, 2, 3].map((dot) => (
+              {[1, 2].map((dot) => (
                 <View key={dot} style={[styles.dot, step >= dot ? styles.dotActive : undefined]} />
               ))}
             </View>
@@ -228,7 +231,7 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
               styles.contentInner,
               {
                 paddingHorizontal: plannerPadX,
-                paddingBottom: Math.max(insets.bottom, 20) + 12,
+                paddingBottom: 16,
               },
               plannerMaxWidth != null ? { maxWidth: plannerMaxWidth, alignSelf: "center", width: "100%" } : null,
             ]}
@@ -236,17 +239,8 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           >
-            {step === 1 ? (
-              <OnboardingNeedStep
-                locale={locale}
-                onLocaleChange={setLocale}
-                selectedNeeds={selectedNeeds}
-                onToggleNeed={toggleNeed}
-                options={companionNeedOptions}
-              />
-            ) : null}
-            {step === 2 ? <ReadingPlannerDirectionStep locale={locale} cards={directionCards} /> : null}
-            {step === 3 && prefsHydrated ? (
+            {step === 1 ? <ReadingPlannerDirectionStep locale={locale} cards={directionCards} /> : null}
+            {step === 2 && prefsHydrated ? (
               <ReadingPlannerPlanStep
                 locale={locale}
                 choice={choice}
@@ -255,40 +249,58 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
                 onStartDayChange={handleStartDayChange}
               />
             ) : null}
-
-            <View style={styles.footer}>
-              <Pressable
-                onPress={goNext}
-                disabled={submitting || (step === 3 && !prefsHydrated)}
-                style={({ pressed }) => [
-                  styles.primaryButtonWrap,
-                  submitting ? styles.primaryDisabled : undefined,
-                  pressed ? styles.primaryPressed : undefined,
-                ]}
-              >
-                <LinearGradient
-                  colors={[LOGO_YELLOW, LOGO_YELLOW]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.primaryButton}
-                >
-                  <Text style={styles.primaryButtonText}>{primaryLabel}</Text>
-                </LinearGradient>
-              </Pressable>
-              {entry === "explore" && step === 3 ? (
-                <Pressable
-                  onPress={() => returnToExploreIndex(router)}
-                  hitSlop={8}
-                  style={styles.exploreBackWrap}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.exploreBackText}>
-                    {locale === "en" ? "Back to Explore" : zhText("返回探索页")}
-                  </Text>
-                </Pressable>
-              ) : null}
-            </View>
           </ScrollView>
+
+          <View
+            style={[
+              styles.footer,
+              { paddingHorizontal: plannerPadX },
+              plannerMaxWidth != null ? { maxWidth: plannerMaxWidth, alignSelf: "center", width: "100%" } : null,
+            ]}
+          >
+            <Pressable
+              onPress={goPrimary}
+              disabled={submitting || (step === 2 && !prefsHydrated)}
+              style={({ pressed }) => [
+                styles.primaryButtonWrap,
+                submitting ? styles.primaryDisabled : undefined,
+                pressed ? styles.primaryPressed : undefined,
+              ]}
+            >
+              <LinearGradient
+                colors={[LOGO_YELLOW, LOGO_YELLOW]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.primaryButton}
+              >
+                <Text style={styles.primaryButtonText}>{primaryLabel}</Text>
+              </LinearGradient>
+            </Pressable>
+            {step === 1 && entry === "welcome" ? (
+              <Pressable
+                onPress={goSetPlan}
+                hitSlop={8}
+                disabled={submitting}
+                style={({ pressed }) => [styles.setPlanWrap, pressed ? styles.skipPressed : undefined]}
+                accessibilityRole="button"
+                accessibilityLabel={setPlanLabel}
+              >
+                <Text style={styles.setPlanText}>{setPlanLabel}</Text>
+              </Pressable>
+            ) : null}
+            {entry === "explore" && step === 2 ? (
+              <Pressable
+                onPress={() => returnToExploreIndex(router)}
+                hitSlop={8}
+                style={styles.exploreBackWrap}
+                accessibilityRole="button"
+              >
+                <Text style={styles.exploreBackText}>
+                  {locale === "en" ? "Back to Explore" : zhText("返回探索页")}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -314,18 +326,27 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   topActions: {
-    minHeight: 24,
-    alignItems: "flex-start",
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  topActionSide: {
+    width: 44,
+    minHeight: 32,
+  },
+  skipBtn: {
+    minHeight: 32,
     justifyContent: "center",
-  },
-  topActionsEnd: {
-    alignItems: "flex-end",
-  },
-  topActionText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "rgba(77, 53, 34, 0.76)",
     paddingHorizontal: 4,
+  },
+  skipText: {
+    fontSize: 17,
+    fontWeight: "400",
+    color: "rgba(77, 53, 34, 0.88)",
+  },
+  skipPressed: {
+    opacity: 0.55,
   },
   brand: {
     alignSelf: "center",
@@ -370,7 +391,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   footer: {
-    marginTop: 8,
+    width: "100%",
     paddingTop: 8,
     paddingBottom: 6,
   },
@@ -396,6 +417,18 @@ const styles = StyleSheet.create({
   },
   primaryPressed: {
     transform: [{ scale: 0.99 }],
+  },
+  setPlanWrap: {
+    marginTop: 14,
+    alignSelf: "center",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  setPlanText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "rgba(77, 53, 34, 0.72)",
+    textDecorationLine: "underline",
   },
   exploreBackWrap: {
     marginTop: 14,

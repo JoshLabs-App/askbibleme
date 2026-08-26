@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { InteractionManager, Pressable, Text } from "react-native";
+import { InteractionManager, Pressable } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t } from "../i18n/site-copy";
 import {
   formatYearDayCountRef,

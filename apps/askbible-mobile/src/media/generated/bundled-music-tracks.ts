@@ -2,7 +2,11 @@
 import { Asset } from "expo-asset";
 
 const modules = {
-  "track-mpg4a8h3jhwl": require("../../../assets/music/tracks/track-mpg4a8h3jhwl.mp3"),
+  "track-mt391okyjj4i": require("../../../assets/music/tracks/track-mt391okyjj4i.mp3"),
+  "track-mpkljem5ewpo": require("../../../assets/music/tracks/track-mpkljem5ewpo.mp3"),
+  "track-mpkmwq6ej8y8": require("../../../assets/music/tracks/track-mpkmwq6ej8y8.mp3"),
+  "track-mpknyhqpr8qw": require("../../../assets/music/tracks/track-mpknyhqpr8qw.mp3"),
+  "track-mt0uzklm451x": require("../../../assets/music/tracks/track-mt0uzklm451x.mp3"),
 } as const;
 
 export function resolveBundledMusicTrackUri(id: string): string | null {

@@ -15,7 +15,7 @@ import {
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import type { TodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
 import { kickReadChapterScriptureAfterNavigate } from "./advance-read-chapter-scripture-audio";
-import { scriptureChapterPool } from "../music/scripture-chapter-pool";
+import { scriptureCommandSkipNext } from "../music/scriptureCommands";
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import { useShellSwipeSuspend } from "../shell/useShellSwipeSuspend";
 import type { HighlightWordEditorTarget } from "./ReadVerseHighlightWordSheet";
@@ -88,7 +88,7 @@ export function useReadChapterScreenNav({
     (next: { bookId: string; chapter: number } | null) => {
       if (isPlanFlow) {
         if (!chapterData) return;
-        void scriptureChapterPool.skipToNext();
+        void scriptureCommandSkipNext();
         return;
       }
       if (!next) return;

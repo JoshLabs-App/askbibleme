@@ -31,6 +31,8 @@ class AskBibleReadingAlarmModule(private val reactContext: ReactApplicationConte
       val bookName = payload.optString("bookName", "")
       val translationId = payload.optString("translationId", "cuv-simp")
       val mode = payload.optString("mode", ReadingAlarmPrefs.MODE_SCRIPTURE)
+      val verseText = payload.optString("verseText", "")
+      val verseRef = payload.optString("verseRef", "")
 
       ReadingAlarmPrefs.setSchedule(
         context,
@@ -44,6 +46,8 @@ class AskBibleReadingAlarmModule(private val reactContext: ReactApplicationConte
         bookName,
         translationId,
         mode,
+        verseText,
+        verseRef,
       )
 
       if (enabled) {
@@ -122,8 +126,11 @@ class AskBibleReadingAlarmModule(private val reactContext: ReactApplicationConte
     val result =
       Arguments.createMap().apply {
         putBoolean("canScheduleExactAlarms", ReadingAlarmCapabilities.canScheduleExactAlarms(context))
-        putBoolean("canUseFullScreenIntent", ReadingAlarmCapabilities.canUseFullScreenIntent(context))
         putBoolean("notificationsGranted", ReadingAlarmCapabilities.notificationsGranted(context))
+        putBoolean(
+          "ignoringBatteryOptimizations",
+          ReadingAlarmCapabilities.isIgnoringBatteryOptimizations(context),
+        )
       }
     promise.resolve(result)
   }
@@ -134,8 +141,8 @@ class AskBibleReadingAlarmModule(private val reactContext: ReactApplicationConte
   }
 
   @ReactMethod
-  fun openFullScreenIntentSettings() {
-    ReadingAlarmCapabilities.openFullScreenIntentSettings(reactApplicationContext.applicationContext)
+  fun openBatteryOptimizationSettings() {
+    ReadingAlarmCapabilities.openBatteryOptimizationSettings(reactApplicationContext.applicationContext)
   }
 
   @ReactMethod
@@ -212,8 +219,11 @@ class AskBibleReadingAlarmModule(private val reactContext: ReactApplicationConte
     reactContext.addLifecycleEventListener(
       object : LifecycleEventListener {
         override fun onHostResume() {
-          if (ReadingAlarmPrefs.peekPendingAutoPlay(reactContext.applicationContext)) {
-            emitAutoContinue(reactContext.applicationContext)
+          val app = reactContext.applicationContext
+          if (ReadingAlarmPrefs.peekPendingAutoPlay(app)) {
+            emitAutoContinue(app)
+          } else if (ReadingAlarmPrefs.isPreludeActive(app)) {
+            emitPreludeSession(app)
           }
         }
 

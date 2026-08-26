@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import {
   Animated,
   ImageBackground,
@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { resolveUiText } from "../i18n/site-copy";
 import {
   getMemberRegisterEnabled,
   subscribeMemberRegisterEnabled,
@@ -22,12 +23,7 @@ import {
   hydrateHomeTtsExperiment,
   subscribeHomeTtsExperiment,
 } from "../home/homeExperimentalFeatures";
-import {
-  getHomeVersePoolScope,
-  hydrateHomeVersePoolScope,
-  subscribeHomeVersePoolScope,
-} from "../home/homeVersePoolScopePrefs";
-import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import { ShellNavDrawerBibleVersionPicker } from "./ShellNavDrawerHomeTranslationSection";
 import { ShellNavDrawerScrollBody } from "./ShellNavDrawerScrollBody";
 import {
   shellNavDrawerParchmentSource,
@@ -36,8 +32,6 @@ import {
 import { shellNavDrawerStyles as styles } from "./shellNavDrawerStyles";
 import { useShellNavDrawerAnimation } from "./useShellNavDrawerAnimation";
 import { useShellNavDrawerMenuActions } from "./useShellNavDrawerMenuActions";
-import { useShellNavDrawerResourceUpdates } from "./useShellNavDrawerResourceUpdates";
-import { useShellNavDrawerTtsState } from "./useShellNavDrawerTtsState";
 import { getMobileAppVersionLabel } from "./mobileAppVersion";
 import { useShellNavMenu } from "./ShellNavMenuContext";
 import { useShellSwipeSuspend } from "./useShellSwipeSuspend";
@@ -47,7 +41,13 @@ export function ShellNavDrawer() {
   const insets = useSafeAreaInsets();
   const { locale, setLocale, t } = useLocale();
   const { open, closeMenu } = useShellNavMenu();
-  useShellSwipeSuspend(open);
+  const [biblePickerOpen, setBiblePickerOpen] = useState(false);
+  useShellSwipeSuspend(open || biblePickerOpen);
+
+  const openBibleVersionPicker = useCallback(() => {
+    closeMenu();
+    setTimeout(() => setBiblePickerOpen(true), 280);
+  }, [closeMenu]);
   const memberAuthEnabled = useSyncExternalStore(
     subscribeMemberRegisterEnabled,
     getMemberRegisterEnabled,
@@ -55,111 +55,106 @@ export function ShellNavDrawer() {
   );
   const { user, signOut, deleteAccount } = useMemberAuth();
 
+  const handleSignOut = useCallback(() => {
+    closeMenu();
+    void signOut();
+  }, [closeMenu, signOut]);
+
   const panelW = shellNavDrawerWidth();
   const { slideX, backdropOpacity, visible } = useShellNavDrawerAnimation(open, panelW);
-  const { checkMusicCatalogUpdate, downloadMusicCatalogUpdate } = useMusicPlayback();
-  const resource = useShellNavDrawerResourceUpdates(open, locale, checkMusicCatalogUpdate);
   const homeTtsExperimentEnabled = useSyncExternalStore(
     subscribeHomeTtsExperiment,
     getHomeTtsExperimentEnabled,
     getHomeTtsExperimentEnabled,
   );
-  const homeVersePoolScope = useSyncExternalStore(
-    subscribeHomeVersePoolScope,
-    getHomeVersePoolScope,
-    getHomeVersePoolScope,
-  );
-  const tts = useShellNavDrawerTtsState(open, homeTtsExperimentEnabled, locale);
-  const { localeSwitching, handleLocaleChange, confirmDeleteAccount, showAnnouncementPrompt } =
+  const { localeSwitching, handleLocaleChange, confirmDeleteAccount } =
     useShellNavDrawerMenuActions({
       locale,
       setLocale,
       closeMenu,
       deleteAccount,
       t,
-      resourceAnnouncement: resource.resourceAnnouncement,
-      resourceAnnouncementActive: resource.resourceAnnouncementActive,
-      setResourceAnnouncementActive: resource.setResourceAnnouncementActive,
     });
 
   useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
       void hydrateHomeTtsExperiment();
-      void hydrateHomeVersePoolScope();
     });
     return () => task.cancel();
   }, []);
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={closeMenu}>
-      <View style={styles.root}>
-        <Animated.View pointerEvents={open ? "auto" : "none"} style={[styles.backdrop, { opacity: backdropOpacity }]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} accessibilityLabel={t("chrome.closeNavMenu")} />
-        </Animated.View>
+    <>
+      <Modal visible={visible} transparent animationType="none" onRequestClose={closeMenu}>
+        <View style={styles.root}>
+          <Animated.View pointerEvents={open ? "auto" : "none"} style={[styles.backdrop, { opacity: backdropOpacity }]}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} accessibilityLabel={t("chrome.closeNavMenu")} />
+          </Animated.View>
 
-        <Animated.View
-          style={[
-            styles.drawer,
-            {
-              width: panelW,
-              transform: [{ translateX: slideX }],
-            },
-          ]}
-        >
-          <ImageBackground
-            source={shellNavDrawerParchmentSource}
-            resizeMode="cover"
-            style={styles.drawerBg}
-            imageStyle={styles.drawerBgImage}
+          <Animated.View
+            style={[
+              styles.drawer,
+              {
+                width: panelW,
+                transform: [{ translateX: slideX }],
+              },
+            ]}
           >
-            <View
-              style={[
-                styles.drawerContent,
-                {
-                  paddingTop: Math.max(insets.top, 12),
-                  paddingBottom: Math.max(insets.bottom, 16),
-                  paddingLeft: Math.max(insets.left, 14),
-                  paddingRight: Math.max(insets.right, 14),
-                },
-              ]}
+            <ImageBackground
+              source={shellNavDrawerParchmentSource}
+              resizeMode="cover"
+              style={styles.drawerBg}
+              imageStyle={styles.drawerBgImage}
             >
-              <View style={styles.header}>
-                <Text style={styles.title}>{t("nav.drawerUserMenuTitle")}</Text>
-                <Pressable
-                  onPress={closeMenu}
-                  hitSlop={8}
-                  style={({ pressed }) => [styles.closeBtn, pressed && styles.closeBtnPressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t("chrome.closeNavMenu")}
-                >
-                  <MaterialIcons name="close" size={22} color="rgba(55, 53, 47, 0.82)" />
-                </Pressable>
-              </View>
+              <View
+                style={[
+                  styles.drawerContent,
+                  {
+                    paddingTop: Math.max(insets.top, 12),
+                    paddingBottom: Math.max(insets.bottom, 16),
+                    paddingLeft: Math.max(insets.left, 14),
+                    paddingRight: Math.max(insets.right, 14),
+                  },
+                ]}
+              >
+                <View style={styles.header}>
+                  <Text style={styles.title}>{resolveUiText(locale, "用户菜单", "User menu")}</Text>
+                  <Pressable
+                    onPress={closeMenu}
+                    hitSlop={8}
+                    style={({ pressed }) => [styles.closeBtn, pressed && styles.closeBtnPressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("chrome.closeNavMenu")}
+                  >
+                    <MaterialIcons name="close" size={22} color="rgba(55, 53, 47, 0.82)" />
+                  </Pressable>
+                </View>
 
-              <ShellNavDrawerScrollBody
-                locale={locale}
-                t={t}
-                closeMenu={closeMenu}
-                memberAuthEnabled={memberAuthEnabled}
-                user={user}
-                signOut={signOut}
-                confirmDeleteAccount={confirmDeleteAccount}
-                homeVersePoolScope={homeVersePoolScope}
-                homeTtsExperimentEnabled={homeTtsExperimentEnabled}
-                tts={tts}
-                resource={resource}
-                downloadMusicCatalogUpdate={downloadMusicCatalogUpdate}
-                handleLocaleChange={handleLocaleChange}
-                localeSwitching={localeSwitching}
-                showAnnouncementPrompt={showAnnouncementPrompt}
-              />
-              <Text style={styles.versionFooter} accessibilityRole="text">
-                {getMobileAppVersionLabel()}
-              </Text>
-            </View>
-          </ImageBackground>
-        </Animated.View>
-      </View>
-    </Modal>
+                <ShellNavDrawerScrollBody
+                  locale={locale}
+                  closeMenu={closeMenu}
+                  memberAuthEnabled={memberAuthEnabled}
+                  user={user}
+                  signOut={handleSignOut}
+                  confirmDeleteAccount={confirmDeleteAccount}
+                  handleLocaleChange={handleLocaleChange}
+                  localeSwitching={localeSwitching}
+                  open={open}
+                  onOpenBibleVersionPicker={openBibleVersionPicker}
+                />
+                <Text style={styles.versionFooter} accessibilityRole="text">
+                  {getMobileAppVersionLabel()}
+                </Text>
+              </View>
+            </ImageBackground>
+          </Animated.View>
+        </View>
+      </Modal>
+      <ShellNavDrawerBibleVersionPicker
+        locale={locale}
+        visible={biblePickerOpen}
+        onClose={() => setBiblePickerOpen(false)}
+      />
+    </>
   );
 }

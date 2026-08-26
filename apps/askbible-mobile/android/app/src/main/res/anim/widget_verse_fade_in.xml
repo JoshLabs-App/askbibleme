@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 先等旧句淡出(1200) + 安静半秒(500)，再慢慢淡入新句。 -->
 <alpha xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="420"
+    android:duration="1200"
     android:fromAlpha="0.0"
     android:interpolator="@android:interpolator/decelerate_cubic"
+    android:startOffset="1700"
     android:toAlpha="1.0" />

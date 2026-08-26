@@ -1,14 +1,21 @@
-import { trackForBookId } from "@/lib/bible/reading-plans/triple-loop-reading";
+import { trackForBookId, type TripleLoopTrack } from "@/lib/bible/reading-plans/triple-loop-reading";
+import { loadTodayReadingPlanPayload } from "@/lib/read/today-reading-plan-payload";
 import type { ReadingPlanRange } from "@/lib/bible/reading-plans/types";
+import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
+import { trackForNtDeepRepeatBookId } from "@/lib/bible/reading-plans/nt-deep-repeat-reading";
+import { addNtDeepRepeatChapterReadToState } from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";
+import { readNtDeepRepeatProgress, writeNtDeepRepeatProgress } from "@/lib/read/nt-deep-repeat-progress";
+import {
+  resolveEffectiveEpochDay,
+  resolveEffectiveReadingPlanDayIndex,
+} from "@/lib/read/reading-plan-ahead";
 import {
   getReadingPlanDaySinceEpoch,
-  resolveReadingPlanDayIndex,
   readEffectiveReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
-import { loadTodayReadingPlanPayload } from "@/lib/read/today-reading-plan-payload";
-import { advanceTripleLoopProgressTrack } from "@/lib/read/triple-loop-progress";
-import type { TripleLoopTrack } from "@/lib/bible/reading-plans/triple-loop-reading";
+import { markTripleLoopChapterRead } from "@/lib/read/triple-loop-progress";
 
 export const TODAY_READING_DONE_STORAGE_KEY = "askbible-today-reading-done-v1";
 export const TODAY_READING_DONE_STORAGE_KEY_LEGACY = "selah-today-reading-done-v1";
@@ -56,12 +63,52 @@ export function buildTodayReadingScopeKey(opts: {
   epochDay: number;
   dayIndex: number | null;
 }): string {
-  if (opts.isTripleLoop) return `${opts.planId}:epoch:${opts.epochDay}`;
+  if (opts.isTripleLoop || isNtDeepRepeatPlanId(opts.planId)) {
+    return `${opts.planId}:epoch:${opts.epochDay}`;
+  }
   if (opts.dayIndex != null) return `${opts.planId}:day:${opts.dayIndex}`;
   return opts.planId;
 }
 
-export function todayReadingItemKey(r: ReadingPlanRange): string {
+export function planIdFromTodayReadingScopeKey(scopeKey: string | null | undefined): string | null {
+  if (!scopeKey?.trim()) return null;
+  return scopeKey.split(":")[0]?.trim() || null;
+}
+
+export function isSameTodayReadingPlanScope(
+  scopeA: string | null | undefined,
+  scopeB: string | null | undefined,
+): boolean {
+  if (!scopeA || !scopeB) return false;
+  if (scopeA === scopeB) return true;
+  const planA = planIdFromTodayReadingScopeKey(scopeA);
+  const planB = planIdFromTodayReadingScopeKey(scopeB);
+  return Boolean(planA && planB && planA === planB);
+}
+
+export function resolveLocalTodayReadingScopeKeyFromPrefs(prefs: import("@/lib/read/reading-plan-prefs").ReadingPlanPrefs): string {
+  const isPointerPlan = isPointerReadingPlanId(prefs.planId);
+  const dayCount = prefs.dayCount ?? 365;
+  const dayIndex =
+    !isPointerPlan && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
+  return buildTodayReadingScopeKey({
+    planId: prefs.planId,
+    isTripleLoop: isTripleLoopPlanId(prefs.planId),
+    epochDay: resolveEffectiveEpochDay(prefs),
+    dayIndex,
+  });
+}
+
+export function resolveLocalTodayReadingScopeKey(): string {
+  return resolveLocalTodayReadingScopeKeyFromPrefs(readEffectiveReadingPlanPrefs());
+}
+
+export function todayReadingItemKey(r: ReadingPlanRange, planId?: string | null): string {
+  if (planId && isNtDeepRepeatPlanId(planId)) {
+    const track = trackForNtDeepRepeatBookId(r.bookId);
+    if (track === "ot") return `ndr:ot:${r.bookId}:${r.startChapter}`;
+    if (track === "nt") return `ndr:nt:${r.bookId}:${r.startChapter}:${r.endChapter}`;
+  }
   const track = trackForBookId(r.bookId);
   if (track) return `${track}:${r.bookId}:${r.startChapter}`;
   return `${r.bookId}:${r.startChapter}-${r.endChapter}`;
@@ -144,6 +191,22 @@ function parseTripleLoopItemKey(itemKey: string): { bookId: string; chapter: num
   return { bookId: parts[1], chapter, track };
 }
 
+function parseNtDeepRepeatItemKey(itemKey: string): { bookId: string; chapter: number } | null {
+  const parts = itemKey.split(":");
+  if (parts[0] !== "ndr") return null;
+  if (parts[1] === "ot" && parts.length === 4) {
+    const chapter = Number(parts[3]);
+    if (!parts[2] || !Number.isInteger(chapter) || chapter < 1) return null;
+    return { bookId: parts[2], chapter };
+  }
+  if (parts[1] === "nt" && parts.length === 5) {
+    const chapter = Number(parts[3]);
+    if (!parts[2] || !Number.isInteger(chapter) || chapter < 1) return null;
+    return { bookId: parts[2], chapter };
+  }
+  return null;
+}
+
 export function setTodayReadingItemDone(
   scopeKey: string,
   itemKey: string,
@@ -158,7 +221,12 @@ export function setTodayReadingItemDone(
   if (done) {
     const triple = parseTripleLoopItemKey(itemKey);
     if (triple) {
-      advanceTripleLoopProgressTrack(triple.track);
+      markTripleLoopChapterRead(triple.bookId, triple.chapter);
+    }
+    const ndr = parseNtDeepRepeatItemKey(itemKey);
+    if (ndr) {
+      const stored = readNtDeepRepeatProgress();
+      writeNtDeepRepeatProgress(addNtDeepRepeatChapterReadToState(stored, ndr.bookId, ndr.chapter));
     }
   }
   return base;
@@ -175,10 +243,11 @@ export async function markTodayReadingChapterVisit(
   opts?: { dayCount?: number },
 ): Promise<void> {
   const prefs = readEffectiveReadingPlanPrefs();
-  const isTripleLoop = isTripleLoopPlanId(prefs.planId);
+  const isPointerPlan = isPointerReadingPlanId(prefs.planId);
   const dayCount = opts?.dayCount ?? prefs.dayCount ?? 365;
-  const dayIndex = !isTripleLoop && dayCount ? resolveReadingPlanDayIndex(prefs, dayCount) : null;
-  if (!isTripleLoop && dayIndex == null) return;
+  const dayIndex =
+    !isPointerPlan && dayCount ? resolveEffectiveReadingPlanDayIndex(prefs, dayCount) : null;
+  if (!isPointerPlan && dayIndex == null) return;
 
   const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: opts?.dayCount });
   const reading = payload?.day?.readings.find((r) => readingIncludesChapter(r, bookId, chapter));
@@ -186,11 +255,11 @@ export async function markTodayReadingChapterVisit(
 
   const scopeKey = buildTodayReadingScopeKey({
     planId: prefs.planId,
-    isTripleLoop,
-    epochDay: getReadingPlanDaySinceEpoch(),
+    isTripleLoop: isTripleLoopPlanId(prefs.planId),
+    epochDay: resolveEffectiveEpochDay(prefs),
     dayIndex,
   });
-  const itemKey = todayReadingItemKey(reading);
+  const itemKey = todayReadingItemKey(reading, prefs.planId);
   const { readingPlanRangeUnitCount, recordTodayReadingChapterFraction, TODAY_READING_AUTO_DONE_FRACTION } =
     await import("@/lib/read/today-reading-chapter-fraction");
   if (readingPlanRangeUnitCount(reading) > 1) {

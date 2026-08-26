@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import {
-  MUSIC_HOME_QUEUE_FADE_BAND,
+  MUSIC_HOME_QUEUE_CENTER_PAD,
   MUSIC_HOME_QUEUE_ROW_HEIGHT,
   MUSIC_HOME_QUEUE_VIEWPORT_HEIGHT,
 } from "./musicHomeQueueScroll";
@@ -24,8 +24,9 @@ export const musicHomeQueuePanelStyles = StyleSheet.create({
     flex: 1,
   },
   queueScrollContent: {
-    paddingTop: MUSIC_HOME_QUEUE_FADE_BAND,
-    paddingBottom: MUSIC_HOME_QUEUE_FADE_BAND,
+    // 留白要够把首尾曲目滚到视口正中，否则自动回中在两端会停在半路。
+    paddingTop: MUSIC_HOME_QUEUE_CENTER_PAD,
+    paddingBottom: MUSIC_HOME_QUEUE_CENTER_PAD,
   },
   queue: {
     paddingTop: 4,
@@ -44,13 +45,13 @@ export const musicHomeQueuePanelStyles = StyleSheet.create({
   },
   queueText: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.62)",
+    color: "rgba(255,255,255,0.48)",
     ...parchmentSans(400),
     textAlign: "center",
   },
   queueTextActive: {
-    color: "rgba(255,255,255,0.98)",
-    ...parchmentSans(500),
+    color: "#FFFFFF",
+    ...parchmentSans(600),
     fontSize: 18,
   },
   chromeHidden: {

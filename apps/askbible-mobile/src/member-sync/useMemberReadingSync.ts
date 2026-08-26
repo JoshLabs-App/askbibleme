@@ -5,9 +5,13 @@ import { rescheduleAllNotifications } from "../notifications/localNotificationSc
 import { syncDailyVerseWidgetSnapshot } from "../widget/syncDailyVerseWidgetSnapshot";
 import { flushMemberReadingSyncNow, scheduleMemberReadingSync } from "./runMemberReadingSync";
 
-async function syncIfLoggedIn(): Promise<void> {
+async function syncIfLoggedIn(mode: "schedule" | "flush" = "schedule"): Promise<void> {
   const session = await readMemberSession();
   if (!session?.sessionToken) return;
+  if (mode === "flush") {
+    await flushMemberReadingSyncNow(session.sessionToken, "foreground");
+    return;
+  }
   scheduleMemberReadingSync(session.sessionToken);
 }
 
@@ -18,13 +22,13 @@ export function useMemberReadingSync(enabled: boolean): void {
 
   useEffect(() => {
     if (!enabled) return;
-    void syncIfLoggedIn();
+    void syncIfLoggedIn("flush");
   }, [enabled]);
 
   useEffect(() => {
     const onChange = (state: AppStateStatus) => {
       if (state !== "active" || !enabledRef.current) return;
-      void syncIfLoggedIn();
+      void syncIfLoggedIn("flush");
     };
     const sub = AppState.addEventListener("change", onChange);
     return () => sub.remove();

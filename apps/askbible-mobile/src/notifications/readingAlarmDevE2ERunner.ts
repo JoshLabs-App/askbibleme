@@ -55,7 +55,7 @@ async function scheduleForegroundReminder(seconds: number): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     identifier: "e2e-reading-reminder",
     content: {
-      title: "Daily morning alarm",
+      title: "Daily reading reminder",
       body: "E2E test",
       sound: true,
       data: { kind: "reading-reminder" },
@@ -91,9 +91,9 @@ async function listScheduledReadingReminderIds(): Promise<string[]> {
   return readingReminderIds(await Notifications.getAllScheduledNotificationsAsync());
 }
 
-async function verifyWeekdayScheduling(): Promise<boolean> {
+async function verifyDailyScheduling(): Promise<boolean> {
   try {
-    console.log(`${LOG} verifyWeekdayScheduling begin`);
+    console.log(`${LOG} verifyDailyScheduling begin`);
     const permission = await Notifications.getPermissionsAsync();
     const granted =
       permission.granted ||
@@ -109,63 +109,37 @@ async function verifyWeekdayScheduling(): Promise<boolean> {
       await requestNotificationPermissions().catch(() => false);
     }
 
-    const partialWeekdays: ReadingReminderWeekday[] = [2, 4, 6];
     const prefs = await readNotificationPrefs();
-    const partialPrefs = {
+    // 旧子集也会被 normalize 成每天；调度应走 daily id，不应残留 weekday ids。
+    const next = {
       ...prefs,
       readingReminderEnabled: true,
-      readingReminderWeekdays: partialWeekdays,
+      readingReminderWeekdays: [2, 4, 6] as ReadingReminderWeekday[],
       readingReminderHour: 7,
       readingReminderMinute: 30,
       dailyVerseEnabled: false,
     };
-    await writeNotificationPrefs(partialPrefs);
+    await writeNotificationPrefs(next);
     await rescheduleAllNotifications();
     if (Platform.OS === "ios") {
       await new Promise((r) => setTimeout(r, 600));
     }
 
-    const partialScheduled = await listScheduledReadingReminderIds();
-    const partialWeeklyIds = partialWeekdays.map((weekday) => readingReminderWeekdayNotificationId(weekday));
-    const hasDailyPartial = partialScheduled.includes(READING_REMINDER_NOTIFICATION_ID);
-    const hasAllPartialWeekly = partialWeeklyIds.every((id) => partialScheduled.includes(id));
-    const hasExtraPartialWeekly = READING_REMINDER_WEEKDAYS_ALL.filter(
-      (weekday) => !partialWeekdays.includes(weekday),
-    ).some((weekday) => partialScheduled.includes(readingReminderWeekdayNotificationId(weekday)));
-
-    if (hasDailyPartial || !hasAllPartialWeekly || hasExtraPartialWeekly) {
-      await writeResult(
-        "fail",
-        `partial weekdays daily=${hasDailyPartial} ids=${partialScheduled.join(",")}`,
-      );
-      return false;
-    }
-
-    const allPrefs = {
-      ...partialPrefs,
-      readingReminderWeekdays: [...READING_REMINDER_WEEKDAYS_ALL],
-    };
-    await writeNotificationPrefs(allPrefs);
-    await rescheduleAllNotifications();
-    if (Platform.OS === "ios") {
-      await new Promise((r) => setTimeout(r, 600));
-    }
-
-    const allScheduled = await listScheduledReadingReminderIds();
-    const hasDailyAll = allScheduled.includes(READING_REMINDER_NOTIFICATION_ID);
-    const hasWeeklyAll = READING_REMINDER_WEEKDAYS_ALL.some((weekday) =>
-      allScheduled.includes(readingReminderWeekdayNotificationId(weekday)),
+    const scheduled = await listScheduledReadingReminderIds();
+    const hasDaily = scheduled.includes(READING_REMINDER_NOTIFICATION_ID);
+    const hasWeekly = READING_REMINDER_WEEKDAYS_ALL.some((weekday) =>
+      scheduled.includes(readingReminderWeekdayNotificationId(weekday)),
     );
 
-    if (!hasDailyAll || hasWeeklyAll) {
-      await writeResult("fail", `all weekdays daily=${hasDailyAll} ids=${allScheduled.join(",")}`);
+    if (!hasDaily || hasWeekly) {
+      await writeResult("fail", `daily schedule daily=${hasDaily} ids=${scheduled.join(",")}`);
       return false;
     }
 
-    await writeResult("pass", "weekdays scheduling");
+    await writeResult("pass", "daily scheduling");
     return true;
   } catch (error) {
-    await writeResult("fail", error instanceof Error ? error.message : "weekdays scheduling error");
+    await writeResult("fail", error instanceof Error ? error.message : "daily scheduling error");
     return false;
   }
 }
@@ -181,7 +155,7 @@ export async function runReadingAlarmE2E(mode: string): Promise<void> {
   }
 
   if (mode === "weekdays" || mode === "full") {
-    const ok = await verifyWeekdayScheduling();
+    const ok = await verifyDailyScheduling();
     if (!ok) return;
     if (mode === "weekdays") return;
   }
@@ -193,7 +167,7 @@ export async function runReadingAlarmE2E(mode: string): Promise<void> {
     await syncReadingAlarmSchedule({
       prefs: next,
       enabled: true,
-      title: "Daily morning alarm",
+      title: "Daily reading reminder",
       body: "E2E sync test",
     });
     await writeResult("pass", "syncSchedule");

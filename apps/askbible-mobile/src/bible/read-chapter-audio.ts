@@ -10,6 +10,10 @@ import {
   translationUsesWebChapterAudio,
 } from "./web-chapter-audio";
 import {
+  resolveYouVersionChapterAudioPlayableSrc,
+  translationHasVerifiedYouVersionChapterAudio,
+} from "@/lib/bible/youversion-chapter-audio";
+import {
   resolveDownloadedChapterAudioUri,
   scheduleChapterAudioBackgroundCache,
 } from "../read/read-audio-package-download";
@@ -43,16 +47,19 @@ export async function prefetchScriptureChapterAudioSrc(args: {
 function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string): boolean {
   const src = cachedSrc.trim().toLowerCase();
   if (!src) return true;
-  // WEB/BBE/BLM 在线音轨容易因为开发基址变化拿到失效缓存地址；每次重算更稳。
+  // WEB/KJV/BLM 在线音轨容易因为开发基址变化拿到失效缓存地址；每次重算更稳。
   if (translationUsesWebChapterAudio(translationId)) {
     return true;
   }
-  // CUV 历史外链在部分章节会 404；开发态优先重算更稳的 askbible 自托管链接。
+  if (translationHasVerifiedYouVersionChapterAudio(translationId)) {
+    return true;
+  }
+  // CUV 历史外链 / 已弃用的 askbible 自托管链在部分章节会 404；重算外站或本地包。
   if (
     translationSupportsCuvChapterAudio(translationId) &&
     (src.includes("theaudiopower.org/cuv/recordings/") ||
       src.includes("media.fhl.net/unvdavid/") ||
-      src.includes("askbible.me/audio/cuv-v20/"))
+      src.includes("askbible.me/audio/"))
   ) {
     return true;
   }
@@ -81,7 +88,8 @@ export function buildChapterAudioPlayableSrcSync(args: {
 export function translationSupportsChapterAudio(translationId: string): boolean {
   return (
     translationSupportsCuvChapterAudio(translationId) ||
-    translationUsesWebChapterAudio(translationId)
+    translationUsesWebChapterAudio(translationId) ||
+    translationHasVerifiedYouVersionChapterAudio(translationId)
   );
 }
 
@@ -104,6 +112,14 @@ export async function resolveChapterAudioPlayableSrc(args: {
     });
   }
 
+  if (translationHasVerifiedYouVersionChapterAudio(args.translationId)) {
+    return resolveYouVersionChapterAudioPlayableSrc({
+      translationId: args.translationId,
+      bookId: args.bookId,
+      chapter: args.chapter,
+    });
+  }
+
   const sync = buildChapterAudioPlayableSrcSync({ ...args, baseUrl });
   if (sync) return { ok: true, src: sync };
   if (translationSupportsCuvChapterAudio(args.translationId)) {
@@ -118,7 +134,7 @@ export async function resolveChapterAudioPlayableSrc(args: {
   return { ok: false };
 }
 
-/** 读经章播放：本地下载包 → 安装包内置 → 联网（FHL 闫大卫 / 自托管，未下载时流式）。 */
+/** 读经章播放：本地下载包/流式缓存 → 安装包内置 → 联网先播，后台落 10 天流式缓存。 */
 export async function resolveScripturePlayableSrcForChapter(args: {
   translationId: string;
   bookId: string;
@@ -167,6 +183,7 @@ export async function resolveScripturePlayableSrcForChapter(args: {
     voiceId: args.voiceId,
   });
   if (resolved.ok) {
+    // 与今日读经一致：远程 URI 立刻可播，后台写入流式缓存（含 YouVersion CDN）。
     if (isMobileScriptureAudioStreamAllowed() && /^https?:\/\//i.test(resolved.src)) {
       scheduleChapterAudioBackgroundCache({
         translationId: args.translationId,

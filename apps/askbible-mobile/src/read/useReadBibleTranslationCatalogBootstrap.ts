@@ -4,6 +4,7 @@ import {
   clearBibleTranslationsCatalogCache,
   fetchBibleTranslationsCatalogFresh,
 } from "../api/fetchBibleTranslationsCatalog";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { preloadPrimaryScriptureTranslation } from "../bible/scripture-translation-download";
 import { inferAppLocaleFromDevice } from "../i18n/config";
 import { getLocale, hydrateLocaleFromStorage, subscribeLocale } from "../i18n/locale-store";
@@ -134,10 +135,21 @@ export function useReadBibleTranslationCatalogBootstrap() {
   }, [translationCatalogReady, syncAutoTranslationForLocale]);
 
   const refreshTranslationCatalog = useCallback(async () => {
-    await clearBibleTranslationsCatalogCache();
+    // 本地包目录固定：清缓存只会拖慢设置/菜单，无收益。
+    if (!isMobileBundledOnly()) {
+      await clearBibleTranslationsCatalogCache();
+    }
     const index = await fetchBibleTranslationsCatalogFresh();
     if (index.translations.length <= bundledBibleTranslationsCatalog().translations.length) return;
-    setTranslationCatalog(index.translations);
+    setTranslationCatalog((prev) => {
+      if (
+        prev.length === index.translations.length &&
+        prev.every((item, i) => item.id === index.translations[i]?.id)
+      ) {
+        return prev;
+      }
+      return index.translations;
+    });
     setDefaultTranslationId(index.defaultTranslationId);
     setTranslationCatalogReady(true);
     const locale = getLocale();

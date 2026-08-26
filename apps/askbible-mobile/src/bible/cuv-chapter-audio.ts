@@ -50,6 +50,15 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
 
+  // 潮语：只引用 TSTSCC，跳过本站 bundled / 自托管
+  if (teochewNtVoiceActive(voice)) {
+    return resolveTeochewNtChapterAudioPlayableSrc({
+      bookId: args.bookId,
+      chapter: args.chapter,
+      baseUrl: args.baseUrl,
+    });
+  }
+
   const bundled = resolveBundledChapterAudioUri({
     translationId: "cuv-simp",
     bookId: args.bookId,
@@ -58,13 +67,6 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   });
   if (bundled) return { ok: true, src: bundled };
 
-  if (teochewNtVoiceActive(voice)) {
-    return resolveTeochewNtChapterAudioPlayableSrc({
-      bookId: args.bookId,
-      chapter: args.chapter,
-      baseUrl: args.baseUrl,
-    });
-  }
   if (!voiceSupportsBook(voice, args.bookId)) return { ok: false };
 
   if (!isMobileScriptureAudioStreamAllowed()) return { ok: false };

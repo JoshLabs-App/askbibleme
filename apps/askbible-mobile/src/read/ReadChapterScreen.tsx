@@ -10,6 +10,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { preferEnglishChapterSegmentTitles } from "../bible/chapter-segment-display";
+import {
+  readScriptureTranslationDownloadState,
+  subscribeScriptureTranslationDownload,
+  type ScriptureTranslationDownloadState,
+} from "../bible/scripture-translation-download";
 import { normalizeScriptureSearchQuery } from "../bible/scripture-search";
 import {
   EXPLORE_READ_RETURN_PARAM,
@@ -27,6 +32,7 @@ import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { useReadChapterSearchFocus } from "./useReadChapterSearchFocus";
 import { useScriptureVerseBookmarks } from "./useScriptureVerseBookmarks";
 import { buildPlanChapterQueue } from "./read-plan-flow-nav";
+import { consumeReadPlanFlowAutoplay } from "./read-plan-flow-autoplay";
 import { getLocalReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
 import { useTodayReadingPlan } from "./useTodayReadingPlan";
 import {
@@ -82,6 +88,7 @@ export function ReadChapterScreen() {
   );
   const { isBookmarked, toggle: toggleVerseBookmark } = useScriptureVerseBookmarks();
   const { locale } = useLocale();
+  const { playScriptureChapter } = useMusicPlayback();
   const swipe = useShellSwipeNav();
   const {
     px,
@@ -158,6 +165,20 @@ export function ReadChapterScreen() {
   const { tr } = display;
   clearXrefOnRouteChangeRef.current = display.clearXrefOnRouteChange;
 
+  const [translationDownload, setTranslationDownload] = useState<ScriptureTranslationDownloadState>(
+    () => readScriptureTranslationDownloadState(),
+  );
+  useEffect(() => {
+    return subscribeScriptureTranslationDownload(() => {
+      setTranslationDownload(readScriptureTranslationDownloadState());
+    });
+  }, []);
+  const preparingTranslation =
+    translationDownload.status === "running" &&
+    (!translationDownload.translationId ||
+      translationDownload.translationId === primaryTranslationId);
+  const preparePercent = Math.max(0, Math.min(100, translationDownload.percent));
+
   const {
     searchFocusVerse,
     verseLayoutsRef,
@@ -166,10 +187,13 @@ export function ReadChapterScreen() {
     onScrollViewportLayout,
     onChapterScrollOffset,
     reportVerseLayoutFromEvent,
+    registerVerseHost,
+    registerParagraphHost,
+    reportParagraphVerseBoxes,
+    reportParagraphFrame,
     refreshScrollViewportTop,
     remeasureVerseLayoutInContent,
     onScrollContentAnchorLayout,
-    scrollVerseToReadableCenter,
   } = useReadChapterSearchFocus(
     chapterData,
     params.verse,
@@ -177,6 +201,7 @@ export function ReadChapterScreen() {
     scrollContentHeightRef,
     scrollContentAnchorRef,
     insets,
+    scrollHeaderHeightRef,
   );
 
   const verseActions = useReadChapterVerseActions({
@@ -196,12 +221,15 @@ export function ReadChapterScreen() {
     return buildPlanChapterQueue(todayPlan.payload.day.readings);
   }, [isPlanFlow, todayPlan.payload]);
 
-  const { playScriptureChapter } = useMusicPlayback();
-
   const autoplayParam = String(
     Array.isArray(params.autoplay) ? params.autoplay[0] : params.autoplay || "",
   );
   const autoplayConsumedRef = useRef(false);
+  // 普通读经章：吃掉计划页遗留 autoplay，默认不开音频
+  useEffect(() => {
+    if (isPlanFlow || autoplayParam === "1") return;
+    consumeReadPlanFlowAutoplay();
+  }, [bookId, chapter, isPlanFlow, autoplayParam]);
   useEffect(() => {
     if (autoplayParam !== "1" || autoplayConsumedRef.current) return;
     if (!chapterData) return;
@@ -238,9 +266,6 @@ export function ReadChapterScreen() {
     isPlanFlow,
     planFlowTick,
     planFlowQueue: planChapterQueue,
-    followScroll: {
-      scrollVerseToReadableCenter,
-    },
   });
 
   const { onChapterScroll, onChapterContentSizeChange } = useReadChapterScreenProgress({
@@ -261,13 +286,27 @@ export function ReadChapterScreen() {
     lastRecordedFractionRef,
   });
 
+  const prepareStatus = (
+    <>
+      <ActivityIndicator color={c.muted} />
+      <Text style={styles.statusText}>
+        {preparingTranslation ? tr("pages.read.preparingTranslation") : tr("pages.read.loadingChapter")}
+      </Text>
+      {preparingTranslation ? (
+        <>
+          <View style={styles.prepareProgressTrack} accessibilityRole="progressbar">
+            <View style={[styles.prepareProgressFill, { width: `${preparePercent}%` }]} />
+          </View>
+          <Text style={styles.preparePercentText}>{preparePercent}%</Text>
+        </>
+      ) : null}
+    </>
+  );
+
   return (
     <View style={styles.root}>
-      {loading ? (
-        <View style={[styles.centered, { paddingTop: insets.top }]}>
-          <ActivityIndicator color={c.muted} />
-          <Text style={styles.statusText}>{tr("pages.read.loadingChapter")}</Text>
-        </View>
+      {loading && !chapterData ? (
+        <View style={[styles.centered, { paddingTop: insets.top }]}>{prepareStatus}</View>
       ) : error ? (
         <View style={[styles.centered, { paddingTop: insets.top }]}>
           <Text style={styles.errorText}>{error}</Text>
@@ -277,14 +316,20 @@ export function ReadChapterScreen() {
         </View>
       ) : !chapterData ? (
         <View style={[styles.centered, { paddingTop: insets.top }]}>
-          <ActivityIndicator color={c.muted} />
-          <Text style={styles.statusText}>{tr("pages.read.loadingChapter")}</Text>
-          <Pressable
-            onPress={() => void load()}
-            style={({ pressed }) => [styles.retryBtn, pressed && styles.pressed, { marginTop: 12 }]}
-          >
-            <Text style={styles.retryBtnText}>{tr("pages.read.retry")}</Text>
-          </Pressable>
+          {prepareStatus}
+          {!preparingTranslation ? (
+            <Pressable
+              onPress={() => void load()}
+              style={({ pressed }) => [styles.retryBtn, pressed && styles.pressed, { marginTop: 12 }]}
+            >
+              <Text style={styles.retryBtnText}>{tr("pages.read.retry")}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+      {(loading || preparingTranslation) && chapterData ? (
+        <View style={[styles.prepareOverlay, { paddingTop: insets.top }]} pointerEvents="auto">
+          {prepareStatus}
         </View>
       ) : null}
 
@@ -311,6 +356,10 @@ export function ReadChapterScreen() {
         postReadingReady={postReadingReady}
         chapterCompleted={chapterCompleted}
         reportVerseLayoutFromEvent={reportVerseLayoutFromEvent}
+        registerVerseHost={registerVerseHost}
+        registerParagraphHost={registerParagraphHost}
+        reportParagraphVerseBoxes={reportParagraphVerseBoxes}
+        reportParagraphFrame={reportParagraphFrame}
         returnToExplore={returnToExplore}
         navigation={navigation}
         primaryTranslationId={primaryTranslationId}

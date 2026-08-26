@@ -122,6 +122,10 @@ export const biblicalLifespanChartStyles = StyleSheet.create({
     rowGap: IS_ANDROID ? 0 : 2,
   },
   metaPressed: { opacity: 0.72 },
+  modernMetaStack: {
+    width: "100%",
+    gap: IS_ANDROID ? 2 : 3,
+  },
   name: {
     fontSize: 14,
     lineHeight: IS_ANDROID ? 16 : 18,
@@ -148,13 +152,20 @@ export const biblicalLifespanChartStyles = StyleSheet.create({
     fontSize: 15,
   },
   modernDisplayName: {
-    fontSize: 21,
+    fontSize: 17,
+    lineHeight: IS_ANDROID ? 20 : 22,
+    flexShrink: 1,
+    minWidth: 0,
+    width: "100%",
   },
   modernLifespan: {
     fontSize: 14,
+    flexShrink: 0,
   },
   modernRef: {
     fontSize: 13,
+    flexShrink: 1,
+    minWidth: 0,
   },
   barTrack: {
     marginTop: IS_ANDROID ? 4 : 6,

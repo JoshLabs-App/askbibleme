@@ -1,7 +1,9 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { InteractionManager, Platform } from "react-native";
+import { Platform } from "react-native";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
+import { isShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 import { ensureNatureResourcePackSync } from "../media/natureResourcePackSync";
 import { useNatureResourcePackSync } from "../media/useNatureResourcePackSync";
 import {
@@ -14,26 +16,35 @@ import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
 import {
   readNatureActiveSceneId,
   readNatureLoopAllScenesEnabled,
-  writeNatureLoopAllScenesEnabled,
 } from "../nature/natureActiveScenePrefs";
+import {
+  registerNatureAmbientSlotClear,
+  registerNatureAmbientSlotControl,
+} from "../nature/natureAmbientExclusiveStop";
 import {
   readNatureAmbientSceneSlotId,
   writeNatureAmbientSceneSlotId,
 } from "../nature/natureAmbientScenePrefs";
-import { NATURE_AMBIENT_SCENE_SLOTS, type NatureAmbientSceneSlotId } from "../nature/ambientSceneSlots";
-import { BUNDLED_AMBIENT_SCENE_AUDIO } from "../nature/bundledAmbientSceneAudio";
+import {
+  NATURE_AMBIENT_SCENE_SLOTS,
+  resolveColdStartAmbientSlot,
+  type NatureAmbientSceneSlotId,
+} from "../nature/ambientSceneSlots";
 import {
   readNatureSceneUsageMap,
   type NatureSceneUsageMap,
 } from "../nature/natureSceneUsage";
 import type { NatureSettingsV2 } from "../types/nature";
 import {
-  DEFAULT_SOFT_FOCUS,
-  readNatureSoftFocusPrefs,
-  type NatureSoftFocusPrefs,
-} from "./natureHomePrefs";
+  DEFAULT_NATURE_LIVE_VIDEO,
+  readNatureLiveVideoEnabled,
+} from "./natureHomeLiveVideoPrefs";
 import { bootWithBundled, bundledOnBoot } from "./homeNatureScreenConstants";
-import { ensureNatureSceneVideoReady } from "../media/natureSceneReadiness";
+import {
+  ensureNatureSceneVideoReady,
+  ensurePrimaryNatureLakeVideoReady,
+  PRIMARY_NATURE_LAKE_SCENE_ID,
+} from "../media/natureSceneReadiness";
 import { peekWidgetPlaybackBoot } from "../widget/widgetPlaybackColdStart";
 
 export function useHomeNatureScreenLoad() {
@@ -59,10 +70,13 @@ export function useHomeNatureScreenLoad() {
     return id;
   });
   const [loopAllScenesEnabled, setLoopAllScenesEnabled] = useState(false);
-  const [softFocus, setSoftFocus] = useState<NatureSoftFocusPrefs>(DEFAULT_SOFT_FOCUS);
+  const [liveVideoEnabled, setLiveVideoEnabled] = useState(DEFAULT_NATURE_LIVE_VIDEO);
   const [prefsVersion, setPrefsVersion] = useState(0);
   const [activeAmbientSlotId, setActiveAmbientSlotId] = useState<NatureAmbientSceneSlotId | "">("");
+  const activeAmbientSlotIdRef = useRef(activeAmbientSlotId);
+  activeAmbientSlotIdRef.current = activeAmbientSlotId;
   const [sceneUsageMap, setSceneUsageMap] = useState<NatureSceneUsageMap>({});
+  const ambientColdStartedRef = useRef(false);
 
   const applySettings = useCallback(
     (data: NatureSettingsV2, stored: string | null) => {
@@ -74,34 +88,36 @@ export function useHomeNatureScreenLoad() {
         playable.videos[0]?.id ||
         "";
       setLocalActiveId(id);
+      return id;
     },
     [baseUrl],
   );
 
+  const applyColdStartAmbient = useCallback(async (sceneId: string) => {
+    if (ambientColdStartedRef.current) return;
+    ambientColdStartedRef.current = true;
+    const storedAmbient = await readNatureAmbientSceneSlotId();
+    const ambient = resolveColdStartAmbientSlot(sceneId, storedAmbient);
+    setActiveAmbientSlotId(ambient);
+    if (ambient) void writeNatureAmbientSceneSlotId(ambient);
+  }, []);
+
   const hydrateNatureHomePrefs = useCallback(
     async (data: NatureSettingsV2) => {
-      const [stored, sf, storedAmbient, loopAllScenes, usage] = await Promise.all([
+      const [stored, loopAllScenes, usage, liveVideo] = await Promise.all([
         readNatureActiveSceneId(),
-        readNatureSoftFocusPrefs(),
-        readNatureAmbientSceneSlotId(),
         readNatureLoopAllScenesEnabled(),
         readNatureSceneUsageMap(),
+        readNatureLiveVideoEnabled(),
       ]);
-      applySettings(data, stored);
+      const sceneId = applySettings(data, stored);
       setLoopAllScenesEnabled(loopAllScenes);
-      setSoftFocus(sf);
+      setLiveVideoEnabled(liveVideo);
       setSceneUsageMap(usage);
-      if (
-        storedAmbient &&
-        (typeof BUNDLED_AMBIENT_SCENE_AUDIO[storedAmbient as NatureAmbientSceneSlotId] === "number" ||
-          data.ambientClips.some((clip) => clip.id === storedAmbient))
-      ) {
-        setActiveAmbientSlotId(storedAmbient as NatureAmbientSceneSlotId);
-      } else {
-        setActiveAmbientSlotId("");
-      }
+      // 打开 App 不自动带环境音；点选场景后再跟场景默认。
+      await applyColdStartAmbient(sceneId);
     },
-    [applySettings],
+    [applyColdStartAmbient, applySettings],
   );
 
   const load = useCallback(
@@ -111,27 +127,19 @@ export function useHomeNatureScreenLoad() {
         setError(null);
       }
       try {
-        const [data, stored, sf, storedAmbient, loopAllScenes, usage] = await Promise.all([
+        const [data, stored, loopAllScenes, usage, liveVideo] = await Promise.all([
           fetchNatureSettings(),
           readNatureActiveSceneId(),
-          readNatureSoftFocusPrefs(),
-          readNatureAmbientSceneSlotId(),
           readNatureLoopAllScenesEnabled(),
           readNatureSceneUsageMap(),
+          readNatureLiveVideoEnabled(),
         ]);
-        applySettings(data, stored);
+        const sceneId = applySettings(data, stored);
         setLoopAllScenesEnabled(loopAllScenes);
-        setSoftFocus(sf);
+        setLiveVideoEnabled(liveVideo);
         setSceneUsageMap(usage);
-        if (
-          storedAmbient &&
-          (typeof BUNDLED_AMBIENT_SCENE_AUDIO[storedAmbient as NatureAmbientSceneSlotId] === "number" ||
-            data.ambientClips.some((clip) => clip.id === storedAmbient))
-        ) {
-          setActiveAmbientSlotId(storedAmbient as NatureAmbientSceneSlotId);
-        } else {
-          setActiveAmbientSlotId("");
-        }
+        // 仅冷启动开环境音；silent 刷新勿覆盖会话内点关。
+        if (!opts?.silent) await applyColdStartAmbient(sceneId);
         setError(null);
       } catch (e) {
         if (!opts?.silent) {
@@ -142,17 +150,17 @@ export function useHomeNatureScreenLoad() {
         if (!opts?.silent) setLoading(false);
       }
     },
-    [applySettings],
+    [applyColdStartAmbient, applySettings],
   );
 
-  const refreshSoftFocusPrefs = useCallback(() => {
-    void readNatureSoftFocusPrefs().then(setSoftFocus);
+  const refreshLiveVideoPrefs = useCallback(() => {
+    void readNatureLiveVideoEnabled().then(setLiveVideoEnabled);
   }, []);
 
   const onPrefsChanged = useCallback(() => {
     setPrefsVersion((n) => n + 1);
-    refreshSoftFocusPrefs();
-  }, [refreshSoftFocusPrefs]);
+    refreshLiveVideoPrefs();
+  }, [refreshLiveVideoPrefs]);
 
   const bundledScenesReady = bootWithBundled && bundledOnBoot.videos.length > 0;
 
@@ -160,7 +168,10 @@ export function useHomeNatureScreenLoad() {
     useCallback(() => {
       homeFocusedRef.current = true;
       setHomeFocused(true);
-      void configureShellAudioMode();
+      // 读经进行中勿改 AudioMode：会抢会话把章朗读掐掉。
+      if (!getShellScriptureWantPlaying() && !isShellNativeAudioTakeover()) {
+        void configureShellAudioMode();
+      }
       return () => {
         homeFocusedRef.current = false;
         setHomeFocused(false);
@@ -177,7 +188,30 @@ export function useHomeNatureScreenLoad() {
     return () => clearTimeout(timer);
   }, [bundledScenesReady, homeFocused]);
 
+  // 湖景优先解压：不绑 focus / widget / live video；相邻场景等湖景就绪后再暖。
   useEffect(() => {
+    void ensurePrimaryNatureLakeVideoReady();
+  }, []);
+
+  useEffect(() => {
+    // 解压与挂载解耦：widget 冷启也先暖湖景，勿等用户开 live video。
+    const bootSceneId =
+      localActiveId.trim() ||
+      settings?.activeVideoId?.trim() ||
+      settings?.videos[0]?.id?.trim() ||
+      bundledOnBoot.activeVideoId?.trim() ||
+      bundledOnBoot.videos[0]?.id?.trim() ||
+      PRIMARY_NATURE_LAKE_SCENE_ID;
+    const ensureBootVideo = () => {
+      const lake = ensurePrimaryNatureLakeVideoReady();
+      const next = bootSceneId.trim();
+      if (next && next !== PRIMARY_NATURE_LAKE_SCENE_ID) {
+        return lake.then(() => ensureNatureSceneVideoReady(next));
+      }
+      return lake;
+    };
+    void ensureBootVideo();
+
     if (videoStageMountedOnceRef.current) {
       setVideoStageMounted(true);
       return;
@@ -190,20 +224,13 @@ export function useHomeNatureScreenLoad() {
       setVideoStageMounted(true);
     };
 
-    const bootSceneId =
-      localActiveId.trim() ||
-      settings?.activeVideoId?.trim() ||
-      settings?.videos[0]?.id?.trim() ||
-      bundledOnBoot.videos[0]?.id?.trim() ||
-      "";
-
     if (bootSceneId) {
       let cancelled = false;
       const delayMs = Platform.OS === "android" ? 240 : 480;
       const timer = setTimeout(() => {
         if (!cancelled) mountVideoStage();
       }, delayMs);
-      void ensureNatureSceneVideoReady(bootSceneId).finally(() => {
+      void ensureBootVideo().finally(() => {
         if (cancelled) return;
         clearTimeout(timer);
         mountVideoStage();
@@ -217,15 +244,6 @@ export function useHomeNatureScreenLoad() {
     const timer = setTimeout(mountVideoStage, 320);
     return () => clearTimeout(timer);
   }, [homeFocused, localActiveId, settings, widgetPlaybackBoot]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const task = InteractionManager.runAfterInteractions(() => {
-        void readNatureSoftFocusPrefs().then(setSoftFocus);
-      });
-      return () => task.cancel();
-    }, []),
-  );
 
   useEffect(() => {
     if (!homeFocused) return;
@@ -283,17 +301,36 @@ export function useHomeNatureScreenLoad() {
     return () => clearTimeout(timer);
   }, [error, load]);
 
+  const clearAmbientSlot = useCallback(() => {
+    setActiveAmbientSlotId("");
+    void writeNatureAmbientSceneSlotId("");
+  }, []);
+
+  useEffect(() => {
+    registerNatureAmbientSlotClear(clearAmbientSlot);
+    registerNatureAmbientSlotControl({
+      getActiveId: () => activeAmbientSlotIdRef.current,
+      restore: (id) => {
+        const next = NATURE_AMBIENT_SCENE_SLOTS.some((slot) => slot.id === id)
+          ? (id as NatureAmbientSceneSlotId)
+          : "";
+        if (!next) return;
+        setActiveAmbientSlotId(next);
+        void writeNatureAmbientSceneSlotId(next);
+      },
+    });
+    return () => {
+      registerNatureAmbientSlotClear(null);
+      registerNatureAmbientSlotControl(null);
+    };
+  }, [clearAmbientSlot]);
+
   const toggleAmbientSlot = useCallback((slotId: NatureAmbientSceneSlotId) => {
     setActiveAmbientSlotId((prev) => {
       const next = prev === slotId ? "" : slotId;
       void writeNatureAmbientSceneSlotId(next);
       return next;
     });
-  }, []);
-
-  const enableLoopAllScenes = useCallback(() => {
-    setLoopAllScenesEnabled(true);
-    void writeNatureLoopAllScenesEnabled(true);
   }, []);
 
   return {
@@ -308,15 +345,16 @@ export function useHomeNatureScreenLoad() {
     setLocalActiveId,
     loopAllScenesEnabled,
     setLoopAllScenesEnabled,
-    softFocus,
+    liveVideoEnabled,
+    setLiveVideoEnabled,
     prefsVersion,
     onPrefsChanged,
     sceneUsageMap,
     setSceneUsageMap,
     activeAmbientSlotId,
     setActiveAmbientSlotId,
+    clearAmbientSlot,
     toggleAmbientSlot,
-    enableLoopAllScenes,
     naturePackRev,
   };
 }

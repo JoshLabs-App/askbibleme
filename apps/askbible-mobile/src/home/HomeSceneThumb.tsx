@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -18,10 +19,11 @@ export const HOME_SCENE_THUMB_GAP = 10;
 export const HOME_SCENE_THUMB_SLOT_PAD = 10;
 export const HOME_SCENE_THUMB_SLOT_WIDTH =
   HOME_SCENE_THUMB_SIZE + HOME_SCENE_THUMB_SLOT_PAD;
+/** 缩略图下方场景名行高（首页已不再展示） */
+export const HOME_SCENE_THUMB_LABEL_H = 0;
 /** 相邻缩略图起点间距（含 gap） */
 export const HOME_SCENE_THUMB_STRIDE =
   HOME_SCENE_THUMB_SLOT_WIDTH + HOME_SCENE_THUMB_GAP;
-
 /** 横向场景条内容总宽（n 个缩略图 + gap） */
 export function homeSceneStripContentWidth(itemCount: number): number {
   if (itemCount <= 0) return 0;
@@ -47,14 +49,14 @@ export function homeSceneStripScrollX(
 }
 
 const CORNER = HOME_SCENE_THUMB_SIZE / 2;
-/** 未选中略缩小、降透明度；选中满尺寸——接近照片/Apple TV 胶片条，不用描边与下点 */
+/** 未选中略缩小、60% 不透明；选中满尺寸、不描边 */
 const SCALE_REST = 0.9;
 const SCALE_SELECTED = 1;
-const OPACITY_REST = 0.55;
+const OPACITY_REST = 0.6;
 const OPACITY_SELECTED = 1;
 
 function thumbSlotHeight(slotPad: number): number {
-  return HOME_SCENE_THUMB_SIZE + slotPad * 2;
+  return HOME_SCENE_THUMB_SIZE + slotPad * 2 + HOME_SCENE_THUMB_LABEL_H;
 }
 
 type Props = {
@@ -62,22 +64,29 @@ type Props = {
   thumbModule: number | null;
   thumbUri?: string;
   fallbackLabel: string;
+  /** 无缩略图时用图标代替首字；场景条功能钮（模糊等） */
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  /** 图下文字；默认用 fallbackLabel */
+  caption?: string;
   onPress: () => void;
   /** 横屏沉浸：缩小槽位上下留白，场景条更贴底 */
   slotPad?: number;
 };
 
-/** 首页底部场景缩略图：iOS 式 scale + opacity，无描边/指示点 */
+/** 首页底部场景缩略图：选中满不透明，未选中 60% */
 export function HomeSceneThumb({
   selected,
   thumbModule,
   thumbUri,
   fallbackLabel,
+  icon,
+  caption,
   onPress,
   slotPad = HOME_SCENE_THUMB_SLOT_PAD,
 }: Props) {
   const focus = useRef(new Animated.Value(selected ? 1 : 0)).current;
   const [thumbFailed, setThumbFailed] = useState(false);
+  const underLabel = (caption ?? fallbackLabel).trim();
 
   useEffect(() => {
     setThumbFailed(false);
@@ -115,7 +124,13 @@ export function HomeSceneThumb({
   };
 
   return (
-    <View style={[styles.slot, { height: thumbSlotHeight(slotPad) }]}>
+    <Pressable
+      onPress={handlePress}
+      style={[styles.slot, { height: thumbSlotHeight(slotPad) }]}
+      accessibilityRole="button"
+      accessibilityLabel={underLabel || fallbackLabel}
+      accessibilityState={{ selected }}
+    >
       <Animated.View
         style={[
           styles.animWrap,
@@ -126,17 +141,11 @@ export function HomeSceneThumb({
         ]}
       >
         <View style={[styles.shadowWrap, selected && styles.shadowWrapSelected]}>
-          <Pressable
-            onPress={handlePress}
-            style={({ pressed }) => [styles.core, pressed && styles.corePressed]}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            android_ripple={{
-              color: "rgba(255,255,255,0.1)",
-              borderless: false,
-              radius: CORNER,
-            }}
-          >
+          {/*
+            Android：Pressable 上 overflow+borderRadius 首帧常不裁切，会闪方角/多边形底。
+            裁切放在 View（collapsable=false），图片与底自身也带圆角。
+          */}
+          <View style={styles.core} collapsable={false}>
             {showImage ? (
               <Image
                 source={thumbSource!}
@@ -147,13 +156,26 @@ export function HomeSceneThumb({
             ) : null}
             {showFallback ? (
               <View style={[styles.img, styles.fallback]}>
-                <Text style={styles.fallbackText}>{fallbackLabel.slice(0, 1) || "·"}</Text>
+                {icon ? (
+                  <MaterialCommunityIcons
+                    name={icon}
+                    size={28}
+                    color="rgba(255,255,255,0.88)"
+                  />
+                ) : (
+                  <Text style={styles.fallbackText}>{fallbackLabel.slice(0, 1) || "·"}</Text>
+                )}
               </View>
             ) : null}
-          </Pressable>
+            <View
+              style={styles.hit}
+              pointerEvents="none"
+              // Android ripple 仍由外层 Pressable；圆角裁切在 core。
+            />
+          </View>
         </View>
       </Animated.View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -162,7 +184,7 @@ const styles = StyleSheet.create({
     width: HOME_SCENE_THUMB_SLOT_WIDTH,
     flexShrink: 0,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   animWrap: {
     alignItems: "center",
@@ -170,16 +192,30 @@ const styles = StyleSheet.create({
   },
   shadowWrap: {
     borderRadius: CORNER,
-    backgroundColor: "transparent",
+    // iOS 阴影只吃本层不透明像素；透明底会导致系统 shadow 完全消失
+    backgroundColor: "rgba(28,24,20,0.9)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.28,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 3,
+      },
+      default: {},
+    }),
   },
   shadowWrapSelected: Platform.select({
     ios: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.2,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.34,
       shadowRadius: 7,
     },
-    android: { elevation: 2 },
+    android: {
+      elevation: 5,
+    },
     default: {},
   }),
   core: {
@@ -189,21 +225,24 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "rgba(0,0,0,0.28)",
   },
-  corePressed: {
-    opacity: 0.88,
+  hit: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: CORNER,
   },
   img: {
     width: "100%",
     height: "100%",
+    borderRadius: CORNER,
   },
   fallback: {
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: CORNER,
     backgroundColor: "rgba(28,24,20,0.75)",
   },
-  fallbackText: {
-    fontSize: 18,
-    ...parchmentSans(500),
-    color: "rgba(255,255,255,0.35)",
-  },
+    fallbackText: {
+      fontSize: 18,
+      ...parchmentSans(500),
+      color: "rgba(255,255,255,0.35)",
+    },
 });

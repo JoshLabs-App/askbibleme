@@ -40,12 +40,12 @@ echo "→ 同步图标与离线内容…"
 npm run mobile:sync-icons
 npm run mobile:sync-content
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
-MOBILE_BUNDLE_MUSIC_LIMIT=1 \
-MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a8h3jhwl \
+MOBILE_ANDROID_MUSIC_PAD=0 \
+MOBILE_STARTER_MUSIC_TRACK_ID=track-mt391okyjj4i \
 npm run mobile:sync-offline-media
 
 echo "→ 离线资源体积审计…"
-npm run mobile:audit:bundle-size
+MOBILE_ANDROID_MUSIC_PAD=0 npm run mobile:audit:bundle-size
 
 echo "→ 校验 EAS 归档是否包含 mp3/mp4/sqlite…"
 node scripts/verify-eas-archive-assets.mjs
@@ -54,7 +54,7 @@ cd apps/askbible-mobile
 
 echo "→ 提交 EAS iOS production 构建…"
 EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=1 \
-EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=0 \
+EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1 \
 EXPO_PUBLIC_MEMBER_REGISTER_ENABLED=1 \
 EXPO_PUBLIC_ASKBIBLE_BASE_URL="https://askbible.me" \
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \

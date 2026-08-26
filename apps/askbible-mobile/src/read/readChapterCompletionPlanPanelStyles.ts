@@ -32,6 +32,18 @@ export const readChapterCompletionPlanPanelStyles = StyleSheet.create({
     color: "#2A170A",
     textAlign: "center",
   },
+  titleLoginHintBtn: {
+    marginBottom: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  titleLoginHint: {
+    fontSize: 17,
+    lineHeight: 24,
+    ...parchmentSans(600),
+    color: "#6A543B",
+    textAlign: "center",
+  },
   titleMain: {
     marginTop: 2,
     fontSize: 24,

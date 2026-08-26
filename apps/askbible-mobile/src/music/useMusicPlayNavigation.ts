@@ -3,10 +3,11 @@ import { pickRandomNextTrackIndex, pickRandomNextTrackIndexInAlbum } from "./mus
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 import type { PlaybackTrack } from "./types";
+import { scriptureCommandSkipNext, scriptureCommandSkipPrev } from "./scriptureCommands";
 
 type Args = {
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
-  trackIndex: number;
+  trackIndexRef: MutableRefObject<number>;
   tracks: PlaybackTrack[];
   tracksLength: number;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
@@ -16,7 +17,7 @@ type Args = {
 
 export function useMusicPlayNavigation({
   playbackModeRef,
-  trackIndex,
+  trackIndexRef,
   tracks,
   tracksLength,
   musicRepeatModeRef,
@@ -25,31 +26,35 @@ export function useMusicPlayNavigation({
 }: Args) {
   const playNext = useCallback(async () => {
     if (playbackModeRef.current === "scripture") {
-      resolveActiveReadChapter()?.onAdvanceNextChapter();
+      // 运输层命令：池优先，否则 playing 注册回调（非 browse）。
+      const ok = await scriptureCommandSkipNext();
+      if (!ok) resolveActiveReadChapter()?.onAdvanceNextChapter();
       return;
     }
+    const index = trackIndexRef.current;
     if (musicRepeatModeRef.current === "all") {
-      await playTrackAt(pickRandomNextTrackIndexInAlbum(tracks, trackIndex, tracksLength));
+      await playTrackAt(pickRandomNextTrackIndexInAlbum(tracks, index, tracksLength));
       return;
     }
-    await playTrackAt(pickRandomNextTrackIndex(trackIndex, tracksLength));
+    await playTrackAt(pickRandomNextTrackIndex(index, tracksLength));
   }, [
     musicRepeatModeRef,
     playbackModeRef,
     playTrackAt,
     resolveActiveReadChapter,
-    trackIndex,
+    trackIndexRef,
     tracks,
     tracksLength,
   ]);
 
   const playPrev = useCallback(async () => {
     if (playbackModeRef.current === "scripture") {
-      resolveActiveReadChapter()?.onAdvancePreviousChapter();
+      const ok = await scriptureCommandSkipPrev();
+      if (!ok) resolveActiveReadChapter()?.onAdvancePreviousChapter();
       return;
     }
-    await playTrackAt(trackIndex - 1);
-  }, [playTrackAt, playbackModeRef, resolveActiveReadChapter, trackIndex]);
+    await playTrackAt(trackIndexRef.current - 1);
+  }, [playTrackAt, playbackModeRef, resolveActiveReadChapter, trackIndexRef]);
 
   return { playNext, playPrev };
 }

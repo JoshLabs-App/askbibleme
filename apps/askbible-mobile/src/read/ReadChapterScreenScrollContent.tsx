@@ -12,14 +12,11 @@ import type { EdgeInsets } from "react-native-safe-area-context";
 import type { LoadedChapter } from "../bible/types";
 import type { ContrastVerseLine } from "./readChapterScreenConstants";
 import { ReadChapterCompletionPlanPanel } from "./ReadChapterCompletionPlanPanel";
-import { ReadChapterReadingPlanAdvance } from "./ReadChapterReadingPlanAdvance";
-import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
-import { useEffectiveReadingPlanPrefs } from "./reading-plan/useReadingPlanStores";
 import { ReadChapterPostReadingEditions } from "./ReadChapterPostReadingEditions";
 import { ReadChapterScreenEndingSection } from "./ReadChapterScreenEndingSection";
 import { ReadChapterScreenVerseList } from "./ReadChapterScreenVerseList";
 import { ParchmentBottomFadeScrollView } from "./ParchmentBottomFadeScrollView";
-import { READ_TAB_SCROLL_FADE_PRESET } from "./readParchmentScrollMask";
+import { READ_CHAPTER_SCROLL_FADE_PRESET } from "./readParchmentScrollMask";
 import { readChapterScrollBottomPad } from "./read-chapter-chrome-inset";
 import type { ReadBibleTypographyPx } from "./read-bible-typography-prefs";
 import { useParchmentContentPadding, useReadChapterSpreadLayout } from "./parchmentColumnLayout";
@@ -60,6 +57,13 @@ type Props = {
   postReadingReady: boolean;
   chapterCompleted: boolean;
   reportVerseLayoutFromEvent: (verse: number, e: LayoutChangeEvent) => void;
+  registerVerseHost: (verse: number, node: unknown) => void;
+  registerParagraphHost: (verses: number[], node: unknown) => void;
+  reportParagraphVerseBoxes: (
+    boxes: Map<number, { y: number; height: number }>,
+    fractions?: Iterable<{ verse: number; start: number; end: number; total: number }>,
+  ) => void;
+  reportParagraphFrame: (verses: number[], layout: { y: number; height: number }) => void;
   isBookmarked: (ref: {
     translationId: string;
     bookId: string;
@@ -93,14 +97,16 @@ export function ReadChapterScreenScrollContent({
   postReadingReady,
   chapterCompleted,
   reportVerseLayoutFromEvent,
+  registerVerseHost,
+  registerParagraphHost,
+  reportParagraphVerseBoxes,
+  reportParagraphFrame,
   isBookmarked,
   display,
   verseActions,
   nav,
 }: Props) {
   const router = useRouter();
-  const { prefs } = useEffectiveReadingPlanPrefs();
-  const showTripleLoopAdvance = isTripleLoopPlanId(prefs.planId);
   const { width: screenWidth } = useWindowDimensions();
   const scrollPadX = useParchmentContentPadding();
   const isSpread = useReadChapterSpreadLayout();
@@ -141,9 +147,11 @@ export function ReadChapterScreenScrollContent({
         scrollHeaderHeightRef.current = Math.round(e.nativeEvent.layout.height);
       }}
     >
-      <Text style={[styles.chapterTitle, { fontSize: px.chapterTitleSize }]}>
-        {chapterTitleText}
-      </Text>
+      <View style={styles.chapterTitleBlock}>
+        <Text style={[styles.chapterTitle, { fontSize: px.chapterTitleSize }]}>
+          {chapterTitleText}
+        </Text>
+      </View>
     </View>
   );
 
@@ -173,6 +181,10 @@ export function ReadChapterScreenScrollContent({
       parentVerseLongPressHandler={parentVerseLongPressHandler}
       verseBodyPressProps={verseBodyPressProps}
       reportVerseLayoutFromEvent={reportVerseLayoutFromEvent}
+      registerVerseHost={registerVerseHost}
+      registerParagraphHost={registerParagraphHost}
+      reportParagraphVerseBoxes={reportParagraphVerseBoxes}
+      reportParagraphFrame={reportParagraphFrame}
       onXrefVersePress={setXrefSheetVerse}
     />
   );
@@ -192,19 +204,13 @@ export function ReadChapterScreenScrollContent({
     />
   );
 
-  const completionPanels =
-    chapterCompleted ? (
-      <>
-        {showTripleLoopAdvance ? (
-          <ReadChapterReadingPlanAdvance bookId={chapterData.bookId} chapter={chapterData.chapter} />
-        ) : null}
-        <ReadChapterCompletionPlanPanel
-          bookId={chapterData.bookId}
-          chapter={chapterData.chapter}
-          displayLocale={postReadingDisplayLocale}
-        />
-      </>
-    ) : null;
+  const completionPanels = chapterCompleted ? (
+    <ReadChapterCompletionPlanPanel
+      bookId={chapterData.bookId}
+      chapter={chapterData.chapter}
+      displayLocale={postReadingDisplayLocale}
+    />
+  ) : null;
 
   const postReadingEditions = postReadingReady ? (
     <ReadChapterPostReadingEditions
@@ -223,9 +229,10 @@ export function ReadChapterScreenScrollContent({
   return (
     <ParchmentBottomFadeScrollView
       ref={scrollRef}
-      fadePreset={isSpread ? "prose" : READ_TAB_SCROLL_FADE_PRESET}
+      fadePreset={READ_CHAPTER_SCROLL_FADE_PRESET}
       style={styles.scroll}
       scrollEnabled={highlightWordEditor == null}
+      removeClippedSubviews
       onLayout={(e) => {
         const h = e.nativeEvent.layout.height;
         onScrollViewportLayout(h);
@@ -234,7 +241,7 @@ export function ReadChapterScreenScrollContent({
       }}
       onScroll={onChapterScroll}
       onContentSizeChange={onChapterContentSizeChange}
-      scrollEventThrottle={120}
+      scrollEventThrottle={48}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingHorizontal: scrollPadX },

@@ -41,6 +41,10 @@ async function queryChapterVerses(
   bookId: string,
   chapter: number,
 ): Promise<VerseRow[]> {
+  // The initial native route can briefly have no chapter target. Avoid binding
+  // an undefined/null value into SQLite while the route settles.
+  if (!BOOK_RE.test(bookId) || !Number.isInteger(chapter) || chapter < 1) return [];
+
   try {
     return await db.getAllAsync<VerseRow>(
       "SELECT verse, text, speech_spans, flags, theme_repeat_count FROM verse WHERE book_id = ? AND chapter = ? ORDER BY verse ASC",

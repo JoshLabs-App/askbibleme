@@ -10,20 +10,20 @@ const VIDEO_REF_COLOR = "#FFFFFF";
 /**
  * 网站 `HomeVerseRotator` nhLegacyDefault（classic / flat）：
  * `0 1px 2px rgba(0,0,0,0.38), 0 2px 14px rgba(0,0,0,0.22)`。
- * RN 仅一层：用贴字、小 radius 模拟第一层，避免大 radius 在 iOS 上变成「黑条底衬」。
+ * RN 仅一层：略加大 opacity / offset / radius，贴视频可读（iOS / Android 同值）。
  */
 function natureHomeClassicOnVideoShadow(tier: Tier): TextStyle {
   if (tier === "ref") {
     return {
-      textShadowColor: "rgba(0,0,0,0.4)",
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
+      textShadowColor: "rgba(0,0,0,0.55)",
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 5,
     };
   }
   return {
-    textShadowColor: "rgba(0,0,0,0.42)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowColor: "rgba(0,0,0,0.58)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   };
 }
 
@@ -129,8 +129,8 @@ export function verseTypography(
   scale: number,
   variant: "onVideo" | "onLight" = "onVideo",
 ): { body: TextStyle; ref: TextStyle } {
-  const baseSize = Math.round(18 * scale);
-  const refSize = Math.round(13 * scale);
+  const baseSize = Math.round(24 * scale);
+  const refSize = Math.round(18 * scale);
   const onLight = variant === "onLight";
   const onVideo = !onLight;
   /** 与网站 `HomeVerseRotator` 自然首页 `font-bold` 一致 */

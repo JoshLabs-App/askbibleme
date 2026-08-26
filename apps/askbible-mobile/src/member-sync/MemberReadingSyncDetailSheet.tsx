@@ -39,11 +39,15 @@ export function MemberReadingSyncDetailSheet({ visible, locale, onClose }: Props
   const debugEnabled = isMemberReadingSyncDebugEnabled();
   const [events, setEvents] = useState(() => getMemberReadingSyncDebugEvents());
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    void readMemberReadingSyncMeta().then((meta) => setLastSyncedAt(meta.lastSyncedAt));
+    void readMemberReadingSyncMeta().then((meta) => {
+      setLastSyncedAt(meta.lastSyncedAt);
+      setLastError(meta.lastError ?? null);
+    });
   }, [visible, events]);
 
   useEffect(() => {
@@ -71,6 +75,7 @@ export function MemberReadingSyncDetailSheet({ visible, locale, onClose }: Props
         await flushMemberReadingSyncNow(session.sessionToken, "manual-debug");
         const meta = await readMemberReadingSyncMeta();
         setLastSyncedAt(meta.lastSyncedAt);
+        setLastError(meta.lastError ?? null);
       } finally {
         setSyncing(false);
       }
@@ -102,6 +107,7 @@ export function MemberReadingSyncDetailSheet({ visible, locale, onClose }: Props
             <Text style={styles.metaValue}>
               {lastSyncedLabel ?? resolveUiText(locale, "尚未同步", "Not synced yet")}
             </Text>
+            {lastError ? <Text style={styles.metaError}>{lastError}</Text> : null}
           </View>
 
           {debugEnabled ? (
@@ -206,6 +212,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     ...parchmentSans(600),
     color: "#3d2e24",
+  },
+  metaError: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 17,
+    ...parchmentSans(500),
+    color: "rgba(92, 64, 48, 0.72)",
   },
   logScroll: {
     maxHeight: 280,

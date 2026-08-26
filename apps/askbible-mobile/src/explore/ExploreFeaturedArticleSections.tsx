@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import type { ExploreFeaturedArticleSection } from "../../../../lib/explore/explore-featured-article-section-types";
 import { exploreFeaturedArticleSectionHeaderLabel } from "../../../../lib/explore/explore-featured-article-section-label";
 import { parchmentSans } from "../fonts/parchmentType";

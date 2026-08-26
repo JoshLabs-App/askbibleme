@@ -1,4 +1,3 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, type ReactNode } from "react";
 import {
   Dimensions,
@@ -16,6 +15,7 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { resolveUiText } from "../i18n/site-copy";
 import { bookNameForId, chaptersForBookId } from "./canonCatalog";
 import { ReadParchmentBackgroundImage } from "./ReadParchmentSurface";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import {
   bibleChapterPickerModalFrameStyles as modalFrameStyles,
@@ -192,15 +192,7 @@ export function BibleChapterPickerPanel({
   const gridBody = (
     <>
       <View style={styles.header}>
-        <Pressable
-          onPress={onBack}
-          hitSlop={12}
-          style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
-          accessibilityRole="button"
-          accessibilityLabel={resolveUiText(locale, "返回书卷", "Back to books")}
-        >
-          <MaterialIcons name="arrow-back-ios-new" size={16} color={c.ink} />
-        </Pressable>
+        <ShellSystemBackButton onPress={onBack} />
         <Text
           style={styles.title}
           allowFontScaling={allowFontScaling}

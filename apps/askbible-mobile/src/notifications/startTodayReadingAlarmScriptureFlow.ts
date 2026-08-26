@@ -1,24 +1,28 @@
 import type { Router } from "expo-router";
-import { buildPlanChapterQueue, type PlanChapterRef } from "../read/read-plan-flow-nav";
-import { readEffectiveReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
-import { loadTodayReadingPlanPayload } from "../read/reading-plan/today-reading-plan-payload";
-import { startTodayPlanFlowScripture } from "../read/startTodayReadingScriptureFromReadHome";
+import { replaceReadPlanPlay, type PlanChapterRef } from "../read/read-plan-flow-nav";
+import { scriptureCommandClearPauseHolds } from "../music/scriptureCommands";
+import {
+  startTodayPlanFlowScripture,
+  startTodayReadingScriptureFromReadHome,
+} from "../read/startTodayReadingScriptureFromReadHome";
 
-/** 闹钟预备音乐结束后：进入今日读经 planFlow，章节播完自动续下一章直至今日读完。 */
+const ALARM_LISTEN_OPTS = {
+  loopTodayPlan: true,
+  replace: true,
+  uiHost: "listen" as const,
+};
+
+/** 闹钟到期：进入今日读经播放页并开播，不进圣经章页。 */
 export async function startTodayReadingAlarmScriptureFlow(
   router: Pick<Router, "push" | "replace">,
   firstChapter?: PlanChapterRef | null,
 ): Promise<boolean> {
-  const prefs = await readEffectiveReadingPlanPrefs();
-  const payload = await loadTodayReadingPlanPayload(prefs, { dayCount: prefs.dayCount ?? 365 });
-  const readings = payload?.day?.readings ?? [];
-  if (!readings.length) return false;
-
-  let target = firstChapter ?? null;
-  if (!target) {
-    target = buildPlanChapterQueue(readings)[0] ?? null;
+  // 预备 quietShell 可能 hold 了暂停；开播前释放。
+  scriptureCommandClearPauseHolds();
+  replaceReadPlanPlay(router);
+  if (firstChapter) {
+    const started = await startTodayPlanFlowScripture(router, firstChapter, ALARM_LISTEN_OPTS);
+    if (started) return true;
   }
-  if (!target) return false;
-
-  return startTodayPlanFlowScripture(router, target, { loopTodayPlan: true, replace: true });
+  return startTodayReadingScriptureFromReadHome(router, ALARM_LISTEN_OPTS);
 }

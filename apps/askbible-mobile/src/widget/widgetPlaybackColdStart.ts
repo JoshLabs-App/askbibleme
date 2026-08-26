@@ -4,6 +4,10 @@ import { configureShellAudioMode } from "../audio/shellAudioMode";
 import type { MusicPlaybackMode } from "../music/musicPlaybackTypes";
 import type { PlaybackTrack } from "../music/types";
 import { isTrackPlayable, resolveShellMusicPlayIndex } from "../music/trackArtwork";
+import {
+  getWidgetVersePlaying,
+  queueWidgetVersePlay,
+} from "./widgetPlaybackRequest";
 
 export function peekWidgetPlaybackBoot(): boolean {
   if (Platform.OS !== "android") return false;
@@ -16,6 +20,7 @@ export function peekWidgetPlaybackBoot(): boolean {
 
 type WidgetPrefsNative = {
   peekWidgetPlaybackActionSync?: () => string | null;
+  peekWidgetPlaybackVerseKeySync?: () => string | null;
   clearWidgetPlaybackAction?: () => void;
   minimizeAfterWidgetPlayback?: () => void;
 };
@@ -33,6 +38,7 @@ type WidgetPlaybackColdStartArgs = {
   playbackMode: MusicPlaybackMode;
   playTrackAt: (index: number) => Promise<boolean>;
   startReadingAudio: () => Promise<boolean>;
+  startVerseAudio: (verseKey?: string) => Promise<boolean>;
 };
 
 function peekPendingAction(): string | null {
@@ -85,7 +91,16 @@ async function waitForScripturePlaying(
   return false;
 }
 
-/** 小挂件冷启动：MainActivity 已拉起后轮询 pending，就绪则 playTrackAt 开播。 */
+async function waitForVersePlaying(timeoutMs = 5000): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (getWidgetVersePlaying()) return true;
+    await sleep(150);
+  }
+  return false;
+}
+
+/** 小挂件冷启动：MainActivity 已拉起后轮询 pending，就绪则直接开播。 */
 export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): void {
   const argsRef = useRef(args);
   argsRef.current = args;
@@ -168,17 +183,22 @@ export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): v
       }
 
       if (pending === "reading") {
-        if (latest.playbackMode === "scripture" && latest.playing) {
+        // 已在读经会话：清 pending，勿在用户暂停后续播。
+        if (latest.playbackMode === "scripture") {
           handledPending = true;
           getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
-          getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
-          log("reading already playing, handled immediately");
+          if (latest.playing) {
+            getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
+          }
+          log("reading already in scripture mode, clear pending");
           return;
         }
         handledPending = true;
         inFlight = true;
         try {
           log("reading start begin");
+          // 先清 pending，避免轮询在暂停后把读经又拉起来。
+          getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
           const started = await latest.startReadingAudio();
           log("reading start result", { started });
           if (!started) {
@@ -189,9 +209,35 @@ export function useWidgetPlaybackColdStart(args: WidgetPlaybackColdStartArgs): v
           const ok = await waitForScripturePlaying(() => argsRef.current);
           log("reading waitForPlaying result", { ok });
           if (ok) {
-            getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
             getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
             log("reading cold start handled");
+          }
+        } finally {
+          inFlight = false;
+        }
+        return;
+      }
+
+      if (pending === "verse") {
+        const verseKey =
+          getWidgetPrefsNative()?.peekWidgetPlaybackVerseKeySync?.()?.trim() || "";
+        if (!verseKey) {
+          log("verse pending without key");
+          getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
+          return;
+        }
+        handledPending = true;
+        inFlight = true;
+        try {
+          log("verse start begin", verseKey);
+          getWidgetPrefsNative()?.clearWidgetPlaybackAction?.();
+          queueWidgetVersePlay(verseKey);
+          await latest.startVerseAudio(verseKey);
+          const ok = await waitForVersePlaying();
+          log("verse waitForPlaying result", { ok });
+          if (ok) {
+            getWidgetPrefsNative()?.minimizeAfterWidgetPlayback?.();
+            log("verse cold start handled");
           }
         } finally {
           inFlight = false;

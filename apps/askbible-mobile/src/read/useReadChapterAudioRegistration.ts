@@ -8,11 +8,13 @@ import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import type { LoadedChapter } from "../bible/types";
 import { resolveReadChapterAudioRegistration } from "../music/MusicPlaybackContext";
 import {
-  armReadPlanFlowAutoplay,
-  isPlanFlowSessionActive,
   shouldHoldPlanFlowChapterUnregister,
 } from "./read-plan-flow-autoplay";
 import { scriptureChapterPool } from "../music/scripture-chapter-pool";
+import {
+  scriptureCommandSkipNext,
+  scriptureCommandSkipPrev,
+} from "../music/scriptureCommands";
 
 type ChapterTarget = { bookId: string; chapter: number };
 
@@ -90,13 +92,17 @@ export function useReadChapterAudioRegistration({
       onAdvanceNextInBook: () => {},
     };
     reg.onAdvancePreviousChapter = () => {
+      if (isPlanFlow && scriptureChapterPool.isActive()) {
+        void scriptureCommandSkipPrev();
+        return;
+      }
       const { prev } = resolveReadChapterNeighbors(snapshot.bookId, snapshot.chapter);
       if (!prev) return;
       onAdvanceChapterRef.current?.(prev);
     };
     reg.onAdvanceNextChapter = () => {
       if (isPlanFlow && scriptureChapterPool.isActive()) {
-        void scriptureChapterPool.skipToNext();
+        void scriptureCommandSkipNext();
         return;
       }
       const { next } = resolveReadChapterNeighbors(snapshot.bookId, snapshot.chapter);
@@ -126,9 +132,8 @@ export function useReadChapterAudioRegistration({
         });
         if (cancelled) return;
         setChapterAudioSrc(resolved.chapterAudioSrc);
-        if (isPlanFlow && isPlanFlowSessionActive() && !scriptureChapterPool.isActive()) {
-          armReadPlanFlowAutoplay();
-        }
+        // 不在每次 register 时重新 arm：暂停后回到章页会误自动开播。
+        // 续章开播由 playChapterAt / handoff / 显式 arm 负责。
         registerReadChapterRef.current(resolved);
       })();
     });

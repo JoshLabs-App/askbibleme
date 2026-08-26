@@ -72,27 +72,4 @@ export const readCatalogScreenStyles = StyleSheet.create({
   catalogBlock: {
     width: "100%",
   },
-  topActions: {
-    position: "absolute",
-    zIndex: 50,
-    gap: 4,
-    alignItems: "center",
-  },
-  topActionBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    opacity: 0.5,
-  },
-  topActionPressed: {
-    opacity: 0.68,
-  },
-  topActionIcon: {
-    textShadowColor: "rgba(0,0,0,0.55)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  pressed: { opacity: 0.88 },
 });

@@ -1,5 +1,5 @@
-import { normalizeTripleLoopChaptersReadKeys } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
-import { scriptureBooks, type ScriptureBook } from "@/lib/bible/scripture-books";
+import { normalizeTripleLoopChaptersReadKeys } from "./triple-loop-chapters-read";
+import { scriptureBooks, type ScriptureBook } from "../scripture-books";
 
 export type TripleLoopTrack = "ot" | "nt" | "wisdom";
 
@@ -179,6 +179,74 @@ export function tripleLoopStateForPlanDay(planDay: number): TripleLoopReadingSta
     state = advanceTripleLoopOneCalendarDay(state);
   }
   return state;
+}
+
+function trackOrder(track: TripleLoopTrack): string[] {
+  if (track === "ot") return TRIPLE_LOOP_OT_BOOK_IDS;
+  if (track === "nt") return TRIPLE_LOOP_NT_BOOK_IDS;
+  return TRIPLE_LOOP_WISDOM_BOOK_IDS;
+}
+
+function pointerProgress(pointer: TripleLoopPointer, order: string[]): number {
+  const bookIdx = order.indexOf(pointer.bookId);
+  return (bookIdx >= 0 ? bookIdx : 0) * 10_000 + pointer.chapter;
+}
+
+export function tripleLoopPointersEqual(
+  left: TripleLoopReadingState,
+  right: TripleLoopReadingState,
+): boolean {
+  const tracks: TripleLoopTrack[] = ["ot", "nt", "wisdom"];
+  return tracks.every(
+    (track) => left[track].bookId === right[track].bookId && left[track].chapter === right[track].chapter,
+  );
+}
+
+/**
+ * 日历日换天后，落后的轨对齐到该计划日；已超前的轨保持不动。
+ * 已读章（chaptersReadKeys）只记录，不回退。
+ */
+export function snapTripleLoopStateToPlanDay(
+  state: TripleLoopReadingState,
+  planDay: number,
+): TripleLoopReadingState {
+  const floor = tripleLoopStateForPlanDay(planDay);
+  const tracks: TripleLoopTrack[] = ["ot", "nt", "wisdom"];
+  const next = Object.fromEntries(
+    tracks.map((track) => {
+      const order = trackOrder(track);
+      const current = state[track];
+      const min = floor[track];
+      return [track, pointerProgress(current, order) >= pointerProgress(min, order) ? current : min];
+    }),
+  ) as Pick<TripleLoopReadingState, TripleLoopTrack>;
+  return normalizeTripleLoopReadingState({
+    ...next,
+    chaptersReadKeys: state.chaptersReadKeys,
+    startedAt: state.startedAt,
+  });
+}
+
+/**
+ * 三轨一起停在比 planDay 更前的同一进度时拉回（整日跳进度后 aheadDays 被清掉）。
+ * 只超前其中一轨则保持不动。
+ */
+export function clipCoordinatedTripleLoopAheadToPlanDay(
+  state: TripleLoopReadingState,
+  planDay: number,
+): TripleLoopReadingState {
+  const floor = tripleLoopStateForPlanDay(planDay);
+  const tracks: TripleLoopTrack[] = ["ot", "nt", "wisdom"];
+  const coordinatedAhead = tracks.every((track) => {
+    const order = trackOrder(track);
+    return pointerProgress(state[track], order) > pointerProgress(floor[track], order);
+  });
+  if (!coordinatedAhead) return state;
+  return normalizeTripleLoopReadingState({
+    ...floor,
+    chaptersReadKeys: state.chaptersReadKeys,
+    startedAt: state.startedAt,
+  });
 }
 
 export function pointerMatchesTrack(

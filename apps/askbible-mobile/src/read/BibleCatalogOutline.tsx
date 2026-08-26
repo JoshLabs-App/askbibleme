@@ -15,12 +15,15 @@ import {
   type ScriptureCanonCatalogSection,
 } from "./canonCatalog";
 import { useBibleCatalogChapterPicker } from "./useBibleCatalogChapterPicker";
+import type { AppLocale } from "../i18n/config";
 
 type Props = {
   sections: ScriptureCanonCatalogSection[];
   activeBookId?: string;
   onPickChapter: (bookId: string, chapter: number) => void;
   showBookSummary?: boolean;
+  /** 首页双栏：提供开关，打开后各卷书名下显示简介 */
+  enableBookSummaryToggle?: boolean;
   completedChaptersByBook?: Record<string, number>;
   paginateByTestament?: boolean;
   splitByTestamentColumns?: boolean;
@@ -32,6 +35,7 @@ type Props = {
   lockTextScale?: boolean;
   onBookPress?: (book: ScriptureCanonCatalogBook) => void;
   onTestamentChange?: () => void;
+  displayLocale?: AppLocale;
 };
 
 export function BibleCatalogOutline({
@@ -39,6 +43,7 @@ export function BibleCatalogOutline({
   activeBookId,
   onPickChapter,
   showBookSummary = false,
+  enableBookSummaryToggle = false,
   completedChaptersByBook,
   paginateByTestament = false,
   splitByTestamentColumns = false,
@@ -50,6 +55,7 @@ export function BibleCatalogOutline({
   lockTextScale = true,
   onBookPress,
   onTestamentChange,
+  displayLocale = "zh-CN",
 }: Props) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const catalogMaxWidth = useParchmentColumnMaxWidth(PARCHMENT_CATALOG_MAX_WIDTH_PHONE);
@@ -57,6 +63,7 @@ export function BibleCatalogOutline({
     catalogMaxWidth != null ? { maxWidth: catalogMaxWidth } : null;
   const groups = groupCanonSectionsByTestament(sections);
   const [activeTestament, setActiveTestament] = useState<"old" | "new">("old");
+  const [summaryToggleOn, setSummaryToggleOn] = useState(false);
   const didAutoPickTestamentRef = useRef(false);
   const appliedHomeDefaultTestamentRef = useRef(false);
 
@@ -108,6 +115,7 @@ export function BibleCatalogOutline({
   }, [activeBookId, groups, paginateByTestament]);
 
   const columnLayout = splitByTestamentColumns && !paginateByTestament;
+  const effectiveShowBookSummary = showBookSummary || (enableBookSummaryToggle && summaryToggleOn);
 
   return (
     <>
@@ -119,7 +127,10 @@ export function BibleCatalogOutline({
         splitByTestamentColumns={splitByTestamentColumns}
         columnLayout={columnLayout}
         compactMode={compactMode}
-        showBookSummary={showBookSummary}
+        showBookSummary={effectiveShowBookSummary}
+        enableBookSummaryToggle={enableBookSummaryToggle}
+        bookSummaryToggleOn={summaryToggleOn}
+        onBookSummaryToggleChange={setSummaryToggleOn}
         completedChaptersByBook={completedChaptersByBook}
         bookMetaMode={bookMetaMode}
         showSectionTint={showSectionTint}
@@ -127,6 +138,7 @@ export function BibleCatalogOutline({
         sectionStripeFullHeight={sectionStripeFullHeight}
         lockTextScale={lockTextScale}
         catalogNarrowStyle={catalogNarrowStyle}
+        displayLocale={displayLocale}
         onSelectTestament={selectTestament}
         onBookPress={openBook}
       />

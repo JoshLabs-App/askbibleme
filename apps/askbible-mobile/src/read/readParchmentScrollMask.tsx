@@ -1,10 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 
-export type ReadParchmentFadePreset = "default" | "prose" | "tabbar";
+export type ReadParchmentFadePreset = "default" | "prose" | "tabbar" | "chapter";
 
-/** 主 Tab 羊皮卷滚动页（读经 / 探索等）：共用同一套 scroll mask */
+/** 主 Tab 羊皮卷滚动页（读经目录 / 探索等）：共用同一套 scroll mask */
 export const SHELL_TAB_SCROLL_FADE_PRESET: ReadParchmentFadePreset = "tabbar";
+
+/** 读经章节正文：只保留上方渐隐（底部由播放栏遮挡，不再做透明过渡） */
+export const READ_CHAPTER_SCROLL_FADE_PRESET: ReadParchmentFadePreset = "chapter";
 
 /** @deprecated 使用 {@link SHELL_TAB_SCROLL_FADE_PRESET} */
 export const READ_TAB_SCROLL_FADE_PRESET = SHELL_TAB_SCROLL_FADE_PRESET;
@@ -42,6 +45,14 @@ const PRESET_METRICS: Record<ReadParchmentFadePreset, FadePresetMetrics> = {
     topTabNearPx: 30,
     tabMaskOpacity: 0.03,
   },
+  /** 章节正文：上方过渡保留（含播音频），底部不做渐隐 */
+  chapter: {
+    edgeFadeTopPx: 70,
+    edgeFadeBottomPx: 0,
+    tabNearPx: 0,
+    topTabNearPx: 30,
+    tabMaskOpacity: 0.03,
+  },
 };
 
 export function readParchmentFadeSafePadding(
@@ -61,6 +72,20 @@ function maskStops(viewportHeight: number, preset: ReadParchmentFadePreset) {
   const topTab = Math.min(0.4, m.topTabNearPx / h);
   const topEnd = Math.min(0.48, Math.max(topTab + 0.02, m.edgeFadeTopPx / h));
   const topBlend = topTab + (topEnd - topTab) * 0.45;
+
+  /** 仅上方渐隐：底部一路保持不透明，避免播放栏下再叠一层透明 */
+  if (m.edgeFadeBottomPx <= 0) {
+    return {
+      colors: [
+        "rgba(0,0,0,0)",
+        `rgba(0,0,0,${m.tabMaskOpacity})`,
+        "rgba(0,0,0,0.42)",
+        "#000000",
+        "#000000",
+      ] as const,
+      locations: [0, topTab, topBlend, topEnd, 1] as const,
+    };
+  }
 
   const fadeStart = Math.max(topEnd + 0.02, 1 - m.edgeFadeBottomPx / h);
   const tabNear = Math.min(0.999, Math.max(fadeStart + 0.02, 1 - m.tabNearPx / h));

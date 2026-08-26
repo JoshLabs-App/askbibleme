@@ -1,4 +1,5 @@
-Version 1.0.11
-• Widget play buttons now start music or reading directly—no second tap inside the app
-• Faster playback on cold start, then returns you to the home screen
-• Clearer visual feedback on widget audio controls
+Version 1.0.38
+• System media controls now pause, skip, and change tracks reliably
+• More stable home music and golden verse playback on first play
+• Reading plan sync and chapter playback are more reliable
+• Explore pages use the same calm parchment background as reading

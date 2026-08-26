@@ -28,37 +28,20 @@ object WidgetTypography {
     isSmallWidget: Boolean,
     textScale: TextScale,
   ): Resolved {
-    val chars = verseLine.trim().length
-    var verseFont =
-      when {
-        isSmallWidget && chars <= 22 -> 17.5f
-        isSmallWidget && chars <= 40 -> 16f
-        isSmallWidget && chars <= 60 -> 15f
-        isSmallWidget -> 14f
-        chars <= 34 -> 18.5f
-        chars <= 56 -> 17f
-        chars <= 84 -> 15.5f
-        else -> 14.5f
-      }
-
-    verseFont =
+    // 字号固定：小挂件 18 / 4 行；中号 19.5 / 6 行。超长截断，不随字数缩放。
+    // textScale 仅作全局偏好微调（±1），不再按经文字数变字号。
+    val baseVerse = if (isSmallWidget) 18f else 19.5f
+    val verseFont =
       when (textScale) {
-        TextScale.COMFORTABLE -> minOf(if (isSmallWidget) 18f else 19.5f, verseFont + 1f)
-        TextScale.COMPACT -> maxOf(13f, verseFont - 1f)
-        TextScale.AUTO -> verseFont
+        TextScale.COMFORTABLE -> baseVerse + 1f
+        TextScale.COMPACT -> baseVerse - 1f
+        TextScale.AUTO -> baseVerse
       }
-
-    val maxLines =
-      when {
-        isSmallWidget && chars > 56 -> 6
-        isSmallWidget -> 5
-        chars > 84 -> 7
-        else -> 6
-      }
+    val maxLines = if (isSmallWidget) 4 else 6
 
     return Resolved(
       verseFontSp = verseFont,
-      refFontSp = if (isSmallWidget) 11.5f else 12.5f,
+      refFontSp = if (isSmallWidget) 13.5f else 14.5f,
       maxLines = maxLines,
     )
   }

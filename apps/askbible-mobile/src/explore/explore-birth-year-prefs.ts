@@ -128,7 +128,7 @@ export async function readExploreYearDayProfile(): Promise<ExploreYearDayProfile
       await AsyncStorage.setItem(STORAGE_KEY, raw);
       await AsyncStorage.multiRemove([STORAGE_KEY_LEGACY, STORAGE_KEY_V1_LEGACY]);
       const profile = parseStoredProfile(raw);
-      if (profile.birthDate) return profile;
+      if (profile.birthDate || profile.displayName) return profile;
     }
     const migrated = await migrateV1YearIfPresent();
     if (migrated) return { ...EMPTY_PROFILE, birthDate: migrated };
@@ -141,6 +141,25 @@ export async function readExploreYearDayProfile(): Promise<ExploreYearDayProfile
 export async function readExploreDisplayName(): Promise<string | null> {
   const profile = await readExploreYearDayProfile();
   return profile.displayName;
+}
+
+/** 仅更新称呼；已有生日则保留其它字段。 */
+export async function writeExploreDisplayName(raw: string): Promise<boolean> {
+  const name = normalizeExploreDisplayName(raw);
+  if (!isValidExploreDisplayName(name)) return false;
+  const existing = await readExploreYearDayProfile();
+  if (existing.birthDate) {
+    await writeExploreYearDayProfile({
+      birthDate: existing.birthDate,
+      displayName: name,
+      weddingAnniversary: existing.weddingAnniversary,
+      baptismDate: existing.baptismDate,
+    });
+    return true;
+  }
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ name }));
+  await AsyncStorage.multiRemove([STORAGE_KEY_LEGACY, STORAGE_KEY_V1, STORAGE_KEY_V1_LEGACY]);
+  return true;
 }
 
 export async function readExploreBirthDate(): Promise<ExploreBirthDate | null> {

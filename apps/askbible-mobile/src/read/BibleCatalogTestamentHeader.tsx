@@ -1,16 +1,20 @@
 import { Text, View } from "react-native";
-import { t } from "../i18n/site-copy";
+import type { AppLocale } from "../i18n/config";
+import { createT } from "../i18n/site-copy";
 import { bibleCatalogOutlineStyles as styles } from "./bibleCatalogOutlineStyles";
 
 export function BibleCatalogTestamentHeader({
   testament,
   compact = false,
   lockTextScale = true,
+  displayLocale = "zh-CN",
 }: {
   testament: "old" | "new";
   compact?: boolean;
   lockTextScale?: boolean;
+  displayLocale?: AppLocale;
 }) {
+  const t = createT(displayLocale);
   const isOld = testament === "old";
   return (
     <View style={[styles.testamentHeaderWrap, compact && styles.testamentHeaderWrapCompact]} accessibilityRole="header">

@@ -124,3 +124,26 @@ export function writeExploreYearDayProfile(profile: {
 }
 
 export { defaultBirthDate };
+
+export function readExploreDisplayName(): string | null {
+  return readExploreYearDayProfile().displayName;
+}
+
+/** 仅更新称呼；已有生日则保留其它字段。 */
+export function writeExploreDisplayName(raw: string): boolean {
+  const name = normalizeExploreDisplayName(raw);
+  if (!isValidExploreDisplayName(name)) return false;
+  const existing = readExploreYearDayProfile();
+  if (existing.birthDate) {
+    writeExploreYearDayProfile({
+      birthDate: existing.birthDate,
+      displayName: name,
+      weddingAnniversary: existing.weddingAnniversary,
+      baptismDate: existing.baptismDate,
+    });
+    return true;
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ name }));
+  localStorage.removeItem(STORAGE_KEY_LEGACY);
+  return true;
+}

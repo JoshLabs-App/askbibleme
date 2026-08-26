@@ -1,6 +1,6 @@
 /**
  * 产品拍板（多语言首页经文）：
- * - **同一套 `VerseRef`**，按界面语言 **切换译本文件**：`zh-CN` → 优先 `cuv-simp`，`en` → 优先 `kjv`，再回退其它英文译本。
+ * - **同一套 `VerseRef`**，按界面语言 **切换译本文件**：`zh-CN` → 优先 `cuv-simp`，`en` → 优先 `web-en`（WEB），再回退其它英文译本。
  * - 不是「仅脚注本地化、正文永远 `defaultTranslation`」。
  */
 import type { AppLocale } from "@/lib/i18n/config";
@@ -35,8 +35,8 @@ export function pickTranslationIdForLocale(index: BibleTranslationsIndex, locale
     );
   }
   return (
-    firstMatch(index, (id) => id === "kjv") ??
     firstMatch(index, (id) => id === "web-en") ??
+    firstMatch(index, (id) => id === "kjv") ??
     firstMatch(index, (id, lang) => id === "bbe-en") ??
     firstMatch(index, (_id, lang) => lang.startsWith("en")) ??
     index.defaultTranslationId

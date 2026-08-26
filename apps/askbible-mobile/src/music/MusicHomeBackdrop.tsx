@@ -48,6 +48,7 @@ export function MusicHomeBackdrop({
             width={width}
             height={height}
             colors={glowColors}
+            breathing={albumDecorMotionActive}
             flatGradientOnly={album === "睡眠"}
             showBottomScrim={!inTab}
             showCenterOrb={album !== "安静" && album !== "睡眠" && album !== "专注工作"}

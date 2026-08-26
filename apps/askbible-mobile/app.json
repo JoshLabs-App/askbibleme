@@ -3,8 +3,8 @@
     "name": "AskBible.me",
     "slug": "askbible-me",
     "scheme": "askbible",
-    "version": "1.0.11",
-    "runtimeVersion": "1.0.11",
+    "version": "1.0.38",
+    "runtimeVersion": "1.0.38",
     "updates": {
       "enabled": false,
       "checkAutomatically": "NEVER",
@@ -27,11 +27,12 @@
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFB101"
+      "backgroundColor": "#FFB101",
+      "imageWidth": 320
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "70",
+      "buildNumber": "119",
       "supportsTablet": true,
       "appleTeamId": "AJ2998VZH6",
       "entitlements": {
@@ -44,16 +45,12 @@
         "UIBackgroundModes": [
           "audio"
         ],
-        "NSUserNotificationsUsageDescription": "AskBible.me can send optional daily reading reminders and verse-of-the-day notifications.",
-        "NSLocalNetworkUsageDescription": "Allow AskBible.me to connect to the development server on your local network for live updates during development.",
-        "NSBonjourServices": [
-          "_metro._tcp"
-        ]
+        "NSUserNotificationsUsageDescription": "AskBible.me can send optional daily reading reminders and verse-of-the-day notifications."
       }
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 70,
+      "versionCode": 119,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -69,6 +66,12 @@
       "expo-router",
       "expo-sqlite",
       "expo-asset",
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-video",
         {

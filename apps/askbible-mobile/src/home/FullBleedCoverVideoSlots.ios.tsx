@@ -38,6 +38,8 @@ function CoverVideoSlotInner({
   const player = useVideoPlayer(source, (p) => {
     p.loop = true;
     p.muted = true;
+    // 静音封面：用 mixWithOthers 以免打断前台音乐；锁屏前父组件必须卸掉本槽，
+    // 并由 AskBibleMusicService 抢回 longFormAudio（否则 moviePlayback+mix 约 60s 挂起）。
     p.audioMixingMode = "mixWithOthers";
     p.playbackRate = clampedRate;
     p.play();
@@ -54,8 +56,13 @@ function CoverVideoSlotInner({
   useEffect(() => {
     const sync = (state: AppStateStatus) => {
       try {
-        if (playbackActive && state === "active") player.play();
-        else player.pause();
+        // 关屏一律 pause；音乐在播时额外 replace nil，避免第二路 AVPlayer 扰会话。
+        if (state === "active") {
+          if (playbackActive) player.play();
+          else player.pause();
+          return;
+        }
+        player.pause();
       } catch {
         /* ignore */
       }

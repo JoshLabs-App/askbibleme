@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Dimensions, Platform, useWindowDimensions, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /** 浮层底栏图标区高度（与 `ShellTabBar` 主行对齐） */
 export const SHELL_TAB_BAR_CLEARANCE = 72;
@@ -47,6 +48,27 @@ export function shellFullBleedBackdropStyle(frame: {
     height: frame.height,
     zIndex: 0,
   };
+}
+
+/**
+ * Android：羊皮/全屏底图需盖住系统导航条后方（与首页视频底同策略）。
+ * iOS：保持 absoluteFill 即可。
+ */
+export function useShellFullBleedBackdropStyle(frame: {
+  width: number;
+  height: number;
+}): ViewStyle {
+  const insets = useSafeAreaInsets();
+  return useMemo(() => {
+    const base = shellFullBleedBackdropStyle(frame);
+    if (Platform.OS !== "android") return base;
+    return {
+      ...base,
+      bottom: -Math.max(insets.bottom, 0),
+      height: frame.height,
+      width: frame.width,
+    };
+  }, [frame.height, frame.width, insets.bottom]);
 }
 
 /** 隐藏系统 TabBar 占位，自定义 `ShellTabBar` 浮在场景之上 */

@@ -65,7 +65,31 @@ import {
   readVerseTextHighlightStore,
   replaceVerseTextHighlightStore,
 } from "@/lib/read/read-verse-text-highlights";
-import { readReadingPlanPrefs, writeReadingPlanPrefs, type ReadingPlanPrefs } from "@/lib/read/reading-plan-prefs";
+import {
+  localeValueWithReadingPlan,
+  readingPlanFromAppLocale,
+} from "@/lib/member-reading-sync/reading-plan-sync-sidecar";
+import { shouldSyncReadingPlanPrefs, mergeReadingPlanPrefsValue } from "@/lib/read/reading-plan-prefs-merge";
+import {
+  readEffectiveReadingPlanPrefs,
+  readReadingPlanPrefs,
+  writeReadingPlanPrefs,
+  type ReadingPlanPrefs,
+} from "@/lib/read/reading-plan-prefs";
+import {
+  hasUserNtDeepRepeatProgress,
+  readNtDeepRepeatProgress,
+  writeNtDeepRepeatProgress,
+} from "@/lib/read/nt-deep-repeat-progress";
+import {
+  hasUserTripleLoopProgress,
+  readTripleLoopProgress,
+  writeTripleLoopProgress,
+} from "@/lib/read/triple-loop-progress";
+import { READ_BIBLE_TYPOGRAPHY_STORAGE_KEY } from "@/lib/read/read-bible-typography-prefs";
+import { READ_BIBLE_TRANSLATION_STORAGE_KEY } from "@/lib/read/read-bible-translation-prefs";
+import { HOME_PRAYER_PREFS_STORAGE_KEY } from "@/lib/home-prayer-pools/constants";
+import { HOME_VERSE_POOL_SCOPE_STORAGE_KEY } from "@/lib/home/home-verse-pool-scope-prefs";
 import {
   mergeReadingHabitStatsRecords,
   readReadingHabitStats,
@@ -77,15 +101,29 @@ import {
   replaceScriptureListenTotalsWeb,
   type ScriptureListenTotalsRecord,
 } from "@/lib/read/scripture-listen-totals-web";
-import { readTripleLoopProgress, writeTripleLoopProgress } from "@/lib/read/triple-loop-progress";
-import { readNtDeepRepeatProgress, writeNtDeepRepeatProgress } from "@/lib/read/nt-deep-repeat-progress";
 import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
-import { reconcileNtDeepRepeatAheadDays } from "@/lib/read/nt-deep-repeat-effective-plan-day";
-import { reconcileTripleLoopAheadDays } from "@/lib/read/triple-loop-effective-plan-day";
+import {
+  inferNtDeepRepeatAheadDays,
+} from "@/lib/read/nt-deep-repeat-effective-plan-day";
+import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
+import { inferTripleLoopAheadDays } from "@/lib/read/triple-loop-effective-plan-day";
 import { readAheadDays } from "@/lib/read/reading-plan-ahead";
-import type { NtDeepRepeatReadingState } from "@/lib/bible/reading-plans/nt-deep-repeat-reading";
-import type { TripleLoopReadingState } from "@/lib/bible/reading-plans/triple-loop-reading";
+import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
+import { NT_DEEP_REPEAT_DEFAULT_PACE } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
+import { normalizeNtDeepRepeatChaptersReadKeys } from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";
+import {
+  normalizeNtDeepRepeatReadingState,
+  ntDeepRepeatStateForPlanDay,
+  type NtDeepRepeatReadingState,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-reading";
+import {
+  normalizeTripleLoopReadingState,
+  tripleLoopStateForPlanDay,
+  type TripleLoopReadingState,
+} from "@/lib/bible/reading-plans/triple-loop-reading";
+import { normalizeTripleLoopChaptersReadKeys } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
+import { toLocalDateString } from "@/lib/read/reading-plan-prefs";
 import {
   readTodayReadingChapterFractionRecord,
   replaceTodayReadingChapterFractionRecord,
@@ -135,8 +173,70 @@ function exploreProfileHasData(profile: ExploreYearDayProfile): boolean {
   );
 }
 
+function hasStoredKeys(keys: string[]): boolean {
+  try {
+    return keys.some((k) => {
+      const v = localStorage.getItem(k);
+      return v != null && v !== "";
+    });
+  } catch {
+    return false;
+  }
+}
+
+function isReadingPlanPrefs(value: unknown): value is ReadingPlanPrefs {
+  if (!value || typeof value !== "object") return false;
+  const planId = (value as { planId?: unknown }).planId;
+  return typeof planId === "string" && planId.trim().length > 0;
+}
+
+/** 本机是否已有会写入云端的读经进度（重装后的空默认值不算）。 */
+export function localHasMemberReadingProgressWeb(): boolean {
+  if (typeof window === "undefined") return false;
+  const bookmarks = getScriptureVerseBookmarkStoreSnapshot();
+  const highlights = readVerseTextHighlightStore();
+  const lastPosition = readLastReadPosition();
+  const listen = readScriptureListenTotalsWeb();
+  const completion = readReadChapterCompletionRecord();
+  const today = readTodayReadingDoneRecord();
+  const fraction = readTodayReadingChapterFractionRecord();
+  const habit = readReadingHabitStats();
+  const plan = readReadingPlanPrefs();
+  if (Object.keys(bookmarks).length) return true;
+  if (Object.keys(highlights).length) return true;
+  if (lastPosition) return true;
+  if (listen.totalSec > 0) return true;
+  if (completion.completed.length) return true;
+  if (today?.doneKeys.length) return true;
+  if (fraction && Object.keys(fraction.fractions).length) return true;
+  if (habit.completedDates.length) return true;
+  if (plan && shouldSyncReadingPlanPrefs(plan)) return true;
+  return hasUserTripleLoopProgress() || hasUserNtDeepRepeatProgress();
+}
+
 export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPushV1> {
   if (typeof window === "undefined") return { schemaVersion: 1, blobs: {} };
+
+  const hasTypography = hasStoredKeys([READ_BIBLE_TYPOGRAPHY_STORAGE_KEY]);
+  const hasTranslation = hasStoredKeys([READ_BIBLE_TRANSLATION_STORAGE_KEY]);
+  const hasHomeNature = hasStoredKeys([
+    "askbible-nature-visual-levels-v1",
+    "selah-nature-visual-levels-v1",
+    "askbible-nature-home-verse-appearance-v1",
+    "selah-nature-home-verse-appearance-v1",
+    "askbible-nature-home-text-scale-v1",
+    "selah-shell-template-chrome-tune-v1",
+  ]);
+  const hasHomePrayer = hasStoredKeys([HOME_PRAYER_PREFS_STORAGE_KEY, "selah-home-verse-prefs-v1"]);
+  const hasVersePoolScope = hasStoredKeys([HOME_VERSE_POOL_SCOPE_STORAGE_KEY]);
+  const hasNatureScene = hasStoredKeys([
+    "askbible-nature-home-active-scene-v1",
+    "selah-nature-home-active-scene-v1",
+    "askbible-nature-home-scene-loop-all-v1",
+    "askbible-nature-home-ambient-scene-v1",
+  ]);
+  const hasLocale = hasStoredKeys([LOCALE_STORAGE_KEY, "selah-locale-v1"]);
+
   const index = await loadTranslationsIndex();
   hydrateHomeVersePoolScope();
 
@@ -150,6 +250,8 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   const readingPlanPrefs = readReadingPlanPrefs();
   const tripleLoopProgress = readTripleLoopProgress();
   const ntDeepRepeatProgress = readNtDeepRepeatProgress();
+  const hasTripleProgress = hasUserTripleLoopProgress();
+  const hasNtProgress = hasUserNtDeepRepeatProgress();
   const todayReadingDone = readTodayReadingDoneRecord();
   const todayReadingFraction = readTodayReadingChapterFractionRecord();
   const habitStats = readReadingHabitStats();
@@ -166,31 +268,39 @@ export async function exportLocalReadingBlobsWeb(): Promise<MemberReadingSyncPus
   if (Object.keys(highlights).length) blobs.highlights = wrapBlob(highlights, now);
   if (lastPosition) blobs.lastPosition = wrapBlob(lastPosition, now);
   if (chapterCompletion.completed.length) blobs.chapterCompletion = wrapBlob(chapterCompletion, now);
-  if (readingPlanPrefs) blobs.readingPlanPrefs = wrapBlob(readingPlanPrefs, now);
-  if (tripleLoopProgress) blobs.tripleLoopProgress = wrapBlob(tripleLoopProgress, now);
-  if (ntDeepRepeatProgress) blobs.ntDeepRepeatProgress = wrapBlob(ntDeepRepeatProgress, now);
+  if (readingPlanPrefs && shouldSyncReadingPlanPrefs(readingPlanPrefs)) {
+    blobs.readingPlanPrefs = wrapBlob(readingPlanPrefs, now);
+    blobs.appLocale = wrapBlob(
+      localeValueWithReadingPlan(hasLocale ? appLocale : null, readingPlanPrefs),
+      now,
+    );
+  }
+  if (hasTripleProgress) blobs.tripleLoopProgress = wrapBlob(tripleLoopProgress, now);
+  if (hasNtProgress) blobs.ntDeepRepeatProgress = wrapBlob(ntDeepRepeatProgress, now);
   if (todayReadingDone?.doneKeys.length) blobs.todayReadingDone = wrapBlob(todayReadingDone, now);
   if (todayReadingFraction && Object.keys(todayReadingFraction.fractions).length) {
     blobs.todayReadingFraction = wrapBlob(todayReadingFraction, now);
   }
-  blobs.habitStats = wrapBlob(habitStats, now);
+  if (habitStats.completedDates.length) blobs.habitStats = wrapBlob(habitStats, now);
   const scriptureListenTotals = readScriptureListenTotalsWeb();
   if (scriptureListenTotals.totalSec > 0) {
     blobs.scriptureListenTotals = wrapBlob(scriptureListenTotals, now);
   }
 
-  blobs.readTypography = wrapBlob(readTypography, now);
-  blobs.readTranslation = wrapBlob(readTranslation, now);
+  if (hasTypography) blobs.readTypography = wrapBlob(readTypography, now);
+  if (hasTranslation) blobs.readTranslation = wrapBlob(readTranslation, now);
   if (recentSearches.terms.length) blobs.recentSearches = wrapBlob(recentSearches, now);
-  blobs.homeNatureUi = wrapBlob(homeNatureUi, now);
-  blobs.homePrayerVerse = wrapBlob(homePrayerVerse, now);
-  blobs.homeVersePoolScope = wrapBlob({ version: 1, scopeId: getHomeVersePoolScope() }, now);
-  blobs.natureSceneUi = wrapBlob(natureSceneUi, now);
+  if (hasHomeNature) blobs.homeNatureUi = wrapBlob(homeNatureUi, now);
+  if (hasHomePrayer) blobs.homePrayerVerse = wrapBlob(homePrayerVerse, now);
+  if (hasVersePoolScope) {
+    blobs.homeVersePoolScope = wrapBlob({ version: 1, scopeId: getHomeVersePoolScope() }, now);
+  }
+  if (hasNatureScene) blobs.natureSceneUi = wrapBlob(natureSceneUi, now);
   blobs.cuvAudioVoice = wrapBlob({ version: 1, voiceId: readStoredCuvChapterAudioVoice() }, now);
   if (exploreProfileHasData(exploreYearDayProfile)) {
     blobs.exploreYearDayProfile = wrapBlob({ version: 1, profile: exploreYearDayProfile }, now);
   }
-  blobs.appLocale = wrapBlob(appLocale, now);
+  if (hasLocale && !blobs.appLocale) blobs.appLocale = wrapBlob(appLocale, now);
 
   return { schemaVersion: 1, blobs };
 }
@@ -318,33 +428,79 @@ async function applyBlob(key: MemberReadingSyncBlobKey, value: unknown): Promise
   }
 }
 
-async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<void> {
-  const prefs = readReadingPlanPrefs();
-  if (!prefs || !isTripleLoopPlanId(prefs.planId)) return;
-  const progress = readTripleLoopProgress();
-  const next = reconcileTripleLoopAheadDays(prefs, progress);
-  if (readAheadDays(next) === readAheadDays(prefs)) return;
-  writeReadingPlanPrefs(next);
+async function reconcileTripleLoopReadingPlanAfterSyncWeb(): Promise<boolean> {
+  const prefs = readEffectiveReadingPlanPrefs();
+  if (!isTripleLoopPlanId(prefs.planId)) return false;
+
+  const stored = readTripleLoopProgress();
+  const prefsAhead = readAheadDays(prefs);
+  const inferred = inferTripleLoopAheadDays(stored);
+  if (inferred <= prefsAhead) return false;
+
+  if (prefs.chosen !== true) {
+    writeReadingPlanPrefs({ ...prefs, aheadDays: inferred, chosen: true });
+    return true;
+  }
+
+  const planDay = getReadingPlanDaySinceEpoch() + prefsAhead;
+  writeTripleLoopProgress(
+    normalizeTripleLoopReadingState({
+      ...tripleLoopStateForPlanDay(planDay),
+      startedAt: stored.startedAt?.trim() || READING_PLAN_EASTER_EPOCH_DATE,
+      chaptersReadKeys: normalizeTripleLoopChaptersReadKeys(stored.chaptersReadKeys),
+    }),
+  );
+  return false;
 }
 
-async function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(): Promise<void> {
-  const prefs = readReadingPlanPrefs();
-  if (!prefs || !isNtDeepRepeatPlanId(prefs.planId)) return;
-  const progress = readNtDeepRepeatProgress();
-  const next = reconcileNtDeepRepeatAheadDays(prefs, progress);
-  if (readAheadDays(next) === readAheadDays(prefs)) return;
-  writeReadingPlanPrefs(next);
+async function reconcileNtDeepRepeatReadingPlanAfterSyncWeb(): Promise<boolean> {
+  const prefs = readEffectiveReadingPlanPrefs();
+  if (!isNtDeepRepeatPlanId(prefs.planId)) return false;
+
+  const stored = readNtDeepRepeatProgress();
+  const prefsAhead = readAheadDays(prefs);
+  const inferred = inferNtDeepRepeatAheadDays(stored, prefs);
+  if (inferred <= prefsAhead) return false;
+
+  if (prefs.chosen !== true) {
+    writeReadingPlanPrefs({ ...prefs, aheadDays: inferred, chosen: true });
+    return true;
+  }
+
+  const planDay = resolveNtDeepRepeatPlanDay(prefs) + prefsAhead;
+  const pace = prefs.ntDeepRepeatPace ?? stored.pace ?? NT_DEEP_REPEAT_DEFAULT_PACE;
+  const startedAt = prefs.startedOn?.trim() || stored.startedAt?.trim() || toLocalDateString(new Date());
+  writeNtDeepRepeatProgress(
+    normalizeNtDeepRepeatReadingState({
+      ...ntDeepRepeatStateForPlanDay(planDay, { pace, startedAt }),
+      pace,
+      startedAt,
+      chaptersReadKeys: normalizeNtDeepRepeatChaptersReadKeys(stored.chaptersReadKeys),
+    }),
+  );
+  return false;
 }
 
 export async function applyMemberReadingSyncBlobsWeb(
   blobs: Partial<Record<MemberReadingSyncBlobKey, MemberReadingSyncBlob>> | undefined,
-): Promise<void> {
-  if (!blobs || typeof window === "undefined") return;
+): Promise<boolean> {
+  if (!blobs || typeof window === "undefined") return false;
+
+  const sidecarPlan = readingPlanFromAppLocale(blobs.appLocale?.value);
+  if (!blobs.readingPlanPrefs && isReadingPlanPrefs(sidecarPlan)) {
+    const current = readReadingPlanPrefs();
+    const merged = current ? mergeReadingPlanPrefsValue(sidecarPlan, current) : sidecarPlan;
+    if (isReadingPlanPrefs(merged)) {
+      writeReadingPlanPrefs(merged);
+    }
+  }
+
   for (const key of MEMBER_READING_SYNC_BLOB_KEYS) {
     const blob = blobs[key];
     if (!blob) continue;
     await applyBlob(key, blob.value);
   }
-  await reconcileTripleLoopReadingPlanAfterSyncWeb();
-  await reconcileNtDeepRepeatReadingPlanAfterSyncWeb();
+  const triple = await reconcileTripleLoopReadingPlanAfterSyncWeb();
+  const ndr = await reconcileNtDeepRepeatReadingPlanAfterSyncWeb();
+  return triple || ndr;
 }

@@ -1,11 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
+  holdScriptureUserPause,
   markScriptureWantPlaying,
   recoverScripturePlaybackAfterBackground,
   type ScriptureBackgroundRecoveryCtx,
   type ScriptureResumeCtx,
   tryResumeScriptureAfterInterruption,
 } from "./scriptureResumeAfterInterruption";
+import { releaseScriptureUserPause } from "./scriptureUserPause";
 
 vi.mock("react-native", () => ({
   Platform: { OS: "ios" },
@@ -19,6 +21,10 @@ vi.mock("../audio/shellAudioMode", () => ({
 vi.mock("../audio/safeShellSound", () => ({
   safeGetSoundStatus: vi.fn(),
   safePlaySound: vi.fn(async () => true),
+}));
+
+vi.mock("../audio/shellAudioInterruption", () => ({
+  getShellAudioInterrupted: vi.fn(() => false),
 }));
 
 import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
@@ -74,6 +80,7 @@ function makeRecoveryCtx(overrides: Partial<ScriptureBackgroundRecoveryCtx> = {}
 describe("tryResumeScriptureAfterInterruption", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    releaseScriptureUserPause();
   });
 
   it("resumes when user still wants playback and sound is paused mid-chapter", async () => {
@@ -90,6 +97,19 @@ describe("tryResumeScriptureAfterInterruption", () => {
     expect(ok).toBe(true);
     expect(safePlaySound).toHaveBeenCalledWith(ctx.soundRef.current);
     expect(ctx.setPlaying).toHaveBeenCalledWith(true);
+  });
+
+  it("does not recover from background after user pause hold", async () => {
+    const ctx = makeRecoveryCtx();
+    markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
+    ctx.autoPlayScriptureRef.current = false;
+    holdScriptureUserPause();
+
+    const ok = await recoverScripturePlaybackAfterBackground(ctx);
+
+    expect(ok).toBe(false);
+    expect(safeGetSoundStatus).not.toHaveBeenCalled();
+    expect(ctx.tryPlayScriptureWithFallback).not.toHaveBeenCalled();
   });
 
   it("does not resume after user pause", async () => {

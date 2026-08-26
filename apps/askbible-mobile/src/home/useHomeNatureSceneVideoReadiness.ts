@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { InteractionManager, Platform } from "react-native";
 import {
   ensureNatureSceneVideoReady,
+  ensurePrimaryNatureLakeVideoReady,
+  hasBundledNatureSceneVideo,
   isNatureSceneVideoReady,
   markNatureSceneVideoReady,
 } from "../media/natureSceneReadiness";
@@ -41,8 +43,12 @@ export function useHomeNatureSceneVideoReadiness({
     let task: { cancel: () => void } | null = null;
     const timer = setTimeout(() => {
       task = InteractionManager.runAfterInteractions(() => {
-        void ensureNatureSceneVideoReady(sceneId);
-        void preloadAdjacentNatureSceneVideos(sceneIdList, sceneId);
+        // 湖景先就绪，再暖当前/相邻，避免其它场景解压抢磁盘。
+        void ensurePrimaryNatureLakeVideoReady().then(() => {
+          if (!homeFocusedRef.current) return;
+          void ensureNatureSceneVideoReady(sceneId);
+          void preloadAdjacentNatureSceneVideos(sceneIdList, sceneId);
+        });
       });
     }, 1800);
     return () => {
@@ -85,6 +91,11 @@ export function useHomeNatureSceneVideoReadiness({
     if (coverVideoPosterOnly || forcePosterStage) return;
     const current = sceneId.trim();
     if (!current) return;
+    if (!hasBundledNatureSceneVideo(current)) {
+      setWaitingSceneId(null);
+      setShowSceneLoader(false);
+      return;
+    }
     if (isNatureSceneVideoReady(current)) {
       setWaitingSceneId(null);
       return;

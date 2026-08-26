@@ -9,7 +9,7 @@ import {
   type TripleLoopTrack,
 } from "@/lib/bible/reading-plans/triple-loop-reading";
 import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
-import { readAheadDays, type ReadingPlanPrefs } from "@/lib/read/reading-plan-ahead";
+import type { ReadingPlanPrefs } from "@/lib/read/reading-plan-ahead";
 
 function trackOrder(track: TripleLoopTrack): string[] {
   if (track === "ot") return TRIPLE_LOOP_OT_BOOK_IDS;
@@ -65,16 +65,9 @@ export function inferTripleLoopAheadDays(
 
 export function reconcileTripleLoopAheadDays(
   prefs: ReadingPlanPrefs,
-  progress: Partial<TripleLoopReadingState> | null | undefined,
-  now = new Date(),
+  _progress?: Partial<TripleLoopReadingState> | null,
+  _now = new Date(),
 ): ReadingPlanPrefs {
-  const fromPrefs = readAheadDays(prefs);
-  const fromProgress = inferTripleLoopAheadDays(progress, now);
-  const ahead = Math.max(fromPrefs, fromProgress);
-  if (ahead === fromPrefs) return prefs;
-  if (ahead <= 0) {
-    const { aheadDays: _omit, ...rest } = prefs;
-    return rest as ReadingPlanPrefs;
-  }
-  return { ...prefs, aheadDays: ahead };
+  // Prefs win. Raising aheadDays from farther progress undoes「设为今日」after sync.
+  return prefs;
 }

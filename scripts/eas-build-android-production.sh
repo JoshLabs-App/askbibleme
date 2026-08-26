@@ -29,8 +29,7 @@ npm run mobile:sync-icons
 npm run mobile:sync-content
 # Bundle music/nature offline media into release assets.
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \
-MOBILE_BUNDLE_MUSIC_LIMIT=1 \
-MOBILE_STARTER_MUSIC_TRACK_ID=track-mpg4a8h3jhwl \
+MOBILE_STARTER_MUSIC_TRACK_ID=track-mt391okyjj4i \
 npm run mobile:sync-offline-media
 
 echo "→ 离线媒体体积审计…"
@@ -43,7 +42,7 @@ cd apps/askbible-mobile
 
 echo "→ 提交 EAS Android production 构建（AAB）…"
 EXPO_PUBLIC_MOBILE_OFFLINE_FIRST=1 \
-EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=0 \
+EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=1 \
 EXPO_PUBLIC_MEMBER_REGISTER_ENABLED=1 \
 EXPO_PUBLIC_ASKBIBLE_BASE_URL="https://askbible.me" \
 MOBILE_BUNDLE_OFFLINE_MEDIA=1 \

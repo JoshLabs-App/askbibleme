@@ -18,7 +18,6 @@ export function MusicHomeScreenView(props: Props) {
   const {
     layoutState,
     playback,
-    seek,
     upper,
     sleepTimer,
     albumState,
@@ -27,10 +26,10 @@ export function MusicHomeScreenView(props: Props) {
     albumDecorVisible,
     albumDecorMotionActive,
     duration,
-    position,
-    progress,
+    musicActive,
+    playbackMode,
+    analysisSrc,
     uiAutoHide,
-    coffeeRhythmPulse,
     gestures,
     queue,
   } = props;
@@ -75,7 +74,10 @@ export function MusicHomeScreenView(props: Props) {
         nowClockText={nowClockText}
         landscapeSafeHorizontal={landscapeSafeHorizontal}
         bottomInset={insets.bottom}
+        playing={playback.playing}
+        canTogglePlayback={playback.canTogglePlayback}
         onLandscapeStageToggle={onLandscapeStageToggle}
+        onTogglePlay={() => void playback.togglePlayMusic()}
       />
 
       {chromeVisible && !inTab && router.canGoBack() ? (
@@ -100,7 +102,6 @@ export function MusicHomeScreenView(props: Props) {
         <MusicHomeScreenForeground
           layoutState={layoutState}
           playback={playback}
-          seek={seek}
           upper={upper}
           sleepTimer={sleepTimer}
           albumState={albumState}
@@ -109,10 +110,10 @@ export function MusicHomeScreenView(props: Props) {
           queue={queue}
           albumDecorVisible={albumDecorVisible}
           albumDecorMotionActive={albumDecorMotionActive}
-          coffeeRhythmPulse={coffeeRhythmPulse}
+          analysisSrc={analysisSrc}
           duration={duration}
-          position={position}
-          progress={progress}
+          musicActive={musicActive}
+          playbackMode={playbackMode}
         />
       ) : null}
     </View>

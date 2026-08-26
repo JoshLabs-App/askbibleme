@@ -26,7 +26,10 @@ export function pickRandomNextTrackIndexInAlbum(
   fallbackTotal: number,
 ): number {
   const current = tracks[currentIndex];
-  const albumKey = normalizeMusicAlbumLabel(current?.album);
+  const rawAlbum = (current?.album || "").trim();
+  // 空专辑不要当成「安静」，否则钢琴等曲目缺标签时会整专辑跳走。
+  if (!rawAlbum) return pickRandomNextTrackIndex(currentIndex, fallbackTotal);
+  const albumKey = normalizeMusicAlbumLabel(rawAlbum);
   if (!albumKey) return pickRandomNextTrackIndex(currentIndex, fallbackTotal);
   const sameAlbumIndices = tracks
     .map((tr, idx) => ({ tr, idx }))

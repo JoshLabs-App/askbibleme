@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Pressable, Text, View, type ViewStyle } from "react-native";
+import { Pressable, View, type ViewStyle } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t, tFormat } from "../i18n/site-copy";
 import {
   birthDateAgeYears,
@@ -11,6 +12,7 @@ import {
   type BiblicalLifespanEntry,
 } from "./biblical-lifespans";
 import { biblicalLifespanChartStyles as styles } from "./ExploreBiblicalLifespanChartStyles";
+import { formatGreetingDisplayName } from "../read/readChapterCompletionPlanPanelHelpers";
 
 export function LifespanEntryRow({
   entry,
@@ -130,7 +132,8 @@ export function ModernLifespanRow({
   const refDisplay = tFormat("pages.explore.centuryTimelineLifeDay", {
     day: lifeDay.toLocaleString(),
   });
-  const a11y = `${displayName} ${lifespanDisplay} ${refDisplay}`;
+  const nameLabel = formatGreetingDisplayName(displayName) || displayName.trim();
+  const a11y = `${nameLabel} ${lifespanDisplay} ${refDisplay}`;
 
   return (
     <View style={[styles.entry, !isLastInModern && styles.entryGap]}>
@@ -144,19 +147,21 @@ export function ModernLifespanRow({
           <Pressable
             onPress={onPress}
             disabled={!onPress}
-            style={({ pressed }) => [styles.metaRow, pressed && onPress && styles.metaPressed]}
+            style={({ pressed }) => [styles.modernMetaStack, pressed && onPress && styles.metaPressed]}
             accessibilityRole={onPress ? "button" : "text"}
             accessibilityLabel={a11y}
           >
-            <Text style={[styles.name, styles.modernDisplayName]} numberOfLines={1}>
-              {displayName}
+            <Text style={[styles.name, styles.modernDisplayName]} numberOfLines={2}>
+              {nameLabel}
             </Text>
-            <Text style={[styles.lifespan, styles.modernLifespan]} numberOfLines={1}>
-              {lifespanDisplay}
-            </Text>
-            <Text style={[styles.ref, styles.modernRef]} numberOfLines={2}>
-              {refDisplay}
-            </Text>
+            <View style={styles.metaRow}>
+              <Text style={[styles.lifespan, styles.modernLifespan]} numberOfLines={1}>
+                {lifespanDisplay}
+              </Text>
+              <Text style={[styles.ref, styles.modernRef]} numberOfLines={1}>
+                {refDisplay}
+              </Text>
+            </View>
           </Pressable>
           <View style={styles.barTrack} accessibilityLabel={lifespanDisplay}>
             <View style={[styles.barFill, { width: `${barPct}%` }]} />

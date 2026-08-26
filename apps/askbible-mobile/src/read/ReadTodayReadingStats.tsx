@@ -1,9 +1,15 @@
-import { StyleSheet, Text, View, type StyleProp, type TextStyle } from "react-native";
+import type { ComponentProps } from "react";
+import { StyleSheet, View, type StyleProp, type TextStyle } from "react-native";
 import { t } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
 import type { ReadingHabitStatsSnapshot } from "./reading-habit-stats";
+import { ReadUiScaledText } from "./ReadUiScaledText";
+
+function Text(props: ComponentProps<typeof ReadUiScaledText>) {
+  return <ReadUiScaledText {...props} sizeBump={1} />;
+}
 
 const READ_DONE_ACCENT = "#65775C";
 
@@ -87,8 +93,8 @@ const styles = StyleSheet.create({
     color: READ_DONE_ACCENT,
   },
   statLabel: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 14,
+    lineHeight: 18,
     ...parchmentSans(500),
     color: c.faint,
     textAlign: "center",

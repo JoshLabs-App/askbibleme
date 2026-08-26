@@ -1,6 +1,5 @@
 import manifest from "../../assets/bible/teochew-nt-audio-manifest.json";
 import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
-import { absoluteSelfHostedChapterAudioUrl } from "./chapter-audio-url";
 import type { CuvChapterAudioVoiceId } from "./cuv-chapter-audio-voices";
 import { voiceSupportsBook } from "./cuv-chapter-audio-voices";
 
@@ -35,12 +34,14 @@ export function getTeochewNtManifestEntry(
   return BY_KEY.get(`${id}:${chapter}`) ?? null;
 }
 
+/** @deprecated 潮语不自托管；保留仅兼容旧路径解析。 */
 export function buildLocalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
   const entry = getTeochewNtManifestEntry(bookId, chapter);
   if (!entry) return "";
   return `/audio/teochew-nt/${entry.localFilename}`;
 }
 
+/** 众生命堂 TSTSCC 原始公开 URL（唯一音源）。 */
 export function buildExternalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
   const entry = getTeochewNtManifestEntry(bookId, chapter);
   return entry?.remoteUrl?.trim() ?? "";
@@ -54,20 +55,16 @@ export function teochewNtVoiceSupportsBook(bookId: string): boolean {
   return voiceSupportsBook("teochew-nt", bookId);
 }
 
+/** 潮语新约：只引用 TSTSCC，不走 askbible.me，不打进安装包。 */
 export async function resolveTeochewNtChapterAudioPlayableSrc(args: {
   bookId: string;
   chapter: number;
-  baseUrl: string;
+  baseUrl?: string;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
+  void args.baseUrl;
   if (!voiceSupportsBook("teochew-nt", args.bookId)) return { ok: false };
   if (!getTeochewNtManifestEntry(args.bookId, args.chapter)) return { ok: false };
   if (!isMobileScriptureAudioStreamAllowed()) return { ok: false };
-
-  const local = buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-  const selfHosted =
-    (local ? absoluteSelfHostedChapterAudioUrl(args.baseUrl, local) : null) ??
-    (local ? absoluteSelfHostedChapterAudioUrl("https://askbible.me", local) : null);
-  if (selfHosted) return { ok: true, src: selfHosted };
 
   const external = buildExternalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
   if (external) return { ok: true, src: external };

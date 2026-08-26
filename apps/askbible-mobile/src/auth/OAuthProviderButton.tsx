@@ -29,7 +29,7 @@ export function OAuthProviderButton({ label, pending = false, disabled = false, 
       disabled={inactive}
       style={({ pressed }) => [
         styles.button,
-        isApple ? styles.appleButton : styles.googleButton,
+        styles.providerButton,
         pressed && !inactive && styles.buttonPressed,
         inactive && styles.buttonDisabled,
         style,
@@ -38,17 +38,13 @@ export function OAuthProviderButton({ label, pending = false, disabled = false, 
       accessibilityLabel={label}
     >
       {pending ? (
-        <ActivityIndicator color={isApple ? "#fff" : c.ink} />
+        <ActivityIndicator color={c.ink} />
       ) : (
         <View style={styles.buttonContent}>
           <View style={styles.iconSlot}>
-            {isApple ? (
-              <AppleBrandIcon color="#ffffff" />
-            ) : (
-              <GoogleBrandIcon />
-            )}
+            {isApple ? <AppleBrandIcon color={c.ink} /> : <GoogleBrandIcon />}
           </View>
-          <Text style={[styles.buttonText, isApple && styles.appleButtonText]} numberOfLines={2}>
+          <Text style={styles.buttonText} numberOfLines={2}>
             {label}
           </Text>
           <View style={styles.iconSlot} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
@@ -66,13 +62,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: "100%",
   },
-  googleButton: {
+  providerButton: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: parchmentControlSurface.border,
     backgroundColor: parchmentControlSurface.fillStrong,
-  },
-  appleButton: {
-    backgroundColor: "#111111",
   },
   buttonPressed: { opacity: 0.88 },
   buttonDisabled: { opacity: 0.55 },
@@ -97,8 +90,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: c.ink,
     ...parchmentSans(600),
-  },
-  appleButtonText: {
-    color: "#ffffff",
   },
 });

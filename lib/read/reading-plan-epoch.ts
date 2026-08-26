@@ -22,7 +22,9 @@ function localDaysBetween(from: string, to: string): number {
   const a = parseLocalDate(from);
   const b = parseLocalDate(to);
   if (!a || !b) return 0;
-  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
+  const utcA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const utcB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((utcB - utcA) / 86_400_000);
 }
 
 /**

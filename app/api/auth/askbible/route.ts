@@ -45,7 +45,12 @@ export async function GET() {
       const user = toAskbibleAuthUser(data.user, profile);
       return NextResponse.json({
         configured: true,
-        user: { id: user.id, email: user.email, name: user.name },
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          createdAt: user.createdAt,
+        },
         isAdmin: user.isAdmin,
       });
     }

@@ -9,7 +9,7 @@ import { requestNotificationPermissions } from "./notification-permissions";
 import { rescheduleAllNotifications } from "./localNotificationScheduler";
 
 /**
- * Fresh install only: persist opt-in reminder defaults (8:00) and show the OS permission dialog once.
+ * Fresh install only: persist default local reminders (金句 08:00 + 读经 07:00) and ask OS permission once.
  * Existing installs with saved prefs are not overwritten or re-prompted.
  */
 export async function bootstrapNotificationsOnFirstLaunch(): Promise<void> {

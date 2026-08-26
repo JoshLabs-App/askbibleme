@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -13,7 +14,8 @@ import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { resolveExploreStagedEntryLabel } from "./exploreHomeConfig";
 import { getExploreStagedEntry, type ExploreStagedEntryId } from "./exploreStagedEntries";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import { useExploreScrollContentStyle, ExploreParchmentPage} from "./exploreParchmentStyles";
 import {
   clearExploreChapterVerseCache,
   loadExploreVerseTextsForRefsProgressive,
@@ -111,7 +113,6 @@ export function ExploreStagedScripturePoolScreen({ entryId, module }: Props) {
     : entryId;
   const pageTitle = resolveRemoteModulePageTitle(locale, module, entryLabel);
   const categoryTitles = locale === "en" ? categoryTitlesEn : null;
-  const backLabel = resolveUiText(locale, "← 返回探索", "← Back to Explore");
   const tapHint = resolveUiText(locale, "点按分类可展开或收起", "Tap a section to expand or collapse");
 
   const parsedRefByRaw = useMemo(() => {
@@ -168,15 +169,13 @@ export function ExploreStagedScripturePoolScreen({ entryId, module }: Props) {
   }, [categories, expandedCategoryIndex, locale, parsedRefByRaw, screenFocused]);
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
-          <Text style={shared.backLinkText}>{backLabel}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.pageTitle}>{pageTitle}</Text>
         <Text style={styles.eyebrow}>{tapHint}</Text>
@@ -227,7 +226,7 @@ export function ExploreStagedScripturePoolScreen({ entryId, module }: Props) {
           ))}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }
 

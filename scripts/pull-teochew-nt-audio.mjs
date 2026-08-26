@@ -1,5 +1,17 @@
 #!/usr/bin/env node
 /**
+ * DEPRECATED: AskBible 不再托管潮语新约音频（不落 public/、不落 DATA_ROOT）。
+ * App / Web 只引用 manifest 里的 TSTSCC remoteUrl。
+ * 若仍要本机镜像（例如生成 timing），设 FORCE_TEOCHEW_LOCAL_MIRROR=1。
+ */
+if (process.env.FORCE_TEOCHEW_LOCAL_MIRROR !== "1") {
+  console.error(
+    "Refusing: teochew-nt is external-only (TSTSCC). Set FORCE_TEOCHEW_LOCAL_MIRROR=1 to override.",
+  );
+  process.exit(1);
+}
+
+/**
  * 按 manifest 将 TSTSCC 朗读版 MP3 下载到 public/audio/teochew-nt/（或 DATA_ROOT/audio/teochew-nt）。
  *
  *   npm run audio:teochew-pull

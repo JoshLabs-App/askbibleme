@@ -20,6 +20,13 @@ describe("scriptureChapterEnd", () => {
     expect(isScriptureNearChapterEnd(117_000, 120_000)).toBe(false);
   });
 
+  it("does not treat short or buffering durations as chapter end", () => {
+    expect(isScriptureNearChapterEnd(0, 1_500)).toBe(false);
+    expect(isScriptureNearChapterEnd(1_200, 1_500)).toBe(false);
+    expect(isScriptureNearChapterEnd(0, 2_000)).toBe(false);
+    expect(isScriptureNearChapterEnd(0, 2_001)).toBe(false);
+  });
+
   it("finishes chapter only once", () => {
     const chapterEndHandledRef = { current: false };
     const args = {

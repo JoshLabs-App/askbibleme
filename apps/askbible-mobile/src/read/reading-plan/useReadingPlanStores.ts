@@ -39,7 +39,9 @@ export function useEffectiveReadingPlanPrefs(): {
         prev.anchor === next.anchor &&
         prev.startedOn === next.startedOn &&
         prev.dayCount === next.dayCount &&
-        prev.aheadDays === next.aheadDays
+        prev.aheadDays === next.aheadDays &&
+        prev.ntDeepRepeatPace === next.ntDeepRepeatPace &&
+        prev.chosen === next.chosen
           ? prev
           : next,
       );

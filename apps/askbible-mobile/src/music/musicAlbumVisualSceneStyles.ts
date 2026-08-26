@@ -3,23 +3,22 @@ import { StyleSheet } from "react-native";
 export const musicAlbumVisualSceneStyleDefs = {
   fishLayer: {
     ...StyleSheet.absoluteFillObject,
+    // 向下溢出到曲目区，避免上半舞台裁切鱼群
+    bottom: -220,
     overflow: "visible",
-  },
-  fishOrbitNode: {
-    position: "absolute",
-    left: -20,
-    top: -7,
-    width: 40,
-    height: 14,
   },
   fishOrbitGroup: {
     position: "absolute",
     width: 0,
     height: 0,
   },
-  fishImage: {
-    width: "100%",
-    height: "100%",
+  // 精灵与轨道节点合并为同一图层：省掉每条鱼一层包裹 View
+  fishSprite: {
+    position: "absolute",
+    left: -20,
+    top: -7,
+    width: 40,
+    height: 14,
     tintColor: "rgba(255,255,255,0.95)",
   },
   coffeeBeanLayer: {

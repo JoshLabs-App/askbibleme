@@ -1,8 +1,6 @@
 import { Image, ImageSourcePropType, StyleSheet, View } from "react-native";
 import type { PortraitCoverLayout } from "./natureHomePortraitCoverLayout";
 
-const STAGE_BACKDROP = "#ffffff";
-
 type Props = {
   posterModule?: number | null;
   posterUri?: string;
@@ -63,9 +61,9 @@ const styles = StyleSheet.create({
     top: 0,
     overflow: "hidden",
   },
+  // 勿白底：视频↔静帧切换时若先出现白底会「跳闪」
   posterCover: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 4,
-    backgroundColor: STAGE_BACKDROP,
   },
 });

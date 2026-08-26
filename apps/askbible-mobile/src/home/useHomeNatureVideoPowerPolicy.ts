@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { isNatureSoftFocusBlurEnabled, type NatureSoftFocusPrefs } from "./natureHomePrefs";
 
 export type HomeNatureVideoPowerPolicy = {
   /** 用静帧替代循环视频，降低解码与发热 */
@@ -11,17 +10,25 @@ export type HomeNatureVideoPowerPolicy = {
 };
 
 type Args = {
-  softFocus: NatureSoftFocusPrefs;
+  /** 用户点「模糊」关 / 开循环视频：关模糊 = 开视频 */
+  liveVideoEnabled: boolean;
+  /** @deprecated 保留参数兼容；低电量不再覆盖用户开视频选择 */
+  batteryPowerSaving?: boolean;
 };
 
-/** 首页背景视频：柔焦开时用静帧；低电量策略待 dev client 重编后接 expo-battery。 */
-export function useHomeNatureVideoPowerPolicy({ softFocus }: Args): HomeNatureVideoPowerPolicy {
+/**
+ * 默认播循环视频；用户点模糊才切静帧。
+ * 低电量不再强制盖掉用户选择——否则 Android 省电模式常开时「关模糊」永远只剩柔焦图。
+ */
+export function useHomeNatureVideoPowerPolicy({
+  liveVideoEnabled,
+}: Args): HomeNatureVideoPowerPolicy {
   return useMemo(() => {
-    const softFocusStaticBackground = isNatureSoftFocusBlurEnabled(softFocus);
+    const preferPosterStage = !liveVideoEnabled;
     return {
-      preferPosterStage: softFocusStaticBackground,
-      crossfadeAnimated: true,
-      skipAdjacentPreload: softFocusStaticBackground,
+      preferPosterStage,
+      crossfadeAnimated: !preferPosterStage,
+      skipAdjacentPreload: preferPosterStage,
     };
-  }, [softFocus]);
+  }, [liveVideoEnabled]);
 }

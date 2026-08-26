@@ -10,31 +10,12 @@ export const EXPLORE_CONTENT_REFRESH_TTL_MS = 60 * 60 * 1000;
 export const EXPLORE_CONTENT_FAILURE_BACKOFF_MS = 60 * 60 * 1000;
 export const EXPLORE_CONTENT_BACKGROUND_DEBOUNCE_MS = 30_000;
 
-export function isLocalLikeHostFromBase(base: string): boolean {
-  try {
-    const u = new URL(base);
-    const h = u.hostname.trim().toLowerCase();
-    if (!h) return true;
-    if (h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return true;
-    if (h.startsWith("10.") || h.startsWith("192.168.")) return true;
-    const m = h.match(/^172\.(\d+)\./);
-    if (m) {
-      const octet = Number(m[1]);
-      if (Number.isFinite(octet) && octet >= 16 && octet <= 31) return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
 export function buildExploreContentFetchCandidates(): string[] {
+  if (isMobileBundledOnly()) return [];
   const primaryBase = getAskBibleBaseUrl().replace(/\/$/, "");
-  const candidates = [primaryBase];
-  if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {
-    candidates.push("https://askbible.me");
-  }
-  return candidates;
+  // 探索内容不经 askbible.me；仅本机/局域网等非主站基址。
+  if (!primaryBase || /askbible\.me/i.test(primaryBase)) return [];
+  return [primaryBase];
 }
 
 export async function readExploreRemoteEnabledFromCachedManifest(): Promise<boolean> {

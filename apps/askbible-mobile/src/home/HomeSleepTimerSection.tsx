@@ -1,10 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { parchmentSans } from "../fonts/parchmentType";
+import { Pressable, Text, View } from "react-native";
 import {
   useMusicPlayback,
   type ShellSleepTimerMinutes,
 } from "../music/MusicPlaybackContext";
 import { tNatureHomeSettings } from "./natureHomeSettingsCopy";
+import { natureHomeSettingsPanelStyles as panelStyles } from "./natureHomeSettingsPanelStyles";
 
 const SLEEP_OPTIONS: ShellSleepTimerMinutes[] = [15, 30, 60, 120];
 
@@ -34,11 +34,8 @@ export function HomeSleepTimerSection({
 }: Props) {
   const { sleepTimerMinutes, setSleepTimerMinutes } = useMusicPlayback();
 
-  const segText = [styles.segText, segTextStyle];
-  const segTextOn = [styles.segText, segTextStyle, styles.segTextOn, segTextOnStyle];
-
   return (
-    <View style={[styles.segment, segmentStyle]} accessibilityRole="radiogroup">
+    <View style={panelStyles.rotationChoicesWrap} accessibilityRole="radiogroup">
       {SLEEP_OPTIONS.map((minutes) => {
         const selected = sleepTimerMinutes === minutes;
         const label = tNatureHomeSettings(SLEEP_LABEL_KEYS[minutes]);
@@ -50,39 +47,15 @@ export function HomeSleepTimerSection({
               setSleepTimerMinutes(next);
               onSelect?.(next);
             }}
-            style={[styles.segBtn, segBtnStyle, selected && [styles.segBtnOn, segBtnOnStyle]]}
+            style={[panelStyles.rotationChoice, segBtnStyle, selected && [panelStyles.rotationChoiceOn, segBtnOnStyle]]}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
             accessibilityLabel={`${label} min`}
           >
-            <Text style={selected ? segTextOn : segText}>{label}</Text>
+            <Text style={[panelStyles.rotationChoiceText, segTextStyle, selected && segTextOnStyle]}>{label}</Text>
           </Pressable>
         );
       })}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  segment: {
-    flexDirection: "row",
-    backgroundColor: "#27272a",
-    borderRadius: 8,
-    padding: 3,
-  },
-  segBtn: {
-    flex: 1,
-    minHeight: 34,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segBtnOn: { backgroundColor: "#3f3f46" },
-  segText: {
-    fontSize: 11,
-    ...parchmentSans(600),
-    fontVariant: ["tabular-nums"],
-    color: "rgba(255,255,255,0.5)",
-  },
-  segTextOn: { color: "#fff" },
-});

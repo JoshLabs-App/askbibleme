@@ -39,6 +39,7 @@ export type MusicPlaybackContextValueArgs = {
   toggleMusicRepeatAll: MusicPlaybackContextValue["toggleMusicRepeatAll"];
   sleepTimerMinutes: MusicPlaybackContextValue["sleepTimerMinutes"];
   setSleepTimerMinutes: MusicPlaybackContextValue["setSleepTimerMinutes"];
+  pauseShellPlayback: MusicPlaybackContextValue["pauseShellPlayback"];
   musicCatalogUpdateAvailable: boolean;
   checkMusicCatalogUpdate: MusicPlaybackContextValue["checkMusicCatalogUpdate"];
   downloadMusicCatalogUpdate: MusicPlaybackContextValue["downloadMusicCatalogUpdate"];

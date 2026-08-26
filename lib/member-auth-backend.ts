@@ -11,7 +11,13 @@ import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseMobileAuthClient } from "@/lib/supabase/mobile-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type MemberAuthUser = { id: string; email: string; name: string; locale?: string | null };
+export type MemberAuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  locale?: string | null;
+  createdAt?: string | null;
+};
 
 export type MemberPasswordSignInResult =
   | {
@@ -82,7 +88,13 @@ async function signInWithSupabaseMobile(
   return {
     ok: true,
     backend: "supabase",
-    user: { id: user.id, email: user.email, name: user.name, locale: user.locale },
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      locale: user.locale,
+      createdAt: user.createdAt,
+    },
     sessionToken: session.sessionToken,
     expiresAt: session.expiresAt,
   };
@@ -95,7 +107,12 @@ async function signInWithSqlite(email: string, password: string): Promise<Member
   const auth = await verifyAskbibleUserCredentials(dbPath, email, password);
   if (!auth.ok) return null;
 
-  const user = { id: auth.userId, email: auth.email, name: auth.name };
+  const user = {
+    id: auth.userId,
+    email: auth.email,
+    name: auth.name,
+    createdAt: auth.createdAt,
+  };
   const session = await issueMobileUserSessionToken(user);
   return {
     ok: true,
@@ -163,7 +180,12 @@ export async function signInMemberWithPasswordServer(
       return {
         ok: true,
         backend: "supabase",
-        user: { id: user.id, email: user.email, name: user.name },
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          createdAt: user.createdAt,
+        },
       };
     }
     if (error && !isInvalidCredentialsMessage(error.message || "")) {

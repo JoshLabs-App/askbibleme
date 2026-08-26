@@ -4,7 +4,6 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { isNativeAppleSignInAvailable } from "./appleSignIn";
-import { isGoogleSignInAvailable } from "./googleAuthAvailability";
 import { OAuthProviderButton } from "./OAuthProviderButton";
 
 type ButtonProps = {
@@ -28,8 +27,6 @@ export function MemberGoogleSignInButton({ pending = false, disabled = false, er
   const [localPending, setLocalPending] = useState(false);
   const busy = pending || localPending;
   const inactive = disabled && !busy;
-
-  if (!isGoogleSignInAvailable()) return null;
 
   return (
     <View style={styles.oauthBlock}>

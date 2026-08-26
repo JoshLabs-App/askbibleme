@@ -20,7 +20,7 @@ export const readCatalogBookName = {
 /** 与网站 `read-chapter-surfaces.css` 默认排版对齐 */
 export const readTypography = {
   verseFontSize: 21,
-  verseLineHeight: 32,
+  verseLineHeight: 36,
   verseFontWeight: "500" as const,
   verseColor: c.inkSoft,
   verseNumFontSize: 17,

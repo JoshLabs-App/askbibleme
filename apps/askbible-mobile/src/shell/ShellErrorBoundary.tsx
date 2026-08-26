@@ -11,13 +11,14 @@ type Props = {
 type State = {
   failed: boolean;
   message: string;
+  generation: number;
 };
 
 /** Release 真机 JS 异常时避免整 App 闪退，留给用户一次重试。 */
 export class ShellErrorBoundary extends Component<Props, State> {
-  state: State = { failed: false, message: "" };
+  state: State = { failed: false, message: "", generation: 0 };
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { failed: true, message: error?.message?.trim() || "Unknown error" };
   }
 
@@ -27,7 +28,7 @@ export class ShellErrorBoundary extends Component<Props, State> {
   }
 
   private retry = () => {
-    this.setState({ failed: false, message: "" });
+    this.setState((prev) => ({ failed: false, message: "", generation: prev.generation + 1 }));
   };
 
   render() {
@@ -46,7 +47,7 @@ export class ShellErrorBoundary extends Component<Props, State> {
         </View>
       );
     }
-    return this.props.children;
+    return <View key={this.state.generation} style={styles.root}>{this.props.children}</View>;
   }
 }
 

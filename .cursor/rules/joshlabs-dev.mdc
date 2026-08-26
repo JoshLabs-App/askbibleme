@@ -1,0 +1,17 @@
+---
+description: AskBible overlay on the universal JoshLabs Dev workflow
+alwaysApply: true
+---
+
+# AskBible 覆盖层
+
+通用开发流程见 JoshLabs Dev（真源：`/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md`）。本文件只保留 AskBible 特有约束。
+
+## 产品边界优先
+
+产品边界与既有气质（`AGENTS.md`、羊皮卷 / 安静入口）优先于通用「系统默认 UI」。  
+领域规则（本地媒体、iOS 优先、本机构建等）优先于通用流程的一般偏好。
+
+## OAuth
+
+OAuth 回调先确认终点：从 App 发起的登录默认必须回到 App；网页 HTTPS 回调只能在明确要求网页完成登录时启用。修改 OAuth 前先确认登录承载端、回调终点与参考实现，不得盲目替换 App 回调。

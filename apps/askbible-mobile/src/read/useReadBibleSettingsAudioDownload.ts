@@ -5,6 +5,7 @@ import { decodeChapterAudioPlaybackOptionId } from "./read-chapter-audio-playbac
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { translationUsesWebChapterAudio } from "../bible/web-chapter-audio";
+import { translationHasVerifiedYouVersionChapterAudio } from "@/lib/bible/youversion-chapter-audio";
 import {
   chapterAudioPackageKey,
   ensureAudioPackageDownloadHydrated,
@@ -69,6 +70,9 @@ export function useReadBibleSettingsAudioDownload({
       voiceId: picked.voiceId,
     };
   }, [chapterAudioPlaybackValue]);
+  const audioPackageDownloadAvailable = !translationHasVerifiedYouVersionChapterAudio(
+    chapterAudioPlaybackValue,
+  );
 
   const activePackageKey = useMemo(
     () =>
@@ -172,6 +176,7 @@ export function useReadBibleSettingsAudioDownload({
   );
 
   return {
+    audioPackageDownloadAvailable,
     currentDownloadPackage,
     downloadActionMeta,
     downloadButtonText,

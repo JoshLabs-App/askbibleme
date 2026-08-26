@@ -12,7 +12,12 @@ export type PlayScriptureChapterFn = (
     translationId: string;
     chapterAudioSrc?: string | null;
   },
-  opts?: { startAtSec?: number; endAtSec?: number; onSegmentEnd?: () => void },
+  opts?: {
+    startAtSec?: number;
+    endAtSec?: number;
+    onSegmentEnd?: () => void;
+    respectUserPause?: boolean;
+  },
 ) => Promise<boolean>;
 
 export type ChapterPlaybackCtx = ScriptureShellPlaybackBridge & {
@@ -38,4 +43,5 @@ export type ChapterPlaybackCtx = ScriptureShellPlaybackBridge & {
   isStarted: () => boolean;
   stopScripturePlayback: () => Promise<void>;
   setScriptureCurrentSec: (sec: number) => void;
+  setScripturePreparing: (preparing: boolean) => void;
 };

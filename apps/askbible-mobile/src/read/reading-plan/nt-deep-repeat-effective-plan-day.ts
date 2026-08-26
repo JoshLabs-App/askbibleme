@@ -50,18 +50,12 @@ export function inferNtDeepRepeatAheadDays(
 
 export function reconcileNtDeepRepeatAheadDays(
   prefs: ReadingPlanPrefs,
-  progress: Partial<NtDeepRepeatReadingState> | null | undefined,
-  now = new Date(),
+  _progress?: Partial<NtDeepRepeatReadingState> | null,
+  _now = new Date(),
 ): ReadingPlanPrefs {
-  const fromPrefs = aheadDaysFromPrefs(prefs);
-  const fromProgress = inferNtDeepRepeatAheadDays(progress, prefs, now);
-  const ahead = Math.max(fromPrefs, fromProgress);
-  if (ahead === fromPrefs) return prefs;
-  if (ahead <= 0) {
-    const { aheadDays: _omit, ...rest } = prefs;
-    return rest as ReadingPlanPrefs;
-  }
-  return { ...prefs, aheadDays: ahead };
+  // Prefs win. Raising aheadDays from farther progress undoes「设为今日」after
+  // member sync merges remote pointers. Progress is clipped to prefs instead.
+  return prefs;
 }
 
 export function ntDeepRepeatPlanPointersEqual(

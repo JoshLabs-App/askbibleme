@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import { warmScriptureSearchDatabase } from "../bible/scripture-database";
 import type { LoadedChapter } from "../bible/types";
 import { useReadChapterExploreReturnHandler } from "../explore/explore-read-chapter-nav";
 import { ReadChapterScreenJumpModal } from "./ReadChapterScreenJumpModal";
@@ -9,7 +8,7 @@ import { ReadChapterScreenVerseActionModal } from "./ReadChapterScreenVerseActio
 import { ReadChapterVerseXrefSheet } from "./ReadChapterVerseXrefSheet";
 import { ReadVerseBookmarkFeedback } from "./ReadVerseBookmarkFeedback";
 import { ReadVerseHighlightWordSheet } from "./ReadVerseHighlightWordSheet";
-import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
+import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { useReadChapterScreenDisplay } from "./useReadChapterScreenDisplay";
 import { useReadChapterScreenNav } from "./useReadChapterScreenNav";
 import { useReadChapterVerseActions } from "./useReadChapterVerseActions";
@@ -42,6 +41,7 @@ export function ReadChapterScreenOverlays({
   nav,
 }: Props) {
   const router = useRouter();
+  const { bumpSize, sizeAtMax, sizeAtMin } = useReadBibleTypography();
   const {
     readDisplayLocale,
     tr,
@@ -107,12 +107,20 @@ export function ReadChapterScreenOverlays({
         <ReadChapterScreenTopChrome
           insets={insets}
           verseSelectionMode={verseSelectionMode}
-          backA11yLabel={tr("pages.read.chapterChromeBack")}
-          searchA11yLabel={tr("pages.read.chapterChromeSearch")}
+          showSearch={false}
+          showAudio={false}
           favoritesA11yLabel={tr("pages.read.chapterChromeFavorites")}
+          increaseSizeA11yLabel={
+            readDisplayLocale === "en" ? "Increase text size" : localeZhText("放大字号")
+          }
+          decreaseSizeA11yLabel={
+            readDisplayLocale === "en" ? "Decrease text size" : localeZhText("缩小字号")
+          }
           selectionCountLabel={tr("pages.read.verseSelectionPicked", { count: selectedVerses.length })}
           selectionClearLabel={tr("pages.read.verseSelectionClear")}
           selectionCopyLabel={tr("pages.read.verseSelectionCopy")}
+          sizeAtMax={sizeAtMax}
+          sizeAtMin={sizeAtMin}
           onBack={() => {
             if (returnToExplore()) return;
             if (navigation.canGoBack()) {
@@ -121,11 +129,9 @@ export function ReadChapterScreenOverlays({
             }
             router.push("/read");
           }}
-          onSearch={() => {
-            void warmScriptureSearchDatabase(primaryTranslationId);
-            router.push(readScriptureSearchRoute());
-          }}
           onFavorites={() => router.push("/read/favorites")}
+          onIncreaseSize={() => bumpSize(1)}
+          onDecreaseSize={() => bumpSize(-1)}
           onExitSelection={exitVerseSelectionMode}
           onCopySelection={() => void copySelectedVerses()}
         />
@@ -141,7 +147,6 @@ export function ReadChapterScreenOverlays({
           }
           bookmarked={verseActionMenuBookmarked}
           bookmarkLabel={tr("pages.read.verseActionBookmark")}
-          unbookmarkLabel={tr("pages.read.verseActionUnbookmark")}
           copyLabel={localeZhText("本节复制")}
           multiCopyLabel={localeZhText("多选复制")}
           highlightLabel={localeZhText("划重点词")}
@@ -200,7 +205,6 @@ export function ReadChapterScreenOverlays({
         onClearPickerBook={() => setJumpPickerBookId(null)}
         onPickChapter={jumpToChapter}
         jumpTitle={tr("pages.read.chapterJumpTitle")}
-        backA11yLabel={tr("pages.read.backToBibleHome")}
         closeLabel={tr("pages.read.chapterJumpClose")}
       />
     </>

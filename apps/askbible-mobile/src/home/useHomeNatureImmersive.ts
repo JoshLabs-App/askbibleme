@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import { useShellSwipeAction } from "../shell/useShellSwipeAction";
 import type { NatureSettingsV2 } from "../types/nature";
 import { setHomeAutoHideChrome, setHomeLandscapeImmersive } from "./homeLandscapeImmersive";
+import { HOME_LANDSCAPE_PLAY_BAR_AUTO_HIDE_MS } from "./homeNatureScreenConstants";
 import { SHELL_TAB_BAR_CLEARANCE } from "../shell/shellLayout";
 import { useLandscapeNarrow } from "./useLandscapeNarrow";
-import { AUTO_IMMERSIVE_DELAY_MS, AUTO_IMMERSIVE_LANDSCAPE_DELAY_MS } from "./homeNatureScreenConstants";
 
 type Args = {
   insets: EdgeInsets;
@@ -18,6 +18,8 @@ type Args = {
   sceneList: NatureSettingsV2["videos"];
   selectScene: (id: string, opts?: { keepLoopMode?: boolean; source?: "user" | "auto" }) => void;
   enabled?: boolean;
+  /** 底栏有操作时递增，横屏播放栏自动隐藏计时重来 */
+  idleEpoch?: number;
 };
 
 export function useHomeNatureImmersive({
@@ -31,16 +33,23 @@ export function useHomeNatureImmersive({
   sceneList,
   selectScene,
   enabled = true,
+  idleEpoch = 0,
 }: Args) {
   const landscapeNarrow = useLandscapeNarrow();
-  const [autoImmersiveActive, setAutoImmersiveActive] = useState(false);
-  const [hasHomeInteraction, setHasHomeInteraction] = useState(false);
-  const autoImmersiveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** true = 藏控件；横屏同时收起播放栏 */
+  const [hideChrome, setHideChrome] = useState(false);
 
   const showLandscapeVideo = landscapeNarrow && hasVideoStage;
-  const canArmAutoImmersive =
-    hasVideoStage && !loading && !error && !settingsOpen && !showSceneLoader;
-  const showAutoImmersive = autoImmersiveActive && canArmAutoImmersive;
+  const canHideChromePortrait =
+    enabled && hasVideoStage && !loading && !error && !settingsOpen && !showSceneLoader;
+
+  /**
+   * 横屏：闲置后 hideChrome，收起播放栏只留经文。
+   * 竖屏：保持原沉浸条件。
+   */
+  const showAutoImmersive = landscapeNarrow
+    ? hideChrome && enabled && !error && !settingsOpen
+    : hideChrome && canHideChromePortrait;
 
   useEffect(() => {
     if (!enabled) return;
@@ -48,47 +57,42 @@ export function useHomeNatureImmersive({
     return () => setHomeLandscapeImmersive(false);
   }, [enabled, showLandscapeVideo]);
 
+  /** 进出横屏都先露出播放栏；横屏闲置后再收。 */
+  useEffect(() => {
+    if (!enabled) return;
+    setHideChrome(false);
+  }, [enabled, landscapeNarrow]);
+
+  useEffect(() => {
+    if (!enabled || !landscapeNarrow || hideChrome || Boolean(error) || settingsOpen) return;
+    const id = setTimeout(() => setHideChrome(true), HOME_LANDSCAPE_PLAY_BAR_AUTO_HIDE_MS);
+    return () => clearTimeout(id);
+  }, [enabled, error, hideChrome, idleEpoch, landscapeNarrow, settingsOpen]);
+
   useEffect(() => {
     if (!enabled) return;
     setHomeAutoHideChrome(showAutoImmersive);
     return () => setHomeAutoHideChrome(false);
   }, [enabled, showAutoImmersive]);
 
-  const clearAutoImmersiveTimer = useCallback(() => {
-    if (!autoImmersiveTimerRef.current) return;
-    clearTimeout(autoImmersiveTimerRef.current);
-    autoImmersiveTimerRef.current = null;
-  }, []);
-
-  const armAutoImmersiveTimer = useCallback(() => {
-    clearAutoImmersiveTimer();
-    if (!canArmAutoImmersive) return;
-    const delayMs = showLandscapeVideo ? AUTO_IMMERSIVE_LANDSCAPE_DELAY_MS : AUTO_IMMERSIVE_DELAY_MS;
-    autoImmersiveTimerRef.current = setTimeout(() => {
-      setAutoImmersiveActive(true);
-    }, delayMs);
-  }, [canArmAutoImmersive, clearAutoImmersiveTimer, showLandscapeVideo]);
-
-  const markHomeInteraction = useCallback(() => {
-    if (!hasHomeInteraction) setHasHomeInteraction(true);
-    if (autoImmersiveActive) setAutoImmersiveActive(false);
-    armAutoImmersiveTimer();
-  }, [hasHomeInteraction, autoImmersiveActive, armAutoImmersiveTimer]);
-
   useEffect(() => {
-    if (!enabled) return;
-    if (!hasHomeInteraction) {
-      clearAutoImmersiveTimer();
-      if (autoImmersiveActive) setAutoImmersiveActive(false);
+    if (settingsOpen || loading || error || showSceneLoader) {
+      if (!landscapeNarrow) {
+        setHideChrome(false);
+      }
+    }
+  }, [settingsOpen, loading, error, showSceneLoader, landscapeNarrow]);
+
+  /** 点空白：横屏显隐播放栏；竖屏显隐顶栏 / Tab。 */
+  const toggleHomeChrome = useCallback(() => {
+    if (landscapeNarrow) {
+      if (!enabled || Boolean(error) || settingsOpen) return;
+      setHideChrome((prev) => !prev);
       return;
     }
-    if (showAutoImmersive) {
-      clearAutoImmersiveTimer();
-      return;
-    }
-    armAutoImmersiveTimer();
-    return clearAutoImmersiveTimer;
-  }, [enabled, hasHomeInteraction, autoImmersiveActive, showAutoImmersive, armAutoImmersiveTimer, clearAutoImmersiveTimer]);
+    if (!canHideChromePortrait && !hideChrome) return;
+    setHideChrome((prev) => !prev);
+  }, [landscapeNarrow, enabled, error, settingsOpen, canHideChromePortrait, hideChrome]);
 
   const onSceneSwipe = useCallback(
     (direction: "left" | "right") => {
@@ -107,8 +111,8 @@ export function useHomeNatureImmersive({
   return {
     showLandscapeVideo,
     showAutoImmersive,
-    markHomeInteraction,
-    /** 横屏沉浸时底栏隐藏，场景条仅留安全区；竖屏仍避让浮层 Tab */
+    toggleHomeChrome,
+    /** 竖屏始终按 Tab 占位留白，点空白藏图标时播放行不跟着下移 */
     bottomNavSlot: showLandscapeVideo
       ? Math.max(insets.bottom, 2)
       : SHELL_TAB_BAR_CLEARANCE + insets.bottom,

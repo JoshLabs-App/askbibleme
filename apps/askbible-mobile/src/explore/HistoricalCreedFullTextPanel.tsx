@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import type { AppLocale } from "../../../../lib/i18n/config";
 import {
   resolveHistoricalCreedBodyParagraphs,

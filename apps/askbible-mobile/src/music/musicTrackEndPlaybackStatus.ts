@@ -1,6 +1,7 @@
 import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
 import type { Audio } from "expo-av";
+import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
 import {
   pickRandomNextTrackIndexInAlbum,
@@ -36,10 +37,12 @@ export function handleMusicTrackDidJustFinish(args: TrackEndArgs): void {
     )
   ) {
     args.syncPlayingState(false);
+    setShellMusicWantPlaying(false);
     return;
   }
 
   if (args.musicRepeatModeRef.current === "one") {
+    setShellMusicWantPlaying(true);
     const active = args.soundRef.current;
     if (active) {
       const calmLoopProfile = resolveCalmLoopProfile(args.track);
@@ -75,6 +78,7 @@ export function handleMusicTrackDidJustFinish(args: TrackEndArgs): void {
   }
 
   if (args.musicRepeatModeRef.current === "all") {
+    setShellMusicWantPlaying(true);
     const next = pickRandomNextTrackIndexInAlbum(
       args.tracks,
       args.trackIndexRef.current,
@@ -84,5 +88,6 @@ export function handleMusicTrackDidJustFinish(args: TrackEndArgs): void {
     return;
   }
 
+  setShellMusicWantPlaying(false);
   args.setPlaying(false);
 }

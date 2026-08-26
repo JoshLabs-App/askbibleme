@@ -39,7 +39,14 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
         ReadingAlarmScheduler.cancel(appContext)
         return
       }
+      if (ReadingAlarmPrefs.isScriptureMode(appContext) && ReadingAlarmPrefs.peekPendingAutoPlay(appContext)) {
+        ReadingAlarmAutoContinue.run(appContext, directScripture = true)
+        return
+      }
       if (ReadingAlarmPrefs.isPreludeActive(appContext) && !ReadingAlarmPrefs.peekPendingAutoPlay(appContext)) {
+        // 音乐已在播：再拉一次停止页，并通知 JS 挂停止条。
+        launchMusicAlarmUi(appContext)
+        AskBibleReadingAlarmModule.emitPreludeSession(appContext)
         return
       }
       try {
@@ -85,6 +92,11 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
         ReadingAlarmPreludePlayer.start(context)
       }
 
+      launchMusicAlarmUi(context)
+      AskBibleReadingAlarmModule.emitPreludeSession(context)
+    }
+
+    private fun launchMusicAlarmUi(context: Context) {
       try {
         context.startActivity(
           Intent(context, ReadingAlarmActivity::class.java).apply {
@@ -92,41 +104,47 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
           },
         )
       } catch (_: Exception) {
-        /* full-screen notification fallback below */
+        /* 全屏通知兜底 */
       }
-
-      postAlarmFullScreenNotification(context, ReadingAlarmActivity::class.java, 9109)
+      postAlarmNotification(context, ReadingAlarmActivity::class.java, 9109)
     }
 
     private fun deliverScriptureAlarm(context: Context) {
-      ReadingAlarmPrefs.clearSessionForNewAlarm(context)
+      ReadingAlarmPrefs.clearSessionForScriptureAlarm(context)
       ReadingAlarmAutoContinue.resetSession(context)
-      ReadingAlarmPrefs.setPreludeActive(context, false)
       ReadingAlarmAutoContinue.run(context, directScripture = true)
     }
 
-    private fun postAlarmFullScreenNotification(
+    private fun postAlarmNotification(
       context: Context,
       activityClass: Class<*>,
       requestCode: Int,
     ) {
-      val fullScreenIntent =
+      val contentIntent =
         Intent(context, activityClass).apply {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-      val fullScreenPendingIntent =
+      val contentPendingIntent =
         PendingIntent.getActivity(
           context,
           requestCode,
-          fullScreenIntent,
+          contentIntent,
           PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
       val label = ReadingAlarmPrefs.label(context)
       val title = context.getString(R.string.reading_alarm_notification_title)
+      val verse = ReadingAlarmDailyVerse.load(context)
       val body =
-        if (label.isNotBlank()) label
-        else context.getString(R.string.reading_alarm_notification_body)
+        if (ReadingAlarmPrefs.isMusicMode(context) && verse != null) {
+          listOf(verse.text.lineSequence().firstOrNull()?.trim().orEmpty(), verse.ref)
+            .filter { it.isNotBlank() }
+            .joinToString("\n")
+        } else if (label.isNotBlank()) {
+          label
+        } else {
+          context.getString(R.string.reading_alarm_notification_body)
+        }
 
       val notification =
         NotificationCompat.Builder(context, CHANNEL_ID)
@@ -137,9 +155,7 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
           .setCategory(NotificationCompat.CATEGORY_ALARM)
           .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
           .setAutoCancel(true)
-          .setSilent(true)
-          .setFullScreenIntent(fullScreenPendingIntent, true)
-          .setContentIntent(fullScreenPendingIntent)
+          .setContentIntent(contentPendingIntent)
           .build()
 
       try {
@@ -169,7 +185,7 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
       manager.createNotificationChannel(channel)
     }
 
-    /** 预备音乐结束后：全屏通知 + 内容 Intent，确保三星等机型能拉起 RN 播放经文。 */
+    /** 预备音乐结束后：高优先级通知 + 内容 Intent，用户点按即可拉起 RN 播放经文。 */
     fun showScriptureHandoffNotification(context: Context) {
       ensureChannel(context)
       val launchIntent =
@@ -177,7 +193,7 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
           flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
           putExtra(EXTRA_AUTO_PLAY, true)
         }
-      val fullScreenPendingIntent =
+      val contentPendingIntent =
         PendingIntent.getActivity(
           context,
           9114,
@@ -197,9 +213,7 @@ class ReadingAlarmReceiver : BroadcastReceiver() {
           .setCategory(NotificationCompat.CATEGORY_ALARM)
           .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
           .setAutoCancel(true)
-          .setSilent(true)
-          .setFullScreenIntent(fullScreenPendingIntent, true)
-          .setContentIntent(fullScreenPendingIntent)
+          .setContentIntent(contentPendingIntent)
           .build()
       NotificationManagerCompat.from(context).notify(SCRIPTURE_HANDOFF_NOTIFICATION_ID, notification)
     }

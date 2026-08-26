@@ -36,7 +36,9 @@
             android:fontFamily="serif"
             android:gravity="center"
             android:textColor="#473D2E"
-            android:textSize="28sp" />
+            android:textSize="20sp"
+            android:lineSpacingExtra="4dp"
+            android:maxLines="8" />
 
         <TextView
             android:id="@+id/alarm_subtitle"

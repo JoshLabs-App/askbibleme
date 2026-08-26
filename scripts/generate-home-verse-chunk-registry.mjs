@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const scopeId = process.env.HOME_PRAYER_POOL_SCOPE_ID?.trim() || "explore-curated-700";
+const scopeId = process.env.HOME_PRAYER_POOL_SCOPE_ID?.trim() || "theme-repeat-ge5";
 
 const publicPoolDir = path.join(repoRoot, "public", "data", "home-prayer-pools", scopeId);
 const mobilePoolDir = path.join(
@@ -71,15 +71,25 @@ function writeMobileRegistry(chunkFiles) {
     "",
     `export const HOME_VERSE_POOL_SCOPE_ID = "${scopeId}" as const;`,
     "",
-    "export const HOME_VERSE_POOL_CHUNKS: Record<number, HomePrayerChunkV1> = {",
+    "/** 按需 require：全量 ge5 有 200+ chunk，启动时不可全部同步加载。 */",
+    "const HOME_VERSE_POOL_CHUNK_LOADERS: Record<number, () => HomePrayerChunkV1> = {",
   ];
   for (const i of chunkFiles) {
-    lines.push(`  ${i}: require("${relPrefix}/chunk-${i}.json"),`);
+    lines.push(`  ${i}: () => require("${relPrefix}/chunk-${i}.json") as HomePrayerChunkV1,`);
   }
   lines.push("};", "");
+  lines.push("export function getHomeVersePoolChunk(index: number): HomePrayerChunkV1 | null {");
+  lines.push("  const load = HOME_VERSE_POOL_CHUNK_LOADERS[index];");
+  lines.push("  if (!load) return null;");
+  lines.push("  try {");
+  lines.push("    return load();");
+  lines.push("  } catch {");
+  lines.push("    return null;");
+  lines.push("  }");
+  lines.push("}", "");
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, `${lines.join("\n")}\n`);
-  console.log(`Wrote ${outFile} (${chunkFiles.length} chunks)`);
+  console.log(`Wrote ${outFile} (${chunkFiles.length} lazy chunks)`);
 }
 
 const chunkFiles = readChunkIndices(publicPoolDir);

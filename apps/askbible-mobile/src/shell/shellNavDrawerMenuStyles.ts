@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 
 export const shellNavDrawerMenuStyles = StyleSheet.create({
@@ -38,11 +38,15 @@ export const shellNavDrawerMenuStyles = StyleSheet.create({
   localeInlineGroup: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
+    flexShrink: 0,
   },
   localeInlineChip: {
     paddingHorizontal: 10,
     minHeight: 32,
+    // 安卓窄抽屉里 flex 挤压会把「简体/繁体」裁成单字（两汉字 + 左右 padding）
+    minWidth: 52,
+    flexShrink: 0,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
@@ -59,6 +63,11 @@ export const shellNavDrawerMenuStyles = StyleSheet.create({
     lineHeight: 16,
     color: "rgba(55, 53, 47, 0.72)",
     ...parchmentSans(600),
+    textAlign: "center",
+    ...Platform.select({
+      android: { includeFontPadding: false },
+      default: {},
+    }),
   },
   localeInlineLabelActive: {
     color: "rgba(120, 75, 30, 0.95)",
@@ -76,8 +85,18 @@ export const shellNavDrawerMenuStyles = StyleSheet.create({
     lineHeight: 22,
     color: "#37352f",
   },
-  rowTextDestructive: {
-    color: "#B42318",
+  rowTextInline: {
+    flexShrink: 1,
+    paddingRight: 8,
+  },
+  rowQuiet: {
+    marginTop: 10,
+    paddingVertical: 6,
+  },
+  rowTextQuiet: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: "rgba(55, 53, 47, 0.42)",
   },
   rowDetail: {
     marginTop: 2,
@@ -85,12 +104,14 @@ export const shellNavDrawerMenuStyles = StyleSheet.create({
     lineHeight: 17,
     color: "rgba(55, 53, 47, 0.55)",
   },
+  rowDetailInline: {
+    marginTop: 0,
+    flexShrink: 0,
+    textAlign: "right",
+  },
   rowDetailSelected: {
     color: "rgba(120, 95, 60, 0.85)",
     ...parchmentSans(500),
-  },
-  rowDetailDestructive: {
-    color: "rgba(180, 35, 24, 0.72)",
   },
   versionFooter: {
     marginTop: 8,
@@ -113,17 +134,18 @@ export const shellNavDrawerMenuStyles = StyleSheet.create({
   },
   holdTimeChoicesWrap: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    flexWrap: "nowrap",
+    gap: 4,
   },
   holdTimeChoice: {
+    flex: 1,
     minHeight: 32,
-    minWidth: 52,
+    minWidth: 0,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(120, 53, 15, 0.18)",
     backgroundColor: "rgba(255, 248, 235, 0.52)",
-    paddingHorizontal: 12,
+    paddingHorizontal: 2,
     alignItems: "center",
     justifyContent: "center",
   },

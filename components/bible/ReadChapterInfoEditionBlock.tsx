@@ -6,6 +6,7 @@ import { ContentCorrectionEntry } from "@/components/content-correction/ContentC
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { InfoEditionReaderVariant } from "@/lib/bible/info-edition-v1-publish";
 import type { InfoEditionV1PublishedChapter } from "@/lib/bible/info-edition-v1-published-types";
+import { fetchStaticInfoEditionChapter } from "@/lib/read/static-info-edition-client";
 
 const ReadChapterInfoEditionMarkdown = dynamic(
   () =>
@@ -46,44 +47,7 @@ function matchesRequestedRole(
   return published?.roleId?.trim() === wanted;
 }
 
-function formatInfoEditionError(
-  raw: string | undefined,
-  t: (key: string, vars?: Record<string, string>) => string,
-): string {
-  if (!raw?.trim()) return t("pages.read.infoEditionLoadFailed");
-  if (/EACCES|permission denied|EPERM|EROFS|不可写|mkdir|Render 提示/i.test(raw)) {
-    return raw;
-  }
-  return raw;
-}
-
-async function parseJson(res: Response): Promise<Record<string, unknown>> {
-  const text = await res.text();
-  if (!text.trim()) return {};
-  try {
-    return JSON.parse(text) as Record<string, unknown>;
-  } catch {
-    return {};
-  }
-}
-
-function apiFailureMessage(j: Record<string, unknown>, res: Response): string | undefined {
-  if (typeof j.error === "string" && j.error.trim()) return j.error.trim();
-  if (j.ok === false && typeof j.message === "string") return j.message.trim();
-  if (!res.ok) return `HTTP ${res.status}`;
-  if (j.ok === false) return "请求未成功";
-  return undefined;
-}
-
-function editionQuery(variant: InfoEditionReaderVariant, roleId?: string | null): string {
-  const q = [`edition=${encodeURIComponent(variant)}`];
-  if (roleId?.trim()) {
-    q.push(`roleId=${encodeURIComponent(roleId.trim())}`);
-  }
-  return q.join("&");
-}
-
-/** 读经页：讲解版 / 发现版面板（由父级选择后按需加载） */
+/** 读经页：讲解版 / 发现版面板（静态 published JSON，无 API / 无现场生成）。 */
 export function ReadChapterInfoEditionBlock({
   variant,
   bookId,
@@ -100,11 +64,8 @@ export function ReadChapterInfoEditionBlock({
     initialReady ? initialPublished : null,
   );
   const [err, setErr] = useState<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollStartedRef = useRef<number | null>(null);
   const loadStartedRef = useRef(false);
   const roleSnapshotRef = useRef<string>(roleId?.trim() ?? "");
-  const POLL_MAX_MS = 4 * 60 * 1000;
 
   const disclaimer =
     variant === "guide"
@@ -114,21 +75,12 @@ export function ReadChapterInfoEditionBlock({
     variant === "guide"
       ? t("pages.read.guideEditionAriaLabel")
       : t("pages.read.infoEditionAriaLabel");
-  const stopPoll = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => stopPoll(), [stopPoll]);
 
   useEffect(() => {
     const nextRole = roleId?.trim() ?? "";
     if (roleSnapshotRef.current === nextRole) return;
     roleSnapshotRef.current = nextRole;
     loadStartedRef.current = false;
-    stopPoll();
     if (hasPublishedMarkdown(initialPublished) && matchesRequestedRole(initialPublished, roleId)) {
       setPublished(initialPublished);
       setPhase("ready");
@@ -138,121 +90,40 @@ export function ReadChapterInfoEditionBlock({
     setPublished(null);
     setErr(null);
     setPhase("idle");
-  }, [initialPublished, roleId, stopPoll]);
+  }, [initialPublished, roleId]);
 
-  const applyCachePayload = useCallback(
-    (j: Record<string, unknown>, options?: { openOnFailed?: boolean }): boolean => {
-      const status = typeof j.status === "string" ? j.status : "";
-      if (status === "ready" && j.published && typeof j.published === "object") {
-        setPublished(j.published as InfoEditionV1PublishedChapter);
-        setPhase("ready");
-        setErr(null);
-        return true;
-      }
-      if (status === "failed") {
-        const e = formatInfoEditionError(
-          typeof j.error === "string" ? j.error : undefined,
-          t,
-        );
-        setErr(e);
-        setPhase("error");
-        if (options?.openOnFailed ?? true) {
-          /* panel visible while active */
-        }
-        return true;
-      }
-      return false;
-    },
-    [t],
-  );
-
-  const pollUntilReady = useCallback(() => {
-    stopPoll();
-    pollStartedRef.current = Date.now();
-    pollRef.current = setInterval(() => {
-      if (pollStartedRef.current && Date.now() - pollStartedRef.current > POLL_MAX_MS) {
-        stopPoll();
-        setErr(t("pages.read.infoEditionTimeout"));
-        setPhase("error");
-        return;
-      }
-      void (async () => {
-        const res = await fetch(
-          `/api/read/info-edition-v1?bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant, roleId)}`,
-          { cache: "no-store" },
-        );
-        const j = await parseJson(res);
-        if (!res.ok || j.ok === false) {
-          stopPoll();
-          setErr(formatInfoEditionError(apiFailureMessage(j, res), t));
-          setPhase("error");
-          return;
-        }
-        if (applyCachePayload(j)) stopPoll();
-      })();
-    }, 2000);
-  }, [applyCachePayload, bookId, chapter, roleId, stopPoll, t, variant]);
-
-  const loadOrGenerate = useCallback(async () => {
+  const loadPublished = useCallback(async () => {
     setErr(null);
     setPhase("loading");
-
-    const qs = `bookId=${encodeURIComponent(bookId)}&chapter=${chapter}&${editionQuery(variant, roleId)}`;
-    const getRes = await fetch(`/api/read/info-edition-v1?${qs}`, { cache: "no-store" });
-    const getJ = await parseJson(getRes);
-    if (!getRes.ok || getJ.ok === false) {
-      setErr(formatInfoEditionError(apiFailureMessage(getJ, getRes), t));
+    try {
+      const next = await fetchStaticInfoEditionChapter(bookId, chapter, variant, { roleId });
+      if (next?.markdown?.trim()) {
+        setPublished(next);
+        setPhase("ready");
+        setErr(null);
+        return;
+      }
+      setErr(t("pages.read.infoEditionLoadFailed"));
       setPhase("error");
-      return;
-    }
-    if (applyCachePayload(getJ)) return;
-    if (getJ.status === "pending") {
-      pollUntilReady();
-      return;
-    }
-
-    const postRes = await fetch(`/api/read/info-edition-v1`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookId, chapter, edition: variant, roleId }),
-    });
-    const postJ = await parseJson(postRes);
-    if (!postRes.ok || postJ.ok === false) {
-      stopPoll();
-      if (postJ.status === "failed" && applyCachePayload(postJ)) return;
-      setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
+    } catch {
+      setErr(t("pages.read.infoEditionLoadFailed"));
       setPhase("error");
-      return;
     }
-    if (applyCachePayload(postJ)) return;
-    if (postJ.status === "pending") {
-      pollUntilReady();
-      return;
-    }
-    setErr(formatInfoEditionError(apiFailureMessage(postJ, postRes), t));
-    setPhase("error");
-  }, [applyCachePayload, bookId, chapter, pollUntilReady, roleId, stopPoll, t, variant]);
+  }, [bookId, chapter, roleId, t, variant]);
 
   useEffect(() => {
-    if (!isActive) {
-      stopPoll();
-      return;
-    }
+    if (!isActive) return;
     if (phase === "ready") return;
     if (initialReady && initialPublished) {
       setPublished(initialPublished);
       setPhase("ready");
       return;
     }
-    if (phase === "loading") {
-      pollUntilReady();
-      return;
-    }
     if (phase === "error") return;
     if (loadStartedRef.current) return;
     loadStartedRef.current = true;
-    void loadOrGenerate();
-  }, [initialPublished, initialReady, isActive, loadOrGenerate, phase, pollUntilReady, stopPoll]);
+    void loadPublished();
+  }, [initialPublished, initialReady, isActive, loadPublished, phase]);
 
   if (!isActive) return null;
 
@@ -286,7 +157,7 @@ export function ReadChapterInfoEditionBlock({
           {phase === "error" && err ? (
             <div className="read-chapter-info-edition-panel read-chapter-info-edition-panel--error">
               <p className="read-chapter-info-edition-error-text">{err}</p>
-              <button type="button" onClick={() => void loadOrGenerate()} className="read-chapter-info-edition-retry">
+              <button type="button" onClick={() => void loadPublished()} className="read-chapter-info-edition-retry">
                 {t("pages.read.infoEditionRetry")}
               </button>
             </div>

@@ -1,5 +1,14 @@
-import { useCallback, useEffect, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, type MutableRefObject } from "react";
 import { safePauseSound } from "../audio/safeShellSound";
+import {
+  pauseShellAppMusic,
+  setShellSleepTimerDeadline,
+  subscribeShellSleepTimerFired,
+} from "../audio/shellMediaControls";
+import { setShellMusicNativePlaying } from "../audio/shellMusicNativePlaying";
+import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { runMusicSleepTimerFire } from "./musicSleepTimerFire";
 import type { ShellSleepTimerMinutes } from "./musicPlaybackTypes";
 import type { Audio } from "expo-av";
 import type { MusicPlaybackMode } from "./musicPlaybackTypes";
@@ -7,6 +16,7 @@ import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 type Args = {
   soundRef: MutableRefObject<Audio.Sound | null>;
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
+  playingStateRef: MutableRefObject<boolean>;
   sleepTimerDeadlineRef: MutableRefObject<number | null>;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
   setPlaying: (playing: boolean) => void;
@@ -15,45 +25,67 @@ type Args = {
 
 export function useMusicSleepTimerControl({
   soundRef,
-  playbackModeRef,
+  playingStateRef,
   sleepTimerDeadlineRef,
   sleepTimerMinutes,
   setPlaying,
   setSleepTimerMinutesState,
 }: Args) {
+  const firingRef = useRef(false);
+
   const pauseShellPlayback = useCallback(async () => {
-    if (playbackModeRef.current === "scripture") {
-      return;
-    }
     const sound = soundRef.current;
-    if (!sound) {
-      setPlaying(false);
-      return;
-    }
-    await safePauseSound(sound);
+    setShellMusicWantPlaying(false);
+    setShellMusicNativePlaying(false);
+    setShellNativeAudioTakeover(false);
+    playingStateRef.current = false;
     setPlaying(false);
-  }, [playbackModeRef, setPlaying, soundRef]);
+    // iOS 音乐走原生 AVPlayer：soundRef 常为 null，仍须 pauseAppMusic，否则只灭黄标、音频继续。
+    pauseShellAppMusic();
+    if (sound) {
+      await safePauseSound(sound);
+    }
+  }, [playingStateRef, setPlaying, soundRef]);
+
+  const fireSleepTimer = useCallback(async () => {
+    await runMusicSleepTimerFire({
+      firingRef,
+      sleepTimerDeadlineRef,
+      setSleepTimerMinutesState,
+      pauseShellPlayback,
+    });
+  }, [
+    pauseShellPlayback,
+    setSleepTimerMinutesState,
+    sleepTimerDeadlineRef,
+  ]);
 
   const setSleepTimerMinutes = useCallback((minutes: 0 | ShellSleepTimerMinutes) => {
     setSleepTimerMinutesState(minutes);
     if (minutes === 0) {
       sleepTimerDeadlineRef.current = null;
+      setShellSleepTimerDeadline(null);
       return;
     }
-    sleepTimerDeadlineRef.current = Date.now() + minutes * 60 * 1000;
+    const deadline = Date.now() + minutes * 60 * 1000;
+    sleepTimerDeadlineRef.current = deadline;
+    setShellSleepTimerDeadline(deadline);
   }, [setSleepTimerMinutesState, sleepTimerDeadlineRef]);
 
+  useEffect(() => subscribeShellSleepTimerFired(() => {
+    void fireSleepTimer();
+  }), [fireSleepTimer]);
+
+  // 前台兜底：一次性超时。锁屏后 JS 会被冻住，到期由原生触发。
   useEffect(() => {
     if (sleepTimerMinutes === 0) return;
-    const id = setInterval(() => {
-      const d = sleepTimerDeadlineRef.current;
-      if (d == null || Date.now() < d) return;
-      sleepTimerDeadlineRef.current = null;
-      setSleepTimerMinutesState(0);
-      void pauseShellPlayback();
-    }, 1000);
-    return () => clearInterval(id);
-  }, [pauseShellPlayback, setSleepTimerMinutesState, sleepTimerDeadlineRef, sleepTimerMinutes]);
+    const deadline = sleepTimerDeadlineRef.current;
+    if (deadline == null) return;
+    const id = setTimeout(() => {
+      void fireSleepTimer();
+    }, Math.max(0, deadline - Date.now()));
+    return () => clearTimeout(id);
+  }, [fireSleepTimer, sleepTimerDeadlineRef, sleepTimerMinutes]);
 
   return { setSleepTimerMinutes, pauseShellPlayback };
 }

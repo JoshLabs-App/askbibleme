@@ -16,7 +16,6 @@ import {
 } from "@/lib/bible/cuv-chapter-audio";
 import {
   buildExternalTeochewNtChapterAudioUrl,
-  buildLocalTeochewNtChapterAudioUrl,
   teochewNtVoiceActive,
 } from "@/lib/bible/teochew-nt-audio";
 import {
@@ -33,9 +32,8 @@ export function chapterAudioRequiresSelfHostedOnly(args: {
   translationId: string;
   voiceId?: CuvChapterAudioVoiceId;
 }): boolean {
-  if (teochewNtVoiceActive(args.voiceId ?? "mandarin")) {
-    return isCuvChapterAudioSelfHosted();
-  }
+  // 潮语永远走 TSTSCC 外站，不强制自托管
+  if (teochewNtVoiceActive(args.voiceId ?? "mandarin")) return false;
   if (translationUsesKjvChapterAudio(args.translationId)) return false;
   if (translationUsesWebChapterAudio(args.translationId)) {
     return isWebChapterAudioSelfHosted();
@@ -66,7 +64,7 @@ export function resolveChapterAudioExternalUrl(args: {
   return "";
 }
 
-/** 本站相对路径（自托管 `/audio/...`）。 */
+/** 本站相对路径（自托管 `/audio/...`）。潮语不自托管，恒为空。 */
 export function resolveChapterAudioSelfHostedPath(args: {
   translationId: string;
   bookId: string;
@@ -74,9 +72,7 @@ export function resolveChapterAudioSelfHostedPath(args: {
   voiceId?: CuvChapterAudioVoiceId;
 }): string {
   const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
-  if (teochewNtVoiceActive(voice)) {
-    return buildLocalTeochewNtChapterAudioUrl(args.bookId, args.chapter);
-  }
+  if (teochewNtVoiceActive(voice)) return "";
   if (translationUsesWebChapterAudio(args.translationId)) {
     return buildLocalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
   }
@@ -119,7 +115,12 @@ export function buildChapterAudioDownloadCandidates(args: {
   /** @default true */
   preferExternalFirst?: boolean;
 }): string[] {
+  const voice = effectiveVoiceForBook(args.voiceId ?? "mandarin", args.bookId);
   const external = resolveChapterAudioExternalUrl(args);
+  if (teochewNtVoiceActive(voice)) {
+    return uniqueNonEmpty([external]);
+  }
+
   const selfPath = resolveChapterAudioSelfHostedPath(args);
   const selfPrimary = toAbsoluteSiteUrl(args.siteBaseUrl, selfPath);
   const selfFallback = toAbsoluteSiteUrl("https://askbible.me", selfPath);

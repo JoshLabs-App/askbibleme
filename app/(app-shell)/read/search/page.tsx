@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { ReadScriptureSearchClient } from "@/components/bible/ReadScriptureSearchClient";
 import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
@@ -9,7 +10,9 @@ export const metadata = {
 export default function ReadScriptureSearchPage() {
   return (
     <ScriptureChrome scrollHome>
-      <ReadScriptureSearchClient />
+      <Suspense fallback={null}>
+        <ReadScriptureSearchClient />
+      </Suspense>
     </ScriptureChrome>
   );
 }

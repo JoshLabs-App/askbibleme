@@ -1,6 +1,7 @@
 import {
   buildChapterAudioPlaybackOptions,
   decodeChapterAudioPlaybackOptionId,
+  translationUsesEditionChapterAudio,
 } from "./read-chapter-audio-playback-options";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { t } from "../i18n/site-copy";
@@ -9,7 +10,6 @@ import {
   sortPickerTranslations,
   translationOptionLabel,
 } from "./readBibleSettingsPanelConstants";
-import { translationUsesWebChapterAudio } from "../bible/web-chapter-audio";
 import type { BibleTranslationsIndex } from "../bible/translations-types";
 import type { AppLocale } from "../i18n/config";
 import type { ReadSettingsSelectOption } from "./ReadSettingsSelect";
@@ -28,11 +28,11 @@ export function buildPrimaryTranslationOptions(
   translationCatalog: Catalog,
   { locale, optionDownloadState, translationStatusSuffix }: OptionDeps,
 ): ReadSettingsSelectOption[] {
-  return sortPickerTranslations(translationCatalog).map((tr) => {
+  return sortPickerTranslations(translationCatalog, locale).map((tr) => {
     const label = translationOptionLabel(tr, locale);
     return {
       id: tr.id,
-      label: `${label}${translationStatusSuffix(tr.id)}`,
+      label,
       shortLabel: shortLabel(tr.id, locale, label),
       downloadState: optionDownloadState(tr.id),
     };
@@ -53,11 +53,12 @@ export function buildContrastTranslationOptions(
         const label = translationOptionLabel(tr, deps.locale);
         return {
           id: tr.id,
-          label: `${label}${deps.translationStatusSuffix(tr.id)}`,
+          label,
           shortLabel: shortLabel(tr.id, deps.locale, label),
           downloadState: deps.optionDownloadState(tr.id),
         };
-      }),
+    }),
+    deps.locale,
   );
   if (contrastDraftIds.length === 0 || openMenu === "contrast") return all;
   const selectedSet = new Set(contrastDraftIds);
@@ -80,7 +81,7 @@ export function resolveChapterAudioPlaybackValue(
   chapterAudioTranslationId: string,
   audioVoiceId: CuvChapterAudioVoiceId,
 ): string {
-  return translationUsesWebChapterAudio(chapterAudioTranslationId)
+  return translationUsesEditionChapterAudio(chapterAudioTranslationId)
     ? chapterAudioTranslationId
     : audioVoiceId;
 }

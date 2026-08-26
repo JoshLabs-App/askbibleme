@@ -7,6 +7,7 @@ import { ReadFavoritesClient } from "@/components/bible/ReadFavoritesClient";
 import { ReadScriptureSearchClient } from "@/components/bible/ReadScriptureSearchClient";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
+import { parseReadChapterPathname } from "@/lib/read/resolve-chapter-page-scripture-play-target";
 
 type ReadWideQuickPanel = "search" | "favorites" | null;
 
@@ -59,6 +60,7 @@ export function ReadWideQuickPanelsProvider({ children }: { children: ReactNode 
   const { t } = useLocale();
   const isWideScreen = useReadChapterSpreadLayout();
   const pathname = usePathname();
+  const chapterSearchRef = useMemo(() => parseReadChapterPathname(pathname ?? ""), [pathname]);
   const [panel, setPanel] = useState<ReadWideQuickPanel>(null);
 
   const value = useMemo<ReadWideQuickPanelsContextValue>(
@@ -94,7 +96,11 @@ export function ReadWideQuickPanelsProvider({ children }: { children: ReactNode 
       >
         {panel ? (
           <PanelCard title={title} titleId={titleId} onClose={() => setPanel(null)}>
-            {panel === "search" ? <ReadScriptureSearchClient /> : <ReadFavoritesClient />}
+            {panel === "search" ? (
+              <ReadScriptureSearchClient routeChapterRef={chapterSearchRef} />
+            ) : (
+              <ReadFavoritesClient />
+            )}
           </PanelCard>
         ) : null}
       </AppShellModal>

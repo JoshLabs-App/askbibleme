@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native";
-import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 
 export const readBibleSettingsPanelStyles = StyleSheet.create({
@@ -32,6 +31,9 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
+  },
+  rowAlignTop: {
+    alignItems: "flex-start",
   },
   rowIcon: {
     width: 26,
@@ -73,48 +75,5 @@ export const readBibleSettingsPanelStyles = StyleSheet.create({
   },
   audioDownloadIconBtnPressed: {
     backgroundColor: c.hover,
-  },
-  sizeActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  sizeSection: {
-    width: "100%",
-  },
-  sizeActionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sizeActionBtnPressed: {
-    backgroundColor: c.hover,
-  },
-  sizeActionBtnDisabled: {
-    opacity: 0.48,
-  },
-  sizeActionBtnActive: {
-    backgroundColor: c.parchmentAccentGlow,
-    borderColor: c.parchmentAccent,
-  },
-  sizeActionLabel: {
-    fontSize: 12,
-    lineHeight: 14,
-    color: c.ink,
-    ...parchmentSans(700),
-  },
-  sizeActionLabelActive: {
-    color: c.parchmentAccent,
-  },
-  sizeActionLabelDisabled: {
-    color: c.muted,
   },
 });

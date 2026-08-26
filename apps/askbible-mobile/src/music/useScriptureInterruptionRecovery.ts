@@ -1,17 +1,19 @@
 import { useEffect, useRef } from "react";
-import { AppState, type AppStateStatus } from "react-native";
+import { AppState, DeviceEventEmitter, type AppStateStatus } from "react-native";
+import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
+import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
+import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import {
   isPlanFlowSessionActive,
   peekReadPlanFlowAutoplay,
   shouldLoopTodayPlanFlow,
 } from "../read/read-plan-flow-autoplay";
-import { scriptureChapterPool } from "./scripture-chapter-pool";
 import {
-  recoverScripturePlaybackAfterBackground,
   scheduleScriptureBackgroundRecovery,
   watchScriptureChapterEndStall,
   type ScriptureBackgroundRecoveryCtx,
 } from "./scriptureResumeAfterInterruption";
+import { isScriptureUserPauseHeld } from "./scriptureUserPause";
 
 type Args = ScriptureBackgroundRecoveryCtx & {
   playing: boolean;
@@ -19,6 +21,11 @@ type Args = ScriptureBackgroundRecoveryCtx & {
 };
 
 function userWantsScripturePlayback(ctx: ScriptureBackgroundRecoveryCtx): boolean {
+  if (isScriptureUserPauseHeld()) return false;
+  // 用户主动暂停后 want/autoPlay 均为 false：即使 planFlow autoplay 仍 armed 也不得强行续播。
+  if (!ctx.scriptureWantPlayingRef.current && !ctx.autoPlayScriptureRef.current) {
+    return false;
+  }
   return (
     ctx.scriptureWantPlayingRef.current ||
     ctx.autoPlayScriptureRef.current ||
@@ -36,6 +43,9 @@ export function useScriptureInterruptionRecovery({
   ctxRef.current = ctx;
 
   useEffect(() => {
+    // 原生读经：禁后台轮询（避免 CPU 杀进程）。
+    if (isNativeMainTrackOs() && getShellScriptureWantPlaying()) return;
+
     const planFlowKick =
       isPlanFlowSessionActive() &&
       shouldLoopTodayPlanFlow() &&
@@ -52,33 +62,52 @@ export function useScriptureInterruptionRecovery({
     const intervalMs = playing ? 1500 : wantActive ? 800 : 2000;
 
     const tick = () => {
+      if (getShellAudioInterrupted()) return;
+      if (isNativeMainTrackOs() && getShellScriptureWantPlaying()) return;
+      if (isScriptureUserPauseHeld()) return;
       if (!userWantsScripturePlayback(ctxRef.current)) {
         return;
       }
+      if (ctxRef.current.scripturePlayInFlightRef.current) return;
       void watchScriptureChapterEndStall(ctxRef.current);
       if (!playing) {
-        if (scriptureChapterPool.isActive()) {
-          void scriptureChapterPool.retryCurrent();
-        }
-        void recoverScripturePlaybackAfterBackground(ctxRef.current);
+        // 只排一次恢复：禁止 playing 闪一下就 playAt 重开整章（安卓跳闪主因）。
+        scheduleScriptureBackgroundRecovery(ctxRef.current);
       }
     };
 
-    tick();
     const interval = setInterval(tick, intervalMs);
     return () => clearInterval(interval);
   }, [playing, scripturePreparing]);
 
   useEffect(() => {
     const sync = (state: AppStateStatus) => {
-      if (state !== "active") return;
+      if (getShellAudioInterrupted()) return;
+      if (isNativeMainTrackOs()) {
+        // 原生读经：只在回前台时兜底；后台交给原生播放器。
+        // 即使 wantPlaying 仍为 true 也要跑：安卓关屏后队列耗尽时 JS 可能没续上，回前台应补播。
+        if (state !== "active") return;
+      } else if (state !== "active" && state !== "inactive" && state !== "background") {
+        return;
+      }
       if (scripturePreparing || ctxRef.current.playbackModeRef.current !== "scripture") {
         return;
       }
+      if (!userWantsScripturePlayback(ctxRef.current)) return;
       scheduleScriptureBackgroundRecovery(ctxRef.current);
     };
 
     const sub = AppState.addEventListener("change", sync);
     return () => sub.remove();
   }, [scripturePreparing]);
+
+  useEffect(() => {
+    const onBegan = () => {
+      const sound = ctxRef.current.soundRef.current;
+      if (!sound) return;
+      void sound.pauseAsync().catch(() => {});
+    };
+    const sub = DeviceEventEmitter.addListener("AudioSessionInterruptionBegan", onBegan);
+    return () => sub.remove();
+  }, []);
 }

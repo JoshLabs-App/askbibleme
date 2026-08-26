@@ -104,7 +104,13 @@ export async function resolveDownloadedChapterAudioUri(args: {
   } catch {
     /* ignore */
   }
-  return null;
+  // 章页点播 / 今日读经边播边存（10 天保留）；完整语音包优先于流式缓存。
+  try {
+    const { resolveStreamCachedChapterAudioUri } = await import("./readChapterAudioStreamCache");
+    return await resolveStreamCachedChapterAudioUri(args);
+  } catch {
+    return null;
+  }
 }
 
 export function chapterCacheKey(args: {

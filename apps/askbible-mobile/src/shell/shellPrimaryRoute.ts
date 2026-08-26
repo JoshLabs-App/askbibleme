@@ -38,6 +38,12 @@ export function isReadChapterPathname(pathname: string): boolean {
   );
 }
 
+/** 今日读经计划连续朗读页 */
+export function isReadPlanPlayPathname(pathname: string): boolean {
+  const p = normalizePath(pathname);
+  return /(^|\/)read\/plan-play$/.test(p);
+}
+
 /** 目录或章页：显示右上译本/排版设置 */
 export function isReadTypographySettingsPathname(pathname: string): boolean {
   return isReadCatalogPathname(pathname) || isReadChapterPathname(pathname);

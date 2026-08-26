@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
-import { useLocale } from "../i18n/LocaleProvider";
-import { bookNameForId, chaptersForBookId, type ScriptureCanonCatalogBook } from "./canonCatalog";
+import type { AppLocale } from "../i18n/config";
+import { chaptersForBookId, type ScriptureCanonCatalogBook } from "./canonCatalog";
 import { bibleCatalogOutlineStyles as styles } from "./bibleCatalogOutlineStyles";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 
@@ -14,6 +14,8 @@ type Props = {
   themeAccent: string;
   onPress: (book: ScriptureCanonCatalogBook) => void;
   lockTextScale?: boolean;
+  /** 跟主译本同步的读经展示语言（英文译本 → 英文书名面） */
+  displayLocale?: AppLocale;
 };
 
 export function BibleCatalogBookRow({
@@ -26,9 +28,9 @@ export function BibleCatalogBookRow({
   themeAccent,
   onPress,
   lockTextScale = true,
+  displayLocale = "zh-CN",
 }: Props) {
   const { px } = useReadBibleTypography();
-  const { locale } = useLocale();
   const allowFontScaling = !lockTextScale;
   const scaledMax = (value: number) => (lockTextScale ? 1 : value);
 
@@ -40,7 +42,8 @@ export function BibleCatalogBookRow({
   );
   const progressRatio =
     totalChapters > 0 ? Math.max(0, Math.min(1, completedChapters / totalChapters)) : 0;
-  const chapterCountText = locale === "en" ? `${totalChapters} ch` : `${totalChapters}章`;
+  const chapterCountText =
+    displayLocale === "en" ? `${totalChapters} ch` : `${totalChapters}章`;
   const showRightMeta = bookMetaMode !== "none";
 
   return (
@@ -76,19 +79,15 @@ export function BibleCatalogBookRow({
                 styles.bookName,
                 styles.bookNameSummaryRow,
                 {
-                  fontSize: compactMode
-                    ? Math.max(16, px.catalogBookSize - 1)
-                    : px.catalogBookSize,
-                  lineHeight: compactMode
-                    ? Math.max(21, px.catalogBookLine - 2)
-                    : px.catalogBookLine,
+                  fontSize: compactMode ? Math.max(13, px.catalogBookSize - 1) : px.catalogBookSize,
+                  lineHeight: compactMode ? Math.max(18, px.catalogBookLine - 2) : px.catalogBookLine,
                 },
               ]}
               allowFontScaling={allowFontScaling}
               numberOfLines={1}
               maxFontSizeMultiplier={scaledMax(1.1)}
             >
-              {bookNameForId(book.bookId)}
+              {book.bookName}
             </Text>
             {showBookSummary && book.summary ? (
               <Text
@@ -145,9 +144,9 @@ export function BibleCatalogBookRow({
             )}
           </View>
         ) : null}
-        {bookMetaMode === "progress" ? (
+        {bookMetaMode === "progress" || bookMetaMode === "none" ? (
           <Text
-            style={styles.bookChevron}
+            style={[styles.bookChevron, compactMode && styles.bookChevronCompact]}
             allowFontScaling={allowFontScaling}
             maxFontSizeMultiplier={scaledMax(1)}
           >

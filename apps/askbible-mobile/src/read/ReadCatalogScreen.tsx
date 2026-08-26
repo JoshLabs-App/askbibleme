@@ -1,16 +1,13 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   ActivityIndicator,
   Animated,
-  Pressable,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ReadParchmentPageScroll } from "./ReadParchmentPageScroll";
 import { READ_TAB_SCROLL_FADE_PRESET } from "./readParchmentScrollMask";
-import { t } from "../i18n/site-copy";
+import { createT, localizeZhText } from "../i18n/site-copy";
 import { BibleCatalogOutline } from "./BibleCatalogOutline";
 import {
   BibleChapterPickerPanel,
@@ -19,14 +16,15 @@ import {
 } from "./BibleChapterPickerPanel";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { readCatalogScreenStyles as styles } from "./readCatalogScreenStyles";
-import { ReadTodayPlanFooter, ReadTodayPlanReadings } from "./ReadTodayPlanPanel";
+import { ReadChapterScreenTopChrome } from "./ReadChapterScreenTopChrome";
+import { ReadTodayPlanReadings } from "./ReadTodayPlanPanel";
 import { warmScriptureSearchDatabase } from "../bible/scripture-database";
 import { readScriptureSearchRoute } from "./readScriptureSearchRoute";
 import { useIsFocused } from "@react-navigation/native";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { useReadHomeTodayScriptureAvailability } from "./useReadHomeTodayScriptureAvailability";
 import { useReadCatalogScreen } from "./useReadCatalogScreen";
-import { shouldSplitTestamentCatalog } from "./parchmentColumnLayout";
+import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 
 type ReadCatalogScreenProps = {
   homeMode?: boolean;
@@ -34,13 +32,13 @@ type ReadCatalogScreenProps = {
 
 export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
-  const ipadCatalogSplit = shouldSplitTestamentCatalog(width, height);
   const catalogFocused = useIsFocused();
   const { setReadHomeTodayScriptureReady } = useMusicPlayback();
+  const { sizeAtMax, sizeAtMin, bumpSize } = useReadBibleTypography();
   const {
     px,
     primaryTranslationId,
+    readDisplayLocale,
     router,
     todayPlan,
     sections,
@@ -62,6 +60,7 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
     setMeasuredPickerViewportH,
     windowHeight,
   } = useReadCatalogScreen({ homeMode });
+  const t = createT(readDisplayLocale);
 
   useReadHomeTodayScriptureAvailability({
     enabled: catalogFocused,
@@ -74,27 +73,50 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
   return (
     <View style={styles.root}>
       {homeMode ? (
-        <View style={[styles.topActions, { top: insets.top + 50, right: Math.max(insets.right, 8) }]}>
-          <Pressable
-            onPress={() => {
-              void warmScriptureSearchDatabase(primaryTranslationId);
-              router.push(readScriptureSearchRoute());
-            }}
-            style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t("pages.read.chapterChromeSearch")}
-          >
-            <MaterialIcons name="search" size={21} color="#FFFFFF" style={styles.topActionIcon} />
-          </Pressable>
-          <Pressable
-            onPress={() => router.push("/read/favorites")}
-            style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t("pages.read.chapterChromeFavorites")}
-          >
-            <MaterialIcons name="bookmark-border" size={21} color="#FFFFFF" style={styles.topActionIcon} />
-          </Pressable>
-        </View>
+        <ReadChapterScreenTopChrome
+          showBack={false}
+          showAudio={false}
+          showLastRead
+          insets={insets}
+          searchA11yLabel={t("pages.read.chapterChromeSearch")}
+          favoritesA11yLabel={t("pages.read.chapterChromeFavorites")}
+          increaseSizeA11yLabel={
+            readDisplayLocale === "en"
+              ? "Increase text size"
+              : localizeZhText(readDisplayLocale, "放大字号")
+          }
+          decreaseSizeA11yLabel={
+            readDisplayLocale === "en"
+              ? "Decrease text size"
+              : localizeZhText(readDisplayLocale, "缩小字号")
+          }
+          lastReadA11yLabel={
+            lastRead
+              ? readDisplayLocale === "en"
+                ? `Continue ${lastRead.bookName} ${lastRead.chapter}`
+                : localizeZhText(
+                    readDisplayLocale,
+                    `继续阅读 ${lastRead.bookName} 第 ${lastRead.chapter} 章`,
+                  )
+              : readDisplayLocale === "en"
+                ? "No recent chapter"
+                : localizeZhText(readDisplayLocale, "暂无最近阅读")
+          }
+          lastReadDisabled={!lastRead}
+          sizeAtMax={sizeAtMax}
+          sizeAtMin={sizeAtMin}
+          onSearch={() => {
+            router.push(readScriptureSearchRoute());
+            void warmScriptureSearchDatabase(primaryTranslationId);
+          }}
+          onFavorites={() => router.push("/read/favorites")}
+          onIncreaseSize={() => bumpSize(1)}
+          onDecreaseSize={() => bumpSize(-1)}
+          onLastRead={() => {
+            if (!lastRead) return;
+            openChapter(lastRead.bookId, lastRead.chapter);
+          }}
+        />
       ) : null}
       <ReadParchmentPageScroll
         keyboardShouldPersistTaps="handled"
@@ -116,12 +138,12 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
                 {t("pages.read.title")}
               </Text>
             </View>
-            <ReadTodayPlanReadings plan={todayPlan} onOpenChapter={openChapter} />
+            <ReadTodayPlanReadings plan={todayPlan} />
           </View>
         ) : null}
 
         <View style={styles.catalogSection}>
-          <View style={[styles.catalogInner, catalogNarrowStyle]}>
+          <View style={[styles.catalogInner, homeMode ? null : catalogNarrowStyle]}>
             {sections.length > 0 ? (
               <View style={styles.catalogBlock}>
                 <BibleCatalogOutline
@@ -130,10 +152,17 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
                   onPickChapter={openChapter}
                   onBookPress={onCatalogBookPress}
                   onTestamentChange={onCatalogTestamentChange}
-                  showBookSummary
-                  completedChaptersByBook={completedByBook}
-                  paginateByTestament={homeMode && !ipadCatalogSplit}
-                  splitByTestamentColumns={homeMode && ipadCatalogSplit}
+                  showBookSummary={!homeMode}
+                  enableBookSummaryToggle={homeMode}
+                  completedChaptersByBook={homeMode ? undefined : completedByBook}
+                  paginateByTestament={false}
+                  splitByTestamentColumns={homeMode}
+                  bookMetaMode={homeMode ? "none" : "progress"}
+                  compactMode={homeMode}
+                  showSectionTint={!homeMode}
+                  sectionGapPx={homeMode ? 8 : undefined}
+                  sectionStripeFullHeight={homeMode}
+                  displayLocale={readDisplayLocale}
                 />
               </View>
             ) : lastReadLoading ? (
@@ -146,7 +175,6 @@ export function ReadCatalogScreen({ homeMode = true }: ReadCatalogScreenProps) {
           </View>
         </View>
 
-        {homeMode ? <ReadTodayPlanFooter plan={todayPlan} /> : null}
         {homeMode ? (
           <View style={styles.bottomVerseWrap}>
             <Animated.View style={[styles.homeVerseCard, catalogNarrowStyle, { opacity: verseOpacity }]}>

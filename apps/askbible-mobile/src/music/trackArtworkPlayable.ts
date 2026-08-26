@@ -1,9 +1,13 @@
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
+import { musicTrackHasRemoteR2Fallback } from "../media/bundledMusicMedia";
 import { DEFAULT_MUSIC_ALBUM, normalizeMusicAlbumLabel } from "./musicAlbumCatalog";
 import type { PlaybackTrack } from "./types";
 
 export function isTrackPlayable(track: PlaybackTrack): boolean {
   if (track.localReady) return true;
+  // TEMP：R2 / 圣诗直链在 bundled-only 下也可播。src 与 catalogSrc 都要认。
+  if (musicTrackHasRemoteR2Fallback(track.catalogSrc)) return true;
+  if (musicTrackHasRemoteR2Fallback(track.src)) return true;
   if (isMobileBundledOnly()) return false;
   return Boolean(track.catalogSrc?.trim() || track.src?.trim());
 }
@@ -24,7 +28,11 @@ export function firstPlayableTrackIndexInAlbum(
   );
 }
 
-/** 底部播放键：优先本地可播的「安静」默认曲，避免冷启动拉远端曲目卡顿。 */
+/**
+ * 壳层/首页播放键选曲：
+ * - 若当前 preferred 已可播（含用户在音乐栏切过的其它专辑、R2 点播），继续该曲；
+ * - 否则只回落到「安静」本地曲，不把其它专辑混进默认播。
+ */
 export function resolveShellMusicPlayIndex(
   tracks: readonly PlaybackTrack[],
   preferredIndex: number,
@@ -32,7 +40,7 @@ export function resolveShellMusicPlayIndex(
   if (tracks.length === 0) return 0;
   const normalizedPreferred = ((preferredIndex % tracks.length) + tracks.length) % tracks.length;
   const preferred = tracks[normalizedPreferred];
-  if (preferred && isTrackPlayable(preferred) && preferred.localReady) {
+  if (preferred && isTrackPlayable(preferred)) {
     return normalizedPreferred;
   }
 
@@ -43,11 +51,6 @@ export function resolveShellMusicPlayIndex(
       normalizeMusicAlbumLabel(t.album) === normalizeMusicAlbumLabel(DEFAULT_MUSIC_ALBUM),
   );
   if (calmLocalIdx >= 0) return calmLocalIdx;
-
-  const anyLocalIdx = tracks.findIndex((t) => isTrackPlayable(t) && t.localReady);
-  if (anyLocalIdx >= 0) return anyLocalIdx;
-
-  if (preferred && isTrackPlayable(preferred)) return normalizedPreferred;
 
   const calmIdx = firstPlayableTrackIndexInAlbum(tracks, DEFAULT_MUSIC_ALBUM);
   if (calmIdx >= 0) return calmIdx;

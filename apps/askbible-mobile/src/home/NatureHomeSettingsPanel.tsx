@@ -17,8 +17,6 @@ type Props = {
   onClose: () => void;
   onPrefsChanged: () => void;
   presentation?: NatureHomeSettingsPresentation;
-  /** 当前场景海报：Android 背板磨砂模糊用 */
-  posterUri?: string;
   /** 试验开关：关闭时隐藏 TTS 相关设置 */
   showTtsControls?: boolean;
 };
@@ -28,7 +26,6 @@ export function NatureHomeSettingsPanel({
   onClose,
   onPrefsChanged,
   presentation = "modal",
-  posterUri,
   showTtsControls = true,
 }: Props) {
   const insets = useSafeAreaInsets();
@@ -50,7 +47,6 @@ export function NatureHomeSettingsPanel({
     <NatureHomeSettingsPanelSheet
       sheetWidth={sheetWidth}
       insets={insets}
-      posterUri={posterUri}
       showTtsControls={showTtsControls}
       onClose={onClose}
       onPrefsChanged={onPrefsChanged}

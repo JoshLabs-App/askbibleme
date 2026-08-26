@@ -1,7 +1,9 @@
 import { Platform } from "react-native";
 import type { AVPlaybackSource } from "expo-av";
 import type { MutableRefObject } from "react";
+import { resolveAndroidMusicPadTrackUri } from "../media/androidMusicAssetPack";
 import { resolveMusicTrackPlayback } from "../media/bundledMusicMedia";
+import { ANDROID_MUSIC_PAD_TRACK_FILES } from "../media/generated/bundled-music-pad-manifest";
 import { getAskBibleBaseUrl, isIosSimulator, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { findNextMusicTrackFallbackIndex, resolveMusicTrackAvSourceForPlay } from "./musicTrackPlayback";
@@ -41,6 +43,7 @@ type PrepareArgs = {
   cacheMusicTrackInBackground: (trackId: string) => void;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   setPlaying: (playing: boolean) => void;
+  autoPlay?: boolean;
 };
 
 export type PreparedMusicTrack =
@@ -60,12 +63,27 @@ export async function prepareMusicTrackForPlay({
   cacheMusicTrackInBackground,
   musicRepeatModeRef,
   setPlaying,
+  autoPlay,
 }: PrepareArgs): Promise<PreparedMusicTrack> {
   const i = normalizeMusicTrackIndex(index, tracks.length);
   const track = tracks[i]!;
   let playableTrack = track;
 
-  if (shouldPrefetchMusicTrackOnIosSimulator(playableTrack)) {
+  if (
+    Platform.OS === "android" &&
+    !playableTrack.localReady &&
+    ANDROID_MUSIC_PAD_TRACK_FILES[playableTrack.id]
+  ) {
+    const padUri = await resolveAndroidMusicPadTrackUri(playableTrack.id);
+    if (generation !== playTrackGenerationRef.current) return { ok: false, stale: true };
+    if (padUri) {
+      playableTrack = {
+        ...playableTrack,
+        src: padUri,
+        localReady: true,
+      };
+    }
+  } else if (shouldPrefetchMusicTrackOnIosSimulator(playableTrack)) {
     const ok = await downloadMusicTrackAt(i);
     if (generation !== playTrackGenerationRef.current) return { ok: false, stale: true };
     if (ok) {
@@ -82,28 +100,29 @@ export async function prepareMusicTrackForPlay({
         bundledModule: resolved.bundledModule,
       };
     }
-  } else if (!playableTrack.localReady && !isMobileBundledOnly()) {
+  } else if (!playableTrack.localReady) {
+    // R2 / 远程：先播 HTTPS，后台写入本地缓存。
     cacheMusicTrackInBackground(playableTrack.id);
   }
 
-  if (musicRepeatModeRef.current === "all" && !isMobileBundledOnly()) {
+  if (musicRepeatModeRef.current === "all") {
     const nextIdx = pickRandomNextTrackIndexInAlbum(tracks, i, tracks.length);
     const nextTrack = tracks[nextIdx];
-    if (nextTrack && nextTrack.id !== playableTrack.id) {
+    if (nextTrack && nextTrack.id !== playableTrack.id && !nextTrack.localReady) {
       cacheMusicTrackInBackground(nextTrack.id);
     }
   }
 
   const avSource = await resolveMusicTrackAvSourceForPlay(playableTrack);
   if (avSource != null) {
-    return { ok: true, index: i, track, avSource };
+    return { ok: true, index: i, track: playableTrack, avSource };
   }
 
   const missingId = track.id.trim();
   if (missingId) failedTrackIdsRef.current.add(missingId);
   const fallbackIndex = findNextMusicTrackFallbackIndex(tracks, i, failedTrackIdsRef.current, true);
   if (fallbackIndex != null) {
-    void playTrackAtRef.current(fallbackIndex);
+    void playTrackAtRef.current(fallbackIndex, { autoPlay });
     return { ok: false, stale: false, aborted: true };
   }
   if (failedTrackIdsRef.current.size >= tracks.length) {

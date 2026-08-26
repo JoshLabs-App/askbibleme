@@ -1,83 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
 import { NATURE_HOME_PREFS_KEYS, NATURE_HOME_PREFS_LEGACY_KEYS } from "./natureHomePrefsKeys";
 
-/** 压暗 / 模糊：关（不选）+ 四档 极淡 / 微微 / 轻 / 深 */
+/** 账号同步仍带压暗 / 模糊档；首页已改预烘焙柔焦，不再读取这两档做运行时效果。 */
 export type NatureVisualLevel = 0 | 1 | 2 | 3 | 4;
-
-export const NATURE_VISUAL_LEVELS: readonly NatureVisualLevel[] = [0, 1, 2, 3, 4];
-
-/** 设置面板四钮；关=不选中（再点已选档关闭） */
-export const NATURE_VISUAL_EFFECT_LEVELS: readonly NatureVisualLevel[] = [1, 2, 3, 4];
-
-/** @deprecated 与 `NatureVisualLevel` 相同，保留旧名 */
-export type NatureSoftFocusLevel = NatureVisualLevel;
-
-export const NATURE_SOFT_FOCUS_LEVELS = NATURE_VISUAL_LEVELS;
-
-export type NatureSoftFocusPrefs = {
-  overlayOpacity: number;
-  blurPx: number;
-};
-
-const DIM_OPACITY: Record<NatureVisualLevel, number> = {
-  0: 0,
-  1: 0.08,
-  2: 0.16,
-  3: 0.32,
-  4: 0.82,
-};
-
-const BLUR_PX: Record<NatureVisualLevel, number> = {
-  0: 0,
-  1: 2,
-  2: 4,
-  3: 9,
-  4: 15,
-};
 
 export const DEFAULT_DIM_LEVEL: NatureVisualLevel = 0;
 export const DEFAULT_BLUR_LEVEL: NatureVisualLevel = 0;
-
-export const DEFAULT_SOFT_FOCUS_LEVEL = DEFAULT_DIM_LEVEL;
-
-export const DEFAULT_SOFT_FOCUS: NatureSoftFocusPrefs = mergeNatureVisualPrefs(
-  DEFAULT_DIM_LEVEL,
-  DEFAULT_BLUR_LEVEL,
-);
-
-export function mergeNatureVisualPrefs(
-  dimLevel: NatureVisualLevel,
-  blurLevel: NatureVisualLevel,
-): NatureSoftFocusPrefs {
-  return {
-    overlayOpacity: DIM_OPACITY[dimLevel],
-    blurPx: BLUR_PX[blurLevel],
-  };
-}
-
-/** 柔焦模糊档位已开：首页背景用场景静帧，不再解码循环视频。 */
-export function isNatureSoftFocusBlurEnabled(prefs: NatureSoftFocusPrefs): boolean {
-  return prefs.blurPx > 0.02;
-}
-
-/**
- * `expo-blur` intensity（0–100）。
- * Android 与设置菜单背板同款（`dimezisBlurView`），比旧映射更重、更接近 CSS `backdrop-filter`。
- */
-export function blurIntensityFromPx(blurPx: number): number {
-  if (blurPx <= 0) return 0;
-  if (Platform.OS === "android") {
-    if (blurPx <= 2) return 36;
-    if (blurPx <= 4) return 48;
-    if (blurPx <= 9) return 68;
-    return 96;
-  }
-  if (blurPx <= 2) return 18;
-  if (blurPx <= 4) return 26;
-  if (blurPx <= 9) return 40;
-  return 76;
-}
 
 function clampVisualLevel(n: number): NatureVisualLevel {
   if (n <= 0) return 0;
@@ -177,44 +105,4 @@ export async function writeNatureVisualLevels(levels: NatureVisualLevels): Promi
     }),
   );
   await AsyncStorage.removeItem(NATURE_HOME_PREFS_LEGACY_KEYS.softFocus);
-}
-
-export async function readNatureSoftFocusDimLevel(): Promise<NatureVisualLevel> {
-  return (await readNatureVisualLevels()).dimLevel;
-}
-
-export async function readNatureSoftFocusBlurLevel(): Promise<NatureVisualLevel> {
-  return (await readNatureVisualLevels()).blurLevel;
-}
-
-export async function writeNatureSoftFocusDimLevel(level: NatureVisualLevel): Promise<void> {
-  const cur = await readNatureVisualLevels();
-  await writeNatureVisualLevels({ ...cur, dimLevel: clampVisualLevel(level) });
-}
-
-export async function writeNatureSoftFocusBlurLevel(level: NatureVisualLevel): Promise<void> {
-  const cur = await readNatureVisualLevels();
-  await writeNatureVisualLevels({ ...cur, blurLevel: clampVisualLevel(level) });
-}
-
-/** @deprecated 同时写入压暗与模糊为同一档 */
-export async function writeNatureSoftFocusLevel(level: NatureVisualLevel): Promise<void> {
-  const l = clampVisualLevel(level);
-  await writeNatureVisualLevels({ dimLevel: l, blurLevel: l });
-}
-
-export async function readNatureSoftFocusLevel(): Promise<NatureVisualLevel> {
-  return readNatureSoftFocusDimLevel();
-}
-
-export async function readNatureSoftFocusPrefs(): Promise<NatureSoftFocusPrefs> {
-  const { dimLevel, blurLevel } = await readNatureVisualLevels();
-  return mergeNatureVisualPrefs(dimLevel, blurLevel);
-}
-
-export async function writeNatureSoftFocusPrefs(p: NatureSoftFocusPrefs): Promise<void> {
-  await writeNatureVisualLevels({
-    dimLevel: levelFromLegacyOpacity(Number(p.overlayOpacity)),
-    blurLevel: levelFromLegacyBlur(Number(p.blurPx)),
-  });
 }

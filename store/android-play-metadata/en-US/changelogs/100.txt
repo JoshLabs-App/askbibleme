@@ -1,0 +1,5 @@
+Version 1.0.25
+• King James Version (KJV) is now bundled for offline reading
+• Book catalog labels and home verses follow your primary translation language
+• Chapter page top icons respond more smoothly
+• Home music and daily verse audio can play together more reliably

@@ -8,9 +8,16 @@ private let rotationAnchorIndexKey = "askbible-widget-rotation-anchor-index"
 private let rotationAnchorMsKey = "askbible-widget-rotation-anchor-ms"
 private let rotationPoolKey = "askbible-widget-rotation-pool-key"
 private let rotationIntervalSecKey = "askbible-widget-rotation-interval-sec"
+private let followVerseKeyKey = "askbible-widget-follow-verse-key"
+private let followFrozenKey = "askbible-widget-follow-frozen"
 private let defaultRotationIntervalSec: TimeInterval = 10
-private let timelineEntryCount = 48
-private let widgetVerseFadeSec: Double = 0.42
+private let timelineEntryCount = 12
+/// 换句：旧句淡出 → 安静半秒 → 新句淡入（与首页同节奏）。
+private let verseFadeOutSec: TimeInterval = 1.2
+private let verseFadeGapSec: TimeInterval = 0.5
+private let verseFadeInSec: TimeInterval = 1.2
+/// WidgetKit 会截断过大 timeline；4 步足够体感平滑。
+private let verseFadeSteps = 4
 
 struct WidgetVerseItem: Codable {
     let verseKey: String
@@ -39,12 +46,15 @@ struct DailyVerseEntry: TimelineEntry {
     let verseKey: String
     let locale: String
     let isPlaceholder: Bool
+    /// 换句时分步淡出/淡入（1 = 全显，0 = 全隐）。
+    let contentOpacity: Double
 }
 
 private func joinWidgetVerseLines(_ lines: [String]) -> String {
-    lines
+    let parts = lines
         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        .first { !$0.isEmpty } ?? ""
+        .filter { !$0.isEmpty }
+    return parts.joined()
 }
 
 private func stripExistingQuotes(_ line: String) -> String {
@@ -66,29 +76,11 @@ private struct WidgetTypography {
     let maxLines: Int
 
     static func resolve(verseLine: String, isSmall: Bool) -> WidgetTypography {
-        let chars = verseLine.trimmingCharacters(in: .whitespacesAndNewlines).count
-        let verseFont: CGFloat
-        let maxLines: Int
-
+        // 字号固定：小挂件 18 / 4 行；中号 19.5 / 6 行。超长截断，不随字数缩放。
         if isSmall {
-            switch chars {
-            case ...22: verseFont = 16.5
-            case ...40: verseFont = 15
-            case ...56: verseFont = 14
-            default: verseFont = 13
-            }
-            maxLines = chars > 56 ? 6 : 5
-        } else {
-            switch chars {
-            case ...34: verseFont = 18.5
-            case ...56: verseFont = 17
-            case ...84: verseFont = 15.5
-            default: verseFont = 14.5
-            }
-            maxLines = chars > 84 ? 7 : 6
+            return WidgetTypography(verseFontSize: 18, maxLines: 4)
         }
-
-        return WidgetTypography(verseFontSize: verseFont, maxLines: maxLines)
+        return WidgetTypography(verseFontSize: 19.5, maxLines: 6)
     }
 }
 
@@ -123,8 +115,51 @@ struct WidgetRotationState {
         return raw
     }
 
-    static func currentIndex(at date: Date, verseCount: Int) -> Int {
+    static func isFollowFrozen() -> Bool {
+        guard let defaults = sharedDefaults() else { return false }
+        if defaults.object(forKey: followFrozenKey) == nil { return false }
+        if defaults.bool(forKey: followFrozenKey) { return true }
+        return defaults.integer(forKey: followFrozenKey) != 0
+    }
+
+    static func followVerseKey() -> String? {
+        let key = sharedDefaults()?.string(forKey: followVerseKeyKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines).uppercased() ?? ""
+        return key.isEmpty ? nil : key
+    }
+
+    /// App 当前金句跟随：钉住索引；freeze 时停墙钟轮换，解冻后从该句继续墙钟。
+    static func followAppVerse(verseKey: String?, verseKeys: [String], freeze: Bool) {
+        guard let defaults = sharedDefaults() else { return }
+        let key = verseKey?.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() ?? ""
+        if key.isEmpty || verseKeys.isEmpty {
+            defaults.set(false, forKey: followFrozenKey)
+            defaults.removeObject(forKey: followVerseKeyKey)
+            return
+        }
+        let idx = verseKeys.firstIndex { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == key } ?? 0
+        let now = Date().timeIntervalSince1970 * 1000
+        defaults.set(idx, forKey: rotationAnchorIndexKey)
+        defaults.set(now, forKey: rotationAnchorMsKey)
+        defaults.set(freeze, forKey: followFrozenKey)
+        if freeze {
+            defaults.set(key, forKey: followVerseKeyKey)
+        } else {
+            defaults.removeObject(forKey: followVerseKeyKey)
+        }
+    }
+
+    static func currentIndex(at date: Date, verseCount: Int, verseKeys: [String] = []) -> Int {
         guard verseCount > 0 else { return 0 }
+        if isFollowFrozen(), let followKey = followVerseKey(), !verseKeys.isEmpty {
+            if let idx = verseKeys.firstIndex(where: {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == followKey
+            }) {
+                return idx
+            }
+            let idx = anchorIndex()
+            return ((idx % verseCount) + verseCount) % verseCount
+        }
         let elapsedMs = date.timeIntervalSince1970 * 1000 - anchorMs()
         let steps = max(0, Int(elapsedMs / (rotationIntervalSec() * 1000)))
         let idx = anchorIndex() + steps
@@ -133,6 +168,7 @@ struct WidgetRotationState {
 
     static func advanceOnTap(verseCount: Int) {
         guard verseCount > 0, let defaults = sharedDefaults() else { return }
+        if isFollowFrozen() { return }
         let now = Date()
         let current = currentIndex(at: now, verseCount: verseCount)
         defaults.set((current + 1) % verseCount, forKey: rotationAnchorIndexKey)
@@ -169,21 +205,8 @@ func resolvedVerses(from snapshot: DailyVerseSnapshot?) -> [(line: String, ref: 
     return []
 }
 
-private func widgetReadChapterURL(verseKey: String) -> URL? {
-    let trimmed = verseKey.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-    guard !trimmed.isEmpty else { return URL(string: "askbible://") }
-    let parts = trimmed.split(separator: ".", omittingEmptySubsequences: false)
-    guard parts.count == 3,
-          let chapter = Int(parts[1]), chapter >= 1,
-          let verse = Int(parts[2]), verse >= 1 else {
-        return URL(string: "askbible://")
-    }
-    let bookId = String(parts[0])
-    guard bookId.range(of: #"^[A-Z0-9]{2,8}$"#, options: .regularExpression) != nil else {
-        return URL(string: "askbible://")
-    }
-    return URL(string: "askbible://read/\(bookId)/\(chapter)?verse=\(verse)")
-}
+/// 点击挂件：打开 App 首页（不进读经章、不控制播放）。
+private let widgetOpenHomeURL = URL(string: "askbible://")!
 
 struct DailyVerseProvider: TimelineProvider {
     func placeholder(in context: Context) -> DailyVerseEntry {
@@ -193,28 +216,82 @@ struct DailyVerseProvider: TimelineProvider {
             ref: "彼得前书 5:7",
             verseKey: "1PE.5.7",
             locale: "zh-TW",
-            isPlaceholder: true
+            isPlaceholder: true,
+            contentOpacity: 1
         )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (DailyVerseEntry) -> Void) {
-        completion(makeEntry(at: Date()))
+        completion(makeEntry(at: Date(), contentOpacity: 1))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<DailyVerseEntry>) -> Void) {
         let now = Date()
-        var entries: [DailyVerseEntry] = []
-        let interval = WidgetRotationState.rotationIntervalSec()
-        for i in 0..<timelineEntryCount {
-            let date = now.addingTimeInterval(interval * Double(i))
-            entries.append(makeEntry(at: date))
+        if WidgetRotationState.isFollowFrozen() {
+            // 金句朗读跟随时只钉当前句，等 App reloadWidget 再刷新。
+            completion(Timeline(entries: [makeEntry(at: now, contentOpacity: 1, syncPool: true)], policy: .never))
+            return
         }
-        completion(Timeline(entries: entries, policy: .atEnd))
+
+        let interval = max(
+            WidgetRotationState.rotationIntervalSec(),
+            verseFadeOutSec + verseFadeGapSec + verseFadeInSec + 1
+        )
+        let anchorMs = WidgetRotationState.anchorMs()
+        let nowMs = now.timeIntervalSince1970 * 1000
+        let elapsedMs = max(0, nowMs - anchorMs)
+        let currentStep = Int(elapsedMs / (interval * 1000))
+        // 池同步只做一次，勿在每个 fade entry 里写 UserDefaults。
+        var entries: [DailyVerseEntry] = [makeEntry(at: now, contentOpacity: 1, syncPool: true)]
+
+        // 每个换句边界：旧句先分步淡到 0，过界后再让新句从 0 分步淡入。
+        for stepOffset in 0..<timelineEntryCount {
+            let boundaryStep = currentStep + stepOffset + 1
+            let boundaryMs = anchorMs + Double(boundaryStep) * interval * 1000
+            let boundary = Date(timeIntervalSince1970: boundaryMs / 1000.0)
+            if boundary.timeIntervalSince(now) > interval * Double(timelineEntryCount) + 1 {
+                break
+            }
+
+            for fadeStep in 1...verseFadeSteps {
+                let progress = Double(fadeStep) / Double(verseFadeSteps)
+                // 保证仍落在边界前，currentIndex 仍是旧句。
+                let t = boundary.addingTimeInterval(-verseFadeOutSec * (1.0 - progress) - 0.02)
+                if t > now {
+                    entries.append(makeEntry(at: t, contentOpacity: max(0, 1.0 - progress), syncPool: false))
+                }
+            }
+
+            // 旧句消失后安静半秒（opacity 保持 0）。
+            let quietAt = boundary.addingTimeInterval(verseFadeGapSec * 0.5)
+            if quietAt >= now {
+                entries.append(makeEntry(at: quietAt, contentOpacity: 0, syncPool: false))
+            }
+
+            for fadeStep in 0...verseFadeSteps {
+                let progress = Double(fadeStep) / Double(verseFadeSteps)
+                let t = boundary.addingTimeInterval(verseFadeGapSec + verseFadeInSec * progress)
+                if t >= now {
+                    entries.append(makeEntry(at: t, contentOpacity: min(1, progress), syncPool: false))
+                }
+            }
+        }
+
+        entries.sort { $0.date < $1.date }
+        var deduped: [DailyVerseEntry] = []
+        for entry in entries {
+            if let last = deduped.last, abs(last.date.timeIntervalSince(entry.date)) < 0.015 {
+                deduped[deduped.count - 1] = entry
+            } else {
+                deduped.append(entry)
+            }
+        }
+        completion(Timeline(entries: deduped, policy: .atEnd))
     }
 
-    private func makeEntry(at date: Date) -> DailyVerseEntry {
+    private func makeEntry(at date: Date, contentOpacity: Double, syncPool: Bool = true) -> DailyVerseEntry {
         let snapshot = loadDailyVerseSnapshot()
-        if let snapshot {
+        if syncPool, let snapshot {
             let trimmedPoolKey = snapshot.rotationPoolKey?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let poolKey = trimmedPoolKey.isEmpty ? snapshot.date : trimmedPoolKey
             let interval = snapshot.rotationIntervalSec.map { TimeInterval(max(1, $0)) }
@@ -222,8 +299,10 @@ struct DailyVerseProvider: TimelineProvider {
             WidgetRotationState.syncRotationPool(poolKey, intervalSec: interval)
         }
         let verses = resolvedVerses(from: snapshot)
+        let opacity = min(1, max(0, contentOpacity))
         if !verses.isEmpty {
-            let idx = WidgetRotationState.currentIndex(at: date, verseCount: verses.count)
+            let keys = verses.map { $0.verseKey }
+            let idx = WidgetRotationState.currentIndex(at: date, verseCount: verses.count, verseKeys: keys)
             let verse = verses[idx]
             return DailyVerseEntry(
                 date: date,
@@ -231,7 +310,8 @@ struct DailyVerseProvider: TimelineProvider {
                 ref: verse.ref,
                 verseKey: verse.verseKey,
                 locale: snapshot?.locale ?? "en",
-                isPlaceholder: false
+                isPlaceholder: false,
+                contentOpacity: opacity
             )
         }
         return DailyVerseEntry(
@@ -240,7 +320,8 @@ struct DailyVerseProvider: TimelineProvider {
             ref: "",
             verseKey: "",
             locale: snapshot?.locale ?? "en",
-            isPlaceholder: true
+            isPlaceholder: true,
+            contentOpacity: opacity
         )
     }
 }
@@ -256,21 +337,83 @@ private func widgetVerseLineForDisplay(_ line: String) -> String {
     line.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-private func widgetJustifiedVerseText(_ line: String, fontSize: CGFloat) -> AttributedString {
+private func widgetJustifiedVerseText(_ line: String, fontSize: CGFloat, truncate: Bool = false) -> AttributedString {
     let trimmed = widgetVerseLineForDisplay(line)
     var attributed = AttributedString(trimmed)
     guard !trimmed.isEmpty else { return attributed }
 
     let paragraphStyle = NSMutableParagraphStyle()
     paragraphStyle.alignment = .justified
-    paragraphStyle.lineBreakMode = .byCharWrapping
-    paragraphStyle.lineSpacing = 3
-    paragraphStyle.firstLineHeadIndent = fontSize * 2
+    paragraphStyle.lineBreakMode = truncate ? .byTruncatingTail : .byCharWrapping
+    paragraphStyle.lineSpacing = 4
+    paragraphStyle.firstLineHeadIndent = fontSize * 1
 
     var container = AttributeContainer()
     container.paragraphStyle = paragraphStyle
     attributed.mergeAttributes(container)
     return attributed
+}
+
+private func widgetSerifFont(size: CGFloat) -> UIFont {
+    let base = UIFont.systemFont(ofSize: size, weight: .regular)
+    if let serif = base.fontDescriptor.withDesign(.serif) {
+        return UIFont(descriptor: serif, size: size)
+    }
+    return base
+}
+
+/// 小挂件：按固定字号量高，超高则预截断加省略号（不依赖 SwiftUI / UILabel 自动缩小）。
+private func widgetPreTruncatedVerseLine(
+    _ line: String,
+    fontSize: CGFloat,
+    maxLines: Int,
+    maxWidth: CGFloat,
+    chineseIndent: Bool
+) -> String {
+    let trimmed = widgetVerseLineForDisplay(line)
+    guard !trimmed.isEmpty, maxWidth > 1, maxLines > 0 else { return trimmed }
+
+    let font = widgetSerifFont(size: fontSize)
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.lineSpacing = 4
+    paragraph.alignment = chineseIndent ? .justified : .natural
+    paragraph.lineBreakMode = chineseIndent ? .byCharWrapping : .byWordWrapping
+    if chineseIndent {
+        paragraph.firstLineHeadIndent = fontSize
+    }
+    let attrs: [NSAttributedString.Key: Any] = [
+        .font: font,
+        .paragraphStyle: paragraph,
+    ]
+    let maxHeight = ceil(font.lineHeight * CGFloat(maxLines) + 4 * CGFloat(max(0, maxLines - 1))) + 1
+
+    func fits(_ s: String) -> Bool {
+        let rect = (s as NSString).boundingRect(
+            with: CGSize(width: maxWidth, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: attrs,
+            context: nil
+        )
+        return ceil(rect.height) <= maxHeight
+    }
+
+    if fits(trimmed) { return trimmed }
+
+    var low = 0
+    var high = trimmed.count
+    var best = "…"
+    while low <= high {
+        let mid = (low + high) / 2
+        let end = trimmed.index(trimmed.startIndex, offsetBy: mid)
+        let candidate = String(trimmed[..<end]).trimmingCharacters(in: .whitespacesAndNewlines) + "…"
+        if fits(candidate) {
+            best = candidate
+            low = mid + 1
+        } else {
+            high = mid - 1
+        }
+    }
+    return best
 }
 
 struct DailyVerseWidgetView: View {
@@ -281,54 +424,93 @@ struct DailyVerseWidgetView: View {
         WidgetTypography.resolve(verseLine: entry.verseLine, isSmall: family == .systemSmall)
     }
 
-    private var contentPadding: EdgeInsets {
-        if family == .systemSmall {
-            return EdgeInsets(top: 20, leading: 22, bottom: 20, trailing: 14)
-        }
-        return EdgeInsets(top: 24, leading: 28, bottom: 24, trailing: 16)
+    private var horizontalInset: CGFloat {
+        family == .systemSmall ? 6 : 10
     }
 
     var body: some View {
         let isSmall = family == .systemSmall
         let displayLine = widgetVerseLineForDisplay(entry.verseLine)
         let useJustifiedChinese = widgetUsesChineseLocale(entry.locale)
+        // 上 15 / 下 10。
+        let topInset: CGFloat = 15
+        let bottomInset: CGFloat = 10
+        let edgeInset: CGFloat = 10
+        // systemSmall 内容区大约宽度（扣掉左右边距后），用于预截断量宽。
+        let smallVerseWidth: CGFloat = 155 - edgeInset * 2 - horizontalInset * 2
 
-        VStack(alignment: .leading, spacing: 0) {
-            Group {
-                if useJustifiedChinese {
-                    Text(widgetJustifiedVerseText(displayLine, fontSize: typography.verseFontSize))
-                } else {
-                    Text(displayLine)
+        Link(destination: widgetOpenHomeURL) {
+            VStack(alignment: .leading, spacing: 0) {
+                if isSmall {
+                    let truncated = widgetPreTruncatedVerseLine(
+                        displayLine,
+                        fontSize: typography.verseFontSize,
+                        maxLines: typography.maxLines,
+                        maxWidth: smallVerseWidth,
+                        chineseIndent: useJustifiedChinese
+                    )
+                    Text(truncated)
+                        .font(.system(size: typography.verseFontSize, weight: .regular, design: .serif))
+                        .foregroundStyle(widgetVerseInk)
+                        .lineSpacing(4)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(typography.maxLines)
+                        .truncationMode(.tail)
+                        .allowsTightening(false)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                } else {
+                    Group {
+                        if useJustifiedChinese {
+                            Text(widgetJustifiedVerseText(
+                                displayLine,
+                                fontSize: typography.verseFontSize,
+                                truncate: false
+                            ))
+                        } else {
+                            Text(displayLine)
+                                .multilineTextAlignment(.leading)
+                        }
+                    }
+                    .font(.system(size: typography.verseFontSize, weight: .regular, design: .serif))
+                    .foregroundStyle(widgetVerseInk)
+                    .lineSpacing(4)
+                    .lineLimit(typography.maxLines)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .layoutPriority(1)
+                }
+
+                if isSmall {
+                    Spacer(minLength: 0)
+                }
+
+                if !entry.ref.isEmpty {
+                    Text(entry.ref)
+                        .font(.system(size: isSmall ? 13.5 : 14.5, weight: .medium, design: .serif))
+                        .foregroundStyle(widgetRefInk)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                        .allowsTightening(false)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.top, isSmall ? 8 : 10)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .font(.system(size: typography.verseFontSize, weight: .regular, design: .serif))
-            .foregroundStyle(widgetVerseInk)
-            .lineSpacing(3)
-            .lineLimit(typography.maxLines)
-            .minimumScaleFactor(0.88)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-            .contentTransition(.opacity)
-            .animation(.easeInOut(duration: widgetVerseFadeSec), value: entry.verseKey)
-
-            Spacer(minLength: 0)
-
-            if !entry.ref.isEmpty {
-                Text(entry.ref)
-                    .font(.system(size: isSmall ? 11.5 : 12.5, weight: .medium, design: .serif))
-                    .foregroundStyle(widgetRefInk)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .contentTransition(.opacity)
-                    .animation(.easeInOut(duration: widgetVerseFadeSec), value: entry.verseKey)
-            }
+            // 不用 .id(verseKey)：换句 remount 会造成硬切/抖动；透明度由 timeline 分步驱动。
+            .opacity(entry.contentOpacity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.horizontal, horizontalInset)
+            .clipped()
+            .transaction { $0.animation = nil }
+            .contentShape(Rectangle())
         }
-        .id(entry.verseKey)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(contentPadding)
-        .widgetURL(widgetReadChapterURL(verseKey: entry.verseKey))
+        .buttonStyle(.plain)
+        // 上 15、下 10，左右 10；裁切防顶出。
+        .padding(.top, topInset)
+        .padding(.bottom, bottomInset)
+        .padding(.horizontal, edgeInset)
+        .clipped()
         .containerBackground(for: .widget) {
             Image("WidgetParchmentBg")
                 .resizable()
@@ -345,7 +527,7 @@ struct AskBibleDailyVerseWidget: Widget {
             DailyVerseWidgetView(entry: entry)
         }
         .configurationDisplayName("Daily Verse")
-        .description("Rotating verses on your schedule — tap to open in Bible")
+        .description("Rotating verses on your schedule — tap to open AskBible.me")
         .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
         .containerBackgroundRemovable(false)
@@ -361,6 +543,7 @@ struct AskBibleDailyVerseWidget: Widget {
         ref: "哥林多前書 14:25",
         verseKey: "1CO.14.25",
         locale: "zh-TW",
-        isPlaceholder: false
+        isPlaceholder: false,
+        contentOpacity: 1
     )
 }

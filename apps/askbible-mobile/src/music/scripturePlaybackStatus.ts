@@ -1,6 +1,7 @@
 import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
 import { refreshShellMediaSession } from "../audio/shellMediaSessionPayload";
+import { safePauseSound } from "../audio/safeShellSound";
 import { SCRIPTURE_PROGRESS_UI_INTERVAL_SEC, shouldEmitPlaybackSecUpdate } from "./musicPlaybackProgress";
 import {
   finishScriptureChapterOnce,
@@ -10,7 +11,7 @@ import {
   shouldScheduleScriptureMidChapterResume,
 } from "./scriptureChapterEnd";
 import { handleScriptureStopAtStatus } from "./scripturePlaybackStopAt";
-import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
+import { publishScripturePlaybackSec, setScripturePlaybackClockPlaying } from "./scripturePlaybackSec";
 import { noteScriptureListenProgress } from "../read/scripture-listen-totals";
 import {
   scheduleScriptureResumeAfterInterruption,
@@ -87,13 +88,30 @@ export function createScripturePlaybackStatusHandler(
       }
       return;
     }
-    setPlaying(status.isPlaying);
+    // 用户已暂停（wantPlaying=false）时，真机偶发迟到的 isPlaying=true，勿把 UI 拉回播放。
+    const scriptureWantPlaying =
+      playbackModeRef.current === "scripture" ? scriptureWantPlayingRef.current : true;
+    const uiPlaying = scriptureWantPlaying ? status.isPlaying : false;
+    if (playbackModeRef.current === "scripture") {
+      setScripturePlaybackClockPlaying(
+        uiPlaying,
+        status.isLoaded && typeof status.rate === "number" && status.rate > 0 ? status.rate : 1,
+      );
+    }
+    if (playbackModeRef.current === "scripture" && !scriptureWantPlaying) {
+      setPlaying(false);
+      if (status.isPlaying && soundRef.current) {
+        void safePauseSound(soundRef.current);
+      }
+    } else {
+      setPlaying(status.isPlaying);
+    }
     const scriptureSec = status.positionMillis / 1000;
     if (playbackModeRef.current === "scripture") {
-      noteScriptureListenProgress(scriptureSec, status.isPlaying);
+      noteScriptureListenProgress(scriptureSec, uiPlaying);
       const durationSec = status.durationMillis != null ? status.durationMillis / 1000 : 0;
       const shouldRefreshSession =
-        !status.isPlaying ||
+        !uiPlaying ||
         shouldEmitPlaybackSecUpdate(
           lastScriptureProgressSecRef,
           scriptureSec,
@@ -101,7 +119,7 @@ export function createScripturePlaybackStatusHandler(
         );
       if (shouldRefreshSession) {
         refreshShellMediaSession({
-          playing: status.isPlaying,
+          playing: uiPlaying,
           scriptureCurrentSec: scriptureSec,
           scriptureDurationSec: durationSec,
         });

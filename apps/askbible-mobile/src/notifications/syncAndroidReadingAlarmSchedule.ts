@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import type { NotificationPrefsV1 } from "@/lib/notifications/notification-prefs-types";
 import { resolveReadingAlarmChapterTarget } from "./resolveReadingAlarmChapterTarget";
+import { resolveDailyVerseForDate } from "./resolve-daily-verse-for-date";
 
 type ReadingAlarmNativeModule = {
   syncSchedule?: (json: string) => void;
@@ -16,11 +17,11 @@ type ReadingAlarmNativeModule = {
   maybeAutoStartDueAlarm?: () => Promise<boolean>;
   getCapabilities?: () => Promise<{
     canScheduleExactAlarms?: boolean;
-    canUseFullScreenIntent?: boolean;
     notificationsGranted?: boolean;
+    ignoringBatteryOptimizations?: boolean;
   }>;
   openExactAlarmSettings?: () => void;
-  openFullScreenIntentSettings?: () => void;
+  openBatteryOptimizationSettings?: () => void;
   getScheduledChapterTarget?: () => Promise<{
     bookId?: string;
     chapter?: number;
@@ -52,11 +53,17 @@ export async function syncReadingAlarmSchedule(args: {
 
   const useNativeAlarm = args.enabled && !args.skipToday;
   let target: Awaited<ReturnType<typeof resolveReadingAlarmChapterTarget>> = null;
+  let verse: Awaited<ReturnType<typeof resolveDailyVerseForDate>> = null;
   if (useNativeAlarm) {
     try {
       target = await resolveReadingAlarmChapterTarget();
     } catch {
       target = null;
+    }
+    try {
+      verse = await resolveDailyVerseForDate();
+    } catch {
+      verse = null;
     }
   }
 
@@ -74,6 +81,8 @@ export async function syncReadingAlarmSchedule(args: {
       bookName: target?.bookName ?? "",
       translationId: target?.translationId ?? "cuv-simp",
       mode: args.prefs.readingReminderMode,
+      verseText: verse?.lines.filter(Boolean).join("\n") ?? "",
+      verseRef: verse?.ref ?? "",
     }),
   );
 }
@@ -91,7 +100,7 @@ export async function maybeAutoStartDueReadingAlarm(): Promise<boolean> {
   }
 }
 
-/** 本地通知触发时走原生预备音乐 / 全屏闹钟链路。 */
+/** 本地通知触发时走原生预备音乐 / 读经提醒链路。 */
 export function fireNativeReadingAlarmFromNotification(): void {
   if (Platform.OS !== "ios" && Platform.OS !== "android") return;
   try {

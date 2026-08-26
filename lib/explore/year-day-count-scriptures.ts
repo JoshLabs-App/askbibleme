@@ -16,7 +16,7 @@ export {
 } from "./year-day-count-refs";
 
 function translationIdForLocale(locale: AppLocale): string {
-  if (locale === "en") return "kjv";
+  if (locale === "en") return "web-en";
   return DEFAULT_SCRIPTURE_TRANSLATION_ID;
 }
 

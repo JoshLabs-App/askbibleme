@@ -4,8 +4,6 @@ import { MusicHomeTransportControls } from "./MusicHomeTransportControls";
 import type { MusicHomeScreenController } from "./useMusicHomeScreenController";
 
 type Playback = MusicHomeScreenController["playback"];
-type Seek = MusicHomeScreenController["seek"];
-type SleepTimer = MusicHomeScreenController["sleepTimer"];
 type AlbumState = MusicHomeScreenController["albumState"];
 type Gestures = MusicHomeScreenController["gestures"];
 type Queue = MusicHomeScreenController["queue"];
@@ -14,14 +12,12 @@ type Props = {
   compactLandscape: boolean;
   chromeVisible: boolean;
   playback: Playback;
-  seek: Seek;
-  sleepTimer: SleepTimer;
   albumState: AlbumState;
   gestures: Gestures;
   queue: Queue;
   duration: number;
-  position: number;
-  progress: number;
+  musicActive: boolean;
+  playbackMode: string;
 };
 
 export function MusicHomeForegroundPanel({
@@ -29,14 +25,12 @@ export function MusicHomeForegroundPanel({
   compactLandscape,
   chromeVisible,
   playback,
-  seek,
-  sleepTimer,
   albumState,
   gestures,
   queue,
   duration,
-  position,
-  progress,
+  musicActive,
+  playbackMode,
 }: Props) {
   const {
     album,
@@ -52,13 +46,11 @@ export function MusicHomeForegroundPanel({
     trackIndex,
     playing,
     canTogglePlayback,
-    selectedTrackTitle,
     musicRepeatMode,
-    sleepTimerMinutes,
     downloadingTrackId,
+    togglePlayMusic,
     toggleMusicRepeatOne,
     toggleMusicRepeatAll,
-    togglePlayMusic,
     playTrackAt,
     playNext,
     seekRatio,
@@ -67,10 +59,10 @@ export function MusicHomeForegroundPanel({
   return (
     <>
       <MusicHomeQueuePanel
-        queueDisplayIndices={queue.queueDisplayIndices}
+        queueDisplayIndices={filteredTrackIndices}
         tracks={tracks}
         trackIndex={trackIndex}
-        queueScrollY={queue.queueScrollY}
+        queueScrollV={queue.queueScrollV}
         downloadingTrackId={downloadingTrackId}
         offlineMusicOnly={offlineMusicOnly}
         compactLandscape={compactLandscape}
@@ -84,32 +76,23 @@ export function MusicHomeForegroundPanel({
         playing={playing}
         canTogglePlayback={canTogglePlayback}
         onTogglePlay={() => void togglePlayMusic()}
-        selectedTrackTitle={selectedTrackTitle}
         album={album}
         albumNames={albumNames}
         albumCounts={albumCounts}
-        compactLandscape={compactLandscape}
         chromeVisible={chromeVisible}
-        position={position}
         duration={duration}
-        progress={progress}
+        musicActive={musicActive}
+        trackIndex={trackIndex}
+        playbackMode={playbackMode}
+        seekRatio={seekRatio}
         musicRepeatMode={musicRepeatMode}
-        sleepTimerMinutes={sleepTimerMinutes}
-        sleepTimerBadge={sleepTimer.sleepTimerBadge}
         filteredTrackIndices={filteredTrackIndices}
         currentFilteredIndex={currentFilteredIndex}
         onSelectAlbum={selectAlbum}
-        onSeekStart={() => seek.setSeekDragging(true)}
-        onSeekPreview={seek.setSeekPreview}
-        onSeekRatio={(r) => {
-          seek.setSeekPreview(r);
-          void seekRatio(r).finally(() => seek.setSeekDragging(false));
-        }}
         onPrevTrack={() => void gestures.onPrev()}
         onNextTrack={() => void playNext()}
         onToggleRepeatOne={toggleMusicRepeatOne}
         onToggleRepeatAll={toggleMusicRepeatAll}
-        onCycleSleepTimer={sleepTimer.cycleSleepTimer}
         onPlayTrackAt={(index) => void playTrackAt(index)}
       />
     </>

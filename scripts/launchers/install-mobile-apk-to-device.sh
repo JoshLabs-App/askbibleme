@@ -18,9 +18,12 @@ fi
 echo "→ 打包 Release APK（资源打入安装包，无需 Metro / 本机 API）…"
 npm run mobile:build:apk:local
 
-APK="$(ls -t "$ROOT/dist/mobile"/askbible-android-*.apk 2>/dev/null | head -1)"
-if [[ -z "$APK" || ! -f "$APK" ]]; then
-  echo "✗ 未找到 dist/mobile/*.apk" >&2
+APK="$ROOT/dist/mobile/askbible-android-latest.apk"
+if [[ ! -f "$APK" ]]; then
+  APK="$(ls -t "$ROOT/dist/mobile"/askbible-android-*.apk 2>/dev/null | head -1 || true)"
+fi
+if [[ -z "${APK:-}" || ! -f "$APK" ]]; then
+  echo "✗ 未找到 dist/mobile/askbible-android-latest.apk" >&2
   exit 1
 fi
 

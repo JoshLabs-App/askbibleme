@@ -1,5 +1,5 @@
-import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-ahead";
 import { mergeNtDeepRepeatReadingState } from "../read/reading-plan/merge-nt-deep-repeat-reading-state";
+import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-prefs-merge";
 import { mergeTripleLoopReadingState } from "../read/reading-plan/merge-triple-loop-reading-state";
 import {
   mergeScriptureListenTotalsRecords,
@@ -192,9 +192,9 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return mergeFractions(a, b);
     case "recentSearches":
       return mergeRecentSearches(a, b);
-    case "lastPosition":
     case "readingPlanPrefs":
       return mergeReadingPlanPrefsValue(a, b);
+    case "lastPosition":
     case "readTypography":
     case "readTranslation":
     case "homeNatureUi":
@@ -246,4 +246,27 @@ export function mergeMemberReadingSyncPush(
     blobs[rawKey] = mergeBlobPair(rawKey, blobs[rawKey], blob);
   }
   return blobs;
+}
+
+export type MemberReadingSyncDocumentV1 = {
+  schemaVersion: 1;
+  userId: string;
+  revision: string;
+  updatedAt: string;
+  blobs: Partial<Record<MemberReadingSyncBlobKey, MemberReadingSyncBlob>>;
+};
+
+export function mergeMemberReadingSyncDocuments(
+  userId: string,
+  base: MemberReadingSyncDocumentV1 | null,
+  incoming: MemberReadingSyncPushV1,
+  now = new Date(),
+): MemberReadingSyncDocumentV1 {
+  return {
+    schemaVersion: 1,
+    userId,
+    revision: `${now.getTime()}-${Math.random().toString(36).slice(2, 10)}`,
+    updatedAt: now.toISOString(),
+    blobs: mergeMemberReadingSyncPush(base?.blobs, incoming),
+  };
 }

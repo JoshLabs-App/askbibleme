@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const ROUTE_ERA_KEY = "askbible-mobile-route-era";
 
 /** 路由结构变更时递增，用于一次性清掉 React Navigation / Router 持久化状态 */
-export const ROUTE_ERA = "v8";
+export const ROUTE_ERA = "v9";
 
 function isNavigationStorageKey(key: string): boolean {
   const k = key.toLowerCase();

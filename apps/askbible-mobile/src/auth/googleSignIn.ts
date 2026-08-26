@@ -57,12 +57,15 @@ function mapApiLoginResult(
   return { ok: false, error: api.error, code: api.code };
 }
 
-async function signInWithSupabaseIdToken(idToken: string): Promise<GoogleSignInMobileResult> {
+async function signInWithSupabaseIdToken(
+  idToken: string,
+  nonce?: string,
+): Promise<GoogleSignInMobileResult> {
   if (!isSupabaseAuthConfigured()) {
     return { ok: false, error: "google_not_configured", code: "google_not_configured" };
   }
   const { signInWithGoogleIdTokenInApp } = await import("./googleOAuthSession");
-  const direct = await signInWithGoogleIdTokenInApp(idToken);
+  const direct = await signInWithGoogleIdTokenInApp(idToken, nonce);
   if (!direct.ok) {
     authTrace("supabase signInWithIdToken failed", `${direct.code} ${direct.error}`);
   }
@@ -70,9 +73,16 @@ async function signInWithSupabaseIdToken(idToken: string): Promise<GoogleSignInM
 }
 
 /** 原生 idToken → 会话：优先 Supabase（不依赖 Mac 本地 API）。 */
-async function exchangeGoogleIdToken(idToken: string): Promise<GoogleSignInMobileResult> {
-  const direct = await signInWithSupabaseIdToken(idToken);
-  if (direct.ok || direct.code !== "network") return direct;
+async function exchangeGoogleIdToken(idToken: string, nonce?: string): Promise<GoogleSignInMobileResult> {
+  const direct = await signInWithSupabaseIdToken(idToken, nonce);
+  if (direct.ok || (direct.code !== "network" && direct.code !== "google_nonce_mismatch")) {
+    return direct;
+  }
+
+  if (direct.code === "google_nonce_mismatch") {
+    // Caller may fall back to browser OAuth; keep code for that branch.
+    return direct;
+  }
 
   authTrace("supabase unreachable, trying production API");
   const { loginMobileMemberWithGoogleAt, MOBILE_AUTH_PRODUCTION_BASE_URL } = await import("../api/memberAuth");
@@ -84,44 +94,40 @@ async function exchangeGoogleIdToken(idToken: string): Promise<GoogleSignInMobil
   );
 }
 
-async function signInWithNativeGoogle(): Promise<GoogleSignInMobileResult> {
-  authTrace("path", "native Google SDK");
-  const nativeMod = await import("./googleSignInNativeImpl");
-  const native = await nativeMod.signInWithGoogleNativeIdToken();
-  if (!native.ok) {
-    authTrace("native failed", `${native.code} ${native.error}`);
-    return native;
-  }
-  return exchangeGoogleIdToken(native.idToken);
-}
-
 /**
  * Google 登录：
- * - Android 默认 Supabase 浏览器 OAuth（无需 GCP Android client）
- * - iOS 无 native client 时也走浏览器 OAuth
- * - 配置了 Android/iOS native client 时优先原生 SDK
+ * - 原生 SDK 可用时只走原生（选帐户一次）；失败不回落浏览器，避免第二次选帐户
+ * - 未启用原生时走 Supabase / 生产浏览器 OAuth（一次）
  */
 export async function signInWithGoogleMobile(): Promise<GoogleSignInMobileResult> {
   try {
     if (isNativeGoogleSignInReady()) {
-      const native = await signInWithNativeGoogle();
-      if (native.ok) return native;
-      if (native.code === "google_cancelled") return native;
-      if (native.code === "google_android_setup" || native.code === "google_play_services") {
-        return native;
+      authTrace("path", "native Google SDK");
+      const nativeMod = await import("./googleSignInNativeImpl");
+      const nativeId = await nativeMod.signInWithGoogleNativeIdToken();
+      if (!nativeId.ok) {
+        authTrace("native idToken failed", `${nativeId.code} ${nativeId.error}`);
+        // 仅在原生根本未配置/未拉起时回落浏览器；用户已见过帐户选择后禁止再开浏览器 OAuth。
+        if (nativeId.code !== "google_not_configured") {
+          return nativeId;
+        }
+        authTrace("native not configured, falling back to browser OAuth");
+      } else {
+        const exchanged = await exchangeGoogleIdToken(nativeId.idToken, nativeId.nonce);
+        if (exchanged.ok || exchanged.code !== "google_nonce_mismatch") {
+          return exchanged;
+        }
+        // 原生 nonce 未生效时（旧二进制未打 patch）再回落浏览器，避免卡死。
+        authTrace("native idToken nonce mismatch, falling back to browser OAuth");
       }
-      authTrace("native failed, falling back to browser OAuth", native.code ?? native.error);
     } else {
       authTrace("path", "Supabase browser OAuth");
     }
 
-    if (!isSupabaseAuthConfigured()) {
-      authTrace("blocked", "Supabase env missing");
-      return { ok: false, error: "google_not_configured", code: "google_not_configured" };
-    }
-
     const browserMod = await import("./googleOAuthBrowser");
-    const browserResult = await browserMod.signInWithGoogleBrowserOAuth();
+    const browserResult = isSupabaseAuthConfigured()
+      ? await browserMod.signInWithGoogleBrowserOAuth()
+      : await browserMod.signInWithGoogleProductionOAuth();
     if (!browserResult.ok) {
       authTrace("browser OAuth failed", `${browserResult.code} ${browserResult.error}`);
       return browserResult;

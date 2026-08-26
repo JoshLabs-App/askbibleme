@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { useLocale } from "../i18n/LocaleProvider";
 import { exploreStyles as s } from "./exploreParchmentStyles";
 import {

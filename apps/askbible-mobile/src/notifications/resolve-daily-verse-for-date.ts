@@ -1,13 +1,11 @@
 import { pickDailyVerseKey } from "@/lib/daily-verse/pick-daily-verse-key";
+import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
 import type { AppLocale } from "../i18n/config";
 import { getLocale } from "../i18n/locale-store";
-import {
-  readHomePrayerVersePrefs,
-  verseTranslationIdsFromPrefs,
-} from "../home/homePrayerVersePrefs";
 import { hydrateHomeVersePoolScope } from "../home/homeVersePoolScopePrefs";
 import { loadHomeVerseManifest, resolveHomeVerseEntry } from "../home/verse-pool/loader";
 import type { HomeVerseEntry } from "../home/verse-pool/types";
+import { readReadBibleTranslationPrefs } from "../read/read-bible-translation-prefs";
 import { toLocalDateString } from "../read/reading-plan/reading-plan-prefs";
 
 export type DailyVerseSnapshotV1 = {
@@ -25,14 +23,16 @@ export async function resolveDailyVerseForDate(
   date: string = toLocalDateString(new Date()),
 ): Promise<DailyVerseSnapshotV1 | null> {
   const locale = getLocale();
-  const [manifest, scopeId, prefs] = await Promise.all([
+  const [manifest, scopeId, catalog] = await Promise.all([
     loadHomeVerseManifest(),
     hydrateHomeVersePoolScope(),
-    readHomePrayerVersePrefs(),
+    fetchBibleTranslationsCatalog().catch(() => null),
   ]);
   if (!manifest?.entries.length) return null;
 
-  const { primary: translationId } = verseTranslationIdsFromPrefs(prefs, locale);
+  const index = catalog ?? { translations: [], defaultTranslationId: null };
+  const prefs = await readReadBibleTranslationPrefs(index, locale);
+  const translationId = prefs.primaryTranslationId.trim() || "cuv-simp";
   const verseKey = pickDailyVerseKey({
     date,
     locale,

@@ -25,10 +25,14 @@ export function ShellNavDrawerReadingSyncSection({ locale }: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [events, setEvents] = useState(() => getMemberReadingSyncDebugEvents());
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
-    void readMemberReadingSyncMeta().then((meta) => setLastSyncedAt(meta.lastSyncedAt));
-  }, [events]);
+    void readMemberReadingSyncMeta().then((meta) => {
+      setLastSyncedAt(meta.lastSyncedAt);
+      setLastError(meta.lastError ?? null);
+    });
+  }, [events, sheetOpen]);
 
   useEffect(() => {
     if (!debugEnabled) return;
@@ -42,10 +46,10 @@ export function ShellNavDrawerReadingSyncSection({ locale }: Props) {
       return summarizeMemberReadingSyncEvents(events);
     }
     const synced = formatMemberReadingSyncMetaTime(lastSyncedAt);
-    return synced
-      ? resolveUiText(locale, `上次 ${synced}`, `Last ${synced}`)
-      : resolveUiText(locale, "尚未同步", "Not synced yet");
-  }, [debugEnabled, events, lastSyncedAt, locale]);
+    if (synced) return resolveUiText(locale, `上次 ${synced}`, `Last ${synced}`);
+    if (lastError) return resolveUiText(locale, "同步未完成", "Sync incomplete");
+    return resolveUiText(locale, "尚未同步", "Not synced yet");
+  }, [debugEnabled, events, lastSyncedAt, lastError, locale]);
 
   return (
     <>

@@ -1,12 +1,14 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
 import { resolveSelfHostedChapterAudioPlayableUrl } from "./chapter-audio-sources";
 import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
+import { buildAudioTreasureKjvChapterUrl } from "@/lib/bible/kjv-chapter-audio-url";
 
 export const WEB_CHAPTER_AUDIO_REMOTE_NT = "https://theaudiopower.org/WEB/Recordings";
 export const WEB_CHAPTER_AUDIO_REMOTE_OT = "https://theaudiopower.org/WEB2/Recordings";
 export const WEB_CHAPTER_AUDIO_SUBDIR = "web-en";
 export const BLM_ES_CHAPTER_AUDIO_REMOTE_BASE = "https://ebible.org/spablm/mp3";
 export const BLM_ES_CHAPTER_AUDIO_SUBDIR = "blm-es";
+export const KJV_CHAPTER_AUDIO_SUBDIR = "kjv";
 
 const WEB_AUDIO_BOOK_NAME_OVERRIDES: Record<string, string> = {
   PSA: "Psalms",
@@ -156,14 +158,15 @@ export function translationUsesWebChapterAudio(translationId: string): boolean {
   const id = String(translationId || "")
     .trim()
     .toLowerCase();
-  return id === "web-en" || id === "bbe-en" || id === "blm-es";
+  return id === "web-en" || id === "kjv" || id === "blm-es";
 }
 
 export function chapterAudioScopeForTranslation(translationId: string): string {
   const id = String(translationId || "")
     .trim()
     .toLowerCase();
-  if (id === "web-en" || id === "bbe-en") return WEB_CHAPTER_AUDIO_SUBDIR;
+  if (id === "kjv") return KJV_CHAPTER_AUDIO_SUBDIR;
+  if (id === "web-en") return WEB_CHAPTER_AUDIO_SUBDIR;
   if (id === "blm-es") return BLM_ES_CHAPTER_AUDIO_SUBDIR;
   return WEB_CHAPTER_AUDIO_SUBDIR;
 }
@@ -226,6 +229,9 @@ export function buildExternalWebChapterAudioUrl(
     .toLowerCase();
   if (tid === "blm-es") {
     return buildExternalBlmEsChapterAudioUrl(bookId, chapter);
+  }
+  if (tid === "kjv") {
+    return buildAudioTreasureKjvChapterUrl(bookId, chapter);
   }
   const id = String(bookId || "").trim().toUpperCase();
   if (!id || !Number.isInteger(chapter) || chapter < 1) return "";

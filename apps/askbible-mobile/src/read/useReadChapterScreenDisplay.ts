@@ -18,6 +18,7 @@ import {
   resolvePlanFlowPrevTarget,
 } from "./read-plan-flow-nav";
 import type { TodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
+import { resolveReadDisplayLocale } from "./resolveReadDisplayLocale";
 
 type TranslationMeta = { language?: string } | undefined;
 
@@ -63,22 +64,15 @@ export function useReadChapterScreenDisplay({
   }, [chapterData?.bookId, chapterData?.chapter, isPlanFlow, todayPlanPayload]);
 
   const readDisplayLocale = useMemo<AppLocale>(() => {
-    const lang = String(primaryTranslationMeta?.language ?? "").toLowerCase();
-    if (lang.startsWith("en")) return "en";
-    if (lang.startsWith("zh")) return locale === "zh-TW" ? "zh-TW" : "zh-CN";
     const verseSample = chapterData?.verses
       ?.slice(0, 3)
       .map((row) => row.text)
       .join(" ");
-    if (verseSample) {
-      if (/[\u3400-\u9FFF]/.test(verseSample)) {
-        return locale === "zh-TW" ? "zh-TW" : "zh-CN";
-      }
-      if (/[A-Za-z]/.test(verseSample)) {
-        return "en";
-      }
-    }
-    return locale;
+    return resolveReadDisplayLocale({
+      appLocale: locale,
+      translationLanguage: primaryTranslationMeta?.language,
+      verseSampleText: verseSample,
+    });
   }, [primaryTranslationMeta?.language, chapterData?.verses, locale]);
 
   const tr = useMemo(() => createT(readDisplayLocale), [readDisplayLocale]);

@@ -1,6 +1,5 @@
 import { Pressable } from "react-native";
 import { t } from "../i18n/site-copy";
-import { useMusicPlaybackOptional } from "../music/MusicPlaybackContext";
 import { homeNatureScreenStyles as styles } from "./homeNatureScreenStyles";
 
 type Props = {
@@ -9,48 +8,20 @@ type Props = {
   onInteraction: () => void;
 };
 
-/** 场景首页背景点按：音乐播放/暂停。经文正文由 HomeVerseOverlay 单独处理。 */
+/** 场景首页点空白：竖屏显隐顶栏 / Tab（播放行留下）；横屏显隐整排播放栏。 */
 export function HomeNatureScreenInteractionLayer({
   autoImmersive,
   enabled,
   onInteraction,
 }: Props) {
-  const playback = useMusicPlaybackOptional();
-
   if (!enabled) return null;
-
-  if (autoImmersive) {
-    return (
-      <Pressable
-        style={styles.autoImmersiveBackdrop}
-        onPress={onInteraction}
-        accessibilityRole="button"
-        accessibilityLabel={t("nature.homeBackdropTapAria")}
-      />
-    );
-  }
-
-  if (!playback) return null;
-
-  const { playing, playbackMode, canTogglePlayback, togglePlayMusic } = playback;
-  const musicActive = playbackMode === "music" && playing;
 
   return (
     <Pressable
-      style={styles.sceneMusicTapSurface}
-      onPress={() => {
-        onInteraction();
-        void togglePlayMusic();
-      }}
+      style={autoImmersive ? styles.autoImmersiveBackdrop : styles.sceneMusicTapSurface}
+      onPress={onInteraction}
       accessibilityRole="button"
-      accessibilityLabel={
-        !canTogglePlayback
-          ? t("playback.noTrack")
-          : musicActive
-            ? t("playback.pauseMusic")
-            : t("playback.playMusic")
-      }
-      accessibilityState={{ disabled: !canTogglePlayback }}
+      accessibilityLabel={t("nature.homeBackdropTapAria")}
     />
   );
 }

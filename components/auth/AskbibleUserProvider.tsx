@@ -9,8 +9,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  deleteAskbibleWebAccount,
+  fetchAskbibleWebSessionUser,
+  signOutAskbibleWeb,
+  type AskbibleWebUser,
+} from "@/lib/askbible-web-auth-client";
 
-export type AskbibleAppUser = { id: string; email: string; name: string };
+export type AskbibleAppUser = {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string | null;
+};
 
 type Ctx = {
   /** 是否已完成首次用户态拉取 */
@@ -26,6 +37,16 @@ type Ctx = {
 
 const AskbibleUserContext = createContext<Ctx | null>(null);
 
+function toAppUser(user: AskbibleWebUser | null): AskbibleAppUser | null {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt,
+  };
+}
+
 export function AskbibleUserProvider({ children }: { children: ReactNode }) {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [configured, setConfigured] = useState(false);
@@ -35,21 +56,10 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/askbible", { method: "GET", cache: "no-store" });
-      if (!res.ok) {
-        setConfigured(false);
-        setUser(null);
-        setIsAdmin(false);
-        return;
-      }
-      const data = (await res.json()) as {
-        configured?: boolean;
-        user?: AskbibleAppUser | null;
-        isAdmin?: boolean;
-      };
-      setConfigured(Boolean(data.configured));
-      setUser(data.user || null);
-      setIsAdmin(Boolean(data.isAdmin));
+      const session = await fetchAskbibleWebSessionUser();
+      setConfigured(session.configured);
+      setUser(toAppUser(session.user));
+      setIsAdmin(Boolean(session.user?.isAdmin));
     } catch {
       setConfigured(false);
       setUser(null);
@@ -66,32 +76,21 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await fetch("/api/auth/askbible", { method: "DELETE" });
+      const { flushMemberReadingSyncWebNow, markMemberReadingSyncPullOnlyWeb } = await import(
+        "@/lib/member-reading-sync/client/run-member-reading-sync-web"
+      );
+      flushMemberReadingSyncWebNow("sign-out");
+      await markMemberReadingSyncPullOnlyWeb();
+      await signOutAskbibleWeb();
     } finally {
       await refresh();
     }
   }, [refresh]);
 
   const deleteAccount = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/askbible/account", { method: "DELETE" });
-      const data = (await res.json().catch(() => null)) as {
-        ok?: boolean;
-        error?: string;
-        code?: string;
-      } | null;
-      if (!res.ok || data?.ok !== true) {
-        return {
-          ok: false as const,
-          error: typeof data?.error === "string" ? data.error : "delete_failed",
-          code: typeof data?.code === "string" ? data.code : undefined,
-        };
-      }
-      await refresh();
-      return { ok: true as const };
-    } catch {
-      return { ok: false as const, error: "network", code: "network" };
-    }
+    const result = await deleteAskbibleWebAccount();
+    if (result.ok) await refresh();
+    return result;
   }, [refresh]);
 
   const value = useMemo(

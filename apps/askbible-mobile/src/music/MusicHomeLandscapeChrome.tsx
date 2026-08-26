@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { resolveUiText } from "../i18n/site-copy";
 import type { AppLocale } from "../i18n/config";
 import { musicCopy } from "./musicCopy";
-import { useMusicPlayback } from "./MusicPlaybackContext";
 
 type Props = {
   locale: AppLocale;
@@ -11,10 +10,13 @@ type Props = {
   chromeVisible: boolean;
   loading: boolean;
   hasCurrent: boolean;
+  playing: boolean;
+  canTogglePlayback: boolean;
   nowClockText: string;
   landscapeSafeHorizontal: { left: number; right: number } | null;
   bottomInset: number;
   onLandscapeStageToggle: () => void;
+  onTogglePlay: () => void;
 };
 
 export function MusicHomeLandscapeChrome({
@@ -28,9 +30,10 @@ export function MusicHomeLandscapeChrome({
   landscapeSafeHorizontal,
   bottomInset,
   onLandscapeStageToggle,
+  onTogglePlay,
+  playing,
+  canTogglePlayback,
 }: Props) {
-  const { playing, togglePlayMusic, canTogglePlayback } = useMusicPlayback();
-
   if (!compactLandscape) return null;
 
   return (
@@ -56,7 +59,7 @@ export function MusicHomeLandscapeChrome({
       {chromeVisible ? (
         <Pressable
           style={[styles.landscapeStageTapLayer, { right: "42%" }]}
-          onPress={() => void togglePlayMusic()}
+          onPress={onTogglePlay}
           disabled={!canTogglePlayback}
           accessibilityRole="button"
           accessibilityLabel={playing ? musicCopy.pause : musicCopy.play}

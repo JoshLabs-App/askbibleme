@@ -1,4 +1,13 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  startTransition,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { InteractionManager } from "react-native";
 import { readCuvChapterAudioVoice, subscribeCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
@@ -78,11 +87,16 @@ export function ReadBibleTypographyProvider({ children }: { children: ReactNode 
   const sizeAtLargePreset = typography.size === READ_BIBLE_SIZE_PRESET_LARGE;
 
   const bumpSize = useCallback((delta: -1 | 1) => {
-    setTypography((prev) => {
-      const next = { ...prev, size: stepReadBibleSize(prev.size, delta) };
-      if (next.size === prev.size) return prev;
-      void writeReadBibleTypographyPrefs(next);
-      return next;
+    startTransition(() => {
+      setTypography((prev) => {
+        const next = { ...prev, size: stepReadBibleSize(prev.size, delta) };
+        if (next.size === prev.size) return prev;
+        // 字号变更会重排整章经文；持久化放到空闲，避免与首帧抢线程。
+        InteractionManager.runAfterInteractions(() => {
+          void writeReadBibleTypographyPrefs(next);
+        });
+        return next;
+      });
     });
   }, []);
 

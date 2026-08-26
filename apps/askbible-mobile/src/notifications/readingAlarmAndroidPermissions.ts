@@ -5,11 +5,11 @@ import { resolveUiText } from "../i18n/site-copy";
 type AndroidReadingAlarmModule = {
   getCapabilities?: () => Promise<{
     canScheduleExactAlarms?: boolean;
-    canUseFullScreenIntent?: boolean;
     notificationsGranted?: boolean;
+    ignoringBatteryOptimizations?: boolean;
   }>;
   openExactAlarmSettings?: () => void;
-  openFullScreenIntentSettings?: () => void;
+  openBatteryOptimizationSettings?: () => void;
 };
 
 function getModule(): AndroidReadingAlarmModule | undefined {
@@ -24,8 +24,8 @@ function getModule(): AndroidReadingAlarmModule | undefined {
 
 export type AndroidReadingAlarmCapabilities = {
   canScheduleExactAlarms: boolean;
-  canUseFullScreenIntent: boolean;
   notificationsGranted: boolean;
+  ignoringBatteryOptimizations: boolean;
 };
 
 export async function getAndroidReadingAlarmCapabilities(): Promise<AndroidReadingAlarmCapabilities | null> {
@@ -35,8 +35,8 @@ export async function getAndroidReadingAlarmCapabilities(): Promise<AndroidReadi
     const raw = await mod.getCapabilities();
     return {
       canScheduleExactAlarms: raw?.canScheduleExactAlarms !== false,
-      canUseFullScreenIntent: raw?.canUseFullScreenIntent !== false,
       notificationsGranted: raw?.notificationsGranted !== false,
+      ignoringBatteryOptimizations: raw?.ignoringBatteryOptimizations !== false,
     };
   } catch {
     return null;
@@ -58,7 +58,12 @@ function promptOpenSettings(
   ]);
 }
 
-/** Prompt for exact-alarm and full-screen intent permissions required on Samsung / Android 12+. */
+/**
+ * Android 过夜提醒准时送达所需权限（全机型通用）：
+ * 1) 精确闹钟（Android 12+，系统设置名仍为「闹钟与提醒」）
+ * 2) 电池优化豁免（深度休眠后否则易被拖死）
+ * 一次只提示一项，下次开启/再进设置时再补另一项。
+ */
 export async function ensureAndroidReadingAlarmPermissions(locale: AppLocale): Promise<void> {
   if (Platform.OS !== "android") return;
   const mod = getModule();
@@ -70,27 +75,27 @@ export async function ensureAndroidReadingAlarmPermissions(locale: AppLocale): P
   if (!caps.canScheduleExactAlarms && mod.openExactAlarmSettings) {
     promptOpenSettings(
       locale,
-      resolveUiText(locale, "需要精确闹钟权限", "Exact alarm permission needed"),
+      resolveUiText(locale, "需要准时提醒权限", "On-time reminder permission"),
       resolveUiText(
         locale,
-        "每日清晨闹钟需要在系统设置中允许「闹钟与提醒」，才能在设定时间自动打开。",
-        "Allow Alarms & reminders in Settings so the daily morning alarm can open automatically at the scheduled time.",
+        "每日读经提醒需要在系统设置中允许「闹钟与提醒」，才能在设定时间准时通知你。",
+        "Allow Alarms & reminders in Settings so the daily reading reminder can notify you on time.",
       ),
       () => mod.openExactAlarmSettings?.(),
     );
     return;
   }
 
-  if (!caps.canUseFullScreenIntent && mod.openFullScreenIntentSettings) {
+  if (!caps.ignoringBatteryOptimizations && mod.openBatteryOptimizationSettings) {
     promptOpenSettings(
       locale,
-      resolveUiText(locale, "需要全屏通知权限", "Full-screen notification needed"),
+      resolveUiText(locale, "需要关闭电池优化", "Battery optimization"),
       resolveUiText(
         locale,
-        "请在系统设置中允许 AskBible.me 使用全屏通知，锁屏时闹钟才能自动弹出。",
-        "Allow full-screen notifications for AskBible.me so the alarm can appear over the lock screen.",
+        "过夜或长时间锁屏后，系统省电可能推迟提醒。请允许 AskBible.me「不受电池限制」，清晨才能准时收到通知。",
+        "After overnight sleep or long lock-screen idle, battery saving may delay reminders. Allow AskBible.me to run without battery restrictions so the morning notification arrives on time.",
       ),
-      () => mod.openFullScreenIntentSettings?.(),
+      () => mod.openBatteryOptimizationSettings?.(),
     );
   }
 }

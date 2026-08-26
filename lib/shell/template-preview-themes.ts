@@ -184,7 +184,7 @@ export function shellChromeBottomLayerStyleForNatureVideoStage(
   };
 }
 
-/** 壳模板页预览主题色板；可选经左菜单写入本机并由 `AppSkinProvider` 全站覆盖 `--brand-*` */
+/** 壳模板页预览主题色板（仅模板/后台预览，不再全站覆盖 `--brand-*`） */
 export type ShellTemplatePreviewThemeId =
   | "parchmentShell"
   | "lagoonPaper"

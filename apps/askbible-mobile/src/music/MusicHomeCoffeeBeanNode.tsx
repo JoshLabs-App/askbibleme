@@ -11,12 +11,12 @@ type Props = {
   orbitV: Animated.Value;
   leaderOrbitV: Animated.Value;
   layout: CoffeeOrbitLayout;
-  rhythmPulse: number;
+  pulseV: Animated.Value;
 };
 
-export function MusicHomeCoffeeBeanNode({ index, bobV, orbitV, leaderOrbitV, layout, rhythmPulse }: Props) {
+export function MusicHomeCoffeeBeanNode({ index, bobV, orbitV, leaderOrbitV, layout, pulseV }: Props) {
   const node = resolveCoffeeBeanNodeLayout(index, layout);
-  const motion = useCoffeeBeanNodeMotion(node, bobV, orbitV, leaderOrbitV, rhythmPulse);
+  const motion = useCoffeeBeanNodeMotion(node, bobV, orbitV, leaderOrbitV, pulseV);
 
   return (
     <Animated.View
@@ -35,7 +35,7 @@ export function MusicHomeCoffeeBeanNode({ index, bobV, orbitV, leaderOrbitV, lay
             { translateX: motion.isFollower ? motion.followRadiusDrift : motion.mainRadiusDrift },
             { rotate: motion.isFollower ? motion.followOrbitWobble : motion.mainOrbitWobble },
             { translateX: motion.danceSwayX },
-            { translateY: -motion.pulseLift },
+            { translateY: motion.pulseTranslateY },
             { translateY: motion.danceFloatY },
             { translateY: motion.bobY },
             { rotate: motion.danceRotate },

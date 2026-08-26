@@ -32,7 +32,8 @@ export async function GET() {
         language: t.language,
         bundled,
         bytes,
-        downloadUrl: isRemote ? null : `/api/mobile/bible/translations/${encodeURIComponent(t.id)}/sqlite`,
+        // 整本 sqlite 下载已下线：内置包 / chapter-api / 本机已装；不再提供远端 zip/sqlite URL。
+        downloadUrl: null,
         provider: t.provider,
         remoteId: t.remoteId ?? null,
         delivery: t.delivery,

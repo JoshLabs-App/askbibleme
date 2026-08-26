@@ -7,6 +7,8 @@ export type ActiveReadingAlarm = {
   bookName: string;
   translationId: string;
   label: string;
+  verseText?: string;
+  verseRef?: string;
 };
 
 export async function shouldStartReadingAlarmAudio(): Promise<boolean> {

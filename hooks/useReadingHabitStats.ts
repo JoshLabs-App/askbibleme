@@ -16,9 +16,14 @@ export function useReadingHabitStats() {
   const [snapshot, setSnapshot] = useState<ReadingHabitStatsSnapshot>(() =>
     snapshotFromRecord(readReadingHabitStats(), toLocalDateString(new Date())),
   );
+  const [completedDates, setCompletedDates] = useState<readonly string[]>(
+    () => readReadingHabitStats().completedDates,
+  );
 
   const refresh = useCallback(() => {
-    setSnapshot(snapshotFromRecord(readReadingHabitStats(), toLocalDateString(new Date())));
+    const record = readReadingHabitStats();
+    setSnapshot(snapshotFromRecord(record, toLocalDateString(new Date())));
+    setCompletedDates(record.completedDates);
   }, []);
 
   useEffect(() => {
@@ -29,7 +34,8 @@ export function useReadingHabitStats() {
   const syncTodayComplete = useCallback(async (hasReadingToday: boolean | undefined) => {
     const next = syncReadingHabitDayCompletion(hasReadingToday);
     setSnapshot(snapshotFromRecord(next, toLocalDateString(new Date())));
+    setCompletedDates(next.completedDates);
   }, []);
 
-  return { yearDay, snapshot, syncTodayComplete };
+  return { yearDay, snapshot, completedDates, syncTodayComplete };
 }

@@ -22,6 +22,8 @@ installGoogleOAuthLinkingCapture();
 export const GOOGLE_OAUTH_HTTPS_REDIRECT_URI = "https://askbible.me/auth/mobile-callback";
 
 export const GOOGLE_OAUTH_APP_REDIRECT_URI = "askbible://auth/callback";
+export const GOOGLE_PRODUCTION_OAUTH_URL =
+  "https://askbible.me/auth/callback?flow=mobile&provider=google&redirect_to=askbible://auth/callback";
 
 export function getGoogleOAuthRedirectUri(): string {
   const mode = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_REDIRECT_MODE?.trim().toLowerCase();
@@ -33,7 +35,7 @@ export function getGoogleOAuthRedirectUri(): string {
     return GOOGLE_OAUTH_HTTPS_REDIRECT_URI;
   }
 
-  // 默认深链（Supabase 已含 askbible://auth/callback）
+  // App 内发起的登录默认回到 App；HTTPS 仅作为显式配置的回落方式。
   return GOOGLE_OAUTH_APP_REDIRECT_URI;
 }
 
@@ -48,6 +50,82 @@ export function getGoogleOAuthAuthSessionRedirectPrefix(redirectTo: string): str
 }
 
 export type GoogleBrowserOAuthResult = GoogleOAuthSessionResult;
+
+async function resolveGoogleUserFromAccessToken(
+  accessToken: string,
+): Promise<{ id: string; email: string; name: string } | null> {
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      sub?: string;
+      id?: string;
+      email?: string;
+      name?: string;
+    };
+    const id = (data.sub || data.id || "").trim();
+    if (!id) return null;
+    return {
+      id,
+      email: (data.email || "").trim(),
+      name: (data.name || "").trim() || "Google",
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** 无本地 Supabase 配置时，沿用 AskBible3 已验证的生产 OAuth 回落。 */
+export async function signInWithGoogleProductionOAuth(): Promise<GoogleBrowserOAuthResult> {
+  const pendingWait = beginGoogleOAuthCallbackWait();
+  try {
+    const WebBrowser = await import("expo-web-browser");
+    WebBrowser.maybeCompleteAuthSession();
+    const result = await WebBrowser.openAuthSessionAsync(
+      GOOGLE_PRODUCTION_OAUTH_URL,
+      GOOGLE_OAUTH_APP_REDIRECT_URI,
+      { preferEphemeralSession: true, showInRecents: false },
+    );
+    const callbackUrl = result.type === "success" ? result.url : await pendingWait.catch(() => null);
+    if (!callbackUrl) return { ok: false, error: "google_cancelled", code: "google_cancelled" };
+    const fragment = callbackUrl.split("#")[1] || callbackUrl.split("?")[1] || "";
+    const params = new URLSearchParams(fragment);
+    const accessToken = params.get("access_token")?.trim();
+    if (!accessToken) return { ok: false, error: "missing_access_token", code: "google_failed" };
+    const user = await resolveGoogleUserFromAccessToken(accessToken);
+    if (!user) return { ok: false, error: "missing_google_user", code: "google_failed" };
+    return {
+      ok: true,
+      sessionToken: accessToken,
+      expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      user,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (Platform.OS === "android") {
+      await Linking.openURL(GOOGLE_PRODUCTION_OAUTH_URL);
+      const callbackUrl = await pendingWait.catch(() => null);
+      const fragment = callbackUrl?.split("#")[1] || callbackUrl?.split("?")[1] || "";
+      const accessToken = new URLSearchParams(fragment).get("access_token")?.trim();
+      if (accessToken) {
+        const user = await resolveGoogleUserFromAccessToken(accessToken);
+        if (!user) return { ok: false, error: "missing_google_user", code: "google_failed" };
+        return {
+          ok: true,
+          sessionToken: accessToken,
+          expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+          user,
+        };
+      }
+    }
+    return { ok: false, error: msg || "google_failed", code: "google_failed" };
+  } finally {
+    cancelGoogleOAuthCallbackWait();
+    await dismissOAuthBrowser();
+  }
+}
 
 function isNetworkErrorMessage(msg: string): boolean {
   return /network request failed|failed to fetch|network error|timed out|internet connection|offline|failed to connect|aborted/i.test(
@@ -89,8 +167,15 @@ async function resolveOAuthCallbackUrl(
   }
 }
 
+const ANDROID_OAUTH_DISMISS_GRACE_MS = 2500;
+
+function takeOAuthCallbackUrl(url: string | null | undefined): string | null {
+  return url && isGoogleOAuthCallbackUrl(url) ? url : null;
+}
+
 /**
- * Android Custom Tab + singleTask 深链回 App 时，openAuthSessionAsync 可能长期不 resolve；
+ * Android Custom Tab + singleTask 深链回 App 时，openAuthSessionAsync 可能长期不 resolve，
+ * 或先以 dismiss 结束（深链已把 Activity 拉回）。立刻当取消会清掉 pendingWait，授权码就丢了。
  * 与 Linking 深链 pendingWait 并行，谁先拿到 callback URL 谁赢。
  */
 async function waitForGoogleOAuthCallbackUrl(
@@ -99,26 +184,36 @@ async function waitForGoogleOAuthCallbackUrl(
 ): Promise<string | null> {
   return new Promise((resolve) => {
     let settled = false;
+    let dismissGrace: ReturnType<typeof setTimeout> | null = null;
     const finish = (url: string | null) => {
       if (settled) return;
       settled = true;
+      if (dismissGrace) clearTimeout(dismissGrace);
       cancelGoogleOAuthCallbackWait();
       resolve(url);
     };
 
     pendingWait
-      .then((url) => finish(isGoogleOAuthCallbackUrl(url) ? url : null))
+      .then((url) => finish(takeOAuthCallbackUrl(url)))
       .catch(() => finish(null));
 
     void authSessionPromise
       .then((result) => {
-        if (result.type === "success" && result.url && isGoogleOAuthCallbackUrl(result.url)) {
-          finish(result.url);
+        const successUrl = result.type === "success" ? takeOAuthCallbackUrl(result.url) : null;
+        if (successUrl) {
+          finish(successUrl);
           return;
         }
-        if (result.type === "cancel" || result.type === "dismiss") {
+        if (result.type !== "cancel" && result.type !== "dismiss") return;
+        if (Platform.OS !== "android") {
           finish(null);
+          return;
         }
+        void Linking.getInitialURL().then((url) => {
+          const callback = takeOAuthCallbackUrl(url);
+          if (callback) finish(callback);
+        });
+        dismissGrace = setTimeout(() => finish(null), ANDROID_OAUTH_DISMISS_GRACE_MS);
       })
       .catch(() => finish(null));
   });

@@ -4,9 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { formatReadingPlanRange } from "./reading-plan/format-reading-range";
-import { todayReadingItemKey } from "./reading-plan/today-reading-done";
 import { readChapterCompletionPlanPanelStyles as styles } from "./readChapterCompletionPlanPanelStyles";
-import { startTodayPlanFlowScripture } from "./startTodayReadingScriptureFromReadHome";
 import { useReadChapterCompletionPlanState } from "./useReadChapterCompletionPlanState";
 
 type Props = {
@@ -14,6 +12,20 @@ type Props = {
   chapter: number;
   displayLocale?: AppLocale;
 };
+
+/** 本章完成面板：只进阅读章页，不走 planFlow、不自动播音频。 */
+function openChapterForReading(
+  router: ReturnType<typeof useRouter>,
+  target: { bookId: string; chapter: number },
+) {
+  router.push({
+    pathname: "/read/[bookId]/[chapter]",
+    params: {
+      bookId: target.bookId,
+      chapter: String(target.chapter),
+    },
+  });
+}
 
 export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale }: Props) {
   const router = useRouter();
@@ -25,11 +37,11 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
     isEnglishDisplay,
     localeZhText,
     displayName,
+    showLoginHint,
     neighbors,
     nextTarget,
     toggleDone,
     isReadingDone,
-    planId,
   } = useReadChapterCompletionPlanState({ bookId, chapter, displayLocale });
 
   if (loading || !readings.length) return null;
@@ -38,7 +50,26 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
     <>
       <View style={styles.card}>
         <View style={styles.titleWrap}>
-          <Text style={styles.titleName}>{displayName || (isEnglishDisplay ? "Friend" : localeZhText("你"))}</Text>
+          {displayName ? <Text style={styles.titleName}>{displayName}</Text> : null}
+          {showLoginHint ? (
+            <Pressable
+              onPress={() => router.push("/login")}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={
+                isEnglishDisplay
+                  ? "Tap to sign in and save reading progress"
+                  : localeZhText("点击登录可保存读经进度")
+              }
+              style={({ pressed }) => [styles.titleLoginHintBtn, pressed && styles.pressed]}
+            >
+              <Text style={styles.titleLoginHint}>
+                {isEnglishDisplay
+                  ? "Tap to sign in and save reading progress ›"
+                  : localeZhText("点击登录可保存读经进度 ›")}
+              </Text>
+            </Pressable>
+          ) : null}
           <Text style={styles.titleMain}>
             {isEnglishDisplay ? "🎉 Great job! This chapter is complete." : localeZhText("🎉 非常好！本章已完成")}
           </Text>
@@ -53,11 +84,11 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
 
         <View style={styles.readingList}>
           {readings.map((r) => {
-            const key = todayReadingItemKey(r, planId);
+            const rowKey = `${r.bookId}:${r.startChapter}-${r.endChapter}:${r.startVerse ?? ""}-${r.endVerse ?? ""}`;
             const done = isReadingDone(r);
             const label = formatReadingPlanRange(r, effectiveLocale);
             return (
-              <View key={key} style={styles.readingRow}>
+              <View key={rowKey} style={styles.readingRow}>
                 <Pressable
                   onPress={() => void toggleDone(r)}
                   hitSlop={8}
@@ -72,7 +103,12 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
                   />
                 </Pressable>
                 <Pressable
-                  onPress={() => void startTodayPlanFlowScripture(router, { bookId: r.bookId, chapter: r.startChapter })}
+                  onPress={() =>
+                    openChapterForReading(router, {
+                      bookId: r.bookId,
+                      chapter: r.startChapter,
+                    })
+                  }
                   hitSlop={8}
                   style={({ pressed }) => [styles.readingOpenBtn, pressed && styles.pressed]}
                   accessibilityRole="button"
@@ -92,11 +128,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
           <View style={styles.actions}>
             {nextTarget ? (
               <Pressable
-                onPress={() =>
-                  nextTarget
-                    ? void startTodayPlanFlowScripture(router, nextTarget)
-                    : undefined
-                }
+                onPress={() => openChapterForReading(router, nextTarget)}
                 hitSlop={8}
                 style={({ pressed }) => [styles.actionBtn, styles.actionPrimary, pressed && styles.pressed]}
               >
@@ -126,13 +158,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
               ? () => {
                   const prev = neighbors.prev;
                   if (!prev) return;
-                  router.push({
-                    pathname: "/read/[bookId]/[chapter]",
-                    params: {
-                      bookId: prev.bookId,
-                      chapter: String(prev.chapter),
-                    },
-                  });
+                  openChapterForReading(router, prev);
                 }
               : undefined
           }
@@ -163,13 +189,7 @@ export function ReadChapterCompletionPlanPanel({ bookId, chapter, displayLocale 
               ? () => {
                   const next = neighbors.next;
                   if (!next) return;
-                  router.push({
-                    pathname: "/read/[bookId]/[chapter]",
-                    params: {
-                      bookId: next.bookId,
-                      chapter: String(next.chapter),
-                    },
-                  });
+                  openChapterForReading(router, next);
                 }
               : undefined
           }

@@ -26,6 +26,11 @@ Default release order follows repository rules: iOS first, Android second.
 
 真源：`docs/mobile-release-checklist.md`；Agent 规则：`.cursor/rules/mobile-local-build-only.mdc`。
 
+### 产物只留一版（强制）
+
+每次 AAB / IPA / APK 构建成功后自动清理 `dist/mobile`：**只保留** `askbible-*-latest.*` 各一份，删除历史时间戳副本与 iOS archive/export 临时目录。手工清理：`npm run mobile:prune:dist`。  
+**不要**为省盘在每次构建时清 Gradle / DerivedData（会拖慢下次打包）。说明见 `docs/mobile-build-artifacts.md`。
+
 ## 1) Preflight (must pass before build)
 
 - Sync bundled content:
@@ -48,7 +53,7 @@ Default release order follows repository rules: iOS first, Android second.
 - 前置：完整 Xcode；`ASC_API_KEY_PATH` 指向 `.p8`（用于自动签名与上传；默认会尝试 `AA/AuthKey_9HDA27WY8C.p8`）
 - 构建 App Store IPA：
   - `npm run mobile:build:ios:production`
-  - 输出：`dist/mobile/askbible-ios-latest.ipa`（带时间戳副本同目录）
+  - 输出：`dist/mobile/askbible-ios-latest.ipa`（同目录旧 IPA 会自动删掉）
 - 上传 + 挂 TestFlight 组：
   - `npm run mobile:submit:ios:production`
   - 或指定 IPA：`IOS_IPA_PATH=/path/to/app.ipa npm run mobile:submit:ios:production`
@@ -82,6 +87,7 @@ Default release order follows repository rules: iOS first, Android second.
   - Copy `android/keystore.properties.example` → `android/keystore.properties`
 - Build production AAB locally (Gradle):
   - `npm run mobile:build:android:production`
+  - 输出：`dist/mobile/askbible-android-latest.aab`（旧 AAB/APK 库存会自动删掉；见 `docs/mobile-build-artifacts.md`）
 - Audit bundled assets (included in build script):
   - `npm run mobile:audit:bundle-size`
 - Submit local AAB directly to Google Play (fastlane supply):

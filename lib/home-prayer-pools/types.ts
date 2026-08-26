@@ -60,7 +60,7 @@ export type HomePrayerVersePrefsV1 = {
   primaryTranslationMode: HomePrimaryTranslationMode;
   /** 首页经文中文栏使用的译本 id（须与 `translations.json` / 祷告池 chunk 内键一致） */
   verseTextZhTranslationId: string;
-  /** 首页经文英文栏：默认 `kjv`，也可选 `web-en`、`bbe-en` 等 */
+  /** 首页经文英文栏：默认 `web-en`，也可选 `kjv`、`bbe-en` 等 */
   verseTextEnTranslationId: string;
   /** 按范围隔离：如 `explore-curated-700` */
   memoryByNamespace: Record<string, Record<string, PrayerMemoryRowV1>>;

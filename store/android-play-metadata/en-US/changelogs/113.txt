@@ -1,0 +1,3 @@
+Version 1.0.35
+• Fixed Home golden verse sometimes starting two sounds at once on Android
+• Background music gently lowers while a golden verse is playing

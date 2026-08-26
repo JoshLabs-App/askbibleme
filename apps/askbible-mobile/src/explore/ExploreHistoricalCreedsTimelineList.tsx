@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t } from "../i18n/site-copy";
 import type { AppLocale } from "../../../../lib/i18n/config";
 import type { MappedHistoricalCreedRow } from "./historicalCreedsTimeline";

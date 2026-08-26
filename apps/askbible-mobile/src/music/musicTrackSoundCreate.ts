@@ -7,6 +7,12 @@ import {
   safeStopAndUnloadSound,
 } from "../audio/safeShellSound";
 import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
+import {
+  normalizeShellMusicFileUri,
+  setShellMusicPlayableAssetUri,
+} from "../audio/shellMusicPlayableAssetUri";
+import { reshuffleShellMediaSceneArtwork } from "../audio/shellMediaSceneArtwork";
+import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { createMusicPlaybackStatusHandler } from "./musicPlaybackStatus";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import type { PlaybackTrack } from "./types";
@@ -72,6 +78,7 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
     resumeTrackIdRef,
     resumePositionSecRef,
     playTrackGenerationRef,
+    playingStateRef,
   } = bridge;
 
   let sound: Audio.Sound;
@@ -97,6 +104,7 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
             musicRepeatModeRef,
             musicGainRef,
             trackIndexRef,
+            playingStateRef,
             playTrackAtRef,
             syncPlayingState,
             setPlaying,
@@ -142,6 +150,7 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
           musicRepeatModeRef,
           musicGainRef,
           trackIndexRef,
+          playingStateRef,
           playTrackAtRef,
           syncPlayingState,
           setPlaying,
@@ -189,32 +198,65 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
       }
     }
     if (shouldPlay) {
+      setShellMusicWantPlaying(true);
+      playingStateRef.current = true;
       try {
+        await configureShellAudioMode({ force: true });
+        await sound.setIsMutedAsync(false);
+        await sound.setVolumeAsync(musicGainRef.current);
         await sound.playAsync();
       } catch (err) {
         try {
-          await configureShellAudioMode();
+          await configureShellAudioMode({ force: true });
+          await sound.setIsMutedAsync(false);
+          await sound.setVolumeAsync(musicGainRef.current);
           await sound.playAsync();
         } catch (retryErr) {
           logShellSoundError("play-retry", retryErr);
           logShellSoundError("play", err);
+          setShellMusicWantPlaying(false);
+          playingStateRef.current = false;
           syncPlayingState(false);
           await safeStopAndUnloadSound(sound);
           return { ok: false, stale: false, failedTrackId: track.id };
         }
       }
+      try {
+        await sound.setIsMutedAsync(false);
+        await sound.setVolumeAsync(musicGainRef.current);
+        const after = await sound.getStatusAsync();
+        if (after.isLoaded && !after.isPlaying) {
+          await sound.playAsync();
+        }
+      } catch {
+        /* ignore post-play verify */
+      }
       if (loadedStatus?.isLoaded) {
+        // 优先实际可播 URI（file://）；Metro Debug 的 track.src 常是 http，原生无法接管。
+        const playableUriRaw =
+          typeof avSource === "object" &&
+          avSource != null &&
+          "uri" in avSource &&
+          typeof (avSource as { uri?: unknown }).uri === "string"
+            ? String((avSource as { uri: string }).uri).trim()
+            : "";
+        const playableUri = playableUriRaw
+          ? normalizeShellMusicFileUri(playableUriRaw)
+          : normalizeShellMusicFileUri(track.src || "");
+        if (playableUri) setShellMusicPlayableAssetUri(playableUri);
+        const artworkUri = await reshuffleShellMediaSceneArtwork();
         syncShellMediaSessionExplicit({
           title: track.title,
           artist: track.artist,
           album: track.album,
-          assetUri: track.src,
-          artworkUri: track.artworkUri,
+          assetUri: playableUri || track.src,
+          artworkUri,
           durationSec: loadedStatus.durationMillis
             ? loadedStatus.durationMillis / 1000
             : track.durationSec ?? 0,
           positionSec: loadedStatus.positionMillis / 1000,
           playing: true,
+          kind: "music",
         });
       }
     }

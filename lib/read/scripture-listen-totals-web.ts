@@ -48,3 +48,30 @@ export function replaceScriptureListenTotalsWeb(remote: ScriptureListenTotalsRec
   const local = readScriptureListenTotalsWeb();
   writeScriptureListenTotalsWeb(mergeScriptureListenTotalsWeb(local, remote));
 }
+
+const listenListeners = new Set<() => void>();
+
+export function subscribeScriptureListenTotals(onStore: () => void): () => void {
+  listenListeners.add(onStore);
+  return () => listenListeners.delete(onStore);
+}
+
+export function getScriptureListenTotalSec(): number {
+  return readScriptureListenTotalsWeb().totalSec;
+}
+
+export function formatScriptureListenDuration(totalSec: number, locale: string): string {
+  const sec = Math.max(0, Math.floor(totalSec));
+  const hours = Math.floor(sec / 3600);
+  const minutes = Math.floor((sec % 3600) / 60);
+  if (locale === "en") {
+    if (hours <= 0 && minutes <= 0) return `${sec} sec`;
+    if (hours <= 0) return `${minutes} min`;
+    if (minutes <= 0) return `${hours} hr`;
+    return `${hours} hr ${minutes} min`;
+  }
+  if (hours <= 0 && minutes <= 0) return `${sec} 秒`;
+  if (hours <= 0) return `${minutes} 分钟`;
+  if (minutes <= 0) return `${hours} 小时`;
+  return `${hours} 小时 ${minutes} 分钟`;
+}

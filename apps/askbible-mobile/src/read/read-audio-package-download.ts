@@ -1,16 +1,16 @@
-import * as FileSystem from "expo-file-system/legacy";
 import { InteractionManager } from "react-native";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { buildChapterAudioDownloadCandidates } from "../bible/chapter-audio-sources";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import {
-  chapterAudioPackageKey,
   chapterCacheKey,
-  chapterFileUri,
-  ensurePackageDir,
   resolveDownloadedChapterAudioUri,
 } from "./readAudioPackageDownloadPaths";
+import {
+  downloadChapterAudioToStreamCache,
+  purgeExpiredChapterAudioStreamCache,
+} from "./readChapterAudioStreamCache";
 import {
   pauseAudioPackageDownload,
   resumeAudioPackageDownload,
@@ -38,6 +38,8 @@ export {
   subscribeAudioPackageDownload,
 };
 
+export { purgeExpiredChapterAudioStreamCache } from "./readChapterAudioStreamCache";
+
 const inFlightChapterDownloads = new Map<string, Promise<string | null>>();
 
 async function downloadChapterAudioToCacheInner(args: {
@@ -54,13 +56,6 @@ async function downloadChapterAudioToCacheInner(args: {
   const existing = await resolveDownloadedChapterAudioUri(args);
   if (existing) return existing;
 
-  const packageKey = chapterAudioPackageKey({
-    translationId: args.translationId,
-    voiceId: args.voiceId,
-  });
-  await ensurePackageDir(packageKey);
-  const target = chapterFileUri(packageKey, args.bookId, args.chapter);
-  const tmp = `${target}.download`;
   const baseUrl = getAskBibleBaseUrl();
   const candidates = buildChapterAudioDownloadCandidates({
     translationId: args.translationId,
@@ -69,26 +64,18 @@ async function downloadChapterAudioToCacheInner(args: {
     voiceId: args.voiceId,
     siteBaseUrl: baseUrl,
   });
-  const urls = [remote, ...candidates.filter((u) => u.trim() && u !== remote)];
 
-  for (const url of urls) {
-    try {
-      await FileSystem.deleteAsync(tmp, { idempotent: true });
-      const result = await FileSystem.downloadAsync(url, tmp);
-      if (!result?.uri || result.status < 200 || result.status >= 300) continue;
-      const info = await FileSystem.getInfoAsync(tmp);
-      if (!info.exists || typeof info.size !== "number" || info.size <= 0) continue;
-      await FileSystem.deleteAsync(target, { idempotent: true });
-      await FileSystem.moveAsync({ from: tmp, to: target });
-      return target;
-    } catch {
-      /* try next candidate */
-    }
-  }
-  return null;
+  return downloadChapterAudioToStreamCache({
+    translationId: args.translationId,
+    voiceId: args.voiceId,
+    bookId: args.bookId,
+    chapter: args.chapter,
+    remoteSrc: remote,
+    candidateUrls: candidates,
+  });
 }
 
-/** 下载远程章朗读到本地缓存目录；已存在则直接返回本地 URI。 */
+/** 下载远程章朗读到「流式缓存」（10 天未访问清理）；完整语音包目录不受影响。 */
 export async function downloadChapterAudioToCache(args: {
   translationId: string;
   voiceId: CuvChapterAudioVoiceId;
@@ -111,18 +98,33 @@ export async function downloadChapterAudioToCache(args: {
   }
 }
 
-/** 远程章朗读边播边存到与「朗读音频下载」相同目录。 */
-export function scheduleChapterAudioBackgroundCache(args: {
-  translationId: string;
-  voiceId: CuvChapterAudioVoiceId;
-  bookId: string;
-  chapter: number;
-  remoteSrc: string;
-}): void {
+/** 首章开播后再落盘，避免和 AVPlayer 抢同一条网。 */
+const PLAYING_CHAPTER_CACHE_DELAY_MS = 8_000;
+
+/** 远程章朗读边播边存到流式缓存目录（章页点播 / 今日读经共用）。 */
+export function scheduleChapterAudioBackgroundCache(
+  args: {
+    translationId: string;
+    voiceId: CuvChapterAudioVoiceId;
+    bookId: string;
+    chapter: number;
+    remoteSrc: string;
+  },
+  opts?: { delayMs?: number },
+): void {
   const remote = args.remoteSrc.trim();
   if (!remote || !/^https?:\/\//i.test(remote)) return;
 
-  InteractionManager.runAfterInteractions(() => {
-    void downloadChapterAudioToCache(args);
-  });
+  const delayMs = opts?.delayMs ?? PLAYING_CHAPTER_CACHE_DELAY_MS;
+  const start = () => {
+    InteractionManager.runAfterInteractions(() => {
+      void purgeExpiredChapterAudioStreamCache();
+      void downloadChapterAudioToCache(args);
+    });
+  };
+  if (delayMs > 0) {
+    setTimeout(start, delayMs);
+    return;
+  }
+  start();
 }

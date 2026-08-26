@@ -5,6 +5,7 @@ import {
   InterruptionModeIOS,
   type AVPlaybackSource,
 } from "expo-av";
+import { isShellNativeAudioTakeover } from "./shellNativeAudioTakeover";
 
 type ShellAudioModeKind = "music" | "scripture";
 
@@ -14,16 +15,22 @@ let shellAudioModeInFlight: Promise<void> | null = null;
 async function ensureShellAudioMode(
   kind: ShellAudioModeKind,
   options: Parameters<typeof Audio.setAudioModeAsync>[0],
+  force = false,
 ): Promise<void> {
-  if (shellAudioModeState === kind) return;
+  // 原生播放器占会话时：禁止 expo-av 再改系统音频模式（会把后台音乐掐掉）。
+  if (isShellNativeAudioTakeover()) return;
+  if (!force && shellAudioModeState === kind) return;
   if (shellAudioModeInFlight) {
     await shellAudioModeInFlight;
-    if (shellAudioModeState === kind) return;
+    if (!force && shellAudioModeState === kind) return;
   }
   if (shellAudioModeInFlight) {
     await shellAudioModeInFlight;
-    if (shellAudioModeState === kind) return;
+    if (!force && shellAudioModeState === kind) return;
   }
+  if (isShellNativeAudioTakeover()) return;
+  // force 时先清缓存，避免环境音/视频改了系统会话后这里误以为仍是 music。
+  if (force) shellAudioModeState = null;
   shellAudioModeInFlight = Audio.setAudioModeAsync(options)
     .then(() => {
       shellAudioModeState = kind;
@@ -35,20 +42,25 @@ async function ensureShellAudioMode(
 }
 
 /** 壳层音乐 / 读经朗读：允许切到后台继续播放（需 iOS `UIBackgroundModes: audio`）。 */
-export async function configureShellAudioMode(): Promise<void> {
+export async function configureShellAudioMode(opts?: { force?: boolean }): Promise<void> {
+  if (isShellNativeAudioTakeover()) return;
   try {
-    await ensureShellAudioMode("music", {
-      allowsRecordingIOS: false,
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      // iOS 锁屏 / Control Center 的 Now Playing 展示依赖更“独占”的音频模式；
-      // `duckOthers` 会让系统更不愿把它当成可控媒体。
-      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-      // shouldDuckAndroid=false：其它 App 出声时会暂停本 App 朗读（expo-av 默认行为）；续播见 scriptureResumeAfterInterruption。
-      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-      shouldDuckAndroid: false,
-      playThroughEarpieceAndroid: false,
-    });
+    await ensureShellAudioMode(
+      "music",
+      {
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        // iOS 锁屏 / Control Center 的 Now Playing 展示依赖更“独占”的音频模式；
+        // `duckOthers` 会让系统更不愿把它当成可控媒体。
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        // shouldDuckAndroid=false：其它 App 出声时会暂停本 App 朗读（expo-av 默认行为）；续播见 scriptureResumeAfterInterruption。
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: false,
+        playThroughEarpieceAndroid: false,
+      },
+      opts?.force === true,
+    );
   } catch (err) {
     if (__DEV__) {
       console.warn("[playback] configureShellAudioMode", err);
@@ -56,15 +68,17 @@ export async function configureShellAudioMode(): Promise<void> {
   }
 }
 
-/** 圣经朗读：优先占用音频会话，减少与其它 App 混播时被 duck / 打断。 */
+/** 圣经朗读：可与同 App 环境音混播；环境音由上层 duck 到约 30%。 */
 export async function configureScriptureShellAudioMode(): Promise<void> {
+  if (isShellNativeAudioTakeover()) return;
   try {
     await ensureShellAudioMode("scripture", {
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
-      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      // 与首页环境音同进程混播；勿用 DoNotMix，否则安卓会掐掉环境音轨。
+      interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
       shouldDuckAndroid: false,
       playThroughEarpieceAndroid: false,
     });

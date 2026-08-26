@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SHELL_TAB_BAR_CLEARANCE_MUSIC, useShellFullBleedFrame } from "../shell/shellLayout";
+import { useShellFullBleedFrame } from "../shell/shellLayout";
+import { shellPlaybackDockBottomPad } from "../shell/shellPlaybackTransportLayout";
 
 export function useMusicHomeLayout(layout: "tab" | "stack") {
   const insets = useSafeAreaInsets();
@@ -10,7 +11,8 @@ export function useMusicHomeLayout(layout: "tab" | "stack") {
   const inTab = layout === "tab";
   const isLandscape = windowW > windowH;
   const compactLandscape = inTab && isLandscape;
-  const bottomPad = (inTab ? SHELL_TAB_BAR_CLEARANCE_MUSIC : 16) + insets.bottom;
+  /** 与读经计划播放坞同底距，Tab 切换时播放键垂直对齐 */
+  const bottomPad = inTab ? shellPlaybackDockBottomPad(insets.bottom) : 16 + insets.bottom;
   const contentBottomPad = compactLandscape ? Math.max(insets.bottom, 12) : bottomPad;
   const viewportHeight = inTab ? fullBleedFrame.height : windowH;
   const viewportTop = compactLandscape ? 0 : insets.top + 8;

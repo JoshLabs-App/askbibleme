@@ -16,7 +16,8 @@ export function useBundledOnlyTrackIndexGuard(
     if (!enabled) return;
     if (!isMobileBundledOnly() || tracks.length === 0) return;
     const current = tracks[trackIndex];
-    if (current?.localReady) return;
+    // R2 点播曲（钢琴等非首曲）可播但未必 localReady；勿因此拨回安静。
+    if (current && isTrackPlayable(current)) return;
     const next = resolveDefaultCalmTrackIndex(tracks);
     if (next !== trackIndex) setTrackIndex(next);
   }, [enabled, tracks, trackIndex, setTrackIndex]);

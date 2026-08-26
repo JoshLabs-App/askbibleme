@@ -1,24 +1,30 @@
 import { useCallback } from "react";
-import { runScripturePlayInFlight } from "./scripturePlayInFlight";
+import type { MutableRefObject } from "react";
+import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { pauseShellAppMusic } from "../audio/shellMediaControls";
+import { setShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
+import { endPlanFlowChapterAdvance, consumeReadPlanFlowAutoplay, clearPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
+import { resetScriptureChapterEndTracking } from "./scriptureChapterEnd";
+import { beginScripturePlayAttempt, isScripturePlaybackBusy } from "./scripturePlaybackExclusive";
+import { isScripturePlaybackStarted } from "./scripturePlaybackHelpers";
 import {
   patchReadChapterSrc as patchReadChapterSrcHelper,
   tryPlayScriptureWithFallback as tryPlayScriptureWithFallbackHelper,
 } from "./scripturePlayFallback";
-import { markScriptureWantPlaying, clearScriptureResumeTimer } from "./scriptureResumeAfterInterruption";
-import { beginScripturePlayAttempt, isScripturePlaybackBusy } from "./scripturePlaybackExclusive";
-import { isScripturePlaybackStarted } from "./scripturePlaybackHelpers";
-import { resetScriptureChapterEndTracking } from "./scriptureChapterEnd";
+import { runScripturePlayInFlight } from "./scripturePlayInFlight";
 import { clearScriptureChapterHandoff } from "./scripturePlaybackPriority";
-import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
-import { endPlanFlowChapterAdvance, consumeReadPlanFlowAutoplay, clearPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
+import { publishScripturePlaybackSec, setScripturePlaybackClockPlaying } from "./scripturePlaybackSec";
+import { clearScripturePlayingChapter } from "./scripturePlayingChapterStore";
+import { clearPlayingReadChapterPlayback } from "../read/read-chapter-playback-store";
+import { markScriptureWantPlaying, clearScriptureResumeTimer } from "./scriptureResumeAfterInterruption";
 import { scriptureChapterPool } from "./scripture-chapter-pool";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
   ScriptureShellPlaybackBridge,
 } from "./scripturePlaybackTypes";
+import { useIosNativeScriptureEnded } from "./useIosNativeScriptureEnded";
 import { useScripturePlayEngineRefs } from "./useScripturePlayEngineRefs";
-import type { MutableRefObject } from "react";
 
 type Args = {
   bridge: ScriptureShellPlaybackBridge;
@@ -56,9 +62,28 @@ export function useScripturePlayEngine({
     [bridge.soundRef, playbackModeRef, scriptureSrcRef],
   );
 
+  useIosNativeScriptureEnded({
+    soundRef: bridge.soundRef,
+    scriptureSrcRef,
+    scriptureAudioRepeatRef,
+    readChapterRef,
+    autoPlayScriptureRef: refs.autoPlayScriptureRef,
+    scriptureChapterHandoffRef: refs.scriptureChapterHandoffRef,
+    scriptureWantPlayingRef: refs.scriptureWantPlayingRef,
+    scriptureStopAtOnEndedRef: refs.scriptureStopAtOnEndedRef,
+    scripturePlaybackRateRef,
+    setPlaying,
+    setReadChapter,
+  });
+
   const stopScripturePlayback = useCallback(async () => {
     scriptureChapterPool.stop();
     markScriptureWantPlaying(refs.scriptureWantPlayingRef, false);
+    setShellScriptureWantPlaying(false);
+    if (isNativeMainTrackOs()) {
+      pauseShellAppMusic();
+      setShellNativeAudioTakeover(false);
+    }
     refs.autoPlayScriptureRef.current = false;
     consumeReadPlanFlowAutoplay();
     clearPlanFlowSessionActive();
@@ -78,9 +103,12 @@ export function useScripturePlayEngine({
     scriptureSrcRef.current = null;
     refs.scriptureStopAtSecRef.current = null;
     publishScripturePlaybackSec(0);
+    setScripturePlaybackClockPlaying(false);
     lastScriptureProgressSecRef.current = -1;
     setScriptureCurrentSec(0);
     setScriptureDurationSec(0);
+    clearScripturePlayingChapter();
+    clearPlayingReadChapterPlayback();
     setPlaying(false);
     setPlaybackMode("music");
     playbackModeRef.current = "music";
@@ -157,6 +185,7 @@ export function useScripturePlayEngine({
         playScripture,
         patchReadChapterSrc,
         isStarted,
+        soundRef: bridge.soundRef,
         playingReg: playingReg !== undefined ? playingReg : readChapterRef.current,
         isBusy: () =>
           isScripturePlaybackBusy({

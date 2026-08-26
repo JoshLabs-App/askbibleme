@@ -1,6 +1,8 @@
 import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { logShellSoundError } from "../audio/safeShellSound";
+import { syncShellMediaPlaybackRate } from "../audio/shellMediaControls";
 import { registerPlanFlowEntryCallback } from "../read/read-plan-flow-autoplay";
 import {
   normalizeScripturePlaybackRate,
@@ -39,6 +41,9 @@ export function useScripturePlaybackPrefs({ soundRef, playbackModeRef }: Args) {
       await writeScripturePlaybackRate(normalized);
     } catch {
       /* ignore local storage write failures */
+    }
+    if (isNativeMainTrackOs()) {
+      syncShellMediaPlaybackRate(normalized);
     }
     const sound = soundRef.current;
     if (!sound || playbackModeRef.current !== "scripture") return;

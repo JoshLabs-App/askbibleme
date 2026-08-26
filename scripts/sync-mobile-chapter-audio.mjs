@@ -29,6 +29,12 @@ function rmDirIfExists(dir) {
   if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
 }
 
+const KEEP_TOP_LEVEL_MP3 = new Set([
+  "today-plan-complete.mp3",
+  "verse-gap-silence-7.mp3",
+  "background-silence-60.mp3",
+]);
+
 function clearBundledChapterAudioFiles() {
   fs.mkdirSync(destRoot, { recursive: true });
   rmDirIfExists(path.join(destRoot, "web-en"));
@@ -37,7 +43,7 @@ function clearBundledChapterAudioFiles() {
   rmDirIfExists(path.join(destRoot, "teochew-nt"));
   for (const name of fs.readdirSync(destRoot)) {
     if (!name.endsWith(".mp3")) continue;
-    if (name === "today-plan-complete.mp3") continue;
+    if (KEEP_TOP_LEVEL_MP3.has(name)) continue;
     fs.unlinkSync(path.join(destRoot, name));
   }
 }
@@ -99,9 +105,8 @@ if (fs.existsSync(publicAudio)) {
       walkFlat("blm-es", "blm-es");
     } else if (name === "cuv-v20") {
       walkFlat("cuv-v20", "cuv-v20");
-    } else if (name === "teochew-nt") {
-      walkFlat("teochew-nt", "teochew-nt");
     }
+    // teochew-nt：不打包，运行时只引用 TSTSCC 外站
   }
 }
 

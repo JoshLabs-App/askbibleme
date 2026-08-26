@@ -1,6 +1,12 @@
 import { View } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
+import {
+  PARCHMENT_COLUMN_MAX_WIDTH_PHONE,
+  useParchmentColumnMaxWidth,
+  useReadPagePaddingHorizontal,
+} from "../read/parchmentColumnLayout";
 import { MusicHomeForegroundPanel } from "./MusicHomeForegroundPanel";
+import { MusicHomeSleepTimerButton } from "./MusicHomeSleepTimerButton";
 import { musicHomeScreenStyles as styles } from "./musicHomeScreenStyles";
 import { MusicHomeStageTapSurface } from "./MusicHomeStageTapSurface";
 import { MusicHomeUpperDecor } from "./MusicHomeUpperDecor";
@@ -8,20 +14,19 @@ import type { MusicHomeScreenController } from "./useMusicHomeScreenController";
 
 type Props = Pick<
   MusicHomeScreenController,
-  "layoutState" | "playback" | "seek" | "upper" | "sleepTimer" | "albumState" | "uiAutoHide" | "gestures" | "queue"
+  "layoutState" | "playback" | "upper" | "sleepTimer" | "albumState" | "uiAutoHide" | "gestures" | "queue"
 > & {
   albumDecorVisible: boolean;
   albumDecorMotionActive: boolean;
-  coffeeRhythmPulse: number;
+  analysisSrc: string | null;
   duration: number;
-  position: number;
-  progress: number;
+  musicActive: boolean;
+  playbackMode: string;
 };
 
 export function MusicHomeScreenForeground({
   layoutState,
   playback,
-  seek,
   upper,
   sleepTimer,
   albumState,
@@ -30,16 +35,18 @@ export function MusicHomeScreenForeground({
   queue,
   albumDecorVisible,
   albumDecorMotionActive,
-  coffeeRhythmPulse,
+  analysisSrc,
   duration,
-  position,
-  progress,
+  musicActive,
+  playbackMode,
 }: Props) {
   const { locale } = useLocale();
   const { insets, compactLandscape, contentBottomPad, viewportHeight, viewportTop, landscapeSafeHorizontal } =
     layoutState;
   const { chromeVisible, resetUiAutoHide } = uiAutoHide;
   const { album } = albumState;
+  const padX = useReadPagePaddingHorizontal();
+  const columnMaxWidth = useParchmentColumnMaxWidth(PARCHMENT_COLUMN_MAX_WIDTH_PHONE);
 
   return (
     <View
@@ -48,9 +55,15 @@ export function MusicHomeScreenForeground({
         compactLandscape && styles.foregroundLandscape,
         { paddingTop: insets.top + 8, paddingBottom: contentBottomPad },
       ]}
-      pointerEvents={compactLandscape ? "box-none" : "auto"}
+      pointerEvents="box-none"
     >
-      <MusicHomeStageTapSurface compactLandscape={compactLandscape}>
+      <MusicHomeStageTapSurface
+        compactLandscape={compactLandscape}
+        playing={playback.playing}
+        canTogglePlayback={playback.canTogglePlayback}
+        hasTracks={playback.tracks.length > 0}
+        onTogglePlay={() => void playback.togglePlayMusic()}
+      >
         <MusicHomeUpperDecor
           album={album}
           upperSize={upper.upperSize}
@@ -59,29 +72,42 @@ export function MusicHomeScreenForeground({
           viewportTop={viewportTop}
           albumDecorVisible={albumDecorVisible}
           albumDecorMotionActive={albumDecorMotionActive}
-          coffeeRhythmPulse={coffeeRhythmPulse}
+          analysisSrc={analysisSrc}
           onUpperLayout={upper.onUpperLayout}
           landscapeSafeHorizontal={landscapeSafeHorizontal}
         />
       </MusicHomeStageTapSurface>
 
+      <MusicHomeSleepTimerButton
+        chromeVisible={chromeVisible}
+        sleepTimerMinutes={playback.sleepTimerMinutes}
+        sleepTimerBadge={sleepTimer.sleepTimerBadge}
+        onCycleSleepTimer={sleepTimer.cycleSleepTimer}
+      />
+
       <View
-        style={[styles.panel, compactLandscape && styles.panelLandscape]}
+        style={[
+          styles.panel,
+          compactLandscape && styles.panelLandscape,
+          !compactLandscape && {
+            paddingHorizontal: padX,
+            ...(columnMaxWidth != null ? { maxWidth: columnMaxWidth } : null),
+          },
+        ]}
         onTouchStart={compactLandscape ? resetUiAutoHide : undefined}
+        pointerEvents="box-none"
       >
         <MusicHomeForegroundPanel
           locale={locale}
           compactLandscape={compactLandscape}
           chromeVisible={chromeVisible}
           playback={playback}
-          seek={seek}
-          sleepTimer={sleepTimer}
           albumState={albumState}
           gestures={gestures}
           queue={queue}
           duration={duration}
-          position={position}
-          progress={progress}
+          musicActive={musicActive}
+          playbackMode={playbackMode}
         />
       </View>
     </View>

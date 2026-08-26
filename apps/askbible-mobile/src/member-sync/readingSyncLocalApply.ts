@@ -52,7 +52,8 @@ import {
   readScriptureListenTotalsRecord,
   replaceScriptureListenTotalsRecord,
 } from "../read/scripture-listen-totals";
-import { writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
+import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-prefs-merge";
+import { readReadingPlanPrefs, writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
   replaceNtDeepRepeatProgress,
 } from "../read/reading-plan/nt-deep-repeat-progress";
@@ -120,8 +121,14 @@ export async function applyReadingSyncBlob(key: MemberReadingSyncBlobKey, value:
       if (isChapterCompletion(value)) await replaceReadChapterCompletionRecord(value);
       break;
     case "readingPlanPrefs":
-      if (value === null) await writeReadingPlanPrefs(null);
-      else if (isReadingPlanPrefs(value)) await writeReadingPlanPrefs(value);
+      if (value === null) await writeReadingPlanPrefs(null, { notifySync: false });
+      else if (isReadingPlanPrefs(value)) {
+        const local = await readReadingPlanPrefs();
+        const merged = local ? mergeReadingPlanPrefsValue(value, local) : value;
+        if (isReadingPlanPrefs(merged)) {
+          await writeReadingPlanPrefs(merged, { notifySync: false });
+        }
+      }
       break;
     case "tripleLoopProgress":
       if (isTripleLoopState(value)) await replaceTripleLoopProgress(value);

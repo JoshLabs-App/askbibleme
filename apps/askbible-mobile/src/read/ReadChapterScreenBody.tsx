@@ -43,6 +43,13 @@ type Props = {
   postReadingReady: boolean;
   chapterCompleted: boolean;
   reportVerseLayoutFromEvent: (verse: number, e: LayoutChangeEvent) => void;
+  registerVerseHost: (verse: number, node: unknown) => void;
+  registerParagraphHost: (verses: number[], node: unknown) => void;
+  reportParagraphVerseBoxes: (
+    boxes: Map<number, { y: number; height: number }>,
+    fractions?: Iterable<{ verse: number; start: number; end: number; total: number }>,
+  ) => void;
+  reportParagraphFrame: (verses: number[], layout: { y: number; height: number }) => void;
   returnToExplore: ReturnType<typeof useReadChapterExploreReturnHandler>;
   navigation: { canGoBack: () => boolean; goBack: () => void };
   primaryTranslationId: string;
@@ -80,6 +87,10 @@ export function ReadChapterScreenBody({
   postReadingReady,
   chapterCompleted,
   reportVerseLayoutFromEvent,
+  registerVerseHost,
+  registerParagraphHost,
+  reportParagraphVerseBoxes,
+  reportParagraphFrame,
   returnToExplore,
   navigation,
   primaryTranslationId,
@@ -113,6 +124,10 @@ export function ReadChapterScreenBody({
           postReadingReady={postReadingReady}
           chapterCompleted={chapterCompleted}
           reportVerseLayoutFromEvent={reportVerseLayoutFromEvent}
+          registerVerseHost={registerVerseHost}
+          registerParagraphHost={registerParagraphHost}
+          reportParagraphVerseBoxes={reportParagraphVerseBoxes}
+          reportParagraphFrame={reportParagraphFrame}
           isBookmarked={isBookmarked}
           display={display}
           verseActions={verseActions}

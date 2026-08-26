@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 
 type Props = {
   selected: boolean;
@@ -8,13 +9,15 @@ type Props = {
   fallbackLabel: string;
   onPress: () => void;
   ariaLabel?: string;
+  /** 无缩略图时用图标代替首字（模糊等） */
+  icon?: string;
 };
 
 /** 首页底部场景缩略图：iOS 式 scale + opacity，无描边/指示点（对齐 App `HomeSceneThumb`） */
-export function HomeSceneThumb({ selected, thumbSrc, fallbackLabel, onPress, ariaLabel }: Props) {
+export function HomeSceneThumb({ selected, thumbSrc, fallbackLabel, onPress, ariaLabel, icon }: Props) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const normalizedSrc = thumbSrc?.trim() ?? "";
-  const showImage = normalizedSrc.length > 0 && !thumbFailed;
+  const showImage = normalizedSrc.length > 0 && !thumbFailed && !icon;
   const initial = fallbackLabel.trim().slice(0, 1) || "·";
 
   return (
@@ -43,7 +46,11 @@ export function HomeSceneThumb({ selected, thumbSrc, fallbackLabel, onPress, ari
           />
         ) : (
           <span className="nature-home-scene-thumb__fallback" aria-hidden>
-            {initial}
+            {icon ? (
+              <ShellMaterialCommunityIcon name={icon} size={28} color="rgba(255,255,255,0.88)" />
+            ) : (
+              initial
+            )}
           </span>
         )}
       </button>

@@ -76,48 +76,14 @@ export function getReadingPlannerStep3Intro(locale: AppLocale): { title: string;
     return {
       title: "Choose your rhythm",
       subtitle:
-        "Easy reading is light and pressure-free. Formal study with 7-day repeats helps you truly understand—the day you enable is day 1.",
+        "Easy reading follows the Easter 2026 cycle by default. Formal study with 7-day repeats starts on the day you enable it.",
     };
   }
   return {
     title: zh(locale, "选一种适合自己的节奏"),
     subtitle: zh(
       locale,
-      "毫无压力地读，选轻松读经（三循环）；想真正读懂圣经，选正式研读（7 天连读）。今天启用，今天就是第 1 天。",
-    ),
-  };
-}
-
-export type ReadingPlannerPathGuidance = {
-  lead: string;
-  newcomerLabel: string;
-  newcomerBody: string;
-  deepReadLabel: string;
-  deepReadBody: string;
-};
-
-export function getReadingPlannerPathGuidance(locale: AppLocale): ReadingPlannerPathGuidance {
-  if (locale === "en") {
-    return {
-      lead: "Two paths—pick what fits your season:",
-      newcomerLabel: "Easy reading",
-      newcomerBody: "Triple loop: one short OT, NT, and Wisdom segment daily—no catch-up, no streaks.",
-      deepReadLabel: "Formal study",
-      deepReadBody:
-        "7-day repeats: stay with the same passage until it sinks in—often easier than racing through chapters.",
-    };
-  }
-  return {
-    lead: zh(locale, "两条路线，按你的季节选："),
-    newcomerLabel: zh(locale, "轻松读经"),
-    newcomerBody: zh(
-      locale,
-      "三循环：每天旧约、新约、智慧书各一小段，无补读、无打卡，停了再回来即可。",
-    ),
-    deepReadLabel: zh(locale, "正式研读"),
-    deepReadBody: zh(
-      locale,
-      "7 天连读：同一段反复读进心里，往往比一路赶进度更容易读懂——默认从这里开始。",
+      "轻松读经默认自 2026 年复活节起循环；正式研读（7 天连读）则从你启用的那天算第 1 天。",
     ),
   };
 }
@@ -127,14 +93,14 @@ export function getTripleLoopPlannerCopy(locale: AppLocale): ReadingPlannerPlanC
   if (locale === "en") {
     return {
       title: "Easy reading · triple loop",
-      body: "Best if you are new or want zero pressure: 1 OT + 1 NT + 1 Wisdom segment daily—three independent loops, no catch-up. About one year through the NT; stop and return anytime.",
+      body: "Zero pressure: 1 OT + 1 NT + 1 Wisdom segment daily. Day 1 is Easter 2026 (5 Apr); today's place follows that cycle. Stop and return anytime.",
     };
   }
   return {
     title: zh(locale, "轻松读经 · 三循环"),
     body: zh(
       locale,
-      "适合刚开始、希望毫无压力：每天旧约、新约、智慧书各 1 小段，三条线互不影响，无补读无打卡。约一年轻松通读新约，停了再回来即可。",
+      "毫无压力：每天旧约、新约、智慧书各 1 小段。第 1 天是 2026 年复活节（4 月 5 日），今日进度按此循环推算；停了再回来即可。",
     ),
   };
 }

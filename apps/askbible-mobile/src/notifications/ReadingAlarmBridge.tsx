@@ -1,9 +1,9 @@
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, InteractionManager, Platform } from "react-native";
+import { AppState, InteractionManager } from "react-native";
 import type { ReadingReminderMode } from "@/lib/notifications/notification-prefs-types";
-import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
+import { setShellAudioInterrupted } from "../audio/shellAudioInterruption";
 import { useLocale } from "../i18n/LocaleProvider";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import type { NotificationKind } from "./notification-constants";
@@ -13,6 +13,7 @@ import {
   stopReadingAlarmPreludeMusic,
 } from "./readingAlarmPreludeMusic";
 import { resolveAlarmChapterTarget } from "./readingAlarmChapterTarget";
+import { resolveDailyVerseForDate } from "./resolve-daily-verse-for-date";
 import { warmReadingAlarmPreludePool } from "./readingAlarmPreludeCache";
 import {
   type ActiveReadingAlarm,
@@ -20,6 +21,8 @@ import {
   shouldStartReadingAlarmAudio,
 } from "./readingAlarmPlayback";
 import { clearReadPlanFlowTodayLoop, clearPlanFlowSessionActive, isPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
+import { replaceReadPlanPlay } from "../read/read-plan-flow-nav";
+import { scriptureCommandEndHold } from "../music/scriptureCommands";
 import { startTodayReadingAlarmScriptureFlow } from "./startTodayReadingAlarmScriptureFlow";
 import {
   consumeReadingAlarmTrigger,
@@ -29,6 +32,7 @@ import {
   stopNativeReadingAlarmSound,
   subscribeReadingAlarmAutoContinue,
   subscribeReadingAlarmDismissed,
+  subscribeReadingAlarmPreludeSession,
 } from "./syncAndroidReadingAlarmSchedule";
 import { tryWakeReadingAlarmOnActive } from "./readingAlarmIosWake";
 import { runQueuedReadingAlarmDevE2E } from "./readingAlarmDevE2ERunner";
@@ -48,6 +52,11 @@ const ALARM_SCRIPTURE_RETRY_MS = [500, 1000, 2000, 4000, 7000, 12_000, 20_000];
 
 function isReadingReminderKind(kind: NotificationKind | undefined): boolean {
   return kind === "reading-reminder" || kind === "reading-alarm-auto-continue";
+}
+
+function isSoftReadingReminderDelivery(data: unknown): boolean {
+  if (!data || typeof data !== "object") return false;
+  return (data as { delivery?: string }).delivery === "notification";
 }
 
 function sleep(ms: number): Promise<void> {
@@ -78,6 +87,7 @@ export function ReadingAlarmBridge({ enabled }: Props) {
   const stopAllAlarmAudio = useCallback(async () => {
     await stopReadingAlarmPreludeMusic(playback);
     stopNativeReadingAlarmSound();
+    scriptureCommandEndHold("alarm-prelude");
     const pb = playbackRef.current;
     if (pb.playbackMode === "scripture" || pb.scripturePreparing) {
       try {
@@ -97,6 +107,7 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     targetRef.current = null;
     clearReadPlanFlowTodayLoop();
     clearPlanFlowSessionActive();
+    scriptureCommandEndHold("alarm-prelude");
     await stopAllAlarmAudio();
     setUi(null);
   }, [stopAllAlarmAudio]);
@@ -114,19 +125,26 @@ export function ReadingAlarmBridge({ enabled }: Props) {
   }, []);
 
   const beginTodayReadingFlow = useCallback(async (): Promise<boolean> => {
+    if (cancelledRef.current) return false;
     const target = targetRef.current;
-    if (!target || cancelledRef.current) return false;
 
-    await configureScriptureShellAudioMode();
+    // 安卓原生读经会自己占会话。这里若先走 expo-av setAudioMode，
+    // 三星会 setSpeakerphoneOn，被误当成通话，章页出来却没声，之后音乐也哑。
+    setShellAudioInterrupted(false);
+    // 预备阶段可能 hold 了读经暂停；开播前必须释放。
+    scriptureCommandEndHold("alarm-prelude");
     await stopReadingAlarmPreludeMusic(playback);
     stopNativeReadingAlarmSound();
     await sleep(300);
 
-    const startedFlow = await startTodayReadingAlarmScriptureFlow(router, {
-      bookId: target.bookId,
-      chapter: target.chapter,
-    });
-    if (!startedFlow) return false;
+    const startedFlow = await startTodayReadingAlarmScriptureFlow(
+      router,
+      target ? { bookId: target.bookId, chapter: target.chapter } : null,
+    );
+    if (!startedFlow) {
+      scriptureCommandEndHold("alarm-prelude");
+      return false;
+    }
 
     await new Promise<void>((resolve) => {
       InteractionManager.runAfterInteractions(() => resolve());
@@ -138,6 +156,7 @@ export function ReadingAlarmBridge({ enabled }: Props) {
       setUi(null);
       targetRef.current = null;
     }
+    if (!played) scriptureCommandEndHold("alarm-prelude");
     return played;
   }, [playback, router, waitForScripturePlayback]);
 
@@ -162,25 +181,22 @@ export function ReadingAlarmBridge({ enabled }: Props) {
 
       if (!(await shouldStartReadingAlarmAudio())) {
         scriptureHandoffStartedRef.current = false;
-        router.push("/(tabs)/read");
+        scriptureCommandEndHold("alarm-prelude");
+        replaceReadPlanPlay(router);
         return false;
       }
 
-      const target = targetRef.current ?? (await resolveAlarmChapterTarget());
-      if (!target) {
-        scriptureHandoffStartedRef.current = false;
-        return false;
-      }
-      targetRef.current = target;
-
-      await consumeReadingAlarmTrigger();
+      targetRef.current = targetRef.current ?? (await resolveAlarmChapterTarget());
       nativeHandoffDoneRef.current = true;
       alarmHandoffLockRef.current = true;
 
       try {
         const started = await beginTodayReadingFlow();
-        if (!started && !cancelledRef.current) {
-          router.push("/(tabs)/read");
+        if (started) {
+          await consumeReadingAlarmTrigger();
+        } else if (!cancelledRef.current) {
+          scriptureCommandEndHold("alarm-prelude");
+          replaceReadPlanPlay(router);
         }
         return started;
       } finally {
@@ -203,10 +219,22 @@ export function ReadingAlarmBridge({ enabled }: Props) {
 
   const runMusicAlarmSession = useCallback(async () => {
     if (sessionActiveRef.current || scriptureHandoffStartedRef.current) return;
-    if (!(await shouldStartReadingAlarmAudio())) return;
+    // 原生已经在响时，即使 JS 偏好还没读到也要挂停止条。
+    const preludeActive = await isNativeReadingAlarmPreludeActive();
+    if (!preludeActive && !(await shouldStartReadingAlarmAudio())) return;
 
-    const target = await resolveAlarmChapterTarget();
-    if (!target) return;
+    const target = (await resolveAlarmChapterTarget()) ?? {
+      bookId: "",
+      chapter: 1,
+      bookName: "",
+      translationId: "cuv-simp",
+      label: "",
+    };
+    const verse = await resolveDailyVerseForDate().catch(() => null);
+    if (verse?.lines.length) {
+      target.verseText = verse.lines.filter(Boolean).join("\n");
+      target.verseRef = verse.ref;
+    }
 
     sessionActiveRef.current = true;
     cancelledRef.current = false;
@@ -215,12 +243,8 @@ export function ReadingAlarmBridge({ enabled }: Props) {
 
     await warmReadingAlarmPreludePool(playback.tracks);
 
-    if (Platform.OS === "ios") {
-      const preludeActive = await isNativeReadingAlarmPreludeActive();
-      if (!preludeActive) {
-        await startReadingAlarmPreludeMusic(playback);
-      }
-    } else {
+    // 原生已经在播时只挂停止条，不要再 startPrelude，否则会清会话并重开一首。
+    if (!preludeActive) {
       await startReadingAlarmPreludeMusic(playback);
     }
 
@@ -241,14 +265,18 @@ export function ReadingAlarmBridge({ enabled }: Props) {
   }, [runMusicAlarmSession]);
 
   const handleReadingReminder = useCallback(
-    (responseId?: string) => {
+    (responseId?: string, soft = false) => {
       if (responseId) {
         if (handledResponseIds.current.has(responseId)) return;
         handledResponseIds.current.add(responseId);
       }
+      if (soft) {
+        router.push("/read");
+        return;
+      }
       fireNativeReadingAlarmFromNotification();
     },
-    [],
+    [router],
   );
 
   const joinNativePreludeSession = useCallback(async () => {
@@ -311,7 +339,12 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     });
 
     const autoContinueSub = subscribeReadingAlarmAutoContinue(() => {
-      void handoffRef.current("native");
+      // 原生事件本身就是交接信号，不要再等 pending 标记（apply 可能还没落盘）。
+      void handoffRef.current("prelude");
+    });
+
+    const preludeSub = subscribeReadingAlarmPreludeSession(() => {
+      void joinNativePreludeSession();
     });
 
     const appStateSub = AppState.addEventListener("change", (state) => {
@@ -322,8 +355,10 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     });
 
     const receivedSub = Notifications.addNotificationReceivedListener((notification) => {
-      const kind = notification.request.content.data?.kind as NotificationKind | undefined;
+      const data = notification.request.content.data;
+      const kind = data?.kind as NotificationKind | undefined;
       if (!isReadingReminderKind(kind)) return;
+      if (isSoftReadingReminderDelivery(data)) return;
       if (isPlanFlowSessionActive()) return;
       const pb = playbackRef.current;
       if (pb.playing && pb.playbackMode === "scripture") return;
@@ -331,24 +366,32 @@ export function ReadingAlarmBridge({ enabled }: Props) {
     });
 
     const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const kind = response.notification.request.content.data?.kind as NotificationKind | undefined;
+      const data = response.notification.request.content.data;
+      const kind = data?.kind as NotificationKind | undefined;
       if (!isReadingReminderKind(kind)) return;
       if (kind === "reading-alarm-auto-continue") {
         void handoffToAlarmScripture("native");
         return;
       }
-      handleReadingReminder(response.notification.request.identifier);
+      handleReadingReminder(
+        response.notification.request.identifier,
+        isSoftReadingReminderDelivery(data),
+      );
     });
 
     void Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!response) return;
-      const kind = response.notification.request.content.data?.kind as NotificationKind | undefined;
+      const data = response.notification.request.content.data;
+      const kind = data?.kind as NotificationKind | undefined;
       if (!isReadingReminderKind(kind)) return;
       if (kind === "reading-alarm-auto-continue") {
         void handoffToAlarmScripture("native");
         return;
       }
-      handleReadingReminder(response.notification.request.identifier);
+      handleReadingReminder(
+        response.notification.request.identifier,
+        isSoftReadingReminderDelivery(data),
+      );
     });
 
     return () => {
@@ -357,6 +400,7 @@ export function ReadingAlarmBridge({ enabled }: Props) {
       clearInterval(pendingPoll);
       dismissSub();
       autoContinueSub();
+      preludeSub();
       appStateSub.remove();
       receivedSub.remove();
       responseSub.remove();

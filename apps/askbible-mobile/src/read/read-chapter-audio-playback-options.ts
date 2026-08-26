@@ -2,6 +2,7 @@ import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { CUV_CHAPTER_AUDIO_VOICES } from "../bible/cuv-chapter-audio-voices";
 import { translationSupportsCuvChapterAudio } from "../bible/cuv-chapter-audio";
 import { translationUsesWebChapterAudio } from "../bible/web-chapter-audio";
+import { translationHasVerifiedYouVersionChapterAudio } from "@/lib/bible/youversion-chapter-audio";
 import type { AppLocale } from "../i18n/config";
 import { localizeZhText } from "../i18n/site-copy";
 import type { BibleTranslationMeta } from "../bible/translations-types";
@@ -25,10 +26,17 @@ function isCuvVoiceOptionId(id: string): id is CuvChapterAudioVoiceId {
   return id === "mandarin" || id === "teochew-nt";
 }
 
+export function translationUsesEditionChapterAudio(translationId: string): boolean {
+  return (
+    translationUsesWebChapterAudio(translationId) ||
+    translationHasVerifiedYouVersionChapterAudio(translationId)
+  );
+}
+
 /**
  * 朗读选项 id：
  * - `mandarin` / `teochew-nt`：人声（译本跟上方「圣经版本」）
- * - `web-en` / `bbe-en` / `blm-es`：跟随译本的整章音轨
+ * - 其它译本 id：跟随对应译本的整章音轨
  */
 export function encodeChapterAudioPlaybackOptionId(
   audioTranslationId: string | null,
@@ -36,10 +44,10 @@ export function encodeChapterAudioPlaybackOptionId(
   primaryTranslationId: string,
 ): string {
   const audio = audioTranslationId?.trim();
-  if (audio && translationUsesWebChapterAudio(audio)) return audio;
+  if (audio && translationUsesEditionChapterAudio(audio)) return audio;
   if (
     !audio &&
-    translationUsesWebChapterAudio(primaryTranslationId) &&
+    translationUsesEditionChapterAudio(primaryTranslationId) &&
     translationSupportsCuvChapterAudio(primaryTranslationId) === false
   ) {
     return primaryTranslationId;
@@ -51,7 +59,7 @@ export function decodeChapterAudioPlaybackOptionId(
   optionId: string,
 ): { audioTranslationId: string | null; voiceId: CuvChapterAudioVoiceId } {
   const raw = optionId.trim();
-  if (translationUsesWebChapterAudio(raw)) {
+  if (translationUsesEditionChapterAudio(raw)) {
     return { audioTranslationId: raw, voiceId: "mandarin" };
   }
   if (isCuvVoiceOptionId(raw)) {
@@ -61,7 +69,7 @@ export function decodeChapterAudioPlaybackOptionId(
   if (colon > 0) {
     const trPart = raw.slice(0, colon);
     const voice = raw.slice(colon + 1);
-    if (translationUsesWebChapterAudio(trPart)) {
+    if (translationUsesEditionChapterAudio(trPart)) {
       return { audioTranslationId: trPart, voiceId: "mandarin" };
     }
     const voiceId: CuvChapterAudioVoiceId = voice === "teochew-nt" ? "teochew-nt" : "mandarin";
@@ -70,7 +78,7 @@ export function decodeChapterAudioPlaybackOptionId(
   return { audioTranslationId: null, voiceId: "mandarin" };
 }
 
-/** 圣经版本在「圣经版本」里选；此处仅列朗读人声与英文音轨（各出现一次） */
+/** 圣经版本在「圣经版本」里选；此处仅列朗读人声与已验证的对应译本音轨。 */
 export function buildChapterAudioPlaybackOptions(
   catalog: BibleTranslationMeta[],
   locale: AppLocale,
@@ -90,7 +98,7 @@ export function buildChapterAudioPlaybackOptions(
   }
 
   for (const tr of audioCatalog) {
-    if (translationUsesWebChapterAudio(tr.id)) {
+    if (translationUsesEditionChapterAudio(tr.id)) {
       out.push({ id: tr.id, label: translationLabel(tr, locale) });
     }
   }

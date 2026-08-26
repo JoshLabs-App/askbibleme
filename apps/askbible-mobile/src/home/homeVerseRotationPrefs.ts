@@ -3,8 +3,9 @@ import { Platform } from "react-native";
 import { NATURE_HOME_PREFS_KEYS } from "./natureHomePrefsKeys";
 import { syncWidgetRotationIntervalSec } from "../widget/syncWidgetRotationIntervalSec";
 
-export const HOME_VERSE_ROTATION_SEC_OPTIONS = [3, 5, 7, 10, 15] as const;
-export const DEFAULT_HOME_VERSE_ROTATION_SEC = 7;
+export const HOME_VERSE_ROTATION_SEC_OPTIONS = [5, 7, 10] as const;
+/** 首页经文停留：固定默认 10 秒（设置里不再展示）。 */
+export const DEFAULT_HOME_VERSE_ROTATION_SEC = 10;
 
 let currentSec = DEFAULT_HOME_VERSE_ROTATION_SEC;
 let hydrated = false;
@@ -47,14 +48,18 @@ export function subscribeHomeVerseRotationSec(onStore: () => void): () => void {
 
 export async function hydrateHomeVerseRotationSec(): Promise<number> {
   if (hydrated) return currentSec;
+  // 设置里已隐藏；统一用默认 10 秒，不再沿用旧档位。
+  currentSec = DEFAULT_HOME_VERSE_ROTATION_SEC;
   try {
-    const raw = await AsyncStorage.getItem(NATURE_HOME_PREFS_KEYS.verseRotationSec);
-    currentSec = clampHomeVerseRotationSec(raw);
+    await AsyncStorage.setItem(NATURE_HOME_PREFS_KEYS.verseRotationSec, String(currentSec));
   } catch {
-    currentSec = DEFAULT_HOME_VERSE_ROTATION_SEC;
+    /* ignore */
   }
   hydrated = true;
   emit();
+  if (Platform.OS === "ios" || Platform.OS === "android") {
+    void syncWidgetRotationIntervalSec(currentSec);
+  }
   return currentSec;
 }
 

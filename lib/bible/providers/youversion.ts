@@ -80,6 +80,7 @@ export async function loadYouVersionChapterRows(
     translationId: meta.id,
     bookId,
     chapter,
+    remoteId: versionId,
   });
   if (pageRows?.length) return pageRows;
 

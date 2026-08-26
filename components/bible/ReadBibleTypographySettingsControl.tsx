@@ -13,6 +13,7 @@ import type { AppLocale } from "@/lib/i18n/config";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { ReadBibleTranslationPickerOverlay } from "@/components/bible/ReadBibleTranslationPickerOverlay";
+import { readTranslationsHref } from "@/lib/read/read-translations-route";
 
 function translationOptionLabel(
   tr: { labelZh: string; labelEn: string },
@@ -169,7 +170,9 @@ export function ReadBibleTypographySettingsControl({ buttonSize = 44, iconSize =
                   options={primaryOptions}
                   open={false}
                   onOpenChange={(next) => {
-                    if (next) setTranslationPickerMode("primary");
+                    if (!next) return;
+                    setOpen(false);
+                    router.push(readTranslationsHref());
                   }}
                   disabled={!translationCatalogReady || primaryOptions.length === 0}
                   ariaLabel={`${t("pages.read.typography.primaryTranslation")} ${primaryDisplay}`}
@@ -294,24 +297,16 @@ export function ReadBibleTypographySettingsControl({ buttonSize = 44, iconSize =
       ) : null}
     </div>
     <ReadBibleTranslationPickerOverlay
-      open={translationPickerMode !== null}
-      mode={translationPickerMode ?? "primary"}
-      title={
-        translationPickerMode === "contrast"
-          ? t("pages.read.typography.contrastTranslation")
-          : t("pages.read.typography.primaryTranslation")
-      }
-      options={translationPickerMode === "contrast" ? contrastOptions : primaryOptions}
+      open={translationPickerMode === "contrast"}
+      mode={translationPickerMode ?? "contrast"}
+      title={t("pages.read.typography.contrastTranslation")}
+      options={contrastOptions}
       primaryValue={translation.primaryTranslationId}
       contrastValues={contrastTranslationIds}
       noneLabel={t("pages.read.typography.contrastNone")}
       confirmLabel={locale === "en" ? "Confirm" : locale === "zh-TW" ? "确认" : "确认"}
       onClose={() => setTranslationPickerMode(null)}
-      onSelectPrimary={(id) => {
-        if (id === translation.primaryTranslationId) return;
-        setPrimaryTranslationId(id);
-        refreshChapterIfNeeded();
-      }}
+      onSelectPrimary={() => setTranslationPickerMode(null)}
       onConfirmContrast={(ids) => {
         setContrastTranslationIds(ids);
         refreshChapterIfNeeded();

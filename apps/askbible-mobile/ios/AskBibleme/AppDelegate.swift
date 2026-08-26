@@ -48,24 +48,28 @@ public class AppDelegate: ExpoAppDelegate {
     }
   }
 
-  private func activateShellPlaybackSession(_ application: UIApplication) {
+  private func activateShellPlaybackSession(_ application: UIApplication, forceReconfigure: Bool = false) {
     application.beginReceivingRemoteControlEvents()
-    do {
-      let session = AVAudioSession.sharedInstance()
-      if #available(iOS 13.0, *) {
-        try session.setCategory(
-          .playback,
-          mode: .default,
-          policy: .longFormAudio,
-          options: [.allowBluetooth, .allowAirPlay]
-        )
-      } else {
-        try session.setCategory(
-          .playback,
-          mode: .default,
-          options: [.allowBluetooth, .allowAirPlay]
-        )
+    let session = AVAudioSession.sharedInstance()
+    // 封面视频 mixWithOthers / moviePlayback：勿抢 exclusive，否则 OSStatus -50 把会话弄死、音乐空转无声。
+    if session.categoryOptions.contains(.mixWithOthers) || session.mode == .moviePlayback {
+      DispatchQueue.main.async { [weak window] in
+        window?.rootViewController?.becomeFirstResponder()
       }
+      return
+    }
+    // 普通 playback + options=[]。勿 longFormAudio；勿 allowAirPlay（playback 下 OSStatus -50）。
+    if !forceReconfigure,
+       session.category == .playback,
+       !session.categoryOptions.contains(.mixWithOthers),
+       session.mode != .moviePlayback {
+      DispatchQueue.main.async { [weak window] in
+        window?.rootViewController?.becomeFirstResponder()
+      }
+      return
+    }
+    do {
+      try session.setCategory(.playback, mode: .default, options: [])
       try session.setActive(true)
       NSLog("[askbible-shell-media] app delegate audio session active")
       appendDebugLine("app delegate audio session active")
@@ -98,7 +102,13 @@ public class AppDelegate: ExpoAppDelegate {
       in: window,
       launchOptions: launchOptions)
     NotificationCenterManager.shared.addDelegate(ReadingAlarmNotificationDelegate.shared)
-    activateShellPlaybackSession(application)
+    // 音乐引擎在 App 主工程：与 Expo module 生命周期解耦。
+    AskBibleMusicService.shared.bootstrap()
+    activateShellPlaybackSession(application, forceReconfigure: true)
+    if let url = launchOptions?[.url] as? URL, Self.isWidgetPlaybackURL(url) {
+      appendDebugLine("widget playback cold launch → schedule return home")
+      Self.scheduleReturnToHomeAfterWidgetPlayback()
+    }
 #endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -107,14 +117,18 @@ public class AppDelegate: ExpoAppDelegate {
   public override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
 #if os(iOS) || os(tvOS)
-    activateShellPlaybackSession(application)
+    // 回前台：仅补 remote control；ensureAlive 只在本会话已开播时续，不因冷启动 UserDefaults 误播。
+    activateShellPlaybackSession(application, forceReconfigure: false)
+    AskBibleMusicService.shared.ensureAlive(reason: "appdelegate-active")
 #endif
   }
 
   public override func applicationDidEnterBackground(_ application: UIApplication) {
     super.applicationDidEnterBackground(application)
 #if os(iOS) || os(tvOS)
-    activateShellPlaybackSession(application)
+    application.beginReceivingRemoteControlEvents()
+    // 同步抢回 playback + 续播，勿等 JS 卸视频（否则 ~60s 被当普通后台挂起）。
+    AskBibleMusicService.shared.prepareForBackground()
 #endif
   }
 
@@ -128,6 +142,10 @@ public class AppDelegate: ExpoAppDelegate {
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
+    if Self.isWidgetPlaybackURL(url) {
+      appendDebugLine("widget playback url open → schedule return home")
+      Self.scheduleReturnToHomeAfterWidgetPlayback()
+    }
     return super.application(app, open: url, options: options) || RCTLinkingManager.application(app, open: url, options: options)
   }
 
@@ -137,8 +155,51 @@ public class AppDelegate: ExpoAppDelegate {
     continue userActivity: NSUserActivity,
     restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
   ) -> Bool {
+    if userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+       let url = userActivity.webpageURL,
+       Self.isWidgetPlaybackURL(url) {
+      Self.scheduleReturnToHomeAfterWidgetPlayback()
+    }
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
+  }
+
+  /// 挂件深链：iOS 必须短暂拉起 App 才能开播；随后短延迟回桌面（可取消，避免普通打开被旧链误 suspend）。
+  private static func isWidgetPlaybackURL(_ url: URL?) -> Bool {
+    guard let url else { return false }
+    let raw = url.absoluteString.lowercased()
+    return raw.contains("askbible:") && raw.contains("widget/play")
+  }
+
+  private static var returnHomeWorkItems: [DispatchWorkItem] = []
+  private static var returnHomeGeneration = 0
+
+  static func suspendAppToHome() {
+    // 无公开 API；与常见播放类 App 一样用 suspend 回 SpringBoard。
+    UIApplication.shared.perform(NSSelectorFromString("suspend"))
+  }
+
+  static func cancelReturnToHomeAfterWidgetPlayback() {
+    returnHomeGeneration += 1
+    for item in returnHomeWorkItems {
+      item.cancel()
+    }
+    returnHomeWorkItems.removeAll()
+  }
+
+  static func scheduleReturnToHomeAfterWidgetPlayback() {
+    cancelReturnToHomeAfterWidgetPlayback()
+    let generation = returnHomeGeneration
+    // 2–3 次短延迟即可；过长会在用户已留在 App 内时仍被踢回桌面。
+    let delays: [TimeInterval] = [0.8, 1.8, 3.2]
+    for delay in delays {
+      let item = DispatchWorkItem {
+        guard generation == returnHomeGeneration else { return }
+        suspendAppToHome()
+      }
+      returnHomeWorkItems.append(item)
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: item)
+    }
   }
 }
 

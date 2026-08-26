@@ -3,8 +3,8 @@ module.exports = {
     name: "AskBible.me",
     slug: "askbible-me",
     scheme: "askbible",
-    version: "1.0.11",
-    runtimeVersion: "1.0.11",
+    version: "1.0.38",
+    runtimeVersion: "1.0.38",
     updates: {
       enabled: false,
       checkAutomatically: "NEVER",
@@ -28,10 +28,11 @@ module.exports = {
       image: "./assets/icon.png",
       resizeMode: "contain",
       backgroundColor: "#FFB101",
+      imageWidth: 320,
     },
     ios: {
       bundleIdentifier: "me.askbible",
-      buildNumber: "71",
+      buildNumber: "119",
       supportsTablet: true,
       appleTeamId: "AJ2998VZH6",
       entitlements: {
@@ -42,17 +43,14 @@ module.exports = {
         UIBackgroundModes: ["audio"],
         NSUserNotificationsUsageDescription:
           "AskBible.me can send optional daily reading reminders and verse-of-the-day notifications.",
-        NSLocalNetworkUsageDescription:
-          "Allow AskBible.me to connect to the development server on your local network for live updates during development.",
-        NSBonjourServices: ["_metro._tcp"],
       },
     },
     android: {
       package: "me.askbible",
-      versionCode: 71,
+      versionCode: 119,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ECD9B9",
+        backgroundColor: "#FFB101",
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -64,6 +62,12 @@ module.exports = {
       "expo-router",
       "expo-sqlite",
       "expo-asset",
+      [
+        "expo-av",
+        {
+          microphonePermission: false,
+        },
+      ],
       [
         "expo-video",
         {

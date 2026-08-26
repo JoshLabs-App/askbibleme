@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Image, StyleSheet, useWindowDimensions, View } from "react-native";
+import { AppState, type AppStateStatus, useWindowDimensions, View } from "react-native";
 import { CoverVideoPosterBackdrop } from "./CoverVideoPosterBackdrop";
 import type { ResolveNatureCoverPlayback } from "./natureCoverPlayback";
 import { useCoverVideoCrossfade } from "./useCoverVideoCrossfade";
@@ -7,6 +7,7 @@ import { resolveNatureHomePortraitCoverLayout } from "./natureHomePortraitCoverL
 import { hasCoverVideoPosterAsset } from "./coverVideoPosterFallback";
 import { IosCoverVideoSlot } from "./FullBleedCoverVideoSlots.ios";
 import {
+  FULL_BLEED_COVER_FALLBACK_BG,
   fullBleedCoverVideoStyles as styles,
   resolveLandscapeCoverLayerFrame,
   type FullBleedCoverVideoLayoutMode,
@@ -68,8 +69,9 @@ export function FullBleedCoverVideo({
   );
 
   const [showInitialPoster, setShowInitialPoster] = useState(
-    () => Boolean(trimmedPoster) && allowInitialPoster,
+    () => hasPoster && allowInitialPoster,
   );
+  const [slotsReady, setSlotsReady] = useState(false);
 
   useEffect(() => {
     if (!allowInitialPoster) setShowInitialPoster(false);
@@ -78,63 +80,71 @@ export function FullBleedCoverVideo({
   const onSlotAReadyOnce = () => {
     onSlotAReady();
     setShowInitialPoster(false);
+    setSlotsReady(true);
     if (slotAScene.trim()) onSceneVideoReady?.(slotAScene.trim());
   };
 
   const onSlotBReadyOnce = () => {
     onSlotBReady();
     setShowInitialPoster(false);
+    setSlotsReady(true);
     if (slotBScene.trim()) onSceneVideoReady?.(slotBScene.trim());
   };
 
+  const [appActive, setAppActive] = useState(() => AppState.currentState === "active");
+  useEffect(() => {
+    const sync = (state: AppStateStatus) => setAppActive(state === "active");
+    sync(AppState.currentState);
+    const sub = AppState.addEventListener("change", sync);
+    return () => sub.remove();
+  }, []);
+
+  // 仅读经独占 / 锁屏才卸槽；进读经页失焦只暂停，避免回首页 VideoView 重挂露白。
+  const videoPlaybackActive = playbackActive && !forcePosterMode;
+  const mountVideoSlots = appActive && !forcePosterMode && Boolean(trimmedScene);
+
+  useEffect(() => {
+    if (!mountVideoSlots) setSlotsReady(false);
+  }, [mountVideoSlots]);
+
   if (!trimmedScene) return null;
 
-  if (forcePosterMode) {
-    return (
-      <View style={styles.stage} pointerEvents="none">
-        {hasPoster ? (
-          <CoverVideoPosterBackdrop
-            posterModule={posterModule}
-            posterUri={trimmedPoster || undefined}
-            portraitLayout={landscapeCover ? null : layerFrame}
-            viewportWidth={winW}
-            viewportHeight={winH}
-          />
-        ) : null}
-      </View>
-    );
-  }
+  const showPosterOverlay = forcePosterMode || showInitialPoster || (hasPoster && !slotsReady);
 
   return (
-    <View style={styles.stage} pointerEvents="none">
-      <IosCoverVideoSlot
-        slotKey="cover-a"
-        sceneId={slotAScene}
-        resolveScenePlayback={resolveScenePlayback}
-        rate={rate}
-        layerFrame={layerFrame}
-        opacity={opacityA}
-        onReady={onSlotAReadyOnce}
-        playbackActive={playbackActive}
-      />
-      <IosCoverVideoSlot
-        slotKey="cover-b"
-        sceneId={slotBScene}
-        resolveScenePlayback={resolveScenePlayback}
-        rate={rate}
-        layerFrame={layerFrame}
-        opacity={opacityB}
-        onReady={onSlotBReadyOnce}
-        playbackActive={playbackActive}
-      />
-      {showInitialPoster && trimmedPoster ? (
-        <View style={styles.posterCover} pointerEvents="none">
-          <Image
-            source={{ uri: trimmedPoster }}
-            style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
+    <View style={[styles.stage, { backgroundColor: FULL_BLEED_COVER_FALLBACK_BG }]} pointerEvents="none">
+      {mountVideoSlots ? (
+        <>
+          <IosCoverVideoSlot
+            slotKey="cover-a"
+            sceneId={slotAScene}
+            resolveScenePlayback={resolveScenePlayback}
+            rate={rate}
+            layerFrame={layerFrame}
+            opacity={opacityA}
+            onReady={onSlotAReadyOnce}
+            playbackActive={videoPlaybackActive}
           />
-        </View>
+          <IosCoverVideoSlot
+            slotKey="cover-b"
+            sceneId={slotBScene}
+            resolveScenePlayback={resolveScenePlayback}
+            rate={rate}
+            layerFrame={layerFrame}
+            opacity={opacityB}
+            onReady={onSlotBReadyOnce}
+            playbackActive={videoPlaybackActive}
+          />
+        </>
+      ) : null}
+      {showPosterOverlay && hasPoster ? (
+        <CoverVideoPosterBackdrop
+          posterModule={posterModule}
+          posterUri={trimmedPoster || undefined}
+          portraitLayout={layerFrame}
+          viewportWidth={winW}
+          viewportHeight={winH}
+        />
       ) : null}
     </View>
   );

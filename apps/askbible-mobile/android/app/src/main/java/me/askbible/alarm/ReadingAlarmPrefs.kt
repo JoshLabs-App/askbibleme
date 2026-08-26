@@ -18,6 +18,8 @@ object ReadingAlarmPrefs {
   const val KEY_PRELUDE_ACTIVE = "prelude_active"
   const val KEY_PRELUDE_STARTED_AT = "prelude_started_at"
   const val KEY_MODE = "mode"
+  const val KEY_VERSE_TEXT = "verse_text"
+  const val KEY_VERSE_REF = "verse_ref"
   const val MODE_MUSIC = "music"
   const val MODE_SCRIPTURE = "scripture"
 
@@ -33,6 +35,8 @@ object ReadingAlarmPrefs {
     bookName: String,
     translationId: String,
     mode: String = MODE_SCRIPTURE,
+    verseText: String = "",
+    verseRef: String = "",
   ) {
     context
       .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -47,6 +51,8 @@ object ReadingAlarmPrefs {
       .putString(KEY_BOOK_NAME, bookName)
       .putString(KEY_TRANSLATION_ID, translationId)
       .putString(KEY_MODE, if (mode == MODE_MUSIC) MODE_MUSIC else MODE_SCRIPTURE)
+      .putString(KEY_VERSE_TEXT, verseText)
+      .putString(KEY_VERSE_REF, verseRef)
       .apply()
   }
 
@@ -79,6 +85,12 @@ object ReadingAlarmPrefs {
   fun bookName(context: Context): String =
     context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_BOOK_NAME, "") ?: ""
 
+  fun verseText(context: Context): String =
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_VERSE_TEXT, "") ?: ""
+
+  fun verseRef(context: Context): String =
+    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_VERSE_REF, "") ?: ""
+
   fun translationId(context: Context): String =
     context
       .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -90,7 +102,18 @@ object ReadingAlarmPrefs {
       .edit()
       .putBoolean(KEY_PENDING_AUTO_PLAY, pending)
       .putBoolean(KEY_DISMISSED, false)
-      .apply()
+      .commit()
+  }
+
+  /** 读经闹钟：不要走 clearSessionForNewAlarm（那会把 prelude 标成 true）。 */
+  fun clearSessionForScriptureAlarm(context: Context) {
+    context
+      .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+      .edit()
+      .putBoolean(KEY_DISMISSED, false)
+      .putBoolean(KEY_PENDING_AUTO_PLAY, false)
+      .putBoolean(KEY_PRELUDE_ACTIVE, false)
+      .commit()
   }
 
   fun consumePendingAutoPlay(context: Context): Boolean {
@@ -116,7 +139,7 @@ object ReadingAlarmPrefs {
       .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
       .edit()
       .putBoolean(KEY_PRELUDE_ACTIVE, active)
-      .apply()
+      .commit()
   }
 
   fun clearSessionForNewAlarm(context: Context) {
@@ -127,7 +150,7 @@ object ReadingAlarmPrefs {
       .putBoolean(KEY_PENDING_AUTO_PLAY, false)
       .putBoolean(KEY_PRELUDE_ACTIVE, true)
       .putLong(KEY_PRELUDE_STARTED_AT, System.currentTimeMillis())
-      .apply()
+      .commit()
   }
 
   fun preludeStartedAt(context: Context): Long =

@@ -1,0 +1,5 @@
+Version 1.0.24
+• Home music and daily verse audio can play together
+• One tap pauses music reliably; buttons respond instantly
+• Home screen widget stays in sync while a verse is reading
+• More stable playback with fewer unexpected stops

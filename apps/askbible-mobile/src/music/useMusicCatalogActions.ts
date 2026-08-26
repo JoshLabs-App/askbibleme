@@ -6,12 +6,13 @@ import {
   readSyncedMusicCompanionStore,
 } from "../media/musicResourcePackSync";
 import {
+  fetchMusicCompanionStoreFromR2,
   fetchMusicCompanionStoreFromRemote,
   getBundledMusicCompanionStore,
   isMusicCompanionStoreDifferent,
   writeCachedMusicCompanionStore,
 } from "./fetchMusicCompanion";
-import { hasAtLeastBundledTracks } from "./musicStoreHelpers";
+import { canAdoptRemoteMusicStore, hasAtLeastBundledTracks } from "./musicStoreHelpers";
 import type { MusicCompanionStore, PlaybackTrack } from "./types";
 
 type Args = {
@@ -33,11 +34,42 @@ export function useMusicCatalogActions({
   setTrackIndex,
   setMusicCatalogUpdateAvailable,
 }: Args) {
-  const checkMusicCatalogUpdate = useCallback(async (): Promise<boolean> => {
-    if (isMobileBundledOnly()) {
+  const applyR2CatalogIfNewer = useCallback(async (): Promise<boolean> => {
+    const bundled = getBundledMusicCompanionStore();
+    const current = storeRef.current ?? bundled;
+    const remote = await fetchMusicCompanionStoreFromR2();
+    if (!remote || !canAdoptRemoteMusicStore(remote, bundled)) {
       latestRemoteMusicStoreRef.current = null;
       setMusicCatalogUpdateAvailable(false);
       return false;
+    }
+    if (!isMusicCompanionStoreDifferent(remote, current)) {
+      latestRemoteMusicStoreRef.current = null;
+      setMusicCatalogUpdateAvailable(false);
+      return false;
+    }
+    const currentTrackId = tracks[trackIndexRef.current]?.id ?? "";
+    const nextTrackIndex = remote.audioTracks.findIndex((x) => x.id === currentTrackId);
+    setStore(remote);
+    storeRef.current = remote;
+    setTrackIndex(nextTrackIndex >= 0 ? nextTrackIndex : 0);
+    await writeCachedMusicCompanionStore(remote);
+    latestRemoteMusicStoreRef.current = null;
+    setMusicCatalogUpdateAvailable(false);
+    return true;
+  }, [
+    latestRemoteMusicStoreRef,
+    setMusicCatalogUpdateAvailable,
+    setStore,
+    setTrackIndex,
+    storeRef,
+    trackIndexRef,
+    tracks,
+  ]);
+
+  const checkMusicCatalogUpdate = useCallback(async (): Promise<boolean> => {
+    if (isMobileBundledOnly()) {
+      return applyR2CatalogIfNewer();
     }
     const packCheck = await checkMusicResourcePackUpdate();
     if (packCheck.available) {
@@ -56,13 +88,11 @@ export function useMusicCatalogActions({
     latestRemoteMusicStoreRef.current = available ? remote : null;
     setMusicCatalogUpdateAvailable(available);
     return available;
-  }, [latestRemoteMusicStoreRef, setMusicCatalogUpdateAvailable, storeRef]);
+  }, [applyR2CatalogIfNewer, latestRemoteMusicStoreRef, setMusicCatalogUpdateAvailable, storeRef]);
 
   const downloadMusicCatalogUpdate = useCallback(async (): Promise<boolean> => {
     if (isMobileBundledOnly()) {
-      latestRemoteMusicStoreRef.current = null;
-      setMusicCatalogUpdateAvailable(false);
-      return false;
+      return applyR2CatalogIfNewer();
     }
     const bundled = getBundledMusicCompanionStore();
     const current = storeRef.current ?? bundled;
@@ -95,6 +125,7 @@ export function useMusicCatalogActions({
     setMusicCatalogUpdateAvailable(false);
     return synced || Boolean(nextStore);
   }, [
+    applyR2CatalogIfNewer,
     latestRemoteMusicStoreRef,
     setMusicCatalogUpdateAvailable,
     setStore,

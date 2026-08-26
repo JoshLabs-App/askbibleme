@@ -21,7 +21,7 @@ function run(cmd, env = {}) {
 
 function assetsReadyForBundle() {
   const checks = [
-    "music/tracks/track-mpg4a8h3jhwl.mp3",
+    "music/tracks/track-mt391okyjj4i.mp3",
     "scripture/cuv-simp.sqlite",
     "content/music-companion.json",
     "audio/scenes/scene-waves-ocean.mp3",
@@ -29,6 +29,11 @@ function assetsReadyForBundle() {
   for (const rel of checks) {
     if (!fs.existsSync(path.join(assets, rel))) return false;
   }
+  const musicTracks = path.join(assets, "music/tracks");
+  const musicCount = fs.existsSync(musicTracks)
+    ? fs.readdirSync(musicTracks).filter((n) => /\.(mp3|m4a)$/i.test(n)).length
+    : 0;
+  if (musicCount < 4) return false;
   const natureVideos = path.join(assets, "nature/videos");
   if (!fs.existsSync(natureVideos)) return false;
   const mp4Count = fs.readdirSync(natureVideos).filter((n) => n.endsWith(".mp4")).length;
@@ -64,8 +69,7 @@ run("node scripts/sync-mobile-content.mjs");
 console.log("[eas-sync-offline-on-cloud] → sync-mobile-offline-media");
 run("node scripts/sync-mobile-offline-media.mjs", {
   MOBILE_BUNDLE_OFFLINE_MEDIA: "1",
-  MOBILE_BUNDLE_MUSIC_LIMIT: "1",
-  MOBILE_STARTER_MUSIC_TRACK_ID: "track-mpg4a8h3jhwl",
+  MOBILE_STARTER_MUSIC_TRACK_ID: "track-mt391okyjj4i",
 });
 
 console.log("[eas-sync-offline-on-cloud] done");

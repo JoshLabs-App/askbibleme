@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
-import { InteractionManager, Pressable, Text, View } from "react-native";
+import { InteractionManager, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocale } from "../i18n/LocaleProvider";
 import { localizeZhText, t } from "../i18n/site-copy";
@@ -9,9 +9,10 @@ import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScroll
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { ReadChapterInfoEditionMarkdown } from "../read/ReadChapterInfoEditionMarkdown";
 import { shellTabBarScrollPad } from "../shell/shellLayout";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { resolveRouteParam } from "../navigation/resolveRouteParam";
 import { linkifyExploreArticleScriptureRefsForLocale } from "../explore/linkifyExploreArticleScriptureRefsForLocale";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "../explore/exploreParchmentStyles";
+import {exploreStyles as shared, useExploreScrollContentStyle, ExploreParchmentPage} from "../explore/exploreParchmentStyles";
 import { pushExploreReadChapter, useExploreReadReturnPath } from "../explore/explore-read-chapter-nav";
 import { useMobileLegacyFiguresBundle } from "./useMobileLegacyFigures";
 import { getMobileLegacyFigureBySlug } from "./mobileLegacyFiguresCore";
@@ -83,16 +84,14 @@ export function ExploreLegacyFigureScreen() {
 
   if (!profile) {
     return (
-      <View style={shared.root}>
+      <ExploreParchmentPage>
         <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
-          <Pressable onPress={() => router.back()} style={shared.backLink} accessibilityRole="button">
-            <Text style={shared.backLinkText}>{t("pages.explore.articlesBack")}</Text>
-          </Pressable>
+          <ShellSystemBackButton onPress={() => router.back()} />
           <Text style={[shared.lead, { marginTop: 24, textAlign: "left" }]}>
             {locale === "en" ? "Figure not found." : localizeZhText(locale, "找不到这位人物。")}
           </Text>
         </ParchmentBottomFadeScrollView>
-      </View>
+      </ExploreParchmentPage>
     );
   }
 
@@ -102,11 +101,9 @@ export function ExploreLegacyFigureScreen() {
   );
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView fadePreset={SHELL_TAB_SCROLL_FADE_PRESET} contentContainerStyle={scrollContentStyle}>
-        <Pressable onPress={() => router.back()} style={shared.backLink} accessibilityRole="button">
-          <Text style={shared.backLinkText}>{t("pages.explore.figuresBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <View style={shared.articleHeader}>
           <Text style={shared.articleTitle} maxFontSizeMultiplier={1.15}>
@@ -150,6 +147,6 @@ export function ExploreLegacyFigureScreen() {
           )}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

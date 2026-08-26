@@ -1,5 +1,4 @@
 import * as FileSystem from "expo-file-system/legacy";
-import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import {
   BUNDLED_SCRIPTURE_TRANSLATION_IDS,
   isBundledScriptureTranslation,
@@ -13,6 +12,7 @@ import {
   removeScriptureDatabaseFiles,
   writeRemoteScriptureBytesMarker,
 } from "./scripture-database";
+import type { BibleTranslationMeta } from "./translations-types";
 
 export type ScriptureTranslationDownloadStatus = "idle" | "running" | "done" | "error";
 
@@ -60,15 +60,18 @@ export function subscribeScriptureTranslationDownload(onStore: () => void): () =
   return () => listeners.delete(onStore);
 }
 
-function buildDownloadUrl(translationId: string, downloadUrl?: string | null): string {
+/** 仅接受显式绝对 URL；主站 `/api/mobile/bible/translations/.../sqlite` 已下线，不再拼默认地址。 */
+function resolveExternalDownloadUrl(downloadUrl?: string | null): string | null {
   const rel = String(downloadUrl || "").trim();
-  const base = getAskBibleBaseUrl().replace(/\/+$/, "");
-  if (rel.startsWith("http://") || rel.startsWith("https://")) return rel;
-  const path = rel || `/api/mobile/bible/translations/${encodeURIComponent(translationId)}/sqlite`;
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  if (!rel) return null;
+  if (rel.startsWith("http://") || rel.startsWith("https://")) {
+    if (/\/api\/mobile\/bible\/translations\/[^/]+\/sqlite\/?$/i.test(rel)) return null;
+    return rel;
+  }
+  return null;
 }
 
-/** 下载译本 SQLite 到设备文档目录；`force` 用于 OTA 覆盖已有文件。 */
+/** 下载译本 SQLite 到设备文档目录；`force` 用于覆盖已有文件。主站整本包已下线。 */
 export async function downloadScriptureTranslation(
   translationId: string,
   downloadUrl?: string | null,
@@ -79,6 +82,10 @@ export async function downloadScriptureTranslation(
   const force = Boolean(options?.force);
   if (!force && isBundledScriptureTranslation(id)) return;
   if (!force && (await isScriptureTranslationInstalled(id))) return;
+  const url = resolveExternalDownloadUrl(downloadUrl);
+  if (!url) {
+    throw new Error("此译本不支持整本下载");
+  }
 
   if (state.status === "running" && state.translationId === id) {
     return;
@@ -99,8 +106,6 @@ export async function downloadScriptureTranslation(
   await FileSystem.deleteAsync(tmp, { idempotent: true });
 
   setState({ translationId: id, status: "running", percent: 0, error: null });
-
-  const url = buildDownloadUrl(id, downloadUrl);
   const resumable = FileSystem.createDownloadResumable(
     url,
     tmp,
@@ -167,18 +172,38 @@ export async function removeDownloadedScriptureTranslation(translationId: string
 export async function ensureScriptureTranslationReady(
   translationId: string,
   downloadUrl?: string | null,
+  options?: { delivery?: BibleTranslationMeta["delivery"] },
 ): Promise<void> {
   const id = String(translationId || "").trim();
   if (!id) throw new Error("译本 id 无效");
   if (isBundledScriptureTranslation(id)) {
     await getScriptureDatabase(id);
+    if (state.status === "error") {
+      setState({ translationId: null, status: "idle", percent: 0, error: null });
+    }
     return;
   }
-  if (await isScriptureTranslationInstalled(id)) return;
+  // 按章在线：无整本 sqlite，不下载。
+  if (options?.delivery === "chapter-api") {
+    if (state.status === "error") {
+      setState({ translationId: null, status: "idle", percent: 0, error: null });
+    }
+    return;
+  }
+  if (await isScriptureTranslationInstalled(id)) {
+    if (state.status === "error") {
+      setState({ translationId: null, status: "idle", percent: 0, error: null });
+    }
+    return;
+  }
+  const externalUrl = resolveExternalDownloadUrl(downloadUrl);
+  if (!externalUrl) {
+    throw new Error(isMobileOfflineFirst() ? "译本未安装" : "此译本不支持整本下载");
+  }
   if (isMobileOfflineFirst()) {
     throw new Error("译本未安装");
   }
-  await downloadScriptureTranslation(id, downloadUrl);
+  await downloadScriptureTranslation(id, externalUrl);
 }
 
 /** 联网下载失败时回退到安装包内译本，避免读经页空白。 */

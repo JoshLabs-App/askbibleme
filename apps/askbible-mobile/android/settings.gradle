@@ -36,4 +36,5 @@ rootProject.name = 'AskBible.me'
 expoAutolinking.useExpoVersionCatalog()
 
 include ':app'
+include ':music_companion_pack'
 includeBuild(expoAutolinking.reactNativeGradlePlugin)

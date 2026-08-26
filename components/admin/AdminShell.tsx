@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { LocaleTrigger } from "@/components/i18n/LocaleTrigger";
-import { AppSkinTrigger } from "@/components/theme/AppSkinTrigger";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 
 const ADMIN_SIDEBAR_WIDTH_KEY = "selah-admin-sidebar-width-v1";
@@ -287,17 +286,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           )}
         </LocaleTrigger>
-        <AppSkinTrigger>
-          {(open) => (
-            <button
-              type="button"
-              onClick={open}
-              className="block w-full rounded-md px-2.5 py-1.5 text-left text-[11px] text-adminMuted transition-colors hover:bg-adminFg/[0.05] hover:text-adminFg/85"
-            >
-              {t("admin.appearance")}
-            </button>
-          )}
-        </AppSkinTrigger>
         <button
           type="button"
           onClick={async () => {
@@ -371,17 +359,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           )}
         </LocaleTrigger>
-        <AppSkinTrigger>
-          {(open) => (
-            <button
-              type="button"
-              onClick={open}
-              className="text-left text-[11px] text-adminMuted hover:text-adminFg/85"
-            >
-              {t("admin.appearance")}
-            </button>
-          )}
-        </AppSkinTrigger>
         <button
           type="button"
           onClick={async () => {

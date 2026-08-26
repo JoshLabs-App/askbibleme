@@ -1,26 +1,42 @@
 import { ActivityIndicator, Pressable, View } from "react-native";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import type { AppLocale } from "../i18n/config";
+import { resolveUiText, t } from "../i18n/site-copy";
 import { ShellMaterialIcon } from "../shell/ShellMaterialIcon";
-import { t } from "../i18n/site-copy";
+import { SPLASH_BACKGROUND as LOGO_COLOR } from "../shell/splash-branding.generated";
+import { shellIconTextShadow } from "../shell/shellChromeIcons";
 import { homeNatureScreenStyles as styles } from "./homeNatureScreenStyles";
 
 type Props = {
   insets: EdgeInsets;
+  locale: AppLocale;
+  hidden?: boolean;
+  sceneToolsOpen: boolean;
+  ambientActive: boolean;
+  onToggleSceneTools: () => void;
+  onUserActivity?: () => void;
   homeTtsExperimentEnabled: boolean;
   voicePreparing: boolean;
   voiceSpeaking: boolean;
   onPlayDisplayedVerseVoice: () => void;
-  onOpenSettings: () => void;
 };
 
 export function HomeNatureScreenTopChrome({
   insets,
+  locale,
+  hidden = false,
+  sceneToolsOpen,
+  ambientActive,
+  onToggleSceneTools,
+  onUserActivity,
   homeTtsExperimentEnabled,
   voicePreparing,
   voiceSpeaking,
   onPlayDisplayedVerseVoice,
-  onOpenSettings,
 }: Props) {
+  const settingsLit = sceneToolsOpen || ambientActive;
+  const settingsColor = settingsLit ? LOGO_COLOR : "#FFFFFF";
+
   return (
     <View
       style={[
@@ -29,8 +45,9 @@ export function HomeNatureScreenTopChrome({
           top: insets.top + 4,
           right: Math.max(insets.right, 10),
         },
+        hidden ? styles.topChromeHidden : null,
       ]}
-      pointerEvents="box-none"
+      pointerEvents={hidden ? "none" : "box-none"}
     >
       {homeTtsExperimentEnabled ? (
         <Pressable
@@ -54,12 +71,25 @@ export function HomeNatureScreenTopChrome({
         </Pressable>
       ) : null}
       <Pressable
-        onPress={onOpenSettings}
-        style={({ pressed }) => [styles.settingsBtn, { opacity: pressed ? 0.72 : 0.5 }]}
+        onPress={() => {
+          onUserActivity?.();
+          onToggleSceneTools();
+        }}
+        style={({ pressed }) => [styles.settingsBtn, pressed ? styles.topChromeBtnPressed : null]}
         accessibilityRole="button"
-        accessibilityLabel={t("nature.homeSettings.openAria")}
+        accessibilityState={{ selected: settingsLit }}
+        accessibilityLabel={
+          sceneToolsOpen
+            ? resolveUiText(locale, "收起场景与音效", "Hide scenes and sounds")
+            : resolveUiText(locale, "场景与音效", "Scenes and sounds")
+        }
       >
-        <ShellMaterialIcon name="settings" size={22} color="#FFFFFF" />
+        <ShellMaterialIcon
+          name="settings"
+          size={28}
+          color={settingsColor}
+          style={shellIconTextShadow()}
+        />
       </Pressable>
     </View>
   );

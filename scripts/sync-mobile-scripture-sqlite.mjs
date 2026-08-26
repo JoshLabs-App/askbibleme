@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * 将主仓库构建好的译本 SQLite 复制到 Expo 资源目录（供离线原生阅读）。
- * 默认仅同步 App 内置的 3 个默认译本（简体/繁体和合本 + KJV）；
+ * 默认同步 App 内置译本（简体/繁体和合本 + WEB + KJV）；
  * 可用 SELAH_MOBILE_SCRIPTURE_IDS=id1,id2 覆盖。
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEFAULT_MOBILE_BUNDLED_IDS = ["cuv-simp", "cuv-trad", "kjv"];
+const DEFAULT_MOBILE_BUNDLED_IDS = ["cuv-simp", "cuv-trad", "web-en", "kjv"];
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const srcDir = path.join(repoRoot, "data", "bible", "sqlite");

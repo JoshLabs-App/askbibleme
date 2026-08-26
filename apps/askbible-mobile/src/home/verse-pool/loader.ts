@@ -8,7 +8,7 @@ import { parseVerseKey } from "../../bible/parse-verse-key";
 import { resolveSameAsPreviousVerseText } from "../../bible/resolve-same-as-previous-verse";
 import { getScriptureBookDisplayName } from "../../bible/scripture-book-display-name";
 import { hydrateHomeVersePoolScope } from "../homeVersePoolScopePrefs";
-import { HOME_VERSE_POOL_CHUNKS, HOME_VERSE_POOL_SCOPE_ID } from "./chunk-registry.generated";
+import { getHomeVersePoolChunk, HOME_VERSE_POOL_SCOPE_ID } from "./chunk-registry.generated";
 import type { HomePrayerChunkV1, HomePrayerChunkVerseV1, HomePrayerManifestV1, HomeVerseEntry } from "./types";
 import { normalizeVerseTextForHomeDisplay } from "@/lib/bible/normalize-verse-text-for-home-display";
 import {
@@ -18,15 +18,6 @@ import {
   staticPoolScopeIdForMenuScope,
   THEME_REPEAT_GE5_POOL_SCOPE_ID,
 } from "@/lib/home-prayer-pools/home-verse-pool-menu-scopes";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const bundledCuratedManifest = (() => {
-  try {
-    return require("../../../assets/content/home-prayer-pools/explore-curated-700/manifest.json") as HomePrayerManifestV1;
-  } catch {
-    return null;
-  }
-})();
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const bundledGe5Manifest = (() => {
@@ -42,19 +33,14 @@ const remoteChunkCache = new Map<string, HomePrayerChunkV1>();
 const verseBodyCache = new Map<string, HomePrayerChunkVerseV1>();
 
 function getBundledManifestForScope(staticScopeId: string): HomePrayerManifestV1 | null {
-  if (staticScopeId === HOME_VERSE_POOL_SCOPE_ID) {
-    if (!bundledCuratedManifest || bundledCuratedManifest.version !== 1) return null;
-    return bundledCuratedManifest;
-  }
-  if (staticScopeId === THEME_REPEAT_GE5_POOL_SCOPE_ID) {
-    if (!bundledGe5Manifest || bundledGe5Manifest.version !== 1) return null;
-    return bundledGe5Manifest;
+  if (staticScopeId === THEME_REPEAT_GE5_POOL_SCOPE_ID || staticScopeId === HOME_VERSE_POOL_SCOPE_ID) {
+    if (bundledGe5Manifest?.version === 1) return bundledGe5Manifest;
   }
   return null;
 }
 
 async function fetchManifestFromNetwork(staticScopeId: string): Promise<HomePrayerManifestV1 | null> {
-  if (isMobileOfflineFirst() || !(await isNetworkAvailable())) return null;
+  if (isMobileBundledOnly() || isMobileOfflineFirst() || !(await isNetworkAvailable())) return null;
   try {
     const base = getAskBibleBaseUrl();
     const res = await fetch(`${base}/data/home-prayer-pools/${staticScopeId}/manifest.json`);
@@ -78,14 +64,16 @@ export async function loadHomeVerseManifest(): Promise<HomePrayerManifestV1 | nu
     manifest = getBundledManifestForScope(HOME_VERSE_POOL_SCOPE_ID);
   }
   if (!manifest) return null;
-  if (menuScope === "curated700") return manifest;
+  // curated700 已废弃为独立池；若旧存档仍带到此，当全量用。
+  if (menuScope === "curated700") return filterManifestToMenuScope(manifest, "repeatGe5All");
   return filterManifestToMenuScope(manifest, menuScope);
 }
 
 function normalizeHomeVerseEntry(entry: HomeVerseEntry): HomeVerseEntry {
+  const lines = Array.isArray(entry?.lines) ? entry.lines : [];
   return {
     ref: normalizeVerseTextForHomeDisplay(entry.ref) || String(entry.ref ?? "").trim(),
-    lines: entry.lines
+    lines: lines
       .map((line) => normalizeVerseTextForHomeDisplay(line) || String(line ?? "").trim())
       .filter(Boolean),
   };
@@ -105,10 +93,10 @@ async function loadChunkForManifest(
   if (cached) return cached;
 
   if (manifest.scopeId === HOME_VERSE_POOL_SCOPE_ID) {
-    return HOME_VERSE_POOL_CHUNKS[chunkIndex] ?? null;
+    return getHomeVersePoolChunk(chunkIndex);
   }
 
-  if (isMobileOfflineFirst() || !(await isNetworkAvailable())) return null;
+  if (isMobileBundledOnly() || isMobileOfflineFirst() || !(await isNetworkAvailable())) return null;
   try {
     const base = getAskBibleBaseUrl();
     const res = await fetch(`${base}/data/home-prayer-pools/${manifest.scopeId}/chunk-${chunkIndex}.json`);
@@ -183,7 +171,7 @@ async function loadChapterCached(bookId: string, chapter: number, translationId:
 }
 
 function defaultPrimaryTranslationId(locale: AppLocale): string {
-  if (locale === "en") return "kjv";
+  if (locale === "en") return "web-en";
   if (locale === "zh-TW") return "cuv-trad";
   return "cuv-simp";
 }
@@ -245,9 +233,10 @@ async function resolveVerseEntryForTranslation(
   locale: AppLocale,
   translationId: string,
 ): Promise<HomeVerseEntry | null> {
-  const fromManifest = await resolveVerseEntryFromManifest(manifest, verseKey, locale, translationId);
-  if (fromManifest?.lines?.length) return fromManifest;
-  return resolveVerseEntryByTranslation(verseKey, translationId);
+  // 主译本优先：已安装/内置 SQLite 正文；池内预置文案仅作兜底（语言对齐主译本）。
+  const fromSqlite = await resolveVerseEntryByTranslation(verseKey, translationId);
+  if (fromSqlite?.lines?.length) return fromSqlite;
+  return resolveVerseEntryFromManifest(manifest, verseKey, locale, translationId);
 }
 
 export async function resolveHomeVersePair(

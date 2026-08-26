@@ -23,13 +23,15 @@ import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import { useEffectiveReadingPlanPrefs, useNtDeepRepeatProgress, useTripleLoopProgress } from "./reading-plan/useReadingPlanStores";
-import { readOnboardingNickname } from "../onboarding/onboarding-devotion-prefs";
+import { useMemberAuth } from "../auth/MemberAuthProvider";
 import {
+  markReadChapterCompleted,
   readCompletedChapterKeySet,
   subscribeReadChapterCompletion,
 } from "./read-chapter-completion";
 import {
   buildChapterQueue,
+  expandReadingsToChapterRows,
   formatDisplayNickname,
   sameChapter,
   type ChapterRef,
@@ -53,7 +55,7 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
   const [doneKeys, setDoneKeys] = useState<Set<string>>(new Set());
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
   const [scopeKey, setScopeKey] = useState<string | null>(null);
-  const [nickname, setNickname] = useState("");
+  const { user, bootstrapped } = useMemberAuth();
 
   const localeZhText = useCallback(
     (text: string) => (effectiveLocale === "zh-TW" ? toZhTwText(text) : text),
@@ -66,20 +68,6 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
   const ntDeepProgressKey = isNtDeepRepeatPlanId(prefs.planId)
     ? `${ntDeepProgress.ot.bookId}:${ntDeepProgress.ot.chapter}|i:${ntDeepProgress.curriculumIndex}|d:${ntDeepProgress.dayInSegment}`
     : tripleProgressKey;
-
-  useEffect(() => {
-    let active = true;
-    const task = InteractionManager.runAfterInteractions(() => {
-      void readOnboardingNickname().then((saved) => {
-        if (!active) return;
-        setNickname(saved);
-      });
-    });
-    return () => {
-      active = false;
-      task.cancel();
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -168,6 +156,7 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
   );
 
   const chapterQueue = useMemo(() => buildChapterQueue(readings), [readings]);
+  const chapterRows = useMemo(() => expandReadingsToChapterRows(readings), [readings]);
   const currentChapter = useMemo<ChapterRef>(() => ({ bookId, chapter }), [bookId, chapter]);
   const currentQueueIndex = useMemo(
     () => chapterQueue.findIndex((ref) => sameChapter(ref, currentChapter)),
@@ -178,7 +167,8 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
     currentQueueIndex >= 0 && chapterQueue.length > 0
       ? chapterQueue[(currentQueueIndex + 1) % chapterQueue.length]
       : null;
-  const displayName = formatDisplayNickname(nickname);
+  const displayName = user ? formatDisplayNickname(user.name) : "";
+  const showLoginHint = bootstrapped && !user;
 
   const allDone = useMemo(() => {
     if (!readings.length) return false;
@@ -190,21 +180,26 @@ export function useReadChapterCompletionPlanState({ bookId, chapter, displayLoca
       if (!scopeKey) return;
       const key = todayReadingItemKey(r, prefs.planId);
       const done = !isReadingDone(r);
+      if (done) {
+        await markReadChapterCompleted(r.bookId, r.startChapter);
+      }
       const next = await setTodayReadingItemDone(scopeKey, key, done);
       setDoneKeys(next);
+      await reloadCompletedChapterKeys();
     },
-    [scopeKey, isReadingDone, prefs.planId],
+    [scopeKey, isReadingDone, prefs.planId, reloadCompletedChapterKeys],
   );
 
   return {
     loading,
-    readings,
+    readings: chapterRows,
     doneKeys,
     allDone,
     effectiveLocale,
     isEnglishDisplay,
     localeZhText,
     displayName,
+    showLoginHint,
     neighbors,
     nextTarget,
     toggleDone,

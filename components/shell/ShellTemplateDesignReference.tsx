@@ -4,7 +4,6 @@ import type { RefObject } from "react";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { DEFAULT_BRAND_COLOR_ROWS, TAILWIND_SANS_STACK } from "@/lib/shell/default-brand-fallbacks";
 import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
 import type { ShellTemplatePreviewThemeId } from "@/lib/shell/template-preview-themes";
@@ -56,7 +55,6 @@ export function ShellTemplateDesignReference({
   hidePreviewThemePicker = false,
 }: Props) {
   const { t } = useLocale();
-  const { skin } = useAppSkin();
   const pathname = usePathname() ?? "";
   const [colorRows, setColorRows] = useState<ColorRowLive[]>(() =>
     DEFAULT_BRAND_COLOR_ROWS.map((r) => ({ ...r, cssResolved: "—", rgbResolved: "—" })),
@@ -117,7 +115,7 @@ export function ShellTemplateDesignReference({
       titleMo?.disconnect();
       window.removeEventListener("resize", sample);
     };
-  }, [skin, pathname, previewThemeId, sampleRootRef]);
+  }, [pathname, previewThemeId, sampleRootRef]);
 
   return (
     <div className="flex min-h-0 flex-col gap-8 text-[13px] leading-relaxed text-ink sm:text-[14px]">

@@ -45,21 +45,3 @@ export function animateMusicHomeQueueScroll({
   };
   animRafRef.current = requestAnimationFrame(step);
 }
-
-export function stabilizeMusicHomeQueueScrollY(
-  y: number,
-  queueLoopBlockHeight: number,
-  scrollRef: RefObject<ScrollView | null>,
-): number {
-  if (y < queueLoopBlockHeight * 0.5) {
-    const stableY = y + queueLoopBlockHeight;
-    scrollRef.current?.scrollTo({ y: stableY, animated: false });
-    return stableY;
-  }
-  if (y > queueLoopBlockHeight * 1.5) {
-    const stableY = y - queueLoopBlockHeight;
-    scrollRef.current?.scrollTo({ y: stableY, animated: false });
-    return stableY;
-  }
-  return y;
-}

@@ -1,0 +1,4 @@
+Version 1.0.36
+• More reliable morning alarm after overnight sleep
+• Clearer chapter finish screen without extra progress clutter
+• Reading page no longer fades under the playback bar

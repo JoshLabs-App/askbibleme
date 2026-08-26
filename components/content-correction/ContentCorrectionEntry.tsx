@@ -67,33 +67,23 @@ export function ContentCorrectionEntry({ context, tone = "explore" }: Props) {
     }
     setState({ kind: "submitting" });
     try {
-      const res = await fetch("/api/content-corrections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scope: context.scope,
-          message: message.trim(),
-          email: email.trim() || undefined,
-          locale,
-          articleSlug: context.articleSlug,
-          articleTitle: context.articleTitle,
-          bookId: context.bookId,
-          chapter: context.chapter,
-          roleId: context.roleId ?? undefined,
-          roleLabel: context.roleLabel ?? undefined,
-          publishedAt: context.publishedAt ?? undefined,
-          platform: "web",
-        }),
+      const { submitContentCorrectionWeb } = await import(
+        "@/lib/content-corrections/submit-content-correction-web"
+      );
+      const result = await submitContentCorrectionWeb({
+        context,
+        message: message.trim(),
+        email: email.trim() || undefined,
+        locale,
       });
-      const data = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
-      if (!res.ok || !data.id) {
+      if (!result.ok) {
         setState({
           kind: "error",
-          message: data.error || t("contentCorrection.errorSubmit"),
+          message: result.error || t("contentCorrection.errorSubmit"),
         });
         return;
       }
-      setState({ kind: "success", id: data.id });
+      setState({ kind: "success", id: result.id });
     } catch {
       setState({ kind: "error", message: t("contentCorrection.errorNetwork") });
     }

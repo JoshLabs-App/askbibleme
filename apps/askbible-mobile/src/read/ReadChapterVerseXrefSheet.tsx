@@ -1,15 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  InteractionManager,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
 import {
   loadScriptureXrefSnippets,
   scriptureXrefSnippetKey,
@@ -20,9 +11,13 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import type { AppLocale } from "../i18n/config";
 import { createT } from "../i18n/site-copy";
-import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { readParchmentTheme as c } from "./readParchmentTheme";
-import { useReadBibleTypography } from "./ReadBibleTypographyContext";
+import { ReadChapterBottomSheet } from "./ReadChapterBottomSheet";
+import {
+  useReadBibleTypography,
+  useReadBibleTypographyPx,
+} from "./ReadBibleTypographyContext";
+import type { ReadBibleTypographyPx } from "./read-bible-typography-prefs";
 
 type Props = {
   visible: boolean;
@@ -43,6 +38,7 @@ function XrefListSection({
   snippets,
   loading,
   locale,
+  px,
   onOpen,
 }: {
   title: string;
@@ -50,30 +46,41 @@ function XrefListSection({
   snippets: Record<string, string>;
   loading: boolean;
   locale: AppLocale;
+  px: ReadBibleTypographyPx;
   onOpen: (ref: ScriptureXrefTarget) => void;
 }) {
   if (!refs.length) return null;
+  const linkSize = px.verseFontSize;
+  const snippetSize = px.verseFontSize;
+  const snippetLine = px.verseLineHeight;
+  const sectionSize = Math.max(12, Math.round(px.verseFontSize * 0.72));
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { fontSize: sectionSize }]}>{title}</Text>
       {refs.map((ref) => {
         const key = scriptureXrefSnippetKey(ref);
         const snippet = snippets[key];
         return (
-          <View key={`${title}-${key}`} style={styles.row}>
-            <Pressable
-              onPress={() => onOpen(ref)}
-              hitSlop={6}
-              style={({ pressed }) => pressed && styles.pressed}
-            >
-              <Text style={styles.link}>{formatScriptureXrefLabel(ref, locale)}</Text>
-            </Pressable>
+          <Pressable
+            key={`${title}-${key}`}
+            onPress={() => onOpen(ref)}
+            accessibilityRole="button"
+            accessibilityLabel={formatScriptureXrefLabel(ref, locale)}
+            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          >
+            <Text style={[styles.link, { fontSize: linkSize }]}>
+              {formatScriptureXrefLabel(ref, locale)}
+            </Text>
             {snippet ? (
-              <Text style={styles.snippet}>{snippet}</Text>
+              <Text style={[styles.snippet, { fontSize: snippetSize, lineHeight: snippetLine }]}>
+                {snippet}
+              </Text>
             ) : loading ? (
-              <Text style={styles.snippetMuted}>…</Text>
+              <Text style={[styles.snippetMuted, { fontSize: Math.round(snippetSize * 0.9) }]}>
+                …
+              </Text>
             ) : null}
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -94,8 +101,8 @@ export function ReadChapterVerseXrefSheet({
   const { locale } = useLocale();
   const sheetLocale = displayLocale ?? locale;
   const tx = useMemo(() => createT(sheetLocale), [sheetLocale]);
-  const insets = useSafeAreaInsets();
   const { primaryTranslationId } = useReadBibleTypography();
+  const px = useReadBibleTypographyPx();
 
   const incoming = bundle?.incoming ?? EMPTY_XREFS;
   const outgoing = bundle?.outgoing ?? EMPTY_XREFS;
@@ -136,149 +143,98 @@ export function ReadChapterVerseXrefSheet({
 
   const openRef = (ref: ScriptureXrefTarget) => {
     onClose();
-    router.push({
-      pathname: "/read/[bookId]/[chapter]",
-      params: { bookId: ref.bookId, chapter: String(ref.chapter), verse: String(ref.verseStart) },
+    InteractionManager.runAfterInteractions(() => {
+      router.push({
+        pathname: "/(tabs)/read/[bookId]/[chapter]",
+        params: {
+          bookId: ref.bookId,
+          chapter: String(ref.chapter),
+          verse: String(ref.verseStart),
+        },
+      });
     });
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable onPress={(e) => e.stopPropagation()} style={{ width: "100%" }}>
-          <ParchmentModalCard
-            style={[styles.sheet, { paddingBottom: Math.max(16, insets.bottom + 12) }]}
-          >
-          <View style={styles.header}>
-            <Text style={styles.title}>
-              {tx("pages.read.verseXrefSheetTitle", {
-                bookName,
-                chapter: String(chapter),
-                verse: String(verse),
-              })}
-            </Text>
-            <Pressable onPress={onClose} hitSlop={12}>
-              <Text style={styles.close}>{tx("pages.read.chapterJumpClose")}</Text>
-            </Pressable>
-          </View>
-
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator
-          >
-            {bundleLoading ? (
-              <Text style={styles.snippetMuted}>…</Text>
-            ) : null}
-            <XrefListSection
-              title={tx("pages.read.verseXrefIncoming")}
-              refs={incoming}
-              snippets={snippets}
-              loading={loadingSnippets}
-              locale={sheetLocale}
-              onOpen={openRef}
-            />
-            <XrefListSection
-              title={tx("pages.read.verseXrefOutgoing")}
-              refs={outgoing}
-              snippets={snippets}
-              loading={loadingSnippets}
-              locale={sheetLocale}
-              onOpen={openRef}
-            />
-            {!incoming.length && !outgoing.length ? (
-              <Text style={styles.empty}>{tx("pages.read.verseXrefEmpty")}</Text>
-            ) : null}
-          </ScrollView>
-          </ParchmentModalCard>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <ReadChapterBottomSheet
+      visible={visible}
+      onClose={onClose}
+      title={tx("pages.read.verseXrefSheetTitle", {
+        bookName,
+        chapter: String(chapter),
+        verse: String(verse),
+      })}
+      closeLabel={tx("pages.read.chapterJumpClose")}
+      titleFontSize={Math.max(17, Math.round(px.verseFontSize * 0.95))}
+      closeFontSize={Math.round(px.verseFontSize * 0.85)}
+    >
+      {bundleLoading ? (
+        <Text style={[styles.snippetMuted, { fontSize: Math.round(px.verseFontSize * 0.9) }]}>
+          …
+        </Text>
+      ) : null}
+      <XrefListSection
+        title={tx("pages.read.verseXrefIncoming")}
+        refs={incoming}
+        snippets={snippets}
+        loading={loadingSnippets}
+        locale={sheetLocale}
+        px={px}
+        onOpen={openRef}
+      />
+      <XrefListSection
+        title={tx("pages.read.verseXrefOutgoing")}
+        refs={outgoing}
+        snippets={snippets}
+        loading={loadingSnippets}
+        locale={sheetLocale}
+        px={px}
+        onOpen={openRef}
+      />
+      {!incoming.length && !outgoing.length ? (
+        <Text style={[styles.empty, { fontSize: px.verseFontSize }]}>
+          {tx("pages.read.verseXrefEmpty")}
+        </Text>
+      ) : null}
+    </ReadChapterBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(28, 20, 16, 0.35)",
-  },
-  sheet: {
-    width: "100%",
-    maxHeight: "78%",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    paddingHorizontal: 18,
-    paddingTop: 14,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
-    marginBottom: 10,
-    flexShrink: 0,
-  },
-  title: {
-    flex: 1,
-    fontSize: 16,
-    ...parchmentSans(600),
-    color: c.ink,
-  },
-  close: {
-    fontSize: 14,
-    color: c.muted,
-  },
-  scroll: {
-    flexGrow: 0,
-    flexShrink: 1,
-  },
-  scrollContent: {
-    paddingBottom: 8,
-  },
   section: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   sectionTitle: {
-    fontSize: 11,
     fontWeight: "600",
     letterSpacing: 0.5,
     textTransform: "uppercase",
     color: c.muted,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   row: {
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: c.border,
   },
   link: {
-    fontSize: 15,
     ...parchmentSans(600),
     color: c.accentOt,
     textDecorationLine: "none",
   },
   snippet: {
-    marginTop: 5,
-    fontSize: 14,
-    lineHeight: 21,
+    marginTop: 6,
     ...parchmentSans(400),
     color: c.inkSoft,
   },
   snippetMuted: {
-    marginTop: 4,
-    fontSize: 13,
+    marginTop: 6,
     color: c.muted,
   },
   pressed: {
     opacity: 0.7,
   },
   empty: {
-    fontSize: 14,
     color: c.muted,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
 });

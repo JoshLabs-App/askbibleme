@@ -44,12 +44,17 @@ export function useMemberAuthBootstrap(
                   await clearMemberSession();
                   setUser(null);
                 } else {
+                  const user = {
+                    ...local.user,
+                    ...remote,
+                    createdAt: remote.createdAt ?? local.user.createdAt ?? null,
+                  };
                   await writeMemberSession({
                     sessionToken: local.sessionToken,
                     expiresAt: local.expiresAt,
-                    user: remote,
+                    user,
                   });
-                  setUser(remote);
+                  setUser(user);
                 }
               } catch {
                 // keep local session when offline/unreachable

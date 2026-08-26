@@ -3,9 +3,9 @@ import { readParchmentTheme as c } from "./readParchmentTheme";
 
 export type VerseTextHighlightKind = "golden" | "bookmark" | "selection";
 
-/** 主题库金句：字下荧光笔色带（非整节块底） */
+/** 主题库金句曾用字下色带；读经页已取消，保留空样式以免旧调用露色。 */
 export function goldenVerseMarkerTextStyle(): TextStyle {
-  return verseTextHighlightStyle("golden");
+  return {};
 }
 
 /** 双击收藏：字下色带，比金句略明显 */
@@ -14,6 +14,7 @@ export function verseBookmarkMarkerTextStyle(): TextStyle {
 }
 
 export function verseTextHighlightStyle(kind: VerseTextHighlightKind): TextStyle {
+  if (kind === "golden") return {};
   if (kind === "bookmark") {
     return {
       backgroundColor: c.verseBookmarkMarker,
@@ -30,10 +31,7 @@ export function verseTextHighlightStyle(kind: VerseTextHighlightKind): TextStyle
       paddingVertical: 1,
     };
   }
-  return {
-    backgroundColor: c.goldenVerseMarker,
-    borderRadius: 2,
-  };
+  return {};
 }
 
 export function verseTextHighlightStyleForVerse(opts: {
@@ -41,6 +39,5 @@ export function verseTextHighlightStyleForVerse(opts: {
   bookmarked: boolean;
 }): TextStyle | undefined {
   if (opts.bookmarked) return verseTextHighlightStyle("bookmark");
-  if (opts.isGolden) return verseTextHighlightStyle("golden");
   return undefined;
 }

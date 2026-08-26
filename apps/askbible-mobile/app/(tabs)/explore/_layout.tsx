@@ -5,19 +5,21 @@ import {
 } from "../../../src/read/ReadParchmentBackground";
 
 export default function ExploreStackLayout() {
+  // 与读经 Tab 共用同一套羊皮栈设置（透明 contentStyle + 外层 ReadParchmentBackground）。
   return (
     <ReadParchmentBackground>
       <Stack
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
-          freezeOnBlur: true,
+          freezeOnBlur: false,
           contentStyle: PARCHMENT_STACK_SCREEN_STYLE,
         }}
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="year-day-count/index" />
         <Stack.Screen name="year-day-count/birth-settings" />
+        <Stack.Screen name="reading-alarm/index" />
         <Stack.Screen name="biblical-feasts/index" />
         <Stack.Screen name="years-days-eternity/index" />
         <Stack.Screen name="word-of-god/index" />

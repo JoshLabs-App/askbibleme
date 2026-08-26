@@ -105,10 +105,18 @@ async function main() {
     method: "PUT",
     body: JSON.stringify({
       track: TARGET_TRACK,
-      releases: [{ status: "completed", versionCodes: [VERSION_CODE] }],
+      releases: [{ status: "completed", versionCodes: [String(VERSION_CODE)] }],
     }),
   });
-  await playApi(token, `/edits/${edit.id}:commit?changesNotSentForReview=true`, { method: "POST" });
+  // Some Play apps auto-send edits for review and reject changesNotSentForReview;
+  // others require it. Try auto-review first, then fall back.
+  try {
+    await playApi(token, `/edits/${edit.id}:commit`, { method: "POST" });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/changesNotSentForReview/i.test(msg)) throw err;
+    await playApi(token, `/edits/${edit.id}:commit?changesNotSentForReview=true`, { method: "POST" });
+  }
   console.log(`Promoted versionCode ${VERSION_CODE} to Play track "${TARGET_TRACK}" (${PACKAGE}).`);
 }
 

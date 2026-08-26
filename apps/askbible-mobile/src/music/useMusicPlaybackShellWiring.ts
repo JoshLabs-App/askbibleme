@@ -6,6 +6,9 @@ import { useMusicShellUnload } from "./useMusicShellUnload";
 import { useMusicTrackDownload } from "./useMusicTrackDownload";
 import { useScriptureShellPlayback } from "./scriptureShellPlayback";
 import { useScriptureInterruptionRecovery } from "./useScriptureInterruptionRecovery";
+import { useMusicInterruptionRecovery } from "./useMusicInterruptionRecovery";
+import { useMusicNativeTakeover } from "./useMusicNativeTakeover";
+import { useNativeMusicEnded } from "./useNativeMusicEnded";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 import type { PlaybackTrack } from "./types";
@@ -119,6 +122,7 @@ export function useMusicPlaybackShellWiring(args: Args) {
     bridge: musicPlayTrackBridge,
     tracks,
     trackIndex,
+    playing,
     unloadCurrent,
     endMusicSession,
     persistMusicResume,
@@ -136,9 +140,41 @@ export function useMusicPlaybackShellWiring(args: Args) {
 
   refs.playTrackAtRef.current = playTrackAt;
 
+  useNativeMusicEnded({
+    tracks,
+    trackIndexRef: refs.trackIndexRef,
+    playingStateRef: refs.playingStateRef,
+    setTrackIndex,
+    setMusicCurrentSec,
+    setPlaying,
+    persistMusicResume,
+  });
+
+  useMusicInterruptionRecovery({
+    playing,
+    playbackModeRef: refs.playbackModeRef,
+    soundRef: refs.soundRef,
+    playingStateRef: refs.playingStateRef,
+    musicGainRef: refs.musicGainRef,
+    setPlaying,
+  });
+
+  useMusicNativeTakeover({
+    playbackModeRef: refs.playbackModeRef,
+    soundRef: refs.soundRef,
+    playingStateRef: refs.playingStateRef,
+    musicGainRef: refs.musicGainRef,
+    setPlaying,
+    setMusicCurrentSec,
+    setMusicDurationSec,
+    setScriptureCurrentSec,
+    setScriptureDurationSec,
+    scripturePlaybackRateRef,
+  });
+
   const { playNext, playPrev } = useMusicPlayNavigation({
     playbackModeRef: refs.playbackModeRef,
-    trackIndex,
+    trackIndexRef: refs.trackIndexRef,
     tracks,
     tracksLength: tracks.length,
     musicRepeatModeRef: refs.musicRepeatModeRef,

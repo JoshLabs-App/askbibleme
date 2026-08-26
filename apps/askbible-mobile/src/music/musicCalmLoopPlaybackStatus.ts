@@ -1,6 +1,7 @@
 import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
 import type { Audio } from "expo-av";
+import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { restartCalmLoopWithCrossfade, resolveCalmLoopProfile } from "./musicCalmPlayback";
 import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
@@ -42,7 +43,11 @@ export function handleMusicCalmLoopTrimStatus(args: CalmLoopStatusArgs): boolean
           targetGain: args.musicGainRef.current,
         });
         args.calmLoopTransitioningRef.current = false;
-        args.setPlaying(ok);
+        // 失败时保持「想播」，交给 interruption recovery，勿把会话钉死成暂停。
+        if (ok) {
+          setShellMusicWantPlaying(true);
+          args.setPlaying(true);
+        }
       })();
     }
     return true;

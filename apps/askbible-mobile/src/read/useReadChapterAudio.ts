@@ -1,35 +1,21 @@
 import { useIsFocused } from "@react-navigation/native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { InteractionManager, type ScrollView } from "react-native";
-import {
-  chapterAudioVerseSyncTranslationId,
-  fetchChapterVerseTimings,
-  verseIndexForVerseNumber,
-  verseNumberAtChapterAudioTime,
-  type CuvChapterVerseTiming,
-} from "../bible/cuv-chapter-verse-timings";
-import { loadChapterFromBundledTranslation } from "../bible/load-chapter";
-import {
-  prefetchScriptureChapterAudioSrc,
-  translationSupportsChapterAudio,
-} from "../bible/read-chapter-audio";
-import {
-  verseIndexForReadChapterAudioTime,
-  verseWeightsForReadChapterAudio,
-} from "../bible/read-chapter-audio-verse-from-progress";
+import { translationSupportsChapterAudio } from "../bible/read-chapter-audio";
 import type { LoadedChapter } from "../bible/types";
-import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
+import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import { useScriptureFollowDerived } from "./useScriptureFollowDerived";
 import {
-  useMusicPlayback,
-  useScripturePlaybackSec,
-} from "../music/MusicPlaybackContext";
+  getScripturePlayingChapter,
+  subscribeScripturePlayingChapter,
+} from "../music/scripturePlayingChapterStore";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import {
-  useReadChapterAudioScrollFollow,
-  type ReadChapterAudioScrollFollowOpts,
-} from "./useReadChapterAudioScrollFollow";
-import { prefetchUpcomingPlanFlowChapterAudio } from "./prefetch-plan-flow-chapter-audio";
+  ensurePlanFlowChapterAudioReady,
+  prefetchUpcomingPlanFlowChapterAudio,
+} from "./prefetch-plan-flow-chapter-audio";
+import { setPlanFlowUiHost } from "./read-plan-flow-autoplay";
 import { useReadChapterAudioRegistration } from "./useReadChapterAudioRegistration";
 
 type ChapterTarget = { bookId: string; chapter: number };
@@ -40,12 +26,16 @@ export type UseReadChapterAudioOptions = {
   isPlanFlow?: boolean;
   planFlowTick?: string | null;
   planFlowQueue?: Array<{ bookId: string; chapter: number }>;
-  followScroll?: ReadChapterAudioScrollFollowOpts;
 };
 
+/**
+ * 读经音频：注册音轨、邻章预取、近结尾检测。
+ * 播经跟读高亮 + 自动滚到屏幕中间已移除（易错位且 120ms 跟读态会抬高 JS CPU）。
+ * 用户「划重点」与搜索定位滚屏仍由其它 hook 负责。
+ */
 export function useReadChapterAudio(
   chapterData: LoadedChapter | null,
-  scrollRef: React.RefObject<ScrollView | null>,
+  _scrollRef: React.RefObject<ScrollView | null>,
   options: UseReadChapterAudioOptions = {},
 ) {
   const {
@@ -53,30 +43,31 @@ export function useReadChapterAudio(
     isPlanFlow = false,
     planFlowTick = null,
     planFlowQueue = [],
-    followScroll,
   } = options;
   const {
     registerReadChapter,
     playing,
     playbackMode,
     scriptureDurationSec,
-    scripturePreparing,
   } = useMusicPlayback();
-  const scripturePlaybackSec = useScripturePlaybackSec();
+  const playingAudioChapter = useSyncExternalStore(
+    subscribeScripturePlayingChapter,
+    getScripturePlayingChapter,
+    getScripturePlayingChapter,
+  );
   const registerReadChapterRef = useRef(registerReadChapter);
   registerReadChapterRef.current = registerReadChapter;
 
-  const [verseTimings, setVerseTimings] = useState<CuvChapterVerseTiming[] | null>(null);
-  const [weightVerses, setWeightVerses] = useState<readonly { text: string }[] | null>(null);
-  const baseUrl = useMemo(() => getAskBibleBaseUrl(), []);
   const { audioVoiceId, chapterAudioTranslationId } = useReadBibleTypography();
   const isFocused = useIsFocused();
 
+  // 章页聚焦时退出 listen 宿主，避免坞/中央键仍按计划池续播。
+  useEffect(() => {
+    if (!isFocused) return;
+    setPlanFlowUiHost("chapter");
+  }, [isFocused]);
+
   const supported = chapterData ? translationSupportsChapterAudio(chapterAudioTranslationId) : false;
-  const verseSyncTranslationId = useMemo(
-    () => chapterAudioVerseSyncTranslationId(chapterAudioTranslationId, audioVoiceId),
-    [audioVoiceId, chapterAudioTranslationId],
-  );
 
   const chapterAudioKey = useMemo(() => {
     if (!chapterData) return null;
@@ -93,6 +84,13 @@ export function useReadChapterAudio(
     registerReadChapterRef,
     onAdvanceChapter,
   });
+
+  const audioBoundToDisplayedChapter =
+    !!chapterData &&
+    !!playingAudioChapter &&
+    playingAudioChapter.bookId === chapterData.bookId &&
+    playingAudioChapter.chapter === chapterData.chapter &&
+    playingAudioChapter.translationId === chapterAudioTranslationId;
 
   useEffect(() => {
     if (!chapterData || !supported || !isFocused) return;
@@ -115,18 +113,27 @@ export function useReadChapterAudio(
       (target): target is NonNullable<typeof next> => Boolean(target),
     );
     if (!neighbors.length) return;
+    // 邻章预取让开开播前几秒，少和进度轴 / 首屏布局抢 JS。
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const task = InteractionManager.runAfterInteractions(() => {
-      for (const target of neighbors) {
-        void prefetchScriptureChapterAudioSrc({
-          translationId: chapterAudioTranslationId,
-          bookId: target.bookId,
-          chapter: target.chapter,
-          bookName: target.bookName,
-          voiceId: audioVoiceId,
-        });
-      }
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        for (const target of neighbors) {
+          void ensurePlanFlowChapterAudioReady({
+            ref: { bookId: target.bookId, chapter: target.chapter },
+            translationId: chapterAudioTranslationId,
+            voiceId: audioVoiceId,
+            streamFirst: false,
+          });
+        }
+      }, 2800);
     });
-    return () => task.cancel();
+    return () => {
+      cancelled = true;
+      task.cancel();
+      if (timer) clearTimeout(timer);
+    };
   }, [
     audioVoiceId,
     chapterAudioTranslationId,
@@ -136,137 +143,29 @@ export function useReadChapterAudio(
     supported,
   ]);
 
-  useEffect(() => {
-    if (!chapterData || !supported) {
-      setVerseTimings(null);
-      return;
-    }
-    const needsTimings = playbackMode === "scripture" && (playing || scripturePreparing);
-    if (!needsTimings || !isFocused) return;
-    let cancelled = false;
-    const task = InteractionManager.runAfterInteractions(() => {
-      void (async () => {
-        const timings = await fetchChapterVerseTimings(
-          baseUrl,
-          chapterAudioTranslationId,
-          audioVoiceId,
-          chapterData.bookId,
-          chapterData.chapter,
-        );
-        if (!cancelled) setVerseTimings(timings);
-      })();
-    });
-    return () => {
-      cancelled = true;
-      task.cancel();
-    };
-  }, [
-    audioVoiceId,
-    baseUrl,
-    chapterAudioTranslationId,
-    chapterData,
-    supported,
-    verseSyncTranslationId,
-    playbackMode,
-    playing,
-    scripturePreparing,
-    isFocused,
-  ]);
-
-  useEffect(() => {
-    if (!chapterData || !supported) {
-      setWeightVerses(null);
-      return;
-    }
-    const needsWeights = playbackMode === "scripture" && (playing || scripturePreparing);
-    if (!needsWeights || !isFocused) return;
-    if (verseSyncTranslationId === chapterData.translationId) {
-      setWeightVerses(chapterData.verses);
-      return;
-    }
-    let cancelled = false;
-    const task = InteractionManager.runAfterInteractions(() => {
-      void loadChapterFromBundledTranslation(
-        chapterData.bookId,
-        chapterData.chapter,
-        verseSyncTranslationId,
-      ).then((loaded) => {
-        if (cancelled) return;
-        setWeightVerses(loaded?.verses ?? chapterData.verses);
-      });
-    });
-    return () => {
-      cancelled = true;
-      task.cancel();
-    };
-  }, [
-    chapterData,
-    chapterData?.bookId,
-    chapterData?.chapter,
-    chapterData?.translationId,
-    chapterData?.verses,
-    supported,
-    verseSyncTranslationId,
-    playbackMode,
-    playing,
-    scripturePreparing,
-    isFocused,
-  ]);
-
-  const weights = useMemo(
-    () => (weightVerses ? verseWeightsForReadChapterAudio(weightVerses) : []),
-    [weightVerses],
-  );
-
   const audioMatchesChapter =
-    supported && Boolean(chapterAudioSrc) && playbackMode === "scripture" && playing;
-  const audioFollowActive =
-    supported && Boolean(chapterAudioSrc) && playbackMode === "scripture" && (playing || scripturePreparing);
+    audioBoundToDisplayedChapter &&
+    supported &&
+    Boolean(chapterAudioSrc) &&
+    playbackMode === "scripture" &&
+    playing;
   const scriptureBoundToCurrentChapter =
-    supported && Boolean(chapterAudioSrc) && playbackMode === "scripture";
-  const nearAudioEnd =
-    scriptureBoundToCurrentChapter &&
-    scriptureDurationSec > 0 &&
-    scripturePlaybackSec >= Math.max(0, scriptureDurationSec - 1.2);
-
-  const activeVerseIndex = (() => {
-    if (!chapterData || !audioFollowActive) return null;
-    if (verseTimings?.length) {
-      const verseNum = verseNumberAtChapterAudioTime(scripturePlaybackSec, verseTimings);
-      if (verseNum === null) return null;
-      return verseIndexForVerseNumber(chapterData.verses, verseNum);
-    }
-    if (weights.length > 0) {
-      if (!Number.isFinite(scriptureDurationSec) || scriptureDurationSec <= 0.05) {
-        return 0;
-      }
-      return verseIndexForReadChapterAudioTime(
-        scripturePlaybackSec,
-        scriptureDurationSec,
-        weights,
-      );
-    }
-    return null;
-  })();
-
-  useReadChapterAudioScrollFollow({
-    scrollRef,
-    followScroll: {
-      ...followScroll,
-      audioDockVisible: Boolean(chapterAudioSrc),
-    },
-    isFocused,
-    activeVerseIndex,
-    chapterVerses: chapterData?.verses,
-    audioFollowActive,
-    chapterKey: chapterData ? `${chapterData.bookId}:${chapterData.chapter}` : null,
-    scripturePlaybackSec,
-  });
+    audioBoundToDisplayedChapter &&
+    supported &&
+    Boolean(chapterAudioSrc) &&
+    playbackMode === "scripture";
+  const nearAudioEnd = useScriptureFollowDerived(
+    (sec) =>
+      scriptureBoundToCurrentChapter &&
+      scriptureDurationSec > 0 &&
+      sec >= Math.max(0, scriptureDurationSec - 1.2),
+  );
 
   return {
     supported,
     chapterAudioAvailable: Boolean(chapterAudioSrc),
-    activeVerseIndex,
+    /** 跟读高亮已关闭；保留字段以免改动整条经文列表 props。 */
+    activeVerseIndex: null as number | null,
     audioMatchesChapter,
     nearAudioEnd,
   };

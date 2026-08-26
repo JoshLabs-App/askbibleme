@@ -56,7 +56,8 @@ async function openScriptureDatabaseUnlocked(
         } else {
           await ensureDownloadedDatabaseOnDisk(id);
         }
-        const db = await SQLite.openDatabaseAsync(dbFileName(id));
+        // Android：共用连接被 close 后易 NPE；每次打开用新连接。
+        const db = await SQLite.openDatabaseAsync(dbFileName(id), { useNewConnection: true });
         trackOpenedDatabase(id, db);
         return db;
       } catch (err) {
@@ -115,27 +116,18 @@ export async function retryScriptureDatabaseOnPrepareError<T>(
       if (!isNativeDatabaseRejectedError(err)) throw err;
       await closeOpenedDatabase(id);
       clearOpenPromise(id);
+      // 先换新连接，避免一遇 NPE 就删库重装引发 Android 连接风暴。
       const reopened = await openScriptureDatabaseUnlocked(id);
       try {
         return await run(reopened);
       } catch (err2) {
         if (!isNativeDatabaseRejectedError(err2)) throw err2;
-        await removeInstalledDatabase(getScriptureDatabaseDestPath(id), id);
-        if (isBundledScriptureTranslation(id)) {
-          await rebuildBundledScriptureDatabaseInner(id);
-        } else {
-          throw err2;
-        }
+        if (!isBundledScriptureTranslation(id)) throw err2;
+        await closeOpenedDatabase(id);
+        clearOpenPromise(id);
+        await rebuildBundledScriptureDatabaseInner(id);
         const rebuilt = await openScriptureDatabaseUnlocked(id);
-        try {
-          return await run(rebuilt);
-        } catch (err3) {
-          if (!isNativeDatabaseRejectedError(err3)) throw err3;
-          if (!isBundledScriptureTranslation(id)) throw err3;
-          await rebuildBundledScriptureDatabaseInner(id);
-          const again = await openScriptureDatabaseUnlocked(id);
-          return run(again);
-        }
+        return run(rebuilt);
       }
     }
   });

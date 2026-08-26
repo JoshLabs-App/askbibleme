@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { useLocale } from "@/components/i18n/LocaleProvider";
+import { ReadingPlanStartDayPicker } from "@/components/explore/reading-planner/ReadingPlanStartDayPicker";
 import { NtDeepRepeatPaceSection } from "@/components/bible/NtDeepRepeatPaceSection";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isNtDeepRepeatPlanId } from "@/lib/bible/reading-plans/nt-deep-repeat-plan";
 import {
   NT_DEEP_REPEAT_DEFAULT_PACE,
   type NtDeepRepeatPace,
 } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "@/lib/bible/reading-plans/triple-loop-plan";
 import { activateNtDeepRepeatPlan } from "@/lib/read/nt-deep-repeat-plan-sync";
+import { resolveEffectiveEpochDay } from "@/lib/read/reading-plan-ahead";
 import type { ReadingPlanAnchor } from "@/lib/read/reading-plan-prefs";
 import {
   DEFAULT_READING_PLAN_ANCHOR,
@@ -25,14 +28,20 @@ import {
   subscribeReadingPlanPrefs,
   writeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
+import { readPlanPlayHref } from "@/lib/read/read-plan-play-route";
 
 type Props = {
   planId: string;
   dayCount: number;
 };
 
+function maxStartDayForPlan(planId: string, dayCount: number, isNtDeepRepeat: boolean): number {
+  if (isNtDeepRepeat) return 365;
+  return Math.max(1, Number.isFinite(dayCount) ? dayCount : 365);
+}
+
 export function ReadPlanActivateControl({ planId, dayCount }: Props) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const router = useRouter();
   const stored = useSyncExternalStore(
     subscribeReadingPlanPrefs,
@@ -46,6 +55,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   );
   const isTripleLoop = isTripleLoopPlanId(planId);
   const isNtDeepRepeat = isNtDeepRepeatPlanId(planId);
+  const isPointerPlan = isPointerReadingPlanId(planId);
   const isActive = effective.planId === planId;
   const isImplicitDefault =
     planId === DEFAULT_READING_PLAN_ID && isImplicitDefaultReadingPlan(stored);
@@ -59,6 +69,10 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
   const [pace, setPace] = useState<NtDeepRepeatPace>(
     stored?.ntDeepRepeatPace ?? effective.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE,
   );
+  const maxStartDay = maxStartDayForPlan(planId, dayCount, isNtDeepRepeat);
+  const supportsStartDay =
+    isNtDeepRepeat || (!isPointerPlan && !isTripleLoop && anchor === "from-today");
+  const [startDay, setStartDay] = useState(1);
 
   useEffect(() => {
     if (isActive) setAnchor(effective.anchor);
@@ -69,19 +83,40 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
     else if (stored?.ntDeepRepeatPace) setPace(stored.ntDeepRepeatPace);
   }, [isActive, effective.ntDeepRepeatPace, stored?.ntDeepRepeatPace]);
 
-  const todayDayIndex = useMemo(() => {
-    if (!isActive || isTripleLoop) return null;
+  const currentPlanDay = useMemo(() => {
+    if (!isActive) return null;
+    if (isNtDeepRepeat) return resolveEffectiveEpochDay(effective);
+    if (isTripleLoop) return null;
     return resolveReadingPlanDayIndex(effective, dayCount) + 1;
-  }, [isActive, effective, dayCount, isTripleLoop]);
+  }, [isActive, effective, dayCount, isNtDeepRepeat, isTripleLoop]);
+
+  useEffect(() => {
+    if (!supportsStartDay) return;
+    if (isActive && currentPlanDay != null) {
+      setStartDay(Math.min(maxStartDay, Math.max(1, currentPlanDay)));
+    }
+  }, [supportsStartDay, isActive, currentPlanDay, maxStartDay]);
+
+  const todayDayIndex = currentPlanDay;
 
   const activate = () => {
+    const safeStartDay = Math.min(maxStartDay, Math.max(1, Math.floor(startDay)));
     if (isNtDeepRepeat) {
-      activateNtDeepRepeatPlan({ dayCount, pace });
+      activateNtDeepRepeatPlan({ dayCount, pace, startDay: safeStartDay });
+    } else if (isTripleLoop) {
+      setActiveReadingPlan(planId, "calendar-easter", { dayCount });
+    } else if (supportsStartDay) {
+      const backDated = new Date();
+      backDated.setDate(backDated.getDate() - (safeStartDay - 1));
+      setActiveReadingPlan(planId, anchor, { dayCount, now: backDated });
     } else {
-      setActiveReadingPlan(planId, isTripleLoop ? "calendar-easter" : anchor, { dayCount });
+      setActiveReadingPlan(planId, anchor, { dayCount });
     }
-    router.push("/read");
-    router.refresh();
+    if (!isActive) {
+      router.push(readPlanPlayHref());
+    } else {
+      router.refresh();
+    }
   };
 
   const clear = () => {
@@ -141,6 +176,10 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
         </fieldset>
       )}
 
+      {supportsStartDay ? (
+        <ReadingPlanStartDayPicker locale={locale} value={startDay} max={maxStartDay} onChange={setStartDay} />
+      ) : null}
+
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -167,7 +206,7 @@ export function ReadPlanActivateControl({ planId, dayCount }: Props) {
 
       {isActive ? (
         <p className="mt-3 text-[11px] text-amber-800/55 dark:text-stone-500">
-          <Link href="/read" className="underline decoration-amber-800/25 underline-offset-[0.15em]">
+          <Link href={readPlanPlayHref()} className="underline decoration-amber-800/25 underline-offset-[0.15em]">
             {t("pages.read.todayPlanSeeHome")}
           </Link>
         </p>

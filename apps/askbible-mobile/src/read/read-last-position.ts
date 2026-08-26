@@ -22,4 +22,6 @@ export async function readLastReadPosition(): Promise<ReadLastPosition | null> {
 
 export async function writeLastReadPosition(pos: ReadLastPosition): Promise<void> {
   await AsyncStorage.setItem(KEY, JSON.stringify(pos));
+  const { pushReadRecentChapter } = await import("./read-recent-chapters");
+  await pushReadRecentChapter(pos);
 }

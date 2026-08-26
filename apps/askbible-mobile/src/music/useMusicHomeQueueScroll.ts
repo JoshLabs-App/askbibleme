@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import type { ScrollView } from "react-native";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { Animated, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from "react-native";
+import { animateMusicHomeQueueScroll } from "./musicHomeQueueScrollAnimate";
 import {
-  animateMusicHomeQueueScroll,
-  stabilizeMusicHomeQueueScrollY,
-} from "./musicHomeQueueScrollAnimate";
-import {
+  MUSIC_HOME_QUEUE_CENTER_PAD,
   MUSIC_HOME_QUEUE_ROW_HEIGHT,
   MUSIC_HOME_QUEUE_VIEWPORT_HEIGHT,
 } from "./musicHomeQueueScroll";
@@ -17,68 +15,51 @@ type Args = {
   filteredTrackIndices: number[];
 };
 
+/**
+ * 滚动位置只以 Animated.Value 存在，不进 React state——行的淡入淡出由它在原生侧驱动。
+ * JS 这边的监听只做空闲后自动回中的计时，不触发重渲染。
+ */
 export function useMusicHomeQueueScroll({ album, trackIndex, filteredTrackIndices }: Args) {
-  const [queueScrollY, setQueueScrollY] = useState(0);
+  const queueScrollV = useRef(new Animated.Value(0)).current;
   const queueScrollRef = useRef<ScrollView | null>(null);
   const recenterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recenterAnimRafRef = useRef<number | null>(null);
   const queueScrollYRef = useRef(0);
-  queueScrollYRef.current = queueScrollY;
 
-  const queueLoopBlockHeight = useMemo(
-    () => filteredTrackIndices.length * MUSIC_HOME_QUEUE_ROW_HEIGHT,
-    [filteredTrackIndices.length],
-  );
-
-  const queueDisplayIndices = useMemo(() => {
-    if (filteredTrackIndices.length <= 1) return filteredTrackIndices;
-    return [...filteredTrackIndices, ...filteredTrackIndices, ...filteredTrackIndices];
-  }, [filteredTrackIndices]);
-
-  useEffect(() => {
-    if (filteredTrackIndices.length <= 1 || queueLoopBlockHeight <= 0) {
-      setQueueScrollY(0);
-      return;
-    }
-    const y = queueLoopBlockHeight;
-    requestAnimationFrame(() => {
-      queueScrollRef.current?.scrollTo({ y, animated: false });
-      setQueueScrollY(y);
-    });
-  }, [album, filteredTrackIndices.length, queueLoopBlockHeight]);
-
-  const animateQueueScrollTo = useCallback(
-    (targetY: number, durationMs = 4000) => {
-      animateMusicHomeQueueScroll({
-        scrollRef: queueScrollRef,
-        startY: queueScrollYRef.current,
-        targetY,
-        durationMs,
-        animRafRef: recenterAnimRafRef,
-        onY: setQueueScrollY,
-      });
+  const setScrollY = useCallback(
+    (y: number) => {
+      queueScrollYRef.current = y;
+      queueScrollV.setValue(y);
     },
-    [],
+    [queueScrollV],
   );
 
   const scrollActiveToCenter = useCallback(
     (animated: boolean) => {
-      if (filteredTrackIndices.length <= 0 || queueLoopBlockHeight <= 0) return;
       const activeLocalIdx = filteredTrackIndices.findIndex((idx) => idx === trackIndex);
       if (activeLocalIdx < 0) return;
-      const middleBlockOffset = queueLoopBlockHeight;
-      const rowCenter =
-        middleBlockOffset + activeLocalIdx * MUSIC_HOME_QUEUE_ROW_HEIGHT + MUSIC_HOME_QUEUE_ROW_HEIGHT / 2;
-      const targetY = Math.max(0, rowCenter - MUSIC_HOME_QUEUE_VIEWPORT_HEIGHT / 2);
+      // 内容顶部有 CENTER_PAD 留白，所以第一行也能滚到正中。
+      const rowTop = MUSIC_HOME_QUEUE_CENTER_PAD + activeLocalIdx * MUSIC_HOME_QUEUE_ROW_HEIGHT;
+      const targetY = Math.max(
+        0,
+        rowTop + MUSIC_HOME_QUEUE_ROW_HEIGHT / 2 - MUSIC_HOME_QUEUE_VIEWPORT_HEIGHT / 2,
+      );
       if (Math.abs(targetY - queueScrollYRef.current) < 1) return;
       if (animated) {
-        animateQueueScrollTo(targetY);
+        animateMusicHomeQueueScroll({
+          scrollRef: queueScrollRef,
+          startY: queueScrollYRef.current,
+          targetY,
+          durationMs: 4000,
+          animRafRef: recenterAnimRafRef,
+          onY: setScrollY,
+        });
       } else {
         queueScrollRef.current?.scrollTo({ y: targetY, animated: false });
-        setQueueScrollY(targetY);
+        setScrollY(targetY);
       }
     },
-    [animateQueueScrollTo, filteredTrackIndices, queueLoopBlockHeight, trackIndex],
+    [filteredTrackIndices, setScrollY, trackIndex],
   );
 
   useEffect(() => {
@@ -87,48 +68,30 @@ export function useMusicHomeQueueScroll({ album, trackIndex, filteredTrackIndice
 
   useEffect(() => {
     return () => {
-      if (recenterTimeoutRef.current) {
-        clearTimeout(recenterTimeoutRef.current);
-        recenterTimeoutRef.current = null;
-      }
-      if (recenterAnimRafRef.current != null) {
-        cancelAnimationFrame(recenterAnimRafRef.current);
-        recenterAnimRafRef.current = null;
-      }
+      if (recenterTimeoutRef.current) clearTimeout(recenterTimeoutRef.current);
+      if (recenterAnimRafRef.current != null) cancelAnimationFrame(recenterAnimRafRef.current);
     };
   }, []);
 
-  const scheduleAutoRecenter = useCallback(() => {
-    if (recenterTimeoutRef.current) clearTimeout(recenterTimeoutRef.current);
-    recenterTimeoutRef.current = setTimeout(() => {
-      scrollActiveToCenter(true);
-      recenterTimeoutRef.current = null;
-    }, QUEUE_RECENTER_IDLE_MS);
-  }, [scrollActiveToCenter]);
-
   const onQueueScroll = useCallback(
-    (y: number) => {
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (recenterAnimRafRef.current != null) {
         cancelAnimationFrame(recenterAnimRafRef.current);
         recenterAnimRafRef.current = null;
       }
-      if (filteredTrackIndices.length <= 1 || queueLoopBlockHeight <= 0) {
-        setQueueScrollY(y);
-        scheduleAutoRecenter();
-        return;
-      }
-      const stableY = stabilizeMusicHomeQueueScrollY(y, queueLoopBlockHeight, queueScrollRef);
-      setQueueScrollY(stableY);
-      scheduleAutoRecenter();
+      setScrollY(e.nativeEvent.contentOffset.y);
+      if (recenterTimeoutRef.current) clearTimeout(recenterTimeoutRef.current);
+      recenterTimeoutRef.current = setTimeout(() => {
+        scrollActiveToCenter(true);
+        recenterTimeoutRef.current = null;
+      }, QUEUE_RECENTER_IDLE_MS);
     },
-    [filteredTrackIndices.length, queueLoopBlockHeight, scheduleAutoRecenter],
+    [scrollActiveToCenter, setScrollY],
   );
 
   return {
-    queueScrollY,
+    queueScrollV,
     queueScrollRef: queueScrollRef as RefObject<ScrollView | null>,
-    queueLoopBlockHeight,
-    queueDisplayIndices,
     onQueueScroll,
   };
 }

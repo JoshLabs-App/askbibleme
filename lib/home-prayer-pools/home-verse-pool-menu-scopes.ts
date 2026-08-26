@@ -5,7 +5,6 @@ import {
 } from "@/lib/bible/scripture-books";
 import type { AppLocale } from "@/lib/i18n/config";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
-import { EXPLORE_CURATED_700_POOL_SCOPE_ID } from "@/lib/scripture/explore-curated-pool-scope-id";
 import {
   DEFAULT_THEME_REPEAT_MIN_COUNT,
   themeRepeatPoolScopeId,
@@ -25,7 +24,8 @@ export type HomeVersePoolMenuScopeId =
   | "repeatGe5OldOther"
   | `repeatGe5Book:${string}`;
 
-export const DEFAULT_HOME_VERSE_POOL_MENU_SCOPE: HomeVersePoolMenuScopeId = "curated700";
+/** 首页默认全量池；不再用 curated700 当「未解锁降级池」。 */
+export const DEFAULT_HOME_VERSE_POOL_MENU_SCOPE: HomeVersePoolMenuScopeId = "repeatGe5All";
 
 export const THEME_REPEAT_GE5_MENU_MIN_COUNT = DEFAULT_THEME_REPEAT_MIN_COUNT;
 
@@ -109,8 +109,7 @@ export function parseHomeVersePoolMenuScopeId(raw: string | null | undefined): H
   return DEFAULT_HOME_VERSE_POOL_MENU_SCOPE;
 }
 
-export function staticPoolScopeIdForMenuScope(menuScope: HomeVersePoolMenuScopeId): string {
-  if (menuScope === "curated700") return EXPLORE_CURATED_700_POOL_SCOPE_ID;
+export function staticPoolScopeIdForMenuScope(_menuScope: HomeVersePoolMenuScopeId): string {
   return THEME_REPEAT_GE5_POOL_SCOPE_ID;
 }
 
@@ -185,7 +184,6 @@ export type HomeVersePoolMenuRow =
 export function buildHomeVersePoolMenuRows(locale: AppLocale): HomeVersePoolMenuRow[] {
   const rows: HomeVersePoolMenuRow[] = [
     { kind: "option", scopeId: "repeatGe5All", label: resolveHomeVersePoolMenuLabel("repeatGe5All", locale) },
-    { kind: "option", scopeId: "curated700", label: resolveHomeVersePoolMenuLabel("curated700", locale) },
     { kind: "header", label: localizeMenuText(locale, "新约") },
     { kind: "option", scopeId: "repeatGe5New", label: resolveHomeVersePoolMenuLabel("repeatGe5New", locale) },
   ];

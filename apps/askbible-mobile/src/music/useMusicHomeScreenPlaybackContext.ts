@@ -1,17 +1,22 @@
+import { useCallback } from "react";
 import { useIsFocused } from "@react-navigation/native";
+import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
+import { useAppForeground } from "./useAppForeground";
 import { useMusicPlayback } from "./MusicPlaybackContext";
 import { useMusicHomeAlbum } from "./useMusicHomeAlbum";
 import { resolveMusicHomePlaybackMetrics } from "./musicHomePlaybackMetrics";
-import { musicCopy } from "./musicCopy";
+import { resolveMusicPageToggleAction } from "./musicPagePlayback";
+import { isTrackPlayable } from "./trackArtwork";
+import { normalizeMusicAlbumLabel } from "./musicAlbumCatalog";
 import {
   useMusicHomeGlowColors,
-  useMusicHomeSeekState,
   useMusicHomeSleepTimer,
   useMusicHomeUpperSize,
 } from "./useMusicHomeScreenState";
 
 export function useMusicHomeScreenPlaybackContext() {
   const isFocused = useIsFocused();
+  const appForeground = useAppForeground();
   const playback = useMusicPlayback();
   const {
     tracks,
@@ -19,7 +24,6 @@ export function useMusicHomeScreenPlaybackContext() {
     playing,
     loading,
     playbackMode,
-    musicCurrentSec,
     musicDurationSec,
     playTrackAt,
     playNext,
@@ -38,13 +42,15 @@ export function useMusicHomeScreenPlaybackContext() {
     downloadMusicTrackAt,
   } = playback;
 
-  const seek = useMusicHomeSeekState(trackIndex, playbackMode);
   const upper = useMusicHomeUpperSize();
   const sleepTimer = useMusicHomeSleepTimer(sleepTimerMinutes, setSleepTimerMinutes);
+
+  const musicPagePlaying = playing && playbackMode === "music";
 
   const albumState = useMusicHomeAlbum({
     tracks,
     trackIndex,
+    playing: musicPagePlaying,
     sleepTimerMinutes,
     playTrackAt,
     downloadMusicTrackAt,
@@ -54,35 +60,48 @@ export function useMusicHomeScreenPlaybackContext() {
   });
 
   const { album } = albumState;
+  const togglePlaySelectedAlbum = useCallback(async () => {
+    const action = resolveMusicPageToggleAction({
+      selectedAlbum: album,
+      currentAlbum: normalizeMusicAlbumLabel(tracks[trackIndex]?.album),
+      playing: musicPagePlaying,
+      tracks,
+      trackIndex,
+      isPlayable: isTrackPlayable,
+    });
+    if (action.type === "ignore") return;
+    if (action.type === "pause") {
+      await togglePlayMusic();
+      return;
+    }
+    setShellMusicWantPlaying(true);
+    await playTrackAt(action.index, { autoPlay: true });
+  }, [album, musicPagePlaying, playTrackAt, togglePlayMusic, trackIndex, tracks]);
   const glowColors = useMusicHomeGlowColors(album);
   const current = tracks[trackIndex];
-  const selectedTrackTitle = current?.title?.trim() || musicCopy.untitled;
   const metrics = resolveMusicHomePlaybackMetrics({
     playbackMode,
     musicDurationSec,
-    musicCurrentSec,
-    seekDragging: seek.seekDragging,
-    seekPreview: seek.seekPreview,
     playing,
     isFocused,
+    appForeground,
   });
 
   return {
     isFocused,
     tracks,
     trackIndex,
-    playing,
+    playing: musicPagePlaying,
     canTogglePlayback: playback.canTogglePlayback,
     loading,
-    musicCurrentSec,
+    playbackMode,
     playTrackAt,
     playNext,
     playPrev,
-    togglePlayMusic,
+    togglePlayMusic: togglePlaySelectedAlbum,
     seekRatio,
     checkMusicCatalogUpdate,
     downloadMusicTrackAt,
-    seek,
     upper,
     sleepTimer,
     albumState,
@@ -93,19 +112,19 @@ export function useMusicHomeScreenPlaybackContext() {
     playbackSlice: {
       tracks,
       trackIndex,
-      playing,
+      playing: musicPagePlaying,
       loading,
       canTogglePlayback: playback.canTogglePlayback,
       musicRepeatMode,
       sleepTimerMinutes,
       downloadingTrackId,
-      togglePlayMusic,
+      togglePlayMusic: togglePlaySelectedAlbum,
+      setMusicRepeatMode,
       toggleMusicRepeatOne,
       toggleMusicRepeatAll,
       playTrackAt,
       playNext,
       seekRatio,
-      selectedTrackTitle,
     },
   };
 }

@@ -17,7 +17,7 @@ type Props = {
   viewportTop: number;
   albumDecorVisible: boolean;
   albumDecorMotionActive: boolean;
-  coffeeRhythmPulse: number;
+  analysisSrc: string | null;
   onUpperLayout: (event: LayoutChangeEvent) => void;
   landscapeSafeHorizontal: { left: number; right: number } | null;
 };
@@ -30,7 +30,7 @@ export function MusicHomeUpperDecor({
   viewportTop,
   albumDecorVisible,
   albumDecorMotionActive,
-  coffeeRhythmPulse,
+  analysisSrc,
   onUpperLayout,
   landscapeSafeHorizontal,
 }: Props) {
@@ -58,7 +58,7 @@ export function MusicHomeUpperDecor({
           viewportHeight={viewportHeight}
           viewportTop={viewportTop}
           centered={compactLandscape}
-          rhythmPulse={coffeeRhythmPulse}
+          analysisSrc={analysisSrc}
         />
       ) : null}
       {album === "安静" ? (
@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
     minHeight: 80,
     alignItems: "center",
     justifyContent: "flex-end",
+    overflow: "visible",
   },
   upperLandscape: {
     ...StyleSheet.absoluteFillObject,

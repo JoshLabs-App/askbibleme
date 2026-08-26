@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useHomeVerseAdvanceGapSec, writeHomeVerseAdvanceGapSec } from "@/components/home/useHomeVerseAdvanceGap";
 import { useAskbibleUser } from "@/components/auth/AskbibleUserProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { ShellTemplateThemeStrip } from "@/components/shell/ShellTemplateThemeStrip";
-import { useAppSkin } from "@/components/theme/AppSkinProvider";
+import {
+  ShellNavDrawerHomeTranslationSection,
+} from "@/components/shell/ShellNavDrawerHomeTranslationSection";
+import { ShellNavDrawerReadingSyncSection } from "@/components/shell/ShellNavDrawerReadingSyncSection";
+import { readTranslationsHref } from "@/lib/read/read-translations-route";
 import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
@@ -144,15 +148,23 @@ function ShellNavDrawerVerseAdvanceGapRow() {
 }
 
 export function ShellNavDrawerContent({ onClose }: Props) {
+  const router = useRouter();
   const { locale, t } = useLocale();
-  const { bootstrapped, user, isAdmin, logout, deleteAccount } = useAskbibleUser();
+  const { bootstrapped, user, logout, deleteAccount } = useAskbibleUser();
   const registerOpen = isMemberRegisterEnabledClient();
-  const { shellTemplateBrand, setShellTemplateBrand } = useAppSkin();
   const zh = locale === "zh-CN" || locale === "zh-TW";
 
   return (
+    <>
     <div className="flex min-h-0 flex-1 flex-col gap-1 py-1 pr-0.5">
       <ShellNavDrawerLocaleRow />
+      <div className="h-1" aria-hidden />
+      <ShellNavDrawerHomeTranslationSection
+        onOpenBibleVersionPicker={() => {
+          onClose();
+          router.push(readTranslationsHref());
+        }}
+      />
       <div className="h-1" aria-hidden />
       <ShellNavDrawerResourceUpdate />
       <div className="h-1" aria-hidden />
@@ -188,36 +200,10 @@ export function ShellNavDrawerContent({ onClose }: Props) {
       <ShellNavDrawerMenuRow
         label={t("feedback.menuAction")}
         detail={SUPPORT_EMAIL}
-        onClick={() => {
-          onClose();
-          const mailto = `mailto:${SUPPORT_EMAIL}`;
-          window.location.href = mailto;
-        }}
+        href="/feedback"
+        onClick={onClose}
       />
-      {bootstrapped && isAdmin ? (
-        <div className="mt-3 border-t border-amber-900/15 pt-3">
-          <span className="sr-only">{t("nav.themeColorsHeading")}</span>
-          <ShellTemplateThemeStrip
-            variant="drawer"
-            selectedId={shellTemplateBrand}
-            onPick={(id) => {
-              setShellTemplateBrand(id);
-              onClose();
-            }}
-          />
-          <button
-            type="button"
-            className="shell-nav-drawer-row mt-2 w-full text-[13px] text-[#37352f]/80"
-            aria-pressed={shellTemplateBrand == null}
-            onClick={() => {
-              setShellTemplateBrand(null);
-              onClose();
-            }}
-          >
-            {t("nav.themeColorsFollowSite")}
-          </button>
-        </div>
-      ) : null}
+      {bootstrapped && user ? <ShellNavDrawerReadingSyncSection /> : null}
       {bootstrapped && user ? (
         <div className="mt-3 border-t border-amber-900/15 pt-3">
           <p className="shell-nav-drawer-section-label">{t("auth.drawerSignedIn")}</p>
@@ -257,5 +243,6 @@ export function ShellNavDrawerContent({ onClose }: Props) {
         </div>
       ) : null}
     </div>
+    </>
   );
 }

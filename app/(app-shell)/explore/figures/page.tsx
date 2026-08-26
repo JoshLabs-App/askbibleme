@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
-import { LegacyFiguresTimeline } from "@/components/legacy/LegacyFiguresTimeline";
+import { ExploreFiguresPageClient } from "@/components/explore/ExploreFiguresPageClient";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import { getMessages } from "@/lib/i18n/messages";
 import { readLegacyFiguresTimelineBookRows } from "@/lib/read-legacy-figures-timeline";
@@ -25,7 +25,7 @@ export default async function ExploreFiguresPage() {
 
   return (
     <ExploreParchmentChrome>
-      <LegacyFiguresTimeline bookRows={bookRows} locale={locale} />
+      <ExploreFiguresPageClient initialBookRows={bookRows} locale={locale} />
     </ExploreParchmentChrome>
   );
 }

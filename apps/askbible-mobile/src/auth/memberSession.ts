@@ -7,6 +7,8 @@ export type MemberUser = {
   email: string;
   name: string;
   locale?: string | null;
+  /** 账号注册时间（ISO） */
+  createdAt?: string | null;
 };
 
 type StoredMemberSession = {
@@ -44,6 +46,10 @@ export async function readMemberSession(): Promise<MemberSession | null> {
         id: parsed.user.id,
         email: parsed.user.email,
         name: typeof parsed.user.name === "string" ? parsed.user.name : parsed.user.email,
+        createdAt:
+          typeof parsed.user.createdAt === "string" && parsed.user.createdAt.trim()
+            ? parsed.user.createdAt.trim()
+            : null,
       },
     };
   } catch {

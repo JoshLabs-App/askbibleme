@@ -11,7 +11,14 @@ export type MobileLoginRequest = {
   password: string;
 };
 
-export type MobileAuthUser = { id: string; email: string; name: string; locale?: string | null };
+export type MobileAuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  locale?: string | null;
+  /** 账号注册时间（ISO） */
+  createdAt?: string | null;
+};
 
 export type MobileRegisterResult =
   | {

@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import type { NatureHomeTtsLevel, NatureVisualLevel } from "./natureHomePrefs";
+import type { NatureHomeTtsLevel } from "./natureHomePrefs";
 
 export type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
@@ -15,24 +15,8 @@ export const MODAL_SUPPORTED_ORIENTATIONS = [
   "landscape-right",
 ] as const;
 
-export const ICON_MUTED = "rgba(255,255,255,0.5)";
+export const ICON_MUTED = "#765b42";
 
 export const TTS_LEVELS: readonly NatureHomeTtsLevel[] = [0, 1, 2, 3, 4];
 
 export type DeviceVoice = { identifier: string; name: string; language: string };
-
-export const DIM_LEVEL_ICONS: Record<NatureVisualLevel, MaterialIconName> = {
-  0: "brightness-low",
-  1: "brightness-6",
-  2: "brightness-5",
-  3: "tonality",
-  4: "brightness-high",
-};
-
-export const BLUR_LEVEL_ICONS: Record<NatureVisualLevel, MaterialIconName> = {
-  0: "blur-off",
-  1: "blur-circular",
-  2: "blur-linear",
-  3: "blur-on",
-  4: "filter-vintage",
-};

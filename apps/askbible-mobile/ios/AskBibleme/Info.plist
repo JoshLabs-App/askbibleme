@@ -21,7 +21,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.11</string>
+    <string>1.0.38</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -33,9 +33,15 @@
           <string>me.askbible</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.827770827257-cq823rmvbvmcc9hccbn5s8d72gqdfv7v</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>71</string>
+    <string>119</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>EXDefaultScreenOrientationMask</key>
@@ -48,17 +54,7 @@
     <dict>
       <key>NSAllowsArbitraryLoads</key>
       <false/>
-      <key>NSAllowsLocalNetworking</key>
-      <true/>
     </dict>
-    <key>NSBonjourServices</key>
-    <array>
-      <string>_metro._tcp</string>
-    </array>
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>Allow AskBible.me to connect to the development server on your local network for live updates during development.</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

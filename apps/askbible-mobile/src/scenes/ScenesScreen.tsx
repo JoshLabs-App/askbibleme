@@ -1,4 +1,3 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -16,12 +15,15 @@ import { fetchNatureSettings, getBundledNatureSettings } from "../api/fetchNatur
 import { getNatureRemoteAssetBaseUrl } from "../bible/chapter-audio-url";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly, isMobileOfflineFirst } from "../config/mobileBundledOnly";
-import { resolveLocalizedField, t } from "../i18n/site-copy";
+import { t } from "../i18n/site-copy";
+import { useLocale } from "../i18n/LocaleProvider";
+import { displayTitle } from "../home/homeNatureScreenConstants";
 import {
   readNatureActiveSceneId,
   writeNatureActiveSceneId,
 } from "../nature/natureActiveScenePrefs";
 import { ShellSwipeExclude } from "../shell/ShellSwipeExclude";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import type { NatureSettingsV2 } from "../types/nature";
 import { HOME_SCENE_THUMB_GAP, HomeSceneThumb } from "../home/HomeSceneThumb";
 import { trackTelemetry } from "../telemetry/client";
@@ -40,19 +42,11 @@ import {
   sortNatureScenesByUsage,
   type NatureSceneUsageMap,
 } from "../nature/natureSceneUsage";
-import type { NatureVideoEntry } from "../types/nature";
 
 const bundledOnBoot = getBundledNatureSettings();
 
-function sceneTitleText(raw: NatureVideoEntry["title"]): string {
-  if (typeof raw === "string") return raw.trim();
-  if (raw && typeof raw === "object") {
-    return resolveLocalizedField(raw as { "zh-CN"?: string; en?: string });
-  }
-  return "";
-}
-
 export function ScenesScreen() {
+  const { locale } = useLocale();
   const scenesFocused = useIsFocused();
   const naturePackRev = useNatureResourcePackSync(scenesFocused);
   const baseUrl = getNatureRemoteAssetBaseUrl();
@@ -161,13 +155,10 @@ export function ScenesScreen() {
         ]}
       >
         {router.canGoBack() ? (
-          <Pressable
+          <ShellSystemBackButton
             onPress={() => router.back()}
-            style={({ pressed }) => [styles.back, pressed && styles.pressed]}
-            accessibilityRole="button"
-          >
-            <MaterialIcons name="arrow-back" size={22} color={theme.sand} />
-          </Pressable>
+            tintColor={theme.sand}
+          />
         ) : null}
         <Text style={styles.title}>{t("scenesPage.title")}</Text>
         <Text style={styles.sub}>{t("scenesPage.subtitle")}</Text>
@@ -185,7 +176,7 @@ export function ScenesScreen() {
                 const posterRel = (v.previewFrameSrc || v.thumbSrc)?.trim() ?? "";
                 const thumbRemote = posterRel ? toAbsoluteUrl(baseUrl, posterRel) : "";
                 const thumbUri = resolveNaturePosterPlaybackUri(v.id, thumbRemote) || thumbRemote;
-                const label = sceneTitleText(v.title);
+                const label = displayTitle(v.title, locale, v.id);
                 return (
                   <HomeSceneThumb
                     key={v.id}

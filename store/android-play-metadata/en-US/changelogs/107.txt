@@ -1,0 +1,5 @@
+Version 1.0.30
+• Reading progress and your chosen plan stay in sync across devices
+• Music plays the album you pick, and the app opens instead of staying on the splash
+• Home and chapter audio stay steadier when you pause or come back
+• First open is quieter: choose your language, then sign in or skip

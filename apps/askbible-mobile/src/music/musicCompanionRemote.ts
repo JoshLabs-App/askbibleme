@@ -1,27 +1,10 @@
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
+import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { mergeMusicCompanionTrackDisplay } from "../../../../lib/music-companion/merge-track-display-shared";
 import { getBundledMusicCompanionStore } from "./musicCompanionBundled";
 import type { MusicCompanionStore } from "./types";
-
-function isLocalLikeHostFromBase(base: string): boolean {
-  try {
-    const u = new URL(base);
-    const h = u.hostname.trim().toLowerCase();
-    if (!h) return true;
-    if (h === "localhost" || h === "127.0.0.1" || h.endsWith(".local")) return true;
-    if (h.startsWith("10.") || h.startsWith("192.168.")) return true;
-    const m = h.match(/^172\.(\d+)\./);
-    if (m) {
-      const octet = Number(m[1]);
-      if (Number.isFinite(octet) && octet >= 16 && octet <= 31) return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
 
 function normalizeRemoteStoreUrls(store: MusicCompanionStore, baseUrl: string): MusicCompanionStore {
   return {
@@ -40,12 +23,12 @@ function normalizeRemoteStoreUrls(store: MusicCompanionStore, baseUrl: string): 
 }
 
 export async function fetchMusicCompanionStoreFromRemote(): Promise<MusicCompanionStore | null> {
+  if (isMobileBundledOnly()) return null;
   if (!(await isNetworkAvailable())) return null;
-  const primaryBase = getAskBibleBaseUrl();
+  const primaryBase = getAskBibleBaseUrl().replace(/\/$/, "");
+  // 音乐 companion 不经 askbible.me。
+  if (!primaryBase || /askbible\.me/i.test(primaryBase)) return null;
   const candidates = [primaryBase];
-  if (isLocalLikeHostFromBase(primaryBase) && !candidates.includes("https://askbible.me")) {
-    candidates.push("https://askbible.me");
-  }
 
   for (const base of candidates) {
     try {

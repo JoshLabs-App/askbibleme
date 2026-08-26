@@ -4,7 +4,7 @@ import { StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSyncExternalStore } from "react";
 import {
-  getHomeLandscapeImmersive,
+  getHomeAutoHideChrome,
   subscribeHomeLandscapeImmersive,
 } from "../home/homeLandscapeImmersive";
 
@@ -25,14 +25,15 @@ function isHomePathname(pathname: string): boolean {
 export function ShellInsetClock() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
-  const homeLandscapeImmersive = useSyncExternalStore(
+  const homeAutoHideChrome = useSyncExternalStore(
     subscribeHomeLandscapeImmersive,
-    getHomeLandscapeImmersive,
-    getHomeLandscapeImmersive,
+    getHomeAutoHideChrome,
+    getHomeAutoHideChrome,
   );
   const [time, setTime] = useState(() => formatShellInsetTime(new Date()));
 
-  const visible = homeLandscapeImmersive && isHomePathname(pathname);
+  /** 横屏只展示经文时顶栏居中时间；显示图标时不抢注意力。 */
+  const visible = homeAutoHideChrome && isHomePathname(pathname);
 
   useEffect(() => {
     if (!visible) return;

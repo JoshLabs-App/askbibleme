@@ -50,29 +50,22 @@ export function FeedbackPageClient() {
     setState({ kind: "submitting" });
 
     try {
-      const res = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: feedbackType,
-          message: message.trim(),
-          email: email.trim() || undefined,
-          page: pathname,
-          locale,
-        }),
+      const { submitFeedbackWeb } = await import("@/lib/feedback/submit-feedback-web");
+      const result = await submitFeedbackWeb({
+        type: feedbackType,
+        message: message.trim(),
+        email: email.trim() || undefined,
+        page: pathname,
+        locale,
       });
-      const data = (await res.json().catch(() => ({}))) as {
-        id?: string;
-        error?: string;
-      };
-      if (!res.ok || !data.id) {
+      if (!result.ok) {
         setState({
           kind: "error",
-          message: data.error || (isZh ? "提交失败，请稍后重试。" : "Could not submit. Please try again."),
+          message: result.error || (isZh ? "提交失败，请稍后重试。" : "Could not submit. Please try again."),
         });
         return;
       }
-      setState({ kind: "success", id: data.id });
+      setState({ kind: "success", id: result.id });
       setMessage("");
       setFeedbackType("idea");
     } catch {

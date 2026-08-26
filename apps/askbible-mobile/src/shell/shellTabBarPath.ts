@@ -34,7 +34,7 @@ export function isParchmentTabBarPathname(pathname: string): boolean {
   return false;
 }
 
-/** 全屏流程页：不显示底部 Tab 导航（如探索 · 读经规划器）。 */
+/** 全屏流程页：不显示底部 Tab 导航（读经规划器）。首次欢迎在根栈 /welcome，不在此判断。 */
 export function shouldHideShellTabBarPathname(pathname: string): boolean {
   return isExploreReadingPlannerRoute(pathname);
 }

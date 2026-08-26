@@ -3,17 +3,15 @@ import {
   orderWidgetVersePoolEntries,
   pickDailyVerseKey,
 } from "./pickDailyVerseKeyAtIndex";
+import { fetchBibleTranslationsCatalog } from "../api/fetchBibleTranslationsCatalog";
 import { getLocale, hydrateLocaleFromStorage } from "../i18n/locale-store";
 import { createT, toZhTwText } from "../i18n/site-copy";
-import {
-  flowLocaleForHomeVerseTranslationId,
-  readHomePrayerVersePrefs,
-  verseTranslationIdsFromPrefs,
-} from "../home/homePrayerVersePrefs";
+import { flowLocaleForHomeVerseTranslationId } from "../home/homePrayerVersePrefs";
 import { hydrateHomeVersePoolScope } from "../home/homeVersePoolScopePrefs";
 import { readHomeVerseRotationSec } from "../home/homeVerseRotationPrefs";
 import { joinVerseLinesForFlow } from "../home/joinVerseLinesForFlow";
 import { loadHomeVerseManifest, resolveHomeVersePair } from "../home/verse-pool/loader";
+import { readReadBibleTranslationPrefs } from "../read/read-bible-translation-prefs";
 import { toLocalDateString } from "../read/reading-plan/reading-plan-prefs";
 import { readReadingHabitStats, snapshotFromRecord } from "../read/reading-habit-stats";
 import {
@@ -50,15 +48,17 @@ export async function buildDailyVerseWidgetSnapshot(
   await hydrateLocaleFromStorage();
   const locale = getLocale();
   const t = createT(locale);
-  const [manifest, scopeId, prefs, rotationIntervalSec] = await Promise.all([
+  const [manifest, scopeId, catalog, rotationIntervalSec] = await Promise.all([
     loadHomeVerseManifest(),
     hydrateHomeVersePoolScope(),
-    readHomePrayerVersePrefs(),
+    fetchBibleTranslationsCatalog().catch(() => null),
     readHomeVerseRotationSec(),
   ]);
   if (!manifest?.entries.length) return null;
 
-  const { primary: translationId } = verseTranslationIdsFromPrefs(prefs, locale);
+  const index = catalog ?? { translations: [], defaultTranslationId: null };
+  const prefs = await readReadBibleTranslationPrefs(index, locale);
+  const translationId = prefs.primaryTranslationId.trim() || "cuv-simp";
   const dailyVerseKey = pickDailyVerseKey({
     date,
     locale,

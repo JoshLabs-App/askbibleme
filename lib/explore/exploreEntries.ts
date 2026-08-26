@@ -1,7 +1,9 @@
 /** 探索页图标入口；与 iOS `exploreEntries.ts` 对齐 */
+export type ExploreEntryHref = `/explore/${string}` | "/welcome";
+
 export type ExploreEntry = {
   id: string;
-  href: `/explore/${string}` | "/read/plans";
+  href: ExploreEntryHref;
   iconSet: "material-community";
   icon: string;
   labelKey: string;
@@ -9,11 +11,25 @@ export type ExploreEntry = {
 
 export const EXPLORE_ENTRIES: ExploreEntry[] = [
   {
-    id: "reading-plans",
-    href: "/read/plans",
+    id: "welcome",
+    href: "/welcome",
+    iconSet: "material-community",
+    icon: "hand-wave-outline",
+    labelKey: "pages.explore.welcomeIconLabel",
+  },
+  {
+    id: "reading-alarm",
+    href: "/explore/reading-alarm",
+    iconSet: "material-community",
+    icon: "alarm",
+    labelKey: "pages.explore.readingAlarmIconLabel",
+  },
+  {
+    id: "reading-plan",
+    href: "/explore/reading-planner",
     iconSet: "material-community",
     icon: "book-open-page-variant-outline",
-    labelKey: "pages.read.plansTitle",
+    labelKey: "pages.explore.readingPlanIconLabel",
   },
   {
     id: "year-day-count",

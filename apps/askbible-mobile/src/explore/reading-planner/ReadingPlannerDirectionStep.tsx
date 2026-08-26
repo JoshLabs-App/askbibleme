@@ -7,7 +7,6 @@ import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../../shell/splash-branding.ge
 import { theme } from "../../theme";
 import { exploreArticleRoute } from "../exploreFeaturedArticles";
 import type { ReadingPlannerDirectionCard } from "./reading-planner-data";
-import { getReadingPlannerPathGuidance } from "./reading-planner-plan-copy";
 import { READING_PLANNER_EXPLORE_ARTICLE_SLUG } from "./reading-planner-routes";
 
 type Props = {
@@ -33,7 +32,6 @@ function mapIcon(name: string): keyof typeof MaterialCommunityIcons.glyphMap {
 export function ReadingPlannerDirectionStep({ locale, cards }: Props) {
   const router = useRouter();
   const zhText = (text: string) => (locale === "zh-TW" ? toZhTwText(text) : text);
-  const pathGuidance = getReadingPlannerPathGuidance(locale);
 
   return (
     <View>
@@ -56,18 +54,6 @@ export function ReadingPlannerDirectionStep({ locale, cards }: Props) {
             </View>
           </View>
         ))}
-      </View>
-
-      <View style={styles.pathHintBox}>
-        <Text style={styles.pathHintLead}>{pathGuidance.lead}</Text>
-        <Text style={styles.pathHintLine}>
-          <Text style={styles.pathHintLabel}>{pathGuidance.newcomerLabel} · </Text>
-          {pathGuidance.newcomerBody}
-        </Text>
-        <Text style={[styles.pathHintLine, styles.pathHintLineAccent]}>
-          <Text style={styles.pathHintLabelAccent}>{pathGuidance.deepReadLabel} · </Text>
-          {pathGuidance.deepReadBody}
-        </Text>
       </View>
 
       <Pressable
@@ -135,39 +121,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     color: "rgba(43, 29, 21, 0.76)",
-  },
-  pathHintBox: {
-    marginTop: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255, 177, 1, 0.35)",
-    backgroundColor: "rgba(255, 248, 230, 0.72)",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 10,
-  },
-  pathHintLead: {
-    fontSize: 13,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: "rgba(43, 29, 21, 0.82)",
-    textAlign: "center",
-  },
-  pathHintLine: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: "rgba(43, 29, 21, 0.76)",
-  },
-  pathHintLineAccent: {
-    color: "rgba(43, 29, 21, 0.86)",
-  },
-  pathHintLabel: {
-    fontWeight: "700",
-    color: "rgba(43, 29, 21, 0.78)",
-  },
-  pathHintLabelAccent: {
-    fontWeight: "700",
-    color: theme.ink,
   },
   learnMoreWrap: {
     marginTop: 14,

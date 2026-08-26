@@ -14,7 +14,8 @@ const publicAudioRoot = path.join(repoRoot, "public", "audio");
 const outDir = path.join(repoRoot, "data", "mobile-offline-packs", "chapter-audio");
 const outManifest = path.join(outDir, "manifest.json");
 
-const SCOPES = ["cuv-v20", "web-en", "blm-es", "teochew-nt"];
+const SCOPES = ["cuv-v20", "web-en", "blm-es"];
+// teochew-nt：不进本站资源包，客户端直连 TSTSCC
 
 function normalizeRelUrl(scope, fileName) {
   return `/audio/${scope}/${fileName}`;

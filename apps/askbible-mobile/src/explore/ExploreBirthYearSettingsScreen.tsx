@@ -1,4 +1,5 @@
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
@@ -7,7 +8,7 @@ import { parchmentControlStyles } from "../shell/parchmentControlSurface";
 import { ExploreBirthDatePicker } from "./ExploreBirthDatePicker";
 import { ExploreBirthYearOptionalDateField } from "./ExploreBirthYearOptionalDateField";
 import { exploreBirthYearSettingsStyles as styles } from "./ExploreBirthYearSettingsScreenStyles";
-import { exploreStyles as shared } from "./exploreParchmentStyles";
+import {exploreStyles as shared, ExploreParchmentPage} from "./exploreParchmentStyles";
 import { useExploreBirthYearSettingsScreen } from "./useExploreBirthYearSettingsScreen";
 
 export const EXPLORE_YEAR_DAY_BIRTH_SETTINGS_PATH = "/explore/year-day-count/birth-settings";
@@ -47,7 +48,7 @@ export function ExploreBirthYearSettingsScreen({
   } = useExploreBirthYearSettingsScreen({ embedded, requiredProp, onClose, onSaved });
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
@@ -153,6 +154,6 @@ export function ExploreBirthYearSettingsScreen({
           </Pressable>
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }

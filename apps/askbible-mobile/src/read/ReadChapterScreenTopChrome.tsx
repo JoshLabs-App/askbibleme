@@ -1,93 +1,200 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ShellMaterialIcon } from "../shell/ShellMaterialIcon";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { Pressable, Text, View } from "react-native";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import {
-  READ_SETTINGS_TOP_OFFSET,
-  READ_TOP_ACTION_GAP,
-  READ_TOP_ACTION_SIZE,
-} from "./readChapterScreenConstants";
+import { ReadChapterTitleAudioButton } from "./ReadChapterTitleAudioButton";
+import { READ_TOP_CHROME, readTopChromeLeftStyle, readTopChromeRightStyle } from "./readTopChrome";
 import { readChapterScreenStyles as styles } from "./readChapterScreenStyles";
 
 type Props = {
   insets: EdgeInsets;
-  verseSelectionMode: boolean;
-  backA11yLabel: string;
-  searchA11yLabel: string;
+  /** 章页默认显示；圣经首页不显示返回 */
+  showBack?: boolean;
+  verseSelectionMode?: boolean;
+  /** 章页播放坞已有搜索时隐藏 */
+  showSearch?: boolean;
+  searchA11yLabel?: string;
   favoritesA11yLabel: string;
-  selectionCountLabel: string;
-  selectionClearLabel: string;
-  selectionCopyLabel: string;
-  onBack: () => void;
-  onSearch: () => void;
+  increaseSizeA11yLabel: string;
+  decreaseSizeA11yLabel: string;
+  selectionCountLabel?: string;
+  selectionClearLabel?: string;
+  selectionCopyLabel?: string;
+  sizeAtMax: boolean;
+  sizeAtMin: boolean;
+  audioBookId?: string;
+  audioChapter?: number;
+  audioBookName?: string;
+  audioDisabled?: boolean;
+  /** 章页默认显示；圣经首页不展示朗读 */
+  showAudio?: boolean;
+  /** 圣经首页：回到上次阅读的一章 */
+  showLastRead?: boolean;
+  lastReadA11yLabel?: string;
+  lastReadDisabled?: boolean;
+  onLastRead?: () => void;
+  onBack?: () => void;
+  onSearch?: () => void;
   onFavorites: () => void;
-  onExitSelection: () => void;
-  onCopySelection: () => void;
+  onIncreaseSize: () => void;
+  onDecreaseSize: () => void;
+  onExitSelection?: () => void;
+  onCopySelection?: () => void;
 };
 
+/** 读经顶栏右侧共用：搜索 / 收藏 / 字号 / 朗读（设置在 layout 第 0 位） */
 export function ReadChapterScreenTopChrome({
   insets,
-  verseSelectionMode,
-  selectionCountLabel,
-  backA11yLabel,
+  showBack = true,
+  verseSelectionMode = false,
+  selectionCountLabel = "",
+  showSearch = true,
   searchA11yLabel,
   favoritesA11yLabel,
-  selectionClearLabel,
-  selectionCopyLabel,
+  increaseSizeA11yLabel,
+  decreaseSizeA11yLabel,
+  selectionClearLabel = "",
+  selectionCopyLabel = "",
+  sizeAtMax,
+  sizeAtMin,
+  audioBookId = "",
+  audioChapter = 1,
+  audioBookName = "",
+  audioDisabled = false,
+  showAudio = true,
+  showLastRead = false,
+  lastReadA11yLabel = "",
+  lastReadDisabled = false,
+  onLastRead,
   onBack,
   onSearch,
   onFavorites,
+  onIncreaseSize,
+  onDecreaseSize,
   onExitSelection,
   onCopySelection,
 }: Props) {
+  const rightStack = readTopChromeRightStyle(insets, 1);
+
   return (
     <>
-      <View
-        style={[
-          styles.topLeftActionWrap,
-          {
-            top: insets.top + READ_SETTINGS_TOP_OFFSET,
-            left: Math.max(insets.left, 8),
-          },
-        ]}
-      >
-        <Pressable
-          onPress={onBack}
-          disabled={verseSelectionMode}
-          style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
-          accessibilityRole="button"
-          accessibilityLabel={backA11yLabel}
-        >
-          <MaterialIcons name="arrow-back-ios-new" size={19} color="#FFFFFF" style={styles.topActionIcon} />
-        </Pressable>
-      </View>
+      {showBack && onBack ? (
+        <View style={[styles.topLeftActionWrap, readTopChromeLeftStyle(insets)]}>
+          <ShellSystemBackButton
+            onPress={onBack}
+            disabled={verseSelectionMode}
+            tintColor={READ_TOP_CHROME.iconColor}
+            style={styles.topSystemBack}
+          />
+        </View>
+      ) : null}
 
-      <View
-        style={[
-          styles.topActions,
-          {
-            top: insets.top + READ_SETTINGS_TOP_OFFSET + READ_TOP_ACTION_SIZE + READ_TOP_ACTION_GAP,
-            right: Math.max(insets.right, 8),
-          },
-        ]}
-      >
+      <View style={[styles.topActions, rightStack]}>
+        {showSearch && onSearch ? (
         <Pressable
           onPress={onSearch}
           disabled={verseSelectionMode}
           style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
+          android_ripple={{
+            color: "rgba(0,0,0,0.12)",
+            borderless: true,
+            radius: READ_TOP_CHROME.btnSize / 2,
+          }}
           accessibilityRole="button"
           accessibilityLabel={searchA11yLabel}
         >
-          <MaterialIcons name="search" size={21} color="#FFFFFF" style={styles.topActionIcon} />
+          <ShellMaterialIcon
+            name="search"
+            size={READ_TOP_CHROME.iconSize}
+            color={READ_TOP_CHROME.iconColor}
+          />
         </Pressable>
+        ) : null}
         <Pressable
           onPress={onFavorites}
           disabled={verseSelectionMode}
           style={({ pressed }) => [styles.topActionBtn, pressed && styles.topActionPressed]}
+          android_ripple={{
+            color: "rgba(0,0,0,0.12)",
+            borderless: true,
+            radius: READ_TOP_CHROME.btnSize / 2,
+          }}
           accessibilityRole="button"
           accessibilityLabel={favoritesA11yLabel}
         >
-          <MaterialIcons name="bookmark-border" size={21} color="#FFFFFF" style={styles.topActionIcon} />
+          <ShellMaterialIcon
+            name="bookmark-border"
+            size={READ_TOP_CHROME.iconSize}
+            color={READ_TOP_CHROME.iconColor}
+          />
         </Pressable>
+        <Pressable
+          onPress={onIncreaseSize}
+          disabled={verseSelectionMode || sizeAtMax}
+          style={({ pressed }) => [
+            styles.topActionBtn,
+            (verseSelectionMode || sizeAtMax) && styles.topActionDisabled,
+            pressed && !sizeAtMax && styles.topActionPressed,
+          ]}
+          android_ripple={{
+            color: "rgba(0,0,0,0.12)",
+            borderless: true,
+            radius: READ_TOP_CHROME.btnSize / 2,
+          }}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: verseSelectionMode || sizeAtMax }}
+          accessibilityLabel={increaseSizeA11yLabel}
+        >
+          <Text style={[styles.topActionIcon, styles.topActionSizeLabel]}>+</Text>
+        </Pressable>
+        <Pressable
+          onPress={onDecreaseSize}
+          disabled={verseSelectionMode || sizeAtMin}
+          style={({ pressed }) => [
+            styles.topActionBtn,
+            (verseSelectionMode || sizeAtMin) && styles.topActionDisabled,
+            pressed && !sizeAtMin && styles.topActionPressed,
+          ]}
+          android_ripple={{
+            color: "rgba(0,0,0,0.12)",
+            borderless: true,
+            radius: READ_TOP_CHROME.btnSize / 2,
+          }}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: verseSelectionMode || sizeAtMin }}
+          accessibilityLabel={decreaseSizeA11yLabel}
+        >
+          <Text style={[styles.topActionIcon, styles.topActionSizeLabel]}>−</Text>
+        </Pressable>
+        {showAudio ? (
+          <ReadChapterTitleAudioButton
+            appearance="chrome"
+            bookId={audioBookId}
+            chapter={audioChapter}
+            bookName={audioBookName}
+            disabled={verseSelectionMode || audioDisabled}
+          />
+        ) : null}
+        {showLastRead ? (
+          <Pressable
+            onPress={onLastRead}
+            disabled={verseSelectionMode || lastReadDisabled || !onLastRead}
+            style={({ pressed }) => [
+              styles.topActionBtn,
+              (verseSelectionMode || lastReadDisabled) && styles.topActionDisabled,
+              pressed && !lastReadDisabled && styles.topActionPressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: verseSelectionMode || lastReadDisabled }}
+            accessibilityLabel={lastReadA11yLabel}
+          >
+            <ShellMaterialIcon
+              name="history"
+              size={READ_TOP_CHROME.iconSize}
+              color={READ_TOP_CHROME.iconColor}
+            />
+          </Pressable>
+        ) : null}
       </View>
 
       {verseSelectionMode ? (

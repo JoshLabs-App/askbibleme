@@ -1,0 +1,46 @@
+---
+description: AskBible.me Android 发版 — 商店包默认 R2 首曲，禁止误开 PAD 把全量音乐打进 AAB
+globs:
+  - scripts/build-android-aab-local.sh
+  - scripts/submit-android-aab-play.sh
+  - scripts/release-android-internal-local.sh
+  - scripts/sync-mobile-offline-media.mjs
+  - docs/mobile-android-music-pad.md
+alwaysApply: false
+---
+
+# Android 发版：商店音乐 = 首曲 + R2（禁止误开 PAD）
+
+## 硬规则（2026-08 起）
+
+- **默认**商店 AAB：每专辑只打 **第一首**，其余走 **Cloudflare R2**（点播缓存）。
+- **禁止**为「安卓上架 / production」设置 `MOBILE_ANDROID_MUSIC_PAD=1`。
+- 误开 PAD 会把约 80 首音乐打进 `music_companion_pack`，AAB 膨胀到 **~650MB**，上传极慢，且与现行 R2 策略冲突。
+- 正确商店包体积大约 **~160MB**（以 `ls -lh dist/mobile/askbible-android-latest.aab` 为准；若明显 >250MB 先停下来查是否误开 PAD / FULL）。
+
+## 正确命令
+
+```bash
+# 默认 PAD=0（勿加 MOBILE_ANDROID_MUSIC_PAD=1）
+npm run mobile:build:android:production
+bash scripts/submit-android-aab-play.sh \
+  --path dist/mobile/askbible-android-latest.aab \
+  --track production \
+  --release-status completed
+```
+
+## 遗留 PAD（仅显式例外）
+
+仅当用户**明确**要求恢复 Play Asset Delivery 时：
+
+```bash
+ALLOW_ANDROID_MUSIC_PAD=1 MOBILE_ANDROID_MUSIC_PAD=1 npm run mobile:build:android:production
+```
+
+文档真源：`docs/mobile-android-music-pad.md`（标题已标 LEGACY）、`.cursor/rules/mobile-local-media-playback-first.mdc`。
+
+## Agent 行为
+
+- 「安卓上架 / 发版 / 发布」→ **不要**设 `MOBILE_ANDROID_MUSIC_PAD=1`。
+- 打完 AAB 后看一眼文件大小；异常偏大先核对再传 Play。
+- 旧文 / AGENTS 若仍写「生产默认 PAD=1」，以本规则与 R2 策略为准。

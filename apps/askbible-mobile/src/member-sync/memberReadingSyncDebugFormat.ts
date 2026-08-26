@@ -30,12 +30,14 @@ const REASON_ZH: Record<string, string> = {
   chapterCompletion: "章完成",
   habitStats: "习惯统计",
   scriptureListenTotals: "累计听经",
-  readingPlanPrefs: "读经计划",
   "manual-debug": "手动同步",
 };
 
 const DETAIL_ZH: Record<string, string> = {
   "push+apply": "上传并应用",
+  "pull-only (account switch)": "仅拉取（换帐号）",
+  "pull-only (reinstall)": "仅拉取（重装）",
+  "pull-only (empty local)": "仅拉取（本机为空）",
   "pull failed": "拉取失败",
   "pull+merge+push": "拉取、合并、上传",
   "pull+merge (confirm push skipped)": "拉取合并（确认上传未成功）",

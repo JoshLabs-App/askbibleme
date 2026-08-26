@@ -9,6 +9,8 @@ import {
   pickAlbumStartTrackIndex,
   resolveSleepTimerOnAlbumSwitch,
 } from "./musicAlbumPlayback";
+import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
+import { isTrackPlayable } from "./trackArtwork";
 import type { ShellSleepTimerMinutes, MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
 import type { PlayTrackAtOptions } from "./musicPlaybackContextTypes";
@@ -16,6 +18,8 @@ import type { PlayTrackAtOptions } from "./musicPlaybackContextTypes";
 type Args = {
   tracks: PlaybackTrack[];
   trackIndex: number;
+  /** 音乐是否正在播放；切专辑要把播放状态一起带过去。 */
+  playing: boolean;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
   playTrackAt: (index: number, opts?: PlayTrackAtOptions) => Promise<boolean>;
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
@@ -27,9 +31,9 @@ type Args = {
 export function useMusicHomeAlbum({
   tracks,
   trackIndex,
+  playing,
   sleepTimerMinutes,
   playTrackAt,
-  downloadMusicTrackAt,
   setMusicGain,
   setMusicRepeatMode,
   setSleepTimerMinutes,
@@ -43,21 +47,27 @@ export function useMusicHomeAlbum({
   );
 
   const albumNames = useMemo(() => buildMusicHomeAlbumNames(tracks), [tracks]);
-  const albumCounts = useMemo(() => buildMusicHomeAlbumCounts(tracks), [tracks]);
+  const albumCounts = useMemo(() => {
+    // 角标：本机就绪 + R2 可点播都计入（TEMP），与列表一致。
+    if (!offlineMusicOnly) return buildMusicHomeAlbumCounts(tracks);
+    const counts: Record<string, number> = {};
+    for (const tr of tracks) {
+      if (!isTrackPlayable(tr)) continue;
+      const label = normalizeMusicAlbumLabel(tr.album);
+      counts[label] = (counts[label] ?? 0) + 1;
+    }
+    return counts;
+  }, [offlineMusicOnly, tracks]);
 
+  // 仅在当前专辑在目录里完全不存在时回落；用户点开 0 首本地专辑时不要强制弹回。
   useEffect(() => {
-    if ((albumCounts[album] ?? 0) > 0) return;
-    const next = albumNames.find((name) => (albumCounts[name] ?? 0) > 0) ?? DEFAULT_MUSIC_ALBUM;
+    if (albumNames.includes(album)) return;
+    const next =
+      albumNames.find((name) => (albumCounts[name] ?? 0) > 0) ??
+      albumNames[0] ??
+      DEFAULT_MUSIC_ALBUM;
     if (next !== album) setAlbum(next);
   }, [album, albumCounts, albumNames]);
-
-  useEffect(() => {
-    if (!offlineMusicOnly || filteredTrackIndices.length > 0) return;
-    const nextAlbum = albumNames.find((name) =>
-      tracks.some((tr) => normalizeMusicAlbumLabel(tr.album) === name && tr.localReady),
-    );
-    if (nextAlbum && nextAlbum !== album) setAlbum(nextAlbum);
-  }, [album, albumNames, filteredTrackIndices.length, offlineMusicOnly, tracks]);
 
   useEffect(() => {
     void setMusicGain(defaultMusicGainForAlbum(album));
@@ -67,6 +77,14 @@ export function useMusicHomeAlbum({
     const repeatMode = defaultRepeatModeForAlbum(album);
     if (repeatMode) setMusicRepeatMode(repeatMode);
   }, [album, setMusicRepeatMode]);
+
+  const currentTrackAlbum = normalizeMusicAlbumLabel(tracks[trackIndex]?.album);
+  useEffect(() => {
+    if (!currentTrackAlbum || !albumNames.includes(currentTrackAlbum)) return;
+    setAlbum(currentTrackAlbum);
+    // 只跟当前曲目专辑走。albumNames 身份变化不要把刚点的圣诗弹回去。
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- albumNames 仅作存在性检查
+  }, [currentTrackAlbum]);
 
   const selectAlbum = useCallback(
     (nextAlbum: string) => {
@@ -79,13 +97,15 @@ export function useMusicHomeAlbum({
       const startIndex = pickAlbumStartTrackIndex(tracks, nextAlbum, trackIndex);
       void setMusicGain(defaultMusicGainForAlbum(nextAlbum));
       if (startIndex != null) {
-        void downloadMusicTrackAt(startIndex);
-        void playTrackAt(startIndex, { autoPlay: false });
+        // 正在播放时切专辑要继续播，否则旧曲还响着、界面却停在暂停态。
+        if (playing) setShellMusicWantPlaying(true);
+        // 先切到该专辑本地首曲；R2 由 playTrackAt 后台缓存，勿先 download 卡住转圈。
+        void playTrackAt(startIndex, { autoPlay: playing });
       }
     },
     [
       album,
-      downloadMusicTrackAt,
+      playing,
       playTrackAt,
       setMusicGain,
       setMusicRepeatMode,

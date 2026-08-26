@@ -204,14 +204,59 @@ def transcribe_verses(audio_path: str, verses: list, model_name: str = "small", 
     return timings
 
 
+def _align_one(audio_path: str, verses_path: str, out_path: str, model_name: str, language: str) -> int:
+    if not os.path.exists(audio_path):
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+    with open(verses_path, "r", encoding="utf-8") as f:
+        verses = json.load(f)
+    timings = align_verses(audio_path, verses, model_name, language)
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(f"{json.dumps(timings, ensure_ascii=False, indent=2)}\n")
+    return len(timings)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("audio", help="Path to MP3/audio file")
-    parser.add_argument("verses_json", help="Path to JSON file with verse texts")
+    parser.add_argument("audio", nargs="?", help="Path to MP3/audio file")
+    parser.add_argument("verses_json", nargs="?", help="Path to JSON file with verse texts")
     parser.add_argument("--model", default="small", choices=["tiny", "base", "small", "medium", "large"])
     parser.add_argument("--language", default="zh")
+    parser.add_argument("--jobs", help="JSON list of {audio, verses, out} — loads the model once")
+    parser.add_argument("--continue-on-error", action="store_true")
     args = parser.parse_args()
 
+    if args.jobs:
+        with open(args.jobs, "r", encoding="utf-8") as f:
+            jobs = json.load(f)
+        if not isinstance(jobs, list) or not jobs:
+            print(json.dumps({"ok": 0, "failed": 0}))
+            return
+        ok = 0
+        fail = 0
+        for i, job in enumerate(jobs, 1):
+            audio = str(job.get("audio") or "")
+            verses = str(job.get("verses") or "")
+            out = str(job.get("out") or "")
+            label = str(job.get("label") or os.path.basename(out) or audio)
+            print(f"[{i}/{len(jobs)}] {label}", file=sys.stderr, flush=True)
+            try:
+                n = _align_one(audio, verses, out, args.model, args.language)
+                ok += 1
+                print(f"  [done] {out} ({n} verses)", file=sys.stderr, flush=True)
+            except Exception as exc:
+                fail += 1
+                print(f"  [error] {exc}", file=sys.stderr, flush=True)
+                if not args.continue_on_error:
+                    print(json.dumps({"ok": ok, "failed": fail}))
+                    sys.exit(1)
+        print(json.dumps({"ok": ok, "failed": fail}))
+        if fail > 0:
+            sys.exit(1)
+        return
+
+    if not args.audio or not args.verses_json:
+        parser.error("audio and verses_json are required unless --jobs is set")
     if not os.path.exists(args.audio):
         print(json.dumps({"error": f"Audio file not found: {args.audio}"}))
         sys.exit(1)

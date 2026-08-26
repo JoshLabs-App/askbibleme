@@ -25,6 +25,7 @@ export const bibleChapterPickerModalFrameStyles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
+    backgroundColor: c.surfaceSolid,
     ...(Platform.OS === "android" ? { elevation: 8 } : null),
   },
   sheetBody: {
@@ -84,14 +85,13 @@ export const bibleChapterPickerPanelStyles = StyleSheet.create({
   },
   modalSheetBg: {
     padding: CHAPTER_SHEET_PAD,
-    backgroundColor: "transparent",
+    backgroundColor: c.surfaceSolid,
   },
   modalSheetBgFill: {
     flex: 1,
   },
   modalSheetBgImage: {
     borderRadius: 14,
-    opacity: 0.92,
   },
   chapterGrid: {
     flexDirection: "row",
@@ -106,12 +106,12 @@ export const bibleChapterPickerPanelStyles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 250, 242, 0.58)",
+    backgroundColor: c.chapterCell,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.chapterCellBorder,
   },
   chapterCellPressed: {
-    backgroundColor: "rgba(255, 246, 234, 0.74)",
+    backgroundColor: c.chapterCellPressed,
     borderColor: c.borderStrong,
   },
   chapterCellText: { fontSize: 15, ...parchmentSans(600), color: c.ink },

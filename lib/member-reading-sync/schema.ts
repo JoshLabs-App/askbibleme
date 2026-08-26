@@ -51,6 +51,10 @@ export const MEMBER_READING_SYNC_META_KEY = "askbible.member-reading-sync-meta.v
 export type MemberReadingSyncMeta = {
   revision: string | null;
   lastSyncedAt: string | null;
+  /** 本机同步数据当前归属的会员 id；切换帐号时用于隔离。 */
+  boundUserId?: string | null;
+  /** 登出清空后：下次登录只拉云端。 */
+  requirePullOnly?: boolean;
 };
 
 export function isMemberReadingSyncBlobKey(key: string): key is MemberReadingSyncBlobKey {

@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NT_DEEP_REPEAT_PLAN_DAY_COUNT, NT_DEEP_REPEAT_PLAN_ID } from "./nt-deep-repeat-plan";
+import { NT_DEEP_REPEAT_PLAN_ID } from "./nt-deep-repeat-plan";
 import { READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
 
 import type { NtDeepRepeatPace } from "./nt-deep-repeat-pace";
 import { isNtDeepRepeatPace, NT_DEEP_REPEAT_DEFAULT_PACE } from "./nt-deep-repeat-pace";
+import { TRIPLE_LOOP_PLAN_DAY_COUNT, TRIPLE_LOOP_PLAN_ID } from "./triple-loop-plan";
 
 export type ReadingPlanAnchor = "from-today" | "calendar-jan1" | "calendar-easter";
 
@@ -16,6 +17,10 @@ export type ReadingPlanPrefs = {
   /** Days read ahead of calendar today (0 = on calendar). Synced across devices. */
   aheadDays?: number;
   ntDeepRepeatPace?: NtDeepRepeatPace;
+  /** 用户显式启用过的计划（非产品隐式默认）。用于同步时避免重装默认盖掉云端选择。 */
+  chosen?: true;
+  /** 用户最近一次显式选用该计划的时间。同步合并时优先于 blob 重盖时间戳。 */
+  selectedAt?: string;
 };
 
 export const READING_PLAN_PREFS_STORAGE_KEY = "askbible-reading-plan-prefs-v1";
@@ -24,9 +29,10 @@ export const READING_PLAN_PREFS_STORAGE_KEY_LEGACY = "selah-reading-plan-prefs-v
 export { READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
 export { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 
-export const DEFAULT_READING_PLAN_ID = NT_DEEP_REPEAT_PLAN_ID;
-export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "from-today";
-export const DEFAULT_READING_PLAN_DAY_COUNT = NT_DEEP_REPEAT_PLAN_DAY_COUNT;
+/** 未手动选计划时：轻松读经 · 自 2026 复活节起循环。 */
+export const DEFAULT_READING_PLAN_ID = TRIPLE_LOOP_PLAN_ID;
+export const DEFAULT_READING_PLAN_ANCHOR: ReadingPlanAnchor = "calendar-easter";
+export const DEFAULT_READING_PLAN_DAY_COUNT = TRIPLE_LOOP_PLAN_DAY_COUNT;
 export const DEFAULT_NT_DEEP_REPEAT_PACE: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE;
 
 const listeners = new Set<() => void>();
@@ -94,6 +100,10 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
       : planId === NT_DEEP_REPEAT_PLAN_ID
         ? NT_DEEP_REPEAT_DEFAULT_PACE
         : undefined;
+    const selectedAt =
+      typeof j.selectedAt === "string" && Number.isFinite(Date.parse(j.selectedAt.trim()))
+        ? j.selectedAt.trim()
+        : undefined;
     return {
       version: 1,
       planId,
@@ -102,6 +112,8 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
       dayCount,
       aheadDays,
       ntDeepRepeatPace,
+      chosen: j.chosen === true ? true : undefined,
+      selectedAt,
     };
   } catch {
     return null;
@@ -110,16 +122,14 @@ export function parseReadingPlanPrefs(raw: string | null): ReadingPlanPrefs | nu
 
 export function buildDefaultReadingPlanPrefs(
   dayCount = DEFAULT_READING_PLAN_DAY_COUNT,
-  now = new Date(),
+  _now = new Date(),
 ): ReadingPlanPrefs {
-  const startedOn = toLocalDateString(now);
   return {
     version: 1,
     planId: DEFAULT_READING_PLAN_ID,
     anchor: DEFAULT_READING_PLAN_ANCHOR,
-    startedOn,
+    startedOn: READING_PLAN_EASTER_EPOCH_DATE,
     dayCount,
-    ntDeepRepeatPace: DEFAULT_NT_DEEP_REPEAT_PACE,
   };
 }
 
@@ -151,7 +161,10 @@ export async function readEffectiveReadingPlanPrefs(): Promise<ReadingPlanPrefs>
   return resolveEffectiveReadingPlanPrefs(stored);
 }
 
-export async function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): Promise<void> {
+export async function writeReadingPlanPrefs(
+  prefs: ReadingPlanPrefs | null,
+  opts?: { notifySync?: boolean },
+): Promise<void> {
   try {
     if (!prefs) {
       await AsyncStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY);
@@ -161,6 +174,7 @@ export async function writeReadingPlanPrefs(prefs: ReadingPlanPrefs | null): Pro
       await AsyncStorage.removeItem(READING_PLAN_PREFS_STORAGE_KEY_LEGACY);
     }
     emit();
+    if (opts?.notifySync === false) return;
     const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
     notifyMemberReadingLocalChanged("readingPlanPrefs");
   } catch {
@@ -188,6 +202,8 @@ export async function setActiveReadingPlan(
           : undefined,
     dayCount: opts?.dayCount,
     ntDeepRepeatPace: opts?.ntDeepRepeatPace,
+    chosen: true,
+    selectedAt: new Date().toISOString(),
   };
   await writeReadingPlanPrefs(prefs);
   return prefs;

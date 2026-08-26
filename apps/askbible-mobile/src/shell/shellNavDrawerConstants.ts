@@ -9,5 +9,5 @@ export const shellNavDrawerParchmentSource = require("../../assets/images/read-p
 
 export function shellNavDrawerWidth(): number {
   const w = Dimensions.get("window").width;
-  return Math.min(360, Math.max(280, w - 28));
+  return Math.round(w * 0.8);
 }

@@ -6,4 +6,8 @@
 
 ## 加载真源技能
 
-使用 Read 工具读取下列路径的 `SKILL.md`，并**完整遵循**其规则后再做用户任务：
+先读并遵循 JoshLabs Dev（全项目通用开发流程）：
+
+`/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md`
+
+再使用 Read 工具读取下列设计技能的 `SKILL.md`，并**完整遵循**其规则后再做用户任务：

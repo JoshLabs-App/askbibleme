@@ -26,9 +26,9 @@ let androidChannelsReady = false;
 async function ensureAndroidChannels(): Promise<void> {
   if (Platform.OS !== "android" || androidChannelsReady) return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_READING_REMINDER, {
-    name: "Daily morning alarm",
-    importance: Notifications.AndroidImportance.HIGH,
-    vibrationPattern: [0, 250, 500, 250],
+    name: "Reading reminder",
+    importance: Notifications.AndroidImportance.DEFAULT,
+    vibrationPattern: [0, 250],
     lightColor: "#ECD9B9",
   });
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_DAILY_VERSE, {
@@ -42,7 +42,7 @@ async function ensureAndroidChannels(): Promise<void> {
 
 function readingReminderCopy(locale: ReturnType<typeof getLocale>) {
   return {
-    title: resolveUiText(locale, "每日清晨闹钟", "Daily morning alarm"),
+    title: resolveUiText(locale, "读经提醒", "Reading reminder"),
     body: resolveUiText(
       locale,
       "今天可以安静读一会儿经。",
@@ -71,6 +71,7 @@ async function scheduleDailyTrigger(args: {
   body: string;
   kind: NotificationKind;
   channelId?: string;
+  delivery?: "notification" | "alarm";
 }): Promise<void> {
   await cancelNotification(args.identifier);
   await Notifications.scheduleNotificationAsync({
@@ -79,7 +80,10 @@ async function scheduleDailyTrigger(args: {
       title: args.title,
       body: args.body,
       sound: true,
-      data: { kind: args.kind },
+      data: {
+        kind: args.kind,
+        ...(args.delivery ? { delivery: args.delivery } : {}),
+      },
       ...(Platform.OS === "android" && args.channelId
         ? { channelId: args.channelId }
         : {}),
@@ -101,6 +105,7 @@ async function scheduleWeeklyTrigger(args: {
   body: string;
   kind: NotificationKind;
   channelId?: string;
+  delivery?: "notification" | "alarm";
 }): Promise<void> {
   await cancelNotification(args.identifier);
   await Notifications.scheduleNotificationAsync({
@@ -109,7 +114,10 @@ async function scheduleWeeklyTrigger(args: {
       title: args.title,
       body: args.body,
       sound: true,
-      data: { kind: args.kind },
+      data: {
+        kind: args.kind,
+        ...(args.delivery ? { delivery: args.delivery } : {}),
+      },
       ...(Platform.OS === "android" && args.channelId
         ? { channelId: args.channelId }
         : {}),
@@ -136,6 +144,7 @@ async function scheduleReadingReminderNotifications(args: {
   weekdays: readonly number[];
   title: string;
   body: string;
+  delivery: "notification" | "alarm";
 }): Promise<void> {
   await cancelAllReadingReminderNotifications();
   const common = {
@@ -145,6 +154,7 @@ async function scheduleReadingReminderNotifications(args: {
     body: args.body,
     kind: "reading-reminder" as const,
     channelId: ANDROID_CHANNEL_READING_REMINDER,
+    delivery: args.delivery,
   };
 
   if (isAllReadingReminderWeekdays(args.weekdays)) {
@@ -175,7 +185,7 @@ export async function rescheduleAllNotifications(): Promise<void> {
   } else {
     const copy = readingReminderCopy(locale);
     if (Platform.OS === "ios") {
-      // iOS: native UNUserNotificationCenter scheduling in AskBibleReadingAlarmModule.
+      // iOS 闹钟：原生 UNUserNotificationCenter（AskBibleReadingAlarmModule）。
       await cancelAllReadingReminderNotifications();
       await syncReadingAlarmSchedule({
         prefs,
@@ -190,6 +200,7 @@ export async function rescheduleAllNotifications(): Promise<void> {
         weekdays: prefs.readingReminderWeekdays,
         title: copy.title,
         body: copy.body,
+        delivery: "alarm",
       });
       await syncReadingAlarmSchedule({ prefs, enabled: true });
     }

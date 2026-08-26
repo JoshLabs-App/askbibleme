@@ -1122,3 +1122,105 @@ button.bible-catalog-read-book--tap {
 .dark .bc-home-book-row--active {
   background: rgba(244, 235, 225, 0.08);
 }
+
+/* /read 首页 homeMode：新旧约双列 + 卷简介开关（对齐 iOS splitByTestamentColumns） */
+.bc-home-testament-headers-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 2px;
+  gap: 0;
+}
+
+.bc-home-testament-header-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.bible-catalog-read-testament-label--column {
+  margin-bottom: 0;
+}
+
+.bc-home-summary-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.bc-home-summary-toggle:hover {
+  background: rgba(118, 95, 62, 0.08);
+}
+
+.bc-home-summary-toggle[aria-pressed="true"] {
+  background: rgba(118, 95, 62, 0.1);
+}
+
+.bible-catalog-read-outline--home-columns {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+}
+
+.bible-catalog-read-outline--home-columns .bible-catalog-read-testament--column {
+  flex: 1;
+  width: 49%;
+  max-width: 49%;
+  min-width: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.bible-catalog-read-outline--home-compact .bc-home-section-block {
+  margin-bottom: 1px;
+  padding: 1px 1px 2px;
+  background: transparent !important;
+}
+
+.bible-catalog-read-outline--home-compact .bc-home-section-block--stripe {
+  border-left: 2px solid var(--bc-section-accent, var(--bc-read-weak));
+  padding-left: 5px;
+}
+
+.bible-catalog-read-outline--home-compact .bc-home-section-block--stripe .bc-home-section-title {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.bc-home-book-row--compact {
+  margin-bottom: 1px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.bc-home-book-row--compact .bc-home-book-badge {
+  width: 1.875rem;
+  height: 1.875rem;
+  font-size: 0.875rem;
+}
+
+.bc-home-book-row--compact .bc-home-book-name {
+  font-size: 0.9375rem;
+  line-height: 1.22;
+}
+
+.bc-home-book-row--compact .bc-home-book-chevron {
+  display: none;
+}

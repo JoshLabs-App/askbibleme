@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -10,7 +11,8 @@ import { t, localizeZhText } from "../i18n/site-copy";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import {exploreStyles as shared, useExploreScrollContentStyle, ExploreParchmentPage} from "./exploreParchmentStyles";
 import { loadExploreVerseTextsForRefsProgressive, clearExploreChapterVerseCache, scheduleExploreCategoryVerseLoad } from "./load-explore-category-verses";
 import type { ExploreModulesCategory } from "./exploreModulesBundleCore";
 import { getExploreModulesContent } from "./exploreModuleContent";
@@ -137,15 +139,13 @@ export function ExplorePraiseWorshipScreen() {
   }, [expandedCategoryIndex, locale, parsedRefByRaw, screenFocused]);
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
-          <Text style={shared.backLinkText}>{t("pages.explore.praiseWorshipBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.pageTitle}>{t("pages.explore.praiseWorshipTitle")}</Text>
         <Text style={styles.eyebrow}>{t("pages.explore.praiseWorshipSubtitle")}</Text>
@@ -196,7 +196,7 @@ export function ExplorePraiseWorshipScreen() {
           ))}
         </View>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }
 

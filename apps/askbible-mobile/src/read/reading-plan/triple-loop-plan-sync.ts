@@ -9,7 +9,6 @@ import {
   READING_PLAN_EASTER_EPOCH_DATE,
 } from "./reading-plan-epoch";
 import {
-  readEffectiveReadingPlanPrefs,
   readReadingPlanPrefs,
   setActiveReadingPlan,
 } from "./reading-plan-prefs";
@@ -25,13 +24,11 @@ export async function ensureTripleLoopPlanPrefs(): Promise<void> {
 }
 
 export async function syncTripleLoopPlanPrefsIfNeeded(): Promise<void> {
-  const effective = await readEffectiveReadingPlanPrefs();
-  if (!isTripleLoopPlanId(effective.planId)) return;
-
   const stored = await readReadingPlanPrefs();
+  // 隐式默认（未落盘）不写入，避免重装后把云端已选计划盖掉。
+  if (!stored || !isTripleLoopPlanId(stored.planId)) return;
+
   if (
-    !stored ||
-    stored.planId !== TRIPLE_LOOP_PLAN_ID ||
     stored.anchor !== "calendar-easter" ||
     stored.startedOn !== READING_PLAN_EASTER_EPOCH_DATE ||
     stored.dayCount !== TRIPLE_LOOP_PLAN_DAY_COUNT

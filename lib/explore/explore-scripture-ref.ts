@@ -13,7 +13,7 @@ export type { ParsedExploreRef } from "./explore-scripture-ref-parse";
 export { formatExploreRefLabel, parseExploreRef } from "./explore-scripture-ref-parse";
 
 function translationIdForLocale(locale: AppLocale): string {
-  if (locale === "en") return "kjv";
+  if (locale === "en") return "web-en";
   if (locale === "zh-TW") return "cuv-trad";
   return DEFAULT_SCRIPTURE_TRANSLATION_ID;
 }

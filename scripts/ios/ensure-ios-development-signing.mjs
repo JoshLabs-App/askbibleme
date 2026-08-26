@@ -170,11 +170,30 @@ async function createDevProfile({ bundleIdentifier, bundleIdResourceId, certId, 
   return res.body.data;
 }
 
+async function profileIncludesDevice(profileId, deviceId) {
+  const res = await ascRequest("GET", `/v1/profiles/${profileId}/devices?limit=200`);
+  return (res.body?.data ?? []).some((d) => d.id === deviceId);
+}
+
+async function fetchProfile(profileId) {
+  const res = await ascRequest("GET", `/v1/profiles/${profileId}`);
+  if (res.status >= 400 || !res.body?.data) {
+    throw new Error(`Fetch profile failed (${res.status}): ${JSON.stringify(res.body)}`);
+  }
+  return res.body.data;
+}
+
 async function ensureDevProfile(bundleIdentifier, bundleIdResourceId, certId, deviceId) {
   const existing = await findActiveDevProfile(bundleIdResourceId, certId);
-  if (existing) {
-    console.log(`→ 复用 Development Profile：${existing.attributes?.name}`);
-    return existing;
+  if (existing?.id) {
+    const includesDevice = await profileIncludesDevice(existing.id, deviceId);
+    if (includesDevice) {
+      console.log(`→ 复用 Development Profile：${existing.attributes?.name}`);
+      return fetchProfile(existing.id);
+    }
+    console.log(
+      `→ Development Profile「${existing.attributes?.name}」未含本机，重建…`,
+    );
   }
   console.log(`→ 创建 Development Profile（${bundleIdentifier}）…`);
   return createDevProfile({ bundleIdentifier, bundleIdResourceId, certId, deviceId });

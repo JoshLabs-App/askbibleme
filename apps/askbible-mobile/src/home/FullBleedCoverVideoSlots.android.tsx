@@ -1,7 +1,10 @@
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEffect, useRef, useState } from "react";
 import { Animated, AppState, type AppStateStatus } from "react-native";
-import { ensureNatureSceneVideoReady } from "../media/natureSceneReadiness";
+import {
+  ensureNatureSceneVideoReady,
+  getNatureSceneVideoFileUri,
+} from "../media/natureSceneReadiness";
 import {
   natureCoverVideoSource,
   type ResolveNatureCoverPlayback,
@@ -153,8 +156,20 @@ function useAndroidCoverVideoSource(
     }
     let alive = true;
     void (async () => {
-      await ensureNatureSceneVideoReady(id);
+      try {
+        await ensureNatureSceneVideoReady(id);
+      } catch {
+        if (!alive) return;
+        setSource(null);
+        return;
+      }
       if (!alive) return;
+      // 优先 readiness 缓存的 file URI（不二次 Asset.fromModule）。
+      const cached = getNatureSceneVideoFileUri(id);
+      if (cached) {
+        setSource(cached);
+        return;
+      }
       const playback = resolveScenePlayback(id);
       const resolved = natureCoverVideoSource(playback);
       if (!alive) return;
@@ -197,6 +212,26 @@ export function AndroidCoverVideoSlot({
 }) {
   const source = useAndroidCoverVideoSource(sceneId, resolveScenePlayback, mounted);
   const playback = source ? resolveScenePlayback(sceneId) : null;
+  const [activityReady, setActivityReady] = useState(false);
+
+  useEffect(() => {
+    if (!mounted) {
+      setActivityReady(false);
+      return;
+    }
+    let cancelled = false;
+    const arm = (state: AppStateStatus) => {
+      if (cancelled) return;
+      setActivityReady(state === "active");
+    };
+    const timer = setTimeout(() => arm(AppState.currentState), 80);
+    const sub = AppState.addEventListener("change", arm);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      sub.remove();
+    };
+  }, [mounted, sceneId, source]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -205,7 +240,7 @@ export function AndroidCoverVideoSlot({
     }
   }, [mounted, onNaturalAspect, playback, portraitMode, sceneId]);
 
-  if (!mounted || !sceneId.trim() || !source) return null;
+  if (!mounted || !activityReady || !sceneId.trim() || !source) return null;
 
   return (
     <CoverVideoSlotInner

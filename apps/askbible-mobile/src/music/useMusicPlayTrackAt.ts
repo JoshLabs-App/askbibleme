@@ -1,5 +1,6 @@
 import { Audio } from "expo-av";
 import { useCallback } from "react";
+import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import {
   loadAndStartMusicTrackSound,
@@ -12,7 +13,11 @@ import {
 import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
+import { configureShellAudioMode } from "../audio/shellAudioMode";
+import { claimDefaultPreloadedMusicSound } from "./useMusicDefaultTrackPreload";
 import { releaseScriptureShellForMusic } from "./scripturePlaybackPriority";
+import { yieldAmbientIfVerseAndAmbientOpen } from "../home/homeGoldenVerseTwoSourceMutex";
+import { startIosNativeMusicTrack } from "./startIosNativeMusicTrack";
 
 type PlaybackMode = "music" | "scripture";
 
@@ -57,7 +62,14 @@ export function useMusicPlayTrackAt({
   return useCallback(
     async (index: number, opts?: { autoPlay?: boolean }) => {
       if (tracks.length === 0) return false;
+      if (opts?.autoPlay !== false) {
+        yieldAmbientIfVerseAndAmbientOpen();
+      }
       await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
+      // 原生主轨勿先改 AudioMode（会污染系统会话）。
+      if (!isNativeMainTrackOs() && opts?.autoPlay !== false) {
+        await configureShellAudioMode({ force: true });
+      }
       const generation = ++playTrackGenerationRef.current;
 
       const prepared = await prepareMusicTrackForPlay({
@@ -72,24 +84,76 @@ export function useMusicPlayTrackAt({
         cacheMusicTrackInBackground,
         musicRepeatModeRef,
         setPlaying,
+        autoPlay: opts?.autoPlay,
       });
       if (!prepared.ok) return false;
 
+      // iOS / Android：音乐只走原生播放器，不经 expo-av。
+      if (isNativeMainTrackOs()) {
+        const resumeSec =
+          bridge.resumeTrackIdRef.current === prepared.track.id
+            ? Math.max(0, bridge.resumePositionSecRef.current)
+            : 0;
+        const ok = await startIosNativeMusicTrack({
+          tracks,
+          track: prepared.track,
+          index: prepared.index,
+          positionSec: resumeSec,
+          shouldPlay: opts?.autoPlay !== false,
+          unloadCurrent,
+          setTrackIndex,
+          setPlaybackMode,
+          setPlaying,
+          setMusicCurrentSec,
+          setMusicDurationSec,
+          persistMusicResume,
+          trackIndexRef: bridge.trackIndexRef,
+          playbackModeRef,
+          playingStateRef: bridge.playingStateRef,
+          lastMusicProgressSecRef: bridge.lastMusicProgressSecRef,
+        });
+        if (ok) return true;
+        scheduleMusicTrackPlayFallback({
+          tracks,
+          index: prepared.index,
+          failedTrackIdsRef,
+          playTrackAtRef,
+          setPlaying,
+          failedTrackId: prepared.track.id,
+          autoPlay: opts?.autoPlay,
+        });
+        return false;
+      }
+
       let preloadedSound: Audio.Sound | null = null;
       let preloadedStatus: import("expo-av").AVPlaybackStatus | null = null;
-      const preloaded = bridge.preloadedMusicSoundRef.current;
-      if (preloaded?.trackId === prepared.track.id) {
-        preloadedSound = preloaded.sound;
-        preloadedStatus = preloaded.status;
+      const claimed = claimDefaultPreloadedMusicSound(prepared.track.id);
+      if (claimed) {
+        preloadedSound = claimed.sound;
+        preloadedStatus = claimed.status;
         bridge.preloadedMusicSoundRef.current = null;
+        bridge.preloadedMusicSoundWorkRef.current = null;
       } else {
-        const pendingPreload = bridge.preloadedMusicSoundWorkRef.current;
-        if (pendingPreload?.trackId === prepared.track.id) {
-          const ready = await pendingPreload.promise;
-          if (ready?.trackId === prepared.track.id) {
-            bridge.preloadedMusicSoundWorkRef.current = null;
-            preloadedSound = ready.sound;
-            preloadedStatus = ready.status;
+        const preloaded = bridge.preloadedMusicSoundRef.current;
+        if (preloaded?.trackId === prepared.track.id) {
+          preloadedSound = preloaded.sound;
+          preloadedStatus = preloaded.status;
+          bridge.preloadedMusicSoundRef.current = null;
+          claimDefaultPreloadedMusicSound(prepared.track.id);
+        } else {
+          const pendingPreload = bridge.preloadedMusicSoundWorkRef.current;
+          if (pendingPreload?.trackId === prepared.track.id) {
+            const ready = await pendingPreload.promise;
+            const taken = ready ? claimDefaultPreloadedMusicSound(ready.trackId) : null;
+            if (taken) {
+              bridge.preloadedMusicSoundWorkRef.current = null;
+              preloadedSound = taken.sound;
+              preloadedStatus = taken.status;
+            } else if (ready?.trackId === prepared.track.id) {
+              bridge.preloadedMusicSoundWorkRef.current = null;
+              preloadedSound = ready.sound;
+              preloadedStatus = ready.status;
+            }
           }
         }
       }
@@ -123,6 +187,7 @@ export function useMusicPlayTrackAt({
         playTrackAtRef,
         setPlaying,
         failedTrackId: loaded.failedTrackId,
+        autoPlay: opts?.autoPlay,
       });
       return false;
     },

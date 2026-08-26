@@ -6,7 +6,7 @@ export function AppLogoSplash() {
   return (
     <View style={styles.root}>
       <Image
-        source={require("../../assets/adaptive-icon.png")}
+        source={require("../../assets/splash-icon.png")}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logo: {
-    width: 140,
-    height: 140,
+    width: 320,
+    height: 320,
   },
 });

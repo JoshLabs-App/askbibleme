@@ -132,6 +132,24 @@ export async function replaceScriptureListenTotalsRecord(
   await persistNow(false);
 }
 
+/** 帐号切换：强制清零（replace 会取 max，无法降回 0）。 */
+export async function clearScriptureListenTotalsLocal(): Promise<void> {
+  if (persistTimer) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  dirty = false;
+  cachedTotalSec = 0;
+  hydrated = true;
+  lastPosSec = -1;
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+  emit();
+}
+
 /** 经文播放进度回调：仅在正向小幅推进时累加，避免 seek 跳秒虚增。 */
 export function noteScriptureListenProgress(positionSec: number, isPlaying: boolean): void {
   void hydrate();

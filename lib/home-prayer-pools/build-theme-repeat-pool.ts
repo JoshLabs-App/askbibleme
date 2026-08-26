@@ -26,7 +26,7 @@ import {
 import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "@/lib/explore/explore-home-verse-pool-verse-keys";
 
 const HOME_POOL_ZH_TRANSLATION_IDS = ["cuv-simp", "cuv-trad"] as const;
-const HOME_POOL_EN_TRANSLATION_IDS = ["kjv", "web-en", "bbe-en"] as const;
+const HOME_POOL_EN_TRANSLATION_IDS = ["web-en", "kjv", "bbe-en"] as const;
 const bookNumberById = new Map(scriptureBooks.map((b) => [b.bookId, b.bookNumber]));
 const CJK_CHAR_RE = /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/;
 const INCOMPLETE_CJK_END_RE = /[，；：、]\s*$/;
@@ -216,9 +216,9 @@ export async function writeThemeRepeatPrayerPool(
   const zhTids = translationIdsPresent(index, HOME_POOL_ZH_TRANSLATION_IDS);
   const enTids = translationIdsPresent(index, HOME_POOL_EN_TRANSLATION_IDS);
   const defaultZhTid = zhTids.includes("cuv-simp") ? "cuv-simp" : zhTids[0];
-  const defaultEnTid = enTids.includes("kjv") ? "kjv" : enTids[0];
+  const defaultEnTid = enTids.includes("web-en") ? "web-en" : enTids[0];
   if (!defaultZhTid || !defaultEnTid) {
-    throw new Error("需要 cuv-simp/cuv-trad 与 KJV 等英文译本方可生成池。");
+    throw new Error("需要 cuv-simp/cuv-trad 与 WEB 等英文译本方可生成池。");
   }
 
   const resolved: {

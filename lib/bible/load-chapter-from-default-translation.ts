@@ -138,7 +138,7 @@ async function loadChapterFromRemoteProvider(
   bookId: string,
   chapter: number,
 ): Promise<RemoteChapterLoadResult | null> {
-  if (translationUsesYouVersionChapterAudio(meta.id)) {
+  if (meta.provider === "youversion" || translationUsesYouVersionChapterAudio(meta.id)) {
     const verses = await loadYouVersionChapterRows(meta, bookId, chapter);
     if (verses?.length) return { verses };
   }
@@ -149,11 +149,6 @@ async function loadChapterFromRemoteProvider(
   }
   if (meta.provider === "esv") {
     const verses = await loadEsvChapterRows(meta, bookId, chapter);
-    if (!verses?.length) return null;
-    return { verses };
-  }
-  if (meta.provider === "youversion") {
-    const verses = await loadYouVersionChapterRows(meta, bookId, chapter);
     if (!verses?.length) return null;
     return { verses };
   }

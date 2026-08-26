@@ -18,6 +18,8 @@ type Args = {
   settings: NatureSettingsV2 | null;
   localActiveId: string;
   setLocalActiveId: React.Dispatch<React.SetStateAction<string>>;
+  /** 静帧模式用预烘焙柔焦海报 */
+  preferSoftPoster?: boolean;
 };
 
 export function useHomeNatureScenePlayback({
@@ -28,6 +30,7 @@ export function useHomeNatureScenePlayback({
   settings,
   localActiveId,
   setLocalActiveId,
+  preferSoftPoster = false,
 }: Args) {
   const rawSceneId = (localActiveId || settings?.activeVideoId || "").trim();
   const sceneId = useMemo(() => {
@@ -78,12 +81,15 @@ export function useHomeNatureScenePlayback({
     const remote = playback?.posterSrc?.trim()
       ? toAbsoluteUrl(baseUrl, playback.posterSrc.trim())
       : "";
-    return resolveNaturePosterPlaybackUri(sceneId.trim(), remote) || remote;
-  }, [sceneId, playback?.posterSrc, baseUrl, naturePackRev]);
+    return resolveNaturePosterPlaybackUri(sceneId.trim(), remote, { soft: preferSoftPoster }) || remote;
+  }, [sceneId, playback?.posterSrc, baseUrl, naturePackRev, preferSoftPoster]);
 
   const posterModule = useMemo(
-    () => (sceneId.trim() ? resolveNaturePosterPlaybackModule(sceneId.trim()) : null),
-    [sceneId, naturePackRev],
+    () =>
+      sceneId.trim()
+        ? resolveNaturePosterPlaybackModule(sceneId.trim(), { soft: preferSoftPoster })
+        : null,
+    [sceneId, naturePackRev, preferSoftPoster],
   );
 
   const clampedRate = Math.min(2, Math.max(0.5, settings?.playbackRate ?? 1));

@@ -3,35 +3,30 @@ import type { AppLocale } from "../i18n/config";
 import { MusicHomeAlbumPicker } from "./MusicHomeAlbumPicker";
 import { MusicHomePlaybackControls } from "./MusicHomePlaybackControls";
 import type { MusicRepeatMode } from "./musicPlaybackTypes";
+import { musicHomeTransportControlsStyles as styles } from "./musicHomeTransportControlsStyles";
 
 type Props = {
   locale: AppLocale;
   album: string;
   albumNames: string[];
   albumCounts: Record<string, number>;
-  compactLandscape: boolean;
   chromeVisible: boolean;
   playing: boolean;
   canTogglePlayback: boolean;
   onTogglePlay: () => void;
-  selectedTrackTitle: string;
-  position: number;
   duration: number;
-  progress: number;
+  musicActive: boolean;
+  trackIndex: number;
+  playbackMode: string;
+  seekRatio: (ratio: number) => Promise<void>;
   musicRepeatMode: MusicRepeatMode;
-  sleepTimerMinutes: number;
-  sleepTimerBadge: string | null;
   filteredTrackIndices: number[];
   currentFilteredIndex: number;
   onSelectAlbum: (album: string) => void;
-  onSeekStart: () => void;
-  onSeekPreview: (ratio: number) => void;
-  onSeekRatio: (ratio: number) => void;
   onPrevTrack: () => void;
   onNextTrack: () => void;
   onToggleRepeatOne: () => void;
   onToggleRepeatAll: () => void;
-  onCycleSleepTimer: () => void;
   onPlayTrackAt: (index: number) => void;
 };
 
@@ -51,5 +46,3 @@ export function MusicHomeTransportControls(props: Props) {
     </View>
   );
 }
-
-import { musicHomeTransportControlsStyles as styles } from "./musicHomeTransportControlsStyles";

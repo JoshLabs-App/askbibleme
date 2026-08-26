@@ -12,6 +12,7 @@ import { fetchReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-regi
 import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 
 function planFieldKey(planId: string, field: "title" | "subtitle" | "blurb"): string {
@@ -51,9 +52,7 @@ export function ReadPlanDetailScreen() {
   return (
     <View style={styles.root}>
       <ReadParchmentPageScroll inset="sub">
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
-          <Text style={styles.backText}>{t("pages.read.catalogBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         {loading ? (
           <ActivityIndicator color={c.muted} style={{ marginTop: 40 }} />

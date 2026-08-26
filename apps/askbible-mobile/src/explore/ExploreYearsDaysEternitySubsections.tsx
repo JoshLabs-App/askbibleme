@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { filterEternityScriptures, formatScriptureBlockBody } from "./years-days-eternity-blocks";
 import type {
   YearsDaysEternityFinale,

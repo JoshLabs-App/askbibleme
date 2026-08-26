@@ -1,5 +1,6 @@
 import { Audio } from "expo-av";
 import { useEffect } from "react";
+import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { safeStopAndUnloadSound } from "../audio/safeShellSound";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { getBundledMusicCompanionStore } from "./fetchMusicCompanion";
@@ -19,6 +20,8 @@ function logPreload(message: string, ...args_: unknown[]) {
 }
 
 function startDefaultTrackPreload(): Promise<PreloadedMusicSound | null> | null {
+  // 原生音乐勿预建 expo-av Sound 污染会话。
+  if (isNativeMainTrackOs()) return null;
   if (defaultPreloadPromise) return defaultPreloadPromise;
   if (defaultPreloadCompletedTrackId && defaultPreloadCompletedTrackId === defaultPreloadTrackId) {
     return null;
@@ -80,6 +83,18 @@ export function primeMusicDefaultTrackPreload(): void {
   void startDefaultTrackPreload();
 }
 
+/** 播放器接手预热 Sound 后调用，避免 hook cleanup 把正在播的轨 unload 掉。 */
+export function claimDefaultPreloadedMusicSound(trackId: string): PreloadedMusicSound | null {
+  const id = trackId.trim();
+  if (!id || defaultPreloadedSound?.trackId !== id) return null;
+  const claimed = defaultPreloadedSound;
+  defaultPreloadedSound = null;
+  defaultPreloadCompletedTrackId = null;
+  defaultPreloadPromise = null;
+  defaultPreloadTrackId = null;
+  return claimed;
+}
+
 type Args = {
   preloadedMusicSoundRef: MusicPlaybackRefs["preloadedMusicSoundRef"];
   preloadedMusicSoundWorkRef: MusicPlaybackRefs["preloadedMusicSoundWorkRef"];
@@ -113,14 +128,13 @@ export function useMusicDefaultTrackPreload({
     return () => {
       preloadedMusicSoundRef.current = null;
       preloadedMusicSoundWorkRef.current = null;
-      const preloadedSound = defaultPreloadedSound?.sound ?? null;
-      if (preloadedSound) void safeStopAndUnloadSound(preloadedSound);
-      if (defaultPreloadedSound?.sound === preloadedSound) {
-        defaultPreloadedSound = null;
-      }
+      // 已被 claim 给播放器的 Sound 不再 unload
+      const owned = defaultPreloadedSound;
+      defaultPreloadedSound = null;
       defaultPreloadPromise = null;
       defaultPreloadTrackId = null;
       defaultPreloadCompletedTrackId = null;
+      if (owned?.sound) void safeStopAndUnloadSound(owned.sound);
     };
   }, [preloadedMusicSoundRef, preloadedMusicSoundWorkRef]);
 }

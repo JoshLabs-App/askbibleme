@@ -9,12 +9,13 @@ export const READ_VERSE_SCROLL_TOP_INSET_RATIO = 0.18;
 /** 底栏 Tab + 快捷行 + 音频条留白占视口比例 */
 export const READ_VERSE_SCROLL_BOTTOM_INSET_RATIO = 0.18;
 /** 朗读中底栏音频条额外占视口比例 */
-export const READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO = 0.08;
+export const READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO = 0.16;
 
 export type ReadChapterScrollChromePx = {
   safeTop: number;
   safeBottom: number;
   audioDockVisible?: boolean;
+  screenHeight?: number;
 };
 
 /** 读经时经节应对齐的可读区中心。底部空间会计入音频条留白。 */
@@ -23,11 +24,31 @@ export function readChapterReadableCenterWindowY(
   scrollViewportHeight: number,
   chrome: ReadChapterScrollChromePx,
 ): number {
+  if (chrome.screenHeight && chrome.screenHeight > 0) {
+    return readChapterReadableCenterFromScreen(chrome);
+  }
   const top = READ_VERSE_SCROLL_TOP_INSET_RATIO;
   const bottom =
     READ_VERSE_SCROLL_BOTTOM_INSET_RATIO +
     (chrome.audioDockVisible ? READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO : 0);
   return scrollWindowY + scrollViewportHeight * (top + (1 - top - bottom) / 2);
+}
+
+/** 按整屏阅读区（顶栏到音频条之间）取几何中心，避免 ScrollView 高度把目标抬得太高。 */
+export function readChapterReadableCenterFromScreen(
+  chrome: Pick<
+    ReadChapterScrollChromePx,
+    "safeTop" | "safeBottom" | "audioDockVisible" | "screenHeight"
+  >,
+): number {
+  const screenHeight = chrome.screenHeight ?? 0;
+  const top = 56 + chrome.safeTop;
+  const bottom =
+    screenHeight -
+    72 -
+    chrome.safeBottom -
+    (chrome.audioDockVisible ? 220 : 0);
+  return (top + bottom) / 2;
 }
 
 /** 可读区垂直中心在视口中的 y 比例（用于加亮经文居中）。 */

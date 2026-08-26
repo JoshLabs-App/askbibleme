@@ -1,4 +1,5 @@
 import {
+  READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO,
   READ_VERSE_SCROLL_BOTTOM_INSET_RATIO,
   READ_VERSE_SCROLL_TOP_INSET_RATIO,
   readVerseScrollFocusRatio,
@@ -24,7 +25,8 @@ function defaultBottomInsetPx(audioDockVisible: boolean): number {
   if (typeof window === "undefined") return audioDockVisible ? 160 : 120;
   const vh = window.innerHeight || 800;
   const ratio =
-    READ_VERSE_SCROLL_BOTTOM_INSET_RATIO + (audioDockVisible ? 0.08 : 0);
+    READ_VERSE_SCROLL_BOTTOM_INSET_RATIO +
+    (audioDockVisible ? READ_VERSE_SCROLL_AUDIO_DOCK_INSET_RATIO : 0);
   return Math.round(vh * ratio);
 }
 

@@ -26,6 +26,9 @@
 /apps/askbible-mobile/assets/nature/videos/
 /apps/askbible-mobile/assets/music/tracks/
 /apps/askbible-mobile/assets/music/analysis/
+/apps/askbible-mobile/assets/audio/golden-verse-packs/
+# Android PAD fast-follow 音乐包（sync 生成，勿提交二进制）
+/apps/askbible-mobile/android/music_companion_pack/src/main/assets/
 
 # misc
 .DS_Store
@@ -52,6 +55,9 @@ yarn-error.log*
 /public/audio/teochew-nt/*.mp3
 /public/audio/web-en/*.mp3
 
+# 本地备用目录（大体量备份，不入库；正式资源在 public/ 与 mobile assets）
+/00/
+
 # 本地导入/下载的大体积资源（不入库，避免 Review 卡死）
 /data/bible/uploads/
 /data/bible/blm-es-chapter-audio-manifest.json
@@ -62,6 +68,11 @@ yarn-error.log*
 /public/audio/
 /public/verse-timings/*
 !/public/verse-timings/kjv/
+# 网页读经静态资源：构建时由 sync-web-static-read-content 从 data/ 复制（体积大，不入库）
+/public/read/info-edition-v1-published.json
+/public/read/open-usfm-chapter-segments.zh.json
+/public/read/open-usfm-chapter-segments.story.t1.zh.json
+/public/read/generation-roles.json
 /scripts/whisper-env/
 
 # 本机全本导读/引导版批量进度（见 npm run info-edition:batch）
@@ -81,3 +92,4 @@ components/tv/
 lib/media/tv-client.ts
 lib/media/tv-shell-boot.ts
 scripts/sync-tv-content.mjs
+.snapshots/

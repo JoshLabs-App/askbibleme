@@ -1,8 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 export const READ_BIBLE_TYPOGRAPHY_STORAGE_KEY = "selah_read_bible_typography_v1";
 
 export type ReadBibleSizeId =
+  | "xs"
   | "s"
   | "m"
   | "l"
@@ -12,7 +14,11 @@ export type ReadBibleSizeId =
   | "xxxxl"
   | "xxxxxl"
   | "xxxxxxl"
-  | "xxxxxxxl";
+  | "xxxxxxxl"
+  | "xxxxxxxxl"
+  | "xxxxxxxxxl"
+  | "xxxxxxxxxxl"
+  | "xxxxxxxxxxxl";
 
 export type ReadBibleTypographyPrefsV1 = {
   size: ReadBibleSizeId;
@@ -37,9 +43,23 @@ export type ReadBibleTypographyPx = {
 };
 
 const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
+  xs: {
+    verseFontSize: 15,
+    verseLineHeight: 26,
+    verseNumFontSize: 14,
+    chapterTitleSize: 21,
+    heroHe: 34,
+    heroHeLine: 37,
+    heroZh: 23,
+    heroZhLine: 26,
+    heroEn: 11,
+    heroEnLine: 16,
+    catalogBookSize: 16,
+    catalogBookLine: 22,
+  },
   s: {
     verseFontSize: 17,
-    verseLineHeight: 26,
+    verseLineHeight: 29,
     verseNumFontSize: 15,
     chapterTitleSize: 23,
     heroHe: 38,
@@ -53,7 +73,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   m: {
     verseFontSize: 19,
-    verseLineHeight: 29,
+    verseLineHeight: 33,
     verseNumFontSize: 16,
     chapterTitleSize: 26,
     heroHe: 44,
@@ -67,7 +87,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   l: {
     verseFontSize: 21,
-    verseLineHeight: 32,
+    verseLineHeight: 36,
     verseNumFontSize: 17,
     chapterTitleSize: 28,
     heroHe: 49,
@@ -81,7 +101,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xl: {
     verseFontSize: 24,
-    verseLineHeight: 36,
+    verseLineHeight: 41,
     verseNumFontSize: 18,
     chapterTitleSize: 31,
     heroHe: 54,
@@ -95,7 +115,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xxl: {
     verseFontSize: 27,
-    verseLineHeight: 41,
+    verseLineHeight: 46,
     verseNumFontSize: 19,
     chapterTitleSize: 34,
     heroHe: 59,
@@ -109,7 +129,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xxxl: {
     verseFontSize: 30,
-    verseLineHeight: 45,
+    verseLineHeight: 51,
     verseNumFontSize: 20,
     chapterTitleSize: 37,
     heroHe: 65,
@@ -123,7 +143,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xxxxl: {
     verseFontSize: 34,
-    verseLineHeight: 51,
+    verseLineHeight: 58,
     verseNumFontSize: 21,
     chapterTitleSize: 41,
     heroHe: 72,
@@ -137,7 +157,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xxxxxl: {
     verseFontSize: 37,
-    verseLineHeight: 56,
+    verseLineHeight: 63,
     verseNumFontSize: 22,
     chapterTitleSize: 44,
     heroHe: 79,
@@ -151,7 +171,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xxxxxxl: {
     verseFontSize: 42,
-    verseLineHeight: 63,
+    verseLineHeight: 71,
     verseNumFontSize: 23,
     chapterTitleSize: 49,
     heroHe: 87,
@@ -165,7 +185,7 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
   },
   xxxxxxxl: {
     verseFontSize: 46,
-    verseLineHeight: 69,
+    verseLineHeight: 78,
     verseNumFontSize: 24,
     chapterTitleSize: 53,
     heroHe: 95,
@@ -177,6 +197,62 @@ const PX: Record<ReadBibleSizeId, ReadBibleTypographyPx> = {
     catalogBookSize: 28,
     catalogBookLine: 37,
   },
+  xxxxxxxxl: {
+    verseFontSize: 52,
+    verseLineHeight: 88,
+    verseNumFontSize: 26,
+    chapterTitleSize: 58,
+    heroHe: 104,
+    heroHeLine: 110,
+    heroZh: 72,
+    heroZhLine: 80,
+    heroEn: 24,
+    heroEnLine: 30,
+    catalogBookSize: 29,
+    catalogBookLine: 38,
+  },
+  xxxxxxxxxl: {
+    verseFontSize: 58,
+    verseLineHeight: 98,
+    verseNumFontSize: 28,
+    chapterTitleSize: 64,
+    heroHe: 114,
+    heroHeLine: 120,
+    heroZh: 80,
+    heroZhLine: 88,
+    heroEn: 26,
+    heroEnLine: 32,
+    catalogBookSize: 30,
+    catalogBookLine: 40,
+  },
+  xxxxxxxxxxl: {
+    verseFontSize: 64,
+    verseLineHeight: 108,
+    verseNumFontSize: 30,
+    chapterTitleSize: 70,
+    heroHe: 124,
+    heroHeLine: 130,
+    heroZh: 88,
+    heroZhLine: 96,
+    heroEn: 28,
+    heroEnLine: 34,
+    catalogBookSize: 31,
+    catalogBookLine: 41,
+  },
+  xxxxxxxxxxxl: {
+    verseFontSize: 72,
+    verseLineHeight: 120,
+    verseNumFontSize: 32,
+    chapterTitleSize: 78,
+    heroHe: 136,
+    heroHeLine: 142,
+    heroZh: 96,
+    heroZhLine: 106,
+    heroEn: 30,
+    heroEnLine: 36,
+    catalogBookSize: 32,
+    catalogBookLine: 42,
+  },
 };
 
 /** 移动端默认比网站小一档，降低首读时视觉压力 */
@@ -186,12 +262,16 @@ export const DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS: ReadBibleTypographyPrefsV1 = {
   chapterSegmentMode: "t1",
 };
 
-/** 平台默认：iOS / Android 统一中号（`m`） */
+/** 安卓默认再小一档；两端都能再往下收到 `xs`。 */
 export function defaultReadBibleTypographyPrefs(): ReadBibleTypographyPrefsV1 {
-  return { ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS };
+  return {
+    ...DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS,
+    size: Platform.OS === "android" ? "s" : DEFAULT_READ_BIBLE_TYPOGRAPHY_PREFS.size,
+  };
 }
 
 export const READ_BIBLE_SIZE_ORDER: ReadBibleSizeId[] = [
+  "xs",
   "s",
   "m",
   "l",
@@ -202,6 +282,10 @@ export const READ_BIBLE_SIZE_ORDER: ReadBibleSizeId[] = [
   "xxxxxl",
   "xxxxxxl",
   "xxxxxxxl",
+  "xxxxxxxxl",
+  "xxxxxxxxxl",
+  "xxxxxxxxxxl",
+  "xxxxxxxxxxxl",
 ];
 
 /** 一键大字预设：用于读经页设置里的「TT」快速按钮 */

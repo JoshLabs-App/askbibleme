@@ -11,7 +11,7 @@ const index = {
 } as never;
 
 describe("pickTranslationIdForLocale", () => {
-  it("uses KJV as the default English translation even when WEBP appears first", () => {
-    expect(pickTranslationIdForLocale(index, "en")).toBe("kjv");
+  it("uses WEB as the default English translation even when KJV appears later", () => {
+    expect(pickTranslationIdForLocale(index, "en")).toBe("web-en");
   });
 });

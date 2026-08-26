@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { AppShellTopBar, type AppShellTopBarTone } from "@/components/app-shell/AppShellTopBar";
 import { HomeDockChromeProvider } from "@/components/home/HomeDockChromeContext";
 import { useShellTemplateDockPreviewOptional } from "@/components/shell/ShellTemplateDockPreviewContext";
-import { useAppSkin } from "@/components/theme/AppSkinProvider";
 import { useLandscapeNarrow } from "@/hooks/useLandscapeNarrow";
 import { useShellChromeScrimVisuals } from "@/hooks/useShellChromeScrimVisuals";
 import {
@@ -115,11 +114,8 @@ export function ShellTemplateChromeLayout({
   const onMusicPath = isMusicShellPath(pathname);
   const musicLandscapeImmersive =
     onMusicPath && (landscapeNarrow || musicAutoHideChrome);
-  const { shellTemplateBrand } = useAppSkin();
-  const previewThemeId = shellTemplateBrand ?? "parchmentShell";
-  const theme = shellTemplatePreviewThemeById(previewThemeId);
+  const theme = shellTemplatePreviewThemeById("parchmentShell");
   const dockPreview = useShellTemplateDockPreviewOptional();
-
   const { chrome } = useShellChromeScrimVisuals(theme.colors.appLight, theme.colors.appDark, chromeTuneProp);
 
   useEffect(() => {

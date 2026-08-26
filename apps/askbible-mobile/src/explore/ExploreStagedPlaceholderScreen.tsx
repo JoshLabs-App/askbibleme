@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
@@ -9,7 +10,8 @@ import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { resolveExploreStagedEntryLabel } from "./exploreHomeConfig";
 import { getExploreStagedEntry, type ExploreStagedEntryId } from "./exploreStagedEntries";
-import { exploreStyles as shared, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import { useExploreScrollContentStyle, ExploreParchmentPage} from "./exploreParchmentStyles";
 import { useExploreModulesBundle } from "./useExploreModules";
 
 const BOTTOM_PAD = 120;
@@ -31,24 +33,21 @@ export function ExploreStagedPlaceholderScreen({ entryId }: Props) {
   });
 
   const title = entry ? resolveExploreStagedEntryLabel(entry, locale, bundle) : entryId;
-  const backLabel = resolveUiText(locale, "← 返回探索", "← Back to Explore");
   const placeholder = resolveUiText(locale, "内容筹备中。", "Coming soon.");
 
   return (
-    <View style={shared.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable onPress={() => router.back()} style={shared.yearDayCountBackLink} accessibilityRole="button">
-          <Text style={shared.backLinkText}>{backLabel}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={styles.pageTitle}>{title}</Text>
         <Text style={styles.placeholder}>{placeholder}</Text>
       </ParchmentBottomFadeScrollView>
-    </View>
+    </ExploreParchmentPage>
   );
 }
 

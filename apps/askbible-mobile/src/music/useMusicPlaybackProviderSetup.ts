@@ -67,6 +67,7 @@ export function useMusicPlaybackProviderSetup() {
   const shellControls = useMusicShellControls({
     soundRef: refs.soundRef,
     playbackModeRef: refs.playbackModeRef,
+    playingStateRef: refs.playingStateRef,
     musicGainRef: refs.musicGainRef,
     musicRepeatModeRef: refs.musicRepeatModeRef,
     lastMusicProgressSecRef: refs.lastMusicProgressSecRef,
@@ -77,6 +78,8 @@ export function useMusicPlaybackProviderSetup() {
     setPlaying,
     setMusicCurrentSec,
     setScriptureCurrentSec,
+    scriptureDurationSec: state.scriptureDurationSec,
+    musicDurationSec: state.musicDurationSec,
     setMusicRepeatModeState,
     setSleepTimerMinutesState,
   });

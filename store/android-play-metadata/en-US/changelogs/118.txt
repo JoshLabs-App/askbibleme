@@ -1,0 +1,4 @@
+System media controls now pause, skip, and change tracks reliably
+More stable home music and golden verse playback on first play
+Reading plan sync and chapter playback are more reliable
+Video playback and play button states stay in sync

@@ -1,5 +1,6 @@
 import { pullMemberProfileFromServer } from "./syncMemberProfileFromServer";
 import { syncMemberReadingAfterLogin } from "../member-sync/useMemberReadingSync";
+import { completeOnboardingDevotionIntro } from "../onboarding/onboarding-devotion-prefs";
 import {
   writeMemberSession,
   type MemberSession,
@@ -16,13 +17,25 @@ export async function commitMemberSession(input: {
   user: MemberUser;
 }): Promise<MemberUser> {
   const synced = await pullMemberProfileFromServer(input.sessionToken);
-  const user = synced ?? input.user;
+  const user: MemberUser = synced
+    ? {
+        ...input.user,
+        ...synced,
+        createdAt: synced.createdAt ?? input.user.createdAt ?? null,
+      }
+    : input.user;
   await writeMemberSession({
     sessionToken: input.sessionToken,
     expiresAt: input.expiresAt,
     user,
   });
-  await syncMemberReadingAfterLogin(input.sessionToken);
+  // 登录即过欢迎页，避免 OAuth 深链先落到 / 再被 gate 打回登录页。
+  await completeOnboardingDevotionIntro([]);
+  try {
+    await syncMemberReadingAfterLogin(input.sessionToken);
+  } catch {
+    // 会话已写入；同步失败不把人留在登录页。
+  }
   return user;
 }
 

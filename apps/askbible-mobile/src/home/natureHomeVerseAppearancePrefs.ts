@@ -31,7 +31,7 @@ export const DEFAULT_VERSE_APPEARANCE: NatureHomeVerseAppearance = {
   textEffect: NATURE_HOME_VERSE_TEXT_EFFECTS[0],
 };
 
-/** 与网站 `NATURE_HOME_TEXT_SCALE_STEPS` 同步（默认 index 12 = 1.0） */
+/** 与网站 `NATURE_HOME_TEXT_SCALE_STEPS` 同步（index 12 = 1.0） */
 export const NATURE_HOME_TEXT_SCALE_STEPS = [
   0.5, 0.54, 0.58, 0.62, 0.66, 0.7, 0.74, 0.78, 0.82, 0.86, 0.91, 0.96, 1, 1.05, 1.1, 1.15, 1.22,
   1.29, 1.36, 1.44, 1.54, 1.64, 1.75, 1.86, 2, 2.12, 2.25, 2.38, 2.55, 2.72, 2.9, 3.1, 3.35, 3.6, 3.65,
@@ -39,26 +39,25 @@ export const NATURE_HOME_TEXT_SCALE_STEPS = [
   5.7, 5.95, 6.2,
 ] as const;
 
+/** 与网站 `NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX` 同步：比例 1.0 → 正文 24pt */
 export const DEFAULT_TEXT_SCALE_INDEX = 12;
-/** Android 默认比 iOS 大一档，抵消系统字体渲染偏小 */
-export const ANDROID_DEFAULT_TEXT_SCALE_INDEX = DEFAULT_TEXT_SCALE_INDEX + 1;
+/** 两端同一默认。旧版安卓曾大一档，减号点到 12 会被读盘逻辑弹回去。 */
+export const ANDROID_DEFAULT_TEXT_SCALE_INDEX = DEFAULT_TEXT_SCALE_INDEX;
+/** 旧版 App 默认（0.74 / 0.78）；读 prefs 时升到新默认，避免一直偏小 */
+const LEGACY_IOS_DEFAULT_TEXT_SCALE_INDEX = 6;
+const LEGACY_ANDROID_DEFAULT_TEXT_SCALE_INDEX = 7;
 /** 一键超大字号（约 200%） */
 export const SUPER_LARGE_TEXT_SCALE_INDEX = 24;
 
 export function platformDefaultTextScaleIndex(): number {
-  return Platform.OS === "android" ? ANDROID_DEFAULT_TEXT_SCALE_INDEX : DEFAULT_TEXT_SCALE_INDEX;
+  return DEFAULT_TEXT_SCALE_INDEX;
 }
 
 function clampStepIndex(n: number): number {
   return Math.min(NATURE_HOME_TEXT_SCALE_STEPS.length - 1, Math.max(0, Math.round(n)));
 }
 
-const VERSE_TEXT_EFFECTS = NATURE_HOME_VERSE_TEXT_EFFECTS;
-
 function normalizeVerseTextEffect(raw: unknown): NatureHomeVerseTextEffect {
-  if (typeof raw === "string" && (VERSE_TEXT_EFFECTS as readonly string[]).includes(raw)) {
-    return raw as NatureHomeVerseTextEffect;
-  }
   return DEFAULT_VERSE_APPEARANCE.textEffect;
 }
 
@@ -100,8 +99,11 @@ export async function readNatureHomeTextScaleIndex(): Promise<number> {
     const p = JSON.parse(raw) as { stepIndex?: number };
     if (typeof p.stepIndex !== "number") return platformDefaultTextScaleIndex();
     let index = clampStepIndex(p.stepIndex);
-    if (Platform.OS === "android" && index === DEFAULT_TEXT_SCALE_INDEX) {
-      index = ANDROID_DEFAULT_TEXT_SCALE_INDEX;
+    if (Platform.OS === "ios" && index === LEGACY_IOS_DEFAULT_TEXT_SCALE_INDEX) {
+      index = DEFAULT_TEXT_SCALE_INDEX;
+      await writeNatureHomeTextScaleIndex(index);
+    } else if (Platform.OS === "android" && index === LEGACY_ANDROID_DEFAULT_TEXT_SCALE_INDEX) {
+      index = DEFAULT_TEXT_SCALE_INDEX;
       await writeNatureHomeTextScaleIndex(index);
     }
     return index;

@@ -4,7 +4,7 @@
     {
       "sectionId": "canon-torah",
       "order": 1,
-      "title": "摩西五经 / 律法书",
+      "title": "摩西五经",
       "taglines": [
         "旧约：神创造、拣选以色列、预备救恩"
       ],
@@ -39,7 +39,7 @@
     {
       "sectionId": "canon-wisdom",
       "order": 3,
-      "title": "智慧书 / 诗歌书",
+      "title": "智慧书",
       "taglines": [],
       "bookIds": [
         "JOB",

@@ -20,6 +20,7 @@ type AskbibleSqlUser = {
   id: string;
   email: string;
   name: string;
+  createdAt?: string | null;
 };
 
 async function openDb(dbPath: string): Promise<{ db: SqlJsDb; close: () => void; save: () => void }> {
@@ -115,7 +116,10 @@ export async function deleteAskbibleSqliteUser(input: {
 export async function getAskbibleUserById(dbPath: string, userId: string): Promise<AskbibleSqlUser | null> {
   const { db, close } = await openDb(dbPath);
   try {
-    const stmt = db.prepare("SELECT id, name, email FROM users WHERE id = ? LIMIT 1");
+    const cols = getTableColumns(db, "users");
+    const selectCols = ["id", "name", "email"];
+    if (cols.has("created_at")) selectCols.push("created_at");
+    const stmt = db.prepare(`SELECT ${selectCols.join(", ")} FROM users WHERE id = ? LIMIT 1`);
     stmt.bind([userId]);
     if (!stmt.step()) {
       stmt.free();
@@ -125,10 +129,12 @@ export async function getAskbibleUserById(dbPath: string, userId: string): Promi
     stmt.free();
     const email = String(row.email ?? "").trim();
     if (!email) return null;
+    const createdRaw = String(row.created_at ?? "").trim();
     return {
       id: String(row.id ?? "").trim(),
       email,
       name: String(row.name ?? "").trim() || email,
+      createdAt: createdRaw || null,
     };
   } finally {
     close();
@@ -199,7 +205,7 @@ export async function registerAskbibleSqliteUser(input: {
     save();
     return {
       ok: true,
-      user: { id, email: normalizedEmail, name: finalName },
+      user: { id, email: normalizedEmail, name: finalName, createdAt },
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "sqlite 写入失败";

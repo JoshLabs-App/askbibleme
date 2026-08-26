@@ -10,6 +10,7 @@ type UseMusicPlayTrackArgs = {
   bridge: MusicPlayTrackBridge;
   tracks: PlaybackTrack[];
   trackIndex: number;
+  playing: boolean;
   unloadCurrent: () => Promise<void>;
   endMusicSession: () => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
@@ -26,7 +27,8 @@ type UseMusicPlayTrackArgs = {
 };
 
 export function useMusicPlayTrack(args: UseMusicPlayTrackArgs) {
-  const playTrackAt = useMusicPlayTrackAt(args);
-  const togglePlayMusic = useMusicTogglePlayMusic({ ...args, playTrackAt });
+  const { playing, ...playTrackAtArgs } = args;
+  const playTrackAt = useMusicPlayTrackAt(playTrackAtArgs);
+  const togglePlayMusic = useMusicTogglePlayMusic({ ...args, playTrackAt, playing });
   return { playTrackAt, togglePlayMusic };
 }

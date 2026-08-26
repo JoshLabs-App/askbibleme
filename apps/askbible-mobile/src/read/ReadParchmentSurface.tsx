@@ -2,15 +2,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import {
-  ImageBackground,
+  Image,
+  Platform,
   StyleSheet,
-  useWindowDimensions,
   View,
   type ImageStyle,
   type StyleProp,
   type ViewProps,
   type ViewStyle,
 } from "react-native";
+import { useShellFullBleedBackdropStyle, useShellFullBleedFrame } from "../shell/shellLayout";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { shouldUseWideParchmentScrollBackground } from "./parchmentColumnLayout";
 
@@ -25,8 +26,11 @@ export function resolveReadParchmentScrollSource(width: number, height: number) 
 }
 
 export function useReadParchmentScrollSource() {
-  const { width, height } = useWindowDimensions();
-  return useMemo(() => resolveReadParchmentScrollSource(width, height), [width, height]);
+  const frame = useShellFullBleedFrame();
+  return useMemo(
+    () => resolveReadParchmentScrollSource(frame.width, frame.height),
+    [frame.width, frame.height],
+  );
 }
 
 const DEFAULT_EDGE_FADE_TOP_PX = 14;
@@ -72,6 +76,10 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
+  parchmentShellAndroid: {
+    // 允许底图向下伸出覆盖系统导航/底栏后方，避免只剩 canvas 实色条
+    overflow: "visible",
+  },
   parchmentShellFill: {
     flex: 1,
     width: "100%",
@@ -101,20 +109,41 @@ export function ReadParchmentFillLayer({
   style,
   imageStyle,
   source,
+  /** 贴屏幕底对齐（读经音频坞等浮层复用全屏羊皮底图，纹理与正文连续） */
+  pinBottom = false,
 }: {
   style?: StyleProp<ViewStyle>;
   imageStyle?: StyleProp<ImageStyle>;
   source?: number;
+  pinBottom?: boolean;
 }) {
+  const frame = useShellFullBleedFrame();
+  const backdropStyle = useShellFullBleedBackdropStyle(frame);
   const dynamicSource = useReadParchmentScrollSource();
   const resolvedSource = source ?? dynamicSource;
+  const positionStyle = pinBottom
+    ? {
+        position: "absolute" as const,
+        left: 0,
+        bottom: 0,
+        width: frame.width,
+        height: frame.height,
+        zIndex: 0,
+      }
+    : { ...backdropStyle, width: frame.width, height: frame.height };
   return (
-    <View style={[StyleSheet.absoluteFillObject, style]} pointerEvents="none">
-      <ImageBackground
+    <View style={[positionStyle, style]} pointerEvents="none" collapsable={false}>
+      <Image
         source={resolvedSource}
         resizeMode="stretch"
-        style={StyleSheet.absoluteFillObject}
-        imageStyle={[styles.fillImage, imageStyle]}
+        style={[
+          StyleSheet.absoluteFillObject,
+          styles.fillImage,
+          { width: frame.width, height: frame.height },
+          imageStyle,
+        ]}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
       />
     </View>
   );
@@ -133,7 +162,13 @@ export function ReadParchmentBackgroundImage({
 }: ReadParchmentBackgroundProps) {
   return (
     <View
-      style={[styles.parchmentContainer, styles.parchmentShell, fill && styles.parchmentShellFill, style]}
+      style={[
+        styles.parchmentContainer,
+        styles.parchmentShell,
+        Platform.OS === "android" && styles.parchmentShellAndroid,
+        fill && styles.parchmentShellFill,
+        style,
+      ]}
       collapsable={false}
       {...viewProps}
     >

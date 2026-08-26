@@ -12,7 +12,7 @@ load_mobile_google_oauth_env "$ROOT"
 export EXPO_NO_DOTENV=1
 export EXPO_PUBLIC_MOBILE_OFFLINE_FIRST="${EXPO_PUBLIC_MOBILE_OFFLINE_FIRST:-1}"
 # 与商店包一致：允许章朗读联网（FHL / askbible.me）；BUNDLED_ONLY=1 会禁流且无包内章音频
-export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-0}"
+export EXPO_PUBLIC_MOBILE_BUNDLED_ONLY="${EXPO_PUBLIC_MOBILE_BUNDLED_ONLY:-1}"
 export EXPO_PUBLIC_ASKBIBLE_BASE_URL="${EXPO_PUBLIC_ASKBIBLE_BASE_URL:-https://askbible.me}"
 export EXPO_PUBLIC_TELEMETRY_DISABLED="${EXPO_PUBLIC_TELEMETRY_DISABLED:-1}"
 export MOBILE_BUNDLE_OFFLINE_MEDIA="${MOBILE_BUNDLE_OFFLINE_MEDIA:-1}"
@@ -45,6 +45,15 @@ if [[ -f "$ENV_LOCAL" ]]; then
 fi
 
 cd "$MOBILE"
+
+echo "→ Patch expo-video：音乐独占时勿改写 AVAudioSession"
+bash "$MOBILE/scripts/patch-expo-video-music-session-lock.sh"
+
+echo ""
+echo "→ iOS Development 签名（USB 真机；App Store 描述文件无法直装）"
+export ASC_API_KEY_PATH="${ASC_API_KEY_PATH:-$ROOT/AA/AuthKey_9HDA27WY8C.p8}"
+node "$ROOT/scripts/ios/ensure-ios-development-signing.mjs"
+node "$ROOT/scripts/ios/patch-ios-release-device-signing.mjs"
 
 echo ""
 echo "→ expo run:ios --device --configuration Release"

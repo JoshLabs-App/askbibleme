@@ -1,7 +1,8 @@
 import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { InteractionManager, StyleSheet, Text, View } from "react-native";
+import { InteractionManager, StyleSheet, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t } from "../i18n/site-copy";
 import { useLocale } from "../i18n/LocaleProvider";
 import { parchmentSans } from "../fonts/parchmentType";
@@ -17,7 +18,8 @@ import {
 } from "./year-day-count-scriptures";
 import { useExploreModulesBundle } from "./useExploreModules";
 
-const BOX_MAX_HEIGHT = 140;
+/** 约 3～4 行经文可视高度；勿用 tabbar 大渐隐，否则有效可视区会被吃掉。 */
+const BOX_MAX_HEIGHT = 96;
 
 type Props = {
   maxHeight?: number;
@@ -130,6 +132,7 @@ export function ExploreYearDayCountScriptureList({
     <View style={[styles.wrap, exploreS.yearDayCountScriptureWrap]}>
       <ExploreScriptureFadeScroll
         height={maxHeight}
+        fadePreset="default"
         autoScroll
         loopSegmentHeight={loopSegmentHeight}
       >
@@ -157,10 +160,10 @@ const styles = StyleSheet.create({
   },
   row: {
     paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   rowFirst: {
-    paddingTop: 4,
+    paddingTop: 6,
   },
   rowBorder: {
     borderTopWidth: StyleSheet.hairlineWidth,

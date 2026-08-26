@@ -22,7 +22,9 @@ import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
 import {
   readEffectiveReadingPlanPrefs,
   toLocalDateString,
+  writeReadingPlanPrefs,
 } from "./reading-plan-prefs";
+import { NT_DEEP_REPEAT_CURRICULUM } from "./nt-deep-repeat-curriculum";
 
 export const NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY = "askbible-nt-deep-repeat-progress-v5";
 const NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V4 = "askbible-nt-deep-repeat-progress-v4";
@@ -111,7 +113,7 @@ export async function readNtDeepRepeatProgress(): Promise<NtDeepRepeatReadingSta
     const base = resolveEffectiveNtDeepRepeatProgress(stored, hasSaved);
     const prefs = await readEffectiveReadingPlanPrefs();
     const aligned = alignNtDeepRepeatProgressToCalendar(base, prefs);
-    if (!ntDeepRepeatPlanPointersEqual(base, aligned)) {
+    if (hasSaved && !ntDeepRepeatPlanPointersEqual(base, aligned)) {
       await replaceNtDeepRepeatProgress(aligned);
     }
     return aligned;
@@ -242,10 +244,99 @@ export async function advanceNtDeepRepeatOnePlanDay(now = new Date()): Promise<N
 export async function resetNtDeepRepeatToCalendarToday(now = new Date()): Promise<NtDeepRepeatReadingState> {
   const prefs = await readEffectiveReadingPlanPrefs();
   const planDay = resolveNtDeepRepeatPlanDay(prefs, now);
+  return jumpNtDeepRepeatProgressToPlanDay(planDay, now);
+}
+
+/** 一次跳到指定计划日（保留已读章），供「进度设置为今日」原子写入。 */
+export async function jumpNtDeepRepeatProgressToPlanDay(
+  planDay: number,
+  now = new Date(),
+): Promise<NtDeepRepeatReadingState> {
+  const prefs = await readEffectiveReadingPlanPrefs();
   const pace = prefs.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE;
   const startedAt = prefs.startedOn?.trim() || toLocalDateString(now);
-  let state = ntDeepRepeatStateForPlanDay(planDay, { pace, startedAt });
-  state.startedAt = startedAt;
+  const safeDay = Math.max(1, Math.floor(planDay));
+  let prevKeys: NtDeepRepeatReadingState["chaptersReadKeys"] | undefined;
+  try {
+    const raw = await readProgressRawFromStorage();
+    if (raw) {
+      prevKeys = normalizeNtDeepRepeatReadingState(parseNtDeepRepeatProgress(raw) ?? undefined).chaptersReadKeys;
+    }
+  } catch {
+    /* ignore */
+  }
+  const state = normalizeNtDeepRepeatReadingState({
+    ...ntDeepRepeatStateForPlanDay(safeDay, { pace, startedAt }),
+    pace,
+    startedAt,
+    chaptersReadKeys: prevKeys,
+  });
   await writeNtDeepRepeatProgress(state);
+  return state;
+}
+
+function addLocalDays(d: Date, days: number): Date {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
+/**
+ * 将某一新约版块（0-based 阶）设为今日读经：该阶第 1 天。
+ * 必要时调整 startedOn / aheadDays，避免日历对齐把进度拉回。
+ */
+export async function setNtDeepRepeatCurriculumStageAsToday(
+  curriculumIndex: number,
+  now = new Date(),
+): Promise<NtDeepRepeatReadingState> {
+  const prefs = await readEffectiveReadingPlanPrefs();
+  const pace = prefs.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE;
+  const stageCount = Math.max(1, NT_DEEP_REPEAT_CURRICULUM.length);
+  const safeIndex = Math.min(stageCount - 1, Math.max(0, Math.floor(curriculumIndex)));
+  const planDay = safeIndex * pace + 1;
+
+  let startedAt = prefs.startedOn?.trim() || toLocalDateString(now);
+  let calendarDay = resolveNtDeepRepeatPlanDay({ ...prefs, startedOn: startedAt }, now);
+  let nextPrefs = { ...prefs, chosen: true as const };
+
+  if (planDay < calendarDay) {
+    startedAt = toLocalDateString(addLocalDays(now, -(planDay - 1)));
+    const { aheadDays: _omit, ...rest } = nextPrefs;
+    nextPrefs = { ...rest, startedOn: startedAt, chosen: true };
+  } else {
+    const ahead = planDay - calendarDay;
+    if (ahead > 0) {
+      nextPrefs = { ...nextPrefs, startedOn: startedAt, aheadDays: ahead };
+    } else {
+      const { aheadDays: _omit, ...rest } = nextPrefs;
+      nextPrefs = { ...rest, startedOn: startedAt, chosen: true };
+    }
+  }
+
+  let prevKeys: NtDeepRepeatReadingState["chaptersReadKeys"] | undefined;
+  try {
+    const raw = await readProgressRawFromStorage();
+    if (raw) {
+      prevKeys = normalizeNtDeepRepeatReadingState(parseNtDeepRepeatProgress(raw) ?? undefined)
+        .chaptersReadKeys;
+    }
+  } catch {
+    /* ignore */
+  }
+
+  const state = normalizeNtDeepRepeatReadingState({
+    ...ntDeepRepeatStateForPlanDay(planDay, { pace, startedAt }),
+    pace,
+    startedAt,
+    chaptersReadKeys: prevKeys,
+  });
+  await writeNtDeepRepeatProgress(state);
+  await writeReadingPlanPrefs(nextPrefs);
+  try {
+    const { notifyMemberReadingLocalChanged } = await import("../../member-sync/requestMemberReadingSync");
+    notifyMemberReadingLocalChanged("readingPlanPrefs");
+  } catch {
+    /* ignore */
+  }
   return state;
 }

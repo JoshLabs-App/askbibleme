@@ -1,4 +1,4 @@
-import { mergeReadingPlanPrefsValue } from "@/lib/read/reading-plan-ahead";
+import { mergeReadingPlanPrefsValue } from "@/lib/read/reading-plan-prefs-merge";
 import { mergeNtDeepRepeatReadingState } from "./merge-nt-deep-repeat-progress";
 import { mergeTripleLoopReadingState } from "./merge-triple-loop-progress";
 import {
@@ -185,9 +185,9 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
       return mergeFractions(a, b);
     case "recentSearches":
       return mergeRecentSearches(a, b);
-    case "lastPosition":
     case "readingPlanPrefs":
       return mergeReadingPlanPrefsValue(a, b);
+    case "lastPosition":
     case "readTypography":
     case "readTranslation":
     case "homeNatureUi":

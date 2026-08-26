@@ -3,7 +3,7 @@ import type { BibleTranslationsIndex } from "@/lib/bible/translations-types";
 import type { ReadBibleTranslationPrefsV1 } from "@/lib/read/read-bible-translation-prefs";
 import { resolveCorrespondingChapterAudioTranslationId } from "@/lib/read/resolve-corresponding-chapter-audio-translation";
 import { translationUsesWebChapterAudio } from "@/lib/bible/web-chapter-audio";
-import { translationUsesYouVersionChapterAudio } from "@/lib/bible/youversion-chapter-audio";
+import { translationHasVerifiedYouVersionChapterAudio } from "@/lib/bible/youversion-chapter-audio";
 
 /** 设置项：朗读译本与屏幕主译本相同 */
 export const READ_BIBLE_AUDIO_TRANSLATION_FOLLOW_PRIMARY = "";
@@ -26,7 +26,7 @@ export function normalizeReadBibleAudioTranslationId(
   if (!id) return null;
   const allowed = new Set(index.translations.map((t) => t.id));
   if (!allowed.has(id)) return null;
-  if (translationUsesWebChapterAudio(id) || translationUsesYouVersionChapterAudio(id)) {
+  if (translationUsesWebChapterAudio(id) || translationHasVerifiedYouVersionChapterAudio(id)) {
     return id;
   }
   void primaryId;

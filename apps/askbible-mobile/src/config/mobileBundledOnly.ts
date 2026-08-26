@@ -1,41 +1,58 @@
 /**
- * 离线优先（播放与读经内容）：
- * - 已下载 / 安装包内资源优先，不常规直连远端媒体 URL 播放
- * - 读经正文 / 导读 / 章音频走本地；译本目录（元数据）仍可联网同步以便选择与下载
- * - 按需下载正文包仍可通过设置或侧栏「资料更新」触发
+ * 内容策略（AskBible.me App）：
  *
- * 会员读经进度同步不受此开关影响（见 member-sync）。
+ * **不拉主站内容库**（自然/音乐更新包、探索、金句池远程、内容 manifest、译本目录远程、导读远程生成）：
+ * - 默认开启（含 `__DEV__` 真机联调）
+ * - 仅当 `EXPO_PUBLIC_MOBILE_BUNDLED_ONLY=0` 时关闭（本机联调内容 API）
+ *
+ * **仍可走网站 / 外站**（用户明确保留）：
+ * - 音乐：曲目清单 JSON + 非首曲音频走 Cloudflare R2（禁止 askbible.me）
+ * - 账号：Supabase Auth 直连；删号走 Edge Function `delete-account`
+ * - 读经同步 / 反馈 / 纠错：Supabase 表直连（须先执行 supabase/migrations/20260812_app_direct_sync_feedback.sql）
+ * - 圣经音频：章朗读（FHL / YouVersion / WEB / 潮语 / 主站 `/audio` 语音包）
+ * - YouVersion 正文：设备直抓 bible.com（不经主站章 API）
+ * - 译本正文：安装包内置 sqlite，或按章 chapter-api（无主站整本 sqlite 下载）
+ *
+ * `EXPO_PUBLIC_MOBILE_OFFLINE_FIRST`：读经正文/导读优先本地（可与 BUNDLED_ONLY 叠用）。
  */
+
 export function isMobileOfflineFirst(): boolean {
   const flag = process.env.EXPO_PUBLIC_MOBILE_OFFLINE_FIRST?.trim();
   if (flag === "0") return false;
   if (flag === "1") return true;
-  return !__DEV__;
+  return true;
 }
 
 /**
- * 纯本地包：为 `1` 时禁止请求 askbible.me（无目录同步、无按需下载）。
- * 与 `EXPO_PUBLIC_MOBILE_OFFLINE_FIRST` 独立；生产 TestFlight 应为 `0`（包内 1 首 + 联网拉列表/下载）。
- * 未显式配置时默认允许联网拉取音乐包（避免本地 Gradle 打包漏设 env 导致永远无法下载）。
+ * 内容纯本地包：禁止请求主站的自然/音乐/探索等内容类 API 与媒体更新包。
+ * 未显式配置时默认开启（开发与生产一致）。
  */
 export function isMobileBundledOnly(): boolean {
   const flag = process.env.EXPO_PUBLIC_MOBILE_BUNDLED_ONLY?.trim();
   if (flag === "0") return false;
   if (flag === "1") return true;
-  return false;
+  return true;
 }
 
-/**
- * 读经正文/导读/目录等：离线优先，不常规打 askbible.me。
- * 整章朗读播放见 `isMobileScriptureAudioStreamAllowed`（未下载时可联网）。
- */
+/** 读经正文/导读/目录：离线优先或不打主站内容。 */
 export function isMobileScriptureReadLocalOnly(): boolean {
   return isMobileOfflineFirst() || isMobileBundledOnly();
 }
 
-/** 章朗读：已下载/包内优先；未下载时允许 FHL 闫大卫等远端流式（仅 BUNDLED_ONLY=1 时完全禁止）。 */
+/**
+ * 章朗读外站流式：默认允许（FHL / YouVersion / 潮语等）。
+ * `EXPO_PUBLIC_MOBILE_CHAPTER_AUDIO_STREAM=0` 可关掉。
+ */
 export function isMobileScriptureAudioStreamAllowed(): boolean {
-  return !isMobileBundledOnly();
+  const flag = process.env.EXPO_PUBLIC_MOBILE_CHAPTER_AUDIO_STREAM?.trim();
+  if (flag === "0") return false;
+  if (flag === "1") return true;
+  return true;
+}
+
+/** 圣经相关（章朗读音频）是否允许打主站。与内容库（自然/音乐/探索）分离。 */
+export function isMobileScriptureSiteRemoteAllowed(): boolean {
+  return true;
 }
 
 export { isMemberRegisterEnabled } from "../auth/member-register-enabled";

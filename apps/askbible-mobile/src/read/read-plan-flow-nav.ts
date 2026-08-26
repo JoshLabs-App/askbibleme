@@ -2,11 +2,12 @@ import type { Router } from "expo-router";
 import { readingIncludesChapter } from "./reading-plan/today-reading-done";
 import type { TodayReadingPlanPayload } from "./reading-plan/today-reading-plan-payload";
 import { peekPrimedTodayReadingPlanPayload } from "./today-reading-plan-payload-prime";
-import { shouldLoopTodayPlanFlow } from "./read-plan-flow-autoplay";
+import { getPlanFlowUiHost, shouldLoopTodayPlanFlow } from "./read-plan-flow-autoplay";
 
 export type PlanChapterRef = { bookId: string; chapter: number };
 
 const PLAN_CHAPTER_PATH = "/(tabs)/read/[bookId]/[chapter]" as const;
+export const PLAN_PLAY_PATH = "/(tabs)/read/plan-play" as const;
 
 /** 章页 payload 未就绪时回退到 planFlow 启动前 prime 的今日计划。 */
 export function resolveEffectiveTodayPlanPayload(
@@ -107,10 +108,27 @@ export function resolveTodayPlanNextTarget(
   return resolveTodayPlanLoopTarget(payload, currentBookId, currentChapter, 1, false);
 }
 
+/** 进计划页：navigate 复用栈内已有页，避免反复 push 叠层导致切换越来越慢。 */
+export function pushReadPlanPlay(router: Pick<Router, "push" | "navigate">): void {
+  if (typeof router.navigate === "function") {
+    router.navigate(PLAN_PLAY_PATH);
+    return;
+  }
+  router.push(PLAN_PLAY_PATH);
+}
+
+export function replaceReadPlanPlay(router: Pick<Router, "replace">): void {
+  router.replace(PLAN_PLAY_PATH);
+}
+
 export function pushReadPlanFlowChapter(
   router: Pick<Router, "push">,
   target: PlanChapterRef,
 ): void {
+  if (getPlanFlowUiHost() === "listen") {
+    // 已在读经计划播放页：开播/续章不改路由，避免 remount 闪页。
+    return;
+  }
   router.push({
     pathname: PLAN_CHAPTER_PATH,
     params: {
@@ -127,6 +145,10 @@ export function replaceReadPlanFlowChapterAudio(
   target: PlanChapterRef,
   restartTick?: number,
 ): void {
+  if (getPlanFlowUiHost() === "listen") {
+    // 已在读经计划播放页：开播/续章不改路由，避免 remount 闪页。
+    return;
+  }
   router.replace({
     pathname: PLAN_CHAPTER_PATH,
     params: {

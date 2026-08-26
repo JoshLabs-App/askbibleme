@@ -7,6 +7,8 @@ export type AskbibleAuthUser = {
   name: string;
   locale: string | null;
   isAdmin: boolean;
+  /** 账号注册时间（ISO） */
+  createdAt: string | null;
 };
 
 type AskbibleProfileRow = {
@@ -32,12 +34,15 @@ function displayNameFromUser(user: User): string {
 
 export function toAskbibleAuthUser(user: User, profile?: AskbibleProfileRow | null): AskbibleAuthUser {
   const name = profile?.display_name?.trim() || displayNameFromUser(user);
+  const createdAt =
+    typeof user.created_at === "string" && user.created_at.trim() ? user.created_at.trim() : null;
   return {
     id: user.id,
     email: user.email || "",
     name,
     locale: profile?.locale?.trim() || null,
     isAdmin: Boolean(profile?.is_admin),
+    createdAt,
   };
 }
 

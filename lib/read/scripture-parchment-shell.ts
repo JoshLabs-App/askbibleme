@@ -8,7 +8,7 @@ import { isParchmentShellPath } from "@/lib/shell/parchment-shell-path";
 export const SCRIPTURE_PARCHMENT_SHELL_DATASET_KEY = "appShellSafeFill";
 export const SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE = "parchment";
 
-/** 与 {@link NATURE_HOME_THEME_LOCK_DATASET_KEY} 共用；值 `parchment` 时勿被 `AppSkinProvider` 覆盖 */
+/** 与 {@link NATURE_HOME_THEME_LOCK_DATASET_KEY} 共用；值 `parchment` 时勿覆盖 theme-color */
 export const SCRIPTURE_PARCHMENT_THEME_LOCK_VALUE = "parchment";
 
 /** Android 等：`env(safe-area-inset-top)` 为 0 时由客户端量得的顶栏重叠高度 */

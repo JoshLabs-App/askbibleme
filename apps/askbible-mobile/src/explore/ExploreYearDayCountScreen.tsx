@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { InteractionManager, Modal, Pressable, Text, View } from "react-native";
+import { InteractionManager, Modal, Pressable, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { ParchmentBottomFadeScrollView } from "../read/ParchmentBottomFadeScrollView";
 import { SHELL_TAB_SCROLL_FADE_PRESET } from "../read/readParchmentScrollMask";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,7 +25,8 @@ import {
 } from "./explore-year-day-birth-prompt-session";
 import { pushExploreReadChapter, useExploreReadReturnPath, EXPLORE_YEAR_DAY_COUNT_PATH } from "./explore-read-chapter-nav";
 import { getYearDayCountLifeDayReadTarget } from "./year-day-count-scriptures";
-import { exploreStyles as s, useExploreScrollContentStyle } from "./exploreParchmentStyles";
+import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
+import {exploreStyles as s, useExploreScrollContentStyle, ExploreParchmentPage} from "./exploreParchmentStyles";
 
 export function ExploreYearDayCountScreen() {
   const router = useRouter();
@@ -133,15 +135,13 @@ export function ExploreYearDayCountScreen() {
   }, [exploreReturn, router]);
 
   return (
-    <View style={s.root}>
+    <ExploreParchmentPage>
       <ParchmentBottomFadeScrollView
         fadePreset={SHELL_TAB_SCROLL_FADE_PRESET}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={scrollContentStyle}
       >
-        <Pressable onPress={() => router.back()} style={s.yearDayCountBackLink} accessibilityRole="button">
-          <Text style={s.backLinkText}>{t("pages.explore.yearDayCountBack")}</Text>
-        </Pressable>
+        <ShellSystemBackButton onPress={() => router.back()} />
 
         <Text style={s.yearDayCountTitle}>{t("pages.explore.yearDayCountTitle")}</Text>
         <View style={s.yearDayCountRule} />
@@ -192,6 +192,6 @@ export function ExploreYearDayCountScreen() {
           />
         </ReadParchmentBackground>
       </Modal>
-    </View>
+    </ExploreParchmentPage>
   );
 }

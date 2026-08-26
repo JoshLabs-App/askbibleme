@@ -16,11 +16,14 @@ export type ScriptureTranslationInstallStatus = "bundled" | "installed" | "missi
 export async function resolveScriptureTranslationInstallStatus(
   tr: BibleTranslationMeta,
 ): Promise<ScriptureTranslationInstallStatus> {
+  // 按章在线译本：无整本 sqlite，视为可用（不走下载）。
+  if (tr.delivery === "chapter-api") return "installed";
+  // 安装包内译本：先认 bundled，避免尚未解压到 Documents 时被标成 missing 去拉网。
+  if (tr.bundled || isBundledScriptureTranslation(tr.id)) return "bundled";
   const serverBytes = typeof tr.bytes === "number" && tr.bytes > 0 ? tr.bytes : 0;
   const localBytes = await getLocalScriptureTranslationByteSize(tr.id);
   if (serverBytes > 0 && localBytes > 0 && localBytes !== serverBytes) return "outdated";
   if (localBytes <= 0) return "missing";
-  if (tr.bundled || isBundledScriptureTranslation(tr.id)) return "bundled";
   return "installed";
 }
 

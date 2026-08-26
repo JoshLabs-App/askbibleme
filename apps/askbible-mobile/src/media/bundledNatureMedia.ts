@@ -1,13 +1,18 @@
-import { Asset } from "expo-asset";
+import { Platform } from "react-native";
 import type { NatureCoverPlayback } from "../home/natureCoverPlayback";
 import {
   getBundledNaturePosterModule,
   resolveBundledNaturePosterUri,
 } from "./generated/bundled-nature-posters";
 import {
+  getBundledNatureSoftPosterModule,
+  resolveBundledNatureSoftPosterUri,
+} from "./generated/bundled-nature-posters-soft";
+import {
   getBundledNatureVideoModule,
   resolveBundledNatureVideoUri,
 } from "./generated/bundled-nature-videos";
+import { getNatureSceneVideoFileUri } from "./natureSceneReadiness";
 import { resolveNatureResourcePackUri } from "./natureResourcePackSync";
 
 export {
@@ -18,6 +23,10 @@ export {
 export function resolveNatureVideoPlaybackUri(videoId: string, remoteAbsolute: string): string {
   const id = videoId.trim();
   if (id) {
+    if (Platform.OS === "android") {
+      const fileUri = getNatureSceneVideoFileUri(id);
+      if (fileUri) return fileUri;
+    }
     const bundled = resolveBundledNatureVideoUri(id);
     if (bundled) return bundled;
   }
@@ -34,11 +43,18 @@ export function resolveNatureCoverPlayback(
   const id = videoId.trim();
   const bundledModule = id ? (getBundledNatureVideoModule(id) ?? undefined) : undefined;
   if (bundledModule != null) {
-    const asset = Asset.fromModule(bundledModule);
-    const uri = (asset.localUri ?? asset.uri ?? resolveBundledNatureVideoUri(id) ?? "").trim();
+    // Android release：只用 readiness 缓存的可播 URI；禁止 Asset.fromModule（会冲掉 localUri）。
+    if (Platform.OS === "android") {
+      return {
+        sceneId: id,
+        uri: getNatureSceneVideoFileUri(id) ?? "",
+        bundledModule,
+      };
+    }
+    const bundled = resolveBundledNatureVideoUri(id) ?? "";
     return {
       sceneId: id,
-      uri,
+      uri: bundled,
       bundledModule,
     };
   }
@@ -52,9 +68,14 @@ export function resolveNatureCoverPlayback(
 export function resolveNaturePosterPlaybackUri(
   videoId: string,
   remoteAbsolute: string,
+  opts?: { soft?: boolean },
 ): string {
   const id = videoId.trim();
   if (id) {
+    if (opts?.soft) {
+      const soft = resolveBundledNatureSoftPosterUri(id);
+      if (soft) return soft;
+    }
     const bundled = resolveBundledNaturePosterUri(id);
     if (bundled) return bundled;
   }
@@ -63,8 +84,15 @@ export function resolveNaturePosterPlaybackUri(
   return "";
 }
 
-export function resolveNaturePosterPlaybackModule(videoId: string): number | null {
+export function resolveNaturePosterPlaybackModule(
+  videoId: string,
+  opts?: { soft?: boolean },
+): number | null {
   const id = videoId.trim();
   if (!id) return null;
+  if (opts?.soft) {
+    const soft = getBundledNatureSoftPosterModule(id);
+    if (soft != null) return soft;
+  }
   return getBundledNaturePosterModule(id);
 }

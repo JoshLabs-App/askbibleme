@@ -1,6 +1,9 @@
 import { StyleSheet } from "react-native";
 
-export const FULL_BLEED_COVER_VIDEO_BACKDROP = "#ffffff";
+/** 透明：视频↔静帧切换时勿露白底造成跳闪 */
+export const FULL_BLEED_COVER_VIDEO_BACKDROP = "transparent";
+/** 封面未就绪时的底色；勿用白，否则卸视频后会整页白屏 */
+export const FULL_BLEED_COVER_FALLBACK_BG = "#0a0806";
 export const FULL_BLEED_VIDEO_OVERDRAW_PX = 2;
 export const FULLSCREEN_VIDEO_ASPECT = 16 / 9;
 
@@ -28,7 +31,6 @@ export const fullBleedCoverVideoStyles = StyleSheet.create({
   stage: {
     ...StyleSheet.absoluteFillObject,
     overflow: "hidden",
-    backgroundColor: FULL_BLEED_COVER_VIDEO_BACKDROP,
   },
   slot: {
     position: "absolute",
@@ -36,7 +38,6 @@ export const fullBleedCoverVideoStyles = StyleSheet.create({
   posterCover: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 4,
-    backgroundColor: FULL_BLEED_COVER_VIDEO_BACKDROP,
   },
 });
 

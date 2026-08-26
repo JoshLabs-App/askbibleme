@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { createElement, useMemo, type ReactNode } from "react";
 import {
+  Platform,
   StyleSheet,
   useWindowDimensions,
   type StyleProp,
@@ -12,6 +13,7 @@ import {
   parchmentColumnMaxWidth,
   parchmentContentPaddingHorizontal,
 } from "../read/parchmentColumnLayout";
+import { ParchmentDefaultPage } from "../read/ParchmentDefaultPage";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 
 /** 与读经首页 `READ_PARCHMENT_PAGE_TOP_HOME` 同量级，略留标题呼吸感 */
@@ -20,9 +22,9 @@ export const EXPLORE_PAGE_TOP_PAD = 40;
 /** 数算年日页中间经文区不透明度（30% 透明） */
 export const YEAR_DAY_COUNT_SCRIPTURE_TEXT_OPACITY = 0.7;
 
-/** 与读经/祷告羊皮卷页对齐；底纹由 explore `_layout` 的 {@link ReadParchmentBackground} 统一提供。 */
+/** 与读经/祷告羊皮卷页对齐；页面根须包 {@link ExploreParchmentPage}（屏内铺底）。 */
 export const exploreStyles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "transparent", overflow: "hidden" },
+  root: { flex: 1, backgroundColor: "transparent", overflow: Platform.OS === "android" ? "visible" : "hidden" },
   scroll: {
     width: "100%",
     alignSelf: "center",
@@ -34,6 +36,15 @@ export const exploreStyles = StyleSheet.create({
     lineHeight: 35,
     color: c.ink,
     textAlign: "center",
+  },
+  /** 探索页顶栏问候：单行、左右留白、过长截断 */
+  titleGreetingWrap: {
+    alignSelf: "center",
+    maxWidth: "82%",
+    paddingHorizontal: 16,
+  },
+  titleGreetingPressed: {
+    opacity: 0.72,
   },
   rule: {
     marginTop: 18,
@@ -280,6 +291,18 @@ export const exploreStyles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+/** 探索族页面共享根壳（屏内羊皮底；与读经同一张 JPG）。 */
+export function ExploreParchmentPage({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  // 本文件为 .ts，避免 JSX；createElement 与 .tsx 等价。
+  return createElement(ParchmentDefaultPage, { style, children });
+}
 
 export function useExploreScrollContentStyle(
   extra?: StyleProp<ViewStyle>,

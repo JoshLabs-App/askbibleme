@@ -16,6 +16,7 @@ import {
   DEFAULT_SCRIPTURE_LABEL_ZH,
 } from "../bible/types";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
+import { resolveReadDisplayLocale } from "./resolveReadDisplayLocale";
 
 type Args = {
   homeMode: boolean;
@@ -74,12 +75,18 @@ export function useReadCatalogHomeVerses({ homeMode, catalogFocused }: Args) {
     const task = InteractionManager.runAfterInteractions(() => {
       if (cancelled) return;
       const primaryMeta = translationCatalog.find((tr) => tr.id === primaryTranslationId);
+      const displayLocale = resolveReadDisplayLocale({
+        appLocale: locale,
+        translationLanguage: primaryMeta?.language,
+      });
       const labels = {
         labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
         labelEn: primaryMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
       };
       const versionLabel = String(
-        locale === "en" ? labels.labelEn : localizeZhText(locale, labels.labelZh) ?? "",
+        displayLocale === "en"
+          ? labels.labelEn
+          : localizeZhText(displayLocale, labels.labelZh) ?? "",
       ).trim();
       void (async () => {
         let readyPrimaryId = primaryTranslationId;
@@ -118,7 +125,7 @@ export function useReadCatalogHomeVerses({ homeMode, catalogFocused }: Args) {
             }
           }
           const loaded = chapterCache.get(cacheKey);
-          const bookName = loaded?.bookName || getScriptureBookDisplayName(ref.bookId, locale);
+          const bookName = getScriptureBookDisplayName(ref.bookId, displayLocale);
           const verseText =
             loaded?.verses.find((row) => row.verse === ref.verse)?.text?.trim() || "";
           const reference = `${bookName} ${ref.chapter}:${ref.verse}${

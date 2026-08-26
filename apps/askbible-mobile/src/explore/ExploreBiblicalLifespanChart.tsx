@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t, tFormat } from "../i18n/site-copy";
 import { getCenturySpanYears } from "./century-timeline";
 import {

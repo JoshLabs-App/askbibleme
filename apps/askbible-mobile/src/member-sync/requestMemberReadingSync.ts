@@ -1,7 +1,10 @@
 import { readMemberSession } from "../auth/memberSession";
 import { isApplyingRemoteMemberSync } from "./readingSyncLocal";
 import { recordMemberReadingSyncDebug } from "./memberReadingSyncDebug";
-import { flushMemberReadingSyncNow } from "./runMemberReadingSync";
+import {
+  flushMemberReadingSyncNow,
+  type MemberReadingSyncOutcome,
+} from "./runMemberReadingSync";
 
 const LOCAL_CHANGE_DEBOUNCE_MS = 1_500;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -23,4 +26,18 @@ export function notifyMemberReadingLocalChanged(reason: string): void {
       await flushMemberReadingSyncNow(session.sessionToken, syncReason);
     })();
   }, LOCAL_CHANGE_DEBOUNCE_MS);
+}
+
+/** 登出前先把未发出的本地变更推上去，避免轻松读经还在 1.5s 节流里就被清掉。 */
+export async function flushPendingMemberReadingLocalChanges(
+  reason = "sign-out",
+): Promise<MemberReadingSyncOutcome> {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  pendingReason = undefined;
+  const session = await readMemberSession();
+  if (!session?.sessionToken) return "skipped";
+  return flushMemberReadingSyncNow(session.sessionToken, reason);
 }

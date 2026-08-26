@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
+import { InteractionManager, Pressable, StyleSheet, View } from "react-native";
+import { ExploreText as Text } from "./ExploreText";
 import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";

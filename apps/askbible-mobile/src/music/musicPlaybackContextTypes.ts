@@ -46,6 +46,7 @@ export type MusicPlaybackContextValue = {
   toggleMusicRepeatAll: () => void;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
   setSleepTimerMinutes: (minutes: 0 | ShellSleepTimerMinutes) => void;
+  pauseShellPlayback: () => Promise<void>;
   musicCatalogUpdateAvailable: boolean;
   checkMusicCatalogUpdate: () => Promise<boolean>;
   downloadMusicCatalogUpdate: () => Promise<boolean>;

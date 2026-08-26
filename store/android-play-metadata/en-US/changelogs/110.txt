@@ -1,0 +1,4 @@
+Version 1.0.33
+• Daily verses on Home keep playing after the screen turns off
+• Playback continues through a long stretch of verses, not just a few
+• Verses keep going even when music is also playing

@@ -42,19 +42,18 @@ export function RegisterClient({ registerOpen }: Props) {
       setError(null);
       setPending(true);
       try {
-        const res = await fetch("/api/auth/askbible", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "register",
-            email: email.trim(),
-            password,
-            name: name.trim(),
-          }),
+        const { signUpAskbibleWebWithPassword } = await import("@/lib/askbible-web-auth-client");
+        const result = await signUpAskbibleWebWithPassword({
+          email: email.trim(),
+          password,
+          name: name.trim(),
         });
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok) {
-          setError(data.error || t("auth.errorNetwork"));
+        if (!result.ok) {
+          if (result.error === "email_confirmation_required") {
+            setError(t("auth.errorNetwork"));
+            return;
+          }
+          setError(result.error || t("auth.errorNetwork"));
           return;
         }
         await refresh();

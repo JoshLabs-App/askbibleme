@@ -18,10 +18,10 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView id="EXPO-SplashScreen" userLabel="SplashScreenLegacy" image="SplashScreenLegacy" contentMode="scaleAspectFit" clipsSubviews="true" userInteractionEnabled="false" translatesAutoresizingMaskIntoConstraints="false">
-                                <rect key="frame" x="126.5" y="356" width="140" height="140"/>
+                                <rect key="frame" x="36.5" y="266" width="320" height="320"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="140" id="EXPO-SplashWidth"/>
-                                    <constraint firstAttribute="height" constant="140" id="EXPO-SplashHeight"/>
+                                    <constraint firstAttribute="width" constant="320" id="EXPO-SplashWidth"/>
+                                    <constraint firstAttribute="height" constant="320" id="EXPO-SplashHeight"/>
                                 </constraints>
                             </imageView>
                         </subviews>

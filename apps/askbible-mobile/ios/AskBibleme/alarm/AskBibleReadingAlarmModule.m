@@ -21,6 +21,7 @@ static NSString *const kKeyMode = @"mode";
 static NSString *const kModeMusic = @"music";
 static NSString *const kModeScripture = @"scripture";
 static NSString *const kKeyLastHandledSlot = @"last_handled_slot";
+static NSString *const kKeyPendingNotificationWake = @"pending_notification_wake";
 static NSString *const kReadingReminderNotificationId = @"askbible-reading-reminder";
 static NSString *const kReadingReminderWeekdayIdPrefix = @"askbible-reading-reminder-wd-";
 static NSString *const kAutoContinueNotificationId = @"askbible-reading-alarm-auto-continue";
@@ -36,13 +37,22 @@ static AskBibleReadingAlarmModule *gReadingAlarmModuleInstance = nil;
 @property (nonatomic, assign) BOOL sessionContinued;
 @property (nonatomic, assign) UIBackgroundTaskIdentifier backgroundTaskId;
 - (void)handleNotificationWake;
+- (void)consumePendingNotificationWakeIfNeeded;
 @end
 
 @implementation AskBibleReadingAlarmBridge
 
 + (void)handleNotificationWake
 {
-  [gReadingAlarmModuleInstance handleNotificationWake];
+  if (gReadingAlarmModuleInstance) {
+    [gReadingAlarmModuleInstance handleNotificationWake];
+    return;
+  }
+  // 冷启动时 AppDelegate 可能早于 RN 模块 init；先记下，模块起来后再接。
+  NSUserDefaults *prefs = [[NSUserDefaults alloc] initWithSuiteName:kReadingAlarmPrefsSuite];
+  prefs = prefs ?: [NSUserDefaults standardUserDefaults];
+  [prefs setBool:YES forKey:kKeyPendingNotificationWake];
+  [prefs synchronize];
 }
 
 @end
@@ -65,6 +75,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
                                              selector:@selector(onAppDidBecomeActive)
                                                  name:UIApplicationDidBecomeActiveNotification
                                                object:nil];
+    [self consumePendingNotificationWakeIfNeeded];
   }
   return self;
 }
@@ -76,7 +87,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
 
 - (NSArray<NSString *> *)supportedEvents
 {
-  return @[ @"ReadingAlarmDismissed", @"ReadingAlarmAutoContinue" ];
+  return @[ @"ReadingAlarmDismissed", @"ReadingAlarmAutoContinue", @"ReadingAlarmPreludeSession" ];
 }
 
 - (NSUserDefaults *)alarmDefaults
@@ -154,13 +165,28 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
   if (![prefs boolForKey:kKeyPreludeActive]) {
     return;
   }
-  if ([self isScriptureMode:prefs]) {
-    return;
-  }
+  // 播放器已空（进程被杀 / 异常退出）或预备音乐已过期：清掉卡住的标记，否则点通知也起不来。
   NSTimeInterval started = [prefs doubleForKey:kKeyPreludeStartedAt];
-  if (started <= 0) {
+  NSTimeInterval elapsed = started > 0 ? ([[NSDate date] timeIntervalSince1970] - started) : 0;
+  BOOL playerAlive = self.player != nil && self.player.isPlaying;
+  if (playerAlive && elapsed <= kPreludeSeconds + 15.0) {
     return;
   }
+  [prefs setBool:NO forKey:kKeyPreludeActive];
+  [prefs removeObjectForKey:kKeyPreludeStartedAt];
+  [self.player stop];
+  self.player = nil;
+  [self endBackgroundPlaybackTask];
+}
+
+- (void)consumePendingNotificationWakeIfNeeded
+{
+  NSUserDefaults *prefs = [self alarmDefaults];
+  if (![prefs boolForKey:kKeyPendingNotificationWake]) {
+    return;
+  }
+  [prefs setBool:NO forKey:kKeyPendingNotificationWake];
+  [self handleNotificationWake];
 }
 
 - (BOOL)isReadingAlarmDueForAutoStart
@@ -237,7 +263,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
   NSUserDefaults *prefs = [self alarmDefaults];
   NSString *label = [prefs stringForKey:kKeyLabel];
   UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-  content.title = @"每日清晨闹钟";
+  content.title = @"每日读经提醒";
   content.body = label.length > 0 ? label : @"预备音乐结束，开始今日读经。";
   content.sound = [UNNotificationSound defaultSound];
   content.userInfo = @{ @"kind" : @"reading-alarm-auto-continue" };
@@ -254,7 +280,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
   NSUserDefaults *prefs = [self alarmDefaults];
   NSString *label = [prefs stringForKey:kKeyLabel];
   UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-  content.title = @"每日清晨闹钟";
+  content.title = @"每日读经提醒";
   content.body = label.length > 0 ? label : @"点击继续今日读经。";
   content.sound = [UNNotificationSound defaultSound];
   content.userInfo = @{ @"kind" : @"reading-alarm-auto-continue" };
@@ -268,6 +294,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
 
 - (void)handleNotificationWake
 {
+  [self recoverStalePreludeIfNeeded];
   NSUserDefaults *prefs = [self alarmDefaults];
   if ([prefs boolForKey:kKeyDismissed]) {
     return;
@@ -275,7 +302,9 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
   if ([prefs boolForKey:kKeyPreludeActive]) {
     return;
   }
+  // 已有未消费的读经交接：再发一次事件给 JS，而不是直接放弃。
   if ([prefs boolForKey:kKeyPendingAutoPlay]) {
+    [self sendEventWithName:@"ReadingAlarmAutoContinue" body:nil];
     return;
   }
   [self markCurrentSlotHandled];
@@ -291,7 +320,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
                                          center:(UNUserNotificationCenter *)center
 {
   UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
-  content.title = title.length > 0 ? title : @"Daily morning alarm";
+  content.title = title.length > 0 ? title : @"Daily reading reminder";
   content.body = body ?: @"";
   content.sound = [UNNotificationSound defaultSound];
   content.userInfo = @{ @"kind" : @"reading-reminder" };
@@ -336,7 +365,7 @@ RCT_EXPORT_MODULE(AskBibleReadingAlarm);
 
     NSInteger hour = [dict[@"hour"] integerValue];
     NSInteger minute = [dict[@"minute"] integerValue];
-    NSString *title = [dict[@"title"] isKindOfClass:[NSString class]] ? dict[@"title"] : @"Daily morning alarm";
+    NSString *title = [dict[@"title"] isKindOfClass:[NSString class]] ? dict[@"title"] : @"Daily reading reminder";
     NSString *body = [dict[@"body"] isKindOfClass:[NSString class]] ? dict[@"body"] : @"";
 
     NSSet<NSNumber *> *weekdays = [self parseWeekdays:dict[@"weekdays"]];
@@ -568,6 +597,7 @@ RCT_EXPORT_METHOD(startPrelude)
       [self.player play];
     }
   }
+  [self sendEventWithName:@"ReadingAlarmPreludeSession" body:nil];
 }
 
 - (void)startPreludeInternal
@@ -584,10 +614,14 @@ RCT_EXPORT_METHOD(dismissAlarm)
 - (void)onAppDidBecomeActive
 {
   [self recoverStalePreludeIfNeeded];
+  [self consumePendingNotificationWakeIfNeeded];
   NSUserDefaults *prefs = [self alarmDefaults];
   if ([prefs boolForKey:kKeyPendingAutoPlay] && ![prefs boolForKey:kKeyDismissed]) {
     [self sendEventWithName:@"ReadingAlarmAutoContinue" body:nil];
     return;
+  }
+  if ([prefs boolForKey:kKeyPreludeActive]) {
+    [self sendEventWithName:@"ReadingAlarmPreludeSession" body:nil];
   }
   if ([self isReadingAlarmDueForAutoStart]) {
     [self markCurrentSlotHandled];

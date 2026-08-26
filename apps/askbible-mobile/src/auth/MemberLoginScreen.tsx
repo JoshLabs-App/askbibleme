@@ -52,6 +52,7 @@ export function MemberLoginScreen() {
         if (message) setGoogleError(message);
         return;
       }
+      router.replace("/");
     } catch (err) {
       if (__DEV__) {
         console.warn("[MemberLoginScreen] Google sign-in threw", err);
@@ -79,6 +80,7 @@ export function MemberLoginScreen() {
         if (message) setAppleError(message);
         return;
       }
+      router.replace("/");
     } catch {
       setAppleError(t("auth.errorNetwork"));
     } finally {
@@ -102,6 +104,7 @@ export function MemberLoginScreen() {
         setError(result.error === "network" ? t("auth.errorNetwork") : result.error || t("auth.errorWrong"));
         return;
       }
+      router.replace("/");
     } catch {
       setError(t("auth.errorNetwork"));
     } finally {

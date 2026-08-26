@@ -50,12 +50,9 @@ type Props = {
   loopAllScenesEnabled: boolean;
   sceneId: string;
   selectScene: (id: string, opts?: { keepLoopMode?: boolean; source?: "user" | "auto" }) => void;
-  goldenVersePlaying: boolean;
-  goldenVerseAudible?: boolean;
+  goldenVerseOn: boolean;
   goldenVersePreparing?: boolean;
   onToggleGoldenVerse: () => void;
-  onPauseVerseTransport?: () => void;
-  onResumeVerseTransport?: () => void;
   liveVideoActive: boolean;
   onToggleLiveVideo: () => void;
   prefsVersion: number;
@@ -82,12 +79,9 @@ export function HomeNatureScreenBottomBand({
   loopAllScenesEnabled,
   sceneId,
   selectScene,
-  goldenVersePlaying,
-  goldenVerseAudible = false,
+  goldenVerseOn,
   goldenVersePreparing = false,
   onToggleGoldenVerse,
-  onPauseVerseTransport,
-  onResumeVerseTransport,
   liveVideoActive,
   onToggleLiveVideo,
   prefsVersion,
@@ -270,15 +264,9 @@ export function HomeNatureScreenBottomBand({
       ) : null}
       <View style={{ alignSelf: "stretch", width: "100%" }}>
         <HomeNatureAlbumStrip
-          goldenVersePlaying={goldenVersePlaying}
-          goldenVerseAudible={goldenVerseAudible}
+          goldenVerseOn={goldenVerseOn}
           goldenVersePreparing={goldenVersePreparing}
           onToggleGoldenVerse={onToggleGoldenVerse}
-          onPauseVerseTransport={onPauseVerseTransport}
-          onResumeVerseTransport={onResumeVerseTransport}
-          sceneToolsOpen={sceneToolsOpen}
-          onToggleSceneTools={onToggleSceneTools}
-          ambientActive={!!activeAmbientSlotId}
           onUserActivity={onUserActivity}
         />
       </View>

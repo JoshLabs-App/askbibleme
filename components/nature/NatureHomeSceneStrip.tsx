@@ -3,19 +3,15 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { HomeSceneThumb } from "@/components/nature/HomeSceneThumb";
-import {
-  homeSceneStripContentWidth,
-  homeSceneStripScrollX,
-  SCENE_LOOP_ALL_ID,
-} from "@/lib/nature/home-scene-strip-metrics";
+import { homeSceneStripContentWidth, homeSceneStripScrollX } from "@/lib/nature/home-scene-strip-metrics";
 import type { NatureVideoEntry } from "@/lib/nature/types";
 
 type Props = {
   scenes: NatureVideoEntry[];
   activeVideoId: string;
-  loopAllScenesEnabled: boolean;
+  liveVideoActive: boolean;
+  onToggleLiveVideo: () => void;
   onSelectScene: (id: string) => void;
-  onSelectLoopAll: () => void;
 };
 
 function sceneTitle(v: NatureVideoEntry, fallback: string): string {
@@ -23,18 +19,20 @@ function sceneTitle(v: NatureVideoEntry, fallback: string): string {
   return t || fallback;
 }
 
+/** 首页底部场景条：模糊静帧 + 场景缩略图（对齐 App，无「全部循环」） */
 export function NatureHomeSceneStrip({
   scenes,
   activeVideoId,
-  loopAllScenesEnabled,
+  liveVideoActive,
+  onToggleLiveVideo,
   onSelectScene,
-  onSelectLoopAll,
 }: Props) {
   const { t } = useLocale();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [viewportWidth, setViewportWidth] = useState(0);
   const unnamed = t("nature.scenes.unnamedProduct");
   const itemCount = scenes.length + 1;
+  const blurLabel = t("music.blur");
 
   const scrollToIndex = useCallback(
     (index: number, behavior: ScrollBehavior = "smooth") => {
@@ -57,12 +55,10 @@ export function NatureHomeSceneStrip({
   }, []);
 
   useEffect(() => {
-    if (!activeVideoId && !loopAllScenesEnabled) return;
-    const index = loopAllScenesEnabled
-      ? 0
-      : Math.max(0, scenes.findIndex((v) => v.id === activeVideoId) + 1);
+    if (!activeVideoId) return;
+    const index = Math.max(0, scenes.findIndex((v) => v.id === activeVideoId) + 1);
     scrollToIndex(index, "auto");
-  }, [activeVideoId, loopAllScenesEnabled, scenes, scrollToIndex]);
+  }, [activeVideoId, scenes, scrollToIndex]);
 
   if (!scenes.length) return null;
 
@@ -73,14 +69,15 @@ export function NatureHomeSceneStrip({
       <div ref={scrollRef} className="nature-home-edge-fade-scroll">
         <div className="nature-home-scene-row" style={{ minWidth: contentMinWidth }}>
           <HomeSceneThumb
-            key={SCENE_LOOP_ALL_ID}
-            selected={loopAllScenesEnabled}
-            fallbackLabel="∞"
-            ariaLabel={t("nature.scenes.loopAllAria")}
-            onPress={onSelectLoopAll}
+            key="scene-blur-toggle"
+            selected={!liveVideoActive}
+            icon="blur"
+            fallbackLabel={blurLabel}
+            ariaLabel={blurLabel}
+            onPress={onToggleLiveVideo}
           />
           {scenes.map((v) => {
-            const selected = !loopAllScenesEnabled && v.id === activeVideoId;
+            const selected = v.id === activeVideoId;
             const title = sceneTitle(v, unnamed);
             const thumb = v.thumbSrc?.trim() || v.previewFrameSrc?.trim() || "";
             return (

@@ -50,7 +50,7 @@ object ShellMainNativePlayer {
     object : Runnable {
       override fun run() {
         if (!awaitingJsAdvance) return
-        if (ShellPlaybackSession.kind != "scripture") {
+        if (ShellPlaybackSession.kind != "scripture" && ShellPlaybackSession.kind != "music") {
           clearAwaitingJsAdvance()
           return
         }
@@ -84,8 +84,11 @@ object ShellMainNativePlayer {
           return
         }
         // 再捅一次 JS（关屏后偶发第一次事件丢失）。
+        val eventName =
+          if (ShellPlaybackSession.kind == "music") "ShellMediaNativeMusicEnded"
+          else "ShellMediaNativeScriptureEnded"
         AskBibleShellMediaControlsModule.emitRemote(
-          "ShellMediaNativeScriptureEnded",
+          eventName,
           Arguments.createMap().apply {
             putDouble("positionSec", ShellPlaybackSession.durationSec)
             putDouble("durationSec", ShellPlaybackSession.durationSec)
@@ -489,6 +492,40 @@ object ShellMainNativePlayer {
       handler.removeCallbacks(jsAdvanceRetryRunnable)
       handler.postDelayed(jsAdvanceRetryRunnable, 1_200L)
       Log.i(TAG, "scripture queue empty; wait JS advance uri=$finished")
+      return
+    }
+    if (kind == "music") {
+      val next = ShellPlaybackSession.consumeQueuedUri()
+      if (!next.isNullOrBlank()) {
+        ShellPlaybackSession.assetUri = next
+        ShellPlaybackSession.positionSec = 0.0
+        ShellPlaybackSession.playing = true
+        val map = Arguments.createMap()
+        map.putBoolean("nativeChained", true)
+        map.putString("assetUri", next)
+        map.putDouble("positionSec", 0.0)
+        AskBibleShellMediaControlsModule.emitRemote("ShellMediaNativeMusicEnded", map)
+        startUri(context, next)
+        return
+      }
+      awaitingJsAdvance = true
+      lastCompletedUri = finished
+      jsAdvanceRetryCount = 0
+      ShellPlaybackSession.playing = true
+      releasePlayerLocked()
+      AskBibleShellMediaControlsModule.emitRemote("RemoteNext")
+      AskBibleShellMediaControlsModule.emitRemote(
+        "ShellMediaNativeMusicEnded",
+        Arguments.createMap().apply {
+          putDouble("positionSec", ShellPlaybackSession.durationSec)
+          putDouble("durationSec", ShellPlaybackSession.durationSec)
+          putBoolean("awaitingJs", true)
+        },
+      )
+      ShellPlaybackService.refreshIfRunning(context)
+      handler.removeCallbacks(jsAdvanceRetryRunnable)
+      handler.postDelayed(jsAdvanceRetryRunnable, 1_200L)
+      Log.i(TAG, "music queue empty; wait JS advance uri=$finished")
       return
     }
     ShellPlaybackSession.playing = false

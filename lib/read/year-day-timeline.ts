@@ -14,3 +14,64 @@ export function getYearDayTimeline(now: Date = new Date()): {
     daysInYear <= 1 ? 0 : Math.min(1, Math.max(0, (dayOfYear - 1) / (daysInYear - 1)));
   return { dayOfYear, daysInYear, progress };
 }
+
+export type YearDayRange = {
+  startDay: number;
+  endDay: number;
+};
+
+function localDateToDayOfYear(iso: string, year: number, yearStartMs: number): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m || Number(m[1]) !== year) return null;
+  const dayMs = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  const day = Math.floor((dayMs - yearStartMs) / 86_400_000) + 1;
+  return day >= 1 ? day : null;
+}
+
+export function buildYearReadRangesBeforeToday(
+  completedDates: readonly string[],
+  now: Date = new Date(),
+): YearDayRange[] {
+  const year = now.getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const { dayOfYear, daysInYear } = getYearDayTimeline(now);
+  const yearStartMs = yearStart.getTime();
+
+  const days: number[] = [];
+  for (const iso of completedDates) {
+    const day = localDateToDayOfYear(iso, year, yearStartMs);
+    if (day == null || day >= dayOfYear || day > daysInYear) continue;
+    days.push(day);
+  }
+  if (days.length === 0) return [];
+
+  days.sort((a, b) => a - b);
+  const ranges: YearDayRange[] = [];
+  let start = days[0]!;
+  let end = start;
+  for (let i = 1; i < days.length; i += 1) {
+    const d = days[i]!;
+    if (d === end || d === end + 1) {
+      end = d;
+      continue;
+    }
+    ranges.push({ startDay: start, endDay: end });
+    start = d;
+    end = d;
+  }
+  ranges.push({ startDay: start, endDay: end });
+  return ranges;
+}
+
+export function yearDayRangeToTrackFraction(
+  range: YearDayRange,
+  daysInYear: number,
+): { left: number; width: number } {
+  if (daysInYear <= 0) return { left: 0, width: 0 };
+  const start = Math.max(1, range.startDay);
+  const end = Math.min(daysInYear, Math.max(start, range.endDay));
+  return {
+    left: (start - 1) / daysInYear,
+    width: (end - start + 1) / daysInYear,
+  };
+}

@@ -1,0 +1,120 @@
+.read-plan-play-screen {
+  min-height: calc(100dvh - var(--home-bottom-nav-slot, 4.5rem));
+}
+
+.read-plan-play-screen__scroll {
+  padding-bottom: 7.5rem;
+}
+
+.read-plan-play-screen__dock {
+  padding-bottom: calc(max(0.25rem, env(safe-area-inset-bottom, 0px)) + 4.25rem);
+}
+
+.read-plan-play-screen__row--active {
+  background: rgba(92, 64, 48, 0.08);
+}
+
+.read-plan-play-screen__row-action {
+  transition: opacity 0.15s ease;
+}
+
+.read-plan-play-screen__row-action:active {
+  opacity: 0.7;
+}
+
+.read-plan-play-calendar {
+  margin-bottom: 0.5rem;
+}
+
+.read-plan-play-calendar__month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+.read-plan-play-calendar__nav {
+  display: inline-flex;
+  height: 30px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  color: var(--bc-read-book, #3d2e24);
+}
+
+.read-plan-play-calendar__month-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--bc-read-book, #3d2e24);
+}
+
+.read-plan-play-calendar__week-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.read-plan-play-calendar__weekday {
+  flex: 1;
+  padding: 1px 0;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.125;
+  font-weight: 500;
+  color: var(--bc-read-muted, rgba(61, 46, 36, 0.55));
+}
+
+.read-plan-play-calendar__cell {
+  flex: 1;
+  margin: 2px 0;
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 0;
+  background: transparent;
+  font-size: 1.125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--bc-read-book, #3d2e24);
+  cursor: pointer;
+}
+
+.read-plan-play-calendar__cell--pad {
+  pointer-events: none;
+}
+
+.read-plan-play-calendar__cell--today {
+  background: var(--bc-read-book, #3d2e24);
+  color: var(--bc-read-surface-solid, #faf6ee);
+  font-weight: 700;
+}
+
+.read-plan-play-calendar__cell--accent {
+  background: var(--brand-logo-background, #f5d547);
+  font-weight: 700;
+}
+
+.read-plan-play-calendar__cell--disabled:not(.read-plan-play-calendar__cell--accent) {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.read-plan-play-ndr-stages__row--current {
+  background: rgba(255, 252, 245, 0.9);
+}
+
+.read-plan-play-ndr-stages__row:active:not(:disabled) {
+  opacity: 0.72;
+}
+
+.dark .read-plan-play-calendar__month-title,
+.dark .read-plan-play-calendar__cell {
+  color: var(--bc-read-book, #e8dfd0);
+}
+
+.dark .read-plan-play-calendar__cell--today {
+  color: #1a1410;
+}

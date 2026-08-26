@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ReadChapterActionChrome } from "@/components/bible/ReadChapterActionChrome";
 import { ReadChapterCatalogQuickPicker } from "@/components/bible/ReadChapterCatalogQuickPicker";
+import { ReadScriptureAudioDockStrip } from "@/components/bible/ReadScriptureAudioDockStrip";
 import { ScriptureAudioDockStrip } from "@/components/bible/ScriptureAudioDockStrip";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
-import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
+import { isReadPlanPlayPath, readPlanPlayHref } from "@/lib/read/read-plan-play-route";
+import { isExploreHomeRoute } from "@/lib/explore/explore-route-chrome";
+import { isReadBibleHomeRoute } from "@/lib/read/read-route-chrome";
+import { parseReadChapterPathname } from "@/lib/read/resolve-chapter-page-scripture-play-target";
+import { shouldShowReadScriptureAudioDock } from "@/lib/read/read-scripture-dock-visibility";
+import { useReadChapterPageAudioAvailable } from "@/hooks/useReadChapterPageAudioAvailable";
 import {
   SHELL_TAB_BAR_ICON,
   SHELL_PLAY_ICON_SIZE_PX,
@@ -124,11 +130,13 @@ type Props = { placement: Placement; /** 电视壳：`/tv` */ shellRoot?: string
  */
 export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
   const { t } = useLocale();
-  const { canPlayMusic, playing, effectiveSrc, togglePlayMusic, togglePlayScripture, readHomeScripturePlaybackReady } =
-    useMusicShellPlayback();
+  const { canPlayMusic, playing, effectiveSrc, togglePlayMusic, loading } = useMusicShellPlayback();
   const readChapterRoute = useMemo(() => parseReadChapterRoute(pathname), [pathname]);
-  const isReadHome = isReadBibleHomePath(pathname);
+  const isPlanPlay = isReadPlanPlayPath(pathname);
+  const readChapterAudioAvailable = useReadChapterPageAudioAvailable();
+  const onChapterPage = parseReadChapterPathname(pathname) !== null;
   const [readCatalogOpen, setReadCatalogOpen] = useState(false);
   const { left: navLeft, right: navRight } = buildNavItems(shellRoot);
   const onReadTab =
@@ -136,10 +144,18 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
   const readFabUsesScripture = onReadTab;
   const musicActive = playing && !isCuvChapterAudioEffectiveSrc(effectiveSrc);
   const scriptureActive = playing && isCuvChapterAudioEffectiveSrc(effectiveSrc);
-  const canPlayFab = readFabUsesScripture
-    ? readChapterRoute !== null || (isReadHome && readHomeScripturePlaybackReady)
-    : canPlayMusic;
-  const fabActive = readFabUsesScripture ? scriptureActive : musicActive;
+  const canPlayFab = readFabUsesScripture ? true : canPlayMusic;
+  const fabActive = readFabUsesScripture ? isPlanPlay || scriptureActive : musicActive;
+
+  const showFullScriptureDock =
+    onReadTab &&
+    !isPlanPlay &&
+    shouldShowReadScriptureAudioDock({
+      readChapterAudioAvailable,
+      onChapterPage,
+      playing: scriptureActive,
+      scripturePreparing: loading && (scriptureActive || onChapterPage),
+    });
 
   useEffect(() => {
     if (readChapterRoute === null) setReadCatalogOpen(false);
@@ -191,6 +207,50 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
         </button>
       );
     }
+    if (item.labelKey === "nav.read") {
+      const onReadRoute = active;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          title={t(item.labelKey)}
+          aria-current={active ? "page" : undefined}
+          aria-label={t(item.labelKey)}
+          className={iconLinkClass(active)}
+          onClick={(event) => {
+            navTapTarget(item);
+            if (!onReadRoute) return;
+            event.preventDefault();
+            if (isReadBibleHomeRoute(pathname)) return;
+            router.replace(shellHref("/read", shellRoot));
+          }}
+        >
+          {renderTabIcon(item)}
+        </Link>
+      );
+    }
+    if (item.labelKey === "nav.explore") {
+      const onExploreRoute = active;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          title={t(item.labelKey)}
+          aria-current={active ? "page" : undefined}
+          aria-label={t(item.labelKey)}
+          className={iconLinkClass(active)}
+          onClick={(event) => {
+            navTapTarget(item);
+            if (!onExploreRoute) return;
+            event.preventDefault();
+            if (isExploreHomeRoute(pathname)) return;
+            router.replace(shellHref("/explore", shellRoot));
+          }}
+        >
+          {renderTabIcon(item)}
+        </Link>
+      );
+    }
     return (
       <Link
         key={item.href}
@@ -218,7 +278,11 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
 
   return (
     <div className={outer}>
-      <ScriptureAudioDockStrip placement={placement} />
+      {showFullScriptureDock ? (
+        <ReadScriptureAudioDockStrip placement={placement} />
+      ) : (
+        <ScriptureAudioDockStrip placement={placement} />
+      )}
       <ReadChapterActionChrome />
       <nav className="home-bottom-nav__bar pointer-events-auto" aria-label={t("nav.mainLabel")}>
         <div className="home-bottom-nav__side home-bottom-nav__side--left">
@@ -229,19 +293,24 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
           type="button"
           disabled={!canPlayFab}
           aria-label={
-            !canPlayFab
-              ? t("playback.noTrack")
-              : readFabUsesScripture
-                ? scriptureActive
-                  ? t("pages.read.chapterChromeAudioPause")
-                  : t("pages.read.chapterChromeAudio")
+            readFabUsesScripture
+              ? isPlanPlay
+                ? t("pages.read.planPlayTitle")
+                : t("pages.read.planPlayTitle")
+              : !canPlayFab
+                ? t("playback.noTrack")
                 : musicActive
                   ? t("playback.pauseMusic")
                   : t("playback.playMusic")
           }
-          onClick={() =>
-            void (readFabUsesScripture ? togglePlayScripture() : togglePlayMusic())
-          }
+          onClick={() => {
+            if (readFabUsesScripture) {
+              if (isPlanPlay) return;
+              router.push(readPlanPlayHref());
+              return;
+            }
+            void togglePlayMusic();
+          }}
           className={[
             "home-bottom-nav__play",
             fabActive ? "home-bottom-nav__play--active" : "",
@@ -249,12 +318,21 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
             .filter(Boolean)
             .join(" ")}
         >
-          <ShellMaterialIcon
-            name={fabActive ? "pause" : "play-arrow"}
-            size={fabActive ? 28 : SHELL_PLAY_ICON_SIZE_PX}
-            color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
-            className="home-bottom-nav__play-icon"
-          />
+          {readFabUsesScripture ? (
+            <ShellMaterialIcon
+              name="account-voice"
+              size={SHELL_PLAY_ICON_SIZE_PX}
+              color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
+              className="home-bottom-nav__play-icon"
+            />
+          ) : (
+            <ShellMaterialIcon
+              name={fabActive ? "pause" : "play-arrow"}
+              size={fabActive ? 28 : SHELL_PLAY_ICON_SIZE_PX}
+              color={fabActive ? "var(--brand-logo-background)" : SHELL_TAB_BAR_ICON}
+              className="home-bottom-nav__play-icon"
+            />
+          )}
         </button>
 
         <div className="home-bottom-nav__side home-bottom-nav__side--right">

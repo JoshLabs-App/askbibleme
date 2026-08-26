@@ -5,7 +5,6 @@ import { BibleCatalogReadOutline } from "@/components/bible/BibleCatalogReadOutl
 import { ReadBibleHomeTopActions } from "@/components/bible/ReadBibleHomeTopActions";
 import { ReadBibleHomeVerseRotator } from "@/components/bible/ReadBibleHomeVerseRotator";
 import {
-  ReadTodayPlanFooter,
   ReadTodayPlanReadings,
 } from "@/components/bible/ReadTodayPlanPanel";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -16,6 +15,7 @@ import { getScriptureCanonCatalogSectionsClient } from "@/lib/bible/scripture-ca
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import type { ReadHomeVerseItem } from "@/lib/read/read-home-verse-rotation";
 import { readLastReadPosition } from "@/lib/read/read-last-position";
+import { warmScriptureSearchWeb } from "@/lib/read/warm-scripture-search-web";
 
 type Props = {
   readingPlanRegistry: ReadingPlanRegistryEntry[];
@@ -30,7 +30,7 @@ export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) 
     [locale],
   );
   const plan = useTodayReadingPlan(readingPlanRegistry);
-  const { translation } = useReadBibleTranslationSettings();
+  const { translation, translationCatalogReady } = useReadBibleTranslationSettings();
   useReadHomeScripturePlaybackReady({
     payload: plan.payload,
     defaultTranslationId: translation.primaryTranslationId,
@@ -41,6 +41,11 @@ export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) 
     const pos = readLastReadPosition();
     setLastReadBookId(pos?.bookId);
   }, []);
+
+  useEffect(() => {
+    if (!translationCatalogReady || !translation.primaryTranslationId) return;
+    void warmScriptureSearchWeb(translation.primaryTranslationId);
+  }, [translation.primaryTranslationId, translationCatalogReady]);
 
   const hasCatalog = catalogSections.length > 0;
 
@@ -66,8 +71,7 @@ export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) 
             <div className="bible-catalog-page--read bible-catalog-on-parchment min-h-0 w-full">
               <BibleCatalogReadOutline
                 sections={catalogSections}
-                paginateByTestament
-                showBookSummary
+                homeMode
                 activeBookId={lastReadBookId}
               />
             </div>
@@ -79,7 +83,6 @@ export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) 
         </div>
       </section>
 
-      <ReadTodayPlanFooter plan={plan} variant="home" />
       <ReadBibleHomeVerseRotator verses={homeVerses} />
     </div>
   );

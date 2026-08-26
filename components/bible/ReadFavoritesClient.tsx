@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import type { AppLocale } from "@/lib/i18n/config";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import {
   getScriptureVerseBookmarkStoreServerSnapshot,
   getScriptureVerseBookmarkStoreSnapshot,
@@ -11,14 +14,39 @@ import {
 } from "@/lib/bible/scripture-verse-bookmarks-client";
 import { listScriptureVerseBookmarks } from "@/lib/bible/scripture-verse-bookmarks";
 
+function translationOptionLabel(
+  tr: { labelZh: string; labelEn: string },
+  locale: AppLocale,
+): string {
+  if (locale === "en") return tr.labelEn;
+  if (locale === "zh-TW") return toZhTwText(tr.labelZh);
+  return tr.labelZh;
+}
+
 export function ReadFavoritesClient() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { translationCatalog } = useReadBibleTranslationSettings();
   const store = useSyncExternalStore(
     subscribeScriptureVerseBookmarks,
     getScriptureVerseBookmarkStoreSnapshot,
     getScriptureVerseBookmarkStoreServerSnapshot,
   );
   const items = listScriptureVerseBookmarks(store);
+
+  const translationLabel = useCallback(
+    (translationId: string) => {
+      const meta = translationCatalog.find((tr) => tr.id === translationId);
+      if (!meta) return translationId;
+      return translationOptionLabel(meta, locale);
+    },
+    [locale, translationCatalog],
+  );
+
+  const bookmarkHref = useMemo(
+    () => (bookId: string, chapter: number, verse: number) =>
+      `/read/${encodeURIComponent(bookId)}/${chapter}?verse=${verse}`,
+    [],
+  );
 
   return (
     <section className="mx-auto w-full max-w-2xl px-4 pb-24 pt-6 sm:px-6">
@@ -44,10 +72,14 @@ export function ReadFavoritesClient() {
             >
               <div className="flex items-start justify-between gap-3">
                 <Link
-                  href={`/read/${item.bookId}/${item.chapter}`}
+                  href={bookmarkHref(item.bookId, item.chapter, item.verse)}
                   className="text-sm font-medium text-amber-950 underline decoration-amber-900/25 underline-offset-4 dark:text-stone-100 dark:decoration-stone-400/30"
                 >
                   {item.bookName} {item.chapter}:{item.verse}
+                  <span className="font-normal text-amber-900/60 dark:text-stone-400">
+                    {" "}
+                    · {translationLabel(item.translationId)}
+                  </span>
                 </Link>
                 <button
                   type="button"
@@ -66,4 +98,3 @@ export function ReadFavoritesClient() {
     </section>
   );
 }
-

@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { ReadBibleTypographySettingsControl } from "@/components/bible/ReadBibleTypographySettingsControl";
+import { useReadBibleTypography } from "@/components/bible/ReadBibleTypographyProvider";
 import { useReadWideQuickPanels } from "@/components/bible/ReadWideQuickPanels";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
+import { useReadChapterPageAudioAvailable } from "@/hooks/useReadChapterPageAudioAvailable";
+import { parseReadChapterPathname } from "@/lib/read/resolve-chapter-page-scripture-play-target";
 
 function IconBack() {
   return (
@@ -24,11 +28,23 @@ function IconBack() {
 const btnClass =
   "read-chapter-top-action inline-flex h-[52px] w-[52px] items-center justify-center rounded-full text-white transition active:scale-[0.97] [filter:drop-shadow(0_1px_6px_rgba(0,0,0,0.55))_drop-shadow(0_0_1px_rgba(0,0,0,0.8))]";
 
+const sizeBtnClass = `${btnClass} pointer-events-auto text-[22px] font-semibold leading-none tabular-nums disabled:opacity-40`;
+
 /** 读经章顶栏浮动操作 — 对齐 iOS ReadChapterScreen */
 export function ReadChapterTopActions() {
   const { t } = useLocale();
   const router = useRouter();
+  const pathname = usePathname() ?? "";
   const { isWideScreen, openPanel } = useReadWideQuickPanels();
+  const { sizeAtMin, sizeAtMax, bumpSize } = useReadBibleTypography();
+  const readChapterAudioAvailable = useReadChapterPageAudioAvailable();
+  const onChapterPage = parseReadChapterPathname(pathname) !== null;
+  const hideTopSearch = onChapterPage && readChapterAudioAvailable;
+  const searchHref = useMemo(() => {
+    const route = parseReadChapterPathname(pathname);
+    if (!route) return "/read/search";
+    return `/read/search?bookId=${encodeURIComponent(route.bookId)}&chapter=${route.chapter}`;
+  }, [pathname]);
 
   return (
     <>
@@ -57,24 +73,26 @@ export function ReadChapterTopActions() {
         <div className="pointer-events-auto self-end">
           <ReadBibleTypographySettingsControl buttonSize={52} iconSize={28} />
         </div>
-        {isWideScreen ? (
-          <button
-            type="button"
-            className={`${btnClass} pointer-events-auto`}
-            aria-label={t("pages.read.chapterChromeSearch")}
-            onClick={() => openPanel("search")}
-          >
-            <ShellMaterialIcon name="search" size={28} color="#fff" />
-          </button>
-        ) : (
-          <Link
-            href="/read/search"
-            className={`${btnClass} pointer-events-auto`}
-            aria-label={t("pages.read.chapterChromeSearch")}
-          >
-            <ShellMaterialIcon name="search" size={28} color="#fff" />
-          </Link>
-        )}
+        {!hideTopSearch ? (
+          isWideScreen ? (
+            <button
+              type="button"
+              className={`${btnClass} pointer-events-auto`}
+              aria-label={t("pages.read.chapterChromeSearch")}
+              onClick={() => openPanel("search")}
+            >
+              <ShellMaterialIcon name="search" size={28} color="#fff" />
+            </button>
+          ) : (
+            <Link
+              href={searchHref}
+              className={`${btnClass} pointer-events-auto`}
+              aria-label={t("pages.read.chapterChromeSearch")}
+            >
+              <ShellMaterialIcon name="search" size={28} color="#fff" />
+            </Link>
+          )
+        ) : null}
         {isWideScreen ? (
           <button
             type="button"
@@ -93,6 +111,24 @@ export function ReadChapterTopActions() {
             <ShellMaterialIcon name="bookmark-border" size={28} color="#fff" />
           </Link>
         )}
+        <button
+          type="button"
+          className={sizeBtnClass}
+          aria-label={t("pages.read.typography.sizeSmallerAria")}
+          disabled={sizeAtMin}
+          onClick={() => bumpSize(-1)}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          className={sizeBtnClass}
+          aria-label={t("pages.read.typography.sizeLargerAria")}
+          disabled={sizeAtMax}
+          onClick={() => bumpSize(1)}
+        >
+          +
+        </button>
       </div>
     </>
   );

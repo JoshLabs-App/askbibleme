@@ -1,29 +1,59 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScriptureSearchHighlightedText } from "@/components/bible/ScriptureSearchHighlightedText";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useReadBibleTranslationSettings } from "@/components/bible/ReadBibleTypographyProvider";
 import {
   SCRIPTURE_SEARCH_MIN_LEN,
+  type ScriptureSearchChapterRef,
   type ScriptureSearchHit,
   type ScriptureSearchScope,
 } from "@/lib/bible/scripture-search";
+import { readLastReadPosition } from "@/lib/read/read-last-position";
+import {
+  getScriptureSearchScope,
+  writeScriptureSearchScope,
+} from "@/lib/read/scripture-search-scope-prefs";
 import {
   pushScriptureRecentSearch,
   readScriptureRecentSearches,
 } from "@/lib/read/scripture-recent-searches";
 import { resolveReadChapterPrimaryTranslationId } from "@/lib/read/read-bible-translation-prefs";
+import { warmScriptureSearchWeb } from "@/lib/read/warm-scripture-search-web";
 
 const SCOPE_OPTIONS: { key: ScriptureSearchScope; labelKey: string }[] = [
   { key: "all", labelKey: "pages.read.scriptureSearchScopeAll" },
   { key: "old", labelKey: "pages.read.scriptureSearchScopeOld" },
   { key: "new", labelKey: "pages.read.scriptureSearchScopeNew" },
+  { key: "chapter", labelKey: "pages.read.scriptureSearchScopeChapter" },
 ];
 
-export function ReadScriptureSearchClient() {
+function parseChapterRefFromParams(
+  bookIdRaw: string | null,
+  chapterRaw: string | null,
+): ScriptureSearchChapterRef | null {
+  const bookId = String(bookIdRaw ?? "").trim();
+  const chapter = Number(chapterRaw);
+  if (!bookId || !Number.isInteger(chapter) || chapter < 1) return null;
+  return { bookId, chapter };
+}
+
+type Props = {
+  /** 宽屏章页内嵌搜索：无 URL 查询时注入当前章。 */
+  routeChapterRef?: ScriptureSearchChapterRef | null;
+};
+
+export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp = null }: Props = {}) {
   const { t, locale } = useLocale();
+  const searchParams = useSearchParams();
+  const routeChapterRefFromUrl = useMemo(
+    () => parseChapterRefFromParams(searchParams.get("bookId"), searchParams.get("chapter")),
+    [searchParams],
+  );
+  const routeChapterRef = routeChapterRefFromUrl ?? routeChapterRefProp ?? null;
   const { translation, translationCatalog, translationCatalogReady } = useReadBibleTranslationSettings();
   const searchTranslationId = useMemo(() => {
     if (!translationCatalogReady || translationCatalog.length === 0) {
@@ -38,13 +68,19 @@ export function ReadScriptureSearchClient() {
       locale,
     );
   }, [locale, translation, translationCatalog, translationCatalogReady]);
-  const [scope, setScope] = useState<ScriptureSearchScope>("all");
+  const [scope, setScopeState] = useState<ScriptureSearchScope>(() => getScriptureSearchScope());
+  const [chapterRef, setChapterRef] = useState<ScriptureSearchChapterRef | null>(routeChapterRef);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ScriptureSearchHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  const setScope = useCallback((next: ScriptureSearchScope) => {
+    setScopeState(next);
+    writeScriptureSearchScope(next);
+  }, []);
 
   const pushRecentSearch = useCallback((raw: string) => {
     const record = pushScriptureRecentSearch(raw);
@@ -55,12 +91,35 @@ export function ReadScriptureSearchClient() {
     setRecentSearches(readScriptureRecentSearches().terms);
   }, []);
 
+  useEffect(() => {
+    if (!translationCatalogReady || !searchTranslationId) return;
+    void warmScriptureSearchWeb(searchTranslationId);
+  }, [searchTranslationId, translationCatalogReady]);
+
+  useEffect(() => {
+    if (routeChapterRef) {
+      setChapterRef(routeChapterRef);
+      return;
+    }
+    const pos = readLastReadPosition();
+    if (pos) {
+      setChapterRef((prev) => prev ?? { bookId: pos.bookId, chapter: pos.chapter });
+    }
+  }, [routeChapterRef]);
+
   const runSearch = useCallback(
     async (raw: string) => {
       const q = raw.trim();
       if (!q) {
         setResults([]);
         setSearched(false);
+        setError(null);
+        return;
+      }
+      if (q.length < SCRIPTURE_SEARCH_MIN_LEN) return;
+      if (scope === "chapter" && !chapterRef) {
+        setResults([]);
+        setSearched(true);
         setError(null);
         return;
       }
@@ -72,6 +131,10 @@ export function ReadScriptureSearchClient() {
           translationId: searchTranslationId,
           scope,
         });
+        if (scope === "chapter" && chapterRef) {
+          params.set("bookId", chapterRef.bookId);
+          params.set("chapter", String(chapterRef.chapter));
+        }
         const res = await fetch(`/api/read/scripture-search?${params.toString()}`, { cache: "no-store" });
         const j = (await res.json()) as { ok?: boolean; results?: ScriptureSearchHit[]; error?: string };
         if (!res.ok || j.ok === false) {
@@ -93,7 +156,7 @@ export function ReadScriptureSearchClient() {
         setLoading(false);
       }
     },
-    [searchTranslationId, pushRecentSearch, scope, t],
+    [chapterRef, searchTranslationId, pushRecentSearch, scope, t],
   );
 
   useEffect(() => {
@@ -108,12 +171,14 @@ export function ReadScriptureSearchClient() {
       void runSearch(q);
     }, 320);
     return () => clearTimeout(timer);
-  }, [query, scope, runSearch]);
+  }, [query, scope, chapterRef, runSearch]);
 
   const hint =
     query.trim().length > 0 && query.trim().length < SCRIPTURE_SEARCH_MIN_LEN
       ? t("pages.read.scriptureSearchMinHint")
-      : null;
+      : scope === "chapter" && !chapterRef
+        ? t("pages.read.scriptureSearchNoChapterHint")
+        : null;
 
   return (
     <div className="read-scripture-search">

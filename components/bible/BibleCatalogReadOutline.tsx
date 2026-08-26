@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { ShellMaterialCommunityIcon } from "@/components/shell/ShellMaterialCommunityIcon";
 import {
   formatBibleBookHistoryEraAriaZh,
   formatBibleBookHistoryEraCompact,
@@ -19,6 +20,8 @@ import { canonSectionTheme } from "@/lib/read/canon-section-theme";
 
 type Props = {
   sections: ScriptureCanonCatalogSection[];
+  /** 对齐 iOS `ReadCatalogScreen` homeMode：双列目录 + 可选卷简介 */
+  homeMode?: boolean;
   paginateByTestament?: boolean;
   showBookSummary?: boolean;
   activeBookId?: string;
@@ -123,6 +126,7 @@ function groupSectionsByTestament(sections: ScriptureCanonCatalogSection[]) {
 /** 旧约 / 新约分组；点卷名在点击位置附近滑出选章 */
 export function BibleCatalogReadOutline({
   sections,
+  homeMode = false,
   paginateByTestament = false,
   showBookSummary = false,
   activeBookId,
@@ -133,6 +137,10 @@ export function BibleCatalogReadOutline({
 }: Props) {
   const { t, locale } = useLocale();
   const groups = groupSectionsByTestament(sections);
+  const effectivePaginate = homeMode ? false : paginateByTestament;
+  const [summaryToggleOn, setSummaryToggleOn] = useState(false);
+  const effectiveShowBookSummary = homeMode ? summaryToggleOn : showBookSummary;
+  const useHomeBookRows = homeMode || showBookSummary;
   const [activeTestament, setActiveTestament] = useState<"old" | "new">("new");
   const catalogBookIds = useMemo(
     () => sections.flatMap((section) => section.books.map((book) => book.bookId)),
@@ -141,9 +149,9 @@ export function BibleCatalogReadOutline({
   const [completedByBook, setCompletedByBook] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (!paginateByTestament) return;
+    if (!effectivePaginate) return;
     setActiveTestament("new");
-  }, [paginateByTestament]);
+  }, [effectivePaginate]);
 
   useEffect(() => {
     const reload = () => setCompletedByBook(readCompletedChapterCountsByBook(catalogBookIds));
@@ -152,8 +160,8 @@ export function BibleCatalogReadOutline({
   }, [catalogBookIds]);
 
   const visibleGroups = useMemo(
-    () => (paginateByTestament ? groups.filter((g) => g.testament === activeTestament) : groups),
-    [groups, paginateByTestament, activeTestament],
+    () => (effectivePaginate ? groups.filter((g) => g.testament === activeTestament) : groups),
+    [groups, effectivePaginate, activeTestament],
   );
 
   const testamentIntro = READ_TESTAMENT_INTRO[locale] ?? READ_TESTAMENT_INTRO["zh-CN"];
@@ -163,7 +171,7 @@ export function BibleCatalogReadOutline({
   const [portalReady, setPortalReady] = useState(false);
   const [layoutTick, setLayoutTick] = useState(0);
 
-  const centerChapterSheet = showBookSummary && !jumpCatalog;
+  const centerChapterSheet = useHomeBookRows && !jumpCatalog;
 
   const panelLayout = useMemo(() => {
     void layoutTick;
@@ -332,7 +340,7 @@ export function BibleCatalogReadOutline({
     <>
       <div
         className={
-          paginateByTestament
+          effectivePaginate
             ? [
                 "bc-home-testament-frame mb-1.5 w-full",
                 activeTestament === "old" ? "bc-home-testament-frame--old" : "bc-home-testament-frame--new",
@@ -340,7 +348,7 @@ export function BibleCatalogReadOutline({
             : "contents"
         }
       >
-        {paginateByTestament ? (
+        {effectivePaginate ? (
           <>
             <div className="bc-home-testament-pager" role="tablist" aria-label={t("pages.read.catalogSection")}>
               <button
@@ -372,6 +380,39 @@ export function BibleCatalogReadOutline({
           </>
         ) : null}
 
+      {homeMode ? (
+        <div className="bc-home-testament-headers-row">
+          <div className="bc-home-testament-header-side bible-catalog-read-testament--old">
+            <p className="bible-catalog-read-testament-label bible-catalog-read-testament-label--column">
+              <span className="bible-catalog-read-testament-label-text">
+                {t("pages.read.catalogTestamentOld")}
+              </span>
+            </p>
+          </div>
+          <button
+            type="button"
+            className="bc-home-summary-toggle"
+            aria-pressed={summaryToggleOn}
+            aria-label={t("pages.read.catalogBookSummaryToggleA11y")}
+            title={t("pages.read.catalogBookSummaryToggle")}
+            onClick={() => setSummaryToggleOn((on) => !on)}
+          >
+            <ShellMaterialCommunityIcon
+              name="notes"
+              size={22}
+              color={summaryToggleOn ? "var(--bc-read-book)" : "var(--bc-read-faint)"}
+            />
+          </button>
+          <div className="bc-home-testament-header-side bible-catalog-read-testament--new">
+            <p className="bible-catalog-read-testament-label bible-catalog-read-testament-label--column">
+              <span className="bible-catalog-read-testament-label-text">
+                {t("pages.read.catalogTestamentNew")}
+              </span>
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       {jumpCatalog ? (
         <div className="bc-jump-testament-headers" aria-hidden>
           {visibleGroups.map((group) => (
@@ -390,7 +431,8 @@ export function BibleCatalogReadOutline({
       <nav
         className={[
           "bible-catalog-read-outline",
-          showBookSummary ? "bible-catalog-read-outline--home" : "",
+          useHomeBookRows ? "bible-catalog-read-outline--home" : "",
+          homeMode ? "bible-catalog-read-outline--home-columns bible-catalog-read-outline--home-compact" : "",
           jumpCatalog ? "bible-catalog-read-outline--jump-columns bible-catalog-on-parchment" : "",
         ]
           .filter(Boolean)
@@ -405,13 +447,14 @@ export function BibleCatalogReadOutline({
               "bible-catalog-read-testament",
               `bible-catalog-read-testament--${group.testament}`,
               jumpCatalog ? "bc-jump-testament" : "",
+              homeMode ? "bible-catalog-read-testament--column" : "",
             ]
               .filter(Boolean)
               .join(" ")}
-            aria-labelledby={paginateByTestament ? undefined : `bc-testament-${group.testament}`}
+            aria-labelledby={effectivePaginate ? undefined : `bc-testament-${group.testament}`}
           >
             <div className="bible-catalog-read-testament-body">
-              {!paginateByTestament && !jumpCatalog ? (
+              {!effectivePaginate && !jumpCatalog && !homeMode ? (
                 <p
                   id={`bc-testament-${group.testament}`}
                   className="bible-catalog-read-testament-label"
@@ -423,7 +466,7 @@ export function BibleCatalogReadOutline({
               ) : null}
               {group.sections.map((section) => {
                 const plainSection =
-                  showBookSummary &&
+                  useHomeBookRows &&
                   (section.sectionId === "canon-torah" || section.sectionId === "canon-gospels");
                 const sectionTheme = canonSectionTheme(section.sectionId, group.testament);
                 return (
@@ -432,7 +475,8 @@ export function BibleCatalogReadOutline({
                   id={section.sectionId}
                   className={[
                     "bible-catalog-read-block",
-                    showBookSummary ? "bc-home-section-block" : "",
+                    useHomeBookRows ? "bc-home-section-block" : "",
+                    homeMode ? "bc-home-section-block--stripe" : "",
                     plainSection ? "bc-home-section-block--plain" : "",
                     jumpCatalog ? "bc-jump-section-block" : "",
                   ]
@@ -442,10 +486,12 @@ export function BibleCatalogReadOutline({
                   style={
                     jumpCatalog
                       ? ({ ["--bc-jump-accent" as string]: sectionTheme.accent } as React.CSSProperties)
-                      : undefined
+                      : homeMode
+                        ? ({ ["--bc-section-accent" as string]: sectionTheme.accent } as React.CSSProperties)
+                        : undefined
                   }
                 >
-                  {showBookSummary ? (
+                  {useHomeBookRows ? (
                     <h2 className="bc-home-section-title">{section.title}</h2>
                   ) : jumpCatalog ? (
                     <h2
@@ -462,7 +508,7 @@ export function BibleCatalogReadOutline({
                   )}
                   <div
                     className={
-                      showBookSummary
+                      useHomeBookRows
                         ? "bc-home-books"
                         : jumpCatalog
                           ? "bc-jump-books"
@@ -482,14 +528,16 @@ export function BibleCatalogReadOutline({
                       const selected = jumpCatalog
                         ? (jumpHighlightedBookId ?? activeBookId) === book.bookId
                         : activeBookId === book.bookId;
+                      const showHomeProgress = useHomeBookRows && !homeMode && totalChapters > 0;
 
-                      if (showBookSummary) {
+                      if (useHomeBookRows) {
                         return (
                           <button
                             key={book.bookId}
                             type="button"
                             className={[
                               "bc-home-book-row",
+                              homeMode ? "bc-home-book-row--compact" : "",
                               selected ? "bc-home-book-row--active" : "",
                             ]
                               .filter(Boolean)
@@ -502,8 +550,10 @@ export function BibleCatalogReadOutline({
                                   : t("pages.read.catalogTestamentNew"),
                                 section.title,
                                 book.bookName,
-                                book.summary,
-                                totalChapters > 0 ? `已读 ${completedChapters}/${totalChapters} 章` : "",
+                                effectiveShowBookSummary && book.summary ? book.summary : "",
+                                showHomeProgress && totalChapters > 0
+                                  ? `已读 ${completedChapters}/${totalChapters} 章`
+                                  : "",
                                 "在点击处打开选章",
                               ]
                                 .filter(Boolean)
@@ -517,10 +567,10 @@ export function BibleCatalogReadOutline({
                             </span>
                             <span className="bc-home-book-main">
                               <span className="bc-home-book-name">{book.bookName}</span>
-                              {book.summary ? (
+                              {effectiveShowBookSummary && book.summary ? (
                                 <span className="bc-home-book-summary">{book.summary}</span>
                               ) : null}
-                              {totalChapters > 0 ? (
+                              {showHomeProgress ? (
                                 <span className="bc-home-book-progress-track" aria-hidden>
                                   <span
                                     className="bc-home-book-progress-fill"
@@ -529,7 +579,7 @@ export function BibleCatalogReadOutline({
                                 </span>
                               ) : null}
                             </span>
-                            {totalChapters > 0 ? (
+                            {showHomeProgress ? (
                               <span className="bc-home-book-meta" aria-hidden>
                                 <span className="bc-home-book-progress-text">
                                   {completedChapters}/{totalChapters}

@@ -349,6 +349,24 @@ final class AskBibleMusicService: NSObject {
         syncMusicDuckForVerse()
         return
       }
+      // 队列/元数据同步（无 userPlay）：播放器已在句中则勿 beginOrResume（缓冲期 rate=0 也会被误判重建）。
+      if !userPlay, versePhase == "content", let versePlayer, versePlayer.currentItem != nil {
+        let uri = (merged["assetUri"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let incomingId = uri.isEmpty ? nil : musicIdentity(uri)
+        let currentId = musicIdentity(verseAssetUri ?? "")
+        if incomingId == nil || incomingId == currentId || currentId == nil {
+          if !uri.isEmpty && (verseAssetUri == nil || verseAssetUri?.isEmpty == true) {
+            verseAssetUri = uri
+          }
+          if !isPlayerActivelyPlaying(versePlayer) {
+            versePlayer.play()
+          }
+          syncMusicDuckForVerse()
+          publishNowPlaying(playing: isPlaying || isVersePlaying, lightweight: appInBackground)
+          log("app verse metadata/queue sync skip beginOrResume")
+          return
+        }
+      }
       beginOrResumeVerse(payload: merged)
       syncMusicDuckForVerse()
       return
@@ -749,11 +767,20 @@ final class AskBibleMusicService: NSObject {
 
     var position = doubleValue(payload["positionSec"]) ?? 0
     let userPlay = boolValue(payload["userPlay"])
+    let forceRestart = boolValue(payload["forceRestart"])
     let same =
       musicIdentity(assetUri) != nil
       && musicIdentity(assetUri) == musicIdentity(verseAssetUri ?? "")
     if same, let versePlayer {
+      let sec = CMTimeGetSeconds(versePlayer.currentTime())
       // userPlay + 位置靠近 0：锁屏 Previous 重开当前句，勿只 resume 半句。
+      // 缓冲卡顿 rate=0 时勿误判；只要进度已过 0.08s 就视为同句重复点播。
+      if userPlay, position <= 0.05, !forceRestart, sec.isFinite, sec > 0.08 {
+        syncMusicDuckForVerse()
+        publishNowPlaying(playing: isPlaying || isVersePlaying, lightweight: appInBackground)
+        log("app verse ignore duplicate userPlay at \(String(format: "%.2f", sec))s")
+        return
+      }
       if userPlay, position <= 0.05 {
         activateSession(force: !sessionArmed)
         versePlayer.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
@@ -780,6 +807,24 @@ final class AskBibleMusicService: NSObject {
 
     if let dur = doubleValue(payload["durationSec"]), dur > 0 {
       position = min(max(0, position), max(0, dur - 0.25))
+    }
+
+    // 并发 sync（无 userPlay）：第一路正在播/缓冲时，第二路勿 tearDown 重建（听感像第 1 秒重播）。
+    if !userPlay, !forceRestart, let versePlayer, versePlayer.currentItem != nil,
+       let incomingId = musicIdentity(assetUri) {
+      let currentId = musicIdentity(verseAssetUri ?? "")
+      if incomingId == currentId || currentId == nil {
+        if verseAssetUri == nil || verseAssetUri?.isEmpty == true {
+          verseAssetUri = assetUri
+        }
+        if !isPlayerActivelyPlaying(versePlayer) {
+          versePlayer.play()
+        }
+        syncMusicDuckForVerse()
+        publishNowPlaying(playing: isPlaying || isVersePlaying, lightweight: appInBackground)
+        log("app verse skip rebuild on sync (no userPlay)")
+        return
+      }
     }
 
     tearDownVersePlayerKeepingWant()
@@ -833,6 +878,13 @@ final class AskBibleMusicService: NSObject {
     var merged = lastVersePayload ?? [:]
     for (key, value) in payload {
       merged[key] = value
+    }
+    // 预取/锁屏图等局部刷新不带 userPlay：勿沿用上次点播，否则同句会被 seek 回 0（首秒卡顿重播）。
+    if payload["userPlay"] == nil {
+      merged["userPlay"] = false
+    }
+    if payload["userPause"] == nil {
+      merged["userPause"] = false
     }
     // 残缺刷新勿清掉间隔/预取。
     if doubleValue(payload["gapSec"]) == nil, verseGapSec > 0 {

@@ -68,6 +68,11 @@ import { SCENE_LOOP_SWITCH_MS } from "@/lib/nature/home-scene-strip-metrics";
 import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots";
 import { useScreenWakeLock } from "@/hooks/useScreenWakeLock";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import {
+  NATURE_HOME_LIVE_VIDEO_PREFS_EVENT,
+  readNatureLiveVideoEnabled,
+  writeNatureLiveVideoEnabled,
+} from "@/lib/home/nature-home-live-video-prefs";
 
 /**
  * 停留后再挂 `<video>` 解码（非「切换」时刻）。
@@ -155,7 +160,10 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const [activeVideoId, setActiveVideoId] = useState(() => defaultNatureHomeActiveVideoId(initial));
   const [loopAllScenesEnabled, setLoopAllScenesEnabled] = useState(false);
   const [activeAmbientSlotId, setActiveAmbientSlotId] = useState<NatureAmbientSceneSlotId | "">("");
+  const [liveVideoEnabled, setLiveVideoEnabled] = useState(true);
+  const [natureHomePrefsVersion, setNatureHomePrefsVersion] = useState(0);
   const ambientPrefsHydratedRef = useRef(false);
+  const liveVideoPrefsHydratedRef = useRef(false);
   const loopAllPrefsHydratedRef = useRef(false);
   const activeSceneHydratedRef = useRef(false);
   const landscapeNarrow = useLandscapeNarrow();
@@ -186,6 +194,18 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
     activeSceneHydratedRef.current = true;
     setActiveVideoId(resolveNatureHomeActiveVideoId(natureSettings));
   }, [natureSettings]);
+
+  useLayoutEffect(() => {
+    if (liveVideoPrefsHydratedRef.current) return;
+    liveVideoPrefsHydratedRef.current = true;
+    setLiveVideoEnabled(readNatureLiveVideoEnabled());
+  }, []);
+
+  useEffect(() => {
+    const onLiveVideoPrefs = () => setLiveVideoEnabled(readNatureLiveVideoEnabled());
+    window.addEventListener(NATURE_HOME_LIVE_VIDEO_PREFS_EVENT, onLiveVideoPrefs);
+    return () => window.removeEventListener(NATURE_HOME_LIVE_VIDEO_PREFS_EVENT, onLiveVideoPrefs);
+  }, []);
 
   useLayoutEffect(() => {
     if (ambientPrefsHydratedRef.current) return;
@@ -374,6 +394,7 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
 
   const showNatureVideoDecoder =
     hasPlayableVideo &&
+    liveVideoEnabled &&
     !posterOnlyLowPower &&
     !blockVideoDecoder &&
     (useFullVideoIntro ? fullFetchReady && Boolean(fullFetchObjectUrl) : dwellVideoAllowed);
@@ -892,7 +913,15 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
   const onNatureHomePrefsChanged = useCallback(() => {
     setTextScaleStepIndex(readNatureHomeTextScaleStepIndex());
     setNatureVerseAppearance(readNatureHomeVerseAppearance());
+    setNatureHomePrefsVersion((v) => v + 1);
   }, []);
+
+  const onToggleLiveVideo = useCallback(() => {
+    const next = !liveVideoEnabled;
+    setLiveVideoEnabled(next);
+    writeNatureLiveVideoEnabled(next);
+    onNatureHomePrefsChanged();
+  }, [liveVideoEnabled, onNatureHomePrefsChanged]);
 
   const renderBottomBand = () => {
     if (sceneEntries.length === 0) return null;
@@ -901,11 +930,13 @@ export function NatureVideoExperience({ initial, settingsRevision, shellRoot = "
         settings={natureSettings}
         scenes={sceneEntries}
         activeVideoId={activeVideoId}
-        loopAllScenesEnabled={loopAllScenesEnabled}
         activeAmbientSlotId={activeAmbientSlotId}
         activeVerseKey={activeVerseKey}
+        liveVideoActive={liveVideoEnabled}
+        onToggleLiveVideo={onToggleLiveVideo}
+        prefsVersion={natureHomePrefsVersion}
+        onPrefsChanged={onNatureHomePrefsChanged}
         onSelectScene={(id) => selectScene(id)}
-        onSelectLoopAll={onSelectLoopAll}
         onToggleAmbientSlot={onToggleAmbientSlot}
       />
     );

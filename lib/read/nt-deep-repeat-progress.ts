@@ -1,4 +1,7 @@
 import {
+  NT_DEEP_REPEAT_CURRICULUM,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
+import {
   advanceNtDeepRepeatOneCalendarDay,
   createDefaultNtDeepRepeatReadingState,
   normalizeNtDeepRepeatReadingState,
@@ -18,7 +21,9 @@ import {
 import {
   readEffectiveReadingPlanPrefs,
   toLocalDateString,
+  writeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
+import { flushMemberReadingSyncWebNow } from "@/lib/member-reading-sync/client/run-member-reading-sync-web";
 
 export const NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY = "askbible-nt-deep-repeat-progress-v5";
 const NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V4 = "askbible-nt-deep-repeat-progress-v4";
@@ -165,6 +170,34 @@ export function writeNtDeepRepeatProgress(state: NtDeepRepeatReadingState): void
   }
 }
 
+/** 重置进度到指定计划日（1 = 起始当天），用于用户手动选择「从第几天开始读」。 */
+export function resetNtDeepRepeatProgressToPlanDay(
+  planDay: number,
+  now = new Date(),
+  pace: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE,
+): NtDeepRepeatReadingState {
+  const safeDay = Math.max(1, Math.floor(planDay));
+  if (safeDay <= 1) return resetNtDeepRepeatProgressToFresh(now, pace);
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY);
+      localStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V4);
+      localStorage.removeItem(NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V3);
+    } catch {
+      /* ignore */
+    }
+  }
+  snapshotRaw = "";
+  snapshotStored = null;
+  snapshotHasSaved = false;
+  snapshotEffective = null;
+  const startedAt = toLocalDateString(now);
+  const state = ntDeepRepeatStateForPlanDay(safeDay, { pace, startedAt });
+  state.startedAt = startedAt;
+  writeNtDeepRepeatProgress(state);
+  return state;
+}
+
 export function resetNtDeepRepeatProgressToFresh(
   now = new Date(),
   pace: NtDeepRepeatPace = NT_DEEP_REPEAT_DEFAULT_PACE,
@@ -205,10 +238,73 @@ export function advanceNtDeepRepeatOnePlanDay(now = new Date()): NtDeepRepeatRea
 export function resetNtDeepRepeatToCalendarToday(now = new Date()): NtDeepRepeatReadingState {
   const prefs = readEffectiveReadingPlanPrefs();
   const planDay = resolveNtDeepRepeatPlanDay(prefs, now);
+  return jumpNtDeepRepeatProgressToPlanDay(planDay, now);
+}
+
+/** 一次跳到指定计划日（保留已读章）。 */
+export function jumpNtDeepRepeatProgressToPlanDay(
+  planDay: number,
+  now = new Date(),
+): NtDeepRepeatReadingState {
+  const prefs = readEffectiveReadingPlanPrefs();
   const pace = prefs.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE;
   const startedAt = prefs.startedOn?.trim() || toLocalDateString(now);
-  let state = ntDeepRepeatStateForPlanDay(planDay, { pace, startedAt });
-  state.startedAt = startedAt;
+  const safeDay = Math.max(1, Math.floor(planDay));
+  const { stored } = refreshStoredSnapshot();
+  const state = normalizeNtDeepRepeatReadingState({
+    ...ntDeepRepeatStateForPlanDay(safeDay, { pace, startedAt }),
+    pace,
+    startedAt,
+    chaptersReadKeys: stored.chaptersReadKeys,
+  });
   writeNtDeepRepeatProgress(state);
+  return state;
+}
+
+function addLocalDays(d: Date, days: number): Date {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
+/** 将某一新约版块（0-based 阶）设为今日读经：该阶第 1 天。 */
+export function setNtDeepRepeatCurriculumStageAsToday(
+  curriculumIndex: number,
+  now = new Date(),
+): NtDeepRepeatReadingState {
+  const prefs = readEffectiveReadingPlanPrefs();
+  const pace = prefs.ntDeepRepeatPace ?? NT_DEEP_REPEAT_DEFAULT_PACE;
+  const stageCount = Math.max(1, NT_DEEP_REPEAT_CURRICULUM.length);
+  const safeIndex = Math.min(stageCount - 1, Math.max(0, Math.floor(curriculumIndex)));
+  const planDay = safeIndex * pace + 1;
+
+  let startedAt = prefs.startedOn?.trim() || toLocalDateString(now);
+  const calendarDay = resolveNtDeepRepeatPlanDay({ ...prefs, startedOn: startedAt }, now);
+  let nextPrefs = { ...prefs, chosen: true as const };
+
+  if (planDay < calendarDay) {
+    startedAt = toLocalDateString(addLocalDays(now, -(planDay - 1)));
+    const { aheadDays: _omit, ...rest } = nextPrefs;
+    nextPrefs = { ...rest, startedOn: startedAt, chosen: true };
+  } else {
+    const ahead = planDay - calendarDay;
+    if (ahead > 0) {
+      nextPrefs = { ...nextPrefs, startedOn: startedAt, aheadDays: ahead };
+    } else {
+      const { aheadDays: _omit, ...rest } = nextPrefs;
+      nextPrefs = { ...rest, startedOn: startedAt, chosen: true };
+    }
+  }
+
+  const { stored } = refreshStoredSnapshot();
+  const state = normalizeNtDeepRepeatReadingState({
+    ...ntDeepRepeatStateForPlanDay(planDay, { pace, startedAt }),
+    pace,
+    startedAt,
+    chaptersReadKeys: stored.chaptersReadKeys,
+  });
+  writeNtDeepRepeatProgress(state);
+  writeReadingPlanPrefs(nextPrefs);
+  flushMemberReadingSyncWebNow("readingPlanPrefs");
   return state;
 }

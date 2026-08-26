@@ -183,18 +183,16 @@ export function HomeNatureScreen() {
   const toggleGoldenVerse = useCallback(() => {
     bumpSceneToolsIdle();
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (homeVerseAudioActive || homeVerseAudio.playing) {
+    if (homeVerseAudioActive) {
       stopGoldenVerse();
       return;
     }
     yieldAmbientIfMusicAndAmbientOpen();
-    // 先钉 wantPlaying：安卓立刻卸封面视频，再开金句，避免抢会话。
+    void togglePlayScripture({ forcePause: true });
     setShellVerseWantPlaying(true);
     setHomeVerseAudioActive(true);
-    void togglePlayScripture({ forcePause: true });
   }, [
     bumpSceneToolsIdle,
-    homeVerseAudio.playing,
     homeVerseAudioActive,
     stopGoldenVerse,
     togglePlayScripture,
@@ -232,9 +230,8 @@ export function HomeNatureScreen() {
   useEffect(() => {
     if (!(playbackMode === "scripture" && playing)) return;
     if (!homeVerseAudioActiveRef.current) return;
-    setHomeVerseAudioActive(false);
-    setForceVerseKey(null);
-  }, [playbackMode, playing]);
+    stopGoldenVerse();
+  }, [playbackMode, playing, stopGoldenVerse]);
 
   useEffect(() => {
     const applyVersePlay = (key: string) => {
@@ -246,11 +243,11 @@ export function HomeNatureScreen() {
         stopGoldenVerse();
         return;
       }
-      // 先停读经，再开金句，避免两路叠音。
       void (async () => {
         await togglePlayScripture({ forcePause: true });
         setForceVerseKey(normalized);
         yieldAmbientIfMusicAndAmbientOpen();
+        setShellVerseWantPlaying(true);
         setHomeVerseAudioActive(true);
       })();
     };
@@ -467,6 +464,12 @@ export function HomeNatureScreen() {
 
       <HomeNatureScreenTopChrome
         insets={insets}
+        locale={locale}
+        hidden={hideLandscapePlayBar}
+        sceneToolsOpen={sceneToolsOpen}
+        ambientActive={!!load.activeAmbientSlotId}
+        onToggleSceneTools={toggleSceneTools}
+        onUserActivity={bumpSceneToolsIdle}
         homeTtsExperimentEnabled={verseSpeech.homeTtsExperimentEnabled}
         voicePreparing={verseSpeech.voicePreparing}
         voiceSpeaking={verseSpeech.voiceSpeaking}
@@ -495,17 +498,10 @@ export function HomeNatureScreen() {
           bumpSceneToolsIdle();
           scene.selectScene(id, opts);
         }}
-        goldenVersePlaying={homeVerseAudioActive || homeVerseAudio.playing}
-        goldenVerseAudible={homeVerseAudio.playing || homeVerseAudio.preparing}
+        goldenVerseOn={homeVerseAudioActive}
         goldenVersePreparing={homeVerseAudio.preparing}
         onToggleGoldenVerse={toggleGoldenVerse}
         onUserActivity={bumpSceneToolsIdle}
-        onPauseVerseTransport={() => {
-          void homeVerseAudio.pauseTransport();
-        }}
-        onResumeVerseTransport={() => {
-          void homeVerseAudio.resumeTransport();
-        }}
         liveVideoActive={liveVideoEnabled}
         onToggleLiveVideo={() => {
           bumpSceneToolsIdle();

@@ -70,6 +70,10 @@ export function defaultRepeatModeForAlbum(album: string): MusicAlbumRepeatMode |
   return null;
 }
 
+export function defaultMusicGainForAlbum(album: string): number {
+  return normalizeMusicAlbumLabel(album) === "睡眠" ? 0.3 : 1;
+}
+
 export function albumUsesInAlbumLoop(album: string): boolean {
   return defaultRepeatModeForAlbum(album) === "all";
 }

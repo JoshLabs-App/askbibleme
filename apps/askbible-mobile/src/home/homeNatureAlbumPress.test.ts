@@ -16,12 +16,12 @@ const hymn = {
 };
 
 describe("resolveHomeAlbumPressAction", () => {
-  it("plays when that album is not selected", () => {
-    expect(resolveHomeAlbumPressAction({ playable: true, selected: false })).toBe("play");
+  it("selects when that album is not selected", () => {
+    expect(resolveHomeAlbumPressAction({ playable: true, selected: false })).toBe("select");
   });
 
-  it("stops when tapping the selected album again", () => {
-    expect(resolveHomeAlbumPressAction({ playable: true, selected: true })).toBe("stop");
+  it("deselects when tapping the selected album again", () => {
+    expect(resolveHomeAlbumPressAction({ playable: true, selected: true })).toBe("deselect");
   });
 
   it("ignores empty albums", () => {

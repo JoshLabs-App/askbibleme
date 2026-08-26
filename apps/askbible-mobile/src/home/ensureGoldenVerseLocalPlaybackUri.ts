@@ -78,7 +78,8 @@ export async function resolveGoldenVersePlaybackUri(args: {
       buildGoldenVerseAudioRemoteUrl(args.verseKey, args.translationId) ||
       (args.remoteUrl?.trim() || null);
     if (streamed && isHttpsUrl(streamed)) {
-      return remoteUrlIfPlayable(streamed.trim());
+      // R2 直链：勿 HEAD（~1s 延迟 + effect 重跑竞态 → 句中重复 userPlay 卡重播）。
+      return streamed.trim();
     }
   }
 

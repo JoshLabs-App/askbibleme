@@ -8,20 +8,24 @@ export type VerseActionMenuState = { verse: number; text: string } | null;
 type Props = {
   menu: VerseActionMenuState;
   highlightModeActive: boolean;
+  bookmarked: boolean;
   onClose: () => void;
   onCopy: () => void;
   onOpenMultiCopy: () => void;
   onOpenHighlight: () => void;
+  onToggleBookmark: () => void;
   onShare: () => void;
 };
 
 export function ReadChapterVerseActionSheet({
   menu,
   highlightModeActive,
+  bookmarked,
   onClose,
   onCopy,
   onOpenMultiCopy,
   onOpenHighlight,
+  onToggleBookmark,
   onShare,
 }: Props) {
   const { t, locale } = useLocale();
@@ -55,6 +59,11 @@ export function ReadChapterVerseActionSheet({
         <button type="button" className="read-chapter-verse-action-btn" onClick={onOpenMultiCopy}>
           {t("pages.read.verseActionMultiCopy")}
         </button>
+        {!bookmarked ? (
+          <button type="button" className="read-chapter-verse-action-btn" onClick={onToggleBookmark}>
+            {t("pages.read.verseActionBookmark")}
+          </button>
+        ) : null}
         <button type="button" className="read-chapter-verse-action-btn" onClick={onOpenHighlight}>
           {highlightModeActive
             ? t("pages.read.verseHighlightModeActive")

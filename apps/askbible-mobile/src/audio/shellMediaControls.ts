@@ -37,6 +37,8 @@ export type ShellMediaSessionPayload = {
   stopAtSec?: number;
   userPause?: boolean;
   userPlay?: boolean;
+  /** 锁屏 Previous / 用户显式重开当前句；无此标记时原生勿在句中 seek 回 0。 */
+  forceRestart?: boolean;
 };
 
 type ShellMediaControlsNativeModule = {
@@ -257,11 +259,16 @@ export function syncShellMediaSession(payload: ShellMediaSessionPayload | null):
     payload.kind === "music" &&
     payload.playing &&
     getShellMusicWantPlaying();
+  const nativeOwnsVerse =
+    (Platform.OS === "ios" || Platform.OS === "android") &&
+    payload.kind === "verse" &&
+    payload.playing &&
+    getShellVerseWantPlaying();
   if (
     !payload.userPlay &&
     !payload.userPause &&
     sameMeta &&
-    (nativeOwnsMusic || Math.abs(pos - lastSentPositionSec) < 2.5)
+    (nativeOwnsMusic || nativeOwnsVerse || Math.abs(pos - lastSentPositionSec) < 2.5)
   ) {
     return;
   }
@@ -469,6 +476,9 @@ function subscribeExpoRemoteEvents(handlers: {
     }),
     emitter.addListener("ShellMediaNativeScriptureEnded", (payload) => {
       DeviceEventEmitter.emit("ShellMediaNativeScriptureEnded", payload);
+    }),
+    emitter.addListener("ShellMediaNativeMusicEnded", (payload) => {
+      DeviceEventEmitter.emit("ShellMediaNativeMusicEnded", payload);
     }),
   ];
   if (handlers.onNext) {

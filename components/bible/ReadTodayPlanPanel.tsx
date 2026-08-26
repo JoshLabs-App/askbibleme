@@ -29,8 +29,7 @@ type ReadingsProps = {
   plan: TodayReadingPlanState;
 };
 
-export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
-  const { t } = useLocale();
+function useTodayPlanReadingHabitSync(plan: TodayReadingPlanState) {
   const { payload, loading, isTripleLoop } = plan;
   const { isDone, toggleDone } = useTodayReadingDone(plan);
   const { fractions } = useTodayReadingChapterFractions(plan);
@@ -39,7 +38,7 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
     getTripleLoopProgressSnapshot,
     getTripleLoopProgressSnapshot,
   );
-  const { yearDay, snapshot, syncTodayComplete } = useReadingHabitStats();
+  const { syncTodayComplete } = useReadingHabitStats();
   const readings = payload?.day?.readings ?? [];
   const [completedChapterKeys, setCompletedChapterKeys] = useState<Set<string>>(new Set());
 
@@ -98,6 +97,24 @@ export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
     if (todayHasReading !== true) return;
     void syncTodayComplete(true);
   }, [todayHasReading, syncTodayComplete]);
+
+  return { isReadingDone, readings, loading, isTripleLoop, toggleDone };
+}
+
+/**
+ * 圣经首页：仅同步「今日有读经」到习惯统计（对齐 App — UI 在 plan-play）。
+ * 年日轴 + 数字展示在探索首页 {@link ExploreReadingHabitStats}。
+ */
+export function ReadTodayPlanReadings({ plan }: ReadingsProps) {
+  useTodayPlanReadingHabitSync(plan);
+  return null;
+}
+
+/** 今日读经计划列表（plan-play 页展示，对齐 App `ReadPlanPlayScreen` 列表区）。 */
+export function ReadTodayPlanPlayContent({ plan }: ReadingsProps) {
+  const { t } = useLocale();
+  const { yearDay, snapshot } = useReadingHabitStats();
+  const { isReadingDone, readings, loading, isTripleLoop, toggleDone } = useTodayPlanReadingHabitSync(plan);
 
   return (
     <div className="read-bible-today-readings mx-auto w-full max-w-[340px]">
@@ -256,7 +273,7 @@ export function ReadTodayPlanPanel({ registryPlans }: Props) {
       >
         {t("pages.read.todayPlanTitle")}
       </h2>
-      <ReadTodayPlanReadings plan={plan} />
+      <ReadTodayPlanPlayContent plan={plan} />
       <ReadTodayPlanFooter plan={plan} />
     </section>
   );

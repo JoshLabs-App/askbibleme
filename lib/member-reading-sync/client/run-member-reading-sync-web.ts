@@ -56,8 +56,13 @@ export async function readMemberReadingSyncMetaWeb(): Promise<MemberReadingSyncM
   }
 }
 
+export const MEMBER_READING_SYNC_META_UPDATED_EVENT = "askbible:member-reading-sync-meta-updated";
+
 async function writeMemberReadingSyncMetaWeb(meta: MemberReadingSyncMeta): Promise<void> {
   localStorage.setItem(MEMBER_READING_SYNC_META_KEY, JSON.stringify(meta));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(MEMBER_READING_SYNC_META_UPDATED_EVENT));
+  }
 }
 
 async function resolveAuthed() {

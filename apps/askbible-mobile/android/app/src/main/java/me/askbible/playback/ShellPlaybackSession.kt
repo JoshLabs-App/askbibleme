@@ -61,7 +61,10 @@ object ShellPlaybackSession {
 
     if (userPlay) {
       userPaused = false
-      forceRestartUri = true
+      val explicitRestart = payload.optBoolean("forceRestart", false)
+      // 金句：重复 userPlay 会 seek 0 掐句中；仅 forceRestart 或换轨点播才重头。
+      // 音乐 / 读经：保留 userPlay → forceRestart 语义。
+      forceRestartUri = explicitRestart || nextKind != "verse"
       lastUserPlayAtElapsed = SystemClock.elapsedRealtime()
     } else if (userPause) {
       // 音乐占栏时金句只是垫底：userPause 只关垫底，勿当成整会话暂停（否则音乐会一起停）。
@@ -82,7 +85,16 @@ object ShellPlaybackSession {
     }
 
     if (nextKind == "verse") {
-      if (nextAsset != null) verseUnderlayUri = nextAsset
+      if (nextAsset != null) {
+        // 关屏后 JS 可能仍停在旧句：勿把原生已接播的垫底 URI 打回去。
+        val staleUnderlay =
+          !userPlay &&
+            nextAsset != verseUnderlayUri &&
+            wasRecentlyPlayed(nextAsset)
+        if (!staleUnderlay) {
+          verseUnderlayUri = nextAsset
+        }
+      }
       verseUnderlayPlaying = nextPlaying && !userPaused && !userPause
       verseUnderlayGapSec = nextGapSec
       verseUnderlayGapUri = nextGapUri

@@ -25,6 +25,7 @@ import { resolveChapterSegmentHeadingText } from "@/lib/bible/chapter-segment-di
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import type { AppLocale } from "@/lib/i18n/config";
 import { useReadChapterSpreadLayout } from "@/hooks/useReadChapterSpreadLayout";
+import { useReadChapterAudioPrefetch } from "@/hooks/useReadChapterAudioPrefetch";
 import { ReadChapterVerseXrefSheet } from "@/components/bible/ReadChapterVerseXrefSheet";
 import type { ScriptureVerseXrefsSerialized } from "@/lib/bible/load-chapter-xrefs";
 import { ReadChapterVerseText } from "@/components/bible/ReadChapterVerseText";
@@ -257,6 +258,13 @@ export function ReadChapterVersesClient({
 
   const supported = translationSupportsChapterAudio(chapterAudioTranslationId);
 
+  useReadChapterAudioPrefetch({
+    bookId,
+    bookName,
+    chapter,
+    translationId: chapterAudioTranslationId,
+  });
+
   useEffect(() => {
     if (!supported) {
       setResolvedChapterSrc(null);
@@ -423,6 +431,51 @@ export function ReadChapterVersesClient({
     if (highlightModeActive || verseSelectionMode) return;
     setVerseActionMenu({ verse: v.verse, text: v.text });
   };
+
+  const verseActionMenuBookmarked = useMemo(() => {
+    if (!verseActionMenu) return false;
+    return isBookmarked({
+      translationId,
+      bookId,
+      chapter,
+      verse: verseActionMenu.verse,
+    });
+  }, [bookId, chapter, isBookmarked, translationId, verseActionMenu]);
+
+  const runToggleBookmarkFromMenu = useCallback(() => {
+    if (!verseActionMenu || verseActionMenuBookmarked) return;
+    void (async () => {
+      const ref = {
+        bookId,
+        bookName,
+        chapter,
+        verse: verseActionMenu.verse,
+        translationId,
+        text: verseActionMenu.text,
+      };
+      const added = await toggleVerseBookmark(ref);
+      if (added) {
+        try {
+          await navigator.clipboard.writeText(formatScriptureVerseClipboard(ref));
+        } catch {
+          /* 剪贴板失败不阻断收藏 */
+        }
+      }
+      setBookmarkFeedback(
+        added ? t("pages.read.verseBookmarkSaved") : t("pages.read.verseBookmarkRemoved"),
+      );
+      setVerseActionMenu(null);
+    })();
+  }, [
+    bookId,
+    bookName,
+    chapter,
+    t,
+    toggleVerseBookmark,
+    translationId,
+    verseActionMenu,
+    verseActionMenuBookmarked,
+  ]);
 
   const runCopyCurrentVerse = () => {
     if (!verseActionMenu) return;
@@ -736,10 +789,12 @@ export function ReadChapterVersesClient({
       <ReadChapterVerseActionSheet
         menu={verseActionMenu}
         highlightModeActive={highlightModeActive}
+        bookmarked={verseActionMenuBookmarked}
         onClose={() => setVerseActionMenu(null)}
         onCopy={runCopyCurrentVerse}
         onOpenMultiCopy={openMultiCopyMode}
         onOpenHighlight={runOpenHighlightEditor}
+        onToggleBookmark={runToggleBookmarkFromMenu}
         onShare={shareCurrentVerse}
       />
       {highlightModeActive ? (

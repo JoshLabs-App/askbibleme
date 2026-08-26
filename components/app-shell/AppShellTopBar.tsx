@@ -7,6 +7,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import { ShellNavDrawerContent } from "@/components/shell/ShellNavDrawerContent";
+import { ShellNavDrawerVersionFooter } from "@/components/shell/ShellNavDrawerVersionFooter";
 import { isNatureHomeShellPath } from "@/components/home/HomeDockChromeContext";
 import { useShellInsetClockEnvironment } from "@/hooks/useShellInsetClockEnvironment";
 import { isReadBibleHomePath } from "@/lib/read/read-bible-home-route";
@@ -480,6 +481,7 @@ export function AppShellTopBar({
                 <nav className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
                   <ShellNavDrawerContent onClose={closeNavMenu} />
                 </nav>
+                <ShellNavDrawerVersionFooter />
               </aside>
             </div>,
             document.body,

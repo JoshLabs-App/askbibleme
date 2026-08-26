@@ -1,6 +1,6 @@
 import { normalizeMusicAlbumLabel } from "../music/musicAlbumCatalog";
 
-/** 首页场景底栏：放松/休闲互切；点已选中的那颗只拿掉音乐，金句继续。 */
+/** 首页场景底栏：放松/休闲互切；点已选中的那颗只停音乐，金句不受影响。 */
 
 export function isHomeAlbumAudible(args: {
   albumName: string;
@@ -23,13 +23,13 @@ export function isHomeAlbumAudible(args: {
 export function resolveHomeAlbumPressAction(args: {
   playable: boolean;
   selected: boolean;
-}): "ignore" | "stop" | "play" {
+}): "ignore" | "deselect" | "select" {
   if (!args.playable) return "ignore";
-  // 点对方 → play（切换专辑）；点自己 → stop（取消选中，只停音乐）。
-  return args.selected ? "stop" : "play";
+  // 点对方 → 选中并播放；点自己 → 关闭并停播。
+  return args.selected ? "deselect" : "select";
 }
 
-/** 中间键：音乐或金句在出声 → 暂停；已选中但都停着 → 续播；否则默认开「安静」。 */
+/** 中间键：有声音 → 暂停；已选中但停着 → 播放选中项；否则默认开「安静」。 */
 export function resolveHomeCenterPlayAction(args: {
   musicOn: boolean;
   verseAudible: boolean;

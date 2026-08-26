@@ -23,6 +23,9 @@ type Props = {
   backLabelKey: string;
   titleKey: string;
   subtitleKey: string;
+  /** 远程预埋模块可覆盖 i18n 标题 */
+  titleOverride?: string;
+  subtitleOverride?: string;
   categories: ExploreScriptureCategory[];
   bookAbbrMap: Record<string, string>;
   verseTextByRef: Record<string, string>;
@@ -37,6 +40,8 @@ export function ExploreScriptureAccordionContent({
   backLabelKey,
   titleKey,
   subtitleKey,
+  titleOverride,
+  subtitleOverride,
   categories,
   bookAbbrMap,
   verseTextByRef,
@@ -60,8 +65,8 @@ export function ExploreScriptureAccordionContent({
       </Link>
 
       <header className="explore-prose-header text-center">
-        <h1 className="explore-prose-title">{t(titleKey)}</h1>
-        <p className="explore-prose-subtitle">{t(subtitleKey)}</p>
+        <h1 className="explore-prose-title">{titleOverride ?? t(titleKey)}</h1>
+        <p className="explore-prose-subtitle">{subtitleOverride ?? t(subtitleKey)}</p>
       </header>
 
       <div className="mt-8 space-y-2.5">

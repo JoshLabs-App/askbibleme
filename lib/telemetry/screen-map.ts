@@ -12,6 +12,10 @@ export function webPathnameToScreen(pathname: string): TelemetryEventProperties 
     return { screen: "explore" };
   }
   if (p === "/read/search") return { screen: "read.search" };
+  if (p === "/read/translations") return { screen: "read.translations" };
+  if (p === "/read/favorites") return { screen: "read.favorites" };
+  if (p === "/read/plan-play") return { screen: "read.plan-play" };
+  if (p === "/read/read" || p === "/read/catalog") return { screen: "read.catalog.standalone" };
   if (p === "/read/plans" || p.startsWith("/read/plans/")) return { screen: "read.plans" };
   if (p === "/read" || p === "/read/") return { screen: "read.catalog" };
 
@@ -43,8 +47,11 @@ export function mobileSegmentsToScreen(segments: string[]): TelemetryEventProper
 
   if (head === "read") {
     if (parts.includes("search")) return { screen: "read.search" };
+    if (parts.includes("translations")) return { screen: "read.translations" };
+    if (parts.includes("favorites")) return { screen: "read.favorites" };
+    if (parts.includes("plan-play")) return { screen: "read.plan-play" };
     if (parts.includes("plans")) return { screen: "read.plans" };
-    if (parts.includes("favorites")) return { screen: "read.catalog" };
+    if (parts.includes("catalog")) return { screen: "read.catalog.standalone" };
     const bookIdx = parts.findIndex((p) => /^[A-Za-z0-9_]+$/.test(p) && p !== "read");
     const chapterPart = parts[bookIdx + 1];
     if (bookIdx >= 0 && chapterPart && /^\d+$/.test(chapterPart)) {

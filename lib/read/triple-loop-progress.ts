@@ -221,7 +221,17 @@ export function advanceTripleLoopOnePlanDay(now = new Date()): TripleLoopReading
 }
 
 export function resetTripleLoopToCalendarToday(now = new Date()): TripleLoopReadingState {
-  const state = defaultProgressForEpoch(now);
+  return jumpTripleLoopProgressToPlanDay(getReadingPlanDaySinceEpoch(now));
+}
+
+/** 一次跳到指定计划日（保留已读章）。 */
+export function jumpTripleLoopProgressToPlanDay(planDay: number): TripleLoopReadingState {
+  const { stored } = refreshStoredSnapshot();
+  const state = normalizeTripleLoopReadingState({
+    ...tripleLoopStateForPlanDay(Math.max(1, Math.floor(planDay))),
+    startedAt: READING_PLAN_EASTER_EPOCH_DATE,
+    chaptersReadKeys: stored.chaptersReadKeys,
+  });
   writeTripleLoopProgress(state);
   return state;
 }

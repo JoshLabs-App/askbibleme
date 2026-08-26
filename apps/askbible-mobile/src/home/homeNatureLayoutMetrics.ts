@@ -1,4 +1,4 @@
-import { shellPlaybackTransportMetrics as tm } from "../shell/shellPlaybackTransportLayout";
+import { TAB_ICON_SIZE } from "../shell/shellTabBarHelpers";
 
 /** 首页布局尺寸：无副作用，供 StyleSheet 与高度计算共用，避免 Fast Refresh 半更新 ReferenceError。 */
 
@@ -18,10 +18,12 @@ export const AMBIENT_CHIP_HEIGHT = AMBIENT_ICON_SIZE;
 export const AMBIENT_ICON_GAP = 16;
 /** 底栏各排图标之间的上下间距（环境音 / 场景 / 专辑/金句），以图标外沿对齐 */
 export const HOME_BOTTOM_ICON_ROW_GAP = 22;
-/** 首页专辑/播放条高度：与音乐页播放键同高 */
-export const HOME_ALBUM_ROW_H = tm.playBtnSize;
-/** 首页四枚专辑图标：比播放坞 loop 图标大一号 */
-export const HOME_ALBUM_ICON_SIZE = tm.loopIconSize + 4;
+/** 首页专辑/金句条高度：与底栏 Tab 图标行同高 */
+export const HOME_ALBUM_ROW_H = 52;
+/** 首页四枚图标：与底栏 Tab 同尺寸 */
+export const HOME_ALBUM_ICON_SIZE = TAB_ICON_SIZE;
+/** 首页侧键触控区（与 tabBtn 高度一致） */
+export const HOME_ALBUM_BTN_SIZE = HOME_ALBUM_ROW_H;
 /** 字号 / 定时侧组：与 72 播放钮同行，不宜再拉开 */
 export const QUICK_CONTROL_ICON_GAP = 16;
 /** 播放行字号/定时触控边长（不随环境音图标放大） */

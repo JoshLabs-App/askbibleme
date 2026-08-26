@@ -10,10 +10,12 @@ import {
 } from "@/lib/read/reading-plan-prefs";
 import {
   advanceNtDeepRepeatOnePlanDay,
+  jumpNtDeepRepeatProgressToPlanDay,
   resetNtDeepRepeatToCalendarToday,
 } from "@/lib/read/nt-deep-repeat-progress";
 import {
   advanceTripleLoopOnePlanDay,
+  jumpTripleLoopProgressToPlanDay,
   resetTripleLoopToCalendarToday,
 } from "@/lib/read/triple-loop-progress";
 import { flushMemberReadingSyncWebNow } from "@/lib/member-reading-sync/client/run-member-reading-sync-web";
@@ -114,4 +116,32 @@ export function stripAheadDaysFromPrefs(prefs: ReadingPlanPrefs): ReadingPlanPre
   if (readAheadDays(prefs) === 0) return prefs;
   const { aheadDays: _omit, ...rest } = prefs;
   return rest as ReadingPlanPrefs;
+}
+
+/** 将超前进度设为指定天数（0 = 日历今天）。 */
+export function setReadingPlanAheadDays(targetAhead: number, now = new Date()): ReadingPlanPrefs {
+  const target = Math.max(0, Math.floor(targetAhead));
+  const prefs = readEffectiveReadingPlanPrefs();
+  if (target === readAheadDays(prefs)) return prefs;
+
+  const nextPrefs: ReadingPlanPrefs =
+    target > 0
+      ? { ...prefs, aheadDays: target, chosen: true }
+      : (() => {
+          const { aheadDays: _omit, ...rest } = prefs;
+          return { ...rest, chosen: true } as ReadingPlanPrefs;
+        })();
+
+  writeReadingPlanPrefs(nextPrefs);
+
+  if (isNtDeepRepeatPlanId(prefs.planId)) {
+    const planDay = resolveNtDeepRepeatPlanDay(prefs, now) + target;
+    jumpNtDeepRepeatProgressToPlanDay(planDay, now);
+  } else if (isTripleLoopPlanId(prefs.planId)) {
+    const planDay = getReadingPlanDaySinceEpoch(now) + target;
+    jumpTripleLoopProgressToPlanDay(planDay);
+  }
+
+  notifyReadingPlanChangedWeb();
+  return nextPrefs;
 }

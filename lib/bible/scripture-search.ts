@@ -15,7 +15,12 @@ export type ScriptureSearchHit = {
 export const SCRIPTURE_SEARCH_MIN_LEN = 1;
 export const SCRIPTURE_SEARCH_LIMIT = 40;
 
-export type ScriptureSearchScope = "all" | ScriptureTestament;
+export type ScriptureSearchChapterRef = {
+  bookId: string;
+  chapter: number;
+};
+
+export type ScriptureSearchScope = "all" | ScriptureTestament | "chapter";
 
 export const DEFAULT_SCRIPTURE_SEARCH_SCOPE: ScriptureSearchScope = "all";
 
@@ -24,7 +29,7 @@ export function scriptureSearchScopeSqlFilter(scope: ScriptureSearchScope): {
   sql: string;
   params: string[];
 } {
-  if (scope === "all") return { sql: "", params: [] };
+  if (scope === "all" || scope === "chapter") return { sql: "", params: [] };
   const ids = scriptureBooks
     .filter((b) => testamentForBookNumber(b.bookNumber) === scope)
     .map((b) => b.bookId);
@@ -33,9 +38,28 @@ export function scriptureSearchScopeSqlFilter(scope: ScriptureSearchScope): {
 
 export function isBookInScriptureSearchScope(bookId: string, scope: ScriptureSearchScope): boolean {
   if (scope === "all") return true;
+  if (scope === "chapter") return false;
   const book = scriptureBooks.find((b) => b.bookId === bookId);
   if (!book) return false;
   return testamentForBookNumber(book.bookNumber) === scope;
+}
+
+export function isVerseInScriptureSearchScope(
+  bookId: string,
+  chapter: number,
+  scope: ScriptureSearchScope,
+  chapterRef?: ScriptureSearchChapterRef | null,
+): boolean {
+  if (scope === "all") return true;
+  if (scope === "chapter") {
+    return Boolean(
+      chapterRef &&
+        bookId === chapterRef.bookId &&
+        Number.isInteger(chapter) &&
+        chapter === chapterRef.chapter,
+    );
+  }
+  return isBookInScriptureSearchScope(bookId, scope);
 }
 
 export function normalizeScriptureSearchQuery(raw: string): string {

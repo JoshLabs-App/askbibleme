@@ -9,6 +9,8 @@ export type AskbibleWebUser = {
   email: string;
   name: string;
   isAdmin: boolean;
+  /** 账号注册时间（ISO），用于探索页「一起走过」 */
+  createdAt: string | null;
 };
 
 function displayNameFromUser(user: User, fallback?: string): string {
@@ -69,6 +71,10 @@ export async function fetchAskbibleWebSessionUser(): Promise<{
     return { configured: true, user: null };
   }
   const profile = await loadProfile(supabase, data.user.id);
+  const createdAt =
+    typeof data.user.created_at === "string" && data.user.created_at.trim()
+      ? data.user.created_at.trim()
+      : null;
   return {
     configured: true,
     user: {
@@ -76,6 +82,7 @@ export async function fetchAskbibleWebSessionUser(): Promise<{
       email: data.user.email,
       name: profile?.display_name?.trim() || displayNameFromUser(data.user),
       isAdmin: Boolean(profile?.is_admin),
+      createdAt,
     },
   };
 }

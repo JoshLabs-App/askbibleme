@@ -16,6 +16,7 @@ import { setShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying
 import { Platform } from "react-native";
 import { warmBundledModuleUri } from "./musicTrackPlayback";
 import type { PlaybackTrack } from "./types";
+import { buildMusicNativeNextUris } from "./musicNativeNextQueue";
 
 /** 解析 iOS 原生 AVAudioPlayer 可用的本地 file URI（不经 expo-av）。 */
 export async function resolveIosNativeMusicAssetUri(
@@ -131,10 +132,17 @@ export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean
     });
   }
   // 显式带 assetUri + userPlay：越过 userPaused，且不被环境音/金句 URI 污染。
+  const nextAssetUris = await buildMusicNativeNextUris({
+    tracks: args.tracks,
+    startIndex: args.index,
+  });
   syncShellMediaSessionExplicit({
     ...sessionBase,
     playing: true,
     userPlay: true,
+    nextAssetUri: nextAssetUris[0] ?? null,
+    nextNextAssetUri: nextAssetUris[1] ?? null,
+    nextAssetUris,
   });
   // 清 Expo / App 两侧 userPaused；若曲目已在原生暂停，立刻续上。
   resumeShellAppMusic();

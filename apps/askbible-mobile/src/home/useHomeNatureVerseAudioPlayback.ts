@@ -21,8 +21,8 @@ import {
 } from "../audio/shellVerseWantPlaying";
 import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import {
+  ensureShellMediaSceneArtwork,
   getShellMediaSceneArtworkUri,
-  reshuffleShellMediaSceneArtwork,
 } from "../audio/shellMediaSceneArtwork";
 import { refreshShellMediaSession } from "../audio/shellMediaSessionPayload";
 import {
@@ -47,6 +47,7 @@ import {
   addGoldenVersePlayMs,
   hydrateGoldenVersePlayUsage,
 } from "./goldenVersePlayUsage";
+import { parseGoldenVerseKeyFromAudioUri } from "./parseGoldenVerseKeyFromAudioUri";
 import {
   getHomeGoldenVerseAudioTranslationId,
   hydrateHomeGoldenVerseAudioTranslationId,
@@ -168,6 +169,11 @@ export function useHomeNatureVerseAudioPlayback({
    * 用 key 而非一次性 bool，避免依赖变化导致 effect 重跑时误重开。
    */
   const iosNativeChainedVerseKeyRef = useRef<string | null>(null);
+  /** 原生已用 userPlay 开播的句；effect 重跑时只补队列，勿再 seek 回 0。 */
+  const nativeVerseStartedRef = useRef<{ key: string; uri: string } | null>(null);
+  /** play effect 代际：取消/重跑时丢掉过期的 resolve + userPlay。 */
+  const playGenerationRef = useRef(0);
+  const verseUriCacheRef = useRef<Map<string, string>>(new Map());
 
   const src = useMemo(
     () => resolveGoldenVerseAudioUrl(baseUrl, verseKey, audioTranslationId),
@@ -333,6 +339,23 @@ export function useHomeNatureVerseAudioPlayback({
     [],
   );
 
+  /** 原生已开播后只补队列/元数据，勿再带 assetUri（防 iOS 缓冲期 tearDown 重播）。 */
+  const buildVerseQueueOnlyPayload = useCallback((isPlaying: boolean) => {
+    const base = buildPayload(isPlaying);
+    const { assetUri: _omit, ...rest } = base;
+    return rest;
+  }, [buildPayload]);
+
+  const buildVersePostStartSyncPayload = useCallback(
+    (isPlaying: boolean) => {
+      if (Platform.OS === "ios" || Platform.OS === "android") {
+        return buildVerseQueueOnlyPayload(isPlaying);
+      }
+      return buildPayload(isPlaying);
+    },
+    [buildPayload, buildVerseQueueOnlyPayload],
+  );
+
   const unloadCurrentSound = useCallback(async () => {
     flushListeningTime();
     const sound = soundRef.current;
@@ -352,6 +375,8 @@ export function useHomeNatureVerseAudioPlayback({
     verseEndHandledRef.current = false;
     gapEndHandledRef.current = false;
     iosNativeChainedVerseKeyRef.current = null;
+    nativeVerseStartedRef.current = null;
+    verseUriCacheRef.current.clear();
     setPlaying(false);
     playingRef.current = false;
     setShellVerseWantPlaying(false);
@@ -383,21 +408,6 @@ export function useHomeNatureVerseAudioPlayback({
       userPause: true,
     });
   }, [buildPayload, clearResumeTimer]);
-
-  const resumeTransport = useCallback(async () => {
-    if (!activeRef.current) return;
-    transportPausedRef.current = false;
-    clearShellMediaSessionUserDismissed();
-    setShellVerseWantPlaying(true);
-    setPlaying(true);
-    playingRef.current = true;
-    if (Platform.OS === "ios") setShellNativeAudioTakeover(true);
-    syncShellMediaSessionExplicit({
-      ...buildPayload(true),
-      playing: true,
-      userPlay: true,
-    });
-  }, [buildPayload]);
 
   const tryResumeCurrentSound = useCallback(async () => {
     if (!activeRef.current) return false;
@@ -445,6 +455,51 @@ export function useHomeNatureVerseAudioPlayback({
       void tryResumeCurrentSound();
     }, 350);
   }, [clearResumeTimer, tryResumeCurrentSound]);
+
+  /** 传输续播（中间键 / 锁屏）：只 playing:true，禁止 userPlay（防句中 seek 0）。 */
+  const syncVerseTransportResume = useCallback(() => {
+    transportPausedRef.current = false;
+    clearShellMediaSessionUserDismissed();
+    setShellVerseWantPlaying(true);
+    setPlaying(true);
+    playingRef.current = true;
+    if (Platform.OS === "ios") setShellNativeAudioTakeover(true);
+
+    if (Platform.OS === "ios" || Platform.OS === "android") {
+      if (getShellMusicWantPlaying()) {
+        void prefetchNextAssetUris().then(({ nextAssetUri, nextNextAssetUri, nextAssetUris }) => {
+          if (!activeRef.current) return;
+          syncShellMediaSessionExplicit({
+            ...buildVerseQueueOnlyPayload(true),
+            nextAssetUri,
+            nextNextAssetUri,
+            nextAssetUris,
+            playing: true,
+          });
+        });
+        return;
+      }
+      if (nativeVerseStartedRef.current) {
+        syncShellMediaSessionExplicit({
+          ...buildVerseQueueOnlyPayload(true),
+          playing: true,
+        });
+      } else {
+        syncShellMediaSessionExplicit({
+          ...buildPayload(true),
+          ...(srcRef.current ? { assetUri: srcRef.current } : {}),
+          playing: true,
+        });
+      }
+      return;
+    }
+    void tryResumeCurrentSound();
+  }, [buildPayload, buildVerseQueueOnlyPayload, prefetchNextAssetUris, tryResumeCurrentSound]);
+
+  const resumeTransport = useCallback(async () => {
+    if (!activeRef.current) return;
+    syncVerseTransportResume();
+  }, [syncVerseTransportResume]);
 
   const attachStatusHandler = useCallback(
     (sound: Audio.Sound, phase: "verse" | "gap") => {
@@ -614,15 +669,9 @@ export function useHomeNatureVerseAudioPlayback({
       notificationPrimeRef.current = true;
       void requestNotificationPermissions();
     }
+    ensureShellMediaSceneArtwork();
 
     let cancelled = false;
-    void reshuffleShellMediaSceneArtwork().then(() => {
-      if (cancelled) return;
-      if (getShellAuxMediaOwner()?.id === VERSE_MEDIA_OWNER_ID) {
-        syncShellMediaSessionExplicit(buildPayload(playingRef.current));
-      }
-    });
-
     setShellAuxMediaOwner({
       id: VERSE_MEDIA_OWNER_ID,
       pause: async () => {
@@ -649,32 +698,21 @@ export function useHomeNatureVerseAudioPlayback({
         });
       },
       resume: async () => {
-        clearShellMediaSessionUserDismissed();
         if (!activeRef.current) onActiveChangeRef.current(true);
-        setShellVerseWantPlaying(true);
-        setPlaying(true);
-        playingRef.current = true;
-        if (Platform.OS === "ios") {
-          setShellNativeAudioTakeover(true);
-          syncShellMediaSessionExplicit({
-            ...buildPayload(true),
-            playing: true,
-            userPlay: true,
-          });
-          return;
-        }
-        // Android：原生轨续播（勿只 resume 空的 expo-av）。
-        syncShellMediaSessionExplicit({
-          ...buildPayload(true),
-          playing: true,
-          userPlay: true,
-        });
+        syncVerseTransportResume();
       },
       buildPayload: () => {
         const wantPlaying =
           playingRef.current ||
           getShellVerseWantPlaying() ||
           (activeRef.current && Date.now() < autoResumeUntilRef.current);
+        if (
+          (Platform.OS === "ios" || Platform.OS === "android") &&
+          nativeVerseStartedRef.current &&
+          wantPlaying
+        ) {
+          return buildVerseQueueOnlyPayload(wantPlaying);
+        }
         return buildPayload(wantPlaying);
       },
     });
@@ -685,7 +723,7 @@ export function useHomeNatureVerseAudioPlayback({
         setShellAuxMediaOwner(null);
       }
     };
-  }, [active, buildPayload, clearResumeTimer, tryResumeCurrentSound]);
+  }, [active, buildPayload, buildVerseQueueOnlyPayload, clearResumeTimer, prefetchNextAssetUris, syncVerseTransportResume, tryResumeCurrentSound]);
 
   useEffect(() => {
     if (!verseKey || !active) {
@@ -696,10 +734,14 @@ export function useHomeNatureVerseAudioPlayback({
     }
 
     let cancelled = false;
+    const generation = ++playGenerationRef.current;
+    const isStale = () =>
+      cancelled || !activeRef.current || playGenerationRef.current !== generation;
     void (async () => {
       clearResumeTimer();
       clearGapTimer();
       await unloadCurrentSound();
+      if (isStale()) return;
       phaseRef.current = "verse";
       verseEndHandledRef.current = false;
       gapEndHandledRef.current = false;
@@ -708,14 +750,20 @@ export function useHomeNatureVerseAudioPlayback({
       setUriResolving(true);
       try {
         clearShellMediaSessionUserDismissed();
-        const playUri = await resolveGoldenVersePlaybackUri({
-          verseKey,
-          translationId: audioTranslationId,
-          remoteUrl: src,
-        });
+        const keyNorm = (verseKey ?? "").trim().toUpperCase();
+        const uriCacheKey = `${audioTranslationId}:${keyNorm}`;
+        let playUri = verseUriCacheRef.current.get(uriCacheKey) ?? null;
+        if (!playUri) {
+          playUri = await resolveGoldenVersePlaybackUri({
+            verseKey,
+            translationId: audioTranslationId,
+            remoteUrl: src,
+          });
+          if (playUri) verseUriCacheRef.current.set(uriCacheKey, playUri);
+        }
         if (!playUri) throw new Error("golden verse audio missing");
+        if (isStale()) return;
         missingAudioSkipRef.current = 0;
-        if (cancelled) return;
         srcRef.current = playUri;
         // 仍有安装包 zip 时才后台整包解压；R2 直链模式跳过。
         if (!isGoldenVerseAudioRemoteStreamEnabled()) {
@@ -729,7 +777,7 @@ export function useHomeNatureVerseAudioPlayback({
             (await warmBundledModuleUri(GAP_SILENCE_MODULE)) ??
             null;
           const gapSec = Math.max(0, getHomeVerseGapSec());
-          if (cancelled) return;
+          if (isStale()) return;
           gapSecRef.current = gapSec;
           gapAssetUriRef.current = gapAssetUri;
           setShellVerseWantPlaying(true);
@@ -744,53 +792,56 @@ export function useHomeNatureVerseAudioPlayback({
           iosVerseStartedAtRef.current = Date.now();
           autoResumeUntilRef.current = Date.now() + 8_000;
 
-          const chainedKey = (iosNativeChainedVerseKeyRef.current ?? "").trim().toUpperCase();
-          if (chainedKey && chainedKey === (verseKey ?? "").trim().toUpperCase()) {
-            if (!srcRef.current) srcRef.current = playUri;
-            // 关屏前必须把 next 写进原生；await 预取，避免只带空队列开播。
-            const { nextAssetUri, nextNextAssetUri, nextAssetUris } = await prefetchNextAssetUris();
-            if (cancelled || !activeRef.current) return;
+          const syncQueueOnly = (next: {
+            nextAssetUri: string | null;
+            nextNextAssetUri: string | null;
+            nextAssetUris: string[];
+          }) => {
+            if (isStale() || !getShellVerseWantPlaying()) return;
             syncShellMediaSessionExplicit({
-              ...buildPayload(true),
-              assetUri: srcRef.current,
+              ...buildVersePostStartSyncPayload(true),
               gapSec,
               gapAssetUri,
-              nextAssetUri,
-              nextNextAssetUri,
-              nextAssetUris,
+              nextAssetUri: next.nextAssetUri,
+              nextNextAssetUri: next.nextNextAssetUri,
+              nextAssetUris: next.nextAssetUris,
               playing: true,
             });
+          };
+
+          const chainedKey = (iosNativeChainedVerseKeyRef.current ?? "").trim().toUpperCase();
+          if (chainedKey && chainedKey === keyNorm) {
+            void prefetchNextAssetUris().then(syncQueueOnly);
             if (__DEV__) {
-              console.warn("[home-golden-verse] native chained keep", verseKey, srcRef.current);
+              console.warn("[home-golden-verse] native chained keep", verseKey, playUri);
             }
             return;
           }
 
-          // 先预取 next/nextNext 再开播：锁屏后 JS 可能被冻，原生只能靠队列接播。
-          const { nextAssetUri, nextNextAssetUri, nextAssetUris } = await prefetchNextAssetUris();
-          if (cancelled || !activeRef.current) return;
+          const alreadyNative =
+            nativeVerseStartedRef.current?.key === keyNorm && getShellVerseWantPlaying();
+          if (alreadyNative) {
+            nativeVerseStartedRef.current = { key: keyNorm, uri: playUri };
+            void prefetchNextAssetUris().then(syncQueueOnly);
+            return;
+          }
+
+          // 先开播，再异步补队列（预取勿挡 userPlay，避免竞态晚到 seek 0）。
+          nativeVerseStartedRef.current = { key: keyNorm, uri: playUri };
           syncShellMediaSessionExplicit({
             ...buildPayload(true, { durationMillis: 0, positionMillis: 0 }),
             assetUri: playUri,
             gapSec,
             gapAssetUri,
-            nextAssetUri,
-            nextNextAssetUri,
-            nextAssetUris,
             playing: true,
             userPlay: true,
           });
+          void prefetchNextAssetUris().then(syncQueueOnly);
           void import("../read/reading-habit-stats")
             .then(({ recordAnyReadingActivityDay }) => recordAnyReadingActivityDay())
             .catch(() => undefined);
           if (__DEV__) {
-            console.warn(
-              "[home-golden-verse] native play",
-              verseKey,
-              playUri,
-              "next=",
-              Boolean(nextAssetUri),
-            );
+            console.warn("[home-golden-verse] native play", verseKey, playUri);
           }
           return;
         }
@@ -808,7 +859,7 @@ export function useHomeNatureVerseAudioPlayback({
           undefined,
           downloadFirst,
         );
-        if (cancelled) {
+        if (isStale()) {
           await safeStopAndUnloadSound(created.sound);
           return;
         }
@@ -856,21 +907,7 @@ export function useHomeNatureVerseAudioPlayback({
       cancelled = true;
       setUriResolving(false);
     };
-  }, [
-    active,
-    audioTranslationId,
-    attachStatusHandler,
-    buildPayload,
-    clearGapTimer,
-    clearResumeTimer,
-    finishGapAndAdvance,
-    playGapSilence,
-    prefetchNextAssetUris,
-    src,
-    stopFully,
-    unloadCurrentSound,
-    verseKey,
-  ]);
+  }, [active, audioTranslationId, verseKey]);
 
   // iOS / Android 原生金句：句终/间隔结束 → 换下一句（勿依赖 expo-av status）。
   useEffect(() => {
@@ -884,10 +921,19 @@ export function useHomeNatureVerseAudioPlayback({
       // 原生已接播下一句：仍要 advance 文案/key；play effect 只补预取，不重开播放器。
       if (payload?.nativeChained) {
         gapEndHandledRef.current = false;
-        // advance 前窥视 pin 头：与原生刚 dequeue 的 URI 对应。
-        const upcoming = (peekNextVerseKeyRef.current?.() ?? "").trim().toUpperCase();
-        iosNativeChainedVerseKeyRef.current = upcoming || null;
-        if (payload.assetUri) srcRef.current = payload.assetUri;
+        if (payload.assetUri) {
+          srcRef.current = payload.assetUri;
+          const keyed = parseGoldenVerseKeyFromAudioUri(payload.assetUri);
+          iosNativeChainedVerseKeyRef.current = keyed || null;
+          if (keyed) {
+            nativeVerseStartedRef.current = {
+              key: keyed.trim().toUpperCase(),
+              uri: payload.assetUri,
+            };
+          }
+        } else {
+          iosNativeChainedVerseKeyRef.current = null;
+        }
         iosVerseStartedAtRef.current = Date.now();
         phaseRef.current = "verse";
         verseEndHandledRef.current = false;
@@ -898,8 +944,7 @@ export function useHomeNatureVerseAudioPlayback({
       void prefetchNextAssetUris().then(({ nextAssetUri, nextNextAssetUri, nextAssetUris }) => {
         if (!activeRef.current || !getShellVerseWantPlaying()) return;
         syncShellMediaSessionExplicit({
-          ...buildPayload(true),
-          assetUri: srcRef.current,
+          ...buildVersePostStartSyncPayload(true),
           nextAssetUri,
           nextNextAssetUri,
           nextAssetUris,
@@ -909,7 +954,7 @@ export function useHomeNatureVerseAudioPlayback({
     };
     const sub = DeviceEventEmitter.addListener("ShellMediaNativeVerseAdvance", onAdvance);
     return () => sub.remove();
-  }, [active, buildPayload, finishGapAndAdvance, flushListeningTime, prefetchNextAssetUris]);
+  }, [active, buildPayload, buildVersePostStartSyncPayload, finishGapAndAdvance, flushListeningTime, prefetchNextAssetUris]);
 
   useEffect(() => {
     if (!active) return;
@@ -931,6 +976,7 @@ export function useHomeNatureVerseAudioPlayback({
         ...buildPayload(true),
         playing: true,
         userPlay: true,
+        forceRestart: true,
         positionSec: 0,
       });
       const sound = soundRef.current;
@@ -968,8 +1014,7 @@ export function useHomeNatureVerseAudioPlayback({
         void prefetchNextAssetUris().then(({ nextAssetUri, nextNextAssetUri, nextAssetUris }) => {
           if (!activeRef.current || !getShellVerseWantPlaying()) return;
           syncShellMediaSessionExplicit({
-            ...buildPayload(true),
-            assetUri: srcRef.current,
+            ...buildVersePostStartSyncPayload(true),
             nextAssetUri,
             nextNextAssetUri,
             nextAssetUris,
@@ -990,7 +1035,7 @@ export function useHomeNatureVerseAudioPlayback({
     sync(AppState.currentState);
     const sub = AppState.addEventListener("change", sync);
     return () => sub.remove();
-  }, [active, buildPayload, flushListeningTime, prefetchNextAssetUris, tryResumeCurrentSound]);
+  }, [active, buildPayload, buildVersePostStartSyncPayload, flushListeningTime, prefetchNextAssetUris]);
 
   useEffect(() => {
     if (!active) return;

@@ -16,7 +16,12 @@ import {
   type AskbibleWebUser,
 } from "@/lib/askbible-web-auth-client";
 
-export type AskbibleAppUser = { id: string; email: string; name: string };
+export type AskbibleAppUser = {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string | null;
+};
 
 type Ctx = {
   /** 是否已完成首次用户态拉取 */
@@ -34,7 +39,12 @@ const AskbibleUserContext = createContext<Ctx | null>(null);
 
 function toAppUser(user: AskbibleWebUser | null): AskbibleAppUser | null {
   if (!user) return null;
-  return { id: user.id, email: user.email, name: user.name };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt,
+  };
 }
 
 export function AskbibleUserProvider({ children }: { children: ReactNode }) {

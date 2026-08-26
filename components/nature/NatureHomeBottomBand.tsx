@@ -1,43 +1,47 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useState } from "react";
 import { NatureHomeAmbientIconStrip } from "@/components/nature/NatureHomeAmbientIconStrip";
-import { NatureGoldenVerseAudioControl } from "@/components/nature/NatureGoldenVerseAudioControl";
+import { NatureHomeAlbumStrip } from "@/components/nature/NatureHomeAlbumStrip";
 import { NatureHomeSceneStrip } from "@/components/nature/NatureHomeSceneStrip";
-import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
-import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
+import { NatureHomeVerseScaleTimerControl } from "@/components/nature/NatureHomeVerseScaleTimerControl";
+import { useNatureGoldenVerseTransport } from "@/components/nature/NatureGoldenVerseAudioControl";
 import "@/components/nature/nature-home-bottom-band.css";
 import { NATURE_HOME_TAB_BAR_CLEARANCE_PX } from "@/lib/nature/home-scene-strip-metrics";
 import type { NatureAmbientSceneSlotId } from "@/lib/nature/ambient-scene-slots";
 import type { NatureSettingsV2, NatureVideoEntry } from "@/lib/nature/types";
-import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 
 type Props = {
   settings: NatureSettingsV2;
   scenes: NatureVideoEntry[];
   activeVideoId: string;
-  loopAllScenesEnabled: boolean;
   activeAmbientSlotId: NatureAmbientSceneSlotId | "";
   activeVerseKey: string | null;
+  liveVideoActive: boolean;
+  onToggleLiveVideo: () => void;
+  prefsVersion: number;
+  onPrefsChanged: () => void;
   onSelectScene: (id: string) => void;
-  onSelectLoopAll: () => void;
   onToggleAmbientSlot: (slotId: NatureAmbientSceneSlotId) => void;
 };
 
-/** 自然首页底区：环境音图标条 + 圆形场景缩略图条（叠在视频上，避让浮层 Tab） */
+/** 自然首页底区：专辑 transport + 可折叠场景/环境音/字号定时（对齐 App `HomeNatureScreenBottomBand`） */
 export function NatureHomeBottomBand({
   settings,
   scenes,
   activeVideoId,
-  loopAllScenesEnabled,
   activeAmbientSlotId,
   activeVerseKey,
+  liveVideoActive,
+  onToggleLiveVideo,
+  prefsVersion,
+  onPrefsChanged,
   onSelectScene,
-  onSelectLoopAll,
   onToggleAmbientSlot,
 }: Props) {
-  const playback = useMusicShellPlayback();
-  const musicPlaying = playback.playing && !isCuvChapterAudioEffectiveSrc(playback.effectiveSrc);
+  const [sceneToolsOpen, setSceneToolsOpen] = useState(false);
+  const verse = useNatureGoldenVerseTransport(activeVerseKey);
 
   if (!scenes.length) return null;
 
@@ -50,38 +54,41 @@ export function NatureHomeBottomBand({
         } as CSSProperties
       }
     >
-      <div className="nature-home-audio-controls">
-        <button
-          type="button"
-          className={[
-            "nature-home-audio-control",
-            musicPlaying ? "nature-home-audio-control--active" : "",
-          ].filter(Boolean).join(" ")}
-          disabled={!playback.canPlayMusic}
-          aria-pressed={musicPlaying}
-          aria-label={musicPlaying ? "暂停背景音乐" : "播放背景音乐"}
-          onClick={() => playback.togglePlayMusic()}
-        >
-          <ShellMaterialIcon
-            name="music-note"
-            size={35}
-            color={musicPlaying ? "var(--brand-logo-background)" : "#fff"}
-            legibilityShadow
+      {sceneToolsOpen ? (
+        <>
+          <NatureHomeVerseScaleTimerControl prefsVersion={prefsVersion} onPrefsChanged={onPrefsChanged} />
+          <NatureHomeAmbientIconStrip
+            settings={settings}
+            activeSlotId={activeAmbientSlotId}
+            onToggleSlot={onToggleAmbientSlot}
           />
-        </button>
-        <NatureGoldenVerseAudioControl verseKey={activeVerseKey} />
-      </div>
-      <NatureHomeAmbientIconStrip
-        settings={settings}
-        activeSlotId={activeAmbientSlotId}
-        onToggleSlot={onToggleAmbientSlot}
+          <NatureHomeSceneStrip
+            scenes={scenes}
+            activeVideoId={activeVideoId}
+            liveVideoActive={liveVideoActive}
+            onToggleLiveVideo={onToggleLiveVideo}
+            onSelectScene={onSelectScene}
+          />
+        </>
+      ) : null}
+      <NatureHomeAlbumStrip
+        goldenVersePlaying={verse.active}
+        goldenVerseAudible={verse.audible}
+        goldenVersePreparing={verse.preparing}
+        onToggleGoldenVerse={() => void verse.toggle()}
+        onPauseVerseTransport={verse.pauseVerseTransport}
+        onResumeVerseTransport={() => void verse.resumeVerseTransport()}
+        sceneToolsOpen={sceneToolsOpen}
+        onToggleSceneTools={() => setSceneToolsOpen((open) => !open)}
+        ambientActive={Boolean(activeAmbientSlotId)}
       />
-      <NatureHomeSceneStrip
-        scenes={scenes}
-        activeVideoId={activeVideoId}
-        loopAllScenesEnabled={loopAllScenesEnabled}
-        onSelectScene={onSelectScene}
-        onSelectLoopAll={onSelectLoopAll}
+      <audio
+        ref={verse.audioRef}
+        src={verse.src ?? undefined}
+        className="hidden"
+        playsInline
+        preload="metadata"
+        aria-hidden
       />
     </div>
   );

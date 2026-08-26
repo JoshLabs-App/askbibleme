@@ -104,6 +104,12 @@ export const homeNatureScreenStyles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 4,
   },
+  topChromeHidden: {
+    opacity: 0,
+  },
+  topChromeBtnPressed: {
+    opacity: 0.72,
+  },
   topChromeTrail: {
     alignItems: "center",
   },

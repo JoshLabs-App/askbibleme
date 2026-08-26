@@ -35,13 +35,17 @@ type Props = {
   onNext?: () => void;
   onToggleRepeatOne?: () => void;
   onToggleRepeatAll?: () => void;
-  /** 首页：替换左右四键，播放键仍用本行原样 */
+  /** 首页：替换左右四键；可隐藏中间播放键，仅保留侧键开关。 */
   sides?: {
     start: MusicHomeTransportSideSlot;
     beforePlay: MusicHomeTransportSideSlot;
     afterPlay: MusicHomeTransportSideSlot;
-    end: MusicHomeTransportSideSlot;
+    end?: MusicHomeTransportSideSlot;
   };
+  /** 首页金句/专辑独立开关：不显示中间播放/暂停。 */
+  hideCenterPlay?: boolean;
+  /** 侧键触控边长（首页与 Tab 栏对齐时用 52） */
+  sideButtonSize?: number;
 };
 
 function SideSlotButton({
@@ -83,6 +87,8 @@ export function MusicHomeTransportButtonRow({
   onToggleRepeatOne,
   onToggleRepeatAll,
   sides,
+  hideCenterPlay = false,
+  sideButtonSize,
 }: Props) {
   const oneOn = musicRepeatMode === "one";
   const allOn = musicRepeatMode === "all";
@@ -117,6 +123,28 @@ export function MusicHomeTransportButtonRow({
   );
 
   if (sides) {
+    const sideChrome =
+      sideButtonSize != null
+        ? {
+            width: sideButtonSize,
+            height: sideButtonSize,
+            alignItems: "center" as const,
+            justifyContent: "center" as const,
+            borderRadius: sideButtonSize / 2,
+          }
+        : styles.loopBtn;
+    if (hideCenterPlay) {
+      return (
+        <ShellSwipeExclude style={homeSidesLayout.row}>
+          <View style={homeSidesLayout.switchRow}>
+            <SideSlotButton slot={sides.start} chrome={sideChrome} />
+            <SideSlotButton slot={sides.beforePlay} chrome={sideChrome} />
+            <SideSlotButton slot={sides.afterPlay} chrome={sideChrome} />
+            {sides.end ? <SideSlotButton slot={sides.end} chrome={sideChrome} /> : null}
+          </View>
+        </ShellSwipeExclude>
+      );
+    }
     return (
       <ShellSwipeExclude style={homeSidesLayout.row}>
         <View style={homeSidesLayout.cluster}>
@@ -127,7 +155,7 @@ export function MusicHomeTransportButtonRow({
           {playButton}
           <View style={homeSidesLayout.pair}>
             <SideSlotButton slot={sides.afterPlay} chrome={styles.loopBtn} />
-            <SideSlotButton slot={sides.end} chrome={styles.loopBtn} />
+            {sides.end ? <SideSlotButton slot={sides.end} chrome={styles.loopBtn} /> : null}
           </View>
         </View>
       </ShellSwipeExclude>
@@ -215,4 +243,10 @@ const homeSidesLayout = StyleSheet.create({
     gap: tm.transportMainGap,
   },
   pair: { flexDirection: "row", alignItems: "center", gap: 8 },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: tm.transportMainGap,
+  },
 });

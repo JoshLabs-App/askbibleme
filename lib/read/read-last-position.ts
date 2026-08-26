@@ -1,3 +1,5 @@
+import { pushReadRecentChapter } from "@/lib/read/read-recent-chapters-web";
+
 const READ_LAST_POSITION_KEY = "askbible-read-last-v1";
 
 export type ReadLastPosition = {
@@ -23,6 +25,7 @@ export function writeLastReadPosition(pos: ReadLastPosition): void {
   if (typeof localStorage === "undefined") return;
   try {
     localStorage.setItem(READ_LAST_POSITION_KEY, JSON.stringify(pos));
+    pushReadRecentChapter(pos);
   } catch {
     /* ignore */
   }

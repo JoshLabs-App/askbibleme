@@ -92,3 +92,4 @@ components/tv/
 lib/media/tv-client.ts
 lib/media/tv-shell-boot.ts
 scripts/sync-tv-content.mjs
+.snapshots/

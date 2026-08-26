@@ -14,8 +14,8 @@ import {
 const HARDCODED_R2_PUBLIC_BASE =
   "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev";
 
-/** 关屏后 JS 冻住；一次从金句池预取这么多句给原生，而不是只循环已播过的十几句。iOS / Android 同数。 */
-export const ANDROID_GOLDEN_VERSE_PREFETCH_COUNT = 120;
+/** 关屏后 JS 冻住；一次从金句池预取这么多句给原生。iOS / Android 同数。 */
+export const ANDROID_GOLDEN_VERSE_PREFETCH_COUNT = 48;
 export const GOLDEN_VERSE_NATIVE_PREFETCH_COUNT = ANDROID_GOLDEN_VERSE_PREFETCH_COUNT;
 
 export function isGoldenVerseAudioRemoteStreamEnabled(): boolean {

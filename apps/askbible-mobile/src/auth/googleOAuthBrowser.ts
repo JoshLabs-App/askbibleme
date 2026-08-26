@@ -51,6 +51,32 @@ export function getGoogleOAuthAuthSessionRedirectPrefix(redirectTo: string): str
 
 export type GoogleBrowserOAuthResult = GoogleOAuthSessionResult;
 
+async function resolveGoogleUserFromAccessToken(
+  accessToken: string,
+): Promise<{ id: string; email: string; name: string } | null> {
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      sub?: string;
+      id?: string;
+      email?: string;
+      name?: string;
+    };
+    const id = (data.sub || data.id || "").trim();
+    if (!id) return null;
+    return {
+      id,
+      email: (data.email || "").trim(),
+      name: (data.name || "").trim() || "Google",
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** 无本地 Supabase 配置时，沿用 AskBible3 已验证的生产 OAuth 回落。 */
 export async function signInWithGoogleProductionOAuth(): Promise<GoogleBrowserOAuthResult> {
   const pendingWait = beginGoogleOAuthCallbackWait();
@@ -68,11 +94,13 @@ export async function signInWithGoogleProductionOAuth(): Promise<GoogleBrowserOA
     const params = new URLSearchParams(fragment);
     const accessToken = params.get("access_token")?.trim();
     if (!accessToken) return { ok: false, error: "missing_access_token", code: "google_failed" };
+    const user = await resolveGoogleUserFromAccessToken(accessToken);
+    if (!user) return { ok: false, error: "missing_google_user", code: "google_failed" };
     return {
       ok: true,
       sessionToken: accessToken,
       expiresAt: new Date(Date.now() + 3600_000).toISOString(),
-      user: { id: "google", email: "", name: "Google 账户" },
+      user,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -82,11 +110,13 @@ export async function signInWithGoogleProductionOAuth(): Promise<GoogleBrowserOA
       const fragment = callbackUrl?.split("#")[1] || callbackUrl?.split("?")[1] || "";
       const accessToken = new URLSearchParams(fragment).get("access_token")?.trim();
       if (accessToken) {
+        const user = await resolveGoogleUserFromAccessToken(accessToken);
+        if (!user) return { ok: false, error: "missing_google_user", code: "google_failed" };
         return {
           ok: true,
           sessionToken: accessToken,
           expiresAt: new Date(Date.now() + 3600_000).toISOString(),
-          user: { id: "google", email: "", name: "Google 账户" },
+          user,
         };
       }
     }

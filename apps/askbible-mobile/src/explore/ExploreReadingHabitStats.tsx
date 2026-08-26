@@ -38,7 +38,7 @@ export function ExploreReadingHabitStats() {
 
   useEffect(() => {
     setUsageSec(getAppUsageTotalSec());
-    const id = setInterval(() => setUsageSec(getAppUsageTotalSec()), 1000);
+    const id = setInterval(() => setUsageSec(getAppUsageTotalSec()), 10_000);
     return () => clearInterval(id);
   }, [storedSec]);
 

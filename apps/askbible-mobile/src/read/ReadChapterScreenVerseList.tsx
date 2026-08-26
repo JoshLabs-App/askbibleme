@@ -167,8 +167,8 @@ function ParagraphVerseFlowBlock({
       {iosAudioBox ? (
         <View pointerEvents="none" style={[styles.verseAudioFollowOverlay, iosAudioBox]} />
       ) : null}
+      <View collapsable={false}>
       <Text
-        collapsable={false}
         onTextLayout={(event: NativeSyntheticEvent<TextLayoutEventData>) => {
           const { fullText, ranges } = paragraphVerseCharRanges(
             group.verses.map((v) => ({ verse: v.verse, text: localeZhText(v.text) })),
@@ -293,6 +293,7 @@ function ParagraphVerseFlowBlock({
           );
         })}
       </Text>
+      </View>
     </View>
   );
 }

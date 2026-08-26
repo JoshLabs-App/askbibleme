@@ -21,6 +21,7 @@ import {
   measureHostInWindow,
   measureLayoutRelativeTo,
   verseContentLayoutFromParagraphFrames,
+  verseContentYFromWindow,
   verseRelativeInParagraphGroup,
   verseWindowBoxFromParagraph,
   type VerseCharFraction,

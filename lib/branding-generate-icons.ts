@@ -11,14 +11,14 @@ const MOBILE_APP_JSON = path.join(MOBILE_ROOT, "app.json");
 const IOS_APP_ICON_SET = path.join(
   MOBILE_ROOT,
   "ios",
-  "AskBible.me",
+  "AskBibleme",
   "Images.xcassets",
   "AppIcon.appiconset",
 );
 const IOS_SPLASH_LEGACY = path.join(
   MOBILE_ROOT,
   "ios",
-  "AskBible.me",
+  "AskBibleme",
   "Images.xcassets",
   "SplashScreenLegacy.imageset",
 );

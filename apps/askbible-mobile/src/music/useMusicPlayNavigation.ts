@@ -1,5 +1,5 @@
 import { useCallback, type MutableRefObject } from "react";
-import { pickRandomNextTrackIndex, pickRandomNextTrackIndexInAlbum } from "./musicCalmPlayback";
+import { pickRandomNextTrackIndexInAlbum } from "./musicCalmPlayback";
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 import type { PlaybackTrack } from "./types";
@@ -20,7 +20,7 @@ export function useMusicPlayNavigation({
   trackIndexRef,
   tracks,
   tracksLength,
-  musicRepeatModeRef,
+  musicRepeatModeRef: _musicRepeatModeRef,
   playTrackAt,
   resolveActiveReadChapter,
 }: Args) {
@@ -32,13 +32,9 @@ export function useMusicPlayNavigation({
       return;
     }
     const index = trackIndexRef.current;
-    if (musicRepeatModeRef.current === "all") {
-      await playTrackAt(pickRandomNextTrackIndexInAlbum(tracks, index, tracksLength));
-      return;
-    }
-    await playTrackAt(pickRandomNextTrackIndex(index, tracksLength));
+    // 始终留在当前专辑内换曲；跨专辑只允许用户在音乐栏主动切换。
+    await playTrackAt(pickRandomNextTrackIndexInAlbum(tracks, index, tracksLength));
   }, [
-    musicRepeatModeRef,
     playbackModeRef,
     playTrackAt,
     resolveActiveReadChapter,

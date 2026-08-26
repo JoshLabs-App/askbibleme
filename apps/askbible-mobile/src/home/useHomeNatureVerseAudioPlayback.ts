@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { AppState, DeviceEventEmitter, Platform, type AppStateStatus } from "react-native";
 import { Audio } from "expo-av";
 import { buildGoldenVerseAudioRelativePath } from "@/lib/bible/golden-verse-audio";
-import { getChapterAudioBaseUrl } from "../bible/chapter-audio-url";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import {
   configureScriptureShellAudioMode,
@@ -91,15 +90,16 @@ function resolveGoldenVerseAudioUrl(
   translationId: "cuv-simp" | "web-en",
 ): string | null {
   if (!verseKey) return null;
-  // TEMP：包体过大时默认 R2 直链，不走 askbible.me。
+  // TEMP：包体过大时默认 R2 直链；禁止回落 askbible.me / Render。
   if (isGoldenVerseAudioRemoteStreamEnabled()) {
-    const streamed = buildGoldenVerseAudioRemoteUrl(verseKey, translationId);
-    if (streamed) return streamed;
+    return buildGoldenVerseAudioRemoteUrl(verseKey, translationId);
   }
+  // Stream off：仅允许显式非 askbible.me 基址（本地调试 / 自建），否则失败关闭。
   const relative = buildGoldenVerseAudioRelativePath(verseKey, translationId);
   if (!relative) return null;
-  const base = baseUrl.trim() || getChapterAudioBaseUrl();
+  const base = baseUrl.trim();
   if (!base) return null;
+  if (/askbible\.me/i.test(base)) return null;
   return toAbsoluteUrl(base, `/audio/${relative}`);
 }
 

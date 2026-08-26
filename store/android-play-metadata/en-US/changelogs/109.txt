@@ -1,0 +1,4 @@
+Version 1.0.32
+• On Home, tap Calm, Cafe, Hymns, or Piano to start that album right away
+• Each tap picks a random piece, not always the same first track
+• Music categories now scroll sideways, with Hymns and Piano in the middle

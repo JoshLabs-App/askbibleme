@@ -1,0 +1,3 @@
+Version 1.0.33
+• The Home music button now controls music only, not chapter reading
+• While a chapter is playing, the current verse stays in the middle of the page

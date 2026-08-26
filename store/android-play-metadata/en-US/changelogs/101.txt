@@ -1,0 +1,4 @@
+Version 1.0.26
+• Full music library continues downloading quietly after install
+• Each album is ready to play right away
+• More reliable local music playback on Android

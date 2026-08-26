@@ -1,0 +1,5 @@
+Version 1.0.23
+• Home music and daily verse audio can play together
+• Music gently ducks while a verse is reading
+• One tap pauses music reliably again
+• More stable playback controls with fewer false stops or restarts

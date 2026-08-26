@@ -1,0 +1,4 @@
+More reliable scripture playback when switching chapters or using today’s reading plan
+Reading alarm handoff and lock-screen controls behave more consistently
+Golden verse previous restarts the current verse instead of jumping to music
+Stability fixes for pause and resume

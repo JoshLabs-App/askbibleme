@@ -1,0 +1,3 @@
+Version 1.0.37
+• Complies with Google Play full-screen intent policy
+• Morning reading reminder still works via notification and alarm screen

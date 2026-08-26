@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-08-26T21:13:53.405Z",
+  "removedCount": 68,
+  "poolCountAfter": 4324,
+  "removed": [
+    {
+      "verseKey": "GAL.5.22",
+      "reference": "加拉太书 5:22",
+      "repeatCount": 220,
+      "text": "圣灵所结的果子，就是仁爱、喜乐、和平、忍耐、恩慈、良善、信实、"
+    },
+    {
+      "verseKey": "ROM.8.38",
+      "reference": "罗马书 8:38",
+      "repeatCount": 145,
+      "text": "因为我深信无论是死， 是生，是天使，是掌权的， 是有能的，是现在的事， 是将来的事，"
+    },
+    {
+      "verseKey": "ROM.5.3",
+      "reference": "罗马书 5:3",
+      "repeatCount": 134,
+      "text": "不但如此，就是在患难中也是欢欢喜喜的； 因为知道患难生忍耐，"
+    },
+    {
+      "verseKey": "ROM.5.4",
+      "reference": "罗马书 5:4",
+      "repeatCount": 128,
+      "text": "忍耐生老练，老练生盼望；"
+    },
+    {
+      "verseKey": "1CO.13.4",
+      "reference": "哥林多前书 13:4",
+      "repeatCount": 116,
+      "text": "爱是恒久忍耐，又有恩慈； 爱是不嫉妒；爱是不自夸， 不张狂，"
+    },
+    {
+      "verseKey": "1CO.13.5",
+      "reference": "哥林多前书 13:5",
+      "repeatCount": 114,
+      "text": "不作害羞的事，不求自己的益处， 不轻易发怒，不计算人的恶，"
+    },
+    {
+      "verseKey": "1CO.13.6",
+      "reference": "哥林多前书 13:6",
+      "repeatCount": 94,
+      "text": "不喜欢不义，只喜欢真理；"
+    },
+    {
+      "verseKey": "GAL.5.20",
+      "reference": "加拉太书 5:20",
+      "repeatCount": 68,
+      "text": "拜偶像、邪术、仇恨、争竞、忌恨、恼怒、结党、纷争、异端、"
+    },
+    {
+      "verseKey": "GAL.5.19",
+      "reference": "加拉太书 5:19",
+      "repeatCount": 65,
+      "text": "情欲的事都是显而易见的， 就如奸淫、污秽、邪荡、"
+    },
+    {
+      "verseKey": "1CO.6.10",
+      "reference": "哥林多前书 6:10",
+      "repeatCount": 44,
+      "text": "偷窃的、贪婪的、醉酒的、辱骂的、勒索的， 都不能承受神的国。"
+    },
+    {
+      "verseKey": "1CO.6.9",
+      "reference": "哥林多前书 6:9",
+      "repeatCount": 40,
+      "text": "你们岂不知不义的人不能承受神的国吗？不要自欺！无论是淫乱的、拜偶像的、奸淫的、作娈童的、亲男色的、"
+    },
+    {
+      "verseKey": "2TI.3.2",
+      "reference": "提摩太后书 3:2",
+      "repeatCount": 31,
+      "text": "因为那时人要专顾自己、贪爱钱财、自夸、狂傲、谤讟、违背父母、忘恩负义、心不圣洁、"
+    },
+    {
+      "verseKey": "HEB.10.27",
+      "reference": "希伯来书 10:27",
+      "repeatCount": 26,
+      "text": "惟有战惧等候审判和那烧灭众敌人的烈火。"
+    },
+    {
+      "verseKey": "2TI.3.3",
+      "reference": "提摩太后书 3:3",
+      "repeatCount": 23,
+      "text": "无亲情、不解怨、好说谗言、不能自约、性情凶暴、不爱良善、"
+    },
+    {
+      "verseKey": "EPH.5.22",
+      "reference": "以弗所书 5:22",
+      "repeatCount": 19,
+      "text": "你们作妻子的，当顺服自己的丈夫， 如同顺服主。"
+    },
+    {
+      "verseKey": "JHN.10.30",
+      "reference": "约翰福音 10:30",
+      "repeatCount": 17,
+      "text": "我与父原为一。」"
+    },
+    {
+      "verseKey": "PRO.2.3",
+      "reference": "箴言 2:3",
+      "repeatCount": 17,
+      "text": "呼求明哲，扬声求聪明，"
+    },
+    {
+      "verseKey": "REV.22.15",
+      "reference": "启示录 22:15",
+      "repeatCount": 16,
+      "text": "城外有那些犬类、行邪术的、淫乱的、杀人的、拜偶像的， 并一切喜好说谎言、编造虚谎的。"
+    },
+    {
+      "verseKey": "1TI.1.10",
+      "reference": "提摩太前书 1:10",
+      "repeatCount": 14,
+      "text": "行淫和亲男色的，抢人口和说谎话的， 并起假誓的，或是为别样敌正道的事设立的。"
+    },
+    {
+      "verseKey": "MAT.25.41",
+      "reference": "马太福音 25:41",
+      "repeatCount": 14,
+      "text": "王又要向那左边的说：『你们这被咒诅的人， 离开我！进入那为魔鬼和他的使者所预备的永火里去！"
+    },
+    {
+      "verseKey": "ROM.1.22",
+      "reference": "罗马书 1:22",
+      "repeatCount": 14,
+      "text": "自称为聪明，反成了愚拙，"
+    },
+    {
+      "verseKey": "TIT.2.5",
+      "reference": "提多书 2:5",
+      "repeatCount": 14,
+      "text": "谨守，贞洁，料理家务， 待人有恩，顺服自己的丈夫， 免得神的道理被毁谤。"
+    },
+    {
+      "verseKey": "MAT.15.4",
+      "reference": "马太福音 15:4",
+      "repeatCount": 13,
+      "text": "神说：『当孝敬父母』； 又说：『咒骂父母的， 必治死他。』"
+    },
+    {
+      "verseKey": "ROM.1.26",
+      "reference": "罗马书 1:26",
+      "repeatCount": 13,
+      "text": "因此，神任凭他们放纵可羞耻的情欲。他们的女人把顺性的用处变为逆性的用处；"
+    },
+    {
+      "verseKey": "ROM.1.27",
+      "reference": "罗马书 1:27",
+      "repeatCount": 12,
+      "text": "男人也是如此，弃了女人顺性的用处， 欲火攻心，彼此贪恋， 男和男行可羞耻的事， 就在自己身上受这妄为当得的报应。"
+    },
+    {
+      "verseKey": "SNG.1.2",
+      "reference": "雅歌 1:2",
+      "repeatCount": 12,
+      "text": "［新娘］愿他用口与我亲嘴； 因你的爱情比酒更美。"
+    },
+    {
+      "verseKey": "2TH.1.9",
+      "reference": "帖撒罗尼迦后书 1:9",
+      "repeatCount": 11,
+      "text": "他们要受刑罚，就是永远沉沦， 离开主的面和他权能的荣光。"
+    },
+    {
+      "verseKey": "EPH.3.14",
+      "reference": "以弗所书 3:14",
+      "repeatCount": 11,
+      "text": "因此，我在父面前屈膝，"
+    },
+    {
+      "verseKey": "PSA.19.3",
+      "reference": "诗篇 19:3",
+      "repeatCount": 11,
+      "text": "无言无语，也无声音可听。"
+    },
+    {
+      "verseKey": "PSA.106.37",
+      "reference": "诗篇 106:37",
+      "repeatCount": 11,
+      "text": "把自己的儿女祭祀鬼魔，"
+    },
+    {
+      "verseKey": "EXO.20.13",
+      "reference": "出埃及记 20:13",
+      "repeatCount": 10,
+      "text": "「不可杀人。"
+    },
+    {
+      "verseKey": "HEB.6.1",
+      "reference": "希伯来书 6:1",
+      "repeatCount": 10,
+      "text": "所以，我们应当离开基督道理的开端， 竭力进到完全的地步， 不必再立根基，就如那懊悔死行， 信靠神、"
+    },
+    {
+      "verseKey": "LEV.20.13",
+      "reference": "利未记 20:13",
+      "repeatCount": 10,
+      "text": "人若与男人苟合，像与女人一样， 他们二人行了可憎的事， 总要把他们治死，罪要归到他们身上。"
+    },
+    {
+      "verseKey": "LEV.18.22",
+      "reference": "利未记 18:22",
+      "repeatCount": 9,
+      "text": "不可与男人苟合，像与女人一样； 这本是可憎恶的。"
+    },
+    {
+      "verseKey": "MAT.7.10",
+      "reference": "马太福音 7:10",
+      "repeatCount": 9,
+      "text": "求鱼，反给他蛇呢？"
+    },
+    {
+      "verseKey": "MAT.25.24",
+      "reference": "马太福音 25:24",
+      "repeatCount": 9,
+      "text": "那领一千的也来，说：『主啊， 我知道你是忍心的人， 没有种的地方要收割， 没有散的地方要聚敛，"
+    },
+    {
+      "verseKey": "MAT.25.26",
+      "reference": "马太福音 25:26",
+      "repeatCount": 9,
+      "text": "主人回答说：『你这又恶又懒的仆人， 你既知道我没有种的地方要收割， 没有散的地方要聚敛，"
+    },
+    {
+      "verseKey": "MRK.7.21",
+      "reference": "马可福音 7:21",
+      "repeatCount": 9,
+      "text": "因为从里面，就是从人心里， 发出恶念、苟合、"
+    },
+    {
+      "verseKey": "PRO.5.3",
+      "reference": "箴言 5:3",
+      "repeatCount": 9,
+      "text": "因为淫妇的嘴滴下蜂蜜； 她的口比油更滑，"
+    },
+    {
+      "verseKey": "PRO.5.4",
+      "reference": "箴言 5:4",
+      "repeatCount": 9,
+      "text": "至终却苦似茵陈， 快如两刃的刀。"
+    },
+    {
+      "verseKey": "EXO.22.24",
+      "reference": "出埃及记 22:24",
+      "repeatCount": 8,
+      "text": "并要发烈怒，用刀杀你们， 使你们的妻子为寡妇， 儿女为孤儿。"
+    },
+    {
+      "verseKey": "JHN.8.44",
+      "reference": "约翰福音 8:44",
+      "repeatCount": 8,
+      "text": "你们是出于你们的父魔鬼， 你们父的私欲你们偏要行。他从起初是杀人的， 不守真理，因他心里没有真理。他说谎是出于自己； 因他本来是说谎的， 也是说谎之人的父。"
+    },
+    {
+      "verseKey": "PRO.7.22",
+      "reference": "箴言 7:22",
+      "repeatCount": 8,
+      "text": "少年人立刻跟随她， 好像牛往宰杀之地， 又像愚昧人带锁链去受刑罚，"
+    },
+    {
+      "verseKey": "ROM.3.14",
+      "reference": "罗马书 3:14",
+      "repeatCount": 8,
+      "text": "满口是咒骂苦毒。"
+    },
+    {
+      "verseKey": "DEU.18.10",
+      "reference": "申命记 18:10",
+      "repeatCount": 7,
+      "text": "你们中间不可有人使儿女经火， 也不可有占卜的、观兆的、用法术的、行邪术的、"
+    },
+    {
+      "verseKey": "EXO.20.15",
+      "reference": "出埃及记 20:15",
+      "repeatCount": 7,
+      "text": "「不可偷盗。"
+    },
+    {
+      "verseKey": "HEB.5.9",
+      "reference": "希伯来书 5:9",
+      "repeatCount": 7,
+      "text": "他既得以完全，就为凡顺从他的人成了永远得救的根源、"
+    },
+    {
+      "verseKey": "ISA.66.24",
+      "reference": "以赛亚书 66:24",
+      "repeatCount": 7,
+      "text": "他们必出去观看那些违背我人的尸首； 因为他们的虫是不死的； 他们的火是不灭的； 凡有血气的都必憎恶他们。"
+    },
+    {
+      "verseKey": "PRO.23.27",
+      "reference": "箴言 23:27",
+      "repeatCount": 7,
+      "text": "妓女是深坑；外女是窄阱。"
+    },
+    {
+      "verseKey": "PRO.31.15",
+      "reference": "箴言 31:15",
+      "repeatCount": 7,
+      "text": "未到黎明她就起来， 把食物分给家中的人， 将当作的工分派婢女。"
+    },
+    {
+      "verseKey": "PRO.31.27",
+      "reference": "箴言 31:27",
+      "repeatCount": 7,
+      "text": "她观察家务，并不吃闲饭。"
+    },
+    {
+      "verseKey": "1TI.5.3",
+      "reference": "提摩太前书 5:3",
+      "repeatCount": 6,
+      "text": "要尊敬那真为寡妇的。"
+    },
+    {
+      "verseKey": "2TH.1.8",
+      "reference": "帖撒罗尼迦后书 1:8",
+      "repeatCount": 6,
+      "text": "要报应那不认识神和那不听从我主耶稣福音的人。"
+    },
+    {
+      "verseKey": "DEU.22.22",
+      "reference": "申命记 22:22",
+      "repeatCount": 6,
+      "text": "「若遇见人与有丈夫的妇人行淫， 就要将奸夫淫妇一并治死。这样， 就把那恶从以色列中除掉。"
+    },
+    {
+      "verseKey": "EXO.21.17",
+      "reference": "出埃及记 21:17",
+      "repeatCount": 6,
+      "text": "「咒骂父母的，必要把他治死。"
+    },
+    {
+      "verseKey": "LEV.20.10",
+      "reference": "利未记 20:10",
+      "repeatCount": 6,
+      "text": "「与邻舍之妻行淫的， 奸夫淫妇都必治死。"
+    },
+    {
+      "verseKey": "LUK.1.46",
+      "reference": "路加福音 1:46",
+      "repeatCount": 6,
+      "text": "马利亚说：我心尊主为大；"
+    },
+    {
+      "verseKey": "PRO.31.14",
+      "reference": "箴言 31:14",
+      "repeatCount": 6,
+      "text": "她好像商船从远方运粮来，"
+    },
+    {
+      "verseKey": "1PE.3.5",
+      "reference": "彼得前书 3:5",
+      "repeatCount": 5,
+      "text": "因为古时仰赖神的圣洁妇人正是以此为妆饰， 顺服自己的丈夫，"
+    },
+    {
+      "verseKey": "2CO.6.4",
+      "reference": "哥林多后书 6:4",
+      "repeatCount": 5,
+      "text": "反倒在各样的事上表明自己是神的用人， 就如在许多的忍耐、患难、穷乏、困苦、"
+    },
+    {
+      "verseKey": "2CO.6.6",
+      "reference": "哥林多后书 6:6",
+      "repeatCount": 5,
+      "text": "廉洁、知识、恒忍、恩慈、圣灵的感化、无伪的爱心、"
+    },
+    {
+      "verseKey": "EPH.5.24",
+      "reference": "以弗所书 5:24",
+      "repeatCount": 5,
+      "text": "教会怎样顺服基督， 妻子也要怎样凡事顺服丈夫。"
+    },
+    {
+      "verseKey": "EXO.20.1",
+      "reference": "出埃及记 20:1",
+      "repeatCount": 5,
+      "text": "神吩咐这一切的话说："
+    },
+    {
+      "verseKey": "EXO.21.23",
+      "reference": "出埃及记 21:23",
+      "repeatCount": 5,
+      "text": "若有别害，就要以命偿命，"
+    },
+    {
+      "verseKey": "LUK.5.16",
+      "reference": "路加福音 5:16",
+      "repeatCount": 5,
+      "text": "耶稣却退到旷野去祷告。"
+    },
+    {
+      "verseKey": "LUK.11.12",
+      "reference": "路加福音 11:12",
+      "repeatCount": 5,
+      "text": "求鸡蛋，反给他蝎子呢？"
+    },
+    {
+      "verseKey": "MAT.12.21",
+      "reference": "马太福音 12:21",
+      "repeatCount": 5,
+      "text": "外邦人都要仰望他的名。"
+    },
+    {
+      "verseKey": "PSA.137.9",
+      "reference": "诗篇 137:9",
+      "repeatCount": 5,
+      "text": "拿你的婴孩摔在磐石上的， 那人便为有福！"
+    }
+  ]
+}

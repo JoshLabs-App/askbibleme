@@ -30,6 +30,8 @@ export type StartTodayPlanFlowOpts = {
   replace?: boolean;
   startAtSec?: number;
   quickStart?: boolean;
+  /** 调用方已 push/replace 章页，prepared 内跳过导航。 */
+  skipChapterNavigate?: boolean;
   /** `listen`：进入专用读经计划播放页，不跳章页。 */
   uiHost?: PlanFlowUiHost;
 };
@@ -90,7 +92,7 @@ async function startTodayPlanFlowScripturePrepared(
     );
 
     if (!quickStart) {
-      if (opts?.uiHost !== "listen") {
+      if (opts?.uiHost !== "listen" && !opts?.skipChapterNavigate) {
         if (opts?.replace) {
           replaceReadPlanFlowChapterAudio(router, target);
         } else {
@@ -189,20 +191,29 @@ export async function startTodayReadingScriptureFromReadHome(
       console.warn("[planFlow] read-home entry", opts?.quickStart ? "quick" : "full");
     }
     const prefs = await readEffectiveReadingPlanPrefs();
-    const payloadPromise = loadTodayReadingPlanPayload(prefs, { dayCount: prefs.dayCount ?? 365 });
-    const audioPrefsPromise = readPlanFlowChapterAudioPrefs();
-    const savedResumePromise = readTodayPlanScriptureResume();
-    const payload = await payloadPromise;
+    const [payload, audioPrefs, savedResume] = await Promise.all([
+      loadTodayReadingPlanPayload(prefs, { dayCount: prefs.dayCount ?? 365 }),
+      readPlanFlowChapterAudioPrefs(),
+      readTodayPlanScriptureResume(),
+    ]);
     const readings = payload?.day?.readings ?? [];
     if (!readings.length) return false;
     const queue = buildPlanChapterQueue(readings);
     const scopeKey = resolveLocalTodayReadingScopeKeyFromPrefs(prefs);
-    const [audioPrefs, savedResume] = await Promise.all([audioPrefsPromise, savedResumePromise]);
     const start = resolveTodayPlanScriptureStartTargetFromSaved(queue, scopeKey, savedResume);
     if (!start) return false;
     primeTodayReadingPlanPayload(payload);
+    const skipChapterNavigate = opts?.uiHost !== "listen";
+    if (skipChapterNavigate) {
+      if (opts?.replace) {
+        replaceReadPlanFlowChapterAudio(router, start.target);
+      } else {
+        pushReadPlanFlowChapter(router, start.target);
+      }
+    }
     return startTodayPlanFlowScripturePrepared(router, start.target, {
       ...opts,
+      skipChapterNavigate,
       startAtSec: start.startAtSec > 0 ? start.startAtSec : opts?.startAtSec,
     }, {
       queue,

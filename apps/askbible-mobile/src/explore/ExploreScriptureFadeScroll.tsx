@@ -5,7 +5,6 @@ import {
   Easing,
   Platform,
   StyleSheet,
-  UIManager,
   View,
   type LayoutChangeEvent,
 } from "react-native";
@@ -14,17 +13,10 @@ import {
   ReadParchmentScrollMask,
   SHELL_TAB_SCROLL_FADE_PRESET,
 } from "../read/readParchmentScrollMask";
+import { nativeMaskedViewAvailable } from "../ui/nativeMaskedViewAvailable";
 
 /** 每秒上移像素 */
 const AUTO_SCROLL_PX_PER_SEC = 9;
-
-function nativeMaskedViewAvailable(): boolean {
-  if (Platform.OS === "web") return false;
-  return (
-    typeof UIManager.hasViewManagerConfig === "function" &&
-    UIManager.hasViewManagerConfig("RNCMaskedView")
-  );
-}
 
 type Props = {
   height: number;

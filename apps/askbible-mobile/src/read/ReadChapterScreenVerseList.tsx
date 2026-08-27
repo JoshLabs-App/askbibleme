@@ -212,10 +212,7 @@ function ParagraphVerseFlowBlock({
           });
           const audioActive =
             !searchFocus && !bookmarked && verseIndex >= 0 && activeVerseIndex === verseIndex;
-          const verseAudioChunkKey =
-            Platform.OS === "android"
-              ? `pv:${v.verse}:audio:${audioActive ? "on" : "off"}:sel:${selected ? 1 : 0}:bm:${bookmarked ? 1 : 0}`
-              : `pv:${v.verse}`;
+          const verseAudioChunkKey = `pv:${v.verse}`;
           const suppressVerseMarker = searchFocus || audioActive;
           const highlightKind = selected
             ? "selection"
@@ -548,10 +545,7 @@ export function ReadChapterScreenVerseList({
     });
     const audioActive = !searchFocus && !bookmarked && activeVerseIndex === i;
     const selected = selectedVerses.includes(v.verse);
-    const verseBlockKey =
-      Platform.OS === "android"
-        ? `v:${v.verse}:audio:${audioActive ? "on" : "off"}:sel:${selected ? 1 : 0}:bm:${bookmarked ? 1 : 0}`
-        : `${v.verse}`;
+    const verseBlockKey = `${v.verse}`;
     verseNodes.push(
       <View
         key={verseBlockKey}

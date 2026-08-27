@@ -38,6 +38,7 @@ Maestro **不在 GitHub Linux 上跑**（要 macOS 模拟器）。
 | 稳定点 | 深链 + 屏上文案 regex（中英）；`testID` 非 Maestro 主选择器 |
 | 前置 | 模拟器已装 Debug：`npm run mobile:ios`（或 android） |
 | 命令 | `npm run mobile:maestro:smoke` |
+| 夜间 Tier A（6 流） | `npm run mobile:maestro:overnight`（iOS 模拟器或 Android 设备；`MAESTRO_PLATFORM=both` 双端） |
 
 进屏路径以 `docs/mobile-feature-map.md` 为准；新冒烟流对齐该图。
 

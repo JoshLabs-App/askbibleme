@@ -208,7 +208,7 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     if (aux) await aux.resume();
   }, [playing, refs, setPlaying, shell]);
 
-  syncMusicPlaybackControlSnapshot(playing, playbackMode, togglePlayScripture);
+  syncMusicPlaybackControlSnapshot(playing, playbackMode, togglePlayScripture, shell.playScriptureChapter);
   // 音乐位置由 setMusicCurrentSec 直接写 store（比这里的 state 更新），这里只负责推进读经秒数。
   publishMusicPlaybackProgressTick(
     getMusicPlaybackProgressTickSnapshot().musicCurrentSec,

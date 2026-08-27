@@ -4,20 +4,12 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  UIManager,
   View,
   type LayoutChangeEvent,
   type ScrollViewProps,
 } from "react-native";
 import { EdgeFadeHorizontalScrollMask } from "./edgeFadeScrollMask";
-
-function nativeMaskedViewAvailable(): boolean {
-  if (Platform.OS === "web") return false;
-  return (
-    typeof UIManager.hasViewManagerConfig === "function" &&
-    UIManager.hasViewManagerConfig("RNCMaskedView")
-  );
-}
+import { nativeMaskedViewAvailable } from "./nativeMaskedViewAvailable";
 
 type Props = ScrollViewProps & {
   fadeLeftPx?: number;

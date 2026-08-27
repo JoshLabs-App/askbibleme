@@ -108,6 +108,7 @@
     "mobile:sync-scripture": "node scripts/sync-mobile-scripture-sqlite.mjs",
     "mobile:release:preflight": "node scripts/mobile-release-preflight.mjs",
     "mobile:maestro:smoke": "bash scripts/maestro-smoke.sh",
+    "mobile:maestro:overnight": "bash scripts/maestro-run-overnight.sh",
     "mobile:verify": "bash scripts/maestro-smoke.sh",
     "pr:auto-merge": "bash scripts/pr-enable-auto-merge.sh",
     "mobile:bump:store-version": "node scripts/bump-mobile-store-version.mjs",

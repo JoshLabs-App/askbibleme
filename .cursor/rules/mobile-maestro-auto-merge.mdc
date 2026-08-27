@@ -1,0 +1,42 @@
+---
+description: App 改动后 Agent 自动 Maestro 验收 + PR 自动合入门禁；创始人不必记命令
+globs:
+  - apps/askbible-mobile/**
+  - .maestro/**
+  - docs/mobile-feature-map.md
+  - docs/mobile-maestro-auto-merge.md
+alwaysApply: false
+---
+
+# 移动端验收与合入（Agent 自动，人不用记）
+
+真源：`docs/mobile-maestro-auto-merge.md` · 进屏：`docs/mobile-feature-map.md`
+
+## 创始人不用记
+
+- **不要**要求用户背 `maestro` / `auto-merge` / `pr:auto-merge` 命令。
+- Agent 改完 `apps/askbible-mobile` 后**自行执行**下列闭环；失败则修到绿，不要声称「已完成」。
+
+## Agent 改 App 后（自动）
+
+| 改了什么 | Agent 必须做 |
+|----------|----------------|
+| UI / 壳层 / Explore / Read 交互 | 读 Feature Map → `npm run mobile:maestro:smoke`（模拟器已 boot 且已装 Debug；不能跑则写明原因） |
+| OAuth / 媒体 | 遵循 `验收-OAuth` / `验收-媒体` Skill，再视情况 Maestro |
+| 仅纯逻辑、无 UI、用户未要合 main | 可跳过 Maestro，在回复里一句说明 |
+
+## Agent 要合进 main 时（自动）
+
+1. **禁止**无 PR 直推 `main`（分支保护 + 产品约定）。
+2. 开 PR → `npm run pr:auto-merge`（打 `auto-merge` 标签）。
+3. 等 GitHub CI `build` 绿 → `gated-auto-merge` 自动 squash。
+4. **不要**等用户说「跑 Maestro」或「打标签」——除非用户明确「只改代码不要合」。
+
+## 已自动、无需人管
+
+- Push/PR 触发 **CI**（网站 build + release preflight）。
+- 带 `auto-merge` 标签的 PR，CI 绿后 **自动合入**。
+
+## 不能自动的（本机）
+
+- Maestro 需要 **本机 iOS 模拟器 + Debug 包**；GitHub Linux CI **不跑** Maestro（除非日后加 macOS runner）。

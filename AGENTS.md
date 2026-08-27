@@ -59,6 +59,7 @@
   - **Android 商店**：生产构建 **默认 `MOBILE_ANDROID_MUSIC_PAD=0`**。**禁止**为上架误开 `MOBILE_ANDROID_MUSIC_PAD=1`（会把全量曲打进 AAB，约 650MB）。遗留 PAD 见 `docs/mobile-android-music-pad.md`，需 `ALLOW_ANDROID_MUSIC_PAD=1` 才允许。
   - 调试全量：`MOBILE_BUNDLE_MUSIC_FULL=1`；限量仍可用 `MOBILE_BUNDLE_MUSIC_LIMIT=N`。
 - **移动端发版禁止 EAS 云端构建**：iOS 用 `npm run mobile:build:ios:production`（本机 `--local`），Android 用 `npm run mobile:build:android:production`（本机 Gradle）；流程见 `docs/mobile-release-checklist.md`。
+- **App 验收与合入（人不用记）**：改 `apps/askbible-mobile` 时 Agent 按 `.cursor/rules/mobile-maestro-auto-merge.mdc` 自动 Maestro + PR 合入门禁；见 `docs/mobile-maestro-auto-merge.md`。
 
 ### 执行节奏
 

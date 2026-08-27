@@ -1,5 +1,8 @@
 # Maestro + Gated Auto Merge
 
+**你不必记命令**——改 App 时 Cursor Agent 会按 `.cursor/rules/mobile-maestro-auto-merge.mdc` 自动跑验收与 PR 合入门禁。  
+人只需：正常让 Agent 改代码；要合 `main` 时说「开 PR / 合进去」即可。
+
 最小闭环：**写码 → Maestro 真机路径 → CI 绿 + `auto-merge` 标签 → squash 合 PR**。  
 **禁止**无标签 / 无 CI 直推 `main`。
 

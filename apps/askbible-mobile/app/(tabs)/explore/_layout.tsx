@@ -20,9 +20,7 @@ export default function ExploreStackLayout() {
         <Stack.Screen name="year-day-count/index" />
         <Stack.Screen name="year-day-count/birth-settings" />
         <Stack.Screen name="reading-alarm/index" />
-        <Stack.Screen name="biblical-feasts/index" />
         <Stack.Screen name="years-days-eternity/index" />
-        <Stack.Screen name="word-of-god/index" />
         <Stack.Screen name="bible-maps/index" />
         <Stack.Screen name="historical-creeds/index" />
         <Stack.Screen name="history-timeline/index" />

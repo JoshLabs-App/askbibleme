@@ -76,7 +76,6 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
 ];
 
 export const SCRIPTURE_ANTHOLOGY_IDS = [
-  "word-of-god",
   "narrow-gate",
   "praise-worship",
 ] as const;

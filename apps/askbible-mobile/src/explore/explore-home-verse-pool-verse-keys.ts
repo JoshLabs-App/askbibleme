@@ -50,7 +50,7 @@ const WORD_OF_GOD_BOOK_ABBR_TO_ID: Record<string, string> = {
   启: "REV",
 };
 
-// 与 ExploreWordOfGodScreen 保持一致，作为首页经文池可用来源。
+// 与 wordOfGod bundle 分类一致，作为首页经文池可用来源。
 const WORD_OF_GOD_CATEGORIES: WordOfGodCategory[] = [
   { refs: ["提后 3:16-17", "彼后 1:20-21", "帖前 2:13", "来 1:1-2", "亚 7:12"] },
   { refs: ["约 17:17", "诗 119:160", "诗 119:142", "诗 119:151", "约 10:35"] },

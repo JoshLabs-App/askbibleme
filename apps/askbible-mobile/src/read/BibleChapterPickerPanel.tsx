@@ -101,6 +101,13 @@ export function deferChapterPickerNavigation(action: () => void): void {
   });
 }
 
+/** 等当前 Pressable 触摸结束再开 Modal，避免同一次触摸误触背景（双 rAF，勿用固定 120ms）。 */
+export function deferAfterRowPress(action: () => void): void {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(action);
+  });
+}
+
 type ChapterPickerModalProps = {
   visible: boolean;
   sheetHeight: number;

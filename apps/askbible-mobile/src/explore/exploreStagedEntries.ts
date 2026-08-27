@@ -42,9 +42,6 @@ export function isExploreScripturePoolEntryId(id: string): id is ExploreScriptur
 
 /** 探索首页第一行下方：预埋区，默认不展示；远程 visibleStagedEntryIds + 内容就绪后才出现 */
 export const EXPLORE_STAGED_ENTRY_IDS = [
-  "biblical-feasts",
-  "years-days-eternity",
-  "word-of-god",
   "bible-maps",
   "historical-creeds",
   "history-timeline",
@@ -65,30 +62,6 @@ function stagedHref(id: string): `/explore/${string}` {
 
 /** 与 ExploreEntry 同形，供 ExploreEntryIcon 复用 */
 export const EXPLORE_STAGED_ENTRIES: ExploreStagedEntry[] = [
-  {
-    id: "biblical-feasts",
-    href: stagedHref("biblical-feasts"),
-    iconSet: "material-community",
-    icon: "calendar-star",
-    labelZh: "圣经节期",
-    labelEn: "Biblical Feasts",
-  },
-  {
-    id: "years-days-eternity",
-    href: stagedHref("years-days-eternity"),
-    iconSet: "material-community",
-    icon: "infinity",
-    labelZh: "年日与永恒",
-    labelEn: "Years, Days & Eternity",
-  },
-  {
-    id: "word-of-god",
-    href: stagedHref("word-of-god"),
-    iconSet: "material-community",
-    icon: "book-open-variant",
-    labelZh: "神的话语",
-    labelEn: "Word of God",
-  },
   {
     id: "bible-maps",
     href: stagedHref("bible-maps"),

@@ -103,8 +103,8 @@ export const readChapterScreenChromeStyles = StyleSheet.create({
   topActionSizeLabel: {
     width: READ_TOP_CHROME.btnSize,
     textAlign: "center",
-    fontSize: 28,
-    lineHeight: 30,
+    fontSize: READ_TOP_CHROME.sizeLabelFontSize,
+    lineHeight: READ_TOP_CHROME.sizeLabelFontSize + 2,
     fontWeight: "500",
     color: READ_TOP_CHROME.iconColor,
     includeFontPadding: false,

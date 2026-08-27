@@ -5,10 +5,6 @@ import {
   subscribeIosMusicBackgroundMinimal,
 } from "../audio/iosMusicBackgroundQuarantine";
 import {
-  getShellMusicWantPlaying,
-  subscribeShellMusicWantPlaying,
-} from "../audio/shellMusicWantPlaying";
-import {
   getShellVerseWantPlaying,
   subscribeShellVerseWantPlaying,
 } from "../audio/shellVerseWantPlaying";
@@ -66,19 +62,14 @@ export function HomeNatureScreenVideoStage({
     isIosMusicBackgroundMinimal,
     () => false,
   );
-  const musicWant = useSyncExternalStore(
-    subscribeShellMusicWantPlaying,
-    getShellMusicWantPlaying,
-    () => false,
-  );
   const verseWant = useSyncExternalStore(
     subscribeShellVerseWantPlaying,
     getShellVerseWantPlaying,
     () => false,
   );
-  // 安卓音乐/金句：只暂停解码，不卸 VideoView（卸掉会切静帧抖动）。读经仍须卸挂。
+  // 安卓金句：只暂停解码，不卸 VideoView（卸掉会切静帧抖动）。音乐已静音 mixWithOthers，可与视频同播；读经仍须卸挂。
   const androidPauseCoverVideo =
-    Platform.OS === "android" && (musicWant || verseWant) && !scriptureAudioActive;
+    Platform.OS === "android" && verseWant && !scriptureAudioActive;
   const trimmedPosterFallback = (posterUri ?? "").trim();
   const hasPosterFallback = posterModule != null || trimmedPosterFallback.length > 0;
   const coverLayout = showLandscapeVideo

@@ -13,7 +13,6 @@ import { setShellMusicNativePlaying } from "../audio/shellMusicNativePlaying";
 import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { setShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
-import { Platform } from "react-native";
 import { warmBundledModuleUri } from "./musicTrackPlayback";
 import type { PlaybackTrack } from "./types";
 import { buildMusicNativeNextUris } from "./musicNativeNextQueue";
@@ -123,14 +122,6 @@ export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean
   args.playingStateRef.current = true;
   args.setPlaying(true);
   setShellNativeAudioTakeover(true);
-  // 安卓：先让首页暂停封面解码再挂原生会话，减轻抢焦点；勿卸视频以免切静帧抖动。
-  if (Platform.OS === "android") {
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        setTimeout(resolve, 48);
-      });
-    });
-  }
   // 显式带 assetUri + userPlay：越过 userPaused，且不被环境音/金句 URI 污染。
   const nextAssetUris = await buildMusicNativeNextUris({
     tracks: args.tracks,

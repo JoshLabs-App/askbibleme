@@ -2,7 +2,7 @@ appId: me.askbible
 ---
 - launchApp
 - extendedWaitUntil:
-    visible: "Rest"
+    visible: ".*(Rest|用户菜单|User menu|Settings|设置).*"
     timeout: 120000
 - tapOn:
     text: "Skip"

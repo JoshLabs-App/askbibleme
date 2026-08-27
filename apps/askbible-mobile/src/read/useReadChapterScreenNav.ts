@@ -2,10 +2,9 @@ import * as Haptics from "expo-haptics";
 import type { NavigationProp, ParamListBase } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Platform } from "react-native";
 import type { ScrollView } from "react-native";
 import type { LoadedChapter } from "../bible/types";
-import { deferChapterPickerNavigation } from "./BibleChapterPickerPanel";
+import { deferAfterRowPress, deferChapterPickerNavigation } from "./BibleChapterPickerPanel";
 import { setReadChapterBottomChromeApi } from "./read-chapter-chrome-inset";
 import { jumpReadChapter, navigateReadChapter, type ReadChapterNavDirection } from "./read-chapter-nav";
 import {
@@ -156,12 +155,7 @@ export function useReadChapterScreenNav({
   }, []);
 
   const onJumpBookPress = useCallback((book: { bookId: string }) => {
-    const show = () => setJumpPickerBookId(book.bookId);
-    if (Platform.OS === "android") {
-      setTimeout(show, 120);
-      return;
-    }
-    show();
+    deferAfterRowPress(() => setJumpPickerBookId(book.bookId));
   }, []);
 
   useEffect(() => {

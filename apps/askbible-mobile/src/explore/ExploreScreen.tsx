@@ -42,7 +42,6 @@ import {
 import { ExploreGreetingNameModal } from "./ExploreGreetingNameModal";
 
 const SCRIPTURE_ANTHOLOGY_IDS = [
-  "word-of-god",
   "narrow-gate",
   "praise-worship",
 ] as const;

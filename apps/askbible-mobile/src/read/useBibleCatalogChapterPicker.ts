@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Platform } from "react-native";
 import {
+  deferAfterRowPress,
   deferChapterPickerNavigation,
   estimateChapterPickerLayout,
   isWithinChapterPickerOpenGuard,
@@ -61,11 +61,7 @@ export function useBibleCatalogChapterPicker({
         chapterPickerOpenGuardUntilRef.current = markChapterPickerOpenGuard();
         setPicker(book);
       };
-      if (Platform.OS === "android") {
-        setTimeout(showPicker, 120);
-        return;
-      }
-      showPicker();
+      deferAfterRowPress(showPicker);
     },
     [onBookPress],
   );

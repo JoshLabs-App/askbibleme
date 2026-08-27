@@ -1,4 +1,4 @@
-/** Ported from mobile ExploreWordOfGodScreen for web alignment. */
+/** 话语之光主题经文汇编（首页经文池 scope 与 bundle 同步）。 */
 
 type WordOfGodCategory = {
   title: string;

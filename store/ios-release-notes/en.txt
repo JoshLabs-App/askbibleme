@@ -1,5 +1,5 @@
 Version 1.0.38
-• System media controls now pause, skip, and change tracks reliably
-• More stable home music and golden verse playback on first play
-• Reading plan sync and chapter playback are more reliable
-• Explore pages use the same calm parchment background as reading
+• Google sign-in on Android returns to the app more reliably after authorization
+• Verse bookmarks and account sync are more stable
+• Music repeat-one and playback controls work more accurately
+• Reading and Explore screens feel more consistent

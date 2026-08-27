@@ -3,9 +3,10 @@ import type { EdgeInsets } from "react-native-safe-area-context";
 /** 读经首页 / 章页顶栏共用尺寸（设置 + 搜索 + 收藏 + 字号 + 朗读） */
 export const READ_TOP_CHROME = {
   topOffset: 6,
-  btnSize: 44,
-  iconSize: 28,
-  gap: 4,
+  btnSize: 50,
+  iconSize: 32,
+  sizeLabelFontSize: 32,
+  gap: 5,
   sideInset: 8,
   iconColor: "#FFFFFF",
 } as const;

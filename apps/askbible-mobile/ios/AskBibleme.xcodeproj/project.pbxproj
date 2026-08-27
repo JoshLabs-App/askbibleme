@@ -536,7 +536,7 @@
 				CODE_SIGN_ENTITLEMENTS = AskBibleme/AskBibleme.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 119;
+				CURRENT_PROJECT_VERSION = 120;
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -576,7 +576,7 @@
 				CODE_SIGN_ENTITLEMENTS = AskBibleme/AskBibleme.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 119;
+				CURRENT_PROJECT_VERSION = 120;
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				INFOPLIST_FILE = AskBibleme/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -730,7 +730,7 @@
 				CODE_SIGN_ENTITLEMENTS = ../targets/widget/generated.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 119;
+				CURRENT_PROJECT_VERSION = 120;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -775,7 +775,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 119;
+				CURRENT_PROJECT_VERSION = 120;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = AJ2998VZH6;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

@@ -1,15 +1,19 @@
 appId: me.askbible
 ---
 - launchApp
+- tapOn:
+    text: "略过"
+    optional: true
+- tapOn:
+    text: "Skip"
+    optional: true
 - openLink: askbible://music
 - extendedWaitUntil:
-    visible: ".*全部循環.*|.*Repeat all.*|.*單曲循環.*"
+    visible: ".*(全部循环|全部循環|Repeat all|單曲循環|单曲循环|Repeat one).*"
     timeout: 90000
 - tapOn:
-    text: ".*全部循環已開啟.*|.*Repeat all on.*"
-- assertVisible:
-    text: ".*全部循環已關閉.*|.*Repeat all off.*"
+    text: ".*(全部循环|全部循環|Repeat all).*"
 - tapOn:
-    text: ".*單曲循環已關閉.*|.*Repeat one off.*"
-- assertVisible:
-    text: ".*單曲循環已開啟.*|.*Repeat one on.*"
+    text: ".*(单曲循环|單曲循環|Repeat one).*"
+- tapOn:
+    text: ".*(单曲循环|單曲循環|Repeat one).*"

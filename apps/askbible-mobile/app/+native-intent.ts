@@ -73,6 +73,7 @@ function tabExpoPath(path: string): string | null {
   const normalized = trimmed.replace(/^[a-z][a-z0-9+.-]*:\/\/?/i, "");
   const route = normalized.startsWith("/") ? normalized : `/${normalized}`;
   if (route === "/music" || route.startsWith("/music/")) return "/music";
+  if (route === "/login" || route.startsWith("/login/")) return "/login";
   return null;
 }
 

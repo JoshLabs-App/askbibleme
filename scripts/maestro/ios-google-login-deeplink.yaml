@@ -1,0 +1,32 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://dev/maestro-smoke-prep
+- extendedWaitUntil:
+    visible: ".*(略过|Skip|用户菜单|User menu|使用 Google 继续|Continue with Google).*"
+    timeout: 120000
+- tapOn:
+    text: "略过"
+    optional: true
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "稍后"
+    optional: true
+- openLink: askbible://login
+- extendedWaitUntil:
+    visible: ".*(使用 Google 继续|Continue with Google).*"
+    timeout: 60000
+- tapOn: "使用 Google 继续"
+- tapOn:
+    text: "继续"
+    optional: true
+- extendedWaitUntil:
+    visible: ".*(josh\\.zeng\\.ca@gmail\\.com|選擇帳戶|Choose an account).*"
+    timeout: 90000
+- tapOn:
+    point: "50%, 32%"
+- extendedWaitUntil:
+    visible: ".*(返回首页|登录后继续使用|已登录|Signed in).*"
+    timeout: 120000

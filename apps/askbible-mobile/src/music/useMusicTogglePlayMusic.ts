@@ -1,5 +1,4 @@
 import { useCallback, useRef } from "react";
-import { Platform } from "react-native";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import {
   logShellSoundError,
@@ -164,15 +163,6 @@ export function useMusicTogglePlayMusic({
     setPlaybackMode("music");
     setPlaying(true);
     yieldAmbientIfVerseAndAmbientOpen();
-    // 安卓：等首页卸掉 expo-video 再开播，否则首按常只响约 1 秒。
-    if (Platform.OS === "android") {
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => {
-          setTimeout(resolve, 48);
-        });
-      });
-      if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-    }
 
     if (leavingScripture) {
       await stopScripturePlayback();

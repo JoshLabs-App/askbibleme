@@ -32,7 +32,7 @@ module.exports = {
     },
     ios: {
       bundleIdentifier: "me.askbible",
-      buildNumber: "119",
+      buildNumber: "120",
       supportsTablet: true,
       appleTeamId: "AJ2998VZH6",
       entitlements: {
@@ -47,7 +47,7 @@ module.exports = {
     },
     android: {
       package: "me.askbible",
-      versionCode: 119,
+      versionCode: 120,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FFB101",

@@ -6,6 +6,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import {
+  deferAfterRowPress,
   deferChapterPickerNavigation,
   estimateChapterPickerLayout,
   isWithinChapterPickerOpenGuard,
@@ -107,14 +108,7 @@ export function useReadCatalogChapterPicker({
       chapterPickerOpenGuardUntilRef.current = markChapterPickerOpenGuard();
       setChapterPickerBookId(book.bookId);
     };
-    if (Platform.OS === "android") {
-      // 等书卷行 onPress 完全结束，避免同一次触摸落到 Modal 背景上立刻关闭。
-      setTimeout(show, 120);
-      return;
-    }
-    requestAnimationFrame(() => {
-      requestAnimationFrame(show);
-    });
+    deferAfterRowPress(show);
   }, []);
 
   return {

@@ -1,0 +1,28 @@
+appId: me.askbible
+---
+- launchApp
+- extendedWaitUntil:
+    visible: ".*(略过|Skip|用户菜单|User menu|Settings|设置|使用 Google 继续).*"
+    timeout: 120000
+- tapOn:
+    text: "Skip"
+    optional: true
+- tapOn:
+    text: "略过"
+    optional: true
+- openLink: askbible://read/GEN/1
+- extendedWaitUntil:
+    visible: ".*(创世记|創世記|Genesis).*"
+    timeout: 60000
+- waitForAnimationToEnd
+- takeScreenshot: sync-read-gen1
+- openLink: askbible://read/favorites
+- waitForAnimationToEnd
+- takeScreenshot: sync-favorites
+- openLink: askbible://read/plans
+- waitForAnimationToEnd
+- takeScreenshot: sync-plans
+- tapOn:
+    point: "8%, 11%"
+- waitForAnimationToEnd
+- takeScreenshot: sync-nav-drawer

@@ -1,0 +1,38 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://dev/maestro-smoke-prep
+- extendedWaitUntil:
+    visible: ".*(DEV|用户菜单|User menu|Settings|设置).*"
+    timeout: 120000
+- tapOn:
+    point: "8%, 11%"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: ".*(登录|Sign in|已登录|Signed in).*"
+    timeout: 30000
+- tapOn:
+    text: "登录"
+    optional: true
+- tapOn:
+    text: "Sign in"
+    optional: true
+- extendedWaitUntil:
+    visible: ".*(使用 Apple 继续|Continue with Apple).*"
+    timeout: 30000
+- tapOn:
+    text: "使用 Apple 继续"
+    optional: true
+- tapOn:
+    text: "Continue with Apple"
+    optional: true
+- tapOn:
+    text: "Continue"
+    optional: true
+- tapOn:
+    text: "Sign In"
+    optional: true
+- extendedWaitUntil:
+    visible: ".*(已登录|Signed in).*"
+    timeout: 120000
+- takeScreenshot: apple-signed-in

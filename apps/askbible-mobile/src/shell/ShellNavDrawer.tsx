@@ -45,8 +45,8 @@ export function ShellNavDrawer() {
   useShellSwipeSuspend(open || biblePickerOpen);
 
   const openBibleVersionPicker = useCallback(() => {
+    setBiblePickerOpen(true);
     closeMenu();
-    setTimeout(() => setBiblePickerOpen(true), 280);
   }, [closeMenu]);
   const memberAuthEnabled = useSyncExternalStore(
     subscribeMemberRegisterEnabled,

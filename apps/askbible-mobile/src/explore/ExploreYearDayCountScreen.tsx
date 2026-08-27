@@ -12,7 +12,6 @@ import { ExploreCenturyTimeline } from "./ExploreCenturyTimeline";
 import { ExploreBiblicalLifespanChart } from "./ExploreBiblicalLifespanChart";
 import { ExploreBirthYearSettingsScreen } from "./ExploreBirthYearSettingsScreen";
 import { ExploreYearDayCountLifeExpectancyIntro } from "./ExploreYearDayCountLifeExpectancyIntro";
-import { ExploreYearDayCountScriptureList } from "./ExploreYearDayCountScriptureList";
 import { ExploreYearsDaysEternitySection } from "./ExploreYearsDaysEternitySection";
 import {
   isExploreYearDayProfileComplete,
@@ -39,7 +38,6 @@ export function ExploreYearDayCountScreen() {
   const [birthRefreshKey, setBirthRefreshKey] = useState(0);
   const [profile, setProfile] = useState<ExploreYearDayProfile | null>(null);
   const [heavySectionsReady, setHeavySectionsReady] = useState(false);
-  const [scriptureReady, setScriptureReady] = useState(false);
   const [tailSectionsReady, setTailSectionsReady] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsRequired, setSettingsRequired] = useState(false);
@@ -53,16 +51,13 @@ export function ExploreYearDayCountScreen() {
 
   useEffect(() => {
     if (!heavySectionsReady) {
-      setScriptureReady(false);
       setTailSectionsReady(false);
       return;
     }
-    const scriptureTask = InteractionManager.runAfterInteractions(() => setScriptureReady(true));
     const tailTask = InteractionManager.runAfterInteractions(() => {
       InteractionManager.runAfterInteractions(() => setTailSectionsReady(true));
     });
     return () => {
-      scriptureTask.cancel();
       tailTask.cancel();
     };
   }, [heavySectionsReady]);
@@ -156,8 +151,6 @@ export function ExploreYearDayCountScreen() {
                 refreshKey={birthRefreshKey}
               />
             </View>
-
-            {scriptureReady ? <ExploreYearDayCountScriptureList exploreReturn={exploreReturn} /> : null}
 
             {tailSectionsReady ? (
               <>

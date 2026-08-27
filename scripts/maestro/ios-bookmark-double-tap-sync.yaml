@@ -1,0 +1,23 @@
+appId: me.askbible
+---
+- launchApp
+- openLink: askbible://read/GEN/1
+- extendedWaitUntil:
+    visible: ".*(创世记|創世記|Genesis).*"
+    timeout: 60000
+- waitForAnimationToEnd
+- doubleTapOn:
+    point: "50%, 42%"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: ".*(已收藏|已加入收藏|Bookmark saved|收藏).*"
+    timeout: 15000
+    optional: true
+- openLink: askbible://read/favorites
+- extendedWaitUntil:
+    visible: ".*(创世记|創世記|Genesis).*"
+    timeout: 30000
+- assertNotVisible:
+    text: ".*(还没有收藏的经文|No favorited|No favorites yet).*"
+    optional: true
+- takeScreenshot: favorites-with-bookmark

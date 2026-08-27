@@ -1,5 +1,5 @@
 import { NT_DEEP_REPEAT_CURRICULUM } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
-import { toLocalDateString } from "@/lib/read/reading-plan-prefs";
+import { toLocalDateString } from "@/lib/read/local-date-string";
 
 export const NT_DEEP_REPEAT_PACE_OPTIONS = [7, 14, 28] as const;
 export type NtDeepRepeatPace = (typeof NT_DEEP_REPEAT_PACE_OPTIONS)[number];

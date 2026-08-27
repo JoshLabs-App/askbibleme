@@ -1,6 +1,7 @@
 import { normalizeNtDeepRepeatChaptersReadKeys } from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";
 import {
   getNtDeepRepeatSegment,
+  isNtDeepRepeatCurriculumBookId,
   NT_DEEP_REPEAT_CURRICULUM,
   NT_DEEP_REPEAT_OT_BOOK_IDS,
   type NtDeepRepeatSegment,
@@ -12,7 +13,7 @@ import {
   type NtDeepRepeatPace,
   isNtDeepRepeatPace,
 } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
-import { toLocalDateString } from "@/lib/read/reading-plan-prefs";
+import { toLocalDateString } from "@/lib/read/local-date-string";
 import { scriptureBooks, type ScriptureBook } from "@/lib/bible/scripture-books";
 
 export type NtDeepRepeatTrack = "ot" | "nt";
@@ -142,6 +143,13 @@ export function normalizeNtDeepRepeatReadingState(
 
 export function currentNtDeepRepeatSegment(state: NtDeepRepeatReadingState): NtDeepRepeatSegment | null {
   return getNtDeepRepeatSegment(state.curriculumIndex);
+}
+
+export function trackForNtDeepRepeatBookId(bookId: string): NtDeepRepeatTrack | null {
+  const id = bookId.trim().toUpperCase();
+  if (NT_DEEP_REPEAT_OT_BOOK_IDS.includes(id)) return "ot";
+  if (isNtDeepRepeatCurriculumBookId(id)) return "nt";
+  return null;
 }
 
 export function advanceNtDeepRepeatOtPointer(current: NtDeepRepeatPointer): NtDeepRepeatPointer {

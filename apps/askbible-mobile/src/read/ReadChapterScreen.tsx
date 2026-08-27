@@ -28,7 +28,8 @@ import { useShellSwipeNav } from "../shell/ShellSwipeNavContext";
 import { useParchmentColumnMaxWidth, useParchmentContentPadding } from "./parchmentColumnLayout";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { useReadChapterAudio } from "./useReadChapterAudio";
-import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import { getMusicPlaybackControlSnapshot } from "../music/MusicPlaybackContext";
+import type { PlayScriptureChapterSnapshotFn } from "../music/musicPlaybackControlSnapshot";
 import { useReadChapterSearchFocus } from "./useReadChapterSearchFocus";
 import { useScriptureVerseBookmarks } from "./useScriptureVerseBookmarks";
 import { buildPlanChapterQueue } from "./read-plan-flow-nav";
@@ -88,7 +89,10 @@ export function ReadChapterScreen() {
   );
   const { isBookmarked, toggle: toggleVerseBookmark } = useScriptureVerseBookmarks();
   const { locale } = useLocale();
-  const { playScriptureChapter } = useMusicPlayback();
+  const playScriptureChapter = useCallback<PlayScriptureChapterSnapshotFn>(
+    (args, opts) => getMusicPlaybackControlSnapshot().playScriptureChapter(args, opts),
+    [],
+  );
   const swipe = useShellSwipeNav();
   const {
     px,

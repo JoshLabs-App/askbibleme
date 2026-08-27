@@ -44,13 +44,15 @@ export async function loadReadChapterScreenChapter({
   cancelDeferredTasks,
   scheduleXrefAfterChapterLoad,
 }: Args): Promise<ReadChapterLoadResult> {
-  console.warn("[read] load chapter start", {
-    bookId,
-    chapter,
-    primaryTranslationId,
-    chapterSegmentMode,
-    preferEnglishSegmentTitles,
-  });
+  if (__DEV__) {
+    console.warn("[read] load chapter start", {
+      bookId,
+      chapter,
+      primaryTranslationId,
+      chapterSegmentMode,
+      preferEnglishSegmentTitles,
+    });
+  }
   const primaryMeta = translationCatalog.find((item) => item.id === primaryTranslationId);
   const primaryLabels = {
     labelZh: primaryMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
@@ -101,21 +103,25 @@ export async function loadReadChapterScreenChapter({
   }
 
   if (!loaded) {
-    console.warn("[read] chapter load failed", {
-      bookId,
-      chapter,
-      primaryTranslationId,
-      delivery: catalogMeta?.delivery ?? null,
-    });
+    if (__DEV__) {
+      console.warn("[read] chapter load failed", {
+        bookId,
+        chapter,
+        primaryTranslationId,
+        delivery: catalogMeta?.delivery ?? null,
+      });
+    }
     return { ok: false, error: t("pages.read.chapterLoadError"), chapter: null };
   }
 
-  console.warn("[read] chapter load ok", {
-    bookId: loaded.bookId,
-    chapter: loaded.chapter,
-    translationId: loaded.translationId,
-    verses: loaded.verses.length,
-  });
+  if (__DEV__) {
+    console.warn("[read] chapter load ok", {
+      bookId: loaded.bookId,
+      chapter: loaded.chapter,
+      translationId: loaded.translationId,
+      verses: loaded.verses.length,
+    });
+  }
 
   const segments = loadBundledChapterSegments(loaded.bookId, loaded.chapter, chapterSegmentMode, {
     preferEnglishTitles: preferEnglishSegmentTitles,

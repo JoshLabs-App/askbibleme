@@ -12,7 +12,7 @@ export default function ExploreStackLayout() {
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
-          freezeOnBlur: false,
+          freezeOnBlur: true,
           contentStyle: PARCHMENT_STACK_SCREEN_STYLE,
         }}
       >

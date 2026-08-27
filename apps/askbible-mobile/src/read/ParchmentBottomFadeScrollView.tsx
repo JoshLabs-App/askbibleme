@@ -5,7 +5,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  UIManager,
   View,
   useWindowDimensions,
   type LayoutChangeEvent,
@@ -16,14 +15,7 @@ import {
   readParchmentFadeSafePadding,
   ReadParchmentScrollMask,
 } from "./readParchmentScrollMask";
-
-function nativeMaskedViewAvailable(): boolean {
-  if (Platform.OS === "web") return false;
-  return (
-    typeof UIManager.hasViewManagerConfig === "function" &&
-    UIManager.hasViewManagerConfig("RNCMaskedView")
-  );
-}
+import { nativeMaskedViewAvailable } from "../ui/nativeMaskedViewAvailable";
 
 type Props = ScrollViewProps & {
   /** auto：按路由自动判定；prose：探索长文；tabbar：更重；default：更轻 */

@@ -16,7 +16,9 @@ let defaultPreloadCompletedTrackId: string | null = null;
 let defaultPreloadedSound: PreloadedMusicSound | null = null;
 
 function logPreload(message: string, ...args_: unknown[]) {
-  console.warn(`[music-preload +${Date.now() - moduleStartedAt}ms] ${message}`, ...args_);
+  if (__DEV__) {
+    console.warn(`[music-preload +${Date.now() - moduleStartedAt}ms] ${message}`, ...args_);
+  }
 }
 
 function startDefaultTrackPreload(): Promise<PreloadedMusicSound | null> | null {

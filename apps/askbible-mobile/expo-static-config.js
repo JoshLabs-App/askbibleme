@@ -3,8 +3,8 @@ module.exports = {
     name: "AskBible.me",
     slug: "askbible-me",
     scheme: "askbible",
-    version: "1.0.38",
-    runtimeVersion: "1.0.38",
+    version: "1.0.39",
+    runtimeVersion: "1.0.39",
     updates: {
       enabled: false,
       checkAutomatically: "NEVER",
@@ -32,7 +32,7 @@ module.exports = {
     },
     ios: {
       bundleIdentifier: "me.askbible",
-      buildNumber: "120",
+      buildNumber: "121",
       supportsTablet: true,
       appleTeamId: "AJ2998VZH6",
       entitlements: {
@@ -47,7 +47,7 @@ module.exports = {
     },
     android: {
       package: "me.askbible",
-      versionCode: 120,
+      versionCode: 121,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FFB101",

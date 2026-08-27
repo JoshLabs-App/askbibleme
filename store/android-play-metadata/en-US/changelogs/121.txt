@@ -1,4 +1,3 @@
-Version 1.0.39
 • Google sign-in on Android returns to the app more reliably after authorization
 • Verse bookmarks and account sync are more stable
 • Music repeat-one and playback controls work more accurately

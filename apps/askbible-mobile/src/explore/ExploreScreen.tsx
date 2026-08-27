@@ -174,6 +174,7 @@ export function ExploreScreen() {
       ]}
       accessibilityRole="button"
       accessibilityLabel={t(entry.labelKey)}
+      testID={`explore-tile-${entry.id}`}
     >
       <View style={s.iconCircle}>
         <ExploreEntryIcon entry={entry} size={28} color={c.ink} />

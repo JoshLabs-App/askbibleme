@@ -1,0 +1,70 @@
+# Gated Auto Merge: only PRs labeled `auto-merge`, and only after CI succeeds.
+# Never force-pushes; never merges without the label. Agent must not push main directly.
+name: Gated Auto Merge
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, synchronize, opened, reopened, ready_for_review]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  arm-auto-merge:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      contains(join(github.event.pull_request.labels.*.name, ','), 'auto-merge')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable squash auto-merge (waits for required checks)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PR="${{ github.event.pull_request.number }}"
+          # --auto queues merge until required status checks pass (needs branch protection).
+          # If branch protection is missing, fall through to workflow_run job below.
+          gh pr merge "$PR" --repo "${{ github.repository }}" --squash --auto || {
+            echo "⚠ gh pr merge --auto failed (often: no required checks). CI workflow_run path may still merge."
+            exit 0
+          }
+
+  merge-after-ci:
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge labeled PR after green CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          HEAD_BRANCH="${{ github.event.workflow_run.head_branch }}"
+          HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+          # Resolve open PR for this head
+          PR="$(gh pr list --repo "${{ github.repository }}" --state open --head "$HEAD_BRANCH" --json number,labels,headRefOid \
+            --jq ".[] | select(.headRefOid==\"$HEAD_SHA\") | .number" | head -1)"
+          if [[ -z "$PR" ]]; then
+            PR="$(gh pr list --repo "${{ github.repository }}" --state open --head "$HEAD_BRANCH" --json number,labels \
+              --jq '.[0].number' || true)"
+          fi
+          if [[ -z "$PR" || "$PR" == "null" ]]; then
+            echo "No open PR for branch $HEAD_BRANCH — skip"
+            exit 0
+          fi
+          LABELS="$(gh pr view "$PR" --repo "${{ github.repository }}" --json labels --jq '[.labels[].name] | join(",")')"
+          echo "PR #$PR labels: $LABELS"
+          if [[ ",$LABELS," != *",auto-merge,"* ]]; then
+            echo "No auto-merge label — skip"
+            exit 0
+          fi
+          gh pr merge "$PR" --repo "${{ github.repository }}" --squash --delete-branch=false
+          echo "✓ Squash-merged PR #$PR after green CI"

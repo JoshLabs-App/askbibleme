@@ -180,6 +180,7 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={tabLabel(routeName)}
+      testID={tabTelemetryName(routeName) ? `shell-tab-${tabTelemetryName(routeName)}` : undefined}
     >
       {tabIcon(routeName, selected)}
     </Pressable>

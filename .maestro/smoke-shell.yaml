@@ -1,0 +1,26 @@
+# Smoke: deep links + Feature Map paths (no launchApp — script opens dev client first)
+appId: me.askbible
+tags:
+  - smoke
+  - shell
+---
+- openLink: askbible://dev/maestro-smoke-prep
+- extendedWaitUntil:
+    visible: ".*DEV.*|.*用户菜单.*|.*User menu.*|.*书.*|.*Rest.*|.*安息.*"
+    timeout: 120000
+- openLink: askbible://music
+- extendedWaitUntil:
+    visible: ".*Music.*|.*音乐.*|.*安静.*|.*Rest.*|.*安息.*"
+    timeout: 45000
+- openLink: askbible://read/GEN/1
+- extendedWaitUntil:
+    visible: ".*Genesis.*|.*创世记.*"
+    timeout: 45000
+- openLink: askbible://explore/reading-alarm
+- extendedWaitUntil:
+    visible: ".*Reading reminder.*|.*读经提醒.*"
+    timeout: 45000
+- openLink: askbible://
+- extendedWaitUntil:
+    visible: ".*DEV.*|.*书.*|.*Rest.*|.*安息.*"
+    timeout: 45000

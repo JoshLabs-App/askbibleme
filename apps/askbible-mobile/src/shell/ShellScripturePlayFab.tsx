@@ -29,6 +29,7 @@ export function ShellScripturePlayFab({ routeSelected = false }: Props) {
       accessibilityRole="button"
       accessibilityState={{ selected: routeSelected }}
       accessibilityLabel={t("pages.read.planPlayTitle")}
+      testID="shell-fab-plan-play"
     >
       <MaterialCommunityIcons
         name="account-voice"

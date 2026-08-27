@@ -39,7 +39,8 @@ function devReadingAlarmExpoPath(path: string): string | null {
     !trimmed.includes("dev/reading-alarm") &&
     !trimmed.includes("dev/plan-flow-e2e") &&
     !trimmed.includes("dev/plan-activate-e2e") &&
-    !trimmed.includes("dev/plan-flow-pool-live")
+    !trimmed.includes("dev/plan-flow-pool-live") &&
+    !trimmed.includes("dev/maestro-smoke-prep")
   ) {
     return null;
   }
@@ -49,6 +50,7 @@ function devReadingAlarmExpoPath(path: string): string | null {
   if (route.startsWith("/dev/plan-flow-e2e")) return route;
   if (route.startsWith("/dev/plan-activate-e2e")) return route;
   if (route.startsWith("/dev/plan-flow-pool-live")) return route;
+  if (route.startsWith("/dev/maestro-smoke-prep")) return route;
   return null;
 }
 
@@ -63,6 +65,14 @@ function exploreExpoPath(path: string): string | null {
   if (route.startsWith("/explore/") || route.startsWith("/read/") || route === "/welcome" || route.startsWith("/welcome/")) {
     return route;
   }
+  return null;
+}
+
+function tabExpoPath(path: string): string | null {
+  const trimmed = path.trim();
+  const normalized = trimmed.replace(/^[a-z][a-z0-9+.-]*:\/\/?/i, "");
+  const route = normalized.startsWith("/") ? normalized : `/${normalized}`;
+  if (route === "/music" || route.startsWith("/music/")) return "/music";
   return null;
 }
 
@@ -83,6 +93,8 @@ export function redirectSystemPath({
     if (devAlarmPath) return devAlarmPath;
     const explorePath = exploreExpoPath(path);
     if (explorePath) return explorePath;
+    const tabPath = tabExpoPath(path);
+    if (tabPath) return tabPath;
     if (isUnmappedAppDeepLink(path)) return "/";
   } catch {
     // keep path

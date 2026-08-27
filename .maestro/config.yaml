@@ -1,0 +1,7 @@
+# Maestro — AskBible.me mobile (iOS Simulator / Android Emulator)
+# Docs: docs/mobile-maestro-auto-merge.md
+# Run: npm run mobile:maestro:smoke
+
+appId: me.askbible
+---
+# Shared defaults applied when flows omit appId (flows below set appId explicitly too).

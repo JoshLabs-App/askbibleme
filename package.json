@@ -107,6 +107,8 @@
     "mobile:sync-home-verse-pool": "node scripts/sync-mobile-home-verse-pool.mjs && HOME_PRAYER_POOL_SCOPE_ID=theme-repeat-ge5 node scripts/generate-home-verse-chunk-registry.mjs && node scripts/generate-home-verse-pool-menu-counts.mjs",
     "mobile:sync-scripture": "node scripts/sync-mobile-scripture-sqlite.mjs",
     "mobile:release:preflight": "node scripts/mobile-release-preflight.mjs",
+    "mobile:maestro:smoke": "bash scripts/maestro-smoke.sh",
+    "pr:auto-merge": "bash scripts/pr-enable-auto-merge.sh",
     "mobile:bump:store-version": "node scripts/bump-mobile-store-version.mjs",
     "mobile:start": "npm run start --prefix apps/askbible-mobile",
     "mobile:metro": "npm run start --prefix apps/askbible-mobile",

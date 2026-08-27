@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import "@/components/music/music-home-transport-row.css";
 
 export type MusicHomeTransportSideSlot = {

@@ -219,7 +219,5 @@ export const HOME_PRAYER_POOL_CHUNKS: Record<number, HomePrayerChunkV1> = {
   210: require("../../public/data/home-prayer-pools/theme-repeat-ge5/chunk-210.json") as HomePrayerChunkV1,
   211: require("../../public/data/home-prayer-pools/theme-repeat-ge5/chunk-211.json") as HomePrayerChunkV1,
   212: require("../../public/data/home-prayer-pools/theme-repeat-ge5/chunk-212.json") as HomePrayerChunkV1,
-  213: require("../../public/data/home-prayer-pools/theme-repeat-ge5/chunk-213.json") as HomePrayerChunkV1,
-  214: require("../../public/data/home-prayer-pools/theme-repeat-ge5/chunk-214.json") as HomePrayerChunkV1,
 };
 

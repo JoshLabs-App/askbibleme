@@ -98,7 +98,6 @@ export async function signInMobileMemberWithOAuthIdToken(
       email: user.email,
       name: user.name,
       locale: user.locale,
-      createdAt: user.createdAt,
     },
     sessionToken: session.sessionToken,
     expiresAt: session.expiresAt,

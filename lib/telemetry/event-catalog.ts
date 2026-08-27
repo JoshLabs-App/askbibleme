@@ -23,6 +23,8 @@ export const TELEMETRY_TAB_VALUES = ["home", "music", "read", "explore"] as cons
 export const TELEMETRY_TAP_TARGETS = [
   "intro.start",
   "intro.skip",
+  "intro.set-plan",
+  "intro.confirm-plan",
   "read.settings",
   "read.search",
   "read.favorites",
@@ -39,6 +41,9 @@ export const TELEMETRY_TAP_TARGETS = [
   "shell.menu",
   "music.play",
   "explore.open",
+  "reading-planner.skip",
+  "reading-planner.set-plan",
+  "reading-planner.confirm",
 ] as const;
 
 export type TelemetryTapTarget = (typeof TELEMETRY_TAP_TARGETS)[number];

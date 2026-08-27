@@ -191,8 +191,8 @@ export function ReadingPlannerPlanStep({
                       <p className="reading-planner-other__row-title">{title}</p>
                       <p className="reading-planner-other__row-meta">
                         {t("pages.read.plansMeta", {
-                          days: plan.dayCount,
-                          max: plan.maxReadingsPerDay,
+                          days: String(plan.dayCount),
+                          max: String(plan.maxReadingsPerDay),
                         })}
                       </p>
                       {plan.description ? (

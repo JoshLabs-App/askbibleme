@@ -24,7 +24,7 @@ export async function ensurePlanFlowChapterAudioReadyWeb(args: {
   voiceId: CuvChapterAudioVoiceId;
 }): Promise<string | null> {
   if (!translationSupportsChapterAudio(args.translationId)) return null;
-  const bookName = getScriptureBookDisplayName(args.ref.bookId);
+  const bookName = getScriptureBookDisplayName(args.ref.bookId, "zh-CN");
   const resolved = await resolveChapterAudioPlayableSrc({
     translationId: args.translationId,
     bookId: args.ref.bookId,

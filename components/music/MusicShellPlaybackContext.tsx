@@ -1439,8 +1439,8 @@ export function MusicShellPlaybackProvider({ children }: { children: ReactNode }
     }
 
     const parsed = tryParseCuvChapterAudioEffectiveSrc(src);
-    let title = ASKBIBLE_PRODUCT_NAME;
-    let artist = ASKBIBLE_PRODUCT_NAME;
+    let title: string = ASKBIBLE_PRODUCT_NAME;
+    let artist: string = ASKBIBLE_PRODUCT_NAME;
     let album: string | undefined;
     let kind: "music" | "scripture" = "music";
     let playbackRate = 1;

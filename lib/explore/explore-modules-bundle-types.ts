@@ -118,3 +118,37 @@ export function isExploreModulesBundle(raw: unknown): raw is ExploreModulesBundl
       && o.biblicalLifespans?.lifespans?.length,
   );
 }
+
+const EMPTY_YEARS_DAYS_ETERNITY: YearsDaysEternityDocument = {
+  pageTitle: "",
+  intro: [],
+  sections: [],
+  closing: [],
+  finale: { leadLines: [], scripture: { type: "scripture", lines: [], ref: "" } },
+  encouragement: { type: "scripture", lines: [], ref: "" },
+};
+
+/** 本地缺 bundle.json 时的空壳（探索页仍可渲染）。 */
+export const EMPTY_EXPLORE_MODULES_BUNDLE: ExploreModulesBundle = {
+  schemaVersion: 1,
+  contentVersion: "",
+  prayer: { bookAbbrToId: {}, scenarios: [] },
+  narrowGate: { bookAbbrToId: {}, categories: [], titlesEn: [] },
+  praiseWorship: { bookAbbrToId: {}, categories: [], titlesEn: [] },
+  wordOfGod: { bookAbbrToId: {}, categories: [], titlesEn: [] },
+  yearsDaysEternity: { zh: EMPTY_YEARS_DAYS_ETERNITY, en: EMPTY_YEARS_DAYS_ETERNITY },
+  yearDayCount: {
+    lifeDayReadTarget: { bookId: "", chapter: 1, verse: 1, refDisplay: "" },
+    leadRef: { bookId: "", chapter: 1, verseStart: 1, refDisplay: "" },
+    scriptures: [],
+  },
+  biblicalLifespans: {
+    scaleYears: 1000,
+    ntScaleYears: 100,
+    modernEra: "",
+    era: {},
+    lifespans: [],
+  },
+  centuryTimeline: { spanYears: 90, batterySegmentCount: 5 },
+  exploreHome: { visibleStagedEntryIds: [] },
+};

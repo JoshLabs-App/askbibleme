@@ -30,7 +30,7 @@ export function startHomeAlbumPlaybackWeb(
   const currentIdx = findCompanionTrackIndexBySrc(rawTracks, playback.effectiveSrc, shellPlaybackUrlsEqual);
 
   const startIndex = resolveHomeAlbumPlayIndex(pickTracks, album, currentIdx, (track) =>
-    Boolean(track.src?.trim()),
+    Boolean(track.localReady),
   );
   if (startIndex == null) return false;
 

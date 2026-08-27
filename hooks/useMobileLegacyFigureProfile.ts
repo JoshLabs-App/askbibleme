@@ -7,7 +7,7 @@ import { refreshLegacyFiguresWeb } from "@/lib/explore/explore-content-refresh-w
 import { mobileLegacyFigureProfileToLegacyProfile } from "@/lib/explore/mobile-legacy-figure-to-legacy-profile";
 import { getMobileLegacyFigureBySlugFromBundle } from "@/lib/explore/mobile-legacy-figure-lookup-web";
 import { resolveMobileLegacyFigureView } from "@/lib/explore/resolve-mobile-legacy-figure-view";
-import { localizeLegacyFigureProfileView } from "@/lib/legacy-figure-locale";
+import { localizeLegacyFigureProfileViewClient } from "@/lib/legacy-figure-locale-client";
 import type { LegacyFigureProfile } from "@/lib/legacy-figure-preview";
 
 export function useMobileLegacyFigureProfile(
@@ -62,7 +62,7 @@ export function useMobileLegacyFigureProfile(
   }, [locale, slug]);
 
   return useMemo(
-    () => localizeLegacyFigureProfileView(profile, locale),
+    () => localizeLegacyFigureProfileViewClient(profile, locale),
     [locale, profile],
   );
 }

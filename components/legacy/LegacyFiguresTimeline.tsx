@@ -4,12 +4,12 @@ import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-
 import type { AppLocale } from "@/lib/i18n/config";
 import { getMessages } from "@/lib/i18n/messages";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
-import { legacyFigureDisplayName } from "@/lib/legacy-figure-locale";
+import { legacyFigureDisplayNameClient } from "@/lib/legacy-figure-locale-client";
 import type {
   LegacyFigureTimelineBookRow,
   LegacyFigureTimelineEntry,
 } from "@/lib/legacy-figures-timeline-types";
-import { isLegacyFigurePrimary, legacyFigureEntryHref } from "@/lib/legacy-figure-preview";
+import { isLegacyFigurePrimary, legacyFigureEntryHref } from "@/lib/legacy-figure-preview-links";
 
 function localizeBookName(bookId: string, locale: AppLocale): string {
   if (locale === "zh-CN") {
@@ -36,7 +36,7 @@ function BookFiguresCell({
     <div className="figure-library-figure-list">
       {figures.map((figure) => {
         const variant = isLegacyFigurePrimary(figure) ? "primary" : "secondary";
-        const name = legacyFigureDisplayName(figure, locale);
+        const name = legacyFigureDisplayNameClient(figure, locale);
         return (
           <Link
             key={figure.id}

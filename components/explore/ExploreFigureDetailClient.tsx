@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ExploreProsePage } from "@/components/explore/ExploreProsePage";
-import { LegacyArticleScriptureBody } from "@/components/legacy/LegacyArticleScriptureBody";
+import { LegacyArticleMarkdown } from "@/components/legacy/LegacyArticleMarkdown";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useMobileLegacyFigureProfile } from "@/hooks/useMobileLegacyFigureProfile";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -54,7 +54,7 @@ export function ExploreFigureDetailClient({ slug, initialProfile, locale: locale
 
       {article ? (
         <div className="explore-prose-body figure-library-article-body">
-          <LegacyArticleScriptureBody content={article.body} locale={locale} variant="explore" />
+          <LegacyArticleMarkdown content={article.body} linkScriptureRefs variant="explore" />
         </div>
       ) : (
         <p className="figure-parchment-hint">

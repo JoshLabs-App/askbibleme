@@ -62,9 +62,9 @@ export function getExploreStagedRemoteModule(
   bundle: ExploreModulesBundle,
   entryId: string,
 ): ExploreModulesRemoteStagedModule | null {
-  const module = getExploreHomeConfig(bundle).remoteModules?.[entryId];
-  if (!module || typeof module !== "object") return null;
-  return module;
+  const remoteModule = getExploreHomeConfig(bundle).remoteModules?.[entryId];
+  if (!remoteModule || typeof remoteModule !== "object") return null;
+  return remoteModule;
 }
 
 export function hasExploreStagedRemotePoolContent(module: ExploreModulesRemoteStagedModule): boolean {
@@ -84,8 +84,8 @@ export function getVisibleExploreStagedEntries(bundle: ExploreModulesBundle): Ex
     if (!entry) continue;
 
     if (isExploreScripturePoolEntryId(id)) {
-      const module = getExploreStagedRemoteModule(bundle, id);
-      if (!module || !hasExploreStagedRemotePoolContent(module)) continue;
+      const remoteModule = getExploreStagedRemoteModule(bundle, id);
+      if (!remoteModule || !hasExploreStagedRemotePoolContent(remoteModule)) continue;
     }
 
     seen.add(id);

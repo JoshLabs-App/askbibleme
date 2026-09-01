@@ -1090,6 +1090,9 @@
   white-space: normal;
   scroll-margin-top: var(--read-chapter-verse-scroll-margin-top, 5.5rem);
   scroll-margin-bottom: 2.5rem;
+  /* 经文正文允许原生划选/复制，覆盖 body 的默认 user-select: none */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .read-chapter-verse-inline-chunk--search-focus {
@@ -1150,6 +1153,9 @@
 
 .read-chapter-verse-primary {
   display: inline;
+  /* 经文正文允许原生划选/复制，覆盖 body 的默认 user-select: none */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .read-chapter-verse-contrast {
@@ -1160,6 +1166,8 @@
   line-height: 1.15;
   letter-spacing: 0.01em;
   color: color-mix(in srgb, rgb(120 75 30) 62%, transparent);
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .dark .read-chapter-verse-contrast {
@@ -2327,6 +2335,14 @@
 
 .read-chapter-verse--highlight-mode {
   user-select: none;
+}
+
+/* 高亮编辑模式下拖拽是"涂色"手势，需重新关闭正文的原生划选（覆盖上方按 verse-primary/inline-chunk 单独打开的 text） */
+.read-chapter-verse--highlight-mode .read-chapter-verse-primary,
+.read-chapter-verse--highlight-mode .read-chapter-verse-contrast,
+.read-chapter-verses-root--highlight-mode .read-chapter-verse-inline-chunk {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .read-chapter-verse-text-highlight {

@@ -69,7 +69,10 @@ export function NtDeepRepeatPaceSection({ value, onChange, previewStart }: Props
           {t("pages.read.ntDeepRepeatPaceIntro")}
         </p>
         <p className="mt-2 text-pretty text-[11px] leading-relaxed text-amber-800/58 dark:text-stone-500">
-          {t("pages.read.ntDeepRepeatPaceContinuousNote")}
+          {t("pages.read.ntDeepRepeatPaceContinuousNote", {
+            days: String(pace),
+            nextDay: String(pace + 1),
+          })}
         </p>
       </div>
 

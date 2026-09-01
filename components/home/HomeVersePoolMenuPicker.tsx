@@ -92,7 +92,14 @@ function HomeVersePoolPickerOverlay({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose, open]);
 
-  if (!open || typeof document === "undefined") return null;
+  // Portal target only exists client-side; defer to an effect (rather than a synchronous
+  // `typeof document` check) so the first client render still matches the SSR output of `null`.
+  const [bodyPortalReady, setBodyPortalReady] = useState(false);
+  useEffect(() => {
+    setBodyPortalReady(true);
+  }, []);
+
+  if (!open || !bodyPortalReady) return null;
 
   const query = searchText.trim().toLowerCase();
   const visibleRows = query

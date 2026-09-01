@@ -108,24 +108,6 @@ async function readMemberReadingSyncDocumentFromAllStores(
   return fromDisk ?? fromSupabase;
 }
 
-async function writeMemberReadingSyncDocumentToDisk(
-  doc: MemberReadingSyncDocumentV1,
-  cwd = process.cwd(),
-): Promise<boolean> {
-  const filePath = memberReadingSyncFilePath(doc.userId, cwd);
-  const dir = memberReadingSyncDir(cwd);
-  if (!filePath || !dir) return false;
-  try {
-    await fs.mkdir(dir, { recursive: true });
-    const tmp = `${filePath}.tmp`;
-    await fs.writeFile(tmp, JSON.stringify(doc, null, 2), "utf8");
-    await fs.rename(tmp, filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export async function readMemberReadingSyncDocument(
   userId: string,
   cwd = process.cwd(),
@@ -135,14 +117,12 @@ export async function readMemberReadingSyncDocument(
 
 export async function writeMemberReadingSyncDocument(
   doc: MemberReadingSyncDocumentV1,
-  cwd = process.cwd(),
 ): Promise<boolean> {
-  const diskOk = await writeMemberReadingSyncDocumentToDisk(doc, cwd);
   const fromSupabase = await upsertMemberReadingSyncDocumentToSupabase(doc.userId, {
     schemaVersion: 1,
     blobs: doc.blobs,
   });
-  return diskOk || fromSupabase != null;
+  return fromSupabase != null;
 }
 
 export async function upsertMemberReadingSyncDocument(
@@ -153,11 +133,9 @@ export async function upsertMemberReadingSyncDocument(
   const existing = await readMemberReadingSyncDocumentFromAllStores(userId, cwd);
   const merged = mergeMemberReadingSyncDocuments(userId, existing, push);
 
-  const diskOk = await writeMemberReadingSyncDocumentToDisk(merged, cwd);
   const supabaseOk = (await upsertMemberReadingSyncDocumentToSupabase(userId, {
     schemaVersion: 1,
     blobs: merged.blobs,
   })) != null;
-  if (diskOk || supabaseOk) return merged;
-  return null;
+  return supabaseOk ? merged : null;
 }

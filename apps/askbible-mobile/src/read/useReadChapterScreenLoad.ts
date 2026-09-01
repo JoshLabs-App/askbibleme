@@ -1,6 +1,6 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { InteractionManager, type ScrollView } from "react-native";
+import type { ScrollView } from "react-native";
 import { loadBundledChapterSegments } from "../bible/bundled-chapter-segments";
 import type { ChapterSegment } from "../bible/types";
 import type { LoadedChapter } from "../bible/types";
@@ -8,7 +8,6 @@ import type { BibleTranslationMeta } from "../bible/translations-types";
 import { t } from "../i18n/site-copy";
 import { loadReadChapterScreenChapter } from "./loadReadChapterScreenChapter";
 import { isNativeDatabaseRejectedError } from "../bible/scripture-database";
-import { trackTelemetry } from "../telemetry/client";
 import { useReadChapterScreenDeferredLoads } from "./useReadChapterScreenDeferredLoads";
 
 type Args = {
@@ -263,17 +262,6 @@ export function useReadChapterScreenLoad({
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [bookId, chapter, scrollRef]);
-
-  useEffect(() => {
-    if (!chapterData) return;
-    const task = InteractionManager.runAfterInteractions(() => {
-      trackTelemetry("read_chapter_open", {
-        book_id: chapterData.bookId,
-        chapter: chapterData.chapter,
-      });
-    });
-    return () => task.cancel();
-  }, [chapterData?.bookId, chapterData?.chapter]);
 
   return {
     loading,

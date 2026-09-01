@@ -9,7 +9,6 @@ import {
 import { t } from "../i18n/site-copy";
 import { useShellNavMenu } from "./ShellNavMenuContext";
 import { isHomeNatureRoute } from "./shellPrimaryRoute";
-import { trackTap } from "../telemetry/tap";
 import { ShellMaterialIcon } from "./ShellMaterialIcon";
 
 /** 左上角三杠：仅自然首页显示；横屏「只看经文」时隐藏，显示图标时可操作。 */
@@ -29,7 +28,6 @@ export function ShellMenuButton() {
   return (
     <Pressable
       onPress={() => {
-        trackTap("shell.menu");
         toggleMenu();
       }}
       style={[

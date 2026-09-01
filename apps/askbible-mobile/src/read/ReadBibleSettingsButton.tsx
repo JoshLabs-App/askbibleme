@@ -7,7 +7,6 @@ import { isReadTypographySettingsPathname } from "../shell/shellPrimaryRoute";
 import { t } from "../i18n/site-copy";
 import { ReadBibleSettingsPanel } from "./ReadBibleSettingsPanel";
 import { READ_TOP_CHROME, readTopChromeRightStyle } from "./readTopChrome";
-import { trackTap } from "../telemetry/tap";
 
 /** 读经栈右上设置：与搜索/收藏同一套顶栏尺寸与列对齐 */
 export function ReadBibleSettingsButton() {
@@ -23,7 +22,6 @@ export function ReadBibleSettingsButton() {
     <>
       <Pressable
         onPress={() => {
-          trackTap("read.settings");
           setPanelMounted(true);
           setOpen(true);
         }}

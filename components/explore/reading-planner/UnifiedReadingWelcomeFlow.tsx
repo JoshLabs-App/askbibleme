@@ -23,7 +23,6 @@ import {
   subscribeReadingPlanPrefs,
 } from "@/lib/read/reading-plan-prefs";
 import { readPlanPlayHref } from "@/lib/read/read-plan-play-route";
-import { trackTap } from "@/lib/telemetry/tap";
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import "@/components/explore/reading-planner/reading-planner.css";
 
@@ -91,7 +90,6 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete, registryPlans }: 
   const handleSkip = () => {
     if (submitting) return;
     if (entry === "explore") {
-      trackTap("reading-planner.skip");
       router.push("/explore");
       return;
     }
@@ -108,14 +106,12 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete, registryPlans }: 
 
   const goSetPlan = () => {
     if (submitting) return;
-    trackTap(entry === "welcome" ? "intro.set-plan" : "reading-planner.set-plan");
     setStep(2);
   };
 
   const confirmPlan = () => {
     if (submitting) return;
     setSubmitting(true);
-    trackTap(entry === "welcome" ? "intro.confirm-plan" : "reading-planner.confirm");
     try {
       const supportsStartDay = readingPlannerChoiceSupportsStartDay(choice);
       const startDayToApply = supportsStartDay ? startDay : 1;

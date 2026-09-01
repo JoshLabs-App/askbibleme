@@ -17,7 +17,6 @@ import { ShellNavDrawer } from "../src/shell/ShellNavDrawer";
 import { AppUsageTimeBridge } from "../src/shell/AppUsageTimeBridge";
 import { ShellNavMenuProvider } from "../src/shell/ShellNavMenuContext";
 import { ReadBibleTypographyProvider } from "../src/read/ReadBibleTypographyContext";
-import { TelemetryProvider } from "../src/telemetry/TelemetryProvider";
 import { installAndroidNotoTextDefaults } from "../src/fonts/installAndroidNotoTextDefaults";
 import { useAndroidNotoFonts } from "../src/fonts/useAndroidNotoFonts";
 import { theme } from "../src/theme";
@@ -224,7 +223,6 @@ export default function RootLayout() {
             <MemberAuthProvider>
               <ReadingPlanBootstrapBridge />
               <MemberReadingSyncBridge />
-              <TelemetryProvider>
                 <ShellNavMenuProvider>
                   <ReadBibleTypographyProvider>
                   {appReady ? (
@@ -298,7 +296,6 @@ export default function RootLayout() {
                   )}
                   </ReadBibleTypographyProvider>
                 </ShellNavMenuProvider>
-              </TelemetryProvider>
             </MemberAuthProvider>
           </LocaleProvider>
         </MusicPlaybackProvider>

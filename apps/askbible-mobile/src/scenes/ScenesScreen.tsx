@@ -26,7 +26,6 @@ import { ShellSwipeExclude } from "../shell/ShellSwipeExclude";
 import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import type { NatureSettingsV2 } from "../types/nature";
 import { HOME_SCENE_THUMB_GAP, HomeSceneThumb } from "../home/HomeSceneThumb";
-import { trackTelemetry } from "../telemetry/client";
 import { parchmentSans } from "../fonts/parchmentType";
 import { theme } from "../theme";
 import { ScenesPageListenShortcuts } from "./ScenesPageListenShortcuts";
@@ -135,7 +134,6 @@ export function ScenesScreen() {
       setSceneUsageMap(usage);
       await writeNatureActiveSceneId(id);
       setActiveId(id);
-      trackTelemetry("scene_view", { scene_id: id });
       router.navigate("/");
     },
     [router],

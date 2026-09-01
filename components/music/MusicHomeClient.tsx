@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -38,7 +37,6 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { exitFullscreenCompat, requestFullscreenCompat } from "@/lib/dom/fullscreen";
 import { isIosLikeUserAgent } from "@/lib/dom/ios";
-import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { prefetchMusicTrackBundle } from "@/lib/music/prefetch-music-track";
 import { resolveLocalized } from "@/lib/i18n/localized-text";
 import { setMusicAutoHideChrome } from "@/lib/music/music-auto-hide-chrome";
@@ -143,7 +141,6 @@ function countTracksWithSrc(store: MusicCompanionStore): number {
 export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) {
   const { t, locale } = useLocale();
   const { bootstrapped, user } = useAskbibleUser();
-  const showAdminMusicLink = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const landscapeNarrow = useLandscapeNarrow();
   const musicWide = useMusicHomeWideScreen();
   const inTemplateChrome = layout === "templateChrome";
@@ -751,15 +748,7 @@ export function MusicHomeClient({ initialStore, layout = "standalone" }: Props) 
 
       {allTracksWithSrc.length === 0 ? (
         <p className="music-home-empty">
-          {showAdminMusicLink ? (
-            <>
-              {t("music.home.noAudioBefore")}{" "}
-              <Link href="/admin/music">{t("music.home.adminMusic")}</Link>{" "}
-              {t("music.home.noAudioAfter")}
-            </>
-          ) : (
-            t("music.home.noAudioPlain")
-          )}
+          {t("music.home.noAudioPlain")}
         </p>
       ) : (
         <div

@@ -5,7 +5,6 @@ import { t } from "../i18n/site-copy";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { ParchmentModalCard } from "../shell/ParchmentControlSheet";
 import { parchmentControlSurface } from "../shell/parchmentControlSurface";
-import { trackTap } from "../telemetry/tap";
 import { markFirstOpenHintSeen, shouldShowFirstOpenHint } from "./first-open-hint-prefs";
 
 function isFirstOpenHintEnabled(): boolean {
@@ -27,8 +26,7 @@ export function FirstOpenHintGate() {
     };
   }, [enabled]);
 
-  const closeWithTarget = (target: "intro.start" | "intro.skip") => {
-    trackTap(target);
+  const close = () => {
     setVisible(false);
     void markFirstOpenHintSeen();
   };
@@ -38,17 +36,17 @@ export function FirstOpenHintGate() {
   return (
     <Modal visible transparent animationType="fade" statusBarTranslucent>
       <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => closeWithTarget("intro.skip")} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => close()} />
         <ParchmentModalCard style={styles.card}>
           <Text style={styles.title}>{t("onboarding.firstOpenHint.title")}</Text>
           <Text style={styles.subtitle}>{t("onboarding.firstOpenHint.subtitle")}</Text>
           <Text style={styles.body}>{t("onboarding.firstOpenHint.body")}</Text>
           <Text style={styles.helper}>{t("onboarding.firstOpenHint.helper")}</Text>
           <View style={styles.actions}>
-            <Pressable style={styles.primaryButton} onPress={() => closeWithTarget("intro.start")}>
+            <Pressable style={styles.primaryButton} onPress={() => close()}>
               <Text style={styles.primaryButtonText}>{t("onboarding.firstOpenHint.ctaStart")}</Text>
             </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={() => closeWithTarget("intro.skip")}>
+            <Pressable style={styles.secondaryButton} onPress={() => close()}>
               <Text style={styles.secondaryButtonText}>{t("onboarding.firstOpenHint.ctaLater")}</Text>
             </Pressable>
           </View>

@@ -14,7 +14,6 @@ import {
 import { useEffectiveReadingPlanPrefs } from "../../read/reading-plan/useReadingPlanStores";
 import { ShellSystemBackButton } from "../../shell/ShellSystemBackButton";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../../shell/splash-branding.generated";
-import { trackTap } from "../../telemetry/tap";
 import { returnToExploreIndex } from "../explore-read-chapter-nav";
 import {
   activateReadingPlanFromPlanner,
@@ -96,12 +95,10 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
   const handleSkip = async () => {
     if (submitting) return;
     if (entry === "explore") {
-      trackTap("reading-planner.skip");
       returnToExploreIndex(router);
       return;
     }
     setSubmitting(true);
-    trackTap("intro.skip");
     try {
       await completeOnboardingDevotionIntro([]);
       onComplete();
@@ -120,7 +117,6 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
 
   const goSetPlan = () => {
     if (submitting) return;
-    trackTap(entry === "welcome" ? "intro.set-plan" : "reading-planner.set-plan");
     setStep(2);
   };
 
@@ -136,7 +132,6 @@ export function UnifiedReadingWelcomeFlow({ entry, onComplete }: UnifiedReadingW
   const confirmPlan = async () => {
     if (submitting) return;
     setSubmitting(true);
-    trackTap(entry === "welcome" ? "intro.confirm-plan" : "reading-planner.confirm");
     try {
       if (entry === "welcome") {
         await completeOnboardingDevotionIntro([]);

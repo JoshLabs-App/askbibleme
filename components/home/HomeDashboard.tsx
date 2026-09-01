@@ -18,7 +18,6 @@ import { HomePrayerVerseDockSettings } from "@/components/home/HomePrayerVerseDo
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { AppLocale } from "@/lib/i18n/config";
 import type { HomeVerseEntry } from "@/lib/i18n/home-verses";
-import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 import { SITE_METADATA_DEFAULT_TITLE } from "@/lib/site-metadata-defaults";
 import {
   NATURE_HOME_TEXT_SCALE_DEFAULT_STEP_INDEX,
@@ -254,7 +253,6 @@ export function HomeDashboard() {
   const { t } = useLocale();
   const { bootstrapped, user, logout } = useAskbibleUser();
   const registerOpen = isMemberRegisterEnabledClient();
-  const showAdminHomeLinks = bootstrapped && Boolean(user && isSelahSuperAdminEmail(user.email));
   const [store, setStore] = useState<MusicCompanionStore | null>(null);
   const [backdropMode, setBackdropMode] = useState<HomeBackdropMode>("atmosphere");
   const [homeAtmospherePresetId, setHomeAtmospherePresetId] = useState<HomeAtmospherePresetId>("lagoon");
@@ -584,26 +582,6 @@ export function HomeDashboard() {
                       ) : null}
                       <div className="mx-3 my-1 h-px bg-white/10" aria-hidden />
                     </>
-                  ) : null}
-                  {showAdminHomeLinks ? (
-                    <Link
-                      href="/admin/studio"
-                      role="menuitem"
-                      className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      内部 · Studio
-                    </Link>
-                  ) : null}
-                  {showAdminHomeLinks ? (
-                    <Link
-                      href="/admin/music"
-                      role="menuitem"
-                      className="block px-3 py-2.5 text-[13px] text-canvas/95 transition hover:bg-white/10"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      曲库与配图
-                    </Link>
                   ) : null}
                 </div>
               ) : null}

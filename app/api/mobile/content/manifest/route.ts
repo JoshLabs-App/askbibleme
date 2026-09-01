@@ -5,7 +5,6 @@ import {
   type MobileContentAnnouncement,
 } from "@/lib/admin/mobile-content-flags-store";
 import { isMemberAuthBackendConfigured } from "@/lib/member-auth-backend";
-import { isTelemetryWritableDiskAvailable } from "@/lib/telemetry/disk-path";
 
 export const runtime = "nodejs";
 
@@ -114,7 +113,7 @@ export async function GET() {
     flags,
     serverCapabilities: {
       feedbackEnabled: hasDataRoot || process.env.NODE_ENV !== "production",
-      telemetryEnabled: isTelemetryWritableDiskAvailable(),
+      telemetryEnabled: false,
       memberRegisterEnabled:
         cfg.flags.memberRegisterEnabled && isMemberAuthBackendConfigured(),
       infoEditionDiskSaveEnabled,

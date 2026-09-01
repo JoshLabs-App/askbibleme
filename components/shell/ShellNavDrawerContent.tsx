@@ -13,7 +13,6 @@ import { readTranslationsHref } from "@/lib/read/read-translations-route";
 import type { AppLocale } from "@/lib/i18n/config";
 import { getLocalePickerLabel } from "@/lib/i18n/locale-display-labels";
 import { isMemberRegisterEnabledClient } from "@/lib/member-register-enabled";
-import { isSelahSuperAdminEmail } from "@/lib/selah-super-admin";
 
 const SUPPORT_EMAIL = "askbibleme@gmail.com";
 
@@ -237,9 +236,6 @@ export function ShellNavDrawerContent({ onClose }: Props) {
               })();
             }}
           />
-          {isSelahSuperAdminEmail(user.email) ? (
-            <ShellNavDrawerMenuRow label={t("auth.drawerAdmin")} href="/admin" onClick={onClose} />
-          ) : null}
         </div>
       ) : null}
     </div>

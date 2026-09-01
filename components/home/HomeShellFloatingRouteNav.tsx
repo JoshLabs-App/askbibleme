@@ -24,8 +24,6 @@ import {
   shellTabMaterialIcon,
   type ShellTabMaterialIconName,
 } from "@/lib/shell/shell-chrome-icons";
-import { trackTap } from "@/lib/telemetry/tap";
-import { trackTelemetry } from "@/lib/telemetry/client";
 
 type NavItemDef = {
   href: string;
@@ -166,17 +164,7 @@ export function HomeShellFloatingRouteNav({ placement, shellRoot = "" }: Props) 
       ? "home-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0"
       : "pointer-events-none absolute inset-x-0 bottom-0 z-[18] flex flex-col items-center justify-end gap-1.5 px-3 pb-[max(0.375rem,env(safe-area-inset-bottom,0px))] pt-0";
 
-  const navTapTarget = (item: NavItemDef): void => {
-    if (item.labelKey === "nav.home") trackTelemetry("tab_select", { tab: "home" });
-    else if (item.labelKey === "nav.music") trackTelemetry("tab_select", { tab: "music" });
-    else if (item.labelKey === "nav.read") {
-      trackTelemetry("tab_select", { tab: "read" });
-      trackTap("read.catalog");
-    } else if (item.labelKey === "nav.explore") {
-      trackTelemetry("tab_select", { tab: "explore" });
-      trackTap("explore.open");
-    }
-  };
+  const navTapTarget = (_item: NavItemDef): void => {};
 
   const renderTabIcon = (item: NavItemDef) => (
     <ShellMaterialIcon

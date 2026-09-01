@@ -17,7 +17,6 @@ import {
 } from "../read/parchmentColumnLayout";
 import { ensureDefaultReadingPlanIfUnset } from "../read/reading-plan/ensure-default-reading-plan";
 import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
-import { trackTap } from "../telemetry/tap";
 import { authFormSurface as auth } from "../auth/authFormSurface";
 import { parchmentControlSurface } from "../shell/parchmentControlSurface";
 import { completeOnboardingDevotionIntro } from "./onboarding-devotion-prefs";
@@ -100,12 +99,10 @@ export function OnboardingDevotionIntro({
 
   const handleSkipLogin = () => {
     if (finishing) return;
-    trackTap("intro.login.skip");
     void finishWelcome();
   };
 
   const handleSignedIn = () => {
-    trackTap("intro.login.success");
     void finishWelcome();
   };
 

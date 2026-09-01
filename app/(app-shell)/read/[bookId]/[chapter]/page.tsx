@@ -18,7 +18,6 @@ import {
   resolveInfoEditionReaderTarget,
 } from "@/lib/bible/info-edition-v1-reader-persistence";
 import { resolveReadChapterNeighbors } from "@/lib/bible/read-chapter-neighbors";
-import { ReadChapterTelemetry } from "@/components/telemetry/ReadChapterTelemetry";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 import {
   INFO_EDITION_GUIDE_V2_EN_ROLE_ID,
@@ -92,7 +91,6 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
         <ReadChapterPlanFlowSync />
       </Suspense>
       <ReadChapterLastPositionSync bookId={data.bookId} chapter={data.chapter} bookName={displayBookName} />
-      <ReadChapterTelemetry bookId={data.bookId} chapter={data.chapter} />
       <article className="read-chapter-article">
         <div className="read-chapter-spread">
           <div className="read-chapter-open-book">

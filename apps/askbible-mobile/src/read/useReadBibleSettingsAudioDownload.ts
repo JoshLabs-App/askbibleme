@@ -15,7 +15,6 @@ import {
   startAudioPackageDownload,
   subscribeAudioPackageDownload,
 } from "./read-audio-package-download";
-import { trackTap } from "../telemetry/tap";
 import type { AppLocale } from "../i18n/config";
 import type { ReadBibleSettingsOpenMenu } from "./useReadBibleSettingsTranslationOptions";
 
@@ -152,7 +151,6 @@ export function useReadBibleSettingsAudioDownload({
 
   const onDownloadPackage = useCallback(
     (pkg: AudioDownloadPackageItem) => {
-      trackTap("read.downloadAudioPack");
       const active = downloadState.packageKey === pkg.packageKey;
       if (active && downloadState.status === "running") {
         void pauseAudioPackageDownload();

@@ -7,7 +7,7 @@ import {
 } from "@/lib/bible/info-edition-published-path";
 import { isSelahOnlineEditorSurfaceAllowed } from "@/lib/selah-online-editor-surface";
 
-/** 允许通过 `/api/admin/bible/info-edition-batch` 在服务器上启停全本批量（临时运维） */
+/** 是否允许在服务器上启停全本批量（临时运维；仅 CLI 触发，无后台入口） */
 export function isInfoEditionOnlineBatchEnabled(): boolean {
   return process.env.INFO_EDITION_BATCH_ONLINE === "1";
 }

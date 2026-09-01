@@ -30,7 +30,6 @@ import { ReadParchmentFillLayer } from "../read/ReadParchmentSurface";
 import { ReadScriptureAudioDockStrip } from "../read/ReadScriptureAudioDockStrip";
 import { shouldShowReadScriptureAudioDock } from "../read/readScriptureDockVisibility";
 import { shouldHideShellTabBarPathname } from "./shellTabBarPath";
-import { trackTelemetry } from "../telemetry/client";
 import { tabIcon, tabLabel, tabTelemetryName } from "./shellTabBarHelpers";
 import { ShellScripturePlayFab } from "./ShellScripturePlayFab";
 import { shellTabBarStyles as styles } from "./shellTabBarStyles";
@@ -117,8 +116,6 @@ export function ShellTabBar({ state, navigation }: BottomTabBarProps) {
             canPreventDefault: true,
           });
           if (pressEvent.defaultPrevented) return;
-          const tab = tabTelemetryName(routeName);
-          if (tab) trackTelemetry("tab_select", { tab });
           if ("jumpTo" in navigation && typeof navigation.jumpTo === "function") {
             navigation.jumpTo(routeName);
             return;

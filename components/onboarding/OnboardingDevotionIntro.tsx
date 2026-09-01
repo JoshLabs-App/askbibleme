@@ -15,7 +15,6 @@ import {
   completeOnboardingDevotionIntro,
   type CompanionNeedId,
 } from "@/lib/onboarding/onboarding-devotion-prefs";
-import { trackTap } from "@/lib/telemetry/tap";
 
 const LOGO_YELLOW = "#ffb101";
 
@@ -203,7 +202,6 @@ export function OnboardingDevotionIntro({ onComplete }: OnboardingDevotionIntroP
   const handleSkip = async () => {
     if (submitting) return;
     setSubmitting(true);
-    trackTap("intro.skip");
     await completeOnboardingDevotionIntro([]);
     onComplete();
   };

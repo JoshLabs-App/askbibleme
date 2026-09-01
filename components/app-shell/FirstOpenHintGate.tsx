@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { trackTap } from "@/lib/telemetry/tap";
 import { markFirstOpenHintSeen, shouldShowFirstOpenHint } from "@/lib/onboarding/first-open-hint-persistence";
 
 function isFirstOpenHintEnabled(): boolean {
@@ -23,8 +22,7 @@ export function FirstOpenHintGate({ onDismiss }: Props) {
     setVisible(shouldShowFirstOpenHint());
   }, [enabled]);
 
-  const closeWithTarget = (target: "intro.start" | "intro.skip") => {
-    trackTap(target);
+  const close = () => {
     setVisible(false);
     markFirstOpenHintSeen();
     onDismiss?.();
@@ -38,7 +36,7 @@ export function FirstOpenHintGate({ onDismiss }: Props) {
         type="button"
         aria-label={t("onboarding.firstOpenHint.ctaLater")}
         className="absolute inset-0 cursor-default"
-        onClick={() => closeWithTarget("intro.skip")}
+        onClick={() => close()}
       />
       <section
         role="dialog"
@@ -59,14 +57,14 @@ export function FirstOpenHintGate({ onDismiss }: Props) {
         <div className="mt-4 flex flex-col gap-2">
           <button
             type="button"
-            onClick={() => closeWithTarget("intro.start")}
+            onClick={() => close()}
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-app-dark px-4 text-[14px] font-medium text-white transition hover:opacity-95"
           >
             {t("onboarding.firstOpenHint.ctaStart")}
           </button>
           <button
             type="button"
-            onClick={() => closeWithTarget("intro.skip")}
+            onClick={() => close()}
             className="inline-flex min-h-10 items-center justify-center rounded-full border border-border/70 px-4 text-[14px] text-ink/70 transition hover:text-ink"
           >
             {t("onboarding.firstOpenHint.ctaLater")}

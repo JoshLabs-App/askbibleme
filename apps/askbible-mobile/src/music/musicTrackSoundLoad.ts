@@ -4,7 +4,6 @@ import type { AVPlaybackStatus } from "expo-av";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import type { PlaybackTrack } from "./types";
-import { trackTelemetry } from "../telemetry/client";
 import { persistMusicStoreSnapshot } from "./musicTrackStartPosition";
 import { createAndPlayMusicTrackSound } from "./musicTrackSoundCreate";
 import { clearScripturePlayingChapter } from "./scripturePlayingChapterStore";
@@ -122,7 +121,6 @@ export async function loadAndStartMusicTrackSound(args: LoadArgs): Promise<Loade
   resumeTrackIdRef.current = track.id;
   resumePositionSecRef.current = 0;
   if (shouldPlay) {
-    trackTelemetry("music_play", { track_id: track.id });
     musicSessionRef.current = { trackId: track.id, startedAt: Date.now() };
   } else {
     musicSessionRef.current = null;

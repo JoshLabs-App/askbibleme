@@ -16,7 +16,6 @@ import {
 } from "../nature/natureSceneUsage";
 import type { NatureSettingsV2 } from "../types/nature";
 import { ensureNatureSceneVideoReady, hasBundledNatureSceneVideo, isNatureSceneVideoReady } from "../media/natureSceneReadiness";
-import { trackTelemetry } from "../telemetry/client";
 import { homeSceneStripScrollX } from "./HomeSceneThumb";
 import type { HomeNatureVideoPowerPolicy } from "./useHomeNatureVideoPowerPolicy";
 import { useHomeNatureSceneVideoReadiness } from "./useHomeNatureSceneVideoReadiness";
@@ -81,8 +80,6 @@ export function useHomeNatureSceneControl({
 
   const sceneScrollRef = useRef<ScrollView>(null);
   const sceneStripViewportW = useRef(0);
-  const prevSceneRef = useRef<string | null>(null);
-  const sceneSessionStartRef = useRef(0);
 
   const {
     sceneId,
@@ -222,39 +219,6 @@ export function useHomeNatureSceneControl({
     });
     return () => task.cancel();
   }, [enabled, loading, sceneId, scrollSceneStripToId]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    if (!sceneId || loading) return;
-    const task = InteractionManager.runAfterInteractions(() => {
-      const prev = prevSceneRef.current;
-      if (prev && prev !== sceneId) {
-        trackTelemetry("scene_session", {
-          scene_id: prev,
-          duration_ms: Date.now() - sceneSessionStartRef.current,
-        });
-      }
-      if (prev !== sceneId) {
-        trackTelemetry("scene_view", { scene_id: sceneId });
-        prevSceneRef.current = sceneId;
-        sceneSessionStartRef.current = Date.now();
-      }
-    });
-    return () => task.cancel();
-  }, [enabled, sceneId, loading]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    return () => {
-      const prev = prevSceneRef.current;
-      if (!prev) return;
-      trackTelemetry("scene_session", {
-        scene_id: prev,
-        duration_ms: Date.now() - sceneSessionStartRef.current,
-      });
-      prevSceneRef.current = null;
-    };
-  }, []);
 
   useEffect(() => {
     if (!enabled) return;

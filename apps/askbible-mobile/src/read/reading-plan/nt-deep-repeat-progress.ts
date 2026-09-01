@@ -24,7 +24,7 @@ import {
   toLocalDateString,
   writeReadingPlanPrefs,
 } from "./reading-plan-prefs";
-import { NT_DEEP_REPEAT_CURRICULUM } from "./nt-deep-repeat-curriculum";
+import { NT_DEEP_REPEAT_CURRICULUM } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 
 export const NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY = "askbible-nt-deep-repeat-progress-v5";
 const NT_DEEP_REPEAT_PROGRESS_STORAGE_KEY_V4 = "askbible-nt-deep-repeat-progress-v4";

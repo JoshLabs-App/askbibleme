@@ -6,7 +6,7 @@ import {
   buildYearReadRangesBeforeToday,
   getYearDayTimeline,
   yearDayRangeToTrackFraction,
-} from "./year-day-timeline";
+} from "@/lib/read/year-day-timeline";
 import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
 
 const EMPTY_DATES: readonly string[] = [];

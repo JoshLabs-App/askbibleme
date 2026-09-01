@@ -10,7 +10,7 @@ import {
   syncReadingHabitDayCompletion,
   type ReadingHabitStatsSnapshot,
 } from "./reading-habit-stats";
-import { getYearDayTimeline } from "./year-day-timeline";
+import { getYearDayTimeline } from "@/lib/read/year-day-timeline";
 
 function applySnapshot(
   setSnapshot: Dispatch<SetStateAction<ReadingHabitStatsSnapshot>>,

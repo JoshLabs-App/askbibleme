@@ -5,7 +5,7 @@ import {
   jumpNtDeepRepeatProgressToPlanDay,
   resetNtDeepRepeatToCalendarToday,
 } from "./nt-deep-repeat-progress";
-import { isPointerReadingPlanId } from "./pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
 import {

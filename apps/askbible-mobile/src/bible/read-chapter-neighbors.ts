@@ -1,5 +1,5 @@
 import { getScriptureBookDisplayName } from "./scripture-book-display-name";
-import { scriptureBooks } from "./scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 
 export type ReadChapterNeighbor = {
   bookId: string;

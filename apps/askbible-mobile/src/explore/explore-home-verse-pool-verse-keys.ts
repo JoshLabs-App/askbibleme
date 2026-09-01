@@ -1,4 +1,4 @@
-import { scriptureBooks } from "../bible/scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import {
   getYearDayCountLeadRef,
   getYearDayCountScriptures,

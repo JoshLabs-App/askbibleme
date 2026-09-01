@@ -6,7 +6,7 @@ import type { AppLocale } from "../i18n/config";
 import { t, tFormat } from "../i18n/site-copy";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { readParchmentTheme as c } from "./readParchmentTheme";
-import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import {
   resolveReadingPlanDayIndex,
   type ReadingPlanPrefs,

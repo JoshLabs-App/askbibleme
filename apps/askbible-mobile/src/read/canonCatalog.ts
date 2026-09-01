@@ -1,7 +1,7 @@
 import { divineLabelForLocale } from "../bible/scripture-book-divine-en";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { summaryLabelForLocale } from "../bible/scripture-book-summary-en";
-import { scriptureBooks, OLD_TESTAMENT_MAX_BOOK_NUMBER } from "../bible/scripture-books";
+import { scriptureBooks, OLD_TESTAMENT_MAX_BOOK_NUMBER } from "@/lib/bible/scripture-books";
 import { scriptureBookNotes } from "../bible/scripture-book-notes";
 import type { AppLocale } from "../i18n/config";
 import { getLocale } from "../i18n/locale-store";

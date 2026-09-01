@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
 import { markNtDeepRepeatChapterRead } from "./nt-deep-repeat-progress";
 import { trackForNtDeepRepeatBookId } from "./nt-deep-repeat-reading";
-import { isPointerReadingPlanId } from "./pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./triple-loop-plan";
 import {
   buildTodayReadingScopeKey,

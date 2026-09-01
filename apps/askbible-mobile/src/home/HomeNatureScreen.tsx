@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { parseVerseKey } from "../bible/parse-verse-key";
+import { parseVerseKey } from "@/lib/bible/parse-verse-key";
 import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
 import { isShellMusicChromeActive } from "../audio/shellMusicNativePlaying";

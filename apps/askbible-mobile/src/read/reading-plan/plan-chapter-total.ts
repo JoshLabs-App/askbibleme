@@ -1,4 +1,4 @@
-import { scriptureBooks } from "../../bible/scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import type { AppLocale } from "../../i18n/config";
 import { getLocale } from "../../i18n/locale-store";
 import type { ReadingPlanRange } from "./types";

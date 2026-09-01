@@ -1,5 +1,5 @@
 import { getScriptureBookDisplayName } from "../../bible/scripture-book-display-name";
-import { scriptureBooks, type ScriptureBook } from "../../bible/scripture-books";
+import { scriptureBooks, type ScriptureBook } from "@/lib/bible/scripture-books";
 import { t, tFormat } from "../../i18n/site-copy";
 import {
   addUserChapterReadToState,

@@ -20,7 +20,7 @@ import {
 import { isTodayReadingPlanItemComplete } from "./reading-plan/today-reading-chapter-fraction";
 import type { ReadingPlanRange } from "./reading-plan/types";
 import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
-import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import { useEffectiveReadingPlanPrefs, useNtDeepRepeatProgress, useTripleLoopProgress } from "./reading-plan/useReadingPlanStores";
 import { useMemberAuth } from "../auth/MemberAuthProvider";

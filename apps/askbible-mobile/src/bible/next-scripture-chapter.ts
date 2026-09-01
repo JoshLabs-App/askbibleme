@@ -1,4 +1,4 @@
-import { scriptureBooks } from "./scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 
 export function getNextScriptureChapter(
   bookId: string,

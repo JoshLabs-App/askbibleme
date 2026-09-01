@@ -1,5 +1,5 @@
 import { normalizeNtDeepRepeatChaptersReadKeys } from "./nt-deep-repeat-chapters-read";
-import { NT_DEEP_REPEAT_OT_BOOK_IDS } from "./nt-deep-repeat-curriculum";
+import { NT_DEEP_REPEAT_OT_BOOK_IDS } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 import {
   normalizeNtDeepRepeatReadingState,
   type NtDeepRepeatPointer,

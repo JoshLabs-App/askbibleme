@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { InteractionManager } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { t } from "../i18n/site-copy";
-import { parseVerseKey } from "../bible/parse-verse-key";
+import { parseVerseKey } from "@/lib/bible/parse-verse-key";
 import {
   DEFAULT_NATURE_HOME_TTS_PREFS,
   getNatureHomeTtsPrefsVersion,

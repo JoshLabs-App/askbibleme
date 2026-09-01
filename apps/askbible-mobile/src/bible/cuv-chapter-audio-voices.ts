@@ -1,4 +1,4 @@
-import { scriptureBooks, testamentForBookNumber } from "./scripture-books";
+import { scriptureBooks, testamentForBookNumber } from "@/lib/bible/scripture-books";
 
 export type CuvChapterAudioVoiceId = "mandarin" | "teochew-nt";
 

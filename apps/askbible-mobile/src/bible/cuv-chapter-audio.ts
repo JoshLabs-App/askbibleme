@@ -12,7 +12,7 @@ import {
   type CuvChapterAudioVoiceId,
   voiceSupportsBook,
 } from "./cuv-chapter-audio-voices";
-import { scriptureBooks } from "./scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 
 export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://media.fhl.net/unvdavid";
 export const CUV_CHAPTER_AUDIO_LOCAL_SUBDIR = "cuv-v20";

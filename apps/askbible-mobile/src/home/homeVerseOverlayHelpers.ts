@@ -1,4 +1,4 @@
-import { parseVerseKey } from "../bible/parse-verse-key";
+import { parseVerseKey } from "@/lib/bible/parse-verse-key";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import type { AppLocale } from "../i18n/config";
 import { flowLocaleForHomeVerseTranslationId } from "./homePrayerVersePrefs";

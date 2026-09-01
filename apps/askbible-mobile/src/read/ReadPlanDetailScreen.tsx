@@ -11,7 +11,7 @@ import { readParchmentTheme as c } from "./readParchmentTheme";
 import { fetchReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
 import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
-import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 

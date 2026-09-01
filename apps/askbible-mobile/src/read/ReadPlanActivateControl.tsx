@@ -13,7 +13,7 @@ import {
   type NtDeepRepeatPace,
 } from "./reading-plan/nt-deep-repeat-pace";
 import { NtDeepRepeatPaceSection } from "./NtDeepRepeatPaceSection";
-import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import { ensureTripleLoopPlanPrefs } from "./reading-plan/triple-loop-plan-sync";
 import {

@@ -1,5 +1,5 @@
 import { getScriptureBookDisplayName } from "./scripture-book-display-name";
-import { scriptureBooks, testamentForBookNumber, type ScriptureTestament } from "./scripture-books";
+import { scriptureBooks, testamentForBookNumber, type ScriptureTestament } from "@/lib/bible/scripture-books";
 
 export type ScriptureSearchHit = {
   bookId: string;

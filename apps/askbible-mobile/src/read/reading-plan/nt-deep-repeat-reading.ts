@@ -1,5 +1,5 @@
 import { getScriptureBookDisplayName } from "../../bible/scripture-book-display-name";
-import { scriptureBooks, type ScriptureBook } from "../../bible/scripture-books";
+import { scriptureBooks, type ScriptureBook } from "@/lib/bible/scripture-books";
 import { t, tFormat } from "../../i18n/site-copy";
 import {
   addNtDeepRepeatChapterReadToState,
@@ -14,7 +14,7 @@ import {
   ntDeepRepeatSegmentPrimaryRange,
   type NtDeepRepeatChapterRange,
   type NtDeepRepeatSegment,
-} from "./nt-deep-repeat-curriculum";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 import {
   NT_DEEP_REPEAT_DEFAULT_PACE,
   isNtDeepRepeatPace,

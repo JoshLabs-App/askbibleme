@@ -2,7 +2,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { translationSupportsCuvChapterAudio } from "../bible/cuv-chapter-audio";
 import { buildChapterAudioDownloadCandidates } from "../bible/chapter-audio-sources";
-import { scriptureBooks } from "../bible/scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import {
   chapterAudioScopeForTranslation,
   translationUsesWebChapterAudio,

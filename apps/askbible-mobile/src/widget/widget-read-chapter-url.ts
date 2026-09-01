@@ -1,4 +1,4 @@
-import { parseVerseKey } from "../bible/parse-verse-key";
+import { parseVerseKey } from "@/lib/bible/parse-verse-key";
 
 /** Deep link opened by home-screen widget → expo-router read chapter route. */
 export function buildWidgetReadChapterUrl(verseKey: string): string | null {

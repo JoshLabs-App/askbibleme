@@ -6,7 +6,7 @@ import { readParchmentTheme as c } from "./readParchmentTheme";
 import {
   NT_DEEP_REPEAT_CURRICULUM,
   ntDeepRepeatSegmentKey,
-} from "./reading-plan/nt-deep-repeat-curriculum";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 import { ntDeepRepeatOneCycleDays } from "./reading-plan/nt-deep-repeat-pace";
 import { setNtDeepRepeatCurriculumStageAsToday } from "./reading-plan/nt-deep-repeat-progress";
 import {

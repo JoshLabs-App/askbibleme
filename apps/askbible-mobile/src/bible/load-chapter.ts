@@ -1,6 +1,6 @@
 import { isBundledScriptureTranslation } from "./bundled-scripture-translations";
 import { getScriptureBookDisplayName } from "./scripture-book-display-name";
-import { scriptureBooks } from "./scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import {
   isScriptureTranslationInstalled,
   rebuildBundledScriptureDatabase,

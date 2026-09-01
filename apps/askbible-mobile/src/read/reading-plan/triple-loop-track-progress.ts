@@ -1,4 +1,4 @@
-import { scriptureBooks, type ScriptureBook } from "../../bible/scripture-books";
+import { scriptureBooks, type ScriptureBook } from "@/lib/bible/scripture-books";
 import {
   TRIPLE_LOOP_NT_BOOK_IDS,
   TRIPLE_LOOP_OT_BOOK_IDS,

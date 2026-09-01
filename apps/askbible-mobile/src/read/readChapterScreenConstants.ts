@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { scriptureBooks, testamentForBookNumber } from "../bible/scripture-books";
+import { scriptureBooks, testamentForBookNumber } from "@/lib/bible/scripture-books";
 import type { ScriptureCanonCatalogSection } from "./canonCatalog";
 
 export const READ_CHAPTER_SCROLL_TOP_PAD = 72;

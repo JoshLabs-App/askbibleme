@@ -1,5 +1,5 @@
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
-import { scriptureBooks } from "../bible/scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import type { AppLocale } from "../i18n/config";
 import { localizeZhText } from "../i18n/site-copy";
 

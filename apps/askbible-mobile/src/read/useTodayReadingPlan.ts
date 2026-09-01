@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { InteractionManager } from "react-native";
 import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
-import { isPointerReadingPlanId } from "./reading-plan/pointer-reading-plan";
+import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 import { getReadingPlanDaySinceEpoch } from "./reading-plan/reading-plan-epoch";

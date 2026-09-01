@@ -1,9 +1,9 @@
-import { scriptureBooks } from "../../bible/scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { t } from "../../i18n/site-copy";
 import {
   NT_DEEP_REPEAT_CURRICULUM,
   NT_DEEP_REPEAT_OT_BOOK_IDS,
-} from "./nt-deep-repeat-curriculum";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 import { ntDeepRepeatOneCycleDays } from "./nt-deep-repeat-pace";
 import {
   currentNtDeepRepeatSegment,

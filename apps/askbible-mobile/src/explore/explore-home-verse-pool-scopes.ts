@@ -1,4 +1,4 @@
-import { scriptureBooks } from "../bible/scripture-books";
+import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getExploreModulesContent } from "./exploreModuleContent";
 import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "./explore-home-verse-pool-verse-keys";
 import { getYearsDaysEternityZh } from "./years-days-eternity-content";

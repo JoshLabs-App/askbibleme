@@ -31,3 +31,21 @@ export function buildGoldenVerseAudioSrc(
   if (!relativePath) return null;
   return `/audio/${relativePath}`;
 }
+
+/** 与移动端共用的公开 R2 桶（见 apps/askbible-mobile/src/home/goldenVerseAudioRemote.ts）。 */
+const GOLDEN_VERSE_AUDIO_R2_PUBLIC_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev";
+
+export function goldenVerseAudioRemoteBaseUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_GOLDEN_VERSE_AUDIO_BASE_URL?.trim();
+  return (fromEnv || GOLDEN_VERSE_AUDIO_R2_PUBLIC_BASE).replace(/\/$/, "");
+}
+
+/** 直连 R2，不经过 askbible.me 存放/转发。 */
+export function buildGoldenVerseAudioRemoteSrc(
+  verseKey: string,
+  translationId: GoldenVerseAudioTranslationId = "cuv-simp",
+): string | null {
+  const relativePath = buildGoldenVerseAudioRelativePath(verseKey, translationId);
+  if (!relativePath) return null;
+  return `${goldenVerseAudioRemoteBaseUrl()}/audio/${relativePath}`;
+}

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomePrayerVerseFeedContext } from "@/components/home/HomePrayerVerseFeedContext";
 import { useMusicShellPlayback } from "@/components/music/MusicShellPlaybackContext";
 import { useMediaPlaybackCoordinator } from "@/components/media/MediaPlaybackCoordinatorProvider";
-import { buildGoldenVerseAudioSrc } from "@/lib/bible/golden-verse-audio";
+import { buildGoldenVerseAudioRemoteSrc } from "@/lib/bible/golden-verse-audio";
 import { isCuvChapterAudioEffectiveSrc } from "@/lib/bible/parse-cuv-chapter-audio-src";
 import { addHomeListeningSeconds } from "@/lib/home-listening/progress";
 import {
@@ -42,7 +42,7 @@ export function useNatureGoldenVerseAudioControl(verseKey?: string | null) {
   const unflushedListeningSecondsRef = useRef(0);
 
   const src = useMemo(
-    () => (verseKey ? buildGoldenVerseAudioSrc(verseKey, audioTranslationId) : null),
+    () => (verseKey ? buildGoldenVerseAudioRemoteSrc(verseKey, audioTranslationId) : null),
     [audioTranslationId, verseKey],
   );
 

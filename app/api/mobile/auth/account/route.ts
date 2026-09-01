@@ -1,7 +1,4 @@
 import { NextResponse } from "next/server";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { deleteAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
-import { parseAskbibleUserSessionCookie } from "@/lib/askbible-user-session";
 import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import {
@@ -22,18 +19,6 @@ function readSessionToken(req: Request): string {
   return req.headers.get("x-askbible-session")?.trim() ?? "";
 }
 
-function missingSqliteResponse() {
-  return NextResponse.json(
-    {
-      ok: false,
-      schemaVersion: SCHEMA_VERSION,
-      error: "账号服务尚未配置，请稍后再试。",
-      code: "auth_not_configured",
-    },
-    { status: 503 },
-  );
-}
-
 export async function DELETE(req: Request) {
   const flags = readMobileContentFlagsSync(process.cwd()).flags;
   if (!flags.memberRegisterEnabled) {
@@ -49,7 +34,7 @@ export async function DELETE(req: Request) {
   }
 
   const token = readSessionToken(req);
-  if (!token) {
+  if (!token || !isSupabaseAuthConfigured() || !isLikelySupabaseAccessToken(token)) {
     return NextResponse.json(
       {
         ok: false,
@@ -61,44 +46,8 @@ export async function DELETE(req: Request) {
     );
   }
 
-  if (isSupabaseAuthConfigured() && isLikelySupabaseAccessToken(token)) {
-    const user = await getAskbibleUserFromAccessToken(token);
-    if (!user) {
-      return NextResponse.json(
-        {
-          ok: false,
-          schemaVersion: SCHEMA_VERSION,
-          error: "请先登录。",
-          code: "unauthorized",
-        },
-        { status: 401 },
-      );
-    }
-
-    const deleted = await deleteAskbibleSupabaseUser(user.id);
-    if (!deleted.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          schemaVersion: SCHEMA_VERSION,
-          error: deleted.error,
-          code: deleted.code,
-        },
-        { status: deleted.status },
-      );
-    }
-
-    return NextResponse.json({
-      ok: true,
-      schemaVersion: SCHEMA_VERSION,
-    });
-  }
-
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return missingSqliteResponse();
-
-  const session = await parseAskbibleUserSessionCookie(token);
-  if (!session) {
+  const user = await getAskbibleUserFromAccessToken(token);
+  if (!user) {
     return NextResponse.json(
       {
         ok: false,
@@ -110,7 +59,7 @@ export async function DELETE(req: Request) {
     );
   }
 
-  const deleted = await deleteAskbibleSqliteUser({ dbPath, userId: session.sub });
+  const deleted = await deleteAskbibleSupabaseUser(user.id);
   if (!deleted.ok) {
     return NextResponse.json(
       {

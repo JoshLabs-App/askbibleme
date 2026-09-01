@@ -28,7 +28,7 @@ services:
         value: "1"
       - key: NEXT_PUBLIC_MEMBER_REGISTER_ENABLED
         value: "1"
-      # 会员认证：共享 Supabase（josh-apps）；设齐后优先于 auth.sqlite
+      # 会员认证：共享 Supabase（josh-apps）
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -38,6 +38,3 @@ services:
       # Crossway ESV API（在线 ESV 正文；不要放进移动端包）
       - key: ESV_API_KEY
         sync: false
-      # 用户库回退：DATA_ROOT/admin_data/auth.sqlite（首次上线用 npm run auth:push-remote 上传）
-      # - key: ASKBIBLE_AUTH_SQLITE_PATH
-      #   value: /var/data/admin_data/auth.sqlite

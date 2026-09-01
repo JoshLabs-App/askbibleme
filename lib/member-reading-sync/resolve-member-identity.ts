@@ -1,10 +1,3 @@
-import { cookies } from "next/headers";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { getAskbibleUserById } from "@/lib/askbible-user-sqlite";
-import {
-  ASKBIBLE_USER_SESSION_COOKIE,
-  parseAskbibleUserSessionCookie,
-} from "@/lib/askbible-user-session";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -30,43 +23,22 @@ export function readMemberSessionToken(req: Request): string {
 
 async function resolveIdentityFromBearerToken(token: string): Promise<MemberIdentity | null> {
   if (!token) return null;
+  if (!isSupabaseAuthConfigured() || !isLikelySupabaseAccessToken(token)) return null;
 
-  if (isSupabaseAuthConfigured() && isLikelySupabaseAccessToken(token)) {
-    const user = await getAskbibleUserFromAccessToken(token);
-    if (!user) return null;
-    return { id: user.id, email: user.email, name: user.name };
-  }
-
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return null;
-  const session = await parseAskbibleUserSessionCookie(token);
-  if (!session) return null;
-  const user = await getAskbibleUserById(dbPath, session.sub);
+  const user = await getAskbibleUserFromAccessToken(token);
   if (!user) return null;
   return { id: user.id, email: user.email, name: user.name };
 }
 
 async function resolveIdentityFromWebCookies(): Promise<MemberIdentity | null> {
-  if (isSupabaseAuthConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    if (supabase) {
-      const { data, error } = await supabase.auth.getUser();
-      if (!error && data.user) {
-        const profile = await fetchAskbibleProfile(supabase, data.user.id);
-        const user = toAskbibleAuthUser(data.user, profile);
-        return { id: user.id, email: user.email, name: user.name };
-      }
-    }
-  }
+  if (!isSupabaseAuthConfigured()) return null;
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
 
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return null;
-  const store = await cookies();
-  const sessionCookie = store.get(ASKBIBLE_USER_SESSION_COOKIE)?.value;
-  const session = await parseAskbibleUserSessionCookie(sessionCookie);
-  if (!session) return null;
-  const user = await getAskbibleUserById(dbPath, session.sub);
-  if (!user) return null;
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return null;
+  const profile = await fetchAskbibleProfile(supabase, data.user.id);
+  const user = toAskbibleAuthUser(data.user, profile);
   return { id: user.id, email: user.email, name: user.name };
 }
 

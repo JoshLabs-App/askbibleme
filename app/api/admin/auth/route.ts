@@ -1,7 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { verifyAskbibleAdminCredentials, verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
 import {
   getLegacyAdminLoginUrl,
   isLegacyRemoteAdminAuthConfigured,
@@ -33,20 +31,16 @@ function timingSafeEqualUtf8(a: string, b: string): boolean {
   }
 }
 
-/** 登录页用：是否可走 AskBible 库 / Supabase / 工作室口令 */
+/** 登录页用：是否可走 Supabase / 工作室口令 */
 export async function GET() {
   return NextResponse.json({
-    askbible: Boolean(
-      isSupabaseAuthConfigured() ||
-        getAskbibleAuthSqlitePath() ||
-        isLegacyRemoteAdminAuthConfigured(),
-    ),
+    askbible: Boolean(isSupabaseAuthConfigured() || isLegacyRemoteAdminAuthConfigured()),
   });
 }
 
 /**
  * 登录优先级：
- * 1) 若请求体含 `email`：优先 POST 到旧站 `ASKBIBLE_LEGACY_*` 管理登录 URL（由旧站校验）；否则若存在 auth.sqlite：`is_admin=1` 或固定超级管理员邮箱。
+ * 1) 若请求体含 `email`：优先 POST 到旧站 `ASKBIBLE_LEGACY_*` 管理登录 URL（由旧站校验）；否则走 Supabase：`is_admin=1` 或固定超级管理员邮箱。
  * 2) 否则：工作室单口令 → `selah_admin_gate`。
  */
 export async function POST(req: Request) {
@@ -121,30 +115,8 @@ export async function POST(req: Request) {
     }
   }
 
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (dbPath && emailRaw) {
-    let auth = await verifyAskbibleAdminCredentials(dbPath, emailRaw, password);
-    if (!auth.ok && isSelahSuperAdminEmail(emailRaw)) {
-      const u = await verifyAskbibleUserCredentials(dbPath, emailRaw, password);
-      if (u.ok) {
-        auth = { ok: true, userId: u.userId, email: u.email };
-      }
-    }
-    if (!auth.ok) {
-      return NextResponse.json({ error: "Wrong email or password" }, { status: 401 });
-    }
-    const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
-    const token = await signAskbibleSessionCookie({ v: 1, sub: auth.userId, email: auth.email, exp });
-    const res = NextResponse.json({ ok: true, mode: "askbible" });
-    const secure = authCookieSecure(req);
-    res.cookies.set(ADMIN_ASKBIBLE_SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-    return res;
+  if (emailRaw) {
+    return NextResponse.json({ error: "Wrong email or password" }, { status: 401 });
   }
 
   if (!timingSafeEqualUtf8(password, getAdminPassword())) {

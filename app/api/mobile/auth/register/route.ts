@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { registerAskbibleSqliteUser } from "@/lib/askbible-user-sqlite";
 import { readMobileContentFlagsSync } from "@/lib/admin/mobile-content-flags-store";
-import { issueMobileUserSessionToken } from "@/lib/mobile-auth-session";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import { createSupabaseMobileAuthClient } from "@/lib/supabase/mobile-server";
-import { shouldFallbackMemberRegisterToSqlite } from "@/lib/member-auth-backend";
 import {
   supabaseSessionFromAuth,
   toAskbibleAuthUser,
@@ -58,7 +54,7 @@ function validEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function missingSqliteResponse() {
+function missingSupabaseResponse() {
   return NextResponse.json(
     {
       ok: false,
@@ -158,146 +154,101 @@ export async function POST(req: Request) {
     );
   }
 
-  let useSqliteRegister = !isSupabaseAuthConfigured();
-
-  if (isSupabaseAuthConfigured()) {
-    const supabase = createSupabaseMobileAuthClient();
-    if (!supabase) {
-      useSqliteRegister = true;
-    } else {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { name: name || email } },
-      });
-
-      if (signUpError) {
-        const msg = signUpError.message || "注册失败";
-        if (shouldFallbackMemberRegisterToSqlite(msg) && getAskbibleAuthSqlitePath()) {
-          useSqliteRegister = true;
-        } else {
-          const code = /already registered|already exists/i.test(msg) ? "email_already_exists" : "register_failed";
-          const status = code === "email_already_exists" ? 409 : 400;
-          return NextResponse.json(
-            {
-              ok: false,
-              schemaVersion: SCHEMA_VERSION,
-              error: msg,
-              code,
-            },
-            { status },
-          );
-        }
-      } else if (signUpData.session?.user && signUpData.session.access_token) {
-        await upsertAskbibleProfile({
-          userId: signUpData.session.user.id,
-          displayName: name || email,
-          locale,
-        });
-        const user = toAskbibleAuthUser(signUpData.session.user);
-        const session = supabaseSessionFromAuth(signUpData.session);
-        if (session) {
-          return NextResponse.json({
-            ok: true,
-            schemaVersion: SCHEMA_VERSION,
-            user: { id: user.id, email: user.email, name: user.name },
-            sessionToken: session.sessionToken,
-            expiresAt: session.expiresAt,
-            nextAction: "login",
-            context: { locale, source },
-          });
-        }
-      } else if (signUpData.user) {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (!signInError && signInData.user && signInData.session) {
-          await upsertAskbibleProfile({
-            userId: signInData.user.id,
-            displayName: name || email,
-            locale,
-          });
-
-          const user = toAskbibleAuthUser(signInData.user);
-          const session = supabaseSessionFromAuth(signInData.session);
-          if (!session) {
-            return NextResponse.json(
-              {
-                ok: false,
-                schemaVersion: SCHEMA_VERSION,
-                error: "注册失败。",
-                code: "register_failed",
-              },
-              { status: 500 },
-            );
-          }
-
-          return NextResponse.json({
-            ok: true,
-            schemaVersion: SCHEMA_VERSION,
-            user: { id: user.id, email: user.email, name: user.name },
-            sessionToken: session.sessionToken,
-            expiresAt: session.expiresAt,
-            nextAction: "login",
-            context: { locale, source },
-          });
-        }
-
-        return NextResponse.json(
-          {
-            ok: false,
-            schemaVersion: SCHEMA_VERSION,
-            error: "注册成功，请查收确认邮件后再登录。",
-            code: "email_confirmation_required",
-          },
-          { status: 403 },
-        );
-      } else {
-        return NextResponse.json(
-          {
-            ok: false,
-            schemaVersion: SCHEMA_VERSION,
-            error: "注册成功但自动登录失败，请手动登录。",
-            code: "login_after_register_failed",
-          },
-          { status: 500 },
-        );
-      }
-    }
+  if (!isSupabaseAuthConfigured()) {
+    return missingSupabaseResponse();
   }
 
-  if (!useSqliteRegister) {
-    return missingSqliteResponse();
+  const supabase = createSupabaseMobileAuthClient();
+  if (!supabase) {
+    return missingSupabaseResponse();
   }
 
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return missingSqliteResponse();
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name: name || email } },
+  });
 
-  const created = await registerAskbibleSqliteUser({ dbPath, email, password, name });
-  if (!created.ok) {
-    const code = created.status === 409 ? "email_already_exists" : "register_failed";
+  if (signUpError) {
+    const msg = signUpError.message || "注册失败";
+    const code = /already registered|already exists/i.test(msg) ? "email_already_exists" : "register_failed";
+    const status = code === "email_already_exists" ? 409 : 400;
     return NextResponse.json(
       {
         ok: false,
         schemaVersion: SCHEMA_VERSION,
-        error: created.error,
+        error: msg,
         code,
       },
-      { status: created.status },
+      { status },
     );
   }
 
-  const session = await issueMobileUserSessionToken(created.user);
+  if (signUpData.session?.user && signUpData.session.access_token) {
+    await upsertAskbibleProfile({
+      userId: signUpData.session.user.id,
+      displayName: name || email,
+      locale,
+    });
+    const user = toAskbibleAuthUser(signUpData.session.user);
+    const session = supabaseSessionFromAuth(signUpData.session);
+    if (session) {
+      return NextResponse.json({
+        ok: true,
+        schemaVersion: SCHEMA_VERSION,
+        user: { id: user.id, email: user.email, name: user.name },
+        sessionToken: session.sessionToken,
+        expiresAt: session.expiresAt,
+        nextAction: "login",
+        context: { locale, source },
+      });
+    }
+  } else if (signUpData.user) {
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  return NextResponse.json({
-    ok: true,
-    schemaVersion: SCHEMA_VERSION,
-    user: created.user,
-    sessionToken: session.sessionToken,
-    expiresAt: session.expiresAt,
-    nextAction: "login",
-    context: { locale, source },
-  });
+    if (!signInError && signInData.user && signInData.session) {
+      await upsertAskbibleProfile({
+        userId: signInData.user.id,
+        displayName: name || email,
+        locale,
+      });
+
+      const user = toAskbibleAuthUser(signInData.user);
+      const session = supabaseSessionFromAuth(signInData.session);
+      if (session) {
+        return NextResponse.json({
+          ok: true,
+          schemaVersion: SCHEMA_VERSION,
+          user: { id: user.id, email: user.email, name: user.name },
+          sessionToken: session.sessionToken,
+          expiresAt: session.expiresAt,
+          nextAction: "login",
+          context: { locale, source },
+        });
+      }
+    }
+
+    return NextResponse.json(
+      {
+        ok: false,
+        schemaVersion: SCHEMA_VERSION,
+        error: "注册成功，请查收确认邮件后再登录。",
+        code: "email_confirmation_required",
+      },
+      { status: 403 },
+    );
+  }
+
+  return NextResponse.json(
+    {
+      ok: false,
+      schemaVersion: SCHEMA_VERSION,
+      error: "注册成功但自动登录失败，请手动登录。",
+      code: "login_after_register_failed",
+    },
+    { status: 500 },
+  );
 }

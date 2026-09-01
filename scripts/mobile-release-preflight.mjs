@@ -78,13 +78,15 @@ async function main() {
   }
 
   if ((process.env.MEMBER_REGISTER_ENABLED ?? "").trim() === "1") {
-    const sqlitePath = (process.env.ASKBIBLE_AUTH_SQLITE_PATH ?? "").trim();
-    if (!sqlitePath && !dataRoot) {
-      addError("MEMBER_REGISTER_ENABLED=1 requires ASKBIBLE_AUTH_SQLITE_PATH or DATA_ROOT.");
-    } else if (sqlitePath && !fs.existsSync(path.resolve(sqlitePath))) {
-      addError(`ASKBIBLE_AUTH_SQLITE_PATH not found: ${sqlitePath}`);
+    const supabaseConfigured =
+      (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim() &&
+      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "").trim();
+    if (!supabaseConfigured) {
+      addError(
+        "MEMBER_REGISTER_ENABLED=1 requires NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+      );
     } else {
-      addInfo("Member register storage path looks configured");
+      addInfo("Member register storage looks configured");
     }
   }
 

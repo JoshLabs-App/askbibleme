@@ -1,7 +1,4 @@
 import { NextResponse } from "next/server";
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { getAskbibleUserById } from "@/lib/askbible-user-sqlite";
-import { parseAskbibleUserSessionCookie } from "@/lib/askbible-user-session";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 import {
   getAskbibleUserFromAccessToken,
@@ -23,20 +20,7 @@ function readSessionToken(req: Request): string {
 export async function GET(req: Request) {
   const token = readSessionToken(req);
 
-  if (isSupabaseAuthConfigured() && token && isLikelySupabaseAccessToken(token)) {
-    const user = await getAskbibleUserFromAccessToken(token);
-    return NextResponse.json({
-      ok: true,
-      schemaVersion: SCHEMA_VERSION,
-      configured: true,
-      user: user
-        ? { id: user.id, email: user.email, name: user.name, locale: user.locale }
-        : null,
-    });
-  }
-
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) {
+  if (!isSupabaseAuthConfigured()) {
     return NextResponse.json(
       {
         ok: false,
@@ -48,8 +32,7 @@ export async function GET(req: Request) {
     );
   }
 
-  const session = await parseAskbibleUserSessionCookie(token);
-  if (!session) {
+  if (!token || !isLikelySupabaseAccessToken(token)) {
     return NextResponse.json({
       ok: true,
       schemaVersion: SCHEMA_VERSION,
@@ -58,20 +41,13 @@ export async function GET(req: Request) {
     });
   }
 
-  const user = await getAskbibleUserById(dbPath, session.sub);
-  if (!user) {
-    return NextResponse.json({
-      ok: true,
-      schemaVersion: SCHEMA_VERSION,
-      configured: true,
-      user: null,
-    });
-  }
-
+  const user = await getAskbibleUserFromAccessToken(token);
   return NextResponse.json({
     ok: true,
     schemaVersion: SCHEMA_VERSION,
     configured: true,
-    user,
+    user: user
+      ? { id: user.id, email: user.email, name: user.name, locale: user.locale }
+      : null,
   });
 }

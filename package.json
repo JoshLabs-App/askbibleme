@@ -88,8 +88,6 @@
     "info-edition:push-remote": "node scripts/push-info-edition-published-remote.mjs",
     "info-edition:v3-apply": "NODE_ENV=development NODE_OPTIONS='--require ./scripts/register-server-only.cjs' tsx scripts/v3-apply-correction.ts",
     "info-edition:v3-batch": "NODE_ENV=development NODE_OPTIONS='--require ./scripts/register-server-only.cjs' tsx scripts/batch-info-edition-v3-correction.ts",
-    "auth:sync-disk": "node scripts/sync-auth-sqlite-to-data-root.mjs",
-    "auth:push-remote": "node scripts/push-auth-sqlite-remote.mjs",
     "member:repair-reading-sync": "tsx scripts/repair-member-reading-sync.ts",
     "ship": "bash scripts/ship.sh",
     "ship:data": "bash scripts/ship-data-config.sh",

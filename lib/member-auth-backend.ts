@@ -1,6 +1,3 @@
-import { getAskbibleAuthSqlitePath } from "@/lib/admin-askbible-path";
-import { verifyAskbibleUserCredentials } from "@/lib/admin-askbible-login";
-import { issueMobileUserSessionToken } from "@/lib/mobile-auth-session";
 import {
   ensureAskbibleMemberProfile,
   fetchAskbibleProfile,
@@ -27,27 +24,15 @@ export type MemberPasswordSignInResult =
       sessionToken: string;
       expiresAt: string;
     }
-  | {
-      ok: true;
-      backend: "sqlite";
-      user: MemberAuthUser;
-      sessionToken: string;
-      expiresAt: string;
-    }
   | { ok: false; error: string; code: string; status: number };
 
-/** 会员认证后端是否可用（Supabase 或本地 auth.sqlite 任一即可）。 */
+/** 会员认证后端是否可用。 */
 export function isMemberAuthBackendConfigured(): boolean {
-  return isSupabaseAuthConfigured() || Boolean(getAskbibleAuthSqlitePath());
+  return isSupabaseAuthConfigured();
 }
 
 export function isMemberRegisterSurfaceOpen(flags: { memberRegisterEnabled: boolean }): boolean {
   return flags.memberRegisterEnabled && isMemberAuthBackendConfigured();
-}
-
-/** Supabase 注册失败时是否可回退到本地 auth.sqlite（如限流、严格邮箱校验）。 */
-export function shouldFallbackMemberRegisterToSqlite(message: string): boolean {
-  return /rate limit|service unavailable|temporarily unavailable|invalid email/i.test(message);
 }
 
 function isInvalidCredentialsMessage(message: string): boolean {
@@ -100,30 +85,7 @@ async function signInWithSupabaseMobile(
   };
 }
 
-async function signInWithSqlite(email: string, password: string): Promise<MemberPasswordSignInResult | null> {
-  const dbPath = getAskbibleAuthSqlitePath();
-  if (!dbPath) return null;
-
-  const auth = await verifyAskbibleUserCredentials(dbPath, email, password);
-  if (!auth.ok) return null;
-
-  const user = {
-    id: auth.userId,
-    email: auth.email,
-    name: auth.name,
-    createdAt: auth.createdAt,
-  };
-  const session = await issueMobileUserSessionToken(user);
-  return {
-    ok: true,
-    backend: "sqlite",
-    user,
-    sessionToken: session.sessionToken,
-    expiresAt: session.expiresAt,
-  };
-}
-
-/** 移动端 / API：Supabase 优先，凭证错误时回退 sqlite。 */
+/** 移动端 / API：Supabase 登录。 */
 export async function signInMemberWithPasswordMobile(
   email: string,
   password: string,
@@ -133,13 +95,9 @@ export async function signInMemberWithPasswordMobile(
     const supabase = createSupabaseMobileAuthClient();
     if (supabase) {
       const supabaseResult = await signInWithSupabaseMobile(supabase, email, password, locale);
-      if (supabaseResult?.ok) return supabaseResult;
-      if (supabaseResult && !supabaseResult.ok) return supabaseResult;
+      if (supabaseResult) return supabaseResult;
     }
   }
-
-  const sqliteResult = await signInWithSqlite(email, password);
-  if (sqliteResult?.ok) return sqliteResult;
 
   if (!isMemberAuthBackendConfigured()) {
     return {
@@ -162,16 +120,12 @@ export type MemberSupabaseServerSignInResult =
   | { ok: true; user: MemberAuthUser }
   | { ok: false; error: string; status: number };
 
-/** Web：Supabase SSR 登录；凭证错误时回退 sqlite（由调用方写 cookie）。 */
+/** Web：Supabase SSR 登录（由调用方写 cookie）。 */
 export async function signInMemberWithPasswordServer(
   supabase: SupabaseClient | null,
   email: string,
   password: string,
-): Promise<
-  | { ok: true; backend: "supabase"; user: MemberAuthUser }
-  | { ok: true; backend: "sqlite"; user: MemberAuthUser }
-  | { ok: false; error: string; status: number }
-> {
+): Promise<{ ok: true; backend: "supabase"; user: MemberAuthUser } | { ok: false; error: string; status: number }> {
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error && data.user) {
@@ -191,11 +145,6 @@ export async function signInMemberWithPasswordServer(
     if (error && !isInvalidCredentialsMessage(error.message || "")) {
       return { ok: false, error: error.message || "登录失败。", status: 400 };
     }
-  }
-
-  const sqliteResult = await signInWithSqlite(email, password);
-  if (sqliteResult?.ok) {
-    return { ok: true, backend: "sqlite", user: sqliteResult.user };
   }
 
   if (!isMemberAuthBackendConfigured()) {

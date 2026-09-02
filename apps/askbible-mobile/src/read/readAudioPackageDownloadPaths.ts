@@ -31,8 +31,14 @@ export function packageKeyBaseForSelection(
   if (translationUsesWebChapterAudio(selection.translationId)) {
     return chapterAudioScopeForTranslation(selection.translationId);
   }
-  if (selection.voiceId === "teochew-nt") return "cuv-teochew-nt";
-  return "cuv-mandarin";
+  if (translationSupportsCuvChapterAudio(selection.translationId)) {
+    if (selection.voiceId === "teochew-nt") return "cuv-teochew-nt";
+    return "cuv-mandarin";
+  }
+  // 既不是 web/kjv/blm-es，也不是 cuv 系译本（如 YouVersion 专属音源的译本）：
+  // 绝不能落回 "cuv-mandarin"，否则会跟普通话缓存共用同一目录，串播/串写其它译本的音频。
+  const id = String(selection.translationId || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  return `edition-${id || "unknown"}`;
 }
 
 export function packageDir(packageKey: string): string {

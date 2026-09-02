@@ -2575,6 +2575,84 @@
         "赞美诗"
       ],
       "remark": "专辑：赞美诗"
+    },
+    {
+      "id": "track-mt9pw2r5b2f4",
+      "title": {
+        "zh-CN": "盼望",
+        "en": "Hope"
+      },
+      "src": "/music/uploads/b2f450e29d90d7da5c6ea5b0bde6179c.mp3",
+      "durationSec": 1204,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt9pw2s4d203",
+      "title": {
+        "zh-CN": "曙光",
+        "en": "Dawn"
+      },
+      "src": "/music/uploads/4d2034cad8aa3d6331427761311d5af5.mp3",
+      "durationSec": 1250,
+      "tags": [
+        "安静"
+      ],
+      "remark": "专辑：安静"
+    },
+    {
+      "id": "track-mt9pw2sf237f",
+      "title": {
+        "zh-CN": "甜蜜的午后",
+        "en": "Sweet Afternoon"
+      },
+      "src": "/music/uploads/f237f7ba9cb2de512b766edc6d2927d1.mp3",
+      "durationSec": 1284,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
+    },
+    {
+      "id": "track-mt9pw2t4de2b",
+      "title": {
+        "zh-CN": "跳动的音符",
+        "en": "Dancing Notes"
+      },
+      "src": "/music/uploads/4de2bfd66ca7188fb454e2d56a7f5137.mp3",
+      "durationSec": 1185,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
+    },
+    {
+      "id": "track-mt9pw2u59bed",
+      "title": {
+        "zh-CN": "雨后的阳光",
+        "en": "Sunshine After Rain"
+      },
+      "src": "/music/uploads/59bed15791c93948cd0886084b5cea98.mp3",
+      "durationSec": 1336,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
+    },
+    {
+      "id": "track-mt9pw2v0e680",
+      "title": {
+        "zh-CN": "秋天的清晨",
+        "en": "Autumn Morning"
+      },
+      "src": "/music/uploads/0e6806015042f3ddd3d99715da1aa847.mp3",
+      "durationSec": 1206,
+      "tags": [
+        "下午茶"
+      ],
+      "remark": "专辑：下午茶"
     }
   ],
   "backgroundVisuals": [

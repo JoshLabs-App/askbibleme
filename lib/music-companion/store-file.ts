@@ -13,7 +13,9 @@ const MAX_JSON_BYTES = 2_000_000;
 const MAX_TITLE = 200;
 const MAX_REMARK = 500;
 const MAX_SRC = 2000;
-const MAX_ITEMS = 120;
+// 曲目库已超原上限（120）：171 首常规增长很正常，上限只是防炸的安全阀，
+// 不是真实容量控制，调到 300 留够未来相当一段时间的余量。
+const MAX_ITEMS = 300;
 
 const ID_RE = /^[a-zA-Z0-9_-]{1,64}$/;
 

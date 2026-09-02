@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import {
-  APP_INSTALL_IOS_URL,
-  buildAndroidTrialMailto,
-  resolveAppInstallAndroidEmail,
-} from "@/lib/app-install-urls";
+import { APP_INSTALL_ANDROID_URL, APP_INSTALL_IOS_URL } from "@/lib/app-install-urls";
 import { isDisplayStandalone } from "@/lib/pwa/display-mode";
 
 /**
@@ -15,18 +10,9 @@ import { isDisplayStandalone } from "@/lib/pwa/display-mode";
  */
 export function ExploreAppInstallHint() {
   const { t } = useLocale();
-  const androidEmail = resolveAppInstallAndroidEmail();
-  const androidMailto = useMemo(
-    () =>
-      buildAndroidTrialMailto(
-        t("chrome.pwaInstallAndroidMailSubject"),
-        t("chrome.pwaInstallAndroidMailBody"),
-      ),
-    [t],
-  );
 
   if (isDisplayStandalone()) return null;
-  if (!APP_INSTALL_IOS_URL && !androidEmail) return null;
+  if (!APP_INSTALL_IOS_URL && !APP_INSTALL_ANDROID_URL) return null;
 
   return (
     <section className="explore-app-install-card" aria-labelledby="explore-app-install-title">
@@ -45,8 +31,13 @@ export function ExploreAppInstallHint() {
               {t("chrome.pwaInstallActionIos")}
             </a>
           ) : null}
-          {androidEmail ? (
-            <a href={androidMailto} className="explore-app-install-btn">
+          {APP_INSTALL_ANDROID_URL ? (
+            <a
+              href={APP_INSTALL_ANDROID_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="explore-app-install-btn"
+            >
               {t("chrome.pwaInstallActionAndroid")}
             </a>
           ) : null}

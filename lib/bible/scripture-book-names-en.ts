@@ -18,7 +18,7 @@ export const SCRIPTURE_BOOK_NAME_EN: Record<string, string> = {
   NEH: "Nehemiah",
   EST: "Esther",
   JOB: "Job",
-  PSA: "Psalm",
+  PSA: "Psalms",
   PRO: "Proverbs",
   ECC: "Ecclesiastes",
   SNG: "Song of Songs",

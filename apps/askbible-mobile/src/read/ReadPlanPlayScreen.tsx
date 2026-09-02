@@ -42,7 +42,7 @@ import {
   readAheadDays,
   setReadingPlanAheadDays,
 } from "./reading-plan/reading-plan-ahead";
-import { resolvePlanPlayContentAhead } from "./reading-plan/plan-play-content-ahead";
+import { resolvePlanPlayContentAhead } from "@/lib/read/plan-play-content-ahead";
 import {
   loadReadingPlanPayloadAtAhead,
   todayReadingPayloadMatchesPrefs,

@@ -1,5 +1,5 @@
 import { scriptureBooks } from "@/lib/bible/scripture-books";
-import { SCRIPTURE_BOOK_NAME_EN } from "../bible/scripture-book-names-en";
+import { SCRIPTURE_BOOK_NAME_EN } from "@/lib/bible/scripture-book-names-en";
 
 type BookToken = { token: string; bookId: string };
 

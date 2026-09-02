@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolvePlanPlayContentAhead } from "./plan-play-content-ahead";
+import { resolvePlanPlayContentAhead } from "@/lib/read/plan-play-content-ahead";
 
 describe("resolvePlanPlayContentAhead", () => {
   it("today with no ahead stays on calendar today", () => {

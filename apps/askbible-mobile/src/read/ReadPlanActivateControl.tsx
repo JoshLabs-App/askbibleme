@@ -11,7 +11,7 @@ import { activateNtDeepRepeatPlan } from "./reading-plan/nt-deep-repeat-plan-syn
 import {
   NT_DEEP_REPEAT_DEFAULT_PACE,
   type NtDeepRepeatPace,
-} from "./reading-plan/nt-deep-repeat-pace";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { NtDeepRepeatPaceSection } from "./NtDeepRepeatPaceSection";
 import { isPointerReadingPlanId } from "@/lib/bible/reading-plans/pointer-reading-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";

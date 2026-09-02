@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   NT_DEEP_REPEAT_DEFAULT_PACE,
   type NtDeepRepeatPace,
-} from "./nt-deep-repeat-pace";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import {
   advanceNtDeepRepeatNtDay,
   advanceNtDeepRepeatOneCalendarDay,
@@ -18,7 +18,7 @@ import {
   alignNtDeepRepeatProgressToCalendar,
   ntDeepRepeatPlanPointersEqual,
 } from "@/lib/read/nt-deep-repeat-effective-plan-day";
-import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
+import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
 import {
   readEffectiveReadingPlanPrefs,
   toLocalDateString,

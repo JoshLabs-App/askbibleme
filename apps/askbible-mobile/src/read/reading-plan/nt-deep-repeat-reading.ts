@@ -21,7 +21,7 @@ import {
   segmentDayTargetForStage,
   standardSegmentDayCount,
   type NtDeepRepeatPace,
-} from "./nt-deep-repeat-pace";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { toLocalDateString } from "./reading-plan-prefs";
 
 export type NtDeepRepeatTrack = "ot" | "nt";

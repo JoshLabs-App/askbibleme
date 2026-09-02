@@ -1,5 +1,5 @@
 import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
-import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
+import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
 import {
   advanceNtDeepRepeatOnePlanDay,
   jumpNtDeepRepeatProgressToPlanDay,

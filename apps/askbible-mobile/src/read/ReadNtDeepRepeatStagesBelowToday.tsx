@@ -7,7 +7,7 @@ import {
   NT_DEEP_REPEAT_CURRICULUM,
   ntDeepRepeatSegmentKey,
 } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
-import { ntDeepRepeatOneCycleDays } from "./reading-plan/nt-deep-repeat-pace";
+import { ntDeepRepeatOneCycleDays } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { setNtDeepRepeatCurriculumStageAsToday } from "./reading-plan/nt-deep-repeat-progress";
 import {
   formatNtDeepRepeatSegmentStageRange,

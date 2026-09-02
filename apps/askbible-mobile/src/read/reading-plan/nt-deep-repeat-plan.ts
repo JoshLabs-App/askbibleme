@@ -4,7 +4,7 @@ import {
   NT_DEEP_REPEAT_CURRICULUM,
   NT_DEEP_REPEAT_OT_BOOK_IDS,
 } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
-import { ntDeepRepeatOneCycleDays } from "./nt-deep-repeat-pace";
+import { ntDeepRepeatOneCycleDays } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import {
   currentNtDeepRepeatSegment,
   formatNtDeepRepeatOtLine,

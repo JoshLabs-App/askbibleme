@@ -10,7 +10,7 @@ import { isFeaturedReadingPlanId } from "@/lib/bible/reading-plans/featured-read
 import {
   NT_DEEP_REPEAT_PACE_OPTIONS,
   type NtDeepRepeatPace,
-} from "../../read/reading-plan/nt-deep-repeat-pace";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { stripReadingPlanHtml } from "../../read/reading-plan/strip-html";
 import type { ReadingPlanRegistryEntry } from "../../read/reading-plan/types";
 import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../../shell/splash-branding.generated";

@@ -3,7 +3,7 @@ import { NT_DEEP_REPEAT_PLAN_ID } from "../../read/reading-plan/nt-deep-repeat-p
 import {
   NT_DEEP_REPEAT_DEFAULT_PACE,
   type NtDeepRepeatPace,
-} from "../../read/reading-plan/nt-deep-repeat-pace";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import {
   readReadingPlanPrefs,
   setActiveReadingPlan,

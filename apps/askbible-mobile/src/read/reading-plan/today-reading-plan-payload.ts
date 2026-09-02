@@ -5,7 +5,7 @@ import {
   NT_DEEP_REPEAT_PLAN_DAY_COUNT,
   NT_DEEP_REPEAT_PLAN_ID,
 } from "./nt-deep-repeat-plan";
-import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
+import { resolveNtDeepRepeatPlanDay } from "@/lib/read/nt-deep-repeat-plan-day";
 import { ntDeepRepeatStateForPlanDay } from "./nt-deep-repeat-reading";
 import {
   buildTripleLoopReadingPlanDay,
@@ -24,7 +24,7 @@ import {
   type ReadingPlanPrefs,
 } from "./reading-plan-prefs";
 import { readNtDeepRepeatProgress } from "./nt-deep-repeat-progress";
-import { NT_DEEP_REPEAT_DEFAULT_PACE } from "./nt-deep-repeat-pace";
+import { NT_DEEP_REPEAT_DEFAULT_PACE } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 
 export type TodayReadingPlanPayload = ReadingPlanDayPayload;
 

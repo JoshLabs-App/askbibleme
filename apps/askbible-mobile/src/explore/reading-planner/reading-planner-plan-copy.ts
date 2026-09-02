@@ -1,6 +1,6 @@
 import type { AppLocale } from "../../i18n/config";
 import { toZhTwText } from "../../i18n/site-copy";
-import type { NtDeepRepeatPace } from "../../read/reading-plan/nt-deep-repeat-pace";
+import type { NtDeepRepeatPace } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { DEEP_READING_EXPLORE_ARTICLE_SLUG } from "./reading-planner-routes";
 
 export type ReadingPlannerPlanReference = {

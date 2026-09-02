@@ -10,7 +10,7 @@ import {
   ntDeepRepeatSegmentKey,
   ntDeepRepeatSegmentPrimaryRange,
 } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
-import { ntDeepRepeatOneCycleDays } from "./reading-plan/nt-deep-repeat-pace";
+import { ntDeepRepeatOneCycleDays } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import { resetNtDeepRepeatProgress, hasUserNtDeepRepeatProgress } from "./reading-plan/nt-deep-repeat-progress";
 import {
   currentNtDeepRepeatSegment,

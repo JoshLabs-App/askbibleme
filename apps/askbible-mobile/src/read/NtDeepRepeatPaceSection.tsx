@@ -12,7 +12,7 @@ import {
   formatApproxDurationEn,
   formatApproxDurationZh,
   type NtDeepRepeatPace,
-} from "./reading-plan/nt-deep-repeat-pace";
+} from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 
 type Props = {
   value?: NtDeepRepeatPace;

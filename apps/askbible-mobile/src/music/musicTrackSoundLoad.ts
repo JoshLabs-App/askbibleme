@@ -1,6 +1,5 @@
-import { Audio } from "expo-av";
-import type { AVPlaybackSource } from "expo-av";
-import type { AVPlaybackStatus } from "expo-av";
+import type { AudioPlayer, AudioSource } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import type { PlaybackTrack } from "./types";
@@ -15,7 +14,7 @@ type LoadArgs = {
   tracks: PlaybackTrack[];
   track: PlaybackTrack;
   index: number;
-  avSource: AVPlaybackSource;
+  avSource: AudioSource;
   generation: number;
   shouldPlay?: boolean;
   unloadCurrent: () => Promise<void>;
@@ -26,12 +25,12 @@ type LoadArgs = {
   setPlaybackMode: (mode: PlaybackMode) => void;
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
-  preloadedSound?: Audio.Sound | null;
-  preloadedStatus?: AVPlaybackStatus | null;
+  preloadedSound?: AudioPlayer | null;
+  preloadedStatus?: LegacyPlaybackStatus | null;
 };
 
 export type LoadedMusicTrack =
-  | { ok: true; sound: Audio.Sound; index: number }
+  | { ok: true; sound: AudioPlayer; index: number }
   | { ok: false; stale: true }
   | { ok: false; stale: false; failedTrackId: string };
 

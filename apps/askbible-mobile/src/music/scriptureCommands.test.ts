@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const pool = vi.hoisted(() => ({
   isActive: vi.fn(() => false),
+  isPlayInFlight: vi.fn(() => false),
   skipToNext: vi.fn(async () => true),
   skipToPrev: vi.fn(async () => true),
   abortPendingPlay: vi.fn(),

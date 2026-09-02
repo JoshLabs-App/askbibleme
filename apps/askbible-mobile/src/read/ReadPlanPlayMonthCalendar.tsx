@@ -78,14 +78,16 @@ export function ReadPlanPlayMonthCalendar({
   // 每次渲染取系统当天，避免挂载时冻住导致「今天」错位
   const today = startOfLocalDay(new Date());
   const selected = addLocalDays(today, viewAhead);
+  const selectedYear = selected.getFullYear();
+  const selectedMonth = selected.getMonth();
 
-  const [cursorYear, setCursorYear] = useState(selected.getFullYear());
-  const [cursorMonth, setCursorMonth] = useState(selected.getMonth());
+  const [cursorYear, setCursorYear] = useState(selectedYear);
+  const [cursorMonth, setCursorMonth] = useState(selectedMonth);
 
   useEffect(() => {
-    setCursorYear(selected.getFullYear());
-    setCursorMonth(selected.getMonth());
-  }, [selected]);
+    setCursorYear(selectedYear);
+    setCursorMonth(selectedMonth);
+  }, [selectedYear, selectedMonth]);
 
   const weekdays = locale === "en" ? WEEKDAYS_EN : WEEKDAYS_ZH;
 

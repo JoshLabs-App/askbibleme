@@ -67,6 +67,12 @@ type Args = {
 
 export type ScriptureSoundLoadResult = { ok: true } | { ok: false; stale: true } | { ok: false; stale: false };
 
+/** 排查"点播放没有立即出声"：分段打点，定位卡在 unload / 语音偏好 / URI 解析 / 实际 issue play 哪一步。 */
+function logScripturePlayTiming(startedAt: number, label: string): void {
+  if (!__DEV__) return;
+  console.warn(`[scripture-audio-timing] +${Date.now() - startedAt}ms ${label}`);
+}
+
 export async function loadAndPlayScriptureSound({
   bridge,
   src,
@@ -94,6 +100,7 @@ export async function loadAndPlayScriptureSound({
   skipInitialUnload = false,
 }: Args): Promise<ScriptureSoundLoadResult> {
   const { soundRef, playbackEpochRef, playbackModeRef } = bridge;
+  const t0 = Date.now();
   const intendedChapter = readChapterRef.current
     ? {
         bookId: readChapterRef.current.bookId,
@@ -107,6 +114,7 @@ export async function loadAndPlayScriptureSound({
   }
 
   await (skipInitialUnload ? Promise.resolve() : unloadCurrent());
+  logScripturePlayTiming(t0, "unloadCurrent done");
   if (playSeq != null && !isScripturePlayAttemptCurrent(playSeq)) {
     return { ok: false, stale: true };
   }
@@ -125,6 +133,7 @@ export async function loadAndPlayScriptureSound({
 
   const rc = readChapterRef.current;
   const voiceId = rc ? await readCuvChapterAudioVoice() : undefined;
+  logScripturePlayTiming(t0, "voice prefs resolved");
 
   // iOS / Android：读经计划/章朗读走原生播放器，锁屏才不会被 expo-av + JS 轮询掐死。
   if (isNativeMainTrackOs() && rc) {
@@ -135,6 +144,7 @@ export async function loadAndPlayScriptureSound({
       chapter: rc.chapter,
       voiceId,
     });
+    logScripturePlayTiming(t0, `native URI resolved: ${nativeUri ? "local/remote ok" : "null"}`);
     if (nativeUri) {
       if (playSeq != null && !isScripturePlayAttemptCurrent(playSeq)) {
         setScripturePreparing(false);
@@ -171,6 +181,7 @@ export async function loadAndPlayScriptureSound({
         stopAtSec: stopAt != null && Number.isFinite(stopAt) ? stopAt : undefined,
         userPlay: true,
       });
+      logScripturePlayTiming(t0, "native play command issued (native engine takes over from here)");
       setPlaying(true);
       publishScripturePlaybackSec(positionSec);
       setScripturePlaybackClockPlaying(true, rate);
@@ -286,7 +297,7 @@ export async function loadAndPlayScriptureSound({
 
   if (playSeq != null && !isScripturePlayAttemptCurrent(playSeq)) {
     try {
-      await created.sound.unloadAsync();
+      created.sound.remove();
     } catch {
       /* ignore */
     }

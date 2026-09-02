@@ -1,6 +1,6 @@
-import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
 import {
@@ -13,10 +13,10 @@ import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
 
 type TrackEndArgs = {
-  status: AVPlaybackStatus & { isLoaded: true };
+  status: LegacyPlaybackStatus & { isLoaded: true };
   track: PlaybackTrack;
   tracks: PlaybackTrack[];
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   musicMaxProgressMsRef: MutableRefObject<number>;
   musicSoundActivatedAtRef: MutableRefObject<number>;
   calmLoopTransitioningRef: MutableRefObject<boolean>;
@@ -68,7 +68,7 @@ export function handleMusicTrackDidJustFinish(args: TrackEndArgs): void {
           });
       } else {
         void active
-          .setPositionAsync(0)
+          .seekTo(0)
           .then(() => safePlaySound(active))
           .catch((err) => logShellSoundError("music-repeat-one", err));
       }

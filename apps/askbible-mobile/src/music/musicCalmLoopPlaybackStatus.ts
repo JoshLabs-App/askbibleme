@@ -1,15 +1,15 @@
-import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { restartCalmLoopWithCrossfade, resolveCalmLoopProfile } from "./musicCalmPlayback";
 import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
 
 type CalmLoopStatusArgs = {
-  status: AVPlaybackStatus & { isLoaded: true };
+  status: LegacyPlaybackStatus & { isLoaded: true };
   track: PlaybackTrack;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   musicGainRef: MutableRefObject<number>;
   calmLoopTransitioningRef: MutableRefObject<boolean>;

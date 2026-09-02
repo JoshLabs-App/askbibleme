@@ -1,4 +1,4 @@
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
 import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
@@ -9,7 +9,7 @@ import { isShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 
 export type MusicBackgroundRecoveryCtx = {
   playbackModeRef: MutableRefObject<"music" | "scripture">;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   playingStateRef: MutableRefObject<boolean>;
   musicGainRef: MutableRefObject<number>;
   setPlaying: (playing: boolean) => void;
@@ -50,8 +50,8 @@ export async function recoverMusicPlaybackAfterBackground(
     await configureShellAudioMode({ force: false });
     clearShellMediaSessionUserDismissed();
     setShellMusicWantPlaying(true);
-    await sound.setIsMutedAsync(false);
-    await sound.setVolumeAsync(ctx.musicGainRef.current);
+    sound.muted = false;
+    sound.volume = ctx.musicGainRef.current;
     let ok = await safePlaySound(sound);
     if (!ok) {
       await configureShellAudioMode({ force: true });

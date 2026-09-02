@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "postinstall": "bash scripts/patch-expo-av-ios.sh && bash scripts/patch-expo-metro-lan.sh && bash scripts/patch-expo-sqlite-ios.sh && bash scripts/patch-google-signin-ios-nonce.sh && bash scripts/patch-expo-video-music-session-lock.sh",
+    "postinstall": "bash scripts/patch-expo-metro-lan.sh && bash scripts/patch-expo-sqlite-ios.sh && bash scripts/patch-google-signin-ios-nonce.sh && bash scripts/patch-expo-video-music-session-lock.sh",
     "eas-build-post-install": "node scripts/eas-sync-offline-on-cloud.mjs && node scripts/verify-bundled-assets.mjs"
   },
   "dependencies": {
@@ -26,8 +26,8 @@
     "expo": "~54.0.35",
     "expo-apple-authentication": "~8.0.8",
     "expo-asset": "~12.0.13",
+    "expo-audio": "~1.1.1",
     "expo-auth-session": "~7.0.11",
-    "expo-av": "~16.0.8",
     "expo-battery": "~10.0.8",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",

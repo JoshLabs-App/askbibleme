@@ -29,6 +29,61 @@ object ShellVerseNativePlayer {
   private var appContext: Context? = null
   private val handler = Handler(Looper.getMainLooper())
   private var gapRunnable: Runnable? = null
+  private var jsAdvanceRetryCount: Int = 0
+
+  /**
+   * 关屏后队列耗尽只 emitAdvance 一次就等 JS：若那次事件恰好在 JS 被系统冻结/降频时丢失，
+   * 金句就永久哑掉，音乐（ShellMainNativePlayer 有同款重试）还在响，像是「金句自己停了」。
+   * 参照 ShellMainNativePlayer.jsAdvanceRetryRunnable，定时重新 emit 并检查队列，给 JS
+   * 多次醒来补队列的机会，而不是赌一次事件必达。
+   */
+  private val jsAdvanceRetryRunnable =
+    object : Runnable {
+      override fun run() {
+        if (!awaitingJsAdvance) return
+        if (ShellPlaybackSession.userPaused || ShellPlaybackSession.systemInterrupted) {
+          clearAwaitingJsAdvance()
+          return
+        }
+        val primary = ShellPlaybackSession.kind == "verse" && ShellPlaybackSession.playing
+        val underlay = ShellPlaybackSession.verseUnderlayPlaying && !ShellPlaybackSession.userPaused
+        if (!primary && !underlay) {
+          clearAwaitingJsAdvance()
+          return
+        }
+        val queued = peekNextUri()
+        if (!queued.isNullOrBlank()) {
+          val ctx = appContext
+          awaitingJsAdvance = false
+          lastCompletedUri = null
+          jsAdvanceRetryCount = 0
+          if (ctx != null) {
+            val consumed = consumeNextUri()
+            if (!consumed.isNullOrBlank()) {
+              emitAdvance(consumed, nativeChained = true)
+              startUri(ctx, consumed, isGap = false)
+            }
+          }
+          return
+        }
+        jsAdvanceRetryCount += 1
+        if (jsAdvanceRetryCount > 12) {
+          Log.w(TAG, "verse JS advance timeout; stop")
+          clearAwaitingJsAdvance()
+          return
+        }
+        // 再捅一次 JS（关屏后偶发第一次事件丢失）。
+        emitAdvance(null, nativeChained = false)
+        handler.postDelayed(this, 2_500L)
+      }
+    }
+
+  private fun clearAwaitingJsAdvance() {
+    awaitingJsAdvance = false
+    lastCompletedUri = null
+    jsAdvanceRetryCount = 0
+    handler.removeCallbacks(jsAdvanceRetryRunnable)
+  }
 
   fun syncFromSession(context: Context) {
     appContext = context.applicationContext
@@ -84,8 +139,7 @@ object ShellVerseNativePlayer {
 
     if (ShellPlaybackSession.forceRestartUri) {
       ShellPlaybackSession.forceRestartUri = false
-      awaitingJsAdvance = false
-      lastCompletedUri = null
+      clearAwaitingJsAdvance()
       // 同 URI userPlay：从头重开（锁屏 Previous 重开当前句）。
       if (uri == currentUri) {
         val p = player
@@ -128,8 +182,7 @@ object ShellVerseNativePlayer {
       return
     }
 
-    awaitingJsAdvance = false
-    lastCompletedUri = null
+    clearAwaitingJsAdvance()
     startUri(context, uri, isGap = false)
   }
 
@@ -137,8 +190,7 @@ object ShellVerseNativePlayer {
     cancelGap()
     playingGap = false
     preparing = false
-    awaitingJsAdvance = false
-    lastCompletedUri = null
+    clearAwaitingJsAdvance()
     currentUri = null
     val old = player
     player = null
@@ -331,14 +383,15 @@ object ShellVerseNativePlayer {
     if (next.isNullOrBlank()) {
       awaitingJsAdvance = true
       lastCompletedUri = currentUri ?: ShellPlaybackSession.assetUri
+      jsAdvanceRetryCount = 0
       ShellPlaybackSession.markAssetPlayed(lastCompletedUri)
       releasePlayerKeepingWait()
       Log.i(TAG, "queue empty after verse; wait JS advance uri=$lastCompletedUri")
       emitAdvance(null, nativeChained = false)
+      handler.postDelayed(jsAdvanceRetryRunnable, 2_500L)
       return
     }
-    awaitingJsAdvance = false
-    lastCompletedUri = null
+    clearAwaitingJsAdvance()
     val consumed = consumeNextUri() ?: return
     Log.i(TAG, "chain next=$consumed remainNext=${peekNextUri() != null}")
     emitAdvance(consumed, nativeChained = true)

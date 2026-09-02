@@ -1,4 +1,4 @@
-import { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { Platform } from "react-native";
 import { useEffect, type MutableRefObject } from "react";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
@@ -34,7 +34,7 @@ type Args = {
   setStore: (store: MusicCompanionStore) => void;
   setTrackIndex: (index: number) => void;
   setLoading: (loading: boolean) => void;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   preloadedMusicSoundRef: MusicPlaybackRefs["preloadedMusicSoundRef"];
   preloadedMusicSoundWorkRef: MusicPlaybackRefs["preloadedMusicSoundWorkRef"];
   storeRef: MutableRefObject<MusicCompanionStore | null>;

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { DeviceEventEmitter } from "react-native";
 import type { MutableRefObject } from "react";
+import type { AudioPlayer } from "expo-audio";
 import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
 import { reshuffleShellMediaSceneArtwork } from "../audio/shellMediaSceneArtwork";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
@@ -22,7 +23,7 @@ import type {
 } from "./scripturePlaybackTypes";
 
 type Args = {
-  soundRef: MutableRefObject<import("expo-av").Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureSrcRef: MutableRefObject<string | null>;
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;

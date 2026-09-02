@@ -90,24 +90,22 @@ function ReadPlansFeaturedPlanCard({ plan, t, locale }: FeaturedCardProps) {
                 ? t("pages.read.tripleLoopPlansMeta")
                 : t("pages.read.ntDeepRepeatPlansMeta")}
             </p>
-            {isNtDeep ? (
-              <p className="mt-2.5 text-[11px] leading-relaxed text-amber-800/58 dark:text-stone-500">
-                {t("pages.read.plansMethodPath2Reference")}{" "}
-                <Link
-                  href={exploreArticleHref(NT_DEEP_REPEAT_EXPLORE_ARTICLE_SLUG)}
-                  className={planLinkClass}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {t("pages.read.plansMethodPath2ArticleLink")} →
-                </Link>
-              </p>
-            ) : null}
           </div>
           <span className="shrink-0 pt-0.5 text-[11px] font-medium text-amber-800/60 dark:text-stone-400">
             {t("pages.read.plansOpen")}
           </span>
         </div>
       </Link>
+      {isNtDeep ? (
+        // Kept as a sibling of the card `<Link>` (not nested inside it): an `<a>` cannot
+        // contain another `<a>` — nesting them here caused a hydration mismatch.
+        <p className="mt-2.5 px-4 text-[11px] leading-relaxed text-amber-800/58 dark:text-stone-500">
+          {t("pages.read.plansMethodPath2Reference")}{" "}
+          <Link href={exploreArticleHref(NT_DEEP_REPEAT_EXPLORE_ARTICLE_SLUG)} className={planLinkClass}>
+            {t("pages.read.plansMethodPath2ArticleLink")} →
+          </Link>
+        </p>
+      ) : null}
     </li>
   );
 }

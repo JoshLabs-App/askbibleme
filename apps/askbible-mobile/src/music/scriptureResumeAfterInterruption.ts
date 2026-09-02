@@ -1,4 +1,4 @@
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
 import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
@@ -26,7 +26,7 @@ import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "
 
 export type ScriptureResumeCtx = {
   playbackModeRef: MutableRefObject<"music" | "scripture">;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
   scriptureStopAtSecRef: MutableRefObject<number | null>;

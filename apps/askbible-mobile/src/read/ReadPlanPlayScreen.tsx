@@ -72,7 +72,18 @@ function getPoolVersion(): number {
   return scriptureChapterPool.getVersion();
 }
 
-/** 今日读经计划播放器：上方日历+列表整页滚动，下方播放坞固定。 */
+/**
+ * 今日读经计划播放器：上方日历+列表整页滚动，下方播放坞固定。
+ * 职责：把「计划配置（plan.prefs）→ 当日该读的章节（queue）→ 是否正在播放（scriptureChapterPool）」
+ *   串起来，支持浏览未来/过去日期（viewAhead）而不影响真实进度，直到用户显式确认（onConfirmDay）。
+ * 边界：不直接操作音频播放器，只通过 scriptureChapterPool / MusicPlaybackContext 下达指令；
+ *   不持久化计划配置，只读取并在用户确认时调用 setReadingPlanAheadDays 落盘。
+ * 交互模块：scriptureChapterPool（真正播放中的章节队列，全局单例）、useTodayReadingPlan
+ *   （计划配置与今日 payload）、ReadScripturePlaybackDock（底部播放坞 UI）。
+ * queue 与 scriptureChapterPool 是两份独立状态：前者是本页“正在看”的章节列表（可能是在浏览
+ * 别的日期），后者是全局“正在播”的队列；两者是否一致（poolMatchesViewedQueue）决定了
+ * activeIndex 用谁的游标，以及操作是走 pool 命令还是重新 startFromIndex 建池。
+ */
 export function ReadPlanPlayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -102,6 +113,7 @@ export function ReadPlanPlayScreen() {
   );
 
 
+  // 切换计划（planId 变化）时清掉浏览缓存的 payload，防止显示上一个计划的章节列表。
   useEffect(() => {
     setBrowsePayload((prev) =>
       prev && todayReadingPayloadMatchesPrefs(prev, plan.prefs) ? prev : null,
@@ -138,12 +150,17 @@ export function ReadPlanPlayScreen() {
     };
   }, [contentAhead, plan.calendarEpochDay, plan.dayCount, plan.prefs]);
 
+  // 订阅全局章节播放池（scriptureChapterPool）以感知外部（如锁屏/其他页）发起的切章；
+  // poolVersion 本身不直接读，只用于强制该组件在池变化时重渲染。
   const poolVersion = useSyncExternalStore(subscribePool, getPoolVersion, () => 0);
   const poolActive = scriptureChapterPool.isActive();
   const poolIndex = scriptureChapterPool.getIndex();
   const poolTracks = scriptureChapterPool.getTracks();
   void poolVersion;
 
+  // 决定本页列表用哪份数据源：若全局播放池的曲目与当前计划内容完全一致（顺序/章节都对得上）
+  // 且未在浏览别的日期，则直接复用池的 tracks（含 lazySrc 解析结果），
+  // 否则退回按 plan/browsePayload 现算的 planned 列表（尚未建池，仅用于展示与后续 startFromIndex）。
   const queue = useMemo(() => {
     const titleFor = (bookId: string, chapter: number) =>
       `${getScriptureBookDisplayName(bookId, locale)} ${chapter}`;
@@ -201,10 +218,15 @@ export function ReadPlanPlayScreen() {
     );
   const activeIndex = poolMatchesViewedQueue ? poolIndex : cursor;
 
+  // 池在播时游标跟随池索引，保证锁屏/其他页切章时本页高亮同步移动。
+  // 仅当池内容与本页正在浏览的 queue 一致时才跟：否则用户在看另一天的计划、
+  // 而别处（如锁屏续播了今日计划）在播，会把 poolIndex 错写成本页 queue 的下标。
   useEffect(() => {
-    if (poolActive) setCursor(poolIndex);
-  }, [poolActive, poolIndex]);
+    if (poolActive && poolMatchesViewedQueue) setCursor(poolIndex);
+  }, [poolActive, poolIndex, poolMatchesViewedQueue]);
 
+  // 池未在播（尚未开始收听）时，尝试从上次保存的断点恢复游标位置，
+  // 让用户回到本页时能续听而非总是从第一章开始。
   useEffect(() => {
     if (poolActive || queue.length === 0) return;
     let cancelled = false;
@@ -297,7 +319,8 @@ export function ReadPlanPlayScreen() {
       setPlanFlowUiHost("listen");
       const refs = queue.map((item) => ({ bookId: item.bookId, chapter: item.chapter }));
       const audioPrefs = await readPlanFlowChapterAudioPrefs();
-      // lazySrc：先建池开播，勿等整日队列逐章预取（冷启动可卡十几秒）。
+      // lazySrc：先建池开播，勿等整日队列逐章预取（冷启动可卡十几秒）；
+      // 下方 setTimeout 延迟 4s 才补预取下一章音频，让首章优先拿到带宽/CPU。
       const tracks = await buildScriptureChapterPool(
         refs,
         audioPrefs.translationId,

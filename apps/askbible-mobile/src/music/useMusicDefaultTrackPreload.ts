@@ -1,7 +1,9 @@
-import { Audio } from "expo-av";
+import { createAudioPlayer } from "expo-audio";
 import { useEffect } from "react";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { safeStopAndUnloadSound } from "../audio/safeShellSound";
+import { waitForAudioPlayerLoaded } from "../audio/expoAudioPlayerReady";
+import { toLegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { getBundledMusicCompanionStore } from "./fetchMusicCompanion";
 import { warmBundledModuleUri } from "./musicTrackPlayback";
@@ -51,16 +53,12 @@ function startDefaultTrackPreload(): Promise<PreloadedMusicSound | null> | null 
       logPreload("default preload start", { trackId: bundledDefaultTrack.id });
       const avSource = await warmBundledModuleUri(bundledDefaultModule);
       if (!avSource) return null;
-      const created = await Audio.Sound.createAsync(
-        { uri: avSource },
-        {
-          shouldPlay: false,
-        },
-      );
+      const sound = createAudioPlayer({ uri: avSource });
+      const rawStatus = await waitForAudioPlayerLoaded(sound);
       defaultPreloadedSound = {
         trackId: bundledDefaultTrack.id,
-        sound: created.sound,
-        status: created.status,
+        sound,
+        status: toLegacyPlaybackStatus(rawStatus, sound.volume, sound.muted),
       };
       logPreload("default preload ready", { trackId: bundledDefaultTrack.id });
       defaultPreloadCompletedTrackId = bundledDefaultTrack.id;

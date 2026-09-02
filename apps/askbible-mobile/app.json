@@ -3,8 +3,8 @@
     "name": "AskBible.me",
     "slug": "askbible-me",
     "scheme": "askbible",
-    "version": "1.0.38",
-    "runtimeVersion": "1.0.38",
+    "version": "1.0.39",
+    "runtimeVersion": "1.0.39",
     "updates": {
       "enabled": false,
       "checkAutomatically": "NEVER",
@@ -32,7 +32,7 @@
     },
     "ios": {
       "bundleIdentifier": "me.askbible",
-      "buildNumber": "119",
+      "buildNumber": "124",
       "supportsTablet": true,
       "appleTeamId": "AJ2998VZH6",
       "entitlements": {
@@ -50,7 +50,7 @@
     },
     "android": {
       "package": "me.askbible",
-      "versionCode": 119,
+      "versionCode": 124,
       "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -66,12 +66,6 @@
       "expo-router",
       "expo-sqlite",
       "expo-asset",
-      [
-        "expo-av",
-        {
-          "microphonePermission": false
-        }
-      ],
       [
         "expo-video",
         {

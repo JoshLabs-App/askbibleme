@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logSwallowedError } from "../debug/logSwallowedError";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { isSupabaseAuthConfigured } from "../config/supabaseAuth";
@@ -38,7 +39,8 @@ export async function readMemberReadingSyncMeta(): Promise<MemberReadingSyncMeta
         ? parsed.lastError.trim()
         : null,
     };
-  } catch {
+  } catch (error) {
+    logSwallowedError("memberReadingSyncApi.readMemberReadingSyncMeta", error);
     return { revision: null, lastSyncedAt: null, boundUserId: null, requirePullOnly: false, lastError: null };
   }
 }

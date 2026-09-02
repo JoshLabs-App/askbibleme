@@ -142,7 +142,11 @@ export function useMusicNativeTakeover(ctx: Args): void {
       if (sound) {
         void safePauseSound(sound);
         ctxRef.current.soundRef.current = null;
-        void sound.unloadAsync().catch(() => {});
+        try {
+          sound.remove();
+        } catch {
+          /* ignore */
+        }
       }
     };
     sync(AppState.currentState);

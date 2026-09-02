@@ -20,7 +20,9 @@ import {
   verseRelativeInParagraphGroup,
 } from "./read-chapter-verse-layout";
 import {
+  buildReadChapterVerseTops,
   computeReadChapterWindowRange,
+  computeWindowRangeFromTops,
   estimateReadChapterVerseHeight,
   type ReadChapterWindowRange,
 } from "./readChapterVerseWindow";
@@ -397,6 +399,18 @@ export function ReadChapterScreenVerseList({
   );
   const [heightEpoch, setHeightEpoch] = useState(0);
 
+  // 高度前缀和只在条目数/章节/实测高度变化时重建；滚动本身（scrollSnap.scrollY）
+  // 不应触发对全章逐节高度的重新遍历，否则长章节（如诗篇119篇）每次滚动回调都要
+  // 重算一遍 O(n) 前缀和，帧率越滚越差。
+  const verseTops = useMemo(
+    () =>
+      buildReadChapterVerseTops(itemCount, (index) =>
+        measuredHeightsRef.current.get(index) ?? estimateAtRef.current(index),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [itemCount, chapterKey, heightEpoch],
+  );
+
   useEffect(() => {
     if (windowDisabled) {
       setRange({
@@ -407,10 +421,7 @@ export function ReadChapterScreenVerseList({
       });
       return;
     }
-    const next = computeReadChapterWindowRange({
-      itemCount,
-      heightAt: (index) =>
-        measuredHeightsRef.current.get(index) ?? estimateAtRef.current(index),
+    const next = computeWindowRangeFromTops(verseTops, {
       scrollY: scrollSnap.scrollY,
       viewportH: scrollSnap.viewportH || 640,
     });
@@ -422,14 +433,7 @@ export function ReadChapterScreenVerseList({
         ? prev
         : next,
     );
-  }, [
-    itemCount,
-    scrollSnap.scrollY,
-    scrollSnap.viewportH,
-    windowDisabled,
-    chapterKey,
-    heightEpoch,
-  ]);
+  }, [itemCount, scrollSnap.scrollY, scrollSnap.viewportH, windowDisabled, verseTops]);
 
   const noteItemLayout = (index: number, height: number) => {
     if (!(height > 0)) return;

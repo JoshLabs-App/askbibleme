@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import type { AVPlaybackSource } from "expo-av";
+import type { AudioSource } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { resolveAndroidMusicPadTrackUri } from "../media/androidMusicAssetPack";
 import { resolveMusicTrackPlayback } from "../media/bundledMusicMedia";
@@ -47,7 +47,7 @@ type PrepareArgs = {
 };
 
 export type PreparedMusicTrack =
-  | { ok: true; index: number; track: PlaybackTrack; avSource: AVPlaybackSource }
+  | { ok: true; index: number; track: PlaybackTrack; avSource: AudioSource }
   | { ok: false; stale: true }
   | { ok: false; stale: false; aborted: true };
 

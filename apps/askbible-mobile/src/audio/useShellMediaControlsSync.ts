@@ -52,6 +52,18 @@ import type { MusicPlaybackMode } from "../music/musicPlaybackTypes";
 import type { PlaybackTrack } from "../music/types";
 import type { ReadChapterPlaybackRegistration } from "../music/scripturePlaybackTypes";
 
+/**
+ * 把 App 内的三条播放意图（音乐 / 读经 / 金句）与原生媒体会话/系统远程指令双向同步的 hook。
+ * 职责：订阅 RemotePlay/Pause/Toggle/Next/Previous/Stop 等系统媒体键，路由到对应播放器；
+ *   周期性刷新会话 payload 以防系统清空 Now Playing；同步桌面挂件快照。
+ * 边界：不做具体音频解码/播放，只做「谁该响、系统按键该转发给谁」的仲裁；实际播放逻辑
+ *   在各自的 hook（如 useHomeNatureVerseAudioPlayback）和 shellMediaControls 原生桥接层。
+ * 交互模块：shellMediaControls（原生会话桥接）、shellAuxMediaOwner（当前占用锁屏的辅助播放
+ *   者，如首页金句）、shell*WantPlaying 系列全局标志、androidRemotePlaybackMute（安卓关屏
+ *   误触发 Pause 的规避）、widget/*（桌面挂件同步）。
+ * 大量分支要区分「用户主动在系统栏点了暂停」与「OEM 关屏时误发的 Pause 事件」——
+ * 这类误发是本文件复杂度的主要来源，见 leftActiveAtRef 与 recentlyBackgrounded 判断。
+ */
 type Args = {
   loading: boolean;
   playing: boolean;
@@ -89,6 +101,8 @@ function logRemoteCommand(message: string): void {
  * - 音乐：有曲目即视为有内容；音乐无章节深链，冷启动只打开 App。
  * - 经文：金句辅助播放器状态（与壳层 music/scripture 独立）。
  */
+// 后台会话刷新 tick 是否应跳过：iOS/Android 原生已接管主轨播放时，JS 侧再刷会话
+// 反而可能打断原生心跳/定时器，因此按平台和当前占用者分别判断是否可以安全跳过。
 function shouldSkipNativeBackgroundSessionTick(appState: AppStateStatus): boolean {
   if (appState === "active") return false;
   if (Platform.OS === "ios") {
@@ -154,6 +168,7 @@ function androidRemotePauseFromUser(latest: Args): void {
 export function useShellMediaControlsSync(args: Args): void {
   const argsRef = useRef(args);
   argsRef.current = args;
+  // 挂件读经卡片的最近一次状态；音乐/空闲态下沿用它以避免深链在模式切换间闪烁。
   const lastReadingRef = useRef<ReadingWidgetState | null>(null);
   /** 刚进后台的时间戳：部分 OEM 关屏会误发 MediaSession onPause，需与用户锁屏点暂停区分。 */
   const leftActiveAtRef = useRef(0);
@@ -427,6 +442,8 @@ export function useShellMediaControlsSync(args: Args): void {
     startVerseAudio: args.startVerseAudio,
   });
 
+  // 播放状态变化时把正确的会话 payload 推给原生：按优先级依次考虑壳层音乐、
+  // 辅助播放器（金句等）、当前 playbackMode，任何一层命中就提前返回，避免互相覆盖。
   useEffect(() => {
     // 壳层音乐意图在播：系统栏只刷新音乐，勿把金句/环境音插进来。
     // 用户刚点系统栏暂停时已有 mute 快照：勿把 playing:true 刷回去。
@@ -550,6 +567,8 @@ export function useShellMediaControlsSync(args: Args): void {
       refreshShellMediaSession();
     };
 
+    // 前台/后台用不同刷新周期：前台 2.5s 保持界面新鲜，后台放宽到 8s 省电，
+    // 并在 want-playing 标志变化时立即重新武装计时器（arm）而不是等下一个 tick。
     const arm = () => {
       if (id) {
         clearInterval(id);

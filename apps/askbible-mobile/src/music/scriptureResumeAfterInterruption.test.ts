@@ -32,7 +32,7 @@ import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
 function makeCtx(overrides: Partial<ScriptureResumeCtx> = {}): ScriptureResumeCtx {
   const scriptureWantPlayingRef = { current: true };
   const playbackModeRef = { current: "scripture" as const };
-  const soundRef = { current: { playAsync: vi.fn() } as unknown as import("expo-av").Audio.Sound };
+  const soundRef = { current: { play: vi.fn() } as unknown as import("expo-audio").AudioPlayer };
   const scripturePlayInFlightRef = { current: null as Promise<void> | null };
   const scriptureStopAtSecRef = { current: null as number | null };
   const setPlaying = vi.fn();

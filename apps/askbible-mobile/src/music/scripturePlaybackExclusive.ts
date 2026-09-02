@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 
@@ -17,7 +17,7 @@ export function isScripturePlayAttemptCurrent(seq: number): boolean {
 
 export function isScripturePlaybackBusy(args: {
   playbackModeRef: MutableRefObject<"music" | "scripture">;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
 }): boolean {
   if (args.scripturePlayInFlightRef.current) return true;

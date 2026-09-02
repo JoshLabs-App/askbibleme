@@ -588,7 +588,15 @@ object ShellMainNativePlayer {
         } catch (_: Exception) {
           ShellPlaybackSession.playing
         }
-    ShellPlaybackSession.positionSec = pos
+    // JS 换章时 updateSession() 会把 assetUri 改成新章、positionSec 清 0，但那次调用
+    // 发生在 RN bridge 线程；真正取消本 Runnable（在 startUri 里）要等 Intent 异步
+    // 转到 service 才执行。这段窗口内，仍在跑的旧 MediaPlayer 的这次 tick 若照常把
+    // positionSec 写回旧进度，会在新章 startUri() 读 positionSec 当 seek 目标时把
+    // 旧章进度带过去。用 assetUri 是否还等于本实例的 currentUri 判断换章是否已经
+    // 发生，一旦不等就不再写 positionSec（仍可正常上报本地 progress 事件）。
+    if (ShellPlaybackSession.assetUri == currentUri) {
+      ShellPlaybackSession.positionSec = pos
+    }
     if (dur > 0) ShellPlaybackSession.durationSec = dur
     val map = Arguments.createMap()
     map.putBoolean("playing", isPlaying)

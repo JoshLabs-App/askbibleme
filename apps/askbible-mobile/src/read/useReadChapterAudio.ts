@@ -4,6 +4,7 @@ import { InteractionManager, type ScrollView } from "react-native";
 import { translationSupportsChapterAudio } from "../bible/read-chapter-audio";
 import type { LoadedChapter } from "../bible/types";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
+import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import { useScriptureFollowDerived } from "./useScriptureFollowDerived";
 import {
@@ -49,6 +50,7 @@ export function useReadChapterAudio(
     playing,
     playbackMode,
     scriptureDurationSec,
+    playScriptureChapter,
   } = useMusicPlayback();
   const playingAudioChapter = useSyncExternalStore(
     subscribeScripturePlayingChapter,
@@ -91,6 +93,33 @@ export function useReadChapterAudio(
     playingAudioChapter.bookId === chapterData.bookId &&
     playingAudioChapter.chapter === chapterData.chapter &&
     playingAudioChapter.translationId === chapterAudioTranslationId;
+
+  // 正在播这一章但译本对不上（用户中途切了阅读译本）：用新译本重开，而不是让旧译本音频一直播下去。
+  // playingAudioChapter 一旦随新音轨更新为目标译本，下面的条件自然不再成立，不会死循环。
+  useEffect(() => {
+    if (!chapterData || !supported || !playbackMode || playbackMode !== "scripture") return;
+    if (!playingAudioChapter) return;
+    if (
+      playingAudioChapter.bookId !== chapterData.bookId ||
+      playingAudioChapter.chapter !== chapterData.chapter ||
+      playingAudioChapter.translationId === chapterAudioTranslationId
+    ) {
+      return;
+    }
+    void playScriptureChapter({
+      bookId: chapterData.bookId,
+      chapter: chapterData.chapter,
+      bookName: getScriptureBookDisplayName(chapterData.bookId),
+      translationId: chapterAudioTranslationId,
+    });
+  }, [
+    chapterData,
+    supported,
+    playbackMode,
+    playingAudioChapter,
+    chapterAudioTranslationId,
+    playScriptureChapter,
+  ]);
 
   useEffect(() => {
     if (!chapterData || !supported || !isFocused) return;

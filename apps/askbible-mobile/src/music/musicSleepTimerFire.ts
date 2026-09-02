@@ -41,7 +41,12 @@ export async function runMusicSleepTimerFire({
   try {
     await pauseShellPlayback();
   } finally {
-    setShellSleepTimerDeadline(null);
+    // 上面几个 await 期间，用户可能已经点了「再加 N 分钟」重新武装了新 deadline
+    // （sleepTimerDeadlineRef 会被写成非 null）；此时不能再无条件把原生 deadline
+    // 清掉，否则会把用户刚重新武装的定时器悄悄取消掉。
+    if (sleepTimerDeadlineRef.current === null) {
+      setShellSleepTimerDeadline(null);
+    }
     firingRef.current = false;
   }
 }

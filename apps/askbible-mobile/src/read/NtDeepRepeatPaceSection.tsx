@@ -61,7 +61,9 @@ export function NtDeepRepeatPaceSection({ value, onChange, previewStart, locale 
     <View style={styles.root}>
       <Text style={styles.title}>{t("pages.read.ntDeepRepeatPaceTitle")}</Text>
       <Text style={styles.intro}>{t("pages.read.ntDeepRepeatPaceIntro")}</Text>
-      <Text style={styles.note}>{t("pages.read.ntDeepRepeatPaceContinuousNote")}</Text>
+      <Text style={styles.note}>
+        {tFormat("pages.read.ntDeepRepeatPaceContinuousNote", { days: pace, nextDay: pace + 1 })}
+      </Text>
 
       {NT_DEEP_REPEAT_PACE_OPTIONS.map((option) => (
         <Pressable

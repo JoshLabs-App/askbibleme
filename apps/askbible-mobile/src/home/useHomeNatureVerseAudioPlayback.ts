@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AppState, DeviceEventEmitter, Platform, type AppStateStatus } from "react-native";
-import { Audio } from "expo-av";
-import { buildGoldenVerseAudioRelativePath } from "@/lib/bible/golden-verse-audio";
-import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { createAudioPlayer, type AudioPlayer } from "expo-audio";
+import { toLegacyPlaybackStatus, type LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
+import { waitForAudioPlayerLoaded } from "../audio/expoAudioPlayerReady";
+import {
+  isNearNaturalEnd,
+  resolveGoldenVerseAudioUrl,
+} from "./homeGoldenVerseAudioPlaybackHelpers";
 import {
   configureScriptureShellAudioMode,
   configureShellAudioMode,
@@ -55,6 +59,18 @@ import {
 } from "./homeGoldenVerseAudioPrefs";
 import { getHomeVerseGapSec, hydrateHomeVerseGapSec } from "./homeVerseGapPrefs";
 
+/**
+ * 首页「每日金句」自动播放的核心 hook。
+ * 职责：解析金句音频 URI → 驱动 expo-av（非 iOS/Android）或原生媒体会话（iOS/Android）播放 →
+ *   句末静音间隔 → 触发外部 advanceNow 换下一句；并把播放状态同步进锁屏/通知栏媒体会话。
+ * 边界：不负责金句文案/翻译选择的 UI，也不直接管理背景音乐（仅通过 shellAuxMediaOwner /
+ *   shellMusicWantPlaying 与音乐播放协调，避免两者抢占同一原生 AudioSession）。
+ * 交互模块：shellAudioMode（AVAudioSession 配置）、shellMediaControls / shellMediaSessionPayload
+ *   （系统媒体控制中心同步）、shellAuxMediaOwner（前台可见的“谁在响”仲裁）、
+ *   ensureGoldenVerseLocalPlaybackUri（本地/远程音频 URI 解析）。
+ * iOS/Android 关屏后 JS 线程可能被系统冻结或降频，因此“换句”逻辑必须能由原生侧
+ * （MediaPlayer / AVPlayer 队列耗尽事件）驱动，不能只依赖 expo-av 的状态回调。
+ */
 const VERSE_MEDIA_OWNER_ID = "home-golden-verse";
 
 /** iOS 音乐在播时勿切 scripture AudioMode，否则会打断原生音乐；金句叠在同一 playback 会话上。 */
@@ -65,8 +81,6 @@ async function ensureVerseAudioMode(): Promise<void> {
   }
   await configureScriptureShellAudioMode();
 }
-/** 安卓关屏后 JS 易被冻；原生队列要一次喂够，继续从金句池取，而不是只循环已播过的。 */
-const VERSE_END_SLACK_MS = 350;
 /** 覆盖设置里 3/5/7 秒间隔；较短间隔靠播放进度截断。 */
 const GAP_SILENCE_MODULE = require("../../assets/audio/verse-gap-silence-7.mp3");
 
@@ -84,34 +98,6 @@ type Args = {
   pinNextVerseKey?: (key: string | null) => void;
   onActiveChange: (active: boolean) => void;
 };
-
-function resolveGoldenVerseAudioUrl(
-  baseUrl: string,
-  verseKey: string | null,
-  translationId: "cuv-simp" | "web-en",
-): string | null {
-  if (!verseKey) return null;
-  // TEMP：包体过大时默认 R2 直链；禁止回落 askbible.me / Render。
-  if (isGoldenVerseAudioRemoteStreamEnabled()) {
-    return buildGoldenVerseAudioRemoteUrl(verseKey, translationId);
-  }
-  // Stream off：仅允许显式非 askbible.me 基址（本地调试 / 自建），否则失败关闭。
-  const relative = buildGoldenVerseAudioRelativePath(verseKey, translationId);
-  if (!relative) return null;
-  const base = baseUrl.trim();
-  if (!base) return null;
-  if (/askbible\.me/i.test(base)) return null;
-  return toAbsoluteUrl(base, `/audio/${relative}`);
-}
-
-function isNearNaturalEnd(status: {
-  durationMillis?: number | null;
-  positionMillis?: number;
-}): boolean {
-  const duration = status.durationMillis ?? 0;
-  const position = status.positionMillis ?? 0;
-  return duration > 400 && position >= duration - VERSE_END_SLACK_MS;
-}
 
 export function useHomeNatureVerseAudioPlayback({
   baseUrl,
@@ -132,7 +118,7 @@ export function useHomeNatureVerseAudioPlayback({
     getHomeGoldenVerseAudioTranslationId,
     getHomeGoldenVerseAudioTranslationId,
   );
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<AudioPlayer | null>(null);
   const advanceNowRef = useRef(advanceNow);
   const peekNextVerseKeyRef = useRef(peekNextVerseKey);
   const peekNextTwoVerseKeysRef = useRef(peekNextTwoVerseKeys);
@@ -363,6 +349,8 @@ export function useHomeNatureVerseAudioPlayback({
     if (sound) await safeStopAndUnloadSound(sound);
   }, [flushListeningTime]);
 
+  // true 表示用户主动暂停了传输（区别于句末/间隔等内部状态切换），
+  // 用于阻止 tryResumeCurrentSound / AppState 回前台时把播放顶回去。
   const transportPausedRef = useRef(false);
 
   const stopFully = useCallback(async () => {
@@ -409,6 +397,8 @@ export function useHomeNatureVerseAudioPlayback({
     });
   }, [buildPayload, clearResumeTimer]);
 
+  // 仅 expo-av 路径使用：尝试续播当前 sound；对近结尾/间隔末尾等即将自然切换的
+  // 时刻主动放弃续播，交给状态回调/timer 去推进换句，避免和换句逻辑产生竞态。
   const tryResumeCurrentSound = useCallback(async () => {
     if (!activeRef.current) return false;
     if (transportPausedRef.current) return false;
@@ -419,7 +409,7 @@ export function useHomeNatureVerseAudioPlayback({
     if (!sound) return false;
     try {
       await ensureVerseAudioMode();
-      const st = await sound.getStatusAsync();
+      const st = toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
       if (!st.isLoaded || st.isPlaying) return st.isLoaded && !!st.isPlaying;
       if (
         phaseRef.current === "verse" &&
@@ -501,11 +491,22 @@ export function useHomeNatureVerseAudioPlayback({
     syncVerseTransportResume();
   }, [syncVerseTransportResume]);
 
+  /**
+   * 非 iOS/Android 平台（expo-av 直接播放）的进度回调，按 phase 分流处理。
+   * 用 phaseRef 而不是闭包里的 phase 判活：sound 是异步创建的，若期间 phase 已经
+   * 切走（如提前触发了间隔/停止），回调必须自行失效，否则会污染新阶段的状态。
+   * 仅比 phaseRef 还不够：旧 sound 卸载是异步的，若新一代 sound 已经把 phaseRef
+   * 切回同一个 phase（如连续换句都是 "verse"），旧 sound 卸载完成前的最后一次
+   * 回调会因 phase 相同而"诈活"，用旧的 position/duration 污染新 sound 的状态。
+   * 因此必须再确认 soundRef.current 就是这次回调所属的 sound 本身。
+   */
   const attachStatusHandler = useCallback(
-    (sound: Audio.Sound, phase: "verse" | "gap") => {
-      sound.setOnPlaybackStatusUpdate((status) => {
+    (sound: AudioPlayer, phase: "verse" | "gap") => {
+      sound.addListener("playbackStatusUpdate", (raw) => {
+        const status = toLegacyPlaybackStatus(raw, sound.volume, sound.muted);
         if (!status.isLoaded) return;
         if (phaseRef.current !== phase) return;
+        if (soundRef.current !== sound) return;
 
         const position = status.positionMillis;
         const delta = position - lastPositionMillisRef.current;
@@ -619,18 +620,17 @@ export function useHomeNatureVerseAudioPlayback({
       soundRef.current = null;
       if (prev) void safeStopAndUnloadSound(prev);
 
-      const created = await Audio.Sound.createAsync(GAP_SILENCE_MODULE, {
-        shouldPlay: true,
-        progressUpdateIntervalMillis: 200,
-        // 略提高音量，避免部分 Android 把近静音轨当成“可忽略”而立刻结束。
-        volume: 0.05,
-        isMuted: false,
-      });
+      const sound = createAudioPlayer(GAP_SILENCE_MODULE, { updateInterval: 200 });
+      // 略提高音量，避免部分 Android 把近静音轨当成“可忽略”而立刻结束。
+      sound.volume = 0.05;
+      sound.muted = false;
+      await waitForAudioPlayerLoaded(sound);
       if (!activeRef.current || phaseRef.current !== "gap") {
-        await safeStopAndUnloadSound(created.sound);
+        await safeStopAndUnloadSound(sound);
         return;
       }
-      soundRef.current = created.sound;
+      sound.play();
+      soundRef.current = sound;
       setPlaying(true);
       playingRef.current = true;
       autoResumeUntilRef.current = Date.now() + Math.max(8_000, gapMs + 2_000);
@@ -640,7 +640,7 @@ export function useHomeNatureVerseAudioPlayback({
           positionMillis: 0,
         }),
       );
-      attachStatusHandler(created.sound, "gap");
+      attachStatusHandler(sound, "gap");
     } catch {
       // 静音轨失败：保留上面的墙钟 timer，到期再换句（不再立刻跳）。
     }
@@ -733,6 +733,9 @@ export function useHomeNatureVerseAudioPlayback({
       return;
     }
 
+    // 主播放 effect：verseKey/active 变化即重跑。异步链路较长（解析 URI、可能的整包解压、
+    // 原生 userPlay），期间可能被更新的 effect 调用打断；用 generation 计数而非仅 cancelled
+    // 标志，防止“旧一代”的 await 恢复后覆盖新一代已经建立的播放状态（典型竞态源）。
     let cancelled = false;
     const generation = ++playGenerationRef.current;
     const isStale = () =>
@@ -848,28 +851,23 @@ export function useHomeNatureVerseAudioPlayback({
 
         await ensureVerseAudioMode();
         const downloadFirst = shellSoundDownloadFirst({ uri: playUri });
-        const created = await Audio.Sound.createAsync(
+        const sound = createAudioPlayer(
           { uri: playUri },
-          {
-            shouldPlay: true,
-            progressUpdateIntervalMillis: 250,
-            volume: 1,
-            isMuted: false,
-          },
-          undefined,
-          downloadFirst,
+          { updateInterval: 250, downloadFirst },
         );
+        sound.volume = 1;
+        sound.muted = false;
+        const rawStatus = await waitForAudioPlayerLoaded(sound);
         if (isStale()) {
-          await safeStopAndUnloadSound(created.sound);
+          await safeStopAndUnloadSound(sound);
           return;
         }
-        soundRef.current = created.sound;
+        soundRef.current = sound;
         try {
-          await created.sound.setIsMutedAsync(false);
-          await created.sound.setVolumeAsync(1);
-          const st = await created.sound.getStatusAsync();
-          if (st.isLoaded && !st.isPlaying) {
-            await created.sound.playAsync();
+          sound.muted = false;
+          sound.volume = 1;
+          if (sound.isLoaded && !sound.playing) {
+            sound.play();
           }
         } catch {
           /* ignore */
@@ -879,11 +877,12 @@ export function useHomeNatureVerseAudioPlayback({
         setPlaying(true);
         playingRef.current = true;
         autoResumeUntilRef.current = Date.now() + 8_000;
-        syncShellMediaSessionExplicit(buildPayload(true, created.status.isLoaded ? created.status : undefined));
+        const legacyStatus = toLegacyPlaybackStatus(rawStatus, sound.volume, sound.muted);
+        syncShellMediaSessionExplicit(buildPayload(true, legacyStatus.isLoaded ? legacyStatus : undefined));
         void import("../read/reading-habit-stats")
           .then(({ recordAnyReadingActivityDay }) => recordAnyReadingActivityDay())
           .catch(() => undefined);
-        attachStatusHandler(created.sound, "verse");
+        attachStatusHandler(sound, "verse");
         if (__DEV__) {
           console.warn("[home-golden-verse] play ok", verseKey, playUri);
         }
@@ -956,6 +955,8 @@ export function useHomeNatureVerseAudioPlayback({
     return () => sub.remove();
   }, [active, buildPayload, buildVersePostStartSyncPayload, finishGapAndAdvance, flushListeningTime, prefetchNextAssetUris]);
 
+  // 原生媒体控制中心「重新开始」手势（如长按/双击）触发的事件；仅 iOS/Android 原生金句
+  // 会发出此事件，因为非原生路径直接用 expo-av 的 setPositionAsync 重播即可，无需绕原生总线。
   useEffect(() => {
     if (!active) return;
     const onRestart = () => {
@@ -983,7 +984,7 @@ export function useHomeNatureVerseAudioPlayback({
       if (sound) {
         void (async () => {
           try {
-            await sound.setPositionAsync(0);
+            await sound.seekTo(0);
             await safePlaySound(sound);
           } catch {
             /* ignore */
@@ -995,6 +996,8 @@ export function useHomeNatureVerseAudioPlayback({
     return () => sub.remove();
   }, [active, buildPayload]);
 
+  // AppState 监听：iOS/Android 原生金句 和 其他平台（expo-av）走两套完全不同的策略，
+  // 因为原生路径的播放器本就在原生层跑，前后台切换不需要 JS 侧介入音频会话。
   useEffect(() => {
     if (!active) return;
     // iOS / Android 原生金句：后台勿重配 AudioMode / 勿 resume expo-av（会掐原生）。
@@ -1037,6 +1040,8 @@ export function useHomeNatureVerseAudioPlayback({
     return () => sub.remove();
   }, [active, buildPayload, buildVersePostStartSyncPayload, flushListeningTime, prefetchNextAssetUris]);
 
+  // 非原生平台的心跳轮询：expo-av 状态回调有时会漏（如 App 从后台恢复），用 900ms
+  // 轮询兜底纠正 playing 状态并尝试自动续播；iOS/Android 原生金句禁用此轮询见下。
   useEffect(() => {
     if (!active) return;
     // 原生金句：禁 900ms 轮询（后台 CPU / 与 MediaPlayer 抢状态）。
@@ -1051,7 +1056,7 @@ export function useHomeNatureVerseAudioPlayback({
           return;
         }
         try {
-          const st = await sound.getStatusAsync();
+          const st = toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
           if (!st.isLoaded) return;
           if (st.isPlaying) {
             playingRef.current = true;

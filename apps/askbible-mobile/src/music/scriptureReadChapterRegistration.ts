@@ -1,4 +1,5 @@
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
+import { navigateToReadChapterViaRegistry } from "../read/read-chapter-navigate-registry";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import { getNextScriptureChapterInBook } from "@/lib/bible/next-scripture-chapter";
@@ -50,6 +51,11 @@ export function buildReadChapterAdvanceHandlers(
         setPlaying(false);
         return;
       }
+      // 这里是"音频先起播、章页刚 push 还没来得及在 ctx.readChapterRef 认领自己"那个
+      // 窗口期兜底出来的 fallback handler（正常情况下章页会用自己的、带路由跳转的
+      // handler）；仅推进音频不管路由会导致文字停在原章。有章页在监听就顺手把路由
+      // 也带过去，没有（比如纯后台/锁屏续播）就维持原样只管音频。
+      navigateToReadChapterViaRegistry(prev, "back");
       void playScriptureChapter({
         bookId: prev.bookId,
         chapter: prev.chapter,
@@ -63,6 +69,7 @@ export function buildReadChapterAdvanceHandlers(
         setPlaying(false);
         return;
       }
+      navigateToReadChapterViaRegistry(next, "forward");
       void playScriptureChapter({
         bookId: next.bookId,
         chapter: next.chapter,

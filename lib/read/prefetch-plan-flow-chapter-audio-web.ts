@@ -12,7 +12,9 @@ function prefetchAudioUrl(url: string): void {
   const src = url.trim();
   if (!src) return;
   try {
-    void fetch(src, { mode: "cors", credentials: "omit", cache: "force-cache" });
+    void fetch(src, { mode: "cors", credentials: "omit", cache: "force-cache" }).catch(() => {
+      /* ignore: best-effort prefetch, e.g. CORS-blocked cross-origin sources */
+    });
   } catch {
     /* ignore */
   }

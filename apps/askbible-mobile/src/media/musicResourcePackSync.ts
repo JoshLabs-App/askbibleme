@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy";
+import { logSwallowedError } from "../debug/logSwallowedError";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
 import type { MusicCompanionStore } from "../music/types";
@@ -99,7 +100,8 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
       unitPercent: 100,
     });
     return true;
-  } catch {
+  } catch (error) {
+    logSwallowedError("musicResourcePackSync.runSyncOnce", error);
     return false;
   } finally {
     setMusicResourcePackSyncing(false);
@@ -128,7 +130,8 @@ export async function checkMusicResourcePackUpdate(): Promise<MusicPackUpdateChe
       available: await shouldSyncMusicResourcePack(manifest),
       latestVersion: manifest.packVersion,
     };
-  } catch {
+  } catch (error) {
+    logSwallowedError("musicResourcePackSync.checkMusicResourcePackUpdate", error);
     return { available: false, latestVersion: "" };
   }
 }
@@ -179,7 +182,8 @@ export async function downloadMusicTrackAssets(
         setMusicResourcePackStore(manifest.store);
       }
     }
-  } catch {
+  } catch (error) {
+    logSwallowedError("musicResourcePackSync.downloadMusicTrackAssets", error);
     assetsToFetch = [];
   }
 

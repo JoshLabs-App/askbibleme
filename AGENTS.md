@@ -1,5 +1,9 @@
 # AGENTS.md — AskBible.me
 
+## AI 交接入口
+
+其它 AI / Agent 接手前先读：**`docs/AI_HANDOFF.md`**（启动顺序、硬禁令、仓库地图、命令、当前状态）。根目录 `HANDOFF.md` 仅作指针。
+
 ## 对外名称（用户可见）
 
 - 产品 / 站点 / App 显示名：**AskBible.me**（域名 `askbible.me`）。真源：`lib/askbible-product-name.ts`。

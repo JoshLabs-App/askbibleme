@@ -131,7 +131,7 @@ export function useMusicTogglePlayMusic({
           if (!stillCurrent()) return;
           if (useCalmFade) {
             try {
-              await sound.setVolumeAsync(musicGainRef.current);
+              sound.volume = musicGainRef.current;
             } catch {
               /* ignore restore failures */
             }
@@ -271,7 +271,7 @@ export function useMusicTogglePlayMusic({
             : 0;
         if (resumeSec > 0.5 && (st.positionMillis ?? 0) < 400) {
           try {
-            await sound.setPositionAsync(Math.floor(resumeSec * 1000));
+            await sound.seekTo(resumeSec);
             lastMusicProgressSecRef.current = resumeSec;
             setMusicCurrentSec(resumeSec);
           } catch {
@@ -283,15 +283,15 @@ export function useMusicTogglePlayMusic({
         const fadeForPlay = shouldUseCalmAlbumFade(playTrack);
         if (fadeForPlay) {
           try {
-            await sound.setVolumeAsync(0);
+            sound.volume = 0;
           } catch {
             /* ignore pre-play fade setup failures */
           }
         }
         try {
-          await sound.setIsMutedAsync(false);
+          sound.muted = false;
           if (!fadeForPlay) {
-            await sound.setVolumeAsync(musicGainRef.current);
+            sound.volume = musicGainRef.current;
           }
         } catch {
           /* ignore */
@@ -306,7 +306,7 @@ export function useMusicTogglePlayMusic({
               await fadeSoundVolume(sound, 0, musicGainRef.current, 0);
             } else {
               try {
-                await sound.setVolumeAsync(musicGainRef.current);
+                sound.volume = musicGainRef.current;
               } catch {
                 /* ignore */
               }

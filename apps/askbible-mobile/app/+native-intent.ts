@@ -1,11 +1,6 @@
 /** OAuth 回调只交给 auth 模块；勿 import src/auth（启动阶段加载 Supabase 可能导致白屏）。 */
 import { widgetReadChapterExpoPath } from "../src/widget/widget-read-chapter-url";
 
-function isWidgetPlaybackDeepLink(path: string): boolean {
-  const trimmed = path.trim();
-  return /askbible:/i.test(trimmed) && /widget\/play/i.test(trimmed);
-}
-
 function isOAuthCallbackPath(path: string): boolean {
   const raw = path.trim();
   if (!raw) return false;
@@ -86,8 +81,6 @@ export function redirectSystemPath({
   try {
     if (isOAuthCallbackPath(path)) return "/";
     if (isBareAppDeepLink(path)) return "/";
-    // 挂件播放深链：路由进首页，实际开播由 WidgetPlaybackDeepLinkBridge 处理。
-    if (isWidgetPlaybackDeepLink(path)) return "/";
     const readPath = widgetReadChapterExpoPath(path);
     if (readPath) return readPath;
     const devAlarmPath = devReadingAlarmExpoPath(path);

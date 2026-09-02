@@ -1,11 +1,11 @@
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { peekReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
 
 /** 判断「圣经朗读会话是否应受保护、不被音乐抢占」所需的 ref 集合。 */
 export type ScripturePriorityRefs = {
   playbackModeRef: MutableRefObject<"music" | "scripture">;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;

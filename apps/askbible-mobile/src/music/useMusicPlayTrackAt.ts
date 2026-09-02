@@ -1,4 +1,5 @@
-import { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { useCallback } from "react";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
@@ -125,8 +126,8 @@ export function useMusicPlayTrackAt({
         return false;
       }
 
-      let preloadedSound: Audio.Sound | null = null;
-      let preloadedStatus: import("expo-av").AVPlaybackStatus | null = null;
+      let preloadedSound: AudioPlayer | null = null;
+      let preloadedStatus: LegacyPlaybackStatus | null = null;
       const claimed = claimDefaultPreloadedMusicSound(prepared.track.id);
       if (claimed) {
         preloadedSound = claimed.sound;

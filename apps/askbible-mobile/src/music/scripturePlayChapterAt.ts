@@ -274,7 +274,7 @@ export async function playScriptureChapterAt(
         const st = await safeGetSoundStatus(sound);
         if (st?.isLoaded) {
           const nextSec = Math.max(0, seekSec ?? 0);
-          await sound.setPositionAsync(Math.floor(nextSec * 1000));
+          await sound.seekTo(nextSec);
           publishScripturePlaybackSec(nextSec);
           ctx.lastScriptureProgressSecRef.current = nextSec;
           ctx.setScriptureCurrentSec(nextSec);

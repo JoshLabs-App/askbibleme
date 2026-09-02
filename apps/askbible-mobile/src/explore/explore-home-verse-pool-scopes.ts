@@ -2,7 +2,7 @@ import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getExploreModulesContent } from "./exploreModuleContent";
 import { EXPLORE_HOME_VERSE_POOL_VERSE_KEYS } from "./explore-home-verse-pool-verse-keys";
 import { getYearsDaysEternityZh } from "./years-days-eternity-content";
-import type { YearsDaysEternityBlock } from "./years-days-eternity-types";
+import type { YearsDaysEternityBlock } from "@/lib/explore/years-days-eternity-types";
 import type { AppLocale } from "../i18n/config";
 import { localizeZhText } from "../i18n/site-copy";
 

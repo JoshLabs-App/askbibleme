@@ -6,7 +6,7 @@ import {
   birthDateAgeYears,
   birthDateLifeDay,
   type ExploreBirthDate,
-} from "./explore-birth-date";
+} from "@/lib/explore/explore-birth-date";
 import {
   biblicalLifespanBarWidthPct,
   type BiblicalLifespanEntry,

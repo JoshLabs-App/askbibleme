@@ -1,4 +1,4 @@
-import { normalizeTripleLoopChaptersReadKeys } from "./triple-loop-chapters-read";
+import { normalizeTripleLoopChaptersReadKeys } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 import {
   normalizeTripleLoopReadingState,
   TRIPLE_LOOP_NT_BOOK_IDS,

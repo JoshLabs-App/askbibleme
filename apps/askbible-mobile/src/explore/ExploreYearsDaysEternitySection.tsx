@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { ExploreText as Text } from "./ExploreText";
-import { filterEternityProse } from "./years-days-eternity-blocks";
+import { filterEternityProse } from "@/lib/explore/years-days-eternity-blocks";
 import { exploreStyles as shared } from "./exploreParchmentStyles";
 import {
   ClosingFinaleSection,

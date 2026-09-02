@@ -53,7 +53,7 @@ import {
 import {
   readScriptureListenTotalsRecord,
 } from "../read/scripture-listen-totals";
-import { shouldSyncReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs-merge";
+import { shouldSyncReadingPlanPrefs } from "@/lib/read/reading-plan-prefs-merge";
 import { readReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import { localeValueWithReadingPlan } from "./readingPlanSyncSidecar";
 import {

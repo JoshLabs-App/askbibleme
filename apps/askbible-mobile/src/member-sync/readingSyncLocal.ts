@@ -5,7 +5,7 @@ import { MEMBER_READING_SYNC_BLOB_KEYS, type MemberReadingSyncBlob, type MemberR
 import { reconcileNtDeepRepeatReadingPlanAfterSync } from "../read/reading-plan/reconcile-nt-deep-repeat-reading-sync";
 import { reconcileTripleLoopReadingPlanAfterSync } from "../read/reading-plan/reconcile-triple-loop-reading-sync";
 import { clearPrimedTodayReadingPlanPayload } from "../read/today-reading-plan-payload-prime";
-import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-prefs-merge";
+import { mergeReadingPlanPrefsValue } from "@/lib/read/reading-plan-prefs-merge";
 import { readReadingPlanPrefs, writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import { isReadingPlanPrefs } from "./readingSyncBlobValidators";
 import { applyReadingSyncBlob } from "./readingSyncLocalApply";

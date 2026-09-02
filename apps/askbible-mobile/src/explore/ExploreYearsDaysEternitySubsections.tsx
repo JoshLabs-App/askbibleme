@@ -1,11 +1,11 @@
 import { Pressable, View } from "react-native";
 import { ExploreText as Text } from "./ExploreText";
-import { filterEternityScriptures, formatScriptureBlockBody } from "./years-days-eternity-blocks";
+import { filterEternityScriptures, formatScriptureBlockBody } from "@/lib/explore/years-days-eternity-blocks";
 import type {
   YearsDaysEternityFinale,
   YearsDaysEternityScriptureBlock,
   YearsDaysEternitySection,
-} from "./years-days-eternity-types";
+} from "@/lib/explore/years-days-eternity-types";
 import { yearsDaysEternitySectionStyles as styles } from "./ExploreYearsDaysEternitySectionStyles";
 import { stripSectionTitlePrefix } from "./yearsDaysEternityRefUtils";
 

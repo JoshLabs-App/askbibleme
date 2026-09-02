@@ -6,7 +6,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import type { AppLocale } from "../../i18n/config";
 import { t, tFormat, toZhTwText } from "../../i18n/site-copy";
 import { fetchReadingPlanRegistry } from "../../read/reading-plan/fetch-reading-plan-registry";
-import { isFeaturedReadingPlanId } from "../../read/reading-plan/featured-reading-plans";
+import { isFeaturedReadingPlanId } from "@/lib/bible/reading-plans/featured-reading-plans";
 import {
   NT_DEEP_REPEAT_PACE_OPTIONS,
   type NtDeepRepeatPace,

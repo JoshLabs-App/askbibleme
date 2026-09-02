@@ -5,7 +5,7 @@ import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { LOGO_TEXT_ACCENT_COLOR as LOGO_COLOR } from "../shell/logo-colors";
-import type { ExploreBirthDate } from "./explore-birth-date";
+import type { ExploreBirthDate } from "@/lib/explore/explore-birth-date";
 import { readExploreYearDayProfile } from "./explore-birth-year-prefs";
 import {
   getCenturyTimeline,

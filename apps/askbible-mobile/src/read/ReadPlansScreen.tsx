@@ -10,7 +10,7 @@ import { fetchReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-regi
 import {
   isFeaturedReadingPlanId,
   partitionReadingPlanCatalog,
-} from "./reading-plan/featured-reading-plans";
+} from "@/lib/bible/reading-plans/featured-reading-plans";
 import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
 import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
 import { stripReadingPlanHtml } from "./reading-plan/strip-html";

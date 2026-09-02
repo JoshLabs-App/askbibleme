@@ -1,4 +1,4 @@
-import { normalizeTripleLoopChaptersReadKeys, tripleLoopChapterReadKey } from "./triple-loop-chapters-read";
+import { normalizeTripleLoopChaptersReadKeys, tripleLoopChapterReadKey } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 import { trackForBookId, type TripleLoopReadingState } from "./triple-loop-reading";
 import type { ReadingPlanRange } from "./types";
 import { TODAY_READING_AUTO_DONE_FRACTION } from "./today-reading-chapter-fraction";

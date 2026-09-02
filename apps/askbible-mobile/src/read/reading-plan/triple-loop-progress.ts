@@ -11,7 +11,7 @@ import {
   type TripleLoopReadingState,
   type TripleLoopTrack,
 } from "./triple-loop-reading";
-import { addUserChapterReadToState } from "./triple-loop-chapters-read";
+import { addUserChapterReadToState } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
 import { readEffectiveReadingPlanPrefs } from "./reading-plan-prefs";
 

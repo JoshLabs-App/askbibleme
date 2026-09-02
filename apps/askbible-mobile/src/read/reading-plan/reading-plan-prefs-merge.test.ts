@@ -3,7 +3,7 @@ import {
   mergeReadingPlanPrefsValue,
   shouldSyncReadingPlanPrefs,
   type ReadingPlanPrefsMergeValue,
-} from "./reading-plan-prefs-merge";
+} from "@/lib/read/reading-plan-prefs-merge";
 
 const oldPlan: ReadingPlanPrefsMergeValue = {
   version: 1,

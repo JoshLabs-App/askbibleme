@@ -5,7 +5,7 @@ import type {
   YearsDaysEternityBlock,
   YearsDaysEternityDocument,
   YearsDaysEternityScriptureBlock,
-} from "./years-days-eternity-types";
+} from "@/lib/explore/years-days-eternity-types";
 
 export function getYearsDaysEternityZh(): YearsDaysEternityDocument {
   return getExploreModulesContent().yearsDaysEternity.zh;

@@ -13,7 +13,7 @@ import {
   clampBirthDate,
   clampBirthDateToToday,
   type ExploreBirthDate,
-} from "./explore-birth-date";
+} from "@/lib/explore/explore-birth-date";
 import { EXPLORE_WHEEL_ROW_HEIGHT, ExploreWheelColumn } from "./ExploreWheelColumn";
 
 const EN_MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;

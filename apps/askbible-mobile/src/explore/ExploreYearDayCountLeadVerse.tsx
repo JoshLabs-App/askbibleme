@@ -7,7 +7,7 @@ import {
   getYearDayCountLeadRef,
   loadYearDayCountScriptureText,
 } from "./year-day-count-scriptures";
-import { splitYearDayCountLeadVerseLines } from "./year-day-count-lead-verse";
+import { splitYearDayCountLeadVerseLines } from "@/lib/explore/year-day-count-lead-verse";
 import { exploreStyles as s } from "./exploreParchmentStyles";
 
 type Props = {

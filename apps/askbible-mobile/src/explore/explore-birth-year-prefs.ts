@@ -5,7 +5,7 @@ import {
   defaultBirthDate,
   isValidBirthDate,
   type ExploreBirthDate,
-} from "./explore-birth-date";
+} from "@/lib/explore/explore-birth-date";
 
 const STORAGE_KEY_V1 = "askbible-explore-birth-year-v1";
 const STORAGE_KEY = "askbible-explore-birth-date-v1";

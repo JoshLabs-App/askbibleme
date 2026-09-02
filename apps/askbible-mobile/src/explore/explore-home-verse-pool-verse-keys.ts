@@ -4,7 +4,7 @@ import {
   getYearDayCountScriptures,
 } from "./year-day-count-refs";
 import { getYearsDaysEternityZh } from "./years-days-eternity-content";
-import type { YearsDaysEternityBlock } from "./years-days-eternity-types";
+import type { YearsDaysEternityBlock } from "@/lib/explore/years-days-eternity-types";
 
 type WordOfGodCategory = {
   refs: string[];

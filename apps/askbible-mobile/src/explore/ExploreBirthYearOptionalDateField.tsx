@@ -2,7 +2,7 @@ import { Pressable, View } from "react-native";
 import { ExploreText as Text } from "./ExploreText";
 import { parchmentControlStyles } from "../shell/parchmentControlSurface";
 import { ExploreBirthDatePicker } from "./ExploreBirthDatePicker";
-import { type ExploreBirthDate } from "./explore-birth-date";
+import { type ExploreBirthDate } from "@/lib/explore/explore-birth-date";
 import { defaultBirthDate } from "./explore-birth-year-prefs";
 import { exploreBirthYearSettingsStyles as styles } from "./ExploreBirthYearSettingsScreenStyles";
 

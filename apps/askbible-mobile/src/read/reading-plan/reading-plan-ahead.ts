@@ -17,7 +17,7 @@ import {
 import {
   mergeReadingPlanPrefsValue,
   shouldSyncReadingPlanPrefs,
-} from "./reading-plan-prefs-merge";
+} from "@/lib/read/reading-plan-prefs-merge";
 import {
   advanceTripleLoopOnePlanDay,
   jumpTripleLoopProgressToPlanDay,

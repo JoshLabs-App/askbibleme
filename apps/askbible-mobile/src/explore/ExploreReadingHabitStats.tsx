@@ -21,7 +21,7 @@ import {
 } from "../shell/app-usage-time";
 import { ExploreRecentBookmarks } from "./ExploreRecentBookmarks";
 import { ExploreRecentChapters } from "./ExploreRecentChapters";
-import { formatMemberJourneyDuration } from "./member-journey-duration";
+import { formatMemberJourneyDuration } from "@/lib/explore/member-journey-duration";
 
 /** 探索首页上部：习惯统计 + 最近阅读/收藏。 */
 export function ExploreReadingHabitStats() {

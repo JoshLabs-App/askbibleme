@@ -1,5 +1,5 @@
 import bundledJson from "./explore-modules-bundled.json";
-import type { YearsDaysEternityDocument } from "./years-days-eternity-types";
+import type { YearsDaysEternityDocument } from "@/lib/explore/years-days-eternity-types";
 
 export type ExploreModulesPrayerScenario = {
   title: string;

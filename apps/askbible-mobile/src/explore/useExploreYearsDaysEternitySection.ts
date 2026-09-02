@@ -3,7 +3,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { InteractionManager } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
 import { getYearsDaysEternityEn, getYearsDaysEternityZh, resolveYearsDaysEternityDocument } from "./years-days-eternity-content";
-import { filterEternityScriptures } from "./years-days-eternity-blocks";
+import { filterEternityScriptures } from "@/lib/explore/years-days-eternity-blocks";
 import { getRedemptionTimelineCaption } from "./years-days-eternity-redemption-eras";
 import { loadEternityEnScriptureBodiesForRefs } from "./yearsDaysEternityScriptureLoad";
 import { localizeRefLabel } from "./yearsDaysEternityRefUtils";

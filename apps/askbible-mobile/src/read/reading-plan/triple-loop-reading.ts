@@ -4,7 +4,7 @@ import { t, tFormat } from "../../i18n/site-copy";
 import {
   addUserChapterReadToState,
   normalizeTripleLoopChaptersReadKeys,
-} from "./triple-loop-chapters-read";
+} from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 
 export type TripleLoopTrack = "ot" | "nt" | "wisdom";
 

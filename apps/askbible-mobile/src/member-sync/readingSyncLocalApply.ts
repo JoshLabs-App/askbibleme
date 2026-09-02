@@ -52,7 +52,7 @@ import {
   readScriptureListenTotalsRecord,
   replaceScriptureListenTotalsRecord,
 } from "../read/scripture-listen-totals";
-import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-prefs-merge";
+import { mergeReadingPlanPrefsValue } from "@/lib/read/reading-plan-prefs-merge";
 import { readReadingPlanPrefs, writeReadingPlanPrefs } from "../read/reading-plan/reading-plan-prefs";
 import {
   replaceNtDeepRepeatProgress,

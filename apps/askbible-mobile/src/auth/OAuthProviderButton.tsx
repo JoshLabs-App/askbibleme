@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, t
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "../read/readParchmentTheme";
 import { parchmentControlSurface } from "../shell/parchmentControlSurface";
-import { OAUTH_BRAND_ICON_SLOT_PX } from "./oauth-brand-icon-paths";
+import { OAUTH_BRAND_ICON_SLOT_PX } from "@/lib/oauth-brand-icon-paths";
 import { AppleBrandIcon, GoogleBrandIcon } from "./OAuthBrandIcons";
 
 type Props = {

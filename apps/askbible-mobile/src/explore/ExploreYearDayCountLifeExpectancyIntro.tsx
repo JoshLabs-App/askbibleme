@@ -6,7 +6,7 @@ import {
   filterEternityProse,
   filterEternityScriptures,
   formatScriptureBlockBody,
-} from "./years-days-eternity-blocks";
+} from "@/lib/explore/years-days-eternity-blocks";
 import { getYearsDaysEternityEn, resolveYearsDaysEternityDocument } from "./years-days-eternity-content";
 
 export function ExploreYearDayCountLifeExpectancyIntro() {

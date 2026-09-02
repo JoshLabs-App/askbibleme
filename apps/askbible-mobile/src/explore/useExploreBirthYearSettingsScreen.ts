@@ -6,7 +6,7 @@ import { t } from "../i18n/site-copy";
 import { READ_PARCHMENT_PAGE_BOTTOM } from "../read/ReadParchmentPageScroll";
 import { useShellSwipeSuspend } from "../shell/useShellSwipeSuspend";
 import { useExploreScrollContentStyle } from "./exploreParchmentStyles";
-import { defaultBirthDate, isValidBirthDate, type ExploreBirthDate } from "./explore-birth-date";
+import { defaultBirthDate, isValidBirthDate, type ExploreBirthDate } from "@/lib/explore/explore-birth-date";
 import {
   isValidExploreDisplayName,
   normalizeExploreDisplayName,

@@ -5,7 +5,7 @@ import { isNetworkAvailable } from "../../network/isNetworkAvailable";
 import { flowLocaleForHomeVerseTranslationId } from "../homePrayerVersePrefs";
 import { loadChapterFromBundledTranslation } from "../../bible/load-chapter";
 import { parseVerseKey } from "@/lib/bible/parse-verse-key";
-import { resolveSameAsPreviousVerseText } from "../../bible/resolve-same-as-previous-verse";
+import { resolveSameAsPreviousVerseText } from "@/lib/bible/resolve-same-as-previous-verse";
 import { getScriptureBookDisplayName } from "../../bible/scripture-book-display-name";
 import { hydrateHomeVersePoolScope } from "../homeVersePoolScopePrefs";
 import { getHomeVersePoolChunk, HOME_VERSE_POOL_SCOPE_ID } from "./chunk-registry.generated";

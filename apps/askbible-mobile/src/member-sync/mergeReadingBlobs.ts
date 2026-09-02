@@ -1,5 +1,5 @@
 import { mergeNtDeepRepeatReadingState } from "../read/reading-plan/merge-nt-deep-repeat-reading-state";
-import { mergeReadingPlanPrefsValue } from "../read/reading-plan/reading-plan-prefs-merge";
+import { mergeReadingPlanPrefsValue } from "@/lib/read/reading-plan-prefs-merge";
 import { mergeTripleLoopReadingState } from "../read/reading-plan/merge-triple-loop-reading-state";
 import {
   mergeScriptureListenTotalsRecords,

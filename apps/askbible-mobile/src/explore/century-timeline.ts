@@ -4,7 +4,7 @@ import {
   birthDateLifeDay,
   toBirthDateMs,
   type ExploreBirthDate,
-} from "./explore-birth-date";
+} from "@/lib/explore/explore-birth-date";
 import { getExploreModulesContent } from "./exploreModuleContent";
 
 export function getCenturySpanYears(): number {

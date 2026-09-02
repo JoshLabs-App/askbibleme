@@ -6,7 +6,7 @@ import {
   normalizeTripleLoopReadingState,
   tripleLoopStateForPlanDay,
 } from "./triple-loop-reading";
-import { normalizeTripleLoopChaptersReadKeys } from "./triple-loop-chapters-read";
+import { normalizeTripleLoopChaptersReadKeys } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
 import {
   readTripleLoopProgress,
   replaceTripleLoopProgress,

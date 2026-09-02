@@ -3,8 +3,13 @@ import type { MobileAuthUser } from "./memberAuthTypes";
 
 export const SCHEMA_VERSION = 1;
 
-/** 线上 HTTPS — Android 真机 Debug 时 RN→Mac HTTP 不可靠，Google idToken 交换走此地址。 */
-export const MOBILE_AUTH_PRODUCTION_BASE_URL = "https://askbible.me";
+/**
+ * OAuth idToken 交换直连 Supabase Edge Function，不经过 askbible.me/Render——
+ * 减少对 Render 服务可用性的依赖，登录不受站点部署影响。函数名与
+ * supabase/functions/mobile-oauth-{google,apple}/ 对应。
+ */
+export const MOBILE_OAUTH_EDGE_FUNCTION_BASE_URL =
+  "https://tgobadhdylarhssudplc.supabase.co/functions/v1";
 
 export function logAuthApiTarget(label: string): void {
   if (!__DEV__) return;

@@ -27,7 +27,7 @@ export async function loginMobileMemberWithGoogleAt(
   const base = baseUrl.replace(/\/$/, "");
   let res: Response;
   try {
-    res = await fetchWithTimeout(`${base}/api/mobile/auth/google`, {
+    res = await fetchWithTimeout(`${base}/mobile-oauth-google`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       timeoutMs: 12_000,
@@ -117,7 +117,7 @@ export async function loginMobileMemberWithAppleAt(
   const base = baseUrl.replace(/\/$/, "");
   let res: Response;
   try {
-    res = await fetchWithTimeout(`${base}/api/mobile/auth/apple`, {
+    res = await fetchWithTimeout(`${base}/mobile-oauth-apple`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       timeoutMs: 12_000,

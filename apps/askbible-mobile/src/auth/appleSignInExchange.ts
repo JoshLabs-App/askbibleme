@@ -2,7 +2,7 @@ import { getLocale } from "../i18n/locale-store";
 import {
   loginMobileMemberWithApple,
   loginMobileMemberWithAppleAt,
-  MOBILE_AUTH_PRODUCTION_BASE_URL,
+  MOBILE_OAUTH_EDGE_FUNCTION_BASE_URL,
 } from "../api/memberAuth";
 import { createMobileSupabaseClient } from "./googleOAuthSession";
 
@@ -121,7 +121,7 @@ export async function exchangeAppleNativeCredential(input: {
   authTrace("fallback", "production API");
   try {
     return mapApiLoginResult(
-      await loginMobileMemberWithAppleAt(MOBILE_AUTH_PRODUCTION_BASE_URL, {
+      await loginMobileMemberWithAppleAt(MOBILE_OAUTH_EDGE_FUNCTION_BASE_URL, {
         idToken: input.idToken,
         nonce: input.nonce,
         locale,

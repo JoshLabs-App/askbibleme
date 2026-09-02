@@ -6,7 +6,7 @@ export type {
   MobileRegisterResult,
 } from "./memberAuthTypes";
 
-export { MOBILE_AUTH_PRODUCTION_BASE_URL } from "./memberAuthShared";
+export { MOBILE_OAUTH_EDGE_FUNCTION_BASE_URL } from "./memberAuthShared";
 
 export { deleteMobileMemberAccount } from "./memberAuthDelete";
 export {

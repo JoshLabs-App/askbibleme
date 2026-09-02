@@ -8,11 +8,13 @@ port = 54321
 
 [db]
 port = 54322
-major_version = 15
+major_version = 17
 
 [studio]
 enabled = true
 port = 54323
 
-[functions]
-verify_jwt = false
+# Per-function JWT verification now lives under [functions.<slug>] (CLI 2.x); a bare
+# [functions] table with a global verify_jwt key fails to parse and breaks every
+# `supabase functions deploy` invocation. Use `--no-verify-jwt` at deploy time instead,
+# or add a [functions.<slug>] table here if a specific function needs it pinned.

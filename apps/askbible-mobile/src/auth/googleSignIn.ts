@@ -85,9 +85,9 @@ async function exchangeGoogleIdToken(idToken: string, nonce?: string): Promise<G
   }
 
   authTrace("supabase unreachable, trying production API");
-  const { loginMobileMemberWithGoogleAt, MOBILE_AUTH_PRODUCTION_BASE_URL } = await import("../api/memberAuth");
+  const { loginMobileMemberWithGoogleAt, MOBILE_OAUTH_EDGE_FUNCTION_BASE_URL } = await import("../api/memberAuth");
   return mapApiLoginResult(
-    await loginMobileMemberWithGoogleAt(MOBILE_AUTH_PRODUCTION_BASE_URL, {
+    await loginMobileMemberWithGoogleAt(MOBILE_OAUTH_EDGE_FUNCTION_BASE_URL, {
       idToken,
       locale: getLocale(),
     }),

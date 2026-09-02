@@ -14,6 +14,13 @@ function zhTwBlock(block: YearsDaysEternityBlock): YearsDaysEternityBlock {
   return { ...block, lines: block.lines.map(toZhTwText) };
 }
 
+/** For call sites that only need one block array (e.g. just `intro`), not the whole document. */
+export function applyZhTwToYearsDaysEternityBlocks(
+  blocks: YearsDaysEternityBlock[],
+): YearsDaysEternityBlock[] {
+  return blocks.map(zhTwBlock);
+}
+
 function zhTwScriptureBlock(block: YearsDaysEternityScriptureBlock): YearsDaysEternityScriptureBlock {
   return { ...block, lines: block.lines.map(toZhTwText), ref: toZhTwText(block.ref) };
 }

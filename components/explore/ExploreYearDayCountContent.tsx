@@ -43,6 +43,7 @@ import {
 } from "@/lib/explore/years-days-eternity-blocks";
 import { YEARS_DAYS_ETERNITY_EN } from "@/lib/explore/years-days-eternity-content-en";
 import { YEARS_DAYS_ETERNITY_ZH } from "@/lib/explore/years-days-eternity-content";
+import { applyZhTwToYearsDaysEternityBlocks } from "@/lib/explore/years-days-eternity-zh-tw";
 
 type Props = {
   initialScriptureTexts: Record<string, string>;
@@ -181,8 +182,11 @@ export function ExploreYearDayCountContent({
   const lifeDayTarget = YEAR_DAY_COUNT_LIFE_DAY_READ_TARGET;
   const orderedRefs = useMemo(() => [...YEAR_DAY_COUNT_SCRIPTURES].reverse(), []);
 
-  const lifeExpectancyIntro =
-    locale === "en" ? YEARS_DAYS_ETERNITY_EN.intro : YEARS_DAYS_ETERNITY_ZH.intro;
+  const lifeExpectancyIntro = useMemo(() => {
+    if (locale === "en") return YEARS_DAYS_ETERNITY_EN.intro;
+    if (locale === "zh-TW") return applyZhTwToYearsDaysEternityBlocks(YEARS_DAYS_ETERNITY_ZH.intro);
+    return YEARS_DAYS_ETERNITY_ZH.intro;
+  }, [locale]);
 
   const openRef = (ref: YearDayCountScriptureRef) => {
     window.location.href = `/read/${ref.bookId}/${ref.chapter}?verse=${ref.verseStart}`;

@@ -1,7 +1,7 @@
 import { getLocale } from "./locale-store";
 import type { AppLocale } from "./config";
 import { ZH_TW_OVERRIDES } from "./site-copy-zh-tw-overrides";
-import { ZH_TW_CHAR_MAP, ZH_TW_PHRASE_REPLACEMENTS } from "./site-copy-zh-tw-maps";
+import { ZH_TW_CHAR_MAP, ZH_TW_PHRASE_REPLACEMENTS, ZH_TW_POST_CHAR_MAP_FIXUPS } from "./site-copy-zh-tw-maps";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const zhCN = require("../../assets/content/zh-CN.json") as Record<string, unknown>;
@@ -90,7 +90,11 @@ export function toZhTwText(input: string): string {
   for (const [from, to] of ZH_TW_PHRASE_REPLACEMENTS) {
     out = out.replaceAll(from, to);
   }
-  return Array.from(out, (ch) => ZH_TW_CHAR_MAP[ch] ?? ch).join("");
+  out = Array.from(out, (ch) => ZH_TW_CHAR_MAP[ch] ?? ch).join("");
+  for (const [from, to] of ZH_TW_POST_CHAR_MAP_FIXUPS) {
+    out = out.replaceAll(from, to);
+  }
+  return out;
 }
 
 /** 简体源文案在 zh-TW 下转为繁体；其它 locale 原样返回。 */

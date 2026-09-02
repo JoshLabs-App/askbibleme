@@ -295,6 +295,7 @@ const ZH_TW_CHAR_MAP: Record<string, string> = {
   马: "馬",
   亚: "亞",
   创: "創",
+  堕: "墮",
   雾: "霧",
   继: "繼",
   续: "續",

@@ -1,4 +1,5 @@
 import type { AppLocale } from "@/lib/i18n/config";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 const REDEMPTION_ERA_BY_SECTION_ID_ZH: Record<string, string> = {
   creation: "创造",
@@ -23,9 +24,13 @@ const REDEMPTION_ERA_BY_SECTION_ID_EN: Record<string, string> = {
 };
 
 export function getRedemptionEraBySectionId(locale: AppLocale): Record<string, string> {
-  return locale === "en" ? REDEMPTION_ERA_BY_SECTION_ID_EN : REDEMPTION_ERA_BY_SECTION_ID_ZH;
+  if (locale === "en") return REDEMPTION_ERA_BY_SECTION_ID_EN;
+  const zh = REDEMPTION_ERA_BY_SECTION_ID_ZH;
+  if (locale !== "zh-TW") return zh;
+  return Object.fromEntries(Object.entries(zh).map(([key, value]) => [key, toZhTwText(value)]));
 }
 
 export function getRedemptionTimelineCaption(locale: AppLocale): string {
-  return locale === "en" ? "History of Redemption" : "救赎史";
+  if (locale === "en") return "History of Redemption";
+  return toZhTwText("救赎史");
 }

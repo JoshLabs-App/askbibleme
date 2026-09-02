@@ -70,11 +70,14 @@ export function buildContrastTranslationOptions(
 export function buildChapterAudioPlaybackSelectOptions(
   translationCatalog: Catalog,
   locale: AppLocale,
+  primaryTranslationId: string,
 ): ReadSettingsSelectOption[] {
-  return buildChapterAudioPlaybackOptions(translationCatalog, locale, t).map((opt) => ({
-    ...opt,
-    shortLabel: shortLabel(opt.id, locale, opt.label),
-  }));
+  return buildChapterAudioPlaybackOptions(translationCatalog, locale, t, primaryTranslationId).map(
+    (opt) => ({
+      ...opt,
+      shortLabel: shortLabel(opt.id, locale, opt.label),
+    }),
+  );
 }
 
 export function resolveChapterAudioPlaybackValue(

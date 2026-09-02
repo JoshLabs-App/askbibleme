@@ -32,7 +32,7 @@ export async function writeMusicPlaybackResume(pos: MusicPlaybackResume): Promis
   await AsyncStorage.setItem(MUSIC_PLAYBACK_RESUME_KEY, JSON.stringify({ trackId, positionSec }));
 }
 
-export const SCRIPTURE_PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+export const SCRIPTURE_PLAYBACK_RATES = [0.75, 1, 1.25] as const;
 
 export function normalizeScripturePlaybackRate(raw: number | null | undefined): number {
   if (!Number.isFinite(raw)) return 1;

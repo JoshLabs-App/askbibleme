@@ -6,7 +6,6 @@ import { translationHasVerifiedYouVersionChapterAudio } from "@/lib/bible/youver
 import type { AppLocale } from "../i18n/config";
 import { localizeZhText } from "../i18n/site-copy";
 import type { BibleTranslationMeta } from "../bible/translations-types";
-import { translationCatalogWithChapterAudio } from "./read-chapter-audio-translation";
 
 export type ChapterAudioPlaybackOption = {
   id: string;
@@ -78,29 +77,29 @@ export function decodeChapterAudioPlaybackOptionId(
   return { audioTranslationId: null, voiceId: "mandarin" };
 }
 
-/** 圣经版本在「圣经版本」里选；此处仅列朗读人声与已验证的对应译本音轨。 */
+/**
+ * 圣经版本在「圣经版本」里选；此处仅列当前主版本自己的朗读音轨。
+ * 朗读实际播放永远跟随屏幕主版本（见 resolveChapterAudioTranslationId），
+ * 所以这里绝不能列出其它译本的音轨——那些选项即使被选中也不会真的播放。
+ */
 export function buildChapterAudioPlaybackOptions(
   catalog: BibleTranslationMeta[],
   locale: AppLocale,
   t: (key: string) => string,
+  primaryTranslationId: string,
 ): ChapterAudioPlaybackOption[] {
-  const audioCatalog = translationCatalogWithChapterAudio({
-    translations: catalog,
-    defaultTranslationId: null,
-  });
   const out: ChapterAudioPlaybackOption[] = [];
-  const hasCuvAudio = audioCatalog.some((tr) => translationSupportsCuvChapterAudio(tr.id));
 
-  if (hasCuvAudio) {
+  if (translationSupportsCuvChapterAudio(primaryTranslationId)) {
     for (const v of CUV_CHAPTER_AUDIO_VOICES) {
       out.push({ id: v.id, label: t(VOICE_LABEL_KEYS[v.id]) });
     }
+    return out;
   }
 
-  for (const tr of audioCatalog) {
-    if (translationUsesEditionChapterAudio(tr.id)) {
-      out.push({ id: tr.id, label: translationLabel(tr, locale) });
-    }
+  if (translationUsesEditionChapterAudio(primaryTranslationId)) {
+    const tr = catalog.find((tr) => tr.id === primaryTranslationId);
+    if (tr) out.push({ id: tr.id, label: translationLabel(tr, locale) });
   }
 
   return out;

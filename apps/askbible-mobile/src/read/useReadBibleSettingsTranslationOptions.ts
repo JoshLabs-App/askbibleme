@@ -136,8 +136,8 @@ export function useReadBibleSettingsTranslationOptions(args: Args) {
   );
 
   const chapterAudioPlaybackOptions = useMemo(
-    () => buildChapterAudioPlaybackSelectOptions(translationCatalog, locale),
-    [translationCatalog, locale],
+    () => buildChapterAudioPlaybackSelectOptions(translationCatalog, locale, primaryTranslationId),
+    [translationCatalog, locale, primaryTranslationId],
   );
 
   const chapterAudioPlaybackValue = useMemo(

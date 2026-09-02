@@ -1,6 +1,6 @@
 import type { MutableRefObject } from "react";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 import { isSameScriptureChapter } from "./scripturePlaybackExclusive";
@@ -9,7 +9,7 @@ import { getScripturePlayingChapter } from "./scripturePlayingChapterStore";
 
 export function isScripturePlaybackStarted(args: {
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureSrcRef: MutableRefObject<string | null>;
 }): boolean {
   if (args.playbackModeRef.current !== "scripture") return false;

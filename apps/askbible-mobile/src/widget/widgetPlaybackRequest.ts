@@ -1,7 +1,5 @@
 import { DeviceEventEmitter } from "react-native";
 
-export type WidgetPlaybackAction = "music" | "reading" | "verse";
-
 const VERSE_PLAY_EVENT = "askbible-widget-verse-play";
 const VERSE_STOP_EVENT = "askbible-widget-verse-stop";
 
@@ -58,21 +56,4 @@ export function subscribeWidgetVersePlayRequest(handler: (verseKey: string) => v
 export function subscribeWidgetVerseStopRequest(handler: () => void): () => void {
   const sub = DeviceEventEmitter.addListener(VERSE_STOP_EVENT, handler);
   return () => sub.remove();
-}
-
-export function parseWidgetPlaybackDeepLink(
-  url: string,
-): { action: WidgetPlaybackAction; verseKey?: string } | null {
-  const trimmed = url.trim();
-  if (!/askbible:/i.test(trimmed) || !/widget\/play/i.test(trimmed)) return null;
-  try {
-    const normalized = trimmed.replace(/^askbible:\/\//i, "https://askbible.local/");
-    const u = new URL(normalized);
-    const action = (u.searchParams.get("action") || "").trim().toLowerCase();
-    if (action !== "music" && action !== "reading" && action !== "verse") return null;
-    const verseKey = (u.searchParams.get("verseKey") || "").trim().toUpperCase() || undefined;
-    return { action: action as WidgetPlaybackAction, verseKey };
-  } catch {
-    return null;
-  }
 }

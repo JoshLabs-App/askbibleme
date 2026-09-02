@@ -1,4 +1,5 @@
 import { NativeModules, Platform } from "react-native";
+import { logSwallowedError } from "../debug/logSwallowedError";
 import {
   ANDROID_MUSIC_PAD_PACK_NAME,
   ANDROID_MUSIC_PAD_TRACK_FILES,
@@ -60,10 +61,14 @@ export async function ensureAndroidMusicAssetPack(): Promise<PackStatus | null> 
         ),
       ),
     ]);
-  } catch {
+  } catch (ensureError) {
     try {
       return await native.getPackStatus();
-    } catch {
+    } catch (statusError) {
+      logSwallowedError("androidMusicAssetPack.ensureAndroidMusicAssetPack", {
+        ensureError,
+        statusError,
+      });
       return null;
     }
   }

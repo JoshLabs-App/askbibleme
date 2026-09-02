@@ -1,21 +1,15 @@
-type Listener = () => void;
+import { createWantPlayingStore } from "./createWantPlayingStore";
 
-let wantPlaying = false;
-const listeners = new Set<Listener>();
+const store = createWantPlayingStore();
 
 export function getShellScriptureWantPlaying(): boolean {
-  return wantPlaying;
+  return store.get();
 }
 
 export function setShellScriptureWantPlaying(next: boolean): void {
-  if (wantPlaying === next) return;
-  wantPlaying = next;
-  for (const cb of listeners) cb();
+  store.set(next);
 }
 
-export function subscribeShellScriptureWantPlaying(onChange: Listener): () => void {
-  listeners.add(onChange);
-  return () => {
-    listeners.delete(onChange);
-  };
+export function subscribeShellScriptureWantPlaying(onChange: () => void): () => void {
+  return store.subscribe(onChange);
 }

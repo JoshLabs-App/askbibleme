@@ -42,10 +42,15 @@ async function awaitPlayInFlightOrTimeout(
 ): Promise<void> {
   const op = ref.current;
   if (!op) return;
+  // 只有 op 真正落地才清 ref：超时只是让本次调用不再苦等，op 仍在跑，
+  // 若这里无条件清空，后一个并发调用会误以为槽位已空，跳过等待直接动 soundRef，
+  // 和仍未结束的旧 op 抢着改同一份状态。op 落地后才清，确保下一次调用仍会等到它。
+  op.catch(() => {}).finally(() => {
+    if (ref.current === op) {
+      ref.current = null;
+    }
+  });
   await Promise.race([op.catch(() => {}), new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))]);
-  if (ref.current === op) {
-    ref.current = null;
-  }
 }
 
 export async function pauseScriptureShellPlayback(

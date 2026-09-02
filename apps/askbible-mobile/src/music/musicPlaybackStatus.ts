@@ -1,4 +1,5 @@
-import type { Audio, AVPlaybackStatus } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import type { MutableRefObject } from "react";
 import { safePauseSound } from "../audio/safeShellSound";
 import { getShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
@@ -26,7 +27,7 @@ export type MusicPlaybackStatusHandlerArgs = {
   activeSoundIdRef: MutableRefObject<number>;
   playbackEpochRef: MutableRefObject<number>;
   playbackModeRef: MutableRefObject<PlaybackMode>;
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   musicMaxProgressMsRef: MutableRefObject<number>;
   musicSoundActivatedAtRef: MutableRefObject<number>;
   calmLoopTransitioningRef: MutableRefObject<boolean>;
@@ -46,7 +47,7 @@ export type MusicPlaybackStatusHandlerArgs = {
 
 export function createMusicPlaybackStatusHandler(
   args: MusicPlaybackStatusHandlerArgs,
-): (status: AVPlaybackStatus) => void {
+): (status: LegacyPlaybackStatus) => void {
   const {
     soundId,
     epoch,
@@ -73,7 +74,7 @@ export function createMusicPlaybackStatusHandler(
     persistMusicResume,
   } = args;
 
-  return (status: AVPlaybackStatus) => {
+  return (status: LegacyPlaybackStatus) => {
     if (soundId !== activeSoundIdRef.current || epoch !== playbackEpochRef.current) return;
     if (!status.isLoaded) return;
     if (status.positionMillis > musicMaxProgressMsRef.current) {

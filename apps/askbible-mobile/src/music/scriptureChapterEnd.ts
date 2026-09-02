@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { handleScriptureDidJustFinish } from "./scripturePlaybackFinish";
 import type {
   ReadChapterPlaybackRegistration,
@@ -25,7 +25,7 @@ export function shouldScheduleScriptureMidChapterResume(positionMs: number, dura
 }
 
 export type ScriptureChapterEndFinishArgs = {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureSrcRef: MutableRefObject<string | null>;
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;

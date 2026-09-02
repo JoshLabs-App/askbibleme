@@ -91,7 +91,7 @@ export default function RootLayout() {
     isIosMusicBackgroundMinimal,
     () => false,
   );
-  if (__DEV__) {
+  if (__DEV__ && process.env.EXPO_PUBLIC_DEBUG_ROOT_LAYOUT === "1") {
     console.warn("[root-layout] render", {
       widgetPlaybackBoot,
       fontsReady,
@@ -184,7 +184,17 @@ export default function RootLayout() {
     if (!appReady || !onboardingBoot.ready || !needsWelcomeGate) return;
     if (onWelcomeRoute) return;
     router.replace(welcomeRoute({ gate: true }));
+    const MAX_RETRIES = 10;
+    let attempts = 0;
     const retry = setInterval(() => {
+      attempts += 1;
+      if (attempts >= MAX_RETRIES) {
+        clearInterval(retry);
+        if (__DEV__) {
+          logStartupTiming("root", "welcome_gate_route_stuck", `attempts=${attempts}`);
+        }
+        return;
+      }
       router.replace(welcomeRoute({ gate: true }));
     }, 400);
     return () => clearInterval(retry);

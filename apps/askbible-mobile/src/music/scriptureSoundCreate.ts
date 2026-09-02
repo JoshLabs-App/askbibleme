@@ -1,5 +1,6 @@
-import { Audio } from "expo-av";
-import type { AVPlaybackSource } from "expo-av";
+import { createAudioPlayer, type AudioPlayer, type AudioSource } from "expo-audio";
+import { toLegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
+import { waitForAudioPlayerLoaded } from "../audio/expoAudioPlayerReady";
 import type { MutableRefObject } from "react";
 import { Platform } from "react-native";
 import { primeShellSoundPlayback, shellSoundDownloadFirst } from "../audio/shellAudioMode";
@@ -15,7 +16,7 @@ import type {
 
 type CreateArgs = {
   bridge: ScriptureShellPlaybackBridge;
-  avSource: AVPlaybackSource;
+  avSource: AudioSource;
   soundId: number;
   epoch: number;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
@@ -39,7 +40,7 @@ type CreateArgs = {
 };
 
 export type CreatedScriptureSound =
-  | { ok: true; sound: Audio.Sound }
+  | { ok: true; sound: AudioPlayer }
   | { ok: false; stale: true }
   | { ok: false; stale: false };
 
@@ -71,18 +72,15 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
 
   const { activeSoundIdRef, playbackEpochRef, playbackModeRef } = bridge;
 
-  let sound: Audio.Sound;
+  let sound: AudioPlayer;
   try {
-    const created = await Audio.Sound.createAsync(
-      avSource,
-      {
-        shouldPlay: true,
-        progressUpdateIntervalMillis: Platform.OS === "android" ? 400 : 500,
-        volume: 1,
-        isMuted: false,
-        rate: scripturePlaybackRateRef.current,
-        shouldCorrectPitch: true,
-      },
+    sound = createAudioPlayer(avSource, {
+      updateInterval: Platform.OS === "android" ? 400 : 500,
+      downloadFirst: shellSoundDownloadFirst(avSource),
+    });
+    sound.volume = 1;
+    sound.muted = false;
+    sound.addListener("playbackStatusUpdate", (raw) => {
       createScripturePlaybackStatusHandler({
         ...bridge,
         soundId,
@@ -102,10 +100,11 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
         scriptureLastProgressMsRef,
         scriptureLastProgressAtRef,
         scriptureSrcRef,
-      }),
-      shellSoundDownloadFirst(avSource),
-    );
-    sound = created.sound;
+      })(toLegacyPlaybackStatus(raw, sound.volume, sound.muted));
+    });
+    await waitForAudioPlayerLoaded(sound);
+    sound.setPlaybackRate(scripturePlaybackRateRef.current, "high");
+    sound.play();
     await primeShellSoundPlayback(sound);
   } catch (err) {
     if (epoch === playbackEpochRef.current) {
@@ -119,12 +118,12 @@ export async function createScriptureSound(args: CreateArgs): Promise<CreatedScr
   }
 
   if (epoch !== playbackEpochRef.current || soundId !== activeSoundIdRef.current) {
-    await sound.unloadAsync();
+    sound.remove();
     return { ok: false, stale: true };
   }
 
   const chapter = readChapterRef.current;
-  const playingStatus = await sound.getStatusAsync();
+  const playingStatus = toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
   if (playingStatus.isLoaded && chapter) {
     syncShellMediaSessionExplicit({
       title: `${chapter.bookName} ${chapter.chapter}`,

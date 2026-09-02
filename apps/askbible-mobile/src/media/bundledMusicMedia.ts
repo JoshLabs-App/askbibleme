@@ -44,10 +44,9 @@ export function resolveMusicTrackPlayback(
   if (padUri) {
     return { src: padUri, localReady: true };
   }
-  // PAD 清单里有、尚未缓存 URI：标未就绪（勿当流式）
-  if (ANDROID_MUSIC_PAD_TRACK_FILES[id]) {
-    return { src: "", localReady: false };
-  }
+  // PAD 清单里有、尚未缓存 URI：Pack 未装好前仍可用下面两级本地兜底（R2 本地缓存 / 旧
+  // resource-pack），只是不落到远程流式——避免 Pack 安装失败/超时时该曲目永久静音。
+  const padPending = Boolean(ANDROID_MUSIC_PAD_TRACK_FILES[id]);
   const r2Cached = peekMusicR2CachedUri(catalogSrc);
   if (r2Cached) {
     return { src: r2Cached, localReady: true };
@@ -55,6 +54,9 @@ export function resolveMusicTrackPlayback(
   const synced = resolveMusicResourcePackUri(catalogSrc);
   if (synced) {
     return { src: synced, localReady: true };
+  }
+  if (padPending) {
+    return { src: "", localReady: false };
   }
   const r2Stream = buildMusicAudioRemoteUrl(catalogSrc);
   if (r2Stream) {

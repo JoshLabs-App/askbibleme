@@ -10,6 +10,18 @@ import { getShellMusicWantPlaying } from "./shellMusicWantPlaying";
 import { getShellScriptureWantPlaying } from "./shellScriptureWantPlaying";
 import { getShellVerseWantPlaying } from "./shellVerseWantPlaying";
 
+/**
+ * 与 iOS/Android 原生「壳层」媒体控制模块（AskBibleShellMediaControls）之间的桥接层。
+ * 职责：把 JS 侧播放意图（音乐/金句/读经/环境音）序列化后节流推送给原生媒体会话
+ *   （锁屏/通知栏/控制中心），并把原生远程指令（RemotePlay/RemoteNext…）转发回 JS 事件总线。
+ * 边界：不持有任何实际的音频播放器/解码状态，只做「JS 意图 <-> 原生会话」的同步与去重；
+ *   真正播放由 expo-av 或原生 AVPlayer/MediaPlayer 负责。
+ * 交互模块：shellAudioInterruption（系统打断桥接）、shellMusicWantPlaying /
+ *   shellVerseWantPlaying / shellScriptureWantPlaying（各来源「是否想播放」的全局标志，
+ *   用于仲裁谁能占用同一个原生媒体会话）。
+ * 大量模块级可变状态（lastSent*）用于跨调用去重：iOS 原生接管播放后靠自己的心跳推进进度，
+ * JS 若高频重复 updateSession 会打断/重建原生定时器，因此必须靠这些缓存判断“是否真的变化”。
+ */
 export type ShellMediaSessionKind = "music" | "scripture" | "verse" | "ambient";
 
 export type ShellMediaSessionPayload = {
@@ -157,6 +169,11 @@ function invokeNativeVoid(fn: (() => void | Promise<void>) | undefined): void {
   }
 }
 
+/**
+ * 主同步入口：把播放意图节流推给原生媒体会话。内部按顺序做多层短路判断——
+ * null 保活防误清、音乐/金句/环境音互斥、用户划掉后的抑制窗口、元数据/位置去重——
+ * 每一层都对应过真实故障（详见各分支注释），调整顺序或去掉某层前请先理解其成因。
+ */
 export function syncShellMediaSession(payload: ShellMediaSessionPayload | null): void {
   const mod = getNativeModule();
   if (!mod) return;
@@ -422,6 +439,8 @@ export function resumeShellAppMusic(): void {
   }
 }
 
+// Expo New Architecture 下的原生事件订阅路径：优先尝试，因为部分设备上
+// legacy DeviceEventEmitter 收不到 Expo 模块直发的事件（见下方 legacy 兜底路径）。
 function subscribeExpoRemoteEvents(handlers: {
   onPlay: () => void;
   onPause: (payload?: unknown) => void;

@@ -1,3 +1,4 @@
+import { logSwallowedError } from "../debug/logSwallowedError";
 import { fetchWithTimeout } from "../api/fetchWithTimeout";
 import { isNetworkAvailable } from "../network/isNetworkAvailable";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
@@ -94,7 +95,8 @@ async function runSyncOnce(options: ResourcePackSyncOptions = {}): Promise<boole
       unitPercent: 100,
     });
     return true;
-  } catch {
+  } catch (error) {
+    logSwallowedError("natureResourcePackSync.runSyncOnce", error);
     return false;
   } finally {
     setNatureResourcePackSyncing(false);
@@ -127,7 +129,8 @@ export async function checkNatureResourcePackUpdate(): Promise<NaturePackUpdateC
       available: shouldUpdateNaturePackFromManifest(manifest),
       latestVersion: manifest.packVersion,
     };
-  } catch {
+  } catch (error) {
+    logSwallowedError("natureResourcePackSync.checkNatureResourcePackUpdate", error);
     return { available: false, latestVersion: "" };
   }
 }

@@ -1,10 +1,5 @@
 import { Platform } from "react-native";
-import {
-  Audio,
-  InterruptionModeAndroid,
-  InterruptionModeIOS,
-  type AVPlaybackSource,
-} from "expo-av";
+import { setAudioModeAsync, type AudioMode, type AudioPlayer, type AudioSource } from "expo-audio";
 import { isShellNativeAudioTakeover } from "./shellNativeAudioTakeover";
 
 type ShellAudioModeKind = "music" | "scripture";
@@ -14,7 +9,7 @@ let shellAudioModeInFlight: Promise<void> | null = null;
 
 async function ensureShellAudioMode(
   kind: ShellAudioModeKind,
-  options: Parameters<typeof Audio.setAudioModeAsync>[0],
+  options: Partial<AudioMode>,
   force = false,
 ): Promise<void> {
   // 原生播放器占会话时：禁止 expo-av 再改系统音频模式（会把后台音乐掐掉）。
@@ -31,7 +26,7 @@ async function ensureShellAudioMode(
   if (isShellNativeAudioTakeover()) return;
   // force 时先清缓存，避免环境音/视频改了系统会话后这里误以为仍是 music。
   if (force) shellAudioModeState = null;
-  shellAudioModeInFlight = Audio.setAudioModeAsync(options)
+  shellAudioModeInFlight = setAudioModeAsync(options)
     .then(() => {
       shellAudioModeState = kind;
     })
@@ -48,16 +43,14 @@ export async function configureShellAudioMode(opts?: { force?: boolean }): Promi
     await ensureShellAudioMode(
       "music",
       {
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
+        allowsRecording: false,
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
         // iOS 锁屏 / Control Center 的 Now Playing 展示依赖更“独占”的音频模式；
-        // `duckOthers` 会让系统更不愿把它当成可控媒体。
-        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-        // shouldDuckAndroid=false：其它 App 出声时会暂停本 App 朗读（expo-av 默认行为）；续播见 scriptureResumeAfterInterruption。
-        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-        shouldDuckAndroid: false,
-        playThroughEarpieceAndroid: false,
+        // `duckOthers` 会让系统更不愿把它当成可控媒体。安卓则维持旧行为：其它 App 出声时
+        // 暂停本 App 朗读，靠 scriptureResumeAfterInterruption 续播。
+        interruptionMode: Platform.OS === "ios" ? "doNotMix" : "duckOthers",
+        shouldRouteThroughEarpiece: false,
       },
       opts?.force === true,
     );
@@ -73,14 +66,12 @@ export async function configureScriptureShellAudioMode(): Promise<void> {
   if (isShellNativeAudioTakeover()) return;
   try {
     await ensureShellAudioMode("scripture", {
-      allowsRecordingIOS: false,
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      // 与首页环境音同进程混播；勿用 DoNotMix，否则安卓会掐掉环境音轨。
-      interruptionModeIOS: InterruptionModeIOS.DuckOthers,
-      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-      shouldDuckAndroid: false,
-      playThroughEarpieceAndroid: false,
+      allowsRecording: false,
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      // 与首页环境音同进程混播；勿用 doNotMix，否则安卓会掐掉环境音轨。
+      interruptionMode: "duckOthers",
+      shouldRouteThroughEarpiece: false,
     });
   } catch (err) {
     if (__DEV__) {
@@ -90,7 +81,7 @@ export async function configureScriptureShellAudioMode(): Promise<void> {
 }
 
 /** Android：`http(s)` 远程流式播放；`file://` 直连；其余 asset 类 URI 先落盘再播。 */
-export function shellSoundDownloadFirst(source: AVPlaybackSource): boolean {
+export function shellSoundDownloadFirst(source: AudioSource): boolean {
   if (Platform.OS !== "android") return false;
   if (typeof source !== "object" || source === null || !("uri" in source)) return false;
   const uri = String(source.uri ?? "");
@@ -100,23 +91,22 @@ export function shellSoundDownloadFirst(source: AVPlaybackSource): boolean {
   return true;
 }
 
-/** 创建 Sound 后确保可听（模拟器上 isPlaying 为 true 但音量为 0 / 被 duck 的常见兜底）。 */
+/** 创建 Player 后确保可听（模拟器上 playing 为 true 但音量为 0 / 被 duck 的常见兜底）。 */
 export async function primeShellSoundPlayback(
-  sound: Audio.Sound,
+  player: AudioPlayer,
   options?: { autoPlay?: boolean },
 ): Promise<void> {
   await configureShellAudioMode();
   try {
-    await sound.setIsMutedAsync(false);
-    await sound.setVolumeAsync(1);
+    player.muted = false;
+    player.volume = 1;
   } catch {
     /* ignore */
   }
   if (options?.autoPlay === false) return;
   try {
-    const status = await sound.getStatusAsync();
-    if (status.isLoaded && !status.isPlaying) {
-      await sound.playAsync();
+    if (player.isLoaded && !player.playing) {
+      player.play();
     }
   } catch {
     /* ignore */

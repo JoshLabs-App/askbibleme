@@ -77,7 +77,11 @@ export function useMusicInterruptionRecovery({ playing, ...ctx }: Args): void {
     const onBegan = () => {
       const sound = ctxRef.current.soundRef.current;
       if (!sound) return;
-      void sound.pauseAsync().catch(() => {});
+      try {
+        sound.pause();
+      } catch {
+        /* ignore */
+      }
     };
     const sub = DeviceEventEmitter.addListener("AudioSessionInterruptionEnded", onNative);
     const began = DeviceEventEmitter.addListener("AudioSessionInterruptionBegan", onBegan);

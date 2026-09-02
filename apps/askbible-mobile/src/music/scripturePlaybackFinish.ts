@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
 import { markTodayReadingAudioChapterComplete } from "../read/reading-plan/today-reading-done";
@@ -13,7 +13,7 @@ import type {
 } from "./scripturePlaybackTypes";
 
 type Args = {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureSrcRef: MutableRefObject<string | null>;
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
@@ -47,7 +47,7 @@ export function handleScriptureDidJustFinish({
     const active = soundRef.current;
     if (active) {
       void active
-        .setPositionAsync(0)
+        .seekTo(0)
         .then(() => safePlaySound(active))
         .catch((err) => logShellSoundError("scripture-repeat", err));
     }
@@ -64,7 +64,17 @@ export function handleScriptureDidJustFinish({
     }
   }
   setPlaying(false);
-  if (scriptureChapterPool.isActive()) {
+  // isActive() 只是个全局标记，不代表这个池当前的轨就是刚播完的 rc——如果用户是
+  // 手动打开了另一章（尤其是碰巧和某个残留的阅读计划池当前轨重名，导致池没被
+  // releasePlanPoolIfLeavingCurrentTrack 停掉），走池的 onTrackFinished 会按池自己的
+  // 队列顺序跳章，跟 rc 实际所在的书/章毫无关系。这里先确认池当前轨确实就是 rc，
+  // 否则视为「池跟这次播放无关」，走 rc 自己的顺章逻辑。
+  const poolCurrentTrack = scriptureChapterPool.getCurrentTrack();
+  const poolMatchesFinishedChapter =
+    !!poolCurrentTrack &&
+    poolCurrentTrack.bookId === rc.bookId &&
+    poolCurrentTrack.chapter === rc.chapter;
+  if (scriptureChapterPool.isActive() && poolMatchesFinishedChapter) {
     autoPlayScriptureRef.current = true;
     markScriptureWantPlaying(scriptureWantPlayingRef, true);
     scriptureChapterPool.onTrackFinished(rc.bookId, rc.chapter);

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
+import { logSwallowedError } from "../debug/logSwallowedError";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import type { NatureSettingsV2 } from "../types/nature";
 
@@ -63,8 +64,8 @@ function emit() {
 async function persistState() {
   try {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // ignore storage failure
+  } catch (error) {
+    logSwallowedError("natureResourcePackState.persistState", error);
   }
 }
 
@@ -110,7 +111,8 @@ export async function hydrateNatureResourcePackStateInternal() {
         await persistState();
       }
     }
-  } catch {
+  } catch (error) {
+    logSwallowedError("natureResourcePackState.hydrateNatureResourcePackStateInternal", error);
     state = { version: "", settings: null, byPath: {} };
   } finally {
     hydrated = true;

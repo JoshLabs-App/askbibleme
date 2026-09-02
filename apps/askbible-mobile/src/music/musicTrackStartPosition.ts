@@ -1,5 +1,5 @@
-import type { Audio } from "expo-av";
-import type { AVPlaybackStatus } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import type { MutableRefObject } from "react";
 import {
   markMusicPlaybackActivated,
@@ -14,7 +14,7 @@ import { resolveCalmLoopProfile } from "./musicCalmPlayback";
 import type { MusicCompanionStore, PlaybackTrack } from "./types";
 
 type ApplyStartArgs = {
-  sound: Audio.Sound;
+  sound: AudioPlayer;
   track: PlaybackTrack;
   resumeTrackIdRef: MutableRefObject<string | null>;
   resumePositionSecRef: MutableRefObject<number>;
@@ -22,7 +22,7 @@ type ApplyStartArgs = {
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
-  loadedStatus: AVPlaybackStatus | null;
+  loadedStatus: LegacyPlaybackStatus | null;
 };
 
 export async function applyMusicTrackStartPosition({
@@ -57,16 +57,16 @@ export async function applyMusicTrackStartPosition({
     setMusicDurationSec(loadedDurationSec);
   }
   if (effectiveResumeSec > 0) {
-    await sound.setPositionAsync(Math.floor(effectiveResumeSec * 1000));
+    await sound.seekTo(effectiveResumeSec);
     lastMusicProgressSecRef.current = effectiveResumeSec;
     setMusicCurrentSec(effectiveResumeSec);
   } else if ((calmLoopProfileForTrack?.startOffsetMs ?? 0) > 0) {
     const startOffsetMs = Math.max(0, Math.floor(calmLoopProfileForTrack?.startOffsetMs ?? 0));
-    await sound.setPositionAsync(startOffsetMs);
+    await sound.seekTo(startOffsetMs / 1000);
     lastMusicProgressSecRef.current = startOffsetMs / 1000;
     setMusicCurrentSec(startOffsetMs / 1000);
   } else if (loadedPosMs > 400) {
-    await sound.setPositionAsync(0);
+    await sound.seekTo(0);
     lastMusicProgressSecRef.current = 0;
     setMusicCurrentSec(0);
   } else {

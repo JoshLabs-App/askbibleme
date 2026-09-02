@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
+import { logSwallowedError } from "../debug/logSwallowedError";
 import type { MusicCompanionStore } from "../music/types";
 
 export type MusicPackAsset = {
@@ -62,8 +63,8 @@ export function emitMusicResourcePackChange() {
 export async function persistMusicResourcePackState() {
   try {
     await AsyncStorage.setItem(MUSIC_RESOURCE_PACK_STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    /* ignore */
+  } catch (error) {
+    logSwallowedError("musicResourcePackState.persistMusicResourcePackState", error);
   }
 }
 
@@ -109,7 +110,8 @@ export async function hydrateMusicResourcePackStateInternal() {
         await persistMusicResourcePackState();
       }
     }
-  } catch {
+  } catch (error) {
+    logSwallowedError("musicResourcePackState.hydrateMusicResourcePackStateInternal", error);
     state = { version: "", store: null, byPath: {} };
   } finally {
     hydrated = true;

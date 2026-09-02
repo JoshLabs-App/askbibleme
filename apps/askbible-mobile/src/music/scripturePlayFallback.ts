@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
 import { resolveChapterAudioExternalUrl } from "../bible/chapter-audio-sources";
 import { scriptureAudioUrlsEqual } from "../bible/cuv-chapter-audio";
@@ -45,7 +45,7 @@ export async function tryPlayScriptureWithFallback(args: {
   patchReadChapterSrc: (src: string) => void;
   isStarted: () => boolean;
   isBusy?: () => boolean;
-  soundRef?: MutableRefObject<Audio.Sound | null>;
+  soundRef?: MutableRefObject<AudioPlayer | null>;
   /** 若 shell 已在播同一章，则跳过（planFlow 换章时必须能强制开播）。 */
   playingReg?: ReadChapterPlaybackRegistration | null;
 }): Promise<boolean> {

@@ -104,6 +104,11 @@ class ScriptureChapterPool {
     return this.tracks[this.index] ?? null;
   }
 
+  /** 上一次 playAt（含 skipToNext/Prev）还没落地：换章中的窗口。 */
+  isPlayInFlight(): boolean {
+    return this.playInFlight;
+  }
+
   /** 预取后续章（含循环）；不推进 index。 */
   peekUpcoming(count: number): ScripturePoolTrack[] {
     if (!this.active || this.tracks.length === 0 || count <= 0) return [];
@@ -361,11 +366,18 @@ class ScriptureChapterPool {
 
   async skipToNext(opts?: { skipNavigate?: boolean }): Promise<boolean> {
     if (!this.active) return false;
+    // 上一次 skip 还没落地（音频没起播/路由没换完）就再点：this.index 是同步自增的，
+    // 但驱动文字换页靠的是 navigateToChapter → 章页异步加载新章内容 → 重新注册
+    // playing。这段异步差期间再连点，会把 index 一路顶到 N+5，文字侧的匹配判断
+    // 却还在对着没跟上的旧注册，结果文字卡在 N+1、音频已经在 N+5——见人工测试
+    // 反馈。此处直接吞掉连点，等上一次真正落地再接受下一次 skip。
+    if (this.playInFlight) return false;
     return this.playAt(this.index + 1, { skipNavigate: opts?.skipNavigate });
   }
 
   async skipToPrev(opts?: { skipNavigate?: boolean }): Promise<boolean> {
     if (!this.active || this.tracks.length === 0) return false;
+    if (this.playInFlight) return false;
     const prev = this.index - 1;
     if (prev < 0) {
       if (!this.loop) return false;

@@ -1,6 +1,6 @@
-import { Audio } from "expo-av";
-import type { AVPlaybackSource } from "expo-av";
-import type { AVPlaybackStatus } from "expo-av";
+import { createAudioPlayer, type AudioPlayer, type AudioSource } from "expo-audio";
+import { toLegacyPlaybackStatus, type LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
+import { waitForAudioPlayerLoaded } from "../audio/expoAudioPlayerReady";
 import { configureShellAudioMode, shellSoundDownloadFirst } from "../audio/shellAudioMode";
 import {
   logShellSoundError,
@@ -23,7 +23,7 @@ type CreateArgs = {
   bridge: MusicPlayTrackBridge;
   tracks: PlaybackTrack[];
   track: PlaybackTrack;
-  avSource: AVPlaybackSource;
+  avSource: AudioSource;
   generation: number;
   epoch: number;
   soundId: number;
@@ -33,12 +33,12 @@ type CreateArgs = {
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
-  preloadedSound?: Audio.Sound | null;
-  preloadedStatus?: AVPlaybackStatus | null;
+  preloadedSound?: AudioPlayer | null;
+  preloadedStatus?: LegacyPlaybackStatus | null;
 };
 
 export type CreatedMusicTrackSound =
-  | { ok: true; sound: Audio.Sound; status: AVPlaybackStatus }
+  | { ok: true; sound: AudioPlayer; status: LegacyPlaybackStatus }
   | { ok: false; stale: true }
   | { ok: false; stale: false; failedTrackId: string };
 
@@ -81,12 +81,12 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
     playingStateRef,
   } = bridge;
 
-  let sound: Audio.Sound;
-  let loadedStatus: AVPlaybackStatus | null = null;
+  let sound: AudioPlayer;
+  let loadedStatus: LegacyPlaybackStatus | null = null;
   try {
-    const attachHandler = async (target: Audio.Sound) => {
+    const attachHandler = (target: AudioPlayer) => {
       try {
-        await target.setOnPlaybackStatusUpdate(
+        target.addListener("playbackStatusUpdate", (raw) => {
           createMusicPlaybackStatusHandler({
             soundId,
             epoch,
@@ -111,8 +111,8 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
             setMusicCurrentSec,
             setMusicDurationSec,
             persistMusicResume,
-          }),
-        );
+          })(toLegacyPlaybackStatus(raw, target.volume, target.muted));
+        });
       } catch {
         /* ignore handler attach failures */
       }
@@ -121,54 +121,27 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
     let reusePreloaded = preloadedSound;
     if (reusePreloaded) {
       sound = reusePreloaded;
-      await attachHandler(sound);
-      loadedStatus = preloadedStatus ?? (await sound.getStatusAsync());
+      attachHandler(sound);
+      loadedStatus = preloadedStatus ?? toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
     }
     if (!reusePreloaded) {
-      const created = await Audio.Sound.createAsync(
-        avSource,
-        {
-          shouldPlay: false,
-          progressUpdateIntervalMillis: 250,
-          volume: musicGainRef.current,
-          isMuted: false,
-        },
-        createMusicPlaybackStatusHandler({
-          soundId,
-          epoch,
-          track,
-          tracks,
-          activeSoundIdRef,
-          playbackEpochRef,
-          playbackModeRef,
-          soundRef,
-          musicMaxProgressMsRef,
-          musicSoundActivatedAtRef,
-          calmLoopTransitioningRef,
-          lastMusicProgressSecRef,
-          lastMusicPersistMsRef,
-          musicRepeatModeRef,
-          musicGainRef,
-          trackIndexRef,
-          playingStateRef,
-          playTrackAtRef,
-          syncPlayingState,
-          setPlaying,
-          setMusicCurrentSec,
-          setMusicDurationSec,
-          persistMusicResume,
-        }),
-        shellSoundDownloadFirst(avSource),
-      );
-      sound = created.sound;
-      loadedStatus = created.status;
+      sound = createAudioPlayer(avSource, {
+        updateInterval: 250,
+        downloadFirst: shellSoundDownloadFirst(avSource),
+      });
+      sound.volume = musicGainRef.current;
+      sound.muted = false;
+      attachHandler(sound);
+      const rawStatus = await waitForAudioPlayerLoaded(sound);
+      loadedStatus = toLegacyPlaybackStatus(rawStatus, sound.volume, sound.muted);
     } else {
       // `reusePreloaded` still points to a loaded sound.
       sound = reusePreloaded;
     }
     if (reusePreloaded && musicGainRef.current !== 1) {
       try {
-        await Promise.all([sound.setIsMutedAsync(false), sound.setVolumeAsync(musicGainRef.current)]);
+        sound.muted = false;
+        sound.volume = musicGainRef.current;
       } catch {
         /* ignore volume prep failures */
       }
@@ -202,15 +175,15 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
       playingStateRef.current = true;
       try {
         await configureShellAudioMode({ force: true });
-        await sound.setIsMutedAsync(false);
-        await sound.setVolumeAsync(musicGainRef.current);
-        await sound.playAsync();
+        sound.muted = false;
+        sound.volume = musicGainRef.current;
+        sound.play();
       } catch (err) {
         try {
           await configureShellAudioMode({ force: true });
-          await sound.setIsMutedAsync(false);
-          await sound.setVolumeAsync(musicGainRef.current);
-          await sound.playAsync();
+          sound.muted = false;
+          sound.volume = musicGainRef.current;
+          sound.play();
         } catch (retryErr) {
           logShellSoundError("play-retry", retryErr);
           logShellSoundError("play", err);
@@ -222,11 +195,11 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
         }
       }
       try {
-        await sound.setIsMutedAsync(false);
-        await sound.setVolumeAsync(musicGainRef.current);
-        const after = await sound.getStatusAsync();
+        sound.muted = false;
+        sound.volume = musicGainRef.current;
+        const after = toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
         if (after.isLoaded && !after.isPlaying) {
-          await sound.playAsync();
+          sound.play();
         }
       } catch {
         /* ignore post-play verify */
@@ -261,7 +234,7 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
       }
     }
     if (generation !== playTrackGenerationRef.current) {
-      await sound.unloadAsync();
+      sound.remove();
       return { ok: false, stale: true };
     }
   } catch (err) {
@@ -270,9 +243,13 @@ export async function createAndPlayMusicTrackSound(args: CreateArgs): Promise<Cr
   }
 
   if (epoch !== playbackEpochRef.current || soundId !== activeSoundIdRef.current) {
-    await sound.unloadAsync();
+    sound.remove();
     return { ok: false, stale: true };
   }
 
-  return { ok: true, sound, status: loadedStatus ?? (await sound.getStatusAsync()) };
+  return {
+    ok: true,
+    sound,
+    status: loadedStatus ?? toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted),
+  };
 }

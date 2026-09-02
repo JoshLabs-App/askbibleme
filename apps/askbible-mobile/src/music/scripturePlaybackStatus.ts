@@ -1,4 +1,4 @@
-import type { AVPlaybackStatus } from "expo-av";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import type { MutableRefObject } from "react";
 import { refreshShellMediaSession } from "../audio/shellMediaSessionPayload";
 import { safePauseSound } from "../audio/safeShellSound";
@@ -44,7 +44,7 @@ type StatusHandlerArgs = ScriptureShellPlaybackBridge &
 
 export function createScripturePlaybackStatusHandler(
   args: StatusHandlerArgs,
-): (status: AVPlaybackStatus) => void {
+): (status: LegacyPlaybackStatus) => void {
   const {
     soundId,
     activeSoundIdRef,
@@ -80,7 +80,7 @@ export function createScripturePlaybackStatusHandler(
     chapterEndHandledRef: scriptureChapterEndHandledRef,
   };
 
-  return (status: AVPlaybackStatus) => {
+  return (status: LegacyPlaybackStatus) => {
     if (soundId !== activeSoundIdRef.current) return;
     if (!status.isLoaded) {
       if ("error" in status && status.error) {

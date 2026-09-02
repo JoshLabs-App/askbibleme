@@ -29,14 +29,36 @@ export function estimateReadChapterVerseHeight(opts: {
   return Math.round(body + headings + breakH);
 }
 
-export function computeReadChapterWindowRange(opts: {
-  itemCount: number;
-  heightAt: (index: number) => number;
-  scrollY: number;
-  viewportH: number;
-  overscanPx?: number;
-}): ReadChapterWindowRange {
-  const count = Math.max(0, opts.itemCount);
+export type ReadChapterVerseTops = {
+  tops: number[];
+  heights: number[];
+  total: number;
+};
+
+/** 逐节高度前缀和：仅在条目数/高度实际变化时才需要重算，滚动本身不应触发重建。 */
+export function buildReadChapterVerseTops(
+  itemCount: number,
+  heightAt: (index: number) => number,
+): ReadChapterVerseTops {
+  const count = Math.max(0, itemCount);
+  const tops: number[] = new Array(count);
+  const heights: number[] = new Array(count);
+  let y = 0;
+  for (let i = 0; i < count; i += 1) {
+    tops[i] = y;
+    const h = Math.max(1, heightAt(i));
+    heights[i] = h;
+    y += h;
+  }
+  return { tops, heights, total: y };
+}
+
+export function computeWindowRangeFromTops(
+  built: ReadChapterVerseTops,
+  opts: { scrollY: number; viewportH: number; overscanPx?: number },
+): ReadChapterWindowRange {
+  const { tops, heights, total } = built;
+  const count = tops.length;
   if (count === 0) {
     return { start: 0, end: -1, topSpacer: 0, bottomSpacer: 0 };
   }
@@ -45,16 +67,8 @@ export function computeReadChapterWindowRange(opts: {
   const viewTop = Math.max(0, opts.scrollY - overscan);
   const viewBottom = opts.scrollY + Math.max(opts.viewportH, 480) + overscan;
 
-  const tops: number[] = new Array(count);
-  let y = 0;
-  for (let i = 0; i < count; i += 1) {
-    tops[i] = y;
-    y += Math.max(1, opts.heightAt(i));
-  }
-  const total = y;
-
   let start = 0;
-  while (start < count - 1 && tops[start]! + opts.heightAt(start) < viewTop) {
+  while (start < count - 1 && tops[start]! + heights[start]! < viewTop) {
     start += 1;
   }
   let end = start;
@@ -63,8 +77,19 @@ export function computeReadChapterWindowRange(opts: {
   }
 
   const topSpacer = tops[start] ?? 0;
-  const endBottom = (tops[end] ?? 0) + opts.heightAt(end);
+  const endBottom = (tops[end] ?? 0) + heights[end]!;
   const bottomSpacer = Math.max(0, total - endBottom);
 
   return { start, end, topSpacer, bottomSpacer };
+}
+
+export function computeReadChapterWindowRange(opts: {
+  itemCount: number;
+  heightAt: (index: number) => number;
+  scrollY: number;
+  viewportH: number;
+  overscanPx?: number;
+}): ReadChapterWindowRange {
+  const built = buildReadChapterVerseTops(opts.itemCount, opts.heightAt);
+  return computeWindowRangeFromTops(built, opts);
 }

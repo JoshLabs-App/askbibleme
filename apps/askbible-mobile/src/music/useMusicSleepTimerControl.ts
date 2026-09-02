@@ -10,11 +10,11 @@ import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { runMusicSleepTimerFire } from "./musicSleepTimerFire";
 import type { ShellSleepTimerMinutes } from "./musicPlaybackTypes";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 
 type Args = {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   playingStateRef: MutableRefObject<boolean>;
   sleepTimerDeadlineRef: MutableRefObject<number | null>;

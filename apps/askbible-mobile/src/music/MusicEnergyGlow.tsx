@@ -40,7 +40,7 @@ export function MusicEnergyGlow({
     return (
       <View style={[styles.root, { width, height }]}>
         <LinearGradient
-          colors={["#0a1736", "#050d1f", "#000000"]}
+          colors={[colors[0], colors[1], colors[2]]}
           locations={[0, 0.58, 1]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}

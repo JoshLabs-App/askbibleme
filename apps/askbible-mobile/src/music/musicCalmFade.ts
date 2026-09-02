@@ -1,16 +1,16 @@
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
 import type { CalmLoopProfile } from "./musicCalmLoopProfile";
 
 export async function fadeSoundVolume(
-  sound: Audio.Sound,
+  sound: AudioPlayer,
   from: number,
   to: number,
   durationMs: number,
 ): Promise<void> {
   if (durationMs <= 0) {
     try {
-      await sound.setVolumeAsync(to);
+      sound.volume = to;
     } catch {
       /* ignore */
     }
@@ -19,7 +19,7 @@ export async function fadeSoundVolume(
   const steps = 24;
   const stepMs = Math.max(16, Math.floor(durationMs / steps));
   try {
-    await sound.setVolumeAsync(from);
+    sound.volume = from;
   } catch {
     return;
   }
@@ -27,7 +27,7 @@ export async function fadeSoundVolume(
     const t = i / steps;
     const eased = t * t * (3 - 2 * t);
     try {
-      await sound.setVolumeAsync(from + (to - from) * eased);
+      sound.volume = from + (to - from) * eased;
     } catch {
       return;
     }
@@ -38,7 +38,7 @@ export async function fadeSoundVolume(
 }
 
 export async function restartCalmLoopWithCrossfade(args: {
-  sound: Audio.Sound;
+  sound: AudioPlayer;
   profile: CalmLoopProfile;
   fromVolume: number;
   targetGain: number;
@@ -47,8 +47,8 @@ export async function restartCalmLoopWithCrossfade(args: {
   const { sound, profile, fromVolume, targetGain, logTag } = args;
   await fadeSoundVolume(sound, fromVolume, 0, profile.crossfadeMs);
   try {
-    await sound.setPositionAsync(profile.restartOffsetMs);
-    await sound.setVolumeAsync(0);
+    await sound.seekTo(profile.restartOffsetMs / 1000);
+    sound.volume = 0;
   } catch (err) {
     if (logTag) logShellSoundError(`${logTag}-seek`, err);
     return false;

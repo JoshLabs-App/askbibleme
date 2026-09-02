@@ -25,6 +25,19 @@ import {
 import { localeValueWithReadingPlan, planIdFromReadingSyncBlobs } from "./readingPlanSyncSidecar";
 import type { MemberReadingSyncBlobKey, MemberReadingSyncPushV1, MemberReadingSyncResponseV1 } from "./schema";
 
+/**
+ * 会员读经进度（reading plan / progress / locale 等 blob）与云端的同步驱动。
+ * 职责：判断本机相对当前登录帐号处于何种“归属”状态（continue/replace/unbound，见
+ *   prepareMemberReadingSyncOwner），据此选择「只拉」「只推」或「拉+合并+推」路径，
+ *   并对读经计划这类强一致性字段做二次确认回读（confirmRemoteReadingPlan）。
+ * 边界：不直接读写具体业务存储，只搬运 blobs；本地读写委托给 readingSyncLocal* 模块，
+ *   HTTP/Supabase 调用委托给 memberReadingSyncApi。
+ * 交互模块：memberReadingSyncOwnerPolicy（归属判定与路径决策）、mergeReadingBlobs（三方合并）、
+ *   memberReadingSyncDebug（结构化调试日志，排障时优先看这里的 phase/outcome/detail）。
+ * 模块级可变状态（syncInFlight / lastSyncStartedAt）实现了「同一时刻只跑一份同步 +
+ * 30s 节流 + 排队再推一次」的调度策略，见文件尾 scheduleMemberReadingSync /
+ * flushMemberReadingSyncNow 及其上方注释。
+ */
 export type MemberReadingSyncOutcome = "ok" | "offline" | "skipped" | "unauthorized";
 
 function formatSyncApiFailure(
@@ -41,6 +54,8 @@ function formatSyncApiFailure(
   return `${label}: 网络或响应异常`;
 }
 
+// 全局单例状态：本文件所有导出函数共享同一份同步任务队列/节流时钟，
+// 防止并发触发（如登录 + 前台唤醒同时发起）导致的重复推送/合并竞态。
 let syncInFlight: Promise<MemberReadingSyncOutcome> | null = null;
 let pendingFlushReason: string | undefined;
 let lastSyncStartedAt = 0;
@@ -112,6 +127,9 @@ function stampedReadingPlanPush(
   };
 }
 
+// 推送后云端未必已经可读到最新计划（写入/CDN 传播延迟）；主动回读确认，
+// 若不一致就重推一次并轮询最多 3 次（每次间隔 400ms）等云端收敛，
+// 避免用户切换计划后其他设备读到旧计划。
 async function confirmRemoteReadingPlan(
   sessionToken: string,
   expectedPlanId: string,
@@ -288,6 +306,8 @@ export async function runMemberReadingSync(
     const ownerMode = await prepareMemberReadingSyncOwner(userId);
     const localHasProgress = await localHasMemberReadingProgress();
     const storedPlan = await readReadingPlanPrefs();
+    // forcePush：某些触发原因（如用户刚手动选了计划）必须确保推上去，
+    // 即便按归属策略本该是「只拉」，也要在有本地进度/计划时改走推送路径。
     const forcePush = shouldForcePushMemberReadingSync(reason);
     const forcePushPlan = forcePush && Boolean(storedPlan?.planId);
 
@@ -363,6 +383,7 @@ export async function runMemberReadingSync(
 
     if (pushed?.ok && pushed.blobs) {
       const merged = await mergeAndApply(pushed.blobs, localPush, forcePush);
+      // 首推成功后必须再确认一次（confirm push）：
       // 若同步期间本地又改过，把合并结果再推上去，避免服务端仍留着旧 aheadDays=0
       const confirm = await pushMemberReadingSync(sessionToken, { schemaVersion: 1, blobs: merged });
       if (!confirm?.ok) {
@@ -547,6 +568,8 @@ export async function flushMemberReadingSyncNow(
   reason = "local-change",
 ): Promise<MemberReadingSyncOutcome> {
   if (syncInFlight) {
+    // 已有同步在跑：记下这次的 reason，等它结束后立即用最新本地状态再跑一轮
+    // （递归调用而非排队多次，pendingFlushReason 被消费后清空即代表本轮已处理）。
     pendingFlushReason = reason;
     const inFlight = await syncInFlight;
     if (!pendingFlushReason) return inFlight;

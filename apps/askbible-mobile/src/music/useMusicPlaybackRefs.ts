@@ -1,12 +1,13 @@
-import { Audio, type AVPlaybackStatus } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { useMemo, useRef } from "react";
 import type { MusicCompanionStore } from "./types";
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
 
 export type PreloadedMusicSound = {
   trackId: string;
-  sound: Audio.Sound;
-  status: AVPlaybackStatus;
+  sound: AudioPlayer;
+  status: LegacyPlaybackStatus;
 };
 
 export type PreloadedMusicSoundWork = {
@@ -15,7 +16,7 @@ export type PreloadedMusicSoundWork = {
 };
 
 export function useMusicPlaybackRefs() {
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<AudioPlayer | null>(null);
   const preloadedMusicSoundRef = useRef<PreloadedMusicSound | null>(null);
   const preloadedMusicSoundWorkRef = useRef<PreloadedMusicSoundWork | null>(null);
   const sleepTimerDeadlineRef = useRef<number | null>(null);

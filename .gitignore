@@ -93,3 +93,10 @@ lib/media/tv-client.ts
 lib/media/tv-shell-boot.ts
 scripts/sync-tv-content.mjs
 .snapshots/
+
+# 本机调试截图/录屏与工具配置（不入库）
+/.artifacts/
+/.claude/
+/tmp/
+/audio/
+/supabase/.temp/

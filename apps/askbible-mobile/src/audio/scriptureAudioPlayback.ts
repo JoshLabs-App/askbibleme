@@ -1,4 +1,4 @@
-import type { AVPlaybackSource } from "expo-av";
+import type { AudioSource } from "expo-audio";
 import { Asset } from "expo-asset";
 import { Platform } from "react-native";
 import { resolveBundledChapterAudioModule } from "../bible/bundled-chapter-audio";
@@ -27,7 +27,7 @@ export async function warmBundledScriptureChapterAudioUri(bundledModule: number)
 export async function resolveScriptureAvSource(
   src: string,
   bundledModule?: number | null,
-): Promise<AVPlaybackSource | null> {
+): Promise<AudioSource | null> {
   const trimmed = src.trim();
   if (!trimmed && bundledModule == null) return null;
 

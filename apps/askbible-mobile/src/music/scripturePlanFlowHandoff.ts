@@ -1,4 +1,4 @@
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { safeStopAndUnloadSound } from "../audio/safeShellSound";
 import { armReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
@@ -8,7 +8,7 @@ let handoffReleasePromise: Promise<void> | null = null;
 
 /** planFlow 章末换章：卸掉上一章音轨，但保留会话与「期望续播」状态。 */
 export function releaseScriptureShellForPlanFlowAdvance(args: {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureSrcRef: MutableRefObject<string | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;

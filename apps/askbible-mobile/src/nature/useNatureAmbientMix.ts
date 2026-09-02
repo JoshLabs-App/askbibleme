@@ -1,4 +1,5 @@
-import { Audio, type AVPlaybackSource } from "expo-av";
+import { createAudioPlayer, type AudioPlayer, type AudioSource } from "expo-audio";
+import { waitForAudioPlayerLoaded } from "../audio/expoAudioPlayerReady";
 import { useEffect, useRef } from "react";
 import { DeviceEventEmitter, Platform } from "react-native";
 import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
@@ -57,7 +58,7 @@ function isAndroidRawResourceUri(uri: string): boolean {
  * - Metro `http(s)` 资源：安卓需先落盘
  * - raw 资源名 / file://：禁止 downloadFirst（否则 ExoPlayer 会当远程文件拉、直接失败）
  */
-function ambientSoundDownloadFirst(source: AVPlaybackSource): boolean {
+function ambientSoundDownloadFirst(source: AudioSource): boolean {
   if (typeof source === "number") return false;
   if (typeof source === "object" && source !== null && "uri" in source) {
     const uri = String(source.uri ?? "").trim();
@@ -72,7 +73,7 @@ function ambientSoundDownloadFirst(source: AVPlaybackSource): boolean {
 async function resolveAmbientSource(
   layer: NatureAmbientLayer,
   baseUrl: string,
-): Promise<AVPlaybackSource | null> {
+): Promise<AudioSource | null> {
   if (typeof layer.assetModule === "number" && Number.isFinite(layer.assetModule)) {
     // 先预热为 file:// 或 raw 名（warmBundledModuleUri 内已处理安卓回退）
     const localUri = await warmBundledModuleUri(layer.assetModule);
@@ -101,7 +102,12 @@ export function useNatureAmbientMix(
 ) {
   const layersRef = useRef(layers);
   layersRef.current = layers;
-  const soundsRef = useRef<Audio.Sound[]>([]);
+  const soundsRef = useRef<AudioPlayer[]>([]);
+  // 加载 effect 逐层 await 创建 Sound，期间 layersKey 可能已变；
+  // 记录"soundsRef 里实际是哪一版 layersKey 加载出来的"，供 duck/restore 等按下标
+  // 对齐 layers[i] 的 effect 判断是否可信，避免拿新 layers 的音量配置套到旧 layersKey
+  // 还没卸载完的 sound 上。
+  const loadedLayersKeyRef = useRef<string | null>(null);
   const pausedByRemoteRef = useRef(false);
   const deferToMusicRef = useRef(deferToExclusiveMusic);
   deferToMusicRef.current = deferToExclusiveMusic;
@@ -114,8 +120,7 @@ export function useNatureAmbientMix(
     const stopExclusive = async () => {
       for (const sound of soundsRef.current) {
         try {
-          const st = await sound.getStatusAsync();
-          if (st.isLoaded && st.isPlaying) await sound.pauseAsync();
+          if (sound.isLoaded && sound.playing) sound.pause();
         } catch {
           /* ignore */
         }
@@ -138,10 +143,10 @@ export function useNatureAmbientMix(
           const vol = Math.min(1, Math.max(0, L[i]!.volume));
           if (vol <= 0) continue;
           try {
-            const st = await sounds[i]!.getStatusAsync();
-            if (!st.isLoaded) continue;
-            await sounds[i]!.setVolumeAsync(vol);
-            if (!st.isPlaying) await sounds[i]!.playAsync();
+            const s = sounds[i]!;
+            if (!s.isLoaded) continue;
+            s.volume = vol;
+            if (!s.playing) s.play();
           } catch {
             /* ignore */
           }
@@ -162,8 +167,7 @@ export function useNatureAmbientMix(
     const pauseAmbient = async () => {
       for (const sound of soundsRef.current) {
         try {
-          const st = await sound.getStatusAsync();
-          if (st.isLoaded && st.isPlaying) await sound.pauseAsync();
+          if (sound.isLoaded && sound.playing) sound.pause();
         } catch {
           /* ignore */
         }
@@ -180,18 +184,17 @@ export function useNatureAmbientMix(
 
     async function disposeAll() {
       const batch = soundsRef.current.splice(0);
-      await Promise.all(
-        batch.map(async (s) => {
-          try {
-            await s.unloadAsync();
-          } catch {
-            /* ignore */
-          }
-        }),
-      );
+      for (const s of batch) {
+        try {
+          s.remove();
+        } catch {
+          /* ignore */
+        }
+      }
     }
 
     (async () => {
+      loadedLayersKeyRef.current = null;
       await disposeAll();
       pausedByRemoteRef.current = false;
       const L = layersRef.current;
@@ -219,42 +222,38 @@ export function useNatureAmbientMix(
         const vol = Math.min(1, Math.max(0, layer.volume));
         const shouldAutoPlay = vol > 0 && !deferMusic && !pausedByRemoteRef.current;
         try {
-          const created = await Audio.Sound.createAsync(
-            source,
-            {
-              shouldPlay: shouldAutoPlay,
-              isLooping: true,
-              volume: vol > 0 ? vol : 0,
-              rate,
-              shouldCorrectPitch: true,
-              isMuted: false,
-            },
-            undefined,
-            ambientSoundDownloadFirst(source),
-          );
+          const sound = createAudioPlayer(source, {
+            downloadFirst: ambientSoundDownloadFirst(source),
+          });
+          sound.loop = true;
+          sound.volume = vol > 0 ? vol : 0;
+          sound.muted = false;
+          await waitForAudioPlayerLoaded(sound);
           if (disposed) {
-            await created.sound.unloadAsync().catch(() => {});
+            try {
+              sound.remove();
+            } catch {
+              /* ignore */
+            }
             return;
           }
-          const sound = created.sound;
           if (!deferMusic && !mixVoice && (!aux || aux.id === AMBIENT_MEDIA_OWNER_ID)) {
             await primeShellSoundPlayback(sound, { autoPlay: shouldAutoPlay });
           }
           try {
-            await sound.setIsMutedAsync(false);
-            await sound.setVolumeAsync(vol);
+            sound.muted = false;
+            sound.volume = vol;
             if (shouldAutoPlay) {
-              const st = await sound.getStatusAsync();
-              if (st.isLoaded && !st.isPlaying) await sound.playAsync();
+              if (sound.isLoaded && !sound.playing) sound.play();
             } else {
-              await sound.pauseAsync();
+              sound.pause();
             }
           } catch {
             /* ignore */
           }
           if (rate !== 1) {
             try {
-              await sound.setRateAsync(rate, true);
+              sound.setPlaybackRate(rate, "high");
             } catch {
               /* ignore */
             }
@@ -264,6 +263,7 @@ export function useNatureAmbientMix(
           console.warn("[ambient] load failed", layer.layerId, err);
         }
       }
+      if (!disposed) loadedLayersKeyRef.current = layersKey;
     })();
 
     return () => {
@@ -280,8 +280,7 @@ export function useNatureAmbientMix(
       for (const sound of soundsRef.current) {
         if (cancelled) return;
         try {
-          const st = await sound.getStatusAsync();
-          if (st.isLoaded && st.isPlaying) await sound.pauseAsync();
+          if (sound.isLoaded && sound.playing) sound.pause();
         } catch {
           /* ignore */
         }
@@ -298,23 +297,26 @@ export function useNatureAmbientMix(
     if (!active || L.length === 0) return;
     let cancelled = false;
     void (async () => {
-      for (let attempt = 0; attempt < 20; attempt += 1) {
+      for (let attempt = 0; attempt < 40; attempt += 1) {
         if (cancelled) return;
-        if (soundsRef.current.length > 0) break;
+        if (soundsRef.current.length > 0 && loadedLayersKeyRef.current === layersKey) break;
         await new Promise((r) => setTimeout(r, 50));
       }
       if (cancelled) return;
+      // 加载 effect 仍在为新 layersKey 逐层灌音（soundsRef 还是旧一批或半新半旧）：
+      // 跳过本轮，等新一批全部就绪后 layersKey 变化会重新触发本 effect。
+      if (loadedLayersKeyRef.current !== layersKey) return;
       const deferMusic = deferToMusicRef.current;
       const sounds = soundsRef.current;
       for (let i = 0; i < Math.min(L.length, sounds.length); i += 1) {
         const vol = Math.min(1, Math.max(0, L[i]!.volume));
         try {
-          const st = await sounds[i]!.getStatusAsync();
-          if (!st.isLoaded) continue;
+          const s = sounds[i]!;
+          if (!s.isLoaded) continue;
           if (vol <= 0 || deferMusic) {
             try {
-              await sounds[i]!.setVolumeAsync(vol);
-              if (st.isPlaying) await sounds[i]!.pauseAsync();
+              s.volume = vol;
+              if (s.playing) s.pause();
             } catch {
               /* ignore */
             }
@@ -326,9 +328,9 @@ export function useNatureAmbientMix(
           ) {
             continue;
           }
-          await sounds[i]!.setIsMutedAsync(false);
-          await sounds[i]!.setVolumeAsync(vol);
-          if (!st.isPlaying) await sounds[i]!.playAsync();
+          s.muted = false;
+          s.volume = vol;
+          if (!s.playing) s.play();
         } catch {
           /* ignore */
         }
@@ -359,11 +361,11 @@ export function useNatureAmbientMix(
           const vol = Math.min(1, Math.max(0, L[i]!.volume));
           if (vol <= 0) continue;
           try {
-            const st = await sounds[i]!.getStatusAsync();
-            if (!st.isLoaded) continue;
-            if (!st.isPlaying) {
-              await sounds[i]!.setVolumeAsync(vol);
-              await sounds[i]!.playAsync();
+            const s = sounds[i]!;
+            if (!s.isLoaded) continue;
+            if (!s.playing) {
+              s.volume = vol;
+              s.play();
             }
           } catch {
             /* ignore */
@@ -413,8 +415,7 @@ export function useNatureAmbientMix(
       pausedByRemoteRef.current = true;
       for (const sound of soundsRef.current) {
         try {
-          const st = await sound.getStatusAsync();
-          if (st.isLoaded) await sound.pauseAsync();
+          if (sound.isLoaded) sound.pause();
         } catch {
           /* ignore */
         }
@@ -427,8 +428,7 @@ export function useNatureAmbientMix(
     const yieldPlayback = async () => {
       for (const sound of soundsRef.current) {
         try {
-          const st = await sound.getStatusAsync();
-          if (st.isLoaded && st.isPlaying) await sound.pauseAsync();
+          if (sound.isLoaded && sound.playing) sound.pause();
         } catch {
           /* ignore */
         }
@@ -444,10 +444,10 @@ export function useNatureAmbientMix(
         const vol = Math.min(1, Math.max(0, L[i]!.volume));
         if (vol <= 0) continue;
         try {
-          const st = await sounds[i]!.getStatusAsync();
-          if (!st.isLoaded) continue;
-          await sounds[i]!.setVolumeAsync(vol);
-          if (!st.isPlaying) await sounds[i]!.playAsync();
+          const s = sounds[i]!;
+          if (!s.isLoaded) continue;
+          s.volume = vol;
+          if (!s.playing) s.play();
         } catch {
           /* ignore */
         }

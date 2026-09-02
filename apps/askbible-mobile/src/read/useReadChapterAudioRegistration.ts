@@ -91,8 +91,22 @@ export function useReadChapterAudioRegistration({
       onAdvanceNextChapter: () => {},
       onAdvanceNextInBook: () => {},
     };
+    // isActive() 只说明「有个池在跑」，不说明这个池跑的就是本章——用户直接打开某个
+    // 计划章（isPlanFlow=true）时，若上一次计划会话留下的池还 active 但当前轨是
+    // 别的章，无脑信 isActive() 会把换章代理给一个跟本章无关的池（scriptureCommandSkipNext
+    // 内部也会再判一次 match，两边若只有一边查 match 会出现「查了也没用」的递归/错代）。
+    const poolMatchesThisChapter = () => {
+      const track = scriptureChapterPool.getCurrentTrack();
+      return (
+        scriptureChapterPool.isActive() &&
+        !!track &&
+        track.bookId === snapshot.bookId &&
+        track.chapter === snapshot.chapter &&
+        track.translationId === chapterAudioTranslationId
+      );
+    };
     reg.onAdvancePreviousChapter = () => {
-      if (isPlanFlow && scriptureChapterPool.isActive()) {
+      if (isPlanFlow && poolMatchesThisChapter()) {
         void scriptureCommandSkipPrev();
         return;
       }
@@ -101,7 +115,7 @@ export function useReadChapterAudioRegistration({
       onAdvanceChapterRef.current?.(prev);
     };
     reg.onAdvanceNextChapter = () => {
-      if (isPlanFlow && scriptureChapterPool.isActive()) {
+      if (isPlanFlow && poolMatchesThisChapter()) {
         void scriptureCommandSkipNext();
         return;
       }

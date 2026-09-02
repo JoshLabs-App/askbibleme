@@ -1,4 +1,4 @@
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 
 export type ReadChapterPlaybackRegistration = {
@@ -17,7 +17,7 @@ export type ScriptureAudioRepeatMode = "off" | "chapter" | "book";
 export type ShellPlaybackMode = "music" | "scripture";
 
 export type ScriptureShellPlaybackBridge = {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   activeSoundIdRef: MutableRefObject<number>;
   playbackEpochRef: MutableRefObject<number>;
   playbackModeRef: MutableRefObject<ShellPlaybackMode>;

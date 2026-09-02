@@ -1,5 +1,5 @@
 import { useCallback, useRef, type MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 import {
   logShellSoundError,
   safeGetSoundStatus,
@@ -13,7 +13,7 @@ import { useMusicRepeatControls } from "./useMusicRepeatControls";
 import { useMusicSleepTimerControl } from "./useMusicSleepTimerControl";
 
 type Args = {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   playingStateRef: MutableRefObject<boolean>;
   musicGainRef: MutableRefObject<number>;
@@ -134,7 +134,7 @@ export function useMusicShellControls(args: Args) {
     const st = await safeGetSoundStatus(sound);
     if (!st?.isLoaded) return;
     try {
-      await sound.setVolumeAsync(next);
+      sound.volume = next;
     } catch (err) {
       logShellSoundError("setMusicGain", err);
     }

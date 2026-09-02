@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system/legacy";
+import { logSwallowedError } from "../debug/logSwallowedError";
 import {
   buildMusicAudioRemoteUrl,
   normalizeMusicAudioObjectKey,
@@ -59,6 +60,14 @@ async function listCacheAudioFiles(): Promise<CacheFileEntry[]> {
 
 const memoryHit = new Map<string, string>();
 
+/** 当前正在播放的本地缓存 URI；清理时须跳过，避免删到播放器正读取的文件。 */
+let activePlayingUri: string | null = null;
+
+/** 播放器在装载一个曲目的最终 src 时调用；与缓存目录无关的 URI 传入也无副作用。 */
+export function markMusicR2CacheActiveUri(uri: string | null | undefined): void {
+  activePlayingUri = uri || null;
+}
+
 async function pruneMusicR2CacheIfNeeded(keepUri?: string): Promise<void> {
   try {
     const files = await listCacheAudioFiles();
@@ -68,6 +77,7 @@ async function pruneMusicR2CacheIfNeeded(keepUri?: string): Promise<void> {
     for (const file of files) {
       if (total <= MAX_CACHE_BYTES) break;
       if (keepUri && file.uri === keepUri) continue;
+      if (activePlayingUri && file.uri === activePlayingUri) continue;
       try {
         await FileSystem.deleteAsync(file.uri, { idempotent: true });
         memoryHit.delete(file.key);
@@ -76,8 +86,8 @@ async function pruneMusicR2CacheIfNeeded(keepUri?: string): Promise<void> {
         /* ignore */
       }
     }
-  } catch {
-    /* ignore */
+  } catch (error) {
+    logSwallowedError("musicR2StreamCache.pruneMusicR2CacheIfNeeded", error);
   }
 }
 
@@ -134,7 +144,8 @@ export async function downloadMusicAudioToR2Cache(pathOrUrl: string): Promise<st
     rememberMusicR2CachedUri(pathOrUrl, target);
     await pruneMusicR2CacheIfNeeded(target);
     return target;
-  } catch {
+  } catch (error) {
+    logSwallowedError("musicR2StreamCache.downloadMusicAudioToR2Cache", error);
     try {
       await FileSystem.deleteAsync(tmp, { idempotent: true });
     } catch {
@@ -154,7 +165,7 @@ export async function hydrateMusicR2CacheIndex(): Promise<void> {
       memoryHit.set(file.key, file.uri);
     }
     await pruneMusicR2CacheIfNeeded();
-  } catch {
-    /* ignore */
+  } catch (error) {
+    logSwallowedError("musicR2StreamCache.hydrateMusicR2CacheIndex", error);
   }
 }

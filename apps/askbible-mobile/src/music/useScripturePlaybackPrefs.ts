@@ -11,10 +11,10 @@ import {
 } from "./music-playback-prefs";
 import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 import type { ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
 
 type Args = {
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  soundRef: MutableRefObject<AudioPlayer | null>;
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
 };
 
@@ -48,7 +48,7 @@ export function useScripturePlaybackPrefs({ soundRef, playbackModeRef }: Args) {
     const sound = soundRef.current;
     if (!sound || playbackModeRef.current !== "scripture") return;
     try {
-      await sound.setRateAsync(normalized, true);
+      sound.setPlaybackRate(normalized, "high");
     } catch (err) {
       logShellSoundError("setScripturePlaybackRate", err);
     }

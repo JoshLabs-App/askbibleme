@@ -1,4 +1,4 @@
-import type { AVPlaybackSource } from "expo-av";
+import type { AudioSource } from "expo-audio";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 import { Image, Platform } from "react-native";
@@ -76,7 +76,7 @@ function normalizeIosHttpUri(uri: string): string {
   }
 }
 
-export function musicTrackAvSource(track: MusicTrackPlayback | null): AVPlaybackSource | null {
+export function musicTrackAvSource(track: MusicTrackPlayback | null): AudioSource | null {
   if (!track) return null;
   if (track.bundledModule != null) return track.bundledModule;
   const normalizedUri = normalizeIosHttpUri(track.src.trim());
@@ -168,7 +168,7 @@ export async function warmBundledModuleUri(bundledModule: number): Promise<strin
 /** 实际创建 Sound 前的播放源：bundled 先预热为本地 file URI（iOS 模拟器上 require 模块常无声）。 */
 export async function resolveMusicTrackAvSourceForPlay(
   track: MusicTrackPlayback | null,
-): Promise<AVPlaybackSource | null> {
+): Promise<AudioSource | null> {
   const base = musicTrackAvSource(track);
   if (!track || base == null) return null;
   if (track.bundledModule != null) {

@@ -1,11 +1,11 @@
-import type { AVPlaybackStatus } from "expo-av";
 import type { MutableRefObject } from "react";
-import type { Audio } from "expo-av";
+import type { AudioPlayer } from "expo-audio";
+import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { logShellSoundError, safePauseSound } from "../audio/safeShellSound";
 
 type Args = {
-  status: AVPlaybackStatus & { isLoaded: true };
-  soundRef: MutableRefObject<Audio.Sound | null>;
+  status: LegacyPlaybackStatus & { isLoaded: true };
+  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureStopAtSecRef: MutableRefObject<number | null>;
   scriptureStopAtOnEndedRef: MutableRefObject<(() => void) | null>;
   setPlaying: (playing: boolean) => void;
@@ -32,7 +32,7 @@ export function handleScriptureStopAtStatus({
   const active = soundRef.current;
   if (active) {
     void active
-      .setPositionAsync(Math.max(0, Math.floor(stopAtSec * 1000)))
+      .seekTo(Math.max(0, stopAtSec))
       .catch((err) => logShellSoundError("scripture-stopAt-seek", err));
     void safePauseSound(active).catch((err) => logShellSoundError("scripture-stopAt-pause", err));
   }

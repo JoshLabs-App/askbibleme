@@ -18,7 +18,7 @@ import {
   readAheadDays,
   resolveEffectiveReadingPlanDayIndex,
 } from "./reading-plan-ahead";
-import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
+import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   resolveReadingPlanDayIndex,
   type ReadingPlanPrefs,

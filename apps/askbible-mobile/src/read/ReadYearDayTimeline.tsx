@@ -7,7 +7,7 @@ import {
   getYearDayTimeline,
   yearDayRangeToTrackFraction,
 } from "@/lib/read/year-day-timeline";
-import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
+import { READ_NEW_TESTAMENT_ACCENT } from "@/lib/read/canon-section-theme";
 
 const EMPTY_DATES: readonly string[] = [];
 const TRACK_H = 5;

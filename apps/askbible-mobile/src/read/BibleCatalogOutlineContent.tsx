@@ -2,7 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Pressable, Text, View } from "react-native";
 import type { AppLocale } from "../i18n/config";
 import { createT } from "../i18n/site-copy";
-import { canonSectionTheme } from "./canon-section-theme";
+import { canonSectionTheme } from "@/lib/read/canon-section-theme";
 import { BibleCatalogBookRow } from "./BibleCatalogBookRow";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { BibleCatalogTestamentHeader } from "./BibleCatalogTestamentHeader";

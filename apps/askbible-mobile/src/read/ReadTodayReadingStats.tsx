@@ -3,7 +3,7 @@ import { StyleSheet, View, type StyleProp, type TextStyle } from "react-native";
 import { t } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
-import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
+import { READ_NEW_TESTAMENT_ACCENT } from "@/lib/read/canon-section-theme";
 import type { ReadingHabitStatsSnapshot } from "./reading-habit-stats";
 import { ReadUiScaledText } from "./ReadUiScaledText";
 

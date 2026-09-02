@@ -9,7 +9,7 @@ import {
   type View,
 } from "react-native";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import { parseScriptureVerseParam } from "../bible/parse-scripture-verse-param";
+import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-param";
 import type { LoadedChapter } from "../bible/types";
 import { READ_CHAPTER_SCROLL_TOP_PAD } from "./readChapterScreenConstants";
 import {

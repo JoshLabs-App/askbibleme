@@ -4,7 +4,7 @@ import { useLocale } from "../i18n/LocaleProvider";
 import type { AppLocale } from "../i18n/config";
 import { toZhTwText } from "../i18n/site-copy";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
-import { getReadingPlanDaySinceEpoch } from "./reading-plan/reading-plan-epoch";
+import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   readEffectiveReadingPlanPrefs,
   resolveReadingPlanDayIndex,

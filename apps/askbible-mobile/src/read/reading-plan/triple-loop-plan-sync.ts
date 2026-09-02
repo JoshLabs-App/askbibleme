@@ -7,7 +7,7 @@ import type { TripleLoopReadingState } from "./triple-loop-reading";
 import {
   getReadingPlanDaySinceEpoch,
   READING_PLAN_EASTER_EPOCH_DATE,
-} from "./reading-plan-epoch";
+} from "@/lib/read/reading-plan-epoch";
 import {
   readReadingPlanPrefs,
   setActiveReadingPlan,

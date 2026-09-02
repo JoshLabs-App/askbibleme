@@ -1,6 +1,6 @@
 import * as Clipboard from "expo-clipboard";
 import { TurboModuleRegistry } from "react-native";
-import { formatScriptureVerseClipboard } from "./format-scripture-verse-clipboard";
+import { formatScriptureVerseClipboard } from "@/lib/bible/format-scripture-verse-clipboard";
 
 type VerseClipboardRef = {
   bookName: string;

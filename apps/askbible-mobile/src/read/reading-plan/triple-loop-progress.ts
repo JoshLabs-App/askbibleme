@@ -12,7 +12,7 @@ import {
   type TripleLoopTrack,
 } from "./triple-loop-reading";
 import { addUserChapterReadToState } from "@/lib/bible/reading-plans/triple-loop-chapters-read";
-import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
+import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
 import { readEffectiveReadingPlanPrefs } from "./reading-plan-prefs";
 
 export const TRIPLE_LOOP_PROGRESS_STORAGE_KEY = "askbible-triple-loop-progress-v1";

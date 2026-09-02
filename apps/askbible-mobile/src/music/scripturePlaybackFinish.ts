@@ -1,6 +1,6 @@
 import type { MutableRefObject } from "react";
 import type { Audio } from "expo-av";
-import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
+import { getNextScriptureChapterInBook } from "@/lib/bible/next-scripture-chapter";
 import { logShellSoundError, safePlaySound } from "../audio/safeShellSound";
 import { markTodayReadingAudioChapterComplete } from "../read/reading-plan/today-reading-done";
 import { resolveTransportReadChapterPlayback } from "../read/read-chapter-playback-store";

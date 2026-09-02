@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
-import { READ_NEW_TESTAMENT_ACCENT } from "./canon-section-theme";
+import { READ_NEW_TESTAMENT_ACCENT } from "@/lib/read/canon-section-theme";
 
 export const bibleCatalogOutlineSectionStyles = StyleSheet.create({
   outline: { width: "100%", alignItems: "center" },

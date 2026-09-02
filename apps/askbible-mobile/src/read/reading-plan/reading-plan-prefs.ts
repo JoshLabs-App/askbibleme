@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NT_DEEP_REPEAT_PLAN_ID } from "./nt-deep-repeat-plan";
-import { READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
+import { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
 
 import type { NtDeepRepeatPace } from "./nt-deep-repeat-pace";
 import { isNtDeepRepeatPace, NT_DEEP_REPEAT_DEFAULT_PACE } from "./nt-deep-repeat-pace";
@@ -26,8 +26,8 @@ export type ReadingPlanPrefs = {
 export const READING_PLAN_PREFS_STORAGE_KEY = "askbible-reading-plan-prefs-v1";
 export const READING_PLAN_PREFS_STORAGE_KEY_LEGACY = "selah-reading-plan-prefs-v1";
 
-export { READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
-export { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
+export { READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
+export { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 
 /** 未手动选计划时：轻松读经 · 自 2026 复活节起循环。 */
 export const DEFAULT_READING_PLAN_ID = TRIPLE_LOOP_PLAN_ID;

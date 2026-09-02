@@ -1,4 +1,4 @@
-import { getReadingPlanDaySinceEpoch } from "./reading-plan-epoch";
+import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import type { ReadingPlanPrefs } from "./reading-plan-prefs";
 import {
   normalizeTripleLoopReadingState,

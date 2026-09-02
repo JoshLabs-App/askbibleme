@@ -5,7 +5,7 @@ import { t, tFormat } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { formatReadingPlanRange } from "./reading-plan/format-reading-range";
-import { getReadingPlanDaySinceEpoch } from "./reading-plan/reading-plan-epoch";
+import { getReadingPlanDaySinceEpoch } from "@/lib/read/reading-plan-epoch";
 import {
   TRIPLE_LOOP_EXPLORE_ARTICLE_SLUG,
 } from "./reading-plan/triple-loop-plan";

@@ -11,7 +11,7 @@ import {
   readTripleLoopProgress,
   replaceTripleLoopProgress,
 } from "./triple-loop-progress";
-import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "./reading-plan-epoch";
+import { getReadingPlanDaySinceEpoch, READING_PLAN_EASTER_EPOCH_DATE } from "@/lib/read/reading-plan-epoch";
 import { readAheadDays } from "./reading-plan-ahead";
 import { readEffectiveReadingPlanPrefs, writeReadingPlanPrefs } from "./reading-plan-prefs";
 

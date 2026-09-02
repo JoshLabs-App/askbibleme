@@ -3,7 +3,7 @@ import { InteractionManager } from "react-native";
 import { getChapterAudioBaseUrl } from "../bible/chapter-audio-url";
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { buildChapterAudioPlayableSrcSync } from "../bible/read-chapter-audio";
-import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
+import { getNextScriptureChapterInBook } from "@/lib/bible/next-scripture-chapter";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import type { LoadedChapter } from "../bible/types";
 import { resolveReadChapterAudioRegistration } from "../music/MusicPlaybackContext";

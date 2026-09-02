@@ -1,7 +1,7 @@
 import type { ReadChapterPlaybackRegistration } from "./scripturePlaybackTypes";
 import { resolveReadChapterNeighbors } from "../bible/read-chapter-neighbors";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
-import { getNextScriptureChapterInBook } from "../bible/next-scripture-chapter";
+import { getNextScriptureChapterInBook } from "@/lib/bible/next-scripture-chapter";
 import {
   resolveScripturePlayableSrcForChapter,
   translationSupportsChapterAudio,

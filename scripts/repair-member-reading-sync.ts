@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 /**
- * 修复会员读经同步数据分叉：
- * - 读取本地 disk + Supabase 中的 member_reading_sync_documents
- * - 对同一用户做并集合并
- * - 将合并结果回写到两端
+ * 一次性收尾：把 Render 磁盘上残留的（本站已停止写入）会员读经同步数据
+ * 并入 Supabase —— 只写 Supabase，不再回写磁盘（磁盘路径已废弃）。
  *
  * 用法：
  *   npm run member:repair-reading-sync -- --user-id=USER_ID
@@ -17,7 +15,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   memberReadingSyncConfigured,
   memberReadingSyncDir,
-  readMemberReadingSyncDocument,
+  readMemberReadingSyncDocumentForRepair,
   writeMemberReadingSyncDocument,
 } from "@/lib/member-reading-sync/store";
 
@@ -77,25 +75,25 @@ function uniqueStrings(values: string[]): string[] {
   return [...new Set(values.map((v) => v.trim()).filter(Boolean))].sort();
 }
 
-function summarizeDoc(doc: Awaited<ReturnType<typeof readMemberReadingSyncDocument>>): string {
+function summarizeDoc(doc: Awaited<ReturnType<typeof readMemberReadingSyncDocumentForRepair>>): string {
   if (!doc) return "none";
   const keys = Object.keys(doc.blobs ?? {});
   return `${keys.length} blob(s)`;
 }
 
 async function repairUser(userId: string, dryRun: boolean): Promise<{ userId: string; ok: boolean; detail: string }> {
-  const before = await readMemberReadingSyncDocument(userId);
+  const before = await readMemberReadingSyncDocumentForRepair(userId);
   if (!before || Object.keys(before.blobs ?? {}).length === 0) {
     return { userId, ok: true, detail: "no sync data" };
   }
 
   if (dryRun) {
-    return { userId, ok: true, detail: `dry-run: would write ${summarizeDoc(before)}` };
+    return { userId, ok: true, detail: `dry-run: would write ${summarizeDoc(before)} to Supabase` };
   }
 
   const wrote = await writeMemberReadingSyncDocument(before);
   return wrote
-    ? { userId, ok: true, detail: `repaired ${summarizeDoc(before)}` }
+    ? { userId, ok: true, detail: `merged into Supabase: ${summarizeDoc(before)}` }
     : { userId, ok: false, detail: "write failed" };
 }
 

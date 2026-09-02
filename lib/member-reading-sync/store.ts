@@ -24,6 +24,8 @@ function resolveMemberReadingSyncDataRoot(): string | null {
   return null;
 }
 
+/** @deprecated Legacy Render-disk path, kept only so scripts/repair-member-reading-sync.ts can
+ * reconcile any pre-cutover disk-only stragglers into Supabase. Nothing writes here anymore. */
 export function memberReadingSyncDir(cwd = process.cwd()): string | null {
   const root = resolveMemberReadingSyncDataRoot();
   if (root) return path.join(root, "member-reading-sync");
@@ -33,8 +35,8 @@ export function memberReadingSyncDir(cwd = process.cwd()): string | null {
   return null;
 }
 
-export function memberReadingSyncConfigured(cwd = process.cwd()): boolean {
-  return memberReadingSyncDir(cwd) != null || memberReadingSyncSupabaseConfigured();
+export function memberReadingSyncConfigured(): boolean {
+  return memberReadingSyncSupabaseConfigured();
 }
 
 function memberReadingSyncFilePath(userId: string, cwd = process.cwd()): string | null {
@@ -60,6 +62,7 @@ function parseDocument(raw: string, userId: string): MemberReadingSyncDocumentV1
   }
 }
 
+/** @deprecated Legacy Render-disk read, kept only for scripts/repair-member-reading-sync.ts. */
 async function readMemberReadingSyncDocumentFromDisk(
   userId: string,
   cwd = process.cwd(),
@@ -93,26 +96,10 @@ function mergeStoredMemberReadingSyncDocuments(
   };
 }
 
-async function readMemberReadingSyncDocumentFromAllStores(
-  userId: string,
-  cwd = process.cwd(),
-): Promise<MemberReadingSyncDocumentV1 | null> {
-  // Disk and Supabase can diverge across environments; merge them before any write.
-  const [fromDisk, fromSupabase] = await Promise.all([
-    readMemberReadingSyncDocumentFromDisk(userId, cwd),
-    readMemberReadingSyncDocumentFromSupabase(userId),
-  ]);
-  if (fromDisk && fromSupabase) {
-    return mergeStoredMemberReadingSyncDocuments(userId, fromDisk, fromSupabase);
-  }
-  return fromDisk ?? fromSupabase;
-}
-
 export async function readMemberReadingSyncDocument(
   userId: string,
-  cwd = process.cwd(),
 ): Promise<MemberReadingSyncDocumentV1 | null> {
-  return readMemberReadingSyncDocumentFromAllStores(userId, cwd);
+  return readMemberReadingSyncDocumentFromSupabase(userId);
 }
 
 export async function writeMemberReadingSyncDocument(
@@ -128,9 +115,8 @@ export async function writeMemberReadingSyncDocument(
 export async function upsertMemberReadingSyncDocument(
   userId: string,
   push: MemberReadingSyncPushV1,
-  cwd = process.cwd(),
 ): Promise<MemberReadingSyncDocumentV1 | null> {
-  const existing = await readMemberReadingSyncDocumentFromAllStores(userId, cwd);
+  const existing = await readMemberReadingSyncDocumentFromSupabase(userId);
   const merged = mergeMemberReadingSyncDocuments(userId, existing, push);
 
   const supabaseOk = (await upsertMemberReadingSyncDocumentToSupabase(userId, {
@@ -138,4 +124,24 @@ export async function upsertMemberReadingSyncDocument(
     blobs: merged.blobs,
   })) != null;
   return supabaseOk ? merged : null;
+}
+
+/**
+ * One-time reconciliation only (scripts/repair-member-reading-sync.ts): merges any pre-cutover
+ * Render-disk copy with the current Supabase document. Not used by the live GET/POST routes —
+ * those are Supabase-only (see readMemberReadingSyncDocument/upsertMemberReadingSyncDocument
+ * above) precisely so a frozen disk file can't keep resurrecting stale blobs on every request.
+ */
+export async function readMemberReadingSyncDocumentForRepair(
+  userId: string,
+  cwd = process.cwd(),
+): Promise<MemberReadingSyncDocumentV1 | null> {
+  const [fromDisk, fromSupabase] = await Promise.all([
+    readMemberReadingSyncDocumentFromDisk(userId, cwd),
+    readMemberReadingSyncDocumentFromSupabase(userId),
+  ]);
+  if (fromDisk && fromSupabase) {
+    return mergeStoredMemberReadingSyncDocuments(userId, fromDisk, fromSupabase);
+  }
+  return fromDisk ?? fromSupabase;
 }

@@ -10,6 +10,7 @@ import {
 import { YEARS_DAYS_ETERNITY_EN } from "@/lib/explore/years-days-eternity-content-en";
 import { YEARS_DAYS_ETERNITY_ZH } from "@/lib/explore/years-days-eternity-content";
 import { getRedemptionTimelineCaption } from "@/lib/explore/years-days-eternity-redemption-eras";
+import { applyZhTwToYearsDaysEternityDocument } from "@/lib/explore/years-days-eternity-zh-tw";
 import type { YearsDaysEternityFinale, YearsDaysEternityScriptureBlock } from "@/lib/explore/years-days-eternity-types";
 
 type Props = {
@@ -87,7 +88,11 @@ function ClosingFinaleSection({ finale }: { finale: YearsDaysEternityFinale }) {
 
 export function ExploreYearsDaysEternitySection({ enScriptureBodyByRef, enRefLabelByRaw }: Props) {
   const { locale } = useLocale();
-  const doc = locale === "en" ? YEARS_DAYS_ETERNITY_EN : YEARS_DAYS_ETERNITY_ZH;
+  const doc = useMemo(() => {
+    if (locale === "en") return YEARS_DAYS_ETERNITY_EN;
+    if (locale === "zh-TW") return applyZhTwToYearsDaysEternityDocument(YEARS_DAYS_ETERNITY_ZH);
+    return YEARS_DAYS_ETERNITY_ZH;
+  }, [locale]);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const fullScriptureSections = useMemo(() => {

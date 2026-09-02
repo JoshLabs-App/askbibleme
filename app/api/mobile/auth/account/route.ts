@@ -33,8 +33,20 @@ export async function DELETE(req: Request) {
     );
   }
 
+  if (!isSupabaseAuthConfigured()) {
+    return NextResponse.json(
+      {
+        ok: false,
+        schemaVersion: SCHEMA_VERSION,
+        error: "账号服务尚未配置，请稍后再试。",
+        code: "auth_not_configured",
+      },
+      { status: 503 },
+    );
+  }
+
   const token = readSessionToken(req);
-  if (!token || !isSupabaseAuthConfigured() || !isLikelySupabaseAccessToken(token)) {
+  if (!token || !isLikelySupabaseAccessToken(token)) {
     return NextResponse.json(
       {
         ok: false,

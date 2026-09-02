@@ -19,7 +19,6 @@ export type MemberAuthUser = {
 export type MemberPasswordSignInResult =
   | {
       ok: true;
-      backend: "supabase";
       user: MemberAuthUser;
       sessionToken: string;
       expiresAt: string;
@@ -72,7 +71,6 @@ async function signInWithSupabaseMobile(
 
   return {
     ok: true,
-    backend: "supabase",
     user: {
       id: user.id,
       email: user.email,
@@ -125,7 +123,7 @@ export async function signInMemberWithPasswordServer(
   supabase: SupabaseClient | null,
   email: string,
   password: string,
-): Promise<{ ok: true; backend: "supabase"; user: MemberAuthUser } | { ok: false; error: string; status: number }> {
+): Promise<{ ok: true; user: MemberAuthUser } | { ok: false; error: string; status: number }> {
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error && data.user) {
@@ -133,7 +131,6 @@ export async function signInMemberWithPasswordServer(
       const user = toAskbibleAuthUser(data.user, profile);
       return {
         ok: true,
-        backend: "supabase",
         user: {
           id: user.id,
           email: user.email,

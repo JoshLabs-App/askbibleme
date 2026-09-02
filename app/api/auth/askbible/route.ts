@@ -116,15 +116,16 @@ export async function POST(req: Request) {
 
     if (signUpData.user) {
       const auth = await signInMemberWithPasswordServer(supabase, email, password);
-      if (!auth.ok && auth.status === 401) {
+      if (auth.ok) {
+        return jsonResponseWithCookies({ ok: true, user: auth.user }, cookieRes);
+      }
+      if (auth.status === 401) {
         return NextResponse.json(
           { error: "注册成功，请查收确认邮件后再登录。" },
           { status: 403 },
         );
       }
-      if (auth.ok) {
-        return jsonResponseWithCookies({ ok: true, user: auth.user }, cookieRes);
-      }
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
   }
 

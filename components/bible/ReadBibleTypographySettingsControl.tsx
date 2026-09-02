@@ -304,7 +304,7 @@ export function ReadBibleTypographySettingsControl({ buttonSize = 44, iconSize =
       primaryValue={translation.primaryTranslationId}
       contrastValues={contrastTranslationIds}
       noneLabel={t("pages.read.typography.contrastNone")}
-      confirmLabel={locale === "en" ? "Confirm" : locale === "zh-TW" ? "确认" : "确认"}
+      confirmLabel={locale === "en" ? "Confirm" : locale === "zh-TW" ? toZhTwText("确认") : "确认"}
       onClose={() => setTranslationPickerMode(null)}
       onSelectPrimary={() => setTranslationPickerMode(null)}
       onConfirmContrast={(ids) => {

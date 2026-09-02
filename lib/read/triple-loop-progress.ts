@@ -165,15 +165,22 @@ function refreshEffectiveSnapshot(now = new Date()): TripleLoopReadingState {
   const { stored, hasSaved } = refreshStoredSnapshot();
   const aheadDays = readTripleLoopAheadDays();
   const planDay = Math.max(1, getReadingPlanDaySinceEpoch(now) + aheadDays);
-  if (snapshotEffective && snapshotEffectivePlanDay === planDay && hasSaved) {
-    if (tripleLoopPointersEqual(snapshotEffective, snapTripleLoopStateToPlanDay(stored, planDay))) {
-      return snapshotEffective;
-    }
-  }
   const effective = resolveEffectiveTripleLoopProgress(stored, hasSaved, now, aheadDays);
   if (hasSaved && !tripleLoopPointersEqual(stored, effective)) {
     writeTripleLoopProgress(effective);
+    snapshotEffectivePlanDay = planDay;
+    snapshotEffective = effective;
     return effective;
+  }
+  // Reuse the cached reference when the freshly computed value is equivalent — required so
+  // `useSyncExternalStore` (which compares by reference) doesn't see a "change" on every call,
+  // which otherwise loops forever for any visitor with no saved progress (`hasSaved === false`).
+  if (
+    snapshotEffective &&
+    snapshotEffectivePlanDay === planDay &&
+    tripleLoopPointersEqual(snapshotEffective, effective)
+  ) {
+    return snapshotEffective;
   }
   snapshotEffectivePlanDay = planDay;
   snapshotEffective = effective;

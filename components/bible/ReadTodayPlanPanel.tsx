@@ -12,6 +12,7 @@ import { useTodayReadingChapterFractions } from "@/hooks/useTodayReadingChapterF
 import { useTodayReadingDone } from "@/hooks/useTodayReadingDone";
 import { planTitleKey, useTodayReadingPlan, type TodayReadingPlanState } from "@/hooks/useTodayReadingPlan";
 import {
+  getTripleLoopProgressServerSnapshot,
   getTripleLoopProgressSnapshot,
   subscribeTripleLoopProgress,
 } from "@/lib/read/triple-loop-progress";
@@ -36,7 +37,7 @@ function useTodayPlanReadingHabitSync(plan: TodayReadingPlanState) {
   const tripleProgress = useSyncExternalStore(
     subscribeTripleLoopProgress,
     getTripleLoopProgressSnapshot,
-    getTripleLoopProgressSnapshot,
+    getTripleLoopProgressServerSnapshot,
   );
   const { syncTodayComplete } = useReadingHabitStats();
   const readings = payload?.day?.readings ?? [];

@@ -2,15 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useAppImmersive } from "@/components/app-shell/AppImmersiveProvider";
 import { isDisplayStandalone } from "@/lib/pwa/display-mode";
-import {
-  APP_INSTALL_IOS_URL,
-  buildAndroidTrialMailto,
-  resolveAppInstallAndroidEmail,
-} from "@/lib/app-install-urls";
+import { APP_INSTALL_ANDROID_URL, APP_INSTALL_IOS_URL } from "@/lib/app-install-urls";
 import {
   isInstallDismissedRecently,
   markInstallDismissed,
@@ -25,10 +21,10 @@ function shouldOfferOnPath(pathname: string): boolean {
   return true;
 }
 
-function shouldSuppressPrompt(androidEmail: string): boolean {
+function shouldSuppressPrompt(): boolean {
   if (isDisplayStandalone()) return true;
   if (isInstallDismissedRecently()) return true;
-  if (!APP_INSTALL_IOS_URL && !androidEmail) return true;
+  if (!APP_INSTALL_IOS_URL && !APP_INSTALL_ANDROID_URL) return true;
   return false;
 }
 
@@ -58,7 +54,7 @@ function registerMinimalServiceWorker(): void {
 }
 
 /**
- * 打开站点后：显示 App 安装入口（App Store / Android 试用邮件）。
+ * 打开站点后：显示 App 安装入口（App Store / Google Play）。
  */
 export function PwaInstallPrompt() {
   const { t } = useLocale();
@@ -67,15 +63,6 @@ export function PwaInstallPrompt() {
   const [visible, setVisible] = useState(false);
   const showTimerRef = useRef<number | null>(null);
   const scheduledRef = useRef(false);
-  const androidEmail = resolveAppInstallAndroidEmail();
-  const androidMailto = useMemo(
-    () =>
-      buildAndroidTrialMailto(
-        t("chrome.pwaInstallAndroidMailSubject"),
-        t("chrome.pwaInstallAndroidMailBody"),
-      ),
-    [t],
-  );
 
   const clearShowTimer = useCallback(() => {
     if (showTimerRef.current != null) {
@@ -94,7 +81,7 @@ export function PwaInstallPrompt() {
       if (
         scheduledRef.current ||
         immersive ||
-        shouldSuppressPrompt(androidEmail) ||
+        shouldSuppressPrompt() ||
         !shouldOfferOnPath(pathname)
       ) {
         return;
@@ -103,11 +90,11 @@ export function PwaInstallPrompt() {
       clearShowTimer();
       showTimerRef.current = window.setTimeout(() => {
         showTimerRef.current = null;
-        if (immersive || shouldSuppressPrompt(androidEmail) || !shouldOfferOnPath(pathname)) return;
+        if (immersive || shouldSuppressPrompt() || !shouldOfferOnPath(pathname)) return;
         setVisible(true);
       }, SHOW_DELAY_MS);
     },
-    [androidEmail, clearShowTimer, immersive, pathname],
+    [clearShowTimer, immersive, pathname],
   );
 
   const onDismiss = useCallback(() => {
@@ -128,13 +115,13 @@ export function PwaInstallPrompt() {
       hide();
       return;
     }
-    if (shouldSuppressPrompt(androidEmail)) return;
+    if (shouldSuppressPrompt()) return;
     scheduleShow();
 
     return () => {
       clearShowTimer();
     };
-  }, [androidEmail, clearShowTimer, hide, immersive, scheduleShow]);
+  }, [clearShowTimer, hide, immersive, scheduleShow]);
 
   if (immersive) return null;
   if (!visible) return null;
@@ -156,9 +143,11 @@ export function PwaInstallPrompt() {
         {t("chrome.pwaInstallBody")}
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        {androidEmail ? (
+        {APP_INSTALL_ANDROID_URL ? (
           <a
-            href={androidMailto}
+            href={APP_INSTALL_ANDROID_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="rounded-full border border-border/60 bg-ink/[0.06] px-3.5 py-1.5 text-[13px] font-medium text-ink transition hover:bg-ink/[0.1]"
           >
             {t("chrome.pwaInstallActionAndroid")}

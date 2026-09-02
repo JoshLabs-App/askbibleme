@@ -6,9 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { StaticParchmentPageFooter } from "@/components/shell/StaticParchmentPageFooter";
 import {
+  APP_INSTALL_ANDROID_APK_URL,
+  APP_INSTALL_ANDROID_URL,
   APP_INSTALL_IOS_URL,
-  buildAndroidTrialMailto,
-  resolveAppInstallAndroidEmail,
 } from "@/lib/app-install-urls";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
 
@@ -25,6 +25,8 @@ type PlatformGuide = {
   actionLabel: string;
   href: string;
   external?: boolean;
+  secondaryLabel?: string;
+  secondaryHref?: string;
 };
 
 function detectPlatform(): Platform {
@@ -59,15 +61,24 @@ function PlatformCard({ guide }: { guide: PlatformGuide }) {
       >
         {guide.actionLabel}
       </a>
+      {guide.secondaryLabel && guide.secondaryHref ? (
+        <a
+          href={guide.secondaryHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2.5 inline-flex w-full items-center justify-center rounded-full border border-[rgba(120,53,15,0.14)] bg-transparent px-4 py-3 text-[14px] font-medium text-[rgba(43,29,21,0.72)] transition hover:border-[rgba(120,53,15,0.28)] hover:text-[#2b1d15] active:scale-[0.99]"
+        >
+          {guide.secondaryLabel}
+        </a>
+      ) : null}
     </section>
   );
 }
 
 export function AppInstallGuidePage() {
-  const { locale, t } = useLocale();
+  const { locale } = useLocale();
   const isZh = locale === "zh-CN";
   const [platform, setPlatform] = useState<Platform>("other");
-  const androidEmail = resolveAppInstallAndroidEmail();
 
   useEffect(() => {
     setPlatform(detectPlatform());
@@ -100,31 +111,31 @@ export function AppInstallGuidePage() {
     const android: PlatformGuide = {
       id: "android",
       eyebrow: isZh ? "Android" : "Android",
-      title: isZh ? "邮件申请 Android 试用版" : "Request the Android trial by email",
+      title: isZh ? "从 Google Play 安装" : "Install from Google Play",
       intro: isZh
-        ? `Android 试用版暂未公开上架。请发送邮件至 ${androidEmail}，我们会回复安装方式。`
-        : `The Android trial is not publicly listed yet. Email ${androidEmail} and we will reply with install steps.`,
+        ? "AskBible.me 已在 Google Play 上架。可直接下载正式版；如所在地区无法访问 Google Play，也可在下方直接下载安装包（APK）手动安装。"
+        : "AskBible.me is live on Google Play. Download the release build there, or install the APK directly below if Google Play isn't available where you are.",
       steps: isZh
         ? [
-            "点击下方按钮打开邮件应用（已预填主题与说明）。",
-            "补充你的设备型号或遇到的问题，然后发送邮件。",
-            "收到回复后，按邮件中的步骤安装试用版。",
+            "点击下方按钮打开 Google Play 页面。",
+            "点击「安装」完成下载。",
+            "安装后打开 App，即可安静回到经文。",
           ]
         : [
-            "Tap the button below to open your mail app with a prefilled message.",
-            "Add your device model or any notes, then send the email.",
-            "Follow the install steps in our reply.",
+            "Tap the button below to open the Google Play listing.",
+            "Tap Install to download.",
+            "Open the app when installation finishes.",
           ],
-      actionLabel: isZh ? "发送试用申请邮件" : "Send trial request email",
-      href: buildAndroidTrialMailto(
-        t("chrome.pwaInstallAndroidMailSubject"),
-        t("chrome.pwaInstallAndroidMailBody"),
-      ),
+      actionLabel: isZh ? "前往 Google Play" : "Open Google Play",
+      href: APP_INSTALL_ANDROID_URL,
+      external: true,
+      secondaryLabel: isZh ? "直接下载 APK 安装包" : "Download the APK directly",
+      secondaryHref: APP_INSTALL_ANDROID_APK_URL,
     };
 
     if (platform === "android") return [android, ios];
     return [ios, android];
-  }, [androidEmail, isZh, platform, t]);
+  }, [isZh, platform]);
 
   return (
     <div className="narrow-parchment-root select-text">

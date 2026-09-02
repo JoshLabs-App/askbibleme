@@ -248,7 +248,8 @@ const REMOTE_TRANSLATION_REGISTRY: RegistryMeta[] = [
     provider: "youversion",
     remoteId: "3354",
     delivery: "chapter-api",
-    enabled: true,
+    // bible.com 现在对该版本页面返回反爬虫 Client Challenge，抓不到正文，先下线。
+    enabled: false,
     copyright: null,
     publisherUrl: null,
   },

@@ -7,8 +7,13 @@ import type { BibleTranslationMeta, BibleTranslationsIndex } from "../bible/tran
 
 const CATALOG_CACHE_KEY = "askbible.mobile.bible-translations-catalog.v4";
 const CATALOG_CACHE_TTL_MS = 60_000;
-/** 仍排除的译本（未启用 / 非阅读主线）。 */
-const EXCLUDED_TRANSLATION_IDS = new Set(["heb-leningrad", "cccbst-zh-hant", "tcv2019t-zh-hant"]);
+/** 仍排除的译本（未启用 / 非阅读主线 / bible.com 抓取被反爬虫拦截）。 */
+const EXCLUDED_TRANSLATION_IDS = new Set([
+  "heb-leningrad",
+  "cccbst-zh-hant",
+  "tcv2019t-zh-hant",
+  "feb-zh-hans",
+]);
 
 const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
   translations: [
@@ -177,20 +182,6 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
       downloadUrl: null,
       provider: "youversion",
       remoteId: "48",
-      delivery: "chapter-api",
-      enabled: true,
-      copyright: null,
-      publisherUrl: null,
-    },
-    {
-      id: "feb-zh-hans",
-      labelZh: "免费的易读圣经",
-      labelEn: "Free Easy-to-Read Bible",
-      language: "zh-Hans",
-      bundled: false,
-      downloadUrl: null,
-      provider: "youversion",
-      remoteId: "3354",
       delivery: "chapter-api",
       enabled: true,
       copyright: null,

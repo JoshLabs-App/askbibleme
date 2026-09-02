@@ -1,7 +1,6 @@
 /**
- * WEB / KJV / BLM-ES 整章朗读。
- * - 默认：theaudiopower.org / ebible.org 原始站点
- * - 可选自托管：`/audio/{scope}/{BOOK}-{chapter}.mp3`
+ * WEB / KJV / BLM-ES 整章朗读：直连 theaudiopower.org / ebible.org 原始站点，
+ * 不经 askbible.me 存放/转发。
  */
 
 import {
@@ -47,22 +46,6 @@ export function translationUsesKjvChapterAudio(translationId: string): boolean {
   return String(translationId || "").trim().toLowerCase() === "kjv";
 }
 
-export function chapterAudioScopeForTranslation(translationId: string): string {
-  const id = String(translationId || "").trim().toLowerCase();
-  if (id === "blm-es") return BLM_ES_CHAPTER_AUDIO_SUBDIR;
-  if (id === "kjv") return KJV_CHAPTER_AUDIO_SUBDIR;
-  return WEB_CHAPTER_AUDIO_SUBDIR;
-}
-
-export function isWebChapterAudioSelfHosted(): boolean {
-  return (
-    process.env.NEXT_PUBLIC_WEB_CHAPTER_AUDIO_SELF_HOSTED === "1" ||
-    process.env.WEB_CHAPTER_AUDIO_SELF_HOSTED === "1" ||
-    process.env.NEXT_PUBLIC_CUV_CHAPTER_AUDIO_SELF_HOSTED === "1" ||
-    process.env.CUV_CHAPTER_AUDIO_SELF_HOSTED === "1"
-  );
-}
-
 function blmEsAudioBookOrdinal(bookId: string): number | null {
   const n = BOOK_NUMBER[bookId.toUpperCase()];
   if (!n) return null;
@@ -93,51 +76,16 @@ export function buildExternalWebChapterAudioUrl(
   return webpChapterAudioUrl(id, chapter);
 }
 
-export function buildLocalWebChapterAudioUrl(
-  bookId: string,
-  chapter: number,
-  translationId: string = "web-en",
-): string {
-  const id = String(bookId || "").trim().toUpperCase();
-  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  // WEBP / KJV 均只引用原始公开站点，不在 AskBible.me 保存副本。
-  const tid = String(translationId || "").trim().toLowerCase();
-  if (tid === "web-en" || translationUsesKjvChapterAudio(tid)) return "";
-  const scope = chapterAudioScopeForTranslation(translationId);
-  return `/audio/${scope}/${id}-${chapter}.mp3`;
-}
-
 export async function resolveWebChapterAudioPlayableSrc(args: {
   bookId: string;
   chapter: number;
   translationId?: string;
 }): Promise<{ ok: true; src: string } | { ok: false }> {
   const translationId = args.translationId ?? "web-en";
-  if (translationId === "web-en") {
-    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
-    return remote ? { ok: true, src: remote } : { ok: false };
-  }
   if (translationUsesKjvChapterAudio(translationId)) {
     const remote = buildAudioTreasureKjvChapterUrl(args.bookId, args.chapter);
     return remote ? { ok: true, src: remote } : { ok: false };
   }
-  if (!isWebChapterAudioSelfHosted()) {
-    const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
-    if (remote) return { ok: true, src: remote };
-  }
-
-  const local = buildLocalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
-  if (!local) return { ok: false };
-
-  if (isWebChapterAudioSelfHosted()) {
-    try {
-      const check = await fetch(local, { method: "HEAD", cache: "no-store" });
-      if (check.ok) return { ok: true, src: local };
-      return { ok: false };
-    } catch {
-      return { ok: false };
-    }
-  }
-
-  return { ok: true, src: local };
+  const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, translationId);
+  return remote ? { ok: true, src: remote } : { ok: false };
 }

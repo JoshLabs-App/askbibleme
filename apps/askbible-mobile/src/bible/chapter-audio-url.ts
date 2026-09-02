@@ -1,5 +1,5 @@
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
-import { getAskBibleBaseUrl, toAbsoluteUrl } from "../config/askbibleBaseUrl";
+import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 
 export function isAskBibleMeBaseUrl(baseUrl: string): boolean {
   try {
@@ -8,27 +8,6 @@ export function isAskBibleMeBaseUrl(baseUrl: string): boolean {
   } catch {
     return /askbible\.me/i.test(baseUrl);
   }
-}
-
-/**
- * 圣经章朗读自托管基址：允许 askbible.me（语音包 / `/audio`），以及开发本机。
- * 与自然/音乐内容库分离——那些仍走 `getNatureRemoteAssetBaseUrl`（bundled-only 下为空）。
- */
-export function isTrustedSelfHostedChapterAudioBase(baseUrl: string): boolean {
-  const trimmed = baseUrl.trim();
-  if (!trimmed) return false;
-  if (isAskBibleMeBaseUrl(trimmed)) return true;
-  if (__DEV__) return true;
-  return false;
-}
-
-export function absoluteSelfHostedChapterAudioUrl(
-  baseUrl: string,
-  path: string,
-): string | null {
-  if (!isTrustedSelfHostedChapterAudioBase(baseUrl)) return null;
-  const absolute = toAbsoluteUrl(baseUrl, path);
-  return absolute || null;
 }
 
 /**

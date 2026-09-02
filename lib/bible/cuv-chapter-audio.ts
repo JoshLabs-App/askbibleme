@@ -1,7 +1,6 @@
 /**
- * 和合本（CUV）整章朗读音源。
- * - 默认：FHL 原始站点（`media.fhl.net/unvdavid`）
- * - 可选自托管：`/audio/cuv-v20/{BOOK}-{chapter}.mp3`（`NEXT_PUBLIC_CUV_CHAPTER_AUDIO_SELF_HOSTED=1`）
+ * 和合本（CUV）整章朗读音源：直连 FHL 原始站点（`media.fhl.net/unvdavid`），不经
+ * askbible.me 存放/转发。
  */
 
 import type { CuvChapterAudioVoiceId } from "@/lib/bible/cuv-chapter-audio-voices";
@@ -10,15 +9,6 @@ import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { resolveTeochewNtChapterAudioPlayableSrc, teochewNtVoiceActive } from "@/lib/bible/teochew-nt-audio";
 
 export const CUV_CHAPTER_AUDIO_REMOTE_BASE = "https://media.fhl.net/unvdavid";
-export const CUV_CHAPTER_AUDIO_LOCAL_SUBDIR = "cuv-v20";
-
-/** 生产自托管：仅使用本站 `/audio/{BOOK}-{章}.mp3`，不回退外部 CDN */
-export function isCuvChapterAudioSelfHosted(): boolean {
-  return (
-    process.env.NEXT_PUBLIC_CUV_CHAPTER_AUDIO_SELF_HOSTED === "1" ||
-    process.env.CUV_CHAPTER_AUDIO_SELF_HOSTED === "1"
-  );
-}
 
 export function translationSupportsCuvChapterAudio(translationId: string): boolean {
   return String(translationId || "")
@@ -34,12 +24,6 @@ export function buildExternalCuvChapterAudioUrl(bookId: string, chapter: number)
   if (!meta) return "";
   const bid = meta.bookNumber;
   return `${CUV_CHAPTER_AUDIO_REMOTE_BASE}/${bid}/${bid}_${String(chapter).padStart(3, "0")}.mp3`;
-}
-
-export function buildLocalCuvChapterAudioUrl(bookId: string, chapter: number): string {
-  const id = String(bookId || "").trim().toUpperCase();
-  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  return `/audio/${CUV_CHAPTER_AUDIO_LOCAL_SUBDIR}/${id}-${chapter}.mp3`;
 }
 
 /** 与 AskBible `readerAudioSourceSameAs` 一致：比较时归一化为绝对 URL。 */
@@ -74,23 +58,6 @@ export async function resolveCuvChapterAudioPlayableSrc(args: {
   }
   if (!voiceSupportsBook(voice, args.bookId)) return { ok: false };
 
-  if (!isCuvChapterAudioSelfHosted()) {
-    const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
-    if (remote) return { ok: true, src: remote };
-  }
-
-  const local = buildLocalCuvChapterAudioUrl(args.bookId, args.chapter);
-  if (!local) return { ok: false };
-
-  if (isCuvChapterAudioSelfHosted()) {
-    try {
-      const check = await fetch(local, { method: "HEAD", cache: "no-store" });
-      if (check.ok) return { ok: true, src: local };
-      return { ok: false };
-    } catch {
-      return { ok: false };
-    }
-  }
-
-  return { ok: true, src: local };
+  const remote = buildExternalCuvChapterAudioUrl(args.bookId, args.chapter);
+  return remote ? { ok: true, src: remote } : { ok: false };
 }

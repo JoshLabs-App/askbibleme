@@ -34,13 +34,6 @@ export function getTeochewNtManifestEntry(
   return BY_KEY.get(`${id}:${chapter}`) ?? null;
 }
 
-/** @deprecated 潮语不自托管；保留仅兼容旧路径解析。 */
-export function buildLocalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
-  const entry = getTeochewNtManifestEntry(bookId, chapter);
-  if (!entry) return "";
-  return `/audio/teochew-nt/${entry.localFilename}`;
-}
-
 /** 众生命堂 TSTSCC 原始公开 URL（唯一音源）。 */
 export function buildExternalTeochewNtChapterAudioUrl(bookId: string, chapter: number): string {
   const entry = getTeochewNtManifestEntry(bookId, chapter);

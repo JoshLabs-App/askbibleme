@@ -1,5 +1,4 @@
 import { resolveBundledChapterAudioUri } from "./bundled-chapter-audio";
-import { resolveSelfHostedChapterAudioPlayableUrl } from "./chapter-audio-sources";
 import { isMobileScriptureAudioStreamAllowed } from "../config/mobileBundledOnly";
 import { buildAudioTreasureKjvChapterUrl } from "@/lib/bible/kjv-chapter-audio-url";
 
@@ -183,17 +182,6 @@ function webRemoteBase(bookId: string): string {
     : WEB_CHAPTER_AUDIO_REMOTE_NT;
 }
 
-export function buildLocalWebChapterAudioUrl(
-  bookId: string,
-  chapter: number,
-  translationId: string = "web-en",
-): string {
-  const id = String(bookId || "").trim().toUpperCase();
-  if (!id || !Number.isInteger(chapter) || chapter < 1) return "";
-  const scope = chapterAudioScopeForTranslation(translationId);
-  return `/audio/${scope}/${id}-${chapter}.mp3`;
-}
-
 const BLM_ES_CANONICAL_ALIAS: Record<string, string> = {
   ECC: "ECL",
   NAM: "NAH",
@@ -255,15 +243,5 @@ export async function resolveWebChapterAudioPlayableSrc(args: {
   if (!isMobileScriptureAudioStreamAllowed()) return { ok: false };
 
   const remote = buildExternalWebChapterAudioUrl(args.bookId, args.chapter, args.translationId);
-  if (remote) return { ok: true, src: remote };
-
-  const selfHosted = resolveSelfHostedChapterAudioPlayableUrl({
-    translationId: args.translationId,
-    bookId: args.bookId,
-    chapter: args.chapter,
-    siteBaseUrl: args.baseUrl,
-  });
-  if (selfHosted) return { ok: true, src: selfHosted };
-
-  return { ok: false };
+  return remote ? { ok: true, src: remote } : { ok: false };
 }

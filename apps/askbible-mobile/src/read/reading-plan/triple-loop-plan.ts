@@ -7,7 +7,7 @@ import {
   type TripleLoopReadingState,
   type TripleLoopTrack,
 } from "./triple-loop-reading";
-import { TRIPLE_LOOP_TRACK_CHAPTER_TOTALS } from "./triple-loop-track-progress";
+import { TRIPLE_LOOP_TRACK_CHAPTER_TOTALS } from "@/lib/bible/reading-plans/triple-loop-track-progress";
 import type { ReadingPlanDay, ReadingPlanRange, ReadingPlanRegistryEntry } from "./types";
 
 export const TRIPLE_LOOP_PLAN_ID = "triple-loop";

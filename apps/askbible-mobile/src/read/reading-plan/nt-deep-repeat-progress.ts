@@ -17,7 +17,7 @@ import { addNtDeepRepeatChapterReadToState } from "./nt-deep-repeat-chapters-rea
 import {
   alignNtDeepRepeatProgressToCalendar,
   ntDeepRepeatPlanPointersEqual,
-} from "./nt-deep-repeat-effective-plan-day";
+} from "@/lib/read/nt-deep-repeat-effective-plan-day";
 import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";
 import {
   readEffectiveReadingPlanPrefs,

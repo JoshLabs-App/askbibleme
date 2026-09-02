@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { normalizeNtDeepRepeatChaptersReadKeys } from "./nt-deep-repeat-chapters-read";
-import { inferNtDeepRepeatAheadDays } from "./nt-deep-repeat-effective-plan-day";
+import { inferNtDeepRepeatAheadDays } from "@/lib/read/nt-deep-repeat-effective-plan-day";
 import { isNtDeepRepeatPlanId } from "./nt-deep-repeat-plan";
 import { NT_DEEP_REPEAT_DEFAULT_PACE } from "./nt-deep-repeat-pace";
 import { resolveNtDeepRepeatPlanDay } from "./nt-deep-repeat-plan-day";

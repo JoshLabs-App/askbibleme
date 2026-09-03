@@ -111,7 +111,8 @@ export const readChapterScreenChromeStyles = StyleSheet.create({
   },
   selectionBar: {
     position: "absolute",
-    zIndex: 65,
+    // 须高于 ShellTabBar(zIndex:100)，否则底部 Tab/播放坞会盖住确定键
+    zIndex: 120,
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,

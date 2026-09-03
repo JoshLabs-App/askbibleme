@@ -1,10 +1,18 @@
+import { usePathname } from "expo-router";
 import { ShellMaterialIcon } from "../shell/ShellMaterialIcon";
 import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
 import { Pressable, Text, View } from "react-native";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import { useMusicPlayback } from "../music/MusicPlaybackContext";
+import {
+  SHELL_SCRIPTURE_DOCK_CONTENT_HEIGHT,
+  SHELL_TAB_BAR_DOCK_GAP,
+} from "../shell/shellPlaybackTransportLayout";
+import { isReadChapterPathname } from "../shell/shellPrimaryRoute";
 import { ReadChapterTitleAudioButton } from "./ReadChapterTitleAudioButton";
 import { READ_TOP_CHROME, readTopChromeLeftStyle, readTopChromeRightStyle } from "./readTopChrome";
 import { readChapterScreenStyles as styles } from "./readChapterScreenStyles";
+import { shouldShowReadScriptureAudioDock } from "./readScriptureDockVisibility";
 
 type Props = {
   insets: EdgeInsets;
@@ -75,6 +83,16 @@ export function ReadChapterScreenTopChrome({
   onCopySelection,
 }: Props) {
   const rightStack = readTopChromeRightStyle(insets, 1);
+  const pathname = usePathname();
+  const { playing, playbackMode, readChapterAudioAvailable, scripturePreparing } =
+    useMusicPlayback();
+  const dockVisible = shouldShowReadScriptureAudioDock({
+    readChapterAudioAvailable,
+    onChapterPage: isReadChapterPathname(pathname ?? ""),
+    playbackMode,
+    playing,
+    scripturePreparing,
+  });
 
   return (
     <>
@@ -204,7 +222,10 @@ export function ReadChapterScreenTopChrome({
             {
               left: 14 + Math.max(insets.left, 0),
               right: 14 + Math.max(insets.right, 0),
-              bottom: 92 + insets.bottom,
+              bottom:
+                92 +
+                insets.bottom +
+                (dockVisible ? SHELL_SCRIPTURE_DOCK_CONTENT_HEIGHT + SHELL_TAB_BAR_DOCK_GAP : 0),
             },
           ]}
         >

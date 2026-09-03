@@ -3,8 +3,8 @@ module.exports = {
     name: "AskBible.me",
     slug: "askbible-me",
     scheme: "askbible",
-    version: "1.0.40",
-    runtimeVersion: "1.0.40",
+    version: "1.0.41",
+    runtimeVersion: "1.0.41",
     updates: {
       enabled: false,
       checkAutomatically: "NEVER",
@@ -32,7 +32,7 @@ module.exports = {
     },
     ios: {
       bundleIdentifier: "me.askbible",
-      buildNumber: "125",
+      buildNumber: "126",
       supportsTablet: true,
       appleTeamId: "AJ2998VZH6",
       entitlements: {

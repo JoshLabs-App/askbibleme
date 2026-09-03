@@ -6,89 +6,191 @@
     {
       "order": 1,
       "titleZh": "远远看见",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 1, "verseEnd": 2 },
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 1,
+        "verseEnd": 2
+      },
       "charactersInScene": [
-        { "slug": "jacob", "stageId": "adult" },
-        { "slug": "esau", "stageId": "adult" }
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        },
+        {
+          "slug": "esau",
+          "stageId": "adult"
+        }
       ],
       "settingZh": "旷野高处,清晨微光,以扫带四百人的队伍出现在地平线上,雅各在中景将拉结、利亚和孩子们按次序安排在自己身后",
       "imagePrompt": "Wide establishing shot from behind Jacob's group looking toward the horizon where Esau's four hundred men approach in a long dust-trailed line; Jacob stands protectively arranging his family in the foreground/midground; vast desert valley; early morning haze; sense of anticipation and vulnerability",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-01.png"
     },
     {
       "order": 2,
       "titleZh": "七次俯伏",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 3 },
-      "charactersInScene": [{ "slug": "jacob", "stageId": "adult" }],
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 3
+      },
+      "charactersInScene": [
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        }
+      ],
       "settingZh": "雅各独自走在最前头,一次又一次俯伏在地,才就近他哥哥",
       "imagePrompt": "Low-angle close shot of Jacob bowing face-down on rocky ground, dust on his robe and hands, repeated humbling gesture implied by posture; Esau's approaching feet/shadow visible at frame edge; tense reconciliation atmosphere",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-02.png"
     },
     {
       "order": 3,
       "titleZh": "拥抱与哭泣",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 4 },
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 4
+      },
       "charactersInScene": [
-        { "slug": "jacob", "stageId": "adult" },
-        { "slug": "esau", "stageId": "adult" }
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        },
+        {
+          "slug": "esau",
+          "stageId": "adult"
+        }
       ],
       "settingZh": "以扫跑来迎接,将雅各抱住,与他亲嘴,两人哭了",
       "imagePrompt": "Medium close-up, emotional embrace between Jacob and Esau, foreheads near, visible tears, arms wrapped tightly; warm backlight; composition centered on the two faces; background softly blurred desert",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-03.png"
     },
     {
       "order": 4,
       "titleZh": "妻子和孩子",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 5, "verseEnd": 7 },
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 5,
+        "verseEnd": 7
+      },
       "charactersInScene": [
-        { "slug": "jacob", "stageId": "adult" },
-        { "slug": "esau", "stageId": "adult" }
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        },
+        {
+          "slug": "esau",
+          "stageId": "adult"
+        },
+        {
+          "slug": "leah",
+          "stageId": "adult"
+        },
+        {
+          "slug": "rachel",
+          "stageId": "adult"
+        },
+        {
+          "slug": "joseph",
+          "stageId": "child"
+        }
       ],
       "settingZh": "以扫举目看见妇人孩子,问这些是谁,雅各说是神赐给仆人的孩子,妇人孩子前来下拜",
       "imagePrompt": "Medium group shot, Jacob gesturing toward his wives and children who bow respectfully; Esau looking on with curiosity and warmth; triangular composition; soft midday light; family group centered, Jacob and Esau flanking",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-04.png"
     },
     {
       "order": 5,
       "titleZh": "礼物",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 8, "verseEnd": 11 },
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 8,
+        "verseEnd": 11
+      },
       "charactersInScene": [
-        { "slug": "jacob", "stageId": "adult" },
-        { "slug": "esau", "stageId": "adult" }
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        },
+        {
+          "slug": "esau",
+          "stageId": "adult"
+        }
       ],
       "settingZh": "雅各将成群的牛羊驼献给以扫为礼物,以扫起初推辞说自己的已经够了,雅各再三求他收下",
       "imagePrompt": "Medium shot with a foreground herd of goats, sheep and camels filling much of the frame; Jacob gesturing with open palms offering the gift; Esau raising a hand in polite refusal; warm afternoon light; livestock texture and dust",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-05.png"
     },
     {
       "order": 6,
       "titleZh": "分别前行",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 12, "verseEnd": 16 },
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 12,
+        "verseEnd": 16
+      },
       "charactersInScene": [
-        { "slug": "jacob", "stageId": "adult" },
-        { "slug": "esau", "stageId": "adult" }
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        },
+        {
+          "slug": "esau",
+          "stageId": "adult"
+        }
       ],
       "settingZh": "以扫提议同行,雅各以孩子牲畜幼弱为由婉拒,于是两人分别,以扫往西珥去",
       "imagePrompt": "Two-shot conversation, Jacob and Esau facing each other mid-gesture; their respective retinues blurred in the background on opposite sides; an open road forking behind them symbolizing the coming separation; neutral midday light",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-06.png"
     },
     {
       "order": 7,
-      "titleZh": "到疏割和示剑",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 17, "verseEnd": 18 },
-      "charactersInScene": [{ "slug": "jacob", "stageId": "adult" }],
-      "settingZh": "雅各往疏割去,为自己盖房屋,又为牲畜搭棚,后又平平安安到了迦南地的示剑城",
+      "titleZh": "到疏割",
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 17
+      },
+      "charactersInScene": [
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        }
+      ],
+      "settingZh": "雅各就往疏割去,在那里为自己盖造房屋,又为牲畜搭棚",
       "imagePrompt": "Wide environmental shot, small figure of Jacob building a wooden livestock shelter and simple house in a green valley; sheep grazing nearby; tree branches framing the composition; peaceful settled mood; softer, cooler light than earlier desert scenes",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-07.png"
     },
     {
       "order": 8,
-      "titleZh": "筑坛",
-      "verseRef": { "bookId": "GEN", "chapter": 33, "verseStart": 19, "verseEnd": 20 },
-      "charactersInScene": [{ "slug": "jacob", "stageId": "adult" }],
-      "settingZh": "雅各从示剑的父亲手中买了一块地,在那里筑了一座坛,起名叫伊利伊罗伊以色列",
+      "titleZh": "示剑筑坛",
+      "verseRef": {
+        "bookId": "GEN",
+        "chapter": 33,
+        "verseStart": 18,
+        "verseEnd": 20
+      },
+      "charactersInScene": [
+        {
+          "slug": "jacob",
+          "stageId": "adult"
+        }
+      ],
+      "settingZh": "雅各从巴旦亚兰回来,平平安安到了迦南地的示剑城,从示剑的父亲手中买了一块地,在那里筑了一座坛,起名叫伊利伊罗伊以色列",
       "imagePrompt": "Silhouette composition at dusk, Jacob standing with arms raised in worship before a simple stone altar with rising fire smoke; dramatic golden-purple sunset sky; distant hills; contemplative closing mood",
-      "status": "draft"
+      "status": "generated",
+      "assetId": "scenes/GEN-33/scene-08.png"
     }
   ]
 }

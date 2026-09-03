@@ -126,6 +126,7 @@ app/
 
 - `apps/askbible-mobile/src/audio/androidRemotePlaybackMute.ts:105,131` — Android 系统栏暂停需要停掉 App 当前所有在播的声音源（音乐/金句/读经/环境音），再点播放要「按暂停前的组合」恢复，不能简单粗暴地只恢复一路。
 - `apps/askbible-mobile/src/media/bundledMusicMedia.ts:28` — 音乐资源解析有 6 级回退链：安装包 → Android Asset Pack → R2 本地缓存 → 旧 resource-pack → R2 HTTPS（临时方案）→ 线上流式（仅非 bundled-only 模式）。改音乐资源加载前务必确认当前回退链没有被绕过。
+- 真机装「独立版」（无 DEV 横幅、不走 TestFlight）不能直接用 Release 配置装机（Apple 禁止 App Store 描述文件直装）；也不用折腾 EAS ad-hoc（这个项目里从没配成功过）。做法和已知的 Expo CLI devicectl 卡死坑点见 `docs/AI_HANDOFF.md` 「真机装独立版」一节。
 
 如果你在读代码时发现新的平台专属注释（含「iOS」「Android」「安卓」「苹果」字样且解释了「为什么这样写」），建议随手补进本节，保持这份坑点清单跟代码同步。
 

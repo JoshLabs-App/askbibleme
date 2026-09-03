@@ -7,9 +7,10 @@
         {
           "stageId": "adult",
           "ageRangeLabelZh": "壮年,自巴旦亚兰返回迦南时期(创28-33章)",
-          "appearanceZh": "中等偏瘦但结实的体格,深棕色卷发,中长络腮胡,常年户外牧羊晒出的古铜色肌肤,眼神谨慎而温和",
+          "appearanceZh": "中等偏瘦但结实的体格,深棕色卷发,中长络腮胡,温暖的橄榄棕色肌肤,眼神谨慎而温和",
           "clothingZh": "蓝绿色与驼色交织的条纹长袍,多层布料,腰间系深色皮革束带,头戴简单深色头巾,脚穿皮革凉鞋",
-          "distinguishingMarksZh": "举止略显谨慎,常低头躬身;创33章情绪从戒备转为喜极而泣"
+          "distinguishingMarksZh": "举止略显谨慎,常低头躬身;创33章情绪从戒备转为喜极而泣",
+          "referenceImageAssetId": "reference-images/jacob-adult.png"
         }
       ]
     },
@@ -21,7 +22,47 @@
           "ageRangeLabelZh": "壮年,与雅各同龄,居住西珥山地时期(创33、36章)",
           "appearanceZh": "体格魁梧健壮,毛发浓密,红棕色头发与胡须(呼应创25:25\"浑身有毛,如同皮衣\"及\"红\"的描述),古铜色肤色,猎人般粗犷的五官轮廓",
           "clothingZh": "深红棕色调的皮革与粗麻猎装,兽皮披肩,皮质护臂,腰间佩带简易猎刀,与雅各的精致条纹布形成质感对比",
-          "distinguishingMarksZh": "神态豪爽直率,创33章重逢时主动张开双臂拥抱"
+          "distinguishingMarksZh": "神态豪爽直率,创33章重逢时主动张开双臂拥抱",
+          "referenceImageAssetId": "reference-images/esau-adult.png"
+        }
+      ]
+    },
+    {
+      "slug": "leah",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,雅各长妻,创33章时已育有六子一女(创29-30章)",
+          "appearanceZh": "体态温厚,深棕色长发在头巾下盘起,眼神温和而略带疲惫,肤色健康的浅棕色",
+          "clothingZh": "赭红色与米色相间的长裙,外披素色罩衫,腰间系朴素布带,头戴素色头巾",
+          "distinguishingMarksZh": "举止沉稳持重,母性温暖,常护在孩子们身边",
+          "referenceImageAssetId": "reference-images/leah-adult.png"
+        }
+      ]
+    },
+    {
+      "slug": "rachel",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,雅各爱妻,创33章时刚生约瑟不久(创29-30章)",
+          "appearanceZh": "体态窈窕,容貌秀美(创29:17),深色长发,眼神明亮温柔,肤色细腻",
+          "clothingZh": "藏蓝色与浅驼色相间的长裙,精致的织纹披肩,头戴轻薄头巾,佩戴简单的银饰",
+          "distinguishingMarksZh": "怀中或身边带着幼子约瑟,神态温柔警觉",
+          "referenceImageAssetId": "reference-images/rachel-adult.png"
+        }
+      ]
+    },
+    {
+      "slug": "joseph",
+      "stages": [
+        {
+          "stageId": "child",
+          "ageRangeLabelZh": "幼儿,刚在巴旦亚兰出生不久(创30:22-24,与创33同期)",
+          "appearanceZh": "幼童体态,深色卷发,大眼睛,神情好奇天真,肤色细嫩",
+          "clothingZh": "简单的米色小罩衫,赤脚或简易软底鞋",
+          "distinguishingMarksZh": "常被拉结抱在怀中或牵在手边",
+          "referenceImageAssetId": "reference-images/joseph-child.png"
         }
       ]
     }

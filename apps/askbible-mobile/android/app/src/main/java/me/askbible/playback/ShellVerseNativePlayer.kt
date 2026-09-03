@@ -16,6 +16,9 @@ import com.facebook.react.bridge.Arguments
  */
 object ShellVerseNativePlayer {
   private const val TAG = "ShellVerseNative"
+  /** 关屏后 JS 可能要经过多次 Doze 唤醒窗口才能补上队列；30s 太短，放宽到约 2 分钟。 */
+  private const val JS_ADVANCE_MAX_RETRIES = 40
+  private const val JS_ADVANCE_RETRY_INTERVAL_MS = 3_000L
 
   private var player: MediaPlayer? = null
   private var currentUri: String? = null
@@ -67,14 +70,14 @@ object ShellVerseNativePlayer {
           return
         }
         jsAdvanceRetryCount += 1
-        if (jsAdvanceRetryCount > 12) {
+        if (jsAdvanceRetryCount > JS_ADVANCE_MAX_RETRIES) {
           Log.w(TAG, "verse JS advance timeout; stop")
           clearAwaitingJsAdvance()
           return
         }
-        // 再捅一次 JS（关屏后偶发第一次事件丢失）。
+        // 再捅一次 JS（关屏后偶发第一次事件丢失；Doze 下 JS 可能要多次心跳才被唤醒）。
         emitAdvance(null, nativeChained = false)
-        handler.postDelayed(this, 2_500L)
+        handler.postDelayed(this, JS_ADVANCE_RETRY_INTERVAL_MS)
       }
     }
 
@@ -388,7 +391,7 @@ object ShellVerseNativePlayer {
       releasePlayerKeepingWait()
       Log.i(TAG, "queue empty after verse; wait JS advance uri=$lastCompletedUri")
       emitAdvance(null, nativeChained = false)
-      handler.postDelayed(jsAdvanceRetryRunnable, 2_500L)
+      handler.postDelayed(jsAdvanceRetryRunnable, JS_ADVANCE_RETRY_INTERVAL_MS)
       return
     }
     clearAwaitingJsAdvance()

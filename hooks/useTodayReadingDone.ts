@@ -36,21 +36,24 @@ export function useTodayReadingDone(plan: TodayReadingPlanState) {
     return subscribeTodayReadingDone(refresh);
   }, [refresh]);
 
-  const isDone = useCallback((r: ReadingPlanRange) => doneKeys.has(todayReadingItemKey(r)), [doneKeys]);
+  const isDone = useCallback(
+    (r: ReadingPlanRange) => doneKeys.has(todayReadingItemKey(r, prefs.planId)),
+    [doneKeys, prefs.planId],
+  );
 
   const allDone = useCallback(
     (readings: ReadingPlanRange[]) =>
-      readings.length > 0 && readings.every((r) => doneKeys.has(todayReadingItemKey(r))),
-    [doneKeys],
+      readings.length > 0 && readings.every((r) => doneKeys.has(todayReadingItemKey(r, prefs.planId))),
+    [doneKeys, prefs.planId],
   );
 
   const toggleDone = useCallback(
     (r: ReadingPlanRange) => {
-      const key = todayReadingItemKey(r);
+      const key = todayReadingItemKey(r, prefs.planId);
       const next = setTodayReadingItemDone(scopeKey, key, !doneKeys.has(key));
       setDoneKeys(next);
     },
-    [scopeKey, doneKeys],
+    [scopeKey, doneKeys, prefs.planId],
   );
 
   return { scopeKey, doneKeys, isDone, allDone, toggleDone };

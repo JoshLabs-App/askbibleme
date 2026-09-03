@@ -375,6 +375,18 @@ const ZH_TW_CHAR_MAP: Record<string, string> = {
   线: "線",
   组: "組",
   网: "網",
+  认: "認",
+  并: "並",
+  写: "寫",
+  传: "傳",
+  数: "數",
+  机: "機",
+  号: "號",
+  删: "刪",
+  阶: "階",
+  编: "編",
+  换: "換",
+  历: "歷",
 };
 
 export function toZhTwText(input: string): string {

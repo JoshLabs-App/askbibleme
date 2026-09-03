@@ -1,4 +1,5 @@
 import type { AppLocale } from "@/lib/i18n/config";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 /**
  * 曲库等内容数据：纯字符串视为中文；对象至少提供 `zh-CN`，可选 `en`。
@@ -14,8 +15,9 @@ export function primaryLocaleText(field: LocalizedField | undefined | null): str
 
 /**
  * - `zh-CN`：优先中文，缺则用英文。
+ * - `zh-TW`：优先中文（简转繁），缺则用英文——与中文变体应优先中文而非英文的原则一致，避免繁体用户看到英文歌名/备注。
  * - `en`：优先英文，缺则用中文。
- * - 将来扩展其它 `AppLocale`：优先该语言字段，缺则 **英文**，再 **中文**（与「无该语言包用英文」一致）。
+ * - 将来扩展其它非中文 `AppLocale`：优先该语言字段，缺则 **英文**，再 **中文**（与「无该语言包用英文」一致）。
  */
 export function resolveLocalized(
   field: LocalizedField | undefined | null,
@@ -30,6 +32,11 @@ export function resolveLocalized(
 
   if (locale === "zh-CN") {
     if (zh) return zh;
+    return en;
+  }
+
+  if (locale === "zh-TW") {
+    if (zh) return toZhTwText(zh);
     return en;
   }
 

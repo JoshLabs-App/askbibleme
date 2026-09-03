@@ -6,9 +6,8 @@ import { useState, useSyncExternalStore } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ReadPlanActivateControl } from "@/components/bible/ReadPlanActivateControl";
 import { formatReadingPlanRange, readingPlanChapterHref } from "@/lib/bible/reading-plans/format-reading-range";
+import { getScriptureBookDisplayName } from "@/lib/bible/scripture-book-display-name";
 import {
-  formatTripleLoopReadingLineVerbose,
-  tripleLoopTrackTitle,
   type TripleLoopTrack,
 } from "@/lib/bible/reading-plans/triple-loop-reading";
 import {
@@ -31,6 +30,12 @@ const TRACKS: TripleLoopTrack[] = ["ot", "nt", "wisdom"];
 function planFieldKey(field: "title" | "subtitle" | "blurb"): string {
   return `pages.read.plansCatalog.${TRIPLE_LOOP_PLAN_ID}.${field}`;
 }
+
+const TRACK_TITLE_KEY: Record<TripleLoopTrack, string> = {
+  ot: "pages.read.tripleLoopTrackOt",
+  nt: "pages.read.tripleLoopTrackNt",
+  wisdom: "pages.read.tripleLoopTrackWisdom",
+};
 
 export function ReadTripleLoopPlanDetailClient() {
   const { t, locale } = useLocale();
@@ -114,16 +119,24 @@ export function ReadTripleLoopPlanDetailClient() {
             return (
               <li key={track} className="text-[13px] leading-snug">
                 <span className="block text-[11px] font-medium text-amber-800/65 dark:text-stone-500">
-                  {tripleLoopTrackTitle(track)}
+                  {t(TRACK_TITLE_KEY[track])}
                 </span>
                 <Link
                   href={readingPlanChapterHref(ptr.bookId, ptr.chapter)}
                   className="mt-0.5 inline-block font-medium text-amber-950 underline decoration-amber-800/25 underline-offset-[0.15em] hover:decoration-amber-800/50 dark:text-stone-100 dark:decoration-stone-500/35"
                 >
-                  {formatReadingPlanRange(range)}
+                  {formatReadingPlanRange(range, locale)}
                 </Link>
                 <span className="mt-0.5 block text-[11px] text-amber-800/48 dark:text-stone-500">
-                  {formatTripleLoopReadingLineVerbose(ptr.bookId, ptr.chapter)}
+                  {t("pages.read.tripleLoopReadingLine", {
+                    name: getScriptureBookDisplayName(ptr.bookId, locale),
+                    chapter: String(ptr.chapter),
+                    unit: t(
+                      ptr.bookId === "PSA"
+                        ? "pages.read.tripleLoopPsalmUnit"
+                        : "pages.read.tripleLoopChapterUnit",
+                    ),
+                  })}
                 </span>
               </li>
             );

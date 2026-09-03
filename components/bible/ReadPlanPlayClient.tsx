@@ -98,7 +98,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     setScriptureAudioRepeatMode,
     playScriptureChapter,
     pauseScripturePlayback,
-    togglePlayScripture,
   } = useMusicShellPlayback();
 
   const committedAhead = readAheadDays(plan.prefs);
@@ -319,20 +318,24 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     }
     if (queue.length === 0) return;
     if (playingIndex >= 0 && !isScripturePlaying) {
+      // Resume in place rather than delegating to togglePlayScripture(), which re-resolves
+      // the translation from the site default and can swap the paused chapter's audio out
+      // from under a reader using a non-default translation (see 2af7e63b).
       markViewDateListened();
-      togglePlayScripture();
+      resumeStartSecRef.current = currentSec > 0 ? currentSec : 0;
+      await playAtIndex(activeIndex);
       return;
     }
     await playAtIndex(activeIndex);
   }, [
     activeIndex,
+    currentSec,
     isScripturePlaying,
     markViewDateListened,
     pauseScripturePlayback,
     playAtIndex,
     playingIndex,
     queue.length,
-    togglePlayScripture,
   ]);
 
   const onNext = useCallback(async () => {

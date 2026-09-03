@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import type { AppLocale } from "@/lib/i18n/config";
+import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
 import {
   buildHomeVersePoolMenuRows,
@@ -16,15 +17,19 @@ import {
   subscribeHomeListeningProgress,
 } from "@/lib/home-listening/progress";
 
-function formatListeningTime(totalSeconds: number, zh: boolean): string {
+function formatListeningTime(totalSeconds: number, zh: boolean, zhTw?: boolean): string {
   const totalMinutes = Math.floor(Math.max(0, totalSeconds) / 60);
-  if (totalMinutes < 60) return zh ? `${totalMinutes}分钟` : `${totalMinutes} min`;
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return zh ? `${hours}小时${minutes ? `${minutes}分` : ""}` : `${hours}h${minutes ? ` ${minutes}m` : ""}`;
+  let s: string;
+  if (totalMinutes < 60) s = zh ? `${totalMinutes}分钟` : `${totalMinutes} min`;
+  else {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    s = zh ? `${hours}小时${minutes ? `${minutes}分` : ""}` : `${hours}h${minutes ? ` ${minutes}m` : ""}`;
+  }
+  return zh && zhTw ? toZhTwText(s) : s;
 }
 
-function honorLabel(id: string, zh: boolean): string {
+function honorLabel(id: string, zh: boolean, zhTw?: boolean): string {
   const labels: Record<string, [string, string]> = {
     "listen-1h": ["静听一小时", "One quiet hour"],
     "listen-7h": ["七小时同行", "Seven hours together"],
@@ -36,7 +41,8 @@ function honorLabel(id: string, zh: boolean): string {
     "journey-stage-3": ["三程同行", "Three journeys together"],
     "journey-stage-7": ["七程回响", "Seven journeys of Scripture"],
   };
-  return labels[id]?.[zh ? 0 : 1] ?? id;
+  const s = labels[id]?.[zh ? 0 : 1] ?? id;
+  return zh && zhTw ? toZhTwText(s) : s;
 }
 
 type Props = {
@@ -334,11 +340,18 @@ export function HomeVersePoolMenuPicker({
       {showStats ? (
       <div className="mt-2 flex items-start justify-between gap-4 px-1 text-[12px] leading-5 text-[#37352f]/65">
         <span>
-          {zh ? "已聆听" : "Listened"} {formatListeningTime(listening.totalListeningSeconds, zh)}
+          {zh ? (locale === "zh-TW" ? "已聆聽" : "已聆听") : "Listened"}{" "}
+          {formatListeningTime(listening.totalListeningSeconds, zh, locale === "zh-TW")}
         </span>
         <span className="text-right">
-          {zh ? `第${position.stage}程 · 第${position.group}组` : `Journey ${position.stage} · Group ${position.group}`}
-          {latestHonor ? <span className="block text-[#a85b17]">{honorLabel(latestHonor, zh)}</span> : null}
+          {zh
+            ? locale === "zh-TW"
+              ? `第${position.stage}程 · 第${position.group}組`
+              : `第${position.stage}程 · 第${position.group}组`
+            : `Journey ${position.stage} · Group ${position.group}`}
+          {latestHonor ? (
+            <span className="block text-[#a85b17]">{honorLabel(latestHonor, zh, locale === "zh-TW")}</span>
+          ) : null}
         </span>
       </div>
       ) : null}

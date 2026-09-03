@@ -178,11 +178,11 @@ function ReadChapterCompletionPlanPanel({
   const isReadingDone = useCallback(
     (r: ReadingPlanRange) =>
       isTodayReadingPlanItemComplete(r, {
-        itemKey: todayReadingItemKey(r),
+        itemKey: todayReadingItemKey(r, prefs.planId),
         doneKeys,
         completedChapterKeys,
       }),
-    [completedChapterKeys, doneKeys],
+    [completedChapterKeys, doneKeys, prefs.planId],
   );
 
   const chapterQueue = useMemo(
@@ -234,12 +234,12 @@ function ReadChapterCompletionPlanPanel({
   const toggleDone = useCallback(
     (r: ReadingPlanRange) => {
       if (!scopeKey) return;
-      const key = todayReadingItemKey(r);
+      const key = todayReadingItemKey(r, prefs.planId);
       const done = !isReadingDone(r);
       const next = setTodayReadingItemDone(scopeKey, key, done);
       setDoneKeys(next);
     },
-    [scopeKey, isReadingDone],
+    [scopeKey, isReadingDone, prefs.planId],
   );
 
   if (loading || !readings.length) return null;
@@ -256,7 +256,7 @@ function ReadChapterCompletionPlanPanel({
 
         <ul className="mt-2.5 space-y-2 text-left">
           {readings.map((r) => {
-            const key = todayReadingItemKey(r);
+            const key = todayReadingItemKey(r, prefs.planId);
             const done = isReadingDone(r);
             const label = formatReadingPlanRange(r, displayLocale);
             return (

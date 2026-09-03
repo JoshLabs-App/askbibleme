@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ShellMaterialIcon } from "@/components/shell/ShellMaterialIcon";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 type Option = { id: string; label: string; language?: string };
 
@@ -39,8 +40,25 @@ export function ReadBibleTranslationPickerOverlay({
   const [viewMode, setViewMode] = useState<"common" | "all">("common");
   const [activeLanguage, setActiveLanguage] = useState("");
 
+  const { locale } = useLocale();
   const languageLabel = (language: string) => {
     const lang = language.toLowerCase();
+    if (locale === "en") {
+      if (lang.startsWith("zh-hant")) return "Chinese (Traditional)";
+      if (lang.startsWith("zh")) return "Chinese (Simplified)";
+      if (lang.startsWith("en")) return "English";
+      if (lang.startsWith("es")) return "Spanish";
+      if (lang.startsWith("he")) return "Hebrew";
+      return "Other";
+    }
+    if (locale === "zh-TW") {
+      if (lang.startsWith("zh-hant")) return "中文（繁體）";
+      if (lang.startsWith("zh")) return "中文（簡體）";
+      if (lang.startsWith("en")) return "英文";
+      if (lang.startsWith("es")) return "西班牙語";
+      if (lang.startsWith("he")) return "希伯來語";
+      return "其他";
+    }
     if (lang.startsWith("zh-hant")) return "中文（繁體）";
     if (lang.startsWith("zh")) return "中文（简体）";
     if (lang.startsWith("en")) return "英文";

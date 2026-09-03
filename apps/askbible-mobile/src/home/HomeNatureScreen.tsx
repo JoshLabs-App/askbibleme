@@ -14,6 +14,7 @@ import {
   subscribeShellScriptureWantPlaying,
 } from "../audio/shellScriptureWantPlaying";
 import { setShellVerseWantPlaying } from "../audio/shellVerseWantPlaying";
+import { ensureAndroidVersePlaybackBatteryPermission } from "./androidVersePlaybackBatteryPrompt";
 import { useMusicPlayback } from "../music/MusicPlaybackContext";
 import type { NatureAmbientSceneSlotId } from "../nature/ambientSceneSlots";
 import {
@@ -191,9 +192,11 @@ export function HomeNatureScreen() {
     void togglePlayScripture({ forcePause: true });
     setShellVerseWantPlaying(true);
     setHomeVerseAudioActive(true);
+    void ensureAndroidVersePlaybackBatteryPermission(locale);
   }, [
     bumpSceneToolsIdle,
     homeVerseAudioActive,
+    locale,
     stopGoldenVerse,
     togglePlayScripture,
   ]);

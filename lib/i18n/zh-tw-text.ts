@@ -598,6 +598,10 @@ const ZH_TW_CHAR_MAP: Record<string, string> = {
   内: "內",
   脑: "腦",
   术: "術",
+  删: "刪",
+  阶: "階",
+  编: "編",
+  换: "換",
 };
 
 export function toZhTwText(input: string): string {

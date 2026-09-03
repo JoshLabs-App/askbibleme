@@ -20,6 +20,9 @@ import com.facebook.react.bridge.Arguments
  */
 object ShellMainNativePlayer {
   private const val TAG = "ShellMainNative"
+  /** 关屏后 JS 可能要经过多次 Doze 唤醒窗口才能补上队列；30s 太短，放宽到约 2 分钟。 */
+  private const val JS_ADVANCE_MAX_RETRIES = 40
+  private const val JS_ADVANCE_RETRY_INTERVAL_MS = 3_000L
   private const val PROGRESS_MS = 400L
 
   private var player: MediaPlayer? = null
@@ -75,7 +78,7 @@ object ShellMainNativePlayer {
           return
         }
         jsAdvanceRetryCount += 1
-        if (jsAdvanceRetryCount > 12) {
+        if (jsAdvanceRetryCount > JS_ADVANCE_MAX_RETRIES) {
           Log.w(TAG, "scripture JS advance timeout; stop")
           clearAwaitingJsAdvance()
           ShellPlaybackSession.playing = false
@@ -83,7 +86,7 @@ object ShellMainNativePlayer {
           appContext?.let { ShellPlaybackService.refreshIfRunning(it) }
           return
         }
-        // 再捅一次 JS（关屏后偶发第一次事件丢失）。
+        // 再捅一次 JS（关屏后偶发第一次事件丢失；Doze 下 JS 可能要多次心跳才被唤醒）。
         val eventName =
           if (ShellPlaybackSession.kind == "music") "ShellMediaNativeMusicEnded"
           else "ShellMediaNativeScriptureEnded"
@@ -95,7 +98,7 @@ object ShellMainNativePlayer {
             putBoolean("awaitingJs", true)
           },
         )
-        handler.postDelayed(this, 2_500L)
+        handler.postDelayed(this, JS_ADVANCE_RETRY_INTERVAL_MS)
       }
     }
 

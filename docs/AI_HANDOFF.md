@@ -143,6 +143,31 @@ npm run mobile:release:android:internal      # 视 checklist
 
 Android 发版后检查：`ls -lh dist/mobile/askbible-android-latest.aab`（异常偏大先停）。
 
+### 真机装"独立版"（无 DEV 横幅、脱离 Metro，但不走 TestFlight）
+
+场景：想在自己手机上装一个看起来像正式版的包（`DevBuildStamp.tsx` 不显示 DEV 横幅、`__DEV__=false`、JS 提前打包内嵌不依赖 Metro），但走 App Store/TestFlight 太慢，只想直接无线装到已经用过的测试机上。
+
+关键认知（第一次做这件事时容易想错）：
+- `ios/AskBibleme.xcodeproj/project.pbxproj` 里 Release 配置签的是 **App Store** 描述文件（`... AppStore ...`），Apple 规定这类包**不能**直接装机，只能走 TestFlight——这是真限制，不是哪一步没配对。
+- 但 Debug/Release（决定要不要内嵌 JS、`__DEV__` 是否为 true）和「签名用哪个描述文件」（决定能不能直接装机）是两件正交的事。已经在目标设备上装过 Debug 包（Development 描述文件）的话，那个 Development 描述文件同样可以签 Release 配置的编译产物——不需要另外去搞 Ad Hoc 描述文件或 EAS 云构建。
+- 项目里 EAS 的 `preview`（ad-hoc）profile **从没有成功构建过**（`eas build --profile preview` 会因为 widget target 缺 Ad Hoc 描述文件、非交互模式下无法对 Apple 开发者门户鉴权而失败），不要默认往这条路走，除非用户愿意手动跑一次交互式 `eas build --profile preview` 把描述文件建出来。
+
+步骤（做完务必执行第4步还原，否则会污染真正的 App Store 归档配置）：
+
+1. 临时编辑 `project.pbxproj`：把 **两个** target（`AskBibleme` 主 App 和 `AskBibleDailyVerse` 小组件）的 Release 配置块里
+   - `CODE_SIGN_IDENTITY[sdk=iphoneos*]`: `Apple Distribution` → `Apple Development`
+   - `PROVISIONING_PROFILE_SPECIFIER`: `AskBible me.askbible AppStore ...` / `AskBible me.askbible.widget AppStore ...` → 改成同名的 `... Development ...`（文件里 Debug 配置块已经有现成的 Development 描述文件全名，直接照抄字符串即可，两个 target 的名字不一样别抄错）。
+2. `cd apps/askbible-mobile && npx expo run:ios --device <设备名> --configuration Release --no-bundler`
+   - ⚠️ **已知坑**：编译、签名、Build Succeeded 都会顺利跑完，但最后"无线装到设备"这一步，Expo CLI 自带的 devicectl 包装器有概率**卡死不动**（命令一开始如果打过 `Unexpected devicectl JSON version output from devicectl` 这行警告，基本就是要卡的前兆）。判断是不是真卡住：`ps aux | grep "devicectl device install"`，看那个子进程的 CPU 时间隔几分钟是否纹丝不动——不动就是卡住了，不用等，直接 `kill -9` 那个 node 进程（`expo run:ios ...`）和它的 devicectl 子进程，App 已经编译好躺在 DerivedData 里了，去做第3步。
+3. 手动收尾装机+启动（第2步卡住时用这个；不卡住的话这步也会自动做，可以不管）：
+   ```bash
+   xcrun devicectl device install app --device <设备名> \
+     ~/Library/Developer/Xcode/DerivedData/AskBibleme-*/Build/Products/Release-iphoneos/AskBibleme.app
+   xcrun devicectl device process launch --device <设备名> me.askbible
+   ```
+4. **还原签名**：`git checkout -- ios/AskBibleme.xcodeproj/project.pbxproj`（前提是改之前这个文件是干净的，正常情况下都是）。
+5. 查已注册测试设备名/UDID：`xcrun xctrace list devices`（真机名字，比如 `home`）或 `xcrun devicectl list devices`（看是否 `available (paired)`）。这些设备已经在 Apple Developer 账号里注册过（`eas device:list --apple-team-id AJ2998VZH6 --non-interactive` 能查到），不需要重新注册。
+
 ### 环境变量
 
 - 模板：仓库根 `.env.example`；移动端另见 `apps/askbible-mobile/env.device.example`。

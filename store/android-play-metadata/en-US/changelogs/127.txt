@@ -1,0 +1,5 @@
+• Chapter audio now only offers playback sources for your current primary translation
+• Fixed chapter audio sometimes playing a previously cached translation's track
+• Google/Apple sign-in now goes through a more reliable Supabase-hosted flow
+• Fixed the text-selection toolbar getting hidden behind the bottom music/audio dock
+• Reading and playback performance improvements from an overnight optimization pass

@@ -8,6 +8,9 @@ const pool = vi.hoisted(() => ({
   skipToNext: vi.fn(async () => true),
   skipToPrev: vi.fn(async () => true),
   abortPendingPlay: vi.fn(),
+  getCurrentTrack: vi.fn(
+    () => null as null | { bookId: string; chapter: number; translationId: string },
+  ),
 }));
 
 vi.mock("react-native", () => ({
@@ -40,6 +43,9 @@ vi.mock("../widget/widgetPlaybackRequest", () => ({
 
 const transport = vi.hoisted(() => ({
   resolveTransportReadChapterPlayback: vi.fn(() => null as null | {
+    bookId?: string;
+    chapter?: number;
+    translationId?: string;
     onAdvanceNextChapter: () => void;
     onAdvancePreviousChapter: () => void;
   }),
@@ -77,10 +83,35 @@ describe("scriptureCommands", () => {
     expect(isScriptureUserPauseHeld()).toBe(false);
   });
 
-  it("skipNext prefers pool when active", async () => {
+  it("skipNext prefers pool when active and pool track matches the playing chapter", async () => {
     pool.isActive.mockReturnValue(true);
+    pool.getCurrentTrack.mockReturnValue({ bookId: "MAT", chapter: 8, translationId: "cuv-simp" });
+    transport.resolveTransportReadChapterPlayback.mockReturnValue({
+      bookId: "MAT",
+      chapter: 8,
+      translationId: "cuv-simp",
+      onAdvanceNextChapter: vi.fn(),
+      onAdvancePreviousChapter: vi.fn(),
+    });
     await scriptureCommandSkipNext({ skipNavigate: true });
     expect(pool.skipToNext).toHaveBeenCalledWith({ skipNavigate: true });
+  });
+
+  it("skipNext falls back to transport when pool track is not the playing chapter", async () => {
+    const onNext = vi.fn();
+    pool.isActive.mockReturnValue(true);
+    pool.getCurrentTrack.mockReturnValue({ bookId: "ACT", chapter: 9, translationId: "cuv-simp" });
+    transport.resolveTransportReadChapterPlayback.mockReturnValue({
+      bookId: "MAT",
+      chapter: 8,
+      translationId: "cuv-simp",
+      onAdvanceNextChapter: onNext,
+      onAdvancePreviousChapter: vi.fn(),
+    });
+    const ok = await scriptureCommandSkipNext();
+    expect(ok).toBe(true);
+    expect(onNext).toHaveBeenCalled();
+    expect(pool.skipToNext).not.toHaveBeenCalled();
   });
 
   it("skipPrev uses transport when pool inactive", async () => {

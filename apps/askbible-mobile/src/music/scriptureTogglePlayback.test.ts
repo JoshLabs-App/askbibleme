@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ChapterPlaybackCtx } from "./scriptureChapterPlaybackTypes";
 
-globalThis.__DEV__ = false;
+(globalThis as { __DEV__?: boolean }).__DEV__ = false;
 
 const mocks = vi.hoisted(() => ({
   configureScriptureShellAudioMode: vi.fn(async () => {}),
@@ -11,11 +12,13 @@ const mocks = vi.hoisted(() => ({
   safePauseSound: vi.fn(async () => {}),
   safePlaySound: vi.fn(async () => true),
   flushTodayPlanScriptureResume: vi.fn(async () => {}),
-  getActiveReadChapterPlayback: vi.fn(() => null),
-  getScripturePlayingChapter: vi.fn(() => null),
+  getActiveReadChapterPlayback: vi.fn(() => null as null | Record<string, unknown>),
+  getScripturePlayingChapter: vi.fn(
+    () => null as null | { bookId: string; chapter: number; translationId: string },
+  ),
   scriptureChapterPoolStop: vi.fn(),
   scriptureChapterPoolIsActive: vi.fn(() => false),
-  scriptureChapterPoolGetCurrentTrack: vi.fn(() => null),
+  scriptureChapterPoolGetCurrentTrack: vi.fn(() => null as null | Record<string, unknown>),
   getPlanFlowUiHost: vi.fn(() => "chapter"),
   markScriptureWantPlaying: vi.fn(),
   scriptureAudioUrlsEqual: vi.fn(() => false),
@@ -78,7 +81,7 @@ vi.mock("./scripture-chapter-pool", () => ({
 }));
 
 vi.mock("./scriptureResumeAfterInterruption", () => ({
-  markScriptureWantPlaying: (ref, want) => {
+  markScriptureWantPlaying: (ref: { current: boolean }, want: boolean) => {
     mocks.markScriptureWantPlaying(ref, want);
     ref.current = want;
   },
@@ -166,7 +169,7 @@ describe("toggleScripturePlayback", () => {
       setScriptureCurrentSec: vi.fn(),
     };
 
-    await toggleScripturePlayback(ctx, { forcePause: true });
+    await toggleScripturePlayback(ctx as unknown as ChapterPlaybackCtx, { forcePause: true });
 
     expect(ctx.unloadCurrent).not.toHaveBeenCalled();
     expect(ctx.stopScripturePlayback).not.toHaveBeenCalled();
@@ -184,7 +187,9 @@ describe("toggleScripturePlayback", () => {
       setPlaying: vi.fn(),
     };
 
-    await pauseScriptureShellPlayback(ctx);
+    await pauseScriptureShellPlayback(
+      ctx as unknown as Parameters<typeof pauseScriptureShellPlayback>[0],
+    );
 
     expect(ctx.scriptureWantPlayingRef.current).toBe(false);
     expect(ctx.autoPlayScriptureRef.current).toBe(false);
@@ -211,7 +216,7 @@ describe("toggleScripturePlayback", () => {
       stopScripturePlayback: vi.fn(async () => {}),
     };
 
-    await toggleScripturePlayback(ctx, { forcePause: true });
+    await toggleScripturePlayback(ctx as unknown as ChapterPlaybackCtx, { forcePause: true });
 
     expect(ctx.scriptureWantPlayingRef.current).toBe(false);
     expect(ctx.autoPlayScriptureRef.current).toBe(false);
@@ -280,7 +285,7 @@ describe("toggleScripturePlayback", () => {
       setScriptureCurrentSec: vi.fn(),
     };
 
-    await toggleScripturePlayback(ctx);
+    await toggleScripturePlayback(ctx as unknown as ChapterPlaybackCtx);
 
     expect(mocks.safePlaySound).not.toHaveBeenCalled();
     expect(mocks.scriptureChapterPoolStop).toHaveBeenCalled();
@@ -348,7 +353,7 @@ describe("toggleScripturePlayback", () => {
       setScriptureCurrentSec: vi.fn(),
     };
 
-    await toggleScripturePlayback(ctx);
+    await toggleScripturePlayback(ctx as unknown as ChapterPlaybackCtx);
 
     expect(mocks.safePlaySound).toHaveBeenCalledWith(sound);
     expect(mocks.scriptureChapterPoolStop).not.toHaveBeenCalled();

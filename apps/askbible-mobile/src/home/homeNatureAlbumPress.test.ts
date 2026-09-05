@@ -111,7 +111,7 @@ describe("resolveHomeAlbumPlayIndex", () => {
     { album: "钢琴", localReady: true },
     { album: "钢琴", localReady: false },
   ];
-  const playable = (track: { localReady?: boolean }) =>
+  const playable = (track: { localReady?: boolean; album?: string | null }) =>
     Boolean(track.localReady) || track.album === "赞美诗";
 
   it("picks only 赞美诗 for 圣诗", () => {

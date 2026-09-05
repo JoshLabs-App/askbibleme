@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   }),
   safeGetSoundStatus: vi.fn(),
   safePlaySound: vi.fn(async () => true),
-  resolveScripturePlayableSrcForChapter: vi.fn(async () => "file:///mat-8.mp3"),
+  resolveScripturePlayableSrcForChapter: vi.fn(async () => "file:///mat-8.mp3" as string | null),
   translationSupportsChapterAudio: vi.fn(() => true),
   readCuvChapterAudioVoice: vi.fn(async () => "cuv-simp"),
   configureScriptureShellAudioMode: vi.fn(async () => {}),

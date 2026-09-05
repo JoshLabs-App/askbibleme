@@ -237,6 +237,17 @@ const OFFLINE_BUNDLED_INDEX: BibleTranslationsIndex = {
       bundled: true,
     },
     {
+      // unfoldingWord® Simplified Text v90，CC BY-SA 4.0；面向学英文的简明英文译本（56 卷，缺卷回退 WEB）。
+      id: "ust-en",
+      labelZh: "UST 简明英文（学英文版）",
+      labelEn: "unfoldingWord Simplified Text (UST) – Learn English",
+      language: "en",
+      bundled: true,
+      copyright:
+        "unfoldingWord® Simplified Text v90. Copyright © 2022 by unfoldingWord. Licensed under CC BY-SA 4.0.",
+      publisherUrl: "https://www.unfoldingword.org/ust",
+    },
+    {
       id: "niv",
       labelZh: "NIV 英文新国际版",
       labelEn: "New International Version (NIV)",

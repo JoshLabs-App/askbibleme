@@ -3717,3 +3717,16 @@ button.read-chapter-verse-num--xref {
 .dark .read-chapter-highlight-bar {
   background-color: var(--read-parchment-bg-canvas, #1a1512);
 }
+
+/* 主译本缺本章（如 UST 未发布书卷）回退到常用译本时的提示 */
+.read-chapter-fallback-notice {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: center;
+  color: color-mix(in srgb, rgb(92 64 48) 82%, transparent);
+}
+
+.dark .read-chapter-fallback-notice {
+  color: color-mix(in srgb, rgb(214 198 180) 82%, transparent);
+}

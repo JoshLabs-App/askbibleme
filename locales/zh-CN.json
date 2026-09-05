@@ -960,6 +960,7 @@
       "catalogCta": "六十六卷目录",
       "invalidChapter": "无效的经文章节。",
       "chapterLoadError": "无法读取本章。若首次安装，请重新构建应用。",
+      "chapterFallbackNotice": "{{from}}暂无本章，已改为显示{{to}}。",
       "loadingChapter": "加载本章…",
       "preparingTranslation": "正在准备译本…",
       "retry": "重试",

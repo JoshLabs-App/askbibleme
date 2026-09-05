@@ -29,6 +29,10 @@ export type LoadedChapter = {
   bookName: string;
   chapter: number;
   verses: LoadedChapterVerse[];
+  /** 主译本缺本章（如 UST 未发布书卷）而回退时：用户原选译本 id 与名称；正常加载为空。 */
+  fallbackFromTranslationId?: string | null;
+  fallbackFromLabelZh?: string;
+  fallbackFromLabelEn?: string;
 };
 
 export const DEFAULT_SCRIPTURE_TRANSLATION_ID = "cuv-simp";

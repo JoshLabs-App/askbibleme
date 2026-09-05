@@ -36,6 +36,8 @@ ok = mustExist("music/tracks/track-mt391okyjj4i.mp3", "音乐曲目") && ok;
 ok = mustExist("scripture/cuv-simp.sqlite", "和合本简体") && ok;
 ok = mustExist("scripture/cuv-trad.sqlite", "和合本繁体") && ok;
 ok = mustExist("scripture/web-en.sqlite", "WEB 英译本") && ok;
+ok = mustExist("scripture/kjv.sqlite", "KJV 英译本") && ok;
+ok = mustExist("scripture/ust-en.sqlite", "UST 学英文版") && ok;
 ok = mustExist("content/music-companion.json", "音乐目录") && ok;
 ok = mustExist("content/nature-settings.json", "自然场景配置") && ok;
 ok = mustExist("audio/scenes/scene-waves-ocean.mp3", "环境音") && ok;
@@ -59,11 +61,13 @@ const cuvSimpMb = fileMb("scripture/cuv-simp.sqlite");
 const cuvTradMb = fileMb("scripture/cuv-trad.sqlite");
 const webEnMb = fileMb("scripture/web-en.sqlite");
 const kjvMb = fileMb("scripture/kjv.sqlite");
+const ustEnMb = fileMb("scripture/ust-en.sqlite");
 for (const [rel, label, minMb] of [
   ["scripture/cuv-simp.sqlite", "cuv-simp", 4],
   ["scripture/cuv-trad.sqlite", "cuv-trad", 4],
   ["scripture/web-en.sqlite", "web-en", 4],
   ["scripture/kjv.sqlite", "kjv", 4],
+  ["scripture/ust-en.sqlite", "ust-en", 4],
 ]) {
   const mb = fileMb(rel);
   if (mb < minMb) {
@@ -72,7 +76,7 @@ for (const [rel, label, minMb] of [
   }
 }
 console.log(
-  `[verify-bundled-assets] music tracks ${musicCount} (sample ${musicMb.toFixed(1)} MB), cuv-simp ${cuvSimpMb.toFixed(1)} MB, cuv-trad ${cuvTradMb.toFixed(1)} MB, web-en ${webEnMb.toFixed(1)} MB, kjv ${kjvMb.toFixed(1)} MB, nature videos ${videoCount}`,
+  `[verify-bundled-assets] music tracks ${musicCount} (sample ${musicMb.toFixed(1)} MB), cuv-simp ${cuvSimpMb.toFixed(1)} MB, cuv-trad ${cuvTradMb.toFixed(1)} MB, web-en ${webEnMb.toFixed(1)} MB, kjv ${kjvMb.toFixed(1)} MB, ust-en ${ustEnMb.toFixed(1)} MB, nature videos ${videoCount}`,
 );
 
 if (!ok) {

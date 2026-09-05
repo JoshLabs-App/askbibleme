@@ -95,6 +95,18 @@ async function fetchChapterVerseRows(
   );
 }
 
+/** 库里是否有任何经文；有则说明库健康，只是本章缺失（如 UST 未发布书卷），不必重建。 */
+async function hasAnyVerseRow(translationId: string): Promise<boolean> {
+  try {
+    const row = await retryScriptureDatabaseOnPrepareError(translationId, (db) =>
+      db.getFirstAsync<{ n: number }>("SELECT 1 AS n FROM verse LIMIT 1"),
+    );
+    return row != null;
+  } catch {
+    return false;
+  }
+}
+
 type CachedChapterBody = {
   translationId: string;
   bookId: string;
@@ -164,7 +176,7 @@ export async function loadChapterFromBundledTranslation(
   }
 
   let verses = rowsToLoadedVerses(rows);
-  if (verses.length === 0 && isBundledScriptureTranslation(tid)) {
+  if (verses.length === 0 && isBundledScriptureTranslation(tid) && !(await hasAnyVerseRow(tid))) {
     await rebuildBundledScriptureDatabase(tid);
     rows = await fetchChapterVerseRows(tid, id, ch);
     verses = rowsToLoadedVerses(rows);

@@ -1,9 +1,10 @@
-/** App 安装包内置译本（简体/繁体和合本 + WEB + KJV）；与 `scripts/sync-mobile-scripture-sqlite.mjs` 保持一致。 */
+/** App 安装包内置译本（简体/繁体和合本 + WEB + KJV + UST 学英文版）；与 `scripts/sync-mobile-scripture-sqlite.mjs` 保持一致。 */
 export const MOBILE_BUNDLED_SCRIPTURE_TRANSLATION_IDS = [
   "cuv-simp",
   "cuv-trad",
   "web-en",
   "kjv",
+  "ust-en",
 ] as const;
 
 export type MobileBundledScriptureTranslationId =

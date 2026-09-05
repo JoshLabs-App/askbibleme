@@ -116,6 +116,7 @@ export function ReadChapterScreenScrollContent({
     localeDisplayText,
     displayBookName,
     chapterTitleText,
+    fallbackNoticeText,
     formatNeighborChapterLabel,
     endNavNext,
     endNavPrev,
@@ -151,6 +152,11 @@ export function ReadChapterScreenScrollContent({
         <Text style={[styles.chapterTitle, { fontSize: px.chapterTitleSize }]}>
           {chapterTitleText}
         </Text>
+        {fallbackNoticeText ? (
+          <Text style={styles.chapterMeta} accessibilityRole="text">
+            {fallbackNoticeText}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

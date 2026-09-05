@@ -111,7 +111,8 @@ export function useReadChapterScreenLoad({
     const hasCachedChapter =
       cached?.bookId === bookId &&
       cached?.chapter === chapter &&
-      cached?.translationId === primaryTranslationId;
+      (cached?.translationId === primaryTranslationId ||
+        cached?.fallbackFromTranslationId === primaryTranslationId);
 
     if (!hasCachedChapter) {
       setLoading(true);

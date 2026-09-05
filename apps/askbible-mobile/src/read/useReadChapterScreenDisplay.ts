@@ -107,6 +107,17 @@ export function useReadChapterScreenDisplay({
     }
     return `${chapterTitleBookName} 第${chapterData.chapter}章`;
   }, [chapterData, chapterTitleBookName, readDisplayLocale]);
+  /** 主译本缺本章而回退时在章标题下方的提示；正常加载为空串。 */
+  const fallbackNoticeText = useMemo(() => {
+    const fromId = chapterData?.fallbackFromTranslationId;
+    if (!chapterData || !fromId) return "";
+    const fromLabel =
+      readDisplayLocale === "en"
+        ? chapterData.fallbackFromLabelEn || fromId
+        : localeZhText(chapterData.fallbackFromLabelZh || fromId);
+    const toLabel = readDisplayLocale === "en" ? chapterData.labelEn : localeZhText(chapterData.labelZh);
+    return tr("pages.read.chapterFallbackNotice", { from: fromLabel, to: toLabel });
+  }, [chapterData, localeZhText, readDisplayLocale, tr]);
 
   const catalogSections = useMemo(() => {
     try {
@@ -206,6 +217,7 @@ export function useReadChapterScreenDisplay({
     localeDisplayText,
     displayBookName,
     chapterTitleText,
+    fallbackNoticeText,
     catalogSections,
     formatNeighborChapterLabel,
     neighbors,

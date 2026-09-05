@@ -28,6 +28,7 @@
     "import:bible": "node scripts/import-askbible-usfx.mjs",
     "import:bible:public-domain-en": "node scripts/import-public-domain-usfx.mjs",
     "import:bible:open-bible": "node scripts/import-open-bible.mjs",
+    "import:bible:ust": "node scripts/import-unfoldingword-ust-usfm.mjs",
     "import:reader-verse-themes": "tsx scripts/import-reader-verse-themes.ts",
     "build:theme-repeat-pool": "tsx scripts/build-theme-repeat-pool.ts",
     "build:theme-repeat-ge5-menu-pool": "tsx scripts/build-theme-repeat-pool.ts --min=5 --strict --sort=book && node scripts/generate-home-verse-pool-menu-counts.mjs",

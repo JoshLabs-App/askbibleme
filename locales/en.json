@@ -960,6 +960,7 @@
       "catalogCta": "Sixty-six books",
       "invalidChapter": "Invalid chapter.",
       "chapterLoadError": "Could not load this chapter. Rebuild the app if this is a fresh install.",
+      "chapterFallbackNotice": "This chapter isn't available in {{from}} yet. Showing {{to}} instead.",
       "loadingChapter": "Loading chapter…",
       "preparingTranslation": "Preparing translation…",
       "retry": "Retry",

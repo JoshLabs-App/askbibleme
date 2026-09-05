@@ -15,6 +15,20 @@ import { t } from "../i18n/site-copy";
 import { recordTodayReadingChapterFraction } from "./reading-plan/today-reading-chapter-fraction";
 import { writeLastReadPosition } from "./read-last-position";
 
+/**
+ * 主译本缺本章（如 UST 尚未发布的书卷）时的回退译本：按主译本语言选内置译本
+ * （英文 → WEB，繁体 → 和合本繁体，其它 → 和合本简体）。
+ */
+function pickFallbackTranslationId(primaryTranslationId: string, language: string | undefined): string | null {
+  const lang = String(language ?? "").trim().toLowerCase();
+  const candidates = lang.startsWith("en")
+    ? ["web-en", "kjv"]
+    : lang === "zh-hant"
+      ? ["cuv-trad", "cuv-simp"]
+      : ["cuv-simp", "cuv-trad"];
+  return candidates.find((id) => id !== primaryTranslationId && isBundledScriptureTranslation(id)) ?? null;
+}
+
 export type ReadChapterLoadResult =
   | { ok: true; chapter: LoadedChapter; segments: ChapterSegment[] | null }
   | { ok: false; error: string | null; chapter: null };
@@ -96,6 +110,27 @@ export async function loadReadChapterScreenChapter({
       primaryTranslationId,
       primaryLabels,
     );
+    if (!loaded) {
+      const fallbackId = pickFallbackTranslationId(primaryTranslationId, primaryMeta?.language);
+      if (fallbackId) {
+        const fallbackMeta = translationCatalog.find((item) => item.id === fallbackId);
+        const fallbackLoaded = await loadChapterFromBundledTranslation(bookId, chapter, fallbackId, {
+          labelZh: fallbackMeta?.labelZh ?? DEFAULT_SCRIPTURE_LABEL_ZH,
+          labelEn: fallbackMeta?.labelEn ?? DEFAULT_SCRIPTURE_LABEL_EN,
+        });
+        if (loadSeq !== chapterLoadSeqRef.current) {
+          return { ok: false, error: null, chapter: null };
+        }
+        if (fallbackLoaded) {
+          loaded = {
+            ...fallbackLoaded,
+            fallbackFromTranslationId: primaryTranslationId,
+            fallbackFromLabelZh: primaryLabels.labelZh,
+            fallbackFromLabelEn: primaryLabels.labelEn,
+          };
+        }
+      }
+    }
   }
 
   if (loadSeq !== chapterLoadSeqRef.current) {

@@ -11,7 +11,11 @@ import { ScriptureChrome } from "@/components/scripture/ScriptureChrome";
 import { loadChapterXrefs } from "@/lib/bible/load-chapter-xrefs";
 import { parseScriptureVerseParam } from "@/lib/bible/parse-scripture-verse-param";
 import { parseScriptureSearchQueryParam } from "@/lib/bible/scripture-search";
-import { loadReadChapterForReadPage, formatReadChapterTitleChapterSuffix } from "@/lib/read/load-read-chapter-for-read-page";
+import {
+  loadReadChapterForReadPage,
+  formatReadChapterFallbackNotice,
+  formatReadChapterTitleChapterSuffix,
+} from "@/lib/read/load-read-chapter-for-read-page";
 import { ReadChapterPostReadingEditions } from "@/components/bible/ReadChapterPostReadingEditions";
 import {
   getInfoEditionReaderCacheAsync,
@@ -102,6 +106,11 @@ export default async function ReadChapterPage({ params, searchParams }: Props) {
                     {formatReadChapterTitleChapterSuffix(data.chapter, locale)}
                   </span>
                 </h1>
+                {loaded.fallbackFrom ? (
+                  <p className="read-chapter-fallback-notice" role="status">
+                    {formatReadChapterFallbackNotice(loaded.fallbackFrom, data, locale)}
+                  </p>
+                ) : null}
               </header>
               <div className="read-chapter-scripture">
                 <Suspense fallback={null}>

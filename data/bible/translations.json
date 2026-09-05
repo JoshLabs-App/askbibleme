@@ -151,6 +151,18 @@
       "verseCount": 31091
     },
     {
+      "id": "ust-en",
+      "labelZh": "UST 简明英文（学英文版）",
+      "labelEn": "unfoldingWord Simplified Text (UST) – Learn English",
+      "language": "en",
+      "sourceFile": "uploads/ust-en.json",
+      "updatedAt": "2026-09-05T05:03:05.749Z",
+      "bytes": 4243969,
+      "verseCount": 23111,
+      "copyright": "unfoldingWord® Simplified Text v90. Copyright © 2022 by unfoldingWord. Licensed under CC BY-SA 4.0.",
+      "publisherUrl": "https://www.unfoldingword.org/ust"
+    },
+    {
       "id": "web-en",
       "labelZh": "WEBP 英译本",
       "labelEn": "World English Bible (WEBP)",

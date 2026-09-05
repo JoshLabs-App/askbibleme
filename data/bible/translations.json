@@ -151,16 +151,6 @@
       "verseCount": 31091
     },
     {
-      "id": "vbl-es",
-      "labelZh": "西班牙语 自由圣经译本",
-      "labelEn": "Spanish Free Bible Version",
-      "language": "es",
-      "sourceFile": "uploads/vbl-es.json",
-      "updatedAt": "2026-05-27T17:42:03.549Z",
-      "bytes": 4455178,
-      "verseCount": 31086
-    },
-    {
       "id": "web-en",
       "labelZh": "WEBP 英译本",
       "labelEn": "World English Bible (WEBP)",

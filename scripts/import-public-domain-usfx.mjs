@@ -147,13 +147,6 @@ const JOBS = [
     language: "es",
   },
   {
-    id: "vbl-es",
-    url: "https://eBible.org/Scriptures/spavbl_usfx.zip",
-    labelZh: "西班牙语 自由圣经译本",
-    labelEn: "Spanish Free Bible Version",
-    language: "es",
-  },
-  {
     id: "blm-es",
     url: "https://eBible.org/Scriptures/spablm_usfx.zip",
     labelZh: "西班牙语 自由世界圣经",

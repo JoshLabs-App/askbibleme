@@ -86,7 +86,7 @@ function sortTranslationsForLanguage(items: BibleTranslationMeta[], locale: AppL
   if (language.startsWith("zh")) return sortPickerTranslations(items, locale === "zh-TW" ? "zh-TW" : "zh-CN");
   if (language.startsWith("en")) return sortPickerTranslations(items, "en");
   if (language.startsWith("es")) {
-    const order = ["rv1909-es", "rvg-es", "vbl-es", "blm-es"];
+    const order = ["rv1909-es", "rvg-es", "blm-es"];
     const rank = new Map(order.map((id, index) => [id, index]));
     return [...items].sort((a, b) => (rank.get(a.id) ?? order.length) - (rank.get(b.id) ?? order.length));
   }

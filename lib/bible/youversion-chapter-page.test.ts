@@ -53,7 +53,7 @@ describe("youversion-chapter-page", () => {
 
   it("can load text-only YouVersion ids without audio-page mapping", async () => {
     const flight = `<script>self.__next_f.push([1,${JSON.stringify(CHAPTER_HTML)}])</script>`;
-    const fetchMock = vi.fn(async () => ({ ok: true, text: async () => flight }));
+    const fetchMock = vi.fn(async (_input: string) => ({ ok: true, text: async () => flight }));
     (globalThis as any).fetch = fetchMock;
 
     await expect(

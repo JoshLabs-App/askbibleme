@@ -895,6 +895,10 @@ export function useHomeNatureVerseAudioPlayback({
           missingAudioSkipRef.current += 1;
           if (missingAudioSkipRef.current <= 12) {
             finishGapAndAdvance();
+          } else {
+            // 连续失败超过阈值：放弃重试，熄灭黄标，避免「点亮但无声」卡死。
+            setShellVerseWantPlaying(false);
+            onActiveChangeRef.current(false);
           }
         }
       } finally {

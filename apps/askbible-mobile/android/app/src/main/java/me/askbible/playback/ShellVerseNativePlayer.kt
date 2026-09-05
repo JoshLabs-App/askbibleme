@@ -2,8 +2,11 @@ package me.askbible.playback
 
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -33,6 +36,7 @@ object ShellVerseNativePlayer {
   private val handler = Handler(Looper.getMainLooper())
   private var gapRunnable: Runnable? = null
   private var jsAdvanceRetryCount: Int = 0
+  private var focusRequest: AudioFocusRequest? = null
 
   /**
    * 关屏后队列耗尽只 emitAdvance 一次就等 JS：若那次事件恰好在 JS 被系统冻结/降频时丢失，
@@ -195,6 +199,7 @@ object ShellVerseNativePlayer {
     preparing = false
     clearAwaitingJsAdvance()
     currentUri = null
+    abandonFocus()
     val old = player
     player = null
     if (old == null) return
@@ -256,6 +261,7 @@ object ShellVerseNativePlayer {
     preparing = true
     currentUri = uri
     val app = context.applicationContext
+    requestFocus(app)
     try {
       val mp = MediaPlayer()
       player = mp
@@ -308,6 +314,7 @@ object ShellVerseNativePlayer {
           Log.w(TAG, "start prepared failed", e)
           markFailed(uri)
           stop()
+          notifyStartFailed()
         }
       }
       mp.setOnCompletionListener { completed ->
@@ -330,6 +337,17 @@ object ShellVerseNativePlayer {
       Log.w(TAG, "setup failed uri=$uri", e)
       markFailed(uri)
       stop()
+      notifyStartFailed()
+    }
+  }
+
+  /**
+   * setDataSource/prepareAsync/start 同步抛异常时走这里；与 setOnErrorListener 不同，
+   * 这两处此前只 markFailed+stop 不通知 JS，导致「点亮但无声」且永远等不到修正事件。
+   */
+  private fun notifyStartFailed() {
+    if (ShellPlaybackSession.kind == "verse" && !ShellPlaybackSession.systemInterrupted) {
+      emitAdvance(null, nativeChained = false)
     }
   }
 
@@ -337,6 +355,47 @@ object ShellVerseNativePlayer {
     lastFailedUri = uri
     lastFailedAtMs = System.currentTimeMillis()
     preparing = false
+  }
+
+  private fun requestFocus(context: Context) {
+    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val req =
+          AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(
+              AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build(),
+            )
+            .setOnAudioFocusChangeListener { }
+            .build()
+        focusRequest = req
+        am.requestAudioFocus(req)
+      } else {
+        @Suppress("DEPRECATION")
+        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+      }
+    } catch (e: Exception) {
+      Log.w(TAG, "requestAudioFocus failed", e)
+    }
+  }
+
+  private fun abandonFocus() {
+    val context = appContext ?: return
+    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        focusRequest?.let { am.abandonAudioFocusRequest(it) }
+        focusRequest = null
+      } else {
+        @Suppress("DEPRECATION")
+        am.abandonAudioFocus(null)
+      }
+    } catch (_: Exception) {
+      /* ignore */
+    }
   }
 
   private fun peekNextUri(): String? {

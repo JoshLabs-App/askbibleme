@@ -189,9 +189,13 @@ export function HomeNatureScreen() {
       return;
     }
     yieldAmbientIfMusicAndAmbientOpen();
-    void togglePlayScripture({ forcePause: true });
-    setShellVerseWantPlaying(true);
-    setHomeVerseAudioActive(true);
+    // 先等旧音频的暂停派发完成，再点亮/开播新句，避免两条 fire-and-forget 消息乱序打到
+    // 同一个原生会话上（真机 IPC 延迟下更容易撞车，模拟器上难复现）。
+    void (async () => {
+      await togglePlayScripture({ forcePause: true });
+      setShellVerseWantPlaying(true);
+      setHomeVerseAudioActive(true);
+    })();
     void ensureAndroidVersePlaybackBatteryPermission(locale);
   }, [
     bumpSceneToolsIdle,

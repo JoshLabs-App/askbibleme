@@ -52,9 +52,22 @@ const nextConfig = {
   // 避免父目录存在其他 lockfile 时被误判为 monorepo 根
   outputFileTracingRoot: path.join(__dirname),
 
-  /** 旧书签 `/music-visual-console` → 管理概览 */
+  /**
+   * 音乐音频不再随仓库发布：`public/music/uploads/*` 已移出 Git，统一由 Cloudflare R2 承载
+   * （对象键与移动端 `musicAudioRemote.ts` 对齐：`/music/uploads/….mp3`）。
+   *
+   * 用 307 而非 308：浏览器不会永久缓存，日后换自定义域（askbible-media.joshlabs.app）
+   * 或临时回落本地时无需等用户清缓存。音频字节直连 R2，不经 Render 计费流量。
+   * 播放链路（`music-companion.json` 的 `src`、壳层 `<audio>` 绑定）保持相对路径不变。
+   */
   async redirects() {
     return [
+      {
+        source: "/music/uploads/:file",
+        destination:
+          "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/music/uploads/:file",
+        permanent: false,
+      },
       { source: "/music-visual-console", destination: "/admin", permanent: true },
       { source: "/joshmoney/privacy", destination: "/joshmoney/privacy/index.html", permanent: true },
       { source: "/JD", destination: "/jd/index.html", permanent: true },

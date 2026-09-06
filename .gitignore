@@ -66,6 +66,10 @@ yarn-error.log*
 /data/bible/hakka-audio-manifest.json
 /data/bible/open-usfm-chapter-segments.story.zh.json
 /public/audio/
+# 音乐音频：统一由 Cloudflare R2 承载（next.config.mjs 有 /music/uploads/* → R2 重定向）。
+# 本机保留原文件作素材，不入库、不上 Render。
+/public/music/uploads/
+!/public/music/uploads/.gitkeep
 /public/verse-timings/*
 !/public/verse-timings/kjv/
 # 网页读经静态资源：构建时由 sync-web-static-read-content 从 data/ 复制（体积大，不入库）

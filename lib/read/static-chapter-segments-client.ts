@@ -28,12 +28,23 @@ async function fetchDataset(url: string): Promise<ChapterSegmentsFile | null> {
 }
 
 function loadDefaultDataset(): Promise<ChapterSegmentsFile | null> {
-  if (!defaultPromise) defaultPromise = fetchDataset(DEFAULT_URL);
+  if (!defaultPromise) {
+    defaultPromise = fetchDataset(DEFAULT_URL).then((result) => {
+      /** 失败别记死：下次调用应该有机会重新拉取，而不是永远拿到 null。 */
+      if (result === null) defaultPromise = null;
+      return result;
+    });
+  }
   return defaultPromise;
 }
 
 function loadStoryDataset(): Promise<ChapterSegmentsFile | null> {
-  if (!storyPromise) storyPromise = fetchDataset(STORY_T1_URL);
+  if (!storyPromise) {
+    storyPromise = fetchDataset(STORY_T1_URL).then((result) => {
+      if (result === null) storyPromise = null;
+      return result;
+    });
+  }
   return storyPromise;
 }
 

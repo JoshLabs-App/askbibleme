@@ -44,12 +44,23 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 }
 
 function loadPublished(): Promise<PublishedFile | null> {
-  if (!publishedPromise) publishedPromise = fetchJson<PublishedFile>(PUBLISHED_URL);
+  if (!publishedPromise) {
+    publishedPromise = fetchJson<PublishedFile>(PUBLISHED_URL).then((result) => {
+      /** 失败别记死：下次调用应该有机会重新拉取，而不是永远拿到 null。 */
+      if (result === null) publishedPromise = null;
+      return result;
+    });
+  }
   return publishedPromise;
 }
 
 function loadRoles(): Promise<RolesFile | null> {
-  if (!rolesPromise) rolesPromise = fetchJson<RolesFile>(ROLES_URL);
+  if (!rolesPromise) {
+    rolesPromise = fetchJson<RolesFile>(ROLES_URL).then((result) => {
+      if (result === null) rolesPromise = null;
+      return result;
+    });
+  }
   return rolesPromise;
 }
 

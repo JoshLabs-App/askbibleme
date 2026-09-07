@@ -86,7 +86,8 @@ async function loadStaticChapterXrefs(
       }
     }
     file = raw ? parseXrefBookFile(raw) : null;
-    rememberXrefBook(bookId, file);
+    /** 只记成功结果：raw 拿不到多半是网络/文件系统抖动，下次应该重试而不是永远落回 sqlite。 */
+    if (file) rememberXrefBook(bookId, file);
   }
   if (!file) return null;
   /** 该卷有产物但本章没条目 = 本章确实没有 xref，返回 []，不要回落去重查一遍 sqlite。 */

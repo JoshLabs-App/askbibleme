@@ -49,7 +49,6 @@ async function fetchBook(
   const cached = bookCache.get(key);
   if (cached !== undefined) return cached;
 
-  let value: StaticScriptureBookFile | null = null;
   try {
     const res = await fetch(staticScriptureBookUrlPath(translationId, bookId), {
       cache: "force-cache",
@@ -58,14 +57,15 @@ async function fetchBook(
       const parsed = (await res.json()) as Partial<StaticScriptureBookFile>;
       /** 版本不认识就当没有，好过按旧形状错读。 */
       if (parsed?.v === 1 && parsed.c && typeof parsed.c === "object") {
-        value = { v: 1, c: parsed.c as StaticScriptureBookFile["c"] };
+        const value: StaticScriptureBookFile = { v: 1, c: parsed.c as StaticScriptureBookFile["c"] };
+        bookCache.set(key, value);
+        return value;
       }
     }
   } catch {
-    value = null;
+    /** 网络/解析失败：不写入缓存，好让下一次搜索有机会重试。 */
   }
-  bookCache.set(key, value);
-  return value;
+  return null;
 }
 
 /** 按 scope 选出要搜的卷，并按 book_id 字母序排列——与服务端 ORDER BY book_id 对齐。 */

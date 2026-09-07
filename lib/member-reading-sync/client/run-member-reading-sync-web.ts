@@ -229,14 +229,16 @@ export async function runMemberReadingSyncWeb(reason?: string): Promise<MemberRe
   return "ok";
 }
 
-export function scheduleMemberReadingSyncWeb(reason?: string): void {
+export function scheduleMemberReadingSyncWeb(reason?: string): Promise<MemberReadingSyncOutcome> {
   const now = Date.now();
   const bypassThrottle = shouldForcePushMemberReadingSync(reason);
   if (syncInFlight) {
     if (bypassThrottle) pendingFlushReason = reason;
-    return;
+    return syncInFlight;
   }
-  if (!bypassThrottle && now - lastSyncStartedAt < MIN_SYNC_INTERVAL_MS) return;
+  if (!bypassThrottle && now - lastSyncStartedAt < MIN_SYNC_INTERVAL_MS) {
+    return Promise.resolve("skipped");
+  }
   lastSyncStartedAt = now;
   syncInFlight = runMemberReadingSyncWeb(reason)
     .catch(() => "skipped" as const)
@@ -248,12 +250,19 @@ export function scheduleMemberReadingSyncWeb(reason?: string): void {
         scheduleMemberReadingSyncWeb(next);
       }
     });
+  return syncInFlight;
 }
 
-export function flushMemberReadingSyncWebNow(reason?: string): void {
+/**
+ * Like scheduleMemberReadingSyncWeb, but returns a promise that resolves once
+ * the flush actually completes — callers that need to guarantee the push
+ * finished before doing something irreversible (e.g. signing out) must await
+ * this instead of the fire-and-forget schedule call.
+ */
+export function flushMemberReadingSyncWebNow(reason?: string): Promise<MemberReadingSyncOutcome> {
   pendingFlushReason = reason;
   lastSyncStartedAt = 0;
-  scheduleMemberReadingSyncWeb(reason);
+  return scheduleMemberReadingSyncWeb(reason);
 }
 
 export function syncMemberReadingAfterLoginWeb(): void {

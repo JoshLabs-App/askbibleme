@@ -20,9 +20,13 @@ export async function runMemberReadingSyncWeb(): Promise<MemberReadingSyncOutcom
   return "skipped";
 }
 
-export function scheduleMemberReadingSyncWeb(): void {}
+export async function scheduleMemberReadingSyncWeb(): Promise<MemberReadingSyncOutcome> {
+  return "skipped";
+}
 
-export function flushMemberReadingSyncWebNow(): void {}
+export async function flushMemberReadingSyncWebNow(): Promise<MemberReadingSyncOutcome> {
+  return "skipped";
+}
 
 export function syncMemberReadingAfterLoginWeb(): void {}
 

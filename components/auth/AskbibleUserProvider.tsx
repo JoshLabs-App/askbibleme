@@ -79,7 +79,7 @@ export function AskbibleUserProvider({ children }: { children: ReactNode }) {
       const { flushMemberReadingSyncWebNow, markMemberReadingSyncPullOnlyWeb } = await import(
         "@/lib/member-reading-sync/client/run-member-reading-sync-web"
       );
-      flushMemberReadingSyncWebNow("sign-out");
+      await flushMemberReadingSyncWebNow("sign-out");
       await markMemberReadingSyncPullOnlyWeb();
       await signOutAskbibleWeb();
     } finally {

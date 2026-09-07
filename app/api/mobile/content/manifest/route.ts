@@ -5,6 +5,7 @@ import {
   type MobileContentAnnouncement,
 } from "@/lib/admin/mobile-content-flags-store";
 import { isMemberAuthBackendConfigured } from "@/lib/member-auth-backend";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/config";
 
 export const runtime = "nodejs";
 
@@ -94,8 +95,6 @@ function manifestVersion(
 export async function GET() {
   const cfg = readMobileContentFlagsSync(process.cwd());
   const enabled = cfg.flags.remoteContentManifestEnabled;
-  const hasDataRoot =
-    (process.env.DATA_ROOT?.trim()?.length ?? 0) > 0 || (process.env.FEEDBACK_DATA_DIR?.trim()?.length ?? 0) > 0;
   const infoEditionDiskSaveEnabled =
     process.env.INFO_EDITION_DISK_SAVE === "1" &&
     ((process.env.DATA_ROOT?.trim()?.length ?? 0) > 0 ||
@@ -112,7 +111,11 @@ export async function GET() {
     manifestVersion: manifestVersion(items, flags, cfg.announcement ?? null),
     flags,
     serverCapabilities: {
-      feedbackEnabled: hasDataRoot || process.env.NODE_ENV !== "production",
+      /**
+       * 反馈与内容纠错都由客户端直写 Supabase（insert-only RLS），与 Render 持久盘无关。
+       * 此处原先按 DATA_ROOT 是否存在判断，磁盘退役后会误报 false 而让 App 收起反馈入口。
+       */
+      feedbackEnabled: isSupabaseAuthConfigured(),
       telemetryEnabled: false,
       memberRegisterEnabled:
         cfg.flags.memberRegisterEnabled && isMemberAuthBackendConfigured(),

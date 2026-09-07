@@ -18,6 +18,7 @@ import {
   isExploreFeaturedArticleSlug,
 } from "@/lib/explore/explore-featured-article-slugs";
 import type { ExploreFeaturedArticleView } from "@/lib/explore/read-explore-featured-article-localized";
+import type { AppLocale } from "@/lib/i18n/config";
 import {
   normalizeExploreDisplayName,
   readExploreDisplayName,
@@ -35,14 +36,18 @@ import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 type Props = {
   exploreModulesBundle: ExploreModulesBundle;
+  featuredByLocale: Record<AppLocale, ExploreFeaturedArticleView[]>;
 };
 
-export function ExploreHomeContent({ exploreModulesBundle }: Props) {
+export function ExploreHomeContent({ exploreModulesBundle, featuredByLocale }: Props) {
   const router = useRouter();
   const { t, locale } = useLocale();
   const { user } = useAskbibleUser();
   const { featuredArticles: liveFeaturedArticles, exploreModulesBundle: liveModulesBundle } =
-    useExploreHomeContentRefresh({ initialModulesBundle: exploreModulesBundle });
+    useExploreHomeContentRefresh({
+      initialModulesBundle: exploreModulesBundle,
+      initialFeaturedByLocale: featuredByLocale,
+    });
   const [exploreDisplayName, setExploreDisplayName] = useState<string | null>(null);
   const [nameEditorOpen, setNameEditorOpen] = useState(false);
   const { entries: stagedEntries, labelFor: stagedLabelFor } = useExploreStagedEntries(liveModulesBundle);

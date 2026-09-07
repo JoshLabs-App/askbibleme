@@ -6,24 +6,29 @@ import { exploreFeaturedArticleViewsFromBundle } from "@/lib/explore/explore-fea
 import { refreshExploreContentWeb } from "@/lib/explore/explore-content-refresh-web";
 import type { ExploreFeaturedArticlesBundle } from "@/lib/explore/explore-featured-articles-bundle-types";
 import type { ExploreModulesBundle } from "@/lib/explore/explore-modules-bundle-types";
-import {
-  readExploreFeaturedArticleViews,
-  type ExploreFeaturedArticleView,
-} from "@/lib/explore/read-explore-featured-article-localized";
+import type { ExploreFeaturedArticleView } from "@/lib/explore/read-explore-featured-article-localized";
+import type { AppLocale } from "@/lib/i18n/config";
 
 type Args = {
   initialModulesBundle: ExploreModulesBundle;
+  /** 服务端算好的全语言精选文章。 */
+  initialFeaturedByLocale: Record<AppLocale, ExploreFeaturedArticleView[]>;
 };
 
 /**
  * 精选文章原先由页面按请求语言取好再传进来，那要求服务端读 cookie/Accept-Language，
- * 整页因此只能动态渲染。改为在这里按 `useLocale()` 自行推导：
- * `readExploreFeaturedArticleViews` 是纯函数、数据是静态 import 的 bundle（本就含
- * 中英两份，zh-TW 由 zh-CN 转写），客户端跑得动。
+ * 整页因此只能动态渲染。改为由页面一次算齐三种语言、这里按 `useLocale()` 选。
  *
- * 附带两个好处：页面可静态生成；切换语言即时重算，不必刷新。
+ * 不在这里直接调 `readExploreFeaturedArticleViews`：它静态 import 的 bundle 有 149KB，
+ * 从 "use client" 文件引用会把整份拽进客户端 chunk，把 next build 的编译阶段推爆 4GB 堆。
+ * 由服务端算好传下来，客户端依赖图就不必背这份数据。
+ *
+ * 附带好处：页面可静态生成，且切换语言即时重选、不必刷新。
  */
-export function useExploreHomeContentRefresh({ initialModulesBundle }: Args): {
+export function useExploreHomeContentRefresh({
+  initialModulesBundle,
+  initialFeaturedByLocale,
+}: Args): {
   featuredArticles: ExploreFeaturedArticleView[];
   exploreModulesBundle: ExploreModulesBundle;
 } {
@@ -37,8 +42,8 @@ export function useExploreHomeContentRefresh({ initialModulesBundle }: Args): {
     () =>
       remoteFeaturedBundle
         ? exploreFeaturedArticleViewsFromBundle(remoteFeaturedBundle, locale)
-        : readExploreFeaturedArticleViews(locale),
-    [remoteFeaturedBundle, locale],
+        : (initialFeaturedByLocale[locale] ?? initialFeaturedByLocale["zh-CN"]),
+    [remoteFeaturedBundle, locale, initialFeaturedByLocale],
   );
 
   useEffect(() => {

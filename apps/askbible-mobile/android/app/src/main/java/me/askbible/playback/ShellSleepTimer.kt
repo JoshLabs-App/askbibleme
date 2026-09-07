@@ -63,6 +63,12 @@ object ShellSleepTimer {
   /** 墙钟兜底。不需要任何权限；设备深睡时会被唤醒，误差几分钟内，足够纠正 uptime 停摆。 */
   private fun armAlarm(context: Context, deadlineMs: Long) {
     val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+    /**
+     * 先撤掉上一个：重设睡眠定时会再注册一个 receiver 并覆盖 `alarmReceiver`，
+     * 旧的既注销不掉（泄漏），又仍在监听同一个 action——闹钟一响会把 fire() 触发多次。
+     * 与音频焦点是同一类问题，见 AGENTS.md 的排查一节。
+     */
+    cancelAlarm()
     try {
       val receiver =
         object : BroadcastReceiver() {
@@ -134,6 +140,11 @@ object ShellSleepTimer {
   private fun silenceExpoAv(context: Context) {
     val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
     try {
+      /**
+       * 先释放上一个：睡眠定时可多次触发，此前每次都新建 request 并覆盖 `focusRequest`，
+       * 旧的再也 abandon 不掉，会堆在系统焦点栈里干扰后续取焦点（见 AGENTS.md 的排查一节）。
+       */
+      abandonFocus()
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val req =
           AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
@@ -143,10 +154,15 @@ object ShellSleepTimer {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build(),
             )
+            /** 本类只抢焦点让 expo-av 静音、自身不播内容，故无需响应焦点变化。 */
             .setOnAudioFocusChangeListener { }
             .build()
-        focusRequest = req
-        am.requestAudioFocus(req)
+        val res = am.requestAudioFocus(req)
+        if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+          focusRequest = req
+        } else {
+          Log.w(TAG, "silenceExpoAv: audio focus not granted: $res")
+        }
       } else {
         @Suppress("DEPRECATION")
         am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)

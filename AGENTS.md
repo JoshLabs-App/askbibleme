@@ -62,6 +62,14 @@
   - **iOS / Android**：默认每专辑只打 **第一首**；其余 **TEMPORARY：Cloudflare R2** 直链 + 本机缓存。见 `musicAudioRemote.ts`。
   - **Android 商店**：生产构建 **默认 `MOBILE_ANDROID_MUSIC_PAD=0`**。**禁止**为上架误开 `MOBILE_ANDROID_MUSIC_PAD=1`（会把全量曲打进 AAB，约 650MB）。遗留 PAD 见 `docs/mobile-android-music-pad.md`，需 `ALLOW_ANDROID_MUSIC_PAD=1` 才允许。
   - 调试全量：`MOBILE_BUNDLE_MUSIC_FULL=1`；限量仍可用 `MOBILE_BUNDLE_MUSIC_LIMIT=N`。
+- **R2 铁律（违反会让已上架 App 挂掉）**：本项目的 R2 桶是 `askbible-media`，公开地址
+  `https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev`。这个 URL **编译进了已上架的二进制**
+  （`goldenVerseAudioRemote.ts`、`musicAudioRemote.ts`、`lib/bible/golden-verse-audio.ts`、
+  `lib/app-install-urls.ts` 的安卓 APK 下载链接），所以：**桶名不能改**（`pub-*` 里那串 id 绑的是
+  bucket，改名 = 新 id = 旧 App 全部 404）、**r2.dev 公开访问不能关**。它没有成本，让它一直开着。
+  以后要换成 `askbible-media.joshlabs.app` 自定义域，是**新增**不是替换：新版 App 用新域名，
+  旧版继续走 r2.dev，两边同时活。跨项目规则见
+  `/Users/joshua/Desktop/APP/skills/joshlabs-dev/references/infrastructure-cloudflare.md`。
 - **移动端发版禁止 EAS 云端构建**：iOS 用 `npm run mobile:build:ios:production`（本机 `--local`），Android 用 `npm run mobile:build:android:production`（本机 Gradle）；流程见 `docs/mobile-release-checklist.md`。
 - **App 验收与合入（人不用记）**：改 `apps/askbible-mobile` 时 Agent 按 `.cursor/rules/mobile-maestro-auto-merge.mdc` 自动 Maestro + PR 合入门禁；见 `docs/mobile-maestro-auto-merge.md`。
 
@@ -72,6 +80,35 @@
 - 大任务：先简短对齐目标，再推进。
 - 高风险操作：删除、发布、提审、推送生产前才确认。
 - 非高风险改动：默认不反复确认。
+
+### 排查：先分清逻辑错误还是状态错误
+
+遇到问题先判断属于哪一类，**再决定用读代码还是用运行时证据**——这两类的查法完全不同。
+
+**逻辑错误**：条件写反、边界没处理、缓存把失败也存了、异步没判序号。特征是**稳定复现**，
+给定同样输入必然同样结果。读代码和补测试是有效的，应该能看出来。
+
+**状态错误**：竞态、资源泄漏、生命周期错位、系统级状态被污染。特征是症状里带
+**「有时」「偶尔」「再试一次就好」**。这类问题**读一百遍代码也可能读不出来**，因为错误不在
+任何一行里，而在多次调用之间累积的状态里——甚至根本不在本进程内。
+
+**判据很简单：症状描述里出现「有时」，就别从读代码开始，直接上运行时证据。**
+Android 用 `adb logcat -v time -s <TAG>` 复现一次，iOS 用模拟器面板，网页用
+`read_console_messages` / `read_network_requests`。
+
+真实教训（2026-09-07，金句与音乐互切时「有时放不出声，再关再点才出来」）：
+
+- 两个原生播放器的 `requestFocus()` 每次都 `new` 一个 `AudioFocusRequest`，却只用一个变量存，
+  旧的永远 `abandon` 不掉，堆在**系统焦点栈**里；`am.requestAudioFocus()` 的返回值被丢弃，
+  被系统拒绝也照样往下播（就是「没声音」）；`setOnAudioFocusChangeListener { }` 是空的。
+- 这段代码逐行读**没有一行是错的**，形状和 Android 官方示例几乎一样。忽略返回值不是语法错误、
+  linter 不报；空 listener 读起来像「判断过不必处理」而不是「漏了」。
+- 定案靠的是 logcat 里的五行：同一时刻五个不同的 `ShellMainNativePlayer$$Lambda@…`
+  同时收到 `onAudioFocusChange(-1)`。这没有第二种解释，而仓库里翻遍每一行都看不到它。
+
+顺带一条通用的写法约束：**凡是成对的 acquire/release（音频焦点、数据库连接、监听器、
+文件句柄），acquire 前先 release 上一个，并且检查 acquire 的返回值**；回调留空之前先问一句
+「是真的不需要，还是我还没想清楚」。
 
 ### 防止变大
 

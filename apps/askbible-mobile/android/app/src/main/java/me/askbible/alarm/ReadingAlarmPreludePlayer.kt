@@ -119,6 +119,11 @@ object ReadingAlarmPreludePlayer {
 
   private fun acquireWakeLock(context: Context) {
     val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    /**
+     * 先释放上一个：连响两次闹钟会各拿一把锁，旧的被覆盖后只能等 75 秒超时自己掉，
+     * 期间白白吊着 CPU。与音频焦点是同一类问题，见 AGENTS.md 的排查一节。
+     */
+    releaseWakeLock()
     wakeLock =
       pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AskBible:ReadingAlarmPrelude").apply {
         acquire(75_000L)
@@ -134,8 +139,10 @@ object ReadingAlarmPreludePlayer {
 
   private fun requestFocus(context: Context) {
     val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    /** 先释放上一个：连响两次闹钟会各新建一个 request，旧的覆盖后再也 abandon 不掉。 */
+    abandonFocus()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      focusRequest =
+      val req =
         AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
           .setAudioAttributes(
             AudioAttributes.Builder()
@@ -143,8 +150,22 @@ object ReadingAlarmPreludePlayer {
               .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
               .build(),
           )
+          .setOnAudioFocusChangeListener { change ->
+            /** 前奏被来电等抢走就停，别在别人的通话里继续响。 */
+            if (change == AudioManager.AUDIOFOCUS_LOSS ||
+              change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+            ) {
+              try {
+                player?.pause()
+              } catch (_: Exception) {
+                /* ignore */
+              }
+            }
+          }
           .build()
-      am.requestAudioFocus(focusRequest!!)
+      if (am.requestAudioFocus(req) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        focusRequest = req
+      }
     } else {
       @Suppress("DEPRECATION")
       am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)

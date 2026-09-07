@@ -619,31 +619,71 @@ object ShellMainNativePlayer {
     }
   }
 
-  private fun requestFocus(context: Context) {
-    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-    try {
+  /**
+   * 请求音频焦点。
+   *
+   * 三处必须留意（曾导致「点了没声音、再关再点才出来」）：
+   * 1) 先释放上一个 request。此前每次调用都新建一个并直接覆盖 `focusRequest`，
+   *    旧的再也 abandon 不掉，会堆在系统焦点栈里——logcat 里能看到同一时刻有五个
+   *    不同的 ShellMainNativePlayer lambda 同时收到 onAudioFocusChange(-1)。
+   * 2) 只有拿到 GRANTED 才记录并允许播放；此前忽略返回值，被拒也照播，表现就是无声。
+   * 3) 焦点丢失要真的处理，不能是空 listener，否则被别的应用抢走后自己还以为在播。
+   */
+  private fun requestFocus(context: Context): Boolean {
+    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
+    return try {
+      abandonFocus()
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val req =
           AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setAudioAttributes(
               AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(
-                  if (ShellPlaybackSession.kind == "scripture") AudioAttributes.CONTENT_TYPE_SPEECH
-                  else AudioAttributes.CONTENT_TYPE_MUSIC,
-                )
+                .setContentType(if (ShellPlaybackSession.kind == "scripture") AudioAttributes.CONTENT_TYPE_SPEECH
+                  else AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build(),
             )
-            .setOnAudioFocusChangeListener { }
+            .setOnAudioFocusChangeListener { change -> onAudioFocusChange(change) }
             .build()
-        focusRequest = req
-        am.requestAudioFocus(req)
+        val res = am.requestAudioFocus(req)
+        if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+          focusRequest = req
+          true
+        } else {
+          Log.w(TAG, "audio focus not granted: $res")
+          false
+        }
       } else {
         @Suppress("DEPRECATION")
-        am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        val res = am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
       }
     } catch (e: Exception) {
       Log.w(TAG, "requestAudioFocus failed", e)
+      false
+    }
+  }
+
+  /** 焦点被永久夺走时停下并交还；短暂丢失（来电等）只暂停，等 GAIN 再由上层决定是否续播。 */
+  private fun onAudioFocusChange(change: Int) {
+    when (change) {
+      AudioManager.AUDIOFOCUS_LOSS -> {
+        Log.i(TAG, "audio focus lost permanently; pausing")
+        try {
+          player?.pause()
+        } catch (_: Exception) {
+          /* ignore */
+        }
+        abandonFocus()
+      }
+      AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+        Log.i(TAG, "audio focus lost transiently; pausing")
+        try {
+          player?.pause()
+        } catch (_: Exception) {
+          /* ignore */
+        }
+      }
     }
   }
 

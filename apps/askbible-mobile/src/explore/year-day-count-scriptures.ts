@@ -56,7 +56,11 @@ async function loadYearDayCountChapterCached(
     yearDayCountChapterCache.set(cacheKey, loaded);
     return loaded;
   } catch {
-    yearDayCountChapterCache.set(cacheKey, null);
+    /**
+     * 失败不写缓存：这里的 catch 只会在加载异常时进来（sqlite 句柄抖动、译本尚未装好等），
+     * 属于「这次没拿到」而非「这一章不存在」。此前把 null 也存下，一次偶发失败就让该章在
+     * 整个 App 生命周期内永远取不到。成功但确实为 null（如某译本缺该章）仍会被缓存。
+     */
     return null;
   }
 }

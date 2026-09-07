@@ -21,12 +21,19 @@ export async function syncHomeVersePrefsFromPrimary(
   const mode = opts?.mode ?? home.primaryTranslationMode;
   if (mode === "auto") {
     const locale = getLocale();
-    await writeHomePrayerVersePrefs({
-      ...home,
-      primaryTranslationMode: "auto",
-      verseTextZhTranslationId: defaultHomePrimaryTranslationIdForLocale(locale),
-      verseTextEnTranslationId: "",
-    });
+    const autoZh = defaultHomePrimaryTranslationIdForLocale(locale);
+    if (
+      home.primaryTranslationMode !== "auto" ||
+      home.verseTextZhTranslationId !== autoZh ||
+      home.verseTextEnTranslationId !== ""
+    ) {
+      await writeHomePrayerVersePrefs({
+        ...home,
+        primaryTranslationMode: "auto",
+        verseTextZhTranslationId: autoZh,
+        verseTextEnTranslationId: "",
+      });
+    }
     await writeHomeGoldenVerseAudioTranslationId(
       resolveGoldenVerseAudioTranslationForLocale(locale),
     );

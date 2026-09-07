@@ -37,6 +37,8 @@ export function subscribeLocale(onStore: () => void): () => void {
 }
 
 export async function hydrateLocaleFromStorage(): Promise<AppLocale> {
+  const wasHydrated = hydrated;
+  const previousLocale = locale;
   try {
     const raw =
       (await AsyncStorage.getItem(LOCALE_STORAGE_KEY)) ??
@@ -52,7 +54,7 @@ export async function hydrateLocaleFromStorage(): Promise<AppLocale> {
     locale = DEFAULT_LOCALE;
   }
   hydrated = true;
-  emit();
+  if (!wasHydrated || locale !== previousLocale) emit();
   return locale;
 }
 

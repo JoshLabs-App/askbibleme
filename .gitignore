@@ -66,6 +66,9 @@ yarn-error.log*
 /data/bible/hakka-audio-manifest.json
 /data/bible/open-usfm-chapter-segments.story.zh.json
 /public/audio/
+# 静态经文：prebuild 由 data/bible/sqlite/*.sqlite 生成（npm run build:static-scripture）。
+# sqlite 已入库且是 App 打包来源，JSON 再入库就是同一份数据存两遍。
+/public/scripture/
 # 音乐音频：统一由 Cloudflare R2 承载（next.config.mjs 有 /music/uploads/* → R2 重定向）。
 # 本机保留原文件作素材，不入库、不上 Render。
 /public/music/uploads/

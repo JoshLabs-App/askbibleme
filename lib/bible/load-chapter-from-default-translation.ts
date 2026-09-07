@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { loadedChapterVerseFromRow, type LoadedChapterVerse } from "@/lib/bible/loaded-chapter-verse";
+import { loadStaticScriptureChapterVerses } from "@/lib/bible/load-static-scripture-chapter";
 import type { ChapterSegment } from "@/lib/bible/load-chapter-segments";
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { getScriptureDatabase, scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
@@ -56,6 +57,24 @@ type RemoteChapterLoadResult = {
   verses: Array<{ verse: number; text: string }>;
   segments?: ChapterSegment[] | null;
 };
+
+/**
+ * 按卷静态文件（public/scripture/…，由 npm run build:static-scripture 生成）。
+ * 排在 sqlite 之前：读一章只取约 100KB 且不必把整个 5-6MB 库读进内存，也不依赖 fs，
+ * 边缘运行时同样可用。产物缺失或结构不认识时返回 null，自动回落 sqlite。
+ */
+async function loadChapterFromStaticFiles(
+  cwd: string,
+  tid: string,
+  bookId: string,
+  ch: number,
+  meta: BibleTranslationMeta,
+  bookName: string,
+): Promise<LoadedChapter | null> {
+  const verses = await loadStaticScriptureChapterVerses(cwd, tid, bookId, ch);
+  if (!verses || verses.length === 0) return null;
+  return loadedChapterFromParts(tid, meta, bookId, bookName, ch, verses);
+}
 
 async function loadChapterFromSqlite(
   cwd: string,
@@ -204,6 +223,9 @@ export async function loadChapterFromTranslation(
       }
     }
   }
+
+  const fromStatic = await loadChapterFromStaticFiles(cwd, tid, id, ch, meta, bookMeta.bookName);
+  if (fromStatic) return fromStatic;
 
   if (fs.existsSync(scriptureSqlitePath(cwd, tid))) {
     const fromSql = await loadChapterFromSqlite(cwd, tid, id, ch, meta, bookMeta.bookName);

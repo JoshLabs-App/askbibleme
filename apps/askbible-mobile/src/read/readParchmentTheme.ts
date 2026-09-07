@@ -1,3 +1,5 @@
+import { Appearance } from "react-native";
+
 /**
  * 读经羊皮卷配色（对齐网站 `bible-catalog-on-parchment`）
  * - light：`:root` 白天羊皮（`--read-parchment-bg-canvas: #ecd9b9`）
@@ -5,8 +7,15 @@
  */
 export type ReadParchmentColorMode = "light" | "dark";
 
-/** 当前读经外观；日后可接系统深色或设置项 */
-export const READ_PARCHMENT_COLOR_MODE: ReadParchmentColorMode = "light";
+/**
+ * 当前读经外观：跟随系统深色/浅色，在 App 冷启动时读一次。
+ * 这个值被 100+ 个文件里的 `StyleSheet.create()` 在模块加载时直接烤进静态样式，
+ * 不是响应式状态——运行中切系统外观不会实时变化，需要重启 App 才会生效。
+ * 之后如果要做到实时切换，需要把这些样式改造成 hook 驱动，是单独一次更大的重构，
+ * 不在这次改动范围内。
+ */
+export const READ_PARCHMENT_COLOR_MODE: ReadParchmentColorMode =
+  Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
 /** Android 窗口 / decorView 过渡底色（Stack 保持透明，仅原生层防切章闪黑） */
 export const READ_PARCHMENT_WINDOW_FILL = "#FAF3E1";

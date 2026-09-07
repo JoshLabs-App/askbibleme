@@ -22,7 +22,7 @@ import {
   readScriptureRecentSearches,
 } from "@/lib/read/scripture-recent-searches";
 import { resolveReadChapterPrimaryTranslationId } from "@/lib/read/read-bible-translation-prefs";
-import { warmScriptureSearchWeb } from "@/lib/read/warm-scripture-search-web";
+import { searchScriptureVersesWeb } from "@/lib/read/search-scripture-verses-web";
 
 const SCOPE_OPTIONS: { key: ScriptureSearchScope; labelKey: string }[] = [
   { key: "all", labelKey: "pages.read.scriptureSearchScopeAll" },
@@ -91,10 +91,6 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
     setRecentSearches(readScriptureRecentSearches().terms);
   }, []);
 
-  useEffect(() => {
-    if (!translationCatalogReady || !searchTranslationId) return;
-    void warmScriptureSearchWeb(searchTranslationId);
-  }, [searchTranslationId, translationCatalogReady]);
 
   useEffect(() => {
     if (routeChapterRef) {
@@ -126,26 +122,18 @@ export function ReadScriptureSearchClient({ routeChapterRef: routeChapterRefProp
       setLoading(true);
       setError(null);
       try {
-        const params = new URLSearchParams({
+        /**
+         * 在浏览器里搜按卷静态文件，不再打 /api/read/scripture-search——那条路要服务端
+         * 把整个 5-6MB sqlite 读进内存做全表 LIKE，是网站运行时对 sqlite 的最后一处依赖。
+         * 卷文件有 CDN 缓存，首次之后纯内存匹配，通常比走服务端更快。
+         */
+        const hits = await searchScriptureVersesWeb(
+          searchTranslationId,
           q,
-          translationId: searchTranslationId,
           scope,
-        });
-        if (scope === "chapter" && chapterRef) {
-          params.set("bookId", chapterRef.bookId);
-          params.set("chapter", String(chapterRef.chapter));
-        }
-        const res = await fetch(`/api/read/scripture-search?${params.toString()}`, { cache: "no-store" });
-        const j = (await res.json()) as { ok?: boolean; results?: ScriptureSearchHit[]; error?: string };
-        if (!res.ok || j.ok === false) {
-          throw new Error(
-            j.error ||
-              (res.status === 503
-                ? t("pages.read.scriptureSearchDbError")
-                : `HTTP ${res.status}`),
-          );
-        }
-        setResults(j.results ?? []);
+          scope === "chapter" ? chapterRef : null,
+        );
+        setResults(hits);
         setSearched(true);
         pushRecentSearch(q);
       } catch (e) {

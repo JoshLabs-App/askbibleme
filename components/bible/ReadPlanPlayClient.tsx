@@ -32,7 +32,6 @@ import { buildPlanChapterQueue } from "@/lib/read/read-plan-flow-nav";
 import { readAheadDays, setReadingPlanAheadDays } from "@/lib/read/reading-plan-ahead";
 import { toLocalDateString } from "@/lib/read/reading-plan-prefs";
 import { nextScripturePlaybackRate } from "@/lib/read/scripture-playback-rate-web";
-import { warmScriptureSearchWeb } from "@/lib/read/warm-scripture-search-web";
 import {
   prefetchTodayReadingPlanQueueAudioWeb,
   prefetchUpcomingPlanFlowChapterAudioWeb,
@@ -70,10 +69,6 @@ export function ReadPlanPlayClient({ readingPlanRegistry }: Props) {
     defaultTranslationId: translation.primaryTranslationId,
   });
 
-  useEffect(() => {
-    if (!translationCatalogReady || !translation.primaryTranslationId) return;
-    void warmScriptureSearchWeb(translation.primaryTranslationId);
-  }, [translation.primaryTranslationId, translationCatalogReady]);
 
   const [cursor, setCursor] = useState(0);
   const resumeStartSecRef = useRef(0);

@@ -15,7 +15,6 @@ import { getScriptureCanonCatalogSectionsClient } from "@/lib/bible/scripture-ca
 import type { ReadingPlanRegistryEntry } from "@/lib/bible/reading-plans/types";
 import type { ReadHomeVerseItem } from "@/lib/read/read-home-verse-rotation";
 import { readLastReadPosition } from "@/lib/read/read-last-position";
-import { warmScriptureSearchWeb } from "@/lib/read/warm-scripture-search-web";
 
 type Props = {
   readingPlanRegistry: ReadingPlanRegistryEntry[];
@@ -42,10 +41,6 @@ export function ReadBibleHomeClient({ readingPlanRegistry, homeVerses }: Props) 
     setLastReadBookId(pos?.bookId);
   }, []);
 
-  useEffect(() => {
-    if (!translationCatalogReady || !translation.primaryTranslationId) return;
-    void warmScriptureSearchWeb(translation.primaryTranslationId);
-  }, [translation.primaryTranslationId, translationCatalogReady]);
 
   const hasCatalog = catalogSections.length > 0;
 

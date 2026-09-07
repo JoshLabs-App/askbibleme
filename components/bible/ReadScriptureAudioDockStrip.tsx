@@ -14,7 +14,6 @@ import {
 } from "@/lib/read/resolve-chapter-page-scripture-play-target";
 import { shouldShowReadScriptureAudioDock } from "@/lib/read/read-scripture-dock-visibility";
 import { nextScripturePlaybackRate } from "@/lib/read/scripture-playback-rate-web";
-import { warmScriptureSearchWeb } from "@/lib/read/warm-scripture-search-web";
 
 type Placement = "fixedShell" | "videoStage";
 
@@ -30,10 +29,6 @@ export function ReadScriptureAudioDockStrip({ placement }: Props) {
   const readChapterAudioAvailable = useReadChapterPageAudioAvailable();
   const onChapterPage = parseReadChapterPathname(pathname) !== null;
 
-  useEffect(() => {
-    if (!translationCatalogReady || !translation.primaryTranslationId) return;
-    void warmScriptureSearchWeb(translation.primaryTranslationId);
-  }, [translation.primaryTranslationId, translationCatalogReady]);
 
   const {
     playing,

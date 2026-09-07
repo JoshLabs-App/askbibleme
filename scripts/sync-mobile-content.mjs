@@ -39,7 +39,8 @@ const copies = [
   ["data/bible/bible_book_history_eras.json", "bible_book_history_eras.json"],
   ["data/music-companion.json", "music-companion.json"],
   ["data/nature-settings.json", "nature-settings.json"],
-  ["data/bible/info-edition-v1-published.json", "info-edition-v1-published.json"],
+  // info-edition 正文改由 sqlite 承载（scripts/sync-mobile-info-edition-sqlite.mjs）：
+  // 原先随包的 22.5MB JSON 会在进读经页时被同步解析，阻塞 JS 线程。
   ["data/admin/generation-roles.json", "generation-roles.json"],
   ["data/bible-reading-plans/registry.json", "reading-plans-registry.json"],
   ["data/bible/teochew-nt-audio-manifest.json", "../bible/teochew-nt-audio-manifest.json"],

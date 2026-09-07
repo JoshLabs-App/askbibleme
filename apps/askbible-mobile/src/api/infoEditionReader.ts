@@ -6,13 +6,13 @@ import type {
   InfoEditionV1PublishedChapter,
 } from "../bible/info-edition-types";
 
-function bundledCachePayload(
+async function bundledCachePayload(
   bookId: string,
   chapter: number,
   variant: InfoEditionReaderVariant,
   roleId?: string | null,
-): InfoEditionReaderCachePayload {
-  const published = loadBundledInfoEditionChapter(bookId, chapter, variant, { roleId });
+): Promise<InfoEditionReaderCachePayload> {
+  const published = await loadBundledInfoEditionChapter(bookId, chapter, variant, { roleId });
   if (published) {
     return { ok: true, status: "ready", published };
   }

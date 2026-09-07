@@ -29,9 +29,9 @@ import {
   clearScripturePlayingChapter,
   setScripturePlayingChapter,
 } from "./scripturePlayingChapterStore";
+import { buildScriptureNativeNextUris } from "./buildScriptureNativeNextUris";
 import { resolveIosNativeScriptureAssetUri } from "./resolveIosNativeScriptureAssetUri";
 import { publishScripturePlaybackSec, setScripturePlaybackClockPlaying } from "./scripturePlaybackSec";
-import { SCRIPTURE_NATIVE_NEXT_PREFETCH, scriptureChapterPool } from "./scripture-chapter-pool";
 import type {
   ReadChapterPlaybackRegistration,
   ScriptureAudioRepeatMode,
@@ -164,8 +164,7 @@ export async function loadAndPlayScriptureSound({
       const positionSec = Math.max(0, lastScriptureProgressSecRef.current || 0);
       const stopAt = scriptureStopAtSecRef.current;
       const rate = scripturePlaybackRateRef.current;
-      const fillNativeNextQueue =
-        scriptureAudioRepeatRef.current !== "chapter" && scriptureChapterPool.isActive();
+      const repeatModeForQueue = scriptureAudioRepeatRef.current;
       // 先开播；锁屏图 / 下一章 URI 后台补上，避免首点干等下载。
       syncShellMediaSessionExplicit({
         title: `${rc.bookName} ${rc.chapter}`,
@@ -191,18 +190,17 @@ export async function loadAndPlayScriptureSound({
         .then(({ recordAnyReadingActivityDay }) => recordAnyReadingActivityDay())
         .catch(() => undefined);
       void (async () => {
-        const upcoming = fillNativeNextQueue ? scriptureChapterPool.peekUpcoming(SCRIPTURE_NATIVE_NEXT_PREFETCH) : [];
-        const [artworkUri, ...resolved] = await Promise.all([
+        // 非池播放（阅读页直接点播）过去这里是空数组，原生手里一章都没有，
+        // 每章末都得靠 JS 被唤醒——锁屏时正是唤不醒的时候。改为按循环模式顺章预取。
+        const [artworkUri, resolved] = await Promise.all([
           reshuffleShellMediaSceneArtwork(),
-          ...upcoming.map((track) =>
-            resolveIosNativeScriptureAssetUri({
-              src: track.src,
-              translationId: track.translationId,
-              bookId: track.bookId,
-              chapter: track.chapter,
-              voiceId,
-            }),
-          ),
+          buildScriptureNativeNextUris({
+            bookId: rc.bookId,
+            chapter: rc.chapter,
+            translationId: rc.translationId,
+            repeatMode: repeatModeForQueue,
+            voiceId,
+          }),
         ]);
         if (playSeq != null && !isScripturePlayAttemptCurrent(playSeq)) return;
         if (!getShellScriptureWantPlaying()) return;
@@ -221,7 +219,7 @@ export async function loadAndPlayScriptureSound({
           stopAtSec: liveStopAt != null && Number.isFinite(liveStopAt) ? liveStopAt : undefined,
           nextAssetUri: resolved[0] ?? null,
           nextNextAssetUri: resolved[1] ?? null,
-          nextAssetUris: resolved.filter((uri): uri is string => Boolean(uri)),
+          nextAssetUris: resolved,
         });
         // 补队列 sync 不带 userPlay；若期间被三星 OEM Pause 卡住，再推一把续播。
         resumeShellAppMusic();

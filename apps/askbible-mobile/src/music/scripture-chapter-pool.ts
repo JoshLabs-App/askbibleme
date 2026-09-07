@@ -11,10 +11,12 @@ import {
 import { writeTodayPlanScriptureResume } from "../read/today-plan-scripture-resume";
 import { requestWidgetVerseStop } from "../widget/widgetPlaybackRequest";
 import { isScriptureUserPauseHeld, releaseScriptureUserPause } from "./scriptureUserPause";
-import { Platform } from "react-native";
 
-/** 原生读经预取章数。安卓关屏后 JS 易冻住，只预取 2 章约半小时就会断播。 */
-export const SCRIPTURE_NATIVE_NEXT_PREFETCH = Platform.OS === "android" ? 10 : 4;
+/**
+ * 原生读经预取章数。关屏后 JS 两端都会被冻住，只预取 2 章约半小时就会断播。
+ * 预取的是 URI 字符串不是音频本身，成本极低，两端统一取 10。
+ */
+export const SCRIPTURE_NATIVE_NEXT_PREFETCH = 10;
 
 
 /** 播放池条目：结构对齐音乐 PlaybackTrack，一章一轨。 */

@@ -48,8 +48,19 @@ final class AskBibleMusicService: NSObject {
   private var verseGapSec: Double = 5
   private var verseGapAssetUri: String?
   private var verseNextQueue: [String] = []
-  /// 读经章间接播：与金句同款浅队列，降低后台 JS 挂起时断播。
+  /// 读经章间接播：与金句同深度的队列，降低后台 JS 挂起时断播。
+  /// 队列里只是 URI 字符串，深一点几乎不占内存，却能扛住 JS 长时间被系统限流。
   private var scriptureNextQueue: [String] = []
+  /// 读经/金句队列上限（Android ShellPlaybackSession.NEXT_QUEUE_CAP 同值）。
+  private let SCRIPTURE_QUEUE_CAP = 120
+  /// 读经队列空：等 JS 补下一章（锁屏时 JS 常被系统限流，直接硬停会像"播到一半突然没声"）。
+  /// 对齐 Android ShellMainNativePlayer.awaitingJsAdvance；区别是 Android 有前台服务可以等 48 秒，
+  /// iOS 停止出声后只剩 beginBackgroundTask 的约 30 秒预算，所以重试上限按该预算收窄。
+  private var scriptureAwaitingJsAdvance = false
+  private var scriptureJsAdvanceRetryCount = 0
+  private var scriptureJsAdvanceTimer: Timer?
+  private let SCRIPTURE_JS_ADVANCE_RETRY_INTERVAL: TimeInterval = 1.2
+  private let SCRIPTURE_JS_ADVANCE_MAX_RETRIES = 18
   private var healthTimer: Timer?
   private var refreshTimer: Timer?
   private var gapTimer: Timer?
@@ -419,6 +430,8 @@ final class AskBibleMusicService: NSObject {
   }
 
   private func pause(userInitiated: Bool) {
+    // 等 JS 补章期间被暂停：撤掉重试，否则十几秒后会自己接着播下一章。
+    if userInitiated { clearScriptureAwaitingJsAdvance() }
     if userInitiated {
       userPaused = true
       wantPlaying = false
@@ -489,6 +502,7 @@ final class AskBibleMusicService: NSObject {
     }
     let pos = currentTime
     stopVerse(reason: "stop-\(reason)")
+    clearScriptureAwaitingJsAdvance()
     scriptureNextQueue.removeAll()
     endScriptureBackgroundTask(after: 0)
     tearDownPlayer()
@@ -613,6 +627,8 @@ final class AskBibleMusicService: NSObject {
       log("app music skip: no assetUri")
       return
     }
+    // 已经有新的一轨要播：等 JS 补章的重试就此作废（JS 直接下发新章也走这里）。
+    clearScriptureAwaitingJsAdvance()
     // TEMP：非首曲走 R2 HTTPS；本地 file 仍优先。
     guard let playURL = resolvePlayableMediaURL(assetUri) else {
       log("app music skip: bad uri")
@@ -1051,56 +1067,142 @@ final class AskBibleMusicService: NSObject {
     // 金句走 versePlayer / handleVersePlaybackEnded，勿占主轨。
     if contentKind == "scripture" {
       beginScriptureBackgroundTask()
-      if let nextUri = dequeueScriptureNext() {
-        var nextPayload = lastPayload ?? [:]
-        nextPayload["assetUri"] = nextUri
-        nextPayload["positionSec"] = 0
-        nextPayload["playing"] = true
-        nextPayload["userPlay"] = true
-        nextPayload["kind"] = "scripture"
-        nextPayload.removeValue(forKey: "stopAtSec")
-        nextPayload["nextAssetUri"] = scriptureNextQueue.first
-        nextPayload["nextNextAssetUri"] = scriptureNextQueue.count > 1 ? scriptureNextQueue[1] : nil
-        lastPayload = nextPayload
-        log("app scripture finished → native next queue=\(scriptureNextQueue.count)")
-        beginOrResume(payload: nextPayload)
-        emit("ShellMediaNativeScriptureEnded", [
-          "assetUri": nextUri,
-          "nativeChained": true,
-          "positionSec": 0,
-          "durationSec": duration,
-        ])
-        endScriptureBackgroundTask(after: 25)
-        return
-      }
-      log("app scripture finished → ended")
-      emit("ShellMediaNativeScriptureEnded", [
-        "positionSec": currentTime,
-        "durationSec": duration,
-      ])
-      endScriptureBackgroundTask(after: 25)
+      if startScriptureNextFromQueue(reason: "finished") { return }
+      // 队列空：先等 JS 补章，勿立刻硬停（对齐 Android awaitingJsAdvance）。
+      log("app scripture queue empty; wait JS advance")
+      beginScriptureAwaitingJsAdvance()
       return
     }
     log("app music finished ok=true")
     emit("RemoteNext", [:])
   }
 
+  /// 从队列取下一章并接播；队列空返回 false。章末与 JS 补章重试共用这一条路径。
+  @discardableResult
+  private func startScriptureNextFromQueue(reason: String) -> Bool {
+    guard let nextUri = dequeueScriptureNext() else { return false }
+    var nextPayload = lastPayload ?? [:]
+    nextPayload["assetUri"] = nextUri
+    nextPayload["positionSec"] = 0
+    nextPayload["playing"] = true
+    nextPayload["userPlay"] = true
+    nextPayload["kind"] = "scripture"
+    nextPayload.removeValue(forKey: "stopAtSec")
+    nextPayload["nextAssetUri"] = scriptureNextQueue.first
+    nextPayload["nextNextAssetUri"] = scriptureNextQueue.count > 1 ? scriptureNextQueue[1] : nil
+    nextPayload["nextAssetUris"] = scriptureNextQueue
+    lastPayload = nextPayload
+    log("app scripture \(reason) → native next queue=\(scriptureNextQueue.count)")
+    beginOrResume(payload: nextPayload)
+    emit("ShellMediaNativeScriptureEnded", [
+      "assetUri": nextUri,
+      "nativeChained": true,
+      "positionSec": 0,
+      "durationSec": duration,
+    ])
+    endScriptureBackgroundTask(after: 25)
+    return true
+  }
+
+  private func beginScriptureAwaitingJsAdvance() {
+    scriptureAwaitingJsAdvance = true
+    scriptureJsAdvanceRetryCount = 0
+    // 保持"仍在播"的锁屏态：这一章确实播完了，但会话没结束，JS 一补上就接着走。
+    emit("ShellMediaNativeScriptureEnded", [
+      "positionSec": duration,
+      "durationSec": duration,
+      "awaitingJs": true,
+    ])
+    scheduleScriptureJsAdvanceRetry()
+  }
+
+  private func scheduleScriptureJsAdvanceRetry() {
+    scriptureJsAdvanceTimer?.invalidate()
+    let t = Timer(timeInterval: SCRIPTURE_JS_ADVANCE_RETRY_INTERVAL, repeats: false) { [weak self] _ in
+      self?.runScriptureJsAdvanceRetry()
+    }
+    RunLoop.main.add(t, forMode: .common)
+    scriptureJsAdvanceTimer = t
+  }
+
+  private func runScriptureJsAdvanceRetry() {
+    guard scriptureAwaitingJsAdvance else { return }
+    if userPaused || systemInterrupted || contentKind != "scripture" {
+      clearScriptureAwaitingJsAdvance()
+      endScriptureBackgroundTask(after: 0)
+      return
+    }
+    // JS 已补上队列：直接接播。
+    if startScriptureNextFromQueue(reason: "js-advance") {
+      clearScriptureAwaitingJsAdvance()
+      return
+    }
+    scriptureJsAdvanceRetryCount += 1
+    if scriptureJsAdvanceRetryCount > SCRIPTURE_JS_ADVANCE_MAX_RETRIES {
+      log("app scripture JS advance timeout; stop")
+      clearScriptureAwaitingJsAdvance()
+      emit("ShellMediaNativeScriptureEnded", [
+        "positionSec": duration,
+        "durationSec": duration,
+      ])
+      endScriptureBackgroundTask(after: 0)
+      return
+    }
+    // 再捅一次 JS（锁屏后偶发第一次事件丢失；被限流时要多次心跳才唤得醒）。
+    emit("ShellMediaNativeScriptureEnded", [
+      "positionSec": duration,
+      "durationSec": duration,
+      "awaitingJs": true,
+    ])
+    scheduleScriptureJsAdvanceRetry()
+  }
+
+  private func clearScriptureAwaitingJsAdvance() {
+    guard scriptureAwaitingJsAdvance || scriptureJsAdvanceTimer != nil else { return }
+    scriptureAwaitingJsAdvance = false
+    scriptureJsAdvanceRetryCount = 0
+    scriptureJsAdvanceTimer?.invalidate()
+    scriptureJsAdvanceTimer = nil
+  }
+
   private func ingestScriptureQueue(from payload: [String: Any]) {
     let currentId = musicIdentity(assetUri ?? "")
-    let candidates = [
-      payload["nextAssetUri"] as? String,
-      payload["nextNextAssetUri"] as? String,
-    ]
-    for raw in candidates {
-      guard let uri = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !uri.isEmpty else { continue }
+    var candidates: [String] = []
+    func appendCandidate(_ raw: String?) {
+      guard let uri = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !uri.isEmpty else { return }
+      if candidates.contains(where: { $0 == uri }) { return }
+      candidates.append(uri)
+    }
+    appendCandidate(payload["nextAssetUri"] as? String)
+    appendCandidate(payload["nextNextAssetUri"] as? String)
+    // JS 下发的完整队列（scripturePlaySound / useIosNativeScriptureEnded 都带）。
+    // 只吃前两个单数字段会让锁屏连播只剩 2 章，队列一空就断在 JS 被限流的时候。
+    if let arr = payload["nextAssetUris"] as? [String] {
+      arr.forEach { appendCandidate($0) }
+    } else if let arr = payload["nextAssetUris"] as? [Any] {
+      arr.forEach { appendCandidate($0 as? String) }
+    }
+    var fresh: [String] = []
+    let sawProvided = !candidates.isEmpty
+    for uri in candidates {
       let id = musicIdentity(uri)
       if id == nil { continue }
       if id == currentId { continue }
-      if scriptureNextQueue.contains(where: { musicIdentity($0) == id }) { continue }
-      scriptureNextQueue.append(uri)
+      if fresh.contains(where: { musicIdentity($0) == id }) { continue }
+      fresh.append(uri)
     }
-    if scriptureNextQueue.count > 6 {
-      scriptureNextQueue = Array(scriptureNextQueue.suffix(6))
+    // 与金句一致：JS 明确给了 next* 才整表替换（顺序即播放顺序，勿用 suffix 丢队首）；
+    // 皆空则不动队列，避免预取完成前的空刷新把有效队列清掉。
+    if sawProvided {
+      scriptureNextQueue = Array(fresh.prefix(SCRIPTURE_QUEUE_CAP))
+    }
+    // 正等 JS 补章而队列刚补上：立刻接播，不必等下一次重试心跳。
+    // 用 async 而不是同步调用：此处仍在 apply 流程里，避免重入 beginOrResume。
+    if scriptureAwaitingJsAdvance && !scriptureNextQueue.isEmpty {
+      DispatchQueue.main.async { [weak self] in
+        guard let self, self.scriptureAwaitingJsAdvance else { return }
+        self.runScriptureJsAdvanceRetry()
+      }
     }
   }
 

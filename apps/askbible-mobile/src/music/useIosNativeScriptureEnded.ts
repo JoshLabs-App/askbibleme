@@ -6,9 +6,13 @@ import { syncShellMediaSessionExplicit } from "../audio/shellMediaControls";
 import { reshuffleShellMediaSceneArtwork } from "../audio/shellMediaSceneArtwork";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
+import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
 import { handleScriptureDidJustFinish } from "./scripturePlaybackFinish";
-import { resolveIosNativeScriptureAssetUri } from "./resolveIosNativeScriptureAssetUri";
-import { SCRIPTURE_NATIVE_NEXT_PREFETCH, scriptureChapterPool } from "./scripture-chapter-pool";
+import {
+  buildScriptureNativeNextUris,
+  peekUpcomingScriptureChapters,
+} from "./buildScriptureNativeNextUris";
+import { scriptureChapterPool } from "./scripture-chapter-pool";
 import {
   getScripturePlayingChapter,
   setScripturePlayingChapter,
@@ -45,23 +49,21 @@ type NativeEndedPayload = {
 
 async function refillScriptureNativeNextQueue(args: {
   currentAssetUri: string | null;
-  track: { bookId: string; chapter: number; bookName: string; translationId: string; src: string };
+  // src 不用：后续章的地址由 buildScriptureNativeNextUris 自己解析。
+  track: { bookId: string; chapter: number; bookName: string; translationId: string };
   rate: number;
+  repeatMode: ScriptureAudioRepeatMode;
 }): Promise<void> {
-  if (!scriptureChapterPool.isActive()) return;
+  // 过去这里是 `if (!scriptureChapterPool.isActive()) return;`——非池播放整个补队列流程都不跑，
+  // 原生手里永远只有开播时那批。改为池/非池都补，池激活时 build 内部仍以池队列为准。
   const voiceId = await readCuvChapterAudioVoice();
-  const upcoming = scriptureChapterPool.peekUpcoming(SCRIPTURE_NATIVE_NEXT_PREFETCH);
-  const resolved = await Promise.all(
-    upcoming.map((item) =>
-      resolveIosNativeScriptureAssetUri({
-        src: item.src,
-        translationId: item.translationId,
-        bookId: item.bookId,
-        chapter: item.chapter,
-        voiceId,
-      }),
-    ),
-  );
+  const resolved = await buildScriptureNativeNextUris({
+    bookId: args.track.bookId,
+    chapter: args.track.chapter,
+    translationId: args.track.translationId,
+    repeatMode: args.repeatMode,
+    voiceId,
+  });
   if (!getShellScriptureWantPlaying()) return;
   const artworkUri = await reshuffleShellMediaSceneArtwork();
   syncShellMediaSessionExplicit({
@@ -77,7 +79,7 @@ async function refillScriptureNativeNextQueue(args: {
     rate: args.rate,
     nextAssetUri: resolved[0] ?? null,
     nextNextAssetUri: resolved[1] ?? null,
-    nextAssetUris: resolved.filter((uri): uri is string => Boolean(uri)),
+    nextAssetUris: resolved,
   });
 }
 
@@ -139,6 +141,7 @@ export function useIosNativeScriptureEnded(args: Args): void {
               currentAssetUri: payload.assetUri ?? args.scriptureSrcRef.current,
               track,
               rate: args.scripturePlaybackRateRef.current,
+              repeatMode: args.scriptureAudioRepeatRef.current,
             });
             return;
           }
@@ -146,6 +149,47 @@ export function useIosNativeScriptureEnded(args: Args): void {
         // 池已结束或无法对齐：原生已开下一首时仍以原生为准，勿再走 JS playAt。
         if (payload.assetUri) args.scriptureSrcRef.current = payload.assetUri;
         args.setPlaying(true);
+        // 非池连播：原生已经在播下一章了，但 JS 这边的"当前章"还停在上一章——
+        // 章号文案不会跟着走，队列也补不上。按与原生同一套规则推算出新章再同步。
+        const mode = args.scriptureAudioRepeatRef.current;
+        const prevReg = args.readChapterRef.current;
+        if (!scriptureChapterPool.isActive() && fromBookId && fromChapter != null && prevReg) {
+          const [next] = peekUpcomingScriptureChapters({
+            bookId: fromBookId,
+            chapter: fromChapter,
+            repeatMode: mode,
+            count: 1,
+          });
+          if (next) {
+            const nextReg: ReadChapterPlaybackRegistration = {
+              ...prevReg,
+              bookId: next.bookId,
+              chapter: next.chapter,
+              bookName: getScriptureBookDisplayName(next.bookId),
+              chapterAudioSrc: payload.assetUri ?? prevReg.chapterAudioSrc,
+            };
+            args.readChapterRef.current = nextReg;
+            args.setReadChapter(nextReg);
+            setScripturePlayingChapter({
+              bookId: next.bookId,
+              chapter: next.chapter,
+              translationId: nextReg.translationId,
+            });
+            setPlayingReadChapterPlayback(nextReg);
+            setBrowseReadChapterPlayback(nextReg);
+            void refillScriptureNativeNextQueue({
+              currentAssetUri: payload.assetUri ?? args.scriptureSrcRef.current,
+              track: {
+                bookId: nextReg.bookId,
+                chapter: nextReg.chapter,
+                bookName: nextReg.bookName,
+                translationId: nextReg.translationId,
+              },
+              rate: args.scripturePlaybackRateRef.current,
+              repeatMode: mode,
+            });
+          }
+        }
         return;
       }
 

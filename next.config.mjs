@@ -103,6 +103,23 @@ const nextConfig = {
     ];
   },
 
+  /**
+   * 静态经文（public/scripture/…）只随部署变化，而 Next 给 public/ 的默认头是
+   * max-age=0, must-revalidate——每读一章都要回源验证一次，静态化省下的往返又还回去了。
+   * 给一小时新鲜期 + 一天 stale-while-revalidate：过期后先用旧的、后台再取，
+   * 读经不会因为一次回源而卡住。译本更新是低频的编辑动作，最多一小时后生效可以接受。
+   */
+  async headers() {
+    return [
+      {
+        source: "/scripture/:translation/:book.json",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" },
+        ],
+      },
+    ];
+  },
+
   /** 讲道分享链接 /jd/826 → 播放器 */
   async rewrites() {
     return [{ source: "/jd/:id(\\d+)", destination: "/jd/index.html" }];

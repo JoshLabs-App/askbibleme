@@ -34,16 +34,15 @@ import {
 import { toZhTwText } from "@/lib/i18n/zh-tw-text";
 
 type Props = {
-  featuredArticles: ExploreFeaturedArticleView[];
   exploreModulesBundle: ExploreModulesBundle;
 };
 
-export function ExploreHomeContent({ featuredArticles, exploreModulesBundle }: Props) {
+export function ExploreHomeContent({ exploreModulesBundle }: Props) {
   const router = useRouter();
   const { t, locale } = useLocale();
   const { user } = useAskbibleUser();
   const { featuredArticles: liveFeaturedArticles, exploreModulesBundle: liveModulesBundle } =
-    useExploreHomeContentRefresh({ initialFeaturedArticles: featuredArticles, initialModulesBundle: exploreModulesBundle });
+    useExploreHomeContentRefresh({ initialModulesBundle: exploreModulesBundle });
   const [exploreDisplayName, setExploreDisplayName] = useState<string | null>(null);
   const [nameEditorOpen, setNameEditorOpen] = useState(false);
   const { entries: stagedEntries, labelFor: stagedLabelFor } = useExploreStagedEntries(liveModulesBundle);

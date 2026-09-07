@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ExploreVerseTextsByLocale } from "@/lib/explore/explore-scripture-ref";
 import { useState } from "react";
 import { ExploreProsePage } from "@/components/explore/ExploreProsePage";
 import { useLocale } from "@/components/i18n/LocaleProvider";
@@ -28,7 +29,11 @@ type Props = {
   subtitleOverride?: string;
   categories: ExploreScriptureCategory[];
   bookAbbrMap: Record<string, string>;
-  verseTextByRef: Record<string, string>;
+  /**
+   * 全语言经文文本。页面改为静态生成后服务端已不知道该用哪种语言，故一次传齐、
+   * 由这里按 `useLocale()` 选；顺带让切换语言不再需要刷新。
+   */
+  verseTextsByLocale: ExploreVerseTextsByLocale;
 };
 
 function stripCategoryTitlePrefix(title: string): string {
@@ -44,10 +49,11 @@ export function ExploreScriptureAccordionContent({
   subtitleOverride,
   categories,
   bookAbbrMap,
-  verseTextByRef,
+  verseTextsByLocale,
 }: Props) {
   const { t, locale } = useLocale();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const verseTextByRef = verseTextsByLocale[locale] ?? verseTextsByLocale["zh-CN"];
 
   const parsedByRaw: Record<string, ParsedExploreRef | null> = {};
   for (const category of categories) {

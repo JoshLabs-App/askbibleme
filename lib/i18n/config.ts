@@ -53,6 +53,24 @@ export function inferAppLocaleFromNavigator(): AppLocale {
   return mapLanguageTagToAppLocale(raw);
 }
 
+/**
+ * 从 `document.cookie` 读语言偏好。页面改为静态生成后，服务端不再有请求上下文可读
+ * cookie，这个判断落到客户端；cookie 仍由 `persistLocaleToCookie` 写，供跨标签页与
+ * localStorage 被清空时兜底。
+ */
+export function readLocaleCookieClient(): AppLocale | null {
+  if (typeof document === "undefined") return null;
+  try {
+    const match = document.cookie.match(
+      new RegExp(`(?:^|;\\s*)${LOCALE_COOKIE_NAME}=([^;]*)`),
+    );
+    const raw = match?.[1];
+    return raw ? parseLocale(decodeURIComponent(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function persistLocaleToCookie(locale: AppLocale): void {
   if (typeof document === "undefined") return;
   try {

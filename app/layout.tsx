@@ -1,16 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { cookies, headers } from "next/headers";
 import { PARCHMENT_SHELL_BOOT_SCRIPT } from "@/lib/read/parchment-shell-boot";
 import { SYNC_HTML_DARK_CLASS_BOOT_SCRIPT } from "@/lib/read/sync-html-dark-class";
-import { isSamsungGalaxyUserAgent } from "@/lib/read/parchment-samsung-device";
-import { SELAH_REQUEST_PATHNAME_HEADER } from "@/lib/read/request-pathname";
-import {
-  isScriptureParchmentPath,
-  SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE,
-  SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE,
-} from "@/lib/read/scripture-parchment-shell";
 import "./globals.css";
 import "./(app-shell)/read/read-parchment-background.css";
 import "./(app-shell)/read/read-parchment-shell-chrome.css";
@@ -32,12 +24,6 @@ import {
   logoBackgroundToCssVars,
 } from "@/lib/site-branding-colors";
 import {
-  inferAppLocaleFromAcceptLanguage,
-  LOCALE_COOKIE_NAME,
-  parseLocale,
-  type AppLocale,
-} from "@/lib/i18n/config";
-import {
   SITE_METADATA_DEFAULT_TITLE,
   SITE_METADATA_TITLE_TEMPLATE,
 } from "@/lib/site-metadata-defaults";
@@ -55,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: appTitle,
       template: SITE_METADATA_TITLE_TEMPLATE,
     },
-    description: "安静回到经文的入口 — 正在成型。",
+    description: "一个安静回到经文的入口。",
     appleWebApp: {
       capable: true,
       title: appTitle,
@@ -94,6 +80,9 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
+/** 构建期写入的兜底值；真实语言由 LocaleProvider 水合后改写 <html lang>。 */
+const DEFAULT_HTML_LANG = "zh-CN";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -101,23 +90,22 @@ export default async function RootLayout({
 }>) {
   const colors = await getResolvedBrandColors();
   const logoBackground = await getResolvedLogoBackground();
-  const cookieStore = await cookies();
-  const headerList = await headers();
-  const cookieRaw = cookieStore.get(LOCALE_COOKIE_NAME)?.value;
-  const initialLocaleGuess: AppLocale = cookieRaw
-    ? parseLocale(cookieRaw)
-    : inferAppLocaleFromAcceptLanguage(headerList.get("accept-language"));
-  const htmlLang = initialLocaleGuess === "en" ? "en" : "zh-CN";
-  const pathname = headerList.get(SELAH_REQUEST_PATHNAME_HEADER) ?? "";
-  const parchmentShell = isScriptureParchmentPath(pathname);
-  const samsungParchment =
-    parchmentShell && isSamsungGalaxyUserAgent(headerList.get("user-agent") ?? "");
-
+  /**
+   * 这里曾用 cookies()/headers() 判定语言、羊皮卷外壳与三星机型。只要读了请求，整站
+   * 所有页面都会被迫动态渲染——那是迁到静态托管（Cloudflare Pages 免费额度）的最大障碍，
+   * 而这三件事客户端都做得了：
+   * - 语言：LocaleProvider 于客户端按 localStorage → cookie → navigator 判定，
+   *   并在 useLayoutEffect 里同步 <html lang>；
+   * - 羊皮卷外壳与三星机型：PARCHMENT_SHELL_BOOT_SCRIPT 以 beforeInteractive 在水合前
+   *   读 location.pathname 与 navigator.userAgent 设好同名 dataset，它本就写成
+   *   「服务端没设才设」的补位逻辑，去掉服务端这半边它会自然接管。
+   */
   const appBuildId = getAppBuildId();
 
   return (
     <html
-      lang={htmlLang}
+      /** 构建期固定；LocaleProvider 水合后按实际语言改写。 */
+      lang={DEFAULT_HTML_LANG}
       style={
         {
           ...brandColorsToCssVars(colors),
@@ -125,10 +113,6 @@ export default async function RootLayout({
         } as CSSProperties
       }
       suppressHydrationWarning
-      data-app-shell-safe-fill={parchmentShell ? SCRIPTURE_PARCHMENT_SHELL_DATASET_VALUE : undefined}
-      data-read-parchment-samsung={
-        samsungParchment ? SCRIPTURE_PARCHMENT_SAMSUNG_DATASET_VALUE : undefined
-      }
     >
       <body className="min-h-screen font-sans text-[15px] leading-relaxed" data-app-build={appBuildId}>
         <Script id="selah-sync-html-dark-class" strategy="beforeInteractive">
@@ -138,7 +122,7 @@ export default async function RootLayout({
           {PARCHMENT_SHELL_BOOT_SCRIPT}
         </Script>
         <AppImmersiveProvider>
-          <LocaleProvider initialLocaleGuess={initialLocaleGuess}>
+          <LocaleProvider>
             <AskbibleUserProvider>
               <MemberReadingSyncBridge />
               <CuvChapterAudioVoiceProvider>

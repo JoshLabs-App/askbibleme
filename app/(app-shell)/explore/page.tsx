@@ -1,10 +1,7 @@
-import { cookies, headers } from "next/headers";
 import { ExploreHomeContent } from "@/components/explore/ExploreHomeContent";
 import { ExploreParchmentChrome } from "@/components/explore/ExploreParchmentChrome";
-import { readExploreFeaturedArticles } from "@/lib/explore/explore-featured-articles";
 import { EMPTY_EXPLORE_MODULES_BUNDLE } from "@/lib/explore/explore-modules-bundle-types";
 import { readExploreModulesBundleSync } from "@/lib/explore/explore-modules-bundle-store";
-import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import { sitePageTitle } from "@/lib/site-metadata-defaults";
 
 export const metadata = {
@@ -13,16 +10,12 @@ export const metadata = {
 };
 
 export default async function ExplorePage() {
-  const cookieStore = await cookies();
-  const headerList = await headers();
-  const locale = resolveRequestLocale(cookieStore, headerList.get("accept-language"));
-  const featuredArticles = readExploreFeaturedArticles(locale);
   const exploreModulesBundle =
     readExploreModulesBundleSync(process.cwd()) ?? EMPTY_EXPLORE_MODULES_BUNDLE;
 
   return (
     <ExploreParchmentChrome>
-      <ExploreHomeContent featuredArticles={featuredArticles} exploreModulesBundle={exploreModulesBundle} />
+      <ExploreHomeContent exploreModulesBundle={exploreModulesBundle} />
     </ExploreParchmentChrome>
   );
 }

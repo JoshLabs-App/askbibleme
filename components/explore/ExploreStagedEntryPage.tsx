@@ -8,7 +8,7 @@ import {
   hasExploreStagedRemotePoolContent,
   resolveExploreStagedEntryLabel,
 } from "@/lib/explore/explore-home-config";
-import { loadExploreRefVerseTexts } from "@/lib/explore/explore-scripture-ref";
+import { loadExploreRefVerseTextsAllLocales } from "@/lib/explore/explore-scripture-ref";
 import { getExploreStagedEntry, type ExploreStagedEntryId } from "@/lib/explore/explore-staged-entries";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import type { AppLocale } from "@/lib/i18n/config";
@@ -50,10 +50,14 @@ export async function ExploreStagedEntryPage({ entryId }: Props) {
       refs: category.refs,
     }));
     const refs = categories.flatMap((c) => c.refs);
-    const verseTextByRef = await loadExploreRefVerseTexts({
+    /**
+     * 组件已改为接收全语言（见 ExploreScriptureAccordionContent）。本页仍按请求语言
+     * 算标题与提示语，因此保持动态渲染——它是预埋入口，访问量极低，不值得为静态化
+     * 把那几处文案也搬到客户端。
+     */
+    const verseTextsByLocale = await loadExploreRefVerseTextsAllLocales({
       refs,
       bookAbbrMap: remoteModule.bookAbbrToId,
-      locale,
     });
     const pageTitle = resolveRemoteModulePageTitle(locale, remoteModule, entryLabel);
     const tapHint = locale === "en" ? "Tap a section to expand or collapse" : "点按分类可展开或收起";
@@ -68,7 +72,7 @@ export async function ExploreStagedEntryPage({ entryId }: Props) {
           subtitleOverride={tapHint}
           categories={categories}
           bookAbbrMap={remoteModule.bookAbbrToId}
-          verseTextByRef={verseTextByRef}
+          verseTextsByLocale={verseTextsByLocale}
         />
       </ExploreParchmentChrome>
     );

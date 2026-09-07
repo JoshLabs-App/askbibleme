@@ -71,3 +71,29 @@ export async function loadExploreRefVerseTexts(args: {
   }
   return out;
 }
+
+
+/** 与 `SUPPORTED_LOCALES` 对齐；显式列出以便返回值类型是完整的 Record。 */
+const EXPLORE_VERSE_LOCALES = ["zh-CN", "zh-TW", "en"] as const;
+
+export type ExploreVerseTextsByLocale = Record<AppLocale, Record<string, string>>;
+
+/**
+ * 一次取齐所有语言的经文文本。
+ *
+ * 页面原先按请求语言只取一份，这就要求服务端读 cookie/Accept-Language，整站因此被迫
+ * 动态渲染。改为全语言一起返回后页面可静态生成，由客户端按 `useLocale()` 选用；
+ * 附带的好处是切换语言不再需要刷新。三种语言合计也就几十 KB，值这个交换。
+ */
+export async function loadExploreRefVerseTextsAllLocales(args: {
+  refs: string[];
+  bookAbbrMap: Record<string, string>;
+}): Promise<ExploreVerseTextsByLocale> {
+  const entries = await Promise.all(
+    EXPLORE_VERSE_LOCALES.map(
+      async (locale) =>
+        [locale, await loadExploreRefVerseTexts({ ...args, locale })] as const,
+    ),
+  );
+  return Object.fromEntries(entries) as ExploreVerseTextsByLocale;
+}

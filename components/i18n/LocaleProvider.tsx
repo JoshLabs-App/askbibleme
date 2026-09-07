@@ -10,11 +10,13 @@ import {
   type ReactNode,
 } from "react";
 import {
+  DEFAULT_LOCALE,
   inferAppLocaleFromNavigator,
   LOCALE_STORAGE_KEY,
   LOCALE_SYNC_EVENT,
   persistLocaleToCookie,
   parseLocale,
+  readLocaleCookieClient,
   type AppLocale,
 } from "@/lib/i18n/config";
 import { MESSAGES } from "@/lib/i18n/messages";
@@ -58,15 +60,21 @@ function subscribeLocale(onStore: () => void) {
 
 function createGetLocaleSnapshot(initialLocaleGuess: AppLocale) {
   return function getLocaleSnapshot(): AppLocale {
-    // 与 `getServerSnapshot` 对齐：避免在无 `window` 的路径里回落到 `DEFAULT_LOCALE` 而与 Cookie/Accept-Language 首猜不一致
+    // 与 `getServerSnapshot` 对齐：避免在无 `window` 的路径里回落到 `DEFAULT_LOCALE` 而与首猜不一致
     if (typeof window === "undefined") return initialLocaleGuess;
     try {
       const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
       if (raw) return parseLocale(raw);
-      return initialLocaleGuess;
     } catch {
-      return initialLocaleGuess;
+      /* 存储不可用时继续往下猜 */
     }
+    /**
+     * 页面静态生成后服务端读不到请求，语言判定整条链落到客户端：
+     * localStorage（用户选过） → cookie（跨标签页 / 存储被清） → 浏览器语言。
+     * 与原先服务端 `resolveRequestLocale` 的优先级一致，只是 Accept-Language 换成
+     * 等价的 `navigator.languages`。
+     */
+    return readLocaleCookieClient() ?? inferAppLocaleFromNavigator();
   };
 }
 
@@ -78,11 +86,19 @@ function createGetServerSnapshot(initialLocaleGuess: AppLocale) {
 
 type LocaleProviderProps = {
   children: ReactNode;
-  /** 无本地存储时用于 SSR 与首次客户端快照对齐：来自 Cookie 或 `Accept-Language` */
-  initialLocaleGuess: AppLocale;
+  /**
+   * SSR 与首次客户端快照的对齐值。页面静态生成后服务端已无请求上下文，故默认
+   * `DEFAULT_LOCALE`——真正的判定在 `getLocaleSnapshot` 里于客户端完成
+   * （localStorage → cookie → navigator）。仍保留此参数，便于将来某个页面若需回到
+   * 动态渲染时把首猜传进来。
+   */
+  initialLocaleGuess?: AppLocale;
 };
 
-export function LocaleProvider({ children, initialLocaleGuess }: LocaleProviderProps) {
+export function LocaleProvider({
+  children,
+  initialLocaleGuess = DEFAULT_LOCALE,
+}: LocaleProviderProps) {
   const getSnapshot = useMemo(() => createGetLocaleSnapshot(initialLocaleGuess), [initialLocaleGuess]);
   const getServerSnapshot = useMemo(() => createGetServerSnapshot(initialLocaleGuess), [initialLocaleGuess]);
 

@@ -119,10 +119,7 @@ object ReadingAlarmPreludePlayer {
 
   private fun acquireWakeLock(context: Context) {
     val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    /**
-     * 先释放上一个：连响两次闹钟会各拿一把锁，旧的被覆盖后只能等 75 秒超时自己掉，
-     * 期间白白吊着 CPU。与音频焦点是同一类问题，见 AGENTS.md 的排查一节。
-     */
+    /** 防御性：`start()` 开头的 `stop()` 已经 releaseWakeLock 过，这里只防将来新增的调用路径。 */
     releaseWakeLock()
     wakeLock =
       pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AskBible:ReadingAlarmPrelude").apply {
@@ -139,7 +136,7 @@ object ReadingAlarmPreludePlayer {
 
   private fun requestFocus(context: Context) {
     val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    /** 先释放上一个：连响两次闹钟会各新建一个 request，旧的覆盖后再也 abandon 不掉。 */
+    /** 防御性：`start()` 开头的 `stop()` 已经 abandonFocus 过；真正要紧的是下面看返回值与补回调。 */
     abandonFocus()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       val req =

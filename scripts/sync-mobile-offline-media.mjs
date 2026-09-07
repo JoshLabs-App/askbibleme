@@ -11,8 +11,14 @@
  * - 可选 `MOBILE_BUNDLE_MUSIC_FULL=1` 恢复全量进包（调试）。
  * - `MOBILE_STARTER_MUSIC_TRACK_ID`：闹钟前奏优先曲目 id。
  *
+ * 自然场景视频（TEMPORARY，与音乐同一套策略）：
+ * - 默认只打**第一个场景**（约 1.5M）进 Expo assets；`MOBILE_STARTER_NATURE_VIDEO_ID` 可指定。
+ * - 其余场景走 R2 HTTPS，点播边播边缓存到 DocumentDirectory（见 `natureVideoR2Source.ts`）。
+ *   不走 askbible.me / Render（那条是 `natureResourcePackSync.ts` 的遗留路径，默认关）。
+ * - 海报每个场景都打（缩略图小，不受这个策略影响）。
+ * - 可选 `MOBILE_BUNDLE_OFFLINE_MEDIA=1` 恢复全量视频进包（调试）。
+ *
  * 其它：
- * - MOBILE_BUNDLE_OFFLINE_MEDIA=1：打包自然场景视频；未设时仍打海报 + 音乐。
  * - 金句朗读 zip：默认**不**打进安装包（TEMPORARY：R2 HTTPS 直链点播）。
  *   `MOBILE_BUNDLE_GOLDEN_VERSE_AUDIO=1` 可恢复本地 zip。
  */
@@ -288,7 +294,13 @@ export function ${exportFn}(id: string): (typeof data)[keyof typeof data] | null
   writeGeneratedTs(fileName, content);
 }
 
-function syncNature() {
+/**
+ * `starterVideoId` 给了值时，只把这一个场景的 mp4 物理拷进安装包（其余场景走
+ * `natureVideoR2Source.ts` 的 R2 点播 + 缓存）；海报不受影响，每个场景都留一张缩略图。
+ * 不给值（或 MOBILE_BUNDLE_OFFLINE_MEDIA=1 debug 全量）就照旧全部场景都打进包。
+ */
+function syncNature(opts = {}) {
+  const starterVideoId = opts.starterVideoId ? String(opts.starterVideoId).trim() : null;
   const settings = JSON.parse(fs.readFileSync(natureSettingsPath, "utf8"));
   const videos = Array.isArray(settings.videos) ? settings.videos : [];
   rmDirIfExists(natureVideoDir);
@@ -299,15 +311,19 @@ function syncNature() {
   const videoEntries = [];
   const posterEntries = [];
 
-  console.log("Nature videos & posters:");
+  console.log(
+    starterVideoId
+      ? `Nature videos & posters (bundling starter "${starterVideoId}" only; rest via R2):`
+      : "Nature videos & posters (full bundle):",
+  );
   for (const v of videos) {
     const id = String(v.id || "").trim();
     if (!id) continue;
-    const srcRel = resolveNatureVideoSrcForBundle(v.src);
-    if (!srcRel) continue;
-    const videoFile = `${id}.mp4`;
-    if (copyIfExists(srcRel, path.join(natureVideoDir, videoFile))) {
-      videoEntries.push({ id, file: videoFile });
+    if (!starterVideoId || id === starterVideoId) {
+      const srcRel = resolveNatureVideoSrcForBundle(v.src);
+      if (srcRel && copyIfExists(srcRel, path.join(natureVideoDir, `${id}.mp4`))) {
+        videoEntries.push({ id, file: `${id}.mp4` });
+      }
     }
     const posterRel = String(v.previewFrameSrc || v.thumbSrc || "").trim();
     if (posterRel) {
@@ -548,61 +564,24 @@ function bakeNatureSquarePosters() {
   }
 }
 
-function syncNaturePostersOnly() {
-  const settings = JSON.parse(fs.readFileSync(natureSettingsPath, "utf8"));
-  const videos = Array.isArray(settings.videos) ? settings.videos : [];
-  rmDirIfExists(naturePosterDir);
-  ensureDir(naturePosterDir);
-
-  const posterEntries = [];
-  console.log("Nature scene posters (16:9 preview frames):");
-  for (const v of videos) {
-    const id = String(v.id || "").trim();
-    if (!id) continue;
-    // 首页满屏静帧用 16:9 预览图；1:1 缩略图只给胶片条 / 锁屏封面。
-    const posterRel = String(v.previewFrameSrc || v.thumbSrc || "").trim();
-    if (!posterRel) continue;
-    const ext = path.extname(posterRel) || ".jpg";
-    const posterFile = `${id}${ext}`;
-    if (copyIfExists(posterRel, path.join(naturePosterDir, posterFile))) {
-      posterEntries.push({ id, file: posterFile });
-    }
-  }
-
-  emitResolver(
-    "bundled-nature-posters.ts",
-    "resolveBundledNaturePosterUri",
-    posterEntries,
-    "../../../assets/nature/posters",
-    { moduleGetter: "BundledNaturePosterModule" },
-  );
-  bakeNatureSoftPosters();
-  bakeNatureSquarePosters();
-  return posterEntries.length;
-}
+const starterVideoIdRaw = process.env.MOBILE_STARTER_NATURE_VIDEO_ID?.trim();
 
 if (!bundleEnabled) {
-  rmDirIfExists(natureVideoDir);
   rmDirIfExists(musicTrackDir);
   rmDirIfExists(musicAnalysisDir);
-  emitResolver(
-    "bundled-nature-videos.ts",
-    "resolveBundledNatureVideoUri",
-    [],
-    "../../../assets/nature/videos",
-    { videoExtras: true, moduleGetter: "BundledNatureVideoModule" },
-  );
-  const posterCount = syncNaturePostersOnly();
+  const settingsForStarter = JSON.parse(fs.readFileSync(natureSettingsPath, "utf8"));
+  const firstVideoId = String(settingsForStarter.videos?.[0]?.id || "").trim();
+  const starterVideoId = starterVideoIdRaw || firstVideoId || null;
+  const nature = syncNature({ starterVideoId });
   const music = syncMusic();
   syncReadingAlarmPreludeRaw(music.firstTrackFile);
   const golden = syncGoldenVerseAudioPacks(bundleGoldenVerseAudio);
   console.log(
-    `Offline media: bundled ${posterCount} scene poster(s) + ${music.trackCount} music track(s); videos download from askbible.me.`,
+    `Offline media: bundled ${nature.videoCount} starter video(s) + ${nature.posterCount} scene poster(s) + ${music.trackCount} music track(s); ` +
+      "remaining nature videos & non-starter music stream from R2 with on-device caching.",
   );
   console.log(`Golden verse packs: ${golden.packCount}.`);
-  console.log(
-    "Set MOBILE_BUNDLE_OFFLINE_MEDIA=1 to also bundle nature scene videos.",
-  );
+  console.log("Set MOBILE_BUNDLE_OFFLINE_MEDIA=1 to bundle every nature scene video (debug).");
   process.exit(0);
 }
 

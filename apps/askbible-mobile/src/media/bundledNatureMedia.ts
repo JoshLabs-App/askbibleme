@@ -14,6 +14,11 @@ import {
 } from "./generated/bundled-nature-videos";
 import { getNatureSceneVideoFileUri } from "./natureSceneReadiness";
 import { resolveNatureResourcePackUri } from "./natureResourcePackSync";
+import {
+  peekNatureVideoR2Src,
+  markNatureVideoR2ActiveUri,
+  warmNatureVideoR2Cache,
+} from "./natureVideoR2Source";
 
 export {
   preloadAdjacentNatureSceneVideos,
@@ -29,6 +34,13 @@ export function resolveNatureVideoPlaybackUri(videoId: string, remoteAbsolute: s
     }
     const bundled = resolveBundledNatureVideoUri(id);
     if (bundled) return bundled;
+    // 非首个场景：R2 直链即时播放，同时后台缓存到本机，下次直接吃本地文件。
+    const r2 = peekNatureVideoR2Src(id);
+    if (r2) {
+      markNatureVideoR2ActiveUri(r2);
+      warmNatureVideoR2Cache(id);
+      return r2;
+    }
   }
   const synced = resolveNatureResourcePackUri(remoteAbsolute);
   if (synced) return synced;
@@ -57,6 +69,14 @@ export function resolveNatureCoverPlayback(
       uri: bundled,
       bundledModule,
     };
+  }
+  if (id) {
+    const r2 = peekNatureVideoR2Src(id);
+    if (r2) {
+      markNatureVideoR2ActiveUri(r2);
+      warmNatureVideoR2Cache(id);
+      return { sceneId: id, uri: r2 };
+    }
   }
   const synced = resolveNatureResourcePackUri(remoteAbsolute);
   if (synced) {

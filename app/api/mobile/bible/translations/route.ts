@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
 import { isMobileBundledScriptureTranslationId } from "@/lib/bible/mobile-bundled-scripture-ids";
+import { mobileScriptureR2DownloadUrl } from "@/lib/bible/mobile-scripture-r2-downloads";
 import { readBibleTranslationRegistry } from "@/lib/bible/providers/registry";
 import { scriptureSqlitePath } from "@/lib/bible/scripture-sqlite-db";
 
@@ -32,8 +33,9 @@ export async function GET() {
         language: t.language,
         bundled,
         bytes,
-        // 整本 sqlite 下载已下线：内置包 / chapter-api / 本机已装；不再提供远端 zip/sqlite URL。
-        downloadUrl: null,
+        // 内置包 / chapter-api 之外，少数已传 R2 的译本（如 KJV）给一个真实可下的整本 sqlite URL；
+        // 其余未上传的仍是 null，不假装可下载。
+        downloadUrl: bundled ? null : mobileScriptureR2DownloadUrl(t.id),
         provider: t.provider,
         remoteId: t.remoteId ?? null,
         delivery: t.delivery,

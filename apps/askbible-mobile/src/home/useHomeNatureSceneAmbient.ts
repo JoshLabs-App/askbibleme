@@ -1,6 +1,11 @@
 import { useEffect, useMemo } from "react";
 import { ambientScenePlaybackGain } from "../nature/ambientScenePlaybackGain";
-import { BUNDLED_AMBIENT_SCENE_AUDIO } from "../nature/bundledAmbientSceneAudio";
+import {
+  isAmbientSceneSlotAvailable,
+  markAmbientSceneAudioActiveUri,
+  peekAmbientSceneAudioSrc,
+  warmAmbientSceneAudioCache,
+} from "../nature/ambientSceneAudioSource";
 import {
   NATURE_AMBIENT_SCENE_SLOTS,
   type NatureAmbientSceneSlotId,
@@ -44,15 +49,15 @@ export function useHomeNatureSceneAmbient({
   useEffect(() => {
     if (!enabled) return;
     if (!activeAmbientSlotId) return;
-    const hasBundled = typeof BUNDLED_AMBIENT_SCENE_AUDIO[activeAmbientSlotId] === "number";
-    if (hasBundled || ambientClipById.has(activeAmbientSlotId)) return;
+    if (isAmbientSceneSlotAvailable(activeAmbientSlotId) || ambientClipById.has(activeAmbientSlotId)) {
+      return;
+    }
     setActiveAmbientSlotId("");
   }, [enabled, activeAmbientSlotId, ambientClipById, setActiveAmbientSlotId]);
 
   const activeAmbientLayer = useMemo(() => {
     if (!activeAmbientSlotId) return [];
-    const assetModule = BUNDLED_AMBIENT_SCENE_AUDIO[activeAmbientSlotId];
-    if (typeof assetModule !== "number") return [];
+    if (!isAmbientSceneSlotAvailable(activeAmbientSlotId)) return [];
     // 场景基准衰减 × 人声/音乐 duck（30%）。
     const sceneGain = ambientScenePlaybackGain(activeAmbientSlotId);
     const duck =
@@ -62,12 +67,16 @@ export function useHomeNatureSceneAmbient({
           ? AMBIENT_WHILE_MUSIC_GAIN
           : 1;
     const gain = Math.max(0, Math.min(1, sceneGain * duck));
+    // 内存里已缓存过就直接给本地文件；否则先给 R2 直链即时播放，同时后台把它下下来，
+    // 下次选同一个场景直接吃本地缓存，不必再等网络（也不会因为流式而卡顿）。
+    const src = peekAmbientSceneAudioSrc(activeAmbientSlotId);
+    markAmbientSceneAudioActiveUri(src);
+    warmAmbientSceneAudioCache(activeAmbientSlotId);
     return [
       {
         layerId: activeAmbientSlotId,
-        src: `bundled://${activeAmbientSlotId}`,
+        src,
         volume: gain,
-        assetModule,
       },
     ];
   }, [activeAmbientSlotId, musicModeActive, scriptureModeActive, voiceActive]);
@@ -76,9 +85,7 @@ export function useHomeNatureSceneAmbient({
     // 勿把 volume 写进 key：开播压音时勿整轨重建（会掐主曲）。
     // 压音改走 useNatureAmbientMix 的 duck 副作用。
     () =>
-      activeAmbientLayer
-        .map((layer) => `${layer.layerId}:${layer.assetModule ?? layer.src}`)
-        .join("|"),
+      activeAmbientLayer.map((layer) => `${layer.layerId}:${layer.src}`).join("|"),
     [activeAmbientLayer],
   );
 

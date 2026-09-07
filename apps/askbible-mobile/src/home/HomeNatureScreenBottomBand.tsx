@@ -2,7 +2,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import type { NatureAmbientSceneSlotId } from "../nature/ambientSceneSlots";
-import { BUNDLED_AMBIENT_SCENE_AUDIO } from "../nature/bundledAmbientSceneAudio";
+import { isAmbientSceneSlotAvailable } from "../nature/ambientSceneAudioSource";
 import { toAbsoluteUrl } from "../config/askbibleBaseUrl";
 import { resolveUiText, toZhTwText } from "../i18n/site-copy";
 import type { AppLocale } from "../i18n/config";
@@ -180,7 +180,7 @@ export function HomeNatureScreenBottomBand({
           }}
         >
           {NATURE_AMBIENT_SCENE_SLOTS.map((slot) => {
-            const enabled = typeof BUNDLED_AMBIENT_SCENE_AUDIO[slot.id] === "number";
+            const enabled = isAmbientSceneSlotAvailable(slot.id);
             const selected = activeAmbientSlotId === slot.id;
             const label = locale === "en" ? slot.labelEn : locale === "zh-TW" ? toZhTwText(slot.label) : slot.label;
             const canPress = enabled || selected;

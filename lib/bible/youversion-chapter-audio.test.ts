@@ -21,8 +21,12 @@ describe("youversion-chapter-audio", () => {
     expect(translationUsesYouVersionChapterAudio("rcuvss-zh-hans")).toBe(true);
     expect(translationUsesYouVersionChapterAudio("esv")).toBe(true);
     expect(translationUsesYouVersionChapterAudio("cunp-zh-hant")).toBe(true);
-    expect(translationHasVerifiedYouVersionChapterAudio("rcuvss-zh-hans")).toBe(true);
-    expect(translationHasVerifiedYouVersionChapterAudio("cunp-zh-hant")).toBe(true);
+  });
+
+  it("reports no verified translations while Bible.com's scrape is disabled by their bot challenge", () => {
+    expect(translationHasVerifiedYouVersionChapterAudio("rcuvss-zh-hans")).toBe(false);
+    expect(translationHasVerifiedYouVersionChapterAudio("cunp-zh-hant")).toBe(false);
+    expect(translationHasVerifiedYouVersionChapterAudio("esv")).toBe(false);
   });
 
   it("builds the expected Bible.com audio page URL", () => {

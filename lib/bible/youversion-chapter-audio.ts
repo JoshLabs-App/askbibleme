@@ -51,10 +51,14 @@ const YOUVERSION_AUDIO_ABBREVIATIONS: Record<string, string> = {
   kjv: "KJV",
 };
 
-/** 已确认章节页能解析到同译本 MP3 的版本（与上面音轨映射对齐）。 */
-const VERIFIED_YOUVERSION_AUDIO_TRANSLATION_IDS = new Set(
-  Object.keys(YOUVERSION_AUDIO_VERSION_IDS),
-);
+/**
+ * 已确认章节页能解析到同译本 MP3 的版本（与上面音轨映射对齐）。
+ * 2026-09 起 Bible.com 音频章节页加了 JS Client Challenge 反爬，普通 fetch 抓不到
+ * mp3 直链（返回验证页，正则匹配不到 format_mp3_32k/contentUrl）。在有可行的官方
+ * API/新抓取方案前，先清空，让朗读按钮如实显示「不支持」，而不是点了没反应。
+ * 版本号映射（YOUVERSION_AUDIO_VERSION_IDS）保留，方便日后恢复。
+ */
+const VERIFIED_YOUVERSION_AUDIO_TRANSLATION_IDS = new Set<string>();
 
 const YOUVERSION_AUDIO_LOCALES: Record<string, string> = {
   "ccb-zh-hans": "zh-CN",

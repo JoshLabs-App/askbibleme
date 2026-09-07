@@ -14,6 +14,10 @@ import {
   translationHasVerifiedYouVersionChapterAudio,
 } from "@/lib/bible/youversion-chapter-audio";
 import {
+  resolveEsvChapterAudioPlayableSrc,
+  translationUsesEsvChapterAudio,
+} from "@/lib/bible/esv-chapter-audio";
+import {
   resolveDownloadedChapterAudioUri,
   scheduleChapterAudioBackgroundCache,
 } from "../read/read-audio-package-download";
@@ -54,6 +58,10 @@ function shouldIgnoreCachedScriptureSrc(cachedSrc: string, translationId: string
   if (translationHasVerifiedYouVersionChapterAudio(translationId)) {
     return true;
   }
+  // ESV 直链由 Crossway 换发；缓存地址可能过期，重算一次成本只是一个 API 调用。
+  if (translationUsesEsvChapterAudio(translationId)) {
+    return true;
+  }
   // CUV 历史外链 / 已弃用的 askbible 自托管链在部分章节会 404；重算外站或本地包。
   if (
     translationSupportsCuvChapterAudio(translationId) &&
@@ -89,6 +97,7 @@ export function translationSupportsChapterAudio(translationId: string): boolean 
   return (
     translationSupportsCuvChapterAudio(translationId) ||
     translationUsesWebChapterAudio(translationId) ||
+    translationUsesEsvChapterAudio(translationId) ||
     translationHasVerifiedYouVersionChapterAudio(translationId)
   );
 }
@@ -109,6 +118,15 @@ export async function resolveChapterAudioPlayableSrc(args: {
       translationId: args.translationId,
       bookId: args.bookId,
       chapter: args.chapter,
+    });
+  }
+
+  // ESV：API key 只在服务端，App 走主站 /api/read/chapter-audio 换直链，再直连 Crossway CDN。
+  if (translationUsesEsvChapterAudio(args.translationId)) {
+    return resolveEsvChapterAudioPlayableSrc({
+      bookId: args.bookId,
+      chapter: args.chapter,
+      apiBaseUrl: baseUrl,
     });
   }
 

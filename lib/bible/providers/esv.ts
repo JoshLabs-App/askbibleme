@@ -73,7 +73,7 @@ const ESV_BOOK_NAMES: Record<string, string> = {
   REV: "Revelation",
 };
 
-function esvChapterQuery(bookId: string, chapter: number): string | null {
+export function esvChapterQuery(bookId: string, chapter: number): string | null {
   const name = ESV_BOOK_NAMES[String(bookId || "").trim().toUpperCase()];
   if (!name || !Number.isInteger(chapter) || chapter < 1) return null;
   return `${name} ${chapter}`;

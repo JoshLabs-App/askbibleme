@@ -89,11 +89,14 @@ export async function loadExploreRefVerseTextsAllLocales(args: {
   refs: string[];
   bookAbbrMap: Record<string, string>;
 }): Promise<ExploreVerseTextsByLocale> {
-  const entries = await Promise.all(
-    EXPLORE_VERSE_LOCALES.map(
-      async (locale) =>
-        [locale, await loadExploreRefVerseTexts({ ...args, locale })] as const,
-    ),
-  );
-  return Object.fromEntries(entries) as ExploreVerseTextsByLocale;
+  /**
+   * 逐个语言串行取，不用 Promise.all：并发会让三套译本的卷文件同时驻留内存，
+   * 构建期把这些页面预渲染时峰值直接翻三倍（曾把 4GB 堆撑爆）。这里是构建期一次性
+   * 开销，慢一点无所谓，省下的是构建机的内存上限。
+   */
+  const out = {} as ExploreVerseTextsByLocale;
+  for (const locale of EXPLORE_VERSE_LOCALES) {
+    out[locale] = await loadExploreRefVerseTexts({ ...args, locale });
+  }
+  return out;
 }

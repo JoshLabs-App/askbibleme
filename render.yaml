@@ -15,9 +15,11 @@ services:
         value: production
       - key: NODE_VERSION
         value: "22.22.0"
-      # 构建阶段内存不足时提高堆上限（Render 文档建议；勿设过小如 460）
+      # 构建阶段内存不足时提高堆上限（Render 文档建议；勿设过小如 460）。
+      # 2026-09-07 提到 8192：探索页改为预取全语言经文后，4096 会在 next build
+      # 阶段耗尽堆（Ineffective mark-compacts near heap limit），本机实测 8192 可过。
       - key: NODE_OPTIONS
-        value: --max-old-space-size=4096
+        value: --max-old-space-size=8192
       # 持久盘根目录（须与 disk.mountPath 一致）
       - key: DATA_ROOT
         value: /var/data

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mobileConfigR2RedirectForGet } from "@/lib/mobile-config-r2";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import { mergeMusicCompanionTrackDisplay } from "@/lib/music-companion/merge-track-display";
 import { filterPublicMusicCompanionStore } from "@/lib/music-companion/public-store";
@@ -12,6 +13,15 @@ import type { MusicCompanionStore } from "@/lib/music-companion/types";
 
 /** 公开读取音乐陪伴配置（前台首页与后台编辑用） */
 export async function GET(req: Request) {
+  /**
+   * 生产走 R2（见 lib/mobile-config-r2.ts）；dev 仍读本地，改曲库立刻可见。POST 不受影响。
+   * `includeHidden=1` 是后台取全量用的，R2 上那份是前台可见子集，故不重定向。
+   */
+  if (new URL(req.url).searchParams.get("includeHidden") !== "1") {
+    const redirected = mobileConfigR2RedirectForGet("/api/music/companion");
+    if (redirected) return redirected;
+  }
+
   try {
     const includeHidden = new URL(req.url).searchParams.get("includeHidden") === "1";
     const store = mergeMusicCompanionTrackDisplay(

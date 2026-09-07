@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mobileConfigR2RedirectForGet } from "@/lib/mobile-config-r2";
 import { isStudioDiskSaveAllowed } from "@/lib/studio-disk-save";
 import {
   assertValidNatureSettingsForWrite,
@@ -7,6 +8,10 @@ import {
 } from "@/lib/nature/nature-settings-store";
 
 export async function GET() {
+  /** 生产走 R2（见 lib/mobile-config-r2.ts）；dev 仍读本地，改内容立刻可见。POST 不受影响。 */
+  const redirected = mobileConfigR2RedirectForGet("/api/nature/settings");
+  if (redirected) return redirected;
+
   try {
     const data = await readNatureSettings(process.cwd());
     return NextResponse.json(data, {

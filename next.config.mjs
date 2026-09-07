@@ -61,7 +61,35 @@ const nextConfig = {
    * 播放链路（`music-companion.json` 的 `src`、壳层 `<audio>` 绑定）保持相对路径不变。
    */
   async redirects() {
+    /**
+     * App 的纯配置接口改由 R2 承载（内容由 `npm run mobile:config:push-r2` 镜像上去，
+     * 键与这里的路径一一对应）。已上架的 App 硬编码的是 askbible.me，跟着 307 走即可，
+     * 不必发版；网站这边则退化成常量，不再需要 fs 与 data/*.json，迁移时不再是障碍。
+     *
+     * 只列纯 GET 的 6 个。`/api/nature/settings` 与 `/api/music/companion` 还带 POST
+     * （后台写盘），redirects 不区分方法会把 POST 一并劫走，故在各自路由内按环境处理。
+     *
+     * 仅生产启用：本机 dev 仍走各自路由读 `data/*.json`，否则改了内容得先推一次
+     * R2 才看得见。与 lib/mobile-config-r2.ts 里的判断保持一致。
+     */
+    const mobileConfigRoutes =
+      process.env.NODE_ENV === "production"
+        ? [
+            "/api/mobile/content/manifest",
+            "/api/mobile/bible/translations",
+            "/api/mobile/explore/modules",
+            "/api/mobile/explore/legacy-figures",
+            "/api/mobile/explore/featured-articles",
+            "/api/read/reading-plans/registry",
+          ]
+        : [];
+
     return [
+      ...mobileConfigRoutes.map((route) => ({
+        source: route,
+        destination: `https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev${route}`,
+        permanent: false,
+      })),
       {
         source: "/music/uploads/:file",
         destination:

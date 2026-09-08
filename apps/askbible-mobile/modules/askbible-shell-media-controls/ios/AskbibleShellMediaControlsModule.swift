@@ -46,7 +46,9 @@ public final class AskbibleShellMediaControlsModule: Module {
       "ShellMediaNativeVerseAdvance",
       "ShellMediaNativeVerseRestart",
       "ShellMediaNativeScriptureEnded",
-      "ShellMediaSleepTimerFired"
+      "ShellMediaSleepTimerFired",
+      // 三条流的完整状态；JS 订阅它，不再自己维护影子状态。
+      "ShellPlaybackState"
     )
 
     OnCreate {
@@ -134,6 +136,10 @@ public final class AskbibleShellMediaControlsModule: Module {
       self?.sendEvent(name, body)
     }
     PlaybackEngine.shared.start()
+    PlaybackStore.shared.subscribe { [weak self] _, next in
+      self?.sendEvent(PlaybackStateBridge.eventName, PlaybackStateBridge.serialize(next))
+    }
+    sendEvent(PlaybackStateBridge.eventName, PlaybackStateBridge.serialize(PlaybackStore.shared.state))
     /// 下一首 / 上一首交回 JS：它才知道曲库与今日计划。
     PlaybackEngine.shared.bindTransportSkip(
       next: { [weak self] in self?.sendEvent("RemoteNext", [:]) },

@@ -6,6 +6,7 @@ import {
 } from "react-native";
 import { EventEmitter, requireOptionalNativeModule } from "expo-modules-core";
 import { installShellAudioInterruptionBridge } from "./shellAudioInterruption";
+import { applyNativePlaybackState } from "./playbackState";
 import { getShellMusicWantPlaying } from "./shellMusicWantPlaying";
 import { getShellScriptureWantPlaying } from "./shellScriptureWantPlaying";
 import { getShellVerseWantPlaying } from "./shellVerseWantPlaying";
@@ -475,6 +476,14 @@ function subscribeExpoRemoteEvents(handlers: {
     emitter.addListener("ShellMediaPlaybackPulse", () => {
       DeviceEventEmitter.emit("ShellMediaPlaybackPulse");
     }),
+    /**
+     * 三条流的完整状态。这是 JS 侧「现在在播什么」的唯一来源——
+     * 直接进 playbackState 的仓库，不经过 DeviceEventEmitter 再绕一圈，
+     * 免得有人顺手在中间加自己的推导。
+     */
+    emitter.addListener("ShellPlaybackState", (payload) => {
+      applyNativePlaybackState(payload);
+    }),
     emitter.addListener("ShellMediaNativeTakeover", (payload) => {
       DeviceEventEmitter.emit("ShellMediaNativeTakeover", payload);
     }),
@@ -543,6 +552,12 @@ function subscribeDeviceRemoteEvents(handlers: {
     DeviceEventEmitter.addListener("RemotePlay", handlers.onPlay),
     DeviceEventEmitter.addListener("RemotePause", handlers.onPause),
     DeviceEventEmitter.addListener("RemoteToggle", handlers.onToggle),
+    /**
+     * 三条流的状态。Android 的原生模块是经典 RN 模块，事件走 RCTDeviceEventEmitter，
+     * 只在上面的 Expo 通道挂监听收不到（实测：读经已在播，按钮图标仍是 ▶）。
+     * 两条通道都挂；同一份载荷进同一个仓库，重复无副作用。
+     */
+    DeviceEventEmitter.addListener("ShellPlaybackState", applyNativePlaybackState),
   ];
   if (handlers.onNext) {
     subs.push(DeviceEventEmitter.addListener("RemoteNext", handlers.onNext));

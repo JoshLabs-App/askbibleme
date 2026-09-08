@@ -1,0 +1,132 @@
+import { DeviceEventEmitter } from "react-native";
+import { useSyncExternalStore } from "react";
+
+/**
+ * 三条流的播放状态，由原生推来。
+ *
+ * **这是 JS 侧关于「现在在播什么」的唯一来源。** 组件读这里，不要再自己记。
+ *
+ * 为什么必须这样：旧代码里 JS 维护 `playing` / `playbackMode` 两个**共用**状态，
+ * 音乐、读经、金句都读同一份，于是同一个按钮的图标和点击处理可能得出不同答案——
+ * 2026-09-08 实测「播着音乐点读经没反应」就是这么来的：图标判断
+ * `playbackMode === "scripture" && playing`，点击处理只判断 `playing`，
+ * 音乐在放时后者为真，按下去执行了暂停。
+ *
+ * 原生那边三条流各有各的状态（见 model/PlaybackModel），这里原样镜像，不做二次推导。
+ */
+
+export type PlaybackStreamId = "music" | "scripture" | "verse";
+
+export type PlaybackStreamState = {
+  /** 此刻真的该出声。已把用户暂停与系统打断算进去——直接用它，别再自己叠条件。 */
+  playing: boolean;
+  /** 用户/JS 的意图；与 `playing` 的差别在于是否被暂停或打断。 */
+  wantPlaying: boolean;
+  userPaused: boolean;
+  uri: string | null;
+  positionSec: number;
+  durationSec: number;
+  queueLength: number;
+  title: string;
+  artist: string;
+  album: string;
+};
+
+export type PlaybackSnapshot = {
+  music: PlaybackStreamState;
+  scripture: PlaybackStreamState;
+  verse: PlaybackStreamState;
+  systemInterrupted: boolean;
+  /** 锁屏 / 通知栏此刻代表哪一条流。 */
+  nowPlayingStream: PlaybackStreamId | null;
+};
+
+const EMPTY_STREAM: PlaybackStreamState = {
+  playing: false,
+  wantPlaying: false,
+  userPaused: false,
+  uri: null,
+  positionSec: 0,
+  durationSec: 0,
+  queueLength: 0,
+  title: "",
+  artist: "",
+  album: "",
+};
+
+const EMPTY: PlaybackSnapshot = {
+  music: EMPTY_STREAM,
+  scripture: EMPTY_STREAM,
+  verse: EMPTY_STREAM,
+  systemInterrupted: false,
+  nowPlayingStream: null,
+};
+
+let snapshot: PlaybackSnapshot = EMPTY;
+const listeners = new Set<() => void>();
+
+function normalizeStream(raw: unknown): PlaybackStreamState {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  const uri = typeof o.uri === "string" && o.uri.trim() ? o.uri : null;
+  return {
+    playing: o.playing === true,
+    wantPlaying: o.wantPlaying === true,
+    userPaused: o.userPaused === true,
+    uri,
+    positionSec: typeof o.positionSec === "number" ? o.positionSec : 0,
+    durationSec: typeof o.durationSec === "number" ? o.durationSec : 0,
+    queueLength: typeof o.queueLength === "number" ? o.queueLength : 0,
+    title: typeof o.title === "string" ? o.title : "",
+    artist: typeof o.artist === "string" ? o.artist : "",
+    album: typeof o.album === "string" ? o.album : "",
+  };
+}
+
+function normalize(raw: unknown): PlaybackSnapshot {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  const now = o.nowPlayingStream;
+  return {
+    music: normalizeStream(o.music),
+    scripture: normalizeStream(o.scripture),
+    verse: normalizeStream(o.verse),
+    systemInterrupted: o.systemInterrupted === true,
+    nowPlayingStream:
+      now === "music" || now === "scripture" || now === "verse" ? now : null,
+  };
+}
+
+/** 原生推来的新状态。事件名与两端的 PlaybackStateBridge 一致。 */
+export function applyNativePlaybackState(raw: unknown): void {
+  snapshot = normalize(raw);
+  for (const listener of listeners) listener();
+}
+
+export function getPlaybackSnapshot(): PlaybackSnapshot {
+  return snapshot;
+}
+
+export function subscribePlaybackState(onChange: () => void): () => void {
+  listeners.add(onChange);
+  return () => {
+    listeners.delete(onChange);
+  };
+}
+
+let installed = false;
+
+/** 装上监听。壳层启动时调一次即可，重复调用无副作用。 */
+export function installPlaybackStateBridge(): void {
+  if (installed) return;
+  installed = true;
+  DeviceEventEmitter.addListener("ShellPlaybackState", applyNativePlaybackState);
+}
+
+/** 订阅整份快照。 */
+export function usePlaybackSnapshot(): PlaybackSnapshot {
+  return useSyncExternalStore(subscribePlaybackState, getPlaybackSnapshot, () => EMPTY);
+}
+
+/** 订阅某一条流。组件通常只关心其中一条。 */
+export function usePlaybackStream(stream: PlaybackStreamId): PlaybackStreamState {
+  return usePlaybackSnapshot()[stream];
+}

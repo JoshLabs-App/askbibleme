@@ -121,6 +121,7 @@ class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicatio
     val app = reactApplicationContext.applicationContext
     /** 引擎订阅状态并驱动三个播放器；服务只负责通知栏。 */
     PlaybackEngine.start(app)
+    PlaybackStateBridge.start()
     ShellPlaybackNotifier.start(app)
     ShellCallAudioMonitor.start(app)
     reactContext.addLifecycleEventListener(

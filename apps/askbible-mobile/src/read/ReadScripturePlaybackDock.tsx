@@ -8,6 +8,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { usePlaybackStream } from "../audio/playbackState";
 import { t } from "../i18n/site-copy";
 import { MusicRepeatAllIcon, MusicRepeatOneIcon } from "../music/MusicHomeControlIcons";
 import { useMusicPlaybackOptional } from "../music/MusicPlaybackContext";
@@ -69,15 +70,16 @@ export function ReadScripturePlaybackDock({
   const poolLoop = scriptureChapterPool.getLoop();
   const poolActive = scriptureChapterPool.isActive();
 
-  const playing = Boolean(
-    playback && playback.playbackMode === "scripture" && playback.playing,
-  );
-  const preparing = Boolean(
-    playback &&
-      playback.playbackMode === "scripture" &&
-      playback.scripturePreparing &&
-      !playback.playing,
-  );
+  /**
+   * 读原生推来的这一条流，不再由 `playbackMode === "scripture" && playing` 推导。
+   *
+   * 那两个是三路共用的状态，推导规则散在各处；同一个按钮的图标与点击处理曾经各推一套，
+   * 音乐在放时图标显示 ▶ 而点击执行了暂停（2026-09-08 实测「播着音乐点读经没反应」）。
+   * 现在两边都读 scripture.playing，不可能再对不上。
+   */
+  const scriptureStream = usePlaybackStream("scripture");
+  const playing = scriptureStream.playing;
+  const preparing = Boolean(playback?.scripturePreparing && !playing);
   const durationSec = playback?.scriptureDurationSec ?? 0;
   const durOk = durationSec > 0.05 && Number.isFinite(durationSec);
   const live = playing || poolActive;

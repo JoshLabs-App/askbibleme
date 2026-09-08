@@ -1,4 +1,4 @@
-import { getPlaybackSnapshot, usePlaybackStream } from "../audio/playbackState";
+import { getPlaybackSnapshot, isStreamWanted, usePlaybackStream } from "../audio/playbackState";
 
 export type ShellMusicSignals = {
   /**
@@ -20,7 +20,7 @@ export type ShellMusicSignals = {
  */
 export function useShellMusicSignals(): ShellMusicSignals {
   const music = usePlaybackStream("music");
-  return { wantPlaying: music.wantPlaying && !music.userPaused, nativePlaying: music.playing };
+  return { wantPlaying: isStreamWanted(music), nativePlaying: music.playing };
 }
 
 /**

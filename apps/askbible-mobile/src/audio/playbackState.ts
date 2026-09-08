@@ -138,6 +138,33 @@ export function getShellPlaybackMode(): "music" | "scripture" {
 }
 
 /**
+ * 这一路的播放意图此刻是否成立：起过播，且用户没有按过它的暂停。
+ *
+ * 原生的 `wantPlaying` 单独看是不够的——用户暂停后它仍是 true（音轨还挂着，
+ * 按播放键要能原样接上）。想问「用户还要不要这一路」就得减掉 userPaused。
+ */
+export function isStreamWanted(stream: PlaybackStreamState): boolean {
+  return stream.wantPlaying && !stream.userPaused;
+}
+
+/**
+ * 意图刚发给原生、回执还没到时，先把这一路的意图位落到本地快照。
+ *
+ * 没有这一步就得让 JS 另存一份 `shellXWantPlaying`，于是同一件事有两个存放处——
+ * 那正是这轮重构在拆掉的东西。原生下一次上报会整份覆盖，这里写的只活一个来回。
+ */
+export function applyOptimisticIntent(
+  stream: PlaybackStreamId,
+  intent: { wantPlaying?: boolean; userPaused?: boolean },
+): void {
+  const before = snapshot[stream];
+  const after = { ...before, ...intent };
+  if (after.wantPlaying === before.wantPlaying && after.userPaused === before.userPaused) return;
+  snapshot = { ...snapshot, [stream]: after };
+  for (const listener of listeners) listener();
+}
+
+/**
  * 这一路该不该点亮（黄标）。
  *
  * 「在响」或「刚点下、还在缓冲」都算亮；**用户按过这一路的暂停就不算**。
@@ -146,5 +173,5 @@ export function getShellPlaybackMode(): "music" | "scripture" {
  * 首页音符仍是黄的）。判断只此一处，各处 UI 都调它。
  */
 export function isStreamLit(stream: PlaybackStreamState): boolean {
-  return stream.playing || (stream.wantPlaying && !stream.userPaused);
+  return stream.playing || isStreamWanted(stream);
 }

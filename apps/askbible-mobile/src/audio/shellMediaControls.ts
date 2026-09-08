@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { EventEmitter, requireOptionalNativeModule } from "expo-modules-core";
 import { installShellAudioInterruptionBridge } from "./shellAudioInterruption";
-import { applyNativePlaybackState } from "./playbackState";
+import { applyNativePlaybackState, applyOptimisticIntent } from "./playbackState";
 import { getShellMusicWantPlaying } from "./shellMusicWantPlaying";
 import { getShellScriptureWantPlaying } from "./shellScriptureWantPlaying";
 import { getShellVerseWantPlaying } from "./shellVerseWantPlaying";
@@ -312,6 +312,15 @@ export function syncShellMediaSession(payload: ShellMediaSessionPayload | null):
   lastSentNextAssetUrisKey = nextAssetUrisKey;
   lastSentGapSec = gapSec;
   lastSentGapAssetUri = gapAssetUri;
+  /*
+   * 先把意图落到本地快照，再发给原生。原生回执要过一个来回，中间这段时间里
+   * 「用户还要不要这一路」必须有人能答——以前答这句话的是 JS 另存的
+   * shellXWantPlaying，两份状态各写各的。现在只有一份，原生回执随后覆盖它。
+   */
+  if (kind === "music" || kind === "scripture" || kind === "verse") {
+    if (payload.userPlay) applyOptimisticIntent(kind, { wantPlaying: true, userPaused: false });
+    else if (payload.userPause) applyOptimisticIntent(kind, { userPaused: true });
+  }
   invokeNativeVoid(() => mod.updateSession?.(payloadKey));
 }
 

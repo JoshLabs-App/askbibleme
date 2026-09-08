@@ -97,7 +97,24 @@ icon_lit 3-verse-on "喇叭仍黄" ${TAP_VERSE% *} ${TAP_VERSE#* } lit
 say "4 金句自动接句（40 秒，含 5 秒间隔）"
 adb -s "$DEVICE" logcat -c; sleep 40
 check "原生自己接句" "NativeAdvanced VERSE"
+# 原生接上句之后 JS 不许再点一次播：它会另抽一句、把原生刚起的这句掐掉
+# （Josh：「每点一次音乐，金句就会重新来，甚至会断掉」）。
+if ledger | grep -q "Play VERSE"; then
+  printf "  ✗ 原生接句后 JS 又点了一次播（出现 Play VERSE）\n"; FAIL=$((FAIL+1))
+else
+  printf "  ✓ JS 没有抢着重开金句\n"; PASS=$((PASS+1))
+fi
 shot 4-verse-text   # 文字必须跟着音轨走
+
+say "4b 金句在响时反复点音乐，金句不许断"
+# 偶数次，跑完音乐仍是关的——下一步要靠「点一下就开」这个前提。
+adb -s "$DEVICE" logcat -c
+for _ in 1 2 3 4; do tap "$TAP_MUSIC" 5; done
+if ledger | grep -q "Play VERSE"; then
+  printf "  ✗ 点音乐把金句重开了（出现 Play VERSE）\n"; FAIL=$((FAIL+1))
+else
+  printf "  ✓ 金句没有被音乐打断\n"; PASS=$((PASS+1))
+fi
 
 say "5 播着音乐进读经页点播放"
 tap "$TAB_HOME" 4; tap "$TAP_MUSIC" 6

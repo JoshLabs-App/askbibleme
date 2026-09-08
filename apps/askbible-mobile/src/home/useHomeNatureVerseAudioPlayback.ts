@@ -718,6 +718,16 @@ export function useHomeNatureVerseAudioPlayback({
               key: keyed.trim().toUpperCase(),
               uri: payload.assetUri,
             };
+            /*
+             * 轮播必须走到**原生已经在读的这一句**，而不是自己再抽一句。
+             *
+             * 不钉住的话 advance() 会另抽一个 key（peek 是随机的），播放 effect 随即
+             * userPlay 那一句，把原生刚接上的这句掐掉——Josh 报的「每点一次音乐，
+             * 金句就会重新来，甚至会断掉」就是这个（2026-09-08 账本：
+             * `NativeAdvanced VERSE PRO-26-24` 之后 0.9 秒 `Play VERSE PRO-27-6`）。
+             * 钉住之后 advance() 取的就是队首这一句，两边不会各走各的。
+             */
+            pinNextVerseKeyRef.current?.(keyed);
           }
         } else {
           iosNativeChainedVerseKeyRef.current = null;

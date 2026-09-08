@@ -18,7 +18,6 @@ import {
   writeNotificationPrefs,
 } from "./notification-prefs";
 import { rescheduleAllNotifications } from "./localNotificationScheduler";
-import { ensureAndroidReadingAlarmPermissions } from "./readingAlarmAndroidPermissions";
 
 export function formatReminderTime(hour: number, minute: number): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
@@ -48,7 +47,6 @@ export function useReadingReminderPrefs(locale: AppLocale) {
     if (Platform.OS !== "android" || !prefs?.readingReminderEnabled) return;
     if (androidAlarmPermCheckedRef.current) return;
     androidAlarmPermCheckedRef.current = true;
-    void ensureAndroidReadingAlarmPermissions(locale);
   }, [prefs?.readingReminderEnabled, locale]);
 
   const persist = useCallback(async (next: NotificationPrefsV1) => {
@@ -94,7 +92,6 @@ export function useReadingReminderPrefs(locale: AppLocale) {
       const ok = await ensurePermission();
       if (!ok) return;
       if (Platform.OS === "android") {
-        void ensureAndroidReadingAlarmPermissions(locale);
       }
     }
     await persist({ ...prefs, readingReminderEnabled: enabling });

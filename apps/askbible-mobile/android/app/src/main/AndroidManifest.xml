@@ -1,18 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools">
+  <!--
+    读经闹钟（.alarm 一整套：精确闹钟 + 全屏 Activity + 开机自启 + 前奏音服务）已移除。
+    Google Play 的 SCHEDULE_EXACT_ALARM 政策只批给闹钟/计时器/日历类应用，圣经应用申请必被拒。
+    每日提醒改由 expo-notifications 承担（渠道 importance=HIGH，见 localNotificationScheduler），
+    只需 POST_NOTIFICATIONS，不再需要 SCHEDULE_EXACT_ALARM / RECEIVE_BOOT_COMPLETED /
+    REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 这三个敏感权限。
+    iOS 的 AskBibleReadingAlarmModule 名字里虽有 Alarm，实为 UNUserNotificationCenter 本地通知，保留。
+  -->
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
   <!-- Play 政策：AskBible 核心不是闹钟/通话，禁止声明 USE_FULL_SCREEN_INTENT（含依赖合并） -->
   <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" tools:node="remove"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
-  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -44,33 +49,6 @@
         <data android:scheme="askbible"/>
       </intent-filter>
     </activity>
-    <activity
-      android:name=".alarm.ReadingAlarmActivity"
-      android:exported="false"
-      android:launchMode="singleTask"
-      android:showWhenLocked="true"
-      android:turnScreenOn="true"
-      android:theme="@style/Theme.ReadingAlarm"/>
-    <receiver
-      android:name=".alarm.ReadingAlarmReceiver"
-      android:exported="true">
-      <intent-filter>
-        <action android:name="me.askbible.alarm.ACTION_FIRE"/>
-        <action android:name="me.askbible.alarm.ACTION_AUTO_CONTINUE"/>
-      </intent-filter>
-    </receiver>
-    <receiver
-      android:name=".alarm.ReadingAlarmBootReceiver"
-      android:exported="true">
-      <intent-filter>
-        <action android:name="android.intent.action.BOOT_COMPLETED"/>
-        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-      </intent-filter>
-    </receiver>
-    <service
-      android:name=".alarm.ReadingAlarmPreludeService"
-      android:exported="false"
-      android:foregroundServiceType="mediaPlayback"/>
     <service
       android:name=".playback.ShellPlaybackService"
       android:exported="false"

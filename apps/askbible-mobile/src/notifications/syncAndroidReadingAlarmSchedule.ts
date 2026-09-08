@@ -1,3 +1,12 @@
+/**
+ * iOS 每日提醒的调度。
+ *
+ * 名字里的 Alarm 是历史包袱：iOS 侧 `AskBibleReadingAlarmModule` 用的是标准
+ * `UNUserNotificationCenter` 本地通知，不是闹钟。Android 侧那套真闹钟
+ * （SCHEDULE_EXACT_ALARM + 全屏 Activity + 开机自启）已因 Google Play 的精确闹钟政策移除，
+ * 故这里只对 iOS 生效；Android 的提醒走 expo-notifications
+ * （见 localNotificationScheduler 的 scheduleReadingReminderNotifications）。
+ */
 import { Platform } from "react-native";
 import type { NotificationPrefsV1 } from "@/lib/notifications/notification-prefs-types";
 import { resolveReadingAlarmChapterTarget } from "./resolveReadingAlarmChapterTarget";
@@ -32,7 +41,7 @@ type ReadingAlarmNativeModule = {
 };
 
 function getModule(): ReadingAlarmNativeModule | undefined {
-  if (Platform.OS !== "ios" && Platform.OS !== "android") return undefined;
+  if (Platform.OS !== "ios") return undefined;
   try {
     const { NativeModules } = require("react-native") as typeof import("react-native");
     return NativeModules.AskBibleReadingAlarm as ReadingAlarmNativeModule | undefined;
@@ -102,7 +111,7 @@ export async function maybeAutoStartDueReadingAlarm(): Promise<boolean> {
 
 /** 本地通知触发时走原生预备音乐 / 读经提醒链路。 */
 export function fireNativeReadingAlarmFromNotification(): void {
-  if (Platform.OS !== "ios" && Platform.OS !== "android") return;
+  if (Platform.OS !== "ios") return;
   try {
     getModule()?.fireReadingReminderNow?.();
   } catch {
@@ -206,7 +215,7 @@ function subscribeReadingAlarmEvent(
     | "ReadingAlarmPreludeSession",
   onEvent: () => void,
 ): () => void {
-  if (Platform.OS !== "ios" && Platform.OS !== "android") return () => {};
+  if (Platform.OS !== "ios") return () => {};
   try {
     const { NativeEventEmitter, NativeModules } = require("react-native") as typeof import("react-native");
     const mod = NativeModules.AskBibleReadingAlarm;

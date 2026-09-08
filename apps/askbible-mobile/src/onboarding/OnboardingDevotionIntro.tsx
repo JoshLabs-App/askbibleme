@@ -10,7 +10,6 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { rescheduleAllNotifications } from "../notifications/localNotificationScheduler";
 import { requestNotificationPermissions } from "../notifications/notification-permissions";
 import { readNotificationPrefs, writeNotificationPrefs } from "../notifications/notification-prefs";
-import { ensureAndroidReadingAlarmPermissions } from "../notifications/readingAlarmAndroidPermissions";
 import {
   parchmentContentPaddingHorizontal,
   parchmentWizardMaxWidth,
@@ -65,7 +64,6 @@ export function OnboardingDevotionIntro({
     });
     await requestNotificationPermissions();
     if (Platform.OS === "android") {
-      void ensureAndroidReadingAlarmPermissions(locale);
     }
     await rescheduleAllNotifications();
     await ensureDefaultReadingPlanIfUnset();

@@ -4,6 +4,7 @@ import { getLocale } from "../i18n/locale-store";
 import { resolveUiText } from "../i18n/site-copy";
 import {
   ANDROID_CHANNEL_DAILY_VERSE,
+  ANDROID_LEGACY_CHANNEL_IDS,
   ANDROID_CHANNEL_READING_REMINDER,
   DAILY_VERSE_NOTIFICATION_ID,
   READING_REMINDER_NOTIFICATION_ID,
@@ -25,18 +26,31 @@ let androidChannelsReady = false;
 
 async function ensureAndroidChannels(): Promise<void> {
   if (Platform.OS !== "android" || androidChannelsReady) return;
+  /**
+   * HIGH 而非 DEFAULT：定时提醒要能抬头弹出。DEFAULT 只进通知栏、不弹横幅，
+   * 用户在三星上的反馈是「早上起来没有真实提醒，只在后台」。
+   * 注意渠道设置只在首次创建时生效，故 id 已升到 v2（见 notification-constants.ts）。
+   */
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_READING_REMINDER, {
     name: "Reading reminder",
-    importance: Notifications.AndroidImportance.DEFAULT,
+    importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250],
     lightColor: "#ECD9B9",
   });
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_DAILY_VERSE, {
     name: "Daily verse",
-    importance: Notifications.AndroidImportance.DEFAULT,
+    importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250],
     lightColor: "#ECD9B9",
   });
+  /** 删掉 v1 渠道，免得系统设置里留下两条同名项。 */
+  for (const legacyId of ANDROID_LEGACY_CHANNEL_IDS) {
+    try {
+      await Notifications.deleteNotificationChannelAsync(legacyId);
+    } catch {
+      /* 渠道不存在时忽略 */
+    }
+  }
   androidChannelsReady = true;
 }
 

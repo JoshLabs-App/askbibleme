@@ -15,8 +15,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.facebook.react.ReactActivity
 import me.askbible.widget.WidgetPlaybackBridge
-import me.askbible.alarm.AskBibleReadingAlarmModule
-import me.askbible.alarm.ReadingAlarmReceiver
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
@@ -28,7 +26,6 @@ class MainActivity : ReactActivity() {
     const val TAG = "AskBibleMainActivity"
   }
 
-  private val alarmContinueHandler = Handler(Looper.getMainLooper())
 
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
@@ -38,7 +35,6 @@ class MainActivity : ReactActivity() {
     Log.i(TAG, "onCreate saved=${savedInstanceState != null}")
     super.onCreate(null)
     applyEdgeToEdgeWindow()
-    handleReadingAlarmIntent(intent)
     handleWidgetPlaybackIntent(intent)
   }
 
@@ -46,9 +42,6 @@ class MainActivity : ReactActivity() {
     super.onResume()
     Log.i(TAG, "onResume")
     applyEdgeToEdgeWindow()
-    if (intent != null && intent.getBooleanExtra(ReadingAlarmReceiver.EXTRA_AUTO_PLAY, false)) {
-      prepareForReadingAlarmHandoff()
-    }
   }
 
   private fun applyEdgeToEdgeWindow() {
@@ -84,7 +77,6 @@ class MainActivity : ReactActivity() {
       TAG,
       "onNewIntent widget=${intent?.getBooleanExtra(WidgetPlaybackBridge.EXTRA_WIDGET_PLAYBACK, false) == true}",
     )
-    handleReadingAlarmIntent(intent)
     handleWidgetPlaybackIntent(intent)
   }
 
@@ -102,44 +94,8 @@ class MainActivity : ReactActivity() {
     window?.decorView?.post { moveTaskToBack(true) }
   }
 
-  private fun handleReadingAlarmIntent(intent: Intent?) {
-    if (intent == null) return
-    if (intent.getBooleanExtra(ReadingAlarmReceiver.EXTRA_AUTO_PLAY, false)) {
-      prepareForReadingAlarmHandoff()
-      scheduleReadingAlarmJsContinue()
-      return
-    }
-    if (intent.getBooleanExtra(ReadingAlarmReceiver.EXTRA_PRELUDE_SESSION, false)) {
-      AskBibleReadingAlarmModule.emitPreludeSession(applicationContext)
-    }
-  }
 
-  /** 锁屏闹钟交接：保持亮屏并尝试解除锁屏，便于 RN 直接开始读经。 */
-  private fun prepareForReadingAlarmHandoff() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-      setShowWhenLocked(true)
-      setTurnScreenOn(true)
-      val keyguard = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-      keyguard.requestDismissKeyguard(this, null)
-    } else {
-      @Suppress("DEPRECATION")
-      window.addFlags(
-        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-          WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
-      )
-    }
-    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-  }
 
-  /** RN Bridge 冷启动时可能尚未就绪：pending 仍在时有限次通知 JS。 */
-  private fun scheduleReadingAlarmJsContinue() {
-    val delaysMs = longArrayOf(0L, 400L, 1000L, 2000L, 4000L, 7000L, 12_000L, 20_000L)
-    delaysMs.forEach { delay ->
-      alarmContinueHandler.postDelayed({
-        AskBibleReadingAlarmModule.emitAutoContinue(applicationContext)
-      }, delay)
-    }
-  }
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule

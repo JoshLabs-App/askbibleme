@@ -32,13 +32,6 @@ export const EXPLORE_ENTRIES: ExploreEntry[] = [
     labelKey: "pages.explore.welcomeIconLabel",
   },
   {
-    id: "reading-alarm",
-    href: "/explore/reading-alarm",
-    iconSet: "material-community",
-    icon: "alarm",
-    labelKey: "pages.explore.readingAlarmIconLabel",
-  },
-  {
     id: "reading-plan",
     href: "/explore/reading-planner",
     iconSet: "material-community",

@@ -24,7 +24,6 @@ class MainApplication : Application(), ReactApplication {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
               add(me.askbible.widget.AskBibleWidgetPrefsPackage())
-              add(me.askbible.alarm.AskBibleReadingAlarmPackage())
               add(me.askbible.playback.AskBibleShellMediaControlsPackage())
               add(me.askbible.music.AskBibleMusicAssetPackPackage())
             }
@@ -49,13 +48,6 @@ class MainApplication : Application(), ReactApplication {
     }
     loadReactNative(this)
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
-    me.askbible.alarm.ReadingAlarmPreludeCache.warmAsync(this)
-    val alarmCtx = applicationContext
-    if (me.askbible.alarm.ReadingAlarmPrefs.isEnabled(alarmCtx)) {
-      me.askbible.alarm.ReadingAlarmScheduler.scheduleNext(alarmCtx)
-    } else {
-      me.askbible.alarm.ReadingAlarmScheduler.cancel(alarmCtx)
-    }
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

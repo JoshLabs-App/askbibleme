@@ -1,27 +1,10 @@
-/** iOS：原生音乐引擎最近一次上报是否在播（与 JS `playing` / wantPlaying 解耦）。 */
-let shellMusicNativePlaying = false;
-const listeners = new Set<() => void>();
-
-export function getShellMusicNativePlaying(): boolean {
-  return shellMusicNativePlaying;
-}
-
-export function setShellMusicNativePlaying(next: boolean): void {
-  if (shellMusicNativePlaying === next) return;
-  shellMusicNativePlaying = next;
-  for (const listener of listeners) listener();
-}
-
 /**
- * 首页/壳层音乐图标是否应显示 LOGO 色。
+ * 音乐是否在出声——**已废弃，改读原生发布的状态**（`usePlaybackStream("music").playing`）。
  *
- * 只问音乐这一条流：`playing` 是真的在响，`wantPlaying` 覆盖「刚点下、还在缓冲」那一瞬。
- * 以前要凑 playbackMode + playing + wantPlaying + nativePlaying 四个来源，
- * 是因为没有一个能单独说清；现在原生按流上报了。
+ * 这个 store 曾是 JS 侧对原生播放器的镜像。原生现在按流上报事实，镜像没有读者了；
+ * setter 暂时保留，是为了不一次性改动十几个写入点，它们不再影响任何判断。
+ * 改到某个写入点时应直接删掉调用，而不是继续写一个没人读的值。
  */
-export function isShellMusicChromeActive(args: {
-  musicPlaying: boolean;
-  musicWantPlaying: boolean;
-}): boolean {
-  return args.musicPlaying || args.musicWantPlaying;
+export function setShellMusicNativePlaying(_next: boolean): void {
+  /* 无人读取；见文件头。 */
 }

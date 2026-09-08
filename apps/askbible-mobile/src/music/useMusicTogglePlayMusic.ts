@@ -19,7 +19,6 @@ import {
 } from "../audio/shellMediaControls";
 import { getShellAuxMediaOwner } from "../audio/shellAuxMediaOwner";
 import {
-  getShellMusicNativePlaying,
   setShellMusicNativePlaying,
 } from "../audio/shellMusicNativePlaying";
 import {

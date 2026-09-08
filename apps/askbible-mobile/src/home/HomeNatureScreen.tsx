@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { parseVerseKey } from "@/lib/bible/parse-verse-key";
 import type { AppLocale } from "../i18n/config";
 import { useLocale } from "../i18n/LocaleProvider";
-import { isShellMusicChromeActive } from "../audio/shellMusicNativePlaying";
+import { isShellMusicChromeActive } from "../music/useShellMusicSignals";
 import { useShellMusicSignals } from "../music/useShellMusicSignals";
 import {
   getShellScriptureWantPlaying,

@@ -33,3 +33,17 @@ export function isShellMusicOn(
   return signals.nativePlaying || signals.wantPlaying;
 }
 
+
+/**
+ * 首页/壳层音乐图标是否点亮。
+ *
+ * `playing` 是真的在响，`wantPlaying` 覆盖「刚点下、还在缓冲」那一瞬。
+ * 以前要凑 playbackMode + playing + wantPlaying + nativePlaying 四个来源，
+ * 因为没有一个能单独说清；原生按流上报后只需这两个。
+ */
+export function isShellMusicChromeActive(args: {
+  musicPlaying: boolean;
+  musicWantPlaying: boolean;
+}): boolean {
+  return args.musicPlaying || args.musicWantPlaying;
+}

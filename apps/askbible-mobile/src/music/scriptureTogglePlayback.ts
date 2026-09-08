@@ -104,12 +104,6 @@ export async function pauseScriptureShellPlayback(
     setShellNativeAudioTakeover(false);
     return;
   }
-  const sound = ctx.soundRef.current;
-  if (sound) {
-    await safePauseSound(sound);
-    // 真机状态回调可能又把 playing 拉回 true；暂停意图优先。
-    ctx.setPlaying(false);
-  }
 }
 
 export async function toggleScripturePlayback(
@@ -168,7 +162,6 @@ export async function toggleScripturePlayback(
     // 原生读经：无 expo-av Sound，直接 pause / apply 续播。
     if (
       canQuickToggleLoadedSession &&
-      !ctx.soundRef.current &&
       desiredChapter
     ) {
       if (getShellScriptureWantPlaying() || ctx.scriptureWantPlayingRef.current) {
@@ -200,30 +193,10 @@ export async function toggleScripturePlayback(
       return;
     }
 
-    // 已加载会话：直接 pause/resume，避免每次点播放条都 resolve 源（模拟器上极慢）
-    const existingSound = ctx.soundRef.current;
-    if (canQuickToggleLoadedSession && existingSound) {
-      if (ctx.scripturePlayInFlightRef.current) {
-        await awaitPlayInFlightOrTimeout(ctx.scripturePlayInFlightRef);
-      }
-      const st = await safeGetSoundStatus(existingSound);
-      if (st?.isLoaded) {
-        // 真机 isPlaying 偶发 false，仍以 wantPlaying / UI 意图判断「应暂停」。
-        if (st.isPlaying || ctx.scriptureWantPlayingRef.current) {
-          ctx.setScripturePreparing(false);
-          await pauseScriptureShellPlayback(ctx);
-          return;
-        }
-        await configureScriptureShellAudioMode();
-        clearShellMediaSessionUserDismissed();
-        markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
-        ctx.autoPlayScriptureRef.current = true;
-        const ok = await safePlaySound(existingSound);
-        ctx.setPlaying(ok);
-        ctx.setScripturePreparing(false);
-        return;
-      }
-    }
+    /*
+     * 这里原有一条「已加载的 expo-av 会话就直接 pause/resume，省掉重新 resolve 源」的快捷路径。
+     * soundRef 在真机上永远是 null（音频全部由原生播放器出声），整段执行不到，已删。
+     */
 
     await configureScriptureShellAudioMode();
     const rc = desiredChapter;
@@ -275,35 +248,12 @@ export async function toggleScripturePlayback(
       if (ctx.scripturePlayInFlightRef.current) {
         await awaitPlayInFlightOrTimeout(ctx.scripturePlayInFlightRef);
       }
-      const sound = ctx.soundRef.current;
-      if (!sound) {
-        const ok = await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
-        if (!ok && didLeavePool) haltNativeScriptureAfterFailedSwitch(ctx);
-        return;
-      }
-      const st = await safeGetSoundStatus(sound);
-      if (!st?.isLoaded) {
-        clearShellMediaSessionUserDismissed();
-        await ctx.playScripture(scriptureSrc);
-        return;
-      }
-      if (st.isPlaying || ctx.scriptureWantPlayingRef.current) {
-        ctx.setScripturePreparing(false);
-        await pauseScriptureShellPlayback(ctx);
-      } else {
-        clearShellMediaSessionUserDismissed();
-        markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
-        const ok = await safePlaySound(sound);
-        ctx.setPlaying(ok);
-        ctx.setScripturePreparing(false);
-      }
+      const ok = await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
+      if (!ok && didLeavePool) haltNativeScriptureAfterFailedSwitch(ctx);
       return;
     }
 
     if (ctx.playbackModeRef.current !== "scripture") {
-      if (ctx.soundRef.current) {
-        await ctx.unloadCurrent();
-      }
       clearShellMediaSessionUserDismissed();
       markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
       const ok = await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
@@ -313,9 +263,6 @@ export async function toggleScripturePlayback(
 
     // 原生换章：勿 stopScripturePlayback（会拆池并清会话）；userPlay 新 URI 顶掉旧轨。
     clearShellMediaSessionUserDismissed();
-    if (ctx.soundRef.current) {
-      await ctx.unloadCurrent();
-    }
     markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
     const ok = await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);
     if (!ok && didLeavePool) haltNativeScriptureAfterFailedSwitch(ctx);

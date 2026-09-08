@@ -21,7 +21,6 @@ import {
 } from "../audio/shellScriptureWantPlaying";
 import { setShellVerseWantPlaying } from "../audio/shellVerseWantPlaying";
 import { readCuvChapterAudioVoice } from "../bible/cuv-chapter-audio-voice-prefs";
-import { createScriptureSound } from "./scriptureSoundCreate";
 import { isScripturePlayAttemptCurrent } from "./scripturePlaybackExclusive";
 import { markScriptureWantPlaying } from "./scriptureResumeAfterInterruption";
 import { clearScriptureChapterHandoff } from "./scripturePlaybackPriority";

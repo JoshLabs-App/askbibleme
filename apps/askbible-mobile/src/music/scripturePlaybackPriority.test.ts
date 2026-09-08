@@ -11,7 +11,6 @@ import type { MutableRefObject } from "react";
 function makeRefs(overrides: Partial<ScripturePriorityRefs> = {}): ScripturePriorityRefs {
   return {
     playbackModeRef: { current: "scripture" as const },
-    soundRef: { current: {} as never },
     scriptureWantPlayingRef: { current: true },
     scripturePlayInFlightRef: { current: null as Promise<void> | null },
     autoPlayScriptureRef: { current: false },

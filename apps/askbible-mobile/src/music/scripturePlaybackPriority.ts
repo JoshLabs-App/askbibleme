@@ -5,7 +5,6 @@ import { peekReadPlanFlowAutoplay } from "../read/read-plan-flow-autoplay";
 /** 判断「圣经朗读会话是否应受保护、不被音乐抢占」所需的 ref 集合。 */
 export type ScripturePriorityRefs = {
   playbackModeRef: MutableRefObject<"music" | "scripture">;
-  soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
@@ -26,7 +25,6 @@ export function isScripturePlaybackProtected(
 ): boolean {
   if (refs.playbackModeRef.current !== "scripture") return false;
   if (state.scripturePreparing) return true;
-  if (state.playing && refs.soundRef.current != null) return true;
   if (refs.scriptureWantPlayingRef.current) return true;
   if (refs.scripturePlayInFlightRef.current) return true;
   if (refs.autoPlayScriptureRef.current) return true;

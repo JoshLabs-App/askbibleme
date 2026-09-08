@@ -296,9 +296,16 @@ describe("toggleScripturePlayback", () => {
   });
 
 
-  it("on listen host resumes plan pool track instead of stale read-chapter registration", async () => {
-    const sound = { id: "plan-sound" };
+  /**
+   * 计划播放页：应该续播池里的当前轨（使徒行传 9），而不是章页残留的注册（马太福音 8）。
+   *
+   * 早先这条断言的是 expo-av 的「已加载会话直接 resume」快捷路径。那条路径已删——
+   * 真机上音频全部由原生播放器出声，soundRef 永远是 null，整段执行不到。
+   * 要守的行为没变，只是现在经由原生起播。
+   */
+  it("on listen host plays the plan pool track instead of the stale read-chapter registration", async () => {
     mocks.getPlanFlowUiHost.mockReturnValue("listen");
+    mocks.resolveScripturePlayableSrcForChapter.mockResolvedValue("file:///act-9.mp3");
     mocks.getScripturePlayingChapter.mockReturnValue({
       bookId: "ACT",
       chapter: 9,
@@ -326,7 +333,7 @@ describe("toggleScripturePlayback", () => {
     });
 
     const ctx = {
-      soundRef: { current: sound },
+      soundRef: { current: null },
       activeSoundIdRef: { current: 1 },
       playbackEpochRef: { current: 1 },
       playbackModeRef: { current: "scripture" },
@@ -355,9 +362,20 @@ describe("toggleScripturePlayback", () => {
 
     await toggleScripturePlayback(ctx as unknown as ChapterPlaybackCtx);
 
-    expect(mocks.safePlaySound).toHaveBeenCalledWith(sound);
-    expect(mocks.scriptureChapterPoolStop).not.toHaveBeenCalled();
+    /**
+     * 续播的是池里的使徒行传 9，不是章页残留的马太福音 8。
+     * 同一章已有音轨时走原生续播，不必重新解析源，所以 tryPlayScriptureWithFallback 不该被调。
+     */
+    expect(mocks.syncShellMediaSessionExplicit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assetUri: "file:///act-9.mp3",
+        title: expect.stringContaining("使徒行传"),
+        kind: "scripture",
+        userPlay: true,
+      }),
+    );
     expect(ctx.tryPlayScriptureWithFallback).not.toHaveBeenCalled();
+    expect(mocks.scriptureChapterPoolStop).not.toHaveBeenCalled();
     expect(ctx.setPlaying).toHaveBeenCalledWith(true);
   });
 

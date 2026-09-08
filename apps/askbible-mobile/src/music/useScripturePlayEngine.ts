@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { MutableRefObject } from "react";
-import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { pauseShellAppMusic } from "../audio/shellMediaControls";
 import { setShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 import { endPlanFlowChapterAdvance, consumeReadPlanFlowAutoplay, clearPlanFlowSessionActive } from "../read/read-plan-flow-autoplay";
@@ -80,10 +80,8 @@ export function useScripturePlayEngine({
     scriptureChapterPool.stop();
     markScriptureWantPlaying(refs.scriptureWantPlayingRef, false);
     setShellScriptureWantPlaying(false);
-    if (isNativeMainTrackOs()) {
-      pauseShellAppMusic();
-      setShellNativeAudioTakeover(false);
-    }
+    pauseShellAppMusic();
+    setShellNativeAudioTakeover(false);
     refs.autoPlayScriptureRef.current = false;
     consumeReadPlanFlowAutoplay();
     clearPlanFlowSessionActive();

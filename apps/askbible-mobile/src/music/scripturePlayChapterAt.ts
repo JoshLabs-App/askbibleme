@@ -6,7 +6,7 @@ import {
   syncShellMediaSessionExplicit,
 } from "../audio/shellMediaControls";
 import { getShellMediaSceneArtworkUri } from "../audio/shellMediaSceneArtwork";
-import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import {
   getShellScriptureWantPlaying,
   setShellScriptureWantPlaying,
@@ -86,10 +86,8 @@ export function haltNativeScriptureAfterFailedSwitch(
   ctx.autoPlayScriptureRef.current = false;
   consumeReadPlanFlowAutoplay();
   setShellScriptureWantPlaying(false);
-  if (isNativeMainTrackOs()) {
-    pauseShellAppMusic();
-    setShellNativeAudioTakeover(false);
-  }
+  pauseShellAppMusic();
+  setShellNativeAudioTakeover(false);
   ctx.setPlaying(false);
 }
 
@@ -147,7 +145,6 @@ export async function playScriptureChapterAt(
       }
       // 原生：无 Sound 时用 apply/resume 续播同一章
       if (
-        isNativeMainTrackOs() &&
         !sound &&
         ctx.scriptureSrcRef.current &&
         (getShellScriptureWantPlaying() || ctx.scriptureWantPlayingRef.current || ctx.isStarted())
@@ -184,10 +181,6 @@ export async function playScriptureChapterAt(
     if (!translationSupportsChapterAudio(args.translationId)) {
       ctx.setScripturePreparing(false);
       return false;
-    }
-    // 安卓原生读经不要先改 expo-av 音频模式：三星会 setSpeakerphoneOn，章页点了没声。
-    if (!isNativeMainTrackOs()) {
-      await configureScriptureShellAudioMode();
     }
     const voiceId = await readCuvChapterAudioVoice();
     const scriptureSrc = await resolveScripturePlayableSrcForChapter({
@@ -289,7 +282,7 @@ export async function playScriptureChapterAt(
       scriptureStopAtOnEndedRef: ctx.scriptureStopAtOnEndedRef,
     });
     // 原生：段末 stopAt 在首帧 apply 之后补推一次。
-    if (isNativeMainTrackOs() && getShellScriptureWantPlaying()) {
+    if (getShellScriptureWantPlaying()) {
       const live = ctx.readChapterRef.current;
       const src = ctx.scriptureSrcRef.current;
       const stopAt = ctx.scriptureStopAtSecRef.current;

@@ -1,4 +1,4 @@
-import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import {
   clearShellMediaSessionUserDismissed,
@@ -77,7 +77,7 @@ export async function pauseScriptureShellPlayback(
   }
   // 先更新 UI，避免等 AsyncStorage / 落盘时「点了暂停没反应」
   ctx.setPlaying(false);
-  const nativeScripture = isNativeMainTrackOs() && getShellScriptureWantPlaying();
+  const nativeScripture = getShellScriptureWantPlaying();
   setShellScriptureWantPlaying(false);
   void flushTodayPlanScriptureResume();
   const playback = getActiveReadChapterPlayback();
@@ -167,7 +167,6 @@ export async function toggleScripturePlayback(
 
     // 原生读经：无 expo-av Sound，直接 pause / apply 续播。
     if (
-      isNativeMainTrackOs() &&
       canQuickToggleLoadedSession &&
       !ctx.soundRef.current &&
       desiredChapter

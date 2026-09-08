@@ -1,7 +1,6 @@
 import type { AudioPlayer } from "expo-audio";
 import type { LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { useCallback } from "react";
-import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import {
   prepareMusicTrackForPlay,

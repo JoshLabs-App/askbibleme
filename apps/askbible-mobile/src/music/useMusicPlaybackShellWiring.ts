@@ -5,8 +5,6 @@ import { useMusicPlayTrack } from "./useMusicPlayTrack";
 import { useMusicShellUnload } from "./useMusicShellUnload";
 import { useMusicTrackDownload } from "./useMusicTrackDownload";
 import { useScriptureShellPlayback } from "./scriptureShellPlayback";
-import { useScriptureInterruptionRecovery } from "./useScriptureInterruptionRecovery";
-import { useMusicInterruptionRecovery } from "./useMusicInterruptionRecovery";
 import { useMusicNativeTakeover } from "./useMusicNativeTakeover";
 import { useMusicFollowNativeTrack } from "./useMusicFollowNativeTrack";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
@@ -86,26 +84,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
     lastScriptureProgressSecRef: refs.lastScriptureProgressSecRef,
   });
 
-  useScriptureInterruptionRecovery({
-    playing,
-    scripturePreparing,
-    playbackModeRef: refs.playbackModeRef,
-    soundRef: refs.soundRef,
-    scriptureWantPlayingRef: scripture.scriptureWantPlayingRef,
-    scripturePlayInFlightRef: scripture.scripturePlayInFlightRef,
-    scriptureStopAtSecRef: scripture.scriptureStopAtSecRef,
-    readChapterRef: scripture.readChapterRef,
-    autoPlayScriptureRef: scripture.autoPlayScriptureRef,
-    scriptureAudioRepeatRef,
-    scriptureChapterEndHandledRef: scripture.scriptureChapterEndHandledRef,
-    scriptureChapterHandoffRef: scripture.scriptureChapterHandoffRef,
-    scriptureLastProgressMsRef: scripture.scriptureLastProgressMsRef,
-    scriptureLastProgressAtRef: scripture.scriptureLastProgressAtRef,
-    scriptureSrcRef: scripture.scriptureSrcRef,
-    tryPlayScriptureWithFallback: scripture.tryPlayScriptureWithFallback,
-    setPlaying,
-  });
-
   const { cacheMusicTrackInBackground, downloadMusicTrackAt } = useMusicTrackDownload({
     tracks,
     storeRef: refs.storeRef,
@@ -146,15 +124,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
     setTrackIndex,
     setMusicCurrentSec,
     persistMusicResume,
-  });
-
-  useMusicInterruptionRecovery({
-    playing,
-    playbackModeRef: refs.playbackModeRef,
-    soundRef: refs.soundRef,
-    playingStateRef: refs.playingStateRef,
-    musicGainRef: refs.musicGainRef,
-    setPlaying,
   });
 
   useMusicNativeTakeover({

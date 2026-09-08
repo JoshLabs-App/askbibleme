@@ -1,6 +1,5 @@
 import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
-import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { logShellSoundError } from "../audio/safeShellSound";
 import { syncShellMediaPlaybackRate } from "../audio/shellMediaControls";
 import { registerPlanFlowEntryCallback } from "../read/read-plan-flow-autoplay";

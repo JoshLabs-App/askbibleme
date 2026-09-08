@@ -14,7 +14,7 @@ import {
   getShellMediaSceneArtworkUri,
   reshuffleShellMediaSceneArtwork,
 } from "../audio/shellMediaSceneArtwork";
-import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import {
   getShellScriptureWantPlaying,
   setShellScriptureWantPlaying,
@@ -135,8 +135,8 @@ export async function loadAndPlayScriptureSound({
   const voiceId = rc ? await readCuvChapterAudioVoice() : undefined;
   logScripturePlayTiming(t0, "voice prefs resolved");
 
-  // iOS / Android：读经计划/章朗读走原生播放器，锁屏才不会被 expo-av + JS 轮询掐死。
-  if (isNativeMainTrackOs() && rc) {
+  /** 读经一律走原生播放器；expo-av 那条路径已删（锁屏下它会被 JS 轮询掐死）。 */
+  if (rc) {
     const nativeUri = await resolveIosNativeScriptureAssetUri({
       src,
       translationId: rc.translationId,
@@ -231,88 +231,20 @@ export async function loadAndPlayScriptureSound({
     }
   }
 
-  await configureScriptureShellAudioMode();
-  const bundledModule = rc
-    ? resolveScriptureBundledModule({
-        translationId: rc.translationId,
-        bookId: rc.bookId,
-        chapter: rc.chapter,
-        voiceId,
-      })
-    : null;
-  const avSource = await resolveScriptureAvSource(src, bundledModule);
-  if (!avSource) {
-    setScripturePreparing(false);
-    if (!soundRef.current) {
-      setPlaybackMode("music");
-      playbackModeRef.current = "music";
-      clearScripturePlayingChapter();
-    }
-    return { ok: false, stale: false };
+  /*
+   * 走到这里表示这一章连原生播放器都拿不到可播的 URI（没内置、没下载、没缓存、
+   * 源也不是文件或远程，且不允许流式）。以前这里会退回 expo-av 再试一次——
+   * 但那种情况下 expo-av 同样无米下锅，而它一旦真的出声，就又出现了第二个播放器。
+   * 直接干净地失败。
+   */
+  setScripturePreparing(false);
+  if (!soundRef.current) {
+    setPlaybackMode("music");
+    playbackModeRef.current = "music";
+    clearScripturePlayingChapter();
   }
   if (__DEV__) {
-    console.warn("[scripture-audio] playScripture source", src, bundledModule ?? "remote");
+    console.warn("[scripture-audio] no playable native uri:", src);
   }
-  setShellScriptureWantPlaying(false);
-
-  const created = await createScriptureSound({
-    bridge,
-    avSource,
-    soundId,
-    epoch,
-    readChapterRef,
-    scripturePlaybackRateRef,
-    scriptureAudioRepeatRef,
-    lastScriptureProgressSecRef,
-    scriptureStopAtSecRef,
-    scriptureStopAtOnEndedRef,
-    autoPlayScriptureRef,
-    scriptureWantPlayingRef,
-    scripturePlayInFlightRef,
-    scriptureChapterEndHandledRef,
-    scriptureChapterHandoffRef,
-    scriptureLastProgressMsRef,
-    scriptureLastProgressAtRef,
-    scriptureSrcRef,
-    setPlaying,
-    setScriptureCurrentSec,
-    setScriptureDurationSec,
-    setPlaybackMode,
-  });
-
-  if (!created.ok) {
-    setScripturePreparing(false);
-    if (!created.stale && !soundRef.current) {
-      setPlaybackMode("music");
-      playbackModeRef.current = "music";
-      clearScripturePlayingChapter();
-    }
-    if (!created.stale && __DEV__) {
-      console.warn("[scripture-audio] play failed:", src);
-    }
-    return created;
-  }
-
-  if (playSeq != null && !isScripturePlayAttemptCurrent(playSeq)) {
-    try {
-      created.sound.remove();
-    } catch {
-      /* ignore */
-    }
-    setScripturePreparing(false);
-    return { ok: false, stale: true };
-  }
-
-  soundRef.current = created.sound;
-  markScriptureWantPlaying(scriptureWantPlayingRef, true);
-  clearScriptureChapterHandoff(scriptureChapterHandoffRef);
-  if (intendedChapter) {
-    setScripturePlayingChapter(intendedChapter);
-  }
-  setPlaying(true);
-  setScripturePreparing(false);
-  void import("../read/reading-habit-stats")
-    .then(({ recordAnyReadingActivityDay }) => recordAnyReadingActivityDay())
-    .catch(() => undefined);
-  return { ok: true };
+  return { ok: false, stale: false };
 }

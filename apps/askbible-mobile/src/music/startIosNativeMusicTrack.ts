@@ -11,7 +11,7 @@ import { reshuffleShellMediaSceneArtwork } from "../audio/shellMediaSceneArtwork
 import { patchShellMediaSessionLiveArgs } from "../audio/shellMediaSessionPayload";
 import { setShellMusicNativePlaying } from "../audio/shellMusicNativePlaying";
 import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
-import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { setShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 import { warmBundledModuleUri } from "./musicTrackPlayback";
 import type { PlaybackTrack } from "./types";

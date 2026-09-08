@@ -1,5 +1,4 @@
 import type { MutableRefObject } from "react";
-import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import type { AudioPlayer } from "expo-audio";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 import type { MusicPlaybackMode } from "./musicPlaybackTypes";
@@ -16,7 +15,6 @@ export function isScripturePlaybackStarted(args: {
   if (args.soundRef.current != null && args.scriptureSrcRef.current != null) return true;
   // 原生读经：无 expo-av Sound，以 want + src 为准。
   if (
-    isNativeMainTrackOs() &&
     getShellScriptureWantPlaying() &&
     args.scriptureSrcRef.current != null
   ) {

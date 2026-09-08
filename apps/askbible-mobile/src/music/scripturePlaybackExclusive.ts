@@ -1,6 +1,5 @@
 import type { MutableRefObject } from "react";
 import type { AudioPlayer } from "expo-audio";
-import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
 
 /** 全局经文播放入队序号：新请求 supersede 旧 load，保证任意时刻仅一条音轨。 */
@@ -24,7 +23,6 @@ export function isScripturePlaybackBusy(args: {
   if (args.playbackModeRef.current === "scripture" && args.soundRef.current != null) return true;
   // 原生读经：无 expo-av Sound，wantPlaying 即视为占用。
   if (
-    isNativeMainTrackOs() &&
     args.playbackModeRef.current === "scripture" &&
     getShellScriptureWantPlaying()
   ) {

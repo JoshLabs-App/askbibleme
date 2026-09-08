@@ -155,11 +155,17 @@ export function isStreamWanted(stream: PlaybackStreamState): boolean {
  */
 export function applyOptimisticIntent(
   stream: PlaybackStreamId,
-  intent: { wantPlaying?: boolean; userPaused?: boolean },
+  intent: { wantPlaying?: boolean; userPaused?: boolean; uri?: string | null },
 ): void {
   const before = snapshot[stream];
   const after = { ...before, ...intent };
-  if (after.wantPlaying === before.wantPlaying && after.userPaused === before.userPaused) return;
+  if (
+    after.wantPlaying === before.wantPlaying &&
+    after.userPaused === before.userPaused &&
+    after.uri === before.uri
+  ) {
+    return;
+  }
   snapshot = { ...snapshot, [stream]: after };
   for (const listener of listeners) listener();
 }

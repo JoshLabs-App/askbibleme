@@ -318,8 +318,18 @@ export function syncShellMediaSession(payload: ShellMediaSessionPayload | null):
    * shellXWantPlaying，两份状态各写各的。现在只有一份，原生回执随后覆盖它。
    */
   if (kind === "music" || kind === "scripture" || kind === "verse") {
-    if (payload.userPlay) applyOptimisticIntent(kind, { wantPlaying: true, userPaused: false });
-    else if (payload.userPause) applyOptimisticIntent(kind, { userPaused: true });
+    if (payload.userPlay) {
+      /*
+       * `uri` 也要一起落。判断「主轨是不是读经」看的就是 scripture 这条流有没有音轨，
+       * 只落 wantPlaying 的话，从发出播放命令到原生回执到达的那一小段时间里
+       * 这个问题的答案仍是「音乐」——于是刚点播的那一章会被判定成「没起播成功」，
+       * 上层跟着跳去下一章（2026-09-08 iOS 实测：点播创世记 1，日志随即
+       * `playScriptureChapter failed GEN 1`，然后自己播了创世记 2）。
+       */
+      applyOptimisticIntent(kind, { wantPlaying: true, userPaused: false, uri: assetUri });
+    } else if (payload.userPause) {
+      applyOptimisticIntent(kind, { userPaused: true });
+    }
   }
   invokeNativeVoid(() => mod.updateSession?.(payloadKey));
 }

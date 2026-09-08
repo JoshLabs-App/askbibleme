@@ -140,6 +140,56 @@ APK / IPA / AAB 装到设备并验证之后**立刻删掉，不用问**——同
 - 同理适用 `dist` / `build` / `.next` / `DerivedData` / `__pycache__`：纯本地产物，重跑就有。
 - **不要**碰 `node_modules` / `.venv` / `Pods`——删了当场要联网重装，打断工作流。
 
+### 播放：三条流，状态住在原生
+
+App 的音频有三条：**音乐 / 读经 / 金句**。2026-09-08 整个播放层被推倒重写，改动前先读这一节。
+
+**规矩一：三条流各有各的状态，不共用。**
+`StreamState { wantPlaying, uri, queue, positionSec, userPaused… }` 每条一份。
+「关音乐」在物理上碰不到金句的字段。**不要再往里加跨流的全局标志**——重写前那袋 25 个
+共用标志（`userPaused`、`playing`、`forceRestartUri`…）是连续六个 bug 的唯一来源，
+每个读取点都得自己拼「这次算不算我」，拼错一处就出问题。
+
+**规矩二：唯一真相在原生，JS 只发意图。**
+JS 说「我想播这个」（`Intent`），原生回报「我现在在播这个」（`NativeAdvanced`）。
+关屏后 JS 会被 Doze/挂起冻住，状态住在会被冻住的一侧就必然分叉——旧代码里 JS 拿着慢一拍
+的答案覆盖原生刚接上的音轨，实测新句播了 0.9 秒被掐。**JS 的保活同步不得改变谁在播**，
+只能补队列与元数据。
+
+**规矩三：互斥关系只写在一张表里。**
+`EXCLUSIVE_WITH`：音乐↔读经互斥，读经↔金句互斥，**音乐与金句可以同响**（金句叠在背景乐上）。
+要改关系就改这张表，不要在别处加 `if (kind == ...)`。
+
+代码位置（两个平台结构对称）：
+
+| | Android | iOS |
+|---|---|---|
+| 纯状态机 | `playback/model/PlaybackModel.kt` | `modules/askbible-shell-media-controls/ios/model/PlaybackModel.swift` |
+| JS 载荷翻译 | `model/JsIntent.kt` | `model/JsIntent.swift` |
+| 状态仓库（唯一入口 + 意图账本） | `model/PlaybackStore.kt` | `ios/PlaybackStore.swift` |
+| 单条流的播放器（不做任何判断） | `playback/StreamPlayer.kt` | `ios/StreamPlayer.swift` |
+| 状态→播放（唯一决定「谁该响」的地方） | `playback/PlaybackEngine.kt` | `ios/PlaybackEngine.swift` |
+
+**两边跑同一组 30 条用例**，每条注明它对应的真实故障与当时的 logcat 证据。改了一边必须同步另一边：
+
+```bash
+cd apps/askbible-mobile/android && ./gradlew :app:testReleaseUnitTest
+cd apps/askbible-mobile/modules/askbible-shell-media-controls/ios && swift test
+```
+
+**排查播放问题先看意图账本**，别从读代码开始：
+
+```bash
+adb logcat -s AskBiblePlayback:V                       # Android
+xcrun simctl spawn <udid> log show --last 5m --info \
+  --predicate 'subsystem == "me.askbible"'             # iOS
+```
+
+每行形如 `pause music -> audible=[VERSE]`，能直接看出是哪条意图、之后谁在响。
+「关音乐会停掉金句」那个 bug 在旧架构里查了几小时没找到，换成账本后第一次运行就自己跳出来：
+`PauseAll -> audible=[]`——JS 的 `pauseAppMusic()` 一直是停全部，只是在一袋共用标志里
+和「停音乐」长得一模一样。
+
 ### 防止变大
 
 - 只做当前真正需要的部分，不为了“顺手”扩出周边功能。

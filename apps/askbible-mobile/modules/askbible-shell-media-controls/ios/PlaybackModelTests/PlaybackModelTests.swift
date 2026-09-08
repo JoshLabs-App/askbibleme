@@ -94,6 +94,15 @@ final class PlaybackModelTests: XCTestCase {
     XCTAssertTrue(s.audibleStreams.isEmpty)
   }
 
+  /// 单独续播一路时，别的暂停中的流要留在暂停状态。
+  func testResumeBringsBackOnlyThatStream() {
+    let paused = reduce(playVerse(playMusic()), .pauseAll)
+    let s = reduce(paused, .resume(.verse))
+
+    XCTAssertEqual(s.audibleStreams, [.verse])
+    XCTAssertTrue(s.music.userPaused)
+  }
+
   /// 播放键只恢复暂停键停掉的那几路，手动关掉的那路要留在关闭状态。
   func testTransportResumeRestoresOnlyWhatItPaused() {
     let musicOff = reduce(playMusic(), .pause(.music))

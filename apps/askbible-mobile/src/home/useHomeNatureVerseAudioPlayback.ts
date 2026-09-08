@@ -92,6 +92,8 @@ type Args = {
   verseKey: string | null;
   active: boolean;
   advanceNow: () => Promise<void>;
+  /** 把界面切到指定这一句（原生已在读它）。跟随专用，不抽签。 */
+  showVerseKey?: (key: string) => Promise<boolean>;
   /** iOS 后台换句：预取下一句本地 URI，供原生 gap 后直接接播。 */
   peekNextVerseKey?: () => string | null;
   peekNextTwoVerseKeys?: () => [string | null, string | null];
@@ -105,6 +107,7 @@ export function useHomeNatureVerseAudioPlayback({
   verseKey,
   active,
   advanceNow,
+  showVerseKey,
   peekNextVerseKey,
   peekNextTwoVerseKeys,
   peekNextVerseKeys,
@@ -121,6 +124,7 @@ export function useHomeNatureVerseAudioPlayback({
   );
   const soundRef = useRef<AudioPlayer | null>(null);
   const advanceNowRef = useRef(advanceNow);
+  const showVerseKeyRef = useRef(showVerseKey);
   const peekNextVerseKeyRef = useRef(peekNextVerseKey);
   const peekNextTwoVerseKeysRef = useRef(peekNextTwoVerseKeys);
   const peekNextVerseKeysRef = useRef(peekNextVerseKeys);
@@ -183,6 +187,9 @@ export function useHomeNatureVerseAudioPlayback({
   useEffect(() => {
     advanceNowRef.current = advanceNow;
   }, [advanceNow]);
+  useEffect(() => {
+    showVerseKeyRef.current = showVerseKey;
+  }, [showVerseKey]);
   useEffect(() => {
     peekNextVerseKeyRef.current = peekNextVerseKey;
   }, [peekNextVerseKey]);
@@ -706,7 +713,7 @@ export function useHomeNatureVerseAudioPlayback({
       // 上一句听完：把墙钟时长计入解锁进度。
       flushListeningTime();
       phaseRef.current = "gap";
-      // 原生已接播下一句：仍要 advance 文案/key；play effect 只补预取，不重开播放器。
+      // 原生已接播下一句：文案跟过去即可；play effect 只补预取，不重开播放器。
       if (payload?.nativeChained) {
         gapEndHandledRef.current = false;
         if (payload.assetUri) {
@@ -718,16 +725,6 @@ export function useHomeNatureVerseAudioPlayback({
               key: keyed.trim().toUpperCase(),
               uri: payload.assetUri,
             };
-            /*
-             * 轮播必须走到**原生已经在读的这一句**，而不是自己再抽一句。
-             *
-             * 不钉住的话 advance() 会另抽一个 key（peek 是随机的），播放 effect 随即
-             * userPlay 那一句，把原生刚接上的这句掐掉——Josh 报的「每点一次音乐，
-             * 金句就会重新来，甚至会断掉」就是这个（2026-09-08 账本：
-             * `NativeAdvanced VERSE PRO-26-24` 之后 0.9 秒 `Play VERSE PRO-27-6`）。
-             * 钉住之后 advance() 取的就是队首这一句，两边不会各走各的。
-             */
-            pinNextVerseKeyRef.current?.(keyed);
           }
         } else {
           iosNativeChainedVerseKeyRef.current = null;
@@ -735,8 +732,26 @@ export function useHomeNatureVerseAudioPlayback({
         iosVerseStartedAtRef.current = Date.now();
         phaseRef.current = "verse";
         verseEndHandledRef.current = false;
+        /*
+         * 原生已经在读某一句了：界面直接切过去，**不要走 advance()**。
+         *
+         * advance() 是「抽下一句」那条路——先看钉住的队首、否则随机挑。即使先把
+         * 原生这句钉进队首也不保险：随后的预取会把整份队列改写，钉住的那句被挤掉，
+         * 于是抽到另一句、播放 effect 再把它播出来，把原生刚起的这句掐断
+         * （2026-09-08 真机账本：`NativeAdvanced VERSE 2TI-4-1` 之后 0.8 秒
+         * `Play VERSE MAT-18-18`）。跟随就该是查表赋值，不是再决定一次。
+         */
+        const followKey = iosNativeChainedVerseKeyRef.current;
+        if (followKey && showVerseKeyRef.current) {
+          gapEndHandledRef.current = true;
+          clearGapTimer();
+          clearResumeTimer();
+          void showVerseKeyRef.current(followKey).catch(() => undefined);
+        } else {
+          finishGapAndAdvance();
+        }
       }
-      finishGapAndAdvance();
+      if (!payload?.nativeChained) finishGapAndAdvance();
       // 仅原生已接播下一句时补队列。非 chained 时 srcRef 仍是旧句，勿再 sync（会把同一句打回去）。
       if (!payload?.nativeChained) return;
       void prefetchNextAssetUris().then(({ nextAssetUri, nextNextAssetUri, nextAssetUris }) => {
@@ -754,7 +769,7 @@ export function useHomeNatureVerseAudioPlayback({
     /** 队列见底时原生会发这个事件，请 JS 补下一句。接上了则不发，见 StreamPlayer。 */
     const sub = DeviceEventEmitter.addListener("ShellMediaNativeVerseAdvance", onAdvance);
     return () => sub.remove();
-  }, [active, buildPayload, buildVersePostStartSyncPayload, finishGapAndAdvance, flushListeningTime, prefetchNextAssetUris]);
+  }, [active, buildPayload, buildVersePostStartSyncPayload, clearGapTimer, clearResumeTimer, finishGapAndAdvance, flushListeningTime, prefetchNextAssetUris]);
 
   /**
    * 原生自己接上下一句时，把界面文案跟过去。

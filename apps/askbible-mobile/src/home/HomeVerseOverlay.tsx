@@ -55,6 +55,8 @@ type Props = {
     peekNextTwoVerseKeys: () => [string | null, string | null];
     peekNextVerseKeys: (count: number) => string[];
     pinNextVerseKey: (key: string | null) => void;
+    /** 把界面切到指定这一句（原生已在读它），不抽签、不动队列。 */
+    showVerseKey: (key: string) => Promise<boolean>;
   }) => void;
 };
 
@@ -113,6 +115,7 @@ export function HomeVerseOverlay({
     peekNextTwoVerseKeys,
     peekNextVerseKeys,
     pinNextVerseKey,
+    showVerseKey,
   } =
     useHomeThemeRepeatVerse(
       locale,
@@ -193,6 +196,7 @@ export function HomeVerseOverlay({
       peekNextTwoVerseKeys,
       peekNextVerseKeys,
       pinNextVerseKey,
+      showVerseKey,
     });
   }, [
     onVerseQueueControllerReady,
@@ -200,6 +204,7 @@ export function HomeVerseOverlay({
     peekNextVerseKey,
     peekNextVerseKeys,
     pinNextVerseKey,
+    showVerseKey,
   ]);
 
   const speechMain =

@@ -95,6 +95,7 @@ export function HomeNatureScreen() {
   const homeVersePeekNextTwoRef = useRef<() => [string | null, string | null]>(() => [null, null]);
   const homeVersePeekNextKeysRef = useRef<(count: number) => string[]>(() => []);
   const homeVersePinNextRef = useRef<(key: string | null) => void>(() => undefined);
+  const homeVerseShowKeyRef = useRef<(key: string) => Promise<boolean>>(async () => false);
   const homeVerseAudioActiveRef = useRef(false);
   const homeVerseStopFullyRef = useRef<() => Promise<void>>(async () => {});
   const displayedVerseKeyRef = useRef<string | null>(null);
@@ -152,11 +153,13 @@ export function HomeNatureScreen() {
       peekNextTwoVerseKeys: () => [string | null, string | null];
       peekNextVerseKeys: (count: number) => string[];
       pinNextVerseKey: (key: string | null) => void;
+      showVerseKey: (key: string) => Promise<boolean>;
     }) => {
       homeVersePeekNextRef.current = ctrl.peekNextVerseKey;
       homeVersePeekNextTwoRef.current = ctrl.peekNextTwoVerseKeys;
       homeVersePeekNextKeysRef.current = ctrl.peekNextVerseKeys;
       homeVersePinNextRef.current = ctrl.pinNextVerseKey;
+      homeVerseShowKeyRef.current = ctrl.showVerseKey;
     },
     [],
   );
@@ -177,6 +180,7 @@ export function HomeNatureScreen() {
     peekNextTwoVerseKeys: () => homeVersePeekNextTwoRef.current(),
     peekNextVerseKeys: (count) => homeVersePeekNextKeysRef.current(count),
     pinNextVerseKey: (key) => homeVersePinNextRef.current(key),
+    showVerseKey: (key) => homeVerseShowKeyRef.current(key),
     onActiveChange: setHomeVerseAudioActive,
   });
   homeVerseStopFullyRef.current = homeVerseAudio.stopFully;

@@ -237,6 +237,46 @@ export function useHomeThemeRepeatVerse(
     return [keys[0] ?? null, keys[1] ?? null] as [string | null, string | null];
   }, [peekNextVerseKeys]);
 
+  /**
+   * 直接把界面切到指定的这一句（原生已经在读它了）。
+   *
+   * 与 `advance()` 的区别是**不抽签、不动队列**：原生接播下一句之后，谁在响这件事
+   * 已经有答案了，轮播只需要跟上。走 advance 会重新经过「钉住的队首 → 否则随机挑」
+   * 那条路，而队列随后会被预取整份改写，于是钉住的那句被挤掉、抽到另一句，
+   * 界面再把它播出来，把原生刚起的这句掐断（2026-09-08 真机账本：
+   * `NativeAdvanced VERSE 2TI-4-1` 之后 0.8 秒 `Play VERSE MAT-18-18`）。
+   *
+   * 解析不出来（这句不在当前池里）就什么都不做——宁可文案暂时停在旧句，
+   * 也不要为了刷新界面去改播放。
+   */
+  const showVerseKey = useCallback(
+    async (key: string): Promise<boolean> => {
+      const trimmed = (key ?? "").trim();
+      const manifest = manifestRef.current;
+      if (!trimmed || !manifest?.entries.length) return false;
+      if (trimmed.toUpperCase() === (verseKeyRef.current ?? "").trim().toUpperCase()) return true;
+      const pair = await resolveHomeVersePair(
+        manifest,
+        trimmed,
+        locale,
+        translationRef.current.primary,
+        translationRef.current.contrast,
+      );
+      if (!pair) return false;
+      /** 这句已经播过了，记进记忆，免得轮播马上又抽到它。 */
+      advanceMemoryAfterShown(memoryRef.current, trimmed, Date.now());
+      await writeHomeVerseMemory(memoryRef.current);
+      pinnedNextVerseKeysRef.current = pinnedNextVerseKeysRef.current.filter(
+        (k) => k.trim().toUpperCase() !== trimmed.toUpperCase(),
+      );
+      setEntry(pair.primary);
+      setContrastEntry(pair.contrast);
+      setVerseKey(trimmed);
+      return true;
+    },
+    [locale],
+  );
+
   const advance = useCallback(async () => {
     if (advanceInFlightRef.current) return;
     const manifest = manifestRef.current;
@@ -430,6 +470,7 @@ export function useHomeThemeRepeatVerse(
     contrastTranslationId: translationIds.contrast,
     poolSize: manifestRef.current?.entries.length ?? 0,
     advanceNow: advance,
+    showVerseKey,
     peekNextVerseKey,
     peekNextTwoVerseKeys,
     peekNextVerseKeys,

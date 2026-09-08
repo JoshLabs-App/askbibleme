@@ -1,3 +1,4 @@
+import { getPlaybackSnapshot } from "./playbackState";
 import { useEffect, useRef } from "react";
 import { AppState, DeviceEventEmitter, Platform, type AppStateStatus } from "react-native";
 import { getShellAuxMediaOwner } from "./shellAuxMediaOwner";
@@ -212,146 +213,34 @@ export function useShellMediaControlsSync(args: Args): void {
       });
     }
     const unsubscribe = subscribeShellMediaRemoteCommands({
-      // 锁屏 / 通知媒体键：对当前正在播放的内容做纯暂停/续播（尊重当前模式）。
+      /*
+       * 锁屏 / 通知栏的播放暂停键：**原生已经处理完了**（PauseAll / ResumeTransport），
+       * JS 这里只补它做不到的一件事——一路都没起来时说明没有可续播的内容，由 JS 挑一首。
+       *
+       * 这里原本有一百三十行：安卓与 iOS 各一套分支、金句 aux 的接管与交还、
+       * 三星关屏误发 Pause 的时间窗启发式……它们全都在重建「刚才在播什么、该恢复谁」，
+       * 而那正是原生此刻精确知道的事（三条流各自的 uri 与 userPaused）。
+       * 关屏误发的判断也已经在 ShellPlaybackService 里，不必在 JS 再猜一遍。
+       */
       onPlay: () => {
         clearShellMediaSessionUserDismissed();
-        const latest = argsRef.current;
-        logRemoteCommand(`RemotePlay mode=${latest.playbackMode} playing=${latest.playing}`);
-        // Android：系统栏再点 = 按暂停前的声音组合续上。
-        if (Platform.OS === "android") {
-          if (resumeAndroidRemoteAudio(latest)) return;
-          if (getShellVerseWantPlaying() || getShellAuxMediaOwner()?.id === "home-golden-verse") {
-            const aux = getShellAuxMediaOwner();
-            if (aux?.id === "home-golden-verse") {
-              void aux.resume();
-              return;
-            }
-          }
-          void latest.ensureShellPlaybackActive();
-          return;
-        }
-        // iOS：金句意图在播时优先恢复金句，勿误走壳层音乐 ensure。
-        if (getShellVerseWantPlaying() || getShellAuxMediaOwner()?.id === "home-golden-verse") {
-          const aux = getShellAuxMediaOwner();
-          if (aux?.id === "home-golden-verse") {
-            void aux.resume();
-            return;
-          }
-        }
-        // UI 仍标 playing 时也可能已哑：走 ensure，勿直接 return。
-        void latest.ensureShellPlaybackActive();
+        if (getPlaybackSnapshot().nowPlayingStream != null) return;
+        void argsRef.current.ensureShellPlaybackActive();
       },
-      onPause: (payload?: unknown) => {
-        const latest = argsRef.current;
-        logRemoteCommand(`RemotePause mode=${latest.playbackMode} playing=${latest.playing}`);
-        if (Platform.OS === "android") {
-          const userRemotePause = payload === "user";
-          if (isScriptureUserPauseHeld() && latest.playbackMode === "scripture") {
-            androidRemotePauseFromUser(latest);
-            return;
-          }
-          // 通知 / 系统栏用户点停：勿走关屏误发续播分支。
-          if (userRemotePause) {
-            androidRemotePauseFromUser(latest);
-            return;
-          }
-          // 三星关屏常把 MediaSession Pause 标成 user；关屏后数秒内一律当误发。
-          const recentlyBackgrounded = Date.now() - leftActiveAtRef.current < 4000;
-          if (recentlyBackgrounded && !getShellAudioInterrupted()) {
-            if (getShellVerseWantPlaying() || getShellAuxMediaOwner()?.id === "home-golden-verse") {
-              const aux = getShellAuxMediaOwner();
-              if (aux?.id === "home-golden-verse") void aux.resume();
-            }
-            // 原生可能已 applyUserPause；ensure 必须能在 JS 仍标 playing 时把声推回来。
-            if (
-              getShellMusicWantPlaying() ||
-              latest.playbackMode === "music" ||
-              getShellScriptureWantPlaying() ||
-              latest.playbackMode === "scripture"
-            ) {
-              void latest.ensureShellPlaybackActive();
-            }
-            return;
-          }
-          androidRemotePauseFromUser(latest);
-          return;
-        }
-        // iOS：金句在播走 aux.pause；关屏瞬间 OEM 误发的 Pause 则强制续播。
-        if (getShellVerseWantPlaying() || getShellAuxMediaOwner()?.id === "home-golden-verse") {
-          const aux = getShellAuxMediaOwner();
-          if (aux?.id === "home-golden-verse") {
-            const recentlyBackgrounded = Date.now() - leftActiveAtRef.current < 4000;
-            if (
-              !getShellAudioInterrupted() &&
-              (recentlyBackgrounded || AppState.currentState !== "active")
-            ) {
-              void aux.resume();
-              return;
-            }
-            void aux.pause();
-            return;
-          }
-        }
-        if (getShellScriptureWantPlaying() || latest.playbackMode === "scripture") {
-          void latest.togglePlayScripture({ forcePause: true });
-          return;
-        }
-        if (!latest.playing) {
-          const aux = getShellAuxMediaOwner();
-          if (aux) {
-            void aux.pause();
-            return;
-          }
-        }
-        if (latest.playbackMode === "music") {
-          void latest.pauseShellPlayback();
-        } else {
-          void latest.togglePlayScripture({ forcePause: true });
-        }
+      onPause: () => {
+        /* 原生已 PauseAll；UI 会从 ShellPlaybackState 收到结果。 */
       },
       onToggle: () => {
-        const latest = argsRef.current;
-        logRemoteCommand(`RemoteToggle mode=${latest.playbackMode} playing=${latest.playing}`);
-        // Android 系统栏：点一下全停，再点按原组合续播。
-        if (Platform.OS === "android") {
-          if (isAndroidRemoteAudioActive(latest)) {
-            androidRemotePauseFromUser(latest);
-            return;
-          }
-          clearShellMediaSessionUserDismissed();
-          if (resumeAndroidRemoteAudio(latest)) return;
-          if (latest.playbackMode === "music") {
-            void latest.togglePlayMusic();
-          } else {
-            void latest.togglePlayScripture();
-          }
-          return;
-        }
-        if (!latest.playing) {
-          clearShellMediaSessionUserDismissed();
-          const aux = getShellAuxMediaOwner();
-          if (aux) {
-            const payload = aux.buildPayload();
-            if (payload?.playing) void aux.pause();
-            else void aux.resume();
-            return;
-          }
-        }
-        if (latest.playbackMode === "music") {
-          if (!latest.playing) clearShellMediaSessionUserDismissed();
-          // playing=true 但轨哑时 toggle 会续播；真在播才暂停。
-          void latest.togglePlayMusic();
-        } else {
-          if (!latest.playing) clearShellMediaSessionUserDismissed();
-          void latest.togglePlayScripture();
-        }
+        clearShellMediaSessionUserDismissed();
+        if (getPlaybackSnapshot().nowPlayingStream != null) return;
+        void argsRef.current.ensureShellPlaybackActive();
       },
       onNext: () => {
         clearShellMediaSessionUserDismissed();
         const latest = argsRef.current;
         logRemoteCommand(`RemoteNext mode=${latest.playbackMode} playing=${latest.playing}`);
         // 金句在播：推进金句，勿 playNext 切音乐。
-        if (getShellVerseWantPlaying() || getShellAuxMediaOwner()?.id === "home-golden-verse") {
+        if (getPlaybackSnapshot().nowPlayingStream === "verse") {
           DeviceEventEmitter.emit("ShellMediaNativeVerseAdvance", {});
           return;
         }
@@ -362,36 +251,15 @@ export function useShellMediaControlsSync(args: Args): void {
         const latest = argsRef.current;
         logRemoteCommand(`RemotePrevious mode=${latest.playbackMode} playing=${latest.playing}`);
         // 金句在播：重开当前句（对齐 Next→Advance），勿 playPrev 切音乐。
-        if (getShellVerseWantPlaying() || getShellAuxMediaOwner()?.id === "home-golden-verse") {
+        if (getPlaybackSnapshot().nowPlayingStream === "verse") {
           DeviceEventEmitter.emit("ShellMediaNativeVerseRestart", {});
           return;
         }
         void latest.playPrev();
       },
-      // 划掉系统媒体控件：停播栏上内容，并抑制会话自动再弹出。
+      /** 划掉系统媒体控件：原生 handleUserDismiss 已停播并撤通知，这里只记下别再自动弹回。 */
       onStop: () => {
-        const latest = argsRef.current;
-        logRemoteCommand(`RemoteStop mode=${latest.playbackMode} playing=${latest.playing}`);
-        if (Platform.OS === "android") {
-          const recentlyBackgrounded = Date.now() - leftActiveAtRef.current < 4000;
-          if (recentlyBackgrounded && !getShellAudioInterrupted()) {
-            logRemoteCommand("RemoteStop ignored (OEM screen-off window)");
-            return;
-          }
-          markShellMediaSessionUserDismissed();
-          androidRemotePauseFromUser(latest);
-          syncShellMediaSession(null);
-          return;
-        }
         markShellMediaSessionUserDismissed();
-        clearAndroidRemoteMuteSnapshot();
-        const aux = getShellAuxMediaOwner();
-        if (aux) void aux.pause();
-        if (latest.playbackMode === "music") {
-          void latest.pauseShellPlayback();
-        } else if (latest.playing || latest.playbackMode === "scripture") {
-          void latest.togglePlayScripture({ forcePause: true });
-        }
         syncShellMediaSession(null);
       },
       // 桌面挂件「读经」键：只作用于本日读经音频，不碰音乐播放器。

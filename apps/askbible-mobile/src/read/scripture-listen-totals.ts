@@ -12,6 +12,7 @@ const listeners = new Set<() => void>();
 let cachedTotalSec = 0;
 let hydrated = false;
 let hydratePromise: Promise<void> | null = null;
+/** 上一次记账到的播放位置；两次之间的差值就是这一段听了多久。 */
 let lastPosSec = -1;
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
 let dirty = false;
@@ -76,6 +77,42 @@ export async function readScriptureListenTotalsRecord(): Promise<ScriptureListen
   return { version: 1, totalSec: Math.floor(cachedTotalSec) };
 }
 
+function schedulePersist(): void {
+  dirty = true;
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    if (!dirty) return;
+    void persistNow(true);
+  }, 2000);
+}
+
+/**
+ * 记一段听读时长。按位置差累加，不按墙钟——暂停、跳转、后台都不该算进去。
+ *
+ * 单次最多记 1.5 秒：拖动进度条会让位置跳很远，那不是听过的时间。
+ *
+ * 这个函数一度失去了唯一的调用方（2026-09-08 删 expo-av 状态链时连带删掉了它的
+ * 调用点），于是「累计听读」只能靠服务端同步长，本机再也不累加。现在由
+ * useFollowNativeProgress 从原生进度喂它。
+ */
+export function noteScriptureListenProgress(positionSec: number, isPlaying: boolean): void {
+  void hydrate();
+  if (!isPlaying || !Number.isFinite(positionSec) || positionSec < 0) {
+    lastPosSec = -1;
+    return;
+  }
+  if (lastPosSec >= 0 && positionSec > lastPosSec) {
+    const delta = Math.min(positionSec - lastPosSec, 1.5);
+    if (delta > 0) {
+      cachedTotalSec += delta;
+      emit();
+      schedulePersist();
+    }
+  }
+  lastPosSec = positionSec;
+}
+
 async function persistNow(notifySync: boolean): Promise<void> {
   dirty = false;
   try {
@@ -98,15 +135,6 @@ async function persistNow(notifySync: boolean): Promise<void> {
   }
 }
 
-function schedulePersist(): void {
-  dirty = true;
-  if (persistTimer) return;
-  persistTimer = setTimeout(() => {
-    persistTimer = null;
-    if (!dirty) return;
-    void persistNow(true);
-  }, 2000);
-}
 
 /** 合并远端累计听时长：取较大值，避免回退。 */
 export function mergeScriptureListenTotalsRecords(
@@ -150,23 +178,6 @@ export async function clearScriptureListenTotalsLocal(): Promise<void> {
   emit();
 }
 
-/** 经文播放进度回调：仅在正向小幅推进时累加，避免 seek 跳秒虚增。 */
-export function noteScriptureListenProgress(positionSec: number, isPlaying: boolean): void {
-  void hydrate();
-  if (!isPlaying || !Number.isFinite(positionSec) || positionSec < 0) {
-    lastPosSec = -1;
-    return;
-  }
-  if (lastPosSec >= 0 && positionSec > lastPosSec) {
-    const delta = Math.min(positionSec - lastPosSec, 1.5);
-    if (delta > 0) {
-      cachedTotalSec += delta;
-      emit();
-      schedulePersist();
-    }
-  }
-  lastPosSec = positionSec;
-}
 
 export function formatScriptureListenDuration(totalSec: number, locale: string): string {
   const sec = Math.max(0, Math.floor(totalSec));

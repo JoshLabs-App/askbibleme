@@ -9,23 +9,38 @@
 # 所以每个场景都要同时检查**账本**与**屏幕**。
 set -uo pipefail
 
-DEVICE="${ANDROID_DEVICE:-R5CW11DNS2K}"
+DEVICE="${ANDROID_DEVICE:-HT74M0200477}"
 OUT="${TMPDIR:-/tmp}/askbible-playback-verify"
 APK=apps/askbible-mobile/android/app/build/outputs/apk/release/app-release.apk
 PASS=0; FAIL=0
 
-# 三星 S23 Ultra（720x1544）上的坐标；换机型要重新量。
-TAP_MUSIC="210 1332"      # 首页底部快捷栏：音符
-TAP_VERSE="359 1332"      # 首页底部快捷栏：喇叭（金句）
-TAB_HOME="88 1460"
-TAB_READ="497 1460"
-BOOK_GENESIS="155 421"
-CHAPTER_1="135 421"
-READ_PLAY="368 1328"
-READ_SCRUB_END="575 1246"  # 进度条接近末尾
+adb -s "$DEVICE" get-state >/dev/null 2>&1 || { echo "设备 $DEVICE 未连接"; exit 1; }
+
+# 坐标按机型分组——同一套像素坐标换台机器就全落空，脚本会「全绿地什么都没点到」。
+# 加新机型：装好后截一张首页图量一次，照抄一组进来。
+SCREEN=$(adb -s "$DEVICE" shell wm size | tr -d '\r' | awk '{print $3}')
+case "$SCREEN" in
+  1440x2560)  # Pixel XL
+    TAP_MUSIC="438 2160"; TAP_VERSE="720 2160"
+    TAB_HOME="189 2397";  TAB_READ="981 2397"
+    BOOK_GENESIS="300 765"; CHAPTER_1="300 735"
+    READ_PLAY="720 2154"; READ_SCRUB_END="1150 1986"
+    ICON_R=60; PROGRESS_BOX="234,1950,1230,2025"
+    ;;
+  720x1544)   # 三星 S23 Ultra（显示缩放下的逻辑分辨率）
+    TAP_MUSIC="210 1332"; TAP_VERSE="359 1332"
+    TAB_HOME="88 1460";   TAB_READ="497 1460"
+    BOOK_GENESIS="155 421"; CHAPTER_1="135 421"
+    READ_PLAY="368 1328"; READ_SCRUB_END="575 1246"
+    ICON_R=34; PROGRESS_BOX="30,1225,690,1270"
+    ;;
+  *)
+    echo "没有 $SCREEN 这个分辨率的坐标表；截一张首页图量一组加进脚本。"; exit 1
+    ;;
+esac
+echo "机型 $SCREEN，用对应坐标表"
 
 mkdir -p "$OUT"
-adb -s "$DEVICE" get-state >/dev/null 2>&1 || { echo "设备 $DEVICE 未连接"; exit 1; }
 
 say() { printf "\n\033[1m%s\033[0m\n" "$*"; }
 tap() { adb -s "$DEVICE" shell input tap $1; sleep "${2:-3}"; }
@@ -42,7 +57,7 @@ check() { # check <说明> <期望正则>
 icon_lit() { # icon_lit <截图名> <说明> <x> <y> <期望 lit|dark>
   adb -s "$DEVICE" exec-out screencap -p > "$OUT/$1.png"
   local got
-  got=$(python3 scripts/icon-lit.py "$OUT/$1.png" "$3" "$4")
+  got=$(python3 scripts/icon-lit.py "$OUT/$1.png" "$3" "$4" "$ICON_R")
   if [ "$got" = "$5" ]; then printf "  ✓ %s（图标 %s）\n" "$2" "$got"; PASS=$((PASS+1));
   else printf "  ✗ %s：图标应为 %s，实为 %s\n" "$2" "$5" "$got"; FAIL=$((FAIL+1)); fi
 }
@@ -137,12 +152,13 @@ say "6b 进度轴在走（读经）"
 adb -s "$DEVICE" exec-out screencap -p > "$OUT/6b-progress-1.png"; sleep 6
 adb -s "$DEVICE" exec-out screencap -p > "$OUT/6b-progress-2.png"
 # 进度是从原生状态直连界面的；不走就说明这条链断了。两张图裁进度条区域供人眼比对。
-python3 - "$OUT" <<'PY2'
+python3 - "$OUT" "$PROGRESS_BOX" <<'PY2'
 import sys
 from PIL import Image, ImageChops
 o = sys.argv[1]
-a = Image.open(f"{o}/6b-progress-1.png").crop((30,1225,690,1270))
-b = Image.open(f"{o}/6b-progress-2.png").crop((30,1225,690,1270))
+box = tuple(int(x) for x in sys.argv[2].split(","))
+a = Image.open(f"{o}/6b-progress-1.png").crop(box)
+b = Image.open(f"{o}/6b-progress-2.png").crop(box)
 a.save(f"{o}/6b-progress-1-crop.png"); b.save(f"{o}/6b-progress-2-crop.png")
 same = ImageChops.difference(a.convert("RGB"), b.convert("RGB")).getbbox() is None
 print(("  ✗ 进度轴 6 秒内没有变化" if same else "  ✓ 进度轴在走"))

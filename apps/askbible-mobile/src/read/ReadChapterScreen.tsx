@@ -26,7 +26,7 @@ import { useLocale } from "../i18n/LocaleProvider";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { useReadChapterScreenLoad } from "./useReadChapterScreenLoad";
 import { useShellSwipeNav } from "../shell/ShellSwipeNavContext";
-import { useParchmentColumnMaxWidth, useParchmentContentPadding } from "./parchmentColumnLayout";
+import { useParchmentColumnMaxWidth } from "./parchmentColumnLayout";
 import { useReadBibleTypography } from "./ReadBibleTypographyContext";
 import { useReadChapterAudio } from "./useReadChapterAudio";
 import { getMusicPlaybackControlSnapshot } from "../music/MusicPlaybackContext";

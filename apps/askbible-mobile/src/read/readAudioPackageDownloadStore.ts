@@ -161,7 +161,3 @@ export function readAudioPackageDownloadState(): AudioPackageDownloadState {
 export async function ensureAudioPackageDownloadHydrated(): Promise<void> {
   await hydrateDownloadState();
 }
-
-export function isAudioPackageDownloadHydrated(): boolean {
-  return hydrated;
-}

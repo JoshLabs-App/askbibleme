@@ -87,20 +87,6 @@ export function createDefaultTripleLoopReadingState(): TripleLoopReadingState {
   };
 }
 
-function normalizeChaptersRead(
-  raw: Partial<TripleLoopChaptersRead> | undefined,
-  fallback: TripleLoopChaptersRead,
-): TripleLoopChaptersRead {
-  const n = (v: unknown, d: number) => {
-    const x = typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : d;
-    return Math.max(0, x);
-  };
-  return {
-    ot: n(raw?.ot, fallback.ot),
-    nt: n(raw?.nt, fallback.nt),
-    wisdom: n(raw?.wisdom, fallback.wisdom),
-  };
-}
 
 export function normalizeTripleLoopReadingState(
   raw: Partial<TripleLoopReadingState> | null | undefined,

@@ -9,23 +9,7 @@ export type PlanFlowChapterFrom = { bookId: string; chapter: number };
 
 type PlanFlowChapterAdvanceHandler = (from: PlanFlowChapterFrom) => Promise<void>;
 
-let onPlanFlowChapterAdvance: PlanFlowChapterAdvanceHandler | null = null;
 
-export function registerPlanFlowChapterAdvanceHandler(
-  fn: PlanFlowChapterAdvanceHandler | null,
-): void {
-  onPlanFlowChapterAdvance = fn;
-}
-
-export async function runPlanFlowChapterAdvanceFrom(from: PlanFlowChapterFrom): Promise<void> {
-  if (!onPlanFlowChapterAdvance) {
-    if (__DEV__) {
-      console.warn("[planFlow-advance] handler not registered", from.bookId, from.chapter);
-    }
-    return;
-  }
-  await onPlanFlowChapterAdvance(from);
-}
 
 export function registerPlanFlowEntryCallback(fn: (() => void) | null): void {
   onPlanFlowEntry = fn;

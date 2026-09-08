@@ -48,10 +48,3 @@ export function addNtDeepRepeatChapterReadToState(
     },
   };
 }
-
-export function ntDeepRepeatTrackChapterReadCount(
-  state: NtDeepRepeatReadingState,
-  track: NtDeepRepeatTrack,
-): number {
-  return normalizeNtDeepRepeatChaptersReadKeys(state.chaptersReadKeys)[track].length;
-}

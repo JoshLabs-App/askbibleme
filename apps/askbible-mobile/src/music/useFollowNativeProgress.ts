@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { usePlaybackSnapshot } from "../audio/playbackState";
 import { setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
 import { syncPlaybackWidgetForceIdleMusic } from "../widget/readingAudioWidget";
+import { noteScriptureListenProgress } from "../read/scripture-listen-totals";
 import { publishScripturePlaybackSec, setScripturePlaybackClockPlaying } from "./scripturePlaybackSec";
 
 type Args = {
@@ -39,6 +40,8 @@ export function useFollowNativeProgress({
       publishScripturePlaybackSec(scripture.positionSec);
       setScriptureCurrentSec?.(scripture.positionSec);
     }
+    /** 累计听读时长（探索页那个数字）就靠这条进度累加。 */
+    noteScriptureListenProgress(scripture.positionSec, scripture.playing);
     if (scripture.durationSec > 0) setScriptureDurationSec?.(scripture.durationSec);
     /** 跟读高亮靠这个时钟推进；语速影响它的外推速度。 */
     setScripturePlaybackClockPlaying(scripture.playing, scripturePlaybackRateRef?.current ?? 1);

@@ -8,11 +8,7 @@ import { parchmentSans } from "../fonts/parchmentType";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { fetchReadingPlanRegistry } from "./reading-plan/fetch-reading-plan-registry";
 import {
-  isFeaturedReadingPlanId,
-  partitionReadingPlanCatalog,
-} from "@/lib/bible/reading-plans/featured-reading-plans";
-import { isNtDeepRepeatPlanId } from "./reading-plan/nt-deep-repeat-plan";
-import { isTripleLoopPlanId } from "./reading-plan/triple-loop-plan";
+  partitionReadingPlanCatalog } from "@/lib/bible/reading-plans/featured-reading-plans";
 import { stripReadingPlanHtml } from "./reading-plan/strip-html";
 import type { ReadingPlanRegistryEntry } from "./reading-plan/types";
 import { useEffectiveReadingPlanPrefs } from "./reading-plan/useReadingPlanStores";

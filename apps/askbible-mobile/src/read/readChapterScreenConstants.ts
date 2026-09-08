@@ -4,11 +4,6 @@ import type { ScriptureCanonCatalogSection } from "./canonCatalog";
 
 export const READ_CHAPTER_SCROLL_TOP_PAD = 72;
 export const READ_VERSE_NUM_BODY_GAP = Platform.OS === "android" ? "\u2003" : "\u2002";
-export const READ_SETTINGS_TOP_OFFSET = 6;
-export const READ_TOP_ACTION_SIZE = 44;
-export const READ_TOP_ACTION_GAP = 1;
-export const READ_TOP_ACTION_IDLE_OPACITY = Platform.OS === "android" ? 0.72 : 0.5;
-export const READ_TOP_ACTION_PRESSED_OPACITY = Platform.OS === "android" ? 0.88 : 0.68;
 export const INFO_EDITION_V1_EN_ROLE_ID = "info_edition_v1_en";
 export const INFO_EDITION_GUIDE_V2_EN_ROLE_ID = "role_guide_v2_en";
 export const JUMP_CATALOG_VIEWPORT_H = 460;

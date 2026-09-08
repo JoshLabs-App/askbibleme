@@ -252,6 +252,8 @@ class StreamPlayer(
    * 事件名不变，JS 侧的既有处理继续有效。
    */
   private fun emitEndedNeedingJs() {
+    /** 账本上要看得见「原生播完、接力交回 JS」，否则后面 JS 的 Play 看着像凭空抢播。 */
+    Log.i("AskBiblePlayback", "EndedNeedingJs ${streamId}")
     when (streamId) {
       StreamId.SCRIPTURE -> emit("ShellMediaNativeScriptureEnded")
       StreamId.MUSIC -> emit("ShellMediaNativeMusicEnded")

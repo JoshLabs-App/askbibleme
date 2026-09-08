@@ -547,8 +547,6 @@ export function ReadChapterScreenVerseList({
       chapter: chapterData.chapter,
       verse: v.verse,
     });
-    const audioActive = !searchFocus && !bookmarked && activeVerseIndex === i;
-    const selected = selectedVerses.includes(v.verse);
     const verseBlockKey = `${v.verse}`;
     verseNodes.push(
       <View

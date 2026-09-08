@@ -1,4 +1,3 @@
-import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import {
@@ -33,8 +32,6 @@ export function useReadParchmentScrollSource() {
   );
 }
 
-const DEFAULT_EDGE_FADE_TOP_PX = 14;
-const DEFAULT_EDGE_FADE_BOTTOM_PX = 18;
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const normalized = hex.trim().replace("#", "");
@@ -54,11 +51,6 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   };
 }
 
-function rgbaFromHex(hex: string, alpha: number): string {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return `rgba(236, 217, 185, ${alpha})`;
-  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-}
 
 type ReadParchmentBackgroundProps = {
   children: ReactNode;
@@ -180,36 +172,5 @@ export function ReadParchmentBackgroundImage({
         {children}
       </View>
     </View>
-  );
-}
-
-type ReadParchmentEdgeFadeOverlayProps = {
-  colorHex?: string;
-  topPx?: number;
-  bottomPx?: number;
-};
-
-/** 读经滚动区默认顶/底渐隐（仅视觉，不拦截点击）。 */
-export function ReadParchmentEdgeFadeOverlay({
-  colorHex = c.canvas,
-  topPx = DEFAULT_EDGE_FADE_TOP_PX,
-  bottomPx = DEFAULT_EDGE_FADE_BOTTOM_PX,
-}: ReadParchmentEdgeFadeOverlayProps) {
-  const topSolid = rgbaFromHex(colorHex, 0.78);
-  const bottomSolid = rgbaFromHex(colorHex, 0.82);
-
-  return (
-    <>
-      <LinearGradient
-        pointerEvents="none"
-        colors={[topSolid, "rgba(0,0,0,0)"]}
-        style={[styles.edgeFade, { top: 0, height: topPx }]}
-      />
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(0,0,0,0)", bottomSolid]}
-        style={[styles.edgeFade, { bottom: 0, height: bottomPx }]}
-      />
-    </>
   );
 }

@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AppState,
   BackHandler,
-  Platform,
-  useWindowDimensions,
-} from "react-native";
+  useWindowDimensions } from "react-native";
 import {
   deferAfterRowPress,
   deferChapterPickerNavigation,

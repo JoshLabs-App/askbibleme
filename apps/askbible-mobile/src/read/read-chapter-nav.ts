@@ -46,13 +46,6 @@ export function readChapterRouteParams(target: { bookId: string; chapter: number
   };
 }
 
-export function chapterNavDirection(
-  from: { bookId: string; chapter: number },
-  to: { bookId: string; chapter: number },
-): ReadChapterNavDirection {
-  if (from.bookId !== to.bookId) return "forward";
-  return to.chapter < from.chapter ? "back" : "forward";
-}
 
 /**
  * 相邻章导航。

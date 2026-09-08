@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 import { useMemo } from "react";
-import { useWindowDimensions, type ViewStyle } from "react-native";
+import { useWindowDimensions } from "react-native";
 
 /** 手机单列版心（与网站 `28rem` / 448px 对齐） */
 export const PARCHMENT_COLUMN_MAX_WIDTH_PHONE = 448;
@@ -41,14 +41,6 @@ export function isParchmentFullWidthLayout(width: number, height: number): boole
   return Math.min(width, height) >= PARCHMENT_TABLET_MIN_SHORT_EDGE;
 }
 
-export function isIpadParchmentLayout(width: number, height: number): boolean {
-  return isParchmentFullWidthLayout(width, height);
-}
-
-/** 读经首页 iPad：旧约 / 新约并排，替代分页切换 */
-export function shouldSplitTestamentCatalog(width: number, height: number): boolean {
-  return isParchmentFullWidthLayout(width, height);
-}
 
 export function parchmentContentPaddingHorizontal(
   width: number,
@@ -127,13 +119,6 @@ export function useParchmentColumnMaxWidth(
   );
 }
 
-export function parchmentColumnContentStyle(
-  maxWidth: number | undefined,
-  base: ViewStyle,
-): ViewStyle {
-  if (maxWidth == null) return base;
-  return { ...base, maxWidth };
-}
 
 export function useParchmentContentPadding(
   phonePad = PARCHMENT_CONTENT_PAD_X_PHONE,

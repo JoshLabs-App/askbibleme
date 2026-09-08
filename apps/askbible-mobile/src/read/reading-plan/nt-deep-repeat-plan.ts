@@ -1,9 +1,7 @@
 import { scriptureBooks } from "@/lib/bible/scripture-books";
 import { t } from "../../i18n/site-copy";
 import {
-  NT_DEEP_REPEAT_CURRICULUM,
-  NT_DEEP_REPEAT_OT_BOOK_IDS,
-} from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
+  NT_DEEP_REPEAT_OT_BOOK_IDS } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 import { ntDeepRepeatOneCycleDays } from "@/lib/bible/reading-plans/nt-deep-repeat-pace";
 import {
   currentNtDeepRepeatSegment,
@@ -22,7 +20,6 @@ export const NT_DEEP_REPEAT_OT_CHAPTER_TOTAL = NT_DEEP_REPEAT_OT_BOOK_IDS.reduce
   return sum + (meta?.chapters ?? 0);
 }, 0);
 
-export const NT_DEEP_REPEAT_NT_SEGMENT_TOTAL = NT_DEEP_REPEAT_CURRICULUM.length;
 
 export const NT_DEEP_REPEAT_PLAN_ID = "nt-deep-repeat";
 

@@ -17,8 +17,6 @@ export type ReadParchmentColorMode = "light" | "dark";
 export const READ_PARCHMENT_COLOR_MODE: ReadParchmentColorMode =
   Appearance.getColorScheme() === "dark" ? "dark" : "light";
 
-/** Android 窗口 / decorView 过渡底色（Stack 保持透明，仅原生层防切章闪黑） */
-export const READ_PARCHMENT_WINDOW_FILL = "#FAF3E1";
 
 const light = {
   canvas: "#ecd9b9",

@@ -32,27 +32,6 @@ export function translationUsesEditionChapterAudio(translationId: string): boole
   );
 }
 
-/**
- * 朗读选项 id：
- * - `mandarin` / `teochew-nt`：人声（译本跟上方「圣经版本」）
- * - 其它译本 id：跟随对应译本的整章音轨
- */
-export function encodeChapterAudioPlaybackOptionId(
-  audioTranslationId: string | null,
-  voiceId: CuvChapterAudioVoiceId,
-  primaryTranslationId: string,
-): string {
-  const audio = audioTranslationId?.trim();
-  if (audio && translationUsesEditionChapterAudio(audio)) return audio;
-  if (
-    !audio &&
-    translationUsesEditionChapterAudio(primaryTranslationId) &&
-    translationSupportsCuvChapterAudio(primaryTranslationId) === false
-  ) {
-    return primaryTranslationId;
-  }
-  return voiceId;
-}
 
 export function decodeChapterAudioPlaybackOptionId(
   optionId: string,
@@ -103,8 +82,4 @@ export function buildChapterAudioPlaybackOptions(
   }
 
   return out;
-}
-
-export function chapterAudioPlaybackUsesWebAudio(optionId: string): boolean {
-  return translationUsesWebChapterAudio(optionId.trim());
 }

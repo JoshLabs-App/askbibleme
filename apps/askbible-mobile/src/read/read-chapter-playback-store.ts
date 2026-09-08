@@ -77,10 +77,6 @@ export function resolveTransportReadChapterPlayback(): ReadChapterPlaybackRegist
   return playing ?? browse;
 }
 
-export function subscribeActiveReadChapterPlayback(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
 
 /** 测用：重置 browse + playing。 */
 export function resetReadChapterPlaybackStoresForTests(): void {

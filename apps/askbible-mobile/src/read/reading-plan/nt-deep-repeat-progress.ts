@@ -11,7 +11,6 @@ import {
   normalizeNtDeepRepeatReadingState,
   ntDeepRepeatStateForPlanDay,
   type NtDeepRepeatReadingState,
-  type NtDeepRepeatTrack,
 } from "./nt-deep-repeat-reading";
 import { addNtDeepRepeatChapterReadToState } from "./nt-deep-repeat-chapters-read";
 import {
@@ -198,19 +197,6 @@ export async function resetNtDeepRepeatProgressToPlanDay(
   return state;
 }
 
-export async function advanceNtDeepRepeatProgressTrack(
-  track: NtDeepRepeatTrack,
-  now = new Date(),
-): Promise<NtDeepRepeatReadingState> {
-  const stored = await readNtDeepRepeatProgress();
-  let next =
-    track === "ot" ? advanceNtDeepRepeatOtTrack(stored) : advanceNtDeepRepeatNtDay(stored);
-  if (!next.startedAt) {
-    next = { ...next, startedAt: await startedAtForProgress(now) };
-  }
-  await writeNtDeepRepeatProgress(next);
-  return next;
-}
 
 export async function markNtDeepRepeatChapterRead(
   bookId: string,

@@ -7,8 +7,6 @@ import {
 /** 读经章底栏：快捷操作行叠在 Tab 导航之上（已空，仅 Scrim / 非章页兼容） */
 export const READ_CHAPTER_ACTION_ROW_HEIGHT = 40;
 export const READ_CHAPTER_ACTION_ROW_GAP = 6;
-/** 快捷操作行距屏幕左右缘（与 safe-area 取较大值） */
-export const READ_CHAPTER_ACTION_ROW_PAD_X = 22;
 export const READ_CHAPTER_SCROLL_BOTTOM_BASE = SHELL_TAB_BAR_CLEARANCE + 28;
 
 /** 非章页：旧快捷行占位（Scrim / 首页滚动） */

@@ -12,11 +12,9 @@ import {
   View,
 } from "react-native";
 import { useLocale } from "../i18n/LocaleProvider";
-import { resolveUiText } from "../i18n/site-copy";
 import { bookNameForId, chaptersForBookId } from "./canonCatalog";
 import { ReadParchmentBackgroundImage } from "./ReadParchmentSurface";
 import { ShellSystemBackButton } from "../shell/ShellSystemBackButton";
-import { readParchmentTheme as c } from "./readParchmentTheme";
 import {
   bibleChapterPickerModalFrameStyles as modalFrameStyles,
   bibleChapterPickerPanelStyles as styles,

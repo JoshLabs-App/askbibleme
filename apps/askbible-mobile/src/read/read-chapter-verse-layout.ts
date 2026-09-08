@@ -39,22 +39,6 @@ export function verseContentYFromWindow(
   return scrollOffsetY + (verseWindowY - scrollViewportWindowY);
 }
 
-export function isVerseVisibleInScrollViewport(
-  layout: VerseLayout,
-  scrollOffsetY: number,
-  viewportHeight: number,
-  opts?: VerseScrollFocusOpts,
-): boolean {
-  if (viewportHeight <= 0) return true;
-  const topMargin = viewportHeight * (opts?.topInsetRatio ?? READ_VERSE_SCROLL_TOP_INSET_RATIO);
-  const bottomMargin =
-    viewportHeight * (opts?.bottomInsetRatio ?? READ_VERSE_SCROLL_BOTTOM_INSET_RATIO);
-  const visibleTop = scrollOffsetY + topMargin;
-  const visibleBottom = scrollOffsetY + viewportHeight - bottomMargin;
-  const verseTop = layout.y;
-  const verseBottom = layout.y + layout.height;
-  return verseTop >= visibleTop && verseBottom <= visibleBottom;
-}
 
 export function nativeTargetFromLayoutEvent(event: LayoutChangeEvent): number | null {
   const fromNative = (event.nativeEvent as { target?: unknown }).target;

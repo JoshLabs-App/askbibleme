@@ -11,10 +11,8 @@ import {
   NT_DEEP_REPEAT_CURRICULUM,
   NT_DEEP_REPEAT_OT_BOOK_IDS,
   ntDeepRepeatSegmentIncludesChapter,
-  ntDeepRepeatSegmentPrimaryRange,
   type NtDeepRepeatChapterRange,
-  type NtDeepRepeatSegment,
-} from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
+  type NtDeepRepeatSegment } from "@/lib/bible/reading-plans/nt-deep-repeat-curriculum";
 import {
   NT_DEEP_REPEAT_DEFAULT_PACE,
   isNtDeepRepeatPace,
@@ -168,23 +166,6 @@ export function segmentIncludesChapter(
   return ntDeepRepeatSegmentIncludesChapter(segment, bookId, chapter);
 }
 
-export function pointerMatchesNtDeepRepeatOt(
-  state: NtDeepRepeatReadingState,
-  bookId: string,
-  chapter: number,
-): boolean {
-  return state.ot.bookId === bookId.trim().toUpperCase() && state.ot.chapter === chapter;
-}
-
-export function pointerMatchesNtDeepRepeatNt(
-  state: NtDeepRepeatReadingState,
-  bookId: string,
-  chapter: number,
-): boolean {
-  const segment = currentNtDeepRepeatSegment(state);
-  if (!segment) return false;
-  return segmentIncludesChapter(segment, bookId, chapter);
-}
 
 export function formatNtDeepRepeatOtLine(bookId: string, chapter: number): string {
   const name = getScriptureBookDisplayName(bookId) || bookId;

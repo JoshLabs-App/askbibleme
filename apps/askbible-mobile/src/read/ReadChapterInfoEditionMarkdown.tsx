@@ -8,11 +8,10 @@ import {
   stripInfoEditionSectionByHeading,
 } from "../bible/info-edition-format";
 import type { InfoEditionReaderVariant } from "../bible/info-edition-types";
-import { parseAskbibleReadLink, parseReadPath, normalizeAskbibleAppHref } from "../../../../lib/bible/parse-askbible-read-link";
+import { normalizeAskbibleAppHref } from "../../../../lib/bible/parse-askbible-read-link";
 import { parchmentSans } from "../fonts/parchmentType";
 import { useLocale } from "../i18n/LocaleProvider";
 import { toZhTwText } from "../i18n/site-copy";
-import { readParchmentTheme as c } from "./readParchmentTheme";
 import { postReadingTheme as pr } from "./postReadingTheme";
 import { useReadBibleTypographyPx } from "./ReadBibleTypographyContext";
 

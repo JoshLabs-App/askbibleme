@@ -1,4 +1,3 @@
-import type { VerseSpeechPart } from "../bible/verse-annotations";
 
 export type HighlightUnit = {
   text: string;

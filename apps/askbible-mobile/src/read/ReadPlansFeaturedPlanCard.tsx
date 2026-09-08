@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/site-copy";
 import { parchmentSans } from "../fonts/parchmentType";
 import { exploreArticleRoute } from "../explore/exploreFeaturedArticles";
-import { SPLASH_BACKGROUND as LOGO_YELLOW } from "../shell/splash-branding.generated";
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import {
   isNtDeepRepeatPlanId,

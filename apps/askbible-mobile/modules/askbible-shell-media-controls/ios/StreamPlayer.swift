@@ -182,6 +182,12 @@ final class StreamPlayer {
    事件名不变，JS 侧既有处理继续有效。
    */
   private func emitEndedNeedingJs() {
+    /*
+     账本上必须看得见这一步。`.ended` 在状态没变时会被 store 静默丢掉（不打日志），
+     于是「原生播完了、把接力交回 JS」在账本上毫无痕迹，只剩后面 JS 发来的一条 play——
+     看上去就像 JS 无缘无故抢播（2026-09-08 模拟器实测就卡在这里）。
+     */
+    log.info("endedNeedingJs \(self.streamId.rawValue, privacy: .public)")
     switch streamId {
     case .scripture: emitEvent("ShellMediaNativeScriptureEnded")
     case .music: emitEvent("ShellMediaNativeMusicEnded")

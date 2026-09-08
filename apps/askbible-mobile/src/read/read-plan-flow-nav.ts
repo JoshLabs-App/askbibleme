@@ -99,14 +99,6 @@ export function resolveTodayPlanLoopPrevTarget(
   );
 }
 
-/** Non-looping next chapter within today's plan (manual plan flow). */
-export function resolveTodayPlanNextTarget(
-  payload: TodayReadingPlanPayload | null | undefined,
-  currentBookId: string,
-  currentChapter: number,
-): PlanChapterRef | null {
-  return resolveTodayPlanLoopTarget(payload, currentBookId, currentChapter, 1, false);
-}
 
 /** 进计划页：navigate 复用栈内已有页，避免反复 push 叠层导致切换越来越慢。 */
 export function pushReadPlanPlay(router: Pick<Router, "push" | "navigate">): void {

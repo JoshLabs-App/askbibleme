@@ -1,7 +1,6 @@
 import type { AudioPlayer } from "expo-audio";
 import { Platform } from "react-native";
 import { useEffect, type MutableRefObject } from "react";
-import { configureShellAudioMode } from "../audio/shellAudioMode";
 import { safeStopAndUnloadSound } from "../audio/safeShellSound";
 import { getAskBibleBaseUrl } from "../config/askbibleBaseUrl";
 import { isMobileBundledOnly } from "../config/mobileBundledOnly";
@@ -67,7 +66,6 @@ export function useMusicStoreBootstrap({
       setLoading(true);
       try {
         const audioModeWarmup = Promise.race([
-          configureShellAudioMode(),
           new Promise<void>((resolve) => setTimeout(resolve, Platform.OS === "android" ? 250 : 1200)),
         ]);
         log("audio mode warmup requested");

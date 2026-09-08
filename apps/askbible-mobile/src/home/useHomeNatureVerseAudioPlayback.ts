@@ -1,7 +1,7 @@
 import { usePlaybackStream } from "../audio/playbackState";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AppState, DeviceEventEmitter, Platform, type AppStateStatus } from "react-native";
-import { createAudioPlayer, type AudioPlayer } from "expo-audio";
+import type { AudioPlayer } from "expo-audio";
 import { toLegacyPlaybackStatus, type LegacyPlaybackStatus } from "../audio/legacyPlaybackStatus";
 import { waitForAudioPlayerLoaded } from "../audio/expoAudioPlayerReady";
 import {

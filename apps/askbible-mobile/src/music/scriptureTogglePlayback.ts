@@ -1,5 +1,4 @@
 import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
-import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import {
   clearShellMediaSessionUserDismissed,
   pauseShellAppMusic,
@@ -198,7 +197,6 @@ export async function toggleScripturePlayback(
      * soundRef 在真机上永远是 null（音频全部由原生播放器出声），整段执行不到，已删。
      */
 
-    await configureScriptureShellAudioMode();
     const rc = desiredChapter;
     if (!rc || !translationSupportsChapterAudio(rc.translationId)) {
       return;

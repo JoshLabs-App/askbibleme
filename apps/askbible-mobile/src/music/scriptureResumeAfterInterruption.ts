@@ -1,7 +1,6 @@
 import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
-import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
 import {
   getActiveReadChapterPlayback,
@@ -120,7 +119,6 @@ export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCt
     return false;
   }
 
-  await configureScriptureShellAudioMode();
   const ok = await safePlaySound(sound);
   ctx.setPlaying(ok);
   return ok;

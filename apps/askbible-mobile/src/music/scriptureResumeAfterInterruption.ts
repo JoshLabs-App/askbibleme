@@ -29,7 +29,6 @@ export type ScriptureResumeCtx = {
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
   scriptureStopAtSecRef: MutableRefObject<number | null>;
-  setPlaying: (playing: boolean) => void;
 };
 
 export type ScriptureBackgroundRecoveryCtx = ScriptureResumeCtx & {
@@ -95,7 +94,6 @@ function chapterEndFinishArgs(ctx: ScriptureBackgroundRecoveryCtx): ScriptureCha
     autoPlayScriptureRef: ctx.autoPlayScriptureRef,
     scriptureChapterHandoffRef: ctx.scriptureChapterHandoffRef,
     scriptureWantPlayingRef: ctx.scriptureWantPlayingRef,
-    setPlaying: ctx.setPlaying,
     chapterEndHandledRef: ctx.scriptureChapterEndHandledRef,
   };
 }
@@ -120,7 +118,6 @@ export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCt
   }
 
   const ok = await safePlaySound(sound);
-  ctx.setPlaying(ok);
   return ok;
 }
 

@@ -22,8 +22,6 @@ type Args = {
   unloadCurrent: () => Promise<void>;
   endMusicSession: () => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
-  syncPlayingState: (playing: boolean) => void;
-  setPlaying: (playing: boolean) => void;
   setTrackIndex: (index: number) => void;
   setPlaybackMode: (mode: PlaybackMode) => void;
   setMusicCurrentSec: (sec: number) => void;
@@ -40,8 +38,6 @@ export function useMusicPlayTrackAt({
   unloadCurrent,
   endMusicSession,
   persistMusicResume,
-  syncPlayingState,
-  setPlaying,
   setTrackIndex,
   setPlaybackMode,
   setMusicCurrentSec,
@@ -74,7 +70,6 @@ export function useMusicPlayTrackAt({
         downloadMusicTrackAt,
         cacheMusicTrackInBackground,
         musicRepeatModeRef,
-        setPlaying,
         autoPlay: opts?.autoPlay,
       });
       if (!prepared.ok) return false;
@@ -94,13 +89,11 @@ export function useMusicPlayTrackAt({
           unloadCurrent,
           setTrackIndex,
           setPlaybackMode,
-          setPlaying,
           setMusicCurrentSec,
           setMusicDurationSec,
           persistMusicResume,
           trackIndexRef: bridge.trackIndexRef,
           playbackModeRef,
-          playingStateRef: bridge.playingStateRef,
           lastMusicProgressSecRef: bridge.lastMusicProgressSecRef,
         });
         if (ok) return true;
@@ -109,7 +102,6 @@ export function useMusicPlayTrackAt({
           index: prepared.index,
           failedTrackIdsRef,
           playTrackAtRef,
-          setPlaying,
           failedTrackId: prepared.track.id,
           autoPlay: opts?.autoPlay,
         });
@@ -131,11 +123,9 @@ export function useMusicPlayTrackAt({
       setMusicCurrentSec,
       setMusicDurationSec,
       setPlaybackMode,
-      setPlaying,
       setTrackIndex,
       stopScripturePlayback,
       storeRef,
-      syncPlayingState,
       tracks,
       unloadCurrent,
     ],

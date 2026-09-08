@@ -69,7 +69,6 @@ function abortIfUserPaused(ctx: ChapterPlaybackCtx): boolean {
   markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
   ctx.autoPlayScriptureRef.current = false;
   consumeReadPlanFlowAutoplay();
-  ctx.setPlaying(false);
   const sound = ctx.soundRef.current;
   if (sound) void safePauseSound(sound);
   return true;
@@ -79,7 +78,7 @@ function abortIfUserPaused(ctx: ChapterPlaybackCtx): boolean {
 export function haltNativeScriptureAfterFailedSwitch(
   ctx: Pick<
     ChapterPlaybackCtx,
-    "scriptureWantPlayingRef" | "autoPlayScriptureRef" | "setPlaying"
+    "scriptureWantPlayingRef" | "autoPlayScriptureRef"
   >,
 ): void {
   markScriptureWantPlaying(ctx.scriptureWantPlayingRef, false);
@@ -88,7 +87,6 @@ export function haltNativeScriptureAfterFailedSwitch(
   setShellScriptureWantPlaying(false);
   pauseShellAppMusic();
   setShellNativeAudioTakeover(false);
-  ctx.setPlaying(false);
 }
 
 export async function playScriptureChapterAt(
@@ -139,7 +137,6 @@ export async function playScriptureChapterAt(
         ctx.autoPlayScriptureRef.current = true;
         ctx.setScripturePreparing(true);
         const ok = await safePlaySound(sound!);
-        ctx.setPlaying(ok);
         ctx.setScripturePreparing(false);
         return ok;
       }
@@ -169,7 +166,6 @@ export async function playScriptureChapterAt(
           });
         }
         resumeShellAppMusic();
-        ctx.setPlaying(true);
         ctx.setScripturePreparing(false);
         return true;
       }
@@ -206,7 +202,7 @@ export async function playScriptureChapterAt(
       bookName: args.bookName,
       translationId: args.translationId,
       chapterAudioSrc: scriptureSrc,
-      ...buildReadChapterAdvanceHandlers(args, playChapter, ctx.setPlaying),
+      ...buildReadChapterAdvanceHandlers(args, playChapter),
     };
     const existing = ctx.readChapterRef.current;
     const keepExistingHandlers =

@@ -32,7 +32,6 @@ export type ChapterPlaybackCtx = ScriptureShellPlaybackBridge & {
   scriptureChapterHandoffRef: MutableRefObject<boolean>;
   lastScriptureProgressSecRef: MutableRefObject<number>;
   setReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
-  setPlaying: (playing: boolean) => void;
   patchReadChapterSrc: (src: string) => void;
   tryPlayScriptureWithFallback: (
     reg: ReadChapterPlaybackRegistration,

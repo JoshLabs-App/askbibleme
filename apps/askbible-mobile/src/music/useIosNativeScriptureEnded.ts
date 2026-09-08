@@ -36,7 +36,6 @@ type Args = {
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scriptureStopAtOnEndedRef: MutableRefObject<(() => void) | null>;
   scripturePlaybackRateRef: MutableRefObject<number>;
-  setPlaying: (playing: boolean) => void;
   setReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
 };
 
@@ -126,7 +125,6 @@ export function useIosNativeScriptureEnded(args: Args): void {
             userPlay: true,
           });
         });
-        args.setPlaying(true);
         return;
       }
 
@@ -138,7 +136,6 @@ export function useIosNativeScriptureEnded(args: Args): void {
         autoPlayScriptureRef: args.autoPlayScriptureRef,
         scriptureChapterHandoffRef: args.scriptureChapterHandoffRef,
         scriptureWantPlayingRef: args.scriptureWantPlayingRef,
-        setPlaying: args.setPlaying,
       });
     };
     const sub = DeviceEventEmitter.addListener("ShellMediaNativeScriptureEnded", onEnded);

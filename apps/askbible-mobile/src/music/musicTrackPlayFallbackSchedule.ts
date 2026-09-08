@@ -7,7 +7,6 @@ export function scheduleMusicTrackPlayFallback(args: {
   index: number;
   failedTrackIdsRef: MutableRefObject<Set<string>>;
   playTrackAtRef: MutableRefObject<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>;
-  setPlaying: (playing: boolean) => void;
   failedTrackId?: string;
   autoPlay?: boolean;
 }): boolean {
@@ -25,6 +24,5 @@ export function scheduleMusicTrackPlayFallback(args: {
   if (args.failedTrackIdsRef.current.size >= args.tracks.length) {
     args.failedTrackIdsRef.current.clear();
   }
-  args.setPlaying(false);
   return false;
 }

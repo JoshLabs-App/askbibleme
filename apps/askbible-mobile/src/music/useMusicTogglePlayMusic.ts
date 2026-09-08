@@ -43,7 +43,6 @@ type Args = {
   playing: boolean;
   playTrackAt: (index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
-  setPlaying: (playing: boolean) => void;
   setPlaybackMode: (mode: "music" | "scripture") => void;
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
@@ -57,7 +56,6 @@ export function useMusicTogglePlayMusic({
   playing,
   playTrackAt,
   persistMusicResume,
-  setPlaying,
   setPlaybackMode,
   setMusicCurrentSec,
   setMusicDurationSec,
@@ -69,7 +67,6 @@ export function useMusicTogglePlayMusic({
     trackIndexRef,
     lastMusicProgressSecRef,
     musicGainRef,
-    playingStateRef,
     resumeTrackIdRef,
     resumePositionSecRef,
   } = bridge;
@@ -92,8 +89,6 @@ export function useMusicTogglePlayMusic({
     if (musicUiPlaying) {
       setShellMusicWantPlaying(false);
       setShellMusicNativePlaying(false);
-      playingStateRef.current = false;
-      setPlaying(false);
       pauseShellAppMusic();
       // 关音乐：若金句仍挂着 aux，交回金句并续播（勿停金句却留黄标）。
       const aux = getShellAuxMediaOwner();
@@ -111,19 +106,15 @@ export function useMusicTogglePlayMusic({
 
     clearShellMediaSessionUserDismissed();
     setShellMusicWantPlaying(true);
-    playingStateRef.current = true;
     playbackModeRef.current = "music";
     setPlaybackMode("music");
-    setPlaying(true);
     yieldAmbientIfVerseAndAmbientOpen();
 
     if (leavingScripture) {
       await stopScripturePlayback();
       if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-      playingStateRef.current = true;
       playbackModeRef.current = "music";
       setPlaybackMode("music");
-      setPlaying(true);
     }
 
     /** 全程原生引擎（带 userPlay）；expo-av 分支已删。 */
@@ -144,22 +135,16 @@ export function useMusicTogglePlayMusic({
         const playTrack = tracks[resolvedIdx];
         if (!playTrack || !isTrackPlayable(playTrack)) {
           setShellMusicWantPlaying(false);
-          playingStateRef.current = false;
-          setPlaying(false);
           return;
         }
         if (isMobileBundledOnly() && !playTrack.localReady && !isTrackPlayable(playTrack)) {
           setShellMusicWantPlaying(false);
-          playingStateRef.current = false;
-          setPlaying(false);
           return;
         }
         const started = await playTrackAt(resolvedIdx);
         if (!stillCurrent()) return;
         if (!started || !getShellMusicWantPlaying()) {
           setShellMusicWantPlaying(false);
-          playingStateRef.current = false;
-          setPlaying(false);
           pauseShellAppMusic();
           return;
         }
@@ -169,8 +154,6 @@ export function useMusicTogglePlayMusic({
         logShellSoundError("togglePlayMusic-native", err);
         if (!stillCurrent()) return;
         setShellMusicWantPlaying(false);
-        playingStateRef.current = false;
-        setPlaying(false);
       }
       return;
     }
@@ -181,13 +164,11 @@ export function useMusicTogglePlayMusic({
     playTrackAt,
     playbackModeRef,
     playing,
-    playingStateRef,
     resumePositionSecRef,
     resumeTrackIdRef,
     setMusicCurrentSec,
     setMusicDurationSec,
     setPlaybackMode,
-    setPlaying,
     soundRef,
     stopScripturePlayback,
     trackIndex,

@@ -39,7 +39,6 @@ export async function resolveReadChapterAudioRegistration(
 export function buildReadChapterAdvanceHandlers(
   args: ChapterArgs,
   playScriptureChapter: (next: ChapterArgs & { translationId: string }) => Promise<boolean>,
-  setPlaying: (playing: boolean) => void,
 ): Pick<
   ReadChapterPlaybackRegistration,
   "onAdvancePreviousChapter" | "onAdvanceNextChapter" | "onAdvanceNextInBook"
@@ -48,7 +47,6 @@ export function buildReadChapterAdvanceHandlers(
     onAdvancePreviousChapter: () => {
       const { prev } = resolveReadChapterNeighbors(args.bookId, args.chapter);
       if (!prev) {
-        setPlaying(false);
         return;
       }
       // 这里是"音频先起播、章页刚 push 还没来得及在 ctx.readChapterRef 认领自己"那个
@@ -66,7 +64,6 @@ export function buildReadChapterAdvanceHandlers(
     onAdvanceNextChapter: () => {
       const { next } = resolveReadChapterNeighbors(args.bookId, args.chapter);
       if (!next) {
-        setPlaying(false);
         return;
       }
       navigateToReadChapterViaRegistry(next, "forward");
@@ -80,7 +77,6 @@ export function buildReadChapterAdvanceHandlers(
     onAdvanceNextInBook: () => {
       const next = getNextScriptureChapterInBook(args.bookId, args.chapter);
       if (!next) {
-        setPlaying(false);
         return;
       }
       void playScriptureChapter({

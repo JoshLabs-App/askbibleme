@@ -20,7 +20,6 @@ type Args = {
   autoPlayScriptureRef: MutableRefObject<boolean>;
   scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
-  setPlaying: (playing: boolean) => void;
 };
 
 export function handleScriptureDidJustFinish({
@@ -31,13 +30,11 @@ export function handleScriptureDidJustFinish({
   autoPlayScriptureRef,
   scriptureChapterHandoffRef,
   scriptureWantPlayingRef,
-  setPlaying,
 }: Args): void {
   const mode = scriptureAudioRepeatRef.current;
   // 续播回调必须来自在播轨，勿用浏览中的 browse 注册。
   const rc = resolveTransportReadChapterPlayback() ?? readChapterRef.current;
   if (!rc) {
-    setPlaying(false);
     return;
   }
   if (mode !== "chapter") {
@@ -51,7 +48,6 @@ export function handleScriptureDidJustFinish({
         .then(() => safePlaySound(active))
         .catch((err) => logShellSoundError("scripture-repeat", err));
     }
-    setPlaying(true);
     return;
   }
   if (mode === "book") {
@@ -63,7 +59,6 @@ export function handleScriptureDidJustFinish({
       return;
     }
   }
-  setPlaying(false);
   // isActive() 只是个全局标记，不代表这个池当前的轨就是刚播完的 rc——如果用户是
   // 手动打开了另一章（尤其是碰巧和某个残留的阅读计划池当前轨重名，导致池没被
   // releasePlanPoolIfLeavingCurrentTrack 停掉），走池的 onTrackFinished 会按池自己的

@@ -32,7 +32,6 @@ type Args = {
     | "scriptureLastProgressMsRef"
     | "scriptureLastProgressAtRef"
   >;
-  setPlaying: (playing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
   setScriptureDurationSec: (sec: number) => void;
   setScripturePreparing: (preparing: boolean) => void;
@@ -49,7 +48,6 @@ export async function runScripturePlayInFlight(args: Args): Promise<void> {
     scriptureAudioRepeatRef,
     lastScriptureProgressSecRef,
     refs,
-    setPlaying,
     setScriptureCurrentSec,
     setScriptureDurationSec,
     setScripturePreparing,
@@ -104,7 +102,6 @@ export async function runScripturePlayInFlight(args: Args): Promise<void> {
       scriptureLastProgressMsRef: refs.scriptureLastProgressMsRef,
       scriptureLastProgressAtRef: refs.scriptureLastProgressAtRef,
       scriptureSrcRef: refs.scriptureSrcRef,
-      setPlaying,
       setScriptureCurrentSec,
       setScriptureDurationSec,
       setScripturePreparing,

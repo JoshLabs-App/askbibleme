@@ -42,7 +42,6 @@ type PrepareArgs = {
   downloadMusicTrackAt: (index: number) => Promise<boolean>;
   cacheMusicTrackInBackground: (trackId: string) => void;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
-  setPlaying: (playing: boolean) => void;
   autoPlay?: boolean;
 };
 
@@ -62,7 +61,6 @@ export async function prepareMusicTrackForPlay({
   downloadMusicTrackAt,
   cacheMusicTrackInBackground,
   musicRepeatModeRef,
-  setPlaying,
   autoPlay,
 }: PrepareArgs): Promise<PreparedMusicTrack> {
   const i = normalizeMusicTrackIndex(index, tracks.length);
@@ -128,7 +126,6 @@ export async function prepareMusicTrackForPlay({
   if (failedTrackIdsRef.current.size >= tracks.length) {
     failedTrackIdsRef.current.clear();
   }
-  setPlaying(false);
   return { ok: false, stale: false, aborted: true };
 }
 

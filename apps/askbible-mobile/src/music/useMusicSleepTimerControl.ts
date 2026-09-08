@@ -16,19 +16,15 @@ import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 type Args = {
   soundRef: MutableRefObject<AudioPlayer | null>;
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
-  playingStateRef: MutableRefObject<boolean>;
   sleepTimerDeadlineRef: MutableRefObject<number | null>;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
-  setPlaying: (playing: boolean) => void;
   setSleepTimerMinutesState: (minutes: 0 | ShellSleepTimerMinutes) => void;
 };
 
 export function useMusicSleepTimerControl({
   soundRef,
-  playingStateRef,
   sleepTimerDeadlineRef,
   sleepTimerMinutes,
-  setPlaying,
   setSleepTimerMinutesState,
 }: Args) {
   const firingRef = useRef(false);
@@ -38,14 +34,12 @@ export function useMusicSleepTimerControl({
     setShellMusicWantPlaying(false);
     setShellMusicNativePlaying(false);
     setShellNativeAudioTakeover(false);
-    playingStateRef.current = false;
-    setPlaying(false);
     // iOS 音乐走原生 AVPlayer：soundRef 常为 null，仍须 pauseAppMusic，否则只灭黄标、音频继续。
     pauseShellAppMusic();
     if (sound) {
       await safePauseSound(sound);
     }
-  }, [playingStateRef, setPlaying, soundRef]);
+  }, [soundRef]);
 
   const fireSleepTimer = useCallback(async () => {
     await runMusicSleepTimerFire({

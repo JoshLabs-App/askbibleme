@@ -35,7 +35,6 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     state,
     tracks,
     setMusicPackRevision,
-    syncPlayingState,
     endMusicSession,
     persistMusicResume,
     scripturePrefs,
@@ -43,7 +42,6 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     catalog,
     readChapter,
     setReadChapter,
-    setPlaying,
     setPlaybackMode,
     setScripturePreparing,
     setScriptureCurrentSec,
@@ -102,7 +100,6 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     scripturePreparing,
     readChapter,
     setReadChapter,
-    setPlaying,
     setPlaybackMode,
     setScripturePreparing,
     setScriptureCurrentSec,
@@ -114,7 +111,6 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     setMusicPackRevision,
     scripturePlaybackRateRef,
     scriptureAudioRepeatRef,
-    syncPlayingState,
     persistMusicResume,
     endMusicSession,
   });
@@ -185,9 +181,7 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
       const recovered = await recoverMusicPlaybackAfterBackground({
         playbackModeRef: refs.playbackModeRef,
         soundRef: refs.soundRef,
-        playingStateRef: refs.playingStateRef,
         musicGainRef: refs.musicGainRef,
-        setPlaying,
       });
       // JS 已标 playing 时也要 resume：三星 OEM Pause 会只停原生、不改 UI。
       resumeShellAppMusic();
@@ -206,7 +200,7 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
     }
     const aux = getShellAuxMediaOwner();
     if (aux) await aux.resume();
-  }, [playing, refs, setPlaying, shell]);
+  }, [playing, refs, shell]);
 
   syncMusicPlaybackControlSnapshot(playing, playbackMode, togglePlayScripture, shell.playScriptureChapter);
   // 音乐位置由 setMusicCurrentSec 直接写 store（比这里的 state 更新），这里只负责推进读经秒数。

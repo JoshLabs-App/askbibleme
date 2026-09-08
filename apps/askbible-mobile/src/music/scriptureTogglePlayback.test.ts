@@ -159,7 +159,6 @@ describe("toggleScripturePlayback", () => {
       scriptureChapterHandoffRef: { current: false },
       lastScriptureProgressSecRef: { current: 0 },
       setReadChapter: vi.fn(),
-      setPlaying: vi.fn(),
       setScripturePreparing: vi.fn(),
       patchReadChapterSrc: vi.fn(),
       tryPlayScriptureWithFallback: vi.fn(),
@@ -173,7 +172,10 @@ describe("toggleScripturePlayback", () => {
 
     expect(ctx.unloadCurrent).not.toHaveBeenCalled();
     expect(ctx.stopScripturePlayback).not.toHaveBeenCalled();
-    expect(ctx.setPlaying).toHaveBeenCalledWith(false);
+    /** 暂停意图要送到原生；界面由原生回报的状态驱动，不再靠 JS 自己置 playing。 */
+    expect(mocks.syncShellMediaSessionExplicit).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "scripture", userPause: true }),
+    );
     expect(mocks.resolveScripturePlayableSrcForChapter).not.toHaveBeenCalled();
     expect(mocks.configureScriptureShellAudioMode).not.toHaveBeenCalled();
   });
@@ -184,7 +186,6 @@ describe("toggleScripturePlayback", () => {
       playbackModeRef: { current: "scripture" },
       autoPlayScriptureRef: { current: true },
       scriptureWantPlayingRef: { current: true },
-      setPlaying: vi.fn(),
     };
 
     await pauseScriptureShellPlayback(
@@ -193,7 +194,6 @@ describe("toggleScripturePlayback", () => {
 
     expect(ctx.scriptureWantPlayingRef.current).toBe(false);
     expect(ctx.autoPlayScriptureRef.current).toBe(false);
-    expect(ctx.setPlaying).toHaveBeenCalledWith(false);
     expect(mocks.syncShellMediaSessionExplicit).toHaveBeenCalledWith(
       expect.objectContaining({
         playing: false,
@@ -210,7 +210,6 @@ describe("toggleScripturePlayback", () => {
       playbackModeRef: { current: "music" },
       autoPlayScriptureRef: { current: true },
       scriptureWantPlayingRef: { current: true },
-      setPlaying: vi.fn(),
       setScripturePreparing: vi.fn(),
       unloadCurrent: vi.fn(async () => {}),
       stopScripturePlayback: vi.fn(async () => {}),
@@ -220,7 +219,6 @@ describe("toggleScripturePlayback", () => {
 
     expect(ctx.scriptureWantPlayingRef.current).toBe(false);
     expect(ctx.autoPlayScriptureRef.current).toBe(false);
-    expect(ctx.setPlaying).not.toHaveBeenCalled();
     expect(mocks.safePauseSound).not.toHaveBeenCalled();
   });
 
@@ -275,7 +273,6 @@ describe("toggleScripturePlayback", () => {
       scriptureChapterHandoffRef: { current: false },
       lastScriptureProgressSecRef: { current: 0 },
       setReadChapter: vi.fn(),
-      setPlaying: vi.fn(),
       setScripturePreparing: vi.fn(),
       patchReadChapterSrc: vi.fn(),
       tryPlayScriptureWithFallback,
@@ -350,7 +347,6 @@ describe("toggleScripturePlayback", () => {
       scriptureChapterHandoffRef: { current: false },
       lastScriptureProgressSecRef: { current: 12 },
       setReadChapter: vi.fn(),
-      setPlaying: vi.fn(),
       setScripturePreparing: vi.fn(),
       patchReadChapterSrc: vi.fn(),
       tryPlayScriptureWithFallback: vi.fn(async () => true),
@@ -376,7 +372,6 @@ describe("toggleScripturePlayback", () => {
     );
     expect(ctx.tryPlayScriptureWithFallback).not.toHaveBeenCalled();
     expect(mocks.scriptureChapterPoolStop).not.toHaveBeenCalled();
-    expect(ctx.setPlaying).toHaveBeenCalledWith(true);
   });
 
 });

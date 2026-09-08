@@ -32,7 +32,6 @@ export type ScriptureChapterEndFinishArgs = {
   autoPlayScriptureRef: MutableRefObject<boolean>;
   scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
-  setPlaying: (playing: boolean) => void;
   chapterEndHandledRef: MutableRefObject<boolean>;
 };
 
@@ -47,7 +46,6 @@ export function finishScriptureChapterOnce(args: ScriptureChapterEndFinishArgs):
     autoPlayScriptureRef: args.autoPlayScriptureRef,
     scriptureChapterHandoffRef: args.scriptureChapterHandoffRef,
     scriptureWantPlayingRef: args.scriptureWantPlayingRef,
-    setPlaying: args.setPlaying,
   });
   return true;
 }

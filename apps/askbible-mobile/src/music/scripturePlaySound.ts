@@ -55,7 +55,6 @@ type Args = {
   scriptureLastProgressMsRef: MutableRefObject<number>;
   scriptureLastProgressAtRef: MutableRefObject<number>;
   scriptureSrcRef: MutableRefObject<string | null>;
-  setPlaying: (playing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
   setScriptureDurationSec: (sec: number) => void;
   setScripturePreparing: (preparing: boolean) => void;
@@ -90,7 +89,6 @@ export async function loadAndPlayScriptureSound({
   scriptureLastProgressMsRef,
   scriptureLastProgressAtRef,
   scriptureSrcRef,
-  setPlaying,
   setScriptureCurrentSec,
   setScriptureDurationSec,
   setScripturePreparing,
@@ -180,7 +178,6 @@ export async function loadAndPlayScriptureSound({
         userPlay: true,
       });
       logScripturePlayTiming(t0, "native play command issued (native engine takes over from here)");
-      setPlaying(true);
       publishScripturePlaybackSec(positionSec);
       setScripturePlaybackClockPlaying(true, rate);
       setScriptureCurrentSec(positionSec);

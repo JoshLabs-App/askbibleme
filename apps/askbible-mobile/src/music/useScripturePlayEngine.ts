@@ -31,7 +31,6 @@ type Args = {
   bridge: ScriptureShellPlaybackBridge;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   setReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
-  setPlaying: (playing: boolean) => void;
   setPlaybackMode: (mode: "music" | "scripture") => void;
   setScripturePreparing: (preparing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
@@ -45,7 +44,6 @@ export function useScripturePlayEngine({
   bridge,
   readChapterRef,
   setReadChapter,
-  setPlaying,
   setPlaybackMode,
   setScripturePreparing,
   setScriptureCurrentSec,
@@ -73,7 +71,6 @@ export function useScripturePlayEngine({
     scriptureWantPlayingRef: refs.scriptureWantPlayingRef,
     scriptureStopAtOnEndedRef: refs.scriptureStopAtOnEndedRef,
     scripturePlaybackRateRef,
-    setPlaying,
     setReadChapter,
   });
 
@@ -117,7 +114,6 @@ export function useScripturePlayEngine({
     setScriptureDurationSec(0);
     clearScripturePlayingChapter();
     clearPlayingReadChapterPlayback();
-    setPlaying(false);
     setPlaybackMode("music");
     playbackModeRef.current = "music";
   }, [
@@ -134,7 +130,6 @@ export function useScripturePlayEngine({
     refs.scriptureWantPlayingRef,
     scriptureSrcRef,
     setPlaybackMode,
-    setPlaying,
     setScriptureCurrentSec,
     setScriptureDurationSec,
     setScripturePreparing,
@@ -158,7 +153,6 @@ export function useScripturePlayEngine({
         scriptureAudioRepeatRef,
         lastScriptureProgressSecRef,
         refs,
-        setPlaying,
         setScriptureCurrentSec,
         setScriptureDurationSec,
         setScripturePreparing,
@@ -173,7 +167,6 @@ export function useScripturePlayEngine({
       scriptureAudioRepeatRef,
       scripturePlaybackRateRef,
       setPlaybackMode,
-      setPlaying,
       setScriptureCurrentSec,
       setScriptureDurationSec,
       setScripturePreparing,

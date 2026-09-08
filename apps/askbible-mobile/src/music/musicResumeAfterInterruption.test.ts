@@ -41,9 +41,7 @@ describe("recoverMusicPlaybackAfterBackground", () => {
     const ok = await recoverMusicPlaybackAfterBackground({
       playbackModeRef: { current: "music" },
       soundRef: { current: { playAsync } as never },
-      playingStateRef: { current: false },
       musicGainRef: { current: 1 },
-      setPlaying: vi.fn(),
     });
     expect(ok).toBe(false);
     expect(playAsync).not.toHaveBeenCalled();

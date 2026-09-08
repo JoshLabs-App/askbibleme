@@ -9,9 +9,7 @@ import { isShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 export type MusicBackgroundRecoveryCtx = {
   playbackModeRef: MutableRefObject<"music" | "scripture">;
   soundRef: MutableRefObject<AudioPlayer | null>;
-  playingStateRef: MutableRefObject<boolean>;
   musicGainRef: MutableRefObject<number>;
-  setPlaying: (playing: boolean) => void;
 };
 
 /**
@@ -34,8 +32,6 @@ export async function recoverMusicPlaybackAfterBackground(
   if (!st?.isLoaded) return false;
   if (st.isPlaying) {
     setShellMusicWantPlaying(true);
-    ctx.playingStateRef.current = true;
-    ctx.setPlaying(true);
     return true;
   }
 
@@ -55,8 +51,6 @@ export async function recoverMusicPlaybackAfterBackground(
       ok = await safePlaySound(sound);
     }
     if (ok) {
-      ctx.playingStateRef.current = true;
-      ctx.setPlaying(true);
     }
     return ok;
   } catch {

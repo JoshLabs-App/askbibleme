@@ -54,7 +54,6 @@ export function useMusicPlaybackRefs() {
       failedTrackIdsRef,
       musicMaxProgressMsRef,
       musicSoundActivatedAtRef,
-      playingStateRef,
       storeRef,
     }),
     [
@@ -80,7 +79,6 @@ export function useMusicPlaybackRefs() {
       failedTrackIdsRef,
       musicMaxProgressMsRef,
       musicSoundActivatedAtRef,
-      playingStateRef,
       storeRef,
     ],
   );

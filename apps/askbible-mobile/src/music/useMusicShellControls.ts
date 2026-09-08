@@ -14,7 +14,6 @@ import { useMusicSleepTimerControl } from "./useMusicSleepTimerControl";
 type Args = {
   soundRef: MutableRefObject<AudioPlayer | null>;
   playbackModeRef: MutableRefObject<MusicPlaybackMode>;
-  playingStateRef: MutableRefObject<boolean>;
   musicGainRef: MutableRefObject<number>;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   lastMusicProgressSecRef: MutableRefObject<number>;
@@ -22,7 +21,6 @@ type Args = {
   sleepTimerDeadlineRef: MutableRefObject<number | null>;
   musicRepeatMode: MusicRepeatMode;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
-  setPlaying: (playing: boolean) => void;
   setMusicCurrentSec: (sec: number) => void;
   setScriptureCurrentSec: (sec: number) => void;
   scriptureDurationSec: number;
@@ -35,7 +33,6 @@ export function useMusicShellControls(args: Args) {
   const {
     soundRef,
     playbackModeRef,
-    playingStateRef,
     musicGainRef,
     musicRepeatModeRef,
     lastMusicProgressSecRef,
@@ -43,7 +40,6 @@ export function useMusicShellControls(args: Args) {
     sleepTimerDeadlineRef,
     musicRepeatMode,
     sleepTimerMinutes,
-    setPlaying,
     setMusicCurrentSec,
     setScriptureCurrentSec,
     scriptureDurationSec,
@@ -60,10 +56,8 @@ export function useMusicShellControls(args: Args) {
   const { setSleepTimerMinutes, pauseShellPlayback } = useMusicSleepTimerControl({
     soundRef,
     playbackModeRef,
-    playingStateRef,
     sleepTimerDeadlineRef,
     sleepTimerMinutes,
-    setPlaying,
     setSleepTimerMinutesState,
   });
 

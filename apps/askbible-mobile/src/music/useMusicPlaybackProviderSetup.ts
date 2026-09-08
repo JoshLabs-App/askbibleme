@@ -17,7 +17,6 @@ export function useMusicPlaybackProviderSetup() {
     trackIndex,
     setTrackIndex,
     playing,
-    setPlaying,
     loading,
     setLoading,
     playbackMode,
@@ -40,10 +39,9 @@ export function useMusicPlaybackProviderSetup() {
   const { tracks, setMusicPackRevision } = useMusicPlaybackTracks(store);
   useMusicStoreRefSync(refs.storeRef, store);
 
-  const syncPlayingState = useMusicPlaybackRefSync(
+  useMusicPlaybackRefSync(
     refs,
-    { trackIndex, playbackMode, musicRepeatMode, playing },
-    setPlaying,
+    { trackIndex, playbackMode, musicRepeatMode },
   );
 
   const endMusicSession = useMusicSessionTelemetry(refs.musicSessionRef);
@@ -62,7 +60,6 @@ export function useMusicPlaybackProviderSetup() {
   const shellControls = useMusicShellControls({
     soundRef: refs.soundRef,
     playbackModeRef: refs.playbackModeRef,
-    playingStateRef: refs.playingStateRef,
     musicGainRef: refs.musicGainRef,
     musicRepeatModeRef: refs.musicRepeatModeRef,
     lastMusicProgressSecRef: refs.lastMusicProgressSecRef,
@@ -70,7 +67,6 @@ export function useMusicPlaybackProviderSetup() {
     sleepTimerDeadlineRef: refs.sleepTimerDeadlineRef,
     musicRepeatMode,
     sleepTimerMinutes,
-    setPlaying,
     setMusicCurrentSec,
     setScriptureCurrentSec,
     scriptureDurationSec: state.scriptureDurationSec,
@@ -96,7 +92,6 @@ export function useMusicPlaybackProviderSetup() {
     state,
     tracks,
     setMusicPackRevision,
-    syncPlayingState,
     endMusicSession,
     persistMusicResume,
     scripturePrefs,
@@ -104,7 +99,6 @@ export function useMusicPlaybackProviderSetup() {
     catalog,
     readChapter,
     setReadChapter,
-    setPlaying,
     setPlaybackMode: state.setPlaybackMode,
     setScripturePreparing,
     setScriptureCurrentSec,

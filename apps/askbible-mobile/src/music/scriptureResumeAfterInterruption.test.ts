@@ -35,7 +35,6 @@ function makeCtx(overrides: Partial<ScriptureResumeCtx> = {}): ScriptureResumeCt
   const soundRef = { current: { play: vi.fn() } as unknown as import("expo-audio").AudioPlayer };
   const scripturePlayInFlightRef = { current: null as Promise<void> | null };
   const scriptureStopAtSecRef = { current: null as number | null };
-  const setPlaying = vi.fn();
 
   return {
     scriptureWantPlayingRef,
@@ -43,7 +42,6 @@ function makeCtx(overrides: Partial<ScriptureResumeCtx> = {}): ScriptureResumeCt
     soundRef,
     scripturePlayInFlightRef,
     scriptureStopAtSecRef,
-    setPlaying,
     ...overrides,
   } satisfies ScriptureResumeCtx;
 }
@@ -96,7 +94,6 @@ describe("tryResumeScriptureAfterInterruption", () => {
 
     expect(ok).toBe(true);
     expect(safePlaySound).toHaveBeenCalledWith(ctx.soundRef.current);
-    expect(ctx.setPlaying).toHaveBeenCalledWith(true);
   });
 
   it("does not recover from background after user pause hold", async () => {

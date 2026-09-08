@@ -43,13 +43,11 @@ type StartArgs = {
   unloadCurrent: () => Promise<void>;
   setTrackIndex: (index: number) => void;
   setPlaybackMode: (mode: "music" | "scripture") => void;
-  setPlaying: (playing: boolean) => void;
   setMusicCurrentSec: (sec: number) => void;
   setMusicDurationSec: (sec: number) => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
   trackIndexRef: { current: number };
   playbackModeRef: { current: "music" | "scripture" };
-  playingStateRef: { current: boolean };
   lastMusicProgressSecRef: { current: number };
 };
 
@@ -104,8 +102,6 @@ export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean
 
   if (!args.shouldPlay) {
     setShellMusicWantPlaying(false);
-    args.playingStateRef.current = false;
-    args.setPlaying(false);
     setShellNativeAudioTakeover(true);
     syncShellMediaSessionExplicit({
       ...sessionBase,
@@ -117,8 +113,6 @@ export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean
   clearShellMediaSessionUserDismissed();
   setShellMusicWantPlaying(true);
   setShellMusicNativePlaying(true);
-  args.playingStateRef.current = true;
-  args.setPlaying(true);
   setShellNativeAudioTakeover(true);
   // 显式带 assetUri + userPlay：越过 userPaused，且不被环境音/金句 URI 污染。
   const nextAssetUris = await buildMusicNativeNextUris({

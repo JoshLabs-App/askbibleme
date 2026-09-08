@@ -98,7 +98,6 @@ export function useMusicPlaybackProviderState() {
     trackIndex,
     setTrackIndex,
     playing,
-    setPlaying,
     loading,
     setLoading,
     playbackMode,

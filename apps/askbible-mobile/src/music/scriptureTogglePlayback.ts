@@ -59,7 +59,7 @@ export async function pauseScriptureShellPlayback(
     | "playbackModeRef"
     | "scriptureWantPlayingRef"
     | "autoPlayScriptureRef"
-    | "setPlaying"
+   
   >,
 ): Promise<void> {
   holdScriptureUserPause("user");
@@ -75,7 +75,6 @@ export async function pauseScriptureShellPlayback(
     return;
   }
   // 先更新 UI，避免等 AsyncStorage / 落盘时「点了暂停没反应」
-  ctx.setPlaying(false);
   const nativeScripture = getShellScriptureWantPlaying();
   setShellScriptureWantPlaying(false);
   void flushTodayPlanScriptureResume();
@@ -187,7 +186,6 @@ export async function toggleScripturePlayback(
         userPlay: true,
       });
       resumeShellAppMusic();
-      ctx.setPlaying(true);
       ctx.setScripturePreparing(false);
       return;
     }
@@ -267,7 +265,6 @@ export async function toggleScripturePlayback(
   } catch (err) {
     logShellSoundError("togglePlayScripture", err);
     ctx.setScripturePreparing(false);
-    ctx.setPlaying(false);
     if (didLeavePool) haltNativeScriptureAfterFailedSwitch(ctx);
   }
 }

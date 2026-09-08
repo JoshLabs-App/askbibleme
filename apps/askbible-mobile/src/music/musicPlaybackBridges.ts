@@ -25,7 +25,6 @@ export type MusicPlayTrackBridge = Pick<
   | "failedTrackIdsRef"
   | "storeRef"
   | "musicSessionRef"
-  | "playingStateRef"
 > & {
   scriptureSrcRef: MutableRefObject<string | null>;
 };
@@ -73,6 +72,5 @@ export function createMusicPlayTrackBridge(
     storeRef: refs.storeRef,
     scriptureSrcRef,
     musicSessionRef: refs.musicSessionRef,
-    playingStateRef: refs.playingStateRef,
   };
 }

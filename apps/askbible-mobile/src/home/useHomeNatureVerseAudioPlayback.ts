@@ -370,7 +370,6 @@ export function useHomeNatureVerseAudioPlayback({
     iosNativeChainedVerseKeyRef.current = null;
     nativeVerseStartedRef.current = null;
     verseUriCacheRef.current.clear();
-    setPlaying(false);
     playingRef.current = false;
     setShellVerseWantPlaying(false);
     // 首页可能已先清 wantPlaying；仍必须把 userPause 送到原生，否则 MediaPlayer / AVPlayer 继续出声。
@@ -392,7 +391,6 @@ export function useHomeNatureVerseAudioPlayback({
     transportPausedRef.current = true;
     clearResumeTimer();
     autoResumeUntilRef.current = 0;
-    setPlaying(false);
     playingRef.current = false;
     setShellVerseWantPlaying(false);
     syncShellMediaSessionExplicit({
@@ -424,7 +422,6 @@ export function useHomeNatureVerseAudioPlayback({
     transportPausedRef.current = false;
     clearShellMediaSessionUserDismissed();
     setShellVerseWantPlaying(true);
-    setPlaying(true);
     playingRef.current = true;
     if (Platform.OS === "ios") setShellNativeAudioTakeover(true);
 
@@ -500,7 +497,6 @@ export function useHomeNatureVerseAudioPlayback({
       pause: async () => {
         clearResumeTimer();
         autoResumeUntilRef.current = 0;
-        setPlaying(false);
         playingRef.current = false;
         setShellVerseWantPlaying(false);
         // 与 iOS 一致：真暂停时熄黄标，避免「无声但图标仍黄」。
@@ -613,7 +609,6 @@ export function useHomeNatureVerseAudioPlayback({
             setShellNativeAudioTakeover(true);
           }
           setReady(true);
-          setPlaying(true);
           playingRef.current = true;
           iosVerseStartedAtRef.current = Date.now();
           autoResumeUntilRef.current = Date.now() + 8_000;
@@ -680,7 +675,6 @@ export function useHomeNatureVerseAudioPlayback({
       } catch (err) {
         console.warn("[home-golden-verse] play failed", verseKey, err);
         setReady(false);
-        setPlaying(false);
         playingRef.current = false;
         if (activeRef.current) {
           missingAudioSkipRef.current += 1;
@@ -778,7 +772,6 @@ export function useHomeNatureVerseAudioPlayback({
       if (transportPausedRef.current) return;
       clearShellMediaSessionUserDismissed();
       setShellVerseWantPlaying(true);
-      setPlaying(true);
       playingRef.current = true;
       lastPositionSecRef.current = 0;
       lastPositionMillisRef.current = 0;
@@ -810,7 +803,6 @@ export function useHomeNatureVerseAudioPlayback({
       const sync = (state: AppStateStatus) => {
         if (getShellAudioInterrupted()) return;
         if (state === "active") {
-          setPlaying(true);
           playingRef.current = true;
           if (getShellVerseWantPlaying()) iosVerseStartedAtRef.current = Date.now();
           return;

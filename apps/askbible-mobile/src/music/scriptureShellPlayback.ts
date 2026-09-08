@@ -17,7 +17,6 @@ type Args = {
   bridge: ScriptureShellPlaybackBridge;
   readChapter: ReadChapterPlaybackRegistration | null;
   setReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
-  setPlaying: (playing: boolean) => void;
   setPlaybackMode: (mode: "music" | "scripture") => void;
   setScripturePreparing: (preparing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
@@ -39,7 +38,6 @@ export function useScriptureShellPlayback(args: Args) {
     readChapterRef,
     lastScriptureProgressSecRef: args.lastScriptureProgressSecRef,
     setReadChapter: args.setReadChapter,
-    setPlaying: args.setPlaying,
     setScriptureCurrentSec: args.setScriptureCurrentSec,
     setScripturePreparing: args.setScripturePreparing,
     autoPlayScriptureRef: engine.autoPlayScriptureRef,
@@ -61,7 +59,6 @@ export function useScriptureShellPlayback(args: Args) {
     readChapterRef,
     lastScriptureProgressSecRef: args.lastScriptureProgressSecRef,
     setReadChapter: args.setReadChapter,
-    setPlaying: args.setPlaying,
     setScriptureCurrentSec: args.setScriptureCurrentSec,
     setScripturePreparing: args.setScripturePreparing,
     autoPlayScriptureRef: engine.autoPlayScriptureRef,

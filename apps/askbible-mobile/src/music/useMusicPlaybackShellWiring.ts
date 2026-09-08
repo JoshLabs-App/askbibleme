@@ -20,7 +20,6 @@ type Args = {
   scripturePreparing: boolean;
   readChapter: ReadChapterPlaybackRegistration | null;
   setReadChapter: (reg: ReadChapterPlaybackRegistration | null) => void;
-  setPlaying: (playing: boolean) => void;
   setPlaybackMode: (mode: "music" | "scripture") => void;
   setScripturePreparing: (preparing: boolean) => void;
   setScriptureCurrentSec: (sec: number) => void;
@@ -32,7 +31,6 @@ type Args = {
   setMusicPackRevision: (fn: (n: number) => number) => void;
   scripturePlaybackRateRef: MutableRefObject<number>;
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
-  syncPlayingState: (playing: boolean) => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
   endMusicSession: () => void;
 };
@@ -46,7 +44,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
     scripturePreparing,
     readChapter,
     setReadChapter,
-    setPlaying,
     setPlaybackMode,
     setScripturePreparing,
     setScriptureCurrentSec,
@@ -58,7 +55,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
     setMusicPackRevision,
     scripturePlaybackRateRef,
     scriptureAudioRepeatRef,
-    syncPlayingState,
     persistMusicResume,
     endMusicSession,
   } = args;
@@ -74,7 +70,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
     bridge: scriptureBridge,
     readChapter,
     setReadChapter,
-    setPlaying,
     setPlaybackMode,
     setScripturePreparing,
     setScriptureCurrentSec,
@@ -104,8 +99,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
     unloadCurrent,
     endMusicSession,
     persistMusicResume,
-    syncPlayingState,
-    setPlaying,
     setTrackIndex,
     setPlaybackMode,
     setMusicCurrentSec,

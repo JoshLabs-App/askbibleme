@@ -19,14 +19,16 @@ export function subscribeShellMusicNativePlaying(listener: () => void): () => vo
   };
 }
 
-/** 首页/壳层音乐图标是否应显示 LOGO 色。 */
+/**
+ * 首页/壳层音乐图标是否应显示 LOGO 色。
+ *
+ * 只问音乐这一条流：`playing` 是真的在响，`wantPlaying` 覆盖「刚点下、还在缓冲」那一瞬。
+ * 以前要凑 playbackMode + playing + wantPlaying + nativePlaying 四个来源，
+ * 是因为没有一个能单独说清；现在原生按流上报了。
+ */
 export function isShellMusicChromeActive(args: {
-  playbackMode: "music" | "scripture" | string;
-  playing: boolean;
-  wantPlaying: boolean;
-  nativePlaying?: boolean;
+  musicPlaying: boolean;
+  musicWantPlaying: boolean;
 }): boolean {
-  if (args.playbackMode !== "music") return false;
-  // wantPlaying：点播当下就要亮中间键；勿只等原生心跳，否则有声却像未激活。
-  return args.wantPlaying || args.playing || !!args.nativePlaying;
+  return args.musicPlaying || args.musicWantPlaying;
 }

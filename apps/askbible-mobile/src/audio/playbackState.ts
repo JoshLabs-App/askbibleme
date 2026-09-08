@@ -1,4 +1,3 @@
-import { DeviceEventEmitter } from "react-native";
 import { useSyncExternalStore } from "react";
 
 /**
@@ -13,6 +12,9 @@ import { useSyncExternalStore } from "react";
  * 音乐在放时后者为真，按下去执行了暂停。
  *
  * 原生那边三条流各有各的状态（见 model/PlaybackModel），这里原样镜像，不做二次推导。
+ *
+ * 本文件**刻意不 import react-native**：测试环境里 RN 的源码是 Flow 语法，
+ * 解析不了，任何间接引到这里的单测都会整体挂掉。事件监听在 shellMediaControls 里挂。
  */
 
 export type PlaybackStreamId = "music" | "scripture" | "verse";
@@ -110,15 +112,6 @@ export function subscribePlaybackState(onChange: () => void): () => void {
   return () => {
     listeners.delete(onChange);
   };
-}
-
-let installed = false;
-
-/** 装上监听。壳层启动时调一次即可，重复调用无副作用。 */
-export function installPlaybackStateBridge(): void {
-  if (installed) return;
-  installed = true;
-  DeviceEventEmitter.addListener("ShellPlaybackState", applyNativePlaybackState);
 }
 
 /** 订阅整份快照。 */

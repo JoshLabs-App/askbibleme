@@ -1,24 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+/** 三条流的状态现在由原生推来；测试直接喂快照，不再 mock 一堆影子 store。 */
 const flags = vi.hoisted(() => ({
-  musicWant: false,
-  musicNative: false,
-  verseWant: false,
-  scriptureWant: false,
+  musicPlaying: false,
+  versePlaying: false,
+  scripturePlaying: false,
   ambientSlot: "" as string,
 }));
 
-vi.mock("../audio/shellMusicWantPlaying", () => ({
-  getShellMusicWantPlaying: () => flags.musicWant,
-}));
-vi.mock("../audio/shellMusicNativePlaying", () => ({
-  getShellMusicNativePlaying: () => flags.musicNative,
-}));
-vi.mock("../audio/shellVerseWantPlaying", () => ({
-  getShellVerseWantPlaying: () => flags.verseWant,
-}));
-vi.mock("../audio/shellScriptureWantPlaying", () => ({
-  getShellScriptureWantPlaying: () => flags.scriptureWant,
+vi.mock("../audio/playbackState", () => ({
+  getPlaybackSnapshot: () => ({
+    music: { playing: flags.musicPlaying, wantPlaying: flags.musicPlaying },
+    verse: { playing: flags.versePlaying, wantPlaying: flags.versePlaying },
+    scripture: { playing: flags.scripturePlaying, wantPlaying: flags.scripturePlaying },
+  }),
 }));
 vi.mock("../nature/natureAmbientExclusiveStop", () => ({
   getNatureAmbientSlotId: () => flags.ambientSlot,
@@ -32,33 +27,32 @@ import {
 
 describe("shouldYieldMusicWhenOpeningAmbient", () => {
   beforeEach(() => {
-    flags.musicWant = false;
-    flags.musicNative = false;
-    flags.verseWant = false;
-    flags.scriptureWant = false;
+    flags.musicPlaying = false;
+    flags.versePlaying = false;
+    flags.scripturePlaying = false;
     flags.ambientSlot = "";
     setHomeGoldenVerseSessionActive(false);
   });
 
   it("stops music when golden verse and music are both on", () => {
     setHomeGoldenVerseSessionActive(true);
-    flags.musicWant = true;
+    flags.musicPlaying = true;
     expect(shouldYieldMusicWhenOpeningAmbient()).toBe(true);
   });
 
   it("stops music when scripture and music are both on", () => {
-    flags.scriptureWant = true;
-    flags.musicNative = true;
+    flags.scripturePlaying = true;
+    flags.musicPlaying = true;
     expect(shouldYieldMusicWhenOpeningAmbient()).toBe(true);
   });
 
   it("leaves music alone when only music is on", () => {
-    flags.musicWant = true;
+    flags.musicPlaying = true;
     expect(shouldYieldMusicWhenOpeningAmbient()).toBe(false);
   });
 
   it("leaves music alone when only voice is on", () => {
-    flags.verseWant = true;
+    flags.versePlaying = true;
     expect(shouldYieldMusicWhenOpeningAmbient()).toBe(false);
   });
 });

@@ -1,45 +1,40 @@
-import { useMemo, useSyncExternalStore } from "react";
-import {
-  getShellMusicNativePlaying,
-  subscribeShellMusicNativePlaying,
-} from "../audio/shellMusicNativePlaying";
-import {
-  getShellMusicWantPlaying,
-  subscribeShellMusicWantPlaying,
-} from "../audio/shellMusicWantPlaying";
+import { getPlaybackSnapshot, usePlaybackStream } from "../audio/playbackState";
 
 export type ShellMusicSignals = {
   /** 用户意图：点过播放且未主动停。 */
   wantPlaying: boolean;
-  /** 原生播放器心跳。 */
+  /** 此刻真的在出声。 */
   nativePlaying: boolean;
 };
 
-/** 壳层音乐的两路外部信号；UI 一律从这里取，不要各自订阅。 */
+/**
+ * 壳层音乐的状态。UI 一律从这里取。
+ *
+ * 以前这里订阅两个 JS 影子 store（`shellMusicWantPlaying` / `shellMusicNativePlaying`），
+ * 因为没有任何一个能单独说清「音乐在不在响」。现在原生按流上报，直接读它。
+ */
 export function useShellMusicSignals(): ShellMusicSignals {
-  const wantPlaying = useSyncExternalStore(
-    subscribeShellMusicWantPlaying,
-    getShellMusicWantPlaying,
-    getShellMusicWantPlaying,
-  );
-  const nativePlaying = useSyncExternalStore(
-    subscribeShellMusicNativePlaying,
-    getShellMusicNativePlaying,
-    getShellMusicNativePlaying,
-  );
-  return useMemo(() => ({ wantPlaying, nativePlaying }), [nativePlaying, wantPlaying]);
+  const music = usePlaybackStream("music");
+  return { wantPlaying: music.wantPlaying, nativePlaying: music.playing };
 }
 
 /**
  * 音乐是否在出声（首页专辑黄标用）。
- * iOS 原生播放时 JS 的 playing 会抖 false，必须三路取或。
- * 读经与音乐共用 playing：mode≠music 时绝不能当音乐在播，否则回首页专辑会误黄。
+ *
+ * 原本要「三路取或」：JS 的 playing 在原生接管时会抖 false，还得额外判断 playbackMode
+ * 免得读经把音乐标黄。现在只问音乐这一条流，这些补偿都不需要了。
+ * 参数保留是为了不改动调用方，实际只用第一个。
  */
 export function isShellMusicOn(
   signals: ShellMusicSignals,
-  jsPlaying: boolean,
-  playbackMode?: string,
+  _jsPlaying?: boolean,
+  _playbackMode?: string,
 ): boolean {
-  if (playbackMode != null && playbackMode !== "music") return false;
-  return signals.wantPlaying || signals.nativePlaying || jsPlaying;
+  return signals.nativePlaying || signals.wantPlaying;
+}
+
+/** 非组件环境（事件回调等）里取同一份答案。 */
+export function isShellMusicOnNow(): boolean {
+  const music = getPlaybackSnapshot().music;
+  return music.playing || music.wantPlaying;
 }

@@ -277,12 +277,10 @@ export function HomeNatureScreen() {
   const videoPowerPolicy = useHomeNatureVideoPowerPolicy({
     liveVideoEnabled,
   });
-  // wantPlaying / 原生实播：UI playing 抖 false 时仍算音乐在播（混音 + 图标）。
+  /** 音乐图标是否点亮。只问音乐这一条流，不再靠 playbackMode + playing 拼。 */
   const musicModeActive = isShellMusicChromeActive({
-    playbackMode,
-    playing,
-    wantPlaying: musicSignals.wantPlaying,
-    nativePlaying: musicSignals.nativePlaying,
+    musicPlaying: musicSignals.nativePlaying,
+    musicWantPlaying: musicSignals.wantPlaying,
   });
   // 金句可与静音封面同在；读经需卸视频，否则安卓会抢会话把朗读掐掉。
   // 音乐不再强制静帧：只暂停封面解码，避免切海报抖动。

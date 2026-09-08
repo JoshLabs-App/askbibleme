@@ -1,24 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { isShellMusicOn } from "./useShellMusicSignals";
 
+/**
+ * 「音乐在不在响」只由音乐这一条流回答。
+ *
+ * 旧版本要把 wantPlaying、原生心跳、共用 `playing` 三者取或，再额外判断 playbackMode
+ * 免得读经把音乐标黄——那些补偿的存在本身就说明没有一个来源可信。原生按流上报后不需要了。
+ */
 describe("isShellMusicOn", () => {
-  const off = { wantPlaying: false, nativePlaying: false };
-
-  it("is false when playbackMode is scripture even if JS playing is true", () => {
-    expect(isShellMusicOn(off, true, "scripture")).toBe(false);
-    expect(isShellMusicOn({ wantPlaying: true, nativePlaying: true }, true, "scripture")).toBe(
-      false,
-    );
+  it("follows the music stream alone", () => {
+    expect(isShellMusicOn({ wantPlaying: false, nativePlaying: false })).toBe(false);
+    expect(isShellMusicOn({ wantPlaying: true, nativePlaying: false })).toBe(true);
+    expect(isShellMusicOn({ wantPlaying: false, nativePlaying: true })).toBe(true);
   });
 
-  it("stays true for music mode when any signal is on", () => {
-    expect(isShellMusicOn({ wantPlaying: true, nativePlaying: false }, false, "music")).toBe(true);
-    expect(isShellMusicOn({ wantPlaying: false, nativePlaying: true }, false, "music")).toBe(true);
-    expect(isShellMusicOn(off, true, "music")).toBe(true);
-  });
-
-  it("without playbackMode keeps legacy three-way OR", () => {
-    expect(isShellMusicOn(off, true)).toBe(true);
-    expect(isShellMusicOn(off, false)).toBe(false);
+  /** 刚点下、还在缓冲：wantPlaying 已为真，图标该亮。 */
+  it("lights up while the tap is still buffering", () => {
+    expect(isShellMusicOn({ wantPlaying: true, nativePlaying: false })).toBe(true);
   });
 });

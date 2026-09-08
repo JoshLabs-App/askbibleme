@@ -1,7 +1,4 @@
-import { getShellMusicNativePlaying } from "../audio/shellMusicNativePlaying";
-import { getShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
-import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
-import { getShellVerseWantPlaying } from "../audio/shellVerseWantPlaying";
+import { getPlaybackSnapshot } from "../audio/playbackState";
 import {
   clearNatureAmbientSlot,
   getNatureAmbientSlotId,
@@ -15,16 +12,19 @@ export function setHomeGoldenVerseSessionActive(next: boolean): void {
 }
 
 export function isHomeGoldenVerseAudioOpen(): boolean {
-  return sessionActive || getShellVerseWantPlaying();
+  const verse = getPlaybackSnapshot().verse;
+  return sessionActive || verse.playing || verse.wantPlaying;
 }
 
 /** 金句或章朗读：都算「人声」这一路。 */
 export function isHomeVoiceAudible(): boolean {
-  return isHomeGoldenVerseAudioOpen() || getShellScriptureWantPlaying();
+  const scripture = getPlaybackSnapshot().scripture;
+  return isHomeGoldenVerseAudioOpen() || scripture.playing || scripture.wantPlaying;
 }
 
 export function isHomeMusicAudible(): boolean {
-  return getShellMusicWantPlaying() || getShellMusicNativePlaying();
+  const music = getPlaybackSnapshot().music;
+  return music.playing || music.wantPlaying;
 }
 
 export function isHomeAmbientActive(): boolean {

@@ -101,16 +101,6 @@ function chapterEndFinishArgs(ctx: ScriptureBackgroundRecoveryCtx): ScriptureCha
   };
 }
 
-export function scheduleScriptureResumeAfterInterruption(ctx: ScriptureResumeCtx): void {
-  if (getShellAudioInterrupted()) return;
-  if (!ctx.scriptureWantPlayingRef.current) return;
-  if (resumeTimer) clearTimeout(resumeTimer);
-  resumeTimer = setTimeout(() => {
-    resumeTimer = null;
-    void tryResumeScriptureAfterInterruption(ctx);
-  }, 450);
-}
-
 export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCtx): Promise<boolean> {
   if (getShellAudioInterrupted()) return false;
   if (!ctx.scriptureWantPlayingRef.current) return false;

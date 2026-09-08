@@ -22,15 +22,6 @@ export const MUSIC_ALBUM_GRADIENTS: Record<string, readonly [string, string, str
   赞美诗: HYMN_GRADIENT,
 };
 
-export const MUSIC_ALBUM_SWATCH: Record<string, string> = {
-  安静: "#10C0DF",
-  下午茶: "#f0ddca",
-  专注工作: "#7f97be",
-  睡眠: "#0a1736",
-  钢琴: "#d4c4a8",
-  赞美诗: "#c4a57a",
-};
-
 export const MUSIC_ALBUM_ICON: Record<string, string> = {
   安静: "music-note-outline",
   下午茶: "coffee-outline",

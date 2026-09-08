@@ -308,56 +308,17 @@ export function useShellMediaControlsSync(args: Args): void {
     startVerseAudio: args.startVerseAudio,
   });
 
-  // 播放状态变化时把正确的会话 payload 推给原生：按优先级依次考虑壳层音乐、
-  // 辅助播放器（金句等）、当前 playbackMode，任何一层命中就提前返回，避免互相覆盖。
+  /**
+   * 把当前这一路的元数据（标题 / 作者 / 封面 / 时长）推给原生。
+   *
+   * **不再决定「谁占锁屏」**——那是原生的仲裁（nowPlaying：读经 > 音乐 > 金句叠底）。
+   * 这里原本有一套优先级回退：先看壳层音乐意图、再看 aux 播放器、再看 playbackMode，
+   * 每一层命中就提前返回「免得互相覆盖」。那些覆盖担忧在原生按流记账之后不成立了：
+   * 不带 userPlay 的同步碰不到「谁在播」，只补元数据。
+   */
   useEffect(() => {
-    // 壳层音乐意图在播：系统栏只刷新音乐，勿把金句/环境音插进来。
-    // 用户刚点系统栏暂停时已有 mute 快照：勿把 playing:true 刷回去。
-    if (getShellMusicWantPlaying() && !hasAndroidRemoteMuteSnapshot()) {
-      const keep = buildShellMediaSessionPayload({
-        ...args,
-        playbackMode: "music",
-        playing: true,
-      });
-      if (keep) {
-        syncShellMediaSession(keep);
-        return;
-      }
-    }
-    // 壳层未在播时，把锁屏交给金句 / 环境音等辅助播放器（Android 金句也需进栏，否则关屏断播）。
-    if (args.playbackMode === "music" && !getShellMusicWantPlaying()) {
-      const aux = getShellAuxMediaOwner();
-      const auxPayload = aux?.buildPayload() ?? null;
-      if (auxPayload?.playing) {
-        syncShellMediaSession(auxPayload);
-        return;
-      }
-    }
-    if (!args.playing) {
-      const aux = getShellAuxMediaOwner();
-      const auxPayload = aux?.buildPayload() ?? null;
-      if (auxPayload) {
-        syncShellMediaSession(auxPayload);
-        return;
-      }
-    }
-    const payload = buildShellMediaSessionPayload(
-      args.playbackMode === "music"
-        ? { ...args, playing: getShellMusicWantPlaying() && args.playing }
-        : args,
-    );
-    if (!payload) {
-      if (getShellMusicWantPlaying()) return;
-      syncShellMediaSession(null);
-      return;
-    }
-    // 暂停时仍保留锁屏元数据，仅更新播放状态。
-    if (!payload.playing && payload.positionSec <= 0 && payload.durationSec <= 0) {
-      if (getShellMusicWantPlaying()) return;
-      syncShellMediaSession(null);
-      return;
-    }
-    syncShellMediaSession(payload);
+    const payload = buildShellMediaSessionPayload(args);
+    if (payload) syncShellMediaSession(payload);
   }, [
     args.playing,
     args.playbackMode,

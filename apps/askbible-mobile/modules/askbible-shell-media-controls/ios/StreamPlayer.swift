@@ -170,13 +170,23 @@ final class StreamPlayer {
   }
 
   private func onCompleted() {
-    /// JS 仍靠这些事件推进章 / 曲目 / 金句轮播，事件名不能改。
+    scheduleNext(gapSec: PlaybackStore.shared.state[streamId].gapSec)
+  }
+
+  /**
+   只在「播完且队列里没有下一条」时通知 JS。
+
+   队列里还有就自己接上，JS 从状态里看到 uri 变了即可跟随。一度是每次播完都发，
+   而 JS 靠事件里的 `nativeChained` 标志判断原生有没有接上；新播放器没带这个标志，
+   JS 就以为没接，自己又推进了一章，把原生刚接上的那章重新点播一次（Android 上实测到）。
+   事件名不变，JS 侧既有处理继续有效。
+   */
+  private func emitEndedNeedingJs() {
     switch streamId {
     case .scripture: emitEvent("ShellMediaNativeScriptureEnded")
     case .music: emitEvent("ShellMediaNativeMusicEnded")
     case .verse: emitEvent("ShellMediaNativeVerseAdvance")
     }
-    scheduleNext(gapSec: PlaybackStore.shared.state[streamId].gapSec)
   }
 
   /**
@@ -187,6 +197,7 @@ final class StreamPlayer {
   private func scheduleNext(gapSec: Double) {
     guard let next = PlaybackStore.shared.state[streamId].queue.first, !next.isEmpty else {
       PlaybackStore.shared.dispatch(.ended(streamId))
+      emitEndedNeedingJs()
       return
     }
     let delay = min(15, max(0, gapSec))

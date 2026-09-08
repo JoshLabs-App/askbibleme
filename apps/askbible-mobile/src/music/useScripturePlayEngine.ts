@@ -24,6 +24,7 @@ import type {
   ScriptureShellPlaybackBridge,
 } from "./scripturePlaybackTypes";
 import { useIosNativeScriptureEnded } from "./useIosNativeScriptureEnded";
+import { useScriptureFollowNativeChapter } from "./useScriptureFollowNativeChapter";
 import { useScripturePlayEngineRefs } from "./useScripturePlayEngineRefs";
 
 type Args = {
@@ -73,6 +74,15 @@ export function useScripturePlayEngine({
     scriptureStopAtOnEndedRef: refs.scriptureStopAtOnEndedRef,
     scripturePlaybackRateRef,
     setPlaying,
+    setReadChapter,
+  });
+
+  /** 跟随原生正在朗读的章：同步界面与今日计划，队列见底时补货。 */
+  useScriptureFollowNativeChapter({
+    scriptureSrcRef,
+    scriptureAudioRepeatRef,
+    scripturePlaybackRateRef,
+    readChapterRef,
     setReadChapter,
   });
 

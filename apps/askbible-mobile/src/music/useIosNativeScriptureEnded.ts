@@ -99,99 +99,12 @@ export function useIosNativeScriptureEnded(args: Args): void {
         }
       }
 
-      // 原生已接播下一章：推进池/文案，并补下一章 URI；勿再 playAt 重启。
-      // 完成标记必须以「实际音轨章」为准，勿用浏览中的 readChapterRef。
-      if (payload.nativeChained) {
-        const playing = getScripturePlayingChapter();
-        const poolTrack = scriptureChapterPool.isActive()
-          ? scriptureChapterPool.getCurrentTrack()
-          : null;
-        const fromBookId = playing?.bookId ?? poolTrack?.bookId;
-        const fromChapter = playing?.chapter ?? poolTrack?.chapter;
-        if (
-          fromBookId &&
-          fromChapter != null &&
-          scriptureChapterPool.isActive()
-        ) {
-          const track = scriptureChapterPool.onNativeChained(fromBookId, fromChapter);
-          if (track) {
-            if (payload.assetUri) args.scriptureSrcRef.current = payload.assetUri;
-            const prev = args.readChapterRef.current;
-            const nextReg: ReadChapterPlaybackRegistration = {
-              bookId: track.bookId,
-              chapter: track.chapter,
-              bookName: track.bookName,
-              translationId: track.translationId,
-              chapterAudioSrc: track.src,
-              onAdvancePreviousChapter: prev?.onAdvancePreviousChapter ?? (() => {}),
-              onAdvanceNextChapter: prev?.onAdvanceNextChapter ?? (() => {}),
-              onAdvanceNextInBook: prev?.onAdvanceNextInBook ?? (() => {}),
-            };
-            args.readChapterRef.current = nextReg;
-            args.setReadChapter(nextReg);
-            args.setPlaying(true);
-            setScripturePlayingChapter({
-              bookId: track.bookId,
-              chapter: track.chapter,
-              translationId: track.translationId,
-            });
-            setPlayingReadChapterPlayback(nextReg);
-            setBrowseReadChapterPlayback(nextReg);
-            void refillScriptureNativeNextQueue({
-              currentAssetUri: payload.assetUri ?? args.scriptureSrcRef.current,
-              track,
-              rate: args.scripturePlaybackRateRef.current,
-              repeatMode: args.scriptureAudioRepeatRef.current,
-            });
-            return;
-          }
-        }
-        // 池已结束或无法对齐：原生已开下一首时仍以原生为准，勿再走 JS playAt。
-        if (payload.assetUri) args.scriptureSrcRef.current = payload.assetUri;
-        args.setPlaying(true);
-        // 非池连播：原生已经在播下一章了，但 JS 这边的"当前章"还停在上一章——
-        // 章号文案不会跟着走，队列也补不上。按与原生同一套规则推算出新章再同步。
-        const mode = args.scriptureAudioRepeatRef.current;
-        const prevReg = args.readChapterRef.current;
-        if (!scriptureChapterPool.isActive() && fromBookId && fromChapter != null && prevReg) {
-          const [next] = peekUpcomingScriptureChapters({
-            bookId: fromBookId,
-            chapter: fromChapter,
-            repeatMode: mode,
-            count: 1,
-          });
-          if (next) {
-            const nextReg: ReadChapterPlaybackRegistration = {
-              ...prevReg,
-              bookId: next.bookId,
-              chapter: next.chapter,
-              bookName: getScriptureBookDisplayName(next.bookId),
-              chapterAudioSrc: payload.assetUri ?? prevReg.chapterAudioSrc,
-            };
-            args.readChapterRef.current = nextReg;
-            args.setReadChapter(nextReg);
-            setScripturePlayingChapter({
-              bookId: next.bookId,
-              chapter: next.chapter,
-              translationId: nextReg.translationId,
-            });
-            setPlayingReadChapterPlayback(nextReg);
-            setBrowseReadChapterPlayback(nextReg);
-            void refillScriptureNativeNextQueue({
-              currentAssetUri: payload.assetUri ?? args.scriptureSrcRef.current,
-              track: {
-                bookId: nextReg.bookId,
-                chapter: nextReg.chapter,
-                bookName: nextReg.bookName,
-                translationId: nextReg.translationId,
-              },
-              rate: args.scripturePlaybackRateRef.current,
-              repeatMode: mode,
-            });
-          }
-        }
-        return;
-      }
+      /*
+       * 原生已接播下一章时，界面同步与队列补货交给 useScriptureFollowNativeChapter：
+       * 它按「建队列时记下的 URI→章」查表，而这里原先是照着原生同一套规则再算一遍下一章，
+       * 两处独立推演同一件事，不一致时界面章号会和音轨错开。
+       */
+      if (payload.nativeChained) return;
 
       const mode = args.scriptureAudioRepeatRef.current;
       const rc = args.readChapterRef.current;

@@ -239,14 +239,24 @@ class StreamPlayer(
   }
 
   private fun onCompleted() {
-    /** JS 仍靠这些事件推进章 / 曲目 / 金句轮播，事件名不能改。 */
+    scheduleNext(gapSecOverride = PlaybackStore.state[streamId].gapSec)
+  }
+
+  /**
+   * 只在「播完且队列里没有下一条」时通知 JS。
+   *
+   * 队列里还有就自己接上，JS 从状态里看到 uri 变了即可跟随——不必打扰它。
+   * 一度是每次播完都发，而 JS 那边靠事件里的 `nativeChained` 标志判断原生有没有接上；
+   * 新播放器没带这个标志，JS 就以为没接，自己又推进了一章，于是原生刚接的 GEN-3
+   * 被 JS 重新点播一次并把队列清成 q=0（2026-09-08 真机账本）。
+   * 事件名不变，JS 侧的既有处理继续有效。
+   */
+  private fun emitEndedNeedingJs() {
     when (streamId) {
       StreamId.SCRIPTURE -> emit("ShellMediaNativeScriptureEnded")
       StreamId.MUSIC -> emit("ShellMediaNativeMusicEnded")
       StreamId.VERSE -> emit("ShellMediaNativeVerseAdvance")
     }
-    val gap = PlaybackStore.state[streamId].gapSec
-    scheduleNext(gapSecOverride = gap)
   }
 
   /** 定期把进度写回状态并上报 JS；只在真的在播时继续排下一拍。 */
@@ -288,6 +298,7 @@ class StreamPlayer(
     val next = PlaybackStore.state[streamId].queue.firstOrNull()
     if (next.isNullOrBlank()) {
       PlaybackStore.dispatch(Intent.Ended(streamId))
+      emitEndedNeedingJs()
       return
     }
     val delayMs = (gapSecOverride * 1000.0).toLong().coerceIn(0L, 15_000L)

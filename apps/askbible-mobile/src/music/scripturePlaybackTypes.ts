@@ -14,6 +14,13 @@ export type ReadChapterPlaybackRegistration = {
 
 export type ScriptureAudioRepeatMode = "off" | "chapter" | "book";
 
+/** 原生队列里一条 URI 对应的章。见 scriptureQueueChapterMap。 */
+export type ChapterQueueRef = {
+  bookId: string;
+  chapter: number;
+  translationId: string;
+};
+
 export type ShellPlaybackMode = "music" | "scripture";
 
 export type ScriptureShellPlaybackBridge = {

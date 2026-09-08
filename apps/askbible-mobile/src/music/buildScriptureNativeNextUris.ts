@@ -7,6 +7,7 @@ import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { resolveScripturePlayableSrcForChapter } from "../bible/read-chapter-audio";
 import { resolveIosNativeScriptureAssetUri } from "./resolveIosNativeScriptureAssetUri";
 import { SCRIPTURE_NATIVE_NEXT_PREFETCH, scriptureChapterPool } from "./scripture-chapter-pool";
+import { rememberScriptureQueueChapter } from "./scriptureQueueChapterMap";
 import type { ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 
 type ChapterRef = { bookId: string; chapter: number };
@@ -81,13 +82,25 @@ export async function buildScriptureNativeNextUris(args: {
         voiceId: args.voiceId,
       });
       if (!src) return null;
-      return resolveIosNativeScriptureAssetUri({
+      const uri = await resolveIosNativeScriptureAssetUri({
         src,
         translationId: args.translationId,
         bookId: ref.bookId,
         chapter: ref.chapter,
         voiceId: args.voiceId,
       });
+      /*
+       * 记下这条 URI 是哪一章。原生接播后 JS 按 URI 查表即可知道章号，
+       * 不必再照着同一套规则独立推演一遍（推演两次就会有两个答案）。
+       */
+      if (uri) {
+        rememberScriptureQueueChapter(uri, {
+          bookId: ref.bookId,
+          chapter: ref.chapter,
+          translationId: args.translationId,
+        });
+      }
+      return uri;
     }),
   );
   return resolved.filter((uri): uri is string => Boolean(uri));

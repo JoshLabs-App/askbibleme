@@ -1,3 +1,4 @@
+import { useFollowNativeScriptureChapterPage } from "./useFollowNativeScriptureChapterPage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
@@ -245,6 +246,11 @@ export function ReadChapterScreen() {
       translationId: chapterAudioTranslationId,
     });
   }, [autoplayParam, chapterData, display.displayBookName, chapterAudioTranslationId, playScriptureChapter]);
+
+  /** 原生自己接到下一章时把页面翻过去；只翻页，音频已经在播了。 */
+  useFollowNativeScriptureChapterPage({
+    displayed: chapterData ? { bookId: chapterData.bookId, chapter: chapterData.chapter } : null,
+  });
 
   const nav = useReadChapterScreenNav({
     chapterData,

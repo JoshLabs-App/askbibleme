@@ -132,7 +132,7 @@ object ShellCallAudioMonitor {
     if (isCallLikeNow(context)) return false
     if (!interrupted && !ShellPlaybackSession.systemInterrupted) return false
     interrupted = false
-    ShellPlaybackSession.systemInterrupted = false
+    ShellPlaybackSession.setSystemInterrupted(false)
     Log.i(TAG, "cleared stale call interrupt")
     AskBibleShellMediaControlsModule.emitRemote("AudioSessionInterruptionEnded")
     return true
@@ -145,10 +145,9 @@ object ShellCallAudioMonitor {
     val next = isCallLike(am, configs)
     if (next == interrupted) return
     interrupted = next
-    ShellPlaybackSession.systemInterrupted = next
+    ShellPlaybackSession.setSystemInterrupted(next)
     if (next) {
       Log.i(TAG, "call interrupt begin mode=${am.mode}")
-      ShellVerseNativePlayer.pause()
       AskBibleShellMediaControlsModule.emitRemote("AudioSessionInterruptionBegan")
     } else {
       Log.i(TAG, "call interrupt end mode=${am.mode}")

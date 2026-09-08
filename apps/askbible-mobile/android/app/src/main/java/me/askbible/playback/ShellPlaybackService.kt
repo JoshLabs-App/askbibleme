@@ -27,6 +27,9 @@ import me.askbible.R
 import me.askbible.widget.WidgetPlaybackBridge
 
 /** 壳层音乐 / 读经朗读：前台服务 + MediaSession，保证后台与锁屏控制。 */
+import me.askbible.playback.model.PlaybackStore
+import me.askbible.playback.model.StreamId
+
 class ShellPlaybackService : Service() {
   private var mediaSession: MediaSessionCompat? = null
   private val handler = Handler(Looper.getMainLooper())
@@ -113,27 +116,26 @@ class ShellPlaybackService : Service() {
 
             override fun onSkipToNext() {
               // 仅金句占栏时推进金句；音乐+金句垫底时运输键切音乐曲。
-              val verseNext =
-                !ShellPlaybackSession.userPaused && ShellPlaybackSession.kind == "verse"
+              /** 通知栏此刻代表金句时，「下一首」推进金句；否则交给音乐。 */
+              val verseNext = ShellPlaybackSession.kind == "verse"
               if (verseNext) {
                 android.util.Log.i(TAG, "MediaSession onSkipToNext -> VerseAdvance")
                 AskBibleShellMediaControlsModule.emitRemote("ShellMediaNativeVerseAdvance")
                 return
               }
-              ShellPlaybackSession.userPaused = false
+              ShellPlaybackSession.resumeAll()
               android.util.Log.i(TAG, "MediaSession onSkipToNext -> RemoteNext")
               AskBibleShellMediaControlsModule.emitRemote("RemoteNext")
             }
 
             override fun onSkipToPrevious() {
-              val versePrev =
-                !ShellPlaybackSession.userPaused && ShellPlaybackSession.kind == "verse"
+              val versePrev = ShellPlaybackSession.kind == "verse"
               if (versePrev) {
                 android.util.Log.i(TAG, "MediaSession onSkipToPrevious -> VerseRestart")
                 AskBibleShellMediaControlsModule.emitRemote("ShellMediaNativeVerseRestart")
                 return
               }
-              ShellPlaybackSession.userPaused = false
+              ShellPlaybackSession.resumeAll()
               android.util.Log.i(TAG, "MediaSession onSkipToPrevious -> RemotePrevious")
               AskBibleShellMediaControlsModule.emitRemote("RemotePrevious")
             }
@@ -180,7 +182,7 @@ class ShellPlaybackService : Service() {
           applySystemInterruptPause()
           return START_STICKY
         }
-        if (isSessionAudible() && !ShellPlaybackSession.userPaused) {
+        if (isSessionAudible()) {
           applyUserPause()
           AskBibleShellMediaControlsModule.emitRemote("RemotePause", "user")
         } else {
@@ -242,12 +244,10 @@ class ShellPlaybackService : Service() {
       }
       ACTION_REMOTE_NEXT -> {
         android.util.Log.i(TAG, "ACTION_REMOTE_NEXT")
-        val verseNext =
-          !ShellPlaybackSession.userPaused && ShellPlaybackSession.kind == "verse"
-        if (verseNext) {
+        if (ShellPlaybackSession.kind == "verse") {
           AskBibleShellMediaControlsModule.emitRemote("ShellMediaNativeVerseAdvance")
         } else {
-          ShellPlaybackSession.userPaused = false
+          ShellPlaybackSession.resumeAll()
           AskBibleShellMediaControlsModule.emitRemote("RemoteNext")
         }
         if (!ShellPlaybackSession.active) {
@@ -259,12 +259,10 @@ class ShellPlaybackService : Service() {
       }
       ACTION_REMOTE_PREVIOUS -> {
         android.util.Log.i(TAG, "ACTION_REMOTE_PREVIOUS")
-        val versePrev =
-          !ShellPlaybackSession.userPaused && ShellPlaybackSession.kind == "verse"
-        if (versePrev) {
+        if (ShellPlaybackSession.kind == "verse") {
           AskBibleShellMediaControlsModule.emitRemote("ShellMediaNativeVerseRestart")
         } else {
-          ShellPlaybackSession.userPaused = false
+          ShellPlaybackSession.resumeAll()
           AskBibleShellMediaControlsModule.emitRemote("RemotePrevious")
         }
         if (!ShellPlaybackSession.active) {
@@ -282,8 +280,6 @@ class ShellPlaybackService : Service() {
     }
 
     publishSessionState()
-    ShellVerseNativePlayer.syncFromSession(this)
-    ShellMainNativePlayer.syncFromSession(this)
     handler.removeCallbacks(refreshRunnable)
     handler.post(refreshRunnable)
     return START_STICKY
@@ -331,8 +327,7 @@ class ShellPlaybackService : Service() {
   }
 
   private fun isSessionAudible(): Boolean {
-    if (ShellPlaybackSession.userPaused) return false
-    return ShellPlaybackSession.playing || ShellPlaybackSession.verseUnderlayPlaying
+    return ShellPlaybackSession.anyAudible
   }
 
   private fun isScreenInteractive(): Boolean {
@@ -368,7 +363,7 @@ class ShellPlaybackService : Service() {
   /** 三星在开播瞬间常误发 Pause；屏亮时 deferred confirm 会把刚点的读经/音乐掐掉。 */
   private fun shouldIgnoreStartPlaybackOemPause(): Boolean {
     // 章朗读要先缓冲：还没 start 时 session 也可能被标成 playing，2.5s 窗口不够。
-    if (ShellMainNativePlayer.isPreparing()) return true
+    if (PlaybackEngine.anyPreparing()) return true
     val started = ShellPlaybackSession.lastUserPlayAtElapsed
     if (started <= 0L) return false
     val dt = SystemClock.elapsedRealtime() - started
@@ -407,39 +402,19 @@ class ShellPlaybackService : Service() {
     handler.postDelayed(runnable, OEM_SCREEN_OFF_PAUSE_CONFIRM_MS)
   }
 
+  /** 三星关屏时会误发一次 Pause；确认是误报后把用户暂停过的几路放回来。 */
   private fun keepPlayingAfterOemFalsePause() {
-    ShellPlaybackSession.userPaused = false
-    if (ShellPlaybackSession.kind == "verse" && !ShellPlaybackSession.assetUri.isNullOrBlank()) {
-      ShellPlaybackSession.playing = true
-    }
-    if (
-      (ShellPlaybackSession.kind == "verse" && ShellPlaybackSession.playing) ||
-        ShellPlaybackSession.verseUnderlayPlaying
-    ) {
-      ShellVerseNativePlayer.resume(this)
-    }
-    if (
-      (ShellPlaybackSession.kind == "music" || ShellPlaybackSession.kind == "scripture") &&
-        !ShellPlaybackSession.userPaused
-    ) {
-      ShellPlaybackSession.playing = true
-      ShellMainNativePlayer.resume(this)
-    }
+    ShellPlaybackSession.resumeAll()
     publishSessionState()
   }
 
   private fun applyUserPause() {
-    ShellPlaybackSession.userPaused = true
-    ShellPlaybackSession.playing = false
-    // 勿清 verseUnderlayPlaying：否则 Play 只能恢复主轨，音乐+金句会丢金句。
-    ShellVerseNativePlayer.pause()
-    ShellMainNativePlayer.pause()
+    ShellPlaybackSession.pauseAll()
     publishSessionState()
   }
 
   private fun applySystemInterruptPause() {
-    ShellVerseNativePlayer.pause()
-    ShellMainNativePlayer.pause()
+    ShellPlaybackSession.setSystemInterrupted(true)
     publishSessionState()
   }
 
@@ -450,29 +425,16 @@ class ShellPlaybackService : Service() {
 
   private fun applyUserPlay() {
     ShellCallAudioMonitor.clearStaleInterruptIfIdle(this)
-    ShellPlaybackSession.userPaused = false
     ShellPlaybackSession.lastUserPlayAtElapsed = SystemClock.elapsedRealtime()
     cancelPendingUserPause()
-    if (ShellPlaybackSession.kind == "verse" && !ShellPlaybackSession.assetUri.isNullOrBlank()) {
-      ShellPlaybackSession.playing = true
-      ShellVerseNativePlayer.resume(this)
-      publishSessionState()
-      return
-    }
-    if (
-      (ShellPlaybackSession.kind == "music" || ShellPlaybackSession.kind == "scripture") &&
-        !ShellPlaybackSession.assetUri.isNullOrBlank()
-    ) {
-      ShellPlaybackSession.playing = true
-      ShellMainNativePlayer.resume(this)
-      if (
-        ShellPlaybackSession.verseUnderlayPlaying &&
-          !ShellPlaybackSession.verseUnderlayUri.isNullOrBlank()
-      ) {
-        ShellVerseNativePlayer.resume(this)
-      }
-      publishSessionState()
-    }
+    /*
+     * 恢复「用户暂停过且还留着音轨」的每一路。
+     *
+     * 旧代码在这里按 kind 分支挑播放器，还要额外照顾 verseUnderlay，六十行里漏一种组合
+     * 就出「音乐+金句只回来一路」。现在每路自己记着有没有被暂停，照单恢复即可。
+     */
+    ShellPlaybackSession.resumeAll()
+    publishSessionState()
   }
 
   private fun registerScreenOffReceiver() {
@@ -521,8 +483,6 @@ class ShellPlaybackService : Service() {
       return
     }
 
-    ShellVerseNativePlayer.syncFromSession(this)
-    ShellMainNativePlayer.syncFromSession(this)
 
     val session = mediaSession ?: return
     val durationMs = (ShellPlaybackSession.durationSec * 1000).toLong().coerceAtLeast(0L)
@@ -659,8 +619,6 @@ class ShellPlaybackService : Service() {
 
   private fun stopPlaybackSession() {
     handler.removeCallbacks(refreshRunnable)
-    ShellVerseNativePlayer.stop()
-    ShellMainNativePlayer.stop()
     ShellPlaybackSession.clear()
     stopForeground(STOP_FOREGROUND_REMOVE)
     stopSelf()
@@ -702,23 +660,23 @@ class ShellPlaybackService : Service() {
     /** 读经常要缓冲；三星开播后数秒内仍会误发 Pause。 */
     private const val OEM_START_PLAY_PAUSE_MS = 8000L
 
+    /**
+     * JS 的 `pauseAppMusic()`：**只停音乐**。
+     *
+     * 名字一直是「pause app music」，实现却是全停——旧模型里两者在一袋全局标志下长得一样，
+     * 于是「关音乐」把正在响的金句一起停掉，而且金句图标还亮着（2026-09-08 实测，
+     * 找了几个钟头都没找到，直到新模型把意图打成账本才一眼看见 `PauseAll -> audible=[]`）。
+     */
     fun pauseFromJs(context: Context) {
-      ShellPlaybackSession.userPaused = true
-      ShellPlaybackSession.playing = false
-      // 勿清 verseUnderlayPlaying：与 applyUserPause 一致。否则「停音乐」会丢金句垫底，
-      // 续播只能恢复主轨；读经开播仍由 kind=scripture 硬清垫底。
-      ShellVerseNativePlayer.pause()
-      ShellMainNativePlayer.pause()
+      PlaybackStore.dispatch(me.askbible.playback.model.Intent.Pause(StreamId.MUSIC))
       if (ShellPlaybackSession.active) startOrRefresh(context)
     }
 
     fun resumeFromJs(context: Context) {
       ShellCallAudioMonitor.clearStaleInterruptIfIdle(context)
-      ShellPlaybackSession.userPaused = false
       ShellPlaybackSession.lastUserPlayAtElapsed = android.os.SystemClock.elapsedRealtime()
-      if (!ShellPlaybackSession.assetUri.isNullOrBlank()) {
-        ShellPlaybackSession.playing = true
-      }
+      /** 与 pauseFromJs 对称：JS 的 resumeAppMusic() 只恢复音乐。 */
+      PlaybackStore.dispatch(me.askbible.playback.model.Intent.Resume(StreamId.MUSIC))
       if (ShellPlaybackSession.active) startOrRefresh(context)
     }
 

@@ -3,72 +3,144 @@ package me.askbible.playback
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.SystemClock
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.ArrayDeque
+import me.askbible.playback.model.Intent
+import me.askbible.playback.model.JsPayload
+import me.askbible.playback.model.PlaybackStore
+import me.askbible.playback.model.StreamId
+import me.askbible.playback.model.intentsFor
+import me.askbible.playback.model.nowPlaying
+import java.io.FileInputStream
 
-/** JS 与前台服务共享的播放元数据。 */
+/**
+ * 通知栏 / 锁屏要用的那一份「当前在播什么」，以及 JS 载荷的入口。
+ *
+ * **这里不再存任何状态。** 每个字段都是从 [PlaybackStore] 派生出来的读值，
+ * 写入一律走 [PlaybackStore.dispatch]。
+ *
+ * 它以前是一袋 25 个全局可变标志，三路音频共用、四个文件随手写，
+ * 「谁改了它」无从追溯——2026-09-07~08 那一晚定位到的六个 bug 全部产自这一点：
+ * 关音乐把金句一起停掉、点音乐让金句从头重放、两个播放器隔着标志互抢音频焦点……
+ * 现在三路各有各的状态（[me.askbible.playback.model.StreamState]），
+ * 这些串扰在结构上不可能再发生。
+ */
 object ShellPlaybackSession {
-  @Volatile var title: String = ""
-  @Volatile var artist: String = ""
-  @Volatile var album: String = ""
-  @Volatile var artworkUri: String? = null
-  @Volatile var durationSec: Double = 0.0
-  @Volatile var positionSec: Double = 0.0
-  @Volatile var playing: Boolean = false
-  @Volatile var kind: String = ""
-  @Volatile var active: Boolean = false
-  /** 主会话资源（金句单独播时用）。 */
-  @Volatile var assetUri: String? = null
-  @Volatile var nextAssetUri: String? = null
-  @Volatile var nextNextAssetUri: String? = null
-  private val nextLock = Any()
-  private val nextQueue = ArrayList<String>()
-  private val recentlyPlayed = ArrayDeque<String>()
-  @Volatile var gapSec: Double = 0.0
-  @Volatile var gapAssetUri: String? = null
-  /** 音乐占栏时金句垫底轨（只播不改通知标题）。 */
-  @Volatile var verseUnderlayUri: String? = null
-  @Volatile var verseUnderlayPlaying: Boolean = false
-  @Volatile var verseUnderlayNextUri: String? = null
-  @Volatile var verseUnderlayGapSec: Double = 0.0
-  @Volatile var verseUnderlayGapUri: String? = null
-  private val verseUnderlayQueue = ArrayList<String>()
-  /** 系统栏用户暂停：拒绝 JS 保活把 playing 刷回 true。 */
-  @Volatile var userPaused: Boolean = false
-  /** 来电 / 通话：停播但不当成用户暂停。 */
-  @Volatile var systemInterrupted: Boolean = false
-  /**
-   * JS 点播：允许重开当前 URI（越过句终等待）。**必须带归属**——值是发起点播的 kind
-   * （"music" / "scripture" / "verse"），null 表示没有待处理的重开。
-   *
-   * 曾经这里是个无主的 Boolean：点一首音乐会把它置 true，垫底的金句播放器也读到同一面旗，
-   * 于是跟着 seekTo(0) 从头重放（2026-09-07 logcat 实证：
-   * `sync uri=PSA-139-13 cur=PSA-139-13 primary=false underlay=true force=true`）。
-   * 两个播放器共用一个标志却没人记账谁是主人——和 [ShellAudioFocus] 之前那个焦点 bug 同类。
-   */
-  @Volatile var forceRestartKind: String? = null
 
-  /** 该 kind 是否有待处理的重开请求；取到就消费掉。 */
-  fun consumeForceRestartFor(vararg kinds: String): Boolean {
-    val pending = forceRestartKind ?: return false
-    if (pending !in kinds) return false
-    forceRestartKind = null
-    return true
-  }
-  /** JS userPlay 时刻，用来丢掉三星开播瞬间误发的 MediaSession Pause。 */
-  @Volatile var lastUserPlayAtElapsed: Long = 0L
+  private val np
+    get() = nowPlaying(PlaybackStore.state)
+
+  // ------------------------------------------------------------ 通知栏要显示的
+
+  val title: String
+    get() = np?.title.orEmpty()
+
+  val artist: String
+    get() = np?.artist.orEmpty()
+
+  val album: String
+    get() = np?.album.orEmpty()
+
+  val artworkUri: String?
+    get() = np?.artworkUri
+
+  val durationSec: Double
+    get() = np?.durationSec ?: 0.0
+
+  val positionSec: Double
+    get() = np?.positionSec ?: 0.0
+
+  /** 通知栏那一路此刻是否在响。 */
+  val playing: Boolean
+    get() = np?.playing == true
+
+  /** 通知栏那一路的种类（"music" / "scripture" / "verse"），没有则空串。 */
+  val kind: String
+    get() = np?.stream?.name?.lowercase().orEmpty()
+
+  val assetUri: String?
+    get() = np?.let { PlaybackStore.state[it.stream].uri }
+
+  /** 还有东西可播（哪怕暂停着），前台服务据此决定是否留着通知。 */
+  val active: Boolean
+    get() = np != null
+
+  val systemInterrupted: Boolean
+    get() = PlaybackStore.state.systemInterrupted
+
+  /** 任意一路在响。 */
+  val anyAudible: Boolean
+    get() = PlaybackStore.state.audibleStreams().isNotEmpty()
+
   @Volatile var rate: Float = 1f
   @Volatile var stopAtSec: Double = 0.0
-  private const val NEXT_QUEUE_CAP = 120
-  private const val RECENT_PLAYED_CAP = 128
+
+  /** JS 点播时刻：用来丢掉三星在开播瞬间误发的 MediaSession Pause。 */
+  @Volatile var lastUserPlayAtElapsed: Long = 0L
+
+  // ------------------------------------------------------------ 写入（全部转成意图）
+
+  fun setSystemInterrupted(active: Boolean) {
+    PlaybackStore.dispatch(Intent.SystemInterrupt(active))
+  }
+
+  /** 锁屏 / 通知栏的暂停键：当前在响的几路一起停。 */
+  fun pauseAll() {
+    PlaybackStore.dispatch(Intent.PauseAll)
+  }
+
+  /** 锁屏 / 通知栏的播放键：把用户暂停过的几路放回来。 */
+  fun resumeAll() {
+    for (id in StreamId.entries) {
+      val s = PlaybackStore.state[id]
+      if (s.userPaused && s.uri != null) PlaybackStore.dispatch(Intent.Resume(id))
+    }
+  }
+
+  fun clear() {
+    for (id in StreamId.entries) PlaybackStore.dispatch(Intent.Stop(id))
+  }
+
+  /**
+   * JS 每次 `updateSession()` 的入口。
+   *
+   * 只做两件事：解析 JSON、翻成意图。语义判断全在
+   * [me.askbible.playback.model.intentsFor]（纯函数，有单测）。
+   */
+  fun updateFromJson(json: String) {
+    val payload =
+      try {
+        parsePayload(JSONObject(json))
+      } catch (_: Exception) {
+        return
+      }
+    if (payload.userPlay) lastUserPlayAtElapsed = android.os.SystemClock.elapsedRealtime()
+    for (intent in intentsFor(payload, PlaybackStore.state)) {
+      PlaybackStore.dispatch(intent)
+    }
+  }
+
+  private fun parsePayload(o: JSONObject): JsPayload =
+    JsPayload(
+      kind = o.optString("kind", ""),
+      playing = o.optBoolean("playing", false),
+      userPlay = o.optBoolean("userPlay", false),
+      userPause = o.optBoolean("userPause", false),
+      assetUri = o.stringOrNull("assetUri"),
+      nextUris = collectNextUris(o),
+      gapSec = o.optDouble("gapSec", 0.0).takeIf { it.isFinite() } ?: 0.0,
+      title = o.optString("title", ""),
+      artist = o.optString("artist", ""),
+      album = o.optString("album", ""),
+      artworkUri = o.stringOrNull("artworkUri"),
+      positionSec = o.optDouble("positionSec", 0.0).takeIf { it.isFinite() } ?: 0.0,
+      durationSec = o.optDouble("durationSec", 0.0).takeIf { it.isFinite() } ?: 0.0,
+    )
 
   /**
    * 取字符串字段。**不要直接用 `optString`**：Android 的 JSONObject 遇到 JSON null 会返回
-   * 字面量 `"null"` 字符串，而不是 Kotlin null——`takeIf { it.isNotBlank() }` 挡不住它。
-   * 于是 `assetUri: null` 会被当成一条叫 "null" 的路径送进 MediaPlayer：
-   * `W/ShellMainNative: startUri failed uri=null` + `ENOENT`（2026-09-07 logcat 实证）。
+   * 字面量 `"null"` 字符串而不是 Kotlin null，于是 `assetUri: null` 会被当成一条叫 "null"
+   * 的路径送进 MediaPlayer（`startUri failed uri=null` + ENOENT，2026-09-07 实证）。
    */
   private fun JSONObject.stringOrNull(key: String): String? {
     if (isNull(key)) return null
@@ -76,334 +148,29 @@ object ShellPlaybackSession {
     return raw.takeIf { it.isNotEmpty() && it != "null" && it != "undefined" }
   }
 
-  fun updateFromJson(json: String) {
-    val payload = JSONObject(json)
-    val nextKind = payload.optString("kind", "")
-    val nextAsset = payload.stringOrNull("assetUri")
-    val nextPlaying = payload.optBoolean("playing", false)
-    val incomingNextUris = collectNextUris(payload)
-    val nextGapSec = payload.optDouble("gapSec", 0.0)
-    val nextGapUri = payload.stringOrNull("gapAssetUri")
-    val userPlay = payload.optBoolean("userPlay", false)
-    val userPause = payload.optBoolean("userPause", false)
-
-    if (userPlay) {
-      userPaused = false
-      val explicitRestart = payload.optBoolean("forceRestart", false)
-      // 金句：重复 userPlay 会 seek 0 掐句中；仅 forceRestart 或换轨点播才重头。
-      // 音乐 / 读经：保留 userPlay → forceRestart 语义。
-      // 记下是谁要重开，只有它自己会消费——别的播放器读到也不该动。
-      forceRestartKind =
-        if (explicitRestart || nextKind != "verse") nextKind.takeIf { it.isNotBlank() } else null
-      lastUserPlayAtElapsed = SystemClock.elapsedRealtime()
-    } else if (userPause) {
-      // 音乐占栏时金句只是垫底：userPause 只关垫底，勿当成整会话暂停（否则音乐会一起停）。
-      val verseUnderMusic = nextKind == "verse" && kind == "music" && playing
-      if (!verseUnderMusic) {
-        userPaused = true
-      }
-    } else if (
-      nextPlaying &&
-        !userPause &&
-        userPaused &&
-        (nextKind == "scripture" || nextKind == "music" || nextKind == "verse")
-    ) {
-      // 三星 OEM Pause 会留下 userPaused，而 JS 仍标 playing（无 userPause）。
-      // 若不软清，后续 sync 会被公式压成 PAUSED → UI 亮着却没声。勿 forceRestart。
-      // 金句也要软清：否则「音乐+金句 / 音乐+读经」UI 亮着两路都无声。
-      userPaused = false
-    }
-
-    if (nextKind == "verse") {
-      if (nextAsset != null) {
-        // 关屏后 JS 可能仍停在旧句：勿把原生已接播的垫底 URI 打回去。
-        val staleUnderlay =
-          !userPlay &&
-            nextAsset != verseUnderlayUri &&
-            wasRecentlyPlayed(nextAsset)
-        if (!staleUnderlay) {
-          verseUnderlayUri = nextAsset
-        }
-      }
-      verseUnderlayPlaying = nextPlaying && !userPaused && !userPause
-      verseUnderlayGapSec = nextGapSec
-      verseUnderlayGapUri = nextGapUri
-      mergeVerseUnderlayNext(incomingNextUris, replace = userPlay)
-      // 音乐会话仍占栏（含刚开播 / 缓冲中 playing=false）：金句只垫底，勿抢成 kind=verse。
-      // 否则主轨 stop，UI 仍 musicWantPlaying →「金句+音乐」只剩金句或两路都哑。
-      if (kind == "music" && !userPaused) {
-        return
-      }
-    }
-
-    // 音乐在播时：拒绝环境音改写通知；读经可更新。
-    if (
-      kind == "music" &&
-        playing &&
-        nextKind.isNotEmpty() &&
-        nextKind != "music" &&
-        nextKind != "scripture" &&
-        nextKind != "verse"
-    ) {
-      return
-    }
-
-    title = payload.optString("title", "")
-    artist = payload.optString("artist", "")
-    album = payload.optString("album", "")
-    artworkUri = payload.stringOrNull("artworkUri")
-    durationSec = payload.optDouble("durationSec", 0.0)
-    positionSec = payload.optDouble("positionSec", 0.0)
-    playing = if (userPaused && !userPlay) false else nextPlaying
-    kind = nextKind
-    // 读经开播：硬清金句垫底（对齐 iOS stopVerse），勿依赖 pauseFromJs 时序。
-    if (nextKind == "scripture") {
-      verseUnderlayPlaying = false
-      verseUnderlayUri = null
-      verseUnderlayNextUri = null
-      synchronized(nextLock) { verseUnderlayQueue.clear() }
-    }
-    if (payload.has("rate")) {
-      val nextRate = payload.optDouble("rate", 1.0)
-      if (nextRate.isFinite() && nextRate > 0) {
-        rate = nextRate.toFloat().coerceIn(0.5f, 2f)
-      }
-    }
-    if (payload.has("stopAtSec")) {
-      val nextStop = payload.optDouble("stopAtSec", 0.0)
-      stopAtSec = if (nextStop.isFinite() && nextStop > 0) nextStop else 0.0
-    } else if (userPlay && nextKind == "scripture") {
-      stopAtSec = 0.0
-    }
-    // 关屏后 JS 可能仍停在旧句：勿把原生已接播的 assetUri 打回去。
-    // userPlay = 用户显式点播：必须换轨（读经回听已播章、今日计划点第一章等），不可当 stale 丢掉。
-    val staleIncoming =
-      !userPlay &&
-        nextAsset != null &&
-        nextAsset != assetUri &&
-        wasRecentlyPlayed(nextAsset)
-    if (
-      !staleIncoming &&
-        (userPlay || assetUri.isNullOrBlank() || nextAsset == null || nextAsset == assetUri)
-    ) {
-      if (nextAsset != null) {
-        assetUri = nextAsset
-      }
-    }
-    mergeIncomingNext(incomingNextUris, replace = userPlay && !staleIncoming)
-    gapSec = nextGapSec
-    gapAssetUri = nextGapUri
-    active = true
-  }
-
-  fun peekNextQueuedUri(): String? {
-    synchronized(nextLock) {
-      return nextQueue.firstOrNull() ?: nextAssetUri
-    }
-  }
-
-  fun consumeQueuedUri(): String? {
-    synchronized(nextLock) {
-      val next =
-        if (nextQueue.isNotEmpty()) {
-          nextQueue.removeAt(0)
-        } else {
-          val fallback = nextAssetUri
-          nextAssetUri = nextNextAssetUri
-          nextNextAssetUri = null
-          fallback
-        }
-      syncNextVarsLocked()
-      return next?.takeIf { it.isNotBlank() }
-    }
-  }
-
-  fun replaceNextUris(first: String?, second: String? = null) {
-    mergeIncomingNext(listOfNotNull(first, second), replace = true)
-  }
-
-  fun peekVerseUnderlayNext(): String? {
-    synchronized(nextLock) {
-      return verseUnderlayQueue.firstOrNull() ?: verseUnderlayNextUri
-    }
-  }
-
-  fun consumeVerseUnderlayNext(): String? {
-    synchronized(nextLock) {
-      val next =
-        if (verseUnderlayQueue.isNotEmpty()) {
-          verseUnderlayQueue.removeAt(0)
-        } else {
-          verseUnderlayNextUri
-        }
-      verseUnderlayNextUri = verseUnderlayQueue.firstOrNull()
-      if (!next.isNullOrBlank()) verseUnderlayUri = next
-      return next?.takeIf { it.isNotBlank() }
-    }
-  }
-
-  fun mergeVerseUnderlayNext(uris: List<String>, replace: Boolean) {
-    synchronized(nextLock) {
-      if (replace) verseUnderlayQueue.clear()
-      val current = verseUnderlayUri
-      for (raw in uris) {
-        val uri = raw.trim()
-        if (uri.isEmpty() || uri == current) continue
-        if (verseUnderlayQueue.contains(uri)) continue
-        verseUnderlayQueue.add(uri)
-      }
-      while (verseUnderlayQueue.size > NEXT_QUEUE_CAP) {
-        verseUnderlayQueue.removeAt(verseUnderlayQueue.lastIndex)
-      }
-      verseUnderlayNextUri = verseUnderlayQueue.firstOrNull()
-    }
-  }
-
-  fun snapshotVerseUnderlayQueue(): List<String> {
-    synchronized(nextLock) {
-      return ArrayList(verseUnderlayQueue)
-    }
-  }
-
-  fun promoteUnderlayToPrimary() {
-    kind = "verse"
-    playing = true
-    title = "AskBible.me"
-    artist = "Daily Verse"
-    album = "AskBible.me"
-    assetUri = verseUnderlayUri
-    gapSec = verseUnderlayGapSec
-    gapAssetUri = verseUnderlayGapUri
-    active = true
-    mergeIncomingNext(snapshotVerseUnderlayQueue(), replace = true)
-  }
-
-  /** 关屏后 JS 冻住补不上队列：把已播过的金句再排进去，避免金句停、音乐还在。 */
-  fun refillVerseQueuesFromHistory(currentUri: String?): Boolean {
-    synchronized(nextLock) {
-      val current = currentUri?.trim().orEmpty()
-      val replay = ArrayList<String>()
-      for (uri in recentlyPlayed) {
-        if (uri.isNotBlank() && uri != current && !replay.contains(uri)) replay.add(uri)
-      }
-      if (replay.isEmpty()) return false
-      if (kind != "verse") {
-        if (verseUnderlayQueue.isNotEmpty()) return true
-        verseUnderlayQueue.addAll(replay)
-        verseUnderlayNextUri = verseUnderlayQueue.firstOrNull()
-        return verseUnderlayQueue.isNotEmpty()
-      }
-      if (nextQueue.isNotEmpty()) return true
-      nextQueue.addAll(replay)
-      syncNextVarsLocked()
-      return nextQueue.isNotEmpty()
-    }
-  }
-
-  fun markAssetPlayed(uri: String?) {
-    val trimmed = uri?.trim().orEmpty()
-    if (trimmed.isEmpty()) return
-    synchronized(nextLock) { markPlayedLocked(trimmed) }
-  }
-
-  fun wasRecentlyPlayed(uri: String?): Boolean {
-    val trimmed = uri?.trim().orEmpty()
-    if (trimmed.isEmpty()) return false
-    synchronized(nextLock) { return recentlyPlayed.contains(trimmed) }
-  }
-
-  fun mergeIncomingNext(uris: List<String>, replace: Boolean) {
-    synchronized(nextLock) {
-      if (replace) {
-        nextQueue.clear()
-      }
-      val current = assetUri
-      for (raw in uris) {
-        val uri = raw.trim()
-        if (uri.isEmpty() || uri == current) continue
-        if (nextQueue.contains(uri)) continue
-        if (!replace && recentlyPlayed.contains(uri)) continue
-        nextQueue.add(uri)
-      }
-      while (nextQueue.size > NEXT_QUEUE_CAP) {
-        nextQueue.removeAt(nextQueue.lastIndex)
-      }
-      syncNextVarsLocked()
-    }
-  }
-
-  private fun syncNextVarsLocked() {
-    nextAssetUri = nextQueue.getOrNull(0)
-    nextNextAssetUri = nextQueue.getOrNull(1)
-  }
-
-  private fun markPlayedLocked(uri: String) {
-    recentlyPlayed.remove(uri)
-    recentlyPlayed.addLast(uri)
-    while (recentlyPlayed.size > RECENT_PLAYED_CAP) {
-      recentlyPlayed.removeFirst()
-    }
-  }
-
-  private fun collectNextUris(payload: JSONObject): List<String> {
+  private fun collectNextUris(o: JSONObject): List<String> {
     val out = ArrayList<String>()
-    fun add(raw: String?) {
-      val uri = raw?.trim().orEmpty()
-      if (uri.isNotEmpty() && !out.contains(uri)) out.add(uri)
+    fun add(v: String?) {
+      val uri = v?.trim().orEmpty()
+      if (uri.isNotEmpty() && uri != "null" && !out.contains(uri)) out.add(uri)
     }
-    add(payload.stringOrNull("nextAssetUri").orEmpty())
-    add(payload.stringOrNull("nextNextAssetUri").orEmpty())
-    val arr: JSONArray? = payload.optJSONArray("nextAssetUris")
-    if (arr != null) {
-      for (i in 0 until arr.length()) {
-        add(arr.optString(i, "").trim().takeIf { it != "null" && it != "undefined" }.orEmpty())
-      }
-    }
+    add(o.stringOrNull("nextAssetUri"))
+    add(o.stringOrNull("nextNextAssetUri"))
+    val arr = o.optJSONArray("nextAssetUris") ?: JSONArray()
+    for (i in 0 until arr.length()) add(arr.optString(i, ""))
     return out
   }
 
-  fun clear() {
-    title = ""
-    artist = ""
-    album = ""
-    artworkUri = null
-    durationSec = 0.0
-    positionSec = 0.0
-    playing = false
-    kind = ""
-    active = false
-    assetUri = null
-    nextAssetUri = null
-    nextNextAssetUri = null
-    synchronized(nextLock) {
-      nextQueue.clear()
-      recentlyPlayed.clear()
-      verseUnderlayQueue.clear()
-    }
-    gapSec = 0.0
-    gapAssetUri = null
-    verseUnderlayUri = null
-    verseUnderlayPlaying = false
-    verseUnderlayNextUri = null
-    verseUnderlayGapSec = 0.0
-    verseUnderlayGapUri = null
-    userPaused = false
-    systemInterrupted = false
-    forceRestartKind = null
-    lastUserPlayAtElapsed = 0L
-    rate = 1f
-    stopAtSec = 0.0
-  }
+  // ------------------------------------------------------------ 封面
 
   fun loadArtworkBitmap(): Bitmap? {
-    val uri = artworkUri ?: return null
+    val uri = artworkUri?.trim().orEmpty()
+    if (uri.isEmpty()) return null
     return try {
       when {
-        uri.startsWith("file://") -> {
-          val path = Uri.parse(uri).path ?: return null
-          BitmapFactory.decodeFile(path)
-        }
-        uri.startsWith("/") -> BitmapFactory.decodeFile(uri)
+        uri.startsWith("file://") ->
+          FileInputStream(Uri.parse(uri).path ?: return null).use { BitmapFactory.decodeStream(it) }
+        uri.startsWith("/") -> FileInputStream(uri).use { BitmapFactory.decodeStream(it) }
         else -> null
       }
     } catch (_: Exception) {

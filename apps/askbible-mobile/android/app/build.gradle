@@ -112,7 +112,7 @@ android {
         applicationId 'me.askbible'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 137
+        versionCode 200
         versionName "1.0.42"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
@@ -185,6 +185,10 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    // 播放状态机是纯 Kotlin（me.askbible.playback.model，不碰 Android API），跑 JVM 单测：
+    //   ./gradlew :app:testReleaseUnitTest
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     implementation("androidx.media:media:1.7.0")
     implementation("com.google.android.play:asset-delivery:2.3.0")
     implementation("com.google.android.play:asset-delivery-ktx:2.3.0")

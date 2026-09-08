@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import me.askbible.playback.model.StreamId
 import me.askbible.widget.WidgetPlaybackBridge
 
 class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicationContext) :
@@ -43,20 +44,21 @@ class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicatio
 
   @ReactMethod
   fun seekTo(positionSec: Double) {
-    Handler(Looper.getMainLooper()).post { ShellMainNativePlayer.seekTo(positionSec) }
+    Handler(Looper.getMainLooper()).post { PlaybackEngine.playerFor(StreamId.SCRIPTURE).seekTo(positionSec)
+      PlaybackEngine.playerFor(StreamId.MUSIC).seekTo(positionSec) }
   }
 
   @ReactMethod
   fun setPlaybackRate(rate: Double) {
     Handler(Looper.getMainLooper()).post {
-      ShellMainNativePlayer.setRate(rate.toFloat())
+      PlaybackEngine.playerFor(StreamId.SCRIPTURE).setRate(rate.toFloat())
     }
   }
 
   @ReactMethod
   fun setMusicVolume(volume: Double) {
     Handler(Looper.getMainLooper()).post {
-      ShellMainNativePlayer.setMusicVolume(volume.toFloat())
+      PlaybackEngine.playerFor(StreamId.MUSIC).setVolume(volume.toFloat())
     }
   }
 
@@ -116,7 +118,11 @@ class AskBibleShellMediaControlsModule(private val reactContext: ReactApplicatio
   override fun initialize() {
     super.initialize()
     bind(this)
-    ShellCallAudioMonitor.start(reactApplicationContext.applicationContext)
+    val app = reactApplicationContext.applicationContext
+    /** 引擎订阅状态并驱动三个播放器；服务只负责通知栏。 */
+    PlaybackEngine.start(app)
+    ShellPlaybackNotifier.start(app)
+    ShellCallAudioMonitor.start(app)
     reactContext.addLifecycleEventListener(
       object : LifecycleEventListener {
         override fun onHostResume() {

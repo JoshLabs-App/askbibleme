@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import me.askbible.playback.model.PlaybackStore
 
 /**
  * 锁屏睡眠定时：JS 线程会被冻住，必须在原生一次性到期。
@@ -120,11 +121,7 @@ object ShellSleepTimer {
     appContext = context.applicationContext
     cancelAlarm()
     Log.i(TAG, "fired")
-    ShellPlaybackSession.userPaused = true
-    ShellPlaybackSession.playing = false
-    ShellPlaybackSession.verseUnderlayPlaying = false
-    ShellVerseNativePlayer.pause()
-    ShellMainNativePlayer.pause()
+    PlaybackStore.dispatch(me.askbible.playback.model.Intent.SleepTimerFired)
     silenceExpoAv(context)
     if (ShellPlaybackSession.active) {
       ShellPlaybackService.startOrRefresh(context)

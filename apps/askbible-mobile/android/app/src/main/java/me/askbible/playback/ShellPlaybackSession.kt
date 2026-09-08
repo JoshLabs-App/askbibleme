@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import org.json.JSONArray
+import android.util.Log
 import org.json.JSONObject
 import me.askbible.playback.model.Intent
 import me.askbible.playback.model.JsPayload
@@ -105,13 +106,26 @@ object ShellPlaybackSession {
    * [me.askbible.playback.model.intentsFor]（纯函数，有单测）。
    */
   fun updateFromJson(json: String) {
+    var jsOrigin: String? = null
     val payload =
       try {
-        parsePayload(JSONObject(json))
+        val o = JSONObject(json)
+        jsOrigin = o.stringOrNull("origin")
+        parsePayload(o)
       } catch (_: Exception) {
         return
       }
-    if (payload.userPlay) lastUserPlayAtElapsed = android.os.SystemClock.elapsedRealtime()
+    if (payload.userPlay) {
+      lastUserPlayAtElapsed = android.os.SystemClock.elapsedRealtime()
+      /*
+       * 账本上三条来源（用户点击 / 章末续播 / JS 兜底）本来长得一模一样，
+       * 「JS 为什么突然播了下一章」只能靠临时日志一轮轮试。来源只打日志，不参与判断。
+       */
+      Log.i(
+        "AskBiblePlayback",
+        "js userPlay ${payload.kind} origin=${jsOrigin ?: "?"}",
+      )
+    }
     for (intent in intentsFor(payload, PlaybackStore.state)) {
       PlaybackStore.dispatch(intent)
     }

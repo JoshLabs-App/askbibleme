@@ -163,6 +163,7 @@ export async function playScriptureChapterAt(
             playing: true,
             kind: "scripture",
             userPlay: true,
+            origin: "scripture-chapter-at",
           });
         }
         resumeShellAppMusic();
@@ -295,6 +296,7 @@ export async function playScriptureChapterAt(
           kind: "scripture",
           stopAtSec: stopAt,
           userPlay: true,
+          origin: "scripture-chapter-at",
         });
       }
     }

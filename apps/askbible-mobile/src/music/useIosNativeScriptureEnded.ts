@@ -122,6 +122,7 @@ export function useIosNativeScriptureEnded(args: Args): void {
             kind: "scripture",
             rate: args.scripturePlaybackRateRef.current,
             userPlay: true,
+            origin: "scripture-chapter-repeat",
           });
         });
         return;

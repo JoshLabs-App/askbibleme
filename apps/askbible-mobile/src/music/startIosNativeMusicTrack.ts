@@ -122,6 +122,7 @@ export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean
     ...sessionBase,
     playing: true,
     userPlay: true,
+    origin: "music-track",
     nextAssetUri: nextAssetUris[0] ?? null,
     nextNextAssetUri: nextAssetUris[1] ?? null,
     nextAssetUris,

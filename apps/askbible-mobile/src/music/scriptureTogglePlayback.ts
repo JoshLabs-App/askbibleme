@@ -185,6 +185,7 @@ export async function toggleScripturePlayback(
         playing: true,
         kind: "scripture",
         userPlay: true,
+        origin: "scripture-toggle",
       });
       resumeShellAppMusic();
       ctx.setScripturePreparing(false);

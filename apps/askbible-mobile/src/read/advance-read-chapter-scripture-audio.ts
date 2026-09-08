@@ -1,5 +1,6 @@
 import type { CuvChapterAudioVoiceId } from "../bible/cuv-chapter-audio-voices";
 import { getScriptureBookDisplayName } from "../bible/scripture-book-display-name";
+import { withPlaybackOrigin } from "../audio/playbackOrigin";
 import { awaitPlanFlowHandoffRelease } from "../music/scripturePlanFlowHandoff";
 import { ensurePlanFlowChapterAudioReady } from "./prefetch-plan-flow-chapter-audio";
 import {
@@ -62,7 +63,7 @@ export async function kickReadChapterScriptureAfterNavigate(
         });
       }
     }
-    const started = await playScriptureChapter(playArgs);
+    const started = await withPlaybackOrigin("chapter-kick", () => playScriptureChapter(playArgs));
     if (__DEV__) {
       console.warn(
         "[planFlow-kick]",

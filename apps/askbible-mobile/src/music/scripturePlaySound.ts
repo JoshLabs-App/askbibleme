@@ -5,6 +5,7 @@ import {
   resolveScriptureAvSource,
   resolveScriptureBundledModule,
 } from "../audio/scriptureAudioPlayback";
+import { currentPlaybackOrigin } from "../audio/playbackOrigin";
 import { pauseShellMusicForAux } from "../audio/pauseShellMusicForAux";
 import {
   clearShellMediaSessionUserDismissed,
@@ -174,6 +175,7 @@ export async function loadAndPlayScriptureSound({
         rate,
         stopAtSec: stopAt != null && Number.isFinite(stopAt) ? stopAt : undefined,
         userPlay: true,
+        origin: currentPlaybackOrigin() ?? "scripture-play",
       });
       logScripturePlayTiming(t0, "native play command issued (native engine takes over from here)");
       publishScripturePlaybackSec(positionSec);

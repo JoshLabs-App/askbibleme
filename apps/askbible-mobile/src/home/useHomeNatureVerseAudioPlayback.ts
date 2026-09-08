@@ -663,6 +663,7 @@ export function useHomeNatureVerseAudioPlayback({
             gapAssetUri,
             playing: true,
             userPlay: true,
+            origin: "verse",
           });
           void prefetchNextAssetUris().then(syncQueueOnly);
           void import("../read/reading-habit-stats")
@@ -809,6 +810,7 @@ export function useHomeNatureVerseAudioPlayback({
         ...buildPayload(true),
         playing: true,
         userPlay: true,
+        origin: "verse",
         forceRestart: true,
         positionSec: 0,
       });

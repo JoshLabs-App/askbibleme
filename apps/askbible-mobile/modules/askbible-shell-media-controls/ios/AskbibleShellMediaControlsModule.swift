@@ -66,6 +66,15 @@ public final class AskbibleShellMediaControlsModule: Module {
     Function("updateSession") { (json: String) in
       DispatchQueue.main.async {
         guard let payload = Self.parse(json) else { return }
+        if payload.userPlay {
+          /*
+           账本上三条来源（用户点击 / 章末续播 / JS 兜底）本来长得一模一样，
+           「JS 为什么突然播了下一章」只能靠临时日志一轮轮试。来源只打日志，不参与判断。
+           */
+          let origin = Self.parseOrigin(json) ?? "?"
+          self.log.info(
+            "js userPlay \(payload.kind, privacy: .public) origin=\(origin, privacy: .public)")
+        }
         for intent in intentsFor(payload, PlaybackStore.shared.state) {
           PlaybackStore.shared.dispatch(intent)
         }
@@ -198,6 +207,16 @@ public final class AskbibleShellMediaControlsModule: Module {
   }
 
   // MARK: - 载荷解析
+
+  /// 只给账本用的来源字段；不进 `JsPayload`，状态机不该知道谁调用了它。
+  private static func parseOrigin(_ json: String) -> String? {
+    guard let data = json.data(using: .utf8),
+      let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let raw = object["origin"] as? String
+    else { return nil }
+    let trimmed = raw.trimmingCharacters(in: .whitespaces)
+    return trimmed.isEmpty ? nil : trimmed
+  }
 
   private static func parse(_ json: String) -> JsPayload? {
     guard let data = json.data(using: .utf8),

@@ -50,6 +50,13 @@ export type ShellMediaSessionPayload = {
   stopAtSec?: number;
   userPause?: boolean;
   userPlay?: boolean;
+  /**
+   * 这条播放命令是谁发的。只用于原生账本，不参与任何判断。
+   *
+   * 账本上三条来源（用户点击 / 章末续播 / JS 兜底）本来长得完全一样，
+   * 于是「JS 为什么突然播了下一章」只能靠加临时日志一轮轮试（2026-09-08 花了两小时）。
+   */
+  origin?: string;
   /** 锁屏 Previous / 用户显式重开当前句；无此标记时原生勿在句中 seek 回 0。 */
   forceRestart?: boolean;
 };

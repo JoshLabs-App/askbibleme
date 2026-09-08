@@ -28,7 +28,6 @@ type Args = {
     | "autoPlayScriptureRef"
     | "scriptureWantPlayingRef"
     | "scriptureChapterEndHandledRef"
-    | "scriptureChapterHandoffRef"
     | "scriptureLastProgressMsRef"
     | "scriptureLastProgressAtRef"
   >;
@@ -98,7 +97,6 @@ export async function runScripturePlayInFlight(args: Args): Promise<void> {
       scriptureWantPlayingRef: refs.scriptureWantPlayingRef,
       scripturePlayInFlightRef: refs.scripturePlayInFlightRef,
       scriptureChapterEndHandledRef: refs.scriptureChapterEndHandledRef,
-      scriptureChapterHandoffRef: refs.scriptureChapterHandoffRef,
       scriptureLastProgressMsRef: refs.scriptureLastProgressMsRef,
       scriptureLastProgressAtRef: refs.scriptureLastProgressAtRef,
       scriptureSrcRef: refs.scriptureSrcRef,

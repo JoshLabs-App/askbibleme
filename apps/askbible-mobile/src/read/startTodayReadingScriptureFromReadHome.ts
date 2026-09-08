@@ -25,7 +25,7 @@ import { resolveBundledChapterAudioModule } from "../bible/bundled-chapter-audio
 import { requestWidgetVerseStop } from "../widget/widgetPlaybackRequest";
 import { resolveLocalTodayReadingScopeKeyFromPrefs } from "./reading-plan/today-reading-done";
 
-export type StartTodayPlanFlowOpts = {
+type StartTodayPlanFlowOpts = {
   loopTodayPlan?: boolean;
   replace?: boolean;
   startAtSec?: number;

@@ -5,7 +5,7 @@ import type { ScripturePoolTrack } from "../music/scripture-chapter-pool";
 import { ensurePlanFlowChapterAudioReady } from "./prefetch-plan-flow-chapter-audio";
 import type { PlanChapterRef } from "./read-plan-flow-nav";
 
-export type BuildScriptureChapterPoolOpts = {
+type BuildScriptureChapterPoolOpts = {
   /** 只解析本地已准备好的音源，不等待整队列预取。 */
   lazySrc?: boolean;
 };

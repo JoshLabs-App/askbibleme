@@ -6,7 +6,7 @@ import { chapterAudioPackageKey } from "./readAudioPackageDownloadPaths";
 const STREAM_CACHE_ROOT = `${FileSystem.documentDirectory}read-chapter-audio-cache`;
 const ACCESS_INDEX_URI = `${STREAM_CACHE_ROOT}/access-index-v1.json`;
 /** 自最近访问起保留天数 */
-export const CHAPTER_AUDIO_STREAM_CACHE_RETENTION_DAYS = 10;
+const CHAPTER_AUDIO_STREAM_CACHE_RETENTION_DAYS = 10;
 const RETENTION_MS = CHAPTER_AUDIO_STREAM_CACHE_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 type AccessIndex = Record<string, number>;
@@ -18,7 +18,7 @@ function streamCacheRelKey(packageKey: string, bookId: string, chapter: number):
   return `${packageKey}/${bookId.toUpperCase()}-${chapter}.mp3`;
 }
 
-export function chapterStreamCacheFileUri(
+function chapterStreamCacheFileUri(
   packageKey: string,
   bookId: string,
   chapter: number,
@@ -80,7 +80,7 @@ export async function resolveStreamCachedChapterAudioUri(args: {
   }
 }
 
-export async function ensureStreamCachePackageDir(packageKey: string): Promise<void> {
+async function ensureStreamCachePackageDir(packageKey: string): Promise<void> {
   await FileSystem.makeDirectoryAsync(`${STREAM_CACHE_ROOT}/${packageKey}`, {
     intermediates: true,
   });

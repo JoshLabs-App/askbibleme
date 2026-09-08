@@ -105,7 +105,7 @@ export function chaptersForBookId(bookId: string): number {
   return booksById.get(bookId)?.chapters ?? 0;
 }
 
-export function testamentForSection(section: ScriptureCanonCatalogSection): "old" | "new" {
+function testamentForSection(section: ScriptureCanonCatalogSection): "old" | "new" {
   const n = section.books[0]?.bookNumber;
   if (typeof n !== "number") return "old";
   return n <= OLD_TESTAMENT_MAX_BOOK_NUMBER ? "old" : "new";

@@ -6,7 +6,7 @@ const USE_DEFERRED_VERSE_TOUCH = Platform.OS === "android";
 const VERSE_TOUCH_SLOP_PX = 10;
 const VERSE_LONG_PRESS_MS = 280;
 
-export type ReadChapterVerseTextHighlightTouchArgs = {
+type ReadChapterVerseTextHighlightTouchArgs = {
   highlightEditMode: boolean;
   activeHighlightColor: string;
   editableTokenUnits: EditableTokenUnit[] | null;

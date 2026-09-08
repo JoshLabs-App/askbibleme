@@ -68,7 +68,6 @@ export function useScripturePlayEngine({
     scriptureAudioRepeatRef,
     readChapterRef,
     autoPlayScriptureRef: refs.autoPlayScriptureRef,
-    scriptureChapterHandoffRef: refs.scriptureChapterHandoffRef,
     scriptureWantPlayingRef: refs.scriptureWantPlayingRef,
     scriptureStopAtOnEndedRef: refs.scriptureStopAtOnEndedRef,
     scripturePlaybackRateRef,
@@ -97,7 +96,7 @@ export function useScripturePlayEngine({
     refs.scripturePlayInFlightRef.current = null;
     clearScriptureResumeTimer();
     endPlanFlowChapterAdvance();
-    clearScriptureChapterHandoff(refs.scriptureChapterHandoffRef);
+    clearScriptureChapterHandoff();
     resetScriptureChapterEndTracking(
       refs.scriptureChapterEndHandledRef,
       refs.scriptureLastProgressMsRef,
@@ -125,7 +124,6 @@ export function useScripturePlayEngine({
     refs.scripturePlayInFlightRef,
     refs.scriptureStopAtSecRef,
     refs.autoPlayScriptureRef,
-    refs.scriptureChapterHandoffRef,
     refs.scriptureWantPlayingRef,
     scriptureSrcRef,
     setPlaybackMode,

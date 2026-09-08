@@ -13,7 +13,6 @@ function makeRefs(overrides: Partial<ScripturePriorityRefs> = {}): ScripturePrio
     scriptureWantPlayingRef: { current: true },
     scripturePlayInFlightRef: { current: null as Promise<void> | null },
     autoPlayScriptureRef: { current: false },
-    scriptureChapterHandoffRef: { current: false },
     ...overrides,
   };
 }
@@ -42,9 +41,9 @@ describe("scripturePlaybackPriority", () => {
   it("detects protected scripture session during handoff", () => {
     nativeScriptureUri("file:///cache/cuv/GEN-1.mp3");
     const refs = makeRefs({ scriptureWantPlayingRef: { current: false } });
-    markScriptureChapterHandoff(refs.scriptureChapterHandoffRef);
+    markScriptureChapterHandoff();
     expect(isScripturePlaybackProtected(refs)).toBe(true);
-    clearScriptureChapterHandoff(refs.scriptureChapterHandoffRef);
+    clearScriptureChapterHandoff();
     expect(isScripturePlaybackProtected(refs)).toBe(false);
   });
 

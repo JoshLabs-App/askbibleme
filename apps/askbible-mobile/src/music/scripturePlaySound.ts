@@ -52,7 +52,6 @@ type Args = {
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
   scriptureChapterEndHandledRef: MutableRefObject<boolean>;
-  scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureLastProgressMsRef: MutableRefObject<number>;
   scriptureLastProgressAtRef: MutableRefObject<number>;
   scriptureSrcRef: MutableRefObject<string | null>;
@@ -86,7 +85,6 @@ export async function loadAndPlayScriptureSound({
   scriptureWantPlayingRef,
   scripturePlayInFlightRef,
   scriptureChapterEndHandledRef,
-  scriptureChapterHandoffRef,
   scriptureLastProgressMsRef,
   scriptureLastProgressAtRef,
   scriptureSrcRef,
@@ -154,7 +152,7 @@ export async function loadAndPlayScriptureSound({
       setShellNativeAudioTakeover(true);
       scriptureSrcRef.current = nativeUri;
       markScriptureWantPlaying(scriptureWantPlayingRef, true);
-      clearScriptureChapterHandoff(scriptureChapterHandoffRef);
+      clearScriptureChapterHandoff();
       if (intendedChapter) {
         setScripturePlayingChapter(intendedChapter);
       }

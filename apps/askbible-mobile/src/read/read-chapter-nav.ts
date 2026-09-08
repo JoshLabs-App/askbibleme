@@ -2,7 +2,7 @@ import type { Router } from "expo-router";
 
 export type ReadChapterNavDirection = "forward" | "back";
 
-export type NavRoute = { params?: unknown };
+type NavRoute = { params?: unknown };
 export type NavState = { routes?: ReadonlyArray<NavRoute>; index?: number };
 
 const CHAPTER_PATH = "/read/[bookId]/[chapter]" as const;
@@ -13,7 +13,7 @@ function paramString(value: unknown): string {
 }
 
 /** 导航栈上一屏是否就是目标章（否则 back 会落到首页等非相邻章路由）。 */
-export function readChapterTargetMatchesRoute(
+function readChapterTargetMatchesRoute(
   route: NavRoute | undefined,
   target: { bookId: string; chapter: number },
 ): boolean {
@@ -27,7 +27,7 @@ export function readChapterTargetMatchesRoute(
   );
 }
 
-export function canPopToReadChapterTarget(
+function canPopToReadChapterTarget(
   getNavigationState: (() => NavState | undefined) | undefined,
   target: { bookId: string; chapter: number },
 ): boolean {
@@ -36,7 +36,7 @@ export function canPopToReadChapterTarget(
   return readChapterTargetMatchesRoute(state.routes[state.index - 1], target);
 }
 
-export function readChapterRouteParams(target: { bookId: string; chapter: number }) {
+function readChapterRouteParams(target: { bookId: string; chapter: number }) {
   return {
     pathname: CHAPTER_PATH,
     params: {

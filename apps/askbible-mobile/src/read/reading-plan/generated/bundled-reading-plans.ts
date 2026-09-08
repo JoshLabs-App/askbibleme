@@ -18,7 +18,7 @@ const planBundles = {
   "oneyearchronological": require("../../../../assets/content/reading-plans/oneyearchronological.json"),
 } as const;
 
-export type BundledReadingPlanBundle = {
+type BundledReadingPlanBundle = {
   schemaVersion: 1;
   planId: string;
   name: string;

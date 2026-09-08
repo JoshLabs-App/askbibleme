@@ -3,7 +3,7 @@
  * 搜索定位 / 划重点时关闭窗口化，避免未挂载节点量不到布局。
  */
 
-export const READ_CHAPTER_VERSE_WINDOW_OVERSCAN_PX = 1400;
+const READ_CHAPTER_VERSE_WINDOW_OVERSCAN_PX = 1400;
 
 export type ReadChapterWindowRange = {
   start: number;
@@ -29,7 +29,7 @@ export function estimateReadChapterVerseHeight(opts: {
   return Math.round(body + headings + breakH);
 }
 
-export type ReadChapterVerseTops = {
+type ReadChapterVerseTops = {
   tops: number[];
   heights: number[];
   total: number;

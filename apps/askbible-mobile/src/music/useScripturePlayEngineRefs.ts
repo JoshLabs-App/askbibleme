@@ -14,7 +14,6 @@ export function useScripturePlayEngineRefs() {
     scriptureLastProgressMsRef: useRef(-1),
     scriptureLastProgressAtRef: useRef(Date.now()),
     /** 章末续章 / planFlow 导航 handoff：避免 registerReadChapter(null) 误停朗读。 */
-    scriptureChapterHandoffRef: useRef(false),
   };
 }
 

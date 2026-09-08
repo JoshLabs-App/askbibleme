@@ -3,7 +3,7 @@ import { Pressable, Text, View, type LayoutRectangle, type TextStyle } from "rea
 import type { EditableTokenUnit } from "./useReadChapterVerseTextHighlightDrag";
 import { readChapterVerseTextStyles as styles } from "./readChapterVerseTextStyles";
 
-export type ReadChapterVerseTextHighlightUnitsArgs = {
+type ReadChapterVerseTextHighlightUnitsArgs = {
   editableTokenUnits: EditableTokenUnit[] | null;
   highlightedCharIndexes: Map<number, string> | null;
   highlightEditMode: boolean;

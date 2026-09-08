@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "askbible.mobile.read.audio-package-download.v1";
 
-export type DownloadStatus = "idle" | "running" | "paused" | "done" | "error";
+type DownloadStatus = "idle" | "running" | "paused" | "done" | "error";
 
 export type AudioPackageSelection = {
   translationId: string;
@@ -10,7 +10,7 @@ export type AudioPackageSelection = {
   label: string;
 };
 
-export type PersistedDownloadState = {
+type PersistedDownloadState = {
   packageKey: string | null;
   label: string;
   status: DownloadStatus;

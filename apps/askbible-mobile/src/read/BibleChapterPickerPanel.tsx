@@ -27,10 +27,10 @@ import {
   CHAPTER_SHEET_PAD,
 } from "./bibleChapterPickerPanelStyles";
 
-export const CHAPTER_PICKER_MIN_VIEWPORT_H = 320;
+const CHAPTER_PICKER_MIN_VIEWPORT_H = 320;
 
 /** 选章 Modal 打开后短暂忽略背景点击，避免 Android 同一次触摸误触关闭（TCL 等慢机更明显）。 */
-export const CHAPTER_PICKER_OPEN_GUARD_MS = 850;
+const CHAPTER_PICKER_OPEN_GUARD_MS = 850;
 
 export function markChapterPickerOpenGuard(now = Date.now()): number {
   return now + CHAPTER_PICKER_OPEN_GUARD_MS;

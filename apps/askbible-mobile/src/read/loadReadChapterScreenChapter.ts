@@ -29,7 +29,7 @@ function pickFallbackTranslationId(primaryTranslationId: string, language: strin
   return candidates.find((id) => id !== primaryTranslationId && isBundledScriptureTranslation(id)) ?? null;
 }
 
-export type ReadChapterLoadResult =
+type ReadChapterLoadResult =
   | { ok: true; chapter: LoadedChapter; segments: ChapterSegment[] | null }
   | { ok: false; error: string | null; chapter: null };
 

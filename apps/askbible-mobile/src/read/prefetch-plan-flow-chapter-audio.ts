@@ -11,7 +11,7 @@ import { downloadChapterAudioToCache, resolveDownloadedChapterAudioUri } from ".
 import type { PlanChapterRef } from "./read-plan-flow-nav";
 
 const PLAN_FLOW_PREFETCH_CONCURRENCY = 3;
-export const PLAN_FLOW_CHAPTER_AUDIO_WAIT_MS = 12_000;
+const PLAN_FLOW_CHAPTER_AUDIO_WAIT_MS = 12_000;
 
 function isRemotePlayableSrc(src: string): boolean {
   return /^https?:\/\//i.test(src.trim());

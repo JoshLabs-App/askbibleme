@@ -18,7 +18,6 @@ type Args = {
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
-  scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
 };
 
@@ -28,7 +27,6 @@ export function handleScriptureDidJustFinish({
   scriptureAudioRepeatRef,
   readChapterRef,
   autoPlayScriptureRef,
-  scriptureChapterHandoffRef,
   scriptureWantPlayingRef,
 }: Args): void {
   const mode = scriptureAudioRepeatRef.current;
@@ -54,7 +52,7 @@ export function handleScriptureDidJustFinish({
     const next = getNextScriptureChapterInBook(rc.bookId, rc.chapter);
     if (next) {
       autoPlayScriptureRef.current = true;
-      markScriptureChapterHandoff(scriptureChapterHandoffRef);
+      markScriptureChapterHandoff();
       rc.onAdvanceNextInBook();
       return;
     }
@@ -77,6 +75,6 @@ export function handleScriptureDidJustFinish({
   }
   autoPlayScriptureRef.current = true;
   markScriptureWantPlaying(scriptureWantPlayingRef, true);
-  markScriptureChapterHandoff(scriptureChapterHandoffRef);
+  markScriptureChapterHandoff();
   rc.onAdvanceNextChapter();
 }

@@ -38,7 +38,7 @@ export function readReadStackTopRouteName(
 }
 
 /** 从圣经目录 push 出的子页：搜索、收藏、计划等（不含目录首页与章页） */
-export function isReadBibleStackSubRoute(pathname: string): boolean {
+function isReadBibleStackSubRoute(pathname: string): boolean {
   const p = normalizePath(pathname);
   if (!/(^|\/)read\//.test(p)) return false;
   if (isReadChapterRoute(pathname)) return false;

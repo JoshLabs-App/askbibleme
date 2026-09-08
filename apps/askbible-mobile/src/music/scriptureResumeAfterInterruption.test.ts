@@ -64,7 +64,6 @@ function makeRecoveryCtx(overrides: Partial<ScriptureBackgroundRecoveryCtx> = {}
     },
     autoPlayScriptureRef: { current: true },
     scriptureAudioRepeatRef: { current: "off" as const },
-    scriptureChapterHandoffRef: { current: false },
     scriptureChapterEndHandledRef: { current: false },
     scriptureLastProgressMsRef: { current: -1 },
     scriptureLastProgressAtRef: { current: Date.now() },

@@ -22,7 +22,7 @@ export type EditableTokenUnit = {
   kindStyle: TextStyle | undefined;
 };
 
-export type ReadChapterVerseTextHighlightDragArgs = {
+type ReadChapterVerseTextHighlightDragArgs = {
   text: string;
   parts: VerseSpeechPart[] | null;
   highlightedCharIndexes: Map<number, string> | null;

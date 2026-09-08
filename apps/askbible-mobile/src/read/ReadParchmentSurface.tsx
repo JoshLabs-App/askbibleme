@@ -14,10 +14,10 @@ import { useShellFullBleedBackdropStyle, useShellFullBleedFrame } from "../shell
 import { readParchmentTheme as c } from "./readParchmentTheme";
 import { shouldUseWideParchmentScrollBackground } from "./parchmentColumnLayout";
 
-export const READ_PARCHMENT_SCROLL_SOURCE = require("../../assets/images/read-parchment-scroll-bg.jpg");
+const READ_PARCHMENT_SCROLL_SOURCE = require("../../assets/images/read-parchment-scroll-bg.jpg");
 export const READ_PARCHMENT_SCROLL_SOURCE_WIDE = require("../../assets/images/read-parchment-scroll-bg-wide.jpg");
 
-export function resolveReadParchmentScrollSource(width: number, height: number) {
+function resolveReadParchmentScrollSource(width: number, height: number) {
   if (shouldUseWideParchmentScrollBackground(width, height)) {
     return READ_PARCHMENT_SCROLL_SOURCE_WIDE;
   }

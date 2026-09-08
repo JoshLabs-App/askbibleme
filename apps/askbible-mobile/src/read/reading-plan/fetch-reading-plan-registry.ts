@@ -25,7 +25,7 @@ function sortPlans(plans: ReadingPlanRegistryEntry[]): ReadingPlanRegistryEntry[
     });
 }
 
-export function fallbackReadingPlanRegistry(): ReadingPlanRegistry {
+function fallbackReadingPlanRegistry(): ReadingPlanRegistry {
   return {
     schemaVersion: 1,
     upstreamNote: "",

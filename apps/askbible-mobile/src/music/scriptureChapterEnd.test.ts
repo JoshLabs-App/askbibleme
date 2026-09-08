@@ -35,7 +35,6 @@ describe("scriptureChapterEnd", () => {
       scriptureAudioRepeatRef: { current: "off" as const },
       readChapterRef: { current: null },
       autoPlayScriptureRef: { current: true },
-      scriptureChapterHandoffRef: { current: false },
       scriptureWantPlayingRef: { current: false },
       setPlaying: vi.fn(),
       chapterEndHandledRef,

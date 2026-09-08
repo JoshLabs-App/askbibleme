@@ -35,7 +35,6 @@ export type ScriptureBackgroundRecoveryCtx = ScriptureResumeCtx & {
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
-  scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureChapterEndHandledRef: MutableRefObject<boolean>;
   scriptureLastProgressMsRef: MutableRefObject<number>;
   scriptureLastProgressAtRef: MutableRefObject<number>;
@@ -92,7 +91,6 @@ function chapterEndFinishArgs(ctx: ScriptureBackgroundRecoveryCtx): ScriptureCha
     scriptureAudioRepeatRef: ctx.scriptureAudioRepeatRef,
     readChapterRef: ctx.readChapterRef,
     autoPlayScriptureRef: ctx.autoPlayScriptureRef,
-    scriptureChapterHandoffRef: ctx.scriptureChapterHandoffRef,
     scriptureWantPlayingRef: ctx.scriptureWantPlayingRef,
     chapterEndHandledRef: ctx.scriptureChapterEndHandledRef,
   };

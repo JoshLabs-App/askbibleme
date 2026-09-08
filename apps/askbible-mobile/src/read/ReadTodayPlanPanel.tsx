@@ -126,7 +126,7 @@ type FooterProps = {
 };
 
 /** 读经计划元信息：放在目录页最底部 */
-export function ReadTodayPlanFooter({ plan }: FooterProps) {
+function ReadTodayPlanFooter({ plan }: FooterProps) {
   const router = useRouter();
   const { locale } = useLocale();
   const { prefs, payload, loading, isTripleLoop, isNtDeepRepeat, dayIndex, aheadDays, effectiveEpochDay } = plan;

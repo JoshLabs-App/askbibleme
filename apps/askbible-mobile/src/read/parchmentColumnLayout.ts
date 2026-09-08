@@ -9,33 +9,33 @@ export const PARCHMENT_COLUMN_MAX_WIDTH_PHONE = 448;
 export const PARCHMENT_CATALOG_MAX_WIDTH_PHONE = 380;
 
 /** 平板短边下限：iPad 及同类设备铺满可用宽度 */
-export const PARCHMENT_TABLET_MIN_SHORT_EDGE = 600;
+const PARCHMENT_TABLET_MIN_SHORT_EDGE = 600;
 
 /** 探索 / 章页等内容区横向内边距（手机） */
-export const PARCHMENT_CONTENT_PAD_X_PHONE = 22;
+const PARCHMENT_CONTENT_PAD_X_PHONE = 22;
 
 /** 读经页 Scroll 横向内边距（手机） */
 export const READ_PARCHMENT_PAGE_PAD_X = 20;
 
 /** iPad 竖屏内容区内边距 */
-export const PARCHMENT_CONTENT_PAD_X_TABLET = 36;
+const PARCHMENT_CONTENT_PAD_X_TABLET = 36;
 
 /** iPad 横屏内容区内边距 */
-export const PARCHMENT_CONTENT_PAD_X_TABLET_LANDSCAPE = 48;
+const PARCHMENT_CONTENT_PAD_X_TABLET_LANDSCAPE = 48;
 
 /** iPad 横屏宽卷轴底图下限（与网站 `READ_PARCHMENT_WIDE_MIN_WIDTH_PX` 对齐） */
-export const READ_PARCHMENT_WIDE_BG_MIN_WIDTH = 768;
+const READ_PARCHMENT_WIDE_BG_MIN_WIDTH = 768;
 
 /** 读经章「书页」双栏下限（与网站 `useReadChapterSpreadLayout` 一致） */
-export const READ_CHAPTER_SPREAD_MIN_WIDTH = 1024;
+const READ_CHAPTER_SPREAD_MIN_WIDTH = 1024;
 
 /** 向导类页面（读经计划等）在 iPad 上的版心上限 */
-export const PARCHMENT_WIZARD_MAX_WIDTH_TABLET = 560;
+const PARCHMENT_WIZARD_MAX_WIDTH_TABLET = 560;
 
 /** @deprecated 使用 `PARCHMENT_COLUMN_MAX_WIDTH_PHONE` */
 export const READ_PARCHMENT_PAGE_MAX_WIDTH = PARCHMENT_COLUMN_MAX_WIDTH_PHONE;
 
-export function isParchmentFullWidthLayout(width: number, height: number): boolean {
+function isParchmentFullWidthLayout(width: number, height: number): boolean {
   if (Platform.OS === "ios" && Platform.isPad) return true;
   if (width <= 0 || height <= 0) return false;
   return Math.min(width, height) >= PARCHMENT_TABLET_MIN_SHORT_EDGE;
@@ -54,12 +54,12 @@ export function parchmentContentPaddingHorizontal(
   return PARCHMENT_CONTENT_PAD_X_TABLET;
 }
 
-export function readPagePaddingHorizontal(width: number, height: number): number {
+function readPagePaddingHorizontal(width: number, height: number): number {
   if (!isParchmentFullWidthLayout(width, height)) return READ_PARCHMENT_PAGE_PAD_X;
   return parchmentContentPaddingHorizontal(width, height, READ_PARCHMENT_PAGE_PAD_X);
 }
 
-export function exploreIconGridColumns(width: number, height: number): number {
+function exploreIconGridColumns(width: number, height: number): number {
   if (!isParchmentFullWidthLayout(width, height)) return 3;
   const padX = parchmentContentPaddingHorizontal(width, height);
   const available = width - padX * 2;
@@ -68,7 +68,7 @@ export function exploreIconGridColumns(width: number, height: number): number {
   return Math.max(4, Math.min(7, Math.floor((available + gap) / (targetTile + gap))));
 }
 
-export function exploreIconGridGap(width: number, height: number): number {
+function exploreIconGridGap(width: number, height: number): number {
   return isParchmentFullWidthLayout(width, height) ? 12 : 10;
 }
 
@@ -86,7 +86,7 @@ export function shouldUseWideParchmentScrollBackground(width: number, height: nu
 }
 
 /** 宽屏章页：左经文 / 右讲解（与网站 `.read-chapter-open-book` 一致） */
-export function shouldUseReadChapterSpreadLayout(width: number, height: number): boolean {
+function shouldUseReadChapterSpreadLayout(width: number, height: number): boolean {
   if (width <= 0 || height <= 0) return false;
   if (width >= READ_CHAPTER_SPREAD_MIN_WIDTH) return true;
   if (Platform.OS === "ios" && Platform.isPad && width > height && width >= READ_PARCHMENT_WIDE_BG_MIN_WIDTH) {

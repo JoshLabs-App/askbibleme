@@ -5,7 +5,7 @@ import { Appearance } from "react-native";
  * - light：`:root` 白天羊皮（`--read-parchment-bg-canvas: #ecd9b9`）
  * - dark：`html.dark` 深夜羊皮
  */
-export type ReadParchmentColorMode = "light" | "dark";
+type ReadParchmentColorMode = "light" | "dark";
 
 /**
  * 当前读经外观：跟随系统深色/浅色，在 App 冷启动时读一次。
@@ -111,9 +111,9 @@ const dark = {
   parchmentAccentGlow: "rgba(217, 119, 7, 0.28)",
 } as const;
 
-export const readParchmentThemes = { light, dark } as const;
+const readParchmentThemes = { light, dark } as const;
 
-export type ReadParchmentTheme = (typeof readParchmentThemes)[ReadParchmentColorMode];
+type ReadParchmentTheme = (typeof readParchmentThemes)[ReadParchmentColorMode];
 
 export const readParchmentTheme: ReadParchmentTheme =
   readParchmentThemes[READ_PARCHMENT_COLOR_MODE];

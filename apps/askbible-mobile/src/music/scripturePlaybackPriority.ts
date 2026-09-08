@@ -8,7 +8,6 @@ export type ScripturePriorityRefs = {
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
-  scriptureChapterHandoffRef: MutableRefObject<boolean>;
 };
 
 export type ScripturePriorityState = {
@@ -28,7 +27,7 @@ export function isScripturePlaybackProtected(
   if (refs.scriptureWantPlayingRef.current) return true;
   if (refs.scripturePlayInFlightRef.current) return true;
   if (refs.autoPlayScriptureRef.current) return true;
-  if (isScriptureChapterHandoffActive(refs.scriptureChapterHandoffRef)) return true;
+  if (isScriptureChapterHandoffActive()) return true;
   if (peekReadPlanFlowAutoplay()) return true;
   return false;
 }
@@ -45,16 +44,20 @@ export async function releaseScriptureShellForMusic(
   await stopScripturePlayback();
 }
 
-export function markScriptureChapterHandoff(ref?: MutableRefObject<boolean>): void {
+/**
+ * 换章交接锁：上一章刚结束、下一章还没接上的那段时间，别让别人抢走读经会话。
+ *
+ * 这个标志只住在这里。它一度还有一份 `scriptureChapterHandoffRef` 被穿过十几个
+ * 文件，判断时两者取或——两边不同步时没有任何报错，只是锁时灵时不灵。
+ */
+export function markScriptureChapterHandoff(): void {
   readingHandoffActive = true;
-  if (ref) ref.current = true;
 }
 
-export function clearScriptureChapterHandoff(ref?: MutableRefObject<boolean>): void {
+export function clearScriptureChapterHandoff(): void {
   readingHandoffActive = false;
-  if (ref) ref.current = false;
 }
 
-export function isScriptureChapterHandoffActive(ref?: MutableRefObject<boolean>): boolean {
-  return readingHandoffActive || Boolean(ref?.current);
+export function isScriptureChapterHandoffActive(): boolean {
+  return readingHandoffActive;
 }

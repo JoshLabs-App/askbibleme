@@ -21,7 +21,7 @@ import { useReadChapterAudioRegistration } from "./useReadChapterAudioRegistrati
 
 type ChapterTarget = { bookId: string; chapter: number };
 
-export type UseReadChapterAudioOptions = {
+type UseReadChapterAudioOptions = {
   scrollHeaderHeightRef?: React.RefObject<number>;
   onAdvanceChapter?: (target: ChapterTarget | null) => void;
   isPlanFlow?: boolean;

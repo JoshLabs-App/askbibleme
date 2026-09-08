@@ -7,14 +7,14 @@ import {
 /** 读经章底栏：快捷操作行叠在 Tab 导航之上（已空，仅 Scrim / 非章页兼容） */
 export const READ_CHAPTER_ACTION_ROW_HEIGHT = 40;
 export const READ_CHAPTER_ACTION_ROW_GAP = 6;
-export const READ_CHAPTER_SCROLL_BOTTOM_BASE = SHELL_TAB_BAR_CLEARANCE + 28;
+const READ_CHAPTER_SCROLL_BOTTOM_BASE = SHELL_TAB_BAR_CLEARANCE + 28;
 
 /** 非章页：旧快捷行占位（Scrim / 首页滚动） */
 export const READ_CHAPTER_SCROLL_BOTTOM_EXTRA =
   READ_CHAPTER_ACTION_ROW_HEIGHT + READ_CHAPTER_ACTION_ROW_GAP;
 
 /** 章页固定播放坞占位（坞内容 + 与 Tab 行间距） */
-export const READ_CHAPTER_SCRIPTURE_DOCK_SCROLL_EXTRA =
+const READ_CHAPTER_SCRIPTURE_DOCK_SCROLL_EXTRA =
   SHELL_SCRIPTURE_DOCK_CONTENT_HEIGHT + SHELL_TAB_BAR_DOCK_GAP;
 
 export function readChapterScrollBottomPad(safeBottom: number, withScriptureDock: boolean): number {

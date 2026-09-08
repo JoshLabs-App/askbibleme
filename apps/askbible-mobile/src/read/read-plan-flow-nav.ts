@@ -7,10 +7,10 @@ import { getPlanFlowUiHost, shouldLoopTodayPlanFlow } from "./read-plan-flow-aut
 export type PlanChapterRef = { bookId: string; chapter: number };
 
 const PLAN_CHAPTER_PATH = "/(tabs)/read/[bookId]/[chapter]" as const;
-export const PLAN_PLAY_PATH = "/(tabs)/read/plan-play" as const;
+const PLAN_PLAY_PATH = "/(tabs)/read/plan-play" as const;
 
 /** 章页 payload 未就绪时回退到 planFlow 启动前 prime 的今日计划。 */
-export function resolveEffectiveTodayPlanPayload(
+function resolveEffectiveTodayPlanPayload(
   payload: TodayReadingPlanPayload | null | undefined,
 ): TodayReadingPlanPayload | null {
   return payload ?? peekPrimedTodayReadingPlanPayload();
@@ -85,7 +85,7 @@ export function resolveTodayPlanLoopNextTarget(
   );
 }
 
-export function resolveTodayPlanLoopPrevTarget(
+function resolveTodayPlanLoopPrevTarget(
   payload: TodayReadingPlanPayload | null | undefined,
   currentBookId: string,
   currentChapter: number,

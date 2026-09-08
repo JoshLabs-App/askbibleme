@@ -12,9 +12,9 @@ import type { AudioPackageSelection } from "./readAudioPackageDownloadStore";
 
 const AUDIO_PACKAGE_ROOT = `${FileSystem.documentDirectory}read-audio-packages`;
 // 音频包与 verse-timings 需要同批次更新；升级这里可以让旧下载包失效，避免声音/文字继续串版本。
-export const AUDIO_PACKAGE_VERSION = "v2";
+const AUDIO_PACKAGE_VERSION = "v2";
 
-export type DownloadChapterRef = {
+type DownloadChapterRef = {
   refKey: string;
   bookId: string;
   chapter: number;
@@ -25,7 +25,7 @@ export function packageKeyForSelection(selection: AudioPackageSelection): string
   return `${packageKeyBaseForSelection(selection)}-${AUDIO_PACKAGE_VERSION}`;
 }
 
-export function packageKeyBaseForSelection(
+function packageKeyBaseForSelection(
   selection: Pick<AudioPackageSelection, "translationId" | "voiceId">,
 ): string {
   if (translationUsesWebChapterAudio(selection.translationId)) {
@@ -41,7 +41,7 @@ export function packageKeyBaseForSelection(
   return `edition-${id || "unknown"}`;
 }
 
-export function packageDir(packageKey: string): string {
+function packageDir(packageKey: string): string {
   return `${AUDIO_PACKAGE_ROOT}/${packageKey}`;
 }
 

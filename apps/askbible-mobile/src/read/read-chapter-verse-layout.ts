@@ -48,7 +48,7 @@ export function nativeTargetFromLayoutEvent(event: LayoutChangeEvent): number | 
   return typeof handle === "number" && handle > 0 ? handle : null;
 }
 
-export type VerseMeasurableHost = {
+type VerseMeasurableHost = {
   measureInWindow: (
     callback: (x: number, y: number, width: number, height: number) => void,
   ) => void;
@@ -155,7 +155,7 @@ export function measureLayoutRelativeTo(
   });
 }
 
-export type ParagraphTextLine = {
+type ParagraphTextLine = {
   x?: number;
   y: number;
   width?: number;
@@ -163,13 +163,13 @@ export type ParagraphTextLine = {
   text?: string;
 };
 
-export type VerseCharRange = {
+type VerseCharRange = {
   verse: number;
   start: number;
   end: number;
 };
 
-export type ParagraphGroupFrame = {
+type ParagraphGroupFrame = {
   verses: number[];
   y: number;
   height: number;
@@ -203,7 +203,7 @@ export function verseContentLayoutFromParagraphFrames(opts: {
   return null;
 }
 
-export function displayedParagraphVerseChunk(verseNum: number, verseText: string, gap: string): string {
+function displayedParagraphVerseChunk(verseNum: number, verseText: string, gap: string): string {
   return `${verseNum}${gap}${verseText} `;
 }
 
@@ -222,7 +222,7 @@ export function paragraphVerseCharRanges(
   return { fullText, ranges };
 }
 
-export function charRangesFromTextLayoutLines(
+function charRangesFromTextLayoutLines(
   fullText: string,
   lines: ParagraphTextLine[],
 ): Array<{ start: number; end: number; y: number; height: number }> {
@@ -279,7 +279,7 @@ export function verseBoxesFromParagraphTextLayout(
   return fillVerseBoxesByTextProportion(verseRanges, lines, fullText, boxes);
 }
 
-export function fillVerseBoxesByTextProportion(
+function fillVerseBoxesByTextProportion(
   verseRanges: VerseCharRange[],
   lines: ParagraphTextLine[],
   fullText: string,

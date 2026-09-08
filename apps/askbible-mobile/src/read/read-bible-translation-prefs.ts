@@ -17,7 +17,7 @@ export type ReadBibleTranslationPrefsV1 = {
   audioTranslationId: string | null;
 };
 
-export type ReadBibleTranslationPrefMode = "auto" | "manual";
+type ReadBibleTranslationPrefMode = "auto" | "manual";
 
 export const DEFAULT_READ_BIBLE_TRANSLATION_PREFS: ReadBibleTranslationPrefsV1 = {
   version: 1,
@@ -157,7 +157,7 @@ export async function readReadBibleTranslationPrefs(
 }
 
 /** auto 模式：主译本随 App 界面语言（zh-CN → 和合本；en → 英文译本等） */
-export function resolveReadBibleTranslationPrefsForLocale(
+function resolveReadBibleTranslationPrefsForLocale(
   prefs: ReadBibleTranslationPrefsV1,
   mode: ReadBibleTranslationPrefMode,
   index: BibleTranslationsIndex,

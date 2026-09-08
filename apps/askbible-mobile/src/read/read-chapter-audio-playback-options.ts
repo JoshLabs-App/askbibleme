@@ -7,7 +7,7 @@ import type { AppLocale } from "../i18n/config";
 import { localizeZhText } from "../i18n/site-copy";
 import type { BibleTranslationMeta } from "../bible/translations-types";
 
-export type ChapterAudioPlaybackOption = {
+type ChapterAudioPlaybackOption = {
   id: string;
   label: string;
 };

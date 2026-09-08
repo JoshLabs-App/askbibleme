@@ -32,7 +32,6 @@ type Args = {
   scriptureAudioRepeatRef: MutableRefObject<ScriptureAudioRepeatMode>;
   readChapterRef: MutableRefObject<ReadChapterPlaybackRegistration | null>;
   autoPlayScriptureRef: MutableRefObject<boolean>;
-  scriptureChapterHandoffRef: MutableRefObject<boolean>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scriptureStopAtOnEndedRef: MutableRefObject<(() => void) | null>;
   scripturePlaybackRateRef: MutableRefObject<number>;
@@ -134,7 +133,6 @@ export function useIosNativeScriptureEnded(args: Args): void {
         scriptureAudioRepeatRef: args.scriptureAudioRepeatRef,
         readChapterRef: args.readChapterRef,
         autoPlayScriptureRef: args.autoPlayScriptureRef,
-        scriptureChapterHandoffRef: args.scriptureChapterHandoffRef,
         scriptureWantPlayingRef: args.scriptureWantPlayingRef,
       });
     };

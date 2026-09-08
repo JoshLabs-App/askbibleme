@@ -1,4 +1,4 @@
-export type TranslationSourceTone = "bundled" | "youversion" | "api-bible" | "esv";
+type TranslationSourceTone = "bundled" | "youversion" | "api-bible" | "esv";
 
 type TranslationSourceToneMeta = {
   bundled?: boolean;

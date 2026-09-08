@@ -5,7 +5,7 @@ import { getLocale } from "../i18n/locale-store";
 import { readReadBibleTranslationPrefs } from "./read-bible-translation-prefs";
 import { resolveChapterAudioTranslationId } from "./read-chapter-audio-translation";
 
-export type PlanFlowChapterAudioPrefs = {
+type PlanFlowChapterAudioPrefs = {
   translationId: string;
   voiceId: CuvChapterAudioVoiceId;
 };

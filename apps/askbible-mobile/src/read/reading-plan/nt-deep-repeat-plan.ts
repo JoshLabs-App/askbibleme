@@ -15,7 +15,7 @@ import {
 } from "./nt-deep-repeat-reading";
 import type { ReadingPlanDay, ReadingPlanRange, ReadingPlanRegistryEntry } from "./types";
 
-export const NT_DEEP_REPEAT_OT_CHAPTER_TOTAL = NT_DEEP_REPEAT_OT_BOOK_IDS.reduce((sum, bookId) => {
+const NT_DEEP_REPEAT_OT_CHAPTER_TOTAL = NT_DEEP_REPEAT_OT_BOOK_IDS.reduce((sum, bookId) => {
   const meta = scriptureBooks.find((b) => b.bookId === bookId);
   return sum + (meta?.chapters ?? 0);
 }, 0);

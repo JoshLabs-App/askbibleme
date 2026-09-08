@@ -4,8 +4,12 @@
     读经闹钟（.alarm 一整套：精确闹钟 + 全屏 Activity + 开机自启 + 前奏音服务）已移除。
     Google Play 的 SCHEDULE_EXACT_ALARM 政策只批给闹钟/计时器/日历类应用，圣经应用申请必被拒。
     每日提醒改由 expo-notifications 承担（渠道 importance=HIGH，见 localNotificationScheduler），
-    只需 POST_NOTIFICATIONS，不再需要 SCHEDULE_EXACT_ALARM / RECEIVE_BOOT_COMPLETED /
-    REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 这三个敏感权限。
+    只需 POST_NOTIFICATIONS，不再需要 SCHEDULE_EXACT_ALARM / REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+    这两个敏感权限——被拒的是前者（Play 只批给闹钟/计时器/日历类应用）。
+    RECEIVE_BOOT_COMPLETED 这里不用声明，但它仍在最终包里：expo-notifications 自带该权限与
+    NotificationsService 接收器，开机后由它把 store 里的排程全部重排（ExpoSchedulingDelegate
+    .setupScheduledNotifications），所以重启后每日提醒不会丢。改动权限后用
+    `aapt2 dump permissions <apk>` 看合并结果，不要只看这个文件。
     iOS 的 AskBibleReadingAlarmModule 名字里虽有 Alarm，实为 UNUserNotificationCenter 本地通知，保留。
   -->
   <uses-permission android:name="android.permission.INTERNET"/>

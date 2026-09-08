@@ -91,6 +91,13 @@ data class PlaybackState(
   val verse: StreamState = StreamState(),
   /** 来电 / 通话：全部停播，但不算用户暂停，通话结束应能恢复。 */
   val systemInterrupted: Boolean = false,
+  /**
+   * 上一次锁屏/通知栏暂停键停掉的几路。
+   *
+   * 播放键要恢复的正是这几路，而不是「所有被暂停过的」——否则一条早就被用户单独关掉的流
+   * 会被一起放回来（真机账本：读经播着时按暂停再按播放，音乐也跟着回来了）。
+   */
+  val transportPaused: Set<StreamId> = emptySet(),
 ) {
   operator fun get(id: StreamId): StreamState =
     when (id) {
@@ -160,6 +167,9 @@ sealed interface Intent {
 
   /** 锁屏或通知栏的全局暂停键：当前在响的几路一起停。 */
   data object PauseAll : Intent
+
+  /** 锁屏或通知栏的播放键：恢复上一次 [PauseAll] 停掉的那几路。 */
+  data object ResumeTransport : Intent
 
   /** 睡眠定时器到点。 */
   data object SleepTimerFired : Intent
@@ -250,13 +260,23 @@ fun reduce(state: PlaybackState, intent: Intent): PlaybackState =
 
     is Intent.SystemInterrupt -> state.copy(systemInterrupted = intent.active)
 
-    /** 全局暂停：只暂停此刻在响的，没在响的不必标记，否则下次开播还要先清。 */
+    /** 全局暂停：只暂停此刻在响的，并记下是哪几路，好让播放键原样恢复。 */
     Intent.PauseAll -> {
-      var out = state
-      for (id in state.audibleStreams()) {
+      val paused = state.audibleStreams()
+      var out = state.copy(transportPaused = paused)
+      for (id in paused) {
         out = out.with(id, out[id].copy(userPaused = true))
       }
       out
+    }
+
+    /** 锁屏/通知栏播放键：恢复上次暂停键停掉的那几路。 */
+    Intent.ResumeTransport -> {
+      var out = state.copy(transportPaused = emptySet())
+      for (id in state.transportPaused) {
+        out = reduce(out, Intent.Resume(id))
+      }
+      out.copy(transportPaused = emptySet())
     }
 
     Intent.SleepTimerFired -> {

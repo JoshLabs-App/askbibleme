@@ -91,10 +91,7 @@ object ShellPlaybackSession {
 
   /** 锁屏 / 通知栏的播放键：把用户暂停过的几路放回来。 */
   fun resumeAll() {
-    for (id in StreamId.entries) {
-      val s = PlaybackStore.state[id]
-      if (s.userPaused && s.uri != null) PlaybackStore.dispatch(Intent.Resume(id))
-    }
+    PlaybackStore.dispatch(Intent.ResumeTransport)
   }
 
   fun clear() {

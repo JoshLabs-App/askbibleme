@@ -174,6 +174,28 @@ class PlaybackModelTest {
     assertEquals(setOf(StreamId.MUSIC), s.audibleStreams())
   }
 
+  /**
+   * 播放键只恢复暂停键停掉的那几路。
+   * 真机账本：读经在播（音乐早已被单独关掉），按暂停再按播放，音乐也跟着回来了。
+   */
+  @Test
+  fun `transport resume restores only what transport paused`() {
+    val musicOff = reduce(playMusic(), Intent.Pause(StreamId.MUSIC))
+    val scripture = reduce(musicOff, Intent.Play(StreamId.SCRIPTURE, "GEN-1.mp3"))
+    val paused = reduce(scripture, Intent.PauseAll)
+    val resumed = reduce(paused, Intent.ResumeTransport)
+
+    assertEquals(setOf(StreamId.SCRIPTURE), resumed.audibleStreams())
+  }
+
+  @Test
+  fun `transport resume brings back both mixed streams`() {
+    val both = playVerse(playMusic())
+    val resumed = reduce(reduce(both, Intent.PauseAll), Intent.ResumeTransport)
+
+    assertEquals(setOf(StreamId.MUSIC, StreamId.VERSE), resumed.audibleStreams())
+  }
+
   @Test
   fun `sleep timer stops every stream`() {
     val s = reduce(playVerse(playMusic()), Intent.SleepTimerFired)

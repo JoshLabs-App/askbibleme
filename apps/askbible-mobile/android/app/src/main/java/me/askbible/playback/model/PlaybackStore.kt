@@ -70,6 +70,7 @@ object PlaybackStore {
       is Intent.Ended -> intent.stream.toString()
       is Intent.SystemInterrupt -> intent.active.toString()
       Intent.PauseAll -> ""
+      Intent.ResumeTransport -> ""
       Intent.SleepTimerFired -> ""
     }
 

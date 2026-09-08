@@ -1,3 +1,4 @@
+import { usePlaybackStream } from "../audio/playbackState";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AppState, DeviceEventEmitter, Platform, type AppStateStatus } from "react-native";
 import { createAudioPlayer, type AudioPlayer } from "expo-audio";
@@ -148,7 +149,14 @@ export function useHomeNatureVerseAudioPlayback({
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoResumeUntilRef = useRef(0);
   const notificationPrimeRef = useRef(false);
-  const playGapSilenceRef = useRef<() => Promise<void>>(async () => {});
+  /** 原生这条金句流的当前音轨；界面跟着它走。 */
+  const verseStreamUri = usePlaybackStream("verse").uri;
+
+  const onAdvanceRef = useRef<
+    ((payload?: { nativeChained?: boolean; assetUri?: string }) => void) | null
+  >(null);
+  /** 已经跟随过的原生 URI，避免同一句重复 advance。 */
+  const followedVerseUriRef = useRef<string | null>(null);
   const missingAudioSkipRef = useRef(0);
   /**
    * iOS 原生已接播的下一句 key：play effect 对该 key 只补预取，不 userPlay 重开。
@@ -344,9 +352,6 @@ export function useHomeNatureVerseAudioPlayback({
 
   const unloadCurrentSound = useCallback(async () => {
     flushListeningTime();
-    const sound = soundRef.current;
-    soundRef.current = null;
-    if (sound) await safeStopAndUnloadSound(sound);
   }, [flushListeningTime]);
 
   // true 表示用户主动暂停了传输（区别于句末/间隔等内部状态切换），
@@ -397,44 +402,12 @@ export function useHomeNatureVerseAudioPlayback({
     });
   }, [buildPayload, clearResumeTimer]);
 
-  // 仅 expo-av 路径使用：尝试续播当前 sound；对近结尾/间隔末尾等即将自然切换的
-  // 时刻主动放弃续播，交给状态回调/timer 去推进换句，避免和换句逻辑产生竞态。
-  const tryResumeCurrentSound = useCallback(async () => {
-    if (!activeRef.current) return false;
-    if (transportPausedRef.current) return false;
-    // 用户锁屏暂停会清 wantPlaying；勿再自动顶回去。
-    if (!getShellVerseWantPlaying()) return false;
-    if (phaseRef.current !== "verse" && phaseRef.current !== "gap") return false;
-    const sound = soundRef.current;
-    if (!sound) return false;
-    try {
-      await ensureVerseAudioMode();
-      const st = toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
-      if (!st.isLoaded || st.isPlaying) return st.isLoaded && !!st.isPlaying;
-      if (
-        phaseRef.current === "verse" &&
-        isNearNaturalEnd(st)
-      ) {
-        // 近结尾勿再 resume（含后台）：交给 didJustFinish / reachedEnd 进间隔换句。
-        return false;
-      }
-      if (phaseRef.current === "gap") {
-        const gapMs = Math.max(0, getHomeVerseGapSec()) * 1000;
-        if ((st.positionMillis ?? 0) >= gapMs - 80) return false;
-      }
-      clearShellMediaSessionUserDismissed();
-      const ok = await safePlaySound(sound);
-      if (ok) {
-        autoResumeUntilRef.current = Date.now() + 8_000;
-        setPlaying(true);
-        playingRef.current = true;
-        syncShellMediaSessionExplicit(buildPayload(true, st));
-      }
-      return ok;
-    } catch {
-      return false;
-    }
-  }, [buildPayload]);
+  /**
+   * 续播当前 expo-av sound。金句在两个平台上都走原生轨，soundRef 永远是 null，
+   * 这里恒为 false；保留是因为调用点用它区分「有没有可续播的轨」。
+   */
+  const tryResumeCurrentSound = useCallback(async () => false, []);
+
 
   const scheduleResume = useCallback(() => {
     if (!activeRef.current) return;
@@ -500,161 +473,11 @@ export function useHomeNatureVerseAudioPlayback({
    * 回调会因 phase 相同而"诈活"，用旧的 position/duration 污染新 sound 的状态。
    * 因此必须再确认 soundRef.current 就是这次回调所属的 sound 本身。
    */
-  const attachStatusHandler = useCallback(
-    (sound: AudioPlayer, phase: "verse" | "gap") => {
-      sound.addListener("playbackStatusUpdate", (raw) => {
-        const status = toLegacyPlaybackStatus(raw, sound.volume, sound.muted);
-        if (!status.isLoaded) return;
-        if (phaseRef.current !== phase) return;
-        if (soundRef.current !== sound) return;
-
-        const position = status.positionMillis;
-        const delta = position - lastPositionMillisRef.current;
-        lastPositionMillisRef.current = position;
-
-        if (phase === "verse" && status.isPlaying && delta > 0 && delta < 5000) {
-          unflushedMillisRef.current += delta;
-          if (unflushedMillisRef.current >= 10_000) flushListeningTime();
-        }
-
-        if (status.isPlaying) {
-          clearResumeTimer();
-          autoResumeUntilRef.current = Date.now() + 8_000;
-          setPlaying(true);
-          playingRef.current = true;
-          syncShellMediaSessionExplicit(buildPayload(true, status));
-        }
-
-        if (phase === "verse") {
-          // 后台 / 回桌面后也要能换句：不能只认前台；近结尾也不再靠 resume 顶住。
-          const reachedEnd =
-            !!status.didJustFinish ||
-            (!status.isPlaying &&
-              isNearNaturalEnd(status) &&
-              Date.now() >= autoResumeUntilRef.current);
-
-          if (!status.isPlaying && !reachedEnd) {
-            setPlaying(false);
-            playingRef.current = false;
-            if (
-              activeRef.current &&
-              getShellVerseWantPlaying() &&
-              !verseEndHandledRef.current
-            ) {
-              if (isNearNaturalEnd(status)) {
-                // 已近结尾却未 didJustFinish：直接进间隔，避免后台 suspend 后死循环 resume。
-                verseEndHandledRef.current = true;
-                clearResumeTimer();
-                flushListeningTime();
-                void playGapSilenceRef.current();
-              } else {
-                scheduleResume();
-                syncShellMediaSessionExplicit(buildPayload(true, status));
-              }
-            }
-          }
-
-          if (reachedEnd && !verseEndHandledRef.current) {
-            verseEndHandledRef.current = true;
-            clearResumeTimer();
-            flushListeningTime();
-            // 立刻接静音轨，保持媒体会话一直 playing（不靠 setTimeout）。
-            void playGapSilenceRef.current();
-          }
-          return;
-        }
-
-        // gap phase：墙钟时间为主（防 didJustFinish 过早）；播放进度为辅；另有 timer 兜底。
-        const gapMs = Math.max(0, getHomeVerseGapSec()) * 1000;
-        const elapsed = Math.max(0, Date.now() - gapStartedAtRef.current);
-        const gapDone =
-          (gapMs <= 0 && elapsed >= 0) ||
-          elapsed >= gapMs ||
-          position >= Math.max(0, gapMs - 60);
-
-        if (!status.isPlaying && !gapDone) {
-          setPlaying(false);
-          playingRef.current = false;
-          if (
-            activeRef.current &&
-            getShellVerseWantPlaying() &&
-            !gapEndHandledRef.current
-          ) {
-            scheduleResume();
-            syncShellMediaSessionExplicit(buildPayload(true, status));
-          }
-        }
-
-        if (gapDone) {
-          finishGapAndAdvance();
-        }
-      });
-    },
-    [buildPayload, clearResumeTimer, finishGapAndAdvance, flushListeningTime, scheduleResume],
-  );
-
-  const playGapSilence = useCallback(async () => {
-    if (!activeRef.current) return;
-    phaseRef.current = "gap";
-    gapEndHandledRef.current = false;
-    clearResumeTimer();
-    clearGapTimer();
-    const gapSec = Math.max(0, getHomeVerseGapSec());
-    const gapMs = gapSec * 1000;
-    gapStartedAtRef.current = Date.now();
-
-    // 墙钟兜底：静音轨失败 / 进度回调丢失时仍按设置间隔换句。
-    gapTimerRef.current = setTimeout(() => {
-      gapTimerRef.current = null;
-      if (phaseRef.current === "gap") finishGapAndAdvance();
-    }, Math.max(0, gapMs));
-
-    if (gapSec <= 0) {
-      finishGapAndAdvance();
-      return;
-    }
-
-    try {
-      await ensureVerseAudioMode();
-      const prev = soundRef.current;
-      soundRef.current = null;
-      if (prev) void safeStopAndUnloadSound(prev);
-
-      const sound = createAudioPlayer(GAP_SILENCE_MODULE, { updateInterval: 200 });
-      // 略提高音量，避免部分 Android 把近静音轨当成“可忽略”而立刻结束。
-      sound.volume = 0.05;
-      sound.muted = false;
-      await waitForAudioPlayerLoaded(sound);
-      if (!activeRef.current || phaseRef.current !== "gap") {
-        await safeStopAndUnloadSound(sound);
-        return;
-      }
-      sound.play();
-      soundRef.current = sound;
-      setPlaying(true);
-      playingRef.current = true;
-      autoResumeUntilRef.current = Date.now() + Math.max(8_000, gapMs + 2_000);
-      syncShellMediaSessionExplicit(
-        buildPayload(true, {
-          durationMillis: gapMs,
-          positionMillis: 0,
-        }),
-      );
-      attachStatusHandler(sound, "gap");
-    } catch {
-      // 静音轨失败：保留上面的墙钟 timer，到期再换句（不再立刻跳）。
-    }
-  }, [
-    attachStatusHandler,
-    buildPayload,
-    clearGapTimer,
-    clearResumeTimer,
-    finishGapAndAdvance,
-  ]);
-
-  useEffect(() => {
-    playGapSilenceRef.current = playGapSilence;
-  }, [playGapSilence]);
+  /*
+   * 这里原有 expo-av 的状态回调（attachStatusHandler）和句间静音轨（playGapSilence）。
+   * 两者互为唯一调用方，形成闭环——原生分支一定先 return，没有活的入口。
+   * 句间静默现在由原生按 gapSec 处理（见 StreamPlayer.scheduleNext）。
+   */
 
   useEffect(() => {
     if (!active) {
@@ -849,43 +672,11 @@ export function useHomeNatureVerseAudioPlayback({
           return;
         }
 
-        await ensureVerseAudioMode();
-        const downloadFirst = shellSoundDownloadFirst({ uri: playUri });
-        const sound = createAudioPlayer(
-          { uri: playUri },
-          { updateInterval: 250, downloadFirst },
-        );
-        sound.volume = 1;
-        sound.muted = false;
-        const rawStatus = await waitForAudioPlayerLoaded(sound);
-        if (isStale()) {
-          await safeStopAndUnloadSound(sound);
-          return;
-        }
-        soundRef.current = sound;
-        try {
-          sound.muted = false;
-          sound.volume = 1;
-          if (sound.isLoaded && !sound.playing) {
-            sound.play();
-          }
-        } catch {
-          /* ignore */
-        }
-        setShellVerseWantPlaying(true);
-        setReady(true);
-        setPlaying(true);
-        playingRef.current = true;
-        autoResumeUntilRef.current = Date.now() + 8_000;
-        const legacyStatus = toLegacyPlaybackStatus(rawStatus, sound.volume, sound.muted);
-        syncShellMediaSessionExplicit(buildPayload(true, legacyStatus.isLoaded ? legacyStatus : undefined));
-        void import("../read/reading-habit-stats")
-          .then(({ recordAnyReadingActivityDay }) => recordAnyReadingActivityDay())
-          .catch(() => undefined);
-        attachStatusHandler(sound, "verse");
-        if (__DEV__) {
-          console.warn("[home-golden-verse] play ok", verseKey, playUri);
-        }
+        /*
+         * 上面的原生分支一定会 return——两个平台都走原生轨。
+         * 这里原本是 expo-av 的金句播放路径（建 Sound、等加载、挂状态回调），
+         * 一行都执行不到，已删。留着只会让人以为金句还有第二个播放器。
+         */
       } catch (err) {
         console.warn("[home-golden-verse] play failed", verseKey, err);
         setReady(false);
@@ -955,9 +746,28 @@ export function useHomeNatureVerseAudioPlayback({
         });
       });
     };
+    onAdvanceRef.current = onAdvance;
+    /** 队列见底时原生会发这个事件，请 JS 补下一句。接上了则不发，见 StreamPlayer。 */
     const sub = DeviceEventEmitter.addListener("ShellMediaNativeVerseAdvance", onAdvance);
     return () => sub.remove();
   }, [active, buildPayload, buildVersePostStartSyncPayload, finishGapAndAdvance, flushListeningTime, prefetchNextAssetUris]);
+
+  /**
+   * 原生自己接上下一句时，把界面文案跟过去。
+   *
+   * 原生接句是静默的（不发事件，避免 JS 又去决定一次播放）。文案如果不跟，就会出现
+   * 「音频已经在读提摩太后书，屏幕还停在箴言」——2026-09-08 真机复现，是本次重构引入的。
+   * 句 key 从 URI 里解析，和事件里带的是同一个来源。
+   */
+  useEffect(() => {
+    const uri = verseStreamUri;
+    if (!active || !uri) return;
+    if (uri === followedVerseUriRef.current) return;
+    followedVerseUriRef.current = uri;
+    /** 首次起播由播放 effect 自己设好文案，不必再 advance 一次。 */
+    if (uri === srcRef.current) return;
+    onAdvanceRef.current?.({ nativeChained: true, assetUri: uri });
+  }, [active, verseStreamUri]);
 
   // 原生媒体控制中心「重新开始」手势（如长按/双击）触发的事件；仅 iOS/Android 原生金句
   // 会发出此事件，因为非原生路径直接用 expo-av 的 setPositionAsync 重播即可，无需绕原生总线。
@@ -984,16 +794,7 @@ export function useHomeNatureVerseAudioPlayback({
         forceRestart: true,
         positionSec: 0,
       });
-      const sound = soundRef.current;
-      if (sound) {
-        void (async () => {
-          try {
-            await sound.seekTo(0);
-            await safePlaySound(sound);
-          } catch {
-            /* ignore */
-          }
-        })();
+      {
       }
     };
     const sub = DeviceEventEmitter.addListener("ShellMediaNativeVerseRestart", onRestart);
@@ -1044,45 +845,11 @@ export function useHomeNatureVerseAudioPlayback({
     return () => sub.remove();
   }, [active, buildPayload, buildVersePostStartSyncPayload, flushListeningTime, prefetchNextAssetUris]);
 
-  // 非原生平台的心跳轮询：expo-av 状态回调有时会漏（如 App 从后台恢复），用 900ms
-  // 轮询兜底纠正 playing 状态并尝试自动续播；iOS/Android 原生金句禁用此轮询见下。
-  useEffect(() => {
-    if (!active) return;
-    // 原生金句：禁 900ms 轮询（后台 CPU / 与 MediaPlayer 抢状态）。
-    if (Platform.OS === "ios" || Platform.OS === "android") return;
-    const tick = () => {
-      if (!activeRef.current || !getShellVerseWantPlaying()) return;
-      if (phaseRef.current !== "verse" && phaseRef.current !== "gap") return;
-      void (async () => {
-        const sound = soundRef.current;
-        if (!sound) {
-          if (!playingRef.current) void tryResumeCurrentSound();
-          return;
-        }
-        try {
-          const st = toLegacyPlaybackStatus(sound.currentStatus, sound.volume, sound.muted);
-          if (!st.isLoaded) return;
-          if (st.isPlaying) {
-            playingRef.current = true;
-            autoResumeUntilRef.current = Date.now() + 8_000;
-            const aux = getShellAuxMediaOwner();
-            if (aux?.id === VERSE_MEDIA_OWNER_ID) {
-              const payload = aux.buildPayload();
-              if (payload) syncShellMediaSession(payload);
-            }
-            return;
-          }
-          playingRef.current = false;
-          void tryResumeCurrentSound();
-        } catch {
-          if (!playingRef.current) void tryResumeCurrentSound();
-        }
-      })();
-    };
-    tick();
-    const id = setInterval(tick, 900);
-    return () => clearInterval(id);
-  }, [active, tryResumeCurrentSound]);
+  /*
+   * 这里原有 900ms 心跳轮询，用来兜底 expo-av 漏掉的状态回调。
+   * 它开头就对 iOS/Android 直接 return，两个平台都走原生轨，所以从来没跑过一次。
+   * 原生播放器自己上报进度与结束（见 StreamPlayer），不需要 JS 轮询。
+   */
 
   useEffect(() => {
     return () => {

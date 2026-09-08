@@ -5,7 +5,7 @@ import { SHELL_MUSIC_PAUSE_FOR_AUX } from "../audio/pauseShellMusicForAux";
 import { pauseShellAppMusic } from "../audio/shellMediaControls";
 import { setShellMusicNativePlaying } from "../audio/shellMusicNativePlaying";
 import { getShellMusicWantPlaying, setShellMusicWantPlaying } from "../audio/shellMusicWantPlaying";
-import { isNativeMainTrackOs, setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
+import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import { syncPlaybackWidgetForceIdleMusic } from "../widget/readingAudioWidget";
 import { applyIosNativeScriptureProgress } from "./applyIosNativeScriptureProgress";
 import type { MusicBackgroundRecoveryCtx } from "./musicResumeAfterInterruption";
@@ -134,7 +134,6 @@ export function useMusicNativeTakeover(ctx: Args): void {
 
   // 仅壳层音乐后台时丢掉 JS 侧 expo-av 轨引用（原生引擎继续播）。环境音关屏后不停。
   useEffect(() => {
-    if (!isNativeMainTrackOs()) return;
     const sync = (state: AppStateStatus) => {
       if (state === "active") return;
       if (!getShellMusicWantPlaying()) return;

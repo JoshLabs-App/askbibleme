@@ -1,6 +1,5 @@
 import { getPlaybackSnapshot } from "../audio/playbackState";
 import { useCallback, useRef } from "react";
-import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import {
   logShellSoundError,
   safeGetSoundStatus,
@@ -104,51 +103,9 @@ export function useMusicTogglePlayMusic({
       } else {
         refreshShellMediaSession({ playing: false });
       }
-      if (isNativeMainTrackOs()) {
-        const loadedTrack = tracks[trackIndexRef.current] ?? null;
-        if (loadedTrack) {
-          void persistMusicResume(loadedTrack.id, lastMusicProgressSecRef.current);
-        }
-        return;
-      }
-      try {
-        const sound = soundRef.current;
-        const stBefore = sound ? await safeGetSoundStatus(sound) : null;
-        if (!stillCurrent()) return;
-        const loadedTrack = tracks[trackIndexRef.current] ?? null;
-        if (sound && stBefore?.isLoaded) {
-          const useCalmFade = shouldUseCalmAlbumFade(loadedTrack);
-          if (useCalmFade) {
-            const fromVolume =
-              typeof stBefore.volume === "number" ? stBefore.volume : musicGainRef.current;
-            await fadeSoundVolume(sound, fromVolume, 0, 0);
-            if (!stillCurrent()) return;
-          }
-          await safePauseSound(sound);
-          if (!stillCurrent()) return;
-          if (useCalmFade) {
-            try {
-              sound.volume = musicGainRef.current;
-            } catch {
-              /* ignore restore failures */
-            }
-          }
-          if (loadedTrack) {
-            await persistMusicResume(loadedTrack.id, stBefore.positionMillis / 1000);
-          }
-        }
-        playingStateRef.current = false;
-        setPlaying(false);
-        // 暂停音轨后再确认一次金句主会话（防止中途被 music 进度刷回去）。
-        const auxAfter = getShellAuxMediaOwner();
-        if (auxAfter?.id === "home-golden-verse") {
-          void auxAfter.resume();
-        }
-      } catch (err) {
-        logShellSoundError("togglePlayMusic-pause", err);
-        setShellMusicWantPlaying(false);
-        playingStateRef.current = false;
-        setPlaying(false);
+      const loadedTrack = tracks[trackIndexRef.current] ?? null;
+      if (loadedTrack) {
+        void persistMusicResume(loadedTrack.id, lastMusicProgressSecRef.current);
       }
       return;
     }
@@ -170,8 +127,8 @@ export function useMusicTogglePlayMusic({
       setPlaying(true);
     }
 
-    // iOS / Android：全程原生引擎（带 userPlay）；勿再走 expo-av。
-    if (isNativeMainTrackOs()) {
+    /** 全程原生引擎（带 userPlay）；expo-av 分支已删。 */
+    {
       try {
         await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
         if (!stillCurrent() || !getShellMusicWantPlaying()) return;
@@ -217,134 +174,6 @@ export function useMusicTogglePlayMusic({
         setPlaying(false);
       }
       return;
-    }
-
-    try {
-      await configureShellAudioMode({ force: true });
-      if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-
-      const sound = soundRef.current;
-      const st = sound ? await safeGetSoundStatus(sound) : null;
-      if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-      const loadedTrack = tracks[trackIndexRef.current] ?? null;
-      const musicLoaded = Boolean(
-        loadedTrack && sound && st?.isLoaded && playbackModeRef.current === "music",
-      );
-
-      const playIdx = await syncMusicResumeForManualPlay({
-        tracks,
-        trackIndexRef,
-        resumeTrackIdRef,
-        resumePositionSecRef,
-      });
-      if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-      const resolvedIdx = resolveShellMusicPlayIndex(tracks, playIdx);
-      const playTrack = tracks[resolvedIdx];
-      if (!playTrack || !isTrackPlayable(playTrack)) {
-        setShellMusicWantPlaying(false);
-        playingStateRef.current = false;
-        setPlaying(false);
-        return;
-      }
-      if (isMobileBundledOnly() && !playTrack.localReady && !isTrackPlayable(playTrack)) {
-        setShellMusicWantPlaying(false);
-        playingStateRef.current = false;
-        setPlaying(false);
-        return;
-      }
-
-      const sameLoadedTrack = Boolean(
-        musicLoaded && sound && st?.isLoaded && loadedTrack?.id === playTrack.id,
-      );
-
-      if (
-        canResumeExistingMusicSound({ leavingScripture, sameLoadedTrack }) &&
-        sound &&
-        st?.isLoaded
-      ) {
-        const resumeSec =
-          resumeTrackIdRef.current === playTrack.id
-            ? Math.max(0, resumePositionSecRef.current)
-            : 0;
-        if (resumeSec > 0.5 && (st.positionMillis ?? 0) < 400) {
-          try {
-            await sound.seekTo(resumeSec);
-            lastMusicProgressSecRef.current = resumeSec;
-            setMusicCurrentSec(resumeSec);
-          } catch {
-            /* ignore seek failures; still try play */
-          }
-        }
-        if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-
-        const fadeForPlay = shouldUseCalmAlbumFade(playTrack);
-        if (fadeForPlay) {
-          try {
-            sound.volume = 0;
-          } catch {
-            /* ignore pre-play fade setup failures */
-          }
-        }
-        try {
-          sound.muted = false;
-          if (!fadeForPlay) {
-            sound.volume = musicGainRef.current;
-          }
-        } catch {
-          /* ignore */
-        }
-        const ok = await safePlaySound(sound);
-        if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-        if (ok) {
-          const resumed = await safeGetSoundStatus(sound);
-          const resumedPlaying = !!(resumed && resumed.isLoaded ? resumed.isPlaying : false);
-          if (resumedPlaying) {
-            if (fadeForPlay) {
-              await fadeSoundVolume(sound, 0, musicGainRef.current, 0);
-            } else {
-              try {
-                sound.volume = musicGainRef.current;
-              } catch {
-                /* ignore */
-              }
-            }
-          }
-          if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-          setPlaying(true);
-          const posSec =
-            (resumed?.isLoaded ? resumed.positionMillis : null) ?? st.positionMillis;
-          lastMusicProgressSecRef.current = posSec / 1000;
-          setMusicCurrentSec(posSec / 1000);
-          const durMs =
-            (resumed?.isLoaded ? resumed.durationMillis : null) ?? st.durationMillis;
-          if (durMs != null) {
-            setMusicDurationSec(durMs / 1000);
-          }
-          refreshShellMediaSession({
-            playing: true,
-            musicCurrentSec: posSec / 1000,
-            ...(durMs != null ? { musicDurationSec: durMs / 1000 } : {}),
-          });
-          return;
-        }
-      }
-
-      if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-      await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
-      if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-      const started = await playTrackAt(resolvedIdx);
-      if (!stillCurrent()) return;
-      if (!started || !getShellMusicWantPlaying()) {
-        setShellMusicWantPlaying(false);
-        playingStateRef.current = false;
-        setPlaying(false);
-      }
-    } catch (err) {
-      logShellSoundError("togglePlayMusic", err);
-      if (!stillCurrent()) return;
-      setShellMusicWantPlaying(false);
-      playingStateRef.current = false;
-      setPlaying(false);
     }
   }, [
     lastMusicProgressSecRef,

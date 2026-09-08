@@ -5,7 +5,6 @@ import {
   safeGetSoundStatus,
   safeSeekSoundRatio,
 } from "../audio/safeShellSound";
-import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import { seekShellMediaPosition, setShellMusicVolume } from "../audio/shellMediaControls";
 import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
 import type { MusicPlaybackMode, MusicRepeatMode, ShellSleepTimerMinutes } from "./musicPlaybackTypes";
@@ -75,7 +74,7 @@ export function useMusicShellControls(args: Args) {
 
   const seekRatio = useCallback(async (ratio: number) => {
     const clamped = Math.max(0, Math.min(1, ratio));
-    if (isNativeMainTrackOs()) {
+    {
       const mode = playbackModeRef.current;
       if (mode === "scripture") {
         const dur = scriptureDurationSecRef.current;
@@ -100,21 +99,7 @@ export function useMusicShellControls(args: Args) {
         }
       }
     }
-    const sound = soundRef.current;
-    if (!sound) return;
-    const st = await safeGetSoundStatus(sound);
-    if (!st?.isLoaded || st.durationMillis == null || st.durationMillis <= 0) return;
-    const ok = await safeSeekSoundRatio(sound, clamped);
-    if (!ok) return;
-    const sec = clamped * (st.durationMillis / 1000);
-    if (playbackModeRef.current === "music") {
-      lastMusicProgressSecRef.current = sec;
-      setMusicCurrentSec(sec);
-    } else {
-      publishScripturePlaybackSec(sec);
-      lastScriptureProgressSecRef.current = sec;
-      setScriptureCurrentSec(sec);
-    }
+    /** 跳转一律经原生播放器；expo-av 那条尾巴已删。 */
   }, [
     lastMusicProgressSecRef,
     lastScriptureProgressSecRef,

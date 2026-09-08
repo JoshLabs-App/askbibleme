@@ -23,7 +23,7 @@ import {
   subscribeShellScriptureWantPlaying,
 } from "./shellScriptureWantPlaying";
 import { setShellMusicNativePlaying } from "./shellMusicNativePlaying";
-import { isNativeMainTrackOs, isShellNativeAudioTakeover } from "./shellNativeAudioTakeover";
+import { isShellNativeAudioTakeover } from "./shellNativeAudioTakeover";
 import {
   clearAndroidRemoteMuteSnapshot,
   hasAndroidRemoteMuteSnapshot,
@@ -137,9 +137,7 @@ function buildPlaybackWidgetSnapshot(
   const hasMusic = !!tracks[trackIndex];
   // iOS 黄标只信原生在播；避免 wantPlaying 残留导致停播后仍黄。
   const musicActuallyPlaying =
-    playbackMode === "music" &&
-    playing &&
-    (!isNativeMainTrackOs() || isShellNativeAudioTakeover());
+    playbackMode === "music" && playing;
 
   return {
     nextReading: reading,

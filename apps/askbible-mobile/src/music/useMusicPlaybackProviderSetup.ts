@@ -3,7 +3,6 @@ import { useMusicPlaybackProviderState } from "./useMusicPlaybackProviderState";
 import { useMusicPlaybackRefSync } from "./useMusicPlaybackRefSync";
 import { useMusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import { useMusicPlaybackTracks, useMusicStoreRefSync } from "./useMusicPlaybackTracks";
-import { useMusicDefaultTrackPreload } from "./useMusicDefaultTrackPreload";
 import { useMusicResumePersistence } from "./useMusicResumePersistence";
 import { useMusicSessionTelemetry } from "./useMusicSessionTelemetry";
 import { useMusicShellControls } from "./useMusicShellControls";
@@ -11,10 +10,6 @@ import { useScripturePlaybackPrefs } from "./useScripturePlaybackPrefs";
 
 export function useMusicPlaybackProviderSetup() {
   const refs = useMusicPlaybackRefs();
-  useMusicDefaultTrackPreload({
-    preloadedMusicSoundRef: refs.preloadedMusicSoundRef,
-    preloadedMusicSoundWorkRef: refs.preloadedMusicSoundWorkRef,
-  });
   const state = useMusicPlaybackProviderState();
   const {
     store,

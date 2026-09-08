@@ -15,7 +15,6 @@ import type { MusicRepeatMode } from "./musicPlaybackTypes";
 import type { PlaybackTrack } from "./types";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import { configureShellAudioMode } from "../audio/shellAudioMode";
-import { claimDefaultPreloadedMusicSound } from "./useMusicDefaultTrackPreload";
 import { releaseScriptureShellForMusic } from "./scripturePlaybackPriority";
 import { yieldAmbientIfVerseAndAmbientOpen } from "../home/homeGoldenVerseTwoSourceMutex";
 import { startIosNativeMusicTrack } from "./startIosNativeMusicTrack";
@@ -126,39 +125,10 @@ export function useMusicPlayTrackAt({
         return false;
       }
 
-      let preloadedSound: AudioPlayer | null = null;
-      let preloadedStatus: LegacyPlaybackStatus | null = null;
-      const claimed = claimDefaultPreloadedMusicSound(prepared.track.id);
-      if (claimed) {
-        preloadedSound = claimed.sound;
-        preloadedStatus = claimed.status;
-        bridge.preloadedMusicSoundRef.current = null;
-        bridge.preloadedMusicSoundWorkRef.current = null;
-      } else {
-        const preloaded = bridge.preloadedMusicSoundRef.current;
-        if (preloaded?.trackId === prepared.track.id) {
-          preloadedSound = preloaded.sound;
-          preloadedStatus = preloaded.status;
-          bridge.preloadedMusicSoundRef.current = null;
-          claimDefaultPreloadedMusicSound(prepared.track.id);
-        } else {
-          const pendingPreload = bridge.preloadedMusicSoundWorkRef.current;
-          if (pendingPreload?.trackId === prepared.track.id) {
-            const ready = await pendingPreload.promise;
-            const taken = ready ? claimDefaultPreloadedMusicSound(ready.trackId) : null;
-            if (taken) {
-              bridge.preloadedMusicSoundWorkRef.current = null;
-              preloadedSound = taken.sound;
-              preloadedStatus = taken.status;
-            } else if (ready?.trackId === prepared.track.id) {
-              bridge.preloadedMusicSoundWorkRef.current = null;
-              preloadedSound = ready.sound;
-              preloadedStatus = ready.status;
-            }
-          }
-        }
-      }
-
+      /*
+       * 默认曲目预载已删：它建的是 expo-av Sound，而真机上音频一律由原生播放器出声，
+       * `startDefaultTrackPreload()` 恒返回 null，整条取用逻辑一行都执行不到。
+       */
       endMusicSession();
       const loaded: LoadedMusicTrack = await loadAndStartMusicTrackSound({
         bridge,
@@ -176,8 +146,6 @@ export function useMusicPlayTrackAt({
         setPlaybackMode,
         setMusicCurrentSec,
         setMusicDurationSec,
-        preloadedSound,
-        preloadedStatus,
       });
       if (loaded.ok) return true;
       if (loaded.stale) return false;

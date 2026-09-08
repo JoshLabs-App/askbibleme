@@ -5,8 +5,8 @@ import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 export type MusicPlayTrackBridge = Pick<
   MusicPlaybackRefs,
   | "soundRef"
-  | "preloadedMusicSoundRef"
-  | "preloadedMusicSoundWorkRef"
+  
+  
   | "activeSoundIdRef"
   | "playbackEpochRef"
   | "playbackModeRef"
@@ -54,8 +54,6 @@ export function createMusicPlayTrackBridge(
 ): MusicPlayTrackBridge {
   return {
     soundRef: refs.soundRef,
-    preloadedMusicSoundRef: refs.preloadedMusicSoundRef,
-    preloadedMusicSoundWorkRef: refs.preloadedMusicSoundWorkRef,
     activeSoundIdRef: refs.activeSoundIdRef,
     playbackEpochRef: refs.playbackEpochRef,
     playbackModeRef: refs.playbackModeRef,

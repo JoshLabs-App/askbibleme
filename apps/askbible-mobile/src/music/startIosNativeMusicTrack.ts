@@ -58,8 +58,6 @@ type StartArgs = {
  * 不创建 expo-av Sound，避免双轨与会话污染。
  */
 export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean> {
-  if (!isNativeMainTrackOs()) return false;
-
   const assetUri = await resolveIosNativeMusicAssetUri(args.track);
   if (!assetUri) return false;
 

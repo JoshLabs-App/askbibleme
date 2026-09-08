@@ -127,18 +127,9 @@ export function useMusicShellControls(args: Args) {
   const setMusicGain = useCallback(async (gain: number) => {
     const next = Math.max(0, Math.min(1, Number(gain)));
     musicGainRef.current = next;
-    // 原生主轨（iOS/Android）没有 expo-av sound，音量必须写到原生播放器。
-    if (isNativeMainTrackOs()) setShellMusicVolume(next);
-    const sound = soundRef.current;
-    if (!sound || playbackModeRef.current !== "music") return;
-    const st = await safeGetSoundStatus(sound);
-    if (!st?.isLoaded) return;
-    try {
-      sound.volume = next;
-    } catch (err) {
-      logShellSoundError("setMusicGain", err);
-    }
-  }, [musicGainRef, playbackModeRef, soundRef]);
+    /** 音量写到原生播放器。expo-av 那条回退路径已删——真机上音频一律走原生。 */
+    setShellMusicVolume(next);
+  }, [musicGainRef]);
 
   return {
     musicRepeatMode,

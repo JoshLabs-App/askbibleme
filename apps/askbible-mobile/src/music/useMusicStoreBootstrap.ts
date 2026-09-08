@@ -35,8 +35,6 @@ type Args = {
   setTrackIndex: (index: number) => void;
   setLoading: (loading: boolean) => void;
   soundRef: MutableRefObject<AudioPlayer | null>;
-  preloadedMusicSoundRef: MusicPlaybackRefs["preloadedMusicSoundRef"];
-  preloadedMusicSoundWorkRef: MusicPlaybackRefs["preloadedMusicSoundWorkRef"];
   storeRef: MutableRefObject<MusicCompanionStore | null>;
 };
 
@@ -46,8 +44,6 @@ export function useMusicStoreBootstrap({
   setTrackIndex,
   setLoading,
   soundRef,
-  preloadedMusicSoundRef,
-  preloadedMusicSoundWorkRef,
   storeRef,
 }: Args): void {
   useEffect(() => {
@@ -238,15 +234,11 @@ export function useMusicStoreBootstrap({
       const sound = soundRef.current;
       soundRef.current = null;
       if (sound) void safeStopAndUnloadSound(sound);
-      const preloadedSound = preloadedMusicSoundRef.current?.sound ?? null;
-      preloadedMusicSoundRef.current = null;
-      preloadedMusicSoundWorkRef.current = null;
-      if (preloadedSound && preloadedSound !== sound) void safeStopAndUnloadSound(preloadedSound);
+
+
     };
   }, [
     enabled,
-    preloadedMusicSoundRef,
-    preloadedMusicSoundWorkRef,
     setStore,
     setTrackIndex,
     setLoading,

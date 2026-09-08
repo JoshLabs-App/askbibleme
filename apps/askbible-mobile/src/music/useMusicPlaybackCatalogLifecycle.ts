@@ -56,8 +56,6 @@ export function useMusicPlaybackCatalogLifecycle({
     setTrackIndex,
     setLoading,
     soundRef: refs.soundRef,
-    preloadedMusicSoundRef: refs.preloadedMusicSoundRef,
-    preloadedMusicSoundWorkRef: refs.preloadedMusicSoundWorkRef,
     storeRef: refs.storeRef,
   });
   useAutoMusicPackDownload({ enabled: catalogReady, setStore, setTrackIndex });

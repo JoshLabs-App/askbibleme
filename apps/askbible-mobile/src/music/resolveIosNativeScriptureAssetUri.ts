@@ -38,8 +38,6 @@ export async function resolveIosNativeScriptureAssetUri(args: {
   chapter: number;
   voiceId?: CuvChapterAudioVoiceId;
 }): Promise<string | null> {
-  if (!isNativeMainTrackOs()) return null;
-
   const voiceId = args.voiceId ?? (await readCuvChapterAudioVoice());
   const bundledModule = resolveScriptureBundledModule({
     translationId: args.translationId,

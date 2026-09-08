@@ -42,17 +42,9 @@ export function useScripturePlaybackPrefs({ soundRef, playbackModeRef }: Args) {
     } catch {
       /* ignore local storage write failures */
     }
-    if (isNativeMainTrackOs()) {
-      syncShellMediaPlaybackRate(normalized);
-    }
-    const sound = soundRef.current;
-    if (!sound || playbackModeRef.current !== "scripture") return;
-    try {
-      sound.setPlaybackRate(normalized, "high");
-    } catch (err) {
-      logShellSoundError("setScripturePlaybackRate", err);
-    }
-  }, [playbackModeRef, soundRef]);
+    /** 语速写到原生播放器；expo-av 回退已删。 */
+    syncShellMediaPlaybackRate(normalized);
+  }, []);
 
   useEffect(() => {
     registerPlanFlowEntryCallback(() => {

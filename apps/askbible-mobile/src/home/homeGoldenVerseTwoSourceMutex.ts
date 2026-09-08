@@ -1,4 +1,4 @@
-import { getPlaybackSnapshot } from "../audio/playbackState";
+import { getPlaybackSnapshot, isStreamLit } from "../audio/playbackState";
 import {
   clearNatureAmbientSlot,
   getNatureAmbientSlotId,
@@ -13,18 +13,18 @@ export function setHomeGoldenVerseSessionActive(next: boolean): void {
 
 export function isHomeGoldenVerseAudioOpen(): boolean {
   const verse = getPlaybackSnapshot().verse;
-  return sessionActive || verse.playing || verse.wantPlaying;
+  return sessionActive || isStreamLit(verse);
 }
 
 /** 金句或章朗读：都算「人声」这一路。 */
 export function isHomeVoiceAudible(): boolean {
   const scripture = getPlaybackSnapshot().scripture;
-  return isHomeGoldenVerseAudioOpen() || scripture.playing || scripture.wantPlaying;
+  return isHomeGoldenVerseAudioOpen() || isStreamLit(scripture);
 }
 
 export function isHomeMusicAudible(): boolean {
   const music = getPlaybackSnapshot().music;
-  return music.playing || music.wantPlaying;
+  return isStreamLit(music);
 }
 
 export function isHomeAmbientActive(): boolean {

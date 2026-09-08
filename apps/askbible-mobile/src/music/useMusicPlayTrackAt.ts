@@ -47,8 +47,7 @@ export function useMusicPlayTrackAt({
   musicRepeatModeRef,
   stopScripturePlayback,
 }: Args) {
-  const { playTrackGenerationRef, storeRef, failedTrackIdsRef, playTrackAtRef, playbackModeRef } =
-    bridge;
+  const { playTrackGenerationRef, storeRef, failedTrackIdsRef, playTrackAtRef } = bridge;
 
   return useCallback(
     async (index: number, opts?: { autoPlay?: boolean }) => {
@@ -56,7 +55,7 @@ export function useMusicPlayTrackAt({
       if (opts?.autoPlay !== false) {
         yieldAmbientIfVerseAndAmbientOpen();
       }
-      await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
+      await releaseScriptureShellForMusic(stopScripturePlayback);
       const generation = ++playTrackGenerationRef.current;
 
       const prepared = await prepareMusicTrackForPlay({
@@ -93,7 +92,6 @@ export function useMusicPlayTrackAt({
           setMusicDurationSec,
           persistMusicResume,
           trackIndexRef: bridge.trackIndexRef,
-          playbackModeRef,
           lastMusicProgressSecRef: bridge.lastMusicProgressSecRef,
         });
         if (ok) return true;
@@ -119,7 +117,6 @@ export function useMusicPlayTrackAt({
       persistMusicResume,
       playTrackAtRef,
       playTrackGenerationRef,
-      playbackModeRef,
       setMusicCurrentSec,
       setMusicDurationSec,
       setPlaybackMode,

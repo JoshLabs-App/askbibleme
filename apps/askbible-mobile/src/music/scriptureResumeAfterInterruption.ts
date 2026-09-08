@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
@@ -24,7 +25,6 @@ import { isScriptureChapterHandoffActive } from "./scripturePlaybackPriority";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 
 export type ScriptureResumeCtx = {
-  playbackModeRef: MutableRefObject<"music" | "scripture">;
   soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureWantPlayingRef: MutableRefObject<boolean>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
@@ -101,7 +101,7 @@ function chapterEndFinishArgs(ctx: ScriptureBackgroundRecoveryCtx): ScriptureCha
 export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCtx): Promise<boolean> {
   if (getShellAudioInterrupted()) return false;
   if (!ctx.scriptureWantPlayingRef.current) return false;
-  if (ctx.playbackModeRef.current !== "scripture") return false;
+  if (getShellPlaybackMode() !== "scripture") return false;
   if (ctx.scripturePlayInFlightRef.current) return false;
   if (ctx.scriptureStopAtSecRef.current != null) return false;
 
@@ -141,7 +141,7 @@ async function flushPlanFlowAutoplayRegistration(ctx: ScriptureBackgroundRecover
 export async function watchScriptureChapterEndStall(
   ctx: ScriptureBackgroundRecoveryCtx,
 ): Promise<boolean> {
-  if (ctx.playbackModeRef.current !== "scripture") return false;
+  if (getShellPlaybackMode() !== "scripture") return false;
   if (ctx.scripturePlayInFlightRef.current) return false;
   if (ctx.scriptureStopAtSecRef.current != null) return false;
   if (!wantsScripturePlayback(ctx)) return false;
@@ -185,7 +185,7 @@ export async function recoverScripturePlaybackAfterBackground(
   if (ctx.scriptureStopAtSecRef.current != null) return false;
   if (!wantsScripturePlayback(ctx)) return false;
 
-  if (ctx.playbackModeRef.current !== "scripture") {
+  if (getShellPlaybackMode() !== "scripture") {
     return flushPlanFlowAutoplayRegistration(ctx);
   }
 

@@ -9,7 +9,7 @@ export type MusicPlayTrackBridge = Pick<
   
   | "activeSoundIdRef"
   | "playbackEpochRef"
-  | "playbackModeRef"
+ 
   | "trackIndexRef"
   | "playTrackAtRef"
   | "playTrackGenerationRef"
@@ -32,7 +32,7 @@ export type MusicPlayTrackBridge = Pick<
 export function createScriptureShellBridge(
   refs: Pick<
     MusicPlaybackRefs,
-    "soundRef" | "activeSoundIdRef" | "playbackEpochRef" | "playbackModeRef"
+    "soundRef" | "activeSoundIdRef" | "playbackEpochRef"
   >,
   unloadCurrent: () => Promise<void>,
   endMusicSession: () => void,
@@ -41,7 +41,6 @@ export function createScriptureShellBridge(
     soundRef: refs.soundRef,
     activeSoundIdRef: refs.activeSoundIdRef,
     playbackEpochRef: refs.playbackEpochRef,
-    playbackModeRef: refs.playbackModeRef,
     unloadCurrent,
     endMusicSession,
   };
@@ -55,7 +54,6 @@ export function createMusicPlayTrackBridge(
     soundRef: refs.soundRef,
     activeSoundIdRef: refs.activeSoundIdRef,
     playbackEpochRef: refs.playbackEpochRef,
-    playbackModeRef: refs.playbackModeRef,
     trackIndexRef: refs.trackIndexRef,
     playTrackAtRef: refs.playTrackAtRef,
     playTrackGenerationRef: refs.playTrackGenerationRef,

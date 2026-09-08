@@ -123,3 +123,28 @@ export function usePlaybackSnapshot(): PlaybackSnapshot {
 export function usePlaybackStream(stream: PlaybackStreamId): PlaybackStreamState {
   return usePlaybackSnapshot()[stream];
 }
+
+/**
+ * 主轨此刻是读经还是音乐。
+ *
+ * 以「读经这条流有没有音轨」为准——暂停中的读经仍算 scripture 模式，坞里的续播键
+ * 才不会跳成音乐。同步读取，异步流程里也能用。
+ *
+ * 取代了 `playbackModeRef`：那是个每次渲染都会被覆盖的镜像，中途几处「抢答式」写入
+ * 只能撑到下一次渲染，依赖它的判断本来就不牢靠。
+ */
+export function getShellPlaybackMode(): "music" | "scripture" {
+  return snapshot.scripture.uri ? "scripture" : "music";
+}
+
+/**
+ * 这一路该不该点亮（黄标）。
+ *
+ * 「在响」或「刚点下、还在缓冲」都算亮；**用户按过这一路的暂停就不算**。
+ * 原生的 `wantPlaying` 只表示「起过播、音轨还挂着」，用户暂停后它仍是 true——
+ * 直接拿它点灯就会出现 Josh 报过的「黄着却没声」（2026-09-08 真机：关掉音乐后
+ * 首页音符仍是黄的）。判断只此一处，各处 UI 都调它。
+ */
+export function isStreamLit(stream: PlaybackStreamState): boolean {
+  return stream.playing || (stream.wantPlaying && !stream.userPaused);
+}

@@ -8,6 +8,7 @@ import {
   tryResumeScriptureAfterInterruption,
 } from "./scriptureResumeAfterInterruption";
 import { releaseScriptureUserPause } from "./scriptureUserPause";
+import { applyNativePlaybackState } from "../audio/playbackState";
 
 vi.mock("react-native", () => ({
   Platform: { OS: "ios" },
@@ -31,14 +32,12 @@ import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
 
 function makeCtx(overrides: Partial<ScriptureResumeCtx> = {}): ScriptureResumeCtx {
   const scriptureWantPlayingRef = { current: true };
-  const playbackModeRef = { current: "scripture" as const };
   const soundRef = { current: { play: vi.fn() } as unknown as import("expo-audio").AudioPlayer };
   const scripturePlayInFlightRef = { current: null as Promise<void> | null };
   const scriptureStopAtSecRef = { current: null as number | null };
 
   return {
     scriptureWantPlayingRef,
-    playbackModeRef,
     soundRef,
     scripturePlayInFlightRef,
     scriptureStopAtSecRef,
@@ -79,6 +78,8 @@ describe("tryResumeScriptureAfterInterruption", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     releaseScriptureUserPause();
+    /** 主轨是谁由原生状态回答：读经流上有音轨就是读经模式。 */
+    applyNativePlaybackState({ scripture: { uri: "file:///gen-1.mp3", playing: false } });
   });
 
   it("resumes when user still wants playback and sound is paused mid-chapter", async () => {

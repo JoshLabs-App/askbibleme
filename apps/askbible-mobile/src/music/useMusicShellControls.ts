@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import { useCallback, useRef, type MutableRefObject } from "react";
 import type { AudioPlayer } from "expo-audio";
 import {
@@ -13,7 +14,6 @@ import { useMusicSleepTimerControl } from "./useMusicSleepTimerControl";
 
 type Args = {
   soundRef: MutableRefObject<AudioPlayer | null>;
-  playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   musicGainRef: MutableRefObject<number>;
   musicRepeatModeRef: MutableRefObject<MusicRepeatMode>;
   lastMusicProgressSecRef: MutableRefObject<number>;
@@ -32,7 +32,6 @@ type Args = {
 export function useMusicShellControls(args: Args) {
   const {
     soundRef,
-    playbackModeRef,
     musicGainRef,
     musicRepeatModeRef,
     lastMusicProgressSecRef,
@@ -55,7 +54,6 @@ export function useMusicShellControls(args: Args) {
 
   const { setSleepTimerMinutes, pauseShellPlayback } = useMusicSleepTimerControl({
     soundRef,
-    playbackModeRef,
     sleepTimerDeadlineRef,
     sleepTimerMinutes,
     setSleepTimerMinutesState,
@@ -69,7 +67,7 @@ export function useMusicShellControls(args: Args) {
   const seekRatio = useCallback(async (ratio: number) => {
     const clamped = Math.max(0, Math.min(1, ratio));
     {
-      const mode = playbackModeRef.current;
+      const mode = getShellPlaybackMode();
       if (mode === "scripture") {
         const dur = scriptureDurationSecRef.current;
         if (dur > 0.05) {
@@ -97,7 +95,6 @@ export function useMusicShellControls(args: Args) {
   }, [
     lastMusicProgressSecRef,
     lastScriptureProgressSecRef,
-    playbackModeRef,
     setMusicCurrentSec,
     setScriptureCurrentSec,
     soundRef,

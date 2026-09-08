@@ -37,6 +37,16 @@ check() { # check <说明> <期望正则>
   else printf "  ✗ %s\n     期望匹配: %s\n" "$1" "$2"; FAIL=$((FAIL+1)); fi
 }
 
+# 图标黄没黄。日志说不了这件事——「黄着却没声」正是 Josh 报过的 bug，
+# 只有数屏幕上的黄色像素才能发现。
+icon_lit() { # icon_lit <截图名> <说明> <x> <y> <期望 lit|dark>
+  adb -s "$DEVICE" exec-out screencap -p > "$OUT/$1.png"
+  local got
+  got=$(python3 scripts/icon-lit.py "$OUT/$1.png" "$3" "$4")
+  if [ "$got" = "$5" ]; then printf "  ✓ %s（图标 %s）\n" "$2" "$got"; PASS=$((PASS+1));
+  else printf "  ✗ %s：图标应为 %s，实为 %s\n" "$2" "$5" "$got"; FAIL=$((FAIL+1)); fi
+}
+
 check_screen() { # check_screen <说明> <裁剪区域 l,t,r,b> <期望文字>
   python3 - "$OUT/$1.png" "$2" "$3" "$1" <<'PY'
 import subprocess, sys
@@ -74,10 +84,15 @@ say "2 金句叠在音乐上（两路同响）"
 tap "$TAP_VERSE" 9
 check "音乐与金句同响" "audible=\[MUSIC, VERSE\]"
 shot 2-both-icons
+icon_lit 2-icons "两个图标都黄" ${TAP_MUSIC% *} ${TAP_MUSIC#* } lit
 
 say "3 关音乐，金句要继续"
 tap "$TAP_MUSIC" 8
 check "只剩金句" "Pause MUSIC -> audible=\[VERSE\]"
+# 关掉音乐后音符必须暗下来：原生的 wantPlaying 暂停后仍为 true，
+# 界面若直接拿它点灯就会「黄着却没声」（2026-09-08 复现）。
+icon_lit 3-music-off "音符已暗" ${TAP_MUSIC% *} ${TAP_MUSIC#* } dark
+icon_lit 3-verse-on "喇叭仍黄" ${TAP_VERSE% *} ${TAP_VERSE#* } lit
 
 say "4 金句自动接句（40 秒，含 5 秒间隔）"
 adb -s "$DEVICE" logcat -c; sleep 40

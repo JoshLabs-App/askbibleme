@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import { useCallback, type MutableRefObject } from "react";
 import { pickRandomNextTrackIndexInAlbum } from "./musicCalmPlayback";
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
@@ -6,7 +7,6 @@ import type { PlaybackTrack } from "./types";
 import { scriptureCommandSkipNext, scriptureCommandSkipPrev } from "./scriptureCommands";
 
 type Args = {
-  playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   trackIndexRef: MutableRefObject<number>;
   tracks: PlaybackTrack[];
   tracksLength: number;
@@ -16,7 +16,6 @@ type Args = {
 };
 
 export function useMusicPlayNavigation({
-  playbackModeRef,
   trackIndexRef,
   tracks,
   tracksLength,
@@ -25,7 +24,7 @@ export function useMusicPlayNavigation({
   resolveActiveReadChapter,
 }: Args) {
   const playNext = useCallback(async () => {
-    if (playbackModeRef.current === "scripture") {
+    if (getShellPlaybackMode() === "scripture") {
       // 运输层命令：池优先，否则 playing 注册回调（非 browse）。
       const ok = await scriptureCommandSkipNext();
       if (!ok) resolveActiveReadChapter()?.onAdvanceNextChapter();
@@ -35,7 +34,6 @@ export function useMusicPlayNavigation({
     // 始终留在当前专辑内换曲；跨专辑只允许用户在音乐栏主动切换。
     await playTrackAt(pickRandomNextTrackIndexInAlbum(tracks, index, tracksLength));
   }, [
-    playbackModeRef,
     playTrackAt,
     resolveActiveReadChapter,
     trackIndexRef,
@@ -44,13 +42,13 @@ export function useMusicPlayNavigation({
   ]);
 
   const playPrev = useCallback(async () => {
-    if (playbackModeRef.current === "scripture") {
+    if (getShellPlaybackMode() === "scripture") {
       const ok = await scriptureCommandSkipPrev();
       if (!ok) resolveActiveReadChapter()?.onAdvancePreviousChapter();
       return;
     }
     await playTrackAt(trackIndexRef.current - 1);
-  }, [playTrackAt, playbackModeRef, resolveActiveReadChapter, trackIndexRef]);
+  }, [playTrackAt, resolveActiveReadChapter, trackIndexRef]);
 
   return { playNext, playPrev };
 }

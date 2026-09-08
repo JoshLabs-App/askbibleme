@@ -54,12 +54,10 @@ export function useMusicPlaybackProviderSetup() {
 
   const scripturePrefs = useScripturePlaybackPrefs({
     soundRef: refs.soundRef,
-    playbackModeRef: refs.playbackModeRef,
   });
 
   const shellControls = useMusicShellControls({
     soundRef: refs.soundRef,
-    playbackModeRef: refs.playbackModeRef,
     musicGainRef: refs.musicGainRef,
     musicRepeatModeRef: refs.musicRepeatModeRef,
     lastMusicProgressSecRef: refs.lastMusicProgressSecRef,

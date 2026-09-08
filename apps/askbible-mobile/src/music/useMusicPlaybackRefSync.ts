@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import type { MusicPlaybackMode, MusicRepeatMode } from "./musicPlaybackTypes";
 import type { useMusicPlaybackRefs } from "./useMusicPlaybackRefs";
 
@@ -18,6 +19,5 @@ export function useMusicPlaybackRefSync(
   },
 ): void {
   refs.trackIndexRef.current = state.trackIndex;
-  refs.playbackModeRef.current = state.playbackMode;
   refs.musicRepeatModeRef.current = state.musicRepeatMode;
 }

@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { applyNativePlaybackState } from "../audio/playbackState";
 import {
   clearScriptureChapterHandoff,
   isScripturePlaybackProtected,
@@ -6,11 +7,9 @@ import {
   releaseScriptureShellForMusic,
   type ScripturePriorityRefs,
 } from "./scripturePlaybackPriority";
-import type { MutableRefObject } from "react";
 
 function makeRefs(overrides: Partial<ScripturePriorityRefs> = {}): ScripturePriorityRefs {
   return {
-    playbackModeRef: { current: "scripture" as const },
     scriptureWantPlayingRef: { current: true },
     scripturePlayInFlightRef: { current: null as Promise<void> | null },
     autoPlayScriptureRef: { current: false },
@@ -19,28 +18,39 @@ function makeRefs(overrides: Partial<ScripturePriorityRefs> = {}): ScripturePrio
   };
 }
 
+/** 主轨是谁由原生说了算：读经这条流有没有音轨。 */
+function nativeScriptureUri(uri: string | null): void {
+  applyNativePlaybackState({ scripture: { uri, playing: uri != null } });
+}
+
 describe("scripturePlaybackPriority", () => {
+  beforeEach(() => nativeScriptureUri(null));
+
   it("stops scripture when user starts music", async () => {
-    const playbackModeRef: MutableRefObject<"music" | "scripture"> = { current: "scripture" };
-    const stop = vi.fn(async () => {
-      playbackModeRef.current = "music";
-    });
-    await releaseScriptureShellForMusic(playbackModeRef, stop);
+    nativeScriptureUri("file:///cache/cuv/GEN-1.mp3");
+    const stop = vi.fn(async () => nativeScriptureUri(null));
+    await releaseScriptureShellForMusic(stop);
     expect(stop).toHaveBeenCalledTimes(1);
   });
 
   it("skips stop when shell is already in music mode", async () => {
-    const playbackModeRef: MutableRefObject<"music" | "scripture"> = { current: "music" };
     const stop = vi.fn(async () => {});
-    await releaseScriptureShellForMusic(playbackModeRef, stop);
+    await releaseScriptureShellForMusic(stop);
     expect(stop).not.toHaveBeenCalled();
   });
 
   it("detects protected scripture session during handoff", () => {
+    nativeScriptureUri("file:///cache/cuv/GEN-1.mp3");
     const refs = makeRefs({ scriptureWantPlayingRef: { current: false } });
     markScriptureChapterHandoff(refs.scriptureChapterHandoffRef);
     expect(isScripturePlaybackProtected(refs)).toBe(true);
     clearScriptureChapterHandoff(refs.scriptureChapterHandoffRef);
+    expect(isScripturePlaybackProtected(refs)).toBe(false);
+  });
+
+  /** 读经流上没有音轨时，保护无从谈起——否则音乐永远抢不到主轨。 */
+  it("is not protected when native holds no scripture track", () => {
+    const refs = makeRefs();
     expect(isScripturePlaybackProtected(refs)).toBe(false);
   });
 });

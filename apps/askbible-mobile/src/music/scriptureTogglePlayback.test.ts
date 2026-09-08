@@ -124,12 +124,15 @@ import {
   toggleScripturePlayback,
 } from "./scriptureTogglePlayback";
 import { releaseScriptureUserPause } from "./scriptureUserPause";
+import { applyNativePlaybackState } from "../audio/playbackState";
 
 describe("toggleScripturePlayback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getPlanFlowUiHost.mockReturnValue("chapter");
     releaseScriptureUserPause();
+    /** 主轨是谁由原生状态回答：读经流上有音轨就是读经模式。 */
+    applyNativePlaybackState({ scripture: { uri: "file:///mat-8.mp3", playing: true } });
   });
 
   it("force-pauses scripture without unloading the sound", async () => {
@@ -137,7 +140,6 @@ describe("toggleScripturePlayback", () => {
       soundRef: { current: null },
       activeSoundIdRef: { current: 0 },
       playbackEpochRef: { current: 0 },
-      playbackModeRef: { current: "scripture" },
       unloadCurrent: vi.fn(async () => {}),
       endMusicSession: vi.fn(),
       readChapter: {
@@ -183,7 +185,6 @@ describe("toggleScripturePlayback", () => {
   it("pauseScriptureShellPlayback clears replay intent when sound is missing", async () => {
     const ctx = {
       soundRef: { current: null },
-      playbackModeRef: { current: "scripture" },
       autoPlayScriptureRef: { current: true },
       scriptureWantPlayingRef: { current: true },
     };
@@ -207,7 +208,6 @@ describe("toggleScripturePlayback", () => {
     const sound = { id: "music-sound" };
     const ctx = {
       soundRef: { current: sound },
-      playbackModeRef: { current: "music" },
       autoPlayScriptureRef: { current: true },
       scriptureWantPlayingRef: { current: true },
       setScripturePreparing: vi.fn(),
@@ -259,7 +259,6 @@ describe("toggleScripturePlayback", () => {
       soundRef: { current: sound },
       activeSoundIdRef: { current: 1 },
       playbackEpochRef: { current: 1 },
-      playbackModeRef: { current: "scripture" },
       unloadCurrent,
       endMusicSession: vi.fn(),
       readChapter: null,
@@ -333,7 +332,6 @@ describe("toggleScripturePlayback", () => {
       soundRef: { current: null },
       activeSoundIdRef: { current: 1 },
       playbackEpochRef: { current: 1 },
-      playbackModeRef: { current: "scripture" },
       unloadCurrent: vi.fn(async () => {}),
       endMusicSession: vi.fn(),
       readChapter: null,

@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import type { MutableRefObject } from "react";
 import type { AudioPlayer } from "expo-audio";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
@@ -15,15 +16,14 @@ export function isScripturePlayAttemptCurrent(seq: number): boolean {
 }
 
 export function isScripturePlaybackBusy(args: {
-  playbackModeRef: MutableRefObject<"music" | "scripture">;
   soundRef: MutableRefObject<AudioPlayer | null>;
   scripturePlayInFlightRef: MutableRefObject<Promise<void> | null>;
 }): boolean {
   if (args.scripturePlayInFlightRef.current) return true;
-  if (args.playbackModeRef.current === "scripture" && args.soundRef.current != null) return true;
+  if (getShellPlaybackMode() === "scripture" && args.soundRef.current != null) return true;
   // 原生读经：无 expo-av Sound，wantPlaying 即视为占用。
   if (
-    args.playbackModeRef.current === "scripture" &&
+    getShellPlaybackMode() === "scripture" &&
     getShellScriptureWantPlaying()
   ) {
     return true;

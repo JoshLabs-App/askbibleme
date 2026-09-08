@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import type { MutableRefObject } from "react";
 import { configureScriptureShellAudioMode } from "../audio/shellAudioMode";
 import {
@@ -96,7 +97,7 @@ export async function loadAndPlayScriptureSound({
   unloadCurrent,
   skipInitialUnload = false,
 }: Args): Promise<ScriptureSoundLoadResult> {
-  const { soundRef, playbackEpochRef, playbackModeRef } = bridge;
+  const { soundRef, playbackEpochRef } = bridge;
   const t0 = Date.now();
   const intendedChapter = readChapterRef.current
     ? {
@@ -117,9 +118,8 @@ export async function loadAndPlayScriptureSound({
   }
   const epoch = playbackEpochRef.current;
 
-  const leavingMusic = playbackModeRef.current !== "scripture";
+  const leavingMusic = getShellPlaybackMode() !== "scripture";
   setPlaybackMode("scripture");
-  playbackModeRef.current = "scripture";
   // 从音乐切到读经时清掉音乐意图；章间接力时不要 pause 正在用的 soundRef。
   if (leavingMusic) {
     pauseShellMusicForAux("scripture");
@@ -236,7 +236,6 @@ export async function loadAndPlayScriptureSound({
   setScripturePreparing(false);
   if (!soundRef.current) {
     setPlaybackMode("music");
-    playbackModeRef.current = "music";
     clearScripturePlayingChapter();
   }
   if (__DEV__) {

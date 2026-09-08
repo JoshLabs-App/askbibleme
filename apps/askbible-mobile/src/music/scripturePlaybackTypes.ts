@@ -27,7 +27,6 @@ export type ScriptureShellPlaybackBridge = {
   soundRef: MutableRefObject<AudioPlayer | null>;
   activeSoundIdRef: MutableRefObject<number>;
   playbackEpochRef: MutableRefObject<number>;
-  playbackModeRef: MutableRefObject<ShellPlaybackMode>;
   unloadCurrent: () => Promise<void>;
   endMusicSession: () => void;
 };

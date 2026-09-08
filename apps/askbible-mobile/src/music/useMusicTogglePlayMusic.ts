@@ -1,4 +1,4 @@
-import { getPlaybackSnapshot } from "../audio/playbackState";
+import { getPlaybackSnapshot, getShellPlaybackMode } from "../audio/playbackState";
 import { useCallback, useRef } from "react";
 import {
   logShellSoundError,
@@ -63,7 +63,6 @@ export function useMusicTogglePlayMusic({
 }: Args) {
   const {
     soundRef,
-    playbackModeRef,
     trackIndexRef,
     lastMusicProgressSecRef,
     musicGainRef,
@@ -81,7 +80,7 @@ export function useMusicTogglePlayMusic({
     // 含原生实播：JS 标志被清但 AVPlayer 仍在出声时，点图标应暂停而非再 play。
     // 读经与音乐共用 playing / soundRef：暂停只认音乐模式，避免首页音乐键去停章朗读。
     const leavingScripture =
-      playbackModeRef.current === "scripture" || getShellScriptureWantPlaying();
+      getShellPlaybackMode() === "scripture" || getShellScriptureWantPlaying();
     const musicUiPlaying = isMusicTogglePauseIntent({
       musicPlaying: getPlaybackSnapshot().music.playing,
     });
@@ -106,21 +105,19 @@ export function useMusicTogglePlayMusic({
 
     clearShellMediaSessionUserDismissed();
     setShellMusicWantPlaying(true);
-    playbackModeRef.current = "music";
     setPlaybackMode("music");
     yieldAmbientIfVerseAndAmbientOpen();
 
     if (leavingScripture) {
       await stopScripturePlayback();
       if (!stillCurrent() || !getShellMusicWantPlaying()) return;
-      playbackModeRef.current = "music";
       setPlaybackMode("music");
     }
 
     /** 全程原生引擎（带 userPlay）；expo-av 分支已删。 */
     {
       try {
-        await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
+        await releaseScriptureShellForMusic(stopScripturePlayback);
         if (!stillCurrent() || !getShellMusicWantPlaying()) return;
         // 勿裸 resume：金句/读经后 contentKind 仍可能是 verse/scripture，
         // resume 会续错轨；一律 playTrackAt 重新 apply 音乐 payload。
@@ -162,7 +159,6 @@ export function useMusicTogglePlayMusic({
     musicGainRef,
     persistMusicResume,
     playTrackAt,
-    playbackModeRef,
     playing,
     resumePositionSecRef,
     resumeTrackIdRef,

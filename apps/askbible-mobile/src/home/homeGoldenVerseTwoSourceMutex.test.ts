@@ -8,7 +8,8 @@ const flags = vi.hoisted(() => ({
   ambientSlot: "" as string,
 }));
 
-vi.mock("../audio/playbackState", () => ({
+vi.mock("../audio/playbackState", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../audio/playbackState")>()),
   getPlaybackSnapshot: () => ({
     music: { playing: flags.musicPlaying, wantPlaying: flags.musicPlaying },
     verse: { playing: flags.versePlaying, wantPlaying: flags.versePlaying },

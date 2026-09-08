@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import { NativeModules, Platform } from "react-native";
@@ -177,9 +178,8 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
   const canTogglePlayback = resolveCanTogglePlayback(tracks, readChapterAudioAvailable);
 
   const ensureShellPlaybackActive = useCallback(async () => {
-    if (refs.playbackModeRef.current === "music" || getShellMusicWantPlaying()) {
+    if (getShellPlaybackMode() === "music" || getShellMusicWantPlaying()) {
       const recovered = await recoverMusicPlaybackAfterBackground({
-        playbackModeRef: refs.playbackModeRef,
         soundRef: refs.soundRef,
         musicGainRef: refs.musicGainRef,
       });
@@ -190,7 +190,7 @@ export function useMusicPlaybackProvider(): MusicPlaybackContextValue {
       }
       return;
     }
-    if (refs.playbackModeRef.current === "scripture") {
+    if (getShellPlaybackMode() === "scripture") {
       if (isScriptureUserPauseHeld()) return;
       if (getShellScriptureWantPlaying() || playing) {
         resumeShellAppMusic();

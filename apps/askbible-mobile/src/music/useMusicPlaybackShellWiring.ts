@@ -129,7 +129,6 @@ export function useMusicPlaybackShellWiring(args: Args) {
   });
 
   const { playNext, playPrev } = useMusicPlayNavigation({
-    playbackModeRef: refs.playbackModeRef,
     trackIndexRef: refs.trackIndexRef,
     tracks,
     tracksLength: tracks.length,

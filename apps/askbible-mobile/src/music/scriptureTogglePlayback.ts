@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 import {
   clearShellMediaSessionUserDismissed,
@@ -56,7 +57,7 @@ export async function pauseScriptureShellPlayback(
   ctx: Pick<
     ChapterPlaybackCtx,
     | "soundRef"
-    | "playbackModeRef"
+   
     | "scriptureWantPlayingRef"
     | "autoPlayScriptureRef"
    
@@ -71,7 +72,7 @@ export async function pauseScriptureShellPlayback(
   clearScriptureResumeTimer();
   setScripturePlaybackClockPlaying(false);
   // 音乐与读经共用 soundRef / setPlaying：仅读经模式才停轨，避免点金句误关音乐。
-  if (ctx.playbackModeRef.current !== "scripture") {
+  if (getShellPlaybackMode() !== "scripture") {
     return;
   }
   // 先更新 UI，避免等 AsyncStorage / 落盘时「点了暂停没反应」
@@ -153,7 +154,7 @@ export async function toggleScripturePlayback(
     // 仅当「实际音轨章」与目标章一致时才快速 pause/resume。
     // 计划暂停后浏览其它章时 readChapterRef 已变，但 sound 仍是计划章——勿误续播。
     const canQuickToggleLoadedSession =
-      ctx.playbackModeRef.current === "scripture" &&
+      getShellPlaybackMode() === "scripture" &&
       Boolean(ctx.scriptureSrcRef.current) &&
       isSameScriptureChapter(playingChapter, desiredChapter);
 
@@ -236,7 +237,7 @@ export async function toggleScripturePlayback(
 
     ctx.patchReadChapterSrc?.(scriptureSrc);
     const sameScripture =
-      ctx.playbackModeRef.current === "scripture" &&
+      getShellPlaybackMode() === "scripture" &&
       ctx.scriptureSrcRef.current &&
       scriptureAudioUrlsEqual(ctx.scriptureSrcRef.current, scriptureSrc);
 
@@ -249,7 +250,7 @@ export async function toggleScripturePlayback(
       return;
     }
 
-    if (ctx.playbackModeRef.current !== "scripture") {
+    if (getShellPlaybackMode() !== "scripture") {
       clearShellMediaSessionUserDismissed();
       markScriptureWantPlaying(ctx.scriptureWantPlayingRef, true);
       const ok = await ctx.tryPlayScriptureWithFallback(rc, scriptureSrc);

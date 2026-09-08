@@ -39,7 +39,6 @@ describe("recoverMusicPlaybackAfterBackground", () => {
     interruption.getShellAudioInterrupted.mockReturnValue(true);
     const playAsync = vi.fn();
     const ok = await recoverMusicPlaybackAfterBackground({
-      playbackModeRef: { current: "music" },
       soundRef: { current: { playAsync } as never },
       musicGainRef: { current: 1 },
     });

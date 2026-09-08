@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import type { AudioPlayer } from "expo-audio";
 import type { MutableRefObject } from "react";
 import { safeGetSoundStatus, safePlaySound } from "../audio/safeShellSound";
@@ -7,7 +8,6 @@ import { getShellAudioInterrupted } from "../audio/shellAudioInterruption";
 import { isShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
 
 export type MusicBackgroundRecoveryCtx = {
-  playbackModeRef: MutableRefObject<"music" | "scripture">;
   soundRef: MutableRefObject<AudioPlayer | null>;
   musicGainRef: MutableRefObject<number>;
 };
@@ -18,7 +18,7 @@ export type MusicBackgroundRecoveryCtx = {
 export async function recoverMusicPlaybackAfterBackground(
   ctx: MusicBackgroundRecoveryCtx,
 ): Promise<boolean> {
-  if (ctx.playbackModeRef.current !== "music") return false;
+  if (getShellPlaybackMode() !== "music") return false;
   // 只认用户意图：点暂停后 wantPlaying=false；勿用 playingStateRef（渲染同步会短暂刷回 true 导致又续播）。
   if (!getShellMusicWantPlaying()) return false;
   if (getShellAudioInterrupted()) return false;

@@ -15,7 +15,6 @@ import type { MusicPlaybackMode } from "./musicPlaybackTypes";
 
 type Args = {
   soundRef: MutableRefObject<AudioPlayer | null>;
-  playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   sleepTimerDeadlineRef: MutableRefObject<number | null>;
   sleepTimerMinutes: 0 | ShellSleepTimerMinutes;
   setSleepTimerMinutesState: (minutes: 0 | ShellSleepTimerMinutes) => void;

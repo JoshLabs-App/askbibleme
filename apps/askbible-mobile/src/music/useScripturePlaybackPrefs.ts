@@ -14,10 +14,9 @@ import type { AudioPlayer } from "expo-audio";
 
 type Args = {
   soundRef: MutableRefObject<AudioPlayer | null>;
-  playbackModeRef: MutableRefObject<MusicPlaybackMode>;
 };
 
-export function useScripturePlaybackPrefs({ soundRef, playbackModeRef }: Args) {
+export function useScripturePlaybackPrefs({ soundRef }: Args) {
   const [scriptureAudioRepeatMode, setScriptureAudioRepeatModeState] =
     useState<ScriptureAudioRepeatMode>("off");
   const [scripturePlaybackRate, setScripturePlaybackRateState] = useState(1);

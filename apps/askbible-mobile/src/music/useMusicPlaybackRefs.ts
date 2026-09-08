@@ -9,7 +9,6 @@ export function useMusicPlaybackRefs() {
   const sleepTimerDeadlineRef = useRef<number | null>(null);
   const activeSoundIdRef = useRef(0);
   const playbackEpochRef = useRef(0);
-  const playbackModeRef = useRef<MusicPlaybackMode>("music");
   const trackIndexRef = useRef(0);
   const playTrackAtRef = useRef<(index: number, opts?: { autoPlay?: boolean }) => Promise<boolean>>(async () => false);
   const lastMusicProgressSecRef = useRef(-1);
@@ -36,7 +35,6 @@ export function useMusicPlaybackRefs() {
       sleepTimerDeadlineRef,
       activeSoundIdRef,
       playbackEpochRef,
-      playbackModeRef,
       trackIndexRef,
       playTrackAtRef,
       lastMusicProgressSecRef,
@@ -61,7 +59,6 @@ export function useMusicPlaybackRefs() {
       sleepTimerDeadlineRef,
       activeSoundIdRef,
       playbackEpochRef,
-      playbackModeRef,
       trackIndexRef,
       playTrackAtRef,
       lastMusicProgressSecRef,

@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import { scriptureAudioUrlsEqual } from "../bible/cuv-chapter-audio";
 import { logShellSoundError } from "../audio/safeShellSound";
 import {
@@ -121,7 +122,7 @@ export function registerReadChapterPlayback(
     prevBrowse.chapter === reg.chapter &&
     prevBrowse.translationId === reg.translationId &&
     shellSrcMatchesReg &&
-    ctx.playbackModeRef.current === "scripture" &&
+    getShellPlaybackMode() === "scripture" &&
     ctx.isStarted()
   ) {
     return;

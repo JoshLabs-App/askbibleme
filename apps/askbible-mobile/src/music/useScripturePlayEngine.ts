@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import { useCallback } from "react";
 import type { MutableRefObject } from "react";
 import { setShellNativeAudioTakeover } from "../audio/shellNativeAudioTakeover";
@@ -52,13 +53,13 @@ export function useScripturePlayEngine({
   scriptureAudioRepeatRef,
   lastScriptureProgressSecRef,
 }: Args) {
-  const { playbackModeRef, unloadCurrent, endMusicSession } = bridge;
+  const { unloadCurrent, endMusicSession } = bridge;
   const refs = useScripturePlayEngineRefs();
   const { scriptureSrcRef } = refs;
 
   const isStarted = useCallback(
-    () => isScripturePlaybackStarted({ playbackModeRef, soundRef: bridge.soundRef, scriptureSrcRef }),
-    [bridge.soundRef, playbackModeRef, scriptureSrcRef],
+    () => isScripturePlaybackStarted({ soundRef: bridge.soundRef, scriptureSrcRef }),
+    [bridge.soundRef, scriptureSrcRef],
   );
 
   useIosNativeScriptureEnded({
@@ -115,11 +116,9 @@ export function useScripturePlayEngine({
     clearScripturePlayingChapter();
     clearPlayingReadChapterPlayback();
     setPlaybackMode("music");
-    playbackModeRef.current = "music";
   }, [
     endMusicSession,
     lastScriptureProgressSecRef,
-    playbackModeRef,
     refs.scriptureChapterEndHandledRef,
     refs.scriptureLastProgressAtRef,
     refs.scriptureLastProgressMsRef,
@@ -190,13 +189,12 @@ export function useScripturePlayEngine({
         playingReg: playingReg !== undefined ? playingReg : readChapterRef.current,
         isBusy: () =>
           isScripturePlaybackBusy({
-            playbackModeRef,
             soundRef: bridge.soundRef,
             scripturePlayInFlightRef: refs.scripturePlayInFlightRef,
           }),
       });
     },
-    [bridge.soundRef, isStarted, patchReadChapterSrc, playbackModeRef, playScripture, readChapterRef, refs.scripturePlayInFlightRef],
+    [bridge.soundRef, isStarted, patchReadChapterSrc, playScripture, readChapterRef, refs.scripturePlayInFlightRef],
   );
 
   return {

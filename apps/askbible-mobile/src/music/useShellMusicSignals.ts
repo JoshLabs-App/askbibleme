@@ -1,7 +1,12 @@
 import { getPlaybackSnapshot, usePlaybackStream } from "../audio/playbackState";
 
 export type ShellMusicSignals = {
-  /** 用户意图：点过播放且未主动停。 */
+  /**
+   * 用户意图仍然成立：点过播放，且没有按过音乐这一路的暂停。
+   *
+   * 原生的 `wantPlaying` 只说明「起过播、音轨还挂着」，用户暂停后仍是 true；
+   * 拿它点灯就会「黄着却没声」，所以这里先减掉 userPaused 再交给界面。
+   */
   wantPlaying: boolean;
   /** 此刻真的在出声。 */
   nativePlaying: boolean;
@@ -15,7 +20,7 @@ export type ShellMusicSignals = {
  */
 export function useShellMusicSignals(): ShellMusicSignals {
   const music = usePlaybackStream("music");
-  return { wantPlaying: music.wantPlaying, nativePlaying: music.playing };
+  return { wantPlaying: music.wantPlaying && !music.userPaused, nativePlaying: music.playing };
 }
 
 /**
@@ -32,7 +37,6 @@ export function isShellMusicOn(
 ): boolean {
   return signals.nativePlaying || signals.wantPlaying;
 }
-
 
 /**
  * 首页/壳层音乐图标是否点亮。

@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import {
   normalizeShellMusicFileUri,
   setShellMusicPlayableAssetUri,
@@ -47,7 +48,6 @@ type StartArgs = {
   setMusicDurationSec: (sec: number) => void;
   persistMusicResume: (trackId: string, positionSec: number) => void | Promise<void>;
   trackIndexRef: { current: number };
-  playbackModeRef: { current: "music" | "scripture" };
   lastMusicProgressSecRef: { current: number };
 };
 
@@ -71,7 +71,6 @@ export async function startIosNativeMusicTrack(args: StartArgs): Promise<boolean
   const positionSec = Math.max(0, args.positionSec);
 
   args.trackIndexRef.current = args.index;
-  args.playbackModeRef.current = "music";
   args.setTrackIndex(args.index);
   args.setPlaybackMode("music");
   args.setMusicCurrentSec(positionSec);

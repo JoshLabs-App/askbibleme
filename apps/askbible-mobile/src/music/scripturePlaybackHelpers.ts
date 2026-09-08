@@ -1,3 +1,4 @@
+import { getShellPlaybackMode } from "../audio/playbackState";
 import type { MutableRefObject } from "react";
 import type { AudioPlayer } from "expo-audio";
 import { getShellScriptureWantPlaying } from "../audio/shellScriptureWantPlaying";
@@ -7,11 +8,10 @@ import { publishScripturePlaybackSec } from "./scripturePlaybackSec";
 import { getScripturePlayingChapter } from "./scripturePlayingChapterStore";
 
 export function isScripturePlaybackStarted(args: {
-  playbackModeRef: MutableRefObject<MusicPlaybackMode>;
   soundRef: MutableRefObject<AudioPlayer | null>;
   scriptureSrcRef: MutableRefObject<string | null>;
 }): boolean {
-  if (args.playbackModeRef.current !== "scripture") return false;
+  if (getShellPlaybackMode() !== "scripture") return false;
   if (args.soundRef.current != null && args.scriptureSrcRef.current != null) return true;
   // 原生读经：无 expo-av Sound，以 want + src 为准。
   if (

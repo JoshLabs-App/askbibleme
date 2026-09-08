@@ -101,7 +101,6 @@ describe("browse vs playing registration", () => {
       autoPlayScriptureRef: { current: false },
       scriptureWantPlayingRef: { current: true },
       scriptureSrcRef: { current: "file:///gen-3.mp3" },
-      playbackModeRef: { current: "scripture" as const },
       isStarted: () => true,
       tryPlayScriptureWithFallback: vi.fn(),
     } as unknown as ChapterPlaybackCtx;

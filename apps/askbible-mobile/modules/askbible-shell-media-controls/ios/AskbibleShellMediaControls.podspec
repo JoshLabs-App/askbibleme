@@ -26,4 +26,6 @@ Pod::Spec.new do |s|
   }
 
   s.source_files = '**/*.{h,m,swift}'
+  # 测试与 SPM 清单只服务 `swift test`，不进 App。
+  s.exclude_files = ['PlaybackModelTests/**/*', 'Package.swift', '.build/**/*']
 end

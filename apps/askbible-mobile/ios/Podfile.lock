@@ -2503,7 +2503,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AppAuth: ef4da5a3fc2e10b90c09a0a94a9baeaedc0341d5
   AppCheckCore: e215d35177a9cf469927863e69c13e220df32a8b
-  AskbibleShellMediaControls: 4247a17b1ff633b640e94c78aa40fd468e582a1c
+  AskbibleShellMediaControls: 8aa120fb68a601ec6ca64ff057e1d1582e1a2180
   EASClient: 40dd9e740684782610c49becab2643782ea1a20c
   EXApplication: 1e98d4b1dccdf30627f92917f4b2c5a53c330e5f
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271

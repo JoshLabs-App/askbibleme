@@ -102,8 +102,7 @@ public class AppDelegate: ExpoAppDelegate {
       in: window,
       launchOptions: launchOptions)
     NotificationCenterManager.shared.addDelegate(ReadingAlarmNotificationDelegate.shared)
-    // 音乐引擎在 App 主工程：与 Expo module 生命周期解耦。
-    AskBibleMusicService.shared.bootstrap()
+    // 播放引擎住在 AskbibleShellMediaControls 模块里（PlaybackEngine），随模块自行启动。
     activateShellPlaybackSession(application, forceReconfigure: true)
     if let url = launchOptions?[.url] as? URL, Self.isWidgetPlaybackURL(url) {
       appendDebugLine("widget playback cold launch → schedule return home")
@@ -117,9 +116,8 @@ public class AppDelegate: ExpoAppDelegate {
   public override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
 #if os(iOS) || os(tvOS)
-    // 回前台：仅补 remote control；ensureAlive 只在本会话已开播时续，不因冷启动 UserDefaults 误播。
+    // 回前台只补 remote control；该不该出声由 PlaybackStore 的状态决定，这里不做判断。
     activateShellPlaybackSession(application, forceReconfigure: false)
-    AskBibleMusicService.shared.ensureAlive(reason: "appdelegate-active")
 #endif
   }
 
@@ -127,8 +125,6 @@ public class AppDelegate: ExpoAppDelegate {
     super.applicationDidEnterBackground(application)
 #if os(iOS) || os(tvOS)
     application.beginReceivingRemoteControlEvents()
-    // 同步抢回 playback + 续播，勿等 JS 卸视频（否则 ~60s 被当普通后台挂起）。
-    AskBibleMusicService.shared.prepareForBackground()
 #endif
   }
 

@@ -16,7 +16,6 @@
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F117485B2D0307B40044C1D9 /* AskBibleReadingAlarmModule.m in Sources */ = {isa = PBXBuildFile; fileRef = F11748552D0307B40044C1D9 /* AskBibleReadingAlarmModule.m */; };
 		F117485C2D0307B40044C1D9 /* reading_alarm_prelude.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F11748562D0307B40044C1D9 /* reading_alarm_prelude.mp3 */; };
-		F11748712D0307B40044C1E1 /* AskBibleMusicService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748702D0307B40044C1E1 /* AskBibleMusicService.swift */; };
 		XX12B55A1EDABF083C3B51XX /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XX470101BAEB8E0BBC8B0DXX /* WidgetKit.framework */; };
 		XX1A6800511A685AB346D2XX /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XXA12889081EB894481655XX /* AppIntents.framework */; };
 		XX3C562DEF346B45594832XX /* ActivityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XXCAF23C3FC41F82140FA1XX /* ActivityKit.framework */; };
@@ -64,7 +63,6 @@
 		F11748502D0307B40044C1D9 /* AskBibleReadingAlarmModule.h */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; path = AskBibleReadingAlarmModule.h; sourceTree = "<group>"; };
 		F11748552D0307B40044C1D9 /* AskBibleReadingAlarmModule.m */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; path = AskBibleReadingAlarmModule.m; sourceTree = "<group>"; };
 		F11748562D0307B40044C1D9 /* reading_alarm_prelude.mp3 */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = audio.mp3; path = reading_alarm_prelude.mp3; sourceTree = "<group>"; };
-		F11748702D0307B40044C1E1 /* AskBibleMusicService.swift */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = AskBibleMusicService.swift; path = AskBibleMusicService.swift; sourceTree = "<group>"; };
 		FC7568BD1E09C695AF6CA6E3 /* libPods-AskBibleme.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AskBibleme.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		XX470101BAEB8E0BBC8B0DXX /* WidgetKit.framework */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = undefined; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		XX4DFF38D47332D6BF0183XX /* SwiftUI.framework */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = undefined; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -232,7 +230,6 @@
 		F11748632D0307B40044C1D9 /* playback */ = {
 			isa = PBXGroup;
 			children = (
-				F11748702D0307B40044C1E1 /* AskBibleMusicService.swift */,
 			);
 			name = playback;
 			path = AskBibleme/playback;
@@ -503,7 +500,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				F11748712D0307B40044C1E1 /* AskBibleMusicService.swift in Sources */,
 				F117485B2D0307B40044C1D9 /* AskBibleReadingAlarmModule.m in Sources */,
 				A66797B789D4377DFA68AB3D /* ExpoModulesProvider.swift in Sources */,
 			);

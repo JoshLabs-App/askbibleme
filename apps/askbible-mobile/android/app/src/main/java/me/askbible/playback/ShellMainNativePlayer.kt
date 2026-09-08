@@ -2,8 +2,6 @@ package me.askbible.playback
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.PlaybackParams
 import android.net.Uri
@@ -20,6 +18,8 @@ import com.facebook.react.bridge.Arguments
  */
 object ShellMainNativePlayer {
   private const val TAG = "ShellMainNative"
+  /** 共享焦点里的成员 id。 */
+  private const val MEDIA_FOCUS_ID = "main"
   /** 关屏后 JS 可能要经过多次 Doze 唤醒窗口才能补上队列；30s 太短，放宽到约 2 分钟。 */
   private const val JS_ADVANCE_MAX_RETRIES = 40
   private const val JS_ADVANCE_RETRY_INTERVAL_MS = 3_000L
@@ -35,7 +35,6 @@ object ShellMainNativePlayer {
   /** 金句垫底时压音乐，对齐 iOS musicDuckWhileVerse。 */
   private const val MUSIC_DUCK_WHILE_VERSE = 0.3f
   private var appContext: Context? = null
-  private var focusRequest: AudioFocusRequest? = null
   private val handler = Handler(Looper.getMainLooper())
   /** 读经队列空：等 JS 补下一章（关屏时 JS 常冻住，硬停会像播半小时后无声）。 */
   private var awaitingJsAdvance: Boolean = false
@@ -140,7 +139,8 @@ object ShellMainNativePlayer {
       return
     }
     val uri = ShellPlaybackSession.assetUri?.trim().orEmpty()
-    if (uri.isEmpty()) return
+    /** 兜底：会话层已挡掉 JSON null 变成的 "null" 字符串，这里再拦一次，别送进 MediaPlayer。 */
+    if (uri.isEmpty() || uri == "null") return
 
     if (awaitingJsAdvance) {
       if (uri == lastCompletedUri) {
@@ -172,8 +172,7 @@ object ShellMainNativePlayer {
           Log.w(TAG, "resume same uri failed", e)
         }
       }
-      if (ShellPlaybackSession.forceRestartUri) {
-        ShellPlaybackSession.forceRestartUri = false
+      if (ShellPlaybackSession.consumeForceRestartFor("music", "scripture")) {
         val pos = ShellPlaybackSession.positionSec
         if (pos > 0.05) {
           seekTo(pos)
@@ -377,7 +376,7 @@ object ShellMainNativePlayer {
         try {
           prepared.start()
           ShellPlaybackSession.playing = true
-          ShellPlaybackSession.forceRestartUri = false
+          ShellPlaybackSession.consumeForceRestartFor("music", "scripture")
           ShellPlaybackService.refreshIfRunning(app)
           emitTakeover()
           armProgress()
@@ -620,86 +619,35 @@ object ShellMainNativePlayer {
   }
 
   /**
-   * 请求音频焦点。
+   * 请求音频焦点——转交给全 App 共享的 [ShellAudioFocus]。
    *
-   * 三处必须留意（曾导致「点了没声音、再关再点才出来」）：
-   * 1) 先释放上一个 request。此前每次调用都新建一个并直接覆盖 `focusRequest`，
-   *    旧的再也 abandon 不掉，会堆在系统焦点栈里——logcat 里能看到同一时刻有五个
-   *    不同的 ShellMainNativePlayer lambda 同时收到 onAudioFocusChange(-1)。
-   * 2) 只有拿到 GRANTED 才记录并允许播放；此前忽略返回值，被拒也照播，表现就是无声。
-   * 3) 焦点丢失要真的处理，不能是空 listener，否则被别的应用抢走后自己还以为在播。
+   * 曾经这里自己 new 一个 AUDIOFOCUS_GAIN request，导致两个原生播放器隔着系统互相踢：
+   * 音乐一开播，金句就收到 AUDIOFOCUS_LOSS 自行暂停（logcat 实证，2026-09-07）。
+   * GAIN 是独占语义，系统分不清两个 request 同属一个 App——所以 App 内只能持有一份。
+   *
+   * 仍然保留的两条老教训：只有拿到 GRANTED 才允许播放（此前忽略返回值，被拒也照播 = 无声）；
+   * 焦点丢失要真的处理，不能是空 listener。
    */
   private fun requestFocus(context: Context): Boolean {
-    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
-    return try {
-      abandonFocus()
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val req =
-          AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-            .setAudioAttributes(
-              AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(if (ShellPlaybackSession.kind == "scripture") AudioAttributes.CONTENT_TYPE_SPEECH
-                  else AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build(),
-            )
-            .setOnAudioFocusChangeListener { change -> onAudioFocusChange(change) }
-            .build()
-        val res = am.requestAudioFocus(req)
-        if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-          focusRequest = req
-          true
-        } else {
-          Log.w(TAG, "audio focus not granted: $res")
-          false
-        }
-      } else {
-        @Suppress("DEPRECATION")
-        val res = am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-        res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-      }
-    } catch (e: Exception) {
-      Log.w(TAG, "requestAudioFocus failed", e)
-      false
-    }
+    return ShellAudioFocus.acquire(context, MEDIA_FOCUS_ID, ShellPlaybackSession.kind == "scripture", focusMember)
   }
 
-  /** 焦点被永久夺走时停下并交还；短暂丢失（来电等）只暂停，等 GAIN 再由上层决定是否续播。 */
-  private fun onAudioFocusChange(change: Int) {
-    when (change) {
-      AudioManager.AUDIOFOCUS_LOSS -> {
-        Log.i(TAG, "audio focus lost permanently; pausing")
+  /** 系统把焦点收走（来电、别的 App、睡眠定时器）时的统一处理。 */
+  private val focusMember =
+    object : ShellAudioFocus.Member {
+      override fun onShellAudioFocusLost(permanent: Boolean) {
+        Log.i(TAG, if (permanent) "audio focus lost permanently; pausing" else "audio focus lost transiently; pausing")
         try {
           player?.pause()
         } catch (_: Exception) {
           /* ignore */
         }
-        abandonFocus()
-      }
-      AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-        Log.i(TAG, "audio focus lost transiently; pausing")
-        try {
-          player?.pause()
-        } catch (_: Exception) {
-          /* ignore */
-        }
+        if (permanent) abandonFocus()
       }
     }
-  }
 
+  /** 本播放器停了：从共享焦点注销。最后一个成员走时才真的还给系统。 */
   private fun abandonFocus() {
-    val context = appContext ?: return
-    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-    try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        focusRequest?.let { am.abandonAudioFocusRequest(it) }
-        focusRequest = null
-      } else {
-        @Suppress("DEPRECATION")
-        am.abandonAudioFocus(null)
-      }
-    } catch (_: Exception) {
-      /* ignore */
-    }
+    ShellAudioFocus.release(MEDIA_FOCUS_ID)
   }
 }

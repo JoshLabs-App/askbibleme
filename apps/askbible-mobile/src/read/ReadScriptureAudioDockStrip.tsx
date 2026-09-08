@@ -74,8 +74,16 @@ export function ReadScriptureAudioDockStrip() {
     void scriptureCommandSkipNext();
   }, []);
 
+  /**
+   * 「在播」必须和图标用同一个判断：`playing` 是音乐与读经**共用**的状态，
+   * 音乐在放时它也是 true。此前这里只看 `playing`，于是音乐一响，读经播放键
+   * 按下去就走 forcePause——图标还是 ▶，却执行暂停，表现为「播着音乐点读经没反应」。
+   * 图标那边（ReadScripturePlaybackDock）本来就带了 playbackMode 判断，是这里漏了。
+   */
+  const scripturePlaying = playbackMode === "scripture" && playing;
+
   const onTogglePlay = useCallback(() => {
-    if (playing) {
+    if (scripturePlaying) {
       void togglePlayScripture({ forcePause: true });
       return;
     }
@@ -97,7 +105,7 @@ export function ReadScriptureAudioDockStrip() {
     chapterAudioTranslationId,
     pathname,
     playScriptureChapter,
-    playing,
+    scripturePlaying,
     routeParams.bookId,
     routeParams.chapter,
     togglePlayScripture,

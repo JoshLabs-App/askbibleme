@@ -4,10 +4,6 @@ import {
   isIosMusicBackgroundMinimal,
   subscribeIosMusicBackgroundMinimal,
 } from "../audio/iosMusicBackgroundQuarantine";
-import {
-  getShellVerseWantPlaying,
-  subscribeShellVerseWantPlaying,
-} from "../audio/shellVerseWantPlaying";
 import { t } from "../i18n/site-copy";
 import { FullBleedCoverVideo } from "./FullBleedCoverVideo";
 import type { NatureCoverPlayback } from "./natureCoverPlayback";
@@ -62,14 +58,12 @@ export function HomeNatureScreenVideoStage({
     isIosMusicBackgroundMinimal,
     () => false,
   );
-  const verseWant = useSyncExternalStore(
-    subscribeShellVerseWantPlaying,
-    getShellVerseWantPlaying,
-    () => false,
-  );
-  // 安卓金句：只暂停解码，不卸 VideoView（卸掉会切静帧抖动）。音乐已静音 mixWithOthers，可与视频同播；读经仍须卸挂。
-  const androidPauseCoverVideo =
-    Platform.OS === "android" && verseWant && !scriptureAudioActive;
+  /*
+   * 金句播放时封面视频照常播——播放器本身是 `muted = true` + `audioMixingMode = "mixWithOthers"`
+   * （见 FullBleedCoverVideoSlots.android.tsx），不参与音频焦点，不会跟金句抢。
+   * 此前这里因金句在播就把 `playbackActive` 置 false，画面冻住像静帧，是早期保守措施的残留。
+   * 读经朗读仍要卸挂 VideoView（见下面 `mountVideo`），那是另一回事。
+   */
   const trimmedPosterFallback = (posterUri ?? "").trim();
   const hasPosterFallback = posterModule != null || trimmedPosterFallback.length > 0;
   const coverLayout = showLandscapeVideo
@@ -94,7 +88,7 @@ export function HomeNatureScreenVideoStage({
           layoutMode={showLandscapeVideo ? "landscape-cover" : "portrait-cover"}
           nativeFullCover={Platform.OS === "android"}
           onSceneVideoReady={handleSceneVideoReady}
-          playbackActive={homeFocused && !androidPauseCoverVideo}
+          playbackActive={homeFocused}
           crossfadeAnimated={videoPowerPolicy.crossfadeAnimated}
         />
       ) : hasPosterFallback ? (

@@ -39,8 +39,24 @@ object ShellPlaybackSession {
   @Volatile var userPaused: Boolean = false
   /** 来电 / 通话：停播但不当成用户暂停。 */
   @Volatile var systemInterrupted: Boolean = false
-  /** JS 点播：允许重开当前 URI（越过句终等待）。 */
-  @Volatile var forceRestartUri: Boolean = false
+  /**
+   * JS 点播：允许重开当前 URI（越过句终等待）。**必须带归属**——值是发起点播的 kind
+   * （"music" / "scripture" / "verse"），null 表示没有待处理的重开。
+   *
+   * 曾经这里是个无主的 Boolean：点一首音乐会把它置 true，垫底的金句播放器也读到同一面旗，
+   * 于是跟着 seekTo(0) 从头重放（2026-09-07 logcat 实证：
+   * `sync uri=PSA-139-13 cur=PSA-139-13 primary=false underlay=true force=true`）。
+   * 两个播放器共用一个标志却没人记账谁是主人——和 [ShellAudioFocus] 之前那个焦点 bug 同类。
+   */
+  @Volatile var forceRestartKind: String? = null
+
+  /** 该 kind 是否有待处理的重开请求；取到就消费掉。 */
+  fun consumeForceRestartFor(vararg kinds: String): Boolean {
+    val pending = forceRestartKind ?: return false
+    if (pending !in kinds) return false
+    forceRestartKind = null
+    return true
+  }
   /** JS userPlay 时刻，用来丢掉三星开播瞬间误发的 MediaSession Pause。 */
   @Volatile var lastUserPlayAtElapsed: Long = 0L
   @Volatile var rate: Float = 1f
@@ -48,14 +64,26 @@ object ShellPlaybackSession {
   private const val NEXT_QUEUE_CAP = 120
   private const val RECENT_PLAYED_CAP = 128
 
+  /**
+   * 取字符串字段。**不要直接用 `optString`**：Android 的 JSONObject 遇到 JSON null 会返回
+   * 字面量 `"null"` 字符串，而不是 Kotlin null——`takeIf { it.isNotBlank() }` 挡不住它。
+   * 于是 `assetUri: null` 会被当成一条叫 "null" 的路径送进 MediaPlayer：
+   * `W/ShellMainNative: startUri failed uri=null` + `ENOENT`（2026-09-07 logcat 实证）。
+   */
+  private fun JSONObject.stringOrNull(key: String): String? {
+    if (isNull(key)) return null
+    val raw = optString(key, "").trim()
+    return raw.takeIf { it.isNotEmpty() && it != "null" && it != "undefined" }
+  }
+
   fun updateFromJson(json: String) {
     val payload = JSONObject(json)
     val nextKind = payload.optString("kind", "")
-    val nextAsset = payload.optString("assetUri", "").takeIf { it.isNotBlank() }
+    val nextAsset = payload.stringOrNull("assetUri")
     val nextPlaying = payload.optBoolean("playing", false)
     val incomingNextUris = collectNextUris(payload)
     val nextGapSec = payload.optDouble("gapSec", 0.0)
-    val nextGapUri = payload.optString("gapAssetUri", "").takeIf { it.isNotBlank() }
+    val nextGapUri = payload.stringOrNull("gapAssetUri")
     val userPlay = payload.optBoolean("userPlay", false)
     val userPause = payload.optBoolean("userPause", false)
 
@@ -64,7 +92,9 @@ object ShellPlaybackSession {
       val explicitRestart = payload.optBoolean("forceRestart", false)
       // 金句：重复 userPlay 会 seek 0 掐句中；仅 forceRestart 或换轨点播才重头。
       // 音乐 / 读经：保留 userPlay → forceRestart 语义。
-      forceRestartUri = explicitRestart || nextKind != "verse"
+      // 记下是谁要重开，只有它自己会消费——别的播放器读到也不该动。
+      forceRestartKind =
+        if (explicitRestart || nextKind != "verse") nextKind.takeIf { it.isNotBlank() } else null
       lastUserPlayAtElapsed = SystemClock.elapsedRealtime()
     } else if (userPause) {
       // 音乐占栏时金句只是垫底：userPause 只关垫底，勿当成整会话暂停（否则音乐会一起停）。
@@ -121,7 +151,7 @@ object ShellPlaybackSession {
     title = payload.optString("title", "")
     artist = payload.optString("artist", "")
     album = payload.optString("album", "")
-    artworkUri = payload.optString("artworkUri", null).takeIf { !it.isNullOrBlank() }
+    artworkUri = payload.stringOrNull("artworkUri")
     durationSec = payload.optDouble("durationSec", 0.0)
     positionSec = payload.optDouble("positionSec", 0.0)
     playing = if (userPaused && !userPlay) false else nextPlaying
@@ -321,12 +351,12 @@ object ShellPlaybackSession {
       val uri = raw?.trim().orEmpty()
       if (uri.isNotEmpty() && !out.contains(uri)) out.add(uri)
     }
-    add(payload.optString("nextAssetUri", ""))
-    add(payload.optString("nextNextAssetUri", ""))
+    add(payload.stringOrNull("nextAssetUri").orEmpty())
+    add(payload.stringOrNull("nextNextAssetUri").orEmpty())
     val arr: JSONArray? = payload.optJSONArray("nextAssetUris")
     if (arr != null) {
       for (i in 0 until arr.length()) {
-        add(arr.optString(i, ""))
+        add(arr.optString(i, "").trim().takeIf { it != "null" && it != "undefined" }.orEmpty())
       }
     }
     return out
@@ -359,7 +389,7 @@ object ShellPlaybackSession {
     verseUnderlayGapUri = null
     userPaused = false
     systemInterrupted = false
-    forceRestartUri = false
+    forceRestartKind = null
     lastUserPlayAtElapsed = 0L
     rate = 1f
     stopAtSec = 0.0

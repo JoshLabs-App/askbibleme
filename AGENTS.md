@@ -110,6 +110,36 @@ Android 用 `adb logcat -v time -s <TAG>` 复现一次，iOS 用模拟器面板�
 文件句柄），acquire 前先 release 上一个，并且检查 acquire 的返回值**；回调留空之前先问一句
 「是真的不需要，还是我还没想清楚」。
 
+### 验证要看最终产物，不要看源文件
+
+源文件只是**输入**，构建会往里合并你没写的东西。判断「线上/包里到底是什么」，必须去看**产物**。
+
+- **Android 权限**：`AndroidManifest.xml` 里没写 ≠ 包里没有。依赖库自带的 manifest 会在合并时
+  并进来。查最终结果用 `aapt2 dump permissions <apk>`（aapt2 在
+  `~/Library/Android/sdk/build-tools/*/aapt2`），或读
+  `android/app/build/intermediates/merged_manifests/.../AndroidManifest.xml`。
+  要删依赖带进来的权限得写 `tools:node="remove"`（仓库里 `USE_FULL_SCREEN_INTENT` 就是这么处理的）。
+- **装到设备上之后**再核一次：`adb shell dumpsys package me.askbible`，能看到权限是否 `granted`、
+  组件是否真的没了。
+- **网页部署了没有**：看 `/app-build.json` 的 id。**不要**用 Accept-Language 比对响应差异来判断——
+  只要 `(app-shell)` layout 还读 cookie，响应本来就随语言不同，必然误判成「没上线」。
+
+真实教训（2026-09-07，撤 Android 闹钟）：我看着改过的 `AndroidManifest.xml` 就下结论
+「`RECEIVE_BOOT_COMPLETED` 删掉了，所以重启后提醒会丢，需要用户权衡」。跑一次
+`aapt2 dump permissions` 才发现该权限**一直都在包里**——`expo-notifications` 自带它和
+`NotificationsService` 接收器，开机后由 `ExpoSchedulingDelegate.setupScheduledNotifications()`
+把 store 里的排程全部重排。也就是说，我拿一个不存在的问题去要用户做决定。
+**结论只能建立在产物上，源文件不足以支撑「包里有没有」这类判断。**
+
+### 打包产物用完即删
+
+APK / IPA / AAB 装到设备并验证之后**立刻删掉，不用问**——同一个版本不会重装第二次，下次都是装更新的版本。
+
+- 删两处：`dist/mobile/` 和 `apps/askbible-mobile/android/app/build/outputs/`（gradle 原始输出，
+  同一个包会存两份，各 160MB）。
+- 同理适用 `dist` / `build` / `.next` / `DerivedData` / `__pycache__`：纯本地产物，重跑就有。
+- **不要**碰 `node_modules` / `.venv` / `Pods`——删了当场要联网重装，打断工作流。
+
 ### 防止变大
 
 - 只做当前真正需要的部分，不为了“顺手”扩出周边功能。

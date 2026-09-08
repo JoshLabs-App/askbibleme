@@ -2,11 +2,8 @@ package me.askbible.playback
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -19,6 +16,8 @@ import com.facebook.react.bridge.Arguments
  */
 object ShellVerseNativePlayer {
   private const val TAG = "ShellVerseNative"
+  /** 共享焦点里的成员 id。 */
+  private const val MEDIA_FOCUS_ID = "verse"
   /** 关屏后 JS 可能要经过多次 Doze 唤醒窗口才能补上队列；30s 太短，放宽到约 2 分钟。 */
   private const val JS_ADVANCE_MAX_RETRIES = 40
   private const val JS_ADVANCE_RETRY_INTERVAL_MS = 3_000L
@@ -28,6 +27,19 @@ object ShellVerseNativePlayer {
   private var playingGap: Boolean = false
   private var preparing: Boolean = false
   private var lastFailedUri: String? = null
+  /**
+   * 原生自己接上、但 JS 还没确认的那一句。
+   *
+   * 关屏可靠性要求原生能自行接句（见 playNextOrAdvance），于是「现在在播哪一句」有两个
+   * 说法：原生按自己的队列走，JS 要等 emitAdvance 才知道换了。JS 那份滞后的答案若照单执行，
+   * 就会把刚起头的新句掐掉换回去——2026-09-07 logcat 实证：`chain next=PRO-3-14` 起播，
+   * 3.7s 后被 JS 换成 ISA-58-10。
+   *
+   * 真正在出声的是原生这一方，所以**以原生为准，直到 JS 送来的句子和它一致**（即已跟上）。
+   * 早先用「接句后 3 秒」的时间窗不管用：窗口一过 JS 照样把它顶掉，只是把切断推迟了。
+   * 用户显式点播（forceRestartKind="verse"）在上面已先行处理，不受这里限制。
+   */
+  private var pendingChainAckUri: String? = null
   private var lastFailedAtMs: Long = 0L
   /** 句终且队列空：等 JS 换句，禁止 1s 刷新把同一句再 start。 */
   private var awaitingJsAdvance: Boolean = false
@@ -36,7 +48,6 @@ object ShellVerseNativePlayer {
   private val handler = Handler(Looper.getMainLooper())
   private var gapRunnable: Runnable? = null
   private var jsAdvanceRetryCount: Int = 0
-  private var focusRequest: AudioFocusRequest? = null
 
   /**
    * 关屏后队列耗尽只 emitAdvance 一次就等 JS：若那次事件恰好在 JS 被系统冻结/降频时丢失，
@@ -144,8 +155,8 @@ object ShellVerseNativePlayer {
       return
     }
 
-    if (ShellPlaybackSession.forceRestartUri) {
-      ShellPlaybackSession.forceRestartUri = false
+    /** 只有金句自己发起的点播才从头重开；音乐/读经的重开旗与本播放器无关。 */
+    if (ShellPlaybackSession.consumeForceRestartFor("verse")) {
       clearAwaitingJsAdvance()
       // 同 URI userPlay：从头重开（锁屏 Previous 重开当前句）。
       if (uri == currentUri) {
@@ -162,6 +173,25 @@ object ShellVerseNativePlayer {
       }
       startUri(context, uri, isGap = false)
       return
+    }
+
+    val awaitingAck = pendingChainAckUri
+    if (awaitingAck != null) {
+      when {
+        // JS 跟上了，交还主导权。
+        uri == awaitingAck -> pendingChainAckUri = null
+        // 这句起播失败：必须放行，否则恢复也被一起挡掉。
+        currentUri == lastFailedUri -> pendingChainAckUri = null
+        // 已经不在播它了（被停/被换），保护失去意义。
+        currentUri != awaitingAck -> pendingChainAckUri = null
+        // 仍在播原生接的这句：以原生为准，忽略 JS 迟到的旧「当前句」。
+        // 注意别在这里加 `player != null`：startUri 里 player 有一瞬是空的，
+        // JS 的更新恰好落在那一瞬就会穿过去（2026-09-08 实测 chain 后 0.9s 仍被掐）。
+        else -> {
+          Log.i(TAG, "hold native verse ${awaitingAck.takeLast(24)}; JS still says ${uri.takeLast(24)}")
+          return
+        }
+      }
     }
 
     if (awaitingJsAdvance && uri == lastCompletedUri) {
@@ -194,6 +224,7 @@ object ShellVerseNativePlayer {
   }
 
   fun stop() {
+    pendingChainAckUri = null
     cancelGap()
     playingGap = false
     preparing = false
@@ -358,86 +389,36 @@ object ShellVerseNativePlayer {
   }
 
   /**
-   * 请求音频焦点。
+   * 请求音频焦点——转交给全 App 共享的 [ShellAudioFocus]。
    *
-   * 三处必须留意（曾导致「点了没声音、再关再点才出来」）：
-   * 1) 先释放上一个 request。此前每次调用都新建一个并直接覆盖 `focusRequest`，
-   *    旧的再也 abandon 不掉，会堆在系统焦点栈里——logcat 里能看到同一时刻有五个
-   *    不同的 ShellMainNativePlayer lambda 同时收到 onAudioFocusChange(-1)。
-   * 2) 只有拿到 GRANTED 才记录并允许播放；此前忽略返回值，被拒也照播，表现就是无声。
-   * 3) 焦点丢失要真的处理，不能是空 listener，否则被别的应用抢走后自己还以为在播。
+   * 曾经这里自己 new 一个 AUDIOFOCUS_GAIN request，导致两个原生播放器隔着系统互相踢：
+   * 音乐一开播，金句就收到 AUDIOFOCUS_LOSS 自行暂停（logcat 实证，2026-09-07）。
+   * GAIN 是独占语义，系统分不清两个 request 同属一个 App——所以 App 内只能持有一份。
+   *
+   * 仍然保留的两条老教训：只有拿到 GRANTED 才允许播放（此前忽略返回值，被拒也照播 = 无声）；
+   * 焦点丢失要真的处理，不能是空 listener。
    */
   private fun requestFocus(context: Context): Boolean {
-    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
-    return try {
-      abandonFocus()
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val req =
-          AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-            .setAudioAttributes(
-              AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                .build(),
-            )
-            .setOnAudioFocusChangeListener { change -> onAudioFocusChange(change) }
-            .build()
-        val res = am.requestAudioFocus(req)
-        if (res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-          focusRequest = req
-          true
-        } else {
-          Log.w(TAG, "audio focus not granted: $res")
-          false
-        }
-      } else {
-        @Suppress("DEPRECATION")
-        val res = am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-        res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-      }
-    } catch (e: Exception) {
-      Log.w(TAG, "requestAudioFocus failed", e)
-      false
-    }
+    return ShellAudioFocus.acquire(context, MEDIA_FOCUS_ID, true, focusMember)
   }
 
-  /** 焦点被永久夺走时停下并交还；短暂丢失（来电等）只暂停，等 GAIN 再由上层决定是否续播。 */
-  private fun onAudioFocusChange(change: Int) {
-    when (change) {
-      AudioManager.AUDIOFOCUS_LOSS -> {
-        Log.i(TAG, "audio focus lost permanently; pausing")
+  /** 系统把焦点收走（来电、别的 App、睡眠定时器）时的统一处理。 */
+  private val focusMember =
+    object : ShellAudioFocus.Member {
+      override fun onShellAudioFocusLost(permanent: Boolean) {
+        Log.i(TAG, if (permanent) "audio focus lost permanently; pausing" else "audio focus lost transiently; pausing")
         try {
           player?.pause()
         } catch (_: Exception) {
           /* ignore */
         }
-        abandonFocus()
-      }
-      AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-        Log.i(TAG, "audio focus lost transiently; pausing")
-        try {
-          player?.pause()
-        } catch (_: Exception) {
-          /* ignore */
-        }
+        if (permanent) abandonFocus()
       }
     }
-  }
 
+  /** 本播放器停了：从共享焦点注销。最后一个成员走时才真的还给系统。 */
   private fun abandonFocus() {
-    val context = appContext ?: return
-    val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-    try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        focusRequest?.let { am.abandonAudioFocusRequest(it) }
-        focusRequest = null
-      } else {
-        @Suppress("DEPRECATION")
-        am.abandonAudioFocus(null)
-      }
-    } catch (_: Exception) {
-      /* ignore */
-    }
+    ShellAudioFocus.release(MEDIA_FOCUS_ID)
   }
 
   private fun peekNextUri(): String? {
@@ -498,6 +479,7 @@ object ShellVerseNativePlayer {
     clearAwaitingJsAdvance()
     val consumed = consumeNextUri() ?: return
     Log.i(TAG, "chain next=$consumed remainNext=${peekNextUri() != null}")
+    pendingChainAckUri = consumed
     emitAdvance(consumed, nativeChained = true)
     startUri(context, consumed, isGap = false)
   }

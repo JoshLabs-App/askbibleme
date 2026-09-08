@@ -1,3 +1,4 @@
+import { getPlaybackSnapshot } from "../audio/playbackState";
 import { useCallback, useRef } from "react";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import {
@@ -87,11 +88,7 @@ export function useMusicTogglePlayMusic({
     const leavingScripture =
       playbackModeRef.current === "scripture" || getShellScriptureWantPlaying();
     const musicUiPlaying = isMusicTogglePauseIntent({
-      playbackMode: playbackModeRef.current,
-      musicWantPlaying: getShellMusicWantPlaying(),
-      musicNativePlaying: getShellMusicNativePlaying(),
-      playing,
-      playingState: playingStateRef.current,
+      musicPlaying: getPlaybackSnapshot().music.playing,
     });
 
     if (musicUiPlaying) {

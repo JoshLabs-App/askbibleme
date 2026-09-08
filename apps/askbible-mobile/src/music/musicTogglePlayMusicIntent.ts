@@ -1,13 +1,13 @@
-/** 首页 / 音乐键：暂停只看音乐会话，不把读经的 shared `playing` 当成音乐在播。 */
-export function isMusicTogglePauseIntent(args: {
-  playbackMode: "music" | "scripture";
-  musicWantPlaying: boolean;
-  musicNativePlaying: boolean;
-  playing: boolean;
-  playingState: boolean;
-}): boolean {
-  if (args.playbackMode !== "music") return false;
-  return args.musicWantPlaying || args.musicNativePlaying || args.playingState || args.playing;
+/**
+ * 首页 / 音乐键：这一下是暂停还是播放。
+ *
+ * **只问音乐这一条流。** 以前要凑四个来源（`musicWantPlaying`、`musicNativePlaying`、
+ * 本地 `playingState`、共用 `playing`）才敢下判断，正是因为没有一个能单独说清「音乐在不在响」；
+ * 凑出来的答案又会被别的流污染——金句在播时共用 `playing` 为真，点音乐就变成了暂停。
+ * 现在原生按流上报，直接读它。
+ */
+export function isMusicTogglePauseIntent(args: { musicPlaying: boolean }): boolean {
+  return args.musicPlaying;
 }
 
 /**

@@ -24,10 +24,6 @@ export function releaseScriptureUserPause(reason?: ScripturePauseHoldReason): vo
   holds.delete(reason);
 }
 
-export function releaseAllScriptureUserPause(): void {
-  holds.clear();
-}
-
 export function isScriptureUserPauseHeld(): boolean {
   return holds.size > 0;
 }

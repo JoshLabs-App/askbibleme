@@ -111,16 +111,6 @@ export function scheduleScriptureResumeAfterInterruption(ctx: ScriptureResumeCtx
   }, 450);
 }
 
-export function scheduleScriptureBackgroundRecovery(ctx: ScriptureBackgroundRecoveryCtx): void {
-  if (getShellAudioInterrupted()) return;
-  if (!wantsScripturePlayback(ctx)) return;
-  if (resumeTimer) clearTimeout(resumeTimer);
-  resumeTimer = setTimeout(() => {
-    resumeTimer = null;
-    void recoverScripturePlaybackAfterBackground(ctx);
-  }, 450);
-}
-
 export async function tryResumeScriptureAfterInterruption(ctx: ScriptureResumeCtx): Promise<boolean> {
   if (getShellAudioInterrupted()) return false;
   if (!ctx.scriptureWantPlayingRef.current) return false;

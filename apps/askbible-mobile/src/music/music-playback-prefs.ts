@@ -81,17 +81,3 @@ export function normalizeMusicResumeSec(resumeSec: number, durationSec: number |
   return resume;
 }
 
-export function isMusicNearEnd(positionSec: number, durationSec: number | undefined): boolean {
-  if (!Number.isFinite(durationSec) || (durationSec ?? 0) <= 0) return false;
-  return positionSec >= durationSec! - MUSIC_RESUME_END_TOLERANCE_SEC;
-}
-
-export function durationSecFromLoadedStatus(
-  trackDurationSec: number | undefined,
-  durationMillis: number | null | undefined,
-): number | undefined {
-  if (typeof durationMillis === "number" && durationMillis > 0) {
-    return durationMillis / 1000;
-  }
-  return trackDurationSec;
-}

@@ -43,10 +43,3 @@ export function publishMusicPlaybackProgressTick(
   });
 }
 
-export function useMusicPlaybackProgressTick(): MusicPlaybackProgressTick {
-  return useSyncExternalStore(
-    subscribeMusicPlaybackProgressTick,
-    getMusicPlaybackProgressTickSnapshot,
-    getMusicPlaybackProgressTickSnapshot,
-  );
-}

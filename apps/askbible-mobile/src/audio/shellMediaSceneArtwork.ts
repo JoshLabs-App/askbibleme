@@ -96,14 +96,3 @@ export async function reshuffleShellMediaSceneArtwork(): Promise<string | null> 
   return run;
 }
 
-/**
- * @deprecated 锁屏图已改为随机 1:1 池，不再绑定首页当前场景。
- * 保留签名以免旧调用方炸掉；行为等同 ensure。
- */
-export function publishShellMediaSceneArtwork(_opts?: {
-  sceneId?: string;
-  posterModule?: number | null;
-  posterUri?: string;
-}): void {
-  ensureShellMediaSceneArtwork();
-}

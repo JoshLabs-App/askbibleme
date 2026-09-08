@@ -33,8 +33,3 @@ export function isShellMusicOn(
   return signals.nativePlaying || signals.wantPlaying;
 }
 
-/** 非组件环境（事件回调等）里取同一份答案。 */
-export function isShellMusicOnNow(): boolean {
-  const music = getPlaybackSnapshot().music;
-  return music.playing || music.wantPlaying;
-}

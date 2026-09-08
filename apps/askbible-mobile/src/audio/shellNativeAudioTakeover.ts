@@ -19,9 +19,3 @@ export function setShellNativeAudioTakeover(next: boolean): void {
   for (const listener of listeners) listener(next);
 }
 
-export function subscribeShellNativeAudioTakeover(listener: (next: boolean) => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}

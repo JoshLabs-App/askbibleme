@@ -12,13 +12,6 @@ export function setShellMusicNativePlaying(next: boolean): void {
   for (const listener of listeners) listener();
 }
 
-export function subscribeShellMusicNativePlaying(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
 /**
  * 首页/壳层音乐图标是否应显示 LOGO 色。
  *

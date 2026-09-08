@@ -23,13 +23,3 @@ export function getShellAuxMediaOwner(): ShellAuxMediaOwner | null {
   return owner;
 }
 
-/** 壳层音乐独占前：立刻停掉环境音/金句等 aux，不依赖首页是否仍在渲染（freezeOnBlur）。 */
-export async function pauseShellAuxMediaOwner(): Promise<void> {
-  const aux = owner;
-  if (!aux) return;
-  try {
-    await (aux.yieldPlayback ?? aux.pause)();
-  } catch {
-    /* ignore */
-  }
-}

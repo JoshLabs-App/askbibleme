@@ -38,26 +38,9 @@ function notifyMuteListeners(): void {
   for (const cb of muteListeners) cb();
 }
 
-export function subscribeShellPlaybackMute(onChange: () => void): () => void {
-  muteListeners.add(onChange);
-  return () => {
-    muteListeners.delete(onChange);
-  };
-}
-
 export function hasAndroidRemoteMuteSnapshot(): boolean {
   const s = snapshot;
   return !!s && (s.music || s.verse || s.scripture || s.ambient);
-}
-
-export function isShellPlaybackMuted(): boolean {
-  return (
-    hasAndroidRemoteMuteSnapshot() &&
-    !getShellMusicWantPlaying() &&
-    !getShellVerseWantPlaying() &&
-    !getShellScriptureWantPlaying() &&
-    !isNatureAmbientAudible()
-  );
 }
 
 export function clearAndroidRemoteMuteSnapshot(): void {
@@ -159,10 +142,3 @@ export function resumeAndroidRemoteAudio(playback: AndroidRemoteMutePlayback): b
   return true;
 }
 
-export function toggleAndroidRemoteAudio(playback: AndroidRemoteMutePlayback): void {
-  if (isAndroidRemoteAudioActive(playback)) {
-    pauseAndroidRemoteAudio(playback);
-    return;
-  }
-  resumeAndroidRemoteAudio(playback);
-}

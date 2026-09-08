@@ -1,4 +1,3 @@
-export const MUSIC_PROGRESS_UI_INTERVAL_SEC = 0.25;
 export const SCRIPTURE_PROGRESS_UI_INTERVAL_SEC = 0.5;
 
 export function shouldEmitPlaybackSecUpdate(

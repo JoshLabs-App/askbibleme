@@ -16,13 +16,6 @@ export function setShellAudioInterrupted(next: boolean): void {
   for (const cb of listeners) cb();
 }
 
-export function subscribeShellAudioInterrupted(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
 export function installShellAudioInterruptionBridge(): void {
   if (bridgeInstalled) return;
   if (typeof DeviceEventEmitter?.addListener !== "function") return;

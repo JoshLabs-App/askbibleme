@@ -50,13 +50,3 @@ export function subscribeScripturePlayingChapter(listener: () => void): () => vo
   return () => listeners.delete(listener);
 }
 
-export function isScripturePlayingChapter(
-  chapter: { bookId: string; chapter: number; translationId?: string } | null | undefined,
-): boolean {
-  if (!current || !chapter) return false;
-  if (current.bookId !== chapter.bookId || current.chapter !== chapter.chapter) return false;
-  if (chapter.translationId != null && chapter.translationId !== current.translationId) {
-    return false;
-  }
-  return true;
-}

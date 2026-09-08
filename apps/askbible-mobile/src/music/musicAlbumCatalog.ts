@@ -75,10 +75,6 @@ export function musicAlbumGlowColors(album: string): readonly [string, string, s
   return MUSIC_ALBUM_GRADIENTS[album] ?? AQUA_GRADIENT;
 }
 
-export function musicAlbumSwatchColor(album: string): string {
-  return MUSIC_ALBUM_SWATCH[album] ?? "#7f97be";
-}
-
 export function musicAlbumIconName(album: string): string {
   return MUSIC_ALBUM_ICON[album] ?? "album";
 }

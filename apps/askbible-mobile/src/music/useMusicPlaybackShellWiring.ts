@@ -8,7 +8,7 @@ import { useScriptureShellPlayback } from "./scriptureShellPlayback";
 import { useScriptureInterruptionRecovery } from "./useScriptureInterruptionRecovery";
 import { useMusicInterruptionRecovery } from "./useMusicInterruptionRecovery";
 import { useMusicNativeTakeover } from "./useMusicNativeTakeover";
-import { useNativeMusicEnded } from "./useNativeMusicEnded";
+import { useMusicFollowNativeTrack } from "./useMusicFollowNativeTrack";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
 import type { PlaybackTrack } from "./types";
@@ -140,13 +140,11 @@ export function useMusicPlaybackShellWiring(args: Args) {
 
   refs.playTrackAtRef.current = playTrackAt;
 
-  useNativeMusicEnded({
+  /** 只跟随原生正在播的曲目并补队列；换曲由原生按队列自己完成。 */
+  useMusicFollowNativeTrack({
     tracks,
-    trackIndexRef: refs.trackIndexRef,
-    playingStateRef: refs.playingStateRef,
     setTrackIndex,
     setMusicCurrentSec,
-    setPlaying,
     persistMusicResume,
   });
 

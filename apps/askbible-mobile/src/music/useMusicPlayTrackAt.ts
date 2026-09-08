@@ -4,10 +4,6 @@ import { useCallback } from "react";
 import { isNativeMainTrackOs } from "../audio/shellNativeAudioTakeover";
 import type { MusicPlayTrackBridge } from "./musicPlaybackBridges";
 import {
-  loadAndStartMusicTrackSound,
-  type LoadedMusicTrack,
-} from "./musicTrackSoundLoad";
-import {
   prepareMusicTrackForPlay,
   scheduleMusicTrackPlayFallback,
 } from "./musicTrackPlayPrepare";
@@ -66,10 +62,6 @@ export function useMusicPlayTrackAt({
         yieldAmbientIfVerseAndAmbientOpen();
       }
       await releaseScriptureShellForMusic(playbackModeRef, stopScripturePlayback);
-      // 原生主轨勿先改 AudioMode（会污染系统会话）。
-      if (!isNativeMainTrackOs() && opts?.autoPlay !== false) {
-        await configureShellAudioMode({ force: true });
-      }
       const generation = ++playTrackGenerationRef.current;
 
       const prepared = await prepareMusicTrackForPlay({
@@ -88,8 +80,8 @@ export function useMusicPlayTrackAt({
       });
       if (!prepared.ok) return false;
 
-      // iOS / Android：音乐只走原生播放器，不经 expo-av。
-      if (isNativeMainTrackOs()) {
+      /** 音乐一律走原生播放器；expo-av 那条载入路径已删。 */
+      {
         const resumeSec =
           bridge.resumeTrackIdRef.current === prepared.track.id
             ? Math.max(0, bridge.resumePositionSecRef.current)
@@ -125,40 +117,6 @@ export function useMusicPlayTrackAt({
         return false;
       }
 
-      /*
-       * 默认曲目预载已删：它建的是 expo-av Sound，而真机上音频一律由原生播放器出声，
-       * `startDefaultTrackPreload()` 恒返回 null，整条取用逻辑一行都执行不到。
-       */
-      endMusicSession();
-      const loaded: LoadedMusicTrack = await loadAndStartMusicTrackSound({
-        bridge,
-        tracks,
-        track: prepared.track,
-        index: prepared.index,
-        avSource: prepared.avSource,
-        generation,
-        shouldPlay: opts?.autoPlay !== false,
-        unloadCurrent,
-        persistMusicResume,
-        syncPlayingState,
-        setPlaying,
-        setTrackIndex,
-        setPlaybackMode,
-        setMusicCurrentSec,
-        setMusicDurationSec,
-      });
-      if (loaded.ok) return true;
-      if (loaded.stale) return false;
-      scheduleMusicTrackPlayFallback({
-        tracks,
-        index: prepared.index,
-        failedTrackIdsRef,
-        playTrackAtRef,
-        setPlaying,
-        failedTrackId: loaded.failedTrackId,
-        autoPlay: opts?.autoPlay,
-      });
-      return false;
     },
     [
       bridge,

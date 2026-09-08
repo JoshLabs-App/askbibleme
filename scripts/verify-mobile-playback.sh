@@ -101,6 +101,21 @@ adb -s "$DEVICE" logcat -c; tap "$READ_SCRUB_END" 22
 check "原生自己接章" "NativeAdvanced SCRIPTURE"
 shot 6-chapter-title  # 标题必须变成第 2 章
 
+say "6b 进度轴在走（读经）"
+adb -s "$DEVICE" exec-out screencap -p > "$OUT/6b-progress-1.png"; sleep 6
+adb -s "$DEVICE" exec-out screencap -p > "$OUT/6b-progress-2.png"
+# 进度是从原生状态直连界面的；不走就说明这条链断了。两张图裁进度条区域供人眼比对。
+python3 - "$OUT" <<'PY2'
+import sys
+from PIL import Image, ImageChops
+o = sys.argv[1]
+a = Image.open(f"{o}/6b-progress-1.png").crop((30,1225,690,1270))
+b = Image.open(f"{o}/6b-progress-2.png").crop((30,1225,690,1270))
+a.save(f"{o}/6b-progress-1-crop.png"); b.save(f"{o}/6b-progress-2-crop.png")
+same = ImageChops.difference(a.convert("RGB"), b.convert("RGB")).getbbox() is None
+print(("  ✗ 进度轴 6 秒内没有变化" if same else "  ✓ 进度轴在走"))
+PY2
+
 say "7 锁屏控制"
 adb -s "$DEVICE" logcat -c
 adb -s "$DEVICE" shell input keyevent 127; sleep 4

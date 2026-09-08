@@ -5,7 +5,7 @@ import { useMusicPlayTrack } from "./useMusicPlayTrack";
 import { useMusicShellUnload } from "./useMusicShellUnload";
 import { useMusicTrackDownload } from "./useMusicTrackDownload";
 import { useScriptureShellPlayback } from "./scriptureShellPlayback";
-import { useMusicNativeTakeover } from "./useMusicNativeTakeover";
+import { useFollowNativeProgress } from "./useFollowNativeProgress";
 import { useMusicFollowNativeTrack } from "./useMusicFollowNativeTrack";
 import type { MusicPlaybackRefs } from "./useMusicPlaybackRefs";
 import type { ReadChapterPlaybackRegistration, ScriptureAudioRepeatMode } from "./scripturePlaybackTypes";
@@ -126,12 +126,8 @@ export function useMusicPlaybackShellWiring(args: Args) {
     persistMusicResume,
   });
 
-  useMusicNativeTakeover({
-    playbackModeRef: refs.playbackModeRef,
-    soundRef: refs.soundRef,
-    playingStateRef: refs.playingStateRef,
-    musicGainRef: refs.musicGainRef,
-    setPlaying,
+  /** 进度直接从原生发布的状态里取，不再解析事件载荷猜归属。 */
+  useFollowNativeProgress({
     setMusicCurrentSec,
     setMusicDurationSec,
     setScriptureCurrentSec,

@@ -1,50 +1,12 @@
-import type {
-  NtDeepRepeatChaptersReadKeys,
-  NtDeepRepeatReadingState,
-  NtDeepRepeatTrack,
-} from "./nt-deep-repeat-reading";
-import { trackForNtDeepRepeatBookId } from "./nt-deep-repeat-reading";
-
-export function ntDeepRepeatChapterReadKey(bookId: string, chapter: number): string {
-  return `${bookId.trim().toUpperCase()}:${Math.max(1, Math.floor(chapter))}`;
-}
-
-export function normalizeNtDeepRepeatChaptersReadKeys(
-  raw: Partial<NtDeepRepeatChaptersReadKeys> | undefined,
-): NtDeepRepeatChaptersReadKeys {
-  const norm = (arr: unknown): string[] =>
-    Array.isArray(arr)
-      ? arr.filter((k): k is string => typeof k === "string" && k.length > 0)
-      : [];
-  return {
-    ot: norm(raw?.ot),
-    nt: norm(raw?.nt),
-  };
-}
-
-export function addNtDeepRepeatChapterReadToState(
-  state: NtDeepRepeatReadingState,
-  bookId: string,
-  chapter: number,
-  track?: NtDeepRepeatTrack,
-): NtDeepRepeatReadingState {
-  const resolved = track ?? trackForNtDeepRepeatBookId(bookId);
-  if (!resolved) return state;
-  const key = ntDeepRepeatChapterReadKey(bookId, chapter);
-  const keys = normalizeNtDeepRepeatChaptersReadKeys(state.chaptersReadKeys);
-  if (keys[resolved].includes(key)) {
-    return state;
-  }
-  const nextKeys: NtDeepRepeatChaptersReadKeys = {
-    ...keys,
-    [resolved]: [...keys[resolved], key],
-  };
-  return {
-    ...state,
-    chaptersReadKeys: nextKeys,
-    chaptersRead: {
-      ot: nextKeys.ot.length,
-      nt: nextKeys.nt.length,
-    },
-  };
-}
+/**
+ * 新约深读：已读章的记录。**实现只有 `lib/bible/reading-plans/nt-deep-repeat-chapters-read.ts` 一份**。
+ *
+ * 手机曾另有一份逐字重写的拷贝。两份同形实现不会报错，只会各自往前走——
+ * 同一族的 triple-loop 状态就这么分叉过：「读了几章」的计数在一端是数出来的、
+ * 在另一端是存下来的，而这份状态正是两端互相同步的。
+ */
+export {
+  addNtDeepRepeatChapterReadToState,
+  normalizeNtDeepRepeatChaptersReadKeys,
+  ntDeepRepeatChapterReadKey,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";

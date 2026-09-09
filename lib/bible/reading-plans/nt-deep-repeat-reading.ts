@@ -1,4 +1,7 @@
-import { normalizeNtDeepRepeatChaptersReadKeys } from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";
+import {
+  addNtDeepRepeatChapterReadToState,
+  normalizeNtDeepRepeatChaptersReadKeys,
+} from "@/lib/bible/reading-plans/nt-deep-repeat-chapters-read";
 import {
   getNtDeepRepeatSegment,
   isNtDeepRepeatCurriculumBookId,
@@ -164,6 +167,38 @@ export function advanceNtDeepRepeatOtPointer(current: NtDeepRepeatPointer): NtDe
 
   const nextIdx = (safeIdx + 1) % NT_DEEP_REPEAT_OT_BOOK_IDS.length;
   return { bookId: NT_DEEP_REPEAT_OT_BOOK_IDS[nextIdx]!, chapter: 1 };
+}
+
+export function advanceNtDeepRepeatOtTrack(state: NtDeepRepeatReadingState): NtDeepRepeatReadingState {
+  const withRead = addNtDeepRepeatChapterReadToState(state, state.ot.bookId, state.ot.chapter, "ot");
+  return { ...withRead, ot: advanceNtDeepRepeatOtPointer(withRead.ot) };
+}
+
+export function advanceNtDeepRepeatNtDay(state: NtDeepRepeatReadingState): NtDeepRepeatReadingState {
+  const segment = currentNtDeepRepeatSegment(state);
+  const target = resolveNtDeepRepeatSegmentDayTarget(state);
+  let nextDay = state.dayInSegment + 1;
+  let nextIndex = state.curriculumIndex;
+  let nextTarget = target;
+  if (nextDay > target) {
+    nextDay = 1;
+    nextIndex = (state.curriculumIndex + 1) % Math.max(1, NT_DEEP_REPEAT_CURRICULUM.length);
+    nextTarget = standardSegmentDayCount(state.pace);
+  }
+  let next = {
+    ...state,
+    curriculumIndex: nextIndex,
+    dayInSegment: nextDay,
+    segmentDayTarget: nextTarget,
+  };
+  if (segment) {
+    for (const range of segment.ranges) {
+      for (let ch = range.startChapter; ch <= range.endChapter; ch += 1) {
+        next = addNtDeepRepeatChapterReadToState(next, range.bookId, ch, "nt");
+      }
+    }
+  }
+  return next;
 }
 
 export function advanceNtDeepRepeatOneCalendarDay(state: NtDeepRepeatReadingState): NtDeepRepeatReadingState {

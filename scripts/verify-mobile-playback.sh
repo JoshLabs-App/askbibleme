@@ -79,6 +79,29 @@ print(("  ✓ " if want in txt.replace(" ", "") else "  ✗ ") + f"{name}：期�
 PY
 }
 
+# 关屏时 JS 是睡着的。以前换章/接句都要靠把 JS 叫醒——叫不醒就断在那儿。
+# 判据有两条：原生自己接上了，**并且**这段时间里没有任何 js userPlay。
+screen_off() { adb -s "$DEVICE" shell input keyevent 26; }
+# 亮屏之后必须把状态完全恢复：解锁 + 把 App 拉回前台。
+# 少做这一步，后面每一条都会失败——不是应用坏了，是它们点在锁屏上。
+screen_on() {
+  adb -s "$DEVICE" shell input keyevent 26; sleep 1
+  adb -s "$DEVICE" shell input keyevent 82; sleep 1
+  adb -s "$DEVICE" shell input swipe 720 2000 720 900 200; sleep 1
+  adb -s "$DEVICE" shell am start -n me.askbible/.MainActivity >/dev/null 2>&1 \
+    || adb -s "$DEVICE" shell monkey -p me.askbible -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+  sleep 3
+}
+
+no_js_play() { # no_js_play <说明>
+  if ledger | grep -q "js userPlay"; then
+    printf "  ✗ %s：关屏期间 JS 仍在发播放命令\n" "$1"; FAIL=$((FAIL+1))
+    ledger | grep "js userPlay" | tail -3 | sed 's/^/      /'
+  else
+    printf "  ✓ %s\n" "$1"; PASS=$((PASS+1))
+  fi
+}
+
 if [ "${1:-}" = "--build" ]; then
   say "重新打包"
   (cd apps/askbible-mobile/android && ./gradlew :app:assembleRelease -q) || exit 1
@@ -131,6 +154,13 @@ else
   printf "  ✓ 金句没有被音乐打断\n"; PASS=$((PASS+1))
 fi
 
+say "4c 关屏后金句自己接句（这轮重构的核心承诺之一）"
+adb -s "$DEVICE" logcat -c
+screen_off; sleep 45
+check "关屏后原生自己接句" "NativeAdvanced VERSE"
+no_js_play "关屏接句没惊动 JS"
+screen_on; sleep 3
+
 say "5 播着音乐进读经页点播放"
 tap "$TAB_HOME" 4; tap "$TAP_MUSIC" 6
 adb -s "$DEVICE" logcat -c
@@ -170,6 +200,17 @@ adb -s "$DEVICE" shell input keyevent 127; sleep 4
 check "暂停键全停" "PauseAll  -> audible=\[\]"
 adb -s "$DEVICE" shell input keyevent 126; sleep 5
 check "播放键原样恢复" "ResumeTransport"
+
+say "6c 关屏后读经自己接章（同上，这条最关键：整章音频最长）"
+# 9a 读经：拖到章末 → 立刻关屏 → 原生该自己接下一章
+tap "$READ_SCRUB_END" 2
+adb -s "$DEVICE" logcat -c
+screen_off; sleep 30
+check "关屏后原生自己接章" "NativeAdvanced SCRIPTURE"
+no_js_play "关屏接章没惊动 JS"
+screen_on; sleep 3
+shot 9a-after-wake   # 醒来后页面该已经在下一章
+
 
 say "8 没有崩溃"
 if ledger | grep -q "AndroidRuntime"; then printf "  ✗ 出现崩溃\n"; FAIL=$((FAIL+1)); else printf "  ✓ 无崩溃\n"; PASS=$((PASS+1)); fi

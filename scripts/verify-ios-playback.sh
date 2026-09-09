@@ -15,7 +15,10 @@ set -uo pipefail
 DEVICE="${IOS_SIM:-iPhone 14 Pro Max}"
 UDID=$(xcrun simctl list devices | grep -F "$DEVICE (" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
 APP_DIR=apps/askbible-mobile/ios
-APP="$APP_DIR/build/DD/Build/Products/Debug-iphonesimulator/AskBibleme.app"
+# Release 包：JS bundle 打进去了，不依赖 Metro。
+# Debug 包要连 localhost:8081，而那个端口随时可能被另一个项目的 Metro 占着——
+# 2026-09-08 就发生过：App 加载了隔壁项目的 bundle，报 `Cannot find native module ExponentAV`。
+APP="$APP_DIR/build/DD/Build/Products/Release-iphonesimulator/AskBibleme.app"
 OUT="${TMPDIR:-/tmp}/askbible-ios-verify"
 PASS=0; FAIL=0
 
@@ -24,12 +27,13 @@ mkdir -p "$OUT"
 
 say() { printf "\n\033[1m%s\033[0m\n" "$*"; }
 shot() { xcrun simctl io "$UDID" screenshot "$OUT/$1.png" >/dev/null 2>&1; }
-# 只看最近这段时间的账本；每段断言前把 WINDOW 设成这一段的时长。
-WINDOW=60s
-ledger() {
-  xcrun simctl spawn "$UDID" log show --last "$WINDOW" --style compact \
-    --predicate 'subsystem == "me.askbible"' 2>/dev/null
-}
+# 账本用 `log stream` 写文件。模拟器上 `log show` 读不到我们这个 subsystem
+# （Logger.info 不落盘），断言会全部落空——2026-09-08 在这上面卡过一轮。
+# 后台起 stream 必须 nohup，否则收到 SIGHUP 当场就死，账本只剩一行。
+LOG="$OUT/ledger.log"
+MARK=0
+mark() { MARK=$(wc -l < "$LOG" 2>/dev/null || echo 0); }
+ledger() { tail -n "+$((MARK + 1))" "$LOG" 2>/dev/null; }
 
 check() { # check <说明> <期望正则>
   if ledger | grep -qE "$2"; then printf "  ✓ %s\n" "$1"; PASS=$((PASS+1));
@@ -44,8 +48,9 @@ refute() { # refute <说明> <不该出现的正则>
 if [ "${1:-}" = "--build" ]; then
   say "重新编译"
   (cd "$APP_DIR" && xcodebuild -workspace AskBibleme.xcworkspace -scheme AskBibleme \
-     -configuration Debug -sdk iphonesimulator -destination "id=$UDID" \
-     -derivedDataPath build/DD build 2>&1 | grep -E "error:|BUILD (SUCCEEDED|FAILED)") || exit 1
+     -configuration Release -sdk iphonesimulator -destination "id=$UDID" \
+     -derivedDataPath build/DD CODE_SIGNING_ALLOWED=NO build 2>&1 \
+     | grep -E "error:|BUILD (SUCCEEDED|FAILED)") || exit 1
   [ -d "$APP" ] || { echo "没有编译产物"; exit 1; }
   xcrun simctl install "$UDID" "$APP" >/dev/null || exit 1
 fi
@@ -53,41 +58,47 @@ fi
 say "冷启动"
 xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1
 xcrun simctl terminate "$UDID" me.askbible >/dev/null 2>&1
-sleep 2
+: > "$LOG"
+nohup xcrun simctl spawn "$UDID" log stream --style compact --level info \
+  --predicate 'subsystem == "me.askbible"' > "$LOG" 2>&1 &
+STREAM=$!
+trap 'kill $STREAM 2>/dev/null' EXIT
+sleep 4
 xcrun simctl launch "$UDID" me.askbible >/dev/null 2>&1
-# Debug 包要连 Metro 拉 bundle，装完第一次尤其慢。等到它真的说话了再往下走，
-# 否则深链会打在一个还没起来的 App 上（问的是账本，不是猜一个 sleep 数字）。
-for i in $(seq 1 40); do
-  WINDOW=90s
-  ledger | grep -q "me.askbible" && break
-  sleep 3
+# 等到它真的说话了再往下走，否则深链会打在一个还没起来的 App 上
+#（问的是账本，不是猜一个 sleep 数字）。
+for _ in $(seq 1 30); do
+  grep -q "me.askbible:" "$LOG" 2>/dev/null && break
+  sleep 2
 done
-sleep 6
-WINDOW=20s
-if ledger | grep -q "me.askbible"; then printf "  ✓ App 起来了\n"; PASS=$((PASS+1));
-else printf "  ✗ App 没起来（Metro 没跑？）\n"; FAIL=$((FAIL+1)); fi
+sleep 4
+if grep -q "me.askbible:" "$LOG" 2>/dev/null; then printf "  ✓ App 起来了\n"; PASS=$((PASS+1));
+else printf "  ✗ App 没起来\n"; FAIL=$((FAIL+1)); fi
 
 # 诗篇 117 只有两节，音轨二十来秒——后台接章因此能在一分钟内验完，
 # 不用干等三四分钟一章。
 say "1 深链起播读经（诗篇 117，全书最短一章）"
 xcrun simctl openurl "$UDID" "askbible://read/PSA/117?autoplay=1" >/dev/null 2>&1
-sleep 16
-WINDOW=20s
+# 只等到「起播 + 队列到位」就走：诗篇 117 只有十三秒，等久了它会在前台就接完章，
+# 后台那一段就没东西可验了。
+sleep 7
 check "读经在响" "play scripture .* -> audible=scripture"
 check "命令带了来源标签" "js userPlay scripture origin="
 check "原生手里有队列（后台接章的前提）" "setQueue scripture q=[1-9]"
 shot 1-psa117
 
 say "2 切到后台，声音要继续"
+# 从这里开始记账。后面两段断言的都是「进了后台之后」发生的事——
+# 不划这条线的话，第 1 步那次起播会被算进来，「后台 JS 没动手」永远判失败。
+mark
 xcrun simctl launch "$UDID" com.apple.mobilesafari >/dev/null 2>&1
-sleep 10
-WINDOW=10s
+sleep 6
 refute "后台没有被暂停" "pause scripture"
 
 say "3 后台自己接下一章（这轮重构的核心承诺）"
-# 判据两条：原生自己接上了，**并且**这段时间 JS 没有发过任何播放命令。
-sleep 35
-WINDOW=45s
+# 判据两条：原生自己接上了，**并且**整个后台期间 JS 没有发过任何播放命令。
+# 沿用第 2 步划的那条线，不重新划——窗口就是「后台这一整段」。
+sleep 22
 check "原生自己接章" "nativeAdvanced scripture"
 refute "接章没惊动 JS" "js userPlay scripture"
 
@@ -97,13 +108,13 @@ sleep 8
 shot 4-after-foreground
 
 say "5 没有崩溃"
-WINDOW=5m
 if xcrun simctl spawn "$UDID" log show --last 5m --predicate 'process == "AskBibleme"' 2>/dev/null \
    | grep -qE "Fatal error|SIGABRT"; then
   printf "  ✗ 出现崩溃\n"; FAIL=$((FAIL+1))
 else printf "  ✓ 无崩溃\n"; PASS=$((PASS+1)); fi
 
 say "结果：$PASS 通过 / $FAIL 失败"
+echo "账本：$LOG"
 echo "截图（屏幕内容需与音轨对上，看这几张）：$OUT"
 ls "$OUT"/*.png 2>/dev/null | sed 's/^/  /'
 [ "$FAIL" -eq 0 ]

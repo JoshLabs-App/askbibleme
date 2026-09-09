@@ -29,6 +29,17 @@ export type TripleLoopReadingState = {
   startedAt?: string;
 };
 
+/**
+ * 归一化之后的状态：该有的都有了。
+ *
+ * 存档里的状态字段是可选的（旧版本可能没写），但 `normalizeTripleLoopReadingState`
+ * 的职责就是把它们补齐——返回类型说清楚这件事，调用方才不用在每个读取点再判一次空。
+ */
+export type NormalizedTripleLoopReadingState = TripleLoopReadingState & {
+  chaptersReadKeys: TripleLoopChaptersReadKeys;
+  chaptersRead: TripleLoopChaptersRead;
+};
+
 const WISDOM_IDS = new Set<string>(["JOB", "PSA", "PRO", "ECC", "SNG"]);
 
 const NT_START = scriptureBooks.findIndex((b) => b.bookId === "MAT");
@@ -70,7 +81,7 @@ function normalizePointerInOrder(bookId: string, chapter: number, order: string[
   return { bookId: bid, chapter: ch };
 }
 
-export function createDefaultTripleLoopReadingState(): TripleLoopReadingState {
+export function createDefaultTripleLoopReadingState(): NormalizedTripleLoopReadingState {
   return {
     ot: { bookId: "GEN", chapter: 1 },
     nt: { bookId: "MAT", chapter: 1 },
@@ -80,28 +91,14 @@ export function createDefaultTripleLoopReadingState(): TripleLoopReadingState {
   };
 }
 
-function normalizeChaptersRead(
-  raw: Partial<TripleLoopChaptersRead> | undefined,
-  fallback: TripleLoopChaptersRead,
-): TripleLoopChaptersRead {
-  const n = (v: unknown, d: number) => {
-    const x = typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : d;
-    return Math.max(0, x);
-  };
-  return {
-    ot: n(raw?.ot, fallback.ot),
-    nt: n(raw?.nt, fallback.nt),
-    wisdom: n(raw?.wisdom, fallback.wisdom),
-  };
-}
-
 export function normalizeTripleLoopReadingState(
   raw: Partial<TripleLoopReadingState> | null | undefined,
-): TripleLoopReadingState {
+): NormalizedTripleLoopReadingState {
   const d = createDefaultTripleLoopReadingState();
   if (!raw || typeof raw !== "object") {
     return d;
   }
+  const keys = normalizeTripleLoopChaptersReadKeys(raw.chaptersReadKeys ?? d.chaptersReadKeys);
   return {
     ot: normalizePointerInOrder(String(raw.ot?.bookId || d.ot.bookId), Number(raw.ot?.chapter) || 1, TRIPLE_LOOP_OT_BOOK_IDS),
     nt: normalizePointerInOrder(String(raw.nt?.bookId || d.nt.bookId), Number(raw.nt?.chapter) || 1, TRIPLE_LOOP_NT_BOOK_IDS),
@@ -110,8 +107,20 @@ export function normalizeTripleLoopReadingState(
       Number(raw.wisdom?.chapter) || 1,
       TRIPLE_LOOP_WISDOM_BOOK_IDS,
     ),
-    chaptersReadKeys: normalizeTripleLoopChaptersReadKeys(raw.chaptersReadKeys ?? d.chaptersReadKeys),
-    chaptersRead: normalizeChaptersRead(raw.chaptersRead, d.chaptersRead as TripleLoopChaptersRead),
+    chaptersReadKeys: keys,
+    /*
+     * 数出来的，不是存下来的。
+     *
+     * 这里原本把存档里的 `chaptersRead` 单独归一化一遍，于是「读了几章」有两个存放处：
+     * 一份计数、一份章名列表，两者可以对不上，而这份状态正是手机和网页互相同步的。
+     * 写入的地方（addUserChapterReadToState）本来就是按列表长度算的，读回来时也照做。
+     * 手机侧一直是这个规则；对不齐时两端会显示不同的进度数字。
+     */
+    chaptersRead: {
+      ot: keys.ot.length,
+      nt: keys.nt.length,
+      wisdom: keys.wisdom.length,
+    },
     startedAt: typeof raw.startedAt === "string" && raw.startedAt.trim() ? raw.startedAt.trim() : undefined,
   };
 }
@@ -173,7 +182,9 @@ export function advanceTripleLoopOneCalendarDay(state: TripleLoopReadingState): 
 
 /** 历元第 1 天 = 默认起点；第 N 天 = 自起点起每轨各推进 N−1 次。 */
 export function tripleLoopStateForPlanDay(planDay: number): TripleLoopReadingState {
-  let state = createDefaultTripleLoopReadingState();
+  // 日历推算只关心三个指针；advanceTripleLoopOneCalendarDay 不带已读记录，
+  // 所以这里的类型是可选字段那一版，不是归一化那一版。
+  let state: TripleLoopReadingState = createDefaultTripleLoopReadingState();
   const advances = Math.max(0, Math.floor(planDay) - 1);
   for (let i = 0; i < advances; i++) {
     state = advanceTripleLoopOneCalendarDay(state);

@@ -114,6 +114,13 @@ adb -s "$DEVICE" logcat -c
 adb -s "$DEVICE" shell monkey -p me.askbible -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 sleep 12
 
+# 冷启动后 App 会恢复上一次待过的标签页，不一定是首页——2026-09-08 有一轮
+# 停在读经页，第一下「点音乐」实际点在了书卷列表的「以斯拉记」上，
+# 然后前半场全线飘红，看着像应用坏了。先明确回首页。
+say "0 回到首页"
+tap "$TAB_HOME" 4
+shot 0-home
+
 say "1 音乐起播"
 adb -s "$DEVICE" logcat -c; tap "$TAP_MUSIC" 8
 check "音乐在响" "Play MUSIC .*audible=\[MUSIC\]"

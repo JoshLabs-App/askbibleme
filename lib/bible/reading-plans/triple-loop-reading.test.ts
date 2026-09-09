@@ -3,6 +3,7 @@ import { getReadingPlanDaySinceEpoch } from "../../read/reading-plan-epoch";
 import {
   clipCoordinatedTripleLoopAheadToPlanDay,
   createDefaultTripleLoopReadingState,
+  normalizeTripleLoopReadingState,
   snapTripleLoopStateToPlanDay,
   tripleLoopStateForPlanDay,
 } from "./triple-loop-reading";
@@ -96,5 +97,34 @@ describe("triple-loop calendar day", () => {
     expect(day).toBe(137);
     expect(tripleLoopStateForPlanDay(136).nt).toEqual({ bookId: "1CO", chapter: 3 });
     expect(tripleLoopStateForPlanDay(day).nt).toEqual({ bookId: "1CO", chapter: 4 });
+  });
+});
+
+/**
+ * 「读了几章」只有一个存放处：章名列表。计数是数出来的。
+ *
+ * 这条规则手机侧一直有，网页侧的归一化却把存档里的计数单独留着——两者能对不上，
+ * 而这份状态正是两端互相同步的，于是同一个账号在两台设备上会显示不同的进度数字。
+ */
+describe("normalizeTripleLoopReadingState 的章数", () => {
+  it("按列表长度算，不信存档里的计数", () => {
+    const state = normalizeTripleLoopReadingState({
+      chaptersReadKeys: { ot: ["GEN:1", "GEN:2"], nt: ["MAT:1"], wisdom: [] },
+      chaptersRead: { ot: 99, nt: 0, wisdom: 42 },
+    });
+    expect(state.chaptersRead).toEqual({ ot: 2, nt: 1, wisdom: 0 });
+  });
+
+  it("列表为空就是零，哪怕存档说读过", () => {
+    const state = normalizeTripleLoopReadingState({ chaptersRead: { ot: 7, nt: 7, wisdom: 7 } });
+    expect(state.chaptersRead).toEqual({ ot: 0, nt: 0, wisdom: 0 });
+  });
+
+  /** 重复的章名不该被数两次。 */
+  it("同一章记两次只算一次", () => {
+    const state = normalizeTripleLoopReadingState({
+      chaptersReadKeys: { ot: ["GEN:1", "GEN:1", "GEN:2"], nt: [], wisdom: [] },
+    });
+    expect(state.chaptersRead.ot).toBe(2);
   });
 });

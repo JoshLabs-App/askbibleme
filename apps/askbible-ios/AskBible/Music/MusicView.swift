@@ -53,6 +53,8 @@ struct MusicView: View {
                 .allowsHitTesting(uiVisible)
             }
             .ignoresSafeArea()
+            // 舞台本身不接触摸（allowsHitTesting false）、按钮藏起来后也不接：整块画布都得算可点区域，手势才收得到
+            .contentShape(Rectangle())
             // 任何触碰都算「用户还在」：不吞事件，按钮照常响应（RN root onTouchStart={resetUiAutoHide}）
             // 纯点按（没有位移）只会触发 onEnded，不会触发 onChanged，两个都接
             .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in resetAutoHide() }.onEnded { _ in resetAutoHide() })

@@ -710,8 +710,9 @@ Supabase 浏览器 OAuth（PKCE，回到 `askbible://auth/callback`）；安卓�
 - 页面：登录 / 注册页顶部「使用 Google 继续」「使用 Apple 继续」（iOS 才有 Apple，RN 安卓也不显示）→ 行内红字错误 → 「或」分隔 → 邮箱表单；
   按钮 48 高 / 圆角 12 / hairline 边 / fillStrong 底 / 左 20 槽品牌标 + 右侧对称留槽，照 RN OAuthProviderButton。Google 四色 G 用 RN 的 SVG path：
   Compose 直接 `PathParser`，Swift 写了个只认 M/L/H/V/C/S/Z 的小解析器；Apple 标用系统 `apple.logo`。
-- 要 Josh 在 Supabase 后台做的：Apple 提供商的 Client IDs 里加原生包名 `me.askbible.native`（RN 是 `me.askbible`），否则 Apple 登录会报 audience 不接受 →
-  行内提示「Apple 登录尚未配置…」。上真机的 Sign in with Apple 还要在开发者后台给 `me.askbible.native` 这个 App ID 开 Sign in with Apple 能力（模拟器不用）。
+- Supabase 后台 Apple 提供商的 Client IDs（`EXTERNAL_APPLE_CLIENT_ID`，逗号分隔，同一个项目还服务 JoshLabs 其它 App）：2026-09-09 Josh 真 iPhone 报「尚未配置」后，
+  经他授权用 Claude in Chrome 进后台把 `me.askbible.native` 追加到末尾并保存（原有 `JoshLabs.app,me.askbible,…` 不动）。没登记时 GoTrue 拒收 audience，行内提示「Apple 登录尚未配置…」。
+  开发者后台那边不用手动开：自动签名（`-allowProvisioningUpdates`）已把 Sign in with Apple 能力挂到 `me.askbible.native` 上。
   Google 那条不需要新配置（redirect `askbible://auth/callback` RN 已在白名单里）。
 - 已知：手机上同时装着 RN 版和原生版时，`askbible://auth/callback` 两个 App 都认领，安卓回调会弹「用哪个应用打开」，选「AskBible 原生」即可
   （模拟器上两版都在；iOS 由 ASWebAuthenticationSession 自己截回调，没这个问题）。

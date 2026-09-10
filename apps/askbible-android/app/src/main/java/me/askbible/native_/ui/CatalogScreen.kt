@@ -110,7 +110,8 @@ fun CatalogScreen(
             }
 
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                // Josh 2026-09-10「让目录的左边距大一些」：只挪书卷两栏，标题那几行仍旧居中
+                Row(Modifier.padding(start = 10.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
                     // 右列顶上那几行正好压在右侧竖排下面：不让开的话点书卷会点到设置 / + / − 上
                     // （Josh 2026-09-10 实测「点 Luc 右边字号变小了」）
@@ -125,8 +126,11 @@ fun CatalogScreen(
     }
 }
 
-/** 右侧竖排占掉的宽度：按钮 50 + 边距 8，再少留 4 让书名多一点位置 */
-private const val RAIL_CLEARANCE = 54f
+/**
+ * 让位宽度：图标栏从屏幕右边算起是 8 + 50 = 58，行本身右边已经有 14 的页边距，所以再退 44 就够。
+ * 退多了「马太福音」这种四字书名会被截成「马太福…」（Josh 2026-09-10 真机）。
+ */
+private const val RAIL_CLEARANCE = 44f
 
 @Composable
 private fun CatalogColumn(

@@ -315,9 +315,18 @@ enum TripleLoop {
         return normalize(next)
     }
 
-    /// 对应 resolveEffectiveTripleLoopProgress
+    /// 自己选了「从今天开始第 1 天」时的计划天数：按 startedAt 算，而不是复活节历元。
+    /// 没自选起点（startedAt 空或就是历元）就还是历元那套。
+    static func planDay(for state: TripleLoopState, hasSaved: Bool, now: Date = Date()) -> Int {
+        guard hasSaved, let started = state.startedAt, started != PlanDates.easterEpoch,
+              PlanDates.parseLocalDate(started) != nil else { return PlanDates.daySinceEpoch(now) }
+        return max(1, PlanDates.daysBetween(started, PlanDates.localDateString(now)) + 1)
+    }
+
+    /// 对应 resolveEffectiveTripleLoopProgress。三轨永远不落后于「第几天」的地板位置；
+    /// 地板按 planDay(for:) 算，用户自选起点时那条线就从他的起点走（原生新增，RN 只有历元一种）
     static func resolveEffective(stored: TripleLoopState, hasSaved: Bool, now: Date = Date(), aheadDays: Int = 0) -> TripleLoopState {
-        let planDay = max(1, PlanDates.daySinceEpoch(now) + max(0, aheadDays))
+        let planDay = max(1, planDay(for: stored, hasSaved: hasSaved, now: now) + max(0, aheadDays))
         var base = hasSaved ? stored : stateForPlanDay(PlanDates.daySinceEpoch(now))
         if !hasSaved { base.startedAt = PlanDates.easterEpoch }
         return clipCoordinatedAhead(snapToPlanDay(base, planDay), planDay)

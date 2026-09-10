@@ -198,6 +198,24 @@ class ReadingPlanStore(context: Context) {
         reloadProgress()
     }
 
+    /**
+     * 三循环「从今天开始第 1 天」：三轨都回到起点（创 1 / 太 1 / 伯 1），不再按复活节历元跟日历跑；
+     * 已读章记录保留，之后靠读经自己推进
+     */
+    fun startTripleFromToday() {
+        setActive(ReadingPlanCatalog.TRIPLE_LOOP_ID, PlanAnchor.CALENDAR_EASTER, 1)
+        val s = TripleLoop.defaultState().copy(startedAt = PlanDates.localDateString(), chaptersReadKeys = triple.chaptersReadKeys)
+        persistTriple(TripleLoop.normalize(s))
+        reloadProgress()
+    }
+
+    /** 三循环进度是不是用户自己「从今天第 1 天」起的（区别于跟着历元走） */
+    val tripleStartedFromToday: Boolean
+        get() = hasUserTriple && (triple.startedAt ?: PlanDates.EASTER_EPOCH) != PlanDates.EASTER_EPOCH
+
+    /** 三循环今天是第几天：自选起点按自己的起点算，否则按复活节历元 */
+    fun triplePlanDay(now: LocalDate = LocalDate.now()): Int = TripleLoop.planDay(triple, hasUserTriple, now)
+
     /** 深读「恢复为默认进度」：从今天第 1 阶第 1 天重来 */
     fun resetNt() {
         sp.edit().remove(KEY_NT).apply()
@@ -245,7 +263,7 @@ class ReadingPlanStore(context: Context) {
      * 三循环永远按日历天算指针；深读 / 日课表在偏移等于已确认的 aheadDays 时就是今日内容。
      */
     fun readings(atContentAhead: Int, now: LocalDate = LocalDate.now()): List<PlanReading> {
-        if (prefs.isTripleLoop) return TripleLoop.readings(TripleLoop.stateForPlanDay(maxOf(1, PlanDates.daySinceEpoch(now) + atContentAhead)))
+        if (prefs.isTripleLoop) return TripleLoop.readings(TripleLoop.stateForPlanDay(maxOf(1, triplePlanDay(now) + atContentAhead)))
         if (atContentAhead == prefs.ahead) return today.readings
         if (prefs.isNtDeepRepeat) {
             val planDay = maxOf(1, ReadingPlanRules.ntPlanDay(prefs, now) + atContentAhead)
@@ -266,12 +284,13 @@ class ReadingPlanStore(context: Context) {
         writePrefs(prefs.copy(aheadDays = if (target > 0) target else null, chosen = true))
         when {
             prefs.isNtDeepRepeat -> jumpNt(ReadingPlanRules.ntPlanDay(prefs, now) + target, now)
-            prefs.isTripleLoop -> jumpTriple(PlanDates.daySinceEpoch(now) + target)
+            prefs.isTripleLoop -> jumpTriple(triplePlanDay(now) + target)
         }
     }
 
     private fun jumpTriple(planDay: Int) {
-        val s = TripleLoop.stateForPlanDay(maxOf(1, planDay)).copy(startedAt = PlanDates.EASTER_EPOCH, chaptersReadKeys = triple.chaptersReadKeys)
+        val s = TripleLoop.stateForPlanDay(maxOf(1, planDay))
+            .copy(startedAt = triple.startedAt ?: PlanDates.EASTER_EPOCH, chaptersReadKeys = triple.chaptersReadKeys)
         persistTriple(TripleLoop.normalize(s))
     }
 
@@ -333,8 +352,10 @@ class ReadingPlanStore(context: Context) {
         val aheadLabel = PlanCopy.t("pages.read.todayPlanAheadLabel")
         fun meta(n: Int, anchor: String) = PlanCopy.f("pages.read.todayPlanDayMeta", mapOf("n" to "$n")) + " · " + anchor
         if (prefs.isTripleLoop) {
-            val day = ReadingPlanRules.effectiveEpochDay(prefs)
-            return TodayPlan(prefs.planId, title, day, meta(day, if (prefs.ahead > 0) aheadLabel else PlanCopy.t("pages.read.todayPlanAnchorEaster")), TripleLoop.readings(triple))
+            val day = triplePlanDay() + prefs.ahead
+            val anchor = if (prefs.ahead > 0) aheadLabel
+                else PlanCopy.t(if (tripleStartedFromToday) "pages.read.todayPlanAnchorToday" else "pages.read.todayPlanAnchorEaster")
+            return TodayPlan(prefs.planId, title, day, meta(day, anchor), TripleLoop.readings(triple))
         }
         if (prefs.isNtDeepRepeat) {
             val day = ReadingPlanRules.effectiveEpochDay(prefs)

@@ -197,6 +197,27 @@ final class ReadingPlanStore: ObservableObject {
         reloadProgress()
     }
 
+    /// 三循环「从今天开始第 1 天」：三轨都回到起点（创 1 / 太 1 / 伯 1），不再按复活节历元跟日历跑；
+    /// 已读章记录保留，之后靠读经自己推进
+    func startTripleFromToday() {
+        setActive(ReadingPlanCatalog.tripleLoopId, anchor: .calendarEaster, dayCount: 1)
+        var s = TripleLoop.defaultState()
+        s.startedAt = PlanDates.localDateString()
+        s.chaptersReadKeys = triple.chaptersReadKeys
+        persistTriple(TripleLoop.normalize(s))
+        reloadProgress()
+    }
+
+    /// 三循环进度是不是用户自己「从今天第 1 天」起的（区别于跟着历元走）
+    var tripleStartedFromToday: Bool {
+        hasUserTriple && (triple.startedAt ?? PlanDates.easterEpoch) != PlanDates.easterEpoch
+    }
+
+    /// 三循环今天是第几天：自选起点按自己的起点算，否则按复活节历元
+    func triplePlanDay(now: Date = Date()) -> Int {
+        TripleLoop.planDay(for: triple, hasSaved: hasUserTriple, now: now)
+    }
+
     /// 深读「恢复为默认进度」：从今天第 1 阶第 1 天重来
     func resetNt() {
         defaults.removeObject(forKey: Self.ntKey)
@@ -254,7 +275,7 @@ final class ReadingPlanStore: ObservableObject {
     /// 三循环永远按日历天算指针；深读 / 日课表在偏移等于已确认的 aheadDays 时就是今日内容。
     func readings(atContentAhead ahead: Int, now: Date = Date()) -> [PlanReading] {
         if prefs.isTripleLoop {
-            return TripleLoop.readings(TripleLoop.stateForPlanDay(max(1, PlanDates.daySinceEpoch(now) + ahead)))
+            return TripleLoop.readings(TripleLoop.stateForPlanDay(max(1, triplePlanDay(now: now) + ahead)))
         }
         if ahead == prefs.ahead { return today.readings }
         if prefs.isNtDeepRepeat {
@@ -278,13 +299,13 @@ final class ReadingPlanStore: ObservableObject {
         if prefs.isNtDeepRepeat {
             jumpNt(toPlanDay: ReadingPlanRules.ntPlanDay(prefs, now: now) + target, now: now)
         } else if prefs.isTripleLoop {
-            jumpTriple(toPlanDay: PlanDates.daySinceEpoch(now) + target)
+            jumpTriple(toPlanDay: triplePlanDay(now: now) + target)
         }
     }
 
     private func jumpTriple(toPlanDay planDay: Int) {
         var s = TripleLoop.stateForPlanDay(max(1, planDay))
-        s.startedAt = PlanDates.easterEpoch
+        s.startedAt = triple.startedAt ?? PlanDates.easterEpoch
         s.chaptersReadKeys = triple.chaptersReadKeys
         persistTriple(TripleLoop.normalize(s))
     }
@@ -352,8 +373,9 @@ final class ReadingPlanStore: ObservableObject {
         let title = entry?.title ?? prefs.planId
         let aheadLabel = PlanCopy.t("pages.read.todayPlanAheadLabel")
         if prefs.isTripleLoop {
-            let day = ReadingPlanRules.effectiveEpochDay(prefs)
-            let anchor = prefs.ahead > 0 ? aheadLabel : PlanCopy.t("pages.read.todayPlanAnchorEaster")
+            let day = triplePlanDay() + prefs.ahead
+            let anchor = prefs.ahead > 0 ? aheadLabel
+                : PlanCopy.t(tripleStartedFromToday ? "pages.read.todayPlanAnchorToday" : "pages.read.todayPlanAnchorEaster")
             return TodayPlan(planId: prefs.planId, title: title, dayNumber: day,
                              metaLine: PlanCopy.f("pages.read.todayPlanDayMeta", ["n": "\(day)"]) + " · " + anchor,
                              readings: TripleLoop.readings(triple))

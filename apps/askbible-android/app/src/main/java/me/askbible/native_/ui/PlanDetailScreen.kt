@@ -70,11 +70,25 @@ fun PlanDetailScreen(
     var anchor by remember(planId) { mutableStateOf(if (stored?.planId == planId) stored.anchor else if (isTriple) PlanAnchor.CALENDAR_EASTER else PlanAnchor.FROM_TODAY) }
     var pace by remember(planId) { mutableIntStateOf(stored?.ntDeepRepeatPace ?: store.prefs.ntDeepRepeatPace ?: NtDeepRepeat.DEFAULT_PACE) }
     var startDay by remember(planId) { mutableIntStateOf(1) }
+    // 轻松循环：今天算第 1 天（从创 1 / 太 1 / 伯 1 起），还是跟着复活节历元的日历位置
+    var tripleFromToday by remember(planId) { mutableStateOf(store.tripleStartedFromToday) }
     val maxStartDay = if (isNt) 365 else maxOf(1, plan?.dayCount ?: 1)
     val supportsStartDay = isNt || (!isTriple && anchor == PlanAnchor.FROM_TODAY)
     val currentDay = plan?.let { store.currentPlanDay(planId, it.dayCount) }
     LaunchedEffect(currentDay, supportsStartDay) { if (supportsStartDay && currentDay != null) startDay = currentDay.coerceIn(1, maxStartDay) }
-    fun activate(p: ReadingPlanEntry) = store.activate(p.planId, p.dayCount, if (isTriple) PlanAnchor.CALENDAR_EASTER else anchor, pace, startDay)
+    fun activate(p: ReadingPlanEntry) {
+        if (isTriple) {
+            // 选的跟现在一样就别重置进度，只把它设成当前计划
+            when {
+                tripleFromToday == store.tripleStartedFromToday ->
+                    store.activate(p.planId, p.dayCount, PlanAnchor.CALENDAR_EASTER, pace, startDay)
+                tripleFromToday -> store.startTripleFromToday()
+                else -> store.resetTripleToDefault()
+            }
+            return
+        }
+        store.activate(p.planId, p.dayCount, anchor, pace, startDay)
+    }
 
     Box(Modifier.fillMaxSize()) {
         PlanPageColumn(theme) {
@@ -144,11 +158,16 @@ fun PlanDetailScreen(
 
                 // ---- 开始使用 ----
                 if (isTriple) {
-                    if (!isActive) {
-                        Spacer(Modifier.height(28.dp))
-                        PlanPrimaryButton(PlanText.t("use"), theme = theme) { activate(plan) }
-                    } else if (!isImplicitDefault) {
-                        Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(32.dp))
+                    PlanSectionHeader(PlanText.t("setupHeading"), theme = theme)
+                    Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        PlanChoiceTile(PlanText.t("tripleStartToday"), PlanText.t("tripleStartTodayHint"), tripleFromToday, theme) { tripleFromToday = true }
+                        PlanChoiceTile(PlanText.t("tripleStartCalendar"), PlanText.t("tripleStartCalendarHint"), !tripleFromToday, theme) { tripleFromToday = false }
+                    }
+                    Spacer(Modifier.height(22.dp))
+                    PlanPrimaryButton(PlanText.t(if (isActive) "update" else "use"), theme = theme) { activate(plan) }
+                    if (isActive && !isImplicitDefault) {
+                        Spacer(Modifier.height(14.dp))
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { PlanLink(PlanText.t("clear"), theme, size = 15) { store.clearPlan() } }
                     }
                 } else {
@@ -239,7 +258,11 @@ fun PlanDetailScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(plan.detail, color = theme.muted.toColor(), fontSize = 16.sp, lineHeight = 24.sp)
                         if (isTriple) {
-                            Text(PlanText.f("epochTriple", mapOf("date" to easterLabel(), "n" to "${PlanDates.daySinceEpoch()}")), color = theme.faint.toColor(), fontSize = 15.sp, lineHeight = 21.sp)
+                            // 自己选了「从今天开始」就报自己的起点与天数，别再说复活节历元
+                            val epochLine = if (store.tripleStartedFromToday)
+                                PlanText.f("epochTripleSelf", mapOf("date" to dayLabel(store.triple.startedAt ?: ""), "n" to "${store.triplePlanDay()}"))
+                            else PlanText.f("epochTriple", mapOf("date" to easterLabel(), "n" to "${store.triplePlanDay()}"))
+                            Text(epochLine, color = theme.faint.toColor(), fontSize = 15.sp, lineHeight = 21.sp)
                         } else if (isNt) {
                             Text(PlanText.f("epochNt", mapOf("n" to "${ReadingPlanRules.effectiveEpochDay(store.prefs)}")), color = theme.faint.toColor(), fontSize = 15.sp, lineHeight = 21.sp)
                         }
@@ -268,9 +291,12 @@ private fun Subheading(title: String, hint: String, theme: Parchment) {
 }
 
 /** PlanDates.EASTER_EPOCH（2026-04-05）→「2026 年 4 月 5 日」 */
-private fun easterLabel(): String {
-    val parts = PlanDates.EASTER_EPOCH.split("-").mapNotNull { it.toIntOrNull() }
-    if (parts.size != 3) return PlanDates.EASTER_EPOCH
+private fun easterLabel(): String = dayLabel(PlanDates.EASTER_EPOCH)
+
+/** yyyy-MM-dd →「2026 年 4 月 5 日」/「April 5, 2026」 */
+private fun dayLabel(iso: String): String {
+    val parts = iso.split("-").mapNotNull { it.toIntOrNull() }
+    if (parts.size != 3) return iso
     if (AppLocale.current == AppLocale.EN) return LocalDate.of(parts[0], parts[1], parts[2]).format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.US))
     return "${parts[0]} 年 ${parts[1]} 月 ${parts[2]} 日"
 }

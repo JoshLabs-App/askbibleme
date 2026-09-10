@@ -267,9 +267,24 @@ object TripleLoop {
         return normalize(floor.copy(chaptersReadKeys = state.chaptersReadKeys, startedAt = state.startedAt))
     }
 
-    /** 对应 resolveEffectiveTripleLoopProgress */
+    /**
+     * 自己选了「从今天开始第 1 天」时的计划天数：按 startedAt 算，而不是复活节历元。
+     * 没自选起点（startedAt 空或就是历元）就还是历元那套。
+     */
+    fun planDay(state: TripleLoopState, hasSaved: Boolean, now: LocalDate = LocalDate.now()): Int {
+        val started = state.startedAt
+        if (!hasSaved || started == null || started == PlanDates.EASTER_EPOCH || PlanDates.parseLocalDate(started) == null) {
+            return PlanDates.daySinceEpoch(now)
+        }
+        return maxOf(1, PlanDates.daysBetween(started, PlanDates.localDateString(now)) + 1)
+    }
+
+    /**
+     * 对应 resolveEffectiveTripleLoopProgress。三轨永远不落后于「第几天」的地板位置；
+     * 地板按 planDay() 算，用户自选起点时那条线就从他的起点走（原生新增，RN 只有历元一种）
+     */
     fun resolveEffective(stored: TripleLoopState, hasSaved: Boolean, now: LocalDate = LocalDate.now(), aheadDays: Int = 0): TripleLoopState {
-        val planDay = maxOf(1, PlanDates.daySinceEpoch(now) + maxOf(0, aheadDays))
+        val planDay = maxOf(1, planDay(stored, hasSaved, now) + maxOf(0, aheadDays))
         val base = if (hasSaved) stored else stateForPlanDay(PlanDates.daySinceEpoch(now)).copy(startedAt = PlanDates.EASTER_EPOCH)
         return clipCoordinatedAhead(snapToPlanDay(base, planDay), planDay)
     }

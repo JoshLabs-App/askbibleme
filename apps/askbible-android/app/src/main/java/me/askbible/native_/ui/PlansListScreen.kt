@@ -72,15 +72,17 @@ fun PlansListScreen(
 /** RN NT_DEEP_REPEAT_EXPLORE_ARTICLE_SLUG */
 const val NT_DEEP_ARTICLE_SLUG = "a-macarthur-lifelong-bible-reading"
 
-/** 主推卡：正式研读金底 + 「推荐」，轻松读经米白底；徽标 / 标题 24 / 一句话 16 / 要点 chips / 查看 › */
+/** 主推卡：两张同底（米白），正式研读多一枚「推荐」小标；徽标 / 标题 24 / 一句话 16 / 要点 chips / 查看 › */
 @Composable
 fun FeaturedPlanCard(plan: ReadingPlanEntry, isActive: Boolean, theme: Parchment, onOpenArticle: (String) -> Unit = {}, onPress: () -> Unit) {
     val isNtDeep = plan.planId == ReadingPlanCatalog.NT_DEEP_REPEAT_ID
-    val border = if (isActive) Color(0x6B452D1C) else if (isNtDeep) Color(0xB8FFB101) else Color(0x3378350F)
+    // 两张主推卡同一个底色：正式研读原来是金底 + 金边，看着像「已选中」，
+    // 而真正在用的那张只有右上角徽标，容易读反（Josh 2026-09-10）
+    val border = if (isActive) Color(0x6B452D1C) else Color(0x3378350F)
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(if (isNtDeep) Color(0xF0FFECBF) else Color(0xB8FFFCF5))
-            .border(if (isNtDeep) 1.5.dp else 0.5.dp, border, RoundedCornerShape(14.dp))
+            .background(Color(0xB8FFFCF5))
+            .border(if (isActive) 1.5.dp else 0.5.dp, border, RoundedCornerShape(14.dp))
             .clickableNoRipple(onPress).padding(horizontal = 16.dp, vertical = 16.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

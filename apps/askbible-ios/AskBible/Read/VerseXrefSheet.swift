@@ -17,7 +17,8 @@ struct VerseXrefSheet: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            theme.modalBackdrop.ignoresSafeArea().onTapGesture(perform: onClose)
+            theme.modalBackdrop.frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(SiteCopy.f("pages.read.verseXrefSheetTitle", ["bookName": bookName, "chapter": "\(chapter)", "verse": "\(xrefs.verse)"]))
@@ -45,7 +46,13 @@ struct VerseXrefSheet: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .parchmentCard(cornerRadius: 18)
             .padding(.horizontal, 10)
+            .contentShape(Rectangle())
+            .onTapGesture {}
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 点空白关面板：手势挂整层，挂遮罩色块上时卡片以外点不动（见 TranslationPanel 那条注）
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onClose)
     }
 
     private var refList: some View {
@@ -94,7 +101,8 @@ struct SleepTimerSheet: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            theme.modalBackdrop.ignoresSafeArea().onTapGesture(perform: onClose)
+            theme.modalBackdrop.frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea().onTapGesture(perform: onClose)
             VStack(spacing: 10) {
                 Text(SiteCopy.t("native.sleepTimer"))
                     .font(.system(size: 17, weight: .bold))
@@ -114,7 +122,12 @@ struct SleepTimerSheet: View {
             .parchmentCard(cornerRadius: 18)
             .padding(.horizontal, 10)
             .padding(.bottom, 24)
+            .contentShape(Rectangle())
+            .onTapGesture {}
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onClose)
     }
 
     private func option(_ title: String, action: @escaping () -> Void) -> some View {

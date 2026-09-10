@@ -40,7 +40,7 @@ struct PlanPlayView: View {
     private var needsConfirm: Bool { browsingAway && viewAhead >= 0 }
     private var dayCount: Int? { ReadingPlanCatalog.plan(id: prefs.planId)?.dayCount ?? prefs.dayCount }
     private var planName: String { locale.zh(ReadingPlanCatalog.plan(id: prefs.planId)?.title ?? PlanCopy.t("pages.read.planPlayTitle")) }
-    private var dayMeta: String { locale.zh(PlanCopy.f("pages.read.todayPlanDayMeta", ["n": "\(PlanPlay.planDayNumber(prefs, dayCount: dayCount, contentAhead: contentAhead))"])) }
+    private var dayMeta: String { locale.zh(PlanCopy.f("pages.read.todayPlanDayMeta", ["n": "\(PlanPlay.planDayNumber(prefs, dayCount: dayCount, contentAhead: contentAhead, tripleBaseDay: store.triplePlanDay()))"])) }
 
     var body: some View {
         GeometryReader { geo in

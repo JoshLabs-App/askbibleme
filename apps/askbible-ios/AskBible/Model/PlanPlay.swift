@@ -17,8 +17,11 @@ enum PlanPlay {
     }
 
     /// 列表抬头「第 N 天」：指针型 = 日历第几天 + 偏移；日课表 = 下标 + 1 + 偏移
-    static func planDayNumber(_ prefs: ReadingPlanPrefs, dayCount: Int?, contentAhead: Int, now: Date = Date()) -> Int {
-        if prefs.isTripleLoop { return max(1, PlanDates.daySinceEpoch(now) + contentAhead) }
+    /// tripleBaseDay：三循环「今天是第几天」的基准。用户自选了起点就传他那条线（ReadingPlanStore.triplePlanDay），
+    /// 不传照旧按复活节历元
+    static func planDayNumber(_ prefs: ReadingPlanPrefs, dayCount: Int?, contentAhead: Int, now: Date = Date(),
+                              tripleBaseDay: Int? = nil) -> Int {
+        if prefs.isTripleLoop { return max(1, (tripleBaseDay ?? PlanDates.daySinceEpoch(now)) + contentAhead) }
         if prefs.isNtDeepRepeat { return max(1, ReadingPlanRules.ntPlanDay(prefs, now: now) + contentAhead) }
         let count = dayCount ?? prefs.dayCount ?? 365
         return ReadingPlanRules.dayIndex(prefs, dayCount: count, now: now) + 1 + contentAhead

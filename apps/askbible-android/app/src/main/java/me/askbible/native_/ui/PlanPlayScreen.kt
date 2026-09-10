@@ -92,7 +92,7 @@ fun PlanPlayScreen(
     val needsConfirm = browsingAway && viewAhead >= 0
     val dayCount = ReadingPlanCatalog.plan(prefs.planId)?.dayCount ?: prefs.dayCount
     val planName = locale.zh(ReadingPlanCatalog.plan(prefs.planId)?.title ?: PlanCopy.t("pages.read.planPlayTitle"))
-    val dayMeta = locale.zh(PlanCopy.f("pages.read.todayPlanDayMeta", mapOf("n" to "${PlanPlay.planDayNumber(prefs, dayCount, contentAhead)}")))
+    val dayMeta = locale.zh(PlanCopy.f("pages.read.todayPlanDayMeta", mapOf("n" to "${PlanPlay.planDayNumber(prefs, dayCount, contentAhead, tripleBaseDay = store.triplePlanDay())}")))
     var stageToConfirm by remember { mutableStateOf<Int?>(null) }
     var lastRowTap by remember { mutableStateOf<Pair<Int, Long>?>(null) }
     val ink = theme.ink.toColor()

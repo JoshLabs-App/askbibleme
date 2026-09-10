@@ -16,6 +16,8 @@ struct PlanDetailView: View {
     @State private var anchor: PlanAnchor = .fromToday
     @State private var pace: Int = NtDeepRepeat.defaultPace
     @State private var startDay = 1
+    /// 轻松循环：今天算第 1 天（从创 1 / 太 1 / 伯 1 起），还是跟着复活节历元的日历位置
+    @State private var tripleFromToday = false
 
     private var plan: ReadingPlanEntry? { ReadingPlanCatalog.plan(id: planId) }
     private var isTriple: Bool { planId == ReadingPlanCatalog.tripleLoopId }
@@ -131,11 +133,16 @@ struct PlanDetailView: View {
 
     @ViewBuilder private func setupSection(_ plan: ReadingPlanEntry) -> some View {
         if isTriple {
-            if !isActive {
-                PlanPrimaryButton(title: PlanText.t("use")) { activate(plan) }.padding(.top, 28)
-            } else if !isImplicitDefault {
-                clearLink.padding(.top, 20)
+            PlanSectionHeader(title: PlanText.t("setupHeading")).padding(.top, 32)
+            HStack(spacing: 10) {
+                PlanChoiceTile(title: PlanText.t("tripleStartToday"), subtitle: PlanText.t("tripleStartTodayHint"),
+                               on: tripleFromToday) { tripleFromToday = true }
+                PlanChoiceTile(title: PlanText.t("tripleStartCalendar"), subtitle: PlanText.t("tripleStartCalendarHint"),
+                               on: !tripleFromToday) { tripleFromToday = false }
             }
+            .padding(.top, 14)
+            PlanPrimaryButton(title: PlanText.t(isActive ? "update" : "use")) { activate(plan) }.padding(.top, 22)
+            if isActive, !isImplicitDefault { clearLink.padding(.top, 14) }
         } else {
             PlanSectionHeader(title: PlanText.t("setupHeading")).padding(.top, 32)
             if isNt {
@@ -181,10 +188,22 @@ struct PlanDetailView: View {
     private func maxStartDay(_ plan: ReadingPlanEntry) -> Int { isNt ? 365 : max(1, plan.dayCount) }
 
     private func activate(_ plan: ReadingPlanEntry) {
-        store.activate(planId: plan.planId, dayCount: plan.dayCount, anchor: isTriple ? .calendarEaster : anchor, pace: pace, startDay: startDay)
+        if isTriple {
+            // 选的跟现在一样就别重置进度，只把它设成当前计划
+            if tripleFromToday == store.tripleStartedFromToday {
+                store.activate(planId: plan.planId, dayCount: plan.dayCount, anchor: .calendarEaster, pace: pace, startDay: startDay)
+            } else if tripleFromToday {
+                store.startTripleFromToday()
+            } else {
+                store.resetTripleToDefault()
+            }
+            return
+        }
+        store.activate(planId: plan.planId, dayCount: plan.dayCount, anchor: anchor, pace: pace, startDay: startDay)
     }
 
     private func loadSetup() {
+        tripleFromToday = store.tripleStartedFromToday
         if let stored = store.storedPrefs, stored.planId == planId {
             anchor = stored.anchor
         } else {
@@ -267,7 +286,10 @@ struct PlanDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(plan.detail).font(.system(size: 16)).lineSpacing(7).foregroundStyle(theme.muted)
                 if isTriple {
-                    Text(PlanText.f("epochTriple", ["date": Self.easterLabel, "n": "\(PlanDates.daySinceEpoch())"]))
+                    // 自己选了「从今天开始」就报自己的起点与天数，别再说复活节历元
+                    Text(store.tripleStartedFromToday
+                         ? PlanText.f("epochTripleSelf", ["date": Self.dayLabel(store.triple.startedAt ?? ""), "n": "\(store.triplePlanDay())"])
+                         : PlanText.f("epochTriple", ["date": Self.easterLabel, "n": "\(store.triplePlanDay())"]))
                         .font(.system(size: 15)).lineSpacing(5).foregroundStyle(theme.faint)
                 } else if isNt {
                     Text(PlanText.f("epochNt", ["n": "\(ReadingPlanRules.effectiveEpochDay(store.prefs))"]))
@@ -285,9 +307,12 @@ struct PlanDetailView: View {
     }
 
     /// PlanDates.easterEpoch（2026-04-05）→「2026 年 4 月 5 日」
-    private static var easterLabel: String {
-        let parts = PlanDates.easterEpoch.split(separator: "-").compactMap { Int($0) }
-        guard parts.count == 3 else { return PlanDates.easterEpoch }
+    private static var easterLabel: String { dayLabel(PlanDates.easterEpoch) }
+
+    /// yyyy-MM-dd →「2026 年 4 月 5 日」/「April 5, 2026」
+    private static func dayLabel(_ iso: String) -> String {
+        let parts = iso.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return iso }
         if AppLocale.current == .en {
             let f = DateFormatter(); f.locale = Locale(identifier: "en_US"); f.dateFormat = "MMMM d, yyyy"
             var c = DateComponents(); c.year = parts[0]; c.month = parts[1]; c.day = parts[2]

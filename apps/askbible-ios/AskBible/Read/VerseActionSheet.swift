@@ -20,7 +20,9 @@ struct VerseActionSheet: View {
         let iconSize = max(22, (fs * 1.15).rounded())
         let labelSize = max(13, (fs * 0.78).rounded())
         ZStack(alignment: .bottom) {
-            Color(red: 28 / 255, green: 20 / 255, blue: 16 / 255, opacity: 0.35).ignoresSafeArea().onTapGesture(perform: onClose)
+            Color(red: 28 / 255, green: 20 / 255, blue: 16 / 255, opacity: 0.35)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 12) {
                     Text(SiteCopy.f("pages.read.verseActionVerseTitle", ["verse": "\(verse)"])).font(.system(size: max(17, (fs * 0.95).rounded()), weight: .semibold)).foregroundStyle(theme.ink)
@@ -39,7 +41,13 @@ struct VerseActionSheet: View {
             .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
             .frame(maxWidth: .infinity, alignment: .leading)
             .parchmentCard(cornerRadius: 16)
+            .contentShape(Rectangle())
+            .onTapGesture {}
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 点空白关面板：手势挂整层（见 TranslationPanel 那条注）
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onClose)
     }
 
     private func cell(_ glyph: String, _ label: String, _ icon: CGFloat, _ font: CGFloat, _ action: @escaping () -> Void) -> some View {

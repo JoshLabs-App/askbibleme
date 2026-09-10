@@ -45,6 +45,8 @@ struct CatalogView: View {
                             column(BibleCatalog.newTestament, railBottom: railBottom)
                         }
                         .padding(.horizontal, 14)
+                        // Josh 2026-09-10「让目录的左边距大一些」：只挪书卷两栏，标题那几行仍旧居中
+                        .padding(.leading, 10)
                         .padding(.top, 16)
                         // 目录页底下不再放读经计划区块（Josh 2026-09-09「圣经目录面下面不需要展示读经计划」），
                         // 读经计划走底栏中央键。RN：72（SHELL_TAB_BAR_CLEARANCE）+ 安全区 + 120（渐隐区）
@@ -145,8 +147,9 @@ struct ChapterPickerSheet: View {
 
     var body: some View {
         ZStack {
-            theme.modalBackdrop.ignoresSafeArea()
-                .onTapGesture(perform: onClose)
+            theme.modalBackdrop
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // RN BibleChapterPickerPanel.header：系统返回（iOS 是 chevron）+ 标题 17/600 居中 + 「×」28 faint
@@ -201,7 +204,13 @@ struct ChapterPickerSheet: View {
             .parchmentCard(cornerRadius: 20)
             .frame(maxHeight: 508)
             .padding(.horizontal, 18)
+            .contentShape(Rectangle())
+            .onTapGesture {}
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 点空白关面板：手势要挂在整层上，挂在遮罩色块上时卡片以外点不动（见 TranslationPanel 那条注）
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onClose)
     }
 }
 
@@ -225,10 +234,11 @@ struct TranslationPanel: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Button { NSLog("DBG backdrop tapped"); onClose() } label: {
-                Color.red.opacity(0.45).ignoresSafeArea()
-            }
-            .buttonStyle(.plain)
+            // 铺满整屏再收点击：不写 frame 的话 ZStack 只按卡片大小给这层布局尺寸，
+            // 颜色照样画到全屏（ignoresSafeArea），但卡片以下的点击落不进来，面板就关不掉了
+            theme.modalBackdrop
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
 
             VStack(spacing: 12) {
                 HStack(spacing: 14) {
@@ -280,8 +290,15 @@ struct TranslationPanel: View {
             .padding(.leading, 30)
             .padding(.trailing, 9)
             .padding(.top, 97)
-            .border(Color.blue, width: 3)
+            // 卡片自己吃掉点击，别让下面那层「点空白关面板」跟着触发
+            .contentShape(Rectangle())
+            .onTapGesture {}
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 点空白关面板：手势挂在整层上。挂在遮罩色块上不行——色块加了 ignoresSafeArea 后
+        // 只剩下绘制铺满，可点区域缩到卡片那一块，卡片以下点了没反应，面板就关不掉
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onClose)
     }
 
     /// 按语言分组：内置的简中 / 繁中 / 英文在前（界面语言那档打头），其余语种按版本数排；组内按 RN 选择器顺序
@@ -473,8 +490,8 @@ private struct CatalogBookRow: View {
     let railBottom: CGFloat
     let onOpen: () -> Void
 
-    /// 右侧竖排占掉的宽度：按钮 50 + 边距 8，再少留 4 让书名多一点位置
-    private let railClearance: CGFloat = 54
+    /// 让位宽度：图标栏从屏幕右边算起是 8 + 50 = 58，行本身右边已经有 14 的页边距，所以再退 44 就够
+    private let railClearance: CGFloat = 44
 
     @State private var underRail = false
 

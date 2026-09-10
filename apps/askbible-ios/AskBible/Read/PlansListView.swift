@@ -55,7 +55,7 @@ struct PlansListView: View {
     }
 }
 
-/// 主推卡：正式研读金底 + 「推荐」，轻松读经米白底；徽标 / 标题 24 / 一句话 16 / 要点 chips / 查看 ›
+/// 主推卡：两张同底（米白），正式研读多一枚「推荐」小标；徽标 / 标题 24 / 一句话 16 / 要点 chips / 查看 ›
 struct FeaturedPlanCard: View {
     let plan: ReadingPlanEntry
     let isActive: Bool
@@ -102,10 +102,12 @@ struct FeaturedPlanCard: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
-            .background(RoundedRectangle(cornerRadius: 14).fill(isNtDeep ? Color(rgb: 0xFFECBF, opacity: 0.94) : Color(rgb: 0xFFFCF5, opacity: 0.72)))
+            // 两张主推卡同一个底色：正式研读原来是金底 + 金边，看着像「已选中」，
+            // 而真正在用的那张只有右上角徽标，容易读反（Josh 2026-09-10）
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color(rgb: 0xFFFCF5, opacity: 0.72)))
             .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(
-                isActive ? Color(rgb: 0x452D1C, opacity: 0.42) : (isNtDeep ? Color(rgb: 0xFFB101, opacity: 0.72) : Color(rgb: 0x78350F, opacity: 0.2)),
-                lineWidth: isNtDeep ? 1.5 : 0.5))
+                isActive ? Color(rgb: 0x452D1C, opacity: 0.42) : Color(rgb: 0x78350F, opacity: 0.2),
+                lineWidth: isActive ? 1.5 : 0.5))
         }
         .buttonStyle(.plain)
     }

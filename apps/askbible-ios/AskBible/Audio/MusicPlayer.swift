@@ -222,10 +222,12 @@ final class MusicPlayer: ObservableObject {
         }
     }
 
+    /// 用户点播放（或打断结束自动续播）：不看 `interrupted` —— 通话 / Siri / 别的 App 抢声道后 iOS 常常不发「打断结束」，
+    /// 之前这里 guard 一下就把播放键永久点死了（Josh 真机 2026-09-10「点播放播放不了」）。RN 也只挡后台自动续播，不挡用户点。
     func resume() {
         guard player != nil else { return }
         wantsPlayback = true
-        guard !interrupted else { return }
+        interrupted = false
         onWillPlay?()
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try? AVAudioSession.sharedInstance().setActive(true)

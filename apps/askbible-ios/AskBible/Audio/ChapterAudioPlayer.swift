@@ -230,10 +230,11 @@ final class ChapterAudioPlayer: ObservableObject {
         isPlaying ? pause() : resume()
     }
 
+    /// 用户点播放不看 `interrupted`（iOS 常不发「打断结束」，之前会把播放键点死；RN 只挡后台自动续播）
     func resume() {
         guard player != nil else { return }
         wantsPlayback = true
-        guard !interrupted else { return }
+        interrupted = false
         onWillPlay?()
         try? AVAudioSession.sharedInstance().setActive(true)
         // 朗读是 spokenAudio；音乐播放器会把 mode 改成 default，回来时改回去

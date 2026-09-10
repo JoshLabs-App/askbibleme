@@ -807,6 +807,14 @@ Josh 真机（iPhone 12，iOS 26.6.1）反馈：「音乐播放列表不能上�
 真机 Appium 走完：播放 / 暂停 / 舞台点击 / 队列滑动与点行 / 睡眠 5 秒隐藏后碰一下恢复 / 齿轮 → 列表 → 箭头（x=16…44 都响应）→ 详情 → 右滑两级返回 /
 登录页「返回」在安全区内并可右滑关闭；安卓模拟器同样过一遍（箭头、系统返回键、返回手势）。
 
+### 真机「点播放播放不了」= 打断状态卡死（2026-09-10）
+
+Appium 复现：播放键图标正常、点了状态不变。`MusicPlayer.resume()` / `ChapterAudioPlayer.resume()` 有 `guard !interrupted`，
+而 iOS 在通话 / Siri / 相机 / 别的 App 抢声道之后经常不发 `AVAudioSession.interruptionNotification` 的 `.ended`，
+`interrupted` 就永远是 true，播放键直到重启 App 都点不动。RN 的 `getShellAudioInterrupted()` 只挡后台自动续播（musicResumeAfterInterruption），
+不挡用户点播放 → 两个播放器的 `resume()` 改成用户点了就清掉 `interrupted` 直接播。安卓走 ExoPlayer 的 handleAudioFocus，没有这个门。
+顺带核实：计划页播放键置灰是因为他手机当前译本是没有整章音源的英文译本（RN 同样置灰），不是 bug。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

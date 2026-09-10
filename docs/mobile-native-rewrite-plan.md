@@ -716,6 +716,19 @@ Supabase 浏览器 OAuth（PKCE，回到 `askbible://auth/callback`）；安卓�
   （模拟器上两版都在；iOS 由 ASWebAuthenticationSession 自己截回调，没这个问题）。
 - `check:tokens` 加了「登记在案的故意偏离」表（`KNOWN_DEVIATIONS`）：播放坞 `playIconNudge` 原生归 0、RN 仍 3 的事在表里点名，等于登记值才算过。
 
+### 图标 + 真 iPhone 装机（2026-09-09）
+
+Josh：「安装到连接的苹果手机上，然后图标也要是更新」。
+
+- 图标用 RN 那套：iOS `AskBible/Assets.xcassets/AppIcon.appiconset`（RN ios 工程里 Expo 生成的 1024 图）+ pbxproj `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`；
+  Android 自适应图标 `mipmap-anydpi-v26/ic_launcher(.xml)`：前景 = RN `assets/adaptive-icon.png` 用 sips 出 5 档密度，底色 `iconBackground #ffb101`（与 RN android colors.xml 同）。
+  显示名仍是「AskBible 原生」，好和 RN 版并排分辨。模拟器上 Josh 自己的桌面 App（app.joshlabs.desk）会缓存旧图标，aapt 看包里已是新图标。
+- 真机 iPhone（「home」，iPhone 12，iOS 26.6.1，UDID `00008101-001641020C98001E`，coredevice `B46E6417-63D5-5690-85EE-AC42091E3ED5`）：
+  `xcodebuild … -destination 'id=00008101-…' DEVELOPMENT_TEAM=AJ2998VZH6 -allowProvisioningUpdates build`，自动签名连 Sign in with Apple 能力一起在 App ID 上登记好了
+  （签出来的包 entitlements 里有 `com.apple.developer.applesignin`）；装 / 启动用 `xcrun devicectl device install app --device <coredevice> <.app>` 与 `… process launch … me.askbible.native`。
+- Josh 发来一张「发送登录邮件」下面报 `Passed nonce and nonce in id_token should either both exist or not.` 的截图——那是 01Unlearn-English（十年之约）的登录页，不是 AskBible；
+  AskBible 原生这边 Apple 走的是「给 Apple SHA-256、给 Supabase 原文」的正确配法。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

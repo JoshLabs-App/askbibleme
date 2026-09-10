@@ -844,6 +844,15 @@ Josh：「探索页也放入语言的设置，探索页图标变成用户图标�
 - 目前原生界面文案只有中文（locale.zh 只做简繁转换，2026-09-09 决定不混英文），所以选 English 只影响读经 / 计划 / 登录页里
   本来就分语种的部分；要整套英文界面是另一件大活。
 
+### 安卓：失焦停下时前台服务不撤（2026-09-10）
+
+三星「播放一半突然停、打开还显示在播但没声」那一次，日志证实是我 09:39 往三星装新版把正在播的进程杀了（installPackageLI），不是播放器问题
+（已写进装机规则）。但顺着查到一个真 bug：别的 App 永久夺走焦点时 ExoPlayer 关掉 playWhenReady，Media3 默认随即撤掉前台服务；
+之后 AudioInterruptionMonitor 在后台自动续播，Media3 再 startForegroundService 会被 Android 12+ 拒绝
+（`ForegroundServiceStartNotAllowedException`，模拟器复现），一分钟后进程被冻结 → 有画面没声音。
+修法：`PlaybackService.onUpdateNotification` 里只要还有播放器「想播」（`PlaybackSessions.anyWantsPlayback()`，用户没按暂停）就继续 startForeground，
+通知显示暂停态；用户真按暂停才撤。模拟器验证：后台被 Chrome 抢走 → Chrome 关掉 5 秒内重新申请焦点续播，前台服务全程在，75 秒后没被冻结。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

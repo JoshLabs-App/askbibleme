@@ -81,7 +81,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
 
     // 同进程两个 MediaSession（朗读 / 音乐）id 必须不同，重复会直接抛异常
     private val mediaSession = MediaSession.Builder(context, player).setId("chapter").build()
-        .also { PlaybackSessions.register(it) }
+        .also { PlaybackSessions.register(it) { wantsPlayback } }
 
     /** 开播前先让别的播放器（音乐）停下：两个播放器不能同时出声 */
     var onWillPlay: (() -> Unit)? = null

@@ -74,7 +74,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         .build()
 
     private val mediaSession = MediaSession.Builder(context, player).setId("music").build()
-        .also { PlaybackSessions.register(it) }
+        .also { PlaybackSessions.register(it) { wantsPlayback } }
 
     init {
         val a = MusicCatalog.DEFAULT_ALBUM

@@ -870,6 +870,20 @@ Josh 定了「补齐整套英文文案（探索页、计划页、首页、设置
   经文操作单、串珠、睡眠定时、读后两版、译本面板标签、播放通知（Now Playing）文案全部三语。
 - 验证：安卓模拟器与 iOS 模拟器切到 English 后探索 / 计划 / 目录 / 详情 / 首页金句（WEB 英文经文）/ 音乐页全英文；切回简体 / 繁體正常。
 
+### 译本面板「上面选语言、下面列版本」+ YouVersion 音源全放开（2026-09-10）
+
+- **译本面板**（读经页齿轮）：Josh「最上面是语言的分类，下面是常选的版本」→ 列表顶部一排语言单选格（简中 / 繁中 / 英文，样式同探索页语言格），
+  下面只列该语言的版本，顺序仍是 RN 选择器顺序（常用在前）；默认停在当前译本所属语言；主 / 副译本两个列表各记各的。列表按行数定高。两端。
+  面板文案跟界面语言（之前英文界面下强制中文）。
+- **YouVersion 音源**：Josh「目前 API 来的都没有音频吗？之前是有的」→ RN 的 `VERIFIED_YOUVERSION_AUDIO_TRANSLATION_IDS` 自 2026-08-26 起是空集，
+  且 bible.com 音频页现在有 JS 反爬壳（直接抓只拿到 Client Challenge），所以 RN 现在也放不了。Josh 定「YouVersion 里有的版本全放开，不需要人为去选」：
+  原生 `ChapterAudioSource` 加 `youVersionVersionIds`（RN 那份 18 个版本的表），`resolve()` 对这些译本返回网站代理地址
+  `https://askbible.me/api/read/chapter-audio?translationId&bookId&chapter`（网站服务器端抓页面，返回 `{src}` = audio-bible-cdn.youversionapi.com 的 mp3），
+  壳先 `fetchResolved`（15 秒超时、会话内缓存）再装载；等待期间播放键转圈、点了播放会在拿到地址后自动起播。
+  音频本身直连 YouVersion CDN，不经 askbible.me。译本目录 `hasChapterAudio` 同步放开（20 本里 17 本有朗读，只有 UST / 学英文 等无）。
+  `check:chapter-audio` 加了 niv / ccb-zh-hans / rcuvss-zh-hans 三条：两端 URL 一致 + 真问代理 + Range 实测 mp3 206。
+  模拟器实测：安卓 NIV 创世记 3 / iOS NIV 创世记 1 都能出声。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

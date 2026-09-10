@@ -17,6 +17,10 @@ fun audioMain() {
         Triple("web-en", Triple("SNG", 22, "Song of Solomon"), 2),
         Triple("web-en", Triple("1CO", 46, "1 Corinthians"), 13),
         Triple("ust-en", Triple("GEN", 1, "Genesis"), 1),
+        // YouVersion：先问网站代理，check 脚本会真去问一次再测 mp3
+        Triple("niv", Triple("JHN", 43, "John"), 3),
+        Triple("ccb-zh-hans", Triple("GEN", 1, "Genesis"), 1),
+        Triple("rcuvss-zh-hans", Triple("PSA", 19, "Psalms"), 23),
     )
     val sb = StringBuilder("[")
     for ((i, c) in cases.withIndex()) {

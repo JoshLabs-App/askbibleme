@@ -336,8 +336,17 @@ private fun RootScreen() {
     LaunchedEffect(audioUrl, targetChapter, translation.id) {
         val b = targetBook ?: return@LaunchedEffect
         audioUrl?.let {
-            audio.load(it, "${translation.id}.${b.id}.$targetChapter", ReadChrome.chapterTitle(b.name(displayLocale), targetChapter, displayLocale),
-                       translation.id, b.id, targetChapter)
+            val key = "${translation.id}.${b.id}.$targetChapter"
+            val title = ReadChrome.chapterTitle(b.name(displayLocale), targetChapter, displayLocale)
+            if (ChapterAudioSource.isResolverUrl(it)) {
+                // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
+                audio.beginResolving(key, title)
+                val src = withContext(Dispatchers.IO) { ChapterAudioSource.fetchResolved(it, key) }
+                if (src != null) audio.load(src, key, title, translation.id, b.id, targetChapter, resolved = true)
+                else audio.failResolving(key)
+            } else {
+                audio.load(it, key, title, translation.id, b.id, targetChapter)
+            }
         }
         audio.onSkipNext = skipNext
         if (autoPlayPending) { autoPlayPending = false; audio.resume() }
@@ -643,7 +652,7 @@ private fun RootScreen() {
                 current = translation,
                 secondary = secondary,
                 // 界面文案目前只有中文：面板里的译本名与分组名按中文界面走（系统英文时不混一行英文），繁体系统给繁体
-                locale = if (appLocale == AppLocale.EN) AppLocale.ZH_CN else appLocale, downloader = downloader,
+                locale = appLocale, downloader = downloader,
                 onSelect = { translation = it; translationPrefs.write(it, secondary) },
                 onSelectSecondary = { secondary = it; translationPrefs.write(translation, it) },
                 onClose = { showTranslationPanel = false },

@@ -83,8 +83,71 @@ enum ChapterAudioSource {
         return URL(string: "\(base)/\(escaped).mp3")
     }
 
+    // MARK: YouVersion（RN youversion-chapter-audio.ts 的 YOUVERSION_AUDIO_VERSION_IDS）
+    //
+    // Josh 2026-09-10：「YouVersion 里有的版本全放开来接入，不需要人为去选」—— RN 的 VERIFIED 名单是空的、原生这里不设名单。
+    // bible.com 的音频页现在有 JS 反爬壳（直接抓只拿到 Client Challenge），所以走网站自己的代理 /api/read/chapter-audio
+    // 拿 CDN 的 mp3 地址（audio-bible-cdn.youversionapi.com），音频本身不经 askbible.me。
+    static let youVersionVersionIds: [String: String] = [
+        "asv": "12", "esv": "59", "ccb-zh-hans": "36", "ccb-zh-hant": "1392", "cnv-zh-hant": "40", "cnvs-zh-hans": "41",
+        "csbs-zh-hans": "43", "csbt-zh-hant": "312", "cunp-zh-hant": "46", "cunp-zh-hant-god": "414",
+        "cunpss-zh-hans": "48", "cunpss-zh-hant": "47", "rcuv-zh-hant": "139", "rcuvss-zh-hans": "140",
+        "niv": "111", "nlt": "116", "nkjv": "114", "kjv": "1",
+    ]
+    static let chapterAudioProxyBase = "https://askbible.me/api/read/chapter-audio"
+
+    /// 走 YouVersion 音源的译本（和合本 / KJV / WEB 有直连音源的优先直连）
+    static func usesYouVersionAudio(_ translationId: String) -> Bool {
+        let id = translationId.trimmingCharacters(in: .whitespaces).lowercased()
+        if supportsCuvAudio(id) || id == "kjv" || usesWebAudio(id) { return false }
+        return youVersionVersionIds[id] != nil
+    }
+
+    /// 代理地址：返回 {"src": "<CDN mp3>"}；播放器先问它再装载
+    static func youVersionResolveURL(translationId: String, bookId: String, chapter: Int) -> URL? {
+        let id = translationId.trimmingCharacters(in: .whitespaces).lowercased()
+        let book = bookId.trimmingCharacters(in: .whitespaces).uppercased()
+        guard chapter >= 1, youVersionVersionIds[id] != nil, !book.isEmpty else { return nil }
+        return URL(string: "\(chapterAudioProxyBase)?translationId=\(id)&bookId=\(book)&chapter=\(chapter)")
+    }
+
+    /// 这是「先问代理」的地址，不是能直接播的 mp3
+    static func isResolverURL(_ url: URL) -> Bool {
+        url.absoluteString.hasPrefix(chapterAudioProxyBase)
+    }
+
+    /// 代理返回的 JSON → mp3 地址（只认 youversionapi.com 的 https 直链）
+    static func parseResolverResponse(_ text: String) -> URL? {
+        guard let data = text.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let src = (obj["src"] as? String)?.trimmingCharacters(in: .whitespaces),
+              src.hasPrefix("https://"), src.contains("youversionapi.com"),
+              let url = URL(string: src) else { return nil }
+        return url
+    }
+
+    /// 已问到的 mp3 地址（key = 译本.书卷.章），同一会话内不重复问
+    nonisolated(unsafe) static var resolvedCache: [String: URL] = [:]
+
+    /// 问代理拿 mp3 地址（15 秒超时；失败回 nil）
+    static func fetchResolved(_ resolver: URL, cacheKey: String) async -> URL? {
+        if let hit = resolvedCache[cacheKey] { return hit }
+        var req = URLRequest(url: resolver, timeoutInterval: 15)
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let url = parseResolverResponse(String(decoding: data, as: UTF8.self)) else { return nil }
+        resolvedCache[cacheKey] = url
+        return url
+    }
+
+    /// 这个译本有没有整章音源（直连或 YouVersion）
+    static func hasAudio(_ translationId: String) -> Bool {
+        supportsCuvAudio(translationId) || translationId.lowercased() == "kjv" || usesWebAudio(translationId) || usesYouVersionAudio(translationId)
+    }
+
     /// 当前译本下这一章的可播地址；没有音源的译本返回 nil（UI 据此禁用播放键）。
-    /// RN 侧还有 bundled / 已下载 / YouVersion / ESV 几条分流，尚未搬。
+    /// YouVersion 译本返回的是代理地址（isResolverURL），壳要先 fetchResolved 再装载。
     static func resolve(translationId: String, bookId: String, bookNumber: Int,
                         bookName: String, chapter: Int) -> URL? {
         if supportsCuvAudio(translationId) {
@@ -95,6 +158,9 @@ enum ChapterAudioSource {
         }
         if usesWebAudio(translationId) {
             return webChapterURL(bookId: bookId, bookNumber: bookNumber, bookName: bookName, chapter: chapter)
+        }
+        if usesYouVersionAudio(translationId) {
+            return youVersionResolveURL(translationId: translationId, bookId: bookId, chapter: chapter)
         }
         // ust-en 在 RN 侧也没有整章音源
         return nil

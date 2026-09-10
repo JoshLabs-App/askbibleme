@@ -1,5 +1,6 @@
 package me.askbible.native_.audio
 
+import me.askbible.native_.data.SiteCopy
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -124,11 +125,30 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     }
 
     /** 装载一章。同一章重复调用不重新装载。 */
-    fun load(url: String, key: String, title: String,
-             translationId: String, bookId: String, chapter: Int) {
+    /** YouVersion 译本：先问代理拿 mp3，这段时间按「装载中」显示；用户这时点播放，拿到地址后自动起播 */
+    fun beginResolving(key: String, title: String) {
         if (loadedKey == key) return
         loadedKey = key
         wantsPlayback = false
+        errorMessage = null
+        currentTime = 0.0; duration = 0.0; activeVerse = null; timings = emptyList()
+        player.stop(); player.clearMediaItems()
+        isLoading = true
+    }
+
+    /** 代理没拿到地址 */
+    fun failResolving(key: String) {
+        if (loadedKey != key) return
+        isLoading = false
+        errorMessage = SiteCopy.t("native.audioLoadFailed")
+    }
+
+    /** [resolved]：beginResolving 之后拿到了真地址，同一个 key 也要装；用户等待期间点过播放就直接起播 */
+    fun load(url: String, key: String, title: String,
+             translationId: String, bookId: String, chapter: Int, resolved: Boolean = false) {
+        if (loadedKey == key && !(resolved && player.mediaItemCount == 0)) return
+        loadedKey = key
+        if (!resolved) wantsPlayback = false
         errorMessage = null
         currentTime = 0.0
         duration = 0.0
@@ -143,6 +163,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
                 .build()
         )
         player.prepare()
+        if (resolved && wantsPlayback) player.playWhenReady = true
         startTicker()
     }
 

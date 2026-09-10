@@ -91,11 +91,69 @@ object ChapterAudioSource {
         return "$KJV_REMOTE_BASE/$stem${chapter.toString().padStart(3, '0')}.mp3"
     }
 
+    // ---- YouVersion（RN youversion-chapter-audio.ts 的 YOUVERSION_AUDIO_VERSION_IDS） ----
+    // Josh 2026-09-10：「YouVersion 里有的版本全放开来接入，不需要人为去选」—— RN 的 VERIFIED 名单是空的、原生这里不设名单。
+    // bible.com 的音频页现在有 JS 反爬壳，所以走网站自己的代理 /api/read/chapter-audio 拿 CDN 的 mp3 地址，音频本身不经 askbible.me。
+    val youVersionVersionIds: Map<String, String> = mapOf(
+        "asv" to "12", "esv" to "59", "ccb-zh-hans" to "36", "ccb-zh-hant" to "1392", "cnv-zh-hant" to "40", "cnvs-zh-hans" to "41",
+        "csbs-zh-hans" to "43", "csbt-zh-hant" to "312", "cunp-zh-hant" to "46", "cunp-zh-hant-god" to "414",
+        "cunpss-zh-hans" to "48", "cunpss-zh-hant" to "47", "rcuv-zh-hant" to "139", "rcuvss-zh-hans" to "140",
+        "niv" to "111", "nlt" to "116", "nkjv" to "114", "kjv" to "1",
+    )
+    const val CHAPTER_AUDIO_PROXY_BASE = "https://askbible.me/api/read/chapter-audio"
+
+    /** 走 YouVersion 音源的译本（和合本 / KJV / WEB 有直连音源的优先直连） */
+    fun usesYouVersionAudio(translationId: String): Boolean {
+        val id = translationId.trim().lowercase()
+        if (supportsCuvAudio(id) || id == "kjv" || usesWebAudio(id)) return false
+        return youVersionVersionIds.containsKey(id)
+    }
+
+    /** 代理地址：返回 {"src": "<CDN mp3>"}；播放器先问它再装载 */
+    fun youVersionResolveUrl(translationId: String, bookId: String, chapter: Int): String? {
+        val id = translationId.trim().lowercase(); val book = bookId.trim().uppercase()
+        if (chapter < 1 || !youVersionVersionIds.containsKey(id) || book.isEmpty()) return null
+        return "$CHAPTER_AUDIO_PROXY_BASE?translationId=$id&bookId=$book&chapter=$chapter"
+    }
+
+    /** 这是「先问代理」的地址，不是能直接播的 mp3 */
+    fun isResolverUrl(url: String): Boolean = url.startsWith(CHAPTER_AUDIO_PROXY_BASE)
+
+    /** 代理返回的 JSON → mp3 地址（只认 youversionapi.com 的 https 直链） */
+    fun parseResolverResponse(text: String): String? {
+        val m = Regex("\"src\"\\s*:\\s*\"([^\"]+)\"").find(text) ?: return null
+        val src = m.groupValues[1].replace("\\/", "/").trim()
+        return if (src.startsWith("https://") && src.contains("youversionapi.com")) src else null
+    }
+
+    private val resolvedCache = HashMap<String, String>()
+
+    /** 问代理拿 mp3 地址（15 秒超时；失败回 null）。在 IO 线程调 */
+    fun fetchResolved(resolver: String, cacheKey: String): String? {
+        synchronized(resolvedCache) { resolvedCache[cacheKey]?.let { return it } }
+        return try {
+            val conn = java.net.URL(resolver).openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 15_000; conn.readTimeout = 15_000
+            conn.setRequestProperty("Accept", "application/json")
+            val text = if (conn.responseCode == 200) conn.inputStream.bufferedReader().use { it.readText() } else null
+            conn.disconnect()
+            val url = text?.let { parseResolverResponse(it) }
+            if (url != null) synchronized(resolvedCache) { resolvedCache[cacheKey] = url }
+            url
+        } catch (_: Exception) { null }
+    }
+
+    /** 这个译本有没有整章音源（直连或 YouVersion） */
+    fun hasAudio(translationId: String): Boolean =
+        supportsCuvAudio(translationId) || translationId.trim().lowercase() == "kjv" || usesWebAudio(translationId) || usesYouVersionAudio(translationId)
+
+    /** 当前译本下这一章的可播地址；没有音源的译本返回 null。YouVersion 译本返回代理地址（isResolverUrl），壳要先 fetchResolved 再装载 */
     fun resolve(translationId: String, bookId: String, bookNumber: Int,
                 bookName: String, chapter: Int): String? = when {
         supportsCuvAudio(translationId) -> cuvChapterUrl(bookNumber, chapter)
         translationId.trim().lowercase() == "kjv" -> kjvChapterUrl(bookId, bookNumber, chapter)
         usesWebAudio(translationId) -> webChapterUrl(bookId, bookNumber, bookName, chapter)
+        usesYouVersionAudio(translationId) -> youVersionResolveUrl(translationId, bookId, chapter)
         // ust-en 在 RN 侧也没有整章音源
         else -> null
     }

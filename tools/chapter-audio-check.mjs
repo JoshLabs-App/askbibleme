@@ -77,6 +77,16 @@ for (const r of rows) {
     problems.push(`${label}: 解析不出音源 URL`);
     continue;
   }
+  // YouVersion：代理地址先问一次拿 CDN mp3（与 ChapterAudioSource.fetchResolved 同一条路）
+  if (r.url.startsWith("https://askbible.me/api/read/chapter-audio")) {
+    let src = "";
+    try {
+      const json = execFileSync("curl", ["-s", "--max-time", "30", "-H", "Accept: application/json", r.url], { encoding: "utf8" });
+      src = String(JSON.parse(json).src || "");
+    } catch { /* 下面按拿不到处理 */ }
+    if (!src.startsWith("https://") || !src.includes("youversionapi.com")) { problems.push(`${label}: 代理没给出 mp3 — ${r.url}`); continue; }
+    r.url = src;
+  }
   let out;
   try {
     out = execFileSync("curl", ["-s", "-o", "/dev/null",

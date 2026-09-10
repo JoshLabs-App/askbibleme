@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import me.askbible.native_.data.Brand
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.AppLocale
@@ -101,7 +102,7 @@ fun TranslationPanel(
             }
 
             if (expandedSecondary) {
-                TranslationList(selectedId = secondary?.id, excludeId = current.id, allowNone = true, locale = locale, downloader = downloader, theme = theme) { t ->
+                TranslationList(selectedId = secondary?.id ?: current.id, excludeId = current.id, allowNone = true, locale = locale, downloader = downloader, theme = theme) { t ->
                     onSelectSecondary(t)
                     expandedSecondary = false
                 }
@@ -130,19 +131,38 @@ private fun TranslationList(
     downloader: TranslationDownloader?, theme: Parchment, onPick: (ScriptureTranslation?) -> Unit,
 ) {
     val sections = remember(locale) { groups(locale) }
-    LazyColumn(
-        Modifier.padding(start = 40.dp).heightIn(max = 380.dp)
+    // 上面一排语言（简中 / 繁中 / 英文），下面只列该语言的版本（RN 选择器顺序 = 常用在前）；Josh 2026-09-10
+    val initialFamily = remember(selectedId, excludeId) {
+        val id = selectedId ?: excludeId
+        sections.firstOrNull { (_, items) -> items.any { it.id == id } }?.first ?: sections.firstOrNull()?.first ?: ""
+    }
+    var family by remember(initialFamily) { mutableStateOf(initialFamily) }
+    val items = (sections.firstOrNull { it.first == family }?.second ?: emptyList()).filter { it.id != excludeId }
+    Column(
+        Modifier.padding(start = 40.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(Color(0xFFFFFDF8))
             .border(1.dp, theme.border.toColor().copy(alpha = 0.6f), RoundedCornerShape(9.dp)),
     ) {
-        if (allowNone) item { TranslationRow(SiteCopy.t("native.none", locale), selectedId == null, theme, onClick = { onPick(null) }) {} }
-        for ((language, items) in sections) {
-            item {
-                Text(ScriptureTranslation.languageName(language, locale), Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 4.dp),
-                     color = theme.faint.toColor(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for ((language, _) in sections) {
+                val on = language == family
+                Box(
+                    Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                        .background(if (on) Brand.logo.toColor().copy(alpha = 0.28f) else theme.surface.toColor().copy(alpha = 0.6f))
+                        .border(if (on) 1.5.dp else 0.5.dp, if (on) Brand.logo.toColor() else theme.border.toColor(), RoundedCornerShape(10.dp))
+                        .clickableNoRipple { family = language }.padding(vertical = 8.dp, horizontal = 4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(ScriptureTranslation.languageName(language, locale), color = theme.ink.toColor(), fontSize = 13.sp,
+                         fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
-            for (t in items.filter { it.id != excludeId }) {
+        }
+    LazyColumn(Modifier.heightIn(max = 340.dp)) {
+        if (allowNone) item { TranslationRow(SiteCopy.t("native.none", locale), selectedId == null || selectedId == excludeId, theme, onClick = { onPick(null) }) {} }
+        run {
+            for (t in items) {
                 item(key = t.id) {
                     TranslationRow(t.label(locale), t.id == selectedId, theme, onClick = { onPick(t) }) {
                         if (t.hasChapterAudio) MaterialIcon(MI.RECORD_VOICE_OVER, 16f, theme.muted.toColor())
@@ -161,6 +181,7 @@ private fun TranslationList(
             }
         }
         item { Spacer(Modifier.height(6.dp)) }
+    }
     }
 }
 

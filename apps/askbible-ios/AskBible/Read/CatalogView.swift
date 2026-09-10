@@ -217,6 +217,9 @@ struct TranslationPanel: View {
 
     @State private var expanded = false
     @State private var expandedSecondary = false
+    /// 列表顶部选中的语言（简中 / 繁中 / 英文）；nil = 跟当前选中译本的语言。主 / 副各一份（Josh 2026-09-10：最上面是语言分类，下面是常选的版本）
+    @State private var langTab: String? = nil
+    @State private var langTabSecondary: String? = nil
     private let theme = Parchment.light
 
     var body: some View {
@@ -239,7 +242,7 @@ struct TranslationPanel: View {
                 }
 
                 if expanded {
-                    translationList(selectedId: store.translation.id, excludeId: nil, allowNone: false) { t in
+                    translationList(selectedId: store.translation.id, excludeId: nil, allowNone: false, lang: $langTab) { t in
                         if let t {
                             store.translation = t
                             if store.secondary?.id == t.id { store.secondary = nil }
@@ -261,7 +264,7 @@ struct TranslationPanel: View {
                 }
 
                 if expandedSecondary {
-                    translationList(selectedId: store.secondary?.id, excludeId: store.translation.id, allowNone: true) { t in
+                    translationList(selectedId: store.secondary?.id ?? store.translation.id, excludeId: store.translation.id, allowNone: true, lang: $langTabSecondary) { t in
                         store.secondary = t
                         expandedSecondary = false
                     }
@@ -291,26 +294,51 @@ struct TranslationPanel: View {
         return out
     }
 
-    private func translationList(selectedId: String?, excludeId: String?, allowNone: Bool,
+    /// 某译本所属的语言分组键
+    private func family(of id: String?) -> String? {
+        guard let id, let t = ScriptureTranslation.find(id) else { return nil }
+        return groups.first { g in g.items.contains { $0.id == t.id } }?.language
+    }
+
+    /// 上面一排语言（简中 / 繁中 / 英文），下面只列该语言的版本（RN 选择器顺序 = 常用在前）
+    private func translationList(selectedId: String?, excludeId: String?, allowNone: Bool, lang: Binding<String?>,
                                  onPick: @escaping (ScriptureTranslation?) -> Void) -> some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                if allowNone {
-                    row(label: SiteCopy.t("native.none", locale), selected: selectedId == nil, badges: EmptyView()) { onPick(nil) }
+        let all = groups
+        let current = lang.wrappedValue ?? family(of: selectedId) ?? all.first?.language ?? ""
+        let items = (all.first { $0.language == current }?.items ?? []).filter { $0.id != excludeId }
+        return VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                ForEach(all, id: \.language) { g in
+                    let on = g.language == current
+                    Button { lang.wrappedValue = g.language } label: {
+                        Text(ScriptureTranslation.languageName(g.language, locale: locale))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(theme.ink)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(on ? Brand.logo.opacity(0.28) : theme.surface.opacity(0.6)))
+                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(on ? Brand.logo : theme.border, lineWidth: on ? 1.5 : 0.5))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
-                ForEach(groups, id: \.language) { group in
-                    Text(ScriptureTranslation.languageName(group.language, locale: locale))
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.faint)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 4)
-                    ForEach(group.items.filter { $0.id != excludeId }) { t in
+            }
+            .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 6)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    if allowNone {
+                        row(label: SiteCopy.t("native.none", locale), selected: selectedId == nil || selectedId == excludeId, badges: EmptyView()) { onPick(nil) }
+                    }
+                    ForEach(items) { t in
                         row(label: t.label(locale), selected: t.id == selectedId, badges: badges(t)) { onPick(t) }
                     }
                 }
+                .padding(.bottom, 6)
             }
-            .padding(.bottom, 6)
+            // 按行数定高（每行 42），最多 340，不留空白
+            .frame(height: min(340, CGFloat(items.count + (allowNone ? 1 : 0)) * 42 + 6))
         }
-        .frame(maxHeight: 380)
         .background(
             RoundedRectangle(cornerRadius: 9)
                 .fill(Color(rgb: 0xfffdf8))

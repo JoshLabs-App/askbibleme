@@ -8,6 +8,10 @@ let cases = [
     Case(tid: "web-en", id: "SNG", num: 22, name: "Song of Solomon", ch: 2),
     Case(tid: "web-en", id: "1CO", num: 46, name: "1 Corinthians", ch: 13),
     Case(tid: "ust-en", id: "GEN", num: 1, name: "Genesis", ch: 1),
+    // YouVersion：先问网站代理，check 脚本会真去问一次再测 mp3
+    Case(tid: "niv", id: "JHN", num: 43, name: "John", ch: 3),
+    Case(tid: "ccb-zh-hans", id: "GEN", num: 1, name: "Genesis", ch: 1),
+    Case(tid: "rcuvss-zh-hans", id: "PSA", num: 19, name: "Psalms", ch: 23),
 ]
 // 输出 JSON 供 Node 侧逐条实测可达性
 struct Row: Encodable { let translation: String; let book: String; let chapter: Int; let url: String? }

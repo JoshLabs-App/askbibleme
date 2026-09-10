@@ -66,7 +66,10 @@ for (const m of localeBlock.matchAll(/"([\w-]+)":\s*"([\w-]+)"/g)) pageLocales[m
 const browserUa = /const BROWSER_UA =\s*"([^"]+)"/.exec(yv)?.[1] ?? "";
 if (!browserUa || Object.keys(versionInfo).length < 10) throw new Error("youversion 表没抽到");
 
-const hasChapterAudio = (id: string) => id.startsWith("cuv") || ["web-en", "kjv", "blm-es"].includes(id) || id === "esv";
+// YouVersion 有音频的版本全部放开（Josh 2026-09-10「YouVersion 里有的版本全放开来接入，不需要人为去选」）；
+// 与 ChapterAudioSource.youVersionVersionIds 同一份名单，网站代理 /api/read/chapter-audio 拿 CDN mp3
+const YOUVERSION_AUDIO_IDS = ["asv", "esv", "ccb-zh-hans", "ccb-zh-hant", "cnv-zh-hant", "cnvs-zh-hans", "csbs-zh-hans", "csbt-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hans", "cunpss-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "niv", "nlt", "nkjv", "kjv"];
+const hasChapterAudio = (id: string) => id.startsWith("cuv") || ["web-en", "kjv", "blm-es"].includes(id) || id === "esv" || YOUVERSION_AUDIO_IDS.includes(id);
 type Entry = {
   id: string; labelZh: string; labelEn: string; language: string; delivery: "bundled" | "download" | "online";
   provider: string; remoteId: string; pageLocale: string; abbreviation: string; downloadUrl: string; hasChapterAudio: boolean;

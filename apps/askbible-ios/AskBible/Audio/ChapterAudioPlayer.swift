@@ -141,9 +141,32 @@ final class ChapterAudioPlayer: ObservableObject {
     }
 
     /// 装载一章。同一章重复调用不重新装载，只切换播放态。
-    func load(url: URL, key: String, title: String,
-              translationId: String = "", bookId: String = "", chapter: Int = 0) {
+    /// YouVersion 译本：先问代理拿 mp3，这段时间按「装载中」显示；用户这时点播放，拿到地址后自动起播
+    func beginResolving(key: String, title: String) {
         guard loadedKey != key else { return }
+        teardown()
+        loadedKey = key
+        nowPlayingTitle = title
+        wantsPlayback = false
+        errorMessage = nil
+        isLoading = true
+        currentTime = 0
+        duration = 0
+        activeVerse = nil
+    }
+
+    /// 代理没拿到地址
+    func failResolving(key: String) {
+        guard loadedKey == key else { return }
+        isLoading = false
+        errorMessage = SiteCopy.t("native.audioLoadFailed")
+    }
+
+    /// [resolved]：beginResolving 之后拿到了真地址，同一个 key 也要装；用户等待期间点过播放就直接起播
+    func load(url: URL, key: String, title: String,
+              translationId: String = "", bookId: String = "", chapter: Int = 0, resolved: Bool = false) {
+        guard loadedKey != key || (resolved && player == nil) else { return }
+        let resumeAfter = resolved && wantsPlayback
         teardown()
 
         loadedKey = key
@@ -164,6 +187,7 @@ final class ChapterAudioPlayer: ObservableObject {
         let avPlayer = AVPlayer(playerItem: item)
         avPlayer.automaticallyWaitsToMinimizeStalling = true
         player = avPlayer
+        if resumeAfter { DispatchQueue.main.async { [weak self] in self?.resume() } }
 
         statusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
             Task { @MainActor in
@@ -232,8 +256,8 @@ final class ChapterAudioPlayer: ObservableObject {
 
     /// 用户点播放不看 `interrupted`（iOS 常不发「打断结束」，之前会把播放键点死；RN 只挡后台自动续播）
     func resume() {
-        guard player != nil else { return }
         wantsPlayback = true
+        guard player != nil else { return }  // 还在问代理拿地址：记住意图，拿到后自动起播
         interrupted = false
         onWillPlay?()
         try? AVAudioSession.sharedInstance().setActive(true)

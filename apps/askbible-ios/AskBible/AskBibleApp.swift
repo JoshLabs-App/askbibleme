@@ -285,14 +285,22 @@ struct RootView: View {
             .onChange(of: localeOverride) { _, _ in sync.localeTag = { [appLocale] in appLocale.rawValue } }
             .onChange(of: audioURL) { _, url in
                 guard let url, let opened = audioTarget else { return }
-                audio.load(
-                    url: url,
-                    key: "\(store.translation.id).\(opened.book.id).\(opened.chapter)",
-                    title: ReadChrome.chapterTitle(bookName: opened.book.name(displayLocale), chapter: opened.chapter, locale: displayLocale),
-                    translationId: store.translation.id,
-                    bookId: opened.book.id,
-                    chapter: opened.chapter
-                )
+                let key = "\(store.translation.id).\(opened.book.id).\(opened.chapter)"
+                let title = ReadChrome.chapterTitle(bookName: opened.book.name(displayLocale), chapter: opened.chapter, locale: displayLocale)
+                if ChapterAudioSource.isResolverURL(url) {
+                    // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
+                    let tid = store.translation.id, bookId = opened.book.id, chapter = opened.chapter
+                    audio.beginResolving(key: key, title: title)
+                    Task {
+                        if let src = await ChapterAudioSource.fetchResolved(url, cacheKey: key) {
+                            audio.load(url: src, key: key, title: title, translationId: tid, bookId: bookId, chapter: chapter, resolved: true)
+                        } else {
+                            audio.failResolving(key: key)
+                        }
+                    }
+                } else {
+                    audio.load(url: url, key: key, title: title, translationId: store.translation.id, bookId: opened.book.id, chapter: opened.chapter)
+                }
                 if autoPlayPending {
                     autoPlayPending = false
                     audio.resume()

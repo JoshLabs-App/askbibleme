@@ -49,6 +49,10 @@ for (const p of sources) {
   const literal = (k) => k && !k.includes("\\(") && !k.includes("$");
   for (const m of src.matchAll(/(?:SiteCopy|PlanCopy)\.[tf]\("([^"]*)"\s*[,)]/g)) if (literal(m[1])) { keys.add(m[1]); if (!(m[1] in zh)) missing.set(m[1], path.relative(ROOT, p)); }
   for (const m of src.matchAll(/PlanText\.[tf]\("([^"]*)"\s*[,)]/g)) if (literal(m[1])) { keys.add(`mobile.${m[1]}`); if (!(`mobile.${m[1]}` in zh)) missing.set(`mobile.${m[1]}`, path.relative(ROOT, p)); }
+  // 写成「条件 ? 键A : 键B」再传进 t() 的，直接扫所有长得像文案键的字面量（真源里存在才收）
+  for (const m of src.matchAll(/"((?:pages|auth|common|nav|chrome|playback|music|nature|localeNames|localePicker|admin|shellTemplatePage|contentCorrection|onboarding|native|mobile)\.[\w.\-]+)"/g)) {
+    if (m[1] in zh) keys.add(m[1]);
+  }
 }
 if (missing.size) { console.error("SiteCopy 缺键：\n" + [...missing].map(([k, f]) => `  ${k}  ← ${f}`).join("\n")); process.exit(1); }
 // native-copy-extra 里明确写了 en 的（哪怕是空串，如英文里不需要的「天」后缀）不算缺

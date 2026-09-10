@@ -38,6 +38,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import me.askbible.native_.data.Brand
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.AppLocale
@@ -62,6 +68,8 @@ fun TranslationPanel(
     /** 界面语言：标签与分组名按它 */
     locale: AppLocale = AppLocale.ZH_CN,
     downloader: TranslationDownloader? = null,
+    /** 网站译本目录刷新计数：变了就重算分组（几百本在线译本是异步来的） */
+    catalogRevision: Int = 0,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var expandedSecondary by remember { mutableStateOf(false) }
@@ -88,7 +96,7 @@ fun TranslationPanel(
             }
 
             if (expanded) {
-                TranslationList(selectedId = current.id, excludeId = null, allowNone = false, locale = locale, downloader = downloader, theme = theme) { t ->
+                TranslationList(selectedId = current.id, excludeId = null, allowNone = false, locale = locale, downloader = downloader, theme = theme, catalogRevision = catalogRevision) { t ->
                     if (t != null) onSelect(t)
                     expanded = false
                 }
@@ -102,7 +110,7 @@ fun TranslationPanel(
             }
 
             if (expandedSecondary) {
-                TranslationList(selectedId = secondary?.id ?: current.id, excludeId = current.id, allowNone = true, locale = locale, downloader = downloader, theme = theme) { t ->
+                TranslationList(selectedId = secondary?.id ?: current.id, excludeId = current.id, allowNone = true, locale = locale, downloader = downloader, theme = theme, catalogRevision = catalogRevision) { t ->
                     onSelectSecondary(t)
                     expandedSecondary = false
                 }
@@ -111,56 +119,92 @@ fun TranslationPanel(
     }
 }
 
-/** 分组：简中 → 繁中 → 英文（RN LANGUAGE_PRIORITY），组内按 RN 选择器顺序 */
+/** 按语言分组：内置的简中 / 繁中 / 英文在前（界面语言那档打头），其余语种按版本数排；组内按 RN 选择器顺序 */
 private fun groups(locale: AppLocale): List<Pair<String, List<ScriptureTranslation>>> {
-    val ordered = ScriptureTranslation.pickerOrder(locale)
-    val keys = listOf("zh-Hans", "zh-Hant", "en")
-    val out = ArrayList<Pair<String, List<ScriptureTranslation>>>()
-    for (key in keys) {
-        val items = ordered.filter { it.language.lowercase().startsWith(key.lowercase()) }
-        if (items.isNotEmpty()) out.add(key to items)
+    val bucket = LinkedHashMap<String, MutableList<ScriptureTranslation>>()
+    for (t in ScriptureTranslation.pickerOrder(locale)) bucket.getOrPut(t.language.lowercase()) { ArrayList() }.add(t)
+    val head = when (locale) {
+        AppLocale.EN -> listOf("en", "zh-hans", "zh-hant")
+        AppLocale.ZH_TW -> listOf("zh-hant", "zh-hans", "en")
+        AppLocale.ZH_CN -> listOf("zh-hans", "zh-hant", "en")
     }
-    val rest = ordered.filter { t -> keys.none { t.language.lowercase().startsWith(it.lowercase()) } }
-    if (rest.isNotEmpty()) out.add("" to rest)
-    return out
+    val rest = bucket.keys.filter { it !in head }.sortedWith(compareByDescending<String> { bucket[it]?.size ?: 0 }.thenBy { it })
+    return (head + rest).mapNotNull { key -> bucket[key]?.let { key to it.toList() } }
 }
 
 @Composable
 private fun TranslationList(
     selectedId: String?, excludeId: String?, allowNone: Boolean, locale: AppLocale,
-    downloader: TranslationDownloader?, theme: Parchment, onPick: (ScriptureTranslation?) -> Unit,
+    downloader: TranslationDownloader?, theme: Parchment, catalogRevision: Int, onPick: (ScriptureTranslation?) -> Unit,
 ) {
-    val sections = remember(locale) { groups(locale) }
+    val sections = remember(locale, catalogRevision) { groups(locale) }
+    var query by remember { mutableStateOf("") }
     // 上面一排语言（简中 / 繁中 / 英文），下面只列该语言的版本（RN 选择器顺序 = 常用在前）；Josh 2026-09-10
     val initialFamily = remember(selectedId, excludeId) {
         val id = selectedId ?: excludeId
         sections.firstOrNull { (_, items) -> items.any { it.id == id } }?.first ?: sections.firstOrNull()?.first ?: ""
     }
     var family by remember(initialFamily) { mutableStateOf(initialFamily) }
-    val items = (sections.firstOrNull { it.first == family }?.second ?: emptyList()).filter { it.id != excludeId }
+    val q = query.trim().lowercase()
+    val items = if (q.isEmpty()) {
+        (sections.firstOrNull { it.first == family }?.second ?: emptyList()).filter { it.id != excludeId }
+    } else {
+        // 搜索非空时跨语言平铺结果（几百本在线译本，只靠滑语言找不动）
+        sections.flatMap { it.second }.filter { t ->
+            t.id != excludeId && (t.label(locale).lowercase().contains(q) || t.labelEn.lowercase().contains(q) ||
+                t.abbreviation.lowercase().contains(q) || ScriptureTranslation.languageName(t.language, locale).lowercase().contains(q))
+        }.take(80)
+    }
     Column(
         Modifier.padding(start = 40.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(Color(0xFFFFFDF8))
             .border(1.dp, theme.border.toColor().copy(alpha = 0.6f), RoundedCornerShape(9.dp)),
     ) {
-        Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for ((language, _) in sections) {
-                val on = language == family
-                Box(
-                    Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
-                        .background(if (on) Brand.logo.toColor().copy(alpha = 0.28f) else theme.surface.toColor().copy(alpha = 0.6f))
-                        .border(if (on) 1.5.dp else 0.5.dp, if (on) Brand.logo.toColor() else theme.border.toColor(), RoundedCornerShape(10.dp))
-                        .clickableNoRipple { family = language }.padding(vertical = 8.dp, horizontal = 4.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(ScriptureTranslation.languageName(language, locale), color = theme.ink.toColor(), fontSize = 13.sp,
-                         fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        BasicTextField(
+            value = query, onValueChange = { query = it },
+            modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 4.dp)
+                .background(theme.surface.toColor(), RoundedCornerShape(9.dp))
+                .border(0.5.dp, theme.border.toColor(), RoundedCornerShape(9.dp))
+                .padding(horizontal = 12.dp, vertical = 9.dp),
+            textStyle = TextStyle(color = theme.ink.toColor(), fontSize = 14.sp),
+            singleLine = true,
+            cursorBrush = SolidColor(theme.ink.toColor()),
+            decorationBox = { inner ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    MaterialIcon(MI.SEARCH, 15f, theme.muted.toColor())
+                    Box(Modifier.weight(1f)) {
+                        if (query.isEmpty()) Text(SiteCopy.t("native.searchTranslation", locale), color = theme.faint.toColor(), fontSize = 14.sp)
+                        inner()
+                    }
+                }
+            },
+        )
+        if (q.isEmpty()) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                    .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for ((language, _) in sections) {
+                    val on = language == family
+                    Box(
+                        Modifier.clip(RoundedCornerShape(10.dp))
+                            .background(if (on) Brand.logo.toColor().copy(alpha = 0.28f) else theme.surface.toColor().copy(alpha = 0.6f))
+                            .border(if (on) 1.5.dp else 0.5.dp, if (on) Brand.logo.toColor() else theme.border.toColor(), RoundedCornerShape(10.dp))
+                            .clickableNoRipple { family = language }.padding(vertical = 8.dp, horizontal = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(ScriptureTranslation.languageName(language, locale), color = theme.ink.toColor(), fontSize = 13.sp,
+                             fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
         }
     LazyColumn(Modifier.heightIn(max = 340.dp)) {
-        if (allowNone) item { TranslationRow(SiteCopy.t("native.none", locale), selectedId == null || selectedId == excludeId, theme, onClick = { onPick(null) }) {} }
+        if (allowNone && q.isEmpty()) item { TranslationRow(SiteCopy.t("native.none", locale), selectedId == null || selectedId == excludeId, theme, onClick = { onPick(null) }) {} }
+        if (items.isEmpty()) item {
+            Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale), Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                 color = theme.faint.toColor(), fontSize = 13.sp, textAlign = TextAlign.Center)
+        }
         run {
             for (t in items) {
                 item(key = t.id) {

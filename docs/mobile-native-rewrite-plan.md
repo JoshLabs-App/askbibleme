@@ -884,6 +884,27 @@ Josh 定了「补齐整套英文文案（探索页、计划页、首页、设置
   `check:chapter-audio` 加了 niv / ccb-zh-hans / rcuvss-zh-hans 三条：两端 URL 一致 + 真问代理 + Range 实测 mp3 206。
   模拟器实测：安卓 NIV 创世记 3 / iOS NIV 创世记 1 都能出声。
 
+### 在线译本全量放开：429 个版本、上百语种（2026-09-10）
+
+Josh：「原来的 API 是因为我们自己过滤过，不过滤直接接，不就有多少版本都进来吗」——确实是我们过滤的。
+网站服务端接的是 **YouVersion 官方平台接口**（`api.youversion.com/v1`，密钥 `YVP_APP_KEY` 在 Vercel 环境变量里），
+但 `lib/bible/providers/registry.ts` 是一张手工登记表，只登记 21 本（14 中文 + 4 英文 + 3 关着的），App 只认这张表。
+Josh 定「全放开」，于是：
+
+- **目录**：原生新增 `RemoteTranslations`（两端对等）：拉 `/api/mobile/bible/youversion/catalog`（429 个版本、上百语种），
+  落盘 Caches/translations-catalog.json，冷启动先读盘（记住的远端译本立刻认得）、再按 24 小时 TTL 后台刷新；
+  `ScriptureTranslation.all` = 内置 20 本（离线可用、带朗读 / 下载信息）+ 目录里多出来的那些（id 前缀 `yv-`，纯在线）。
+- **正文**：`RemoteChapterStore` 改成**先问** `/api/mobile/bible/youversion/chapter`（服务端走官方接口，稳），
+  拿不到再退回原来的抓 bible.com 公开页。原有 15 本在线译本也一起受益。
+- **译本面板**：搜索框 +（横滑的）语言行 + 该语言的版本列表；搜索非空时跨语言平铺（最多 80 条）。语言顺序：界面语言那档打头，其余按版本数。
+- **版权行**：章末显示目录给的 copyright；目录没给就显示「版本名 · 经文由 YouVersion 提供」（YouVersion 条款要求署名）。
+- **网站目录接口提速**：原来 `language_ranges[]=*` 翻 60 页拉 5900 种语言，整个请求要 240 秒（iOS 直接超时），
+  且一次请求打 60+ 次上游 —— 把 YouVersion 的配额打到 429。改成只查用到的语言码（分批 40 个一次，共 1–2 次）、
+  加进程内 6 小时缓存与 CDN `s-maxage`，上游挂掉时回吐过期缓存。**要部署后才生效**；同时新增 `languageNameEn` / `abbreviation` / `deepLink`。
+- **音频**：官方平台接口**没有**音频（版本元数据无 audio 字段，各种音频路径全 404），所以整章朗读仍只有原来那 18 本
+  （走网站代理抓 bible.com 音频页）。其余语种目前无朗读；要放开得改那条代理按版本号 / 缩写拼音频页，再逐个试哪些抓得到。
+- 验证：安卓模拟器与 iOS 模拟器都切到 Reina-Valera Antigua（西班牙语）读到正文，章末署名行正常；搜索「Reina」两端都能搜到。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

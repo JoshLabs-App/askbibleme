@@ -99,6 +99,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // 全量在线译本目录先读盘：记住的远端译本要在 TranslationPrefs 解析之前就认得
+        me.askbible.native_.data.RemoteTranslations.attach(cacheDir)
         OAuthCallbackBus.deliver(intent?.dataString)
         setContent { RootScreen() }
     }
@@ -208,6 +210,11 @@ private fun RootScreen() {
     val activity = remember { ReadingActivityStore(context) }
     val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs) } }
     LaunchedEffect(appLocale) { syncEngine.localeTag = { appLocale.tag } }
+    // 网站译本目录（几百本在线译本）：盘里没过期就不走网
+    var catalogRevision by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        if (withContext(Dispatchers.IO) { me.askbible.native_.data.RemoteTranslations.refresh() }) catalogRevision++
+    }
     LaunchedEffect(Unit) {
         activity.noteForeground(); activity.touchHabitDay()
         activity.mergeRemoteHabit(plans.listenedDates)
@@ -652,7 +659,7 @@ private fun RootScreen() {
                 current = translation,
                 secondary = secondary,
                 // 界面文案目前只有中文：面板里的译本名与分组名按中文界面走（系统英文时不混一行英文），繁体系统给繁体
-                locale = appLocale, downloader = downloader,
+                locale = appLocale, downloader = downloader, catalogRevision = catalogRevision,
                 onSelect = { translation = it; translationPrefs.write(it, secondary) },
                 onSelectSecondary = { secondary = it; translationPrefs.write(translation, it) },
                 onClose = { showTranslationPanel = false },

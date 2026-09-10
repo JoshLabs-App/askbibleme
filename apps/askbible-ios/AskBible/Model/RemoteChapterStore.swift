@@ -18,6 +18,12 @@ actor RemoteChapterStore {
         let key = "\(t.id):\(book):\(chapter)"
         if let hit = memory[key] { return hit }
         if let cached = Self.readDisk(t.id, book, chapter) { memory[key] = cached; return cached }
+        // 先问网站接口（服务端走 YouVersion 官方平台接口，带密钥、稳定）；拿不到再退回抓 bible.com 公开页
+        if let rows = await Self.fetchViaSite(t, book: book, chapter: chapter), !rows.isEmpty {
+            memory[key] = rows
+            Self.writeDisk(t.id, book, chapter, rows)
+            return rows
+        }
         for url in Self.pageURLs(t, book: book, chapter: chapter) {
             guard let html = await Self.fetchHTML(url) else { continue }
             let rows = YouVersionPage.parse(html)
@@ -33,6 +39,26 @@ actor RemoteChapterStore {
     /// 已缓存过的章（同步 peek，给搜索 / 对照预览这类不该等网络的地方）
     nonisolated static func cached(_ translationId: String, bookId: String, chapter: Int) -> [Row]? {
         readDisk(translationId, bookId.uppercased(), chapter)
+    }
+
+    // MARK: 网站接口（/api/mobile/bible/youversion/chapter → {ok, verses:[{verse,text}]}）
+
+    static func fetchViaSite(_ t: ScriptureTranslation, book: String, chapter: Int) async -> [Row]? {
+        guard !t.remoteId.isEmpty, chapter >= 1,
+              let url = URL(string: "\(RemoteTranslations.chapterEndpoint)?versionId=\(t.remoteId)&bookId=\(book)&chapter=\(chapter)") else { return nil }
+        var req = URLRequest(url: url, timeoutInterval: 25)
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let list = root["verses"] as? [[String: Any]] else { return nil }
+        let rows: [Row] = list.compactMap { item in
+            guard let v = item["verse"] as? Int,
+                  let text = (item["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !text.isEmpty else { return nil }
+            return Row(verse: v, text: text)
+        }
+        return rows.isEmpty ? nil : rows
     }
 
     // MARK: URL（RN buildYouVersionChapterPageUrls）

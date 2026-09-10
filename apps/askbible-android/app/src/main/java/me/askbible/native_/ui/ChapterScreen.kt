@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.RemoteTranslations
 import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -200,6 +201,14 @@ fun ChapterScreen(
                     onDoubleTapVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onDoubleTapVerse) },
                     onLongPressVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onLongPressVerse) },
                     onVerseBounds = { b -> verseBounds.putAll(b) })
+            }
+
+            // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
+            RemoteTranslations.attribution(translationId, locale)?.let { copyright ->
+                item(key = "copyright") {
+                    Text(copyright, Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 18.dp),
+                         color = theme.faint.toColor(), fontSize = 12.sp, lineHeight = 16.sp)
+                }
             }
 
             item(key = "ending") {

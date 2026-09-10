@@ -5,6 +5,13 @@ import SwiftUI
 @MainActor
 final class ScriptureStore: ObservableObject {
     @Published private(set) var lastError: String?
+    /// 网站译本目录（几百本在线译本）刷新后 +1：面板等处据此重画
+    @Published private(set) var catalogRevision = 0
+
+    /// 起来时刷一次全量目录（盘里没过期就不走网）
+    func refreshRemoteCatalog() async {
+        if await RemoteTranslations.refresh() { catalogRevision += 1 }
+    }
     /// 当前主译本，切换后各页重新取数；与副译本一起落 UserDefaults（RN selah_read_bible_translation_v1），跨启动记住
     @Published var translation: ScriptureTranslation = .default {
         didSet { persistTranslationPrefs() }

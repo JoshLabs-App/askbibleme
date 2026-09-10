@@ -88,6 +88,15 @@ struct ChapterView: View {
                                 .id(gi)
                         }
 
+                        // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
+                        if let copyright = RemoteTranslations.attribution(store.translation.id, locale) {
+                            Text(copyright)
+                                .font(.system(size: 12)).lineSpacing(4)
+                                .foregroundStyle(theme.faint)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 20).padding(.top, 18)
+                        }
+
                         endingSection()
 
                         // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）；原生只有中文两版，英文面不出（RN 英文面走英文版本，未接）

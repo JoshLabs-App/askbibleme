@@ -333,6 +333,7 @@ struct RootView: View {
                 if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
             }
             .onAppear {
+                Task { await store.refreshRemoteCatalog() }
                 sync.attach(auth: auth, plans: plans, bookmarks: bookmarks, activity: activity, search: searchPrefs)
                 sync.localeTag = { [appLocale] in appLocale.rawValue }
                 activity.noteForeground(); activity.touchHabitDay()

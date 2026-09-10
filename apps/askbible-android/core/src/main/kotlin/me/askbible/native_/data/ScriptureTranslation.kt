@@ -40,18 +40,22 @@ data class ScriptureTranslation(
     fun shortLabel(locale: AppLocale): String = when (locale) { AppLocale.EN -> shortEn; AppLocale.ZH_TW -> shortZhTw; AppLocale.ZH_CN -> shortZh }
 
     companion object {
-        /** 全目录（RN 生产环境拿得到正文的那些） */
-        val all: List<ScriptureTranslation> get() = TranslationCatalog.entries
+        /** 全目录：内置表（离线可用、带朗读 / 下载信息）+ 网站目录接口拿到的其余在线译本（RemoteTranslations） */
+        val all: List<ScriptureTranslation> get() = TranslationCatalog.entries + RemoteTranslations.extras
         /** 随安装包内置的（BUNDLED_SCRIPTURE_TRANSLATION_IDS 的顺序） */
-        val bundled: List<ScriptureTranslation> get() = all.filter { it.delivery == TranslationDelivery.BUNDLED }
+        val bundled: List<ScriptureTranslation> get() = TranslationCatalog.entries.filter { it.delivery == TranslationDelivery.BUNDLED }
         /** DEFAULT_SCRIPTURE_TRANSLATION_ID */
-        val DEFAULT: ScriptureTranslation get() = find("cuv-simp") ?: all[0]
+        val DEFAULT: ScriptureTranslation get() = TranslationCatalog.entries.firstOrNull { it.id == "cuv-simp" } ?: TranslationCatalog.entries[0]
 
         fun find(id: String): ScriptureTranslation? = all.firstOrNull { it.id == id }
 
-        /** 选择器顺序（RN sortPickerTranslations，按界面语言） */
-        fun pickerOrder(locale: AppLocale): List<ScriptureTranslation> =
-            (TranslationCatalog.pickerOrder[locale.tag] ?: TranslationCatalog.pickerOrder["en"] ?: emptyList()).mapNotNull { find(it) }
+        /** 选择器顺序（RN sortPickerTranslations，按界面语言）；其余语种接在内置表后面，按语言 + 名称排 */
+        fun pickerOrder(locale: AppLocale): List<ScriptureTranslation> {
+            val curated = (TranslationCatalog.pickerOrder[locale.tag] ?: TranslationCatalog.pickerOrder["en"] ?: emptyList())
+                .mapNotNull { id -> TranslationCatalog.entries.firstOrNull { it.id == id } }
+            val extras = RemoteTranslations.extras.sortedWith(compareBy({ it.language }, { it.label(locale) }))
+            return curated + extras
+        }
 
         /** RN languageDisplayName：简中 / 繁中 / 英文（英文界面 Simp. Chinese / Trad. Chinese / English） */
         fun languageName(language: String, locale: AppLocale): String {
@@ -61,14 +65,14 @@ data class ScriptureTranslation(
                     lang.startsWith("zh-hant") -> "Trad. Chinese"
                     lang.startsWith("zh") -> "Simp. Chinese"
                     lang.startsWith("en") -> "English"
-                    else -> lang.ifEmpty { "Other" }
+                    else -> RemoteTranslations.languageName(lang, locale) ?: lang.ifEmpty { "Other" }
                 }
             }
             return when {
                 lang.startsWith("zh-hant") -> locale.zh("繁中")
                 lang.startsWith("zh") -> locale.zh("简中")
                 lang.startsWith("en") -> SiteCopy.t("native.langEnglish", locale)
-                else -> SiteCopy.t("admin.mediaLibrary.kindOther", locale)
+                else -> RemoteTranslations.languageName(lang, locale) ?: lang.ifEmpty { SiteCopy.t("admin.mediaLibrary.kindOther", locale) }
             }
         }
     }

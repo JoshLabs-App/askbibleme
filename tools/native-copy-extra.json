@@ -235,5 +235,13 @@
   "native.durationYears": {
     "zh": "约 {{n}} 年",
     "en": "about {{n}} years"
+  },
+  "native.searchTranslation": {
+    "zh": "搜索译本",
+    "en": "Search versions"
+  },
+  "native.remoteTextAttribution": {
+    "zh": "{{name}} · 经文由 YouVersion 提供",
+    "en": "{{name}} · Scripture provided by YouVersion"
   }
 }

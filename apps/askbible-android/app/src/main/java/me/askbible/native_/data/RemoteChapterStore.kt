@@ -24,6 +24,12 @@ object RemoteChapterStore {
         val key = "${t.id}:$book:$chapter"
         synchronized(memory) { memory[key] }?.let { return@withContext it }
         readDisk(context, t.id, book, chapter)?.let { synchronized(memory) { memory[key] = it }; return@withContext it }
+        // 先问网站接口（服务端走 YouVersion 官方平台接口，带密钥、稳定）；拿不到再退回抓 bible.com 公开页
+        fetchViaSite(t, book, chapter)?.let { rows ->
+            synchronized(memory) { memory[key] = rows }
+            writeDisk(context, t.id, book, chapter, rows)
+            return@withContext rows
+        }
         for (url in pageUrls(t, book, chapter)) {
             val html = fetchHtml(url) ?: continue
             val rows = YouVersionPage.parse(html)
@@ -38,6 +44,30 @@ object RemoteChapterStore {
 
     /** 已缓存过的章（同步 peek） */
     fun cached(context: Context, translationId: String, bookId: String, chapter: Int): List<Row>? = readDisk(context, translationId, bookId.uppercase(), chapter)
+
+    /** 网站接口（/api/mobile/bible/youversion/chapter → {ok, verses:[{verse,text}]}） */
+    fun fetchViaSite(t: ScriptureTranslation, book: String, chapter: Int): List<Row>? {
+        if (t.remoteId.isEmpty() || chapter < 1) return null
+        val url = "${RemoteTranslations.CHAPTER_ENDPOINT}?versionId=${t.remoteId}&bookId=$book&chapter=$chapter"
+        val text = try {
+            val conn = URL(url).openConnection() as HttpURLConnection
+            conn.connectTimeout = 25_000; conn.readTimeout = 25_000
+            conn.setRequestProperty("Accept", "application/json")
+            try {
+                if (conn.responseCode != 200) return null
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } finally { conn.disconnect() }
+        } catch (_: Exception) { return null }
+        val arr = try { JSONObject(text).optJSONArray("verses") } catch (_: Exception) { null } ?: return null
+        val out = ArrayList<Row>(arr.length())
+        for (i in 0 until arr.length()) {
+            val o = arr.optJSONObject(i) ?: continue
+            val v = o.optInt("verse", 0)
+            val s = o.optString("text").trim()
+            if (v >= 1 && s.isNotEmpty()) out.add(Row(v, s))
+        }
+        return out.takeIf { it.isNotEmpty() }
+    }
 
     /** RN buildYouVersionChapterPageUrls：先音频章页（同样带经文），再文字页（带缩写 / 不带），各带语言前缀变体 */
     fun pageUrls(t: ScriptureTranslation, book: String, chapter: Int): List<String> {

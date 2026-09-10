@@ -30,20 +30,26 @@ struct ScriptureTranslation: Identifiable, Hashable {
     let shortZhTw: String
     let shortEn: String
 
-    /// 全目录（RN 生产环境拿得到正文的那些）
-    static let all: [ScriptureTranslation] = TranslationCatalog.entries
+    /// 全目录：内置表（离线可用、带朗读 / 下载信息）+ 网站目录接口拿到的其余在线译本（RemoteTranslations）
+    static var all: [ScriptureTranslation] { TranslationCatalog.entries + RemoteTranslations.extras }
     /// 随安装包内置的（BUNDLED_SCRIPTURE_TRANSLATION_IDS 的顺序）
-    static let bundled: [ScriptureTranslation] = all.filter { $0.delivery == .bundled }
+    static let bundled: [ScriptureTranslation] = TranslationCatalog.entries.filter { $0.delivery == .bundled }
     /// DEFAULT_SCRIPTURE_TRANSLATION_ID
-    static let `default`: ScriptureTranslation = find("cuv-simp") ?? all[0]
+    static let `default`: ScriptureTranslation = TranslationCatalog.entries.first { $0.id == "cuv-simp" } ?? TranslationCatalog.entries[0]
 
     static func find(_ id: String) -> ScriptureTranslation? {
         all.first { $0.id == id }
     }
 
-    /// 选择器顺序（RN sortPickerTranslations，按界面语言）
+    /// 选择器顺序（RN sortPickerTranslations，按界面语言）；其余语种接在内置表后面，按语言 + 名称排
     static func pickerOrder(_ locale: AppLocale) -> [ScriptureTranslation] {
-        (TranslationCatalog.pickerOrder[locale.rawValue] ?? TranslationCatalog.pickerOrder["en"] ?? []).compactMap(find)
+        let curated = (TranslationCatalog.pickerOrder[locale.rawValue] ?? TranslationCatalog.pickerOrder["en"] ?? [])
+            .compactMap { id in TranslationCatalog.entries.first { $0.id == id } }
+        let extras = RemoteTranslations.extras.sorted {
+            $0.language == $1.language ? $0.label(locale).localizedCompare($1.label(locale)) == .orderedAscending
+                                       : $0.language < $1.language
+        }
+        return curated + extras
     }
 
     var isZh: Bool { language.lowercased().hasPrefix("zh") }
@@ -64,11 +70,13 @@ struct ScriptureTranslation: Identifiable, Hashable {
             if lang.hasPrefix("zh-hant") { return "Trad. Chinese" }
             if lang.hasPrefix("zh") { return "Simp. Chinese" }
             if lang.hasPrefix("en") { return "English" }
+            if let name = RemoteTranslations.languageName(lang, locale) { return name }
             return lang.isEmpty ? "Other" : lang
         }
         if lang.hasPrefix("zh-hant") { return locale.zh("繁中") }
         if lang.hasPrefix("zh") { return locale.zh("简中") }
         if lang.hasPrefix("en") { return SiteCopy.t("native.langEnglish", locale) }
-        return SiteCopy.t("admin.mediaLibrary.kindOther", locale)
+        if let name = RemoteTranslations.languageName(lang, locale) { return name }
+        return lang.isEmpty ? SiteCopy.t("admin.mediaLibrary.kindOther", locale) : lang
     }
 }

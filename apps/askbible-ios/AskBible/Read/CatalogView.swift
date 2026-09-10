@@ -217,9 +217,12 @@ struct TranslationPanel: View {
 
     @State private var expanded = false
     @State private var expandedSecondary = false
-    /// 列表顶部选中的语言（简中 / 繁中 / 英文）；nil = 跟当前选中译本的语言。主 / 副各一份（Josh 2026-09-10：最上面是语言分类，下面是常选的版本）
+    /// 列表顶部选中的语言；nil = 跟当前选中译本的语言。主 / 副各一份（Josh 2026-09-10：最上面是语言分类，下面是常选的版本）
     @State private var langTab: String? = nil
     @State private var langTabSecondary: String? = nil
+    /// 版本搜索（几百本在线译本，横滑找语言太慢）
+    @State private var query = ""
+    @State private var querySecondary = ""
     private let theme = Parchment.light
 
     var body: some View {
@@ -242,7 +245,7 @@ struct TranslationPanel: View {
                 }
 
                 if expanded {
-                    translationList(selectedId: store.translation.id, excludeId: nil, allowNone: false, lang: $langTab) { t in
+                    translationList(selectedId: store.translation.id, excludeId: nil, allowNone: false, lang: $langTab, query: $query) { t in
                         if let t {
                             store.translation = t
                             if store.secondary?.id == t.id { store.secondary = nil }
@@ -264,7 +267,7 @@ struct TranslationPanel: View {
                 }
 
                 if expandedSecondary {
-                    translationList(selectedId: store.secondary?.id ?? store.translation.id, excludeId: store.translation.id, allowNone: true, lang: $langTabSecondary) { t in
+                    translationList(selectedId: store.secondary?.id ?? store.translation.id, excludeId: store.translation.id, allowNone: true, lang: $langTabSecondary, query: $querySecondary) { t in
                         store.secondary = t
                         expandedSecondary = false
                     }
@@ -280,18 +283,26 @@ struct TranslationPanel: View {
         }
     }
 
-    /// 分组：简中 → 繁中 → 英文（RN LANGUAGE_PRIORITY），组内按 RN 选择器顺序
+    /// 按语言分组：内置的简中 / 繁中 / 英文在前（界面语言那档打头），其余语种按版本数排；组内按 RN 选择器顺序
     private var groups: [(language: String, items: [ScriptureTranslation])] {
-        let ordered = ScriptureTranslation.pickerOrder(locale)
-        let keys = ["zh-Hans", "zh-Hant", "en"]
-        var out: [(language: String, items: [ScriptureTranslation])] = []
-        for key in keys {
-            let items = ordered.filter { $0.language.lowercased().hasPrefix(key.lowercased()) }
-            if !items.isEmpty { out.append((key, items)) }
+        var bucket: [String: [ScriptureTranslation]] = [:]
+        var order: [String] = []
+        for t in ScriptureTranslation.pickerOrder(locale) {
+            let key = t.language.lowercased()
+            if bucket[key] == nil { order.append(key) }
+            bucket[key, default: []].append(t)
         }
-        let rest = ordered.filter { t in !keys.contains { t.language.lowercased().hasPrefix($0.lowercased()) } }
-        if !rest.isEmpty { out.append(("", rest)) }
-        return out
+        let head: [String]
+        switch locale {
+        case .en: head = ["en", "zh-hans", "zh-hant"]
+        case .zhTW: head = ["zh-hant", "zh-hans", "en"]
+        case .zhCN: head = ["zh-hans", "zh-hant", "en"]
+        }
+        let rest = order.filter { !head.contains($0) }.sorted {
+            let a = bucket[$0]?.count ?? 0, b = bucket[$1]?.count ?? 0
+            return a == b ? $0 < $1 : a > b
+        }
+        return (head + rest).compactMap { key in bucket[key].map { (language: key, items: $0) } }
     }
 
     /// 某译本所属的语言分组键
@@ -300,44 +311,78 @@ struct TranslationPanel: View {
         return groups.first { g in g.items.contains { $0.id == t.id } }?.language
     }
 
-    /// 上面一排语言（简中 / 繁中 / 英文），下面只列该语言的版本（RN 选择器顺序 = 常用在前）
+    /// 最上面一行搜索 + 一排语言（横滑，界面语言那档打头），下面只列该语言的版本（RN 选择器顺序 = 常用在前）。
+    /// 搜索非空时跨语言平铺结果（几百本在线译本，只靠滑语言找不动）。
     private func translationList(selectedId: String?, excludeId: String?, allowNone: Bool, lang: Binding<String?>,
-                                 onPick: @escaping (ScriptureTranslation?) -> Void) -> some View {
+                                 query: Binding<String>, onPick: @escaping (ScriptureTranslation?) -> Void) -> some View {
         let all = groups
         let current = lang.wrappedValue ?? family(of: selectedId) ?? all.first?.language ?? ""
-        let items = (all.first { $0.language == current }?.items ?? []).filter { $0.id != excludeId }
+        let q = query.wrappedValue.trimmingCharacters(in: .whitespaces).lowercased()
+        let items: [ScriptureTranslation] = {
+            if q.isEmpty { return (all.first { $0.language == current }?.items ?? []).filter { $0.id != excludeId } }
+            return Array(all.flatMap(\.items).filter { t in
+                t.id != excludeId && (t.label(locale).lowercased().contains(q) || t.labelEn.lowercased().contains(q)
+                    || t.abbreviation.lowercased().contains(q)
+                    || ScriptureTranslation.languageName(t.language, locale: locale).lowercased().contains(q))
+            }.prefix(80))
+        }()
         return VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                ForEach(all, id: \.language) { g in
-                    let on = g.language == current
-                    Button { lang.wrappedValue = g.language } label: {
-                        Text(ScriptureTranslation.languageName(g.language, locale: locale))
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(theme.ink)
-                            .lineLimit(1).minimumScaleFactor(0.8)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(on ? Brand.logo.opacity(0.28) : theme.surface.opacity(0.6)))
-                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(on ? Brand.logo : theme.border, lineWidth: on ? 1.5 : 0.5))
-                            .contentShape(Rectangle())
+            HStack(spacing: 7) {
+                MaterialIcon(glyph: MI.search, size: 15, color: theme.muted)
+                TextField(SiteCopy.t("native.searchTranslation", locale), text: query)
+                    .font(.system(size: 14))
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                if !q.isEmpty {
+                    Button { query.wrappedValue = "" } label: {
+                        Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundStyle(theme.faint)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 6)
+            .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 4)
+
+            if q.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(all, id: \.language) { g in
+                            let on = g.language == current
+                            Button { lang.wrappedValue = g.language } label: {
+                                Text(ScriptureTranslation.languageName(g.language, locale: locale))
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(theme.ink)
+                                    .lineLimit(1)
+                                    .padding(.horizontal, 12).padding(.vertical, 8)
+                                    .background(RoundedRectangle(cornerRadius: 10).fill(on ? Brand.logo.opacity(0.28) : theme.surface.opacity(0.6)))
+                                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(on ? Brand.logo : theme.border, lineWidth: on ? 1.5 : 0.5))
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                }
+                .padding(.top, 4).padding(.bottom, 6)
+            }
+
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    if allowNone {
+                    if allowNone, q.isEmpty {
                         row(label: SiteCopy.t("native.none", locale), selected: selectedId == nil || selectedId == excludeId, badges: EmptyView()) { onPick(nil) }
                     }
                     ForEach(items) { t in
                         row(label: t.label(locale), selected: t.id == selectedId, badges: badges(t)) { onPick(t) }
                     }
+                    if items.isEmpty {
+                        Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale))
+                            .font(.system(size: 13)).foregroundStyle(theme.faint)
+                            .frame(maxWidth: .infinity).frame(height: 42)
+                    }
                 }
                 .padding(.bottom, 6)
             }
             // 按行数定高（每行 42），最多 340，不留空白
-            .frame(height: min(340, CGFloat(items.count + (allowNone ? 1 : 0)) * 42 + 6))
+            .frame(height: min(340, CGFloat(max(1, items.count + (allowNone && q.isEmpty ? 1 : 0))) * 42 + 6))
         }
         .background(
             RoundedRectangle(cornerRadius: 9)

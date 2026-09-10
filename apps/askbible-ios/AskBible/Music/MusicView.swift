@@ -54,7 +54,8 @@ struct MusicView: View {
             }
             .ignoresSafeArea()
             // 任何触碰都算「用户还在」：不吞事件，按钮照常响应（RN root onTouchStart={resetUiAutoHide}）
-            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in resetAutoHide() })
+            // 纯点按（没有位移）只会触发 onEnded，不会触发 onChanged，两个都接
+            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in resetAutoHide() }.onEnded { _ in resetAutoHide() })
             .onAppear { resetAutoHide() }
             .onDisappear { hideTask?.cancel(); hideTask = nil; uiVisible = true; onChromeHidden(false) }
             .onChange(of: sleepAutoHide) { _, _ in resetAutoHide() }

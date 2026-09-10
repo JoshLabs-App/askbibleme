@@ -10,7 +10,9 @@ private func keyWindowAnchor() -> ASPresentationAnchor {
     return scenes.flatMap(\.windows).first(where: \.isKeyWindow) ?? scenes.first?.windows.first ?? ASPresentationAnchor()
 }
 
-/// RN openAuthSessionAsync(preferEphemeralSession: true)：Safari 登录页 → askbible://auth/callback 回来；关掉即取消（nil）
+/// RN openAuthSessionAsync：Safari 登录页 → askbible://auth/callback 回来；关掉即取消（nil）。
+/// RN 传 preferEphemeralSession: true（无痕），原生这里**故意不用无痕**：Josh 2026-09-09 真 iPhone 实测，无痕会话不带 Safari 里已登录的
+/// Google 帐户，Google 要他重输邮箱密码、还当成新设备走了一遍「恢复帐户」验证；共用 Safari 会话就能直接选帐户（RN iOS 平时走原生 Google SDK，也是共用 Safari 会话）。
 final class WebAuthSession: NSObject, ASWebAuthenticationPresentationContextProviding {
     private var session: ASWebAuthenticationSession?
 
@@ -26,7 +28,7 @@ final class WebAuthSession: NSObject, ASWebAuthenticationPresentationContextProv
                 holder.session = nil
                 cont.resume(returning: callback?.absoluteString)
             }
-            s.prefersEphemeralWebBrowserSession = true
+            s.prefersEphemeralWebBrowserSession = false
             s.presentationContextProvider = holder
             holder.session = s
             if !s.start() {

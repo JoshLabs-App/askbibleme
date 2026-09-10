@@ -106,10 +106,10 @@ sealed class MemberAuthResult {
 object SupabaseAuthClient {
     private class Response(val status: Int, val body: String)
 
-    private fun request(path: String, method: String, token: String? = null, body: JSONObject? = null, extra: Map<String, String> = emptyMap()): Response {
+    private fun request(path: String, method: String, token: String? = null, body: JSONObject? = null, extra: Map<String, String> = emptyMap(), timeoutMs: Int = 15_000): Response {
         val conn = URL(SupabaseAuthConfig.URL + path).openConnection() as HttpURLConnection
         conn.requestMethod = method
-        conn.connectTimeout = 15_000; conn.readTimeout = 15_000
+        conn.connectTimeout = 15_000; conn.readTimeout = timeoutMs
         conn.setRequestProperty("apikey", SupabaseAuthConfig.ANON_KEY)
         conn.setRequestProperty("Accept", "application/json")
         conn.setRequestProperty("Authorization", "Bearer ${token ?: SupabaseAuthConfig.ANON_KEY}")
@@ -222,7 +222,8 @@ object SupabaseAuthClient {
     fun signInWithIdToken(provider: String, idToken: String, nonce: String?, fallbackName: String?, locale: String?): MemberAuthResult = try {
         val body = JSONObject().put("provider", provider).put("id_token", idToken)
         if (!nonce.isNullOrEmpty()) body.put("nonce", nonce)
-        val r = request("/auth/v1/token?grant_type=id_token", "POST", body = body)
+        // GoTrue 验 id_token 要去拿对方公钥，实测 18 秒以上；15 秒就当断网会误报（与 iOS 同）
+        val r = request("/auth/v1/token?grant_type=id_token", "POST", body = body, timeoutMs = 90_000)
         val o = json(r.body)
         val s = if (r.status in 200..299 && o != null) session(o, fallbackName, locale) else null
         if (s != null) MemberAuthResult.Ok(s) else {
@@ -234,7 +235,7 @@ object SupabaseAuthClient {
 
     /** RN exchangeCodeForSession：浏览器 OAuth 回调里的 code + 本机 verifier → 会话（grant_type=pkce） */
     fun exchangeCode(code: String, verifier: String, locale: String?): MemberAuthResult = try {
-        val r = request("/auth/v1/token?grant_type=pkce", "POST", body = JSONObject().put("auth_code", code).put("code_verifier", verifier))
+        val r = request("/auth/v1/token?grant_type=pkce", "POST", body = JSONObject().put("auth_code", code).put("code_verifier", verifier), timeoutMs = 90_000)
         val o = json(r.body)
         val s = if (r.status in 200..299 && o != null) session(o, null, locale) else null
         if (s != null) MemberAuthResult.Ok(s) else {

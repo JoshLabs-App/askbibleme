@@ -109,10 +109,10 @@ enum MemberAuthResult {
 /// GoTrue（/auth/v1）+ PostgREST（/rest/v1/askbible_profiles）请求；全部 async，失败给 RN 同款文案
 enum SupabaseAuthClient {
     private static func request(_ path: String, method: String, token: String? = nil, body: [String: Any]? = nil,
-                                extraHeaders: [String: String] = [:]) async throws -> (status: Int, json: Any?) {
+                                extraHeaders: [String: String] = [:], timeout: TimeInterval = 15) async throws -> (status: Int, json: Any?) {
         var req = URLRequest(url: URL(string: SupabaseAuthConfig.url + path)!)
         req.httpMethod = method
-        req.timeoutInterval = 15
+        req.timeoutInterval = timeout
         req.setValue(SupabaseAuthConfig.anonKey, forHTTPHeaderField: "apikey")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         req.setValue("Bearer \(token ?? SupabaseAuthConfig.anonKey)", forHTTPHeaderField: "Authorization")
@@ -236,7 +236,8 @@ enum SupabaseAuthClient {
         var body: [String: Any] = ["provider": provider, "id_token": idToken]
         if let nonce, !nonce.isEmpty { body["nonce"] = nonce }
         do {
-            let (status, json) = try await request("/auth/v1/token?grant_type=id_token", method: "POST", body: body)
+            // GoTrue 验 Apple / Google id_token 要去拿对方的公钥，实测一次 18 秒以上；15 秒就当断网会误报「网络连接失败」（Josh 真 iPhone 2026-09-09）
+            let (status, json) = try await request("/auth/v1/token?grant_type=id_token", method: "POST", body: body, timeout: 90)
             if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: fallbackName, locale: locale) {
                 return .ok(s)
             }
@@ -251,7 +252,7 @@ enum SupabaseAuthClient {
     /// RN exchangeCodeForSession：浏览器 OAuth 回调里的 code + 本机 verifier → 会话（grant_type=pkce）
     static func exchangeCode(_ code: String, verifier: String, locale: String?) async -> MemberAuthResult {
         do {
-            let (status, json) = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": code, "code_verifier": verifier])
+            let (status, json) = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": code, "code_verifier": verifier], timeout: 90)
             if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: nil, locale: locale) {
                 return .ok(s)
             }

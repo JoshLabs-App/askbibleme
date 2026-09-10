@@ -204,7 +204,9 @@ private struct AuthMethodDivider: View {
     }
 }
 
-/// 页面骨架：羊皮卷底 + 返回 + 标题 + 引言 + 表单（键盘顶起靠 ScrollView）
+/// 页面骨架：羊皮卷底 + 返回 + 标题 + 引言 + 表单（键盘顶起靠 ScrollView）。
+/// 顶部安全区照 PlansListView 的写法：GeometryReader 本身不 ignoresSafeArea（那样 safeAreaInsets 会归零，「返回」就顶进状态栏——Josh 真机 2026-09-09），
+/// 只让羊皮卷底铺满，内容按 geo.safeAreaInsets.top 让开刘海。
 private struct AuthPage<Content: View>: View {
     let locale: AppLocale
     let title: String
@@ -233,7 +235,6 @@ private struct AuthPage<Content: View>: View {
             .scrollDismissesKeyboard(.interactively)
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
-        .ignoresSafeArea()
     }
 }
 

@@ -697,8 +697,9 @@ Supabase 浏览器 OAuth（PKCE，回到 `askbible://auth/callback`）；安卓�
   （TS 侧 resolveMemberOAuthError 直接 import RN 源码，其余照抄）。
 - 网络：`SupabaseAuthClient.exchangeCode`（`grant_type=pkce`：auth_code + code_verifier）、`signInWithIdToken`（`grant_type=id_token`：provider / id_token / nonce 原文）、
   `sessionFromTokens`（回调直接带 access_token 的 implicit 分支）。拿到 session 后与邮箱登录同一条 `session(from:)`：ensureProfile 落 askbible_profiles，会话 JSON 同形同键。
-- iOS：`Auth/SocialSignIn.swift`。Google = `ASWebAuthenticationSession`（ephemeral，同 RN preferEphemeralSession；callbackURLScheme `askbible`，不用注册 URL scheme，
-  也不会与同机的 RN 版抢链接）→ code 换会话。Apple = `ASAuthorizationAppleIDProvider`（fullName + email，nonce 传 SHA-256）→ identityToken → id_token 换会话；
+- iOS：`Auth/SocialSignIn.swift`。Google = `ASWebAuthenticationSession`（callbackURLScheme `askbible`，不用注册 URL scheme，也不会与同机的 RN 版抢链接）→ code 换会话。
+  **不用无痕会话**（RN 传 preferEphemeralSession: true）：Josh 真 iPhone 实测无痕会话不带 Safari 里已登录的 Google 帐户，要重输邮箱密码、还被 Google 当新设备走「恢复帐户」验证；
+  共用 Safari 会话就直接出选帐户页（RN iOS 平时走原生 Google SDK，同样共用 Safari 会话）。Apple = `ASAuthorizationAppleIDProvider`（fullName + email，nonce 传 SHA-256）→ identityToken → id_token 换会话；
   加了 `AskBible.entitlements`（`com.apple.developer.applesignin`）并在 pbxproj 两个配置里挂 `CODE_SIGN_ENTITLEMENTS`。
   模拟器没登 Apple ID 时系统弹「需要在设置中登录 Apple 账户」，关掉后行内显示「Apple 登录失败，请重试。」（RN 同款非取消失败文案）；点 Google 弹 Safari 登录页，关掉即取消不提示。
 - Android：`androidx.browser` Custom Tab 打开 authorize URL；`MainActivity` 改 `singleTask` + `askbible://auth/callback` intent-filter，`onNewIntent` → `OAuthCallbackBus` →
@@ -728,6 +729,13 @@ Josh：「安装到连接的苹果手机上，然后图标也要是更新」。
   （签出来的包 entitlements 里有 `com.apple.developer.applesignin`）；装 / 启动用 `xcrun devicectl device install app --device <coredevice> <.app>` 与 `… process launch … me.askbible.native`。
 - Josh 发来一张「发送登录邮件」下面报 `Passed nonce and nonce in id_token should either both exist or not.` 的截图——那是 01Unlearn-English（十年之约）的登录页，不是 AskBible；
   AskBible 原生这边 Apple 走的是「给 Apple SHA-256、给 Supabase 原文」的正确配法。
+
+### 真 iPhone 试第三方登录后修的三处（2026-09-09）
+
+- Google：无痕会话改共用 Safari 会话（见上，`SocialSignIn.swift`）。
+- Apple 报「网络连接失败」：不是断网。GoTrue 第一次验 Apple id_token 要去拿 Apple 公钥，curl 实测冷启动 18.7 秒、之后 3 秒 / 0.2 秒；
+  原生请求超时 15 秒直接当断网。`request()` 加 timeout 参数，id_token / pkce 两个换会话请求放宽到 90 秒（RN 的 fetch 本来就没超时）。Kotlin 同改。
+- 登录 / 注册页「返回」顶进状态栏：AuthPage 的 GeometryReader 上多挂了一个 `.ignoresSafeArea()`，把 safeAreaInsets 清零了。改成 PlansListView 同款：只让羊皮卷底铺满，内容按 safeAreaInsets.top 让开。
 
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 

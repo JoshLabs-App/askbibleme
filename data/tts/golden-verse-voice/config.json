@@ -1,0 +1,12 @@
+{
+  "language": "zh",
+  "engine": "VoxCPM2 (openbmb/VoxCPM2) voice clone",
+  "reference_wav": "data/tts/golden-verse-voice/ref-zm_yunjian-ISA-41-10.wav",
+  "reference_origin": "Kokoro-82M voice zm_yunjian, lang_code z, speed 0.8, text = ISA.41.10 spoken line",
+  "control": "播音级男声，沉稳克制，语调平稳略有起伏，庄重温和，语速稍慢",
+  "cfg_value": 2.0,
+  "inference_timesteps": 10,
+  "chosen": "2026-09-10, candidate G_yunjian_restrained, listened against 12 alternatives",
+  "post_atempo": 0.88,
+  "post_atempo_note": "VoxCPM2 对语速指令不敏感，语速靠 ffmpeg atempo 后期放慢 12%（Josh 2026-09-10 在 8%/12% 中选 12%）"
+}

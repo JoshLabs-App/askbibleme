@@ -2,6 +2,8 @@
 /**
  * Resume-friendly R2 upload via Cloudflare REST API (byte-preserving).
  * Lists existing keys once, then uploads only missing files with 429 backoff.
+ * R2_FORCE=1 skips the listing and PUTs every local file (replace production audio).
+ * R2_ONLY_PACK=golden-verses limits the run to one pack; R2_FILE_LIST=<txt> limits to listed basenames.
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -11,6 +13,9 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const accountId = "652050e08d4a384c7cbe975ea02fb52c";
 const bucket = process.env.R2_BUCKET || "askbible-media";
+const force = process.env.R2_FORCE === "1"; // 无条件 PUT 覆盖已存在 key（替换生产内容用）
+const onlyPack = process.env.R2_ONLY_PACK || ""; // 只上传某一个 pack id
+const fileList = process.env.R2_FILE_LIST || ""; // 只上传这个清单文件里列出的文件名（每行一个 basename）
 const concurrency = Math.max(1, Number(process.env.R2_CONCURRENCY || 6) || 6);
 const publicBase =
   process.env.R2_PUBLIC_BASE_URL ||
@@ -129,10 +134,14 @@ async function putObject(token, absPath, key) {
 }
 
 async function uploadPack(token, pack) {
-  const files = listMp3(pack.dir);
+  let files = listMp3(pack.dir);
+  if (fileList) {
+    const want = new Set(fs.readFileSync(fileList, "utf8").split(/\r?\n/).filter(Boolean));
+    files = files.filter((abs) => want.has(path.basename(abs)));
+  }
   console.log(`${pack.id}: ${files.length} local; listing remote…`);
-  const existing = await listExistingKeys(token, `${pack.prefix}/`);
-  console.log(`${pack.id}: ${existing.size} already on R2`);
+  const existing = force ? new Set() : await listExistingKeys(token, `${pack.prefix}/`);
+  console.log(`${pack.id}: ${existing.size} already on R2${force ? " (R2_FORCE=1: overwriting all)" : ""}`);
 
   const pending = files.filter((abs) => !existing.has(`${pack.prefix}/${path.basename(abs)}`));
   console.log(`${pack.id}: ${pending.length} to upload (concurrency=${concurrency})`);
@@ -158,7 +167,10 @@ async function main() {
   console.log(`bucket=${bucket} concurrency=${concurrency}`);
   console.log(`publicBase=${publicBase}`);
   let failed = 0;
-  for (const pack of packs) failed += await uploadPack(token, pack);
+  for (const pack of packs) {
+    if (onlyPack && pack.id !== onlyPack) continue;
+    failed += await uploadPack(token, pack);
+  }
   console.log("\nUpload finished (no transcode).");
   console.log(`EXPO_PUBLIC_GOLDEN_VERSE_AUDIO_BASE_URL=${publicBase}`);
   if (failed) process.exit(1);

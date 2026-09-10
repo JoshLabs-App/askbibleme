@@ -19,6 +19,8 @@ struct PlanPlayView: View {
     var onPlayChapter: (Int) -> Void
     var onReadChapter: (Int) -> Void
     var onOpenPlans: () -> Void
+    /// 书卷名：跟当前版本（点这一行进去读的就是它）；默认退回目录里的中英名
+    var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
     /// 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates）
     var habitDates: Set<String> = []
     var onConfirmDay: () -> Void
@@ -139,7 +141,7 @@ struct PlanPlayView: View {
 
     private func chapterTitle(_ p: PlanPointer) -> String {
         guard let b = BibleCatalog.book(id: p.bookId) else { return "\(p.bookId) \(p.chapter)" }
-        return "\(b.name(locale)) \(p.chapter)"
+        return "\(bookLabel(b)) \(p.chapter)"
     }
 
     /// 单击点播；同一行 320ms 内再点 → 进阅读页（RN onRowPress）

@@ -50,7 +50,7 @@ struct RootView: View {
         let primary = AppLocale.primaryTranslationId(for: next)
         if let t = ScriptureTranslation.find(primary) { store.translation = t }
         store.secondary = nil
-        home.setTranslation(primary, audioTranslationId: AppLocale.goldenVerseAudioTranslationId(for: next))
+        // 首页金句跟读经版本走，换完译本由 onChange(store.translation.id) 接手
     }
     /// 计划 Tab（底栏中央键）里的子页：播放页 / 计划目录 / 计划详情
     enum PlanRoute: Equatable { case play, plans, planDetail(String) }
@@ -287,7 +287,11 @@ struct RootView: View {
             .onChange(of: localeOverride) { _, _ in sync.localeTag = { [appLocale] in appLocale.rawValue } }
             .onChange(of: store.translation.id) { _, _ in
                 // 换到在线译本：把它自己的书卷名取回来（盘里有就只读盘）
-                Task { if await RemoteBookNames.ensure(store.translation) { bookNamesRevision += 1 } }
+                Task {
+                    if await RemoteBookNames.ensure(store.translation) { bookNamesRevision += 1 }
+                    home.setSource(store.translation)
+                }
+                home.setSource(store.translation)
             }
             .onChange(of: audioURL) { _, url in
                 guard let url, let opened = audioTarget else { return }
@@ -340,6 +344,7 @@ struct RootView: View {
             }
             .onAppear {
                 Task { await store.refreshRemoteCatalog() }
+                home.setSource(store.translation)
                 sync.attach(auth: auth, plans: plans, bookmarks: bookmarks, activity: activity, search: searchPrefs)
                 sync.localeTag = { [appLocale] in appLocale.rawValue }
                 activity.noteForeground(); activity.touchHabitDay()
@@ -622,7 +627,7 @@ struct RootView: View {
                                  activeIndex: planActiveIndex, activePlaying: planActivePlaying,
                                  viewAhead: $planViewAhead, cursor: $planCursor,
                                  onPlayChapter: { planPlay(at: $0) }, onReadChapter: { planRead(at: $0) },
-                                 onOpenPlans: { planRoute = .plans }, habitDates: activity.completedDateSet,
+                                 onOpenPlans: { planRoute = .plans }, bookLabel: bookLabel, habitDates: activity.completedDateSet,
                                  onConfirmDay: { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                                  onStageSet: { planViewAhead = 0; planCursor = 0 })
                 case .plans:

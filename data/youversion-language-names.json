@@ -1,0 +1,1225 @@
+{
+ "_note": "YouVersion 目录用到的 305 个语言码的中英文名，由 tools/gen-language-names.mjs 从 api.youversion.com/v1/languages 抓一次生成；/languages 不支持按码过滤，线上现抓要翻 60 页，所以固化在仓库里。data/language-speakers.json 里有的语言以那份为准（和 LanguageOrder 同源）。",
+ "names": {
+  "aab": {
+   "zh": "Alumu-Tesu",
+   "en": "Alumu-Tesu"
+  },
+  "ahr": {
+   "zh": "Ahirani",
+   "en": "Ahirani"
+  },
+  "ak": {
+   "zh": "阿肯语 (加纳)",
+   "en": "Twi"
+  },
+  "ala": {
+   "zh": "Alago",
+   "en": "Alago"
+  },
+  "alw": {
+   "zh": "Alaba-K’abeena",
+   "en": "Alaba-K’abeena"
+  },
+  "am": {
+   "zh": "阿姆哈拉语",
+   "en": "Amharic"
+  },
+  "anh": {
+   "zh": "Nend",
+   "en": "Nend"
+  },
+  "anl": {
+   "zh": "Chin, Anu-Hkongso",
+   "en": "Chin, Anu-Hkongso"
+  },
+  "aqk": {
+   "zh": "Aninka",
+   "en": "Aninka"
+  },
+  "ar": {
+   "zh": "阿拉伯语",
+   "en": "Arabic"
+  },
+  "arp": {
+   "zh": "阿拉帕霍语",
+   "en": "Arapaho"
+  },
+  "as": {
+   "zh": "阿萨姆语",
+   "en": "Assamese"
+  },
+  "asg": {
+   "zh": "Cishingini",
+   "en": "Cishingini"
+  },
+  "auh": {
+   "zh": "Aushi",
+   "en": "Aushi"
+  },
+  "bcv": {
+   "zh": "Shoo-Minda-Nye",
+   "en": "Shoo-Minda-Nye"
+  },
+  "bdv": {
+   "zh": "Bodo Parja",
+   "en": "Bodo Parja"
+  },
+  "be": {
+   "zh": "白俄罗斯语",
+   "en": "Belarusian"
+  },
+  "beo": {
+   "zh": "Beami",
+   "en": "Beami"
+  },
+  "bfz": {
+   "zh": "Pahari, Mahasu",
+   "en": "Pahari, Mahasu"
+  },
+  "bgc": {
+   "zh": "哈里亚纳语",
+   "en": "Haryanvi"
+  },
+  "bgg": {
+   "zh": "Bugun",
+   "en": "Bugun"
+  },
+  "bhd": {
+   "zh": "Bhadrawahi",
+   "en": "Bhadrawahi"
+  },
+  "bhi": {
+   "zh": "Bhilali",
+   "en": "Bhilali"
+  },
+  "bho": {
+   "zh": "博杰普尔语",
+   "en": "Bhojpuri"
+  },
+  "bht": {
+   "zh": "Bhattiyali",
+   "en": "Bhattiyali"
+  },
+  "bhu": {
+   "zh": "Bhunjia",
+   "en": "Bhunjia"
+  },
+  "bla": {
+   "zh": "西克西卡语",
+   "en": "Siksika (Blackfoot)"
+  },
+  "bma": {
+   "zh": "Lame",
+   "en": "Lame"
+  },
+  "bn": {
+   "zh": "孟加拉语",
+   "en": "Bengali"
+  },
+  "bnx": {
+   "zh": "Bangubangu",
+   "en": "Bangubangu"
+  },
+  "bou": {
+   "zh": "Bondei",
+   "en": "Bondei"
+  },
+  "bpx": {
+   "zh": "Bareli, Palya",
+   "en": "Bareli, Palya"
+  },
+  "bsp": {
+   "zh": "Baga Sitemu",
+   "en": "Baga Sitemu"
+  },
+  "bsw": {
+   "zh": "Baiso",
+   "en": "Baiso"
+  },
+  "buj": {
+   "zh": "Basa-Gurmana",
+   "en": "Basa-Gurmana"
+  },
+  "bvw": {
+   "zh": "Boga",
+   "en": "Boga"
+  },
+  "bwc": {
+   "zh": "Bwile",
+   "en": "Bwile"
+  },
+  "bwo": {
+   "zh": "Borna",
+   "en": "Borna"
+  },
+  "byi": {
+   "zh": "Buyu",
+   "en": "Buyu"
+  },
+  "cdz": {
+   "zh": "Koda",
+   "en": "Koda"
+  },
+  "ceb": {
+   "zh": "宿务语",
+   "en": "Cebuano"
+  },
+  "cfm": {
+   "zh": "Falam Chin",
+   "en": "Falam Chin"
+  },
+  "ckb": {
+   "zh": "中库尔德语",
+   "en": "Sorani Kurdish"
+  },
+  "cs": {
+   "zh": "捷克语",
+   "en": "Czech"
+  },
+  "csj": {
+   "zh": "Chin-Songlai",
+   "en": "Chin-Songlai"
+  },
+  "cwe": {
+   "zh": "Kwere",
+   "en": "Kwere"
+  },
+  "da": {
+   "zh": "丹麦语",
+   "en": "Danish"
+  },
+  "dao": {
+   "zh": "Chin, Daai",
+   "en": "Chin, Daai"
+  },
+  "de": {
+   "zh": "德语",
+   "en": "German"
+  },
+  "dhn": {
+   "zh": "Dhanki",
+   "en": "Dhanki"
+  },
+  "dne": {
+   "zh": "Ndendeule",
+   "en": "Ndendeule"
+  },
+  "dnv": {
+   "zh": "Danu",
+   "en": "Danu"
+  },
+  "doe": {
+   "zh": "Doe",
+   "en": "Doe"
+  },
+  "dso": {
+   "zh": "Desiya",
+   "en": "Desiya"
+  },
+  "duq": {
+   "zh": "Dusun Malang",
+   "en": "Dusun Malang"
+  },
+  "dwr": {
+   "zh": "Dawro",
+   "en": "Dawro"
+  },
+  "ee": {
+   "zh": "埃维语",
+   "en": "Éwé"
+  },
+  "egm": {
+   "zh": "Benemanga",
+   "en": "Benemanga"
+  },
+  "eka": {
+   "zh": "艾卡朱克语",
+   "en": "Ekajuk"
+  },
+  "en": {
+   "zh": "英语",
+   "en": "English"
+  },
+  "ena": {
+   "zh": "Apali",
+   "en": "Apali"
+  },
+  "es": {
+   "zh": "西班牙语",
+   "en": "Spanish"
+  },
+  "es-ES": {
+   "zh": "西班牙语（西班牙）",
+   "en": "Spanish (Spain)"
+  },
+  "et": {
+   "zh": "爱沙尼亚语",
+   "en": "Estonian"
+  },
+  "eu": {
+   "zh": "巴斯克语",
+   "en": "Basque"
+  },
+  "fa": {
+   "zh": "波斯语",
+   "en": "Persian"
+  },
+  "fi": {
+   "zh": "芬兰语",
+   "en": "Finnish"
+  },
+  "fil": {
+   "zh": "菲律宾语",
+   "en": "Tagalog"
+  },
+  "fr": {
+   "zh": "法语",
+   "en": "French"
+  },
+  "fuf": {
+   "zh": "Pular",
+   "en": "Pular"
+  },
+  "gai": {
+   "zh": "Borei",
+   "en": "Borei"
+  },
+  "gaq": {
+   "zh": "Gata’",
+   "en": "Gata’"
+  },
+  "gax": {
+   "zh": "Oromo, Borana-Arsi-Guji",
+   "en": "Oromo, Borana-Arsi-Guji"
+  },
+  "gbl": {
+   "zh": "Gamit",
+   "en": "Gamit"
+  },
+  "gbr": {
+   "zh": "Gbagyi",
+   "en": "Gbagyi"
+  },
+  "gdf": {
+   "zh": "Guduf-Gava",
+   "en": "Guduf-Gava"
+  },
+  "geb": {
+   "zh": "Kire",
+   "en": "Kire"
+  },
+  "ghn": {
+   "zh": "Ghanongga",
+   "en": "Ghanongga"
+  },
+  "glw": {
+   "zh": "Glavda",
+   "en": "Glavda"
+  },
+  "gmv": {
+   "zh": "Gamo",
+   "en": "Gamo"
+  },
+  "gof": {
+   "zh": "Gofa",
+   "en": "Gofa"
+  },
+  "goj": {
+   "zh": "Gowlan",
+   "en": "Gowlan"
+  },
+  "gok": {
+   "zh": "Gowli",
+   "en": "Gowli"
+  },
+  "gqa": {
+   "zh": "Ga’anda",
+   "en": "Ga’anda"
+  },
+  "grc": {
+   "zh": "古希腊语",
+   "en": "Ancient Greek"
+  },
+  "gu": {
+   "zh": "古吉拉特语",
+   "en": "Gujarati"
+  },
+  "gwn": {
+   "zh": "Gwandara",
+   "en": "Gwandara"
+  },
+  "gyl": {
+   "zh": "Gayil",
+   "en": "Gayil"
+  },
+  "gyz": {
+   "zh": "Geji",
+   "en": "Geji"
+  },
+  "ha": {
+   "zh": "豪萨语",
+   "en": "Hausa"
+  },
+  "hav": {
+   "zh": "Havu",
+   "en": "Havu"
+  },
+  "he": {
+   "zh": "希伯来语",
+   "en": "Hebrew"
+  },
+  "hi": {
+   "zh": "印地语",
+   "en": "Hindi"
+  },
+  "hi-Latn": {
+   "zh": "印地语（拉丁字母）",
+   "en": "Hindi (Latin)"
+  },
+  "hil": {
+   "zh": "希利盖农语",
+   "en": "Hiligaynon"
+  },
+  "hlb": {
+   "zh": "Halbi",
+   "en": "Halbi"
+  },
+  "hne": {
+   "zh": "Chhattisgarhi",
+   "en": "Chhattisgarhi"
+  },
+  "hoo": {
+   "zh": "Holoholo",
+   "en": "Holoholo"
+  },
+  "hoy": {
+   "zh": "Holiya",
+   "en": "Holiya"
+  },
+  "hr": {
+   "zh": "克罗地亚语",
+   "en": "Croatian"
+  },
+  "hru": {
+   "zh": "Hruso",
+   "en": "Hruso"
+  },
+  "ht": {
+   "zh": "海地克里奥尔语",
+   "en": "Haitian Creole"
+  },
+  "hu": {
+   "zh": "匈牙利语",
+   "en": "Hungarian"
+  },
+  "hwo": {
+   "zh": "Hwana",
+   "en": "Hwana"
+  },
+  "id": {
+   "zh": "印尼语",
+   "en": "Indonesian"
+  },
+  "idc": {
+   "zh": "Ajiya",
+   "en": "Ajiya"
+  },
+  "ig": {
+   "zh": "伊博语",
+   "en": "Igbo"
+  },
+  "isn": {
+   "zh": "Isanzu",
+   "en": "Isanzu"
+  },
+  "it": {
+   "zh": "意大利语",
+   "en": "Italian"
+  },
+  "ja": {
+   "zh": "日语",
+   "en": "Japanese"
+  },
+  "jid": {
+   "zh": "Bu (Kaduna State)",
+   "en": "Bu (Kaduna State)"
+  },
+  "jnj": {
+   "zh": "Yemsa",
+   "en": "Yemsa"
+  },
+  "jub": {
+   "zh": "Wannu",
+   "en": "Wannu"
+  },
+  "jum": {
+   "zh": "Jumjum",
+   "en": "Jumjum"
+  },
+  "juy": {
+   "zh": "Juray",
+   "en": "Juray"
+  },
+  "kad": {
+   "zh": "Adara",
+   "en": "Adara"
+  },
+  "kca": {
+   "zh": "Hantĭ jasaŋ (Khanty)",
+   "en": "Hantĭ jasaŋ (Khanty)"
+  },
+  "kck": {
+   "zh": "Kalanga",
+   "en": "Kalanga"
+  },
+  "kcu": {
+   "zh": "Kami",
+   "en": "Kami"
+  },
+  "kcv": {
+   "zh": "Kete",
+   "en": "Kete"
+  },
+  "kdc": {
+   "zh": "Kutu",
+   "en": "Kutu"
+  },
+  "kde": {
+   "zh": "马孔德语",
+   "en": "Makonde"
+  },
+  "kdl": {
+   "zh": "Tsikimba",
+   "en": "Tsikimba"
+  },
+  "kfc": {
+   "zh": "Konda-Dora",
+   "en": "Konda-Dora"
+  },
+  "kff": {
+   "zh": "Koya",
+   "en": "Koya"
+  },
+  "kfw": {
+   "zh": "Naga, Kharam",
+   "en": "Naga, Kharam"
+  },
+  "khj": {
+   "zh": "Kuturmi",
+   "en": "Kuturmi"
+  },
+  "ki": {
+   "zh": "吉库尤语",
+   "en": "Kikuyu"
+  },
+  "kip": {
+   "zh": "Kham, Sheshi",
+   "en": "Kham, Sheshi"
+  },
+  "kiv": {
+   "zh": "Kimbu",
+   "en": "Kimbu"
+  },
+  "kjl": {
+   "zh": "Kham, Western Parbate",
+   "en": "Kham, Western Parbate"
+  },
+  "kn": {
+   "zh": "卡纳达语",
+   "en": "Kannada"
+  },
+  "ko": {
+   "zh": "韩语",
+   "en": "Korean"
+  },
+  "kos": {
+   "zh": "科斯拉伊语",
+   "en": "Kosraean"
+  },
+  "kpg": {
+   "zh": "Kapingamarangi",
+   "en": "Kapingamarangi"
+  },
+  "kqa": {
+   "zh": "Mum (PNG)",
+   "en": "Mum (PNG)"
+  },
+  "kql": {
+   "zh": "Kyenele",
+   "en": "Kyenele"
+  },
+  "krh": {
+   "zh": "Kurama",
+   "en": "Kurama"
+  },
+  "ksb": {
+   "zh": "香巴拉语",
+   "en": "Shambala"
+  },
+  "kxv": {
+   "zh": "库维语",
+   "en": "Kuvi"
+  },
+  "kzq": {
+   "zh": "Kaike",
+   "en": "Kaike"
+  },
+  "la": {
+   "zh": "拉丁语",
+   "en": "Latin"
+  },
+  "lbm": {
+   "zh": "Lodhi",
+   "en": "Lodhi"
+  },
+  "ldk": {
+   "zh": "Leelau",
+   "en": "Leelau"
+  },
+  "lg": {
+   "zh": "卢干达语",
+   "en": "Ganda"
+  },
+  "lga": {
+   "zh": "Lungga",
+   "en": "Lungga"
+  },
+  "liy": {
+   "zh": "Banda-Bambari",
+   "en": "Banda-Bambari"
+  },
+  "ln": {
+   "zh": "林加拉语",
+   "en": "Lingala"
+  },
+  "lnb": {
+   "zh": "Mbalanhu",
+   "en": "Mbalanhu"
+  },
+  "lol": {
+   "zh": "蒙戈语",
+   "en": "Mongo"
+  },
+  "luj": {
+   "zh": "Luna Inkongo (DRC)",
+   "en": "Luna Inkongo (DRC)"
+  },
+  "luo": {
+   "zh": "卢奥语",
+   "en": "Luo (Kenya and Tanzania)"
+  },
+  "lv": {
+   "zh": "拉脱维亚语",
+   "en": "Latvian"
+  },
+  "lyn": {
+   "zh": "Luyana",
+   "en": "Luyana"
+  },
+  "mbu": {
+   "zh": "Mbula-Bwazza",
+   "en": "Mbula-Bwazza"
+  },
+  "mdy": {
+   "zh": "Maale",
+   "en": "Maale"
+  },
+  "mey": {
+   "zh": "Hassaniyya",
+   "en": "Hassaniyya"
+  },
+  "mfm": {
+   "zh": "Marghi South",
+   "en": "Marghi South"
+  },
+  "mfn": {
+   "zh": "Mbembe, Cross River",
+   "en": "Mbembe, Cross River"
+  },
+  "mfo": {
+   "zh": "Mbe",
+   "en": "Mbe"
+  },
+  "mfx": {
+   "zh": "Melo",
+   "en": "Melo"
+  },
+  "mg": {
+   "zh": "马达加斯加语",
+   "en": "Malagasy"
+  },
+  "mgc": {
+   "zh": "Morokodo",
+   "en": "Morokodo"
+  },
+  "mgh": {
+   "zh": "马库阿-梅托语",
+   "en": "Makhuwa-Meetto"
+  },
+  "mgj": {
+   "zh": "Abureni",
+   "en": "Abureni"
+  },
+  "mgv": {
+   "zh": "Matengo",
+   "en": "Matengo"
+  },
+  "mgw": {
+   "zh": "Matumbi",
+   "en": "Matumbi"
+  },
+  "mgy": {
+   "zh": "Mbunga",
+   "en": "Mbunga"
+  },
+  "mhd": {
+   "zh": "Mbugu",
+   "en": "Mbugu"
+  },
+  "mho": {
+   "zh": "Mashi",
+   "en": "Mashi"
+  },
+  "ml": {
+   "zh": "马拉雅拉姆语",
+   "en": "Malayalam"
+  },
+  "mni": {
+   "zh": "曼尼普尔语",
+   "en": "Meitei"
+  },
+  "mpa": {
+   "zh": "Mpoto",
+   "en": "Mpoto"
+  },
+  "mr": {
+   "zh": "马拉地语",
+   "en": "Marathi"
+  },
+  "msc": {
+   "zh": "Sankaran Maninka",
+   "en": "Sankaran Maninka"
+  },
+  "msy": {
+   "zh": "Aruamu",
+   "en": "Aruamu"
+  },
+  "mwe": {
+   "zh": "Mwera (Chimwera)",
+   "en": "Mwera (Chimwera)"
+  },
+  "mzq": {
+   "zh": "Mori Atas",
+   "en": "Mori Atas"
+  },
+  "nag": {
+   "zh": "Naga Pidgin",
+   "en": "Naga Pidgin"
+  },
+  "nat": {
+   "zh": "Hungworo",
+   "en": "Hungworo"
+  },
+  "nb": {
+   "zh": "书面挪威语",
+   "en": "Norwegian Bokmål"
+  },
+  "nbr": {
+   "zh": "Numana-Nunku-Gbantu-Numbu",
+   "en": "Numana-Nunku-Gbantu-Numbu"
+  },
+  "nd": {
+   "zh": "北恩德贝勒语",
+   "en": "North Ndebele"
+  },
+  "ndj": {
+   "zh": "Ndamba",
+   "en": "Ndamba"
+  },
+  "neh": {
+   "zh": "Nyenkha",
+   "en": "Nyenkha"
+  },
+  "ngc": {
+   "zh": "Ngombe (Democratic Republic of Congo)",
+   "en": "Ngombe (Democratic Republic of Congo)"
+  },
+  "ngp": {
+   "zh": "Ngulu",
+   "en": "Ngulu"
+  },
+  "nho": {
+   "zh": "Takuu",
+   "en": "Takuu"
+  },
+  "nit": {
+   "zh": "Kolami, Southeastern",
+   "en": "Kolami, Southeastern"
+  },
+  "njd": {
+   "zh": "Ndonde Hamba",
+   "en": "Ndonde Hamba"
+  },
+  "nkn": {
+   "zh": "Nkangala",
+   "en": "Nkangala"
+  },
+  "nl": {
+   "zh": "荷兰语",
+   "en": "Dutch"
+  },
+  "nlx": {
+   "zh": "Nahali",
+   "en": "Nahali"
+  },
+  "nme": {
+   "zh": "Naga, Mzieme",
+   "en": "Naga, Mzieme"
+  },
+  "nmq": {
+   "zh": "Nambya",
+   "en": "Nambya"
+  },
+  "nnq": {
+   "zh": "Ngindo",
+   "en": "Ngindo"
+  },
+  "noi": {
+   "zh": "Noiri",
+   "en": "Noiri"
+  },
+  "nst": {
+   "zh": "Tase Naga",
+   "en": "Tase Naga"
+  },
+  "nto": {
+   "zh": "Ntomba",
+   "en": "Ntomba"
+  },
+  "nww": {
+   "zh": "Ndwewe",
+   "en": "Ndwewe"
+  },
+  "ny": {
+   "zh": "齐切瓦语",
+   "en": "Nyanja"
+  },
+  "nyj": {
+   "zh": "Nyanga",
+   "en": "Nyanga"
+  },
+  "nyy": {
+   "zh": "Nyakyusa-Ngonde",
+   "en": "Nyakyusa-Ngonde"
+  },
+  "omb": {
+   "zh": "East Ambae",
+   "en": "East Ambae"
+  },
+  "oml": {
+   "zh": "Ombo",
+   "en": "Ombo"
+  },
+  "or": {
+   "zh": "奥里亚语",
+   "en": "Odia"
+  },
+  "oyd": {
+   "zh": "Oyda",
+   "en": "Oyda"
+  },
+  "pa": {
+   "zh": "旁遮普语",
+   "en": "Punjabi"
+  },
+  "peg": {
+   "zh": "Pengo",
+   "en": "Pengo"
+  },
+  "pga": {
+   "zh": "Arabic, Sudanese Creole",
+   "en": "Arabic, Sudanese Creole"
+  },
+  "pl": {
+   "zh": "波兰语",
+   "en": "Polish"
+  },
+  "plj": {
+   "zh": "Polci",
+   "en": "Polci"
+  },
+  "pll": {
+   "zh": "Palaung, Shwe",
+   "en": "Palaung, Shwe"
+  },
+  "pon": {
+   "zh": "波纳佩语",
+   "en": "Pohnpeian"
+  },
+  "pot": {
+   "zh": "Potawatomi",
+   "en": "Potawatomi"
+  },
+  "poy": {
+   "zh": "Pogolo",
+   "en": "Pogolo"
+  },
+  "pt": {
+   "zh": "葡萄牙语",
+   "en": "Portuguese"
+  },
+  "pt-PT": {
+   "zh": "葡萄牙语（葡萄牙）",
+   "en": "Portuguese (Portugal)"
+  },
+  "pub": {
+   "zh": "Purum",
+   "en": "Purum"
+  },
+  "puu": {
+   "zh": "Punu (Ipounou)",
+   "en": "Punu (Ipounou)"
+  },
+  "pwr": {
+   "zh": "Powari",
+   "en": "Powari"
+  },
+  "quc": {
+   "zh": "基切语",
+   "en": "K'iche'"
+  },
+  "qug": {
+   "zh": "Chimborazo Highland Quichua",
+   "en": "Chimborazo Highland Quichua"
+  },
+  "rei": {
+   "zh": "Reli",
+   "en": "Reli"
+  },
+  "rhg": {
+   "zh": "罗兴亚语",
+   "en": "Rohingya"
+  },
+  "rki": {
+   "zh": "Southern Rakhine",
+   "en": "Southern Rakhine"
+  },
+  "rmc": {
+   "zh": "Carpathian Romani",
+   "en": "Carpathian Romani"
+  },
+  "rmn": {
+   "zh": "巴尔干罗姆语",
+   "en": "Balkan Romani"
+  },
+  "ro": {
+   "zh": "罗马尼亚语",
+   "en": "Romanian"
+  },
+  "rom": {
+   "zh": "吉普赛语",
+   "en": "Romani: Ursari"
+  },
+  "ru": {
+   "zh": "俄语",
+   "en": "Russian"
+  },
+  "ruf": {
+   "zh": "Luguru",
+   "en": "Luguru"
+  },
+  "rup": {
+   "zh": "阿罗马尼亚语",
+   "en": "Aromanian"
+  },
+  "sa": {
+   "zh": "梵语",
+   "en": "Sanskrit"
+  },
+  "sat": {
+   "zh": "桑塔利语",
+   "en": "Santali"
+  },
+  "sax": {
+   "zh": "Sa",
+   "en": "Sa"
+  },
+  "sby": {
+   "zh": "Soli",
+   "en": "Soli"
+  },
+  "sce": {
+   "zh": "Dongxiang",
+   "en": "Dongxiang"
+  },
+  "sch": {
+   "zh": "Sakachep",
+   "en": "Sakachep"
+  },
+  "shj": {
+   "zh": "Shatt",
+   "en": "Shatt"
+  },
+  "shq": {
+   "zh": "Sala",
+   "en": "Sala"
+  },
+  "shr": {
+   "zh": "Shi",
+   "en": "Shi"
+  },
+  "six": {
+   "zh": "Sumau",
+   "en": "Sumau"
+  },
+  "sk": {
+   "zh": "斯洛伐克语",
+   "en": "Slovak"
+  },
+  "sl": {
+   "zh": "斯洛文尼亚语",
+   "en": "Slovenian"
+  },
+  "sle": {
+   "zh": "Sholaga",
+   "en": "Sholaga"
+  },
+  "sn": {
+   "zh": "绍纳语",
+   "en": "Shona"
+  },
+  "sod": {
+   "zh": "Songoora",
+   "en": "Songoora"
+  },
+  "spm": {
+   "zh": "Akukem",
+   "en": "Akukem"
+  },
+  "sq": {
+   "zh": "阿尔巴尼亚语",
+   "en": "Albanian"
+  },
+  "sqa": {
+   "zh": "Shama-Sambuga",
+   "en": "Shama-Sambuga"
+  },
+  "sr": {
+   "zh": "塞尔维亚语",
+   "en": "Serbian"
+  },
+  "sur": {
+   "zh": "Mwaghavul",
+   "en": "Mwaghavul"
+  },
+  "sus": {
+   "zh": "苏苏语",
+   "en": "Susu (Roman script)"
+  },
+  "sus-Arab": {
+   "zh": "苏苏语（阿拉伯字母）",
+   "en": "Susu (Arabic)"
+  },
+  "sv": {
+   "zh": "瑞典语",
+   "en": "Swedish"
+  },
+  "sw": {
+   "zh": "斯瓦希里语",
+   "en": "Swahili"
+  },
+  "ta": {
+   "zh": "泰米尔语",
+   "en": "Tamil"
+  },
+  "tap": {
+   "zh": "Taabwa",
+   "en": "Taabwa"
+  },
+  "taw": {
+   "zh": "Tai",
+   "en": "Tai"
+  },
+  "tcn": {
+   "zh": "Tichurong",
+   "en": "Tichurong"
+  },
+  "te": {
+   "zh": "泰卢固语",
+   "en": "Telugu"
+  },
+  "tgj": {
+   "zh": "Tagin",
+   "en": "Tagin"
+  },
+  "th": {
+   "zh": "泰语",
+   "en": "Thai"
+  },
+  "thr": {
+   "zh": "Tharu, Rana",
+   "en": "Tharu, Rana"
+  },
+  "tkr": {
+   "zh": "Tsakhur",
+   "en": "Tsakhur"
+  },
+  "tn": {
+   "zh": "茨瓦纳语",
+   "en": "Setswana"
+  },
+  "tod": {
+   "zh": "Toma",
+   "en": "Toma"
+  },
+  "toi": {
+   "zh": "Tonga (Zambia)",
+   "en": "Tonga (Zambia)"
+  },
+  "tr": {
+   "zh": "土耳其语",
+   "en": "Turkish"
+  },
+  "tsw": {
+   "zh": "Tsishingini",
+   "en": "Tsishingini"
+  },
+  "ttl": {
+   "zh": "Totela",
+   "en": "Totela"
+  },
+  "tvn": {
+   "zh": "Tavoyan",
+   "en": "Tavoyan"
+  },
+  "tvt": {
+   "zh": "Tutsa Naga",
+   "en": "Tutsa Naga"
+  },
+  "uk": {
+   "zh": "乌克兰语",
+   "en": "Ukrainian"
+  },
+  "unx": {
+   "zh": "Munda",
+   "en": "Munda"
+  },
+  "ur": {
+   "zh": "乌尔都语",
+   "en": "Urdu"
+  },
+  "ur-Deva": {
+   "zh": "乌尔都语（天城文）",
+   "en": "Urdu (Devanagari)"
+  },
+  "ur-Latn": {
+   "zh": "乌尔都语（拉丁字母）",
+   "en": "Urdu (Latin)"
+  },
+  "urw": {
+   "zh": "Sop",
+   "en": "Sop"
+  },
+  "utr": {
+   "zh": "Etulo",
+   "en": "Etulo"
+  },
+  "vaa": {
+   "zh": "Vaagri Booli",
+   "en": "Vaagri Booli"
+  },
+  "ver": {
+   "zh": "Verre",
+   "en": "Verre"
+  },
+  "vgr": {
+   "zh": "Vaghri",
+   "en": "Vaghri"
+  },
+  "vi": {
+   "zh": "越南语",
+   "en": "Vietnamese"
+  },
+  "vid": {
+   "zh": "Vidunda",
+   "en": "Vidunda"
+  },
+  "wbq": {
+   "zh": "Waddar",
+   "en": "Waddar"
+  },
+  "wja": {
+   "zh": "Waja",
+   "en": "Waja"
+  },
+  "xnj": {
+   "zh": "kiNgoni",
+   "en": "kiNgoni"
+  },
+  "xsn": {
+   "zh": "Sanga",
+   "en": "Sanga"
+  },
+  "yaf": {
+   "zh": "Yaka",
+   "en": "Yaka"
+  },
+  "yal": {
+   "zh": "Yalunka",
+   "en": "Yalunka"
+  },
+  "yao": {
+   "zh": "尧语",
+   "en": "Yao"
+  },
+  "yap": {
+   "zh": "雅浦语",
+   "en": "Yapese"
+  },
+  "yer": {
+   "zh": "Tarok",
+   "en": "Tarok"
+  },
+  "yi": {
+   "zh": "意第绪语 (乌克兰)",
+   "en": "Yiddish Latin Script"
+  },
+  "ymp": {
+   "zh": "Yamap",
+   "en": "Yamap"
+  },
+  "yns": {
+   "zh": "Yansi",
+   "en": "Yansi"
+  },
+  "yo": {
+   "zh": "约鲁巴语",
+   "en": "Yoruba"
+  },
+  "yom": {
+   "zh": "Yombe",
+   "en": "Yombe"
+  },
+  "zaj": {
+   "zh": "Zaramo / Zalamo",
+   "en": "Zaramo / Zalamo"
+  },
+  "zbu": {
+   "zh": "Bu (Bauchi State)",
+   "en": "Bu (Bauchi State)"
+  },
+  "zh": {
+   "zh": "中文",
+   "en": "Chinese"
+  },
+  "zh-Hant-TW": {
+   "zh": "繁體中文（台灣）",
+   "en": "Chinese (Traditional, Taiwan)"
+  },
+  "ziw": {
+   "zh": "Zigula",
+   "en": "Zigula"
+  }
+ }
+}

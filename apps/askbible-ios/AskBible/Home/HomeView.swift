@@ -269,7 +269,10 @@ struct HomeView: View {
         let playingAlbum = music.isPlaying ? music.track?.album : nil
         return HStack(spacing: M.albumGap) {
             albumButton(MCI.musicNoteOutline, community: true, on: playingAlbum == "安静") { touch(); onPressAlbum("安静") }
-            albumButton(MI.volumeUp, on: home.voiceOn) { touch(); home.toggleVoice() }
+            // 金句朗读只有和合本 / WEBP 两套：显示的是别的版本（法语等）时没有对得上的朗读，喇叭不出
+            if home.voiceAvailable {
+                albumButton(MI.volumeUp, on: home.voiceOn) { touch(); home.toggleVoice() }
+            }
             albumButton(MCI.coffeeOutline, community: true, on: playingAlbum == "下午茶") { touch(); onPressAlbum("下午茶") }
         }
         .frame(height: M.albumBtn)

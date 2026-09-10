@@ -22,10 +22,15 @@ final class HomeVerseController: ObservableObject {
     let player = GoldenVersePlayer()
     private let entries: [HomeVerseEntry]
     private var memory: [String: PrayerMemoryRow]
-    /// 经文译本跟界面语言联动（RN applyLocaleWithTranslationPrefs：verseTextZhTranslationId / 金句朗读译本）
+    /// 首页金句跟当前读经版本走（Josh 2026-09-10）：内置译本直接读本机库；在线译本（含法语等）取该版本的正文，
+    /// 没取到之前先用同语系的内置库顶着。切语言时读经译本本来就会跟着换，所以联动仍然成立。
     private(set) var translationId = AppLocale.primaryTranslationId(for: AppLocale.current)
     private(set) var audioTranslationId = AppLocale.goldenVerseAudioTranslationId(for: AppLocale.current)
     private var db = try? ScriptureDatabase(translationId: AppLocale.primaryTranslationId(for: AppLocale.current))
+    /// 在线版本（正文要联网取）；nil = 直接读本机库
+    private(set) var remoteSource: ScriptureTranslation?
+    /// 金句朗读只有和合本 / WEBP 两套：显示的是别的版本时就没有对得上的朗读，喇叭不出
+    @Published private(set) var voiceAvailable = true
     private var rotationTimer: Timer?
     private var gapTimer: Timer?
     private var sleepTimer: Timer?
@@ -113,16 +118,58 @@ final class HomeVerseController: ObservableObject {
         Self.saveMemory(memory)
         verseKey = next
         verse = resolve(next) ?? .sample
+        fetchRemoteIfNeeded(next)
         if play { playCurrent() }
     }
 
     private func resolve(_ key: String) -> GoldenVerse? {
         guard let loc = GoldenVerseAudioSource.parseVerseKey(key),
-              let book = BibleCatalog.book(id: loc.bookId),
-              let rows = try? db?.loadChapter(bookId: loc.bookId, chapter: loc.chapter),
+              let book = BibleCatalog.book(id: loc.bookId) else { return nil }
+        let name = remoteSource.flatMap { RemoteBookNames.name($0, bookId: loc.bookId) } ?? book.name(AppLocale.current)
+        let reference = "\(name) \(loc.chapter):\(loc.verse)"
+        // 在线版本：缓存里有这一章就用它的正文（换句时顺带把这一章拉回来缓存，见 fetchRemoteIfNeeded）
+        if let t = remoteSource,
+           let cached = RemoteChapterStore.cached(t.id, bookId: loc.bookId, chapter: loc.chapter),
+           let row = cached.first(where: { $0.verse == loc.verse }) {
+            return GoldenVerse(text: VerseDisplayNotes.strip(row.text), reference: reference)
+        }
+        guard let rows = try? db?.loadChapter(bookId: loc.bookId, chapter: loc.chapter),
               let row = rows.first(where: { $0.number == loc.verse }) else { return nil }
         // 首页短展示要去括注（诗前「（上行之诗）」等），与 RN chunk 里的 zh-CN 行一致
-        return GoldenVerse(text: VerseDisplayNotes.strip(row.text), reference: "\(book.name(AppLocale.current)) \(loc.chapter):\(loc.verse)")
+        return GoldenVerse(text: VerseDisplayNotes.strip(row.text), reference: reference)
+    }
+
+    /// 在线版本：把这一句所在的章拉回来（RemoteChapterStore 自带内存 + 落盘缓存），拿到就把当前这句换成该版本的正文
+    private func fetchRemoteIfNeeded(_ key: String) {
+        guard let t = remoteSource, let loc = GoldenVerseAudioSource.parseVerseKey(key),
+              RemoteChapterStore.cached(t.id, bookId: loc.bookId, chapter: loc.chapter) == nil else { return }
+        Task { [weak self] in
+            _ = await RemoteChapterStore.shared.load(t, bookId: loc.bookId, chapter: loc.chapter)
+            await MainActor.run {
+                guard let self, self.verseKey == key else { return }
+                if let v = self.resolve(key) { self.verse = v }
+            }
+        }
+    }
+
+    /// 首页金句的来源版本 = 当前读经版本。内置的直接读库；在线的联网取正文，先用同语系内置库顶着
+    func setSource(_ t: ScriptureTranslation) {
+        let fallbackId: String = t.isZh ? (AppLocale.current == .zhTW ? "cuv-trad" : "cuv-simp")
+            : (t.language.lowercased().hasPrefix("en") ? "web-en" : "web-en")
+        let localId = t.delivery == .bundled ? t.id : fallbackId
+        if localId != translationId {
+            translationId = localId
+            db = try? ScriptureDatabase(translationId: localId)
+        }
+        remoteSource = t.delivery == .bundled ? nil : t
+        audioTranslationId = AppLocale.goldenVerseAudioTranslationId(for: t.isZh ? .zhCN : .en)
+        // 显示的正文不是和合本 / WEBP 时没有对得上的朗读
+        voiceAvailable = remoteSource == nil
+        if !voiceAvailable, voiceOn { stopVoice() }
+        if !verseKey.isEmpty {
+            if let v = resolve(verseKey) { verse = v }
+            fetchRemoteIfNeeded(verseKey)
+        }
     }
 
     // MARK: 睡眠定时（到期关掉朗读，与其它两个播放器同一套档位）

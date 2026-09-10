@@ -1,40 +1,21 @@
 import { NextResponse } from "next/server";
 
+import languageNamesData from "@/data/youversion-language-names.json";
+
 const BASE = "https://api.youversion.com/v1";
 
+const LANGUAGE_NAMES = languageNamesData.names as Record<string, { zh: string; en: string }>;
+
 /**
- * 只查用到的语言码（`language_ranges[]` 支持多值）。
- * 早先是 `language_ranges[]=*` 翻 60 页拉全部 5900 种语言，整个接口要几分钟，手机端直接超时。
+ * 语言名走仓库里的静态表（tools/gen-language-names.mjs 生成）。
+ * 上游 /languages 不认 language_ranges[] 过滤（照样返回第一页全量），线上现抓要翻 60 页，
+ * 早先那版因此把语言名退化成了语言码本身。
  */
-async function loadLanguageNames(key: string, codes: string[]) {
-  const names = new Map<string, { zh: string; en: string }>();
-  const wanted = [...new Set(codes.filter(Boolean))];
-  for (let i = 0; i < wanted.length; i += 40) {
-    const params = new URLSearchParams({ page_size: "99" });
-    for (const code of wanted.slice(i, i + 40)) params.append("language_ranges[]", code);
-    const response = await fetch(`${BASE}/languages?${params.toString()}`, {
-      headers: { "X-YVP-App-Key": key, Accept: "application/json" },
-      cache: "no-store",
-    });
-    if (!response.ok) continue;
-    const body = (await response.json()) as { data?: Array<Record<string, unknown>> };
-    for (const item of body.data ?? []) {
-      const code = String(item.language ?? item.id ?? "");
-      const displayNames = (item.display_names as Record<string, unknown> | undefined) ?? {};
-      const local = String((displayNames as Record<string, unknown>)[code] ?? item.name ?? "");
-      const name = {
-        zh: String(displayNames.zh ?? displayNames.en ?? local ?? code),
-        en: String(displayNames.en ?? local ?? displayNames.zh ?? code),
-      };
-      // 别名（zh-CN / zh-Hans 之类）不覆盖已登记的主码：先到先得，否则简体条目会被繁体名字盖掉
-      if (code && !names.has(code)) names.set(code, name);
-      for (const alias of (item.aliases as unknown[] | undefined) ?? []) {
-        const key = String(alias);
-        if (key && !names.has(key)) names.set(key, name);
-      }
-    }
-  }
-  return names;
+function languageName(code: string) {
+  const direct = LANGUAGE_NAMES[code];
+  if (direct) return direct;
+  const base = code.split("-")[0];
+  return LANGUAGE_NAMES[base];
 }
 
 /** 进程内缓存：Vercel 实例热着时后续请求直接返回（目录一天也不会变一次） */
@@ -84,10 +65,9 @@ export async function GET() {
       nextPageToken = String(body.next_page_token ?? "");
       if (!nextPageToken) break;
     }
-    const languageNames = await loadLanguageNames(key, translations.map((t) => String(t.language ?? "")));
     for (const item of translations) {
       const code = String(item.language ?? "");
-      const name = languageNames.get(code);
+      const name = languageName(code);
       // languageName 保留旧字段名（老客户端在读）；新增中英两份供 App 按界面语言显示
       item.languageName = name?.zh ?? code;
       item.languageNameZh = name?.zh ?? code;

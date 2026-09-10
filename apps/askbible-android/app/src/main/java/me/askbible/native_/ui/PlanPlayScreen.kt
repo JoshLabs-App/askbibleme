@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.askbible.native_.data.BookRef
 import me.askbible.native_.audio.ChapterAudioPlayer
 import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.BibleCatalog
@@ -75,6 +76,8 @@ fun PlanPlayScreen(
     onPlayChapter: (Int) -> Unit,
     onReadChapter: (Int) -> Unit,
     onOpenPlans: () -> Unit,
+    /** 书卷名：跟当前版本（点这一行进去读的就是它）；默认退回目录里的中英名 */
+    bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     onConfirmDay: () -> Unit,
     onStageSet: () -> Unit,
     theme: Parchment = Parchment.light,
@@ -163,7 +166,7 @@ fun PlanPlayScreen(
                 items(queue.size) { i ->
                     val p = queue[i]
                     val active = i == activeIndex
-                    val title = BibleCatalog.book(p.bookId)?.let { "${it.name(locale)} ${p.chapter}" } ?: "${p.bookId} ${p.chapter}"
+                    val title = BibleCatalog.book(p.bookId)?.let { "${bookLabel(it)} ${p.chapter}" } ?: "${p.bookId} ${p.chapter}"
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = if (active) 0.dp else 6.dp).clip(RoundedCornerShape(10.dp))
                             .background(if (active) theme.surface.toColor().copy(alpha = 0.85f) else Color.Transparent)

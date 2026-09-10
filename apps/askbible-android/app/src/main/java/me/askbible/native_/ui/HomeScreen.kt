@@ -89,6 +89,8 @@ fun HomeScreen(
     liveVideo: Boolean,
     ambientSlotId: String?,
     voiceOn: Boolean,
+    /** 金句朗读只有和合本 / WEBP 两套：显示的是别的版本（法语等）时没有对得上的朗读，喇叭不出 */
+    voiceAvailable: Boolean = true,
     /** 正在出声的专辑名（没在放 = null） */
     playingAlbum: String?,
     sleepTimerMinutes: Int,
@@ -195,7 +197,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AlbumButton(MCI.MUSIC_NOTE_OUTLINE, community = true, on = playingAlbum == "安静") { touch(); onPressAlbum("安静") }
-                    AlbumButton(MI.VOLUME_UP, on = voiceOn) { touch(); onToggleVoice() }
+                    if (voiceAvailable) AlbumButton(MI.VOLUME_UP, on = voiceOn) { touch(); onToggleVoice() }
                     AlbumButton(MCI.COFFEE_OUTLINE, community = true, on = playingAlbum == "下午茶") { touch(); onPressAlbum("下午茶") }
                 }
             }

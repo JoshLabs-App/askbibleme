@@ -290,6 +290,8 @@ private fun RootScreen() {
     }
     val music = remember { MusicPlayer(context, scope) }
     val home = remember { HomeVerseController(context, scope) }
+    // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
+    LaunchedEffect(translation.id) { home.setSource(translation) }
     val ambient = remember { AmbientPlayer(context, scope) }
     // 外部音频打断监听：永久失焦后外部声音一停 / 回到前台就把朗读 / 音乐叫回来
     LaunchedEffect(Unit) {
@@ -456,6 +458,7 @@ private fun RootScreen() {
                 liveVideo = naturePrefs.liveVideo,
                 ambientSlotId = ambient.slotId,
                 voiceOn = home.voiceOn,
+                voiceAvailable = home.voiceAvailable,
                 playingAlbum = if (music.isPlaying) music.track?.album else null,
                 sleepTimerMinutes = sleepTimerMinutes,
                 // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
@@ -526,6 +529,7 @@ private fun RootScreen() {
                     viewAhead = planViewAhead, onViewAhead = { planViewAhead = it }, cursor = planCursor, onCursor = { planCursor = it },
                     onPlayChapter = { planPlay(it) }, onReadChapter = { planRead(it) },
                     onOpenPlans = { planRoute = "plans" },
+                    bookLabel = bookLabel,
                     onConfirmDay = { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                     onStageSet = { planViewAhead = 0; planCursor = 0 }, habitDates = activity.completedDateSet)
             }

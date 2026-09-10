@@ -79,6 +79,8 @@ fun ChapterScreen(
     chapter: Int,
     /** 读经展示语言（RN readDisplayLocale）：标题格式、小标题、章末「第N章 / Chapter N」、读后两版都按它 */
     locale: AppLocale = AppLocale.ZH_CN,
+    /** 界面语言（读后两版这类「只有中文内容」的模块按它决定出不出，不跟译本语言） */
+    uiLocale: AppLocale = AppLocale.ZH_CN,
     /** 当前主译本 id（判断是不是下载型，给提示用） */
     translationId: String = "",
     /** 在线 / 下载型译本取数中 / 取不到（内置译本瞬时读库，不会看到） */
@@ -214,9 +216,10 @@ fun ChapterScreen(
             item(key = "ending") {
                 EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, locale)
             }
-            // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）
-            // 读后两版入口：原生只有中文两版，英文面不出（RN 英文面走英文版本，未接）
-            if (locale != AppLocale.EN) item(key = "post-reading") {
+            // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
+            // 讲解 / 发现两版只有中文内容：界面是中文就出（读西班牙语等版本时照样能看中文讲解），
+            // 界面是英文或别的语言就不出 —— 没有对应语言的内容，不拿中文顶（Josh 2026-09-10）
+            if (uiLocale.isZh) item(key = "post-reading") {
                 PostReadingEditions(
                     bookId = bookId, chapter = chapter, size = size, theme = theme,
                     prev = neighbors.first, next = neighbors.second,

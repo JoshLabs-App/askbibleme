@@ -555,6 +555,7 @@ private fun RootScreen() {
                 LaunchedEffect(book.id, chapter) { activity.recordOpened(book.id, chapter, book.name(displayLocale)) }
                 ChapterScreen(
                     locale = displayLocale,
+                    uiLocale = appLocale,
                     bookId = book.id,
                     bookName = book.name(displayLocale),
                     chapter = chapter,

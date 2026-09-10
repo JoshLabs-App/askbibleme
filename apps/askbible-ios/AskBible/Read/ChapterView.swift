@@ -9,6 +9,8 @@ struct ChapterView: View {
     let bookName: String
     /// 读经展示语言（RN readDisplayLocale）：标题格式、小标题、章末「第N章 / Chapter N」、读后两版都按它
     var locale: AppLocale = .zhCN
+    /// 界面语言（读后两版这类「只有中文内容」的模块按它决定出不出，不跟译本语言）
+    var uiLocale: AppLocale = .zhCN
     let bookNumber: Int
     let chapter: Int
     @Binding var size: ReadSize
@@ -99,8 +101,10 @@ struct ChapterView: View {
 
                         endingSection()
 
-                        // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）；原生只有中文两版，英文面不出（RN 英文面走英文版本，未接）
-                        if locale != .en {
+                        // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
+                        // 讲解 / 发现两版只有中文内容：界面是中文就出（读西班牙语等版本时照样能看中文讲解），
+                        // 界面是英文或别的语言就不出 —— 没有对应语言的内容，不拿中文顶（Josh 2026-09-10）
+                        if uiLocale.isZh {
                             let n = neighbors
                             PostReadingEditions(
                                 bookId: bookId, chapter: chapter, size: size, theme: theme,

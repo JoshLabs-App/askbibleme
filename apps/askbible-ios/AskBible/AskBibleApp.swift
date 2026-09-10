@@ -534,6 +534,7 @@ struct RootView: View {
                     bookId: opened.book.id,
                     bookName: opened.book.name(displayLocale),
                     locale: displayLocale,
+                    uiLocale: appLocale,
                     bookNumber: opened.book.number,
                     chapter: opened.chapter,
                     size: $readSize,

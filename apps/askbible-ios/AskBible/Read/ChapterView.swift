@@ -13,6 +13,8 @@ struct ChapterView: View {
     var uiLocale: AppLocale = .zhCN
     /// 译本语言既不是中文也不是英文：章标题用「Génesis 1」，段落小标题不出（没有这个语种的）
     var foreignText: Bool = false
+    /// 章页上的界面小字（署名、上一章 / 下一章）：法语等版本用英文，别在法语经文下面写中文
+    private var chromeLocale: AppLocale { foreignText ? .en : locale }
     let bookNumber: Int
     let chapter: Int
     @Binding var size: ReadSize
@@ -65,7 +67,7 @@ struct ChapterView: View {
                         Color.clear.frame(height: 0).id("chapter-top")
                         // header：paddingTop 4 / paddingBottom 24 / 细线 / marginBottom 12（readChapterScreenLayoutStyles.header）
                         VStack(spacing: 0) {
-                            Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: foreignText ? .en : locale))
+                            Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: chromeLocale))
                                 .font(.system(size: m.chapterTitleSize, weight: .semibold))
                                 .foregroundStyle(theme.ink)
                                 .multilineTextAlignment(.center)
@@ -93,7 +95,7 @@ struct ChapterView: View {
                         }
 
                         // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
-                        if let copyright = RemoteTranslations.attribution(store.translation.id, locale) {
+                        if let copyright = RemoteTranslations.attribution(store.translation.id, chromeLocale) {
                             Text(copyright)
                                 .font(.system(size: 12)).lineSpacing(4)
                                 .foregroundStyle(theme.faint)
@@ -104,9 +106,9 @@ struct ChapterView: View {
                         endingSection()
 
                         // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
-                        // 库里中英两套都有：读英文译本（RN prefersEnglishInfoEdition）或界面是英文 → 英文那套；
-                        // 其余（含西班牙语等没有对应语种内容的版本）跟界面语言走中文那套（Josh 2026-09-10）
-                        do {
+                        // 库里只有中英两套：读中文版本给中文那套，读英文版本（或英文界面）给英文那套；
+                        // 法语 / 西语等版本没有对应语言的资料，整块不出 —— 不拿中文顶（Josh 2026-09-10：「没有语言就不展示更合适」）
+                        if !foreignText {
                             let n = neighbors
                             PostReadingEditions(
                                 bookId: bookId, chapter: chapter, size: size, theme: theme,
@@ -260,7 +262,7 @@ struct ChapterView: View {
                             // RN：MaterialIcons chevron-left 16 + 13/500，颜色 breadcrumbColor = faint
                             HStack(spacing: 2) {
                                 MaterialIcon(glyph: MI.chevronLeft, size: 16, color: theme.faint)
-                                Text(ReadChrome.chapterLabel(p.chapter, locale: locale)).font(.system(size: 13, weight: .medium))
+                                Text(ReadChrome.chapterLabel(p.chapter, locale: chromeLocale)).font(.system(size: 13, weight: .medium))
                             }
                             .foregroundStyle(theme.faint)
                         }
@@ -281,7 +283,7 @@ struct ChapterView: View {
                     if let nx = n.next {
                         Button { onNavigate(nx.bookId, nx.chapter) } label: {
                             HStack(spacing: 2) {
-                                Text(ReadChrome.chapterLabel(nx.chapter, locale: locale)).font(.system(size: 13, weight: .medium))
+                                Text(ReadChrome.chapterLabel(nx.chapter, locale: chromeLocale)).font(.system(size: 13, weight: .medium))
                                 MaterialIcon(glyph: MI.chevronRight, size: 16, color: theme.faint)
                             }
                             .foregroundStyle(theme.faint)

@@ -116,6 +116,8 @@ fun ChapterScreen(
     onNavigate: (bookId: String, chapter: Int) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
+    // 章页上的界面小字（署名、上一章 / 下一章）：法语等版本用英文，别在法语经文下面写中文
+    val chromeLocale = if (foreignText) AppLocale.EN else locale
     val meta = remember(bookId, chapter, locale, foreignText) {
         val m = ChapterSegments.meta(context, bookId, chapter, english = locale == AppLocale.EN)
         // 西语等版本：段落照分，小标题不出（我们只有中英两套）
@@ -188,7 +190,7 @@ fun ChapterScreen(
                 // header：paddingTop 4 / paddingBottom 24 / 细线 / marginBottom 12（readChapterScreenLayoutStyles.header）
                 Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                     Text(
-                        ReadChrome.chapterTitle(bookName, chapter, if (foreignText) AppLocale.EN else locale),
+                        ReadChrome.chapterTitle(bookName, chapter, chromeLocale),
                         Modifier.fillMaxWidth().padding(start = 42.dp, end = 42.dp, top = 4.dp, bottom = 24.dp),
                         color = theme.ink.toColor(),
                         fontSize = m.chapterTitleSize.sp,
@@ -212,7 +214,7 @@ fun ChapterScreen(
             }
 
             // 在线译本的版权声明（YouVersion 条款要求展示；内置译本没有这一行）
-            RemoteTranslations.attribution(translationId, locale)?.let { copyright ->
+            RemoteTranslations.attribution(translationId, chromeLocale)?.let { copyright ->
                 item(key = "copyright") {
                     Text(copyright, Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 18.dp),
                          color = theme.faint.toColor(), fontSize = 12.sp, lineHeight = 16.sp)
@@ -220,12 +222,12 @@ fun ChapterScreen(
             }
 
             item(key = "ending") {
-                EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, locale)
+                EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, chromeLocale)
             }
             // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
-            // 库里中英两套都有：读英文译本（RN prefersEnglishInfoEdition）或界面是英文 → 英文那套；
-            // 其余（含西班牙语等没有对应语种内容的版本）跟界面语言走中文那套（Josh 2026-09-10）
-            item(key = "post-reading") {
+            // 库里只有中英两套：读中文版本给中文那套，读英文版本（或英文界面）给英文那套；
+            // 法语 / 西语等版本没有对应语言的资料，整块不出 —— 不拿中文顶（Josh 2026-09-10：「没有语言就不展示更合适」）
+            if (!foreignText) item(key = "post-reading") {
                 PostReadingEditions(
                     bookId = bookId, chapter = chapter, size = size, theme = theme,
                     prev = neighbors.first, next = neighbors.second,

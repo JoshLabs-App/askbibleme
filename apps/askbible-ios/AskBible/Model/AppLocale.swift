@@ -20,6 +20,25 @@ enum AppLocale: String {
     /// 系统首选语言（RN 取 AppleLanguages[0]）
     static var device: AppLocale { fromLanguageTag(Locale.preferredLanguages.first ?? "") }
 
+    /// 当前界面语言（壳在 appLocale 变化时更新；SiteCopy / 目录表的默认取值）。
+    /// 视图层仍应显式传 locale，让 SwiftUI 在切语言时重绘；这里给模型层与临时弹层用。
+    nonisolated(unsafe) static var current: AppLocale = .zhCN  // 默认简体：对拍 harness 不受机器语言影响；App 启动时改成真实值
+
+    /// 切语言时联动的主译本（RN pickTranslationIdForLocale：简 → 和合本简体，繁 → 和合本繁體，英 → WEB）
+    static func primaryTranslationId(for locale: AppLocale) -> String {
+        switch locale { case .zhCN: return "cuv-simp"; case .zhTW: return "cuv-trad"; case .en: return "web-en" }
+    }
+
+    /// 首页金句朗读译本（RN resolveGoldenVerseAudioTranslationForLocale：中文 → 和合本，英文 → WEB）
+    static func goldenVerseAudioTranslationId(for locale: AppLocale) -> String {
+        locale == .en ? "web-en" : "cuv-simp"
+    }
+
+    /// 简 / 英两份文案按当前语言取一份（繁体面把简体转繁）
+    static func pick(_ zh: String, _ en: String, _ locale: AppLocale = AppLocale.current) -> String {
+        locale == .en ? en : locale.zh(zh)
+    }
+
     var isZh: Bool { self != .en }
 
     /// RN localeZhText：繁体面把简体文案转繁

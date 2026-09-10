@@ -1,5 +1,6 @@
 package me.askbible.native_.audio
 
+import me.askbible.native_.data.SiteCopy
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,7 +81,7 @@ class AmbientPlayer(context: Context, private val scope: CoroutineScope) {
         val uri = if (local.exists()) "file://${local.absolutePath}" else AmbientScenes.remoteUrl(id) ?: return
         player.setMediaItem(
             MediaItem.Builder().setUri(uri)
-                .setMediaMetadata(MediaMetadata.Builder().setTitle(slot.label).setArtist("AskBible · 环境音").build())
+                .setMediaMetadata(MediaMetadata.Builder().setTitle(slot.label).setArtist(SiteCopy.t("native.ambientNowPlaying")).build())
                 .build()
         )
         player.volume = slot.gain * (if (ducked) DUCK_GAIN else 1f)

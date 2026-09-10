@@ -89,7 +89,7 @@ final class ChapterAudioPlayer: ObservableObject {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
         } catch {
-            errorMessage = "音频会话配置失败：\(error.localizedDescription)"
+            errorMessage = SiteCopy.f("native.audioSessionFailed", ["error": error.localizedDescription])
         }
     }
 
@@ -176,7 +176,7 @@ final class ChapterAudioPlayer: ObservableObject {
                     self.updateNowPlaying()
                 case .failed:
                     self.isLoading = false
-                    self.errorMessage = item.error?.localizedDescription ?? "音频加载失败"
+                    self.errorMessage = item.error?.localizedDescription ?? SiteCopy.t("native.audioLoadFailed")
                     self.isPlaying = false
                 default:
                     break

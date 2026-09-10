@@ -19,6 +19,18 @@ enum class AppLocale(val tag: String) {
     val settingLabel: String get() = when (this) { EN -> "English"; ZH_CN -> "简体中文"; ZH_TW -> "繁體中文" }
 
     companion object {
+        /** 当前界面语言（壳在 appLocale 变化时更新；SiteCopy / 目录表的默认取值）。Compose 层仍应显式传 locale 触发重组。 */
+        @Volatile var current: AppLocale = ZH_CN
+
+        /** 切语言时联动的主译本（RN pickTranslationIdForLocale：简 → 和合本简体，繁 → 和合本繁體，英 → WEB） */
+        fun primaryTranslationId(locale: AppLocale): String = when (locale) { ZH_CN -> "cuv-simp"; ZH_TW -> "cuv-trad"; EN -> "web-en" }
+
+        /** 首页金句朗读译本（RN resolveGoldenVerseAudioTranslationForLocale：中文 → 和合本，英文 → WEB） */
+        fun goldenVerseAudioTranslationId(locale: AppLocale): String = if (locale == EN) "web-en" else "cuv-simp"
+
+        /** 简 / 英两份文案按当前语言取一份（繁体面把简体转繁） */
+        fun pick(zh: String, en: String, locale: AppLocale = current): String = if (locale == EN) en else locale.zh(zh)
+
         /** RN mapLanguageTagToAppLocale */
         fun fromLanguageTag(tag: String): AppLocale {
             val t = tag.trim().lowercase()

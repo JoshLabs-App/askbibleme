@@ -1,5 +1,6 @@
 package me.askbible.native_.home
 
+import me.askbible.native_.data.name
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.askbible.native_.audio.GoldenVersePlayer
+import me.askbible.native_.data.AppLocale
 import me.askbible.native_.data.BibleCatalog
 import me.askbible.native_.data.GoldenVerse
 import me.askbible.native_.data.GoldenVerseAudioSource
@@ -45,7 +47,11 @@ class HomeVerseController(private val context: Context, private val scope: Corou
     val player = GoldenVersePlayer(context)
     private val entries: List<HomeVerseEntry> = loadManifest()
     private val memory: MutableMap<String, PrayerMemoryRow> = loadMemory()
-    private val db = ScriptureDatabase.open(context, "cuv-simp")
+    /** 经文译本跟界面语言联动（RN applyLocaleWithTranslationPrefs：verseTextZhTranslationId / 金句朗读译本） */
+    var translationId: String = AppLocale.primaryTranslationId(AppLocale.current); private set
+    var audioTranslationId: String = AppLocale.goldenVerseAudioTranslationId(AppLocale.current); private set
+    private val appContext = context.applicationContext
+    private var db = ScriptureDatabase.open(context, translationId)
     private var rotation: Job? = null
     private var gap: Job? = null
     private var sleep: Job? = null
@@ -73,8 +79,19 @@ class HomeVerseController(private val context: Context, private val scope: Corou
         startRotation()
     }
 
+    /** 切语言：换经文译本与朗读译本，当前这句立刻按新译本重取 */
+    fun setTranslation(id: String, audioTranslationId: String) {
+        if (id != translationId) {
+            translationId = id
+            db?.close()
+            db = ScriptureDatabase.open(appContext, id)
+        }
+        this.audioTranslationId = audioTranslationId
+        if (verseKey.isNotEmpty()) resolve(verseKey)?.let { verse = it }
+    }
+
     private fun playCurrent() {
-        val url = GoldenVerseAudioSource.remoteUrl(verseKey) ?: run { scheduleAdvanceAfterGap(); return }
+        val url = GoldenVerseAudioSource.remoteUrl(verseKey, audioTranslationId) ?: run { scheduleAdvanceAfterGap(); return }
         player.play(url, verse.reference)
     }
 
@@ -118,7 +135,7 @@ class HomeVerseController(private val context: Context, private val scope: Corou
         val book = BibleCatalog.book(loc.bookId) ?: return null
         val row = db?.loadChapter(loc.bookId, loc.chapter)?.firstOrNull { it.number == loc.verse } ?: return null
         // 首页短展示要去括注（诗前「（上行之诗）」等），与 RN chunk 里的 zh-CN 行一致
-        return GoldenVerse(VerseDisplayNotes.strip(row.text), "${book.nameZh} ${loc.chapter}:${loc.verse}")
+        return GoldenVerse(VerseDisplayNotes.strip(row.text), "${book.name(AppLocale.current)} ${loc.chapter}:${loc.verse}")
     }
 
     // ---- 睡眠定时（到期关掉朗读，与其它两个播放器同一套档位） ----

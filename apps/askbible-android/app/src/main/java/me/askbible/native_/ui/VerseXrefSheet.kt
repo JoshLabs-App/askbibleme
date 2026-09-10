@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,7 +59,7 @@ fun VerseXrefSheet(
                 .padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 34.dp)
                 .clickableNoRipple {},
         ) {
-            Text("$bookName $chapter:${xrefs.verse} · 经文关联",
+            Text(SiteCopy.f("pages.read.verseXrefSheetTitle", mapOf("bookName" to bookName, "chapter" to "$chapter", "verse" to "${xrefs.verse}")),
                  color = theme.ink.toColor(), fontSize = maxOf(17f, Math.round(fs * 0.95f).toFloat()).sp,
                  fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 14.dp))
             if (xrefs.isEmpty) {
@@ -66,8 +67,8 @@ fun VerseXrefSheet(
             } else {
                 Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
                        verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                    XrefSection("被引用于", xrefs.incoming, fs, theme, snippet, onOpen, locale)
-                    XrefSection("相关经文", xrefs.outgoing, fs, theme, snippet, onOpen, locale)
+                    XrefSection(SiteCopy.t("pages.read.verseXrefIncoming"), xrefs.incoming, fs, theme, snippet, onOpen, locale)
+                    XrefSection(SiteCopy.t("pages.read.verseXrefOutgoing"), xrefs.outgoing, fs, theme, snippet, onOpen, locale)
                 }
             }
         }
@@ -110,12 +111,12 @@ fun SleepTimerSheet(remainingLabel: String?, onPick: (Int?) -> Unit, onClose: ()
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text("睡眠定时", color = theme.ink.toColor(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            remainingLabel?.let { Text("剩余 $it", color = theme.muted.toColor(), fontSize = 13.sp) }
+            Text(SiteCopy.t("native.sleepTimer"), color = theme.ink.toColor(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            remainingLabel?.let { Text(SiteCopy.f("native.sleepTimerLeft", mapOf("left" to it)), color = theme.muted.toColor(), fontSize = 13.sp) }
             for (m in ChapterAudioPlayer.SLEEP_OPTIONS_MINUTES) {
-                SleepOption("$m 分钟", theme) { onPick(m); onClose() }
+                SleepOption(SiteCopy.f("native.minutes", mapOf("m" to "$m")), theme) { onPick(m); onClose() }
             }
-            SleepOption("关闭定时", theme) { onPick(null); onClose() }
+            SleepOption(SiteCopy.t("native.sleepTimerOff"), theme) { onPick(null); onClose() }
         }
     }
 }

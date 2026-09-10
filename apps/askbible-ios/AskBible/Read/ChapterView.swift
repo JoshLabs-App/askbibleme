@@ -153,16 +153,16 @@ struct ChapterView: View {
         if verses.isEmpty, loadState == .loading {
             HStack(spacing: 10) {
                 ProgressView().tint(theme.muted)
-                Text(ScriptureTranslation.find(store.translation.id)?.delivery == .download ? "正在下载这个译本…" : "正在获取经文…")
+                Text(ScriptureTranslation.find(store.translation.id)?.delivery == .download ? SiteCopy.t("native.translationDownloading", locale) : SiteCopy.t("native.chapterFetching", locale))
                     .font(.system(size: 15)).foregroundStyle(theme.muted)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 40)
         } else if verses.isEmpty, loadState == .failed {
             VStack(spacing: 12) {
-                Text("这个译本要联网获取，暂时拿不到，请检查网络后重试")
+                Text(SiteCopy.t("native.translationOfflineHint", locale))
                     .font(.system(size: 15)).foregroundStyle(theme.muted).multilineTextAlignment(.center)
                 Button { reloadToken += 1 } label: {
-                    Text("重试").font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.t("pages.read.retry", locale)).font(.system(size: 15, weight: .semibold)).foregroundStyle(theme.ink)
                         .padding(.horizontal, 18).padding(.vertical, 9)
                         .background(Capsule().fill(theme.surface))
                         .overlay(Capsule().strokeBorder(theme.border, lineWidth: 1))

@@ -16,9 +16,19 @@ struct ExploreArticle: Identifiable, Equatable {
 }
 
 enum ExploreArticles {
-    static let locale = "zh-CN"
+    /// 文章包里有 zh-CN / en 两版；按当前界面语言取（繁体面用简体版，运行时不转正文）
+    static var locale: String { AppLocale.current == .en ? "en" : "zh-CN" }
+    nonisolated(unsafe) private static var cache: [String: [ExploreArticle]] = [:]
 
-    static let all: [ExploreArticle] = {
+    static var all: [ExploreArticle] {
+        let key = locale
+        if let c = cache[key] { return c }
+        let loaded = load(locale: key)
+        cache[key] = loaded
+        return loaded
+    }
+
+    private static func load(locale: String) -> [ExploreArticle] {
         guard let url = Bundle.main.url(forResource: "explore-articles", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -38,7 +48,7 @@ enum ExploreArticles {
                 sections: sections
             )
         }
-    }()
+    }
 
     /// 探索格子里的文章：读经计划器的占位文章不出现（RN gridFeaturedArticles）
     static var grid: [ExploreArticle] { all.filter { $0.slug != ExploreArticleCatalog.readingPlannerSlug } }

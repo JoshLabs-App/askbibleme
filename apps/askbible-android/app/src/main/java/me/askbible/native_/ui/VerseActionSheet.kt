@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,9 +51,9 @@ fun VerseActionSheet(
                 Text("关闭", Modifier.clickableNoRipple(onClose), color = theme.muted.toColor(), fontSize = Math.round(fs * 0.85f).sp)
             }
             Row(Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.Top) {
-                Cell(MI.CONTENT_COPY, "本节复制", iconSize, labelSize, theme, Modifier.weight(1f), onCopy)
-                if (!bookmarked) Cell(MI.BOOKMARK_BORDER, "双击收藏", iconSize, labelSize, theme, Modifier.weight(1f), onBookmark)
-                Cell(MI.IOS_SHARE, "分享", iconSize, labelSize, theme, Modifier.weight(1f), onShare)
+                Cell(MI.CONTENT_COPY, SiteCopy.t("pages.read.verseActionCopy"), iconSize, labelSize, theme, Modifier.weight(1f), onCopy)
+                if (!bookmarked) Cell(MI.BOOKMARK_BORDER, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, theme, Modifier.weight(1f), onBookmark)
+                Cell(MI.IOS_SHARE, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, theme, Modifier.weight(1f), onShare)
             }
         }
     }

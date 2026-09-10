@@ -163,7 +163,7 @@ struct PlanReading: Hashable {
 
     /// 对应 formatReadingPlanRange（不带 locale 的那条分支）：「创世记 1」「创世记 1–3」「创世记 1:1–5」
     var display: String {
-        let name = BibleCatalog.book(id: bookId)?.nameZh ?? bookId
+        let name = BibleCatalog.book(id: bookId)?.name(AppLocale.current) ?? bookId
         if startChapter == endChapter {
             if let sv = startVerse, let ev = endVerse {
                 return sv == ev ? "\(name) \(startChapter):\(sv)" : "\(name) \(startChapter):\(sv)–\(ev)"
@@ -348,13 +348,13 @@ enum TripleLoop {
     }
 
     static func trackTitle(_ track: TripleTrack) -> String {
-        switch track { case .ot: return "旧约循环"; case .nt: return "新约循环"; case .wisdom: return "智慧书循环" }
+        switch track { case .ot: return PlanCopy.t("pages.read.tripleLoopTrackOt"); case .nt: return PlanCopy.t("pages.read.tripleLoopTrackNt"); case .wisdom: return PlanCopy.t("pages.read.tripleLoopTrackWisdom") }
     }
 
     /// 「创世记 第 1 章」「诗篇 第 23 篇」
     static func formatVerbose(_ bookId: String, _ chapter: Int) -> String {
-        let name = BibleCatalog.book(id: bookId)?.nameZh ?? bookId
-        return bookId == "PSA" ? "\(name) 第 \(chapter) 篇" : "\(name) 第 \(chapter) 章"
+        let name = BibleCatalog.book(id: bookId)?.name(AppLocale.current) ?? bookId
+        return PlanCopy.f("pages.read.tripleLoopReadingLine", ["name": name, "chapter": "\(chapter)", "unit": PlanCopy.t(bookId == "PSA" ? "pages.read.tripleLoopPsalmUnit" : "pages.read.tripleLoopChapterUnit")])
     }
 
     static func trackChapterTotal(_ track: TripleTrack) -> Int { order(track).reduce(0) { $0 + chapters($1) } }
@@ -467,10 +467,10 @@ enum NtDeepRepeat {
     static func oneCycleDays(_ pace: Int) -> Int { stageCount * pace }
 
     static func formatApproxDurationZh(_ days: Int) -> String {
-        if days < 60 { return "\(days) 天" }
+        if days < 60 { return SiteCopy.f("native.durationDays", ["n": "\(days)"]) }
         let months = Double(days) / 30.44
-        if months < 18 { return "约 \(Int(months.rounded())) 个月" }
-        return String(format: "约 %.1f 年", Double(days) / 365.25)
+        if months < 18 { return SiteCopy.f("native.durationMonths", ["n": "\(Int(months.rounded()))"]) }
+        return SiteCopy.f("native.durationYears", ["n": String(format: "%.1f", Double(days) / 365.25)])
     }
 
     static func defaultState(pace: Int = defaultPace, now: Date = Date()) -> NtDeepRepeatState {
@@ -633,7 +633,7 @@ enum NtDeepRepeat {
 
     /// 「约翰福音 第 1–5 章」/「约翰一书 第 5 章」
     static func rangeLine(_ r: PlanReading) -> String {
-        let name = BibleCatalog.book(id: r.bookId)?.nameZh ?? r.bookId
+        let name = BibleCatalog.book(id: r.bookId)?.name(AppLocale.current) ?? r.bookId
         if r.startChapter == r.endChapter {
             return PlanCopy.f("pages.read.ntDeepRepeatStageBookSingle", ["name": name, "chapter": "\(r.startChapter)"])
         }
@@ -650,7 +650,7 @@ enum NtDeepRepeat {
 
     /// 「创世记 第 1 章」/「诗篇 第 23 篇」（formatNtDeepRepeatOtLine）
     static func otLine(_ bookId: String, _ chapter: Int) -> String {
-        let name = BibleCatalog.book(id: bookId)?.nameZh ?? bookId
+        let name = BibleCatalog.book(id: bookId)?.name(AppLocale.current) ?? bookId
         let unit = bookId == "PSA" ? PlanCopy.t("pages.read.tripleLoopPsalmUnit") : PlanCopy.t("pages.read.tripleLoopChapterUnit")
         return PlanCopy.f("pages.read.tripleLoopReadingLine", ["name": name, "chapter": "\(chapter)", "unit": unit])
     }

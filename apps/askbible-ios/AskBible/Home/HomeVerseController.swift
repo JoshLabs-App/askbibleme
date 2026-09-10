@@ -22,7 +22,10 @@ final class HomeVerseController: ObservableObject {
     let player = GoldenVersePlayer()
     private let entries: [HomeVerseEntry]
     private var memory: [String: PrayerMemoryRow]
-    private let db = try? ScriptureDatabase(translationId: "cuv-simp")
+    /// 经文译本跟界面语言联动（RN applyLocaleWithTranslationPrefs：verseTextZhTranslationId / 金句朗读译本）
+    private(set) var translationId = AppLocale.primaryTranslationId(for: AppLocale.current)
+    private(set) var audioTranslationId = AppLocale.goldenVerseAudioTranslationId(for: AppLocale.current)
+    private var db = try? ScriptureDatabase(translationId: AppLocale.primaryTranslationId(for: AppLocale.current))
     private var rotationTimer: Timer?
     private var gapTimer: Timer?
     private var sleepTimer: Timer?
@@ -55,8 +58,18 @@ final class HomeVerseController: ObservableObject {
         startRotation()
     }
 
+    /// 切语言：换经文译本与朗读译本，当前这句立刻按新译本重取
+    func setTranslation(_ id: String, audioTranslationId: String) {
+        if id != translationId {
+            translationId = id
+            db = try? ScriptureDatabase(translationId: id)
+        }
+        self.audioTranslationId = audioTranslationId
+        if !verseKey.isEmpty, let v = resolve(verseKey) { verse = v }
+    }
+
     private func playCurrent() {
-        guard let url = GoldenVerseAudioSource.remoteURL(verseKey: verseKey) else {
+        guard let url = GoldenVerseAudioSource.remoteURL(verseKey: verseKey, translationId: audioTranslationId) else {
             scheduleAdvanceAfterGap()
             return
         }
@@ -109,7 +122,7 @@ final class HomeVerseController: ObservableObject {
               let rows = try? db?.loadChapter(bookId: loc.bookId, chapter: loc.chapter),
               let row = rows.first(where: { $0.number == loc.verse }) else { return nil }
         // 首页短展示要去括注（诗前「（上行之诗）」等），与 RN chunk 里的 zh-CN 行一致
-        return GoldenVerse(text: VerseDisplayNotes.strip(row.text), reference: "\(book.nameZh) \(loc.chapter):\(loc.verse)")
+        return GoldenVerse(text: VerseDisplayNotes.strip(row.text), reference: "\(book.name(AppLocale.current)) \(loc.chapter):\(loc.verse)")
     }
 
     // MARK: 睡眠定时（到期关掉朗读，与其它两个播放器同一套档位）

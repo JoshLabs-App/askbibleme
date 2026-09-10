@@ -67,8 +67,8 @@ data class ScriptureTranslation(
             return when {
                 lang.startsWith("zh-hant") -> locale.zh("繁中")
                 lang.startsWith("zh") -> locale.zh("简中")
-                lang.startsWith("en") -> "英文"
-                else -> "其他"
+                lang.startsWith("en") -> SiteCopy.t("native.langEnglish", locale)
+                else -> SiteCopy.t("admin.mediaLibrary.kindOther", locale)
             }
         }
     }

@@ -68,7 +68,7 @@ struct ScriptureTranslation: Identifiable, Hashable {
         }
         if lang.hasPrefix("zh-hant") { return locale.zh("繁中") }
         if lang.hasPrefix("zh") { return locale.zh("简中") }
-        if lang.hasPrefix("en") { return "英文" }
-        return "其他"
+        if lang.hasPrefix("en") { return SiteCopy.t("native.langEnglish", locale) }
+        return SiteCopy.t("admin.mediaLibrary.kindOther", locale)
     }
 }

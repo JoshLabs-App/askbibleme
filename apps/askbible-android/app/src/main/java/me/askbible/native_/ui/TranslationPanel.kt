@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -95,7 +96,7 @@ fun TranslationPanel(
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Spacer(Modifier.width(26.dp))
-                Dropdown(secondary?.label(locale) ?: "无", Color(0xFFE0A100), expandedSecondary, theme,
+                Dropdown(secondary?.label(locale) ?: SiteCopy.t("native.none", locale), Color(0xFFE0A100), expandedSecondary, theme,
                          Modifier.weight(1f)) { expandedSecondary = !expandedSecondary; if (expandedSecondary) expanded = false }
             }
 
@@ -135,7 +136,7 @@ private fun TranslationList(
             .background(Color(0xFFFFFDF8))
             .border(1.dp, theme.border.toColor().copy(alpha = 0.6f), RoundedCornerShape(9.dp)),
     ) {
-        if (allowNone) item { TranslationRow("无", selectedId == null, theme, onClick = { onPick(null) }) {} }
+        if (allowNone) item { TranslationRow(SiteCopy.t("native.none", locale), selectedId == null, theme, onClick = { onPick(null) }) {} }
         for ((language, items) in sections) {
             item {
                 Text(ScriptureTranslation.languageName(language, locale), Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 4.dp),
@@ -147,12 +148,12 @@ private fun TranslationList(
                         if (t.hasChapterAudio) MaterialIcon(MI.RECORD_VOICE_OVER, 16f, theme.muted.toColor())
                         when (t.delivery) {
                             TranslationDelivery.BUNDLED -> Unit
-                            TranslationDelivery.ONLINE -> Tag("在线", theme)
+                            TranslationDelivery.ONLINE -> Tag(SiteCopy.t("native.online", locale), theme)
                             TranslationDelivery.DOWNLOAD -> when (downloader?.state(t.id)) {
-                                is TranslationDownloader.State.Downloading -> Tag("下载中", theme)
-                                is TranslationDownloader.State.Failed -> Tag("重试", theme)
+                                is TranslationDownloader.State.Downloading -> Tag(SiteCopy.t("native.downloading", locale), theme)
+                                is TranslationDownloader.State.Failed -> Tag(SiteCopy.t("pages.read.retry", locale), theme)
                                 TranslationDownloader.State.Done -> Unit
-                                else -> Tag("需下载", theme)
+                                else -> Tag(SiteCopy.t("native.needDownload", locale), theme)
                             }
                         }
                     }

@@ -57,6 +57,7 @@ const bin = path.join(mkdtempSync(path.join(tmpdir(), "musicaudio-")), "bin");
 execFileSync("swiftc", ["-O", "-swift-version", "5",
   path.join(IOS, "Audio/MusicAudioSource.swift"),
   path.join(IOS, "Model/MusicCatalog.swift"),
+  path.join(IOS, "Model/AppLocale.swift"), path.join(IOS, "Model/LocaleTables.swift"), path.join(IOS, "Model/SiteCopy.swift"), path.join(IOS, "Model/BibleCatalog.swift"), path.join(IOS, "Theme/ParchmentTheme.swift"),
   path.join(ROOT, "tools/swift-harness/musicaudio/main.swift"),
   "-o", bin], { stdio: "pipe" });
 const swift = run(bin, [], "Swift harness");

@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -105,7 +106,7 @@ fun SearchScreen(
         if (prefs.scope == ScriptureSearchScope.CHAPTER && chapterRef == null) { results = emptyList(); searched = true; return }
         loading = true
         val fallbackId = ChapterLoader.searchFallbackId(context, translationId)
-        fallbackNote = fallbackId?.let { ScriptureTranslation.find(it) }?.let { "当前译本是在线译本，暂不支持搜索；已改用「${it.label(locale)}」搜索" }
+        fallbackNote = fallbackId?.let { ScriptureTranslation.find(it) }?.let { SiteCopy.f("native.searchFallbackNote", mapOf("name" to it.label(locale)), locale) }
         results = ScriptureDatabase.open(context, fallbackId ?: translationId)?.let { db -> try { db.search(q, prefs.scope, chapterRef) } finally { db.close() } } ?: emptyList()
         searched = true
         loading = false
@@ -129,9 +130,9 @@ fun SearchScreen(
                 Box(Modifier.size(44.dp).clickableNoRipple(onBack), contentAlignment = Alignment.CenterStart) {
                     MaterialIcon(MI.ARROW_BACK, 24f, theme.ink.toColor())
                 }
-                Text("经文搜索", Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.ink.toColor(), fontSize = sx(24f).sp,
+                Text(SiteCopy.t("pages.read.scriptureSearchTitle", locale), Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.ink.toColor(), fontSize = sx(24f).sp,
                      fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
-                Text("在当前译本中按关键词查找经文。", Modifier.fillMaxWidth().padding(bottom = 12.dp), color = theme.muted.toColor(),
+                Text(SiteCopy.t("pages.read.scriptureSearchLead", locale), Modifier.fillMaxWidth().padding(bottom = 12.dp), color = theme.muted.toColor(),
                      fontSize = sx(16f).sp, lineHeight = sx(24f).sp, textAlign = TextAlign.Center)
 
                 // 范围分段：surface 底、hairline 边、圆角 10、内边 3、间隔 2；选中 ink 底 surface 字
@@ -139,8 +140,8 @@ fun SearchScreen(
                     Row(Modifier.background(theme.surface.toColor(), RoundedCornerShape(10.dp))
                             .border(0.5.dp, theme.border.toColor(), RoundedCornerShape(10.dp)).padding(3.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        for ((scope, label) in listOf(ScriptureSearchScope.ALL to "全本", ScriptureSearchScope.OLD to "旧约",
-                                                      ScriptureSearchScope.NEW to "新约", ScriptureSearchScope.CHAPTER to "本章")) {
+                        for ((scope, label) in listOf(ScriptureSearchScope.ALL to SiteCopy.t("pages.read.scriptureSearchScopeAll", locale), ScriptureSearchScope.OLD to SiteCopy.t("pages.read.scriptureSearchScopeOld", locale),
+                                                      ScriptureSearchScope.NEW to SiteCopy.t("pages.read.scriptureSearchScopeNew", locale), ScriptureSearchScope.CHAPTER to SiteCopy.t("pages.read.scriptureSearchScopeChapter", locale))) {
                             val on = prefs.scope == scope
                             Text(label, Modifier.background(if (on) theme.ink.toColor() else Color.Transparent, RoundedCornerShape(8.dp))
                                     .clickableNoRipple { prefs.updateScope(scope) }
@@ -162,13 +163,13 @@ fun SearchScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, autoCorrect = false),
                     keyboardActions = KeyboardActions(onSearch = { run(query) }),
                     decorationBox = { inner ->
-                        if (query.isEmpty()) Text("输入关键词", color = theme.faint.toColor(), fontSize = size.metrics.verseFontSize.sp)
+                        if (query.isEmpty()) Text(SiteCopy.t("pages.read.scriptureSearchPlaceholder", locale), color = theme.faint.toColor(), fontSize = size.metrics.verseFontSize.sp)
                         inner()
                     },
                 )
 
                 if (prefs.recent.isNotEmpty()) {
-                    Text("最近搜索", Modifier.padding(top = 2.dp, bottom = 6.dp), color = theme.muted.toColor(), fontSize = sx(14f).sp, fontWeight = FontWeight.Medium)
+                    Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale), Modifier.padding(top = 2.dp, bottom = 6.dp), color = theme.muted.toColor(), fontSize = sx(14f).sp, fontWeight = FontWeight.Medium)
                     FlowRow(Modifier.fillMaxWidth().padding(bottom = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         for (term in prefs.recent) {
                             Text(term, Modifier.background(theme.surface.toColor(), CircleShape).border(0.5.dp, theme.border.toColor(), CircleShape)
@@ -182,14 +183,14 @@ fun SearchScreen(
                     Text(note, Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.faint.toColor(), fontSize = sx(13f).sp, textAlign = TextAlign.Center)
                 }
                 if (prefs.scope == ScriptureSearchScope.CHAPTER && chapterRef == null) {
-                    Text("暂无当前章节，请先打开一章后再搜索本章。", Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.faint.toColor(),
+                    Text(SiteCopy.t("pages.read.scriptureSearchNoChapterHint", locale), Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.faint.toColor(),
                          fontSize = sx(14f).sp, textAlign = TextAlign.Center)
                 }
                 if (loading) Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = theme.muted.toColor(), strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
                 }
                 if (!loading && searched && results.isEmpty() && !(prefs.scope == ScriptureSearchScope.CHAPTER && chapterRef == null)) {
-                    Text("没有找到匹配的经文", Modifier.fillMaxWidth().padding(top = 24.dp), color = theme.muted.toColor(),
+                    Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale), Modifier.fillMaxWidth().padding(top = 24.dp), color = theme.muted.toColor(),
                          fontSize = sx(16f).sp, lineHeight = sx(24f).sp, textAlign = TextAlign.Center)
                 }
             }

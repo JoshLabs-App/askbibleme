@@ -853,6 +853,23 @@ Josh：「探索页也放入语言的设置，探索页图标变成用户图标�
 修法：`PlaybackService.onUpdateNotification` 里只要还有播放器「想播」（`PlaybackSessions.anyWantsPlayback()`，用户没按暂停）就继续 startForeground，
 通知显示暂停态；用户真按暂停才撤。模拟器验证：后台被 Chrome 抢走 → Chrome 关掉 5 秒内重新申请焦点续播，前台服务全程在，75 秒后没被冻结。
 
+### 整套三语界面 + 切语言联动（2026-09-10）
+
+Josh 定了「补齐整套英文文案（探索页、计划页、首页、设置等全部三语），效果最完整」。整理后的语言规则一句话：
+**「语言」是总开关，切一次就把语言、主译本、首页金句、金句朗读一起换过去；之后手动改译本不再受语言影响，直到下次切语言；读经区展示语言继续跟主译本。**
+
+- **文案表 `SiteCopy`**（两端同一份，`tools/gen-site-copy.mjs` 生成，`check:site-copy` 对拍）：真源是 RN 的 `assets/content/{zh-CN,en}.json`
+  + `site-copy.ts` 的 AUTH_UI_FALLBACKS + `mobile-brief.{zh-CN,en}.json`（ui.* → mobile.*）+ `tools/native-copy-extra.json`（原生独有 native.*）。
+  键集合 = 扫两端源码里 `SiteCopy / PlanCopy / PlanText` 用到的键 + 读经计划文案前缀；缺键、缺英文直接报错。繁体仍是运行时 ZhTw 转。
+  `SiteCopy.t(key, locale = AppLocale.current)` / `f(key, args)` / `localizeKnown(text)`（模型层为保对拍仍产出简体的登录 / 同步错误，展示时按语言换）。
+- **`AppLocale.current`**（两端）：壳在 App 起来 / 切语言时更新；目录表（读经计划 `ReadingPlanEntry` / `PlanFact` 的 title / badge / tagline / facts / detail、
+  探索文章 `ExploreArticles` zh-CN / en 两版、音乐 `localizedTitle`、专辑短名）都按它取。视图层仍显式传 `locale`，切语言即重绘。
+- **切语言联动**（RN applyLocaleWithTranslationPrefs）：`applyLocaleChoice` / `onSetLocale`：主译本 = 简 → cuv-simp、繁 → cuv-trad、英 → web-en（都内置），
+  副译本清空，首页金句 `HomeVerseController.setTranslation`（经文译本 + 朗读译本：中文 → cuv-simp，英文 → web-en）。首装没存过译本时也按界面语言取默认。
+- 计划页的书卷名、日期（`EEE, MMM d` / `MMMM d, yyyy`）、星期、月份跟语言；探索页统计行、最近阅读、登录 / 注册、搜索、收藏、章页状态、
+  经文操作单、串珠、睡眠定时、读后两版、译本面板标签、播放通知（Now Playing）文案全部三语。
+- 验证：安卓模拟器与 iOS 模拟器切到 English 后探索 / 计划 / 目录 / 详情 / 首页金句（WEB 英文经文）/ 音乐页全英文；切回简体 / 繁體正常。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

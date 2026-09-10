@@ -89,7 +89,8 @@ final class ScriptureStore: ObservableObject {
     init() {
         let stored = TranslationPrefsRules.parse(UserDefaults.standard.string(forKey: TranslationPrefsRules.key),
                                                  allowed: ScriptureTranslation.all.map(\.id),  // RN 传整个目录：下载型 / 在线译本重启后也要记住
-                                                 defaultId: ScriptureTranslation.default.id)
+                                                 // 首装没存过：跟界面语言（RN resolveDefaultPrimaryTranslationId(index, locale)）
+                                                 defaultId: AppLocale.primaryTranslationId(for: AppLocale.current))
         translation = ScriptureTranslation.find(stored.primaryId) ?? .default
         secondary = stored.secondaryId.flatMap(ScriptureTranslation.find)
     }

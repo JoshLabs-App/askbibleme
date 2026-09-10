@@ -95,11 +95,13 @@ object MusicAlbumRules {
     }
 
     /** 心境条短名（用户可见） */
-    fun shortLabel(album: String): String = when (album) {
-        "安静" -> "放松"
-        "下午茶" -> "休闲"
-        "专注工作" -> "工作"
-        "赞美诗" -> "圣诗"
+    fun shortLabel(album: String, locale: AppLocale = AppLocale.current): String = when (album) {
+        "安静" -> SiteCopy.t("native.albumCalm", locale)
+        "下午茶" -> SiteCopy.t("native.albumAfternoon", locale)
+        "专注工作" -> SiteCopy.t("native.albumWork", locale)
+        "赞美诗" -> SiteCopy.t("native.albumHymns", locale)
+        "钢琴" -> SiteCopy.t("native.albumPiano", locale)
+        "睡眠" -> SiteCopy.t("native.albumSleep", locale)
         else -> album
     }
 

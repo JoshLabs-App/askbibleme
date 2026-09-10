@@ -17,13 +17,13 @@ struct LoginView: View {
     @StateObject private var social = SocialSignInState()
 
     var body: some View {
-        AuthPage(locale: locale, title: "登录", onBack: onBack) {
+        AuthPage(locale: locale, title: SiteCopy.t("auth.pageTitle", locale), onBack: onBack) {
             SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
-            AuthField(label: "邮箱", text: $email, locale: locale, keyboard: .emailAddress, contentType: .emailAddress)
-            AuthField(label: "密码", text: $password, locale: locale, secure: true, contentType: .password)
+            AuthField(label: SiteCopy.t("auth.email", locale), text: $email, locale: locale, keyboard: .emailAddress, contentType: .emailAddress)
+            AuthField(label: SiteCopy.t("auth.password", locale), text: $password, locale: locale, secure: true, contentType: .password)
             if let error { AuthErrorText(error, locale: locale) }
-            AuthSubmit(title: "登录", pending: pending, locale: locale) { submit() }
-            AuthLink(title: "还没有账户？注册", locale: locale, action: onRegister)
+            AuthSubmit(title: SiteCopy.t("auth.submit", locale), pending: pending, locale: locale) { submit() }
+            AuthLink(title: SiteCopy.t("auth.loginFooterRegister", locale), locale: locale, action: onRegister)
         }
     }
 
@@ -33,7 +33,7 @@ struct LoginView: View {
         Task {
             let err = await auth.signIn(email: email, password: password, locale: locale.rawValue)
             pending = false
-            if let err { error = err == "network" ? "网络连接失败，请稍后再试。" : err } else { onDone() }
+            if let err { error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale) } else { onDone() }
         }
     }
 }
@@ -53,14 +53,14 @@ struct RegisterView: View {
     @StateObject private var social = SocialSignInState()
 
     var body: some View {
-        AuthPage(locale: locale, title: "注册", onBack: onBack) {
+        AuthPage(locale: locale, title: SiteCopy.t("auth.registerPageTitle", locale), onBack: onBack) {
             SocialSignInButtons(auth: auth, locale: locale, state: social, onDone: onDone)
-            AuthField(label: "邮箱", text: $email, locale: locale, keyboard: .emailAddress, contentType: .emailAddress)
-            AuthField(label: "密码", text: $password, locale: locale, secure: true, contentType: .newPassword)
-            AuthField(label: "昵称", text: $name, locale: locale, contentType: .nickname)
+            AuthField(label: SiteCopy.t("auth.email", locale), text: $email, locale: locale, keyboard: .emailAddress, contentType: .emailAddress)
+            AuthField(label: SiteCopy.t("auth.password", locale), text: $password, locale: locale, secure: true, contentType: .newPassword)
+            AuthField(label: SiteCopy.t("auth.registerName", locale), text: $name, locale: locale, contentType: .nickname)
             if let error { AuthErrorText(error, locale: locale) }
-            AuthSubmit(title: "注册", pending: pending, locale: locale) { submit() }
-            AuthLink(title: "已有账户？登录", locale: locale, action: onLogin)
+            AuthSubmit(title: SiteCopy.t("auth.registerSubmit", locale), pending: pending, locale: locale) { submit() }
+            AuthLink(title: SiteCopy.t("auth.registerGoLogin", locale), locale: locale, action: onLogin)
         }
     }
 
@@ -70,7 +70,7 @@ struct RegisterView: View {
         Task {
             let err = await auth.register(email: email, password: password, name: name, locale: locale.rawValue)
             pending = false
-            if let err { error = err == "network" ? "网络连接失败，请稍后再试。" : err } else { onDone() }
+            if let err { error = err == "network" ? SiteCopy.t("auth.errorNetwork", locale) : SiteCopy.localizeKnown(err, locale) } else { onDone() }
         }
     }
 }
@@ -94,11 +94,11 @@ struct SocialSignInButtons: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            AuthProviderButton(variant: .google, label: "使用 Google 继续", pending: state.googlePending, disabled: state.busy, locale: locale) { google() }
+            AuthProviderButton(variant: .google, label: SiteCopy.t("auth.continueWithGoogle", locale), pending: state.googlePending, disabled: state.busy, locale: locale) { google() }
             if let e = state.googleError { AuthOAuthError(e, locale: locale) }
         }
         VStack(spacing: 6) {
-            AuthProviderButton(variant: .apple, label: "使用 Apple 继续", pending: state.applePending, disabled: state.busy, locale: locale) { apple() }
+            AuthProviderButton(variant: .apple, label: SiteCopy.t("auth.continueWithApple", locale), pending: state.applePending, disabled: state.busy, locale: locale) { apple() }
             if let e = state.appleError { AuthOAuthError(e, locale: locale) }
         }
         AuthMethodDivider(locale: locale)
@@ -197,7 +197,7 @@ private struct AuthMethodDivider: View {
     var body: some View {
         HStack(spacing: 12) {
             Rectangle().fill(theme.border).frame(height: 0.5)
-            Text(locale.zh("或")).font(.system(size: 11, weight: .semibold)).tracking(0.6).textCase(.uppercase).foregroundStyle(theme.faint)
+            Text(SiteCopy.t("auth.orDivider", locale)).font(.system(size: 11, weight: .semibold)).tracking(0.6).textCase(.uppercase).foregroundStyle(theme.faint)
             Rectangle().fill(theme.border).frame(height: 0.5)
         }
         .padding(.vertical, 6)
@@ -219,12 +219,12 @@ private struct AuthPage<Content: View>: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     Button(action: onBack) {
-                        Text(locale.zh("返回")).font(.system(size: 14, weight: .medium)).foregroundStyle(theme.faint).padding(.vertical, 8)
+                        Text(SiteCopy.t("pages.read.chapterChromeBack", locale)).font(.system(size: 14, weight: .medium)).foregroundStyle(theme.faint).padding(.vertical, 8)
                     }
                     .buttonStyle(.plain)
                     Text(locale.zh(title)).font(.system(size: 18, weight: .semibold)).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.top, 8)
-                    Text(locale.zh("登录后继续使用 AskBible.me")).font(.system(size: 14)).lineSpacing(4).foregroundStyle(theme.muted)
+                    Text(SiteCopy.t("auth.registerIntro", locale)).font(.system(size: 14)).lineSpacing(4).foregroundStyle(theme.muted)
                         .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 10)
                     VStack(alignment: .leading, spacing: 10) { content() }.padding(.top, 24)
                 }
@@ -270,7 +270,7 @@ private struct AuthErrorText: View {
     let locale: AppLocale
     init(_ text: String, locale: AppLocale) { self.text = text; self.locale = locale }
     var body: some View {
-        Text(locale.zh(text)).font(.system(size: 13, weight: .medium)).foregroundStyle(Color(rgb: 0xB42318))
+        Text(SiteCopy.localizeKnown(text, locale)).font(.system(size: 13, weight: .medium)).foregroundStyle(Color(rgb: 0xB42318))
             .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.top, 8)
     }
 }

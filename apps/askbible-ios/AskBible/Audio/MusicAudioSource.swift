@@ -91,12 +91,14 @@ enum MusicAlbumRules {
     }
 
     /// 心境条短名（用户可见）
-    static func shortLabel(_ album: String) -> String {
+    static func shortLabel(_ album: String, _ locale: AppLocale = AppLocale.current) -> String {
         switch album {
-        case "安静": return "放松"
-        case "下午茶": return "休闲"
-        case "专注工作": return "工作"
-        case "赞美诗": return "圣诗"
+        case "安静": return SiteCopy.t("native.albumCalm", locale)
+        case "下午茶": return SiteCopy.t("native.albumAfternoon", locale)
+        case "专注工作": return SiteCopy.t("native.albumWork", locale)
+        case "赞美诗": return SiteCopy.t("native.albumHymns", locale)
+        case "钢琴": return SiteCopy.t("native.albumPiano", locale)
+        case "睡眠": return SiteCopy.t("native.albumSleep", locale)
         default: return album
         }
     }

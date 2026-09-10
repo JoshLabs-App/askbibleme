@@ -1,5 +1,6 @@
 package me.askbible.native_
 
+import me.askbible.native_.data.SiteCopy
 import me.askbible.native_.data.TranslationDownloader
 import me.askbible.native_.data.ChapterLoader
 import me.askbible.native_.data.name
@@ -140,7 +141,10 @@ private fun RootScreen() {
     val configuration = LocalConfiguration.current
     // 手动设置（探索页）优先，否则跟系统
     var localeOverride by remember { mutableStateOf(me.askbible.native_.data.AppLocalePrefs.read(context)) }
-    val appLocale = localeOverride ?: remember(configuration) { AppLocale.fromLanguageTag(configuration.locales[0]?.toLanguageTag() ?: "") }
+    val systemLocale = remember(configuration) { AppLocale.fromLanguageTag(configuration.locales[0]?.toLanguageTag() ?: "") }
+    val appLocale = localeOverride ?: systemLocale
+    // 目录表 / 文案表 / 译本默认值都看 AppLocale.current；在建各 store 之前定好
+    AppLocale.current = appLocale
     val displayLocale = ReadDisplayLocale.resolve(appLocale, translation.language)
     var xrefVerse by remember { mutableStateOf<Int?>(null) }
     var showSleepSheet by remember { mutableStateOf(false) }
@@ -455,7 +459,18 @@ private fun RootScreen() {
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
-                localeOverride = localeOverride, onSetLocale = { localeOverride = it; me.askbible.native_.data.AppLocalePrefs.write(context, it) },
+                localeOverride = localeOverride, onSetLocale = { choice ->
+                    // RN applyLocaleWithTranslationPrefs：语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；之后手动改译本不再受语言影响
+                    val next = choice ?: systemLocale
+                    AppLocale.current = next
+                    localeOverride = choice
+                    me.askbible.native_.data.AppLocalePrefs.write(context, choice)
+                    val primary = AppLocale.primaryTranslationId(next)
+                    ScriptureTranslation.find(primary)?.let { translation = it }
+                    secondary = null
+                    translationPrefs.write(translation, null)
+                    home.setTranslation(primary, AppLocale.goldenVerseAudioTranslationId(next))
+                },
                 activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
                 onOpenChapter = { id, ch ->
                     // 文章里的经文链接：切到读经 Tab 直接开章
@@ -550,7 +565,7 @@ private fun RootScreen() {
                         // 双击收藏：新加时顺手复制（RN「已收藏，经文已复制」）
                         val added = bookmarks.toggle(book.id, book.name(displayLocale), chapter, v.number, translation.id, v.text)
                         if (added) copyText(context, VerseShareText.clipboard(book.name(displayLocale), chapter, v.number, v.text))
-                        toast = if (added) "已收藏，经文已复制" else "已取消收藏"
+                        toast = SiteCopy.t(if (added) "pages.read.verseBookmarkSaved" else "pages.read.verseBookmarkRemoved", appLocale)
                     },
                     onLongPressVerse = { actionVerse = it },
                     onOpenSearch = { searchRef = SearchChapterRef(book.id, chapter); showSearch = true },
@@ -639,11 +654,11 @@ private fun RootScreen() {
             val b = book
             if (b != null) VerseActionSheet(
                 verse = v.number, bookmarked = bookmarks.isBookmarked(translation.id, b.id, chapter, v.number), size = size,
-                onCopy = { copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text)); toast = "已复制本节经文"; actionVerse = null },
+                onCopy = { copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text)); toast = SiteCopy.t("pages.read.verseCopied", appLocale); actionVerse = null },
                 onBookmark = {
                     val added = bookmarks.toggle(b.id, b.name(displayLocale), chapter, v.number, translation.id, v.text)
                     if (added) copyText(context, VerseShareText.clipboard(b.name(displayLocale), chapter, v.number, v.text))
-                    toast = if (added) "已收藏，经文已复制" else "已取消收藏"; actionVerse = null
+                    toast = SiteCopy.t(if (added) "pages.read.verseBookmarkSaved" else "pages.read.verseBookmarkRemoved", appLocale); actionVerse = null
                 },
                 onShare = {
                     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {

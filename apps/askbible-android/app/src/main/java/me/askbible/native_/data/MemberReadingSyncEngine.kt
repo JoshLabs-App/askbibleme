@@ -1,5 +1,6 @@
 package me.askbible.native_.data
 
+import me.askbible.native_.data.SiteCopy
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -195,9 +196,9 @@ class MemberReadingSyncEngine(context: Context) {
 
     private suspend fun pullAndApplyRemoteOnly(token: String, userId: String, label: String): Outcome = when (val r = fetch(token, userId)) {
         is SyncFetch.Ok -> applyPulled(r.doc, userId)
-        SyncFetch.Unauthorized -> { remember("登录已失效，请重新登录"); Outcome.UNAUTHORIZED }
+        SyncFetch.Unauthorized -> { remember(SiteCopy.t("native.syncUnauthorized")); Outcome.UNAUTHORIZED }
         is SyncFetch.Failed -> { remember("$label：${r.message}"); Outcome.SKIPPED }
-        SyncFetch.Network -> { remember("当前无网络"); Outcome.OFFLINE }
+        SyncFetch.Network -> { remember(SiteCopy.t("native.syncOffline")); Outcome.OFFLINE }
     }
 
     /** RN memberReadingSyncPushSupabase：读云端 → 合并 → upsert，回合并后的文档 */
@@ -226,7 +227,7 @@ class MemberReadingSyncEngine(context: Context) {
     suspend fun run(reason: String?): Outcome {
         val token = auth.ensureFreshToken()
         val userId = auth.user?.id?.trim().orEmpty()
-        if (token == null || userId.isEmpty()) { remember("未找到登录会话"); return Outcome.SKIPPED }
+        if (token == null || userId.isEmpty()) { remember(SiteCopy.t("native.syncNoSession")); return Outcome.SKIPPED }
         var m = meta
         val ownerMode = when {
             m.boundUserId == userId && !m.requirePullOnly -> "continue"
@@ -239,12 +240,12 @@ class MemberReadingSyncEngine(context: Context) {
         val forcePush = R.shouldForcePush(reason)
         val forcePushPlan = forcePush && !R.str(storedPlan?.opt("planId")).isNullOrEmpty()
 
-        if (ownerMode == "replace" && !(forcePush && (localHas || forcePushPlan))) return pullAndApplyRemoteOnly(token, userId, "帐号切换后拉取失败")
+        if (ownerMode == "replace" && !(forcePush && (localHas || forcePushPlan))) return pullAndApplyRemoteOnly(token, userId, SiteCopy.t("native.syncPullFailedAfterSwitch"))
         if (ownerMode == "unbound") {
             when (val r = fetch(token, userId)) {
-                SyncFetch.Unauthorized -> { remember("登录已失效，请重新登录"); return Outcome.UNAUTHORIZED }
-                is SyncFetch.Failed -> { remember("未绑定先拉取失败：${r.message}"); return Outcome.SKIPPED }
-                SyncFetch.Network -> { remember("当前无网络"); return Outcome.OFFLINE }
+                SyncFetch.Unauthorized -> { remember(SiteCopy.t("native.syncUnauthorized")); return Outcome.UNAUTHORIZED }
+                is SyncFetch.Failed -> { remember(SiteCopy.f("native.syncPullFailedFirst", mapOf("message" to r.message))); return Outcome.SKIPPED }
+                SyncFetch.Network -> { remember(SiteCopy.t("native.syncOffline")); return Outcome.OFFLINE }
                 is SyncFetch.Ok -> {
                     val path = R.decidePath(null, false, userId, R.blobsHaveProgress(r.doc?.blobs), localHas, forcePush)
                     if (path == R.SyncPath.PULL_ONLY_REINSTALL || path == R.SyncPath.PULL_ONLY_EMPTY) return applyPulled(r.doc, userId)
@@ -253,7 +254,7 @@ class MemberReadingSyncEngine(context: Context) {
                 }
             }
         } else if (!localHas && !forcePushPlan) {
-            return pullAndApplyRemoteOnly(token, userId, "拉取失败")
+            return pullAndApplyRemoteOnly(token, userId, SiteCopy.t("native.syncPullFailed"))
         }
 
         val localPush = exportLocal()
@@ -274,14 +275,14 @@ class MemberReadingSyncEngine(context: Context) {
                                          boundUserId = userId, requirePullOnly = false, lastError = null)
                         Outcome.OK
                     }
-                    SyncFetch.Unauthorized -> { remember("登录已失效，请重新登录"); Outcome.UNAUTHORIZED }
-                    is SyncFetch.Failed -> { remember("合并后再次上传失败：${confirm.message}"); Outcome.SKIPPED }
-                    SyncFetch.Network -> { remember("当前无网络"); Outcome.OFFLINE }
+                    SyncFetch.Unauthorized -> { remember(SiteCopy.t("native.syncUnauthorized")); Outcome.UNAUTHORIZED }
+                    is SyncFetch.Failed -> { remember(SiteCopy.f("native.syncPushFailedAfterMerge", mapOf("message" to confirm.message))); Outcome.SKIPPED }
+                    SyncFetch.Network -> { remember(SiteCopy.t("native.syncOffline")); Outcome.OFFLINE }
                 }
             }
-            SyncFetch.Unauthorized -> { remember("登录已失效，请重新登录"); Outcome.UNAUTHORIZED }
-            is SyncFetch.Failed -> { remember("上传失败：${pushed.message}"); Outcome.SKIPPED }
-            SyncFetch.Network -> { remember("当前无网络"); Outcome.OFFLINE }
+            SyncFetch.Unauthorized -> { remember(SiteCopy.t("native.syncUnauthorized")); Outcome.UNAUTHORIZED }
+            is SyncFetch.Failed -> { remember(SiteCopy.f("native.syncPushFailed", mapOf("message" to pushed.message))); Outcome.SKIPPED }
+            SyncFetch.Network -> { remember(SiteCopy.t("native.syncOffline")); Outcome.OFFLINE }
         }
     }
 

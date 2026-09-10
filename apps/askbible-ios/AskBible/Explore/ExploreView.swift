@@ -33,10 +33,10 @@ struct ExploreView: View {
         } else {
             page
                 // RN ExploreGreetingNameModal：改称呼（最多 24 字）
-                .alert(locale.zh("修改称呼"), isPresented: $nameEditorOpen) {
-                    TextField(locale.zh("你的名字"), text: $nameDraft)
-                    Button(locale.zh("取消"), role: .cancel) {}
-                    Button(locale.zh("保存")) { let n = nameDraft; Task { _ = await auth.updateDisplayName(n) } }
+                .alert(SiteCopy.t("pages.explore.greetingEditTitle", locale), isPresented: $nameEditorOpen) {
+                    TextField(SiteCopy.t("pages.explore.birthYearModalNamePlaceholder", locale), text: $nameDraft)
+                    Button(SiteCopy.t("native.cancel", locale), role: .cancel) {}
+                    Button(SiteCopy.t("native.save", locale)) { let n = nameDraft; Task { _ = await auth.updateDisplayName(n) } }
                         .disabled(!MemberAuthRules.isValidDisplayName(nameDraft))
                 }
         }
@@ -52,7 +52,7 @@ struct ExploreView: View {
                         Button {
                             if auth.user != nil { nameDraft = auth.user?.name ?? ""; nameEditorOpen = true } else { onOpenLogin() }
                         } label: {
-                            Text(locale.zh(MemberAuthRules.greeting(auth.user)))
+                            Text(greetingText)
                                 .font(.system(size: 25, weight: .bold))
                                 .foregroundStyle(theme.ink)
                                 .lineLimit(1)
@@ -62,7 +62,7 @@ struct ExploreView: View {
                         if auth.user != nil {
                             // RN 的「退出登录」在侧边抽屉里；原生版还没有抽屉，先放在抬头下面
                             Button { onSignOut() } label: {
-                                Text(locale.zh("退出登录")).font(.system(size: 13)).underline().foregroundStyle(theme.faint)
+                                Text(SiteCopy.t("auth.drawerLogout", locale)).font(.system(size: 13)).underline().foregroundStyle(theme.faint)
                             }
                             .buttonStyle(.plain).padding(.top, 8)
                         }
@@ -80,7 +80,7 @@ struct ExploreView: View {
                             .foregroundStyle(theme.muted)
                             .padding(.top, 6)
 
-                        Text("最近阅读")
+                        Text(SiteCopy.t("native.recentReading", locale))
                             .font(.system(size: 15))
                             .foregroundStyle(theme.faint)
                             .padding(.top, 20)
@@ -102,7 +102,7 @@ struct ExploreView: View {
                                 .buttonStyle(.plain)
                             }
                             if activity.recent.isEmpty {
-                                Text(locale.zh("还没有阅读记录"))
+                                Text(SiteCopy.t("native.noReadingRecord", locale))
                                     .font(.system(size: 15)).foregroundStyle(theme.faint)
                                     .frame(maxWidth: .infinity).frame(height: 38)
                             }
@@ -111,12 +111,12 @@ struct ExploreView: View {
                         .padding(.top, 8)
 
                         // 界面语言（原生版新增）：跟随系统 / 简体 / 繁體 / English，样式同计划详情的单选格
-                        Text(locale.zh("语言"))
+                        Text(SiteCopy.t("nav.language", locale))
                             .font(.system(size: 15))
                             .foregroundStyle(theme.faint)
                             .padding(.top, 28)
                         HStack(spacing: 8) {
-                            languageChip(nil, label: locale.zh("跟随系统"))
+                            languageChip(nil, label: SiteCopy.t("native.followSystem", locale))
                             ForEach([AppLocale.zhCN, .zhTW, .en], id: \.rawValue) { l in languageChip(l, label: l.settingLabel) }
                         }
                         .padding(.horizontal, 26)
@@ -189,17 +189,23 @@ struct ExploreView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// 原生界面文案目前只有中文（locale.zh 只管简繁），统计行也跟着走，别混进英文（Josh 2026-09-09：中英文混一起）
-    private var isEn: Bool { false }
+    /// 统计行跟界面语言走（三语文案见 SiteCopy；Josh 2026-09-10 决定补齐整套英文）
+    private var isEn: Bool { locale == .en }
     private var usageLine: String {
-        "\(isEn ? "Time in app" : locale.zh("使用时长"))  \(MemberReadingSyncRules.formatUsageDuration(totalSec: Int(activity.usageTotalSec), en: isEn))"
+        "\(SiteCopy.t("native.usageTime", locale))  \(MemberReadingSyncRules.formatUsageDuration(totalSec: Int(activity.usageTotalSec), en: isEn))"
     }
     private var listenLine: String {
-        let d = MemberReadingSyncRules.formatListenDuration(totalSec: Int(activity.listenTotalSec), en: isEn)
-        return isEn ? "Listened \(d)" : locale.zh("累计听 ") + d
+        SiteCopy.f("native.listenTotal", ["duration": MemberReadingSyncRules.formatListenDuration(totalSec: Int(activity.listenTotalSec), en: isEn)], locale)
     }
     private func recentLabel(_ item: ReadingActivityStore.RecentChapter) -> String {
-        isEn ? "\(item.bookName) \(item.chapter)" : "\(locale.zh(item.bookName)) \(item.chapter)\(locale.zh("章"))"
+        let name = BibleCatalog.book(id: item.bookId)?.name(locale) ?? locale.zh(item.bookName)
+        return isEn ? "\(name) \(item.chapter)" : SiteCopy.f("native.chapterUnit", ["bookName": name, "chapter": "\(item.chapter)"], locale)
+    }
+    /// 抬头：登录了「你好，名字」，没登录「请登录，解锁更多」（MemberAuthRules.greeting 的三语版）
+    private var greetingText: String {
+        guard let user = auth.user else { return SiteCopy.t("native.authGreetingGuest", locale) }
+        let n = MemberAuthRules.normalizeDisplayName(user.name)
+        return SiteCopy.f("native.authGreetingNamed", ["name": n.isEmpty ? SiteCopy.t("native.authDefaultName", locale) : n], locale)
     }
 
     /// RN ReadYearDayTimeline：淡底轨 + 实色已读区段 + 今日橙点
@@ -230,11 +236,11 @@ struct ExploreView: View {
     private var statsRow: some View {
         let tl = MemberReadingSyncRules.yearTimeline()
         return HStack(spacing: 0) {
-            stat(String(tl.dayOfYear), "今年已过", theme.parchmentAccent)
+            stat(String(tl.dayOfYear), SiteCopy.t("pages.read.todayReadingStatYearDayLabel", locale), theme.parchmentAccent)
             divider
-            stat(String(activity.readDays), "读经天", Color(rgb: 0x4F7A54))
+            stat(String(activity.readDays), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(rgb: 0x4F7A54))
             divider
-            stat(String(activity.streakDays), "连续天", Color(rgb: 0x4F7A54))
+            stat(String(activity.streakDays), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(rgb: 0x4F7A54))
         }
         .padding(.horizontal, 24)
     }

@@ -142,7 +142,7 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
                 items(queue.size, key = { queue[it] }) { pos ->
                     val i = queue[pos]
                     val active = i == player.trackIndex
-                    Text(MusicCatalog.tracks[i].title, color = if (active) Color.White else Color(0x7AFFFFFF),
+                    Text(MusicCatalog.tracks[i].localizedTitle, color = if (active) Color.White else Color(0x7AFFFFFF),
                          fontSize = if (active) 18.sp else 14.sp, fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
                          maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
                          modifier = Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 4.dp).wrapContentHeight(Alignment.CenterVertically)

@@ -36,7 +36,7 @@ struct ExploreArticleView: View {
 
                     Group {
                         if !article.sections.isEmpty && !article.prose {
-                            Text("点按段落可展开或收起")
+                            Text(SiteCopy.t("native.articleTapHint"))
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(theme.muted)
                                 .frame(maxWidth: .infinity)

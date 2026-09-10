@@ -176,9 +176,9 @@ final class MemberReadingSyncEngine: ObservableObject {
     private func pullAndApplyRemoteOnly(token: String, userId: String, label: String) async -> Outcome {
         switch await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId) {
         case .ok(let doc): return applyPulled(doc, userId: userId)
-        case .unauthorized: remember("登录已失效，请重新登录"); return .unauthorized
+        case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
         case .failed(let m): remember("\(label)：\(m)"); return .skipped
-        case .network: remember("当前无网络"); return .offline
+        case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
         }
     }
 
@@ -202,7 +202,7 @@ final class MemberReadingSyncEngine: ObservableObject {
 
     func run(reason: String?) async -> Outcome {
         guard let auth, let token = await auth.ensureFreshToken(), let userId = auth.user?.id.trimmingCharacters(in: .whitespaces), !userId.isEmpty else {
-            remember("未找到登录会话"); return .skipped
+            remember(SiteCopy.t("native.syncNoSession")); return .skipped
         }
         var m = meta
         let ownerMode: String
@@ -220,13 +220,13 @@ final class MemberReadingSyncEngine: ObservableObject {
         let forcePushPlan = forcePush && (Rules.str(storedPlan?["planId"])?.isEmpty == false)
 
         if ownerMode == "replace", !(forcePush && (localHas || forcePushPlan)) {
-            return await pullAndApplyRemoteOnly(token: token, userId: userId, label: "帐号切换后拉取失败")
+            return await pullAndApplyRemoteOnly(token: token, userId: userId, label: SiteCopy.t("native.syncPullFailedAfterSwitch"))
         }
         if ownerMode == "unbound" {
             switch await SupabaseAuthClient.fetchSyncDocument(token: token, userId: userId) {
-            case .unauthorized: remember("登录已失效，请重新登录"); return .unauthorized
-            case .failed(let msg): remember("未绑定先拉取失败：\(msg)"); return .skipped
-            case .network: remember("当前无网络"); return .offline
+            case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
+            case .failed(let msg): remember(SiteCopy.f("native.syncPullFailedFirst", ["message": msg])); return .skipped
+            case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
             case .ok(let doc):
                 let path = Rules.decidePath(boundUserId: nil, requirePullOnly: false, userId: userId,
                                             remoteHasProgress: Rules.blobsHaveProgress(doc?.blobs), localHasProgress: localHas, forcePush: forcePush)
@@ -235,7 +235,7 @@ final class MemberReadingSyncEngine: ObservableObject {
                 meta = Rules.Meta(revision: doc?.revision, lastSyncedAt: nil, boundUserId: userId, requirePullOnly: false, lastError: nil)
             }
         } else if !localHas, !forcePushPlan {
-            return await pullAndApplyRemoteOnly(token: token, userId: userId, label: "拉取失败")
+            return await pullAndApplyRemoteOnly(token: token, userId: userId, label: SiteCopy.t("native.syncPullFailed"))
         }
 
         var localPush = exportLocal()
@@ -255,13 +255,13 @@ final class MemberReadingSyncEngine: ObservableObject {
                 mm.boundUserId = userId; mm.requirePullOnly = false; mm.lastError = nil
                 meta = mm
                 return .ok
-            case .unauthorized: remember("登录已失效，请重新登录"); return .unauthorized
-            case .failed(let msg): remember("合并后再次上传失败：\(msg)"); return .skipped
-            case .network: remember("当前无网络"); return .offline
+            case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
+            case .failed(let msg): remember(SiteCopy.f("native.syncPushFailedAfterMerge", ["message": msg])); return .skipped
+            case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
             }
-        case .unauthorized: remember("登录已失效，请重新登录"); return .unauthorized
-        case .failed(let msg): remember("上传失败：\(msg)"); return .skipped
-        case .network: remember("当前无网络"); return .offline
+        case .unauthorized: remember(SiteCopy.t("native.syncUnauthorized")); return .unauthorized
+        case .failed(let msg): remember(SiteCopy.f("native.syncPushFailed", ["message": msg])); return .skipped
+        case .network: remember(SiteCopy.t("native.syncOffline")); return .offline
         }
     }
 

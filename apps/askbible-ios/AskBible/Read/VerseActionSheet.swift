@@ -23,16 +23,16 @@ struct VerseActionSheet: View {
             Color(red: 28 / 255, green: 20 / 255, blue: 16 / 255, opacity: 0.35).ignoresSafeArea().onTapGesture(perform: onClose)
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 12) {
-                    Text("第 \(verse) 节").font(.system(size: max(17, (fs * 0.95).rounded()), weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.f("pages.read.verseActionVerseTitle", ["verse": "\(verse)"])).font(.system(size: max(17, (fs * 0.95).rounded()), weight: .semibold)).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(action: onClose) { Text("关闭").font(.system(size: (fs * 0.85).rounded())).foregroundStyle(theme.muted) }
+                    Button(action: onClose) { Text(SiteCopy.t("pages.read.verseActionClose")).font(.system(size: (fs * 0.85).rounded())).foregroundStyle(theme.muted) }
                         .buttonStyle(.plain)
                 }
                 .padding(.bottom, 10)
                 HStack(alignment: .top, spacing: 0) {
-                    cell(MI.contentCopy, "本节复制", iconSize, labelSize, onCopy)
-                    if !bookmarked { cell(MI.bookmarkBorder, "双击收藏", iconSize, labelSize, onBookmark) }
-                    cell(MI.iosShare, "分享", iconSize, labelSize, onShare)
+                    cell(MI.contentCopy, SiteCopy.t("pages.read.verseActionCopy"), iconSize, labelSize, onCopy)
+                    if !bookmarked { cell(MI.bookmarkBorder, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, onBookmark) }
+                    cell(MI.iosShare, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, onShare)
                 }
                 .padding(.top, 4).padding(.bottom, 8)
             }

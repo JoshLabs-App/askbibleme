@@ -72,6 +72,8 @@ struct MusicTrack: Identifiable, Hashable {
     /// zh-CN 优先，回落 en / 纯字符串（resolveMusicLocalizedField）
     let title: String
     let titleEn: String
+    /// 按界面语言：英文面用 titleEn（RN resolveMusicLocalizedField 反向）
+    var localizedTitle: String { AppLocale.pick(title, titleEn) }
     let artist: String
     /// 已归一化的专辑名（inferTrackAlbum）
     let album: String
@@ -109,7 +111,10 @@ data class MusicTrack(
     val durationSec: Int,
     /** 安装包内置（assets/music） */
     val bundled: Boolean,
-)
+) {
+    /** 按界面语言：英文面用 titleEn（RN resolveMusicLocalizedField 反向） */
+    val localizedTitle: String get() = AppLocale.pick(title, titleEn)
+}
 
 object MusicCatalog {
     /** 与 RN KNOWN_MUSIC_ALBUMS 同序 */

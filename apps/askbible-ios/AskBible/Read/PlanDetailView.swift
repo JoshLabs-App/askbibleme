@@ -142,7 +142,7 @@ struct PlanDetailView: View {
                 subheading(PlanText.t("paceHeading"), PlanText.t("paceHint")).padding(.top, 14)
                 HStack(spacing: 10) {
                     ForEach(NtDeepRepeat.paces, id: \.self) { p in
-                        PlanChoiceTile(title: "\(p) 天", subtitle: PlanText.t("pace\(p)"), on: pace == p) { pace = p }
+                        PlanChoiceTile(title: SiteCopy.f("native.days", ["n": "\(p)"]), subtitle: PlanText.t("pace\(p)"), on: pace == p) { pace = p }
                     }
                 }
                 .padding(.top, 10)
@@ -198,7 +198,10 @@ struct PlanDetailView: View {
 
     private var endDateLabel: String {
         let end = PlanDates.addDays(Date(), pace - 1)
-        let f = DateFormatter(); f.locale = Locale(identifier: "zh_CN"); f.dateFormat = "M月d日 EEE"
+        // RN NtDeepRepeatPaceSection：toLocaleDateString(en-US / zh-CN)
+        let f = DateFormatter()
+        if AppLocale.current == .en { f.locale = Locale(identifier: "en_US"); f.dateFormat = "EEE, MMM d" }
+        else { f.locale = Locale(identifier: "zh_CN"); f.dateFormat = "M月d日 EEE" }
         return f.string(from: end)
     }
 
@@ -285,6 +288,11 @@ struct PlanDetailView: View {
     private static var easterLabel: String {
         let parts = PlanDates.easterEpoch.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return PlanDates.easterEpoch }
+        if AppLocale.current == .en {
+            let f = DateFormatter(); f.locale = Locale(identifier: "en_US"); f.dateFormat = "MMMM d, yyyy"
+            var c = DateComponents(); c.year = parts[0]; c.month = parts[1]; c.day = parts[2]
+            if let d = Calendar.current.date(from: c) { return f.string(from: d) }
+        }
         return "\(parts[0]) 年 \(parts[1]) 月 \(parts[2]) 日"
     }
 }

@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,12 +70,12 @@ fun PostReadingEditions(
 
     Column(Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         // heading（下 20）
-        Text("继续阅读与思考", color = theme.ink.toColor(), fontSize = sx(22f).sp, lineHeight = sx(30f).sp,
+        Text(SiteCopy.t("pages.read.postReadingEditionsHeading"), color = theme.ink.toColor(), fontSize = sx(22f).sp, lineHeight = sx(30f).sp,
              fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp, textAlign = TextAlign.Center,
              modifier = Modifier.padding(bottom = 10.dp))
-        Text("你可以先安静查阅资料，再回到经文里。", color = LEAD, fontSize = sx(13f).sp, lineHeight = sx(21f).sp,
+        Text(SiteCopy.t("pages.read.postReadingEditionsLead"), color = LEAD, fontSize = sx(13f).sp, lineHeight = sx(21f).sp,
              textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 10.dp))
-        Text("点按下方任一卡片进入", color = HINT, fontSize = sx(12f).sp, lineHeight = sx(18f).sp, fontWeight = FontWeight.Medium,
+        Text(SiteCopy.t("pages.read.postReadingEditionsTapHint"), color = HINT, fontSize = sx(12f).sp, lineHeight = sx(18f).sp, fontWeight = FontWeight.Medium,
              letterSpacing = 0.2.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 8.dp))
         BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = 20.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.width(minOf(224.dp, maxWidth * 0.56f)).height(0.5.dp).background(Color(0x47483422)))
@@ -97,17 +98,17 @@ fun PostReadingEditions(
                         Row(Modifier.clickableNoRipple { onNavigate(p.bookId, p.chapter) }.padding(6.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                             MaterialIcon(MI.CHEVRON_LEFT, 16f, NAV_INK)
-                            Text("上一章", color = Color(0xE08C5A2A), fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.1.sp)
+                            Text(SiteCopy.t("pages.read.chapterEndNavPrev"), color = Color(0xE08C5A2A), fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.1.sp)
                         }
                     }
                 }
-                Text("回到顶部", color = Color(0xD68C5A2A), fontSize = sx(14f).sp, fontWeight = FontWeight.Medium, letterSpacing = 0.2.sp,
+                Text(SiteCopy.t("pages.read.postReadingBackToTop"), color = Color(0xD68C5A2A), fontSize = sx(14f).sp, fontWeight = FontWeight.Medium, letterSpacing = 0.2.sp,
                      modifier = Modifier.clickableNoRipple(onBackToTop).padding(horizontal = 8.dp, vertical = 6.dp))
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
                     next?.let { n ->
                         Row(Modifier.clickableNoRipple { onNavigate(n.bookId, n.chapter) }.padding(6.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
-                            Text("下一章", color = Color(0xE08C5A2A), fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.1.sp)
+                            Text(SiteCopy.t("pages.read.chapterChromeNext"), color = Color(0xE08C5A2A), fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.1.sp)
                             MaterialIcon(MI.CHEVRON_RIGHT, 16f, NAV_INK)
                         }
                     }
@@ -121,8 +122,8 @@ fun PostReadingEditions(
 @Composable
 private fun Page(variant: InfoEditionVariant, isActive: Boolean, sx: (Float) -> Float, modifier: Modifier, onPress: () -> Unit) {
     val art = rememberAssetImage(if (variant == InfoEditionVariant.GUIDE) "images/post-reading-discover.png" else "images/post-reading-consult.png")
-    val title = if (variant == InfoEditionVariant.GUIDE) "陪你探索" else "查找资料"
-    val blurb = if (variant == InfoEditionVariant.GUIDE) "通过问题引导去探索" else "整理资料供你参考"
+    val title = SiteCopy.t(if (variant == InfoEditionVariant.GUIDE) "pages.read.postReadingEditionGuideTitle" else "pages.read.postReadingEditionInfoTitle")
+    val blurb = SiteCopy.t(if (variant == InfoEditionVariant.GUIDE) "pages.read.postReadingEditionGuideBlurb" else "pages.read.postReadingEditionInfoBlurb")
     Column(modifier.clickableNoRipple { if (!isActive) onPress() }, horizontalAlignment = Alignment.CenterHorizontally) {
         if (art != null) {
             Image(art, contentDescription = null, contentScale = ContentScale.FillBounds,
@@ -138,7 +139,7 @@ private fun Page(variant: InfoEditionVariant, isActive: Boolean, sx: (Float) -> 
                  modifier = Modifier.widthIn(max = 168.dp))
             Row(Modifier.padding(top = 2.dp).defaultMinSize(minHeight = 18.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(if (isActive) "已选择" else "点按打开", color = HINT, fontSize = 11.sp, lineHeight = 16.sp,
+                Text(SiteCopy.t(if (isActive) "pages.read.postReadingEditionSelected" else "pages.read.postReadingEditionTapAction"), color = HINT, fontSize = 11.sp, lineHeight = 16.sp,
                      fontWeight = FontWeight.Medium, letterSpacing = 0.2.sp)
                 MaterialIcon(if (isActive) MI.CHECK_CIRCLE else MI.CHEVRON_RIGHT, 14f, if (isActive) Color(0xFF7A633A) else NAV_INK)
             }
@@ -163,7 +164,7 @@ private fun EditionBlock(
     }
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("以下仅为参考资料，请对照圣经慎思明辨", color = theme.muted.toColor(), fontSize = sx(12f).sp, lineHeight = sx(19f).sp,
+        Text(SiteCopy.t("pages.read.infoEditionDisclaimer"), color = theme.muted.toColor(), fontSize = sx(12f).sp, lineHeight = sx(19f).sp,
              textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 320.dp).padding(horizontal = 8.dp).padding(top = 10.dp, bottom = 18.dp))
 
         // bodyFullscreenShell：通屏（越过章页 20 的内边距），最小高度一屏，顶部一道暗影
@@ -194,11 +195,11 @@ private fun EditionBlock(
                     }
                     MarkdownBody(content.second, size, theme, onLink)
                 } else {
-                    Text("暂时无法加载本章讲解", Modifier.fillMaxWidth(), color = theme.muted.toColor(), fontSize = sx(13f).sp,
+                    Text(SiteCopy.t("pages.read.infoEditionLoadFailed"), Modifier.fillMaxWidth(), color = theme.muted.toColor(), fontSize = sx(13f).sp,
                          lineHeight = sx(20f).sp, textAlign = TextAlign.Center)
                 }
                 Box(Modifier.fillMaxWidth().padding(top = 50.dp, bottom = 100.dp), contentAlignment = Alignment.Center) {
-                    Text("返回", color = NAV_INK, fontSize = sx(14f).sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.3.sp,
+                    Text(SiteCopy.t("pages.read.chapterChromeBack"), color = NAV_INK, fontSize = sx(14f).sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.3.sp,
                          modifier = Modifier.clickableNoRipple(onBack).padding(horizontal = 8.dp, vertical = 6.dp))
                 }
             }

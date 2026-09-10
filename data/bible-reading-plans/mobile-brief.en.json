@@ -1,0 +1,86 @@
+{
+  "_note": "English copy for the native (iOS / Android) reading-plan pages, mirroring mobile-brief.zh-CN.json key for key. Generated into both ReadingPlanCatalog tables and SiteCopy (mobile.*) by tools/gen-reading-plans.mjs / tools/gen-site-copy.mjs.",
+  "ui": {
+    "plansIntro": "No check-ins. Never worry about missing a day.",
+    "plansOtherHeading": "Classic reading schedules",
+    "plansOtherLead": "M'Cheyne, through-the-Bible-in-a-year and other familiar schedules.",
+    "open": "Open",
+    "activePill": "Current plan",
+    "todayHeading": "Today's reading",
+    "todayHint": "Tap a line to open that chapter",
+    "setupHeading": "Get started",
+    "howHeading": "How it works",
+    "moreOpen": "Learn more",
+    "moreClose": "Show less",
+    "use": "Use this plan",
+    "update": "Save settings",
+    "clear": "Stop this plan",
+    "currentDay": "Day {{n}}",
+    "paceHeading": "Choose a depth",
+    "paceHint": "How many days to stay on one New Testament stage before moving on",
+    "pace7": "1 year · 7 readings",
+    "pace14": "2 years · 14 readings",
+    "pace28": "4 years · 28 readings",
+    "paceEnd": "First stage ends on {{endDate}}",
+    "startDayHeading": "Start from day",
+    "startDayHint": "Keep 1 for a first read; if you had reached day 20 before, set 20.",
+    "anchorToday": "Start today",
+    "anchorTodayHint": "Today counts as day 1",
+    "anchorJan1": "Align to January 1",
+    "anchorJan1Hint": "Counted by the days elapsed this year",
+    "ladderHeading": "52 New Testament stages",
+    "ladderProgress": "Stage {{n}} · day {{day}}/{{total}} of this stage",
+    "ladderOpen": "Show all 52 stages",
+    "ladderClose": "Show less",
+    "stageDone": "Completed",
+    "stageCurrent": "In progress",
+    "toDeepTitle": "Want to go deeper?",
+    "toDeepLead": "Path 2 · Formal study: read the same New Testament passage again and again",
+    "toLightTitle": "Just starting to read?",
+    "toLightLead": "Path 1 · Easy reading: three short readings a day, no pressure",
+    "resetDefault": "Reset to default progress",
+    "epochTriple": "By default day 1 is {{date}} (Easter); each of the three tracks advances one chapter a day. Today is day {{n}}.",
+    "epochNt": "Counted from the day you chose this plan; today is day {{n}}.",
+    "seeHome": "See today's readings on the Bible home page"
+  },
+  "classic": {
+    "badge": "Classic schedule",
+    "how": [
+      ["calendar", "Read the schedule day by day and finish in a year"],
+      ["today", "Start from today, or align to January 1 of this year"],
+      ["spa", "Come back whenever you stop; never worry about missing a day"]
+    ]
+  },
+  "plans": {
+    "triple-loop": {
+      "badge": "Path 1 · Easy reading",
+      "tagline": "One short reading a day from the Old Testament, New Testament and Wisdom books",
+      "facts": [
+        ["today", "3 readings a day"],
+        ["loop", "Never fall behind"],
+        ["swap", "Three tracks, each at its own pace"]
+      ],
+      "how": [
+        ["sync", "Only the track you read advances; the three are independent"],
+        ["spa", "Come back whenever you stop; never worry about missing a day"],
+        ["replay", "When a track reaches its last chapter, it loops back to its start"]
+      ],
+      "detail": "For building a first habit, or returning to God's Word in a low-pressure, sustainable way. Each track advances one chapter a day by default; you can move ahead from any chapter page, or reset to the default progress at any time."
+    },
+    "nt-deep-repeat": {
+      "badge": "Path 2 · Formal study",
+      "tagline": "Read the same New Testament passage again and again until it sinks in",
+      "facts": [
+        ["stairs", "52 NT stages"],
+        ["repeat", "7 / 14 / 28 days per stage"],
+        ["book", "1 OT chapter a day"]
+      ],
+      "how": [
+        ["stairs", "The New Testament in 52 stages of 4–6 chapters"],
+        ["repeat", "Stay on one stage for 7, 14 or 28 days"],
+        ["book", "One Old Testament chapter a day alongside"]
+      ],
+      "detail": "Based on John MacArthur's New Testament reading method. “N readings” means staying on each stage for N days; 52 stages make one cycle of about 12 months, 2 years or 4 years. Come back whenever you stop; if you are new to Bible reading, start with Path 1."
+    }
+  }
+}

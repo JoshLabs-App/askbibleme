@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -87,7 +88,7 @@ fun ExploreArticleScreen(
             }
             if (article.sections.isNotEmpty() && !article.prose) {
                 item {
-                    Text("点按段落可展开或收起", Modifier.fillMaxWidth().padding(bottom = 12.dp), color = theme.muted.toColor(),
+                    Text(SiteCopy.t("native.articleTapHint"), Modifier.fillMaxWidth().padding(bottom = 12.dp), color = theme.muted.toColor(),
                          fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
                 }
                 // RN ExploreFeaturedArticleSections：14 圆角卡、chapterCell 底、边 2×hairline、头 56 高、序号 + 标题 17/700 强调色、右侧 + / −

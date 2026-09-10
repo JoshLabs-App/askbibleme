@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.name
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.offset
 import me.askbible.native_.data.MemberReadingSyncRules
@@ -41,6 +42,9 @@ import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import me.askbible.native_.data.MemberUser
+import me.askbible.native_.data.BibleCatalog
+import me.askbible.native_.data.SiteCopy
 import me.askbible.native_.data.Brand
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.RowScope
@@ -95,30 +99,30 @@ fun ExploreScreen(
     var nameEditorOpen by remember { mutableStateOf(false) }
     var nameDraft by remember { mutableStateOf("") }
     val recent = activity?.recent ?: emptyList()
-    // 原生界面文案目前只有中文（locale.zh 只管简繁），统计行也跟着走，别混进英文（Josh 2026-09-09：中英文混一起）
-    val isEn = false
+    // 统计行跟界面语言走（三语文案见 SiteCopy；Josh 2026-09-10 决定补齐整套英文）
+    val isEn = locale == AppLocale.EN
     val tl = remember { MemberReadingSyncRules.yearTimeline() }
     val completedDates = activity?.completedDates ?: emptyList()
     val ranges = remember(completedDates) { val d = java.time.LocalDate.now(); MemberReadingSyncRules.yearReadRanges(completedDates, d.year, d.monthValue, d.dayOfMonth) }
-    val usageLine = "${if (isEn) "Time in app" else locale.zh("使用时长")}  ${MemberReadingSyncRules.formatUsageDuration((activity?.usageTotalSec ?: 0.0).toInt(), isEn)}"
+    val usageLine = "${SiteCopy.t("native.usageTime", locale)}  ${MemberReadingSyncRules.formatUsageDuration((activity?.usageTotalSec ?: 0.0).toInt(), isEn)}"
     val listenDuration = MemberReadingSyncRules.formatListenDuration((activity?.listenTotalSec ?: 0.0).toInt(), isEn)
-    val listenLine = if (isEn) "Listened $listenDuration" else locale.zh("累计听 ") + listenDuration
-    val articles = remember { ExploreArticles.grid(context) }
+    val listenLine = SiteCopy.f("native.listenTotal", mapOf("duration" to listenDuration), locale)
+    val articles = remember(locale) { ExploreArticles.grid(context) }
 
     // RN ExploreGreetingNameModal：改称呼（最多 24 字）
     if (nameEditorOpen && auth != null) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { nameEditorOpen = false },
-            title = { Text(locale.zh("修改称呼")) },
+            title = { Text(SiteCopy.t("pages.explore.greetingEditTitle", locale)) },
             text = {
                 androidx.compose.material3.OutlinedTextField(value = nameDraft, onValueChange = { nameDraft = it }, singleLine = true,
-                    placeholder = { Text(locale.zh("你的名字")) })
+                    placeholder = { Text(SiteCopy.t("pages.explore.birthYearModalNamePlaceholder", locale)) })
             },
             confirmButton = {
                 androidx.compose.material3.TextButton(enabled = MemberAuthRules.isValidDisplayName(nameDraft),
-                    onClick = { val n = nameDraft; nameEditorOpen = false; scope.launch { auth.updateDisplayName(n) } }) { Text(locale.zh("保存")) }
+                    onClick = { val n = nameDraft; nameEditorOpen = false; scope.launch { auth.updateDisplayName(n) } }) { Text(SiteCopy.t("native.save", locale)) }
             },
-            dismissButton = { androidx.compose.material3.TextButton(onClick = { nameEditorOpen = false }) { Text(locale.zh("取消")) } },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { nameEditorOpen = false }) { Text(SiteCopy.t("native.cancel", locale)) } },
         )
     }
     Box(Modifier.fillMaxSize()) {
@@ -133,13 +137,13 @@ fun ExploreScreen(
             item {
                 // RN ExploreScreen 抬头：没登录点了去登录页；登录了显示「你好，名字」，点了改称呼
                 val user = auth?.user
-                Text(locale.zh(MemberAuthRules.greeting(user)),
+                Text(greetingText(user, locale),
                      Modifier.fillMaxWidth().clickableNoRipple { if (user != null) { nameDraft = user.name; nameEditorOpen = true } else onOpenLogin() },
                      color = theme.ink.toColor(), fontSize = 25.sp,
                      fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
                 if (user != null) {
                     // RN 的「退出登录」在侧边抽屉里；原生版还没有抽屉，先放在抬头下面
-                    Text(locale.zh("退出登录"), Modifier.fillMaxWidth().padding(top = 8.dp).clickableNoRipple { onSignOut() },
+                    Text(SiteCopy.t("auth.drawerLogout", locale), Modifier.fillMaxWidth().padding(top = 8.dp).clickableNoRipple { onSignOut() },
                          color = theme.faint.toColor(), fontSize = 13.sp, textAlign = TextAlign.Center,
                          textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
                 }
@@ -162,11 +166,11 @@ fun ExploreScreen(
 
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Stat(tl.dayOfYear.toString(), "今年已过", theme.parchmentAccent.toColor(), theme, Modifier.weight(1f))
+                    Stat(tl.dayOfYear.toString(), SiteCopy.t("pages.read.todayReadingStatYearDayLabel", locale), theme.parchmentAccent.toColor(), theme, Modifier.weight(1f))
                     Divider(theme)
-                    Stat((activity?.readDays ?: 0).toString(), "读经天", Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                    Stat((activity?.readDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatReadLabel", locale), Color(0xFF4F7A54), theme, Modifier.weight(1f))
                     Divider(theme)
-                    Stat((activity?.streakDays ?: 0).toString(), "连续天", Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                    Stat((activity?.streakDays ?: 0).toString(), SiteCopy.t("pages.read.todayReadingStatStreakLabel", locale), Color(0xFF4F7A54), theme, Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(18.dp))
 
@@ -176,28 +180,29 @@ fun ExploreScreen(
                 Text(listenLine, Modifier.fillMaxWidth(),
                      color = theme.muted.toColor(), fontSize = 17.sp, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(20.dp))
-                Text("最近阅读", Modifier.fillMaxWidth(),
+                Text(SiteCopy.t("native.recentReading", locale), Modifier.fillMaxWidth(),
                      color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(8.dp))
 
                 Column(Modifier.padding(horizontal = 26.dp)) {
                     for (r in recent) {
-                        val label = if (isEn) "${r.bookName} ${r.chapter}" else "${locale.zh(r.bookName)} ${r.chapter}${locale.zh("章")}"
+                        val name = BibleCatalog.book(r.bookId)?.name(locale) ?: locale.zh(r.bookName)
+                        val label = if (isEn) "$name ${r.chapter}" else SiteCopy.f("native.chapterUnit", mapOf("bookName" to name, "chapter" to "${r.chapter}"), locale)
                         Row(Modifier.fillMaxWidth().height(38.dp).clickableNoRipple { onOpenChapter(r.bookId, r.chapter) }, verticalAlignment = Alignment.CenterVertically) {
                             Text(label, color = theme.ink.toColor(), fontSize = 18.sp, modifier = Modifier.weight(1f))
                             Text("\u203A", color = theme.faint.toColor().copy(alpha = 0.58f), fontSize = 24.sp, lineHeight = 24.sp)
                         }
                     }
                     if (recent.isEmpty()) {
-                        Text(locale.zh("还没有阅读记录"), Modifier.fillMaxWidth().height(38.dp), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
+                        Text(SiteCopy.t("native.noReadingRecord", locale), Modifier.fillMaxWidth().height(38.dp), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                     }
                 }
                 // 界面语言（原生版新增）：跟随系统 / 简体 / 繁體 / English，样式同计划详情的单选格
                 Spacer(Modifier.height(28.dp))
-                Text(locale.zh("语言"), Modifier.fillMaxWidth(), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
+                Text(SiteCopy.t("nav.language", locale), Modifier.fillMaxWidth(), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth().padding(horizontal = 26.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LanguageChip(locale.zh("跟随系统"), localeOverride == null, theme) { onSetLocale(null) }
+                    LanguageChip(SiteCopy.t("native.followSystem", locale), localeOverride == null, theme) { onSetLocale(null) }
                     for (l in listOf(AppLocale.ZH_CN, AppLocale.ZH_TW, AppLocale.EN)) LanguageChip(l.settingLabel, localeOverride == l, theme) { onSetLocale(l) }
                 }
                 // 九宫格功能块（欢迎 / 读经计划 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）
@@ -260,4 +265,11 @@ private fun RowScope.LanguageChip(label: String, on: Boolean, theme: Parchment, 
         Text(label, color = theme.ink.toColor(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
              overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
     }
+}
+
+/** 抬头：登录了「你好，名字」，没登录「请登录，解锁更多」（MemberAuthRules.greeting 的三语版） */
+private fun greetingText(user: MemberUser?, locale: AppLocale): String {
+    if (user == null) return SiteCopy.t("native.authGreetingGuest", locale)
+    val n = MemberAuthRules.normalizeDisplayName(user.name)
+    return SiteCopy.f("native.authGreetingNamed", mapOf("name" to (n.ifEmpty { SiteCopy.t("native.authDefaultName", locale) })), locale)
 }

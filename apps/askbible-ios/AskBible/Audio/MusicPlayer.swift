@@ -150,7 +150,7 @@ final class MusicPlayer: ObservableObject {
         currentTime = 0
         duration = 0
         guard let url = MusicAudioSource.url(for: t) else {
-            errorMessage = "这首曲子没有可用音源"
+            errorMessage = SiteCopy.t("native.trackNoSource")
             return
         }
         isLoading = !url.isFileURL
@@ -174,7 +174,7 @@ final class MusicPlayer: ObservableObject {
                     self.updateNowPlaying()
                 case .failed:
                     self.isLoading = false
-                    self.errorMessage = item.error?.localizedDescription ?? "音乐加载失败"
+                    self.errorMessage = item.error?.localizedDescription ?? SiteCopy.t("native.musicLoadFailed")
                     self.isPlaying = false
                 default:
                     break
@@ -336,7 +336,7 @@ final class MusicPlayer: ObservableObject {
     private func updateNowPlaying() {
         guard let t = track else { return }
         var info: [String: Any] = [
-            MPMediaItemPropertyTitle: t.title,
+            MPMediaItemPropertyTitle: t.localizedTitle,
             MPMediaItemPropertyArtist: t.artist.isEmpty ? "AskBible" : t.artist,
             MPMediaItemPropertyAlbumTitle: t.album,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTime,

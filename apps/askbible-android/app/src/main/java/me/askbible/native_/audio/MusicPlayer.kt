@@ -1,5 +1,6 @@
 package me.askbible.native_.audio
 
+import me.askbible.native_.data.SiteCopy
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -209,7 +210,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         duration = 0.0
         val uri = MusicAudioSource.uri(t)
         if (uri == null) {
-            errorMessage = "这首曲子没有可用音源"
+            errorMessage = SiteCopy.t("native.trackNoSource")
             player.stop(); player.clearMediaItems()
             return
         }
@@ -218,7 +219,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
                 .setUri(uri)
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setTitle(t.title)
+                        .setTitle(t.localizedTitle)
                         .setArtist(t.artist.ifEmpty { "AskBible" })
                         .setAlbumTitle(t.album)
                         .build())

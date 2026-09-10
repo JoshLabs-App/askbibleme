@@ -34,6 +34,24 @@ struct RootView: View {
     @State private var deviceLocale = AppLocale.device
     @State private var localeOverride = AppLocale.storedOverride
     private var appLocale: AppLocale { localeOverride ?? deviceLocale }
+
+    init() {
+        // 目录表 / 文案表 / 译本默认值都看 AppLocale.current，要在各 StateObject 建起来之前定好
+        AppLocale.current = AppLocale.storedOverride ?? AppLocale.device
+    }
+
+    /// 探索页选了语言（nil = 跟随系统）：RN applyLocaleWithTranslationPrefs —— 语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；
+    /// 之后用户手动改译本不再受语言影响，直到下次切语言
+    private func applyLocaleChoice(_ choice: AppLocale?) {
+        let next = choice ?? deviceLocale
+        AppLocale.current = next
+        localeOverride = choice
+        AppLocale.storeOverride(choice)
+        let primary = AppLocale.primaryTranslationId(for: next)
+        if let t = ScriptureTranslation.find(primary) { store.translation = t }
+        store.secondary = nil
+        home.setTranslation(primary, audioTranslationId: AppLocale.goldenVerseAudioTranslationId(for: next))
+    }
     /// 计划 Tab（底栏中央键）里的子页：播放页 / 计划目录 / 计划详情
     enum PlanRoute: Equatable { case play, plans, planDetail(String) }
     @State private var planRoute: PlanRoute = .play
@@ -131,12 +149,12 @@ struct RootView: View {
                                      translationId: store.translation.id, text: v.text)
         if added { UIPasteboard.general.string = VerseShareText.clipboard(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text) }
         UINotificationFeedbackGenerator().notificationOccurred(added ? .success : .warning)
-        showToast(added ? "已收藏，经文已复制" : "已取消收藏")
+        showToast(SiteCopy.t(added ? "pages.read.verseBookmarkSaved" : "pages.read.verseBookmarkRemoved", appLocale))
     }
 
     private func copyVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
         UIPasteboard.general.string = VerseShareText.clipboard(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text)
-        showToast("已复制本节经文")
+        showToast(SiteCopy.t("pages.read.verseCopied", appLocale))
     }
 
     private func shareVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
@@ -260,7 +278,10 @@ struct RootView: View {
     var body: some View {
         content
             .environmentObject(store)
-            .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in deviceLocale = .device }
+            .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
+                deviceLocale = .device
+                if localeOverride == nil { AppLocale.current = deviceLocale }
+            }
             .onChange(of: localeOverride) { _, _ in sync.localeTag = { [appLocale] in appLocale.rawValue } }
             .onChange(of: audioURL) { _, url in
                 guard let url, let opened = audioTarget else { return }
@@ -383,7 +404,7 @@ struct RootView: View {
 
             if showTranslationPanel {
                 // 界面文案目前只有中文：面板里的译本名与分组名按中文界面走（系统英文时不混一行英文），繁体系统给繁体
-                TranslationPanel(locale: appLocale == .en ? .zhCN : appLocale, onClose: { showTranslationPanel = false })
+                TranslationPanel(locale: appLocale, onClose: { showTranslationPanel = false })
             }
 
             if let v = xrefVerse, let opened = openedChapter {
@@ -593,7 +614,7 @@ struct RootView: View {
         case .explore:
             ExploreView(article: $exploreArticle, auth: auth, activity: activity, locale: appLocale, onOpenLogin: { authRoute = .login },
                         onSignOut: { Task { await sync.prepareSignOut(); auth.signOut() } },
-                        localeOverride: localeOverride, onSetLocale: { localeOverride = $0; AppLocale.storeOverride($0) },
+                        localeOverride: localeOverride, onSetLocale: { applyLocaleChoice($0) },
                         size: readSize, onOpenChapter: { id, ch in
                 // 文章里的经文链接：切到读经 Tab 直接开章
                 guard let b = BibleCatalog.book(id: id) else { return }

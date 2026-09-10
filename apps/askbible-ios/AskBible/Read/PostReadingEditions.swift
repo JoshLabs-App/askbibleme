@@ -36,16 +36,16 @@ struct PostReadingEditions: View {
 
     private var heading: some View {
         VStack(spacing: 0) {
-            Text("继续阅读与思考")
+            Text(SiteCopy.t("pages.read.postReadingEditionsHeading"))
                 .font(.system(size: sx(22), weight: .semibold)).tracking(0.8)
                 .lineSpacing(max(0, sx(30) - sx(22)))
                 .foregroundStyle(theme.ink).multilineTextAlignment(.center)
                 .padding(.bottom, 10)
-            Text("你可以先安静查阅资料，再回到经文里。")
+            Text(SiteCopy.t("pages.read.postReadingEditionsLead"))
                 .font(.system(size: sx(13))).lineSpacing(max(0, sx(21) - sx(13)))
                 .foregroundStyle(Self.lead).multilineTextAlignment(.center)
                 .padding(.horizontal, 18).padding(.bottom, 10)
-            Text("点按下方任一卡片进入")
+            Text(SiteCopy.t("pages.read.postReadingEditionsTapHint"))
                 .font(.system(size: sx(12), weight: .medium)).tracking(0.2)
                 .lineSpacing(max(0, sx(18) - sx(12)))
                 .foregroundStyle(Self.hint).multilineTextAlignment(.center)
@@ -72,8 +72,8 @@ struct PostReadingEditions: View {
     private func page(_ v: InfoEditionVariant) -> some View {
         let isActive = active == v
         let art = v == .guide ? "post-reading-discover" : "post-reading-consult"
-        let title = v == .guide ? "陪你探索" : "查找资料"
-        let blurb = v == .guide ? "通过问题引导去探索" : "整理资料供你参考"
+        let title = SiteCopy.t(v == .guide ? "pages.read.postReadingEditionGuideTitle" : "pages.read.postReadingEditionInfoTitle")
+        let blurb = SiteCopy.t(v == .guide ? "pages.read.postReadingEditionGuideBlurb" : "pages.read.postReadingEditionInfoBlurb")
         return Button {
             if active != v { active = v }
         } label: {
@@ -93,7 +93,7 @@ struct PostReadingEditions: View {
                         .foregroundStyle(Color(red: 120 / 255, green: 75 / 255, blue: 30 / 255, opacity: 0.86))
                         .multilineTextAlignment(.center).frame(maxWidth: 168)
                     HStack(spacing: 2) {
-                        Text(isActive ? "已选择" : "点按打开")
+                        Text(SiteCopy.t(isActive ? "pages.read.postReadingEditionSelected" : "pages.read.postReadingEditionTapAction"))
                             .font(.system(size: 11, weight: .medium)).tracking(0.2)
                             .foregroundStyle(Self.hint)
                         MaterialIcon(glyph: isActive ? MI.checkCircle : MI.chevronRight, size: 14,
@@ -117,7 +117,7 @@ struct PostReadingEditions: View {
                     Button { onNavigate(p.bookId, p.chapter) } label: {
                         HStack(spacing: 1) {
                             MaterialIcon(glyph: MI.chevronLeft, size: 16, color: Self.navInk)
-                            Text("上一章").font(.system(size: 13, weight: .medium)).tracking(0.1)
+                            Text(SiteCopy.t("pages.read.chapterEndNavPrev")).font(.system(size: 13, weight: .medium)).tracking(0.1)
                                 .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.88))
                         }
                         .padding(6)
@@ -127,7 +127,7 @@ struct PostReadingEditions: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: onBackToTop) {
-                Text("回到顶部").font(.system(size: sx(14), weight: .medium)).tracking(0.2)
+                Text(SiteCopy.t("pages.read.postReadingBackToTop")).font(.system(size: sx(14), weight: .medium)).tracking(0.2)
                     .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.84))
                     .padding(.horizontal, 8).padding(.vertical, 6)
             }
@@ -136,7 +136,7 @@ struct PostReadingEditions: View {
                 if let n = next {
                     Button { onNavigate(n.bookId, n.chapter) } label: {
                         HStack(spacing: 1) {
-                            Text("下一章").font(.system(size: 13, weight: .medium)).tracking(0.1)
+                            Text(SiteCopy.t("pages.read.chapterChromeNext")).font(.system(size: 13, weight: .medium)).tracking(0.1)
                                 .foregroundStyle(Color(red: 140 / 255, green: 90 / 255, blue: 42 / 255, opacity: 0.88))
                             MaterialIcon(glyph: MI.chevronRight, size: 16, color: Self.navInk)
                         }
@@ -172,7 +172,7 @@ private struct EditionBlock: View {
     var body: some View {
         let content = loaded
         VStack(spacing: 0) {
-            Text("以下仅为参考资料，请对照圣经慎思明辨")
+            Text(SiteCopy.t("pages.read.infoEditionDisclaimer"))
                 .font(.system(size: sx(12))).lineSpacing(max(0, sx(19) - sx(12)))
                 .foregroundStyle(theme.muted).multilineTextAlignment(.center)
                 .frame(maxWidth: 320).padding(.horizontal, 8)
@@ -191,12 +191,12 @@ private struct EditionBlock: View {
                     }
                     MarkdownBody(markdown: content.body, size: size, theme: theme)
                 } else {
-                    Text("暂时无法加载本章讲解")
+                    Text(SiteCopy.t("pages.read.infoEditionLoadFailed"))
                         .font(.system(size: sx(13))).lineSpacing(max(0, sx(20) - sx(13)))
                         .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
                 }
                 Button(action: onBack) {
-                    Text("返回").font(.system(size: sx(14), weight: .semibold)).tracking(0.3)
+                    Text(SiteCopy.t("pages.read.chapterChromeBack")).font(.system(size: sx(14), weight: .semibold)).tracking(0.3)
                         .foregroundStyle(Color(rgb: 0x8C5A2A))
                         .padding(.horizontal, 8).padding(.vertical, 6)
                 }

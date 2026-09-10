@@ -254,7 +254,7 @@ struct TranslationPanel: View {
                         expandedSecondary.toggle()
                         if expandedSecondary { expanded = false }
                     } label: {
-                        dropdown(text: store.secondary?.label(locale) ?? "无",
+                        dropdown(text: store.secondary?.label(locale) ?? SiteCopy.t("native.none", locale),
                                  color: Color(rgb: 0xE0A100), open: expandedSecondary)
                     }
                     .buttonStyle(.plain)
@@ -296,7 +296,7 @@ struct TranslationPanel: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
                 if allowNone {
-                    row(label: "无", selected: selectedId == nil, badges: EmptyView()) { onPick(nil) }
+                    row(label: SiteCopy.t("native.none", locale), selected: selectedId == nil, badges: EmptyView()) { onPick(nil) }
                 }
                 ForEach(groups, id: \.language) { group in
                     Text(ScriptureTranslation.languageName(group.language, locale: locale))
@@ -341,13 +341,13 @@ struct TranslationPanel: View {
             if t.hasChapterAudio { MaterialIcon(glyph: MI.recordVoiceOver, size: 16, color: theme.muted) }
             switch t.delivery {
             case .bundled: EmptyView()
-            case .online: tag("在线")
+            case .online: tag(SiteCopy.t("native.online", locale))
             case .download:
                 switch store.downloader.state(t.id) {
-                case .idle: tag("需下载")
-                case .downloading: tag("下载中")
+                case .idle: tag(SiteCopy.t("native.needDownload", locale))
+                case .downloading: tag(SiteCopy.t("native.downloading", locale))
                 case .done: EmptyView()
-                case .failed: tag("重试")
+                case .failed: tag(SiteCopy.t("pages.read.retry", locale))
                 }
             }
         }

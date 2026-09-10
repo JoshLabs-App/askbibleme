@@ -75,7 +75,7 @@ final class GoldenVersePlayer: ObservableObject {
     private func updateNowPlaying() {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [
             MPMediaItemPropertyTitle: title,
-            MPMediaItemPropertyArtist: "AskBible · 金句",
+            MPMediaItemPropertyArtist: SiteCopy.t("native.goldenVerseNowPlaying"),
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
         ]
     }

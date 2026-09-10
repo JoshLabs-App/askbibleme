@@ -31,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,21 +70,21 @@ fun LoginScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit, on
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var googleError by remember { mutableStateOf<String?>(null) }
-    AuthPage(locale, "登录", onBack, theme) {
+    AuthPage(locale, SiteCopy.t("auth.pageTitle", locale), onBack, theme) {
         SocialSignInButtons(auth, locale, theme, googleError, { googleError = it }, onDone)
-        AuthField("邮箱", email, { email = it }, locale, theme, KeyboardType.Email)
-        AuthField("密码", password, { password = it }, locale, theme, KeyboardType.Password, secure = true)
+        AuthField(SiteCopy.t("auth.email", locale), email, { email = it }, locale, theme, KeyboardType.Email)
+        AuthField(SiteCopy.t("auth.password", locale), password, { password = it }, locale, theme, KeyboardType.Password, secure = true)
         error?.let { AuthErrorText(it, locale) }
-        AuthSubmit("登录", pending, locale, theme) {
+        AuthSubmit(SiteCopy.t("auth.submit", locale), pending, locale, theme) {
             if (pending || auth.oauthPending) return@AuthSubmit
             pending = true; error = null; googleError = null
             scope.launch {
                 val err = auth.signIn(email, password, locale.tag)
                 pending = false
-                if (err != null) error = if (err == "network") "网络连接失败，请稍后再试。" else err else onDone()
+                if (err != null) error = if (err == "network") SiteCopy.t("auth.errorNetwork", locale) else SiteCopy.localizeKnown(err, locale) else onDone()
             }
         }
-        AuthLink("还没有账户？注册", locale, theme, onRegister)
+        AuthLink(SiteCopy.t("auth.loginFooterRegister", locale), locale, theme, onRegister)
     }
 }
 
@@ -96,22 +97,22 @@ fun RegisterScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit,
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var googleError by remember { mutableStateOf<String?>(null) }
-    AuthPage(locale, "注册", onBack, theme) {
+    AuthPage(locale, SiteCopy.t("auth.registerPageTitle", locale), onBack, theme) {
         SocialSignInButtons(auth, locale, theme, googleError, { googleError = it }, onDone)
-        AuthField("邮箱", email, { email = it }, locale, theme, KeyboardType.Email)
-        AuthField("密码", password, { password = it }, locale, theme, KeyboardType.Password, secure = true)
-        AuthField("昵称", name, { name = it }, locale, theme, KeyboardType.Text)
+        AuthField(SiteCopy.t("auth.email", locale), email, { email = it }, locale, theme, KeyboardType.Email)
+        AuthField(SiteCopy.t("auth.password", locale), password, { password = it }, locale, theme, KeyboardType.Password, secure = true)
+        AuthField(SiteCopy.t("auth.registerName", locale), name, { name = it }, locale, theme, KeyboardType.Text)
         error?.let { AuthErrorText(it, locale) }
-        AuthSubmit("注册", pending, locale, theme) {
+        AuthSubmit(SiteCopy.t("auth.registerSubmit", locale), pending, locale, theme) {
             if (pending || auth.oauthPending) return@AuthSubmit
             pending = true; error = null; googleError = null
             scope.launch {
                 val err = auth.register(email, password, name, locale.tag)
                 pending = false
-                if (err != null) error = if (err == "network") "网络连接失败，请稍后再试。" else err else onDone()
+                if (err != null) error = if (err == "network") SiteCopy.t("auth.errorNetwork", locale) else SiteCopy.localizeKnown(err, locale) else onDone()
             }
         }
-        AuthLink("已有账户？登录", locale, theme, onLogin)
+        AuthLink(SiteCopy.t("auth.registerGoLogin", locale), locale, theme, onLogin)
     }
 }
 
@@ -129,7 +130,7 @@ private fun SocialSignInButtons(auth: MemberAuthStore, locale: AppLocale, theme:
         }
     }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        OAuthProviderButton("使用 Google 继续", pending = auth.oauthPending, disabled = auth.oauthPending, locale = locale, theme = theme) {
+        OAuthProviderButton(SiteCopy.t("auth.continueWithGoogle", locale), pending = auth.oauthPending, disabled = auth.oauthPending, locale = locale, theme = theme) {
             setGoogleError(null)
             auth.startGoogleSignIn(context, locale.tag)
         }
@@ -185,7 +186,7 @@ private fun AuthOAuthError(text: String, locale: AppLocale) {
 private fun AuthMethodDivider(locale: AppLocale, theme: Parchment) {
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.weight(1f).height(0.5.dp).background(theme.border.toColor()))
-        Text(locale.zh("或").uppercase(), color = theme.faint.toColor(), fontSize = 11.sp, letterSpacing = 0.6.sp, fontWeight = FontWeight.SemiBold)
+        Text(SiteCopy.t("auth.orDivider", locale).uppercase(), color = theme.faint.toColor(), fontSize = 11.sp, letterSpacing = 0.6.sp, fontWeight = FontWeight.SemiBold)
         Box(Modifier.weight(1f).height(0.5.dp).background(theme.border.toColor()))
     }
 }
@@ -199,9 +200,9 @@ private fun AuthPage(locale: AppLocale, title: String, onBack: () -> Unit, theme
             Modifier.fillMaxSize().statusBarsPadding().imePadding().verticalScroll(rememberScrollState())
                 .padding(PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp)),
         ) {
-            Text(locale.zh("返回"), Modifier.padding(vertical = 8.dp).clickableNoRipple(onBack), color = theme.faint.toColor(), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(SiteCopy.t("pages.read.chapterChromeBack", locale), Modifier.padding(vertical = 8.dp).clickableNoRipple(onBack), color = theme.faint.toColor(), fontSize = 14.sp, fontWeight = FontWeight.Medium)
             Text(locale.zh(title), Modifier.fillMaxWidth().padding(top = 8.dp), color = theme.ink.toColor(), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
-            Text(locale.zh("登录后继续使用 AskBible.me"), Modifier.fillMaxWidth().padding(top = 10.dp), color = theme.muted.toColor(), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+            Text(SiteCopy.t("auth.registerIntro", locale), Modifier.fillMaxWidth().padding(top = 10.dp), color = theme.muted.toColor(), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
             Spacer(Modifier.height(24.dp))
             content()
         }
@@ -226,7 +227,7 @@ private fun AuthField(label: String, value: String, onChange: (String) -> Unit, 
 
 @Composable
 private fun AuthErrorText(text: String, locale: AppLocale) {
-    Text(locale.zh(text), Modifier.fillMaxWidth().padding(top = 8.dp), color = Color(0xFFB42318), fontSize = 13.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+    Text(SiteCopy.localizeKnown(text, locale), Modifier.fillMaxWidth().padding(top = 8.dp), color = Color(0xFFB42318), fontSize = 13.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
 }
 
 @Composable

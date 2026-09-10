@@ -21,14 +21,14 @@ struct FavoritesView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text("收藏").font(.system(size: 22, weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.t("pages.read.favoritesTitle", locale)).font(.system(size: 22, weight: .semibold)).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.bottom, 8)
-                    Text("你在读经时双击收藏的经文，会保存在本机。").font(.system(size: 13)).lineSpacing(7)
+                    Text(SiteCopy.t("pages.read.favoritesLead", locale)).font(.system(size: 13)).lineSpacing(7)
                         .foregroundStyle(theme.muted).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.bottom, 16)
 
                     let list = bookmarks.list
                     if list.isEmpty {
-                        Text("还没有收藏的经文").font(.system(size: 14)).lineSpacing(8).foregroundStyle(theme.muted)
+                        Text(SiteCopy.t("pages.read.favoritesEmpty", locale)).font(.system(size: 14)).lineSpacing(8).foregroundStyle(theme.muted)
                             .frame(maxWidth: .infinity).padding(.top, 24)
                     }
                     ForEach(list) { item in

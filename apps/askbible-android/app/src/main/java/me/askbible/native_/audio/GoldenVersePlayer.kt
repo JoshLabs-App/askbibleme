@@ -1,5 +1,6 @@
 package me.askbible.native_.audio
 
+import me.askbible.native_.data.SiteCopy
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +73,7 @@ class GoldenVersePlayer(context: Context) {
         onWillPlay?.invoke()
         player.setMediaItem(
             MediaItem.Builder().setUri(url)
-                .setMediaMetadata(MediaMetadata.Builder().setTitle(title).setArtist("AskBible · 金句").build())
+                .setMediaMetadata(MediaMetadata.Builder().setTitle(title).setArtist(SiteCopy.t("native.goldenVerseNowPlaying")).build())
                 .build()
         )
         player.prepare()

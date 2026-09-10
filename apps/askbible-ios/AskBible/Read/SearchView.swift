@@ -26,7 +26,7 @@ struct SearchView: View {
     private var scale: CGFloat { max(0.85, min(2.8, size.metrics.verseFontSize / 16)) }
     private func sx(_ n: CGFloat) -> CGFloat { max(1, (n * scale * 10).rounded() / 10) }
 
-    private static let scopes: [(ScriptureSearchScope, String)] = [(.all, "全本"), (.old, "旧约"), (.new, "新约"), (.chapter, "本章")]
+    private static let scopes: [(ScriptureSearchScope, String)] = [(.all, "pages.read.scriptureSearchScopeAll"), (.old, "pages.read.scriptureSearchScopeOld"), (.new, "pages.read.scriptureSearchScopeNew"), (.chapter, "pages.read.scriptureSearchScopeChapter")]
 
     var body: some View {
         GeometryReader { geo in
@@ -38,9 +38,9 @@ struct SearchView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text("经文搜索").font(.system(size: sx(24), weight: .semibold)).foregroundStyle(theme.ink)
+                    Text(SiteCopy.t("pages.read.scriptureSearchTitle", locale)).font(.system(size: sx(24), weight: .semibold)).foregroundStyle(theme.ink)
                         .frame(maxWidth: .infinity).padding(.bottom, 8)
-                    Text("在当前译本中按关键词查找经文。").font(.system(size: sx(16))).lineSpacing(max(0, sx(24) - sx(16)))
+                    Text(SiteCopy.t("pages.read.scriptureSearchLead", locale)).font(.system(size: sx(16))).lineSpacing(max(0, sx(24) - sx(16)))
                         .foregroundStyle(theme.muted).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.bottom, 12)
 
                     // 范围分段：surface 底、hairline 边、圆角 10、内边 3、间隔 2；选中 ink 底 surface 字
@@ -48,7 +48,7 @@ struct SearchView: View {
                         ForEach(Self.scopes, id: \.0) { scope, label in
                             let on = prefs.scope == scope
                             Button { prefs.scope = scope; rerun() } label: {
-                                Text(label).font(.system(size: sx(15), weight: .medium))
+                                Text(SiteCopy.t(label, locale)).font(.system(size: sx(15), weight: .medium))
                                     .foregroundStyle(on ? theme.surface : theme.muted)
                                     .padding(.horizontal, sx(12)).padding(.vertical, sx(8))
                                     .background(RoundedRectangle(cornerRadius: 8).fill(on ? theme.ink : Color.clear))
@@ -62,7 +62,7 @@ struct SearchView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 14)
 
-                    TextField("输入关键词", text: $query)
+                    TextField(SiteCopy.t("pages.read.scriptureSearchPlaceholder", locale), text: $query)
                         .font(.system(size: size.metrics.verseFontSize))
                         .foregroundStyle(theme.ink)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
@@ -76,7 +76,7 @@ struct SearchView: View {
                         .onSubmit { rerun() }
 
                     if !prefs.recent.isEmpty {
-                        Text("最近搜索").font(.system(size: sx(14), weight: .medium)).foregroundStyle(theme.muted)
+                        Text(SiteCopy.t("pages.read.scriptureSearchRecentTitle", locale)).font(.system(size: sx(14), weight: .medium)).foregroundStyle(theme.muted)
                             .padding(.top, 2).padding(.bottom, 6)
                         FlowChips(items: prefs.recent, spacing: 6) { term in
                             Button { query = term; rerun() } label: {
@@ -95,12 +95,12 @@ struct SearchView: View {
                             .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.bottom, 8)
                     }
                     if prefs.scope == .chapter, chapterRef == nil {
-                        Text("暂无当前章节，请先打开一章后再搜索本章。").font(.system(size: sx(14))).foregroundStyle(theme.faint)
+                        Text(SiteCopy.t("pages.read.scriptureSearchNoChapterHint", locale)).font(.system(size: sx(14))).foregroundStyle(theme.faint)
                             .frame(maxWidth: .infinity).padding(.bottom, 8)
                     }
                     if loading { ProgressView().tint(theme.muted).frame(maxWidth: .infinity).padding(.vertical, 20) }
                     if !loading, searched, results.isEmpty, !(prefs.scope == .chapter && chapterRef == nil) {
-                        Text("没有找到匹配的经文").font(.system(size: sx(16))).lineSpacing(max(0, sx(24) - sx(16)))
+                        Text(SiteCopy.t("pages.read.scriptureSearchEmpty", locale)).font(.system(size: sx(16))).lineSpacing(max(0, sx(24) - sx(16)))
                             .foregroundStyle(theme.muted).frame(maxWidth: .infinity).padding(.top, 24)
                     }
 
@@ -170,7 +170,7 @@ struct SearchView: View {
         if prefs.scope == .chapter, chapterRef == nil { results = []; searched = true; return }
         loading = true
         let fallbackId = store.searchFallbackId(for: store.translation.id)
-        fallbackNote = fallbackId.flatMap { ScriptureTranslation.find($0) }.map { "当前译本是在线译本，暂不支持搜索；已改用「\($0.label(locale))」搜索" }
+        fallbackNote = fallbackId.flatMap { ScriptureTranslation.find($0) }.map { SiteCopy.f("native.searchFallbackNote", ["name": $0.label(locale)], locale) }
         let hits = store.database(fallbackId ?? store.translation.id)?.search(query: q, scope: prefs.scope, chapterRef: chapterRef) ?? []
         results = hits
         searched = true

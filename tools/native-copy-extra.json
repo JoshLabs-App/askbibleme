@@ -1,0 +1,239 @@
+{
+  "_note": "原生 App 独有、RN 文案表里没有的键（RN 的 explore 统计行 / 睡眠定时 / 译本状态等）。zh 简体，繁体运行时转；en 手写。由 tools/gen-site-copy.mjs 并进 SiteCopy。",
+  "native.usageTime": {
+    "zh": "使用时长",
+    "en": "Time in app"
+  },
+  "native.listenTotal": {
+    "zh": "累计听 {{duration}}",
+    "en": "Listened {{duration}}"
+  },
+  "native.recentReading": {
+    "zh": "最近阅读",
+    "en": "Recently read"
+  },
+  "native.noReadingRecord": {
+    "zh": "还没有阅读记录",
+    "en": "No reading history yet"
+  },
+  "native.followSystem": {
+    "zh": "跟随系统",
+    "en": "System"
+  },
+  "native.chapterUnit": {
+    "zh": "{{bookName}} {{chapter}}章",
+    "en": "{{bookName}} {{chapter}}"
+  },
+  "native.sleepTimer": {
+    "zh": "睡眠定时",
+    "en": "Sleep timer"
+  },
+  "native.sleepTimerOff": {
+    "zh": "关闭定时",
+    "en": "Turn off"
+  },
+  "native.sleepTimerLeft": {
+    "zh": "剩余 {{left}}",
+    "en": "{{left}} left"
+  },
+  "native.minutes": {
+    "zh": "{{m}} 分钟",
+    "en": "{{m}} min"
+  },
+  "native.translationDownloading": {
+    "zh": "正在下载这个译本…",
+    "en": "Downloading this translation…"
+  },
+  "native.chapterFetching": {
+    "zh": "正在获取经文…",
+    "en": "Loading the chapter…"
+  },
+  "native.translationOfflineHint": {
+    "zh": "这个译本要联网获取，暂时拿不到，请检查网络后重试",
+    "en": "This translation is fetched online and isn't available right now. Check your connection and retry."
+  },
+  "native.articleTapHint": {
+    "zh": "点按段落可展开或收起",
+    "en": "Tap a section to expand or collapse"
+  },
+  "native.musicLoadFailed": {
+    "zh": "音乐加载失败",
+    "en": "Music failed to load"
+  },
+  "native.audioLoadFailed": {
+    "zh": "音频加载失败",
+    "en": "Audio failed to load"
+  },
+  "native.trackNoSource": {
+    "zh": "这首曲子没有可用音源",
+    "en": "No audio source for this track"
+  },
+  "native.langSimplified": {
+    "zh": "简中",
+    "en": "Simp. Chinese"
+  },
+  "native.langTraditional": {
+    "zh": "繁中",
+    "en": "Trad. Chinese"
+  },
+  "native.langEnglish": {
+    "zh": "英文",
+    "en": "English"
+  },
+  "native.none": {
+    "zh": "无",
+    "en": "None"
+  },
+  "native.online": {
+    "zh": "在线",
+    "en": "Online"
+  },
+  "native.needDownload": {
+    "zh": "需下载",
+    "en": "Download"
+  },
+  "native.downloading": {
+    "zh": "下载中",
+    "en": "Downloading"
+  },
+  "native.searchFallbackNote": {
+    "zh": "当前译本是在线译本，暂不支持搜索；已改用「{{name}}」搜索",
+    "en": "The current translation is online-only and can't be searched; searching {{name}} instead"
+  },
+  "native.days": {
+    "zh": "{{n}} 天",
+    "en": "{{n}} days"
+  },
+  "native.dailySegments": {
+    "zh": "每日 ≤ {{n}} 段",
+    "en": "≤ {{n}} readings a day"
+  },
+  "native.stepDayPrefix": {
+    "zh": "第",
+    "en": "Day"
+  },
+  "native.stepDaySuffix": {
+    "zh": "天",
+    "en": ""
+  },
+  "native.albumCalm": {
+    "zh": "放松",
+    "en": "Calm"
+  },
+  "native.albumAfternoon": {
+    "zh": "休闲",
+    "en": "Leisure"
+  },
+  "native.albumHymns": {
+    "zh": "圣诗",
+    "en": "Hymns"
+  },
+  "native.albumPiano": {
+    "zh": "钢琴",
+    "en": "Piano"
+  },
+  "native.albumSleep": {
+    "zh": "睡眠",
+    "en": "Sleep"
+  },
+  "native.albumWork": {
+    "zh": "工作",
+    "en": "Focus"
+  },
+  "native.syncUnauthorized": {
+    "zh": "登录已失效，请重新登录",
+    "en": "Your session has expired. Please sign in again."
+  },
+  "native.syncOffline": {
+    "zh": "当前无网络",
+    "en": "No network connection"
+  },
+  "native.syncNoSession": {
+    "zh": "未找到登录会话",
+    "en": "No signed-in session found"
+  },
+  "native.syncPullFailedAfterSwitch": {
+    "zh": "帐号切换后拉取失败",
+    "en": "Could not fetch after switching accounts"
+  },
+  "native.syncPullFailed": {
+    "zh": "拉取失败",
+    "en": "Fetch failed"
+  },
+  "native.authInvalidCredentials": {
+    "zh": "邮箱或密码不正确。",
+    "en": "Incorrect email or password."
+  },
+  "native.authEmailNotConfirmed": {
+    "zh": "请先完成邮箱验证后再登录。",
+    "en": "Please verify your email before logging in."
+  },
+  "native.authEmailTaken": {
+    "zh": "该邮箱已注册。",
+    "en": "This email is already registered."
+  },
+  "native.authGreetingGuest": {
+    "zh": "请登录，解锁更多",
+    "en": "Log in to unlock more"
+  },
+  "native.authGreetingNamed": {
+    "zh": "你好，{{name}}",
+    "en": "Hello, {{name}}"
+  },
+  "native.authAppleFailed": {
+    "zh": "Apple 登录失败，请重试。",
+    "en": "Apple sign-in failed. Please try again."
+  },
+  "native.authAppleNotConfigured": {
+    "zh": "Apple 登录尚未配置。请在 Supabase 的 Apple 提供商中登记 Bundle ID：me.askbible.native。",
+    "en": "Apple sign-in is not configured yet. Register the bundle ID me.askbible.native under the Apple provider in Supabase."
+  },
+  "native.save": {
+    "zh": "保存",
+    "en": "Save"
+  },
+  "native.cancel": {
+    "zh": "取消",
+    "en": "Cancel"
+  },
+  "native.authDefaultName": {
+    "zh": "用户",
+    "en": "friend"
+  },
+  "native.goldenVerseNowPlaying": {
+    "zh": "AskBible · 金句",
+    "en": "AskBible · Verse"
+  },
+  "native.audioSessionFailed": {
+    "zh": "音频会话配置失败：{{error}}",
+    "en": "Audio session setup failed: {{error}}"
+  },
+  "native.syncPullFailedFirst": {
+    "zh": "未绑定先拉取失败：{{message}}",
+    "en": "Initial fetch failed: {{message}}"
+  },
+  "native.syncPushFailedAfterMerge": {
+    "zh": "合并后再次上传失败：{{message}}",
+    "en": "Upload failed again after merging: {{message}}"
+  },
+  "native.syncPushFailed": {
+    "zh": "上传失败：{{message}}",
+    "en": "Upload failed: {{message}}"
+  },
+  "native.ambientNowPlaying": {
+    "zh": "AskBible · 环境音",
+    "en": "AskBible · Ambience"
+  },
+  "native.durationDays": {
+    "zh": "{{n}} 天",
+    "en": "{{n}} days"
+  },
+  "native.durationMonths": {
+    "zh": "约 {{n}} 个月",
+    "en": "about {{n}} months"
+  },
+  "native.durationYears": {
+    "zh": "约 {{n}} 年",
+    "en": "about {{n}} years"
+  }
+}

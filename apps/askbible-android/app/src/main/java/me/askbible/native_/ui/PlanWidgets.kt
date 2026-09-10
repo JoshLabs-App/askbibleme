@@ -1,5 +1,7 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.AppLocale
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,9 +59,10 @@ import me.askbible.native_.data.PlanFact
  * Josh 2026-09-09：介绍与内容要为手机看优化 —— 字不小于 13，段落改成要点，能点的做成卡片，整体简短、可视。
  * 文案来自 data/bible-reading-plans/mobile-brief.zh-CN.json（PlanText = PlanCopy 的 mobile.* 键）。
  */
+/** 手机版精简文案（mobile-brief 的 ui.*，在 SiteCopy 里是 mobile.*） */
 object PlanText {
-    fun t(key: String): String = PlanCopy.t("mobile.$key")
-    fun f(key: String, args: Map<String, String>): String = PlanCopy.f("mobile.$key", args)
+    fun t(key: String, locale: AppLocale = AppLocale.current): String = SiteCopy.t("mobile.$key", locale)
+    fun f(key: String, args: Map<String, String>, locale: AppLocale = AppLocale.current): String = SiteCopy.f("mobile.$key", args, locale)
 }
 
 /** mobile-brief 里的图标名 → Material 字形 */
@@ -236,9 +239,9 @@ fun PlanStepper(value: Int, min: Int, max: Int, theme: Parchment = Parchment.lig
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         PlanStepButton(MI.REMOVE, value > min, theme) { onChange(maxOf(min, value - 1)) }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("第", color = theme.muted.toColor(), fontSize = 16.sp)
+            Text(SiteCopy.t("native.stepDayPrefix"), color = theme.muted.toColor(), fontSize = 16.sp)
             Text("$value", Modifier.width(44.dp), color = theme.ink.toColor(), fontSize = 24.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-            Text("天", color = theme.muted.toColor(), fontSize = 16.sp)
+            Text(SiteCopy.t("native.stepDaySuffix"), color = theme.muted.toColor(), fontSize = 16.sp)
         }
         PlanStepButton(MI.ADD, value < max, theme) { onChange(minOf(max, value + 1)) }
     }

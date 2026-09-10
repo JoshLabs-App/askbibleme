@@ -3,9 +3,10 @@ import SwiftUI
 /// 读经计划页的手机版视觉件（两端同构，Android 见 ui/PlanWidgets.kt）。
 /// Josh 2026-09-09：介绍与内容要为手机看优化 —— 字不小于 13，段落改成要点，能点的做成卡片，整体简短、可视。
 /// 文案来自 data/bible-reading-plans/mobile-brief.zh-CN.json（PlanText = PlanCopy 的 mobile.* 键）。
+/// 手机版精简文案（mobile-brief 的 ui.*，在 SiteCopy 里是 mobile.*）
 enum PlanText {
-    static func t(_ key: String) -> String { PlanCopy.t("mobile." + key) }
-    static func f(_ key: String, _ args: [String: String]) -> String { PlanCopy.f("mobile." + key, args) }
+    static func t(_ key: String, _ locale: AppLocale = AppLocale.current) -> String { SiteCopy.t("mobile." + key, locale) }
+    static func f(_ key: String, _ args: [String: String], _ locale: AppLocale = AppLocale.current) -> String { SiteCopy.f("mobile." + key, args, locale) }
 }
 
 enum PlanIcons {
@@ -259,9 +260,9 @@ struct PlanStepper: View {
         HStack(spacing: 16) {
             step(MI.remove, enabled: value > range.lowerBound) { value = max(range.lowerBound, value - 1) }
             HStack(spacing: 4) {
-                Text("第").font(.system(size: 16)).foregroundStyle(theme.muted)
+                Text(SiteCopy.t("native.stepDayPrefix")).font(.system(size: 16)).foregroundStyle(theme.muted)
                 Text("\(value)").font(.system(size: 24, weight: .bold)).foregroundStyle(theme.ink).frame(minWidth: 44)
-                Text("天").font(.system(size: 16)).foregroundStyle(theme.muted)
+                Text(SiteCopy.t("native.stepDaySuffix")).font(.system(size: 16)).foregroundStyle(theme.muted)
             }
             step(MI.add, enabled: value < range.upperBound) { value = min(range.upperBound, value + 1) }
         }

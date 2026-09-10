@@ -97,7 +97,7 @@ struct MusicView: View {
                     ForEach(q, id: \.self) { i in
                         let active = i == player.trackIndex
                         Button { player.select(index: i) } label: {
-                            Text(MusicCatalog.tracks[i].title)
+                            Text(MusicCatalog.tracks[i].localizedTitle)
                                 .font(.system(size: active ? 18 : 14, weight: active ? .semibold : .regular))
                                 .foregroundStyle(active ? Color.white : Color.white.opacity(0.48))
                                 .lineLimit(1)

@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,12 +65,12 @@ fun FavoritesScreen(
                 Box(Modifier.size(44.dp).clickableNoRipple(onBack), contentAlignment = Alignment.CenterStart) {
                     MaterialIcon(MI.ARROW_BACK, 24f, theme.ink.toColor())
                 }
-                Text("收藏", Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.ink.toColor(), fontSize = 22.sp,
+                Text(SiteCopy.t("pages.read.favoritesTitle", locale), Modifier.fillMaxWidth().padding(bottom = 8.dp), color = theme.ink.toColor(), fontSize = 22.sp,
                      fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
-                Text("你在读经时双击收藏的经文，会保存在本机。", Modifier.fillMaxWidth().padding(bottom = 16.dp), color = theme.muted.toColor(),
+                Text(SiteCopy.t("pages.read.favoritesLead", locale), Modifier.fillMaxWidth().padding(bottom = 16.dp), color = theme.muted.toColor(),
                      fontSize = 13.sp, lineHeight = 20.sp, textAlign = TextAlign.Center)
                 if (list.isEmpty()) {
-                    Text("还没有收藏的经文", Modifier.fillMaxWidth().padding(top = 24.dp), color = theme.muted.toColor(),
+                    Text(SiteCopy.t("pages.read.favoritesEmpty", locale), Modifier.fillMaxWidth().padding(top = 24.dp), color = theme.muted.toColor(),
                          fontSize = 14.sp, lineHeight = 22.sp, textAlign = TextAlign.Center)
                 }
             }

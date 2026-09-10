@@ -1,5 +1,7 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.AppLocale
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -156,9 +158,11 @@ fun PlanDetailScreen(
                         Spacer(Modifier.height(14.dp))
                         Subheading(PlanText.t("paceHeading"), PlanText.t("paceHint"), theme)
                         Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            for (p in NtDeepRepeat.PACES) PlanChoiceTile("$p 天", PlanText.t("pace$p"), pace == p, theme) { pace = p }
+                            for (p in NtDeepRepeat.PACES) PlanChoiceTile(SiteCopy.f("native.days", mapOf("n" to "$p")), PlanText.t("pace$p"), pace == p, theme) { pace = p }
                         }
-                        val end = LocalDate.now().plusDays((pace - 1).toLong()).format(DateTimeFormatter.ofPattern("M月d日 EEE", Locale.CHINA))
+                        // RN NtDeepRepeatPaceSection：toLocaleDateString(en-US / zh-CN)
+                        val end = LocalDate.now().plusDays((pace - 1).toLong()).format(
+                            if (AppLocale.current == AppLocale.EN) DateTimeFormatter.ofPattern("EEE, MMM d", Locale.US) else DateTimeFormatter.ofPattern("M月d日 EEE", Locale.CHINA))
                         Text(PlanText.f("paceEnd", mapOf("endDate" to end)), Modifier.padding(top = 10.dp), color = theme.muted.toColor(), fontSize = 15.sp)
                     } else {
                         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -266,5 +270,7 @@ private fun Subheading(title: String, hint: String, theme: Parchment) {
 /** PlanDates.EASTER_EPOCH（2026-04-05）→「2026 年 4 月 5 日」 */
 private fun easterLabel(): String {
     val parts = PlanDates.EASTER_EPOCH.split("-").mapNotNull { it.toIntOrNull() }
-    return if (parts.size == 3) "${parts[0]} 年 ${parts[1]} 月 ${parts[2]} 日" else PlanDates.EASTER_EPOCH
+    if (parts.size != 3) return PlanDates.EASTER_EPOCH
+    if (AppLocale.current == AppLocale.EN) return LocalDate.of(parts[0], parts[1], parts[2]).format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.US))
+    return "${parts[0]} 年 ${parts[1]} 月 ${parts[2]} 日"
 }

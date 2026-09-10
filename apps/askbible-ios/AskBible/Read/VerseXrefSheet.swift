@@ -20,13 +20,13 @@ struct VerseXrefSheet: View {
             theme.modalBackdrop.ignoresSafeArea().onTapGesture(perform: onClose)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("\(bookName) \(chapter):\(xrefs.verse) · 经文关联")
+                Text(SiteCopy.f("pages.read.verseXrefSheetTitle", ["bookName": bookName, "chapter": "\(chapter)", "verse": "\(xrefs.verse)"]))
                     .font(.system(size: max(17, (size.metrics.verseFontSize * 0.95).rounded()), weight: .bold))
                     .foregroundStyle(theme.ink)
                     .padding(.bottom, 14)
 
                 if xrefs.isEmpty {
-                    Text("暂无关联经文")
+                    Text(SiteCopy.t("pages.read.verseXrefEmpty"))
                         .font(.system(size: (size.metrics.verseFontSize * 0.9).rounded()))
                         .foregroundStyle(theme.muted)
                 } else {
@@ -50,8 +50,8 @@ struct VerseXrefSheet: View {
 
     private var refList: some View {
         VStack(alignment: .leading, spacing: 18) {
-            section("被引用于", xrefs.incoming)
-            section("相关经文", xrefs.outgoing)
+            section(SiteCopy.t("pages.read.verseXrefIncoming"), xrefs.incoming)
+            section(SiteCopy.t("pages.read.verseXrefOutgoing"), xrefs.outgoing)
         }
     }
 
@@ -96,18 +96,18 @@ struct SleepTimerSheet: View {
         ZStack(alignment: .bottom) {
             theme.modalBackdrop.ignoresSafeArea().onTapGesture(perform: onClose)
             VStack(spacing: 10) {
-                Text("睡眠定时")
+                Text(SiteCopy.t("native.sleepTimer"))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(theme.ink)
                 if let left = remainingLabel {
-                    Text("剩余 \(left)")
+                    Text(SiteCopy.f("native.sleepTimerLeft", ["left": left]))
                         .font(.system(size: 13))
                         .foregroundStyle(theme.muted)
                 }
                 ForEach(ChapterAudioPlayer.sleepOptionsMinutes, id: \.self) { m in
-                    option("\(m) 分钟") { onPick(m); onClose() }
+                    option(SiteCopy.f("native.minutes", ["m": "\(m)"])) { onPick(m); onClose() }
                 }
-                option("关闭定时") { onPick(nil); onClose() }
+                option(SiteCopy.t("native.sleepTimerOff")) { onPick(nil); onClose() }
             }
             .padding(18)
             .frame(maxWidth: .infinity)

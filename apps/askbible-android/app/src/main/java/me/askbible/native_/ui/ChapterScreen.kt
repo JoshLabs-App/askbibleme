@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -190,7 +191,7 @@ fun ChapterScreen(
             }
 
             if (verses.isEmpty() && (loading || failed)) item(key = "status") {
-                ChapterStatus(loading, ScriptureTranslation.find(translationId)?.delivery == TranslationDelivery.DOWNLOAD, theme, onRetry)
+                ChapterStatus(loading, ScriptureTranslation.find(translationId)?.delivery == TranslationDelivery.DOWNLOAD, theme, locale, onRetry)
             }
             itemsIndexed(groups, key = { _, g -> g.first().number }) { gi, group ->
                 ParagraphBlock(group, gi, meta, locale, m, theme, xrefVerses, activeVerse, contrast,
@@ -284,17 +285,17 @@ private fun ParagraphBlock(
 /** 结尾：endNav（上 80 下 50）+ 收尾渐变（28 高，贴满屏宽）+ 段尾 30 */
 /** 在线 / 下载型译本取数中或失败时的提示 */
 @Composable
-private fun ChapterStatus(loading: Boolean, downloading: Boolean, theme: Parchment, onRetry: () -> Unit) {
+private fun ChapterStatus(loading: Boolean, downloading: Boolean, theme: Parchment, locale: AppLocale, onRetry: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally,
            verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (loading) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 CircularProgressIndicator(color = theme.muted.toColor(), strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
-                Text(if (downloading) "正在下载这个译本…" else "正在获取经文…", color = theme.muted.toColor(), fontSize = 15.sp)
+                Text(if (downloading) SiteCopy.t("native.translationDownloading", locale) else SiteCopy.t("native.chapterFetching", locale), color = theme.muted.toColor(), fontSize = 15.sp)
             }
         } else {
-            Text("这个译本要联网获取，暂时拿不到，请检查网络后重试", color = theme.muted.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
-            Text("重试", Modifier.clip(CircleShape).background(theme.surface.toColor()).border(1.dp, theme.border.toColor(), CircleShape)
+            Text(SiteCopy.t("native.translationOfflineHint", locale), color = theme.muted.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
+            Text(SiteCopy.t("pages.read.retry", locale), Modifier.clip(CircleShape).background(theme.surface.toColor()).border(1.dp, theme.border.toColor(), CircleShape)
                     .clickableNoRipple(onRetry).padding(horizontal = 18.dp, vertical = 9.dp),
                  color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         }

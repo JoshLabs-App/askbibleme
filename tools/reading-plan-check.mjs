@@ -62,7 +62,7 @@ function run(cmd, args, label) {
 const bin = path.join(mkdtempSync(path.join(tmpdir(), "plans-")), "bin");
 execFileSync("swiftc", ["-O", "-swift-version", "5",
   // BibleCatalog 用到 Color(rgb:)，得带上主题文件；macOS SDK 自带 SwiftUI，能编
-  path.join(IOS, "Theme/ParchmentTheme.swift"), path.join(IOS, "Model/BibleCatalog.swift"), path.join(IOS, "Model/ReadingPlanCatalog.swift"), path.join(IOS, "Model/ReadingPlans.swift"),
+  path.join(IOS, "Theme/ParchmentTheme.swift"), path.join(IOS, "Model/BibleCatalog.swift"), path.join(IOS, "Model/ReadingPlanCatalog.swift"), path.join(IOS, "Model/SiteCopy.swift"), path.join(IOS, "Model/ReadingPlans.swift"),
   path.join(IOS, "Model/PlanPlay.swift"), path.join(IOS, "Model/AppLocale.swift"), path.join(IOS, "Model/LocaleTables.swift"),
   path.join(ROOT, "tools/swift-harness/plans/main.swift"), "-o", bin], { stdio: "pipe" });
 const swift = run(bin, [], "Swift harness");

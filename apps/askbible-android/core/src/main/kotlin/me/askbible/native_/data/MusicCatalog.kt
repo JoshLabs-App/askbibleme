@@ -16,7 +16,10 @@ data class MusicTrack(
     val durationSec: Int,
     /** 安装包内置（assets/music） */
     val bundled: Boolean,
-)
+) {
+    /** 按界面语言：英文面用 titleEn（RN resolveMusicLocalizedField 反向） */
+    val localizedTitle: String get() = AppLocale.pick(title, titleEn)
+}
 
 object MusicCatalog {
     /** 与 RN KNOWN_MUSIC_ALBUMS 同序 */

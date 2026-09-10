@@ -10,7 +10,9 @@ class TranslationPrefs(context: Context) {
 
     fun read(): Stored {
         val s = TranslationPrefsRules.parse(sp.getString(TranslationPrefsRules.KEY, null),
-                                            ScriptureTranslation.all.map { it.id }, ScriptureTranslation.DEFAULT.id)  // RN 传整个目录：下载型 / 在线译本重启后也要记住
+                                            ScriptureTranslation.all.map { it.id },
+                                            // 首装没存过：跟界面语言（RN resolveDefaultPrimaryTranslationId(index, locale)）
+                                            AppLocale.primaryTranslationId(AppLocale.current))  // RN 传整个目录：下载型 / 在线译本重启后也要记住
         return Stored(ScriptureTranslation.find(s.primaryId) ?: ScriptureTranslation.DEFAULT, s.secondaryId?.let { ScriptureTranslation.find(it) })
     }
 

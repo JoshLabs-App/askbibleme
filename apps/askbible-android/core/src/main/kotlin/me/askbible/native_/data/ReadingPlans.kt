@@ -146,7 +146,7 @@ data class PlanReading(
 ) {
     /** 对应 formatReadingPlanRange（不带 locale 的那条分支）：「创世记 1」「创世记 1–3」「创世记 1:1–5」 */
     val display: String get() {
-        val name = BibleCatalog.book(bookId)?.nameZh ?: bookId
+        val name = BibleCatalog.book(bookId)?.name(AppLocale.current) ?: bookId
         if (startChapter == endChapter) {
             if (startVerse != null && endVerse != null) {
                 return if (startVerse == endVerse) "$name $startChapter:$startVerse" else "$name $startChapter:$startVerse–$endVerse"
@@ -293,12 +293,12 @@ object TripleLoop {
         return state.copy(chaptersReadKeys = keys, chaptersRead = keys.mapValues { it.value.size })
     }
 
-    fun trackTitle(track: TripleTrack): String = when (track) { TripleTrack.OT -> "旧约循环"; TripleTrack.NT -> "新约循环"; TripleTrack.WISDOM -> "智慧书循环" }
+    fun trackTitle(track: TripleTrack): String = when (track) { TripleTrack.OT -> PlanCopy.t("pages.read.tripleLoopTrackOt"); TripleTrack.NT -> PlanCopy.t("pages.read.tripleLoopTrackNt"); TripleTrack.WISDOM -> PlanCopy.t("pages.read.tripleLoopTrackWisdom") }
 
     /** 「创世记 第 1 章」「诗篇 第 23 篇」 */
     fun formatVerbose(bookId: String, chapter: Int): String {
-        val name = BibleCatalog.book(bookId)?.nameZh ?: bookId
-        return if (bookId == "PSA") "$name 第 $chapter 篇" else "$name 第 $chapter 章"
+        val name = BibleCatalog.book(bookId)?.name(AppLocale.current) ?: bookId
+        return PlanCopy.f("pages.read.tripleLoopReadingLine", mapOf("name" to name, "chapter" to "$chapter", "unit" to PlanCopy.t(if (bookId == "PSA") "pages.read.tripleLoopPsalmUnit" else "pages.read.tripleLoopChapterUnit")))
     }
 
     fun trackChapterTotal(track: TripleTrack): Int = order(track).sumOf { chapters(it) }
@@ -398,10 +398,10 @@ object NtDeepRepeat {
     fun oneCycleDays(pace: Int): Int = STAGE_COUNT * pace
 
     fun formatApproxDurationZh(days: Int): String {
-        if (days < 60) return "$days 天"
+        if (days < 60) return SiteCopy.f("native.durationDays", mapOf("n" to "$days"))
         val months = days / 30.44
-        if (months < 18) return "约 ${Math.round(months)} 个月"
-        return "约 %.1f 年".format(days / 365.25)
+        if (months < 18) return SiteCopy.f("native.durationMonths", mapOf("n" to "${Math.round(months)}"))
+        return SiteCopy.f("native.durationYears", mapOf("n" to "%.1f".format(days / 365.25)))
     }
 
     fun defaultState(pace: Int = DEFAULT_PACE, now: LocalDate = LocalDate.now()): NtDeepRepeatState =
@@ -536,7 +536,7 @@ object NtDeepRepeat {
 
     /** 「约翰福音 第 1–5 章」/「约翰一书 第 5 章」 */
     fun rangeLine(r: PlanReading): String {
-        val name = BibleCatalog.book(r.bookId)?.nameZh ?: r.bookId
+        val name = BibleCatalog.book(r.bookId)?.name(AppLocale.current) ?: r.bookId
         return if (r.startChapter == r.endChapter)
             PlanCopy.f("pages.read.ntDeepRepeatStageBookSingle", mapOf("name" to name, "chapter" to "${r.startChapter}"))
         else PlanCopy.f("pages.read.ntDeepRepeatStageBookRange", mapOf("name" to name, "start" to "${r.startChapter}", "end" to "${r.endChapter}"))
@@ -549,7 +549,7 @@ object NtDeepRepeat {
 
     /** 「创世记 第 1 章」/「诗篇 第 23 篇」（formatNtDeepRepeatOtLine） */
     fun otLine(bookId: String, chapter: Int): String {
-        val name = BibleCatalog.book(bookId)?.nameZh ?: bookId
+        val name = BibleCatalog.book(bookId)?.name(AppLocale.current) ?: bookId
         val unit = if (bookId == "PSA") PlanCopy.t("pages.read.tripleLoopPsalmUnit") else PlanCopy.t("pages.read.tripleLoopChapterUnit")
         return PlanCopy.f("pages.read.tripleLoopReadingLine", mapOf("name" to name, "chapter" to "$chapter", "unit" to unit))
     }

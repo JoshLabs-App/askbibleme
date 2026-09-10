@@ -6,8 +6,27 @@ struct MusicView: View {
     @ObservedObject var player: MusicPlayer
     var sleepActive: Bool = false
     var onSleepTimer: () -> Void = {}
+    /// 睡眠专辑自动隐藏了按钮时通知壳把底栏也藏起来（RN setMusicAutoHideChrome → ShellTabBar）
+    var onChromeHidden: (Bool) -> Void = { _ in }
     /// 拖进度条时的预览比例；nil = 没在拖
     @State private var dragRatio: Double?
+    /// RN useMusicHomeSleepAutoHide：睡眠专辑放着的时候 5 秒没碰屏幕就把按钮 / 曲名 / 定时器都藏起来，碰一下再出现并重新计时
+    @State private var uiVisible = true
+    @State private var hideTask: Task<Void, Never>?
+    private static let autoHideMs: UInt64 = 5_000
+
+    private var sleepAutoHide: Bool { player.album == "睡眠" && player.isPlaying && player.track != nil }
+
+    private func resetAutoHide() {
+        hideTask?.cancel(); hideTask = nil
+        if !uiVisible { withAnimation(.easeInOut(duration: 0.25)) { uiVisible = true } }
+        guard sleepAutoHide else { return }
+        hideTask = Task {
+            try? await Task.sleep(nanoseconds: Self.autoHideMs * 1_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.6)) { uiVisible = false }
+        }
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -19,6 +38,8 @@ struct MusicView: View {
                 MusicAlbumStage(album: player.album, active: player.isPlaying)
 
                 sleepTimerButton(safeTop: safeTop)
+                    .opacity(uiVisible ? 1 : 0)
+                    .allowsHitTesting(uiVisible)
 
                 VStack(spacing: 0) {
                     Spacer()
@@ -28,8 +49,16 @@ struct MusicView: View {
                     transport.padding(.top, 6)
                 }
                 .padding(.bottom, ShellMetrics.dockBottomPad(safeBottom: safeBottom) + 12)
+                .opacity(uiVisible ? 1 : 0)
+                .allowsHitTesting(uiVisible)
             }
             .ignoresSafeArea()
+            // 任何触碰都算「用户还在」：不吞事件，按钮照常响应（RN root onTouchStart={resetUiAutoHide}）
+            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in resetAutoHide() })
+            .onAppear { resetAutoHide() }
+            .onDisappear { hideTask?.cancel(); hideTask = nil; uiVisible = true; onChromeHidden(false) }
+            .onChange(of: sleepAutoHide) { _, _ in resetAutoHide() }
+            .onChange(of: uiVisible) { _, v in onChromeHidden(!v) }
         }
     }
 

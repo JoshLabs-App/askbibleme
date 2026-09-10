@@ -150,6 +150,8 @@ private fun RootScreen() {
     // 会员登录（Supabase 直连；RN MemberAuthProvider）；登录 / 注册页盖在整个壳上（RN 是 stack 路由，无底栏）
     val auth = remember { MemberAuthStore(context) }
     var authRoute by remember { mutableStateOf<String?>(null) }
+    // 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
+    var musicChromeHidden by remember { mutableStateOf(false) }
     // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
     val oauthCallback = OAuthCallbackBus.url
     LaunchedEffect(oauthCallback) {
@@ -440,7 +442,7 @@ private fun RootScreen() {
                 },
                 onOpenMenu = {},
             )
-            ShellTab.MUSIC -> MusicScreen(player = music,
+            ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
                 onSleepTimer = { showSleepSheet = true })
             ShellTab.EXPLORE -> ExploreScreen(
@@ -558,7 +560,7 @@ private fun RootScreen() {
         // 其余羊皮页底栏透明，正文靠 parchmentFade 在底栏前渐隐 —— 之前整块铺一层会在坞顶露出一条硬边
         // 读经计划目录 / 详情 / 今日读经是独立子页，不放底栏（Josh「独立页下面无需放图标」，靠左上返回键回来；章页打开后照常）
         // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
-        val standalonePage = (onPlanTab && planRoute != "play" && !showSearch) || authRoute != null
+        val standalonePage = (onPlanTab && planRoute != "play" && !showSearch) || authRoute != null || (tab == ShellTab.MUSIC && musicChromeHidden)
         val anyDock = showDock || showPlanDock
         if (!standalonePage) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
         if (anyDock) ParchmentPinnedBottom(Modifier.matchParentSize())

@@ -202,9 +202,9 @@ private fun DrawScope.drawSleepSky(moon: ImageBitmap?, tMs: Double, d: Float) {
         }
     }
     if (moon != null) {
-        // RN 月亮住在上半舞台底部（贴着曲名上方），比其它场景的焦点略低
+        // RN 月亮住在上半舞台底部；Josh 2026-09-10「月亮要往上放一些」→ 提到 35% 高度
         val mw = (86 * d).roundToInt()
-        drawImage(moon, dstOffset = IntOffset((size.width / 2 - mw / 2).roundToInt(), (size.height * 0.44f - mw / 2).roundToInt()),
+        drawImage(moon, dstOffset = IntOffset((size.width / 2 - mw / 2).roundToInt(), (size.height * 0.35f - mw / 2).roundToInt()),
                   dstSize = IntSize(mw, mw), alpha = MusicVisuals.moonOpacity(tMs).toFloat(),
                   colorFilter = ColorFilter.tint(rgba(229, 242, 255, 0.98)))
     }

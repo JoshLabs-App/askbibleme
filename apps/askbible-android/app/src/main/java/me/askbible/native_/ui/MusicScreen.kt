@@ -40,6 +40,15 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import me.askbible.native_.audio.ChapterAudioPlayer
@@ -61,20 +70,37 @@ import kotlin.random.Random
  * 播放状态全部来自 MusicPlayer；心境条 = MusicCatalog.albums（与 RN KNOWN_MUSIC_ALBUMS 同序）。
  */
 @Composable
-fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer: () -> Unit = {}) {
+fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer: () -> Unit = {},
+                /** 睡眠专辑自动隐藏了按钮时通知壳把底栏也藏起来（RN setMusicAutoHideChrome → ShellTabBar） */
+                onChromeHidden: (Boolean) -> Unit = {}) {
     /** 拖进度条时的预览比例；null = 没在拖 */
     var dragRatio by remember { mutableStateOf<Float?>(null) }
-    Box(Modifier.fillMaxSize().background(Color(0xFF0A0908))) {
+    // RN useMusicHomeSleepAutoHide：睡眠专辑放着的时候 5 秒没碰屏幕就把按钮 / 曲名 / 定时器都藏起来，碰一下再出现并重新计时
+    var uiVisible by remember { mutableStateOf(true) }
+    var touchTick by remember { mutableIntStateOf(0) }
+    val sleepAutoHide = player.album == "睡眠" && player.isPlaying && player.track != null
+    LaunchedEffect(sleepAutoHide, touchTick) {
+        uiVisible = true
+        if (sleepAutoHide) { delay(5_000); uiVisible = false }
+    }
+    LaunchedEffect(uiVisible) { onChromeHidden(!uiVisible) }
+    DisposableEffect(Unit) { onDispose { onChromeHidden(false) } }
+    Box(Modifier.fillMaxSize().background(Color(0xFF0A0908))
+        // 任何触碰都算「用户还在」：不吞事件，按钮照常响应（RN root onTouchStart={resetUiAutoHide}）
+        .pointerInput(Unit) { awaitEachGesture { awaitFirstDown(requireUnconsumed = false); touchTick += 1 } }) {
         // 专辑舞台：渐变 + 光球 + 该专辑的动画层（RN 各专辑各一套：鱼群 / 咖啡豆 / 星月 / 行星）；停播时定格
         MusicAlbumStage(player.album, player.isPlaying)
 
         // 睡眠定时器
+        AnimatedVisibility(uiVisible, Modifier.align(Alignment.TopEnd), enter = fadeIn(), exit = fadeOut()) {
         Box(Modifier.statusBarsPadding().padding(top = 6.dp, end = ShellMetrics.topChromeSideInset.dp)
-            .align(Alignment.TopEnd).size(50.dp).clickableNoRipple(onSleepTimer), contentAlignment = Alignment.Center) {
+            .size(50.dp).clickableNoRipple(onSleepTimer), contentAlignment = Alignment.Center) {
             // RN MusicHomeSleepTimerButton：timer 26，开着 LOGO 黄，否则白
             MaterialIcon(MI.TIMER, 26f, if (sleepActive) Brand.logo.toColor() else Color.White, shadow = true)
         }
+        }
 
+        AnimatedVisibility(uiVisible, enter = fadeIn(), exit = fadeOut()) {
         Column(Modifier.fillMaxSize().padding(bottom = (ShellMetrics.tabRowHeight + 30f).dp).navigationBarsPadding()) {
             Spacer(Modifier.weight(1f))
 
@@ -155,6 +181,7 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
                 }
                 LoopButton(one = false, on = player.repeatMode == MusicRepeatMode.ALL) { player.toggleRepeatAll() }
             }
+        }
         }
     }
 }

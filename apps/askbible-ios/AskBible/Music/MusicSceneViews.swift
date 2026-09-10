@@ -214,8 +214,8 @@ private struct SleepSkyLayer: View {
                     .frame(width: 86, height: 86)
                     .foregroundStyle(rgba(229, 242, 255, 0.98))
                     .opacity(MusicVisuals.moonOpacity(tMs: tMs))
-                    // RN 月亮住在上半舞台底部（贴着曲名上方），比其它场景的焦点略低
-                    .position(x: w * 0.5, y: h * 0.44)
+                    // RN 月亮住在上半舞台底部；Josh 2026-09-10「月亮要往上放一些」→ 提到 35% 高度
+                    .position(x: w * 0.5, y: h * 0.35)
             }
         }
     }

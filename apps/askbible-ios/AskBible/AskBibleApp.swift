@@ -55,6 +55,8 @@ struct RootView: View {
     @State private var planFlowActive = false
     @State private var autoPlayPending = false
     @State private var tab: ShellTab = .home
+    /// 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
+    @State private var musicChromeHidden = false
     @State private var readSize: ReadSize = .default
     @State private var openedBook: BookRef?
     @State private var openedChapter: (book: BookRef, chapter: Int)?
@@ -330,7 +332,7 @@ struct RootView: View {
             ShellTabBarHost(selection: $tab, parchmentBar: tab == .read || tab == .explore || tab == .plan, onCenterTap: openToday,
                             dockActive: readDockActive || planDockActive,
                             // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
-                            showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil) {
+                            showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil && !(tab == .music && musicChromeHidden)) {
                 screen
             } dock: {
                 // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
@@ -467,7 +469,8 @@ struct RootView: View {
         case .music:
             MusicView(player: music,
                       sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil,
-                      onSleepTimer: { showSleepSheet = true })
+                      onSleepTimer: { showSleepSheet = true },
+                      onChromeHidden: { hidden in withAnimation(.easeInOut(duration: 0.3)) { musicChromeHidden = hidden } })
         case .read:
             if showSearch {
                 SearchView(prefs: searchPrefs, size: readSize, chapterRef: searchRef, locale: displayLocale,

@@ -777,6 +777,14 @@ Josh 安卓登录后：「之前的读经日期记录信息没有出来，读经
   （放工程目录、`INFOPLIST_FILE = Info.plist`；放 AskBible/ 里会被 synchronized group 当资源再拷一份撞车）。
 - 没做：Google / Apple 之外的登录方式；删除账号；高亮同步（原生没有高亮功能）；今日完成 / 比例（原生用已读章 + 月历标记表达）。
 
+### 音乐页睡眠专辑自动隐藏 + 月亮上移（2026-09-10）
+
+Josh：「睡眠 7 秒后要自动隐藏图标，月亮要往上放一些」。RN useMusicHomeSleepAutoHide：专辑是「睡眠」且在放时，5 秒（MUSIC_UI_AUTO_HIDE_MS = 5000）
+没碰屏幕就把曲名 / 心境条 / 进度条 / 传输键 / 睡眠定时器都藏掉（opacity 0 + 不接触摸），并经 setMusicAutoHideChrome 让底栏一起藏；任何触碰都恢复并重新计时；
+停播 / 换专辑立即恢复。原生两端同样 5 秒：iOS `MusicView`（simultaneousGesture 抓触碰，不吞按钮事件；`onChromeHidden` 通知壳 `showTabBar`），
+Android `MusicScreen`（`awaitEachGesture + awaitFirstDown(requireUnconsumed=false)`；AnimatedVisibility 淡入淡出；`standalonePage` 藏底栏）。
+月亮从 44% 高度提到 35%（`MusicSceneViews`）。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

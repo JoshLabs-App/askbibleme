@@ -53,6 +53,13 @@ enum AppLocale: String {
 /// 读经展示语言（RN `resolveReadDisplayLocale`）：跟主译本走 —— 英文译本 → 英文面，中文译本 → 中文面
 /// （繁简按界面语言），不强制改 App 全局界面语言。译本语言未知时跟界面语言。
 enum ReadDisplayLocale {
+    /// 译本语言既不是中文也不是英文（西语等全量放开进来的那些）：
+    /// 我们没有这个语种的段落小标题，章标题也不该写成「Génesis 第1章」
+    static func isForeign(_ translationLanguage: String?) -> Bool {
+        let lang = (translationLanguage ?? "").trimmingCharacters(in: .whitespaces).lowercased()
+        return !lang.isEmpty && !lang.hasPrefix("zh") && !lang.hasPrefix("en")
+    }
+
     static func resolve(appLocale: AppLocale, translationLanguage: String?) -> AppLocale {
         let lang = (translationLanguage ?? "").trimmingCharacters(in: .whitespaces).lowercased()
         if lang.hasPrefix("en") { return .en }

@@ -47,6 +47,8 @@ import me.askbible.native_.data.ShellMetrics
 fun CatalogScreen(
     size: ReadSize,
     onOpenBook: (BookRef) -> Unit,
+    /** 书卷名：在线译本用它自己那套（西语版本 → Génesis）；默认退回目录里的中英名 */
+    bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     /** 读经展示语言：书名 / 分组 / 「圣经 · 旧约 · 新约」都按它（英文译本 → 英文面） */
     locale: AppLocale = AppLocale.ZH_CN,
     onOpenSettings: () -> Unit,
@@ -96,8 +98,8 @@ fun CatalogScreen(
 
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale)
-                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale)
+                    CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
+                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
                 }
             }
             // 目录页底下不再放读经计划区块（Josh 2026-09-09「圣经目录面下面不需要展示读经计划」），读经计划走底栏中央键
@@ -115,6 +117,8 @@ private fun CatalogColumn(
     onOpenBook: (BookRef) -> Unit,
     modifier: Modifier = Modifier,
     locale: AppLocale = AppLocale.ZH_CN,
+    /** 书卷名：在线译本用它自己那套 */
+    bookLabel: (BookRef) -> String = { it.name(locale) },
 ) {
     Column(modifier) {
         for (group in groups) {
@@ -143,7 +147,7 @@ private fun CatalogColumn(
                                  fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                             // softWrap=false + Ellipsis：否则「1 Thessalonians」装不下时会在空格处折行，
                             // maxLines=1 只留下第一行的「1」。iOS 的 lineLimit(1) 默认就是截断加省略号。
-                            Text(book.name(locale), color = theme.ink.toColor(),
+                            Text(bookLabel(book), color = theme.ink.toColor(),
                                  fontSize = (size.metrics.catalogBookSize * 0.85f).sp,
                                  maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
                                  modifier = Modifier.weight(1f))

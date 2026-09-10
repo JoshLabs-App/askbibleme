@@ -11,6 +11,8 @@ struct ChapterView: View {
     var locale: AppLocale = .zhCN
     /// 界面语言（读后两版这类「只有中文内容」的模块按它决定出不出，不跟译本语言）
     var uiLocale: AppLocale = .zhCN
+    /// 译本语言既不是中文也不是英文：章标题用「Génesis 1」，段落小标题不出（没有这个语种的）
+    var foreignText: Bool = false
     let bookNumber: Int
     let chapter: Int
     @Binding var size: ReadSize
@@ -63,7 +65,7 @@ struct ChapterView: View {
                         Color.clear.frame(height: 0).id("chapter-top")
                         // header：paddingTop 4 / paddingBottom 24 / 细线 / marginBottom 12（readChapterScreenLayoutStyles.header）
                         VStack(spacing: 0) {
-                            Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: locale))
+                            Text(ReadChrome.chapterTitle(bookName: bookName, chapter: chapter, locale: foreignText ? .en : locale))
                                 .font(.system(size: m.chapterTitleSize, weight: .semibold))
                                 .foregroundStyle(theme.ink)
                                 .multilineTextAlignment(.center)
@@ -146,7 +148,9 @@ struct ChapterView: View {
             activeEdition = nil
             searchFocus = focusVerse
             xrefVerses = store.versesWithXrefs(bookId: bookId, chapter: chapter)
-            meta = ChapterSegments.meta(bookId: bookId, chapter: chapter, english: locale == .en)
+            let m = ChapterSegments.meta(bookId: bookId, chapter: chapter, english: locale == .en)
+            // 西语等版本：段落照分，小标题不出（我们只有中英两套）
+            meta = foreignText ? ChapterSegmentMeta(headings: [:], paragraphStarts: m.paragraphStarts) : m
             loadState = .loading
             let loaded = await store.loadChapterAsync(translationId: store.translation.id, bookId: bookId, chapter: chapter)
             if Task.isCancelled { return }

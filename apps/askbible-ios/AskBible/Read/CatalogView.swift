@@ -5,6 +5,8 @@ struct CatalogView: View {
     @Binding var size: ReadSize
     /// 读经展示语言：书名 / 分组 / 「圣经 · 旧约 · 新约」都按它（英文译本 → 英文面）
     var locale: AppLocale = .zhCN
+    /// 书卷名：在线译本用它自己那套（西语版本 → Génesis）；默认退回目录里的中英名
+    var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
     var onOpenBook: (BookRef) -> Void = { _ in }
     var onOpenSettings: () -> Void = {}
     var onOpenSearch: () -> Void = {}
@@ -72,7 +74,7 @@ struct CatalogView: View {
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(group.color)
                                     .frame(minWidth: 15, alignment: .leading)
-                                Text(book.name(locale))
+                                Text(bookLabel(book))
                                     .font(.system(size: size.metrics.catalogBookSize * 0.85))
                                     .foregroundStyle(theme.ink)
                                     .lineLimit(1)
@@ -141,6 +143,8 @@ struct ChapterPickerSheet: View {
     var onPick: (Int) -> Void
     var onClose: () -> Void
     var locale: AppLocale = .zhCN
+    /// 书卷名：在线译本用它自己那套
+    var bookLabel: (BookRef) -> String = { $0.name(AppLocale.current) }
 
     private let theme = Parchment.light
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 9), count: 6)
@@ -159,7 +163,7 @@ struct ChapterPickerSheet: View {
                             .foregroundStyle(theme.ink)
                     }
                     .buttonStyle(.plain)
-                    Text(book.name(locale))
+                    Text(bookLabel(book))
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(theme.ink)
                         .lineLimit(1)

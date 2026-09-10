@@ -34,6 +34,8 @@ import me.askbible.native_.data.AppLocale
 fun ChapterPickerSheet(
     book: BookRef,
     chapterCount: Int,
+    /** 书卷名：在线译本用它自己那套 */
+    bookLabel: (BookRef) -> String = { it.name(AppLocale.current) },
     onPick: (Int) -> Unit,
     onClose: () -> Unit,
     theme: Parchment = Parchment.light,
@@ -62,7 +64,7 @@ fun ChapterPickerSheet(
                 Box(Modifier.size(24.dp).clickableNoRipple(onClose), contentAlignment = Alignment.Center) {
                     MaterialIcon(MI.ARROW_BACK, 24f, theme.ink.toColor())
                 }
-                Text(book.name(locale), Modifier.weight(1f),
+                Text(bookLabel(book), Modifier.weight(1f),
                      color = theme.ink.toColor(), fontSize = 17.sp,
                      fontWeight = FontWeight.SemiBold, maxLines = 1,
                      textAlign = androidx.compose.ui.text.style.TextAlign.Center)

@@ -148,6 +148,14 @@ private fun RootScreen() {
     // 目录表 / 文案表 / 译本默认值都看 AppLocale.current；在建各 store 之前定好
     AppLocale.current = appLocale
     val displayLocale = ReadDisplayLocale.resolve(appLocale, translation.language)
+    // 在线译本（目录接口来的那些）用它自己那套书卷名：正文是西语，书名也该是 Génesis
+    var bookNamesRevision by remember { mutableStateOf(0) }
+    LaunchedEffect(translation.id) {
+        if (withContext(Dispatchers.IO) { me.askbible.native_.data.RemoteBookNames.ensure(context, translation) }) bookNamesRevision++
+    }
+    val bookLabel: (BookRef) -> String = { b ->
+        bookNamesRevision.let { me.askbible.native_.data.RemoteBookNames.name(context, translation, b.id) ?: b.name(displayLocale) }
+    }
     var xrefVerse by remember { mutableStateOf<Int?>(null) }
     var showSleepSheet by remember { mutableStateOf(false) }
 
@@ -344,7 +352,8 @@ private fun RootScreen() {
         val b = targetBook ?: return@LaunchedEffect
         audioUrl?.let {
             val key = "${translation.id}.${b.id}.$targetChapter"
-            val title = ReadChrome.chapterTitle(b.name(displayLocale), targetChapter, displayLocale)
+            val title = ReadChrome.chapterTitle(bookLabel(b), targetChapter,
+                                               if (ReadDisplayLocale.isForeign(translation.language)) AppLocale.EN else displayLocale)
             if (ChapterAudioSource.isResolverUrl(it)) {
                 // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
                 audio.beginResolving(key, title)
@@ -541,6 +550,7 @@ private fun RootScreen() {
                     }
                 })
             else if (book == null) CatalogScreen(
+                bookLabel = bookLabel,
                 locale = displayLocale,
                 size = size,
                 onOpenBook = { pickingBook = it },
@@ -556,8 +566,9 @@ private fun RootScreen() {
                 ChapterScreen(
                     locale = displayLocale,
                     uiLocale = appLocale,
+                    foreignText = ReadDisplayLocale.isForeign(translation.language),
                     bookId = book.id,
-                    bookName = book.name(displayLocale),
+                    bookName = bookLabel(book),
                     chapter = chapter,
                     verses = data.verses,
                     translationId = translation.id, loading = data.loading, failed = data.failed, onRetry = { reloadToken += 1 },
@@ -647,6 +658,7 @@ private fun RootScreen() {
 
         pickingBook?.let { b ->
             ChapterPickerSheet(
+                bookLabel = bookLabel,
                 locale = displayLocale,
                 book = b,
                 chapterCount = b.chapterCount,

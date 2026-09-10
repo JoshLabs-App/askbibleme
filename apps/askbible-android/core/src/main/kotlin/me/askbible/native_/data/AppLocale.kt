@@ -48,6 +48,15 @@ enum class AppLocale(val tag: String) {
  * （繁简按界面语言），不强制改 App 全局界面语言。译本语言未知时跟界面语言。
  */
 object ReadDisplayLocale {
+    /**
+     * 译本语言既不是中文也不是英文（西语等全量放开进来的那些）：
+     * 我们没有这个语种的段落小标题，章标题也不该写成「Génesis 第1章」
+     */
+    fun isForeign(translationLanguage: String?): Boolean {
+        val lang = (translationLanguage ?: "").trim().lowercase()
+        return lang.isNotEmpty() && !lang.startsWith("zh") && !lang.startsWith("en")
+    }
+
     fun resolve(appLocale: AppLocale, translationLanguage: String?): AppLocale {
         val lang = (translationLanguage ?: "").trim().lowercase()
         if (lang.startsWith("en")) return AppLocale.EN

@@ -81,6 +81,8 @@ fun ChapterScreen(
     locale: AppLocale = AppLocale.ZH_CN,
     /** 界面语言（读后两版这类「只有中文内容」的模块按它决定出不出，不跟译本语言） */
     uiLocale: AppLocale = AppLocale.ZH_CN,
+    /** 译本语言既不是中文也不是英文：章标题用「Génesis 1」，段落小标题不出（没有这个语种的） */
+    foreignText: Boolean = false,
     /** 当前主译本 id（判断是不是下载型，给提示用） */
     translationId: String = "",
     /** 在线 / 下载型译本取数中 / 取不到（内置译本瞬时读库，不会看到） */
@@ -114,7 +116,11 @@ fun ChapterScreen(
     onNavigate: (bookId: String, chapter: Int) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
-    val meta = remember(bookId, chapter, locale) { ChapterSegments.meta(context, bookId, chapter, english = locale == AppLocale.EN) }
+    val meta = remember(bookId, chapter, locale, foreignText) {
+        val m = ChapterSegments.meta(context, bookId, chapter, english = locale == AppLocale.EN)
+        // 西语等版本：段落照分，小标题不出（我们只有中英两套）
+        if (foreignText) ChapterSegmentMeta(emptyMap(), m.paragraphStarts) else m
+    }
     val groups = remember(verses, meta) { ChapterSegments.paragraphGroups(verses, meta) }
     val neighbors = remember(bookId, chapter) { ChapterNeighbor.resolve(bookId, chapter) }
     val listState = rememberLazyListState()
@@ -182,7 +188,7 @@ fun ChapterScreen(
                 // header：paddingTop 4 / paddingBottom 24 / 细线 / marginBottom 12（readChapterScreenLayoutStyles.header）
                 Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                     Text(
-                        ReadChrome.chapterTitle(bookName, chapter, locale),
+                        ReadChrome.chapterTitle(bookName, chapter, if (foreignText) AppLocale.EN else locale),
                         Modifier.fillMaxWidth().padding(start = 42.dp, end = 42.dp, top = 4.dp, bottom = 24.dp),
                         color = theme.ink.toColor(),
                         fontSize = m.chapterTitleSize.sp,

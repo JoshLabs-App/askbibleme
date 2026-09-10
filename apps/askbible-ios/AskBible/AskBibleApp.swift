@@ -82,6 +82,8 @@ struct RootView: View {
     @State private var openedBook: BookRef?
     @State private var openedChapter: (book: BookRef, chapter: Int)?
     @State private var showTranslationPanel = false
+    /// 在线译本的书卷名取到后 +1，目录页 / 章页据此重画
+    @State private var bookNamesRevision = 0
     @State private var xrefVerse: Int?
     /// 经文搜索 / 收藏页：盖在读经 Tab 当前内容之上，关掉就回到原来的页
     @State private var showSearch = false
@@ -283,10 +285,14 @@ struct RootView: View {
                 if localeOverride == nil { AppLocale.current = deviceLocale }
             }
             .onChange(of: localeOverride) { _, _ in sync.localeTag = { [appLocale] in appLocale.rawValue } }
+            .onChange(of: store.translation.id) { _, _ in
+                // 换到在线译本：把它自己的书卷名取回来（盘里有就只读盘）
+                Task { if await RemoteBookNames.ensure(store.translation) { bookNamesRevision += 1 } }
+            }
             .onChange(of: audioURL) { _, url in
                 guard let url, let opened = audioTarget else { return }
                 let key = "\(store.translation.id).\(opened.book.id).\(opened.chapter)"
-                let title = ReadChrome.chapterTitle(bookName: opened.book.name(displayLocale), chapter: opened.chapter, locale: displayLocale)
+                let title = ReadChrome.chapterTitle(bookName: bookLabel(opened.book), chapter: opened.chapter, locale: titleLocale)
                 if ChapterAudioSource.isResolverURL(url) {
                     // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
                     let tid = store.translation.id, bookId = opened.book.id, chapter = opened.chapter
@@ -362,6 +368,18 @@ struct RootView: View {
 
     private var displayLocale: AppLocale { ReadDisplayLocale.resolve(appLocale: appLocale, translationLanguage: store.translation.language) }
 
+    /// 书卷名：在线译本（目录接口来的那些）用它自己那套，正文是西语、书名也该是 Génesis；其余用目录里的中英名。
+    /// 读 bookNamesRevision 只是为了让取到名字后这些视图重画
+    /// 章标题的语言：西语等版本用英文那种「Génesis 1」，不写「第1章」
+    private var titleLocale: AppLocale {
+        ReadDisplayLocale.isForeign(store.translation.language) ? .en : displayLocale
+    }
+
+    private func bookLabel(_ book: BookRef) -> String {
+        _ = bookNamesRevision
+        return RemoteBookNames.name(store.translation, bookId: book.id) ?? book.name(displayLocale)
+    }
+
     private var content: some View {
         ZStack {
             ShellTabBarHost(selection: $tab, parchmentBar: tab == .read || tab == .explore || tab == .plan, onCenterTap: openToday,
@@ -407,7 +425,8 @@ struct RootView: View {
                         openedBook = nil
                     },
                     onClose: { openedBook = nil },
-                    locale: displayLocale
+                    locale: displayLocale,
+                    bookLabel: bookLabel
                 )
             }
 
@@ -532,9 +551,10 @@ struct RootView: View {
             } else if let opened = openedChapter {
                 ChapterView(
                     bookId: opened.book.id,
-                    bookName: opened.book.name(displayLocale),
+                    bookName: bookLabel(opened.book),
                     locale: displayLocale,
                     uiLocale: appLocale,
+                    foreignText: ReadDisplayLocale.isForeign(store.translation.language),
                     bookNumber: opened.book.number,
                     chapter: opened.chapter,
                     size: $readSize,
@@ -573,6 +593,7 @@ struct RootView: View {
                 CatalogView(
                     size: $readSize,
                     locale: displayLocale,
+                    bookLabel: bookLabel,
                     onOpenBook: { openedBook = $0 },
                     onOpenSettings: { showTranslationPanel = true },
                     onOpenSearch: { searchRef = nil; showSearch = true },

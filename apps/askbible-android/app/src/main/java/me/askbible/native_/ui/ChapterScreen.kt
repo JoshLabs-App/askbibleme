@@ -15,6 +15,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -123,13 +128,35 @@ fun ChapterScreen(
     // 换章回到顶部：LazyColumn 状态跨章复用，不主动滚回去会停在上一章的位置（计划流顺章时标题在屏外）
     LaunchedEffect(bookId, chapter) { listState.scrollToItem(0) }
 
-    // 跟读时把当前节所在的段滚到视野；用户手动滚动不打断（只在播放中跟随）
+    // 跟读时把当前「节」滚到可读区中心（RN scrollVerseToReadableCenter / readChapterReadableCenterFromScreen：
+    // 顶栏 56 + 安全区 到 底部 72 + 安全区 + 音频条 220 之间的几何中心；偏差不到 8px 不动）。
+    // 之前按「段」animateScrollToItem 只把段首顶到视口顶，长段后半的节会读到屏幕外（Josh 三星 2026-09-10）。
+    // 用户手动滚动中不打断。
+    val verseBounds = remember(bookId, chapter) { mutableStateMapOf<Int, Pair<Float, Float>>() }
+    val rootView = LocalView.current
+    val density = LocalDensity.current
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val sbTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     LaunchedEffect(activeVerse, isPlaying) {
-        val v = activeVerse
-        if (v != null && isPlaying) {
-            val gi = groups.indexOfFirst { g -> g.any { it.number == v } }
-            if (gi >= 0) listState.animateScrollToItem(gi + 1)  // +1 跳过标题 item
+        val v = activeVerse ?: return@LaunchedEffect
+        if (!isPlaying) return@LaunchedEffect
+        val gi = groups.indexOfFirst { g -> g.any { it.number == v } }
+        if (gi < 0) return@LaunchedEffect
+        if (listState.isScrollInProgress) return@LaunchedEffect
+        var b = verseBounds[v]
+        if (b == null) {
+            // 这节所在的段还没排上屏：先把段滚进来，等一帧拿到节的位置再对中
+            listState.animateScrollToItem(gi + 1)  // +1 跳过标题 item
+            kotlinx.coroutines.delay(80)
+            b = verseBounds[v] ?: return@LaunchedEffect
         }
+        val target: Float = with(density) {
+            val top = 56.dp.toPx() + sbTop.toPx()
+            val bottom = rootView.height - 72.dp.toPx() - navBarBottom.toPx() - 220.dp.toPx()
+            (top + bottom) / 2
+        }
+        val delta = (b.first + b.second) / 2 - target
+        if (kotlin.math.abs(delta) >= with(density) { 8.dp.toPx() }) listState.animateScrollBy(delta)
     }
     val m = size.metrics
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -170,7 +197,8 @@ fun ChapterScreen(
                     bookmarked = bookmarked, searchFocus = searchFocus,
                     onTapVerseNumber = { v -> searchFocus = null; if (v in xrefVerses) onTapVerse(v) },
                     onDoubleTapVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onDoubleTapVerse) },
-                    onLongPressVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onLongPressVerse) })
+                    onLongPressVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onLongPressVerse) },
+                    onVerseBounds = { b -> verseBounds.putAll(b) })
             }
 
             item(key = "ending") {
@@ -210,6 +238,7 @@ private fun ParagraphBlock(
     onTapVerseNumber: (Int) -> Unit,
     onDoubleTapVerse: (Int) -> Unit,
     onLongPressVerse: (Int) -> Unit,
+    onVerseBounds: ((Map<Int, Pair<Float, Float>>) -> Unit)? = null,
 ) {
     val headings = (meta.headings[group.first().number] ?: emptyList()).map { locale.zh(it) }
     Column(Modifier.fillMaxWidth().padding(bottom = 14.dp)) {  // verseParagraphBlock.marginBottom
@@ -236,7 +265,7 @@ private fun ParagraphBlock(
             )
         }
         ChapterFlowParagraph(group, m, theme, xrefVerses, activeVerse, bookmarked, searchFocus,
-                             onTapVerseNumber, onDoubleTapVerse, onLongPressVerse)
+                             onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds)
         // 副译本对照行：0.82× 字号，muted，上距 7（verseContrast）
         for (v in group) {
             val line = contrast[v.number] ?: continue

@@ -826,6 +826,14 @@ Josh：「读经播放会被手机其它系统音打断了，就不续播」。E
 模拟器验证：Chrome 播 mp3 → onAudioFocusChange(-1) 朗读停；force-stop Chrome → 1 秒内朗读自己重新申请焦点续播。
 iOS 同步补了回前台续播（`recoverAfterInterruption`，iOS 常不发「打断结束」）。
 
+### 安卓跟读：按「节」滚到可读区中心（2026-09-10，三星）
+
+Josh：「读经的时候，经文高亮的焦点没有拉到屏幕中间，往下读时高亮超出屏幕了」。之前 `animateScrollToItem(段)` 只把当前节所在的段首顶到视口顶，
+长段后半的节就读到屏幕外。现在照 RN `scrollVerseToReadableCenter`：`ChapterFlowParagraph` 用 `onGloballyPositioned` + TextLayoutResult 报每节在窗口里的
+top/bottom，`ChapterScreen` 在 activeVerse 变化时把节中心滚到「顶栏 56 + 状态栏 ～ 底部 72 + 导航栏 + 音频条 220」的几何中心
+（readChapterReadableCenterFromScreen），偏差不到 8dp 不动，用户手动滚动中不打断；段还没排上屏就先 scrollToItem 再对中。模拟器连拍验证：高亮一直停在屏幕中部。
+iOS 仍是按段 `scrollTo(gi, anchor: .center)`，长段同样可能偏出，待改。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

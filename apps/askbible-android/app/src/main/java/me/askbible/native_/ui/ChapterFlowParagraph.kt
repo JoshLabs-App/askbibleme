@@ -16,6 +16,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,6 +54,8 @@ fun ChapterFlowParagraph(
     onDoubleTapVerse: (Int) -> Unit = {},
     /** 长按正文 → 操作单（复制 / 收藏 / 分享） */
     onLongPressVerse: (Int) -> Unit = {},
+    /** 每节在窗口坐标里的 top/bottom（px），滚动 / 排版后都会报：跟读时按「节」把高亮滚到可读区中心 */
+    onVerseBounds: ((Map<Int, Pair<Float, Float>>) -> Unit)? = null,
 ) {
     val ranges = ArrayList<Pair<Int, IntRange>>(verses.size)
     val numberRanges = ArrayList<Pair<Int, IntRange>>(verses.size)
@@ -101,6 +105,17 @@ fun ChapterFlowParagraph(
     Text(
         text,
         Modifier.fillMaxWidth()
+            .onGloballyPositioned { coords ->
+                val report = onVerseBounds ?: return@onGloballyPositioned
+                val l = layout ?: return@onGloballyPositioned
+                val rootY = coords.positionInRoot().y
+                val out = HashMap<Int, Pair<Float, Float>>(ranges.size)
+                for ((n, r) in ranges) {
+                    if (r.isEmpty()) continue
+                    out[n] = (rootY + l.getLineTop(l.getLineForOffset(r.first))) to (rootY + l.getLineBottom(l.getLineForOffset(r.last)))
+                }
+                report(out)
+            }
             .drawBehind {
                 val l = layout ?: return@drawBehind
                 // 圆角 8 整行框：跟读高亮 #FFB103 / 搜索定位 verseSearchFocusBg（RN verseAudioFollowOverlay / verseSearchFocusBg）

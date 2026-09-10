@@ -834,6 +834,16 @@ top/bottom，`ChapterScreen` 在 activeVerse 变化时把节中心滚到「顶�
 （readChapterReadableCenterFromScreen），偏差不到 8dp 不动，用户手动滚动中不打断；段还没排上屏就先 scrollToItem 再对中。模拟器连拍验证：高亮一直停在屏幕中部。
 iOS 仍是按段 `scrollTo(gi, anchor: .center)`，长段同样可能偏出，待改。
 
+### 探索页语言设置 + 用户图标（2026-09-10，原生新增、偏离 RN）
+
+Josh：「探索页也放入语言的设置，探索页图标变成用户图标」。RN 没有界面语言开关（只跟系统）；原生两端加：
+- 探索页「最近阅读」下方一行「语言」单选格：跟随系统 / 简体中文 / 繁體中文 / English（样式同计划详情的单选格）。
+  存 `askbible.app-locale-override.v1`（iOS UserDefaults / Android SharedPreferences "app-locale"），nil = 跟随系统；
+  `appLocale = override ?: 系统语言`，会员同步的 localeTag 跟着变。
+- 底栏探索 Tab 图标由 MaterialIcons explore（罗盘）改为 person（用户），两端。
+- 目前原生界面文案只有中文（locale.zh 只做简繁转换，2026-09-09 决定不混英文），所以选 English 只影响读经 / 计划 / 登录页里
+  本来就分语种的部分；要整套英文界面是另一件大活。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

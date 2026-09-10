@@ -26,6 +26,7 @@ enum MI {
     static let musicNote = "\u{e405}"
     static let menuBook = "\u{ea19}"
     static let explore = "\u{e87a}"
+    static let person = "\u{e7fd}"
     static let search = "\u{e8b6}"
     static let playArrow = "\u{e037}"
     static let pause = "\u{e034}"

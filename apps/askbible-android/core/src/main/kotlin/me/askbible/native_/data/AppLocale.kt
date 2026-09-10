@@ -15,6 +15,9 @@ enum class AppLocale(val tag: String) {
 
     fun pick(t: TriText): String = when (this) { EN -> t.en; ZH_TW -> t.zhTw; ZH_CN -> t.zh }
 
+    /** 设置项上的名字，各用自己的文字（探索页语言设置；原生版新增，RN 只跟系统） */
+    val settingLabel: String get() = when (this) { EN -> "English"; ZH_CN -> "简体中文"; ZH_TW -> "繁體中文" }
+
     companion object {
         /** RN mapLanguageTagToAppLocale */
         fun fromLanguageTag(tag: String): AppLocale {

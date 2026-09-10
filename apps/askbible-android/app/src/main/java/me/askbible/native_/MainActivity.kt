@@ -138,7 +138,9 @@ private fun RootScreen() {
     var secondary by remember { mutableStateOf(storedTranslation.secondary) }
     // 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
     val configuration = LocalConfiguration.current
-    val appLocale = remember(configuration) { AppLocale.fromLanguageTag(configuration.locales[0]?.toLanguageTag() ?: "") }
+    // 手动设置（探索页）优先，否则跟系统
+    var localeOverride by remember { mutableStateOf(me.askbible.native_.data.AppLocalePrefs.read(context)) }
+    val appLocale = localeOverride ?: remember(configuration) { AppLocale.fromLanguageTag(configuration.locales[0]?.toLanguageTag() ?: "") }
     val displayLocale = ReadDisplayLocale.resolve(appLocale, translation.language)
     var xrefVerse by remember { mutableStateOf<Int?>(null) }
     var showSleepSheet by remember { mutableStateOf(false) }
@@ -201,8 +203,8 @@ private fun RootScreen() {
     // 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步（RN AppUsageTimeBridge / useMemberReadingSync）
     val activity = remember { ReadingActivityStore(context) }
     val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs) } }
+    LaunchedEffect(appLocale) { syncEngine.localeTag = { appLocale.tag } }
     LaunchedEffect(Unit) {
-        syncEngine.localeTag = { appLocale.tag }
         activity.noteForeground(); activity.touchHabitDay()
         activity.mergeRemoteHabit(plans.listenedDates)
         auth.verifyRemote()
@@ -453,6 +455,7 @@ private fun RootScreen() {
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
+                localeOverride = localeOverride, onSetLocale = { localeOverride = it; me.askbible.native_.data.AppLocalePrefs.write(context, it) },
                 activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
                 onOpenChapter = { id, ch ->
                     // 文章里的经文链接：切到读经 Tab 直接开章

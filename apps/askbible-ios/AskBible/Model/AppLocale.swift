@@ -89,3 +89,23 @@ extension BookGroup {
         return locale.pick(t)
     }
 }
+
+/// 界面语言的手动设置（原生版新增，RN 没有：RN 只跟系统语言）。nil = 跟随系统。
+/// Josh 2026-09-10：「在探索页也放入语言的设置」。
+extension AppLocale {
+    static let overrideKey = "askbible.app-locale-override.v1"
+
+    static var storedOverride: AppLocale? {
+        UserDefaults.standard.string(forKey: overrideKey).flatMap(AppLocale.init(rawValue:))
+    }
+
+    static func storeOverride(_ locale: AppLocale?) {
+        if let locale { UserDefaults.standard.set(locale.rawValue, forKey: overrideKey) }
+        else { UserDefaults.standard.removeObject(forKey: overrideKey) }
+    }
+
+    /// 设置项上的名字，各用自己的文字
+    var settingLabel: String {
+        switch self { case .en: return "English"; case .zhCN: return "简体中文"; case .zhTW: return "繁體中文" }
+    }
+}

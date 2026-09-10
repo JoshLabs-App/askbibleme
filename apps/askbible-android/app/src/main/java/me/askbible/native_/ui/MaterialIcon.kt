@@ -40,6 +40,7 @@ object MI {
     const val MUSIC_NOTE = ""
     const val MENU_BOOK = ""
     const val EXPLORE = ""
+    const val PERSON = "\ue7fd"
     const val SEARCH = ""
     const val PLAY_ARROW = ""
     const val PAUSE = ""

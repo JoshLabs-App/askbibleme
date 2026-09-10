@@ -13,6 +13,9 @@ struct ExploreView: View {
     var onOpenLogin: () -> Void = {}
     /// 退出登录（先把本机进度推上云端再清本机，由壳接线）
     var onSignOut: () -> Void = {}
+    /// 界面语言手动设置（nil = 跟随系统）；原生版新增，RN 只跟系统
+    var localeOverride: AppLocale? = nil
+    var onSetLocale: (AppLocale?) -> Void = { _ in }
     var size: ReadSize = .default
     /// 文章里的经文链接 → 读经 Tab 打开那一章
     var onOpenChapter: (_ bookId: String, _ chapter: Int) -> Void = { _, _ in }
@@ -107,6 +110,18 @@ struct ExploreView: View {
                         .padding(.horizontal, 26)
                         .padding(.top, 8)
 
+                        // 界面语言（原生版新增）：跟随系统 / 简体 / 繁體 / English，样式同计划详情的单选格
+                        Text(locale.zh("语言"))
+                            .font(.system(size: 15))
+                            .foregroundStyle(theme.faint)
+                            .padding(.top, 28)
+                        HStack(spacing: 8) {
+                            languageChip(nil, label: locale.zh("跟随系统"))
+                            ForEach([AppLocale.zhCN, .zhTW, .en], id: \.rawValue) { l in languageChip(l, label: l.settingLabel) }
+                        }
+                        .padding(.horizontal, 26)
+                        .padding(.top, 10)
+
                         // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
                         articleGrid(width: geo.size.width)
                             .padding(.top, 36 + 8 + 16 + 8)
@@ -121,6 +136,22 @@ struct ExploreView: View {
             }
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
+    }
+
+    private func languageChip(_ value: AppLocale?, label: String) -> some View {
+        let on = localeOverride == value
+        return Button { onSetLocale(value) } label: {
+            Text(label)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(theme.ink)
+                .lineLimit(1).minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(RoundedRectangle(cornerRadius: 12).fill(on ? Brand.logo.opacity(0.28) : theme.surface.opacity(0.6)))
+                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(on ? Brand.logo : theme.border, lineWidth: on ? 1.5 : 0.5))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// RN renderArticleTile：64 圆角 18 的浅底圈 + MaterialCommunityIcons 28 ink + 12/600 两行标签，列宽按 useExploreIconGridLayout

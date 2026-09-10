@@ -41,6 +41,9 @@ import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import me.askbible.native_.data.Brand
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,6 +80,9 @@ fun ExploreScreen(
     activity: ReadingActivityStore? = null,
     /** 退出登录（先把本机进度推上云端再清本机，由壳接线） */
     onSignOut: () -> Unit = {},
+    /** 界面语言手动设置（null = 跟随系统）；原生版新增，RN 只跟系统 */
+    localeOverride: AppLocale? = null,
+    onSetLocale: (AppLocale?) -> Unit = {},
     theme: Parchment = Parchment.light,
 ) {
     if (article != null) {
@@ -186,6 +192,14 @@ fun ExploreScreen(
                         Text(locale.zh("还没有阅读记录"), Modifier.fillMaxWidth().height(38.dp), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                     }
                 }
+                // 界面语言（原生版新增）：跟随系统 / 简体 / 繁體 / English，样式同计划详情的单选格
+                Spacer(Modifier.height(28.dp))
+                Text(locale.zh("语言"), Modifier.fillMaxWidth(), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(10.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 26.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LanguageChip(locale.zh("跟随系统"), localeOverride == null, theme) { onSetLocale(null) }
+                    for (l in listOf(AppLocale.ZH_CN, AppLocale.ZH_TW, AppLocale.EN)) LanguageChip(l.settingLabel, localeOverride == l, theme) { onSetLocale(l) }
+                }
                 // 九宫格功能块（欢迎 / 读经计划 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）
                 // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
                 Spacer(Modifier.height((36 + 8 + 16 + 8).dp))
@@ -232,4 +246,18 @@ private fun Stat(value: String, label: String, color: Color, theme: Parchment, m
 @Composable
 private fun Divider(theme: Parchment) {
     Box(Modifier.width(1.dp).height(56.dp).background(theme.border.toColor().copy(alpha = 0.8f)))
+}
+
+@Composable
+private fun RowScope.LanguageChip(label: String, on: Boolean, theme: Parchment, onClick: () -> Unit) {
+    Box(
+        Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+            .background(if (on) Brand.logo.toColor().copy(alpha = 0.28f) else theme.surface.toColor().copy(alpha = 0.6f))
+            .border(if (on) 1.5.dp else 0.5.dp, if (on) Brand.logo.toColor() else theme.border.toColor(), RoundedCornerShape(12.dp))
+            .clickableNoRipple(onClick).padding(vertical = 10.dp, horizontal = 4.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = theme.ink.toColor(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+             overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+    }
 }

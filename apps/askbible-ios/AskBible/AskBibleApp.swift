@@ -30,7 +30,10 @@ struct RootView: View {
     private let usageTicker = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
     @State private var usageTicks = 0
     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
-    @State private var appLocale = AppLocale.device
+    // 界面语言：手动设置（探索页）优先，否则跟系统
+    @State private var deviceLocale = AppLocale.device
+    @State private var localeOverride = AppLocale.storedOverride
+    private var appLocale: AppLocale { localeOverride ?? deviceLocale }
     /// 计划 Tab（底栏中央键）里的子页：播放页 / 计划目录 / 计划详情
     enum PlanRoute: Equatable { case play, plans, planDetail(String) }
     @State private var planRoute: PlanRoute = .play
@@ -257,7 +260,8 @@ struct RootView: View {
     var body: some View {
         content
             .environmentObject(store)
-            .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in appLocale = .device }
+            .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in deviceLocale = .device }
+            .onChange(of: localeOverride) { _, _ in sync.localeTag = { [appLocale] in appLocale.rawValue } }
             .onChange(of: audioURL) { _, url in
                 guard let url, let opened = audioTarget else { return }
                 audio.load(
@@ -589,6 +593,7 @@ struct RootView: View {
         case .explore:
             ExploreView(article: $exploreArticle, auth: auth, activity: activity, locale: appLocale, onOpenLogin: { authRoute = .login },
                         onSignOut: { Task { await sync.prepareSignOut(); auth.signOut() } },
+                        localeOverride: localeOverride, onSetLocale: { localeOverride = $0; AppLocale.storeOverride($0) },
                         size: readSize, onOpenChapter: { id, ch in
                 // 文章里的经文链接：切到读经 Tab 直接开章
                 guard let b = BibleCatalog.book(id: id) else { return }

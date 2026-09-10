@@ -375,9 +375,10 @@ struct RootView: View {
 
     /// 书卷名：在线译本（目录接口来的那些）用它自己那套，正文是西语、书名也该是 Génesis；其余用目录里的中英名。
     /// 读 bookNamesRevision 只是为了让取到名字后这些视图重画
-    /// 章标题的语言：西语等版本用英文那种「Génesis 1」，不写「第1章」
+    /// 我们自己写的读经面文字（章标题、目录分类）只有中英两套：
+    /// 法语这类没有对应语言的译本回退英文，别在法语圣经上写「第1章」「摩西五经」
     private var titleLocale: AppLocale {
-        ReadDisplayLocale.isForeign(store.translation.language) ? .en : displayLocale
+        ReadDisplayLocale.chrome(appLocale: appLocale, translationLanguage: store.translation.language)
     }
 
     private func bookLabel(_ book: BookRef) -> String {
@@ -430,7 +431,7 @@ struct RootView: View {
                         openedBook = nil
                     },
                     onClose: { openedBook = nil },
-                    locale: displayLocale,
+                    locale: titleLocale,
                     bookLabel: bookLabel
                 )
             }
@@ -597,7 +598,7 @@ struct RootView: View {
             } else {
                 CatalogView(
                     size: $readSize,
-                    locale: displayLocale,
+                    locale: titleLocale,
                     bookLabel: bookLabel,
                     onOpenBook: { openedBook = $0 },
                     onOpenSettings: { showTranslationPanel = true },

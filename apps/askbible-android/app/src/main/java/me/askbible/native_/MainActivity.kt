@@ -148,6 +148,8 @@ private fun RootScreen() {
     // 目录表 / 文案表 / 译本默认值都看 AppLocale.current；在建各 store 之前定好
     AppLocale.current = appLocale
     val displayLocale = ReadDisplayLocale.resolve(appLocale, translation.language)
+    // 目录 / 章标题这类我们自己的文字只有中英两套：法语等译本没有对应语言，跟章页一样回退英文
+    val readChromeLocale = ReadDisplayLocale.chrome(appLocale, translation.language)
     // 在线译本（目录接口来的那些）用它自己那套书卷名：正文是西语，书名也该是 Génesis
     var bookNamesRevision by remember { mutableStateOf(0) }
     LaunchedEffect(translation.id) {
@@ -354,8 +356,7 @@ private fun RootScreen() {
         val b = targetBook ?: return@LaunchedEffect
         audioUrl?.let {
             val key = "${translation.id}.${b.id}.$targetChapter"
-            val title = ReadChrome.chapterTitle(bookLabel(b), targetChapter,
-                                               if (ReadDisplayLocale.isForeign(translation.language)) AppLocale.EN else displayLocale)
+            val title = ReadChrome.chapterTitle(bookLabel(b), targetChapter, readChromeLocale)
             if (ChapterAudioSource.isResolverUrl(it)) {
                 // YouVersion 译本：先问网站代理拿 CDN mp3，再装载
                 audio.beginResolving(key, title)
@@ -555,7 +556,7 @@ private fun RootScreen() {
                 })
             else if (book == null) CatalogScreen(
                 bookLabel = bookLabel,
-                locale = displayLocale,
+                locale = readChromeLocale,
                 size = size,
                 onOpenBook = { pickingBook = it },
                 onOpenSettings = { showTranslationPanel = true },
@@ -663,7 +664,7 @@ private fun RootScreen() {
         pickingBook?.let { b ->
             ChapterPickerSheet(
                 bookLabel = bookLabel,
-                locale = displayLocale,
+                locale = readChromeLocale,
                 book = b,
                 chapterCount = b.chapterCount,
                 onPick = { n -> chapter = n; openedBook = b; pickingBook = null },

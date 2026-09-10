@@ -22,6 +22,9 @@ const CASES = [
   ["display", "zh-CN", "en"], ["display", "zh-CN", "zh-Hans"], ["display", "zh-TW", "zh-Hans"], ["display", "zh-CN", "zh-Hant"],
   ["display", "zh-TW", "zh-Hant"], ["display", "en", "zh-Hant"], ["display", "en", "en"], ["display", "zh-TW", ""], ["display", "en", ""],
   ["display", "zh-CN", " EN-GB "], ["display", "zh-CN", "es"],
+  // chrome：目录分类 / 章标题这些我们自己的文字只有中英两套，外语译本回退英文
+  ["chrome", "zh-CN", "fr"], ["chrome", "zh-TW", "fr"], ["chrome", "en", "fr"], ["chrome", "zh-CN", "es-ES"],
+  ["chrome", "zh-CN", "zh-Hans"], ["chrome", "zh-TW", "zh-Hant"], ["chrome", "zh-CN", "en"], ["chrome", "zh-TW", ""],
   ["zhtw", "圣经"], ["zhtw", "旧约·新约·读经计划"], ["zhtw", "王后与太后来了"], ["zhtw", "走了一公里到这里"], ["zhtw", "仆人仆倒在地"],
   ["zhtw", "混沌中的创造开端"], ["zhtw", "Genesis 1"], ["zhtw", ""], ["zhtw", "设置里打开加载"], ["zhtw", "摩西五经"],
   ["book", "GEN", "en"], ["book", "GEN", "zh-CN"], ["book", "GEN", "zh-TW"], ["book", "PSA", "zh-TW"], ["book", "SNG", "zh-TW"], ["book", "2CO", "zh-TW"],
@@ -64,6 +67,8 @@ cmp(ts, "TS");
 if (kotlin) cmp(kotlin, "Kotlin");
 const at = (kind, i) => ts[CASES.findIndex((c, j) => c[0] === kind && CASES.slice(0, j).filter((x) => x[0] === kind).length === i)];
 if (at("tag", 5) !== "zh-TW" || at("tag", 8) !== "zh-CN" || at("tag", 9) !== "en") problems.push("语言标签映射不对（Hant→繁 / zh→简 / 其它→en）");
+if (at("chrome", 0) !== "en" || at("chrome", 1) !== "en" || at("chrome", 5) !== "zh-TW" || at("chrome", 7) !== "zh-TW")
+  problems.push("外语译本的目录 / 章标题没有回退英文");
 if (at("display", 0) !== "en" || at("display", 2) !== "zh-TW" || at("display", 5) !== "zh-CN") problems.push("读经展示语言没跟译本走");
 if (at("zhtw", 2) !== "王后與太后來了" || at("zhtw", 3) !== "走了一公里到這裡") problems.push(`简→繁修正词没生效：${at("zhtw", 2)} / ${at("zhtw", 3)}`);
 if (at("book", 2) !== "創世記") problems.push(`繁体书名不对：${at("book", 2)}`);

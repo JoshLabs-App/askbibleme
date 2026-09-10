@@ -13,6 +13,8 @@ struct CatalogView: View {
     var onOpenFavorites: () -> Void = {}
 
     private let theme = Parchment.light
+    /// 右侧竖排最后一个按钮的底边（全局坐标）：落在它上面的行要给图标让位
+    @State private var railBottom: CGFloat = 0
 
     var body: some View {
         GeometryReader { geo in
@@ -38,8 +40,9 @@ struct CatalogView: View {
                         .padding(.top, 18)
 
                         HStack(alignment: .top, spacing: 14) {
-                            column(BibleCatalog.oldTestament)
-                            column(BibleCatalog.newTestament)
+                            column(BibleCatalog.oldTestament, railBottom: 0)
+                            // 右列顶上那几行正好压在右侧竖排下面：不让开的话点书卷会点到设置 / + / − 上
+                            column(BibleCatalog.newTestament, railBottom: railBottom)
                         }
                         .padding(.horizontal, 14)
                         .padding(.top, 16)
@@ -57,7 +60,7 @@ struct CatalogView: View {
         }
     }
 
-    private func column(_ groups: [BookGroup]) -> some View {
+    private func column(_ groups: [BookGroup], railBottom: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(groups) { group in
                 Text(group.title(locale))
@@ -68,27 +71,14 @@ struct CatalogView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(group.books) { book in
-                        Button { onOpenBook(book) } label: {
-                            HStack(spacing: 8) {
-                                Text(book.displayNumber)
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(group.color)
-                                    .frame(minWidth: 15, alignment: .leading)
-                                Text(bookLabel(book))
-                                    .font(.system(size: size.metrics.catalogBookSize * 0.85))
-                                    .foregroundStyle(theme.ink)
-                                    .lineLimit(1)
-                                Spacer(minLength: 2)
-                                // RN bookChevron：文字「›」24/400 faint，透明度 .58
-                                Text("\u{203A}")
-                                    .font(.system(size: 24))
-                                    .foregroundStyle(theme.faint.opacity(0.58))
-                                    .frame(height: 24)
-                            }
-                            .padding(.horizontal, 5)
-                            .frame(height: 27)
-                        }
-                        .buttonStyle(.plain)
+                        CatalogBookRow(
+                            book: book, color: group.color, theme: theme,
+                            label: bookLabel(book),
+                            fontSize: size.metrics.catalogBookSize * 0.85,
+                            // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也开，手指更好点
+                            rowHeight: size.metrics.catalogBookLine,
+                            railBottom: railBottom,
+                            onOpen: { onOpenBook(book) })
                     }
                 }
                 .padding(.leading, 5)
@@ -111,6 +101,10 @@ struct CatalogView: View {
         }
         .padding(.top, safeTop + ShellMetrics.topChromeOffset)
         .padding(.trailing, ShellMetrics.topChromeSideInset)
+        .background(GeometryReader { g in
+            Color.clear.onAppear { railBottom = g.frame(in: .global).maxY }
+                .onChange(of: g.frame(in: .global).maxY) { railBottom = $0 }
+        })
     }
 
     /// 右栏图标走 RN 同一套 Material 字形（READ_TOP_CHROME.iconSize = 32）
@@ -231,8 +225,10 @@ struct TranslationPanel: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            theme.modalBackdrop.ignoresSafeArea()
-                .onTapGesture(perform: onClose)
+            Button { NSLog("DBG backdrop tapped"); onClose() } label: {
+                Color.red.opacity(0.45).ignoresSafeArea()
+            }
+            .buttonStyle(.plain)
 
             VStack(spacing: 12) {
                 HStack(spacing: 14) {
@@ -284,6 +280,7 @@ struct TranslationPanel: View {
             .padding(.leading, 30)
             .padding(.trailing, 9)
             .padding(.top, 97)
+            .border(Color.blue, width: 3)
         }
     }
 
@@ -462,5 +459,55 @@ struct TranslationPanel: View {
                 .fill(Color(rgb: 0xfffdf8))
                 .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(theme.border.opacity(0.6), lineWidth: 1))
         )
+    }
+}
+
+/// 目录里的一行书卷。单独拆出来是为了每行自己量位置：压在右侧竖排下面的行要让出图标宽度。
+private struct CatalogBookRow: View {
+    let book: BookRef
+    let color: Color
+    let theme: Parchment
+    let label: String
+    let fontSize: CGFloat
+    let rowHeight: CGFloat
+    let railBottom: CGFloat
+    let onOpen: () -> Void
+
+    /// 右侧竖排占掉的宽度：按钮 50 + 边距 8，再少留 4 让书名多一点位置
+    private let railClearance: CGFloat = 54
+
+    @State private var underRail = false
+
+    var body: some View {
+        Button(action: onOpen) {
+            HStack(spacing: 8) {
+                Text(book.displayNumber)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(minWidth: 15, alignment: .leading)
+                Text(label)
+                    .font(.system(size: fontSize))
+                    .foregroundStyle(theme.ink)
+                    .lineLimit(1)
+                Spacer(minLength: 2)
+                // RN bookChevron：文字「›」24/400 faint，透明度 .58
+                Text("\u{203A}")
+                    .font(.system(size: 24))
+                    .foregroundStyle(theme.faint.opacity(0.58))
+                    .frame(height: 24)
+            }
+            .padding(.horizontal, 5)
+            .padding(.trailing, underRail ? railClearance : 0)
+            .frame(height: rowHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(GeometryReader { g in
+            Color.clear
+                .onAppear { underRail = railBottom > 0 && g.frame(in: .global).minY < railBottom }
+                .onChange(of: g.frame(in: .global).minY) { y in
+                    underRail = railBottom > 0 && y < railBottom
+                }
+        })
     }
 }

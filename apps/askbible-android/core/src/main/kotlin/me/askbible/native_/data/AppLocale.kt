@@ -57,6 +57,13 @@ object ReadDisplayLocale {
         return lang.isNotEmpty() && !lang.startsWith("zh") && !lang.startsWith("en")
     }
 
+    /**
+     * 我们自己写的读经面文字（目录分类、章标题、上一章/下一章）只有中英两套：
+     * 译本是法语这类没有对应语言的，回退英文，别在法语圣经上写「摩西五经」。
+     */
+    fun chrome(appLocale: AppLocale, translationLanguage: String?): AppLocale =
+        if (isForeign(translationLanguage)) AppLocale.EN else resolve(appLocale, translationLanguage)
+
     fun resolve(appLocale: AppLocale, translationLanguage: String?): AppLocale {
         val lang = (translationLanguage ?: "").trim().lowercase()
         if (lang.startsWith("en")) return AppLocale.EN

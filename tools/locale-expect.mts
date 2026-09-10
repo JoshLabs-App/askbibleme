@@ -50,6 +50,13 @@ for (const line of lines) {
   switch (f[0]) {
     case "tag": out.push(C.mapLanguageTagToAppLocale(f[1] ?? "")); break;
     case "display": out.push(D.resolveReadDisplayLocale({ appLocale: f[1], translationLanguage: f[2] || null })); break;
+    // RN 里没有单独的函数：外语译本回退英文这条规则写在读经页里（章标题 / 目录分类只有中英两套）
+    case "chrome": {
+      const lang = (f[2] ?? "").trim().toLowerCase();
+      const foreign = lang.length > 0 && !lang.startsWith("zh") && !lang.startsWith("en");
+      out.push(foreign ? "en" : D.resolveReadDisplayLocale({ appLocale: f[1], translationLanguage: f[2] || null }));
+      break;
+    }
     case "zhtw": out.push(S.toZhTwText(f[1] ?? "")); break;
     case "book": out.push(N.getScriptureBookDisplayName(f[1], f[2])); break;
     // RN chapterTitleText / formatNeighborChapterLabel（useReadChapterScreenDisplay.ts）内联在 hook 里，这里照抄那两行

@@ -20,6 +20,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,6 +71,12 @@ fun CatalogScreen(
         // RN tabbar preset：视口从屏幕顶到屏幕底，顶 70 / 底 120 渐隐，正文从透明底栏下面滑过去；
         // 底部留 72 + 导航栏 + 120（SHELL_TAB_BAR_CLEARANCE + readParchmentFadeSafePadding.bottom）
         val insets = WindowInsets.systemBars.asPaddingValues()
+        // 右侧竖排最后一个按钮的底边，用来判断哪几行会被它压住
+        val density = LocalDensity.current
+        val railBottomPx = with(density) {
+            (insets.calculateTopPadding() + ShellMetrics.topChromeOffset.dp +
+                (ShellMetrics.topChromeButton * 6 + ShellMetrics.topChromeGap * 5).dp).toPx()
+        }
         LazyColumn(
             Modifier.fillMaxSize().parchmentFade(ParchmentFadePreset.TABBAR),
             contentPadding = PaddingValues(
@@ -99,7 +112,10 @@ fun CatalogScreen(
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     CatalogColumn(BibleCatalog.oldTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
-                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.weight(1f), locale = locale, bookLabel = bookLabel)
+                    // 右列顶上那几行正好压在右侧竖排下面：不让开的话点书卷会点到设置 / + / − 上
+                    // （Josh 2026-09-10 实测「点 Luc 右边字号变小了」）
+                    CatalogColumn(BibleCatalog.newTestament, size, theme, onOpenBook, Modifier.weight(1f),
+                                  locale = locale, bookLabel = bookLabel, railBottomPx = railBottomPx)
                 }
             }
             // 目录页底下不再放读经计划区块（Josh 2026-09-09「圣经目录面下面不需要展示读经计划」），读经计划走底栏中央键
@@ -108,6 +124,9 @@ fun CatalogScreen(
         CatalogRail(theme, onOpenSettings, onSizeUp, onSizeDown, onOpenSearch = onOpenSearch, onOpenFavorites = onOpenFavorites)
     }
 }
+
+/** 右侧竖排占掉的宽度：按钮 50 + 边距 8，再少留 4 让书名多一点位置 */
+private const val RAIL_CLEARANCE = 54f
 
 @Composable
 private fun CatalogColumn(
@@ -119,7 +138,11 @@ private fun CatalogColumn(
     locale: AppLocale = AppLocale.ZH_CN,
     /** 书卷名：在线译本用它自己那套 */
     bookLabel: (BookRef) -> String = { it.name(locale) },
+    /** >0 时：纵向落在这个位置以上的行，右边留出图标栏的宽度 */
+    railBottomPx: Float = 0f,
 ) {
+    // RN 的 catalogBookLine：行高跟着字号档走，放大字号时行距也跟着开，手指更好点
+    val rowHeight = size.metrics.catalogBookLine.dp
     Column(modifier) {
         for (group in groups) {
             Text(
@@ -131,12 +154,18 @@ private fun CatalogColumn(
             )
             Row {
                 Box(Modifier.width(2.5.dp).fillMaxWidth(0f)
-                    .height((group.books.size * 27).dp)
+                    .height(rowHeight * group.books.size)
                     .background(Color(0xFF000000 or group.colorHex.toLong())))
                 Column(Modifier.padding(start = 5.dp)) {
                     for (book in group.books) {
+                        var underRail by remember(book.id) { mutableStateOf(false) }
                         Row(
-                            Modifier.fillMaxWidth().height(27.dp)
+                            Modifier.fillMaxWidth().height(rowHeight)
+                                .onGloballyPositioned { c ->
+                                    underRail = railBottomPx > 0f &&
+                                        c.positionInWindow().y < railBottomPx
+                                }
+                                .padding(end = if (underRail) RAIL_CLEARANCE.dp else 0.dp)
                                 .clickableNoRipple { onOpenBook(book) }
                                 .padding(horizontal = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,

@@ -17,6 +17,7 @@ fun localeMain() {
         out.add(when (f[0]) {
             "tag" -> AppLocale.fromLanguageTag(f.getOrElse(1) { "" }).tag
             "display" -> ReadDisplayLocale.resolve(loc(f[1]), f.getOrNull(2)?.takeIf { it.isNotEmpty() }).tag
+            "chrome" -> ReadDisplayLocale.chrome(loc(f[1]), f.getOrNull(2)?.takeIf { it.isNotEmpty() }).tag
             "zhtw" -> ZhTw.convert(f.getOrElse(1) { "" })
             "book" -> BibleCatalog.book(f[1])?.name(loc(f[2])) ?: f[1]
             "title" -> ReadChrome.chapterTitle(f[1], f[2].toIntOrNull() ?: 0, loc(f[3]))

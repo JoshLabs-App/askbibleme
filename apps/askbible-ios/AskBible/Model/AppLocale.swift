@@ -60,6 +60,12 @@ enum ReadDisplayLocale {
         return !lang.isEmpty && !lang.hasPrefix("zh") && !lang.hasPrefix("en")
     }
 
+    /// 我们自己写的读经面文字（目录分类、章标题、上一章/下一章）只有中英两套：
+    /// 译本是法语这类没有对应语言的，回退英文，别在法语圣经上写「摩西五经」。
+    static func chrome(appLocale: AppLocale, translationLanguage: String?) -> AppLocale {
+        isForeign(translationLanguage) ? .en : resolve(appLocale: appLocale, translationLanguage: translationLanguage)
+    }
+
     static func resolve(appLocale: AppLocale, translationLanguage: String?) -> AppLocale {
         let lang = (translationLanguage ?? "").trimmingCharacters(in: .whitespaces).lowercased()
         if lang.hasPrefix("en") { return .en }

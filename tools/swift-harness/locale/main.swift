@@ -10,6 +10,9 @@ while let line = readLine() {
     case "display":
         let app = AppLocale(rawValue: f[1]) ?? .en
         out.append(ReadDisplayLocale.resolve(appLocale: app, translationLanguage: f.count > 2 && !f[2].isEmpty ? f[2] : nil).rawValue)
+    case "chrome":
+        let app = AppLocale(rawValue: f[1]) ?? .en
+        out.append(ReadDisplayLocale.chrome(appLocale: app, translationLanguage: f.count > 2 && !f[2].isEmpty ? f[2] : nil).rawValue)
     case "zhtw": out.append(ZhTw.convert(f.count > 1 ? f[1] : ""))
     case "book": out.append(BibleCatalog.book(id: f[1])?.name(AppLocale(rawValue: f[2]) ?? .en) ?? f[1])
     case "title": out.append(ReadChrome.chapterTitle(bookName: f[1], chapter: Int(f[2]) ?? 0, locale: AppLocale(rawValue: f[3]) ?? .en))

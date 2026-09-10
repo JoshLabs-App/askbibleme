@@ -8,15 +8,39 @@ final class MemberAuthStore: ObservableObject {
     @Published private(set) var bootstrapped = false
     private var session: MemberSession?
     private let defaults = UserDefaults.standard
+    /// 当前会话 token（读经同步用；没登录为 nil）
+    var sessionToken: String? { session?.sessionToken }
 
     init() {
-        if let data = defaults.data(forKey: MemberAuthRules.sessionKey), let s = MemberAuthRules.parseSession(data) {
+        // 过期但带 refresh_token 的也先算登着（启动后 verifyRemote 会先续期）；RN 是一过期就登出
+        if let data = defaults.data(forKey: MemberAuthRules.sessionKey), let s = MemberAuthRules.parseSession(data, allowExpired: true) {
             session = s
             user = s.user
         } else {
             defaults.removeObject(forKey: MemberAuthRules.sessionKey)
         }
         bootstrapped = true
+    }
+
+    /// 拿一个还能用的 access token：快到期（2 分钟内）就先用 refresh_token 续；续期被拒（已作废）→ 登出；断网 → 先用旧的
+    func ensureFreshToken() async -> String? {
+        guard let s = session else { return nil }
+        guard MemberAuthRules.secondsUntilExpiry(s) < 120 else { return s.sessionToken }
+        guard let rt = s.refreshToken else {
+            if MemberAuthRules.secondsUntilExpiry(s) <= 0 { persist(nil); return nil }
+            return s.sessionToken
+        }
+        switch await SupabaseAuthClient.refresh(refreshToken: rt, locale: s.user.locale) {
+        case .ok(let next):
+            var merged = next
+            merged.user.createdAt = next.user.createdAt ?? s.user.createdAt
+            persist(merged)
+            return merged.sessionToken
+        case .failed(_, let code):
+            if code == "network" { return MemberAuthRules.secondsUntilExpiry(s) > 0 ? s.sessionToken : nil }
+            persist(nil)
+            return nil
+        }
     }
 
     private func persist(_ s: MemberSession?) {
@@ -28,12 +52,15 @@ final class MemberAuthStore: ObservableObject {
 
     /// 启动后校验会话：token 作废就清掉；网络不通保留本机会话（RN 同）
     func verifyRemote() async {
-        guard let s = session else { return }
+        guard session != nil, let token = await ensureFreshToken(), let s = session else { return }
         do {
-            if let remote = try await SupabaseAuthClient.verify(token: s.sessionToken) {
+            if let remote = try await SupabaseAuthClient.verify(token: token) {
                 var merged = remote
                 merged.createdAt = remote.createdAt ?? s.user.createdAt
-                persist(MemberSession(sessionToken: s.sessionToken, expiresAt: s.expiresAt, user: merged))
+                persist(MemberSession(sessionToken: token, expiresAt: s.expiresAt, user: merged, refreshToken: s.refreshToken))
+            } else if let rt = s.refreshToken, case .ok(let next) = await SupabaseAuthClient.refresh(refreshToken: rt, locale: s.user.locale) {
+                // access token 被服务端作废但 refresh_token 还在：续一次
+                persist(next)
             } else {
                 persist(nil)
             }
@@ -112,7 +139,7 @@ final class MemberAuthStore: ObservableObject {
         let name = MemberAuthRules.normalizeDisplayName(raw)
         guard MemberAuthRules.isValidDisplayName(name), let s = session else { return false }
         var u = s.user; u.name = name
-        persist(MemberSession(sessionToken: s.sessionToken, expiresAt: s.expiresAt, user: u))
+        persist(MemberSession(sessionToken: s.sessionToken, expiresAt: s.expiresAt, user: u, refreshToken: s.refreshToken))
         _ = await SupabaseAuthClient.updateDisplayName(token: s.sessionToken, userId: u.id, name: name)
         return true
     }

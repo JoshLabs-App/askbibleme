@@ -12,6 +12,16 @@ class VerseBookmarkStore(context: Context) {
         private set
 
     val list: List<VerseBookmark> get() = VerseBookmarkRules.list(store)
+    /** 本机改动通知（会员同步） */
+    var onLocalChange: (() -> Unit)? = null
+    /** 序列化成 RN 同形的 JSON 对象（同步 blob） */
+    val json: org.json.JSONObject get() = try { org.json.JSONObject(VerseBookmarkRules.serialize(store)) } catch (_: Exception) { org.json.JSONObject() }
+    /** 云端书签落本机（RN replaceScriptureVerseBookmarkStore） */
+    fun replace(json: org.json.JSONObject) {
+        store = VerseBookmarkRules.parse(json.toString())
+        sp.edit().putString(VerseBookmarkRules.STORAGE_KEY, VerseBookmarkRules.serialize(store)).apply()
+    }
+    fun clearForAccountSwitch() { store = emptyMap(); sp.edit().remove(VerseBookmarkRules.STORAGE_KEY).apply() }
 
     fun isBookmarked(translationId: String, bookId: String, chapter: Int, verse: Int) =
         store.containsKey(VerseBookmarkRules.key(translationId, bookId, chapter, verse))
@@ -28,6 +38,7 @@ class VerseBookmarkStore(context: Context) {
         }
         store = next
         sp.edit().putString(VerseBookmarkRules.STORAGE_KEY, VerseBookmarkRules.serialize(next)).apply()
+        onLocalChange?.invoke()
         return added
     }
 }
@@ -61,11 +72,19 @@ class SearchPrefs(context: Context) {
     /** 不能叫 setScope：与 `var scope` 的 setter 在 JVM 上撞签名 */
     fun updateScope(next: ScriptureSearchScope) { scope = next; sp.edit().putString(SCOPE_KEY, next.raw).apply() }
 
+    var onLocalChange: (() -> Unit)? = null
     fun push(raw: String) {
         val next = RecentSearchRules.push(raw, recent)
         if (next == recent) return
         recent = next
-        val obj = org.json.JSONObject().put("version", 1).put("terms", org.json.JSONArray(next))
+        persistRecent()
+        onLocalChange?.invoke()
+    }
+    private fun persistRecent() {
+        val obj = org.json.JSONObject().put("version", 1).put("terms", org.json.JSONArray(recent))
         sp.edit().putString(RECENT_KEY, obj.toString()).apply()
     }
+    /** 云端最近搜索落本机（RN replaceScriptureRecentSearches） */
+    fun replaceRecent(terms: List<String>) { recent = RecentSearchRules.normalizeTerms(terms); persistRecent() }
+    fun clearRecentForAccountSwitch() { recent = emptyList(); sp.edit().remove(RECENT_KEY).apply() }
 }

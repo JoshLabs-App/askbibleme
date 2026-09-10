@@ -15,6 +15,8 @@ struct MemberSession: Codable, Equatable {
     var sessionToken: String
     var expiresAt: String
     var user: MemberUser
+    /// GoTrue refresh_token：access token 一小时过期，RN 没存所以一小时就被登出；原生存下来到期自动续（RN 读这份 JSON 会忽略这个键）
+    var refreshToken: String?
 }
 
 /// 纯规则（check:member-auth 对拍）：错误文案映射、显示名回退、会话解析、称呼校验
@@ -48,17 +50,31 @@ enum MemberAuthRules {
 
     /// RN readMemberSession：字段齐全且未过期才算有会话
     static func parseSession(_ data: Data, now: Date = Date()) -> MemberSession? {
+        guard let s = parseSession(data, now: now, allowExpired: false) else { return nil }
+        return s
+    }
+
+    /// allowExpired：过期但带 refresh_token 的会话也读出来（启动后先续期再校验）
+    static func parseSession(_ data: Data, now: Date = Date(), allowExpired: Bool) -> MemberSession? {
         guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let token = (obj["sessionToken"] as? String)?.trimmingCharacters(in: .whitespaces), !token.isEmpty,
               let expiresAt = obj["expiresAt"] as? String,
               let u = obj["user"] as? [String: Any],
               let id = u["id"] as? String, let email = u["email"] as? String else { return nil }
-        guard let exp = ISO8601DateFormatter.flexible(expiresAt), exp > now else { return nil }
+        let refresh = (obj["refreshToken"] as? String)?.trimmingCharacters(in: .whitespaces)
+        guard let exp = ISO8601DateFormatter.flexible(expiresAt) else { return nil }
+        if exp <= now, !(allowExpired && !(refresh?.isEmpty ?? true)) { return nil }
         let name = (u["name"] as? String) ?? email
         let created = (u["createdAt"] as? String)?.trimmingCharacters(in: .whitespaces)
         return MemberSession(sessionToken: token, expiresAt: expiresAt,
                              user: MemberUser(id: id, email: email, name: name, locale: u["locale"] as? String,
-                                              createdAt: (created?.isEmpty ?? true) ? nil : created))
+                                              createdAt: (created?.isEmpty ?? true) ? nil : created),
+                             refreshToken: (refresh?.isEmpty ?? true) ? nil : refresh)
+    }
+
+    /// 还有多久过期（秒；已过期为负）
+    static func secondsUntilExpiry(_ s: MemberSession, now: Date = Date()) -> Double {
+        (ISO8601DateFormatter.flexible(s.expiresAt) ?? now).timeIntervalSince(now)
     }
 
     /// RN normalizeExploreDisplayName / isValidExploreDisplayName
@@ -148,7 +164,21 @@ enum SupabaseAuthClient {
                                           locale: locale)
         let name = profile?.displayName ?? MemberAuthRules.displayName(email: email, id: id, metadata: meta, fallback: fallbackName)
         return MemberSession(sessionToken: token, expiresAt: expiresAt,
-                             user: MemberUser(id: id, email: email, name: name, locale: profile?.locale, createdAt: (created?.isEmpty ?? true) ? nil : created))
+                             user: MemberUser(id: id, email: email, name: name, locale: profile?.locale, createdAt: (created?.isEmpty ?? true) ? nil : created),
+                             refreshToken: (o["refresh_token"] as? String).flatMap { $0.isEmpty ? nil : $0 })
+    }
+
+    /// 用 refresh_token 换一对新 token（grant_type=refresh_token）；refresh_token 作废 → failed(code: refresh_failed)
+    static func refresh(refreshToken: String, locale: String?) async -> MemberAuthResult {
+        do {
+            let (status, json) = try await request("/auth/v1/token?grant_type=refresh_token", method: "POST", body: ["refresh_token": refreshToken], timeout: 30)
+            if status >= 200, status < 300, let o = json as? [String: Any], let s = await session(from: o, fallbackName: nil, locale: locale) { return .ok(s) }
+            let msg = errorMessage(json, status: status)
+            if MemberOAuthRules.isNetworkMessage(msg) { return .failed(error: "network", code: "network") }
+            return .failed(error: msg, code: "refresh_failed")
+        } catch {
+            return .failed(error: "network", code: "network")
+        }
     }
 
     static func signIn(email: String, password: String, locale: String?) async -> MemberAuthResult {
@@ -273,6 +303,49 @@ enum SupabaseAuthClient {
             return .failed(error: errorMessage(json, status: status), code: "google_failed")
         } catch {
             return .failed(error: "network", code: "network")
+        }
+    }
+
+    // MARK: 会员读经进度同步文档（RN memberReadingSyncApi：PostgREST member_reading_sync_documents，RLS 只看得到自己那行）
+
+    struct SyncDocument {
+        var revision: String
+        var updatedAt: String
+        var blobs: [String: Any]
+    }
+    enum SyncFetch {
+        case ok(SyncDocument?)
+        case unauthorized
+        case failed(String)
+        case network
+    }
+
+    /// 拉自己的同步文档；没有就 ok(nil)（RN readRemoteDocument + emptyOkResponse）
+    static func fetchSyncDocument(token: String, userId: String) async -> SyncFetch {
+        do {
+            let (status, json) = try await request("/rest/v1/member_reading_sync_documents?select=user_id,schema_version,revision,updated_at,blobs&user_id=eq.\(userId)",
+                                                   method: "GET", token: token, timeout: 30)
+            if status == 401 || status == 403 { return .unauthorized }
+            guard status == 200, let rows = json as? [[String: Any]] else { return .failed(errorMessage(json, status: status)) }
+            guard let row = rows.first else { return .ok(nil) }
+            return .ok(SyncDocument(revision: (row["revision"] as? String) ?? "0", updatedAt: (row["updated_at"] as? String) ?? "",
+                                    blobs: (row["blobs"] as? [String: Any]) ?? [:]))
+        } catch {
+            return .network
+        }
+    }
+
+    /// 写回合并后的文档（upsert on user_id；RN memberReadingSyncPushSupabase）
+    static func upsertSyncDocument(token: String, userId: String, revision: String, updatedAt: String, blobs: [String: Any]) async -> SyncFetch {
+        do {
+            let row: [String: Any] = ["user_id": userId, "schema_version": 1, "revision": revision, "updated_at": updatedAt, "blobs": blobs]
+            let (status, json) = try await request("/rest/v1/member_reading_sync_documents?on_conflict=user_id", method: "POST", token: token, body: row,
+                                                   extraHeaders: ["Prefer": "resolution=merge-duplicates,return=minimal"], timeout: 30)
+            if status == 401 || status == 403 { return .unauthorized }
+            guard status >= 200, status < 300 else { return .failed(errorMessage(json, status: status)) }
+            return .ok(SyncDocument(revision: revision, updatedAt: updatedAt, blobs: blobs))
+        } catch {
+            return .network
         }
     }
 

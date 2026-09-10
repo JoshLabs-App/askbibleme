@@ -66,6 +66,8 @@ final class ChapterAudioPlayer: ObservableObject {
 
     /// 用户点过播放：开章时预载会短暂 loading，没点播放前不该转圈（RN 开章不转）
     @Published private(set) var wantsPlayback = false
+    /// 播放位置回调（累计听读时长：RN useFollowNativeProgress → noteScriptureListenProgress）
+    var onProgress: ((Double, Bool) -> Void)?
     private let timingDB = VerseTimingDatabase()
     private var timings: [VerseTiming] = []
 
@@ -189,6 +191,7 @@ final class ChapterAudioPlayer: ObservableObject {
                 guard let self else { return }
                 let t = time.seconds.isFinite ? time.seconds : 0
                 self.currentTime = t
+                self.onProgress?(t, self.isPlaying)
                 let next = VerseTimingLookup.activeVerse(at: t, in: self.timings)
                 if next != self.activeVerse { self.activeVerse = next }
                 if self.duration == 0, let d = self.player?.currentItem?.duration.seconds,

@@ -78,6 +78,8 @@ fun PlanPlayScreen(
     onConfirmDay: () -> Unit,
     onStageSet: () -> Unit,
     theme: Parchment = Parchment.light,
+    /** 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates） */
+    habitDates: Set<String> = emptySet(),
 ) {
     val prefs = store.prefs
     val committedAhead = prefs.ahead
@@ -133,7 +135,7 @@ fun PlanPlayScreen(
                 }
             } else {
                 item {
-                    PlanMonthCalendar(locale, prefs, dayCount, viewAhead, store.listenedDates, theme) { a -> onViewAhead(a); onCursor(0) }
+                    PlanMonthCalendar(locale, prefs, dayCount, viewAhead, store.listenedDates + habitDates, theme) { a -> onViewAhead(a); onCursor(0) }
                     if (needsConfirm) {
                         Box(
                             Modifier.fillMaxWidth().padding(top = 12.dp).height(46.dp).clip(RoundedCornerShape(12.dp)).background(ink)

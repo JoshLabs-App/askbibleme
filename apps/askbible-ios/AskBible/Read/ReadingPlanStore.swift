@@ -37,6 +37,10 @@ final class ReadingPlanStore: ObservableObject {
 
     private let defaults = UserDefaults.standard
     private var bundles: [String: [[PlanReading]]] = [:]
+    /// 本机改动通知（会员同步用；应用云端数据期间由 suppressChangeNotify 压住，RN isApplyingRemoteMemberSync）
+    var onLocalChange: ((String) -> Void)?
+    var suppressChangeNotify = false
+    private func changed(_ key: String) { if !suppressChangeNotify { onLocalChange?(key) } }
 
     init() {
         let stored = defaults.data(forKey: Self.prefsKey).flatMap(ReadingPlanPrefs.parse)
@@ -70,17 +74,59 @@ final class ReadingPlanStore: ObservableObject {
     private func persistTriple(_ s: TripleLoopState) {
         if let d = try? JSONEncoder().encode(s) { defaults.set(d, forKey: Self.tripleKey) }
         triple = s; hasUserTriple = true
+        changed("tripleLoopProgress")
     }
 
     private func persistNt(_ s: NtDeepRepeatState) {
         if let d = try? JSONEncoder().encode(s) { defaults.set(d, forKey: Self.ntKey) }
         nt = s; hasUserNt = true
+        changed("ntDeepRepeatProgress")
     }
 
     private func writePrefs(_ p: ReadingPlanPrefs?) {
         if let p, let d = try? JSONEncoder().encode(p) { defaults.set(d, forKey: Self.prefsKey) } else { defaults.removeObject(forKey: Self.prefsKey) }
         storedPrefs = p
         prefs = p ?? .defaultPrefs()
+        reloadProgress()
+        changed("readingPlanPrefs")
+    }
+
+    // MARK: 会员同步：导出 / 应用（RN readingSyncLocalExport / readingSyncLocalApply）
+
+    /// 存过的偏好（JSON，RN 同形）；隐式默认返回 nil
+    var storedPrefsJSON: [String: Any]? {
+        guard let p = storedPrefs, let d = try? JSONEncoder().encode(p) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: d)) as? [String: Any]
+    }
+    /// 用户动过的三循环 / 深读进度（没动过 = 没存过 → nil，RN hasUserTripleLoopProgress）
+    var tripleJSON: [String: Any]? { hasUserTriple ? MemberReadingSyncRules.tripleJson(triple) : nil }
+    var ntJSON: [String: Any]? { hasUserNt ? MemberReadingSyncRules.ntJson(nt) : nil }
+    var completedSorted: [String] { completed.sorted(by: MemberReadingSyncRules.jsSort) }
+
+    /// 云端计划偏好落本机（已按 mergeReadingPlanPrefsValue 合并过）
+    func applyRemotePrefs(_ json: [String: Any]?) {
+        guard let json else { writePrefs(nil); return }
+        guard let data = try? JSONSerialization.data(withJSONObject: json), let p = ReadingPlanPrefs.parse(data) else { return }
+        writePrefs(p)
+    }
+    func applyRemoteTriple(_ json: [String: Any]) {
+        guard let s = MemberReadingSyncRules.tripleState(from: json) else { return }
+        persistTriple(TripleLoop.normalize(s)); reloadProgress()
+    }
+    func applyRemoteNt(_ json: [String: Any]) {
+        guard let s = MemberReadingSyncRules.ntState(from: json) else { return }
+        persistNt(NtDeepRepeat.normalize(s)); reloadProgress()
+    }
+    /// RN replaceReadChapterCompletionRecord：整份替换
+    func applyRemoteCompleted(_ keys: [String]) {
+        completed = Set(keys.filter { !$0.isEmpty })
+        if let d = try? JSONEncoder().encode(Array(completed).sorted()) { defaults.set(d, forKey: Self.completionKey) }
+    }
+    /// 换帐号 / 退出：清空计划相关本机数据（RN clearLocalMemberReadingSyncBlobs 的计划部分）
+    func clearForAccountSwitch() {
+        for k in [Self.prefsKey, Self.tripleKey, Self.ntKey, Self.completionKey, Self.listenedKey] { defaults.removeObject(forKey: k) }
+        completed = []; listenedDates = []
+        storedPrefs = nil; prefs = .defaultPrefs()
         reloadProgress()
     }
 
@@ -181,6 +227,7 @@ final class ReadingPlanStore: ObservableObject {
         // RN 习惯统计 completedDates：读完 / 听完一章的日子也算「读过」，月历标黄
         markListened(PlanDates.localDateString())
         if let d = try? JSONEncoder().encode(Array(completed).sorted()) { defaults.set(d, forKey: Self.completionKey) }
+        changed("chapterCompletion")
         if prefs.isTripleLoop { persistTriple(TripleLoop.addChapterRead(triple, bookId: bookId, chapter: chapter)) }
         if prefs.isNtDeepRepeat { persistNt(NtDeepRepeat.addChapterRead(nt, bookId: bookId, chapter: chapter)) }
     }
@@ -200,6 +247,7 @@ final class ReadingPlanStore: ObservableObject {
         guard PlanDates.parseLocalDate(iso) != nil, !listenedDates.contains(iso) else { return }
         listenedDates.insert(iso)
         if let d = try? JSONEncoder().encode(ListenedRecord(version: 1, dates: listenedDates.sorted())) { defaults.set(d, forKey: Self.listenedKey) }
+        changed("habitStats")
     }
 
     /// 浏览「相对系统今天偏移 ahead 天」那一天该读什么（不写 prefs）。

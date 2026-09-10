@@ -48,7 +48,10 @@ import me.askbible.native_.ui.PlanDetailScreen
 import me.askbible.native_.ui.PlanPlayScreen
 import me.askbible.native_.ui.RegisterScreen
 import me.askbible.native_.ui.LoginScreen
+import kotlinx.coroutines.launch
 import me.askbible.native_.data.MemberAuthStore
+import me.askbible.native_.data.MemberReadingSyncEngine
+import me.askbible.native_.data.ReadingActivityStore
 import me.askbible.native_.data.OAuthCallbackBus
 import java.time.LocalDate
 import androidx.compose.runtime.mutableIntStateOf
@@ -147,7 +150,6 @@ private fun RootScreen() {
     // 会员登录（Supabase 直连；RN MemberAuthProvider）；登录 / 注册页盖在整个壳上（RN 是 stack 路由，无底栏）
     val auth = remember { MemberAuthStore(context) }
     var authRoute by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(Unit) { auth.verifyRemote() }
     // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
     val oauthCallback = OAuthCallbackBus.url
     LaunchedEffect(oauthCallback) {
@@ -194,11 +196,45 @@ private fun RootScreen() {
     var planFlowActive by remember { mutableStateOf(false) }
     var autoPlayPending by remember { mutableStateOf(false) }
     val plans = remember { ReadingPlanStore(context) }
+    // 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步（RN AppUsageTimeBridge / useMemberReadingSync）
+    val activity = remember { ReadingActivityStore(context) }
+    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs) } }
+    LaunchedEffect(Unit) {
+        syncEngine.localeTag = { appLocale.tag }
+        activity.noteForeground(); activity.touchHabitDay()
+        activity.mergeRemoteHabit(plans.listenedDates)
+        auth.verifyRemote()
+        syncEngine.flushNow("foreground")
+    }
+    // 刚登录：立即拉云端进度（RN syncMemberReadingAfterLogin）
+    LaunchedEffect(auth.user?.id) { if (auth.user != null) syncEngine.flushNow("login") }
+    LaunchedEffect(plans.listenedDates) { activity.mergeRemoteHabit(plans.listenedDates) }
+    // 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步
+    LaunchedEffect(Unit) {
+        var ticks = 0
+        while (true) {
+            kotlinx.coroutines.delay(15_000)
+            activity.flushUsageTick(); activity.touchHabitDay()
+            ticks += 1
+            if (ticks % 3 == 0) syncEngine.schedule("poll")
+        }
+    }
+    DisposableEffect(lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { activity.noteForeground(); activity.touchHabitDay(); syncEngine.flushInBackground("foreground") }
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> activity.noteBackground()
+                else -> {}
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     val naturePrefs = remember { NatureHomePrefs(context) }
     // 睡眠定时四路（读经 / 音乐 / 金句 / 环境音）同一份分钟数；0 = 未设
     var sleepTimerMinutes by remember { mutableIntStateOf(0) }
 
-    val audio = remember { ChapterAudioPlayer(context, scope) }
+    val audio = remember { ChapterAudioPlayer(context, scope).also { p -> p.onProgress = { t, playing -> activity.noteListenProgress(t, playing) } } }
     fun openPlanChapter(p: PlanPointer, autoPlay: Boolean) {
         val b = BibleCatalog.book(p.bookId) ?: return
         focusVerse = null
@@ -410,6 +446,7 @@ private fun RootScreen() {
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
+                activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
                 onOpenChapter = { id, ch ->
                     // 文章里的经文链接：切到读经 Tab 直接开章
                     BibleCatalog.book(id)?.let { b ->
@@ -435,12 +472,12 @@ private fun RootScreen() {
                     onBack = { planRoute = "plans" }, onOpenPlan = { planDetailId = it },
                     onOpenChapter = { chapterFromPlan = true; planFlowListen = false; planFlowActive = false; listenBook = null; openPlanChapter(it, false); tab = ShellTab.READ },
                     onGoHome = { planRoute = "play" })
-                else -> PlanPlayScreen(plans, audio, displayLocale, planPageQueue, planActiveIndex, planActivePlaying,
+                else -> PlanPlayScreen(plans, audio, appLocale, planPageQueue, planActiveIndex, planActivePlaying,
                     viewAhead = planViewAhead, onViewAhead = { planViewAhead = it }, cursor = planCursor, onCursor = { planCursor = it },
                     onPlayChapter = { planPlay(it) }, onReadChapter = { planRead(it) },
                     onOpenPlans = { planRoute = "plans" },
                     onConfirmDay = { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
-                    onStageSet = { planViewAhead = 0; planCursor = 0 })
+                    onStageSet = { planViewAhead = 0; planCursor = 0 }, habitDates = activity.completedDateSet)
             }
             ShellTab.READ -> if (showSearch) SearchScreen(
                 locale = displayLocale,
@@ -473,6 +510,8 @@ private fun RootScreen() {
                 onOpenFavorites = { showFavorites = true },
             )
             else {
+                // RN writeLastReadPosition + pushReadRecentChapter：最后位置 + 探索页「最近阅读」
+                LaunchedEffect(book.id, chapter) { activity.recordOpened(book.id, chapter, book.name(displayLocale)) }
                 ChapterScreen(
                     locale = displayLocale,
                     bookId = book.id,

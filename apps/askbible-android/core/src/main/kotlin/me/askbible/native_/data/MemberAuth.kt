@@ -17,11 +17,13 @@ import java.time.format.DateTimeFormatter
  */
 data class MemberUser(val id: String, val email: String, val name: String, val locale: String? = null, val createdAt: String? = null)
 
-data class MemberSession(val sessionToken: String, val expiresAt: String, val user: MemberUser) {
+/** refreshToken：GoTrue refresh_token，access token 一小时过期，RN 没存所以一小时就被登出；原生存下来到期自动续（RN 读这份 JSON 会忽略这个键） */
+data class MemberSession(val sessionToken: String, val expiresAt: String, val user: MemberUser, val refreshToken: String? = null) {
     fun toJson(): String = JSONObject()
         .put("sessionToken", sessionToken).put("expiresAt", expiresAt)
         .put("user", JSONObject().put("id", user.id).put("email", user.email).put("name", user.name)
             .put("locale", user.locale ?: JSONObject.NULL).put("createdAt", user.createdAt ?: JSONObject.NULL))
+        .also { o -> refreshToken?.let { o.put("refreshToken", it) } }
         .toString()
 }
 
@@ -51,20 +53,27 @@ object MemberAuthRules {
     }
 
     /** RN readMemberSession：字段齐全且未过期才算有会话 */
-    fun parseSession(raw: String, nowMs: Long = System.currentTimeMillis()): MemberSession? {
+    fun parseSession(raw: String, nowMs: Long = System.currentTimeMillis()): MemberSession? = parseSession(raw, nowMs, allowExpired = false)
+
+    /** allowExpired：过期但带 refresh_token 的会话也读出来（启动后先续期再校验） */
+    fun parseSession(raw: String, nowMs: Long, allowExpired: Boolean): MemberSession? {
         val o = try { JSONObject(raw) } catch (_: Exception) { return null }
         val token = o.optString("sessionToken").trim()
         val expiresAt = o.optString("expiresAt")
         val u = o.optJSONObject("user") ?: return null
         val id = u.optString("id"); val email = u.optString("email")
         if (token.isEmpty() || expiresAt.isEmpty() || id.isEmpty() || !u.has("email")) return null
+        val refresh = (o.opt("refreshToken") as? String)?.trim()?.ifEmpty { null }
         val exp = parseIso(expiresAt) ?: return null
-        if (exp <= nowMs) return null
+        if (exp <= nowMs && !(allowExpired && refresh != null)) return null
         val name = if (u.has("name") && !u.isNull("name")) u.getString("name") else email
         val created = if (u.isNull("createdAt")) null else u.optString("createdAt").trim().ifEmpty { null }
         val locale = if (u.isNull("locale")) null else u.optString("locale")
-        return MemberSession(token, expiresAt, MemberUser(id, email, name, locale, created))
+        return MemberSession(token, expiresAt, MemberUser(id, email, name, locale, created), refresh)
     }
+
+    /** 还有多少秒过期（已过期为负） */
+    fun secondsUntilExpiry(s: MemberSession, nowMs: Long = System.currentTimeMillis()): Double = ((parseIso(s.expiresAt) ?: nowMs) - nowMs) / 1000.0
 
     /** JS Date.toISOString() 带毫秒；有的接口不带 */
     fun parseIso(s: String): Long? = try { OffsetDateTime.parse(s).toInstant().toEpochMilli() } catch (_: Exception) { null }
@@ -149,8 +158,20 @@ object SupabaseAuthClient {
         val created = u.optString("created_at").trim().ifEmpty { null }
         val fallback = MemberAuthRules.displayName(email, id, metadata(u), fallbackName)
         val profile = ensureProfile(token, id, fallback, locale)
-        return MemberSession(token, expiresAt, MemberUser(id, email, profile?.displayName ?: fallback, profile?.locale, created))
+        return MemberSession(token, expiresAt, MemberUser(id, email, profile?.displayName ?: fallback, profile?.locale, created),
+                             o.optString("refresh_token").ifEmpty { null })
     }
+
+    /** 用 refresh_token 换一对新 token（grant_type=refresh_token）；refresh_token 作废 → Failed(code = refresh_failed) */
+    fun refresh(refreshToken: String, locale: String?): MemberAuthResult = try {
+        val r = request("/auth/v1/token?grant_type=refresh_token", "POST", body = JSONObject().put("refresh_token", refreshToken), timeoutMs = 30_000)
+        val o = json(r.body)
+        val s = if (r.status in 200..299 && o != null) session(o, null, locale) else null
+        if (s != null) MemberAuthResult.Ok(s) else {
+            val msg = errorMessage(o, r.status)
+            if (MemberOAuthRules.isNetworkMessage(msg)) MemberAuthResult.Failed("network", "network") else MemberAuthResult.Failed(msg, "refresh_failed")
+        }
+    } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
 
     fun signIn(email: String, password: String, locale: String?): MemberAuthResult = try {
         val r = request("/auth/v1/token?grant_type=password", "POST", body = JSONObject().put("email", email.trim()).put("password", password))
@@ -251,6 +272,44 @@ object SupabaseAuthClient {
         val s = if (r.status == 200 && u != null) session(JSONObject().put("access_token", accessToken).put("user", u), null, locale) else null
         if (s != null) MemberAuthResult.Ok(s) else MemberAuthResult.Failed(errorMessage(u, r.status), "google_failed")
     } catch (_: Exception) { MemberAuthResult.Failed("network", "network") }
+
+    // ---- 会员读经进度同步文档（RN memberReadingSyncApi：PostgREST member_reading_sync_documents，RLS 只看得到自己那行） ----
+
+    data class SyncDocument(val revision: String, val updatedAt: String, val blobs: JSONObject)
+    sealed class SyncFetch {
+        data class Ok(val doc: SyncDocument?) : SyncFetch()
+        object Unauthorized : SyncFetch()
+        data class Failed(val message: String) : SyncFetch()
+        object Network : SyncFetch()
+    }
+
+    /** 拉自己的同步文档；没有就 Ok(null)（RN readRemoteDocument + emptyOkResponse） */
+    fun fetchSyncDocument(token: String, userId: String): SyncFetch = try {
+        val r = request("/rest/v1/member_reading_sync_documents?select=user_id,schema_version,revision,updated_at,blobs&user_id=eq.$userId", "GET", token, timeoutMs = 30_000)
+        when {
+            r.status == 401 || r.status == 403 -> SyncFetch.Unauthorized
+            r.status != 200 -> SyncFetch.Failed(errorMessage(json(r.body), r.status))
+            else -> {
+                val rows = try { JSONArray(r.body) } catch (_: Exception) { JSONArray() }
+                if (rows.length() == 0) SyncFetch.Ok(null) else {
+                    val row = rows.getJSONObject(0)
+                    SyncFetch.Ok(SyncDocument(row.optString("revision", "0"), row.optString("updated_at", ""), row.optJSONObject("blobs") ?: JSONObject()))
+                }
+            }
+        }
+    } catch (_: Exception) { SyncFetch.Network }
+
+    /** 写回合并后的文档（upsert on user_id；RN memberReadingSyncPushSupabase） */
+    fun upsertSyncDocument(token: String, userId: String, revision: String, updatedAt: String, blobs: JSONObject): SyncFetch = try {
+        val row = JSONObject().put("user_id", userId).put("schema_version", 1).put("revision", revision).put("updated_at", updatedAt).put("blobs", blobs)
+        val r = request("/rest/v1/member_reading_sync_documents?on_conflict=user_id", "POST", token, row,
+                        mapOf("Prefer" to "resolution=merge-duplicates,return=minimal"), timeoutMs = 30_000)
+        when {
+            r.status == 401 || r.status == 403 -> SyncFetch.Unauthorized
+            r.status !in 200..299 -> SyncFetch.Failed(errorMessage(json(r.body), r.status))
+            else -> SyncFetch.Ok(SyncDocument(revision, updatedAt, blobs))
+        }
+    } catch (_: Exception) { SyncFetch.Network }
 
     fun signOut(token: String) { try { request("/auth/v1/logout", "POST", token) } catch (_: Exception) {} }
 }

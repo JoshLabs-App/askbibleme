@@ -7,8 +7,12 @@ struct ExploreView: View {
     @Binding var article: ExploreArticle?
     /// 会员状态：抬头「请登录，解锁更多」→ 登录页；登录后「你好，名字」→ 改称呼
     @ObservedObject var auth: MemberAuthStore
+    /// 读经活动：今年已过 / 读经天 / 连续天 / 使用时长 / 累计听 / 最近阅读（RN ExploreReadingHabitStats）
+    @ObservedObject var activity: ReadingActivityStore
     var locale: AppLocale = .zhCN
     var onOpenLogin: () -> Void = {}
+    /// 退出登录（先把本机进度推上云端再清本机，由壳接线）
+    var onSignOut: () -> Void = {}
     var size: ReadSize = .default
     /// 文章里的经文链接 → 读经 Tab 打开那一章
     var onOpenChapter: (_ bookId: String, _ chapter: Int) -> Void = { _, _ in }
@@ -17,7 +21,6 @@ struct ExploreView: View {
     @State private var nameEditorOpen = false
     @State private var nameDraft = ""
 
-    private let recent = ["创世记 1章", "创世记 3章", "创世记 2章"]
 
     var body: some View {
         if let a = article {
@@ -54,7 +57,7 @@ struct ExploreView: View {
                         .padding(.top, safeTop + 37)
                         if auth.user != nil {
                             // RN 的「退出登录」在侧边抽屉里；原生版还没有抽屉，先放在抬头下面
-                            Button { auth.signOut() } label: {
+                            Button { onSignOut() } label: {
                                 Text(locale.zh("退出登录")).font(.system(size: 13)).underline().foregroundStyle(theme.faint)
                             }
                             .buttonStyle(.plain).padding(.top, 8)
@@ -64,11 +67,11 @@ struct ExploreView: View {
 
                         statsRow.padding(.top, 22)
 
-                        Text("使用时长 8 小时 25 分钟")
+                        Text(usageLine)
                             .font(.system(size: 17))
                             .foregroundStyle(theme.muted)
                             .padding(.top, 18)
-                        Text("累计听 46 分钟")
+                        Text(listenLine)
                             .font(.system(size: 17))
                             .foregroundStyle(theme.muted)
                             .padding(.top, 6)
@@ -79,17 +82,25 @@ struct ExploreView: View {
                             .padding(.top, 20)
 
                         VStack(spacing: 0) {
-                            ForEach(recent, id: \.self) { item in
-                                HStack {
-                                    Text(item)
-                                        .font(.system(size: 18))
-                                        .foregroundStyle(theme.ink)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundStyle(theme.muted.opacity(0.5))
+                            ForEach(activity.recent) { item in
+                                Button { onOpenChapter(item.bookId, item.chapter) } label: {
+                                    HStack {
+                                        Text(recentLabel(item))
+                                            .font(.system(size: 18))
+                                            .foregroundStyle(theme.ink)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(theme.muted.opacity(0.5))
+                                    }
+                                    .frame(height: 38)
                                 }
-                                .frame(height: 38)
+                                .buttonStyle(.plain)
+                            }
+                            if activity.recent.isEmpty {
+                                Text(locale.zh("还没有阅读记录"))
+                                    .font(.system(size: 15)).foregroundStyle(theme.faint)
+                                    .frame(maxWidth: .infinity).frame(height: 38)
                             }
                         }
                         .padding(.horizontal, 26)
@@ -146,21 +157,52 @@ struct ExploreView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// 原生界面文案目前只有中文（locale.zh 只管简繁），统计行也跟着走，别混进英文（Josh 2026-09-09：中英文混一起）
+    private var isEn: Bool { false }
+    private var usageLine: String {
+        "\(isEn ? "Time in app" : locale.zh("使用时长"))  \(MemberReadingSyncRules.formatUsageDuration(totalSec: Int(activity.usageTotalSec), en: isEn))"
+    }
+    private var listenLine: String {
+        let d = MemberReadingSyncRules.formatListenDuration(totalSec: Int(activity.listenTotalSec), en: isEn)
+        return isEn ? "Listened \(d)" : locale.zh("累计听 ") + d
+    }
+    private func recentLabel(_ item: ReadingActivityStore.RecentChapter) -> String {
+        isEn ? "\(item.bookName) \(item.chapter)" : "\(locale.zh(item.bookName)) \(item.chapter)\(locale.zh("章"))"
+    }
+
+    /// RN ReadYearDayTimeline：淡底轨 + 实色已读区段 + 今日橙点
     private var progressLine: some View {
-        ZStack {
-            Capsule().fill(theme.border.opacity(0.8)).frame(height: 3)
-            Circle().fill(theme.parchmentAccent).frame(width: 11, height: 11)
+        let tl = MemberReadingSyncRules.yearTimeline()
+        let c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        let ranges = MemberReadingSyncRules.yearReadRanges(activity.completedDates, year: c.year!, month: c.month!, day: c.day!)
+        return GeometryReader { g in
+            let w = g.size.width
+            let minW = 2 / Double(max(tl.daysInYear, 1))
+            ZStack(alignment: .leading) {
+                Capsule().fill(theme.border.opacity(0.8)).frame(height: 3).frame(maxHeight: .infinity)
+                ForEach(Array(ranges.enumerated()), id: \.offset) { _, r in
+                    let fr = MemberReadingSyncRules.rangeToTrackFraction(start: r.start, end: r.end, daysInYear: tl.daysInYear)
+                    let drawW = max(fr.width, minW)
+                    let drawLeft = min(fr.left, max(0, 1 - drawW))
+                    Capsule().fill(Color(rgb: 0xE8A017)).frame(width: w * drawW, height: 5)
+                        .frame(maxHeight: .infinity).offset(x: w * drawLeft)
+                }
+                Circle().fill(theme.parchmentAccent).frame(width: 11, height: 11)
+                    .frame(maxHeight: .infinity).offset(x: w * tl.progress - 5.5)
+            }
         }
+        .frame(height: 22)
         .padding(.horizontal, 52)
     }
 
     private var statsRow: some View {
-        HStack(spacing: 0) {
-            stat("251", "今年已过", theme.parchmentAccent)
+        let tl = MemberReadingSyncRules.yearTimeline()
+        return HStack(spacing: 0) {
+            stat(String(tl.dayOfYear), "今年已过", theme.parchmentAccent)
             divider
-            stat("2", "读经天", Color(rgb: 0x4F7A54))
+            stat(String(activity.readDays), "读经天", Color(rgb: 0x4F7A54))
             divider
-            stat("1", "连续天", Color(rgb: 0x4F7A54))
+            stat(String(activity.streakDays), "连续天", Color(rgb: 0x4F7A54))
         }
         .padding(.horizontal, 24)
     }

@@ -22,6 +22,13 @@ struct RootView: View {
     @StateObject private var naturePrefs = NatureHomePrefs()
     /// 会员登录（Supabase 直连；RN MemberAuthProvider）
     @StateObject private var auth = MemberAuthStore()
+    /// 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步
+    @StateObject private var activity = ReadingActivityStore()
+    @StateObject private var sync = MemberReadingSyncEngine()
+    @Environment(\.scenePhase) private var scenePhase
+    /// 15 秒一跳：使用时长打点 + 记当天为读经日；每三跳（45 秒）轮询一次同步（RN AppUsageTimeBridge / useMemberReadingSync）
+    private let usageTicker = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
+    @State private var usageTicks = 0
     /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
     @State private var appLocale = AppLocale.device
     /// 计划 Tab（底栏中央键）里的子页：播放页 / 计划目录 / 计划详情
@@ -266,8 +273,35 @@ struct RootView: View {
             }
             // 整章朗读时环境音压半音量继续放，停了恢复
             .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing) }
-            .task { await auth.verifyRemote() }
+            .task {
+                await auth.verifyRemote()
+                await sync.flushNow(reason: "foreground")
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    activity.noteForeground(); activity.touchHabitDay()
+                    Task { await sync.flushNow(reason: "foreground") }
+                } else {
+                    activity.noteBackground()
+                }
+            }
+            .onChange(of: auth.user?.id) { old, new in
+                // 刚登录：立即拉云端进度（RN syncMemberReadingAfterLogin）
+                if old == nil, new != nil { Task { await sync.flushNow(reason: "login") } }
+            }
+            .onChange(of: plans.listenedDates) { _, dates in activity.mergeRemoteHabit(Array(dates)) }
+            .onReceive(usageTicker) { _ in
+                guard scenePhase == .active else { return }
+                activity.flushUsageTick(); activity.touchHabitDay()
+                usageTicks += 1
+                if usageTicks % 3 == 0 { sync.schedule(reason: "poll") }
+            }
             .onAppear {
+                sync.attach(auth: auth, plans: plans, bookmarks: bookmarks, activity: activity, search: searchPrefs)
+                sync.localeTag = { [appLocale] in appLocale.rawValue }
+                activity.noteForeground(); activity.touchHabitDay()
+                activity.mergeRemoteHabit(Array(plans.listenedDates))
+                audio.onProgress = { [weak activity] t, playing in activity?.noteListenProgress(positionSec: t, isPlaying: playing) }
                 audio.onSkipNext = skipToNextChapter
                 audio.onFinished = { if planFlowActive { skipToNextChapter() } }
                 // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
@@ -490,6 +524,10 @@ struct RootView: View {
                         openedChapter = (b, ch)
                     }
                 )
+                .onChange(of: "\(opened.book.id):\(opened.chapter)", initial: true) { _, _ in
+                    // RN writeLastReadPosition + pushReadRecentChapter：最后位置 + 探索页「最近阅读」
+                    activity.recordOpened(bookId: opened.book.id, chapter: opened.chapter, bookName: opened.book.name(displayLocale))
+                }
             } else {
                 CatalogView(
                     size: $readSize,
@@ -517,11 +555,11 @@ struct RootView: View {
             } else {
                 switch planRoute {
                 case .play:
-                    PlanPlayView(store: plans, audio: audio, locale: displayLocale, queue: planPageQueue,
+                    PlanPlayView(store: plans, audio: audio, locale: appLocale, queue: planPageQueue,
                                  activeIndex: planActiveIndex, activePlaying: planActivePlaying,
                                  viewAhead: $planViewAhead, cursor: $planCursor,
                                  onPlayChapter: { planPlay(at: $0) }, onReadChapter: { planRead(at: $0) },
-                                 onOpenPlans: { planRoute = .plans },
+                                 onOpenPlans: { planRoute = .plans }, habitDates: activity.completedDateSet,
                                  onConfirmDay: { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
                                  onStageSet: { planViewAhead = 0; planCursor = 0 })
                 case .plans:
@@ -540,7 +578,8 @@ struct RootView: View {
                 }
             }
         case .explore:
-            ExploreView(article: $exploreArticle, auth: auth, locale: appLocale, onOpenLogin: { authRoute = .login },
+            ExploreView(article: $exploreArticle, auth: auth, activity: activity, locale: appLocale, onOpenLogin: { authRoute = .login },
+                        onSignOut: { Task { await sync.prepareSignOut(); auth.signOut() } },
                         size: readSize, onOpenChapter: { id, ch in
                 // 文章里的经文链接：切到读经 Tab 直接开章
                 guard let b = BibleCatalog.book(id: id) else { return }

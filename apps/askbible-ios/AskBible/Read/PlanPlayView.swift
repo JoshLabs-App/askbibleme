@@ -19,6 +19,8 @@ struct PlanPlayView: View {
     var onPlayChapter: (Int) -> Void
     var onReadChapter: (Int) -> Void
     var onOpenPlans: () -> Void
+    /// 习惯统计里的已读日（云端同步下来的也在）；月历标黄 = 它 ∪ 播放页点听日（RN habitCompletedDates）
+    var habitDates: Set<String> = []
     var onConfirmDay: () -> Void
     /// 深读某阶设为今日后：回到今天、游标归零
     var onStageSet: () -> Void
@@ -49,7 +51,7 @@ struct PlanPlayView: View {
                             .frame(maxWidth: .infinity).padding(.top, 48)
                     } else {
                         PlanMonthCalendar(locale: locale, prefs: prefs, dayCount: dayCount, viewAhead: viewAhead,
-                                          listened: store.listenedDates, onSelectAhead: { a in viewAhead = a; cursor = 0 })
+                                          listened: store.listenedDates.union(habitDates), onSelectAhead: { a in viewAhead = a; cursor = 0 })
                             .padding(.top, 8)
                         if needsConfirm {
                             Button {

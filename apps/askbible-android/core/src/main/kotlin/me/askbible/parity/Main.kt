@@ -22,6 +22,7 @@ fun main(args: Array<String>) {
         "--locale" -> return localeMain()
         "--musicvis" -> return musicVisualsMain()
         "--memberauth" -> return memberAuthMain()
+        "--membersync" -> return memberSyncMain()
     }
     val input = generateSequence(::readLine).joinToString("\n")
     val cases = parseCases(input)

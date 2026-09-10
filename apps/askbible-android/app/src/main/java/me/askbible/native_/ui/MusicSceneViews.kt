@@ -116,8 +116,10 @@ private fun DrawScope.drawFishSwarm(fish: ImageBitmap?, tMs: Double, d: Float) {
     fish ?: return
     val cx = size.width * 0.5f; val cy = size.height * MusicVisuals.FOCUS_CENTER_Y_RATIO.toFloat()
     val tint = ColorFilter.tint(Color.White.copy(alpha = 0.95f))
-    // RN fishSprite：40×14 dp，left -20 / top -7（以轨道点为中心）
-    val spriteW = (40 * d).roundToInt(); val spriteH = (14 * d).roundToInt()
+    // RN fishSprite：40×14 dp 的框，resizeMode="contain"——fish-shape.png 是 300×54，按宽 40 等比缩成 40×7.2 居中，
+    // 不能拉满 14 高（拉满就成了胖鱼，Josh 2026-09-09：「没有用我之前画的那个小鱼」）
+    val k = minOf(40f * d / fish.width, 14f * d / fish.height)
+    val spriteW = (fish.width * k).roundToInt(); val spriteH = (fish.height * k).roundToInt()
     for (seed in MusicVisuals.FISH_SEEDS) {
         val f = MusicVisuals.fishFrame(seed, tMs)
         translate(cx + f.x.toFloat() * d, cy + f.y.toFloat() * d) {

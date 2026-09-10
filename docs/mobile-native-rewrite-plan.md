@@ -738,6 +738,45 @@ Josh：「安装到连接的苹果手机上，然后图标也要是更新」。
   原生请求超时 15 秒直接当断网。`request()` 加 timeout 参数，id_token / pkce 两个换会话请求放宽到 90 秒（RN 的 fetch 本来就没超时）。Kotlin 同改。
 - 登录 / 注册页「返回」顶进状态栏：AuthPage 的 GeometryReader 上多挂了一个 `.ignoresSafeArea()`，把 safeAreaInsets 清零了。改成 PlansListView 同款：只让羊皮卷底铺满，内容按 safeAreaInsets.top 让开。
 
+### 会员读经进度同步 + 探索页真实统计（2026-09-10）
+
+Josh 安卓登录后：「之前的读经日期记录信息没有出来，读经计划有标的读经日现在都是空白的，读经天 / 连续天数字不对，没有同步」。
+两个原因：原生没接 RN 的 member-sync；探索页那几个数字（251 / 2 / 1 / 使用时长 8 小时 25 分钟 / 累计听 46 分钟 / 最近阅读三行）全是占位写死的。
+
+- **纯规则** `Model/MemberReadingSync.swift` / core `MemberReadingSync.kt`（`MemberReadingSyncRules`），照抄 RN src/member-sync：23 个 blob 键；
+  逐键三方合并（书签按 savedAt、高亮按节号并、已读章 / 习惯日 / 今日完成取并集、比例取大、听读秒取大、最近搜索去重取 8、计划偏好走
+  lib/read/reading-plan-prefs-merge、三循环 / 深读指针取最远 + 已读章并集）；`mergeBlobPair` 按 updatedAt 裁决；归属判定
+  `decidePath`（replace / pull-only-reinstall / pull-only-empty / guest-push / continue）；`blobsHaveProgress`；`shouldSyncReadingPlanPrefs`；
+  appLocale 侧车；连读 `computeReadingStreak`；全年轴 `yearTimeline` / `yearReadRanges`；使用时长 / 累计听文案。
+  `check:member-sync` 155 条三端一致（TS 侧直接 import RN 的 ownerPolicy / sidecar / schema 与 lib 的合并、normalize、年轴；
+  拖着 AsyncStorage 的照抄）。TS 固定 `TZ=UTC` 跑：RN year-day-timeline 用毫秒差算「第几天」，夏令时月份会少算一天（RN 的坑），原生用日历天不受影响。
+  Swift 对拍输出不用 JSONSerialization 打数值（0.9 会打成 0.90000000000000002），自写规范 JSON。
+- **计划状态 JSON** 从安卓 app 的 ReadingPlanStore 搬进 core `PlanStateJson`（合并要用）。
+- **网络** `SupabaseAuthClient.fetchSyncDocument / upsertSyncDocument`：PostgREST `member_reading_sync_documents`（RLS 只看得到自己那行），
+  upsert `on_conflict=user_id`；revision `${now}-${8 位随机 36 进制}`。没做主站 `/api/mobile/member/reading-sync` 回落与切计划后三次回读确认。
+- **本机记录** `Model/ReadingActivityStore.swift` / `data/ReadingActivityStore.kt`（键与 RN AsyncStorage 同名）：习惯日 `askbible-reading-habit-stats-v1`
+  （打开 App、每 15 秒前台打点、读完 / 听完一章、计划页点听都记当天——RN AppUsageTimeBridge 就是这样，所以「读经天」≈ 打开过 App 的天数）、
+  累计听 `askbible-scripture-listen-totals-v1`（ChapterAudioPlayer 位置差累加，单次 ≤ 1.5 秒，2 秒落盘）、使用时长 `askbible-app-usage-time-v1`
+  （前台时段，不同步）、最后位置 / 最近阅读 3 条（开章时记；探索页「最近阅读」可点开章）。
+- **驱动** `Model/MemberReadingSyncEngine.swift` / `data/MemberReadingSyncEngine.kt`：导出本机（书签 / 最后位置 / 已读章 / 计划偏好 + appLocale 侧车 /
+  三循环 / 深读 / 习惯日（∪ 播放页点听日）/ 累计听 / 最近搜索）；应用云端（同上这些键；高亮 / 今日完成 / 字体 / 译本 / 首页与自然场景设置 /
+  音乐主题 / 语速 / 人声 / 探索档案 / 语言：原生没有对应开关，只在云端保留不动本机）；路径与 RN runMemberReadingSync 同：换帐号清本机只拉、
+  未绑定先看云端、已绑定推 → 服务端合并 → 本机再合并 → 再推一次；调度：登录 / 冷启动 / 回前台立即，本地改动 1.5 秒防抖，45 秒轮询走 30 秒节流，
+  同一时刻只跑一份；退出登录先推（最多 12 秒）再清本机、标记下次只拉云端（RN 退出就是清本机）。各 store 的本机改动经 `onLocalChange` 报给驱动，
+  应用云端期间 `suppressChangeNotify` 压住。
+- **探索页**：今年已过（日历天）、读经天（习惯日数）、连续天（连读）、使用时长、累计听、最近阅读全部真数据；全年轴画已读区段（RN ReadYearDayTimeline：
+  淡底轨 + #E8A017 实色区段 + 今日橙点）。统计行文案只用中文：原生界面暂无英文文案，混进 en 会中英夹杂。
+- **计划月历**标黄 = 习惯日 ∪ 播放页点听日（RN habitCompletedDates）；`PlanPlayView(habitDates:)` / `PlanPlayScreen(habitDates =)`。
+- **会话续期**：RN 只存 access token 与 expiresAt（Supabase 默认一小时），过期即登出（模拟器上登着的 Google 帐号 75 分钟后就没了）。
+  原生把 GoTrue 的 `refresh_token` 存进会话 JSON（键 `refreshToken`，RN 读到会忽略），快到期 2 分钟内 / 校验 401 时用 `grant_type=refresh_token` 续；
+  续期被拒才登出；启动时过期但带 refresh_token 的会话也先算登着。同步前 `ensureFreshToken()`。
+- **计划页语言**：RN ReadPlanPlayScreen 用 useLocale（界面语言），不是译本语言；原生之前传的是译本推出的 displayLocale，英文译本下出现「轻松循环读经计划 /
+  September 2026 / 2 Corinthians 9」混排（Josh 截图）。改为 appLocale。
+- **图标**：Josh「LOGO 在中间太大了」→ iOS 白标收到 90%（黄底、去 alpha），安卓自适应前景收到 80%（圆形遮罩只露中间 66/108）。用 PIL 从 RN 的 adaptive-icon.png 生成。
+- **iOS 后台播放声明**：`INFOPLIST_KEY_UIBackgroundModes` 不是 Xcode 认的键，打出来的 plist 里一直没有 UIBackgroundModes；改成真 `Info.plist`
+  （放工程目录、`INFOPLIST_FILE = Info.plist`；放 AskBible/ 里会被 synchronized group 当资源再拷一份撞车）。
+- 没做：Google / Apple 之外的登录方式；删除账号；高亮同步（原生没有高亮功能）；今日完成 / 比例（原生用已读章 + 月历标记表达）。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

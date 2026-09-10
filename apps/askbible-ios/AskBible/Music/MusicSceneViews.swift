@@ -83,6 +83,15 @@ private struct FishSwarmLayer: View {
     let size: CGSize
     private static let fish = BundleImage.load("fish", ext: "png")
 
+    /// 40×14 框内 contain：等比缩放后居中（以轨道点为中心，对应 RN left -20 / top -7）
+    static func spriteRect(_ image: CGSize) -> CGRect {
+        let boxW: CGFloat = 40, boxH: CGFloat = 14
+        guard image.width > 0, image.height > 0 else { return CGRect(x: -boxW / 2, y: -boxH / 2, width: boxW, height: boxH) }
+        let k = min(boxW / image.width, boxH / image.height)
+        let w = image.width * k, h = image.height * k
+        return CGRect(x: -w / 2, y: -h / 2, width: w, height: h)
+    }
+
     var body: some View {
         Canvas { ctx, _ in
             guard let ui = Self.fish else { return }
@@ -96,8 +105,9 @@ private struct FishSwarmLayer: View {
                 c.rotate(by: .degrees(f.headingDeg))
                 c.scaleBy(x: f.scale, y: f.scale)
                 c.opacity = f.opacity
-                // RN fishSprite：40×14，left -20 / top -7（以轨道点为中心）
-                c.draw(sprite, in: CGRect(x: -20, y: -7, width: 40, height: 14))
+                // RN fishSprite：40×14 的框，resizeMode="contain"——fish-shape.png 是 300×54，按宽 40 等比缩成 40×7.2 居中，
+                // 不能拉满 14 高（拉满就成了胖鱼，Josh 2026-09-09：「没有用我之前画的那个小鱼」）
+                c.draw(sprite, in: Self.spriteRect(ui.size))
             }
         }
     }

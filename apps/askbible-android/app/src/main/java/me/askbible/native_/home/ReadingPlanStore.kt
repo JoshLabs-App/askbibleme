@@ -13,6 +13,7 @@ import me.askbible.native_.data.PlanPlay
 import me.askbible.native_.data.PlanPointer
 import me.askbible.native_.data.PlanReading
 import me.askbible.native_.data.ReadingPlanCatalog
+import me.askbible.native_.data.PlanStateJson
 import me.askbible.native_.data.ReadingPlanPrefs
 import me.askbible.native_.data.ReadingPlanRules
 import me.askbible.native_.data.TripleLoop
@@ -69,49 +70,48 @@ class ReadingPlanStore(context: Context) {
         reloadProgress()
     }
 
-    // ---- JSON ----
+    // ---- JSON（规则在 core 的 PlanStateJson，同步合并也用同一份） ----
+    private fun parsePrefs(raw: String): ReadingPlanPrefs? = try { PlanStateJson.parsePrefs(JSONObject(raw)) } catch (_: Exception) { null }
+    private fun prefsJson(p: ReadingPlanPrefs): String = PlanStateJson.prefsJson(p).toString()
+    private fun tripleJson(s: TripleLoopState): String = PlanStateJson.tripleJson(s).toString()
+    private fun parseTriple(raw: String): TripleLoopState? = try { PlanStateJson.tripleFrom(JSONObject(raw)) } catch (_: Exception) { null }
+    private fun ntJson(s: NtDeepRepeatState): String = PlanStateJson.ntJson(s).toString()
+    private fun parseNt(raw: String): NtDeepRepeatState? = try { PlanStateJson.ntFrom(JSONObject(raw)) } catch (_: Exception) { null }
 
-    private fun parsePrefs(raw: String): ReadingPlanPrefs? = try {
-        val o = JSONObject(raw)
-        ReadingPlanPrefs.fromFields(
-            version = o.optInt("version", 0), planId = o.optString("planId", null), anchorRaw = o.optString("anchor", null),
-            startedOn = if (o.has("startedOn")) o.optString("startedOn") else null, dayCount = if (o.has("dayCount")) o.optInt("dayCount") else null,
-            aheadDays = if (o.has("aheadDays")) o.optInt("aheadDays") else null, pace = if (o.has("ntDeepRepeatPace")) o.optInt("ntDeepRepeatPace") else null,
-            chosen = if (o.has("chosen")) o.optBoolean("chosen") else null, selectedAt = if (o.has("selectedAt")) o.optString("selectedAt") else null,
-        )
-    } catch (_: Exception) { null }
+    /** 本机改动通知（会员同步用；应用云端数据期间由 suppressChangeNotify 压住，RN isApplyingRemoteMemberSync） */
+    var onLocalChange: ((String) -> Unit)? = null
+    var suppressChangeNotify = false
+    private fun changed(key: String) { if (!suppressChangeNotify) onLocalChange?.invoke(key) }
 
-    private fun prefsJson(p: ReadingPlanPrefs): String = JSONObject().apply {
-        put("version", 1); put("planId", p.planId); put("anchor", p.anchor.raw)
-        p.startedOn?.let { put("startedOn", it) }; p.dayCount?.let { put("dayCount", it) }; p.aheadDays?.let { put("aheadDays", it) }
-        p.ntDeepRepeatPace?.let { put("ntDeepRepeatPace", it) }; p.chosen?.let { put("chosen", it) }; p.selectedAt?.let { put("selectedAt", it) }
-    }.toString()
+    // ---- 会员同步：导出 / 应用（RN readingSyncLocalExport / readingSyncLocalApply） ----
 
-    private fun keysJson(keys: Map<String, List<String>>) = JSONObject().apply { for ((k, v) in keys) put(k, JSONArray(v)) }
-    private fun keysFrom(o: JSONObject?, tracks: List<String>): Map<String, List<String>> =
-        tracks.associateWith { t -> o?.optJSONArray(t)?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList() }
-    private fun pointerJson(p: PlanPointer) = JSONObject().put("bookId", p.bookId).put("chapter", p.chapter)
-    private fun pointerFrom(o: JSONObject?) = PlanPointer(o?.optString("bookId", "") ?: "", o?.optInt("chapter", 0) ?: 0)
+    /** 存过的偏好（JSON，RN 同形）；隐式默认返回 null */
+    val storedPrefsJson: JSONObject? get() = storedPrefs?.let { PlanStateJson.prefsJson(it) }
+    /** 用户动过的三循环 / 深读进度（没动过 = 没存过 → null，RN hasUserTripleLoopProgress） */
+    val tripleJsonOrNull: JSONObject? get() = if (hasUserTriple) PlanStateJson.tripleJson(triple) else null
+    val ntJsonOrNull: JSONObject? get() = if (hasUserNt) PlanStateJson.ntJson(nt) else null
+    val completedSorted: List<String> get() = completed.sorted()
 
-    private fun tripleJson(s: TripleLoopState) = JSONObject().apply {
-        put("ot", pointerJson(s.ot)); put("nt", pointerJson(s.nt)); put("wisdom", pointerJson(s.wisdom))
-        put("chaptersReadKeys", keysJson(s.chaptersReadKeys)); put("chaptersRead", JSONObject(s.chaptersRead)); s.startedAt?.let { put("startedAt", it) }
-    }.toString()
-    private fun parseTriple(raw: String): TripleLoopState? = try {
-        val o = JSONObject(raw)
-        TripleLoopState(pointerFrom(o.optJSONObject("ot")), pointerFrom(o.optJSONObject("nt")), pointerFrom(o.optJSONObject("wisdom")),
-            keysFrom(o.optJSONObject("chaptersReadKeys"), listOf("ot", "nt", "wisdom")), startedAt = if (o.has("startedAt")) o.optString("startedAt") else null)
-    } catch (_: Exception) { null }
-
-    private fun ntJson(s: NtDeepRepeatState) = JSONObject().apply {
-        put("ot", pointerJson(s.ot)); put("curriculumIndex", s.curriculumIndex); put("dayInSegment", s.dayInSegment); put("pace", s.pace)
-        put("segmentDayTarget", s.segmentDayTarget); put("chaptersReadKeys", keysJson(s.chaptersReadKeys)); put("chaptersRead", JSONObject(s.chaptersRead)); s.startedAt?.let { put("startedAt", it) }
-    }.toString()
-    private fun parseNt(raw: String): NtDeepRepeatState? = try {
-        val o = JSONObject(raw)
-        NtDeepRepeatState(pointerFrom(o.optJSONObject("ot")), o.optInt("curriculumIndex", 0), o.optInt("dayInSegment", 1), o.optInt("pace", 0),
-            o.optInt("segmentDayTarget", 0), keysFrom(o.optJSONObject("chaptersReadKeys"), listOf("ot", "nt")), startedAt = if (o.has("startedAt")) o.optString("startedAt") else null)
-    } catch (_: Exception) { null }
+    /** 云端计划偏好落本机（已按 mergeReadingPlanPrefsValue 合并过） */
+    fun applyRemotePrefs(json: JSONObject?) {
+        if (json == null) { writePrefs(null); return }
+        val p = PlanStateJson.parsePrefs(json) ?: return
+        writePrefs(p)
+    }
+    fun applyRemoteTriple(json: JSONObject) { val s = PlanStateJson.tripleFrom(json) ?: return; persistTriple(TripleLoop.normalize(s)); reloadProgress() }
+    fun applyRemoteNt(json: JSONObject) { val s = PlanStateJson.ntFrom(json) ?: return; persistNt(NtDeepRepeat.normalize(s)); reloadProgress() }
+    /** RN replaceReadChapterCompletionRecord：整份替换 */
+    fun applyRemoteCompleted(keys: List<String>) {
+        completed = keys.filter { it.isNotEmpty() }.toSet()
+        sp.edit().putString(KEY_COMPLETION, JSONArray(completed.sorted()).toString()).apply()
+    }
+    /** 换帐号 / 退出：清空计划相关本机数据（RN clearLocalMemberReadingSyncBlobs 的计划部分） */
+    fun clearForAccountSwitch() {
+        sp.edit().remove(KEY_PREFS).remove(KEY_TRIPLE).remove(KEY_NT).remove(KEY_COMPLETION).remove(KEY_LISTENED).apply()
+        completed = emptySet(); listenedDates = emptySet()
+        storedPrefs = null; prefs = ReadingPlanPrefs.default()
+        reloadProgress()
+    }
 
     // ---- 读出来先对齐日历（readTripleLoopProgress / readNtDeepRepeatProgress） ----
 
@@ -131,14 +131,15 @@ class ReadingPlanStore(context: Context) {
         nt = aligned
     }
 
-    private fun persistTriple(s: TripleLoopState) { sp.edit().putString(KEY_TRIPLE, tripleJson(s)).apply(); triple = s; hasUserTriple = true }
-    private fun persistNt(s: NtDeepRepeatState) { sp.edit().putString(KEY_NT, ntJson(s)).apply(); nt = s; hasUserNt = true }
+    private fun persistTriple(s: TripleLoopState) { sp.edit().putString(KEY_TRIPLE, tripleJson(s)).apply(); triple = s; hasUserTriple = true; changed("tripleLoopProgress") }
+    private fun persistNt(s: NtDeepRepeatState) { sp.edit().putString(KEY_NT, ntJson(s)).apply(); nt = s; hasUserNt = true; changed("ntDeepRepeatProgress") }
 
     private fun writePrefs(p: ReadingPlanPrefs?) {
         sp.edit().apply { if (p == null) remove(KEY_PREFS) else putString(KEY_PREFS, prefsJson(p)) }.apply()
         storedPrefs = p
         prefs = p ?: ReadingPlanPrefs.default()
         reloadProgress()
+        changed("readingPlanPrefs")
     }
 
     // ---- 计划切换（对应 setActiveReadingPlan / activateNtDeepRepeatPlan / ensureTripleLoopPlanPrefs） ----
@@ -223,6 +224,7 @@ class ReadingPlanStore(context: Context) {
         // RN 习惯统计 completedDates：读完 / 听完一章的日子也算「读过」，月历标黄
         markListened(PlanDates.localDateString())
         sp.edit().putString(KEY_COMPLETION, JSONArray(completed.sorted()).toString()).apply()
+        changed("chapterCompletion")
         if (prefs.isTripleLoop) persistTriple(TripleLoop.addChapterRead(triple, bookId, chapter))
         if (prefs.isNtDeepRepeat) persistNt(NtDeepRepeat.addChapterRead(nt, bookId, chapter))
     }
@@ -235,6 +237,7 @@ class ReadingPlanStore(context: Context) {
         listenedDates = listenedDates + iso
         val o = JSONObject().put("version", 1).put("dates", JSONArray(listenedDates.sorted()))
         sp.edit().putString(KEY_LISTENED, o.toString()).apply()
+        changed("habitStats")
     }
 
     /**

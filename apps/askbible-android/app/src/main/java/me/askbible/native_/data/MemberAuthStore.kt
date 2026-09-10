@@ -25,10 +25,24 @@ class MemberAuthStore(context: Context) {
     private val sp = context.applicationContext.getSharedPreferences("member-auth", Context.MODE_PRIVATE)
     var user by mutableStateOf<MemberUser?>(null); private set
     private var session: MemberSession? = null
+    /** 当前会话 token（读经同步用；没登录为 null） */
+    val sessionToken: String? get() = session?.sessionToken
 
     init {
-        val s = sp.getString(MemberAuthRules.SESSION_KEY, null)?.let { MemberAuthRules.parseSession(it) }
+        // 过期但带 refresh_token 的也先算登着（启动后 verifyRemote 会先续期）；RN 是一过期就登出
+        val s = sp.getString(MemberAuthRules.SESSION_KEY, null)?.let { MemberAuthRules.parseSession(it, System.currentTimeMillis(), allowExpired = true) }
         if (s != null) { session = s; user = s.user } else sp.edit().remove(MemberAuthRules.SESSION_KEY).apply()
+    }
+
+    /** 拿一个还能用的 access token：快到期（2 分钟内）就先用 refresh_token 续；续期被拒（已作废）→ 登出；断网 → 先用旧的 */
+    suspend fun ensureFreshToken(): String? {
+        val s = session ?: return null
+        if (MemberAuthRules.secondsUntilExpiry(s) >= 120) return s.sessionToken
+        val rt = s.refreshToken ?: return if (MemberAuthRules.secondsUntilExpiry(s) <= 0) { persist(null); null } else s.sessionToken
+        return when (val r = withContext(Dispatchers.IO) { SupabaseAuthClient.refresh(rt, s.user.locale) }) {
+            is MemberAuthResult.Ok -> { val next = r.session.copy(user = r.session.user.copy(createdAt = r.session.user.createdAt ?: s.user.createdAt)); persist(next); next.sessionToken }
+            is MemberAuthResult.Failed -> if (r.code == "network") (if (MemberAuthRules.secondsUntilExpiry(s) > 0) s.sessionToken else null) else { persist(null); null }
+        }
     }
 
     private fun persist(s: MemberSession?) {
@@ -40,10 +54,17 @@ class MemberAuthStore(context: Context) {
 
     /** 启动后校验会话：token 作废就清掉；网络不通保留本机会话（RN 同） */
     suspend fun verifyRemote() {
+        if (session == null) return
+        val token = ensureFreshToken() ?: return
         val s = session ?: return
-        val remote = try { withContext(Dispatchers.IO) { SupabaseAuthClient.verify(s.sessionToken) } } catch (_: Exception) { return }
-        if (remote == null) persist(null)
-        else persist(MemberSession(s.sessionToken, s.expiresAt, remote.copy(createdAt = remote.createdAt ?: s.user.createdAt)))
+        val remote = try { withContext(Dispatchers.IO) { SupabaseAuthClient.verify(token) } } catch (_: Exception) { return }
+        if (remote != null) persist(MemberSession(token, s.expiresAt, remote.copy(createdAt = remote.createdAt ?: s.user.createdAt), s.refreshToken))
+        else {
+            // access token 被服务端作废但 refresh_token 还在：续一次
+            val rt = s.refreshToken
+            val refreshed = if (rt != null) withContext(Dispatchers.IO) { SupabaseAuthClient.refresh(rt, s.user.locale) } else null
+            if (refreshed is MemberAuthResult.Ok) persist(refreshed.session) else persist(null)
+        }
     }
 
     /** 成功返回 null，失败返回错误文案（"network" 由页面换成中文） */
@@ -149,7 +170,7 @@ class MemberAuthStore(context: Context) {
         val name = MemberAuthRules.normalizeDisplayName(raw)
         val s = session ?: return false
         if (!MemberAuthRules.isValidDisplayName(name)) return false
-        persist(MemberSession(s.sessionToken, s.expiresAt, s.user.copy(name = name)))
+        persist(MemberSession(s.sessionToken, s.expiresAt, s.user.copy(name = name), s.refreshToken))
         withContext(Dispatchers.IO) { SupabaseAuthClient.updateDisplayName(s.sessionToken, s.user.id, name) }
         return true
     }

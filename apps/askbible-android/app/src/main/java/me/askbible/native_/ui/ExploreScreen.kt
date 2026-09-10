@@ -1,6 +1,9 @@
 package me.askbible.native_.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.offset
+import me.askbible.native_.data.MemberReadingSyncRules
+import me.askbible.native_.data.ReadingActivityStore
 import me.askbible.native_.data.ReadSize
 import me.askbible.native_.data.ExploreArticles
 import me.askbible.native_.data.ExploreArticle
@@ -70,6 +73,10 @@ fun ExploreScreen(
     auth: MemberAuthStore? = null,
     locale: AppLocale = AppLocale.ZH_CN,
     onOpenLogin: () -> Unit = {},
+    /** 读经活动：今年已过 / 读经天 / 连续天 / 使用时长 / 累计听 / 最近阅读（RN ExploreReadingHabitStats） */
+    activity: ReadingActivityStore? = null,
+    /** 退出登录（先把本机进度推上云端再清本机，由壳接线） */
+    onSignOut: () -> Unit = {},
     theme: Parchment = Parchment.light,
 ) {
     if (article != null) {
@@ -81,7 +88,15 @@ fun ExploreScreen(
     val scope = rememberCoroutineScope()
     var nameEditorOpen by remember { mutableStateOf(false) }
     var nameDraft by remember { mutableStateOf("") }
-    val recent = listOf("创世记 1章", "创世记 3章", "创世记 2章")
+    val recent = activity?.recent ?: emptyList()
+    // 原生界面文案目前只有中文（locale.zh 只管简繁），统计行也跟着走，别混进英文（Josh 2026-09-09：中英文混一起）
+    val isEn = false
+    val tl = remember { MemberReadingSyncRules.yearTimeline() }
+    val completedDates = activity?.completedDates ?: emptyList()
+    val ranges = remember(completedDates) { val d = java.time.LocalDate.now(); MemberReadingSyncRules.yearReadRanges(completedDates, d.year, d.monthValue, d.dayOfMonth) }
+    val usageLine = "${if (isEn) "Time in app" else locale.zh("使用时长")}  ${MemberReadingSyncRules.formatUsageDuration((activity?.usageTotalSec ?: 0.0).toInt(), isEn)}"
+    val listenDuration = MemberReadingSyncRules.formatListenDuration((activity?.listenTotalSec ?: 0.0).toInt(), isEn)
+    val listenLine = if (isEn) "Listened $listenDuration" else locale.zh("累计听 ") + listenDuration
     val articles = remember { ExploreArticles.grid(context) }
 
     // RN ExploreGreetingNameModal：改称呼（最多 24 字）
@@ -118,34 +133,41 @@ fun ExploreScreen(
                      fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
                 if (user != null) {
                     // RN 的「退出登录」在侧边抽屉里；原生版还没有抽屉，先放在抬头下面
-                    Text(locale.zh("退出登录"), Modifier.fillMaxWidth().padding(top = 8.dp).clickableNoRipple { scope.launch { auth.signOut() } },
+                    Text(locale.zh("退出登录"), Modifier.fillMaxWidth().padding(top = 8.dp).clickableNoRipple { onSignOut() },
                          color = theme.faint.toColor(), fontSize = 13.sp, textAlign = TextAlign.Center,
                          textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
                 }
                 Spacer(Modifier.height(26.dp))
 
-                // 进度线 + 橙点
-                Box(Modifier.fillMaxWidth().padding(horizontal = 52.dp), contentAlignment = Alignment.Center) {
-                    Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape)
-                        .background(theme.border.toColor().copy(alpha = 0.8f)))
-                    Box(Modifier.size(11.dp).clip(CircleShape).background(theme.parchmentAccent.toColor()))
+                // RN ReadYearDayTimeline：淡底轨 + 实色已读区段 + 今日橙点
+                BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 52.dp).height(22.dp), contentAlignment = Alignment.CenterStart) {
+                    val w = maxWidth
+                    Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(theme.border.toColor().copy(alpha = 0.8f)))
+                    val minW = 2.0 / maxOf(tl.daysInYear, 1)
+                    for ((start, end) in ranges) {
+                        val (left, width) = MemberReadingSyncRules.rangeToTrackFraction(start, end, tl.daysInYear)
+                        val drawW = maxOf(width, minW)
+                        val drawLeft = minOf(left, maxOf(0.0, 1 - drawW))
+                        Box(Modifier.offset(x = w * drawLeft.toFloat()).width(w * drawW.toFloat()).height(5.dp).clip(CircleShape).background(Color(0xFFE8A017)))
+                    }
+                    Box(Modifier.offset(x = w * tl.progress.toFloat() - 5.5.dp).size(11.dp).clip(CircleShape).background(theme.parchmentAccent.toColor()))
                 }
                 Spacer(Modifier.height(22.dp))
 
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Stat("251", "今年已过", theme.parchmentAccent.toColor(), theme, Modifier.weight(1f))
+                    Stat(tl.dayOfYear.toString(), "今年已过", theme.parchmentAccent.toColor(), theme, Modifier.weight(1f))
                     Divider(theme)
-                    Stat("2", "读经天", Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                    Stat((activity?.readDays ?: 0).toString(), "读经天", Color(0xFF4F7A54), theme, Modifier.weight(1f))
                     Divider(theme)
-                    Stat("1", "连续天", Color(0xFF4F7A54), theme, Modifier.weight(1f))
+                    Stat((activity?.streakDays ?: 0).toString(), "连续天", Color(0xFF4F7A54), theme, Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(18.dp))
 
-                Text("使用时长 8 小时 25 分钟", Modifier.fillMaxWidth(),
+                Text(usageLine, Modifier.fillMaxWidth(),
                      color = theme.muted.toColor(), fontSize = 17.sp, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(6.dp))
-                Text("累计听 46 分钟", Modifier.fillMaxWidth(),
+                Text(listenLine, Modifier.fillMaxWidth(),
                      color = theme.muted.toColor(), fontSize = 17.sp, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(20.dp))
                 Text("最近阅读", Modifier.fillMaxWidth(),
@@ -154,10 +176,14 @@ fun ExploreScreen(
 
                 Column(Modifier.padding(horizontal = 26.dp)) {
                     for (r in recent) {
-                        Row(Modifier.fillMaxWidth().height(38.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(r, color = theme.ink.toColor(), fontSize = 18.sp, modifier = Modifier.weight(1f))
+                        val label = if (isEn) "${r.bookName} ${r.chapter}" else "${locale.zh(r.bookName)} ${r.chapter}${locale.zh("章")}"
+                        Row(Modifier.fillMaxWidth().height(38.dp).clickableNoRipple { onOpenChapter(r.bookId, r.chapter) }, verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, color = theme.ink.toColor(), fontSize = 18.sp, modifier = Modifier.weight(1f))
                             Text("\u203A", color = theme.faint.toColor().copy(alpha = 0.58f), fontSize = 24.sp, lineHeight = 24.sp)
                         }
+                    }
+                    if (recent.isEmpty()) {
+                        Text(locale.zh("还没有阅读记录"), Modifier.fillMaxWidth().height(38.dp), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                     }
                 }
                 // 九宫格功能块（欢迎 / 读经计划 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）

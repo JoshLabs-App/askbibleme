@@ -44,6 +44,8 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     var isLoading by mutableStateOf(false); private set
     /** 用户点过播放（RN wantsPlayback）：开章时预载会短暂 BUFFERING，没点播放前不该转圈 */
     var wantsPlayback by mutableStateOf(false); private set
+    /** 播放位置回调（累计听读时长：RN useFollowNativeProgress → noteScriptureListenProgress） */
+    var onProgress: ((Double, Boolean) -> Unit)? = null
     var currentTime by mutableStateOf(0.0); private set
     var duration by mutableStateOf(0.0); private set
     var errorMessage by mutableStateOf<String?>(null); private set
@@ -203,6 +205,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
             while (true) {
                 val pos = player.currentPosition / 1000.0
                 currentTime = pos
+                onProgress?.invoke(pos, isPlaying)
                 if (duration <= 0 && player.duration > 0) duration = player.duration / 1000.0
                 val next = VerseTimingLookup.activeVerse(pos, timings)
                 if (next != activeVerse) activeVerse = next

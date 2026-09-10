@@ -67,6 +67,21 @@ final class VerseBookmarkStore: ObservableObject {
     }
 
     var list: [VerseBookmark] { VerseBookmarkRules.list(store) }
+    /// 本机改动通知（会员同步）
+    var onLocalChange: (() -> Void)?
+
+    /// 序列化成 RN 同形的 JSON 对象（同步 blob）
+    var json: [String: Any] {
+        (try? JSONSerialization.jsonObject(with: Data(VerseBookmarkRules.serialize(store).utf8))) as? [String: Any] ?? [:]
+    }
+    /// 云端书签落本机（RN replaceScriptureVerseBookmarkStore）
+    func replace(json: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: json) else { return }
+        let raw = String(decoding: data, as: UTF8.self)
+        store = VerseBookmarkRules.parse(raw)
+        defaults.set(VerseBookmarkRules.serialize(store), forKey: VerseBookmarkRules.storageKey)
+    }
+    func clearForAccountSwitch() { store = [:]; defaults.removeObject(forKey: VerseBookmarkRules.storageKey) }
 
     func isBookmarked(translationId: String, bookId: String, chapter: Int, verse: Int) -> Bool {
         store[VerseBookmarkRules.key(translationId: translationId, bookId: bookId, chapter: chapter, verse: verse)] != nil
@@ -90,6 +105,7 @@ final class VerseBookmarkStore: ObservableObject {
         }
         store = next
         defaults.set(VerseBookmarkRules.serialize(next), forKey: VerseBookmarkRules.storageKey)
+        onLocalChange?()
         return added
     }
 }
@@ -113,12 +129,26 @@ final class SearchPrefs: ObservableObject {
         scope = ScriptureSearchScope(rawValue: d.string(forKey: Self.scopeKey) ?? "") ?? ScriptureSearchRules.defaultScope
     }
 
+    var onLocalChange: (() -> Void)?
+
     func push(_ raw: String) {
         let next = RecentSearchRules.push(raw, into: recent)
         if next == recent { return }
         recent = next
-        if let data = try? JSONSerialization.data(withJSONObject: ["version": 1, "terms": next]) {
+        persistRecent()
+        onLocalChange?()
+    }
+
+    private func persistRecent() {
+        if let data = try? JSONSerialization.data(withJSONObject: ["version": 1, "terms": recent]) {
             UserDefaults.standard.set(String(decoding: data, as: UTF8.self), forKey: Self.recentKey)
         }
     }
+
+    /// 云端最近搜索落本机（RN replaceScriptureRecentSearches）
+    func replaceRecent(_ terms: [String]) {
+        recent = RecentSearchRules.normalizeTerms(terms)
+        persistRecent()
+    }
+    func clearRecentForAccountSwitch() { recent = []; UserDefaults.standard.removeObject(forKey: Self.recentKey) }
 }

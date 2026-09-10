@@ -11,9 +11,37 @@ import {
 import { loadSpeechSpansSnapshot } from "../lib/bible/speech-spans-snapshot";
 import { writeScriptureSqliteFromBooks } from "../lib/bible/build-scripture-sqlite";
 import { scriptureSqlitePath } from "../lib/bible/scripture-sqlite-db";
+import { getSqlJsStatic } from "../lib/bible/sql-js-wasm";
+import { verseAnnotationKey } from "../lib/bible/verse-annotations";
 import { readTranslationsIndex, resolveTranslationAbsolutePath } from "../lib/bible/translations-store";
 import { parseAndValidateBiblePayload } from "../lib/bible/validate-bible-json";
 import { findLegacyCuvSimplifiedOrthography } from "../lib/bible/cuv-simplified-orthography.mjs";
+
+/**
+ * 主题库 `data/scripture/reader-verse-themes.sqlite` 不入库（从桌面 BIBLE 项目导入），本机没有它时
+ * `loadThemeRepeatCountMap` 是空表；重建译本会把已提交 sqlite 里的 theme_repeat_count（金句色带）全刷成 0。
+ * 这时从已提交的同名 sqlite 把计数按节键接过来——节键不随正文改动，接过来就是准确值。
+ */
+async function readCommittedThemeRepeatCounts(cwd: string, sqliteAbs: string): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (!fs.existsSync(sqliteAbs)) return map;
+  const SQL = await getSqlJsStatic(cwd);
+  const db = new SQL.Database(fs.readFileSync(sqliteAbs));
+  try {
+    const stmt = db.prepare("SELECT book_id, chapter, verse, theme_repeat_count FROM verse WHERE theme_repeat_count > 0");
+    try {
+      while (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        map.set(verseAnnotationKey(String(row.book_id), Number(row.chapter), Number(row.verse)), Number(row.theme_repeat_count));
+      }
+    } finally {
+      stmt.free();
+    }
+  } finally {
+    db.close();
+  }
+  return map;
+}
 
 async function main(): Promise<void> {
   const cwd = process.cwd();
@@ -76,8 +104,15 @@ async function main(): Promise<void> {
         );
       }
     }
+    let themeCountsForBuild = themeRepeatCounts;
+    if (themeRepeatCounts.size === 0) {
+      themeCountsForBuild = await readCommittedThemeRepeatCounts(cwd, sqliteAbs);
+      console.error(
+        `[build-bible-sqlite] ${t.id}: 本机无主题库，沿用已提交 sqlite 的 theme_repeat_count（${themeCountsForBuild.size} 节）`,
+      );
+    }
     const { bytes, verseCount: inserted } = await writeScriptureSqliteFromBooks(cwd, t.id, books, {
-      themeRepeatCounts,
+      themeRepeatCounts: themeCountsForBuild,
       speechSpansByVerseKey: speechSpansSnapshot?.translations.get(t.id) ?? undefined,
     });
     if (inserted !== verseCount) {

@@ -1,0 +1,66 @@
+{
+  "_note": "原生 App（iOS / Android）读经计划页的手机版精简文案：Josh 2026-09-09「介绍、内容全面优化，为手机查看优化，不要字太小、太多，整体简介、可视」。长版说明仍在 apps/askbible-mobile/assets/content/zh-CN.json（pages.read.*），这里只放短句、要点与图标名；由 tools/gen-reading-plans.mjs 生成进两端的 ReadingPlanCatalog。图标名对应 Material Icons：today / loop / swap / stairs / repeat / book / sync / spa / replay / calendar / layers",
+  "ui": {
+    "plansIntro": "不打卡，别担心漏读。",
+    "plansOtherHeading": "经典日课表",
+    "plansOtherLead": "麦琴、一年通读等常见读经表。",
+    "open": "查看",
+    "activePill": "当前计划",
+    "todayHeading": "今日读经",
+    "todayHint": "点一条就进入那一章",
+    "setupHeading": "开始使用",
+    "howHeading": "怎么读",
+    "moreOpen": "了解更多",
+    "moreClose": "收起",
+    "use": "设为当前计划",
+    "update": "保存设置",
+    "clear": "取消当前计划",
+    "currentDay": "第 {{n}} 天",
+    "paceHeading": "选一种深度",
+    "paceHint": "同一阶新约连读几天再换下一阶",
+    "pace7": "一年 · 读 7 遍",
+    "pace14": "两年 · 读 14 遍",
+    "pace28": "四年 · 读 28 遍",
+    "paceEnd": "首阶到 {{endDate}} 结束",
+    "startDayHeading": "从第几天开始",
+    "startDayHint": "第一次读保持 1；之前读到第 20 天，就设为 20。",
+    "anchorToday": "从今天开始",
+    "anchorTodayHint": "今天算第 1 天",
+    "anchorJan1": "对齐 1 月 1 日",
+    "anchorJan1Hint": "按今年过了几天算",
+    "ladderHeading": "新约 52 阶",
+    "ladderProgress": "第 {{n}} 阶 · 本阶第 {{day}}/{{total}} 天",
+    "ladderOpen": "展开全部 52 阶",
+    "ladderClose": "收起",
+    "stageDone": "已读完",
+    "stageCurrent": "进行中",
+    "toDeepTitle": "想读得更深？",
+    "toDeepLead": "方法二 · 正式研读：同一段新约反复读",
+    "toLightTitle": "刚开始读经？",
+    "toLightLead": "方法一 · 轻松读经：每天三小段，没有压力",
+    "resetDefault": "恢复默认进度",
+    "epochTriple": "默认以 {{date}}（复活节）为第 1 天，三轨每日各进一章。今天是第 {{n}} 天。",
+    "epochNt": "自你选定计划那天起算，今天是第 {{n}} 天。",
+    "seeHome": "在圣经首页查看今日经文"
+  },
+  "plans": {
+    "triple-loop": {
+      "badge": "方法一 · 轻松读经",
+      "tagline": "旧约、新约、智慧书，每天各读一小段",
+      "facts": [["today", "每日 3 段"], ["loop", "随时跟上"], ["swap", "三条进度各走各的"]],
+      "how": [["sync", "读哪条就推哪条，三条互不绑定"], ["spa", "停了再回来，别担心漏读"], ["replay", "读完一环末章，回到该环起点"]],
+      "detail": "适合第一次建立习惯，或希望低压、可持续地回到神话语的人。三轨默认每日各进一章，你可随时在章节页推进，也可以恢复默认进度。"
+    },
+    "nt-deep-repeat": {
+      "badge": "方法二 · 正式研读",
+      "tagline": "同一段新约反复读，直到读进心里",
+      "facts": [["stairs", "新约 52 阶"], ["repeat", "每阶 7 / 14 / 28 天"], ["book", "旧约每日 1 章"]],
+      "how": [["stairs", "新约分 52 阶，每阶 4–6 章"], ["repeat", "同一阶连读 7、14 或 28 天"], ["book", "旧约每天 1 章并行通读"]],
+      "detail": "参考约翰·麦克阿瑟的新约研读法。「读 N 遍」= 每阶连读 N 天；走完 52 阶为一轮，约 12 个月 / 2 年 / 4 年。停了再回来，别担心漏读；若刚开始读经，建议先用方法一。"
+    }
+  },
+  "classic": {
+    "badge": "经典日课表",
+    "how": [["calendar", "按日课表逐日读，一年读完"], ["today", "从今天起算，或对齐今年 1 月 1 日"], ["spa", "停了再回来，别担心漏读"]]
+  }
+}

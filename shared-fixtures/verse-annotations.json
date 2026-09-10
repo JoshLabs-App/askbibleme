@@ -1,0 +1,7164 @@
+{
+  "note": "由 tools/verse-annotation-parity.mjs 生成。真源是 RN 的 verse-annotations.ts，勿手改。",
+  "generatedFrom": "apps/askbible-mobile/assets/scripture/cuv-simp.sqlite",
+  "sampleCount": 369,
+  "samples": [
+    {
+      "label": "无标注",
+      "text": "亚当生塞特；塞特生以挪士；",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "以挪士生该南；该南生玛勒列；玛勒列生雅列；",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "雅列生以诺；以诺生玛土撒拉；玛土撒拉生拉麦；",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "拉麦生挪亚；挪亚生闪、含、雅弗。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "雅弗的儿子是歌篾、玛各、玛代、雅完、土巴、米设、提拉。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "歌篾的儿子是亚实基拿、低法〔在创世记十章三节作利法〕、陀迦玛。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "雅完的儿子是以利沙、他施、基提、多单〔有作罗单的〕。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "含的儿子是古实、麦西、弗、迦南。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "古实的儿子是西巴、哈腓拉、撒弗他、拉玛、撒弗提迦。拉玛的儿子是示巴、底但。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "古实生宁录；他为世上英雄之首。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "麦西生路低人、亚拿米人、利哈比人、拿弗土希人、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "帕斯鲁细人、迦斯路希人、迦斐托人；从迦斐托出来的有非利士人。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "迦南生长子西顿，又生赫",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "和耶布斯人、亚摩利人、革迦撒人、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "希未人、亚基人、西尼人、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "亚瓦底人、洗玛利人，并哈马人。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "闪的儿子是以拦、亚述、亚法撒、路德、亚兰、乌斯、户勒、基帖、米设〔在创世记十章二十三节作玛施〕。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "亚法撒生沙拉；沙拉生希伯。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "希伯生了两个儿子：一个名叫法勒〔就是分的意思〕，因为那时人就分地居住；法勒的兄弟名叫约坍。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "约坍生亚摩答、沙列、哈萨玛非、耶拉、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "哈多兰、乌萨、德拉、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "以巴录、亚比玛利、示巴、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "阿斐、哈腓拉、约巴。这都是约坍的儿子。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "闪生亚法撒；亚法撒生沙拉；",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "沙拉生希伯；希伯生法勒；法勒生拉吴；",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "拉吴生西鹿；西鹿生拿鹤；拿鹤生他拉；",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "他拉生亚伯兰，亚伯兰就是亚伯拉罕。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "亚伯拉罕的儿子是以撒、以实玛利。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "以实玛利的儿子记在下面：以实玛利的长子是尼拜约，其次是基达、押德别、米比衫、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "米施玛、度玛、玛撒、哈达、提玛、",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "伊突、拿非施、基底玛。这都是以实玛利的儿子。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "亚伯拉罕的妾基土拉所生的儿子，就是心兰、约珊、米但、米甸、伊施巴、书亚。约珊的儿子是示巴、底但。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "米甸的儿子是以法、以弗、哈诺、亚比大、以勒大。这都是基土拉的子孙。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "亚伯拉罕生以撒；以撒的儿子是以扫和以色列。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "以扫的儿子是以利法、流珥、耶乌施、雅兰、可拉。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "以利法的儿子是提幔、阿抹、洗玻、迦坦、基纳斯、亭纳、亚玛力。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "流珥的儿子是拿哈、谢拉、沙玛、米撒。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "西珥的儿子是罗坍、朔巴、祭便、亚拿、底顺、以察、底珊。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "罗坍的儿子是何利、荷幔；罗坍的妹子是亭纳。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "无标注",
+      "text": "朔巴的儿子是亚勒文、玛拿辖、以巴录、示非、阿南。祭便的儿子是亚雅、亚拿。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "雅比斯求告以色列的神说：「甚愿你赐福与我，扩张我的境界，常与我同在，保佑我不遭患难，不受艰苦。」神就应允他所求的。",
+      "spans": "[[13,47,1]]",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "雅比斯求告以色列的神说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "甚愿你赐福与我，扩张我的境界，常与我同在，保佑我不遭患难，不受艰苦。"
+          },
+          {
+            "kind": "plain",
+            "text": "」神就应允他所求的。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "亚伦和他的子孙在燔祭坛和香坛上献祭烧香，又在至圣所办理一切的事，为以色列人赎罪，是照神仆人摩西所吩咐的。",
+      "spans": "[[50,52,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "亚伦和他的子孙在燔祭坛和香坛上献祭烧香，又在至圣所办理一切的事，为以色列人赎罪，是照神仆人摩西所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "从前扫罗作王的时候，率领以色列人出入的是你；耶和华你的神也曾应许你说：『你必牧养我的民以色列，作以色列的君。』」",
+      "spans": "[[36,54,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "从前扫罗作王的时候，率领以色列人出入的是你；耶和华你的神也曾应许你说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你必牧养我的民以色列，作以色列的君。"
+          },
+          {
+            "kind": "plain",
+            "text": "』」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "于是以色列的长老都来到希伯仑见大卫王。大卫在希伯仑耶和华面前与他们立约，他们就膏大卫作以色列的王，是照耶和华借撒母耳所说的话。",
+      "spans": "[[60,63,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "于是以色列的长老都来到希伯仑见大卫王。大卫在希伯仑耶和华面前与他们立约，他们就膏大卫作以色列的王，是照耶和华借撒母耳所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的话。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "以下记录跟随大卫勇士的首领，就是奋勇帮助他得国、照着耶和华吩咐以色列人的话、与以色列人一同立他作王的。",
+      "spans": "[[31,51,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以下记录跟随大卫勇士的首领，就是奋勇帮助他得国、照着耶和华吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "以色列人的话、与以色列人一同立他作王的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "那时神的灵感动那三十个勇士的首领亚玛撒，他就说：大卫啊，我们是归于你的！耶西的儿子啊，我们是帮助你的！愿你平平安安，愿帮助你的也都平安！因为你的神帮助你。大卫就收留他们，立他们作军长。",
+      "spans": "[[24,92,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那时神的灵感动那三十个勇士的首领亚玛撒，他就说："
+          },
+          {
+            "kind": "divine",
+            "text": "大卫啊，我们是归于你的！耶西的儿子啊，我们是帮助你的！愿你平平安安，愿帮助你的也都平安！因为你的神帮助你。大卫就收留他们，立他们作军长。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "那日，大卫惧怕神，说：「神的约柜怎可运到我这里来？」",
+      "spans": "[[12,25,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那日，大卫惧怕神，说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "神的约柜怎可运到我这里来？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "非利士人将神像撇在那里，大卫吩咐人用火焚烧了。",
+      "spans": "[[16,23,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "非利士人将神像撇在那里，大卫吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "人用火焚烧了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "大卫又求问神。神说：「不要一直的上去，要转到他们后头，从桑林对面攻打他们。",
+      "spans": "[[11,37,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫又求问神。神说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "不要一直的上去，要转到他们后头，从桑林对面攻打他们。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你听见桑树梢上有脚步的声音，就要出战，因为神已经在你前头去攻打非利士人的军队。」",
+      "spans": "[[0,40,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你听见桑树梢上有脚步的声音，就要出战，因为神已经在你前头去攻打非利士人的军队。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "大卫就遵着神所吩咐的，攻打非利士人的军队，从基遍直到基色。",
+      "spans": "[[9,29,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫就遵着神所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "的，攻打非利士人的军队，从基遍直到基色。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "利未子孙就用杠，肩抬神的约柜，是照耶和华借摩西所吩咐的。",
+      "spans": "[[26,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "利未子孙就用杠，肩抬神的约柜，是照耶和华借摩西所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "且派祭司撒督和他弟兄众祭司在基遍的邱坛、耶和华的帐幕前燔祭坛上，每日早晚，照着耶和华律法书上所吩咐以色列人的，常给耶和华献燔祭。",
+      "spans": "[[49,64,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "且派祭司撒督和他弟兄众祭司在基遍的邱坛、耶和华的帐幕前燔祭坛上，每日早晚，照着耶和华律法书上所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "以色列人的，常给耶和华献燔祭。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "自从我领以色列人出埃及，直到今日，我未曾住过殿宇，乃从这会幕到那会幕，从这帐幕到那帐幕。",
+      "spans": "[[0,44,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "自从我领以色列人出埃及，直到今日，我未曾住过殿宇，乃从这会幕到那会幕，从这帐幕到那帐幕。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "凡我同以色列人所走的地方，我何曾向以色列的一个士师，就是我吩咐牧养我民的说：你为何不给我建造香柏木的殿宇呢？』",
+      "spans": "[[0,55,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "凡我同以色列人所走的地方，我何曾向以色列的一个士师，就是我吩咐牧养我民的说：你为何不给我建造香柏木的殿宇呢？』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "现在你要告诉我仆人大卫，说万军之耶和华如此说：『我从羊圈中将你召来，叫你不再跟从羊群，立你作我民以色列的君。",
+      "spans": "[[24,54,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "现在你要告诉我仆人大卫，说万军之耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "我从羊圈中将你召来，叫你不再跟从羊群，立你作我民以色列的君。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你无论往那里去，我常与你同在，剪除你的一切仇敌；我必使你得大名，好像世上大大有名的人一样。",
+      "spans": "[[0,45,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你无论往那里去，我常与你同在，剪除你的一切仇敌；我必使你得大名，好像世上大大有名的人一样。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我必为我民以色列选定一个地方，栽培他们，使他们住自己的地方，不再迁移；凶恶之子也不像从前扰害他们，",
+      "spans": "[[0,49,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我必为我民以色列选定一个地方，栽培他们，使他们住自己的地方，不再迁移；凶恶之子也不像从前扰害他们，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "并不像我命士师治理我民以色列的时候一样。我必治服你的一切仇敌，并且我耶和华应许你，必为你建立家室。",
+      "spans": "[[0,49,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "并不像我命士师治理我民以色列的时候一样。我必治服你的一切仇敌，并且我耶和华应许你，必为你建立家室。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你寿数满足归你列祖的时候，我必使你的后裔接续你的位，我也必坚定他的国。",
+      "spans": "[[0,35,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你寿数满足归你列祖的时候，我必使你的后裔接续你的位，我也必坚定他的国。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "他必为我建造殿宇；我必坚定他的国位直到永远。",
+      "spans": "[[0,22,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他必为我建造殿宇；我必坚定他的国位直到永远。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我要作他的父，他要作我的子；并不使我的慈爱离开他，像离开在你以前的扫罗一样。",
+      "spans": "[[0,38,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我要作他的父，他要作我的子；并不使我的慈爱离开他，像离开在你以前的扫罗一样。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我却要将他永远坚立在我家里和我国里；他的国位也必坚定，直到永远。』」",
+      "spans": "[[0,33,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我却要将他永远坚立在我家里和我国里；他的国位也必坚定，直到永远。』"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "于是大卫王进去，坐在耶和华面前，说：「耶和华神啊，我是谁，我的家算甚么，你竟使我到这地步呢？",
+      "spans": "[[19,46,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "于是大卫王进去，坐在耶和华面前，说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "耶和华神啊，我是谁，我的家算甚么，你竟使我到这地步呢？"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "神啊，这在你眼中还看为小，又应许你仆人的家至于久远。耶和华神啊，你看顾我好像看顾高贵的人。",
+      "spans": "[[0,45,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "神啊，这在你眼中还看为小，又应许你仆人的家至于久远。耶和华神啊，你看顾我好像看顾高贵的人。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你加于仆人的尊荣，我还有何言可说呢？因为你知道你的仆人。",
+      "spans": "[[0,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你加于仆人的尊荣，我还有何言可说呢？因为你知道你的仆人。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华啊，你行了这大事，并且显明出来，是因你仆人的缘故，也是照你的心意。",
+      "spans": "[[0,36,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，你行了这大事，并且显明出来，是因你仆人的缘故，也是照你的心意。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华啊，照我们耳中听见，没有可比你的，除你以外再无神。",
+      "spans": "[[0,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，照我们耳中听见，没有可比你的，除你以外再无神。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "世上有何民能比你的民以色列呢？你神从埃及救赎他们作自己的子民，又在你赎出来的民面前行大而可畏的事，驱逐列邦人，显出你的大名。",
+      "spans": "[[0,62,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "世上有何民能比你的民以色列呢？你神从埃及救赎他们作自己的子民，又在你赎出来的民面前行大而可畏的事，驱逐列邦人，显出你的大名。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你使以色列人作你的子民，直到永远；你耶和华也作他们的神。",
+      "spans": "[[0,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你使以色列人作你的子民，直到永远；你耶和华也作他们的神。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华啊，你所应许仆人和仆人家的话，求你坚定，直到永远，照你所说的而行。",
+      "spans": "[[0,36,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，你所应许仆人和仆人家的话，求你坚定，直到永远，照你所说的而行。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "愿你的名永远坚立，被尊为大，说：『万军之耶和华是以色列的神，是治理以色列的神。』这样，你仆人大卫的家必在你面前坚立。",
+      "spans": "[[0,40,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "愿你的名永远坚立，被尊为大，说：『万军之耶和华是以色列的神，是治理以色列的神。』"
+          },
+          {
+            "kind": "plain",
+            "text": "这样，你仆人大卫的家必在你面前坚立。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我的神啊，因你启示仆人说，我必为你建立家室，所以仆人大胆在你面前祈祷。",
+      "spans": "[[13,35,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "我的神啊，因你启示仆人说，"
+          },
+          {
+            "kind": "divine",
+            "text": "我必为你建立家室，所以仆人大胆在你面前祈祷。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "大卫祷告神说：「我行这事大有罪了！现在求你除掉仆人的罪孽，因我所行的甚是愚昧。」",
+      "spans": "[[8,39,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫祷告神说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "我行这事大有罪了！现在求你除掉仆人的罪孽，因我所行的甚是愚昧。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华吩咐大卫的先见迦得说：",
+      "spans": "[[5,14,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "大卫的先见迦得说："
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "或三年的饥荒；或败在你敌人面前，被敌人的刀追杀三个月；或在你国中有耶和华的刀，就是三日的瘟疫，耶和华的使者在以色列的四境施行毁灭。』现在你要想一想，我好回复那差我来的。」",
+      "spans": "[[0,66,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "或三年的饥荒；或败在你敌人面前，被敌人的刀追杀三个月；或在你国中有耶和华的刀，就是三日的瘟疫，耶和华的使者在以色列的四境施行毁灭。』"
+          },
+          {
+            "kind": "plain",
+            "text": "现在你要想一想，我好回复那差我来的。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "神差遣使者去灭耶路撒冷，刚要灭的时候，耶和华看见后悔，就不降这灾了，吩咐灭城的天使说：「够了，住手吧！」那时，耶和华的使者站在耶布斯人阿珥楠的禾场那里。",
+      "spans": "[[36,76,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "神差遣使者去灭耶路撒冷，刚要灭的时候，耶和华看见后悔，就不降这灾了，吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "灭城的天使说：「够了，住手吧！」那时，耶和华的使者站在耶布斯人阿珥楠的禾场那里。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "大卫祷告神说：「吩咐数点百姓的不是我么？我犯了罪，行了恶，但这群羊作了甚么呢？愿耶和华我神的手攻击我和我的父家，不要攻击你的民，降瘟疫与他们。」",
+      "spans": "[[8,71,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫祷告神说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "吩咐数点百姓的不是我么？我犯了罪，行了恶，但这群羊作了甚么呢？愿耶和华我神的手攻击我和我的父家，不要攻击你的民，降瘟疫与他们。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华的使者吩咐迦得去告诉大卫，叫他上去，在耶布斯人阿珥楠的禾场上为耶和华筑一座坛；",
+      "spans": "[[8,42,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华的使者吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "迦得去告诉大卫，叫他上去，在耶布斯人阿珥楠的禾场上为耶和华筑一座坛；"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "大卫就照着迦得奉耶和华名所说的话上去了。",
+      "spans": "[[14,20,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫就照着迦得奉耶和华名所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的话上去了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华吩咐使者，他就收刀入鞘。",
+      "spans": "[[5,15,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "使者，他就收刀入鞘。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "只是耶和华的话临到我说：『你流了多人的血，打了多次大仗，你不可为我的名建造殿宇，因为你在我眼前使多人的血流在地上。",
+      "spans": "[[13,57,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "只是耶和华的话临到我说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你流了多人的血，打了多次大仗，你不可为我的名建造殿宇，因为你在我眼前使多人的血流在地上。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你要生一个儿子，他必作太平的人；我必使他安静，不被四围的仇敌扰乱。他的名要叫所罗门〔即太平之意〕。他在位的日子，我必使以色列人平安康泰。",
+      "spans": "[[0,68,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你要生一个儿子，他必作太平的人；我必使他安静，不被四围的仇敌扰乱。他的名要叫所罗门〔即太平之意〕。他在位的日子，我必使以色列人平安康泰。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "他必为我的名建造殿宇。他要作我的子；我要作他的父。他作以色列王；我必坚定他的国位，直到永远。』",
+      "spans": "[[0,47,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他必为我的名建造殿宇。他要作我的子；我要作他的父。他作以色列王；我必坚定他的国位，直到永远。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我儿啊，现今愿耶和华与你同在，使你亨通，照他指着你说的话，建造耶和华你神的殿。",
+      "spans": "[[26,39,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "我儿啊，现今愿耶和华与你同在，使你亨通，照他指着你说"
+          },
+          {
+            "kind": "divine",
+            "text": "的话，建造耶和华你神的殿。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "你若谨守遵行耶和华借摩西吩咐以色列的律例典章，就得亨通。你当刚强壮胆，不要惧怕，也不要惊惶。",
+      "spans": "[[14,46,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "你若谨守遵行耶和华借摩西吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "以色列的律例典章，就得亨通。你当刚强壮胆，不要惧怕，也不要惊惶。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "又看守会幕和圣所，并守耶和华吩咐他们弟兄亚伦子孙的，办耶和华殿的事。",
+      "spans": "[[16,34,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "又看守会幕和圣所，并守耶和华吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "他们弟兄亚伦子孙的，办耶和华殿的事。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "这就是他们的班次，要照耶和华以色列的神借他们祖宗亚伦所吩咐的条例进入耶和华的殿办理事务。",
+      "spans": "[[29,44,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "这就是他们的班次，要照耶和华以色列的神借他们祖宗亚伦所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "的条例进入耶和华的殿办理事务。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "以色列人二十岁以内的，大卫没有记其数目；因耶和华曾应许说，必加增以色列人如天上的星那样多。",
+      "spans": "[[29,45,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以色列人二十岁以内的，大卫没有记其数目；因耶和华曾应许说，"
+          },
+          {
+            "kind": "divine",
+            "text": "必加增以色列人如天上的星那样多。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "只是神对我说：『你不可为我的名建造殿宇；因你是战士，流了人的血。』",
+      "spans": "[[8,32,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "只是神对我说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你不可为我的名建造殿宇；因你是战士，流了人的血。"
+          },
+          {
+            "kind": "plain",
+            "text": "』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华对我说：『你儿子所罗门必建造我的殿和院宇；因为我拣选他作我的子，我也必作他的父。",
+      "spans": "[[8,43,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华对我说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你儿子所罗门必建造我的殿和院宇；因为我拣选他作我的子，我也必作他的父。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "他若恒久遵行我的诫命典章如今日一样，我就必坚定他的国位，直到永远。』",
+      "spans": "[[0,34,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他若恒久遵行我的诫命典章如今日一样，我就必坚定他的国位，直到永远。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "现今在耶和华的会中，以色列众人眼前所说的，我们的神也听见了。你们应当寻求耶和华你们神的一切诫命，谨守遵行，如此你们可以承受这美地，遗留给你们的子孙，永远为业。",
+      "spans": "[[19,79,1]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "现今在耶和华的会中，以色列众人眼前所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的，我们的神也听见了。你们应当寻求耶和华你们神的一切诫命，谨守遵行，如此你们可以承受这美地，遗留给你们的子孙，永远为业。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "所以，大卫在会众面前称颂耶和华说：「耶和华我们的父，以色列的神是应当称颂，直到永永远远的！",
+      "spans": "[[18,45,1]]",
+      "themeRepeatCount": 8,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "所以，大卫在会众面前称颂耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "耶和华我们的父，以色列的神是应当称颂，直到永永远远的！"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华啊，尊大、能力、荣耀、强胜、威严都是你的；凡天上地下的都是你的；国度也是你的，并且你为至高，为万有之首。",
+      "spans": "[[0,55,1]]",
+      "themeRepeatCount": 23,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，尊大、能力、荣耀、强胜、威严都是你的；凡天上地下的都是你的；国度也是你的，并且你为至高，为万有之首。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "丰富尊荣都从你而来，你也治理万物。在你手里有大能大力，使人尊大强盛都出于你。",
+      "spans": "[[0,38,1]]",
+      "themeRepeatCount": 20,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "丰富尊荣都从你而来，你也治理万物。在你手里有大能大力，使人尊大强盛都出于你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我们的神啊，现在我们称谢你，赞美你荣耀之名！",
+      "spans": "[[0,22,1]]",
+      "themeRepeatCount": 13,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我们的神啊，现在我们称谢你，赞美你荣耀之名！"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "「我算甚么，我的民算甚么，竟能如此乐意奉献？因为万物都从你而来，我们把从你而得的献给你。",
+      "spans": "[[0,44,1]]",
+      "themeRepeatCount": 11,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "「我算甚么，我的民算甚么，竟能如此乐意奉献？因为万物都从你而来，我们把从你而得的献给你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "我们在你面前是客旅，是寄居的，与我们列祖一样。我们在世的日子如影儿，不能长存〔或作：没有长存的指望〕。",
+      "spans": "[[0,51,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我们在你面前是客旅，是寄居的，与我们列祖一样。我们在世的日子如影儿，不能长存〔或作：没有长存的指望〕。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段神言",
+      "text": "耶和华我们的神啊，我们预备这许多材料，要为你的圣名建造殿宇，都是从你而来，都是属你的。",
+      "spans": "[[0,43,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华我们的神啊，我们预备这许多材料，要为你的圣名建造殿宇，都是从你而来，都是属你的。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "就吩咐拿他兵器的人说：「你拔出刀来，将我刺死，免得那些未受割礼的人来凌辱我。」但拿兵器的人甚惧怕，不肯刺他；",
+      "spans": "[[12,38,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "就吩咐拿他兵器的人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你拔出刀来，将我刺死，免得那些未受割礼的人来凌辱我。"
+          },
+          {
+            "kind": "plain",
+            "text": "」但拿兵器的人甚惧怕，不肯刺他；"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "以色列众人聚集到希伯仑见大卫，说：「我们原是你的骨肉。",
+      "spans": "[[18,27,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以色列众人聚集到希伯仑见大卫，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我们原是你的骨肉。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "耶布斯人对大卫说：「你决不能进这地方。」然而大卫攻取锡安的保障，就是大卫的城。",
+      "spans": "[[10,19,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶布斯人对大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你决不能进这地方。"
+          },
+          {
+            "kind": "plain",
+            "text": "」然而大卫攻取锡安的保障，就是大卫的城。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫说：「谁先攻打耶布斯人，必作首领元帅。」洗鲁雅的儿子约押先上去，就作了元帅。",
+      "spans": "[[5,21,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "谁先攻打耶布斯人，必作首领元帅。"
+          },
+          {
+            "kind": "plain",
+            "text": "」洗鲁雅的儿子约押先上去，就作了元帅。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫渴想，说：「甚愿有人将伯利恒城门旁井里的水打来给我喝！」",
+      "spans": "[[8,29,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫渴想，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "甚愿有人将伯利恒城门旁井里的水打来给我喝！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "说：「我的神啊，这三个人冒死去打水，这水好像他们的血一般，我断不敢喝！」如此，大卫不肯喝。这是三个勇士所作的事。",
+      "spans": "[[3,35,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我的神啊，这三个人冒死去打水，这水好像他们的血一般，我断不敢喝！"
+          },
+          {
+            "kind": "plain",
+            "text": "」如此，大卫不肯喝。这是三个勇士所作的事。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫出去迎接他们，对他们说：「你们若是和和平平的来帮助我，我心就与你们相契；你们若是将我这无罪的人卖在敌人手里，愿我们列祖的神察看责罚。」",
+      "spans": "[[15,68,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫出去迎接他们，对他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们若是和和平平的来帮助我，我心就与你们相契；你们若是将我这无罪的人卖在敌人手里，愿我们列祖的神察看责罚。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫从前与非利士人同去，要与扫罗争战，有些玛拿西人来投奔大卫，他们却没有帮助非利士人；因为非利士人的首领商议，打发他们回去，说：「恐怕大卫拿我们的首级，归降他的主人扫罗。」",
+      "spans": "[[65,85,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫从前与非利士人同去，要与扫罗争战，有些玛拿西人来投奔大卫，他们却没有帮助非利士人；因为非利士人的首领商议，打发他们回去，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "恐怕大卫拿我们的首级，归降他的主人扫罗。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫对以色列全会众说：「你们若以为美，见这事是出于耶和华我们的神，我们就差遣人走遍以色列地，见我们未来的弟兄，又见住在有郊野之城的祭司利未人，使他们都到这里来聚集。",
+      "spans": "[[12,82,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫对以色列全会众说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们若以为美，见这事是出于耶和华我们的神，我们就差遣人走遍以色列地，见我们未来的弟兄，又见住在有郊野之城的祭司利未人，使他们都到这里来聚集。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "非利士人来到巴力毗拉心，大卫在那里杀败他们。大卫说：「神借我的手冲破敌人，如同水冲去一般」；因此称那地方为巴力毗拉心。",
+      "spans": "[[27,44,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "非利士人来到巴力毗拉心，大卫在那里杀败他们。大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "神借我的手冲破敌人，如同水冲去一般"
+          },
+          {
+            "kind": "plain",
+            "text": "」；因此称那地方为巴力毗拉心。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "那时大卫说：「除了利未人之外，无人可抬神的约柜；因为耶和华拣选他们抬神的约柜，且永远事奉他。」",
+      "spans": "[[7,46,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那时大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "除了利未人之外，无人可抬神的约柜；因为耶和华拣选他们抬神的约柜，且永远事奉他。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "对他们说：「你们是利未人的族长，你们和你们的弟兄应当自洁，好将耶和华以色列神的约柜抬到我所预备的地方。",
+      "spans": "[[6,51,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "对他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们是利未人的族长，你们和你们的弟兄应当自洁，好将耶和华以色列神的约柜抬到我所预备的地方。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "耶和华以色列的神，从亘古直到永远，是应当称颂的！众民都说：「阿们！」并且赞美耶和华。",
+      "spans": "[[30,33,2]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华以色列的神，从亘古直到永远，是应当称颂的！众民都说：「"
+          },
+          {
+            "kind": "human",
+            "text": "阿们！"
+          },
+          {
+            "kind": "plain",
+            "text": "」并且赞美耶和华。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫住在自己宫中，对先知拿单说：「看哪，我住在香柏木的宫中，耶和华的约柜反在幔子里。」",
+      "spans": "[[17,42,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫住在自己宫中，对先知拿单说：「"
+          },
+          {
+            "kind": "human",
+            "text": "看哪，我住在香柏木的宫中，耶和华的约柜反在幔子里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "拿单对大卫说：「你可以照你的心意而行，因为神与你同在。」",
+      "spans": "[[8,27,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "拿单对大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你可以照你的心意而行，因为神与你同在。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫说：「我要照哈嫩的父亲拿辖厚待我的恩典厚待哈嫩。」于是大卫差遣使者为他丧父安慰他。大卫的臣仆到了亚扪人的境内见哈嫩，要安慰他，",
+      "spans": "[[5,26,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我要照哈嫩的父亲拿辖厚待我的恩典厚待哈嫩。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是大卫差遣使者为他丧父安慰他。大卫的臣仆到了亚扪人的境内见哈嫩，要安慰他，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "但亚扪人的首领对哈嫩说：「大卫差人来安慰你，你想他是尊敬你父亲吗？他的臣仆来见你不是为详察窥探、倾覆这地吗？」",
+      "spans": "[[13,54,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "但亚扪人的首领对哈嫩说：「"
+          },
+          {
+            "kind": "human",
+            "text": "大卫差人来安慰你，你想他是尊敬你父亲吗？他的臣仆来见你不是为详察窥探、倾覆这地吗？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "有人将臣仆所遇的事告诉大卫，他就差人去迎接他们，因为他们甚觉羞耻；告诉他们说：「可以住在耶利哥，等到胡须长起再回来。」",
+      "spans": "[[40,58,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有人将臣仆所遇的事告诉大卫，他就差人去迎接他们，因为他们甚觉羞耻；告诉他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "可以住在耶利哥，等到胡须长起再回来。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "约押对亚比筛说：「亚兰人若强过我，你就来帮助我；亚扪人若强过你，我就去帮助你。",
+      "spans": "[[9,39,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "约押对亚比筛说：「"
+          },
+          {
+            "kind": "human",
+            "text": "亚兰人若强过我，你就来帮助我；亚扪人若强过你，我就去帮助你。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫就吩咐约押和民中的首领说：「你们去数点以色列人，从别是巴直到但，回来告诉我，我好知道他们的数目。」",
+      "spans": "[[16,50,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫就吩咐约押和民中的首领说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们去数点以色列人，从别是巴直到但，回来告诉我，我好知道他们的数目。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "约押说：「愿耶和华使他的百姓比现在加增百倍。我主我王啊，他们不都是你的仆人吗？我主为何吩咐行这事，为何使以色列人陷在罪里呢？」",
+      "spans": "[[5,62,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "约押说：「"
+          },
+          {
+            "kind": "human",
+            "text": "愿耶和华使他的百姓比现在加增百倍。我主我王啊，他们不都是你的仆人吗？我主为何吩咐行这事，为何使以色列人陷在罪里呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫对迦得说：「我甚为难。我愿落在耶和华的手里，因为他有丰盛的怜悯；我不愿落在人的手里。」",
+      "spans": "[[8,44,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫对迦得说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我甚为难。我愿落在耶和华的手里，因为他有丰盛的怜悯；我不愿落在人的手里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫对阿珥楠说：「你将这禾场与相连之地卖给我，我必给你足价，我好在其上为耶和华筑一座坛，使民间的瘟疫止住。」",
+      "spans": "[[9,53,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫对阿珥楠说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你将这禾场与相连之地卖给我，我必给你足价，我好在其上为耶和华筑一座坛，使民间的瘟疫止住。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "阿珥楠对大卫说：「你可以用这禾场，愿我主我王照你所喜悦的去行。我也将牛给你作燔祭，把打粮的器具当柴烧，拿麦子作素祭。这些我都送给你。」",
+      "spans": "[[9,66,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "阿珥楠对大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你可以用这禾场，愿我主我王照你所喜悦的去行。我也将牛给你作燔祭，把打粮的器具当柴烧，拿麦子作素祭。这些我都送给你。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫王对阿珥楠说：「不然！我必要用足价向你买。我不用你的物献给耶和华，也不用白得之物献为燔祭。」",
+      "spans": "[[10,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫王对阿珥楠说：「"
+          },
+          {
+            "kind": "human",
+            "text": "不然！我必要用足价向你买。我不用你的物献给耶和华，也不用白得之物献为燔祭。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫说：「这就是耶和华神的殿，为以色列人献燔祭的坛。」",
+      "spans": "[[5,26,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这就是耶和华神的殿，为以色列人献燔祭的坛。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫说：「我儿子所罗门还年幼娇嫩，要为耶和华建造的殿宇必须高大辉煌，使名誉荣耀传遍万国；所以我要为殿预备材料。」于是，大卫在未死之先预备的材料甚多。",
+      "spans": "[[5,55,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿子所罗门还年幼娇嫩，要为耶和华建造的殿宇必须高大辉煌，使名誉荣耀传遍万国；所以我要为殿预备材料。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是，大卫在未死之先预备的材料甚多。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "对所罗门说：「我儿啊，我心里本想为耶和华我神的名建造殿宇，",
+      "spans": "[[7,29,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "对所罗门说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿啊，我心里本想为耶和华我神的名建造殿宇，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "「耶和华你们的神不是与你们同在吗？不是叫你们四围都平安吗？因他已将这地的居民交在我手中，这地就在耶和华与他百姓面前制伏了。",
+      "spans": "[[1,61,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华你们的神不是与你们同在吗？不是叫你们四围都平安吗？因他已将这地的居民交在我手中，这地就在耶和华与他百姓面前制伏了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫说：「耶和华以色列的神已经使他的百姓平安，他永远住在耶路撒冷。",
+      "spans": "[[5,33,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华以色列的神已经使他的百姓平安，他永远住在耶路撒冷。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫王就站起来，说：「我的弟兄，我的百姓啊，你们当听我言，我心里本想建造殿宇，安放耶和华的约柜，作为我神的脚凳；我已经预备建造的材料。",
+      "spans": "[[11,67,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫王就站起来，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我的弟兄，我的百姓啊，你们当听我言，我心里本想建造殿宇，安放耶和华的约柜，作为我神的脚凳；我已经预备建造的材料。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "「我儿所罗门哪，你当认识耶和华你父的神，诚心乐意地事奉他；因为他鉴察众人的心，知道一切心思意念。你若寻求他，他必使你寻见；你若离弃他，他必永远丢弃你。",
+      "spans": "[[1,75,2]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿所罗门哪，你当认识耶和华你父的神，诚心乐意地事奉他；因为他鉴察众人的心，知道一切心思意念。你若寻求他，他必使你寻见；你若离弃他，他必永远丢弃你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫说：「这一切工作的样式都是耶和华用手划出来使我明白的。」",
+      "spans": "[[5,29,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这一切工作的样式都是耶和华用手划出来使我明白的。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫又对他儿子所罗门说：「你当刚强壮胆去行！不要惧怕，也不要惊惶。因为耶和华神就是我的神，与你同在；他必不撇下你，也不丢弃你，直到耶和华殿的工作都完毕了。",
+      "spans": "[[13,77,2]]",
+      "themeRepeatCount": 7,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫又对他儿子所罗门说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你当刚强壮胆去行！不要惧怕，也不要惊惶。因为耶和华神就是我的神，与你同在；他必不撇下你，也不丢弃你，直到耶和华殿的工作都完毕了。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫王对会众说：「我儿子所罗门是神特选的，还年幼娇嫩；这工程甚大，因这殿不是为人，乃是为耶和华神建造的。",
+      "spans": "[[9,52,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫王对会众说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿子所罗门是神特选的，还年幼娇嫩；这工程甚大，因这殿不是为人，乃是为耶和华神建造的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "大卫对全会众说：「你们应当称颂耶和华你们的神。」于是会众称颂耶和华他们列祖的神，低头拜耶和华与王。",
+      "spans": "[[9,23,2]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫对全会众说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们应当称颂耶和华你们的神。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是会众称颂耶和华他们列祖的神，低头拜耶和华与王。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "如经上所记：『夸口的，当指着主夸口。』",
+      "spans": "[[7,18,2]]",
+      "themeRepeatCount": 5,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "如经上所记：『"
+          },
+          {
+            "kind": "human",
+            "text": "夸口的，当指着主夸口。"
+          },
+          {
+            "kind": "plain",
+            "text": "』"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "因这世界的智慧，在神看是愚拙。如经上记着说：「主叫有智慧的，中了自己的诡计」；",
+      "spans": "[[23,37,2]]",
+      "themeRepeatCount": 6,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "因这世界的智慧，在神看是愚拙。如经上记着说：「"
+          },
+          {
+            "kind": "human",
+            "text": "主叫有智慧的，中了自己的诡计"
+          },
+          {
+            "kind": "plain",
+            "text": "」；"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "又说：「主知道智慧人的意念是虚妄的。」",
+      "spans": "[[4,18,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "又说：「"
+          },
+          {
+            "kind": "human",
+            "text": "主知道智慧人的意念是虚妄的。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "岂不知与娼妓联合的，便是与她成为一体吗？因为主说：「二人要成为一体。」",
+      "spans": "[[26,34,2]]",
+      "themeRepeatCount": 6,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "岂不知与娼妓联合的，便是与她成为一体吗？因为主说：「"
+          },
+          {
+            "kind": "human",
+            "text": "二人要成为一体。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "就如摩西的律法记着说：「牛在场上踹谷的时候，不可笼住他的嘴。」难道神所挂念的是牛吗？",
+      "spans": "[[12,30,2]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "就如摩西的律法记着说：「"
+          },
+          {
+            "kind": "human",
+            "text": "牛在场上踹谷的时候，不可笼住他的嘴。"
+          },
+          {
+            "kind": "plain",
+            "text": "」难道神所挂念的是牛吗？"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "也不要拜偶像，像他们有人拜的。如经上所记：「百姓坐下吃喝，起来玩耍。」",
+      "spans": "[[22,34,2]]",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "也不要拜偶像，像他们有人拜的。如经上所记：「"
+          },
+          {
+            "kind": "human",
+            "text": "百姓坐下吃喝，起来玩耍。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "若有人对你们说：「这是献过祭的物」，就要为那告诉你们的人，并为良心的缘故不吃。",
+      "spans": "[[9,16,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "若有人对你们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这是献过祭的物"
+          },
+          {
+            "kind": "plain",
+            "text": "」，就要为那告诉你们的人，并为良心的缘故不吃。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "祝谢了，就擘开，说：「这是我的身体，为你们舍〔有古卷作：擘开〕的，你们应当如此行，为的是记念我。」",
+      "spans": "[[11,48,2]]",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "祝谢了，就擘开，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这是我的身体，为你们舍〔有古卷作：擘开〕的，你们应当如此行，为的是记念我。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "饭后，也照样拿起杯来，说：「这杯是用我的血所立的新约，你们每逢喝的时候，要如此行，为的是记念我。」",
+      "spans": "[[14,48,2]]",
+      "themeRepeatCount": 7,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "饭后，也照样拿起杯来，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这杯是用我的血所立的新约，你们每逢喝的时候，要如此行，为的是记念我。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "设若脚说：「我不是手，所以不属乎身子；」它不能因此就不属乎身子。",
+      "spans": "[[6,19,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "设若脚说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我不是手，所以不属乎身子；"
+          },
+          {
+            "kind": "plain",
+            "text": "」它不能因此就不属乎身子。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "设若耳说：「我不是眼，所以不属乎身子；」它也不能因此就不属乎身子。",
+      "spans": "[[6,19,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "设若耳说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我不是眼，所以不属乎身子；"
+          },
+          {
+            "kind": "plain",
+            "text": "」它也不能因此就不属乎身子。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "不然，你用灵祝谢，那在座不通方言的人，既然不明白你的话，怎能在你感谢的时候说「阿们」呢？",
+      "spans": "[[39,41,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "不然，你用灵祝谢，那在座不通方言的人，既然不明白你的话，怎能在你感谢的时候说「"
+          },
+          {
+            "kind": "human",
+            "text": "阿们"
+          },
+          {
+            "kind": "plain",
+            "text": "」呢？"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "因为经上说：「神叫万物都服在他的脚下。」既说万物都服了他，明显那叫万物服他的，不在其内了。",
+      "spans": "[[7,19,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "因为经上说：「"
+          },
+          {
+            "kind": "human",
+            "text": "神叫万物都服在他的脚下。"
+          },
+          {
+            "kind": "plain",
+            "text": "」既说万物都服了他，明显那叫万物服他的，不在其内了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "或有人问：「死人怎样复活，带着甚么身体来呢？」",
+      "spans": "[[6,22,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "或有人问：「"
+          },
+          {
+            "kind": "human",
+            "text": "死人怎样复活，带着甚么身体来呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "经上也是这样记着说：「首先的人亚当成了有灵〔灵：或作血气〕的活人」；末后的亚当成了叫人活的灵。",
+      "spans": "[[11,32,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "经上也是这样记着说：「"
+          },
+          {
+            "kind": "human",
+            "text": "首先的人亚当成了有灵〔灵：或作血气〕的活人"
+          },
+          {
+            "kind": "plain",
+            "text": "」；末后的亚当成了叫人活的灵。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "这必朽坏的既变成不朽坏的，这必死的既变成不死的，那时经上所记「死被得胜吞灭」的话就应验了。",
+      "spans": "[[31,37,2]]",
+      "themeRepeatCount": 9,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "这必朽坏的既变成不朽坏的，这必死的既变成不死的，那时经上所记「"
+          },
+          {
+            "kind": "human",
+            "text": "死被得胜吞灭"
+          },
+          {
+            "kind": "plain",
+            "text": "」的话就应验了。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "人若说「我爱神」，却恨他的弟兄，就是说谎话的；不爱他所看见的弟兄，就不能爱没有看见的神〔有古卷作：怎能爱没有看见的神呢〕。",
+      "spans": "[[4,7,2]]",
+      "themeRepeatCount": 39,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "人若说「"
+          },
+          {
+            "kind": "human",
+            "text": "我爱神"
+          },
+          {
+            "kind": "plain",
+            "text": "」，却恨他的弟兄，就是说谎话的；不爱他所看见的弟兄，就不能爱没有看见的神〔有古卷作：怎能爱没有看见的神呢〕。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "所以臣仆对他说：「不如为我主我王寻找一个处女，使她伺候王，奉养王，睡在王的怀中，好叫我主我王得暖。」",
+      "spans": "[[9,49,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "所以臣仆对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "不如为我主我王寻找一个处女，使她伺候王，奉养王，睡在王的怀中，好叫我主我王得暖。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "那时，哈及的儿子亚多尼雅自尊，说：「我必作王」，就为自己预备车辆、马兵，又派五十人在他前头奔走。",
+      "spans": "[[18,22,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那时，哈及的儿子亚多尼雅自尊，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我必作王"
+          },
+          {
+            "kind": "plain",
+            "text": "」，就为自己预备车辆、马兵，又派五十人在他前头奔走。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "他父亲素来没有使他忧闷，说：「你是作甚么呢？」他甚俊美，生在押沙龙之后。",
+      "spans": "[[15,22,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "他父亲素来没有使他忧闷，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你是作甚么呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他甚俊美，生在押沙龙之后。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "拿单对所罗门的母亲拔示巴说：「哈及的儿子亚多尼雅作王了，你没有听见么？我们的主大卫却不知道。",
+      "spans": "[[15,46,2]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "拿单对所罗门的母亲拔示巴说：「"
+          },
+          {
+            "kind": "human",
+            "text": "哈及的儿子亚多尼雅作王了，你没有听见么？我们的主大卫却不知道。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "你进去见大卫王，对他说：『我主我王啊，你不曾向婢女起誓说：你儿子所罗门必接续我作王，坐在我的位上么？现在亚多尼雅怎么作了王呢？』",
+      "spans": "[[13,63,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "你进去见大卫王，对他说：『"
+          },
+          {
+            "kind": "human",
+            "text": "我主我王啊，你不曾向婢女起誓说：你儿子所罗门必接续我作王，坐在我的位上么？现在亚多尼雅怎么作了王呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "拔示巴向王屈身下拜；王说：「你要甚么？」",
+      "spans": "[[14,19,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "拔示巴向王屈身下拜；王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你要甚么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "单段人言",
+      "text": "有人奏告王说：「先知拿单来了。」拿单进到王前，脸伏于地。",
+      "spans": "[[8,15,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有人奏告王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "先知拿单来了。"
+          },
+          {
+            "kind": "plain",
+            "text": "」拿单进到王前，脸伏于地。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "大卫求问神，说：「我可以上去攻打非利士人吗？你将他们交在我手里吗？」耶和华说：「你可以上去，我必将他们交在你手里。」",
+      "spans": "[[9,33,1],[40,57,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫求问神，说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "我可以上去攻打非利士人吗？你将他们交在我手里吗？"
+          },
+          {
+            "kind": "plain",
+            "text": "」耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "你可以上去，我必将他们交在你手里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "「你去告诉我仆人大卫，说耶和华如此说：『你不可建造殿宇给我居住。",
+      "spans": "[[1,20,2],[20,32,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "「"
+          },
+          {
+            "kind": "human",
+            "text": "你去告诉我仆人大卫，说耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你不可建造殿宇给我居住。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "「你去告诉大卫说，耶和华如此说：我有三样灾，随你选择一样，我好降与你。」",
+      "spans": "[[1,16,2],[16,36,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "「"
+          },
+          {
+            "kind": "human",
+            "text": "你去告诉大卫说，耶和华如此说："
+          },
+          {
+            "kind": "divine",
+            "text": "我有三样灾，随你选择一样，我好降与你。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "于是，迦得来见大卫，对他说：「耶和华如此说：『你可以随意选择：",
+      "spans": "[[15,23,2],[23,31,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "于是，迦得来见大卫，对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你可以随意选择："
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "我的意思就是你们各人说：「我是属保罗的」；「我是属亚波罗的」；「我是属矶法的」；「我是属基督的」。",
+      "spans": "[[13,19,2],[22,29,2],[32,38,2],[41,47,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "我的意思就是你们各人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我是属保罗的"
+          },
+          {
+            "kind": "plain",
+            "text": "」；「"
+          },
+          {
+            "kind": "human",
+            "text": "我是属亚波罗的"
+          },
+          {
+            "kind": "plain",
+            "text": "」；「"
+          },
+          {
+            "kind": "human",
+            "text": "我是属矶法的"
+          },
+          {
+            "kind": "plain",
+            "text": "」；「"
+          },
+          {
+            "kind": "human",
+            "text": "我是属基督的"
+          },
+          {
+            "kind": "plain",
+            "text": "」。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "有说：「我是属保罗的」；有说：「我是属亚波罗的。」这岂不是你们和世人一样吗？",
+      "spans": "[[4,10,2],[16,24,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我是属保罗的"
+          },
+          {
+            "kind": "plain",
+            "text": "」；有说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我是属亚波罗的。"
+          },
+          {
+            "kind": "plain",
+            "text": "」这岂不是你们和世人一样吗？"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "所以我告诉你们，被神的灵感动的，没有说「耶稣是可咒诅」的；若不是被圣灵感动的，也没有能说「耶稣是主」的。",
+      "spans": "[[20,26,1],[45,49,2]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "所以我告诉你们，被神的灵感动的，没有说「"
+          },
+          {
+            "kind": "divine",
+            "text": "耶稣是可咒诅"
+          },
+          {
+            "kind": "plain",
+            "text": "」的；若不是被圣灵感动的，也没有能说「"
+          },
+          {
+            "kind": "human",
+            "text": "耶稣是主"
+          },
+          {
+            "kind": "plain",
+            "text": "」的。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "多段",
+      "text": "眼不能对手说：「我用不着你；」头也不能对脚说：「我用不着你。」",
+      "spans": "[[8,14,2],[24,30,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "眼不能对手说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我用不着你；"
+          },
+          {
+            "kind": "plain",
+            "text": "」头也不能对脚说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我用不着你。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "她说：「我主啊，你曾向婢女指着耶和华你的神起誓说：『你儿子所罗门必接续我作王，坐在我的位上。』",
+      "spans": "[[4,26,2],[26,46,1],[46,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "她说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我主啊，你曾向婢女指着耶和华你的神起誓说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你儿子所罗门必接续我作王，坐在我的位上。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "哈及的儿子亚多尼雅去见所罗门的母亲拔示巴，拔示巴问他说：「你来是为平安么？」回答说：「是为平安」；",
+      "spans": "[[29,37,2],[43,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "哈及的儿子亚多尼雅去见所罗门的母亲拔示巴，拔示巴问他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你来是为平安么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "是为平安"
+          },
+          {
+            "kind": "plain",
+            "text": "」；"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "又说：「我有话对你说。」拔示巴说：「你说吧。」",
+      "spans": "[[4,11,2],[18,22,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "又说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我有话对你说。"
+          },
+          {
+            "kind": "plain",
+            "text": "」拔示巴说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你说吧。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "拔示巴说：「我有一件小事求你，望你不要推辞。」王说：「请母亲说，我必不推辞。」",
+      "spans": "[[6,22,2],[27,38,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "拔示巴说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我有一件小事求你，望你不要推辞。"
+          },
+          {
+            "kind": "plain",
+            "text": "」王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "请母亲说，我必不推辞。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "有人告诉所罗门王说：「约押逃到耶和华的帐幕，现今在祭坛的旁边。」所罗门就差遣耶何耶大的儿子比拿雅，说：「你去将他杀死。」",
+      "spans": "[[11,31,2],[52,59,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有人告诉所罗门王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "约押逃到耶和华的帐幕，现今在祭坛的旁边。"
+          },
+          {
+            "kind": "plain",
+            "text": "」所罗门就差遣耶何耶大的儿子比拿雅，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你去将他杀死。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "比拿雅来到耶和华的帐幕，对约押说：「王吩咐说，你出来吧！」他说：「我不出去，我要死在这里。」比拿雅就去回复王，说约押如此如此回答我。",
+      "spans": "[[18,28,1],[33,45,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "比拿雅来到耶和华的帐幕，对约押说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "王吩咐说，你出来吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我不出去，我要死在这里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」比拿雅就去回复王，说约押如此如此回答我。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "王就差遣人将示每召了来，对他说：「我岂不是叫你指着耶和华起誓，并且警戒你说『你当确实的知道，你哪日出来往别处去，那日必死』么？你也对我说：『这话甚好，我必听从。』",
+      "spans": "[[17,38,2],[38,60,1],[60,81,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "王就差遣人将示每召了来，对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我岂不是叫你指着耶和华起誓，并且警戒你说『"
+          },
+          {
+            "kind": "divine",
+            "text": "你当确实的知道，你哪日出来往别处去，那日必死"
+          },
+          {
+            "kind": "human",
+            "text": "』么？你也对我说：『这话甚好，我必听从。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "那妇人说：「不然，活孩子是我的，死孩子是你的。」这妇人说：「不然，死孩子是你的，活孩子是我的。」她们在王面前如此争论。",
+      "spans": "[[6,23,2],[30,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那妇人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "不然，活孩子是我的，死孩子是你的。"
+          },
+          {
+            "kind": "plain",
+            "text": "」这妇人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "不然，死孩子是你的，活孩子是我的。"
+          },
+          {
+            "kind": "plain",
+            "text": "」她们在王面前如此争论。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "活孩子的母亲为自己的孩子心里急痛，就说：「求我主将活孩子给那妇人吧，万不可杀他！」那妇人说：「这孩子也不归我，也不归你，把他劈了吧！」",
+      "spans": "[[21,40,2],[47,66,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "活孩子的母亲为自己的孩子心里急痛，就说：「"
+          },
+          {
+            "kind": "human",
+            "text": "求我主将活孩子给那妇人吧，万不可杀他！"
+          },
+          {
+            "kind": "plain",
+            "text": "」那妇人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这孩子也不归我，也不归你，把他劈了吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "法老对他说：「你在我这里有甚么缺乏，你竟要回你本国去呢？」他回答说：「我没有缺乏甚么，只是求王容我回去。」",
+      "spans": "[[7,28,2],[35,52,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "法老对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你在我这里有甚么缺乏，你竟要回你本国去呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我没有缺乏甚么，只是求王容我回去。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "对耶罗波安说：「你可以拿十片。耶和华以色列的神如此说：『我必将国从所罗门手里夺回，将十个支派赐给你。",
+      "spans": "[[8,28,2],[28,50,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "对耶罗波安说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你可以拿十片。耶和华以色列的神如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "我必将国从所罗门手里夺回，将十个支派赐给你。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "『耶和华如此说：你们不可上去与你们的弟兄以色列人争战。各归各家去吧！因为这事出于我。』」众人就听从耶和华的话，遵着耶和华的命回去了。",
+      "spans": "[[1,8,2],[8,66,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "『"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说："
+          },
+          {
+            "kind": "divine",
+            "text": "你们不可上去与你们的弟兄以色列人争战。各归各家去吧！因为这事出于我。』」众人就听从耶和华的话，遵着耶和华的命回去了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "去追赶神人，遇见他坐在橡树底下，就问他说：「你是从犹大来的神人不是？」他说：「是。」",
+      "spans": "[[22,34,2],[39,41,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "去追赶神人，遇见他坐在橡树底下，就问他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你是从犹大来的神人不是？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "是。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "老先知对他说：「我也是先知，和你一样。有天使奉耶和华的命对我说：『你去把他带回你的家，叫他吃饭喝水。』」这都是老先知诓哄他。",
+      "spans": "[[8,33,2],[33,50,1],[50,51,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "老先知对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我也是先知，和你一样。有天使奉耶和华的命对我说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你去把他带回你的家，叫他吃饭喝水。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          },
+          {
+            "kind": "plain",
+            "text": "」这都是老先知诓哄他。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "你回去告诉耶罗波安说：『耶和华以色列的神如此说：我从民中将你高举，立你作我民以色列的君，",
+      "spans": "[[12,24,2],[24,44,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "你回去告诉耶罗波安说：『"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华以色列的神如此说："
+          },
+          {
+            "kind": "divine",
+            "text": "我从民中将你高举，立你作我民以色列的君，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "妇人对以利亚说：「现在我知道你是神人，耶和华借你口所说的话是真的。」",
+      "spans": "[[9,27,2],[27,34,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "妇人对以利亚说：「"
+          },
+          {
+            "kind": "human",
+            "text": "现在我知道你是神人，耶和华借你口所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的话是真的。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "又说：「倒第二次。」他们就倒第二次；又说：「倒第三次。」他们就倒第三次。",
+      "spans": "[[4,9,2],[22,27,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "又说：「"
+          },
+          {
+            "kind": "human",
+            "text": "倒第二次。"
+          },
+          {
+            "kind": "plain",
+            "text": "」他们就倒第二次；又说：「"
+          },
+          {
+            "kind": "human",
+            "text": "倒第三次。"
+          },
+          {
+            "kind": "plain",
+            "text": "」他们就倒第三次。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "对仆人说：「你上去，向海观看。」仆人就上去观看，说：「没有甚么。」他说：「你再去观看。」如此七次。",
+      "spans": "[[6,15,2],[27,32,2],[37,43,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "对仆人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你上去，向海观看。"
+          },
+          {
+            "kind": "plain",
+            "text": "」仆人就上去观看，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "没有甚么。"
+          },
+          {
+            "kind": "plain",
+            "text": "」他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你再去观看。"
+          },
+          {
+            "kind": "plain",
+            "text": "」如此七次。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "第七次仆人说：「我看见有一小片云从海里上来，不过如人手那样大。」以利亚说：「你上去告诉亚哈，当套车下去，免得被雨阻挡。」",
+      "spans": "[[8,31,2],[38,59,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "第七次仆人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我看见有一小片云从海里上来，不过如人手那样大。"
+          },
+          {
+            "kind": "plain",
+            "text": "」以利亚说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你上去告诉亚哈，当套车下去，免得被雨阻挡。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "以利沙就离开牛，跑到以利亚那里，说：「求你容我先与父母亲嘴，然后我便跟随你。」以利亚对他说：「你回去吧，我向你作了甚么呢？」",
+      "spans": "[[19,38,2],[47,61,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以利沙就离开牛，跑到以利亚那里，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "求你容我先与父母亲嘴，然后我便跟随你。"
+          },
+          {
+            "kind": "plain",
+            "text": "」以利亚对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你回去吧，我向你作了甚么呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "有一个先知来见以色列王亚哈，说：「耶和华如此说：『这一大群人你看见了么？今日我必将他们交在你手里，你就知道我是耶和华。』」",
+      "spans": "[[17,25,2],[25,59,1],[59,60,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有一个先知来见以色列王亚哈，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "这一大群人你看见了么？今日我必将他们交在你手里，你就知道我是耶和华。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "亚哈说：「借着谁呢？」他回答说：「耶和华说，借着跟从省长的少年人。」亚哈说：「要谁率领呢？」他说：「要你亲自率领。」",
+      "spans": "[[5,10,2],[17,22,2],[22,58,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "亚哈说：「"
+          },
+          {
+            "kind": "human",
+            "text": "借着谁呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华说，"
+          },
+          {
+            "kind": "divine",
+            "text": "借着跟从省长的少年人。」亚哈说：「要谁率领呢？」他说：「要你亲自率领。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "于是他们腰束麻布，头套绳索，去见以色列王，说：「王的仆人便哈达说，求王存留我的性命。」亚哈说：「他还活着么？他是我的兄弟。」",
+      "spans": "[[24,42,2],[48,61,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "于是他们腰束麻布，头套绳索，去见以色列王，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "王的仆人便哈达说，求王存留我的性命。"
+          },
+          {
+            "kind": "plain",
+            "text": "」亚哈说：「"
+          },
+          {
+            "kind": "human",
+            "text": "他还活着么？他是我的兄弟。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "这些人留心探出他的口气来，便急忙就着他的话说：「便哈达是王的兄弟！」王说：「你们去请他来。」便哈达出来见王，王就请他上车。",
+      "spans": "[[24,33,2],[38,45,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "这些人留心探出他的口气来，便急忙就着他的话说：「"
+          },
+          {
+            "kind": "human",
+            "text": "便哈达是王的兄弟！"
+          },
+          {
+            "kind": "plain",
+            "text": "」王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们去请他来。"
+          },
+          {
+            "kind": "plain",
+            "text": "」便哈达出来见王，王就请他上车。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "便哈达对王说：「我父从你父那里所夺的城邑，我必归还。你可以在大马色立街市，像我父在撒玛利亚所立的一样。」亚哈说：「我照此立约，放你回去」，就与他立约，放他去了。",
+      "spans": "[[8,51,2],[57,67,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "便哈达对王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我父从你父那里所夺的城邑，我必归还。你可以在大马色立街市，像我父在撒玛利亚所立的一样。"
+          },
+          {
+            "kind": "plain",
+            "text": "」亚哈说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我照此立约，放你回去"
+          },
+          {
+            "kind": "plain",
+            "text": "」，就与他立约，放他去了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "他对王说：「耶和华如此说：『因你将我定要灭绝的人放去，你的命就必代替他的命，你的民也必代替他的民。』」",
+      "spans": "[[6,14,2],[14,49,1],[49,50,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "他对王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "因你将我定要灭绝的人放去，你的命就必代替他的命，你的民也必代替他的民。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "你要对他说：『耶和华如此说：你杀了人，又得他的产业么？』又要对他说：『耶和华如此说：狗在何处舔拿伯的血，也必在何处舔你的血。』」",
+      "spans": "[[7,14,2],[14,64,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "你要对他说：『"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说："
+          },
+          {
+            "kind": "divine",
+            "text": "你杀了人，又得他的产业么？』又要对他说：『耶和华如此说：狗在何处舔拿伯的血，也必在何处舔你的血。』」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "亚哈对以利亚说：「我仇敌啊，你找到我么？」他回答说：「我找到你了；因为你卖了自己，行耶和华眼中看为恶的事。",
+      "spans": "[[9,20,2],[27,53,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "亚哈对以利亚说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我仇敌啊，你找到我么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我找到你了；因为你卖了自己，行耶和华眼中看为恶的事。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "亚哈问约沙法说：「你肯同我去攻取基列的拉末么？」约沙法对以色列王说：「你我不分彼此，我的民与你的民一样，我的马与你的马一样。」",
+      "spans": "[[9,23,2],[35,62,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "亚哈问约沙法说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你肯同我去攻取基列的拉末么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」约沙法对以色列王说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你我不分彼此，我的民与你的民一样，我的马与你的马一样。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "于是以色列王招聚先知，约有四百人，问他们说：「我上去攻取基列的拉末可以不可以？」他们说：「可以上去，因为主必将那城交在王的手里。」",
+      "spans": "[[23,39,2],[45,64,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "于是以色列王招聚先知，约有四百人，问他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我上去攻取基列的拉末可以不可以？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "可以上去，因为主必将那城交在王的手里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "以色列王对约沙法说：「还有一个人，是音拉的儿子米该雅，我们可以托他求问耶和华。只是我恨他；因为他指着我所说的预言，不说吉语，单说凶言。」约沙法说：「王不必这样说。」",
+      "spans": "[[11,67,2],[74,81,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以色列王对约沙法说：「"
+          },
+          {
+            "kind": "human",
+            "text": "还有一个人，是音拉的儿子米该雅，我们可以托他求问耶和华。只是我恨他；因为他指着我所说的预言，不说吉语，单说凶言。"
+          },
+          {
+            "kind": "plain",
+            "text": "」约沙法说：「"
+          },
+          {
+            "kind": "human",
+            "text": "王不必这样说。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "基拿拿的儿子西底家造了两个铁角，说：「耶和华如此说：『你要用这角抵触亚兰人，直到将他们灭尽。』」",
+      "spans": "[[19,27,2],[27,46,1],[46,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "基拿拿的儿子西底家造了两个铁角，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你要用这角抵触亚兰人，直到将他们灭尽。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "米该雅说：「我指着永生的耶和华起誓，耶和华对我说甚么，我就说甚么。」",
+      "spans": "[[6,24,2],[24,34,1]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "米该雅说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我指着永生的耶和华起誓，耶和华对我说"
+          },
+          {
+            "kind": "divine",
+            "text": "甚么，我就说甚么。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "米该雅到王面前，王问他说：「米该雅啊，我们上去攻取基列的拉末可以不可以？」他回答说：「可以上去，必然得胜，耶和华必将那城交在王的手中。」",
+      "spans": "[[14,36,2],[43,67,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "米该雅到王面前，王问他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "米该雅啊，我们上去攻取基列的拉末可以不可以？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "可以上去，必然得胜，耶和华必将那城交在王的手中。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "王对他说：「我当嘱咐你几次，你才奉耶和华的名向我说实话呢？」",
+      "spans": "[[6,25,2],[25,30,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "王对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我当嘱咐你几次，你才奉耶和华的名向我说"
+          },
+          {
+            "kind": "divine",
+            "text": "实话呢？」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "米该雅说：「我看见以色列众民散在山上，如同没有牧人的羊群一般。耶和华说：『这民没有主人，他们可以平平安安的各归各家去。』」",
+      "spans": "[[6,37,2],[37,59,1],[59,60,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "米该雅说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我看见以色列众民散在山上，如同没有牧人的羊群一般。耶和华说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "这民没有主人，他们可以平平安安的各归各家去。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "耶和华问他说：『你用何法呢？』他说：『我去，要在他众先知口中作谎言的灵。』耶和华说：『这样，你必能引诱他，你去如此行吧！』",
+      "spans": "[[8,14,2],[19,36,2],[43,60,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华问他说：『"
+          },
+          {
+            "kind": "human",
+            "text": "你用何法呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "』他说：『"
+          },
+          {
+            "kind": "human",
+            "text": "我去，要在他众先知口中作谎言的灵。"
+          },
+          {
+            "kind": "plain",
+            "text": "』耶和华说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "这样，你必能引诱他，你去如此行吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "基拿拿的儿子西底家前来，打米该雅的脸，说：「耶和华的灵从那里离开我与你说话呢？」",
+      "spans": "[[22,36,2],[36,40,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "基拿拿的儿子西底家前来，打米该雅的脸，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华的灵从那里离开我与你说"
+          },
+          {
+            "kind": "divine",
+            "text": "话呢？」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "米该雅说：「你若能平平安安的回来，那就是耶和华没有借我说这话了」；又说：「众民哪，你们都要听！」",
+      "spans": "[[6,28,2],[28,48,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "米该雅说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你若能平平安安的回来，那就是耶和华没有借我说"
+          },
+          {
+            "kind": "divine",
+            "text": "这话了」；又说：「众民哪，你们都要听！」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "献祭的人若说：「必须先烧脂油，然后你可以随意取肉。」仆人就说：「你立时给我，不然我便抢去。」",
+      "spans": "[[8,25,2],[32,45,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "献祭的人若说：「"
+          },
+          {
+            "kind": "human",
+            "text": "必须先烧脂油，然后你可以随意取肉。"
+          },
+          {
+            "kind": "plain",
+            "text": "」仆人就说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你立时给我，不然我便抢去。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "有神人来见以利，对他说：「耶和华如此说：『你祖父在埃及法老家作奴仆的时候，我不是向他们显现么？",
+      "spans": "[[13,21,2],[21,47,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有神人来见以利，对他说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "你祖父在埃及法老家作奴仆的时候，我不是向他们显现么？"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "就跑到以利那里，说：「你呼唤我？我在这里。」以利回答说：「我没有呼唤你，你去睡吧。」他就去睡了。",
+      "spans": "[[11,21,2],[29,41,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "就跑到以利那里，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你呼唤我？我在这里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」以利回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我没有呼唤你，你去睡吧。"
+          },
+          {
+            "kind": "plain",
+            "text": "」他就去睡了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "耶和华又呼唤撒母耳。撒母耳起来，到以利那里，说：「你呼唤我？我在这里。」以利回答说：「我的儿，我没有呼唤你，你去睡吧。」",
+      "spans": "[[25,35,2],[43,59,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华又呼唤撒母耳。撒母耳起来，到以利那里，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你呼唤我？我在这里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」以利回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我的儿，我没有呼唤你，你去睡吧。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "因此以利对撒母耳说：「你仍去睡吧；若再呼唤你，你就说：『耶和华啊，请说，仆人敬听！』」撒母耳就去，仍睡在原处。",
+      "spans": "[[11,36,2],[36,55,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "因此以利对撒母耳说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你仍去睡吧；若再呼唤你，你就说：『耶和华啊，请说，"
+          },
+          {
+            "kind": "divine",
+            "text": "仆人敬听！』」撒母耳就去，仍睡在原处。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "耶和华又来站着，像前三次呼唤说：「撒母耳啊！撒母耳啊！」撒母耳回答说：「请说，仆人敬听！」",
+      "spans": "[[17,27,1],[36,44,2]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华又来站着，像前三次呼唤说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "撒母耳啊！撒母耳啊！"
+          },
+          {
+            "kind": "plain",
+            "text": "」撒母耳回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "请说，仆人敬听！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "以利呼唤撒母耳说：「我儿撒母耳啊！」撒母耳回答说：「我在这里！」",
+      "spans": "[[10,17,2],[26,31,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以利呼唤撒母耳说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿撒母耳啊！"
+          },
+          {
+            "kind": "plain",
+            "text": "」撒母耳回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我在这里！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "以利说：「耶和华对你说甚么，你不要向我隐瞒；你若将神对你所说的隐瞒一句，愿他重重的降罚与你。」",
+      "spans": "[[5,11,2],[11,47,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以利说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华对你说"
+          },
+          {
+            "kind": "divine",
+            "text": "甚么，你不要向我隐瞒；你若将神对你所说的隐瞒一句，愿他重重的降罚与你。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "非利士人就惧怕起来，说：「有神到了他们营中」；又说：「我们有祸了！向来不曾有这样的事。",
+      "spans": "[[13,21,2],[27,43,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "非利士人就惧怕起来，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "有神到了他们营中"
+          },
+          {
+            "kind": "plain",
+            "text": "」；又说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我们有祸了！向来不曾有这样的事。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "那人对以利说：「我是从阵上来的，今日我从阵上逃回。」以利说：「我儿，事情怎样？」",
+      "spans": "[[8,25,2],[31,39,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那人对以利说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我是从阵上来的，今日我从阵上逃回。"
+          },
+          {
+            "kind": "plain",
+            "text": "」以利说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿，事情怎样？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "就打发人去请非利士的众首领来聚集，问他们说：「我们向以色列神的约柜应当怎样行呢？」他们回答说：「可以将以色列神的约柜运到迦特去。」于是将以色列神的约柜运到那里去。",
+      "spans": "[[23,40,2],[48,64,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "就打发人去请非利士的众首领来聚集，问他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我们向以色列神的约柜应当怎样行呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他们回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "可以将以色列神的约柜运到迦特去。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是将以色列神的约柜运到那里去。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "非利士人说：「应当用甚么献为赔罪的礼物呢？」他们回答说：「当照非利士首领的数目，用五个金痔疮，五个金老鼠，因为在你们众人和你们首领的身上都是一样的灾。",
+      "spans": "[[7,21,2],[29,75,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "非利士人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "应当用甚么献为赔罪的礼物呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他们回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "当照非利士首领的数目，用五个金痔疮，五个金老鼠，因为在你们众人和你们首领的身上都是一样的灾。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "耶和华对撒母耳说：「你只管依从他们的话，为他们立王。」撒母耳对以色列人说：「你们各归各城去吧！」",
+      "spans": "[[10,26,1],[38,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华对撒母耳说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "你只管依从他们的话，为他们立王。"
+          },
+          {
+            "kind": "plain",
+            "text": "」撒母耳对以色列人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们各归各城去吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "仆人说：「这城里有一位神人，是众人所尊重的，凡他所说的全都应验。我们不如往他那里去，或者他能将我们当走的路指示我们。」",
+      "spans": "[[5,26,2],[26,59,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "仆人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这城里有一位神人，是众人所尊重的，凡他所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的全都应验。我们不如往他那里去，或者他能将我们当走的路指示我们。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "（从前以色列中，若有人去问神，就说：「我们问先见去吧！」现在称为「先知」的，从前称为「先见」。）",
+      "spans": "[[19,27,1],[33,35,2],[43,45,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "（从前以色列中，若有人去问神，就说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "我们问先见去吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」现在称为「"
+          },
+          {
+            "kind": "human",
+            "text": "先知"
+          },
+          {
+            "kind": "plain",
+            "text": "」的，从前称为「"
+          },
+          {
+            "kind": "human",
+            "text": "先见"
+          },
+          {
+            "kind": "plain",
+            "text": "」。）"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "那地方有一个人说：「这些人的父亲是谁呢？」此后有句俗语说：「扫罗也列在先知中吗？」",
+      "spans": "[[10,20,2],[30,40,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那地方有一个人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "这些人的父亲是谁呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」此后有句俗语说：「"
+          },
+          {
+            "kind": "human",
+            "text": "扫罗也列在先知中吗？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "扫罗的叔叔问扫罗和他仆人说：「你们往那里去了？」回答说：「找驴去了。我们见没有驴，就到了撒母耳那里。」",
+      "spans": "[[15,23,2],[29,50,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "扫罗的叔叔问扫罗和他仆人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们往那里去了？"
+          },
+          {
+            "kind": "plain",
+            "text": "」回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "找驴去了。我们见没有驴，就到了撒母耳那里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "对他们说：「耶和华以色列的神如此说：『我领你们以色列人出埃及，救你们脱离埃及人的手，又救你们脱离欺压你们各国之人的手。』",
+      "spans": "[[6,19,2],[19,59,1],[59,60,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "对他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华以色列的神如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "我领你们以色列人出埃及，救你们脱离埃及人的手，又救你们脱离欺压你们各国之人的手。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "就问耶和华说：「那人到这里来了没有？」耶和华说：「他藏在器具中了。」",
+      "spans": "[[8,18,1],[25,33,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "就问耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "那人到这里来了没有？"
+          },
+          {
+            "kind": "plain",
+            "text": "」耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "他藏在器具中了。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳对众民说：「你们看耶和华所拣选的人，众民中有可比他的么？」众民就大声欢呼说：「愿王万岁！」",
+      "spans": "[[9,31,2],[42,47,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳对众民说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们看耶和华所拣选的人，众民中有可比他的么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」众民就大声欢呼说：「"
+          },
+          {
+            "kind": "human",
+            "text": "愿王万岁！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳对他们说：「你们在我手里没有找着甚么，有耶和华和他的受膏者今日为证。」他们说：「愿他为证。」",
+      "spans": "[[9,37,2],[43,48,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳对他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们在我手里没有找着甚么，有耶和华和他的受膏者今日为证。"
+          },
+          {
+            "kind": "plain",
+            "text": "」他们说：「"
+          },
+          {
+            "kind": "human",
+            "text": "愿他为证。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳说：「你作的是甚么事呢？」扫罗说：「因为我见百姓离开我散去，你也不照所定的日期来到，而且非利士人聚集在密抹。",
+      "spans": "[[6,15,2],[21,57,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你作的是甚么事呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "因为我见百姓离开我散去，你也不照所定的日期来到，而且非利士人聚集在密抹。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳对扫罗说：「你作了糊涂事了，没有遵守耶和华你神所吩咐你的命令。若遵守，耶和华必在以色列中坚立你的王位，直到永远。",
+      "spans": "[[9,29,2],[29,59,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳对扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你作了糊涂事了，没有遵守耶和华你神所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "你的命令。若遵守，耶和华必在以色列中坚立你的王位，直到永远。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "防兵对约拿单和拿兵器的人说：「你们上到这里来，我们有一件事指示你们。」约拿单就对拿兵器的人说：「你跟随我上去，因为耶和华将他们交在以色列人手里了。」",
+      "spans": "[[15,34,2],[48,73,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "防兵对约拿单和拿兵器的人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们上到这里来，我们有一件事指示你们。"
+          },
+          {
+            "kind": "plain",
+            "text": "」约拿单就对拿兵器的人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你跟随我上去，因为耶和华将他们交在以色列人手里了。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "有人告诉扫罗说：「百姓吃带血的肉，得罪耶和华了。」扫罗说：「你们有罪了，今日要将大石头滚到我这里来。」",
+      "spans": "[[9,24,2],[30,50,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "有人告诉扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "百姓吃带血的肉，得罪耶和华了。"
+          },
+          {
+            "kind": "plain",
+            "text": "」扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们有罪了，今日要将大石头滚到我这里来。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "扫罗说：「我们不如夜里下去追赶非利士人，抢掠他们，直到天亮，不留他们一人。」众民说：「你看怎样好就去行吧！」祭司说：「我们先当亲近神。」",
+      "spans": "[[5,37,2],[43,53,2],[59,67,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我们不如夜里下去追赶非利士人，抢掠他们，直到天亮，不留他们一人。"
+          },
+          {
+            "kind": "plain",
+            "text": "」众民说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你看怎样好就去行吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」祭司说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我们先当亲近神。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "扫罗就对以色列众人说：「你们站在一边，我与我儿子约拿单也站在一边。」百姓对扫罗说：「你看怎样好就去行吧！」",
+      "spans": "[[12,33,2],[42,52,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "扫罗就对以色列众人说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们站在一边，我与我儿子约拿单也站在一边。"
+          },
+          {
+            "kind": "plain",
+            "text": "」百姓对扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你看怎样好就去行吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "扫罗对约拿单说：「你告诉我，你作了甚么事？」约拿单说：「我实在以手里的杖，用杖头蘸了一点蜜尝了一尝。这样我就死么〔或作：吧〕？」",
+      "spans": "[[9,21,2],[28,63,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "扫罗对约拿单说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你告诉我，你作了甚么事？"
+          },
+          {
+            "kind": "plain",
+            "text": "」约拿单说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我实在以手里的杖，用杖头蘸了一点蜜尝了一尝。这样我就死么〔或作：吧〕？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳对扫罗说：「你住口吧！等我将耶和华昨夜向我所说的话告诉你。」扫罗说：「请讲。」",
+      "spans": "[[9,26,2],[26,42,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳对扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你住口吧！等我将耶和华昨夜向我所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的话告诉你。」扫罗说：「请讲。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳说：「我怎能去呢？扫罗若听见，必要杀我。」耶和华说：「你可以带一只牛犊去，就说：『我来是要向耶和华献祭。』",
+      "spans": "[[6,23,2],[30,56,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我怎能去呢？扫罗若听见，必要杀我。"
+          },
+          {
+            "kind": "plain",
+            "text": "」耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "你可以带一只牛犊去，就说：『我来是要向耶和华献祭。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "撒母耳对耶西说：「你的儿子都在这里么？」他回答说：「还有个小的，现在放羊。」撒母耳对耶西说：「你打发人去叫他来；他若不来，我们必不坐席。」",
+      "spans": "[[9,19,2],[26,37,2],[47,68,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "撒母耳对耶西说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你的儿子都在这里么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」他回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "还有个小的，现在放羊。"
+          },
+          {
+            "kind": "plain",
+            "text": "」撒母耳对耶西说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你打发人去叫他来；他若不来，我们必不坐席。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "大卫又说：「耶和华救我脱离狮子和熊的爪，也必救我脱离这非利士人的手。」扫罗对大卫说：「你可以去吧！耶和华必与你同在。」",
+      "spans": "[[6,34,2],[43,58,2]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫又说：「"
+          },
+          {
+            "kind": "human",
+            "text": "耶和华救我脱离狮子和熊的爪，也必救我脱离这非利士人的手。"
+          },
+          {
+            "kind": "plain",
+            "text": "」扫罗对大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你可以去吧！耶和华必与你同在。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多段",
+      "text": "扫罗看见大卫去攻击非利士人，就问元帅押尼珥说：「押尼珥啊，那少年人是谁的儿子？」押尼珥说：「我敢在王面前起誓，我不知道。」",
+      "spans": "[[24,39,2],[46,60,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "扫罗看见大卫去攻击非利士人，就问元帅押尼珥说：「"
+          },
+          {
+            "kind": "human",
+            "text": "押尼珥啊，那少年人是谁的儿子？"
+          },
+          {
+            "kind": "plain",
+            "text": "」押尼珥说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我敢在王面前起誓，我不知道。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你听见桑树梢上有脚步的声音，就要出战，因为神已经在你前头去攻打非利士人的军队。」",
+      "spans": "[[0,40,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你听见桑树梢上有脚步的声音，就要出战，因为神已经在你前头去攻打非利士人的军队。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "自从我领以色列人出埃及，直到今日，我未曾住过殿宇，乃从这会幕到那会幕，从这帐幕到那帐幕。",
+      "spans": "[[0,44,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "自从我领以色列人出埃及，直到今日，我未曾住过殿宇，乃从这会幕到那会幕，从这帐幕到那帐幕。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "凡我同以色列人所走的地方，我何曾向以色列的一个士师，就是我吩咐牧养我民的说：你为何不给我建造香柏木的殿宇呢？』",
+      "spans": "[[0,55,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "凡我同以色列人所走的地方，我何曾向以色列的一个士师，就是我吩咐牧养我民的说：你为何不给我建造香柏木的殿宇呢？』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你无论往那里去，我常与你同在，剪除你的一切仇敌；我必使你得大名，好像世上大大有名的人一样。",
+      "spans": "[[0,45,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你无论往那里去，我常与你同在，剪除你的一切仇敌；我必使你得大名，好像世上大大有名的人一样。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我必为我民以色列选定一个地方，栽培他们，使他们住自己的地方，不再迁移；凶恶之子也不像从前扰害他们，",
+      "spans": "[[0,49,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我必为我民以色列选定一个地方，栽培他们，使他们住自己的地方，不再迁移；凶恶之子也不像从前扰害他们，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "并不像我命士师治理我民以色列的时候一样。我必治服你的一切仇敌，并且我耶和华应许你，必为你建立家室。",
+      "spans": "[[0,49,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "并不像我命士师治理我民以色列的时候一样。我必治服你的一切仇敌，并且我耶和华应许你，必为你建立家室。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你寿数满足归你列祖的时候，我必使你的后裔接续你的位，我也必坚定他的国。",
+      "spans": "[[0,35,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你寿数满足归你列祖的时候，我必使你的后裔接续你的位，我也必坚定他的国。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "他必为我建造殿宇；我必坚定他的国位直到永远。",
+      "spans": "[[0,22,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他必为我建造殿宇；我必坚定他的国位直到永远。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我要作他的父，他要作我的子；并不使我的慈爱离开他，像离开在你以前的扫罗一样。",
+      "spans": "[[0,38,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我要作他的父，他要作我的子；并不使我的慈爱离开他，像离开在你以前的扫罗一样。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我却要将他永远坚立在我家里和我国里；他的国位也必坚定，直到永远。』」",
+      "spans": "[[0,33,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我却要将他永远坚立在我家里和我国里；他的国位也必坚定，直到永远。』"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "神啊，这在你眼中还看为小，又应许你仆人的家至于久远。耶和华神啊，你看顾我好像看顾高贵的人。",
+      "spans": "[[0,45,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "神啊，这在你眼中还看为小，又应许你仆人的家至于久远。耶和华神啊，你看顾我好像看顾高贵的人。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你加于仆人的尊荣，我还有何言可说呢？因为你知道你的仆人。",
+      "spans": "[[0,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你加于仆人的尊荣，我还有何言可说呢？因为你知道你的仆人。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华啊，你行了这大事，并且显明出来，是因你仆人的缘故，也是照你的心意。",
+      "spans": "[[0,36,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，你行了这大事，并且显明出来，是因你仆人的缘故，也是照你的心意。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华啊，照我们耳中听见，没有可比你的，除你以外再无神。",
+      "spans": "[[0,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，照我们耳中听见，没有可比你的，除你以外再无神。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "世上有何民能比你的民以色列呢？你神从埃及救赎他们作自己的子民，又在你赎出来的民面前行大而可畏的事，驱逐列邦人，显出你的大名。",
+      "spans": "[[0,62,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "世上有何民能比你的民以色列呢？你神从埃及救赎他们作自己的子民，又在你赎出来的民面前行大而可畏的事，驱逐列邦人，显出你的大名。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你使以色列人作你的子民，直到永远；你耶和华也作他们的神。",
+      "spans": "[[0,28,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你使以色列人作你的子民，直到永远；你耶和华也作他们的神。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华啊，你所应许仆人和仆人家的话，求你坚定，直到永远，照你所说的而行。",
+      "spans": "[[0,36,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，你所应许仆人和仆人家的话，求你坚定，直到永远，照你所说的而行。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "愿你的名永远坚立，被尊为大，说：『万军之耶和华是以色列的神，是治理以色列的神。』这样，你仆人大卫的家必在你面前坚立。",
+      "spans": "[[0,40,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "愿你的名永远坚立，被尊为大，说：『万军之耶和华是以色列的神，是治理以色列的神。』"
+          },
+          {
+            "kind": "plain",
+            "text": "这样，你仆人大卫的家必在你面前坚立。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "或三年的饥荒；或败在你敌人面前，被敌人的刀追杀三个月；或在你国中有耶和华的刀，就是三日的瘟疫，耶和华的使者在以色列的四境施行毁灭。』现在你要想一想，我好回复那差我来的。」",
+      "spans": "[[0,66,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "或三年的饥荒；或败在你敌人面前，被敌人的刀追杀三个月；或在你国中有耶和华的刀，就是三日的瘟疫，耶和华的使者在以色列的四境施行毁灭。』"
+          },
+          {
+            "kind": "plain",
+            "text": "现在你要想一想，我好回复那差我来的。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你要生一个儿子，他必作太平的人；我必使他安静，不被四围的仇敌扰乱。他的名要叫所罗门〔即太平之意〕。他在位的日子，我必使以色列人平安康泰。",
+      "spans": "[[0,68,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你要生一个儿子，他必作太平的人；我必使他安静，不被四围的仇敌扰乱。他的名要叫所罗门〔即太平之意〕。他在位的日子，我必使以色列人平安康泰。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "他必为我的名建造殿宇。他要作我的子；我要作他的父。他作以色列王；我必坚定他的国位，直到永远。』",
+      "spans": "[[0,47,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他必为我的名建造殿宇。他要作我的子；我要作他的父。他作以色列王；我必坚定他的国位，直到永远。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "他若恒久遵行我的诫命典章如今日一样，我就必坚定他的国位，直到永远。』",
+      "spans": "[[0,34,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他若恒久遵行我的诫命典章如今日一样，我就必坚定他的国位，直到永远。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华啊，尊大、能力、荣耀、强胜、威严都是你的；凡天上地下的都是你的；国度也是你的，并且你为至高，为万有之首。",
+      "spans": "[[0,55,1]]",
+      "themeRepeatCount": 23,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华啊，尊大、能力、荣耀、强胜、威严都是你的；凡天上地下的都是你的；国度也是你的，并且你为至高，为万有之首。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "丰富尊荣都从你而来，你也治理万物。在你手里有大能大力，使人尊大强盛都出于你。",
+      "spans": "[[0,38,1]]",
+      "themeRepeatCount": 20,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "丰富尊荣都从你而来，你也治理万物。在你手里有大能大力，使人尊大强盛都出于你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我们的神啊，现在我们称谢你，赞美你荣耀之名！",
+      "spans": "[[0,22,1]]",
+      "themeRepeatCount": 13,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我们的神啊，现在我们称谢你，赞美你荣耀之名！"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "「我算甚么，我的民算甚么，竟能如此乐意奉献？因为万物都从你而来，我们把从你而得的献给你。",
+      "spans": "[[0,44,1]]",
+      "themeRepeatCount": 11,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "「我算甚么，我的民算甚么，竟能如此乐意奉献？因为万物都从你而来，我们把从你而得的献给你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我们在你面前是客旅，是寄居的，与我们列祖一样。我们在世的日子如影儿，不能长存〔或作：没有长存的指望〕。",
+      "spans": "[[0,51,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我们在你面前是客旅，是寄居的，与我们列祖一样。我们在世的日子如影儿，不能长存〔或作：没有长存的指望〕。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华我们的神啊，我们预备这许多材料，要为你的圣名建造殿宇，都是从你而来，都是属你的。",
+      "spans": "[[0,43,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华我们的神啊，我们预备这许多材料，要为你的圣名建造殿宇，都是从你而来，都是属你的。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我的神啊，我知道你察验人心，喜悦正直；我以正直的心乐意献上这一切物。现在我喜欢见你的民在这里都乐意奉献与你。",
+      "spans": "[[0,54,1]]",
+      "themeRepeatCount": 5,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我的神啊，我知道你察验人心，喜悦正直；我以正直的心乐意献上这一切物。现在我喜欢见你的民在这里都乐意奉献与你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华我们列祖亚伯拉罕、以撒、以色列的神啊，求你使你的民常存这样的心思意念，坚定他们的心归向你，",
+      "spans": "[[0,48,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华我们列祖亚伯拉罕、以撒、以色列的神啊，求你使你的民常存这样的心思意念，坚定他们的心归向你，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "又求你赐我儿子所罗门诚实的心，遵守你的命令、法度、律例，成就这一切的事，用我所预备的建造殿宇。」",
+      "spans": "[[0,48,1]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "又求你赐我儿子所罗门诚实的心，遵守你的命令、法度、律例，成就这一切的事，用我所预备的建造殿宇。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "耶和华坚立我，使我坐在父亲大卫的位上，照着所应许的话为我建立家室；现在我指着永生的耶和华起誓，亚多尼雅今日必被治死。」",
+      "spans": "[[0,59,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华坚立我，使我坐在父亲大卫的位上，照着所应许的话为我建立家室；现在我指着永生的耶和华起誓，亚多尼雅今日必被治死。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "只是你不可建殿，惟你所生的儿子必为我名建殿。』",
+      "spans": "[[0,23,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "只是你不可建殿，惟你所生的儿子必为我名建殿。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "（我因仆人大卫和我在以色列众支派中所选择的耶路撒冷城的缘故，仍给所罗门留一个支派。）",
+      "spans": "[[0,42,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "（我因仆人大卫和我在以色列众支派中所选择的耶路撒冷城的缘故，仍给所罗门留一个支派。）"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "因为他离弃我，敬拜西顿人的女神亚斯他录、摩押的神基抹，和亚扪人的神米勒公，没有遵从我的道，行我眼中看为正的事，守我的律例典章，像他父亲大卫一样。",
+      "spans": "[[0,72,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "因为他离弃我，敬拜西顿人的女神亚斯他录、摩押的神基抹，和亚扪人的神米勒公，没有遵从我的道，行我眼中看为正的事，守我的律例典章，像他父亲大卫一样。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "但我不从他手里将全国夺回；使他终身为君，是因我所拣选的仆人大卫谨守我的诫命律例。",
+      "spans": "[[0,40,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "但我不从他手里将全国夺回；使他终身为君，是因我所拣选的仆人大卫谨守我的诫命律例。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我必从他儿子的手里将国夺回，以十个支派赐给你，",
+      "spans": "[[0,23,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我必从他儿子的手里将国夺回，以十个支派赐给你，"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "还留一个支派给他的儿子，使我仆人大卫在我所选择立我名的耶路撒冷城里，在我面前长有灯光。",
+      "spans": "[[0,43,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "还留一个支派给他的儿子，使我仆人大卫在我所选择立我名的耶路撒冷城里，在我面前长有灯光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "我必拣选你，使你照心里一切所愿的，作王治理以色列。",
+      "spans": "[[0,25,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我必拣选你，使你照心里一切所愿的，作王治理以色列。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "从0起",
+      "text": "你若听从我一切所吩咐你的，遵行我的道，行我眼中看为正的事，谨守我的律例诫命，像我仆人大卫所行的，我就与你同在，为你立坚固的家，像我为大卫所立的一样，将以色列人赐给你。",
+      "spans": "[[0,83,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "你若听从我一切所吩咐你的，遵行我的道，行我眼中看为正的事，谨守我的律例诫命，像我仆人大卫所行的，我就与你同在，为你立坚固的家，像我为大卫所立的一样，将以色列人赐给你。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "那时，以利沙正坐在家中，长老也与他同坐。王打发一个伺候他的人去；他还没有到，以利沙对长老说：「你们看这凶手之子，打发人来斩我的头；你们看着使者来到，就关上门，用门将他推出去。在他后头不是有他主人脚步的响声吗？」",
+      "spans": "[[47,104,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那时，以利沙正坐在家中，长老也与他同坐。王打发一个伺候他的人去；他还没有到，以利沙对长老说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们看这凶手之子，打发人来斩我的头；你们看着使者来到，就关上门，用门将他推出去。在他后头不是有他主人脚步的响声吗？"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "以后我要将犹大王西底家和他的臣仆百姓，就是在城内，从瘟疫、刀剑、饥荒中剩下的人，都交在巴比伦王尼布甲尼撒的手中和他们仇敌，并寻索其命的人手中。巴比伦王必用刀击杀他们，不顾惜，不可怜，不怜悯。这是耶和华说的。』",
+      "spans": "[[0,104,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "以后我要将犹大王西底家和他的臣仆百姓，就是在城内，从瘟疫、刀剑、饥荒中剩下的人，都交在巴比伦王尼布甲尼撒的手中和他们仇敌，并寻索其命的人手中。巴比伦王必用刀击杀他们，不顾惜，不可怜，不怜悯。这是耶和华说的。』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "必再听见有欢喜和快乐的声音、新郎和新妇的声音，并听见有人说：要称谢万军之耶和华，因耶和华本为善；他的慈爱永远长存！又有奉感谢祭到耶和华殿中之人的声音；因为我必使这地被掳的人归回，和起初一样。这是耶和华说的。」",
+      "spans": "[[0,104,1]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "必再听见有欢喜和快乐的声音、新郎和新妇的声音，并听见有人说：要称谢万军之耶和华，因耶和华本为善；他的慈爱永远长存！又有奉感谢祭到耶和华殿中之人的声音；因为我必使这地被掳的人归回，和起初一样。这是耶和华说的。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "耶利米还没有回去，护卫长说：「你可以回到沙番的孙子亚希甘的儿子基大利那里去；现在巴比伦王立他作犹大城邑的省长。你可以在他那里住在民中，不然，你看那里合宜就可以上那里去。」于是护卫长送他粮食和礼物，释放他去了。",
+      "spans": "[[15,84,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶利米还没有回去，护卫长说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你可以回到沙番的孙子亚希甘的儿子基大利那里去；现在巴比伦王立他作犹大城邑的省长。你可以在他那里住在民中，不然，你看那里合宜就可以上那里去。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是护卫长送他粮食和礼物，释放他去了。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "从前打死耶路比设（就是耶路巴力，见士师记九章一节）儿子亚比米勒的是谁呢？岂不是一个妇人从城上抛下一块上磨石来，打在他身上，他就死在提备斯么？你们为甚么挨近城墙呢？』你就说：『王的仆人赫人乌利亚也死了。』」",
+      "spans": "[[87,100,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "从前打死耶路比设（就是耶路巴力，见士师记九章一节）儿子亚比米勒的是谁呢？岂不是一个妇人从城上抛下一块上磨石来，打在他身上，他就死在提备斯么？你们为甚么挨近城墙呢？』你就说：『"
+          },
+          {
+            "kind": "human",
+            "text": "王的仆人赫人乌利亚也死了。"
+          },
+          {
+            "kind": "plain",
+            "text": "』」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "以法莲、玛拿西、以萨迦、西布伦有许多人尚未自洁，他们却也吃逾越节的羊羔，不合所记录的定例。希西家为他们祷告说：「凡专心寻求神，就是耶和华他列祖之神的，虽不照着圣所洁净之礼自洁，求至善的耶和华也饶恕他。」",
+      "spans": "[[56,100,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以法莲、玛拿西、以萨迦、西布伦有许多人尚未自洁，他们却也吃逾越节的羊羔，不合所记录的定例。希西家为他们祷告说：「"
+          },
+          {
+            "kind": "human",
+            "text": "凡专心寻求神，就是耶和华他列祖之神的，虽不照着圣所洁净之礼自洁，求至善的耶和华也饶恕他。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "我在古时折断你的轭，解开你的绳索。你说：我必不事奉耶和华；因为你在各高冈上、各青翠树下屈身行淫〔或作：我在古时折断你的轭，解开你的绳索，你就说：我必不事奉别神。谁知你在各高冈上、各青翠树下仍屈身行淫〕。",
+      "spans": "[[0,101,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我在古时折断你的轭，解开你的绳索。你说：我必不事奉耶和华；因为你在各高冈上、各青翠树下屈身行淫〔或作：我在古时折断你的轭，解开你的绳索，你就说：我必不事奉别神。谁知你在各高冈上、各青翠树下仍屈身行淫〕。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "约书亚对百姓说：「看哪，这石头可以向我们作见证；因为是听见了耶和华所吩咐我们的一切话，倘或你们背弃你们的神，这石头就可以向你们作见证〔倘或至见证：或作所以要向你们作见证，免得你们背弃耶和华你们的神〕。」",
+      "spans": "[[9,36,2],[36,101,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "约书亚对百姓说：「"
+          },
+          {
+            "kind": "human",
+            "text": "看哪，这石头可以向我们作见证；因为是听见了耶和华所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "我们的一切话，倘或你们背弃你们的神，这石头就可以向你们作见证〔倘或至见证：或作所以要向你们作见证，免得你们背弃耶和华你们的神〕。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "所以你要告诉他们：『主耶和华如此说：以色列家的人中，凡将他的假神接到心里，把陷于罪的绊脚石放在面前，又就了先知来的，我耶和华在他所求的事上，必按他众多的假神回答他〔或作：必按他拜许多假神的罪报应他〕，",
+      "spans": "[[10,18,2],[18,100,1]]",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "所以你要告诉他们：『"
+          },
+          {
+            "kind": "human",
+            "text": "主耶和华如此说："
+          },
+          {
+            "kind": "divine",
+            "text": "以色列家的人中，凡将他的假神接到心里，把陷于罪的绊脚石放在面前，又就了先知来的，我耶和华在他所求的事上，必按他众多的假神回答他〔或作：必按他拜许多假神的罪报应他〕，"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "长节",
+      "text": "那时，神的约柜在那里；亚伦的孙子、以利亚撒的儿子非尼哈侍立在约柜前。以色列人问耶和华说：「我们当再出去与我们弟兄便雅悯人打仗呢？还是罢兵呢？」耶和华说：「你们当上去，因为明日我必将他们交在你们手中。」",
+      "spans": "[[45,70,1],[77,99,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那时，神的约柜在那里；亚伦的孙子、以利亚撒的儿子非尼哈侍立在约柜前。以色列人问耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "我们当再出去与我们弟兄便雅悯人打仗呢？还是罢兵呢？"
+          },
+          {
+            "kind": "plain",
+            "text": "」耶和华说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "你们当上去，因为明日我必将他们交在你们手中。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "长节",
+      "text": "他们便进到王前，提王的禁令，说：「王啊，三十日内不拘何人，若在王以外，或向神或向人求甚么，必被扔在狮子坑中。王不是在这禁令上盖了玉玺么？」王回答说：「实有这事，照玛代和波斯人的例是不可更改的。」",
+      "spans": "[[17,68,2],[75,96,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "他们便进到王前，提王的禁令，说：「"
+          },
+          {
+            "kind": "human",
+            "text": "王啊，三十日内不拘何人，若在王以外，或向神或向人求甚么，必被扔在狮子坑中。王不是在这禁令上盖了玉玺么？"
+          },
+          {
+            "kind": "plain",
+            "text": "」王回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "实有这事，照玛代和波斯人的例是不可更改的。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "那当毁灭的物连一点都不可粘你的手。你要听从耶和华你神的话，遵守我今日所吩咐你的一切诫命，行耶和华你神眼中看为正的事，耶和华就必转意，不发烈怒，恩待你，怜恤你，照他向你列祖所起的誓使你人数增多。」",
+      "spans": "[[37,97,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那当毁灭的物连一点都不可粘你的手。你要听从耶和华你神的话，遵守我今日所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "你的一切诫命，行耶和华你神眼中看为正的事，耶和华就必转意，不发烈怒，恩待你，怜恤你，照他向你列祖所起的誓使你人数增多。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "乌利亚对大卫说：「约柜和以色列与犹大兵都住在棚里，我主约押和我主〔或作：王〕的仆人都在田野安营，我岂可回家吃喝、与妻子同寝呢？我敢在王面前起誓〔原文作我指着王和王的性命起誓〕：我决不行这事！」",
+      "spans": "[[9,95,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "乌利亚对大卫说：「"
+          },
+          {
+            "kind": "human",
+            "text": "约柜和以色列与犹大兵都住在棚里，我主约押和我主〔或作：王〕的仆人都在田野安营，我岂可回家吃喝、与妻子同寝呢？我敢在王面前起誓〔原文作我指着王和王的性命起誓〕：我决不行这事！"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "「万军之耶和华以色列的神如此说：『我怎样将我的怒气和忿怒倾在耶路撒冷的居民身上，你们进入埃及的时候，我也必照样将我的忿怒倾在你们身上，以致你们令人辱骂、惊骇、咒诅、羞辱，你们不得再见这地方。』",
+      "spans": "[[1,17,2],[17,95,1],[95,96,2]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "「"
+          },
+          {
+            "kind": "human",
+            "text": "万军之耶和华以色列的神如此说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "我怎样将我的怒气和忿怒倾在耶路撒冷的居民身上，你们进入埃及的时候，我也必照样将我的忿怒倾在你们身上，以致你们令人辱骂、惊骇、咒诅、羞辱，你们不得再见这地方。"
+          },
+          {
+            "kind": "human",
+            "text": "』"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "以色列众人，无论是本地人、是寄居的，和长老、官长，并审判官，都站在约柜两旁，在抬耶和华约柜的祭司利未人面前，一半对着基利心山，一半对着以巴路山，为以色列民祝福，正如耶和华仆人摩西先前所吩咐的。",
+      "spans": "[[94,96,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "以色列众人，无论是本地人、是寄居的，和长老、官长，并审判官，都站在约柜两旁，在抬耶和华约柜的祭司利未人面前，一半对着基利心山，一半对着以巴路山，为以色列民祝福，正如耶和华仆人摩西先前所吩咐"
+          },
+          {
+            "kind": "divine",
+            "text": "的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "摩西对他岳父〔或作：内兄〕米甸人流珥的儿子何巴说：「我们要行路，往耶和华所应许之地去；他曾说：『我要将这地赐给你们。』现在求你和我们同去，我们必厚待你，因为耶和华指着以色列人已经应许给好处。」",
+      "spans": "[[26,48,2],[48,58,1],[58,95,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "摩西对他岳父〔或作：内兄〕米甸人流珥的儿子何巴说：「"
+          },
+          {
+            "kind": "human",
+            "text": "我们要行路，往耶和华所应许之地去；他曾说：『"
+          },
+          {
+            "kind": "divine",
+            "text": "我要将这地赐给你们。"
+          },
+          {
+            "kind": "human",
+            "text": "』现在求你和我们同去，我们必厚待你，因为耶和华指着以色列人已经应许给好处。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "我叔叔的儿子哈拿篾果然照耶和华的话来到护卫兵的院内，对我说：「我在便雅悯境内、亚拿突的那块地，求你买来；因你买来是合乎承受之理，是你当赎的。你为自己买来吧！」我耶利米就知道这是耶和华的话。",
+      "spans": "[[31,78,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "我叔叔的儿子哈拿篾果然照耶和华的话来到护卫兵的院内，对我说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "我在便雅悯境内、亚拿突的那块地，求你买来；因你买来是合乎承受之理，是你当赎的。你为自己买来吧！"
+          },
+          {
+            "kind": "plain",
+            "text": "」我耶利米就知道这是耶和华的话。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "耶和华说：日子将到，我必使人听见打仗的喊声，是攻击亚扪人拉巴的喊声。拉巴要成为乱堆；属她的乡村〔原文作女子〕要被火焚烧。先前得以色列地为业的，此时以色列倒要得他们的地为业。这是耶和华说的。",
+      "spans": "[[5,94,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华说："
+          },
+          {
+            "kind": "divine",
+            "text": "日子将到，我必使人听见打仗的喊声，是攻击亚扪人拉巴的喊声。拉巴要成为乱堆；属她的乡村〔原文作女子〕要被火焚烧。先前得以色列地为业的，此时以色列倒要得他们的地为业。这是耶和华说的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "那时神的灵感动那三十个勇士的首领亚玛撒，他就说：大卫啊，我们是归于你的！耶西的儿子啊，我们是帮助你的！愿你平平安安，愿帮助你的也都平安！因为你的神帮助你。大卫就收留他们，立他们作军长。",
+      "spans": "[[24,92,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "那时神的灵感动那三十个勇士的首领亚玛撒，他就说："
+          },
+          {
+            "kind": "divine",
+            "text": "大卫啊，我们是归于你的！耶西的儿子啊，我们是帮助你的！愿你平平安安，愿帮助你的也都平安！因为你的神帮助你。大卫就收留他们，立他们作军长。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "看哪，这都写在我面前。我必不静默，必施行报应，必将你们的罪孽和你们列祖的罪孽，就是在山上烧香，在冈上亵渎我的罪孽，一同报应在他们后人怀中，我先要把他们所行的量给他们；这是耶和华说的。",
+      "spans": "[[89,91,1]]",
+      "themeRepeatCount": 1,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "看哪，这都写在我面前。我必不静默，必施行报应，必将你们的罪孽和你们列祖的罪孽，就是在山上烧香，在冈上亵渎我的罪孽，一同报应在他们后人怀中，我先要把他们所行的量给他们；这是耶和华说"
+          },
+          {
+            "kind": "divine",
+            "text": "的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "他们必将你们的弟兄从列国中送回，使他们或骑马，或坐车，坐轿，骑骡子，骑独峰驼，到我的圣山耶路撒冷，作为供物献给耶和华，好像以色列人用洁净的器皿盛供物奉到耶和华的殿中；这是耶和华说的。",
+      "spans": "[[0,91,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他们必将你们的弟兄从列国中送回，使他们或骑马，或坐车，坐轿，骑骡子，骑独峰驼，到我的圣山耶路撒冷，作为供物献给耶和华，好像以色列人用洁净的器皿盛供物奉到耶和华的殿中；这是耶和华说的。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "亚撒呼求耶和华他的神说：「耶和华啊，惟有你能帮助软弱的，胜过强盛的。耶和华我们的神啊，求你帮助我们；因为我们仰赖你，奉你的名来攻击这大军。耶和华啊，你是我们的神，不要容人胜过你。」",
+      "spans": "[[13,89,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "亚撒呼求耶和华他的神说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "耶和华啊，惟有你能帮助软弱的，胜过强盛的。耶和华我们的神啊，求你帮助我们；因为我们仰赖你，奉你的名来攻击这大军。耶和华啊，你是我们的神，不要容人胜过你。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "我要显神迹〔或作：记号〕在他们中间。逃脱的，我要差到列国去，就是到他施、普勒、拉弓的路德和土巴、雅完，并素来没有听见我名声、没有看见我荣耀辽远的海岛；他们必将我的荣耀传扬在列国中。",
+      "spans": "[[0,90,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "我要显神迹〔或作：记号〕在他们中间。逃脱的，我要差到列国去，就是到他施、普勒、拉弓的路德和土巴、雅完，并素来没有听见我名声、没有看见我荣耀辽远的海岛；他们必将我的荣耀传扬在列国中。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "基甸说：「主啊，耶和华若与我们同在，我们何至遭遇这一切事呢？我们的列祖不是向我们说『耶和华领我们从埃及上来』么？他那样奇妙的作为在那里呢？现在他却丢弃我们，将我们交在米甸人手里。」",
+      "spans": "[[5,89,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "基甸说：「"
+          },
+          {
+            "kind": "human",
+            "text": "主啊，耶和华若与我们同在，我们何至遭遇这一切事呢？我们的列祖不是向我们说『耶和华领我们从埃及上来』么？他那样奇妙的作为在那里呢？现在他却丢弃我们，将我们交在米甸人手里。"
+          },
+          {
+            "kind": "plain",
+            "text": "」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "约书亚说：「看哪，普天下主的约柜必在你们前头过去，到约但河里，因此你们就知道在你们中间有永生神；并且他必在你们面前赶出迦南人、赫人、希未人、比利洗人、革迦撒人、亚摩利人、耶布斯人。",
+      "spans": "[[6,90,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "约书亚说：「"
+          },
+          {
+            "kind": "human",
+            "text": "看哪，普天下主的约柜必在你们前头过去，到约但河里，因此你们就知道在你们中间有永生神；并且他必在你们面前赶出迦南人、赫人、希未人、比利洗人、革迦撒人、亚摩利人、耶布斯人。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "使者回答说：「有一个人迎着我们来，对我们说：『你们回去见差你们来的王，对他说：耶和华如此说，你差人去问以革伦神巴力西卜，岂因以色列中没有神吗？所以你必不下所上的床，必定要死。』」",
+      "spans": "[[7,46,2],[46,89,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "使者回答说：「"
+          },
+          {
+            "kind": "human",
+            "text": "有一个人迎着我们来，对我们说：『你们回去见差你们来的王，对他说：耶和华如此说，"
+          },
+          {
+            "kind": "divine",
+            "text": "你差人去问以革伦神巴力西卜，岂因以色列中没有神吗？所以你必不下所上的床，必定要死。』」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "耶和华如此说：埃及劳碌得来的和古实的货物必归你；身量高大的西巴人必投降你，也要属你。他们必带着锁链过来随从你，又向你下拜，祈求你说：神真在你们中间，此外再没有别神；再没有别的神。",
+      "spans": "[[7,89,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华如此说："
+          },
+          {
+            "kind": "divine",
+            "text": "埃及劳碌得来的和古实的货物必归你；身量高大的西巴人必投降你，也要属你。他们必带着锁链过来随从你，又向你下拜，祈求你说：神真在你们中间，此外再没有别神；再没有别的神。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "她们的父亲或是弟兄若来与我们争竞，我们就说：『求你们看我们的情面，施恩给这些人，因我们在争战的时候没有给他们留下女子为妻。这也不是你们将女子给他们的；若是你们给的，就算有罪。』」",
+      "spans": "[[23,87,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "她们的父亲或是弟兄若来与我们争竞，我们就说：『"
+          },
+          {
+            "kind": "human",
+            "text": "求你们看我们的情面，施恩给这些人，因我们在争战的时候没有给他们留下女子为妻。这也不是你们将女子给他们的；若是你们给的，就算有罪。"
+          },
+          {
+            "kind": "plain",
+            "text": "』」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "「仇敌必像狮子从约但河边的丛林上来，攻击坚固的居所。转眼之间，我要使他们逃跑，离开这地。谁蒙拣选，我就派谁治理这地。谁能比我呢？谁能给我定规日期呢？有何牧人能在我面前站立得住呢？",
+      "spans": "[[0,89,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "「仇敌必像狮子从约但河边的丛林上来，攻击坚固的居所。转眼之间，我要使他们逃跑，离开这地。谁蒙拣选，我就派谁治理这地。谁能比我呢？谁能给我定规日期呢？有何牧人能在我面前站立得住呢？"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "长节",
+      "text": "百姓对扫罗说：「约拿单在以色列人中这样大行拯救，岂可使他死呢？断乎不可！我们指着永生的耶和华起誓，连他的一根头发也不可落地，因为他今日与神一同作事。」于是百姓救约拿单免了死亡。",
+      "spans": "[[8,74,2]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "百姓对扫罗说：「"
+          },
+          {
+            "kind": "human",
+            "text": "约拿单在以色列人中这样大行拯救，岂可使他死呢？断乎不可！我们指着永生的耶和华起誓，连他的一根头发也不可落地，因为他今日与神一同作事。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是百姓救约拿单免了死亡。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "雅比斯求告以色列的神说：「甚愿你赐福与我，扩张我的境界，常与我同在，保佑我不遭患难，不受艰苦。」神就应允他所求的。",
+      "spans": "[[13,47,1]]",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "雅比斯求告以色列的神说：「"
+          },
+          {
+            "kind": "divine",
+            "text": "甚愿你赐福与我，扩张我的境界，常与我同在，保佑我不遭患难，不受艰苦。"
+          },
+          {
+            "kind": "plain",
+            "text": "」神就应允他所求的。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "他们得了神的帮助，夏甲人和跟随夏甲的人都交在他们手中；因为他们在阵上呼求神，倚赖神，神就应允他们。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "这样，扫罗死了。因为他干犯耶和华，没有遵守耶和华的命；又因他求问交鬼的妇人，",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "大卫和以色列众人在神前用琴、瑟、锣、鼓、号作乐，极力跳舞歌唱。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "大卫吩咐利未人的族长，派他们歌唱的弟兄用琴瑟和钹作乐，欢欢喜喜的大声歌颂。",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "说：不可难为我受膏的人，也不可恶待我的先知！",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "外邦的神都属虚无，惟独耶和华创造诸天。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "愿天欢喜，愿地快乐；愿人在列邦中说：耶和华作王了！",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "那时，林中的树木都要在耶和华面前欢呼，因为他来要审判全地。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "耶和华以色列的神，从亘古直到永远，是应当称颂的！众民都说：「阿们！」并且赞美耶和华。",
+      "spans": "[[30,33,2]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "耶和华以色列的神，从亘古直到永远，是应当称颂的！众民都说：「"
+          },
+          {
+            "kind": "human",
+            "text": "阿们！"
+          },
+          {
+            "kind": "plain",
+            "text": "」并且赞美耶和华。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "与他们一同被派的有希幔、耶杜顿，和其余被选名字录在册上的，称谢耶和华，因他的慈爱永远长存。",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "他必为我建造殿宇；我必坚定他的国位直到永远。",
+      "spans": "[[0,22,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "他必为我建造殿宇；我必坚定他的国位直到永远。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "我在困难之中为耶和华的殿预备了金子十万他连得，银子一百万他连得，铜和铁多得无法可称；我也预备了木头、石头，你还可以增添。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "大卫又吩咐以色列的众首领帮助他儿子所罗门，说：",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "有四千人作守门的，又有四千人用大卫所作的乐器颂赞耶和华。",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "每日早晚，站立称谢赞美耶和华，",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "大卫和众首领分派亚萨、希幔，并耶杜顿的子孙弹琴、鼓瑟、敲钹、唱歌〔原文作说预言；本章同〕。他们供职的人数记在下面：",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "都归他们父亲指教，在耶和华的殿唱歌、敲钹、弹琴、鼓瑟，办神殿的事务。亚萨、耶杜顿、希幔都是王所命定的。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "现今在耶和华的会中，以色列众人眼前所说的，我们的神也听见了。你们应当寻求耶和华你们神的一切诫命，谨守遵行，如此你们可以承受这美地，遗留给你们的子孙，永远为业。",
+      "spans": "[[19,79,1]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "现今在耶和华的会中，以色列众人眼前所说"
+          },
+          {
+            "kind": "divine",
+            "text": "的，我们的神也听见了。你们应当寻求耶和华你们神的一切诫命，谨守遵行，如此你们可以承受这美地，遗留给你们的子孙，永远为业。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "「我儿所罗门哪，你当认识耶和华你父的神，诚心乐意地事奉他；因为他鉴察众人的心，知道一切心思意念。你若寻求他，他必使你寻见；你若离弃他，他必永远丢弃你。",
+      "spans": "[[1,75,2]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "「"
+          },
+          {
+            "kind": "human",
+            "text": "我儿所罗门哪，你当认识耶和华你父的神，诚心乐意地事奉他；因为他鉴察众人的心，知道一切心思意念。你若寻求他，他必使你寻见；你若离弃他，他必永远丢弃你。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "且因我心中爱慕我神的殿，就在预备建造圣殿的材料之外，又将我自己积蓄的金银献上，建造我神的殿，",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "耶和华我们的神啊，我们预备这许多材料，要为你的圣名建造殿宇，都是从你而来，都是属你的。",
+      "spans": "[[0,43,1]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "耶和华我们的神啊，我们预备这许多材料，要为你的圣名建造殿宇，都是从你而来，都是属你的。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "又求你赐我儿子所罗门诚实的心，遵守你的命令、法度、律例，成就这一切的事，用我所预备的建造殿宇。」",
+      "spans": "[[0,48,1]]",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "又求你赐我儿子所罗门诚实的心，遵守你的命令、法度、律例，成就这一切的事，用我所预备的建造殿宇。」"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "大卫对全会众说：「你们应当称颂耶和华你们的神。」于是会众称颂耶和华他们列祖的神，低头拜耶和华与王。",
+      "spans": "[[9,23,2]]",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "大卫对全会众说：「"
+          },
+          {
+            "kind": "human",
+            "text": "你们应当称颂耶和华你们的神。"
+          },
+          {
+            "kind": "plain",
+            "text": "」于是会众称颂耶和华他们列祖的神，低头拜耶和华与王。"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "以致你们在恩赐上没有一样不及人的，等候我们的主耶稣基督显现。",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "因为革来氏家里的人曾对我题起弟兄们来，说你们中间有纷争。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "我们却是传钉十字架的基督，在犹太人为绊脚石，在外邦人为愚拙；",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "但在那蒙召的，无论是犹太人、希利尼人，基督总为神的能力，神的智慧。",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "弟兄们哪，可见你们蒙召的，按着肉体有智慧的不多，有能力的不多，有尊贵的也不多。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "我在你们那里，又软弱又惧怕，又甚战兢。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "这智慧世上有权有位的人没有一个知道的、他们若知道，就不把荣耀的主钉在十字架上了。",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "属灵的人能看透万事，却没有一人能看透了他。",
+      "spans": "",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "亚波罗算甚么？保罗算甚么？无非是执事，照主所赐给他们各人的，引导你们相信。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "我栽种了，亚波罗浇灌了，惟有神叫他生长。",
+      "spans": "",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "因为那已经立好的根基就是耶稣基督，此外没有人能立别的根基。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "若有人用金、银、宝石、草木，禾秸在这根基上建造，",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "人在那根基上所建造的工程若存得住，他就要得赏赐。",
+      "spans": "",
+      "themeRepeatCount": 4,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "所以无论谁，都不可拿人夸口，因为万有全是你们的。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "或保罗，或亚波罗，或矶法，或世界，或生，或死，或现今的事，或将来的事，全是你们的；",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句边界",
+      "text": "我想神把我们使徒明明列在末后，好像定死罪的囚犯；因为我们成了一台戏，给世人和天使观看。",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "空 span",
+      "text": "神说：要有光。",
+      "spans": "",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "坏 JSON",
+      "text": "神说：要有光。",
+      "spans": "[[0,3,",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "非数组",
+      "text": "神说：要有光。",
+      "spans": "{\"a\":1}",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "越界",
+      "text": "神说：要有光。",
+      "spans": "[[0,999,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "神说：要有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "end<=start",
+      "text": "神说：要有光。",
+      "spans": "[[3,3,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "负 start",
+      "text": "神说：要有光。",
+      "spans": "[[-1,3,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "非法 code",
+      "text": "神说：要有光。",
+      "spans": "[[0,3,7]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "小数",
+      "text": "神说：要有光。",
+      "spans": "[[0.5,3,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "乱序",
+      "text": "神说：要有光，就有了光。",
+      "spans": "[[6,9,2],[0,3,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "神说："
+          },
+          {
+            "kind": "plain",
+            "text": "要有光"
+          },
+          {
+            "kind": "human",
+            "text": "，就有"
+          },
+          {
+            "kind": "plain",
+            "text": "了光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "元素不足",
+      "text": "神说：要有光。",
+      "spans": "[[0,3]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "整节覆盖",
+      "text": "要有光",
+      "spans": "[[0,3,1]]",
+      "themeRepeatCount": 5,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "要有光"
+          }
+        ],
+        "isGolden": true
+      }
+    },
+    {
+      "label": "金句阈值-下",
+      "text": "测试",
+      "spans": "",
+      "themeRepeatCount": 2,
+      "expected": {
+        "parts": null,
+        "isGolden": false
+      }
+    },
+    {
+      "label": "金句阈值-上",
+      "text": "测试",
+      "spans": "",
+      "themeRepeatCount": 3,
+      "expected": {
+        "parts": null,
+        "isGolden": true
+      }
+    },
+    {
+      "label": "emoji 与代理对",
+      "text": "神说🕊：要有光。",
+      "spans": "[[0,2,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "神说"
+          },
+          {
+            "kind": "plain",
+            "text": "🕊：要有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "代理对在 span 内",
+      "text": "🕊神说：要有光。",
+      "spans": "[[0,3,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "🕊神"
+          },
+          {
+            "kind": "plain",
+            "text": "说：要有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "代理对在 span 前",
+      "text": "🕊神说：要有光。",
+      "spans": "[[3,6,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "plain",
+            "text": "🕊神"
+          },
+          {
+            "kind": "divine",
+            "text": "说：要"
+          },
+          {
+            "kind": "plain",
+            "text": "有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "代理对跨 span 边界",
+      "text": "神🕊说：要有光。",
+      "spans": "[[0,2,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "神\ud83d"
+          },
+          {
+            "kind": "plain",
+            "text": "\udd4a说：要有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "CJK 扩展区汉字",
+      "text": "𠮷野家神说：要有光。",
+      "spans": "[[0,2,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "𠮷"
+          },
+          {
+            "kind": "plain",
+            "text": "野家神说：要有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    },
+    {
+      "label": "多个代理对",
+      "text": "🕊📖神说：要有光。",
+      "spans": "[[0,5,1]]",
+      "themeRepeatCount": 0,
+      "expected": {
+        "parts": [
+          {
+            "kind": "divine",
+            "text": "🕊📖神"
+          },
+          {
+            "kind": "plain",
+            "text": "说：要有光。"
+          }
+        ],
+        "isGolden": false
+      }
+    }
+  ]
+}

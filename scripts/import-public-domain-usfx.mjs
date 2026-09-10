@@ -155,16 +155,33 @@ const JOBS = [
   },
 ];
 
+// 字符级行内标签（eBible 的 KJV / ASV / RV1909 等带 Strong's 号的版本每个词都包在 <w s="H7225">…</w> 里，
+// 标点紧贴在 </w> 后面）：去掉标签本身、不补空格，否则会变成 "the earth ." 这种词与标点分家的正文。
+// 词与词之间 USFX 本来就有换行 / 空格，所以不需要靠标签位置补空格。
+const INLINE_CHAR_TAG_RE =
+  /<\/?(?:w|add|nd|wj|qs|tl|bk|k|sc|it|bd|em|no|sup|sls|dc|pn|wg|wh|wr|char|rb|rt|ndx|ord|png|qac|qt|sig|lit|xt|rq|ior|iqt|fq|fqa|fk|fl|fv|fw|fp|xo|xk|xq|xot|xnt|xdc)\b[^>]*>/g;
+
+// 标点前后的空格规范：闭合标点（, . ; : ! ? ) ] } ’ ” »）前不留空格，开放标点（( [ { “ ‘ « ¿ ¡）后不留空格。
+function normalizePunctuationSpacing(text) {
+  return text
+    .replace(/\s+([,.;:!?)\]}’”»])/g, "$1")
+    .replace(/([(\[{“‘«¿¡])\s+/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function stripXml(text) {
-  return String(text || "")
+  const plain = String(text || "")
     .replace(/<f\b[^>]*>[\s\S]*?<\/f>/g, " ")
     .replace(/<x\b[^>]*>[\s\S]*?<\/x>/g, " ")
     .replace(/<fig\b[^>]*>[\s\S]*?<\/fig>/g, " ")
     .replace(/<table\b[^>]*>[\s\S]*?<\/table>/g, " ")
     .replace(/<ref\b[^>]*>[\s\S]*?<\/ref>/g, " ")
+    .replace(INLINE_CHAR_TAG_RE, "")
     .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    // 1611 版式的段落记号 ¶：手机上逐节排版用不上，去掉
+    .replace(/¶/g, " ");
+  return normalizePunctuationSpacing(plain);
 }
 
 function extractAllVerses(xml, bookCode) {
@@ -313,9 +330,18 @@ function upsertTranslationsIndex(records) {
   );
 }
 
+// 只重导部分译本：`node scripts/import-public-domain-usfx.mjs kjv asv` 或 IMPORT_IDS=kjv,asv
+const ONLY_IDS = new Set(
+  (process.env.IMPORT_IDS || process.argv.slice(2).join(","))
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
+
 async function main() {
   const imported = [];
   for (const job of JOBS) {
+    if (ONLY_IDS.size > 0 && !ONLY_IDS.has(job.id)) continue;
     const zipPath = path.join(TMP_DIR, `${job.id}.usfx.zip`);
     console.log(`Downloading ${job.id} from ${job.url}`);
     await downloadZip(job.url, zipPath);

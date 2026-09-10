@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- 与 RN 版同一个图标底色（app.json android.adaptiveIcon / android colors.xml iconBackground） -->
+  <color name="iconBackground">#ffb101</color>
+</resources>

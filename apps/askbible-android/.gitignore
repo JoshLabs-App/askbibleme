@@ -1,0 +1,7 @@
+# 本机专属，不进版本控制
+local.properties
+.gradle/
+build/
+*/build/
+.idea/
+*.iml

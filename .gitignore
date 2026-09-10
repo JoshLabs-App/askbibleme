@@ -112,3 +112,22 @@ scripts/sync-tv-content.mjs
 # info-edition sqlite 由 data/bible/info-edition-v1-published.json 生成
 # （npm run build:info-edition-sqlite），真源已入库，产物 25MB 不必再存一份。
 /data/bible/sqlite/info-edition.sqlite
+tools/.music-catalog.json
+tools/.reading-plans.json
+
+# 原生 App 的读后两版内容库：与 RN assets/content/info-edition.sqlite 同一份（26MB 产物，不入库），
+# 由 npm run gen:info-edition 从 RN 资源复制过来
+/apps/askbible-ios/AskBible/Resources/info-edition.sqlite
+/apps/askbible-android/app/src/main/assets/info-edition.sqlite
+
+# 原生 App 的首页场景素材（海报 / 柔焦海报 / 循环视频，~33MB）：由 tools/gen-nature-scenes.mjs 从 RN assets/nature 复制，不入库
+/apps/askbible-ios/AskBible/Resources/nature/
+/apps/askbible-android/app/src/main/assets/nature/
+
+# 原生 App 内置的 5 首音乐（~137MB）：与 RN 的 assets/music/tracks 同一份，不入库；从那里复制过来即可
+/apps/askbible-ios/AskBible/Resources/track-*.mp3
+/apps/askbible-android/app/src/main/assets/music/
+
+# 原生 App 的跟读时间轴库（6.5MB 产物）：npm run build:verse-timings 从 RN 的 verse-timings-bundle.json 生成
+/apps/askbible-ios/AskBible/Resources/verse-timings.sqlite
+/apps/askbible-android/app/src/main/assets/verse-timings.sqlite

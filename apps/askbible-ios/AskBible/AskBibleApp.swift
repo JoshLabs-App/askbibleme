@@ -1,0 +1,554 @@
+import SwiftUI
+
+@main
+struct AskBibleApp: App {
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .preferredColorScheme(.light)
+        }
+    }
+}
+
+struct RootView: View {
+    @StateObject private var store = ScriptureStore()
+    @StateObject private var audio = ChapterAudioPlayer()
+    @StateObject private var music = MusicPlayer()
+    @StateObject private var home = HomeVerseController()
+    @StateObject private var ambient = AmbientPlayer()
+    @StateObject private var plans = ReadingPlanStore()
+    @StateObject private var bookmarks = VerseBookmarkStore()
+    @StateObject private var searchPrefs = SearchPrefs()
+    @StateObject private var naturePrefs = NatureHomePrefs()
+    /// 会员登录（Supabase 直连；RN MemberAuthProvider）
+    @StateObject private var auth = MemberAuthStore()
+    /// 界面语言跟系统走；读经展示语言再跟主译本走（英文译本 → 英文面）
+    @State private var appLocale = AppLocale.device
+    /// 计划 Tab（底栏中央键）里的子页：播放页 / 计划目录 / 计划详情
+    enum PlanRoute: Equatable { case play, plans, planDetail(String) }
+    @State private var planRoute: PlanRoute = .play
+    /// 播放页状态：日历上看的那天（相对系统今天）与选中的章
+    @State private var planViewAhead = 0
+    @State private var planCursor = 0
+    /// 计划流在哪一页听：播放页（不开章页、顺队列换音源）还是章页（顺队列开下一章）—— RN PlanFlowUiHost
+    enum PlanFlowHost { case listen, chapter }
+    @State private var planFlowHost: PlanFlowHost = .chapter
+    /// 播放页在听的章（章页没开时的音源目标）
+    @State private var listenChapter: (book: BookRef, chapter: Int)?
+    /// 章页是从计划页开的：返回回计划 Tab、不停播
+    @State private var chapterFromPlan = false
+    /// 探索页当前打开的文章（计划目录页的「麦克阿瑟研经法」链接要能直接打开一篇）
+    @State private var exploreArticle: ExploreArticle?
+    /// 登录 / 注册页：盖在整个壳上的全屏页（RN 是 stack 路由，无底栏）
+    enum AuthRoute { case login, register }
+    @State private var authRoute: AuthRoute?
+    /// 读经计划流：今日逐章队列，一章播完顺到下一章并记已读
+    @State private var planQueue: [PlanPointer] = []
+    @State private var planQueueIndex = 0
+    @State private var planFlowActive = false
+    @State private var autoPlayPending = false
+    @State private var tab: ShellTab = .home
+    @State private var readSize: ReadSize = .default
+    @State private var openedBook: BookRef?
+    @State private var openedChapter: (book: BookRef, chapter: Int)?
+    @State private var showTranslationPanel = false
+    @State private var xrefVerse: Int?
+    /// 经文搜索 / 收藏页：盖在读经 Tab 当前内容之上，关掉就回到原来的页
+    @State private var showSearch = false
+    @State private var searchRef: SearchChapterRef?
+    @State private var showFavorites = false
+    /// 从搜索 / 收藏跳进章页要定位的节
+    @State private var focusVerse: Int?
+    /// 长按弹出操作单的那节；收藏 / 复制后的轻提示
+    @State private var actionVerse: LoadedVerse?
+    @State private var toast: String?
+    @State private var toastTask: Task<Void, Never>?
+    @State private var showSleepSheet = false
+    /// 睡眠定时四路（读经 / 音乐 / 金句 / 环境音）同一份分钟数；0 = 未设
+    @State private var sleepTimerMinutes = 0
+
+    /// 音源目标：章页开着就是那一章；否则是播放页在听的章
+    private var audioTarget: (book: BookRef, chapter: Int)? { openedChapter ?? listenChapter }
+
+    /// 当前章的可播音源；译本不支持时为 nil，播放键置灰
+    private var audioURL: URL? {
+        guard let opened = audioTarget else { return nil }
+        return ChapterAudioSource.resolve(
+            translationId: store.translation.id,
+            bookId: opened.book.id,
+            bookNumber: opened.book.number,
+            bookName: opened.book.name,
+            chapter: opened.chapter
+        )
+    }
+
+    private func skipToNextChapter() {
+        if planFlowActive {
+            if let cur = audioTarget { plans.markChapterRead(cur.book.id, cur.chapter) }
+            let next = planQueueIndex + 1
+            if next < planQueue.count {
+                planQueueIndex = next
+                // 在播放页听（章页没开）→ 只换音源不开章页；在章页 → 顺到下一章页
+                if planFlowHost == .listen, openedChapter == nil { listenPlanChapter(planQueue[next], autoPlay: true) }
+                else { openPlanChapter(planQueue[next], autoPlay: true) }
+            } else {
+                planFlowActive = false
+            }
+            return
+        }
+        guard let opened = openedChapter else { return }
+        let count = store.chapterCount(translationId: store.translation.id, bookId: opened.book.id)
+        let limit = count > 0 ? count : opened.book.chapterCount
+        guard opened.chapter < limit else { return }
+        openedChapter = (opened.book, opened.chapter + 1)
+    }
+
+    /// 睡眠定时：首页定时角标与音乐页睡眠单同一份分钟数，四路播放器一起设（0 = 关）
+    private func setSleepTimerAll(_ minutes: Int) {
+        sleepTimerMinutes = minutes
+        let m: Int? = minutes > 0 ? minutes : nil
+        audio.setSleepTimer(minutes: m)
+        music.setSleepTimer(minutes: m)
+        home.setSleepTimer(minutes: m)
+        ambient.setSleepTimer(minutes: m)
+    }
+
+    /// 双击 / 操作单收藏：新加时顺手复制（RN「已收藏，经文已复制」）
+    private func toggleBookmark(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
+        let added = bookmarks.toggle(bookId: opened.book.id, bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number,
+                                     translationId: store.translation.id, text: v.text)
+        if added { UIPasteboard.general.string = VerseShareText.clipboard(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text) }
+        UINotificationFeedbackGenerator().notificationOccurred(added ? .success : .warning)
+        showToast(added ? "已收藏，经文已复制" : "已取消收藏")
+    }
+
+    private func copyVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
+        UIPasteboard.general.string = VerseShareText.clipboard(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text)
+        showToast("已复制本节经文")
+    }
+
+    private func shareVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
+        let text = VerseShareText.share(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text)
+        let vc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        var top = scene?.keyWindow?.rootViewController
+        while let presented = top?.presentedViewController { top = presented }
+        vc.popoverPresentationController?.sourceView = top?.view
+        top?.present(vc, animated: true)
+    }
+
+    /// 轻提示：进 160ms · 停 1400ms · 出 220ms（RN ReadVerseBookmarkFeedback）
+    private func showToast(_ message: String) {
+        toastTask?.cancel()
+        withAnimation(.easeOut(duration: 0.16)) { toast = message }
+        toastTask = Task {
+            try? await Task.sleep(nanoseconds: 1_560_000_000)
+            if Task.isCancelled { return }
+            await MainActor.run { withAnimation(.easeIn(duration: 0.22)) { toast = nil } }
+        }
+    }
+
+    /// 中央键：切到读经计划 Tab（主页级页面，底栏照常；Josh「中间计划与旁边的圣经，要直接就切换过来」）
+    private func openToday() {
+        tab = .plan
+        planFlowHost = .listen
+    }
+
+    private func openPlanChapter(_ p: PlanPointer, autoPlay: Bool) {
+        guard let b = BibleCatalog.book(id: p.bookId) else { return }
+        focusVerse = nil
+        autoPlayPending = autoPlay
+        listenChapter = (b, p.chapter)
+        openedChapter = (b, p.chapter)
+    }
+
+    /// 播放页点播：不开章页，只把音源换到这一章（同章已载入就直接续播）
+    private func listenPlanChapter(_ p: PlanPointer, autoPlay: Bool) {
+        guard let b = BibleCatalog.book(id: p.bookId) else { return }
+        if let t = audioTarget, t.book.id == b.id, t.chapter == p.chapter {
+            if autoPlay { audio.resume() }
+            return
+        }
+        autoPlayPending = autoPlay
+        listenChapter = (b, p.chapter)
+    }
+
+    // MARK: 播放页（RN ReadPlanPlayScreen：本页队列 vs 全局播放池，谁在播就跟谁的游标）
+
+    private var planContentAhead: Int { PlanPlay.contentAhead(view: planViewAhead, committed: plans.prefs.ahead) }
+    /// 播放页正在看的那天的逐章队列
+    private var planPageQueue: [PlanPointer] { plans.readings(atContentAhead: planContentAhead).flatMap { $0.chapters } }
+    /// 池在播的就是本页队列 → 高亮跟池的下标
+    private var planPoolMatchesView: Bool { planFlowActive && !planQueue.isEmpty && planQueue == planPageQueue }
+    private var planActiveIndex: Int { planPoolMatchesView ? planQueueIndex : planCursor }
+    private var planActivePlaying: Bool {
+        guard planPoolMatchesView, audio.isPlaying, let t = audioTarget, planQueue.indices.contains(planQueueIndex) else { return false }
+        return planQueue[planQueueIndex] == PlanPointer(bookId: t.book.id, chapter: t.chapter)
+    }
+    /// 读经 Tab 的坞：章页照常；目录页只在播放中才出（RN 非章页只在播放中才出坞，计划页点播后切到圣经页也能控制）
+    /// 播放页当前高亮那章有没有整章音源（UST 等无音源译本：播放键置灰，与章页一致；RN 朗读永远跟随正文译本、不跨译本回退）
+    private var planActiveAudioAvailable: Bool {
+        let q = planPageQueue
+        guard q.indices.contains(planActiveIndex), let b = BibleCatalog.book(id: q[planActiveIndex].bookId) else { return false }
+        return ChapterAudioSource.resolve(translationId: store.translation.id, bookId: b.id, bookNumber: b.number, bookName: b.name, chapter: q[planActiveIndex].chapter) != nil
+    }
+    private var readDockActive: Bool {
+        guard tab == .read, !(showSearch || showFavorites) || audio.isPlaying else { return false }
+        return openedChapter != nil || (audio.isPlaying && audioTarget != nil)
+    }
+    private var planDockActive: Bool { tab == .plan && planRoute == .play && !showSearch && !planPageQueue.isEmpty }
+
+    /// 日历上看的那天算「听过」（月历标黄）
+    private func markPlanListened() { plans.markListened(PlanPlay.isoDate(PlanDates.addDays(Date(), planViewAhead))) }
+
+    /// 行点播 / 行尾「声音」：建池（或复用）从第 index 章起播
+    private func planPlay(at index: Int) {
+        let q = planPageQueue
+        guard q.indices.contains(index) else { return }
+        markPlanListened()
+        planFlowHost = .listen
+        if !planPoolMatchesView { planQueue = q; planFlowActive = true }
+        planQueueIndex = index
+        planCursor = index
+        listenPlanChapter(q[index], autoPlay: true)
+    }
+
+    /// 行尾「阅读」/ 双击：进这一章的阅读页；正在播的那章不停播；返回回计划 Tab
+    private func planRead(at index: Int) {
+        let q = planPageQueue
+        guard q.indices.contains(index), let b = BibleCatalog.book(id: q[index].bookId) else { return }
+        chapterFromPlan = true
+        planFlowHost = .chapter
+        focusVerse = nil
+        if !(planPoolMatchesView && index == planQueueIndex) { planFlowActive = false; listenChapter = nil }
+        openedChapter = (b, q[index].chapter)
+        tab = .read
+    }
+
+    /// 坞的播放键：播中就停；池对上本页就续播；否则从选中章起播
+    private func planTogglePlay() {
+        if audio.isPlaying { audio.pause(); return }
+        if planPoolMatchesView, audioTarget != nil { markPlanListened(); audio.resume(); return }
+        planPlay(at: planActiveIndex)
+    }
+
+    private func planNext() {
+        if planFlowActive { skipToNextChapter(); return }
+        planCursor = min(max(0, planPageQueue.count - 1), planCursor + 1)
+    }
+
+    private func startPlanFlow(_ queue: [PlanPointer], at index: Int) {
+        guard queue.indices.contains(index) else { return }
+        planQueue = queue
+        planQueueIndex = index
+        planFlowActive = true
+        openPlanChapter(queue[index], autoPlay: true)
+    }
+
+    var body: some View {
+        content
+            .environmentObject(store)
+            .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in appLocale = .device }
+            .onChange(of: audioURL) { _, url in
+                guard let url, let opened = audioTarget else { return }
+                audio.load(
+                    url: url,
+                    key: "\(store.translation.id).\(opened.book.id).\(opened.chapter)",
+                    title: ReadChrome.chapterTitle(bookName: opened.book.name(displayLocale), chapter: opened.chapter, locale: displayLocale),
+                    translationId: store.translation.id,
+                    bookId: opened.book.id,
+                    chapter: opened.chapter
+                )
+                if autoPlayPending {
+                    autoPlayPending = false
+                    audio.resume()
+                }
+            }
+            // 整章朗读时环境音压半音量继续放，停了恢复
+            .onChange(of: audio.isPlaying) { _, playing in ambient.setDucked(playing) }
+            .task { await auth.verifyRemote() }
+            .onAppear {
+                audio.onSkipNext = skipToNextChapter
+                audio.onFinished = { if planFlowActive { skipToNextChapter() } }
+                // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
+                // 首页最多两路同时出声（RN homeGoldenVerseTwoSourceMutex）：
+                // 开音乐 / 开金句时另外两路都在 → 关环境音；开环境音时人声与音乐都在 → 停音乐。
+                audio.onWillPlay = { [weak music, weak home] in music?.pause(); home?.stopVoice() }
+                music.onWillPlay = { [weak audio, weak home, weak ambient] in
+                    audio?.pause()
+                    if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
+                }
+                home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
+                    audio?.pause()
+                    if music?.isPlaying == true, ambient?.isOn == true { ambient?.stop() }
+                }
+                ambient.onWillPlay = { [weak audio, weak home, weak music] in
+                    let voice = (home?.voiceOn ?? false) || (audio?.isPlaying ?? false)
+                    if voice, music?.isPlaying == true { music?.pause() }
+                }
+            }
+    }
+
+    private var displayLocale: AppLocale { ReadDisplayLocale.resolve(appLocale: appLocale, translationLanguage: store.translation.language) }
+
+    private var content: some View {
+        ZStack {
+            ShellTabBarHost(selection: $tab, parchmentBar: tab == .read || tab == .explore || tab == .plan, onCenterTap: openToday,
+                            dockActive: readDockActive || planDockActive,
+                            // 计划目录 / 详情是独立子页，不放底栏；播放页是主页级页面，底栏照常
+                            showTabBar: !(tab == .plan && planRoute != .play && !showSearch) && authRoute == nil) {
+                screen
+            } dock: {
+                // 搜索 / 收藏页盖在上面时藏坞（RN 非章页只在播放中才出坞）
+                if readDockActive {
+                    return AnyView(PlaybackDock(
+                        audio: audio,
+                        available: audioURL != nil,
+                        onSearch: {
+                            if let o = openedChapter { searchRef = SearchChapterRef(bookId: o.book.id, chapter: o.chapter) }
+                            showSearch = true
+                        },
+                        onSkipNext: skipToNextChapter))
+                }
+                if planDockActive {
+                    // 播放页的坞：左键是经文搜索（带当前章上下文）；播放键没建池时从选中章起播
+                    return AnyView(PlaybackDock(
+                        audio: audio,
+                        available: planActiveAudioAvailable,
+                        onSearch: {
+                            let q = planPageQueue
+                            searchRef = q.indices.contains(planActiveIndex) ? SearchChapterRef(bookId: q[planActiveIndex].bookId, chapter: q[planActiveIndex].chapter) : nil
+                            showSearch = true
+                        },
+                        onSkipNext: planNext,
+                        onToggle: planTogglePlay))
+                }
+                return AnyView(EmptyView())
+            }
+
+            if let book = openedBook, openedChapter == nil {
+                ChapterPickerSheet(
+                    book: book,
+                    chapterCount: store.chapterCount(
+                        translationId: store.translation.id, bookId: book.id),
+                    onPick: { chapter in
+                        openedChapter = (book, chapter)
+                        openedBook = nil
+                    },
+                    onClose: { openedBook = nil },
+                    locale: displayLocale
+                )
+            }
+
+            if showTranslationPanel {
+                // 界面文案目前只有中文：面板里的译本名与分组名按中文界面走（系统英文时不混一行英文），繁体系统给繁体
+                TranslationPanel(locale: appLocale == .en ? .zhCN : appLocale, onClose: { showTranslationPanel = false })
+            }
+
+            if let v = xrefVerse, let opened = openedChapter {
+                VerseXrefSheet(
+                    bookName: opened.book.name(displayLocale),
+                    chapter: opened.chapter,
+                    xrefs: store.verseXrefs(bookId: opened.book.id, chapter: opened.chapter, verse: v),
+                    size: readSize,
+                    snippet: { ref in
+                        store.verseText(translationId: store.translation.id,
+                                        bookId: ref.bookId, chapter: ref.chapter, verse: ref.verseStart)
+                    },
+                    onOpen: { ref in
+                        xrefVerse = nil
+                        if let b = BibleCatalog.book(id: ref.bookId) {
+                            openedChapter = (b, ref.chapter)
+                        }
+                    },
+                    onClose: { xrefVerse = nil },
+                    locale: displayLocale
+                )
+            }
+
+            if let v = actionVerse, let opened = openedChapter {
+                VerseActionSheet(
+                    verse: v.number,
+                    bookmarked: bookmarks.isBookmarked(translationId: store.translation.id, bookId: opened.book.id, chapter: opened.chapter, verse: v.number),
+                    size: readSize,
+                    onCopy: { copyVerse(v, in: opened); actionVerse = nil },
+                    onBookmark: { toggleBookmark(v, in: opened); actionVerse = nil },
+                    onShare: { shareVerse(v, in: opened); actionVerse = nil },
+                    onClose: { actionVerse = nil }
+                )
+            }
+            if let route = authRoute {
+                switch route {
+                case .login:
+                    LoginView(auth: auth, locale: appLocale, onBack: { authRoute = nil }, onRegister: { authRoute = .register }, onDone: { authRoute = nil })
+                case .register:
+                    RegisterView(auth: auth, locale: appLocale, onBack: { authRoute = nil }, onLogin: { authRoute = .login }, onDone: { authRoute = nil })
+                }
+            }
+
+            if let toast {
+                // RN ReadVerseBookmarkFeedback：底部 108 + 安全区之上（在坞与底栏之上），居中胶囊
+                VerseFeedbackToast(message: toast)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 108)
+            }
+
+            if showSleepSheet {
+                SleepTimerSheet(
+                    remainingLabel: audio.sleepRemainingLabel ?? music.sleepRemainingLabel,
+                    onPick: { m in setSleepTimerAll(m ?? 0) },
+                    onClose: { showSleepSheet = false })
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var screen: some View {
+        switch tab {
+        case .home:
+            HomeView(
+                home: home, music: music, ambient: ambient, prefs: naturePrefs,
+                sleepTimerMinutes: sleepTimerMinutes,
+                // 点选场景：记次数、存档、跟场景默认环境音（RN selectScene source=user）
+                onSelectScene: { id in
+                    guard id != naturePrefs.sceneId else { return }
+                    naturePrefs.bumpUsage(id)
+                    naturePrefs.selectScene(id)
+                    if let slot = NatureScenes.scene(id: id)?.defaultAmbient { ambient.start(slotId: slot) }
+                },
+                onToggleAmbient: { id in ambient.slotId == id ? ambient.stop() : ambient.start(slotId: id) },
+                onCycleSleepTimer: { setSleepTimerAll(NatureScenes.cycleSleepTimer(sleepTimerMinutes)) },
+                // 点已在放的专辑 → 停；点另一张 → 切过去起播（homeNatureAlbumPress）
+                onPressAlbum: { album in
+                    if music.isPlaying, music.track?.album == album {
+                        music.pause()
+                    } else {
+                        let wasPlaying = music.isPlaying
+                        music.selectAlbum(album)
+                        if !wasPlaying { music.toggle() }
+                    }
+                }
+            )
+        case .music:
+            MusicView(player: music,
+                      sleepActive: audio.sleepDeadline != nil || music.sleepDeadline != nil || home.sleepDeadline != nil || ambient.sleepDeadline != nil,
+                      onSleepTimer: { showSleepSheet = true })
+        case .read:
+            if showSearch {
+                SearchView(prefs: searchPrefs, size: readSize, chapterRef: searchRef, locale: displayLocale,
+                           onBack: { showSearch = false },
+                           onOpenHit: { hit in
+                               showSearch = false
+                               guard let b = BibleCatalog.book(id: hit.bookId) else { return }
+                               planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
+                               focusVerse = hit.verse
+                               openedChapter = (b, hit.chapter)
+                           })
+            } else if showFavorites {
+                FavoritesView(bookmarks: bookmarks, size: readSize, locale: displayLocale,
+                              onBack: { showFavorites = false },
+                              onOpen: { item in
+                                  showFavorites = false
+                                  guard let b = BibleCatalog.book(id: item.bookId) else { return }
+                                  planFlowActive = false; listenChapter = nil; chapterFromPlan = false; openedBook = nil
+                                  focusVerse = item.verse
+                                  openedChapter = (b, item.chapter)
+                              })
+            } else if let opened = openedChapter {
+                ChapterView(
+                    bookId: opened.book.id,
+                    bookName: opened.book.name(displayLocale),
+                    locale: displayLocale,
+                    bookNumber: opened.book.number,
+                    chapter: opened.chapter,
+                    size: $readSize,
+                    onBack: {
+                        openedChapter = nil
+                        // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
+                        if chapterFromPlan {
+                            chapterFromPlan = false; planFlowHost = .listen; tab = .plan
+                            if !planFlowActive { listenChapter = nil }
+                        } else {
+                            planFlowActive = false; listenChapter = nil
+                        }
+                    },
+                    onOpenSettings: { showTranslationPanel = true },
+                    audio: audio,
+                    bookmarks: bookmarks,
+                    focusVerse: focusVerse,
+                    onTapVerse: { xrefVerse = $0 },
+                    onOpenSearch: { searchRef = SearchChapterRef(bookId: opened.book.id, chapter: opened.chapter); showSearch = true },
+                    onOpenFavorites: { showFavorites = true },
+                    onDoubleTapVerse: { v in toggleBookmark(v, in: opened) },
+                    onLongPressVerse: { v in actionVerse = v },
+                    onOpenCatalog: { openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
+                    onNavigate: { id, ch in
+                        // 结尾的上一章 / 下一章：手动翻页就退出计划流
+                        guard let b = BibleCatalog.book(id: id) else { return }
+                        planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                        openedChapter = (b, ch)
+                    }
+                )
+            } else {
+                CatalogView(
+                    size: $readSize,
+                    locale: displayLocale,
+                    onOpenBook: { openedBook = $0 },
+                    onOpenSettings: { showTranslationPanel = true },
+                    onOpenSearch: { searchRef = nil; showSearch = true },
+                    onOpenFavorites: { showFavorites = true }
+                )
+            }
+        case .plan:
+            if showSearch {
+                // 播放页坞的搜索键：搜到的章在读经 Tab 打开，返回回计划页
+                SearchView(prefs: searchPrefs, size: readSize, chapterRef: searchRef, locale: displayLocale,
+                           onBack: { showSearch = false },
+                           onOpenHit: { hit in
+                               showSearch = false
+                               guard let b = BibleCatalog.book(id: hit.bookId) else { return }
+                               planFlowActive = false; listenChapter = nil; openedBook = nil
+                               chapterFromPlan = true; planFlowHost = .chapter
+                               focusVerse = hit.verse
+                               openedChapter = (b, hit.chapter)
+                               tab = .read
+                           })
+            } else {
+                switch planRoute {
+                case .play:
+                    PlanPlayView(store: plans, audio: audio, locale: displayLocale, queue: planPageQueue,
+                                 activeIndex: planActiveIndex, activePlaying: planActivePlaying,
+                                 viewAhead: $planViewAhead, cursor: $planCursor,
+                                 onPlayChapter: { planPlay(at: $0) }, onReadChapter: { planRead(at: $0) },
+                                 onOpenPlans: { planRoute = .plans },
+                                 onConfirmDay: { plans.setAheadDays(planContentAhead); planViewAhead = 0 },
+                                 onStageSet: { planViewAhead = 0; planCursor = 0 })
+                case .plans:
+                    PlansListView(store: plans, onOpenPlan: { planRoute = .planDetail($0) }, onBack: { planRoute = .play },
+                                  onOpenArticle: { slug in exploreArticle = ExploreArticles.article(slug); tab = .explore })
+                case .planDetail(let id):
+                    PlanDetailView(store: plans, planId: id,
+                                   onBack: { planRoute = .plans },
+                                   onOpenPlan: { planRoute = .planDetail($0) },
+                                   onOpenChapter: { p in
+                                       chapterFromPlan = true; planFlowHost = .chapter; planFlowActive = false; listenChapter = nil
+                                       openPlanChapter(p, autoPlay: false)
+                                       tab = .read
+                                   },
+                                   onGoHome: { planRoute = .play })
+                }
+            }
+        case .explore:
+            ExploreView(article: $exploreArticle, auth: auth, locale: appLocale, onOpenLogin: { authRoute = .login },
+                        size: readSize, onOpenChapter: { id, ch in
+                // 文章里的经文链接：切到读经 Tab 直接开章
+                guard let b = BibleCatalog.book(id: id) else { return }
+                planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                openedBook = nil
+                openedChapter = (b, ch)
+                tab = .read
+            })
+        }
+    }
+}

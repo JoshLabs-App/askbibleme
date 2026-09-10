@@ -1,0 +1,77 @@
+// 由 tools/gen-translation-catalog.mts 从 RN 的译本目录 / YouVersion 表 / R2 下载表 / 选择器排序生成，勿手改。
+
+/// 译本目录（RN 生产环境 OFFLINE_BUNDLED_INDEX 里拿得到正文的那些）。
+enum TranslationCatalog {
+    static let entries: [ScriptureTranslation] = [
+        ScriptureTranslation(id: "ccb-zh-hans", labelZh: "当代译本（简体）", labelEn: "Contemporary Chinese Bible (Simplified)", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "36", pageLocale: "zh-CN", abbreviation: "CCB", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "当代译本", shortZhTw: "當代譯本", shortEn: "CCB"),
+        ScriptureTranslation(id: "ccb-zh-hant", labelZh: "當代譯本（繁體）", labelEn: "Contemporary Chinese Bible (Traditional)", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "1392", pageLocale: "zh-TW", abbreviation: "CCB", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "当代译本", shortZhTw: "當代譯本", shortEn: "CCB"),
+        ScriptureTranslation(id: "cnv-zh-hant", labelZh: "新譯本（繁體）", labelEn: "Chinese New Version (Traditional)", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "40", pageLocale: "zh-TW", abbreviation: "CNV", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "新译本", shortZhTw: "新譯本", shortEn: "CNV"),
+        ScriptureTranslation(id: "cnvs-zh-hans", labelZh: "新译本（简体）", labelEn: "Chinese New Version (Simplified)", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "41", pageLocale: "zh-CN", abbreviation: "CNVS", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "新译本", shortZhTw: "新譯本", shortEn: "CNVS"),
+        ScriptureTranslation(id: "csbs-zh-hans", labelZh: "中文标准译本（简体）", labelEn: "Chinese Standard Bible (Simplified)", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "43", pageLocale: "zh-CN", abbreviation: "CSBS", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "标准译本", shortZhTw: "標準譯本", shortEn: "CSBS"),
+        ScriptureTranslation(id: "csbt-zh-hant", labelZh: "中文標準譯本（繁體）", labelEn: "Chinese Standard Bible (Traditional)", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "312", pageLocale: "zh-TW", abbreviation: "CSBT", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "标准译本", shortZhTw: "標準譯本", shortEn: "CSBT"),
+        ScriptureTranslation(id: "rcuv-zh-hant", labelZh: "和合本修訂版", labelEn: "Revised Chinese Union Version", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "139", pageLocale: "zh-TW", abbreviation: "RCUV", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "和合本修订", shortZhTw: "和合本修訂", shortEn: "RCUV"),
+        ScriptureTranslation(id: "rcuvss-zh-hans", labelZh: "和合本修订版", labelEn: "Revised Chinese Union Version (Simplified)", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "140", pageLocale: "zh-CN", abbreviation: "RCUVSS", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "和合本修订", shortZhTw: "和合本修訂", shortEn: "RCUVSS"),
+        ScriptureTranslation(id: "cunp-zh-hant", labelZh: "新標點和合本（神版·繁體）", labelEn: "CUNP (Shen, Traditional)", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "46", pageLocale: "zh-TW", abbreviation: "CUNP-Shen", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "新标点·神繁", shortZhTw: "新標點·神繁", shortEn: "CUNP Shen"),
+        ScriptureTranslation(id: "cunp-zh-hant-god", labelZh: "新標點和合本（上帝版·繁體）", labelEn: "CUNP (Shangdi, Traditional)", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "414", pageLocale: "zh-TW", abbreviation: "CUNP-Shangti", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "新标点·上帝繁", shortZhTw: "新標點·上帝繁", shortEn: "CUNP Shangdi"),
+        ScriptureTranslation(id: "cunpss-zh-hant", labelZh: "新标点和合本（上帝版·简体）", labelEn: "CUNPSS (Shangdi, Simplified)", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "47", pageLocale: "zh-CN", abbreviation: "CUNPSS-Shangti", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "新标点·上帝简", shortZhTw: "新標點·上帝簡", shortEn: "CUNPSS Shangdi"),
+        ScriptureTranslation(id: "cunpss-zh-hans", labelZh: "新标点和合本（神版·简体）", labelEn: "CUNPSS (Shen, Simplified)", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "48", pageLocale: "zh-CN", abbreviation: "CUNPSS-Shen", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "新标点·神简", shortZhTw: "新標點·神簡", shortEn: "CUNPSS Shen"),
+        ScriptureTranslation(id: "mandarin-zh-hans", labelZh: "普通话本", labelEn: "Mandarin Bible", language: "zh-Hans", delivery: .online,
+            provider: "youversion", remoteId: "3780", pageLocale: "zh-CN", abbreviation: "", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "普通话", shortZhTw: "普通話", shortEn: "Mandarin"),
+        ScriptureTranslation(id: "rcv-zh-hant", labelZh: "恢復本（繁體）", labelEn: "Recovery Version Traditional Chinese", language: "zh-Hant", delivery: .online,
+            provider: "youversion", remoteId: "4230", pageLocale: "zh-TW", abbreviation: "RCV", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "恢复本", shortZhTw: "恢復本", shortEn: "RCV"),
+        ScriptureTranslation(id: "cuv-simp", labelZh: "和合本（简体）", labelEn: "Chinese Union Version (Simplified)", language: "zh-Hans", delivery: .bundled,
+            provider: "local", remoteId: "", pageLocale: "", abbreviation: "", downloadUrl: "",
+            hasChapterAudio: true, shortZh: "和合本", shortZhTw: "和合本", shortEn: "CUV"),
+        ScriptureTranslation(id: "cuv-trad", labelZh: "和合本（繁體）", labelEn: "Chinese Union Version (Traditional)", language: "zh-Hant", delivery: .bundled,
+            provider: "local", remoteId: "", pageLocale: "", abbreviation: "", downloadUrl: "",
+            hasChapterAudio: true, shortZh: "和合本繁", shortZhTw: "和合本繁", shortEn: "CUV Trad"),
+        ScriptureTranslation(id: "web-en", labelZh: "WEBP 英译本", labelEn: "World English Bible (WEBP)", language: "en", delivery: .bundled,
+            provider: "local", remoteId: "", pageLocale: "", abbreviation: "", downloadUrl: "",
+            hasChapterAudio: true, shortZh: "WEBP", shortZhTw: "WEBP", shortEn: "WEBP"),
+        ScriptureTranslation(id: "ust-en", labelZh: "UST 简明英文（学英文版）", labelEn: "unfoldingWord Simplified Text (UST) – Learn English", language: "en", delivery: .bundled,
+            provider: "local", remoteId: "", pageLocale: "", abbreviation: "", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "UST", shortZhTw: "UST", shortEn: "UST"),
+        ScriptureTranslation(id: "niv", labelZh: "NIV 英文新国际版", labelEn: "New International Version (NIV)", language: "en", delivery: .online,
+            provider: "youversion", remoteId: "111", pageLocale: "", abbreviation: "NIV", downloadUrl: "",
+            hasChapterAudio: false, shortZh: "NIV", shortZhTw: "NIV", shortEn: "NIV"),
+        ScriptureTranslation(id: "kjv", labelZh: "KJV 英文钦定本", labelEn: "King James Version (KJV)", language: "en", delivery: .download,
+            provider: "", remoteId: "1", pageLocale: "", abbreviation: "KJV", downloadUrl: "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev/bible/kjv.sqlite",
+            hasChapterAudio: true, shortZh: "KJV", shortZhTw: "KJV", shortEn: "KJV"),
+    ]
+    /// 选择器顺序（RN sortPickerTranslations，按界面语言）
+    static let pickerOrder: [String: [String]] = [
+        "zh-CN": ["cuv-simp", "cuv-trad", "ccb-zh-hans", "cnvs-zh-hans", "rcuvss-zh-hans", "rcuv-zh-hant", "rcv-zh-hant", "csbs-zh-hans", "cunpss-zh-hans", "cunpss-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "csbt-zh-hant", "cnv-zh-hant", "mandarin-zh-hans", "niv", "kjv", "web-en", "ust-en", "ccb-zh-hant"],
+        "zh-TW": ["cuv-trad", "cuv-simp", "ccb-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cnv-zh-hant", "rcv-zh-hant", "csbt-zh-hant", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hans", "cunpss-zh-hant", "csbs-zh-hans", "cnvs-zh-hans", "mandarin-zh-hans", "niv", "kjv", "web-en", "ust-en", "ccb-zh-hans"],
+        "en": ["niv", "kjv", "web-en", "ust-en", "cuv-simp", "cuv-trad", "ccb-zh-hans", "ccb-zh-hant", "cnv-zh-hant", "cnvs-zh-hans", "csbs-zh-hans", "csbt-zh-hant", "rcuv-zh-hant", "rcuvss-zh-hans", "cunp-zh-hant", "cunp-zh-hant-god", "cunpss-zh-hant", "cunpss-zh-hans", "mandarin-zh-hans", "rcv-zh-hant"],
+    ]
+    /// 抓 bible.com 页面第二次尝试用的浏览器 UA（RN BROWSER_UA）
+    static let browserUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    /// 生产包里 RN 自己也拿不到正文的译本，没列进来
+    static let notListed: [String] = ["esv", "nlt", "nkjv"]
+}

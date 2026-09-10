@@ -6,8 +6,8 @@
       "labelEn": "American Standard Version (ASV)",
       "language": "en",
       "sourceFile": "uploads/asv.json",
-      "updatedAt": "2026-05-27T17:42:03.549Z",
-      "bytes": 4465819,
+      "updatedAt": "2026-09-09T20:04:46.638Z",
+      "bytes": 4361617,
       "verseCount": 31086
     },
     {
@@ -26,8 +26,8 @@
       "labelEn": "Spanish Free Bible for the World",
       "language": "es",
       "sourceFile": "uploads/blm-es.json",
-      "updatedAt": "2026-05-27T17:42:03.549Z",
-      "bytes": 4277479,
+      "updatedAt": "2026-09-09T20:04:46.638Z",
+      "bytes": 4207262,
       "verseCount": 31098
     },
     {
@@ -66,8 +66,8 @@
       "labelEn": "Darby Translation",
       "language": "en",
       "sourceFile": "uploads/dby-en.json",
-      "updatedAt": "2026-05-27T17:42:03.549Z",
-      "bytes": 4430324,
+      "updatedAt": "2026-09-09T20:04:46.638Z",
+      "bytes": 4319303,
       "verseCount": 31099
     },
     {
@@ -86,8 +86,8 @@
       "labelEn": "King James Version (KJV)",
       "language": "en",
       "sourceFile": "uploads/kjv.json",
-      "updatedAt": "2026-05-27T17:42:03.549Z",
-      "bytes": 4474163,
+      "updatedAt": "2026-09-09T20:04:46.638Z",
+      "bytes": 4358320,
       "verseCount": 31102
     },
     {
@@ -136,8 +136,8 @@
       "labelEn": "Reina Valera Gomez (Spanish)",
       "language": "es",
       "sourceFile": "uploads/rvg-es.json",
-      "updatedAt": "2026-05-27T17:42:03.549Z",
-      "bytes": 4254675,
+      "updatedAt": "2026-09-09T20:04:46.638Z",
+      "bytes": 4178251,
       "verseCount": 31102
     },
     {

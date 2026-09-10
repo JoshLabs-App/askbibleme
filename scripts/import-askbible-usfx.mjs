@@ -104,16 +104,30 @@ const HEBREW_XML_BOOK_SOURCE = {
 
 const OT_BOOK_IDS = new Set(BOOKS.slice(0, 39).map((b) => b.id));
 
+// 与 import-public-domain-usfx.mjs 同一套规则：字符级行内标签（<w s="…">、<add>、<nd>…）去掉不补空格，
+// 否则带 Strong's 号的版本（rv1909-es 等）会变成 "la tierra ." 这种词与标点分家的正文；¶ 段落记号去掉。
+const INLINE_CHAR_TAG_RE =
+  /<\/?(?:w|add|nd|wj|qs|tl|bk|k|sc|it|bd|em|no|sup|sls|dc|pn|wg|wh|wr|char|rb|rt|ndx|ord|png|qac|qt|sig|lit|xt|rq|ior|iqt|fq|fqa|fk|fl|fv|fw|fp|xo|xk|xq|xot|xnt|xdc)\b[^>]*>/g;
+
+function normalizePunctuationSpacing(text) {
+  return text
+    .replace(/\s+([,.;:!?)\]}’”»])/g, "$1")
+    .replace(/([(\[{“‘«¿¡])\s+/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function stripXml(text) {
-  return String(text || "")
+  const plain = String(text || "")
     .replace(/<f\b[^>]*>[\s\S]*?<\/f>/g, " ")
     .replace(/<x\b[^>]*>[\s\S]*?<\/x>/g, " ")
     .replace(/<fig\b[^>]*>[\s\S]*?<\/fig>/g, " ")
     .replace(/<table\b[^>]*>[\s\S]*?<\/table>/g, " ")
     .replace(/<ref\b[^>]*>[\s\S]*?<\/ref>/g, " ")
+    .replace(INLINE_CHAR_TAG_RE, "")
     .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/¶/g, " ");
+  return normalizePunctuationSpacing(plain);
 }
 
 function extractAllVerses(xml, bookCode) {

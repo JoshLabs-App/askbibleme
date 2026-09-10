@@ -103,12 +103,18 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     return finish({ bookId, startChapter, startVerse: 1, endChapter, endVerse, label });
   }
 
+  // 单章书卷（俄巴底亚书 / 腓利门书 / 约翰二三书 / 犹大书）：上游表写 "Obadiah 15-21" 指的是节，不是章
+  const singleChapterBook = scriptureBooks.find((b) => b.bookId === bookId)?.chapters === 1;
+
   const cr = CHAPTER_RANGE.exec(rest);
   if (cr) {
     const startChapter = Number(cr[1]);
     const endChapter = Number(cr[2]);
     if (![startChapter, endChapter].every((n) => Number.isFinite(n) && n >= 1) || endChapter < startChapter) {
       throw new Error(`[reading-plan] invalid chapter range: ${JSON.stringify(label)}`);
+    }
+    if (singleChapterBook) {
+      return finish({ bookId, startChapter: 1, endChapter: 1, startVerse: startChapter, endVerse: endChapter, label });
     }
     return finish({ bookId, startChapter, endChapter, label });
   }
@@ -118,6 +124,9 @@ export function parseEnglishPassageLabel(full: string): ReadingPlanRange {
     const chapter = Number(sc[1]);
     if (!Number.isFinite(chapter) || chapter < 1) {
       throw new Error(`[reading-plan] invalid chapter: ${JSON.stringify(label)}`);
+    }
+    if (singleChapterBook && chapter > 1) {
+      return finish({ bookId, startChapter: 1, endChapter: 1, startVerse: chapter, endVerse: chapter, label });
     }
     return finish({ bookId, startChapter: chapter, endChapter: chapter, label });
   }

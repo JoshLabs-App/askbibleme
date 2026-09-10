@@ -40,14 +40,30 @@ data class ScriptureTranslation(
     fun shortLabel(locale: AppLocale): String = when (locale) { AppLocale.EN -> shortEn; AppLocale.ZH_TW -> shortZhTw; AppLocale.ZH_CN -> shortZh }
 
     companion object {
-        /** 全目录：内置表（离线可用、带朗读 / 下载信息）+ 网站目录接口拿到的其余在线译本（RemoteTranslations） */
-        val all: List<ScriptureTranslation> get() = TranslationCatalog.entries + RemoteTranslations.extras
+        /**
+         * 全目录：内置表（离线可用、带朗读 / 下载信息）+ 网站目录接口拿到的其余在线译本（RemoteTranslations）。
+         * 合表与 id 索引都缓存住：几百条的表每次重拼、再线性找，章页每次重组要问好几次
+         */
+        @Volatile private var cachedAll: List<ScriptureTranslation> = TranslationCatalog.entries
+        @Volatile private var cachedIndex: Map<String, ScriptureTranslation> = TranslationCatalog.entries.associateBy { it.id }
+        @Volatile private var cachedRevision = -1
+
+        @Synchronized private fun ensureCache() {
+            val rev = RemoteTranslations.revision
+            if (cachedRevision == rev) return
+            val merged = TranslationCatalog.entries + RemoteTranslations.extras
+            cachedAll = merged
+            cachedIndex = merged.associateBy { it.id }
+            cachedRevision = rev
+        }
+
+        val all: List<ScriptureTranslation> get() { ensureCache(); return cachedAll }
         /** 随安装包内置的（BUNDLED_SCRIPTURE_TRANSLATION_IDS 的顺序） */
         val bundled: List<ScriptureTranslation> get() = TranslationCatalog.entries.filter { it.delivery == TranslationDelivery.BUNDLED }
         /** DEFAULT_SCRIPTURE_TRANSLATION_ID */
         val DEFAULT: ScriptureTranslation get() = TranslationCatalog.entries.firstOrNull { it.id == "cuv-simp" } ?: TranslationCatalog.entries[0]
 
-        fun find(id: String): ScriptureTranslation? = all.firstOrNull { it.id == id }
+        fun find(id: String): ScriptureTranslation? { ensureCache(); return cachedIndex[id] }
 
         /** 选择器顺序（RN sortPickerTranslations，按界面语言）；其余语种接在内置表后面，按语言 + 名称排 */
         fun pickerOrder(locale: AppLocale): List<ScriptureTranslation> {

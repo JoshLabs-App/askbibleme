@@ -13,6 +13,8 @@ struct PostReadingEditions: View {
     var onNavigate: (_ bookId: String, _ chapter: Int) -> Void
     var onBackToTop: () -> Void
     @Binding var active: InfoEditionVariant?
+    /// 用英文那套讲解 / 发现（读英文译本，或界面是英文时）
+    var english: Bool = false
 
     private var scale: CGFloat { max(0.8, min(2.8, size.metrics.verseFontSize / 16)) }
     private func sx(_ n: CGFloat) -> CGFloat { (n * scale * 10).rounded() / 10 }
@@ -27,7 +29,7 @@ struct PostReadingEditions: View {
             heading
             bookSpread
             if let v = active {
-                EditionBlock(bookId: bookId, chapter: chapter, variant: v, size: size, theme: theme, onBack: { active = nil })
+                EditionBlock(bookId: bookId, chapter: chapter, variant: v, english: english, size: size, theme: theme, onBack: { active = nil })
                 bottomRow
             }
         }
@@ -157,6 +159,7 @@ private struct EditionBlock: View {
     let bookId: String
     let chapter: Int
     let variant: InfoEditionVariant
+    var english: Bool = false
     var size: ReadSize
     let theme: Parchment
     var onBack: () -> Void
@@ -165,7 +168,7 @@ private struct EditionBlock: View {
     private func sx(_ n: CGFloat) -> CGFloat { (n * scale * 10).rounded() / 10 }
 
     private var loaded: (heading: String?, body: String)? {
-        guard let ch = InfoEditionDatabase.shared?.chapter(bookId: bookId, chapter: chapter, variant: variant) else { return nil }
+        guard let ch = InfoEditionDatabase.shared?.chapter(bookId: bookId, chapter: chapter, variant: variant, english: english) else { return nil }
         return InfoEditionFormat.splitPrimaryHeading(InfoEditionFormat.readerText(ch.markdown, variant: variant))
     }
 

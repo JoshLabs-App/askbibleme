@@ -61,6 +61,8 @@ fun PostReadingEditions(
     prev: ChapterNeighbor?,
     next: ChapterNeighbor?,
     active: InfoEditionVariant?,
+    /** 用英文那套讲解 / 发现（读英文译本，或界面是英文时） */
+    english: Boolean = false,
     onActiveChange: (InfoEditionVariant?) -> Unit,
     onNavigate: (String, Int) -> Unit,
     onBackToTop: () -> Unit,
@@ -88,7 +90,7 @@ fun PostReadingEditions(
         }
 
         if (active != null) {
-            EditionBlock(bookId, chapter, active, size, theme, ::sx, onBack = { onActiveChange(null) }, onLink = { url ->
+            EditionBlock(bookId, chapter, active, english, size, theme, ::sx, onBack = { onActiveChange(null) }, onLink = { url ->
                 (ArticleLink.resolve(url) as? ArticleLink.Chapter)?.let { onNavigate(it.bookId, it.chapter) }
             })
             // 底部「上一章 / 回到顶部 / 下一章」（上下各 50）
@@ -153,12 +155,12 @@ private fun Page(variant: InfoEditionVariant, isActive: Boolean, sx: (Float) -> 
  */
 @Composable
 private fun EditionBlock(
-    bookId: String, chapter: Int, variant: InfoEditionVariant, size: ReadSize, theme: Parchment,
+    bookId: String, chapter: Int, variant: InfoEditionVariant, english: Boolean, size: ReadSize, theme: Parchment,
     sx: (Float) -> Float, onBack: () -> Unit, onLink: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val content = remember(bookId, chapter, variant) {
-        InfoEditionDatabase.open(context)?.chapter(bookId, chapter, variant)?.let { ch ->
+    val content = remember(bookId, chapter, variant, english) {
+        InfoEditionDatabase.open(context)?.chapter(bookId, chapter, variant, english)?.let { ch ->
             InfoEditionFormat.splitPrimaryHeading(InfoEditionFormat.readerText(ch.markdown, variant))
         }
     }

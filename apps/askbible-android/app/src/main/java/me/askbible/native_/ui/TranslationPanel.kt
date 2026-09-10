@@ -44,6 +44,10 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.AppLocale
@@ -181,10 +185,17 @@ private fun TranslationList(
             },
         )
         if (q.isEmpty()) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
-                    .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 6.dp),
+            // 语言行打开时把当前语言滚到眼前（几百本时当前语言常在最右边）
+            val chipState = rememberLazyListState()
+            LaunchedEffect(family, sections) {
+                val i = sections.indexOfFirst { it.first == family }
+                if (i >= 0) chipState.scrollToItem(i)
+            }
+            LazyRow(state = chipState,
+                modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for ((language, _) in sections) {
+                items(sections.size, key = { sections[it].first }) { idx ->
+                    val language = sections[idx].first
                     val on = language == family
                     Box(
                         Modifier.clip(RoundedCornerShape(10.dp))

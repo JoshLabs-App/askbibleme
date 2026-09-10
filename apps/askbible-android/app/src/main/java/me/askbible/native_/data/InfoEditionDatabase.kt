@@ -34,7 +34,10 @@ class InfoEditionDatabase private constructor(private val db: SQLiteDatabase) {
             } catch (_: Exception) { null }
         }
 
-        fun roleId(variant: InfoEditionVariant) = if (variant == InfoEditionVariant.GUIDE) GUIDE_ROLE_ID else INFO_ROLE_ID
+        /** 讲解 / 发现两版都有中英两套角色（库里 info_edition_v1 / info_edition_v1_en、role_356f0ffb / role_guide_v2_en） */
+        fun roleId(variant: InfoEditionVariant, english: Boolean = false) =
+            if (variant == InfoEditionVariant.GUIDE) (if (english) GUIDE_EN_ROLE_ID else GUIDE_ROLE_ID)
+            else (if (english) INFO_EN_ROLE_ID else INFO_ROLE_ID)
 
         fun roleMatches(ch: InfoEditionChapter, target: String, variant: InfoEditionVariant): Boolean {
             if (ch.roleId == target) return true
@@ -45,10 +48,12 @@ class InfoEditionDatabase private constructor(private val db: SQLiteDatabase) {
         }
     }
 
-    fun chapter(bookId: String, chapter: Int, variant: InfoEditionVariant): InfoEditionChapter? {
+    fun chapter(bookId: String, chapter: Int, variant: InfoEditionVariant, english: Boolean = false): InfoEditionChapter? {
         val book = bookId.trim().uppercase()
-        val target = roleId(variant)
+        val target = roleId(variant, english)
         query("$book:$chapter:$target")?.takeIf { it.markdown.isNotBlank() }?.let { return it }
+        // 要的那套语言没有这一章就退回另一套（英文库比中文库少几章）
+        query("$book:$chapter:${roleId(variant, !english)}")?.takeIf { it.markdown.isNotBlank() }?.let { return it }
         val legacy = query("$book:$chapter") ?: return null
         return if (legacy.markdown.isNotBlank() && roleMatches(legacy, target, variant)) legacy else null
     }

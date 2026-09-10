@@ -37,7 +37,11 @@ final class InfoEditionDatabase {
 
     deinit { if let handle { sqlite3_close(handle) } }
 
-    static func roleId(for variant: InfoEditionVariant) -> String { variant == .guide ? guideRoleId : infoRoleId }
+    /// 讲解 / 发现两版都有中英两套角色（库里 info_edition_v1 / info_edition_v1_en、role_356f0ffb / role_guide_v2_en）
+    static func roleId(for variant: InfoEditionVariant, english: Bool = false) -> String {
+        if variant == .guide { return english ? guideEnRoleId : guideRoleId }
+        return english ? infoEnRoleId : infoRoleId
+    }
 
     static func roleMatches(_ ch: InfoEditionChapter, target: String, variant: InfoEditionVariant) -> Bool {
         if ch.roleId == target { return true }
@@ -48,9 +52,15 @@ final class InfoEditionDatabase {
         return ch.roleId == guideRoleId || ch.roleId == guideEnRoleId || guideLabelAliases.contains(label)
     }
 
-    func chapter(bookId: String, chapter: Int, variant: InfoEditionVariant) -> InfoEditionChapter? {
+    func chapter(bookId: String, chapter: Int, variant: InfoEditionVariant, english: Bool = false) -> InfoEditionChapter? {
         let book = bookId.trimmingCharacters(in: .whitespaces).uppercased()
-        let target = Self.roleId(for: variant)
+        let target = Self.roleId(for: variant, english: english)
+        // 要的那套语言没有这一章就退回另一套（英文库比中文库少几章）
+        if let hit = query(key: "\(book):\(chapter):\(Self.roleId(for: variant, english: !english))"),
+           query(key: "\(book):\(chapter):\(target)") == nil,
+           !hit.markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return hit
+        }
         if let hit = query(key: "\(book):\(chapter):\(target)"), !hit.markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return hit
         }

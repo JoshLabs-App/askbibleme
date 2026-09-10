@@ -343,6 +343,7 @@ struct TranslationPanel: View {
             .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 4)
 
             if q.isEmpty {
+                ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(all, id: \.language) { g in
@@ -358,11 +359,14 @@ struct TranslationPanel: View {
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
+                            .id(g.language)
                         }
                     }
                     .padding(.horizontal, 10)
                 }
                 .padding(.top, 4).padding(.bottom, 6)
+                .onAppear { proxy.scrollTo(current, anchor: .center) }
+                }
             }
 
             ScrollView(showsIndicators: false) {

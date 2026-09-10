@@ -217,13 +217,14 @@ fun ChapterScreen(
                 EndingSection(bookName, neighbors, theme, onOpenCatalog, onNavigate, locale)
             }
             // 读后两版入口：陪你探索 / 查找资料（RN ReadChapterPostReadingEditions）。
-            // 讲解 / 发现两版只有中文内容：界面是中文就出（读西班牙语等版本时照样能看中文讲解），
-            // 界面是英文或别的语言就不出 —— 没有对应语言的内容，不拿中文顶（Josh 2026-09-10）
-            if (uiLocale.isZh) item(key = "post-reading") {
+            // 库里中英两套都有：读英文译本（RN prefersEnglishInfoEdition）或界面是英文 → 英文那套；
+            // 其余（含西班牙语等没有对应语种内容的版本）跟界面语言走中文那套（Josh 2026-09-10）
+            item(key = "post-reading") {
                 PostReadingEditions(
                     bookId = bookId, chapter = chapter, size = size, theme = theme,
                     prev = neighbors.first, next = neighbors.second,
                     active = activeEdition, onActiveChange = { activeEdition = it },
+                    english = locale == AppLocale.EN || uiLocale == AppLocale.EN,
                     onNavigate = onNavigate,
                     onBackToTop = { scope.launch { listState.animateScrollToItem(0) } },
                 )

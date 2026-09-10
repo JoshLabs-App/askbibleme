@@ -29,19 +29,31 @@ object RemoteTranslations {
     private val lock = Any()
     @Volatile private var cacheFile: File? = null
     @Volatile private var entries: List<Entry> = emptyList()
+    @Volatile private var extrasCache: List<ScriptureTranslation> = emptyList()
+    /** 目录内容变一次 +1：ScriptureTranslation 的合并表 / id 索引据此失效重建 */
+    @Volatile var revision = 0; private set
 
-    /** 壳启动时接上缓存目录并读盘（同步，很小一个文件） */
+    /** 壳启动时接上缓存目录并读盘（同步；TSV 很快，见 writeDisk 的说明） */
     fun attach(cacheDir: File) {
-        val f = File(cacheDir, "translations-catalog.json")
+        val f = File(cacheDir, "translations-catalog.tsv")
         cacheFile = f
         if (entries.isEmpty() && f.exists()) {
-            val parsed = runCatching { parse(f.readText()) }.getOrNull().orEmpty()
-            if (parsed.isNotEmpty()) synchronized(lock) { entries = parsed }
+            val parsed = runCatching { readDisk(f) }.getOrNull().orEmpty()
+            if (parsed.isNotEmpty()) replace(parsed)
         }
     }
 
-    /** 内置目录之外的在线译本 */
-    val extras: List<ScriptureTranslation> get() = entries.map { it.translation }
+    /** 换一批目录（内存 + 派生缓存 + 版本号一起更新） */
+    private fun replace(next: List<Entry>) {
+        synchronized(lock) {
+            entries = next
+            extrasCache = next.map { it.translation }
+            revision += 1
+        }
+    }
+
+    /** 内置目录之外的在线译本。缓存成 List，别每次访问都 map 一遍几百条 */
+    val extras: List<ScriptureTranslation> get() = extrasCache
 
     /** 语言码 → 显示名（按界面语言）；目录里没有返回 null */
     fun languageName(tag: String, locale: AppLocale): String? {
@@ -77,8 +89,8 @@ object RemoteTranslations {
         } catch (_: Exception) { return false }
         val parsed = runCatching { parse(text) }.getOrNull().orEmpty()
         if (parsed.isEmpty()) return false
-        synchronized(lock) { entries = parsed }
-        runCatching { f?.writeText(text) }
+        replace(parsed)
+        runCatching { f?.let { writeDisk(it, parsed) } }
         return true
     }
 
@@ -124,4 +136,49 @@ object RemoteTranslations {
         }
         return out
     }
+}
+
+// ---- 落盘 ----
+//
+// 存成一行一条的 TSV，不存服务端那份 JSON：启动时要在主线程上把它读回来，
+// 92KB JSON 解析要几十毫秒（会顶到冷启动时间上），TSV 按 \t / \n 切开只要一两毫秒。
+
+private fun esc(s: String) = s.replace("\\", "\\\\").replace("\t", "\\t").replace("\n", "\\n")
+
+private fun unesc(s: String): String {
+    val sb = StringBuilder(s.length)
+    var escaped = false
+    for (ch in s) {
+        when {
+            escaped -> { sb.append(if (ch == 't') '\t' else if (ch == 'n') '\n' else ch); escaped = false }
+            ch == '\\' -> escaped = true
+            else -> sb.append(ch)
+        }
+    }
+    return sb.toString()
+}
+
+private fun RemoteTranslations.writeDisk(f: File, list: List<RemoteTranslations.Entry>) {
+    f.writeText(list.joinToString("\n") { e ->
+        listOf(e.translation.remoteId, e.translation.language, e.translation.labelZh, e.translation.labelEn,
+               e.translation.abbreviation, e.languageNameZh, e.languageNameEn, e.copyright).joinToString("\t") { esc(it) }
+    })
+}
+
+private fun RemoteTranslations.readDisk(f: File): List<RemoteTranslations.Entry> {
+    val out = ArrayList<RemoteTranslations.Entry>(512)
+    for (line in f.readText().split('\n')) {
+        if (line.isBlank()) continue
+        val fields = line.split('\t')
+        if (fields.size != 8) continue
+        val remoteId = unesc(fields[0]); val language = unesc(fields[1])
+        if (remoteId.isEmpty() || language.isEmpty()) continue
+        val labelZh = unesc(fields[2]); val labelEn = unesc(fields[3]); val abbreviation = unesc(fields[4])
+        val short = abbreviation.ifEmpty { labelEn.ifEmpty { labelZh } }
+        out.add(RemoteTranslations.Entry(
+            ScriptureTranslation("yv-$remoteId", labelZh, labelEn, language, TranslationDelivery.ONLINE,
+                "youversion", remoteId, "", abbreviation, "", false, short, short, short),
+            unesc(fields[5]), unesc(fields[6]), unesc(fields[7])))
+    }
+    return out
 }

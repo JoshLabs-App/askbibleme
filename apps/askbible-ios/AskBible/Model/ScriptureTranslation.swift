@@ -30,15 +30,38 @@ struct ScriptureTranslation: Identifiable, Hashable {
     let shortZhTw: String
     let shortEn: String
 
-    /// 全目录：内置表（离线可用、带朗读 / 下载信息）+ 网站目录接口拿到的其余在线译本（RemoteTranslations）
-    static var all: [ScriptureTranslation] { TranslationCatalog.entries + RemoteTranslations.extras }
+    /// 全目录：内置表（离线可用、带朗读 / 下载信息）+ 网站目录接口拿到的其余在线译本（RemoteTranslations）。
+    /// 合表与 id 索引都缓存住：几百条的数组每次重拼、再线性找，章页每帧要问好几次
+    nonisolated(unsafe) private static var cachedAll: [ScriptureTranslation] = TranslationCatalog.entries
+    nonisolated(unsafe) private static var cachedIndex: [String: ScriptureTranslation] =
+        Dictionary(TranslationCatalog.entries.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+    nonisolated(unsafe) private static var cachedRevision = -1
+    private static let cacheLock = NSLock()
+
+    private static func ensureCache() {
+        let rev = RemoteTranslations.revision
+        cacheLock.lock(); defer { cacheLock.unlock() }
+        guard cachedRevision != rev else { return }
+        let merged = TranslationCatalog.entries + RemoteTranslations.extras
+        cachedAll = merged
+        cachedIndex = Dictionary(merged.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        cachedRevision = rev
+    }
+
+    static var all: [ScriptureTranslation] {
+        ensureCache()
+        cacheLock.lock(); defer { cacheLock.unlock() }
+        return cachedAll
+    }
     /// 随安装包内置的（BUNDLED_SCRIPTURE_TRANSLATION_IDS 的顺序）
     static let bundled: [ScriptureTranslation] = TranslationCatalog.entries.filter { $0.delivery == .bundled }
     /// DEFAULT_SCRIPTURE_TRANSLATION_ID
     static let `default`: ScriptureTranslation = TranslationCatalog.entries.first { $0.id == "cuv-simp" } ?? TranslationCatalog.entries[0]
 
     static func find(_ id: String) -> ScriptureTranslation? {
-        all.first { $0.id == id }
+        ensureCache()
+        cacheLock.lock(); defer { cacheLock.unlock() }
+        return cachedIndex[id]
     }
 
     /// 选择器顺序（RN sortPickerTranslations，按界面语言）；其余语种接在内置表后面，按语言 + 名称排

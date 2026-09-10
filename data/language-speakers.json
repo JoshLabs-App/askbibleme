@@ -1,0 +1,415 @@
+{
+  "_note": "语言使用人数（百万，含母语 + 二语），粗略公开数据，只用来给译本面板的语言行排序 —— 之前按版本数排，梵语 22 个版本会排在最前面。表里没有的语言排在后面（再按版本数）。由 tools/gen-language-order.mjs 生成两端的 LanguageOrder。 名字两份（中 / 英）：目录接口老版本只给中文名，英文界面不该显示中文语言名（Josh 2026-09-10）。",
+  "languages": {
+    "en": {
+      "speakers": 1500,
+      "zh": "英语",
+      "en": "English"
+    },
+    "zh": {
+      "speakers": 1180,
+      "zh": "中文",
+      "en": "Chinese"
+    },
+    "hi": {
+      "speakers": 610,
+      "zh": "印地语",
+      "en": "Hindi"
+    },
+    "es": {
+      "speakers": 560,
+      "zh": "西班牙语",
+      "en": "Spanish"
+    },
+    "ar": {
+      "speakers": 370,
+      "zh": "阿拉伯语",
+      "en": "Arabic"
+    },
+    "fr": {
+      "speakers": 310,
+      "zh": "法语",
+      "en": "French"
+    },
+    "bn": {
+      "speakers": 270,
+      "zh": "孟加拉语",
+      "en": "Bengali"
+    },
+    "pt": {
+      "speakers": 260,
+      "zh": "葡萄牙语",
+      "en": "Portuguese"
+    },
+    "ru": {
+      "speakers": 255,
+      "zh": "俄语",
+      "en": "Russian"
+    },
+    "ur": {
+      "speakers": 230,
+      "zh": "乌尔都语",
+      "en": "Urdu"
+    },
+    "id": {
+      "speakers": 200,
+      "zh": "印尼语",
+      "en": "Indonesian"
+    },
+    "ms": {
+      "speakers": 200,
+      "zh": "马来语",
+      "en": "Malay"
+    },
+    "de": {
+      "speakers": 135,
+      "zh": "德语",
+      "en": "German"
+    },
+    "ja": {
+      "speakers": 125,
+      "zh": "日语",
+      "en": "Japanese"
+    },
+    "pa": {
+      "speakers": 113,
+      "zh": "旁遮普语",
+      "en": "Punjabi"
+    },
+    "mr": {
+      "speakers": 99,
+      "zh": "马拉地语",
+      "en": "Marathi"
+    },
+    "te": {
+      "speakers": 96,
+      "zh": "泰卢固语",
+      "en": "Telugu"
+    },
+    "tr": {
+      "speakers": 90,
+      "zh": "土耳其语",
+      "en": "Turkish"
+    },
+    "ta": {
+      "speakers": 87,
+      "zh": "泰米尔语",
+      "en": "Tamil"
+    },
+    "tl": {
+      "speakers": 87,
+      "zh": "他加禄语",
+      "en": "Tagalog"
+    },
+    "yue": {
+      "speakers": 86,
+      "zh": "粤语",
+      "en": "Cantonese"
+    },
+    "vi": {
+      "speakers": 86,
+      "zh": "越南语",
+      "en": "Vietnamese"
+    },
+    "ko": {
+      "speakers": 82,
+      "zh": "韩语",
+      "en": "Korean"
+    },
+    "ha": {
+      "speakers": 80,
+      "zh": "豪萨语",
+      "en": "Hausa"
+    },
+    "fa": {
+      "speakers": 78,
+      "zh": "波斯语",
+      "en": "Persian"
+    },
+    "sw": {
+      "speakers": 71,
+      "zh": "斯瓦希里语",
+      "en": "Swahili"
+    },
+    "jv": {
+      "speakers": 68,
+      "zh": "爪哇语",
+      "en": "Javanese"
+    },
+    "it": {
+      "speakers": 68,
+      "zh": "意大利语",
+      "en": "Italian"
+    },
+    "gu": {
+      "speakers": 62,
+      "zh": "古吉拉特语",
+      "en": "Gujarati"
+    },
+    "th": {
+      "speakers": 61,
+      "zh": "泰语",
+      "en": "Thai"
+    },
+    "kn": {
+      "speakers": 59,
+      "zh": "卡纳达语",
+      "en": "Kannada"
+    },
+    "am": {
+      "speakers": 57,
+      "zh": "阿姆哈拉语",
+      "en": "Amharic"
+    },
+    "bho": {
+      "speakers": 52,
+      "zh": "博杰普尔语",
+      "en": "Bhojpuri"
+    },
+    "uz": {
+      "speakers": 44,
+      "zh": "乌兹别克语",
+      "en": "Uzbek"
+    },
+    "my": {
+      "speakers": 43,
+      "zh": "缅甸语",
+      "en": "Burmese"
+    },
+    "or": {
+      "speakers": 39,
+      "zh": "奥里亚语",
+      "en": "Odia"
+    },
+    "pl": {
+      "speakers": 40,
+      "zh": "波兰语",
+      "en": "Polish"
+    },
+    "uk": {
+      "speakers": 40,
+      "zh": "乌克兰语",
+      "en": "Ukrainian"
+    },
+    "ps": {
+      "speakers": 40,
+      "zh": "普什图语",
+      "en": "Pashto"
+    },
+    "ml": {
+      "speakers": 36,
+      "zh": "马拉雅拉姆语",
+      "en": "Malayalam"
+    },
+    "ne": {
+      "speakers": 32,
+      "zh": "尼泊尔语",
+      "en": "Nepali"
+    },
+    "sd": {
+      "speakers": 32,
+      "zh": "信德语",
+      "en": "Sindhi"
+    },
+    "az": {
+      "speakers": 30,
+      "zh": "阿塞拜疆语",
+      "en": "Azerbaijani"
+    },
+    "ku": {
+      "speakers": 30,
+      "zh": "库尔德语",
+      "en": "Kurdish"
+    },
+    "si": {
+      "speakers": 22,
+      "zh": "僧伽罗语",
+      "en": "Sinhala"
+    },
+    "so": {
+      "speakers": 22,
+      "zh": "索马里语",
+      "en": "Somali"
+    },
+    "ceb": {
+      "speakers": 28,
+      "zh": "宿务语",
+      "en": "Cebuano"
+    },
+    "ro": {
+      "speakers": 25,
+      "zh": "罗马尼亚语",
+      "en": "Romanian"
+    },
+    "nl": {
+      "speakers": 25,
+      "zh": "荷兰语",
+      "en": "Dutch"
+    },
+    "mg": {
+      "speakers": 25,
+      "zh": "马达加斯加语",
+      "en": "Malagasy"
+    },
+    "km": {
+      "speakers": 18,
+      "zh": "高棉语",
+      "en": "Khmer"
+    },
+    "hu": {
+      "speakers": 13,
+      "zh": "匈牙利语",
+      "en": "Hungarian"
+    },
+    "el": {
+      "speakers": 13,
+      "zh": "希腊语",
+      "en": "Greek"
+    },
+    "sv": {
+      "speakers": 13,
+      "zh": "瑞典语",
+      "en": "Swedish"
+    },
+    "sr": {
+      "speakers": 12,
+      "zh": "塞尔维亚语",
+      "en": "Serbian"
+    },
+    "cs": {
+      "speakers": 11,
+      "zh": "捷克语",
+      "en": "Czech"
+    },
+    "he": {
+      "speakers": 9,
+      "zh": "希伯来语",
+      "en": "Hebrew"
+    },
+    "bg": {
+      "speakers": 8,
+      "zh": "保加利亚语",
+      "en": "Bulgarian"
+    },
+    "sq": {
+      "speakers": 8,
+      "zh": "阿尔巴尼亚语",
+      "en": "Albanian"
+    },
+    "da": {
+      "speakers": 6,
+      "zh": "丹麦语",
+      "en": "Danish"
+    },
+    "hr": {
+      "speakers": 6,
+      "zh": "克罗地亚语",
+      "en": "Croatian"
+    },
+    "hy": {
+      "speakers": 6,
+      "zh": "亚美尼亚语",
+      "en": "Armenian"
+    },
+    "fi": {
+      "speakers": 5,
+      "zh": "芬兰语",
+      "en": "Finnish"
+    },
+    "no": {
+      "speakers": 5,
+      "zh": "挪威语",
+      "en": "Norwegian"
+    },
+    "nb": {
+      "speakers": 5,
+      "zh": "书面挪威语",
+      "en": "Norwegian Bokmål"
+    },
+    "sk": {
+      "speakers": 5,
+      "zh": "斯洛伐克语",
+      "en": "Slovak"
+    },
+    "mn": {
+      "speakers": 5,
+      "zh": "蒙古语",
+      "en": "Mongolian"
+    },
+    "ka": {
+      "speakers": 4,
+      "zh": "格鲁吉亚语",
+      "en": "Georgian"
+    },
+    "lt": {
+      "speakers": 3,
+      "zh": "立陶宛语",
+      "en": "Lithuanian"
+    },
+    "sl": {
+      "speakers": 2,
+      "zh": "斯洛文尼亚语",
+      "en": "Slovenian"
+    },
+    "lv": {
+      "speakers": 2,
+      "zh": "拉脱维亚语",
+      "en": "Latvian"
+    },
+    "mk": {
+      "speakers": 2,
+      "zh": "马其顿语",
+      "en": "Macedonian"
+    },
+    "et": {
+      "speakers": 1,
+      "zh": "爱沙尼亚语",
+      "en": "Estonian"
+    },
+    "is": {
+      "speakers": 1,
+      "zh": "冰岛语",
+      "en": "Icelandic"
+    },
+    "sa": {
+      "speakers": 0,
+      "zh": "梵语",
+      "en": "Sanskrit"
+    },
+    "grc": {
+      "speakers": 0,
+      "zh": "古希腊语",
+      "en": "Ancient Greek"
+    },
+    "la": {
+      "speakers": 0,
+      "zh": "拉丁语",
+      "en": "Latin"
+    },
+    "hbo": {
+      "speakers": 0,
+      "zh": "圣经希伯来语",
+      "en": "Biblical Hebrew"
+    },
+    "rmn": {
+      "speakers": 0,
+      "zh": "巴尔干罗姆语",
+      "en": "Balkan Romani"
+    },
+    "haw": {
+      "speakers": 0,
+      "zh": "夏威夷语",
+      "en": "Hawaiian"
+    },
+    "cy": {
+      "speakers": 0,
+      "zh": "威尔士语",
+      "en": "Welsh"
+    },
+    "eo": {
+      "speakers": 0,
+      "zh": "世界语",
+      "en": "Esperanto"
+    }
+  }
+}

@@ -298,7 +298,10 @@ struct TranslationPanel: View {
         case .zhTW: head = ["zh-hant", "zh-hans", "en"]
         case .zhCN: head = ["zh-hans", "zh-hant", "en"]
         }
+        // 按语言使用人数排（LanguageOrder）；表里没有的排在后面，再按版本数（之前只按版本数，梵语 22 本会顶到最前）
         let rest = order.filter { !head.contains($0) }.sorted {
+            let ra = LanguageOrder.rank($0), rb = LanguageOrder.rank($1)
+            if ra != rb { return ra < rb }
             let a = bucket[$0]?.count ?? 0, b = bucket[$1]?.count ?? 0
             return a == b ? $0 < $1 : a > b
         }

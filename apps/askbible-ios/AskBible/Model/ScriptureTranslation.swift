@@ -93,12 +93,15 @@ struct ScriptureTranslation: Identifiable, Hashable {
             if lang.hasPrefix("zh-hant") { return "Trad. Chinese" }
             if lang.hasPrefix("zh") { return "Simp. Chinese" }
             if lang.hasPrefix("en") { return "English" }
+            // 内置表在前：目录接口老版本只给中文名，英文界面不该显示中文语言名
+            if let name = LanguageOrder.name(lang, locale) { return name }
             if let name = RemoteTranslations.languageName(lang, locale) { return name }
             return lang.isEmpty ? "Other" : lang
         }
         if lang.hasPrefix("zh-hant") { return locale.zh("繁中") }
         if lang.hasPrefix("zh") { return locale.zh("简中") }
         if lang.hasPrefix("en") { return SiteCopy.t("native.langEnglish", locale) }
+        if let name = LanguageOrder.name(lang, locale) { return name }
         if let name = RemoteTranslations.languageName(lang, locale) { return name }
         return lang.isEmpty ? SiteCopy.t("admin.mediaLibrary.kindOther", locale) : lang
     }

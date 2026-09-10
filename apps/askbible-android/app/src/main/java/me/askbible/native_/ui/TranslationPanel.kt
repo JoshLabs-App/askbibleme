@@ -1,5 +1,6 @@
 package me.askbible.native_.ui
 
+import me.askbible.native_.data.LanguageOrder
 import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -132,7 +133,10 @@ private fun groups(locale: AppLocale): List<Pair<String, List<ScriptureTranslati
         AppLocale.ZH_TW -> listOf("zh-hant", "zh-hans", "en")
         AppLocale.ZH_CN -> listOf("zh-hans", "zh-hant", "en")
     }
-    val rest = bucket.keys.filter { it !in head }.sortedWith(compareByDescending<String> { bucket[it]?.size ?: 0 }.thenBy { it })
+    // 按语言使用人数排（LanguageOrder）；表里没有的排在后面，再按版本数（之前只按版本数，梵语 22 本会顶到最前）
+    val rest = bucket.keys.filter { it !in head }
+        .sortedWith(compareBy<String> { LanguageOrder.rank(it) }
+            .thenByDescending { bucket[it]?.size ?: 0 }.thenBy { it })
     return (head + rest).mapNotNull { key -> bucket[key]?.let { key to it.toList() } }
 }
 

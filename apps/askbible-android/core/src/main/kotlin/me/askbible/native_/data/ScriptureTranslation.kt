@@ -81,14 +81,16 @@ data class ScriptureTranslation(
                     lang.startsWith("zh-hant") -> "Trad. Chinese"
                     lang.startsWith("zh") -> "Simp. Chinese"
                     lang.startsWith("en") -> "English"
-                    else -> RemoteTranslations.languageName(lang, locale) ?: lang.ifEmpty { "Other" }
+                    // 内置表在前：目录接口老版本只给中文名，英文界面不该显示中文语言名
+                    else -> LanguageOrder.name(lang, locale) ?: RemoteTranslations.languageName(lang, locale) ?: lang.ifEmpty { "Other" }
                 }
             }
             return when {
                 lang.startsWith("zh-hant") -> locale.zh("繁中")
                 lang.startsWith("zh") -> locale.zh("简中")
                 lang.startsWith("en") -> SiteCopy.t("native.langEnglish", locale)
-                else -> RemoteTranslations.languageName(lang, locale) ?: lang.ifEmpty { SiteCopy.t("admin.mediaLibrary.kindOther", locale) }
+                else -> LanguageOrder.name(lang, locale) ?: RemoteTranslations.languageName(lang, locale)
+                    ?: lang.ifEmpty { SiteCopy.t("admin.mediaLibrary.kindOther", locale) }
             }
         }
     }

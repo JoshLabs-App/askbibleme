@@ -26,6 +26,7 @@ struct ExploreView: View {
         if let a = article {
             ExploreArticleView(article: a, size: size, onBack: { article = nil },
                                onOpenChapter: onOpenChapter, onOpenArticle: { article = $0 })
+                .edgeSwipeBack { article = nil }
         } else {
             page
                 // RN ExploreGreetingNameModal：改称呼（最多 24 字）

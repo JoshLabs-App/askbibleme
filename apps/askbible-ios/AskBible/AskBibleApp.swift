@@ -416,9 +416,9 @@ struct RootView: View {
             if let route = authRoute {
                 switch route {
                 case .login:
-                    LoginView(auth: auth, locale: appLocale, onBack: { authRoute = nil }, onRegister: { authRoute = .register }, onDone: { authRoute = nil })
+                    LoginView(auth: auth, locale: appLocale, onBack: { authRoute = nil }, onRegister: { authRoute = .register }, onDone: { authRoute = nil }).edgeSwipeBack { authRoute = nil }
                 case .register:
-                    RegisterView(auth: auth, locale: appLocale, onBack: { authRoute = nil }, onLogin: { authRoute = .login }, onDone: { authRoute = nil })
+                    RegisterView(auth: auth, locale: appLocale, onBack: { authRoute = nil }, onLogin: { authRoute = .login }, onDone: { authRoute = nil }).edgeSwipeBack { authRoute = nil }
                 }
             }
 
@@ -482,6 +482,7 @@ struct RootView: View {
                                focusVerse = hit.verse
                                openedChapter = (b, hit.chapter)
                            })
+                .edgeSwipeBack { showSearch = false }
             } else if showFavorites {
                 FavoritesView(bookmarks: bookmarks, size: readSize, locale: displayLocale,
                               onBack: { showFavorites = false },
@@ -492,6 +493,7 @@ struct RootView: View {
                                   focusVerse = item.verse
                                   openedChapter = (b, item.chapter)
                               })
+                .edgeSwipeBack { showFavorites = false }
             } else if let opened = openedChapter {
                 ChapterView(
                     bookId: opened.book.id,
@@ -555,6 +557,7 @@ struct RootView: View {
                                openedChapter = (b, hit.chapter)
                                tab = .read
                            })
+                .edgeSwipeBack { showSearch = false }
             } else {
                 switch planRoute {
                 case .play:
@@ -568,6 +571,7 @@ struct RootView: View {
                 case .plans:
                     PlansListView(store: plans, onOpenPlan: { planRoute = .planDetail($0) }, onBack: { planRoute = .play },
                                   onOpenArticle: { slug in exploreArticle = ExploreArticles.article(slug); tab = .explore })
+                    .edgeSwipeBack { planRoute = .play }
                 case .planDetail(let id):
                     PlanDetailView(store: plans, planId: id,
                                    onBack: { planRoute = .plans },
@@ -578,6 +582,7 @@ struct RootView: View {
                                        tab = .read
                                    },
                                    onGoHome: { planRoute = .play })
+                    .edgeSwipeBack { planRoute = .plans }
                 }
             }
         case .explore:

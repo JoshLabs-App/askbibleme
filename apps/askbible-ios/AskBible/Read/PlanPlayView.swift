@@ -44,7 +44,7 @@ struct PlanPlayView: View {
         GeometryReader { geo in
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    topBar.padding(.top, geo.safeAreaInsets.top + 8)
+                    topBar.padding(.top, 8)
                     if queue.isEmpty && !browsingAway {
                         Text(locale.zh(PlanCopy.t("pages.read.todayPlanEmpty")))
                             .font(.system(size: 16)).foregroundStyle(theme.muted)
@@ -115,7 +115,7 @@ struct PlanPlayView: View {
                 Spacer()
                 Button(action: onOpenPlans) {
                     MaterialIcon(glyph: MI.settings, size: 22, color: theme.muted)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 40, height: 40).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.todayPlanChange")))
@@ -169,12 +169,12 @@ struct PlanPlayView: View {
             Spacer(minLength: 8)
             HStack(spacing: 2) {
                 Button { onReadChapter(index) } label: {
-                    MaterialIcon(glyph: MI.menuBook, size: 20, color: theme.muted).frame(width: 36, height: 36)
+                    MaterialIcon(glyph: MI.menuBook, size: 20, color: theme.muted).frame(width: 36, height: 36).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.planPlayReadChapter")))
                 Button { onPlayChapter(index) } label: {
-                    MaterialIcon(glyph: active && activePlaying ? MI.graphicEq : MI.volumeUp, size: 20, color: theme.muted).frame(width: 36, height: 36)
+                    MaterialIcon(glyph: active && activePlaying ? MI.graphicEq : MI.volumeUp, size: 20, color: theme.muted).frame(width: 36, height: 36).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).disabled(busy).opacity(busy ? 0.35 : 1)
                 .accessibilityLabel(locale.zh(PlanCopy.t("pages.read.planPlayPlayChapterAudio")))
@@ -295,7 +295,7 @@ struct PlanMonthCalendar: View {
 
     private func navButton(_ glyph: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            MaterialIcon(glyph: glyph, size: 28, color: theme.ink).frame(width: 40, height: 40)
+            MaterialIcon(glyph: glyph, size: 28, color: theme.ink).frame(width: 40, height: 40).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(locale.zh(PlanCopy.t(label)))

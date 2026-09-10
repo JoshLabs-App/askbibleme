@@ -30,7 +30,7 @@ struct PlanDetailView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
                         if let plan {
-                            header(plan, safeTop: geo.safeAreaInsets.top)
+                            header(plan)
                             todaySection(plan)
                             setupSection(plan)
                             howSection(plan)
@@ -43,13 +43,13 @@ struct PlanDetailView: View {
                             .buttonStyle(.plain).frame(maxWidth: .infinity).padding(.top, 28)
                         } else {
                             Text(PlanCopy.t("pages.read.plansEmpty")).font(.system(size: 15)).foregroundStyle(theme.muted)
-                                .frame(maxWidth: .infinity).padding(.top, geo.safeAreaInsets.top + 100)
+                                .frame(maxWidth: .infinity).padding(.top, 100)
                         }
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
                 }
-                PlanBackButton(safeTop: geo.safeAreaInsets.top, action: onBack)
+                PlanBackButton(action: onBack)
             }
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }
@@ -58,7 +58,7 @@ struct PlanDetailView: View {
 
     // MARK: 头部
 
-    private func header(_ plan: ReadingPlanEntry, safeTop: CGFloat) -> some View {
+    private func header(_ plan: ReadingPlanEntry) -> some View {
         VStack(spacing: 0) {
             Text(plan.badge).font(.system(size: 14, weight: .semibold)).kerning(0.8).foregroundStyle(Color(rgb: 0x4D3522, opacity: 0.8))
             Text(plan.title).font(.system(size: 28, weight: .bold)).foregroundStyle(theme.ink)
@@ -73,7 +73,7 @@ struct PlanDetailView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, safeTop + 64)
+        .padding(.top, 64)
     }
 
     // MARK: 今日读经

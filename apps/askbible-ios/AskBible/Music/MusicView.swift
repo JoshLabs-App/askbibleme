@@ -36,6 +36,15 @@ struct MusicView: View {
             ZStack {
                 // 专辑舞台：渐变 + 光球 + 该专辑的动画层（RN 各专辑各一套：鱼群 / 咖啡豆 / 星月 / 行星）；停播时定格
                 MusicAlbumStage(album: player.album, active: player.isPlaying)
+                    // RN MusicHomeStageTapSurface：视觉大区域点一下暂停、再点一下播放（曲目列表与按钮在上层，不受影响）
+                    .overlay(alignment: .top) {
+                        // 只盖舞台上半段（曲目列表以上），列表 / 按钮藏起来后点下半段只算「碰一下回来」
+                        Color.clear.contentShape(Rectangle()).frame(height: geo.size.height * 0.42)
+                            .onTapGesture { if player.track != nil { player.toggle() } }
+                    }
+
+                // 触碰探测（睡眠专辑自动隐藏的「碰一下回来」）：window 级识别器，不吞按钮事件
+                TouchObserver(onTouch: { resetAutoHide() }).frame(width: 0, height: 0)
 
                 sleepTimerButton(safeTop: safeTop)
                     .opacity(uiVisible ? 1 : 0)
@@ -53,11 +62,6 @@ struct MusicView: View {
                 .allowsHitTesting(uiVisible)
             }
             .ignoresSafeArea()
-            // 舞台本身不接触摸（allowsHitTesting false）、按钮藏起来后也不接：整块画布都得算可点区域，手势才收得到
-            .contentShape(Rectangle())
-            // 任何触碰都算「用户还在」：不吞事件，按钮照常响应（RN root onTouchStart={resetUiAutoHide}）
-            // 纯点按（没有位移）只会触发 onEnded，不会触发 onChanged，两个都接
-            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in resetAutoHide() }.onEnded { _ in resetAutoHide() })
             .onAppear { resetAutoHide() }
             .onDisappear { hideTask?.cancel(); hideTask = nil; uiVisible = true; onChromeHidden(false) }
             .onChange(of: sleepAutoHide) { _, _ in resetAutoHide() }
@@ -78,28 +82,43 @@ struct MusicView: View {
             .padding(.trailing, ShellMetrics.topChromeSideInset)
     }
 
-    /// 队列窗口：上一曲 / 当前曲 / 下一曲（RN 队列面板滚到当前曲居中的样子）。点上下曲直接切。
+    /// 队列面板（RN MusicHomeQueuePanel）：当前专辑全部曲目可上下滑，40pt 一行、视口 168、首尾留白让任一行能滚到正中，上下 46pt 渐隐；
+    /// 当前曲 18 号白粗体，其余 14 号白 48%；点哪首就切哪首；切曲后自动滚到正中。
+    private static let queueRow: CGFloat = 40
+    private static let queueViewport: CGFloat = 168
+    private static let queueFade: CGFloat = 46
+
     private var trackTitles: some View {
-        VStack(spacing: 6) {
-            Button { player.previous() } label: {
-                Text(player.previousTrack?.title ?? " ")
-                    .font(.system(size: 15))
-                    .foregroundStyle(.white.opacity(0.34))
-                    .lineLimit(1)
+        let q = player.queue
+        let fade = Self.queueFade / Self.queueViewport
+        return ScrollViewReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    ForEach(q, id: \.self) { i in
+                        let active = i == player.trackIndex
+                        Button { player.select(index: i) } label: {
+                            Text(MusicCatalog.tracks[i].title)
+                                .font(.system(size: active ? 18 : 14, weight: active ? .semibold : .regular))
+                                .foregroundStyle(active ? Color.white : Color.white.opacity(0.48))
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: Self.queueRow)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .id(i)
+                    }
+                }
+                .padding(.vertical, (Self.queueViewport - Self.queueRow) / 2)
             }
-            .buttonStyle(.plain)
-            Text(player.track?.title ?? "\u{2014}")
-                .font(.system(size: 23, weight: .bold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .shadow(color: .black.opacity(0.4), radius: 5, y: 2)
-            Button { player.next() } label: {
-                Text(player.nextTrack?.title ?? " ")
-                    .font(.system(size: 15))
-                    .foregroundStyle(.white.opacity(0.30))
-                    .lineLimit(1)
-            }
-            .buttonStyle(.plain)
+            .frame(maxWidth: 300)
+            .frame(height: Self.queueViewport)
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: fade),
+                                         .init(color: .black, location: 1 - fade), .init(color: .clear, location: 1)],
+                                 startPoint: .top, endPoint: .bottom))
+            .onAppear { proxy.scrollTo(player.trackIndex, anchor: .center) }
+            .onChange(of: player.trackIndex) { _, i in withAnimation(.easeInOut(duration: 0.6)) { proxy.scrollTo(i, anchor: .center) } }
+            .onChange(of: player.album) { _, _ in proxy.scrollTo(player.trackIndex, anchor: .center) }
         }
         .padding(.horizontal, 24)
     }
@@ -198,7 +217,7 @@ struct MusicView: View {
                 Circle().fill(.white.opacity(on ? 0.14 : 0))
                 RepeatGlyph(one: one, color: .white.opacity(on ? 1 : 0.48), size: ShellMetrics.loopIconSize)
             }
-            .frame(width: 44, height: 44)
+            .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

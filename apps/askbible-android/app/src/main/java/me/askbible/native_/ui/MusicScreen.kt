@@ -40,6 +40,16 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyColumn
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.DisposableEffect
@@ -90,6 +100,9 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
         .pointerInput(Unit) { awaitEachGesture { awaitFirstDown(requireUnconsumed = false); touchTick += 1 } }) {
         // 专辑舞台：渐变 + 光球 + 该专辑的动画层（RN 各专辑各一套：鱼群 / 咖啡豆 / 星月 / 行星）；停播时定格
         MusicAlbumStage(player.album, player.isPlaying)
+        // RN MusicHomeStageTapSurface：视觉大区域点一下暂停、再点一下播放（曲目列表与按钮在上层，不受影响）
+        // 只盖舞台上半段（曲目列表以上），列表 / 按钮藏起来后点下半段只算「碰一下回来」
+        Box(Modifier.fillMaxWidth().fillMaxHeight(0.42f).clickableNoRipple { if (player.track != null) player.toggle() })
 
         // 睡眠定时器
         AnimatedVisibility(uiVisible, Modifier.align(Alignment.TopEnd), enter = fadeIn(), exit = fadeOut()) {
@@ -104,15 +117,38 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
         Column(Modifier.fillMaxSize().padding(bottom = (ShellMetrics.tabRowHeight + 30f).dp).navigationBarsPadding()) {
             Spacer(Modifier.weight(1f))
 
-            // 队列窗口：上一曲 / 当前曲 / 下一曲（RN 队列面板滚到当前曲居中的样子）。点上下曲直接切。
-            Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally,
-                   verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(player.previousTrack?.title ?: " ", color = Color(0x57FFFFFF), fontSize = 15.sp, maxLines = 1,
-                     overflow = TextOverflow.Ellipsis, modifier = Modifier.clickableNoRipple { player.previous() })
-                Text(player.track?.title ?: "\u2014", color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.Bold,
-                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(player.nextTrack?.title ?: " ", color = Color(0x4DFFFFFF), fontSize = 15.sp, maxLines = 1,
-                     overflow = TextOverflow.Ellipsis, modifier = Modifier.clickableNoRipple { player.next() })
+            // 队列面板（RN MusicHomeQueuePanel）：当前专辑全部曲目可上下滑，40dp 一行、视口 168、首尾留白让任一行能滚到正中，上下 46dp 渐隐；
+            // 当前曲 18 号白粗体，其余 14 号白 48%；点哪首就切哪首；切曲后自动滚到正中。
+            val queue = player.queue
+            val queueState = rememberLazyListState()
+            val density = LocalDensity.current
+            LaunchedEffect(player.trackIndex, queue) {
+                val idx = queue.indexOf(player.trackIndex)
+                if (idx >= 0) queueState.animateScrollToItem(idx + 1, with(density) { -((168 - 40) / 2).dp.roundToPx() })
+            }
+            val fade = 46f / 168f
+            LazyColumn(
+                state = queueState,
+                modifier = Modifier.widthIn(max = 300.dp).fillMaxWidth().height(168.dp).align(Alignment.CenterHorizontally)
+                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(Brush.verticalGradient(0f to Color.Transparent, fade to Color.Black, 1f - fade to Color.Black, 1f to Color.Transparent),
+                                 blendMode = BlendMode.DstIn)
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                item { Spacer(Modifier.height(((168 - 40) / 2).dp)) }
+                items(queue.size, key = { queue[it] }) { pos ->
+                    val i = queue[pos]
+                    val active = i == player.trackIndex
+                    Text(MusicCatalog.tracks[i].title, color = if (active) Color.White else Color(0x7AFFFFFF),
+                         fontSize = if (active) 18.sp else 14.sp, fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                         maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                         modifier = Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 4.dp).wrapContentHeight(Alignment.CenterVertically)
+                             .clickableNoRipple { player.select(i) })
+                }
+                item { Spacer(Modifier.height(((168 - 40) / 2).dp)) }
             }
             Spacer(Modifier.height(30.dp))
 

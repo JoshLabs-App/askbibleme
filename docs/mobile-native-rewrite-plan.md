@@ -785,6 +785,28 @@ Josh：「睡眠 7 秒后要自动隐藏图标，月亮要往上放一些」。R
 Android `MusicScreen`（`awaitEachGesture + awaitFirstDown(requireUnconsumed=false)`；AnimatedVisibility 淡入淡出；`standalonePage` 藏底栏）。
 月亮从 44% 高度提到 35%（`MusicSceneViews`）。
 
+### 真 iPhone 实机验收：音乐页手势 / 队列 / 子页返回（2026-09-10）
+
+Josh 真机（iPhone 12，iOS 26.6.1）反馈：「音乐播放列表不能上下滑，音乐里不能点播放 / 暂停；读经计划点设置后不能返回，手势和左上角 ‹ 都不行；
+返回键比苹果默认位置低很多」。没有现成的实机测试 skill，用 **Appium XCUITest**（WDA runner `me.askbible.wda` 已在机上）直接驱动真机：
+`/actions` 点 / 滑，`/source` 读控件树核对状态，`/screenshot` 存证；安卓走 adb。
+
+- **播放 / 暂停点不动**：音乐页根上 `simultaneousGesture(DragGesture(minimumDistance: 0))` 当触碰探测，模拟器 iOS 26.5 没事，真机 iOS 26.6.1 会把
+  下面 Button 的点击吃掉 → 改成 window 级 `TouchObserver`（自定义 UIGestureRecognizer，允许同时识别、不取消触摸），只做「碰一下重新计时」。
+- **舞台点击切播放**（RN MusicHomeStageTapSurface）：舞台上 42% 高度透明层，点一下暂停、再点播放；下半段（曲目列表以下）藏起来后点只算「回来」。
+- **队列可滚**（RN MusicHomeQueuePanel）：当前专辑全部曲目，40pt 一行、视口 168、maxWidth 300、上下 46 渐隐，当前曲 18 白粗、其余 14 白 48%，
+  点行切曲，切曲后滚到正中；安卓 LazyColumn 同规格（DstIn 渐隐）。
+- **右滑返回**（RN stack 手势）：`edgeSwipeBack` = window 级 `EdgeSwipeRecognizer`：左缘 32pt 起手、横向 80pt 才识别，识别成功那一刻
+  `cancelsTouchesInView` 取消底下卡片的点击。先试过 `UIScreenEdgePanGestureRecognizer`：真机上它把左缘约 25pt 内的点按也吃了，返回箭头正好在那里，
+  而且 XCTest 合成的边缘触摸它根本不认 → 弃用。挂在 PlansList / PlanDetail / Search / Favorites / ExploreArticle / Login / Register 上，
+  多页叠着只最上层响应。安卓本来就有系统返回手势 + BackHandler。
+- **返回键太低**：PlansList / PlanDetail / PlanPlay / Auth 的 GeometryReader 没 ignoresSafeArea，内容本来就从安全区下方开始，
+  再加 `geo.safeAreaInsets.top` 就低了一个状态栏 → 全部去掉，只留 8 / 64。
+- **箭头左半边点不到**：`.buttonStyle(.plain)` 的 44×44 frame 里透明部分默认不算点击区（真机 x<24 没反应）→ 图标按钮统一加 `.contentShape(Rectangle())`。
+
+真机 Appium 走完：播放 / 暂停 / 舞台点击 / 队列滑动与点行 / 睡眠 5 秒隐藏后碰一下恢复 / 齿轮 → 列表 → 箭头（x=16…44 都响应）→ 详情 → 右滑两级返回 /
+登录页「返回」在安全区内并可右滑关闭；安卓模拟器同样过一遍（箭头、系统返回键、返回手势）。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

@@ -127,7 +127,7 @@ struct PlanHowRow: View {
                 Circle().fill(Brand.logo.opacity(0.2))
                 MaterialIcon(glyph: PlanIcons.glyph(fact.icon), size: 20, color: theme.ink)
             }
-            .frame(width: 36, height: 36)
+            .frame(width: 36, height: 36).contentShape(Rectangle())
             Text(fact.text).font(.system(size: 17, weight: .medium)).lineSpacing(6).foregroundStyle(theme.inkSoft)
             Spacer(minLength: 0)
         }
@@ -269,7 +269,7 @@ struct PlanStepper: View {
     private func step(_ glyph: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             MaterialIcon(glyph: glyph, size: 22, color: theme.ink)
-                .frame(width: 44, height: 44)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
                 .background(RoundedRectangle(cornerRadius: 10).fill(theme.surface))
                 .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(theme.border, lineWidth: 0.5))
                 .opacity(enabled ? 1 : 0.4)
@@ -325,18 +325,19 @@ struct PlanLinkCard: View {
 }
 
 /// 子页左上返回键（RN ShellSystemBackButton）
+/// 左上返回箭头（整块 44×44 可点：图标外的透明部分默认不算点击区，真机点 x<24 没反应）：页面在 GeometryReader（不 ignoresSafeArea）里，内容本来就从安全区下方开始，这里只留 8pt，
+/// 不能再加 safeAreaInsets.top —— 那会把箭头压到比系统默认位置低一个状态栏（Josh 真机 2026-09-10）
 struct PlanBackButton: View {
-    let safeTop: CGFloat
     let action: () -> Void
     var body: some View {
         Button(action: action) {
             Image(systemName: "arrow.left")
                 .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(Parchment.light.ink)
-                .frame(width: 44, height: 44)
+                .frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .padding(.leading, 12)
-        .padding(.top, safeTop + 8)
+        .padding(.top, 8)
     }
 }

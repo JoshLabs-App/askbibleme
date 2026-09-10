@@ -20,7 +20,7 @@ struct PlansListView: View {
                             .font(.system(size: 30, weight: .bold))
                             .foregroundStyle(theme.ink)
                             .frame(maxWidth: .infinity)
-                            .padding(.top, geo.safeAreaInsets.top + 64)
+                            .padding(.top, 64)
                         Text(PlanText.t("plansIntro"))
                             .font(.system(size: 17))
                             .foregroundStyle(theme.muted)
@@ -48,7 +48,7 @@ struct PlansListView: View {
                     .padding(.bottom, 24)
                 }
 
-                PlanBackButton(safeTop: geo.safeAreaInsets.top, action: onBack)
+                PlanBackButton(action: onBack)
             }
             .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         }

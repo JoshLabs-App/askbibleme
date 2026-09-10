@@ -229,7 +229,7 @@ private struct AuthPage<Content: View>: View {
                     VStack(alignment: .leading, spacing: 10) { content() }.padding(.top, 24)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, geo.safeAreaInsets.top + 8)
+                .padding(.top, 8)
                 .padding(.bottom, geo.safeAreaInsets.bottom + 24)
             }
             .scrollDismissesKeyboard(.interactively)

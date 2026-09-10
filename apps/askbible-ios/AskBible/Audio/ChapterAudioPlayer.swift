@@ -245,6 +245,12 @@ final class ChapterAudioPlayer: ObservableObject {
         updateNowPlaying()
     }
 
+    /// 回到前台：被打断停掉但还想播的，续上（RN tryResumeScriptureAfterInterruption；iOS 常不发「打断结束」）
+    func recoverAfterInterruption() {
+        guard wantsPlayback, !isPlaying, player != nil else { return }
+        resume()
+    }
+
     func pause() {
         wantsPlayback = false
         player?.pause()

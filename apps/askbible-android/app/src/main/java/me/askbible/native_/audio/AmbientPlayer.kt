@@ -60,7 +60,8 @@ class AmbientPlayer(context: Context, private val scope: CoroutineScope) {
 
     init {
         player.setAudioAttributes(
-            AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).setUsage(C.USAGE_MEDIA).build(),
+            // MOVIE：AudioInterruptionMonitor 靠它认出「这是自家环境音，不是别的 App 在响」
+            AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).setUsage(C.USAGE_MEDIA).build(),
             false
         )
         player.repeatMode = Player.REPEAT_MODE_ONE

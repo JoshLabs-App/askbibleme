@@ -44,6 +44,8 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     var isLoading by mutableStateOf(false); private set
     /** 用户点过播放（RN wantsPlayback）：开章时预载会短暂 BUFFERING，没点播放前不该转圈 */
     var wantsPlayback by mutableStateOf(false); private set
+    /** 被系统「永久」夺走焦点而停的（还想播）：外部声音停了 / 回前台就续播（AudioInterruptionMonitor） */
+    private var focusLost = false
     /** 播放位置回调（累计听读时长：RN useFollowNativeProgress → noteScriptureListenProgress） */
     var onProgress: ((Double, Boolean) -> Unit)? = null
     var currentTime by mutableStateOf(0.0); private set
@@ -100,6 +102,11 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
                 this@ChapterAudioPlayer.isPlaying = playing
             }
 
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (playWhenReady) focusLost = false
+                else if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS && wantsPlayback) focusLost = true
+            }
+
             override fun onPlaybackStateChanged(state: Int) {
                 this@ChapterAudioPlayer.isLoading = state == Player.STATE_BUFFERING
                 if (state == Player.STATE_READY && this@ChapterAudioPlayer.duration <= 0) {
@@ -149,7 +156,15 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         player.playbackParameters = player.playbackParameters.withSpeed(rate)
     }
 
-    fun pause() { wantsPlayback = false; player.playWhenReady = false }
+    fun pause() { wantsPlayback = false; focusLost = false; player.playWhenReady = false }
+
+    /** 外部声音停了 / 回到前台：永久失焦停掉的、还想播的，叫回来（RN tryResumeScriptureAfterInterruption） */
+    fun recoverAfterInterruption() {
+        if (!focusLost || !wantsPlayback || isPlaying) return
+        if (AudioInterruptionMonitor.callLike || AudioInterruptionMonitor.foreignAudioActive) return
+        focusLost = false
+        resume()
+    }
 
     fun seekTo(seconds: Double) {
         val clamped = if (duration > 0) seconds.coerceIn(0.0, duration) else maxOf(0.0, seconds)

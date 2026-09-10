@@ -815,6 +815,17 @@ Appium 复现：播放键图标正常、点了状态不变。`MusicPlayer.resume
 不挡用户点播放 → 两个播放器的 `resume()` 改成用户点了就清掉 `interrupted` 直接播。安卓走 ExoPlayer 的 handleAudioFocus，没有这个门。
 顺带核实：计划页播放键置灰是因为他手机当前译本是没有整章音源的英文译本（RN 同样置灰），不是 bug。
 
+### 安卓：被别的声音「永久」夺走焦点后自动续播（2026-09-10，三星）
+
+Josh：「读经播放会被手机其它系统音打断了，就不续播」。ExoPlayer（handleAudioFocus）只会处理临时失焦（来电 / 闹钟 LOSS_TRANSIENT，
+结束后系统发 GAIN 就续播，模拟器 `adb emu gsm call/cancel` 验证过）；别的 App / 系统音以独占方式申请焦点（AUDIOFOCUS_LOSS，
+例如微信朋友圈里的视频）之后 Android 永远不再发 GAIN，播放器就停死在暂停态。RN 靠 ShellCallAudioMonitor + tryResumeScriptureAfterInterruption
+在打断结束 / 回前台时续播。原生新增 `audio/AudioInterruptionMonitor`：盯 AudioManager 的通话模式与活动播放配置（AudioPlaybackCallback），
+朗读 / 音乐播放器在 `onPlayWhenReadyChanged(false, AUDIO_FOCUS_LOSS)` 且还「想播」时记 `focusLost`；外部声音都停了（700ms 去抖）或回到前台，
+就 `recoverAfterInterruption()` 重新申请焦点续播。自家不抢焦点的环境音 / 金句用 contentType MOVIE / FLAG_LOW_LATENCY 标记，不算外部声音。
+模拟器验证：Chrome 播 mp3 → onAudioFocusChange(-1) 朗读停；force-stop Chrome → 1 秒内朗读自己重新申请焦点续播。
+iOS 同步补了回前台续播（`recoverAfterInterruption`，iOS 常不发「打断结束」）。
+
 ### 真机反馈修的三处（2026-09-09，三星 S23 Ultra）
 
 - 章页播放坞：开章预载会短暂 BUFFERING，之前播放键一直转圈（RN 开章不转）→ 两端只在用户点了播放（`wantsPlayback`）还没出声时才转圈；计划播放页的行按钮同理。

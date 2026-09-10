@@ -281,6 +281,7 @@ struct RootView: View {
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
+                    audio.recoverAfterInterruption(); music.recoverAfterInterruption()
                     activity.noteForeground(); activity.touchHabitDay()
                     Task { await sync.flushNow(reason: "foreground") }
                 } else {

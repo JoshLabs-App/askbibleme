@@ -49,6 +49,8 @@ class GoldenVersePlayer(context: Context) {
             AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                 .setUsage(C.USAGE_MEDIA)
+                // LOW_LATENCY 只当标记：AudioInterruptionMonitor 靠它认出「这是自家金句，不是别的 App 在响」
+                .setFlags(android.media.AudioAttributes.FLAG_LOW_LATENCY)
                 .build(),
             false
         )

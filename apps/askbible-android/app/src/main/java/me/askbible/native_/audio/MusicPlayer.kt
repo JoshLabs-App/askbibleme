@@ -54,6 +54,8 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
 
     private var loadedId: String? = null
     private var wantsPlayback = false
+    /** 被系统「永久」夺走焦点而停的（还想播）：外部声音停了 / 回前台就续播 */
+    private var focusLost = false
     private var gain = 1f
     private var ticker: Job? = null
 
@@ -89,6 +91,11 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 this@MusicPlayer.isPlaying = playing
+            }
+
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (playWhenReady) focusLost = false
+                else if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS && wantsPlayback) focusLost = true
             }
 
             override fun onPlaybackStateChanged(state: Int) {
@@ -247,7 +254,16 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
 
     fun pause() {
         wantsPlayback = false
+        focusLost = false
         player.playWhenReady = false
+    }
+
+    /** 外部声音停了 / 回到前台：永久失焦停掉的、还想播的，叫回来（RN recoverMusicPlaybackAfterBackground） */
+    fun recoverAfterInterruption() {
+        if (!focusLost || !wantsPlayback || isPlaying) return
+        if (AudioInterruptionMonitor.callLike || AudioInterruptionMonitor.foreignAudioActive) return
+        focusLost = false
+        resume()
     }
 
     fun seekRatio(ratio: Double) {

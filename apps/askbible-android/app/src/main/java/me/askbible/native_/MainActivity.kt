@@ -224,7 +224,7 @@ private fun RootScreen() {
     DisposableEffect(lifecycle) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
-                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { activity.noteForeground(); activity.touchHabitDay(); syncEngine.flushInBackground("foreground") }
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> { activity.noteForeground(); activity.touchHabitDay(); syncEngine.flushInBackground("foreground"); me.askbible.native_.audio.AudioInterruptionMonitor.onForeground() }
                 androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> activity.noteBackground()
                 else -> {}
             }
@@ -270,6 +270,11 @@ private fun RootScreen() {
     val music = remember { MusicPlayer(context, scope) }
     val home = remember { HomeVerseController(context, scope) }
     val ambient = remember { AmbientPlayer(context, scope) }
+    // 外部音频打断监听：永久失焦后外部声音一停 / 回到前台就把朗读 / 音乐叫回来
+    LaunchedEffect(Unit) {
+        me.askbible.native_.audio.AudioInterruptionMonitor.addRecoverer { audio.recoverAfterInterruption(); music.recoverAfterInterruption() }
+        me.askbible.native_.audio.AudioInterruptionMonitor.start(context)
+    }
     val setSleepTimerAll: (Int) -> Unit = { m ->
         sleepTimerMinutes = m
         val v = if (m > 0) m else null

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -30,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -59,15 +61,22 @@ fun WelcomeScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var pending by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    /** null = 没在提交；否则是正在跑的那个动作（"login" / "register"） */
+    var pendingAction by remember { mutableStateOf<String?>(null) }
+    val pending = pendingAction != null
+    /** 点了「注册」先展开昵称，再点一次才提交（RN OnboardingWelcomeLoginPanel 的做法） */
+    var registering by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var googleError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxSize()) {
         ParchmentBackground(theme = theme)
+        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {
+        val bodyMin = maxHeight - 44.dp
         Column(
-            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()
+            Modifier.fillMaxSize()
                 .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 6.dp),
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -81,7 +90,19 @@ fun WelcomeScreen(
                 }
             }
 
-            Column(Modifier.fillMaxWidth().widthIn(max = 420.dp).padding(top = 12.dp)) {
+            // 内容不满屏时整体居中（RN contentInner justifyContent center）
+            Column(
+                Modifier.fillMaxWidth().widthIn(max = 420.dp).heightIn(min = bodyMin).padding(vertical = 12.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                // 抬头：应用名 + 一句引言，欢迎页不该只有一堆输入框
+                Text(SiteCopy.t("native.welcomeTitle", locale),
+                     color = theme.ink.toColor(), fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                Text(SiteCopy.t("onboarding.welcome.loginIntro", locale),
+                     color = theme.muted.toColor(), fontSize = 14.sp, lineHeight = 20.sp)
+
+                Spacer(Modifier.height(18.dp))
                 Text(SiteCopy.t("onboarding.welcome.languageTitle", locale),
                      color = theme.muted.toColor(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
@@ -96,31 +117,63 @@ fun WelcomeScreen(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
-                Text(SiteCopy.t("onboarding.welcome.loginTitle", locale),
-                     color = theme.ink.toColor(), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(6.dp))
-                Text(SiteCopy.t("onboarding.welcome.loginIntro", locale),
-                     color = theme.muted.toColor(), fontSize = 14.sp, lineHeight = 20.sp)
-                Spacer(Modifier.height(12.dp))
+                // 标题那句引言已经说了「登录或注册」，这里不再重复一遍
+                Spacer(Modifier.height(18.dp))
                 SocialSignInButtons(auth, locale, theme, googleError, { googleError = it }, onDone)
                 AuthField(SiteCopy.t("auth.email", locale), email, { email = it }, locale, theme, KeyboardType.Email)
+                if (registering) {
+                    AuthField(SiteCopy.t("auth.registerName", locale), name, { name = it }, locale, theme, KeyboardType.Text)
+                }
                 AuthField(SiteCopy.t("auth.password", locale), password, { password = it }, locale, theme, KeyboardType.Password, secure = true)
                 error?.let { AuthErrorText(it, locale) }
-                AuthSubmit(SiteCopy.t("auth.submit", locale), pending, locale, theme) {
-                    if (pending || auth.oauthPending) return@AuthSubmit
-                    pending = true; error = null; googleError = null
-                    scope.launch {
-                        val err = auth.signIn(email, password, locale.tag)
-                        pending = false
-                        if (err != null) {
-                            error = if (err == "network") SiteCopy.t("auth.errorNetwork", locale) else SiteCopy.localizeKnown(err, locale)
-                        } else onDone()
+                // RN actionRow：登录 / 注册并排，各占一半
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    WelcomeAction(SiteCopy.t("auth.submit", locale), pendingAction == "login", pending, theme) {
+                        if (!pending && !auth.oauthPending) {
+                            pendingAction = "login"; error = null; googleError = null
+                            scope.launch {
+                                val err = auth.signIn(email, password, locale.tag)
+                                pendingAction = null
+                                if (err != null) {
+                                    error = if (err == "network") SiteCopy.t("auth.errorNetwork", locale) else SiteCopy.localizeKnown(err, locale)
+                                } else onDone()
+                            }
+                        }
+                    }
+                    WelcomeAction(SiteCopy.t("auth.registerSubmit", locale), pendingAction == "register", pending, theme) {
+                        if (!registering) registering = true
+                        else if (!pending && !auth.oauthPending) {
+                            pendingAction = "register"; error = null; googleError = null
+                            scope.launch {
+                                val err = auth.register(email, password, name, locale.tag)
+                                pendingAction = null
+                                if (err != null) {
+                                    error = if (err == "network") SiteCopy.t("auth.errorNetwork", locale) else SiteCopy.localizeKnown(err, locale)
+                                } else onDone()
+                            }
+                        }
                     }
                 }
-                Spacer(Modifier.height(24.dp))
             }
         }
+        }
+    }
+}
+
+/** RN actionBtn：48 高、圆角 12、hairline 边 */
+@Composable
+private fun RowScope.WelcomeAction(label: String, busy: Boolean, disabled: Boolean, theme: Parchment, onClick: () -> Unit) {
+    Box(
+        Modifier.weight(1f).heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
+            .background(Color(0x9EFFFCF5)).border(0.5.dp, theme.border.toColor(), RoundedCornerShape(12.dp))
+            .alpha(if (disabled) 0.55f else 1f).clickableNoRipple(onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (busy) androidx.compose.material3.CircularProgressIndicator(
+            color = theme.ink.toColor(), strokeWidth = 2.dp,
+            modifier = Modifier.padding(12.dp).height(24.dp))
+        else Text(label, color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

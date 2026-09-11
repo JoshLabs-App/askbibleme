@@ -287,5 +287,9 @@
   "native.appVersion": {
     "zh": "版本 {{version}}",
     "en": "Version {{version}}"
+  },
+  "native.welcomeTitle": {
+    "zh": "欢迎使用 AskBible",
+    "en": "Welcome to AskBible"
   }
 }

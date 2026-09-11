@@ -89,6 +89,11 @@ struct RootView: View {
     @State private var authRoute: AuthRoute?
     /// 首页左上的用户菜单
     @State private var showMenu = false
+    /// 删除账户的二次确认
+    @State private var confirmDeleteAccount = false
+    /// 每日读经提醒
+    @StateObject private var reminder = ReadingReminder.shared
+    @State private var showReminderTime = false
     /// 首次打开的欢迎页（语言 + 登录），完成后写盘不再出
     @State private var showWelcome = !OnboardingPrefs.completed
     /// 读经计划流：今日逐章队列，一章播完顺到下一章并记已读
@@ -541,8 +546,57 @@ struct RootView: View {
                     onRegister: { showMenu = false; authRoute = .register },
                     onLogout: { showMenu = false; Task { await sync.prepareSignOut(); auth.signOut() } },
                     onFeedback: { showMenu = false; openSupportMail() },
+                    reminderEnabled: reminder.enabled,
+                    reminderTime: reminder.timeLabel,
+                    onToggleReminder: {
+                        Task {
+                            await reminder.apply(enabled: !reminder.enabled, hour: reminder.hour,
+                                                 minute: reminder.minute, locale: appLocale)
+                            if reminder.denied { showToast(SiteCopy.t("native.reminderDenied", appLocale)) }
+                        }
+                    },
+                    onPickReminderTime: { showMenu = false; showReminderTime = true },
+                    onDeleteAccount: { showMenu = false; confirmDeleteAccount = true },
                     onClose: { showMenu = false })
                 .zIndex(20)
+            }
+
+            if showReminderTime {
+                TimePickerSheet(
+                    title: SiteCopy.t("native.reminderTitle", appLocale),
+                    hour: reminder.hour, minute: reminder.minute,
+                    doneTitle: SiteCopy.t("native.done", appLocale),
+                    onDone: { h, m in
+                        showReminderTime = false
+                        Task {
+                            await reminder.apply(enabled: true, hour: h, minute: m, locale: appLocale)
+                            if reminder.denied { showToast(SiteCopy.t("native.reminderDenied", appLocale)) }
+                        }
+                    },
+                    onCancel: { showReminderTime = false })
+                .zIndex(24)
+            }
+
+            if confirmDeleteAccount {
+                // 不可逆操作走确认单（RN confirmDeleteAccount 的 Alert）
+                ConfirmSheet(
+                    title: SiteCopy.t("native.deleteAccount", appLocale),
+                    message: SiteCopy.t("native.deleteAccountConfirm", appLocale),
+                    confirmTitle: SiteCopy.t("native.deleteAccount", appLocale),
+                    cancelTitle: SiteCopy.t("native.cancel", appLocale),
+                    onConfirm: {
+                        confirmDeleteAccount = false
+                        Task {
+                            await sync.prepareSignOut()
+                            if let err = await auth.deleteAccount() {
+                                showToast(SiteCopy.localizeKnown(err, appLocale))
+                            } else {
+                                showToast(SiteCopy.t("native.deleteAccountDone", appLocale))
+                            }
+                        }
+                    },
+                    onCancel: { confirmDeleteAccount = false })
+                .zIndex(25)
             }
 
             if showWelcome {

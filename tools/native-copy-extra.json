@@ -303,5 +303,57 @@
   "native.verseMultiCopy": {
     "zh": "多选复制",
     "en": "Copy several"
+  },
+  "native.deleteAccount": {
+    "zh": "删除账户",
+    "en": "Delete account"
+  },
+  "native.deleteAccountConfirm": {
+    "zh": "删除账户后，云端的读经进度、收藏、记录都会一并删除，且无法恢复。确定要删除吗？",
+    "en": "Deleting your account also deletes the reading progress, bookmarks and history stored in the cloud. This cannot be undone. Delete it?"
+  },
+  "native.deleteAccountDone": {
+    "zh": "账户已删除",
+    "en": "Account deleted"
+  },
+  "native.reminderTitle": {
+    "zh": "每日读经提醒",
+    "en": "Daily reading reminder"
+  },
+  "native.reminderOn": {
+    "zh": "开启",
+    "en": "On"
+  },
+  "native.reminderOff": {
+    "zh": "关闭",
+    "en": "Off"
+  },
+  "native.reminderAt": {
+    "zh": "每天 {{time}}",
+    "en": "Daily at {{time}}"
+  },
+  "native.reminderBody": {
+    "zh": "今天可以安静读一会儿经。",
+    "en": "A quiet moment to read Scripture today."
+  },
+  "native.reminderDenied": {
+    "zh": "系统通知权限没开，去设置里打开后再试",
+    "en": "Notifications are off for this app. Turn them on in Settings and try again."
+  },
+  "native.highlight": {
+    "zh": "划重点",
+    "en": "Highlight"
+  },
+  "native.highlightHint": {
+    "zh": "手指划过要标的字",
+    "en": "Drag across the words to mark"
+  },
+  "native.highlightErase": {
+    "zh": "擦除",
+    "en": "Erase"
+  },
+  "native.done": {
+    "zh": "完成",
+    "en": "Done"
   }
 }

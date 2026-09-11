@@ -165,6 +165,39 @@ class MemberAuthStore(context: Context) {
         if (token != null) withContext(Dispatchers.IO) { SupabaseAuthClient.signOut(token) }
     }
 
+    /**
+     * 删除账户（RN deleteAccount → DELETE /api/mobile/auth/account）：服务端删掉会员，本机再登出。
+     * 返回 null 表示成功，否则是错误码。
+     */
+    suspend fun deleteAccount(): String? = withContext(Dispatchers.IO) {
+        val token = ensureFreshToken() ?: return@withContext "unauthorized"
+        try {
+            val url = java.net.URL("https://askbible.me/api/mobile/auth/account")
+            val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                requestMethod = "DELETE"
+                connectTimeout = 20_000
+                readTimeout = 20_000
+                setRequestProperty("Authorization", "Bearer $token")
+                setRequestProperty("Accept", "application/json")
+            }
+            val status = conn.responseCode
+            val body = (if (status in 200..299) conn.inputStream else conn.errorStream)
+                ?.bufferedReader()?.use { it.readText() } ?: ""
+            conn.disconnect()
+            val json = runCatching { org.json.JSONObject(body) }.getOrNull()
+            if (status == 200 && json?.optBoolean("ok", true) != false) {
+                persist(null)
+                null
+            } else {
+                json?.optString("code")?.takeIf { it.isNotEmpty() }
+                    ?: json?.optString("error")?.takeIf { it.isNotEmpty() }
+                    ?: "network"
+            }
+        } catch (_: Throwable) {
+            "network"
+        }
+    }
+
     /** 改称呼：先改本机（马上生效），再写服务端 profile */
     suspend fun updateDisplayName(raw: String): Boolean {
         val name = MemberAuthRules.normalizeDisplayName(raw)

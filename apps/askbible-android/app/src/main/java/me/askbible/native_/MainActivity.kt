@@ -44,6 +44,9 @@ import me.askbible.native_.data.NatureScenes
 import me.askbible.native_.home.ReadingPlanStore
 import me.askbible.native_.data.PlanPlay
 import me.askbible.native_.data.PlanPointer
+import me.askbible.native_.ui.TimePickerSheet
+import me.askbible.native_.ReadingReminder
+import me.askbible.native_.ui.ConfirmSheet
 import me.askbible.native_.ui.NavDrawer
 import me.askbible.native_.ui.VerseSelectionSheet
 import me.askbible.native_.ui.OnboardingPrefs
@@ -179,6 +182,8 @@ private fun RootScreen() {
     var authRoute by remember { mutableStateOf<String?>(null) }
     /** 首页左上的用户菜单 */
     var showMenu by remember { mutableStateOf(false) }
+    /** 删除账户的二次确认 */
+    var confirmDeleteAccount by remember { mutableStateOf(false) }
     /** 多节选择（章页底部条），空集合 = 不在选择态 */
     var selectedVerses by remember { mutableStateOf(setOf<Int>()) }
     /** 首次打开的欢迎页（语言 + 登录），完成后写盘不再出 */
@@ -210,6 +215,21 @@ private fun RootScreen() {
     // 长按弹出操作单的那节；收藏 / 复制后的轻提示
     var actionVerse by remember { mutableStateOf<LoadedVerse?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
+    /** 每日读经提醒 */
+    var reminderOn by remember { mutableStateOf(ReadingReminder.enabled(context)) }
+    var reminderTime by remember { mutableStateOf(ReadingReminder.timeLabel(context)) }
+    var showReminderTime by remember { mutableStateOf(false) }
+    val notifyPermission = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            reminderOn = ReadingReminder.apply(context, true, ReadingReminder.hour(context), ReadingReminder.minute(context))
+            if (!reminderOn) toast = SiteCopy.t("native.reminderDenied", appLocale)
+        } else {
+            toast = SiteCopy.t("native.reminderDenied", appLocale)
+        }
+    }
+
     LaunchedEffect(toast) { if (toast != null) { kotlinx.coroutines.delay(1560); toast = null } }
     var chapter by remember { mutableStateOf(1) }
     // 计划 Tab（底栏中央键）里的子页：play / plans / detail
@@ -418,10 +438,12 @@ private fun RootScreen() {
 
     // 系统返回键按层级逐层收起：弹层 → 章页 → 回首页；到首页才真正退出。
     // Compose 弹层是普通 Box，不会自动接管返回键，不加这段整个 App 会直接被退出。
-    val backHandled = selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
+    val backHandled = showReminderTime || confirmDeleteAccount || selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
         pickingBook != null || openedBook != null || (tab == ShellTab.PLAN && planRoute != "play") || tab != ShellTab.HOME
     BackHandler(enabled = backHandled) {
         when {
+            showReminderTime -> showReminderTime = false
+            confirmDeleteAccount -> confirmDeleteAccount = false
             selectedVerses.isNotEmpty() -> selectedVerses = emptySet()
             showMenu -> showMenu = false
             authRoute != null -> authRoute = null
@@ -734,8 +756,59 @@ private fun RootScreen() {
             onRegister = { showMenu = false; authRoute = "register" },
             onLogout = { showMenu = false; scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
             onFeedback = { showMenu = false; openSupportMail(context) },
+            reminderEnabled = reminderOn,
+            reminderTime = reminderTime,
+            onToggleReminder = {
+                if (reminderOn) {
+                    ReadingReminder.apply(context, false, ReadingReminder.hour(context), ReadingReminder.minute(context))
+                    reminderOn = false
+                } else if (!ReadingReminder.canNotify(context) && android.os.Build.VERSION.SDK_INT >= 33) {
+                    notifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    reminderOn = ReadingReminder.apply(context, true, ReadingReminder.hour(context), ReadingReminder.minute(context))
+                    if (!reminderOn) toast = SiteCopy.t("native.reminderDenied", appLocale)
+                }
+            },
+            onPickReminderTime = { showMenu = false; showReminderTime = true },
+            onDeleteAccount = { showMenu = false; confirmDeleteAccount = true },
             onClose = { showMenu = false },
         )
+
+        if (showReminderTime) {
+            TimePickerSheet(
+                title = SiteCopy.t("native.reminderTitle", appLocale),
+                hour = ReadingReminder.hour(context),
+                minute = ReadingReminder.minute(context),
+                doneTitle = SiteCopy.t("native.done", appLocale),
+                onDone = { h, m ->
+                    showReminderTime = false
+                    reminderOn = ReadingReminder.apply(context, true, h, m)
+                    reminderTime = ReadingReminder.timeLabel(context)
+                    if (!reminderOn) toast = SiteCopy.t("native.reminderDenied", appLocale)
+                },
+                onCancel = { showReminderTime = false },
+            )
+        }
+
+        if (confirmDeleteAccount) {
+            // 不可逆操作走确认单（RN confirmDeleteAccount 的 Alert）
+            ConfirmSheet(
+                title = SiteCopy.t("native.deleteAccount", appLocale),
+                message = SiteCopy.t("native.deleteAccountConfirm", appLocale),
+                confirmTitle = SiteCopy.t("native.deleteAccount", appLocale),
+                cancelTitle = SiteCopy.t("native.cancel", appLocale),
+                onConfirm = {
+                    confirmDeleteAccount = false
+                    scope.launch {
+                        syncEngine.prepareSignOut()
+                        val err = auth.deleteAccount()
+                        toast = if (err != null) SiteCopy.localizeKnown(err, appLocale)
+                                else SiteCopy.t("native.deleteAccountDone", appLocale)
+                    }
+                },
+                onCancel = { confirmDeleteAccount = false },
+            )
+        }
 
         if (showWelcome) {
             WelcomeScreen(

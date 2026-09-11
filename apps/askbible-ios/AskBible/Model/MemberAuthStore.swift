@@ -134,6 +134,29 @@ final class MemberAuthStore: ObservableObject {
         if let token { Task { await SupabaseAuthClient.signOut(token: token) } }
     }
 
+    /// 删除账户（RN deleteAccount → DELETE /api/mobile/auth/account）：服务端删掉会员，本机再登出。
+    /// 返回 nil 表示成功，否则是错误码。调用方负责先把本机进度推上云（其实删了也就没了）并清本机数据。
+    func deleteAccount() async -> String? {
+        guard let token = await ensureFreshToken() else { return "unauthorized" }
+        var req = URLRequest(url: URL(string: "https://askbible.me/api/mobile/auth/account")!)
+        req.httpMethod = "DELETE"
+        req.timeoutInterval = 20
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            let json = data.isEmpty ? nil : (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            if status == 200, (json?["ok"] as? Bool) != false {
+                persist(nil)
+                return nil
+            }
+            return (json?["code"] as? String) ?? (json?["error"] as? String) ?? "network"
+        } catch {
+            return "network"
+        }
+    }
+
     /// 改称呼：先改本机（马上生效），再写服务端 profile
     func updateDisplayName(_ raw: String) async -> Bool {
         let name = MemberAuthRules.normalizeDisplayName(raw)

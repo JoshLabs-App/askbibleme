@@ -65,6 +65,13 @@ fun NavDrawer(
     onRegister: () -> Unit,
     onLogout: () -> Unit,
     onFeedback: () -> Unit,
+    /** 每日读经提醒：开关 + 当前时间 */
+    reminderEnabled: Boolean = false,
+    reminderTime: String = "07:00",
+    onToggleReminder: () -> Unit = {},
+    onPickReminderTime: () -> Unit = {},
+    /** 删除账户（只在登录后出；二次确认在壳里弹） */
+    onDeleteAccount: () -> Unit = {},
     onClose: () -> Unit,
     theme: Parchment = Parchment.light,
 ) {
@@ -115,9 +122,38 @@ fun NavDrawer(
                             DrawerRow(SiteCopy.t("auth.pageTitle", locale), null, theme, onLogin)
                             DrawerRow(SiteCopy.t("native.register", locale), null, theme, onRegister)
                         }
+                        // 每日读经提醒：左边开关（点文字切换），右边时间（点时间改）
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(Modifier.weight(1f).clickableNoRipple(onToggleReminder),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(SiteCopy.t("native.reminderTitle", locale),
+                                     color = theme.ink.toColor(), fontSize = 16.sp, maxLines = 1)
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(999.dp))
+                                        .background(if (reminderEnabled) Color(0x38FFB101) else Color(0x80FFF8EB))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                                ) {
+                                    Text(SiteCopy.t(if (reminderEnabled) "native.reminderOn" else "native.reminderOff", locale),
+                                         color = if (reminderEnabled) Color(0xFF784B1E) else theme.ink.toColor().copy(alpha = 0.5f),
+                                         fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                            Text(reminderTime, Modifier.clickableNoRipple(onPickReminderTime),
+                                 color = theme.ink.toColor().copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        }
                         DrawerRow(SiteCopy.t("native.sendFeedback", locale), SUPPORT_EMAIL, theme, onFeedback)
                         if (syncDetail != null) {
                             DrawerRow(SiteCopy.t("native.readingSync", locale), syncDetail, theme, onClose)
+                        }
+                        if (userName != null) {
+                            // RN 抽屉底部的「删除账户」：quiet 样式，小一号、淡色
+                            Text(SiteCopy.t("native.deleteAccount", locale),
+                                 Modifier.fillMaxWidth().clickableNoRipple(onDeleteAccount)
+                                     .padding(top = 10.dp, start = 12.dp, end = 12.dp, bottom = 6.dp),
+                                 color = theme.ink.toColor().copy(alpha = 0.42f), fontSize = 12.sp)
                         }
                     }
 

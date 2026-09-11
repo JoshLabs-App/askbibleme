@@ -570,6 +570,16 @@ private fun RootScreen() {
             else if (book == null) CatalogScreen(
                 bookLabel = bookLabel,
                 locale = readChromeLocale,
+                // 右侧竖排最后一个「历史」：回到上次读到的那一章（RN onLastRead）
+                onLastRead = activity.lastPosition?.let { last ->
+                    BibleCatalog.book(last.bookId)?.let { b ->
+                        {
+                            planFlowActive = false; listenBook = null; chapterFromPlan = false
+                            pickingBook = null; focusVerse = null
+                            chapter = last.chapter; openedBook = b
+                        }
+                    }
+                },
                 size = size,
                 onOpenBook = { pickingBook = it },
                 onOpenSettings = { showTranslationPanel = true },

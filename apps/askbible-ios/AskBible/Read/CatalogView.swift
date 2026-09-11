@@ -11,6 +11,8 @@ struct CatalogView: View {
     var onOpenSettings: () -> Void = {}
     var onOpenSearch: () -> Void = {}
     var onOpenFavorites: () -> Void = {}
+    /// 右侧竖排最后一个「历史」：回到上次读到的那一章；没有记录时按钮变淡且点不动
+    var onLastRead: (() -> Void)? = nil
 
     private let theme = Parchment.light
     /// 右侧竖排最后一个按钮的底边（全局坐标）：落在它上面的行要给图标让位
@@ -99,7 +101,9 @@ struct CatalogView: View {
             railButton(MI.bookmarkBorder, action: onOpenFavorites)
             railLabel("+") { if let n = size.next { size = n } }
             railLabel("\u{2212}") { if let p = size.previous { size = p } }
-            railButton(MI.history)
+            railButton(MI.history, action: onLastRead ?? {})
+                .opacity(onLastRead == nil ? 0.4 : 1)
+                .disabled(onLastRead == nil)
         }
         .padding(.top, safeTop + ShellMetrics.topChromeOffset)
         .padding(.trailing, ShellMetrics.topChromeSideInset)
@@ -115,6 +119,7 @@ struct CatalogView: View {
             MaterialIcon(glyph: glyph, size: ShellMetrics.topChromeIcon, color: .white)
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
                 .shellIconShadow()
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

@@ -652,7 +652,18 @@ struct RootView: View {
                     onOpenBook: { openedBook = $0 },
                     onOpenSettings: { showTranslationPanel = true },
                     onOpenSearch: { searchRef = nil; showSearch = true },
-                    onOpenFavorites: { showFavorites = true }
+                    onOpenFavorites: { showFavorites = true },
+                    // 右侧竖排最后一个「历史」：回到上次读到的那一章（RN onLastRead）
+                    onLastRead: activity.lastPosition.flatMap { last in
+                        BibleCatalog.book(id: last.bookId).map { b in
+                            {
+                                planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                                focusVerse = nil
+                                openedBook = nil
+                                openedChapter = (b, last.chapter)
+                            }
+                        }
+                    }
                 )
             }
         case .plan:

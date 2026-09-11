@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,6 +64,8 @@ fun CatalogScreen(
     onSizeDown: () -> Unit,
     onOpenSearch: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
+    /** 右侧竖排最后一个「历史」：回到上次读到的那一章；没有记录时按钮变淡且点不动 */
+    onLastRead: (() -> Unit)? = null,
     theme: Parchment = Parchment.light,
 ) {
     Box(Modifier.fillMaxSize()) {
@@ -122,7 +125,8 @@ fun CatalogScreen(
             // 目录页底下不再放读经计划区块（Josh 2026-09-09「圣经目录面下面不需要展示读经计划」），读经计划走底栏中央键
         }
 
-        CatalogRail(theme, onOpenSettings, onSizeUp, onSizeDown, onOpenSearch = onOpenSearch, onOpenFavorites = onOpenFavorites)
+        CatalogRail(theme, onOpenSettings, onSizeUp, onSizeDown, onOpenSearch = onOpenSearch,
+                    onOpenFavorites = onOpenFavorites, onLastRead = onLastRead)
     }
 }
 
@@ -203,6 +207,7 @@ private fun CatalogRail(
     onSizeDown: () -> Unit,
     onOpenSearch: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
+    onLastRead: (() -> Unit)? = null,
 ) {
     Column(
         Modifier.fillMaxWidth()
@@ -212,18 +217,19 @@ private fun CatalogRail(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(ShellMetrics.topChromeGap.dp),
     ) {
-        RailIcon(MI.SETTINGS, onOpenSettings)
-        RailIcon(MI.SEARCH, onOpenSearch)
-        RailIcon(MI.BOOKMARK_BORDER, onOpenFavorites)
+        RailIcon(MI.SETTINGS, onClick = onOpenSettings)
+        RailIcon(MI.SEARCH, onClick = onOpenSearch)
+        RailIcon(MI.BOOKMARK_BORDER, onClick = onOpenFavorites)
         RailLabel("+", onSizeUp)
         RailLabel("\u2212", onSizeDown)
-        RailIcon(MI.HISTORY) {}
+        RailIcon(MI.HISTORY, enabled = onLastRead != null) { onLastRead?.invoke() }
     }
 }
 
 @Composable
-private fun RailIcon(glyph: String, onClick: () -> Unit) {
-    Box(Modifier.size(ShellMetrics.topChromeButton.dp).clickableNoRipple(onClick),
+private fun RailIcon(glyph: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Box(Modifier.size(ShellMetrics.topChromeButton.dp).alpha(if (enabled) 1f else 0.4f)
+            .clickableNoRipple { if (enabled) onClick() },
         contentAlignment = Alignment.Center) {
         MaterialIcon(glyph, ShellMetrics.topChromeIcon, Color.White, shadow = true)
     }

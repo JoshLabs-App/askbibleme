@@ -46,6 +46,9 @@ import me.askbible.native_.data.PlanPlay
 import me.askbible.native_.data.PlanPointer
 import me.askbible.native_.ui.TimePickerSheet
 import me.askbible.native_.ReadingReminder
+import me.askbible.native_.ui.HighlightBar
+import me.askbible.native_.data.VerseHighlightStore
+import me.askbible.native_.data.VerseHighlightRules
 import me.askbible.native_.ui.ConfirmSheet
 import me.askbible.native_.ui.NavDrawer
 import me.askbible.native_.ui.VerseSelectionSheet
@@ -186,6 +189,11 @@ private fun RootScreen() {
     var confirmDeleteAccount by remember { mutableStateOf(false) }
     /** 多节选择（章页底部条），空集合 = 不在选择态 */
     var selectedVerses by remember { mutableStateOf(setOf<Int>()) }
+    /** 划重点：开关 + 当前颜色 + 擦除态 */
+    val highlights = remember { VerseHighlightStore(context) }
+    var highlighting by remember { mutableStateOf(false) }
+    var highlightColor by remember { mutableStateOf(VerseHighlightRules.DEFAULT_COLOR) }
+    var erasing by remember { mutableStateOf(false) }
     /** 首次打开的欢迎页（语言 + 登录），完成后写盘不再出 */
     var showWelcome by remember { mutableStateOf(!OnboardingPrefs.completed(context)) }
     // 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
@@ -253,7 +261,7 @@ private fun RootScreen() {
     val plans = remember { ReadingPlanStore(context) }
     // 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步（RN AppUsageTimeBridge / useMemberReadingSync）
     val activity = remember { ReadingActivityStore(context) }
-    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs) } }
+    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs, highlights) } }
     LaunchedEffect(appLocale) { syncEngine.localeTag = { appLocale.tag } }
     // 网站译本目录（几百本在线译本）：盘里没过期就不走网
     var catalogRevision by remember { mutableStateOf(0) }
@@ -438,10 +446,11 @@ private fun RootScreen() {
 
     // 系统返回键按层级逐层收起：弹层 → 章页 → 回首页；到首页才真正退出。
     // Compose 弹层是普通 Box，不会自动接管返回键，不加这段整个 App 会直接被退出。
-    val backHandled = showReminderTime || confirmDeleteAccount || selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
+    val backHandled = highlighting || showReminderTime || confirmDeleteAccount || selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
         pickingBook != null || openedBook != null || (tab == ShellTab.PLAN && planRoute != "play") || tab != ShellTab.HOME
     BackHandler(enabled = backHandled) {
         when {
+            highlighting -> { highlighting = false; erasing = false }
             showReminderTime -> showReminderTime = false
             confirmDeleteAccount -> confirmDeleteAccount = false
             selectedVerses.isNotEmpty() -> selectedVerses = emptySet()
@@ -645,6 +654,13 @@ private fun RootScreen() {
                 // RN writeLastReadPosition + pushReadRecentChapter：最后位置 + 探索页「最近阅读」
                 LaunchedEffect(book.id, chapter) { activity.recordOpened(book.id, chapter, book.name(displayLocale)) }
                 ChapterScreen(
+                    highlights = highlights.chapter(translation.id, book.id, chapter),
+                    paintColor = if (highlighting && !erasing) highlightColor else null,
+                    eraseMode = highlighting && erasing,
+                    onPaint = { verse, range ->
+                        highlights.paint(translation.id, book.id, chapter, verse, range,
+                                         if (erasing) null else highlightColor)
+                    },
                     selectedVerses = selectedVerses,
                     onToggleSelection = { v ->
                         selectedVerses = if (v in selectedVerses) selectedVerses - v else selectedVerses + v
@@ -774,6 +790,17 @@ private fun RootScreen() {
             onClose = { showMenu = false },
         )
 
+        if (highlighting && openedBook != null) {
+            HighlightBar(
+                locale = appLocale,
+                color = highlightColor,
+                erasing = erasing,
+                onPickColor = { highlightColor = it; erasing = false },
+                onErase = { erasing = true },
+                onDone = { highlighting = false; erasing = false },
+            )
+        }
+
         if (showReminderTime) {
             TimePickerSheet(
                 title = SiteCopy.t("native.reminderTitle", appLocale),
@@ -860,6 +887,7 @@ private fun RootScreen() {
                     context.startActivity(android.content.Intent.createChooser(intent, null)); actionVerse = null
                 },
                 onMultiCopy = { selectedVerses = setOf(v.number); actionVerse = null },
+                onHighlight = { highlighting = true; erasing = false; actionVerse = null },
                 onClose = { actionVerse = null },
             )
         }

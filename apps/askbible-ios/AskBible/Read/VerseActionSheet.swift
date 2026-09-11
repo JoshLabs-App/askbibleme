@@ -13,6 +13,8 @@ struct VerseActionSheet: View {
     var onShare: () -> Void
     /// 多选复制：以这一节为起点进入选择态（RN runStartMultiCopy）
     var onMultiCopy: () -> Void = {}
+    /// 划重点：进入划字模式（RN runOpenHighlightEditor）
+    var onHighlight: () -> Void = {}
     var onClose: () -> Void
 
     private let theme = Parchment.light
@@ -38,6 +40,7 @@ struct VerseActionSheet: View {
                     if !bookmarked { cell(MI.bookmarkBorder, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, onBookmark) }
                     cell(MI.iosShare, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, onShare)
                     cell(MI.libraryAddCheck, SiteCopy.t("native.verseMultiCopy"), iconSize, labelSize, onMultiCopy)
+                    cell(MI.brush, SiteCopy.t("native.highlight"), iconSize, labelSize, onHighlight)
                 }
                 .padding(.top, 4).padding(.bottom, 8)
             }

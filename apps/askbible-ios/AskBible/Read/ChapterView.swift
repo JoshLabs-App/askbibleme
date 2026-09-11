@@ -33,6 +33,12 @@ struct ChapterView: View {
     var onLongPressVerse: (LoadedVerse) -> Void = { _ in }
     /// 多节选择（Josh 2026-09-11「长按要能选多节一起复制」）：非空即进入选择态
     @Binding var selectedVerses: Set<Int>
+    /// 划重点：节号 → （节内字符下标 → 颜色）
+    var highlights: [Int: [Int: String]] = [:]
+    /// 划重点模式下的颜色；nil 且 eraseMode 为假 = 不在划重点
+    var paintColor: String?
+    var eraseMode = false
+    var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
     /// 选择态：点一节切换选中
     var onToggleSelection: (Int) -> Void = { _ in }
     /// 选择态底部条：复制所选 / 清空
@@ -212,6 +218,10 @@ struct ChapterView: View {
             bookmarked: marks,
             searchFocus: searchFocus,
             tapWholeVerse: selecting,
+            highlights: highlights,
+            paintColor: paintColor,
+            eraseMode: eraseMode,
+            onPaint: onPaint,
             onTapVerseNumber: { v in
                 searchFocus = nil
                 if selecting { onToggleSelection(v) } else if xrefVerses.contains(v) { onTapVerse(v) }

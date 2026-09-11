@@ -40,6 +40,8 @@ fun VerseActionSheet(
     onShare: () -> Unit,
     /** 多选复制：以这一节为起点进入选择态（RN runStartMultiCopy） */
     onMultiCopy: () -> Unit = {},
+    /** 划重点：进入划字模式（RN runOpenHighlightEditor） */
+    onHighlight: () -> Unit = {},
     onClose: () -> Unit,
     theme: Parchment = Parchment.light,
 ) {
@@ -60,6 +62,7 @@ fun VerseActionSheet(
                 if (!bookmarked) Cell(MI.BOOKMARK_BORDER, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, theme, Modifier.weight(1f), onBookmark)
                 Cell(MI.IOS_SHARE, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, theme, Modifier.weight(1f), onShare)
                 Cell(MI.LIBRARY_ADD_CHECK, SiteCopy.t("native.verseMultiCopy"), iconSize, labelSize, theme, Modifier.weight(1f), onMultiCopy)
+                Cell(MI.BRUSH, SiteCopy.t("native.highlight"), iconSize, labelSize, theme, Modifier.weight(1f), onHighlight)
             }
         }
     }

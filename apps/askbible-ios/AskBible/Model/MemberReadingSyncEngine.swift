@@ -19,6 +19,7 @@ final class MemberReadingSyncEngine: ObservableObject {
     private var bookmarks: VerseBookmarkStore!
     private var activity: ReadingActivityStore!
     private var search: SearchPrefs!
+    private var highlights: VerseHighlightStore!
     /// 当前界面语言（appLocale 侧车的 locale）
     var localeTag: () -> String = { "zh-CN" }
 
@@ -30,8 +31,11 @@ final class MemberReadingSyncEngine: ObservableObject {
     private var pendingLocalReason: String?
     private var applyingRemote = false
 
-    func attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore, search: SearchPrefs) {
+    func attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore,
+                search: SearchPrefs, highlights: VerseHighlightStore) {
         self.auth = auth; self.plans = plans; self.bookmarks = bookmarks; self.activity = activity; self.search = search
+        self.highlights = highlights
+        highlights.onLocalChange = { [weak self] k in self?.notifyLocalChanged(k) }
         plans.onLocalChange = { [weak self] k in self?.notifyLocalChanged(k) }
         bookmarks.onLocalChange = { [weak self] in self?.notifyLocalChanged("bookmarks") }
         activity.onLocalChange = { [weak self] k in self?.notifyLocalChanged(k) }
@@ -76,6 +80,8 @@ final class MemberReadingSyncEngine: ObservableObject {
         // Josh 2026-09-11：使用时长与最近阅读也上云
         if activity.usageTotalSec > 0 { blobs["appUsageTime"] = wrap(activity.usageJSON, now) }
         if !activity.recent.isEmpty { blobs["recentChapters"] = wrap(activity.recentJSON, now) }
+        let hl = highlights.json
+        if !hl.isEmpty { blobs["highlights"] = wrap(hl, now) }
         return blobs
     }
 
@@ -144,6 +150,8 @@ final class MemberReadingSyncEngine: ObservableObject {
             if let d = R.parseListenTotals(value) { activity.mergeRemoteListen(totalSec: R.num(d["totalSec"]) ?? 0) }
         case "recentSearches":
             if let d = R.dict(value), R.num(d["version"]) == 1, let arr = d["terms"] as? [Any] { search.replaceRecent(arr.compactMap { $0 as? String }) }
+        case "highlights":
+            if let o = R.dict(value) { highlights.replace(VerseHighlightStore.parse(json: o)) }
         case "appUsageTime":
             if let d = R.dict(value), let sec = R.num(d["totalSec"]) { activity.mergeRemoteUsage(totalSec: sec) }
         case "recentChapters":

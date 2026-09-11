@@ -1,6 +1,7 @@
 package me.askbible.native_.ui
 
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.LoadedVerse
 import me.askbible.native_.data.Parchment
+import me.askbible.native_.data.VerseHighlightRules
 import me.askbible.native_.data.ReadTypographyMetrics
 import me.askbible.native_.data.SpeechKind
 
@@ -58,6 +60,13 @@ fun ChapterFlowParagraph(
     onVerseBounds: ((Map<Int, Pair<Float, Float>>) -> Unit)? = null,
     /** 多节选择态：单击整节都算切换选中，不再只认节号（Josh 2026-09-11） */
     tapWholeVerse: Boolean = false,
+    /** 划重点：节号 → （节内字符下标 → 颜色） */
+    highlights: Map<Int, Map<Int, String>> = emptyMap(),
+    /** 划重点模式：手指划过即上色；null 且 eraseMode 为假 = 不在该模式 */
+    paintColor: String? = null,
+    eraseMode: Boolean = false,
+    /** 划过一段：节号 + 节内字符区间 */
+    onPaint: (Int, IntRange) -> Unit = { _, _ -> },
 ) {
     val ranges = ArrayList<Pair<Int, IntRange>>(verses.size)
     val numberRanges = ArrayList<Pair<Int, IntRange>>(verses.size)
@@ -101,6 +110,39 @@ fun ChapterFlowParagraph(
     val bookmarkRanges = ranges.filter { it.first in bookmarked }.map { it.second }
     val bookmarkFill = theme.verseBookmarkMarker.toColor()
     val focusFill = theme.verseSearchFocusBg.toColor()
+    // 划重点：把「节内字符下标 → 颜色」压成连续同色区间，换算到整段文本坐标，少画几次
+    val highlightRuns = remember(highlights, textRanges) {
+        val out = ArrayList<Pair<IntRange, Color>>()
+        for ((verse, byIndex) in highlights) {
+            val base = textRanges.firstOrNull { it.first == verse }?.second ?: continue
+            if (byIndex.isEmpty()) continue
+            val sorted = byIndex.keys.sorted()
+            var runStart = sorted.first(); var prev = sorted.first()
+            var color = byIndex[sorted.first()] ?: VerseHighlightRules.DEFAULT_COLOR
+            fun flush(end: Int) {
+                val from = base.first + runStart
+                val to = base.first + end
+                if (from in base && to in base) out.add((from..to) to hexColor(color))
+            }
+            for (i in sorted.drop(1)) {
+                val c = byIndex[i] ?: VerseHighlightRules.DEFAULT_COLOR
+                if (i == prev + 1 && c == color) { prev = i; continue }
+                flush(prev); runStart = i; prev = i; color = c
+            }
+            flush(prev)
+        }
+        out
+    }
+    val painting = paintColor != null || eraseMode
+    /** 触点 → 「哪一节的第几个字」 */
+    fun paintAt(pos: Offset) {
+        val l = layout ?: return
+        val offset = l.getOffsetForPosition(pos)
+        val hit = textRanges.firstOrNull { offset in it.second } ?: return
+        val local = offset - hit.second.first
+        if (local < 0) return
+        onPaint(hit.first, local..local)
+    }
     fun verseAt(pos: Offset, list: List<Pair<Int, IntRange>>): Int? {
         val l = layout ?: return null
         val offset = l.getOffsetForPosition(pos)
@@ -129,6 +171,18 @@ fun ChapterFlowParagraph(
                     val bottom = l.getLineBottom(l.getLineForOffset(r.last))
                     drawRoundRect(fill, topLeft = Offset(0f, top), size = Size(size.width, bottom - top), cornerRadius = CornerRadius(8.dp.toPx()))
                 }
+                // 划重点：逐行铺用户选的颜色，压在正文底下
+                for ((r, c) in highlightRuns) {
+                    val first = l.getLineForOffset(r.first); val last = l.getLineForOffset(r.last)
+                    for (line in first..last) {
+                        val left = if (line == first) l.getHorizontalPosition(r.first, true) else l.getLineLeft(line)
+                        val right = if (line == last) l.getHorizontalPosition(r.last + 1, true) else l.getLineRight(line)
+                        if (right <= left) continue
+                        drawRoundRect(c.copy(alpha = 0.45f), topLeft = Offset(left, l.getLineTop(line) - 1.dp.toPx()),
+                                      size = Size(right - left, l.getLineBottom(line) - l.getLineTop(line) + 2.dp.toPx()),
+                                      cornerRadius = CornerRadius(3.dp.toPx()))
+                    }
+                }
                 // 收藏：正文逐行铺 verseBookmarkMarker，圆角 6、四周各撑 2/1（RN verseTextHighlightStyle("bookmark") 圆角 2）
                 for (r in bookmarkRanges) {
                     if (r.isEmpty()) continue
@@ -144,6 +198,15 @@ fun ChapterFlowParagraph(
                     }
                 }
             }
+            // 划重点：手指划过要标的字（Josh 2026-09-11「直接用手划动，划过的就高亮」）；
+            // 只在划重点模式下吃掉滚动手势
+            .pointerInput(painting, text) {
+                if (!painting) return@pointerInput
+                detectDragGestures(
+                    onDragStart = { pos -> paintAt(pos) },
+                    onDrag = { change, _ -> paintAt(change.position); change.consume() },
+                )
+            }
             .pointerInput(text) {
                 detectTapGestures(
                     onTap = { pos -> verseAt(pos, if (tapWholeVerse) ranges else numberRanges)?.let(onTapVerseNumber) },
@@ -156,4 +219,11 @@ fun ChapterFlowParagraph(
         fontWeight = FontWeight.Medium,
         onTextLayout = { layout = it },
     )
+}
+
+/** 「#RRGGBB」→ Compose Color（划重点的调色板是十六进制字符串，和 RN / 网页共用一份） */
+fun hexColor(hex: String): Color {
+    val raw = hex.trim().removePrefix("#")
+    val v = raw.take(6).toLongOrNull(16) ?: 0xFFB103L
+    return Color(0xFF000000L or v)
 }

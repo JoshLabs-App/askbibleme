@@ -60,6 +60,8 @@ enum MI {
     static let contentCopy = "\u{e14d}"
     /// library_add_check：多选复制
     static let libraryAddCheck = "\u{e9b7}"
+    /// brush：划重点
+    static let brush = "\u{e3ae}"
     static let iosShare = "\u{e6b8}"
     static let bookmark = "\u{e866}"
     // 读经计划页（手机版精简排版）：要点 chips / 怎么读 / 轨道图标 / 展开收起

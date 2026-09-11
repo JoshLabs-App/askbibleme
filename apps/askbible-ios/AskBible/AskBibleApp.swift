@@ -121,6 +121,11 @@ struct RootView: View {
     @State private var actionVerse: LoadedVerse?
     /// 多节选择（章页底部条），空集合 = 不在选择态
     @State private var selectedVerses: Set<Int> = []
+    /// 划重点：开关 + 当前颜色 + 擦除态
+    @StateObject private var highlights = VerseHighlightStore()
+    @State private var highlighting = false
+    @State private var highlightColor = VerseHighlightRules.defaultColor
+    @State private var erasing = false
     @State private var toast: String?
     @State private var toastTask: Task<Void, Never>?
     @State private var showSleepSheet = false
@@ -190,6 +195,16 @@ struct RootView: View {
     private func copyVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
         UIPasteboard.general.string = VerseShareText.clipboard(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text)
         showToast(SiteCopy.t("pages.read.verseCopied", appLocale))
+    }
+
+    /// 当前章的划重点：节号 → （节内字符下标 → 颜色）
+    private func chapterHighlights(_ opened: (book: BookRef, chapter: Int)) -> [Int: [Int: String]] {
+        var out: [Int: [Int: String]] = [:]
+        let prefix = "\(store.translation.id):\(opened.book.id):\(opened.chapter):"
+        for (key, byIndex) in highlights.store where key.hasPrefix(prefix) {
+            if let verse = Int(key.dropFirst(prefix.count)), !byIndex.isEmpty { out[verse] = byIndex }
+        }
+        return out
     }
 
     /// 多节复制：按节号顺序，每节一行「书名 章:节 正文」（RN copySelectedVerses）
@@ -392,7 +407,8 @@ struct RootView: View {
             .onAppear {
                 Task { await store.refreshRemoteCatalog() }
                 home.setSource(store.translation)
-                sync.attach(auth: auth, plans: plans, bookmarks: bookmarks, activity: activity, search: searchPrefs)
+                sync.attach(auth: auth, plans: plans, bookmarks: bookmarks, activity: activity,
+                            search: searchPrefs, highlights: highlights)
                 sync.localeTag = { [appLocale] in appLocale.rawValue }
                 activity.noteForeground(); activity.touchHabitDay()
                 activity.mergeRemoteHabit(Array(plans.listenedDates))
@@ -521,6 +537,7 @@ struct RootView: View {
                     onBookmark: { toggleBookmark(v, in: opened); actionVerse = nil },
                     onShare: { shareVerse(v, in: opened); actionVerse = nil },
                     onMultiCopy: { selectedVerses = [v.number]; actionVerse = nil },
+                    onHighlight: { highlighting = true; erasing = false; actionVerse = nil },
                     onClose: { actionVerse = nil }
                 )
             }
@@ -559,6 +576,12 @@ struct RootView: View {
                     onDeleteAccount: { showMenu = false; confirmDeleteAccount = true },
                     onClose: { showMenu = false })
                 .zIndex(20)
+            }
+
+            if highlighting, openedChapter != nil {
+                HighlightBar(locale: appLocale, color: $highlightColor, erasing: $erasing,
+                             onDone: { highlighting = false; erasing = false })
+                .zIndex(23)
             }
 
             if showReminderTime {
@@ -694,6 +717,7 @@ struct RootView: View {
                     size: $readSize,
                     onBack: {
                         selectedVerses = []
+                        highlighting = false
                         openedChapter = nil
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
                         if chapterFromPlan {
@@ -713,6 +737,14 @@ struct RootView: View {
                     onDoubleTapVerse: { v in toggleBookmark(v, in: opened) },
                     onLongPressVerse: { v in actionVerse = v },
                     selectedVerses: $selectedVerses,
+                    highlights: chapterHighlights(opened),
+                    paintColor: highlighting && !erasing ? highlightColor : nil,
+                    eraseMode: highlighting && erasing,
+                    onPaint: { verse, range in
+                        highlights.paint(translationId: store.translation.id, bookId: opened.book.id,
+                                         chapter: opened.chapter, verse: verse, range: range,
+                                         color: erasing ? nil : highlightColor)
+                    },
                     onToggleSelection: { v in
                         if selectedVerses.contains(v) { selectedVerses.remove(v) } else { selectedVerses.insert(v) }
                     },

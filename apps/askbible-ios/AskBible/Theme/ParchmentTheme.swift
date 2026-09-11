@@ -1,6 +1,13 @@
 import SwiftUI
 
 extension Color {
+    /// 「#RRGGBB」→ Color（划重点的调色板是十六进制字符串，和 RN / 网页共用一份）
+    init(hex: String) {
+        let raw = hex.trimmingCharacters(in: CharacterSet(charactersIn: "# ")).uppercased()
+        let value = UInt32(raw.prefix(6), radix: 16) ?? 0xFFB103
+        self.init(rgb: value)
+    }
+
     init(rgb: UInt32, opacity: Double = 1) {
         self.init(
             .sRGB,

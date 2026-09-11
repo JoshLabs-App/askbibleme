@@ -49,7 +49,12 @@ class MemberReadingSyncEngine(context: Context) {
     private var pendingLocalReason: String? = null
     private var applyingRemote = false
 
-    fun attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore, search: SearchPrefs) {
+    private var highlights: VerseHighlightStore? = null
+
+    fun attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore,
+               search: SearchPrefs, highlights: VerseHighlightStore? = null) {
+        this.highlights = highlights
+        highlights?.onLocalChange = { k -> notifyLocalChanged(k) }
         this.auth = auth; this.plans = plans; this.bookmarks = bookmarks; this.activity = activity; this.search = search
         plans.onLocalChange = { notifyLocalChanged(it) }
         bookmarks.onLocalChange = { notifyLocalChanged("bookmarks") }
@@ -95,6 +100,8 @@ class MemberReadingSyncEngine(context: Context) {
         // Josh 2026-09-11：使用时长与最近阅读也上云
         if (activity.usageTotalSec > 0) blobs.put("appUsageTime", wrap(activity.usageJson(), now))
         if (activity.recent.isNotEmpty()) blobs.put("recentChapters", wrap(activity.recentJson(), now))
+        val hl = highlights?.json()
+        if (hl != null && hl.length() > 0) blobs.put("highlights", wrap(hl, now))
         return blobs
     }
 
@@ -167,6 +174,7 @@ class MemberReadingSyncEngine(context: Context) {
             "recentSearches" -> R.dict(value)?.let { d ->
                 if (R.num(d.opt("version")) == 1.0 && d.opt("terms") is JSONArray) search.replaceRecent(R.stringArray(d.opt("terms")))
             }
+            "highlights" -> R.dict(value)?.let { highlights?.replace(VerseHighlightStore.parse(it)) }
             "appUsageTime" -> R.dict(value)?.let { d -> R.num(d.opt("totalSec"))?.let { activity.mergeRemoteUsage(it) } }
             "recentChapters" -> R.dict(value)?.let { d ->
                 val items = d.opt("items") as? JSONArray ?: return@let

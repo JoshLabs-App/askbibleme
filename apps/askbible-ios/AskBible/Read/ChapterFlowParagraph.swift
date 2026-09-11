@@ -21,6 +21,12 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     /// 点节号（有串珠的才亮）→ 经文关联
     /// 多节选择态：单击整节都算切换选中，不再只认节号（Josh 2026-09-11）
     var tapWholeVerse = false
+    /// 划重点：节号 → （节内字符下标 → 颜色）
+    var highlights: [Int: [Int: String]] = [:]
+    /// 划重点模式下手指划过的颜色；nil = 不在该模式（擦除用 eraseMode）
+    var paintColor: String?
+    var eraseMode = false
+    var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
     var onTapVerseNumber: (Int) -> Void = { _ in }
     /// 双击正文 → 收藏 / 取消收藏（RN 420ms 内两次点按）
     var onDoubleTapVerse: (Int) -> Void = { _ in }
@@ -30,7 +36,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     /// iOS 用 en space 作节号与正文的间隔（READ_VERSE_NUM_BODY_GAP）
     static let numberGap = "\u{2002}"
 
-    final class FlowTextView: UIView {
+    final class FlowTextView: UIView, UIGestureRecognizerDelegate {
         let storage = NSTextStorage()
         let layoutManager = NSLayoutManager()
         let container = NSTextContainer(size: .zero)
@@ -48,6 +54,15 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         var searchFocusRange: NSRange?
         /// 已收藏的节的正文区间（不含节号）
         var bookmarkRanges: [NSRange] = []
+        /// 划重点：每段连续同色字符的区间（正文坐标已换算成整段文本坐标）
+        var highlightRuns: [(range: NSRange, color: UIColor)] = []
+        /// 划重点模式：手指划过即上色；nil = 不在该模式
+        var paintColor: UIColor?
+        var painting = false
+        /// (节号, 该节正文在整段文本里的起点) —— 拖动时把字符下标换算回「节内下标」
+        var textStarts: [(verse: Int, range: NSRange)] = []
+        /// 划过一段：节号 + 节内字符区间
+        var onPaint: (Int, ClosedRange<Int>) -> Void = { _, _ in }
         static let activeFill = UIColor(red: 1, green: 0.694, blue: 0.012, alpha: 1)
         static let bookmarkFill = UIColor(Parchment.light.verseBookmarkMarker)
         static let searchFocusFill = UIColor(Parchment.light.verseSearchFocusBg)
@@ -70,6 +85,40 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             addGestureRecognizer(double)
             addGestureRecognizer(single)
             addGestureRecognizer(long)
+            // 划重点：手指划过要标的字（Josh 2026-09-11「直接用手划动，划过的就高亮」）
+            let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
+            pan.maximumNumberOfTouches = 1
+            pan.delegate = self
+            addGestureRecognizer(pan)
+            paintPan = pan
+        }
+
+        private weak var paintPan: UIPanGestureRecognizer?
+
+        /// 划重点模式下才吃掉滚动；平时让 ScrollView 正常滚
+        override func gestureRecognizerShouldBegin(_ g: UIGestureRecognizer) -> Bool {
+            if g === paintPan { return paintColor != nil || painting }
+            return super.gestureRecognizerShouldBegin(g)
+        }
+
+        @objc private func panned(_ g: UIPanGestureRecognizer) {
+            guard paintColor != nil || painting else { return }
+            switch g.state {
+            case .began, .changed:
+                painting = true
+                paintAt(g.location(in: self))
+            default:
+                painting = false
+            }
+        }
+
+        /// 把触点换算成「哪一节的第几个字」，通知上层上色
+        private func paintAt(_ p: CGPoint) {
+            let idx = layoutManager.characterIndex(for: p, in: container, fractionOfDistanceBetweenInsertionPoints: nil)
+            guard let hit = textStarts.first(where: { NSLocationInRange(idx, $0.range) }) else { return }
+            let local = idx - hit.range.location
+            guard local >= 0, local < hit.range.length else { return }
+            onPaint(hit.verse, local...local)
         }
 
         private func verse(at p: CGPoint, in list: [(verse: Int, range: NSRange)]) -> Int? {
@@ -125,6 +174,13 @@ struct ChapterFlowParagraph: UIViewRepresentable {
                 // RN 是圆角 2，真机上看还是方的；Josh 2026-09-09「四角要加弧边」→ 6
                 for rect in rects(for: r) { UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: -1), cornerRadius: 6).fill() }
             }
+            // 划重点：逐行铺用户选的颜色，压在正文底下
+            for run in highlightRuns {
+                run.color.withAlphaComponent(0.45).setFill()
+                for rect in rects(for: run.range) {
+                    UIBezierPath(roundedRect: rect.insetBy(dx: 0, dy: -1), cornerRadius: 3).fill()
+                }
+            }
             layoutManager.drawBackground(forGlyphRange: range, at: .zero)
             layoutManager.drawGlyphs(forGlyphRange: range, at: .zero)
         }
@@ -164,6 +220,10 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
         // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
         v.bookmarkRanges = built.ranges.filter { bookmarked.contains($0.verse) }.map(\.range)
+        v.textStarts = built.textRanges
+        v.paintColor = (paintColor != nil || eraseMode) ? UIColor(Color(hex: paintColor ?? VerseHighlightRules.defaultColor)) : nil
+        v.onPaint = onPaint
+        v.highlightRuns = Self.runs(highlights: highlights, textRanges: built.textRanges)
         v.setNeedsDisplay()
     }
 
@@ -171,6 +231,32 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: FlowTextView, context: Context) -> CGSize? {
         let width = proposal.width ?? UIScreen.main.bounds.width - 40
         return CGSize(width: width, height: uiView.height(for: width))
+    }
+
+    /// 把「节内字符下标 → 颜色」压成连续同色的区间，换算到整段文本坐标，少画几次
+    static func runs(highlights: [Int: [Int: String]], textRanges: [(verse: Int, range: NSRange)]) -> [(range: NSRange, color: UIColor)] {
+        var out: [(NSRange, UIColor)] = []
+        for (verse, byIndex) in highlights {
+            guard let base = textRanges.first(where: { $0.verse == verse })?.range, !byIndex.isEmpty else { continue }
+            let sorted = byIndex.keys.sorted()
+            var runStart = sorted[0]
+            var prev = sorted[0]
+            var color = byIndex[sorted[0]] ?? VerseHighlightRules.defaultColor
+            func flush(_ end: Int) {
+                let loc = base.location + runStart
+                let len = end - runStart + 1
+                guard loc >= base.location, loc + len <= base.location + base.length else { return }
+                out.append((NSRange(location: loc, length: len), UIColor(Color(hex: color))))
+            }
+            for i in sorted.dropFirst() {
+                let c = byIndex[i] ?? VerseHighlightRules.defaultColor
+                if i == prev + 1, c == color { prev = i; continue }
+                flush(prev)
+                runStart = i; prev = i; color = c
+            }
+            flush(prev)
+        }
+        return out
     }
 
     /// 对应 displayedParagraphVerseChunk：`${节号}${gap}${正文} `，节号加粗按有无串珠分色，正文按神言 / 人言着色

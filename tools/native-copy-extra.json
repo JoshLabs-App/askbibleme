@@ -243,5 +243,49 @@
   "native.remoteTextAttribution": {
     "zh": "{{name}} · 经文由 YouVersion 提供",
     "en": "{{name}} · Scripture provided by YouVersion"
+  },
+  "native.userMenu": {
+    "zh": "用户菜单",
+    "en": "User menu"
+  },
+  "native.bibleVersion": {
+    "zh": "圣经版本",
+    "en": "Bible version"
+  },
+  "native.signedIn": {
+    "zh": "已登录",
+    "en": "Signed in"
+  },
+  "native.register": {
+    "zh": "注册",
+    "en": "Register"
+  },
+  "native.sendFeedback": {
+    "zh": "发送反馈",
+    "en": "Send feedback"
+  },
+  "native.readingSync": {
+    "zh": "读经同步",
+    "en": "Reading sync"
+  },
+  "native.syncLast": {
+    "zh": "上次 {{time}}",
+    "en": "Last {{time}}"
+  },
+  "native.syncNever": {
+    "zh": "尚未同步",
+    "en": "Not synced yet"
+  },
+  "native.syncIncomplete": {
+    "zh": "同步未完成",
+    "en": "Sync incomplete"
+  },
+  "native.closeMenu": {
+    "zh": "关闭菜单",
+    "en": "Close menu"
+  },
+  "native.appVersion": {
+    "zh": "版本 {{version}}",
+    "en": "Version {{version}}"
   }
 }

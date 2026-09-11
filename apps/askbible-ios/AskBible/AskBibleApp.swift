@@ -42,6 +42,23 @@ struct RootView: View {
 
     /// 探索页选了语言（nil = 跟随系统）：RN applyLocaleWithTranslationPrefs —— 语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；
     /// 之后用户手动改译本不再受语言影响，直到下次切语言
+    /// 读经同步那一行的右侧细节
+    private var syncDetailText: String {
+        if let at = sync.lastSyncedAt, let t = ISO8601DateFormatter.flexible(at) {
+            let f = DateFormatter()
+            f.dateFormat = appLocale == .en ? "MMM d, HH:mm" : "M月d日 HH:mm"
+            return SiteCopy.t("native.syncLast", appLocale).replacingOccurrences(of: "{{time}}", with: f.string(from: t))
+        }
+        if sync.lastError != nil { return SiteCopy.t("native.syncIncomplete", appLocale) }
+        return SiteCopy.t("native.syncNever", appLocale)
+    }
+
+    /// 发送反馈：RN 是 mailto，打不开就算了（原生没有站内反馈页）
+    private func openSupportMail() {
+        guard let url = URL(string: "mailto:askbibleme@gmail.com") else { return }
+        UIApplication.shared.open(url)
+    }
+
     private func applyLocaleChoice(_ choice: AppLocale?) {
         let next = choice ?? deviceLocale
         AppLocale.current = next
@@ -70,6 +87,10 @@ struct RootView: View {
     /// 登录 / 注册页：盖在整个壳上的全屏页（RN 是 stack 路由，无底栏）
     enum AuthRoute { case login, register }
     @State private var authRoute: AuthRoute?
+    /// 首页左上的用户菜单
+    @State private var showMenu = false
+    /// 首次打开的欢迎页（语言 + 登录），完成后写盘不再出
+    @State private var showWelcome = !OnboardingPrefs.completed
     /// 读经计划流：今日逐章队列，一章播完顺到下一章并记已读
     @State private var planQueue: [PlanPointer] = []
     @State private var planQueueIndex = 0
@@ -482,6 +503,33 @@ struct RootView: View {
                 }
             }
 
+            if showMenu {
+                NavDrawerView(
+                    locale: appLocale,
+                    localeOverride: localeOverride,
+                    userName: auth.user.map { MemberAuthRules.shortAccountName($0.name.isEmpty ? $0.email : $0.name) },
+                    translationLabel: store.translation.label(appLocale),
+                    syncDetail: auth.user == nil ? nil : syncDetailText,
+                    onSetLocale: { applyLocaleChoice($0) },
+                    onOpenTranslations: { showMenu = false; showTranslationPanel = true },
+                    onLogin: { showMenu = false; authRoute = .login },
+                    onRegister: { showMenu = false; authRoute = .register },
+                    onLogout: { showMenu = false; Task { await sync.prepareSignOut(); auth.signOut() } },
+                    onFeedback: { showMenu = false; openSupportMail() },
+                    onClose: { showMenu = false })
+                .zIndex(20)
+            }
+
+            if showWelcome {
+                WelcomeView(
+                    auth: auth,
+                    locale: appLocale,
+                    localeOverride: localeOverride,
+                    onSetLocale: { applyLocaleChoice($0) },
+                    onDone: { OnboardingPrefs.complete(); showWelcome = false })
+                .zIndex(30)
+            }
+
             if let toast {
                 // RN ReadVerseBookmarkFeedback：底部 108 + 安全区之上（在坞与底栏之上），居中胶囊
                 VerseFeedbackToast(message: toast)
@@ -524,7 +572,8 @@ struct RootView: View {
                         music.selectAlbum(album)
                         if !wasPlaying { music.toggle() }
                     }
-                }
+                },
+                onOpenMenu: { showMenu = true }
             )
         case .music:
             MusicView(player: music,
@@ -651,7 +700,6 @@ struct RootView: View {
         case .explore:
             ExploreView(article: $exploreArticle, auth: auth, activity: activity, locale: appLocale, onOpenLogin: { authRoute = .login },
                         onSignOut: { Task { await sync.prepareSignOut(); auth.signOut() } },
-                        localeOverride: localeOverride, onSetLocale: { applyLocaleChoice($0) },
                         size: readSize, onOpenChapter: { id, ch in
                 // 文章里的经文链接：切到读经 Tab 直接开章
                 guard let b = BibleCatalog.book(id: id) else { return }

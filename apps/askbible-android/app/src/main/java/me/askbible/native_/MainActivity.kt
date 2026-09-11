@@ -44,6 +44,13 @@ import me.askbible.native_.data.NatureScenes
 import me.askbible.native_.home.ReadingPlanStore
 import me.askbible.native_.data.PlanPlay
 import me.askbible.native_.data.PlanPointer
+import me.askbible.native_.ui.NavDrawer
+import me.askbible.native_.ui.OnboardingPrefs
+import me.askbible.native_.ui.WelcomeScreen
+import me.askbible.native_.ui.appVersionLabel
+import me.askbible.native_.ui.openSupportMail
+import me.askbible.native_.ui.syncDetailText
+import me.askbible.native_.data.MemberAuthRules
 import me.askbible.native_.ui.PlansListScreen
 import me.askbible.native_.ui.PlanDetailScreen
 import me.askbible.native_.ui.PlanPlayScreen
@@ -168,6 +175,10 @@ private fun RootScreen() {
     // 会员登录（Supabase 直连；RN MemberAuthProvider）；登录 / 注册页盖在整个壳上（RN 是 stack 路由，无底栏）
     val auth = remember { MemberAuthStore(context) }
     var authRoute by remember { mutableStateOf<String?>(null) }
+    /** 首页左上的用户菜单 */
+    var showMenu by remember { mutableStateOf(false) }
+    /** 首次打开的欢迎页（语言 + 登录），完成后写盘不再出 */
+    var showWelcome by remember { mutableStateOf(!OnboardingPrefs.completed(context)) }
     // 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
     var musicChromeHidden by remember { mutableStateOf(false) }
     // 浏览器 OAuth 回调：拿到 code 就换会话（RN useMemberAuthGoogleDeepLink）
@@ -294,6 +305,19 @@ private fun RootScreen() {
     val home = remember { HomeVerseController(context, scope) }
     // 首页金句跟当前读经版本走：内置译本读本机库，在线译本（含法语等）取该版本的正文
     LaunchedEffect(translation.id) { home.setSource(translation) }
+    // 切界面语言：探索页与首页左上菜单共用（RN applyLocaleWithTranslationPrefs：
+    // 语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；之后手动改译本不再受语言影响）
+    val applyLocaleChoice: (AppLocale?) -> Unit = { choice ->
+        val next = choice ?: systemLocale
+        AppLocale.current = next
+        localeOverride = choice
+        me.askbible.native_.data.AppLocalePrefs.write(context, choice)
+        val primary = AppLocale.primaryTranslationId(next)
+        ScriptureTranslation.find(primary)?.let { translation = it }
+        secondary = null
+        translationPrefs.write(translation, null)
+        home.setTranslation(primary, AppLocale.goldenVerseAudioTranslationId(next))
+    }
     val ambient = remember { AmbientPlayer(context, scope) }
     // 外部音频打断监听：永久失焦后外部声音一停 / 回到前台就把朗读 / 音乐叫回来
     LaunchedEffect(Unit) {
@@ -373,10 +397,11 @@ private fun RootScreen() {
 
     // 系统返回键按层级逐层收起：弹层 → 章页 → 回首页；到首页才真正退出。
     // Compose 弹层是普通 Box，不会自动接管返回键，不加这段整个 App 会直接被退出。
-    val backHandled = authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
+    val backHandled = showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
         pickingBook != null || openedBook != null || (tab == ShellTab.PLAN && planRoute != "play") || tab != ShellTab.HOME
     BackHandler(enabled = backHandled) {
         when {
+            showMenu -> showMenu = false
             authRoute != null -> authRoute = null
             showSleepSheet -> showSleepSheet = false
             xrefVerse != null -> xrefVerse = null
@@ -480,7 +505,7 @@ private fun RootScreen() {
                     if (music.isPlaying && music.track?.album == album) music.pause()
                     else { val wasPlaying = music.isPlaying; music.selectAlbum(album); if (!wasPlaying) music.toggle() }
                 },
-                onOpenMenu = {},
+                onOpenMenu = { showMenu = true },
             )
             ShellTab.MUSIC -> MusicScreen(player = music, onChromeHidden = { musicChromeHidden = it },
                 sleepActive = audio.sleepDeadlineMs != null || music.sleepDeadlineMs != null || home.sleepDeadlineMs != null || ambient.sleepDeadlineMs != null,
@@ -488,18 +513,6 @@ private fun RootScreen() {
             ShellTab.EXPLORE -> ExploreScreen(
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
-                localeOverride = localeOverride, onSetLocale = { choice ->
-                    // RN applyLocaleWithTranslationPrefs：语言、主译本（自动）、副译本清空、首页金句译本与朗读一起换；之后手动改译本不再受语言影响
-                    val next = choice ?: systemLocale
-                    AppLocale.current = next
-                    localeOverride = choice
-                    me.askbible.native_.data.AppLocalePrefs.write(context, choice)
-                    val primary = AppLocale.primaryTranslationId(next)
-                    ScriptureTranslation.find(primary)?.let { translation = it }
-                    secondary = null
-                    translationPrefs.write(translation, null)
-                    home.setTranslation(primary, AppLocale.goldenVerseAudioTranslationId(next))
-                },
                 activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
                 onOpenChapter = { id, ch ->
                     // 文章里的经文链接：切到读经 Tab 直接开章
@@ -659,6 +672,33 @@ private fun RootScreen() {
         when (authRoute) {
             "login" -> LoginScreen(auth, appLocale, onBack = { authRoute = null }, onRegister = { authRoute = "register" }, onDone = { authRoute = null })
             "register" -> RegisterScreen(auth, appLocale, onBack = { authRoute = null }, onLogin = { authRoute = "login" }, onDone = { authRoute = null })
+        }
+
+        NavDrawer(
+            open = showMenu,
+            locale = appLocale,
+            localeOverride = localeOverride,
+            userName = auth.user?.let { MemberAuthRules.shortAccountName(it.name.ifEmpty { it.email }) },
+            translationLabel = translation.label(appLocale),
+            syncDetail = if (auth.user == null) null else syncDetailText(syncEngine, appLocale),
+            versionLabel = appVersionLabel(context),
+            onSetLocale = applyLocaleChoice,
+            onOpenTranslations = { showMenu = false; showTranslationPanel = true },
+            onLogin = { showMenu = false; authRoute = "login" },
+            onRegister = { showMenu = false; authRoute = "register" },
+            onLogout = { showMenu = false; scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
+            onFeedback = { showMenu = false; openSupportMail(context) },
+            onClose = { showMenu = false },
+        )
+
+        if (showWelcome) {
+            WelcomeScreen(
+                auth = auth,
+                locale = appLocale,
+                localeOverride = localeOverride,
+                onSetLocale = applyLocaleChoice,
+                onDone = { OnboardingPrefs.complete(context); showWelcome = false },
+            )
         }
 
         pickingBook?.let { b ->

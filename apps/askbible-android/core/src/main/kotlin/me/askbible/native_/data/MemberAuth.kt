@@ -80,6 +80,16 @@ object MemberAuthRules {
 
     /** RN normalizeExploreDisplayName / isValidExploreDisplayName */
     fun normalizeDisplayName(raw: String): String = raw.trim().replace(Regex("\\s+"), " ")
+    /**
+     * 抬头 / 菜单里显示的账号名：没设昵称时 name 就是邮箱，整串太长（Josh 2026-09-10「超长，不好看」），
+     * 取 @ 前面那段，再长就截断。只用于显示，不进对拍规则。
+     */
+    fun shortAccountName(raw: String): String {
+        val n = normalizeDisplayName(raw)
+        val base = n.substringBefore('@')
+        return if (base.length > 14) base.take(13) + "\u2026" else base
+    }
+
     fun isValidDisplayName(raw: String): Boolean { val n = normalizeDisplayName(raw); return n.isNotEmpty() && n.length <= DISPLAY_NAME_MAX_LEN }
 
     /** 探索页抬头：登录了「你好，名字」，没登录「请登录，解锁更多」 */

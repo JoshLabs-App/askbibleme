@@ -13,7 +13,7 @@ enum ShellTab: String, CaseIterable, Identifiable {
         case .music: return MI.musicNote
         case .plan: return MCI.accountVoice
         case .read: return MI.menuBook
-        case .explore: return MI.person  // Josh 2026-09-10：探索页图标改成用户图标（RN 是 explore 罗盘）
+        case .explore: return MI.explore
         }
     }
 }

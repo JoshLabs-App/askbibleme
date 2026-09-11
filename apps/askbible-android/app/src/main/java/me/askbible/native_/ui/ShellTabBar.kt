@@ -78,7 +78,7 @@ fun ShellTabBar(
 
             Row(Modifier.weight(2f), horizontalArrangement = Arrangement.SpaceBetween) {
                 TabButton(MI.MENU_BOOK, selected == ShellTab.READ, Modifier.weight(1f)) { onSelect(ShellTab.READ) }
-                TabButton(MI.PERSON /* Josh 2026-09-10：探索页图标改成用户图标 */, selected == ShellTab.EXPLORE, Modifier.weight(1f)) { onSelect(ShellTab.EXPLORE) }
+                TabButton(MI.EXPLORE, selected == ShellTab.EXPLORE, Modifier.weight(1f)) { onSelect(ShellTab.EXPLORE) }
             }
         }
     }

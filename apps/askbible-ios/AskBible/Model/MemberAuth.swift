@@ -87,6 +87,14 @@ enum MemberAuthRules {
     }
 
     /// 探索页抬头：登录了「你好，名字」，没登录「请登录，解锁更多」
+    /// 抬头 / 菜单里显示的账号名：没设昵称时 name 就是邮箱，整串太长（Josh 2026-09-10「超长，不好看」），
+    /// 取 @ 前面那段，再长就截断。只用于显示，不进对拍规则。
+    static func shortAccountName(_ raw: String) -> String {
+        let n = normalizeDisplayName(raw)
+        let base = n.contains("@") ? String(n.prefix(while: { $0 != "@" })) : n
+        return base.count > 14 ? String(base.prefix(13)) + "\u{2026}" : base
+    }
+
     static func greeting(_ user: MemberUser?) -> String {
         guard let user else { return "请登录，解锁更多" }
         let n = normalizeDisplayName(user.name)

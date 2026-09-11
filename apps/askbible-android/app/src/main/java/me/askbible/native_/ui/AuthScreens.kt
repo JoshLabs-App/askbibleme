@@ -118,7 +118,7 @@ fun RegisterScreen(auth: MemberAuthStore, locale: AppLocale, onBack: () -> Unit,
 
 /** RN MemberGoogleSignInButton + MemberAuthMethodDivider（登录 / 注册页共用）：按钮 → 行内错误 → 「或」分隔 */
 @Composable
-private fun SocialSignInButtons(auth: MemberAuthStore, locale: AppLocale, theme: Parchment, googleError: String?, setGoogleError: (String?) -> Unit, onDone: () -> Unit) {
+fun SocialSignInButtons(auth: MemberAuthStore, locale: AppLocale, theme: Parchment, googleError: String?, setGoogleError: (String?) -> Unit, onDone: () -> Unit) {
     val context = LocalContext.current
     val result = auth.oauthResult
     LaunchedEffect(result) {
@@ -210,7 +210,7 @@ private fun AuthPage(locale: AppLocale, title: String, onBack: () -> Unit, theme
 }
 
 @Composable
-private fun AuthField(label: String, value: String, onChange: (String) -> Unit, locale: AppLocale, theme: Parchment, keyboard: KeyboardType, secure: Boolean = false) {
+fun AuthField(label: String, value: String, onChange: (String) -> Unit, locale: AppLocale, theme: Parchment, keyboard: KeyboardType, secure: Boolean = false) {
     Text(locale.zh(label), Modifier.padding(top = 10.dp), color = theme.muted.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
     Spacer(Modifier.height(10.dp))
     BasicTextField(
@@ -226,12 +226,12 @@ private fun AuthField(label: String, value: String, onChange: (String) -> Unit, 
 }
 
 @Composable
-private fun AuthErrorText(text: String, locale: AppLocale) {
+fun AuthErrorText(text: String, locale: AppLocale) {
     Text(SiteCopy.localizeKnown(text, locale), Modifier.fillMaxWidth().padding(top = 8.dp), color = Color(0xFFB42318), fontSize = 13.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
 }
 
 @Composable
-private fun AuthSubmit(title: String, pending: Boolean, locale: AppLocale, theme: Parchment, onClick: () -> Unit) {
+fun AuthSubmit(title: String, pending: Boolean, locale: AppLocale, theme: Parchment, onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().padding(top = 16.dp).heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
             .background(Color(0x1A1C1410)).alpha(if (pending) 0.55f else 1f).clickableNoRipple(onClick),

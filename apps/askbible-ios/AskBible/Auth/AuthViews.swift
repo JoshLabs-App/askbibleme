@@ -238,7 +238,8 @@ private struct AuthPage<Content: View>: View {
     }
 }
 
-private struct AuthField: View {
+/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
+struct AuthField: View {
     let label: String
     @Binding var text: String
     let locale: AppLocale
@@ -265,7 +266,8 @@ private struct AuthField: View {
     }
 }
 
-private struct AuthErrorText: View {
+/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
+struct AuthErrorText: View {
     let text: String
     let locale: AppLocale
     init(_ text: String, locale: AppLocale) { self.text = text; self.locale = locale }
@@ -275,7 +277,8 @@ private struct AuthErrorText: View {
     }
 }
 
-private struct AuthSubmit: View {
+/// 欢迎页也要用这几块（原本只给登录 / 注册页），所以不再 private
+struct AuthSubmit: View {
     let title: String
     let pending: Bool
     let locale: AppLocale

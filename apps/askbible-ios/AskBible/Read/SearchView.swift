@@ -35,6 +35,7 @@ struct SearchView: View {
                     Button(action: onBack) {
                         Image(systemName: "chevron.left").font(.system(size: 22, weight: .semibold))
                             .foregroundStyle(theme.ink).frame(width: 44, height: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 

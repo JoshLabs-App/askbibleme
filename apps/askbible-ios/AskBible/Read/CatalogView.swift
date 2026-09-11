@@ -158,6 +158,8 @@ struct ChapterPickerSheet: View {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(theme.ink)
+                            .frame(width: 44, height: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     Text(bookLabel(book))
@@ -357,6 +359,7 @@ struct TranslationPanel: View {
                 if !q.isEmpty {
                     Button { query.wrappedValue = "" } label: {
                         Image(systemName: "xmark.circle.fill").font(.system(size: 14)).foregroundStyle(theme.faint)
+                            .frame(width: 32, height: 32).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }

@@ -341,6 +341,9 @@ struct ChapterView: View {
                 .foregroundStyle(Color.white)
                 .frame(width: ShellMetrics.topChromeButton, height: ShellMetrics.topChromeButton)
                 .shellIconShadow()
+                // SF Symbol 只有笔画本身可点：不补这一句，50×50 里只有细细的箭头能点中
+                // （Josh 2026-09-10 真机「今日读经进章后返回退不回去」）
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

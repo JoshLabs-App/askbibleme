@@ -13,7 +13,7 @@
 
 | 步 | 文件 | 用途 |
 |----|------|------|
-| 1 | 本文 `docs/AI_HANDOFF.md` | 边界、地图、命令、当前状态 |
+| 1 | 本文 `docs/HANDOFF.md` | 边界、地图、命令、当前状态 |
 | 2 | `AGENTS.md`（仓库根） | 产品哲学与工作方式真源 |
 | 3 | `/Users/joshua/Desktop/APP/skills/joshlabs-dev/SKILL.md` | 通用开发流程（最小闭环、不擅自扩功能） |
 | 4 | `.cursor/rules/*.mdc` | 领域硬规则（按任务只读相关条） |
@@ -75,7 +75,7 @@
 01AskBible/
 ├── AGENTS.md                 # 产品边界真源
 ├── docs/                     # 产品文档 + 本交接文 + 移动端运维
-│   ├── AI_HANDOFF.md         # ← 你在这里
+│   ├── HANDOFF.md         # ← 你在这里
 │   ├── 01–11-*.md            # 愿景 / 原则 / MVP / 危险方向 / parking lot / 模块边界
 │   ├── mobile-feature-map.md # App 进屏路径（验收必读）
 │   ├── mobile-*.md           # 发版 / Maestro / 媒体 / 构建产物
@@ -265,7 +265,7 @@ Maestro 真源：`docs/mobile-maestro-auto-merge.md`。GitHub Linux CI **不跑*
 
 ```text
 你在仓库 /Users/joshua/Desktop/APP/01AskBible。
-先读 docs/AI_HANDOFF.md，再读 AGENTS.md 与 joshlabs-dev skill。
+先读 docs/HANDOFF.md，再读 AGENTS.md 与 joshlabs-dev skill。
 产品：AskBible.me = 安静进圣经的入口，不是 Bible tool / chatbot / 游戏化。
 平台：iOS → Android → Web；App 在 apps/askbible-mobile。
 硬禁：不擅自扩功能；禁止 EAS 云构建；媒体不走 askbible.me 增量；PAD 默认关；未要求不 commit/push。

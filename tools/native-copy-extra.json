@@ -291,5 +291,17 @@
   "native.welcomeTitle": {
     "zh": "欢迎使用 AskBible",
     "en": "Welcome to AskBible"
+  },
+  "native.favoritesMore": {
+    "zh": "更多",
+    "en": "See all"
+  },
+  "native.noFavorites": {
+    "zh": "还没有收藏",
+    "en": "No favorites yet"
+  },
+  "native.verseMultiCopy": {
+    "zh": "多选复制",
+    "en": "Copy several"
   }
 }

@@ -76,6 +76,12 @@ fun ExploreScreen(
     onOpenArticle: (ExploreArticle?) -> Unit = {},
     /** 文章里的经文链接 → 读经 Tab 打开那一章 */
     onOpenChapter: (bookId: String, chapter: Int) -> Unit = { _, _ -> },
+    /** 收藏（Josh 2026-09-11「探索里要放收藏，前 3 条 + 更多」） */
+    favorites: List<me.askbible.native_.data.VerseBookmark> = emptyList(),
+    /** 点一条收藏 → 打开那一节 */
+    onOpenVerse: (String, Int, Int) -> Unit = { _, _, _ -> },
+    /** 「更多」→ 收藏页 */
+    onOpenFavorites: () -> Unit = {},
     /** 会员状态：抬头「请登录，解锁更多」→ 登录页；登录后「你好，名字」→ 改称呼 */
     auth: MemberAuthStore? = null,
     locale: AppLocale = AppLocale.ZH_CN,
@@ -194,6 +200,38 @@ fun ExploreScreen(
                         Text(SiteCopy.t("native.noReadingRecord", locale), Modifier.fillMaxWidth().height(38.dp), color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
                     }
                 }
+                // 收藏：最近 3 条 + 「更多」（Josh 2026-09-11「探索里要放收藏」）；点一条跳到那一节
+                Spacer(Modifier.height(20.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 26.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(SiteCopy.t("pages.read.favoritesTitle", locale), Modifier.weight(1f),
+                         color = theme.faint.toColor(), fontSize = 15.sp)
+                    if (favorites.size > 3) {
+                        Text(SiteCopy.t("native.favoritesMore", locale),
+                             Modifier.clickableNoRipple(onOpenFavorites).padding(4.dp),
+                             color = theme.muted.toColor(), fontSize = 14.sp)
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Column(Modifier.padding(horizontal = 26.dp)) {
+                    for (b in favorites.take(3)) {
+                        val name = BibleCatalog.book(b.bookId)?.name(locale) ?: locale.zh(b.bookName)
+                        Column(Modifier.fillMaxWidth().clickableNoRipple { onOpenVerse(b.bookId, b.chapter, b.verse) }
+                                   .padding(vertical = 8.dp)) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text("$name ${b.chapter}:${b.verse}", Modifier.weight(1f),
+                                     color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                Text("\u203A", color = theme.faint.toColor().copy(alpha = 0.58f), fontSize = 24.sp, lineHeight = 24.sp)
+                            }
+                            Text(locale.zh(b.text), color = theme.muted.toColor(), fontSize = 14.sp,
+                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    if (favorites.isEmpty()) {
+                        Text(SiteCopy.t("native.noFavorites", locale), Modifier.fillMaxWidth().height(38.dp),
+                             color = theme.faint.toColor(), fontSize = 15.sp, textAlign = TextAlign.Center)
+                    }
+                }
+
                 // 九宫格功能块（欢迎 / 读经计划 / 圣经人物…）按 Josh 的决定只留网站，App 暂不放（2026-09-09）
                 // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
                 Spacer(Modifier.height((36 + 8 + 16 + 8).dp))

@@ -150,13 +150,13 @@ fun PlaybackDock(
 
                     Box(
                         Modifier.size(ShellMetrics.loopButtonSize.dp).clip(CircleShape)
-                            .background(if (audio.loopMode != LoopMode.OFF) Color(0x1A5C4030) else Color.Transparent)
+                            .background(if (audio.loopMode != LoopMode.FORWARD) Color(0x1A5C4030) else Color.Transparent)
                             .clickableNoRipple { audio.cycleLoop() },
                         contentAlignment = Alignment.Center,
                     ) {
                         RepeatGlyph(
-                            one = audio.loopMode == LoopMode.CHAPTER,
-                            color = if (audio.loopMode == LoopMode.OFF) theme.muted.toColor() else ink,
+                            badge = audio.loopMode.badge,
+                            color = if (audio.loopMode == LoopMode.FORWARD) theme.muted.toColor() else ink,
                             size = ShellMetrics.loopIconSize,
                         )
                     }
@@ -206,7 +206,8 @@ fun SpeedRateImage(rate: Double, color: Color) {
 
 /** RN `MusicRepeatAllIcon` / `MusicRepeatOneIcon`（react-native-svg 手绘）：24 格里两段圆角箭头，描边 1.6 圆头；单章版中间一个 8sp 粗体 "1" */
 @Composable
-fun RepeatGlyph(one: Boolean, color: Color, size: Float = 24f) {
+/** 角标：本章「1」、本书「B」、继续往前 null */
+fun RepeatGlyph(badge: String?, color: Color, size: Float = 24f) {
     val s = size / 24f
     Box(Modifier.size(size.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(size.dp)) {
@@ -226,8 +227,8 @@ fun RepeatGlyph(one: Boolean, color: Color, size: Float = 24f) {
             }
             drawPath(p, color, style = Stroke(width = 1.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
-        if (one) {
-            Text("1", color = color, fontSize = (8 * s).sp, fontWeight = FontWeight.Bold,
+        if (badge != null) {
+            Text(badge, color = color, fontSize = (8 * s).sp, fontWeight = FontWeight.Bold,
                  modifier = Modifier.offset(y = (0.3f * s).dp))
         }
     }

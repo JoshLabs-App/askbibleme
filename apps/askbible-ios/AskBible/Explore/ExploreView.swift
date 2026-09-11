@@ -14,6 +14,12 @@ struct ExploreView: View {
     /// 退出登录（先把本机进度推上云端再清本机，由壳接线）
     var onSignOut: () -> Void = {}
     var size: ReadSize = .default
+    /// 收藏（Josh 2026-09-11「探索里要放收藏，前 3 条 + 更多」）
+    @ObservedObject var bookmarks: VerseBookmarkStore
+    /// 点一条收藏 → 打开那一节
+    var onOpenVerse: (_ bookId: String, _ chapter: Int, _ verse: Int) -> Void = { _, _, _ in }
+    /// 「更多」→ 收藏页
+    var onOpenFavorites: () -> Void = {}
     /// 文章里的经文链接 → 读经 Tab 打开那一章
     var onOpenChapter: (_ bookId: String, _ chapter: Int) -> Void = { _, _ in }
 
@@ -108,6 +114,8 @@ struct ExploreView: View {
                         .padding(.top, 8)
 
 
+                        favoritesBlock
+
                         // 查经资料：RN 探索格子里的精选文章（section 上 36 + 8，格子上 16 + 8，3 列 gap 10）
                         articleGrid(width: geo.size.width)
                             .padding(.top, 36 + 8 + 16 + 8)
@@ -172,6 +180,67 @@ struct ExploreView: View {
         let name = BibleCatalog.book(id: item.bookId)?.name(locale) ?? locale.zh(item.bookName)
         return isEn ? "\(name) \(item.chapter)" : SiteCopy.f("native.chapterUnit", ["bookName": name, "chapter": "\(item.chapter)"], locale)
     }
+    /// 收藏：最近 3 条 + 「更多」；点一条直接跳到那一节
+    private var favoritesBlock: some View {
+        let list = bookmarks.list
+        return VStack(spacing: 0) {
+            HStack {
+                Text(SiteCopy.t("pages.read.favoritesTitle", locale))
+                    .font(.system(size: 15))
+                    .foregroundStyle(theme.faint)
+                Spacer()
+                if list.count > 3 {
+                    Button(action: onOpenFavorites) {
+                        Text(SiteCopy.t("native.favoritesMore", locale))
+                            .font(.system(size: 14))
+                            .foregroundStyle(theme.muted)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.top, 20)
+
+            VStack(spacing: 0) {
+                ForEach(list.prefix(3)) { b in
+                    Button { onOpenVerse(b.bookId, b.chapter, b.verse) } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                Text(favoriteRef(b))
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(theme.ink)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(theme.muted.opacity(0.5))
+                            }
+                            Text(locale.zh(b.text))
+                                .font(.system(size: 14))
+                                .foregroundStyle(theme.muted)
+                                .lineLimit(1)
+                        }
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                if list.isEmpty {
+                    Text(SiteCopy.t("native.noFavorites", locale))
+                        .font(.system(size: 15)).foregroundStyle(theme.faint)
+                        .frame(maxWidth: .infinity).frame(height: 38)
+                }
+            }
+            .padding(.top, 4)
+        }
+        .padding(.horizontal, 26)
+    }
+
+    /// 「哥林多后书 10:12」/「2 Corinthians 10:12」
+    private func favoriteRef(_ b: VerseBookmark) -> String {
+        let name = BibleCatalog.book(id: b.bookId)?.name(locale) ?? locale.zh(b.bookName)
+        return "\(name) \(b.chapter):\(b.verse)"
+    }
+
     /// 抬头：登录了「你好，名字」，没登录「请登录，解锁更多」（MemberAuthRules.greeting 的三语版）
     private var greetingText: String {
         guard let user = auth.user else { return SiteCopy.t("native.authGreetingGuest", locale) }

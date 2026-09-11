@@ -114,6 +114,8 @@ struct RootView: View {
     @State private var focusVerse: Int?
     /// 长按弹出操作单的那节；收藏 / 复制后的轻提示
     @State private var actionVerse: LoadedVerse?
+    /// 多节选择（章页底部条），空集合 = 不在选择态
+    @State private var selectedVerses: Set<Int> = []
     @State private var toast: String?
     @State private var toastTask: Task<Void, Never>?
     @State private var showSleepSheet = false
@@ -149,11 +151,16 @@ struct RootView: View {
             }
             return
         }
-        guard let opened = openedChapter else { return }
+        guard let opened = audioTarget else { return }
         let count = store.chapterCount(translationId: store.translation.id, bookId: opened.book.id)
         let limit = count > 0 ? count : opened.book.chapterCount
-        guard opened.chapter < limit else { return }
-        openedChapter = (opened.book, opened.chapter + 1)
+        // 本书循环：读到末章回本书第 1 章；继续往前：到末章就停
+        let nextChapter: Int
+        if opened.chapter < limit { nextChapter = opened.chapter + 1 }
+        else if audio.loopMode == .book { nextChapter = 1 }
+        else { return }
+        if openedChapter != nil { openedChapter = (opened.book, nextChapter) }
+        else { listenChapter = (opened.book, nextChapter); audio.resume() }
     }
 
     /// 睡眠定时：首页定时角标与音乐页睡眠单同一份分钟数，四路播放器一起设（0 = 关）
@@ -178,6 +185,20 @@ struct RootView: View {
     private func copyVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
         UIPasteboard.general.string = VerseShareText.clipboard(bookName: opened.book.name(displayLocale), chapter: opened.chapter, verse: v.number, text: v.text)
         showToast(SiteCopy.t("pages.read.verseCopied", appLocale))
+    }
+
+    /// 多节复制：按节号顺序，每节一行「书名 章:节 正文」（RN copySelectedVerses）
+    private func copySelectedVerses(in opened: (book: BookRef, chapter: Int)) {
+        guard !selectedVerses.isEmpty else { return }
+        let name = bookLabel(opened.book)
+        let lines = selectedVerses.sorted().compactMap { v -> String? in
+            guard let text = store.verseText(translationId: store.translation.id, bookId: opened.book.id,
+                                             chapter: opened.chapter, verse: v) else { return nil }
+            return "\(name) \(opened.chapter):\(v) \(displayLocale.zh(text))"
+        }
+        UIPasteboard.general.string = lines.joined(separator: "\n")
+        showToast(SiteCopy.f("pages.read.verseSelectionCopied", ["count": "\(selectedVerses.count)"], appLocale))
+        selectedVerses = []
     }
 
     private func shareVerse(_ v: LoadedVerse, in opened: (book: BookRef, chapter: Int)) {
@@ -376,9 +397,12 @@ struct RootView: View {
                 // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
                 // 首页最多两路同时出声（RN homeGoldenVerseTwoSourceMutex）：
                 // 开音乐 / 开金句时另外两路都在 → 关环境音；开环境音时人声与音乐都在 → 停音乐。
-                audio.onWillPlay = { [weak music, weak home] in music?.pause(); home?.stopVoice() }
+                // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
+                audio.onWillPlay = { [weak music, weak home] in music?.setDucked(true); home?.stopVoice() }
+                audio.onStopped = { [weak music] in music?.setDucked(false) }
                 music.onWillPlay = { [weak audio, weak home, weak ambient] in
-                    audio?.pause()
+                    // 音乐起播时朗读在放 → 保持两路，音乐压低
+                    music.setDucked(audio?.isPlaying ?? false)
                     if home?.voiceOn == true, ambient?.isOn == true { ambient?.stop() }
                 }
                 home.player.onWillPlay = { [weak audio, weak music, weak ambient] in
@@ -491,6 +515,7 @@ struct RootView: View {
                     onCopy: { copyVerse(v, in: opened); actionVerse = nil },
                     onBookmark: { toggleBookmark(v, in: opened); actionVerse = nil },
                     onShare: { shareVerse(v, in: opened); actionVerse = nil },
+                    onMultiCopy: { selectedVerses = [v.number]; actionVerse = nil },
                     onClose: { actionVerse = nil }
                 )
             }
@@ -614,6 +639,7 @@ struct RootView: View {
                     chapter: opened.chapter,
                     size: $readSize,
                     onBack: {
+                        selectedVerses = []
                         openedChapter = nil
                         // 从计划页进来的章页：回计划 Tab、不停播（RN 返回上一页仍在放）
                         if chapterFromPlan {
@@ -632,6 +658,12 @@ struct RootView: View {
                     onOpenFavorites: { showFavorites = true },
                     onDoubleTapVerse: { v in toggleBookmark(v, in: opened) },
                     onLongPressVerse: { v in actionVerse = v },
+                    selectedVerses: $selectedVerses,
+                    onToggleSelection: { v in
+                        if selectedVerses.contains(v) { selectedVerses.remove(v) } else { selectedVerses.insert(v) }
+                    },
+                    onCopySelection: { copySelectedVerses(in: opened) },
+                    onClearSelection: { selectedVerses = [] },
                     onOpenCatalog: { openedChapter = nil; openedBook = nil; planFlowActive = false; listenChapter = nil; chapterFromPlan = false },
                     onNavigate: { id, ch in
                         // 结尾的上一章 / 下一章：手动翻页就退出计划流
@@ -711,7 +743,19 @@ struct RootView: View {
         case .explore:
             ExploreView(article: $exploreArticle, auth: auth, activity: activity, locale: appLocale, onOpenLogin: { authRoute = .login },
                         onSignOut: { Task { await sync.prepareSignOut(); auth.signOut() } },
-                        size: readSize, onOpenChapter: { id, ch in
+                        size: readSize,
+                        bookmarks: bookmarks,
+                        onOpenVerse: { id, ch, verse in
+                            // 探索页的收藏：跳到读经 Tab 的那一节
+                            guard let b = BibleCatalog.book(id: id) else { return }
+                            planFlowActive = false; listenChapter = nil; chapterFromPlan = false
+                            openedBook = nil
+                            focusVerse = verse
+                            openedChapter = (b, ch)
+                            tab = .read
+                        },
+                        onOpenFavorites: { showFavorites = true; tab = .read },
+                        onOpenChapter: { id, ch in
                 // 文章里的经文链接：切到读经 Tab 直接开章
                 guard let b = BibleCatalog.book(id: id) else { return }
                 planFlowActive = false; listenChapter = nil; chapterFromPlan = false

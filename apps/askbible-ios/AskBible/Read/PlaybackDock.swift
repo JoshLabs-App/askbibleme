@@ -93,13 +93,13 @@ struct PlaybackDock: View {
                 playButton
 
                 Button { audio.cycleLoop() } label: {
-                    RepeatGlyph(one: audio.loopMode == .chapter,
-                                color: audio.loopMode == .off ? theme.muted : theme.ink,
+                    RepeatGlyph(badge: audio.loopMode.badge,
+                                color: audio.loopMode == .forward ? theme.muted : theme.ink,
                                 size: ShellMetrics.loopIconSize)
                         .frame(width: ShellMetrics.loopButtonSize, height: ShellMetrics.loopButtonSize)
                         .background {
                             // loopBtnOn: rgba(92, 64, 48, 0.1)
-                            if audio.loopMode != .off {
+                            if audio.loopMode != .forward {
                                 Circle().fill(Color(rgb: 0x5c4030, opacity: 0.1))
                             }
                         }
@@ -184,7 +184,8 @@ struct SpeedRateImage: View {
 
 /// RN `MusicRepeatAllIcon` / `MusicRepeatOneIcon`（react-native-svg 手绘）：24 格里两段圆角箭头，描边 1.6 圆头；单章版中间一个 8pt 粗体 "1"
 struct RepeatGlyph: View {
-    var one: Bool
+    /// 角标：本章「1」、本书「B」、继续往前 nil
+    var badge: String?
     var color: Color
     var size: CGFloat = 24
 
@@ -207,8 +208,8 @@ struct RepeatGlyph: View {
             .applying(CGAffineTransform(scaleX: s, y: s))
             .stroke(color, style: StrokeStyle(lineWidth: 1.6 * s, lineCap: .round, lineJoin: .round))
 
-            if one {
-                Text("1")
+            if let badge {
+                Text(badge)
                     .font(.system(size: 8 * s, weight: .bold))
                     .foregroundStyle(color)
                     .position(x: 12 * s, y: 12.3 * s)

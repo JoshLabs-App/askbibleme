@@ -9,19 +9,31 @@ import MediaPlayer
 /// 这里播放状态就是唯一那一份，SwiftUI 直接订阅，没有跨语言镜像可漂移。
 /// 循环模式。与 RN 版 `ReadScripturePlaybackDock` 的 LoopMode 一致：
 /// off → chapter（单章循环）→ all（顺延整卷）→ off。
+/// 播放坞的循环键三档（Josh 2026-09-11）：
+/// `chapter` 重复本章、`book` 重复本书（读到本书末回到第 1 章）、`forward` 继续往前（默认）。
+/// `forward` 下如果在读经计划流里就跟计划池走，否则顺到下一章。
 enum LoopMode: String, CaseIterable {
-    case off, chapter, all
+    case forward, chapter, book
 
     var next: LoopMode {
         switch self {
-        case .off: return .chapter
-        case .chapter: return .all
-        case .all: return .off
+        case .forward: return .chapter
+        case .chapter: return .book
+        case .book: return .forward
         }
     }
 
     var symbol: String {
         self == .chapter ? "repeat.1" : "repeat"
+    }
+
+    /// 循环键上的小角标：本章「1」、本书「卷」、继续往前不标
+    var badge: String? {
+        switch self {
+        case .chapter: return "1"
+        case .book: return "B"
+        case .forward: return nil
+        }
     }
 }
 
@@ -35,7 +47,7 @@ final class ChapterAudioPlayer: ObservableObject {
     @Published var rate: Float = 1.0 {
         didSet { if isPlaying { player?.rate = rate } }
     }
-    @Published var loopMode: LoopMode = .off
+    @Published var loopMode: LoopMode = .forward
     /// 被来电之类打断时置位：停播但不清「想听」的意图，打断结束才续播。
     /// 对应 RN 版 `shellAudioInterruption.ts`，那边要靠原生发 DeviceEventEmitter 事件桥回 JS。
     @Published private(set) var interrupted = false
@@ -73,6 +85,8 @@ final class ChapterAudioPlayer: ObservableObject {
 
     /// 开播前先让别的播放器（音乐）停下：两个播放器不能同时出声
     var onWillPlay: (() -> Void)?
+    /// 朗读停下来（暂停 / 播完 / 换章卸载）时通知壳：音乐可以把音量还原
+    var onStopped: (() -> Void)?
 
     init() {
         configureSession()
@@ -235,16 +249,10 @@ final class ChapterAudioPlayer: ObservableObject {
                     // 单章循环：回到开头继续，不动章号
                     self.seek(to: 0)
                     self.resume()
-                case .all:
+                case .book, .forward:
+                    // 往下走由壳决定：计划流跟计划池，否则下一章；本书循环读到末章回本书第 1 章
                     self.currentTime = self.duration
                     self.onSkipNext?()
-                case .off:
-                    self.isPlaying = false
-                    self.wantsPlayback = false
-                    self.currentTime = self.duration
-                    self.activeVerse = nil
-                    self.updateNowPlaying()
-                    self.onFinished?()
                 }
             }
         }
@@ -280,6 +288,7 @@ final class ChapterAudioPlayer: ObservableObject {
         player?.pause()
         isPlaying = false
         updateNowPlaying()
+        onStopped?()
     }
 
     func cycleLoop() {

@@ -215,7 +215,7 @@ struct MusicView: View {
         Button(action: action) {
             ZStack {
                 Circle().fill(.white.opacity(on ? 0.14 : 0))
-                RepeatGlyph(one: one, color: .white.opacity(on ? 1 : 0.48), size: ShellMetrics.loopIconSize)
+                RepeatGlyph(badge: one ? "1" : nil, color: .white.opacity(on ? 1 : 0.48), size: ShellMetrics.loopIconSize)
             }
             .frame(width: 44, height: 44).contentShape(Rectangle())
         }

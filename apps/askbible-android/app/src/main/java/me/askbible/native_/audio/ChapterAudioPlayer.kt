@@ -22,9 +22,14 @@ import kotlinx.coroutines.launch
 import me.askbible.native_.data.VerseTiming
 import me.askbible.native_.data.VerseTimingLookup
 
-/** 循环模式。与 iOS 的 LoopMode、RN 的 ReadScripturePlaybackDock 一致。 */
-enum class LoopMode { OFF, CHAPTER, ALL;
-    val next: LoopMode get() = when (this) { OFF -> CHAPTER; CHAPTER -> ALL; ALL -> OFF }
+/**
+ * 播放坞的循环键三档（Josh 2026-09-11）：CHAPTER 重复本章、BOOK 重复本书（读到本书末回第 1 章）、
+ * FORWARD 继续往前（默认；在读经计划流里跟计划池走，否则顺到下一章）。与 iOS 的 LoopMode 一致。
+ */
+enum class LoopMode { FORWARD, CHAPTER, BOOK;
+    val next: LoopMode get() = when (this) { FORWARD -> CHAPTER; CHAPTER -> BOOK; BOOK -> FORWARD }
+    /** 循环键上的小角标：本章「1」、本书「B」、继续往前不标 */
+    val badge: String? get() = when (this) { CHAPTER -> "1"; BOOK -> "B"; FORWARD -> null }
 }
 
 /**
@@ -53,7 +58,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     var duration by mutableStateOf(0.0); private set
     var errorMessage by mutableStateOf<String?>(null); private set
     var activeVerse by mutableStateOf<Int?>(null); private set
-    var loopMode by mutableStateOf(LoopMode.OFF); private set
+    var loopMode by mutableStateOf(LoopMode.FORWARD); private set
     var rate by mutableStateOf(1.0f); private set
 
     var onSkipNext: (() -> Unit)? = null
@@ -86,6 +91,8 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
 
     /** 开播前先让别的播放器（音乐）停下：两个播放器不能同时出声 */
     var onWillPlay: (() -> Unit)? = null
+    /** 朗读停下来（暂停 / 播完 / 换章卸载）时通知壳：音乐可以把音量还原 */
+    var onStopped: (() -> Unit)? = null
 
     init {
         // handleAudioFocus=true：来电等打断时 ExoPlayer 自动暂停，结束后按需恢复
@@ -177,7 +184,7 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
         player.playbackParameters = player.playbackParameters.withSpeed(rate)
     }
 
-    fun pause() { wantsPlayback = false; focusLost = false; player.playWhenReady = false }
+    fun pause() { wantsPlayback = false; focusLost = false; player.playWhenReady = false; onStopped?.invoke() }
 
     /** 外部声音停了 / 回到前台：永久失焦停掉的、还想播的，叫回来（RN tryResumeScriptureAfterInterruption） */
     fun recoverAfterInterruption() {
@@ -253,8 +260,8 @@ class ChapterAudioPlayer(context: Context, private val scope: CoroutineScope) {
     private fun onEnded() {
         when (loopMode) {
             LoopMode.CHAPTER -> { seekTo(0.0); resume() }
-            LoopMode.ALL -> { currentTime = duration; onSkipNext?.invoke() }
-            LoopMode.OFF -> { currentTime = duration; activeVerse = null; onFinished?.invoke() }
+            // 往下走由壳决定：计划流跟计划池，否则下一章；本书循环读到末章回本书第 1 章
+            LoopMode.BOOK, LoopMode.FORWARD -> { currentTime = duration; onSkipNext?.invoke() }
         }
     }
 

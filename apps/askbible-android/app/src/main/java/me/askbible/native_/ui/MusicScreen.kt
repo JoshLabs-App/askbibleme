@@ -226,6 +226,6 @@ fun MusicScreen(player: MusicPlayer, sleepActive: Boolean = false, onSleepTimer:
 private fun LoopButton(one: Boolean, on: Boolean, onClick: () -> Unit) {
     Box(Modifier.size(44.dp).clip(CircleShape).background(if (on) Color(0x24FFFFFF) else Color.Transparent)
         .clickableNoRipple(onClick), contentAlignment = Alignment.Center) {
-        RepeatGlyph(one = one, color = if (on) Color.White else Color(0x7AFFFFFF), size = ShellMetrics.loopIconSize)
+        RepeatGlyph(badge = if (one) "1" else null, color = if (on) Color.White else Color(0x7AFFFFFF), size = ShellMetrics.loopIconSize)
     }
 }

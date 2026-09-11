@@ -28,6 +28,11 @@ class ScriptureDatabase private constructor(
     private val db: SQLiteDatabase,
 ) {
     companion object {
+        /** `CASE book_id WHEN 'GEN' THEN 0 … END`：把创世记→启示录的卷序交给 SQLite 排 */
+        private val bookOrderSql: String by lazy {
+            val cases = BibleCatalog.all.withIndex().joinToString(" ") { (i, b) -> "WHEN '${b.id}' THEN $i" }
+            "CASE book_id $cases ELSE 999 END"
+        }
         private val BOOK_RE = Regex("^[A-Z0-9]{2,8}$")
 
         fun open(context: Context, translationId: String): ScriptureDatabase? {
@@ -101,7 +106,9 @@ class ScriptureDatabase private constructor(
 
     /**
      * searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约先取 120 再按卷过滤；最多 40 条。
-     * 排序照 RN：ORDER BY book_id, chapter, verse（book_id 是字符串序，RN 就是这么排的，对齐它）。与 iOS 的 ScriptureDatabase.search 对等。
+     * 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：RN 是 `ORDER BY book_id`，
+     * book_id 是字符串，排出来「1CO」在「GEN」前面。这里把卷序做成 CASE 表达式交给 SQLite，
+     * 顺序正确的同时 LIMIT 截出来的也是靠前的卷，不是字母靠前的卷。与 iOS 的 ScriptureDatabase.search 对等。
      */
     fun search(raw: String, scope: ScriptureSearchScope, chapterRef: SearchChapterRef?): List<ScriptureSearchHit> {
         val q = ScriptureSearchRules.normalize(raw)
@@ -113,7 +120,7 @@ class ScriptureDatabase private constructor(
             "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' AND book_id = ? AND chapter = ? ORDER BY verse LIMIT ?",
             arrayOf(like, chapterRef.bookId, chapterRef.chapter.toString(), ScriptureSearchRules.LIMIT.toString()))
         else db.rawQuery(
-            "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' ORDER BY book_id, chapter, verse LIMIT ?",
+            "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' ORDER BY $bookOrderSql, chapter, verse LIMIT ?",
             arrayOf(like, (if (scope == ScriptureSearchScope.ALL) ScriptureSearchRules.LIMIT else ScriptureSearchRules.SCOPED_FETCH_LIMIT).toString()))
         cursor.use { c -> while (c.moveToNext()) rows.add(arrayOf(c.getString(0) ?: "", c.getInt(1), c.getInt(2), c.getString(3) ?: "")) }
         val filtered = if (scope == ScriptureSearchScope.CHAPTER) rows else rows.filter {

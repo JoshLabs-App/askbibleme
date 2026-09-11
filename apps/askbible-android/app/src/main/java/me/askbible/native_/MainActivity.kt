@@ -45,11 +45,13 @@ import me.askbible.native_.home.ReadingPlanStore
 import me.askbible.native_.data.PlanPlay
 import me.askbible.native_.data.PlanPointer
 import me.askbible.native_.ui.NavDrawer
+import me.askbible.native_.ui.VerseSelectionSheet
 import me.askbible.native_.ui.OnboardingPrefs
 import me.askbible.native_.ui.WelcomeScreen
 import me.askbible.native_.ui.appVersionLabel
 import me.askbible.native_.ui.openSupportMail
 import me.askbible.native_.ui.syncDetailText
+import me.askbible.native_.audio.LoopMode
 import me.askbible.native_.data.MemberAuthRules
 import me.askbible.native_.ui.PlansListScreen
 import me.askbible.native_.ui.PlanDetailScreen
@@ -177,6 +179,8 @@ private fun RootScreen() {
     var authRoute by remember { mutableStateOf<String?>(null) }
     /** 首页左上的用户菜单 */
     var showMenu by remember { mutableStateOf(false) }
+    /** 多节选择（章页底部条），空集合 = 不在选择态 */
+    var selectedVerses by remember { mutableStateOf(setOf<Int>()) }
     /** 首次打开的欢迎页（语言 + 登录），完成后写盘不再出 */
     var showWelcome by remember { mutableStateOf(!OnboardingPrefs.completed(context)) }
     // 睡眠专辑放着时音乐页把按钮藏起来了，底栏一起藏（RN musicAutoHideChrome）
@@ -299,7 +303,22 @@ private fun RootScreen() {
                 planQueueIndex = next
                 if (planFlowListen && b == null) listenPlanChapter(planQueue[next], true) else openPlanChapter(planQueue[next], true)
             } else planFlowActive = false
-        } else if (b != null && chapter < b.chapterCount) chapter += 1
+        } else {
+            // 本书循环：读到末章回本书第 1 章；继续往前：到末章就停
+            val cur = b ?: listenBook
+            val at = if (b != null) chapter else listenChapter
+            if (cur != null) {
+                val nextChapter = when {
+                    at < cur.chapterCount -> at + 1
+                    audio.loopMode == LoopMode.BOOK -> 1
+                    else -> 0
+                }
+                if (nextChapter > 0) {
+                    if (b != null) chapter = nextChapter
+                    else { listenChapter = nextChapter; audio.resume() }
+                }
+            }
+        }
     }
     val music = remember { MusicPlayer(context, scope) }
     val home = remember { HomeVerseController(context, scope) }
@@ -333,9 +352,11 @@ private fun RootScreen() {
         // 互斥：整章朗读 ↔ 音乐（RN shell 单一 playbackMode）；整章朗读 ↔ 金句（都是人声）。
         // 首页最多两路有声（homeGoldenVerseTwoSourceMutex）：开音乐时金句+环境音都在 → 关环境音；
         // 开金句时音乐+环境音都在 → 关环境音；开环境音时人声+音乐都在 → 停音乐。
-        audio.onWillPlay = { music.pause(); home.stopVoice() }
+        // 读经朗读与音乐可以同时放：音乐压到 30%，不再直接暂停（Josh 2026-09-11）；金句人声仍然互斥
+        audio.onWillPlay = { music.setDucked(true); home.stopVoice() }
+        audio.onStopped = { music.setDucked(false) }
         audio.onFinished = { if (planFlowActive) skipNext() }
-        music.onWillPlay = { audio.pause(); if (home.voiceOn && ambient.isOn) ambient.stop() }
+        music.onWillPlay = { music.setDucked(audio.isPlaying); if (home.voiceOn && ambient.isOn) ambient.stop() }
         home.player.onWillPlay = { audio.pause(); if (music.isPlaying && ambient.isOn) ambient.stop() }
         ambient.onWillPlay = { if ((home.voiceOn || audio.isPlaying) && music.isPlaying) music.pause() }
         onDispose { audio.release(); music.release(); home.release(); ambient.release() }
@@ -397,10 +418,11 @@ private fun RootScreen() {
 
     // 系统返回键按层级逐层收起：弹层 → 章页 → 回首页；到首页才真正退出。
     // Compose 弹层是普通 Box，不会自动接管返回键，不加这段整个 App 会直接被退出。
-    val backHandled = showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
+    val backHandled = selectedVerses.isNotEmpty() || showMenu || authRoute != null || showSleepSheet || showSearch || showFavorites || actionVerse != null || xrefVerse != null || showTranslationPanel || exploreArticle != null ||
         pickingBook != null || openedBook != null || (tab == ShellTab.PLAN && planRoute != "play") || tab != ShellTab.HOME
     BackHandler(enabled = backHandled) {
         when {
+            selectedVerses.isNotEmpty() -> selectedVerses = emptySet()
             showMenu -> showMenu = false
             authRoute != null -> authRoute = null
             showSleepSheet -> showSleepSheet = false
@@ -514,6 +536,15 @@ private fun RootScreen() {
                 size = size, article = exploreArticle, onOpenArticle = { exploreArticle = it },
                 auth = auth, locale = appLocale, onOpenLogin = { authRoute = "login" },
                 activity = activity, onSignOut = { scope.launch { syncEngine.prepareSignOut(); auth.signOut() } },
+                favorites = bookmarks.list,
+                onOpenVerse = { id, ch, v ->
+                    // 探索页的收藏：跳到读经 Tab 的那一节
+                    BibleCatalog.book(id)?.let { b ->
+                        planFlowActive = false; listenBook = null; chapterFromPlan = false; pickingBook = null
+                        focusVerse = v; chapter = ch; openedBook = b; tab = ShellTab.READ
+                    }
+                },
+                onOpenFavorites = { showFavorites = true; tab = ShellTab.READ },
                 onOpenChapter = { id, ch ->
                     // 文章里的经文链接：切到读经 Tab 直接开章
                     BibleCatalog.book(id)?.let { b ->
@@ -592,6 +623,11 @@ private fun RootScreen() {
                 // RN writeLastReadPosition + pushReadRecentChapter：最后位置 + 探索页「最近阅读」
                 LaunchedEffect(book.id, chapter) { activity.recordOpened(book.id, chapter, book.name(displayLocale)) }
                 ChapterScreen(
+                    selectedVerses = selectedVerses,
+                    onToggleSelection = { v ->
+                        selectedVerses = if (v in selectedVerses) selectedVerses - v else selectedVerses + v
+                    },
+
                     locale = displayLocale,
                     uiLocale = appLocale,
                     foreignText = ReadDisplayLocale.isForeign(translation.language),
@@ -750,7 +786,32 @@ private fun RootScreen() {
                     }
                     context.startActivity(android.content.Intent.createChooser(intent, null)); actionVerse = null
                 },
+                onMultiCopy = { selectedVerses = setOf(v.number); actionVerse = null },
                 onClose = { actionVerse = null },
+            )
+        }
+
+        // 多节选择的底部卡片：画在播放坞之上
+        if (selectedVerses.isNotEmpty() && openedBook != null) {
+            val b = openedBook!!
+            VerseSelectionSheet(
+                count = selectedVerses.size,
+                locale = appLocale,
+                onCopy = {
+                    // 多节复制：按节号顺序，每节一行「书名 章:节 正文」（RN copySelectedVerses）
+                    val db = ScriptureDatabase.open(context, translation.id)
+                    val name = bookLabel(b)
+                    val verses = try { db?.loadChapter(b.id, chapter).orEmpty() } catch (_: Throwable) { emptyList() }
+                    val lines = selectedVerses.sorted().mapNotNull { n ->
+                        verses.firstOrNull { it.number == n }?.let { "$name $chapter:$n ${displayLocale.zh(it.text)}" }
+                    }
+                    if (lines.isNotEmpty()) {
+                        copyText(context, lines.joinToString("\n"))
+                        toast = SiteCopy.f("pages.read.verseSelectionCopied", mapOf("count" to "${selectedVerses.size}"), appLocale)
+                    }
+                    selectedVerses = emptySet()
+                },
+                onClear = { selectedVerses = emptySet() },
             )
         }
         toast?.let { msg ->

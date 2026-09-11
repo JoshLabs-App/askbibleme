@@ -19,6 +19,8 @@ struct ChapterFlowParagraph: UIViewRepresentable {
     /// 搜索结果跳进来的那节：verseSearchFocusBg 整行框
     var searchFocus: Int? = nil
     /// 点节号（有串珠的才亮）→ 经文关联
+    /// 多节选择态：单击整节都算切换选中，不再只认节号（Josh 2026-09-11）
+    var tapWholeVerse = false
     var onTapVerseNumber: (Int) -> Void = { _ in }
     /// 双击正文 → 收藏 / 取消收藏（RN 420ms 内两次点按）
     var onDoubleTapVerse: (Int) -> Void = { _ in }
@@ -35,6 +37,8 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         var ranges: [(verse: Int, range: NSRange)] = []
         /// 节号那几个字符的区间（点它开串珠）
         var numberRanges: [(verse: Int, range: NSRange)] = []
+        /// 单击命中的区间：平时是节号，选择态是整节
+        var tapRanges: [(verse: Int, range: NSRange)] = []
         var onTapVerseNumber: (Int) -> Void = { _ in }
         var onDoubleTapVerse: (Int) -> Void = { _ in }
         var onLongPressVerse: (Int) -> Void = { _ in }
@@ -126,7 +130,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         }
 
         @objc private func tapped(_ g: UITapGestureRecognizer) {
-            if let v = verse(at: g.location(in: self), in: numberRanges) { onTapVerseNumber(v) }
+            if let v = verse(at: g.location(in: self), in: tapRanges.isEmpty ? numberRanges : tapRanges) { onTapVerseNumber(v) }
         }
 
         @objc private func doubleTapped(_ g: UITapGestureRecognizer) {
@@ -151,12 +155,15 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         v.ranges = built.ranges
         v.numberRanges = built.numberRanges
         v.onTapVerseNumber = onTapVerseNumber
+        v.tapRanges = tapWholeVerse ? built.ranges : built.numberRanges
         v.onDoubleTapVerse = onDoubleTapVerse
         v.onLongPressVerse = onLongPressVerse
         // 已收藏的节不再画跟读高亮（RN audioActive = !bookmarked && …）
         v.activeRange = activeVerse.flatMap { a in bookmarked.contains(a) ? nil : built.ranges.first { $0.verse == a }?.range }
         v.searchFocusRange = searchFocus.flatMap { f in built.ranges.first { $0.verse == f }?.range }
-        v.bookmarkRanges = built.textRanges.filter { bookmarked.contains($0.verse) }.map(\.range)
+        // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
+        // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
+        v.bookmarkRanges = built.ranges.filter { bookmarked.contains($0.verse) }.map(\.range)
         v.setNeedsDisplay()
     }
 

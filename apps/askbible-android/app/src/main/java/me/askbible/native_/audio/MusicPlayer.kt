@@ -58,6 +58,16 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
     /** 被系统「永久」夺走焦点而停的（还想播）：外部声音停了 / 回前台就续播 */
     private var focusLost = false
     private var gain = 1f
+    /** 读经朗读在放时音乐压到 30%（Josh 2026-09-11「读圣经时音乐降到主线程的 30%」） */
+    private var ducked = false
+    private val effectiveGain: Float get() = if (ducked) gain * 0.3f else gain
+
+    /** 读经朗读开始 / 结束时由壳调用：压低或还原音乐音量 */
+    fun setDucked(on: Boolean) {
+        if (ducked == on) return
+        ducked = on
+        player.volume = effectiveGain
+    }
     private var ticker: Job? = null
 
     private val player: ExoPlayer = ExoPlayer.Builder(context)
@@ -155,7 +165,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         MusicAlbumRules.defaultRepeatMode(next)?.let { repeatMode = it }
         MusicAlbumRules.sleepTimerOnSwitch(next, sleepMinutes)?.let { setSleepTimer(if (it == 0) null else it) }
         gain = MusicAlbumRules.defaultGain(next)
-        player.volume = gain
+        player.volume = effectiveGain
         MusicAlbumRules.startIndex(MusicCatalog.tracks, next, trackIndex)?.let { play(it, isPlaying || wantsPlayback) }
     }
 
@@ -225,7 +235,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
                         .build())
                 .build()
         )
-        player.volume = gain
+        player.volume = effectiveGain
         player.prepare()
         startTicker()
     }
@@ -249,7 +259,7 @@ class MusicPlayer(context: Context, private val scope: CoroutineScope) {
         wantsPlayback = true
         onWillPlay?.invoke()
         PlaybackSessions.ensureStarted(appContext)
-        player.volume = gain
+        player.volume = effectiveGain
         player.playWhenReady = true
     }
 

@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import me.askbible.native_.data.AppLocale
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
@@ -35,6 +38,8 @@ fun VerseActionSheet(
     onCopy: () -> Unit,
     onBookmark: () -> Unit,
     onShare: () -> Unit,
+    /** 多选复制：以这一节为起点进入选择态（RN runStartMultiCopy） */
+    onMultiCopy: () -> Unit = {},
     onClose: () -> Unit,
     theme: Parchment = Parchment.light,
 ) {
@@ -54,6 +59,7 @@ fun VerseActionSheet(
                 Cell(MI.CONTENT_COPY, SiteCopy.t("pages.read.verseActionCopy"), iconSize, labelSize, theme, Modifier.weight(1f), onCopy)
                 if (!bookmarked) Cell(MI.BOOKMARK_BORDER, SiteCopy.t("pages.read.verseActionBookmark"), iconSize, labelSize, theme, Modifier.weight(1f), onBookmark)
                 Cell(MI.IOS_SHARE, SiteCopy.t("pages.read.verseActionShare"), iconSize, labelSize, theme, Modifier.weight(1f), onShare)
+                Cell(MI.LIBRARY_ADD_CHECK, SiteCopy.t("native.verseMultiCopy"), iconSize, labelSize, theme, Modifier.weight(1f), onMultiCopy)
             }
         }
     }
@@ -83,4 +89,40 @@ fun VerseFeedbackToast(message: String, modifier: Modifier = Modifier) {
 object VerseShareText {
     fun clipboard(bookName: String, chapter: Int, verse: Int, text: String) = "$bookName $chapter:$verse ${text.trim()}".trim()
     fun share(bookName: String, chapter: Int, verse: Int, text: String) = "$bookName $chapter:$verse\n$text"
+}
+
+/**
+ * 多节选择时的底部卡片：已选 N 节 · 清空 · 复制所选。
+ * 和长按操作单同一张羊皮卡片（Josh 2026-09-11「这个地方没用我们默认的对话框」），
+ * 由壳画在播放坞之上，否则会被坞挡住。
+ */
+@Composable
+fun VerseSelectionSheet(
+    count: Int,
+    locale: AppLocale,
+    onCopy: () -> Unit,
+    onClear: () -> Unit,
+    theme: Parchment = Parchment.light,
+) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        Column(
+            Modifier.fillMaxWidth().navigationBarsPadding().parchmentCard(16.dp)
+                .padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 28.dp).clickableNoRipple {},
+        ) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(SiteCopy.f("pages.read.verseSelectionPicked", mapOf("count" to "$count"), locale),
+                     Modifier.weight(1f), color = theme.ink.toColor(), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Text(SiteCopy.t("pages.read.verseSelectionClear", locale),
+                     Modifier.clickableNoRipple(onClear), color = theme.muted.toColor(), fontSize = 14.sp)
+            }
+            Row(Modifier.fillMaxWidth().clickableNoRipple(onCopy).padding(vertical = 14.dp),
+                horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                MaterialIcon(MI.CONTENT_COPY, 22f, theme.ink.toColor())
+                Spacer(Modifier.width(8.dp))
+                Text(SiteCopy.t("pages.read.verseSelectionCopy", locale),
+                     color = theme.ink.toColor(), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
 }

@@ -31,6 +31,13 @@ struct ChapterView: View {
     /// 双击正文 → 收藏 / 取消收藏；长按 → 操作单。弹层与轻提示由 RootView 出（章页里出会被坞 + 底栏宿主盖住）
     var onDoubleTapVerse: (LoadedVerse) -> Void = { _ in }
     var onLongPressVerse: (LoadedVerse) -> Void = { _ in }
+    /// 多节选择（Josh 2026-09-11「长按要能选多节一起复制」）：非空即进入选择态
+    @Binding var selectedVerses: Set<Int>
+    /// 选择态：点一节切换选中
+    var onToggleSelection: (Int) -> Void = { _ in }
+    /// 选择态底部条：复制所选 / 清空
+    var onCopySelection: () -> Void = {}
+    var onClearSelection: () -> Void = {}
     /// 结尾中间的书名 → 回目录
     var onOpenCatalog: () -> Void = {}
     /// 结尾左右的上一章 / 下一章（可跨卷）
@@ -144,6 +151,8 @@ struct ChapterView: View {
             }
 
             topChrome()
+
+            if selecting { selectionBar }
         }
         .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         .task(id: "\(store.translation.id).\(store.secondary?.id ?? "-").\(bookId).\(chapter).\(reloadToken)") {
@@ -193,6 +202,34 @@ struct ChapterView: View {
         }
     }
 
+
+    /// 连排正文单独拆一个函数：和段落块写在一起时 SwiftUI 的类型推断会超时
+    private func flowParagraph(_ group: [LoadedVerse], metrics m: ReadTypographyMetrics) -> some View {
+        let marks: Set<Int> = selecting ? selectedVerses : bookmarkedVerses
+        return ChapterFlowParagraph(
+            verses: group, metrics: m, theme: theme, xrefVerses: xrefVerses,
+            activeVerse: audio.activeVerse,
+            bookmarked: marks,
+            searchFocus: searchFocus,
+            tapWholeVerse: selecting,
+            onTapVerseNumber: { v in
+                searchFocus = nil
+                if selecting { onToggleSelection(v) } else if xrefVerses.contains(v) { onTapVerse(v) }
+            },
+            onDoubleTapVerse: { v in
+                searchFocus = nil
+                if selecting { onToggleSelection(v); return }
+                if let lv = group.first(where: { $0.number == v }) { onDoubleTapVerse(lv) }
+            },
+            onLongPressVerse: { v in
+                searchFocus = nil
+                if selecting { onToggleSelection(v); return }
+                if let lv = group.first(where: { $0.number == v }) { onLongPressVerse(lv) }
+            }
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     /// 一个段落：段前分隔（首段没有；带小标题时 22 高 + 96 宽细线，否则 16 空）→ 小标题 → 连排正文 → 副译本对照
     @ViewBuilder
     private func paragraphBlock(_ group: [LoadedVerse], index: Int, metrics m: ReadTypographyMetrics) -> some View {
@@ -221,15 +258,7 @@ struct ChapterView: View {
                     .padding(.top, 18)
                     .padding(.bottom, 16)
             }
-            ChapterFlowParagraph(
-                verses: group, metrics: m, theme: theme, xrefVerses: xrefVerses,
-                activeVerse: audio.activeVerse,
-                bookmarked: bookmarkedVerses,
-                searchFocus: searchFocus,
-                onTapVerseNumber: { v in searchFocus = nil; if xrefVerses.contains(v) { onTapVerse(v) } },
-                onDoubleTapVerse: { v in searchFocus = nil; if let lv = group.first(where: { $0.number == v }) { onDoubleTapVerse(lv) } },
-                onLongPressVerse: { v in searchFocus = nil; if let lv = group.first(where: { $0.number == v }) { onLongPressVerse(lv) } }
-            )
+            flowParagraph(group, metrics: m)
             .frame(maxWidth: .infinity, alignment: .leading)
             // 副译本对照行：0.82× 字号，muted（verseContrast）
             ForEach(group.filter { contrast[$0.number] != nil }) { v in
@@ -313,6 +342,46 @@ struct ChapterView: View {
             .padding(.bottom, 14)
         }
         .padding(.bottom, 30)
+    }
+
+    private var selecting: Bool { !selectedVerses.isEmpty }
+
+    /// 选择态底部条：和长按操作单同一张羊皮卡片（Josh 2026-09-11「这个地方没用我们默认的对话框」）
+    private var selectionBar: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 12) {
+                Text(SiteCopy.f("pages.read.verseSelectionPicked", ["count": "\(selectedVerses.count)"], locale))
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Button(action: onClearSelection) {
+                    Text(SiteCopy.t("pages.read.verseSelectionClear", locale))
+                        .font(.system(size: 14))
+                        .foregroundStyle(theme.muted)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.bottom, 10)
+
+            Button(action: onCopySelection) {
+                HStack(spacing: 8) {
+                    MaterialIcon(glyph: MI.contentCopy, size: 22, color: theme.ink)
+                    Text(SiteCopy.t("pages.read.verseSelectionCopy", locale))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(theme.ink)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .parchmentCard(cornerRadius: 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .ignoresSafeArea(edges: .bottom)
     }
 
     /// 左上返回 + 右上竖排。位置来自 `readTopChrome.ts`：

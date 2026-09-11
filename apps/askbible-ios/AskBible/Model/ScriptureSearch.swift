@@ -103,8 +103,16 @@ enum RecentSearchRules {
 }
 
 extension ScriptureDatabase {
+    /// `CASE book_id WHEN 'GEN' THEN 0 … END`：把创世记→启示录的卷序交给 SQLite 排
+    static let bookOrderSQL: String = {
+        let cases = BibleCatalog.all.enumerated().map { "WHEN '\($0.element.id)' THEN \($0.offset)" }.joined(separator: " ")
+        return "CASE book_id \(cases) ELSE 999 END"
+    }()
+
     /// searchScriptureVersesMobile：LIKE 全文；本章范围直接带 book/chapter 条件；旧约 / 新约先取 120 再按卷过滤；最多 40 条。
-    /// 排序照 RN：ORDER BY book_id, chapter, verse（book_id 是字符串序，RN 就是这么排的，对齐它）。
+    /// 排序按圣经卷序（Josh 2026-09-11「搜索结果要按圣经顺序排」）：RN 是 `ORDER BY book_id`，
+    /// book_id 是字符串，排出来「1CO」在「GEN」前面。这里把卷序做成 CASE 表达式交给 SQLite，
+    /// 顺序正确的同时 LIMIT 截出来的也是靠前的卷，不是字母靠前的卷。
     func search(query raw: String, scope: ScriptureSearchScope, chapterRef: SearchChapterRef?) -> [ScriptureSearchHit] {
         let q = ScriptureSearchRules.normalize(raw)
         if q.isEmpty || q.count < ScriptureSearchRules.minLength { return [] }
@@ -122,7 +130,7 @@ extension ScriptureDatabase {
             sqlite3_bind_int(stmt, 3, Int32(ref.chapter))
             sqlite3_bind_int(stmt, 4, Int32(ScriptureSearchRules.limit))
         } else {
-            let sql = "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' ORDER BY book_id, chapter, verse LIMIT ?"
+            let sql = "SELECT book_id, chapter, verse, text FROM verse WHERE text LIKE ? ESCAPE '\\' ORDER BY \(Self.bookOrderSQL), chapter, verse LIMIT ?"
             guard sqlite3_prepare_v2(handle, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
             sqlite3_bind_text(stmt, 1, like, -1, transient)
             sqlite3_bind_int(stmt, 2, Int32(scope == .all ? ScriptureSearchRules.limit : ScriptureSearchRules.scopedFetchLimit))

@@ -89,6 +89,8 @@ object MI {
     const val FORMAT_ALIGN_LEFT = "\uE236"
     const val NOTES = "\uE26C"
     const val CONTENT_COPY = "\uE14D"
+    /** library_add_check：多选复制 */
+    const val LIBRARY_ADD_CHECK = "\uE9B7"
     const val IOS_SHARE = "\uE6B8"
     const val BOOKMARK = "\uE866"
 }

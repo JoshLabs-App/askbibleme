@@ -56,6 +56,8 @@ fun ChapterFlowParagraph(
     onLongPressVerse: (Int) -> Unit = {},
     /** 每节在窗口坐标里的 top/bottom（px），滚动 / 排版后都会报：跟读时按「节」把高亮滚到可读区中心 */
     onVerseBounds: ((Map<Int, Pair<Float, Float>>) -> Unit)? = null,
+    /** 多节选择态：单击整节都算切换选中，不再只认节号（Josh 2026-09-11） */
+    tapWholeVerse: Boolean = false,
 ) {
     val ranges = ArrayList<Pair<Int, IntRange>>(verses.size)
     val numberRanges = ArrayList<Pair<Int, IntRange>>(verses.size)
@@ -94,7 +96,9 @@ fun ChapterFlowParagraph(
     // 已收藏的节不再画跟读高亮（RN audioActive = !bookmarked && …）
     val activeRange = activeVerse?.takeIf { it !in bookmarked }?.let { a -> ranges.firstOrNull { it.first == a }?.second }
     val focusRange = searchFocus?.let { f -> ranges.firstOrNull { it.first == f }?.second }
-    val bookmarkRanges = textRanges.filter { it.first in bookmarked }.map { it.second }
+    // 收藏高亮盖住整节（含节号与节末空格）：Josh 2026-09-11「标高亮时连节号也一起包含进去，
+    // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
+    val bookmarkRanges = ranges.filter { it.first in bookmarked }.map { it.second }
     val bookmarkFill = theme.verseBookmarkMarker.toColor()
     val focusFill = theme.verseSearchFocusBg.toColor()
     fun verseAt(pos: Offset, list: List<Pair<Int, IntRange>>): Int? {
@@ -142,7 +146,7 @@ fun ChapterFlowParagraph(
             }
             .pointerInput(text) {
                 detectTapGestures(
-                    onTap = { pos -> verseAt(pos, numberRanges)?.let(onTapVerseNumber) },
+                    onTap = { pos -> verseAt(pos, if (tapWholeVerse) ranges else numberRanges)?.let(onTapVerseNumber) },
                     onDoubleTap = { pos -> verseAt(pos, ranges)?.let(onDoubleTapVerse) },
                     onLongPress = { pos -> verseAt(pos, ranges)?.let(onLongPressVerse) },
                 )

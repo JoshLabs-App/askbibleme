@@ -58,6 +58,8 @@ enum MI {
     static let formatAlignLeft = "\u{e236}"
     static let notes = "\u{e26c}"
     static let contentCopy = "\u{e14d}"
+    /// library_add_check：多选复制
+    static let libraryAddCheck = "\u{e9b7}"
     static let iosShare = "\u{e6b8}"
     static let bookmark = "\u{e866}"
     // 读经计划页（手机版精简排版）：要点 chips / 怎么读 / 轨道图标 / 展开收起

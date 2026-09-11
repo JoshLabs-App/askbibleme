@@ -34,6 +34,9 @@ final class MusicPlayer: ObservableObject {
     private var loadedId: String?
     private var wantsPlayback = false
     private var gain: Float
+    /// 读经朗读在放时音乐压到 30%（Josh 2026-09-11「读圣经时音乐降到主线程的 30%」）
+    private(set) var ducked = false
+    private var effectiveGain: Float { ducked ? gain * 0.3 : gain }
 
     init() {
         let a = MusicCatalog.defaultAlbum
@@ -84,6 +87,13 @@ final class MusicPlayer: ObservableObject {
 
     /// 切专辑（RN useMusicHomeAlbum.selectAlbum）：换循环模式、联动睡眠定时、换音量、
     /// 跳到该专辑起播曲；正在播就接着播，不然停在暂停态。
+    /// 读经朗读开始 / 结束时由壳调用：压低或还原音乐音量
+    func setDucked(_ on: Bool) {
+        guard ducked != on else { return }
+        ducked = on
+        player?.volume = effectiveGain
+    }
+
     func selectAlbum(_ raw: String) {
         let next = MusicAlbumRules.normalize(raw)
         guard next != album else { return }
@@ -93,7 +103,7 @@ final class MusicPlayer: ObservableObject {
             setSleepTimer(minutes: mins == 0 ? nil : mins)
         }
         gain = MusicAlbumRules.defaultGain(next)
-        player?.volume = gain
+        player?.volume = effectiveGain
         if let idx = MusicAlbumRules.startIndex(MusicCatalog.tracks, album: next, current: trackIndex) {
             play(index: idx, autoPlay: isPlaying || wantsPlayback)
         }
@@ -160,7 +170,7 @@ final class MusicPlayer: ObservableObject {
         let item = AVPlayerItem(asset: asset)
         let avPlayer = AVPlayer(playerItem: item)
         avPlayer.automaticallyWaitsToMinimizeStalling = true
-        avPlayer.volume = gain
+        avPlayer.volume = effectiveGain
         player = avPlayer
 
         statusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
@@ -232,7 +242,7 @@ final class MusicPlayer: ObservableObject {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try? AVAudioSession.sharedInstance().setActive(true)
         RemoteControlHub.shared.claim(self)
-        player?.volume = gain
+        player?.volume = effectiveGain
         player?.play()
         isPlaying = true
         updateNowPlaying()

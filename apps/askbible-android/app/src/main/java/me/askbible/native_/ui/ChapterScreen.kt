@@ -3,6 +3,7 @@ package me.askbible.native_.ui
 import me.askbible.native_.data.RemoteTranslations
 import me.askbible.native_.data.SiteCopy
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.statusBars
@@ -108,6 +110,10 @@ fun ChapterScreen(
     focusVerse: Int? = null,
     onDoubleTapVerse: (LoadedVerse) -> Unit = {},
     onLongPressVerse: (LoadedVerse) -> Unit = {},
+    /** 多节选择（Josh 2026-09-11「长按要能选多节一起复制」）：非空即进入选择态，单击整节切换 */
+    selectedVerses: Set<Int> = emptySet(),
+    onToggleSelection: (Int) -> Unit = {},
+
     onOpenSearch: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
     /** 结尾中间的书名 → 回目录 */
@@ -206,10 +212,22 @@ fun ChapterScreen(
             }
             itemsIndexed(groups, key = { _, g -> g.first().number }) { gi, group ->
                 ParagraphBlock(group, gi, meta, locale, m, theme, xrefVerses, activeVerse, contrast,
-                    bookmarked = bookmarked, searchFocus = searchFocus,
-                    onTapVerseNumber = { v -> searchFocus = null; if (v in xrefVerses) onTapVerse(v) },
-                    onDoubleTapVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onDoubleTapVerse) },
-                    onLongPressVerse = { v -> searchFocus = null; group.firstOrNull { it.number == v }?.let(onLongPressVerse) },
+                    bookmarked = if (selectedVerses.isNotEmpty()) selectedVerses else bookmarked, searchFocus = searchFocus,
+                    tapWholeVerse = selectedVerses.isNotEmpty(),
+                    onTapVerseNumber = { v ->
+                        searchFocus = null
+                        if (selectedVerses.isNotEmpty()) onToggleSelection(v) else if (v in xrefVerses) onTapVerse(v)
+                    },
+                    onDoubleTapVerse = { v ->
+                        searchFocus = null
+                        if (selectedVerses.isNotEmpty()) onToggleSelection(v)
+                        else group.firstOrNull { it.number == v }?.let(onDoubleTapVerse)
+                    },
+                    onLongPressVerse = { v ->
+                        searchFocus = null
+                        if (selectedVerses.isNotEmpty()) onToggleSelection(v)
+                        else group.firstOrNull { it.number == v }?.let(onLongPressVerse)
+                    },
                     onVerseBounds = { b -> verseBounds.putAll(b) })
             }
 
@@ -240,6 +258,7 @@ fun ChapterScreen(
         }
 
         TopChrome(theme, onBack, onOpenSettings, onSizeUp, onSizeDown, onOpenSearch, onOpenFavorites)
+
     }
 }
 
@@ -261,6 +280,8 @@ private fun ParagraphBlock(
     onDoubleTapVerse: (Int) -> Unit,
     onLongPressVerse: (Int) -> Unit,
     onVerseBounds: ((Map<Int, Pair<Float, Float>>) -> Unit)? = null,
+    /** 多节选择态：单击整节都算切换选中 */
+    tapWholeVerse: Boolean = false,
 ) {
     val headings = (meta.headings[group.first().number] ?: emptyList()).map { locale.zh(it) }
     Column(Modifier.fillMaxWidth().padding(bottom = 14.dp)) {  // verseParagraphBlock.marginBottom
@@ -287,7 +308,8 @@ private fun ParagraphBlock(
             )
         }
         ChapterFlowParagraph(group, m, theme, xrefVerses, activeVerse, bookmarked, searchFocus,
-                             onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds)
+                             onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
+                             tapWholeVerse = tapWholeVerse)
         // 副译本对照行：0.82× 字号，muted，上距 7（verseContrast）
         for (v in group) {
             val line = contrast[v.number] ?: continue

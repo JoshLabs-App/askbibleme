@@ -73,6 +73,9 @@ final class MemberReadingSyncEngine: ObservableObject {
         if !habit.isEmpty { blobs["habitStats"] = wrap(["version": 1, "completedDates": habit] as [String: Any], now) }
         if activity.listenTotalSec > 0 { blobs["scriptureListenTotals"] = wrap(activity.listenJSON, now) }
         if !search.recent.isEmpty { blobs["recentSearches"] = wrap(["version": 1, "terms": search.recent] as [String: Any], now) }
+        // Josh 2026-09-11：使用时长与最近阅读也上云
+        if activity.usageTotalSec > 0 { blobs["appUsageTime"] = wrap(activity.usageJSON, now) }
+        if !activity.recent.isEmpty { blobs["recentChapters"] = wrap(activity.recentJSON, now) }
         return blobs
     }
 
@@ -141,6 +144,21 @@ final class MemberReadingSyncEngine: ObservableObject {
             if let d = R.parseListenTotals(value) { activity.mergeRemoteListen(totalSec: R.num(d["totalSec"]) ?? 0) }
         case "recentSearches":
             if let d = R.dict(value), R.num(d["version"]) == 1, let arr = d["terms"] as? [Any] { search.replaceRecent(arr.compactMap { $0 as? String }) }
+        case "appUsageTime":
+            if let d = R.dict(value), let sec = R.num(d["totalSec"]) { activity.mergeRemoteUsage(totalSec: sec) }
+        case "recentChapters":
+            if let d = R.dict(value), let items = d["items"] as? [Any] {
+                let parsed: [ReadingActivityStore.RecentChapter] = items.compactMap { raw in
+                    guard let o = raw as? [String: Any],
+                          let bookId = (o["bookId"] as? String)?.trimmingCharacters(in: .whitespaces), !bookId.isEmpty,
+                          let ch = R.num(o["chapter"]), ch >= 1 else { return nil }
+                    return ReadingActivityStore.RecentChapter(
+                        bookId: bookId.uppercased(), chapter: Int(ch),
+                        bookName: (o["bookName"] as? String) ?? bookId,
+                        at: R.num(o["at"]) ?? 0)
+                }
+                if !parsed.isEmpty { activity.mergeRemoteRecent(parsed) }
+            }
         default:
             // 高亮 / 今日完成 / 字体 / 译本 / 首页与自然场景设置 / 音乐主题 / 语速 / 人声 / 探索档案 / 语言：原生没有对应开关，只在云端保留、不动本机
             break

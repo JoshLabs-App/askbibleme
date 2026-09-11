@@ -134,6 +134,42 @@ class ReadingActivityStore(context: Context) {
 
     val listenJson: JSONObject get() = JSONObject().put("version", 1).put("totalSec", Math.floor(listenTotalSec).toLong())
 
+    /** 云端使用时长并入：取较大值（Josh 2026-09-11「使用时长和最近阅读要上云」） */
+    fun mergeRemoteUsage(totalSec: Double) {
+        val next = maxOf(usageStoredSec, Math.floor(totalSec))
+        if (next == usageStoredSec) return
+        usageStoredSec = next
+        persistUsage()
+    }
+
+    fun usageJson(): JSONObject = JSONObject().put("version", 1).put("totalSec", Math.floor(usageTotalSec).toLong())
+
+    /** 最近阅读：本机与云端按「卷:章」并集，同一章取更晚的时间，倒序留前 MAX_RECENT 条 */
+    fun mergeRemoteRecent(remote: List<RecentChapter>) {
+        val byKey = LinkedHashMap<String, RecentChapter>()
+        for (item in recent + remote) {
+            val prev = byKey[item.id]
+            if (prev != null && prev.at >= item.at) continue
+            byKey[item.id] = item
+        }
+        val next = byKey.values
+            .sortedWith(compareByDescending<RecentChapter> { it.at }.thenBy { it.bookId })
+            .take(MAX_RECENT)
+        if (next == recent) return
+        recent = next
+        persistRecent()
+    }
+
+    /** 上云用：最多 12 条，比本机列表长一点，换设备时不至于一合并就丢 */
+    fun recentJson(): JSONObject {
+        val arr = JSONArray()
+        for (r in recent.take(12)) {
+            arr.put(JSONObject().put("bookId", r.bookId).put("chapter", r.chapter)
+                        .put("bookName", r.bookName).put("at", r.at.toLong()))
+        }
+        return JSONObject().put("version", 1).put("items", arr)
+    }
+
     // ---- 使用时长（RN app-usage-time：前台时段累加，15 秒打点，2.5 秒落盘） ----
 
     val usageTotalSec: Double get() = usageStoredSec + (sessionStartedAtMs?.let { maxOf(0L, System.currentTimeMillis() - it) / 1000.0 } ?: 0.0)

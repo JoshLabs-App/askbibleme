@@ -24,6 +24,8 @@ object MemberReadingSyncRules {
         "readingPlanPrefs", "todayReadingDone", "todayReadingFraction", "habitStats", "scriptureListenTotals",
         "readTypography", "readTranslation", "recentSearches", "homeNatureUi", "homePrayerVerse", "homeVersePoolScope",
         "natureSceneUi", "musicVisualTheme", "scripturePlaybackRate", "cuvAudioVoice", "exploreYearDayProfile", "appLocale",
+        // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
+        "appUsageTime", "recentChapters",
     )
     const val MIN_SYNC_INTERVAL_MS = 30_000L
     const val LOCAL_CHANGE_DEBOUNCE_MS = 1_500L
@@ -192,6 +194,37 @@ object MemberReadingSyncRules {
         return JSONObject().put("version", 1).put("totalSec", Math.floor(n).toLong())
     }
 
+    /** 最近阅读：按「卷:章」并集，同一章取更晚的时间，按时间倒序，最多 12 条（与 TS mergeRecentChapters 同） */
+    fun mergeRecentChapters(a: Any?, b: Any?): Any? {
+        fun read(v: Any?): List<JSONObject> {
+            val items = dict(v)?.opt("items") as? JSONArray ?: return emptyList()
+            val out = ArrayList<JSONObject>(items.length())
+            for (i in 0 until items.length()) {
+                val o = items.opt(i) as? JSONObject ?: continue
+                val bookId = (str(o.opt("bookId")) ?: "").trim().uppercase()
+                val chapter = (num(o.opt("chapter")) ?: 0.0).toInt()
+                if (bookId.isEmpty() || chapter <= 0) continue
+                out.add(JSONObject()
+                    .put("bookId", bookId)
+                    .put("chapter", chapter)
+                    .put("bookName", str(o.opt("bookName")) ?: bookId)
+                    .put("at", (num(o.opt("at")) ?: 0.0).toLong()))
+            }
+            return out
+        }
+        val byKey = LinkedHashMap<String, JSONObject>()
+        for (item in read(a) + read(b)) {
+            val key = "${item.optString("bookId")}:${item.optInt("chapter")}"
+            val prev = byKey[key]
+            if (prev != null && prev.optLong("at") >= item.optLong("at")) continue
+            byKey[key] = item
+        }
+        val sorted = byKey.values.sortedWith(
+            compareByDescending<JSONObject> { it.optLong("at") }.thenBy { it.optString("bookId") },
+        ).take(12)
+        return JSONObject().put("version", 1).put("items", JSONArray(sorted))
+    }
+
     fun mergeListenTotals(a: Any?, b: Any?): Any? {
         val left = parseListenTotals(a); val right = parseListenTotals(b)
         if (left == null) return right ?: b
@@ -332,6 +365,8 @@ object MemberReadingSyncRules {
         "scriptureListenTotals" -> mergeListenTotals(a, b)
         "todayReadingFraction" -> mergeFractions(a, b)
         "recentSearches" -> mergeRecentSearches(a, b)
+        "appUsageTime" -> mergeListenTotals(a, b)
+        "recentChapters" -> mergeRecentChapters(a, b)
         "readingPlanPrefs" -> mergeReadingPlanPrefsValue(a, b)
         "tripleLoopProgress" -> mergeTripleLoopState(a, b)
         "ntDeepRepeatProgress" -> mergeNtDeepRepeatState(a, b, now)

@@ -25,7 +25,7 @@ class VerseTimingDatabase private constructor(private val db: SQLiteDatabase) {
 
     /** cuv-v20 缺章时回退 cuv-simp，与 TS 侧同 */
     fun timings(translationId: String, bookId: String, chapter: Int): List<VerseTiming> {
-        val primary = VerseTimingLookup.scopeFor(translationId)
+        val primary = VerseTimingLookup.scopeFor(translationId) ?: return emptyList()
         val rows = query(primary, bookId, chapter)
         if (rows.isNotEmpty()) return rows
         return if (primary == "cuv-v20") query("cuv-simp", bookId, chapter) else emptyList()

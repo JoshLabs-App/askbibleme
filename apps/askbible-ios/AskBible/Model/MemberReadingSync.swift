@@ -15,6 +15,8 @@ enum MemberReadingSyncRules {
         "readingPlanPrefs", "todayReadingDone", "todayReadingFraction", "habitStats", "scriptureListenTotals",
         "readTypography", "readTranslation", "recentSearches", "homeNatureUi", "homePrayerVerse", "homeVersePoolScope",
         "natureSceneUi", "musicVisualTheme", "scripturePlaybackRate", "cuvAudioVoice", "exploreYearDayProfile", "appLocale",
+        // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
+        "appUsageTime", "recentChapters",
     ]
     /// 同步驱动的节流：30 秒内不重复自动同步；本地改动 1.5 秒防抖；前台轮询 45 秒（RN runMemberReadingSync / requestMemberReadingSync / useMemberReadingSync）
     static let minSyncIntervalMs: Double = 30_000
@@ -357,6 +359,35 @@ enum MemberReadingSyncRules {
         return ntJson(NtDeepRepeat.normalize(s, now: now))
     }
 
+    /// 最近阅读：按「卷:章」并集，同一章取更晚的时间，按时间倒序，最多 12 条（与 TS mergeRecentChapters 同）
+    static func mergeRecentChapters(_ a: Any?, _ b: Any?) -> Any? {
+        func read(_ v: Any?) -> [[String: Any]] {
+            guard let items = dict(v)?["items"] as? [Any] else { return [] }
+            return items.compactMap { raw in
+                guard let o = raw as? [String: Any] else { return nil }
+                let bookId = str(o["bookId"])?.trimmingCharacters(in: .whitespaces).uppercased() ?? ""
+                let chapter = Int(num(o["chapter"]) ?? 0)
+                guard !bookId.isEmpty, chapter > 0 else { return nil }
+                return ["bookId": bookId, "chapter": chapter,
+                        "bookName": str(o["bookName"]) ?? bookId,
+                        "at": Int(num(o["at"]) ?? 0)]
+            }
+        }
+        var byKey: [String: [String: Any]] = [:]
+        for item in read(a) + read(b) {
+            let key = "\(item["bookId"] as? String ?? ""):\(item["chapter"] as? Int ?? 0)"
+            let at = item["at"] as? Int ?? 0
+            if let prev = byKey[key], (prev["at"] as? Int ?? 0) >= at { continue }
+            byKey[key] = item
+        }
+        let items = byKey.values.sorted { l, r in
+            let la = l["at"] as? Int ?? 0, ra = r["at"] as? Int ?? 0
+            if la != ra { return la > ra }
+            return (l["bookId"] as? String ?? "") < (r["bookId"] as? String ?? "")
+        }.prefix(12)
+        return ["version": 1, "items": Array(items)]
+    }
+
     // MARK: 一条 blob 的合并 + 整份推送合并
 
     static func mergeBlobValue(key: String, _ a: Any?, _ b: Any?, now: Date) -> Any? {
@@ -369,6 +400,8 @@ enum MemberReadingSyncRules {
         case "scriptureListenTotals": return mergeListenTotals(a, b)
         case "todayReadingFraction": return mergeFractions(a, b)
         case "recentSearches": return mergeRecentSearches(a, b)
+        case "appUsageTime": return mergeListenTotals(a, b)
+        case "recentChapters": return mergeRecentChapters(a, b)
         case "readingPlanPrefs": return mergeReadingPlanPrefsValue(a, b)
         case "tripleLoopProgress": return mergeTripleLoopState(a, b)
         case "ntDeepRepeatProgress": return mergeNtDeepRepeatState(a, b, now: now)

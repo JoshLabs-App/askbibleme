@@ -92,6 +92,9 @@ class MemberReadingSyncEngine(context: Context) {
         if (habit.isNotEmpty()) blobs.put("habitStats", wrap(JSONObject().put("version", 1).put("completedDates", JSONArray(habit)), now))
         if (activity.listenTotalSec > 0) blobs.put("scriptureListenTotals", wrap(activity.listenJson, now))
         if (search.recent.isNotEmpty()) blobs.put("recentSearches", wrap(JSONObject().put("version", 1).put("terms", JSONArray(search.recent)), now))
+        // Josh 2026-09-11：使用时长与最近阅读也上云
+        if (activity.usageTotalSec > 0) blobs.put("appUsageTime", wrap(activity.usageJson(), now))
+        if (activity.recent.isNotEmpty()) blobs.put("recentChapters", wrap(activity.recentJson(), now))
         return blobs
     }
 
@@ -163,6 +166,20 @@ class MemberReadingSyncEngine(context: Context) {
             "scriptureListenTotals" -> R.parseListenTotals(value)?.let { activity.mergeRemoteListen(R.num(it.opt("totalSec")) ?: 0.0) }
             "recentSearches" -> R.dict(value)?.let { d ->
                 if (R.num(d.opt("version")) == 1.0 && d.opt("terms") is JSONArray) search.replaceRecent(R.stringArray(d.opt("terms")))
+            }
+            "appUsageTime" -> R.dict(value)?.let { d -> R.num(d.opt("totalSec"))?.let { activity.mergeRemoteUsage(it) } }
+            "recentChapters" -> R.dict(value)?.let { d ->
+                val items = d.opt("items") as? JSONArray ?: return@let
+                val parsed = ArrayList<ReadingActivityStore.RecentChapter>(items.length())
+                for (i in 0 until items.length()) {
+                    val o = items.opt(i) as? JSONObject ?: continue
+                    val bookId = (R.str(o.opt("bookId")) ?: "").trim()
+                    val ch = (R.num(o.opt("chapter")) ?: 0.0).toInt()
+                    if (bookId.isEmpty() || ch < 1) continue
+                    parsed.add(ReadingActivityStore.RecentChapter(
+                        bookId.uppercase(), ch, R.str(o.opt("bookName")) ?: bookId, R.num(o.opt("at")) ?: 0.0))
+                }
+                if (parsed.isNotEmpty()) activity.mergeRemoteRecent(parsed)
             }
             else -> {} // 高亮 / 今日完成 / 字体 / 译本 / 首页与自然场景设置 / 音乐主题 / 语速 / 人声 / 探索档案 / 语言：原生没有对应开关，只在云端保留、不动本机
         }

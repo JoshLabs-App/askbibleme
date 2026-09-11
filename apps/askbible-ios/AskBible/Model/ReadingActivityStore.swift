@@ -127,6 +127,37 @@ final class ReadingActivityStore: ObservableObject {
 
     var listenJSON: [String: Any] { ["version": 1, "totalSec": Int(listenTotalSec.rounded(.down))] }
 
+    /// 云端使用时长并入：取较大值（Josh 2026-09-11「使用时长和最近阅读要上云」）
+    func mergeRemoteUsage(totalSec: Double) {
+        let next = max(usageStoredSec, totalSec.rounded(.down))
+        guard next != usageStoredSec else { return }
+        usageStoredSec = next
+        persistUsage()
+    }
+
+    var usageJSON: [String: Any] { ["version": 1, "totalSec": Int(usageTotalSec.rounded(.down))] }
+
+    /// 最近阅读：本机与云端按「卷:章」并集，同一章取更晚的时间，倒序留前 maxRecent 条
+    func mergeRemoteRecent(_ remote: [RecentChapter]) {
+        var byKey: [String: RecentChapter] = [:]
+        for item in recent + remote {
+            if let prev = byKey[item.id], prev.at >= item.at { continue }
+            byKey[item.id] = item
+        }
+        let merged = byKey.values.sorted { $0.at != $1.at ? $0.at > $1.at : $0.bookId < $1.bookId }
+        let next = Array(merged.prefix(Self.maxRecent))
+        guard next != recent else { return }
+        recent = next
+        persistRecent()
+    }
+
+    /// 上云用：最多 12 条，比本机列表长一点，换设备时不至于一合并就丢
+    var recentJSON: [String: Any] {
+        ["version": 1,
+         "items": recent.prefix(12).map { ["bookId": $0.bookId, "chapter": $0.chapter,
+                                           "bookName": $0.bookName, "at": Int($0.at)] as [String: Any] }]
+    }
+
     // MARK: 使用时长（RN app-usage-time：前台时段累加，15 秒打点，2.5 秒落盘）
 
     var usageTotalSec: Double { usageStoredSec + (sessionStartedAt.map { max(0, Date().timeIntervalSince($0)) } ?? 0) }

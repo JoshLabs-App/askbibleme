@@ -38,15 +38,19 @@ final class VerseTimingDatabase {
 
     deinit { sqlite3_close(handle) }
 
-    /// scopeForTranslation
-    static func scope(for translationId: String) -> String {
+    /// scopeForTranslation。RN 里是「不是 web 就当和合本」，只有内置那几个译本时没问题；
+    /// 放开 YouVersion 全量译本后，法语版会去套和合本的时间轴、高亮全错位，
+    /// 所以认不出的译本一律返回 nil ——「没有时间点就不高亮」（Josh 2026-09-11）。
+    static func scope(for translationId: String) -> String? {
         let id = translationId.trimmingCharacters(in: .whitespaces).lowercased()
-        return id.hasPrefix("web") ? "web-en" : "cuv-v20"
+        if id.hasPrefix("web") { return "web-en" }
+        if id.hasPrefix("cuv") { return "cuv-v20" }
+        return nil
     }
 
     /// 取一章的时间轴，按 verse 升序。cuv-v20 缺章时回退 cuv-simp（与 TS 侧同）。
     func timings(translationId: String, bookId: String, chapter: Int) -> [VerseTiming] {
-        let primary = Self.scope(for: translationId)
+        guard let primary = Self.scope(for: translationId) else { return [] }
         let rows = query(scope: primary, bookId: bookId, chapter: chapter)
         if !rows.isEmpty { return rows }
         if primary == "cuv-v20" {

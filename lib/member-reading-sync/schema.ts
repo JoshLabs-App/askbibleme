@@ -24,6 +24,9 @@ export const MEMBER_READING_SYNC_BLOB_KEYS = [
   "cuvAudioVoice",
   "exploreYearDayProfile",
   "appLocale",
+  // Josh 2026-09-11：使用时长与最近阅读也要上云（原本只存本机）
+  "appUsageTime",
+  "recentChapters",
 ] as const;
 
 export type MemberReadingSyncBlobKey = (typeof MEMBER_READING_SYNC_BLOB_KEYS)[number];

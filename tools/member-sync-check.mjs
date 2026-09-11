@@ -51,6 +51,12 @@ const CASES = [
   ["mergeval", "chapterCompletion", J({ version: 1, completed: ["GEN:2", "GEN:1"] }), J({ version: 1, completed: ["GEN:2", "EXO:10", 3] }), NOW],
   ["mergeval", "chapterCompletion", "-", J({ version: 1, completed: ["GEN:1"] }), NOW], ["mergeval", "chapterCompletion", J({ version: 1, completed: ["GEN:1"] }), J("str"), NOW],
   ["mergeval", "habitStats", J({ version: 1, completedDates: ["2026-09-03", "2026-09-01"] }), J({ version: 1, completedDates: ["2026-09-02", "2026-09-01"] }), NOW],
+  // 使用时长 / 最近阅读上云（Josh 2026-09-11）：时长取大，最近阅读按「卷:章」并集取更晚的时间
+  ["mergeval", "appUsageTime", J({ version: 1, totalSec: 900 }), J({ version: 1, totalSec: 120 }), NOW],
+  ["mergeval", "appUsageTime", "-", J({ version: 1, totalSec: 30 }), NOW],
+  ["mergeval", "recentChapters", J({ version: 1, items: [{ bookId: "GEN", chapter: 1, bookName: "创世记", at: 100 }] }),
+   J({ version: 1, items: [{ bookId: "gen", chapter: 1, bookName: "Genesis", at: 300 }, { bookId: "MRK", chapter: 2, bookName: "马可福音", at: 200 }, { bookId: "", chapter: 3, bookName: "x", at: 1 }] }), NOW],
+  ["mergeval", "recentChapters", J({ version: 1, items: [] }), J("str"), NOW],
   ["mergeval", "todayReadingDone", J(doneA), J({ ...doneA, doneKeys: ["ot:GEN:2"] }), NOW], ["mergeval", "todayReadingDone", J(doneA), J(doneB), NOW],
   ["mergeval", "todayReadingDone", J(doneA), J(doneC), NOW], ["mergeval", "todayReadingDone", J(doneC), J(doneA), NOW], ["mergeval", "todayReadingDone", J(doneA), J({ version: 1, scopeKey: "esveverydayinword:day:9", doneKeys: ["a", "b"] }), NOW],
   ["mergeval", "todayReadingDone", J({ version: 1, scopeKey: "", doneKeys: ["a"] }), J({ version: 1, scopeKey: "", doneKeys: ["b"] }), NOW],

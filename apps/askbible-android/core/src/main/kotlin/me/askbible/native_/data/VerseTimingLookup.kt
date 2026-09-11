@@ -33,7 +33,17 @@ object VerseTimingLookup {
         return timings[found].verse
     }
 
-    /** scopeForTranslation —— web 系走 web-en，其余走 cuv-v20 */
-    fun scopeFor(translationId: String): String =
-        if (translationId.trim().lowercase().startsWith("web")) "web-en" else "cuv-v20"
+    /**
+     * scopeForTranslation。RN 里是「不是 web 就当和合本」，只有内置那几个译本时没问题；
+     * 放开 YouVersion 全量译本后，法语版会去套和合本的时间轴、高亮全错位，
+     * 所以认不出的译本一律返回 null ——「没有时间点就不高亮」（Josh 2026-09-11）。
+     */
+    fun scopeFor(translationId: String): String? {
+        val id = translationId.trim().lowercase()
+        return when {
+            id.startsWith("web") -> "web-en"
+            id.startsWith("cuv") -> "cuv-v20"
+            else -> null
+        }
+    }
 }

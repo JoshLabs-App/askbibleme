@@ -161,6 +161,35 @@ function mergeTodayReadingDone(a: unknown, b: unknown): unknown {
   if (keysA.length > keysB.length) return a;
   return b;
 }
+function mergeRecentChapters(a: unknown, b: unknown): unknown {
+  type Item = { bookId: string; chapter: number; bookName: string; at: number };
+  const read = (v: unknown): Item[] => {
+    const items = v && typeof v === "object" ? (v as { items?: unknown }).items : null;
+    if (!Array.isArray(items)) return [];
+    return items.flatMap((raw) => {
+      if (!raw || typeof raw !== "object") return [];
+      const o = raw as Record<string, unknown>;
+      const bookId = typeof o.bookId === "string" ? o.bookId.trim().toUpperCase() : "";
+      const chapter = typeof o.chapter === "number" ? Math.floor(o.chapter) : 0;
+      if (!bookId || chapter <= 0) return [];
+      return [{
+        bookId,
+        chapter,
+        bookName: typeof o.bookName === "string" ? o.bookName : bookId,
+        at: typeof o.at === "number" && Number.isFinite(o.at) ? Math.floor(o.at) : 0,
+      }];
+    });
+  };
+  const byKey = new Map<string, Item>();
+  for (const item of [...read(a), ...read(b)]) {
+    const key = `${item.bookId}:${item.chapter}`;
+    const prev = byKey.get(key);
+    if (!prev || item.at > prev.at) byKey.set(key, item);
+  }
+  const items = [...byKey.values()].sort((x, y) => y.at - x.at || (x.bookId < y.bookId ? -1 : 1)).slice(0, 12);
+  return { version: 1, items };
+}
+
 function mergeBlobValue(key: string, a: unknown, b: unknown): unknown {
   switch (key) {
     case "bookmarks": return mergeBookmarks(a, b);
@@ -171,6 +200,15 @@ function mergeBlobValue(key: string, a: unknown, b: unknown): unknown {
     case "scriptureListenTotals": { const left = parseScriptureListenTotalsRecord(a), right = parseScriptureListenTotalsRecord(b); if (!left) return right ?? b; if (!right) return left; return mergeScriptureListenTotalsRecords(left, right); }
     case "todayReadingFraction": return mergeFractions(a, b);
     case "recentSearches": return mergeRecentSearches(a, b);
+    // 使用时长 / 最近阅读上云（Josh 2026-09-11），真源在 lib/member-reading-sync/merge.ts
+    case "appUsageTime": {
+      const sec = (v: unknown) =>
+        v && typeof v === "object" && typeof (v as { totalSec?: unknown }).totalSec === "number"
+          ? Math.floor((v as { totalSec: number }).totalSec)
+          : 0;
+      return { version: 1, totalSec: Math.max(sec(a), sec(b)) };
+    }
+    case "recentChapters": return mergeRecentChapters(a, b);
     case "readingPlanPrefs": return prefsMerge.mergeReadingPlanPrefsValue(a, b);
     case "tripleLoopProgress": return mergeTripleLoopReadingState(a, b);
     case "ntDeepRepeatProgress": return mergeNtDeepRepeatReadingState(a, b);

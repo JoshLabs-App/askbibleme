@@ -128,6 +128,36 @@ function mergeRecentSearches(a: unknown, b: unknown): unknown {
   return { version: 1, terms: merged };
 }
 
+/** 最近阅读：按「卷:章」并集，同一章取更晚的时间，按时间倒序，最多 12 条 */
+function mergeRecentChapters(a: unknown, b: unknown): unknown {
+  type Item = { bookId: string; chapter: number; bookName: string; at: number };
+  const read = (v: unknown): Item[] => {
+    const items = v && typeof v === "object" ? (v as { items?: unknown }).items : null;
+    if (!Array.isArray(items)) return [];
+    return items.flatMap((raw) => {
+      if (!raw || typeof raw !== "object") return [];
+      const o = raw as Record<string, unknown>;
+      const bookId = typeof o.bookId === "string" ? o.bookId.trim().toUpperCase() : "";
+      const chapter = typeof o.chapter === "number" ? Math.floor(o.chapter) : 0;
+      if (!bookId || chapter <= 0) return [];
+      return [{
+        bookId,
+        chapter,
+        bookName: typeof o.bookName === "string" ? o.bookName : bookId,
+        at: typeof o.at === "number" && Number.isFinite(o.at) ? Math.floor(o.at) : 0,
+      }];
+    });
+  };
+  const byKey = new Map<string, Item>();
+  for (const item of [...read(a), ...read(b)]) {
+    const key = `${item.bookId}:${item.chapter}`;
+    const prev = byKey.get(key);
+    if (!prev || item.at > prev.at) byKey.set(key, item);
+  }
+  const items = [...byKey.values()].sort((x, y) => y.at - x.at || (x.bookId < y.bookId ? -1 : 1)).slice(0, 12);
+  return { version: 1, items };
+}
+
 function scopeKeyFromRecord(v: unknown): string | null {
   if (!v || typeof v !== "object") return null;
   const s = (v as { scopeKey?: unknown }).scopeKey;
@@ -181,6 +211,16 @@ function mergeBlobValue(key: MemberReadingSyncBlobKey, a: unknown, b: unknown): 
           : 0;
       return { version: 1, totalSec: Math.max(leftSec, rightSec) };
     }
+    case "appUsageTime": {
+      // 使用时长：两端取大（和累计听一样，都是单调增的计数）
+      const sec = (v: unknown) =>
+        v && typeof v === "object" && typeof (v as { totalSec?: unknown }).totalSec === "number"
+          ? Math.floor((v as { totalSec: number }).totalSec)
+          : 0;
+      return { version: 1, totalSec: Math.max(sec(a), sec(b)) };
+    }
+    case "recentChapters":
+      return mergeRecentChapters(a, b);
     case "todayReadingFraction":
       return mergeFractions(a, b);
     case "recentSearches":

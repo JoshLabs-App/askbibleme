@@ -199,7 +199,7 @@ private struct EditionBlock: View {
                             .progressViewStyle(.circular)
                             .tint(Color(rgb: 0x8C5A2A))
                             .frame(width: 36, height: 36)
-                        Text("首次加载中")
+                        Text("首次准备中")
                             .font(.system(size: sx(13))).foregroundStyle(theme.muted)
                     }
                     .frame(maxWidth: .infinity)

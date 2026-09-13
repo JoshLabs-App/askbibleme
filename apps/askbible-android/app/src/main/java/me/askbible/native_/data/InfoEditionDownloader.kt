@@ -12,7 +12,7 @@ import java.net.URL
 
 /**
  * 「读后两版」内容库（info-edition.sqlite）按需下载器。
- * 首次点进「陪你探索 / 查找资料」时触发，下载到 filesDir/info-edition.sqlite 后离线可读。
+ * 首次点进「陪你探索 / 查找资料」时触发，显示「首次准备中」进度条，下载到 filesDir/info-edition.sqlite 后离线可读。
  */
 object InfoEditionDownloader {
     private const val R2_URL =

@@ -216,7 +216,7 @@ private fun EditionBlock(
                                     strokeWidth = 2.5.dp,
                                     progress = { if (dlState is InfoEditionDownloader.State.Downloading) dlState.progress.toFloat() else 0f },
                                 )
-                                Text("首次加载中", color = theme.muted.toColor(), fontSize = sx(13f).sp, textAlign = TextAlign.Center)
+                                Text("首次准备中", color = theme.muted.toColor(), fontSize = sx(13f).sp, textAlign = TextAlign.Center)
                             }
                         }
                     }

@@ -55,6 +55,7 @@
 - **决定了什么**：安装新版到 iPhone 全程用 `xcodebuild` + `xcrun devicectl` CLI 完成，不需要打开 Xcode GUI。跟 Claude 说「装到 home 手机」或「装到 David 手机」即可，自动编译并安装。
 - **为什么**：之前每次要手动打开 Xcode、选设备、点 Run；CLI 更快且可自动化。根本原因是 `DEVELOPMENT_TEAM = AJ2998VZH6` 之前只存在 Xcode 用户缓存里（不进 git），今天已写入 `apps/askbible-ios/AskBible.xcodeproj/project.pbxproj`，CLI 和 GUI 都能直接读到。
 - **不会被清理掉的理由**：清理脚本只扫 `~/Desktop/APP` 下的 `dist/build/.next/DerivedData` 等目录，不碰 `~/Library/`（证书、Provisioning Profiles 在这里）；pbxproj 已提交进 git，不会丢。
+- **每次安装必须先卸载**：覆盖安装会导致容器状态脏，App 启动 0.4 秒被 SIGKILL，无崩溃报告。流程固定为：卸载 → 编译 → 安装。卸载会清本地登录，需重新登录一次。
 - **设备 UDID**：home 手机 `00008101-001641020C98001E`，David iPhone `00008120-0002598A0244C01E`。
 - **日期**：2026-09-13
 

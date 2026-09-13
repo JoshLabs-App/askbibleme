@@ -255,6 +255,11 @@ export function useHomeThemeRepeatVerse(
       const manifest = manifestRef.current;
       if (!trimmed || !manifest?.entries.length) return false;
       if (trimmed.toUpperCase() === (verseKeyRef.current ?? "").trim().toUpperCase()) return true;
+      // 原生已接播此句：同步先从预取队列删除，防止 prefetchNextAssetUris 在 await 前
+      // 读到旧队列、把它当"下下一句"重复送给原生（安卓重复播同一金句的根源）。
+      pinnedNextVerseKeysRef.current = pinnedNextVerseKeysRef.current.filter(
+        (k) => k.trim().toUpperCase() !== trimmed.toUpperCase(),
+      );
       const pair = await resolveHomeVersePair(
         manifest,
         trimmed,
@@ -266,9 +271,6 @@ export function useHomeThemeRepeatVerse(
       /** 这句已经播过了，记进记忆，免得轮播马上又抽到它。 */
       advanceMemoryAfterShown(memoryRef.current, trimmed, Date.now());
       await writeHomeVerseMemory(memoryRef.current);
-      pinnedNextVerseKeysRef.current = pinnedNextVerseKeysRef.current.filter(
-        (k) => k.trim().toUpperCase() !== trimmed.toUpperCase(),
-      );
       setEntry(pair.primary);
       setContrastEntry(pair.contrast);
       setVerseKey(trimmed);

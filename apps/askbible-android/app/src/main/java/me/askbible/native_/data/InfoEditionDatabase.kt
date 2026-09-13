@@ -6,8 +6,7 @@ import org.json.JSONObject
 
 /**
  * 「读后两版」内容库：陪你探索（guide，发现版 V2）/ 查找资料（info，讲解版 V1）。
- * 数据是 RN 同一份 assets/content/info-edition.sqlite（4761 行，按「书卷:章:角色」取一行），
- * 由 tools/gen-info-edition.mjs 复制进 assets（noCompress 保证不压缩，先拷到 filesDir 再开）。
+ * 数据由 InfoEditionDownloader 按需从 R2 拉到 filesDir/info-edition.sqlite，不再随包内置。
  * 查找顺序照搬 RN bundled-info-edition.ts：先「书卷:章:角色」精确取，取不到再退回旧式「书卷:章」并校验角色。
  * 与 iOS 的 InfoEditionDatabase 对等。
  */
@@ -28,7 +27,8 @@ class InfoEditionDatabase private constructor(private val db: SQLiteDatabase) {
 
         fun open(context: Context): InfoEditionDatabase? {
             shared?.let { return it }
-            val file = ScriptureDatabase.ensureOnDisk(context, "info-edition.sqlite") ?: return null
+            val file = InfoEditionDownloader.localFile(context)
+            if (!file.exists() || file.length() == 0L) return null
             return try {
                 InfoEditionDatabase(SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)).also { shared = it }
             } catch (_: Exception) { null }

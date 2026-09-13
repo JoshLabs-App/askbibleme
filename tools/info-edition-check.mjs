@@ -3,7 +3,7 @@
  * 读后两版（陪你探索 / 查找资料）三端对拍：
  *  1. 归一化规则：Swift `InfoEditionFormat` ↔ Kotlin `InfoEditionFormat` ↔ RN `info-edition-format.ts`，
  *     用例 = 内容库里的真实章节（两版各若干章）+ 一组合成用例逐条打到每条规则上。
- *  2. 内容库：两端的 info-edition.sqlite 与 RN 资源字节一致（由 gen-info-edition 复制）。
+ *  2. 内容库：RN 资源 info-edition.sqlite 字节可读（两端原生已改为按需从 R2 下载，不再检查）。
  * 用例文件协议：记录以「换行 + U+001E + 换行」分隔，每条第一行是 variant，其余是 markdown。
  */
 import { execFileSync, spawnSync } from "node:child_process";
@@ -19,14 +19,9 @@ const KOTLIN_BIN = path.join(ANDROID_ROOT, "core/build/install/core/bin/core");
 const SQLITE = path.join(ROOT, "apps/askbible-mobile/assets/content/info-edition.sqlite");
 const SEP = "\n\x1e\n";
 
-// ---- 内容库字节一致
+// ---- 内容库：只检 RN 资源（两端原生已改为按需从 R2 下载，不再内置）
 const problems = [];
 if (!existsSync(SQLITE)) { console.error("找不到 RN 的 info-edition.sqlite"); process.exit(1); }
-for (const rel of ["apps/askbible-ios/AskBible/Resources/info-edition.sqlite", "apps/askbible-android/app/src/main/assets/info-edition.sqlite"]) {
-  const abs = path.join(ROOT, rel);
-  if (!existsSync(abs)) problems.push(`${rel} 不存在（npm run gen:info-edition）`);
-  else if (statSync(abs).size !== statSync(SQLITE).size) problems.push(`${rel} 与 RN 资源字节数不一致（npm run gen:info-edition）`);
-}
 
 // ---- 用例：真实章节
 const REAL = [["GEN", 1], ["GEN", 2], ["GEN", 34], ["PSA", 119], ["JHN", 3], ["MAT", 23], ["REV", 22], ["ACT", 1]];
@@ -102,4 +97,4 @@ if (problems.length) {
   console.error(`读后两版自检失败：${problems.length} 处\n  ` + problems.join("\n  "));
   process.exit(1);
 }
-console.log(`读后两版自检通过：${cases.length} 条用例三端一致（真实章节 ${cases.length - SYN.length} · 合成 ${SYN.length}），内容库两端与 RN 字节一致${kotlin ? "" : "（Kotlin 端未参与）"}`);
+console.log(`读后两版自检通过：${cases.length} 条用例三端一致（真实章节 ${cases.length - SYN.length} · 合成 ${SYN.length}）${kotlin ? "" : "（Kotlin 端未参与）"}`);

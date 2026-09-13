@@ -2,9 +2,8 @@ import Foundation
 import SQLite3
 
 /// 「读后两版」内容库：陪你探索（guide，发现版 V2）/ 查找资料（info，讲解版 V1）。
-/// 数据是 RN 同一份 assets/content/info-edition.sqlite（4761 行，按「书卷:章:角色」取一行），
-/// 由 tools/gen-info-edition.mjs 复制进 bundle。查找顺序照搬 RN bundled-info-edition.ts：
-/// 先「书卷:章:角色」精确取，取不到再退回旧式「书卷:章」并校验角色。
+/// 数据由 InfoEditionDownloader 按需从 R2 拉到 Documents/info-edition.sqlite，不再随包内置。
+/// 查找顺序照搬 RN bundled-info-edition.ts：先「书卷:章:角色」精确取，取不到再退回旧式「书卷:章」并校验角色。
 struct InfoEditionChapter {
     let bookId: String
     let chapter: Int
@@ -21,10 +20,15 @@ final class InfoEditionDatabase {
     static let guideEnRoleId = "role_guide_v2_en"
     static let guideLabelAliases: Set<String> = ["发现版V2", "引导版V2", "引导版", "Study Guide V2 EN", "Guide V2 EN"]
 
-    static let shared: InfoEditionDatabase? = {
-        guard let url = Bundle.main.url(forResource: "info-edition", withExtension: "sqlite") else { return nil }
-        return InfoEditionDatabase(url: url)
-    }()
+    private static var _shared: InfoEditionDatabase?
+    static var shared: InfoEditionDatabase? {
+        if let db = _shared { return db }
+        let url = InfoEditionDownloader.localFileURL
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        let db = InfoEditionDatabase(url: url)
+        _shared = db
+        return db
+    }
 
     private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     private var handle: OpaquePointer?

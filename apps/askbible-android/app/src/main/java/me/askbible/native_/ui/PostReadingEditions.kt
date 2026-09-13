@@ -15,11 +15,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.askbible.native_.data.InfoEditionDatabase
+import me.askbible.native_.data.InfoEditionDownloader
 import me.askbible.native_.data.InfoEditionFormat
 import me.askbible.native_.data.InfoEditionVariant
 import me.askbible.native_.data.Parchment
@@ -69,6 +73,8 @@ fun PostReadingEditions(
 ) {
     val scale = (size.metrics.verseFontSize / 16f).coerceIn(0.8f, 2.8f)
     fun sx(n: Float) = Math.round(n * scale * 10f) / 10f
+    val context = LocalContext.current
+    LaunchedEffect(Unit) { InfoEditionDownloader.initState(context) }
 
     Column(Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         // heading（下 20）
@@ -152,6 +158,7 @@ private fun Page(variant: InfoEditionVariant, isActive: Boolean, sx: (Float) -> 
 /**
  * 展开的一版正文。对应 RN ReadChapterInfoEditionBlock：免责声明 → 通屏壳（顶部一道 15dp 的暗影）→
  * 纸面卡片（#F2E4CF、圆角 18、边 rgba(150,112,64,.18)、投影）→ 标题 + Markdown → 「返回」。
+ * 首次使用时 info-edition.sqlite 尚未下载，显示「首次加载中」进度指示器；下载完成后重组渲染正文。
  */
 @Composable
 private fun EditionBlock(
@@ -159,11 +166,22 @@ private fun EditionBlock(
     sx: (Float) -> Float, onBack: () -> Unit, onLink: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val content = remember(bookId, chapter, variant, english) {
-        InfoEditionDatabase.open(context)?.chapter(bookId, chapter, variant, english)?.let { ch ->
-            InfoEditionFormat.splitPrimaryHeading(InfoEditionFormat.readerText(ch.markdown, variant))
+    val dlState = InfoEditionDownloader.state
+
+    LaunchedEffect(dlState) {
+        if (dlState is InfoEditionDownloader.State.Idle) {
+            InfoEditionDownloader.download(context)
         }
     }
+
+    val content = remember(bookId, chapter, variant, english, dlState) {
+        if (dlState is InfoEditionDownloader.State.Done)
+            InfoEditionDatabase.open(context)?.chapter(bookId, chapter, variant, english)?.let { ch ->
+                InfoEditionFormat.splitPrimaryHeading(InfoEditionFormat.readerText(ch.markdown, variant))
+            }
+        else null
+    }
+
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(SiteCopy.t("pages.read.infoEditionDisclaimer"), color = theme.muted.toColor(), fontSize = sx(12f).sp, lineHeight = sx(19f).sp,
@@ -188,17 +206,43 @@ private fun EditionBlock(
                     .clip(shape).background(PAPER).border(1.dp, Color(0x2E967040), shape)
                     .padding(start = 18.dp, end = 18.dp, top = 20.dp, bottom = 22.dp),
             ) {
-                if (content != null) {
-                    content.first?.let { h ->
-                        // titleStyles：24/700 强调色、行高 36、字距 .5、居中、上 30 下 22
-                        Text(h, Modifier.fillMaxWidth().padding(top = sx(30f).dp, bottom = 22.dp), color = MARKDOWN_ACCENT,
-                             fontSize = sx(24f).sp, lineHeight = sx(36f).sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp,
-                             textAlign = TextAlign.Center)
+                when {
+                    dlState is InfoEditionDownloader.State.Downloading || dlState is InfoEditionDownloader.State.Idle -> {
+                        Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(36.dp),
+                                    color = NAV_INK,
+                                    strokeWidth = 2.5.dp,
+                                    progress = { if (dlState is InfoEditionDownloader.State.Downloading) dlState.progress.toFloat() else 0f },
+                                )
+                                Text("首次加载中", color = theme.muted.toColor(), fontSize = sx(13f).sp, textAlign = TextAlign.Center)
+                            }
+                        }
                     }
-                    MarkdownBody(content.second, size, theme, onLink)
-                } else {
-                    Text(SiteCopy.t("pages.read.infoEditionLoadFailed"), Modifier.fillMaxWidth(), color = theme.muted.toColor(), fontSize = sx(13f).sp,
-                         lineHeight = sx(20f).sp, textAlign = TextAlign.Center)
+                    dlState is InfoEditionDownloader.State.Failed -> {
+                        Column(Modifier.fillMaxWidth().padding(vertical = 48.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                               verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Text(SiteCopy.t("pages.read.infoEditionLoadFailed"), Modifier.fillMaxWidth(), color = theme.muted.toColor(),
+                                 fontSize = sx(13f).sp, lineHeight = sx(20f).sp, textAlign = TextAlign.Center)
+                            Text("重试", color = NAV_INK, fontSize = sx(14f).sp, fontWeight = FontWeight.SemiBold,
+                                 modifier = Modifier.clickableNoRipple { InfoEditionDownloader.resetForRetry() }
+                                     .padding(horizontal = 8.dp, vertical = 6.dp))
+                        }
+                    }
+                    content != null -> {
+                        content.first?.let { h ->
+                            // titleStyles：24/700 强调色、行高 36、字距 .5、居中、上 30 下 22
+                            Text(h, Modifier.fillMaxWidth().padding(top = sx(30f).dp, bottom = 22.dp), color = MARKDOWN_ACCENT,
+                                 fontSize = sx(24f).sp, lineHeight = sx(36f).sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp,
+                                 textAlign = TextAlign.Center)
+                        }
+                        MarkdownBody(content.second, size, theme, onLink)
+                    }
+                    else -> {
+                        Text(SiteCopy.t("pages.read.infoEditionLoadFailed"), Modifier.fillMaxWidth(), color = theme.muted.toColor(), fontSize = sx(13f).sp,
+                             lineHeight = sx(20f).sp, textAlign = TextAlign.Center)
+                    }
                 }
                 Box(Modifier.fillMaxWidth().padding(top = 50.dp, bottom = 100.dp), contentAlignment = Alignment.Center) {
                     Text(SiteCopy.t("pages.read.chapterChromeBack"), color = NAV_INK, fontSize = sx(14f).sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.3.sp,

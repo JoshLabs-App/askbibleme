@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 /// 章末「读后两版」入口。对应 RN ReadChapterPostReadingEditions + PostReadingBookPage + ReadChapterInfoEditionBlock：
 /// 标题「继续阅读与思考」+ 引导语 + 细线；左右两页书脊卡「陪你探索 / 查找资料」；点开后在下方铺出该版正文（纸面卡片），
@@ -155,6 +156,7 @@ struct PostReadingEditions: View {
 
 /// 展开的一版正文。对应 RN ReadChapterInfoEditionBlock：免责声明 → 通屏壳（顶部一道 15pt 的暗影）→
 /// 纸面卡片（#F2E4CF、圆角 18、边 rgba(150,112,64,.18)、投影）→ 标题 + Markdown → 「返回」。
+/// 首次使用时 info-edition.sqlite 尚未下载，显示「首次加载中」进度指示器；下载完成后自动刷新。
 private struct EditionBlock: View {
     let bookId: String
     let chapter: Int
@@ -164,11 +166,15 @@ private struct EditionBlock: View {
     let theme: Parchment
     var onBack: () -> Void
 
+    @ObservedObject private var downloader = InfoEditionDownloader.shared
+
     private var scale: CGFloat { max(0.8, min(2.8, size.metrics.verseFontSize / 16)) }
     private func sx(_ n: CGFloat) -> CGFloat { (n * scale * 10).rounded() / 10 }
 
     private var loaded: (heading: String?, body: String)? {
-        guard let ch = InfoEditionDatabase.shared?.chapter(bookId: bookId, chapter: chapter, variant: variant, english: english) else { return nil }
+        guard case .done = downloader.state,
+              let ch = InfoEditionDatabase.shared?.chapter(bookId: bookId, chapter: chapter, variant: variant, english: english)
+        else { return nil }
         return InfoEditionFormat.splitPrimaryHeading(InfoEditionFormat.readerText(ch.markdown, variant: variant))
     }
 
@@ -182,22 +188,56 @@ private struct EditionBlock: View {
                 .padding(.top, 10).padding(.bottom, 14 + 4)
 
             VStack(alignment: .leading, spacing: 0) {
-                if let content {
-                    if let h = content.heading {
-                        // titleStyles：24/700 强调色、行高 36、字距 .5、居中、上 30 下 22
-                        Text(h)
-                            .font(.system(size: sx(24), weight: .bold)).tracking(0.5)
-                            .lineSpacing(max(0, sx(36) - sx(24)))
-                            .foregroundStyle(MarkdownBody.accent).multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, sx(30)).padding(.bottom, 22)
+                switch downloader.state {
+                case .idle, .downloading:
+                    let progress: Double = {
+                        if case .downloading(let p) = downloader.state { return p }
+                        return 0
+                    }()
+                    VStack(spacing: 16) {
+                        ProgressView(value: progress > 0 ? progress : nil)
+                            .progressViewStyle(.circular)
+                            .tint(Color(rgb: 0x8C5A2A))
+                            .frame(width: 36, height: 36)
+                        Text("首次加载中")
+                            .font(.system(size: sx(13))).foregroundStyle(theme.muted)
                     }
-                    MarkdownBody(markdown: content.body, size: size, theme: theme)
-                } else {
-                    Text(SiteCopy.t("pages.read.infoEditionLoadFailed"))
-                        .font(.system(size: sx(13))).lineSpacing(max(0, sx(20) - sx(13)))
-                        .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 48)
+                    .onAppear { downloader.downloadIfNeeded() }
+
+                case .failed(let msg):
+                    VStack(spacing: 16) {
+                        Text(SiteCopy.t("pages.read.infoEditionLoadFailed"))
+                            .font(.system(size: sx(13))).lineSpacing(max(0, sx(20) - sx(13)))
+                            .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
+                        Button("重试") { downloader.resetForRetry() }
+                            .font(.system(size: sx(14), weight: .semibold))
+                            .foregroundStyle(Color(rgb: 0x8C5A2A))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 48)
+                    .onAppear { _ = msg }
+
+                case .done:
+                    if let content {
+                        if let h = content.heading {
+                            // titleStyles：24/700 强调色、行高 36、字距 .5、居中、上 30 下 22
+                            Text(h)
+                                .font(.system(size: sx(24), weight: .bold)).tracking(0.5)
+                                .lineSpacing(max(0, sx(36) - sx(24)))
+                                .foregroundStyle(MarkdownBody.accent).multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, sx(30)).padding(.bottom, 22)
+                        }
+                        MarkdownBody(markdown: content.body, size: size, theme: theme)
+                    } else {
+                        Text(SiteCopy.t("pages.read.infoEditionLoadFailed"))
+                            .font(.system(size: sx(13))).lineSpacing(max(0, sx(20) - sx(13)))
+                            .foregroundStyle(theme.muted).frame(maxWidth: .infinity)
+                    }
                 }
+
                 Button(action: onBack) {
                     Text(SiteCopy.t("pages.read.chapterChromeBack")).font(.system(size: sx(14), weight: .semibold)).tracking(0.3)
                         .foregroundStyle(Color(rgb: 0x8C5A2A))

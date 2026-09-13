@@ -63,13 +63,33 @@ enum NatureScenes {
 
     // MARK: 资源
 
+    private static let r2Base = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+
+    /// scene id → R2 720p 路径（与 nature-settings.json src 一致）
+    private static let r2VideoPath: [String: String] = [
+        "9cc949f2-3c1d-49c0-8357-2dc1d32bd954": "/nature/uploads/9a090c2be6a34caa9536861005726781-720.mp4",
+        "3c8150de-7baa-4334-9c89-4042781ced66": "/nature/uploads/aaf87b9fcc864378a8b0cd099cb9a5c5-720.mp4",
+        "7536456b-50fe-42c0-ad70-e78c9710e762": "/nature/uploads/005ff1000c2046e2af6055b0d0d78792-720.mp4",
+        "d721567f-395f-41d0-b022-7f78a4ef456e": "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9-720.mp4",
+        "d86754f9-2c16-4896-a00f-31a29858b547": "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d-720.mp4",
+        "3ebc424b-5a1b-48dd-accb-0906186dfda0": "/nature/uploads/3f24c668f5eb4be889950a7874a2464d-720.mp4",
+        "c6eed3e9-7b57-4fd8-9843-4af6fb321b0c": "/nature/uploads/3736d8d552da45de84099a78ad8cc3eb-720.mp4",
+        "260b958e-f95a-4900-80b5-3ae9e7b2d720": "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58-720.mp4",
+        "8132b70e-f9dc-44a3-9cb0-35f43a46ef33": "/nature/uploads/d82f4a27a47d43b796abe0c837702963-720.mp4",
+    ]
+
     /// 工程用文件系统同步组，子目录可能被摊平进包根（海报与柔焦海报同名会撞），所以文件名带前缀，先按子目录找、找不到再找包根
     static func resourceURL(_ name: String, ext: String) -> URL? {
         Bundle.main.url(forResource: name, withExtension: ext, subdirectory: "nature")
             ?? Bundle.main.url(forResource: name, withExtension: ext)
     }
 
-    static func videoURL(id: String) -> URL? { resourceURL("nature-video-\(id)", ext: "mp4") }
+    /// 本地内置优先；找不到则走 R2 HTTPS 流播（AVPlayerItem 两种 URL 都认）
+    static func videoURL(id: String) -> URL? {
+        if let local = resourceURL("nature-video-\(id)", ext: "mp4") { return local }
+        let path = r2VideoPath[id] ?? "/nature/uploads/\(id)-720.mp4"
+        return URL(string: r2Base + path)
+    }
 
     /// 全屏海报（live 时垫在视频底下）/ 柔焦海报（关 live 时就看它）。整张解码有几 MB，只留最近一张
     private static var posterCache: (key: String, image: UIImage)?

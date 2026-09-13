@@ -76,7 +76,7 @@ fun HomeSceneVideo(sceneId: String, modifier: Modifier = Modifier) {
 
     LaunchedEffect(sceneId) {
         firstFrame = false
-        player.setMediaItem(MediaItem.fromUri(NatureScenes.videoAssetUri(sceneId)))
+        player.setMediaItem(MediaItem.fromUri(NatureScenes.videoUri(sceneId)))
         player.prepare()
         player.playWhenReady = true
     }

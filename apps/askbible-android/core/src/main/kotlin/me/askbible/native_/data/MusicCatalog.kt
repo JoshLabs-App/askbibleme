@@ -1,5 +1,5 @@
 // 由 tools/gen-music-catalog.mjs 从 apps/askbible-mobile/assets/content/music-companion.json 生成，勿手改。
-// 164 首；内置 5 首，其余经 R2 点播。
+// 164 首；内置 0 首，其余经 R2 点播。
 package me.askbible.native_.data
 
 /** 一首曲子。字段对应 RN 版 PlaybackTrack 里原生真正用到的那几项。 */
@@ -27,23 +27,23 @@ object MusicCatalog {
     const val DEFAULT_ALBUM = "安静"
 
     val tracks: List<MusicTrack> = listOf(
-        MusicTrack("track-mt391okyjj4i", "安息在祢恩典中", "Resting in Your Grace", "", "安静", "/music/uploads/0e63e309c5fd4e518174ed84ee74b391.mp3", 1679, true),
+        MusicTrack("track-mt391okyjj4i", "安息在祢恩典中", "Resting in Your Grace", "", "安静", "/music/uploads/0e63e309c5fd4e518174ed84ee74b391.mp3", 1679, false),
         MusicTrack("track-mt4vkhb4aom4", "柔光之下", "Beneath Soft Light", "", "安静", "/music/uploads/60704b4a1e6f4b5cace44946a7a5e7a7.mp3", 1299, false),
         MusicTrack("track-mt4vkhbu1wrw", "我来到祢面前", "I Come Before You", "", "安静", "/music/uploads/8e06e21df4874da29bf327add75e6ff9.mp3", 1485, false),
         MusicTrack("track-mt4vkhcg5zla", "轻柔盼望", "Gentle Hope", "", "安静", "/music/uploads/248371d04d8c41caab390a6ef34256a0.mp3", 1178, false),
         MusicTrack("track-mt4vkhd762ua", "听我的祷告", "Hear My Prayer", "", "安静", "/music/uploads/1f260d08aac74d3c9a0f01459c99232b.mp3", 1492, false),
         MusicTrack("track-mt4w1bwhs1qa", "我心依靠祢", "My Heart Trusts in You", "", "安静", "/music/uploads/3861d48db2a14350a5cb98a749f2346a.mp3", 1262, false),
-        MusicTrack("track-mpkljem5ewpo", "Dancing in the Afternoon Light", "Dancing in the Afternoon Light", "", "下午茶", "/music/uploads/e1e831706a454fc1ad5e444c5433786f.mp3", 1869, true),
-        MusicTrack("track-mpkmwq6ej8y8", "Rainy Window", "Rainy Window", "", "睡眠", "/music/uploads/1dc20f0b313345cca2c4c1cf3ebccee8.mp3", 120, true),
+        MusicTrack("track-mpkljem5ewpo", "Dancing in the Afternoon Light", "Dancing in the Afternoon Light", "", "下午茶", "/music/uploads/e1e831706a454fc1ad5e444c5433786f.mp3", 1869, false),
+        MusicTrack("track-mpkmwq6ej8y8", "Rainy Window", "Rainy Window", "", "睡眠", "/music/uploads/1dc20f0b313345cca2c4c1cf3ebccee8.mp3", 120, false),
         MusicTrack("track-mpkn1s6ax3sk", "Relaxing Brown Noise", "Relaxing Brown Noise", "", "睡眠", "/music/uploads/709e0e58b2974fcb9b1ee502cd6a79b0.mp3", 60, false),
         MusicTrack("track-mpkm1n2z3z7z", "Alpha Waves 8 Hz🎧", "Alpha Waves 8 Hz🎧", "", "睡眠", "/music/uploads/d0f96a4573204d4cb91f3c10dc5f53c9.mp3", 178, false),
         MusicTrack("track-mpkm1m4fly5r", "4Hz Theta Brainwaves🎧", "4Hz Theta Brainwaves🎧", "", "睡眠", "/music/uploads/67b3b991f3634446aaf8185e147f9642.mp3", 178, false),
         MusicTrack("track-mpkm1mjz4zd1", "40-42-delta🎧", "40-42-delta🎧", "", "睡眠", "/music/uploads/92e36c98d3774bc0aac97548dbf7366a.mp3", 30, false),
         MusicTrack("track-mpknl837n9oq", "Grace-Filled Afternoon", "Grace-Filled Afternoon", "", "下午茶", "/music/uploads/faedc528e0f646978fab98008baa1614.mp3", 1930, false),
-        MusicTrack("track-mpknyhqpr8qw", "Deep Calls to Deep", "Deep Calls to Deep", "", "专注工作", "/music/uploads/87ccf04d22994febbe28bced9278a22d.mp3", 29, true),
+        MusicTrack("track-mpknyhqpr8qw", "Deep Calls to Deep", "Deep Calls to Deep", "", "专注工作", "/music/uploads/87ccf04d22994febbe28bced9278a22d.mp3", 29, false),
         MusicTrack("track-mpkpc8f7zrte", "Resting on a French Bench", "Resting on a French Bench", "", "下午茶", "/music/uploads/ad7ff29461ab49a89111b44081d94a14.mp3", 2231, false),
         MusicTrack("track-mprxst9jy82y", "Dappled Light", "Dappled Light", "", "下午茶", "/music/uploads/cf1dfaabe387401d846e09054aaee6d4.mp3", 1593, false),
-        MusicTrack("track-mt0uzklm451x", "哥德堡变奏曲：咏叹调", "Goldberg Variations: Aria", "石坂希美子", "钢琴", "/music/uploads/0c05f5f82d814874b70399f2dc9cb323.mp3", 300, true),
+        MusicTrack("track-mt0uzklm451x", "哥德堡变奏曲：咏叹调", "Goldberg Variations: Aria", "石坂希美子", "钢琴", "/music/uploads/0c05f5f82d814874b70399f2dc9cb323.mp3", 300, false),
         MusicTrack("track-mt0uzklqz6g9", "平均律 C 大调前奏曲", "Prelude in C major, BWV 846", "石坂希美子", "钢琴", "/music/uploads/749dc98ef53b44ad93192f4d0a63fb18.mp3", 163, false),
         MusicTrack("track-mt0uzklqgha2", "吉诺佩迪第一号", "Gymnopédie No. 1", "Robin Alciatore", "钢琴", "/music/uploads/fdee77a58e71462d821422b142e68711.mp3", 184, false),
         MusicTrack("track-mt0uzklqxuwp", "间奏曲 Op.118 No.2", "Intermezzo in A major, Op. 118 No. 2", "Carlos Gardels", "钢琴", "/music/uploads/f40d471e22ba45fd9ee9383ff2e2a9e5.mp3", 328, false),

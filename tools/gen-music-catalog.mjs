@@ -21,9 +21,11 @@ const store = JSON.parse(readFileSync(path.join(MOBILE, "assets/content/music-co
 const KNOWN = ["安静", "下午茶", "赞美诗", "钢琴", "睡眠", "专注工作"];
 const DEFAULT_ALBUM = "安静";
 
-// 安装包内置的曲目 = assets/music/tracks 里实际存在的文件（与 bundled-music-tracks.ts 一致）
+// 安装包内置的曲目 = 原生 Android assets/music 目录里实际存在的文件
+// （与 RN 的 bundled-music-tracks.ts 独立——RN 捆绑策略由 sync-mobile-offline-media.mjs 管）
+const ANDROID_MUSIC = path.join(ROOT, "apps/askbible-android/app/src/main/assets/music");
 const bundledIds = new Set(
-  readdirSync(path.join(MOBILE, "assets/music/tracks"))
+  readdirSync(ANDROID_MUSIC)
     .filter((f) => f.endsWith(".mp3"))
     .map((f) => f.replace(/\.mp3$/, "")),
 );

@@ -1,5 +1,5 @@
 // 由 tools/gen-music-catalog.mjs 从 apps/askbible-mobile/assets/content/music-companion.json 生成，勿手改。
-// 164 首；内置 5 首，其余经 R2 点播。
+// 164 首；内置 0 首，其余经 R2 点播。
 
 /// 一首曲子。字段对应 RN 版 PlaybackTrack 里原生真正用到的那几项。
 struct MusicTrack: Identifiable, Hashable {
@@ -25,23 +25,23 @@ enum MusicCatalog {
     static let defaultAlbum = "安静"
 
     static let tracks: [MusicTrack] = [
-        MusicTrack(id: "track-mt391okyjj4i", title: "安息在祢恩典中", titleEn: "Resting in Your Grace", artist: "", album: "安静", src: "/music/uploads/0e63e309c5fd4e518174ed84ee74b391.mp3", durationSec: 1679, bundled: true),
+        MusicTrack(id: "track-mt391okyjj4i", title: "安息在祢恩典中", titleEn: "Resting in Your Grace", artist: "", album: "安静", src: "/music/uploads/0e63e309c5fd4e518174ed84ee74b391.mp3", durationSec: 1679, bundled: false),
         MusicTrack(id: "track-mt4vkhb4aom4", title: "柔光之下", titleEn: "Beneath Soft Light", artist: "", album: "安静", src: "/music/uploads/60704b4a1e6f4b5cace44946a7a5e7a7.mp3", durationSec: 1299, bundled: false),
         MusicTrack(id: "track-mt4vkhbu1wrw", title: "我来到祢面前", titleEn: "I Come Before You", artist: "", album: "安静", src: "/music/uploads/8e06e21df4874da29bf327add75e6ff9.mp3", durationSec: 1485, bundled: false),
         MusicTrack(id: "track-mt4vkhcg5zla", title: "轻柔盼望", titleEn: "Gentle Hope", artist: "", album: "安静", src: "/music/uploads/248371d04d8c41caab390a6ef34256a0.mp3", durationSec: 1178, bundled: false),
         MusicTrack(id: "track-mt4vkhd762ua", title: "听我的祷告", titleEn: "Hear My Prayer", artist: "", album: "安静", src: "/music/uploads/1f260d08aac74d3c9a0f01459c99232b.mp3", durationSec: 1492, bundled: false),
         MusicTrack(id: "track-mt4w1bwhs1qa", title: "我心依靠祢", titleEn: "My Heart Trusts in You", artist: "", album: "安静", src: "/music/uploads/3861d48db2a14350a5cb98a749f2346a.mp3", durationSec: 1262, bundled: false),
-        MusicTrack(id: "track-mpkljem5ewpo", title: "Dancing in the Afternoon Light", titleEn: "Dancing in the Afternoon Light", artist: "", album: "下午茶", src: "/music/uploads/e1e831706a454fc1ad5e444c5433786f.mp3", durationSec: 1869, bundled: true),
-        MusicTrack(id: "track-mpkmwq6ej8y8", title: "Rainy Window", titleEn: "Rainy Window", artist: "", album: "睡眠", src: "/music/uploads/1dc20f0b313345cca2c4c1cf3ebccee8.mp3", durationSec: 120, bundled: true),
+        MusicTrack(id: "track-mpkljem5ewpo", title: "Dancing in the Afternoon Light", titleEn: "Dancing in the Afternoon Light", artist: "", album: "下午茶", src: "/music/uploads/e1e831706a454fc1ad5e444c5433786f.mp3", durationSec: 1869, bundled: false),
+        MusicTrack(id: "track-mpkmwq6ej8y8", title: "Rainy Window", titleEn: "Rainy Window", artist: "", album: "睡眠", src: "/music/uploads/1dc20f0b313345cca2c4c1cf3ebccee8.mp3", durationSec: 120, bundled: false),
         MusicTrack(id: "track-mpkn1s6ax3sk", title: "Relaxing Brown Noise", titleEn: "Relaxing Brown Noise", artist: "", album: "睡眠", src: "/music/uploads/709e0e58b2974fcb9b1ee502cd6a79b0.mp3", durationSec: 60, bundled: false),
         MusicTrack(id: "track-mpkm1n2z3z7z", title: "Alpha Waves 8 Hz🎧", titleEn: "Alpha Waves 8 Hz🎧", artist: "", album: "睡眠", src: "/music/uploads/d0f96a4573204d4cb91f3c10dc5f53c9.mp3", durationSec: 178, bundled: false),
         MusicTrack(id: "track-mpkm1m4fly5r", title: "4Hz Theta Brainwaves🎧", titleEn: "4Hz Theta Brainwaves🎧", artist: "", album: "睡眠", src: "/music/uploads/67b3b991f3634446aaf8185e147f9642.mp3", durationSec: 178, bundled: false),
         MusicTrack(id: "track-mpkm1mjz4zd1", title: "40-42-delta🎧", titleEn: "40-42-delta🎧", artist: "", album: "睡眠", src: "/music/uploads/92e36c98d3774bc0aac97548dbf7366a.mp3", durationSec: 30, bundled: false),
         MusicTrack(id: "track-mpknl837n9oq", title: "Grace-Filled Afternoon", titleEn: "Grace-Filled Afternoon", artist: "", album: "下午茶", src: "/music/uploads/faedc528e0f646978fab98008baa1614.mp3", durationSec: 1930, bundled: false),
-        MusicTrack(id: "track-mpknyhqpr8qw", title: "Deep Calls to Deep", titleEn: "Deep Calls to Deep", artist: "", album: "专注工作", src: "/music/uploads/87ccf04d22994febbe28bced9278a22d.mp3", durationSec: 29, bundled: true),
+        MusicTrack(id: "track-mpknyhqpr8qw", title: "Deep Calls to Deep", titleEn: "Deep Calls to Deep", artist: "", album: "专注工作", src: "/music/uploads/87ccf04d22994febbe28bced9278a22d.mp3", durationSec: 29, bundled: false),
         MusicTrack(id: "track-mpkpc8f7zrte", title: "Resting on a French Bench", titleEn: "Resting on a French Bench", artist: "", album: "下午茶", src: "/music/uploads/ad7ff29461ab49a89111b44081d94a14.mp3", durationSec: 2231, bundled: false),
         MusicTrack(id: "track-mprxst9jy82y", title: "Dappled Light", titleEn: "Dappled Light", artist: "", album: "下午茶", src: "/music/uploads/cf1dfaabe387401d846e09054aaee6d4.mp3", durationSec: 1593, bundled: false),
-        MusicTrack(id: "track-mt0uzklm451x", title: "哥德堡变奏曲：咏叹调", titleEn: "Goldberg Variations: Aria", artist: "石坂希美子", album: "钢琴", src: "/music/uploads/0c05f5f82d814874b70399f2dc9cb323.mp3", durationSec: 300, bundled: true),
+        MusicTrack(id: "track-mt0uzklm451x", title: "哥德堡变奏曲：咏叹调", titleEn: "Goldberg Variations: Aria", artist: "石坂希美子", album: "钢琴", src: "/music/uploads/0c05f5f82d814874b70399f2dc9cb323.mp3", durationSec: 300, bundled: false),
         MusicTrack(id: "track-mt0uzklqz6g9", title: "平均律 C 大调前奏曲", titleEn: "Prelude in C major, BWV 846", artist: "石坂希美子", album: "钢琴", src: "/music/uploads/749dc98ef53b44ad93192f4d0a63fb18.mp3", durationSec: 163, bundled: false),
         MusicTrack(id: "track-mt0uzklqgha2", title: "吉诺佩迪第一号", titleEn: "Gymnopédie No. 1", artist: "Robin Alciatore", album: "钢琴", src: "/music/uploads/fdee77a58e71462d821422b142e68711.mp3", durationSec: 184, bundled: false),
         MusicTrack(id: "track-mt0uzklqxuwp", title: "间奏曲 Op.118 No.2", titleEn: "Intermezzo in A major, Op. 118 No. 2", artist: "Carlos Gardels", album: "钢琴", src: "/music/uploads/f40d471e22ba45fd9ee9383ff2e2a9e5.mp3", durationSec: 328, bundled: false),

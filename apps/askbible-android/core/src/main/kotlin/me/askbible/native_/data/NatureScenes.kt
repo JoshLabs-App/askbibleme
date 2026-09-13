@@ -3,7 +3,7 @@ package me.askbible.native_.data
 /**
  * 首页自然场景。搬自 RN assets/content/nature-settings.json（顺序 = 配置顺序）
  * + nature/ambientSceneSlots.ts（每景默认环境音、英文名）+ natureHomeVerseAppearancePrefs.ts（字号档）。
- * 海报 / 柔焦海报 / 循环视频都随安装包内置（assets/nature/…），文件名就是场景 id。
+ * 默认景（雪山湖）视频内置；其余场景视频走 R2 HTTPS 流播（videoUri 自动判断）。
  */
 data class NatureScene(
     val id: String,
@@ -31,9 +31,28 @@ object NatureScenes {
 
     fun scene(id: String): NatureScene? = scenes.firstOrNull { it.id == id }
 
+    private const val R2_BASE = "https://pub-f30fb48025d841f09c37bb9b52df5354.r2.dev"
+
+    /** scene id → R2 720p 视频路径（与 nature-settings.json src 一致） */
+    private val r2VideoPath = mapOf(
+        "9cc949f2-3c1d-49c0-8357-2dc1d32bd954" to "/nature/uploads/9a090c2be6a34caa9536861005726781-720.mp4",
+        "3c8150de-7baa-4334-9c89-4042781ced66" to "/nature/uploads/aaf87b9fcc864378a8b0cd099cb9a5c5-720.mp4",
+        "7536456b-50fe-42c0-ad70-e78c9710e762" to "/nature/uploads/005ff1000c2046e2af6055b0d0d78792-720.mp4",
+        "d721567f-395f-41d0-b022-7f78a4ef456e" to "/nature/uploads/3adc833b30b4495fb8c46a48cc11afe9-720.mp4",
+        "d86754f9-2c16-4896-a00f-31a29858b547" to "/nature/uploads/0b288d8250b2460788fd0f0e2efa828d-720.mp4",
+        "3ebc424b-5a1b-48dd-accb-0906186dfda0" to "/nature/uploads/3f24c668f5eb4be889950a7874a2464d-720.mp4",
+        "c6eed3e9-7b57-4fd8-9843-4af6fb321b0c" to "/nature/uploads/3736d8d552da45de84099a78ad8cc3eb-720.mp4",
+        "260b958e-f95a-4900-80b5-3ae9e7b2d720" to "/nature/uploads/a59d8302282b42a28d858a8d92c5ba58-720.mp4",
+        "8132b70e-f9dc-44a3-9cb0-35f43a46ef33" to "/nature/uploads/d82f4a27a47d43b796abe0c837702963-720.mp4",
+    )
+
     fun posterAsset(id: String) = "nature/posters/$id.jpg"
     fun softPosterAsset(id: String) = "nature/posters-soft/$id.jpg"
-    fun videoAssetUri(id: String) = "asset:///nature/videos/$id.mp4"
+
+    /** 默认景走内置 asset，其余走 R2 HTTPS；ExoPlayer DefaultDataSource 两种都认 */
+    fun videoUri(id: String): String =
+        if (id == DEFAULT_SCENE_ID) "asset:///nature/videos/$id.mp4"
+        else "$R2_BASE${r2VideoPath[id] ?: "/nature/uploads/$id-720.mp4"}"
 
     /** RN sortNatureScenesByUsage：按点选次数降序，同次数保持配置顺序 */
     fun sortedByUsage(usage: Map<String, Int>): List<NatureScene> =

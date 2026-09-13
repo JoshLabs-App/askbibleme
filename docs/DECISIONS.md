@@ -59,4 +59,13 @@
 - **设备 UDID**：home 手机 `00008101-001641020C98001E`，David iPhone `00008120-0002598A0244C01E`。
 - **日期**：2026-09-13
 
+### Android 包体压缩：音乐 + info-edition + 自然场景视频改为按需下载
+
+- **决定了什么**：三类大文件不再随安装包内置，全部改为按需从 R2 流播或下载：
+  1. **音乐 MP3（68MB）**：5 首 starter tracks 删出 assets，MusicCatalog 所有 164 首 `bundled: false`，ExoPlayer 走 R2 HTTPS 流播。
+  2. **info-edition.sqlite（26MB）**：上传到 R2 `bible/info-edition.sqlite`，新增 `InfoEditionDownloader`，首次点击「陪你探索 / 查找资料」时异步下载，UI 显示「首次加载中」进度条，下载完成自动显示内容。
+  3. **自然场景视频（9.7MB）**：只保留默认景（雪山湖）内置，其余 8 景走 R2 HTTPS 流播（ExoPlayer / AVPlayer 原生支持）。
+- **为什么**：Josh 确认。Android 安装包从约 92MB 压到约 24MB（-68MB）。
+- **日期**：2026-09-13
+
 ## 已作废

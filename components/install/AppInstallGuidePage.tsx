@@ -11,8 +11,6 @@ import {
   APP_INSTALL_IOS_URL,
 } from "@/lib/app-install-urls";
 import { ASKBIBLE_PRODUCT_NAME } from "@/lib/askbible-product-name";
-import { isIosDevice } from "@/lib/pwa/display-mode";
-import { useA2hsPrompt } from "@/lib/pwa/use-a2hs-prompt";
 
 const LOGO_GOLD = "#ffb101";
 
@@ -73,102 +71,6 @@ function PlatformCard({ guide }: { guide: PlatformGuide }) {
           {guide.secondaryLabel}
         </a>
       ) : null}
-    </section>
-  );
-}
-
-function WebAppCard() {
-  const { t } = useLocale();
-  const a2hs = useA2hsPrompt();
-  const [platform, setPlatform] = useState<Platform>("other");
-
-  useEffect(() => {
-    setPlatform(detectPlatform());
-    // Also detect iOS via the isIosDevice helper which handles iPadOS
-    if (isIosDevice()) setPlatform("ios");
-  }, []);
-
-  // Hide on Android when the native prompt isn't available (non-Chrome, already installed, etc.)
-  // Always show on iOS for the manual instructions.
-  // Also show when the native prompt is ready.
-  const showCard =
-    platform === "ios" ||
-    a2hs.status === "ready" ||
-    a2hs.status === "installing" ||
-    a2hs.status === "installed";
-
-  if (!showCard) return null;
-
-  const isAndroidPrompt =
-    a2hs.status === "ready" || a2hs.status === "installing" || a2hs.status === "installed";
-
-  if (isAndroidPrompt || platform === "android") {
-    const eyebrow = t("install.webAppEyebrowAndroid");
-    const title = t("install.webAppTitle");
-    const intro = t("install.webAppIntroAndroid");
-    const steps = [
-      t("install.webAppStepAndroid1"),
-      t("install.webAppStepAndroid2"),
-      t("install.webAppStepAndroid3"),
-    ];
-
-    const actionLabel =
-      a2hs.status === "installing"
-        ? t("install.webAppInstalling")
-        : a2hs.status === "installed"
-          ? t("install.webAppInstalled")
-          : t("install.webAppActionAndroid");
-
-    return (
-      <section className="rounded-[18px] border border-[rgba(120,53,15,0.2)] bg-[rgba(255,252,245,0.92)] px-4 py-5">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgba(77,53,34,0.55)]">
-          {eyebrow}
-        </p>
-        <h2 className="mt-2 font-serif text-[1.15rem] font-medium tracking-[0.02em] text-[#2b1d15]">
-          {title}
-        </h2>
-        <p className="mt-3 text-[15px] leading-[1.75] text-[rgba(43,29,21,0.76)]">{intro}</p>
-        <ol className="mt-4 list-decimal space-y-2 pl-5 text-[15px] leading-[1.75] text-[rgba(43,29,21,0.78)] marker:text-[rgba(77,53,34,0.35)]">
-          {steps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-        {a2hs.status === "ready" ? (
-          <button
-            type="button"
-            onClick={() => void a2hs.trigger()}
-            className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-[rgba(120,53,15,0.22)] bg-[rgba(255,252,245,0.88)] px-4 py-3 text-[15px] font-semibold text-[#2b1d15] transition hover:border-[rgba(120,53,15,0.32)] active:scale-[0.99]"
-          >
-            {actionLabel}
-          </button>
-        ) : (
-          <div
-            className="mt-6 inline-flex w-full items-center justify-center rounded-full border border-[rgba(120,53,15,0.12)] bg-[rgba(255,252,245,0.6)] px-4 py-3 text-[15px] font-medium text-[rgba(43,29,21,0.5)]"
-          >
-            {actionLabel}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  // iOS manual instructions
-  return (
-    <section className="rounded-[18px] border border-[rgba(120,53,15,0.2)] bg-[rgba(255,252,245,0.92)] px-4 py-5">
-      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgba(77,53,34,0.55)]">
-        {t("install.webAppEyebrowIos")}
-      </p>
-      <h2 className="mt-2 font-serif text-[1.15rem] font-medium tracking-[0.02em] text-[#2b1d15]">
-        {t("install.webAppTitle")}
-      </h2>
-      <p className="mt-3 text-[15px] leading-[1.75] text-[rgba(43,29,21,0.76)]">
-        {t("install.webAppIntroIos")}
-      </p>
-      <ol className="mt-4 list-decimal space-y-2 pl-5 text-[15px] leading-[1.75] text-[rgba(43,29,21,0.78)] marker:text-[rgba(77,53,34,0.35)]">
-        <li>{t("install.webAppStepIos1")}</li>
-        <li>{t("install.webAppStepIos2")}</li>
-        <li>{t("install.webAppStepIos3")}</li>
-      </ol>
     </section>
   );
 }
@@ -266,7 +168,6 @@ export function AppInstallGuidePage() {
       </header>
 
       <div className="mt-10 space-y-2.5">
-        <WebAppCard />
         {guides.map((guide) => (
           <PlatformCard key={guide.id} guide={guide} />
         ))}

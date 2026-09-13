@@ -56,21 +56,7 @@
   },
   "install": {
     "menuAction": "安装 AskBible App",
-    "guideLink": "查看安装说明",
-    "webAppTitle": "添加到主屏幕",
-    "webAppIntroAndroid": "在浏览器中打开 AskBible.me，即可将其作为 App 添加到手机主屏幕，无需应用商店。",
-    "webAppIntroIos": "在 Safari 浏览器中打开 AskBible.me，即可将其添加到 iPhone / iPad 主屏幕，体验接近原生 App。",
-    "webAppStepAndroid1": "在 Chrome 浏览器中打开 AskBible.me。",
-    "webAppStepAndroid2": "点击下方「添加到主屏幕」按钮，或点击 Chrome 地址栏右侧的安装图标。",
-    "webAppStepAndroid3": "在弹出的对话框中点击「安装」即可。",
-    "webAppStepIos1": "在 Safari 中打开 AskBible.me（须用 Safari，其他浏览器不支持此功能）。",
-    "webAppStepIos2": "点击底部工具栏中间的「分享」按钮（方框加箭头图标）。",
-    "webAppStepIos3": "向下滚动，点击「添加到主屏幕」，然后点右上角「添加」。",
-    "webAppActionAndroid": "添加到主屏幕",
-    "webAppInstalling": "正在添加…",
-    "webAppInstalled": "已添加到主屏幕",
-    "webAppEyebrowAndroid": "Android · Chrome",
-    "webAppEyebrowIos": "iPhone / iPad · Safari"
+    "guideLink": "查看安装说明"
   },
   "auth": {
     "pageTitle": "登录",

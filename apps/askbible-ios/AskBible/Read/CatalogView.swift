@@ -240,7 +240,8 @@ struct TranslationPanel: View {
     private let theme = Parchment.light
 
     var body: some View {
-        ZStack(alignment: .top) {
+        let allGroups = groups
+        return ZStack(alignment: .top) {
             // 铺满整屏再收点击：不写 frame 的话 ZStack 只按卡片大小给这层布局尺寸，
             // 颜色照样画到全屏（ignoresSafeArea），但卡片以下的点击落不进来，面板就关不掉了
             theme.modalBackdrop
@@ -262,7 +263,7 @@ struct TranslationPanel: View {
                 }
 
                 if expanded {
-                    translationList(selectedId: store.translation.id, excludeId: nil, allowNone: false, lang: $langTab, query: $query) { t in
+                    translationList(allGroups: allGroups, selectedId: store.translation.id, excludeId: nil, allowNone: false, lang: $langTab, query: $query) { t in
                         if let t {
                             store.translation = t
                             if store.secondary?.id == t.id { store.secondary = nil }
@@ -284,7 +285,7 @@ struct TranslationPanel: View {
                 }
 
                 if expandedSecondary {
-                    translationList(selectedId: store.secondary?.id ?? store.translation.id, excludeId: store.translation.id, allowNone: true, lang: $langTabSecondary, query: $querySecondary) { t in
+                    translationList(allGroups: allGroups, selectedId: store.secondary?.id ?? store.translation.id, excludeId: store.translation.id, allowNone: true, lang: $langTabSecondary, query: $querySecondary) { t in
                         store.secondary = t
                         expandedSecondary = false
                     }
@@ -334,17 +335,17 @@ struct TranslationPanel: View {
     }
 
     /// 某译本所属的语言分组键
-    private func family(of id: String?) -> String? {
+    private func family(of id: String?, in allGroups: [(language: String, items: [ScriptureTranslation])]) -> String? {
         guard let id, let t = ScriptureTranslation.find(id) else { return nil }
-        return groups.first { g in g.items.contains { $0.id == t.id } }?.language
+        return allGroups.first { g in g.items.contains { $0.id == t.id } }?.language
     }
 
     /// 最上面一行搜索 + 一排语言（横滑，界面语言那档打头），下面只列该语言的版本（RN 选择器顺序 = 常用在前）。
     /// 搜索非空时跨语言平铺结果（几百本在线译本，只靠滑语言找不动）。
-    private func translationList(selectedId: String?, excludeId: String?, allowNone: Bool, lang: Binding<String?>,
+    private func translationList(allGroups: [(language: String, items: [ScriptureTranslation])], selectedId: String?, excludeId: String?, allowNone: Bool, lang: Binding<String?>,
                                  query: Binding<String>, onPick: @escaping (ScriptureTranslation?) -> Void) -> some View {
-        let all = groups
-        let current = lang.wrappedValue ?? family(of: selectedId) ?? all.first?.language ?? ""
+        let all = allGroups
+        let current = lang.wrappedValue ?? family(of: selectedId, in: allGroups) ?? all.first?.language ?? ""
         let q = query.wrappedValue.trimmingCharacters(in: .whitespaces).lowercased()
         let items: [ScriptureTranslation] = {
             if q.isEmpty { return (all.first { $0.language == current }?.items ?? []).filter { $0.id != excludeId } }
@@ -399,7 +400,7 @@ struct TranslationPanel: View {
             }
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
+                LazyVStack(spacing: 0) {
                     if allowNone, q.isEmpty {
                         row(label: SiteCopy.t("native.none", locale), selected: selectedId == nil || selectedId == excludeId, badges: EmptyView()) { onPick(nil) }
                     }
@@ -515,11 +516,6 @@ private struct CatalogBookRow: View {
                     .foregroundStyle(theme.ink)
                     .lineLimit(1)
                 Spacer(minLength: 2)
-                // RN bookChevron：文字「›」24/400 faint，透明度 .58
-                Text("\u{203A}")
-                    .font(.system(size: 24))
-                    .foregroundStyle(theme.faint.opacity(0.58))
-                    .frame(height: 24)
             }
             .padding(.horizontal, 5)
             .padding(.trailing, underRail ? railClearance : 0)

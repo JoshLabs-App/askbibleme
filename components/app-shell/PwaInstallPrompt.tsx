@@ -11,6 +11,7 @@ import {
   isInstallDismissedRecently,
   markInstallDismissed,
 } from "@/lib/pwa/install-prompt-persistence";
+import { useA2hsPrompt } from "@/lib/pwa/use-a2hs-prompt";
 
 const SHOW_DELAY_MS = 2_500;
 
@@ -54,12 +55,13 @@ function registerMinimalServiceWorker(): void {
 }
 
 /**
- * 打开站点后：显示 App 安装入口（App Store / Google Play）。
+ * 打开站点后：显示 App 安装入口（App Store / Google Play / 添加到主屏幕）。
  */
 export function PwaInstallPrompt() {
   const { t } = useLocale();
   const { immersive } = useAppImmersive();
   const pathname = usePathname() ?? "";
+  const a2hs = useA2hsPrompt();
   const [visible, setVisible] = useState(false);
   const showTimerRef = useRef<number | null>(null);
   const scheduledRef = useRef(false);
@@ -143,6 +145,15 @@ export function PwaInstallPrompt() {
         {t("chrome.pwaInstallBody")}
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {a2hs.status === "ready" ? (
+          <button
+            type="button"
+            onClick={() => void a2hs.trigger()}
+            className="rounded-full border border-border/60 bg-ink/[0.06] px-3.5 py-1.5 text-[13px] font-medium text-ink transition hover:bg-ink/[0.1]"
+          >
+            {t("install.webAppActionAndroid")}
+          </button>
+        ) : null}
         {APP_INSTALL_ANDROID_URL ? (
           <a
             href={APP_INSTALL_ANDROID_URL}

@@ -56,7 +56,21 @@
   },
   "install": {
     "menuAction": "Install AskBible App",
-    "guideLink": "Full install guide"
+    "guideLink": "Full install guide",
+    "webAppTitle": "Add to Home Screen",
+    "webAppIntroAndroid": "Open AskBible.me in Chrome and add it to your home screen as an app — no app store needed.",
+    "webAppIntroIos": "Open AskBible.me in Safari and add it to your home screen for a near-native app experience.",
+    "webAppStepAndroid1": "Open AskBible.me in Chrome.",
+    "webAppStepAndroid2": "Tap the Add to Home Screen button below, or tap the install icon in the Chrome address bar.",
+    "webAppStepAndroid3": "Tap Install in the prompt that appears.",
+    "webAppStepIos1": "Open AskBible.me in Safari (must be Safari — other browsers don't support this).",
+    "webAppStepIos2": "Tap the Share button in the middle of the bottom toolbar (box with an arrow).",
+    "webAppStepIos3": "Scroll down and tap Add to Home Screen, then tap Add in the top-right corner.",
+    "webAppActionAndroid": "Add to Home Screen",
+    "webAppInstalling": "Adding…",
+    "webAppInstalled": "Added to Home Screen",
+    "webAppEyebrowAndroid": "Android · Chrome",
+    "webAppEyebrowIos": "iPhone / iPad · Safari"
   },
   "auth": {
     "pageTitle": "Sign in",

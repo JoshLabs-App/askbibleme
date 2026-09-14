@@ -57,6 +57,8 @@ struct ShellTabBar: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: ShellMetrics.tabButtonHeight)
                 .shellIconShadow()
+                // 不补 contentShape 的话只有字形笔画能点中（Josh 2026-09-11 在底栏上撞到）
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

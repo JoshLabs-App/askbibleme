@@ -140,6 +140,11 @@ struct ChapterView: View {
                     .padding(.horizontal, 20)
                 }
                 .shellBottomInset(hasDock: true)
+                // 浮层时在 shellBottomInset 之外再留出空间，防止底部文字被遮住
+                .safeAreaInset(edge: .bottom) {
+                    if paintColor != nil || eraseMode { Color.clear.frame(height: 140) }
+                    else if selecting { Color.clear.frame(height: 90) }
+                }
                 .parchmentFade(.chapter)
                 // 换章回到顶部：ScrollView 身份没变，不主动滚回去会停在上一章的滚动位置（计划流顺章时标题在屏外）
                 .onChange(of: "\(bookId).\(chapter)") { _, _ in proxy.scrollTo("chapter-top", anchor: .top) }
@@ -157,8 +162,6 @@ struct ChapterView: View {
             }
 
             topChrome()
-
-            if selecting { selectionBar }
         }
         .background(ParchmentBackground(theme: theme).ignoresSafeArea())
         .task(id: "\(store.translation.id).\(store.secondary?.id ?? "-").\(bookId).\(chapter).\(reloadToken)") {
@@ -355,44 +358,6 @@ struct ChapterView: View {
     }
 
     private var selecting: Bool { !selectedVerses.isEmpty }
-
-    /// 选择态底部条：和长按操作单同一张羊皮卡片（Josh 2026-09-11「这个地方没用我们默认的对话框」）
-    private var selectionBar: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 12) {
-                Text(SiteCopy.f("pages.read.verseSelectionPicked", ["count": "\(selectedVerses.count)"], locale))
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(theme.ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Button(action: onClearSelection) {
-                    Text(SiteCopy.t("pages.read.verseSelectionClear", locale))
-                        .font(.system(size: 14))
-                        .foregroundStyle(theme.muted)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.bottom, 10)
-
-            Button(action: onCopySelection) {
-                HStack(spacing: 8) {
-                    MaterialIcon(glyph: MI.contentCopy, size: 22, color: theme.ink)
-                    Text(SiteCopy.t("pages.read.verseSelectionCopy", locale))
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(theme.ink)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .parchmentCard(cornerRadius: 16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-        .ignoresSafeArea(edges: .bottom)
-    }
 
     /// 左上返回 + 右上竖排。位置来自 `readTopChrome.ts`：
     /// 第 index 个按钮顶边 = safeTop + 6 + index × (50 + 5)，右边距 8，图标 32，白色带阴影。

@@ -207,6 +207,45 @@ struct RootView: View {
         return out
     }
 
+    /// 多节选择底部条：渲染在顶层 ZStack，浮在底栏之上（ChapterView 内渲染会被底栏盖住）
+    @ViewBuilder private var verseSelectionBar: some View {
+        if let opened = openedChapter {
+            let theme = Parchment.light
+            VStack(spacing: 0) {
+                HStack(alignment: .top, spacing: 12) {
+                    Text(SiteCopy.f("pages.read.verseSelectionPicked", ["count": "\(selectedVerses.count)"], appLocale))
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button { selectedVerses = [] } label: {
+                        Text(SiteCopy.t("pages.read.verseSelectionClear", appLocale))
+                            .font(.system(size: 14))
+                            .foregroundStyle(theme.muted)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.bottom, 10)
+                Button { copySelectedVerses(in: opened) } label: {
+                    HStack(spacing: 8) {
+                        MaterialIcon(glyph: MI.contentCopy, size: 22, color: theme.ink)
+                        Text(SiteCopy.t("pages.read.verseSelectionCopy", appLocale))
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(theme.ink)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .parchmentCard(cornerRadius: 16)
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
     /// 多节复制：按节号顺序，每节一行「书名 章:节 正文」（RN copySelectedVerses）
     private func copySelectedVerses(in opened: (book: BookRef, chapter: Int)) {
         guard !selectedVerses.isEmpty else { return }
@@ -646,6 +685,10 @@ struct RootView: View {
                     onPick: { m in setSleepTimerAll(m ?? 0) },
                     onClose: { showSleepSheet = false })
             }
+        }
+        // 多选条浮在底栏之上：用 overlay 不用全屏 frame，避免透明区域拦截点击
+        .overlay(alignment: .bottom) {
+            if !selectedVerses.isEmpty { verseSelectionBar }
         }
     }
 

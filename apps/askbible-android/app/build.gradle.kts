@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,17 +11,34 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        // 与 RN 版 me.askbible 错开，两个 App 可并排安装对比
-        applicationId = "me.askbible.native"
+        // Josh 2026-09-14：Play 沿用 me.askbible 顶替 RN 版；debug 加后缀仍是 me.askbible.native，可与商店版并排装
+        applicationId = "me.askbible"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2"
+        // 必须大于 Play 上 RN 版已用过的 versionCode（RN android/app/build.gradle = 238）
+        versionCode = 239
+        versionName = "1.0.42"
+    }
+
+    // 与 RN 同一把 upload key：凭据只在本机 apps/askbible-mobile/android/keystore.properties（gitignore）
+    val uploadProps = rootProject.file("../askbible-mobile/android/keystore.properties")
+    signingConfigs {
+        if (uploadProps.exists()) create("upload") {
+            val p = Properties().apply { uploadProps.inputStream().use { load(it) } }
+            storeFile = rootProject.file("../askbible-mobile/android/app/" + p.getProperty("MYAPP_UPLOAD_STORE_FILE"))
+            storePassword = p.getProperty("MYAPP_UPLOAD_STORE_PASSWORD")
+            keyAlias = p.getProperty("MYAPP_UPLOAD_KEY_ALIAS")
+            keyPassword = p.getProperty("MYAPP_UPLOAD_KEY_PASSWORD")
+        }
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".native"
+        }
         release {
             isMinifyEnabled = false
+            signingConfigs.findByName("upload")?.let { signingConfig = it }
         }
     }
 

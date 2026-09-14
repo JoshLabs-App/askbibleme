@@ -58,7 +58,7 @@
 - **影响**：在 iPhone 或网页上擦除仍会复活；另一端用并集推送时，也可能把安卓擦掉的内容再合回云端。
 - **要 Josh 决定**：是否三端统一改成同样规则（推荐：统一改）。
 
-## 原生安卓：官网发的是 Debug 包，Play 未发布（2026-09-14）
-- **现状**：`deploy_android.py` 用 `assembleDebug`（原生 app 没配 release 签名，release 包装不上），已发 0.2(2) 到 askbible-media.joshlabs.app/download.html。Play 上的是 RN 版 `me.askbible`，原生是 `me.askbible.native`，包名不同，不能作为它的更新发布。
-- **影响**：Debug 包可调试、体积 57MB 未压缩；官网包与 Play 版是两个独立 App。
-- **要 Josh 决定**：①原生何时接 release 签名（推荐：用现有 upload keystore 配 release，官网改发 release 包）；②原生上 Play 时是改用 `me.askbible` 包名替换 RN 版，还是新建条目（推荐：替换 RN 版，保留用户和评价）。
+## 原生安卓 1.0.42(239) 已在 Play 内部测试，正式发布待定（2026-09-14）
+- **现状**：原生已改 `me.askbible` + 与 RN 同一把 upload key，已传 Play internal 轨道；官网下载页同步为 release 签名 APK v1.0.42。（已关闭：包名问题，Josh 定沿用 me.askbible；release 签名已配。）
+- **影响**：RN 版本机数据（AsyncStorage：未登录用户的收藏、计划、划重点、设置）原生读不到，覆盖更新后游客数据会丢；登录会员靠云同步找回。官网 APK 与 Play 下发的包签名不同（Play 用 Google 签名），装过 Play 版的手机不能直接用官网包覆盖。
+- **要 Josh 决定**：①先在内部测试用 Play 装一次验证覆盖更新；②正式推 production 前是否先做 RN→原生本地数据迁移（推荐：先做迁移再推正式）。

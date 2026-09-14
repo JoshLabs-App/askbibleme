@@ -6,14 +6,65 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AB0000000000000000000017 /* AskBibleWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000010 /* AskBibleWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AB000000000000000000001E /* WidgetKit.framework in Frameworks (main) */ = {isa = PBXBuildFile; fileRef = AB000000000000000000001D /* WidgetKit.framework */; };
+		AB000000000000000000001F /* WidgetKit.framework in Frameworks (widget) */ = {isa = PBXBuildFile; fileRef = AB000000000000000000001D /* WidgetKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AB0000000000000000000018 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AB0000000000000000000009 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AB0000000000000000000015;
+			remoteInfo = AskBibleWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AB0000000000000000000016 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AB0000000000000000000017 /* AskBibleWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		AB0000000000000000000001 /* AskBible.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AskBible.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB0000000000000000000010 /* AskBibleWidget.appex */ = {isa = PBXFileReference; explicitFileType = wrapper.app-extension; includeInIndex = 0; path = AskBibleWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB000000000000000000001D /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AB0000000000000000000020 /* Widget infoplist exceptions */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				AskBibleWidget.entitlements,
+			);
+			target = AB0000000000000000000015 /* AskBibleWidget */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AB0000000000000000000002 /* AskBible */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = AskBible;
+			sourceTree = "<group>";
+		};
+		AB0000000000000000000011 /* AskBibleWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AB0000000000000000000020 /* Widget infoplist exceptions */,
+			);
+			path = AskBibleWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +74,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB000000000000000000001E /* WidgetKit.framework in Frameworks (main) */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000013 /* Frameworks (widget) */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB000000000000000000001F /* WidgetKit.framework in Frameworks (widget) */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,7 +93,9 @@
 			isa = PBXGroup;
 			children = (
 				AB0000000000000000000002 /* AskBible */,
+				AB0000000000000000000011 /* AskBibleWidget */,
 				AB0000000000000000000005 /* Products */,
+				AB000000000000000000001D /* WidgetKit.framework */,
 			);
 			sourceTree = "<group>";
 		};
@@ -41,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				AB0000000000000000000001 /* AskBible.app */,
+				AB0000000000000000000010 /* AskBibleWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,10 +118,12 @@
 				AB0000000000000000000007 /* Sources */,
 				AB0000000000000000000003 /* Frameworks */,
 				AB0000000000000000000008 /* Resources */,
+				AB0000000000000000000016 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AB0000000000000000000019 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AB0000000000000000000002 /* AskBible */,
@@ -67,6 +132,26 @@
 			productName = AskBible;
 			productReference = AB0000000000000000000001 /* AskBible.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AB0000000000000000000015 /* AskBibleWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB000000000000000000001C /* Build configuration list for PBXNativeTarget "AskBibleWidget" */;
+			buildPhases = (
+				AB0000000000000000000012 /* Sources (widget) */,
+				AB0000000000000000000013 /* Frameworks (widget) */,
+				AB0000000000000000000014 /* Resources (widget) */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AB0000000000000000000011 /* AskBibleWidget */,
+			);
+			name = AskBibleWidget;
+			productName = AskBibleWidget;
+			productReference = AB0000000000000000000010 /* AskBibleWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -79,6 +164,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					AB0000000000000000000006 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					AB0000000000000000000015 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -98,12 +186,20 @@
 			projectRoot = "";
 			targets = (
 				AB0000000000000000000006 /* AskBible */,
+				AB0000000000000000000015 /* AskBibleWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AB0000000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0000000000000000000014 /* Resources (widget) */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -120,7 +216,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB0000000000000000000012 /* Sources (widget) */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB0000000000000000000019 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AB0000000000000000000015 /* AskBibleWidget */;
+			targetProxy = AB0000000000000000000018 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AB000000000000000000000B /* Debug */ = {
@@ -236,6 +347,56 @@
 			};
 			name = Release;
 		};
+		AB000000000000000000001A /* Debug (widget) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AskBibleWidget/AskBibleWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 127;
+				DEVELOPMENT_TEAM = AJ2998VZH6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AskBibleWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "me.askbible.DailyVerse";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AB000000000000000000001B /* Release (widget) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = AskBibleWidget/AskBibleWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 127;
+				DEVELOPMENT_TEAM = AJ2998VZH6;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = AskBibleWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "me.askbible.DailyVerse";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -253,6 +414,15 @@
 			buildConfigurations = (
 				AB000000000000000000000E /* Debug */,
 				AB000000000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB000000000000000000001C /* Build configuration list for PBXNativeTarget "AskBibleWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB000000000000000000001A /* Debug (widget) */,
+				AB000000000000000000001B /* Release (widget) */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import WidgetKit
 
 /// 首页金句：轮播 + 朗读。
 ///
@@ -118,6 +119,7 @@ final class HomeVerseController: ObservableObject {
         Self.saveMemory(memory)
         verseKey = next
         verse = resolve(next) ?? .sample
+        writeToWidget(verse)
         fetchRemoteIfNeeded(next)
         if play { playCurrent() }
     }
@@ -187,6 +189,15 @@ final class HomeVerseController: ObservableObject {
                 if self.voiceOn { self.stopVoice() }
             }
         }
+    }
+
+    // MARK: Widget 数据共享
+
+    private func writeToWidget(_ v: GoldenVerse) {
+        let ud = UserDefaults(suiteName: "group.me.askbible.native")
+        ud?.set(v.text, forKey: "widget-verse-v1-text")
+        ud?.set(v.reference, forKey: "widget-verse-v1-ref")
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: 记忆持久化

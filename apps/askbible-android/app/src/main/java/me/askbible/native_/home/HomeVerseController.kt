@@ -169,6 +169,7 @@ class HomeVerseController(private val context: Context, private val scope: Corou
         saveMemory(memory)
         verseKey = next
         verse = resolve(next) ?: GoldenVerse.SAMPLE
+        me.askbible.native_.widget.DailyVerseWidget.push(appContext, verse.text, verse.reference)
         fetchRemoteIfNeeded(next)
         if (play) playCurrent()
     }

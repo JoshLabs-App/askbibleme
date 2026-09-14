@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#ECD9B9"
+    android:padding="14dp">
+
+    <TextView
+        android:id="@+id/widget_open_quote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="“"
+        android:textColor="#381C1410"
+        android:textSize="26sp"
+        android:fontFamily="serif"
+        android:layout_marginBottom="-6dp" />
+
+    <TextView
+        android:id="@+id/widget_verse_text"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="凡自高的，必降为卑；自卑的，必升为高。"
+        android:textColor="#1C1410"
+        android:textSize="14sp"
+        android:fontFamily="serif"
+        android:lineSpacingMultiplier="1.45"
+        android:gravity="top|start"
+        android:ellipsize="end"
+        android:maxLines="8" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
+
+        <TextView
+            android:id="@+id/widget_reference"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="马太福音 23:12"
+            android:textColor="#8C1C1410"
+            android:textSize="11sp"
+            android:fontFamily="serif"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AskBible"
+            android:textColor="#591C1410"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>

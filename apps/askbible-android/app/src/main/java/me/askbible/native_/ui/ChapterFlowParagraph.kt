@@ -1,12 +1,14 @@
 package me.askbible.native_.ui
 
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
@@ -68,6 +70,8 @@ fun ChapterFlowParagraph(
     eraseMode: Boolean = false,
     /** 划过一段：节号 + 节内字符区间 */
     onPaint: (Int, IntRange) -> Unit = { _, _ -> },
+    /** 屏幕坐标的划重点触点（由 ChapterScreen 统一捕获，跨段落不断开）；null 表示未在划重点模式 */
+    paintScreenOffset: State<Offset?>? = null,
 ) {
     val ranges = ArrayList<Pair<Int, IntRange>>(verses.size)
     val numberRanges = ArrayList<Pair<Int, IntRange>>(verses.size)
@@ -109,6 +113,7 @@ fun ChapterFlowParagraph(
     val currentOnLongPressVerse = rememberUpdatedState(onLongPressVerse)
     val currentTapWholeVerse = rememberUpdatedState(tapWholeVerse)
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var textRootPos by remember { mutableStateOf(Offset.Zero) }
     // 已收藏的节不再画跟读高亮（RN audioActive = !bookmarked && …）
     val activeRange = activeVerse?.takeIf { it !in bookmarked }?.let { a -> ranges.firstOrNull { it.first == a }?.second }
     val focusRange = searchFocus?.let { f -> ranges.firstOrNull { it.first == f }?.second }
@@ -140,7 +145,6 @@ fun ChapterFlowParagraph(
         }
         out
     }
-    val painting = paintColor != null || eraseMode
     /** 触点 → 「哪一节的第几个字」 */
     fun paintAt(pos: Offset) {
         val l = layout ?: return
@@ -155,17 +159,29 @@ fun ChapterFlowParagraph(
         val offset = l.getOffsetForPosition(pos)
         return list.firstOrNull { offset in it.second }?.first
     }
+    // 屏幕级别的划重点：ChapterScreen 统一捕获触点，各段落独立判断是否落在自己范围内
+    LaunchedEffect(paintScreenOffset) {
+        val state = paintScreenOffset ?: return@LaunchedEffect
+        snapshotFlow { state.value }.collect { screenPos ->
+            val pos = screenPos ?: return@collect
+            val l = layout ?: return@collect
+            val local = pos - textRootPos
+            if (local.y < -4f || local.y > l.size.height + 4f) return@collect
+            paintAt(local)
+        }
+    }
     Text(
         text,
         Modifier.fillMaxWidth()
             .onGloballyPositioned { coords ->
+                val rootPos = coords.positionInRoot()
+                textRootPos = rootPos
                 val report = onVerseBounds ?: return@onGloballyPositioned
                 val l = layout ?: return@onGloballyPositioned
-                val rootY = coords.positionInRoot().y
                 val out = HashMap<Int, Pair<Float, Float>>(ranges.size)
                 for ((n, r) in ranges) {
                     if (r.isEmpty()) continue
-                    out[n] = (rootY + l.getLineTop(l.getLineForOffset(r.first))) to (rootY + l.getLineBottom(l.getLineForOffset(r.last)))
+                    out[n] = (rootPos.y + l.getLineTop(l.getLineForOffset(r.first))) to (rootPos.y + l.getLineBottom(l.getLineForOffset(r.last)))
                 }
                 report(out)
             }
@@ -204,15 +220,6 @@ fun ChapterFlowParagraph(
                                       cornerRadius = CornerRadius(6.dp.toPx()))
                     }
                 }
-            }
-            // 划重点：手指划过要标的字（Josh 2026-09-11「直接用手划动，划过的就高亮」）；
-            // 只在划重点模式下吃掉滚动手势
-            .pointerInput(painting, text) {
-                if (!painting) return@pointerInput
-                detectDragGestures(
-                    onDragStart = { pos -> paintAt(pos) },
-                    onDrag = { change, _ -> paintAt(change.position); change.consume() },
-                )
             }
             .pointerInput(text) {
                 detectTapGestures(

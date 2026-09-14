@@ -21,7 +21,11 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.layout.size
@@ -183,8 +187,24 @@ fun ChapterScreen(
     }
     val m = size.metrics
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val painting = paintColor != null || eraseMode
+    // 划重点触点统一在外层 Box 的 Initial pass 捕获，再广播给各段落，解决跨段落断开 + 最后一行选不到
+    val paintScreenOffset = remember { mutableStateOf<Offset?>(null) }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(
+        Modifier.fillMaxSize()
+            .pointerInput(painting) {
+                if (!painting) { paintScreenOffset.value = null; return@pointerInput }
+                awaitPointerEventScope {
+                    while (true) {
+                        val ev = awaitPointerEvent(PointerEventPass.Initial)
+                        val change = ev.changes.firstOrNull() ?: continue
+                        paintScreenOffset.value = if (change.pressed) change.position else null
+                        ev.changes.forEach { it.consume() }
+                    }
+                }
+            }
+    ) {
         ParchmentBackground(theme = theme)
 
         LazyColumn(
@@ -222,6 +242,7 @@ fun ChapterScreen(
                     bookmarked = if (selectedVerses.isNotEmpty()) selectedVerses else bookmarked, searchFocus = searchFocus,
                     tapWholeVerse = selectedVerses.isNotEmpty(),
                     highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
+                    paintScreenOffset = if (painting) paintScreenOffset else null,
                     onTapVerseNumber = { v ->
                         searchFocus = null
                         if (selectedVerses.isNotEmpty()) onToggleSelection(v) else if (v in xrefVerses) onTapVerse(v)
@@ -295,6 +316,7 @@ private fun ParagraphBlock(
     paintColor: String? = null,
     eraseMode: Boolean = false,
     onPaint: (Int, IntRange) -> Unit = { _, _ -> },
+    paintScreenOffset: State<Offset?>? = null,
 ) {
     val headings = (meta.headings[group.first().number] ?: emptyList()).map { locale.zh(it) }
     Column(Modifier.fillMaxWidth().padding(bottom = 14.dp)) {  // verseParagraphBlock.marginBottom
@@ -323,7 +345,8 @@ private fun ParagraphBlock(
         ChapterFlowParagraph(group, m, theme, xrefVerses, activeVerse, bookmarked, searchFocus,
                              onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
                              tapWholeVerse = tapWholeVerse,
-                             highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint)
+                             highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
+                             paintScreenOffset = paintScreenOffset)
         // 副译本对照行：0.82× 字号，muted，上距 7（verseContrast）
         for (v in group) {
             val line = contrast[v.number] ?: continue

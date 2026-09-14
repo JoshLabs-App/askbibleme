@@ -50,6 +50,7 @@ class MemberReadingSyncEngine(context: Context) {
     private var applyingRemote = false
 
     private var highlights: VerseHighlightStore? = null
+    private var applyingUpdatedAtMs = 0L
 
     fun attach(auth: MemberAuthStore, plans: ReadingPlanStore, bookmarks: VerseBookmarkStore, activity: ReadingActivityStore,
                search: SearchPrefs, highlights: VerseHighlightStore? = null) {
@@ -100,13 +101,16 @@ class MemberReadingSyncEngine(context: Context) {
         // Josh 2026-09-11：使用时长与最近阅读也上云
         if (activity.usageTotalSec > 0) blobs.put("appUsageTime", wrap(activity.usageJson(), now))
         if (activity.recent.isNotEmpty()) blobs.put("recentChapters", wrap(activity.recentJson(), now))
-        val hl = highlights?.json()
-        if (hl != null && hl.length() > 0) blobs.put("highlights", wrap(hl, now))
+        highlights?.let { h ->
+            if (h.localUpdatedAtMs > 0) blobs.put("highlights", wrap(h.json(), R.isoString(h.localUpdatedAtMs.toDouble())))
+            else { val hl = h.json(); if (hl.length() > 0) blobs.put("highlights", wrap(hl, now)) }
+        }
         return blobs
     }
 
     fun localHasProgress(): Boolean {
         if (bookmarks.store.isNotEmpty()) return true
+        if (highlights?.dirty == true) return true
         if (activity.lastPosition != null) return true
         if (activity.listenTotalSec > 0) return true
         if (plans.completed.isNotEmpty()) return true
@@ -126,6 +130,7 @@ class MemberReadingSyncEngine(context: Context) {
             for (key in R.BLOB_KEYS) {
                 val blob = R.dict(blobs.opt(key)) ?: continue
                 if (!blob.has("value")) continue
+                applyingUpdatedAtMs = R.parseIsoMs(R.str(blob.opt("updatedAt"))).toLong()
                 apply(key, blob.opt("value"))
             }
             // 没有正式 readingPlanPrefs blob 时才用 appLocale 侧车里的旧计划
@@ -174,7 +179,7 @@ class MemberReadingSyncEngine(context: Context) {
             "recentSearches" -> R.dict(value)?.let { d ->
                 if (R.num(d.opt("version")) == 1.0 && d.opt("terms") is JSONArray) search.replaceRecent(R.stringArray(d.opt("terms")))
             }
-            "highlights" -> R.dict(value)?.let { highlights?.replace(VerseHighlightStore.parse(it)) }
+            "highlights" -> R.dict(value)?.let { highlights?.replace(VerseHighlightStore.parse(it), applyingUpdatedAtMs) }
             "appUsageTime" -> R.dict(value)?.let { d -> R.num(d.opt("totalSec"))?.let { activity.mergeRemoteUsage(it) } }
             "recentChapters" -> R.dict(value)?.let { d ->
                 val items = d.opt("items") as? JSONArray ?: return@let
@@ -296,6 +301,7 @@ class MemberReadingSyncEngine(context: Context) {
                 // 首推成功后再确认一次：同步期间本地又改过的，把合并结果再推上去
                 when (val confirm = pushMerged(token, userId, merged)) {
                     is SyncFetch.Ok -> {
+                        highlights?.markSynced()
                         meta = meta.copy(revision = confirm.doc?.revision ?: pushed.doc?.revision, lastSyncedAt = R.isoString(System.currentTimeMillis().toDouble()),
                                          boundUserId = userId, requirePullOnly = false, lastError = null)
                         Outcome.OK

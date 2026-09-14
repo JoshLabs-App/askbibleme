@@ -68,6 +68,16 @@
 - **为什么**：Josh 确认。Android 安装包从约 92MB 压到约 24MB（-68MB）。
 - **日期**：2026-09-13
 
+### Solid Joys 不自己翻译、不自己配音，也不抓站
+- **决定了什么**：在 Desiring God 另行书面同意之前，Solid Joys 只用八福伙伴现成的中文译文和音频。不自行翻译、不用 TTS 生成朗读，也不去八福伙伴站点或公众号批量抓取。
+- **为什么**：DG 2026-09-10 回复明确写了不授权新译和新录音，TTS 朗读同样算新录音。八福伙伴官网本身没有每日灵修正文，内容只在微信公众号和福源课堂。详见 `docs/content-permissions.md`。
+- **日期**：2026-09-14
+
+### 再给 Desiring God 回一封信，三件事合并成一封
+- **决定了什么**：在原邮件串里回复，一次问三件事：请 DG 提供或牵线取得八福伙伴中文版文件并确认授权是否已覆盖；请求重新考虑授权翻译现行版；新申请 John Piper 讲道的中文翻译配音。草稿由 Claude 起草，Josh 自己从 Gmail 发。
+- **为什么**：八福伙伴没有邮箱、官网打不开，找 DG 最省事；新译请求刚被拒过，所以写成附带审核条件的重新考虑请求，而不是直接要英文文本。
+- **日期**：2026-09-14
+
 ## 已作废
 
 ### 划重点灵敏度修复（2026-09-13）
@@ -88,3 +98,7 @@
 - **根因**：`ParchmentCardModifier` 的 background 内部有一张 `UIScreen.main.bounds.height` 高的羊皮纸图，该背景视图会截获 SwiftUI 触点，使底部 ~8 行文字区域的触点无法到达 UIKit 层的 `PaintGestureRecognizer`。
 - **修法**：`ParchmentCardModifier` 加 `backgroundHitTesting: Bool = true` 参数；HighlightBar 传 `backgroundHitTesting: false`，背景 `.allowsHitTesting(false)` 穿透给下层 FlowTextView；颜色按钮 / 完成按钮作为前景元素不受影响，仍可点击。
 - **日期**：2026-09-13
+
+## 划重点同步改为整份「后改的为准」（2026-09-14，安卓原生）
+- **决定**：`highlights` blob 不再逐字取并集，整份以 updatedAt 新的一侧为准；updatedAt 用本机最后一次划/擦的时间，擦空也上传；本机有未同步的擦除时算「有进度」，不走只拉云端。
+- **为什么**：并集下擦掉的字会被云端旧副本补回（Josh 反馈清除后自动恢复）。代价：两台设备同时离线各自划，后同步的一方覆盖先前的。

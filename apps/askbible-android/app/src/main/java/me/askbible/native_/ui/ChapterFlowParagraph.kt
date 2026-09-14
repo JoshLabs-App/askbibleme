@@ -195,8 +195,6 @@ fun ChapterFlowParagraph(
                 report(out)
             }
             .drawBehind {
-                // 诊断：固定红色矩形，确认 drawBehind 有效
-                drawRect(androidx.compose.ui.graphics.Color.Red, topLeft = Offset(0f, 0f), size = androidx.compose.ui.geometry.Size(100f, 40f))
                 val l = layout ?: return@drawBehind
                 // 圆角 8 整行框：跟读高亮 #FFB103 / 搜索定位 verseSearchFocusBg（RN verseAudioFollowOverlay / verseSearchFocusBg）
                 for ((r, fill) in listOf(activeRange to AUDIO_ACTIVE, focusRange to focusFill)) {

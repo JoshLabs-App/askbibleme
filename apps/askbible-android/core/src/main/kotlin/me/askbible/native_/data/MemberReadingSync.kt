@@ -358,7 +358,8 @@ object MemberReadingSyncRules {
 
     fun mergeBlobValue(key: String, a: Any?, b: Any?, now: LocalDate): Any? = when (key) {
         "bookmarks" -> mergeBookmarks(a, b)
-        "highlights" -> mergeHighlightStore(a, b)
+        // 划重点可擦除，并集会让擦掉的字被旧副本补回：整份以时间戳新的一侧为准
+        "highlights" -> dict(b) ?: a
         "chapterCompletion" -> mergeStringSetRecords(a, b, "completed")
         "todayReadingDone" -> mergeTodayReadingDone(a, b)
         "habitStats" -> mergeStringSetRecords(a, b, "completedDates")

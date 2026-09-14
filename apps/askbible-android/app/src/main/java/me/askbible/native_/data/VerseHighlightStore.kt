@@ -38,7 +38,14 @@ class VerseHighlightStore(context: Context) {
     var onLocalChange: ((String) -> Unit)? = null
     var suppressChangeNotify = false
 
-    init { store = parse(sp.getString(VerseHighlightRules.STORAGE_KEY, null)) }
+    /** 本机最后一次划/擦的时间（ms），0 = 从未改过；同步 blob 的 updatedAt 用它，擦空也要上传 */
+    var localUpdatedAtMs: Long = 0L
+        private set
+    /** 本机改过、还没同步成功 */
+    val dirty: Boolean get() = sp.getBoolean(DIRTY_KEY, false)
+    fun markSynced() { sp.edit().putBoolean(DIRTY_KEY, false).apply() }
+
+    init { localUpdatedAtMs = sp.getLong(UPDATED_KEY, 0L); store = parse(sp.getString(VerseHighlightRules.STORAGE_KEY, null)) }
 
     fun colors(translationId: String, bookId: String, chapter: Int, verse: Int): Map<Int, String> =
         store[VerseHighlightRules.key(translationId, bookId, chapter, verse)] ?: emptyMap()
@@ -66,17 +73,22 @@ class VerseHighlightStore(context: Context) {
         val next = HashMap(store)
         if (byIndex.isEmpty()) next.remove(key) else next[key] = byIndex
         store = next
+        localUpdatedAtMs = System.currentTimeMillis()
+        sp.edit().putLong(UPDATED_KEY, localUpdatedAtMs).putBoolean(DIRTY_KEY, true).apply()
         persist()
     }
 
     /** 云端并入（会员同步 highlights blob） */
-    fun replace(next: Map<String, Map<Int, String>>) {
+    fun replace(next: Map<String, Map<Int, String>>, updatedAtMs: Long) {
         store = next
+        if (updatedAtMs > localUpdatedAtMs) { localUpdatedAtMs = updatedAtMs; sp.edit().putLong(UPDATED_KEY, updatedAtMs).apply() }
         persist(notify = false)
     }
 
     fun clearForAccountSwitch() {
         store = emptyMap()
+        localUpdatedAtMs = 0L
+        sp.edit().remove(UPDATED_KEY).remove(DIRTY_KEY).apply()
         persist(notify = false)
     }
 
@@ -100,6 +112,9 @@ class VerseHighlightStore(context: Context) {
     }
 
     companion object {
+        private const val UPDATED_KEY = "askbible-read-verse-text-highlights-updated-at"
+        private const val DIRTY_KEY = "askbible-read-verse-text-highlights-dirty"
+
         fun parse(raw: String?): Map<String, Map<Int, String>> {
             if (raw.isNullOrEmpty()) return emptyMap()
             return parse(runCatching { JSONObject(raw) }.getOrNull() ?: return emptyMap())

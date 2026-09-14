@@ -261,7 +261,7 @@ private fun RootScreen() {
     val plans = remember { ReadingPlanStore(context) }
     // 读经活动（习惯日 / 累计听 / 使用时长 / 最近阅读）与会员读经进度同步（RN AppUsageTimeBridge / useMemberReadingSync）
     val activity = remember { ReadingActivityStore(context) }
-    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs, highlights) } }
+    val syncEngine = remember { MemberReadingSyncEngine(context).also { it.attach(auth, plans, bookmarks, activity, searchPrefs, highlights); me.askbible.native_.data.RnLegacyMigration.runOnce(context, it) } }
     LaunchedEffect(appLocale) { syncEngine.localeTag = { appLocale.tag } }
     // 网站译本目录（几百本在线译本）：盘里没过期就不走网
     var catalogRevision by remember { mutableStateOf(0) }

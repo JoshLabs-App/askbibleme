@@ -106,3 +106,7 @@
 ## 原生安卓上 Play 沿用 me.askbible，顶替 RN 版（2026-09-14）
 - **决定**：原生安卓 applicationId 改为 `me.askbible`，作为 Play 现有条目的更新发布，不新建条目。
 - **为什么**：Josh 定：Play 原来就是 me.askbible，保留现有用户与评价，不重新做一个包。
+
+## RN→原生安卓：本机数据一次性迁移（2026-09-14）
+- **决定**：原生首次启动读 RN 残留的 `databases/RKStorage`，把读经进度类键拼成会员同步 blobs 走 `applyBlobs`；只跑一次（失败也不重试），不删 RKStorage；登录态与界面设置不迁。
+- **为什么**：RN 存盘 JSON 与同步 blob value 同形，复用现成解析最省；登录 token 体系不同迁不了，数据有云同步兜底。先迁移再推正式，避免游客覆盖更新丢数据。

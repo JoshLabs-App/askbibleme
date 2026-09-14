@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "profiles": [
     {
-      "slug": "jacob",
+      "slug": "jacob-patriarch",
       "stages": [
         {
           "stageId": "adult",
@@ -10,12 +10,12 @@
           "appearanceZh": "中等偏瘦但结实的体格,深棕色卷发,中长络腮胡,温暖的橄榄棕色肌肤,眼神谨慎而温和",
           "clothingZh": "蓝绿色与驼色交织的条纹长袍,多层布料,腰间系深色皮革束带,头戴简单深色头巾,脚穿皮革凉鞋",
           "distinguishingMarksZh": "举止略显谨慎,常低头躬身;创33章情绪从戒备转为喜极而泣",
-          "referenceImageAssetId": "reference-images/jacob-adult.png"
+          "referenceImageAssetId": "reference-images/jacob-patriarch-adult.png"
         }
       ]
     },
     {
-      "slug": "esau",
+      "slug": "figure-esau",
       "stages": [
         {
           "stageId": "adult",
@@ -23,12 +23,12 @@
           "appearanceZh": "体格魁梧健壮,毛发浓密,红棕色头发与胡须(呼应创25:25\"浑身有毛,如同皮衣\"及\"红\"的描述),古铜色肤色,猎人般粗犷的五官轮廓",
           "clothingZh": "深红棕色调的皮革与粗麻猎装,兽皮披肩,皮质护臂,腰间佩带简易猎刀,与雅各的精致条纹布形成质感对比",
           "distinguishingMarksZh": "神态豪爽直率,创33章重逢时主动张开双臂拥抱",
-          "referenceImageAssetId": "reference-images/esau-adult.png"
+          "referenceImageAssetId": "reference-images/figure-esau-adult.png"
         }
       ]
     },
     {
-      "slug": "leah",
+      "slug": "figure-leah",
       "stages": [
         {
           "stageId": "adult",
@@ -36,12 +36,12 @@
           "appearanceZh": "体态温厚,深棕色长发在头巾下盘起,眼神温和而略带疲惫,肤色健康的浅棕色",
           "clothingZh": "赭红色与米色相间的长裙,外披素色罩衫,腰间系朴素布带,头戴素色头巾",
           "distinguishingMarksZh": "举止沉稳持重,母性温暖,常护在孩子们身边",
-          "referenceImageAssetId": "reference-images/leah-adult.png"
+          "referenceImageAssetId": "reference-images/figure-leah-adult.png"
         }
       ]
     },
     {
-      "slug": "rachel",
+      "slug": "figure-rachel",
       "stages": [
         {
           "stageId": "adult",
@@ -49,12 +49,12 @@
           "appearanceZh": "体态窈窕,容貌秀美(创29:17),深色长发,眼神明亮温柔,肤色细腻",
           "clothingZh": "藏蓝色与浅驼色相间的长裙,精致的织纹披肩,头戴轻薄头巾,佩戴简单的银饰",
           "distinguishingMarksZh": "怀中或身边带着幼子约瑟,神态温柔警觉",
-          "referenceImageAssetId": "reference-images/rachel-adult.png"
+          "referenceImageAssetId": "reference-images/figure-rachel-adult.png"
         }
       ]
     },
     {
-      "slug": "joseph",
+      "slug": "joseph-genesis",
       "stages": [
         {
           "stageId": "child",
@@ -62,7 +62,145 @@
           "appearanceZh": "幼童体态,深色卷发,大眼睛,神情好奇天真,肤色细嫩",
           "clothingZh": "简单的米色小罩衫,赤脚或简易软底鞋",
           "distinguishingMarksZh": "常被拉结抱在怀中或牵在手边",
-          "referenceImageAssetId": "reference-images/joseph-child.png"
+          "referenceImageAssetId": "reference-images/joseph-genesis-child.png"
+        },
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,埃及宰相时期(创41:41-46)",
+          "appearanceZh": "身材修长挺拔的青壮年,深色短卷发按埃及宫廷式样修整,面容俊秀清朗(创39:6),温暖的橄榄色肌肤,深色眼睛既锐利又含泪意",
+          "clothingZh": "埃及宫廷式的细麻白色长袍,外罩带蓝金纹饰的宽领披肩,颈挂法老所赐的金链(创41:42),手上戴印章戒指,腰间系金饰带,脚穿精工凉鞋",
+          "distinguishingMarksZh": "希伯来人的面孔配埃及宰相的装束,两种身份的张力;举止庄重克制",
+          "facialStructureZh": "修长的椭圆脸,颧骨高而窄,鼻梁精致高挺,眉毛细长斜飞,眼睛狭长而含水,下颌线清晰利落,嘴唇轮廓分明"
+        }
+      ]
+    },
+    {
+      "slug": "figure-jesus",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "三十岁上下,公开传道时期(路3:23)",
+          "appearanceZh": "第一世纪加利利犹太男子的样貌,中等身材,橄榄棕色肌肤,深褐色中长发在耳后微卷,修整过的深色短须,深棕色眼睛,眼神沉静温暖、带着不容错认的权柄与怜悯",
+          "clothingZh": "素白色亚麻内袍,外披羊毛质地的深蓝与米白色长外袍,腰间系素色布带,四角带穗子(民15:38),脚穿磨旧的皮革凉鞋,不戴任何饰物",
+          "distinguishingMarksZh": "双手朴素有力,带木匠劳作的痕迹;姿态从容,无王冠无光环,威严来自神情而非装饰",
+          "facialStructureZh": "修长的鹅蛋脸,额头开阔,眉毛平直而浓密,鼻梁高直、鼻头收窄,颧骨清晰但不外突,眼距适中、眼窝略深,下颌线柔和地向下收成温和的尖,嘴唇薄而平稳"
+        }
+      ]
+    },
+    {
+      "slug": "paul",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,第二、三次宣教旅程时期(徒15-20章)",
+          "appearanceZh": "身材不高但结实精悍,前额宽阔略显秃顶,深色卷曲的中长胡须夹着灰白,鹰隼般专注锐利的深色眼睛,风吹日晒的深橄榄色肌肤,面容清瘦带旅途风霜",
+          "clothingZh": "朴素的米褐色旅行长袍,外披深赭色粗羊毛斗篷(提后4:13),腰间系皮带并挂着装书卷的皮袋,脚穿厚实的旅行凉鞋",
+          "distinguishingMarksZh": "常一手持书卷、一手抬起作论辩手势;体格带织帐棚匠的劳作感(徒18:3)",
+          "facialStructureZh": "短而方的脸,发际线严重后退露出高阔前额,眉骨明显前突,鹰钩鼻高而带弯,眼窝深陷、眼睛偏小而极锐利,颧骨高耸,双颊凹陷,下巴短而方"
+        }
+      ]
+    },
+    {
+      "slug": "david",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年为王时期,统一以色列、定都耶路撒冷(撒下5章)",
+          "appearanceZh": "中等偏高的健壮体格,红润的面色与俊美的容貌(撒上16:12),深金棕色微卷的中长发与修整的胡须,明亮有神的眼睛,神情既有武士的锐气又有诗人的柔和",
+          "clothingZh": "深紫红色与金线织纹的王袍,内着白色细麻长衣,肩披王室斗篷,腰束镶饰皮带,头戴朴素的金冠,脚穿装饰皮靴",
+          "distinguishingMarksZh": "身边或手中常带竖琴,兼有牧人与君王两重气质;站姿挺拔但不倨傲",
+          "facialStructureZh": "偏方的圆脸,年轻饱满有肉感,眉毛浓密且眉尾上扬,眼睛大而明亮、眼距略宽,鼻梁挺直而偏短、鼻头圆润,下颌角方正有力,嘴角天生微微上扬"
+        }
+      ]
+    },
+    {
+      "slug": "moses",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "八十岁,出埃及与旷野带领时期(出7:7)",
+          "appearanceZh": "高大清瘦的老年体格但精神矍铄,浓密的花白长发与及胸的白须,饱经风霜的深棕色肌肤,深陷而炯炯有神的眼睛,眉骨厚重,神情威严沉重",
+          "clothingZh": "土褐色与深红棕相间的粗毛料长袍,外披厚重的沙漠斗篷,腰间系粗绳带,头巾松垮地搭在肩上,脚穿磨损的皮革凉鞋",
+          "distinguishingMarksZh": "手中必持那根木杖(出4:17);面容带着长期背负重担的疲惫与坚定",
+          "facialStructureZh": "狭长的长方脸,额头布满深刻横纹,眉骨厚重下压,鼻梁高而带明显鹰钩,双颊瘦削凹陷,眼窝极深,下颌被及胸白须完全遮住"
+        }
+      ]
+    },
+    {
+      "slug": "abraham",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "老年,迦南寄居与立约时期(创12-22章)",
+          "appearanceZh": "高瘦而挺拔的老者,长长的银白色须发,深褐色布满岁月纹路的肌肤,眼窝深邃,目光辽远沉静,像常年仰望星空的人(创15:5)",
+          "clothingZh": "米白与驼色相间的厚重毛料长袍,外披条纹游牧斗篷,头戴缠绕式的浅色头巾,腰间系编织布带,脚穿旧皮凉鞋",
+          "distinguishingMarksZh": "手扶牧人长杖,举止安详笃定;身上有长期游牧扎营的朴素感,毫无城市贵族气",
+          "facialStructureZh": "瘦长的窄脸,颧骨高而突出,鼻梁细长笔直,眼角自然下垂并带放射状皱纹,眉毛稀疏花白、末端外扬,下颌尖窄"
+        }
+      ]
+    },
+    {
+      "slug": "mary-mother-of-jesus",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "少女至青年,报喜与耶稣童年时期(路1-2章)",
+          "appearanceZh": "十几岁末至二十出头的年轻女子,身形纤细,柔和的鹅蛋脸,深棕色长发束在头巾下,大而清澈的深色眼睛,橄榄色肌肤,神情谦卑安静中带着坚定",
+          "clothingZh": "深蓝色的外袍罩在米白色内裙外,头戴柔软的浅色头巾垂至肩,腰间系素布带,无珠宝饰物,脚穿简朴凉鞋",
+          "distinguishingMarksZh": "双手常交叠于胸前或轻护腹前,姿态内敛;整体朴素,是拿撒勒乡村少女而非贵妇",
+          "facialStructureZh": "小巧的心形脸,下巴尖而秀气,额头略窄,眉毛细而柔和弯曲,眼睛大而圆、眼距略宽,鼻子小巧挺翘,脸颊圆润,嘴唇小而饱满"
+        }
+      ]
+    },
+    {
+      "slug": "figure-joshua",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,接续摩西带领进迦南时期(书1章)",
+          "appearanceZh": "健壮挺拔的军人体格,宽肩厚背,深黑色短卷发与修剪整齐的短须,坚毅方正的下颌,深橄榄色肌肤,眼神果决专注",
+          "clothingZh": "米褐色束腰短袍便于行动,外罩皮革护胸甲与肩带,腰佩青铜短剑,小臂缠皮质护腕,脚穿系带战靴",
+          "distinguishingMarksZh": "一手常按剑柄或持卷轴(书1:8),站姿如随时待命的将领;气质是顺服而非张扬的勇武",
+          "facialStructureZh": "宽阔的方形脸,下颌角明显外扩,颧骨宽平,眉毛粗黑平直且压得很低,眼睛细长锐利,鼻梁宽厚、鼻背略塌,嘴唇厚实紧抿"
+        }
+      ]
+    },
+    {
+      "slug": "judah-ot",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,为便雅悯代求、认罪担责之后(创43-44章)",
+          "appearanceZh": "体格厚实结实的族长次子,深棕色浓密卷发与络腮胡,晒成深色的肌肤,眉眼间有担当与悔悟后的沉稳",
+          "clothingZh": "赭黄与深棕相间的条纹长袍,外披牧人斗篷,腰间系宽皮带,头戴缠绕头巾,脚穿皮革凉鞋",
+          "distinguishingMarksZh": "身形带狮子般的沉稳威势(创49:9);神情从早年的强硬转为愿意替人担罪的柔和",
+          "facialStructureZh": "厚重的梯形脸,下半张脸宽大,眉毛浓密几乎连成一线,眼睛偏小、上眼皮厚重,鼻头厚大,双颊多肉,下巴宽厚"
+        }
+      ]
+    },
+    {
+      "slug": "james-apostle",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,耶路撒冷教会领袖时期(徒15章)",
+          "appearanceZh": "中等身材偏清瘦,深棕色中长发与浓密胡须,面容与耶稣有几分相似的家族轮廓,深橄榄色肌肤,神情肃穆专注、带长期祷告者的沉静",
+          "clothingZh": "素净的米白色亚麻长袍,外披浅棕色羊毛外袍,腰系素布带,不佩饰物,脚穿朴素凉鞋",
+          "distinguishingMarksZh": "双手粗糙,常呈祷告或按手姿态;整体简朴克己,像一位受敬重的会堂长老",
+          "facialStructureZh": "瘦削的长脸,与耶稣同属一个家族的直鼻与平直眉,但整张脸更窄更瘦、颧骨更外突、下颌更尖、眼睛更小更沉,法令纹明显"
+        }
+      ]
+    },
+    {
+      "slug": "jude-author",
+      "stages": [
+        {
+          "stageId": "adult",
+          "ageRangeLabelZh": "壮年,书信写作时期(犹1:1)",
+          "appearanceZh": "中等身材结实的加利利男子,深棕色卷发与中长胡须,风吹日晒的棕褐肌肤,眼神恳切而警醒",
+          "clothingZh": "朴素的土黄色长袍,外披粗羊毛披巾,腰间系皮带,肩背装书卷的布袋,脚穿磨旧凉鞋",
+          "distinguishingMarksZh": "手持书卷或芦苇笔,神情如在急切劝勉(犹1:3);装束比雅各更像行路的平信徒",
+          "facialStructureZh": "圆润的方脸,额头低而宽,眉毛短粗,眼睛圆而眼距偏近,鼻子短而宽,下巴中央有一道浅沟,双颊宽厚"
         }
       ]
     }

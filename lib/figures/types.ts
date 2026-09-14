@@ -84,6 +84,8 @@ export type FigureAppearanceStage = {
   stageId: string;
   ageRangeLabelZh?: string;
   appearanceZh: string;
+  /** 这一人物独有的面部骨相,防止同一批次里所有人共用一张脸 */
+  facialStructureZh?: string;
   clothingZh: string;
   distinguishingMarksZh?: string;
   /** 该阶段的标准参考图(生成后回填),供后续场景生成时作为参考锁定长相 */

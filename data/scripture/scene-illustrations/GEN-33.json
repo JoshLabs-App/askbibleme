@@ -14,11 +14,11 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         },
         {
-          "slug": "esau",
+          "slug": "figure-esau",
           "stageId": "adult"
         }
       ],
@@ -37,7 +37,7 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         }
       ],
@@ -56,11 +56,11 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         },
         {
-          "slug": "esau",
+          "slug": "figure-esau",
           "stageId": "adult"
         }
       ],
@@ -80,23 +80,23 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         },
         {
-          "slug": "esau",
+          "slug": "figure-esau",
           "stageId": "adult"
         },
         {
-          "slug": "leah",
+          "slug": "figure-leah",
           "stageId": "adult"
         },
         {
-          "slug": "rachel",
+          "slug": "figure-rachel",
           "stageId": "adult"
         },
         {
-          "slug": "joseph",
+          "slug": "joseph-genesis",
           "stageId": "child"
         }
       ],
@@ -116,11 +116,11 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         },
         {
-          "slug": "esau",
+          "slug": "figure-esau",
           "stageId": "adult"
         }
       ],
@@ -140,11 +140,11 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         },
         {
-          "slug": "esau",
+          "slug": "figure-esau",
           "stageId": "adult"
         }
       ],
@@ -163,7 +163,7 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         }
       ],
@@ -183,7 +183,7 @@
       },
       "charactersInScene": [
         {
-          "slug": "jacob",
+          "slug": "jacob-patriarch",
           "stageId": "adult"
         }
       ],

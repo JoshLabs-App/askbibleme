@@ -190,11 +190,17 @@ Maestro 真源：`docs/mobile-maestro-auto-merge.md`。GitHub Linux CI **不跑*
 
 ---
 
-## 6. 当前状态（2026-08-27）
+## 6. 当前状态（2026-09-14）
 
 ### 已交付 / 基线
 
-- Mobile **1.0.38**（iOS build 119 / Android versionCode 119）；夜间审查：**无阻断性新 bug**。
+- **原生 iOS App（Swift）`apps/askbible-ios`** 已上架提审：
+  - 版本 **1.1**，build **128**，bundle ID `me.askbible`（接替 Expo App）
+  - 新增 WidgetKit DailyVerse 小组件（`me.askbible.DailyVerse`），读 App Group `group.me.askbible.native`
+  - 首页 `HomeVerseController.writeToWidget()` 每次换句自动刷新小组件
+  - App Review 提交时间：`2026-09-14T04:51:02Z`，状态 `WAITING_FOR_REVIEW`
+  - 提审用 ASC API：`PATCH /v1/reviewSubmissions/{id}` + `attributes: { submitted: true }`（文档未记载的隐藏字段）
+- Mobile Expo **1.0.38**（iOS build 119 / Android versionCode 119）；夜间审查：**无阻断性新 bug**。
 - iOS Maestro 默认冒烟 + 扩展项 PASS；Android Pixel 完整 7 项 PASS（见 `docs/overnight-optimization-2026-08-27.md`）。
 - 可还原 App 快照：`.snapshots/`（如 `askbible-app-2026-08-26-0142`）；说明见同目录 `RESTORE.txt`。
 
@@ -288,3 +294,67 @@ Maestro 真源：`docs/mobile-maestro-auto-merge.md`。GitHub Linux CI **不跑*
 ---
 
 *本文为交接入口；细节以 `AGENTS.md` 与 `.cursor/rules` 为准。状态过期时优先更新本节「当前状态」与过夜报告链接，勿复制整库到其它文档。*
+
+
+---
+
+# 圣经人物透明立绘（2026-09-11 暂停于此）
+
+## 当前状态
+
+用内置浏览器驱动 ChatGPT 网页版出图，会话是 https://chatgpt.com/c/6aa43ecf-1ed4-83ea-b082-b88ab74a0c96 。
+
+- 出图标准已定版：`docs/figure-portrait-standard.md`（七节 + 速查清单 + 统一模板，Josh 逐轮调教后的结果）。
+- 人物底档：`data/figure-visual-profiles/bundle.json`，15 个 profile / 16 个 stage，新增 `facialStructureZh` 字段存各人骨相。
+- 已生成 31 张（含重做），file_id 索引在 `data/figure-visual-profiles/chatgpt-batch-2026-09-11.json`，每个人物取最后一条。
+- 只有摩西那张取回了本地：`tmp/figure-portraits/raw/moses.png`。
+
+## 两个没解决的问题
+
+1. **假透明**。后半批是 RGB、没有 alpha 通道，灰白棋盘格是 ChatGPT 当成图案画进画面的。前半批（雅各、扫罗那几张）是真 alpha。已在会话里发了纠正并重做摩西，结果还没验。
+2. **风格漂成写实**。标准文本里「写实与动画结合」这句把模型带向真人照片感，和 `lib/figures/scene-style-guide.ts` 顶部注释记的坑一致。纠正消息里要求回到明确的 3D 动画角色风。
+
+验证一张图是否真透明：
+
+```bash
+python3 -c "from PIL import Image; im=Image.open('tmp/figure-portraits/raw/moses.png'); print(im.mode, im.convert('RGBA').getchannel('A').getextrema())"
+```
+
+`mode` 是 RGB 或 alpha extrema 为 (255,255) 就是假透明。
+
+## 出图队列状态（2026-09-11 更新）
+
+最后确认发出去的是：**大卫王（壮年为王，定都耶路撒冷时期）**，`gen: false` = 已生成完毕。
+
+**待发送（按此顺序，每条都必须带完整风格前缀）**：
+- 扫罗王（统一以色列王国时期，登基初年）
+- 摩西（带领出埃及、旷野时期，中壮年）← 重做，解决假透明+写实漂移
+- 亚伯拉罕（蒙召离迦勒底之后，迦南时期，老年）
+- 雅各（以色列/与天使摔跤之后，壮年）
+- 约瑟（约瑟·创世记，埃及宰相时期，成年）
+- 约书亚（征服迦南时期，壮年）
+- 耶稣（传道期，30岁出头）
+- 马利亚（耶稣母亲，青年，报喜/怀孕时期）← 之前那张丢了，重做
+- 保罗（宣教旅程时期，中年）
+- 雅各（使徒雅各，耶路撒冷领袖时期）
+- 犹大（犹大书作者，中年）
+
+**每条发送的完整前缀（必须逐字粘贴，末尾换行加人物描述）**：
+存在 `docs/figure-portrait-standard.md` 最后一节。
+
+## 下一步
+
+1. 开新线程，继续向 ChatGPT 会话发剩余人物（用完整风格前缀 + 人物描述）。
+2. 每发一条等生成完（查 `stop-button`），再发下一条。
+3. 全部发完后，用三步取图法把所有图取回 `data/figure-visual-profiles/reference-images/`，文件名 `<slug>-adult.png`，回填 bundle 的 `referenceImageAssetId`。
+4. 补马利亚（唯一 Josh 认可构图的那张已从会话分支消失，需重做）。
+5. 做 Josh 要的管理网页：列已生成 + 待生成，点一下能去生成或重新生成、用新图替换旧图。
+
+## 别踩的坑
+
+- **取图必须拆成三次调用**，一次做完会超 45 秒：先 `/backend-api/files/download/<fid>` 拿 `download_url` 存进 `window.__url`；再 `fetch` 成 blob 存 `window.__blob`；最后 `FileReader.readAsDataURL`。第三次返回 3MB 左右，工具会自动落盘并给路径，字节不进上下文。再用 Bash base64 解码。
+- `download_url` 不能拿去 Bash 里 curl，不带会话凭据是 403，只能页内 fetch。
+- 发消息用 `form_input` 写 `ref_12`，再用 JS 点 `button[data-testid="send-button"]`；Enter 键和坐标点击都不可靠。点之前先判断 `button[data-testid="stop-button"]` 在不在，在就是还在生成，这时 send 按钮不存在。
+- **别用截图轮询进度**，一张上千 token。查 `stop-button` 存不存在就够了。
+- 浏览器面板被隐藏时 `setTimeout` 被节流，页内长轮询会超时；改用 `computer wait` 分段等，再单次 JS 查状态。
+- 输入框是和 Josh 共用的，`form_input` 会把他正在打的字整段覆盖掉。动手前先查输入框是不是空的。

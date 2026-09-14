@@ -398,6 +398,22 @@ JS 不派生、不缓存、不补算。
 **待办**
 - 译本下载与 iOS 同步推进；后台前台服务见 Phase 2 待办
 
+#### Android 装机流程（2026-09-13，固定规则）
+
+没有特别交待，一律安装 **独立版**（Debug APK，applicationId `me.askbible.native_`），不装 Play 版（签名不同）。
+Claude 负责全程跑，不需要 Josh 手动操作，安装完成后汇报 APK 大小（MB）。
+
+标准步骤：
+```
+cd apps/askbible-android
+./gradlew assembleDebug
+adb -s <device> uninstall me.askbible.native_   # 旧版没装时报错可忽略
+adb -s <device> install app/build/outputs/apk/debug/*.apk
+rm app/build/outputs/apk/debug/*.apk            # 装完立刻删产物
+```
+
+当前连接设备：`R5CW11DNS2K`（三星 S23 Ultra，USB 直连）。
+
 ### 版面对齐 RN（2026-09-09，两端同步）
 
 Josh 拿 RN 版创世记 2 章截图对照，指出章页与底部图标「明显没有对齐」。逐项对齐后的结果：

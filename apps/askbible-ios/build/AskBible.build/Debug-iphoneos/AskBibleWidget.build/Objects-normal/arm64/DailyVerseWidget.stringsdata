@@ -1,0 +1,40 @@
+{
+  "source": "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBibleWidget/DailyVerseWidget.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "“",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 57
+        }
+      },
+      {
+        "comment": "",
+        "key": "AskBible",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 77
+        }
+      },
+      {
+        "comment": "",
+        "key": "每日金句",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "首页当前的经文金句",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 98
+        }
+      }
+    ]
+  },
+  "version": 1
+}

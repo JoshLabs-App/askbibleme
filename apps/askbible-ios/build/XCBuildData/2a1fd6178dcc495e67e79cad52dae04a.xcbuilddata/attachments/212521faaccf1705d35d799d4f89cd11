@@ -1,0 +1,29 @@
+{
+  "" : {
+    "diagnostics" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidget-primary.dia",
+    "emit-module-dependencies" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidget-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidget-primary-emit-module.dia",
+    "pch" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidget-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidget-primary.swiftdeps"
+  },
+  "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBibleWidget/AskBibleWidgetBundle.swift" : {
+    "const-values" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.swiftconstvalues",
+    "dependencies" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.d",
+    "diagnostics" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.dia",
+    "index-unit-output-path" : "/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.o",
+    "llvm-bc" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.bc",
+    "object" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.o",
+    "swift-dependencies" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle.swiftdeps",
+    "swiftmodule" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/AskBibleWidgetBundle~partial.swiftmodule"
+  },
+  "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/AskBibleWidget/DailyVerseWidget.swift" : {
+    "const-values" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.swiftconstvalues",
+    "dependencies" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.d",
+    "diagnostics" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.dia",
+    "index-unit-output-path" : "/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.o",
+    "llvm-bc" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.bc",
+    "object" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.o",
+    "swift-dependencies" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget.swiftdeps",
+    "swiftmodule" : "/Users/joshua/Desktop/APP/01AskBible/apps/askbible-ios/build/AskBible.build/Debug-iphoneos/AskBibleWidget.build/Objects-normal/arm64/DailyVerseWidget~partial.swiftmodule"
+  }
+}

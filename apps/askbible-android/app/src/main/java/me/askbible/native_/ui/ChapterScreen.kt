@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -50,6 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -188,19 +189,26 @@ fun ChapterScreen(
     val m = size.metrics
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val painting = paintColor != null || eraseMode
-    // 划重点触点统一在外层 Box 的 Initial pass 捕获，再广播给各段落，解决跨段落断开 + 最后一行选不到
-    val paintScreenOffset = remember { mutableStateOf<Offset?>(null) }
+    // 各段落在这里注册回调（key = 段落首节号），外层 Box 在 Initial pass 直接同步 dispatch，零帧延迟
+    val paintDispatch = remember { mutableMapOf<Int, (Offset) -> Unit>() }
+    // Box 的根坐标偏移（状态栏等导致 Box 不在屏幕原点），用于把 change.position（Box 本地坐标）转成根坐标
+    var boxRootOffset by remember { mutableStateOf(Offset.Zero) }
 
     Box(
         Modifier.fillMaxSize()
+            .onGloballyPositioned { coords -> boxRootOffset = coords.positionInRoot() }
+            // Initial pass：每个触点事件直接同步分发给所有段落，各段落自行判断 Y 范围后作画
+            // 不 consume：点击 / 双击 / 长按等手势照常工作
             .pointerInput(painting) {
-                if (!painting) { paintScreenOffset.value = null; return@pointerInput }
+                if (!painting) return@pointerInput
                 awaitPointerEventScope {
                     while (true) {
                         val ev = awaitPointerEvent(PointerEventPass.Initial)
                         val change = ev.changes.firstOrNull() ?: continue
-                        paintScreenOffset.value = if (change.pressed) change.position else null
-                        ev.changes.forEach { it.consume() }
+                        if (change.pressed) {
+                            val root = change.position + boxRootOffset
+                            paintDispatch.values.forEach { it(root) }
+                        }
                     }
                 }
             }
@@ -242,7 +250,7 @@ fun ChapterScreen(
                     bookmarked = if (selectedVerses.isNotEmpty()) selectedVerses else bookmarked, searchFocus = searchFocus,
                     tapWholeVerse = selectedVerses.isNotEmpty(),
                     highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
-                    paintScreenOffset = if (painting) paintScreenOffset else null,
+                    paintDispatch = if (painting) paintDispatch else null,
                     onTapVerseNumber = { v ->
                         searchFocus = null
                         if (selectedVerses.isNotEmpty()) onToggleSelection(v) else if (v in xrefVerses) onTapVerse(v)
@@ -316,7 +324,7 @@ private fun ParagraphBlock(
     paintColor: String? = null,
     eraseMode: Boolean = false,
     onPaint: (Int, IntRange) -> Unit = { _, _ -> },
-    paintScreenOffset: State<Offset?>? = null,
+    paintDispatch: MutableMap<Int, (Offset) -> Unit>? = null,
 ) {
     val headings = (meta.headings[group.first().number] ?: emptyList()).map { locale.zh(it) }
     Column(Modifier.fillMaxWidth().padding(bottom = 14.dp)) {  // verseParagraphBlock.marginBottom
@@ -346,7 +354,7 @@ private fun ParagraphBlock(
                              onTapVerseNumber, onDoubleTapVerse, onLongPressVerse, onVerseBounds,
                              tapWholeVerse = tapWholeVerse,
                              highlights = highlights, paintColor = paintColor, eraseMode = eraseMode, onPaint = onPaint,
-                             paintScreenOffset = paintScreenOffset)
+                             paintDispatch = paintDispatch)
         // 副译本对照行：0.82× 字号，muted，上距 7（verseContrast）
         for (v in group) {
             val line = contrast[v.number] ?: continue

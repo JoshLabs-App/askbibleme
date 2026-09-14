@@ -188,8 +188,6 @@ private fun CatalogColumn(
                                  fontSize = (size.metrics.catalogBookSize * 0.85f).sp,
                                  maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
                                  modifier = Modifier.weight(1f))
-                            // RN bookChevron：文字「›」24/400 faint，透明度 .58
-                            Text("\u203A", color = theme.faint.toColor().copy(alpha = 0.58f), fontSize = 24.sp, lineHeight = 24.sp)
                         }
                     }
                 }

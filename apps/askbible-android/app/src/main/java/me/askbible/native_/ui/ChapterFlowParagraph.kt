@@ -4,11 +4,10 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
@@ -70,8 +69,8 @@ fun ChapterFlowParagraph(
     eraseMode: Boolean = false,
     /** 划过一段：节号 + 节内字符区间 */
     onPaint: (Int, IntRange) -> Unit = { _, _ -> },
-    /** 屏幕坐标的划重点触点（由 ChapterScreen 统一捕获，跨段落不断开）；null 表示未在划重点模式 */
-    paintScreenOffset: State<Offset?>? = null,
+    /** 由 ChapterScreen 统一维护的 dispatch 表；key = 段落首节号，value = 接受根坐标触点的回调 */
+    paintDispatch: MutableMap<Int, (Offset) -> Unit>? = null,
 ) {
     val ranges = ArrayList<Pair<Int, IntRange>>(verses.size)
     val numberRanges = ArrayList<Pair<Int, IntRange>>(verses.size)
@@ -127,14 +126,16 @@ fun ChapterFlowParagraph(
         val out = ArrayList<Pair<IntRange, Color>>()
         for ((verse, byIndex) in highlights) {
             val base = textRanges.firstOrNull { it.first == verse }?.second ?: continue
+            // runStart==0 时从节号开头画（含节号），让高亮不在序号处留白
+            val verseStart = ranges.firstOrNull { it.first == verse }?.second?.first ?: base.first
             if (byIndex.isEmpty()) continue
             val sorted = byIndex.keys.sorted()
             var runStart = sorted.first(); var prev = sorted.first()
             var color = byIndex[sorted.first()] ?: VerseHighlightRules.DEFAULT_COLOR
             fun flush(end: Int) {
-                val from = base.first + runStart
+                val from = if (runStart == 0) verseStart else base.first + runStart
                 val to = base.first + end
-                if (from in base && to in base) out.add((from..to) to hexColor(color))
+                if (to in base) out.add((from..to) to hexColor(color))
             }
             for (i in sorted.drop(1)) {
                 val c = byIndex[i] ?: VerseHighlightRules.DEFAULT_COLOR
@@ -145,30 +146,38 @@ fun ChapterFlowParagraph(
         }
         out
     }
-    /** 触点 → 「哪一节的第几个字」 */
+    /** 触点 → 「哪一节的第几个字」；落在节号或间隔区时等价于正文第 0 个字，避免节号处出现空洞 */
     fun paintAt(pos: Offset) {
         val l = layout ?: return
         val offset = l.getOffsetForPosition(pos)
-        val hit = textRanges.firstOrNull { offset in it.second } ?: return
-        val local = offset - hit.second.first
-        if (local < 0) return
-        onPaint(hit.first, local..local)
+        val textHit = textRanges.firstOrNull { offset in it.second }
+        if (textHit != null) {
+            val local = offset - textHit.second.first
+            if (local >= 0) onPaint(textHit.first, local..local)
+            return
+        }
+        // 触在节号 / 间隔 → 等价于正文 index 0
+        val rangeHit = ranges.firstOrNull { offset in it.second } ?: return
+        onPaint(rangeHit.first, 0..0)
     }
     fun verseAt(pos: Offset, list: List<Pair<Int, IntRange>>): Int? {
         val l = layout ?: return null
         val offset = l.getOffsetForPosition(pos)
         return list.firstOrNull { offset in it.second }?.first
     }
-    // 屏幕级别的划重点：ChapterScreen 统一捕获触点，各段落独立判断是否落在自己范围内
-    LaunchedEffect(paintScreenOffset) {
-        val state = paintScreenOffset ?: return@LaunchedEffect
-        snapshotFlow { state.value }.collect { screenPos ->
-            val pos = screenPos ?: return@collect
-            val l = layout ?: return@collect
-            val local = pos - textRootPos
-            if (local.y < -4f || local.y > l.size.height + 4f) return@collect
+    // 向外层 Box 注册本段落的 paint 回调：SideEffect 每次 recompose 后刷新（保持 paintAt / textRootPos 最新），
+    // DisposableEffect 在段落离开 composition 时清除，避免悬空引用
+    val firstVerse = verses.first().number
+    SideEffect {
+        paintDispatch?.set(firstVerse) { rootOffset ->
+            val l = layout ?: return@set
+            val local = rootOffset - textRootPos
+            if (local.y < -4f || local.y > l.size.height + 4f) return@set
             paintAt(local)
         }
+    }
+    DisposableEffect(firstVerse, paintDispatch) {
+        onDispose { paintDispatch?.remove(firstVerse) }
     }
     Text(
         text,
@@ -186,6 +195,8 @@ fun ChapterFlowParagraph(
                 report(out)
             }
             .drawBehind {
+                // 诊断：固定红色矩形，确认 drawBehind 有效
+                drawRect(androidx.compose.ui.graphics.Color.Red, topLeft = Offset(0f, 0f), size = androidx.compose.ui.geometry.Size(100f, 40f))
                 val l = layout ?: return@drawBehind
                 // 圆角 8 整行框：跟读高亮 #FFB103 / 搜索定位 verseSearchFocusBg（RN verseAudioFollowOverlay / verseSearchFocusBg）
                 for ((r, fill) in listOf(activeRange to AUDIO_ACTIVE, focusRange to focusFill)) {
@@ -199,7 +210,12 @@ fun ChapterFlowParagraph(
                     val first = l.getLineForOffset(r.first); val last = l.getLineForOffset(r.last)
                     for (line in first..last) {
                         val left = if (line == first) l.getHorizontalPosition(r.first, true) else l.getLineLeft(line)
-                        val right = if (line == last) l.getHorizontalPosition(r.last + 1, true) else l.getLineRight(line)
+                        // r.last+1 可能落在下一行开头（getHorizontalPosition 会返回 0），改用 getLineRight 兜底
+                        val right = if (line != last) l.getLineRight(line) else {
+                            val lineEnd = l.getLineEnd(line, visibleEnd = false)
+                            if (r.last + 1 < lineEnd) l.getHorizontalPosition(r.last + 1, true)
+                            else l.getLineRight(line)
+                        }
                         if (right <= left) continue
                         drawRoundRect(c.copy(alpha = 0.45f), topLeft = Offset(left, l.getLineTop(line) - 1.dp.toPx()),
                                       size = Size(right - left, l.getLineBottom(line) - l.getLineTop(line) + 2.dp.toPx()),
@@ -221,7 +237,8 @@ fun ChapterFlowParagraph(
                     }
                 }
             }
-            .pointerInput(text) {
+            .pointerInput(text, paintColor, eraseMode) {
+                if (paintColor != null || eraseMode) return@pointerInput
                 detectTapGestures(
                     onTap = { pos -> verseAt(pos, if (currentTapWholeVerse.value) ranges else numberRanges)?.let(currentOnTapVerseNumber.value) },
                     onDoubleTap = { pos -> verseAt(pos, ranges)?.let(currentOnDoubleTapVerse.value) },

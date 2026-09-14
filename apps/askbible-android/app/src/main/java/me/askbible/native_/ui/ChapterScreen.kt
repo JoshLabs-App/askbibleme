@@ -189,6 +189,8 @@ fun ChapterScreen(
 
         LazyColumn(
             state = listState,
+            // 划重点模式下禁止 LazyColumn 滚动，让 detectDragGestures 能抢到拖动事件（否则被 scroll 吃掉）
+            userScrollEnabled = paintColor == null && !eraseMode,
             // 视口从屏幕顶开始（状态栏高度并进 contentPadding），顶部 70 渐隐才对得上 RN
             modifier = Modifier.fillMaxSize().parchmentFade(ParchmentFadePreset.CHAPTER),
             contentPadding = PaddingValues(

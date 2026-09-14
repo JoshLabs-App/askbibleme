@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
@@ -101,6 +102,12 @@ fun ChapterFlowParagraph(
             ranges.add(v.number to (start until length))
         }
     }
+    // rememberUpdatedState：pointerInput(text) 的 key 只跟 text 走，不随 callback 重建而重启协程，
+    // 不用 `by` 委托——直接保留 State<T> 引用，协程里访问 .value 确保读到最新值
+    val currentOnTapVerseNumber = rememberUpdatedState(onTapVerseNumber)
+    val currentOnDoubleTapVerse = rememberUpdatedState(onDoubleTapVerse)
+    val currentOnLongPressVerse = rememberUpdatedState(onLongPressVerse)
+    val currentTapWholeVerse = rememberUpdatedState(tapWholeVerse)
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
     // 已收藏的节不再画跟读高亮（RN audioActive = !bookmarked && …）
     val activeRange = activeVerse?.takeIf { it !in bookmarked }?.let { a -> ranges.firstOrNull { it.first == a }?.second }
@@ -209,9 +216,9 @@ fun ChapterFlowParagraph(
             }
             .pointerInput(text) {
                 detectTapGestures(
-                    onTap = { pos -> verseAt(pos, if (tapWholeVerse) ranges else numberRanges)?.let(onTapVerseNumber) },
-                    onDoubleTap = { pos -> verseAt(pos, ranges)?.let(onDoubleTapVerse) },
-                    onLongPress = { pos -> verseAt(pos, ranges)?.let(onLongPressVerse) },
+                    onTap = { pos -> verseAt(pos, if (currentTapWholeVerse.value) ranges else numberRanges)?.let(currentOnTapVerseNumber.value) },
+                    onDoubleTap = { pos -> verseAt(pos, ranges)?.let(currentOnDoubleTapVerse.value) },
+                    onLongPress = { pos -> verseAt(pos, ranges)?.let(currentOnLongPressVerse.value) },
                 )
             },
         fontSize = metrics.verseFontSize.sp,

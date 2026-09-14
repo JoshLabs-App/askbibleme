@@ -117,6 +117,7 @@ tools/.reading-plans.json
 
 # 原生 App 的读后两版内容库：与 RN assets/content/info-edition.sqlite 同一份（26MB 产物，不入库），
 # 由 npm run gen:info-edition 从 RN 资源复制过来
+/apps/askbible-ios/build/
 /apps/askbible-ios/AskBible/Resources/info-edition.sqlite
 /apps/askbible-android/app/src/main/assets/info-edition.sqlite
 

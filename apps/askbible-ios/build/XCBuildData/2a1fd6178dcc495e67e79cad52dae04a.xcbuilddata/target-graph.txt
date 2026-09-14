@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'AskBibleWidget' in project 'AskBible' (no dependencies)

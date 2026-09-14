@@ -65,7 +65,7 @@ struct HighlightBar: View {
         }
         .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 28)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .parchmentCard(cornerRadius: 16)
+        .parchmentCard(cornerRadius: 16, backgroundHitTesting: false)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .ignoresSafeArea(edges: .bottom)
     }

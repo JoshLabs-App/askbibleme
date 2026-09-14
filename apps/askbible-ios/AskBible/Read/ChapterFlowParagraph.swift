@@ -85,40 +85,131 @@ struct ChapterFlowParagraph: UIViewRepresentable {
             addGestureRecognizer(double)
             addGestureRecognizer(single)
             addGestureRecognizer(long)
-            // 划重点：手指划过要标的字（Josh 2026-09-11「直接用手划动，划过的就高亮」）
-            let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
-            pan.maximumNumberOfTouches = 1
-            pan.delegate = self
-            addGestureRecognizer(pan)
-            paintPan = pan
+            // PaintGestureRecognizer: 在 touchesBegan 立刻进入 .began，强制 ScrollView pan gesture fail
+            let pg = PaintGestureRecognizer(target: self, action: #selector(handlePaintGesture(_:)))
+            pg.delegate = self
+            pg.isEnabled = false
+            addGestureRecognizer(pg)
+            paintGesture = pg
         }
 
-        private weak var paintPan: UIPanGestureRecognizer?
+        /// 上一次 paintAt 的字符绝对下标；补齐快划跳过的字符
+        private var prevPaintIdx: Int? = nil
+        /// 划的过程只在本地记录，松手才提交给 SwiftUI——避免每字触发状态更新 + 写盘 + 全章重绘
+        private var pendingPaints: [Int: (lo: Int, hi: Int)] = [:]
+        /// 本地实时渲染：只更新 UIView，不走 SwiftUI 状态
+        var liveHighlightRuns: [(range: NSRange, color: UIColor)] = []
+        /// verse → 从 textStarts[verse].range.location 到正文第一个字的偏移（节号长度 + 间隔）
+        var textOffsets: [Int: Int] = [:]
 
-        /// 划重点模式下才吃掉滚动；平时让 ScrollView 正常滚
-        override func gestureRecognizerShouldBegin(_ g: UIGestureRecognizer) -> Bool {
-            if g === paintPan { return paintColor != nil || painting }
-            return super.gestureRecognizerShouldBegin(g)
-        }
+        // MARK: - 划重点手势识别器（立刻抢占 touch，阻止 ScrollView pan gesture 取消我们的触点）
 
-        @objc private func panned(_ g: UIPanGestureRecognizer) {
-            guard paintColor != nil || painting else { return }
-            switch g.state {
-            case .began, .changed:
-                painting = true
-                paintAt(g.location(in: self))
-            default:
-                painting = false
+        /// 在 touchesBegan 那一帧就进入 .began 态，UIKit 规则：任何还在 .possible 态的 recognizer（包括
+        /// 父级 ScrollView 的 panGestureRecognizer）会被强制 fail，无法再调用 touchesCancelled。
+        final class PaintGestureRecognizer: UIGestureRecognizer {
+            override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+                super.touchesBegan(touches, with: event)
+                state = .began
+            }
+            override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+                super.touchesMoved(touches, with: event)
+                state = .changed
+            }
+            override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+                super.touchesEnded(touches, with: event)
+                state = .ended
+            }
+            override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+                super.touchesCancelled(touches, with: event)
+                state = .cancelled
             }
         }
 
-        /// 把触点换算成「哪一节的第几个字」，通知上层上色
+        var paintGesture: PaintGestureRecognizer!
+
+        /// 划重点期间：只让 paintGesture 运行，其余 recognizer 全部阻止
+        override func gestureRecognizerShouldBegin(_ g: UIGestureRecognizer) -> Bool {
+            if paintColor != nil { return g === paintGesture }
+            return super.gestureRecognizerShouldBegin(g)
+        }
+
+        /// 不允许 paintGesture 与任何其他 recognizer 同时识别，确保 pan gesture 被 fail 掉
+        func gestureRecognizer(_ gr: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            return false
+        }
+
+        @objc private func handlePaintGesture(_ g: PaintGestureRecognizer) {
+            let pt = g.location(in: self)
+            switch g.state {
+            case .began:
+                painting = true
+                prevPaintIdx = nil
+                pendingPaints = [:]
+                liveHighlightRuns = []
+                paintAt(pt)
+            case .changed:
+                if painting { paintAt(pt) }
+            case .ended:
+                guard painting else { return }
+                painting = false
+                prevPaintIdx = nil
+                for (verse, bounds) in pendingPaints { onPaint(verse, bounds.lo...bounds.hi) }
+                pendingPaints = [:]
+                // liveHighlightRuns 保持，等 updateUIView 在 highlightRuns 更新后再清除，
+                // 避免 "SwiftUI 更新前黄色消失" 的闪烁；setNeedsDisplay 仍要调以确保当前帧可见
+                setNeedsDisplay()
+            default:
+                if painting {
+                    painting = false
+                    prevPaintIdx = nil
+                    pendingPaints = [:]
+                    liveHighlightRuns = []
+                    setNeedsDisplay()
+                }
+            }
+        }
+
+        /// 把触点换算成字符区间，只更新本地状态 + setNeedsDisplay，不调 onPaint。
+        /// textStarts = textRanges（正文区间，不含节号），off = 0；
+        /// 存入 pendingPaints 的下标以正文首字为 0（与 Web 存储格式一致）。
         private func paintAt(_ p: CGPoint) {
             let idx = layoutManager.characterIndex(for: p, in: container, fractionOfDistanceBetweenInsertionPoints: nil)
-            guard let hit = textStarts.first(where: { NSLocationInRange(idx, $0.range) }) else { return }
-            let local = idx - hit.range.location
-            guard local >= 0, local < hit.range.length else { return }
-            onPaint(hit.verse, local...local)
+            let from = prevPaintIdx ?? idx
+            prevPaintIdx = idx
+            let lo = min(from, idx)
+            let hi = max(from, idx)
+            var dirty = false
+            for (verse, range) in textStarts {
+                let vLo = range.location
+                let vHi = range.location + range.length - 1
+                let iLo = max(lo, vLo)
+                let iHi = min(hi, vHi)
+                guard iLo <= iHi else { continue }
+                let off = textOffsets[verse] ?? 0
+                // 转成正文相对下标（节号+间隔算作 0，不会存成负数）
+                let sLo = max(0, (iLo - range.location) - off)
+                let sHi = max(0, (iHi - range.location) - off)
+                if let ex = pendingPaints[verse] {
+                    pendingPaints[verse] = (lo: min(ex.lo, sLo), hi: max(ex.hi, sHi))
+                } else {
+                    pendingPaints[verse] = (lo: sLo, hi: sHi)
+                }
+                dirty = true
+            }
+            if dirty {
+                if let color = paintColor {
+                    liveHighlightRuns = pendingPaints.compactMap { (verse, bounds) in
+                        guard let r = textStarts.first(where: { $0.verse == verse })?.range else { return nil }
+                        let off = textOffsets[verse] ?? 0
+                        let visLo = bounds.lo == 0 ? r.location : r.location + off + bounds.lo
+                        let visHi = r.location + off + bounds.hi
+                        return (NSRange(location: visLo, length: max(1, visHi - visLo + 1)), color)
+                    }
+                }
+                // 每次触点立刻提交，不等 .ended，确认 onPaint→storage 链路是否正常
+                for (verse, bounds) in pendingPaints { onPaint(verse, bounds.lo...bounds.hi) }
+                setNeedsDisplay()
+            }
         }
 
         private func verse(at p: CGPoint, in list: [(verse: Int, range: NSRange)]) -> Int? {
@@ -137,6 +228,50 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         }
 
         required init?(coder: NSCoder) { fatalError() }
+
+        /// 划重点模式：同时禁用父级 UIScrollView 的 isScrollEnabled 和 panGestureRecognizer，
+        /// 防止 ScrollView 的 pan 手势抢占或取消我们的 paint pan（只禁 isScrollEnabled 不够）
+        private var parentScrollEnabled: Bool = true
+        func setParentScrollEnabled(_ enabled: Bool) {
+            guard enabled != parentScrollEnabled else { return }
+            parentScrollEnabled = enabled
+            var view: UIView? = superview
+            while let v = view {
+                if let sv = v as? UIScrollView {
+                    sv.isScrollEnabled = enabled
+                    return
+                }
+                view = v.superview
+            }
+        }
+
+        /// 进入/退出划重点模式时设 delaysContentTouches，让触点立即送达，不等 ScrollView 判断。
+        /// isScrollEnabled 不在这里动——用户在没按下时仍可滚到目标位置，
+        /// 按下时靠 cancelParentPanGesture 取消 pan，不依赖 isScrollEnabled 的竞态。
+        func setPaintMode(_ paintMode: Bool) {
+            var view: UIView? = superview
+            while let v = view {
+                if let sv = v as? UIScrollView {
+                    sv.delaysContentTouches = !paintMode
+                    return
+                }
+                view = v.superview
+            }
+        }
+
+        /// 手指落下瞬间把父级 ScrollView 的 pan gesture 取消（disable→enable 清空状态）。
+        /// pan 此时在 possible 态还没开始滚，cancel 后立刻恢复，不影响后续自由滚动。
+        private func cancelParentPanGesture() {
+            var view: UIView? = superview
+            while let v = view {
+                if let sv = v as? UIScrollView {
+                    sv.panGestureRecognizer.isEnabled = false
+                    sv.panGestureRecognizer.isEnabled = true
+                    return
+                }
+                view = v.superview
+            }
+        }
 
         func setText(_ text: NSAttributedString) {
             storage.setAttributedString(text)
@@ -175,7 +310,7 @@ struct ChapterFlowParagraph: UIViewRepresentable {
                 for rect in rects(for: r) { UIBezierPath(roundedRect: rect.insetBy(dx: -2, dy: -1), cornerRadius: 6).fill() }
             }
             // 划重点：逐行铺用户选的颜色，压在正文底下
-            for run in highlightRuns {
+            for run in highlightRuns + liveHighlightRuns {
                 run.color.withAlphaComponent(0.45).setFill()
                 for rect in rects(for: run.range) {
                     UIBezierPath(roundedRect: rect.insetBy(dx: 0, dy: -1), cornerRadius: 3).fill()
@@ -221,10 +356,18 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         // 不会在两句中断开」——原来只铺正文段，节号和两节之间会露白
         v.bookmarkRanges = built.ranges.filter { bookmarked.contains($0.verse) }.map(\.range)
         v.textStarts = built.textRanges
-        v.paintColor = (paintColor != nil || eraseMode) ? UIColor(Color(hex: paintColor ?? VerseHighlightRules.defaultColor)) : nil
+        v.textOffsets = [:]
+        let inPaintMode = paintColor != nil || eraseMode
+        v.paintColor = inPaintMode ? UIColor(Color(hex: paintColor ?? VerseHighlightRules.defaultColor)) : nil
         v.onPaint = onPaint
-        v.highlightRuns = Self.runs(highlights: highlights, textRanges: built.textRanges)
+        v.highlightRuns = Self.runs(highlights: highlights, textRanges: built.textRanges, fullRanges: built.ranges)
+        // 划完之后 updateUIView 到来时，清掉实时预览（highlightRuns 已更新，不再需要 live 备份）
+        if !v.painting { v.liveHighlightRuns = [] }
         v.setNeedsDisplay()
+        // 进入划重点：启用 paintGesture（立刻抢占 touch 阻止 ScrollView pan），禁用滚动
+        v.paintGesture.isEnabled = inPaintMode
+        v.setParentScrollEnabled(!inPaintMode)
+        v.setPaintMode(inPaintMode)
     }
 
     @available(iOS 16.0, *)
@@ -233,19 +376,23 @@ struct ChapterFlowParagraph: UIViewRepresentable {
         return CGSize(width: width, height: uiView.height(for: width))
     }
 
-    /// 把「节内字符下标 → 颜色」压成连续同色的区间，换算到整段文本坐标，少画几次
-    static func runs(highlights: [Int: [Int: String]], textRanges: [(verse: Int, range: NSRange)]) -> [(range: NSRange, color: UIColor)] {
+    /// 把「节内字符下标 → 颜色」压成连续同色的区间，换算到整段文本坐标，少画几次。
+    /// fullRanges：含节号+间隔的完整节范围；runStart==0 时视觉上从节号起画，保持连续感。
+    static func runs(highlights: [Int: [Int: String]], textRanges: [(verse: Int, range: NSRange)], fullRanges: [(verse: Int, range: NSRange)] = []) -> [(range: NSRange, color: UIColor)] {
         var out: [(NSRange, UIColor)] = []
         for (verse, byIndex) in highlights {
             guard let base = textRanges.first(where: { $0.verse == verse })?.range, !byIndex.isEmpty else { continue }
+            let fullStart = fullRanges.first(where: { $0.verse == verse })?.range.location ?? base.location
+            let numOffset = base.location - fullStart  // 节号+间隔字符数
             let sorted = byIndex.keys.sorted()
             var runStart = sorted[0]
             var prev = sorted[0]
             var color = byIndex[sorted[0]] ?? VerseHighlightRules.defaultColor
             func flush(_ end: Int) {
-                let loc = base.location + runStart
-                let len = end - runStart + 1
-                guard loc >= base.location, loc + len <= base.location + base.length else { return }
+                // runStart==0 时从节号起画（覆盖节号+间隔），保持高亮不留空头
+                let loc = runStart == 0 ? fullStart : (base.location + runStart)
+                let len = runStart == 0 ? (end - runStart + 1 + numOffset) : (end - runStart + 1)
+                guard loc >= 0, len > 0, loc + len <= base.location + base.length else { return }
                 out.append((NSRange(location: loc, length: len), UIColor(Color(hex: color))))
             }
             for i in sorted.dropFirst() {

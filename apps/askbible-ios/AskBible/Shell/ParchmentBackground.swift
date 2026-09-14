@@ -29,6 +29,9 @@ struct ParchmentBackground: View {
 struct ParchmentCardModifier: ViewModifier {
     var theme: Parchment = .light
     var cornerRadius: CGFloat = 16
+    /// 背景是否允许接收触点。划重点模式下 HighlightBar 设为 false，
+    /// 背景纹理穿透给下层 FlowTextView，按钮本身仍可响应点击。
+    var backgroundHitTesting: Bool = true
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
@@ -43,6 +46,7 @@ struct ParchmentCardModifier: ViewModifier {
                     }
                 }
                 .clipShape(shape)
+                .allowsHitTesting(backgroundHitTesting)
             }
             .overlay(shape.strokeBorder(theme.border, lineWidth: 1 / UIScreen.main.scale))
             .clipShape(shape)
@@ -50,8 +54,10 @@ struct ParchmentCardModifier: ViewModifier {
 }
 
 extension View {
-    func parchmentCard(cornerRadius: CGFloat = 16, theme: Parchment = .light) -> some View {
-        modifier(ParchmentCardModifier(theme: theme, cornerRadius: cornerRadius))
+    func parchmentCard(cornerRadius: CGFloat = 16, theme: Parchment = .light,
+                       backgroundHitTesting: Bool = true) -> some View {
+        modifier(ParchmentCardModifier(theme: theme, cornerRadius: cornerRadius,
+                                       backgroundHitTesting: backgroundHitTesting))
     }
 }
 

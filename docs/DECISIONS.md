@@ -69,3 +69,22 @@
 - **日期**：2026-09-13
 
 ## 已作废
+
+### 划重点灵敏度修复（2026-09-13）
+- **决定**：修复划重点 pan 手势漏字问题，不删除功能。
+- **为什么**：根因是 `paintAt` 每次只标当前触点的 1 个字符，手指快划时两次回调之间的字符被跳过。基础设施（TextKit 绘制、存储、会员同步、HighlightBar UI）已全齐，修复成本低（约 20 行），删除浪费。
+- **修法（最终 Fix 5）**：去掉 pan gesture，改用 `FlowTextView.touchesBegan/Moved/Ended` 直接接触摸。`prevPaintIdx` 填补连续区间；`pendingPaints`+`liveHighlightRuns` 在手势结束前仅在本地绘制预览，结束时批量提交 `onPaint`（消除每字符 SwiftUI 刷新的卡顿）；`setParentScrollEnabled` 同时设 `delaysContentTouches = false`，阻止 ScrollView 抢触摸。
+- **验证**：2026-09-13 安装真机验收通过，丝滑连续。
+- **日期**：2026-09-13
+
+### 划重点两个 bug 修复（2026-09-13 真机复验通过）
+
+**Bug 1：黄色落不下来（persistence 断链）**
+- **根因**：加节号高亮支持时把 `textStarts = built.textRanges` 改成了 `built.ranges`（含节号），导致 `paintAt` 里算出的字符下标与 `VerseHighlightStore` 存储格式错位，`runs()` 找不到对应区间，`highlightRuns` 始终为空。
+- **修法**：`textStarts = built.textRanges`，`textOffsets = [:]`，回到 Fix 5 坐标映射。节号视觉高亮靠 `runs()` 里 `runStart == 0 → fullStart` 的扩展逻辑处理，不需要在 `paintAt` 里覆盖节号区。
+- **日期**：2026-09-13
+
+**Bug 2：下部分选不了（touch blocking）**
+- **根因**：`ParchmentCardModifier` 的 background 内部有一张 `UIScreen.main.bounds.height` 高的羊皮纸图，该背景视图会截获 SwiftUI 触点，使底部 ~8 行文字区域的触点无法到达 UIKit 层的 `PaintGestureRecognizer`。
+- **修法**：`ParchmentCardModifier` 加 `backgroundHitTesting: Bool = true` 参数；HighlightBar 传 `backgroundHitTesting: false`，背景 `.allowsHitTesting(false)` 穿透给下层 FlowTextView；颜色按钮 / 完成按钮作为前景元素不受影响，仍可点击。
+- **日期**：2026-09-13

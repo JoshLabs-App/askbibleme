@@ -236,6 +236,17 @@ async function submitForReview(appId, versionId) {
   if (open) {
     submissionId = open.submission.id;
     console.log(`→ Reusing review submission ${submissionId}`);
+    // 复用的草稿可能是空的（没挂版本），补挂一次；已挂过会返回 409，忽略
+    const item = await ascRequest("POST", "/v1/reviewSubmissionItems", {
+      data: {
+        type: "reviewSubmissionItems",
+        relationships: {
+          reviewSubmission: { data: { type: "reviewSubmissions", id: submissionId } },
+          appStoreVersion: { data: { type: "appStoreVersions", id: versionId } },
+        },
+      },
+    });
+    if (item.status !== 201 && !JSON.stringify(item.body).includes("already")) fail("add review submission item", item);
   } else {
     const create = await ascRequest("POST", "/v1/reviewSubmissions", {
       data: {

@@ -27,16 +27,25 @@ final class InfoEditionDownloader: NSObject, ObservableObject, URLSessionDownloa
 
     override init() {
         super.init()
-        if FileManager.default.fileExists(atPath: Self.localFileURL.path) {
+        if Self.isValidSQLite(Self.localFileURL) {
             state = .done
+        } else {
+            // 旧版不校验 HTTP 状态，R2 404 时把错误文本存成了 sqlite，之后永远「加载失败」；这里清掉让它重下
+            try? FileManager.default.removeItem(at: Self.localFileURL)
         }
     }
 
+    /// 文件头必须是 "SQLite format 3\0"，挡住 404 页面、截断文件
+    static func isValidSQLite(_ url: URL) -> Bool {
+        guard let h = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? h.close() }
+        let head = h.readData(ofLength: 16)
+        return head == Data("SQLite format 3\u{0}".utf8)
+    }
+
     func downloadIfNeeded() {
-        guard case .idle = state, !FileManager.default.fileExists(atPath: Self.localFileURL.path) else {
-            if FileManager.default.fileExists(atPath: Self.localFileURL.path) { state = .done }
-            return
-        }
+        if Self.isValidSQLite(Self.localFileURL) { state = .done; return }
+        guard case .idle = state else { return }
         state = .downloading(0)
         task = session.downloadTask(with: Self.r2URL)
         task?.resume()
@@ -50,12 +59,20 @@ final class InfoEditionDownloader: NSObject, ObservableObject, URLSessionDownloa
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         let dest = Self.localFileURL
+        if let http = downloadTask.response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            DispatchQueue.main.async { self.state = .failed("HTTP \(http.statusCode)") }
+            return
+        }
+        guard Self.isValidSQLite(location) else {
+            DispatchQueue.main.async { self.state = .failed("invalid sqlite") }
+            return
+        }
         do {
             if FileManager.default.fileExists(atPath: dest.path) {
                 try FileManager.default.removeItem(at: dest)
             }
             try FileManager.default.moveItem(at: location, to: dest)
-            DispatchQueue.main.async { self.state = .done }
+            DispatchQueue.main.async { InfoEditionDatabase.resetShared(); self.state = .done }
         } catch {
             DispatchQueue.main.async { self.state = .failed(error.localizedDescription) }
         }

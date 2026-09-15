@@ -19,8 +19,8 @@ import { createRequire } from "node:module";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const require = createRequire(import.meta.url);
 const APP_CONFIG_BASE = require(path.join(ROOT, "apps/askbible-mobile/expo-static-config.js"));
-const TARGET_VERSION = APP_CONFIG_BASE.expo.version;
-const TARGET_BUILD = String(APP_CONFIG_BASE.expo.ios.buildNumber);
+const TARGET_VERSION = process.env.ASC_TARGET_VERSION?.trim() || APP_CONFIG_BASE.expo.version;
+const TARGET_BUILD = process.env.ASC_TARGET_BUILD?.trim() || String(APP_CONFIG_BASE.expo.ios.buildNumber);
 const BUNDLE_ID = APP_CONFIG_BASE.expo.ios.bundleIdentifier || "me.askbible";
 
 // AFTER_APPROVAL = auto-release once Apple approves. Override with ASC_RELEASE_TYPE=MANUAL.

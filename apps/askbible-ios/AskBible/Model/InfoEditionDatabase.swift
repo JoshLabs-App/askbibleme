@@ -24,11 +24,13 @@ final class InfoEditionDatabase {
     static var shared: InfoEditionDatabase? {
         if let db = _shared { return db }
         let url = InfoEditionDownloader.localFileURL
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        guard InfoEditionDownloader.isValidSQLite(url) else { return nil }
         let db = InfoEditionDatabase(url: url)
         _shared = db
         return db
     }
+
+    static func resetShared() { _shared = nil }
 
     private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     private var handle: OpaquePointer?
